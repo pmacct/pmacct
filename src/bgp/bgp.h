@@ -87,6 +87,11 @@
 #define BGP_MSG_EXTRA_DATA_NONE	0
 #define BGP_MSG_EXTRA_DATA_BMP	1
 
+#define BGP_LOOKUP_NOPEER	2
+#define BGP_LOOKUP_NOPREFIX	1
+#define BGP_LOOKUP_OK		0
+#define BGP_LOOKUP_ERR		-1
+
 /* structures */
 struct bgp_dump_event {
   struct timeval tstamp;

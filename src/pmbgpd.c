@@ -326,9 +326,9 @@ void bgp_lg_daemon_worker(void *zh, void *zs)
         ret = bgp_lg_daemon_decode_query_ip_lookup(sock, req.data);
 
         bgp_lg_rep_init(&rep);
-        if (!ret) bgp_lg_daemon_ip_lookup(req.data, &rep, FUNC_TYPE_BGP); 
+        if (!ret) ret = bgp_lg_daemon_ip_lookup(req.data, &rep, FUNC_TYPE_BGP); 
 
-        bgp_lg_daemon_encode_reply_ip_lookup(sock, &rep);
+        bgp_lg_daemon_encode_reply_ip_lookup(sock, &rep, ret);
       }
       break;
     case BGP_LG_QT_UNKNOWN:
@@ -469,7 +469,7 @@ int bgp_lg_daemon_decode_query_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg_
   return ret;
 }
 
-void bgp_lg_daemon_encode_reply_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg_rep *rep) 
+void bgp_lg_daemon_encode_reply_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg_rep *rep, int res) 
 {
   json_t *rep_results_obj;
   char *rep_results_str;
@@ -479,6 +479,23 @@ void bgp_lg_daemon_encode_reply_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg
   rep_results_obj = json_object();
   json_object_set_new_nocheck(rep_results_obj, "results", json_integer(rep->results));
   json_object_set_new_nocheck(rep_results_obj, "query_type", json_integer(BGP_LG_QT_IP_LOOKUP));
+
+  if (!rep->results && res) {
+    switch (res) {
+    case BGP_LOOKUP_ERR:
+      json_object_set_new_nocheck(rep_results_obj, "text", json_string("lookup error"));
+      break;
+    case BGP_LOOKUP_NOPREFIX:
+      json_object_set_new_nocheck(rep_results_obj, "text", json_string("prefix not found"));
+      break;
+    case BGP_LOOKUP_NOPEER:
+      json_object_set_new_nocheck(rep_results_obj, "text", json_string("peer not found"));
+      break;
+    default:
+      json_object_set_new_nocheck(rep_results_obj, "text", json_string("unknown lookup error"));
+      break;
+    }
+  }
 
   rep_results_str = json_dumps(rep_results_obj, JSON_PRESERVE_ORDER);
   json_decref(rep_results_obj);
@@ -535,7 +552,7 @@ void bgp_lg_daemon_encode_reply_unknown(struct p_zmq_sock *sock)
   rep_results_obj = json_object();
   json_object_set_new_nocheck(rep_results_obj, "results", json_integer(FALSE));
   json_object_set_new_nocheck(rep_results_obj, "query_type", json_integer(BGP_LG_QT_UNKNOWN));
-  // XXX: add some error string?
+  json_object_set_new_nocheck(rep_results_obj, "text", json_string("unsupported query_type"));
 
   rep_results_str = json_dumps(rep_results_obj, JSON_PRESERVE_ORDER);
   json_decref(rep_results_obj);

@@ -748,7 +748,7 @@ u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id
           (bms->table_peer_buckets * per_peer_buckets));
 }
 
-void bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep *rep, int type)
+int bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep *rep, int type)
 {
   struct xflow_status_entry xs_entry; // XXX: fixme, costly alloc
   struct bgp_misc_structs *bms;
@@ -759,11 +759,12 @@ void bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep 
   struct node_match_cmp_term2 nmct2;
   safi_t safi;
   u_int16_t l3_proto = 0;
+  int ret = BGP_LOOKUP_OK;
 
   bms = bgp_select_misc_db(type);
   inter_domain_routing_db = bgp_select_routing_db(type);
 
-  if (!req || !rep || !bms || !inter_domain_routing_db) return;
+  if (!req || !rep || !bms || !inter_domain_routing_db) return BGP_LOOKUP_ERR;
 
   memset(rep, 0, sizeof(rep));
   safi = SAFI_UNICAST;
@@ -797,7 +798,11 @@ void bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep 
 			    bms->bgp_lookup_node_match_cmp, &nmct2,
 			    &result, &info);
 
-      if (result) bgp_lg_rep_data_add(rep, AFI_IP, safi, &result->p, info);
+      if (result) {
+	bgp_lg_rep_data_add(rep, AFI_IP, safi, &result->p, info);
+	ret = BGP_LOOKUP_OK;
+      }
+      else ret = BGP_LOOKUP_NOPREFIX; 
     }
 #if defined ENABLE_IPV6
     else if (l3_proto == ETHERTYPE_IPV6) {
@@ -807,7 +812,11 @@ void bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep 
 		            bms->bgp_lookup_node_match_cmp, &nmct2,
 		            &result, &info);
 
-      if (result) bgp_lg_rep_data_add(rep, AFI_IP6, safi, &result->p, info);
+      if (result) {
+	bgp_lg_rep_data_add(rep, AFI_IP6, safi, &result->p, info);
+	ret = BGP_LOOKUP_OK;
+      }
+      else ret = BGP_LOOKUP_NOPREFIX; 
     }
 #endif
 
@@ -826,6 +835,9 @@ void bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep 
 
     // XXX: bgp_follow_default code not currently supported
   }
+  else ret = BGP_LOOKUP_NOPEER; 
+
+  return ret;
 }
 
 void bgp_lg_rep_init(struct bgp_lg_rep *rep)
