@@ -290,6 +290,9 @@ void bgp_lg_daemon()
   snprintf(log_id, sizeof(log_id), "%s/core/lg", config.name);
   p_zmq_set_log_id(&lg_host, log_id);
 
+  if (config.bgp_lg_user) p_zmq_set_username(&lg_host, config.bgp_lg_user);
+  if (config.bgp_lg_passwd) p_zmq_set_password(&lg_host, config.bgp_lg_passwd);
+
   p_zmq_router_setup(&lg_host, config.bgp_lg_ip, config.bgp_lg_port);
   Log(LOG_INFO, "INFO ( %s/core/lg ): Looking Glass listening on %s:%u\n", config.name, config.bgp_lg_ip, config.bgp_lg_port);
 

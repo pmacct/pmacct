@@ -35,12 +35,15 @@
 void usage_pmbgp(char *prog)
 {
   printf("%s %s (%s)\n", PMBGP_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
-  printf("Usage: %s [query]\n\n", prog);
-  printf("Queries:\n");
-  printf("  -p\tIP address to look up\n");
-  printf("  -P\tBGP peer routing table to look up\n");
-  printf("  -z\tpmbgpd Looking Glass IP address [default: 127.0.0.1]\n");
-  printf("  -Z\tpmbgpd Looking Glass port [default: 17900]\n");
+  printf("Usage: %s [options] [query]\n\n", prog);
+  printf("Query options:\n");
+  printf("  -a\tIP address to look up\n");
+  printf("  -r\tBGP peer routing table to look up\n");
+  printf("General options:\n");
+  printf("  -z\tLooking Glass IP address [default: 127.0.0.1]\n");
+  printf("  -Z\tLooking Glass port [default: 17900]\n");
+  printf("  -u\tLooking glass username [default: none]\n");
+  printf("  -p\tLooking Glass password [default: none]\n");
   printf("\n");
   printf("  -h\tShow this page\n");
   printf("  -V\tPrint version and exit\n");
@@ -57,8 +60,8 @@ void version_pmbgp(char *prog)
 
 int main(int argc,char **argv)
 {
-  char address_str[SRVBUFLEN], peer_str[SRVBUFLEN], *req_str = NULL, *req_type_str = NULL;
-  char *rep_str = NULL;
+  char address_str[SRVBUFLEN], peer_str[SRVBUFLEN], *req_str = NULL;
+  char *req_type_str = NULL, *rep_str = NULL;
   char *zmq_host_str_ptr, zmq_host_str[SRVBUFLEN], default_zmq_host_str[] = "127.0.0.1";
   int ret, zmq_port = 0, default_zmq_port = 17900, results = 0, query_type = 0, idx = 0;
 
@@ -85,10 +88,10 @@ int main(int argc,char **argv)
       version_pmbgp(argv[0]);
       exit(0);
       break;
-    case 'p':
+    case 'a':
       strlcpy(address_str, optarg, sizeof(address_str));
       break;
-    case 'P':
+    case 'r':
       strlcpy(peer_str, optarg, sizeof(peer_str));
       break;
     case 'z':
@@ -96,6 +99,12 @@ int main(int argc,char **argv)
       break;
     case 'Z':
       zmq_port = atoi(optarg);
+      break;
+    case 'u':
+      strlcpy(zmq_host.zap.username, optarg, sizeof(zmq_host.zap.username));
+      break;
+    case 'p':
+      strlcpy(zmq_host.zap.password, optarg, sizeof(zmq_host.zap.password));
       break;
     default:
       printf("ERROR: parameter %c unknown! \n  Exiting...\n\n", cp);
@@ -106,7 +115,7 @@ int main(int argc,char **argv)
   }
 
   if (!strlen(address_str) || !strlen(peer_str)) {
-    printf("ERROR: mandatory options, -p and/or -P, are not specified. Exiting ..\n");
+    printf("ERROR: mandatory options, -a and/or -r, are not specified. Exiting ..\n");
     exit(1);
   }
   
@@ -213,6 +222,20 @@ void pmbgp_zmq_req_setup(struct p_zmq_host *zmq_host, char *host, int port)
   }
 
   snprintf(zmq_host->sock.str, sizeof(zmq_host->sock.str), "tcp://%s:%u", host, port);
+
+  if (strlen(zmq_host->zap.username) && strlen(zmq_host->zap.password)) {
+    ret = zmq_setsockopt(zmq_host->sock.obj, ZMQ_PLAIN_USERNAME, zmq_host->zap.username, strlen(zmq_host->zap.username));
+    if (ret == ERR) {
+      printf("ERROR: zmq_setsockopt() ZMQ_PLAIN_USERNAME failed: %s\nExiting.\n", zmq_strerror(errno));
+      exit(1);
+    }
+
+    ret = zmq_setsockopt(zmq_host->sock.obj, ZMQ_PLAIN_PASSWORD, zmq_host->zap.password, strlen(zmq_host->zap.password));
+    if (ret == ERR) {
+      printf("ERROR: zmq_setsockopt() ZMQ_PLAIN_PASSWORD failed: %s\nExiting.\n", zmq_strerror(errno));
+      exit(1);
+    }
+  }
 
   ret = zmq_connect(zmq_host->sock.obj, zmq_host->sock.str);
   if (ret == ERR) {

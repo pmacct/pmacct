@@ -754,6 +754,8 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_daemon_lg_ip", cfg_key_bgp_lg_ip},
   {"bgp_daemon_lg_port", cfg_key_bgp_lg_port},
   {"bgp_daemon_lg_threads", cfg_key_bgp_lg_threads},
+  {"bgp_daemon_lg_user", cfg_key_bgp_lg_user},
+  {"bgp_daemon_lg_passwd", cfg_key_bgp_lg_passwd},
   {"bmp_daemon", cfg_key_nfacctd_bmp},
   {"bmp_daemon_ip", cfg_key_nfacctd_bmp_ip},
   {"bmp_daemon_port", cfg_key_nfacctd_bmp_port},
