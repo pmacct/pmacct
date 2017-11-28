@@ -38,6 +38,7 @@ void usage_pmbgp(char *prog)
   printf("Usage: %s [options] [query]\n\n", prog);
   printf("Query options:\n");
   printf("  -a\tIP address to look up\n");
+  printf("  -d\tRoute Distinguisher to look up\n");
   printf("  -r\tBGP peer routing table to look up\n");
   printf("General options:\n");
   printf("  -z\tLooking Glass IP address [default: 127.0.0.1]\n");
@@ -60,7 +61,7 @@ void version_pmbgp(char *prog)
 
 int main(int argc,char **argv)
 {
-  char address_str[SRVBUFLEN], peer_str[SRVBUFLEN], *req_str = NULL;
+  char address_str[SRVBUFLEN], peer_str[SRVBUFLEN], rd_str[SRVBUFLEN], *req_str = NULL;
   char *req_type_str = NULL, *rep_str = NULL;
   char *zmq_host_str_ptr, zmq_host_str[SRVBUFLEN], default_zmq_host_str[] = "127.0.0.1";
   int ret, zmq_port = 0, default_zmq_port = 17900, results = 0, query_type = 0, idx = 0;
@@ -74,6 +75,7 @@ int main(int argc,char **argv)
   int errflag, cp;
 
   memset(address_str, 0, sizeof(address_str));
+  memset(rd_str, 0, sizeof(rd_str));
   memset(peer_str, 0, sizeof(peer_str));
   memset(zmq_host_str, 0, sizeof(zmq_host_str));
   memset(&zmq_host, 0, sizeof(zmq_host));
@@ -90,6 +92,9 @@ int main(int argc,char **argv)
       break;
     case 'a':
       strlcpy(address_str, optarg, sizeof(address_str));
+      break;
+    case 'd':
+      strlcpy(rd_str, optarg, sizeof(rd_str));
       break;
     case 'r':
       strlcpy(peer_str, optarg, sizeof(peer_str));
@@ -150,7 +155,8 @@ int main(int argc,char **argv)
       exit(1);
     }
 
-    // XXX: encode Route Distinguisher, if any
+    /* no specific validation done for the RD */
+    if (strlen(rd_str)) json_object_set_new_nocheck(req_obj, "rd", json_string(rd_str));
 
     req_str = json_dumps(req_obj, JSON_PRESERVE_ORDER);
     json_decref(req_obj);

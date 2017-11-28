@@ -555,7 +555,7 @@ int bgp_lookup_node_match_cmp_bgp(struct bgp_info *info, struct node_match_cmp_t
     if (nmct2->peer->cap_add_paths && info->attr && nmct2->peer_dst_ip) no_match++;
 
     if (nmct2->safi == SAFI_MPLS_VPN) {
-      if (info->extra && !memcmp(&info->extra->rd, &nmct2->rd, sizeof(rd_t))) no_match--;
+      if (info->extra && !memcmp(&info->extra->rd, nmct2->rd, sizeof(rd_t))) no_match--;
     }
 
     if (nmct2->peer->cap_add_paths) {
@@ -757,9 +757,10 @@ int bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep *
   struct bgp_node *result;
   struct bgp_info *info;
   struct node_match_cmp_term2 nmct2;
-  safi_t safi;
   u_int16_t l3_proto = 0;
   int ret = BGP_LOOKUP_OK;
+  struct rd_as4 *rd_as4_ptr;
+  safi_t safi;
 
   bms = bgp_select_misc_db(type);
   inter_domain_routing_db = bgp_select_routing_db(type);
@@ -783,12 +784,14 @@ int bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep *
   if (peer) {
     // XXX: ADD-PATH code not currently supported
 
-    if (req->rd.type) safi = SAFI_MPLS_VPN;
+    rd_as4_ptr = (struct rd_as4 *) &req->rd;
+    if (rd_as4_ptr->as) safi = SAFI_MPLS_VPN;
 
     start_again_mpls_label:
 
     memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
     nmct2.peer = peer;
+    nmct2.safi = safi;
     nmct2.rd = &req->rd;
 
     if (l3_proto == ETHERTYPE_IP) {

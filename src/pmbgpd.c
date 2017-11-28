@@ -394,10 +394,11 @@ int bgp_lg_daemon_decode_query_type(struct p_zmq_sock *sock, struct bgp_lg_req *
 int bgp_lg_daemon_decode_query_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg_req_ipl_data *req) 
 {
   json_error_t req_err;
-  json_t *req_obj, *peer_ip_src_json, *ip_address_json;
-  const char *peer_ip_src_str, *ip_address_str;
+  json_t *req_obj, *peer_ip_src_json, *ip_address_json, *rd_json;
+  const char *peer_ip_src_str, *ip_address_str, *rd_str;
   char *req_str;
   int ret = SUCCESS, default_timeout = -1, query_timeout = 0;
+  struct rd_as4 *rd_as4_ptr; 
 
   if (!sock || !req) return ERR;
 
@@ -458,7 +459,19 @@ int bgp_lg_daemon_decode_query_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg_
         json_decref(ip_address_json);
       }
 
-      // XXX: decode Route Distinguisher, if any
+      rd_json = json_object_get(req_obj, "rd");
+      if (rd_json) {
+        rd_str = json_string_value(rd_json);
+        bgp_str2rd(&req->rd, (char *) rd_str);
+	rd_as4_ptr = (struct rd_as4 *) &req->rd;
+        if (!rd_as4_ptr->as) {
+          Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query(): bogus 'rd' element.\n", config.name);
+          ret = ERR;
+          goto exit_lane;
+        }
+
+        json_decref(rd_json);
+      }
     }
 
     exit_lane:
