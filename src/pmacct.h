@@ -408,6 +408,7 @@ EXT int gtp_tunnel_func(register struct packet_ptrs *);
 EXT int gtp_tunnel_configurator(struct tunnel_handler *, char *);
 EXT void tunnel_registry_init();
 EXT void pcap_cb(u_char *, const struct pcap_pkthdr *, const u_char *);
+EXT void gre_decap_cb(u_char *, const struct pcap_pkthdr *, const u_char *);
 EXT int PM_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 EXT void compute_once();
 EXT void reset_index_pkt_ptrs(struct packet_ptrs *);

@@ -351,6 +351,7 @@ static const struct _dictionary_line dictionary[] = {
   {"plugin_pipe_zmq_hwm", cfg_key_plugin_pipe_zmq_hwm},
   {"interface", cfg_key_pcap_interface}, 		/* Legacy key */
   {"interface_wait", cfg_key_pcap_interface_wait},	/* Legacy key */
+  {"gre_decap", cfg_key_gre_decap},
   {"files_umask", cfg_key_files_umask},
   {"files_uid", cfg_key_files_uid},
   {"files_gid", cfg_key_files_gid},

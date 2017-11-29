@@ -161,6 +161,13 @@ DESC:		If set, specifies a specific packet socket protocol value to limit packet
 		against a version of libpcap that supports pcap_set_protocol().
 DEFAULT:	none
 
+KEY:		decap_gre [GLOBAL, PMACCTD_ONLY]
+VALUES:		[ true | false ]
+DESC:		If set, makes the daemon decapsulate GRE-tunneled traffic.
+			Packets that are not encapsulated in an IPv4/GRE tunnel are processed as usual.
+			This option only applies to pmacctd.
+DEFAULT:	false
+
 KEY:		snaplen (-L) [GLOBAL, NO_NFACCTD, NO_SFACCTD]
 DESC:		Specifies the maximum number of bytes to capture for each packet. This directive has
 		key importance to both classification and connection tracking engines. In fact, some

@@ -54,6 +54,8 @@
 #define AF_PLABEL		255
 #endif
 #define PRIMPTRS_FUNCS_N	16
+#define GRE_HDRLEN          4
+#define IP_HDRLEN           20
 
 /* 10Mb/s ethernet header */
 struct eth_header
