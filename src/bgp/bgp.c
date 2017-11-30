@@ -144,7 +144,8 @@ void skinny_bgp_daemon_online()
       Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() BGP peers cache structure. Terminating thread.\n", config.name, bgp_misc_db->log_str);
       exit_all(1);
     }
-    memset(peers_cache, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_cache_bucket));
+
+    bgp_peer_cache_init(peers_cache, config.nfacctd_bgp_max_peers);
   }
   else peers_cache = NULL;
 
@@ -543,6 +544,13 @@ void skinny_bgp_daemon_online()
 	peer->tcp_port = ntohs(((struct sockaddr_in6 *)&client)->sin6_port);
       }
 #endif
+
+      if (peers_cache) {
+	u_int32_t bucket;
+
+	bucket = addr_hash(&peer->addr, config.nfacctd_bgp_max_peers);
+	bgp_peer_cache_insert(peers_cache, bucket, peer);
+      }
 
       if (bgp_misc_db->msglog_backend_methods)
 	bgp_peer_log_init(peer, config.nfacctd_bgp_msglog_output, FUNC_TYPE_BGP);

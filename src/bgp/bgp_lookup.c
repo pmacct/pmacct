@@ -752,14 +752,15 @@ u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id
 
 int bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep *rep, int type)
 {
-  struct xflow_status_entry xs_entry; // XXX: fixme, costly alloc
   struct bgp_misc_structs *bms;
   struct bgp_rt_structs *inter_domain_routing_db;
   struct bgp_peer *peer;
   struct bgp_node *result;
   struct bgp_info *info;
   struct node_match_cmp_term2 nmct2;
-  u_int16_t l3_proto = 0;
+  struct host_addr peer_ha;
+  u_int16_t l3_proto = 0, peer_port = 0;
+  u_int32_t bucket;
   int ret = BGP_LOOKUP_OK;
   struct rd_as4 *rd_as4_ptr;
   safi_t safi;
@@ -769,19 +770,16 @@ int bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep *
 
   if (!req || !rep || !bms || !inter_domain_routing_db) return BGP_LOOKUP_ERR;
 
-  memset(rep, 0, sizeof(rep));
+  memset(&peer_ha, 0, sizeof(peer_ha));
+  memset(rep, 0, sizeof(struct bgp_lg_rep));
   safi = SAFI_UNICAST;
 
-  if (req->pref.family == AF_INET) {
-    l3_proto = ETHERTYPE_IP;
-    xs_entry.peer_v4_idx = 0; // XXX: optimize
-  }
-  else if (req->pref.family == AF_INET6) {
-    l3_proto = ETHERTYPE_IPV6;
-    xs_entry.peer_v6_idx = 0; // XXX: optimize
-  }
+  if (req->pref.family == AF_INET) l3_proto = ETHERTYPE_IP;
+  else if (req->pref.family == AF_INET6) l3_proto = ETHERTYPE_IPV6;
 
-  peer = bms->bgp_lookup_find_peer(&req->peer, &xs_entry, l3_proto, FALSE /* XXX: compare_bgp_port option currently not supported */);
+  sa_to_addr(&req->peer, &peer_ha, &peer_port);
+  bucket = addr_hash(&peer_ha, bms->max_peers);
+  peer = bgp_peer_cache_search(bms->peers_cache, bucket, &peer_ha);
 
   if (peer) {
     // XXX: ADD-PATH code not currently supported

@@ -482,9 +482,21 @@ void *bgp_attr_hash_alloc(void *p)
   return attr;
 }
 
+void bgp_peer_cache_init(struct bgp_peer_cache_bucket *cache, u_int32_t buckets)
+{
+  u_int32_t idx;
+
+  for (idx = 0; idx < buckets; idx++) {
+    memset(&cache[idx], 0, sizeof(struct bgp_peer_cache_bucket));
+    pthread_mutex_init(&cache[idx].mutex, NULL);
+  }
+}
+
 struct bgp_peer_cache *bgp_peer_cache_insert(struct bgp_peer_cache_bucket *cache, u_int32_t bucket, struct bgp_peer *peer)
 {
-  struct bgp_peer_cache *cursor, *last, *new;
+  struct bgp_peer_cache *cursor, *last, *new, *ret = NULL;
+
+  pthread_mutex_lock(&peers_cache[bucket].mutex);  
 
   for (cursor = peers_cache[bucket].e, last = NULL; cursor; cursor = cursor->next) last = cursor;
 
@@ -496,14 +508,20 @@ struct bgp_peer_cache *bgp_peer_cache_insert(struct bgp_peer_cache_bucket *cache
     if (!last) peers_cache[bucket].e = new;
     else last->next = new; 
 
-    return new;
+    ret = new;
   }
-  else return NULL;
+
+  pthread_mutex_unlock(&peers_cache[bucket].mutex);  
+
+  return ret;
 }
 
 int bgp_peer_cache_delete(struct bgp_peer_cache_bucket *cache, u_int32_t bucket, struct bgp_peer *peer)
 {
   struct bgp_peer_cache *cursor, *last;
+  int ret = ERR;
+
+  pthread_mutex_lock(&peers_cache[bucket].mutex);  
 
   for (cursor = peers_cache[bucket].e, last = NULL; cursor; cursor = cursor->next) {
     if (cursor->ptr == peer) {
@@ -512,27 +530,36 @@ int bgp_peer_cache_delete(struct bgp_peer_cache_bucket *cache, u_int32_t bucket,
 
       free(cursor);
 
-      return SUCCESS;
+      ret = SUCCESS;
+      break;
     }
 
     last = cursor;
   }
 
-  return ERR;
+  pthread_mutex_unlock(&peers_cache[bucket].mutex);
+
+  return ret;
 }
 
-struct bgp_peer *bgp_peer_cache_search(struct bgp_peer_cache_bucket *cache, u_int32_t bucket, struct bgp_peer *peer)
+struct bgp_peer *bgp_peer_cache_search(struct bgp_peer_cache_bucket *cache, u_int32_t bucket, struct host_addr *ha)
 {
   struct bgp_peer_cache *cursor;
+  struct bgp_peer *ret = NULL;
+
+  pthread_mutex_lock(&peers_cache[bucket].mutex);
 
   for (cursor = peers_cache[bucket].e; cursor; cursor = cursor->next) {
     /* XXX: no option to compare BGP ports yet */
-    if (!memcmp(&cursor->ptr->addr, &peer->addr, sizeof(struct host_addr))) {
-      return cursor->ptr;
+    if (!memcmp(&cursor->ptr->addr, ha, sizeof(struct host_addr))) {
+      ret = cursor->ptr;
+      break;
     }
   }
 
-  return NULL;
+  pthread_mutex_unlock(&peers_cache[bucket].mutex);
+
+  return ret;
 }
 
 int bgp_peer_init(struct bgp_peer *peer, int type)
@@ -558,13 +585,6 @@ int bgp_peer_init(struct bgp_peer *peer, int type)
   else {
     memset(peer->buf.base, 0, peer->buf.len);
     ret = FALSE;
-  }
-
-  if (bms->peers_cache) {
-    u_int32_t idx;
-
-    idx = addr_hash(&peer->addr, bms->max_peers); 
-    bgp_peer_cache_insert(bms->peers_cache, idx, peer);
   }
 
   return ret;
@@ -599,10 +619,10 @@ void bgp_peer_close(struct bgp_peer *peer, int type, int no_quiet, int send_noti
   if (peer->fd != ERR) close(peer->fd);
 
   if (bms->peers_cache) {
-    u_int32_t idx;
+    u_int32_t bucket;
 
-    idx = addr_hash(&peer->addr, bms->max_peers);
-    bgp_peer_cache_delete(bms->peers_cache, idx, peer);
+    bucket = addr_hash(&peer->addr, bms->max_peers);
+    bgp_peer_cache_delete(bms->peers_cache, bucket, peer);
   }
 
   peer->fd = 0;

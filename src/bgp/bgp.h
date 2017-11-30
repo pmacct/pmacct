@@ -114,6 +114,7 @@ struct bgp_peer_cache {
 };
 
 struct bgp_peer_cache_bucket {
+  pthread_mutex_t mutex;
   struct bgp_peer_cache *e;
 };
 
