@@ -23,6 +23,7 @@
 
 #include "pmacct.h"
 #include "addr.h"
+#include "jhash.h"
 
 static const char hex[] = "0123456789abcdef";
 
@@ -673,4 +674,25 @@ u_int16_t af_to_etype(u_int8_t af)
 #endif
 
   return FALSE;
+}
+
+u_int32_t addr_hash(struct host_addr *ha, u_int32_t modulo)
+{
+  u_int32_t val = 0;
+
+  if (ha->family == AF_INET) {
+    val = jhash_1word(ha->address.ipv4.s_addr, 0);
+  }
+#if defined ENABLE_IPV6
+  else if (ha->family == AF_INET6) {
+    u_int32_t a, b, c;
+
+    memcpy(&a, &ha->address.ipv6.s6_addr[4], 4);
+    memcpy(&b, &ha->address.ipv6.s6_addr[8], 4);
+    memcpy(&c, &ha->address.ipv6.s6_addr[12], 4);
+    val = jhash_3words(a, b, c, 0);
+  }
+#endif
+
+  return (val % modulo);
 }

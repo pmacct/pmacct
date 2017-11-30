@@ -132,6 +132,7 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_kafka_host = &bmp_daemon_msglog_kafka_host;
 #endif
   bms->max_peers = config.nfacctd_bmp_max_peers;
+  bms->peers_cache = NULL;
   bms->dump_file = config.bmp_dump_file;
   bms->dump_amqp_routing_key = config.bmp_dump_amqp_routing_key;
   bms->dump_amqp_routing_key_rr = config.bmp_dump_amqp_routing_key_rr;

@@ -133,6 +133,7 @@ void telemetry_link_misc_structs(telemetry_misc_structs *tms)
   tms->msglog_kafka_host = &telemetry_daemon_msglog_kafka_host;
 #endif
   tms->max_peers = config.telemetry_max_peers;
+  tms->peers_cache = NULL;
   tms->dump_file = config.telemetry_dump_file;
   tms->dump_amqp_routing_key = config.telemetry_dump_amqp_routing_key;
   tms->dump_amqp_routing_key_rr = config.telemetry_dump_amqp_routing_key_rr;

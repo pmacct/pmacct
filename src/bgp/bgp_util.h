@@ -68,6 +68,9 @@ EXT int bgp_peer_init(struct bgp_peer *, int);
 EXT void bgp_peer_close(struct bgp_peer *, int, int, int, u_int8_t, u_int8_t, char *);
 EXT void bgp_peer_print(struct bgp_peer *, char *, int);
 EXT void bgp_peer_info_delete(struct bgp_peer *);
+EXT struct bgp_peer_cache *bgp_peer_cache_insert(struct bgp_peer_cache_bucket *, u_int32_t, struct bgp_peer *);
+EXT int bgp_peer_cache_delete(struct bgp_peer_cache_bucket *, u_int32_t, struct bgp_peer *);
+EXT struct bgp_peer *bgp_peer_cache_search(struct bgp_peer_cache_bucket *, u_int32_t, struct bgp_peer *);
 
 EXT void bgp_batch_init(struct bgp_peer_batch *, int, int);
 EXT void bgp_batch_reset(struct bgp_peer_batch *, time_t);

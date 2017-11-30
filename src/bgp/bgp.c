@@ -138,6 +138,16 @@ void skinny_bgp_daemon_online()
   }
   memset(peers, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
 
+  if (config.bgp_lg) {
+    peers_cache = malloc(config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_cache_bucket));
+    if (!peers_cache) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() BGP peers cache structure. Terminating thread.\n", config.name, bgp_misc_db->log_str);
+      exit_all(1);
+    }
+    memset(peers_cache, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_cache_bucket));
+  }
+  else peers_cache = NULL;
+
   if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key || config.nfacctd_bgp_msglog_kafka_topic) {
     if (config.nfacctd_bgp_msglog_file) bgp_misc_db->msglog_backend_methods++;
     if (config.nfacctd_bgp_msglog_amqp_routing_key) bgp_misc_db->msglog_backend_methods++;

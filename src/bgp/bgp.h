@@ -108,6 +108,15 @@ struct bgp_rt_structs {
   struct bgp_table *rib[AFI_MAX][SAFI_MAX];
 };
 
+struct bgp_peer_cache {
+  struct bgp_peer *ptr;
+  struct bgp_peer_cache *next;
+};
+
+struct bgp_peer_cache_bucket {
+  struct bgp_peer_cache *e;
+};
+
 struct bgp_misc_structs {
   struct bgp_peer_log *peers_log;
   u_int64_t log_seq;
@@ -129,6 +138,8 @@ struct bgp_misc_structs {
 #endif
   
   int max_peers;
+  struct bgp_peer_cache_bucket *peers_cache;
+
   char *neighbors_file;
   char *dump_file;
   char *dump_amqp_routing_key;
@@ -303,6 +314,7 @@ EXT void bgp_prepare_daemon();
 #define EXT
 #endif
 EXT struct bgp_peer *peers;
+EXT struct bgp_peer_cache_bucket *peers_cache;
 EXT char *std_comm_patterns[MAX_BGP_COMM_PATTERNS];
 EXT char *ext_comm_patterns[MAX_BGP_COMM_PATTERNS];
 EXT char *lrg_comm_patterns[MAX_BGP_COMM_PATTERNS];

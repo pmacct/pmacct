@@ -482,6 +482,59 @@ void *bgp_attr_hash_alloc(void *p)
   return attr;
 }
 
+struct bgp_peer_cache *bgp_peer_cache_insert(struct bgp_peer_cache_bucket *cache, u_int32_t bucket, struct bgp_peer *peer)
+{
+  struct bgp_peer_cache *cursor, *last, *new;
+
+  for (cursor = peers_cache[bucket].e, last = NULL; cursor; cursor = cursor->next) last = cursor;
+
+  new = malloc(sizeof(struct bgp_peer_cache));
+  if (new) {
+    new->ptr = peer;
+    new->next = NULL;
+
+    if (!last) peers_cache[bucket].e = new;
+    else last->next = new; 
+
+    return new;
+  }
+  else return NULL;
+}
+
+int bgp_peer_cache_delete(struct bgp_peer_cache_bucket *cache, u_int32_t bucket, struct bgp_peer *peer)
+{
+  struct bgp_peer_cache *cursor, *last;
+
+  for (cursor = peers_cache[bucket].e, last = NULL; cursor; cursor = cursor->next) {
+    if (cursor->ptr == peer) {
+      if (!last) peers_cache[bucket].e = cursor->next;
+      else last->next = cursor->next;
+
+      free(cursor);
+
+      return SUCCESS;
+    }
+
+    last = cursor;
+  }
+
+  return ERR;
+}
+
+struct bgp_peer *bgp_peer_cache_search(struct bgp_peer_cache_bucket *cache, u_int32_t bucket, struct bgp_peer *peer)
+{
+  struct bgp_peer_cache *cursor;
+
+  for (cursor = peers_cache[bucket].e; cursor; cursor = cursor->next) {
+    /* XXX: no option to compare BGP ports yet */
+    if (!memcmp(&cursor->ptr->addr, &peer->addr, sizeof(struct host_addr))) {
+      return cursor->ptr;
+    }
+  }
+
+  return NULL;
+}
+
 int bgp_peer_init(struct bgp_peer *peer, int type)
 {
   struct bgp_misc_structs *bms;
@@ -505,6 +558,13 @@ int bgp_peer_init(struct bgp_peer *peer, int type)
   else {
     memset(peer->buf.base, 0, peer->buf.len);
     ret = FALSE;
+  }
+
+  if (bms->peers_cache) {
+    u_int32_t idx;
+
+    idx = addr_hash(&peer->addr, bms->max_peers); 
+    bgp_peer_cache_insert(bms->peers_cache, idx, peer);
   }
 
   return ret;
@@ -537,6 +597,13 @@ void bgp_peer_close(struct bgp_peer *peer, int type, int no_quiet, int send_noti
     bgp_peer_log_close(peer, bms->msglog_output, peer->type);
 
   if (peer->fd != ERR) close(peer->fd);
+
+  if (bms->peers_cache) {
+    u_int32_t idx;
+
+    idx = addr_hash(&peer->addr, bms->max_peers);
+    bgp_peer_cache_delete(bms->peers_cache, idx, peer);
+  }
 
   peer->fd = 0;
   memset(&peer->id, 0, sizeof(peer->id));
@@ -1140,6 +1207,7 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_kafka_host = &bgp_daemon_msglog_kafka_host;
 #endif
   bms->max_peers = config.nfacctd_bgp_max_peers;
+  bms->peers_cache = peers_cache;
   bms->neighbors_file = config.nfacctd_bgp_neighbors_file; 
   bms->dump_file = config.bgp_table_dump_file; 
   bms->dump_amqp_routing_key = config.bgp_table_dump_amqp_routing_key; 
