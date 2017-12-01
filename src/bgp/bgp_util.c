@@ -542,7 +542,7 @@ int bgp_peer_cache_delete(struct bgp_peer_cache_bucket *cache, u_int32_t bucket,
   return ret;
 }
 
-struct bgp_peer *bgp_peer_cache_search(struct bgp_peer_cache_bucket *cache, u_int32_t bucket, struct host_addr *ha)
+struct bgp_peer *bgp_peer_cache_search(struct bgp_peer_cache_bucket *cache, u_int32_t bucket, struct host_addr *ha, u_int16_t port)
 {
   struct bgp_peer_cache *cursor;
   struct bgp_peer *ret = NULL;
@@ -550,7 +550,10 @@ struct bgp_peer *bgp_peer_cache_search(struct bgp_peer_cache_bucket *cache, u_in
   pthread_mutex_lock(&peers_cache[bucket].mutex);
 
   for (cursor = peers_cache[bucket].e; cursor; cursor = cursor->next) {
-    /* XXX: no option to compare BGP ports yet */
+    if (port) {
+      if (cursor->ptr->tcp_port != port) continue;
+    }
+
     if (!memcmp(&cursor->ptr->addr, ha, sizeof(struct host_addr))) {
       ret = cursor->ptr;
       break;

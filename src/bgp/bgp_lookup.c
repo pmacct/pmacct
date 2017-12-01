@@ -779,7 +779,7 @@ int bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep *
 
   sa_to_addr(&req->peer, &peer_ha, &peer_port);
   bucket = addr_hash(&peer_ha, bms->max_peers);
-  peer = bgp_peer_cache_search(bms->peers_cache, bucket, &peer_ha);
+  peer = bgp_peer_cache_search(bms->peers_cache, bucket, &peer_ha, peer_port);
 
   if (peer) {
     // XXX: ADD-PATH code not currently supported

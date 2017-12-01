@@ -696,3 +696,24 @@ u_int32_t addr_hash(struct host_addr *ha, u_int32_t modulo)
 
   return (val % modulo);
 }
+
+// XXX: trivial, to be improved
+u_int32_t addr_port_hash(struct host_addr *ha, u_int16_t port, u_int32_t modulo)
+{
+  u_int32_t val = 0;
+
+  if (ha->family == AF_INET) {
+    val = jhash_2words(ha->address.ipv4.s_addr, port, 0);
+  }
+#if defined ENABLE_IPV6
+  else if (ha->family == AF_INET6) {
+    u_int32_t a, b;
+
+    memcpy(&a, &ha->address.ipv6.s6_addr[8], 4);
+    memcpy(&b, &ha->address.ipv6.s6_addr[12], 4);
+    val = jhash_3words(port, a, b, 0);
+  }
+#endif
+
+  return (val % modulo);
+}

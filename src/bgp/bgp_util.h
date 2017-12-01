@@ -71,7 +71,7 @@ EXT void bgp_peer_info_delete(struct bgp_peer *);
 EXT void bgp_peer_cache_init(struct bgp_peer_cache_bucket *, u_int32_t);
 EXT struct bgp_peer_cache *bgp_peer_cache_insert(struct bgp_peer_cache_bucket *, u_int32_t, struct bgp_peer *);
 EXT int bgp_peer_cache_delete(struct bgp_peer_cache_bucket *, u_int32_t, struct bgp_peer *);
-EXT struct bgp_peer *bgp_peer_cache_search(struct bgp_peer_cache_bucket *, u_int32_t, struct host_addr *);
+EXT struct bgp_peer *bgp_peer_cache_search(struct bgp_peer_cache_bucket *, u_int32_t, struct host_addr *, u_int16_t);
 
 EXT void bgp_batch_init(struct bgp_peer_batch *, int, int);
 EXT void bgp_batch_reset(struct bgp_peer_batch *, time_t);

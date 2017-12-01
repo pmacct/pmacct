@@ -394,11 +394,12 @@ int bgp_lg_daemon_decode_query_type(struct p_zmq_sock *sock, struct bgp_lg_req *
 int bgp_lg_daemon_decode_query_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg_req_ipl_data *req) 
 {
   json_error_t req_err;
-  json_t *req_obj, *peer_ip_src_json, *ip_address_json, *rd_json;
+  json_t *req_obj, *peer_ip_src_json, *bgp_port_json, *ip_address_json, *rd_json;
   const char *peer_ip_src_str, *ip_address_str, *rd_str;
   char *req_str;
   int ret = SUCCESS, default_timeout = -1, query_timeout = 0;
   struct rd_as4 *rd_as4_ptr; 
+  u_int16_t bgp_port = 0;
 
   if (!sock || !req) return ERR;
 
@@ -420,6 +421,21 @@ int bgp_lg_daemon_decode_query_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg_
       goto exit_lane;
     }
     else {
+      bgp_port_json = json_object_get(req_obj, "peer_ip_src_port");
+      if (bgp_port_json) {
+        int bgp_port_int;
+
+        bgp_port_int = json_integer_value(bgp_port_json);
+        if (bgp_port_int >= 0 && bgp_port_int <= 65535) bgp_port = bgp_port_int;
+        else {
+          Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query(): bogus 'peer_ip_src_port' element.\n", config.name);
+          ret = ERR;
+          goto exit_lane;
+        }
+
+        json_decref(bgp_port_json);
+      }
+
       peer_ip_src_json = json_object_get(req_obj, "peer_ip_src");
       if (peer_ip_src_json == NULL) {
 	Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query(): no 'peer_ip_src' element.\n", config.name);
@@ -431,7 +447,7 @@ int bgp_lg_daemon_decode_query_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg_
 
 	peer_ip_src_str = json_string_value(peer_ip_src_json);
 	str_to_addr(peer_ip_src_str, &peer_ip_src_ha);
-	addr_to_sa(&req->peer, &peer_ip_src_ha, FALSE);
+	addr_to_sa(&req->peer, &peer_ip_src_ha, bgp_port);
 	if (!req->peer.sa_family) {
 	  Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query(): bogus 'peer_ip_src' element.\n", config.name);
 	  ret = ERR;

@@ -39,7 +39,8 @@ void usage_pmbgp(char *prog)
   printf("Query options:\n");
   printf("  -a\tIP address to look up\n");
   printf("  -d\tRoute Distinguisher to look up\n");
-  printf("  -r\tBGP peer routing table to look up\n");
+  printf("  -r\tBGP peer to look up\n");
+  printf("  -R\tTCP port of the BGP peer (for BGP through NAT/proxy scenarios)\n");
   printf("General options:\n");
   printf("  -z\tLooking Glass IP address [default: 127.0.0.1]\n");
   printf("  -Z\tLooking Glass port [default: 17900]\n");
@@ -61,13 +62,14 @@ void version_pmbgp(char *prog)
 
 int main(int argc,char **argv)
 {
-  char address_str[SRVBUFLEN], peer_str[SRVBUFLEN], rd_str[SRVBUFLEN], *req_str = NULL;
-  char *req_type_str = NULL, *rep_str = NULL;
+  char address_str[SRVBUFLEN], peer_str[SRVBUFLEN], rd_str[SRVBUFLEN], port_str[SRVBUFLEN];
+  char *req_str = NULL, *req_type_str = NULL, *rep_str = NULL;
   char *zmq_host_str_ptr, zmq_host_str[SRVBUFLEN], default_zmq_host_str[] = "127.0.0.1";
   int ret, zmq_port = 0, default_zmq_port = 17900, results = 0, query_type = 0, idx = 0;
+  u_int16_t peer_port;
 
   struct p_zmq_host zmq_host;
-  struct host_addr address_ha;
+  struct host_addr peer_ha, address_ha;
 
   /* getopt() stuff */
   extern char *optarg;
@@ -77,6 +79,7 @@ int main(int argc,char **argv)
   memset(address_str, 0, sizeof(address_str));
   memset(rd_str, 0, sizeof(rd_str));
   memset(peer_str, 0, sizeof(peer_str));
+  memset(port_str, 0, sizeof(port_str));
   memset(zmq_host_str, 0, sizeof(zmq_host_str));
   memset(&zmq_host, 0, sizeof(zmq_host));
 
@@ -98,6 +101,9 @@ int main(int argc,char **argv)
       break;
     case 'r':
       strlcpy(peer_str, optarg, sizeof(peer_str));
+      break;
+    case 'R':
+      strlcpy(port_str, optarg, sizeof(port_str));
       break;
     case 'z':
       strlcpy(zmq_host_str, optarg, sizeof(zmq_host_str));
@@ -141,17 +147,28 @@ int main(int argc,char **argv)
   {
     json_t *req_obj = json_object();
 
-    str_to_addr(peer_str, &address_ha);
-    if (address_ha.family) json_object_set_new_nocheck(req_obj, "peer_ip_src", json_string(peer_str));
+    str_to_addr(peer_str, &peer_ha);
+    if (peer_ha.family) json_object_set_new_nocheck(req_obj, "peer_ip_src", json_string(peer_str));
     else {
-      printf("ERROR: invalid -P value. Exiting ..\n");
+      printf("ERROR: invalid -r value. Exiting ..\n");
       exit(1);
+    }
+
+    if (strlen(port_str)) {
+      int port_int;
+
+      port_int = atoi(port_str);
+      if (port_int > 0 && port_int <= 65535) json_object_set_new_nocheck(req_obj, "peer_ip_src_port", json_integer(port_int));
+      else {
+	printf("ERROR: invalid -R value. Exiting ..\n");
+	exit(1);
+      }
     }
 
     str_to_addr(address_str, &address_ha);
     if (address_ha.family) json_object_set_new_nocheck(req_obj, "ip_address", json_string(address_str));
     else {
-      printf("ERROR: invalid -p value. Exiting ..\n");
+      printf("ERROR: invalid -a value. Exiting ..\n");
       exit(1);
     }
 
