@@ -296,11 +296,12 @@ void bgp_lg_daemon()
   p_zmq_router_setup(&lg_host, config.bgp_lg_ip, config.bgp_lg_port);
   Log(LOG_INFO, "INFO ( %s/core/lg ): Looking Glass listening on %s:%u\n", config.name, config.bgp_lg_ip, config.bgp_lg_port);
 
-  lg_host.router_worker_func = &bgp_lg_daemon_worker;
+  // XXX: more encodings supported in future?
+  lg_host.router_worker_func = &bgp_lg_daemon_worker_json;
   p_zmq_router_backend_setup(&lg_host, config.bgp_lg_threads, inproc_str);
 }
 
-void bgp_lg_daemon_worker(void *zh, void *zs)
+void bgp_lg_daemon_worker_json(void *zh, void *zs)
 {
   struct p_zmq_host *lg_host = (struct p_zmq_host *) zh;
   struct p_zmq_sock *sock = zs;
@@ -317,7 +318,7 @@ void bgp_lg_daemon_worker(void *zh, void *zs)
 
   for (;;) {
     memset(&req, 0, sizeof(req));
-    ret = bgp_lg_daemon_decode_query_type(sock, &req);
+    ret = bgp_lg_daemon_decode_query_type_json(sock, &req);
 
     switch(req.type) {
     case BGP_LG_QT_IP_LOOKUP:
@@ -326,23 +327,23 @@ void bgp_lg_daemon_worker(void *zh, void *zs)
 
         req.data = &query_data;
 	memset(req.data, 0, sizeof(struct bgp_lg_req_ipl_data));
-        ret = bgp_lg_daemon_decode_query_ip_lookup(sock, req.data);
+        ret = bgp_lg_daemon_decode_query_ip_lookup_json(sock, req.data);
 
         bgp_lg_rep_init(&rep);
         if (!ret) ret = bgp_lg_daemon_ip_lookup(req.data, &rep, FUNC_TYPE_BGP); 
 
-        bgp_lg_daemon_encode_reply_ip_lookup(sock, &rep, ret);
+        bgp_lg_daemon_encode_reply_ip_lookup_json(sock, &rep, ret);
       }
       break;
     case BGP_LG_QT_UNKNOWN:
     default:
-      bgp_lg_daemon_encode_reply_unknown(sock);
+      bgp_lg_daemon_encode_reply_unknown_json(sock);
       break;
     }
   }
 }
 
-int bgp_lg_daemon_decode_query_type(struct p_zmq_sock *sock, struct bgp_lg_req *req) 
+int bgp_lg_daemon_decode_query_type_json(struct p_zmq_sock *sock, struct bgp_lg_req *req) 
 {
   json_error_t req_err;
   json_t *req_obj, *query_type_json;
@@ -363,14 +364,14 @@ int bgp_lg_daemon_decode_query_type(struct p_zmq_sock *sock, struct bgp_lg_req *
 
   if (req_obj) {
     if (!json_is_object(req_obj)) {
-      Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_type(): json_is_object() failed.\n", config.name);
+      Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_type_json(): json_is_object() failed.\n", config.name);
       ret = ERR;
       goto exit_lane;
     }
     else {
       query_type_json = json_object_get(req_obj, "query_type");
       if (query_type_json == NULL) {
-        Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_type(): no 'query_type' element.\n", config.name);
+        Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_type_json(): no 'query_type' element.\n", config.name);
         ret = ERR;
         goto exit_lane;
       }
@@ -384,14 +385,14 @@ int bgp_lg_daemon_decode_query_type(struct p_zmq_sock *sock, struct bgp_lg_req *
     json_decref(req_obj);
   }
   else {
-    Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_type(): invalid request received: %s.\n", config.name, req_err.text);
+    Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_type_json(): invalid request received: %s.\n", config.name, req_err.text);
     ret = ERR;
   }
 
   return ret;
 }
 
-int bgp_lg_daemon_decode_query_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg_req_ipl_data *req) 
+int bgp_lg_daemon_decode_query_ip_lookup_json(struct p_zmq_sock *sock, struct bgp_lg_req_ipl_data *req) 
 {
   json_error_t req_err;
   json_t *req_obj, *peer_ip_src_json, *bgp_port_json, *ip_address_json, *rd_json;
@@ -416,7 +417,7 @@ int bgp_lg_daemon_decode_query_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg_
 
   if (req_obj) {
     if (!json_is_object(req_obj)) {
-      Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query(): json_is_object() failed.\n", config.name);
+      Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_json(): json_is_object() failed.\n", config.name);
       ret = ERR;
       goto exit_lane;
     }
@@ -428,7 +429,7 @@ int bgp_lg_daemon_decode_query_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg_
         bgp_port_int = json_integer_value(bgp_port_json);
         if (bgp_port_int >= 0 && bgp_port_int <= 65535) bgp_port = bgp_port_int;
         else {
-          Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query(): bogus 'peer_ip_src_port' element.\n", config.name);
+          Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_json(): bogus 'peer_ip_src_port' element.\n", config.name);
           ret = ERR;
           goto exit_lane;
         }
@@ -438,7 +439,7 @@ int bgp_lg_daemon_decode_query_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg_
 
       peer_ip_src_json = json_object_get(req_obj, "peer_ip_src");
       if (peer_ip_src_json == NULL) {
-	Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query(): no 'peer_ip_src' element.\n", config.name);
+	Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_json(): no 'peer_ip_src' element.\n", config.name);
 	ret = ERR;
 	goto exit_lane;
       }
@@ -449,7 +450,7 @@ int bgp_lg_daemon_decode_query_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg_
 	str_to_addr(peer_ip_src_str, &peer_ip_src_ha);
 	addr_to_sa(&req->peer, &peer_ip_src_ha, bgp_port);
 	if (!req->peer.sa_family) {
-	  Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query(): bogus 'peer_ip_src' element.\n", config.name);
+	  Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_json(): bogus 'peer_ip_src' element.\n", config.name);
 	  ret = ERR;
 	  goto exit_lane;
 	}
@@ -459,7 +460,7 @@ int bgp_lg_daemon_decode_query_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg_
 
       ip_address_json = json_object_get(req_obj, "ip_address");
       if (ip_address_json == NULL) {
-	Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query: no 'ip_address' element.\n", config.name);
+	Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_json: no 'ip_address' element.\n", config.name);
 	ret = ERR;
 	goto exit_lane;
       }
@@ -467,7 +468,7 @@ int bgp_lg_daemon_decode_query_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg_
 	ip_address_str = json_string_value(ip_address_json);
 	str2prefix(ip_address_str, &req->pref);
 	if (!req->pref.family) {
-	  Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query(): bogus 'ip_address' element.\n", config.name);
+	  Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_json(): bogus 'ip_address' element.\n", config.name);
 	  ret = ERR;
 	  goto exit_lane;
 	}
@@ -481,7 +482,7 @@ int bgp_lg_daemon_decode_query_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg_
         bgp_str2rd(&req->rd, (char *) rd_str);
 	rd_as4_ptr = (struct rd_as4 *) &req->rd;
         if (!rd_as4_ptr->as) {
-          Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query(): bogus 'rd' element.\n", config.name);
+          Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_json(): bogus 'rd' element.\n", config.name);
           ret = ERR;
           goto exit_lane;
         }
@@ -494,14 +495,14 @@ int bgp_lg_daemon_decode_query_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg_
     json_decref(req_obj);
   }
   else {
-    Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query(): invalid request received: %s.\n", config.name, req_err.text);
+    Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_json(): invalid request received: %s.\n", config.name, req_err.text);
     ret = ERR;
   }
 
   return ret;
 }
 
-void bgp_lg_daemon_encode_reply_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg_rep *rep, int res) 
+void bgp_lg_daemon_encode_reply_ip_lookup_json(struct p_zmq_sock *sock, struct bgp_lg_rep *rep, int res) 
 {
   json_t *rep_results_obj;
   char *rep_results_str;
@@ -542,7 +543,7 @@ void bgp_lg_daemon_encode_reply_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg
     p_zmq_sendmore_str(sock, rep_results_str);
 
     for (idx = 0, data = rep->data; idx < rep->results; idx++) {
-      rep_data_str = bgp_lg_daemon_encode_reply_ip_lookup_data(data);
+      rep_data_str = bgp_lg_daemon_encode_reply_ip_lookup_data_json(data);
 
       if (rep_data_str) {
 	if (idx == (rep->results - 1)) p_zmq_send_str(sock, rep_data_str); 
@@ -558,7 +559,7 @@ void bgp_lg_daemon_encode_reply_ip_lookup(struct p_zmq_sock *sock, struct bgp_lg
   if (rep_results_str) free(rep_results_str);
 }
 
-char *bgp_lg_daemon_encode_reply_ip_lookup_data(struct bgp_lg_rep_ipl_data *rep_data)
+char *bgp_lg_daemon_encode_reply_ip_lookup_data_json(struct bgp_lg_rep_ipl_data *rep_data)
 {
   struct bgp_node dummy_node;
   char event_type[] = "lglass", *data_str = NULL;
@@ -574,7 +575,7 @@ char *bgp_lg_daemon_encode_reply_ip_lookup_data(struct bgp_lg_rep_ipl_data *rep_
   return data_str;
 }
 
-void bgp_lg_daemon_encode_reply_unknown(struct p_zmq_sock *sock)
+void bgp_lg_daemon_encode_reply_unknown_json(struct p_zmq_sock *sock)
 {
   json_t *rep_results_obj;
   char *rep_results_str;
