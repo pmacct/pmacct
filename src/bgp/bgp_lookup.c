@@ -778,8 +778,15 @@ int bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep *
   else if (req->pref.family == AF_INET6) l3_proto = ETHERTYPE_IPV6;
 
   sa_to_addr(&req->peer, &peer_ha, &peer_port);
-  bucket = addr_hash(&peer_ha, bms->max_peers);
-  peer = bgp_peer_cache_search(bms->peers_cache, bucket, &peer_ha, peer_port);
+
+  if (!peer_port) {
+    bucket = addr_hash(&peer_ha, bms->max_peers);
+    peer = bgp_peer_cache_search(bms->peers_cache, bucket, &peer_ha, FALSE);
+  }
+  else {
+    bucket = addr_port_hash(&peer_ha, peer_port, bms->max_peers);
+    peer = bgp_peer_cache_search(bms->peers_port_cache, bucket, &peer_ha, peer_port);
+  }
 
   if (peer) {
     // XXX: ADD-PATH code not currently supported

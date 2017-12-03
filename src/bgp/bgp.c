@@ -146,8 +146,19 @@ void skinny_bgp_daemon_online()
     }
 
     bgp_peer_cache_init(peers_cache, config.nfacctd_bgp_max_peers);
+
+    peers_port_cache = malloc(config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_cache_bucket));
+    if (!peers_port_cache) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() BGP peers cache structure (2). Terminating thread.\n", config.name, bgp_misc_db->log_str);
+      exit_all(1);
+    }
+
+    bgp_peer_cache_init(peers_port_cache, config.nfacctd_bgp_max_peers);
   }
-  else peers_cache = NULL;
+  else {
+    peers_cache = NULL;
+    peers_port_cache = NULL;
+  }
 
   if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key || config.nfacctd_bgp_msglog_kafka_topic) {
     if (config.nfacctd_bgp_msglog_file) bgp_misc_db->msglog_backend_methods++;
@@ -545,11 +556,14 @@ void skinny_bgp_daemon_online()
       }
 #endif
 
-      if (peers_cache) {
+      if (peers_cache && peers_port_cache) {
 	u_int32_t bucket;
 
 	bucket = addr_hash(&peer->addr, config.nfacctd_bgp_max_peers);
 	bgp_peer_cache_insert(peers_cache, bucket, peer);
+
+	bucket = addr_port_hash(&peer->addr, peer->tcp_port, config.nfacctd_bgp_max_peers);
+	bgp_peer_cache_insert(peers_port_cache, bucket, peer);
       }
 
       if (bgp_misc_db->msglog_backend_methods)

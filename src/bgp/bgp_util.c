@@ -621,11 +621,14 @@ void bgp_peer_close(struct bgp_peer *peer, int type, int no_quiet, int send_noti
 
   if (peer->fd != ERR) close(peer->fd);
 
-  if (bms->peers_cache) {
+  if (bms->peers_cache && bms->peers_port_cache) {
     u_int32_t bucket;
 
     bucket = addr_hash(&peer->addr, bms->max_peers);
     bgp_peer_cache_delete(bms->peers_cache, bucket, peer);
+
+    bucket = addr_port_hash(&peer->addr, peer->tcp_port, bms->max_peers);
+    bgp_peer_cache_delete(bms->peers_port_cache, bucket, peer);
   }
 
   peer->fd = 0;
@@ -1231,6 +1234,7 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
 #endif
   bms->max_peers = config.nfacctd_bgp_max_peers;
   bms->peers_cache = peers_cache;
+  bms->peers_port_cache = peers_port_cache;
   bms->neighbors_file = config.nfacctd_bgp_neighbors_file; 
   bms->dump_file = config.bgp_table_dump_file; 
   bms->dump_amqp_routing_key = config.bgp_table_dump_amqp_routing_key; 

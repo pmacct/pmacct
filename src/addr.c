@@ -697,7 +697,7 @@ u_int32_t addr_hash(struct host_addr *ha, u_int32_t modulo)
   return (val % modulo);
 }
 
-// XXX: trivial, to be improved
+// XXX: basic implementation, to be improved
 u_int32_t addr_port_hash(struct host_addr *ha, u_int16_t port, u_int32_t modulo)
 {
   u_int32_t val = 0;

@@ -134,6 +134,7 @@ void telemetry_link_misc_structs(telemetry_misc_structs *tms)
 #endif
   tms->max_peers = config.telemetry_max_peers;
   tms->peers_cache = NULL;
+  tms->peers_port_cache = NULL;
   tms->dump_file = config.telemetry_dump_file;
   tms->dump_amqp_routing_key = config.telemetry_dump_amqp_routing_key;
   tms->dump_amqp_routing_key_rr = config.telemetry_dump_amqp_routing_key_rr;

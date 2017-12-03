@@ -140,6 +140,7 @@ struct bgp_misc_structs {
   
   int max_peers;
   struct bgp_peer_cache_bucket *peers_cache;
+  struct bgp_peer_cache_bucket *peers_port_cache;
 
   char *neighbors_file;
   char *dump_file;
@@ -315,7 +316,7 @@ EXT void bgp_prepare_daemon();
 #define EXT
 #endif
 EXT struct bgp_peer *peers;
-EXT struct bgp_peer_cache_bucket *peers_cache;
+EXT struct bgp_peer_cache_bucket *peers_cache, *peers_port_cache;
 EXT char *std_comm_patterns[MAX_BGP_COMM_PATTERNS];
 EXT char *ext_comm_patterns[MAX_BGP_COMM_PATTERNS];
 EXT char *lrg_comm_patterns[MAX_BGP_COMM_PATTERNS];
