@@ -24,7 +24,7 @@ libdaemons_la_SOURCES = signals.c util.c util.h plugin_hooks.c		\
         preprocess-data.h preprocess.h ll.c nl.c jhash.h pmacct-dlt.h	\
         sflow.h crc32.h base64.c base64.h plugin_cmn_json.c		\
 	plugin_cmn_json.h plugin_cmn_avro.c plugin_cmn_avro.h		\
-	pmsearch.c pmsearch.h
+	pmsearch.c pmsearch.h thread_pool.c thread_pool.h
 
 libcommon_la_LIBADD  = 
 libcommon_la_CFLAGS  = $(AM_CFLAGS)
@@ -86,9 +86,6 @@ endif
 if USING_SQL
 libdaemons_la_SOURCES += sql_common.c sql_handlers.c sql_common.h
 libdaemons_la_LIBADD  += -lm -lz
-endif
-if USING_THREADPOOL
-libdaemons_la_SOURCES += thread_pool.c thread_pool.h
 endif
 
 if USING_TRAFFIC_BINS

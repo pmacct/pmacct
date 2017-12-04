@@ -679,7 +679,6 @@ int main(int argc,char **argv, char **envp)
     list = list->next;
   }
 
-#if defined ENABLE_THREADS
   if (config.nfacctd_bgp && config.nfacctd_bmp) {
     Log(LOG_ERR, "ERROR ( %s/core ): bgp_daemon and bmp_daemon are currently mutual exclusive. Exiting.\n", config.name);
     exit(1);
@@ -759,22 +758,6 @@ int main(int argc,char **argv, char **envp)
     /* Let's give the BMP thread some advantage to create its structures */
     sleep(5);
   }
-#else
-  if (config.nfacctd_isis) {
-    Log(LOG_ERR, "ERROR ( %s/core ): 'isis_daemon' is available only with threads (--enable-threads). Exiting.\n", config.name);
-    exit(1);
-  }
-
-  if (config.nfacctd_bgp) {
-    Log(LOG_ERR, "ERROR ( %s/core ): 'bgp_daemon' is available only with threads (--enable-threads). Exiting.\n", config.name);
-    exit(1);
-  }
-
-  if (config.nfacctd_bmp) {
-    Log(LOG_ERR, "ERROR ( %s/core ): 'bmp_daemon' is available only with threads (--enable-threads). Exiting.\n", config.name);
-    exit(1);
-  }
-#endif
 
 #if defined WITH_GEOIP
   if (config.geoip_ipv4_file || config.geoip_ipv6_file) {

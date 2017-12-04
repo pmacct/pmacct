@@ -38,7 +38,6 @@
 thread_pool_t *bgp_pool;
 
 /* Functions */
-#if defined ENABLE_THREADS
 void nfacctd_bgp_wrapper()
 {
   /* initialize variables */
@@ -53,7 +52,6 @@ void nfacctd_bgp_wrapper()
   /* giving a kick to the BGP thread */
   send_to_pool(bgp_pool, skinny_bgp_daemon, NULL);
 }
-#endif
 
 void skinny_bgp_daemon()
 {

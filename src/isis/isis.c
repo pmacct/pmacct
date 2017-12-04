@@ -60,7 +60,6 @@
 thread_pool_t *isis_pool;
 
 /* Functions */
-#if defined ENABLE_THREADS
 void nfacctd_isis_wrapper()
 {
   /* initialize threads pool */
@@ -71,7 +70,6 @@ void nfacctd_isis_wrapper()
   /* giving a kick to the BGP thread */
   send_to_pool(isis_pool, skinny_isis_daemon, NULL);
 }
-#endif
 
 void skinny_isis_daemon()
 {

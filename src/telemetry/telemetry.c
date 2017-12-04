@@ -39,7 +39,6 @@
 thread_pool_t *telemetry_pool;
 
 /* Functions */
-#if defined ENABLE_THREADS
 void telemetry_wrapper()
 {
   struct telemetry_data *t_data;
@@ -59,7 +58,6 @@ void telemetry_wrapper()
   /* giving a kick to the telemetry thread */
   send_to_pool(telemetry_pool, telemetry_daemon, t_data);
 }
-#endif
 
 void telemetry_daemon(void *t_data_void)
 {

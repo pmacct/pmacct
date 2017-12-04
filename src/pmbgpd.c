@@ -257,7 +257,6 @@ int main(int argc,char **argv, char **envp)
 }
 
 #if defined WITH_ZMQ
-#if defined ENABLE_THREADS
 void bgp_lg_wrapper()
 {
   /* initialize variables */
@@ -273,11 +272,6 @@ void bgp_lg_wrapper()
   /* giving a kick to the BGP thread */
   send_to_pool(bgp_lg_pool, bgp_lg_daemon, NULL);
 }
-#else
-void bgp_lg_wrapper()
-{
-}
-#endif /* ENABLE_THREADS */
 
 void bgp_lg_daemon()
 {

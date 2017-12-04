@@ -14,6 +14,9 @@ DESC:   Following is the list of features, knobs and plugins that are being
 	* pkt_len_distrib primitive is discontinued due to apparent lack of
 	  interest; the primitive was meant to bucket packet/flow/sample
 	  lenghts in a distribution.
+	* removed --enable-threads / --disable-threads configure switch to
+	  allow to compile pmacct even if no pthreads library is available.
+	  From this release support for threads is mandatory. 
 
 TO:	>= 1.7.1
 FROM:	<= 1.7.0

@@ -39,7 +39,6 @@
 thread_pool_t *bmp_pool;
 
 /* Functions */
-#if defined ENABLE_THREADS
 void nfacctd_bmp_wrapper()
 {
   /* initialize variables */
@@ -54,7 +53,6 @@ void nfacctd_bmp_wrapper()
   /* giving a kick to the BMP thread */
   send_to_pool(bmp_pool, skinny_bmp_daemon, NULL);
 }
-#endif
 
 void skinny_bmp_daemon()
 {

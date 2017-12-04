@@ -1026,46 +1026,6 @@ AC_ARG_ENABLE(64bit,
 	]
 )
 
-AC_MSG_CHECKING([whether to enable multithreading in pmacct])
-AC_ARG_ENABLE(threads,
-        [  --enable-threads                 Enable multi-threading in pmacct (default: yes)],
-	[
-          if test x$enableval = x"yes" ; then
-            AC_MSG_RESULT(yes)
-            AC_DEFINE(ENABLE_THREADS, 1)
-	  
-	    dnl OS Specifics
-	    case "$host" in
-	    *-linux-*)
-	        AC_DEFINE(_XOPEN_SOURCE, 600)
-	        AC_DEFINE(_GNU_SOURCE, 1)
-	      ;;
-	    esac
-
-	    LIBS="${LIBS} -lpthread"
-            USING_THREADPOOL=yes
-	  else
-            AC_MSG_RESULT(no)
-          fi
-        ],
-	[
-          AC_MSG_RESULT(yes)
-          AC_DEFINE(ENABLE_THREADS, 1)
-
-          dnl OS Specifics
-          case "$host" in
-          *-linux-*)
-              AC_DEFINE(_XOPEN_SOURCE, 600)
-              AC_DEFINE(_GNU_SOURCE, 1)
-            ;;
-          esac
-
-          LIBS="${LIBS} -lpthread"
-          USING_THREADPOOL=yes
-	  COMPILE_ARGS="${COMPILE_ARGS} '--enable-threads'"
-	]
-)
-
 AC_MSG_CHECKING(whether to enable NFLOG support)
 AC_ARG_ENABLE(nflog,
   [  --enable-nflog                   Enable NFLOG support (default: no)],
@@ -1209,7 +1169,6 @@ AM_CONDITIONAL([WITH_RABBITMQ], [test x"$USING_RABBITMQ" = x"yes"])
 AM_CONDITIONAL([WITH_ZMQ], [test x"$USING_ZMQ" = x"yes"])
 AM_CONDITIONAL([WITH_KAFKA], [test x"$USING_KAFKA" = x"yes"])
 AM_CONDITIONAL([USING_SQL], [test x"$USING_SQL" = x"yes"])
-AM_CONDITIONAL([USING_THREADPOOL], [test x"$USING_THREADPOOL" = x"yes"])
 AM_CONDITIONAL([WITH_AVRO], [test x"$USING_AVRO" = x"yes"])
 AM_CONDITIONAL([WITH_NDPI], [test x"$USING_NDPI" = x"yes"])
 AM_CONDITIONAL([WITH_NFLOG], [test x"$USING_NFLOG" = x"yes"])

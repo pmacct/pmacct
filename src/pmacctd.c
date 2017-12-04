@@ -829,7 +829,6 @@ int main(int argc,char **argv, char **envp)
   signal(SIGUSR2, reload_maps); /* sets to true the reload_maps flag */
   signal(SIGPIPE, SIG_IGN); /* we want to exit gracefully when a pipe is broken */
 
-#if defined ENABLE_THREADS
   if (config.nfacctd_bgp && config.nfacctd_bmp) {
     Log(LOG_ERR, "ERROR ( %s/core ): bgp_daemon and bmp_daemon are currently mutual exclusive. Exiting.\n", config.name);
     exit(1);
@@ -907,17 +906,6 @@ int main(int argc,char **argv, char **envp)
     /* Let's give the BGP thread some advantage to create its structures */
     sleep(5);
   }
-#else
-  if (config.nfacctd_isis) {
-    Log(LOG_ERR, "ERROR ( %s/core ): 'isis_daemon' is available only with threads (--enable-threads). Exiting.\n", config.name);
-    exit(1);
-  }
-
-  if (config.nfacctd_bgp) {
-    Log(LOG_ERR, "ERROR ( %s/core ): 'bgp_daemon' is available only with threads (--enable-threads). Exiting.\n", config.name);
-    exit(1);
-  }
-#endif
 
 #if defined WITH_GEOIP
   if (config.geoip_ipv4_file || config.geoip_ipv6_file) {
