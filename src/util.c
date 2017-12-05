@@ -1170,7 +1170,7 @@ void pm_strftime(char *s, int max, char *format, const time_t *time_ref, int utc
   time_t time_loc;  
   struct tm *tm_loc;
 
-  if (time_ref) time_loc = (*time_ref);
+  if (time_ref && (*time_ref)) time_loc = (*time_ref);
   else time_loc = time(NULL);
 
   if (!utc) tm_loc = localtime(&time_loc);
@@ -1187,7 +1187,7 @@ void pm_strftime_same(char *s, int max, char *tmp, const time_t *time_ref, int u
   time_t time_loc;
   struct tm *tm_loc;
 
-  if (time_ref) time_loc = (*time_ref);
+  if (time_ref && (*time_ref)) time_loc = (*time_ref);
   else time_loc = time(NULL);
 
   if (!utc) tm_loc = localtime(&time_loc);
