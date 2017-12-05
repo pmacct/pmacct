@@ -385,7 +385,7 @@ struct host_mask {
   union {
     u_int32_t m4;
 #if defined ENABLE_IPV6
-    u_int32_t m6[4];
+    u_int8_t m6[16];
 #endif
   } mask;
 };

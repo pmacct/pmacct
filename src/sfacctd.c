@@ -1879,7 +1879,7 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
     begin = t->num-t->ipv6_num;
     end = t->num;
     sa_local.sa_family = AF_INET6;
-    for (j = 0; j < 4; j++) sa6->sin6_addr.s6_addr[j] = sample->agent_addr.address.ip_v6.s6_addr[j];
+    memcpy(sa6->sin6_addr.s6_addr, sample->agent_addr.address.ip_v6.s6_addr, 16);
   }
 #endif
 

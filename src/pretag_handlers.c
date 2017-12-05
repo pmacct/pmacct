@@ -2992,7 +2992,7 @@ int PT_map_index_fdata_ip_handler(struct id_entry *e, pm_hash_serial_t *hash_ser
 #if defined ENABLE_IPV6
     else if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V6) {
       e->key.agent_ip.a.family = AF_INET6;
-      for (j = 0; j < 4; j++) e->key.agent_ip.a.address.ipv6.s6_addr[j] = sample->agent_addr.address.ip_v6.s6_addr[j];
+      memcpy(e->key.agent_ip.a.address.ipv6.s6_addr, sample->agent_addr.address.ip_v6.s6_addr, 16);
     }
 #endif 
   }

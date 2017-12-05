@@ -426,7 +426,7 @@ u_int32_t getAddress(SFSample *sample, SFLAddress *address)
     address->address.ip_v4.s_addr = getData32_nobswap(sample);
   else {
 #if defined ENABLE_IPV6
-    memcpy(&address->address.ip_v6.s6_addr, sample->datap, 16);
+    memcpy(address->address.ip_v6.s6_addr, sample->datap, 16);
 #endif
     skipBytes(sample, 16);
   }
