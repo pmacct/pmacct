@@ -37,7 +37,7 @@ void usage_pmbgp(char *prog)
   printf("%s %s (%s)\n", PMBGP_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
   printf("Usage: %s [options] [query]\n\n", prog);
   printf("Query options:\n");
-  printf("  -a\tIP address to look up\n");
+  printf("  -a\tIP address/prefix to look up\n");
   printf("  -d\tRoute Distinguisher to look up\n");
   printf("  -r\tBGP peer to look up\n");
   printf("  -R\tTCP port of the BGP peer (for BGP through NAT/proxy scenarios)\n");
@@ -63,7 +63,7 @@ void version_pmbgp(char *prog)
 int main(int argc,char **argv)
 {
   char address_str[SRVBUFLEN], peer_str[SRVBUFLEN], rd_str[SRVBUFLEN], port_str[SRVBUFLEN];
-  char *req_str = NULL, *req_type_str = NULL, *rep_str = NULL;
+  char *req_str = NULL, *req_type_str = NULL, *rep_str = NULL, *pfx_delim = NULL;
   char *zmq_host_str_ptr, zmq_host_str[SRVBUFLEN], default_zmq_host_str[] = "127.0.0.1";
   int ret, zmq_port = 0, default_zmq_port = 17900, results = 0, query_type = 0, idx = 0;
   u_int16_t peer_port;
@@ -82,6 +82,8 @@ int main(int argc,char **argv)
   memset(port_str, 0, sizeof(port_str));
   memset(zmq_host_str, 0, sizeof(zmq_host_str));
   memset(&zmq_host, 0, sizeof(zmq_host));
+  memset(&address_ha, 0, sizeof(address_ha));
+  memset(&peer_ha, 0, sizeof(peer_ha));
 
   while (!errflag && ((cp = getopt(argc, argv, ARGS_PMBGP)) != -1)) {
     switch (cp) {
@@ -165,8 +167,13 @@ int main(int argc,char **argv)
       }
     }
 
+    /* Simplified validation: only IP address part */
+    pfx_delim = strchr(address_str, '/');
+    if (pfx_delim) (*pfx_delim) = '\0'; 
     str_to_addr(address_str, &address_ha);
-    if (address_ha.family) json_object_set_new_nocheck(req_obj, "ip_address", json_string(address_str));
+    if (pfx_delim) (*pfx_delim) = '/'; 
+
+    if (address_ha.family) json_object_set_new_nocheck(req_obj, "ip_prefix", json_string(address_str));
     else {
       printf("ERROR: invalid -a value. Exiting ..\n");
       exit(1);

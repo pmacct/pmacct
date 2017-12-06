@@ -389,8 +389,8 @@ int bgp_lg_daemon_decode_query_type_json(struct p_zmq_sock *sock, struct bgp_lg_
 int bgp_lg_daemon_decode_query_ip_lookup_json(struct p_zmq_sock *sock, struct bgp_lg_req_ipl_data *req) 
 {
   json_error_t req_err;
-  json_t *req_obj, *peer_ip_src_json, *bgp_port_json, *ip_address_json, *rd_json;
-  const char *peer_ip_src_str, *ip_address_str, *rd_str;
+  json_t *req_obj, *peer_ip_src_json, *bgp_port_json, *ip_prefix_json, *rd_json;
+  const char *peer_ip_src_str, *ip_prefix_str, *rd_str;
   char *req_str;
   int ret = SUCCESS, default_timeout = -1, query_timeout = 0;
   struct rd_as4 *rd_as4_ptr; 
@@ -452,22 +452,22 @@ int bgp_lg_daemon_decode_query_ip_lookup_json(struct p_zmq_sock *sock, struct bg
         json_decref(peer_ip_src_json);
       }
 
-      ip_address_json = json_object_get(req_obj, "ip_address");
-      if (ip_address_json == NULL) {
-	Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_json: no 'ip_address' element.\n", config.name);
+      ip_prefix_json = json_object_get(req_obj, "ip_prefix");
+      if (ip_prefix_json == NULL) {
+	Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_json: no 'ip_prefix' element.\n", config.name);
 	ret = ERR;
 	goto exit_lane;
       }
       else {
-	ip_address_str = json_string_value(ip_address_json);
-	str2prefix(ip_address_str, &req->pref);
+	ip_prefix_str = json_string_value(ip_prefix_json);
+	str2prefix(ip_prefix_str, &req->pref);
 	if (!req->pref.family) {
-	  Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_json(): bogus 'ip_address' element.\n", config.name);
+	  Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_json(): bogus 'ip_prefix' element.\n", config.name);
 	  ret = ERR;
 	  goto exit_lane;
 	}
 
-        json_decref(ip_address_json);
+        json_decref(ip_prefix_json);
       }
 
       rd_json = json_object_get(req_obj, "rd");
