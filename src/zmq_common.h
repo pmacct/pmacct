@@ -47,6 +47,11 @@ struct p_zmq_zap {
   char password[SHORTBUFLEN];
 };
 
+struct p_zmq_router_worker {
+  void **threads;
+  void (*func)(void *, void *);
+};
+
 struct p_zmq_host {
   void *ctx;
   struct p_zmq_zap zap;
@@ -54,7 +59,7 @@ struct p_zmq_host {
 
   struct p_zmq_sock sock;
   struct p_zmq_sock sock_inproc;
-  void (*router_worker_func)(void *, void *);
+  struct p_zmq_router_worker router_worker;
 
   u_int8_t topic;
   int hwm;

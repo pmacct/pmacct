@@ -525,15 +525,15 @@ void p_zmq_proxy_setup(struct p_zmq_host *zmq_host)
   }
 }
 
-void p_zmq_router_backend_setup(struct p_zmq_host *zmq_host, int threads, char *inproc_str)
+void p_zmq_router_backend_setup(struct p_zmq_host *zmq_host, int thread_nbr, char *inproc_str)
 {
   int idx;
 
   p_zmq_dealer_inproc_setup(zmq_host, inproc_str);
+  zmq_host->router_worker.threads = malloc(sizeof(void *) * thread_nbr);
 
-  for (idx = 0; idx < threads; idx++) {
-    // XXX: we should save reference to the thread handler
-    void *thread = zmq_threadstart(&p_zmq_router_worker, zmq_host);
+  for (idx = 0; idx < thread_nbr; idx++) {
+    zmq_host->router_worker.threads[thread_nbr] = zmq_threadstart(&p_zmq_router_worker, zmq_host);
   }
 
   p_zmq_proxy_setup(zmq_host);
@@ -561,5 +561,5 @@ void p_zmq_router_worker(void *zh)
     exit(1);
   }
 
-  zmq_host->router_worker_func(zmq_host, &sock);
+  zmq_host->router_worker.func(zmq_host, &sock);
 }

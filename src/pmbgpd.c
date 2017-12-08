@@ -291,7 +291,7 @@ void bgp_lg_daemon()
   Log(LOG_INFO, "INFO ( %s/core/lg ): Looking Glass listening on %s:%u\n", config.name, config.bgp_lg_ip, config.bgp_lg_port);
 
   // XXX: more encodings supported in future?
-  lg_host.router_worker_func = &bgp_lg_daemon_worker_json;
+  lg_host.router_worker.func = &bgp_lg_daemon_worker_json;
   p_zmq_router_backend_setup(&lg_host, config.bgp_lg_threads, inproc_str);
 }
 
