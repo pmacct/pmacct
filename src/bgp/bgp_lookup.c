@@ -848,6 +848,11 @@ int bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep *
   return ret;
 }
 
+int bgp_lg_daemon_get_peers(struct bgp_lg_rep *rep, int type)
+{
+  // XXX
+}
+
 void bgp_lg_rep_init(struct bgp_lg_rep *rep)
 {
   struct bgp_lg_rep_ipl_data *data, *next;

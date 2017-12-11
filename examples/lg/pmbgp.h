@@ -23,7 +23,7 @@
 #ifdef WITH_ZMQ
 
 /* defines */
-#define ARGS_PMBGP "hVa:d:r:R:z:Z:u:p:"
+#define ARGS_PMBGP "hVa:d:r:R:z:Z:u:p:g"
 #define PMBGP_USAGE_HEADER "pmacct BGP Looking Glass client, pmbgp"
 
 /* prototypes */

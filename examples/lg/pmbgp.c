@@ -36,15 +36,17 @@ void usage_pmbgp(char *prog)
 {
   printf("%s %s (%s)\n", PMBGP_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
   printf("Usage: %s [options] [query]\n\n", prog);
-  printf("Query options:\n");
+  printf("IP Lookup query options:\n");
   printf("  -a\tIP address/prefix to look up\n");
   printf("  -d\tRoute Distinguisher to look up\n");
   printf("  -r\tBGP peer to look up\n");
   printf("  -R\tTCP port of the BGP peer (for BGP through NAT/proxy scenarios)\n");
+  printf("Get Peers query options:\n");
+  printf("  -g\tGet the list of BGP peers at the Looking Glass\n");
   printf("General options:\n");
   printf("  -z\tLooking Glass IP address [default: 127.0.0.1]\n");
   printf("  -Z\tLooking Glass port [default: 17900]\n");
-  printf("  -u\tLooking glass username [default: none]\n");
+  printf("  -u\tLooking Glass username [default: none]\n");
   printf("  -p\tLooking Glass password [default: none]\n");
   printf("\n");
   printf("  -h\tShow this page\n");
@@ -74,7 +76,7 @@ int main(int argc,char **argv)
   /* getopt() stuff */
   extern char *optarg;
   extern int optind, opterr, optopt;
-  int errflag, cp;
+  int errflag, cp, ip_lookup_query, get_peers_query;
 
   memset(address_str, 0, sizeof(address_str));
   memset(rd_str, 0, sizeof(rd_str));
@@ -84,6 +86,8 @@ int main(int argc,char **argv)
   memset(&zmq_host, 0, sizeof(zmq_host));
   memset(&address_ha, 0, sizeof(address_ha));
   memset(&peer_ha, 0, sizeof(peer_ha));
+  ip_lookup_query = FALSE;
+  get_peers_query = FALSE;
 
   while (!errflag && ((cp = getopt(argc, argv, ARGS_PMBGP)) != -1)) {
     switch (cp) {
@@ -97,15 +101,22 @@ int main(int argc,char **argv)
       break;
     case 'a':
       strlcpy(address_str, optarg, sizeof(address_str));
+      ip_lookup_query = TRUE;
       break;
     case 'd':
       strlcpy(rd_str, optarg, sizeof(rd_str));
+      ip_lookup_query = TRUE;
       break;
     case 'r':
       strlcpy(peer_str, optarg, sizeof(peer_str));
+      ip_lookup_query = TRUE;
       break;
     case 'R':
       strlcpy(port_str, optarg, sizeof(port_str));
+      ip_lookup_query = TRUE;
+      break;
+    case 'g':
+      get_peers_query = TRUE;
       break;
     case 'z':
       strlcpy(zmq_host_str, optarg, sizeof(zmq_host_str));
@@ -127,7 +138,12 @@ int main(int argc,char **argv)
     }
   }
 
-  if (!strlen(address_str) || !strlen(peer_str)) {
+  if (ip_lookup_query && get_peers_query) {
+    printf("ERROR: IP Lookup and Get Peers queries are mutual exclusive. Please select only one. Exiting ..\n");
+    exit(1);
+  }
+
+  if (ip_lookup_query && (!strlen(address_str) || !strlen(peer_str))) {
     printf("ERROR: mandatory options, -a and/or -r, are not specified. Exiting ..\n");
     exit(1);
   }
@@ -138,58 +154,74 @@ int main(int argc,char **argv)
   if (!zmq_port) zmq_port = default_zmq_port;
 
   /* craft query */
-  {
-    json_t *req_obj = json_object();
+  if (ip_lookup_query) {
+    {
+      json_t *req_obj = json_object();
 
-    json_object_set_new_nocheck(req_obj, "query_type", json_integer(BGP_LG_QT_IP_LOOKUP));
-    req_type_str = json_dumps(req_obj, JSON_PRESERVE_ORDER);
-    json_decref(req_obj);
-  }
-
-  {
-    json_t *req_obj = json_object();
-
-    str_to_addr(peer_str, &peer_ha);
-    if (peer_ha.family) json_object_set_new_nocheck(req_obj, "peer_ip_src", json_string(peer_str));
-    else {
-      printf("ERROR: invalid -r value. Exiting ..\n");
-      exit(1);
+      json_object_set_new_nocheck(req_obj, "query_type", json_integer(BGP_LG_QT_IP_LOOKUP));
+      req_type_str = json_dumps(req_obj, JSON_PRESERVE_ORDER);
+      json_decref(req_obj);
     }
 
-    if (strlen(port_str)) {
-      int port_int;
+    {
+      json_t *req_obj = json_object();
 
-      port_int = atoi(port_str);
-      if (port_int > 0 && port_int <= 65535) json_object_set_new_nocheck(req_obj, "peer_ip_src_port", json_integer(port_int));
+      str_to_addr(peer_str, &peer_ha);
+      if (peer_ha.family) json_object_set_new_nocheck(req_obj, "peer_ip_src", json_string(peer_str));
       else {
-	printf("ERROR: invalid -R value. Exiting ..\n");
+        printf("ERROR: invalid -r value. Exiting ..\n");
+        exit(1);
+      }
+
+      if (strlen(port_str)) {
+	int port_int;
+
+	port_int = atoi(port_str);
+	if (port_int > 0 && port_int <= 65535) json_object_set_new_nocheck(req_obj, "peer_ip_src_port", json_integer(port_int));
+	else {
+	  printf("ERROR: invalid -R value. Exiting ..\n");
+	  exit(1);
+	}
+      }
+
+      /* Simplified validation: only IP address part */
+      pfx_delim = strchr(address_str, '/');
+      if (pfx_delim) (*pfx_delim) = '\0'; 
+      str_to_addr(address_str, &address_ha);
+      if (pfx_delim) (*pfx_delim) = '/'; 
+
+      if (address_ha.family) json_object_set_new_nocheck(req_obj, "ip_prefix", json_string(address_str));
+      else {
+	printf("ERROR: invalid -a value. Exiting ..\n");
 	exit(1);
       }
+
+      /* no specific validation done for the RD */
+      if (strlen(rd_str)) json_object_set_new_nocheck(req_obj, "rd", json_string(rd_str));
+
+      req_str = json_dumps(req_obj, JSON_PRESERVE_ORDER);
+      json_decref(req_obj);
     }
+  }
+  else if (get_peers_query) {
+    {
+      json_t *req_obj = json_object();
 
-    /* Simplified validation: only IP address part */
-    pfx_delim = strchr(address_str, '/');
-    if (pfx_delim) (*pfx_delim) = '\0'; 
-    str_to_addr(address_str, &address_ha);
-    if (pfx_delim) (*pfx_delim) = '/'; 
-
-    if (address_ha.family) json_object_set_new_nocheck(req_obj, "ip_prefix", json_string(address_str));
-    else {
-      printf("ERROR: invalid -a value. Exiting ..\n");
-      exit(1);
+      json_object_set_new_nocheck(req_obj, "query_type", json_integer(BGP_LG_QT_GET_PEERS));
+      req_type_str = json_dumps(req_obj, JSON_PRESERVE_ORDER);
+      json_decref(req_obj);
     }
-
-    /* no specific validation done for the RD */
-    if (strlen(rd_str)) json_object_set_new_nocheck(req_obj, "rd", json_string(rd_str));
-
-    req_str = json_dumps(req_obj, JSON_PRESERVE_ORDER);
-    json_decref(req_obj);
   }
 
   pmbgp_zmq_req_setup(&zmq_host, zmq_host_str_ptr, zmq_port);
 
-  pmbgp_zmq_sendmore_str(&zmq_host.sock, req_type_str);
-  pmbgp_zmq_send_str(&zmq_host.sock, req_str);
+  if (req_str) {
+    pmbgp_zmq_sendmore_str(&zmq_host.sock, req_type_str);
+    pmbgp_zmq_send_str(&zmq_host.sock, req_str);
+  }
+  else {
+    pmbgp_zmq_send_str(&zmq_host.sock, req_type_str);
+  }
 
   /* query type + results */
   rep_str = pmbgp_zmq_recv_str(&zmq_host.sock);
@@ -233,7 +265,9 @@ int main(int argc,char **argv)
   for (idx = 0; idx < results; idx++) {
     rep_str = pmbgp_zmq_recv_str(&zmq_host.sock);
     if (rep_str) {
-      if (query_type == BGP_LG_QT_IP_LOOKUP) printf("%s\n", rep_str);
+      if (query_type == BGP_LG_QT_IP_LOOKUP ||
+	  query_type == BGP_LG_QT_GET_PEERS)
+	printf("%s\n", rep_str);
       free(rep_str);
     }
   }
