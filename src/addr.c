@@ -687,9 +687,9 @@ u_int32_t addr_hash(struct host_addr *ha, u_int32_t modulo)
   else if (ha->family == AF_INET6) {
     u_int32_t a, b, c;
 
-    memcpy(&a, ha->address.ipv6.s6_addr[4], 4);
-    memcpy(&b, ha->address.ipv6.s6_addr[8], 4);
-    memcpy(&c, ha->address.ipv6.s6_addr[12], 4);
+    memcpy(&a, &ha->address.ipv6.s6_addr[4], 4);
+    memcpy(&b, &ha->address.ipv6.s6_addr[8], 4);
+    memcpy(&c, &ha->address.ipv6.s6_addr[12], 4);
     val = jhash_3words(a, b, c, 0);
   }
 #endif
@@ -709,8 +709,8 @@ u_int32_t addr_port_hash(struct host_addr *ha, u_int16_t port, u_int32_t modulo)
   else if (ha->family == AF_INET6) {
     u_int32_t a, b;
 
-    memcpy(&a, ha->address.ipv6.s6_addr[8], 4);
-    memcpy(&b, ha->address.ipv6.s6_addr[12], 4);
+    memcpy(&a, &ha->address.ipv6.s6_addr[8], 4);
+    memcpy(&b, &ha->address.ipv6.s6_addr[12], 4);
     val = jhash_3words(port, a, b, 0);
   }
 #endif
