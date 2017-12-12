@@ -87,7 +87,8 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
       break;
     case BGP_NOTIFICATION:
       {
-	u_int8_t res_maj = 0, res_min = 0, shutdown_msglen = (BGP_NOTIFY_CEASE_SM_LEN + 1);
+	u_int16_t shutdown_msglen = (BGP_NOTIFY_CEASE_SM_LEN + 1);
+	u_int8_t res_maj = 0, res_min = 0;
         char shutdown_msg[shutdown_msglen];
 
 	memset(shutdown_msg, 0, shutdown_msglen);
@@ -490,7 +491,8 @@ int bgp_write_notification_msg(char *msg, int msglen, u_int8_t n_major, u_int8_t
 {
   struct bgp_notification *bn_reply = (struct bgp_notification *) msg;
   struct bgp_notification_shutdown_msg *bnsm_reply;
-  int ret = FALSE, shutdown_msglen;
+  u_int16_t shutdown_msglen;
+  int ret = FALSE;
   char *reply_msg_ptr;
 
   if (bn_reply && msglen >= BGP_MIN_NOTIFICATION_MSG_SIZE) {
@@ -529,7 +531,7 @@ int bgp_write_notification_msg(char *msg, int msglen, u_int8_t n_major, u_int8_t
   return ret;
 }
 
-int bgp_parse_notification_msg(struct bgp_msg_data *bmd, char *pkt, u_int8_t *res_maj, u_int8_t *res_min, char *shutdown_msg, u_int8_t shutdown_msglen)
+int bgp_parse_notification_msg(struct bgp_msg_data *bmd, char *pkt, u_int8_t *res_maj, u_int8_t *res_min, char *shutdown_msg, u_int16_t shutdown_msglen)
 {
   struct bgp_peer *peer = bmd->peer;
   struct bgp_notification *bn = (struct bgp_notification *) pkt;

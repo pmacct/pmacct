@@ -33,7 +33,7 @@ EXT int bgp_marker_check(struct bgp_header *, int);
 EXT int bgp_parse_msg(struct bgp_peer *, time_t, int);
 EXT int bgp_parse_open_msg(struct bgp_msg_data *, char *, time_t, int);
 EXT int bgp_parse_update_msg(struct bgp_msg_data *, char *);
-EXT int bgp_parse_notification_msg(struct bgp_msg_data *, char *, u_int8_t *, u_int8_t *, char *, u_int8_t);
+EXT int bgp_parse_notification_msg(struct bgp_msg_data *, char *, u_int8_t *, u_int8_t *, char *, u_int16_t);
 EXT int bgp_write_keepalive_msg(char *);
 EXT int bgp_write_open_msg(char *, char *, int, struct bgp_peer *);
 EXT int bgp_write_notification_msg(char *, int, u_int8_t, u_int8_t, char *);
