@@ -138,9 +138,10 @@ struct bgp_misc_structs {
   struct p_kafka_host *msglog_kafka_host;
 #endif
   
+  void *peers;
   int max_peers;
-  struct bgp_peer_cache_bucket *peers_cache;
-  struct bgp_peer_cache_bucket *peers_port_cache;
+  void *peers_cache;
+  void *peers_port_cache;
 
   char *neighbors_file;
   char *dump_file;
@@ -290,6 +291,11 @@ struct bgp_lg_rep_ipl_data {
   struct prefix *pref;
   struct bgp_info *info;
   struct bgp_lg_rep_ipl_data *next;
+};
+
+struct bgp_lg_rep_gp_data {
+  struct bgp_peer *peer;
+  struct bgp_lg_rep_gp_data *next;
 };
 
 #include "bgp_msg.h"

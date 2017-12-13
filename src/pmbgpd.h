@@ -46,7 +46,7 @@ EXT int bgp_lg_daemon_decode_query_ip_lookup_json(struct p_zmq_sock *, struct bg
 EXT void bgp_lg_daemon_encode_reply_ip_lookup_json(struct p_zmq_sock *, struct bgp_lg_rep *, int);
 EXT char *bgp_lg_daemon_encode_reply_ip_lookup_data_json(struct bgp_lg_rep_ipl_data *);
 EXT void bgp_lg_daemon_encode_reply_get_peers_json(struct p_zmq_sock *, struct bgp_lg_rep *, int);
-EXT char *bgp_lg_daemon_encode_reply_get_peers_data_json(struct bgp_lg_rep_ipl_data *);
+EXT char *bgp_lg_daemon_encode_reply_get_peers_data_json(struct bgp_lg_rep_gp_data *);
 EXT void bgp_lg_daemon_encode_reply_unknown_json(struct p_zmq_sock *);
 #endif
 

@@ -1233,6 +1233,7 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_kafka_host = &bgp_daemon_msglog_kafka_host;
 #endif
   bms->max_peers = config.nfacctd_bgp_max_peers;
+  bms->peers = peers;
   bms->peers_cache = peers_cache;
   bms->peers_port_cache = peers_port_cache;
   bms->neighbors_file = config.nfacctd_bgp_neighbors_file; 

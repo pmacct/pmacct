@@ -300,7 +300,7 @@ void bgp_lg_daemon_worker_json(void *zh, void *zs)
   struct p_zmq_host *lg_host = (struct p_zmq_host *) zh;
   struct p_zmq_sock *sock = zs;
   struct bgp_lg_req req;
-  struct bgp_lg_rep rep;
+  struct bgp_lg_rep ipl_rep, gp_rep;
   int ret;
 
   if (!lg_host || !sock) {
@@ -308,7 +308,8 @@ void bgp_lg_daemon_worker_json(void *zh, void *zs)
     exit(1);
   }
 
-  memset(&rep, 0, sizeof(rep));
+  memset(&ipl_rep, 0, sizeof(ipl_rep));
+  memset(&gp_rep, 0, sizeof(gp_rep));
 
   for (;;) {
     memset(&req, 0, sizeof(req));
@@ -323,16 +324,16 @@ void bgp_lg_daemon_worker_json(void *zh, void *zs)
 	memset(req.data, 0, sizeof(struct bgp_lg_req_ipl_data));
         ret = bgp_lg_daemon_decode_query_ip_lookup_json(sock, req.data);
 
-        bgp_lg_rep_init(&rep);
-        if (!ret) ret = bgp_lg_daemon_ip_lookup(req.data, &rep, FUNC_TYPE_BGP); 
+        bgp_lg_rep_ipl_init(&ipl_rep);
+        if (!ret) ret = bgp_lg_daemon_ip_lookup(req.data, &ipl_rep, FUNC_TYPE_BGP); 
 
-        bgp_lg_daemon_encode_reply_ip_lookup_json(sock, &rep, ret);
+        bgp_lg_daemon_encode_reply_ip_lookup_json(sock, &ipl_rep, ret);
       }
       break;
     case BGP_LG_QT_GET_PEERS:
-      bgp_lg_rep_init(&rep);
-      ret = bgp_lg_daemon_get_peers(&rep, FUNC_TYPE_BGP);
-      bgp_lg_daemon_encode_reply_get_peers_json(sock, &rep, ret);
+      bgp_lg_rep_gp_init(&gp_rep);
+      ret = bgp_lg_daemon_get_peers(&gp_rep, FUNC_TYPE_BGP);
+      bgp_lg_daemon_encode_reply_get_peers_json(sock, &gp_rep, ret);
 
       break;
     case BGP_LG_QT_UNKNOWN:
@@ -586,20 +587,71 @@ void bgp_lg_daemon_encode_reply_get_peers_json(struct p_zmq_sock *sock, struct b
   json_object_set_new_nocheck(rep_results_obj, "results", json_integer(rep->results));
   json_object_set_new_nocheck(rep_results_obj, "query_type", json_integer(BGP_LG_QT_GET_PEERS));
 
+  if (!rep->results && res) {
+    switch (res) {
+    case BGP_LOOKUP_ERR:
+      json_object_set_new_nocheck(rep_results_obj, "text", json_string("lookup error"));
+      break;
+    default:
+      json_object_set_new_nocheck(rep_results_obj, "text", json_string("unknown lookup error"));
+      break;
+    }
+  }
+
   rep_results_str = json_dumps(rep_results_obj, JSON_PRESERVE_ORDER);
   json_decref(rep_results_obj);
   
   if (!rep->results) p_zmq_send_str(sock, rep_results_str);
   else {
-    // XXX
+    struct bgp_lg_rep_gp_data *data;
+    json_t *rep_data_obj;
+    char *rep_data_str;
+    u_int32_t idx;
+
+    p_zmq_sendmore_str(sock, rep_results_str);
+
+    for (idx = 0, data = rep->data; idx < rep->results; idx++) {
+      rep_data_str = bgp_lg_daemon_encode_reply_get_peers_data_json(data);
+
+      if (rep_data_str) {
+        if (idx == (rep->results - 1)) p_zmq_send_str(sock, rep_data_str);
+        else p_zmq_sendmore_str(sock, rep_data_str);
+
+        free(rep_data_str);
+      }
+
+      data = data->next;
+    }
   }
 
   if (rep_results_str) free(rep_results_str);
 }
 
-char *bgp_lg_daemon_encode_reply_get_peers_data_json(struct bgp_lg_rep_ipl_data *rep_data)
+char *bgp_lg_daemon_encode_reply_get_peers_data_json(struct bgp_lg_rep_gp_data *rep_data)
 {
-  // XXX
+  struct bgp_misc_structs *bms;
+  char ip_address[INET6_ADDRSTRLEN], *data_str = NULL;
+  json_t *obj = json_object();
+
+  if (rep_data) {
+    struct bgp_peer *peer = rep_data->peer;
+
+    bms = bgp_select_misc_db(peer->type);
+    if (!bms) return NULL;
+
+    addr_to_str(ip_address, &peer->addr);
+    json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
+
+    addr_to_str(ip_address, &peer->id);
+    json_object_set_new_nocheck(obj, "peer_id", json_string(ip_address));
+
+    json_object_set_new_nocheck(obj, "peer_tcp_port", json_integer((json_int_t)peer->tcp_port));
+    json_object_set_new_nocheck(obj, "peer_as", json_integer((json_int_t)peer->as));
+
+    data_str = compose_json_str(obj); 
+  }
+
+  return data_str;
 }
 
 void bgp_lg_daemon_encode_reply_unknown_json(struct p_zmq_sock *sock)

@@ -808,7 +808,7 @@ int bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep *
 			    &result, &info);
 
       if (result) {
-	bgp_lg_rep_data_add(rep, AFI_IP, safi, &result->p, info);
+	bgp_lg_rep_ipl_data_add(rep, AFI_IP, safi, &result->p, info);
 	ret = BGP_LOOKUP_OK;
       }
       else ret = BGP_LOOKUP_NOPREFIX; 
@@ -821,7 +821,7 @@ int bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep *
 			    &result, &info);
 
       if (result) {
-	bgp_lg_rep_data_add(rep, AFI_IP6, safi, &result->p, info);
+	bgp_lg_rep_ipl_data_add(rep, AFI_IP6, safi, &result->p, info);
 	ret = BGP_LOOKUP_OK;
       }
       else ret = BGP_LOOKUP_NOPREFIX; 
@@ -850,10 +850,23 @@ int bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep *
 
 int bgp_lg_daemon_get_peers(struct bgp_lg_rep *rep, int type)
 {
-  // XXX
+  struct bgp_misc_structs *bms;
+  struct bgp_peer *peer, *peers;
+  int idx, ret = BGP_LOOKUP_OK;
+
+  bms = bgp_select_misc_db(type);
+
+  if (!rep || !bms || !bms->peers) return BGP_LOOKUP_ERR;
+
+  for (peers = bms->peers, idx = 0; idx < bms->max_peers; idx++) {
+    peer = &peers[idx]; 
+    if (peer->fd) bgp_lg_rep_gp_data_add(rep, peer);
+  }
+
+  return ret;
 }
 
-void bgp_lg_rep_init(struct bgp_lg_rep *rep)
+void bgp_lg_rep_ipl_init(struct bgp_lg_rep *rep)
 {
   struct bgp_lg_rep_ipl_data *data, *next;
   u_int32_t idx;
@@ -871,7 +884,7 @@ void bgp_lg_rep_init(struct bgp_lg_rep *rep)
   memset(rep, 0, sizeof(struct bgp_lg_rep));
 }
 
-void bgp_lg_rep_data_add(struct bgp_lg_rep *rep, afi_t afi, safi_t safi, struct prefix *pref, struct bgp_info *info)
+void bgp_lg_rep_ipl_data_add(struct bgp_lg_rep *rep, afi_t afi, safi_t safi, struct prefix *pref, struct bgp_info *info)
 {
   struct bgp_lg_rep_ipl_data *data, *last;
   u_int32_t idx;
@@ -894,6 +907,49 @@ void bgp_lg_rep_data_add(struct bgp_lg_rep *rep, afi_t afi, safi_t safi, struct 
   data->next = NULL;
 
   if (last) last->next = data; 
+  else rep->data = data;
+
+  rep->results++;
+}
+
+void bgp_lg_rep_gp_init(struct bgp_lg_rep *rep)
+{
+  struct bgp_lg_rep_gp_data *data, *next;
+  u_int32_t idx;
+
+  assert(rep);
+
+  for (idx = 0, data = rep->data; idx < rep->results; idx++) {
+    assert(data);
+
+    next = data->next;
+    free(data);
+    data = next;
+  }
+
+  memset(rep, 0, sizeof(struct bgp_lg_rep));
+}
+
+void bgp_lg_rep_gp_data_add(struct bgp_lg_rep *rep, struct bgp_peer *peer)
+{
+  struct bgp_lg_rep_gp_data *data, *last;
+  u_int32_t idx;
+
+  assert(rep);
+
+  for (idx = 0, data = rep->data, last = NULL; idx < rep->results; idx++) {
+    last = data;
+    data = data->next;
+  }
+
+  data = malloc(sizeof(struct bgp_lg_rep_gp_data));
+
+  assert(data);
+
+  data->peer = peer;
+  data->next = NULL;
+
+  if (last) last->next = data;
   else rep->data = data;
 
   rep->results++;
