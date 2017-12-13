@@ -2009,16 +2009,16 @@ following command:
 gdb> bt
 
 Optionally, especially if the issue can be easily reproduced, the daemon can
-be re-configured for compiling with the --debug flag so to produce extra info
-suitable for troubleshooting. 
+be re-configured for compiling with the --enable-debug flag so to produce
+extra info suitable for troubleshooting. 
 
 c) In case of (suspected) memory leaks, the advice is to: 1) re-compile pmacct
-with "./configure --debug <any other flags already in use>"; --debug sets as
-CFLAGS -O0 -g -Wall where especially -O0 is capital since it disables any code
-optimizations the compiler may introduce; 2) run the resulting daemon under
-valgrind, ie. "valgrind --leak-check=yes <pmacct command-line>". A memory leak
-is confirmed if the amount of "definitely lost" bytes keeps increasing over
-time. 
+with "./configure --enable-debug <other flags already in use>"; --enable-debug
+sets as CFLAGS -O0 -g -Wall where especially -O0 is capital since it disables
+any code optimizations the compiler may introduce; 2) run the resulting daemon
+under valgrind, ie. "valgrind --leak-check=yes <pmacct command-line>". A memory
+leak is confirmed if the amount of "definitely lost" bytes keeps increasing
+over time. 
 
 d) In the two cases of nfacctd/sfacctd or nfprobe/sfprobe not showing signs of
 input/output data: 1) check with tcpdump, ie. "tcpdump -i <interface> -n port
