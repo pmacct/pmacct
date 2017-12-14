@@ -41,8 +41,10 @@ void usage_pmbgp(char *prog)
   printf("  -d\tRoute Distinguisher to look up\n");
   printf("  -r\tBGP peer to look up\n");
   printf("  -R\tTCP port of the BGP peer (for BGP through NAT/proxy scenarios)\n");
+  printf("\n");
   printf("Get Peers query options:\n");
   printf("  -g\tGet the list of BGP peers at the Looking Glass\n");
+  printf("\n");
   printf("General options:\n");
   printf("  -z\tLooking Glass IP address [default: 127.0.0.1]\n");
   printf("  -Z\tLooking Glass port [default: 17900]\n");
@@ -51,15 +53,11 @@ void usage_pmbgp(char *prog)
   printf("\n");
   printf("  -h\tShow this page\n");
   printf("  -V\tPrint version and exit\n");
-  printf("\n");
-  printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);
 }
 
 void version_pmbgp(char *prog)
 {
   printf("%s %s (%s)\n", PMBGP_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
-  printf("\n");
-  printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);
 }
 
 int main(int argc,char **argv)
@@ -138,13 +136,19 @@ int main(int argc,char **argv)
     }
   }
 
+  if (!ip_lookup_query && !get_peers_query) {
+    printf("ERROR: no query specificed. Exiting ..\n");
+    usage_pmbgp(argv[0]);
+    exit(1);
+  }
+
   if (ip_lookup_query && get_peers_query) {
     printf("ERROR: IP Lookup and Get Peers queries are mutual exclusive. Please select only one. Exiting ..\n");
     exit(1);
   }
 
   if (ip_lookup_query && (!strlen(address_str) || !strlen(peer_str))) {
-    printf("ERROR: mandatory options, -a and/or -r, are not specified. Exiting ..\n");
+    printf("ERROR: mandatory options for IP Lookup query (-a,  -r) are not specified. Exiting ..\n");
     exit(1);
   }
   
