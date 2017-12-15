@@ -181,7 +181,7 @@ int main(int argc,char **argv)
 	int port_int;
 
 	port_int = atoi(port_str);
-	if (port_int > 0 && port_int <= 65535) json_object_set_new_nocheck(req_obj, "peer_ip_src_port", json_integer(port_int));
+	if (port_int > 0 && port_int <= 65535) json_object_set_new_nocheck(req_obj, "peer_tcp_port", json_integer(port_int));
 	else {
 	  printf("ERROR: invalid -R value. Exiting ..\n");
 	  exit(1);

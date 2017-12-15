@@ -115,7 +115,7 @@ def main():
 			queryDataObj['rd'] = queryIplRd
 
 		if len(queryIplPeerPort):
-			queryDataObj['peer_ip_src_port'] = queryIplPeerPort
+			queryDataObj['peer_tcp_port'] = queryIplPeerPort
 
 		queryTypeJsonObj = json.dumps(queryTypeObj)
 		queryDataJsonObj = json.dumps(queryDataObj)

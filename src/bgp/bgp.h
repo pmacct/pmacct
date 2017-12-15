@@ -273,10 +273,15 @@ struct bgp_lg_req {
   void *data;
 };
 
+struct bgp_lg_rep_data {
+  void *ptr;
+  struct bgp_lg_rep_data *next;
+};
+
 struct bgp_lg_rep {
   u_int32_t type;
   u_int32_t results;
-  void *data;
+  struct bgp_lg_rep_data *data;
 };
 
 struct bgp_lg_req_ipl_data {
@@ -290,12 +295,10 @@ struct bgp_lg_rep_ipl_data {
   safi_t safi;
   struct prefix *pref;
   struct bgp_info *info;
-  struct bgp_lg_rep_ipl_data *next;
 };
 
 struct bgp_lg_rep_gp_data {
   struct bgp_peer *peer;
-  struct bgp_lg_rep_gp_data *next;
 };
 
 #include "bgp_msg.h"
