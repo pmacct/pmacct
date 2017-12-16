@@ -1,0 +1,57 @@
+Following are documented the up-to-date BGP Looking Glass server request/reply
+formats. When upgrading from an earlier version, you may want to check out the
+UPGRADE document to verify if any impacting changes to the message formats were
+introduced. See CONFIG-KEYS and the 'Example: querying the BGP daemon via the
+Looking Glass server' section in QUICKSTART for more info.
+
+Query Type 1: IP address/prefix lookup
+
+* Request format:
+  {
+    "query_type": 1
+  }
+
+  Followed by the IP address/prefix to look up:
+  {
+    "ip_prefix": <IP prefix>,
+    "rd": <Route Distingiusher>, [OPTIONAL]
+    "peer_ip_src": <Peer IP address>,
+    "peer_tcp_port": <BGP peer TCP port> [OPTIONAL]
+  }
+
+* Reply format:
+  {
+    "query_type": 1,
+    "results": <# of matching IP Prefixes>,
+  }
+
+  Followed by one JSON object per matching IP address/prefix, ie.: 
+  {
+    "peer_ip_src": <Peer IP address>,
+    "event_type": "lgass",
+    "afi": <afi>,
+    "safi": <safi>,
+    "ip_prefix": <IP prefix>,
+    <BGP NLRI, attributes, ..>
+  }
+
+Query Type 2: Get Peers
+
+* Request format:
+  { 
+    "query_type": 2
+  } 
+
+* Reply format:
+  {
+    "query_type": 2,
+    "results": <# of BGP peers>
+  }
+
+  Followed by one JSON object per connected BGP peer:
+  {
+    "peer_ip_src": <Peer IP address>,
+    "peer_id": <Peer BGP Router-ID>,
+    "peer_tcp_port": <BGP session TCP port>,
+    "peer_as": <Peer AS number>
+  }

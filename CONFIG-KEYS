@@ -2034,7 +2034,7 @@ DESC:           Enables the BMP daemon thread. BMP, BGP Monitoring Protocol, can
 DEFAULT:        false
 
 KEY:		[ bgp_daemon_ip | bmp_daemon_ip ] [GLOBAL]
-DESC:		Binds the BGP/BMP daemon to a specific interface. Expects as value an IPv4 address. For the
+DESC:		Binds the BGP/BMP daemon to a specific interface. Expects as value an IP address. For the
 		BGP daemon the same is value is presented as BGP Router-ID (read more about the BGP Router-ID
 		selection process at the bgp_daemon_id config directive description). Setting this directive
 		is highly adviced.
@@ -2055,8 +2055,8 @@ DESC:           Defines the BGP Local AS to the supplied value. By default, no v
 DEFAULT:        none
 
 KEY:		[ bgp_daemon_port | bmp_daemon_port ] [GLOBAL] 
-DESC:		Binds the BGP/BMP daemon to a port different from the standard port. Default port for BGP is
-		179/tcp; default port for BMP is 1790.
+DESC:		Makes the BGP/BMP daemon listen to a port different from the standard port. Default port for
+		BGP is 179/tcp; default port for BMP is 1790.
 DEFAULT:	bgp_daemon_port: 179; bmp_daemon_port: 1790
 
 KEY:		[ bgp_daemon_ipprec | bmp_daemon_ipprec ] [GLOBAL]
@@ -2389,6 +2389,39 @@ DESC:           Defines the full pathname to pointer(s) to latest file(s). Dynam
 		supported variables; time-based variables are not allowed. Update of the latest pointer
 		is done evaluating files modification time. See also print_latest_file for examples.
 DEFAULT:        none
+
+KEY:		bgp_daemon_lg [GLOBAL]
+VALUES:		[ true | false ]
+DESC:		Applies to pmbgpd, enables the BGP Looking Glass server allowing to perform queries,
+		ie. lookup IP addresses/prefixes or get the list of BGP peers, against available BGP
+		RIBs. The server is asyncronous and uses ZeroMQ as transport layer to serve incoming
+		queries. Sample C/Python LG clients are available in 'examples/lg'. Sample LG server
+		config is available in QUICKSTART. Request/Reply Looking Glass formats are documented
+		in 'docs/LOOKING_GLASS_FORMAT'.
+DEFAULT:	false
+
+KEY:            bgp_daemon_lg_ip [GLOBAL]
+DESC:           Binds the BGP Looking Glass server to a specific interface. Expects as value an IP
+		address.
+DEFAULT:        0.0.0.0
+
+KEY:            bgp_daemon_lg_port [GLOBAL]
+DESC:           Makes the BGP Looking Glass server listen to a specific port.
+DEFAULT:        17900
+
+KEY:		bgp_daemon_lg_user [GLOBAL]
+DESC:		Enables plain username/password authentication in the BGP Looking Glass server. This
+		directive sets the expected username. By default authentication is disabled.
+DEFAULT:	none
+
+KEY:		bgp_daemon_lg_passwd [GLOBAL]
+DESC:		Enables plain username/password authentication in the BGP Looking Glass server. This
+		directive sets the expected password. By default authentication is disabled.
+DEFAULT:	none
+
+KEY:		bgp_daemon_lg_threads [GLOBAL]
+DESC:		Defines the amount of threads of the BGP Looking Glass to serve incoming queries.
+DEFAULT:	8
 
 KEY:		isis_daemon [GLOBAL]
 VALUES:		[ true | false ]

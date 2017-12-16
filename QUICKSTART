@@ -1365,10 +1365,37 @@ to make the above example work against a RabbitMQ broker.
 A sample of both the BGP msglog and dump formats are captured in the following
 document: docs/MSGLOG_DUMP_FORMATS
 
+XIVg. Example: querying the BGP daemon via the Looking Glass server.
+Starting with release 1.7.1 pmbgpd, the pmacct BGP standalone daemon, includes
+a Looking Glass server to query available BGP RIBs. The server is asyncronous
+and uses ZeroMQ as transport layer to serve incoming queries. The LG server can
+be configured as follows:
 
-XIVg. BGP daemon implementation concluding notes
+bgp_daemon_lg: true
+bgp_daemon_lg_user: pmacct
+bgp_daemon_lg_passwd: arealsmartpwd 
+
+This configuration will enable plain authentication and will make the server
+listen on all interfaces on port 17900/TCP. Following an example of querying
+with the Python client available in 'examples/lg':
+
+Get the list of available BGP peers:
+
+shell> examples/lg/pmbgp.py -g
+{"results": 1, "query_type": 2}
+{"peer_ip_src": "192.168.1.1", "peer_id": "192.168.1.1", "peer_tcp_port": 47248, "peer_as": 65500}
+ 
+Lookup IP prefix 192.168.2.0/24 for BGP peer 192.168.1.1:
+
+shell> examples/lg/pmbgp.py -a 192.168.2.0/24 -r 192.168.1.1
+{"peer_ip_src": "192.168.1.1", "event_type": "lglass", "afi": 1, "safi": 1, "ip_prefix": "192.168.2.0/24", "bgp_nexthop": "192.168.1.254", "as_path": "65500 65501 65502", "comms": "65500:1 65500:100 65500:65500", "origin": 0, "local_pref": 100}
+
+Request/Reply Looking Glass formats are documented in 'docs/LOOKING_GLASS_FORMAT'.
+
+XIVh. BGP daemon implementation concluding notes
 The implementation supports 4-bytes ASN, IPv4, IPv6, VPNv4 and VPNv6 (MP-BGP)
-address families and ADD-PATH (draft-ietf-idr-add-paths); both IPv4 and IPv6
+address families and several IETF drafts and RFCs, ie. ADD-PATH, Shutdown
+Message and Large BGP Communities among the others; IPv4, IPv6 transports for
 BGP sessions are supported. When storing data via SQL, BGP primitives can be
 freely mix-and-matched with other primitives (ie. L2/L3/L4) when customizing
 the SQL table (sql_optimize_clauses: true). Environments making use of BGP
