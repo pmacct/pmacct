@@ -1129,6 +1129,15 @@ AC_TYPE_SIGNAL
 
 AC_CHECK_FUNCS([strlcpy vsnprintf setproctitle mallopt tdestroy])
 
+dnl Check for SO_REUSEPORT
+AC_CHECK_DECL([SO_REUSEPORT],
+	AC_DEFINE(HAVE_SO_REUSEPORT, 1, [Check if kernel supports SO_REUSEPORT]),,
+		[
+		  #include <sys/types.h>
+		  #include <sys/socket.h>
+		]
+)
+
 dnl final checks
 dnl trivial solution to portability issue 
 AC_DEFINE_UNQUOTED(COMPILE_ARGS, "$COMPILE_ARGS")
