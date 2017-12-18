@@ -67,7 +67,6 @@ EXT void p_kafka_set_topic_rr(struct p_kafka_host *, int);
 EXT void p_kafka_set_content_type(struct p_kafka_host *, int);
 EXT void p_kafka_set_partition(struct p_kafka_host *, int);
 EXT void p_kafka_set_key(struct p_kafka_host *, char *, int);
-EXT void p_kafka_set_fallback(struct p_kafka_host *, char *);
 EXT void p_kafka_set_config_file(struct p_kafka_host *, char *);
 
 EXT char *p_kafka_get_topic(struct p_kafka_host *);
@@ -87,7 +86,7 @@ EXT void p_kafka_apply_topic_config(struct p_kafka_host *);
 EXT void p_kafka_logger(const rd_kafka_t *, int, const char *, const char *);
 EXT void p_kafka_msg_delivered(rd_kafka_t *, void *, size_t, int, void *, void *);
 EXT void p_kafka_msg_error(rd_kafka_t *, int, const char *, void *);
-EXT void p_kafka_stats(rd_kafka_t *, char *, size_t, void *);
+EXT int p_kafka_stats(rd_kafka_t *, char *, size_t, void *);
 
 EXT int p_kafka_connect_to_produce(struct p_kafka_host *);
 EXT int p_kafka_produce_data(struct p_kafka_host *, void *, u_int32_t);

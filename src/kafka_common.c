@@ -191,24 +191,6 @@ char *p_kafka_get_key(struct p_kafka_host *kafka_host)
   return NULL;
 }
 
-void p_kafka_set_fallback(struct p_kafka_host *kafka_host, char *fallback)
-{
-  int res;
-  char errstr[SRVBUFLEN];
-
-  if (kafka_host && kafka_host->cfg && fallback) {
-    res = rd_kafka_conf_set(kafka_host->cfg, "api.version.request", "false", errstr, sizeof(errstr));
-    if (res != RD_KAFKA_CONF_OK)
-      Log(LOG_WARNING, "WARN ( %s/%s ): p_kafka_set_fallback(): api.version.request=false failed: %s\n",
-	  config.name, config.type, errstr);
-
-    res = rd_kafka_conf_set(kafka_host->cfg, "broker.version.fallback", fallback, errstr, sizeof(errstr));
-    if (res != RD_KAFKA_CONF_OK)
-      Log(LOG_WARNING, "WARN ( %s/%s ): p_kafka_set_fallback(): broker.version.fallback=%s failed: %s\n",
-	  config.name, config.type, fallback, errstr);
-  }
-}
-
 void p_kafka_set_config_file(struct p_kafka_host *kafka_host, char *config_file)
 {
   if (kafka_host) {
@@ -372,7 +354,7 @@ void p_kafka_msg_error(rd_kafka_t *rk, int err, const char *reason, void *opaque
   kafkap_ret_err_cb = ERR;
 }
 
-void p_kafka_stats(rd_kafka_t *rk, char *json, size_t json_len, void *opaque)
+int p_kafka_stats(rd_kafka_t *rk, char *json, size_t json_len, void *opaque)
 {
   Log(LOG_INFO, "INFO ( %s/%s ): %s\n", config.name, config.type, json);
 }
