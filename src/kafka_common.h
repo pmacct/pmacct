@@ -87,6 +87,8 @@ EXT void p_kafka_apply_topic_config(struct p_kafka_host *);
 EXT void p_kafka_logger(const rd_kafka_t *, int, const char *, const char *);
 EXT void p_kafka_msg_delivered(rd_kafka_t *, void *, size_t, int, void *, void *);
 EXT void p_kafka_msg_error(rd_kafka_t *, int, const char *, void *);
+EXT void p_kafka_stats(rd_kafka_t *, char *, size_t, void *);
+
 EXT int p_kafka_connect_to_produce(struct p_kafka_host *);
 EXT int p_kafka_produce_data(struct p_kafka_host *, void *, u_int32_t);
 EXT int p_kafka_produce_data_to_part(struct p_kafka_host *, void *, u_int32_t, int);

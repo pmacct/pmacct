@@ -39,6 +39,7 @@ void p_kafka_init_host(struct p_kafka_host *kafka_host, char *config_file)
       rd_kafka_conf_set_log_cb(kafka_host->cfg, p_kafka_logger);
       rd_kafka_conf_set_error_cb(kafka_host->cfg, p_kafka_msg_error);
       rd_kafka_conf_set_dr_cb(kafka_host->cfg, p_kafka_msg_delivered);
+      rd_kafka_conf_set_stats_cb(kafka_host->cfg, p_kafka_stats);
       rd_kafka_conf_set_opaque(kafka_host->cfg, kafka_host);
       p_kafka_apply_global_config(kafka_host);
 
@@ -369,6 +370,11 @@ void p_kafka_msg_delivered(rd_kafka_t *rk, void *payload, size_t len, int error_
 void p_kafka_msg_error(rd_kafka_t *rk, int err, const char *reason, void *opaque)
 {
   kafkap_ret_err_cb = ERR;
+}
+
+void p_kafka_stats(rd_kafka_t *rk, char *json, size_t json_len, void *opaque)
+{
+  Log(LOG_INFO, "INFO ( %s/%s ): %s\n", config.name, config.type, json);
 }
 
 int p_kafka_connect_to_produce(struct p_kafka_host *kafka_host)

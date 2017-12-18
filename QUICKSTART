@@ -761,6 +761,10 @@ as global settings, ie.:
 global, queue.buffering.max.messages, 8000000
 global, batch.num.messages, 100000
 
+Configuring statistics.interval.ms to positive value in a kafka_config_file makes
+librdkafka log plenty of internal metrics - as documented at the following wiki
+page: https://github.com/edenhill/librdkafka/wiki/Statistics .  
+
 
 X. Internal buffering and queueing
 Two options are provided for internal buffering and queueing: 1) a home-grown circular
