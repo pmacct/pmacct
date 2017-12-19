@@ -104,7 +104,6 @@ char *p_kafka_get_topic(struct p_kafka_host *kafka_host)
   return NULL;
 }
 
-/* XXX: is round-robin feature overlapping with kafka partitions? */
 void p_kafka_init_topic_rr(struct p_kafka_host *kafka_host)
 {
   if (kafka_host) memset(&kafka_host->topic_rr, 0, sizeof(struct p_table_rr));

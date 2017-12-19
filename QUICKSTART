@@ -661,11 +661,12 @@ languages are very welcome at this stage.
 
 
 IX. Running the Kafka plugin
-Apache Kafka is publish-subscribe messaging rethought as a distributed commit log.
-Its qualities being: fast, scalable, durable and distributed by design. pmacct
-Kafka plugin is designed to send aggregated network traffic data, in JSON or
-Avro format, through a Kafka broker to 3rd party applications. Requirements to
-use the plugin are:
+Apache Kafka is a distributed streaming platform. Its qualities being: fast,
+scalable, durable and distributed by design. pmacct Kafka plugin is designed
+to send aggregated network traffic data, in JSON or Avro format, through a
+Kafka broker to 3rd party applications (typically, but not limited to, noSQL
+databases like ElasticSearch, InfluxDB, etc.). Requirements to use the plugin
+are:
 
 * A working Kafka broker (and Zookeper server): http://kafka.apache.org/
 * Librdkafka: https://github.com/edenhill/librdkafka/
@@ -675,10 +676,10 @@ Additionally, the Apache Avro C library (http://avro.apache.org/) needs to be
 installed to be able to send messages packed using Avro (you will also need to
 pass --enable-avro to the configuration script).
 
-Once these elements are installed, pmacct can be configured for compiling. pmacct
-makes use of pkg-config for finding libraries and headers location and checks some
-"typical" default locations, ie. /usr/local/lib and /usr/local/include. So all
-you should do is just:
+Once these elements are installed, pmacct can be configured for compiling.
+pmacct makes use of pkg-config for finding libraries and headers location and
+checks some default locations, ie. /usr/local/lib and /usr/local/include. If
+this is satisfactory, all you should do is just:
 
 ./configure --enable-kafka --enable-jansson
 
@@ -711,13 +712,14 @@ kafka_history: 5m
 kafka_history_roundoff: m
 ! ..
 
-A basic consumer script, in Python, is provided as sample to: declare a group_id
-and bind it to the topic and show consumed data on the screen. The script is located
-in the pmacct default distribution tarball in: examples/kafka/kafka_consumer.py and
-requires the python-kafka Python module installed. Should this not be available you
-can read on the following page how to get it installed:
+A basic script, in Python, is provided as sample to consume JSON/Avro data from
+a given topic and perform some simple actions (ie. post data to a new Kafka topic,
+post to a URL or print to screen). The script is located in the pmacct distributed
+code in 'examples/kafka/kafka_consumer.py' and requires the confluent-kafka-python
+Python module installed (among the others, check script header). Should this not
+be available you can read on the following page how to get it installed:
 
-http://kafka-python.readthedocs.org/
+https://github.com/confluentinc/confluent-kafka-python
 
 This is a pointer to the quick start guide to Kafka:
 
@@ -732,9 +734,9 @@ the following parameters:
 * advertised.listeners,
 * listener.security.protocol.map
 
-and configure it according to your kafka design. Taking a simple example where
-there is one single Kafka node used for both zookeeper  and Kafka and this node
-is using and ip address like 172.16.2.1. Those tree parameters  will look like
+and configure it according to your Kafka design. Taking a simple example where
+there is one single Kafka node used for both Zookeeper and Kafka and this node
+is using and ip address like 172.16.2.1. Those three parameters will look like
 this:
 
 listeners=PLAINTEXT://172.16.2.1:9092
@@ -742,11 +744,11 @@ advertised.listeners=PLAINTEXT://172.16.2.1:9092
 listener.security.protocol.map=PLAINTEXT:PLAINTEXT,SSL:SSL,SASL_PLAINTEXT:SASL_PLAINTEXT,SASL_SSL:SASL_SSL
 
 Finally, when the amount of data published to Kafka is substantial, ie. in the
-order of thousands of entries per second, some care is needed in order to avoid
+order of thousands of entries per second, batching is needed in order to avoid
 every single entry originating a produce call to Kafka. Two strategies are being
-available for batching: 1) kafka_multi_values feature of pmacct; 2) as per
-librdkafka documentation, "The two most important configuration properties for
-performance tuning are:
+available: 1) pmacct batching via the kafka_multi_values feature or 2) librdkafka
+batching via, as per the lib documentation, "The two most important configuration
+properties for performance tuning are:
 
 * batch.num.messages : the minimum number of messages to wait for to accumulate
   in the local queue before sending off a message set.
@@ -754,16 +756,16 @@ performance tuning are:
   in the local queue."
 
 Also, intuitively, queue.buffering.max.messages, the "Maximum number of messages
-allowed on the producer queue" should be kept greater than the batch.num.messages.
-These knobs can all be in pmacct to Kafka via a file pointed by kafka_config_file,
-as global settings, ie.:
+allowed on the producer queue", should be kept greater than the batch.num.messages.
+These knobs can all be supplied to librdkafka through pmacct via a file pointed
+by kafka_config_file, as global settings, ie.:
  
 global, queue.buffering.max.messages, 8000000
 global, batch.num.messages, 100000
 
-Configuring statistics.interval.ms to positive value in a kafka_config_file makes
-librdkafka log plenty of internal metrics - as documented at the following wiki
-page: https://github.com/edenhill/librdkafka/wiki/Statistics .  
+Configuring statistics.interval.ms to a positive value in kafka_config_file will
+make librdkafka log plenty of internal metrics - as documented at the following
+wiki page: https://github.com/edenhill/librdkafka/wiki/Statistics .  
 
 
 X. Internal buffering and queueing
