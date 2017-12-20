@@ -2041,6 +2041,16 @@ following command:
 
 gdb> bt
 
+If the dmesg command or system logs reveal a line like the following one:
+
+Jan 01 00:00:00 xxxx kernel: [4075819.569587] nfacctd[51817]: segfault at 10 ip 00007f77f448ad44 sp 00007ffc6974ed70 error 4 ..
+
+In certain cases, ie. if the crash is not inside a shared library, this can
+return useful information for debugging when examined with addr2line; using
+the example above:
+
+shell> addr2line /path/to/nfacctd 00007f77f448ad44
+
 Optionally, especially if the issue can be easily reproduced, the daemon can
 be re-configured for compiling with the --enable-debug flag so to produce
 extra info suitable for troubleshooting. 
