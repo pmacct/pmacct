@@ -352,6 +352,7 @@ struct configuration {
   int bgp_table_dump_kafka_partition_keylen;
   int bgp_table_dump_kafka_broker_port;
   char *bgp_table_dump_kafka_config_file;
+  char *bgp_daemon_map;
   int bgp_lg;
   char *bgp_lg_ip;
   int bgp_lg_port;

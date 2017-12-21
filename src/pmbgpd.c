@@ -70,6 +70,7 @@ void usage_daemon(char *prog_name)
 int main(int argc,char **argv, char **envp)
 {
   struct plugins_list_entry *list;
+  struct plugin_requests req;
   char config_file[SRVBUFLEN];
   int logf;
 
@@ -151,6 +152,11 @@ int main(int argc,char **argv, char **envp)
       strlcpy(cfg_cmdline[rows], "bgp_daemon_lg: true", SRVBUFLEN);
       rows++;
       break;
+    case 'm':
+      strlcpy(cfg_cmdline[rows], "bgp_daemon_map: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
     case 'h':
       usage_daemon(argv[0]);
       exit(0);
@@ -165,7 +171,6 @@ int main(int argc,char **argv, char **envp)
       break;
     }
   }
-
 
   /* post-checks and resolving conflicts */
   if (strlen(config_file)) {
@@ -244,6 +249,17 @@ int main(int argc,char **argv, char **envp)
   signal(SIGPIPE, SIG_IGN); /* we want to exit gracefully when a pipe is broken */
   signal(SIGINT, my_sigint_handler);
   signal(SIGTERM, my_sigint_handler);
+
+  if (config.bgp_daemon_map) {
+    int bgp_recvs_allocated = FALSE;
+
+    memset(&bgp_recvs, 0, sizeof(bgp_recvs));
+    memset(&req, 0, sizeof(req));
+    reload_map = FALSE;
+
+    req.key_value_table = (void *) &bgp_recvs;
+    load_id_file(MAP_BGP_RECVS, config.bgp_daemon_map, NULL, &req, &bgp_recvs_allocated);
+  }
 
   if (!config.nfacctd_bgp) config.nfacctd_bgp = BGP_DAEMON_ONLINE;
   if (!config.nfacctd_bgp_port) config.nfacctd_bgp_port = BGP_TCP_PORT;

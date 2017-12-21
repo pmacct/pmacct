@@ -268,6 +268,7 @@ struct bgp_comm_range {
   u_int32_t last;
 };
 
+/* Looking Glass */
 struct bgp_lg_req {
   u_int32_t type;
   void *data;
@@ -299,6 +300,25 @@ struct bgp_lg_rep_ipl_data {
 
 struct bgp_lg_rep_gp_data {
   struct bgp_peer *peer;
+};
+
+/* XXX: bgp_daemon_map */
+struct bgp_receiver {
+#if defined ENABLE_IPV6
+  struct sockaddr_storage dest;         /* BGP receiver IP address and port */
+#else
+  struct sockaddr dest;
+#endif
+  socklen_t dest_len;
+
+  u_int32_t id;                         /* BGP receiver id */
+  struct pretag_filter tag_filter;      /* BGP originator id */
+  int fd;                               /* BGP receiver fd */
+};
+
+struct bgp_receivers {
+  struct bgp_receiver *pool;
+  int num;
 };
 
 #include "bgp_msg.h"
@@ -336,5 +356,7 @@ EXT u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, path_id_t *, int);
 
 EXT struct bgp_rt_structs inter_domain_routing_dbs[FUNC_TYPE_MAX], *bgp_routing_db;
 EXT struct bgp_misc_structs inter_domain_misc_dbs[FUNC_TYPE_MAX], *bgp_misc_db;
+
+EXT struct bgp_receivers bgp_recvs;
 #undef EXT
 #endif 

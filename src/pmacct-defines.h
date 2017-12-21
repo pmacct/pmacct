@@ -25,7 +25,7 @@
 #define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:o:t:O:uwWL:RVazA:E:"
 #define ARGS_UACCTD "n:NdDhP:b:f:F:c:m:p:r:s:S:o:t:O:uRg:L:VaA:E:"
 #define ARGS_PMTELEMETRYD "hVL:l:f:dDS:F:o:O:i:"
-#define ARGS_PMBGPD "hVL:l:f:dDS:F:o:O:i:g"
+#define ARGS_PMBGPD "hVL:l:f:dDS:F:o:O:i:gm:"
 #define ARGS_PMBMPD "hVL:l:f:dDS:F:o:O:i:"
 #define ARGS_PMACCT "hSsc:Cetm:p:P:M:arN:n:lT:O:E:uVUiI0"
 #define N_PRIMITIVES 75
@@ -153,6 +153,7 @@
 #define MAP_TEE_RECVS		106	/* tee_receivers */
 #define MAP_IGP			107	/* igp_daemon_map */
 #define MAP_CUSTOM_PRIMITIVES	108	/* aggregate_primitives */
+#define MAP_BGP_RECVS		109	/* bgp_daemon_map */
 
 /* PRIMITIVES DEFINITION: START */
 /* internal: first registry, ie. what_to_count, aggregation, etc. */

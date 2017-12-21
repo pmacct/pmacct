@@ -29,6 +29,8 @@
 #define BGP_LG_QT_IP_LOOKUP	1
 #define BGP_LG_QT_GET_PEERS	2
 
+/* structures */
+
 /* prototypes */
 #if (!defined __PMBGPD_C)
 #define EXT extern
@@ -37,6 +39,12 @@
 EXT void usage_daemon(char *);
 EXT void compute_once();
 
+EXT void bgp_recvs_map_validate(char *, struct plugin_requests *);
+EXT int bgp_recvs_map_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int bgp_recvs_map_ip_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int bgp_recvs_map_tag_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+
+/* Looking Glass */
 #if defined WITH_ZMQ
 EXT void bgp_lg_wrapper();
 EXT void bgp_lg_daemon();

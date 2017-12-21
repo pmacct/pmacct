@@ -356,6 +356,7 @@ EXT int cfg_key_nfacctd_bgp_table_dump_kafka_config_file(char *, char *, char *)
 EXT int cfg_key_nfacctd_bgp_batch(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_batch_interval(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_pipe_size(char *, char *, char *);
+EXT int cfg_key_bgp_daemon_map(char *, char *, char *);
 EXT int cfg_key_bgp_lg(char *, char *, char *);
 EXT int cfg_key_bgp_lg_ip(char *, char *, char *);
 EXT int cfg_key_bgp_lg_port(char *, char *, char *);
