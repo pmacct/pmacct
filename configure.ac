@@ -993,6 +993,8 @@ AC_CHECK_LIB([z], [deflate], [
 	AC_DEFINE(HAVE_ZLIB, 1)]
 )
 
+LIBS="${LIBS} -lpthread"
+
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
