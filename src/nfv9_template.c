@@ -1031,7 +1031,7 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
       }
       ptr->list[count].ptr = (char *) ext_db_ptr;
       ptr->list[count].type = TPL_TYPE_EXT_DB;
-      ptr->len += ntohs(ext_db_ptr->len);
+      ptr->len += ext_db_ptr->len;
     }
 
     count--;
@@ -1140,7 +1140,7 @@ struct template_cache_entry *refresh_opt_template(void *hdr, struct template_cac
       }
       tpl->list[count].ptr = (char *) ext_db_ptr;
       tpl->list[count].type = TPL_TYPE_EXT_DB;
-      tpl->len += ntohs(ext_db_ptr->len);
+      tpl->len += ext_db_ptr->len;
     }
 
     count--;
