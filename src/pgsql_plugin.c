@@ -38,7 +38,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct insert_data idata;
   time_t refresh_deadline;
   int timeout, refresh_timeout;
-  int ret, num;
+  int ret, num, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
@@ -107,6 +107,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   for(;;) {
     poll_again:
     status->wakeup = TRUE;
+    poll_bypass = FALSE;
     calc_refresh_timeout(refresh_deadline, idata.now, &refresh_timeout);
 
     pfd.fd = pipe_fd;
@@ -122,6 +123,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       if (ret < 0) goto poll_again;
     }
 
+    poll_ops:
     idata.now = time(NULL);
     now = idata.now;
 
@@ -138,6 +140,12 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
     }
 
+    recv_budget = 0;
+    if (poll_bypass) {
+      poll_bypass = FALSE;
+      goto read_data;
+    }
+
     switch (ret) {
     case 0: /* poll(): timeout */
       if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, &idata, FALSE);
@@ -145,6 +153,11 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       break;
     default: /* poll(): received data */
       read_data:
+      if (recv_budget == DEFAULT_PLUGIN_COMMON_RECV_BUDGET) {
+	poll_bypass = TRUE;
+	goto poll_ops;
+      }
+
       if (config.pipe_homegrown) {
         if (!pollagain) {
           seq++;

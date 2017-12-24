@@ -44,7 +44,7 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct insert_data idata;
   time_t t, avro_schema_deadline = 0;
   int timeout, refresh_timeout, avro_schema_timeout = 0;
-  int ret, num; 
+  int ret, num, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
@@ -171,6 +171,8 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   for(;;) {
     poll_again:
     status->wakeup = TRUE;
+    poll_bypass = FALSE;
+
     calc_refresh_timeout(refresh_deadline, idata.now, &refresh_timeout);
     if (config.kafka_avro_schema_topic) calc_refresh_timeout(avro_schema_deadline, idata.now, &avro_schema_timeout);
 
@@ -188,16 +190,8 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       if (ret < 0) goto poll_again;
     }
 
-    idata.now = time(NULL);
-
-    if (config.sql_history) {
-      while (idata.now > (basetime.tv_sec + timeslot)) {
-	new_basetime.tv_sec = basetime.tv_sec;
-        basetime.tv_sec += timeslot;
-        if (config.sql_history == COUNT_MONTHLY)
-          timeslot = calc_monthly_timeslot(basetime.tv_sec, config.sql_history_howmany, ADD);
-      }
-    }
+    poll_ops:
+    P_update_time_reference(&idata);
 
 #ifdef WITH_AVRO
     if (idata.now > avro_schema_deadline) {
@@ -206,12 +200,23 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     }
 #endif
 
+    recv_budget = 0;
+    if (poll_bypass) {
+      poll_bypass = FALSE;
+      goto read_data;
+    }
+
     switch (ret) {
     case 0: /* timeout */
       if (idata.now > refresh_deadline) P_cache_handle_flush_event(&pt);
       break;
     default: /* we received data */
       read_data:
+      if (recv_budget == DEFAULT_PLUGIN_COMMON_RECV_BUDGET) {
+        poll_bypass = TRUE;
+        goto poll_ops;
+      }
+
       if (config.pipe_homegrown) {
         if (!pollagain) {
           seq++;
@@ -299,6 +304,7 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
       }
 
+      recv_budget++;
       goto read_data;
     }
   }

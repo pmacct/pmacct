@@ -1386,7 +1386,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct timezone tz;
   unsigned char *pipebuf;
   time_t now, refresh_deadline;
-  int refresh_timeout, ret, num;
+  int refresh_timeout, ret, num, recv_budget, poll_bypass;
   char default_receiver[] = "127.0.0.1:2100";
   char default_engine[] = "0:0";
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
@@ -1550,6 +1550,7 @@ sort_version:
 
   for(;;) {
     status->wakeup = TRUE;
+    poll_bypass = FALSE;
 
     pfd.fd = pipe_fd;
     pfd.events = POLLIN;
@@ -1571,6 +1572,7 @@ sort_version:
       break;
     }
 
+    poll_ops:
     if (reload_map) {
       load_networks(config.networks_file, &nt, &nc);
       load_ports(config.ports_file, &pt);
@@ -1579,8 +1581,19 @@ sort_version:
 
     now = time(NULL);
 
+    recv_budget = 0;
+    if (poll_bypass) {
+      poll_bypass = FALSE;
+      goto read_data;
+    }
+
     if (ret > 0) { /* we received data */
-read_data:
+      read_data:
+      if (recv_budget == DEFAULT_PLUGIN_COMMON_RECV_BUDGET) {
+	poll_bypass = TRUE;
+	goto poll_ops;
+      }
+
       if (config.pipe_homegrown) {
         if (!pollagain) {
           seq++;
@@ -1672,6 +1685,7 @@ read_data:
       }
       }
 
+      recv_budget++;
       goto read_data;
     }
 

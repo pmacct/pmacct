@@ -33,7 +33,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   unsigned char *pipebuf;
   struct pollfd pfd;
   int timeout, refresh_timeout, err, ret, num;
-  int fd, pool_idx, recv_idx;
+  int fd, pool_idx, recv_idx, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
@@ -141,6 +141,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   for (;;) {
     poll_again:
     status->wakeup = TRUE;
+    poll_bypass = FALSE;
 
     pfd.fd = pipe_fd;
     pfd.events = POLLIN;
@@ -149,6 +150,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
     if (ret < 0) goto poll_again;
 
+    poll_ops:
     if (reload_map) {
       if (config.tee_receivers) {
         int recvs_allocated = FALSE;
@@ -164,12 +166,23 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
     now = time(NULL);
 
+    recv_budget = 0;
+    if (poll_bypass) {
+      poll_bypass = FALSE;
+      goto read_data;
+    }
+
     switch (ret) {
     case 0: /* timeout */
       /* reserved for future since we don't currently cache/batch/etc */
       break;
     default: /* we received data */
       read_data:
+      if (recv_budget == DEFAULT_PLUGIN_COMMON_RECV_BUDGET) {
+	poll_bypass = TRUE;
+	goto poll_ops;
+      }
+
       if (config.pipe_homegrown) {
         if (!pollagain) {
           seq++;
@@ -256,6 +269,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
       }
 
+      recv_budget++;
       goto read_data;
     }
   }  

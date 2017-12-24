@@ -47,7 +47,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct pollfd pfd;
   struct insert_data idata;
   time_t t;
-  int timeout, refresh_timeout, ret, num, is_event;
+  int timeout, refresh_timeout, ret, num, is_event, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
@@ -178,6 +178,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   for(;;) {
     poll_again:
     status->wakeup = TRUE;
+    poll_bypass = FALSE;
     calc_refresh_timeout(refresh_deadline, idata.now, &refresh_timeout);
     
     pfd.fd = pipe_fd;
@@ -194,7 +195,14 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       if (ret < 0) goto poll_again;
     }
 
+    poll_ops:
     P_update_time_reference(&idata);
+
+    recv_budget = 0;
+    if (poll_bypass) {
+      poll_bypass = FALSE;
+      goto read_data;
+    }
 
     switch (ret) {
     case 0: /* timeout */
@@ -208,6 +216,11 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       break;
     default: /* we received data */
       read_data:
+      if (recv_budget == DEFAULT_PLUGIN_COMMON_RECV_BUDGET) {
+	poll_bypass = TRUE;
+	goto poll_ops;
+      }
+
       if (config.pipe_homegrown) {
         if (!pollagain) {
           seq++;
@@ -259,9 +272,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
 #endif
 
-      /* lazy refresh time handling */ 
-      P_update_time_reference(&idata);
-
+      /* lazy refresh time handling */
       if (idata.now > refresh_deadline) {
 	int saved_qq_ptr;
 
@@ -303,6 +314,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
       }
 
+      recv_budget++;
       goto read_data;
     }
   }

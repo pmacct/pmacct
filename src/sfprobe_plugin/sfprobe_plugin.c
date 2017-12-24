@@ -583,7 +583,7 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct timezone tz;
   unsigned char *pipebuf, *pipebuf_ptr;
   time_t now;
-  int timeout, refresh_timeout, ret, num;
+  int timeout, refresh_timeout, ret, num, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
@@ -666,8 +666,9 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   refresh_timeout = 60 * 1000; /* 1 min */
 
   for (;;) {
-poll_again:
+    poll_again:
     status->wakeup = TRUE;
+    poll_bypass = FALSE;
 
     pfd.fd = pipe_fd;
     pfd.events = POLLIN;
@@ -676,13 +677,25 @@ poll_again:
 
     if (ret < 0) goto poll_again;
 
+    poll_ops:
     if (reload_map) {
       load_networks(config.networks_file, &nt, &nc);
       reload_map = FALSE;
     }
 
+    recv_budget = 0;
+    if (poll_bypass) {
+      poll_bypass = FALSE;
+      goto read_data;
+    }
+
     if (ret > 0) { /* we received data */
-read_data:
+      read_data:
+      if (recv_budget == DEFAULT_PLUGIN_COMMON_RECV_BUDGET) {
+	poll_bypass = TRUE;
+	goto poll_ops;
+      }
+
       if (config.pipe_homegrown) {
         if (!pollagain) {
           seq++;
@@ -786,8 +799,10 @@ read_data:
       }
       }
 
+      recv_budget++;
       goto read_data;
     }
+
 handle_tick:
     test_clk = time(NULL);
     while(clk < test_clk) sfl_agent_tick(sp.agent, clk++);
