@@ -166,6 +166,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
     poll_ops:
     P_update_time_reference(&idata);
+    if (idata.now > refresh_deadline) P_cache_handle_flush_event(&pt);
 
     recv_budget = 0;
     if (poll_bypass) {
@@ -175,7 +176,6 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
     switch (ret) {
     case 0: /* timeout */
-      P_cache_handle_flush_event(&pt);
       break;
     default: /* we received data */
       read_data:
@@ -234,9 +234,6 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	else goto poll_again;
       }
 #endif
-
-      /* lazy refresh time handling */ 
-      if (idata.now > refresh_deadline) P_cache_handle_flush_event(&pt);
 
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 

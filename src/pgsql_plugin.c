@@ -140,6 +140,21 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
     }
 
+    if (idata.now > refresh_deadline) {
+      if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, &idata, FALSE);
+      sql_cache_handle_flush_event(&idata, &refresh_deadline, &pt);
+    }
+    else {
+      if (config.sql_trigger_exec) {
+        while (idata.now > idata.triggertime && idata.t_timeslot > 0) {
+          sql_trigger_exec(config.sql_trigger_exec);
+          idata.triggertime += idata.t_timeslot;
+          if (config.sql_trigger_time == COUNT_MONTHLY)
+            idata.t_timeslot = calc_monthly_timeslot(idata.triggertime, config.sql_trigger_time_howmany, ADD);
+        }
+      }
+    }
+
     recv_budget = 0;
     if (poll_bypass) {
       poll_bypass = FALSE;
@@ -148,8 +163,6 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
     switch (ret) {
     case 0: /* poll(): timeout */
-      if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, &idata, FALSE);
-      sql_cache_handle_flush_event(&idata, &refresh_deadline, &pt);
       break;
     default: /* poll(): received data */
       read_data:
@@ -210,22 +223,6 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	else goto poll_again;
       }
 #endif
-
-      /* lazy sql refresh handling */ 
-      if (idata.now > refresh_deadline) {
-        if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, &idata, FALSE);
-        sql_cache_handle_flush_event(&idata, &refresh_deadline, &pt);
-      } 
-      else {
-        if (config.sql_trigger_exec) {
-          while (idata.now > idata.triggertime && idata.t_timeslot > 0) {
-            sql_trigger_exec(config.sql_trigger_exec);
-	    idata.triggertime += idata.t_timeslot;
-	    if (config.sql_trigger_time == COUNT_MONTHLY)
-	      idata.t_timeslot = calc_monthly_timeslot(idata.triggertime, config.sql_trigger_time_howmany, ADD);
-          }
-        }
-      }
 
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 

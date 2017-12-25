@@ -198,6 +198,14 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     poll_ops:
     P_update_time_reference(&idata);
 
+    if (idata.now > refresh_deadline) {
+      int saved_qq_ptr;
+
+      saved_qq_ptr = qq_ptr;
+      P_cache_handle_flush_event(&pt);
+      if (saved_qq_ptr) print_output_stdout_header = FALSE;
+    }
+
     recv_budget = 0;
     if (poll_bypass) {
       poll_bypass = FALSE;
@@ -206,13 +214,6 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
     switch (ret) {
     case 0: /* timeout */
-      if (timeout == refresh_timeout) {
-	int saved_qq_ptr;
-
-	saved_qq_ptr = qq_ptr;
-	P_cache_handle_flush_event(&pt);
-	if (saved_qq_ptr) print_output_stdout_header = FALSE;
-      }
       break;
     default: /* we received data */
       read_data:
@@ -271,15 +272,6 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	else goto poll_again;
       }
 #endif
-
-      /* lazy refresh time handling */
-      if (idata.now > refresh_deadline) {
-	int saved_qq_ptr;
-
-	saved_qq_ptr = qq_ptr;
-	P_cache_handle_flush_event(&pt);
-	if (saved_qq_ptr) print_output_stdout_header = FALSE;
-      }
 
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
