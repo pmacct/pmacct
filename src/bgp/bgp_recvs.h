@@ -37,6 +37,7 @@ EXT int bgp_recvs_map_ip_handler(char *, struct id_entry *, char *, struct plugi
 EXT int bgp_recvs_map_tag_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 
 EXT void bgp_recvs_map_validate(char *, struct plugin_requests *);
+EXT int bgp_recvs_parse_hostport(const char *, struct sockaddr *, socklen_t *);
 
 /* global variables */
 

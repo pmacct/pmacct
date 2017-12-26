@@ -257,6 +257,16 @@ int main(int argc,char **argv, char **envp)
     memset(&req, 0, sizeof(req));
     reload_map = FALSE;
 
+    /* Setting up the pool */
+    if (!config.nfacctd_bgp_max_peers) config.nfacctd_bgp_max_peers = MAX_BGP_PEERS_DEFAULT;
+
+    bgp_recvs.pool = malloc((config.nfacctd_bgp_max_peers + 1) * sizeof(struct bgp_receiver));
+    if (!bgp_recvs.pool) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate BGP receiver pool. Exiting ...\n", config.name, config.type);
+      exit(1);
+    }
+    else memset(bgp_recvs.pool, 0, (config.nfacctd_bgp_max_peers + 1) * sizeof(struct bgp_receiver));
+
     req.key_value_table = (void *) &bgp_recvs;
     load_id_file(MAP_BGP_RECVS, config.bgp_daemon_map, NULL, &req, &bgp_recvs_allocated);
   }
