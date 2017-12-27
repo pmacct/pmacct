@@ -599,7 +599,8 @@ The Advanced Message Queuing Protocol (AMQP) is an open standard for passing bus
 messages between applications. RabbitMQ is a messaging broker, an intermediary for
 messaging, which implementes AMQP. pmacct RabbitMQ/AMQP plugin is designed to send
 aggregated network traffic data, in JSON or Avro format, through a RabbitMQ server
-to 3rd party applications. Requirements to use the plugin are:
+to 3rd party applications (typically, but not limited to, noSQL databases like
+ElasticSearch, InfluxDB, etc.). Requirements to use the plugin are:
 
 * A working RabbitMQ server: http://www.rabbitmq.com/
 * RabbitMQ C API, rabbitmq-c: https://github.com/alanxz/rabbitmq-c/
@@ -649,15 +650,12 @@ amqp_history_roundoff: m
 pmacct will only declare a message exchange and provide a routing key, ie. it
 will not get involved with queues at all. A basic consumer script, in Python,
 is provided as sample to: declare a queue, bind the queue to the exchange and
-show consumed data on the screen. The script is located in the pmacct default
-distribution tarball in: examples/amqp/amqp_receiver.py and requires the pika
-Python module installed. Should this not be available you can read on the
-following page how to get it installed:
+show consumed data on the screen or post to a REST API. The script is located
+in the pmacct default distribution tarball in 'examples/amqp/amqp_receiver.py'
+and requires the 'pika' Python module installed. Should this not be available,
+installation instructions are available at the following page:
 
 http://www.rabbitmq.com/tutorials/tutorial-one-python.html
-
-Improvements to the basic Python script provided and/or examples in different
-languages are very welcome at this stage.
 
 
 IX. Running the Kafka plugin
@@ -725,10 +723,11 @@ This is a pointer to the quick start guide to Kafka:
 
 https://kafka.apache.org/quickstart
 
-When using Kafka over a dedicated node or VM, you will have to update the default
-Kafka server configuration. Edit with your favorite text editor the file named
-server.properties under the config folder of your kafka installation. Uncomment
-the following parameters:
+Some notes:
+1) When using Kafka over a dedicated node or VM, you will have to update the
+default Kafka server configuration. Edit with your favorite text editor the file
+named server.properties under the config folder of your kafka installation.
+Uncomment the following parameters:
 
 * listeners,
 * advertised.listeners,
@@ -743,10 +742,10 @@ listeners=PLAINTEXT://172.16.2.1:9092
 advertised.listeners=PLAINTEXT://172.16.2.1:9092
 listener.security.protocol.map=PLAINTEXT:PLAINTEXT,SSL:SSL,SASL_PLAINTEXT:SASL_PLAINTEXT,SASL_SSL:SASL_SSL
 
-Finally, when the amount of data published to Kafka is substantial, ie. in the
-order of thousands of entries per second, batching is needed in order to avoid
-every single entry originating a produce call to Kafka. Two strategies are being
-available: 1) pmacct batching via the kafka_multi_values feature or 2) librdkafka
+2) When the amount of data published to Kafka is substantial, ie. in the order
+of thousands of entries per second, batching is needed in order to avoid every
+single entry originating a produce call to Kafka. Two strategies are being
+available: a) pmacct batching via the kafka_multi_values feature or b) librdkafka
 batching via, as per the lib documentation, "The two most important configuration
 properties for performance tuning are:
 
@@ -763,9 +762,9 @@ by kafka_config_file, as global settings, ie.:
 global, queue.buffering.max.messages, 8000000
 global, batch.num.messages, 100000
 
-Configuring statistics.interval.ms to a positive value in kafka_config_file will
-make librdkafka log plenty of internal metrics - as documented at the following
-wiki page: https://github.com/edenhill/librdkafka/wiki/Statistics .  
+3) Configuring statistics.interval.ms to a positive value in kafka_config_file
+will make librdkafka log plenty of internal metrics - as documented at the
+following wiki page: https://github.com/edenhill/librdkafka/wiki/Statistics
 
 
 X. Internal buffering and queueing
@@ -1770,7 +1769,7 @@ the following document: docs/MSGLOG_DUMP_FORMATS
 
 
 XIX. Running the print plugin to write to flat-files
-pmacct can also output to files via its 'print' plugin. Dynamic filenames are
+pmacct can also output to files via the 'print' plugin. Dynamic filenames are
 supported. Output is either text-based using JSON, CSV or formatted outputs, or
 binary-based using the Apache Avro file container ('print_output' directive).
 Interval between writes can be configured via the 'print_refresh_time'
@@ -1813,6 +1812,11 @@ print_output_file: /path/to/%Y/%Y-%m/%Y-%m-%d/file-%Y%m%d-%H%M.txt
 print_history: 15m
 print_history_roundoff: m
 print_output_file_append: true 
+
+Writing to flat-files is also a suitable method to ingest data into 3rd
+party applications (typically, but not limited to, noSQL databases like
+ElasticSearch, InfluxDB, etc.). An example is the pmacct-to-elasticsearch
+project https://github.com/pierky/pmacct-to-elasticsearch . 
 
 
 XX. Quickstart guide to setup GeoIP lookups
