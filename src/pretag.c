@@ -32,8 +32,8 @@
 #include "tee_plugin/tee_recvs-data.h"
 #include "isis/isis.h"
 #include "isis/isis-data.h"
-#include "bgp/bgp_recvs.h"
-#include "bgp/bgp_recvs-data.h"
+#include "bgp/bgp_xcs.h"
+#include "bgp/bgp_xcs-data.h"
 #include "crc32.h"
 #include "pmacct-data.h"
 

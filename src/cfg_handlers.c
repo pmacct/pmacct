@@ -3402,17 +3402,6 @@ int cfg_key_nfacctd_bgp_port(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_bgp_daemon_map(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int changes = 0;
-
-  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_map = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_map'. Globalized.\n", filename);
-
-  return changes;
-}
-
 int cfg_key_bgp_lg(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -3490,6 +3479,17 @@ int cfg_key_bgp_lg_passwd(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) list->cfg.bgp_lg_passwd = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_lg_passwd'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_bgp_xconnect_map(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_xconnect_map = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_xconnect_map'. Globalized.\n", filename);
 
   return changes;
 }

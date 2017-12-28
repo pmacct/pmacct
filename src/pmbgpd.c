@@ -153,7 +153,7 @@ int main(int argc,char **argv, char **envp)
       rows++;
       break;
     case 'm':
-      strlcpy(cfg_cmdline[rows], "bgp_daemon_map: ", SRVBUFLEN);
+      strlcpy(cfg_cmdline[rows], "bgp_daemon_xconnect_map: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
@@ -250,7 +250,7 @@ int main(int argc,char **argv, char **envp)
   signal(SIGINT, my_sigint_handler);
   signal(SIGTERM, my_sigint_handler);
 
-  if (config.bgp_daemon_map) {
+  if (config.bgp_xconnect_map) {
     int bgp_xcs_allocated = FALSE;
 
     memset(&bgp_xcs, 0, sizeof(bgp_xcs));
@@ -268,7 +268,7 @@ int main(int argc,char **argv, char **envp)
     else memset(bgp_xcs.pool, 0, (config.nfacctd_bgp_max_peers + 1) * sizeof(struct bgp_xconnect));
 
     req.key_value_table = (void *) &bgp_xcs;
-    load_id_file(MAP_BGP_XCS, config.bgp_daemon_map, NULL, &req, &bgp_xcs_allocated);
+    load_id_file(MAP_BGP_XCS, config.bgp_xconnect_map, NULL, &req, &bgp_xcs_allocated);
   }
 
   if (!config.nfacctd_bgp) config.nfacctd_bgp = BGP_DAEMON_ONLINE;

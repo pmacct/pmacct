@@ -26,7 +26,7 @@
 /* structures */
 
 /* prototypes */
-#if (!defined __BGP_RECVS_C)
+#if (!defined __BGP_XCS_C)
 #define EXT extern
 #else
 #define EXT

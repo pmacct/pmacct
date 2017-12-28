@@ -19,11 +19,11 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __BGP_RECVS_C
+#define __BGP_XCS_C
 
 #include "../pmacct.h"
 #include "bgp.h"
-#include "bgp_recvs.h"
+#include "bgp_xcs.h"
 
 void bgp_xcs_map_validate(char *filename, struct plugin_requests *req)
 {
