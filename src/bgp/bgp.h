@@ -302,22 +302,28 @@ struct bgp_lg_rep_gp_data {
   struct bgp_peer *peer;
 };
 
-/* XXX: bgp_daemon_map */
-struct bgp_receiver {
-#if defined ENABLE_IPV6
-  struct sockaddr_storage dest;         /* BGP receiver IP address and port */
-#else
-  struct sockaddr dest;
-#endif
-  socklen_t dest_len;
+struct bgp_xconnect {
+  u_int32_t id;
 
-  u_int32_t id;                         /* BGP receiver id */
-  struct pretag_filter tag_filter;      /* BGP originator id */
-  int fd;                               /* BGP receiver fd */
+#if defined ENABLE_IPV6
+  struct sockaddr_storage dst;         /* BGP receiver IP address and port */
+#else
+  struct sockaddr dst;
+#endif
+  socklen_t dst_len;
+  int dst_fd;
+
+#if defined ENABLE_IPV6
+  struct sockaddr_storage src;         /* BGP peer IP address and port */
+#else
+  struct sockaddr src;
+#endif
+  socklen_t src_len;
+  int src_fd;
 };
 
-struct bgp_receivers {
-  struct bgp_receiver *pool;
+struct bgp_xconnects {
+  struct bgp_xconnect *pool;
   int num;
 };
 
@@ -357,6 +363,6 @@ EXT u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, path_id_t *, int);
 EXT struct bgp_rt_structs inter_domain_routing_dbs[FUNC_TYPE_MAX], *bgp_routing_db;
 EXT struct bgp_misc_structs inter_domain_misc_dbs[FUNC_TYPE_MAX], *bgp_misc_db;
 
-EXT struct bgp_receivers bgp_recvs;
+EXT struct bgp_xconnects bgp_xcs;
 #undef EXT
 #endif 

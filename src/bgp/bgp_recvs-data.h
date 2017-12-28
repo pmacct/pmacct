@@ -19,9 +19,8 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-const struct _map_dictionary_line bgp_recvs_map_dictionary[] = {
-  {"id", bgp_recvs_map_id_handler},
-  {"ip", bgp_recvs_map_ip_handler},
-  {"tag", bgp_recvs_map_tag_handler},
+const struct _map_dictionary_line bgp_xcs_map_dictionary[] = {
+  {"bgp_dst", bgp_xcs_map_dst_handler},
+  {"bgp_src", bgp_xcs_map_src_handler},
   {"", NULL}
 };

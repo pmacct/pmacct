@@ -251,24 +251,24 @@ int main(int argc,char **argv, char **envp)
   signal(SIGTERM, my_sigint_handler);
 
   if (config.bgp_daemon_map) {
-    int bgp_recvs_allocated = FALSE;
+    int bgp_xcs_allocated = FALSE;
 
-    memset(&bgp_recvs, 0, sizeof(bgp_recvs));
+    memset(&bgp_xcs, 0, sizeof(bgp_xcs));
     memset(&req, 0, sizeof(req));
     reload_map = FALSE;
 
     /* Setting up the pool */
     if (!config.nfacctd_bgp_max_peers) config.nfacctd_bgp_max_peers = MAX_BGP_PEERS_DEFAULT;
 
-    bgp_recvs.pool = malloc((config.nfacctd_bgp_max_peers + 1) * sizeof(struct bgp_receiver));
-    if (!bgp_recvs.pool) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate BGP receiver pool. Exiting ...\n", config.name, config.type);
+    bgp_xcs.pool = malloc((config.nfacctd_bgp_max_peers + 1) * sizeof(struct bgp_xconnect));
+    if (!bgp_xcs.pool) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate BGP xconnect pool. Exiting ...\n", config.name, config.type);
       exit(1);
     }
-    else memset(bgp_recvs.pool, 0, (config.nfacctd_bgp_max_peers + 1) * sizeof(struct bgp_receiver));
+    else memset(bgp_xcs.pool, 0, (config.nfacctd_bgp_max_peers + 1) * sizeof(struct bgp_xconnect));
 
-    req.key_value_table = (void *) &bgp_recvs;
-    load_id_file(MAP_BGP_RECVS, config.bgp_daemon_map, NULL, &req, &bgp_recvs_allocated);
+    req.key_value_table = (void *) &bgp_xcs;
+    load_id_file(MAP_BGP_XCS, config.bgp_daemon_map, NULL, &req, &bgp_xcs_allocated);
   }
 
   if (!config.nfacctd_bgp) config.nfacctd_bgp = BGP_DAEMON_ONLINE;
