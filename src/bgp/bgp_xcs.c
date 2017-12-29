@@ -30,12 +30,10 @@ void bgp_xcs_map_validate(char *filename, struct plugin_requests *req)
   struct bgp_xconnects *table = (struct bgp_xconnects *) req->key_value_table;
   int valid = FALSE;
 
-  /* If we have got: a) a valid pool ID and b) a valid id THEN ok */
+  /* If we have got AFs != 0 we are good enough */
   if (table && table->pool) {
-    struct sockaddr *sa_src = (struct sockaddr *) &table->pool[table->num].src;
-    struct sockaddr *sa_dst = (struct sockaddr *) &table->pool[table->num].dst;
-
-    if (sa_src->sa_family && sa_dst->sa_family) {
+    if (sa_has_family((struct sockaddr *) &table->pool[table->num].src) &&
+	sa_has_family((struct sockaddr *) &table->pool[table->num].dst)) {
       valid = TRUE;
       table->num++;
       table->pool[table->num].id = table->num;
@@ -49,7 +47,7 @@ void bgp_xcs_map_validate(char *filename, struct plugin_requests *req)
 
 int bgp_xcs_parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len)
 {
-  return Tee_parse_hostport(s, addr, len);
+  return Tee_parse_hostport(s, addr, len, TRUE);
 }
 
 int bgp_xcs_map_dst_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)

@@ -79,7 +79,7 @@ EXT void Tee_init_socks();
 EXT void Tee_destroy_recvs();
 EXT void Tee_send(struct pkt_msg *, struct sockaddr *, int);
 EXT int Tee_prepare_sock(struct sockaddr *, socklen_t, u_int16_t);
-EXT int Tee_parse_hostport(const char *, struct sockaddr *, socklen_t *);
+EXT int Tee_parse_hostport(const char *, struct sockaddr *, socklen_t *, int);
 EXT struct tee_receiver *Tee_rr_balance(void *, struct pkt_msg *);
 EXT struct tee_receiver *Tee_hash_agent_balance(void *, struct pkt_msg *);
 EXT struct tee_receiver *Tee_hash_tag_balance(void *, struct pkt_msg *);

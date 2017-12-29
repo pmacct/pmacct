@@ -60,6 +60,7 @@ EXT u_int8_t etype_to_af(u_int16_t);
 EXT u_int16_t af_to_etype(u_int8_t);
 EXT u_int32_t addr_hash(struct host_addr *, u_int32_t);
 EXT u_int32_t addr_port_hash(struct host_addr *, u_int16_t, u_int32_t);
+EXT u_int16_t sa_has_family(struct sockaddr *);
 
 #if defined ENABLE_IPV6
 EXT void ipv4_mapped_to_ipv4(struct sockaddr_storage *);

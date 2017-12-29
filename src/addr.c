@@ -717,3 +717,8 @@ u_int32_t addr_port_hash(struct host_addr *ha, u_int16_t port, u_int32_t modulo)
 
   return (val % modulo);
 }
+
+u_int16_t sa_has_family(struct sockaddr *sa)
+{
+  return sa->sa_family;
+}
