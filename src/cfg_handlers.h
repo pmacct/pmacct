@@ -66,6 +66,7 @@ EXT int cfg_key_sql_table_schema(char *, char *, char *);
 EXT int cfg_key_sql_table_version(char *, char *, char *);
 EXT int cfg_key_sql_table_type(char *, char *, char *);
 EXT int cfg_key_sql_host(char *, char *, char *);
+EXT int cfg_key_sql_port(char *, char *, char *);
 EXT int cfg_key_sql_data(char *, char *, char *);
 EXT int cfg_key_sql_user(char *, char *, char *);
 EXT int cfg_key_sql_passwd(char *, char *, char *);

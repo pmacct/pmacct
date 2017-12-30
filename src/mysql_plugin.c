@@ -672,7 +672,7 @@ void MY_DB_Connect(struct DBdesc *db, char *host)
   if (!db->fail) {
     mysql_init(db->desc);
     mysql_options(dbptr, MYSQL_OPT_RECONNECT, &reconnect);
-    if (!mysql_real_connect(db->desc, host, config.sql_user, config.sql_passwd, config.sql_db, 0, NULL, 0)) {
+    if (!mysql_real_connect(db->desc, host, config.sql_user, config.sql_passwd, config.sql_db, config.sql_port, NULL, 0)) {
       sql_db_fail(db);
       MY_get_errmsg(db);
       sql_db_errmsg(db);
@@ -735,6 +735,7 @@ void MY_init_default_values(struct insert_data *idata)
   if (!config.sql_user) config.sql_user = mysql_user;
   if (!config.sql_db) config.sql_db = mysql_db;
   if (!config.sql_passwd) config.sql_passwd = mysql_pwd;
+  if (!config.sql_port) config.sql_port = mysql_prt;
   if (!config.sql_table) {
     if (config.sql_table_version == (SQL_TABLE_VERSION_BGP+1)) config.sql_table = mysql_table_bgp;
     else if (config.sql_table_version == 8) config.sql_table = mysql_table_v8;
