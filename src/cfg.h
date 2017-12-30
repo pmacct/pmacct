@@ -121,6 +121,7 @@ struct configuration {
   char *sql_user;
   char *sql_passwd;
   char *sql_host;
+  int sql_port;
   char *sql_data;
   char *sql_backup_host;
   int sql_optimize_clauses;

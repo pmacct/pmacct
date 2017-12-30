@@ -46,6 +46,7 @@ void MY_mysql_get_version();
 /* variables */
 static char mysql_user[] = "pmacct";
 static char mysql_pwd[] = "arealsmartpwd";
+static unsigned int mysql_prt = 3306;
 static char mysql_db[] = "pmacct";
 static char mysql_table[] = "acct";
 static char mysql_table_v2[] = "acct_v2";
