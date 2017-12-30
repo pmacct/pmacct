@@ -1055,6 +1055,10 @@ KEY:	 	sql_host
 DESC:		Defines the backend server IP/hostname
 DEFAULT:	localhost
 
+KEY:            sql_port
+DESC:           Defines the backend server TCP/UDP port
+DEFAULT:        [ MySQL: 3306; PostgreSQL: 5432 ]
+
 KEY:		sql_user
 DESC:		Defines the username to use when connecting to the server.
 DEFAULT:	pmacct

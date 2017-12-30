@@ -33,7 +33,7 @@ int PG_cache_dbop_copy(struct DBdesc *, struct db_cache *, struct insert_data *)
 void PG_cache_purge(struct db_cache *[], int, struct insert_data *);
 int PG_evaluate_history(int);
 int PG_compose_static_queries();
-void PG_compose_conn_string(struct DBdesc *, char *);
+void PG_compose_conn_string(struct DBdesc *, char *, int);
 void PG_Lock(struct DBdesc *);
 void PG_DB_Connect(struct DBdesc *, char *);
 void PG_DB_Close(struct BE_descs *);

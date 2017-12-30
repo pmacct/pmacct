@@ -774,7 +774,7 @@ int PG_compose_static_queries()
   return primitives;
 }
 
-void PG_compose_conn_string(struct DBdesc *db, char *host)
+void PG_compose_conn_string(struct DBdesc *db, char *host, int port)
 {
   char *string;
   int slen = SRVBUFLEN;
@@ -792,6 +792,7 @@ void PG_compose_conn_string(struct DBdesc *db, char *host)
     string += strlen(string);
 
     if (host) snprintf(string, slen, " host=%s", host);
+    if (port) snprintf(string, slen, " port=%u", port);
   }
 }
 
@@ -873,7 +874,7 @@ void PG_create_backend(struct DBdesc *db)
     if (!config.sql_backup_host) return;
   } 
 
-  PG_compose_conn_string(db, config.sql_host);
+  PG_compose_conn_string(db, config.sql_host, config.sql_port);
 }
 
 void PG_set_callbacks(struct sqlfunc_cb_registry *cbr)
