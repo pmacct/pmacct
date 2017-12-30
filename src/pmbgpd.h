@@ -39,11 +39,6 @@
 EXT void usage_daemon(char *);
 EXT void compute_once();
 
-EXT void bgp_recvs_map_validate(char *, struct plugin_requests *);
-EXT int bgp_recvs_map_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
-EXT int bgp_recvs_map_ip_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
-EXT int bgp_recvs_map_tag_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
-
 /* Looking Glass */
 #if defined WITH_ZMQ
 EXT void bgp_lg_wrapper();

@@ -26,18 +26,17 @@
 /* structures */
 
 /* prototypes */
-#if (!defined __BGP_RECVS_C)
+#if (!defined __BGP_XCS_C)
 #define EXT extern
 #else
 #define EXT
 #endif
 
-EXT int bgp_recvs_map_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
-EXT int bgp_recvs_map_ip_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
-EXT int bgp_recvs_map_tag_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int bgp_xcs_map_src_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int bgp_xcs_map_dst_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 
-EXT void bgp_recvs_map_validate(char *, struct plugin_requests *);
-EXT int bgp_recvs_parse_hostport(const char *, struct sockaddr *, socklen_t *);
+EXT void bgp_xcs_map_validate(char *, struct plugin_requests *);
+EXT int bgp_xcs_parse_hostport(const char *, struct sockaddr *, socklen_t *);
 
 /* global variables */
 

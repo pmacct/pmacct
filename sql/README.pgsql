@@ -186,14 +186,10 @@ in looking up protocol names by their number and viceversa. Because joins are ex
 'proto' table has been created *only* for your personal reference. 
 
 NOTE: mind to specify EVERYTIME which SQL table version you
-intend to adhere to by using either of the following rules:
+intend to adhere to by using the following config directives:
 
-When using commandline options:
-  * -v [ 1 | 2 | 3 | 4 | 5 | 6 | 7 ]
-
-When using configuration directives:
-  * sql_table_version: [ 1 | 2 | 3 | 4 | 5 | 6 | 7 ]
-  * sql_table_type: [ bgp ]
+* sql_table_version: [ 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 ]
+* sql_table_type: [ bgp ]
 
 NOTE: specifying a non-documented SQL table profile will result
 in an non-determined behaviour. Unless this will create crashes

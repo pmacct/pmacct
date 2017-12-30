@@ -32,8 +32,8 @@
 #include "tee_plugin/tee_recvs-data.h"
 #include "isis/isis.h"
 #include "isis/isis-data.h"
-#include "bgp/bgp_recvs.h"
-#include "bgp/bgp_recvs-data.h"
+#include "bgp/bgp_xcs.h"
+#include "bgp/bgp_xcs-data.h"
 #include "crc32.h"
 #include "pmacct-data.h"
 
@@ -283,10 +283,10 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   }
                   key = NULL; value = NULL;
 		}
-		else if (acct_type == MAP_BGP_RECVS) {
-                  for (dindex = 0; strcmp(bgp_recvs_map_dictionary[dindex].key, ""); dindex++) {
-                    if (!strcmp(bgp_recvs_map_dictionary[dindex].key, key)) {
-                      err = (*bgp_recvs_map_dictionary[dindex].func)(filename, NULL, value, req, acct_type);
+		else if (acct_type == MAP_BGP_XCS) {
+                  for (dindex = 0; strcmp(bgp_xcs_map_dictionary[dindex].key, ""); dindex++) {
+                    if (!strcmp(bgp_xcs_map_dictionary[dindex].key, key)) {
+                      err = (*bgp_xcs_map_dictionary[dindex].func)(filename, NULL, value, req, acct_type);
                       break;
                     }
                     else err = E_NOTFOUND; /* key not found */
@@ -506,7 +506,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 			config.name, config.type, filename, tot_lines);
               }
 	      else if (acct_type == MAP_TEE_RECVS) tee_recvs_map_validate(filename, req); 
-	      else if (acct_type == MAP_BGP_RECVS) bgp_recvs_map_validate(filename, req); 
+	      else if (acct_type == MAP_BGP_XCS) bgp_xcs_map_validate(filename, req); 
 	      else if (acct_type == MAP_IGP) igp_daemon_map_validate(filename, req); 
 	      else if (acct_type == MAP_CUSTOM_PRIMITIVES) custom_primitives_map_validate(filename, req); 
 	    }

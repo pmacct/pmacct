@@ -153,7 +153,7 @@
 #define MAP_TEE_RECVS		106	/* tee_receivers */
 #define MAP_IGP			107	/* igp_daemon_map */
 #define MAP_CUSTOM_PRIMITIVES	108	/* aggregate_primitives */
-#define MAP_BGP_RECVS		109	/* bgp_daemon_map */
+#define MAP_BGP_XCS		109	/* bgp_xconnect_map */
 
 /* PRIMITIVES DEFINITION: START */
 /* internal: first registry, ie. what_to_count, aggregation, etc. */

@@ -559,9 +559,9 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, u_int16_t src_port)
   return(s);
 }
 
-int Tee_parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len)
+int Tee_parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len, int dont_check_port)
 {
-  char *orig, *host, *port;
+  char *orig, *host, *port, zero_port[] = "]:0";
   struct addrinfo hints, *res;
   int herr;
 
@@ -575,11 +575,20 @@ int Tee_parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len)
   trim_spaces(host);
   trim_spaces(orig);
 
-  if ((port = strrchr(host, ':')) == NULL || *(++port) == '\0' || *host == '\0') return TRUE;
+  if ((port = strrchr(host, ':')) == NULL || *(++port) == '\0') {
+    if (dont_check_port) {
+      port = zero_port;
+      ++port; ++port;
+    }
+    else return TRUE;
+  }
+
+  if (*host == '\0') return TRUE;
 
   *(port - 1) = '\0';
 
-  /* Accept [host]:port for numeric IPv6 addresses */
+  /* Accept [host]:port for numeric IPv6 addresses;
+     XXX: if dont_check_port is set to true, check for ']' will be inaccurate */
   if (*host == '[' && *(port - 2) == ']') {
     host++;
     *(port - 2) = '\0';

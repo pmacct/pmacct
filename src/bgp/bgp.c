@@ -62,6 +62,7 @@ void skinny_bgp_daemon_online()
 {
   int slen, ret, rc, peers_idx, allowed;
   int peers_idx_rr = 0, max_peers_idx = 0;
+  struct plugin_requests req;
   struct host_addr addr;
   struct bgp_peer *peer;
   char bgp_reply_pkt[BGP_BUFFER_SIZE], *bgp_reply_pkt_ptr;
@@ -156,6 +157,28 @@ void skinny_bgp_daemon_online()
   else {
     peers_cache = NULL;
     peers_port_cache = NULL;
+  }
+
+  if (config.bgp_xconnect_map) {
+    int bgp_xcs_allocated = FALSE;
+
+    memset(&bgp_xcs, 0, sizeof(bgp_xcs));
+    memset(&req, 0, sizeof(req));
+
+    /* Setting up the pool */
+    bgp_xcs.pool = malloc((config.nfacctd_bgp_max_peers + 1) * sizeof(struct bgp_xconnect));
+    if (!bgp_xcs.pool) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate BGP xconnect pool. Exiting ...\n", config.name, config.type);
+      exit(1);
+    }
+    else memset(bgp_xcs.pool, 0, (config.nfacctd_bgp_max_peers + 1) * sizeof(struct bgp_xconnect));
+
+    req.key_value_table = (void *) &bgp_xcs;
+    load_id_file(MAP_BGP_XCS, config.bgp_xconnect_map, NULL, &req, &bgp_xcs_allocated);
+  }
+  else {
+    bgp_xcs.pool = 0;
+    bgp_xcs.num = 0;
   }
 
   if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key || config.nfacctd_bgp_msglog_kafka_topic) {

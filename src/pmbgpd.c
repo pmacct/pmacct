@@ -70,7 +70,6 @@ void usage_daemon(char *prog_name)
 int main(int argc,char **argv, char **envp)
 {
   struct plugins_list_entry *list;
-  struct plugin_requests req;
   char config_file[SRVBUFLEN];
   int logf;
 
@@ -153,7 +152,7 @@ int main(int argc,char **argv, char **envp)
       rows++;
       break;
     case 'm':
-      strlcpy(cfg_cmdline[rows], "bgp_daemon_map: ", SRVBUFLEN);
+      strlcpy(cfg_cmdline[rows], "bgp_daemon_xconnect_map: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
@@ -249,27 +248,6 @@ int main(int argc,char **argv, char **envp)
   signal(SIGPIPE, SIG_IGN); /* we want to exit gracefully when a pipe is broken */
   signal(SIGINT, my_sigint_handler);
   signal(SIGTERM, my_sigint_handler);
-
-  if (config.bgp_daemon_map) {
-    int bgp_recvs_allocated = FALSE;
-
-    memset(&bgp_recvs, 0, sizeof(bgp_recvs));
-    memset(&req, 0, sizeof(req));
-    reload_map = FALSE;
-
-    /* Setting up the pool */
-    if (!config.nfacctd_bgp_max_peers) config.nfacctd_bgp_max_peers = MAX_BGP_PEERS_DEFAULT;
-
-    bgp_recvs.pool = malloc((config.nfacctd_bgp_max_peers + 1) * sizeof(struct bgp_receiver));
-    if (!bgp_recvs.pool) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate BGP receiver pool. Exiting ...\n", config.name, config.type);
-      exit(1);
-    }
-    else memset(bgp_recvs.pool, 0, (config.nfacctd_bgp_max_peers + 1) * sizeof(struct bgp_receiver));
-
-    req.key_value_table = (void *) &bgp_recvs;
-    load_id_file(MAP_BGP_RECVS, config.bgp_daemon_map, NULL, &req, &bgp_recvs_allocated);
-  }
 
   if (!config.nfacctd_bgp) config.nfacctd_bgp = BGP_DAEMON_ONLINE;
   if (!config.nfacctd_bgp_port) config.nfacctd_bgp_port = BGP_TCP_PORT;
