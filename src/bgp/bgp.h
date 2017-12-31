@@ -142,6 +142,7 @@ struct bgp_misc_structs {
   int max_peers;
   void *peers_cache;
   void *peers_port_cache;
+  void *xconnects;
 
   char *neighbors_file;
   char *dump_file;
@@ -192,6 +193,7 @@ struct bgp_peer_buf {
 
 struct bgp_peer {
   int fd;
+  int xconnect_fd;
   int lock;
   int type; /* ie. BGP vs BMP */
   u_int8_t status;
@@ -311,7 +313,6 @@ struct bgp_xconnect {
   struct sockaddr dst;
 #endif
   socklen_t dst_len;
-  int dst_fd;
 
 #if defined ENABLE_IPV6
   struct sockaddr_storage src;         /* BGP peer IP address and port */
@@ -319,7 +320,6 @@ struct bgp_xconnect {
   struct sockaddr src;
 #endif
   socklen_t src_len;
-  int src_fd;
 };
 
 struct bgp_xconnects {

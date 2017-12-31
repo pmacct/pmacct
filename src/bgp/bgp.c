@@ -138,6 +138,11 @@ void skinny_bgp_daemon_online()
   memset(peers, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
 
   if (config.bgp_lg) {
+    if (config.acct_type != ACCT_PMBGP) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): bgp_daemon_lg feature not supported for this daemon. Exiting ...\n", config.name, config.type);
+      exit(1);
+    }
+
     peers_cache = malloc(config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_cache_bucket));
     if (!peers_cache) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() BGP peers cache structure. Terminating thread.\n", config.name, bgp_misc_db->log_str);
@@ -161,6 +166,11 @@ void skinny_bgp_daemon_online()
 
   if (config.bgp_xconnect_map) {
     int bgp_xcs_allocated = FALSE;
+
+    if (config.acct_type != ACCT_PMBGP) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): bgp_daemon_xconnect_map feature not supported for this daemon. Exiting ...\n", config.name, config.type);
+      exit(1);
+    }
 
     memset(&bgp_xcs, 0, sizeof(bgp_xcs));
     memset(&req, 0, sizeof(req));
@@ -226,6 +236,11 @@ void skinny_bgp_daemon_online()
       Log(LOG_ERR, "ERROR ( %s/%s ): bgp_table_dump_file, bgp_table_dump_amqp_routing_key and bgp_table_dump_kafka_topic are mutually exclusive. Terminating thread.\n", config.name, bgp_misc_db->log_str);
       exit_all(1);
     }
+  }
+
+  if ((bgp_misc_db->msglog_backend_methods || bgp_misc_db->dump_backend_methods) && config.bgp_xconnect_map) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): bgp_daemon_xconnect_map is mutually exclusive with any BGP msglog and dump method. Terminating thread.\n", config.name, bgp_misc_db->log_str);
+    exit_all(1);
   }
 
   if (!config.bgp_table_peer_buckets) config.bgp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
@@ -657,25 +672,32 @@ void skinny_bgp_daemon_online()
       goto select_again;
     }
     else {
-      /* Appears a valid peer with a valid BGP message: before
-	 continuing let's see if it's time to send a KEEPALIVE
-	 back */
-      if (peer->status == Established && ((now - peer->last_keepalive) > (peer->ht / 2))) {
-        bgp_reply_pkt_ptr = bgp_reply_pkt;
-        bgp_reply_pkt_ptr += bgp_write_keepalive_msg(bgp_reply_pkt_ptr);
-        ret = send(peer->fd, bgp_reply_pkt, bgp_reply_pkt_ptr - bgp_reply_pkt, 0);
-	peer->last_keepalive = now;
-      } 
+      if (!config.bgp_xconnect_map) {
+	/* Appears a valid peer with a valid BGP message: before
+	   continuing let's see if it's time to send a KEEPALIVE
+	   back */
+	if (peer->status == Established && ((now - peer->last_keepalive) > (peer->ht / 2))) {
+	  bgp_reply_pkt_ptr = bgp_reply_pkt;
+	  bgp_reply_pkt_ptr += bgp_write_keepalive_msg(bgp_reply_pkt_ptr);
+	  ret = send(peer->fd, bgp_reply_pkt, bgp_reply_pkt_ptr - bgp_reply_pkt, 0);
+	  peer->last_keepalive = now;
+	} 
 
-      ret = bgp_parse_msg(peer, now, TRUE);
-      if (ret) {
-        FD_CLR(peer->fd, &bkp_read_descs);
+	ret = bgp_parse_msg(peer, now, TRUE);
+	if (ret) {
+	  FD_CLR(peer->fd, &bkp_read_descs);
 
-	if (ret < 0) bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
-	else bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, TRUE, ret, BGP_NOTIFY_SUBCODE_UNSPECIFIC, NULL);
+	  if (ret < 0) bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
+	  else bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, TRUE, ret, BGP_NOTIFY_SUBCODE_UNSPECIFIC, NULL);
 
-        recalc_fds = TRUE;
-        goto select_again;
+	  recalc_fds = TRUE;
+	  goto select_again;
+	}
+      }
+      else {
+	peer->last_keepalive = now; /* prevent any local session timer to kick in */
+
+	// XXX
       }
     }
   }
