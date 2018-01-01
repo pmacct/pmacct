@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -569,8 +569,6 @@ int bgp_peer_init(struct bgp_peer *peer, int type)
 {
   struct bgp_misc_structs *bms;
   int ret = TRUE;
-  afi_t afi;
-  safi_t safi;
 
   bms = bgp_select_misc_db(type);
 
@@ -596,8 +594,6 @@ int bgp_peer_init(struct bgp_peer *peer, int type)
 void bgp_peer_close(struct bgp_peer *peer, int type, int no_quiet, int send_notification, u_int8_t n_major, u_int8_t n_minor, char *shutdown_msg)
 {
   struct bgp_misc_structs *bms;
-  afi_t afi;
-  safi_t safi;
 
   if (!peer) return;
 
@@ -640,6 +636,48 @@ void bgp_peer_close(struct bgp_peer *peer, int type, int no_quiet, int send_noti
 
   if (bms->neighbors_file)
     write_neighbors_file(bms->neighbors_file, peer->type);
+}
+
+int bgp_peer_xconnect_init(struct bgp_peer *peer, int type)
+{
+  struct bgp_misc_structs *bms;
+  struct bgp_xconnects *bxm; 
+  int ret = TRUE, idx, fd;
+
+  assert(!peer->xconnect_fd);
+  bms = bgp_select_misc_db(type);
+
+  if (!peer || !bms) return ERR;
+
+  bxm = bms->xconnects;
+
+  if (bxm) {
+    for (idx = 0; idx < bxm->num; idx++) {
+      if (!sa_addr_cmp((struct sockaddr *) &bxm->pool[idx].src, &peer->addr)) {
+	struct sockaddr *sa = (struct sockaddr *) &bxm->pool[idx].dst;
+
+	fd = socket(sa->sa_family, SOCK_STREAM, 0);
+	if (fd == ERR) {
+	  Log(LOG_WARNING, "WARN ( %s/%s ): bgp_peer_xconnect_init() can't obtain new socket.\n", config.name, bms->log_str);
+	  return ERR;
+	}
+
+	ret = connect(fd, sa, bxm->pool[idx].dst_len);
+	if (ret == ERR) {
+	  char dst[INET6_ADDRSTRLEN + PORT_STRLEN + 1];
+
+	  sa_to_str(dst, sizeof(dst), sa);
+	  Log(LOG_WARNING, "WARN ( %s/%s ): bgp_peer_xconnect_init() can't connect to %s.\n", config.name, bms->log_str, dst);
+	  return ERR;
+	}
+
+	peer->xconnect_fd = fd;
+	break;
+      }
+    }
+  }
+
+  return ret;
 }
 
 void bgp_peer_print(struct bgp_peer *peer, char *buf, int len)
@@ -1236,7 +1274,7 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->peers = peers;
   bms->peers_cache = peers_cache;
   bms->peers_port_cache = peers_port_cache;
-  bms->xconnects = &bgp_xcs;
+  bms->xconnects = &bgp_xcs_map;
   bms->neighbors_file = config.nfacctd_bgp_neighbors_file; 
   bms->dump_file = config.bgp_table_dump_file; 
   bms->dump_amqp_routing_key = config.bgp_table_dump_amqp_routing_key; 

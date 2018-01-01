@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -172,23 +172,23 @@ void skinny_bgp_daemon_online()
       exit(1);
     }
 
-    memset(&bgp_xcs, 0, sizeof(bgp_xcs));
+    memset(&bgp_xcs_map, 0, sizeof(bgp_xcs_map));
     memset(&req, 0, sizeof(req));
 
     /* Setting up the pool */
-    bgp_xcs.pool = malloc((config.nfacctd_bgp_max_peers + 1) * sizeof(struct bgp_xconnect));
-    if (!bgp_xcs.pool) {
+    bgp_xcs_map.pool = malloc((config.nfacctd_bgp_max_peers + 1) * sizeof(struct bgp_xconnect));
+    if (!bgp_xcs_map.pool) {
       Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate BGP xconnect pool. Exiting ...\n", config.name, config.type);
       exit(1);
     }
-    else memset(bgp_xcs.pool, 0, (config.nfacctd_bgp_max_peers + 1) * sizeof(struct bgp_xconnect));
+    else memset(bgp_xcs_map.pool, 0, (config.nfacctd_bgp_max_peers + 1) * sizeof(struct bgp_xconnect));
 
-    req.key_value_table = (void *) &bgp_xcs;
+    req.key_value_table = (void *) &bgp_xcs_map;
     load_id_file(MAP_BGP_XCS, config.bgp_xconnect_map, NULL, &req, &bgp_xcs_allocated);
   }
   else {
-    bgp_xcs.pool = 0;
-    bgp_xcs.num = 0;
+    bgp_xcs_map.pool = 0;
+    bgp_xcs_map.num = 0;
   }
 
   if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key || config.nfacctd_bgp_msglog_kafka_topic) {
@@ -418,6 +418,12 @@ void skinny_bgp_daemon_online()
 
       for (peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
         if (select_fd < peers[peers_idx].fd) select_fd = peers[peers_idx].fd; 
+
+        if (config.bgp_xconnect_map) {
+	  if (select_fd < peers[peers_idx].xconnect_fd)
+	    select_fd = peers[peers_idx].xconnect_fd; 
+	}
+
 	if (peers[peers_idx].fd) max_peers_idx = peers_idx;
       }
       select_fd++;
@@ -606,6 +612,8 @@ void skinny_bgp_daemon_online()
 	bucket = addr_port_hash(&peer->addr, peer->tcp_port, config.nfacctd_bgp_max_peers);
 	bgp_peer_cache_insert(peers_port_cache, bucket, peer);
       }
+
+      if (config.bgp_xconnect_map) bgp_peer_xconnect_init(peer, FUNC_TYPE_BGP);
 
       if (bgp_misc_db->msglog_backend_methods)
 	bgp_peer_log_init(peer, config.nfacctd_bgp_msglog_output, FUNC_TYPE_BGP);

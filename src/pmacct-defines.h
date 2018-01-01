@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -46,6 +46,7 @@
 #define PM_COUNTRY_T_STRLEN 4
 #define PM_POCODE_T_STRLEN 12
 #define PCAP_SAVEFILE_MAX_ERRORS 10
+#define PORT_STRLEN 6
 #ifndef UINT8_MAX
 #define UINT8_MAX (255U)
 #endif

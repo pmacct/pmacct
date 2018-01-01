@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -332,30 +332,51 @@ unsigned int raw_to_sa(struct sockaddr *sa, char *src, u_int16_t port, u_int8_t 
 }
 
 /*
- * sa_to_str() converts a supported family addres into a string
- * 'str' length is not checked and assumed to be INET6_ADDRSTRLEN 
+ * sa_to_str() converts a supported family address into a string
  */
-unsigned int sa_to_str(char *str, const struct sockaddr *sa)
+unsigned int sa_to_str(char *str, int len, const struct sockaddr *sa)
 {
   struct sockaddr_in *sa4 = (struct sockaddr_in *)sa;
 #if defined ENABLE_IPV6
   struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)sa;
 #endif
+  char sep[] = ":";
+  int off;
 
-  if (sa->sa_family == AF_INET) {
-    inet_ntop(AF_INET, &sa4->sin_addr.s_addr, str, INET6_ADDRSTRLEN);
-    return sa->sa_family;
-  }
+  if (len >= INET6_ADDRSTRLEN) {
+    if (sa->sa_family == AF_INET) {
+      inet_ntop(AF_INET, &sa4->sin_addr.s_addr, str, INET6_ADDRSTRLEN);
+
+      if (len >= (INET6_ADDRSTRLEN + PORT_STRLEN + 1) && sa4->sin_port) {
+	off = strlen(str);
+	snprintf(str + off, len - off, "%s", sep);
+
+	off = strlen(str);
+	snprintf(str + off, len - off, "%u", sa4->sin_port);
+      }
+
+      return sa->sa_family;
+    }
 #if defined ENABLE_IPV6
-  if (sa->sa_family == AF_INET6) {
-    inet_ntop(AF_INET6, &sa6->sin6_addr, str, INET6_ADDRSTRLEN);
-    return sa->sa_family;
+    if (sa->sa_family == AF_INET6) {
+      inet_ntop(AF_INET6, &sa6->sin6_addr, str, INET6_ADDRSTRLEN);
+
+      if (sa6->sin6_port) {
+        off = strlen(str);
+        snprintf(str + off, len - off, "%s", sep);
+
+        off = strlen(str);
+        snprintf(str + off, len - off, "%u", sa6->sin6_port);
+      }
+
+      return sa->sa_family;
+    }
   }
 #endif
 
-  memset(str, 0, INET6_ADDRSTRLEN);
+  memset(str, 0, len);
 
-  return 0;
+  return FALSE;
 }
 
 /*
