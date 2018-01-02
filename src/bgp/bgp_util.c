@@ -601,33 +601,39 @@ void bgp_peer_close(struct bgp_peer *peer, int type, int no_quiet, int send_noti
 
   if (!bms) return;
 
-  if (send_notification) {
-    int ret, notification_msglen = (BGP_MIN_NOTIFICATION_MSG_SIZE + BGP_NOTIFY_CEASE_SM_LEN + 1);
-    char notification_msg[notification_msglen];
+  if (!config.bgp_xconnect_map) {
+    if (send_notification) {
+      int ret, notification_msglen = (BGP_MIN_NOTIFICATION_MSG_SIZE + BGP_NOTIFY_CEASE_SM_LEN + 1);
+      char notification_msg[notification_msglen];
 
-    ret = bgp_write_notification_msg(notification_msg, notification_msglen, n_major, n_minor, shutdown_msg);
-    if (ret) send(peer->fd, notification_msg, ret, 0);
+      ret = bgp_write_notification_msg(notification_msg, notification_msglen, n_major, n_minor, shutdown_msg);
+      if (ret) send(peer->fd, notification_msg, ret, 0);
+    }
+
+    /* be quiet if we are in a signal handler and already set to exit() */
+    if (!no_quiet) bgp_peer_info_delete(peer);
+
+    if (bms->msglog_file || bms->msglog_amqp_routing_key || bms->msglog_kafka_topic)
+      bgp_peer_log_close(peer, bms->msglog_output, peer->type);
+
+    if (bms->peers_cache && bms->peers_port_cache) {
+      u_int32_t bucket;
+
+      bucket = addr_hash(&peer->addr, bms->max_peers);
+      bgp_peer_cache_delete(bms->peers_cache, bucket, peer);
+
+      bucket = addr_port_hash(&peer->addr, peer->tcp_port, bms->max_peers);
+      bgp_peer_cache_delete(bms->peers_port_cache, bucket, peer);
+    }
+  }
+  else {
+    if (peer->xconnect_fd && peer->xconnect_fd != ERR) close(peer->xconnect_fd);
   }
 
-  /* be quiet if we are in a signal handler and already set to exit() */
-  if (!no_quiet) bgp_peer_info_delete(peer);
-
-  if (bms->msglog_file || bms->msglog_amqp_routing_key || bms->msglog_kafka_topic)
-    bgp_peer_log_close(peer, bms->msglog_output, peer->type);
-
-  if (peer->fd != ERR) close(peer->fd);
-
-  if (bms->peers_cache && bms->peers_port_cache) {
-    u_int32_t bucket;
-
-    bucket = addr_hash(&peer->addr, bms->max_peers);
-    bgp_peer_cache_delete(bms->peers_cache, bucket, peer);
-
-    bucket = addr_port_hash(&peer->addr, peer->tcp_port, bms->max_peers);
-    bgp_peer_cache_delete(bms->peers_port_cache, bucket, peer);
-  }
+  if (peer->fd && peer->fd != ERR) close(peer->fd);
 
   peer->fd = 0;
+  peer->xconnect_fd = 0;
   memset(&peer->id, 0, sizeof(peer->id));
   memset(&peer->addr, 0, sizeof(peer->addr));
   memset(&peer->addr_str, 0, sizeof(peer->addr_str));
@@ -659,6 +665,7 @@ int bgp_peer_xconnect_init(struct bgp_peer *peer, int type)
 	fd = socket(sa->sa_family, SOCK_STREAM, 0);
 	if (fd == ERR) {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): bgp_peer_xconnect_init() can't obtain new socket.\n", config.name, bms->log_str);
+	  peer->xconnect_fd = 0;
 	  return ERR;
 	}
 
@@ -667,7 +674,8 @@ int bgp_peer_xconnect_init(struct bgp_peer *peer, int type)
 	  char dst[INET6_ADDRSTRLEN + PORT_STRLEN + 1];
 
 	  sa_to_str(dst, sizeof(dst), sa);
-	  Log(LOG_WARNING, "WARN ( %s/%s ): bgp_peer_xconnect_init() can't connect to %s.\n", config.name, bms->log_str, dst);
+	  Log(LOG_WARNING, "WARN ( %s/%s ): bgp_peer_xconnect_init(): unable to establish BGP xconnect to %s.\n", config.name, bms->log_str, dst);
+	  peer->xconnect_fd = 0;
 	  return ERR;
 	}
 

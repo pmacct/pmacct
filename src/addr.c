@@ -352,7 +352,7 @@ unsigned int sa_to_str(char *str, int len, const struct sockaddr *sa)
 	snprintf(str + off, len - off, "%s", sep);
 
 	off = strlen(str);
-	snprintf(str + off, len - off, "%u", sa4->sin_port);
+	snprintf(str + off, len - off, "%u", ntohs(sa4->sin_port));
       }
 
       return sa->sa_family;
@@ -366,7 +366,7 @@ unsigned int sa_to_str(char *str, int len, const struct sockaddr *sa)
         snprintf(str + off, len - off, "%s", sep);
 
         off = strlen(str);
-        snprintf(str + off, len - off, "%u", sa6->sin6_port);
+        snprintf(str + off, len - off, "%u", ntohs(sa6->sin6_port));
       }
 
       return sa->sa_family;

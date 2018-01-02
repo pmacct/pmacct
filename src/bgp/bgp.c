@@ -61,7 +61,7 @@ void skinny_bgp_daemon()
 void skinny_bgp_daemon_online()
 {
   int slen, ret, rc, peers_idx, allowed;
-  int peers_idx_rr = 0, max_peers_idx = 0;
+  int peers_idx_rr = 0, peers_xconnect_idx_rr = 0, max_peers_idx = 0;
   struct plugin_requests req;
   struct host_addr addr;
   struct bgp_peer *peer;
@@ -84,6 +84,7 @@ void skinny_bgp_daemon_online()
   /* select() stuff */
   fd_set read_descs, bkp_read_descs; 
   int fd, select_fd, bkp_select_fd, recalc_fds, select_num;
+  int recv_fd, send_fd;
 
   /* initial cleanups */
   reload_map_bgp_thread = FALSE;
@@ -613,7 +614,16 @@ void skinny_bgp_daemon_online()
 	bgp_peer_cache_insert(peers_port_cache, bucket, peer);
       }
 
-      if (config.bgp_xconnect_map) bgp_peer_xconnect_init(peer, FUNC_TYPE_BGP);
+      if (config.bgp_xconnect_map) {
+	bgp_peer_xconnect_init(peer, FUNC_TYPE_BGP);
+
+        if (peer->xconnect_fd) FD_SET(peer->xconnect_fd, &bkp_read_descs);
+	else {
+	  FD_CLR(peer->fd, &bkp_read_descs);
+	  bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
+	  goto read_data;
+	}
+      }
 
       if (bgp_misc_db->msglog_backend_methods)
 	bgp_peer_log_init(peer, config.nfacctd_bgp_msglog_output, FUNC_TYPE_BGP);
@@ -658,24 +668,44 @@ void skinny_bgp_daemon_online()
     */
     for (peer = NULL, peers_idx = 0; peers_idx < max_peers_idx; peers_idx++) {
       int loc_idx = (peers_idx + peers_idx_rr) % max_peers_idx;
+      recv_fd = 0; send_fd = 0;
 
       if (peers[loc_idx].fd && FD_ISSET(peers[loc_idx].fd, &read_descs)) {
         peer = &peers[loc_idx];
+	recv_fd = peer->fd;
+	if (config.bgp_xconnect_map) send_fd = peer->xconnect_fd;
         peers_idx_rr = (peers_idx_rr + 1) % max_peers_idx;
 	break;
       }
-    } 
+      
+      // XXX: verify round-robin fairness holding up
+      if (config.bgp_xconnect_map) {
+        loc_idx = (peers_idx + peers_xconnect_idx_rr) % max_peers_idx;
+
+	if (peers[loc_idx].xconnect_fd && FD_ISSET(peers[loc_idx].xconnect_fd, &read_descs)) {
+	  peer = &peers[loc_idx];
+	  recv_fd = peer->xconnect_fd;
+	  send_fd = peer->fd;
+	  peers_xconnect_idx_rr = (peers_xconnect_idx_rr + 1) % max_peers_idx;
+	  break;
+	}
+      }
+    }
 
     if (!peer) goto select_again;
 
-    ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
+    ret = recv(recv_fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
     peer->msglen = (ret + peer->buf.truncated_len);
 
     if (ret <= 0) {
       bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] BGP connection reset by peer (%d).\n", config.name, bgp_misc_db->log_str, bgp_peer_str, errno);
+
       FD_CLR(peer->fd, &bkp_read_descs);
+      if (peer->xconnect_fd) FD_CLR(peer->xconnect_fd, &bkp_read_descs);
+
       bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
+
       recalc_fds = TRUE;
       goto select_again;
     }
@@ -687,13 +717,13 @@ void skinny_bgp_daemon_online()
 	if (peer->status == Established && ((now - peer->last_keepalive) > (peer->ht / 2))) {
 	  bgp_reply_pkt_ptr = bgp_reply_pkt;
 	  bgp_reply_pkt_ptr += bgp_write_keepalive_msg(bgp_reply_pkt_ptr);
-	  ret = send(peer->fd, bgp_reply_pkt, bgp_reply_pkt_ptr - bgp_reply_pkt, 0);
+	  ret = send(recv_fd, bgp_reply_pkt, bgp_reply_pkt_ptr - bgp_reply_pkt, 0);
 	  peer->last_keepalive = now;
 	} 
 
 	ret = bgp_parse_msg(peer, now, TRUE);
 	if (ret) {
-	  FD_CLR(peer->fd, &bkp_read_descs);
+	  FD_CLR(recv_fd, &bkp_read_descs);
 
 	  if (ret < 0) bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
 	  else bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, TRUE, ret, BGP_NOTIFY_SUBCODE_UNSPECIFIC, NULL);
@@ -705,7 +735,20 @@ void skinny_bgp_daemon_online()
       else {
 	peer->last_keepalive = now; /* prevent any local session timer to kick in */
 
-	// XXX
+	ret = send(send_fd, &peer->buf.base[peer->buf.truncated_len], peer->msglen, 0);
+	if (ret <= 0) {
+	  // XXX: print correct IP address
+	  bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+	  Log(LOG_INFO, "INFO ( %s/%s ): [%s] BGP xconnect reset by peer (%d).\n", config.name, bgp_misc_db->log_str, bgp_peer_str, errno);
+
+	  FD_CLR(peer->fd, &bkp_read_descs);
+	  FD_CLR(peer->xconnect_fd, &bkp_read_descs);
+
+	  bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
+
+	  recalc_fds = TRUE;
+	  goto select_again;
+	}
       }
     }
   }
