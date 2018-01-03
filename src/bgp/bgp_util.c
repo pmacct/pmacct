@@ -633,6 +633,7 @@ void bgp_peer_close(struct bgp_peer *peer, int type, int no_quiet, int send_noti
   if (peer->fd && peer->fd != ERR) close(peer->fd);
 
   peer->fd = 0;
+  peer->xc = NULL;
   peer->xconnect_fd = 0;
   memset(&peer->id, 0, sizeof(peer->id));
   memset(&peer->addr, 0, sizeof(peer->addr));
@@ -646,11 +647,13 @@ void bgp_peer_close(struct bgp_peer *peer, int type, int no_quiet, int send_noti
 
 int bgp_peer_xconnect_init(struct bgp_peer *peer, int type)
 {
+  char xconnect_str[BGP_XCONNECT_STRLEN];
   struct bgp_misc_structs *bms;
   struct bgp_xconnects *bxm; 
   int ret = TRUE, idx, fd;
 
-  assert(!peer->xconnect_fd);
+  assert(!peer->xconnect_fd && !peer->xc);
+
   bms = bgp_select_misc_db(type);
 
   if (!peer || !bms) return ERR;
@@ -662,19 +665,21 @@ int bgp_peer_xconnect_init(struct bgp_peer *peer, int type)
       if (!sa_addr_cmp((struct sockaddr *) &bxm->pool[idx].src, &peer->addr)) {
 	struct sockaddr *sa = (struct sockaddr *) &bxm->pool[idx].dst;
 
+	peer->xc = &bxm->pool[idx];
+	bgp_peer_xconnect_print(peer, xconnect_str, BGP_XCONNECT_STRLEN);
+
 	fd = socket(sa->sa_family, SOCK_STREAM, 0);
 	if (fd == ERR) {
-	  Log(LOG_WARNING, "WARN ( %s/%s ): bgp_peer_xconnect_init() can't obtain new socket.\n", config.name, bms->log_str);
+	  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bgp_peer_xconnect_init(): socket() failed.\n", config.name, bms->log_str, xconnect_str);
+	  peer->xc = NULL;
 	  peer->xconnect_fd = 0;
 	  return ERR;
 	}
 
 	ret = connect(fd, sa, bxm->pool[idx].dst_len);
 	if (ret == ERR) {
-	  char dst[INET6_ADDRSTRLEN + PORT_STRLEN + 1];
-
-	  sa_to_str(dst, sizeof(dst), sa);
-	  Log(LOG_WARNING, "WARN ( %s/%s ): bgp_peer_xconnect_init(): unable to establish BGP xconnect to %s.\n", config.name, bms->log_str, dst);
+	  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bgp_peer_xconnect_init(): connect() failed.\n", config.name, bms->log_str, xconnect_str);
+	  peer->xc = NULL;
 	  peer->xconnect_fd = 0;
 	  return ERR;
 	}
@@ -704,6 +709,23 @@ void bgp_peer_print(struct bgp_peer *peer, char *buf, int len)
   }
 
   if (!ret) strcpy(buf, dumb_buf);
+}
+
+void bgp_peer_xconnect_print(struct bgp_peer *peer, char *buf, int len)
+{
+  char src[INET6_ADDRSTRLEN + PORT_STRLEN + 1], dst[INET6_ADDRSTRLEN + PORT_STRLEN + 1];
+  struct sockaddr *sa_src;
+  struct sockaddr *sa_dst;
+
+  if (peer && buf && len >= BGP_XCONNECT_STRLEN) {
+    sa_src = (struct sockaddr *) &peer->xc->src;
+    sa_dst = (struct sockaddr *) &peer->xc->dst;
+
+    sa_to_str(src, sizeof(src), sa_src);
+    sa_to_str(dst, sizeof(dst), sa_dst);
+
+    snprintf(buf, len, "%s x %s", src, dst);
+  }
 }
 
 void bgp_peer_info_delete(struct bgp_peer *peer)

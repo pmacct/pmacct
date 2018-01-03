@@ -72,13 +72,14 @@
 #define BGP_ATTR_FLAG_EXTLEN    0x10    /* Extended length flag. */
 
 /* BGP misc */
-#define MAX_BGP_PEERS_DEFAULT 4
-#define MAX_HOPS_FOLLOW_NH 20
-#define MAX_NH_SELF_REFERENCES 1
+#define MAX_BGP_PEERS_DEFAULT	4
+#define MAX_HOPS_FOLLOW_NH	20
+#define MAX_NH_SELF_REFERENCES	1
+#define BGP_XCONNECT_STRLEN	(2 * (INET6_ADDRSTRLEN + PORT_STRLEN + 1) + 4) 
 
 /* Maximum BGP standard/extended community patterns supported:
    nfacctd_bgp_stdcomm_pattern, nfacctd_bgp_extcomm_pattern */
-#define MAX_BGP_COMM_PATTERNS 16
+#define MAX_BGP_COMM_PATTERNS	16
 
 #define BGP_DAEMON_NONE		0
 #define BGP_DAEMON_TRUE		1
@@ -193,7 +194,6 @@ struct bgp_peer_buf {
 
 struct bgp_peer {
   int fd;
-  int xconnect_fd;
   int lock;
   int type; /* ie. BGP vs BMP */
   u_int8_t status;
@@ -218,6 +218,9 @@ struct bgp_peer {
      bmp_peer.bgp_peers[n].bmp_se:	backpointer to parent struct bmp_peer
   */
   void *bmp_se;
+
+  struct bgp_xconnect *xc;
+  int xconnect_fd;
 };
 
 struct bgp_msg_data {
