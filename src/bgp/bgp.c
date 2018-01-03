@@ -614,42 +614,53 @@ void skinny_bgp_daemon_online()
 	bgp_peer_cache_insert(peers_port_cache, bucket, peer);
       }
 
-      if (config.bgp_xconnect_map) {
-	bgp_peer_xconnect_init(peer, FUNC_TYPE_BGP);
-
-        if (peer->xconnect_fd) FD_SET(peer->xconnect_fd, &bkp_read_descs);
-	else {
-	  FD_CLR(peer->fd, &bkp_read_descs);
-	  bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
-	  goto read_data;
-	}
-      }
-
       if (bgp_misc_db->msglog_backend_methods)
 	bgp_peer_log_init(peer, config.nfacctd_bgp_msglog_output, FUNC_TYPE_BGP);
 
       /* Check: only one TCP connection is allowed per peer */
-      /* XXX: fixme for NAT traversal scenarios */
+      /* XXX: fix multiple BGP daemons on the same host and NAT traversal scenarios */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bgp_max_peers; peers_check_idx++) { 
 	if (peers_idx != peers_check_idx && !memcmp(&peers[peers_check_idx].addr, &peer->addr, sizeof(peers[peers_check_idx].addr))) { 
 	  bgp_peer_print(&peers[peers_check_idx], bgp_peer_str, INET6_ADDRSTRLEN);
-	  if ((now - peers[peers_check_idx].last_keepalive) > peers[peers_check_idx].ht) {
-            Log(LOG_INFO, "INFO ( %s/%s ): [%s] Replenishing stale connection by peer.\n",
-				config.name, bgp_misc_db->log_str, bgp_peer_str);
-            FD_CLR(peers[peers_check_idx].fd, &bkp_read_descs);
-            bgp_peer_close(&peers[peers_check_idx], FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
+
+	  if (!config.bgp_xconnect_map) {
+	    if ((now - peers[peers_check_idx].last_keepalive) > peers[peers_check_idx].ht) {
+	      bgp_peer_print(&peers[peers_check_idx], bgp_peer_str, INET6_ADDRSTRLEN);
+              Log(LOG_INFO, "INFO ( %s/%s ): [%s] Replenishing stale connection by peer.\n",
+			config.name, bgp_misc_db->log_str, bgp_peer_str);
+              FD_CLR(peers[peers_check_idx].fd, &bkp_read_descs);
+              bgp_peer_close(&peers[peers_check_idx], FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
+	    }
+	    else {
+	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Refusing new connection from existing peer (residual holdtime: %u).\n",
+			config.name, bgp_misc_db->log_str, bgp_peer_str,
+			(peers[peers_check_idx].ht - (now - peers[peers_check_idx].last_keepalive)));
+	      FD_CLR(peer->fd, &bkp_read_descs);
+	      bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
+	      // bgp_batch_rollback(&bp_batch);
+	      goto read_data;
+	    }
 	  }
 	  else {
-	    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Refusing new connection from existing peer (residual holdtime: %u).\n",
-				config.name, bgp_misc_db->log_str, bgp_peer_str,
-				(peers[peers_check_idx].ht - (now - peers[peers_check_idx].last_keepalive)));
+	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Refusing new incoming connection for existing BGP xconnect.\n",
+			config.name, bgp_misc_db->log_str, bgp_peer_str);
 	    FD_CLR(peer->fd, &bkp_read_descs);
 	    bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
-	    // bgp_batch_rollback(&bp_batch);
 	    goto read_data;
 	  }
         }
 	else if (peers[peers_check_idx].fd) peers_num++;
+      }
+
+      if (config.bgp_xconnect_map) {
+        bgp_peer_xconnect_init(peer, FUNC_TYPE_BGP);
+
+        if (peer->xconnect_fd) FD_SET(peer->xconnect_fd, &bkp_read_descs);
+        else {
+          FD_CLR(peer->fd, &bkp_read_descs);
+          bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
+          goto read_data;
+        }
       }
 
       if (!config.bgp_xconnect_map) {
@@ -753,8 +764,6 @@ void skinny_bgp_daemon_online()
 	}
       }
       else {
-	peer->last_keepalive = now; /* prevent any local session timer to kick in */
-
 	ret = send(send_fd, &peer->buf.base[peer->buf.truncated_len], peer->msglen, 0);
 	if (ret <= 0) {
 	  bgp_peer_xconnect_print(peer, bgp_xconnect_peer_str, BGP_XCONNECT_STRLEN);
