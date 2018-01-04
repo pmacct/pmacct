@@ -2427,6 +2427,18 @@ KEY:		bgp_daemon_lg_threads [GLOBAL]
 DESC:		Defines the amount of threads of the BGP Looking Glass to serve incoming queries.
 DEFAULT:	8
 
+KEY:		bgp_daemon_xconnect_map [MAP, GLOBAL]
+DESC:		Full pathname to a file to cross-connect BGP peers (ie. edge routers part of an
+		observed network topology) to BGP collectors (ie. nfacctd daemons correlating flow
+		and BGP data). The mapping works only against the IP address layer and not the BGP
+		Router ID, only 1:1 is supported (ie. it's cross-connecting not replication) and
+		only one session per BGP peer is supported (ie. multiple BGP agents are running on
+		the same IP address or NAT traversal scenarios are not supported yet).
+		A sample map is provided in 'examples/bgp_xconnects.map.example'. Number of map
+		entries (by default 384) can be modified via maps_entries. Content can be reloaded
+		at runtime by sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd").
+DEFAULT:	none
+
 KEY:		isis_daemon [GLOBAL]
 VALUES:		[ true | false ]
 DESC:		Enables the skinny IS-IS daemon thread. This feature requires the package to be supporting
