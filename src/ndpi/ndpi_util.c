@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -80,7 +80,7 @@ void pm_ndpi_export_proto_to_class(struct pm_ndpi_workflow *workflow)
 {
   struct pkt_classifier css;
   u_int32_t class_st_sz;
-  int idx;
+  int idx, ret;
 
   if (!workflow || !workflow->ndpi_struct) return;
 
@@ -89,10 +89,13 @@ void pm_ndpi_export_proto_to_class(struct pm_ndpi_workflow *workflow)
   memset(class, 0, class_st_sz);
 
   for (idx = 0; idx < (int) workflow->ndpi_struct->ndpi_num_supported_protocols; idx++) {
-    memset(&css, 0, sizeof(css));
-    css.id = workflow->ndpi_struct->proto_defaults[idx].protoId;
-    strncpy(css.protocol, workflow->ndpi_struct->proto_defaults[idx].protoName, MAX_PROTOCOL_LEN);
-    pmct_ndpi_register(&css);
+    if (workflow->ndpi_struct->proto_defaults[idx].protoId) {
+      memset(&css, 0, sizeof(css));
+      css.id = workflow->ndpi_struct->proto_defaults[idx].protoId;
+      strncpy(css.protocol, workflow->ndpi_struct->proto_defaults[idx].protoName, MAX_PROTOCOL_LEN);
+      ret = pmct_ndpi_register(&css);
+      if (!ret) Log(LOG_WARNING, "WARN ( %s/core ): unable to register nDPI class ID %u.\n", config.name, css.id);
+    }
   }
 }
 #endif

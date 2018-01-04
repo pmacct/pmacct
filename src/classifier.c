@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -17,23 +17,6 @@
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-
-
-   NOTE: because the main idea is to make the pmacct classifier FULLY compatibile
-   with the patterns of the L7-filter project, very little parts of this file have
-   been grabbed - and carefully adapted in order to work into the new home :) - by
-   the L7-filter project source code. They are marked as "l7code" and protected as
-   follows:
-
-   By Matthew Strait <quadong@users.sf.net>, Oct 2003.
-
-   http://l7-filter.sf.net
-
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version
-   2 of the License, or (at your option) any later version.
-   http://www.gnu.org/licenses/gpl.txt
 */
 
 #define __CLASSIFIER_C
@@ -570,7 +553,7 @@ pm_class_t pmct_register(struct pkt_classifier *css)
 {
   int max = pmct_get_num_entries();
 
-  if (!css) return 0;
+  if (!css || !css->id) return 0;
 
   /* let's check that a) a valid class ID has been supplied, b) the class ID
      is still available. If this is the case, let's proceed with this entry,
@@ -590,7 +573,7 @@ pm_class_t pmct_ndpi_register(struct pkt_classifier *css)
 {
   int max = pmct_get_num_entries();
 
-  if (!css) return 0;
+  if (!css || !css->id) return 0;
 
   /* let's check that a) a valid class ID has been supplied, b) the class ID
      is still available. If this is the case, let's proceed with this entry,
@@ -598,8 +581,8 @@ pm_class_t pmct_ndpi_register(struct pkt_classifier *css)
 
   if (!strcmp(css->protocol, "")) return 0;
 
-  if (css->id <= max && !class[css->id].id) {
-    memcpy(&class[css->id], css, sizeof(struct pkt_classifier));
+  if (css->id <= max && !class[css->id-1].id) {
+    memcpy(&class[css->id-1], css, sizeof(struct pkt_classifier));
     return css->id;
   }
   else return 0;
