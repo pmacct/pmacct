@@ -371,8 +371,8 @@ unsigned int sa_to_str(char *str, int len, const struct sockaddr *sa)
 
       return sa->sa_family;
     }
-  }
 #endif
+  }
 
   memset(str, 0, len);
 
