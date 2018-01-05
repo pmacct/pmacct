@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -37,6 +37,7 @@ EXT int bgp_xcs_map_dst_handler(char *, struct id_entry *, char *, struct plugin
 
 EXT void bgp_xcs_map_validate(char *, struct plugin_requests *);
 EXT int bgp_xcs_parse_hostport(const char *, struct sockaddr *, socklen_t *);
+EXT void bgp_xcs_map_destroy();
 
 /* global variables */
 

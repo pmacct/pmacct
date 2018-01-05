@@ -463,6 +463,17 @@ void skinny_bgp_daemon_online()
 	if (bgp_md5.num) bgp_md5_file_process(config.bgp_sock, &bgp_md5); // process load
       }
 
+      if (config.bgp_xconnect_map) {
+	int bgp_xcs_allocated = FALSE;
+
+        bgp_xcs_map_destroy();
+
+	memset(&req, 0, sizeof(req));
+	req.key_value_table = (void *) &bgp_xcs_map;
+
+	load_id_file(MAP_BGP_XCS, config.bgp_xconnect_map, NULL, &req, &bgp_xcs_allocated);
+      }
+
       reload_map_bgp_thread = FALSE;
     }
 
