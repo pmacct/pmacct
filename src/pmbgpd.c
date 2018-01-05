@@ -59,6 +59,7 @@ void usage_daemon(char *prog_name)
   printf("  -o  \tOutput file to log real-time BGP messages\n");
   printf("  -O  \tOutput file to dump generated RIBs at regular time intervals\n");
   printf("  -i  \tInterval, in secs, to write to the dump output file (supplied by -O)\n");
+  printf("  -g  \tEnable the Looking Glass server\n");
   printf("  -m  \tLoad a BGP xconnects map from the specified file\n");
   printf("\n");
   printf("For examples, see:\n");
