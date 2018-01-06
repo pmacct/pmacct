@@ -4,8 +4,6 @@
 ! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in
 ! this same directory.
 !
-! All daemons valid keys: bgp_src, bgp_dst.
-!
 ! list of currently supported keys follow:
 !
 ! 'bgp_dst'             LOOKUP: IPv4/IPv6 address and port of the BGP collector

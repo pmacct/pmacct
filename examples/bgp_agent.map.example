@@ -4,8 +4,6 @@
 ! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in
 ! this same directory.
 !
-! All daemons valid keys: id, ip, filter.
-!
 ! list of currently supported keys follow:
 !
 ! 'bgp_ip'		LOOKUP: IPv4/IPv6 session address or Router ID of the

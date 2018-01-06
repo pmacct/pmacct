@@ -925,7 +925,7 @@ nfprobe_version: 9
 pmacctd_as: bgp
 bgp_daemon: true
 bgp_daemon_ip: 127.0.0.1
-bgp_agent_map: /path/to/agent_to_peer.map
+bgp_agent_map: /path/to/bgp_agent.map
 bgp_daemon_port: 17917
 
    The bgp_daemon_port can be changed from the standard BGP port (179/TCP) in order to
