@@ -1,5 +1,5 @@
 pmacct [IP traffic accounting : BGP : BMP : IGP : Streaming Telemetry]
-pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 
 Founder:
 
@@ -16,6 +16,7 @@ Package maintainers:
 
 Thanks to the following people for their strong support along the time: 
 
+	Arash Afrakhteh
 	Martin Anderberg
 	Sven Anderson
 	David Barroso
@@ -30,12 +31,15 @@ Thanks to the following people for their strong support along the time:
 	Pierre Francois
 	Rich Gade
 	Aaron Glenn
+	Alan Gous
 	Gianluca Guida
         Elisa Jasinska
 	Wim Kerkhoff
 	Tim LaBerge
 	Paul Mabey
+	Arman Maghbouleh
 	Peter Nixon
+	Ivan Pepelnjak
 	Karl O. Pinc
 	Vasiliy Ponomarev
 	Martin Pot
