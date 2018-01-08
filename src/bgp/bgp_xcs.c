@@ -30,18 +30,32 @@ void bgp_xcs_map_validate(char *filename, struct plugin_requests *req)
   struct bgp_xconnects *table = (struct bgp_xconnects *) req->key_value_table;
   int valid = FALSE;
 
-  /* If we have got AFs != 0 we are good enough */
+  /* IF we have got 1) AF for _only one_ of src and src_addr, and dst AND
+     2) AFs of src_addr and src_mask are consistent THEN we are good to go */
   if (table && table->pool) {
     if (sa_has_family((struct sockaddr *) &table->pool[table->num].src) &&
-	sa_has_family((struct sockaddr *) &table->pool[table->num].dst)) {
+	sa_has_family((struct sockaddr *) &table->pool[table->num].dst))
       valid = TRUE;
+
+    if (table->pool[table->num].src_addr.family &&
+	table->pool[table->num].src_mask.family &&
+	sa_has_family((struct sockaddr *) &table->pool[table->num].dst))
+      valid = TRUE;
+
+    if (table->pool[table->num].src_addr.family ==
+	table->pool[table->num].src_mask.family)
+      valid = TRUE;
+
+    if (sa_has_family((struct sockaddr *) &table->pool[table->num].src) &&
+	(table->pool[table->num].src_addr.family ||
+        table->pool[table->num].src_mask.family))
+      valid = FALSE;
+
+    if (valid) {
       table->num++;
       table->pool[table->num].id = table->num;
     }
-    else {
-      valid = FALSE;
-      memset(&table->pool[table->num], 0, sizeof(struct bgp_xconnect));
-    }
+    else memset(&table->pool[table->num], 0, sizeof(struct bgp_xconnect));
   }
 }
 
@@ -82,9 +96,15 @@ int bgp_xcs_map_src_handler(char *filename, struct id_entry *e, char *value, str
     if (table->num < config.nfacctd_bgp_max_peers) {
       target = &table->pool[table->num];
       target->src_len = sizeof(target->src);
+
       if (bgp_xcs_parse_hostport(value, (struct sockaddr *)&target->src, &target->src_len)) { 
-        Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Invalid BGP xconnect source.\n", config.name, config.type, filename);
-        return TRUE;
+	memset(&target->src, 0, sizeof(target->src));
+	target->src_len = 0;
+
+	if (!str_to_addr_mask(value, &target->src_addr, &target->src_mask)) {
+          Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Invalid BGP xconnect source.\n", config.name, config.type, filename);
+          return TRUE;
+	}
       }
     }
   }

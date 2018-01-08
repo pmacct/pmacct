@@ -11,9 +11,15 @@
 ! 'bgp_src'		MATCH: compared against the IPv4/IPv6 address (not BGP
 !			Router ID) of an incoming BGP session from a BGP peer.
 !
-! A couple of straightforward examples follow: cross-connect the incoming BGP
-! session from 192.168.0.1 to 10.0.0.1:17901 and the session from 192.168.0.2
-! to 10.0.0.1:17902.
+! A couple of straightforward examples follow:
+!
+! Cross-connect the incoming BGP session from 192.168.0.1 to 10.0.0.1:17901
+! and the session from 192.168.0.2 to 10.0.0.1:17902.
 !
 bgp_dst=10.0.0.1:17901	bgp_src=192.168.0.1
 bgp_dst=10.0.0.1:17902	bgp_src=192.168.0.2
+!
+! Cross-connect incoming BGP sessions from IP addresses belonging to the
+! 192.168.10.0/24 subnet to 10.0.0.1:17910.
+! 
+bgp_dst=10.0.0.1:17910	bgp_src=192.168.10.0/24

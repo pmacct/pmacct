@@ -47,7 +47,7 @@ unsigned int str_to_addr(const char *str, struct host_addr *a)
 }
 
 /*
- * addr_to_str() converts a supported family addres into a string
+ * addr_to_str() converts a supported family address into a string
  * 'str' length is not checked and assumed to be INET6_ADDRSTRLEN 
  */
 unsigned int addr_to_str(char *str, const struct host_addr *a)
@@ -70,6 +70,33 @@ unsigned int addr_to_str(char *str, const struct host_addr *a)
 #endif
 
   memset(str, 0, INET6_ADDRSTRLEN);
+
+  return 0;
+}
+
+/*
+ * addr_mask_to_str() converts a supported family address into a string
+ */
+unsigned int addr_mask_to_str(char *str, int len, const struct host_addr *a, const struct host_mask *m)
+{
+  char buf[INET6_ADDRSTRLEN];
+
+  if (a->family == m->family) { 
+    if (a->family == AF_INET) {
+      inet_ntop(AF_INET, &a->address.ipv4, buf, sizeof(buf));
+      snprintf(str, len, "%s/%u", buf, m->len);
+      return a->family;
+    }
+#if defined ENABLE_IPV6
+    else if (a->family == AF_INET6) {
+      inet_ntop(AF_INET6, &a->address.ipv6, buf, sizeof(buf));
+      snprintf(str, len, "%s/%u", buf, m->len);
+      return a->family;
+    }
+#endif
+  }
+
+  memset(str, 0, len);
 
   return 0;
 }
@@ -98,6 +125,8 @@ unsigned int str_to_addr_mask(const char *str, struct host_addr *a, struct host_
   if (family) {
     if (mask) {
       index = atoi(mask);
+      m->len = index;
+
       if (family == AF_INET) {
         if (index > 32) goto error;
         else {
@@ -119,9 +148,15 @@ unsigned int str_to_addr_mask(const char *str, struct host_addr *a, struct host_
     }
     /* if no mask: set ipv4 mask to /32 and ipv6 mask to /128 */
     else {
-      if (family == AF_INET) m->mask.m4 = 0xffffffffUL;
+      if (family == AF_INET) {
+	m->len = 32;
+	m->mask.m4 = 0xffffffffUL;
+      }
 #if defined ENABLE_IPV6
-      else if (family == AF_INET6) for (j = 0; j < 16; j++) m->mask.m6[j] = 0xffU;
+      else if (family == AF_INET6) {
+	m->len = 128;
+	for (j = 0; j < 16; j++) m->mask.m6[j] = 0xffU;
+      }
 #endif
       else goto error;
     }
@@ -268,7 +303,7 @@ int sa_port_cmp(struct sockaddr *sa, u_int16_t port)
 }
 
 /*
- * host_addr_mask_cmp() checks whether s1 falls in a1/m1
+ * host_addr_mask_sa_cmp() checks whether s1 falls in a1/m1
  * returns 0 if positive; 1 if negative; -1 to signal a generic error
  * (e.g. unsupported family).
  */
@@ -293,6 +328,36 @@ int host_addr_mask_sa_cmp(struct host_addr *a1, struct host_mask *m1, struct soc
     memcpy(&sa6_local, s1, sizeof(struct sockaddr));
     for (j = 0; j < 16; j++) sa6_local.sin6_addr.s6_addr[j] &= m1->mask.m6[j];
     ret = ip6_addr_cmp(a1, &sa6_local.sin6_addr);
+    if (!ret) return 0;
+    else return 1;
+  }
+#endif
+
+  return -1;
+}
+
+/*
+ * host_addr_mask_cmp() checks whether a2 falls in a1/m1
+ * returns 0 if positive; 1 if negative; -1 to signal a generic error
+ * (e.g. unsupported family).
+ */
+int host_addr_mask_cmp(struct host_addr *a1, struct host_mask *m1, struct host_addr *a2)
+{
+  struct host_addr ha_local;
+  int ret, j;
+
+  if (!a1 || !m1 || !a2) return -1;
+  if (a1->family != a2->family || a1->family != m1->family) return -1;
+
+  if (a1->family == AF_INET) {
+    if ((a2->address.ipv4.s_addr & m1->mask.m4) == a1->address.ipv4.s_addr) return 0;
+    else return 1;
+  }
+#if defined ENABLE_IPV6
+  else if (a1->family == AF_INET6) {
+    memcpy(&ha_local, a2, sizeof(struct host_addr));
+    for (j = 0; j < 16; j++) ha_local.address.ipv6.s6_addr[j] &= m1->mask.m6[j];
+    ret = ip6_addr_cmp(a1, &ha_local.address.ipv6);
     if (!ret) return 0;
     else return 1;
   }

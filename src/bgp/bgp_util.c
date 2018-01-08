@@ -662,7 +662,8 @@ int bgp_peer_xconnect_init(struct bgp_peer *peer, int type)
 
   if (bxm) {
     for (idx = 0; idx < bxm->num; idx++) {
-      if (!sa_addr_cmp((struct sockaddr *) &bxm->pool[idx].src, &peer->addr)) {
+      if (!sa_addr_cmp((struct sockaddr *) &bxm->pool[idx].src, &peer->addr) ||
+	  !host_addr_mask_cmp(&bxm->pool[idx].src_addr, &bxm->pool[idx].src_mask, &peer->addr)) { 
 	struct sockaddr *sa = (struct sockaddr *) &bxm->pool[idx].dst;
 
 	peer->xc = &bxm->pool[idx];
@@ -722,11 +723,13 @@ void bgp_peer_xconnect_print(struct bgp_peer *peer, char *buf, int len)
   struct sockaddr *sa_src;
   struct sockaddr *sa_dst;
 
-  if (peer && buf && len >= BGP_XCONNECT_STRLEN) {
+  if (peer && peer->xc && buf && len >= BGP_XCONNECT_STRLEN) {
     sa_src = (struct sockaddr *) &peer->xc->src;
     sa_dst = (struct sockaddr *) &peer->xc->dst;
 
-    sa_to_str(src, sizeof(src), sa_src);
+    if (sa_src->sa_family) sa_to_str(src, sizeof(src), sa_src);
+    else addr_mask_to_str(src, sizeof(src), &peer->xc->src_addr, &peer->xc->src_mask);
+
     sa_to_str(dst, sizeof(dst), sa_dst);
 
     snprintf(buf, len, "%s x %s", src, dst);

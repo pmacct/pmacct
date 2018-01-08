@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -382,6 +382,7 @@ struct host_addr {
 
 struct host_mask {
   u_int8_t family;
+  u_int8_t len;
   union {
     u_int32_t m4;
 #if defined ENABLE_IPV6
