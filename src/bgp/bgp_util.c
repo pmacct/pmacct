@@ -633,7 +633,7 @@ void bgp_peer_close(struct bgp_peer *peer, int type, int no_quiet, int send_noti
   if (peer->fd && peer->fd != ERR) close(peer->fd);
 
   peer->fd = 0;
-  peer->xc = NULL;
+  memset(&peer->xc, 0, sizeof(peer->xc));
   peer->xconnect_fd = 0;
   memset(&peer->id, 0, sizeof(peer->id));
   memset(&peer->addr, 0, sizeof(peer->addr));
@@ -652,7 +652,7 @@ int bgp_peer_xconnect_init(struct bgp_peer *peer, int type)
   struct bgp_xconnects *bxm; 
   int ret = TRUE, idx, fd;
 
-  assert(!peer->xconnect_fd && !peer->xc);
+  assert(!peer->xconnect_fd);
 
   bms = bgp_select_misc_db(type);
 
@@ -666,13 +666,13 @@ int bgp_peer_xconnect_init(struct bgp_peer *peer, int type)
 	  !host_addr_mask_cmp(&bxm->pool[idx].src_addr, &bxm->pool[idx].src_mask, &peer->addr)) { 
 	struct sockaddr *sa = (struct sockaddr *) &bxm->pool[idx].dst;
 
-	peer->xc = &bxm->pool[idx];
+	memcpy(&peer->xc, &bxm->pool[idx], sizeof(struct bgp_xconnect));
 	bgp_peer_xconnect_print(peer, xconnect_str, BGP_XCONNECT_STRLEN);
 
 	fd = socket(sa->sa_family, SOCK_STREAM, 0);
 	if (fd == ERR) {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bgp_peer_xconnect_init(): socket() failed.\n", config.name, bms->log_str, xconnect_str);
-	  peer->xc = NULL;
+	  memset(&peer->xc, 0, sizeof(peer->xc));
 	  peer->xconnect_fd = 0;
 	  return ERR;
 	}
@@ -680,7 +680,7 @@ int bgp_peer_xconnect_init(struct bgp_peer *peer, int type)
 	ret = connect(fd, sa, bxm->pool[idx].dst_len);
 	if (ret == ERR) {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bgp_peer_xconnect_init(): connect() failed.\n", config.name, bms->log_str, xconnect_str);
-	  peer->xc = NULL;
+	  memset(&peer->xc, 0, sizeof(peer->xc));
 	  peer->xconnect_fd = 0;
 	  return ERR;
 	}
@@ -723,12 +723,12 @@ void bgp_peer_xconnect_print(struct bgp_peer *peer, char *buf, int len)
   struct sockaddr *sa_src;
   struct sockaddr *sa_dst;
 
-  if (peer && peer->xc && buf && len >= BGP_XCONNECT_STRLEN) {
-    sa_src = (struct sockaddr *) &peer->xc->src;
-    sa_dst = (struct sockaddr *) &peer->xc->dst;
+  if (peer && buf && len >= BGP_XCONNECT_STRLEN) {
+    sa_src = (struct sockaddr *) &peer->xc.src;
+    sa_dst = (struct sockaddr *) &peer->xc.dst;
 
     if (sa_src->sa_family) sa_to_str(src, sizeof(src), sa_src);
-    else addr_mask_to_str(src, sizeof(src), &peer->xc->src_addr, &peer->xc->src_mask);
+    else addr_mask_to_str(src, sizeof(src), &peer->xc.src_addr, &peer->xc.src_mask);
 
     sa_to_str(dst, sizeof(dst), sa_dst);
 

@@ -178,6 +178,32 @@ struct bgp_misc_structs {
   int dump_input_backend_methods;
 };
 
+struct bgp_xconnect {
+  u_int32_t id;
+
+#if defined ENABLE_IPV6
+  struct sockaddr_storage dst;  /* BGP receiver IP address and port */
+#else
+  struct sockaddr dst;
+#endif
+  socklen_t dst_len;
+
+#if defined ENABLE_IPV6
+  struct sockaddr_storage src;  /* BGP peer IP address and port */
+#else
+  struct sockaddr src;
+#endif
+  socklen_t src_len;
+
+  struct host_addr src_addr;    /* IP prefix to match multiple BGP peers */
+  struct host_mask src_mask;
+};
+
+struct bgp_xconnects {
+  struct bgp_xconnect *pool;
+  int num;
+};
+
 struct bgp_peer_stats {
     u_int32_t packets; /* Datagrams received */
     u_int32_t packet_bytes; /* Bytes read off the socket */
@@ -219,7 +245,7 @@ struct bgp_peer {
   */
   void *bmp_se;
 
-  struct bgp_xconnect *xc;
+  struct bgp_xconnect xc;
   int xconnect_fd;
 };
 
@@ -305,32 +331,6 @@ struct bgp_lg_rep_ipl_data {
 
 struct bgp_lg_rep_gp_data {
   struct bgp_peer *peer;
-};
-
-struct bgp_xconnect {
-  u_int32_t id;
-
-#if defined ENABLE_IPV6
-  struct sockaddr_storage dst;	/* BGP receiver IP address and port */
-#else
-  struct sockaddr dst;
-#endif
-  socklen_t dst_len;
-
-#if defined ENABLE_IPV6
-  struct sockaddr_storage src;	/* BGP peer IP address and port */
-#else
-  struct sockaddr src;
-#endif
-  socklen_t src_len;
-
-  struct host_addr src_addr;	/* IP prefix to match multiple BGP peers */
-  struct host_mask src_mask;
-};
-
-struct bgp_xconnects {
-  struct bgp_xconnect *pool;
-  int num;
 };
 
 #include "bgp_msg.h"
