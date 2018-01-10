@@ -281,7 +281,7 @@ struct pm_ndpi_flow_info *pm_ndpi_get_flow_info6(struct pm_ndpi_workflow *workfl
   iph.version = IPVERSION;
   iph.saddr = iph6->ip6_src.u6_addr.u6_addr32[2] + iph6->ip6_src.u6_addr.u6_addr32[3];
   iph.daddr = iph6->ip6_dst.u6_addr.u6_addr32[2] + iph6->ip6_dst.u6_addr.u6_addr32[3];
-  iph.protocol = iph6->ip6_ctlun.ip6_un1.ip6_un1_nxt;
+  iph.protocol = iph6->ip6_hdr.ip6_un1_nxt;
 
   if (iph.protocol == IPPROTO_DSTOPTS /* IPv6 destination option */) {
     u_int8_t *options = (u_int8_t*)iph6 + sizeof(const struct ndpi_ipv6hdr);
@@ -291,7 +291,7 @@ struct pm_ndpi_flow_info *pm_ndpi_get_flow_info6(struct pm_ndpi_workflow *workfl
 
   return(pm_ndpi_get_flow_info(workflow, pptrs, vlan_id, &iph, iph6, ip_offset,
 			    sizeof(struct ndpi_ipv6hdr),
-			    ntohs(iph6->ip6_ctlun.ip6_un1.ip6_un1_plen),
+			    ntohs(iph6->ip6_hdr.ip6_un1_plen),
 			    tcph, udph, sport, dport,
 			    src, dst, proto, payload, payload_len, src_to_dst_direction));
 }
