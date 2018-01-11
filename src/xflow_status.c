@@ -143,7 +143,7 @@ void print_status_table(time_t now, int buckets)
     entry = xflow_status_table[idx];
 
     bucket_cycle:
-    if (entry) {
+    if (entry && entry->counters.total && entry->counters.bytes) {
       addr_to_str(agent_ip_address, &entry->agent_addr);
       if (config.nfacctd_ip)
 	memcpy(collector_ip_address, config.nfacctd_ip, MAX(strlen(config.nfacctd_ip), INET6_ADDRSTRLEN));
