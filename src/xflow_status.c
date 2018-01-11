@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -89,19 +89,18 @@ struct xflow_status_entry *search_status_table(struct sockaddr *sa, u_int32_t au
   return entry;
 }
 
-void update_status_table(struct xflow_status_entry *entry, u_int32_t seqno)
+void update_status_table(struct xflow_status_entry *entry, u_int32_t seqno, int bytes)
 {
   if (!entry) return;
 
+  entry->counters.total++;
+  entry->counters.bytes += bytes;
+
   if (!entry->seqno || config.nfacctd_disable_checks) {
-    // entry->seqno = seqno; /* Init */
     entry->counters.good++;
   }
   else {
-    if (seqno == entry->seqno+entry->inc) {
-      // entry->seqno = seqno;
-      entry->counters.good++;
-    }
+    if (seqno == entry->seqno + entry->inc) entry->counters.good++;
     else {
       char agent_ip_address[INET6_ADDRSTRLEN];
       char collector_ip_address[INET6_ADDRSTRLEN];
@@ -116,16 +115,8 @@ void update_status_table(struct xflow_status_entry *entry, u_int32_t seqno)
       Log(LOG_INFO, "INFO ( %s/%s ): expecting flow '%u' but received '%u' collector=%s:%u agent=%s:%u\n",
 		config.name, config.type, entry->seqno+entry->inc, seqno, collector_ip_address,
 		config.nfacctd_port, agent_ip_address, entry->aux1);
-      if (seqno > entry->seqno+entry->inc) {
-        // entry->counters.missed += (seqno-entry->seqno);
-        entry->counters.jumps_f++;
-	// entry->seqno = seqno;
-      }
-      else {
-	entry->counters.jumps_b++;
-	// entry->seqno--;
-	// entry->seqno = seqno;
-      }
+      if (seqno > entry->seqno+entry->inc) entry->counters.jumps_f++;
+      else entry->counters.jumps_b++;
     }
   }
 
@@ -163,6 +154,8 @@ void print_status_table(time_t now, int buckets)
       Log(LOG_NOTICE, "NOTICE ( %s/%s ): %s statistics collector=%s:%u agent=%s:%u (%u):\n",
 		config.name, config.type, ftype, collector_ip_address, config.nfacctd_port,
 		agent_ip_address, entry->aux1, now);
+      Log(LOG_NOTICE, "NOTICE ( %s/%s ): Datagrams:       %llu\n", config.name, config.type, entry->counters.total);
+      Log(LOG_NOTICE, "NOTICE ( %s/%s ): Bytes:           %llu\n", config.name, config.type, entry->counters.bytes);
       Log(LOG_NOTICE, "NOTICE ( %s/%s ): Good datagrams:  %u\n", config.name, config.type, entry->counters.good);
       Log(LOG_NOTICE, "NOTICE ( %s/%s ): Forward jumps:   %u\n", config.name, config.type, entry->counters.jumps_f);
       Log(LOG_NOTICE, "NOTICE ( %s/%s ): Backward jumps:  %u\n", config.name, config.type, entry->counters.jumps_b);

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2015 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -27,9 +27,13 @@
 /* structures */
 struct xflow_status_entry_counters
 {
+  // XXX: change to 64 bit?
   u_int32_t good;
   u_int32_t jumps_f;
   u_int32_t jumps_b;
+
+  u_int64_t total;
+  u_int64_t bytes;
 };
 
 struct xflow_status_entry_sampling
@@ -105,5 +109,5 @@ EXT u_int32_t xflow_tot_bad_datagrams;
 EXT u_int8_t smp_entry_status_table_memerr, class_entry_status_table_memerr;
 EXT void set_vector_f_status(struct packet_ptrs_vector *);
 EXT void set_vector_f_status_g(struct packet_ptrs_vector *);
-EXT void update_status_table(struct xflow_status_entry *, u_int32_t);
+EXT void update_status_table(struct xflow_status_entry *, u_int32_t, int);
 #undef EXT

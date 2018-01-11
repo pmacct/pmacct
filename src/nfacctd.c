@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -2450,7 +2450,7 @@ char *nfv578_check_status(struct packet_ptrs *pptrs)
   if (hash >= 0) {
     entry = search_status_table(sa, aux1, 0, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
     if (entry) {
-      update_status_table(entry, ntohl(hdr->flow_sequence));
+      update_status_table(entry, ntohl(hdr->flow_sequence), pptrs->f_len);
       entry->inc = ntohs(hdr->count);
     }
   }
@@ -2467,7 +2467,7 @@ char *nfv9_check_status(struct packet_ptrs *pptrs, u_int32_t sid, u_int32_t flag
   if (hash >= 0) {
     entry = search_status_table(sa, sid, flags, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
     if (entry && update) {
-      update_status_table(entry, seq);
+      update_status_table(entry, seq, pptrs->f_len);
       entry->inc = 1;
     }
   }

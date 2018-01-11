@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -340,7 +340,7 @@ EXT void sfacctd_counter_init_amqp_host();
 EXT int sfacctd_counter_init_kafka_host();
 EXT void sf_cnt_link_misc_structs(struct bgp_misc_structs *);
 
-EXT char *sfv245_check_status(SFSample *spp, struct sockaddr *);
+EXT char *sfv245_check_status(SFSample *spp, struct packet_ptrs *, struct sockaddr *);
 EXT void sfv245_check_counter_log_init(struct packet_ptrs *);
 
 EXT void usage_daemon(char *);

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -1181,7 +1181,7 @@ void process_SFv2v4_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
   sysUpTime = spp->sysUpTime = getData32(spp);
   samplesInPacket = getData32(spp);
   
-  pptrsv->v4.f_status = sfv245_check_status(spp, agent);
+  pptrsv->v4.f_status = sfv245_check_status(spp, &pptrsv->v4, agent);
   set_vector_f_status(pptrsv);
 
   if (config.debug) {
@@ -1228,7 +1228,7 @@ void process_SFv5_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
   sequenceNo = spp->sequenceNo = getData32(spp);
   sysUpTime = spp->sysUpTime = getData32(spp);
   samplesInPacket = getData32(spp);
-  pptrsv->v4.f_status = sfv245_check_status(spp, agent);
+  pptrsv->v4.f_status = sfv245_check_status(spp, &pptrsv->v4, agent);
   set_vector_f_status(pptrsv);
 
   if (config.debug) {
@@ -1958,7 +1958,7 @@ void reset_ip6(struct packet_ptrs *pptrs)
 }
 #endif
 
-char *sfv245_check_status(SFSample *spp, struct sockaddr *sa)
+char *sfv245_check_status(SFSample *spp, struct packet_ptrs *pptrs, struct sockaddr *sa)
 {
   struct sockaddr salocal;
   u_int32_t aux1 = spp->agentSubId;
@@ -1977,7 +1977,7 @@ char *sfv245_check_status(SFSample *spp, struct sockaddr *sa)
   if (hash >= 0) {
     entry = search_status_table(&salocal, aux1, 0, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
     if (entry) {
-      update_status_table(entry, spp->sequenceNo);
+      update_status_table(entry, spp->sequenceNo, pptrs->f_len);
       entry->inc = 1;
     }
   }
