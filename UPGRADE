@@ -6,6 +6,45 @@ the changes done or break old assumptions no longer valid; while the effort
 is to keep these cases at a low, please read this file in preparation to
 upgrading your installation.
 
+TO:	>= 1.7.2
+FROM:	<= 1.7.1
+TOPIC:	NetFlow/IPFIX/sFlow statistics via SIGUSR1
+DESC:	If using this feature, please note that there has been a change in
+	the output format. Mainly: 1) agent stats are now one per line, 2)
+	the stats format has been formalised a bit and 3) +++/--- separators
+	are sent at the beginning and at the end of the output (not anymore
+	one per agent).
+
+	The new output looks as follows:
+
+	NOTICE ( default/core ): +++
+	NOTICE ( default/core ): stats [0.0.0.0:2100] agent=X.X.X.X:0 time=1515772618 packets=1 bytes=496 seq_good=1 seq_jmp_fwd=0 seq_jmp_bck=0
+	NOTICE ( default/core ): stats [0.0.0.0:2100] agent=Y.Y.Y.Y:0 time=1515772618 packets=2 bytes=992 seq_good=2 seq_jmp_fwd=0 seq_jmp_bck=0
+	NOTICE ( default/core ): stats [0.0.0.0:2100] time=1515772618 discarded_packets=0
+	NOTICE ( default/core ): --- 
+
+	The old output was looking as follows:
+
+	NOTICE ( default/core ): +++
+	NOTICE ( default/core ): NetFlow statistics collector=0.0.0.0:2100 agent=X.X.X.X:0 (1515772618):
+	NOTICE ( default/core ): Datagrams:       1
+	NOTICE ( default/core ): Bytes:           496
+	NOTICE ( default/core ): Good datagrams:  1
+	NOTICE ( default/core ): Forward jumps:   0
+	NOTICE ( default/core ): Backward jumps:  0
+	NOTICE ( default/core ): ---
+        NOTICE ( default/core ): +++
+        NOTICE ( default/core ): NetFlow statistics collector=0.0.0.0:2100 agent=Y.Y.Y.Y:0 (1515772618):
+        NOTICE ( default/core ): Datagrams:       2
+        NOTICE ( default/core ): Bytes:           992
+        NOTICE ( default/core ): Good datagrams:  2 
+        NOTICE ( default/core ): Forward jumps:   0
+        NOTICE ( default/core ): Backward jumps:  0
+        NOTICE ( default/core ): ---
+	NOTICE ( default/core ): +++
+	NOTICE ( default/core ): Total bad NetFlow datagrams: 0 (1515772618)
+	NOTICE ( default/core ): ---
+
 TO:     >= 1.7.1
 FROM:   <= 1.7.0
 TOPIC:  Obsoleted features
