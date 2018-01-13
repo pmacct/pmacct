@@ -1346,12 +1346,12 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
 
 int bgp_peer_cmp(const void *a, const void *b)
 {
-  return memcmp(&((struct bgp_peer *)a)->addr, &((struct bgp_peer *)b)->addr, sizeof(struct host_addr));
+  return host_addr_cmp(&((struct bgp_peer *)a)->addr, &((struct bgp_peer *)b)->addr);
 }
 
 int bgp_peer_host_addr_cmp(const void *a, const void *b)
 {
-  return memcmp(a, &((struct bgp_peer *)b)->addr, sizeof(struct host_addr));
+  return host_addr_cmp((struct host_addr *)a, &((struct bgp_peer *)b)->addr);
 }
 
 void bgp_peer_free(void *a)

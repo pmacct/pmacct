@@ -303,6 +303,43 @@ int sa_port_cmp(struct sockaddr *sa, u_int16_t port)
 }
 
 /*
+ * host_addr_cmp() compares two IP addresses in a host_addr structure
+ * returns 0 if positive; 1 if negative; -1 to signal a generic error
+ * (e.g. unsupported family).
+ */
+int host_addr_cmp(struct host_addr *a1, struct host_addr *a2)
+{
+  struct host_addr ha_local;
+
+  if (a1->family == AF_INET && a2->family == AF_INET) {
+    if (a1->address.ipv4.s_addr == a2->address.ipv4.s_addr) return FALSE;
+    else return TRUE;
+  }
+#if defined ENABLE_IPV6
+  if (a1->family == AF_INET6 && a2->family == AF_INET6) {
+    if (!ip6_addr_cmp(&a1->address.ipv6, &a2->address.ipv6)) return FALSE;
+    else return TRUE;
+  }
+  else if (a1->family == AF_INET && a2->family == AF_INET6) {
+    memset(&ha_local, 0, sizeof(ha_local));
+    memset((u_int8_t *)&ha_local.address.ipv6.s6_addr[10], 0xff, 2);
+    memcpy((u_int8_t *)&ha_local.address.ipv6.s6_addr[12], &a1->address.ipv4.s_addr, 4);
+    if (!ip6_addr_cmp(&a2->address.ipv6, &ha_local.address.ipv6)) return FALSE;
+    else return TRUE;
+  }
+  else if (a1->family == AF_INET6 && a2->family == AF_INET) {
+    memset(&ha_local, 0, sizeof(ha_local));
+    memset((u_int8_t *)&ha_local.address.ipv6.s6_addr[10], 0xff, 2);
+    memcpy((u_int8_t *)&ha_local.address.ipv6.s6_addr[12], &a2->address.ipv4.s_addr, 4);
+    if (!ip6_addr_cmp(&a1->address.ipv6, &ha_local.address.ipv6)) return FALSE;
+    else return TRUE;
+  }
+#endif
+
+  return -1;
+}
+
+/*
  * host_addr_mask_sa_cmp() checks whether s1 falls in a1/m1
  * returns 0 if positive; 1 if negative; -1 to signal a generic error
  * (e.g. unsupported family).

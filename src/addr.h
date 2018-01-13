@@ -41,6 +41,7 @@ EXT unsigned int addr_to_sa(struct sockaddr *, struct host_addr *, u_int16_t);
 EXT unsigned int sa_to_addr(struct sockaddr *, struct host_addr *, u_int16_t *);
 EXT int sa_addr_cmp(struct sockaddr *, struct host_addr *);
 EXT int sa_port_cmp(struct sockaddr *, u_int16_t);
+EXT int host_addr_cmp(struct host_addr *, struct host_addr *);
 EXT int host_addr_mask_sa_cmp(struct host_addr *, struct host_mask *, struct sockaddr *);
 EXT int host_addr_mask_cmp(struct host_addr *, struct host_mask *, struct host_addr *);
 EXT unsigned int raw_to_sa(struct sockaddr *, char *, u_int16_t port, u_int8_t);
