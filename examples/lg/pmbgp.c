@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -31,7 +31,7 @@
 #include "pmbgp.h"
 
 /* functions */
-#ifdef WITH_ZMQ
+#if defined (WITH_ZMQ) && defined (WITH_JANSSON)
 void usage_pmbgp(char *prog)
 {
   printf("%s %s (%s)\n", PMBGP_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
@@ -343,6 +343,6 @@ int pmbgp_zmq_sendmore_str(struct p_zmq_sock *sock, char *buf)
 #else
 int main(int argc,char **argv)
 {
-  printf("WARN: pmbgp: tool depends on missing --enable-zmq. Exiting.\n");
+  printf("WARN: pmbgp: tool depends on missing --enable-zmq and --enable-jansson. Exiting.\n");
 }
-#endif
+#endif /* WITH_ZMQ && WITH_JANSSON */

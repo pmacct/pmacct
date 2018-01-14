@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -254,15 +254,20 @@ int main(int argc,char **argv, char **envp)
   if (!config.nfacctd_bgp) config.nfacctd_bgp = BGP_DAEMON_ONLINE;
   if (!config.nfacctd_bgp_port) config.nfacctd_bgp_port = BGP_TCP_PORT;
 
-#if defined WITH_ZMQ
-  if (config.bgp_lg) bgp_lg_wrapper();
+  if (config.bgp_lg) {
+#if defined (WITH_ZMQ) && defined (WITH_JANSSON)
+    bgp_lg_wrapper();
+#else
+    Log(LOG_ERR, "ERROR ( %s/core ): BGP Looking Glass (bgp_daemon_lg) depends on missing --enable-zmq and --enable-jansson. Exiting.\n", config.name);
+    exit(1);
 #endif
+  }
 
   bgp_prepare_daemon();
   skinny_bgp_daemon();
 }
 
-#if defined WITH_ZMQ
+#if defined (WITH_ZMQ) && defined (WITH_JANSSON)
 void bgp_lg_wrapper()
 {
   /* initialize variables */
@@ -666,4 +671,4 @@ void bgp_lg_daemon_encode_reply_unknown_json(struct p_zmq_sock *sock)
 
   p_zmq_send_str(sock, rep_results_str);
 }
-#endif /* WITH_ZMQ */ 
+#endif /* WITH_ZMQ && WITH_JANSSON */ 
