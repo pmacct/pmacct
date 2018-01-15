@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -147,11 +147,14 @@ err:
 
 int main(int argc,char **argv, char **envp)
 {
-  bpf_u_int32 localnet, netmask;  /* pcap library stuff */
+  /* pcap library stuff */
+  bpf_u_int32 localnet, netmask;
   struct bpf_program filter;
-  struct pcap_device device;
   char errbuf[PCAP_ERRBUF_SIZE];
-  int index, logf, ret;
+  struct pcap_pkthdr pkt_hdr;
+  const u_char *pkt_body;
+
+  int index, index_rr, logf, ret, device_idx;
 
   struct plugins_list_entry *list;
   struct plugin_requests req;
@@ -163,7 +166,14 @@ int main(int argc,char **argv, char **envp)
   struct id_table bmed_table;
   struct id_table biss_table;
   struct id_table bta_table;
+
+  struct pcap_device *dev_ptr;
+  struct pcap_device device[PCAP_MAX_INTERFACES];
   struct pcap_callback_data cb_data;
+
+  /* select() stuff */
+  fd_set read_descs, bkp_read_descs;
+  int select_fd, bkp_select_fd, select_num;
 
   /* getopt() stuff */
   extern char *optarg;
@@ -197,10 +207,11 @@ int main(int argc,char **argv, char **envp)
   plugins_list = NULL;
 
   errflag = 0;
+  device_idx = 0;
 
   memset(cfg_cmdline, 0, sizeof(cfg_cmdline));
   memset(&config, 0, sizeof(struct configuration));
-  memset(&device, 0, sizeof(struct pcap_device));
+  memset(&device, 0, sizeof(device));
   memset(&config_file, 0, sizeof(config_file));
   memset(&failed_plugins, 0, sizeof(failed_plugins));
   memset(&req, 0, sizeof(req));
@@ -213,13 +224,13 @@ int main(int argc,char **argv, char **envp)
   memset(&bta_table, 0, sizeof(bta_table));
   memset(&client, 0, sizeof(client));
   memset(&cb_data, 0, sizeof(cb_data));
+  memset(&glob_pcapt, 0, sizeof(glob_pcapt));
   memset(&tunnel_registry, 0, sizeof(tunnel_registry));
   memset(&reload_map_tstamp, 0, sizeof(reload_map_tstamp));
   log_notifications_init(&log_notifications);
   config.acct_type = ACCT_PM;
 
   rows = 0;
-  glob_pcapt = NULL;
 
   /* getting commandline values */
   while (!errflag && ((cp = getopt(argc, argv, ARGS_PMACCTD)) != -1)) {
@@ -754,73 +765,104 @@ int main(int argc,char **argv, char **envp)
     exit_all(1);
   }
 
-  throttle_startup:
   if (config.dev) {
-    if ((device.dev_desc = do_pcap_open(config.dev, psize, config.promisc, 1000, config.pcap_protocol, errbuf)) == NULL) {
-      if (!config.if_wait) {
-        Log(LOG_ERR, "ERROR ( %s/core ): do_pcap_open(): %s\n", config.name, errbuf);
-        exit_all(1);
+    char *token, *string_ptr = config.dev; 
+
+    while ((token = extract_token(&string_ptr, ',')) && device_idx < PCAP_MAX_INTERFACES) {
+      throttle_startup:
+      if ((device[device_idx].dev_desc = do_pcap_open(token, psize, config.promisc, 1000, config.pcap_protocol, errbuf)) == NULL) {
+	if (!config.if_wait) {
+	  Log(LOG_ERR, "ERROR ( %s/core ): do_pcap_open(): %s\n", config.name, errbuf);
+	  exit_all(1);
+	}
+	else {
+	  sleep(5); /* XXX: User defined value? Also, give-up at some point if multiple interfaces defined? */
+	  goto throttle_startup;
+	}
       }
-      else {
-        sleep(5); /* XXX: user defined ? */
-        goto throttle_startup;
-      }
+
+      device[device_idx].active = TRUE;
+      device[device_idx].str = token;
+      device_idx++;
     }
   }
-  else if (config.pcap_savefile) open_pcap_savefile(&device, config.pcap_savefile);
+  else if (config.pcap_savefile) {
+    open_pcap_savefile(&device[device_idx], config.pcap_savefile);
+    device[device_idx].active = TRUE;
+  }
 
-  device.active = TRUE;
-  glob_pcapt = device.dev_desc; /* SIGINT/stats handling */
-  if (config.nfacctd_pipe_size) {
-    int slen = sizeof(config.nfacctd_pipe_size), x;
+  bkp_select_fd = 0;
+  FD_ZERO(&bkp_read_descs);
+
+  for (device_idx = 0; device[device_idx].dev_desc; device_idx++) {
+    dev_ptr = &device[device_idx];
+
+    glob_pcapt[device_idx] = dev_ptr; /* SIGINT/stats handling */
+    dev_ptr->fd = pcap_fileno(dev_ptr->dev_desc); 
+
+    if (config.nfacctd_pipe_size) {
+      int slen = sizeof(config.nfacctd_pipe_size), x;
 
 #if defined (PCAP_TYPE_linux) || (PCAP_TYPE_snoop)
-    Setsocksize(pcap_fileno(device.dev_desc), SOL_SOCKET, SO_RCVBUF, &config.nfacctd_pipe_size, slen);
-    getsockopt(pcap_fileno(device.dev_desc), SOL_SOCKET, SO_RCVBUF, &x, &slen);
-    Log(LOG_DEBUG, "DEBUG ( %s/core ): pmacctd_pipe_size: obtained=%d target=%d.\n", config.name, x, config.nfacctd_pipe_size);
+      Setsocksize(pcap_fileno(dev_ptr->dev_desc), SOL_SOCKET, SO_RCVBUF, &config.nfacctd_pipe_size, slen);
+      getsockopt(pcap_fileno(dev_ptr->dev_desc), SOL_SOCKET, SO_RCVBUF, &x, &slen);
+      Log(LOG_DEBUG, "DEBUG ( %s/core ): pmacctd_pipe_size: obtained=%d target=%d.\n", config.name, x, config.nfacctd_pipe_size);
 #endif
-  }
+    }
 
-  device.link_type = pcap_datalink(device.dev_desc);
-  for (index = 0; _devices[index].link_type != -1; index++) {
-    if (device.link_type == _devices[index].link_type)
-      device.data = &_devices[index];
-  }
-  load_plugin_filters(device.link_type);
+    if (bkp_select_fd < dev_ptr->fd) bkp_select_fd = dev_ptr->fd; 
+    FD_SET(dev_ptr->fd, &bkp_read_descs);
 
-  /* we need to solve some link constraints */
-  if (device.data == NULL) {
-    Log(LOG_ERR, "ERROR ( %s/core ): data link not supported: %d\n", config.name, device.link_type);
-    exit_all(1);
-  }
-  else Log(LOG_INFO, "INFO ( %s/core ): link type is: %d\n", config.name, device.link_type);
+    dev_ptr->link_type = pcap_datalink(dev_ptr->dev_desc);
+    for (index = 0; _devices[index].link_type != -1; index++) {
+      if (dev_ptr->link_type == _devices[index].link_type)
+        dev_ptr->data = &_devices[index];
+    }
 
-  if (device.link_type != DLT_EN10MB && device.link_type != DLT_IEEE802 && device.link_type != DLT_LINUX_SLL) {
-    list = plugins_list;
-    while (list) {
-      if ((list->cfg.what_to_count & COUNT_SRC_MAC) || (list->cfg.what_to_count & COUNT_DST_MAC)) {
-        Log(LOG_ERR, "ERROR ( %s/core ): MAC aggregation not available for link type: %d\n", config.name, device.link_type);
-        exit_all(1);
+    load_plugin_filters(dev_ptr->link_type);
+
+    /* we need to solve some link constraints */
+    if (dev_ptr->data == NULL) {
+      Log(LOG_ERR, "ERROR ( %s/core ): data link not supported: %d\n", config.name, dev_ptr->link_type);
+      exit_all(1);
+    }
+    else Log(LOG_INFO, "INFO ( %s/core ): [%s] link type is: %d\n", config.name, dev_ptr->str, dev_ptr->link_type);
+
+    if (dev_ptr->link_type != DLT_EN10MB && dev_ptr->link_type != DLT_IEEE802 && dev_ptr->link_type != DLT_LINUX_SLL) {
+      list = plugins_list;
+      while (list) {
+        if ((list->cfg.what_to_count & COUNT_SRC_MAC) || (list->cfg.what_to_count & COUNT_DST_MAC)) {
+          Log(LOG_ERR, "ERROR ( %s/core ): MAC aggregation not available for link type: %d\n", config.name, dev_ptr->link_type);
+          exit_all(1);
+        }
+        list = list->next;
       }
-      list = list->next;
+    }
+
+    /* Preparing the pointer in case we sniff from a single interface;
+       if multiple interfaces, we will set this dynamically at runtime */
+    if (!device_idx) cb_data.device = dev_ptr;
+
+    /* doing pcap stuff */
+    if (!config.dev || pcap_lookupnet(dev_ptr->str, &localnet, &netmask, errbuf) < 0) {
+      localnet = 0;
+      netmask = 0;
+      if (dev_ptr->str) Log(LOG_WARNING, "WARN ( %s/core ): %s\n", config.name, errbuf);
+    }
+
+    memset(&filter, 0, sizeof(filter));
+    if (pcap_compile(dev_ptr->dev_desc, &filter, config.clbuf, 0, netmask) < 0) {
+      Log(LOG_WARNING, "WARN ( %s/core ): %s (going on without a filter)\n", config.name, pcap_geterr(dev_ptr->dev_desc));
+    }
+    else {
+      if (pcap_setfilter(dev_ptr->dev_desc, &filter) < 0) {
+        Log(LOG_WARNING, "WARN ( %s/core ): %s (going on without a filter)\n", config.name, pcap_geterr(dev_ptr->dev_desc));
+      }
+      else pcap_freecode(&filter);
     }
   }
 
-  cb_data.device = &device;
-
-  /* doing pcap stuff */
-  if (!config.dev || pcap_lookupnet(config.dev, &localnet, &netmask, errbuf) < 0) {
-    localnet = 0;
-    netmask = 0;
-    if (config.dev) Log(LOG_WARNING, "WARN ( %s/core ): %s\n", config.name, errbuf);
-  }
-
-  if (pcap_compile(device.dev_desc, &filter, config.clbuf, 0, netmask) < 0)
-    Log(LOG_WARNING, "WARN ( %s/core ): %s (going on without a filter)\n", config.name, pcap_geterr(device.dev_desc));
-  else {
-    if (pcap_setfilter(device.dev_desc, &filter) < 0)
-      Log(LOG_WARNING, "WARN ( %s/core ): %s (going on without a filter)\n", config.name, pcap_geterr(device.dev_desc));
-  }
+  bkp_select_fd++;
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
   signal(SIGCHLD, startup_handle_falling_child); /* takes note of plugins failed during startup phase */
@@ -946,29 +988,65 @@ int main(int argc,char **argv, char **envp)
     sleep(2);
   }
 
-  /* Main loop: if pcap_loop() exits maybe an error occurred; we will try closing
-     and reopening again our listening device */
-  for(;;) {
-    if (!device.active) {
-      Log(LOG_WARNING, "WARN ( %s/core ): %s has become unavailable; throttling ...\n", config.name, config.dev);
-      throttle_loop:
-      sleep(5); /* XXX: user defined ? */
-      if ((device.dev_desc = do_pcap_open(config.dev, psize, config.promisc, 1000, config.pcap_protocol, errbuf)) == NULL)
-        goto throttle_loop;
-      pcap_setfilter(device.dev_desc, &filter);
-      device.active = TRUE;
-    }
-    pcap_loop(device.dev_desc, -1, pcap_cb, (u_char *) &cb_data);
-    pcap_close(device.dev_desc);
+  /* Main loop (for the case of a single interface): if pcap_loop() exits
+     maybe an error occurred; we will try closing and reopening again our
+     listening device */
+  if (device_idx == 1) {
+    for (;;) {
+      if (!device[0].active) {
+	Log(LOG_WARNING, "WARN ( %s/core ): %s has become unavailable; throttling ...\n", config.name, config.dev);
+	throttle_loop:
+	sleep(5); /* XXX: user defined ? */
 
-    if (config.pcap_savefile) {
-      if (config.sf_wait) {
-	fill_pipe_buffer();
-	Log(LOG_INFO, "INFO ( %s/core ): finished reading PCAP capture file\n", config.name);
-	wait(NULL);
+	if ((device[0].dev_desc = do_pcap_open(config.dev, psize, config.promisc, 1000, config.pcap_protocol, errbuf)) == NULL)
+	  goto throttle_loop;
+
+	pcap_setfilter(device[0].dev_desc, &filter);
+	device[0].active = TRUE;
       }
-      stop_all_childs();
+
+      pcap_loop(device[0].dev_desc, -1, pcap_cb, (u_char *) &cb_data);
+      pcap_close(device[0].dev_desc);
+
+      if (config.pcap_savefile) {
+	if (config.sf_wait) {
+	  fill_pipe_buffer();
+	  Log(LOG_INFO, "INFO ( %s/core ): finished reading PCAP capture file\n", config.name);
+	  wait(NULL);
+        }
+        stop_all_childs();
+      }
+      device[0].active = FALSE;
     }
-    device.active = FALSE;
+  }
+  else {
+    /* XXX:
+      1) handle interfaces to be removed from select() because getting inactive;
+      2) somehow expose capturing interface to pcap_cb();
+    */
+    for (;;) {
+      select_fd = bkp_select_fd;
+      memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
+
+      select_num = select(select_fd, &read_descs, NULL, NULL, NULL);
+
+      for (dev_ptr = NULL, index = 0; index < device_idx; index++) {
+        int loc_idx = (index + index_rr) % device_idx;
+
+	if (device[loc_idx].fd && FD_ISSET(device[loc_idx].fd, &read_descs)) {
+	  dev_ptr = &device[loc_idx];
+          index_rr = (index_rr + 1) % device_idx;
+          break;
+	}
+      }
+
+      if (dev_ptr) {
+	pkt_body = pcap_next(dev_ptr->dev_desc, &pkt_hdr); 
+	if (pkt_body) {
+	  cb_data.device = dev_ptr;
+	  pcap_cb((u_char *) &cb_data, &pkt_hdr, pkt_body);
+	}
+      }
+    }
   }
 }

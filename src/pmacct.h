@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -256,10 +256,12 @@ typedef struct {
 
 /* structures */
 struct pcap_device {
+  char *str;
   pcap_t *dev_desc;
   int link_type;
   int active;
   int errors; /* error count when reading from a savefile */
+  int fd;
   struct _devices_struct *data; 
 };
 
@@ -408,7 +410,7 @@ EXT struct configuration config; /* global configuration structure */
 EXT struct plugins_list_entry *plugins_list; /* linked list of each plugin configuration */
 EXT pid_t failed_plugins[MAX_N_PLUGINS]; /* plugins failed during startup phase */
 EXT u_char dummy_tlhdr[16];
-EXT pcap_t *glob_pcapt;
+EXT struct pcap_device *glob_pcapt[PCAP_MAX_INTERFACES];
 EXT struct pcap_stat ps;
 #undef EXT
 #endif /* _PMACCT_H_ */

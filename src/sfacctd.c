@@ -209,7 +209,7 @@ int main(int argc,char **argv, char **envp)
   config.acct_type = ACCT_SF;
 
   rows = 0;
-  glob_pcapt = NULL;
+  memset(&glob_pcapt, 0, sizeof(glob_pcapt));
 
   /* getting commandline values */
   while (!errflag && ((cp = getopt(argc, argv, ARGS_SFACCTD)) != -1)) {

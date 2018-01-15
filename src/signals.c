@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -152,11 +152,17 @@ void my_sigint_handler(int signum)
   Log(LOG_INFO, "INFO ( %s/%s ): OK, Exiting ...\n", config.name, config.type);
 
   if (config.acct_type == ACCT_PM && !config.uacctd_group /* XXX */) {
+    int device_idx;
+
     if (config.dev) {
-      if (pcap_stats(glob_pcapt, &ps) < 0) printf("\npcap_stats: %s\n", pcap_geterr(glob_pcapt));
-      printf("\n");
-      printf("%u packets received by filter\n", ps.ps_recv);
-      printf("%u packets dropped by kernel\n", ps.ps_drop);
+      for (device_idx = 0; glob_pcapt[device_idx]; device_idx++) {
+        if (pcap_stats(glob_pcapt[device_idx]->dev_desc, &ps) < 0) {
+	  printf("\npcap_stats: %s\n", pcap_geterr(glob_pcapt[device_idx]->dev_desc));
+	}
+        printf("\n");
+        printf("[%s] %u packets received by filter\n", glob_pcapt[device_idx]->str, ps.ps_recv);
+        printf("[%s] %u packets dropped by kernel\n", glob_pcapt[device_idx]->str, ps.ps_drop);
+      }
     }
   }
 
@@ -197,13 +203,19 @@ void push_stats()
   time_t now = time(NULL);
 
   if (config.acct_type == ACCT_PM) {
+    int device_idx;
+
     if (config.dev) {
-      if (pcap_stats(glob_pcapt, &ps) < 0) Log(LOG_INFO, "INFO ( %s/%s ): pcap_stats: %s\n",
-						config.name, config.type, pcap_geterr(glob_pcapt));
-      Log(LOG_NOTICE, "NOTICE ( %s/%s ): %s: (%u) %u packets received by filter\n",
-		config.name, config.type, config.dev, now, ps.ps_recv);
-      Log(LOG_NOTICE, "NOTICE ( %s/%s ): %s: (%u) %u packets dropped by kernel\n",
-		config.name, config.type, config.dev, now, ps.ps_drop);
+      for (device_idx = 0; glob_pcapt[device_idx]; device_idx++) {
+	if (pcap_stats(glob_pcapt[device_idx]->dev_desc, &ps) < 0) {
+	  Log(LOG_INFO, "INFO ( %s/%s ): pcap_stats: %s\n",
+		config.name, config.type, pcap_geterr(glob_pcapt[device_idx]->dev_desc));
+	}
+	Log(LOG_NOTICE, "NOTICE ( %s/%s ): [%s] (%u) %u packets received by filter\n",
+		config.name, config.type, glob_pcapt[device_idx]->str, now, ps.ps_recv);
+	Log(LOG_NOTICE, "NOTICE ( %s/%s ): [%s] (%u) %u packets dropped by kernel\n",
+		config.name, config.type, glob_pcapt[device_idx]->str, now, ps.ps_drop);
+      }
     }
   }
   else if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF)
