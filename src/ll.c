@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -359,8 +359,9 @@ void sll_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
   register const struct sll_header *sllp;
   register u_short etype;
   u_char *p;
-  u_int caplen = h->caplen;
+  u_int16_t caplen = h->caplen;
   u_int16_t e8021Q, nl;
+  int cursor;
 
   if (caplen < SLL_HDR_LEN) {
     pptrs->iph_ptr = NULL;
@@ -390,7 +391,14 @@ void sll_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
     return;
   }
   
-  /* XXX: ETHERTYPE_IPV6 ? */
+#if defined ENABLE_IPV6
+  if (etype == ETHERTYPE_IPV6) {
+    pptrs->l3_proto = ETHERTYPE_IPV6;
+    pptrs->l3_handler = ip6_handler;
+    pptrs->iph_ptr = pptrs->packet_ptr + nl;
+    return;
+  }
+#endif
 
   if (etype == LINUX_SLL_P_802_2) {
     /* going up to LLC/SNAP layer header */
@@ -409,10 +417,17 @@ void sll_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
       return;
     }
     memcpy(&e8021Q, pptrs->packet_ptr+nl+2, 2);
-    pptrs->vlan_ptr = pptrs->packet_ptr + nl;
+    if (!cursor) pptrs->vlan_ptr = pptrs->packet_ptr + nl;
     etype = ntohs(e8021Q);
     nl += IEEE8021Q_TAGLEN;
     caplen -= IEEE8021Q_TAGLEN;
+    cursor++;
+    goto recurse;
+  }
+
+  if (etype == ETHERTYPE_MPLS || etype == ETHERTYPE_MPLS_MULTI) {
+    etype = mpls_handler(pptrs->packet_ptr + nl, &caplen, &nl, pptrs);
+    cursor = 1;
     goto recurse;
   }
 
