@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -1533,12 +1533,13 @@ void *pm_tsearch(const void *key, void **rootp, int (*compar)(const void *key1, 
 void pm_tdestroy(void **root, void (*free_node)(void *nodep))
 {
   /* in implementations where tdestroy() is not defined, tdelete() against
-     the root node of the three destroys also the last few remaining bits */
+     the root node of the tree would destroy also the last few remaining
+     bits */
 #if (defined HAVE_TDESTROY)
   __pm_tdestroy((*root), free_node);
-#else
-  (*root) = NULL;
 #endif
+
+  (*root) = NULL;
 }
 
 void load_allow_file(char *filename, struct hosts_table *t)
