@@ -39,6 +39,7 @@
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #endif
+#include "jhash.h"
 
 /* variables to be exported away */
 struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
@@ -751,7 +752,7 @@ int main(int argc,char **argv, char **envp)
     Log(LOG_WARNING, "WARN ( %s/core ): Selecting a suitable device.\n", config.name);
     config.dev = pcap_lookupdev(errbuf);
     if (!config.dev) {
-      Log(LOG_WARNING, "WARN ( %s/core ): Unable to find a suitable device. Exiting.\n", config.name);
+      Log(LOG_ERR, "ERROR ( %s/core ): Unable to find a suitable device. Exiting.\n", config.name);
       exit_all(1);
     }
     else Log(LOG_DEBUG, "DEBUG ( %s/core ): device is %s\n", config.name, config.dev);
@@ -767,23 +768,37 @@ int main(int argc,char **argv, char **envp)
 
   if (config.dev) {
     char *token, *string_ptr = config.dev; 
+    int attempts;
 
-    while ((token = extract_token(&string_ptr, ',')) && device_idx < PCAP_MAX_INTERFACES) {
-      throttle_startup:
-      if ((device[device_idx].dev_desc = do_pcap_open(token, psize, config.promisc, 1000, config.pcap_protocol, errbuf)) == NULL) {
-	if (!config.if_wait) {
-	  Log(LOG_ERR, "ERROR ( %s/core ): do_pcap_open(): %s\n", config.name, errbuf);
-	  exit_all(1);
+    while ((token = extract_token(&string_ptr, ','))) {
+      if (device_idx < PCAP_MAX_INTERFACES) {
+	attempts = FALSE;
+
+	throttle_startup:
+	if (attempts < PCAP_MAX_ATTEMPTS) {
+	  if ((device[device_idx].dev_desc = do_pcap_open(token, psize, config.promisc, 1000, config.pcap_protocol, errbuf)) == NULL) {
+	    if (!config.if_wait) {
+	      Log(LOG_ERR, "ERROR ( %s/core ): [%s] do_pcap_open(): %s. Exiting.\n", config.name, token, errbuf);
+	      exit_all(1);
+	    }
+	    else {
+	      sleep(PCAP_RETRY_PERIOD); /* XXX: User defined value? */
+	      attempts++;
+	      goto throttle_startup;
+	    }
+          }
+
+          device[device_idx].active = TRUE;
+          device[device_idx].str = token;
+	  device[device_idx].id = jhash(device[device_idx].str, strlen(device[device_idx].str), 0);
+          device_idx++;
 	}
-	else {
-	  sleep(5); /* XXX: User defined value? Also, give-up at some point if multiple interfaces defined? */
-	  goto throttle_startup;
-	}
+	else Log(LOG_WARNING, "WARN ( %s/core ): [%s] do_pcap_open(): giving up after too many attempts.\n", config.name, token);
       }
-
-      device[device_idx].active = TRUE;
-      device[device_idx].str = token;
-      device_idx++;
+      else {
+	Log(LOG_ERR, "ERROR ( %s/core ): Maximum number of interfaces reached (%u). Exiting.\n", config.name, PCAP_MAX_INTERFACES);
+	exit(1);
+      }
     }
   }
   else if (config.pcap_savefile) {
@@ -826,7 +841,7 @@ int main(int argc,char **argv, char **envp)
       Log(LOG_ERR, "ERROR ( %s/core ): data link not supported: %d\n", config.name, dev_ptr->link_type);
       exit_all(1);
     }
-    else Log(LOG_INFO, "INFO ( %s/core ): [%s] link type is: %d\n", config.name, dev_ptr->str, dev_ptr->link_type);
+    else Log(LOG_INFO, "INFO ( %s/core ): [%s,%u] link type is: %d\n", config.name, dev_ptr->str, dev_ptr->id, dev_ptr->link_type);
 
     if (dev_ptr->link_type != DLT_EN10MB && dev_ptr->link_type != DLT_IEEE802 && dev_ptr->link_type != DLT_LINUX_SLL) {
       list = plugins_list;
@@ -994,9 +1009,9 @@ int main(int argc,char **argv, char **envp)
   if (device_idx == 1) {
     for (;;) {
       if (!device[0].active) {
-	Log(LOG_WARNING, "WARN ( %s/core ): %s has become unavailable; throttling ...\n", config.name, config.dev);
+	Log(LOG_WARNING, "WARN ( %s/core ): [%s] has become unavailable; throttling ...\n", config.name, config.dev);
 	throttle_loop:
-	sleep(5); /* XXX: user defined ? */
+	sleep(PCAP_RETRY_PERIOD); /* XXX: user defined ? */
 
 	if ((device[0].dev_desc = do_pcap_open(config.dev, psize, config.promisc, 1000, config.pcap_protocol, errbuf)) == NULL)
 	  goto throttle_loop;
@@ -1020,10 +1035,7 @@ int main(int argc,char **argv, char **envp)
     }
   }
   else {
-    /* XXX:
-      1) handle interfaces to be removed from select() because getting inactive;
-      2) somehow expose capturing interface to pcap_cb();
-    */
+    /* XXX: handle interfaces to be removed from select() because getting inactive */
     for (;;) {
       select_fd = bkp_select_fd;
       memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));

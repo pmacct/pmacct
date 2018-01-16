@@ -157,11 +157,12 @@ void my_sigint_handler(int signum)
     if (config.dev) {
       for (device_idx = 0; glob_pcapt[device_idx]; device_idx++) {
         if (pcap_stats(glob_pcapt[device_idx]->dev_desc, &ps) < 0) {
-	  printf("\npcap_stats: %s\n", pcap_geterr(glob_pcapt[device_idx]->dev_desc));
+	  printf("INFO: [%s,%u] error='pcap_stats(): %s'\n", glob_pcapt[device_idx]->str,
+		glob_pcapt[device_idx]->id, pcap_geterr(glob_pcapt[device_idx]->dev_desc));
 	}
-        printf("\n");
-        printf("[%s] %u packets received by filter\n", glob_pcapt[device_idx]->str, ps.ps_recv);
-        printf("[%s] %u packets dropped by kernel\n", glob_pcapt[device_idx]->str, ps.ps_drop);
+        printf("NOTICE: [%s,%u] received_packets=%u dropped_packets=%u\n",
+		glob_pcapt[device_idx]->str, glob_pcapt[device_idx]->id,
+		ps.ps_recv, ps.ps_drop);
       }
     }
   }
@@ -208,13 +209,13 @@ void push_stats()
     if (config.dev) {
       for (device_idx = 0; glob_pcapt[device_idx]; device_idx++) {
 	if (pcap_stats(glob_pcapt[device_idx]->dev_desc, &ps) < 0) {
-	  Log(LOG_INFO, "INFO ( %s/%s ): pcap_stats: %s\n",
-		config.name, config.type, pcap_geterr(glob_pcapt[device_idx]->dev_desc));
+	  Log(LOG_INFO, "INFO ( %s/%s ): [%s,%u] time=%u error='pcap_stats(): %s'\n",
+		config.name, config.type, glob_pcapt[device_idx]->str, glob_pcapt[device_idx]->id,
+		now, pcap_geterr(glob_pcapt[device_idx]->dev_desc));
 	}
-	Log(LOG_NOTICE, "NOTICE ( %s/%s ): [%s] (%u) %u packets received by filter\n",
-		config.name, config.type, glob_pcapt[device_idx]->str, now, ps.ps_recv);
-	Log(LOG_NOTICE, "NOTICE ( %s/%s ): [%s] (%u) %u packets dropped by kernel\n",
-		config.name, config.type, glob_pcapt[device_idx]->str, now, ps.ps_drop);
+	Log(LOG_NOTICE, "NOTICE ( %s/%s ): [%s,%u] time=%u received_packets=%u dropped_packets=%u\n",
+		config.name, config.type, glob_pcapt[device_idx]->str, glob_pcapt[device_idx]->id,
+		now, ps.ps_recv, ps.ps_drop);
       }
     }
   }

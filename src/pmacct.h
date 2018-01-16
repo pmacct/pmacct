@@ -257,6 +257,7 @@ typedef struct {
 /* structures */
 struct pcap_device {
   char *str;
+  u_int32_t id;
   pcap_t *dev_desc;
   int link_type;
   int active;
