@@ -322,6 +322,7 @@ static const struct _dictionary_line dictionary[] = {
   {"pcap_protocol", cfg_key_pcap_protocol},
   {"pcap_savefile", cfg_key_pcap_savefile},
   {"pcap_savefile_wait", cfg_key_pcap_savefile_wait},
+  {"pcap_direction", cfg_key_pcap_direction},
   {"pcap_ifindex", cfg_key_pcap_ifindex},
   {"pcap_interfaces_map", cfg_key_pcap_interfaces_map},
   {"core_proc_name", cfg_key_proc_name},

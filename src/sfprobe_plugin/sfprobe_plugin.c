@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /* 
@@ -314,7 +314,7 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
     }
   }
 
-  // Let's determine the ifIndex
+  // XXX: Let's determine the ifIndex
   if (!hdr->ifindex_in && !hdr->ifindex_out) {
     if (sp->ifIndex_Type) {
       switch (sp->ifIndex_Type) {
@@ -386,28 +386,43 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
     SFL_FLOW_SAMPLE_TYPE fs;
     memset(&fs, 0, sizeof(fs));
 
-    if (!hdr->ifindex_in && !hdr->ifindex_out) {
-	if (sp->ifIndex_Type) {
-	  switch (sp->ifIndex_Type) {
-	  case IFINDEX_STATIC:
-          fs.input = (direction == SFL_DIRECTION_IN) ? sp->counters[0].ifIndex : 0x3FFFFFFF;
-          fs.output = (direction == SFL_DIRECTION_OUT) ? sp->counters[0].ifIndex : 0x3FFFFFFF;
-	    break;
-	  case IFINDEX_TAG:
-	    fs.input = (direction == SFL_DIRECTION_IN) ? hdr->tag : 0x3FFFFFFF;
-	    fs.output = (direction == SFL_DIRECTION_OUT) ? hdr->tag : 0x3FFFFFFF;
-	    break;
-	  case IFINDEX_TAG2:
-	    fs.input = (direction == SFL_DIRECTION_IN) ? hdr->tag2 : 0x3FFFFFFF;
-	    fs.output = (direction == SFL_DIRECTION_OUT) ? hdr->tag2 : 0x3FFFFFFF;
-	    break;
-	  }
-	}
+    if (hdr->ifindex_in) fs.input = hdr->ifindex_in;
+    else if (sp->ifIndex_Type && direction == SFL_DIRECTION_IN) {
+      switch (sp->ifIndex_Type) {
+      case IFINDEX_STATIC:
+	fs.input = sp->counters[idx].ifIndex;
+	break;
+      case IFINDEX_TAG:
+	fs.input = hdr->tag;
+	break;
+      case IFINDEX_TAG2:
+	fs.input = hdr->tag2;
+	break;
+      default:
+	fs.input = 0x3FFFFFFF;
+	break;
+      }
     }
-    else {
-      fs.input = (hdr->ifindex_in) ? hdr->ifindex_in : 0x3FFFFFFF;
-      fs.output = (hdr->ifindex_out) ? hdr->ifindex_out : 0x3FFFFFFF;
+    else fs.input = 0x3FFFFFFF;
+
+    if (hdr->ifindex_out) fs.output = hdr->ifindex_out;
+    else if (sp->ifIndex_Type && direction == SFL_DIRECTION_OUT) {
+      switch (sp->ifIndex_Type) {
+      case IFINDEX_STATIC:
+        fs.output = sp->counters[idx].ifIndex;
+        break;
+      case IFINDEX_TAG:
+        fs.output = hdr->tag;
+        break;
+      case IFINDEX_TAG2:
+        fs.output = hdr->tag2;
+        break;
+      default:
+        fs.output = 0x3FFFFFFF;
+        break;
+      }
     }
+    else fs.output = 0x3FFFFFFF;
     
     memset(&hdrElem, 0, sizeof(hdrElem));
 

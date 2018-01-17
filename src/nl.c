@@ -61,10 +61,17 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     pptrs.bta_table = cb_data->bta_table;
     pptrs.flow_type = NF9_FTYPE_TRAFFIC;
 
-    if (cb_data->ifindex_in) pptrs.ifindex_in = cb_data->ifindex_in;
-    else if (cb_data->device->id) pptrs.ifindex_in = cb_data->device->id;
+    if (cb_data->ifindex_in)
+      pptrs.ifindex_in = cb_data->ifindex_in;
+    else if (cb_data->device->id && config.pcap_direction == PCAP_D_IN)
+      pptrs.ifindex_in = cb_data->device->id;
     else pptrs.ifindex_in = FALSE;
-    pptrs.ifindex_out = cb_data->ifindex_out;
+
+    if (cb_data->ifindex_out)
+      pptrs.ifindex_out = cb_data->ifindex_out;
+    else if (cb_data->device->id && config.pcap_direction == PCAP_D_OUT)
+      pptrs.ifindex_out = cb_data->device->id;
+    else pptrs.ifindex_out = FALSE;
 
     (*device->data->handler)(pkthdr, &pptrs);
     if (pptrs.iph_ptr) {

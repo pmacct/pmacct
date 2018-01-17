@@ -444,6 +444,7 @@ struct configuration {
   char *clbuf; /* pcap filter */
   int pcap_protocol;
   char *pcap_savefile;
+  int pcap_direction;
   int pcap_ifindex;
   char *pcap_interfaces_map;
   char *dev;

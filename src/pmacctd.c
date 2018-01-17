@@ -93,7 +93,7 @@ void usage_daemon(char *prog_name)
 }
 
 static pcap_t *do_pcap_open(const char *device, int snaplen, int promisc,
-			    int to_ms, int protocol, char *errbuf)
+			    int to_ms, int protocol, int direction, char *errbuf)
 {
   pcap_t *p;
   int ret;
@@ -120,8 +120,13 @@ static pcap_t *do_pcap_open(const char *device, int snaplen, int promisc,
     goto err;
 #else
   if (protocol)
-    Log(LOG_WARNING, "WARN ( %s/core ): pcap_protocol specified but linked against a version of libpcap that does not support pcap_set_protocol.\n", config.name);
+    Log(LOG_WARNING, "WARN ( %s/core ): pcap_protocol specified but linked against a version of libpcap that does not support pcap_set_protocol().\n", config.name);
 #endif
+
+  /* since direction is not supported on all platforms, we just issue a warning */
+  ret = pcap_setdirection(p, direction);
+  if (ret < 0 && direction != PCAP_D_INOUT)
+    Log(LOG_WARNING, "WARN ( %s/core ): pcap_direction specified but linked against a version of libpcap that does not support pcap_setdirection().\n", config.name);
 
   ret = pcap_activate(p);
   if (ret < 0)
@@ -755,6 +760,8 @@ int main(int argc,char **argv, char **envp)
     pcap_if_map.num = 0;
   }
 
+  if (!config.pcap_direction) config.pcap_direction = PCAP_D_INOUT;
+
   /* If any device/savefile have been specified, choose a suitable device
      where to listen for traffic */
   if (!config.dev && !config.pcap_savefile) {
@@ -787,7 +794,7 @@ int main(int argc,char **argv, char **envp)
 
 	throttle_startup:
 	if (attempts < PCAP_MAX_ATTEMPTS) {
-	  if ((device[device_idx].dev_desc = do_pcap_open(ifname, psize, config.promisc, 1000, config.pcap_protocol, errbuf)) == NULL) {
+	  if ((device[device_idx].dev_desc = do_pcap_open(ifname, psize, config.promisc, 1000, config.pcap_protocol, config.pcap_direction, errbuf)) == NULL) {
 	    if (!config.if_wait) {
 	      Log(LOG_ERR, "ERROR ( %s/core ): [%s] do_pcap_open(): %s. Exiting.\n", config.name, ifname, errbuf);
 	      exit_all(1);
@@ -1039,7 +1046,7 @@ int main(int argc,char **argv, char **envp)
 	throttle_loop:
 	sleep(PCAP_RETRY_PERIOD); /* XXX: user defined ? */
 
-	if ((device[0].dev_desc = do_pcap_open(config.dev, psize, config.promisc, 1000, config.pcap_protocol, errbuf)) == NULL)
+	if ((device[0].dev_desc = do_pcap_open(config.dev, psize, config.promisc, 1000, config.pcap_protocol, config.pcap_direction, errbuf)) == NULL)
 	  goto throttle_loop;
 
 	pcap_setfilter(device[0].dev_desc, &filter);

@@ -473,6 +473,22 @@ int cfg_key_pcap_protocol(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_pcap_direction(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0, value = 0;
+
+  lower_string(value_ptr);
+  if (!strncmp(value_ptr, "in", strlen("in"))) value = PCAP_D_IN;
+  else if (!strncmp(value_ptr, "out", strlen("out"))) value = PCAP_D_OUT;
+  else Log(LOG_WARNING, "WARN: [%s] Ignoring unknown 'pcap_direction' value.\n", filename);
+
+  for (; list; list = list->next, changes++) list->cfg.pcap_direction = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'pcap_direction'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_pcap_ifindex(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

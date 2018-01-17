@@ -517,7 +517,8 @@ int PT_map_filter_handler(char *filename, struct id_entry *e, char *value, struc
   }
 
   memset(&device, 0, sizeof(struct pcap_device));
-  if (glob_pcapt[0]->dev_desc) device.link_type = pcap_datalink(glob_pcapt[0]->dev_desc); // XXX: fix if multiple interfaces
+  // XXX: fix if multiple interfaces
+  if (glob_pcapt[0] && glob_pcapt[0]->dev_desc) device.link_type = pcap_datalink(glob_pcapt[0]->dev_desc);
   else if (config.uacctd_group) device.link_type = DLT_RAW;
   else device.link_type = 1;
   device.dev_desc = pcap_open_dead(device.link_type, 128); /* snaplen=eth_header+pm_iphdr+pm_tlhdr */
