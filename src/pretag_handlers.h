@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -180,4 +180,12 @@ EXT int BTA_lookup_bgp_port_handler(struct packet_ptrs *, void *, void *);
 
 EXT int BITR_mpls_label_bottom_handler(struct packet_ptrs *, void *, void *);
 EXT int BITR_mpls_vpn_id_handler(struct packet_ptrs *, void *, void *);
+
+EXT void pcap_interfaces_map_validate(char *, struct plugin_requests *);
+EXT int pcap_interfaces_map_ifindex_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int pcap_interfaces_map_ifname_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT void pcap_interfaces_map_initialize();
+EXT void pcap_interfaces_map_load();
+EXT void pcap_interfaces_map_destroy();
+EXT u_int32_t pcap_interfaces_map_lookup_ifname(char *);
 #undef EXT

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -469,6 +469,35 @@ int cfg_key_pcap_protocol(char *filename, char *name, char *value_ptr)
   value = strtol(value_ptr, NULL, 0);
   for (; list; list = list->next, changes++) list->cfg.pcap_protocol = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'pcap_protocol'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_pcap_ifindex(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0, value = 0;
+
+  lower_string(value_ptr);
+  if (!strncmp(value_ptr, "sys", strlen("sys"))) value = PCAP_IFINDEX_SYS;
+  else if (!strncmp(value_ptr, "hash", strlen("hash"))) value = PCAP_IFINDEX_HASH;
+  else if (!strncmp(value_ptr, "map", strlen("map"))) value = PCAP_IFINDEX_MAP;
+  else if (!strncmp(value_ptr, "none", strlen("none"))) value = PCAP_IFINDEX_NONE;
+  else Log(LOG_WARNING, "WARN: [%s] Ignoring unknown 'pcap_ifindex' value.\n", filename); 
+
+  for (; list; list = list->next, changes++) list->cfg.pcap_ifindex = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'pcap_ifindex'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_pcap_interfaces_map(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.pcap_interfaces_map = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'pcap_interfaces_map'. Globalized.\n", filename);
 
   return changes;
 }

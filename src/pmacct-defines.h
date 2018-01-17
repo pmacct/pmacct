@@ -49,6 +49,10 @@
 #define PCAP_MAX_INTERFACES 1000
 #define PCAP_MAX_ATTEMPTS 3
 #define PCAP_RETRY_PERIOD 5
+#define PCAP_IFINDEX_NONE 0
+#define PCAP_IFINDEX_SYS 1
+#define PCAP_IFINDEX_HASH 2 
+#define PCAP_IFINDEX_MAP 3
 #define PORT_STRLEN 6
 #ifndef UINT8_MAX
 #define UINT8_MAX (255U)
@@ -158,6 +162,7 @@
 #define MAP_IGP			107	/* igp_daemon_map */
 #define MAP_CUSTOM_PRIMITIVES	108	/* aggregate_primitives */
 #define MAP_BGP_XCS		109	/* bgp_xconnect_map */
+#define MAP_PCAP_INTERFACES	110	/* pcap_interfaces_map */
 
 /* PRIMITIVES DEFINITION: START */
 /* internal: first registry, ie. what_to_count, aggregation, etc. */

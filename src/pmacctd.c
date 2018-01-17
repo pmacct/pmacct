@@ -746,6 +746,15 @@ int main(int argc,char **argv, char **envp)
   if (config.handle_flows) init_ip_flow_handler();
   load_networks(config.networks_file, &nt, &nc);
 
+  if (config.pcap_interfaces_map) {
+    pcap_interfaces_map_initialize();
+    pcap_interfaces_map_load();
+  }
+  else {
+    pcap_if_map.list = NULL;
+    pcap_if_map.num = 0;
+  }
+
   /* If any device/savefile have been specified, choose a suitable device
      where to listen for traffic */
   if (!config.dev && !config.pcap_savefile) {
@@ -772,13 +781,15 @@ int main(int argc,char **argv, char **envp)
 
     while ((token = extract_token(&string_ptr, ','))) {
       if (device_idx < PCAP_MAX_INTERFACES) {
+	char *ifname = strdup(token);
+	trim_all_spaces(ifname);
 	attempts = FALSE;
 
 	throttle_startup:
 	if (attempts < PCAP_MAX_ATTEMPTS) {
-	  if ((device[device_idx].dev_desc = do_pcap_open(token, psize, config.promisc, 1000, config.pcap_protocol, errbuf)) == NULL) {
+	  if ((device[device_idx].dev_desc = do_pcap_open(ifname, psize, config.promisc, 1000, config.pcap_protocol, errbuf)) == NULL) {
 	    if (!config.if_wait) {
-	      Log(LOG_ERR, "ERROR ( %s/core ): [%s] do_pcap_open(): %s. Exiting.\n", config.name, token, errbuf);
+	      Log(LOG_ERR, "ERROR ( %s/core ): [%s] do_pcap_open(): %s. Exiting.\n", config.name, ifname, errbuf);
 	      exit_all(1);
 	    }
 	    else {
@@ -789,8 +800,23 @@ int main(int argc,char **argv, char **envp)
           }
 
           device[device_idx].active = TRUE;
-          device[device_idx].str = token;
-	  device[device_idx].id = jhash(device[device_idx].str, strlen(device[device_idx].str), 0);
+          device[device_idx].str = ifname;
+
+	  if (config.pcap_ifindex == PCAP_IFINDEX_SYS)
+	    device[device_idx].id = if_nametoindex(device[device_idx].str);
+	  else if (config.pcap_ifindex == PCAP_IFINDEX_HASH)
+	    device[device_idx].id = jhash(device[device_idx].str, strlen(device[device_idx].str), 0);
+	  else if (config.pcap_ifindex == PCAP_IFINDEX_MAP) {
+	    if (config.pcap_interfaces_map) {
+	      device[device_idx].id = pcap_interfaces_map_lookup_ifname(device[device_idx].str);
+	    }
+	    else {
+	      Log(LOG_ERR, "ERROR ( %s/core ): pcap_ifindex set to 'map' but no pcap_interface_map is defined. Exiting.\n", config.name);
+	      exit(1);
+	    }
+	  }
+	  else device[device_idx].id = 0;
+
           device_idx++;
 	}
 	else Log(LOG_WARNING, "WARN ( %s/core ): [%s] do_pcap_open(): giving up after too many attempts.\n", config.name, token);
@@ -1035,7 +1061,7 @@ int main(int argc,char **argv, char **envp)
     }
   }
   else {
-    /* XXX: handle interfaces to be removed from select() because getting inactive */
+    /* XXX: handle interface changes? */
     for (;;) {
       select_fd = bkp_select_fd;
       memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));

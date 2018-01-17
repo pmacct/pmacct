@@ -278,6 +278,16 @@ struct pcap_callback_data {
   u_int32_t ifindex_out;
 };
 
+struct pcap_interface {
+  u_int32_t ifindex;
+  char ifname[IFNAMSIZ];
+};
+
+struct pcap_interfaces {
+  struct pcap_interface *list;
+  int num;
+};
+
 struct _protocols_struct {
   char name[PROTO_LEN];
   int number;
@@ -412,6 +422,7 @@ EXT struct plugins_list_entry *plugins_list; /* linked list of each plugin confi
 EXT pid_t failed_plugins[MAX_N_PLUGINS]; /* plugins failed during startup phase */
 EXT u_char dummy_tlhdr[16];
 EXT struct pcap_device *glob_pcapt[PCAP_MAX_INTERFACES];
+EXT struct pcap_interfaces pcap_if_map;
 EXT struct pcap_stat ps;
 #undef EXT
 #endif /* _PMACCT_H_ */

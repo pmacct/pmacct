@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -172,5 +172,11 @@ const struct _map_dictionary_line custom_primitives_map_dictionary[] = {
   {"field_type", custom_primitives_map_field_type_handler},
   {"len", custom_primitives_map_len_handler},
   {"semantics", custom_primitives_map_semantics_handler},
+  {"", NULL}
+};
+
+const struct _map_dictionary_line pcap_interfaces_map_dictionary[] = {
+  {"ifindex", pcap_interfaces_map_ifindex_handler},
+  {"ifname", pcap_interfaces_map_ifname_handler},
   {"", NULL}
 };

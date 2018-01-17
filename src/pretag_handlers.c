@@ -3596,3 +3596,117 @@ int PT_map_index_fdata_fwdstatus_handler(struct id_entry *e, pm_hash_serial_t *h
 
   return FALSE;
 }
+
+void pcap_interfaces_map_validate(char *filename, struct plugin_requests *req)
+{
+  struct pcap_interfaces *table = (struct pcap_interfaces *) req->key_value_table;
+  int valid = FALSE;
+
+  if (table && table->list) {
+    if (table->list[table->num].ifindex && strlen(table->list[table->num].ifname))
+      valid = TRUE;
+
+    if (valid) table->num++;
+    else memset(&table->list[table->num], 0, sizeof(struct pcap_interface));
+  }
+}
+
+int pcap_interfaces_map_ifindex_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  struct pcap_interfaces *table = (struct pcap_interfaces *) req->key_value_table;
+  char *endp;
+
+  if (table && table->list) {
+    if (table->num < PCAP_MAX_INTERFACES) {
+      table->list[table->num].ifindex = strtoul(value, &endp, 10);
+      if (!table->list[table->num].ifindex) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): [%s] invalid 'ifindex' value: '%s'.\n", config.name, config.type, filename, value);
+        return TRUE;
+      }
+    }
+    else {
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] maximum entries (%u) reached.\n", config.name, config.type, filename, PCAP_MAX_INTERFACES);
+      return TRUE;
+    }
+  }
+  else {
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] pcap_interfaces_map not allocated.\n", config.name, config.type, filename);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+int pcap_interfaces_map_ifname_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  struct pcap_interfaces *table = (struct pcap_interfaces *) req->key_value_table;
+
+  if (table && table->list) {
+    if (table->num < PCAP_MAX_INTERFACES) {
+      strncpy(table->list[table->num].ifname, value, IFNAMSIZ);
+      if (!strlen(table->list[table->num].ifname)) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): [%s] invalid 'ifname' value: '%s'.\n", config.name, config.type, filename, value);
+        return TRUE;
+      }
+    }
+    else {
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] maximum entries (%u) reached.\n", config.name, config.type, filename, PCAP_MAX_INTERFACES);
+      return TRUE;
+    }
+  }
+  else {
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] pcap_interfaces_map not allocated.\n", config.name, config.type, filename);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+void pcap_interfaces_map_initialize()
+{
+  memset(&pcap_if_map, 0, sizeof(pcap_if_map));
+
+  /* Setting up the list */
+  pcap_if_map.list = malloc((PCAP_MAX_INTERFACES) * sizeof(struct pcap_interface));
+  if (!pcap_if_map.list) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate pcap_interfaces_map. Exiting ...\n", config.name, config.type);
+    exit(1);
+  }
+  else memset(pcap_if_map.list, 0, (PCAP_MAX_INTERFACES) * sizeof(struct pcap_interface));
+}
+
+void pcap_interfaces_map_load()
+{
+  struct plugin_requests req;
+  int pcap_interfaces_allocated = FALSE;
+
+  pcap_interfaces_map_destroy();
+  memset(&req, 0, sizeof(req));
+
+  req.key_value_table = (void *) &pcap_if_map;
+  load_id_file(MAP_PCAP_INTERFACES, config.pcap_interfaces_map, NULL, &req, &pcap_interfaces_allocated);
+}
+
+void pcap_interfaces_map_destroy()
+{
+  int idx;
+
+  for (idx = 0; idx < pcap_if_map.num; idx++) memset(&pcap_if_map.list[idx], 0, sizeof(struct pcap_interface));
+
+  pcap_if_map.num = 0;
+}
+
+u_int32_t pcap_interfaces_map_lookup_ifname(char *ifname)
+{
+  u_int32_t ifindex = 0;
+  int idx;
+
+  for (idx = 0; idx < pcap_if_map.num; idx++) {
+    if (!strncmp(pcap_if_map.list[idx].ifname, ifname, strlen(ifname))) {
+      ifindex = pcap_if_map.list[idx].ifindex;
+      break;
+    }
+  }
+
+  return ifindex;
+}

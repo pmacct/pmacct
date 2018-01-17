@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -45,6 +45,8 @@ EXT int cfg_key_pcap_filter(char *, char *, char *);
 EXT int cfg_key_pcap_protocol(char *, char *, char *);
 EXT int cfg_key_pcap_savefile(char *, char *, char *);
 EXT int cfg_key_pcap_savefile_wait(char *, char *, char *);
+EXT int cfg_key_pcap_ifindex(char *, char *, char *);
+EXT int cfg_key_pcap_interfaces_map(char *, char *, char *);
 EXT int cfg_key_use_ip_next_hop(char *, char *, char *);
 EXT int cfg_key_thread_stack(char *, char *, char *);
 EXT int cfg_key_interface(char *, char *, char *);

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -322,6 +322,8 @@ static const struct _dictionary_line dictionary[] = {
   {"pcap_protocol", cfg_key_pcap_protocol},
   {"pcap_savefile", cfg_key_pcap_savefile},
   {"pcap_savefile_wait", cfg_key_pcap_savefile_wait},
+  {"pcap_ifindex", cfg_key_pcap_ifindex},
+  {"pcap_interfaces_map", cfg_key_pcap_interfaces_map},
   {"core_proc_name", cfg_key_proc_name},
   {"proc_priority", cfg_key_proc_priority},
   {"pmacctd_as", cfg_key_nfacctd_as_new},

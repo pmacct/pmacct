@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -444,6 +444,8 @@ struct configuration {
   char *clbuf; /* pcap filter */
   int pcap_protocol;
   char *pcap_savefile;
+  int pcap_ifindex;
+  char *pcap_interfaces_map;
   char *dev;
   int if_wait;
   int sf_wait;
