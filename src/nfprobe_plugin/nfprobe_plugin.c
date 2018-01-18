@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -322,31 +322,43 @@ l2_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extra
   flow->mpls_label[ndx] = extras->mpls_top_label;
 #endif
 
-  if (!p->ifindex_in && !p->ifindex_out) {
-    if (config.nfprobe_ifindex_type) {
-      switch (config.nfprobe_ifindex_type) {
-      case IFINDEX_STATIC:
-        flow->ifindex[ndx] = (direction == DIRECTION_IN) ? config.nfprobe_ifindex : 0;
-        flow->ifindex[ndx ^ 1] = (direction == DIRECTION_OUT) ? config.nfprobe_ifindex : 0;
-        break;
-      case IFINDEX_TAG:
-        flow->ifindex[ndx] = (direction == DIRECTION_IN) ? p->tag : 0;
-	flow->ifindex[ndx ^ 1] = (direction == DIRECTION_OUT) ? p->tag : 0;
-	break;
-      case IFINDEX_TAG2:
-        flow->ifindex[ndx] = (direction == DIRECTION_IN) ? p->tag2 : 0;
-	flow->ifindex[ndx ^ 1] = (direction == DIRECTION_OUT) ? p->tag2 : 0;
-        break;
-      default:
-        flow->ifindex[ndx] = 0;
-	flow->ifindex[ndx ^ 1] = 0;
-      }
+  if (p->ifindex_in) flow->ifindex[ndx] = p->ifindex_in;
+  else if (config.nfprobe_ifindex_type && direction == DIRECTION_IN) {
+    switch (config.nfprobe_ifindex_type) {
+    case IFINDEX_STATIC:
+      flow->ifindex[ndx] = config.nfprobe_ifindex;
+      break;
+    case IFINDEX_TAG:
+      flow->ifindex[ndx] = p->tag;
+      break;
+    case IFINDEX_TAG2:
+      flow->ifindex[ndx] = p->tag2;
+      break;
+    default:
+      flow->ifindex[ndx] = 0;
+      break;
     }
   }
-  else {
-    flow->ifindex[ndx] = p->ifindex_in;
-    flow->ifindex[ndx ^ 1] = p->ifindex_out;
+  else flow->ifindex[ndx] = 0;
+
+  if (p->ifindex_out) flow->ifindex[ndx ^ 1] = p->ifindex_out;
+  else if (config.nfprobe_ifindex_type && direction == DIRECTION_OUT) {
+    switch (config.nfprobe_ifindex_type) {
+    case IFINDEX_STATIC:
+      flow->ifindex[ndx ^ 1] = config.nfprobe_ifindex; 
+      break;
+    case IFINDEX_TAG:
+      flow->ifindex[ndx ^ 1] = p->tag;
+      break;
+    case IFINDEX_TAG2:
+      flow->ifindex[ndx ^ 1] = p->tag2;
+      break;
+    default:
+      flow->ifindex[ndx ^ 1] = 0;
+      break;
+    }
   }
+  else flow->ifindex[ndx ^ 1] = 0;
 
   return (0);
 }
