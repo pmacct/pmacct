@@ -305,7 +305,7 @@ EXT void readv2v4CountersSample(SFSample *, struct packet_ptrs_vector *);
 EXT void readv5CountersSample(SFSample *, int, struct packet_ptrs_vector *);
 EXT void finalizeSample(SFSample *, struct packet_ptrs_vector *, struct plugin_requests *);
 EXT void InterSampleCleanup(SFSample *);
-EXT void decodeMpls(SFSample *);
+EXT void decodeMpls(SFSample *, u_char **);
 EXT void decodePPP(SFSample *);
 EXT void decodeLinkLayer(SFSample *);
 EXT void decodeIPLayer4(SFSample *, u_char *, u_int32_t);

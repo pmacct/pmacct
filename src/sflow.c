@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -142,7 +142,7 @@ void decodeLinkLayer(SFSample *sample)
   }
 
   if (sample->eth_type == ETHERTYPE_MPLS || sample->eth_type == ETHERTYPE_MPLS_MULTI) {
-    decodeMpls(sample);
+    decodeMpls(sample, &ptr);
     caplen -= sample->lstk.depth * 4;
   }
 
@@ -816,12 +816,16 @@ void readExtendedTag(SFSample *sample)
   sample->tag2 = getData64(sample);
 }
 
-void decodeMpls(SFSample *sample)
+void decodeMpls(SFSample *sample, u_char **bp)
 {
   struct packet_ptrs dummy_pptrs;
-  u_char *ptr = (u_char *)sample->datap, *end = sample->header + sample->headerLen;
-  u_int16_t nl = 0, caplen = end - ptr;
-  
+  u_char *ptr, *end = sample->header + sample->headerLen;
+  u_int16_t nl = 0, caplen;
+
+  if (bp) ptr = (*bp);
+  else ptr = (u_char *)sample->datap;
+  caplen = end - ptr;
+
   memset(&dummy_pptrs, 0, sizeof(dummy_pptrs));
   sample->eth_type = mpls_handler(ptr, &caplen, &nl, &dummy_pptrs);
 
@@ -839,6 +843,7 @@ void decodeMpls(SFSample *sample)
   if (nl) {
     sample->lstk.depth = nl / 4; 
     sample->lstk.stack = (u_int32_t *) dummy_pptrs.mpls_ptr;
+    if (bp) (*bp) += nl;
   }
 }
 
@@ -904,7 +909,7 @@ void readFlowSample_header(SFSample *sample)
     break;
 #endif
   case SFLHEADER_MPLS:
-    decodeMpls(sample);
+    decodeMpls(sample, NULL);
     break;
   case SFLHEADER_PPP:
     decodePPP(sample);

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -667,13 +667,14 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation_2 & COUNT_MPLS_LABEL_TOP) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = mpls_label_top_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_label_top_handler;
-      else primitives--;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_mpls_label_top_handler;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_MPLS_LABEL_BOTTOM) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = mpls_label_bottom_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_label_bottom_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_mpls_label_bottom_handler;
       else primitives--;
       primitives++;
     }
@@ -681,6 +682,7 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation_2 & COUNT_MPLS_STACK_DEPTH) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = mpls_stack_depth_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_stack_depth_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_mpls_stack_depth_handler;
       else primitives--;
       primitives++;
     }
@@ -5212,6 +5214,49 @@ void SF_tunnel_ip_tos_handler(struct channels_list_entry *chptr, struct packet_p
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   ptun->tunnel_tos = sample->dcd_inner_ipTos;
+}
+
+void SF_mpls_label_top_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
+  SFSample *sample = (SFSample *) pptrs->f_data;
+  u_int32_t *label = (u_int32_t *) sample->lstk.stack;
+
+  if (label) pmpls->mpls_label_top = MPLS_LABEL(ntohl(*label));
+}
+
+void SF_mpls_label_bottom_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
+  SFSample *sample = (SFSample *) pptrs->f_data;
+  u_int32_t lvalue = 0, *label = (u_int32_t *) sample->lstk.stack;
+
+  if (label) {
+    do {
+      lvalue = ntohl(*label);
+      label += 4;
+    } while (!MPLS_STACK(lvalue));
+
+    pmpls->mpls_label_bottom = MPLS_LABEL(lvalue);
+  }
+}
+
+void SF_mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
+  SFSample *sample = (SFSample *) pptrs->f_data;
+  u_int32_t lvalue = 0, *label = (u_int32_t *) sample->lstk.stack;
+
+  if (label) {
+    do {
+      lvalue = ntohl(*label);
+      label += 4;
+      pmpls->mpls_stack_depth++;
+    } while (!MPLS_STACK(lvalue));
+  }
 }
 
 #if defined WITH_GEOIP
