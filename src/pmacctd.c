@@ -837,6 +837,7 @@ int main(int argc,char **argv, char **envp)
   else if (config.pcap_savefile) {
     open_pcap_savefile(&device[device_idx], config.pcap_savefile);
     device[device_idx].active = TRUE;
+    device[device_idx].str = config.pcap_savefile;
   }
 
   bkp_select_fd = 0;
@@ -859,7 +860,7 @@ int main(int argc,char **argv, char **envp)
     }
 
     if (bkp_select_fd < dev_ptr->fd) bkp_select_fd = dev_ptr->fd; 
-    FD_SET(dev_ptr->fd, &bkp_read_descs);
+    if (dev_ptr->fd > 0) FD_SET(dev_ptr->fd, &bkp_read_descs);
 
     dev_ptr->link_type = pcap_datalink(dev_ptr->dev_desc);
     for (index = 0; _devices[index].link_type != -1; index++) {
