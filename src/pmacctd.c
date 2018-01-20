@@ -541,8 +541,12 @@ int main(int argc,char **argv, char **envp)
 	    list->cfg.what_to_count |= COUNT_CLASS;
 	    config.handle_flows = TRUE;
 	  }
+
 	  if (list->cfg.nfprobe_what_to_count_2 & COUNT_NDPI_CLASS)
 	    list->cfg.what_to_count_2 |= COUNT_NDPI_CLASS;
+
+	  if (list->cfg.nfprobe_what_to_count_2 & COUNT_MPLS_LABEL_TOP)
+	    list->cfg.what_to_count_2 |= COUNT_MPLS_LABEL_TOP;
 	}
 	if (list->cfg.pre_tag_map) {
 	  list->cfg.what_to_count |= COUNT_TAG;
@@ -569,6 +573,9 @@ int main(int argc,char **argv, char **envp)
 
 	list->cfg.data_type = PIPE_TYPE_METADATA;
 	list->cfg.data_type |= PIPE_TYPE_EXTRAS;
+
+        if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_TOP))
+          list->cfg.data_type |= PIPE_TYPE_MPLS;
 
         if (list->cfg.what_to_count_2 & (COUNT_LABEL))
           list->cfg.data_type |= PIPE_TYPE_VLEN;

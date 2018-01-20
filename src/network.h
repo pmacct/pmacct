@@ -475,7 +475,6 @@ struct pkt_vlen_hdr_primitives {
 // XXX: eventually deprecate pkt_extras
 struct pkt_extras {
   u_int8_t tcp_flags;
-  u_int32_t mpls_top_label;
   struct host_addr bgp_next_hop;
 };
 

@@ -284,8 +284,11 @@ transport_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras
 }
 
 static int
-l2_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extras, int ndx)
+l2_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int ndx)
 {
+  struct pkt_data *data = prim_ptrs->data;
+  struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
+  struct pkt_extras *extras = prim_ptrs->pextras;
   struct pkt_primitives *p = &data->primitives;
   int direction = 0;
 
@@ -319,8 +322,9 @@ l2_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extra
   memcpy(&flow->mac[ndx][0], &p->eth_shost, 6);
   memcpy(&flow->mac[ndx ^ 1][0], &p->eth_dhost, 6);
   flow->vlan = p->vlan_id;
-  flow->mpls_label[ndx] = extras->mpls_top_label;
 #endif
+
+  if (pmpls) flow->mpls_label[ndx] = pmpls->mpls_label_top;
 
   if (p->ifindex_in) flow->ifindex[ndx] = p->ifindex_in;
   else if (config.nfprobe_ifindex_type && direction == DIRECTION_IN) {
@@ -364,8 +368,10 @@ l2_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extra
 }
 
 static int
-l2_to_flowrec_update(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extras, int ndx)
+l2_to_flowrec_update(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int ndx)
 {
+  struct pkt_data *data = prim_ptrs->data;
+  struct pkt_extras *extras = prim_ptrs->pextras;
   struct pkt_primitives *p = &data->primitives;
   int direction = 0;
 
@@ -472,7 +478,7 @@ ipv4_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int *isfra
 
   *isfrag = 0;
 
-  l2_to_flowrec(flow, data, extras, ndx);
+  l2_to_flowrec(flow, prim_ptrs, ndx);
   ASN_to_flowrec(flow, data, ndx);
   cust_to_flowrec(flow, pcust, ndx);
   vlen_to_flowrec(flow, pvlen, ndx);
@@ -495,7 +501,7 @@ ipv4_to_flowrec_update(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int
 
   if (!flow->bgp_next_hop[ndx].v4.s_addr) flow->bgp_next_hop[ndx].v4 = extras->bgp_next_hop.address.ipv4;
 
-  l2_to_flowrec_update(flow, data, extras, ndx);
+  l2_to_flowrec_update(flow, prim_ptrs, ndx);
   cust_to_flowrec(flow, pcust, ndx);
   vlen_to_flowrec(flow, pvlen, ndx);
 
@@ -538,7 +544,7 @@ ipv6_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int *isfra
 
   *isfrag = 0;
 
-  l2_to_flowrec(flow, data, extras, ndx);
+  l2_to_flowrec(flow, prim_ptrs, ndx);
   ASN_to_flowrec(flow, data, ndx);
   cust_to_flowrec(flow, pcust, ndx);
   vlen_to_flowrec(flow, pvlen, ndx);
@@ -564,7 +570,7 @@ ipv6_to_flowrec_update(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int
   if (!memcmp(&dummy_ipv6, &flow->bgp_next_hop[ndx].v6, sizeof(dummy_ipv6)))
     flow->bgp_next_hop[ndx].v6 = extras->bgp_next_hop.address.ipv6;
 
-  l2_to_flowrec_update(flow, data, extras, ndx);
+  l2_to_flowrec_update(flow, prim_ptrs, ndx);
   cust_to_flowrec(flow, pcust, ndx);
   vlen_to_flowrec(flow, pvlen, ndx);
 

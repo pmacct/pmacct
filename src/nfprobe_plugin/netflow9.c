@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -443,9 +443,10 @@ flow_to_flowset_vlan_handler(char *flowset, const struct FLOW *flow, int idx, in
 }
 
 static int
-flow_to_flowset_mpls_handler(char *flowset, const struct FLOW *flow, int idx, int size)
+flow_to_flowset_mpls_label_top_handler(char *flowset, const struct FLOW *flow, int idx, int size)
 {
-  memcpy(flowset, &flow->mpls_label[idx], size);
+  encode_mpls_label(flowset, flow->mpls_label[idx]);
+  // memcpy(flowset, &flow->mpls_label[idx], size);
 
   return 0;
 }
@@ -1014,6 +1015,17 @@ nf9_init_template(void)
           v4_int_template_out.r[rcount].length = 2;
 	  rcount++;
 	}
+        if (config.nfprobe_what_to_count_2 & COUNT_MPLS_LABEL_TOP) {
+          v4_template.r[rcount].type = htons(NF9_MPLS_LABEL_1);
+          v4_template.r[rcount].length = htons(3);
+          v4_int_template.r[rcount].handler = flow_to_flowset_mpls_label_top_handler;
+          v4_int_template.r[rcount].length = 3;
+          v4_template_out.r[rcount].type = htons(NF9_MPLS_LABEL_1);
+          v4_template_out.r[rcount].length = htons(3);
+          v4_int_template_out.r[rcount].handler = flow_to_flowset_mpls_label_top_handler;
+          v4_int_template_out.r[rcount].length = 3;
+          rcount++;
+        }
 	if (config.nfprobe_version == 10 && config.nfprobe_what_to_count & COUNT_TAG) {
 	  int rlen = sizeof(pm_id_t);
 
@@ -1420,6 +1432,17 @@ nf9_init_template(void)
           v6_int_template_out.r[rcount].length = 2;
 	  rcount++;
 	}
+        if (config.nfprobe_what_to_count_2 & COUNT_MPLS_LABEL_TOP) {
+          v6_template.r[rcount].type = htons(NF9_MPLS_LABEL_1);
+          v6_template.r[rcount].length = htons(3);
+          v6_int_template.r[rcount].handler = flow_to_flowset_mpls_label_top_handler;
+          v6_int_template.r[rcount].length = 3;
+          v6_template_out.r[rcount].type = htons(NF9_MPLS_LABEL_1);
+          v6_template_out.r[rcount].length = htons(3);
+          v6_int_template_out.r[rcount].handler = flow_to_flowset_mpls_label_top_handler;
+          v6_int_template_out.r[rcount].length = 3;
+          rcount++;
+        }
         if (config.nfprobe_version == 10 && config.nfprobe_what_to_count & COUNT_TAG) {
           int rlen = sizeof(pm_id_t);
 

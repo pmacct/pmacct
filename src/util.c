@@ -1312,6 +1312,20 @@ u_int32_t decode_mpls_label(char *label)
   return ret;
 }
 
+void encode_mpls_label(char *out_label, u_int32_t in_label)
+{
+  u_int32_t tmp;
+  u_char loc_label[4];
+
+  memset(out_label, 0, 3);
+  tmp = in_label;
+  tmp <<= 4; /* label shift */
+  memcpy(loc_label, &tmp, 4);  
+  out_label[0] = loc_label[2];
+  out_label[1] = loc_label[1];
+  out_label[2] = loc_label[0];
+}
+
 /*
  * timeval_cmp(): returns > 0 if a > b; < 0 if a < b; 0 if a == b.
  */

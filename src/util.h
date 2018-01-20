@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -75,6 +75,7 @@ EXT int read_SQLquery_from_file(char *, char *, int);
 EXT void stick_bosbit(u_char *);
 EXT int check_bosbit(u_char *);
 EXT u_int32_t decode_mpls_label(char *);
+EXT void encode_mpls_label(char *, u_int32_t);
 EXT int timeval_cmp(struct timeval *, struct timeval *);
 EXT void exit_all(int);
 EXT void exit_plugin(int);
