@@ -1248,12 +1248,15 @@ void sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_pt
 {
   struct pkt_payload *payload = (struct pkt_payload *) *data;
   struct pkt_data tmp;
+  struct pkt_bgp_primitives tmp_bgp;
   struct eth_header eh;
   char *buf = (char *) *data, *tmpp = (char *) &tmp;
+  char *tmp_bgpp = (char *) &tmp_bgp;
   int space = (chptr->bufend - chptr->bufptr) - PpayloadSz;
   int ethHdrLen = 0;
 
   memset(&tmp, 0, sizeof(tmp));
+  memset(&tmp_bgp, 0, sizeof(tmp_bgp));
 
   if (chptr->plugin->cfg.nfacctd_as & NF_AS_NEW ||
       chptr->plugin->cfg.nfacctd_net == NF_NET_NEW) {
@@ -1268,6 +1271,9 @@ void sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_pt
     bgp_dst_nmask_handler(chptr, pptrs, &tmpp);
     payload->src_nmask = tmp.primitives.src_nmask;
     payload->dst_nmask = tmp.primitives.dst_nmask;
+
+    bgp_peer_dst_ip_handler(chptr, pptrs, &tmp_bgpp);
+    memcpy(&payload->bgp_next_hop, &tmp_bgp.peer_dst_ip, HostAddrSz);
   }
 
   payload->cap_len = ((struct pcap_pkthdr *)pptrs->pkthdr)->caplen;
