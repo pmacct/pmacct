@@ -449,6 +449,7 @@ static int
 ipv4_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int *isfrag, int af)
 {
   struct pkt_data *data = prim_ptrs->data;
+  struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_extras *extras = prim_ptrs->pextras;
   char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
@@ -461,7 +462,7 @@ ipv4_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int *isfra
   flow->af = af;
   flow->addr[ndx].v4 = p->src_ip.address.ipv4;
   flow->addr[ndx ^ 1].v4 = p->dst_ip.address.ipv4;
-  flow->bgp_next_hop[ndx].v4 = extras->bgp_next_hop.address.ipv4;
+  flow->bgp_next_hop[ndx].v4 = pbgp->peer_dst_ip.address.ipv4;
   flow->mask[ndx] = p->src_nmask;
   flow->mask[ndx ^ 1] = p->dst_nmask;
   flow->tos[ndx] = p->tos;
@@ -490,6 +491,7 @@ static int
 ipv4_to_flowrec_update(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int *isfrag, int af)
 {
   struct pkt_data *data = prim_ptrs->data;
+  struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_extras *extras = prim_ptrs->pextras;
   char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
@@ -499,7 +501,7 @@ ipv4_to_flowrec_update(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int
   /* Prepare to store flow in canonical format */
   ndx = memcmp(&p->src_ip.address.ipv4, &p->dst_ip.address.ipv4, sizeof(p->src_ip.address.ipv4)) > 0 ? 1 : 0;
 
-  if (!flow->bgp_next_hop[ndx].v4.s_addr) flow->bgp_next_hop[ndx].v4 = extras->bgp_next_hop.address.ipv4;
+  if (!flow->bgp_next_hop[ndx].v4.s_addr) flow->bgp_next_hop[ndx].v4 = pbgp->peer_dst_ip.address.ipv4;
 
   l2_to_flowrec_update(flow, prim_ptrs, ndx);
   cust_to_flowrec(flow, pcust, ndx);
@@ -514,6 +516,7 @@ static int
 ipv6_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int *isfrag, int af)
 {
   struct pkt_data *data = prim_ptrs->data;
+  struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_extras *extras = prim_ptrs->pextras;
   char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
@@ -528,7 +531,7 @@ ipv6_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int *isfra
   flow->ip6_flowlabel[ndx] = 0;
   flow->addr[ndx].v6 = p->src_ip.address.ipv6; 
   flow->addr[ndx ^ 1].v6 = p->dst_ip.address.ipv6; 
-  flow->bgp_next_hop[ndx].v6 = extras->bgp_next_hop.address.ipv6;
+  flow->bgp_next_hop[ndx].v6 = pbgp->peer_dst_ip.address.ipv6;
   flow->mask[ndx] = p->src_nmask;
   flow->mask[ndx ^ 1] = p->dst_nmask;
   flow->protocol = p->proto;
@@ -556,6 +559,7 @@ static int
 ipv6_to_flowrec_update(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int *isfrag, int af)
 {
   struct pkt_data *data = prim_ptrs->data;
+  struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_extras *extras = prim_ptrs->pextras;
   char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
@@ -568,7 +572,7 @@ ipv6_to_flowrec_update(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int
   ndx = memcmp(&p->src_ip.address.ipv6, &p->dst_ip.address.ipv6, sizeof(p->src_ip.address.ipv6)) > 0 ? 1 : 0;
 
   if (!memcmp(&dummy_ipv6, &flow->bgp_next_hop[ndx].v6, sizeof(dummy_ipv6)))
-    flow->bgp_next_hop[ndx].v6 = extras->bgp_next_hop.address.ipv6;
+    flow->bgp_next_hop[ndx].v6 = pbgp->peer_dst_ip.address.ipv6;
 
   l2_to_flowrec_update(flow, prim_ptrs, ndx);
   cust_to_flowrec(flow, pcust, ndx);
@@ -1676,13 +1680,7 @@ sort_version:
           (*primptrs_funcs[num])((u_char *)data, &extras, &prim_ptrs);
 
         for (num = 0; net_funcs[num]; num++)
-	  (*net_funcs[num])(&nt, &nc, &data->primitives, &dummy_pbgp, &nfd);
-
-	/* hacky: bgp next-hop */
-        if (config.nfacctd_net & NF_NET_NEW && dummy_pbgp.peer_dst_ip.family) {
-          memcpy(&prim_ptrs.pextras->bgp_next_hop, &dummy_pbgp.peer_dst_ip, sizeof(struct host_addr));
-          memset(&dummy_pbgp, 0, sizeof(dummy_pbgp));
-        }
+	  (*net_funcs[num])(&nt, &nc, &data->primitives, prim_ptrs.pbgp, &nfd);
 
 	if (config.ports_file) {
 	  if (!pt.table[data->primitives.src_port]) data->primitives.src_port = 0;

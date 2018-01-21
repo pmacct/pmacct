@@ -574,6 +574,9 @@ int main(int argc,char **argv, char **envp)
 	list->cfg.data_type = PIPE_TYPE_METADATA;
 	list->cfg.data_type |= PIPE_TYPE_EXTRAS;
 
+        if (list->cfg.what_to_count & (COUNT_PEER_DST_IP))
+          list->cfg.data_type |= PIPE_TYPE_BGP;
+
         if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_TOP))
           list->cfg.data_type |= PIPE_TYPE_MPLS;
 
