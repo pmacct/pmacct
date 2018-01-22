@@ -31,6 +31,9 @@ void sfl_agent_init(SFLAgent *agent,
 		    errorFn_t errorFn,
 		    sendFn_t sendFn)
 {
+  struct sockaddr ssource_ip;
+  int ret;
+
   /* first clear everything */
   memset(agent, 0, sizeof(*agent));
   /* now copy in the parameters */
@@ -43,6 +46,11 @@ void sfl_agent_init(SFLAgent *agent,
   agent->freeFn = freeFn;
   agent->errorFn = errorFn;
   agent->sendFn = sendFn;
+
+  if (config.nfprobe_source_ip) {
+    ret = str_to_addr(config.nfprobe_source_ip, &config.nfprobe_source_ha);
+    addr_to_sa(&ssource_ip, &config.nfprobe_source_ha, 0);
+  }
   
   if(sendFn == NULL) {
     /* open the socket */
@@ -56,6 +64,11 @@ void sfl_agent_init(SFLAgent *agent,
 
     rc = setsockopt(agent->receiverSocket, IPPROTO_IP, IP_TOS, &opt, sizeof(opt));
     if (rc < 0) Log(LOG_WARNING, "WARN ( %s/%s ): setsockopt() failed for IP_TOS: %s\n", config.name, config.type, strerror(errno));
+  }
+
+  if (ret && bind(agent->receiverSocket, (struct sockaddr *) &ssource_ip, sizeof(ssource_ip)) == -1) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): bind() failed: %s\n", config.name, config.type, strerror(errno));
+    exit_plugin(1);
   }
 
   if (config.pipe_size) {

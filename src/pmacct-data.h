@@ -662,6 +662,7 @@ static const struct _dictionary_line dictionary[] = {
   {"sfprobe_agentip", cfg_key_sfprobe_agentip},
   {"sfprobe_agentsubid", cfg_key_sfprobe_agentsubid},
   {"sfprobe_peer_as", cfg_key_nfprobe_peer_as},
+  {"sfprobe_source_ip", cfg_key_nfprobe_source_ip},
   {"sfprobe_ipprec", cfg_key_nfprobe_ip_precedence},
   {"sfprobe_direction", cfg_key_nfprobe_direction},
   {"sfprobe_ifindex", cfg_key_nfprobe_ifindex},

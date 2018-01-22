@@ -1933,8 +1933,8 @@ DESC:		Defines the remote IP address/hostname and port to which NetFlow dagagram
 		If IPv4, the value is expected as 'address:port'. If IPv6, it is expected as '[address]:port'.
 DEFAULT:	127.0.0.1:2100
 
-KEY:            nfprobe_source_ip
-DESC:           Defines the local IP address from which NetFlow dagagrams are to be exported. Only a numerical
+KEY:            [ nfprobe_source_ip | sfprobe_source_ip ]
+DESC:           Defines the local IP address from which NetFlow/sFlow datagrams are exported. Only a numerical
 		IPv4/IPv6 address is expected. The supplied IP address is required to be already configured on
 		one of the interfaces. This parameter is also required for graceful encoding of NetFlow v9 and
 		IPFIX option scoping.
