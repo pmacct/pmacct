@@ -462,7 +462,7 @@ ipv4_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int *isfra
   flow->af = af;
   flow->addr[ndx].v4 = p->src_ip.address.ipv4;
   flow->addr[ndx ^ 1].v4 = p->dst_ip.address.ipv4;
-  flow->bgp_next_hop[ndx].v4 = pbgp->peer_dst_ip.address.ipv4;
+  if (pbgp) flow->bgp_next_hop[ndx].v4 = pbgp->peer_dst_ip.address.ipv4;
   flow->mask[ndx] = p->src_nmask;
   flow->mask[ndx ^ 1] = p->dst_nmask;
   flow->tos[ndx] = p->tos;
@@ -501,7 +501,8 @@ ipv4_to_flowrec_update(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int
   /* Prepare to store flow in canonical format */
   ndx = memcmp(&p->src_ip.address.ipv4, &p->dst_ip.address.ipv4, sizeof(p->src_ip.address.ipv4)) > 0 ? 1 : 0;
 
-  if (!flow->bgp_next_hop[ndx].v4.s_addr) flow->bgp_next_hop[ndx].v4 = pbgp->peer_dst_ip.address.ipv4;
+  if (pbgp && !flow->bgp_next_hop[ndx].v4.s_addr)
+    flow->bgp_next_hop[ndx].v4 = pbgp->peer_dst_ip.address.ipv4;
 
   l2_to_flowrec_update(flow, prim_ptrs, ndx);
   cust_to_flowrec(flow, pcust, ndx);
@@ -531,7 +532,7 @@ ipv6_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int *isfra
   flow->ip6_flowlabel[ndx] = 0;
   flow->addr[ndx].v6 = p->src_ip.address.ipv6; 
   flow->addr[ndx ^ 1].v6 = p->dst_ip.address.ipv6; 
-  flow->bgp_next_hop[ndx].v6 = pbgp->peer_dst_ip.address.ipv6;
+  if (pbgp) flow->bgp_next_hop[ndx].v6 = pbgp->peer_dst_ip.address.ipv6;
   flow->mask[ndx] = p->src_nmask;
   flow->mask[ndx ^ 1] = p->dst_nmask;
   flow->protocol = p->proto;
@@ -571,7 +572,7 @@ ipv6_to_flowrec_update(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int
   memset(&dummy_ipv6, 0, sizeof(dummy_ipv6));
   ndx = memcmp(&p->src_ip.address.ipv6, &p->dst_ip.address.ipv6, sizeof(p->src_ip.address.ipv6)) > 0 ? 1 : 0;
 
-  if (!memcmp(&dummy_ipv6, &flow->bgp_next_hop[ndx].v6, sizeof(dummy_ipv6)))
+  if (pbgp && !memcmp(&dummy_ipv6, &flow->bgp_next_hop[ndx].v6, sizeof(dummy_ipv6)))
     flow->bgp_next_hop[ndx].v6 = pbgp->peer_dst_ip.address.ipv6;
 
   l2_to_flowrec_update(flow, prim_ptrs, ndx);
