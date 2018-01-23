@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -176,7 +176,7 @@ struct FLOW {
 	u_int8_t mac[2][6];			/* Endpoint L2/Ethernet MAC addresses */
 	u_int16_t vlan;				/* VLAN ID */
 	u_int32_t mpls_label[2];		/* MPLS top label */
-        u_int16_t ifindex[2];			/* input/output ifindex */
+        u_int32_t ifindex[2];			/* input/output ifindex */
 
 	/* classification stuff */
 	pm_class_t class;			/* Classification internal ID */
