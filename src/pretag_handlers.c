@@ -3711,3 +3711,16 @@ u_int32_t pcap_interfaces_map_lookup_ifname(char *ifname)
 
   return ifindex;
 }
+
+char *pcap_interfaces_map_getnext_ifname(int *index)
+{
+  char *ifname = NULL;
+  int loc_idx = (*index);
+
+  if (loc_idx < pcap_if_map.num) {
+    ifname = pcap_if_map.list[loc_idx].ifname;
+    loc_idx++; (*index) = loc_idx;
+  }
+
+  return ifname;
+}

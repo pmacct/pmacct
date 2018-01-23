@@ -188,4 +188,5 @@ EXT void pcap_interfaces_map_initialize();
 EXT void pcap_interfaces_map_load();
 EXT void pcap_interfaces_map_destroy();
 EXT u_int32_t pcap_interfaces_map_lookup_ifname(char *);
+EXT char *pcap_interfaces_map_getnext_ifname(int *);
 #undef EXT
