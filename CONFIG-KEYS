@@ -1992,6 +1992,15 @@ DESC:           Associates an interface index (ifIndex) to a given nfprobe or sf
 		ifIndex can be determined dynamically (ie. via NFLOG framework).
 DEFAULT:	none
 
+KEY:		nfprobe_dont_cache
+VALUES:		[ true | false ]
+DESC:		Disables caching and summarisation of flows. By default a NetFlow/IPFIX agent would attempt
+		to build uni-directional flows by caching individual packets and waiting for an expiration
+		condition (see nfprobe_timeouts). This knob prevents that to happen and, if paired with a
+		(external) packet sampling strategy, it makes a NetFlow/IPFIX agent to match sFlow export
+		responsiveness. 
+DEFAULT:	false
+
 KEY:		sfprobe_receiver
 DESC:           Defines the remote IP address/hostname and port to which sFlow dagagrams are to be exported.
 		The value is expected to be in the usual form 'address:port'.

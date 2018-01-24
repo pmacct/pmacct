@@ -269,6 +269,7 @@ EXT int cfg_key_nfprobe_source_ip(char *, char *, char *);
 EXT int cfg_key_nfprobe_ip_precedence(char *, char *, char *);
 EXT int cfg_key_nfprobe_direction(char *, char *, char *);
 EXT int cfg_key_nfprobe_ifindex(char *, char *, char *);
+EXT int cfg_key_nfprobe_dont_cache(char *, char *, char *);
 EXT int cfg_key_sfprobe_receiver(char *, char *, char *);
 EXT int cfg_key_sfprobe_agentip(char *, char *, char *);
 EXT int cfg_key_sfprobe_agentsubid(char *, char *, char *);

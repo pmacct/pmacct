@@ -702,7 +702,7 @@ process_packet(struct FLOWTRACK *ft, struct primitives_ptrs *prim_ptrs, const st
   struct pkt_data *data = prim_ptrs->data;
 
   struct FLOW tmp, *flow;
-  int frag, af, dont_summarize = (config.acct_type == ACCT_NF ? 1 : 0);
+  int frag, af;
 
   ft->total_packets += data->pkt_num;
   af = (data->primitives.src_ip.family == 0 ? AF_INET : data->primitives.src_ip.family);
@@ -733,7 +733,7 @@ process_packet(struct FLOWTRACK *ft, struct primitives_ptrs *prim_ptrs, const st
     ft->frag_packets += data->pkt_num;
 
   /* If a matching flow does not exist, create and insert one */
-  if (dont_summarize || ((flow = FLOW_FIND(FLOWS, &ft->flows, &tmp)) == NULL)) {
+  if (config.nfprobe_dont_cache || ((flow = FLOW_FIND(FLOWS, &ft->flows, &tmp)) == NULL)) {
     /* Allocate and fill in the flow */
     if ((flow = malloc(sizeof(*flow))) == NULL) return (PP_MALLOC_FAIL);
     memcpy(flow, &tmp, sizeof(*flow));
@@ -745,9 +745,8 @@ process_packet(struct FLOWTRACK *ft, struct primitives_ptrs *prim_ptrs, const st
     if ((flow->expiry = malloc(sizeof(*flow->expiry))) == NULL)
       return (PP_MALLOC_FAIL);
     flow->expiry->flow = flow;
-    /* Expiration note: 0 means expire immediately; we prefer this to happen 
-       when attaching to nfacctd - ie. dont_summarize is TRUE */
-    if (!dont_summarize) flow->expiry->expires_at = 1;
+    /* Expiration note: 0 means expire immediately */
+    if (!config.nfprobe_dont_cache) flow->expiry->expires_at = 1;
     else flow->expiry->expires_at = 0;
     flow->expiry->reason = R_GENERAL;
     EXPIRY_INSERT(EXPIRIES, &ft->expiries, flow->expiry);
