@@ -1594,7 +1594,7 @@ DESC:		If set to true account for NetFlow/IPFIX option records. This will requir
 DEFAULT:        false
 
 KEY:		[ nfacctd_as | sfacctd_as | pmacctd_as | uacctd_as ] [GLOBAL]
-VALUES:		[ netflow | sflow | file | bgp | longest ]
+VALUES:		[ netflow | sflow | file | bgp | bmp | longest ]
 DESC:		When set to 'netflow' or 'sflow' it instructs nfacctd and sfacctd to populate 'src_as',
 		'dst_as', 'peer_src_as' and 'peer_dst_as' primitives from information in NetFlow and sFlow
 		datagrams; when set to 'file', it instructs nfacctd and sfacctd to populate 'src_as',
@@ -1616,7 +1616,7 @@ DESC:		When set to 'netflow' or 'sflow' it instructs nfacctd and sfacctd to popu
 DEFAULT:        none
 
 KEY:            [ nfacctd_net | sfacctd_net | pmacctd_net | uacctd_net ] [GLOBAL]
-VALUES:         [ netflow | sflow | mask | file | igp | bgp | longest ]
+VALUES:         [ netflow | sflow | mask | file | igp | bgp | bmp | longest ]
 DESC:		Determines the method for performing IP prefix aggregation - hence directly influencing 'src_net',
 		'dst_net', 'src_mask', 'dst_mask' and 'peer_dst_ip' primitives. 'netflow' and 'sflow' get values
 		from NetFlow and sFlow protocols respectively; these keywords are only valid in nfacctd, sfacctd.

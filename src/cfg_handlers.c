@@ -4855,7 +4855,7 @@ int cfg_key_nfacctd_as_new(char *filename, char *name, char *value_ptr)
   }
   else if (!strcmp(value_ptr, "true") /* legacy */ || !strcmp(value_ptr, "file"))
     value = NF_AS_NEW;
-  else if (!strcmp(value_ptr, "bgp"))
+  else if (!strcmp(value_ptr, "bgp") || !strcmp(value_ptr, "bmp"))
     value = NF_AS_BGP;
   else if (!strcmp(value_ptr, "fallback") || !strcmp(value_ptr, "longest")) {
     value = NF_AS_FALLBACK;
@@ -4896,7 +4896,7 @@ int cfg_key_nfacctd_net(char *filename, char *name, char *value_ptr)
     value = NF_NET_NEW;
   else if (!strcmp(value_ptr, "mask"))
     value = NF_NET_STATIC;
-  else if (!strcmp(value_ptr, "bgp"))
+  else if (!strcmp(value_ptr, "bgp") || !strcmp(value_ptr, "bmp"))
     value = NF_NET_BGP;
   else if (!strcmp(value_ptr, "igp"))
     value = NF_NET_IGP;
