@@ -233,10 +233,11 @@ unsigned int sa_to_addr(struct sockaddr *sa, struct host_addr *a, u_int16_t *por
 }
 
 /*
- * sa_addr_cmp(): compare two IP addresses: the first encapsulated into a
- * 'struct sockaddr' and the second into a 'struct host_addr'.
- * returns 0 if they match; 1 if they don't match; -1 to signal a generic
- * error (e.g. unsupported family mismatch).
+ * sa_addr_cmp(): compare two IP addresses: the first encapsulated
+ * into a 'struct sockaddr' and the second into a 'struct host_addr'.
+ * returns 0 if they match, 1 if a1 is found greater than a2; -1 on
+ * the contrary. -1 is also used to flag a generic error (ie. family
+ * not supported).
  */
 int sa_addr_cmp(struct sockaddr *sa, struct host_addr *a)
 {
@@ -248,26 +249,24 @@ int sa_addr_cmp(struct sockaddr *sa, struct host_addr *a)
 
   if (a->family == AF_INET && sa->sa_family == AF_INET) {
     if (sa4->sin_addr.s_addr == a->address.ipv4.s_addr) return FALSE;
-    else return TRUE; 
+    else if (sa4->sin_addr.s_addr > a->address.ipv4.s_addr) return 1;
+    else return -1;
   }
 #if defined ENABLE_IPV6
   if (a->family == AF_INET6 && sa->sa_family == AF_INET6) {
-    if (!ip6_addr_cmp(&sa6->sin6_addr, &a->address.ipv6)) return FALSE;
-    else return TRUE;
+    return ip6_addr_cmp(&sa6->sin6_addr, &a->address.ipv6);
   }
   else if (a->family == AF_INET && sa->sa_family == AF_INET6) {
     memset(&sa6_local, 0, sizeof(sa6_local));
     memset((u_int8_t *)&sa6_local.sin6_addr+10, 0xff, 2);
     memcpy((u_int8_t *)&sa6_local.sin6_addr+12, &a->address.ipv4.s_addr, 4);
-    if (!ip6_addr_cmp(&sa6->sin6_addr, &sa6_local.sin6_addr)) return FALSE;
-    else return TRUE;
+    return ip6_addr_cmp(&sa6->sin6_addr, &sa6_local.sin6_addr);
   }
   else if (a->family == AF_INET6 && sa->sa_family == AF_INET) {
     memset(&sa6_local, 0, sizeof(sa6_local));
     memset((u_int8_t *)&sa6_local.sin6_addr+10, 0xff, 2);
     memcpy((u_int8_t *)&sa6_local.sin6_addr+12, &sa4->sin_addr, 4);
-    if (!ip6_addr_cmp(&sa6_local.sin6_addr, &a->address.ipv6)) return FALSE;
-    else return TRUE;
+    return ip6_addr_cmp(&sa6_local.sin6_addr, &a->address.ipv6);
   }
 #endif
 
@@ -304,8 +303,9 @@ int sa_port_cmp(struct sockaddr *sa, u_int16_t port)
 
 /*
  * host_addr_cmp() compares two IP addresses in a host_addr structure
- * returns 0 if positive; 1 if negative; -1 to signal a generic error
- * (e.g. unsupported family).
+ * returns 0 if they match, 1 if a1 is found greater than a2; -1 on
+ * the contrary. -1 is also used to flag a generic error (ie. family
+ * not supported).
  */
 int host_addr_cmp(struct host_addr *a1, struct host_addr *a2)
 {
@@ -313,26 +313,24 @@ int host_addr_cmp(struct host_addr *a1, struct host_addr *a2)
 
   if (a1->family == AF_INET && a2->family == AF_INET) {
     if (a1->address.ipv4.s_addr == a2->address.ipv4.s_addr) return FALSE;
-    else return TRUE;
+    else if (a1->address.ipv4.s_addr > a2->address.ipv4.s_addr) return 1;
+    else return -1;
   }
 #if defined ENABLE_IPV6
   if (a1->family == AF_INET6 && a2->family == AF_INET6) {
-    if (!ip6_addr_cmp(&a1->address.ipv6, &a2->address.ipv6)) return FALSE;
-    else return TRUE;
+    return ip6_addr_cmp(&a1->address.ipv6, &a2->address.ipv6);
   }
   else if (a1->family == AF_INET && a2->family == AF_INET6) {
     memset(&ha_local, 0, sizeof(ha_local));
     memset((u_int8_t *)&ha_local.address.ipv6.s6_addr[10], 0xff, 2);
     memcpy((u_int8_t *)&ha_local.address.ipv6.s6_addr[12], &a1->address.ipv4.s_addr, 4);
-    if (!ip6_addr_cmp(&a2->address.ipv6, &ha_local.address.ipv6)) return FALSE;
-    else return TRUE;
+    return ip6_addr_cmp(&a2->address.ipv6, &ha_local.address.ipv6);
   }
   else if (a1->family == AF_INET6 && a2->family == AF_INET) {
     memset(&ha_local, 0, sizeof(ha_local));
     memset((u_int8_t *)&ha_local.address.ipv6.s6_addr[10], 0xff, 2);
     memcpy((u_int8_t *)&ha_local.address.ipv6.s6_addr[12], &a2->address.ipv4.s_addr, 4);
-    if (!ip6_addr_cmp(&a1->address.ipv6, &ha_local.address.ipv6)) return FALSE;
-    else return TRUE;
+    return ip6_addr_cmp(&a1->address.ipv6, &ha_local.address.ipv6);
   }
 #endif
 
