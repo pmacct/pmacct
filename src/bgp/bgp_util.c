@@ -1354,6 +1354,11 @@ int bgp_peer_host_addr_cmp(const void *a, const void *b)
   return host_addr_cmp((struct host_addr *)a, &((struct bgp_peer *)b)->addr);
 }
 
+int bgp_peer_sa_addr_cmp(const void *a, const void *b)
+{
+  return sa_addr_cmp((struct sockaddr *) a, &((struct bgp_peer *)b)->addr);
+}
+
 void bgp_peer_free(void *a)
 {
 }

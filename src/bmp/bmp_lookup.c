@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -64,10 +64,22 @@ struct bgp_peer *bgp_lookup_find_bmp_peer(struct sockaddr *sa, struct xflow_stat
   }
   else {
     for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
+      /* use-case #1: BMP peer being the edge router */
       if (!sa_addr_cmp(sa, &bmp_peers[peers_idx].self.addr) || !sa_addr_cmp(sa, &bmp_peers[peers_idx].self.id)) {
         peer = &bmp_peers[peers_idx].self;
         if (xs_entry && peer_idx_ptr) *peer_idx_ptr = peers_idx;
         break;
+      }
+      /* use-case #2: BMP peer being the reflector; XXX: fix caching */
+      else {
+	void *ret;
+
+	ret = pm_tfind(sa, &bmp_peers[peers_idx].bgp_peers, bgp_peer_sa_addr_cmp);
+
+	if (ret) {
+	  peer = &bmp_peers[peers_idx].self;
+	  break;
+	}
       }
     }
   }

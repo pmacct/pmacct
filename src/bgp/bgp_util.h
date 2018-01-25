@@ -87,6 +87,7 @@ EXT void bgp_batch_rollback(struct bgp_peer_batch *);
 
 EXT int bgp_peer_cmp(const void *, const void *);
 EXT int bgp_peer_host_addr_cmp(const void *, const void *);
+EXT int bgp_peer_sa_addr_cmp(const void *, const void *);
 EXT void bgp_peer_free(void *);
 EXT int bgp_peers_bintree_walk_print(const void *, const pm_VISIT, const int, void *);
 EXT int bgp_peers_bintree_walk_delete(const void *, const pm_VISIT, const int, void *);
