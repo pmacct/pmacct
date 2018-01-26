@@ -797,10 +797,8 @@ void P_exit_now(int signum)
 
 int P_trigger_exec(char *filename)
 {
-  char *args[1];
+  char *args[2] = { filename, NULL };
   int pid;
-
-  memset(args, 0, sizeof(args));
 
   switch (pid = vfork()) {
   case -1:
