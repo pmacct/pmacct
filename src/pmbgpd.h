@@ -40,12 +40,12 @@ EXT void usage_daemon(char *);
 EXT void compute_once();
 
 /* Looking Glass */
-#if defined (WITH_ZMQ) && defined (WITH_JANSSON)
+#if defined WITH_ZMQ
 EXT void bgp_lg_wrapper();
 EXT void bgp_lg_daemon();
 EXT void bgp_lg_daemon_worker_json(void *, void *);
 
-EXT int bgp_lg_daemon_decode_query_type_json(struct p_zmq_sock *, struct bgp_lg_req *);
+EXT int bgp_lg_daemon_decode_query_header_json(struct p_zmq_sock *, struct bgp_lg_req *);
 EXT int bgp_lg_daemon_decode_query_ip_lookup_json(struct p_zmq_sock *, struct bgp_lg_req_ipl_data *);
 
 EXT void bgp_lg_daemon_encode_reply_results_json(struct p_zmq_sock *, struct bgp_lg_rep *, int, int);
@@ -54,7 +54,7 @@ EXT char *bgp_lg_daemon_encode_reply_ip_lookup_data_json(struct bgp_lg_rep_ipl_d
 EXT void bgp_lg_daemon_encode_reply_get_peers_json(struct p_zmq_sock *, struct bgp_lg_rep *, int);
 EXT char *bgp_lg_daemon_encode_reply_get_peers_data_json(struct bgp_lg_rep_gp_data *);
 EXT void bgp_lg_daemon_encode_reply_unknown_json(struct p_zmq_sock *);
-#endif /* WITH_ZMQ && WITH_JANSSON */
+#endif
 
 #endif
 #undef EXT

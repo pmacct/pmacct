@@ -31,7 +31,7 @@
 #include "pmbgp.h"
 
 /* functions */
-#if defined (WITH_ZMQ) && defined (WITH_JANSSON)
+#ifdef WITH_ZMQ
 void usage_pmbgp(char *prog)
 {
   printf("%s %s (%s)\n", PMBGP_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
@@ -163,6 +163,7 @@ int main(int argc,char **argv)
       json_t *req_obj = json_object();
 
       json_object_set_new_nocheck(req_obj, "query_type", json_integer(BGP_LG_QT_IP_LOOKUP));
+      json_object_set_new_nocheck(req_obj, "queries", json_integer(1));
       req_type_str = json_dumps(req_obj, JSON_PRESERVE_ORDER);
       json_decref(req_obj);
     }
@@ -212,6 +213,7 @@ int main(int argc,char **argv)
       json_t *req_obj = json_object();
 
       json_object_set_new_nocheck(req_obj, "query_type", json_integer(BGP_LG_QT_GET_PEERS));
+      json_object_set_new_nocheck(req_obj, "queries", json_integer(1));
       req_type_str = json_dumps(req_obj, JSON_PRESERVE_ORDER);
       json_decref(req_obj);
     }
@@ -343,6 +345,6 @@ int pmbgp_zmq_sendmore_str(struct p_zmq_sock *sock, char *buf)
 #else
 int main(int argc,char **argv)
 {
-  printf("WARN: pmbgp: tool depends on missing --enable-zmq and --enable-jansson. Exiting.\n");
+  printf("WARN: pmbgp: tool depends on missing --enable-zmq. Exiting.\n");
 }
-#endif /* WITH_ZMQ && WITH_JANSSON */
+#endif

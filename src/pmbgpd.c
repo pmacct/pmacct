@@ -254,20 +254,15 @@ int main(int argc,char **argv, char **envp)
   if (!config.nfacctd_bgp) config.nfacctd_bgp = BGP_DAEMON_ONLINE;
   if (!config.nfacctd_bgp_port) config.nfacctd_bgp_port = BGP_TCP_PORT;
 
-  if (config.bgp_lg) {
-#if defined (WITH_ZMQ) && defined (WITH_JANSSON)
-    bgp_lg_wrapper();
-#else
-    Log(LOG_ERR, "ERROR ( %s/core ): BGP Looking Glass (bgp_daemon_lg) depends on missing --enable-zmq and --enable-jansson. Exiting.\n", config.name);
-    exit(1);
+#if defined WITH_ZMQ
+  if (config.bgp_lg) bgp_lg_wrapper();
 #endif
-  }
 
   bgp_prepare_daemon();
   skinny_bgp_daemon();
 }
 
-#if defined (WITH_ZMQ) && defined (WITH_JANSSON)
+#if defined WITH_ZMQ
 void bgp_lg_wrapper()
 {
   /* initialize variables */
@@ -324,7 +319,7 @@ void bgp_lg_daemon_worker_json(void *zh, void *zs)
 
   for (;;) {
     memset(&req, 0, sizeof(req));
-    ret = bgp_lg_daemon_decode_query_type_json(sock, &req);
+    ret = bgp_lg_daemon_decode_query_header_json(sock, &req);
 
     switch(req.type) {
     case BGP_LG_QT_IP_LOOKUP:
@@ -355,10 +350,10 @@ void bgp_lg_daemon_worker_json(void *zh, void *zs)
   }
 }
 
-int bgp_lg_daemon_decode_query_type_json(struct p_zmq_sock *sock, struct bgp_lg_req *req) 
+int bgp_lg_daemon_decode_query_header_json(struct p_zmq_sock *sock, struct bgp_lg_req *req) 
 {
+  json_t *req_obj, *query_type_json, *queries_num_json;
   json_error_t req_err;
-  json_t *req_obj, *query_type_json;
   char *req_str;
   int ret = SUCCESS;
 
@@ -376,14 +371,14 @@ int bgp_lg_daemon_decode_query_type_json(struct p_zmq_sock *sock, struct bgp_lg_
 
   if (req_obj) {
     if (!json_is_object(req_obj)) {
-      Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_type_json(): json_is_object() failed.\n", config.name);
+      Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_header_json(): json_is_object() failed.\n", config.name);
       ret = ERR;
       goto exit_lane;
     }
     else {
       query_type_json = json_object_get(req_obj, "query_type");
       if (query_type_json == NULL) {
-        Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_type_json(): no 'query_type' element.\n", config.name);
+        Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_header_json(): no 'query_type' element.\n", config.name);
         ret = ERR;
         goto exit_lane;
       }
@@ -391,13 +386,31 @@ int bgp_lg_daemon_decode_query_type_json(struct p_zmq_sock *sock, struct bgp_lg_
 	req->type = json_integer_value(query_type_json);
 	json_decref(query_type_json);
       }
+
+      queries_num_json = json_object_get(req_obj, "queries");
+      if (queries_num_json == NULL) {
+        Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_header_json(): no 'queries' element.\n", config.name);
+        ret = ERR;
+        goto exit_lane;
+      }
+      else {
+        req->num = json_integer_value(queries_num_json);
+        json_decref(queries_num_json);
+      }
+
+      /* XXX: only one query per query message currently supported */
+      if (req->num != 1) {
+        Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_header_json(): 'queries' element != 1.\n", config.name);
+        ret = ERR;
+        goto exit_lane;
+      }
     }
 
     exit_lane:
     json_decref(req_obj);
   }
   else {
-    Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_type_json(): invalid request received: %s.\n", config.name, req_err.text);
+    Log(LOG_WARNING, "WARN ( %s/core/lg ): bgp_lg_daemon_decode_query_header_json(): invalid request received: %s.\n", config.name, req_err.text);
     ret = ERR;
   }
 
@@ -671,4 +684,4 @@ void bgp_lg_daemon_encode_reply_unknown_json(struct p_zmq_sock *sock)
 
   p_zmq_send_str(sock, rep_results_str);
 }
-#endif /* WITH_ZMQ && WITH_JANSSON */ 
+#endif /* WITH_ZMQ */ 

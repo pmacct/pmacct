@@ -9,9 +9,10 @@ Query Type 1: IP address/prefix lookup
 * Request format:
   {
     "query_type": 1
+    "queries": <# of IP prefixes to lookup>
   }
 
-  Followed by the IP address/prefix to look up:
+  Followed by one JSON object per IP address/prefix to look up, ie.:
   {
     "ip_prefix": <IP prefix>,
     "rd": <Route Distingiusher>, [OPTIONAL]
@@ -22,13 +23,13 @@ Query Type 1: IP address/prefix lookup
 * Reply format:
   {
     "query_type": 1,
-    "results": <# of matching IP Prefixes>,
+    "results": <# of matching IP Prefixes>
   }
 
   Followed by one JSON object per matching IP address/prefix, ie.: 
   {
     "peer_ip_src": <Peer IP address>,
-    "event_type": "lgass",
+    "event_type": "lglass",
     "afi": <afi>,
     "safi": <safi>,
     "ip_prefix": <IP prefix>,
@@ -40,6 +41,7 @@ Query Type 2: Get Peers
 * Request format:
   { 
     "query_type": 2
+    "queries": 1
   } 
 
 * Reply format:

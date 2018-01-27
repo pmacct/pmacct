@@ -302,6 +302,7 @@ struct bgp_comm_range {
 /* Looking Glass */
 struct bgp_lg_req {
   u_int32_t type;
+  u_int32_t num;
   void *data;
 };
 
