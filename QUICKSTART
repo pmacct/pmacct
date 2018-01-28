@@ -2097,7 +2097,16 @@ NetFlow v9/IPFIX packet (R: unknown template [ .. ]" messages in your logs);
 you can confirm whether templates are being exported/replicated/received with a
 touch of "tshark -d udp.port==<NFv9/IPFIX port>,cflow -R cflow.template_id". 
 
-e) Replay packets can be needed, for example, to troubleshoot the behaviour
+e) In the case of inconsistent output - inconsistent defined as replaying the
+same set of data, output produced by the daemon differs - of nfacctd/sfacctd:
+1) check the basics: whether another nfacctd/sfacctd is listening on the very
+same port; this is legit behaviour due to behaviour of SO_REUSEPORT, in brief:
+share load among multiple sockets listening on the same port, and SO_REUSEADDR,
+in brief: don't wait for a closing socket to be closed in order to bind a new
+one to the same port, options used on the listening socket; 2) check all tips
+about buffering provided slightly later in this document.
+
+f) Replay packets can be needed, for example, to troubleshoot the behaviour
 of one of the pmacct daemons. A capture in libpcap format, suitable for
 replay, can be produced with tcpdump, ie. for NetFlow/IPFIX/sFlow via the
 "tcpdump -i <interface> -n -s 0 -w <output file> port <sfacctd/nfacctd
@@ -2116,7 +2125,7 @@ file from tcprewrite can be supplied to tcpreplay for the actual replay to
 the pmacct daemon, ie.: "tcpreplay -x <speed multiplicator> -i <output
 interface> <input file>". 
 
-f) Buffering is often an element to tune. While buffering internal to pmacct, 
+g) Buffering is often an element to tune. While buffering internal to pmacct, 
 configured with plugin_buffer_size and plugin_pipe_size, returns warning
 messages in case of data loss and brings solid queueing alterantives like
 ZeroMQ (plugin_pipe_zmq), buffering between pmacct and the kernel, configured
@@ -2133,7 +2142,7 @@ in CONFIG-KEYS description for the nfacctd_pipe_size configuration directive,
 any lift in the buffering must be also supported by the kernel, adjusting
 /proc/sys/net/core/rmem_max.
 
-g) packet classification using the nDPI library is among the new features of
+h) packet classification using the nDPI library is among the new features of
 pmacct 1.7. As with any major and complex feature, it is expected that not
 everything may work great and smooth at the first round of implementation.
 In this section you will find a few tips on how to help providing meaningful
