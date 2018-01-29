@@ -230,7 +230,7 @@ int main(int argc,char **argv, char **envp)
   config.acct_type = ACCT_PM;
 
   rows = 0;
-  memset(&glob_pcapt, 0, sizeof(glob_pcapt));
+  memset(&device, 0, sizeof(device));
 
   /* getting commandline values */
   while (!errflag && ((cp = getopt(argc, argv, ARGS_UACCTD)) != -1)) {

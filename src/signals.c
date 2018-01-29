@@ -155,13 +155,13 @@ void my_sigint_handler(int signum)
     int device_idx;
 
     if (config.dev) {
-      for (device_idx = 0; glob_pcapt[device_idx]; device_idx++) {
-        if (pcap_stats(glob_pcapt[device_idx]->dev_desc, &ps) < 0) {
-	  printf("INFO: [%s,%u] error='pcap_stats(): %s'\n", glob_pcapt[device_idx]->str,
-		glob_pcapt[device_idx]->id, pcap_geterr(glob_pcapt[device_idx]->dev_desc));
+      for (device_idx = 0; device_idx < device.num; device_idx++) {
+        if (pcap_stats(device.list[device_idx].dev_desc, &ps) < 0) {
+	  printf("INFO: [%s,%u] error='pcap_stats(): %s'\n", device.list[device_idx].str,
+		device.list[device_idx].id, pcap_geterr(device.list[device_idx].dev_desc));
 	}
         printf("NOTICE: [%s,%u] received_packets=%u dropped_packets=%u\n",
-		glob_pcapt[device_idx]->str, glob_pcapt[device_idx]->id,
+		device.list[device_idx].str, device.list[device_idx].id,
 		ps.ps_recv, ps.ps_drop);
       }
     }
@@ -207,14 +207,14 @@ void push_stats()
     int device_idx;
 
     if (config.dev) {
-      for (device_idx = 0; glob_pcapt[device_idx]; device_idx++) {
-	if (pcap_stats(glob_pcapt[device_idx]->dev_desc, &ps) < 0) {
+      for (device_idx = 0; device_idx < device.num; device_idx++) {
+	if (pcap_stats(device.list[device_idx].dev_desc, &ps) < 0) {
 	  Log(LOG_INFO, "INFO ( %s/%s ): [%s,%u] time=%u error='pcap_stats(): %s'\n",
-		config.name, config.type, glob_pcapt[device_idx]->str, glob_pcapt[device_idx]->id,
-		now, pcap_geterr(glob_pcapt[device_idx]->dev_desc));
+		config.name, config.type, device.list[device_idx].str, device.list[device_idx].id,
+		now, pcap_geterr(device.list[device_idx].dev_desc));
 	}
 	Log(LOG_NOTICE, "NOTICE ( %s/%s ): [%s,%u] time=%u received_packets=%u dropped_packets=%u\n",
-		config.name, config.type, glob_pcapt[device_idx]->str, glob_pcapt[device_idx]->id,
+		config.name, config.type, device.list[device_idx].str, device.list[device_idx].id,
 		now, ps.ps_recv, ps.ps_drop);
       }
     }
@@ -237,6 +237,8 @@ void reload_maps()
     reload_map_bgp_thread = TRUE;
     reload_map_exec_plugins = TRUE;
     reload_geoipv2_file = TRUE;
+
+    if (config.acct_type == ACCT_PM) reload_map_pmacctd = TRUE;
   }
   
   signal(SIGUSR2, reload_maps);

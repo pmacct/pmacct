@@ -184,9 +184,10 @@ EXT int BITR_mpls_vpn_id_handler(struct packet_ptrs *, void *, void *);
 EXT void pcap_interfaces_map_validate(char *, struct plugin_requests *);
 EXT int pcap_interfaces_map_ifindex_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int pcap_interfaces_map_ifname_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
-EXT void pcap_interfaces_map_initialize();
-EXT void pcap_interfaces_map_load();
-EXT void pcap_interfaces_map_destroy();
-EXT u_int32_t pcap_interfaces_map_lookup_ifname(char *);
-EXT char *pcap_interfaces_map_getnext_ifname(int *);
+EXT void pcap_interfaces_map_initialize(struct pcap_interfaces *);
+EXT void pcap_interfaces_map_load(struct pcap_interfaces *);
+EXT void pcap_interfaces_map_destroy(struct pcap_interfaces *);
+EXT void pcap_interfaces_map_copy(struct pcap_interfaces *, struct pcap_interfaces *);
+EXT u_int32_t pcap_interfaces_map_lookup_ifname(struct pcap_interfaces *, char *);
+EXT char *pcap_interfaces_map_getnext_ifname(struct pcap_interfaces *, int *);
 #undef EXT

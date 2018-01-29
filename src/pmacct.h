@@ -256,7 +256,7 @@ typedef struct {
 
 /* structures */
 struct pcap_device {
-  char *str;
+  char str[IFNAMSIZ];
   u_int32_t id;
   pcap_t *dev_desc;
   int link_type;
@@ -264,6 +264,11 @@ struct pcap_device {
   int errors; /* error count when reading from a savefile */
   int fd;
   struct _devices_struct *data; 
+};
+
+struct pcap_devices {
+  struct pcap_device list[PCAP_MAX_INTERFACES];
+  int num;
 };
 
 struct pcap_callback_data {
@@ -412,6 +417,7 @@ EXT int reload_map, reload_map_exec_plugins, reload_geoipv2_file;
 EXT int reload_map_bgp_thread, reload_log_bgp_thread;
 EXT int reload_map_bmp_thread, reload_log_bmp_thread;
 EXT int reload_map_telemetry_thread, reload_log_telemetry_thread;
+EXT int reload_map_pmacctd;
 EXT int reload_log_sf_cnt;
 EXT int data_plugins, tee_plugins;
 EXT struct timeval reload_map_tstamp;
@@ -421,8 +427,8 @@ EXT struct configuration config; /* global configuration structure */
 EXT struct plugins_list_entry *plugins_list; /* linked list of each plugin configuration */
 EXT pid_t failed_plugins[MAX_N_PLUGINS]; /* plugins failed during startup phase */
 EXT u_char dummy_tlhdr[16];
-EXT struct pcap_device *glob_pcapt[PCAP_MAX_INTERFACES];
-EXT struct pcap_interfaces pcap_if_map;
+EXT struct pcap_devices device, bkp_device;
+EXT struct pcap_interfaces pcap_if_map, bkp_pcap_if_map;
 EXT struct pcap_stat ps;
 #undef EXT
 #endif /* _PMACCT_H_ */

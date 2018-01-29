@@ -2879,26 +2879,26 @@ void generate_random_string(char *s, const int len)
   s[len] = '\0';
 }
 
-void open_pcap_savefile(struct pcap_device *device, char *file)
+void open_pcap_savefile(struct pcap_device *dev_ptr, char *file)
 {
   char errbuf[PCAP_ERRBUF_SIZE];
   int idx;
 
-  if ((device->dev_desc = pcap_open_offline(file, errbuf)) == NULL) {
+  if ((dev_ptr->dev_desc = pcap_open_offline(file, errbuf)) == NULL) {
     Log(LOG_ERR, "ERROR ( %s/core ): pcap_open_offline(): %s\n", config.name, errbuf);
     exit(1);
   }
 
-  device->link_type = pcap_datalink(device->dev_desc);
+  dev_ptr->link_type = pcap_datalink(dev_ptr->dev_desc);
   for (idx = 0; _devices[idx].link_type != -1; idx++) {
-    if (device->link_type == _devices[idx].link_type)
-      device->data = &_devices[idx];
+    if (dev_ptr->link_type == _devices[idx].link_type)
+      dev_ptr->data = &_devices[idx];
   }
 
-  if (!device->data->handler) {
+  if (!dev_ptr->data->handler) {
     Log(LOG_ERR, "ERROR ( %s/core ): pcap_savefile: unsupported link layer.\n", config.name);
     exit(1);
   }
 
-  device->active = TRUE;
+  dev_ptr->active = TRUE;
 }

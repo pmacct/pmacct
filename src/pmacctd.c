@@ -92,13 +92,42 @@ void usage_daemon(char *prog_name)
   printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);
 }
 
-static pcap_t *do_pcap_open(const char *device, int snaplen, int promisc,
+void do_pcap_device_initialize(struct pcap_devices *map)
+{
+  memset(map, 0, sizeof(struct pcap_devices));
+}
+
+void do_pcap_device_copy_all(struct pcap_devices *dst, struct pcap_devices *src)
+{
+  memcpy(dst, src, sizeof(struct pcap_devices));
+}
+
+void do_pcap_device_copy_entry(struct pcap_devices *dst, struct pcap_devices *src, int src_idx)
+{
+  memcpy(&dst->list[dst->num], &src->list[src_idx], sizeof(struct pcap_device));
+  dst->num++;
+}
+
+int do_pcap_device_getindex_byifname(struct pcap_devices *map, char *ifname)
+{
+  int loc_idx;
+
+  for (loc_idx = 0; loc_idx < map->num; loc_idx++) {
+    if (!strncmp(map->list[loc_idx].str, ifname, strlen(ifname))) {
+      return loc_idx;
+    }
+  }
+
+  return ERR;
+}
+
+static pcap_t *do_pcap_open(const char *dev_ptr, int snaplen, int promisc,
 			    int to_ms, int protocol, int direction, char *errbuf)
 {
   pcap_t *p;
   int ret;
 
-  p = pcap_create(device, errbuf);
+  p = pcap_create(dev_ptr, errbuf);
   if (p == NULL)
     return NULL;
 
@@ -136,14 +165,14 @@ static pcap_t *do_pcap_open(const char *device, int snaplen, int promisc,
 
 err:
   if (ret == PCAP_ERROR)
-    snprintf(errbuf, PCAP_ERRBUF_SIZE, "%s: %s", device, pcap_geterr(p));
+    snprintf(errbuf, PCAP_ERRBUF_SIZE, "%s: %s", dev_ptr, pcap_geterr(p));
   else if (ret == PCAP_ERROR_NO_SUCH_DEVICE ||
 	   ret == PCAP_ERROR_PERM_DENIED ||
 	   ret == PCAP_ERROR_PROMISC_PERM_DENIED)
-    snprintf(errbuf, PCAP_ERRBUF_SIZE, "%s: %s (%s)", device,
+    snprintf(errbuf, PCAP_ERRBUF_SIZE, "%s: %s (%s)", dev_ptr,
 	     pcap_statustostr(ret), pcap_geterr(p));
   else
-    snprintf(errbuf, PCAP_ERRBUF_SIZE, "%s: %s", device,
+    snprintf(errbuf, PCAP_ERRBUF_SIZE, "%s: %s", dev_ptr,
 	     pcap_statustostr(ret));
 
   pcap_close(p);
@@ -176,7 +205,7 @@ int do_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, int psize)
     }
 
     dev_ptr->active = TRUE;
-    dev_ptr->str = ifname;
+    strncpy(dev_ptr->str, ifname, strlen(ifname));
 
     if (config.pcap_ifindex == PCAP_IFINDEX_SYS)
       dev_ptr->id = if_nametoindex(dev_ptr->str);
@@ -184,7 +213,7 @@ int do_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, int psize)
       dev_ptr->id = jhash(dev_ptr->str, strlen(dev_ptr->str), 0);
     else if (config.pcap_ifindex == PCAP_IFINDEX_MAP) {
       if (config.pcap_interfaces_map) {
-	dev_ptr->id = pcap_interfaces_map_lookup_ifname(dev_ptr->str);
+	dev_ptr->id = pcap_interfaces_map_lookup_ifname(&pcap_if_map, dev_ptr->str);
       }
       else {
 	Log(LOG_ERR, "ERROR ( %s/core ): pcap_ifindex set to 'map' but no pcap_interface_map is defined. Exiting.\n", config.name);
@@ -266,7 +295,7 @@ int main(int argc,char **argv, char **envp)
   struct pcap_pkthdr pkt_hdr;
   const u_char *pkt_body;
 
-  int index, index_rr, logf, ret, device_idx;
+  int index, index_rr, logf, ret;
 
   struct plugins_list_entry *list;
   struct plugin_requests req;
@@ -280,7 +309,6 @@ int main(int argc,char **argv, char **envp)
   struct id_table bta_table;
 
   struct pcap_device *dev_ptr;
-  struct pcap_device device[PCAP_MAX_INTERFACES];
   struct pcap_callback_data cb_data;
 
   /* select() stuff */
@@ -307,6 +335,7 @@ int main(int argc,char **argv, char **envp)
 
   /* a bunch of default definitions */
   reload_map = FALSE;
+  reload_map_pmacctd = FALSE;
   reload_geoipv2_file = FALSE;
   bpas_map_allocated = FALSE;
   blp_map_allocated = FALSE;
@@ -319,11 +348,9 @@ int main(int argc,char **argv, char **envp)
   plugins_list = NULL;
 
   errflag = 0;
-  device_idx = 0;
 
   memset(cfg_cmdline, 0, sizeof(cfg_cmdline));
   memset(&config, 0, sizeof(struct configuration));
-  memset(&device, 0, sizeof(device));
   memset(&config_file, 0, sizeof(config_file));
   memset(&failed_plugins, 0, sizeof(failed_plugins));
   memset(&req, 0, sizeof(req));
@@ -336,9 +363,10 @@ int main(int argc,char **argv, char **envp)
   memset(&bta_table, 0, sizeof(bta_table));
   memset(&client, 0, sizeof(client));
   memset(&cb_data, 0, sizeof(cb_data));
-  memset(&glob_pcapt, 0, sizeof(glob_pcapt));
   memset(&tunnel_registry, 0, sizeof(tunnel_registry));
   memset(&reload_map_tstamp, 0, sizeof(reload_map_tstamp));
+  do_pcap_device_initialize(&device);
+  do_pcap_device_initialize(&bkp_device);
   log_notifications_init(&log_notifications);
   config.acct_type = ACCT_PM;
 
@@ -870,8 +898,9 @@ int main(int argc,char **argv, char **envp)
   load_networks(config.networks_file, &nt, &nc);
 
   if (config.pcap_interfaces_map) {
-    pcap_interfaces_map_initialize();
-    pcap_interfaces_map_load();
+    pcap_interfaces_map_initialize(&pcap_if_map);
+    pcap_interfaces_map_initialize(&bkp_pcap_if_map);
+    pcap_interfaces_map_load(&pcap_if_map);
   }
   else {
     pcap_if_map.list = NULL;
@@ -905,47 +934,43 @@ int main(int argc,char **argv, char **envp)
     exit_all(1);
   }
 
-  if (config.dev) {
-    int pcap_if_idx = 0;
+  bkp_select_fd = 0;
+  FD_ZERO(&bkp_read_descs);
 
-    ret = do_pcap_add_interface(&device[device_idx], config.dev, psize);
-    if (!ret) device_idx++;
+  if (config.dev) {
+    ret = do_pcap_add_interface(&device.list[0], config.dev, psize);
+    if (!ret) {
+      cb_data.device = &device.list[0];
+      device.num = 1;
+    }
   }
   else if (config.pcap_interfaces_map) {
     int pcap_if_idx = 0;
     char *ifname;
 
-    while ((ifname = pcap_interfaces_map_getnext_ifname(&pcap_if_idx))) {
-      if (device_idx == PCAP_MAX_INTERFACES) {
+    while ((ifname = pcap_interfaces_map_getnext_ifname(&pcap_if_map, &pcap_if_idx))) {
+      if (device.num == PCAP_MAX_INTERFACES) {
 	Log(LOG_ERR, "ERROR ( %s/core ): Maximum number of interfaces reached (%u). Exiting.\n", config.name, PCAP_MAX_INTERFACES);
 	exit(1);
       }
 
-      ret = do_pcap_add_interface(&device[device_idx], ifname, psize);
-      if (!ret) device_idx++;
+      ret = do_pcap_add_interface(&device.list[device.num], ifname, psize);
+      if (!ret) {
+	if (bkp_select_fd <= device.list[device.num].fd) {
+	  bkp_select_fd = device.list[device.num].fd;
+	  bkp_select_fd++;
+	}
+
+	if (device.list[device.num].fd) FD_SET(device.list[device.num].fd, &bkp_read_descs);
+	device.num++;
+      }
     }
   }
   else if (config.pcap_savefile) {
-    open_pcap_savefile(&device[device_idx], config.pcap_savefile);
-    device[device_idx].active = TRUE;
-    device[device_idx].str = config.pcap_savefile;
+    open_pcap_savefile(&device.list[0], config.pcap_savefile);
+    cb_data.device = &device.list[0];
+    device.num = 1;
   }
-
-  bkp_select_fd = 0;
-  FD_ZERO(&bkp_read_descs);
-
-  for (device_idx = 0; device[device_idx].dev_desc; device_idx++) {
-    glob_pcapt[device_idx] = &device[device_idx]; /* SIGINT/stats handling */
-
-    /* Preparing the pointer in case we sniff from a single interface;
-       if multiple interfaces, we will set this dynamically at runtime */
-    if (!device_idx) cb_data.device = &device[device_idx];
-
-    if (bkp_select_fd < device[device_idx].fd) bkp_select_fd = device[device_idx].fd;
-    if (device[device_idx].fd) FD_SET(device[device_idx].fd, &bkp_read_descs);
-  }
-
-  bkp_select_fd++;
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
   signal(SIGCHLD, startup_handle_falling_child); /* takes note of plugins failed during startup phase */
@@ -1074,22 +1099,22 @@ int main(int argc,char **argv, char **envp)
   /* Main loop (for the case of a single interface): if pcap_loop() exits
      maybe an error occurred; we will try closing and reopening again our
      listening device */
-  if (device_idx == 1) {
+  if (!config.pcap_interfaces_map) {
     for (;;) {
-      if (!device[0].active) {
+      if (!device.list[0].active) {
 	Log(LOG_WARNING, "WARN ( %s/core ): [%s] has become unavailable; throttling ...\n", config.name, config.dev);
 	throttle_loop:
 	sleep(PCAP_RETRY_PERIOD); /* XXX: user defined ? */
 
-	if ((device[0].dev_desc = do_pcap_open(config.dev, psize, config.promisc, 1000, config.pcap_protocol, config.pcap_direction, errbuf)) == NULL)
+	if ((device.list[0].dev_desc = do_pcap_open(config.dev, psize, config.promisc, 1000, config.pcap_protocol, config.pcap_direction, errbuf)) == NULL)
 	  goto throttle_loop;
 
-	pcap_setfilter(device[0].dev_desc, &filter);
-	device[0].active = TRUE;
+	pcap_setfilter(device.list[0].dev_desc, &filter);
+	device.list[0].active = TRUE;
       }
 
-      pcap_loop(device[0].dev_desc, -1, pcap_cb, (u_char *) &cb_data);
-      pcap_close(device[0].dev_desc);
+      pcap_loop(device.list[0].dev_desc, -1, pcap_cb, (u_char *) &cb_data);
+      pcap_close(device.list[0].dev_desc);
 
       if (config.pcap_savefile) {
 	if (config.sf_wait) {
@@ -1099,23 +1124,86 @@ int main(int argc,char **argv, char **envp)
         }
         stop_all_childs();
       }
-      device[0].active = FALSE;
+      device.list[0].active = FALSE;
     }
   }
   else {
-    /* XXX: handle interface changes? */
     for (;;) {
       select_fd = bkp_select_fd;
       memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
 
       select_num = select(select_fd, &read_descs, NULL, NULL, NULL);
 
-      for (dev_ptr = NULL, index = 0; index < device_idx; index++) {
-        int loc_idx = (index + index_rr) % device_idx;
+      if (reload_map_pmacctd) {
+	int pcap_if_idx = 0;
+	char *ifname;
 
-	if (device[loc_idx].fd && FD_ISSET(device[loc_idx].fd, &read_descs)) {
-	  dev_ptr = &device[loc_idx];
-          index_rr = (index_rr + 1) % device_idx;
+	pcap_interfaces_map_copy(&bkp_pcap_if_map, &pcap_if_map);
+	pcap_interfaces_map_destroy(&pcap_if_map);
+	pcap_interfaces_map_load(&pcap_if_map);
+
+	do_pcap_device_copy_all(&bkp_device, &device);
+	do_pcap_device_initialize(&device);
+
+	/* Add interfaces and re-build relevant structs */
+	while ((ifname = pcap_interfaces_map_getnext_ifname(&pcap_if_map, &pcap_if_idx))) {
+	  if (!pcap_interfaces_map_lookup_ifname(&bkp_pcap_if_map, ifname)) {
+	    if (device.num == PCAP_MAX_INTERFACES) {
+	      Log(LOG_WARNING, "WARN ( %s/core ): Maximum number of interfaces reached (%u). Ignoring '%s'.\n", config.name, PCAP_MAX_INTERFACES, ifname);
+	    }
+	    else {
+	      if (!do_pcap_add_interface(&device.list[device.num], ifname, psize)) {
+		if (bkp_select_fd <= device.list[device.num].fd) {
+		  bkp_select_fd = device.list[device.num].fd;
+		  bkp_select_fd++;
+		}
+
+		if (device.list[device.num].fd && !FD_ISSET(device.list[device.num].fd, &bkp_read_descs)) {
+		  FD_SET(device.list[device.num].fd, &bkp_read_descs);
+		}
+	
+		device.num++;
+	      }
+	    }
+	  }
+          else {
+	    int device_idx;
+
+	    device_idx = do_pcap_device_getindex_byifname(&bkp_device, ifname);
+	    if (device_idx >= 0) {
+	      Log(LOG_INFO, "INFO ( %s/core ): [%s,%u] link type is: %d\n", config.name, bkp_device.list[device_idx].str,
+		  bkp_device.list[device_idx].id, bkp_device.list[device_idx].link_type);
+	      do_pcap_device_copy_entry(&device, &bkp_device, device_idx);
+	    }
+	    else Log(LOG_WARNING, "WARN ( %s/core ): Mayday. Interface '%s' went lost.\n", config.name, ifname);
+	  }
+	}
+
+	/* Remove unlisted interfaces */
+	pcap_if_idx = 0;
+	while ((ifname = pcap_interfaces_map_getnext_ifname(&bkp_pcap_if_map, &pcap_if_idx))) {
+	  if (!pcap_interfaces_map_lookup_ifname(&pcap_if_map, ifname)) {
+            int device_idx;
+          
+	    device_idx = do_pcap_device_getindex_byifname(&bkp_device, ifname);
+	    if (device_idx >= 0) {
+	      Log(LOG_INFO, "INFO ( %s/core ): [%s,%u] removed.\n", config.name, bkp_device.list[device_idx].str, bkp_device.list[device_idx].id);
+	      FD_CLR(bkp_device.list[device_idx].fd, &bkp_read_descs);
+	      pcap_close(bkp_device.list[device_idx].dev_desc);
+            }
+	    else Log(LOG_WARNING, "WARN ( %s/core ): Mayday. Interface '%s' went lost (2).\n", config.name, ifname);
+	  }
+	}
+
+	reload_map_pmacctd = FALSE;
+      }
+
+      for (dev_ptr = NULL, index = 0; index < device.num; index++) {
+        int loc_idx = (index + index_rr) % device.num;
+
+	if (device.list[loc_idx].fd && FD_ISSET(device.list[loc_idx].fd, &read_descs)) {
+	  dev_ptr = &device.list[loc_idx];
+          index_rr = (index_rr + 1) % device.num;
           break;
 	}
       }

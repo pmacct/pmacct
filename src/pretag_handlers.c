@@ -503,7 +503,7 @@ int PT_map_engine_id_handler(char *filename, struct id_entry *e, char *value, st
 
 int PT_map_filter_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
-  struct pcap_device device;
+  struct pcap_device dev;
   bpf_u_int32 localnet, netmask;  /* pcap library stuff */
   char errbuf[PCAP_ERRBUF_SIZE];
   int x, link_type;
@@ -516,20 +516,20 @@ int PT_map_filter_handler(char *filename, struct id_entry *e, char *value, struc
     }
   }
 
-  memset(&device, 0, sizeof(struct pcap_device));
+  memset(&dev, 0, sizeof(struct pcap_device));
   // XXX: fix if multiple interfaces
-  if (glob_pcapt[0] && glob_pcapt[0]->dev_desc) device.link_type = pcap_datalink(glob_pcapt[0]->dev_desc);
-  else if (config.uacctd_group) device.link_type = DLT_RAW;
-  else device.link_type = 1;
-  device.dev_desc = pcap_open_dead(device.link_type, 128); /* snaplen=eth_header+pm_iphdr+pm_tlhdr */
+  if (device.list[0].dev_desc) dev.link_type = pcap_datalink(device.list[0].dev_desc);
+  else if (config.uacctd_group) dev.link_type = DLT_RAW;
+  else dev.link_type = 1;
+  dev.dev_desc = pcap_open_dead(dev.link_type, 128); /* snaplen=eth_header+pm_iphdr+pm_tlhdr */
 
   pcap_lookupnet(config.dev, &localnet, &netmask, errbuf);
-  if (pcap_compile(device.dev_desc, &e->key.filter, value, 0, netmask) < 0) {
-    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] malformed filter: %s\n", config.name, config.type, filename, pcap_geterr(device.dev_desc));
+  if (pcap_compile(dev.dev_desc, &e->key.filter, value, 0, netmask) < 0) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] malformed filter: %s\n", config.name, config.type, filename, pcap_geterr(dev.dev_desc));
     return TRUE;
   }
 
-  pcap_close(device.dev_desc);
+  pcap_close(dev.dev_desc);
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_FILTER) {
@@ -3663,48 +3663,56 @@ int pcap_interfaces_map_ifname_handler(char *filename, struct id_entry *e, char 
   return FALSE;
 }
 
-void pcap_interfaces_map_initialize()
+void pcap_interfaces_map_initialize(struct pcap_interfaces *map)
 {
-  memset(&pcap_if_map, 0, sizeof(pcap_if_map));
+  memset(map, 0, sizeof(struct pcap_interfaces));
 
   /* Setting up the list */
-  pcap_if_map.list = malloc((PCAP_MAX_INTERFACES) * sizeof(struct pcap_interface));
-  if (!pcap_if_map.list) {
+  map->list = malloc((PCAP_MAX_INTERFACES) * sizeof(struct pcap_interface));
+  if (!map->list) {
     Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate pcap_interfaces_map. Exiting ...\n", config.name, config.type);
     exit(1);
   }
-  else memset(pcap_if_map.list, 0, (PCAP_MAX_INTERFACES) * sizeof(struct pcap_interface));
+  else memset(map->list, 0, (PCAP_MAX_INTERFACES) * sizeof(struct pcap_interface));
 }
 
-void pcap_interfaces_map_load()
+void pcap_interfaces_map_load(struct pcap_interfaces *map)
 {
   struct plugin_requests req;
   int pcap_interfaces_allocated = FALSE;
 
-  pcap_interfaces_map_destroy();
   memset(&req, 0, sizeof(req));
 
-  req.key_value_table = (void *) &pcap_if_map;
+  req.key_value_table = (void *) map;
   load_id_file(MAP_PCAP_INTERFACES, config.pcap_interfaces_map, NULL, &req, &pcap_interfaces_allocated);
 }
 
-void pcap_interfaces_map_destroy()
+void pcap_interfaces_map_destroy(struct pcap_interfaces *map)
 {
   int idx;
 
-  for (idx = 0; idx < pcap_if_map.num; idx++) memset(&pcap_if_map.list[idx], 0, sizeof(struct pcap_interface));
+  for (idx = 0; idx < map->num; idx++) memset(&map->list[idx], 0, sizeof(struct pcap_interface));
 
-  pcap_if_map.num = 0;
+  map->num = 0;
 }
 
-u_int32_t pcap_interfaces_map_lookup_ifname(char *ifname)
+void pcap_interfaces_map_copy(struct pcap_interfaces *dst, struct pcap_interfaces *src)
+{
+  int idx;
+
+  for (idx = 0; idx < src->num; idx++) memcpy(&dst->list[idx], &src->list[idx], sizeof(struct pcap_interface)); 
+
+  dst->num = src->num;
+}
+
+u_int32_t pcap_interfaces_map_lookup_ifname(struct pcap_interfaces *map, char *ifname)
 {
   u_int32_t ifindex = 0;
   int idx;
 
-  for (idx = 0; idx < pcap_if_map.num; idx++) {
-    if (!strncmp(pcap_if_map.list[idx].ifname, ifname, strlen(ifname))) {
-      ifindex = pcap_if_map.list[idx].ifindex;
+  for (idx = 0; idx < map->num; idx++) {
+    if (!strncmp(map->list[idx].ifname, ifname, strlen(ifname))) {
+      ifindex = map->list[idx].ifindex;
       break;
     }
   }
@@ -3712,13 +3720,13 @@ u_int32_t pcap_interfaces_map_lookup_ifname(char *ifname)
   return ifindex;
 }
 
-char *pcap_interfaces_map_getnext_ifname(int *index)
+char *pcap_interfaces_map_getnext_ifname(struct pcap_interfaces *map, int *index)
 {
   char *ifname = NULL;
   int loc_idx = (*index);
 
-  if (loc_idx < pcap_if_map.num) {
-    ifname = pcap_if_map.list[loc_idx].ifname;
+  if (loc_idx < map->num) {
+    ifname = map->list[loc_idx].ifname;
     loc_idx++; (*index) = loc_idx;
   }
 
