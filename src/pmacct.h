@@ -347,6 +347,18 @@ void my_sigint_handler();
 void reload();
 void push_stats();
 void reload_maps();
+#if (!defined __PMACCTD_C)
+#define EXT extern
+#else
+#define EXT
+#endif
+EXT void pm_pcap_device_initialize(struct pcap_devices *);
+EXT void pm_pcap_device_copy_all(struct pcap_devices *, struct pcap_devices *);
+EXT void pm_pcap_device_copy_entry(struct pcap_devices *, struct pcap_devices *, int);
+EXT int pm_pcap_device_getindex_byifname(struct pcap_devices *, char *);
+EXT pcap_t *pm_pcap_open(const char *, int, int, int, int, int, char *);
+EXT int pm_pcap_add_interface(struct pcap_device *, char *, int);
+#undef EXT
 
 #if (!defined __LL_C)
 #define EXT extern
