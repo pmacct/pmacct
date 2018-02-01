@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -130,7 +130,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
         memcpy(&pref4, &((struct pm_iphdr *)pptrs->iph_ptr)->ip_src, sizeof(struct in_addr));
 	bgp_node_match_ipv4(inter_domain_routing_db->rib[AFI_IP][safi],
 			    &pref4, (struct bgp_peer *) pptrs->bgp_peer,
-		     	    bgp_route_info_modulo_pathid,
+		     	    bms->route_info_modulo,
 			    bms->bgp_lookup_node_match_cmp, &nmct2,
 			    &result, &info);
       }
@@ -154,7 +154,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 	memcpy(&pref4, &((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
 	bgp_node_match_ipv4(inter_domain_routing_db->rib[AFI_IP][safi],
 			    &pref4, (struct bgp_peer *) pptrs->bgp_peer,
-			    bgp_route_info_modulo_pathid,
+			    bms->route_info_modulo,
 			    bms->bgp_lookup_node_match_cmp, &nmct2,
 			    &result, &info);
       }
@@ -180,7 +180,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
         memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, sizeof(struct in6_addr));
 	bgp_node_match_ipv6(inter_domain_routing_db->rib[AFI_IP6][safi],
 		            &pref6, (struct bgp_peer *) pptrs->bgp_peer,
-		            bgp_route_info_modulo_pathid,
+		            bms->route_info_modulo,
 		            bms->bgp_lookup_node_match_cmp, &nmct2,
 		            &result, &info);
       }
@@ -203,7 +203,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
         memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
 	bgp_node_match_ipv6(inter_domain_routing_db->rib[AFI_IP6][safi],
 	     		    &pref6, (struct bgp_peer *) pptrs->bgp_peer,
-			    bgp_route_info_modulo_pathid,
+			    bms->route_info_modulo,
 			    bms->bgp_lookup_node_match_cmp, &nmct2,
 			    &result, &info);
       }
@@ -386,7 +386,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
       if (pptrs->l3_proto == ETHERTYPE_IP) {
         memcpy(&pref4, &((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
         bgp_node_match_ipv4(inter_domain_routing_db->rib[AFI_IP][SAFI_UNICAST], &pref4, nh_peer,
-			    bgp_route_info_modulo_pathid,
+			    bms->route_info_modulo,
 			    bms->bgp_lookup_node_match_cmp, &nmct2,
 			    &result_node, &info);
       }
@@ -394,7 +394,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
       else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
         memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
         bgp_node_match_ipv6(inter_domain_routing_db->rib[AFI_IP6][SAFI_UNICAST], &pref6, nh_peer,
-			    bgp_route_info_modulo_pathid,
+			    bms->route_info_modulo,
 			    bms->bgp_lookup_node_match_cmp, &nmct2,
 			    &result_node, &info);
       }

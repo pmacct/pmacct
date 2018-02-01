@@ -77,7 +77,7 @@ struct bgp_peer *bgp_lookup_find_bmp_peer(struct sockaddr *sa, struct xflow_stat
 	ret = pm_tfind(sa, &bmp_peers[peers_idx].bgp_peers, bgp_peer_sa_addr_cmp);
 
 	if (ret) {
-	  peer = &bmp_peers[peers_idx].self;
+	  peer = (*(struct bgp_peer **) ret);
 	  break;
 	}
       }
@@ -110,9 +110,11 @@ int bgp_lookup_node_match_cmp_bmp(struct bgp_info *info, struct node_match_cmp_t
 {
   struct bmp_peer *bmpp = info->peer->bmp_se;
   struct bgp_peer *peer_local = &bmpp->self;
+  struct bgp_peer *peer_remote = info->peer;
   int no_match = FALSE;
 
-  if (peer_local == nmct2->peer) {
+  /* peer_local: edge router use-case; peer_remote: replicator use-case */
+  if (peer_local == nmct2->peer || peer_remote == nmct2->peer) {
     if (nmct2->safi == SAFI_MPLS_VPN) no_match++;
     if (nmct2->peer->cap_add_paths) no_match++;
 
