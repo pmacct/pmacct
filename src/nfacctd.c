@@ -1513,7 +1513,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    if (ssaved) sentry->next = ssaved;
 	  }
 	}
-	else if (tpl->tpl[NF9_APPLICATION_ID].len == 4 && tpl->tpl[NF9_APPLICATION_NAME].len > 0) {
+
+	if (tpl->tpl[NF9_APPLICATION_ID].len == 4 && tpl->tpl[NF9_APPLICATION_NAME].len > 0) {
 	  struct pkt_classifier css;
 	  pm_class_t class_id = 0, class_int_id = 0;
 
@@ -1548,6 +1549,23 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    strlcpy(css.protocol, centry->class_name, MAX_PROTOCOL_LEN);
 	    pmct_register(&css);
           }
+	}
+
+	if (tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].len == 4 || tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].len == 16) {
+          /* Handling the global option scoping case */
+          if (!config.nfacctd_disable_opt_scope_check) {
+            if (tpl->tpl[NF9_OPT_SCOPE_SYSTEM].len) entry = (struct xflow_status_entry *) pptrs->f_status_g;
+          }
+          else entry = (struct xflow_status_entry *) pptrs->f_status_g;
+
+	  if (entry) {
+	    if (tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].len) {
+	      raw_to_addr(&entry->agent_addr, pkt+tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].off, AF_INET);
+	    }
+	    else if (tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].len) {
+	      raw_to_addr(&entry->agent_addr, pkt+tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].off, AF_INET6);
+	    }
+	  }
 	}
 
 	if (config.nfacctd_account_options) {

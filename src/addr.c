@@ -432,6 +432,29 @@ unsigned int raw_to_sa(struct sockaddr *sa, char *src, u_int16_t port, u_int8_t 
 }
 
 /*
+ * raw_to_addr() converts a supported family address into a host_addr 
+ * structure 
+ */
+unsigned int raw_to_addr(struct host_addr *ha, char *src, u_int8_t v4v6)
+{
+  if (v4v6 == AF_INET) {
+    ha->family = AF_INET;
+    memcpy(&ha->address.ipv4, src, 4);
+    return ha->family;
+  }
+#if defined ENABLE_IPV6
+  if (v4v6 == AF_INET6) {
+    ha->family = AF_INET6;
+    ip6_addr_cpy(&ha->address.ipv6, src);
+    return ha->family;
+  }
+#endif
+
+  memset(ha, 0, sizeof(struct host_addr));
+  return 0;
+}
+
+/*
  * sa_to_str() converts a supported family address into a string
  */
 unsigned int sa_to_str(char *str, int len, const struct sockaddr *sa)

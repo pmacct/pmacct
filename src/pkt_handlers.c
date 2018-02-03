@@ -2065,22 +2065,48 @@ void NF_peer_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptr
 
 void NF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
+  struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
 
-  if (sa->sa_family == AF_INET) {
-    pbgp->peer_src_ip.address.ipv4.s_addr = ((struct sockaddr_in *)sa)->sin_addr.s_addr;
-    pbgp->peer_src_ip.family = AF_INET;
+  /* 1) NF9_EXPORTER_IPV[46]_ADDRESS from NetFlow v9/IPFIX options */
+  if (entry->agent_addr.family) {
+    memcpy(&pbgp->peer_src_ip, &entry->agent_addr, sizeof(struct host_addr));
   }
+  /* 2) Socket IP address */
+  else {
+    if (sa->sa_family == AF_INET) {
+      pbgp->peer_src_ip.address.ipv4.s_addr = ((struct sockaddr_in *)sa)->sin_addr.s_addr;
+      pbgp->peer_src_ip.family = AF_INET;
+    }
 #if defined ENABLE_IPV6
-  else if (sa->sa_family == AF_INET6) {
-    memcpy(&pbgp->peer_src_ip.address.ipv6, &((struct sockaddr_in6 *)sa)->sin6_addr, IP6AddrSz);
-    pbgp->peer_src_ip.family = AF_INET6;
-  }
+    else if (sa->sa_family == AF_INET6) {
+      memcpy(&pbgp->peer_src_ip.address.ipv6, &((struct sockaddr_in6 *)sa)->sin6_addr, IP6AddrSz);
+      pbgp->peer_src_ip.family = AF_INET6;
+    }
 #endif
+  }
+
+  /* 3) NetFlow v9/IPFIX inline NF9_EXPORTER_IPV[46]_ADDRESS */
+  if (!pbgp->peer_src_ip.family) {
+    switch (hdr->version) {
+    case 10:
+    case 9:
+      if (tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].len) {
+	memcpy(&pbgp->peer_src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].off, MIN(tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].len, 4));
+	pbgp->peer_src_ip.family = AF_INET;
+      }
+#if defined ENABLE_IPV6
+      else if (tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].len) {
+	memcpy(&pbgp->peer_src_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].off, MIN(tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].len, 16));
+	pbgp->peer_src_ip.family = AF_INET6;
+      }
+#endif
+    }
+  }
 }
 
 void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
