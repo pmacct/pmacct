@@ -255,6 +255,17 @@ typedef struct {
 #endif
 
 /* structures */
+struct pcap_interface {
+  u_int32_t ifindex;
+  char ifname[IFNAMSIZ];
+  int direction;
+};
+
+struct pcap_interfaces {
+  struct pcap_interface *list;
+  int num;
+};
+
 struct pcap_device {
   char str[IFNAMSIZ];
   u_int32_t id;
@@ -264,6 +275,7 @@ struct pcap_device {
   int errors; /* error count when reading from a savefile */
   int fd;
   struct _devices_struct *data; 
+  struct pcap_interface *pcap_if;
 };
 
 struct pcap_devices {
@@ -281,16 +293,6 @@ struct pcap_callback_data {
   struct pcap_device *device;
   u_int32_t ifindex_in;
   u_int32_t ifindex_out;
-};
-
-struct pcap_interface {
-  u_int32_t ifindex;
-  char ifname[IFNAMSIZ];
-};
-
-struct pcap_interfaces {
-  struct pcap_interface *list;
-  int num;
 };
 
 struct _protocols_struct {
@@ -357,7 +359,7 @@ EXT void pm_pcap_device_copy_all(struct pcap_devices *, struct pcap_devices *);
 EXT void pm_pcap_device_copy_entry(struct pcap_devices *, struct pcap_devices *, int);
 EXT int pm_pcap_device_getindex_byifname(struct pcap_devices *, char *);
 EXT pcap_t *pm_pcap_open(const char *, int, int, int, int, int, char *);
-EXT int pm_pcap_add_interface(struct pcap_device *, char *, int);
+EXT int pm_pcap_add_interface(struct pcap_device *, char *, struct pcap_interface *, int);
 #undef EXT
 
 #if (!defined __LL_C)

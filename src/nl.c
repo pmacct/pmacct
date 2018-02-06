@@ -63,15 +63,25 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
 
     if (cb_data->ifindex_in)
       pptrs.ifindex_in = cb_data->ifindex_in;
+    else if (cb_data->device->id && cb_data->device->pcap_if &&
+	     cb_data->device->pcap_if->direction) {
+      if (cb_data->device->pcap_if->direction == PCAP_D_IN)
+        pptrs.ifindex_in = cb_data->device->id;
+    }
     else if (cb_data->device->id && config.pcap_direction == PCAP_D_IN)
       pptrs.ifindex_in = cb_data->device->id;
-    else pptrs.ifindex_in = FALSE;
+    else pptrs.ifindex_in = 0;
 
     if (cb_data->ifindex_out)
       pptrs.ifindex_out = cb_data->ifindex_out;
+    else if (cb_data->device->id && cb_data->device->pcap_if &&
+             cb_data->device->pcap_if->direction) { 
+      if (cb_data->device->pcap_if->direction == PCAP_D_OUT)
+        pptrs.ifindex_out = cb_data->device->id;
+    }
     else if (cb_data->device->id && config.pcap_direction == PCAP_D_OUT)
       pptrs.ifindex_out = cb_data->device->id;
-    else pptrs.ifindex_out = FALSE;
+    else pptrs.ifindex_out = 0;
 
     (*device->data->handler)(pkthdr, &pptrs);
     if (pptrs.iph_ptr) {

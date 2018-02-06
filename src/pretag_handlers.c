@@ -3663,6 +3663,33 @@ int pcap_interfaces_map_ifname_handler(char *filename, struct id_entry *e, char 
   return FALSE;
 }
 
+int pcap_interfaces_map_direction_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  struct pcap_interfaces *table = (struct pcap_interfaces *) req->key_value_table;
+
+  if (table && table->list) {
+    if (table->num < PCAP_MAX_INTERFACES) {
+      lower_string(value);
+      if (!strncmp(value, "in", strlen("in"))) table->list[table->num].direction = PCAP_D_IN;
+      else if (!strncmp(value, "out", strlen("out"))) table->list[table->num].direction = PCAP_D_OUT;
+      else {
+        Log(LOG_ERR, "ERROR ( %s/%s ): [%s] invalid 'direction' value: '%s'.\n", config.name, config.type, filename, value);
+        return TRUE;
+      }
+    }
+    else {
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] maximum entries (%u) reached.\n", config.name, config.type, filename, PCAP_MAX_INTERFACES);
+      return TRUE;
+    }
+  }
+  else {
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] pcap_interfaces_map not allocated.\n", config.name, config.type, filename);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 void pcap_interfaces_map_initialize(struct pcap_interfaces *map)
 {
   memset(map, 0, sizeof(struct pcap_interfaces));
@@ -3718,6 +3745,19 @@ u_int32_t pcap_interfaces_map_lookup_ifname(struct pcap_interfaces *map, char *i
   }
 
   return ifindex;
+}
+
+struct pcap_interface *pcap_interfaces_map_getentry_by_ifname(struct pcap_interfaces *map, char *ifname)
+{
+  int idx;
+
+  for (idx = 0; idx < map->num; idx++) {
+    if (!strncmp(map->list[idx].ifname, ifname, strlen(ifname))) {
+      return &map->list[idx];
+    }
+  }
+
+  return NULL;
 }
 
 char *pcap_interfaces_map_getnext_ifname(struct pcap_interfaces *map, int *index)

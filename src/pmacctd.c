@@ -152,10 +152,12 @@ pcap_t *pm_pcap_open(const char *dev_ptr, int snaplen, int promisc,
     Log(LOG_WARNING, "WARN ( %s/core ): pcap_protocol specified but linked against a version of libpcap that does not support pcap_set_protocol().\n", config.name);
 #endif
 
-  /* since direction is not supported on all platforms, we just issue a warning */
+  /* XXX: rely on external filtering for now */
+/* 
   ret = pcap_setdirection(p, direction);
   if (ret < 0 && direction != PCAP_D_INOUT)
-    Log(LOG_WARNING, "WARN ( %s/core ): pcap_direction specified but linked against a version of libpcap that does not support pcap_setdirection().\n", config.name);
+    Log(LOG_WARNING, "INFO ( %s/core ): direction specified but linked against a version of libpcap that does not support pcap_setdirection().\n", config.name);
+*/
 
   ret = pcap_activate(p);
   if (ret < 0)
@@ -180,7 +182,7 @@ err:
   return NULL;
 }
 
-int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, int psize)
+int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, struct pcap_interface *pcap_if_entry, int psize)
 {
   /* pcap library stuff */
   bpf_u_int32 localnet, netmask;
@@ -189,10 +191,14 @@ int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, int psize)
 
   struct plugins_list_entry *list;
   int ret = SUCCESS, attempts = FALSE, index;
+  int direction;
+
+  if (pcap_if_entry && pcap_if_entry->direction) direction = pcap_if_entry->direction; 
+  else direction = config.pcap_direction;
 
   throttle_startup:
   if (attempts < PCAP_MAX_ATTEMPTS) {
-    if ((dev_ptr->dev_desc = pm_pcap_open(ifname, psize, config.promisc, 1000, config.pcap_protocol, config.pcap_direction, errbuf)) == NULL) {
+    if ((dev_ptr->dev_desc = pm_pcap_open(ifname, psize, config.promisc, 1000, config.pcap_protocol, direction, errbuf)) == NULL) {
       if (!config.if_wait) {
 	Log(LOG_ERR, "ERROR ( %s/core ): [%s] pm_pcap_open(): %s. Exiting.\n", config.name, ifname, errbuf);
 	exit_all(1);
@@ -205,6 +211,7 @@ int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, int psize)
     }
 
     dev_ptr->active = TRUE;
+    dev_ptr->pcap_if = pcap_if_entry;
     strncpy(dev_ptr->str, ifname, strlen(ifname));
 
     if (config.pcap_ifindex == PCAP_IFINDEX_SYS)
@@ -938,13 +945,14 @@ int main(int argc,char **argv, char **envp)
   FD_ZERO(&bkp_read_descs);
 
   if (config.dev) {
-    ret = pm_pcap_add_interface(&device.list[0], config.dev, psize);
+    ret = pm_pcap_add_interface(&device.list[0], config.dev, NULL, psize);
     if (!ret) {
       cb_data.device = &device.list[0];
       device.num = 1;
     }
   }
   else if (config.pcap_interfaces_map) {
+    struct pcap_interface *pcap_if_entry;
     int pcap_if_idx = 0;
     char *ifname;
 
@@ -954,7 +962,8 @@ int main(int argc,char **argv, char **envp)
 	exit(1);
       }
 
-      ret = pm_pcap_add_interface(&device.list[device.num], ifname, psize);
+      pcap_if_entry = pcap_interfaces_map_getentry_by_ifname(&pcap_if_map, ifname);
+      ret = pm_pcap_add_interface(&device.list[device.num], ifname, pcap_if_entry, psize);
       if (!ret) {
 	if (bkp_select_fd <= device.list[device.num].fd) {
 	  bkp_select_fd = device.list[device.num].fd;
@@ -1111,6 +1120,7 @@ int main(int argc,char **argv, char **envp)
 
 	pcap_setfilter(device.list[0].dev_desc, &filter);
 	device.list[0].active = TRUE;
+	device.list[0].pcap_if = NULL;
       }
 
       pcap_loop(device.list[0].dev_desc, -1, pcap_cb, (u_char *) &cb_data);
@@ -1135,6 +1145,7 @@ int main(int argc,char **argv, char **envp)
       select_num = select(select_fd, &read_descs, NULL, NULL, NULL);
 
       if (reload_map_pmacctd) {
+	struct pcap_interface *pcap_if_entry;
 	int pcap_if_idx = 0;
 	char *ifname;
 
@@ -1152,7 +1163,8 @@ int main(int argc,char **argv, char **envp)
 	      Log(LOG_WARNING, "WARN ( %s/core ): Maximum number of interfaces reached (%u). Ignoring '%s'.\n", config.name, PCAP_MAX_INTERFACES, ifname);
 	    }
 	    else {
-	      if (!pm_pcap_add_interface(&device.list[device.num], ifname, psize)) {
+	      pcap_if_entry = pcap_interfaces_map_getentry_by_ifname(&pcap_if_map, ifname);
+	      if (!pm_pcap_add_interface(&device.list[device.num], ifname, pcap_if_entry, psize)) {
 		if (bkp_select_fd <= device.list[device.num].fd) {
 		  bkp_select_fd = device.list[device.num].fd;
 		  bkp_select_fd++;
