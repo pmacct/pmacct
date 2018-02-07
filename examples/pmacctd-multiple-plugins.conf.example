@@ -6,7 +6,7 @@
 !
 ! debug: true 
 daemonize: true 
-interface: eth0
+pcap_interface: eth0
 aggregate[in]: src_host
 aggregate[out]: dst_host 
 aggregate_filter[in]: dst net 192.168.0.0/16

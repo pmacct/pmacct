@@ -447,9 +447,9 @@ struct configuration {
   int pcap_direction;
   int pcap_ifindex;
   char *pcap_interfaces_map;
-  char *dev;
-  int if_wait;
-  int sf_wait;
+  char *pcap_if;
+  int pcap_if_wait;
+  int pcap_sf_wait;
   int num_memory_pools;
   int memory_pool_size;
   int buckets;

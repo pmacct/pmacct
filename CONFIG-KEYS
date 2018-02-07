@@ -350,14 +350,14 @@ DESC:           Defines the system group id (GID) for files opened for writing (
 		created. 
 DEFAULT:	Operating System default (current user GID)
 
-KEY:		interface (-i) [GLOBAL, PMACCTD_ONLY]
+KEY:		pcap_interface (-i) [GLOBAL, PMACCTD_ONLY]
 DESC:		Interface on which 'pmacctd' listens. If such directive isn't supplied, a libpcap
 		function is used to select a valid device. [ns]facctd can catch similar behaviour by
 		employing the [ns]facctd_ip directives; also, note that this directive is mutually
 		exclusive with 'pcap_savefile' (-I). 
 DEFAULT:	Interface is selected by by the Operating System
 
-KEY:		interface_wait (-w) [GLOBAL, PMACCTD_ONLY]
+KEY:		pcap_interface_wait (-w) [GLOBAL, PMACCTD_ONLY]
 VALUES:		[ true | false ]
 DESC:		If set to true, this option causes 'pmacctd' to wait for the listening device to become
 		available; it will try to open successfully the device each few seconds. Whenever set to
@@ -369,7 +369,7 @@ KEY:		pcap_savefile (-I) [GLOBAL, NO_UACCTD]
 DESC:		File in libpcap savefile format to read data from (as an alternative to live data
 		collection. The file has to be correctly finalized in order to be read. As soon as
 		the daemon finished processing the file, it exits (unless the 'pcap_savefile_wait'
-		config directive is specified). The directive is mutually exclusive with 'interface'
+		config directive is specified). The directive is mutually exclusive with pcap_interface
 		(-i) for pmacctd and with [ns]facctd_ip (-L) and [ns]facctd_port (-l) for nfacctd
 		and sfacctd respectively.
 DEFAULT:	none

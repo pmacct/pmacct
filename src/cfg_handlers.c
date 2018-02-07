@@ -518,13 +518,13 @@ int cfg_key_pcap_interfaces_map(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_interface(char *filename, char *name, char *value_ptr)
+int cfg_key_pcap_interface(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.dev = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'interface'. Globalized.\n", filename);
+  for (; list; list = list->next, changes++) list->cfg.pcap_if = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'pcap_interface'. Globalized.\n", filename);
 
   return changes;
 }
@@ -605,7 +605,7 @@ int cfg_key_files_gid(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_interface_wait(char *filename, char *name, char *value_ptr)
+int cfg_key_pcap_interface_wait(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -613,8 +613,8 @@ int cfg_key_interface_wait(char *filename, char *name, char *value_ptr)
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  for (; list; list = list->next, changes++) list->cfg.if_wait = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'interface_wait'. Globalized.\n", filename);
+  for (; list; list = list->next, changes++) list->cfg.pcap_if_wait = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'pcap_interface_wait'. Globalized.\n", filename);
 
   return changes;
 }
@@ -627,7 +627,7 @@ int cfg_key_pcap_savefile_wait(char *filename, char *name, char *value_ptr)
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  for (; list; list = list->next, changes++) list->cfg.sf_wait = value;
+  for (; list; list = list->next, changes++) list->cfg.pcap_sf_wait = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'pcap_savefile_wait'. Globalized.\n", filename);
 
   return changes;

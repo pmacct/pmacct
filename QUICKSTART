@@ -344,7 +344,7 @@ Or written the configuration way:
 daemonize: true
 plugins: mysql
 aggregate: src_host, dst_host
-interface: eth0
+pcap_interface: eth0
 pcap_filter: src net 10.0.0.0/16
 ! ...
 
@@ -358,7 +358,7 @@ Or written the configuration way:
 plugins: print
 print_refresh_time: 30
 aggregate: src_host, dst_host
-interface: eth0
+pcap_interface: eth0
 ! ...
 
 Daemonize the process; let pmacct aggregate traffic in order to show in vs out traffic
@@ -876,7 +876,7 @@ steps:
    the print plugin with formatted output to stdout: 
 
    daemonize: true
-   interface: eth0
+   pcap_interface: eth0
    snaplen: 700
    !
    plugins: print
@@ -904,7 +904,7 @@ a) usual initial steps: download pmacct, unpack it, compile it.
 b) build NetFlow probe configuration, using pmacctd:
 !
 daemonize: true
-interface: eth0
+pcap_interface: eth0
 aggregate: src_host, dst_host, src_port, dst_port, proto, tos
 plugins: nfprobe
 nfprobe_receiver: 1.2.3.4:2100
@@ -1041,7 +1041,7 @@ Below a quickstarter guide:
 b) build sFlow probe configuration, using pmacctd:
 !
 daemonize: true
-interface: eth0
+pcap_interface: eth0
 plugins: sfprobe
 sampling_rate: 20
 sfprobe_agentsubid: 1402

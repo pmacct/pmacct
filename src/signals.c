@@ -154,7 +154,7 @@ void my_sigint_handler(int signum)
   if (config.acct_type == ACCT_PM && !config.uacctd_group /* XXX */) {
     int device_idx;
 
-    if (config.dev) {
+    if (config.pcap_if) {
       for (device_idx = 0; device_idx < device.num; device_idx++) {
         if (pcap_stats(device.list[device_idx].dev_desc, &ps) < 0) {
 	  printf("INFO: [%s,%u] error='pcap_stats(): %s'\n", device.list[device_idx].str,
@@ -206,7 +206,7 @@ void push_stats()
   if (config.acct_type == ACCT_PM) {
     int device_idx;
 
-    if (config.dev) {
+    if (config.pcap_if) {
       for (device_idx = 0; device_idx < device.num; device_idx++) {
 	if (pcap_stats(device.list[device_idx].dev_desc, &ps) < 0) {
 	  Log(LOG_INFO, "INFO ( %s/%s ): [%s,%u] time=%u error='pcap_stats(): %s'\n",

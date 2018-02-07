@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -873,7 +873,7 @@ void load_plugin_filters(int link_type)
 
 	dev_desc = pcap_open_dead(link_type, 128); /* 128 bytes should be long enough */
 
-	if (config.dev) pcap_lookupnet(config.dev, &localnet, &netmask, errbuf);
+	if (config.pcap_if) pcap_lookupnet(config.pcap_if, &localnet, &netmask, errbuf);
 
 	list->cfg.bpfp_a_table[idx] = malloc(sizeof(struct bpf_program));
 	while ( (count_token = extract_token(&list->cfg.a_filter, ',')) && idx < AGG_FILTER_ENTRIES ) {

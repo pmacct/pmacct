@@ -6,7 +6,7 @@
 !
 ! debug: true
 daemonize: true
-interface: eth0
+pcap_interface: eth0
 plugins: sfprobe
 sfprobe_agentsubid: 1402
 sfprobe_receiver: 1.2.3.4:6343

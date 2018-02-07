@@ -523,7 +523,7 @@ int PT_map_filter_handler(char *filename, struct id_entry *e, char *value, struc
   else dev.link_type = 1;
   dev.dev_desc = pcap_open_dead(dev.link_type, 128); /* snaplen=eth_header+pm_iphdr+pm_tlhdr */
 
-  pcap_lookupnet(config.dev, &localnet, &netmask, errbuf);
+  pcap_lookupnet(config.pcap_if, &localnet, &netmask, errbuf);
   if (pcap_compile(dev.dev_desc, &e->key.filter, value, 0, netmask) < 0) {
     Log(LOG_WARNING, "WARN ( %s/%s ): [%s] malformed filter: %s\n", config.name, config.type, filename, pcap_geterr(dev.dev_desc));
     return TRUE;

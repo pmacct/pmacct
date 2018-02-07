@@ -5,7 +5,7 @@
 ! supported by 'nfacctd' and 'pmacctd' ?
 !
 ! debug: true 
-interface: eth0
+pcap_interface: eth0
 daemonize: true 
 plugins: memory
 aggregate: src_host,dst_host

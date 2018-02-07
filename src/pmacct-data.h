@@ -322,6 +322,8 @@ static const struct _dictionary_line dictionary[] = {
   {"pcap_protocol", cfg_key_pcap_protocol},
   {"pcap_savefile", cfg_key_pcap_savefile},
   {"pcap_savefile_wait", cfg_key_pcap_savefile_wait},
+  {"pcap_interface", cfg_key_pcap_interface},
+  {"pcap_interface_wait", cfg_key_pcap_interface_wait},
   {"pcap_direction", cfg_key_pcap_direction},
   {"pcap_ifindex", cfg_key_pcap_ifindex},
   {"pcap_interfaces_map", cfg_key_pcap_interfaces_map},
@@ -341,8 +343,8 @@ static const struct _dictionary_line dictionary[] = {
   {"plugin_pipe_zmq_retry", cfg_key_plugin_pipe_zmq_retry},
   {"plugin_pipe_zmq_profile", cfg_key_plugin_pipe_zmq_profile},
   {"plugin_pipe_zmq_hwm", cfg_key_plugin_pipe_zmq_hwm},
-  {"interface", cfg_key_interface},
-  {"interface_wait", cfg_key_interface_wait},
+  {"interface", cfg_key_pcap_interface}, 		// legacy
+  {"interface_wait", cfg_key_pcap_interface_wait},	// legacy
   {"files_umask", cfg_key_files_umask},
   {"files_uid", cfg_key_files_uid},
   {"files_gid", cfg_key_files_gid},

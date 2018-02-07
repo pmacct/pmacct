@@ -6,7 +6,7 @@
 !
 ! debug: true
 daemonize: true
-interface: eth0
+pcap_interface: eth0
 aggregate: src_host, dst_host, src_port, dst_port, proto, tos
 plugins: nfprobe
 nfprobe_receiver: 1.2.3.4:2100

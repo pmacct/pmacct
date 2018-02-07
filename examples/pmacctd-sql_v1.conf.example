@@ -6,7 +6,7 @@
 !
 ! debug: true 
 !
-interface: eth0
+pcap_interface: eth0
 daemonize: false
 aggregate: src_host,dst_host
 ! aggregate: src_net,dst_net 

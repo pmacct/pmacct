@@ -199,7 +199,7 @@ int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, struct pcap
   throttle_startup:
   if (attempts < PCAP_MAX_ATTEMPTS) {
     if ((dev_ptr->dev_desc = pm_pcap_open(ifname, psize, config.promisc, 1000, config.pcap_protocol, direction, errbuf)) == NULL) {
-      if (!config.if_wait) {
+      if (!config.pcap_if_wait) {
 	Log(LOG_ERR, "ERROR ( %s/core ): [%s] pm_pcap_open(): %s. Exiting.\n", config.name, ifname, errbuf);
 	exit_all(1);
       }
@@ -486,7 +486,7 @@ int main(int argc,char **argv, char **envp)
       rows++;
       break;
     case 'i':
-      strlcpy(cfg_cmdline[rows], "interface: ", SRVBUFLEN);
+      strlcpy(cfg_cmdline[rows], "pcap_interface: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
@@ -496,7 +496,7 @@ int main(int argc,char **argv, char **envp)
       rows++;
       break;
     case 'w':
-      strlcpy(cfg_cmdline[rows], "interface_wait: true", SRVBUFLEN);
+      strlcpy(cfg_cmdline[rows], "pcap_interface_wait: true", SRVBUFLEN);
       rows++;
       break;
     case 'W':
@@ -918,25 +918,25 @@ int main(int argc,char **argv, char **envp)
 
   /* If any device/savefile have been specified, choose a suitable device
      where to listen for traffic */
-  if (!config.dev && !config.pcap_savefile && !config.pcap_interfaces_map) {
+  if (!config.pcap_if && !config.pcap_savefile && !config.pcap_interfaces_map) {
     Log(LOG_WARNING, "WARN ( %s/core ): Selecting a suitable device.\n", config.name);
-    config.dev = pcap_lookupdev(errbuf);
-    if (!config.dev) {
+    config.pcap_if = pcap_lookupdev(errbuf);
+    if (!config.pcap_if) {
       Log(LOG_ERR, "ERROR ( %s/core ): Unable to find a suitable device. Exiting.\n", config.name);
       exit_all(1);
     }
-    else Log(LOG_DEBUG, "DEBUG ( %s/core ): device is %s\n", config.name, config.dev);
+    else Log(LOG_DEBUG, "DEBUG ( %s/core ): device is %s\n", config.name, config.pcap_if);
   }
 
   /* reading filter; if it exists, we'll take an action later */
   if (!strlen(config_file)) config.clbuf = copy_argv(&argv[optind]);
 
-  if ((config.dev || config.pcap_interfaces_map) && config.pcap_savefile) {
+  if ((config.pcap_if || config.pcap_interfaces_map) && config.pcap_savefile) {
     Log(LOG_ERR, "ERROR ( %s/core ): interface (-i) pcap_interfaces_map and pcap_savefile (-I) directives are mutually exclusive. Exiting.\n", config.name);
     exit_all(1);
   }
 
-  if (config.dev && config.pcap_interfaces_map) {
+  if (config.pcap_if && config.pcap_interfaces_map) {
     Log(LOG_ERR, "ERROR ( %s/core ): interface (-i) and pcap_interfaces_map directives are mutually exclusive. Exiting.\n", config.name);
     exit_all(1);
   }
@@ -944,8 +944,8 @@ int main(int argc,char **argv, char **envp)
   bkp_select_fd = 0;
   FD_ZERO(&bkp_read_descs);
 
-  if (config.dev) {
-    ret = pm_pcap_add_interface(&device.list[0], config.dev, NULL, psize);
+  if (config.pcap_if) {
+    ret = pm_pcap_add_interface(&device.list[0], config.pcap_if, NULL, psize);
     if (!ret) {
       cb_data.device = &device.list[0];
       device.num = 1;
@@ -1111,11 +1111,11 @@ int main(int argc,char **argv, char **envp)
   if (!config.pcap_interfaces_map) {
     for (;;) {
       if (!device.list[0].active) {
-	Log(LOG_WARNING, "WARN ( %s/core ): [%s] has become unavailable; throttling ...\n", config.name, config.dev);
+	Log(LOG_WARNING, "WARN ( %s/core ): [%s] has become unavailable; throttling ...\n", config.name, config.pcap_if);
 	throttle_loop:
 	sleep(PCAP_RETRY_PERIOD); /* XXX: user defined ? */
 
-	if ((device.list[0].dev_desc = pm_pcap_open(config.dev, psize, config.promisc, 1000, config.pcap_protocol, config.pcap_direction, errbuf)) == NULL)
+	if ((device.list[0].dev_desc = pm_pcap_open(config.pcap_if, psize, config.promisc, 1000, config.pcap_protocol, config.pcap_direction, errbuf)) == NULL)
 	  goto throttle_loop;
 
 	pcap_setfilter(device.list[0].dev_desc, &filter);
@@ -1127,7 +1127,7 @@ int main(int argc,char **argv, char **envp)
       pcap_close(device.list[0].dev_desc);
 
       if (config.pcap_savefile) {
-	if (config.sf_wait) {
+	if (config.pcap_sf_wait) {
 	  fill_pipe_buffer();
 	  Log(LOG_INFO, "INFO ( %s/core ): finished reading PCAP capture file\n", config.name);
 	  wait(NULL);
