@@ -1112,15 +1112,11 @@ int main(int argc,char **argv, char **envp)
     for (;;) {
       if (!device.list[0].active) {
 	Log(LOG_WARNING, "WARN ( %s/core ): [%s] has become unavailable; throttling ...\n", config.name, config.pcap_if);
-	throttle_loop:
-	sleep(PCAP_RETRY_PERIOD); /* XXX: user defined ? */
-
-	if ((device.list[0].dev_desc = pm_pcap_open(config.pcap_if, psize, config.promisc, 1000, config.pcap_protocol, config.pcap_direction, errbuf)) == NULL)
-	  goto throttle_loop;
-
-	pcap_setfilter(device.list[0].dev_desc, &filter);
-	device.list[0].active = TRUE;
-	device.list[0].pcap_if = NULL;
+	ret = pm_pcap_add_interface(&device.list[0], config.pcap_if, NULL, psize);
+	if (!ret) {
+	  cb_data.device = &device.list[0];
+	  device.num = 1;
+	}
       }
 
       pcap_loop(device.list[0].dev_desc, -1, pcap_cb, (u_char *) &cb_data);
