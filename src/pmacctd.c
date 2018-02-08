@@ -932,7 +932,7 @@ int main(int argc,char **argv, char **envp)
   if (!strlen(config_file)) config.clbuf = copy_argv(&argv[optind]);
 
   if ((config.pcap_if || config.pcap_interfaces_map) && config.pcap_savefile) {
-    Log(LOG_ERR, "ERROR ( %s/core ): interface (-i) pcap_interfaces_map and pcap_savefile (-I) directives are mutually exclusive. Exiting.\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core ): interface (-i), pcap_interfaces_map and pcap_savefile (-I) directives are mutually exclusive. Exiting.\n", config.name);
     exit_all(1);
   }
 

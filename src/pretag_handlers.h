@@ -172,6 +172,7 @@ EXT int PM_pretag_src_as_handler(struct packet_ptrs *, void *, void *);
 EXT int PM_pretag_dst_as_handler(struct packet_ptrs *, void *, void *);
 EXT int PM_pretag_input_handler(struct packet_ptrs *, void *, void *);
 EXT int PM_pretag_output_handler(struct packet_ptrs *, void *, void *);
+EXT int PM_pretag_direction_handler(struct packet_ptrs *, void *, void *);
 
 EXT int BPAS_bgp_nexthop_handler(struct packet_ptrs *, void *, void *);
 EXT int BPAS_bgp_peer_dst_as_handler(struct packet_ptrs *, void *, void *);

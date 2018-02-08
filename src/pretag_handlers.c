@@ -713,6 +713,7 @@ int PT_map_direction_handler(char *filename, struct id_entry *e, char *value, st
 
   if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_direction_handler;
   else if (config.acct_type == ACCT_NF) e->func[x] = pretag_direction_handler;
+  else if (config.acct_type == ACCT_PM) e->func[x] = PM_pretag_direction_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_DIRECTION;
 
   return FALSE;
@@ -2366,6 +2367,14 @@ int PM_pretag_output_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct id_entry *entry = e;
 
   if (entry->key.output.n == pptrs->ifindex_out) return (FALSE | entry->key.output.neg);
+  else return (TRUE ^ entry->key.output.neg);
+}
+
+int PM_pretag_direction_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+
+  if (entry->key.direction.n == pptrs->direction) return (FALSE | entry->key.output.neg);
   else return (TRUE ^ entry->key.output.neg);
 }
 
