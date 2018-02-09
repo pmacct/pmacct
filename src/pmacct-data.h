@@ -532,6 +532,7 @@ static const struct _dictionary_line dictionary[] = {
   {"uacctd_ext_sampling_rate", cfg_key_pmacctd_ext_sampling_rate},
   {"uacctd_stitching", cfg_key_nfacctd_stitching},
   {"uacctd_renormalize", cfg_key_sfacctd_renormalize},
+  {"uacctd_direction", cfg_key_pcap_direction},
   {"telemetry_daemon", cfg_key_telemetry_daemon},
   {"telemetry_daemon_port_tcp", cfg_key_telemetry_port_tcp},
   {"telemetry_daemon_port_udp", cfg_key_telemetry_port_udp},
