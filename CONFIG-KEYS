@@ -157,8 +157,7 @@ DEFAULT:	none
 KEY:		pcap_protocol [GLOBAL, PMACCTD_ONLY]
 DESC:		If set, specifies a specific packet socket protocol value to limit packet capture
 		to (for example, 0x0800 = IPv4). This option is only supported if pmacct was built
-		against a version of libpcap that supports pcap_set_protocol(), and it only applies
-		to pmacctd.
+		against a version of libpcap that supports pcap_set_protocol().
 DEFAULT:	none
 
 KEY:		snaplen (-L) [GLOBAL, NO_NFACCTD, NO_SFACCTD]
@@ -381,6 +380,32 @@ DESC:           If set to true, this option will cause the daemon to wait indefi
 		processing  the supplied libpcap savefile (pcap_savefile). This is particularly useful
 		when inserting fixed amounts of data into memory tables.
 DEFAULT:        false
+
+KEY:		[ pcap_direction | uacctd_direction ] [GLOBAL, NO_NFACCTD, NO_SFACCTD] 
+VALUES:		[ "in", "out" ]
+DESC:		Defines the traffic capturing direction with two possible values, "in" and "out". In
+		pmacctd this is used to determine which primitive to populate, whether in_iface or
+		out_iface with the pcap_ifindex value. In addition, this allows to tag data basing
+		on direction in pre_tag_map. In uacctd the only functionality is the latter of the
+		two. 
+DEFAULT:	none
+
+KEY:		pcap_ifindex [GLOBAL, PMACCTD_ONLY]
+VALUES:		[ "sys", "hash", "map", "none" ]
+DESC:		Defines how to source the ifindex of the capturing interface. If "sys" then a
+		if_nametoindex() call is triggered to the underlying OS and the result is used; if
+		"hash" an hashing algorithm is used against the interface name to generate a unique
+		number per interface; if "map" then ifindex definitions are expected as part of a
+		pcap_interfaces_map (see below). 
+DEFAULT:	none
+
+KEY:		pcap_interfaces_map [GLOBAL, PMACCTD_ONLY]
+DESC:		Allows to listen for traffic data on multiple interfaces (compared to pcap_interface
+		where only a single interface can be defined). The map allows to define also ifindex
+		and capturing direction on a per-interface basis. The map can be reloaded at runtime
+		by sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd"). Sample map in
+                examples/pcap_interfaces.map.example .
+DEFAULT:	none
 
 KEY:		promisc (-N) [GLOBAL, PMACCTD_ONLY]
 VALUES:		[ true | false ]
