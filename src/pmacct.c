@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -103,7 +103,6 @@ void usage_client(char *prog)
   printf("  -E\tSet sparator for CSV format\n");
   printf("  -I\tSet timestamps in 'since Epoch' format\n");
   printf("  -u\tLeave IP protocols in numerical format\n");
-  printf("  -x\tPrint BGP communities (standard, extended) in the same field (temporary, 1.5 and 1.6.0 compatible)\n");
   printf("  -0\tAlways set timestamps to UTC (even if the timezone configured on the system is different)\n"); 
   printf("  -V\tPrint version and exit\n");
   printf("\n");
