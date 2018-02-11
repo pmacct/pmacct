@@ -1,0 +1,21 @@
+!
+! pcap_interfaces_map
+!
+! File syntax is key-based. Read full syntax rules in 'pretag.map.example' in
+! this same directory.
+!
+! pmacctd: mandatory keys: ifname.
+!
+! list of currently supported keys follows:
+!
+! 'ifname'		MATCH: name of the interface, ie. eth0, ens1, lo, etc.
+! 'ifindex'		SET: interface index. A positive 32-bit integer value
+!			is expected.
+! 'direction'		SET: packet sampling direction. Possible values are
+'			'in' and 'out'. It influences whether ifindex should
+!			be used to populate in_iface or out_iface.
+!
+! Examples:
+!
+ifindex=100	ifname=eth0	direction=in
+ifindex=200	ifname=ens1	direction=in

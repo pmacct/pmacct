@@ -7,11 +7,11 @@
 !
 ! list of currently supported keys follows:
 !
-! 'name'		Primitive name: it will be used as identifier of the
-!			primitive itself and hence must be unique. This name
-!			can be used in 'aggregate' statements to include the
-!			primitive as part of plugin aggregation methods.
-! 'packet_ptr'		Applies to pmacctd (libpcap) and uacctd (NFLOG):
+! 'name'		SET: Primitive name: it will be used as identifier of
+!			the primitive itself and hence must be unique. This
+!			name can be used in 'aggregate' statements to include
+!			the primitive as part of plugin aggregation methods.
+! 'packet_ptr'		MATCH: Applies to pmacctd (libpcap) and uacctd (NFLOG):
 !			defines the base pointer in the packet where to read
 !			the primitive value; intuitively, this is to be used
 !			in conjunction with 'len'. The supported syntax is:
@@ -22,16 +22,16 @@
 !			decimal or hex format. 'offset' is optional key and
 !			is expected as a positive decimal number. A maximum
 !			of 8 'packet_ptr' definitions are allowed per entry. 
-! 'field_type'		Applies to NetFlow v9/IPFIX: defines which field type
-!			(Element ID) to select. Optionally, a PEN value can be
-!			supplied aswell via the <PEN>:<value> format. As a
+! 'field_type'		MATCH: Applies to NetFlow v9/IPFIX: defines which field
+!			type (Element ID) to select. Optionally, a PEN value can
+!			be supplied aswell via the <PEN>:<value> format. As a
 !			reference the IPFIX standard IE definition table can be
 !			used: http://www.iana.org/assignments/ipfix/ipfix.xhtml
-! 'len'			Length of the primitive, in bytes. 'vlen' word defines
-!			a primitive to be variable length. In pmacctd and 
-!			uacctd only strings can be defined vlen; in nfacctd
+! 'len'			MATCH: Length of the primitive, in bytes. 'vlen' word
+!			defines a primitive to be variable length. In pmacctd
+!			and  uacctd only strings can be defined vlen; in nfacctd
 !			string and raw semantics can be defined vlen.
-! 'semantics'		Specifies semantics of the primitive. Allowed values
+! 'semantics'		SET: Specifies semantics of the primitive. Allowed values
 !			are: 'u_int' (unsigned integer [1,2,4,8 bytes long],
 !			presented as decimal number), 'hex' (unsigned integer
 !			[1,2,4,8 bytes long], presented as hexadecimal number),

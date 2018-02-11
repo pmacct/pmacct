@@ -6,12 +6,12 @@
 !
 ! list of currently supported keys follow:
 !
-! 'bgp_dst'             LOOKUP: IPv4/IPv6 address and port of the BGP collector
+! 'bgp_dst'             SET: IPv4/IPv6 address and port of the BGP collector
 !			to cross-connect incoming (bgp_src) BGP session to.
 ! 'bgp_src'		MATCH: compared against the IPv4/IPv6 address (not BGP
 !			Router ID) of an incoming BGP session from a BGP peer.
 !
-! A couple of straightforward examples follow:
+! Examples:
 !
 ! Cross-connect the incoming BGP session from 192.168.0.1 to 10.0.0.1:17901
 ! and the session from 192.168.0.2 to 10.0.0.1:17902.

@@ -27,7 +27,7 @@
 !			against field types #234 and #235.
 ! 'mpls_label_bottom'	MATCH: MPLS bottom label value.
 !
-! A couple of straightforward examples follow.  
+! Examples:
 !
 ! Maps input interface 100 of router 192.168.1.1 to RD 0:65512:1 - ie.
 ! a BGP/MPLS VPN Route Distinguisher encoded as type #0 according to

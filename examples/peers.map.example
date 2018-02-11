@@ -32,7 +32,7 @@
 !                       IE #58, in sFlow against in/out VLAN ID fields part of
 !                       the Extended Switch object.
 !
-! A few examples follow.
+! Examples:
 !
 ! Private peering with AS12345 on router with IP address 192.168.2.1, SNMP ifIndex 7 
 !
