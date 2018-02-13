@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -253,6 +253,9 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
 
   if (wtc_2 & COUNT_EXPORT_PROTO_VERSION)
     avro_schema_record_field_append(schema, "export_proto_version", avro_schema_long());
+
+  if (wtc_2 & COUNT_EXPORT_PROTO_SYSID)
+    avro_schema_record_field_append(schema, "export_proto_sysid", avro_schema_long());
 
   if (config.cpptrs.num > 0) {
     avro_schema_record_field_append(
@@ -796,6 +799,11 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
   if (wtc_2 & COUNT_EXPORT_PROTO_VERSION) {
     check_i(avro_value_get_by_name(&value, "export_proto_version", &field, NULL));
     check_i(avro_value_set_long(&field, pbase->export_proto_version));
+  }
+
+  if (wtc_2 & COUNT_EXPORT_PROTO_SYSID) {
+    check_i(avro_value_get_by_name(&value, "export_proto_sysid", &field, NULL));
+    check_i(avro_value_set_long(&field, pbase->export_proto_sysid));
   }
 
   /* all custom primitives printed here */

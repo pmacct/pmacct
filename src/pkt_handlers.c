@@ -721,6 +721,12 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    if (channels_list[index].aggregation_2 & COUNT_EXPORT_PROTO_SYSID) {
+      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_sysid_handler;
+      else primitives--;
+      primitives++;
+    }
+
     /* if cpptrs.num > 0 one or multiple custom primitives are defined */
     if (channels_list[index].plugin->cfg.cpptrs.num) {
       if (config.acct_type == ACCT_PM) {
@@ -3308,7 +3314,6 @@ void NF_sequence_number_handler(struct channels_list_entry *chptr, struct packet
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
-  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch(hdr->version) {
   case 10:
@@ -3332,6 +3337,29 @@ void NF_version_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
 
   pdata->primitives.export_proto_version = hdr->version;
+}
+
+void NF_sysid_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+
+  switch(hdr->version) {
+  case 10:
+    pdata->primitives.export_proto_sysid = ntohl(((struct struct_header_ipfix *) pptrs->f_header)->source_id);
+    break;
+  case 9:
+    pdata->primitives.export_proto_sysid = ntohl(((struct struct_header_v9 *) pptrs->f_header)->source_id);
+    break;
+  case 8:
+    pdata->primitives.export_proto_sysid = ((struct struct_header_v8 *) pptrs->f_header)->engine_id;
+    /* XXX: engine type? */
+    break;
+  default:
+    pdata->primitives.export_proto_sysid = ((struct struct_header_v5 *) pptrs->f_header)->engine_id;
+    /* XXX: engine type? */
+    break;
+  }
 }
 
 void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

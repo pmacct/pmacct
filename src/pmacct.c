@@ -242,8 +242,9 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     printf("TIMESTAMP_START                ");
     printf("TIMESTAMP_END                  ");
     printf("TIMESTAMP_ARRIVAL              ");
-    printf("SEQNO       ");
+    printf("EXPORT_PROTO_SEQNO  ");
     printf("EXPORT_PROTO_VERSION  ");
+    printf("EXPORT_PROTO_SYSID  ");
 
     /* all custom primitives printed here */
     {
@@ -368,6 +369,7 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) printf("TIMESTAMP_ARRIVAL              "); 
     if (what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) printf("EXPORT_PROTO_SEQNO  "); 
     if (what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) printf("EXPORT_PROTO_VERSION  "); 
+    if (what_to_count_2 & COUNT_EXPORT_PROTO_SYSID) printf("EXPORT_PROTO_SYSID  "); 
 
     /* all custom primitives printed here */
     {
@@ -482,8 +484,9 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     printf("%sTIMESTAMP_START", write_sep(sep, &count));
     printf("%sTIMESTAMP_END", write_sep(sep, &count));
     printf("%sTIMESTAMP_ARRIVAL", write_sep(sep, &count));
-    printf("%sSEQNO", write_sep(sep, &count));
+    printf("%sEXPORT_PROTO_SEQNO", write_sep(sep, &count));
     printf("%sEXPORT_PROTO_VERSION", write_sep(sep, &count));
+    printf("%sEXPORT_PROTO_SYSID", write_sep(sep, &count));
     /* all custom primitives printed here */
     {
       char cp_str[SRVBUFLEN];
@@ -590,6 +593,7 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     if (what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) printf("%sTIMESTAMP_ARRIVAL", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) printf("%sEXPORT_PROTO_SEQNO", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) printf("%sEXPORT_PROTO_VERSION", write_sep(sep, &count));
+    if (what_to_count_2 & COUNT_EXPORT_PROTO_SYSID) printf("%sEXPORT_PROTO_SYSID", write_sep(sep, &count));
 
     /* all custom primitives printed here */
     {
@@ -1047,6 +1051,10 @@ int main(int argc,char **argv)
           count_token_int[count_index] = COUNT_INT_EXPORT_PROTO_VERSION;
           what_to_count_2 |= COUNT_EXPORT_PROTO_VERSION;
         }
+        else if (!strcmp(count_token[count_index], "export_proto_sysid")) {
+          count_token_int[count_index] = COUNT_INT_EXPORT_PROTO_SYSID;
+          what_to_count_2 |= COUNT_EXPORT_PROTO_SYSID;
+	}
         else if (!strcmp(count_token[count_index], "label")) {
           count_token_int[count_index] = COUNT_INT_LABEL;
           what_to_count_2 |= COUNT_LABEL;
@@ -1927,6 +1935,11 @@ int main(int argc,char **argv)
 
           request.data.export_proto_version = strtoul(match_string_token, &endptr, 10);
         }
+        else if (!strcmp(count_token[match_string_index], "export_proto_sysid")) {
+          char *endptr;
+
+          request.data.export_proto_sysid = strtoul(match_string_token, &endptr, 10);
+        }
 	else if (!strcmp(count_token[match_string_index], "label")) {
 	  // XXX: to be supported in future
           printf("ERROR: -M and -N are not supported (yet) against variable-length primitives (ie. label)\n");
@@ -2718,6 +2731,11 @@ int main(int argc,char **argv)
         if (!have_wtc || (what_to_count_2 & COUNT_EXPORT_PROTO_VERSION)) {
           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-20u  ", acc_elem->primitives.export_proto_version);
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), acc_elem->primitives.export_proto_version);
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_EXPORT_PROTO_SYSID)) {
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-18u  ", acc_elem->primitives.export_proto_sysid);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), acc_elem->primitives.export_proto_sysid);
         }
 
         /* all custom primitives printed here */
@@ -3571,6 +3589,8 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   if (wtc_2 & COUNT_EXPORT_PROTO_SEQNO) json_object_set_new_nocheck(obj, "export_proto_seqno", json_integer((json_int_t)pbase->export_proto_seqno));
 
   if (wtc_2 & COUNT_EXPORT_PROTO_VERSION) json_object_set_new_nocheck(obj, "export_proto_version", json_integer((json_int_t)pbase->export_proto_version));
+
+  if (wtc_2 & COUNT_EXPORT_PROTO_SYSID) json_object_set_new_nocheck(obj, "export_proto_sysid", json_integer((json_int_t)pbase->export_proto_sysid));
 
   /* all custom primitives printed here */
   {

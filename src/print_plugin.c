@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -832,6 +832,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
         if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) fprintf(f, "%-18u  ", data->export_proto_seqno);
         if (config.what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) fprintf(f, "%-20u  ", data->export_proto_version);
+        if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SYSID) fprintf(f, "%-18u  ", data->export_proto_sysid);
 
         /* all custom primitives printed here */
         {
@@ -1174,6 +1175,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
         if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) fprintf(f, "%s%u", write_sep(sep, &count), data->export_proto_seqno);
         if (config.what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) fprintf(f, "%s%u", write_sep(sep, &count), data->export_proto_version);
+        if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SYSID) fprintf(f, "%s%u", write_sep(sep, &count), data->export_proto_sysid);
   
         /* all custom primitives printed here */
         {
@@ -1399,6 +1401,7 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   }
   if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) fprintf(f, "EXPORT_PROTO_SEQNO  ");
   if (config.what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) fprintf(f, "EXPORT_PROTO_VERSION  ");
+  if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SYSID) fprintf(f, "EXPORT_PROTO_SYSID  ");
 
   /* all custom primitives printed here */
   {
@@ -1506,6 +1509,7 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   }
   if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) fprintf(f, "%sEXPORT_PROTO_SEQNO", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) fprintf(f, "%sEXPORT_PROTO_VERSION", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SYSID) fprintf(f, "%sEXPORT_PROTO_SYSID", write_sep(sep, &count));
 
   /* all custom primitives printed here */
   { 

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -826,6 +826,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
 
       if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) bson_append_int(bson_elem, "export_proto_seqno", data->export_proto_seqno);
       if (config.what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) bson_append_int(bson_elem, "export_proto_version", data->export_proto_version);
+      if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SYSID) bson_append_int(bson_elem, "export_proto_sysid", data->export_proto_sysid);
   
       /* all custom primitives printed here */
       {

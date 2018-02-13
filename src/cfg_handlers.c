@@ -268,6 +268,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "label")) cfg_set_aggregate(filename, value, COUNT_INT_LABEL, count_token);
     else if (!strcmp(count_token, "export_proto_seqno")) cfg_set_aggregate(filename, value, COUNT_INT_EXPORT_PROTO_SEQNO, count_token);
     else if (!strcmp(count_token, "export_proto_version")) cfg_set_aggregate(filename, value, COUNT_INT_EXPORT_PROTO_VERSION, count_token);
+    else if (!strcmp(count_token, "export_proto_sysid")) cfg_set_aggregate(filename, value, COUNT_INT_EXPORT_PROTO_SYSID, count_token);
     else if (!strcmp(count_token, "src_host_pocode")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_HOST_POCODE, count_token);
     else if (!strcmp(count_token, "dst_host_pocode")) cfg_set_aggregate(filename, value, COUNT_INT_DST_HOST_POCODE, count_token);
     else if (!strcmp(count_token, "tunnel_src_host")) cfg_set_aggregate(filename, value, COUNT_INT_TUNNEL_SRC_HOST, count_token);

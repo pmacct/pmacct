@@ -113,6 +113,7 @@ EXT void NF_timestamp_end_handler(struct channels_list_entry *, struct packet_pt
 EXT void NF_timestamp_arrival_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_sequence_number_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_version_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_sysid_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_custom_primitives_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_counters_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_counters_map_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

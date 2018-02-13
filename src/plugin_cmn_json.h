@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -109,6 +109,7 @@ EXT void compose_json_timestamp_arrival(json_t *, struct chained_cache *);
 EXT void compose_json_timestamp_stitching(json_t *, struct chained_cache *);
 EXT void compose_json_export_proto_seqno(json_t *, struct chained_cache *);
 EXT void compose_json_export_proto_version(json_t *, struct chained_cache *);
+EXT void compose_json_export_proto_sysid(json_t *, struct chained_cache *);
 EXT void compose_json_custom_primitives(json_t *, struct chained_cache *);
 EXT void compose_json_history(json_t *, struct chained_cache *);
 EXT void compose_json_flows(json_t *, struct chained_cache *);

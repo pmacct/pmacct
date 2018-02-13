@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -385,6 +385,11 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
 
   if (wtc_2 & COUNT_EXPORT_PROTO_VERSION) {
     cjhandler[idx] = compose_json_export_proto_version;
+    idx++;
+  }
+
+  if (wtc_2 & COUNT_EXPORT_PROTO_SYSID) {
+    cjhandler[idx] = compose_json_export_proto_sysid;
     idx++;
   }
 
@@ -972,6 +977,11 @@ void compose_json_export_proto_seqno(json_t *obj, struct chained_cache *cc)
 void compose_json_export_proto_version(json_t *obj, struct chained_cache *cc)
 {
   json_object_set_new_nocheck(obj, "export_proto_version", json_integer((json_int_t)cc->primitives.export_proto_version));
+}
+
+void compose_json_export_proto_sysid(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "export_proto_sysid", json_integer((json_int_t)cc->primitives.export_proto_sysid));
 }
 
 void compose_json_custom_primitives(json_t *obj, struct chained_cache *cc)

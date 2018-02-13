@@ -1225,6 +1225,7 @@ int sql_evaluate_primitives(int primitive)
 
     if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) what_to_count_2 |= COUNT_EXPORT_PROTO_SEQNO;
     if (config.what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) what_to_count_2 |= COUNT_EXPORT_PROTO_VERSION;
+    if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SYSID) what_to_count_2 |= COUNT_EXPORT_PROTO_SYSID;
     if (config.what_to_count_2 & COUNT_LABEL) what_to_count_2 |= COUNT_LABEL;
 
 #if defined (WITH_NDPI)
@@ -2698,6 +2699,20 @@ int sql_evaluate_primitives(int primitive)
     strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
     values[primitive].handler = where[primitive].handler = count_export_proto_version_handler;
     values[primitive].type = where[primitive].type = COUNT_INT_EXPORT_PROTO_VERSION;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_EXPORT_PROTO_SYSID) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "export_proto_sysid", SPACELEFT(insert_clause));
+    strncat(where[primitive].string, "export_proto_sysid=%u", SPACELEFT(where[primitive].string));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    values[primitive].handler = where[primitive].handler = count_export_proto_sysid_handler;
+    values[primitive].type = where[primitive].type = COUNT_INT_EXPORT_PROTO_SYSID;
     primitive++;
   }
 
