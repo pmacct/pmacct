@@ -723,6 +723,7 @@ void evaluate_packet_handlers()
 
     if (channels_list[index].aggregation_2 & COUNT_EXPORT_PROTO_SYSID) {
       if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_sysid_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_sysid_handler;
       else primitives--;
       primitives++;
     }
@@ -5135,6 +5136,14 @@ void SF_version_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   pdata->primitives.export_proto_version = sample->datagramVersion;
+}
+
+void SF_sysid_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  pdata->primitives.export_proto_sysid = sample->agentSubId;
 }
 
 void SF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
