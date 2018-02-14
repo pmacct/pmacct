@@ -155,6 +155,9 @@ CHAR fields because making use of IP prefix labels, transparently to pmacct.
   * timestamp_max => timestamp_max, timestamp_max_residual:
     - timestamp_max timestamp without time zone NOT NULL DEFAULT '0000-01-01 00:00:00', see README.timestamp)
     - timestamp_max_residual INT NOT NULL DEFAULT 0, see README.timestamp)
+  * export_proto_seqno => export_proto_seqno (INT NOT NULL DEFAULT 0, see README.export_proto)
+  * export_proto_version => export_proto_version (SMALLINT NOT NULL DEFAULT 0, see README.export_proto)
+  * export_proto_sysid => export_proto_sysid (INT NOT NULL DEFAULT 0, see README.export_proto)
 
 - If not using COPY statements (sql_use_copy, sql_dont_try_update both enabled)
   'packets' and 'bytes' counters need to be defined as part of the SQL schema

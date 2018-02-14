@@ -15,6 +15,10 @@ the SQL schema:
   - "export_proto_version INT(2) UNSIGNED NOT NULL," to declare the field itself
   - "PRIMARY KEY (..., export_proto_version, ...)" to put it in the primary key
 
+* export_proto_sysid field:
+  - "export_proto_sysid INT(4) UNSIGNED NOT NULL," to declare the field itself
+  - "PRIMARY KEY (..., export_proto_sysid, ...)" to put it in the primary key
+
 The primitive is not declared as part of any default table version; yet will
 not fail version checks which are enabled when 'sql_optimize_clauses' feature
 is disabled.
