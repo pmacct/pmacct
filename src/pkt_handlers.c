@@ -2080,8 +2080,8 @@ void NF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
 
   /* 1) NF9_EXPORTER_IPV[46]_ADDRESS from NetFlow v9/IPFIX options */
-  if (entry->agent_addr.family) {
-    memcpy(&pbgp->peer_src_ip, &entry->agent_addr, sizeof(struct host_addr));
+  if (entry->exp_addr.family) {
+    memcpy(&pbgp->peer_src_ip, &entry->exp_addr, sizeof(struct host_addr));
   }
   /* 2) Socket IP address */
   else {

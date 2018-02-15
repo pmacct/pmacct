@@ -1560,10 +1560,10 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  if (entry) {
 	    if (tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].len) {
-	      raw_to_addr(&entry->agent_addr, pkt+tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].off, AF_INET);
+	      raw_to_addr(&entry->exp_addr, pkt+tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].off, AF_INET);
 	    }
 	    else if (tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].len) {
-	      raw_to_addr(&entry->agent_addr, pkt+tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].off, AF_INET6);
+	      raw_to_addr(&entry->exp_addr, pkt+tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].off, AF_INET6);
 	    }
 	  }
 	}
