@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -18,8 +18,6 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
-
-/* Netflow stuff */
 
 /*  NetFlow Export Version 1 Header Format  */
 struct struct_header_v1  {
@@ -556,6 +554,8 @@ struct data_hdr_v9 {
 #define NF9_POST_DOT1QVLANID		254
 #define NF9_POST_DOT1QCVLANID		255
 #define NF9_ETHERTYPE			256
+/* ... */
+#define NF9_DATALINK_FRAME_SECTION	315
 /* ... */
 #define NF9_OBSERVATION_TIME_SEC	322
 #define NF9_OBSERVATION_TIME_MSEC	323

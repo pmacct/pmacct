@@ -48,6 +48,13 @@ void evaluate_packet_handlers()
     primitives = 0;
     memset(&channels_list[index].phandler, 0, N_PRIMITIVES);
 
+    {
+      if (config.acct_type == ACCT_NF) {
+	channels_list[index].phandler[primitives] = NF_datalink_frame_section_handler;
+	primitives++;
+      }
+    }
+
 #if defined (HAVE_L2)
     if (channels_list[index].aggregation & (COUNT_SRC_MAC|COUNT_SUM_MAC)) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = src_mac_handler;
@@ -1508,6 +1515,37 @@ void custom_primitives_handler(struct channels_list_entry *chptr, struct packet_
 	}
       }
     }
+  }
+}
+
+void NF_datalink_frame_section_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len) {
+      struct pcap_pkthdr pkthdr;
+
+      memset(&pkthdr, 0, sizeof(struct pcap_pkthdr));
+      pkthdr.caplen = tpl->tpl[NF9_DATALINK_FRAME_SECTION].len;
+
+      pptrs->pkthdr = (struct pcap_pkthdr *) &pkthdr;
+      pptrs->packet_ptr = (u_char *) pptrs->f_data+tpl->tpl[NF9_DATALINK_FRAME_SECTION].off;
+
+      /* XXX: Ethernet assumption */
+      eth_handler(&pkthdr, pptrs);
+      if (pptrs->iph_ptr) {
+	((*pptrs->l3_handler)(pptrs));
+        // XXX
+      }
+    }
+    break;
+  default:
+    break;
   }
 }
 

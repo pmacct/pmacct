@@ -121,6 +121,7 @@ EXT void NF_cust_tag_handler(struct channels_list_entry *, struct packet_ptrs *,
 EXT void NF_cust_tag2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_cust_label_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_tee_payload_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_datalink_frame_section_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 
 EXT void bgp_ext_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void nfprobe_bgp_ext_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
