@@ -1523,10 +1523,18 @@ void NF_datalink_frame_section_handler(struct channels_list_entry *chptr, struct
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int16_t frame_type = NF9_DL_F_TYPE_UNKNOWN, t16;
 
   switch(hdr->version) {
   case 10:
   case 9:
+    if (tpl->tpl[NF9_DATALINK_FRAME_TYPE].len == 2) {
+      memcpy(&t16, pptrs->f_data+tpl->tpl[NF9_DATALINK_FRAME_TYPE].off, 2);
+      frame_type = ntohs(t16);
+    }
+    /* XXX: in case of no NF9_DATALINK_FRAME_TYPE, let's assume Ethernet */
+    else frame_type = NF9_DL_F_TYPE_ETHERNET; 
+
     if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len) {
       struct pcap_pkthdr pkthdr;
 
@@ -1536,11 +1544,19 @@ void NF_datalink_frame_section_handler(struct channels_list_entry *chptr, struct
       pptrs->pkthdr = (struct pcap_pkthdr *) &pkthdr;
       pptrs->packet_ptr = (u_char *) pptrs->f_data+tpl->tpl[NF9_DATALINK_FRAME_SECTION].off;
 
-      /* XXX: Ethernet assumption */
-      eth_handler(&pkthdr, pptrs);
-      if (pptrs->iph_ptr) {
-	((*pptrs->l3_handler)(pptrs));
-        // XXX
+      if (frame_type == NF9_DL_F_TYPE_ETHERNET) {
+	eth_handler(&pkthdr, pptrs);
+	if (pptrs->iph_ptr) {
+	  if ((*pptrs->l3_handler)(pptrs)) {
+#if defined (WITH_NDPI)
+	    if (config.classifier_ndpi && pm_ndpi_wfl) {
+	      pptrs->ndpi_class = pm_ndpi_workflow_process_packet(pm_ndpi_wfl, pptrs);
+	    }
+#endif
+	    if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP);
+	    if (config.nfacctd_bmp) bmp_srcdst_lookup(pptrs);
+	  }
+	}
       }
     }
     break;

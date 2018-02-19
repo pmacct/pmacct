@@ -562,6 +562,8 @@ struct data_hdr_v9 {
 /* ... */
 #define NF9_LAYER2OCTETDELTACOUNT	352
 /* ... */
+#define NF9_DATALINK_FRAME_TYPE		408
+/* ... */
 #define NF9_ASA_XLATE_IPV4_SRC_ADDR	40001
 #define NF9_ASA_XLATE_IPV4_DST_ADDR	40002
 #define NF9_ASA_XLATE_L4_SRC_PORT	40003
@@ -589,6 +591,11 @@ struct data_hdr_v9 {
 #define NF9_OPT_SCOPE_LC		3
 #define NF9_OPT_SCOPE_CACHE		4
 #define NF9_OPT_SCOPE_TPL		5
+
+/* dataLinkFrameType */
+#define NF9_DL_F_TYPE_UNKNOWN		0
+#define NF9_DL_F_TYPE_ETHERNET		1
+#define NF9_DL_F_TYPE_802DOT11		2
 
 /* CUSTOM TYPES START HERE: supported in IPFIX only with pmacct PEN */
 #define NF9_CUST_TAG                    1

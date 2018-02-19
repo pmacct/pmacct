@@ -511,6 +511,7 @@ int main(int argc,char **argv, char **envp)
 	  exit(1);
 	}
 
+#if defined (WITH_NDPI)
 	if (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS) {
           config.handle_fragments = TRUE;
           config.classifier_ndpi = TRUE;
@@ -520,6 +521,7 @@ int main(int argc,char **argv, char **envp)
 	  Log(LOG_ERR, "ERROR ( %s/%s ): 'class_legacy' and 'class' primitives are mutual exclusive. Exiting...\n\n", list->name, list->type.string);
 	  exit(1);
 	}
+#endif
 
 	list->cfg.type_id = list->type.id;
 	bgp_config_checks(&list->cfg);
