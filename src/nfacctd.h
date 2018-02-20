@@ -793,6 +793,7 @@ EXT void NF_compute_once();
 
 EXT char *nfv578_check_status(struct packet_ptrs *);
 EXT char *nfv9_check_status(struct packet_ptrs *, u_int32_t, u_int32_t, u_int32_t, u_int8_t);
+EXT void nfv9_datalink_frame_section_handler(struct packet_ptrs *);
 
 EXT struct template_cache tpl_cache;
 EXT struct v8_handler_entry v8_handlers[15];

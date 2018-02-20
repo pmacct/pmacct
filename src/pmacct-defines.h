@@ -502,6 +502,7 @@ typedef u_int32_t pm_counter_t;
 #define NF9_FTYPE_TRAFFIC_IPV6		1
 #define NF9_FTYPE_IPV4                  1
 #define NF9_FTYPE_IPV6                  2
+#define NF9_FTYPE_DLFS			3
 #define NF9_FTYPE_VLAN                  5
 #define NF9_FTYPE_VLAN_IPV4             6
 #define NF9_FTYPE_VLAN_IPV6             7 

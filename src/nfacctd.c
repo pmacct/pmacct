@@ -2167,6 +2167,19 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  memcpy(&pptrs->l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
 
           exec_plugins(pptrs, req);
+	case NF9_FTYPE_DLFS:
+	  nfv9_datalink_frame_section_handler(pptrs);
+
+	  if (config.nfacctd_isis) isis_srcdst_lookup(pptrs);
+	  if (config.nfacctd_bgp_to_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, &pptrs->bta2);
+	  if (config.nfacctd_flow_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, pptrs, &pptrs->bitr, NULL);
+	  if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP);
+	  if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
+	  if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
+	  if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
+          if (config.nfacctd_bmp) bmp_srcdst_lookup(pptrs);
+          exec_plugins(pptrs, req);
+	  break;
 	default:
 	  break;
         }
@@ -2321,7 +2334,8 @@ u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_p
   u_int8_t have_ip_proto = FALSE;
 
   /* first round: event vs traffic */
-  if (!tpl->tpl[NF9_IN_BYTES].len && !tpl->tpl[NF9_OUT_BYTES].len && !tpl->tpl[NF9_FLOW_BYTES].len /* && packets? */) {
+  if (!tpl->tpl[NF9_IN_BYTES].len && !tpl->tpl[NF9_OUT_BYTES].len && !tpl->tpl[NF9_FLOW_BYTES].len &&
+      /* && packets? && */ !tpl->tpl[NF9_DATALINK_FRAME_SECTION].len) {
     ret = NF9_FTYPE_EVENT;
   }
   else {
@@ -2349,6 +2363,8 @@ u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_p
 	have_ip_proto - TRUE;
       }
     }
+
+    if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len) ret = NF9_FTYPE_DLFS;
   }
 
   /* second round: overrides */
@@ -2536,4 +2552,53 @@ pm_class_t NF_evaluate_classifiers(struct xflow_status_entry_class *entry, pm_cl
   }
 
   return 0;
+}
+
+void nfv9_datalink_frame_section_handler(struct packet_ptrs *pptrs)
+{
+  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int16_t frame_type = NF9_DL_F_TYPE_UNKNOWN, t16;
+
+  /* cleanups */
+  pptrs->pkthdr = NULL;
+  pptrs->packet_ptr = NULL;
+  pptrs->mac_ptr = NULL;
+  pptrs->vlan_ptr = NULL;
+  pptrs->mpls_ptr = NULL;
+  pptrs->iph_ptr = NULL;
+  pptrs->tlh_ptr = NULL;
+  pptrs->payload_ptr = NULL;
+  pptrs->l3_proto = FALSE;
+  pptrs->l4_proto = FALSE;
+
+  if (tpl->tpl[NF9_DATALINK_FRAME_TYPE].len == 2) {
+    memcpy(&t16, pptrs->f_data+tpl->tpl[NF9_DATALINK_FRAME_TYPE].off, 2);
+    frame_type = ntohs(t16);
+  }
+  /* XXX: in case of no NF9_DATALINK_FRAME_TYPE, let's assume Ethernet */
+  else frame_type = NF9_DL_F_TYPE_ETHERNET;
+
+  if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len) {
+    struct pcap_pkthdr pkthdr;
+
+    memset(&pkthdr, 0, sizeof(struct pcap_pkthdr));
+    pkthdr.caplen = tpl->tpl[NF9_DATALINK_FRAME_SECTION].len;
+
+    pptrs->pkthdr = (struct pcap_pkthdr *) &pkthdr;
+    pptrs->packet_ptr = (u_char *) pptrs->f_data+tpl->tpl[NF9_DATALINK_FRAME_SECTION].off;
+
+    if (frame_type == NF9_DL_F_TYPE_ETHERNET) {
+      eth_handler(&pkthdr, pptrs);
+      if (pptrs->iph_ptr) {
+	if ((*pptrs->l3_handler)(pptrs)) {
+#if defined (WITH_NDPI)
+	  if (config.classifier_ndpi && pm_ndpi_wfl) {
+	    pptrs->ndpi_class = pm_ndpi_workflow_process_packet(pm_ndpi_wfl, pptrs);
+	  }
+#endif
+	}
+      }
+    }
+  }
 }
