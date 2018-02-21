@@ -607,6 +607,20 @@ int gtp_tunnel_func(register struct packet_ptrs *pptrs)
   return ret;
 }
 
+void reset_index_pkt_ptrs(struct packet_ptrs *pptrs)
+{
+  pptrs->pkt_data_ptrs[CUSTOM_PRIMITIVE_PACKET_PTR] = NULL;
+  pptrs->pkt_data_ptrs[CUSTOM_PRIMITIVE_MAC_PTR] = NULL;
+  pptrs->pkt_data_ptrs[CUSTOM_PRIMITIVE_VLAN_PTR] = NULL;
+  pptrs->pkt_data_ptrs[CUSTOM_PRIMITIVE_MPLS_PTR] = NULL;
+  pptrs->pkt_data_ptrs[CUSTOM_PRIMITIVE_L3_PTR] = NULL;
+  pptrs->pkt_data_ptrs[CUSTOM_PRIMITIVE_L4_PTR] = NULL;
+  pptrs->pkt_data_ptrs[CUSTOM_PRIMITIVE_PAYLOAD_PTR] = NULL;
+
+  pptrs->pkt_proto[CUSTOM_PRIMITIVE_L3_PTR] = FALSE;
+  pptrs->pkt_proto[CUSTOM_PRIMITIVE_L4_PTR] = FALSE;
+}
+
 void set_index_pkt_ptrs(struct packet_ptrs *pptrs)
 {
   pptrs->pkt_data_ptrs[CUSTOM_PRIMITIVE_PACKET_PTR] = pptrs->packet_ptr;

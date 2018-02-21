@@ -3482,6 +3482,9 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
 	}
       }
     }
+
+    if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len) custom_primitives_handler(chptr, pptrs, data);
+
     break;
   default:
     break;

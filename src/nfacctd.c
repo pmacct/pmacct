@@ -2561,16 +2561,11 @@ void nfv9_datalink_frame_section_handler(struct packet_ptrs *pptrs)
   u_int16_t frame_type = NF9_DL_F_TYPE_UNKNOWN, t16;
 
   /* cleanups */
+  reset_index_pkt_ptrs(pptrs);
   pptrs->pkthdr = NULL;
-  pptrs->packet_ptr = NULL;
-  pptrs->mac_ptr = NULL;
-  pptrs->vlan_ptr = NULL;
-  pptrs->mpls_ptr = NULL;
-  pptrs->iph_ptr = NULL;
-  pptrs->tlh_ptr = NULL;
-  pptrs->payload_ptr = NULL;
-  pptrs->l3_proto = FALSE;
-  pptrs->l4_proto = FALSE;
+  pptrs->packet_ptr = pptrs->mac_ptr = pptrs->vlan_ptr = pptrs->mpls_ptr = NULL;
+  pptrs->iph_ptr = pptrs->tlh_ptr = pptrs->payload_ptr = NULL;
+  pptrs->l3_proto = pptrs->l4_proto = FALSE;
 
   if (tpl->tpl[NF9_DATALINK_FRAME_TYPE].len == 2) {
     memcpy(&t16, pptrs->f_data+tpl->tpl[NF9_DATALINK_FRAME_TYPE].off, 2);
@@ -2597,6 +2592,7 @@ void nfv9_datalink_frame_section_handler(struct packet_ptrs *pptrs)
 	    pptrs->ndpi_class = pm_ndpi_workflow_process_packet(pm_ndpi_wfl, pptrs);
 	  }
 #endif
+	  set_index_pkt_ptrs(pptrs);
 	}
       }
     }

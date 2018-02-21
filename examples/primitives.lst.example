@@ -11,13 +11,14 @@
 !			the primitive itself and hence must be unique. This
 !			name can be used in 'aggregate' statements to include
 !			the primitive as part of plugin aggregation methods.
-! 'packet_ptr'		MATCH: Applies to pmacctd (libpcap) and uacctd (NFLOG):
-!			defines the base pointer in the packet where to read
-!			the primitive value; intuitively, this is to be used
-!			in conjunction with 'len'. The supported syntax is:
-!			"<layer>:[<protocol value>]+[<offset>]". 'layer' keys 
-!			are: 'packet', 'mac', 'vlan', 'mpls', 'l3', 'l4' and
-!			'payload'; 'layer' keyword is mandatory. 'protocol
+! 'packet_ptr'		MATCH: Applies to pmacctd (libpcap), uacctd (NFLOG)
+!			and nfacctd (NetFlow v9/IPFIX dataLinkFrameSection
+!			IE #315): defines the base pointer in the packet where
+!			to read the primitive value; intuitively, this is to
+!			be used in conjunction with 'len'. The supported syntax
+!			is: "<layer>:[<protocol value>]+[<offset>]". 'layer'
+!			keys  are: 'packet', 'mac', 'vlan', 'mpls', 'l3', 'l4'
+!			and 'payload'; 'layer' keyword is mandatory. 'protocol
 !			value' is optional key and can be supplied in either
 !			decimal or hex format. 'offset' is optional key and
 !			is expected as a positive decimal number. A maximum

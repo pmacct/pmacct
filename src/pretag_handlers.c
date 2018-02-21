@@ -2537,7 +2537,7 @@ int custom_primitives_map_field_type_handler(char *filename, struct id_entry *e,
   struct custom_primitives *table = (struct custom_primitives *) req->key_value_table;
   char *pen = NULL, *type = NULL, *endptr;
 
-  if (table) {
+  if (config.acct_type == ACCT_NF && table) {
     u_int8_t repeat_id;
     int idx;
 
@@ -2563,7 +2563,13 @@ int custom_primitives_map_field_type_handler(char *filename, struct id_entry *e,
     table->primitive[table->num].repeat_id = repeat_id;
   }
   else {
-    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] custom aggregate primitives registry not allocated.\n", config.name, config.type, filename);
+    if (config.acct_type != ACCT_NF) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] field_type is only supported in pmacctd.\n", config.name, config.type, filename);
+    }
+    else {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] custom aggregate primitives registry not allocated.\n", config.name, config.type, filename);
+    }
+
     return TRUE;
   }
 
@@ -2577,7 +2583,7 @@ int custom_primitives_map_packet_ptr_handler(char *filename, struct id_entry *e,
   char *layer = NULL, *proto_ptr = NULL, *offset_ptr = NULL, *endptr;
   u_int16_t offset = 0, proto = 0, idx = 0;
 
-  if (config.acct_type == ACCT_PM && table) {
+  if (/* config.acct_type == ACCT_PM && */ table) {
     for (idx = 0; idx < MAX_CUSTOM_PRIMITIVE_PD_PTRS; idx++) {
       if (!table->primitive[table->num].pd_ptr[idx].ptr_idx.set) { 
 	pd_ptr = &table->primitive[table->num].pd_ptr[idx];
