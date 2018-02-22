@@ -78,6 +78,7 @@ void usage_daemon(char *prog_name)
   printf("  -R  \tRenormalize sampled data\n");
   printf("  -u  \tLeave IP protocols in numerical format\n");
   printf("  -I  \tRead packets from the specified savefile\n");
+  printf("  -Z  \tReading from a savefile, sleep the given amount of seconds at startup\n");
   printf("  -W  \tReading from a savefile, don't exit but sleep when finished\n");
   printf("\nMemory plugin (-P memory) options:\n");
   printf("  -p  \tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
@@ -330,6 +331,11 @@ int main(int argc,char **argv, char **envp)
       break;
     case 'W':
       strlcpy(cfg_cmdline[rows], "pcap_savefile_wait: true", SRVBUFLEN);
+      rows++;
+      break;
+    case 'Z':
+      strlcpy(cfg_cmdline[rows], "pcap_savefile_delay: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
     case 'h':
@@ -954,7 +960,9 @@ int main(int argc,char **argv, char **envp)
   else {
     Log(LOG_INFO, "INFO ( %s/core ): reading NetFlow/IPFIX data from: %s\n", config.name, config.pcap_savefile);
     allowed = TRUE;
-    sleep(2);
+
+    if (!config.pcap_sf_delay) sleep(2);
+    else sleep(config.pcap_sf_delay);
   }
 
   if (config.sfacctd_counter_file || config.sfacctd_counter_amqp_routing_key || config.sfacctd_counter_kafka_topic) {

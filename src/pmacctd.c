@@ -69,6 +69,7 @@ void usage_daemon(char *prog_name)
   printf("  -S  \t[ auth | mail | daemon | kern | user | local[0-7] ] \n\tLog to the specified syslog facility\n");
   printf("  -F  \tWrite Core Process PID into the specified file\n");
   printf("  -w  \tWait for the listening interface to become available\n");
+  printf("  -Z  \tReading from a savefile, sleep the given amount of seconds at startup\n");
   printf("  -W  \tReading from a savefile, don't exit but sleep when finished\n");
   printf("  -R  \tRenormalize sampled data\n");
   printf("  -L  \tSet snapshot length\n");
@@ -501,6 +502,11 @@ int main(int argc,char **argv, char **envp)
       break;
     case 'W':
       strlcpy(cfg_cmdline[rows], "pcap_savefile_wait: true", SRVBUFLEN);
+      rows++;
+      break;
+    case 'Z':
+      strlcpy(cfg_cmdline[rows], "pcap_savefile_delay: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
     case 'L':
@@ -1101,8 +1107,11 @@ int main(int argc,char **argv, char **envp)
   /* When reading packets from a savefile, things are lightning fast; we will sit
      here just few seconds, thus allowing plugins to complete their startup operations */
   if (config.pcap_savefile) {
-    Log(LOG_INFO, "INFO ( %s/core ): PCAP capture file, sleeping for 2 seconds\n", config.name);
-    sleep(2);
+    if (!config.pcap_sf_delay) {
+      Log(LOG_INFO, "INFO ( %s/core ): PCAP capture file, sleeping for 2 seconds\n", config.name);
+      sleep(2);
+    }
+    else sleep(config.pcap_sf_delay);
   }
 
   /* Main loop (for the case of a single interface): if pcap_loop() exits
