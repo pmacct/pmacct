@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -71,7 +71,7 @@ struct NF5_FLOW {
 int
 send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock,
     u_int64_t *flows_exported, struct timeval *system_boot_time,
-    int verbose_flag, u_int8_t engine_type, u_int8_t engine_id)
+    int verbose_flag, u_int8_t engine_type, u_int32_t engine_id)
 {
 	struct timeval now;
 	u_int32_t uptime_ms;

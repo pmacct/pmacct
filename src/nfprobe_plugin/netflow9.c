@@ -2052,7 +2052,7 @@ nf_class_option_to_flowset(u_int idx, u_char *packet, u_int len, const struct ti
 int
 send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
     u_int64_t *flows_exported, struct timeval *system_boot_time,
-    int verbose_flag, u_int8_t engine_type, u_int8_t engine_id)
+    int verbose_flag, u_int8_t unused, u_int32_t source_id)
 {
 	struct NF9_HEADER *nf9;
 	struct IPFIX_HEADER *nf10;
@@ -2063,7 +2063,6 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 	int direction, new_direction;
 	socklen_t errsz;
 	int err, r, flow_i, class_i;
-	u_int8_t *sid_ptr;
 
 	memset(packet, 0, sizeof(packet));
 	gettimeofday(&now, NULL);
@@ -2090,11 +2089,7 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 		  nf9->uptime_ms = htonl(timeval_sub_ms(&now, system_boot_time));
 		  nf9->time_sec = htonl(time(NULL));
 		  nf9->package_sequence = htonl(++(*flows_exported));
-
-		  nf9->source_id = 0;
-		  sid_ptr = (u_int8_t *) &nf9->source_id;
-		  sid_ptr[2] = engine_type; 
-		  sid_ptr[3] = engine_id; 
+		  nf9->source_id = htonl(source_id);
 
 		  offset = sizeof(*nf9);
 		}
@@ -2105,11 +2100,7 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
                   nf10->len = 0;
                   nf10->time_sec = htonl(time(NULL));
                   nf10->package_sequence = htonl(*flows_exported);
-
-                  nf10->source_id = 0;
-                  sid_ptr = (u_int8_t *) &nf10->source_id;
-                  sid_ptr[2] = engine_type;
-                  sid_ptr[3] = engine_id;
+                  nf10->source_id = htonl(source_id);
 
                   offset = sizeof(*nf10);
 		}

@@ -1982,13 +1982,14 @@ DESC:		Version of outgoing NetFlow datagrams. NetFlow v5/v9 and IPFIX (v10) are 
 DEFAULT:	5
 
 KEY:            nfprobe_engine
-DESC:           Allows to define Engine ID and Engine Type fields. It applies only to NetFlow v5/v9 and IPFIX.
-		In NetFlow v9/IPFIX, the supplied value fills last two bytes of SourceID field. Expects two
-		non-negative numbers, up to 255 each and separated by the ":" symbol. It also allows a collector
-		to distinguish between distinct probe instances running on the same box; this is also important
-		for letting NetFlow v9/IPFIX templates to work correctly: in fact, template IDs get automatically
-		selected only inside single daemon instances.
-DEFAULT:	0:0
+DESC:           Allows to define Engine ID and Engine Type fields for NetFlow v5 and Source ID/Obs Domain ID
+		for NetFlow v9 and IPFIX respectiely. In case of NetFlow v5 export it expects two non-negative
+		numbers, each up to maximum 8-bits length and separated by the ":" symbol; in case of NetFlow
+		v9/IPFIX it expects a single non-negative number up-to maximum 32-bits length. This comes
+		useful to allow a collector to distinguish between distinct probe instances running on the
+		same host; this is also important for letting NetFlow v9/IPFIX templates to work correctly: in
+		fact, template IDs get automatically selected only inside single daemon instances.
+DEFAULT:	[ 0:0, 0 ]
 
 KEY:		[ nfacctd_peer_as | sfacctd_peer_as | nfprobe_peer_as | sfprobe_peer_as ]
 VALUES:         [ true | false ]

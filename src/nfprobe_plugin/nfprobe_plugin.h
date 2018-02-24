@@ -232,17 +232,10 @@ struct EXPIRY {
 };
 
 /* Prototype for functions shared from softflowd.c */
-u_int32_t timeval_sub_ms(const struct timeval *t1, const struct timeval *t2);
+u_int32_t timeval_sub_ms(const struct timeval *, const struct timeval *);
 
 /* Prototypes for functions to send NetFlow packets, from netflow*.c */
-int send_netflow_v1(struct FLOW **flows, int num_flows, int nfsock,
-    u_int64_t *flows_exported, struct timeval *system_boot_time, 
-    int verbose_flag, u_int8_t engine_type, u_int8_t engine_id);
-int send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock,
-    u_int64_t *flows_exported, struct timeval *system_boot_time,
-    int verbose_flag, u_int8_t engine_type, u_int8_t engine_id);
-int send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
-    u_int64_t *flows_exported, struct timeval *system_boot_time,
-    int verbose_flag, u_int8_t engine_type, u_int8_t engine_id);
-
+int send_netflow_v1(struct FLOW **, int, int, u_int64_t *, struct timeval *,  int, u_int8_t, u_int32_t);
+int send_netflow_v5(struct FLOW **, int, int, u_int64_t *, struct timeval *,  int, u_int8_t, u_int32_t);
+int send_netflow_v9(struct FLOW **, int, int, u_int64_t *, struct timeval *,  int, u_int8_t, u_int32_t);
 #endif /* _SOFTFLOWD_H */

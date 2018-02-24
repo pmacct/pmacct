@@ -83,8 +83,8 @@ struct CB_CTXT {
 };
 
 /* Netflow send functions */
-typedef int (netflow_send_func_t)(struct FLOW **, int, int, u_int64_t *,
-    struct timeval *, int, u_int8_t, u_int8_t);
+typedef int (netflow_send_func_t)(struct FLOW **, int, int, u_int64_t *, struct timeval *, int, u_int8_t, u_int32_t);
+
 struct NETFLOW_SENDER {
 	int version;
 	netflow_send_func_t *func;
@@ -941,7 +941,7 @@ next_expire(struct FLOWTRACK *ft)
 #define CE_EXPIRE_ALL		-1 /* Expire all flows immediately */
 #define CE_EXPIRE_FORCED	1  /* Only expire force-expired flows */
 static int
-check_expired(struct FLOWTRACK *ft, struct NETFLOW_TARGET *target, int ex, u_int8_t engine_type, u_int8_t engine_id)
+check_expired(struct FLOWTRACK *ft, struct NETFLOW_TARGET *target, int ex, u_int8_t engine_type, u_int32_t engine_id)
 {
 	struct FLOW **expired_flows, **oldexp;
 	int num_expired, i, r;
@@ -1379,23 +1379,39 @@ parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len)
 }
 
 static void
-parse_engine(char *s, u_int8_t *engine_type, u_int8_t *engine_id)
+parse_engine(char *s, u_int8_t *engine_type, u_int32_t *engine_id)
 {
   char *delim, *ptr;
 
+  if (config.nfprobe_version == 1) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): parse_engine(): NetFlow v1 export does not support nfprobe_engine.\n", config.name, config.type);
+    exit_plugin(1);
+  }
+
   trim_spaces(s);
   delim = strchr(s, ':');
+  
+  /* NetFlow v5 case */
   if (delim) {
+    if (config.nfprobe_version != 5) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): parse_engine(): engine_type:engine_id is only supported on NetFlow v5 export.\n", config.name, config.type);
+      exit_plugin(1);
+    }
+
     *delim = '\0';
     ptr = delim+1;
     *engine_type = atoi(s);
     *engine_id = atoi(ptr);
     *delim = ':';
   }
+  /* NetFlow v9 / IPFIX case */
   else {
-    *engine_type = 0;
-    *engine_id = 0;
-    Log(LOG_WARNING, "WARN ( %s/%s ): Engine Type/ID '%s' is not valid. Ignoring.\n", config.name, config.type, s);
+    if (config.nfprobe_version != 9 && config.nfprobe_version != 10) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): parse_engine(): source_id is only supported on NetFlow v9/IPFIX exports.\n", config.name, config.type);
+      exit_plugin(1);
+    }
+
+    *engine_id = strtoul(s, &delim, 10);
   }
 }
 
@@ -1431,7 +1447,8 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   socklen_t dest_len;
   struct NETFLOW_TARGET target;
   struct CB_CTXT cb_ctxt;
-  u_int8_t engine_type, engine_id;
+  u_int8_t engine_type;
+  u_int32_t engine_id;
 
   struct extra_primitives extras;
   struct primitives_ptrs prim_ptrs;
