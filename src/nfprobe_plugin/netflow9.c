@@ -1693,7 +1693,7 @@ nf9_init_options_template(void)
         exporter_option_template.h.template_id = htons(NF9_OPTIONS_TEMPLATE_ID + 2 + config.nfprobe_id );
         if (config.nfprobe_version == 9) {
           exporter_option_template.h.scope_len = htons(4); /* NF9_OPT_SCOPE_SYSTEM */
-          exporter_option_template.h.option_len = htons(20); /* NF9_EXPORTER_IPV4_ADDRESS + NF9_EXPORTER_IPV6_ADDRESS */
+          exporter_option_template.h.option_len = htons(8); /* NF9_EXPORTER_IPV4_ADDRESS + NF9_EXPORTER_IPV6_ADDRESS */
 	}
 	else if (config.nfprobe_version == 10) {
           exporter_option_template.h.scope_len = htons(2+1); /* IPFIX twist: NF9_EXPORTER_IPV4_ADDRESS + NF9_EXPORTER_IPV6_ADDRESS + NF9_OPT_SCOPE_SYSTEM */ 
