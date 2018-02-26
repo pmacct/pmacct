@@ -537,7 +537,7 @@ void evaluate_packet_handlers()
 #if defined (WITH_NDPI)
     if (channels_list[index].aggregation_2 & COUNT_NDPI_CLASS) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = ndpi_class_handler;
-      else if (config.acct_type == ACCT_NF) primitives--; /* NO nDPI support for NetFlow/IPFIX */
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_ndpi_class_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_ndpi_class_handler;
       primitives++;
     }
@@ -3765,6 +3765,15 @@ void NF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
     break;
   }
 }
+
+#if defined (WITH_NDPI)
+void NF_ndpi_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+
+  memcpy(&pdata->primitives.ndpi_class, &pptrs->ndpi_class, sizeof(pm_class2_t));
+}
+#endif
 
 void NF_cust_tag_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
