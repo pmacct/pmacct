@@ -1482,6 +1482,8 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
     reset_net_status_v(pptrsv);
     pptrs->flow_type = SF_evaluate_flow_type(pptrs);
 
+    if (config.classifier_ndpi) sf_flow_sample_class(sample);
+
     /* we need to understand the IP protocol version in order to build the fake packet */
     switch (pptrs->flow_type) {
     case NF9_FTYPE_IPV4:
@@ -2393,4 +2395,33 @@ void sf_cnt_link_misc_structs(struct bgp_misc_structs *bms)
   strcpy(bms->peer_str, "peer_src_ip");
 
   /* dump not supported */
+}
+
+/* XXX: unify decoding flow sample header, now done twice if DPI is required */
+void sf_flow_sample_class(SFSample *sample)
+{
+  struct pcap_pkthdr pkthdr;
+  struct packet_ptrs pptrs;
+
+  memset(&sample->ndpi_class, 0, sizeof(pm_class2_t)); 
+
+  if (sample->header && sample->headerLen) {
+    memset(&pptrs, 0, sizeof(struct packet_ptrs));
+    memset(&pkthdr, 0, sizeof(struct pcap_pkthdr));
+    pkthdr.caplen = sample->headerLen;
+
+    pptrs.pkthdr = (struct pcap_pkthdr *) &pkthdr;
+    pptrs.packet_ptr = (u_char *) sample->header;
+
+    if (sample->headerProtocol == SFLHEADER_ETHERNET_ISO8023) { 
+      eth_handler(&pkthdr, &pptrs);
+      if (pptrs.iph_ptr) {
+	if ((*pptrs.l3_handler)(&pptrs)) {
+#if defined (WITH_NDPI)
+	  if (pm_ndpi_wfl) sample->ndpi_class = pm_ndpi_workflow_process_packet(pm_ndpi_wfl, &pptrs);
+#endif
+	}
+      }
+    }
+  }
 }

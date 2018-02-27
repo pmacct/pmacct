@@ -5241,8 +5241,7 @@ void SF_ndpi_class_handler(struct channels_list_entry *chptr, struct packet_ptrs
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  pdata->primitives.ndpi_class.master_protocol = sample->ndpi_class.master_protocol;
-  pdata->primitives.ndpi_class.app_protocol = sample->ndpi_class.app_protocol;
+  memcpy(&pdata->primitives.ndpi_class, &sample->ndpi_class, sizeof(pm_class2_t));
 }
 #endif
 
