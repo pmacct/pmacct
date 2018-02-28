@@ -215,6 +215,9 @@ typedef struct _SFSample {
 
   SFLAddress ipsrc;
   SFLAddress ipdst;
+
+  struct packet_ptrs hdr_ptrs;
+  struct pcap_pkthdr hdr_pcap;
 } SFSample;
 
 /* define my own IP header struct - to ease portability */
@@ -339,7 +342,7 @@ EXT int readCounters_vlan(struct bgp_peer *, SFSample *, char *, int, void *);
 EXT void sfacctd_counter_init_amqp_host();
 EXT int sfacctd_counter_init_kafka_host();
 EXT void sf_cnt_link_misc_structs(struct bgp_misc_structs *);
-EXT void sf_flow_sample_class(SFSample *);
+EXT void sf_flow_sample_hdr_decode(SFSample *);
 
 EXT char *sfv245_check_status(SFSample *spp, struct packet_ptrs *, struct sockaddr *);
 EXT void sfv245_check_counter_log_init(struct packet_ptrs *);

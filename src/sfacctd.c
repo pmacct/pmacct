@@ -174,6 +174,7 @@ int main(int argc,char **argv, char **envp)
   biss_map_allocated = FALSE;
   bta_map_allocated = FALSE;
   bitr_map_allocated = FALSE;
+  custom_primitives_allocated = FALSE;
   bta_map_caching = TRUE;
   sampling_map_caching = TRUE;
   find_id_func = SF_find_id;
@@ -684,11 +685,17 @@ int main(int argc,char **argv, char **envp)
   }
   else pptrs.v4.bitr_table = NULL;
 
+  if (config.aggregate_primitives) {
+    req.key_value_table = (void *) &custom_primitives_registry;
+    load_id_file(MAP_CUSTOM_PRIMITIVES, config.aggregate_primitives, NULL, &req, &custom_primitives_allocated);
+  }
+  else memset(&custom_primitives_registry, 0, sizeof(custom_primitives_registry));
+
   /* fixing per plugin custom primitives pointers, offsets and lengths */
-  memset(&custom_primitives_registry, 0, sizeof(custom_primitives_registry));
   list = plugins_list;
   while(list) { 
     custom_primitives_reconcile(&list->cfg.cpptrs, &custom_primitives_registry);
+    if (custom_primitives_vlen(&list->cfg.cpptrs)) list->cfg.data_type |= PIPE_TYPE_VLEN;
     list = list->next;
   }
 
@@ -1482,7 +1489,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
     reset_net_status_v(pptrsv);
     pptrs->flow_type = SF_evaluate_flow_type(pptrs);
 
-    if (config.classifier_ndpi) sf_flow_sample_class(sample);
+    if (config.classifier_ndpi || config.aggregate_primitives) sf_flow_sample_hdr_decode(sample);
 
     /* we need to understand the IP protocol version in order to build the fake packet */
     switch (pptrs->flow_type) {
@@ -2397,29 +2404,36 @@ void sf_cnt_link_misc_structs(struct bgp_misc_structs *bms)
   /* dump not supported */
 }
 
-/* XXX: unify decoding flow sample header, now done twice if DPI is required */
-void sf_flow_sample_class(SFSample *sample)
+/* XXX: unify decoding flow sample header, now done twice if DPI or custom primitives are enabled */
+void sf_flow_sample_hdr_decode(SFSample *sample)
 {
-  struct pcap_pkthdr pkthdr;
-  struct packet_ptrs pptrs;
+  struct packet_ptrs *pptrs = &sample->hdr_ptrs;
 
+  /* cleanups */
+  reset_index_pkt_ptrs(pptrs);
+  pptrs->pkthdr = NULL;
+  pptrs->packet_ptr = pptrs->mac_ptr = pptrs->vlan_ptr = pptrs->mpls_ptr = NULL;
+  pptrs->iph_ptr = pptrs->tlh_ptr = pptrs->payload_ptr = NULL;
+  pptrs->l3_proto = pptrs->l4_proto = FALSE;
   memset(&sample->ndpi_class, 0, sizeof(pm_class2_t)); 
 
   if (sample->header && sample->headerLen) {
-    memset(&pptrs, 0, sizeof(struct packet_ptrs));
-    memset(&pkthdr, 0, sizeof(struct pcap_pkthdr));
-    pkthdr.caplen = sample->headerLen;
+    memset(&sample->hdr_pcap, 0, sizeof(struct pcap_pkthdr));
+    sample->hdr_pcap.caplen = sample->headerLen;
 
-    pptrs.pkthdr = (struct pcap_pkthdr *) &pkthdr;
-    pptrs.packet_ptr = (u_char *) sample->header;
+    pptrs->pkthdr = (struct pcap_pkthdr *) &sample->hdr_pcap;
+    pptrs->packet_ptr = (u_char *) sample->header;
 
     if (sample->headerProtocol == SFLHEADER_ETHERNET_ISO8023) { 
-      eth_handler(&pkthdr, &pptrs);
-      if (pptrs.iph_ptr) {
-	if ((*pptrs.l3_handler)(&pptrs)) {
+      eth_handler(&sample->hdr_pcap, pptrs);
+      if (pptrs->iph_ptr) {
+	if ((*pptrs->l3_handler)(pptrs)) {
 #if defined (WITH_NDPI)
-	  if (pm_ndpi_wfl) sample->ndpi_class = pm_ndpi_workflow_process_packet(pm_ndpi_wfl, &pptrs);
+	  if (config.classifier_ndpi && pm_ndpi_wfl) {
+	    sample->ndpi_class = pm_ndpi_workflow_process_packet(pm_ndpi_wfl, pptrs);
+	  }
 #endif
+	  set_index_pkt_ptrs(pptrs);
 	}
       }
     }

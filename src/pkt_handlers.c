@@ -738,6 +738,10 @@ void evaluate_packet_handlers()
 	channels_list[index].phandler[primitives] = NF_custom_primitives_handler;
 	primitives++;
       }
+      else if (config.acct_type == ACCT_SF) {
+        channels_list[index].phandler[primitives] = SF_custom_primitives_handler;
+        primitives++;
+      }
     }
 
     if (channels_list[index].aggregation & COUNT_COUNTERS) {
@@ -5379,6 +5383,14 @@ void SF_mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packe
       pmpls->mpls_stack_depth++;
     } while (!MPLS_STACK(lvalue));
   }
+}
+
+void SF_custom_primitives_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  custom_primitives_handler(chptr, &sample->hdr_ptrs, data);
 }
 
 #if defined WITH_GEOIP

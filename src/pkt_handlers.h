@@ -185,6 +185,7 @@ EXT void SF_tee_payload_handler(struct channels_list_entry *, struct packet_ptrs
 EXT void SF_mpls_label_top_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_mpls_label_bottom_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_mpls_stack_depth_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_custom_primitives_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 
 EXT void pre_tag_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void pre_tag2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
