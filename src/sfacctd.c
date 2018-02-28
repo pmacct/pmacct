@@ -2415,7 +2415,9 @@ void sf_flow_sample_hdr_decode(SFSample *sample)
   pptrs->packet_ptr = pptrs->mac_ptr = pptrs->vlan_ptr = pptrs->mpls_ptr = NULL;
   pptrs->iph_ptr = pptrs->tlh_ptr = pptrs->payload_ptr = NULL;
   pptrs->l3_proto = pptrs->l4_proto = FALSE;
+#if defined (WITH_NDPI)
   memset(&sample->ndpi_class, 0, sizeof(pm_class2_t)); 
+#endif
 
   if (sample->header && sample->headerLen) {
     memset(&sample->hdr_pcap, 0, sizeof(struct pcap_pkthdr));

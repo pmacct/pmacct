@@ -2564,7 +2564,7 @@ int custom_primitives_map_field_type_handler(char *filename, struct id_entry *e,
   }
   else {
     if (config.acct_type != ACCT_NF) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] field_type is only supported in pmacctd.\n", config.name, config.type, filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] field_type is only supported in nfacctd.\n", config.name, config.type, filename);
     }
     else {
       Log(LOG_WARNING, "WARN ( %s/%s ): [%s] custom aggregate primitives registry not allocated.\n", config.name, config.type, filename);
@@ -2666,13 +2666,7 @@ int custom_primitives_map_packet_ptr_handler(char *filename, struct id_entry *e,
     pd_ptr->off = offset;
   }
   else {
-    if (config.acct_type != ACCT_PM) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] packet_ptr is only supported in pmacctd.\n", config.name, config.type, filename);
-    }
-    else {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] custom aggregate primitives registry not allocated.\n", config.name, config.type, filename);
-    }
-
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] custom aggregate primitives registry not allocated.\n", config.name, config.type, filename);
     return TRUE;
   }
 

@@ -1312,6 +1312,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   struct packet_ptrs *pptrs = &pptrsv->v4;
   u_int16_t fid, off = 0, flowoff, flowsetlen, flowsetNo, flowsetCount, direction, FlowSeqInc = 0; 
   u_int32_t HdrSz = 0, SourceId = 0, FlowSeq = 0;
+  u_char *dummy_packet_ptr;
 
   if (version == 9) {
     HdrSz = NfHdrV9Sz; 
@@ -2175,7 +2176,9 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  memcpy(&pptrs->l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
 
           exec_plugins(pptrs, req);
+	  break;
 	case NF9_FTYPE_DLFS:
+	  dummy_packet_ptr = pptrs->packet_ptr;
 	  nfv9_datalink_frame_section_handler(pptrs);
 
 	  if (config.nfacctd_isis) isis_srcdst_lookup(pptrs);
@@ -2186,7 +2189,9 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
 	  if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
           if (config.nfacctd_bmp) bmp_srcdst_lookup(pptrs);
+
           exec_plugins(pptrs, req);
+	  reset_dummy_v4(pptrs, dummy_packet_ptr);
 	  break;
 	default:
 	  break;
@@ -2421,6 +2426,20 @@ void reset_ip6(struct packet_ptrs *pptrs)
 }
 #endif
 
+void reset_dummy_v4(struct packet_ptrs *pptrs, char *dummy_packet)
+{
+  pptrs->packet_ptr = dummy_packet;
+  /* pptrs->pkthdr = dummy_pkthdr; */
+  Assign16(((struct eth_header *)pptrs->packet_ptr)->ether_type, htons(ETHERTYPE_IP));
+  pptrs->mac_ptr = (u_char *)((struct eth_header *)pptrs->packet_ptr)->ether_dhost;
+  pptrs->iph_ptr = pptrs->packet_ptr + ETHER_HDRLEN;
+  pptrs->tlh_ptr = pptrs->packet_ptr + ETHER_HDRLEN + sizeof(struct pm_iphdr);
+  Assign8(((struct pm_iphdr *)pptrs->iph_ptr)->ip_vhl, 5);
+  pptrs->pkthdr->caplen = 55;
+  pptrs->pkthdr->len = 100;
+  pptrs->l3_proto = ETHERTYPE_IP;
+}
+
 void notify_malf_packet(short int severity, char *ostr, struct sockaddr *sa, u_int32_t seq)
 {
   struct host_addr a;
@@ -2570,10 +2589,12 @@ void nfv9_datalink_frame_section_handler(struct packet_ptrs *pptrs)
 
   /* cleanups */
   reset_index_pkt_ptrs(pptrs);
-  pptrs->pkthdr = NULL;
   pptrs->packet_ptr = pptrs->mac_ptr = pptrs->vlan_ptr = pptrs->mpls_ptr = NULL;
   pptrs->iph_ptr = pptrs->tlh_ptr = pptrs->payload_ptr = NULL;
   pptrs->l3_proto = pptrs->l4_proto = FALSE;
+#if defined (WITH_NDPI)
+  memset(&pptrs->ndpi_class, 0, sizeof(pm_class2_t));
+#endif
 
   if (tpl->tpl[NF9_DATALINK_FRAME_TYPE].len == 2) {
     memcpy(&t16, pptrs->f_data+tpl->tpl[NF9_DATALINK_FRAME_TYPE].off, 2);
@@ -2583,16 +2604,11 @@ void nfv9_datalink_frame_section_handler(struct packet_ptrs *pptrs)
   else frame_type = NF9_DL_F_TYPE_ETHERNET;
 
   if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len) {
-    struct pcap_pkthdr pkthdr;
-
-    memset(&pkthdr, 0, sizeof(struct pcap_pkthdr));
-    pkthdr.caplen = tpl->tpl[NF9_DATALINK_FRAME_SECTION].len;
-
-    pptrs->pkthdr = (struct pcap_pkthdr *) &pkthdr;
+    pptrs->pkthdr->caplen = tpl->tpl[NF9_DATALINK_FRAME_SECTION].len;
     pptrs->packet_ptr = (u_char *) pptrs->f_data+tpl->tpl[NF9_DATALINK_FRAME_SECTION].off;
 
     if (frame_type == NF9_DL_F_TYPE_ETHERNET) {
-      eth_handler(&pkthdr, pptrs);
+      eth_handler(pptrs->pkthdr, pptrs);
       if (pptrs->iph_ptr) {
 	if ((*pptrs->l3_handler)(pptrs)) {
 #if defined (WITH_NDPI)

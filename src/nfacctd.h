@@ -787,6 +787,7 @@ EXT void reset_mac(struct packet_ptrs *);
 EXT void reset_mac_vlan(struct packet_ptrs *);
 EXT void reset_ip4(struct packet_ptrs *);
 EXT void reset_ip6(struct packet_ptrs *);
+EXT void reset_dummy_v4(struct packet_ptrs *, char *);
 EXT void notify_malf_packet(short int, char *, struct sockaddr *, u_int32_t);
 EXT int NF_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 EXT void NF_compute_once();
