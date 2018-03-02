@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -534,6 +534,8 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
   u_int32_t index, count = 0, cnt_data32;
   u_int16_t cnt_type, cnt_len;
   u_int8_t got_data;
+  afi_t afi;
+  safi_t safi;
 
   if (!bmpp) return;
 
@@ -578,7 +580,7 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
 
       bmp_stats_cnt_hdr_get_type(bsch, &cnt_type);
       bmp_stats_cnt_hdr_get_len(bsch, &cnt_len);
-      cnt_data32 = 0; cnt_data64 = 0, got_data = TRUE;
+      cnt_data32 = 0, cnt_data64 = 0, afi = 0, safi = 0, got_data = TRUE;
 
       switch (cnt_type) {
       case BMP_STATS_TYPE0:
@@ -608,6 +610,21 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
       case BMP_STATS_TYPE8:
         if (cnt_len == 8) bmp_stats_cnt_get_data64(bmp_packet, len, &cnt_data64);
         break;
+      case BMP_STATS_TYPE9:
+	if (cnt_len == 11) bmp_stats_cnt_get_afi_safi_data64(bmp_packet, len, &afi, &safi, &cnt_data64);
+	break;
+      case BMP_STATS_TYPE10:
+	if (cnt_len == 11) bmp_stats_cnt_get_afi_safi_data64(bmp_packet, len, &afi, &safi, &cnt_data64);
+	break;
+      case BMP_STATS_TYPE11:
+        if (cnt_len == 4) bmp_stats_cnt_get_data32(bmp_packet, len, &cnt_data32);
+        break;
+      case BMP_STATS_TYPE12:
+        if (cnt_len == 4) bmp_stats_cnt_get_data32(bmp_packet, len, &cnt_data32);
+        break;
+      case BMP_STATS_TYPE13:
+        if (cnt_len == 4) bmp_stats_cnt_get_data32(bmp_packet, len, &cnt_data32);
+        break;
       default:
         if (cnt_len == 4) bmp_stats_cnt_get_data32(bmp_packet, len, &cnt_data32);
         else if (cnt_len == 8) bmp_stats_cnt_get_data64(bmp_packet, len, &cnt_data64);
@@ -624,6 +641,8 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
         struct bmp_log_stats blstats;
 
         blstats.cnt_type = cnt_type;
+	blstats.cnt_afi = afi;
+	blstats.cnt_safi = safi;
         blstats.cnt_data = cnt_data64;
         blstats.got_data = got_data;
 
@@ -674,7 +693,7 @@ void bmp_peer_hdr_get_v_flag(struct bmp_peer_hdr *bph, u_int8_t *family)
   u_int8_t version;
 
   if (bph && family) {
-    version = (bph->flags & 0x80);
+    version = (bph->flags & BMP_PEER_FLAGS_ARI_V);
     (*family) = FALSE;
 
     if (version == 0) (*family) = AF_INET;
@@ -686,12 +705,12 @@ void bmp_peer_hdr_get_v_flag(struct bmp_peer_hdr *bph, u_int8_t *family)
 
 void bmp_peer_hdr_get_l_flag(struct bmp_peer_hdr *bph, u_int8_t *is_post)
 {
-  if (bph && is_post) (*is_post) = (bph->flags & 0x40);
+  if (bph && is_post) (*is_post) = (bph->flags & BMP_PEER_FLAGS_ARI_L);
 }
 
 void bmp_peer_hdr_get_a_flag(struct bmp_peer_hdr *bph, u_int8_t *is_2b_asn)
 {
-  if (bph && is_2b_asn) (*is_2b_asn) = (bph->flags & 0x20);
+  if (bph && is_2b_asn) (*is_2b_asn) = (bph->flags & BMP_PEER_FLAGS_ARI_A);
 }
 
 void bmp_peer_hdr_get_peer_ip(struct bmp_peer_hdr *bph, struct host_addr *a, u_int8_t family)
@@ -809,6 +828,24 @@ void bmp_stats_cnt_get_data64(char **bmp_packet, u_int32_t *pkt_size, u_int64_t 
   char *ptr;
 
   if (bmp_packet && (*bmp_packet) && pkt_size && data) {
+    ptr = bmp_get_and_check_length(bmp_packet, pkt_size, 8);
+    memcpy(data, ptr, 8);
+    (*data) = pm_ntohll((*data));
+  }
+}
+
+void bmp_stats_cnt_get_afi_safi_data64(char **bmp_packet, u_int32_t *pkt_size, afi_t *afi, safi_t *safi, u_int64_t *data)
+{
+  char *ptr;
+
+  if (bmp_packet && (*bmp_packet) && pkt_size && afi && safi && data) {
+    ptr = bmp_get_and_check_length(bmp_packet, pkt_size, 2);
+    memcpy(afi, ptr, 2);
+    (*afi) = ntohs((*afi));
+
+    ptr = bmp_get_and_check_length(bmp_packet, pkt_size, 1);
+    memcpy(safi, ptr, 1);
+
     ptr = bmp_get_and_check_length(bmp_packet, pkt_size, 8);
     memcpy(data, ptr, 8);
     (*data) = pm_ntohll((*data));

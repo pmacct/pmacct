@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -160,6 +160,11 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_
     json_object_set_new_nocheck(obj, "counter_type_str", json_string(bmp_stats_cnt_types[blstats->cnt_type]));
   else
     json_object_set_new_nocheck(obj, "counter_type_str", json_string("Unknown"));
+
+  if (blstats->cnt_type == BMP_STATS_TYPE9 || blstats->cnt_type == BMP_STATS_TYPE10) {
+    json_object_set_new_nocheck(obj, "afi", json_integer((json_int_t)blstats->cnt_afi));
+    json_object_set_new_nocheck(obj, "safi", json_integer((json_int_t)blstats->cnt_safi));
+  }
 
   if (blstats->got_data) json_object_set_new_nocheck(obj, "counter_value", json_integer((json_int_t)blstats->cnt_data));
 #endif

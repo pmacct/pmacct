@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -32,6 +32,8 @@
 
 struct bmp_log_stats {
   u_int16_t cnt_type;
+  afi_t cnt_afi;
+  safi_t cnt_safi;
   u_int64_t cnt_data;
   u_int8_t got_data;
 };
