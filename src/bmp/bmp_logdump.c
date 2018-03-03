@@ -283,6 +283,9 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
 
   json_object_set_new_nocheck(obj, "reason_type", json_integer((json_int_t)blpd->reason));
 
+  if (blpd->reason <= BMP_PEER_DOWN_MAX)
+    json_object_set_new_nocheck(obj, "reason_str", json_string(bmp_peer_down_reason_types[blpd->reason]));
+
   if (blpd->reason == BMP_PEER_DOWN_LOC_CODE)
     json_object_set_new_nocheck(obj, "reason_loc_code", json_integer((json_int_t)blpd->loc_code));
 #endif

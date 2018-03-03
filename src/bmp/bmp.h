@@ -28,9 +28,6 @@
 
 #define BMP_MISSING_PEER_UP_LOG_TOUT	60
 
-/* definitions originally based on draft-ietf-grow-bmp-07 */
-/* definitions review #1 based on draft-ietf-grow-bmp-17 */
-
 /* BMP message types */
 #define BMP_MSG_ROUTE_MONITOR	0	
 #define	BMP_MSG_STATS		1
@@ -92,13 +89,15 @@ struct bmp_init_hdr {
 #define BMP_TERM_REASON_UNK	1
 #define BMP_TERM_REASON_OOR	2
 #define BMP_TERM_REASON_DUP	3
-#define BMP_TERM_REASON_MAX	3 /* set to the highest BMP_TERM_* value */
+#define BMP_TERM_REASON_PERM	4
+#define BMP_TERM_REASON_MAX	4 /* set to the highest BMP_TERM_* value */
 
 static const char *bmp_term_reason_types[] = {
   "Session administratively closed",
   "Unspecified reason",
   "Out of resources",
-  "Redundant connection"
+  "Redundant connection",
+  "Session permanently administratively closed"
 };
 
 struct bmp_term_hdr {
@@ -159,10 +158,22 @@ struct bmp_stats_cnt_hdr {
   u_int16_t	len;
 } __attribute__ ((packed));
 
+#define BMP_PEER_DOWN_RESERVED		0
 #define BMP_PEER_DOWN_LOC_NOT_MSG	1
 #define BMP_PEER_DOWN_LOC_CODE		2
 #define BMP_PEER_DOWN_REM_NOT_MSG	3
 #define BMP_PEER_DOWN_REM_CODE		4
+#define BMP_PEER_DOWN_DECFG		5
+#define BMP_PEER_DOWN_MAX		5 /* set to the highest BMP_PEER_DOWN_* value */
+
+static const char *bmp_peer_down_reason_types[] = {
+  "Reserved",
+  "The local system closed the session",
+  "The local system closed the session without a notification message",
+  "The remote system closed the session",
+  "The remote system closed the session without a notification message",
+  "Info for this peer will no longer be sent for configuration reasons"
+};
 
 struct bmp_peer_down_hdr {
   u_char	reason;
