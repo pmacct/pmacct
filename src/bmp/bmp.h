@@ -54,10 +54,18 @@ struct bmp_common_hdr {
   u_char	type;
 } __attribute__ ((packed));
 
-#define BMP_PEER_GLOBAL		0
-#define BMP_PEER_L3VPN		1
-#define BMP_PEER_LOCAL		2
-#define BMP_PEER_LOC_RIB	3 /* draft-evens-grow-bmp-local-rib */ 
+#define BMP_PEER_TYPE_GLOBAL	0
+#define BMP_PEER_TYPE_L3VPN	1
+#define BMP_PEER_TYPE_LOCAL	2
+#define BMP_PEER_TYPE_LOC_RIB	3 /* draft-evens-grow-bmp-local-rib */ 
+#define BMP_PEER_TYPE_MAX	3 /* set to the highest BMP_PEER_TYPE_* value */
+
+static const char *bmp_peer_types[] = {
+  "Global Instance Peer",
+  "RD Instance Peer",
+  "Local Instance Peer",
+  "Loc-RIB Instance Peer"
+};
 
 #define BMP_PEER_FLAGS_ARI_V	0x80
 #define BMP_PEER_FLAGS_ARI_L	0x40

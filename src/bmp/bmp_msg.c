@@ -288,7 +288,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
   }
 
   bmp_peer_hdr_get_peer_type(bph, &bdata.peer_type);
-  if (bdata.peer_type == BMP_PEER_LOC_RIB) {
+  if (bdata.peer_type == BMP_PEER_TYPE_LOC_RIB) {
     bmp_peer_hdr_get_f_flag(bph, &bdata.is_filtered);
   }
   else {
@@ -389,7 +389,7 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
   }
 
   bmp_peer_hdr_get_peer_type(bph, &bdata.peer_type);
-  if (bdata.peer_type != BMP_PEER_LOC_RIB) {
+  if (bdata.peer_type != BMP_PEER_TYPE_LOC_RIB) {
     bmp_peer_hdr_get_v_flag(bph, &bdata.family);
     bmp_peer_hdr_get_l_flag(bph, &bdata.is_post);
   }
@@ -473,7 +473,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
   }
 
   bmp_peer_hdr_get_peer_type(bph, &bdata.peer_type);
-  if (bdata.peer_type == BMP_PEER_LOC_RIB) {
+  if (bdata.peer_type == BMP_PEER_TYPE_LOC_RIB) {
     bmp_peer_hdr_get_f_flag(bph, &bdata.is_filtered);
   }
   else {
@@ -571,7 +571,7 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
   }
 
   bmp_peer_hdr_get_peer_type(bph, &bdata.peer_type);
-  if (bdata.peer_type != BMP_PEER_LOC_RIB) {
+  if (bdata.peer_type != BMP_PEER_TYPE_LOC_RIB) {
     bmp_peer_hdr_get_v_flag(bph, &bdata.family);
   }
   bmp_peer_hdr_get_v_flag(bph, &bdata.family);
