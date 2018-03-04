@@ -57,10 +57,13 @@ struct bmp_common_hdr {
 #define BMP_PEER_GLOBAL		0
 #define BMP_PEER_L3VPN		1
 #define BMP_PEER_LOCAL		2
+#define BMP_PEER_LOC_RIB	3 /* draft-evens-grow-bmp-local-rib */ 
 
 #define BMP_PEER_FLAGS_ARI_V	0x80
 #define BMP_PEER_FLAGS_ARI_L	0x40
 #define BMP_PEER_FLAGS_ARI_A	0x20
+
+#define BMP_PEER_FLAGS_LR_F	0x80 /* draft-ietf-grow-bmp-local-rib-01 */
 
 struct bmp_peer_hdr {
   u_char	type;
@@ -195,6 +198,7 @@ struct bmp_data {
   u_int8_t peer_type;
   u_int8_t is_post;
   u_int8_t is_2b_asn;
+  u_int8_t is_filtered;
   struct timeval tstamp;
 };
 
