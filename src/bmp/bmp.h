@@ -73,6 +73,8 @@ static const char *bmp_peer_types[] = {
 
 #define BMP_PEER_FLAGS_LR_F	0x80 /* draft-ietf-grow-bmp-local-rib-01 */
 
+#define BMP_PEER_FLAGS_ARO_O	0x10 /* draft-ietf-grow-bmp-adj-rib-out-01 */
+
 struct bmp_peer_hdr {
   u_char	type;
   u_char	flags;
@@ -145,7 +147,13 @@ struct bgp_msg_extra_data_bmp {
 #define BMP_STATS_TYPE11	11 /* (32-bit Counter) Number of updates subjected to treat-as-withdraw */ 
 #define BMP_STATS_TYPE12	12 /* (32-bit Counter) Number of prefixes subjected to treat-as-withdraw */
 #define BMP_STATS_TYPE13	13 /* (32-bit Counter) Number of duplicate update messages received */
-#define BMP_STATS_MAX		13 /* set to the highest BMP_STATS_* value */
+
+/* Types 14-17 defined in draft-evens-grow-bmp-adj-rib-out */
+#define BMP_STATS_TYPE14	14 /* (64-bit Gauge) Number of routes in Adj-RIBs-Out Pre-Policy */
+#define BMP_STATS_TYPE15	15 /* (64-bit Gauge) Number of routes in Adj-RIBs-Out Post-Policy */
+#define BMP_STATS_TYPE16	16 /* (64-bit Gauge) Number of routes in per-AFI/SAFI Abj-RIB-Out */
+#define BMP_STATS_TYPE17	17 /* (64-bit Gauge) Number of routes in per-AFI/SAFI Abj-RIB-Out */
+#define BMP_STATS_MAX		17 /* set to the highest BMP_STATS_* value */
 
 static const char *bmp_stats_cnt_types[] = {
   "Number of prefixes rejected by inbound policy",
@@ -161,7 +169,11 @@ static const char *bmp_stats_cnt_types[] = {
   "Number of routes in per-AFI/SAFI Loc-RIB",
   "Number of updates subjected to treat-as-withdraw",
   "Number of prefixes subjected to treat-as-withdraw",
-  "Number of duplicate update messages received"
+  "Number of duplicate update messages received",
+  "Number of routes in Adj-RIBs-Out Pre-Policy",
+  "Number of routes in Adj-RIBs-Out Post-Policy",
+  "Number of routes in per-AFI/SAFI Abj-RIB-Out Pre-Policy",
+  "Number of routes in per-AFI/SAFI Abj-RIB-Out Post-Policy"
 };
 
 struct bmp_stats_cnt_hdr {
@@ -207,6 +219,7 @@ struct bmp_data {
   u_int8_t is_post;
   u_int8_t is_2b_asn;
   u_int8_t is_filtered;
+  u_int8_t is_out;
   struct timeval tstamp;
 };
 

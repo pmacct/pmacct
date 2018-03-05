@@ -295,6 +295,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
     bmp_peer_hdr_get_v_flag(bph, &bdata.family);
     bmp_peer_hdr_get_l_flag(bph, &bdata.is_post);
     bmp_peer_hdr_get_a_flag(bph, &bdata.is_2b_asn);
+    bmp_peer_hdr_get_o_flag(bph, &bdata.is_out);
   }
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
@@ -392,6 +393,7 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
   if (bdata.peer_type != BMP_PEER_TYPE_LOC_RIB) {
     bmp_peer_hdr_get_v_flag(bph, &bdata.family);
     bmp_peer_hdr_get_l_flag(bph, &bdata.is_post);
+    bmp_peer_hdr_get_o_flag(bph, &bdata.is_out);
   }
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
@@ -480,6 +482,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
     bmp_peer_hdr_get_v_flag(bph, &bdata.family);
     bmp_peer_hdr_get_l_flag(bph, &bdata.is_post);
     bmp_peer_hdr_get_a_flag(bph, &bdata.is_2b_asn);
+    bmp_peer_hdr_get_o_flag(bph, &bdata.is_out);
   }
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
@@ -571,13 +574,16 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
   }
 
   bmp_peer_hdr_get_peer_type(bph, &bdata.peer_type);
-  if (bdata.peer_type != BMP_PEER_TYPE_LOC_RIB) {
-    bmp_peer_hdr_get_v_flag(bph, &bdata.family);
+  if (bdata.peer_type == BMP_PEER_TYPE_LOC_RIB) {
+    bmp_peer_hdr_get_f_flag(bph, &bdata.is_filtered);
   }
-  bmp_peer_hdr_get_v_flag(bph, &bdata.family);
+  else {
+    bmp_peer_hdr_get_v_flag(bph, &bdata.family);
+    bmp_peer_hdr_get_l_flag(bph, &bdata.is_post);
+    bmp_peer_hdr_get_o_flag(bph, &bdata.is_out);
+  }
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
-  bmp_peer_hdr_get_l_flag(bph, &bdata.is_post);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
   bmp_stats_hdr_get_count(bsh, &count);
@@ -640,6 +646,18 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
       case BMP_STATS_TYPE13:
         if (cnt_len == 4) bmp_stats_cnt_get_data32(bmp_packet, len, &cnt_data32);
         break;
+      case BMP_STATS_TYPE14:
+	if (cnt_len == 8) bmp_stats_cnt_get_data64(bmp_packet, len, &cnt_data64);
+	break;
+      case BMP_STATS_TYPE15:
+	if (cnt_len == 8) bmp_stats_cnt_get_data64(bmp_packet, len, &cnt_data64);
+	break;
+      case BMP_STATS_TYPE16:
+	if (cnt_len == 11) bmp_stats_cnt_get_afi_safi_data64(bmp_packet, len, &afi, &safi, &cnt_data64);
+	break;
+      case BMP_STATS_TYPE17:
+	if (cnt_len == 11) bmp_stats_cnt_get_afi_safi_data64(bmp_packet, len, &afi, &safi, &cnt_data64);
+	break;
       default:
         if (cnt_len == 4) bmp_stats_cnt_get_data32(bmp_packet, len, &cnt_data32);
         else if (cnt_len == 8) bmp_stats_cnt_get_data64(bmp_packet, len, &cnt_data64);
@@ -731,6 +749,11 @@ void bmp_peer_hdr_get_a_flag(struct bmp_peer_hdr *bph, u_int8_t *is_2b_asn)
 void bmp_peer_hdr_get_f_flag(struct bmp_peer_hdr *bph, u_int8_t *is_filtered)
 {
   if (bph && is_filtered) (*is_filtered) = (bph->flags & BMP_PEER_FLAGS_LR_F);
+}
+
+void bmp_peer_hdr_get_o_flag(struct bmp_peer_hdr *bph, u_int8_t *is_out)
+{
+  if (bph && is_out) (*is_out) = (bph->flags & BMP_PEER_FLAGS_ARO_O);
 }
 
 void bmp_peer_hdr_get_peer_ip(struct bmp_peer_hdr *bph, struct host_addr *a, u_int8_t family)

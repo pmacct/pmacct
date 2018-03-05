@@ -46,6 +46,7 @@ EXT void bmp_peer_hdr_get_v_flag(struct bmp_peer_hdr *, u_int8_t *);
 EXT void bmp_peer_hdr_get_l_flag(struct bmp_peer_hdr *, u_int8_t *);
 EXT void bmp_peer_hdr_get_a_flag(struct bmp_peer_hdr *, u_int8_t *);
 EXT void bmp_peer_hdr_get_f_flag(struct bmp_peer_hdr *, u_int8_t *);
+EXT void bmp_peer_hdr_get_o_flag(struct bmp_peer_hdr *, u_int8_t *);
 EXT void bmp_peer_hdr_get_peer_ip(struct bmp_peer_hdr *, struct host_addr *, u_int8_t);
 EXT void bmp_peer_hdr_get_bgp_id(struct bmp_peer_hdr *, struct host_addr *);
 EXT void bmp_peer_hdr_get_tstamp(struct bmp_peer_hdr *, struct timeval *);
