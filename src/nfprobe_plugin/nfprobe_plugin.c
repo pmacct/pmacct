@@ -1515,9 +1515,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   dest_len = sizeof(dest);
   if (!config.nfprobe_receiver) config.nfprobe_receiver = default_receiver;
-  if (!config.nfprobe_engine) config.nfprobe_engine = default_engine;
   parse_hostport(config.nfprobe_receiver, (struct sockaddr *)&dest, &dest_len);
-  parse_engine(config.nfprobe_engine, &engine_type, &engine_id);
 
 sort_version:
   for (i = 0, r = config.nfprobe_version; nf[i].version != -1; i++) {
@@ -1529,6 +1527,9 @@ sort_version:
     goto sort_version;
   }
   target.dialect = &nf[i];
+
+  if (!config.nfprobe_engine) config.nfprobe_engine = default_engine;
+  parse_engine(config.nfprobe_engine, &engine_type, &engine_id);
 
   /* Netflow send socket */
   if (dest.ss_family != 0) {
