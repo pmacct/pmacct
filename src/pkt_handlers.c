@@ -1494,11 +1494,11 @@ void custom_primitives_handler(struct channels_list_entry *chptr, struct packet_
 		  str_len = strlen(str_ptr);
 
 		  if (str_len) {
-                    if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + str_len)) {
+                    if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + str_len + 1 /* terminating zero */)) {
                       vlen_prims_init(pvlen, 0);
                       return;
                     }
-                    else vlen_prims_insert(pvlen, cpe->type, str_len, str_ptr, PM_MSG_STR_COPY);
+                    else vlen_prims_insert(pvlen, cpe->type, str_len, str_ptr, PM_MSG_STR_COPY_ZERO);
 		  }
 		}
 	      }
@@ -3474,11 +3474,11 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
 	      }
               else {
                 if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_STRING && cpe->len == PM_VARIABLE_LENGTH) {
-		  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + utpl->len)) {
+		  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + utpl->len + 1 /* terminating zero */)) {
 		    vlen_prims_init(pvlen, 0);
 		    return;
 		  }
-		  else vlen_prims_insert(pvlen, cpe->type, utpl->len, pptrs->f_data+utpl->off, PM_MSG_STR_COPY);
+		  else vlen_prims_insert(pvlen, cpe->type, utpl->len, pptrs->f_data+utpl->off, PM_MSG_STR_COPY_ZERO);
 		}
 	      }
             }

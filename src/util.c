@@ -2487,12 +2487,25 @@ void vlen_prims_insert(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, int
   ptr += PmLabelTSz;
 
   if (len) {
-    if (PM_MSG_BIN_COPY) memcpy(ptr, val, len);
-    else if (PM_MSG_STR_COPY) strncpy(ptr, val, len);
+    switch (copy_type) {
+    case PM_MSG_BIN_COPY:
+      memcpy(ptr, val, len);
+      break;
+    case PM_MSG_STR_COPY:
+      strncpy(ptr, val, len); 
+      break;
+    case PM_MSG_STR_COPY_ZERO:
+      label_ptr->len++; /* terminating zero */
+      strncpy(ptr, val, len);
+      ptr[len] = '\0';
+      break;
+    default:
+      break;
+    }
   }
 
   hdr->num++;
-  hdr->tot_len += (PmLabelTSz + len);
+  hdr->tot_len += (PmLabelTSz + label_ptr->len);
 }
 
 int vlen_prims_delete(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc /*, optional realloc */)

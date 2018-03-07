@@ -422,6 +422,7 @@
 
 #define PM_MSG_BIN_COPY			0
 #define PM_MSG_STR_COPY			1
+#define PM_MSG_STR_COPY_ZERO		2
 
 #define DYN_STR_UNKNOWN			0
 #define DYN_STR_KAFKA_TOPIC		1
