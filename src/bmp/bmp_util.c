@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -219,8 +219,12 @@ void bmp_peer_close(struct bmp_peer *bmpp, int type)
 
 void bgp_msg_data_set_data_bmp(struct bgp_msg_extra_data_bmp *bmed_bmp, struct bmp_data *bdata)
 {
+  bmed_bmp->peer_type = bdata->peer_type;
+
   bmed_bmp->is_post = bdata->is_post;
   bmed_bmp->is_2b_asn = bdata->is_2b_asn;
+  bmed_bmp->is_out = bdata->is_out;
+  bmed_bmp->is_filtered = bdata->is_filtered;
 }
 
 int bgp_extra_data_cmp_bmp(struct bgp_msg_extra_data *a, struct bgp_msg_extra_data *b) 
@@ -279,7 +283,13 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
 #ifdef WITH_JANSSON
     json_t *obj = void_obj;
 
-    json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bmed_bmp->is_post));
+    if (bmed_bmp->peer_type == BMP_PEER_TYPE_LOC_RIB) {
+      json_object_set_new_nocheck(obj, "is_filtered", json_integer((json_int_t)bmed_bmp->is_filtered));
+    }
+    else {
+      json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bmed_bmp->is_post));
+      json_object_set_new_nocheck(obj, "is_out", json_integer((json_int_t)bmed_bmp->is_out));
+    }
 #endif
   }
 }
