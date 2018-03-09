@@ -1403,6 +1403,11 @@ parse_engine(char *s, u_int8_t *engine_type, u_int32_t *engine_id)
     *engine_type = atoi(s);
     *engine_id = atoi(ptr);
     *delim = ':';
+
+    if (engine_type > 255) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): parse_engine(): NetFlow v5 engine_type values are limited to 0-255.\n", config.name, config.type);
+      exit_plugin(1);
+    }
   }
   /* NetFlow v9 / IPFIX case */
   else {
@@ -1426,7 +1431,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   time_t now, refresh_deadline;
   int refresh_timeout, ret, num, recv_budget, poll_bypass;
   char default_receiver[] = "127.0.0.1:2100";
-  char default_engine[] = "0:0";
+  char default_engine_v5[] = "0:0", default_engine_v9[] = "0";
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
@@ -1528,7 +1533,12 @@ sort_version:
   }
   target.dialect = &nf[i];
 
-  if (!config.nfprobe_engine) config.nfprobe_engine = default_engine;
+  if (!config.nfprobe_engine) {
+    if (config.nfprobe_version == 5)
+      config.nfprobe_engine = default_engine_v5;
+    else if (config.nfprobe_version == 9 || config.nfprobe_version == 10)
+      config.nfprobe_engine = default_engine_v9;
+  }
   parse_engine(config.nfprobe_engine, &engine_type, &engine_id);
 
   /* Netflow send socket */

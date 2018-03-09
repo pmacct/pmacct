@@ -8,6 +8,16 @@ upgrading your installation.
 
 TO:	>= 1.7.2
 FROM:	<= 1.7.1
+TOPIC:	nfprobe plugin, nfprobe_engine and NetFlow v9/IPFIX
+DESC:	Until version 1.7.1 it was possible to (mistakenly) configure the
+	NetFlow v9 SourceID field/IPFIX Observation Domain ID with the old
+	NetFlow v5 jargon, ie. '1:1'. This is now threated as invalid and
+	a positive 32-bit number, ie. '100000', is expected. If exporting
+	NetFlow v5, nothing changed: the Engine ID/Engine Type input, ie.
+	'1:1', is still valid and expected.
+
+TO:	>= 1.7.2
+FROM:	<= 1.7.1
 TOPIC:	NetFlow/IPFIX/sFlow statistics via SIGUSR1
 DESC:	If using this feature, please note that there has been a change in
 	the output format. Mainly: 1) agent stats are now one per line, 2)
