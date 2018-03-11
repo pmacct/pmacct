@@ -2409,7 +2409,7 @@ DESC:           Enables dump of BGP tables/BMP events/Streaming Telemetry data a
 
 		%z		The +hhmm numeric time zone in ISO8601:1988 format (ie. -0400)
 
-		$tzone		The time zone in rfc3339 format (ie. -04:00 or Z for +00:00)
+		$tzone		The time zone in rfc3339 format (ie. -04:00 or 'Z' for +00:00)
 
                 $peer_src_ip    BGP or BMP peer/Streaming Telemetry exporter IP address.
 DEFAULT:	none

@@ -1,8 +1,56 @@
 pmacct [IP traffic accounting : BGP : BMP : IGP : Streaming Telemetry]
-pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 
 The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
+
+1.7.1 -- XX-0X-2018
+  + pmbgpd: introduced a BGP Looking Glass server allowing to perform
+    queries, ie. lookup IP addresses/prefixes or get the list of BGP
+    peers, against available BGP RIBs. The server is asyncronous and
+    uses ZeroMQ as transport layer to serve incoming queries. Sample
+    C/Python LG clients are available in 'examples/lg'. Sample LG
+    server config is available in QUICKSTART. Request/Reply Looking
+    Glass formats are documented in 'docs/LOOKING_GLASS_FORMAT'.
+  + Introduced Kafka dynamic partitioning via kafka_partition_dynamic
+    and kafka_partition_key knobs. Kafka topic can contain variables,
+    ie. $peer_src_ip, $src_host, $dst_port, $tag, etc., which are all
+    computed for each aggregate when data is purged to the backend.
+    This is in addition to existing kafka_partition knob to rely on
+    built-in Kafka partitioning, allowing to assign data statically to
+    one partition or dynamically relying on the default partitioner. 
+    Feature is courtesy by Corentin Neau / Codethink ( @weyfonk ).
+  + Introduced rfc3339 formatted timestamps in logs, ie. if UTC timezone
+    yyyy-MM-ddTHH:mm:ss(.ss)Z. For primitives the timestamps_rfc3339
+    knob enables this feature (currently left disabled by default for
+    backward compatibility).
+  + Added timestamps_utc knob to decode timestamps to UTC even if the
+    underlying Operating System is set to a different timezone. On the
+    goodness of running a system set to UTC please read Q18 of FAQS.
+  + Improved [ns]facctd_allow_file: the map is now made reloadable at
+    runtime via SIGUSR2 and accepts IPv4/IPv6 prefixes increasing its
+    scale (before it was only accepting individual IP addresses).
+  ! fix, plugins: getppid() parent process health check improved so
+    to work in Docker environments not assuming anymore parent PID is
+    1. Patch is courtesy by Hidde van der Heide ( @hvanderheide ). 
+  ! fix, nfacctd: avoid time calculations to underflow if sysUptime <
+    first or last flow switched timestamps in NetFlow v5. Patch is
+    courtesy by David Steinn Geirsson ( @dsgwork ). 
+  ! fix, MySQL plugin: minor code revisions to restore compilingxi
+    against MariaDB 10.2. 
+  ! fix, print, SQL plugins: post_tag, post_tag2 support was added to
+    sql_table and print_output_file. Also for Kafka, RabbitMQ plugins
+    kafka_topic and amqp_routing_key variables support was harmonized
+    with print and SQL plugins (ie. $pre_tag renamed to $tag), see
+    UPGRADE.
+  ! fix, build system: several patches committed to the build system
+    to simplify libraries probing, make sure to bail out upon error.
+    Also imposed minimum required version to pretty all libraries.
+  - BGP daemon: offline code, ie. bgp_daemon_offline_* configuration
+    directives, has been deprecated in favour of different approaches
+    like BGP Looking Glass and BGP Xconnects.
+  - Obsoleted pkt_len_distrib primitive which was meant to bucket
+    packe/flow/sample lenghts in a distribution. 
 
 1.7.0 -- 21-10-2017
   + ZeroMQ integration: by defining plugin_pipe_zmq to 'true', ZeroMQ is
