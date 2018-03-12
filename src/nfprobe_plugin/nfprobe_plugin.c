@@ -1404,7 +1404,7 @@ parse_engine(char *s, u_int8_t *engine_type, u_int32_t *engine_id)
     *engine_id = atoi(ptr);
     *delim = ':';
 
-    if (engine_type > 255) {
+    if ((*engine_type) > 255) {
       Log(LOG_ERR, "ERROR ( %s/%s ): parse_engine(): NetFlow v5 engine_type values are limited to 0-255.\n", config.name, config.type);
       exit_plugin(1);
     }
