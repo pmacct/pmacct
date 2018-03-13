@@ -239,7 +239,7 @@ void sql_init_triggers(time_t now, struct insert_data *idata)
       if (config.sql_trigger_time == COUNT_MONTHLY) 
 	idata->t_timeslot = calc_monthly_timeslot(t, config.sql_trigger_time_howmany, ADD);
     }
-    idata->triggertime = t;
+    idata->triggertime = (t + config.sql_startup_delay);
 
     /* adding a trailer timeslot: it's a deadline not a basetime */
     idata->triggertime += idata->t_timeslot;

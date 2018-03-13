@@ -1267,11 +1267,11 @@ KEY:		[ sql_trigger_exec | print_trigger_exec | amqp_trigger_exec | kafka_trigge
 DESC:		Defines the executable to be launched at fixed time intervals to post-process aggregates;
 		in SQL plugins, intervals are specified by the 'sql_trigger_time' directive; if no interval
 		is supplied 'sql_refresh_time' value is used instead: this will result in a trigger being
-		fired each purging event. A number of environment variables are set in order to allow the
-		trigger to take actions; take a look to docs/TRIGGER_VARS to check them out. In the print
-		plugin a simpler implementation is made: triggers can be fired each time data is written to
-		the backend (ie. print_refresh_time) and no environment variables are passed over to the
-		executable.
+		fired each purging event (recommended since all environment variables will be set, see next).
+		A number of environment variables are set in order to allow the trigger to take actions and 
+		are listed in docs/TRIGGER_VARS. Non-SQL plugins feature a simpler implementation: triggers
+		can only be fired each time data is written to the backend (ie. print_refresh_time) and no
+		environment variables are passed over to the executable.
 DEFAULT:	none
 
 KEY:		sql_trigger_time
