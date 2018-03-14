@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -275,7 +275,7 @@ Inline void SQL_SetENV_child(const struct insert_data *idata)
     count++;
   }
 
-  if (idata->een) {
+  {
     u_char *tmpptr;
 
     strncat(envbuf.ptr, "EFFECTIVE_ELEM_NUMBER=", envbuf.end-envbuf.ptr);
