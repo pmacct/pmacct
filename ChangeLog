@@ -23,14 +23,22 @@ The keys used are:
     C/Python LG clients are available in 'examples/lg'. Sample LG
     server config is available in QUICKSTART. Request/Reply Looking
     Glass formats are documented in 'docs/LOOKING_GLASS_FORMAT'.
-  + Introduced Kafka dynamic partitioning via kafka_partition_dynamic
-    and kafka_partition_key knobs. Kafka topic can contain variables,
-    ie. $peer_src_ip, $src_host, $dst_port, $tag, etc., which are all
-    computed for each aggregate when data is purged to the backend.
-    This is in addition to existing kafka_partition knob to rely on
-    built-in Kafka partitioning, allowing to assign data statically to
-    one partition or dynamically relying on the default partitioner. 
-    Feature is courtesy by Corentin Neau / Codethink ( @weyfonk ).
+  + pmacctd: the daemon can now listen for traffic data on multiple
+    interfaces via a new pcap_interfaces_map feature (compared to
+    existing interface/pcap_interface where only a single interface
+    could be defined). The map allows to define also ifindex mapping
+    and capturing direction on a per-interface basis. The map can be
+    reloaded at runtime via a SIGUSR2 signal and a sample map is
+    available in examples/pcap_interfaces.map.example .
+  + Kafka plugin: dynamic partitioning via kafka_partition_dynamic
+    and kafka_partition_key knobs is introduced. The Kafka topic can
+    contain variables, ie. $peer_src_ip, $src_host, $dst_port, $tag,
+    etc., which are all computed for each aggregate when data is
+    purged to the backend. This is in addition to kafka_partition knob
+    to rely on built-in Kafka partitioning, allowing to assign data
+    statically to one partition or dynamically relying on the default
+    partitioner.  Feature is courtesy by Corentin Neau / Codethink
+    ( @weyfonk ).
   + Introduced rfc3339 formatted timestamps in logs, ie. if UTC timezone
     yyyy-MM-ddTHH:mm:ss(.ss)Z. For primitives the timestamps_rfc3339
     knob enables this feature (currently left disabled by default for
@@ -38,6 +46,20 @@ The keys used are:
   + Added timestamps_utc knob to decode timestamps to UTC even if the
     underlying Operating System is set to a different timezone. On the
     goodness of running a system set to UTC please read Q18 of FAQS.
+  + sfacctd: implemented mpls_label_top, mpls_label_bottom and
+    mpls_stack_depth primitives decoded from flow sample headers.
+    Thanks to David Barroso ( @dbarrosop ).
+  + nfacctd: added support for field types 130 and 131 passed as part
+    of NetFlow v9/IPFIX option packets (in addition to being in-lined
+    in the flows.
+  + nfprobe: added a new nfprobe_dont_cache knob allowing to disable
+    caching and summarisation of flows (essentially behaving like a
+    sFlow probe).
+  * nfprobe: added support for MPLS_LABEL_1, NetFlow v9/IPFIX IE 70;
+    improved support for BGP next-hop IE 18 and 63.
+  + sfprobe: added sfprobe_source_ip knob to define the local IP
+    address from which sFlow datagrams are exported; improved support
+    for BGP next-hop.
   + nfacctd, sfacctd, BGP, BMP, Streaming Telemetry daemons: on Linux,
     if supported, use SO_REUSEPORT for the listening socket (added to
     existing SO_REUSEADDR option).
@@ -53,9 +75,12 @@ The keys used are:
   + plugin_pipe_zmq: introduced plugin_pipe_zmq_hwm (high water mark)
     to control the maximum amount of messages than can be stored in
     the ZeroMQ queue.
-  + Improved [ns]facctd_allow_file: the map is now made reloadable at
+  + improved [ns]facctd_allow_file: the map is now made reloadable at
     runtime via SIGUSR2 and accepts IPv4/IPv6 prefixes increasing its
     scale (before it was only accepting individual IP addresses).
+  + pmacctd: added support for IPv6, MPLS for DLT_LINUX_SLL captures.
+  + uacctd: added global 'direction' knob to give visibility of data
+    capturing direction, ie. in/out. Useful for pre_tag_map use.
   + MySQL plugin: added sql_port knob in order to specify non-default
     port for connecting to the database. Patch is courtesy by Vadim
     Tkachenko ( @vadimtk ).
@@ -65,24 +90,42 @@ The keys used are:
   ! fix, plugins: imposing a budget for received messages (100) so to
     preserve fairness of other operations (ie. time keeping, bucketing,
     reloading maps, etc.) and prevent starvations.
+  ! fix, plugins: executing triggers, the first argument passed to
+    execv() should be the path to the executable. Otherwise it will
+    cause execv(3) to fail and return EFAULT on OpenBSD. The patch is
+    courtesy by @higgsd .
   ! fix, BGP daemon: improved support of multiple capabilities per
     optional parameter in the OPEN message. Also add-path capability
     is now advertised if neighbor supports send/receive (previously it
     was sent back on send only) of such capability. Thanks to Radu
     Anghel ( @cozonac ) for his support.
+  ! fix, BGP daemon: wrong type 2 32-bit ASN Route Distinguisher was
+    defined in network.h.
   ! fix, BGP, BMP daemons: lookup of BGP-LU entries is now performed
     against the correct RIB.
   ! fix, BMP daemon: BMP thread is now made mutually exclusive with
     the BGP thread (until an use-case needs to run them both). This is
     to potentially prevent BGP and BMP information to interfere with
-    each other when correlated.
+    each other when correlated. Also the 'bmp' keyword was added for
+    *_as and *_net config directives (ie. nfacctd_as, nfacctd_net).
+    Thanks to Juan Camilo Cardona ( @jccardonar ) for his support.
+  ! fix, BMP daemon: improved correlation of BMP data with traffic
+    data by supporting a replication use-case (the BMP exporter is a
+    route-server rather than an actual Edge Router) upon lookup. Many
+    thanks to Juan Camilo Cardona ( @jccardonar ) for his support.
   ! fix, BMP daemon: in bgp_peer_cmp() and bgp_peer_host_addr_cmp()
     the comparison function has been changed from generic memcmp() to
     host_addr_cmp() as paddings were giving issues. Many thanks to
     Juan Camilo Cardona ( @jccardonar ) for reporting the issue.
+  ! fix, BMP daemon: a pm_tdestroy call in bmp_peer_close was leading
+    to SEGVs under certain conditions by not NULL'ing all pointers.
+    Thanks to Juan Camilo Cardona ( @jccardonar ) for reporting the
+    issue.
   ! fix, nfacctd: avoid time calculations to underflow if sysUptime <
     first or last flow switched timestamps in NetFlow v5. Patch is
     courtesy by David Steinn Geirsson ( @dsgwork ). 
+  ! fix, nfprobe: changed ifindex fields from u_int16_t to u_int32_t,
+    aligning to the rest of pmacct structs.
   ! fix, MySQL plugin: minor code revisions to restore compilingxi
     against MariaDB 10.2. 
   ! fix, sql_common.c: increased read_SQLquery_from_file() buffer size
