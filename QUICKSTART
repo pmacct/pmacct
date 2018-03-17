@@ -1078,22 +1078,17 @@ sfprobe_receiver: 1.2.3.4:6343
 XIV. Quickstart guide to setup the BGP daemon
 BGP can be run as a stand-alone collector daemon (pmbgpd, from 1.6.1) or as a
 thread within one of the traffic accounting daemons (ie. nfacctd). The stand-
-alone daemon is suitable for consuming BGP data only, real-time or at regular
-intervals; the thread solution is suitable for correlation of BGP with other
-data sources, ie. NetFlow, IPFIX, sFlow, etc.. The thread implementation idea
-is to receive data-plane information, ie. via NetFlow, sFlow, etc., and control
-plane information, ie. full routing tables via BGP, from edge routers. Per-peer
-BGP RIBs are maintained to ensure local views of the network, a behaviour close
-to that of a BGP route-server. In case of routers with default-only or partial
-BGP views, the default route can be followed up (bgp_default_follow); also it
-might be desirable in certain situations, for example trading-off resources to
-accuracy, to ntirely map one or a set of agents to a BGP peer (bgp_agent_map). 
-
-Pre-requisite is that the pmacct package is configured for compiling with support
-for threads. Nowadays this is the default setting hence the following line will
-do it:
-
-shell> ./configure
+alone daemon is suitable for the Looking-Glass use-case, building BGP xconnects
+and consuming BGP data, real-time or at regular intervals; the thread solution
+is suitable for correlation of BGP with other data sources, ie. NetFlow, IPFIX,
+sFlow, etc. The thread implementation idea is to receive data-plane information,
+ie. via NetFlow, sFlow, etc., and control plane information, ie. full routing
+tables via BGP, from edge routers. Per-peer BGP RIBs are maintained to ensure
+local views of the network, a behaviour close to that of a BGP route-server.
+In case of routers with default-only or partial BGP views, the default route
+can be followed up (bgp_default_follow); also it might be desirable in certain
+situations, for example trading-off resources to accuracy, to map one or a set
+of flow agents to a BGP peer (bgp_agent_map). 
 
 The following configuration snippet shows how to set up a BGP thread (ie. part
 of the NetFlow/IPFIX collector, nfacctd) which will bind to an IP address and
@@ -1136,14 +1131,15 @@ related to the BGP feed(s), bgp_daemon_msglog_* configuration directives can be
 enabled in order to log BGP messaging.
 
 XIVa. Limiting AS-PATH and BGP community attributes length
-AS-PATH and BGP communities can by nature get easily long, when represented as strings.
-Sometimes only a small portion of their content is relevant to the accounting task and
-hence a filtering layer was developed to take special care of these attributes. The
-bgp_aspath_radius cuts the AS-PATH down after a specified amount of hops; whereas the
-bgp_stdcomm_pattern does a simple sub-string matching against standard BGP communities,
-filtering in only those that match (optionally, for better precision, a pre-defined
-number of characters can be wildcarded by employing the '.' symbol, like in regular
-expressions). See a typical usage example below:
+AS-PATH and BGP communities can get easily long when represented as strings.
+Sometimes only a small portion of their content is of interest and hence a
+simple filtering layer was developed in order to take special care of these
+BGP attributes. bgp_aspath_radius cuts the AS-PATH down after a specified
+amount of AS hops; whereas the bgp_stdcomm_pattern does a simple sub-string
+matching against standard BGP communities, filtering in only those that match
+(optionally, for better precision, a pre-defined number of characters can be
+wildcarded by employing the '.' symbol, like in regular expressions). See an
+example below:
 
 bgp_aspath_radius: 3
 bgp_stdcomm_pattern: 12345:
@@ -1178,10 +1174,13 @@ relevant routers via SNMP. In this sense, the bgpPeerTable MIB is a good startin
 point. Alternatively pmacct also offers the option to perform reverse BGP lookups.
 
 NOTES:
-* When mapping, the peer_src_as primitive doesn't really apply to egress NetFlow
-  (or egress sFlow) as it mainly relies on either the input interface index
-  (ifIndex), the source MAC address, a reverse BGP next-hop lookup or a combination
-  of these.
+* When using maps, the peer_src_as primitive should be used with care if egress
+  NetFlow/IPFIX/sFlow is in use as it mainly relies on either the input interface
+  index (ifIndex), the source MAC address, a reverse BGP next-hop lookup or a
+  combination of these. For example, egress NetFlow enabled on edge devices on
+  core interfaces may work as the input ifIndex would still be visible; egress
+  NetFlow enabled on edge devices on edge interfaces may not work as, unless
+  traffic is locally switched, it may be sampled upon exiting the observed netowrk.
 * "Source" MED, local preference, communities and AS-PATH have all been allocated
   aggregation primitives. Each carries its own peculiarities but the general concepts
   highlighed in this chapter apply to these aswell. Check CONFIG-KEYS out for the
@@ -1189,28 +1188,32 @@ NOTES:
   directives.
 
 XIVc. Tracking entities on the own IP address space
-It might happen that not all entities attached to the service provider network are
-running BGP but rather they get IP prefixes redistributed into iBGP (different
-routing protocols, statics, directly connected, etc.). These can be private IP
-addresses or segments of the SP public address space. The common factor to all of
-them is that while being present in iBGP, these prefixes can't be tracked any
-further due to the lack of attributes like AS-PATH or an ASN. To overcome this
-situation the simplest approach is to employ a bgp_peer_src_as_map directive,
-described previously (ie. making use of interface descriptions as a possible way
-to automate the process). Alterntively, the bgp_stdcomm_pattern_to_asn directive
-was developed to fit into this scenario: assuming procedures of a SP are (or can
-be changed) to label every relevant non-BGP speaking entity IP prefixes uniquely
-with a BGP standard community, this directive allows to map the community to a
-peer AS/origin AS couple as per the following example: XXXXX:YYYYY => Peer-AS=XXXXX,
+It might happen that not all entities connected to the observed network are
+running BGP but rather they get assigned provider IP prefixes redistributed
+into iBGP (different routing protocols, statics, directly connected, etc.).
+These can be private IP addresses or segments of the SP public address space.
+The common factor to all of them is that while being present in iBGP, these
+prefixes can't be distinguished any further due to the lack of attributes like
+AS-PATH or an ASN. One simple solution, although costly, could be to account
+on IP prefixes (other than BGP attributes). Another simple solution, especially
+if the enity is dominated by outbound traffic (ingress in the observed network)
+could be to use a bgp_peer_src_as_map directive, described previously (ie. make
+use of interface descriptions as a possible way to automate the process).
+Alterntively, the bgp_stdcomm_pattern_to_asn directive was developed to fit in
+this scenario: assuming procedures of a SP are (or can be changed) to label
+every relevant non-BGP speaking entity IP prefixes uniquely with BGP standard
+communities, this directive then allows to map the community to a peer AS/
+origin AS couple as per the following example: XXXXX:YYYYY => Peer-AS=XXXXX,
 Origin-AS=YYYYY. 
 
 XIVd. Preparing the router to BGP peer 
-Once the collector is configured and started up the remaining step is to let routers
-to export traffic samples to the collector and BGP peer with it. Configuring the same
-source IP address across both NetFlow and BGP features allows the pmacct collector to
-perform the required correlations. Also, setting the BGP Router ID accordingly allows
-for more clear log messages. It's adviceable to configure the collector at the routers
-as a Route-Reflector (RR) client.
+Once the collector is configured and started up the remaining step is to let
+routers export traffic samples to the collector and BGP peer with it. By
+configuring the same source IP address across both NetFlow and BGP features
+allows the collector to perform the required correlations without further
+configuration. Also, setting the BGP Router ID accordingly allows for more
+clear log messages. On the routers it is adviceable to configure the BGP
+session with the collector as a Route-Reflector (RR) client.
 
 A relevant configuration example for a Cisco router follows:
 
@@ -1252,6 +1255,9 @@ protocols bgp {
         }
     }
 }
+
+Contribution of further configuration examples for Cisco and Juniper devices
+and/or other relevant vendors is more than welcome. 
 
 XIVe. Example: writing flows augmented by BGP to a MySQL database
 The following setup is a realistic example for collecting an external traffic
@@ -1420,7 +1426,32 @@ shell> examples/lg/pmbgp.py -a 192.168.2.0/24 -r 192.168.1.1
 
 Request/Reply Looking Glass formats are documented in 'docs/LOOKING_GLASS_FORMAT'.
 
-XIVh. BGP daemon implementation concluding notes
+XIVh. Example: BGP Xconnects 
+Starting with release 1.7.1 pmbgpd, the pmacct BGP standalone daemon, includes
+a new BGP xconnect feature to map BGP peers (ie. PE routers) to BGP collectors
+(ie. nfacctd, sfacctd). The aim is to facilitate operations when re-sizing/re-
+balancing the collection infrastructure without impacting (ie. re-configuring)
+BGP peers. A few caveats apply: 1) mapping works only against the IP source
+address and not the BGP Router ID, 2) only 1:1 relationships can be formed
+(ie. this is about cross-connecting, not replication) and 3) only one session
+per BGP peer is supported (ie. multiple BGP agents are running on the same IP
+address or NAT traversal scenarios are not supported [yet]). The feature can
+be configured as follows:
+
+bgp_daemon_xconnect_map: /path/to/bgp_xconnects.map
+
+And the content of the map can be defined as follows:
+
+bgp_dst=10.0.0.1:17901  bgp_src=192.168.0.1
+bgp_dst=10.0.0.1:17902  bgp_src=192.168.0.2
+bgp_dst=10.0.0.1:17910  bgp_src=192.168.10.0/24
+
+Where bgp_dst is the IPv4/IPv6 address and port of the BGP collector to cross-
+connect incoming (bgp_src) BGP session to and bgp_src is compared against the
+IPv4/IPv6 address (not BGP Router ID) of an incoming BGP session from a BGP
+peer.
+
+XIVg. BGP daemon implementation concluding notes
 The implementation supports 4-bytes ASN, IPv4, IPv6, VPNv4 and VPNv6 (MP-BGP)
 address families and several IETF drafts and RFCs, ie. ADD-PATH, Shutdown
 Message and Large BGP Communities among the others; IPv4, IPv6 transports for
