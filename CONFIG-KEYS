@@ -2485,10 +2485,9 @@ DEFAULT:	none
 
 KEY:		isis_daemon [GLOBAL]
 VALUES:		[ true | false ]
-DESC:		Enables the skinny IS-IS daemon thread. This feature requires the package to be supporting
-		multi-threading (--enable-threads). It implements P2P Hellos, CSNP and PSNP - and does not
-		send any LSP information out. It currently supports a single L2 P2P neighborship. Testing
-		has been done over a GRE tunnel.
+DESC:		Enables the skinny IS-IS daemon thread. It implements P2P Hellos, CSNP and PSNP -
+		and does not send any LSP information out. It currently supports a single L2 P2P
+		neighborship. Testing has been done over a GRE tunnel.
 DEFAULT:        false
 
 KEY:		isis_daemon_ip [GLOBAL]

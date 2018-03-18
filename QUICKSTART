@@ -164,7 +164,7 @@ go. Scripts for setting up RDBMS are located in the 'sql/' tree of the pmacct
 distribution tarball. For further guidance read the relevant README files in
 such directory. One of the crucial concepts to deal with, when using default
 table schemas, is table versioning: please read more about this topic in the
-FAQS document (Q16). 
+FAQS document (Q17). 
 
 IIIa. MySQL examples 
 shell> cd sql/
@@ -319,23 +319,24 @@ queries when retrieving data.
 
 
 IV. Running the libpcap-based daemon (pmacctd) 
-All deamons including pmacctd can be run with commandline options, using a config
-file or a mix of the two. Sample configuration files are in examples/ tree. Note also 
-that most of the new features are available only as configuration directives. To be
-aware of the existing configuration directives, please read the CONFIG-KEYS document. 
+All deamons including pmacctd can be run with commandline options, using a
+config file or a mix of the two. Sample configuration files are in examples/
+tree. Note also  that most of the new features are available only as config
+directives. To be aware of the existing configuration directives, please
+read the CONFIG-KEYS document. 
 
 Show all available pmacctd commandline switches:
 shell> pmacctd -h
 
-Run pmacctd reading configuration from a specified file (see examples/ tree for a brief
-list of some commonly useed keys; divert your eyes to CONFIG-KEYS for the full list).
-This example applies to all daemons:
+Run pmacctd reading configuration from a specified file (see examples/ tree
+for a brief list of some commonly useed keys; divert your eyes to CONFIG-KEYS
+for the full list). This example applies to all daemons:
 shell> pmacctd -f pmacctd.conf
 
-Daemonize the process; listen on eth0; aggregate data by src_host/dst_host; write to a
-MySQL server; limit traffic matching only source ip network 10.0.0.0/16; note that
-filters work the same as tcpdump. So, refer to libpcap/tcpdump man pages for examples
-and further reading. 
+Daemonize the process; listen on eth0; aggregate data by src_host/dst_host;
+write to a MySQL server; filter in only traffic with source prefix 10.0.0.0/16;
+note that filters work the same as tcpdump. So, refer to libpcap/tcpdump man
+pages for examples and further reading. 
 
 shell> pmacctd -D -c src_host,dst_host -i eth0 -P mysql src net 10.0.0.0/16
 
@@ -348,8 +349,8 @@ pcap_interface: eth0
 pcap_filter: src net 10.0.0.0/16
 ! ...
 
-Print collected traffic data aggregated by src_host/dst_host over the screen; refresh
-data every 30 seconds and listen on eth0. 
+Print collected traffic data aggregated by src_host/dst_host over the screen;
+refresh data every 30 seconds and listen on eth0. 
 
 shell> pmacctd -P print -r 30 -i eth0 -c src_host,dst_host
 
@@ -361,11 +362,31 @@ aggregate: src_host, dst_host
 pcap_interface: eth0
 ! ...
 
-Daemonize the process; let pmacct aggregate traffic in order to show in vs out traffic
-for network 192.168.0.0/16; send data to a PostgreSQL server. This configuration is not
-possible via commandline switches; the corresponding configuration follows: 
+Print collected traffic data aggregated by src_host/dst_host over the screen;
+refresh data every 30 seconds and listen on eth0 and eth1, listed in the file
+pointed by pcap_interfaces_map (see 'examples/pcap_interfaces.map.example' for
+more advanced uses of the map):
 
 !
+plugins: print
+print_refresh_time: 30
+aggregate: src_host, dst_host
+pcap_interfaces_map: /path/to/pcap_interfaces.map
+! ...
+
+Then in /path/to/pcap_interfaces.map:
+
+!
+ifname=eth0
+ifname=eth1
+! ...
+
+Daemonize the process; let pmacct aggregate traffic in order to show in vs out
+traffic for network 192.168.0.0/16; send data to a PostgreSQL server. This
+configuration is not possible via commandline switches; the corresponding
+configuration follows: 
+
+! 
 daemonize: true
 plugins: pgsql[in], pgsql[out]
 aggregate[in]: dst_host
@@ -376,8 +397,9 @@ sql_table[in]: acct_in
 sql_table[out]: acct_out
 ! ...
 
-The previous example looks nice! But how to make data historical ? Simple enough, let's
-suppose you want to split traffic by hour and write data into the DB every 60 seconds. 
+The previous example looks nice! But how to make data historical ? Simple
+enough, let's suppose you want to split traffic by hour and write data into
+the DB every 60 seconds. 
 
 !
 daemonize: true
@@ -393,11 +415,11 @@ sql_history: 1h
 sql_history_roundoff: h
 ! ...
 
-Let's now translate the same example in the memory plugin world. It's use is valuable
-expecially when it's required to feed bytes/packets/flows counters to external programs.
-Examples about the client program will follow later in this document. Now, note that
-each memory table need its own pipe file in order to get correctly contacted by the
-client:
+Let's now translate the same example in the memory plugin world. It's use
+is valuable expecially when it's required to feed bytes/packets/flows
+counters to external programs. Examples about the client program will
+follow later in this document. Now, note that each memory table need its
+own pipe file in order to get correctly contacted by the client:
 
 !
 daemonize: true
@@ -410,13 +432,15 @@ imt_path[in]: /tmp/pmacct_in.pipe
 imt_path[out]: /tmp/pmacct_out.pipe
 ! ...
 
-As a further note, check the CONFIG-KEYS document about more imt_* directives as they
-will support in the task of fine tuning the size and boundaries of memory tables, if
-default values are not ok for your setup. 
+As a further note, check CONFIG-KEYS document about more imt_* directives
+as they will support in the task of fine tuning the size and boundaries
+of memory tables, if default values are not ok for your setup. 
 
-Now, fire multiple instances of pmacctd, each on a different interface; again, because
-each instance will have its own memory table, it will require its own pipe file for
-client queries aswell (as explained in the previous examples):
+Now, fire multiple instances of pmacctd, each on a different interface;
+again, because each instance will have its own memory table, it will
+require its own pipe file for client queries aswell (as explained in the
+previous examples):
+
 shell> pmacctd -D -i eth0 -m 8 -s 65535 -p /tmp/pipe.eth0 
 shell> pmacctd -D -i ppp0 -m 0 -s 32768 -p /tmp/pipe.ppp0 
 
