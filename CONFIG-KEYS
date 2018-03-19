@@ -1543,6 +1543,11 @@ DEFAULT:        false
 
 KEY:		[ nfacctd_port | sfacctd_port ] (-l) [GLOBAL, NO_PMACCTD, NO_UACCTD]
 DESC:		Defines the UDP port where to bind nfacctd (nfacctd_port) and sfacctd (sfacctd_port) daemons.
+		If supported and if enabled on the system, the SO_REUSEPORT feature can be leveraged on Linux:
+		it allows multiple daemons (ie. nfacctd) to bind the same local address and UDP port in order
+		to load-balance processing of incoming packets. Below a URL to a presentation of SO_REUSEPORT 
+		https://domsch.com/linux/lpc2010/Scaling_techniques_for_servers_with_high_connection%20rates.pdf 
+		To enable SO_REUSEPORT on a Linux system supporting it 'sysctl net.core.allow_reuseport=1'.
 DEFAULT:	nfacctd_port: 2100; sfacctd_port: 6343 
 
 KEY:		[ nfacctd_ip | sfacctd_ip ] (-L) [GLOBAL, NO_PMACCTD, NO_UACCTD]
