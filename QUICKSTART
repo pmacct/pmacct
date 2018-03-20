@@ -853,27 +853,27 @@ deployment.
 
 
 XI. Quickstart guide to packet classification
-Packet classification is a feature available for pmacctd (libpcap-based daemon) and
-uacctd (NFLOG-based daemon) (please get in touch if packet classification against
-the sFlow raw header sample is desired). The current approach is to leverage the
-popular free, open-source nDPI library. To enable the feature please follow these
+Packet classification is a feature available for pmacctd (libpcap-based daemon),
+uacctd (NFLOG-based daemon), NetFlow v9/IPFIX IE 315 (dataLinkFrameSection) and
+the sFlow v5 raw header sample. The current approach is to leverage the popular
+free, open-source nDPI library. To enable the feature please follow these
 steps:
 
 1) Download pmacct from its webpage (http://www.pmacct.net/) or from its GitHub
    repository (https://github.com/pmacct/pmacct).
 
-2) Download nDPI from its GitHub repository (https://github.com/ntop/nDPI). pmacct
-   code is tested against the latest stable version of the nDPI library and hence
-   that is the recommended download. 
+2) Download nDPI from its GitHub repository (https://github.com/ntop/nDPI).
+   pmacct code is tested against the latest stable version of the nDPI library
+   and hence that is the recommended download. 
 
 3) Configure for compiling, compile and install the downloaded nDPI library, ie.
    inside the nDPI directory:
 
    shell> ./autogen.sh; ./configure; make; make install 
 
-3b) Starting with nDPI 2.2, several users have reported an error in step #4:
-   compiling pmacct fails with the following error (exact line numbers can differ
-   basing on pmacct and nDPI version):
+3b) Starting with nDPI 2.2, several users have reported an error in the following
+   step, that is, step #4: compiling pmacct fails with the following error (exact
+   line numbers can differ basing on pmacct and nDPI version):
 
    In file included from /usr/local/include/libndpi-2.2.0/libndpi/ndpi_main.h:30:0,
 		from ./../pmacct.h:93,
@@ -943,8 +943,10 @@ steps:
 XII. Quickstart guide to setup a NetFlow/IPFIX agent/probe
 pmacct is able to export traffic data through both NetFlow and sFlow protocols. This
 section covers NetFlow/IPFIX and next one covers sFlow. While NetFlow v5 is fixed by
-nature, v9 adds flexibility allowing to transport custom informations (for example,
-classification information or custom tags to remote collectors). Below the guide:
+nature, v9 adds (to v5) flexibility allowing to transport custom information (ie.
+classification information or custom tags to remote collectors) and IPFIX adds (to
+v9) the chance to transport private information (PEN) and variable-length elements.
+Below the configuration guide:
 
 a) usual initial steps: download pmacct, unpack it, compile it.
 
@@ -1673,16 +1675,19 @@ BMP can be run as a stand-alone collector daemon (pmbmpd, from 1.6.1) or as a
 thread within one of the traffic accounting daemons (ie. nfacctd). The stand-
 alone daemon is suitable for consuming BMP data only, real-time or at regular
 intervals; the thread solution is suitable for correlation of BMP with other
-data sources, ie. NetFlow, IPFIX, sFlow, etc.. The implementation was originally
-based on the draft-ietf-grow-bmp-07 IETF document (whereas the current review is
-against draft-ietf-grow-bmp-17). If unfamiliar with BMP, to quote the IETF
-document: "BMP is intended to provide a more convenient interface for obtaining
-route views for research purpose than the screen-scraping approach in common use
-today. The design goals are to keep BMP simple, useful, easily implemented, and
-minimally service-affecting.". The BMP daemon currently supports BMP data,
-events and stats, ie. initiation, termination, peer up, peer down, stats and
-route monitoring messages. The daemon enables to write BMP messages to files,
-AMQP and Kafka brokers, real-time (msglog) or at regular time intervals (dump).
+data sources, ie. NetFlow, IPFIX, sFlow, etc.. The implementation bases on
+rfc7854 and adds elements from both draft-ietf-grow-bmp-adj-rib-out and
+draft-ietf-grow-bmp-adj-loc-rib IETF documents. If unfamiliar with BMP, to
+quote rfc7854: "BMP is intended to provide a more convenient interface for
+obtaining route views for research purpose than the screen-scraping approach
+in common use today. The design goals are to keep BMP simple, useful, easily
+implemented, and minimally service-affecting.".
+
+The BMP daemon currently supports BMP data, events and stats, ie. initiation,
+termination, peer up, peer down, stats and route monitoring messages (that is
+no route mirroring messages; please get in touch if an implementation is
+wanted in this sense). The daemon enables to write BMP messages to files, AMQP
+and Kafka brokers, real-time (msglog) or at regular time intervals (dump).
 Also, route monitoring messages are saved in a RIB structure for IP prefix
 lookup.
 

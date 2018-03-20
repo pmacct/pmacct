@@ -6,18 +6,18 @@ the changes done or break old assumptions no longer valid; while the effort
 is to keep these cases at a low, please read this file in preparation to
 upgrading your installation.
 
-TO:	>= 1.7.2
-FROM:	<= 1.7.1
+TO:	>= 1.7.1
+FROM:	<= 1.7.0
 TOPIC:	nfprobe plugin, nfprobe_engine and NetFlow v9/IPFIX
-DESC:	Until version 1.7.1 it was possible to (mistakenly) configure the
+DESC:	Until version 1.7.0 it was possible to (mistakenly) configure the
 	NetFlow v9 SourceID field/IPFIX Observation Domain ID with the old
 	NetFlow v5 jargon, ie. '1:1'. This is now threated as invalid and
 	a positive 32-bit number, ie. '100000', is expected. If exporting
 	NetFlow v5, nothing changed: the Engine ID/Engine Type input, ie.
 	'1:1', is still valid and expected.
 
-TO:	>= 1.7.2
-FROM:	<= 1.7.1
+TO:	>= 1.7.1
+FROM:	<= 1.7.0
 TOPIC:	NetFlow/IPFIX/sFlow statistics via SIGUSR1
 DESC:	If using this feature, please note that there has been a change in
 	the output format. Mainly: 1) agent stats are now one per line, 2)
@@ -63,6 +63,9 @@ DESC:   Following is the list of features, knobs and plugins that are being
 	* pkt_len_distrib primitive is discontinued due to apparent lack of
 	  interest; the primitive was meant to bucket packet/flow/sample
 	  lenghts in a distribution.
+        * BGP daemon offline code, ie. bgp_daemon_offline_* directives, has
+	  been deprecated in favor of alternative approaches, ie. BGP Looking
+	  Glass (bgp_daemon_lg_*) and BGP Xconnects (bgp_daemon_xconnect_*).
 	* removed --enable-threads / --disable-threads configure switch to
 	  allow to compile pmacct even if no pthreads library is available.
 	  From this release support for threads is mandatory. 
