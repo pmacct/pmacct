@@ -83,7 +83,7 @@ void usage_daemon(char *prog_name)
   printf("  -O  \t[ formatted | csv | json | avro ] \n\tOutput format\n");
   printf("  -o  \tPath to output file\n");
   printf("  -A  \tAppend output (applies to -o)\n");
-  printf("  -E  \tCSV format serparator (applies to -O csv, DEFAULT: ',')\n");
+  printf("  -E  \tCSV format separator (applies to -O csv, DEFAULT: ',')\n");
   printf("\n");
   printf("For examples, see:\n");
   printf("  https://github.com/pmacct/pmacct/blob/master/QUICKSTART or\n");

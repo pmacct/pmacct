@@ -4,16 +4,16 @@ All data plane (ie. IPv4/IPv6 traffic) daemons can print statistics to stdout,
 keep them in memory tables, store persistently to open-source RDBMS (MySQL,
 PostgreSQL, Sqlite 3) or to noSQL databates (ie. BerkeleyDB) and to flat-files,
 and publish to AMQP and Kafka brokers (typically to insert in ElasticSearch,
-InfluxDB and Cassandra and, in general, all backends which are not natively
-supported by pmacct). BGP, BMP and Streaming Telemetry daemons can publish
-control and infrastructure planes to AMQP and Kafka brokers. 
+InfluxDB, Druid, ClickHouse and, more in general, all backends which are not
+natively supported by pmacct). BGP, BMP and Streaming Telemetry daemons can
+publish control and infrastructure planes to AMQP and Kafka brokers. 
 
-pmacctd		libpcap-based accounting daemon: it captures packets from an
-		interface it is bound to. Other than acting as a collector,
-		this daemon can also export statistics via NetFlow, IPFIX and
-		sFlow protocols. 
-nfacctd		NetFlow accounting daemon: it listens for NetFlow packets
-		v1/v5/v7/v8/v9 and IPFIX on one or more interfaces (IPv4 and
+pmacctd		libpcap-based accounting daemon: it captures packets from one
+		or multiple interfaces it is bound to. Other than acting as a
+		collector, this daemon can also export statistics via NetFlow,
+		IPFIX and sFlow protocols. 
+nfacctd		NetFlow/IPFIX accounting daemon: it listens for NetFlow v1/v5/
+		v8/v9 packets and IPFIX on one or more interfaces (IPv4 and
 		IPv6). Other than acting as a collector, this daemon can also
 		replicate to 3rd party collectors.
 sfacctd         sFlow accounting daemon; it listens for sFlow packets v2, v4

@@ -14,7 +14,7 @@ DOCUMENTATION
   * FAQS: FAQ document
   * INSTALL: basic installation guide
   * docs/: Miscellaneous internals, UNIX signals, SQL triggers documents 
-  * examples/: Sample pmacct and 3rd party tools configurations; sample maps
+  * examples/: Sample configs, maps, AMQP/Kafka consumers, clients 
   * sql/: SQL documentation, default SQL schemas and customization tips
 
 # BUILDING

@@ -48,11 +48,12 @@ plugins. Here is a list of plugins included in the official pmacct distribution:
 	   default.
 'amqp':    data is sent to a RabbitMQ message exchange, running AMQP protocol,
 	   for delivery to consumer applications or tools. Popular consumers
-	   are ElasticSearch, InfluxDB and Cassandra. This plugin can be compiled
-	   using the --enable-rabbitmq switch.
+	   are ElasticSearch, InfluxDB, Druid and ClickHouse. This plugin can
+	   be compiled using the --enable-rabbitmq switch.
 'kafka':   data is sent to a Kafka broker for delivery to consumer applications
-	   or tools. Popular consumers are ElasticSearch, InfluxDB and Cassandra.
-	   This plugin can be compiled using the --enable-kafka switch.
+	   or tools. Popular consumers are ElasticSearch, InfluxDB, Druid and
+	   ClickHouse. This plugin can be compiled using the --enable-kafka
+	   switch.
 'tee':	   applies to nfacctd and sfacctd daemons only. It's a featureful packet
 	   replicator for NetFlow/IPFIX/sFlow data. This plugin is compiled in by
 	   default.
