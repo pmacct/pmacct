@@ -524,8 +524,9 @@ struct bgp_peer *bgp_lookup_find_bgp_peer(struct sockaddr *sa, struct xflow_stat
   }
 
   if (xs_entry && peer_idx) {
-    if ((!sa_addr_cmp(sa, &peers[peer_idx].addr) || !sa_addr_cmp(sa, &peers[peer_idx].id)) &&
-        (!compare_bgp_port || !sa_port_cmp(sa, peers[peer_idx].tcp_port))) {
+    if (!sa_addr_cmp(sa, &peers[peer_idx].id) ||
+	(!sa_addr_cmp(sa, &peers[peer_idx].addr) &&
+	(!compare_bgp_port || !sa_port_cmp(sa, peers[peer_idx].tcp_port)))) {
       peer = &peers[peer_idx];
     }
     /* If no match then let's invalidate the entry */
@@ -536,8 +537,9 @@ struct bgp_peer *bgp_lookup_find_bgp_peer(struct sockaddr *sa, struct xflow_stat
   }
   else {
     for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
-      if ((!sa_addr_cmp(sa, &peers[peers_idx].addr) || !sa_addr_cmp(sa, &peers[peers_idx].id)) && 
-	  (!compare_bgp_port || !sa_port_cmp(sa, peers[peer_idx].tcp_port))) {
+      if (!sa_addr_cmp(sa, &peers[peers_idx].id) ||
+	  (!sa_addr_cmp(sa, &peers[peers_idx].addr) && 
+	  (!compare_bgp_port || !sa_port_cmp(sa, peers[peer_idx].tcp_port)))) {
         peer = &peers[peers_idx];
         if (xs_entry && peer_idx_ptr) *peer_idx_ptr = peers_idx;
         break;
