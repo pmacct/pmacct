@@ -405,7 +405,7 @@ DESC:		Defines how to source the ifindex of the capturing interface. If "sys" th
 		pcap_interfaces_map (see below). 
 DEFAULT:	none
 
-KEY:		pcap_interfaces_map [GLOBAL, PMACCTD_ONLY]
+KEY:		pcap_interfaces_map [GLOBAL, PMACCTD_ONLY, MAP]
 DESC:		Allows to listen for traffic data on multiple interfaces (compared to pcap_interface
 		where only a single interface can be defined). The map allows to define also ifindex
 		and capturing direction on a per-interface basis. The map can be reloaded at runtime
@@ -1967,7 +1967,7 @@ DESC:		Maximum number of flows that can be tracked simultaneously.
 DEFAULT:	8192
 
 KEY:		nfprobe_receiver
-DESC:		Defines the remote IP address/hostname and port to which NetFlow dagagrams are to be exported.
+DESC:		Defines the remote IP address/hostname and port to which NetFlow datagrams are to be exported.
 		If IPv4, the value is expected as 'address:port'. If IPv6, it is expected as '[address]:port'.
 DEFAULT:	127.0.0.1:2100
 
@@ -2041,7 +2041,7 @@ DESC:		Disables caching and summarisation of flows. By default a NetFlow/IPFIX a
 DEFAULT:	false
 
 KEY:		sfprobe_receiver
-DESC:           Defines the remote IP address/hostname and port to which sFlow dagagrams are to be exported.
+DESC:           Defines the remote IP address/hostname and port to which sFlow datagrams are to be exported.
 		The value is expected to be in the usual form 'address:port'.
 DEFAULT:	127.0.0.1:6343
 		
@@ -2573,14 +2573,14 @@ DEFAULT:	none
 
 KEY:            tee_receivers [MAP]
 DESC:           Defines full pathname to a list of remote IP addresses and ports to which NetFlow/sFlow
-		dagagrams are to be replicated to. Examples are available in "examples/tee_receivers.lst.
+		datagrams are to be replicated to. Examples are available in "examples/tee_receivers.lst.
 		example" file. Number of map entries (by default 384) can be modified via maps_entries.
 		Content can be reloaded at runtime by sending the daemon a SIGUSR2 signal (ie. "killall
 		-USR2 nfacctd").
 DEFAULT:	none
 
 KEY:		tee_source_ip
-DESC:           Defines the local IP address from which NetFlow/sFlow dagagrams are to be replicate from.
+DESC:           Defines the local IP address from which NetFlow/sFlow datagrams are to be replicate from.
 		Only a numerical IPv4/IPv6 address is expected. The supplied IP address is required to be
 		already configured on one of the interfaces. Value is ignored when transparent replication
 		is enabled.
