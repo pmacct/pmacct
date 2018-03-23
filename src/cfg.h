@@ -535,6 +535,7 @@ struct configuration {
   int use_ip_next_hop;
   int dump_max_writers;
   int tmp_asa_bi_flow;
+  int tmp_bgp_lookup_compare_ports;
   size_t thread_stack;
 };
 

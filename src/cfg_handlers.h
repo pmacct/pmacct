@@ -444,6 +444,7 @@ EXT int cfg_key_uacctd_threshold(char *, char *, char *);
 EXT int cfg_key_tunnel_0(char *, char *, char *);
 EXT int cfg_key_dump_max_writers(char *, char *, char *);
 EXT int cfg_key_tmp_asa_bi_flow(char *, char *, char *);
+EXT int cfg_key_tmp_bgp_lookup_compare_ports(char *, char *, char *);
 
 EXT void parse_time(char *, char *, int *, int *);
 EXT void cfg_set_aggregate(char *, u_int64_t [], u_int64_t, char *);

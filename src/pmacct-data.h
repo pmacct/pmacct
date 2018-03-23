@@ -849,6 +849,7 @@ static const struct _dictionary_line dictionary[] = {
   {"uacctd_threshold", cfg_key_uacctd_threshold},
   {"tunnel_0", cfg_key_tunnel_0},
   {"tmp_asa_bi_flow", cfg_key_tmp_asa_bi_flow},
+  {"tmp_bgp_lookup_compare_ports", cfg_key_tmp_bgp_lookup_compare_ports},
   {"", NULL},
 };
 

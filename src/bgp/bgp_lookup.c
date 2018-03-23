@@ -42,7 +42,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
   struct bgp_info *info;
   struct node_match_cmp_term2 nmct2;
   struct prefix default_prefix;
-  int compare_bgp_port;
+  int compare_bgp_port = config.tmp_bgp_lookup_compare_ports;
   int follow_default = config.nfacctd_bgp_follow_default;
   struct in_addr pref4;
 #if defined ENABLE_IPV6
@@ -62,7 +62,6 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
   pptrs->bgp_dst_info = NULL;
   pptrs->bgp_peer = NULL;
   pptrs->bgp_nexthop_info = NULL;
-  compare_bgp_port = FALSE;
   safi = SAFI_UNICAST;
 
   memset(&rd, 0, sizeof(rd));
