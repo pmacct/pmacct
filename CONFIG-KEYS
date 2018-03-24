@@ -2619,6 +2619,17 @@ DESC:		Bi-flows use two counters to report counters, ie. bytes and packets, in f
 		#232 and has been tested against a Cisco ASA export.
 DEFAULT:	false
 
+KEY:		tmp_bgp_lookup_compare_ports
+VALUES:		[ true | false ]
+DESC:		When looking up BGP RIBs in traffic accounting daemons (ie. nfacctd, sfacctd, etc.), 
+		if set to true, try to compare both the socket IP address and the TCP port of a BGP
+		session (that is, not only the socket IP address as when this knob is set to false).
+		This is always the case when a bgp_agent_map is defined and the 'bgp_port' keyword
+		is specified; when 'bgp_port' is not specified (or a bgp_agent_map is not defined),
+		this knob essentially forces the comparison against only the BGP Router-ID. This may
+		be wanted in NAT traversal scenarios and/or BGP xconnects (bgp_daemon_xconnect_map).
+DEFAULT:	false
+
 KEY:		thread_stack
 DESC:		Defines the stack size for threads screated by the daemon. The value is expected in
 		bytes. A value of 0, default, leaves the stack size to the system default or pmacct

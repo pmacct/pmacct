@@ -771,5 +771,9 @@ void MY_init_default_values(struct insert_data *idata)
 
 void MY_mysql_get_version()
 {
-  printf("MySQL %u\n", MYSQL_VERSION_ID);
+#ifdef MARIADB_CLIENT_VERSION_STR
+  printf("MariaDB %s\n", MARIADB_CLIENT_VERSION_STR);
+#else
+  printf("MySQL %s\n", MYSQL_SERVER_VERSION);
+#endif
 }

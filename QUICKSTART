@@ -1476,7 +1476,8 @@ bgp_dst=10.0.0.1:17910  bgp_src=192.168.10.0/24
 Where bgp_dst is the IPv4/IPv6 address and port of the BGP collector to cross-
 connect incoming (bgp_src) BGP session to and bgp_src is compared against the
 IPv4/IPv6 address (not BGP Router ID) of an incoming BGP session from a BGP
-peer.
+peer. At the collector end one should set tmp_bgp_lookup_compare_ports (read
+more about this knob in CONFIG-KEYS) to true. 
 
 XIVg. BGP daemon implementation concluding notes
 The implementation supports 4-bytes ASN, IPv4, IPv6, VPNv4 and VPNv6 (MP-BGP)
