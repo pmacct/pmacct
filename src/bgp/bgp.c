@@ -628,30 +628,46 @@ void skinny_bgp_daemon_online()
       if (bgp_misc_db->msglog_backend_methods)
 	bgp_peer_log_init(peer, config.nfacctd_bgp_msglog_output, FUNC_TYPE_BGP);
 
-      /* Check: only one TCP connection is allowed per peer */
-      /* XXX: fix multiple BGP daemons on the same host and NAT traversal scenarios */
+      /* Check: more than one TCP connection from a peer (IP address) */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bgp_max_peers; peers_check_idx++) { 
-	if (peers_idx != peers_check_idx && !memcmp(&peers[peers_check_idx].addr, &peer->addr, sizeof(peers[peers_check_idx].addr))) { 
+	if (peers_idx != peers_check_idx && !memcmp(&peers[peers_check_idx].addr, &peer->addr, sizeof(peers[peers_check_idx].addr))) {
+	  int same_peer = FALSE;
+
 	  bgp_peer_print(&peers[peers_check_idx], bgp_peer_str, INET6_ADDRSTRLEN);
 
+          /* Check: if not x-connecting, let's see if we have to compare TCP ports
+	     (ie. NAT traversal / non-transparent tee scenarios); then evaluate if
+	     the new session is valid or has to be rejected */  
 	  if (!config.bgp_xconnect_map) {
-	    if ((now - peers[peers_check_idx].last_keepalive) > peers[peers_check_idx].ht) {
-	      bgp_peer_print(&peers[peers_check_idx], bgp_peer_str, INET6_ADDRSTRLEN);
-              Log(LOG_INFO, "INFO ( %s/%s ): [%s] Replenishing stale connection by peer.\n",
-			config.name, bgp_misc_db->log_str, bgp_peer_str);
-              FD_CLR(peers[peers_check_idx].fd, &bkp_read_descs);
-              bgp_peer_close(&peers[peers_check_idx], FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
+	    if (config.tmp_bgp_lookup_compare_ports) {
+	      if (peers[peers_check_idx].tcp_port == peer->tcp_port) same_peer = TRUE;
+	      else {
+		same_peer = FALSE;
+	        if (peers[peers_check_idx].fd) peers_num++;
+	      }
 	    }
-	    else {
-	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Refusing new connection from existing peer (residual holdtime: %u).\n",
+	    else same_peer = TRUE;
+
+	    if (same_peer) {
+	      if ((now - peers[peers_check_idx].last_keepalive) > peers[peers_check_idx].ht) {
+		bgp_peer_print(&peers[peers_check_idx], bgp_peer_str, INET6_ADDRSTRLEN);
+              	Log(LOG_INFO, "INFO ( %s/%s ): [%s] Replenishing stale connection by peer.\n",
+			config.name, bgp_misc_db->log_str, bgp_peer_str);
+		FD_CLR(peers[peers_check_idx].fd, &bkp_read_descs);
+		bgp_peer_close(&peers[peers_check_idx], FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
+	      }
+	      else {
+		Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Refusing new connection from existing peer (residual holdtime: %u).\n",
 			config.name, bgp_misc_db->log_str, bgp_peer_str,
 			(peers[peers_check_idx].ht - (now - peers[peers_check_idx].last_keepalive)));
-	      FD_CLR(peer->fd, &bkp_read_descs);
-	      bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
-	      // bgp_batch_rollback(&bp_batch);
-	      goto read_data;
+		FD_CLR(peer->fd, &bkp_read_descs);
+		bgp_peer_close(peer, FUNC_TYPE_BGP, FALSE, FALSE, FALSE, FALSE, NULL);
+		goto read_data;
+	      }
 	    }
 	  }
+	  /* XXX: if x-connecting we don't support NAT traversal / non-transparent tee
+	     scenarios (yet?) */ 
 	  else {
 	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Refusing new incoming connection for existing BGP xconnect.\n",
 			config.name, bgp_misc_db->log_str, bgp_peer_str);
