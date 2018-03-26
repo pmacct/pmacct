@@ -2063,12 +2063,12 @@ DESC:		Enables the BGP daemon thread. Neighbors are not defined explicitely but 
 		of peers is specified (bgp_daemon_max_peers); also, for security purposes, the daemon does
 		not implement outbound BGP UPDATE messages and acts passively (ie. it never establishes
 		a connection to a remote peer but waits for incoming connections); upon receipt of a BGP
-		OPEN message, the local daemon presents itself as belonging to the same AS number and
-		supporting the same (or a subset of the) BGP capabilities as the remote peer; capabilities
-		currently supported are MP-BGP, 4-bytes ASNs, ADD-PATH. Per-peer RIBs are maintained basing
-		on the IP address of the peer (and for clarity not its BGP Router-ID). In case of ADD-PATH
-		capability, the correct BGP info is linked to traffic data using BGP next-hop (or IP next-
-		hop if use_ip_next_hop is set to true) as selector among the paths available.
+		OPEN message the local daemon presents itself as belonging to the same AS number as the
+		remote peer, unless bgp_daemon_as is set, and supporting the same (or a subset of the) BGP
+		capabilities; capabilities currently supported are MP-BGP, 4-bytes ASNs, ADD-PATH.
+		Per-peer RIBs are maintained. In case of ADD-PATH capability, the correct BGP info is
+		linked to traffic data using BGP next-hop (or IP next-hop if use_ip_next_hop is set to
+		true) as selector among the paths available.
 DEFAULT:	false
 
 KEY:		bmp_daemon [GLOBAL]

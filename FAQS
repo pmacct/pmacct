@@ -84,13 +84,15 @@ A: CPU cycles are proportional to the amount of traffic (packets, flows, samples
    in 1.0.0. To take advantage of the performance boost from Linux
    3.10, you need at least libpcap 1.5.0.
    
-   PF_RING, http://www.ntop.org/PF_RING.html : it's a new type of network socket that
-   improves the packet capture speed; it's available for Linux kernels 2.[46].x; it's
-   kernel based; has libpcap support for seamless integration with existing applications.
+   PF_RING, http://www.ntop.org/PF_RING.html : PF_RING is a new type of network socket
+   that improves the packet capture speed; it's available for Linux kernels 2.6.32 and
+   newer. It needs a kernel module to be loaded, it's device driver independent and
+   has libpcap support for seamless integration with existing applications.
 
-   Device polling: it's available since FreeBSD 4.5REL kernel and needs just kernel
-   recompilation (with "options DEVICE_POLLING"), and a polling-aware NIC. Linux kernel
-   2.6.x also supports device polling. 
+   NetMap, http://info.iet.unipi.it/~luigi/netmap/ : Netmap is a BSD-licensed framework
+   that supports line-rate direct packet I/O even on 10GBit/s interfaces (14.88Mpps)
+   with limited system load, and includes a libpcap emulation library to port
+   applications.
 
    Internal buffering can also help and, contrary to the previous tecniques, applies
    to all daemons. Buffering is enabled with the plugin_buffer_size directive; buffers
