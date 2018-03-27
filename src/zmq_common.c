@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -312,13 +312,19 @@ int p_zmq_plugin_pipe_recv(struct p_zmq_host *zmq_host, void *buf, u_int64_t len
 {
   int ret = 0, events;
   size_t elen = sizeof(events);
-  u_int8_t topic;
+  u_int8_t topic, retries = 0;
 
+  zmq_events_again:
   ret = zmq_getsockopt(zmq_host->sock.obj, ZMQ_EVENTS, &events, &elen); 
   if (ret == ERR) {
     Log(LOG_ERR, "ERROR ( %s ): consuming topic from ZMQ: zmq_getsockopt() for ZMQ_EVENTS: %s [topic=%u]\n",
         zmq_host->log_id, zmq_strerror(errno), zmq_host->topic);
-    return ret;
+
+    if (retries < PLUGIN_PIPE_ZMQ_EVENTS_RETRIES) {
+      retries++;
+      goto zmq_events_again;
+    }
+    else return ret;
   }
 
   if (events & ZMQ_POLLIN) {

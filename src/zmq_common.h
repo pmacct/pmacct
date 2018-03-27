@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -32,6 +32,8 @@
 #define PLUGIN_PIPE_ZMQ_MEDIUM_SIZE	100000
 #define PLUGIN_PIPE_ZMQ_LARGE_SIZE	1000000
 #define PLUGIN_PIPE_ZMQ_XLARGE_SIZE	10000000
+
+#define PLUGIN_PIPE_ZMQ_EVENTS_RETRIES	3
 
 
 /* structures */
