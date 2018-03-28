@@ -297,10 +297,18 @@ void bgp_lg_daemon()
   Log(LOG_INFO, "INFO ( %s/core/lg ): Looking Glass listening on %s:%u\n", config.name, config.bgp_lg_ip, config.bgp_lg_port);
 
   // XXX: more encodings supported in future?
+#ifdef WITH_JANSSON
   lg_host.router_worker.func = &bgp_lg_daemon_worker_json;
+#else
+  lg_host.router_worker.func = NULL;
+  Log(LOG_WARNING, "WARN ( %s/core/lg ): pmbgpd Looking Glass depends on missing --enable-jansson.\n", config.name);
+  exit(1);
+#endif
+
   p_zmq_router_backend_setup(&lg_host, config.bgp_lg_threads, inproc_str);
 }
 
+#ifdef WITH_JANSSON
 void bgp_lg_daemon_worker_json(void *zh, void *zs)
 {
   struct p_zmq_host *lg_host = (struct p_zmq_host *) zh;
@@ -684,4 +692,5 @@ void bgp_lg_daemon_encode_reply_unknown_json(struct p_zmq_sock *sock)
 
   p_zmq_send_str(sock, rep_results_str);
 }
+#endif
 #endif /* WITH_ZMQ */ 

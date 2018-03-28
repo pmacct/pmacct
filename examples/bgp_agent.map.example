@@ -48,4 +48,4 @@ bgp_ip=1.2.3.4		ip=2.3.4.5
 ! BGP agent, the peers will need to have a different Router ID configured:
 !
 ! bgp_ip=4.0.0.1	ip=0.0.0.0/0	filter='ip  or (vlan and ip)'
-! bgp_ip=6.0.0.1	ip=0.0.0.0/0	filter='ip6 or (vlan and ip6)'
+! bgp_ip=6::1		ip=0.0.0.0/0	filter='ip6 or (vlan and ip6)'
