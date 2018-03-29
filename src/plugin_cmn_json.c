@@ -460,6 +460,7 @@ void compose_json_ndpi_class(json_t *obj, struct chained_cache *cc)
 }
 #endif
 
+#if defined (HAVE_L2)
 void compose_json_src_mac(json_t *obj, struct chained_cache *cc)
 {
   char mac[18];
@@ -493,6 +494,7 @@ void compose_json_etype(json_t *obj, struct chained_cache *cc)
   sprintf(misc_str, "%x", cc->primitives.etype);
   json_object_set_new_nocheck(obj, "etype", json_string(misc_str));
 }
+#endif
 
 void compose_json_src_as(json_t *obj, struct chained_cache *cc)
 {
