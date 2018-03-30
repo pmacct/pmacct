@@ -154,6 +154,27 @@ export AVRO_LIBS="-L/usr/local/avro/lib -lavro"
 export AVRO_CFLAGS="-I/usr/local/avro/include"
 ./configure --enable-rabbitmq --enable-avro
 
+IIc. Compiling pmacct against a own libpcap library
+Compiling against a downloaded libpcap library may be wanted for several
+reasons including the version packaged with the Operating System is too
+old, a custom libpcap library needs to be compiled (ie. with support for
+PF_RING) or static linking is wanted.
+
+Once libpcap is downloaded, if static linking is wanted (ideal for example
+for distributing pmacct without external dependencies), the library can be
+configured for comipilingas:
+
+./configure --disable-shared
+
+pmacct should be pointed to the own libpcap library when configuring for
+compiling: 
+
+./configure --with-pcap-libs=/path/to/libpcap-x.y.z --with-pcap-includes=/path/to/libpcap-x.y.z
+
+Once pmacct is compiled, it can be confirmed that the right library was
+picked by doing, for example, a 'pmacctd -V' and seeing the version of
+libpcap matches with the supplied version.
+
 
 III. Brief SQL and noSQL setup examples
 RDBMS require a table schema to manage data. pmacct offers two options: use one

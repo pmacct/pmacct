@@ -272,6 +272,8 @@ The keys used are:
     AF_INET6 and the compared peer addess in MD5 file is AF_INET, pass
     it through ipv4_to_ipv4_mapped(). Thanks to Paul Mabey for reporting
     the issue.
+  ! fix, zmq_common.c: retry if zmq_getsockopt() for ZMQ_EVENTS returns
+    EINTR. Thanks to Wouter de Jong for his support solving the issue.
   ! fix, nfacctd: improved length checks in resolve_vlen_template() to
     prevent SEGVs. Thanks to Josh Suhr and Levi Mason for their support.
   ! fix, nfacctd: flow stitching, improved flow end time checks. Thanks
