@@ -162,7 +162,7 @@ PF_RING) or static linking is wanted.
 
 Once libpcap is downloaded, if static linking is wanted (ideal for example
 for distributing pmacct without external dependencies), the library can be
-configured for comipilingas:
+configured for comipiling:
 
 ./configure --disable-shared
 
@@ -2108,7 +2108,8 @@ runtime against shared libraries:
      and compiled libraries, it is a symptom that after installing the shared
      library, ldconfig was not called. Or alternatively that the directory
      where the library is located is not inserted in /etc/ld.so.conf or in any
-     files included it includes.
+     files included it includes. When not having super-user privileges, this
+     can be fixed in the own environment setting the LD_LIBRARY_PATH variable.
 
   2) json_array_foreach(json_list, key, value) {
                                                ^
