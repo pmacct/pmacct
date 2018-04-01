@@ -46,6 +46,7 @@ EXT int cfg_key_pcap_protocol(char *, char *, char *);
 EXT int cfg_key_pcap_savefile(char *, char *, char *);
 EXT int cfg_key_pcap_savefile_wait(char *, char *, char *);
 EXT int cfg_key_pcap_savefile_delay(char *, char *, char *);
+EXT int cfg_key_pcap_savefile_replay(char *, char *, char *);
 EXT int cfg_key_pcap_direction(char *, char *, char *);
 EXT int cfg_key_pcap_ifindex(char *, char *, char *);
 EXT int cfg_key_pcap_interfaces_map(char *, char *, char *);

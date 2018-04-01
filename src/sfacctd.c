@@ -80,6 +80,7 @@ void usage_daemon(char *prog_name)
   printf("  -I  \tRead packets from the specified savefile\n");
   printf("  -Z  \tReading from a savefile, sleep the given amount of seconds at startup\n");
   printf("  -W  \tReading from a savefile, don't exit but sleep when finished\n");
+  printf("  -Y  \tReading from a savefile, replay the number of times specified\n");
   printf("\nMemory plugin (-P memory) options:\n");
   printf("  -p  \tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
   printf("  -b  \tNumber of buckets\n");
@@ -336,6 +337,11 @@ int main(int argc,char **argv, char **envp)
       break;
     case 'Z':
       strlcpy(cfg_cmdline[rows], "pcap_savefile_delay: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
+    case 'Y':
+      strlcpy(cfg_cmdline[rows], "pcap_savefile_replay: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;

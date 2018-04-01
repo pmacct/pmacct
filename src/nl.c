@@ -656,6 +656,8 @@ ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockadd
     }
   }
   else if (pcap_ret == -2 /* last packet in a pcap_savefile */) {
+    pcap_close(device->dev_desc);
+
     if (config.pcap_sf_wait) {
       fill_pipe_buffer();
       Log(LOG_INFO, "INFO ( %s/core ): finished reading PCAP capture file\n", config.name);

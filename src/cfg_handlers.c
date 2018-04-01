@@ -651,6 +651,23 @@ int cfg_key_pcap_savefile_delay(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_pcap_savefile_replay(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value < -1) {
+    Log(LOG_WARNING, "WARN: [%s] 'pcap_savefile_replay' has to be >= -1.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.pcap_sf_replay = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'pcap_savefile_replay'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_promisc(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
