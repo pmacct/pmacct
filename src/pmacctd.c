@@ -305,6 +305,7 @@ int main(int argc,char **argv, char **envp)
   const u_char *pkt_body;
 
   int index, index_rr, logf, ret;
+  int pcap_savefile_round = 0;
 
   struct plugins_list_entry *list;
   struct plugin_requests req;
@@ -991,6 +992,7 @@ int main(int argc,char **argv, char **envp)
     open_pcap_savefile(&device.list[0], config.pcap_savefile);
     cb_data.device = &device.list[0];
     device.num = 1;
+    pcap_savefile_round = 1;
   }
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
@@ -1134,10 +1136,20 @@ int main(int argc,char **argv, char **envp)
 	}
       }
 
+      read_packet:
       pcap_loop(device.list[0].dev_desc, -1, pcap_cb, (u_char *) &cb_data);
       pcap_close(device.list[0].dev_desc);
 
       if (config.pcap_savefile) {
+	if (config.pcap_sf_replay < 0 ||
+	    (config.pcap_sf_replay > 0 && pcap_savefile_round < config.pcap_sf_replay)) {
+	  pcap_savefile_round++;
+	  open_pcap_savefile(&device.list[0], config.pcap_savefile);
+	  if (config.pcap_sf_delay) sleep(config.pcap_sf_delay);
+
+	  goto read_packet;
+	}
+
 	if (config.pcap_sf_wait) {
 	  fill_pipe_buffer();
 	  Log(LOG_INFO, "INFO ( %s/core ): finished reading PCAP capture file\n", config.name);
