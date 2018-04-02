@@ -635,12 +635,13 @@ void set_index_pkt_ptrs(struct packet_ptrs *pptrs)
   pptrs->pkt_proto[CUSTOM_PRIMITIVE_L4_PTR] = pptrs->l4_proto;
 }
 
-ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockaddr *src_addr, struct timeval **ts)
+ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockaddr *src_addr, struct timeval **ts, int *round)
 {
   struct packet_ptrs savefile_pptrs;
   ssize_t ret = 0;
   int pcap_ret;
 
+  read_packet:
   pcap_ret = pcap_next_ex(device->dev_desc, &savefile_pptrs.pkthdr, (const u_char **)&savefile_pptrs.packet_ptr);
 
   if (pcap_ret == 1 /* all good */) device->errors = FALSE;
@@ -657,6 +658,15 @@ ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockadd
   }
   else if (pcap_ret == -2 /* last packet in a pcap_savefile */) {
     pcap_close(device->dev_desc);
+
+    if (config.pcap_sf_replay < 0 ||
+	(config.pcap_sf_replay > 0 && (*round) < config.pcap_sf_replay)) {
+      (*round)++;
+      open_pcap_savefile(device, config.pcap_savefile);
+      if (config.pcap_sf_delay) sleep(config.pcap_sf_delay);
+
+      goto read_packet;
+    }
 
     if (config.pcap_sf_wait) {
       fill_pipe_buffer();

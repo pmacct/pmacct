@@ -657,10 +657,11 @@ int cfg_key_pcap_savefile_replay(char *filename, char *name, char *value_ptr)
   int value, changes = 0;
 
   value = atoi(value_ptr);
-  if (value < -1) {
-    Log(LOG_WARNING, "WARN: [%s] 'pcap_savefile_replay' has to be >= -1.\n", filename);
+  if (value < 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'pcap_savefile_replay' has to be >= 0.\n", filename);
     return ERR;
   }
+  else if (value == 0) value = -1;
 
   for (; list; list = list->next, changes++) list->cfg.pcap_sf_replay = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'pcap_savefile_replay'. Globalized.\n", filename);

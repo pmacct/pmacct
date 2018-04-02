@@ -124,6 +124,7 @@ int main(int argc,char **argv, char **envp)
   struct ip_mreq multi_req4;
 
   struct pcap_device device;
+  int pcap_savefile_round = 0;
 
   unsigned char dummy_packet[64]; 
   unsigned char dummy_packet_vlan[64]; 
@@ -552,6 +553,8 @@ int main(int argc,char **argv, char **envp)
 
   if (config.pcap_savefile) {
     open_pcap_savefile(&device, config.pcap_savefile);
+    pcap_savefile_round = 1;
+
     config.handle_fragments = TRUE;
     init_ip_fragment_handler();
   }
@@ -982,7 +985,7 @@ int main(int argc,char **argv, char **envp)
       ret = recvfrom(config.sock, netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
     }
     else {
-      ret = recvfrom_savefile(&device, (void **) &netflow_packet, (struct sockaddr *) &client, NULL);
+      ret = recvfrom_savefile(&device, (void **) &netflow_packet, (struct sockaddr *) &client, NULL, &pcap_savefile_round);
     }
 
     /* we have no data or not not enough data to decode the version */
