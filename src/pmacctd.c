@@ -69,7 +69,7 @@ void usage_daemon(char *prog_name)
   printf("  -S  \t[ auth | mail | daemon | kern | user | local[0-7] ] \n\tLog to the specified syslog facility\n");
   printf("  -F  \tWrite Core Process PID into the specified file\n");
   printf("  -w  \tWait for the listening interface to become available\n");
-  printf("  -Z  \tReading from a savefile, sleep the given amount of seconds at startup\n");
+  printf("  -Z  \tReading from a savefile, sleep the given amount of seconds at startup and between replays\n");
   printf("  -W  \tReading from a savefile, don't exit but sleep when finished\n");
   printf("  -Y  \tReading from a savefile, replay the number of times specified\n");
   printf("  -R  \tRenormalize sampled data\n");

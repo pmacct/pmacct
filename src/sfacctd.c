@@ -78,7 +78,7 @@ void usage_daemon(char *prog_name)
   printf("  -R  \tRenormalize sampled data\n");
   printf("  -u  \tLeave IP protocols in numerical format\n");
   printf("  -I  \tRead packets from the specified savefile\n");
-  printf("  -Z  \tReading from a savefile, sleep the given amount of seconds at startup\n");
+  printf("  -Z  \tReading from a savefile, sleep the given amount of seconds at startup and between replays\n");
   printf("  -W  \tReading from a savefile, don't exit but sleep when finished\n");
   printf("  -Y  \tReading from a savefile, replay the number of times specified\n");
   printf("\nMemory plugin (-P memory) options:\n");
