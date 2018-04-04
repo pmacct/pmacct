@@ -2170,15 +2170,16 @@ DESC:		Cuts down AS-PATHs to the specified number of ASN hops. If the same ASN i
 		are left intact unless reaching the maximum length of the buffer (128 chars). 
 DEFAULT:	none
 
-KEY:		[ bgp_stdcomm_pattern | bgp_extcomm_pattern ] [GLOBAL]
-DESC:		Filters BGP standard/extended communities against the supplied pattern. The underlying idea
-		is that many communities can be attached to a prefix; some of these can be of little or no
-		interest for the accounting task; this feature allows to select only the relevant ones. By
-		default the list of communities is left intact until reaching maximum length of the buffer
-		(96 chars). The filter does substring matching, ie. 12345:64 will match communities in the
-		ranges 64-64, 640-649, 6400-6499 and 64000-64999. The '.' symbol can be used to wildcard a
-		pre-defined number of characters, ie. 12345:64... will match community values in the range
-		64000-64999 only. Multiple patterns can be supplied comma-separated.
+KEY:		[ bgp_stdcomm_pattern | bgp_extcomm_pattern | bgp_lrgcomm_pattern ] [GLOBAL]
+DESC:		Filters BGP standard, extended and large communities against the supplied pattern. The
+		underlying idea is that many communities can be attached to a prefix; some of these can
+		be of little or no interest for the accounting task; this feature allows to select only
+		the relevant ones. The memory plugin brings a buffer limit of 96 chars; all the others
+		do not as buffers are handled dynamically. The filter does substring matching, ie.
+		12345:64 will match communities in the ranges 64-64, 640-649, 6400-6499 and 64000-64999.
+		The '.' symbol can be used to wildcard a defined number of characters, ie. 12345:64...
+		will match community values in the range 64000-64999 only. Multiple patterns can be 
+		supplied comma-separated.
 DEFAULT:	none
 
 KEY:            [ bgp_stdcomm_pattern_to_asn ] [GLOBAL]

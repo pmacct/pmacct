@@ -852,6 +852,8 @@ void evaluate_comm_patterns(char *dst, char *src, char **patterns, int dstlen)
 
   if (!src || !dst || !dstlen) return;
 
+  printf("CI PASSO 1: dst: %s src: %s\n", dst, src);
+
   srclen = strlen(src);
   memset(dst, 0, dstlen);
 
@@ -909,6 +911,8 @@ void evaluate_comm_patterns(char *dst, char *src, char **patterns, int dstlen)
     /* Trick to find multiple occurrences */ 
     if (ptr) goto find_again;
   }
+
+  printf("CI PASSO 2: dst: %s src: %s\n", dst, src);
 }
 
 as_t evaluate_last_asn(struct aspath *as)
