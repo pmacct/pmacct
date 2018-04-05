@@ -363,6 +363,7 @@ EXT char *std_comm_patterns[MAX_BGP_COMM_PATTERNS];
 EXT char *ext_comm_patterns[MAX_BGP_COMM_PATTERNS];
 EXT char *lrg_comm_patterns[MAX_BGP_COMM_PATTERNS];
 EXT char *std_comm_patterns_to_asn[MAX_BGP_COMM_PATTERNS];
+EXT char *lrg_comm_patterns_to_asn[MAX_BGP_COMM_PATTERNS];
 EXT struct bgp_comm_range peer_src_as_ifrange; 
 EXT struct bgp_comm_range peer_src_as_asrange; 
 EXT u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, path_id_t *, int);

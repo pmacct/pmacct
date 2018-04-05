@@ -306,6 +306,7 @@ struct configuration {
   char *nfacctd_bgp_extcomm_pattern;
   char *nfacctd_bgp_lrgcomm_pattern;
   char *nfacctd_bgp_stdcomm_pattern_to_asn;
+  char *nfacctd_bgp_lrgcomm_pattern_to_asn;
   int nfacctd_bgp_peer_as_src_type;
   int nfacctd_bgp_src_std_comm_type;
   int nfacctd_bgp_src_ext_comm_type;

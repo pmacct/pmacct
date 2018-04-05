@@ -797,7 +797,7 @@ int bgp_attr_munge_as4path(struct bgp_peer *peer, struct bgp_attr *attr, struct 
   return SUCCESS;
 }
 
-void load_comm_patterns(char **stdcomm, char **extcomm, char **lrgcomm, char **stdcomm_to_asn)
+void load_comm_patterns(char **stdcomm, char **extcomm, char **lrgcomm, char **stdcomm_to_asn, char **lrgcomm_to_asn)
 {
   int idx;
   char *token;
@@ -806,6 +806,7 @@ void load_comm_patterns(char **stdcomm, char **extcomm, char **lrgcomm, char **s
   memset(ext_comm_patterns, 0, sizeof(ext_comm_patterns));
   memset(lrg_comm_patterns, 0, sizeof(lrg_comm_patterns));
   memset(std_comm_patterns_to_asn, 0, sizeof(std_comm_patterns_to_asn));
+  memset(lrg_comm_patterns_to_asn, 0, sizeof(lrg_comm_patterns_to_asn));
 
   if (*stdcomm) {
     idx = 0;
@@ -842,7 +843,16 @@ void load_comm_patterns(char **stdcomm, char **extcomm, char **lrgcomm, char **s
       idx++;
     }
   }
-} 
+
+  if (*lrgcomm_to_asn) {
+    idx = 0;
+    while ( (token = extract_token(lrgcomm_to_asn, ',')) && idx < MAX_BGP_COMM_PATTERNS ) {
+      lrg_comm_patterns_to_asn[idx] = token;
+      trim_spaces(lrg_comm_patterns_to_asn[idx]);
+      idx++;
+    }
+  }
+}
 
 void evaluate_comm_patterns(char *dst, char *src, char **patterns, int dstlen)
 {
@@ -851,8 +861,6 @@ void evaluate_comm_patterns(char *dst, char *src, char **patterns, int dstlen)
   int idx, i, j, srclen;
 
   if (!src || !dst || !dstlen) return;
-
-  printf("CI PASSO 1: dst: %s src: %s\n", dst, src);
 
   srclen = strlen(src);
   memset(dst, 0, dstlen);
@@ -911,8 +919,6 @@ void evaluate_comm_patterns(char *dst, char *src, char **patterns, int dstlen)
     /* Trick to find multiple occurrences */ 
     if (ptr) goto find_again;
   }
-
-  printf("CI PASSO 2: dst: %s src: %s\n", dst, src);
 }
 
 as_t evaluate_last_asn(struct aspath *as)
@@ -1007,6 +1013,24 @@ void copy_stdcomm_to_asn(char *stdcomm, as_t *asn, int is_origin)
 
   if (is_origin) *asn = atoi(p2);
   else *asn = atoi(p1);
+}
+
+void copy_lrgcomm_to_asn(char *lrgcomm, as_t *asn, int is_origin)
+{
+  char *delim, *delim2;
+  char *p1, *p2, *endptr;
+
+  if (!lrgcomm || !strlen(lrgcomm) || (delim = strchr(lrgcomm, ':')) == NULL) return;
+  if (validate_truefalse(is_origin)) return;
+
+  delim2 = strchr(lrgcomm, ':');
+  *delim = '\0';
+  *delim2 = '\0';
+  p1 = lrgcomm;
+  p2 = delim+1;
+
+  if (is_origin) *asn = strtoul(p2, &endptr, 10);
+  else *asn = strtoul(p1, &endptr, 10);
 }
 
 /* XXX: currently only BGP is supported due to use of peers struct */
