@@ -2153,6 +2153,15 @@ int pretag_id_handler(struct packet_ptrs *pptrs, void *id, void *e)
 	      copy_stdcomm_to_asn(tmp_stdcomms, (as_t *)tid, FALSE);
 	    }
           }
+
+	  if (!(*tid) && config.nfacctd_bgp_lrgcomm_pattern_to_asn) {
+	    char tmp_lrgcomms[MAX_BGP_LRG_COMMS];
+
+	    if (info->attr->lcommunity && info->attr->lcommunity->str) {
+	      evaluate_comm_patterns(tmp_lrgcomms, info->attr->lcommunity->str, lrg_comm_patterns_to_asn, MAX_BGP_LRG_COMMS);
+	      copy_lrgcomm_to_asn(tmp_lrgcomms, (as_t *)tid, FALSE);
+	    }
+          }
         }
       }
     }
@@ -2438,6 +2447,15 @@ int BPAS_bgp_peer_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *
           if (info->attr->community && info->attr->community->str) {
             evaluate_comm_patterns(tmp_stdcomms, info->attr->community->str, std_comm_patterns_to_asn, MAX_BGP_STD_COMMS);
             copy_stdcomm_to_asn(tmp_stdcomms, &asn, FALSE);
+          }
+        }
+
+        if (!asn && config.nfacctd_bgp_lrgcomm_pattern_to_asn) {
+          char tmp_lrgcomms[MAX_BGP_LRG_COMMS];
+
+          if (info->attr->lcommunity && info->attr->lcommunity->str) {
+            evaluate_comm_patterns(tmp_lrgcomms, info->attr->lcommunity->str, lrg_comm_patterns_to_asn, MAX_BGP_LRG_COMMS);
+            copy_lrgcomm_to_asn(tmp_lrgcomms, &asn, FALSE);
           }
         }
       }

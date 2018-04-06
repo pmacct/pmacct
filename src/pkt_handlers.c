@@ -4009,6 +4009,15 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 	      copy_stdcomm_to_asn(tmp_stdcomms, &pdata->primitives.src_as, TRUE);
 	    }
 	  }
+
+	  if (!pdata->primitives.src_as && config.nfacctd_bgp_lrgcomm_pattern_to_asn) {
+	    char tmp_lrgcomms[MAX_BGP_LRG_COMMS];
+
+	    if (info->attr->lcommunity && info->attr->lcommunity->str) {
+	      evaluate_comm_patterns(tmp_lrgcomms, info->attr->lcommunity->str, lrg_comm_patterns_to_asn, MAX_BGP_LRG_COMMS);
+	      copy_lrgcomm_to_asn(tmp_lrgcomms, &pdata->primitives.src_as, TRUE);
+	    }
+	  }
 	}
       }
       if (chptr->aggregation & COUNT_SRC_AS_PATH && info->attr->aspath && info->attr->aspath->str) {
@@ -4206,6 +4215,15 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           if (info->attr->community && info->attr->community->str) {
             evaluate_comm_patterns(tmp_stdcomms, info->attr->community->str, std_comm_patterns_to_asn, MAX_BGP_STD_COMMS);
             copy_stdcomm_to_asn(tmp_stdcomms, &pbgp->peer_src_as, FALSE);
+          }
+        }
+
+        if (!pbgp->peer_src_as && config.nfacctd_bgp_lrgcomm_pattern_to_asn) {
+          char tmp_lrgcomms[MAX_BGP_LRG_COMMS];
+
+          if (info->attr->lcommunity && info->attr->lcommunity->str) {
+            evaluate_comm_patterns(tmp_lrgcomms, info->attr->lcommunity->str, lrg_comm_patterns_to_asn, MAX_BGP_LRG_COMMS);
+            copy_lrgcomm_to_asn(tmp_lrgcomms, &pbgp->peer_src_as, FALSE);
           }
         }
       }
@@ -4444,6 +4462,15 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
               copy_stdcomm_to_asn(tmp_stdcomms, &pdata->primitives.dst_as, TRUE);
             }
 	  }
+
+          if (!pdata->primitives.dst_as && config.nfacctd_bgp_lrgcomm_pattern_to_asn) {
+            char tmp_lrgcomms[MAX_BGP_LRG_COMMS];
+
+            if (info->attr->lcommunity && info->attr->lcommunity->str) {
+              evaluate_comm_patterns(tmp_lrgcomms, info->attr->lcommunity->str, lrg_comm_patterns_to_asn, MAX_BGP_LRG_COMMS);
+              copy_lrgcomm_to_asn(tmp_lrgcomms, &pdata->primitives.dst_as, TRUE);
+            }
+	  }
         }
       }
 
@@ -4460,6 +4487,15 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           if (info->attr->community && info->attr->community->str) {
             evaluate_comm_patterns(tmp_stdcomms, info->attr->community->str, std_comm_patterns_to_asn, MAX_BGP_STD_COMMS);
             copy_stdcomm_to_asn(tmp_stdcomms, &pbgp->peer_dst_as, FALSE);
+          }
+        }
+
+        if (!pbgp->peer_dst_as && config.nfacctd_bgp_lrgcomm_pattern_to_asn) {
+          char tmp_lrgcomms[MAX_BGP_LRG_COMMS];
+
+          if (info->attr->lcommunity && info->attr->lcommunity->str) {
+            evaluate_comm_patterns(tmp_lrgcomms, info->attr->lcommunity->str, lrg_comm_patterns_to_asn, MAX_BGP_LRG_COMMS);
+            copy_lrgcomm_to_asn(tmp_lrgcomms, &pbgp->peer_dst_as, FALSE);
           }
         }
       }
@@ -4610,6 +4646,19 @@ void bgp_peer_src_as_frommap_handler(struct channels_list_entry *chptr, struct p
       if (info && info->attr && info->attr->community && info->attr->community->str) {
         evaluate_comm_patterns(tmp_stdcomms, info->attr->community->str, std_comm_patterns_to_asn, MAX_BGP_STD_COMMS);
         copy_stdcomm_to_asn(tmp_stdcomms, &pbgp->peer_src_as, FALSE);
+      }
+    }
+  }
+
+  if (!pbgp->peer_src_as && config.nfacctd_bgp_lrgcomm_pattern_to_asn) {
+    if (src_ret) {
+      char tmp_lrgcomms[MAX_BGP_LRG_COMMS];
+
+      info = (struct bgp_info *) pptrs->bgp_src_info;
+
+      if (info && info->attr && info->attr->lcommunity && info->attr->lcommunity->str) {
+        evaluate_comm_patterns(tmp_lrgcomms, info->attr->lcommunity->str, lrg_comm_patterns_to_asn, MAX_BGP_LRG_COMMS);
+        copy_lrgcomm_to_asn(tmp_lrgcomms, &pbgp->peer_src_as, FALSE);
       }
     }
   }
