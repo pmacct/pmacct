@@ -2182,14 +2182,15 @@ DESC:		Filters BGP standard, extended and large communities against the supplied
 		supplied comma-separated.
 DEFAULT:	none
 
-KEY:            [ bgp_stdcomm_pattern_to_asn ] [GLOBAL]
+KEY:            [ bgp_stdcomm_pattern_to_asn | bgp_lrgcomm_pattern_to_asn ] [GLOBAL]
 DESC:           Filters BGP standard communities against the supplied pattern. The algorithm employed is
-		the same as for the bgp_stdcomm_pattern directive: read implementation details there. The
+		the same as for the bgp_*comm_pattern directives: read implementation details there. The
 		first matching community is taken and split using the ':' symbol as delimiter. The first
-		part is mapped onto the peer AS field while the second is mapped onto the origin AS field.
-		The aim of this directive is to deal with IP prefixes on the own address space, ie. statics
-		or connected redistributed in BGP. Example: BGP standard community XXXXX:YYYYY is mapped as:
-		Peer-AS=XXXXX, Origin-AS=YYYYY. Multiple patterns can be supplied comma-separated.
+		part is mapped onto the peer AS field while the second is mapped onto the origin AS field;
+		in case of Large Communities, the third part is unused. The aim of this directive is to
+		deal with IP prefixes on the own address space, ie. statics or connected redistributed
+		in BGP. As an example: BGP standard community XXXXX:YYYYY is mapped as: Peer-AS=XXXXX,
+		Origin-AS=YYYYY. Multiple patterns can be supplied comma-separated.
 DEFAULT:	none
 
 KEY:		bgp_peer_as_skip_subas [GLOBAL]

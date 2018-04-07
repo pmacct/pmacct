@@ -1247,12 +1247,12 @@ on IP prefixes (other than BGP attributes). Another simple solution, especially
 if the enity is dominated by outbound traffic (ingress in the observed network)
 could be to use a bgp_peer_src_as_map directive, described previously (ie. make
 use of interface descriptions as a possible way to automate the process).
-Alterntively, the bgp_stdcomm_pattern_to_asn directive was developed to fit in
-this scenario: assuming procedures of a SP are (or can be changed) to label
-every relevant non-BGP speaking entity IP prefixes uniquely with BGP standard
-communities, this directive then allows to map the community to a peer AS/
-origin AS couple as per the following example: XXXXX:YYYYY => Peer-AS=XXXXX,
-Origin-AS=YYYYY. 
+Alternatively, bgp_stdcomm_pattern_to_asn and bgp_lrgcomm_pattern_to_asn config
+directives were developed to fit in this scenario: assuming procedures of a SP
+are (or can be changed) to label every relevant non-BGP speaking entity IP
+prefixes uniquely with BGP standard communities, this directive then allows to
+map the community to a peer AS/ origin AS couple as per the following example:
+XXXXX:YYYYY => Peer-AS=XXXXX, Origin-AS=YYYYY. 
 
 XIVd. Preparing the router to BGP peer 
 Once the collector is configured and started up the remaining step is to let
