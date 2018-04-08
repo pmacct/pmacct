@@ -1003,8 +1003,8 @@ bgp_daemon_port: 17917
    co-exist with other BGP routing software which might be running on the same host.
    Furthermore, they can safely peer each other by using 127.0.0.1 as bgp_daemon_ip. 
    In pmacctd, bgp_agent_map does the trick of mapping 0.0.0.0 to the IP address of
-   the BGP peer (ie. 127.0.0.1: 'set_tag=127.0.0.1 ip=0.0.0.0'); this setup, while
-   generic, was tested working in conjunction with Quagga 0.99.14. Following a relevant
+   the BGP peer (ie. 127.0.0.1: 'bgp_ip=127.0.0.1 ip=0.0.0.0'); this setup, while
+   generic, was tested working in conjunction with Quagga. Following a relevant
    fragment of the Quagga configuration:
 
 router bgp Y 
@@ -1263,7 +1263,7 @@ configuration. Also, setting the BGP Router ID accordingly allows for more
 clear log messages. On the routers it is adviceable to configure the BGP
 session with the collector as a Route-Reflector (RR) client.
 
-A relevant configuration example for a Cisco router follows:
+A relevant configuration example for a Cisco IOS follows:
 
 ip flow-export source Loopback12345
 ip flow-export version 5
@@ -1306,6 +1306,18 @@ protocols bgp {
 
 Contribution of further configuration examples for Cisco and Juniper devices
 and/or other relevant vendors is more than welcome. 
+
+In case ipv4 and ipv6 address-families are delivered over two distinct BGP
+sessions, typically one with ipv4 transport and one with ipv6 transport, then,
+since both ipv4 and ipv6 flows (NetFlow, IPFIX, sFlow) are typically delivered
+over a single ipv4 transport, a bgp_agent_map is needed in order to make the
+right correlation (see the 'filter' keyword in the example below). The map is
+defined in the daemon configuration ie. 'bgp_agent_map: /path/to/bgp_agent.map'
+then in the map itself for every router exporting flows and BGP peering the
+following lines should be defined:
+
+bgp_ip=<BGP v4 transport>	ip=<flow v4 transport>	filter='ip  or (vlan and ip)'
+bgp_ip=<BGP v6 transport>	ip=<flow v4 transport>	filter='ip6 or (vlan and ip6)'
 
 XIVe. Example: writing flows augmented by BGP to a MySQL database
 The following setup is a realistic example for collecting an external traffic
@@ -1500,7 +1512,7 @@ IPv4/IPv6 address (not BGP Router ID) of an incoming BGP session from a BGP
 peer. At the collector end one should set tmp_bgp_lookup_compare_ports (read
 more about this knob in CONFIG-KEYS) to true. 
 
-XIVg. BGP daemon implementation concluding notes
+XIVi. BGP daemon implementation concluding notes
 The implementation supports 4-bytes ASN, IPv4, IPv6, VPNv4 and VPNv6 (MP-BGP)
 address families and several IETF drafts and RFCs, ie. ADD-PATH, Shutdown
 Message and Large BGP Communities among the others; IPv4, IPv6 transports for
