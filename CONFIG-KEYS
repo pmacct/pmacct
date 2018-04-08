@@ -871,7 +871,8 @@ DEFAULT:	false
 KEY:            networks_mask
 DESC:           Specifies the network mask - in bits - to apply to IP address values in L3 header. The
 		mask is applied sistematically and before evaluating the 'networks_file' content (if
-		any is specified).
+		any is specified). The mask must be part of the aggregation method in order to be
+		applied, ie. 'aggregate: dst_net, dst_mask', 'aggregate: src_net, src_mask', etc.
 DEFAULT:	none
 
 KEY:		networks_cache_entries
