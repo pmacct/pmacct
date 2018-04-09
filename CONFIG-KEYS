@@ -1029,8 +1029,7 @@ DEFAULT:	none
 
 KEY:		sql_table_schema
 DESC:		Full pathname to a file containing a SQL table schema. It allows to create the SQL table
-		if it does not exist; this directive makes sense only if a dynamic 'sql_table' is in use.  
-		A configuration example where this directive could be useful follows:
+		if it does not exist; a config example where this directive could be useful follows:
 
 			sql_history: 5m
 			sql_history_roundoff: h
