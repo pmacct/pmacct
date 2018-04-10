@@ -318,6 +318,8 @@ int p_zmq_plugin_pipe_recv(struct p_zmq_host *zmq_host, void *buf, u_int64_t len
   ret = zmq_getsockopt(zmq_host->sock.obj, ZMQ_EVENTS, &events, &elen); 
   if (ret == ERR) {
     if (retries < PLUGIN_PIPE_ZMQ_EVENTS_RETRIES) {
+      Log(LOG_DEBUG, "DEBUG ( %s ): consuming topic from ZMQ: zmq_getsockopt() for ZMQ_EVENTS: %s [topic=%u]\n",
+	zmq_host->log_id, zmq_strerror(errno), zmq_host->topic);
       retries++;
       goto zmq_events_again;
     }
