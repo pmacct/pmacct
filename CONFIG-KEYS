@@ -187,7 +187,7 @@ DESC:		Plugins to be enabled. memory, print, nfprobe, sfprobe and tee plugins ar
 		Apache Avro serialization system. amqp and kafka plugins allow to output data to
 		RabbitMQ and Kafka brokers respectively. All these plugins, SQL, no-SQL and messaging
 		are good for production solutions and/or larger scenarios.
-		nfprobe acts as a NetFlow/IPFIX agent and exports collected data via NetFlow v1/v5/
+		nfprobe acts as a NetFlow/IPFIX agent and exports collected data via NetFlow v5/
 		v9 and IPFIX datagrams to a remote collector. sfprobe acts as a sFlow agent and 
 		exports collected data via sFlow v5 datagrams to a remote collector. Both nfprobe
 		and sfprobe plugins apply only to pmacctd and uacctd daemons. tee acts as a replicator

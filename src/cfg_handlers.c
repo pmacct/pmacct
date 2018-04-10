@@ -5300,8 +5300,8 @@ int cfg_key_nfprobe_version(char *filename, char *name, char *value_ptr)
   int value, changes = 0;
 
   value = atoi(value_ptr);
-  if (value != 1 && value != 5 && value != 9 && value != 10) {
-    Log(LOG_ERR, "WARN: [%s] 'nfprobe_version' has to be either 1/5/9/10.\n", filename);
+  if (value != 5 && value != 9 && value != 10) {
+    Log(LOG_ERR, "WARN: [%s] 'nfprobe_version' has to be one of 5, 9 or 10.\n", filename);
     return ERR;
   }
 

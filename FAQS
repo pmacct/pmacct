@@ -36,7 +36,7 @@ A: pmacct can collect, replicate and export network information. On the data pla
    BerkeleyDB 5.x via SQLite API or document-oriented: MongoDB) and flat-files
    (CSV, formatted, JSON, Apache Avro output), publish to AMQP and Kafka brokers
    (ie. to insert in ElasticSearch, InfluxDB, Druid or ClickHouse). Export sFlow
-   v5, NetFlow v1/v5/v9 and IPFIX. pmacct is able to perform data aggregation,
+   v5, NetFlow v5/v9 and IPFIX. pmacct is able to perform data aggregation,
    offering a rich set of primitives to choose from; it can also filter, sample,
    renormalize, tag and classify at L7. On the control and infrastructure planes it
    can collect and publish to AMQP and Kafka brokers BGP, BMP, IGP and Streaming
