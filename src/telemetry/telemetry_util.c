@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -150,6 +150,8 @@ void telemetry_link_misc_structs(telemetry_misc_structs *tms)
   tms->msglog_kafka_topic_rr = config.telemetry_msglog_kafka_topic_rr;
   tms->peer_str = malloc(strlen("telemetry_node") + 1);
   strcpy(tms->peer_str, "telemetry_node");
+  tms->peer_port_str = malloc(strlen("telemetry_node_port") + 1);
+  strcpy(tms->peer_port_str, "telemetry_node_port");
 }
 
 int telemetry_validate_input_output_decoders(int input, int output)
