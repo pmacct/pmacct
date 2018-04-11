@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -111,6 +111,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
     addr_to_str(ip_address, &peer->addr);
     json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
+    json_object_set_new_nocheck(obj, bms->peer_port_str, json_integer((json_int_t)peer->tcp_port));
 
     json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
 
@@ -283,6 +284,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 
       addr_to_str(ip_address, &peer->addr);
       json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
+      json_object_set_new_nocheck(obj, bms->peer_port_str, json_integer((json_int_t)peer->tcp_port));
 
       json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
 
@@ -357,6 +359,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 
     addr_to_str(ip_address, &peer->addr);
     json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
+    json_object_set_new_nocheck(obj, bms->peer_port_str, json_integer((json_int_t)peer->tcp_port));
 
     json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
 
@@ -482,6 +485,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
 
     addr_to_str(ip_address, &peer->addr);
     json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
+    json_object_set_new_nocheck(obj, bms->peer_port_str, json_integer((json_int_t)peer->tcp_port));
 
     json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
 
@@ -542,6 +546,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
 
     addr_to_str(ip_address, &peer->addr);
     json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
+    json_object_set_new_nocheck(obj, bms->peer_port_str, json_integer((json_int_t)peer->tcp_port));
 
     json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
 
