@@ -2415,6 +2415,7 @@ void sf_cnt_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_kafka_topic = config.sfacctd_counter_kafka_topic;
   bms->peer_str = malloc(strlen("peer_src_ip") + 1);
   strcpy(bms->peer_str, "peer_src_ip");
+  bms->peer_port_str = NULL;
 
   /* dump not supported */
 }
