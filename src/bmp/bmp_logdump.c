@@ -494,10 +494,10 @@ void bmp_handle_dump_event()
         pm_strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bms->dump.tstamp.tv_sec, config.timestamps_utc);
 
         /*
-	  we close last_filename and open current_filename in case they differ;
-	  we are safe with this approach until $peer_src_ip is the only variable
-	  supported as part of bmp_dump_file configuration directive.
-	*/
+	   we close last_filename and open current_filename in case they differ;
+	   we are safe with this approach until time and BMP peer (IP, port) are
+	   the only variables supported as part of bmp_dump_file.
+        */
         if (config.bmp_dump_file) {
           if (strcmp(last_filename, current_filename)) {
 	    if (saved_peer && saved_peer->log && strlen(last_filename)) {

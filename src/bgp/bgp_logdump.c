@@ -411,7 +411,7 @@ void bgp_peer_log_seq_increment(u_int64_t *seq)
 void bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *peer)
 {
   int oldlen;
-  char psi_string[] = "$peer_src_ip";
+  char psi_string[] = "$peer_src_ip", ptp_string[] = "$peer_tcp_port";
   char *ptr_start, *ptr_end;
 
   if (!new || !old || !peer) return;
@@ -424,7 +424,7 @@ void bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *pee
     char empty_peer_src_ip[] = "null";
     char peer_src_ip[SRVBUFLEN];
     char buf[newlen];
-    int len, howmany;
+    int len;
 
     len = strlen(ptr_start);
     ptr_end = ptr_start;
@@ -436,6 +436,24 @@ void bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *pee
 
     escape_ip_uscores(peer_src_ip);
     snprintf(buf, newlen, "%s", peer_src_ip);
+    strncat(buf, ptr_end, len);
+
+    len = strlen(buf);
+    *ptr_start = '\0';
+    strncat(new, buf, len);
+  }
+
+  ptr_start = strstr(new, ptp_string);
+  if (ptr_start) {
+    char buf[newlen];
+    int len;
+
+    len = strlen(ptr_start);
+    ptr_end = ptr_start;
+    ptr_end += strlen(ptp_string);
+    len -= strlen(ptp_string);
+
+    snprintf(buf, newlen, "%u", peer->tcp_port);
     strncat(buf, ptr_end, len);
 
     len = strlen(buf);
@@ -652,8 +670,8 @@ void bgp_handle_dump_event()
 
 	/*
 	   we close last_filename and open current_filename in case they differ;
-	   we are safe with this approach until $peer_src_ip is the only variable
-	   supported as part of bgp_table_dump_file configuration directive.
+	   we are safe with this approach until time and BGP peer (IP, port) are
+	   the only variables supported as part of bgp_table_dump_file.
         */
 	if (config.bgp_table_dump_file) {
 	  if (strcmp(last_filename, current_filename)) {

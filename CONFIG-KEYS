@@ -2151,7 +2151,9 @@ DESC:		Enables streamed logging of BGP tables/BMP events/Streaming Telemetry dat
 		order events when time reference is not granular enough). BGP UPDATE messages also contain
 		full prefix and BGP attributes information. The list of supported filename variables follows:
 
-                $peer_src_ip    BGP/BMP peer IP address.
+                $peer_src_ip    BGP or BMP peer/Streaming Telemetry exporter IP address.
+
+		$peer_tcp_port  BGP or BMP peer/Streaming Telemetry exporter port.
 
 		Files can be re-opened by sending a SIGHUP to the daemon core process.
 DEFAULT:	none
@@ -2426,6 +2428,8 @@ DESC:           Enables dump of BGP tables/BMP events/Streaming Telemetry data a
 		$tzone		The time zone in rfc3339 format (ie. -04:00 or 'Z' for +00:00)
 
                 $peer_src_ip    BGP or BMP peer/Streaming Telemetry exporter IP address.
+
+                $peer_tcp_port	BGP or BMP peer/Streaming Telemetry exporter port.
 DEFAULT:	none
 
 KEY:            [ bgp_table_dump_output | bmp_dump_output | telemetry_dump_output ] [GLOBAL]

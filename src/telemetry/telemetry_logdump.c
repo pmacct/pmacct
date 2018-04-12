@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -298,9 +298,9 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
         pm_strftime_same(current_filename, SRVBUFLEN, tmpbuf, &tms->dump.tstamp.tv_sec, config.timestamps_utc);
 
         /*
-          we close last_filename and open current_filename in case they differ;
-          we are safe with this approach until $peer_src_ip is the only variable
-          supported as part of telemetry_dump_file configuration directive.
+	   we close last_filename and open current_filename in case they differ;
+	   we are safe with this approach until time and Streaming Telemetry node
+	   (IP, port) are the only variables supported as part of telemetry_dump_file.
         */
         if (config.telemetry_dump_file) {
           if (strcmp(last_filename, current_filename)) {
