@@ -411,18 +411,38 @@ void bgp_peer_log_seq_increment(u_int64_t *seq)
   }
 }
 
+/* XXX: 1) inefficient string testing and 2) string aliases can be mixed
+   and matched. But as long as this is used for determining filenames for
+   large outputs this is fine. To be refined in future */
 void bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *peer)
 {
   int oldlen;
   char psi_string[] = "$peer_src_ip", ptp_string[] = "$peer_tcp_port";
-  char *ptr_start, *ptr_end;
+  char br_string[] = "$bmp_router", brp_string[] = "$bmp_router_port";
+  char tn_string[] = "$telemetry_node", tnp_string[] = "$telemetry_node_port";
+  char *ptr_start, *ptr_end, *string_ptr;
 
   if (!new || !old || !peer) return;
 
   oldlen = strlen(old);
   if (oldlen <= newlen) strcpy(new, old);
 
-  ptr_start = strstr(new, psi_string);
+  ptr_start = NULL;
+  string_ptr = NULL; 
+
+  if (!ptr_start) {
+    ptr_start = strstr(new, psi_string);
+    string_ptr = psi_string;
+  }
+  if (!ptr_start) {
+    ptr_start = strstr(new, br_string);
+    string_ptr = br_string;
+  }
+  if (!ptr_start) {
+    ptr_start = strstr(new, tn_string);
+    string_ptr = tn_string;
+  }
+
   if (ptr_start) {
     char empty_peer_src_ip[] = "null";
     char peer_src_ip[SRVBUFLEN];
@@ -431,8 +451,8 @@ void bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *pee
 
     len = strlen(ptr_start);
     ptr_end = ptr_start;
-    ptr_end += strlen(psi_string);
-    len -= strlen(psi_string);
+    ptr_end += strlen(string_ptr);
+    len -= strlen(string_ptr);
 
     if (peer->addr.family) addr_to_str(peer_src_ip, &peer->addr);
     else strlcpy(peer_src_ip, empty_peer_src_ip, strlen(peer_src_ip));
@@ -446,15 +466,30 @@ void bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *pee
     strncat(new, buf, len);
   }
 
-  ptr_start = strstr(new, ptp_string);
+  ptr_start = NULL;
+  string_ptr = NULL; 
+
+  if (!ptr_start) {
+    ptr_start = strstr(new, ptp_string);
+    string_ptr = ptp_string;
+  }
+  if (!ptr_start) {
+    ptr_start = strstr(new, brp_string);
+    string_ptr = brp_string;
+  }
+  if (!ptr_start) {
+    ptr_start = strstr(new, tnp_string);
+    string_ptr = tnp_string;
+  }
+
   if (ptr_start) {
     char buf[newlen];
     int len;
 
     len = strlen(ptr_start);
     ptr_end = ptr_start;
-    ptr_end += strlen(ptp_string);
-    len -= strlen(ptp_string);
+    ptr_end += strlen(string_ptr);
+    len -= strlen(string_ptr);
 
     snprintf(buf, newlen, "%u", peer->tcp_port);
     strncat(buf, ptr_end, len);

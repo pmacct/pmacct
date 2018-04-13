@@ -2151,9 +2151,17 @@ DESC:		Enables streamed logging of BGP tables/BMP events/Streaming Telemetry dat
 		order events when time reference is not granular enough). BGP UPDATE messages also contain
 		full prefix and BGP attributes information. The list of supported filename variables follows:
 
-                $peer_src_ip    BGP or BMP peer/Streaming Telemetry exporter IP address.
+                $peer_src_ip    	BGP peer IP address.
 
-		$peer_tcp_port  BGP or BMP peer/Streaming Telemetry exporter port.
+                $bmp_router		BMP peer IP address.
+
+                $telemetry_node		Streaming Telemetry exporter IP address.
+
+		$peer_tcp_port  	BGP peer TCP port.
+
+		$bmp_router_port	BMP peer TCP port.
+
+		$telemetry_node_port	Streaming Telemetry exporter port.
 
 		Files can be re-opened by sending a SIGHUP to the daemon core process.
 DEFAULT:	none
@@ -2403,33 +2411,42 @@ DESC:           Enables dump of BGP tables/BMP events/Streaming Telemetry data a
 		rest of BGP/BMP/Streaming Telemetry data. The list of supported filename variables
 		follows:
 
-                %d              The day of the month as a decimal number (range 01 to 31).
+                %d              	The day of the month as a decimal number (range 01 to 31).
 
-                %H              The hour as a decimal number using a 24 hour clock (range 00 to 23).
+                %H              	The hour as a decimal number using a 24 hour clock (range 00 to 23).
 
-                %m              The month as a decimal number (range 01 to 12).
+                %m              	The month as a decimal number (range 01 to 12).
 
-                %M              The minute as a decimal number (range 00 to 59).
+                %M              	The minute as a decimal number (range 00 to 59).
 
-                %s              The number of seconds since Epoch, ie., since 1970-01-01 00:00:00 UTC.
+                %s              	The number of seconds since Epoch, ie., since 1970-01-01 00:00:00 UTC.
 
-		%S		The seconds as a decimal number second (range 00 to 60).
+		%S			The seconds as a decimal number second (range 00 to 60).
 
-                %w              The day of the week as a decimal, range 0 to 6, Sunday being 0.
+                %w              	The day of the week as a decimal, range 0 to 6, Sunday being 0.
 
-                %W              The week number of the current year as a decimal number, range
-                                00 to 53,  starting  with the first Monday as the first day of
-                                week 01.
+                %W              	The week number of the current year as a decimal number, range
+                                	00 to 53,  starting  with the first Monday as the first day of
+                                	week 01.
 
-                %Y              The year as a decimal number including the century.
+                %Y              	The year as a decimal number including the century.
 
-		%z		The +hhmm numeric time zone in ISO8601:1988 format (ie. -0400)
+		%z			The +hhmm numeric time zone in ISO8601:1988 format (ie. -0400).
 
-		$tzone		The time zone in rfc3339 format (ie. -04:00 or 'Z' for +00:00)
+		$tzone			The time zone in rfc3339 format (ie. -04:00 or 'Z' for +00:00).
 
-                $peer_src_ip    BGP or BMP peer/Streaming Telemetry exporter IP address.
+		$peer_src_ip		BGP peer IP address.
 
-                $peer_tcp_port	BGP or BMP peer/Streaming Telemetry exporter port.
+		$bmp_router		BMP peer IP address.
+
+		$telemetry_node		Streaming Telemetry exporter IP address.
+
+		$peer_tcp_port		BGP peer TCP port.
+
+		$bmp_router_port	BMP peer TCP port.
+
+		$telemetry_node_port	Streaming Telemetry exporter port.
+
 DEFAULT:	none
 
 KEY:            [ bgp_table_dump_output | bmp_dump_output | telemetry_dump_output ] [GLOBAL]
