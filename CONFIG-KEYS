@@ -544,7 +544,17 @@ KEY:		[ bgp_daemon_msglog_amqp_routing_key | bgp_table_dump_amqp_routing_key |
 DESC:		See amqp_routing_key; see also bgp_daemon_msglog_amqp_host. Variables supported by
 		the configuration directives described in this section:
 
-		$peer_src_ip    Value of the peer_src_ip primitive of the record being processed.
+                $peer_src_ip    	BGP peer IP address (bgp_*) or sFlow agent IP address (sfacctd_*).
+
+                $bmp_router		BMP peer IP address.
+
+                $telemetry_node		Streaming Telemetry exporter IP address.
+
+		$peer_tcp_port  	BGP peer TCP port.
+
+		$bmp_router_port	BMP peer TCP port.
+
+		$telemetry_node_port	Streaming Telemetry exporter port.
 
 DEFAULT:	none
 
@@ -768,7 +778,20 @@ KEY:            [ bgp_daemon_msglog_kafka_topic | bgp_table_dump_kafka_topic |
                   bmp_daemon_msglog_kafka_topic | bmp_dump_kafka_topic |
 		  sfacctd_counter_kafka_topic | telemetry_daemon_msglog_kafka_topic |
 		  telemetry_dump_kafka_topic ] [GLOBAL]
-DESC:           See kafka_topic
+DESC:		See kafka_topic. Variables supported by the configuration directives described
+		in this section:
+
+                $peer_src_ip    	BGP peer IP address (bgp_*) or sFlow agent IP address (sfacctd_*).
+
+                $bmp_router		BMP peer IP address.
+
+                $telemetry_node		Streaming Telemetry exporter IP address.
+
+		$peer_tcp_port  	BGP peer TCP port.
+
+		$bmp_router_port	BMP peer TCP port.
+
+		$telemetry_node_port	Streaming Telemetry exporter port.
 DEFAULT:        none
 
 KEY:            [ bgp_daemon_msglog_kafka_topic_rr | bgp_table_dump_kafka_topic_rr |
