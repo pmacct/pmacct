@@ -1042,14 +1042,8 @@ int main(int argc,char **argv, char **envp)
       reset_shadow_status(&pptrs);
 
       switch(((struct struct_header_v5 *)netflow_packet)->version) {
-      case 1:
-	process_v1_packet(netflow_packet, ret, &pptrs.v4, &req);
-	break;
       case 5:
 	process_v5_packet(netflow_packet, ret, &pptrs.v4, &req); 
-	break;
-      case 7:
-	process_v7_packet(netflow_packet, ret, &pptrs.v4, &req);
 	break;
       case 8:
 	process_v8_packet(netflow_packet, ret, &pptrs.v4, &req);
@@ -1070,61 +1064,6 @@ int main(int argc,char **argv, char **envp)
     else if (tee_plugins) {
       process_raw_packet(netflow_packet, ret, &pptrs, &req);
     }
-  }
-}
-
-void process_v1_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pptrs,
-		struct plugin_requests *req)
-{
-  struct struct_header_v1 *hdr_v1 = (struct struct_header_v1 *)pkt;
-  struct struct_export_v1 *exp_v1;
-  unsigned short int count = ntohs(hdr_v1->count);
-
-  if (len < NfHdrV1Sz) {
-    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v1 packet", (struct sockaddr *) pptrs->f_agent, 0);
-    xflow_tot_bad_datagrams++;
-    return;
-  }
-  pptrs->f_header = pkt;
-  pkt += NfHdrV1Sz; 
-  exp_v1 = (struct struct_export_v1 *)pkt;
-
-  reset_mac(pptrs);
-  pptrs->flow_type = NF9_FTYPE_TRAFFIC;
-
-  if ((count <= V1_MAXFLOWS) && ((count*NfDataV1Sz)+NfHdrV1Sz == len)) {
-    while (count) {
-      reset_net_status(pptrs);
-      pptrs->f_data = (unsigned char *) exp_v1;
-      if (req->bpf_filter) {
-        Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, exp_v1->srcaddr.s_addr);
-        Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, exp_v1->dstaddr.s_addr);
-        Assign8(((struct pm_iphdr *)pptrs->iph_ptr)->ip_p, exp_v1->prot);
-        Assign8(((struct pm_iphdr *)pptrs->iph_ptr)->ip_tos, exp_v1->tos);
-        Assign16(((struct pm_tlhdr *)pptrs->tlh_ptr)->src_port, exp_v1->srcport);
-        Assign16(((struct pm_tlhdr *)pptrs->tlh_ptr)->dst_port, exp_v1->dstport);
-      }
-      /* Let's copy some relevant field */
-      pptrs->l4_proto = exp_v1->prot;
-
-      /* IP header's id field is unused; we will use it to transport our id */
-      if (config.nfacctd_isis) isis_srcdst_lookup(pptrs);
-      if (config.nfacctd_bgp_to_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, &pptrs->bta2);
-      if (config.nfacctd_flow_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, pptrs, &pptrs->bitr, NULL);
-      if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP);
-      if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
-      if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
-      if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
-      if (config.nfacctd_bmp) bmp_srcdst_lookup(pptrs);
-      exec_plugins(pptrs, req);
-      exp_v1++;           
-      count--;             
-    }
-  }
-  else {
-    notify_malf_packet(LOG_INFO, "INFO: discarding malformed NetFlow v1 packet", (struct sockaddr *) pptrs->f_agent, 0);
-    xflow_tot_bad_datagrams++;
-    return;
   }
 }
 
@@ -1199,70 +1138,6 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
     return;
   }
 } 
-
-void process_v7_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pptrs,
-                struct plugin_requests *req)
-{
-  struct struct_header_v7 *hdr_v7 = (struct struct_header_v7 *)pkt;
-  struct struct_export_v7 *exp_v7;
-  unsigned short int count = ntohs(hdr_v7->count);
-
-  if (len < NfHdrV7Sz) {
-    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v7 packet", (struct sockaddr *) pptrs->f_agent, 0);
-    xflow_tot_bad_datagrams++;
-    return;
-  }
-  pptrs->f_header = pkt;
-  pkt += NfHdrV7Sz;
-  exp_v7 = (struct struct_export_v7 *)pkt;
-  pptrs->f_status = nfv578_check_status(pptrs);
-  pptrs->f_status_g = NULL;
-
-  reset_mac(pptrs);
-  pptrs->flow_type = NF9_FTYPE_TRAFFIC;
-
-  if ((count <= V7_MAXFLOWS) && ((count*NfDataV7Sz)+NfHdrV7Sz == len)) {
-    while (count) {
-      reset_net_status(pptrs);
-      pptrs->f_data = (unsigned char *) exp_v7;
-      if (req->bpf_filter) {
-        Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, exp_v7->srcaddr);
-        Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, exp_v7->dstaddr);
-        Assign8(((struct pm_iphdr *)pptrs->iph_ptr)->ip_p, exp_v7->prot);
-        Assign8(((struct pm_iphdr *)pptrs->iph_ptr)->ip_tos, exp_v7->tos);
-        Assign16(((struct pm_tlhdr *)pptrs->tlh_ptr)->src_port, exp_v7->srcport);
-        Assign16(((struct pm_tlhdr *)pptrs->tlh_ptr)->dst_port, exp_v7->dstport);
-        Assign8(((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags, exp_v7->tcp_flags);
-      }
-
-      pptrs->lm_mask_src = exp_v7->src_mask;
-      pptrs->lm_mask_dst = exp_v7->dst_mask;
-      pptrs->lm_method_src = NF_NET_KEEP;
-      pptrs->lm_method_dst = NF_NET_KEEP;
-
-      /* Let's copy some relevant field */
-      pptrs->l4_proto = exp_v7->prot;
-
-      /* IP header's id field is unused; we will use it to transport our id */
-      if (config.nfacctd_isis) isis_srcdst_lookup(pptrs);
-      if (config.nfacctd_bgp_to_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, &pptrs->bta2);
-      if (config.nfacctd_flow_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, pptrs, &pptrs->bitr, NULL);
-      if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP);
-      if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
-      if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
-      if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
-      if (config.nfacctd_bmp) bmp_srcdst_lookup(pptrs);
-      exec_plugins(pptrs, req);
-      exp_v7++;
-      count--;
-    }
-  }
-  else {
-    notify_malf_packet(LOG_INFO, "INFO: discarding malformed NetFlow v7 packet", (struct sockaddr *) pptrs->f_agent, 0);
-    xflow_tot_bad_datagrams++;
-    return;
-  }
-}
 
 void process_v8_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pptrs,
                 struct plugin_requests *req)
@@ -2330,18 +2205,14 @@ void NF_compute_once()
   PtLabelTSz = sizeof(pt_label_t);
   ChBufHdrSz = sizeof(struct ch_buf_hdr);
   CharPtrSz = sizeof(char *);
-  NfHdrV1Sz = sizeof(struct struct_header_v1);
   NfHdrV5Sz = sizeof(struct struct_header_v5);
-  NfHdrV7Sz = sizeof(struct struct_header_v7);
   NfHdrV8Sz = sizeof(struct struct_header_v8);
   NfHdrV9Sz = sizeof(struct struct_header_v9);
   NfDataHdrV9Sz = sizeof(struct data_hdr_v9);
   NfTplHdrV9Sz = sizeof(struct template_hdr_v9);
   NfTplFieldV9Sz = sizeof(struct template_field_v9);
   NfOptTplHdrV9Sz = sizeof(struct options_template_hdr_v9);
-  NfDataV1Sz = sizeof(struct struct_export_v1);
   NfDataV5Sz = sizeof(struct struct_export_v5);
-  NfDataV7Sz = sizeof(struct struct_export_v7);
   IP4HdrSz = sizeof(struct pm_iphdr);
   IP4TlSz = sizeof(struct pm_iphdr)+sizeof(struct pm_tlhdr);
   PptrsSz = sizeof(struct packet_ptrs);
