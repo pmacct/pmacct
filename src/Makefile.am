@@ -96,7 +96,7 @@ pmacctd_LDADD = libdaemons.la
 if WITH_NDPI
 pmacctd_LDADD += @NDPI_LIBS_STATIC@
 endif
-nfacctd_SOURCES = nfacctd.c nfacctd.h nfv8_handlers.c nfv8_handlers.h nfv9_template.c
+nfacctd_SOURCES = nfacctd.c nfacctd.h nfv9_template.c
 nfacctd_LDADD = libdaemons.la
 if WITH_NDPI
 nfacctd_LDADD += @NDPI_LIBS_STATIC@

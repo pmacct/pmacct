@@ -10,7 +10,7 @@
 !
 ! nfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
 ! engine_type, engine_id, source_id, flowset_id, nexthop, bgp_nexthop, filter,
-! v8agg, sampling_rate, sample_type, direction, src_mac, dst_mac, vlan, cvlan.
+! sampling_rate, sample_type, direction, src_mac, dst_mac, vlan, cvlan.
 !
 ! sfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
 ! nexthop, bgp_nexthop, filter, agent_id, sampling_rate, sample_type, src_mac,
@@ -64,10 +64,10 @@
 !			against IE #10 and, if not existing, against IE #252.  
 ! 'out' 		MATCH: Output interface. In NFv9/IPFIX this is compared
 !			against IE #14 and, if not existing, against IE #253. 
-! 'engine_type'		MATCH: in NFv5-v8 this is compared against the engine_type
+! 'engine_type'		MATCH: in NFv5 this is compared against the engine_type
 !			header field. Provides uniqueness with respect to the
 !			routing engine on the exporting device.
-! 'engine_id'		MATCH: in NFv5-v8 this is compared against the engine_id
+! 'engine_id'		MATCH: in NFv5 this is compared against the engine_id
 !			header field; this provides uniqueness with respect to the
 !			particular line card on the exporting device. In NFv9/IPFIX
 !			it's compared against the source_id header field.
@@ -85,15 +85,12 @@
 ! 'filter'		MATCH: incoming packets are mateched against the supplied
 !			filter expression (expected in libpcap syntax); the filter
 !			needs to be enclosed in quotes ('). 
-! 'v8agg'		MATCH: in NFv8 this is compared against the aggregation
-!			method in use. Valid values are in the range 0 > value
-!			> 15. 
 ! 'agent_id'		MATCH: in sFlow v5 it's compared against the subAgentId
 !			field. sFlow v2/v4 do not carry such field, hence it does
 !			not apply.
 ! 'sampling_rate'       MATCH: in sFlow v2/v4/v5 this is compared against the
-!			sampling rate field; it also works against NFv5-v8.
-!			NFv9/IPFIX are unsupported instead.
+!			sampling rate field; it also works against NFv5. NFv9/
+!			IPFIX are unsupported instead.
 ! 'sample_type'         MATCH: in sFlow v2/v4/v5 this is compared against the
 !			sample type field. Expected in <Enterprise>:<Format>
 !			notation. In NetFlow/IPIX three keywords are supported:

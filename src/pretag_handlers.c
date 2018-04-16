@@ -544,41 +544,6 @@ int PT_map_filter_handler(char *filename, struct id_entry *e, char *value, struc
   return FALSE;
 }
 
-int PT_map_v8agg_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
-{
-  int tmp, x = 0, len;
-
-  e->key.v8agg.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
-  len = strlen(value);
-
-  while (x < len) {
-    if (!isdigit(value[x])) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bad 'v8agg' value: '%s'.\n", config.name, config.type, filename, value);
-      return TRUE;
-    }
-    x++;
-  }
-
-  tmp = atoi(value);
-  if (tmp < 1 || tmp > 14) {
-    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'v8agg' need to be in the following range: 0 > value > 15.\n", config.name, config.type, filename);
-    return TRUE;
-  }
-  e->key.v8agg.n = tmp; 
-
-  for (x = 0; e->func[x]; x++) {
-    if (e->func_type[x] == PRETAG_NFV8_AGG) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'v8agg' clauses part of the same statement.\n", config.name, config.type, filename);
-      return TRUE;
-    }
-  }
-
-  if (config.acct_type == ACCT_NF) e->func[x] = pretag_v8agg_handler;
-  if (e->func[x]) e->func_type[x] = PRETAG_NFV8_AGG;
-
-  return FALSE;
-}
-
 int PT_map_agent_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0;
@@ -1308,41 +1273,6 @@ int pretag_input_handler(struct packet_ptrs *pptrs, void *unused, void *e)
         return (FALSE | neg);
     }
     else return (TRUE ^ neg);
-  case 8: 
-    switch(hdr->aggregation) {
-      case 1:
-	if (input16 == ((struct struct_export_v8_1 *)pptrs->f_data)->input) return (FALSE | neg);
-	else return (TRUE ^ neg);
-      case 3:
-	if (input16 == ((struct struct_export_v8_3 *)pptrs->f_data)->input) return (FALSE | neg);
-	else return (TRUE ^ neg);
-      case 5:
-        if (input16 == ((struct struct_export_v8_5 *)pptrs->f_data)->input) return (FALSE | neg);
-	else return (TRUE ^ neg);
-      case 7:
-	if (input16 == ((struct struct_export_v8_7 *)pptrs->f_data)->input) return (FALSE | neg);
-	else return (TRUE ^ neg);
-      case 8:
-        if (input16 == ((struct struct_export_v8_8 *)pptrs->f_data)->input) return (FALSE | neg);
-        else return (TRUE ^ neg);
-      case 9:
-        if (input16 == ((struct struct_export_v8_9 *)pptrs->f_data)->input) return (FALSE | neg);
-        else return (TRUE ^ neg);
-      case 10:
-        if (input16 == ((struct struct_export_v8_10 *)pptrs->f_data)->input) return (FALSE | neg);
-        else return (TRUE ^ neg);
-      case 11: 
-        if (input16 == ((struct struct_export_v8_11 *)pptrs->f_data)->input) return (FALSE | neg);
-        else return (TRUE ^ neg);
-      case 13:
-        if (input16 == ((struct struct_export_v8_13 *)pptrs->f_data)->input) return (FALSE | neg);
-        else return (TRUE ^ neg);
-      case 14:
-        if (input16 == ((struct struct_export_v8_14 *)pptrs->f_data)->input) return (FALSE | neg);
-        else return (TRUE ^ neg);
-      default:
-	return (TRUE ^ neg);
-    }
   default:
     if (input16 == ((struct struct_export_v5 *)pptrs->f_data)->input) return (FALSE | neg);
     else return (TRUE ^ neg); 
@@ -1374,44 +1304,6 @@ int pretag_output_handler(struct packet_ptrs *pptrs, void *unused, void *e)
         return (FALSE | neg);
     }
     else return (TRUE ^ neg);
-  case 8:
-    switch(hdr->aggregation) {
-      case 1:
-        if (output16 == ((struct struct_export_v8_1 *)pptrs->f_data)->output) return (FALSE | neg);
-        else return (TRUE ^ neg);
-      case 4:
-        if (output16 == ((struct struct_export_v8_4 *)pptrs->f_data)->output) return (FALSE | neg);
-        else return (TRUE ^ neg);
-      case 5:
-        if (output16 == ((struct struct_export_v8_5 *)pptrs->f_data)->output) return (FALSE | neg);
-        else return (TRUE ^ neg);
-      case 6:
-        if (output16 == ((struct struct_export_v8_6 *)pptrs->f_data)->output) return (FALSE | neg);
-        else return (TRUE ^ neg);
-      case 7:
-        if (output16 == ((struct struct_export_v8_7 *)pptrs->f_data)->output) return (FALSE | neg);
-        else return (TRUE ^ neg);
-      case 8:
-        if (output16 == ((struct struct_export_v8_8 *)pptrs->f_data)->output) return (FALSE | neg);
-        else return (TRUE ^ neg);
-      case 9:
-        if (output16 == ((struct struct_export_v8_9 *)pptrs->f_data)->output) return (FALSE | neg);
-        else return (TRUE ^ neg);
-      case 10:
-        if (output16 == ((struct struct_export_v8_10 *)pptrs->f_data)->output) return (FALSE | neg);
-        else return (TRUE ^ neg);
-      case 12:
-        if (output16 == ((struct struct_export_v8_12 *)pptrs->f_data)->output) return (FALSE | neg);
-        else return (TRUE ^ neg);
-      case 13:
-        if (output16 == ((struct struct_export_v8_13 *)pptrs->f_data)->output) return (FALSE | neg);
-        else return (TRUE ^ neg);
-      case 14:
-        if (output16 == ((struct struct_export_v8_14 *)pptrs->f_data)->output) return (FALSE | neg);
-        else return (TRUE ^ neg);
-      default:
-        return (TRUE ^ neg);
-    }
   default:
     if (output16 == ((struct struct_export_v5 *)pptrs->f_data)->output) return (FALSE | neg);
     else return (TRUE ^ neg);
@@ -1438,9 +1330,6 @@ int pretag_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     }
 #endif
     else return (TRUE ^ entry->key.nexthop.neg);
-  case 8:
-    /* NetFlow v8 does not seem to contain any nexthop field */
-    return TRUE;
   default:
     if (entry->key.nexthop.a.address.ipv4.s_addr == ((struct struct_export_v5 *)pptrs->f_data)->nexthop.s_addr) return (FALSE | entry->key.nexthop.neg);
     else return (TRUE ^ entry->key.nexthop.neg);
@@ -1488,9 +1377,6 @@ int pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     }
 #endif
     else return (TRUE ^ entry->key.bgp_nexthop.neg);
-  case 8:
-    /* NetFlow v8 does not seem to contain any nexthop field */
-    return TRUE;
   default:
     if (entry->key.bgp_nexthop.a.address.ipv4.s_addr == ((struct struct_export_v5 *)pptrs->f_data)->nexthop.s_addr) return (FALSE | entry->key.bgp_nexthop.neg);
     else return (TRUE ^ entry->key.bgp_nexthop.neg);
@@ -1545,9 +1431,6 @@ int pretag_engine_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch(hdr->version) {
-  case 8:
-    if (entry->key.engine_type.n == ((struct struct_header_v8 *)pptrs->f_header)->engine_type) return (FALSE | entry->key.engine_type.neg);
-    else return (TRUE ^ entry->key.engine_type.neg);
   case 5:
     if (entry->key.engine_type.n == ((struct struct_header_v5 *)pptrs->f_header)->engine_type) return (FALSE | entry->key.engine_type.neg);
     else return (TRUE ^ entry->key.engine_type.neg);
@@ -1580,9 +1463,6 @@ int pretag_engine_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     if (entry->key.engine_id.n == value) return (FALSE | entry->key.engine_id.neg);
     else return (TRUE ^ entry->key.engine_id.neg);
   }
-  case 8:
-    if (entry->key.engine_id.n == ((struct struct_header_v8 *)pptrs->f_header)->engine_id) return (FALSE | entry->key.engine_id.neg);
-    else return (TRUE ^ entry->key.engine_id.neg);
   case 5:
     if (entry->key.engine_id.n == ((struct struct_header_v5 *)pptrs->f_header)->engine_id) return (FALSE | entry->key.engine_id.neg);
     else return (TRUE ^ entry->key.engine_id.neg);
@@ -1619,20 +1499,6 @@ int pretag_filter_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   else return TRUE;
 }
 
-int pretag_v8agg_handler(struct packet_ptrs *pptrs, void *unused, void *e)
-{
-  struct id_entry *entry = e;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
-
-  switch(hdr->version) {
-  case 8:
-    if (entry->key.v8agg.n == ((struct struct_header_v8 *)pptrs->f_header)->aggregation) return (FALSE | entry->key.v8agg.neg);
-    else return (TRUE ^ entry->key.v8agg.neg);
-  default:
-    return TRUE; /* this field does not exist: condition is always true */
-  }
-}
-
 int pretag_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
@@ -1653,30 +1519,6 @@ int pretag_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     else if (tpl->tpl[NF9_SRC_AS].len == 4) {
       memcpy(&asn32, pptrs->f_data+tpl->tpl[NF9_SRC_AS].off, 4);
       asn32 = ntohl(asn32);
-    }
-    break;
-  case 8:
-    switch(hdr->aggregation) {
-    case 1:
-      asn32 = ntohs(((struct struct_export_v8_1 *) pptrs->f_data)->src_as);
-      break;
-    case 3:
-      asn32 = ntohs(((struct struct_export_v8_3 *) pptrs->f_data)->src_as);
-      break;
-    case 5:
-      asn32 = ntohs(((struct struct_export_v8_5 *) pptrs->f_data)->src_as);
-      break;
-    case 9:
-      asn32 = ntohs(((struct struct_export_v8_9 *) pptrs->f_data)->src_as);
-      break;
-    case 11:
-      asn32 = ntohs(((struct struct_export_v8_11 *) pptrs->f_data)->src_as);
-      break;
-    case 13:
-      asn32 = ntohs(((struct struct_export_v8_13 *) pptrs->f_data)->src_as);
-      break;
-    default:
-      break;
     }
     break;
   default:
@@ -1732,30 +1574,6 @@ int pretag_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     else if (tpl->tpl[NF9_DST_AS].len == 4) {
       memcpy(&asn32, pptrs->f_data+tpl->tpl[NF9_DST_AS].off, 4);
       asn32 = ntohl(asn32);
-    }
-    break;
-  case 8:
-    switch(hdr->aggregation) {
-    case 1:
-      asn32 = ntohs(((struct struct_export_v8_1 *) pptrs->f_data)->dst_as);
-      break;
-    case 4:
-      asn32 = ntohs(((struct struct_export_v8_4 *) pptrs->f_data)->dst_as);
-      break;
-    case 5:
-      asn32 = ntohs(((struct struct_export_v8_5 *) pptrs->f_data)->dst_as);
-      break;
-    case 9:
-      asn32 = ntohs(((struct struct_export_v8_9 *) pptrs->f_data)->dst_as);
-      break;
-    case 12:
-      asn32 = ntohs(((struct struct_export_v8_12 *) pptrs->f_data)->dst_as);
-      break;
-    case 13:
-      asn32 = ntohs(((struct struct_export_v8_13 *) pptrs->f_data)->dst_as);
-      break;
-    default:
-      break;
     }
     break;
   default:
@@ -3058,9 +2876,6 @@ int PT_map_index_fdata_input_handler(struct id_entry *e, pm_hash_serial_t *hash_
         e->key.input.n = ntohl(iface32);
       }
       break; 
-    case 8:
-      /* unsupported */
-      break;
     default:
       iface16 = ntohs(((struct struct_export_v5 *) pptrs->f_data)->input);
       e->key.input.n = iface16;
@@ -3105,9 +2920,6 @@ int PT_map_index_fdata_output_handler(struct id_entry *e, pm_hash_serial_t *hash
         memcpy(&iface32, pptrs->f_data+tpl->tpl[NF9_OUTPUT_PHYSINT].off, 4);
         e->key.output.n = ntohl(iface32);
       }
-      break;
-    case 8:
-      /* unsupported */
       break;
     default:
       iface16 = ntohs(((struct struct_export_v5 *) pptrs->f_data)->output);
@@ -3244,9 +3056,6 @@ int PT_map_index_fdata_src_as_handler(struct id_entry *e, pm_hash_serial_t *hash
 	  e->key.src_as.n = ntohl(asn32);
 	}
 	break;
-      case 8:
-	/* unsupported */
-	break;
       default:
 	e->key.src_as.n = ntohs(((struct struct_export_v5 *) pptrs->f_data)->src_as);
 	break;
@@ -3295,9 +3104,6 @@ int PT_map_index_fdata_dst_as_handler(struct id_entry *e, pm_hash_serial_t *hash
           memcpy(&asn32, pptrs->f_data+tpl->tpl[NF9_DST_AS].off, 4);
           e->key.dst_as.n = ntohl(asn32);
         }
-        break;
-      case 8:
-        /* unsupported */
         break;
       default:
         e->key.dst_as.n = ntohs(((struct struct_export_v5 *) pptrs->f_data)->dst_as);

@@ -37,7 +37,6 @@
 #include "bgp/bgp.h"
 #include "isis/isis.h"
 #include "bmp/bmp.h"
-#include "nfv8_handlers.h"
 #include "telemetry/telemetry.h"
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
@@ -808,8 +807,6 @@ int main(int argc,char **argv, char **envp)
     }
   }
 
-  load_nfv8_handlers();
-
   init_classifiers(NULL);
 
 #if defined (WITH_NDPI)
@@ -1045,9 +1042,6 @@ int main(int argc,char **argv, char **envp)
       case 5:
 	process_v5_packet(netflow_packet, ret, &pptrs.v4, &req); 
 	break;
-      case 8:
-	process_v8_packet(netflow_packet, ret, &pptrs.v4, &req);
-	break;
       /* NetFlow v9 + IPFIX */
       case 9:
       case 10:
@@ -1082,7 +1076,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   pptrs->f_header = pkt;
   pkt += NfHdrV5Sz; 
   exp_v5 = (struct struct_export_v5 *)pkt;
-  pptrs->f_status = nfv578_check_status(pptrs);
+  pptrs->f_status = nfv5_check_status(pptrs);
   pptrs->f_status_g = NULL;
 
   reset_mac(pptrs);
@@ -1138,58 +1132,6 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
     return;
   }
 } 
-
-void process_v8_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pptrs,
-                struct plugin_requests *req)
-{
-  struct struct_header_v8 *hdr_v8 = (struct struct_header_v8 *)pkt;
-  unsigned char *exp_v8;
-  unsigned short int count = ntohs(hdr_v8->count);
-
-  if (len < NfHdrV8Sz) {
-    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v8 packet", (struct sockaddr *) pptrs->f_agent, 0);
-    xflow_tot_bad_datagrams++;
-    return;
-  }
-  pptrs->f_header = pkt;
-  pkt += NfHdrV8Sz;
-  exp_v8 = pkt;
-  pptrs->f_status = nfv578_check_status(pptrs);
-  pptrs->f_status_g = NULL;
-
-  reset_mac(pptrs);
-  reset_ip4(pptrs);
-  pptrs->flow_type = NF9_FTYPE_TRAFFIC;
-
-  if ((count <= v8_handlers[hdr_v8->aggregation].max_flows) && ((count*v8_handlers[hdr_v8->aggregation].exp_size)+NfHdrV8Sz <= len)) {
-    while (count) {
-      reset_net_status(pptrs);
-      pptrs->f_data = exp_v8;
-      if (req->bpf_filter) {
-	/* XXX: nfacctd_net: network masks should be looked up here */ 
-	v8_handlers[hdr_v8->aggregation].fh(pptrs, exp_v8);
-      }
-
-      /* IP header's id field is unused; we will use it to transport our id */
-      if (config.nfacctd_isis) isis_srcdst_lookup(pptrs);
-      if (config.nfacctd_bgp_to_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, &pptrs->bta2);
-      if (config.nfacctd_flow_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, pptrs, &pptrs->bitr, NULL);
-      if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP);
-      if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
-      if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
-      if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
-      if (config.nfacctd_bmp) bmp_srcdst_lookup(pptrs);
-      exec_plugins(pptrs, req);
-      exp_v8 += v8_handlers[hdr_v8->aggregation].exp_size;
-      count--;
-    }
-  }
-  else {
-    notify_malf_packet(LOG_INFO, "INFO: discarding malformed NetFlow v8 packet", (struct sockaddr *) pptrs->f_agent, 0);
-    xflow_tot_bad_datagrams++;
-    return;
-  }
-}
 
 void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vector *pptrsv,
 		struct plugin_requests *req, u_int16_t version)
@@ -2206,7 +2148,6 @@ void NF_compute_once()
   ChBufHdrSz = sizeof(struct ch_buf_hdr);
   CharPtrSz = sizeof(char *);
   NfHdrV5Sz = sizeof(struct struct_header_v5);
-  NfHdrV8Sz = sizeof(struct struct_header_v8);
   NfHdrV9Sz = sizeof(struct struct_header_v9);
   NfDataHdrV9Sz = sizeof(struct data_hdr_v9);
   NfTplHdrV9Sz = sizeof(struct template_hdr_v9);
@@ -2411,9 +2352,9 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   return ret;
 }
 
-char *nfv578_check_status(struct packet_ptrs *pptrs)
+char *nfv5_check_status(struct packet_ptrs *pptrs)
 {
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
   u_int32_t aux1 = (hdr->engine_id << 8 | hdr->engine_type);
   int hash = hash_status_table(aux1, sa, XFLOW_STATUS_TABLE_SZ);
@@ -2470,7 +2411,6 @@ pm_class_t NF_evaluate_classifiers(struct xflow_status_entry_class *entry, pm_cl
 
 void nfv9_datalink_frame_section_handler(struct packet_ptrs *pptrs)
 {
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t frame_type = NF9_DL_F_TYPE_UNKNOWN, t16;
 
