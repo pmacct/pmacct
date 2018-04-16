@@ -32,21 +32,6 @@ struct struct_header_v5 {
   u_int16_t sampling;
 };
 
-/*  NetFlow Export Version 8 Header Format  */
-struct struct_header_v8 {
-  u_int16_t version;		/* Version = 8 */
-  u_int16_t count;		/* The number of records in the PDU */
-  u_int32_t SysUptime;		/* Current time in millisecs since router booted */
-  u_int32_t unix_secs;		/* Current seconds since 0000 UTC 1970 */
-  u_int32_t unix_nsecs;		/* Residual nanoseconds since 0000 UTC 1970 */
-  u_int32_t flow_sequence;	/* Seq counter of total flows seen */
-  unsigned char engine_type;	/* Type of flow switching engine (RP,VIP,etc.) */
-  unsigned char engine_id;	/* Slot number of the flow switching engine */
-  u_int8_t  aggregation;	/* Aggregation method being used */
-  u_int8_t  agg_version;	/* Version of the aggregation export */
-  u_int32_t reserved;
-};
-
 /*  NetFlow Export Version 9 Header Format  */
 struct struct_header_v9 {
   u_int16_t version;		/* version = 9 */

@@ -1251,7 +1251,7 @@ int pretag_dummy_ip_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_input_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t input16 = htons(entry->key.input.n);
   u_int32_t input32 = htonl(entry->key.input.n);
@@ -1282,7 +1282,7 @@ int pretag_input_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_output_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t output16 = htons(entry->key.output.n);
   u_int32_t output32 = htonl(entry->key.output.n);
@@ -1313,7 +1313,7 @@ int pretag_output_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch(hdr->version) {
@@ -1339,7 +1339,7 @@ int pretag_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   if (entry->last_matched == PRETAG_BGP_NEXTHOP) return FALSE;
@@ -1427,7 +1427,7 @@ int pretag_bgp_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void
 int pretag_engine_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch(hdr->version) {
@@ -1442,7 +1442,7 @@ int pretag_engine_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_engine_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int32_t value;
 
@@ -1474,7 +1474,7 @@ int pretag_engine_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_flowset_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch(hdr->version) {
@@ -1502,7 +1502,7 @@ int pretag_filter_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t asn16 = 0;
   u_int32_t asn32 = 0;
@@ -1557,7 +1557,7 @@ int pretag_bgp_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t asn16 = 0;
   u_int32_t asn32 = 0;
@@ -1738,8 +1738,7 @@ int pretag_comms_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_sample_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
-  struct struct_header_v5 *hdr5 = (struct struct_header_v5 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   if (entry->key.sample_type.n == pptrs->flow_type) return (FALSE | entry->key.sample_type.neg); 
@@ -1749,15 +1748,13 @@ int pretag_sample_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_sampling_rate_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
-  struct struct_header_v5 *hdr5 = (struct struct_header_v5 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t srate = 0;
 
   switch (hdr->version) {
   case 5:
-    hdr5 = (struct struct_header_v5 *) pptrs->f_header;
-    srate = ( ntohs(hdr5->sampling) & 0x3FFF );
+    srate = ( ntohs(hdr->sampling) & 0x3FFF );
     if (entry->key.sampling_rate.n == srate) return (FALSE | entry->key.sampling_rate.neg);
     else return (TRUE ^ entry->key.sampling_rate.neg);
   default:
@@ -1768,7 +1765,7 @@ int pretag_sampling_rate_handler(struct packet_ptrs *pptrs, void *unused, void *
 int pretag_direction_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int8_t direction = 0;
 
@@ -1808,7 +1805,7 @@ int pretag_mpls_vpn_rd_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_src_mac_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch (hdr->version) {
@@ -1827,7 +1824,7 @@ int pretag_src_mac_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_dst_mac_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch (hdr->version) {
@@ -1846,7 +1843,7 @@ int pretag_dst_mac_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_vlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t tmp16 = 0, vlan_id = 0;
 
@@ -1870,7 +1867,7 @@ int pretag_vlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_forwarding_status_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int32_t fwdstatus = 0;
 
@@ -1909,7 +1906,7 @@ int pretag_forwarding_status_handler(struct packet_ptrs *pptrs, void *unused, vo
 int pretag_cvlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t tmp16 = 0, cvlan_id = 0;
 
@@ -2287,7 +2284,7 @@ int BPAS_bgp_peer_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *
 int BITR_mpls_label_bottom_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   int label_idx;
   u_int32_t label;
@@ -2312,7 +2309,7 @@ int BITR_mpls_label_bottom_handler(struct packet_ptrs *pptrs, void *unused, void
 int BITR_mpls_vpn_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int32_t tmp32 = 0, label = 0;
 
@@ -2852,7 +2849,7 @@ int PT_map_index_fdata_ip_handler(struct id_entry *e, pm_hash_serial_t *hash_ser
 int PT_map_index_fdata_input_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
@@ -2897,7 +2894,7 @@ int PT_map_index_fdata_input_handler(struct id_entry *e, pm_hash_serial_t *hash_
 int PT_map_index_fdata_output_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
@@ -2942,7 +2939,7 @@ int PT_map_index_fdata_output_handler(struct id_entry *e, pm_hash_serial_t *hash
 int PT_map_index_fdata_bgp_nexthop_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
@@ -3026,7 +3023,7 @@ int PT_map_index_fdata_bgp_nexthop_handler(struct id_entry *e, pm_hash_serial_t 
 int PT_map_index_fdata_src_as_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
@@ -3075,7 +3072,7 @@ int PT_map_index_fdata_src_as_handler(struct id_entry *e, pm_hash_serial_t *hash
 int PT_map_index_fdata_dst_as_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
@@ -3124,7 +3121,7 @@ int PT_map_index_fdata_dst_as_handler(struct id_entry *e, pm_hash_serial_t *hash
 int PT_map_index_fdata_peer_src_as_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
@@ -3177,7 +3174,7 @@ int PT_map_index_fdata_peer_src_as_handler(struct id_entry *e, pm_hash_serial_t 
 int PT_map_index_fdata_peer_dst_as_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
@@ -3247,7 +3244,7 @@ int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_entry *e, pm_hash_serial_t 
 int PT_map_index_fdata_mpls_vpn_id_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   if (config.acct_type == ACCT_NF) {
@@ -3274,7 +3271,7 @@ int PT_map_index_fdata_mpls_vpn_id_handler(struct id_entry *e, pm_hash_serial_t 
 int PT_map_index_fdata_mpls_label_bottom_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
@@ -3302,7 +3299,7 @@ int PT_map_index_fdata_mpls_label_bottom_handler(struct id_entry *e, pm_hash_ser
 int PT_map_index_fdata_src_mac_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
@@ -3328,7 +3325,7 @@ int PT_map_index_fdata_src_mac_handler(struct id_entry *e, pm_hash_serial_t *has
 int PT_map_index_fdata_dst_mac_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
@@ -3354,7 +3351,7 @@ int PT_map_index_fdata_dst_mac_handler(struct id_entry *e, pm_hash_serial_t *has
 int PT_map_index_fdata_vlan_id_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   SFSample *sample = (SFSample *) pptrs->f_data;
   u_int16_t tmp16 = 0;
@@ -3386,7 +3383,7 @@ int PT_map_index_fdata_vlan_id_handler(struct id_entry *e, pm_hash_serial_t *has
 int PT_map_index_fdata_cvlan_id_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t tmp16 = 0;
 
@@ -3410,7 +3407,7 @@ int PT_map_index_fdata_cvlan_id_handler(struct id_entry *e, pm_hash_serial_t *ha
 int PT_map_index_fdata_fwdstatus_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int32_t fwdstatus = 0;
 

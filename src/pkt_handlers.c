@@ -1519,7 +1519,7 @@ void custom_primitives_handler(struct channels_list_entry *chptr, struct packet_
 void NF_src_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch(hdr->version) {
@@ -1541,7 +1541,7 @@ void NF_src_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 void NF_dst_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch(hdr->version) {
@@ -1563,7 +1563,7 @@ void NF_dst_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 void NF_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int8_t direction;
 
@@ -1611,7 +1611,7 @@ void NF_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 void NF_cos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch(hdr->version) {
@@ -1631,7 +1631,7 @@ void NF_cos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs
 void NF_etype_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch(hdr->version) {
@@ -1657,7 +1657,7 @@ void NF_etype_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
 void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch(hdr->version) {
@@ -1700,7 +1700,7 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
 void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch(hdr->version) {
@@ -1743,7 +1743,7 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
 void NF_src_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   /* check network-related primitives against fallback scenarios */
@@ -1772,7 +1772,7 @@ void NF_src_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 void NF_dst_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   /* check network-related primitives against fallback scenarios */
@@ -1801,7 +1801,7 @@ void NF_dst_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 void NF_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   u_int16_t asn16 = 0;
@@ -1836,7 +1836,7 @@ void NF_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
 void NF_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   u_int16_t asn16 = 0;
@@ -1871,7 +1871,7 @@ void NF_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
 void NF_peer_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   u_int16_t asn16 = 0;
@@ -1901,7 +1901,7 @@ void NF_peer_src_as_handler(struct channels_list_entry *chptr, struct packet_ptr
 void NF_peer_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   u_int16_t asn16 = 0;
@@ -1932,7 +1932,7 @@ void NF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
 {
   struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
@@ -1977,7 +1977,7 @@ void NF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
 void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_bgp_primitives *pbgp;
   int use_ip_next_hop = FALSE;
@@ -2043,7 +2043,7 @@ void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
 void NF_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int8_t l4_proto = 0;
   
@@ -2079,7 +2079,7 @@ void NF_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
 void NF_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int8_t l4_proto = 0;
 
@@ -2114,7 +2114,7 @@ void NF_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
 void NF_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   /* setting tos from pre_tag_map */
@@ -2141,7 +2141,7 @@ void NF_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
 void NF_ip_proto_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch(hdr->version) {
@@ -2162,7 +2162,7 @@ void NF_ip_proto_handler(struct channels_list_entry *chptr, struct packet_ptrs *
 void NF_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int8_t tcp_flags = 0;
 
@@ -2187,7 +2187,7 @@ void NF_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 void NF_counters_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   time_t fstime = 0;
   u_int32_t t32 = 0;
@@ -2281,7 +2281,7 @@ void NF_counters_handler(struct channels_list_entry *chptr, struct packet_ptrs *
 void NF_time_msecs_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   time_t fstime = 0;
   u_int32_t t32 = 0;
@@ -2423,7 +2423,7 @@ void NF_time_msecs_handler(struct channels_list_entry *chptr, struct packet_ptrs
 void NF_time_secs_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   time_t fstime = 0;
   u_int32_t t32 = 0;
@@ -2454,7 +2454,7 @@ void NF_time_secs_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 void NF_time_new_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int32_t t32 = 0;
   u_int64_t t64 = 0;
@@ -2495,7 +2495,7 @@ void pre_tag_label_handler(struct channels_list_entry *chptr, struct packet_ptrs
 void NF_flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int32_t t32 = 0;
   u_int64_t t64 = 0;
@@ -2522,7 +2522,7 @@ void NF_flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
 void NF_in_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t iface16 = 0;
   u_int32_t iface32 = 0;
@@ -2553,7 +2553,7 @@ void NF_in_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs *
 void NF_out_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t iface16 = 0;
   u_int32_t iface32 = 0;
@@ -2587,8 +2587,7 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
   struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
   struct xflow_status_entry_sampling *sentry = NULL;
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
-  struct struct_header_v5 *hdr5 = (struct struct_header_v5 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t srate = 0, is_sampled = 0;
   u_int16_t t16 = 0;
@@ -2678,9 +2677,8 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
       }
       break;
     case 5:
-      hdr5 = (struct struct_header_v5 *) pptrs->f_header;
-      is_sampled = ( ntohs(hdr5->sampling) & 0xC000 );
-      srate = ( ntohs(hdr5->sampling) & 0x3FFF );
+      is_sampled = ( ntohs(hdr->sampling) & 0xC000 );
+      srate = ( ntohs(hdr->sampling) & 0x3FFF );
       if (srate) pdata->primitives.sampling_rate = srate;
       break;
     default:
@@ -2695,7 +2693,7 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
 void NF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
 
@@ -2785,7 +2783,7 @@ void NF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet
 void NF_timestamp_end_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
 
@@ -2855,7 +2853,7 @@ void NF_timestamp_end_handler(struct channels_list_entry *chptr, struct packet_p
 void NF_timestamp_arrival_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
 
@@ -2866,7 +2864,7 @@ void NF_timestamp_arrival_handler(struct channels_list_entry *chptr, struct pack
 void NF_sequence_number_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
 
   switch(hdr->version) {
   case 10:
@@ -2876,7 +2874,7 @@ void NF_sequence_number_handler(struct channels_list_entry *chptr, struct packet
     pdata->primitives.export_proto_seqno = ntohl(((struct struct_header_v9 *) pptrs->f_header)->flow_sequence);
     break;
   case 8:
-    pdata->primitives.export_proto_seqno = ntohl(((struct struct_header_v8 *) pptrs->f_header)->flow_sequence);
+    pdata->primitives.export_proto_seqno = ntohl(((struct struct_header_v5 *) pptrs->f_header)->flow_sequence);
     break;
   default:
     pdata->primitives.export_proto_seqno = ntohl(((struct struct_header_v5 *) pptrs->f_header)->flow_sequence);
@@ -2887,7 +2885,7 @@ void NF_sequence_number_handler(struct channels_list_entry *chptr, struct packet
 void NF_version_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
 
   pdata->primitives.export_proto_version = hdr->version;
 }
@@ -2895,7 +2893,7 @@ void NF_version_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 void NF_sysid_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
 
   switch(hdr->version) {
   case 10:
@@ -2905,7 +2903,7 @@ void NF_sysid_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
     pdata->primitives.export_proto_sysid = ntohl(((struct struct_header_v9 *) pptrs->f_header)->source_id);
     break;
   case 8:
-    pdata->primitives.export_proto_sysid = ((struct struct_header_v8 *) pptrs->f_header)->engine_id;
+    pdata->primitives.export_proto_sysid = ((struct struct_header_v5 *) pptrs->f_header)->engine_id;
     /* XXX: engine type? */
     break;
   default:
@@ -2918,7 +2916,7 @@ void NF_sysid_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
 void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct utpl_field *utpl = NULL;
   char *pcust = ((*data) + chptr->extras.off_custom_primitives);
@@ -2997,7 +2995,7 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
 void NF_post_nat_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
   struct utpl_field *utpl = NULL;
@@ -3024,7 +3022,7 @@ void NF_post_nat_src_host_handler(struct channels_list_entry *chptr, struct pack
 void NF_post_nat_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
   struct utpl_field *utpl = NULL;
@@ -3051,7 +3049,7 @@ void NF_post_nat_dst_host_handler(struct channels_list_entry *chptr, struct pack
 void NF_post_nat_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
   struct utpl_field *utpl = NULL;
@@ -3078,7 +3076,7 @@ void NF_post_nat_src_port_handler(struct channels_list_entry *chptr, struct pack
 void NF_post_nat_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
   struct utpl_field *utpl = NULL;
@@ -3105,7 +3103,7 @@ void NF_post_nat_dst_port_handler(struct channels_list_entry *chptr, struct pack
 void NF_nat_event_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
   struct utpl_field *utpl = NULL;
@@ -3126,7 +3124,7 @@ void NF_nat_event_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 void NF_mpls_label_top_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
 
@@ -3147,7 +3145,7 @@ void NF_mpls_label_top_handler(struct channels_list_entry *chptr, struct packet_
 void NF_mpls_label_bottom_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
   int label_idx;
@@ -3176,7 +3174,7 @@ void NF_mpls_label_bottom_handler(struct channels_list_entry *chptr, struct pack
 void NF_mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
   int label_idx, last_label_value = 0, stack_depth, bosbit_found = FALSE;
@@ -3211,7 +3209,7 @@ void NF_mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packe
 void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives); 
   int vrfid = FALSE;
@@ -3242,7 +3240,7 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
 void NF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   time_t fstime;
 
@@ -3281,7 +3279,7 @@ void NF_ndpi_class_handler(struct channels_list_entry *chptr, struct packet_ptrs
 void NF_cust_tag_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct utpl_field *utpl = NULL;
 
@@ -3300,7 +3298,7 @@ void NF_cust_tag_handler(struct channels_list_entry *chptr, struct packet_ptrs *
 void NF_cust_tag2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct utpl_field *utpl = NULL;
 
@@ -3320,7 +3318,7 @@ void NF_cust_tag2_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 void NF_cust_label_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct utpl_field *utpl = NULL;
 
@@ -3345,8 +3343,7 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
   struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
   struct xflow_status_entry_sampling *sentry = NULL;
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v8 *hdr = (struct struct_header_v8 *) pptrs->f_header;
-  struct struct_header_v5 *hdr5 = (struct struct_header_v5 *) pptrs->f_header;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t srate = 0, is_sampled = 0;
   u_int16_t t16 = 0;
@@ -3435,9 +3432,8 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
 
     break;
   case 5:
-    hdr5 = (struct struct_header_v5 *) pptrs->f_header;
-    is_sampled = ( ntohs(hdr5->sampling) & 0xC000 );
-    srate = ( ntohs(hdr5->sampling) & 0x3FFF );
+    is_sampled = ( ntohs(hdr->sampling) & 0xC000 );
+    srate = ( ntohs(hdr->sampling) & 0x3FFF );
     /* XXX: checking srate value instead of is_sampled as Sampling
        Mode seems not to be a mandatory field. */
     if (srate) {
