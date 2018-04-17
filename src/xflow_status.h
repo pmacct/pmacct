@@ -69,7 +69,7 @@ struct xflow_status_entry
   struct host_addr exp_addr;	/* NetFlow/IPFIX: exporter IP address, ie. #130/#131 */
   u_int32_t seqno;              /* Sequence number */
   u_int32_t aux1;               /* Some more distinguishing fields:
-                                   NetFlow v5-v8: Engine Type + Engine ID
+                                   NetFlow v5: Engine Type + Engine ID
                                    NetFlow v9: Source ID
                                    IPFIX: ObservedDomainID
                                    sFlow v5: agentSubID */

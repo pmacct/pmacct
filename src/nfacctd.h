@@ -106,23 +106,7 @@ struct data_hdr_v9 {
 /* defines */
 #define DEFAULT_NFACCTD_PORT 2100
 #define NETFLOW_MSG_SIZE PKT_MSG_SIZE
-#define V1_MAXFLOWS 24  /* max records in V1 packet */
 #define V5_MAXFLOWS 30  /* max records in V5 packet */
-#define V7_MAXFLOWS 27  /* max records in V7 packet */
-#define V8_1_MAXFLOWS  51  /* max records in V8 AS packet */
-#define V8_2_MAXFLOWS  51  /* max records in V8 PROTO PORT packet */
-#define V8_3_MAXFLOWS  44  /* max records in V8 SRC PREFIX packet */
-#define V8_4_MAXFLOWS  44  /* max records in V8 DST PREFIX packet */
-#define V8_5_MAXFLOWS  35  /* max records in V8 PREFIX packet */
-#define V8_6_MAXFLOWS  44  /* max records in V8 DESTONLY packet */
-#define V8_7_MAXFLOWS  35  /* max records in V8 SRC_DEST packet */
-#define V8_8_MAXFLOWS  32  /* max records in V8 FULL_FLOW packet */
-#define V8_9_MAXFLOWS  44  /* max records in V8 AS_TOS packet */
-#define V8_10_MAXFLOWS 44  /* max records in V8 PROT_PORT_TOS packet */
-#define V8_11_MAXFLOWS 44  /* max records in V8 SRC_PREFIX_TOS packet */
-#define V8_12_MAXFLOWS 44  /* max records in V8 DST_PREFIX_TOS packet */
-#define V8_13_MAXFLOWS 35  /* max records in V8 PREFIX_TOS packet */
-#define V8_14_MAXFLOWS 35  /* max records in V8 PREFIX_PORT_TOS packet */
 #define TEMPLATE_CACHE_ENTRIES 255
 
 #define NF_TIME_MSECS 0 /* times are in msecs */

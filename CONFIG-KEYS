@@ -1605,9 +1605,9 @@ DEFAULT:	none (ie. allow all)
 
 KEY:		nfacctd_time_secs [GLOBAL, NFACCTD_ONLY]
 VALUES:		[ true | false ]
-DESC:		Makes 'nfacctd' expect times included in NetFlow header to be in seconds rather than msecs. This
-		knob makes sense for NetFlow up to v8 - as in NetFlow v9 and IPFIX different fields are reserved
-		for secs and msecs timestamps, increasing collector awareness.
+DESC:		Makes 'nfacctd' expect times included in NetFlow header to be in seconds rather than msecs.
+		This knob makes sense for NetFlow v5 since in NetFlow v9 and IPFIX different fields are
+		reserved for secs and msecs timestamps, increasing collector awareness.
 DEFAULT:        false
 
 KEY:		[ nfacctd_time_new | pmacctd_time_new | sfacctd_time_new ] [GLOBAL, NO_UACCTD]

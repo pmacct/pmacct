@@ -12,9 +12,9 @@ pmacctd		libpcap-based accounting daemon: it captures packets from one
 		or multiple interfaces it is bound to. Other than acting as a
 		collector, this daemon can also export statistics via NetFlow,
 		IPFIX and sFlow protocols. 
-nfacctd		NetFlow/IPFIX accounting daemon: it listens for NetFlow v1/v5/
-		v8/v9 packets and IPFIX on one or more interfaces (IPv4 and
-		IPv6). Other than acting as a collector, this daemon can also
+nfacctd		NetFlow/IPFIX accounting daemon: it listens for NetFlow v5/v9
+		and IPFIX packets on one or more interfaces (IPv4 and IPv6).
+		Other than acting as a collector, this daemon can also
 		replicate to 3rd party collectors.
 sfacctd         sFlow accounting daemon; it listens for sFlow packets v2, v4
 		and v5 on one or more interfaces (both IPv4 and IPv6). Other

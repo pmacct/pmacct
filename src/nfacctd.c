@@ -2082,7 +2082,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
   u_int16_t nfv;
 
   /* basic length check against longest NetFlow header */
-  if (len < NfHdrV8Sz) {
+  if (len < NfHdrV5Sz) {
     notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow packet", (struct sockaddr *) pptrs->f_agent, 0);
     xflow_tot_bad_datagrams++;
     return;

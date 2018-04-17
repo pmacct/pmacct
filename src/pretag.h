@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -36,7 +36,7 @@
 #define PRETAG_ENGINE_TYPE		0x000000010ULL
 #define PRETAG_ENGINE_ID		0x000000020ULL
 #define PRETAG_FILTER			0x000000040ULL
-#define PRETAG_NFV8_AGG			0x000000080ULL
+/* #define XXX				0x000000080ULL */
 #define PRETAG_SF_AGENTID		0x000000100ULL
 #define PRETAG_SAMPLING_RATE		0x000000200ULL
 #define PRETAG_DIRECTION		0x000000400ULL
@@ -170,7 +170,6 @@ struct id_entry_key {
   pt_rd_t mpls_vpn_rd;
   pt_uint32_t fwdstatus;
   struct bpf_program filter;
-  pt_uint8_t v8agg;
 };
 
 struct id_entry {

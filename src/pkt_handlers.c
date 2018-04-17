@@ -2313,7 +2313,7 @@ void NF_time_msecs_handler(struct channels_list_entry *chptr, struct packet_ptrs
       pdata->time_start.tv_sec = pm_ntohll(t64)/1000;
       pdata->time_start.tv_usec = (pm_ntohll(t64)%1000)*1000;
     }
-    /* sec handling here: msec vs sec restricted up to NetFlow v8 */
+    /* sec handling here: msec vs sec restricted to NetFlow v5 */
     else if (tpl->tpl[NF9_FIRST_SWITCHED_SEC].len == 4) {
       memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED_SEC].off, tpl->tpl[NF9_FIRST_SWITCHED_SEC].len);
       pdata->time_start.tv_sec = ntohl(t32);
@@ -2374,7 +2374,7 @@ void NF_time_msecs_handler(struct channels_list_entry *chptr, struct packet_ptrs
       pdata->time_end.tv_sec = pm_ntohll(t64)/1000;
       pdata->time_end.tv_usec = (pm_ntohll(t64)%1000)*1000;
     }
-    /* sec handling here: msec vs sec restricted up to NetFlow v8 */
+    /* sec handling here: msec vs sec restricted to NetFlow v5 */
     else if (tpl->tpl[NF9_LAST_SWITCHED_SEC].len == 4) {
       memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED_SEC].off, tpl->tpl[NF9_LAST_SWITCHED_SEC].len);
       pdata->time_end.tv_sec = ntohl(t32);
@@ -2727,7 +2727,7 @@ void NF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet
       pnat->timestamp_start.tv_sec = pm_ntohll(t64)/1000;
       pnat->timestamp_start.tv_usec = (pm_ntohll(t64)%1000)*1000; 
     }
-    /* sec handling here: msec vs sec restricted up to NetFlow v8 */
+    /* sec handling here: msec vs sec restricted to NetFlow v5 */
     else if (tpl->tpl[NF9_FIRST_SWITCHED_SEC].len == 4) {
       memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED_SEC].off, tpl->tpl[NF9_FIRST_SWITCHED_SEC].len);
       pnat->timestamp_start.tv_sec = ntohl(t32);
@@ -2812,7 +2812,7 @@ void NF_timestamp_end_handler(struct channels_list_entry *chptr, struct packet_p
       pnat->timestamp_end.tv_sec = pm_ntohll(t64)/1000;
       pnat->timestamp_end.tv_usec = (pm_ntohll(t64)%1000)*1000;
     }
-    /* sec handling here: msec vs sec restricted up to NetFlow v8 */
+    /* sec handling here: msec vs sec restricted to NetFlow v5 */
     else if (tpl->tpl[NF9_LAST_SWITCHED_SEC].len == 4) {
       memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED_SEC].off, tpl->tpl[NF9_LAST_SWITCHED_SEC].len);
       pnat->timestamp_end.tv_sec = ntohl(t32);
