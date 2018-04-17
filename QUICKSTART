@@ -812,6 +812,10 @@ global, batch.num.messages, 100000
 will make librdkafka log plenty of internal metrics - as documented at the
 following wiki page: https://github.com/edenhill/librdkafka/wiki/Statistics
 
+4) When integrating pmacct with the PNDA framework ( http://www.pnda.io/ ), a
+guide on how to make the two communicate has been written-up and published at
+this URL: https://github.com/jbotello7381/pmacct_to_pnda.io . 
+
 
 X. Internal buffering and queueing
 Two options are provided for internal buffering and queueing: 1) a home-grown circular
