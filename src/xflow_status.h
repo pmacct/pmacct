@@ -66,7 +66,8 @@ struct xflow_status_entry
 {
   struct host_addr agent_addr;  /* NetFlow/IPFIX: socket IP address
 				   sFlow: agentID IP address */
-  struct host_addr exp_addr;	/* NetFlow/IPFIX: exporter IP address, ie. #130/#131 */
+  struct host_addr exp_addr;	/* NetFlow/IPFIX: exporter IP address, ie. #130/#131 (host_addr struct) */
+  struct sockaddr exp_sa;	/* NetFlow/IPFIX: exporter IP address, ie. #130/#131 (sockaddr struct) */
   u_int32_t seqno;              /* Sequence number */
   u_int32_t aux1;               /* Some more distinguishing fields:
                                    NetFlow v5: Engine Type + Engine ID

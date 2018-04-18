@@ -1427,9 +1427,11 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (entry) {
 	    if (tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].len) {
 	      raw_to_addr(&entry->exp_addr, pkt+tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].off, AF_INET);
+	      raw_to_sa(&entry->exp_sa, pkt+tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].off, 0, AF_INET);
 	    }
 	    else if (tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].len) {
 	      raw_to_addr(&entry->exp_addr, pkt+tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].off, AF_INET6);
+	      raw_to_sa(&entry->exp_sa, pkt+tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].off, 0, AF_INET6);
 	    }
 	  }
 	}
@@ -2289,11 +2291,21 @@ void notify_malf_packet(short int severity, char *ostr, struct sockaddr *sa, u_i
 
 int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
 {
-  struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
+  struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
+  struct sockaddr *sa = NULL;
+  char *saved_f_agent = NULL;
   int x, j, begin = 0, end = 0;
   pm_id_t ret = 0;
 
   if (!t) return 0;
+
+  /* if NF9_EXPORTER_IPV[46]_ADDRESS from NetFlow v9/IPFIX options, use it */
+  if (entry->exp_sa.sa_family) {
+    saved_f_agent = pptrs->f_agent;
+    pptrs->f_agent = (u_char *) &entry->exp_sa;
+  }
+
+  sa = (struct sockaddr *) pptrs->f_agent;
 
   /* The id_table is shared between by IPv4 and IPv6 NetFlow agents.
      IPv4 ones are in the lower part (0..x), IPv6 ones are in the upper
@@ -2317,11 +2329,11 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
 
     for (iterator = 0; index_results[iterator] && iterator < ID_TABLE_INDEX_RESULTS; iterator++) {
       ret = pretag_entry_process(index_results[iterator], pptrs, tag, tag2);
-      if (!(ret & PRETAG_MAP_RCODE_JEQ)) return ret;
+      if (!(ret & PRETAG_MAP_RCODE_JEQ)) goto exit_lane;
     }
 
     /* if we have at least one index we trust we did a good job */
-    return ret;
+    goto exit_lane;
   }
 
   if (sa->sa_family == AF_INET) {
@@ -2348,6 +2360,9 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
       }
     }
   }
+
+  exit_lane:
+  if (entry->exp_sa.sa_family) pptrs->f_agent = saved_f_agent; 
 
   return ret;
 }
