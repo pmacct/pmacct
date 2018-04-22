@@ -1273,9 +1273,11 @@ int pretag_input_handler(struct packet_ptrs *pptrs, void *unused, void *e)
         return (FALSE | neg);
     }
     else return (TRUE ^ neg);
-  default:
+  case 5:
     if (input16 == ((struct struct_export_v5 *)pptrs->f_data)->input) return (FALSE | neg);
     else return (TRUE ^ neg); 
+  default:
+    return TRUE;
   }
 }
 
@@ -1304,9 +1306,11 @@ int pretag_output_handler(struct packet_ptrs *pptrs, void *unused, void *e)
         return (FALSE | neg);
     }
     else return (TRUE ^ neg);
-  default:
+  case 5:
     if (output16 == ((struct struct_export_v5 *)pptrs->f_data)->output) return (FALSE | neg);
     else return (TRUE ^ neg);
+  default:
+    return TRUE;
   }
 }
 
@@ -1330,9 +1334,11 @@ int pretag_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     }
 #endif
     else return (TRUE ^ entry->key.nexthop.neg);
-  default:
+  case 5:
     if (entry->key.nexthop.a.address.ipv4.s_addr == ((struct struct_export_v5 *)pptrs->f_data)->nexthop.s_addr) return (FALSE | entry->key.nexthop.neg);
     else return (TRUE ^ entry->key.nexthop.neg);
+  default:
+    return TRUE;
   }
 }
 
@@ -1377,9 +1383,11 @@ int pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     }
 #endif
     else return (TRUE ^ entry->key.bgp_nexthop.neg);
-  default:
+  case 5:
     if (entry->key.bgp_nexthop.a.address.ipv4.s_addr == ((struct struct_export_v5 *)pptrs->f_data)->nexthop.s_addr) return (FALSE | entry->key.bgp_nexthop.neg);
     else return (TRUE ^ entry->key.bgp_nexthop.neg);
+  default:
+    return TRUE;
   }
 }
 
@@ -1521,8 +1529,10 @@ int pretag_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
       asn32 = ntohl(asn32);
     }
     break;
-  default:
+  case 5:
     asn32 = ntohs(((struct struct_export_v5 *) pptrs->f_data)->src_as);
+    break;
+  default:
     break;
   }
 
@@ -1576,8 +1586,10 @@ int pretag_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
       asn32 = ntohl(asn32);
     }
     break;
-  default:
+  case 5:
     asn32 = ntohs(((struct struct_export_v5 *) pptrs->f_data)->dst_as);
+    break;
+  default:
     break;
   }
 
@@ -2873,9 +2885,11 @@ int PT_map_index_fdata_input_handler(struct id_entry *e, pm_hash_serial_t *hash_
         e->key.input.n = ntohl(iface32);
       }
       break; 
-    default:
+    case 5:
       iface16 = ntohs(((struct struct_export_v5 *) pptrs->f_data)->input);
       e->key.input.n = iface16;
+      break;
+    default:
       break;
     }
   }
@@ -2918,9 +2932,11 @@ int PT_map_index_fdata_output_handler(struct id_entry *e, pm_hash_serial_t *hash
         e->key.output.n = ntohl(iface32);
       }
       break;
-    default:
+    case 5:
       iface16 = ntohs(((struct struct_export_v5 *) pptrs->f_data)->output);
       e->key.output.n = iface16;
+      break;
+    default:
       break;
     }
   }
@@ -3053,8 +3069,10 @@ int PT_map_index_fdata_src_as_handler(struct id_entry *e, pm_hash_serial_t *hash
 	  e->key.src_as.n = ntohl(asn32);
 	}
 	break;
-      default:
+      case 5:
 	e->key.src_as.n = ntohs(((struct struct_export_v5 *) pptrs->f_data)->src_as);
+	break;
+      default:
 	break;
       }
     }
@@ -3102,9 +3120,11 @@ int PT_map_index_fdata_dst_as_handler(struct id_entry *e, pm_hash_serial_t *hash
           e->key.dst_as.n = ntohl(asn32);
         }
         break;
-      default:
+      case 5:
         e->key.dst_as.n = ntohs(((struct struct_export_v5 *) pptrs->f_data)->dst_as);
         break;
+      default:
+	break;
       }
     }
     else if (config.acct_type == ACCT_SF) {

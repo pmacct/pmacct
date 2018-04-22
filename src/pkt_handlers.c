@@ -1690,9 +1690,11 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     }
 #endif
     break;
-  default:
+  case 5:
     pdata->primitives.src_ip.address.ipv4.s_addr = ((struct struct_export_v5 *) pptrs->f_data)->srcaddr.s_addr;
     pdata->primitives.src_ip.family = AF_INET;
+    break;
+  default:
     break;
   }
 }
@@ -1733,9 +1735,11 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     }
 #endif
     break;
-  default:
+  case 5:
     pdata->primitives.dst_ip.address.ipv4.s_addr = ((struct struct_export_v5 *) pptrs->f_data)->dstaddr.s_addr;
     pdata->primitives.dst_ip.family = AF_INET;
+    break;
+  default:
     break;
   }
 }
@@ -1763,8 +1767,10 @@ void NF_src_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs 
     }
 #endif
     break;
-  default:
+  case 5:
     pdata->primitives.src_nmask = ((struct struct_export_v5 *) pptrs->f_data)->src_mask;
+    break;
+  default:
     break;
   }
 }
@@ -1792,8 +1798,10 @@ void NF_dst_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs 
     }
 #endif
     break;
-  default:
+  case 5:
     pdata->primitives.dst_nmask = ((struct struct_export_v5 *) pptrs->f_data)->dst_mask;
+    break;
+  default:
     break;
   }
 }
@@ -1822,8 +1830,10 @@ void NF_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
       pdata->primitives.src_as = ntohl(asn32); 
     }
     break;
-  default:
+  case 5:
     pdata->primitives.src_as = ntohs(((struct struct_export_v5 *) pptrs->f_data)->src_as);
+    break;
+  default:
     break;
   }
 
@@ -1857,8 +1867,10 @@ void NF_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
       pdata->primitives.dst_as = ntohl(asn32); 
     }
     break;
-  default:
+  case 5:
     pdata->primitives.dst_as = ntohs(((struct struct_export_v5 *) pptrs->f_data)->dst_as);
+    break;
+  default:
     break;
   }
 
@@ -1892,7 +1904,6 @@ void NF_peer_src_as_handler(struct channels_list_entry *chptr, struct packet_ptr
       pbgp->peer_src_as = ntohl(asn32);
     }
     break;
-  case 8:
   default:
     break;
   }
@@ -1922,7 +1933,6 @@ void NF_peer_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptr
       pbgp->peer_dst_as = ntohl(asn32);
     }
     break;
-  case 8:
   default:
     break;
   }
@@ -2029,13 +2039,13 @@ void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
     }
 #endif
     break;
-  case 8:
-    break;
-  default:
+  case 5:
     if (use_ip_next_hop) {
       pbgp->peer_dst_ip.address.ipv4.s_addr = ((struct struct_export_v5 *) pptrs->f_data)->nexthop.s_addr; 
       pbgp->peer_dst_ip.family = AF_INET;
     }
+    break;
+  default:
     break;
   }
 }
@@ -2066,12 +2076,14 @@ void NF_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
 
     pdata->primitives.src_port = ntohs(pdata->primitives.src_port);
     break;
-  default:
+  case 5:
     if ((((struct struct_export_v5 *) pptrs->f_data)->prot == IPPROTO_UDP) ||
         ((struct struct_export_v5 *) pptrs->f_data)->prot == IPPROTO_TCP) {
       pdata->primitives.src_port = ntohs(((struct struct_export_v5 *) pptrs->f_data)->srcport);
     }
     else pdata->primitives.src_port = 0;
+    break;
+  default:
     break;
   }
 }
@@ -2102,11 +2114,13 @@ void NF_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
 
     pdata->primitives.dst_port = ntohs(pdata->primitives.dst_port);
     break;
-  default:
+  case 5:
     if ((((struct struct_export_v5 *) pptrs->f_data)->prot == IPPROTO_UDP) ||
         ((struct struct_export_v5 *) pptrs->f_data)->prot == IPPROTO_TCP) 
       pdata->primitives.dst_port = ntohs(((struct struct_export_v5 *) pptrs->f_data)->dstport);
     else pdata->primitives.dst_port = 0;
+    break;
+  default:
     break;
   }
 }
@@ -2132,8 +2146,10 @@ void NF_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
       ip_tos_handler(chptr, pptrs, data);
 
     break;
-  default:
+  case 5:
     pdata->primitives.tos = ((struct struct_export_v5 *) pptrs->f_data)->tos;
+    break;
+  default:
     break;
   }
 }
@@ -2153,8 +2169,10 @@ void NF_ip_proto_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       ip_proto_handler(chptr, pptrs, data);
 
     break;
-  default:
+  case 5:
     pdata->primitives.proto = ((struct struct_export_v5 *) pptrs->f_data)->prot;
+    break;
+  default:
     break;
   }
 }
@@ -2177,9 +2195,11 @@ void NF_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs 
       tcp_flags_handler(chptr, pptrs, data);
 
     break;
-  default:
+  case 5:
     if (((struct struct_export_v5 *) pptrs->f_data)->prot == IPPROTO_TCP && hdr->version == 5)
       pdata->tcp_flags = ((struct struct_export_v5 *) pptrs->f_data)->tcp_flags;
+    break;
+  default:
     break;
   }
 }
@@ -2268,9 +2288,11 @@ void NF_counters_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     }
 
     break;
-  default:
+  case 5:
     pdata->pkt_len = ntohl(((struct struct_export_v5 *) pptrs->f_data)->dOctets);
     pdata->pkt_num = ntohl(((struct struct_export_v5 *) pptrs->f_data)->dPkts);
+    break;
+  default:
     break;
   }
 
@@ -2404,7 +2426,7 @@ void NF_time_msecs_handler(struct channels_list_entry *chptr, struct packet_ptrs
     }
     
     break;
-  default:
+  case 5:
     pdata->time_start.tv_sec = ntohl(((struct struct_header_v5 *) pptrs->f_header)->unix_secs)-
       ((ntohl(((struct struct_header_v5 *) pptrs->f_header)->SysUptime))/1000)+
       ((ntohl(((struct struct_export_v5 *) pptrs->f_data)->First))/1000);
@@ -2413,6 +2435,8 @@ void NF_time_msecs_handler(struct channels_list_entry *chptr, struct packet_ptrs
       ((ntohl(((struct struct_header_v5 *) pptrs->f_header)->SysUptime))/1000)+
       ((ntohl(((struct struct_export_v5 *) pptrs->f_data)->Last))/1000);
 
+    break;
+  default:
     break;
   }
 
@@ -2439,11 +2463,13 @@ void NF_time_secs_handler(struct channels_list_entry *chptr, struct packet_ptrs 
     pdata->time_end.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
       (ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime));
     break;
-  default:
+  case 5:
     pdata->time_start.tv_sec = ntohl(((struct struct_header_v5 *) pptrs->f_header)->unix_secs)-
       (ntohl(((struct struct_header_v5 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v5 *) pptrs->f_data)->First));
     pdata->time_end.tv_sec = ntohl(((struct struct_header_v5 *) pptrs->f_header)->unix_secs)-
       (ntohl(((struct struct_header_v5 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v5 *) pptrs->f_data)->Last));
+    break;
+  default:
     break;
   }
 
@@ -2513,8 +2539,10 @@ void NF_flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
     }
     if (!pdata->flo_num) pdata->flo_num = 1;
     break;
-  default:
+  case 5:
     pdata->flo_num = 1;
+    break;
+  default:
     break;
   }
 }
@@ -2543,9 +2571,11 @@ void NF_in_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       pdata->primitives.ifindex_in = ntohl(iface32);
     }
     break;
-  default:
+  case 5:
     iface16 = ntohs(((struct struct_export_v5 *) pptrs->f_data)->input);
     pdata->primitives.ifindex_in = iface16;
+    break;
+  default:
     break;
   }
 }
@@ -2574,9 +2604,11 @@ void NF_out_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs 
       pdata->primitives.ifindex_out = ntohl(iface32);
     }
     break;
-  default:
+  case 5:
     iface16 = ntohs(((struct struct_export_v5 *) pptrs->f_data)->output);
     pdata->primitives.ifindex_out = iface16;
+    break;
+  default:
     break;
   }
 }
@@ -2771,9 +2803,11 @@ void NF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet
     }
 
     break;
-  default:
+  case 5:
     pnat->timestamp_start.tv_sec = ntohl(((struct struct_header_v5 *) pptrs->f_header)->unix_secs)-
       ((ntohl(((struct struct_header_v5 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v5 *) pptrs->f_data)->First))/1000);
+    break;
+  default:
     break;
   }
 
@@ -2841,9 +2875,11 @@ void NF_timestamp_end_handler(struct channels_list_entry *chptr, struct packet_p
       pnat->timestamp_end.tv_usec = t64_2;
     }
     break;
-  default:
+  case 5:
     pnat->timestamp_end.tv_sec = ntohl(((struct struct_header_v5 *) pptrs->f_header)->unix_secs)-
       ((ntohl(((struct struct_header_v5 *) pptrs->f_header)->SysUptime)-ntohl(((struct struct_export_v5 *) pptrs->f_data)->Last))/1000); 
+    break;
+  default:
     break;
   }
 
@@ -2873,11 +2909,10 @@ void NF_sequence_number_handler(struct channels_list_entry *chptr, struct packet
   case 9:
     pdata->primitives.export_proto_seqno = ntohl(((struct struct_header_v9 *) pptrs->f_header)->flow_sequence);
     break;
-  case 8:
+  case 5:
     pdata->primitives.export_proto_seqno = ntohl(((struct struct_header_v5 *) pptrs->f_header)->flow_sequence);
     break;
   default:
-    pdata->primitives.export_proto_seqno = ntohl(((struct struct_header_v5 *) pptrs->f_header)->flow_sequence);
     break;
   }
 }
@@ -2902,13 +2937,11 @@ void NF_sysid_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   case 9:
     pdata->primitives.export_proto_sysid = ntohl(((struct struct_header_v9 *) pptrs->f_header)->source_id);
     break;
-  case 8:
+  case 5:
     pdata->primitives.export_proto_sysid = ((struct struct_header_v5 *) pptrs->f_header)->engine_id;
     /* XXX: engine type? */
     break;
   default:
-    pdata->primitives.export_proto_sysid = ((struct struct_header_v5 *) pptrs->f_header)->engine_id;
-    /* XXX: engine type? */
     break;
   }
 }
