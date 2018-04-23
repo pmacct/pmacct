@@ -602,6 +602,7 @@ void skinny_bgp_daemon_online()
       }
 
       peer->fd = fd;
+      peer->idx = peers_idx; 
       FD_SET(peer->fd, &bkp_read_descs);
       peer->addr.family = ((struct sockaddr *)&client)->sa_family;
       if (peer->addr.family == AF_INET) {

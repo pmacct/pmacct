@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -178,6 +178,14 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
       peer->ht = MAX(5, ntohs(bopen->bgpo_holdtime));
       peer->id.family = AF_INET; 
       peer->id.address.ipv4.s_addr = bopen->bgpo_id;
+
+      /* Check: duplicate Router-IDs; BGP only, ie. no BMP */
+      if (bms->bgp_msg_open_router_id_check) {
+	int check_ret;
+
+	check_ret = bms->bgp_msg_open_router_id_check(bmd);
+	if (check_ret) return check_ret;
+      }
 
       /* OPEN options parsing */
       if (bopen->bgpo_optlen && bopen->bgpo_optlen >= 2) {

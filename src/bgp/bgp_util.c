@@ -1368,6 +1368,8 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->bgp_lookup_find_peer = bgp_lookup_find_bgp_peer;
   bms->bgp_lookup_node_match_cmp = bgp_lookup_node_match_cmp_bgp;
 
+  bms->bgp_msg_open_router_id_check = bgp_router_id_check; 
+
   if (!bms->is_thread && !bms->dump_backend_methods && !bms->has_lglass)
     bms->skip_rib = TRUE;
 }
@@ -1433,4 +1435,31 @@ int bgp_peers_bintree_walk_delete(const void *nodep, const pm_VISIT which, const
   // XXX: count tree elements to index and free() later
 
   return TRUE;
+}
+
+int bgp_router_id_check(struct bgp_msg_data *bmd)
+{
+  struct bgp_peer *peer = bmd->peer;
+  struct bgp_misc_structs *bms;
+  struct bgp_peer *peers_check;
+  int peers_check_idx = 0;
+
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return ERR;
+
+  peers_check = bms->peers;
+
+  for (; peers_check_idx < bms->max_peers; peers_check_idx++) {
+    if (peers_check_idx != peer->idx && !memcmp(&peers_check[peers_check_idx].id, &peer->id, sizeof(peers_check[peers_check_idx].id))) {
+      char bgp_peer_str[INET6_ADDRSTRLEN];
+
+      bgp_peer_print(&peers_check[peers_check_idx], bgp_peer_str, INET6_ADDRSTRLEN);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Refusing new connection from existing Router-ID.\n", config.name, bms->log_str, bgp_peer_str);
+
+      return ERR;
+    }
+  }
+
+  return FALSE;
 }

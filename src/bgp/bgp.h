@@ -119,6 +119,83 @@ struct bgp_peer_cache_bucket {
   struct bgp_peer_cache *e;
 };
 
+struct bgp_xconnect {
+  u_int32_t id;
+
+#if defined ENABLE_IPV6
+  struct sockaddr_storage dst;  /* BGP receiver IP address and port */
+#else
+  struct sockaddr dst;
+#endif
+  socklen_t dst_len;
+
+#if defined ENABLE_IPV6
+  struct sockaddr_storage src;  /* BGP peer IP address and port */
+#else
+  struct sockaddr src;
+#endif
+  socklen_t src_len;
+
+  struct host_addr src_addr;    /* IP prefix to match multiple BGP peers */
+  struct host_mask src_mask;
+};
+
+struct bgp_xconnects {
+  struct bgp_xconnect *pool;
+  int num;
+};
+
+struct bgp_peer_stats {
+    u_int32_t packets; /* Datagrams received */
+    u_int32_t packet_bytes; /* Bytes read off the socket */
+    u_int32_t msg_bytes; /* Bytes in the decoded messages */
+    u_int32_t msg_errors; /* Errors detected in message content */
+    time_t last_check; /* Timestamp when stats were last checked */
+};
+
+struct bgp_peer_buf {
+  char *base;
+  u_int32_t len;
+  u_int32_t truncated_len;
+};
+
+struct bgp_peer {
+  int idx;
+  int fd;
+  int lock;
+  int type; /* ie. BGP vs BMP */
+  u_int8_t status;
+  as_t myas;
+  as_t as;
+  u_int16_t ht;
+  time_t last_keepalive;
+  struct host_addr id;
+  struct host_addr addr;
+  char addr_str[INET6_ADDRSTRLEN];
+  u_int16_t tcp_port;
+  u_int8_t cap_mp;
+  char *cap_4as;
+  u_int8_t cap_add_paths;
+  u_int32_t msglen;
+  struct bgp_peer_stats stats;
+  struct bgp_peer_buf buf;
+  struct bgp_peer_log *log;
+
+  /*
+     bmp_peer.self.bmp_se:		pointer to struct bmp_dump_se_ll
+     bmp_peer.bgp_peers[n].bmp_se:	backpointer to parent struct bmp_peer
+  */
+  void *bmp_se;
+
+  struct bgp_xconnect xc;
+  int xconnect_fd;
+};
+
+struct bgp_msg_data {
+  struct bgp_peer *peer;
+  struct bgp_msg_extra_data extra;
+};
+
 struct bgp_misc_structs {
   struct bgp_peer_log *peers_log;
   u_int64_t log_seq;
@@ -176,82 +253,8 @@ struct bgp_misc_structs {
   int msglog_backend_methods;
   int dump_backend_methods;
   int dump_input_backend_methods;
-};
 
-struct bgp_xconnect {
-  u_int32_t id;
-
-#if defined ENABLE_IPV6
-  struct sockaddr_storage dst;  /* BGP receiver IP address and port */
-#else
-  struct sockaddr dst;
-#endif
-  socklen_t dst_len;
-
-#if defined ENABLE_IPV6
-  struct sockaddr_storage src;  /* BGP peer IP address and port */
-#else
-  struct sockaddr src;
-#endif
-  socklen_t src_len;
-
-  struct host_addr src_addr;    /* IP prefix to match multiple BGP peers */
-  struct host_mask src_mask;
-};
-
-struct bgp_xconnects {
-  struct bgp_xconnect *pool;
-  int num;
-};
-
-struct bgp_peer_stats {
-    u_int32_t packets; /* Datagrams received */
-    u_int32_t packet_bytes; /* Bytes read off the socket */
-    u_int32_t msg_bytes; /* Bytes in the decoded messages */
-    u_int32_t msg_errors; /* Errors detected in message content */
-    time_t last_check; /* Timestamp when stats were last checked */
-};
-
-struct bgp_peer_buf {
-  char *base;
-  u_int32_t len;
-  u_int32_t truncated_len;
-};
-
-struct bgp_peer {
-  int fd;
-  int lock;
-  int type; /* ie. BGP vs BMP */
-  u_int8_t status;
-  as_t myas;
-  as_t as;
-  u_int16_t ht;
-  time_t last_keepalive;
-  struct host_addr id;
-  struct host_addr addr;
-  char addr_str[INET6_ADDRSTRLEN];
-  u_int16_t tcp_port;
-  u_int8_t cap_mp;
-  char *cap_4as;
-  u_int8_t cap_add_paths;
-  u_int32_t msglen;
-  struct bgp_peer_stats stats;
-  struct bgp_peer_buf buf;
-  struct bgp_peer_log *log;
-
-  /*
-     bmp_peer.self.bmp_se:		pointer to struct bmp_dump_se_ll
-     bmp_peer.bgp_peers[n].bmp_se:	backpointer to parent struct bmp_peer
-  */
-  void *bmp_se;
-
-  struct bgp_xconnect xc;
-  int xconnect_fd;
-};
-
-struct bgp_msg_data {
-  struct bgp_peer *peer;
-  struct bgp_msg_extra_data extra;
+  int (*bgp_msg_open_router_id_check)(struct bgp_msg_data *);
 };
 
 /* these includes require definition of bgp_rt_structs and bgp_peer */

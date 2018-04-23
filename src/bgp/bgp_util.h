@@ -96,5 +96,7 @@ EXT int bgp_peers_bintree_walk_delete(const void *, const pm_VISIT, const int, v
 EXT unsigned int attrhash_key_make(void *);
 EXT int attrhash_cmp(const void *, const void *);
 EXT void attrhash_init(int, struct hash **);
+
+EXT int bgp_router_id_check(struct bgp_msg_data *);
 #undef EXT
 #endif 
