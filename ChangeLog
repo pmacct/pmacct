@@ -124,6 +124,10 @@ The keys used are:
     now advertised if neighbor supports send/receive (previously it was
     sent back on send only) of such capability. Thanks to Radu Anghel
     ( @cozonac ) for his support.
+  ! fix, BGP daemon: upon route lookup, don't perform ADD-PATH logics if
+    no PATH-ID (even if ADD-PATH capability is announced by the peer).
+    Thanks to Camilo Cardona ( @jccardonar ) for his support solving the
+    issue.
   ! fix, BGP daemon: wrong type 2 32-bit ASN Route Distinguisher was
     defined in network.h. Thanks to Thomas Graf for reporting the issue.
   ! fix, BGP, BMP daemons: lookup of BGP-LU entries is now performed
