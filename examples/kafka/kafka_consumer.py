@@ -42,6 +42,7 @@ def usage(tool):
 	print "  -u, --url".ljust(25) + "Define a URL to HTTP POST data to"
 	print "  -a, --to-json-array".ljust(25) + "Convert list of newline-separated JSON objects in a JSON array"
 	print "  -s, --stats-interval".ljust(25) + "Define a time interval, in secs, to get statistics to stdout"
+	print "  -P, --pidfile".ljust(25) + "Set a pidfile to record active processes PID"
 
 
 def post_to_url(http_req, value):
@@ -56,9 +57,9 @@ def post_to_url(http_req, value):
 
 def main():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "ht:T:pin:g:H:d:eu:as:r:", ["help", "topic=",
+		opts, args = getopt.getopt(sys.argv[1:], "ht:T:pin:g:H:d:eu:as:r:P:", ["help", "topic=",
 				"group_id=", "host=", "earliest=", "url=", "produce-topic=", "print=",
-				"num=", "to-json-array=", "stats-interval="])
+				"num=", "to-json-array=", "stats-interval=", "pidfile="])
 	except getopt.GetoptError as err:
 		# print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -77,6 +78,7 @@ def main():
         print_stdout_max = 0
 	convert_to_json_array = 0
 	stats_interval = 0
+	pidfile = None
  	
 	required_cl = 0
 
@@ -108,6 +110,8 @@ def main():
 			if stats_interval < 0:
 				sys.stderr.write("ERROR: `-s`, `--stats-interval` must be positive\n")
 				sys.exit(1)
+		elif o in ("-P", "--pidfile"):
+			pidfile = a
 		else:
 			assert False, "unhandled option"
 
@@ -115,6 +119,12 @@ def main():
 		print "ERROR: Missing required arguments"
 		usage(sys.argv[0])
 		sys.exit(1)
+
+	if pidfile:
+		pidfile_f = open(pidfile, 'w')
+		pidfile_f.write(str(mypid))
+		pidfile_f.write("\n")
+		pidfile_f.close()
 
 	consumer_conf = { 'bootstrap.servers': kafka_host,
 			  'group.id': kafka_group_id,

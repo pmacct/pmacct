@@ -71,6 +71,7 @@ def usage(tool):
 	print "  -u, --url".ljust(25) + "Define a URL to HTTP POST data to" 
 	print "  -a, --to-json-array".ljust(25) + "Convert list of newline-separated JSON objects in a JSON array"
 	print "  -s, --stats-interval".ljust(25) + "Define a time interval, in secs, to get statistics to stdout"
+	print "  -P, --pidfile".ljust(25) + "Set a pidfile to record active processes PID"
 	if avro_available:
 		print "  -d, --decode-with-avro".ljust(25) + "Define the file with the " \
 		      "schema to use for decoding Avro messages"
@@ -170,10 +171,10 @@ def main():
         global elem_count
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "he:k:q:H:u:d:pn:as:", ["help",
+		opts, args = getopt.getopt(sys.argv[1:], "he:k:q:H:u:d:pn:as:P:", ["help",
 				"exchange=", "routing_key=", "queue=", "host=", "url=",
 				"decode-with-avro=", "print=", "num=", "to-json-array=",
-				"stats-interval="])
+				"stats-interval=", "pidfile="])
 	except getopt.GetoptError as err:
 		# print help information and exit:
 		print str(err) # will print something like "option -a not recognized"
@@ -184,6 +185,7 @@ def main():
 	amqp_routing_key = None
 	amqp_queue = None
 	amqp_host = "localhost"
+	pidfile = None
  	
 	required_cl = 0
 
@@ -227,6 +229,8 @@ def main():
 
 			with open(a) as f:
 				avro_schema = avro.schema.parse(f.read())
+		elif o in ("-P", "--pidfile"):
+			pidfile = a
 	        else:
 			assert False, "unhandled option"
 
@@ -236,6 +240,12 @@ def main():
 		print "ERROR: Missing required arguments"
 		usage(sys.argv[0])
 		sys.exit(1)
+
+	if pidfile:
+		pidfile_f = open(pidfile, 'w')
+		pidfile_f.write(str(mypid))
+		pidfile_f.write("\n")
+		pidfile_f.close()
 
 	connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_host))
 	channel = connection.channel()
