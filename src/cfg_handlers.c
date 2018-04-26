@@ -5703,6 +5703,25 @@ int cfg_key_tee_dissect_send_full_pkt(char *filename, char *name, char *value_pt
   return changes;
 }
 
+int cfg_key_tee_kafka_config_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.tee_kafka_config_file = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.tee_kafka_config_file = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 void parse_time(char *filename, char *value, int *mu, int *howmany)
 {
   int k, j, len;

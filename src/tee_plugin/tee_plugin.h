@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -59,6 +59,9 @@ struct tee_receivers_pool {
   struct pretag_filter tag_filter; 	/* filter datagrams basing on a pre_tag_map */
   struct tee_balance balance;		/* balance datagrams basing on supported algorithm */
   u_int16_t src_port;			/* Non transparent mode: source UDP port to use for replication */
+  char *kafka_broker;			/* Emitting to Kafka: broker string */
+  char *kafka_topic;			/* Emitting to Kafka: topic */
+  struct p_kafka_host kafka_host;	/* Emitting to Kafka: librdkafka structs */ 
   int num;				/* Number of receivers in the pool */
 };
 

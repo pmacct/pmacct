@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -21,7 +21,8 @@
 
 #define __TEE_RECVS_C
 
-#include "../pmacct.h"
+#include "pmacct.h"
+#include "kafka_common.h"
 #include "tee_plugin.h"
 #include "tee_recvs.h"
 
@@ -171,6 +172,34 @@ int tee_recvs_map_src_port_handler(char *filename, struct id_entry *e, char *val
   return FALSE;
 }
 
+int tee_recvs_map_kafka_broker_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
+  int pool_idx, recv_idx, ret;
+
+  if (table && table->pools) table->pools[table->num].kafka_broker = value;
+  else {
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Receivers table not allocated.\n", config.name, config.type, filename);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+int tee_recvs_map_kafka_topic_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
+  int pool_idx, recv_idx, ret; 
+
+  if (table && table->pools) table->pools[table->num].kafka_topic = value;
+  else {
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Receivers table not allocated.\n", config.name, config.type, filename);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 void tee_recvs_map_validate(char *filename, struct plugin_requests *req)
 {
   struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
@@ -181,7 +210,29 @@ void tee_recvs_map_validate(char *filename, struct plugin_requests *req)
     if (table->pools[table->num].id && table->pools[table->num].num > 0) valid = TRUE;
     else valid = FALSE;
 
-    if (valid) table->num++;
+    /* If having to emit to Kafka, make sure we have both broker string and topic */
+    if ((table->pools[table->num].kafka_broker && table->pools[table->num].kafka_topic) ||
+        (!table->pools[table->num].kafka_broker && !table->pools[table->num].kafka_topic)) valid = TRUE;
+    else {
+      if (!table->pools[table->num].kafka_broker)
+	Log(LOG_WARNING, "WARN ( %s/%s ): [%s] kafka_broker missing. Line ignored.\n", config.name, config.type, filename);
+      else if (!table->pools[table->num].kafka_topic)
+	Log(LOG_WARNING, "WARN ( %s/%s ): [%s] kafka_topic missing. Line ignored.\n", config.name, config.type, filename);
+
+      valid = FALSE;
+    }
+
+    if (valid) {
+      table->num++;
+      
+      if (table->pools[table->num].kafka_broker && table->pools[table->num].kafka_topic) {
+	p_kafka_init_host(&table->pools[table->num].kafka_host, config.tee_kafka_config_file);
+	p_kafka_connect_to_produce(&table->pools[table->num].kafka_host);
+	p_kafka_set_broker(&table->pools[table->num].kafka_host, table->pools[table->num].kafka_broker, FALSE);
+	p_kafka_set_topic(&table->pools[table->num].kafka_host, table->pools[table->num].kafka_topic);
+	p_kafka_set_content_type(&table->pools[table->num].kafka_host, PM_KAFKA_CNT_TYPE_BIN);
+      }
+    }
     else {
       table->pools[table->num].id = 0;
       table->pools[table->num].num = 0;
@@ -189,6 +240,10 @@ void tee_recvs_map_validate(char *filename, struct plugin_requests *req)
       memset(table->pools[table->num].receivers, 0, config.tee_max_receivers*sizeof(struct tee_receivers));
       memset(&table->pools[table->num].tag_filter, 0, sizeof(struct pretag_filter));
       memset(&table->pools[table->num].balance, 0, sizeof(struct tee_balance));
+
+      memset(&table->pools[table->num].kafka_host, 0, sizeof(struct p_kafka_host));
+      table->pools[table->num].kafka_broker = NULL;
+      table->pools[table->num].kafka_topic = NULL;
     }
   }
 }

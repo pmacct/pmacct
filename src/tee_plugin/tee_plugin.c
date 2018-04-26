@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -23,6 +23,7 @@
 
 #include "pmacct.h"
 #include "addr.h"
+#include "kafka_common.h"
 #include "tee_plugin.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
@@ -438,6 +439,12 @@ void Tee_destroy_recvs()
     memset(&receivers.pools[pool_idx].balance, 0, sizeof(struct tee_balance));
     receivers.pools[pool_idx].id = 0;
     receivers.pools[pool_idx].num = 0;
+
+    if (receivers.pools[pool_idx].kafka_broker && receivers.pools[pool_idx].kafka_topic) {
+      p_kafka_close(&receivers.pools[pool_idx].kafka_host, FALSE);
+      receivers.pools[pool_idx].kafka_broker = NULL;
+      receivers.pools[pool_idx].kafka_topic = NULL;
+    }
   }
 
   receivers.num = 0;

@@ -282,6 +282,7 @@ EXT int cfg_key_tee_max_receivers(char *, char *, char *);
 EXT int cfg_key_tee_max_receiver_pools(char *, char *, char *);
 EXT int cfg_key_tee_pipe_size(char *, char *, char *);
 EXT int cfg_key_tee_dissect_send_full_pkt(char *, char *, char *);
+EXT int cfg_key_tee_kafka_config_file(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_msglog_output(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_msglog_file(char *, char *, char *);

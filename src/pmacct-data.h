@@ -682,6 +682,7 @@ static const struct _dictionary_line dictionary[] = {
   {"tee_ipprec", cfg_key_nfprobe_ip_precedence},
   {"tee_pipe_size", cfg_key_tee_pipe_size},
   {"tee_dissect_send_full_pkt", cfg_key_tee_dissect_send_full_pkt},
+  {"tee_kafka_config_file", cfg_key_tee_kafka_config_file},
   {"bgp_daemon", cfg_key_nfacctd_bgp},
   {"bgp_daemon_ip", cfg_key_nfacctd_bgp_ip},
   {"bgp_daemon_id", cfg_key_nfacctd_bgp_id},

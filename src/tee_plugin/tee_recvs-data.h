@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -25,5 +25,7 @@ const struct _map_dictionary_line tee_recvs_map_dictionary[] = {
   {"tag", tee_recvs_map_tag_handler},
   {"balance-alg", tee_recvs_map_balance_alg_handler},
   {"src_port", tee_recvs_map_src_port_handler},
+  {"kafka_broker", tee_recvs_map_kafka_broker_handler},
+  {"kafka_topic", tee_recvs_map_kafka_topic_handler},
   {"", NULL}
 };

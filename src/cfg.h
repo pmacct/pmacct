@@ -530,6 +530,7 @@ struct configuration {
   char *tee_receivers;
   int tee_pipe_size;
   int tee_dissect_send_full_pkt;
+  char *tee_kafka_config_file;
   int uacctd_group;
   int uacctd_nl_size;
   int uacctd_threshold;
