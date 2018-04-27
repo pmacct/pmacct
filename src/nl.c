@@ -46,6 +46,8 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
   struct pcap_callback_data *cb_data = (struct pcap_callback_data *) user;
   struct pcap_device *device = cb_data->device;
   struct plugin_requests req;
+  u_int32_t iface32 = 0;
+  u_int32_t ifacePresent = 0;
 
   /* We process the packet with the appropriate
      data link layer function */
@@ -108,6 +110,14 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
       pptrs.ifindex_out = cb_data->device->id;
     }
     else pptrs.ifindex_out = 0;
+
+    if (config.decode_arista_trailer) {
+      memcpy(&ifacePresent, buf + pkthdr->len - 8, 4);
+        if (ifacePresent == 1) {
+          memcpy(&iface32, buf + pkthdr->len - 4, 4);
+          pptrs.ifindex_out = iface32;
+        }
+    }
 
     (*device->data->handler)(pkthdr, &pptrs);
     if (pptrs.iph_ptr) {

@@ -50,6 +50,7 @@ EXT int cfg_key_pcap_direction(char *, char *, char *);
 EXT int cfg_key_pcap_ifindex(char *, char *, char *);
 EXT int cfg_key_pcap_interfaces_map(char *, char *, char *);
 EXT int cfg_key_use_ip_next_hop(char *, char *, char *);
+EXT int cfg_key_decode_arista_trailer(char *, char *, char *);
 EXT int cfg_key_thread_stack(char *, char *, char *);
 EXT int cfg_key_pcap_interface(char *, char *, char *);
 EXT int cfg_key_pcap_interface_wait(char *, char *, char *);

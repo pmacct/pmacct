@@ -1686,6 +1686,11 @@ DESC:		When IP prefix aggregation (ie. nfacctd_net) is set to 'netflow', 'sflow'
 		from NetFlow/sFlow IP next hop field if BGP next-hop is not available.
 DEFAULT:        false
 
+KEY:            [ decode_arista_trailer ] [GLOBAL]
+VALUES:         [ true | false ]
+DESC:           Decode output interfaces data present on trailer of arista sflow packets.
+DEFAULT:        false
+
 KEY:		[ nfacctd_mcast_groups | sfacctd_mcast_groups ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
 DESC:		Defines one or more IPv4/IPv6 multicast groups to be joined by the daemon. If more groups are
 		supplied, they are expected comma separated. A maximum of 20 multicast groups may be joined by

@@ -533,6 +533,7 @@ struct configuration {
   int uacctd_threshold;
   char *tunnel0;
   int use_ip_next_hop;
+  int decode_arista_trailer;
   int dump_max_writers;
   int tmp_asa_bi_flow;
   size_t thread_stack;
