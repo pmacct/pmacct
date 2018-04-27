@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -132,6 +132,7 @@ void p_kafka_set_broker(struct p_kafka_host *kafka_host, char *host, int port)
     if (multiple_brokers) snprintf(kafka_host->broker, SRVBUFLEN, "%s", host);
     else {
       if (host && port) snprintf(kafka_host->broker, SRVBUFLEN, "%s:%u", host, port);
+      else if (host && !port) snprintf(kafka_host->broker, SRVBUFLEN, "%s", host);
     }
 
     if ((ret = rd_kafka_brokers_add(kafka_host->rk, kafka_host->broker)) == 0) {
@@ -387,7 +388,7 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, u_
 
     if (ret == ERR) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Failed to produce to topic %s partition %i: %s\n", config.name, config.type,
-          rd_kafka_topic_name(kafka_host->topic), part, rd_kafka_err2str(rd_kafka_errno2err(errno)));
+          rd_kafka_topic_name(kafka_host->topic), part, rd_kafka_err2str(rd_kafka_last_error()));
       p_kafka_close(kafka_host, TRUE);
     }
   }
@@ -420,9 +421,19 @@ void p_kafka_close(struct p_kafka_host *kafka_host, int set_fail)
       kafka_host->topic = NULL;
     }
 
+    if (kafka_host->topic_cfg) {
+      rd_kafka_topic_conf_destroy(kafka_host->topic_cfg);
+      kafka_host->topic_cfg = NULL; 
+    }
+
     if (kafka_host->rk) {
       rd_kafka_destroy(kafka_host->rk);
       kafka_host->rk = NULL;
+    }
+
+    if (kafka_host->cfg) {
+      rd_kafka_conf_destroy(kafka_host->cfg);
+      kafka_host->cfg = NULL;
     }
   }
 }
