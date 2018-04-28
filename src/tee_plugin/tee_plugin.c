@@ -442,8 +442,8 @@ void Tee_destroy_recvs()
 
     if (receivers.pools[pool_idx].kafka_broker && receivers.pools[pool_idx].kafka_topic) {
       p_kafka_close(&receivers.pools[pool_idx].kafka_host, FALSE);
-      receivers.pools[pool_idx].kafka_broker = NULL;
-      receivers.pools[pool_idx].kafka_topic = NULL;
+      memset(receivers.pools[pool_idx].kafka_broker, 0, sizeof(receivers.pools[pool_idx].kafka_broker));
+      memset(receivers.pools[pool_idx].kafka_topic, 0, sizeof(receivers.pools[pool_idx].kafka_topic));
     }
   }
 
@@ -480,8 +480,25 @@ void Tee_init_socks()
 
 	sa_to_addr((struct sockaddr *)&target->dest, &recv_addr, &recv_port); 
         addr_to_str(recv_addr_str, &recv_addr);
-        Log(LOG_DEBUG, "DEBUG ( %s/%s ): pool ID: %u :: receiver: %s :: fd: %d.\n",
-                config.name, config.type, receivers.pools[pool_idx].id, recv_addr_str, target->fd);
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): PoolID=%u receiver=%s fd=%d\n",
+	    config.name, config.type, receivers.pools[pool_idx].id, recv_addr_str, target->fd);
+      }
+    }
+
+    if (receivers.pools[pool_idx].kafka_broker) {
+      p_kafka_init_host(&receivers.pools[pool_idx].kafka_host, config.tee_kafka_config_file);
+      p_kafka_connect_to_produce(&receivers.pools[pool_idx].kafka_host);
+      p_kafka_set_broker(&receivers.pools[pool_idx].kafka_host, receivers.pools[pool_idx].kafka_broker, FALSE);
+      p_kafka_set_topic(&receivers.pools[pool_idx].kafka_host, receivers.pools[pool_idx].kafka_topic);
+      p_kafka_set_content_type(&receivers.pools[pool_idx].kafka_host, PM_KAFKA_CNT_TYPE_BIN);
+
+      if (config.debug) {
+        char *broker, *topic;
+
+	broker = p_kafka_get_broker(&receivers.pools[pool_idx].kafka_host);
+	topic = p_kafka_get_topic(&receivers.pools[pool_idx].kafka_host);
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): PoolID=%u KafkaBroker=%s KafkaTopic=%s\n",
+	    config.name, config.type, receivers.pools[pool_idx].id, broker, topic);
       }
     }
   }

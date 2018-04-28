@@ -177,7 +177,13 @@ int tee_recvs_map_kafka_broker_handler(char *filename, struct id_entry *e, char 
   struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
   int pool_idx, recv_idx, ret;
 
-  if (table && table->pools) table->pools[table->num].kafka_broker = value;
+  if (table && table->pools) {
+    int len = sizeof(table->pools[table->num].kafka_broker); 
+
+    memset(table->pools[table->num].kafka_broker, 0, len);
+    strlcpy(table->pools[table->num].kafka_broker, value, len);
+    table->pools[table->num].kafka_broker[len] = '\0';
+  }
   else {
     Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Receivers table not allocated.\n", config.name, config.type, filename);
     return TRUE;
@@ -191,7 +197,13 @@ int tee_recvs_map_kafka_topic_handler(char *filename, struct id_entry *e, char *
   struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
   int pool_idx, recv_idx, ret; 
 
-  if (table && table->pools) table->pools[table->num].kafka_topic = value;
+  if (table && table->pools) {
+    int len = sizeof(table->pools[table->num].kafka_topic);
+
+    memset(table->pools[table->num].kafka_topic, 0, len);
+    strlcpy(table->pools[table->num].kafka_topic, value, len);
+    table->pools[table->num].kafka_topic[len] = '\0';
+  } 
   else {
     Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Receivers table not allocated.\n", config.name, config.type, filename);
     return TRUE;
@@ -206,34 +218,59 @@ void tee_recvs_map_validate(char *filename, struct plugin_requests *req)
   int valid = FALSE;
 
   if (table && table->pools && table->pools[table->num].receivers) {
-    /* If we have got: a) a valid pool ID and b) at least a receiver THEN ok */
-    if (table->pools[table->num].id && table->pools[table->num].num > 0) valid = TRUE;
-    else valid = FALSE;
-
-    /* If having to emit to Kafka, make sure we have both broker string and topic */
-    if ((table->pools[table->num].kafka_broker && table->pools[table->num].kafka_topic) ||
-        (!table->pools[table->num].kafka_broker && !table->pools[table->num].kafka_topic)) valid = TRUE;
-    else {
-      if (!table->pools[table->num].kafka_broker)
-	Log(LOG_WARNING, "WARN ( %s/%s ): [%s] kafka_broker missing. Line ignored.\n", config.name, config.type, filename);
-      else if (!table->pools[table->num].kafka_topic)
-	Log(LOG_WARNING, "WARN ( %s/%s ): [%s] kafka_topic missing. Line ignored.\n", config.name, config.type, filename);
-
+    /* Check: emit to either IP address(es) or Kafka broker(s) */
+    if (table->pools[table->num].num > 0 && table->pools[table->num].kafka_broker) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'ip' and 'kafka_broker' are mutual exclusive. Line ignored.\n",
+	  config.name, config.type, filename);
       valid = FALSE;
+      goto zero_entry;
     }
 
-    if (valid) {
-      table->num++;
-      
-      if (table->pools[table->num].kafka_broker && table->pools[table->num].kafka_topic) {
-	p_kafka_init_host(&table->pools[table->num].kafka_host, config.tee_kafka_config_file);
-	p_kafka_connect_to_produce(&table->pools[table->num].kafka_host);
-	p_kafka_set_broker(&table->pools[table->num].kafka_host, table->pools[table->num].kafka_broker, FALSE);
-	p_kafka_set_topic(&table->pools[table->num].kafka_host, table->pools[table->num].kafka_topic);
-	p_kafka_set_content_type(&table->pools[table->num].kafka_host, PM_KAFKA_CNT_TYPE_BIN);
-      }
+    if (!table->pools[table->num].num && !table->pools[table->num].kafka_broker) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'ip' or 'kafka_broker' must be specified. Line ignored.\n",
+	  config.name, config.type, filename);
+      valid = FALSE;
+      goto zero_entry;
     }
+
+    /* Check: valid pool ID */
+    if (table->pools[table->num].id > 0) valid = TRUE;
     else {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid pool 'id' specified. Line ignored.\n",
+	  config.name, config.type, filename);
+      valid = FALSE;
+      goto zero_entry;
+    }
+
+    if (table->pools[table->num].num > 0) valid = TRUE;
+
+    /*
+       Check: if emitting to Kafka:
+       a) make sure we have both broker string and topic,
+       b) tee_transparent is set to true
+    */
+    if (table->pools[table->num].kafka_broker) {
+      if (!config.tee_transparent) {
+	Log(LOG_WARNING, "WARN ( %s/%s ): [%s] tee_transparent must be set to 'true' when emitting to Kafka. Line ignored.\n",
+	    config.name, config.type, filename);
+	valid = FALSE;
+	goto zero_entry;
+      }
+
+      if (!table->pools[table->num].kafka_topic) {
+	Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'kafka_topic' missing. Line ignored.\n",
+	    config.name, config.type, filename);
+	valid = FALSE;
+	goto zero_entry;
+      }
+
+      valid = TRUE;
+    }
+
+    if (valid) table->num++;
+    else {
+      zero_entry:
+
       table->pools[table->num].id = 0;
       table->pools[table->num].num = 0;
       table->pools[table->num].src_port = 0;
@@ -242,8 +279,8 @@ void tee_recvs_map_validate(char *filename, struct plugin_requests *req)
       memset(&table->pools[table->num].balance, 0, sizeof(struct tee_balance));
 
       memset(&table->pools[table->num].kafka_host, 0, sizeof(struct p_kafka_host));
-      table->pools[table->num].kafka_broker = NULL;
-      table->pools[table->num].kafka_topic = NULL;
+      memset(&table->pools[table->num].kafka_broker, 0, sizeof(table->pools[table->num].kafka_broker));
+      memset(&table->pools[table->num].kafka_topic, 0, sizeof(table->pools[table->num].kafka_topic));
     }
   }
 }

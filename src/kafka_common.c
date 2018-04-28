@@ -97,6 +97,13 @@ void p_kafka_set_topic(struct p_kafka_host *kafka_host, char *topic)
   }
 }
 
+char *p_kafka_get_broker(struct p_kafka_host *kafka_host)
+{
+  if (kafka_host && strlen(kafka_host->broker)) return kafka_host->broker;
+
+  return NULL;
+}
+
 char *p_kafka_get_topic(struct p_kafka_host *kafka_host)
 {
   if (kafka_host && kafka_host->topic) return rd_kafka_topic_name(kafka_host->topic);
