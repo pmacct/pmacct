@@ -521,7 +521,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] required key missing. Required keys are: 'id', 'ip'. Line ignored.\n",
 			config.name, config.type, filename, tot_lines);
               }
-	      else if (acct_type == MAP_TEE_RECVS) tee_recvs_map_validate(filename, req); 
+	      else if (acct_type == MAP_TEE_RECVS) tee_recvs_map_validate(filename, tot_lines, req); 
 	      else if (acct_type == MAP_BGP_XCS) bgp_xcs_map_validate(filename, req); 
 	      else if (acct_type == MAP_IGP) igp_daemon_map_validate(filename, req); 
 	      else if (acct_type == MAP_CUSTOM_PRIMITIVES) custom_primitives_map_validate(filename, req); 

@@ -40,7 +40,7 @@ EXT int tee_recvs_map_src_port_handler(char *, struct id_entry *, char *, struct
 EXT int tee_recvs_map_kafka_broker_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int tee_recvs_map_kafka_topic_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 
-EXT void tee_recvs_map_validate(char *, struct plugin_requests *);
+EXT void tee_recvs_map_validate(char *, int, struct plugin_requests *);
 
 /* global variables */
 

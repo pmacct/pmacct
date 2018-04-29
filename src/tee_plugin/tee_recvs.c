@@ -212,7 +212,7 @@ int tee_recvs_map_kafka_topic_handler(char *filename, struct id_entry *e, char *
   return FALSE;
 }
 
-void tee_recvs_map_validate(char *filename, struct plugin_requests *req)
+void tee_recvs_map_validate(char *filename, int lineno, struct plugin_requests *req)
 {
   struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
   int valid = FALSE;
@@ -220,15 +220,15 @@ void tee_recvs_map_validate(char *filename, struct plugin_requests *req)
   if (table && table->pools && table->pools[table->num].receivers) {
     /* Check: emit to either IP address(es) or Kafka broker(s) */
     if (table->pools[table->num].num > 0 && table->pools[table->num].kafka_broker) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'ip' and 'kafka_broker' are mutual exclusive. Line ignored.\n",
-	  config.name, config.type, filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] 'ip' and 'kafka_broker' are mutual exclusive. Line ignored.\n",
+	  config.name, config.type, filename, lineno);
       valid = FALSE;
       goto zero_entry;
     }
 
     if (!table->pools[table->num].num && !table->pools[table->num].kafka_broker) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'ip' or 'kafka_broker' must be specified. Line ignored.\n",
-	  config.name, config.type, filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] 'ip' or 'kafka_broker' must be specified. Line ignored.\n",
+	  config.name, config.type, filename, lineno);
       valid = FALSE;
       goto zero_entry;
     }
@@ -236,8 +236,8 @@ void tee_recvs_map_validate(char *filename, struct plugin_requests *req)
     /* Check: valid pool ID */
     if (table->pools[table->num].id > 0) valid = TRUE;
     else {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid pool 'id' specified. Line ignored.\n",
-	  config.name, config.type, filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Invalid pool 'id' specified. Line ignored.\n",
+	  config.name, config.type, filename, lineno);
       valid = FALSE;
       goto zero_entry;
     }
@@ -251,15 +251,22 @@ void tee_recvs_map_validate(char *filename, struct plugin_requests *req)
     */
     if (table->pools[table->num].kafka_broker) {
       if (!config.tee_transparent) {
-	Log(LOG_WARNING, "WARN ( %s/%s ): [%s] tee_transparent must be set to 'true' when emitting to Kafka. Line ignored.\n",
-	    config.name, config.type, filename);
+	Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] tee_transparent must be set to 'true' when emitting to Kafka. Line ignored.\n",
+	    config.name, config.type, filename, lineno);
+	valid = FALSE;
+	goto zero_entry;
+      }
+
+      if (table->pools[table->num].balance.func) {
+	Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] 'balance-alg' is not compatible with emitting to Kafka. Line ignored.\n",
+	    config.name, config.type, filename, lineno);
 	valid = FALSE;
 	goto zero_entry;
       }
 
       if (!table->pools[table->num].kafka_topic) {
-	Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'kafka_topic' missing. Line ignored.\n",
-	    config.name, config.type, filename);
+	Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] 'kafka_topic' missing. Line ignored.\n",
+	    config.name, config.type, filename, lineno);
 	valid = FALSE;
 	goto zero_entry;
       }

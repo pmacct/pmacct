@@ -282,6 +282,93 @@ void Tee_exit_now(int signum)
   exit_plugin(0);
 }
 
+int Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
+{
+  char *buf_ptr = tee_send_buf;
+  struct sockaddr_in *sa = (struct sockaddr_in *) &msg->agent;
+  struct pm_iphdr *i4h = (struct pm_iphdr *) buf_ptr;
+#if defined ENABLE_IPV6
+  struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) &msg->agent;
+  struct ip6_hdr *i6h = (struct ip6_hdr *) buf_ptr;
+#endif
+  struct pm_udphdr *uh;
+  int msglen = 0;
+
+  if (msg->agent.sa_family == target->sa_family) {
+    /* UDP header first */
+    if (target->sa_family == AF_INET) {
+      buf_ptr += IP4HdrSz;
+      uh = (struct pm_udphdr *) buf_ptr;
+      uh->uh_sport = sa->sin_port;
+      uh->uh_dport = ((struct sockaddr_in *)target)->sin_port;
+    }
+#if defined ENABLE_IPV6
+    else if (target->sa_family == AF_INET6) {
+      buf_ptr += IP6HdrSz;
+      uh = (struct pm_udphdr *) buf_ptr;
+      uh->uh_sport = sa6->sin6_port;
+      uh->uh_dport = ((struct sockaddr_in6 *)target)->sin6_port;
+    }
+#endif
+
+    uh->uh_ulen = htons(msg->len+UDPHdrSz);
+    uh->uh_sum = 0;
+
+    /* IP header then */
+    if (target->sa_family == AF_INET) {
+      i4h->ip_vhl = 4;
+      i4h->ip_vhl <<= 4;
+      i4h->ip_vhl |= (IP4HdrSz/4);
+
+      if (config.nfprobe_ipprec) {
+	int opt = config.nfprobe_ipprec << 5;
+        i4h->ip_tos = opt;
+      }
+      else i4h->ip_tos = 0;
+
+#if !defined BSD
+      i4h->ip_len = htons(IP4HdrSz+UDPHdrSz+msg->len);
+#else
+      i4h->ip_len = IP4HdrSz+UDPHdrSz+msg->len;
+#endif
+      i4h->ip_id = 0;
+      i4h->ip_off = 0;
+      i4h->ip_ttl = 255;
+      i4h->ip_p = IPPROTO_UDP;
+      i4h->ip_sum = 0;
+      i4h->ip_src.s_addr = sa->sin_addr.s_addr;
+      i4h->ip_dst.s_addr = ((struct sockaddr_in *)target)->sin_addr.s_addr;
+    }
+#if defined ENABLE_IPV6
+    else if (target->sa_family == AF_INET6) {
+      i6h->ip6_vfc = 6;
+      i6h->ip6_vfc <<= 4;
+      i6h->ip6_plen = htons(UDPHdrSz+msg->len);
+      i6h->ip6_nxt = IPPROTO_UDP;
+      i6h->ip6_hlim = 255;
+      memcpy(&i6h->ip6_src, &sa6->sin6_addr, IP6AddrSz);
+      memcpy(&i6h->ip6_dst, &((struct sockaddr_in6 *)target)->sin6_addr, IP6AddrSz);
+    }
+#endif
+
+    /* Put everything together and send */
+    buf_ptr += UDPHdrSz;
+    memcpy(buf_ptr, msg->payload, msg->len);
+
+    msglen = (IP4HdrSz + UDPHdrSz + msg->len);
+  }
+  else {
+    time_t now = time(NULL);
+
+    if (now > err_cant_bridge_af + 60) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Can't bridge Address Families when in transparent mode\n", config.name, config.type);
+      err_cant_bridge_af = now;
+    }
+  }
+
+  return msglen;
+}
+
 void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
 {
   struct host_addr r;
@@ -326,99 +413,24 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
     }
   }
   else {
-    char *buf_ptr = tee_send_buf;
-    struct sockaddr_in *sa = (struct sockaddr_in *) &msg->agent;
-    struct pm_iphdr *i4h = (struct pm_iphdr *) buf_ptr;
-#if defined ENABLE_IPV6
-    struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) &msg->agent;
-    struct ip6_hdr *i6h = (struct ip6_hdr *) buf_ptr;
-#endif
-    struct pm_udphdr *uh;
+    int msglen;
 
-    if (msg->agent.sa_family == target->sa_family) {
-      /* UDP header first */
-      if (target->sa_family == AF_INET) {
-        buf_ptr += IP4HdrSz;
-        uh = (struct pm_udphdr *) buf_ptr;
-        uh->uh_sport = sa->sin_port;
-        uh->uh_dport = ((struct sockaddr_in *)target)->sin_port;
-      }
-#if defined ENABLE_IPV6
-      else if (target->sa_family == AF_INET6) {
-        buf_ptr += IP6HdrSz;
-        uh = (struct pm_udphdr *) buf_ptr;
-        uh->uh_sport = sa6->sin6_port;
-        uh->uh_dport = ((struct sockaddr_in6 *)target)->sin6_port;
-      }
-#endif
+    msglen = Tee_craft_transparent_msg(msg, target);
 
-      uh->uh_ulen = htons(msg->len+UDPHdrSz);
-      uh->uh_sum = 0;
+    if (msglen && send(fd, tee_send_buf, msglen, 0) == -1) {
+      struct host_addr a;
+      u_char agent_addr[50];
+      u_int16_t agent_port;
 
-      /* IP header then */
-      if (target->sa_family == AF_INET) {
-        i4h->ip_vhl = 4;
-        i4h->ip_vhl <<= 4;
-        i4h->ip_vhl |= (IP4HdrSz/4);
+      sa_to_addr((struct sockaddr *)msg, &a, &agent_port);
+      addr_to_str(agent_addr, &a);
 
-	if (config.nfprobe_ipprec) {
-	  int opt = config.nfprobe_ipprec << 5;
-          i4h->ip_tos = opt;
-	}
-	else i4h->ip_tos = 0;
+      sa_to_addr((struct sockaddr *)target, &r, &recv_port);
+      addr_to_str(recv_addr, &r);
 
-#if !defined BSD
-        i4h->ip_len = htons(IP4HdrSz+UDPHdrSz+msg->len);
-#else
-        i4h->ip_len = IP4HdrSz+UDPHdrSz+msg->len;
-#endif
-        i4h->ip_id = 0;
-        i4h->ip_off = 0;
-        i4h->ip_ttl = 255;
-        i4h->ip_p = IPPROTO_UDP;
-        i4h->ip_sum = 0;
-        i4h->ip_src.s_addr = sa->sin_addr.s_addr;
-        i4h->ip_dst.s_addr = ((struct sockaddr_in *)target)->sin_addr.s_addr;
-      }
-#if defined ENABLE_IPV6
-      else if (target->sa_family == AF_INET6) {
-        i6h->ip6_vfc = 6;
-        i6h->ip6_vfc <<= 4;
-        i6h->ip6_plen = htons(UDPHdrSz+msg->len);
-        i6h->ip6_nxt = IPPROTO_UDP;
-        i6h->ip6_hlim = 255;
-        memcpy(&i6h->ip6_src, &sa6->sin6_addr, IP6AddrSz);
-        memcpy(&i6h->ip6_dst, &((struct sockaddr_in6 *)target)->sin6_addr, IP6AddrSz);
-      }
-#endif
-
-      /* Put everything together and send */
-      buf_ptr += UDPHdrSz;
-      memcpy(buf_ptr, msg->payload, msg->len);
-
-      if (send(fd, tee_send_buf, IP4HdrSz+UDPHdrSz+msg->len, 0) == -1) {
-        struct host_addr a;
-        u_char agent_addr[50];
-        u_int16_t agent_port;
-
-        sa_to_addr((struct sockaddr *)msg, &a, &agent_port);
-        addr_to_str(agent_addr, &a);
-
-	sa_to_addr((struct sockaddr *)target, &r, &recv_port);
-	addr_to_str(recv_addr, &r);
-
-        Log(LOG_ERR, "ERROR ( %s/%s ): raw send() from [%s:%u] seqno [%u] to [%s:%u] failed (%s)\n",
-			config.name, config.type, agent_addr, agent_port, msg->seqno, recv_addr,
-			recv_port, strerror(errno));
-      }
-    }
-    else {
-      time_t now = time(NULL);
-
-      if (now > err_cant_bridge_af + 60) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): Can't bridge Address Families when in transparent mode\n", config.name, config.type);
-	err_cant_bridge_af = now;
-      }
+      Log(LOG_ERR, "ERROR ( %s/%s ): raw send() from [%s:%u] seqno [%u] to [%s:%u] failed (%s)\n",
+	  config.name, config.type, agent_addr, agent_port, msg->seqno, recv_addr,
+	  recv_port, strerror(errno));
     }
   }
 }
@@ -440,7 +452,7 @@ void Tee_destroy_recvs()
     receivers.pools[pool_idx].id = 0;
     receivers.pools[pool_idx].num = 0;
 
-    if (receivers.pools[pool_idx].kafka_broker && receivers.pools[pool_idx].kafka_topic) {
+    if (receivers.pools[pool_idx].kafka_broker) {
       p_kafka_close(&receivers.pools[pool_idx].kafka_host, FALSE);
       memset(receivers.pools[pool_idx].kafka_broker, 0, sizeof(receivers.pools[pool_idx].kafka_broker));
       memset(receivers.pools[pool_idx].kafka_topic, 0, sizeof(receivers.pools[pool_idx].kafka_topic));
