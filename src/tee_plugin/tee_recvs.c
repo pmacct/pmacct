@@ -22,7 +22,9 @@
 #define __TEE_RECVS_C
 
 #include "pmacct.h"
+#ifdef WITH_KAFKA
 #include "kafka_common.h"
+#endif
 #include "tee_plugin.h"
 #include "tee_recvs.h"
 
@@ -172,6 +174,7 @@ int tee_recvs_map_src_port_handler(char *filename, struct id_entry *e, char *val
   return FALSE;
 }
 
+#ifdef WITH_KAFKA
 int tee_recvs_map_kafka_broker_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
@@ -211,6 +214,7 @@ int tee_recvs_map_kafka_topic_handler(char *filename, struct id_entry *e, char *
 
   return FALSE;
 }
+#endif
 
 void tee_recvs_map_validate(char *filename, int lineno, struct plugin_requests *req)
 {
@@ -249,6 +253,7 @@ void tee_recvs_map_validate(char *filename, int lineno, struct plugin_requests *
        a) make sure we have both broker string and topic,
        b) tee_transparent is set to true
     */
+#ifdef WITH_KAFKA
     if (table->pools[table->num].kafka_broker) {
       if (!config.tee_transparent) {
 	Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] tee_transparent must be set to 'true' when emitting to Kafka. Line ignored.\n",
@@ -273,6 +278,7 @@ void tee_recvs_map_validate(char *filename, int lineno, struct plugin_requests *
 
       valid = TRUE;
     }
+#endif
 
     if (valid) table->num++;
     else {
@@ -285,9 +291,11 @@ void tee_recvs_map_validate(char *filename, int lineno, struct plugin_requests *
       memset(&table->pools[table->num].tag_filter, 0, sizeof(struct pretag_filter));
       memset(&table->pools[table->num].balance, 0, sizeof(struct tee_balance));
 
+#ifdef WITH_KAFKA
       memset(&table->pools[table->num].kafka_host, 0, sizeof(struct p_kafka_host));
       memset(&table->pools[table->num].kafka_broker, 0, sizeof(table->pools[table->num].kafka_broker));
       memset(&table->pools[table->num].kafka_topic, 0, sizeof(table->pools[table->num].kafka_topic));
+#endif
     }
   }
 }

@@ -25,7 +25,9 @@ const struct _map_dictionary_line tee_recvs_map_dictionary[] = {
   {"tag", tee_recvs_map_tag_handler},
   {"balance-alg", tee_recvs_map_balance_alg_handler},
   {"src_port", tee_recvs_map_src_port_handler},
+#ifdef WITH_KAFKA
   {"kafka_broker", tee_recvs_map_kafka_broker_handler},
   {"kafka_topic", tee_recvs_map_kafka_topic_handler},
+#endif
   {"", NULL}
 };

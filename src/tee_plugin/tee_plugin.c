@@ -23,7 +23,9 @@
 
 #include "pmacct.h"
 #include "addr.h"
+#ifdef WITH_KAFKA
 #include "kafka_common.h"
+#endif
 #include "tee_plugin.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
@@ -252,6 +254,12 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	        target = &receivers.pools[pool_idx].receivers[recv_idx];
 	        Tee_send(msg, (struct sockaddr *) &target->dest, target->fd);
 	      }
+
+#ifdef WITH_KAFKA
+	      if (receivers.pools[pool_idx].kafka_broker) {
+		Tee_kafka_send(msg, &receivers.pools[pool_idx].kafka_host);
+	      }
+#endif
 	    }
 	    else {
 	      target = receivers.pools[pool_idx].balance.func(&receivers.pools[pool_idx], msg);
@@ -435,6 +443,48 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
   }
 }
 
+#ifdef WITH_KAFKA
+void Tee_kafka_send(struct pkt_msg *msg, struct p_kafka_host *kafka_host)
+{
+  struct sockaddr target;
+  int ret, msglen = 0;
+
+  memset(&target, 0, sizeof(target));
+  target.sa_family = msg->agent.sa_family;
+
+  if (config.debug) {
+    char *flow = NULL, netflow[] = "NetFlow/IPFIX", sflow[] = "sFlow";
+    char *broker, *topic;
+    struct host_addr a;
+    u_char agent_addr[50];
+    u_int16_t agent_port;
+
+    sa_to_addr((struct sockaddr *)msg, &a, &agent_port);
+    addr_to_str(agent_addr, &a);
+
+    broker = p_kafka_get_broker(kafka_host);
+    topic = p_kafka_get_topic(kafka_host);
+
+    if (config.acct_type == ACCT_NF) flow = netflow;
+    else if (config.acct_type == ACCT_SF) flow = sflow;
+
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sending %s packet from [%s:%u] seqno [%u] to [%s:%s]\n",
+                        config.name, config.type, flow, agent_addr, agent_port, msg->seqno,
+                        broker, topic);
+  }
+
+  if (config.tee_transparent) {
+    msglen = Tee_craft_transparent_msg(msg, &target);
+
+    if (msglen) {
+      ret = p_kafka_produce_data(kafka_host, tee_send_buf, msglen);
+
+      // XXX
+    }
+  }
+}
+#endif
+
 void Tee_destroy_recvs()
 {
   struct tee_receiver *target = NULL;
@@ -452,11 +502,13 @@ void Tee_destroy_recvs()
     receivers.pools[pool_idx].id = 0;
     receivers.pools[pool_idx].num = 0;
 
+#ifdef WITH_KAFKA
     if (receivers.pools[pool_idx].kafka_broker) {
       p_kafka_close(&receivers.pools[pool_idx].kafka_host, FALSE);
       memset(receivers.pools[pool_idx].kafka_broker, 0, sizeof(receivers.pools[pool_idx].kafka_broker));
       memset(receivers.pools[pool_idx].kafka_topic, 0, sizeof(receivers.pools[pool_idx].kafka_topic));
     }
+#endif
   }
 
   receivers.num = 0;
@@ -497,6 +549,7 @@ void Tee_init_socks()
       }
     }
 
+#ifdef WITH_KAFKA
     if (receivers.pools[pool_idx].kafka_broker) {
       p_kafka_init_host(&receivers.pools[pool_idx].kafka_host, config.tee_kafka_config_file);
       p_kafka_connect_to_produce(&receivers.pools[pool_idx].kafka_host);
@@ -513,6 +566,7 @@ void Tee_init_socks()
 	    config.name, config.type, receivers.pools[pool_idx].id, broker, topic);
       }
     }
+#endif
   }
 }
 

@@ -61,7 +61,9 @@ struct tee_receivers_pool {
   u_int16_t src_port;			/* Non transparent mode: source UDP port to use for replication */
   char kafka_broker[SRVBUFLEN];		/* Emitting to Kafka: broker string */
   char kafka_topic[SRVBUFLEN];		/* Emitting to Kafka: topic */
+#ifdef WITH_KAFKA
   struct p_kafka_host kafka_host;	/* Emitting to Kafka: librdkafka structs */ 
+#endif
   int num;				/* Number of receivers in the pool */
 };
 
@@ -87,6 +89,10 @@ EXT int Tee_parse_hostport(const char *, struct sockaddr *, socklen_t *, int);
 EXT struct tee_receiver *Tee_rr_balance(void *, struct pkt_msg *);
 EXT struct tee_receiver *Tee_hash_agent_balance(void *, struct pkt_msg *);
 EXT struct tee_receiver *Tee_hash_tag_balance(void *, struct pkt_msg *);
+
+#ifdef WITH_KAFKA
+EXT void Tee_kafka_send(struct pkt_msg *, struct p_kafka_host *);
+#endif
 
 /* global variables */
 EXT char tee_send_buf[65535];

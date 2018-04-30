@@ -37,8 +37,11 @@ EXT int tee_recvs_map_ip_handler(char *, struct id_entry *, char *, struct plugi
 EXT int tee_recvs_map_tag_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int tee_recvs_map_balance_alg_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int tee_recvs_map_src_port_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+
+#ifdef WITH_KAFKA
 EXT int tee_recvs_map_kafka_broker_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int tee_recvs_map_kafka_topic_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+#endif
 
 EXT void tee_recvs_map_validate(char *, int, struct plugin_requests *);
 
