@@ -256,7 +256,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	      }
 
 #ifdef WITH_KAFKA
-	      if (receivers.pools[pool_idx].kafka_broker) {
+	      if (p_kafka_get_handler(&receivers.pools[pool_idx].kafka_host)) {
 		Tee_kafka_send(msg, &receivers.pools[pool_idx].kafka_host);
 	      }
 #endif
@@ -468,7 +468,7 @@ void Tee_kafka_send(struct pkt_msg *msg, struct p_kafka_host *kafka_host)
     if (config.acct_type == ACCT_NF) flow = netflow;
     else if (config.acct_type == ACCT_SF) flow = sflow;
 
-    Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sending %s packet from [%s:%u] seqno [%u] to [%s:%s]\n",
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sending %s packet from [%s:%u] seqno [%u] to Kafka [%s-%s]\n",
                         config.name, config.type, flow, agent_addr, agent_port, msg->seqno,
                         broker, topic);
   }
@@ -503,7 +503,7 @@ void Tee_destroy_recvs()
     receivers.pools[pool_idx].num = 0;
 
 #ifdef WITH_KAFKA
-    if (receivers.pools[pool_idx].kafka_broker) {
+    if (strlen(receivers.pools[pool_idx].kafka_broker)) {
       p_kafka_close(&receivers.pools[pool_idx].kafka_host, FALSE);
       memset(receivers.pools[pool_idx].kafka_broker, 0, sizeof(receivers.pools[pool_idx].kafka_broker));
       memset(receivers.pools[pool_idx].kafka_topic, 0, sizeof(receivers.pools[pool_idx].kafka_topic));
@@ -550,7 +550,7 @@ void Tee_init_socks()
     }
 
 #ifdef WITH_KAFKA
-    if (receivers.pools[pool_idx].kafka_broker) {
+    if (strlen(receivers.pools[pool_idx].kafka_broker)) {
       p_kafka_init_host(&receivers.pools[pool_idx].kafka_host, config.tee_kafka_config_file);
       p_kafka_connect_to_produce(&receivers.pools[pool_idx].kafka_host);
       p_kafka_set_broker(&receivers.pools[pool_idx].kafka_host, receivers.pools[pool_idx].kafka_broker, FALSE);

@@ -69,6 +69,7 @@ EXT void p_kafka_set_partition(struct p_kafka_host *, int);
 EXT void p_kafka_set_key(struct p_kafka_host *, char *, int);
 EXT void p_kafka_set_config_file(struct p_kafka_host *, char *);
 
+EXT rd_kafka_t *p_kafka_get_handler(struct p_kafka_host *);
 EXT char *p_kafka_get_broker(struct p_kafka_host *);
 EXT char *p_kafka_get_topic(struct p_kafka_host *);
 EXT int p_kafka_get_topic_rr(struct p_kafka_host *);

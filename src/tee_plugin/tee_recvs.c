@@ -223,14 +223,14 @@ void tee_recvs_map_validate(char *filename, int lineno, struct plugin_requests *
 
   if (table && table->pools && table->pools[table->num].receivers) {
     /* Check: emit to either IP address(es) or Kafka broker(s) */
-    if (table->pools[table->num].num > 0 && table->pools[table->num].kafka_broker) {
+    if (table->pools[table->num].num > 0 && strlen(table->pools[table->num].kafka_broker)) {
       Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] 'ip' and 'kafka_broker' are mutual exclusive. Line ignored.\n",
 	  config.name, config.type, filename, lineno);
       valid = FALSE;
       goto zero_entry;
     }
 
-    if (!table->pools[table->num].num && !table->pools[table->num].kafka_broker) {
+    if (!table->pools[table->num].num && !strlen(table->pools[table->num].kafka_broker)) {
       Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] 'ip' or 'kafka_broker' must be specified. Line ignored.\n",
 	  config.name, config.type, filename, lineno);
       valid = FALSE;
@@ -254,7 +254,7 @@ void tee_recvs_map_validate(char *filename, int lineno, struct plugin_requests *
        b) tee_transparent is set to true
     */
 #ifdef WITH_KAFKA
-    if (table->pools[table->num].kafka_broker) {
+    if (strlen(table->pools[table->num].kafka_broker)) {
       if (!config.tee_transparent) {
 	Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] tee_transparent must be set to 'true' when emitting to Kafka. Line ignored.\n",
 	    config.name, config.type, filename, lineno);
@@ -269,7 +269,7 @@ void tee_recvs_map_validate(char *filename, int lineno, struct plugin_requests *
 	goto zero_entry;
       }
 
-      if (!table->pools[table->num].kafka_topic) {
+      if (!strlen(table->pools[table->num].kafka_topic)) {
 	Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] 'kafka_topic' missing. Line ignored.\n",
 	    config.name, config.type, filename, lineno);
 	valid = FALSE;
