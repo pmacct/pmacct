@@ -112,9 +112,8 @@ void pm_pcap_device_copy_entry(struct pcap_devices *dst, struct pcap_devices *sr
 int pm_pcap_device_getindex_byifname(struct pcap_devices *map, char *ifname)
 {
   int loc_idx;
-
-  for (loc_idx = 0; loc_idx < map->num; loc_idx++) {
-    if (!strncmp(map->list[loc_idx].str, ifname, strlen(ifname))) {
+   for (loc_idx = 0; loc_idx < map->num; loc_idx++) {
+    if (strlen(map->list[loc_idx].str) == strlen(ifname) && !strncmp(map->list[loc_idx].str, ifname, strlen(ifname))) {
       return loc_idx;
     }
   }
