@@ -2300,7 +2300,7 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   if (!t) return 0;
 
   /* if NF9_EXPORTER_IPV[46]_ADDRESS from NetFlow v9/IPFIX options, use it */
-  if (entry->exp_sa.sa_family) {
+  if (entry && entry->exp_sa.sa_family) {
     saved_f_agent = pptrs->f_agent;
     pptrs->f_agent = (u_char *) &entry->exp_sa;
   }
@@ -2362,7 +2362,7 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   }
 
   exit_lane:
-  if (entry->exp_sa.sa_family) pptrs->f_agent = saved_f_agent; 
+  if (entry && entry->exp_sa.sa_family) pptrs->f_agent = saved_f_agent; 
 
   return ret;
 }
