@@ -25,6 +25,10 @@
 !			the number of receivers in pool.
 ! 'src_port'		SET: When in non-transparent replication mode, use
 !			the specified UDP port to send data to receiver(s) 
+! 'kafka_broker'	SET: Defines the Kafka broker host to emit to. It
+!			expects a string like 'localhost:9092'. 
+! 'kafka_topic'		SET: Defines the Kafka topic to emit to. Mandatory
+!			to specify when a kafka_broker is defined.
 !			
 ! Examples:
 !

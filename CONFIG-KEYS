@@ -2677,6 +2677,11 @@ DESC:		When replicating and dissecting flow samples, send onto the tee plugin al
 		full packet is left untagged. By default this is left to false for security reasons. 
 DEFAULT:	false
 
+KEY:            tee_kafka_config_file
+DESC:           Full pathname to a file containing directives to configure librdkafka when emitting
+		replicated datagrams to a Kafka broker. See kafka_config_file for more info.
+DEFAULT:        none
+
 KEY:		tmp_asa_bi_flow
 VALUES:		[ true | false ]
 DESC:		Bi-flows use two counters to report counters, ie. bytes and packets, in forward and

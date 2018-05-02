@@ -256,6 +256,8 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	      }
 
 #ifdef WITH_KAFKA
+	      /* Checking the handler is the most light weight op we can perform
+		 in order to ensure we are in business with the Kafka broker */
 	      if (p_kafka_get_handler(&receivers.pools[pool_idx].kafka_host)) {
 		Tee_kafka_send(msg, &receivers.pools[pool_idx].kafka_host);
 	      }
@@ -447,7 +449,7 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
 void Tee_kafka_send(struct pkt_msg *msg, struct p_kafka_host *kafka_host)
 {
   struct sockaddr target;
-  int ret, msglen = 0;
+  int msglen = 0;
 
   memset(&target, 0, sizeof(target));
   target.sa_family = msg->agent.sa_family;
@@ -476,11 +478,7 @@ void Tee_kafka_send(struct pkt_msg *msg, struct p_kafka_host *kafka_host)
   if (config.tee_transparent) {
     msglen = Tee_craft_transparent_msg(msg, &target);
 
-    if (msglen) {
-      ret = p_kafka_produce_data(kafka_host, tee_send_buf, msglen);
-
-      // XXX
-    }
+    if (msglen) p_kafka_produce_data(kafka_host, tee_send_buf, msglen);
   }
 }
 #endif
