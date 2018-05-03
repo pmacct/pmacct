@@ -552,11 +552,17 @@ read them before continuing. All configuration keys available are in the CONFIG-
 document.
 
 The daemon depends on the package libnetfilter-log-dev (in Debian/Ubuntu or equivalent
-in the prefered Linux distribution). The Linux NFLOG infrastructure requires a couple
-parameters in order to work properly: the NFLOG multicast group (uacctd_group) to
-which captured packets have to be sent to and the Netlink buffer size (uacctd_nl_size).
-The default buffer settings (128KB) typically works OK for small environments. The
-traffic is captured with an iptables rule. For example in one of the following ways:
+in the prefered Linux distribution). The support for NFLOG is disabled by default and
+should be enabled as follows:
+
+shell> ./configure --enable-nflog
+
+NFLOG_CFLAGS and NFLOG_LIBS can be used if inclues and library are not in default
+locations. The Linux NFLOG infrastructure requires a couple parameters in order to
+work properly: the NFLOG multicast group (uacctd_group) to which captured packets
+have to be sent to and the Netlink buffer size (uacctd_nl_size). The default buffer
+settings (128KB) typically works OK for small environments. The traffic is captured
+with an iptables rule. For example in one of the following ways:
 
 * iptables -t mangle -I POSTROUTING -j NFLOG --nflog-group 5
 * iptables -t raw -I PREROUTING -j NFLOG --nflog-group 5 
