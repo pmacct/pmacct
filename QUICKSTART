@@ -1928,7 +1928,6 @@ disk, ie. due to caching issues, overwrite existing file content). A sample
 config follows:
 
 print_refresh_time: 300
-print_history: 5m
 print_output: csv
 print_output_file: /path/to/%Y/%Y-%m/%Y-%m-%d/file-%Y%m%d-%H%M.txt
 print_history: 15m
