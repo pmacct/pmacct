@@ -148,14 +148,34 @@ def main():
 		message = consumer.poll()
 		value = message.value().decode('utf-8')
 
-		#
-		# XXX: data enrichments, manipulations, correlations, etc. go here
-		#
-
 		if stats_interval:
 			time_now = int(time.time())
 
 		if len(value):
+			try:
+				jsonObj = json.loads(value)
+			except ValueError:
+				print("ERROR: json.loads: '%s'. Skipping." % value)
+				continue
+
+			if 'event_type' in jsonObj:
+				if jsonObj['event_type'] == "purge_init":
+					continue
+				elif jsonObj['event_type'] == "purge_close":
+					continue
+				elif jsonObj['event_type'] == "purge":
+					pass
+				else:
+					print("WARN: json.loads: flow record with unexpected event_type '%s'. Skipping." % jsonObj['event_type'])
+					continue
+			else:
+				print("WARN: json.loads: flow record with no event_type field. Skipping.")
+				continue
+
+			#
+			# XXX: data enrichments, manipulations, correlations, filtering, etc. go here
+			#
+
 			if stats_interval:
 				elem_count += 1
 

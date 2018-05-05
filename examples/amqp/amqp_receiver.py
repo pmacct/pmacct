@@ -97,10 +97,6 @@ def callback(ch, method, properties, body):
         global time_count
         global elem_count
 
-	#
-	# XXX: data enrichments, manipulations, correlations, etc. go here
-	#
-
 	if stats_interval:
 		time_now = int(time.time())
 
@@ -113,6 +109,10 @@ def callback(ch, method, properties, body):
 		while inputio.tell() < len(inputio.getvalue()):
 			x = datum_reader.read(decoder)
 			avro_data.append(str(x))
+
+		#
+		# XXX: data enrichments, manipulations, correlations, filtering etc. go here
+		#
 
 		if stats_interval:
 			elem_count += len(avro_data)
@@ -130,6 +130,16 @@ def callback(ch, method, properties, body):
 			post_to_url(http_req, ("\n".join(avro_data)))
 	else:
 		value = body
+
+		try:
+			jsonObj = json.loads(value)
+		except ValueError:
+			print("ERROR: json.loads: '%s'. Skipping." % value)
+			return
+
+		#
+		# XXX: data enrichments, manipulations, correlations, filtering etc. go here
+		#
 
 		if stats_interval:
 			elem_count += value.count('\n')
