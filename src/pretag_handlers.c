@@ -3747,7 +3747,7 @@ u_int32_t pcap_interfaces_map_lookup_ifname(struct pcap_interfaces *map, char *i
   int idx;
 
   for (idx = 0; idx < map->num; idx++) {
-    if (!strncmp(map->list[idx].ifname, ifname, strlen(ifname))) {
+    if (strlen(map->list[idx].ifname) == strlen(ifname) && !strncmp(map->list[idx].ifname, ifname, strlen(ifname))) {
       ifindex = map->list[idx].ifindex;
       break;
     }
@@ -3761,7 +3761,7 @@ struct pcap_interface *pcap_interfaces_map_getentry_by_ifname(struct pcap_interf
   int idx;
 
   for (idx = 0; idx < map->num; idx++) {
-    if (!strncmp(map->list[idx].ifname, ifname, strlen(ifname))) {
+    if (strlen(map->list[idx].ifname) == strlen(ifname) && !strncmp(map->list[idx].ifname, ifname, strlen(ifname))) {
       return &map->list[idx];
     }
   }
