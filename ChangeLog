@@ -4,8 +4,8 @@ pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
-1.7.1 -- XX-04-2018
-  + pmbgpd: introduced a BGP connect feature meant to map BGP peers
+1.7.1 -- 06-05-2018
+  + pmbgpd: introduced a BGP x-connect feature meant to map BGP peers
     (ie. PE routers) to BGP collectors (ie. nfacctd, sfacctd) via a
     standalone BGP daemon (pmbgpd). The aim is to facilitate operations
     when re-sizing/re-balancing the collection infrastructure without
