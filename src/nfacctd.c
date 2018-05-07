@@ -25,6 +25,9 @@
 /* includes */
 #include "pmacct.h"
 #include "addr.h"
+#ifdef WITH_KAFKA
+#include "kafka_common.h"
+#endif
 #include "nfacctd.h"
 #include "pretag_handlers.h"
 #include "pmacct-data.h"
@@ -538,10 +541,27 @@ int main(int argc,char **argv, char **envp)
     exit(1);
   }
   
-  if (config.pcap_savefile && (config.nfacctd_port || config.nfacctd_ip)) {
-    Log(LOG_ERR, "ERROR ( %s/core ): 'pcap_savefile' is mutual exclusive with live collection, ie. 'nfacctd_ip' and/or 'nfacctd_port' Exiting...\n\n", config.name);
+  if (config.pcap_savefile && (config.nfacctd_port || config.nfacctd_ip || config.nfacctd_kafka_broker_host)) {
+    Log(LOG_ERR, "ERROR ( %s/core ): pcap_savefile is mutual exclusive with live collection, ie. nfacctd_ip, nfacctd_kafka_broker_host. Exiting...\n\n", config.name);
     exit(1);
   }
+
+#ifdef WITH_KAFKA
+  if ((config.nfacctd_port || config.nfacctd_ip) && config.nfacctd_kafka_broker_host) {
+    Log(LOG_ERR, "ERROR ( %s/core ): Socket collection, nfacctd_ip, is mutual exclusive with Kafka collection, nfacctd_kafka_broker_host. Exiting...\n\n", config.name);
+    exit(1);
+  }
+
+  if ((config.nfacctd_kafka_broker_host && !config.nfacctd_kafka_topic) || (config.nfacctd_kafka_topic && !config.nfacctd_kafka_broker_host)) {
+    Log(LOG_ERR, "ERROR ( %s/core ): Kafka collection requires both nfacctd_kafka_broker_host and nfacctd_kafka_topic to be specified. Exiting...\n\n", config.name);
+    exit(1);
+  }
+
+  if (config.nfacctd_kafka_broker_host && tee_plugins) {
+    Log(LOG_ERR, "ERROR ( %s/core ): Kafka collection is mutual exclusive with 'tee' plugins. Exiting...\n\n", config.name);
+    exit(1);
+  }
+#endif
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
   signal(SIGCHLD, startup_handle_falling_child); /* takes note of plugins failed during startup phase */
@@ -557,6 +577,15 @@ int main(int argc,char **argv, char **envp)
     config.handle_fragments = TRUE;
     init_ip_fragment_handler();
   }
+#ifdef WITH_KAFKA
+  else if (config.nfacctd_kafka_broker_host) {
+    p_kafka_init_host(&nfacctd_kafka_host, config.nfacctd_kafka_config_file);
+    p_kafka_connect_to_consume(&nfacctd_kafka_host);
+    p_kafka_set_broker(&nfacctd_kafka_host, config.nfacctd_kafka_broker_host, config.nfacctd_kafka_broker_port);
+    p_kafka_set_topic(&nfacctd_kafka_host, config.nfacctd_kafka_topic);
+    p_kafka_set_content_type(&nfacctd_kafka_host, PM_KAFKA_CNT_TYPE_BIN);
+  }
+#endif
   else {
     /* If no IP address is supplied, let's set our default
        behaviour: IPv4 address, INADDR_ANY, port 2100 */
@@ -962,7 +991,20 @@ int main(int argc,char **argv, char **envp)
   pptrs.vlanmpls6.l3_proto = ETHERTYPE_IPV6;
 #endif
 
-  if (!config.pcap_savefile) {
+  if (config.pcap_savefile) {
+    Log(LOG_INFO, "INFO ( %s/core ): reading NetFlow/IPFIX data from: %s\n", config.name, config.pcap_savefile);
+    allowed = TRUE;
+
+    if (!config.pcap_sf_delay) sleep(2);
+    else sleep(config.pcap_sf_delay);
+  }
+#ifdef WITH_KAFKA
+  else if (config.nfacctd_kafka_broker_host) {
+    Log(LOG_INFO, "INFO ( %s/core ): reading NetFlow/IPFIX data from Kafka broker: %s\n", config.name, p_kafka_get_broker(&nfacctd_kafka_host));
+    allowed = TRUE;
+  }
+#endif
+  else {
     char srv_string[INET6_ADDRSTRLEN];
     struct host_addr srv_addr;
     u_int16_t srv_port;
@@ -971,13 +1013,6 @@ int main(int argc,char **argv, char **envp)
     addr_to_str(srv_string, &srv_addr);
     Log(LOG_INFO, "INFO ( %s/core ): waiting for NetFlow/IPFIX data on %s:%u\n", config.name, srv_string, srv_port);
     allowed = TRUE;
-  }
-  else {
-    Log(LOG_INFO, "INFO ( %s/core ): reading NetFlow/IPFIX data from: %s\n", config.name, config.pcap_savefile);
-    allowed = TRUE;
-
-    if (!config.pcap_sf_delay) sleep(2);
-    else sleep(config.pcap_sf_delay);
   }
 
   /* fixing NetFlow v9/IPFIX template func pointers */

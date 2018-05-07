@@ -93,6 +93,7 @@ EXT int p_kafka_stats(rd_kafka_t *, char *, size_t, void *);
 EXT int p_kafka_connect_to_produce(struct p_kafka_host *);
 EXT int p_kafka_produce_data(struct p_kafka_host *, void *, u_int32_t);
 EXT int p_kafka_produce_data_to_part(struct p_kafka_host *, void *, u_int32_t, int);
+EXT int p_kafka_connect_to_consume(struct p_kafka_host *);
 EXT void p_kafka_close(struct p_kafka_host *, int);
 EXT int p_kafka_check_outq_len(struct p_kafka_host *);
 
@@ -107,6 +108,7 @@ EXT struct p_kafka_host bmp_dump_kafka_host;
 EXT struct p_kafka_host sfacctd_counter_kafka_host;
 EXT struct p_kafka_host telemetry_daemon_msglog_kafka_host;
 EXT struct p_kafka_host telemetry_dump_kafka_host;
+EXT struct p_kafka_host nfacctd_kafka_host;
 
 EXT int kafkap_ret_err_cb;
 EXT int dyn_partition_key;

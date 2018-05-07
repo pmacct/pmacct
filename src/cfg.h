@@ -177,6 +177,10 @@ struct configuration {
   char *print_latest_file;
   int nfacctd_port;
   char *nfacctd_ip;
+  char *nfacctd_kafka_broker_host;
+  int nfacctd_kafka_broker_port;
+  char *nfacctd_kafka_topic;
+  char *nfacctd_kafka_config_file;
   char *nfacctd_allow_file;
   int nfacctd_time;
   int nfacctd_time_new;

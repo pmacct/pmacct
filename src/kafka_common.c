@@ -416,6 +416,23 @@ int p_kafka_produce_data(struct p_kafka_host *kafka_host, void *data, u_int32_t 
   return p_kafka_produce_data_to_part(kafka_host, data, data_len, kafka_host->partition);
 }
 
+int p_kafka_connect_to_consume(struct p_kafka_host *kafka_host)
+{
+  if (kafka_host) {
+    kafka_host->rk = rd_kafka_new(RD_KAFKA_CONSUMER, kafka_host->cfg, kafka_host->errstr, sizeof(kafka_host->errstr));
+    if (!kafka_host->rk) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Failed to create new Kafka producer: %s\n", config.name, config.type, kafka_host->errstr);
+      p_kafka_close(kafka_host, TRUE);
+      return ERR;
+    }
+
+    if (config.debug) rd_kafka_set_log_level(kafka_host->rk, LOG_DEBUG);
+  }
+  else return ERR;
+
+  return SUCCESS;
+}
+
 void p_kafka_close(struct p_kafka_host *kafka_host, int set_fail)
 {
   if (kafka_host && !validate_truefalse(set_fail)) { 
