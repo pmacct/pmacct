@@ -93,7 +93,12 @@ EXT int p_kafka_stats(rd_kafka_t *, char *, size_t, void *);
 EXT int p_kafka_connect_to_produce(struct p_kafka_host *);
 EXT int p_kafka_produce_data(struct p_kafka_host *, void *, u_int32_t);
 EXT int p_kafka_produce_data_to_part(struct p_kafka_host *, void *, u_int32_t, int);
+
 EXT int p_kafka_connect_to_consume(struct p_kafka_host *);
+EXT int p_kafka_manage_consumer(struct p_kafka_host *, int);
+EXT int p_kafka_consume_poller(struct p_kafka_host *, void **, int);
+EXT int p_kafka_consume_data(struct p_kafka_host *, void *, char *, u_int32_t);
+
 EXT void p_kafka_close(struct p_kafka_host *, int);
 EXT int p_kafka_check_outq_len(struct p_kafka_host *);
 

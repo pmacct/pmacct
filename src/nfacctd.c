@@ -584,6 +584,7 @@ int main(int argc,char **argv, char **envp)
     p_kafka_set_broker(&nfacctd_kafka_host, config.nfacctd_kafka_broker_host, config.nfacctd_kafka_broker_port);
     p_kafka_set_topic(&nfacctd_kafka_host, config.nfacctd_kafka_topic);
     p_kafka_set_content_type(&nfacctd_kafka_host, PM_KAFKA_CNT_TYPE_BIN);
+    p_kafka_manage_consumer(&nfacctd_kafka_host, TRUE);
   }
 #endif
   else {
@@ -828,7 +829,7 @@ int main(int argc,char **argv, char **envp)
   }
 #endif
 
-  if (!config.pcap_savefile) {
+  if (!config.pcap_savefile && !config.nfacctd_kafka_broker_host) {
     rc = bind(config.sock, (struct sockaddr *) &server, slen);
     if (rc < 0) {
       Log(LOG_ERR, "ERROR ( %s/core ): bind() to ip=%s port=%d/udp failed (errno: %d).\n", config.name, config.nfacctd_ip, config.nfacctd_port, errno);
@@ -1020,11 +1021,41 @@ int main(int argc,char **argv, char **envp)
 
   /* Main loop */
   for (;;) {
-    if (!config.pcap_savefile) {
-      ret = recvfrom(config.sock, netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
-    }
-    else {
+    if (config.pcap_savefile) {
       ret = recvfrom_savefile(&device, (void **) &netflow_packet, (struct sockaddr *) &client, NULL, &pcap_savefile_round);
+    }
+#ifdef WITH_KAFKA
+    else if (config.nfacctd_kafka_broker_host) {
+      int kafka_reconnect = FALSE;
+      void *kafka_msg = NULL;
+
+      kafka_poll_again:
+      ret = p_kafka_consume_poller(&nfacctd_kafka_host, &kafka_msg, 0);
+
+      switch (ret) {
+      case TRUE: /* got data */
+        ret = p_kafka_consume_data(&nfacctd_kafka_host, kafka_msg, netflow_packet, NETFLOW_MSG_SIZE);
+	if (ret) kafka_reconnect = TRUE;
+	break;
+      case FALSE: /* timeout */
+	goto kafka_poll_again;
+	break;
+      case ERR: /* error */
+      default:
+	kafka_reconnect = TRUE;
+	break;
+      }
+
+      if (kafka_reconnect) {
+        p_kafka_manage_consumer(&nfacctd_kafka_host, FALSE);
+        p_kafka_close(&nfacctd_kafka_host, FALSE);
+
+        // XXX: handle reconnection to Kafka broker
+      }
+    }
+#endif
+    else {
+      ret = recvfrom(config.sock, netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
     }
 
     /* we have no data or not not enough data to decode the version */
