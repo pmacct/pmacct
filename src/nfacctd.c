@@ -1030,12 +1030,12 @@ int main(int argc,char **argv, char **envp)
       void *kafka_msg = NULL;
 
       kafka_poll_again:
-      ret = p_kafka_consume_poller(&nfacctd_kafka_host, &kafka_msg, 0);
+      ret = p_kafka_consume_poller(&nfacctd_kafka_host, &kafka_msg, 1000);
 
       switch (ret) {
       case TRUE: /* got data */
         ret = p_kafka_consume_data(&nfacctd_kafka_host, kafka_msg, netflow_packet, NETFLOW_MSG_SIZE);
-	if (ret) kafka_reconnect = TRUE;
+	if (ret < 0) kafka_reconnect = TRUE;
 	break;
       case FALSE: /* timeout */
 	goto kafka_poll_again;
@@ -1047,10 +1047,17 @@ int main(int argc,char **argv, char **envp)
       }
 
       if (kafka_reconnect) {
+	/* Close */
         p_kafka_manage_consumer(&nfacctd_kafka_host, FALSE);
         p_kafka_close(&nfacctd_kafka_host, FALSE);
 
-        // XXX: handle reconnection to Kafka broker
+	/* Re-open */
+        p_kafka_init_host(&nfacctd_kafka_host, config.nfacctd_kafka_config_file);
+        p_kafka_connect_to_consume(&nfacctd_kafka_host);
+        p_kafka_set_broker(&nfacctd_kafka_host, config.nfacctd_kafka_broker_host, config.nfacctd_kafka_broker_port);
+        p_kafka_set_topic(&nfacctd_kafka_host, config.nfacctd_kafka_topic);
+        p_kafka_set_content_type(&nfacctd_kafka_host, PM_KAFKA_CNT_TYPE_BIN);
+        p_kafka_manage_consumer(&nfacctd_kafka_host, TRUE);
       }
     }
 #endif
