@@ -398,6 +398,7 @@ EXT void compute_once();
 EXT void reset_index_pkt_ptrs(struct packet_ptrs *);
 EXT void set_index_pkt_ptrs(struct packet_ptrs *);
 EXT ssize_t recvfrom_savefile(struct pcap_device *, void **, struct sockaddr *, struct timeval **, int *);
+EXT ssize_t recvfrom_rawip(char *, size_t, struct sockaddr *);
 #undef EXT
 
 #ifndef HAVE_STRLCPY

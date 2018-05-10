@@ -585,6 +585,9 @@ int main(int argc,char **argv, char **envp)
     p_kafka_set_topic(&nfacctd_kafka_host, config.nfacctd_kafka_topic);
     p_kafka_set_content_type(&nfacctd_kafka_host, PM_KAFKA_CNT_TYPE_BIN);
     p_kafka_manage_consumer(&nfacctd_kafka_host, TRUE);
+
+    config.handle_fragments = TRUE;
+    init_ip_fragment_handler();
   }
 #endif
   else {
@@ -1029,7 +1032,6 @@ int main(int argc,char **argv, char **envp)
       int kafka_reconnect = FALSE;
       void *kafka_msg = NULL;
 
-      kafka_poll_again:
       ret = p_kafka_consume_poller(&nfacctd_kafka_host, &kafka_msg, 1000);
 
       switch (ret) {
@@ -1038,7 +1040,7 @@ int main(int argc,char **argv, char **envp)
 	if (ret < 0) kafka_reconnect = TRUE;
 	break;
       case FALSE: /* timeout */
-	goto kafka_poll_again;
+	continue;
 	break;
       case ERR: /* error */
       default:
@@ -1058,7 +1060,11 @@ int main(int argc,char **argv, char **envp)
         p_kafka_set_topic(&nfacctd_kafka_host, config.nfacctd_kafka_topic);
         p_kafka_set_content_type(&nfacctd_kafka_host, PM_KAFKA_CNT_TYPE_BIN);
         p_kafka_manage_consumer(&nfacctd_kafka_host, TRUE);
+
+	continue;
       }
+
+      ret = recvfrom_rawip(netflow_packet, ret, (struct sockaddr *) &client);
     }
 #endif
     else {

@@ -479,7 +479,6 @@ struct pkt_extras {
   u_int8_t tcp_flags;
 };
 
-// #define PKT_MSG_SIZE 1550
 #define PKT_MSG_SIZE 10000
 struct pkt_msg {
   struct sockaddr agent;
