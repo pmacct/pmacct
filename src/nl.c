@@ -635,14 +635,13 @@ void set_index_pkt_ptrs(struct packet_ptrs *pptrs)
   pptrs->pkt_proto[CUSTOM_PRIMITIVE_L4_PTR] = pptrs->l4_proto;
 }
 
-ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockaddr *src_addr, struct timeval **ts, int *round)
+ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockaddr *src_addr, struct timeval **ts, int *round, struct packet_ptrs *savefile_pptrs)
 {
-  struct packet_ptrs savefile_pptrs;
   ssize_t ret = 0;
   int pcap_ret;
 
   read_packet:
-  pcap_ret = pcap_next_ex(device->dev_desc, &savefile_pptrs.pkthdr, (const u_char **)&savefile_pptrs.packet_ptr);
+  pcap_ret = pcap_next_ex(device->dev_desc, &savefile_pptrs->pkthdr, (const u_char **)&savefile_pptrs->packet_ptr);
 
   if (pcap_ret == 1 /* all good */) device->errors = FALSE;
   else if (pcap_ret == -1 /* failed reading next packet */) {
@@ -680,23 +679,23 @@ ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockadd
     exit(1);
   }
 
-  (*device->data->handler)(savefile_pptrs.pkthdr, &savefile_pptrs);
-  if (savefile_pptrs.iph_ptr) {
-    (*savefile_pptrs.l3_handler)(&savefile_pptrs);
-    if (savefile_pptrs.payload_ptr) {
-      if (ts) (*ts) = &savefile_pptrs.pkthdr->ts; 
-      (*buf) = savefile_pptrs.payload_ptr;
-      ret = savefile_pptrs.pkthdr->caplen - (savefile_pptrs.payload_ptr - savefile_pptrs.packet_ptr);
+  (*device->data->handler)(savefile_pptrs->pkthdr, savefile_pptrs);
+  if (savefile_pptrs->iph_ptr) {
+    (*savefile_pptrs->l3_handler)(savefile_pptrs);
+    if (savefile_pptrs->payload_ptr) {
+      if (ts) (*ts) = &savefile_pptrs->pkthdr->ts; 
+      (*buf) = savefile_pptrs->payload_ptr;
+      ret = savefile_pptrs->pkthdr->caplen - (savefile_pptrs->payload_ptr - savefile_pptrs->packet_ptr);
 
-      if (savefile_pptrs.l4_proto == IPPROTO_UDP) {
-	if (savefile_pptrs.l3_proto == ETHERTYPE_IP) {
-	  raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct pm_iphdr *)savefile_pptrs.iph_ptr)->ip_src.s_addr,
-		    (u_int16_t) ((struct pm_udphdr *)savefile_pptrs.tlh_ptr)->uh_sport, AF_INET);
+      if (savefile_pptrs->l4_proto == IPPROTO_UDP) {
+	if (savefile_pptrs->l3_proto == ETHERTYPE_IP) {
+	  raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct pm_iphdr *)savefile_pptrs->iph_ptr)->ip_src.s_addr,
+		    (u_int16_t) ((struct pm_udphdr *)savefile_pptrs->tlh_ptr)->uh_sport, AF_INET);
 	}
 #if defined ENABLE_IPV6
-	else if (savefile_pptrs.l3_proto == ETHERTYPE_IPV6) {
-	  raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct ip6_hdr *)savefile_pptrs.iph_ptr)->ip6_src,
-		    (u_int16_t) ((struct pm_udphdr *)savefile_pptrs.tlh_ptr)->uh_sport, AF_INET6);
+	else if (savefile_pptrs->l3_proto == ETHERTYPE_IPV6) {
+	  raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct ip6_hdr *)savefile_pptrs->iph_ptr)->ip6_src,
+		    (u_int16_t) ((struct pm_udphdr *)savefile_pptrs->tlh_ptr)->uh_sport, AF_INET6);
 	}
 #endif
       }
@@ -706,42 +705,35 @@ ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockadd
   return ret;
 }
 
-ssize_t recvfrom_rawip(char *buf, size_t len, struct sockaddr *src_addr)
+ssize_t recvfrom_rawip(char *buf, size_t len, struct sockaddr *src_addr, struct packet_ptrs *local_pptrs)
 {
-  struct packet_ptrs local_pptrs;
-  struct pcap_pkthdr local_pkthdr;
   ssize_t ret = 0;
 
-  /* XXX: check how expensive are local allocs and cleanups */
-  memset(&local_pptrs, 0, sizeof(local_pptrs));
-  memset(&local_pkthdr, 0, sizeof(local_pkthdr));
+  local_pptrs->packet_ptr = buf;
+  local_pptrs->pkthdr->caplen = len;
 
-  local_pptrs.packet_ptr = buf;
-  local_pptrs.pkthdr = &local_pkthdr;
-  local_pptrs.pkthdr->caplen = len;
+  raw_handler(local_pptrs->pkthdr, local_pptrs);
 
-  raw_handler(local_pptrs.pkthdr, &local_pptrs);
+  if (local_pptrs->iph_ptr) {
+    (*local_pptrs->l3_handler)(local_pptrs);
+    if (local_pptrs->payload_ptr) {
+      ret = local_pptrs->pkthdr->caplen - (local_pptrs->payload_ptr - local_pptrs->packet_ptr);
 
-  if (local_pptrs.iph_ptr) {
-    (*local_pptrs.l3_handler)(&local_pptrs);
-    if (local_pptrs.payload_ptr) {
-      ret = local_pptrs.pkthdr->caplen - (local_pptrs.payload_ptr - local_pptrs.packet_ptr);
-
-      if (local_pptrs.l4_proto == IPPROTO_UDP) {
-        if (local_pptrs.l3_proto == ETHERTYPE_IP) {
-          raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct pm_iphdr *)local_pptrs.iph_ptr)->ip_src.s_addr,
-                    (u_int16_t) ((struct pm_udphdr *)local_pptrs.tlh_ptr)->uh_sport, AF_INET);
+      if (local_pptrs->l4_proto == IPPROTO_UDP) {
+        if (local_pptrs->l3_proto == ETHERTYPE_IP) {
+          raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct pm_iphdr *)local_pptrs->iph_ptr)->ip_src.s_addr,
+                    (u_int16_t) ((struct pm_udphdr *)local_pptrs->tlh_ptr)->uh_sport, AF_INET);
         }
 #if defined ENABLE_IPV6
-        else if (local_pptrs.l3_proto == ETHERTYPE_IPV6) {
-          raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct ip6_hdr *)local_pptrs.iph_ptr)->ip6_src,
-                    (u_int16_t) ((struct pm_udphdr *)local_pptrs.tlh_ptr)->uh_sport, AF_INET6);
+        else if (local_pptrs->l3_proto == ETHERTYPE_IPV6) {
+          raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct ip6_hdr *)local_pptrs->iph_ptr)->ip6_src,
+                    (u_int16_t) ((struct pm_udphdr *)local_pptrs->tlh_ptr)->uh_sport, AF_INET6);
         }
 #endif
       }
 
       /* last action: cut L3 and L4 off the packet */
-      memmove(buf, local_pptrs.payload_ptr, ret);
+      memmove(buf, local_pptrs->payload_ptr, ret);
     }
   }
 

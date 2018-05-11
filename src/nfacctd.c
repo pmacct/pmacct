@@ -148,6 +148,9 @@ int main(int argc,char **argv, char **envp)
   struct pcap_pkthdr dummy_pkthdr_vlan_mpls6;
 #endif
 
+  struct packet_ptrs recv_pptrs;
+  struct pcap_pkthdr recv_pkthdr;
+
   /* getopt() stuff */
   extern char *optarg;
   extern int optind, opterr, optopt;
@@ -207,6 +210,9 @@ int main(int argc,char **argv, char **envp)
 
   rows = 0;
   memset(&device, 0, sizeof(device));
+
+  memset(&recv_pptrs, 0, sizeof(recv_pptrs));
+  memset(&recv_pkthdr, 0, sizeof(recv_pkthdr));
 
   /* getting commandline values */
   while (!errflag && ((cp = getopt(argc, argv, ARGS_NFACCTD)) != -1)) {
@@ -588,6 +594,8 @@ int main(int argc,char **argv, char **envp)
 
     config.handle_fragments = TRUE;
     init_ip_fragment_handler();
+
+    recv_pptrs.pkthdr = &recv_pkthdr;
   }
 #endif
   else {
@@ -1025,7 +1033,7 @@ int main(int argc,char **argv, char **envp)
   /* Main loop */
   for (;;) {
     if (config.pcap_savefile) {
-      ret = recvfrom_savefile(&device, (void **) &netflow_packet, (struct sockaddr *) &client, NULL, &pcap_savefile_round);
+      ret = recvfrom_savefile(&device, (void **) &netflow_packet, (struct sockaddr *) &client, NULL, &pcap_savefile_round, &recv_pptrs);
     }
 #ifdef WITH_KAFKA
     else if (config.nfacctd_kafka_broker_host) {
@@ -1064,7 +1072,7 @@ int main(int argc,char **argv, char **envp)
 	continue;
       }
 
-      ret = recvfrom_rawip(netflow_packet, ret, (struct sockaddr *) &client);
+      ret = recvfrom_rawip(netflow_packet, ret, (struct sockaddr *) &client, &recv_pptrs);
     }
 #endif
     else {

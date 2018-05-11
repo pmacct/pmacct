@@ -154,6 +154,9 @@ int main(int argc,char **argv, char **envp)
   struct pcap_pkthdr dummy_pkthdr_vlan_mpls6;
 #endif
 
+  struct packet_ptrs recv_pptrs;
+  struct pcap_pkthdr recv_pkthdr;
+
   /* getopt() stuff */
   extern char *optarg;
   extern int optind, opterr, optopt;
@@ -214,6 +217,9 @@ int main(int argc,char **argv, char **envp)
 
   rows = 0;
   memset(&device, 0, sizeof(device));
+
+  memset(&recv_pptrs, 0, sizeof(recv_pptrs));
+  memset(&recv_pkthdr, 0, sizeof(recv_pkthdr));
 
   /* getting commandline values */
   while (!errflag && ((cp = getopt(argc, argv, ARGS_SFACCTD)) != -1)) {
@@ -1046,7 +1052,7 @@ int main(int argc,char **argv, char **envp)
       ret = recvfrom(config.sock, sflow_packet, SFLOW_MAX_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
     }
     else {
-      ret = recvfrom_savefile(&device, (void **) &sflow_packet, (struct sockaddr *) &client, &spp.ts, &pcap_savefile_round);
+      ret = recvfrom_savefile(&device, (void **) &sflow_packet, (struct sockaddr *) &client, &spp.ts, &pcap_savefile_round, &recv_pptrs);
     }
     spp.rawSample = pptrs.v4.f_header = sflow_packet;
     spp.rawSampleLen = pptrs.v4.f_len = ret;
