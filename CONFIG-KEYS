@@ -993,16 +993,19 @@ DESC:           In SQL this defines the table to use; in print plugin it defines
 		maximum table name length is 64 characters.
 
 		Print plugin notes:
-		* if a non-dynamic filename is selected, content is overwritten to the existing one in
-		case print_output_file_append is set to false (default). Are supported scenarios where
-		multiple level of directories need to be created in order to create the target file,
-		ie. "/path/to/%Y/%Y-%m/%Y-%m-%d/blabla-%Y%m%d-%H%M.txt". Shell replacements are not
-		supported though, ie. '~' symbol to denote the user home directory. print_history
-		values are used for time-related variables substitution of dynamic print_output_file
-		names. 
+		If a non-dynamic filename is selected, content is overwritten to the existing file in
+		case print_output_file_append is set to false (default). When creating a target file,
+		the needed level of directories are created too (equivalent to mkdir -p), for example
+		"/path/to/%Y/%Y-%m/%Y-%m-%d/blabla-%Y%m%d-%H%M.txt". However shell replacements are
+		not supported, ie. the '~' symbol to denote the user home directory. Time-related
+		variables require 'print_history' to be specified in order to work correctly.
 
 		MongoDB plugin notes:
 		The table name is expected as <database>.<collection> . Default table is test.acct
+
+		SQlite3 plugin notes:
+		The value expected is full pathname to a file. If multiple sqlite3 plugins are in
+		use, it is recommended to point them to different files to prevent locking issues. 
 
 		Common notes:
 		The maximum number of variables it may contain is 32.
