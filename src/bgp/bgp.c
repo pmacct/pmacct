@@ -26,6 +26,7 @@
 #include "pmacct.h"
 #include "addr.h"
 #include "bgp.h"
+#include "bgp_xcs.h"
 #include "thread_pool.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"

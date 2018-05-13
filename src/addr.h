@@ -67,8 +67,8 @@ EXT u_int32_t addr_port_hash(struct host_addr *, u_int16_t, u_int32_t);
 EXT u_int16_t sa_has_family(struct sockaddr *);
 
 #if defined ENABLE_IPV6
+EXT void ipv4_to_ipv4_mapped(struct sockaddr_storage *);
 EXT void ipv4_mapped_to_ipv4(struct sockaddr_storage *);
-EXT void ipv4_to_mapped_ipv4(struct sockaddr_storage *);
 #endif
 
 #undef EXT

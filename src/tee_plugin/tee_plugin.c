@@ -29,6 +29,7 @@
 #include "tee_plugin.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
+#include "plugin_common.h"
 
 void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 {

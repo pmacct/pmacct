@@ -54,14 +54,13 @@
 #include "addr.h"
 #include "sys-tree.h"
 #include "convtime.h"
-#include "../nfacctd.h"
+#include "nfacctd.h"
 #include "nfprobe_plugin.h"
 #include "treetype.h"
 
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
-#include "net_aggr.h"
-#include "ports_aggr.h"
+#include "plugin_common.h"
 
 /* Global variables */
 static int verbose_flag = 0;		/* Debugging flag */

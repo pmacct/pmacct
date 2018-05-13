@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -105,7 +105,7 @@ EXT void notify_orphan_fragment(struct ip_fragment *);
 
 #if defined ENABLE_IPV6
 EXT void init_ip6_fragment_handler();
-EXT int ip6_fragment_handler6(struct packet_ptrs *, struct ip6_frag *);
+EXT int ip6_fragment_handler(struct packet_ptrs *, struct ip6_frag *);
 EXT unsigned int hash_fragment6(u_int32_t, struct in6_addr *, struct in6_addr *);
 EXT int find_fragment6(u_int32_t, struct packet_ptrs *, struct ip6_frag *);
 EXT int create_fragment6(u_int32_t, struct ip6_fragment *, u_int8_t, unsigned int, struct packet_ptrs *, struct ip6_frag *);

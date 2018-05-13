@@ -35,6 +35,7 @@
 #include "plugin_hooks.h"
 #include "pkt_handlers.h"
 #include "ip_flow.h"
+#include "ip_frag.h"
 #include "classifier.h"
 #include "net_aggr.h"
 #include "crc32.h"

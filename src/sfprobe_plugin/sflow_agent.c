@@ -8,6 +8,8 @@
 #include <string.h>
 #include <sys/socket.h>
 
+#include "pmacct.h"
+#include "addr.h"
 #include "sflow_api.h"
 
 static void * sflAlloc(SFLAgent *agent, size_t bytes);

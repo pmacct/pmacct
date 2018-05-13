@@ -28,6 +28,7 @@
 #include "nfacctd.h"
 #include "pretag_handlers.h"
 #include "pretag-data.h"
+#include "plugin_hooks.h"
 #include "tee_plugin/tee_recvs.h"
 #include "tee_plugin/tee_recvs-data.h"
 #include "isis/isis.h"
@@ -876,7 +877,7 @@ int pretag_entry_process(struct id_entry *e, struct packet_ptrs *pptrs, pm_id_t 
 
     if (e->jeq.ptr) {
       if (e->ret) {
-	exec_plugins(pptrs);
+	exec_plugins(pptrs, NULL);
 	set_shadow_status(pptrs);
 	*tag = 0;
 	*tag2 = 0;

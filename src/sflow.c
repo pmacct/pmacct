@@ -34,6 +34,9 @@
 #include "bgp/bgp.h"
 #include "sfacctd.h"
 #include "sfv5_module.h"
+#include "ip_flow.h"
+#include "ip_frag.h"
+#include "classifier.h"
 #include "pmacct-data.h"
 #include "crc32.h"
 

@@ -21,7 +21,8 @@
 
 #define __BGP_XCS_C
 
-#include "../pmacct.h"
+#include "pmacct.h"
+#include "addr.h"
 #include "bgp.h"
 #include "bgp_xcs.h"
 

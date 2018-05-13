@@ -29,6 +29,7 @@
 #include "plugin_cmn_json.h"
 #include "ip_flow.h"
 #include "classifier.h"
+#include "bgp/bgp.h"
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #endif

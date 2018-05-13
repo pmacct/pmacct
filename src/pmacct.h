@@ -231,7 +231,6 @@ typedef struct {
 #include "network.h"
 #include "pretag.h"
 #include "cfg.h"
-#include "util.h"
 #include "xflow_status.h"
 #include "log.h"
 #include "once.h"
@@ -340,6 +339,8 @@ struct child_ctl2 {
 	memset(x.base, 0, sizeof(x.base)); \
 	x.end = x.base+sizeof(x.base); \
 	x.ptr = x.base;
+
+#include "util.h"
 
 /* prototypes */
 void startup_handle_falling_child();

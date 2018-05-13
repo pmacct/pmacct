@@ -42,3 +42,5 @@ EXT void bgp_xcs_map_destroy();
 /* global variables */
 
 #undef EXT
+
+extern int Tee_parse_hostport(const char *, struct sockaddr *, socklen_t *, int);
