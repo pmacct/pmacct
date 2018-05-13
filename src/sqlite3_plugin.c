@@ -702,7 +702,7 @@ void SQLI_create_dyn_table(struct DBdesc *db, char *buf)
     if (sqlite3_exec(db->desc, buf, NULL, NULL, NULL)) {
       Log(LOG_DEBUG, "DEBUG ( %s/%s ): FAILED query follows:\n%s\n", config.name, config.type, buf);
       SQLI_get_errmsg(db);
-      sql_db_errmsg(db);
+      sql_db_warnmsg(db);
     }
   }
 }

@@ -916,9 +916,10 @@ DESC:		Full pathname to a file containing a list of (known/interesting/meaningfu
 DEFAULT:	none
 
 KEY:		sql_db
-DESC:		Defines the SQL database to use. Remember that when using the SQLite3 plugin, this
-		directive refers to the full path to the database file
-DEFAULT:	'pmacct'; SQLite 3.x: '/tmp/pmacct.db' 
+DESC:		Defines the SQL database to use. When using the SQLite3 plugin, this directive refers
+		to the full path to the database file; if multiple sqlite3 plugins are in use, it is
+		recommended to point them to different files to prevent locking issues.
+DEFAULT:	'pmacct'; sqlite3: '/tmp/pmacct.db' 
 
 KEY:            [ sql_table | print_output_file ]
 DESC:           In SQL this defines the table to use; in print plugin it defines the file to write output
@@ -1002,10 +1003,6 @@ DESC:           In SQL this defines the table to use; in print plugin it defines
 
 		MongoDB plugin notes:
 		The table name is expected as <database>.<collection> . Default table is test.acct
-
-		SQlite3 plugin notes:
-		The value expected is full pathname to a file. If multiple sqlite3 plugins are in
-		use, it is recommended to point them to different files to prevent locking issues. 
 
 		Common notes:
 		The maximum number of variables it may contain is 32.

@@ -341,6 +341,7 @@ EXT int sql_trigger_exec(char *);
 EXT void sql_db_ok(struct DBdesc *);
 EXT void sql_db_fail(struct DBdesc *);
 EXT void sql_db_errmsg(struct DBdesc *);
+EXT void sql_db_warnmsg(struct DBdesc *);
 EXT int sql_query(struct BE_descs *, struct db_cache *, struct insert_data *);
 EXT void sql_exit_gracefully(int);
 EXT int sql_evaluate_primitives(int);

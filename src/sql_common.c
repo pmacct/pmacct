@@ -1030,7 +1030,12 @@ void sql_db_errmsg(struct DBdesc *db)
   else if (db->type == BE_TYPE_BACKUP) 
     Log(LOG_ERR, "ERROR ( %s/%s ): BACKUP '%s' backend trouble.\n", config.name, config.type, config.type);
 
-  if (db->errmsg) Log(LOG_ERR, "ERROR ( %s/%s ): The SQL server says: %s\n\n", config.name, config.type, db->errmsg);
+  if (db->errmsg) Log(LOG_ERR, "ERROR ( %s/%s ): The SQL server says: %s\n", config.name, config.type, db->errmsg);
+}
+
+void sql_db_warnmsg(struct DBdesc *db)
+{
+  if (db->errmsg) Log(LOG_WARNING, "WARN ( %s/%s ): The SQL server says: %s\n", config.name, config.type, db->errmsg);
 }
 
 void sql_exit_gracefully(int signum)
