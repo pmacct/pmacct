@@ -34,7 +34,6 @@
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "pkt_handlers.h"
-#include "util.h"
 
 int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {

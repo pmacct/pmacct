@@ -24,6 +24,7 @@
 /* includes */
 #include "pmacct.h"
 #include "pmacct-data.h"
+#include "plugin_common.h"
 #include "kafka_common.h"
 
 /* Functions */

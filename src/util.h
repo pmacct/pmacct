@@ -33,6 +33,11 @@
 } while (0)
 #endif
 
+struct p_broker_timers {
+  time_t last_fail;
+  int retry_interval;
+};
+
 /* prototypes */
 #if (!defined __UTIL_C)
 #define EXT extern
@@ -184,4 +189,11 @@ EXT void replace_string(char *, int, char *, char *);
 EXT int delete_line_from_file(int, char *);
 
 EXT void generate_random_string(char *, const int);
+
+EXT void P_broker_timers_set_last_fail(struct p_broker_timers *, time_t);
+EXT void P_broker_timers_set_retry_interval(struct p_broker_timers *, int);
+EXT void P_broker_timers_unset_last_fail(struct p_broker_timers *);
+EXT time_t P_broker_timers_get_last_fail(struct p_broker_timers *);
+EXT int P_broker_timers_get_retry_interval(struct p_broker_timers *);
+EXT time_t P_broker_timers_get_last_fail(struct p_broker_timers *);
 #undef EXT

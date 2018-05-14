@@ -30,11 +30,13 @@
 
 /* includes */
 #include "pmacct.h"
+#include "addr.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "sql_common.h"
 #include "ip_flow.h"
 #include "classifier.h"
+#include "bgp/bgp.h"
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #endif

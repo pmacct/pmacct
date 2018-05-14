@@ -155,6 +155,7 @@ EXT pm_counter_t take_simple_random_skip(pm_counter_t);
 EXT pm_counter_t take_simple_systematic_skip(pm_counter_t);
 EXT void plugin_pipe_zmq_compile_check();
 EXT void plugin_pipe_check(struct configuration *);
+EXT void P_zmq_pipe_init(void *, int *, int *);
 #undef EXT
 
 #if (defined __PLUGIN_HOOKS_C)
