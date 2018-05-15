@@ -1194,6 +1194,10 @@ int PT_map_jeq_handler(char *filename, struct id_entry *e, char *value, struct p
 int PT_map_return_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int res = parse_truefalse(value);
+
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] RETURN is in the process of being discontinued.\n", config.name, config.type, filename);
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] %s: %s\n", config.name, config.type, filename, GET_IN_TOUCH_MSG, MANTAINER);
+
   if (res < 0) Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unknown RETURN value: '%s'. Ignoring.\n", config.name, config.type, filename, value);
   else e->ret = res;
 
