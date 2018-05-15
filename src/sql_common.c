@@ -340,7 +340,7 @@ int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *ida
   return index;
 }
 
-int sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_data *idata)
+void sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_data *idata)
 {
   struct db_cache *Cursor, *auxCursor, *PendingElem, SavedCursor;
   int j;

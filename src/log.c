@@ -137,4 +137,6 @@ int log_notification_isset(struct log_notification *ln, time_t now)
       else return FALSE;
     }
   }
+
+  return ERR;
 }

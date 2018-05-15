@@ -164,6 +164,8 @@ int telemetry_validate_input_output_decoders(int input, int output)
     if (output == PRINT_OUTPUT_JSON) return FALSE;
     /* else if (output == PRINT_OUTPUT_GPB) return ERR; */
   }
+
+  return ERR;
 }
 
 void telemetry_log_peer_stats(telemetry_peer *peer, struct telemetry_data *t_data)

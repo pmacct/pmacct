@@ -101,6 +101,8 @@ void p_kafka_set_topic(struct p_kafka_host *kafka_host, char *topic)
 rd_kafka_t *p_kafka_get_handler(struct p_kafka_host *kafka_host)
 {
   if (kafka_host) return kafka_host->rk;
+
+  return NULL;
 }
 
 char *p_kafka_get_broker(struct p_kafka_host *kafka_host)
@@ -370,6 +372,10 @@ void p_kafka_msg_error(rd_kafka_t *rk, int err, const char *reason, void *opaque
 int p_kafka_stats(rd_kafka_t *rk, char *json, size_t json_len, void *opaque)
 {
   Log(LOG_INFO, "INFO ( %s/%s ): %s\n", config.name, config.type, json);
+
+  /* We return 0 since we don't want to hold data any further;
+     see librdkafka header/docs for more info. */
+  return FALSE;
 }
 
 int p_kafka_connect_to_produce(struct p_kafka_host *kafka_host)

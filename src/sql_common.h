@@ -333,7 +333,7 @@ EXT void sql_init_refresh_deadline(time_t *);
 EXT void sql_link_backend_descriptors(struct BE_descs *, struct DBdesc *, struct DBdesc *);
 EXT void sql_cache_modulo(struct primitives_ptrs *, struct insert_data *);
 EXT int sql_cache_flush(struct db_cache *[], int, struct insert_data *, int);
-EXT int sql_cache_flush_pending(struct db_cache *[], int, struct insert_data *);
+EXT void sql_cache_flush_pending(struct db_cache *[], int, struct insert_data *);
 EXT void sql_cache_handle_flush_event(struct insert_data *, time_t *, struct ports_table *);
 EXT void sql_cache_insert(struct primitives_ptrs *, struct insert_data *);
 EXT struct db_cache *sql_cache_search(struct primitives_ptrs *, time_t);
