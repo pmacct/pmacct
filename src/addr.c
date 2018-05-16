@@ -284,7 +284,6 @@ int sa_port_cmp(struct sockaddr *sa, u_int16_t port)
   struct sockaddr_in *sa4 = (struct sockaddr_in *)sa;
 #if defined ENABLE_IPV6
   struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)sa;
-  struct sockaddr_in6 sa6_local;
 #endif
 
   if (sa->sa_family == AF_INET) {
@@ -346,7 +345,6 @@ int host_addr_mask_sa_cmp(struct host_addr *a1, struct host_mask *m1, struct soc
 {
   struct sockaddr_in *sa4 = (struct sockaddr_in *)s1;
 #if defined ENABLE_IPV6
-  struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)s1;
   struct sockaddr_in6 sa6_local;
   int ret, j;
 #endif

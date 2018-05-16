@@ -111,7 +111,7 @@ void telemetry_basic_process_json(telemetry_peer *peer)
 
 int telemetry_recv_json(telemetry_peer *peer, u_int32_t len, int *flags)
 {
-  int ret = 0, idx;
+  int ret = 0;
   if (!flags) return ret;
 
   (*flags) = FALSE;

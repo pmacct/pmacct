@@ -1832,7 +1832,6 @@ void version_daemon(char *header)
 char *compose_json_str(void *obj)
 {
   char *tmpbuf = NULL;
-  json_t *json_obj = (json_t *) obj;
 
   tmpbuf = json_dumps(obj, JSON_PRESERVE_ORDER);
   json_decref(obj);
@@ -2676,11 +2675,10 @@ void hash_destroy_key(pm_hash_key_t *key)
 
 int hash_init_serial(pm_hash_serial_t *serial, u_int16_t key_len)
 {
-  int ret;
-
   if (!serial || !key_len) return ERR;
 
   memset(serial, 0, sizeof(pm_hash_serial_t));
+
   return hash_alloc_key(&serial->key, key_len);
 }
 

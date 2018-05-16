@@ -69,7 +69,6 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     json_t *obj = json_object();
-    char tstamp_str[SRVBUFLEN];
 
     json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
 

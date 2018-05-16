@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -42,8 +42,8 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   unsigned char *pipebuf;
   struct pollfd pfd;
   struct insert_data idata;
-  time_t t, avro_schema_deadline = 0;
-  int timeout, refresh_timeout, amqp_timeout = 0, avro_schema_timeout = 0;
+  time_t avro_schema_deadline = 0;
+  int timeout, refresh_timeout, avro_schema_timeout = 0;
   int ret, num, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
@@ -329,10 +329,8 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   struct pkt_mpls_primitives empty_pmpls;
   struct pkt_tunnel_primitives empty_ptun;
   char *empty_pcust = NULL;
-  char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
-  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], dyn_amqp_routing_key[SRVBUFLEN], *orig_amqp_routing_key = NULL;
-  char tmpbuf[SRVBUFLEN];
-  int i, j, stop, batch_idx, is_routing_key_dyn = FALSE, qn = 0, ret, saved_index = index;
+  char dyn_amqp_routing_key[SRVBUFLEN], *orig_amqp_routing_key = NULL;
+  int j, stop, is_routing_key_dyn = FALSE, qn = 0, ret, saved_index = index;
   int mv_num = 0, mv_num_save = 0;
   time_t start, duration;
   struct primitives_ptrs prim_ptrs;
@@ -451,7 +449,6 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   }
 
   for (j = 0; j < index; j++) {
-    void *json_obj;
     char *json_str;
 
     if (queue[j]->valid != PRINT_CACHE_COMMITTED) continue;

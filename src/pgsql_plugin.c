@@ -37,7 +37,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct pollfd pfd;
   struct insert_data idata;
   time_t refresh_deadline;
-  int timeout, refresh_timeout;
+  int refresh_timeout;
   int ret, num, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
@@ -264,7 +264,6 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
 int PG_cache_dbop_copy(struct DBdesc *db, struct db_cache *cache_elem, struct insert_data *idata)
 {
-  PGresult *ret;
   char *ptr_values, *ptr_where;
   char default_delim[] = ",", delim_buf[SRVBUFLEN];
   int num=0, have_flows=0;

@@ -36,14 +36,13 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct pkt_msg *msg;
   unsigned char *pipebuf;
   struct pollfd pfd;
-  int timeout, refresh_timeout, err, ret, num;
-  int fd, pool_idx, recv_idx, recv_budget, poll_bypass;
+  int refresh_timeout, ret, pool_idx, recv_idx, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   pid_t core_pid = ((struct channels_list_entry *)ptr)->core_pid;
-  char *dataptr, dest_addr[256], dest_serv[256];
+  char *dataptr;
   struct tee_receiver *target = NULL;
   struct plugin_requests req;
 
@@ -612,8 +611,6 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, u_int16_t src_port)
       Log(LOG_WARNING, "WARN ( %s/%s ): bind() error: %s\n", config.name, config.type, strerror(errno));
   }
   else {
-    int hincl = TRUE;
-
     if ((s = socket(addr->sa_family, SOCK_RAW, IPPROTO_RAW)) == -1) {
       Log(LOG_ERR, "ERROR ( %s/%s ): socket() error: %s\n", config.name, config.type, strerror(errno));
       exit_plugin(1);

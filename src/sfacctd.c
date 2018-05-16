@@ -1880,7 +1880,7 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) &sa_local;
 #endif 
   SFSample *sample = (SFSample *)pptrs->f_data; 
-  int x, j, begin = 0, end = 0;
+  int x, begin = 0, end = 0;
   pm_id_t ret = 0;
 
   if (!t) return 0;
@@ -2178,8 +2178,7 @@ int readCounters_generic(struct bgp_peer *peer, SFSample *sample, char *event_ty
   char msg_type[] = "sflow_cnt_generic";
   int ret = 0;
 #ifdef WITH_JANSSON
-  char ip_address[INET6_ADDRSTRLEN];
-  json_t *obj = (json_t *) vobj, *kv;
+  json_t *obj = (json_t *) vobj;
 
   /* parse sFlow first and foremost */
   sample->ifCounters.ifIndex = getData32(sample);
@@ -2254,8 +2253,7 @@ int readCounters_ethernet(struct bgp_peer *peer, SFSample *sample, char *event_t
   char msg_type[] = "sflow_cnt_ethernet";
   int ret = 0;
 #ifdef WITH_JANSSON
-  char ip_address[INET6_ADDRSTRLEN];
-  json_t *obj = (json_t *) vobj, *kv;
+  json_t *obj = (json_t *) vobj;
 
   u_int32_t m32_1, m32_2, m32_3, m32_4, m32_5;
   u_int32_t m32_6, m32_7, m32_8, m32_9, m32_10;
@@ -2315,7 +2313,6 @@ int readCounters_vlan(struct bgp_peer *peer, SFSample *sample, char *event_type,
   char msg_type[] = "sflow_cnt_vlan";
   int ret = 0;
 #ifdef WITH_JANSSON
-  char ip_address[INET6_ADDRSTRLEN];
   json_t *obj = (json_t *) vobj;
 
   u_int64_t m64_1;

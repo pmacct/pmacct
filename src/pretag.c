@@ -1225,7 +1225,6 @@ void pretag_index_results_sort(struct id_entry **index_results, int ir_entries)
 
 void pretag_index_results_compress(struct id_entry **index_results, int ir_entries)
 {
-  struct id_entry *ptr = NULL;
   u_int32_t j, valid;
   int i;
 
@@ -1246,7 +1245,6 @@ void pretag_index_results_compress(struct id_entry **index_results, int ir_entri
 
 void pretag_index_results_compress_jeqs(struct id_entry **index_results, int ir_entries)
 {
-  struct id_entry *ptr = NULL;
   u_int32_t i, j, x;
 
   if (!index_results) return;

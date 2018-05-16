@@ -31,7 +31,7 @@
 int tee_recvs_map_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct tee_receivers *table = (struct tee_receivers *) req->key_value_table; 
-  int pool_idx, recv_idx;
+  int pool_idx;
   u_int32_t pool_id;
   char *endptr = NULL;
 
@@ -71,7 +71,7 @@ int tee_recvs_map_ip_handler(char *filename, struct id_entry *e, char *value, st
 {
   struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
   struct tee_receiver *target = NULL;
-  int pool_idx, recv_idx;
+  int recv_idx;
   char *str_ptr, *token;
 
   if (table && table->pools && table->pools[table->num].receivers) {
@@ -110,7 +110,7 @@ int tee_recvs_map_ip_handler(char *filename, struct id_entry *e, char *value, st
 int tee_recvs_map_tag_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
-  int pool_idx, recv_idx, ret;
+  int ret;
 
   if (table && table->pools) ret = load_tags(filename, &table->pools[table->num].tag_filter, value);
   else {
@@ -125,7 +125,6 @@ int tee_recvs_map_tag_handler(char *filename, struct id_entry *e, char *value, s
 int tee_recvs_map_balance_alg_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
-  int pool_idx, recv_idx, ret;
 
   if (table && table->pools) {
     if (!strncmp(value, "rr", 2)) {
@@ -156,7 +155,7 @@ int tee_recvs_map_balance_alg_handler(char *filename, struct id_entry *e, char *
 int tee_recvs_map_src_port_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
-  int pool_idx, recv_idx, port;
+  int port;
 
   if (table && table->pools) {
     port = atoi(value);
@@ -178,7 +177,6 @@ int tee_recvs_map_src_port_handler(char *filename, struct id_entry *e, char *val
 int tee_recvs_map_kafka_broker_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
-  int pool_idx, recv_idx, ret;
 
   if (table && table->pools) {
     int len = sizeof(table->pools[table->num].kafka_broker); 
@@ -198,7 +196,6 @@ int tee_recvs_map_kafka_broker_handler(char *filename, struct id_entry *e, char 
 int tee_recvs_map_kafka_topic_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
-  int pool_idx, recv_idx, ret; 
 
   if (table && table->pools) {
     int len = sizeof(table->pools[table->num].kafka_topic);

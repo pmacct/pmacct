@@ -37,7 +37,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct pollfd pfd;
   struct insert_data idata;
   time_t refresh_deadline;
-  int timeout, refresh_timeout;
+  int refresh_timeout;
   int ret, num, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
@@ -407,7 +407,7 @@ void SQLI_cache_purge(struct db_cache *queue[], int index, struct insert_data *i
 {
   struct db_cache *LastElemCommitted = NULL;
   time_t start;
-  int j, stop, ret, go_to_pending, saved_index = index;
+  int j, stop, go_to_pending, saved_index = index;
   char orig_insert_clause[LONGSRVBUFLEN], orig_update_clause[LONGSRVBUFLEN], orig_lock_clause[LONGSRVBUFLEN];
   char tmpbuf[LONGLONGSRVBUFLEN], tmptable[SRVBUFLEN];
   struct primitives_ptrs prim_ptrs;

@@ -334,7 +334,7 @@ int parse_pattern_file(char *fname, struct pkt_classifier *css)
 {
   FILE *f;
   char line[MAX_PATTERN_LEN];
-  int len = 0, linelen = 0, ret;
+  int linelen = 0;
 
   enum { protocol, pattern, done } datatype = protocol;
 

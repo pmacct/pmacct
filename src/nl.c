@@ -277,10 +277,10 @@ int ip6_handler(register struct packet_ptrs *pptrs)
 {
   struct ip6_frag *fhdr = NULL;
   register u_int16_t caplen = ((struct pcap_pkthdr *)pptrs->pkthdr)->caplen;
-  u_int16_t len = 0, plen = ntohs(((struct ip6_hdr *)pptrs->iph_ptr)->ip6_plen);
+  u_int16_t plen = ntohs(((struct ip6_hdr *)pptrs->iph_ptr)->ip6_plen);
   u_int16_t off = pptrs->iph_ptr-pptrs->packet_ptr, off_l4;
   u_int32_t advance;
-  u_int8_t nh, fragmented = 0;
+  u_int8_t nh;
   u_char *ptr = pptrs->iph_ptr;
   int ret = TRUE;
 
@@ -401,7 +401,7 @@ int ip6_handler(register struct packet_ptrs *pptrs)
 
 int PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
 {
-  int x, j;
+  int x;
   pm_id_t ret = 0;
 
   if (!t) return 0;
@@ -483,7 +483,6 @@ void tunnel_registry_init()
   if (config.tunnel0) {
     char *tun_string = config.tunnel0, *tun_entry = NULL, *tun_type = NULL;
     int th_index = 0 /* tunnel handler index */, tr_index = 0 /* tunnel registry index */;
-    int ret;
 
     while (tun_entry = extract_token(&tun_string, ';')) {
       tun_type = extract_token(&tun_entry, ',');
@@ -524,7 +523,7 @@ int gtp_tunnel_func(register struct packet_ptrs *pptrs)
   struct pm_gtphdr_v1 *gtp_hdr_v1 = (struct pm_gtphdr_v1 *) pptrs->payload_ptr;
   struct pm_udphdr *udp_hdr = (struct pm_udphdr *) pptrs->tlh_ptr;
   u_int16_t off = pptrs->payload_ptr-pptrs->packet_ptr;
-  u_int16_t gtp_hdr_len, gtp_opt_len, gtp_version;
+  u_int16_t gtp_hdr_len, gtp_version;
   char *ptr = pptrs->payload_ptr;
   int ret, trial;
 

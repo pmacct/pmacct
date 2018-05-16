@@ -2209,7 +2209,6 @@ void NF_counters_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  time_t fstime = 0;
   u_int32_t t32 = 0;
   u_int64_t t64 = 0;
 
@@ -2450,8 +2449,6 @@ void NF_time_secs_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   time_t fstime = 0;
-  u_int32_t t32 = 0;
-  u_int64_t t64 = 0;
   
   switch(hdr->version) {
   case 10:
@@ -2482,8 +2479,6 @@ void NF_time_new_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int32_t t32 = 0;
-  u_int64_t t64 = 0;
 
   pdata->time_start.tv_sec = 0;
   pdata->time_start.tv_usec = 0;
@@ -4118,7 +4113,6 @@ void sfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
 void nfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct pkt_extras *pextras = (struct pkt_extras *) ++pdata;
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
   struct bgp_info *info = NULL;
@@ -4196,7 +4190,6 @@ void bgp_src_local_pref_frommap_handler(struct channels_list_entry *chptr, struc
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
-  struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
 
   pbgp->src_local_pref = pptrs->blp;
 }
@@ -4205,7 +4198,6 @@ void bgp_src_med_frommap_handler(struct channels_list_entry *chptr, struct packe
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
-  struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
 
   pbgp->src_med = pptrs->bmed;
 }

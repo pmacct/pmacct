@@ -58,7 +58,6 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   unsigned char *pipebuf;
   struct pollfd pfd;
   struct insert_data idata;
-  time_t t;
   int timeout, refresh_timeout, ret, num, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
@@ -943,11 +942,10 @@ int MongoDB_get_database(char *db, int dblen, char *db_table)
 
 void MongoDB_create_indexes(mongo *db_conn, const char *table)
 {
-  bson idx_key[1], *out;
+  bson idx_key[1];
   FILE *f;
   char buf[LARGEBUFLEN];
   char *token, *bufptr;
-  int ret;
 
   f = fopen(config.sql_table_schema, "r");
   if (f) {

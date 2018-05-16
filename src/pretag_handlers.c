@@ -410,7 +410,6 @@ int BITR_map_mpls_label_bottom_handler(char *filename, struct id_entry *e, char 
 
 int BITR_map_mpls_vpn_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
-  u_int32_t tmp;
   int x = 0;
   char *endptr;
 
@@ -505,7 +504,7 @@ int PT_map_filter_handler(char *filename, struct id_entry *e, char *value, struc
   struct pcap_device dev;
   bpf_u_int32 localnet, netmask;  /* pcap library stuff */
   char errbuf[PCAP_ERRBUF_SIZE];
-  int x, link_type;
+  int x;
 
   if (acct_type == MAP_BGP_TO_XFLOW_AGENT) {
     if (strncmp(value, "ip", 2) && strncmp(value, "ip6", 3) && strncmp(value, "vlan and ip", 11) && strncmp(value, "vlan and ip6", 12)) {
@@ -900,7 +899,7 @@ int PT_map_local_pref_handler(char *filename, struct id_entry *e, char *value, s
 int PT_map_src_comms_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0, idx = 0;
-  char *endptr, *token;
+  char *token;
 
   memset(e->key.src_comms, 0, sizeof(e->key.src_comms));
 
@@ -938,7 +937,7 @@ int PT_map_src_comms_handler(char *filename, struct id_entry *e, char *value, st
 int PT_map_comms_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0, idx = 0;
-  char *endptr, *token;
+  char *token;
 
   memset(e->key.comms, 0, sizeof(e->key.comms));
 
@@ -976,7 +975,6 @@ int PT_map_comms_handler(char *filename, struct id_entry *e, char *value, struct
 int PT_map_mpls_vpn_rd_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0, ret;
-  char *endptr, *token;
 
   memset(&e->key.mpls_vpn_rd, 0, sizeof(e->key.mpls_vpn_rd));
 
@@ -1439,7 +1437,6 @@ int pretag_engine_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
-  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   switch(hdr->version) {
   case 5:
@@ -1454,7 +1451,6 @@ int pretag_engine_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
-  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int32_t value;
 
   switch(hdr->version) {
@@ -1753,8 +1749,6 @@ int pretag_comms_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_sample_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
-  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   if (entry->key.sample_type.n == pptrs->flow_type) return (FALSE | entry->key.sample_type.neg); 
   else return (TRUE ^ entry->key.sample_type.neg);
@@ -1764,7 +1758,6 @@ int pretag_sampling_rate_handler(struct packet_ptrs *pptrs, void *unused, void *
 {
   struct id_entry *entry = e;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
-  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t srate = 0;
 
   switch (hdr->version) {
@@ -2105,7 +2098,6 @@ int SF_pretag_sampling_rate_handler(struct packet_ptrs *pptrs, void *unused, voi
 int SF_pretag_sample_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  SFSample *sample = (SFSample *) pptrs->f_data;
 
   if (entry->key.sample_type.n == pptrs->sample_type) return (FALSE | entry->key.sample_type.neg);
   else return (TRUE ^ entry->key.sample_type.neg);
@@ -2837,7 +2829,7 @@ int PT_map_index_fdata_ip_handler(struct id_entry *e, pm_hash_serial_t *hash_ser
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
   SFSample *sample = (SFSample *)pptrs->f_data;
-  u_int16_t port, j;
+  u_int16_t port;
 
   if (config.acct_type == ACCT_NF) {
     sa_to_addr((struct sockaddr *)sa, &e->key.agent_ip.a, &port);
@@ -3296,7 +3288,6 @@ int PT_map_index_fdata_mpls_label_bottom_handler(struct id_entry *e, pm_hash_ser
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  SFSample *sample = (SFSample *) pptrs->f_data;
 
   if (config.acct_type == ACCT_NF) {
     int label_idx;

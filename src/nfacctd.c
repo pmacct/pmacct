@@ -2382,7 +2382,7 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
   struct sockaddr *sa = NULL;
   char *saved_f_agent = NULL;
-  int x, j, begin = 0, end = 0;
+  int x, begin = 0, end = 0;
   pm_id_t ret = 0;
 
   if (!t) return 0;

@@ -38,7 +38,6 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 		     char *event_type, int output, char **output_data, int log_type)
 {
   struct bgp_misc_structs *bms;
-  char log_rk[SRVBUFLEN];
   struct bgp_peer *peer;
   struct bgp_attr *attr;
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
@@ -594,7 +593,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     char ip_address[INET6_ADDRSTRLEN];
-    json_t *obj = json_object(), *kv;
+    json_t *obj = json_object();
 
     json_object_set_new_nocheck(obj, "timestamp", json_string(bms->dump.tstamp_str));
 

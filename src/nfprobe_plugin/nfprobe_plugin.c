@@ -286,7 +286,6 @@ l2_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int ndx)
 {
   struct pkt_data *data = prim_ptrs->data;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
-  struct pkt_extras *extras = prim_ptrs->pextras;
   struct pkt_primitives *p = &data->primitives;
   int direction = 0;
 
@@ -369,7 +368,6 @@ static int
 l2_to_flowrec_update(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int ndx)
 {
   struct pkt_data *data = prim_ptrs->data;
-  struct pkt_extras *extras = prim_ptrs->pextras;
   struct pkt_primitives *p = &data->primitives;
   int direction = 0;
 
@@ -490,7 +488,6 @@ ipv4_to_flowrec_update(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int
 {
   struct pkt_data *data = prim_ptrs->data;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
-  struct pkt_extras *extras = prim_ptrs->pextras;
   char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   struct pkt_primitives *p = &data->primitives;
@@ -520,7 +517,7 @@ ipv6_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int *isfra
   char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   struct pkt_primitives *p = &data->primitives;
-  int ndx, nxt;
+  int ndx;
 
   /* Prepare to store flow in canonical format */
   ndx = memcmp(&p->src_ip.address.ipv6, &p->dst_ip.address.ipv6, sizeof(p->src_ip.address.ipv6)) > 0 ? 1 : 0; 
@@ -559,7 +556,6 @@ ipv6_to_flowrec_update(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int
 {
   struct pkt_data *data = prim_ptrs->data;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
-  struct pkt_extras *extras = prim_ptrs->pextras;
   char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   struct pkt_primitives *p = &data->primitives;
@@ -1424,9 +1420,8 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct pkt_bgp_primitives dummy_pbgp;
   struct ports_table pt;
   struct pollfd pfd;
-  struct timezone tz;
   unsigned char *pipebuf;
-  time_t now, refresh_deadline;
+  time_t now;
   int refresh_timeout, ret, num, recv_budget, poll_bypass;
   char default_receiver[] = "127.0.0.1:2100";
   char default_engine_v5[] = "0:0", default_engine_v9[] = "0";
@@ -1443,8 +1438,8 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   u_int32_t seq = 1, rg_err_count = 0;
 
   char *capfile = NULL, dest_addr[256], dest_serv[256];
-  int ch, linktype, ctlsock, i, r, err, always_v6;
-  int max_flows, stop_collection_flag, exit_request, hoplimit;
+  int linktype, i, r, err, always_v6;
+  int max_flows, stop_collection_flag, hoplimit;
   struct sockaddr_storage dest;
   struct FLOWTRACK flowtrack;
   socklen_t dest_len;

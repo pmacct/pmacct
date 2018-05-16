@@ -407,11 +407,7 @@ int cfg_key_pre_tag_filter(char *filename, char *name, char *value_ptr)
 int cfg_key_pre_tag2_filter(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  char *count_token, *range_ptr;
-  pm_id_t value = 0, range = 0;
   int changes = 0;
-  char *endptr_v, *endptr_r;
-  u_int8_t neg;
 
   if (!name) {
     Log(LOG_ERR, "ERROR: [%s] TAG2 filter cannot be global. Not loaded.\n", filename);
@@ -3130,8 +3126,8 @@ int cfg_key_nfacctd_mcast_groups(char *filename, char *name, char *value_ptr)
   struct plugins_list_entry *list = plugins_list;
   struct host_addr tmp_addr;
   char *count_token;
-  u_int32_t value = 0, changes = 0; 
-  u_int8_t idx = 0, more = 0, mcast_family; 
+  u_int32_t changes = 0; 
+  u_int8_t idx = 0, more = 0; 
 
   trim_all_spaces(value_ptr);
   memset(mcast_groups, 0, sizeof(mcast_groups));
@@ -3986,7 +3982,7 @@ int cfg_key_nfacctd_bmp_table_per_peer_hash(char *filename, char *name, char *va
 int cfg_key_nfacctd_bmp_msglog_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bmp_msglog_file = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_daemon_msglog_file'. Globalized.\n", filename);
@@ -4179,7 +4175,7 @@ int cfg_key_nfacctd_bmp_msglog_amqp_retry(char *filename, char *name, char *valu
 int cfg_key_nfacctd_bmp_dump_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.bmp_dump_file = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_dump_file'. Globalized.\n", filename);
@@ -4190,7 +4186,7 @@ int cfg_key_nfacctd_bmp_dump_file(char *filename, char *name, char *value_ptr)
 int cfg_key_nfacctd_bmp_dump_latest_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.bmp_dump_latest_file = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_dump_latest_file'. Globalized.\n", filename);
@@ -4479,7 +4475,7 @@ int cfg_key_igp_daemon_map(char *filename, char *name, char *value_ptr)
 int cfg_key_igp_daemon_map_msglog(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.igp_daemon_map_msglog = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'igp_daemon_map_msglog'. Globalized.\n", filename);
@@ -4651,7 +4647,7 @@ int cfg_key_sfacctd_renormalize(char *filename, char *name, char *value_ptr)
 int cfg_key_sfacctd_counter_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.sfacctd_counter_file = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'sfacctd_counter_file'. Globalized.\n", filename);
@@ -5931,7 +5927,7 @@ void cfg_set_aggregate(char *filename, u_int64_t registry[], u_int64_t input, ch
 int cfg_key_nfacctd_bgp_msglog_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_file = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_file'. Globalized.\n", filename);
@@ -6124,7 +6120,7 @@ int cfg_key_nfacctd_bgp_msglog_amqp_retry(char *filename, char *name, char *valu
 int cfg_key_nfacctd_bgp_table_dump_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.bgp_table_dump_file = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_table_dump_file'. Globalized.\n", filename);
@@ -6135,7 +6131,7 @@ int cfg_key_nfacctd_bgp_table_dump_file(char *filename, char *name, char *value_
 int cfg_key_nfacctd_bgp_table_dump_latest_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.bgp_table_dump_latest_file = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_table_dump_latest_file'. Globalized.\n", filename);
@@ -6980,7 +6976,7 @@ int cfg_key_telemetry_udp_timeout(char *filename, char *name, char *value_ptr)
 int cfg_key_telemetry_msglog_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.telemetry_msglog_file = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_msglog_file'. Globalized.\n", filename);
@@ -7173,7 +7169,7 @@ int cfg_key_telemetry_msglog_amqp_retry(char *filename, char *name, char *value_
 int cfg_key_telemetry_dump_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.telemetry_dump_file = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_file'. Globalized.\n", filename);
@@ -7184,7 +7180,7 @@ int cfg_key_telemetry_dump_file(char *filename, char *name, char *value_ptr)
 int cfg_key_telemetry_dump_latest_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.telemetry_dump_latest_file = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_latest_file'. Globalized.\n", filename);

@@ -65,7 +65,7 @@ int build_query_server(char *path_ptr)
 
 void process_query_data(int sd, unsigned char *buf, int len, struct extra_primitives *extras, int datasize, int forked)
 {
-  struct acc *acc_elem = 0, tmpbuf;
+  struct acc *acc_elem = 0;
   struct bucket_desc bd;
   struct query_header *q, *uq;
   struct query_entry request;

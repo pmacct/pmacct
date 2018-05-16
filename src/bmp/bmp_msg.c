@@ -312,7 +312,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
       struct bgp_msg_extra_data_bmp bmed_bmp;
       struct bgp_msg_data bmd;
       int bgp_open_len;
-      void *ret, *alloc_key;
+      void *ret;
 
       memset(&bgp_peer_loc, 0, sizeof(bgp_peer_loc));
       memset(&bgp_peer_rem, 0, sizeof(bgp_peer_rem));

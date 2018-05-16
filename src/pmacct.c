@@ -684,13 +684,12 @@ int main(int argc,char **argv)
   struct pkt_vlen_hdr_primitives *pvlen = NULL;
   char *pcust = NULL;
   char *clibuf, *bufptr;
-  unsigned char *largebuf, *elem, *ct, *pldt, *cpt;
+  unsigned char *largebuf, *elem, *ct, *cpt;
   char ethernet_address[18], ip_address[INET6_ADDRSTRLEN], ndpi_class[SUPERSHORTBUFLEN];
   char path[SRVBUFLEN], file[SRVBUFLEN], password[9], rd_str[SRVBUFLEN], tmpbuf[SRVBUFLEN];
   char *as_path, empty_aspath[] = "^$", empty_string[] = "", *bgp_comm;
   int sd, buflen, unpacked, printed;
-  int counter=0, sep_len=0;
-  int pldt_idx=0, pldt_num=0, is_event;
+  int counter=0, sep_len=0, is_event;
   char *sep_ptr = NULL, sep[10], default_sep[] = ",";
   struct imt_custom_primitives custom_primitives_input;
 
@@ -3260,7 +3259,6 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *tmpbuf;
   char tstamp_str[SRVBUFLEN], ndpi_class[SUPERSHORTBUFLEN], *label_ptr;
-  int ret = FALSE;
   json_t *obj = json_object();
   
   if (wtc & COUNT_TAG) json_object_set_new_nocheck(obj, "tag", json_integer((json_int_t)pbase->tag));

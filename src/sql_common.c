@@ -300,7 +300,6 @@ void sql_cache_modulo(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
 int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *idata, int exiting)
 {
   int j, delay = 0, new_basetime = FALSE;
-  struct db_cache *Cursor, *auxCursor, *PendingElem, SavedCursor;
 
   /* We are seeking how many time-bins data has to be delayed by; residual
      time is taken into account by scanner deadlines (sql_refresh_time) */
@@ -2724,7 +2723,6 @@ int sql_evaluate_primitives(int primitive)
   /* all custom primitives printed here */
   {
     struct custom_primitive_ptrs *cp_entry;
-    char cp_str[SRVBUFLEN];
     int cp_idx;
 
     for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
@@ -3211,7 +3209,6 @@ int sql_query(struct BE_descs *bed, struct db_cache *elem, struct insert_data *i
 
 void sql_create_table(struct DBdesc *db, time_t *basetime, struct primitives_ptrs *prim_ptrs)
 {
-  struct tm *nowtm;
   char buf[LARGEBUFLEN], tmpbuf[LARGEBUFLEN];
   int ret;
 

@@ -284,7 +284,6 @@ void bgp_lg_daemon()
 {
   char inproc_str[] = "inproc://lg_host_backend", log_id[SHORTBUFLEN];
   struct p_zmq_host lg_host;
-  int idx;
 
   memset(&lg_host, 0, sizeof(lg_host));
 
@@ -432,7 +431,7 @@ int bgp_lg_daemon_decode_query_ip_lookup_json(struct p_zmq_sock *sock, struct bg
   json_t *req_obj, *peer_ip_src_json, *bgp_port_json, *ip_prefix_json, *rd_json;
   const char *peer_ip_src_str, *ip_prefix_str, *rd_str;
   char *req_str;
-  int ret = SUCCESS, default_timeout = -1, query_timeout = 0;
+  int ret = SUCCESS;
   struct rd_as4 *rd_as4_ptr; 
   u_int16_t bgp_port = 0;
 
@@ -582,7 +581,6 @@ void bgp_lg_daemon_encode_reply_ip_lookup_json(struct p_zmq_sock *sock, struct b
   if (rep->results) {
     struct bgp_lg_rep_data *data;
     struct bgp_lg_rep_ipl_data *ipl_data;
-    json_t *rep_data_obj;
     char *rep_data_str;
     u_int32_t idx;
 
@@ -628,7 +626,6 @@ void bgp_lg_daemon_encode_reply_get_peers_json(struct p_zmq_sock *sock, struct b
   if (rep->results) {
     struct bgp_lg_rep_data *data;
     struct bgp_lg_rep_gp_data *gp_data;
-    json_t *rep_data_obj;
     char *rep_data_str;
     u_int32_t idx;
 

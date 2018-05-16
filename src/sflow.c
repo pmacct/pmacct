@@ -464,9 +464,6 @@ void readExtendedSwitch(SFSample *sample)
 
 void readExtendedRouter(SFSample *sample)
 {
-  u_int32_t addrType;
-  char buf[51];
-
   getAddress(sample, &sample->nextHop);
   sample->srcMask = getData32(sample);
   sample->dstMask = getData32(sample);
@@ -507,7 +504,6 @@ void readExtendedGateway(SFSample *sample)
 {
   int len_tot, len_asn, len_comm, idx;
   char asn_str[MAX_BGP_ASPATH], comm_str[MAX_BGP_STD_COMMS], space[] = " ";
-  char buf[51];
 
   if(sample->datagramVersion >= 5) getAddress(sample, &sample->bgp_nextHop);
 
@@ -640,8 +636,6 @@ void readExtendedUrl(SFSample *sample)
 
 void mplsLabelStack(SFSample *sample, char *fieldName)
 {
-  u_int32_t lab;
-
   sample->lstk.depth = getData32(sample);
   /* just point at the lablelstack array */
   if (sample->lstk.depth > 0) sample->lstk.stack = (u_int32_t *)sample->datap;
@@ -656,8 +650,6 @@ void mplsLabelStack(SFSample *sample, char *fieldName)
 
 void readExtendedMpls(SFSample *sample)
 {
-  char buf[51];
-
   getAddress(sample, &sample->mpls_nextHop);
 
   mplsLabelStack(sample, "mpls_input_stack");
@@ -673,8 +665,6 @@ void readExtendedMpls(SFSample *sample)
 
 void readExtendedNat(SFSample *sample)
 {
-  char buf[51];
-
   getAddress(sample, &sample->nat_src);
   getAddress(sample, &sample->nat_dst);
 
@@ -1088,7 +1078,7 @@ void readv2v4FlowSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, str
 void readv5FlowSample(SFSample *sample, int expanded, struct packet_ptrs_vector *pptrsv, struct plugin_requests *req, int finalize)
 {
   struct sfv5_modules_db_field *db_field = NULL;
-  u_int32_t num_elements, sampleLength, actualSampleLength;
+  u_int32_t num_elements, sampleLength;
   u_char *sampleStart;
 
   sampleLength = getData32(sample);
@@ -1181,7 +1171,7 @@ void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vec
   struct sfv5_modules_db_field *db_field = NULL;
   struct xflow_status_entry *xse = NULL;
   struct bgp_peer *peer = NULL;
-  u_int32_t sampleLength, num_elements, idx, drain;
+  u_int32_t sampleLength, num_elements, idx;
   u_char *sampleStart;
 
   if (sfacctd_counter_backend_methods) {

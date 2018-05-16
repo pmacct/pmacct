@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -173,7 +173,7 @@ int parse_configuration_file(char *filename)
 
 void sanitize_cfg(int rows, char *filename)
 {
-  int rindex = 0, len, got_first, got_first_colon;
+  int rindex = 0, len;
   char localbuf[10240];
 
   while (rindex < rows) {

@@ -278,7 +278,7 @@ void conntrack_sip_helper(time_t now, struct packet_ptrs *pptrs)
 {
   char *start = NULL, *end = NULL, *ptr;
   u_int16_t port;
-  int x = 0, len;
+  int len;
 
   if (!pptrs->payload_ptr) return;
   len = strlen(pptrs->payload_ptr);

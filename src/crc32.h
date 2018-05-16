@@ -46,7 +46,8 @@
  *     using byte-swap instructions.                                   
  */
 
-static unsigned int crc_32_tab[] = { /* CRC polynomial 0xedb88320 */
+/*
+static unsigned int crc_32_tab[] = { //
 0x00000000U, 0x77073096U, 0xee0e612cU, 0x990951baU, 0x076dc419U, 0x706af48fU, 0xe963a535U, 0x9e6495a3U,
 0x0edb8832U, 0x79dcb8a4U, 0xe0d5e91eU, 0x97d2d988U, 0x09b64c2bU, 0x7eb17cbdU, 0xe7b82d07U, 0x90bf1d91U,
 0x1db71064U, 0x6ab020f2U, 0xf3b97148U, 0x84be41deU, 0x1adad47dU, 0x6ddde4ebU, 0xf4d4b551U, 0x83d385c7U,
@@ -80,18 +81,6 @@ static unsigned int crc_32_tab[] = { /* CRC polynomial 0xedb88320 */
 0xbdbdf21cU, 0xcabac28aU, 0x53b39330U, 0x24b4a3a6U, 0xbad03605U, 0xcdd70693U, 0x54de5729U, 0x23d967bfU,
 0xb3667a2eU, 0xc4614ab8U, 0x5d681b02U, 0x2a6f2b94U, 0xb40bbe37U, 0xc30c8ea1U, 0x5a05df1bU, 0x2d02ef8dU
 };
-
-static unsigned int __crc32 = 0x0U;
-
-/* XXX: to be optimized */
-/*
-Inline unsigned int cache_crc32(const unsigned char *buf, unsigned int len)
-{
-  unsigned int crc = __crc32;
-
-  while (len--) crc = crc_32_tab[(crc ^ (*buf++)) & 0xff] ^ (crc >> 8);
-  return crc;
-}
 */
 
 Inline unsigned int cache_crc32(const unsigned char *buf, unsigned int len)

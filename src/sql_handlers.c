@@ -544,7 +544,6 @@ void count_export_proto_sysid_handler(const struct db_cache *cache_elem, struct 
 void count_custom_primitives_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
   struct custom_primitive_ptrs *cp_entry;
-  char cp_str[SRVBUFLEN];
 
   cp_entry = &config.cpptrs.primitive[idata->cp_idx];
 
@@ -970,7 +969,7 @@ void fake_as_path_handler(const struct db_cache *cache_elem, struct insert_data 
 
 void count_src_host_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " "; 
+  char aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ", *aton = aton_null; 
   char ptr[INET6_ADDRSTRLEN];
 
   addr_to_str(ptr, &cache_elem->primitives.src_ip);
@@ -988,7 +987,7 @@ void count_src_host_aton_handler(const struct db_cache *cache_elem, struct inser
 
 void count_dst_host_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ";
+  char aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ", *aton = aton_null;
   char ptr[INET6_ADDRSTRLEN];
 
   addr_to_str(ptr, &cache_elem->primitives.dst_ip);
@@ -1006,7 +1005,7 @@ void count_dst_host_aton_handler(const struct db_cache *cache_elem, struct inser
 
 void count_src_net_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ";
+  char aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ", *aton = aton_null;
   char ptr[INET6_ADDRSTRLEN];
 
   addr_to_str(ptr, &cache_elem->primitives.src_net);
@@ -1024,7 +1023,7 @@ void count_src_net_aton_handler(const struct db_cache *cache_elem, struct insert
 
 void count_dst_net_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ";
+  char aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ", *aton = aton_null;
   char ptr[INET6_ADDRSTRLEN];
 
   addr_to_str(ptr, &cache_elem->primitives.dst_net);
@@ -1042,7 +1041,7 @@ void count_dst_net_aton_handler(const struct db_cache *cache_elem, struct insert
 
 void count_peer_src_ip_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ";
+  char aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ", *aton = aton_null;
   char ptr[INET6_ADDRSTRLEN];
 
   addr_to_str(ptr, &cache_elem->pbgp->peer_src_ip);
@@ -1060,7 +1059,7 @@ void count_peer_src_ip_aton_handler(const struct db_cache *cache_elem, struct in
 
 void count_peer_dst_ip_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ";
+  char aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ", *aton = aton_null;
   char ptr[INET6_ADDRSTRLEN];
 
   addr_to_str(ptr, &cache_elem->pbgp->peer_dst_ip);
@@ -1078,7 +1077,7 @@ void count_peer_dst_ip_aton_handler(const struct db_cache *cache_elem, struct in
 
 void count_post_nat_src_ip_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ";
+  char aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ", *aton = aton_null;
   char ptr[INET6_ADDRSTRLEN];
 
   addr_to_str(ptr, &cache_elem->pnat->post_nat_src_ip);
@@ -1096,7 +1095,7 @@ void count_post_nat_src_ip_aton_handler(const struct db_cache *cache_elem, struc
 
 void count_post_nat_dst_ip_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ";
+  char aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ", *aton = aton_null;
   char ptr[INET6_ADDRSTRLEN];
 
   addr_to_str(ptr, &cache_elem->pnat->post_nat_dst_ip);
@@ -1114,7 +1113,7 @@ void count_post_nat_dst_ip_aton_handler(const struct db_cache *cache_elem, struc
 
 void count_tunnel_src_ip_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ";
+  char aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ", *aton = aton_null;
   char ptr[INET6_ADDRSTRLEN];
 
   addr_to_str(ptr, &cache_elem->ptun->tunnel_src_ip);
@@ -1132,7 +1131,7 @@ void count_tunnel_src_ip_aton_handler(const struct db_cache *cache_elem, struct 
 
 void count_tunnel_dst_ip_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ";
+  char aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON", aton_null[] = " ", *aton = aton_null;
   char ptr[INET6_ADDRSTRLEN];
 
   addr_to_str(ptr, &cache_elem->ptun->tunnel_dst_ip);
@@ -1150,7 +1149,7 @@ void count_tunnel_dst_ip_aton_handler(const struct db_cache *cache_elem, struct 
 
 void fake_host_aton_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  char *aton = NULL, aton_v4[] = "INET_ATON", aton_v6[] = "INET6_ATON";
+  char *aton = NULL, aton_v4[] = "INET_ATON";
 
   aton = aton_v4;
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, aton, fake_host);

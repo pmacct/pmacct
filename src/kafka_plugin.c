@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -42,7 +42,7 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   unsigned char *pipebuf;
   struct pollfd pfd;
   struct insert_data idata;
-  time_t t, avro_schema_deadline = 0;
+  time_t avro_schema_deadline = 0;
   int timeout, refresh_timeout, avro_schema_timeout = 0;
   int ret, num, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
@@ -322,10 +322,9 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   struct pkt_mpls_primitives empty_pmpls;
   struct pkt_tunnel_primitives empty_ptun;
   char *empty_pcust = NULL;
-  char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
-  char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], dyn_kafka_topic[SRVBUFLEN], *orig_kafka_topic = NULL;
+  char dyn_kafka_topic[SRVBUFLEN], *orig_kafka_topic = NULL;
   char elem_part_key[SRVBUFLEN], tmpbuf[SRVBUFLEN];
-  int i, j, stop, batch_idx, is_topic_dyn = FALSE, qn = 0, ret, saved_index = index;
+  int j, stop, is_topic_dyn = FALSE, qn = 0, ret, saved_index = index;
   int mv_num = 0, mv_num_save = 0;
   time_t start, duration;
   struct primitives_ptrs prim_ptrs;
@@ -458,7 +457,6 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   }
 
   for (j = 0; j < index; j++) {
-    void *json_obj;
     char *json_str;
 
     if (queue[j]->valid != PRINT_CACHE_COMMITTED) continue;

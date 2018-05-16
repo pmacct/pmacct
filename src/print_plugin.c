@@ -46,8 +46,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   unsigned char *pipebuf;
   struct pollfd pfd;
   struct insert_data idata;
-  time_t t;
-  int timeout, refresh_timeout, ret, num, is_event, recv_budget, poll_bypass;
+  int refresh_timeout, ret, num, is_event, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
@@ -328,7 +327,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   char *empty_pcust = NULL;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], *sep = config.print_output_separator, *fd_buf;
-  char *as_path, *bgp_comm, empty_string[] = "", empty_aspath[] = "^$", empty_ip4[] = "0.0.0.0", empty_ip6[] = "::";
+  char *as_path, *bgp_comm, empty_string[] = "", empty_ip4[] = "0.0.0.0", empty_ip6[] = "::";
   char empty_macaddress[] = "00:00:00:00:00:00", empty_rd[] = "0:0", ndpi_class[SUPERSHORTBUFLEN];
   FILE *f = NULL, *lockf = NULL;
   int j, stop, is_event = FALSE, qn = 0, go_to_pending, saved_index = index, file_to_be_created;

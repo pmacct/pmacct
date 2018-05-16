@@ -274,7 +274,7 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
   SFLFlow_sample_element gatewayHdrElem, routerHdrElem, switchHdrElem;
   SFLExtended_as_path_segment as_path_segment;
   u_int32_t frame_len, header_len;
-  int direction, sampledPackets, ethHdrLen, idx = 0;
+  int direction, ethHdrLen, idx = 0;
   struct eth_header dummy_eh;
   u_int16_t ethType = 0, cap_len = hdr->cap_len, pkt_len = hdr->pkt_len;
   unsigned char *local_buf = (unsigned char *) buf;
@@ -592,10 +592,8 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct pkt_data dummy;
   struct pkt_bgp_primitives dummy_pbgp;
   struct pollfd pfd;
-  struct timezone tz;
   unsigned char *pipebuf, *pipebuf_ptr;
-  time_t now;
-  int timeout, refresh_timeout, ret, num, recv_budget, poll_bypass;
+  int refresh_timeout, ret, num, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;

@@ -491,7 +491,7 @@ static int computeFlowSampleSize(SFLReceiver *receiver, SFL_FLOW_SAMPLE_TYPE *fs
 int sfl_receiver_writeFlowSample(SFLReceiver *receiver, SFL_FLOW_SAMPLE_TYPE *fs)
 {
   SFLFlow_sample_element *elem;
-  int num_extended = 0, packedSize;
+  int packedSize;
 
   if(fs == NULL) return -1;
 

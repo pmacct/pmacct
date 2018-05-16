@@ -297,8 +297,6 @@ int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, struct pcap
 int main(int argc,char **argv, char **envp)
 {
   /* pcap library stuff */
-  bpf_u_int32 localnet, netmask;
-  struct bpf_program filter;
   char errbuf[PCAP_ERRBUF_SIZE];
   struct pcap_pkthdr pkt_hdr;
   const u_char *pkt_body;

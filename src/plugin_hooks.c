@@ -40,7 +40,7 @@
 void load_plugins(struct plugin_requests *req)
 {
   u_int64_t buf_pipe_ratio_sz = 0, pipe_idx = 0;
-  int snd_buflen = 0, rcv_buflen = 0, socklen = 0, target_buflen = 0, ret;
+  int snd_buflen = 0, rcv_buflen = 0, socklen = 0, target_buflen = 0;
 
   int nfprobe_id = 0, min_sz = 0, extra_sz = 0;
   struct plugins_list_entry *list = plugins_list;
@@ -547,7 +547,7 @@ reprocess:
 struct channels_list_entry *insert_pipe_channel(int plugin_type, struct configuration *cfg, int pipe)
 {
   struct channels_list_entry *chptr; 
-  int index = 0, x;  
+  int index = 0;  
 
   while (index < MAX_N_PLUGINS) {
     chptr = &channels_list[index]; 

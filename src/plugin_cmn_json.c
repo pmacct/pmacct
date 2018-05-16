@@ -441,7 +441,6 @@ void compose_json_label(json_t *obj, struct chained_cache *cc)
 
 void compose_json_class(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
   struct pkt_primitives *pbase = &cc->primitives;
 
   json_object_set_new_nocheck(obj, "class", json_string((pbase->class && class[(pbase->class)-1].id) ? class[(pbase->class)-1].protocol : "unknown"));
@@ -832,8 +831,6 @@ void compose_json_tcp_flags(json_t *obj, struct chained_cache *cc)
 
 void compose_json_proto(json_t *obj, struct chained_cache *cc)
 {
-  char misc_str[VERYSHORTBUFLEN];
-
   if (!config.num_protos && (cc->primitives.proto < protocols_number))
     json_object_set_new_nocheck(obj, "ip_proto", json_string(_protocols[cc->primitives.proto].name));
   else
@@ -914,8 +911,6 @@ void compose_json_tunnel_dst_host(json_t *obj, struct chained_cache *cc)
 
 void compose_json_tunnel_proto(json_t *obj, struct chained_cache *cc)
 {
-  char misc_str[VERYSHORTBUFLEN];
-
   if (!config.num_protos && (cc->ptun->tunnel_proto < protocols_number))
     json_object_set_new_nocheck(obj, "tunnel_ip_proto", json_string(_protocols[cc->ptun->tunnel_proto].name));
   else

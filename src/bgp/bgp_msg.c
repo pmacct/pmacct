@@ -581,7 +581,6 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 {
   struct bgp_peer *peer = bmd->peer;
   struct bgp_header bhdr;
-  u_char *startp, *endp;
   struct bgp_attr attr;
   u_int16_t attribute_len;
   u_int16_t update_len;

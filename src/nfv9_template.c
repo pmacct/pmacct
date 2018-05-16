@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -354,10 +354,8 @@ void save_template(struct template_cache_entry *tpl, char *file)
 {
   FILE *tpl_file = open_output_file(config.nfacctd_templates_file, "a", TRUE);
   u_int16_t field_idx;
-  u_int8_t idx;
-  char *fmt;
   char ip_addr[INET6_ADDRSTRLEN];
-  json_t *root = json_object(), *agent_obj;
+  json_t *root = json_object();
   json_t *list_array, *tpl_array;
 
   addr_to_str(ip_addr, &tpl->agent);
@@ -471,7 +469,6 @@ void save_template(struct template_cache_entry *tpl, char *file)
 struct template_cache_entry *nfacctd_offline_read_json_template(char *buf, char *errbuf, int errlen)
 {
   struct template_cache_entry *ret = NULL;
-  u_int16_t field_idx;
 
   json_error_t json_err;
   json_t *json_obj = NULL, *json_tpl_id = NULL, *json_src_id = NULL, *json_tpl_type = NULL;
@@ -875,7 +872,7 @@ void log_template_header(struct template_cache_entry *tpl, struct packet_ptrs *p
 {
   struct host_addr a;
   u_char agent_addr[50];
-  u_int16_t agent_port, count, size;
+  u_int16_t agent_port;
 
   sa_to_addr((struct sockaddr *)pptrs->f_agent, &a, &agent_port);
   addr_to_str(agent_addr, &a);

@@ -104,8 +104,6 @@ int p_zmq_get_fd(struct p_zmq_host *zmq_host)
 
 void p_zmq_plugin_pipe_init_core(struct p_zmq_host *zmq_host, u_int8_t plugin_id)
 {
-  int ret;
-
   if (zmq_host) {
     memset(zmq_host, 0, sizeof(struct p_zmq_host));
     p_zmq_set_topic(zmq_host, plugin_id);
@@ -288,7 +286,6 @@ void p_zmq_plugin_pipe_consume(struct p_zmq_host *zmq_host)
 
 int p_zmq_plugin_pipe_send(struct p_zmq_host *zmq_host, void *buf, u_int64_t len)
 {
-  zmq_msg_t topic, msg;
   int ret;
 
   ret = zmq_send(zmq_host->sock.obj, &zmq_host->topic, sizeof(zmq_host->topic), ZMQ_SNDMORE);

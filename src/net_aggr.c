@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -159,8 +159,6 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
 #endif
 
 	  if (fields >= 2) {
-            char *endptr;
-
             delim = strchr(bufptr, ',');
             nh = bufptr;
             *delim = '\0';
@@ -1530,8 +1528,6 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
 #endif
 
           if (fields >= 2) {
-            char *endptr;
-
             delim = strchr(bufptr, ',');
             nh = bufptr;
             *delim = '\0';
@@ -1707,7 +1703,6 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
       index = 0;
       while (!fake_row && index < tmpt->num6) {
         if (config.debug) {
-          int j;
           struct host_addr net_bin;
           char nh_string[INET6_ADDRSTRLEN];
           char net_string[INET6_ADDRSTRLEN];
@@ -1922,7 +1917,6 @@ void networks_cache_insert6(struct networks_cache *nc, void *key, struct network
   struct networks6_cache_entry *ptr;
   unsigned int hash;
   u_int32_t *keyptr = key;
-  int chunk;
 
   hash = networks_cache_hash6(key); 
   ptr = &nc->cache6[hash % nc->num6];

@@ -1159,7 +1159,7 @@ void bgp_md5_file_load(char *filename, struct bgp_md5_table *t)
       memset(buf, 0, SRVBUFLEN);
       if (fgets(buf, SRVBUFLEN, file)) {
         if (!sanitize_buf(buf)) {
-          char *endptr, *token;
+          char *token;
           int tk_idx = 0, ret = 0, len = 0;
 
           ptr = buf;

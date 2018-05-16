@@ -65,8 +65,7 @@ int main(int argc,char **argv)
   char address_str[SRVBUFLEN], peer_str[SRVBUFLEN], rd_str[SRVBUFLEN], port_str[SRVBUFLEN];
   char *req_str = NULL, *req_type_str = NULL, *rep_str = NULL, *pfx_delim = NULL;
   char *zmq_host_str_ptr, zmq_host_str[SRVBUFLEN], default_zmq_host_str[] = "127.0.0.1";
-  int ret, zmq_port = 0, default_zmq_port = 17900, results = 0, query_type = 0, idx = 0;
-  u_int16_t peer_port;
+  int zmq_port = 0, default_zmq_port = 17900, results = 0, query_type = 0, idx = 0;
 
   struct p_zmq_host zmq_host;
   struct host_addr peer_ha, address_ha;
