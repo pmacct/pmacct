@@ -604,7 +604,7 @@ int SQLI_compose_static_queries()
 
   /* "LOCK ..." stuff */
   if (config.sql_locking_style) Log(LOG_WARNING, "WARN ( %s/%s ): sql_locking_style is not supported. Ignored.\n", config.name, config.type);
-  snprintf(lock_clause, sizeof(lock_clause), "BEGIN", config.sql_table);
+  snprintf(lock_clause, sizeof(lock_clause), "BEGIN");
   strncpy(unlock_clause, "COMMIT", sizeof(unlock_clause));
 
   /* "UPDATE ... SET ..." stuff */
