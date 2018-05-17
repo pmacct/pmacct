@@ -1438,7 +1438,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   u_int32_t seq = 1, rg_err_count = 0;
 
   char *capfile = NULL, dest_addr[256], dest_serv[256];
-  int linktype, i, r, err, always_v6;
+  int linktype = 0, i, r, err, always_v6;
   int max_flows, stop_collection_flag, hoplimit;
   struct sockaddr_storage dest;
   struct FLOWTRACK flowtrack;

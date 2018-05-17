@@ -73,7 +73,7 @@ int main(int argc,char **argv)
   /* getopt() stuff */
   extern char *optarg;
   extern int optind, opterr, optopt;
-  int errflag, cp, ip_lookup_query, get_peers_query;
+  int cp, ip_lookup_query, get_peers_query;
 
   memset(address_str, 0, sizeof(address_str));
   memset(rd_str, 0, sizeof(rd_str));
@@ -86,7 +86,7 @@ int main(int argc,char **argv)
   ip_lookup_query = FALSE;
   get_peers_query = FALSE;
 
-  while (!errflag && ((cp = getopt(argc, argv, ARGS_PMBGP)) != -1)) {
+  while ((cp = getopt(argc, argv, ARGS_PMBGP)) != -1) {
     switch (cp) {
     case 'h':
       usage_pmbgp(argv[0]);

@@ -37,7 +37,7 @@ void p_zmq_set_retry_timeout(struct p_zmq_host *zmq_host, int tout)
   int ret;
 
   if (zmq_host) {
-    zmq_setsockopt(zmq_host->sock.obj, ZMQ_RECONNECT_IVL, &tout, sizeof(tout));
+    ret = zmq_setsockopt(zmq_host->sock.obj, ZMQ_RECONNECT_IVL, &tout, sizeof(tout));
     if (ret != 0) {
       Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() RECONNECT_IVL failed for topic %u: %s\nExiting.\n",
 	  zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));

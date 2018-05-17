@@ -1005,7 +1005,7 @@ int pretag_index_allocate(struct id_table *t)
 	  t->index[iterator].idx_t[j].depth = ID_TABLE_INDEX_DEPTH;
 	}
 
-	hash_init_serial(&t->index[iterator].hash_serializer, 16 /* dummy len for init sake */);
+	ret = hash_init_serial(&t->index[iterator].hash_serializer, 16 /* dummy len for init sake */);
 	if (ret == ERR) {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] maps_index: unable to allocate hash serializer for index %x.\n", config.name,
 		config.type, t->filename, t->index[iterator].bitmap);

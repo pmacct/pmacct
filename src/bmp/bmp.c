@@ -512,8 +512,6 @@ void skinny_bmp_daemon()
       }
 
       if (!peer) {
-        int fd;
-
         /* We briefly accept the new connection to be able to drop it */
         Log(LOG_ERR, "ERROR ( %s/%s ): Insufficient number of BMP peers has been configured by 'bmp_daemon_max_peers' (%d).\n",
                         config.name, bmp_misc_db->log_str, config.nfacctd_bmp_max_peers);
