@@ -3203,7 +3203,6 @@ int sql_query(struct BE_descs *bed, struct db_cache *elem, struct insert_data *i
     }
   }
 
-  quit:
   return TRUE;
 }
 

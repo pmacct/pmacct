@@ -1238,7 +1238,6 @@ void process_SFv2v4_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
     spp->sysUpTime = sysUpTime;
 
     set_vector_sample_type(pptrsv, 0);
-SFv2v4_read_sampleType:
     sampleType = getData32(spp);
     if (!pptrsv->v4.sample_type) set_vector_sample_type(pptrsv, sampleType);
     switch (sampleType) {

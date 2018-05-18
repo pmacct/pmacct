@@ -538,7 +538,6 @@ void find_flow6(struct timeval *now, struct packet_ptrs *pptrs)
     last_seen = fp;
   }
 
-  create:
   if (candidate) create_flow6(now, candidate, TRUE, bucket, pptrs, iphp, tlhp, idx);
   else create_flow6(now, last_seen, FALSE, bucket, pptrs, iphp, tlhp, idx);
 }
