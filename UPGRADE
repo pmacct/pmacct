@@ -6,6 +6,17 @@ the changes done or break old assumptions no longer valid; while the effort
 is to keep these cases at a low, please read this file in preparation to
 upgrading your installation.
 
+TO:	>= 1.7.2
+FROM:	<= 1.7.1
+TOPIC:  Obsoleted features
+DESC:   Following is the list of features, knobs and plugins that are being
+        discontinued with release 1.7.2:
+	* pre_tag_map: matching on 'sampling_rate' is not supported anymore
+	  since a sampling_rate primitive is available since 0.14.2; the
+	  'return' feature to return matched data before completing the map
+	  workflow has started the process of being obsolete (retired from
+	  docs but still available).
+
 TO:	>= 1.7.1
 FROM:	<= 1.7.0
 TOPIC:	nfprobe plugin, nfprobe_engine and NetFlow v9/IPFIX

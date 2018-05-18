@@ -578,25 +578,6 @@ int PT_map_flowset_id_handler(char *filename, struct id_entry *e, char *value, s
   return FALSE;
 }
 
-int PT_map_sampling_rate_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
-{
-  int x = 0;
-
-  e->key.sampling_rate.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
-  e->key.sampling_rate.n = atoi(value);
-  for (x = 0; e->func[x]; x++) {
-    if (e->func_type[x] == PRETAG_SAMPLING_RATE) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'sampling_rate' clauses part of the same statement.\n", config.name, config.type, filename);
-      return TRUE;
-    }
-  }
-  if (config.acct_type == ACCT_NF) e->func[x] = pretag_sampling_rate_handler;
-  else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_sampling_rate_handler;
-  if (e->func[x]) e->func_type[x] = PRETAG_SAMPLING_RATE;
-
-  return FALSE;
-}
-
 int PT_map_sample_type_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   char *token = NULL;
@@ -1754,22 +1735,6 @@ int pretag_sample_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   else return (TRUE ^ entry->key.sample_type.neg);
 }
 
-int pretag_sampling_rate_handler(struct packet_ptrs *pptrs, void *unused, void *e)
-{
-  struct id_entry *entry = e;
-  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
-  u_int16_t srate = 0;
-
-  switch (hdr->version) {
-  case 5:
-    srate = ( ntohs(hdr->sampling) & 0x3FFF );
-    if (entry->key.sampling_rate.n == srate) return (FALSE | entry->key.sampling_rate.neg);
-    else return (TRUE ^ entry->key.sampling_rate.neg);
-  default:
-    return TRUE; /* this field might not apply: condition is always true */
-  }
-}
-
 int pretag_direction_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
@@ -2084,15 +2049,6 @@ int SF_pretag_agent_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   if (entry->key.agent_id.n == sample->agentSubId) return (FALSE | entry->key.agent_id.neg);
   else return (TRUE ^ entry->key.agent_id.neg);
-}
-
-int SF_pretag_sampling_rate_handler(struct packet_ptrs *pptrs, void *unused, void *e)
-{
-  struct id_entry *entry = e;
-  SFSample *sample = (SFSample *) pptrs->f_data;
-
-  if (entry->key.sampling_rate.n == sample->meanSkipCount) return (FALSE | entry->key.sampling_rate.neg);
-  else return (TRUE ^ entry->key.sampling_rate.neg);
 }
 
 int SF_pretag_sample_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)

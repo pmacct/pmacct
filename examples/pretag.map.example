@@ -10,11 +10,11 @@
 !
 ! nfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
 ! engine_type, engine_id, source_id, flowset_id, nexthop, bgp_nexthop, filter,
-! sampling_rate, sample_type, direction, src_mac, dst_mac, vlan, cvlan.
+! sample_type, direction, src_mac, dst_mac, vlan, cvlan.
 !
 ! sfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
-! nexthop, bgp_nexthop, filter, agent_id, sampling_rate, sample_type, src_mac,
-! dst_mac, vlan.
+! nexthop, bgp_nexthop, filter, agent_id, sample_type, src_mac, dst_mac,
+! vlan.
 !
 ! pmacctd: valid keys: set_tag, set_tag2, set_label and filter.
 !
@@ -88,9 +88,6 @@
 ! 'agent_id'		MATCH: in sFlow v5 it's compared against the subAgentId
 !			field. sFlow v2/v4 do not carry such field, hence it does
 !			not apply.
-! 'sampling_rate'       MATCH: in sFlow v2/v4/v5 this is compared against the
-!			sampling rate field; it also works against NFv5. NFv9/
-!			IPFIX are unsupported instead.
 ! 'sample_type'         MATCH: in sFlow v2/v4/v5 this is compared against the
 !			sample type field. Expected in <Enterprise>:<Format>
 !			notation. In NetFlow/IPIX three keywords are supported:
@@ -193,8 +190,7 @@ set_label=LabelB   filter='((ip[12:4] >= 0xC0A80065) and (ip[12:4] <= 0xC0A800C8
 !
 set_tag=30 ip=192.168.1.1 
 set_tag=31 ip=192.168.1.1 out=50
-set_tag=32 ip=192.168.1.1 out=50 agent_set_tag=0 sampling_rate=512
-
+set_tag=32 ip=192.168.1.1 out=50 agent_id=100
 !
 ! === JEQ example #1:
 ! - 'set_tag' used to store input interface tags
