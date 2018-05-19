@@ -561,18 +561,18 @@ int main(int argc,char **argv, char **envp)
   }
 
   if (config.pcap_savefile && (config.nfacctd_port || config.nfacctd_ip || config.nfacctd_kafka_broker_host)) {
-    Log(LOG_ERR, "ERROR ( %s/core ): pcap_savefile is mutual exclusive with live collection, ie. nfacctd_ip, nfacctd_kafka_broker_host. Exiting...\n\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core ): pcap_savefile is mutual exclusive with live collection, ie. sfacctd_ip, sfacctd_kafka_broker_host. Exiting...\n\n", config.name);
     exit(1);
   }
 
 #ifdef WITH_KAFKA
   if ((config.nfacctd_port || config.nfacctd_ip) && config.nfacctd_kafka_broker_host) {
-    Log(LOG_ERR, "ERROR ( %s/core ): Socket collection, nfacctd_ip, is mutual exclusive with Kafka collection, nfacctd_kafka_broker_host. Exiting...\n\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core ): Socket collection, sfacctd_ip, is mutual exclusive with Kafka collection, sfacctd_kafka_broker_host. Exiting...\n\n", config.name);
     exit(1);
   }
 
   if ((config.nfacctd_kafka_broker_host && !config.nfacctd_kafka_topic) || (config.nfacctd_kafka_topic && !config.nfacctd_kafka_broker_host)) {
-    Log(LOG_ERR, "ERROR ( %s/core ): Kafka collection requires both nfacctd_kafka_broker_host and nfacctd_kafka_topic to be specified. Exiting...\n\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core ): Kafka collection requires both sfacctd_kafka_broker_host and sfacctd_kafka_topic to be specified. Exiting...\n\n", config.name);
     exit(1);
   }
 
@@ -1009,7 +1009,7 @@ int main(int argc,char **argv, char **envp)
 #endif
 
   if (config.pcap_savefile) {
-    Log(LOG_INFO, "INFO ( %s/core ): reading NetFlow/IPFIX data from: %s\n", config.name, config.pcap_savefile);
+    Log(LOG_INFO, "INFO ( %s/core ): reading sFlow data from: %s\n", config.name, config.pcap_savefile);
     allowed = TRUE;
 
     if (!config.pcap_sf_delay) sleep(2);
@@ -1017,7 +1017,8 @@ int main(int argc,char **argv, char **envp)
   }
 #ifdef WITH_KAFKA
   else if (config.nfacctd_kafka_broker_host) {
-    Log(LOG_INFO, "INFO ( %s/core ): reading NetFlow/IPFIX data from Kafka broker: %s\n", config.name, p_kafka_get_broker(&nfacctd_kafka_host));
+    Log(LOG_INFO, "INFO ( %s/core ): reading sFlow data from Kafka %s:%s\n", config.name,
+	p_kafka_get_broker(&nfacctd_kafka_host), p_kafka_get_topic(&nfacctd_kafka_host));
     allowed = TRUE;
   }
 #endif

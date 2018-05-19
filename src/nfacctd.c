@@ -1013,7 +1013,8 @@ int main(int argc,char **argv, char **envp)
   }
 #ifdef WITH_KAFKA
   else if (config.nfacctd_kafka_broker_host) {
-    Log(LOG_INFO, "INFO ( %s/core ): reading NetFlow/IPFIX data from Kafka broker: %s\n", config.name, p_kafka_get_broker(&nfacctd_kafka_host));
+    Log(LOG_INFO, "INFO ( %s/core ): reading NetFlow/IPFIX data from Kafka %s:%s\n", config.name,
+        p_kafka_get_broker(&nfacctd_kafka_host), p_kafka_get_topic(&nfacctd_kafka_host));
     allowed = TRUE;
   }
 #endif
