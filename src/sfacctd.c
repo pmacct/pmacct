@@ -560,10 +560,27 @@ int main(int argc,char **argv, char **envp)
     exit(1);
   }
 
-  if (config.pcap_savefile && (config.nfacctd_port || config.nfacctd_ip)) {
-    Log(LOG_ERR, "ERROR ( %s/core ): 'pcap_savefile' is mutual exclusive with live collection, ie. 'sfacctd_ip' and/or 'sfacctd_port' Exiting...\n\n", config.name);
+  if (config.pcap_savefile && (config.nfacctd_port || config.nfacctd_ip || config.nfacctd_kafka_broker_host)) {
+    Log(LOG_ERR, "ERROR ( %s/core ): pcap_savefile is mutual exclusive with live collection, ie. nfacctd_ip, nfacctd_kafka_broker_host. Exiting...\n\n", config.name);
     exit(1);
   }
+
+#ifdef WITH_KAFKA
+  if ((config.nfacctd_port || config.nfacctd_ip) && config.nfacctd_kafka_broker_host) {
+    Log(LOG_ERR, "ERROR ( %s/core ): Socket collection, nfacctd_ip, is mutual exclusive with Kafka collection, nfacctd_kafka_broker_host. Exiting...\n\n", config.name);
+    exit(1);
+  }
+
+  if ((config.nfacctd_kafka_broker_host && !config.nfacctd_kafka_topic) || (config.nfacctd_kafka_topic && !config.nfacctd_kafka_broker_host)) {
+    Log(LOG_ERR, "ERROR ( %s/core ): Kafka collection requires both nfacctd_kafka_broker_host and nfacctd_kafka_topic to be specified. Exiting...\n\n", config.name);
+    exit(1);
+  }
+
+  if (config.nfacctd_kafka_broker_host && tee_plugins) {
+    Log(LOG_ERR, "ERROR ( %s/core ): Kafka collection is mutual exclusive with 'tee' plugins. Exiting...\n\n", config.name);
+    exit(1);
+  }
+#endif
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
   signal(SIGCHLD, startup_handle_falling_child); /* takes note of plugins failed during startup phase */
@@ -579,6 +596,21 @@ int main(int argc,char **argv, char **envp)
     config.handle_fragments = TRUE;
     init_ip_fragment_handler();
   }
+#ifdef WITH_KAFKA
+  else if (config.nfacctd_kafka_broker_host) {
+    p_kafka_init_host(&nfacctd_kafka_host, config.nfacctd_kafka_config_file);
+    p_kafka_connect_to_consume(&nfacctd_kafka_host);
+    p_kafka_set_broker(&nfacctd_kafka_host, config.nfacctd_kafka_broker_host, config.nfacctd_kafka_broker_port);
+    p_kafka_set_topic(&nfacctd_kafka_host, config.nfacctd_kafka_topic);
+    p_kafka_set_content_type(&nfacctd_kafka_host, PM_KAFKA_CNT_TYPE_BIN);
+    p_kafka_manage_consumer(&nfacctd_kafka_host, TRUE);
+
+    config.handle_fragments = TRUE;
+    init_ip_fragment_handler();
+
+    recv_pptrs.pkthdr = &recv_pkthdr;
+  }
+#endif
   else {
     /* If no IP address is supplied, let's set our default
        behaviour: IPv4 address, INADDR_ANY, port 2100 */
@@ -813,7 +845,7 @@ int main(int argc,char **argv, char **envp)
   }
 #endif
 
-  if (!config.pcap_savefile) {
+  if (!config.pcap_savefile && !config.nfacctd_kafka_broker_host) {
     rc = bind(config.sock, (struct sockaddr *) &server, slen);
     if (rc < 0) {
       Log(LOG_ERR, "ERROR ( %s/core ): bind() to ip=%s port=%d/udp failed (errno: %d).\n", config.name, config.nfacctd_ip, config.nfacctd_port, errno);
@@ -976,7 +1008,20 @@ int main(int argc,char **argv, char **envp)
   pptrs.vlanmpls6.l3_proto = ETHERTYPE_IP;
 #endif
 
-  if (!config.pcap_savefile) {
+  if (config.pcap_savefile) {
+    Log(LOG_INFO, "INFO ( %s/core ): reading NetFlow/IPFIX data from: %s\n", config.name, config.pcap_savefile);
+    allowed = TRUE;
+
+    if (!config.pcap_sf_delay) sleep(2);
+    else sleep(config.pcap_sf_delay);
+  }
+#ifdef WITH_KAFKA
+  else if (config.nfacctd_kafka_broker_host) {
+    Log(LOG_INFO, "INFO ( %s/core ): reading NetFlow/IPFIX data from Kafka broker: %s\n", config.name, p_kafka_get_broker(&nfacctd_kafka_host));
+    allowed = TRUE;
+  }
+#endif
+  else {
     char srv_string[INET6_ADDRSTRLEN];
     struct host_addr srv_addr;
     u_int16_t srv_port;
@@ -985,13 +1030,6 @@ int main(int argc,char **argv, char **envp)
     addr_to_str(srv_string, &srv_addr);
     Log(LOG_INFO, "INFO ( %s/core ): waiting for sFlow data on %s:%u\n", config.name, srv_string, srv_port);
     allowed = TRUE;
-  }
-  else {
-    Log(LOG_INFO, "INFO ( %s/core ): reading NetFlow/IPFIX data from: %s\n", config.name, config.pcap_savefile);
-    allowed = TRUE;
-
-    if (!config.pcap_sf_delay) sleep(2);
-    else sleep(config.pcap_sf_delay);
   }
 
   if (config.sfacctd_counter_file || config.sfacctd_counter_amqp_routing_key || config.sfacctd_counter_kafka_topic) {
@@ -1049,12 +1087,53 @@ int main(int argc,char **argv, char **envp)
 
   /* Main loop */
   for (;;) {
-    if (!config.pcap_savefile) {
-      ret = recvfrom(config.sock, sflow_packet, SFLOW_MAX_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
-    }
-    else {
+    if (config.pcap_savefile) {
       ret = recvfrom_savefile(&device, (void **) &sflow_packet, (struct sockaddr *) &client, &spp.ts, &pcap_savefile_round, &recv_pptrs);
     }
+#ifdef WITH_KAFKA
+    else if (config.nfacctd_kafka_broker_host) {
+      int kafka_reconnect = FALSE;
+      void *kafka_msg = NULL;
+
+      ret = p_kafka_consume_poller(&nfacctd_kafka_host, &kafka_msg, 1000);
+
+      switch (ret) {
+      case TRUE: /* got data */
+        ret = p_kafka_consume_data(&nfacctd_kafka_host, kafka_msg, sflow_packet, SFLOW_MAX_MSG_SIZE);
+	if (ret < 0) kafka_reconnect = TRUE;
+	break;
+      case FALSE: /* timeout */
+	continue;
+	break;
+      case ERR: /* error */
+      default:
+	kafka_reconnect = TRUE;
+	break;
+      }
+
+      if (kafka_reconnect) {
+	/* Close */
+        p_kafka_manage_consumer(&nfacctd_kafka_host, FALSE);
+        p_kafka_close(&nfacctd_kafka_host, FALSE);
+
+	/* Re-open */
+	p_kafka_init_host(&nfacctd_kafka_host, config.nfacctd_kafka_config_file);
+	p_kafka_connect_to_consume(&nfacctd_kafka_host);
+	p_kafka_set_broker(&nfacctd_kafka_host, config.nfacctd_kafka_broker_host, config.nfacctd_kafka_broker_port);
+	p_kafka_set_topic(&nfacctd_kafka_host, config.nfacctd_kafka_topic);
+	p_kafka_set_content_type(&nfacctd_kafka_host, PM_KAFKA_CNT_TYPE_BIN);
+	p_kafka_manage_consumer(&nfacctd_kafka_host, TRUE);
+
+	continue;
+      }
+
+      ret = recvfrom_rawip(sflow_packet, ret, (struct sockaddr *) &client, &recv_pptrs);
+    }
+#endif
+    else {
+      ret = recvfrom(config.sock, sflow_packet, SFLOW_MAX_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
+    }
+
     spp.rawSample = pptrs.v4.f_header = sflow_packet;
     spp.rawSampleLen = pptrs.v4.f_len = ret;
     spp.datap = (u_int32_t *) spp.rawSample;
