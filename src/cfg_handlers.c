@@ -175,6 +175,20 @@ int cfg_key_use_ip_next_hop(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_decode_arista_trailer(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.decode_arista_trailer = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'decode_arista_trailer'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
