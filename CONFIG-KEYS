@@ -1754,9 +1754,9 @@ DESC:		When IP prefix aggregation (ie. nfacctd_net) is set to 'netflow', 'sflow'
 		from NetFlow/sFlow IP next hop field if BGP next-hop is not available.
 DEFAULT:        false
 
-KEY:            [ decode_arista_trailer ] [GLOBAL]
+KEY:            decode_arista_trailer [GLOBAL, PMACCTD_ONLY]
 VALUES:         [ true | false ]
-DESC:           Decode output interfaces data present on trailer of arista sflow packets.
+DESC:           Decode output interfaces data present on trailer of libpcap packets passed by Arista.
 DEFAULT:        false
 
 KEY:		[ nfacctd_mcast_groups | sfacctd_mcast_groups ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
