@@ -2292,7 +2292,7 @@ u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_p
       }
       else if (tpl->tpl[NF9_IPV6_SRC_ADDR].len) {
 	ret += NF9_FTYPE_TRAFFIC_IPV6;
-	have_ip_proto - TRUE;
+	have_ip_proto = TRUE;
       }
     }
 
