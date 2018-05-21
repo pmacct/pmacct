@@ -758,6 +758,9 @@ DESC:           Defines the Kafka broker topic partition key. A string of printa
 
 		$proto		Record value for proto primitive (if primitive is not part of
 				the aggregation method then this will be set to a null value).
+
+		$in_iface	Record value for in_iface primitive (if primitive is not part of
+				the aggregation method then this will be set to a null value).
 DEFAULT:	none
 
 KEY:            [ bgp_daemon_msglog_kafka_broker_host | bgp_table_dump_kafka_broker_host |

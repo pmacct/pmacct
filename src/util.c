@@ -476,7 +476,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
   /* applies only to DYN_STR_KAFKA_PART */
   char src_host_string[] = "$src_host", dst_host_string[] = "$dst_host";
   char src_port_string[] = "$src_port", dst_port_string[] = "$dst_port";
-  char proto_string[] = "$proto";
+  char proto_string[] = "$proto", in_iface_string[] = "$in_iface";
 
   char buf[newlen], *ptr_start, *ptr_end, *ptr_var, *ptr_substr, *last_char;
   int oldlen, var_num, var_len, rem_len, sub_len; 
@@ -776,6 +776,29 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
 
       if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%d", prim_ptrs->data->primitives.proto);
       else snprintf(buf, newlen, "%d", null_proto);
+
+      sub_len = strlen(buf);
+      if ((sub_len + len) >= newlen) return ERR;
+      strncat(buf, ptr_end, len);
+
+      len = strlen(buf);
+      *ptr_start = '\0';
+
+      if (len >= rem_len) return ERR;
+      strncat(new, buf, len);
+    }
+    else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, in_iface_string, var_len)) {
+      int null_in_iface = 0;
+      int len;
+
+      ptr_start = ptr_var;
+      len = rem_len;
+      ptr_end = ptr_start;
+      ptr_end += strlen(in_iface_string);
+      len -= strlen(in_iface_string);
+
+      if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%u", prim_ptrs->data->primitives.ifindex_in);
+      else snprintf(buf, newlen, "%u", null_in_iface);
 
       sub_len = strlen(buf);
       if ((sub_len + len) >= newlen) return ERR;

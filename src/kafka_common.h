@@ -120,6 +120,5 @@ EXT int dyn_partition_key;
 
 static char default_kafka_broker_host[] = "127.0.0.1";
 static int default_kafka_broker_port = 9092;
-static int default_kafka_partition = RD_KAFKA_PARTITION_UA;
 static char default_kafka_topic[] = "pmacct.acct";
 #undef EXT
