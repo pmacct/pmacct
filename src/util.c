@@ -509,10 +509,9 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       int len;
 
       ptr_start = ptr_var;
-      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += 4;
-      len -= 4;
+      len = strlen(ptr_end);
 
       snprintf(buf, newlen, "%u", config.sql_refresh_time);
 
@@ -531,10 +530,9 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       int len, howmany;
 
       ptr_start = ptr_var;
-      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += 4;
-      len -= 4;
+      len = strlen(ptr_end);
 
       howmany = sql_history_to_secs(config.sql_history, config.sql_history_howmany);
       snprintf(buf, newlen, "%u", howmany);
@@ -555,10 +553,9 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       int len;
 
       ptr_start = ptr_var;
-      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += strlen(psi_string);
-      len -= strlen(psi_string);
+      len = strlen(ptr_end);
 
       if (prim_ptrs && prim_ptrs->pbgp) addr_to_str(peer_src_ip, &prim_ptrs->pbgp->peer_src_ip);
       else strlcpy(peer_src_ip, empty_peer_src_ip, strlen(peer_src_ip));
@@ -581,10 +578,9 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       int len;
 
       ptr_start = ptr_var;
-      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += strlen(tag_string);
-      len -= strlen(tag_string);
+      len = strlen(ptr_end);
 
       if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%llu", prim_ptrs->data->primitives.tag); 
       else snprintf(buf, newlen, "%llu", zero_tag);
@@ -604,10 +600,9 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       int len;
 
       ptr_start = ptr_var;
-      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += strlen(tag2_string);
-      len -= strlen(tag2_string);
+      len = strlen(ptr_end);
 
       if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%llu", prim_ptrs->data->primitives.tag2);
       else snprintf(buf, newlen, "%llu", zero_tag);
@@ -626,10 +621,9 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       int len;
 
       ptr_start = ptr_var;
-      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += strlen(post_tag_string);
-      len -= strlen(post_tag_string);
+      len = strlen(ptr_end);
 
       snprintf(buf, newlen, "%llu", config.post_tag);
 
@@ -647,10 +641,9 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       int len;
 
       ptr_start = ptr_var;
-      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += strlen(post_tag2_string);
-      len -= strlen(post_tag2_string);
+      len = strlen(ptr_end);
 
       snprintf(buf, newlen, "%llu", config.post_tag2);
 
@@ -670,10 +663,9 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       int len;
 
       ptr_start = ptr_var;
-      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += strlen(src_host_string);
-      len -= strlen(src_host_string);
+      len = strlen(ptr_end);
 
       if (prim_ptrs && prim_ptrs->data) addr_to_str(src_host, &prim_ptrs->data->primitives.src_ip);
       else strlcpy(src_host, empty_src_host, strlen(empty_src_host));
@@ -697,10 +689,9 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       int len;
 
       ptr_start = ptr_var;
-      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += strlen(dst_host_string);
-      len -= strlen(dst_host_string);
+      len = strlen(ptr_end);
 
       if (prim_ptrs && prim_ptrs->data) addr_to_str(dst_host, &prim_ptrs->data->primitives.dst_ip);
       else strlcpy(dst_host, empty_dst_host, strlen(empty_dst_host));
@@ -723,10 +714,9 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       int len;
 
       ptr_start = ptr_var;
-      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += strlen(src_port_string);
-      len -= strlen(src_port_string);
+      len = strlen(ptr_end);
 
       if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%hu", prim_ptrs->data->primitives.src_port);
       else snprintf(buf, newlen, "%hu", zero_port);
@@ -746,10 +736,9 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       int len;
 
       ptr_start = ptr_var;
-      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += strlen(dst_port_string);
-      len -= strlen(dst_port_string);
+      len = strlen(ptr_end);
 
       if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%hu", prim_ptrs->data->primitives.dst_port);
       else snprintf(buf, newlen, "%hu", zero_port);
@@ -769,10 +758,9 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       int len;
 
       ptr_start = ptr_var;
-      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += strlen(proto_string);
-      len -= strlen(proto_string);
+      len = strlen(ptr_end);
 
       if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%d", prim_ptrs->data->primitives.proto);
       else snprintf(buf, newlen, "%d", null_proto);
@@ -792,10 +780,9 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       int len;
 
       ptr_start = ptr_var;
-      len = rem_len;
       ptr_end = ptr_start;
       ptr_end += strlen(in_iface_string);
-      len -= strlen(in_iface_string);
+      len = strlen(ptr_end);
 
       if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%u", prim_ptrs->data->primitives.ifindex_in);
       else snprintf(buf, newlen, "%u", null_in_iface);
