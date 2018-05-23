@@ -377,7 +377,6 @@ static const struct _dictionary_line dictionary[] = {
   {"sql_host", cfg_key_sql_host},
   {"sql_port", cfg_key_sql_port},
   {"sql_data", cfg_key_sql_data},
-  {"sql_backup_host", cfg_key_sql_recovery_backup_host}, /* obsolete */
   {"sql_user", cfg_key_sql_user},
   {"sql_passwd", cfg_key_sql_passwd},
   {"sql_refresh_time", cfg_key_sql_refresh_time},
@@ -387,6 +386,7 @@ static const struct _dictionary_line dictionary[] = {
   {"sql_history_offset", cfg_key_sql_history_offset},
   {"sql_history_roundoff", cfg_key_sql_history_roundoff},
   {"sql_history_since_epoch", cfg_key_timestamps_since_epoch}, // legacy
+  {"sql_backup_host", cfg_key_sql_recovery_backup_host}, // legacy
   {"sql_recovery_backup_host", cfg_key_sql_recovery_backup_host},
   {"sql_delimiter", cfg_key_sql_delimiter},
   {"sql_max_writers", cfg_key_dump_max_writers},

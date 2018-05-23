@@ -869,11 +869,13 @@ static int PG_affected_rows(PGresult *result)
 
 void PG_create_backend(struct DBdesc *db)
 {
-  if (db->type == BE_TYPE_BACKUP) {
+  if (db->type == BE_TYPE_PRIMARY) {
+    PG_compose_conn_string(db, config.sql_host, config.sql_port);
+  }
+  else if (db->type == BE_TYPE_BACKUP) {
     if (!config.sql_backup_host) return;
-  } 
-
-  PG_compose_conn_string(db, config.sql_host, config.sql_port);
+    else PG_compose_conn_string(db, config.sql_backup_host, config.sql_port);
+  }
 }
 
 void PG_set_callbacks(struct sqlfunc_cb_registry *cbr)
