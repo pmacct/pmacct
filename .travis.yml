@@ -4,7 +4,7 @@ dist: trusty
 sudo: required
 
 install:
-  - sudo apt-get install pkg-config libtool autoconf automake cmake bash
+  - sudo apt-get install pkg-config libtool autoconf automake cmake bash wget
   - git clone https://github.com/akheron/jansson
   - cd jansson && autoreconf -i && ./configure && make && sudo make install && cd ..
   - git clone https://github.com/edenhill/librdkafka
@@ -15,8 +15,8 @@ install:
   - cd libmaxminddb && ./bootstrap && ./configure && make && sudo make install && cd ..
   - git clone -b 2.0-stable https://github.com/ntop/nDPI
   - cd nDPI && ./autogen.sh && ./configure && make && sudo make install && cd ..
-  - git clone https://github.com/zeromq/libzmq.git
-  - cd libzmq && ./autogen.sh && ./configure && make && sudo make install && cd ..
+  - wget https://github.com/zeromq/libzmq/releases/download/v4.2.5/zeromq-4.2.5.tar.gz
+  - cd zeromq-4.2.5 && ./configure && make && sudo make install && cd ..
 
 script:
   - ./autogen.sh
