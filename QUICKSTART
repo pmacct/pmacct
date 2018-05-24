@@ -903,28 +903,8 @@ steps:
 
    shell> ./autogen.sh; ./configure; make; make install 
 
-3b) Starting with nDPI 2.2, several users have reported an error in the following
-   step, that is, step #4: compiling pmacct fails with the following error (exact
-   line numbers can differ basing on pmacct and nDPI version):
-
-   In file included from /usr/local/include/libndpi-2.2.0/libndpi/ndpi_main.h:30:0,
-		from ./../pmacct.h:93,
-		from common.h:30,
-		from nfprobe_plugin.c:53:
-   /usr/local/include/libndpi-2.2.0/libndpi/ndpi_typedefs.h:28:49: \
-   	fatal error: ../lib/third_party/include/libcache.h: No such file or directory 
-
-   It seems a required file that is present in the original distribution package
-   never gets installed by nDPI 'make install'. While searching for the issue on
-   Google and GitHub returns many results, it does not bring a conclusive answer.
-   To mitigate the issue, the following extra step helps:
-
-   host:/usr/local/include/libndpi-2.2.0# mkdir -p lib/third_party/include
-   host:/usr/local/include/libndpi-2.2.0# cp -p /path/to/nDPI-2.2/src/lib/third_party/include/* lib/third_party/include
-
-   That is, in "/usr/local/include/libndpi-2.2.0" create the expected directory
-   tree "lib/third_party/include" then copy into it the content of the directory
-   "src/lib/third_party/include/" in the nDPI distribution tarball.
+3b) If using nDPI 2.2, use version >= 2.2.2 since several users have reported
+   issues building previous versions of the 2.2 release.
 
 4) Configure for compiling pmacct with the --enable-ndpi switch. Then compile and
    install, ie.:
