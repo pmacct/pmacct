@@ -1129,12 +1129,12 @@ int main(int argc,char **argv, char **envp)
 
       switch(((struct struct_header_v5 *)netflow_packet)->version) {
       case 5:
-	process_v5_packet(netflow_packet, ret, &pptrs.v4, &req); 
+	process_v5_packet(netflow_packet, ret, &pptrs.v4, &req, NULL); 
 	break;
       /* NetFlow v9 + IPFIX */
       case 9:
       case 10:
-	process_v9_packet(netflow_packet, ret, &pptrs, &req, ((struct struct_header_v5 *)netflow_packet)->version);
+	process_v9_packet(netflow_packet, ret, &pptrs, &req, ((struct struct_header_v5 *)netflow_packet)->version, NULL);
 	break;
       default:
         if (!config.nfacctd_disable_checks) {
@@ -1151,7 +1151,7 @@ int main(int argc,char **argv, char **envp)
 }
 
 void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pptrs,
-		struct plugin_requests *req)
+		struct plugin_requests *req, struct NF_dissect *tee_dissect)
 {
   struct struct_header_v5 *hdr_v5 = (struct struct_header_v5 *)pkt;
   struct struct_export_v5 *exp_v5;
@@ -1171,6 +1171,18 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   reset_mac(pptrs);
   pptrs->flow_type = NF9_FTYPE_TRAFFIC;
 
+  if (tee_dissect) {
+    tee_dissect->hdrVersion = hdr_v5->version;
+    tee_dissect->hdrBasePtr = pkt;
+    tee_dissect->hdrEndPtr = (char *) (pkt + NfHdrV5Sz);
+    tee_dissect->hdrLen = NfHdrV5Sz;
+
+    /* no flowset in NetFlow v5 */
+    tee_dissect->flowSetBasePtr = NULL;
+    tee_dissect->flowSetEndPtr = NULL;
+    tee_dissect->flowSetLen = 0;
+  }
+
   if ((count <= V5_MAXFLOWS) && ((count*NfDataV5Sz)+NfHdrV5Sz == len)) {
     if (config.debug) {
       sa_to_addr((struct sockaddr *)pptrs->f_agent, &debug_a, &debug_agent_port);
@@ -1183,6 +1195,18 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
     while (count) {
       reset_net_status(pptrs);
       pptrs->f_data = (unsigned char *) exp_v5;
+
+      if (tee_dissect) {
+	tee_dissect->elemBasePtr = pptrs->f_data;
+	tee_dissect->elemEndPtr = (char *) (pptrs->f_data + NfDataV5Sz);
+	tee_dissect->elemLen = NfDataV5Sz;
+	tee_dissect->is_broadcast = FALSE;
+
+	// XXX
+
+	goto finalize_record;
+      }
+
       if (req->bpf_filter) {
         Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, exp_v5->srcaddr.s_addr);
         Assign32(((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, exp_v5->dstaddr.s_addr);
@@ -1211,6 +1235,8 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
       if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
       if (config.nfacctd_bmp) bmp_srcdst_lookup(pptrs);
       exec_plugins(pptrs, req);
+
+      finalize_record:
       exp_v5++;
       count--;
     }
@@ -1223,7 +1249,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 } 
 
 void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vector *pptrsv,
-		struct plugin_requests *req, u_int16_t version)
+		struct plugin_requests *req, u_int16_t version, struct NF_dissect *tee_dissect)
 {
   struct struct_header_v9 *hdr_v9 = (struct struct_header_v9 *)pkt;
   struct struct_header_ipfix *hdr_v10 = (struct struct_header_ipfix *)pkt;
@@ -1253,6 +1279,13 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     }
     flowsetNo = 0;
     flowsetCount = 0;
+  }
+
+  if (tee_dissect) {
+    tee_dissect->hdrVersion = version;
+    tee_dissect->hdrBasePtr = pkt;
+    tee_dissect->hdrEndPtr = (char *) (pkt + HdrSz); 
+    tee_dissect->hdrLen = HdrSz;
   }
 
   if (config.debug) {
@@ -1302,6 +1335,12 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     return;
   }
 
+  if (tee_dissect) {
+    tee_dissect->flowSetBasePtr = pkt;
+    tee_dissect->flowSetEndPtr = (char *) (pkt + NfDataHdrV9Sz);
+    tee_dissect->flowSetLen = NfDataHdrV9Sz;
+  }
+
   if (fid == 0 || fid == 2) { /* template: 0 NetFlow v9, 2 IPFIX */ 
     unsigned char *tpl_ptr = pkt;
     u_int16_t pens = 0;
@@ -1310,7 +1349,21 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     tpl_ptr += NfDataHdrV9Sz;
     flowoff += NfDataHdrV9Sz;
 
+    /* broadcast the whole flowset over */
+    if (tee_dissect) {
+      tee_dissect->elemBasePtr = NULL;
+      tee_dissect->elemEndPtr = NULL;
+      tee_dissect->elemLen = 0;
+      tee_dissect->is_broadcast = TRUE;
+
+      // XXX
+
+      goto finalize_tpl_flowset;
+    }
+
     while (flowoff < flowsetlen) {
+      u_int32_t tpl_len = 0;
+
       template_hdr = (struct template_hdr_v9 *) tpl_ptr;
       if (off+flowsetlen > len) { 
         notify_malf_packet(LOG_INFO, "INFO: unable to read next Template Flowset (incomplete NetFlow v9/IPFIX packet)",
@@ -1322,10 +1375,12 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       tpl = handle_template(template_hdr, pptrs, fid, SourceId, &pens, flowsetlen-flowoff, FlowSeq);
       if (!tpl) return;
 
-      tpl_ptr += sizeof(struct template_hdr_v9)+(ntohs(template_hdr->num)*sizeof(struct template_field_v9))+(pens*sizeof(u_int32_t)); 
-      flowoff += sizeof(struct template_hdr_v9)+(ntohs(template_hdr->num)*sizeof(struct template_field_v9))+(pens*sizeof(u_int32_t)); 
+      tpl_len = sizeof(struct template_hdr_v9)+(ntohs(template_hdr->num)*sizeof(struct template_field_v9))+(pens*sizeof(u_int32_t));
+      tpl_ptr += tpl_len;
+      flowoff += tpl_len;
     }
 
+    finalize_tpl_flowset:
     pkt += flowsetlen; 
     off += flowsetlen; 
   }
@@ -1337,7 +1392,21 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     tpl_ptr += NfDataHdrV9Sz;
     flowoff += NfDataHdrV9Sz;
 
+    /* broadcast the whole flowset over */
+    if (tee_dissect) { 
+      tee_dissect->elemBasePtr = NULL;
+      tee_dissect->elemEndPtr = NULL;
+      tee_dissect->elemLen = 0;
+      tee_dissect->is_broadcast = TRUE;
+
+      // XXX
+
+      goto finalize_opt_tpl_flowset;
+    }
+
     while (flowoff < flowsetlen) {
+      u_int32_t tpl_len = 0;
+
       opt_template_hdr = (struct options_template_hdr_v9 *) tpl_ptr;
       if (off+flowsetlen > len) {
         notify_malf_packet(LOG_INFO, "INFO: unable to read next Options Template Flowset (incomplete NetFlow v9/IPFIX packet)",
@@ -1350,14 +1419,15 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       if (!tpl) return;
 
       /* Increment is not precise for NetFlow v9 but will work */
-      tpl_ptr += sizeof(struct options_template_hdr_v9) +
-		 (((ntohs(opt_template_hdr->scope_len) + ntohs(opt_template_hdr->option_len)) * sizeof(struct template_field_v9)) +
-		 (pens * sizeof(u_int32_t)));
-      flowoff += sizeof(struct options_template_hdr_v9) +
-		 (((ntohs(opt_template_hdr->scope_len) + ntohs(opt_template_hdr->option_len)) * sizeof(struct template_field_v9)) +
-		 (pens * sizeof(u_int32_t)));
+      tpl_len = sizeof(struct options_template_hdr_v9) +
+		(((ntohs(opt_template_hdr->scope_len) + ntohs(opt_template_hdr->option_len)) * sizeof(struct template_field_v9)) +
+		(pens * sizeof(u_int32_t)));
+
+      tpl_ptr += tpl_len;
+      flowoff += tpl_len;
     }
 
+    finalize_opt_tpl_flowset:
     pkt += flowsetlen;
     off += flowsetlen;
   }
@@ -1388,10 +1458,24 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       struct xflow_status_entry_sampling *sentry, *ssaved;
       struct xflow_status_entry_class *centry, *csaved;
 
+      /* broadcast the whole flowset over */
+      if (tee_dissect) {
+        tee_dissect->elemBasePtr = NULL;
+        tee_dissect->elemEndPtr = NULL;
+        tee_dissect->elemLen = 0;
+        tee_dissect->is_broadcast = TRUE;
+
+        // XXX
+
+	/* goto finalize_opt_record later */
+      } 
+
       while (flowoff+tpl->len <= flowsetlen) {
 	entry = (struct xflow_status_entry *) pptrs->f_status;
 	sentry = NULL, ssaved = NULL;
 	centry = NULL, csaved = NULL;
+
+	if (tee_dissect) goto finalize_opt_record;
 
 	/* Is this option about sampling? */
 	if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len || tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4 || tpl->tpl[NF9_SAMPLING_PKT_INTERVAL].len == 4) {
@@ -1534,6 +1618,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  exec_plugins(pptrs, req);
 	}
 
+	finalize_opt_record:
         pkt += tpl->len;
         flowoff += tpl->len;
 
@@ -1564,6 +1649,18 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
         pptrs->f_data = pkt;
 	pptrs->f_tpl = (u_char *) tpl;
 	reset_net_status_v(pptrsv);
+
+	if (tee_dissect) {
+	  tee_dissect->elemBasePtr = pkt;
+	  tee_dissect->elemEndPtr = (char *) (pkt + tpl->len);
+	  tee_dissect->elemLen = tpl->len;
+	  tee_dissect->is_broadcast = FALSE;
+
+	  // XXX
+
+	  goto finalize_record;
+	}
+
 	pptrs->flow_type = NF_evaluate_flow_type(tpl, pptrs);
 	direction = NF_evaluate_direction(tpl, pptrs);
 
@@ -2121,6 +2218,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  break;
         }
 
+        finalize_record:
         pkt += tpl->len;
         flowoff += tpl->len;
 	
@@ -2215,7 +2313,32 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
 			config.name, debug_agent_addr, debug_agent_port, nfv, pptrsv->v4.seqno);
   }
 
+  if (req->ptm_c.exec_ptm_dissect) {
+    struct NF_dissect tee_dissect;
+
+    memset(&tee_dissect, 0, sizeof(tee_dissect));
+    pptrsv->v4.tee_dissect = (char *) &tee_dissect;
+    req->ptm_c.exec_ptm_res = TRUE;
+
+    switch(nfv) {
+    case 5:
+      process_v5_packet(pkt, len, &pptrsv->v4, req, &tee_dissect);
+      break;
+    /* NetFlow v9 + IPFIX */
+    case 9:
+    case 10:
+      process_v9_packet(pkt, len, pptrsv, req, nfv, &tee_dissect);
+      break;
+    default:
+      break;
+    }
+  }
+
+  /* If dissecting, we may also send the full packet in case multiple tee
+     plugins are instantiated and any of them does not require dissection */
+  pptrs->tee_dissect = NULL;
   req->ptm_c.exec_ptm_res = FALSE;
+
   exec_plugins(pptrs, req);
 }
 

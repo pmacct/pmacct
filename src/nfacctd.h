@@ -452,14 +452,28 @@ struct template_cache {
   struct template_cache_entry *c[TEMPLATE_CACHE_ENTRIES];
 };
 
+struct NF_dissect {
+  u_int8_t hdrVersion;
+  char *hdrBasePtr;
+  char *hdrEndPtr;
+  u_int32_t hdrLen;
+  char *flowSetBasePtr;
+  char *flowSetEndPtr;
+  u_int32_t flowSetLen;
+  char *elemBasePtr;
+  char *elemEndPtr;
+  u_int32_t elemLen;
+  u_int8_t is_broadcast;
+};
+
 /* functions */
 #if (!defined __NFACCTD_C)
 #define EXT extern
 #else
 #define EXT
 #endif
-EXT void process_v5_packet(unsigned char *, u_int16_t, struct packet_ptrs *, struct plugin_requests *);
-EXT void process_v9_packet(unsigned char *, u_int16_t, struct packet_ptrs_vector *, struct plugin_requests *, u_int16_t);
+EXT void process_v5_packet(unsigned char *, u_int16_t, struct packet_ptrs *, struct plugin_requests *, struct NF_dissect *);
+EXT void process_v9_packet(unsigned char *, u_int16_t, struct packet_ptrs_vector *, struct plugin_requests *, u_int16_t, struct NF_dissect *);
 EXT void process_raw_packet(unsigned char *, u_int16_t, struct packet_ptrs_vector *, struct plugin_requests *);
 EXT u_int8_t NF_evaluate_flow_type(struct template_cache_entry *, struct packet_ptrs *);
 EXT u_int16_t NF_evaluate_direction(struct template_cache_entry *, struct packet_ptrs *);
