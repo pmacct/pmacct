@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /* 
@@ -178,37 +178,6 @@ assegment_dup_all (struct assegment *seg)
       seg = seg->next;
     }
   return head;
-}
-
-/* prepend the as number to given segment, given num of times */
-static struct assegment *
-assegment_prepend_asns (struct assegment *seg, as_t asnum, int num)
-{
-  as_t *newas;
-  
-  if (!num)
-    return seg;
-  
-  if (num >= AS_SEGMENT_MAX)
-    return seg; /* we don't do huge prepends */
-  
-  newas = assegment_data_new (seg->length + num);
-  
-  if (newas)
-    {
-      int i;
-      for (i = 0; i < num; i++)
-        newas[i] = asnum;
-      
-      memcpy (newas + num, seg->as, ASSEGMENT_DATA_SIZE (seg->length, 1));
-      free(seg->as);
-      seg->as = newas; 
-      seg->length += num;
-      return seg;
-    }
-
-  assegment_free_all (seg);
-  return NULL;
 }
 
 /* append given array of as numbers to the segment */

@@ -182,25 +182,6 @@ isis_adj_expire (struct isis_adjacency *adj)
   return 0;
 }
 
-static const char *
-adj_state2string (int state)
-{
-
-  switch (state)
-    {
-    case ISIS_ADJ_INITIALIZING:
-      return "Initializing";
-    case ISIS_ADJ_UP:
-      return "Up";
-    case ISIS_ADJ_DOWN:
-      return "Down";
-    default:
-      return "Unknown";
-    }
-
-  return NULL;			/* not reached */
-}
-
 void
 isis_adjdb_iterate (struct list *adjdb, void (*func) (struct isis_adjacency *,
 						      void *), void *arg)

@@ -1099,31 +1099,6 @@ force_expire(struct FLOWTRACK *ft, u_int32_t num_to_expire)
 	/* XXX - this is overcomplicated, perhaps use a separate queue */
 }
 
-/* Delete all flows that we know about without processing */
-static int
-delete_all_flows(struct FLOWTRACK *ft)
-{
-	struct FLOW *flow, *nflow;
-	int i;
-	
-	i = 0;
-	for(flow = FLOW_MIN(FLOWS, &ft->flows); flow != NULL; flow = nflow) {
-		nflow = FLOW_NEXT(FLOWS, &ft->flows, flow);
-		FLOW_REMOVE(FLOWS, &ft->flows, flow);
-		
-		EXPIRY_REMOVE(EXPIRIES, &ft->expiries, flow->expiry);
-		free(flow->expiry);
-
-		ft->num_flows--;
-
-		free_flow_allocs(flow);
-		free(flow);
-		i++;
-	}
-	
-	return (i);
-}
-
 /*
  * Per-packet callback function from libpcap. Pass the packet (if it is IP)
  * sans datalink headers to process_packet.

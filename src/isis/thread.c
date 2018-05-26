@@ -246,20 +246,6 @@ cpu_record_hash_free (void *a)
   free(hist);
 }
 
-static void
-cpu_record_hash_clear (struct hash_backet *bucket, 
-		      void *args)
-{
-  thread_type *filter = args;
-  struct cpu_thread_history *a = bucket->data;
-  
-  a = bucket->data;
-  if ( !(a->types & *filter) )
-       return;
-  
-  isis_hash_release (cpu_record, bucket->data);
-}
-
 /* Allocate new thread master.  */
 struct thread_master *
 thread_master_create ()

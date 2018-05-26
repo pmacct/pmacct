@@ -591,33 +591,6 @@ lsp_build_isis_list_ssn (struct isis_circuit *circuit, struct list *list,
   return;
 }
 
-static void
-lsp_set_time (struct isis_lsp *lsp)
-{
-  assert (lsp);
-
-  if (lsp->lsp_header->rem_lifetime == 0)
-    {
-      if (lsp->age_out != 0)
-	lsp->age_out--;
-      return;
-    }
-
-  /* If we are turning 0 */
-  /* ISO 10589 - 7.3.16.4 first paragraph */
-
-  if (ntohs (lsp->lsp_header->rem_lifetime) == 1)
-    {
-      /* 7.3.16.4 a) set SRM flags on all */
-      ISIS_FLAGS_SET_ALL (lsp->SRMflags);
-      /* 7.3.16.4 b) retain only the header FIXME  */
-      /* 7.3.16.4 c) record the time to purge FIXME (other way to do it) */
-    }
-
-  lsp->lsp_header->rem_lifetime =
-    htons (ntohs (lsp->lsp_header->rem_lifetime) - 1);
-}
-
 /* Convert the lsp attribute bits to attribute string */
 const char *
 lsp_bits2string (u_char * lsp_bits)
