@@ -1827,6 +1827,9 @@ void version_daemon(char *header)
 #ifdef WITH_ZMQ
   printf("ZeroMQ %u.%u.%u\n", ZMQ_VERSION_MAJOR, ZMQ_VERSION_MINOR, ZMQ_VERSION_PATCH); 
 #endif
+#ifdef WITH_NDPI
+  printf("nDPI %s\n", ndpi_revision());
+#endif
   printf("\n");
 
   if (!uname(&utsbuf)) {
