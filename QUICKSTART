@@ -1087,6 +1087,23 @@ d) Ok, we are done ! Now fire both daemons:
    shell a> pmacctd -f /path/to/configuration/pmacctd-nfprobe.conf
    shell b> nfacctd -f /path/to/configuration/nfacctd-memory.conf
 
+e) Routers should be configured to export netflow to the daemon.  Following is an example of configuration of netflow on an IOS/IOS-XE (15.4(2)T):
+
+ip flow-cache timeout active 1
+ip flow-cache mpls label-positions 1
+!
+ip forward-protocol nd
+!
+ip flow-export source GigabitEthernet0/0
+ip flow-export version 9 bgp-nexthop
+ip flow-export template timeout-rate 1
+ip flow-export template refresh-rate 4
+ip flow-export destination 1.2.3.4 2100
+!
+interface GigabitEthernet0/0
+ ip address Y.Y.Y.Y Z.Z.Z.Z
+ ip flow ingress
+ ip flow egress
 
 XIII. Quickstart guide to setup a sFlow agent/probe
 pmacct can export traffic data via sFlow; such protocol is different from NetFlow/
@@ -1293,6 +1310,33 @@ protocols bgp {
         }
     }
 }
+
+A relevant configuration example for a IOS XR (Version 5.1.1) router follows:
+
+router bgp 12345
+ address-family ipv4 unicast
+  additional-paths receive
+  additional-paths send
+  maximum-paths ibgp 6
+  additional-paths selection route-policy add_path
+ !
+ af-group af-group-example address-family ipv4 unicast
+  route-reflector-client
+ !
+ session-group ibgp
+  remote-as 12345
+  update-source Loopback0
+ !
+ neighbor-group ibgp-rr-client
+  use session-group ibgp
+  address-family ipv4 unicast
+   use af-group af-group-example
+  !
+ !
+ neighbor X.X.X.X
+  use neighbor-group ibgp-rr-client
+ !
+!
 
 Contribution of further configuration examples for Cisco and Juniper devices
 and/or other relevant vendors is more than welcome. 
@@ -1759,7 +1803,7 @@ document: docs/MSGLOG_DUMP_FORMATS
 Setting up the stand-alone BMP collector daemon, pmbmpd, is the exact same as
 the configuration above except the 'bmp_daemon: true' line can be skipped.
 
-Following is an example how a Cisco router running IOS/IOS-XE should be
+Following is an example of how a Cisco router running IOS/IOS-XE (15.4(2)T) should be
 configured in order to export BMP data to a collector:
 
 router bgp 64512
@@ -1777,7 +1821,7 @@ router bgp 64512
  neighbor Z.Z.Z.Z remote-as 64514
  neighbor Z.Z.Z.Z bmp-activate all
 
-Following is an example how a Cisco router running IOS-XR should be configured
+Following is an example how a Cisco router running IOS-XR (6.2.1) should be configured
 in order to export BMP data to a collector:
 
 router bgp 64512
@@ -1789,9 +1833,12 @@ router bgp 64512
 !
 bmp server 1
  host X.X.X.X port 1790
+ description -- fretta --
+ update-source GigabitEthernet0/0/0/10
  initial-delay 60
  initial-refresh delay 60
  stats-reporting-period 300
+ initial-refresh delay 10
 !
 
 Following is an example how a Juniper router should be configured in order to
