@@ -1521,7 +1521,7 @@ shell> examples/lg/pmbgp.py -a 192.168.2.0/24 -r 192.168.1.1
 Request/Reply Looking Glass formats are documented in 'docs/LOOKING_GLASS_FORMAT'.
 
 XIVh. Example: BGP Xconnects 
-Starting with release 1.7.1 pmbgpd, the pmacct BGP standalone daemon, includes
+Starting with release 1.7.1, pmbgpd, the pmacct BGP standalone daemon, includes
 a new BGP xconnect feature to map BGP peers (ie. PE routers) to BGP collectors
 (ie. nfacctd, sfacctd). The aim is to facilitate operations when re-sizing/re-
 balancing the collection infrastructure without impacting (ie. re-configuring)
@@ -1544,7 +1544,12 @@ Where bgp_dst is the IPv4/IPv6 address and port of the BGP collector to cross-
 connect incoming (bgp_src) BGP session to and bgp_src is compared against the
 IPv4/IPv6 address (not BGP Router ID) of an incoming BGP session from a BGP
 peer. At the collector end one should set tmp_bgp_lookup_compare_ports (read
-more about this knob in CONFIG-KEYS) to true. 
+more about this knob in CONFIG-KEYS) to true.
+
+In future BMP may be added as a transport for BGP data between pmbgpd and the
+collector (please get in touch if interested). An alternative to the use of
+pmbgpd is NAT/masquerading; in this context, pmbgpd brings the advantage of
+running fully in user-space.
 
 XIVi. BGP daemon implementation concluding notes
 The implementation supports 4-bytes ASN, IPv4, IPv6, VPNv4 and VPNv6 (MP-BGP)
