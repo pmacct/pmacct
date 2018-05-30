@@ -1122,19 +1122,19 @@ int main(int argc,char **argv, char **envp)
     }
 
     if (data_plugins) {
-      /* We will change byte ordering in order to avoid a bunch of ntohs() calls */
-      ((struct struct_header_v5 *)netflow_packet)->version = ntohs(((struct struct_header_v5 *)netflow_packet)->version);
+      u_int16_t nfv = ntohs(((struct struct_header_v5 *)netflow_packet)->version);
+
       reset_tag_label_status(&pptrs);
       reset_shadow_status(&pptrs);
 
-      switch(((struct struct_header_v5 *)netflow_packet)->version) {
+      switch (nfv) {
       case 5:
 	process_v5_packet(netflow_packet, ret, &pptrs.v4, &req, NULL); 
 	break;
       /* NetFlow v9 + IPFIX */
       case 9:
       case 10:
-	process_v9_packet(netflow_packet, ret, &pptrs, &req, ((struct struct_header_v5 *)netflow_packet)->version, NULL);
+	process_v9_packet(netflow_packet, ret, &pptrs, &req, nfv, NULL);
 	break;
       default:
         if (!config.nfacctd_disable_checks) {
@@ -1145,6 +1145,7 @@ int main(int argc,char **argv, char **envp)
       }
     }
     else if (tee_plugins) {
+      if (req.ptm_c.exec_ptm_dissect) reset_tag_label_status(&pptrs);
       process_raw_packet(netflow_packet, ret, &pptrs, &req);
     }
   }
@@ -1172,7 +1173,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   pptrs->flow_type = NF9_FTYPE_TRAFFIC;
 
   if (tee_dissect) {
-    tee_dissect->hdrVersion = hdr_v5->version;
+    tee_dissect->hdrVersion = ntohs(hdr_v5->version);
     tee_dissect->hdrBasePtr = pkt;
     tee_dissect->hdrEndPtr = (char *) (pkt + NfHdrV5Sz);
     tee_dissect->hdrLen = NfHdrV5Sz;
@@ -1189,7 +1190,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
       addr_to_str(debug_agent_addr, &debug_a);
 
       Log(LOG_DEBUG, "DEBUG ( %s/core ): Received NetFlow packet from [%s:%u] version [%u] seqno [%u]\n",
-                        config.name, debug_agent_addr, debug_agent_port, 5, ntohl(((struct struct_header_v5 *)pkt)->flow_sequence));
+	  config.name, debug_agent_addr, debug_agent_port, ntohs(hdr_v5->version), ntohl(hdr_v5->flow_sequence));
     }
 
     while (count) {
@@ -1202,7 +1203,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 	tee_dissect->elemLen = NfDataV5Sz;
 	tee_dissect->is_broadcast = FALSE;
 
-	// XXX
+	exec_plugins(pptrs, req);
 
 	goto finalize_record;
       }
@@ -1356,7 +1357,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       tee_dissect->elemLen = 0;
       tee_dissect->is_broadcast = TRUE;
 
-      // XXX
+      exec_plugins(pptrs, req);
 
       goto finalize_tpl_flowset;
     }
@@ -1399,7 +1400,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       tee_dissect->elemLen = 0;
       tee_dissect->is_broadcast = TRUE;
 
-      // XXX
+      exec_plugins(pptrs, req);
 
       goto finalize_opt_tpl_flowset;
     }
@@ -1465,10 +1466,9 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
         tee_dissect->elemLen = 0;
         tee_dissect->is_broadcast = TRUE;
 
-        // XXX
-
+	exec_plugins(pptrs, req);
 	/* goto finalize_opt_record later */
-      } 
+      }
 
       while (flowoff+tpl->len <= flowsetlen) {
 	entry = (struct xflow_status_entry *) pptrs->f_status;
@@ -1656,7 +1656,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  tee_dissect->elemLen = tpl->len;
 	  tee_dissect->is_broadcast = FALSE;
 
-	  // XXX
+	  exec_plugins(pptrs, req);
 
 	  goto finalize_record;
 	}
@@ -2303,12 +2303,12 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
     break;
   }
 
-  if (config.debug) {
+  if (!req->ptm_c.exec_ptm_dissect && config.debug) {
     sa_to_addr((struct sockaddr *)pptrs->f_agent, &debug_a, &debug_agent_port);
     addr_to_str(debug_agent_addr, &debug_a);
 
     Log(LOG_DEBUG, "DEBUG ( %s/core ): Received NetFlow/IPFIX packet from [%s:%u] version [%u] seqno [%u]\n",
-			config.name, debug_agent_addr, debug_agent_port, nfv, pptrsv->v4.seqno);
+	config.name, debug_agent_addr, debug_agent_port, nfv, pptrs->seqno);
   }
 
   if (req->ptm_c.exec_ptm_dissect) {
