@@ -1355,7 +1355,24 @@ void NF_tee_payload_handler(struct channels_list_entry *chptr, struct packet_ptr
     }
   }
   else {
-    // XXX
+    struct NF_dissect *tee_dissect = (struct NF_dissect *) pptrs->tee_dissect;
+
+    pmsg->seqno = pptrs->seqno;
+    pmsg->len = (tee_dissect->hdrLen + tee_dissect->flowSetLen + tee_dissect->elemLen);
+    pmsg->payload = NULL;
+    memcpy(&pmsg->agent, pptrs->f_agent, sizeof(pmsg->agent));
+    pmsg->tag = pptrs->tag;
+    pmsg->tag2 = pptrs->tag2;
+    if (!check_pipe_buffer_space(chptr, NULL, pmsg->len)) {
+      memcpy(ppayload, tee_dissect->hdrBasePtr, tee_dissect->hdrLen);
+      ((struct struct_header_v5 *)ppayload)->version = htons(((struct struct_header_v5 *)ppayload)->version);
+
+      if (tee_dissect->flowSetLen) memcpy((ppayload + tee_dissect->hdrLen), tee_dissect->flowSetBasePtr, tee_dissect->flowSetLen);
+      memcpy((ppayload + tee_dissect->flowSetLen + tee_dissect->hdrLen), tee_dissect->elemBasePtr, tee_dissect->elemLen);
+    }
+
+    printf("CI PASSO: seqno=%u len=%u (hdr=%u flowset=%u elem=%u) tag=%u\n", pmsg->seqno, pmsg->len,
+	   tee_dissect->hdrLen, tee_dissect->flowSetLen, tee_dissect->elemLen, pmsg->tag);
   }
 }
 

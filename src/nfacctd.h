@@ -472,7 +472,7 @@ struct NF_dissect {
 #else
 #define EXT
 #endif
-EXT void process_v5_packet(unsigned char *, u_int16_t, struct packet_ptrs *, struct plugin_requests *, struct NF_dissect *);
+EXT void process_v5_packet(unsigned char *, u_int16_t, struct packet_ptrs *, struct plugin_requests *, u_int16_t, struct NF_dissect *);
 EXT void process_v9_packet(unsigned char *, u_int16_t, struct packet_ptrs_vector *, struct plugin_requests *, u_int16_t, struct NF_dissect *);
 EXT void process_raw_packet(unsigned char *, u_int16_t, struct packet_ptrs_vector *, struct plugin_requests *);
 EXT u_int8_t NF_evaluate_flow_type(struct template_cache_entry *, struct packet_ptrs *);

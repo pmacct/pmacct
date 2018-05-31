@@ -1122,14 +1122,17 @@ int main(int argc,char **argv, char **envp)
     }
 
     if (data_plugins) {
-      u_int16_t nfv = ntohs(((struct struct_header_v5 *)netflow_packet)->version);
+      u_int16_t nfv;
+
+      /* We will change byte ordering in order to avoid a bunch of ntohs() calls */
+      nfv = ((struct struct_header_v5 *)netflow_packet)->version = ntohs(((struct struct_header_v5 *)netflow_packet)->version);
 
       reset_tag_label_status(&pptrs);
       reset_shadow_status(&pptrs);
 
       switch (nfv) {
       case 5:
-	process_v5_packet(netflow_packet, ret, &pptrs.v4, &req, NULL); 
+	process_v5_packet(netflow_packet, ret, &pptrs.v4, &req, nfv, NULL); 
 	break;
       /* NetFlow v9 + IPFIX */
       case 9:
@@ -1145,14 +1148,20 @@ int main(int argc,char **argv, char **envp)
       }
     }
     else if (tee_plugins) {
-      if (req.ptm_c.exec_ptm_dissect) reset_tag_label_status(&pptrs);
+      if (req.ptm_c.exec_ptm_dissect) {
+	reset_tag_label_status(&pptrs);
+
+	/* We will change byte ordering in order to avoid a bunch of ntohs() calls */
+	((struct struct_header_v5 *)netflow_packet)->version = ntohs(((struct struct_header_v5 *)netflow_packet)->version);
+      }
+
       process_raw_packet(netflow_packet, ret, &pptrs, &req);
     }
   }
 }
 
 void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pptrs,
-		struct plugin_requests *req, struct NF_dissect *tee_dissect)
+		struct plugin_requests *req, u_int16_t version, struct NF_dissect *tee_dissect)
 {
   struct struct_header_v5 *hdr_v5 = (struct struct_header_v5 *)pkt;
   struct struct_export_v5 *exp_v5;
@@ -1173,15 +1182,18 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   pptrs->flow_type = NF9_FTYPE_TRAFFIC;
 
   if (tee_dissect) {
-    tee_dissect->hdrVersion = ntohs(hdr_v5->version);
-    tee_dissect->hdrBasePtr = pkt;
-    tee_dissect->hdrEndPtr = (char *) (pkt + NfHdrV5Sz);
+    tee_dissect->hdrVersion = version;
+    tee_dissect->hdrBasePtr = (char *) hdr_v5;
+    tee_dissect->hdrEndPtr = (char *) (hdr_v5 + NfHdrV5Sz);
     tee_dissect->hdrLen = NfHdrV5Sz;
 
     /* no flowset in NetFlow v5 */
     tee_dissect->flowSetBasePtr = NULL;
     tee_dissect->flowSetEndPtr = NULL;
     tee_dissect->flowSetLen = 0;
+
+    /* fix-ups */
+    hdr_v5->count = htons(1);
   }
 
   if ((count <= V5_MAXFLOWS) && ((count*NfDataV5Sz)+NfHdrV5Sz == len)) {
@@ -1190,7 +1202,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
       addr_to_str(debug_agent_addr, &debug_a);
 
       Log(LOG_DEBUG, "DEBUG ( %s/core ): Received NetFlow packet from [%s:%u] version [%u] seqno [%u]\n",
-	  config.name, debug_agent_addr, debug_agent_port, ntohs(hdr_v5->version), ntohl(hdr_v5->flow_sequence));
+	  config.name, debug_agent_addr, debug_agent_port, version, ntohl(hdr_v5->flow_sequence));
     }
 
     while (count) {
@@ -2277,7 +2289,8 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
     return;
   } 
 
-  nfv = ntohs(((struct struct_header_v5 *)pkt)->version);
+  if (req->ptm_c.exec_ptm_dissect) nfv = ((struct struct_header_v5 *)pkt)->version;
+  else nfv = ntohs(((struct struct_header_v5 *)pkt)->version);
 
   if (nfv != 5 && nfv != 9 && nfv != 10) {
     if (!config.nfacctd_disable_checks) {
@@ -2320,7 +2333,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
 
     switch(nfv) {
     case 5:
-      process_v5_packet(pkt, len, &pptrsv->v4, req, &tee_dissect);
+      process_v5_packet(pkt, len, &pptrsv->v4, req, nfv, &tee_dissect);
       break;
     /* NetFlow v9 + IPFIX */
     case 9:
