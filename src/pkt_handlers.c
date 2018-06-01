@@ -1350,6 +1350,7 @@ void NF_tee_payload_handler(struct channels_list_entry *chptr, struct packet_ptr
     memcpy(&pmsg->agent, pptrs->f_agent, sizeof(pmsg->agent));
     pmsg->tag = pptrs->tag;
     pmsg->tag2 = pptrs->tag2;
+    pmsg->bcast = FALSE;
     if (!check_pipe_buffer_space(chptr, NULL, pptrs->f_len)) {
       memcpy(ppayload, pptrs->f_header, pptrs->f_len);
     }
@@ -1363,16 +1364,28 @@ void NF_tee_payload_handler(struct channels_list_entry *chptr, struct packet_ptr
     memcpy(&pmsg->agent, pptrs->f_agent, sizeof(pmsg->agent));
     pmsg->tag = pptrs->tag;
     pmsg->tag2 = pptrs->tag2;
+    pmsg->bcast = pptrs->tee_dissect_bcast;
     if (!check_pipe_buffer_space(chptr, NULL, pmsg->len)) {
       memcpy(ppayload, tee_dissect->hdrBasePtr, tee_dissect->hdrLen);
-      ((struct struct_header_v5 *)ppayload)->version = htons(((struct struct_header_v5 *)ppayload)->version);
-
       if (tee_dissect->flowSetLen) memcpy((ppayload + tee_dissect->hdrLen), tee_dissect->flowSetBasePtr, tee_dissect->flowSetLen);
-      memcpy((ppayload + tee_dissect->flowSetLen + tee_dissect->hdrLen), tee_dissect->elemBasePtr, tee_dissect->elemLen);
-    }
+      memcpy((ppayload + tee_dissect->hdrLen + tee_dissect->flowSetLen), tee_dissect->elemBasePtr, tee_dissect->elemLen);
 
-    printf("CI PASSO: seqno=%u len=%u (hdr=%u flowset=%u elem=%u) tag=%u\n", pmsg->seqno, pmsg->len,
-	   tee_dissect->hdrLen, tee_dissect->flowSetLen, tee_dissect->elemLen, pmsg->tag);
+      /* fix-ups */
+      ((struct struct_header_v5 *)ppayload)->version = htons(tee_dissect->hdrVersion);
+
+      switch (tee_dissect->hdrVersion) {
+      case 5:
+        ((struct struct_header_v5 *)ppayload)->count = htons(1); 
+        break;
+      case 9:
+        /* XXX: NetFlow v9 counts */
+        break;
+      case 10:
+        ((struct struct_header_ipfix *)ppayload)->len = htons(tee_dissect->hdrLen + tee_dissect->flowSetLen + tee_dissect->elemLen);
+        ((struct data_hdr_v9 *)(ppayload + tee_dissect->hdrLen))->flow_len = htons(tee_dissect->flowSetLen + tee_dissect->elemLen); 
+        break;
+      }
+    }
   }
 }
 
@@ -1388,6 +1401,7 @@ void SF_tee_payload_handler(struct channels_list_entry *chptr, struct packet_ptr
     memcpy(&pmsg->agent, pptrs->f_agent, sizeof(pmsg->agent));
     pmsg->tag = pptrs->tag;
     pmsg->tag2 = pptrs->tag2;
+    pmsg->bcast = FALSE;
     if (!check_pipe_buffer_space(chptr, NULL, pptrs->f_len)) {
       memcpy(ppayload, pptrs->f_header, pptrs->f_len);
     }

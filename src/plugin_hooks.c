@@ -382,18 +382,21 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
         pptrs->have_label = saved_have_label;
       }
       else {
-        find_id_func(&p->cfg.ptm, pptrs, &pptrs->tag, &pptrs->tag2);
+	if (p->cfg.type_id == PLUGIN_ID_TEE && req->ptm_c.exec_ptm_res && pptrs->tee_dissect_bcast) /* noop */;
+        else {
+	  find_id_func(&p->cfg.ptm, pptrs, &pptrs->tag, &pptrs->tag2);
 
-	if (p->cfg.ptm_global) {
-	  saved_tag = pptrs->tag;
-	  saved_tag2 = pptrs->tag2;
-	  pretag_copy_label(&saved_label, &pptrs->label);
+	  if (p->cfg.ptm_global) {
+	    saved_tag = pptrs->tag;
+	    saved_tag2 = pptrs->tag2;
+	    pretag_copy_label(&saved_label, &pptrs->label);
 
-	  saved_have_tag = pptrs->have_tag;
-	  saved_have_tag2 = pptrs->have_tag2;
-	  saved_have_label = pptrs->have_label;
+	    saved_have_tag = pptrs->have_tag;
+	    saved_have_tag2 = pptrs->have_tag2;
+	    saved_have_label = pptrs->have_label;
 
-          got_tags = TRUE;
+            got_tags = TRUE;
+	  }
         }
       }
     }

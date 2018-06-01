@@ -463,7 +463,6 @@ struct NF_dissect {
   char *elemBasePtr;
   char *elemEndPtr;
   u_int32_t elemLen;
-  u_int8_t is_broadcast;
 };
 
 /* functions */

@@ -1191,9 +1191,6 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
     tee_dissect->flowSetBasePtr = NULL;
     tee_dissect->flowSetEndPtr = NULL;
     tee_dissect->flowSetLen = 0;
-
-    /* fix-ups */
-    hdr_v5->count = htons(1);
   }
 
   if ((count <= V5_MAXFLOWS) && ((count*NfDataV5Sz)+NfHdrV5Sz == len)) {
@@ -1213,7 +1210,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 	tee_dissect->elemBasePtr = pptrs->f_data;
 	tee_dissect->elemEndPtr = (char *) (pptrs->f_data + NfDataV5Sz);
 	tee_dissect->elemLen = NfDataV5Sz;
-	tee_dissect->is_broadcast = FALSE;
+	pptrs->tee_dissect_bcast = FALSE;
 
 	exec_plugins(pptrs, req);
 
@@ -1351,7 +1348,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   if (tee_dissect) {
     tee_dissect->flowSetBasePtr = pkt;
     tee_dissect->flowSetEndPtr = (char *) (pkt + NfDataHdrV9Sz);
-    tee_dissect->flowSetLen = NfDataHdrV9Sz;
+    tee_dissect->flowSetLen = NfDataHdrV9Sz; /* updated later */
   }
 
   if (fid == 0 || fid == 2) { /* template: 0 NetFlow v9, 2 IPFIX */ 
@@ -1367,11 +1364,12 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       tee_dissect->elemBasePtr = NULL;
       tee_dissect->elemEndPtr = NULL;
       tee_dissect->elemLen = 0;
-      tee_dissect->is_broadcast = TRUE;
+
+      tee_dissect->flowSetEndPtr = (char *) (tee_dissect->flowSetBasePtr + ntohs(data_hdr->flow_len)); 
+      tee_dissect->flowSetLen = ntohs(data_hdr->flow_len); 
+      pptrs->tee_dissect_bcast = TRUE;
 
       exec_plugins(pptrs, req);
-
-      goto finalize_tpl_flowset;
     }
 
     while (flowoff < flowsetlen) {
@@ -1393,7 +1391,6 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       flowoff += tpl_len;
     }
 
-    finalize_tpl_flowset:
     pkt += flowsetlen; 
     off += flowsetlen; 
   }
@@ -1410,11 +1407,11 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       tee_dissect->elemBasePtr = NULL;
       tee_dissect->elemEndPtr = NULL;
       tee_dissect->elemLen = 0;
-      tee_dissect->is_broadcast = TRUE;
+
+      tee_dissect->flowSetEndPtr = (char *) (tee_dissect->flowSetBasePtr + ntohs(data_hdr->flow_len));
+      tee_dissect->flowSetLen = ntohs(data_hdr->flow_len);
 
       exec_plugins(pptrs, req);
-
-      goto finalize_opt_tpl_flowset;
     }
 
     while (flowoff < flowsetlen) {
@@ -1440,7 +1437,6 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       flowoff += tpl_len;
     }
 
-    finalize_opt_tpl_flowset:
     pkt += flowsetlen;
     off += flowsetlen;
   }
@@ -1476,7 +1472,10 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
         tee_dissect->elemBasePtr = NULL;
         tee_dissect->elemEndPtr = NULL;
         tee_dissect->elemLen = 0;
-        tee_dissect->is_broadcast = TRUE;
+
+	tee_dissect->flowSetEndPtr = (char *) (tee_dissect->flowSetBasePtr + ntohs(data_hdr->flow_len));
+	tee_dissect->flowSetLen = ntohs(data_hdr->flow_len);
+        pptrs->tee_dissect_bcast = TRUE;
 
 	exec_plugins(pptrs, req);
 	/* goto finalize_opt_record later */
@@ -1666,7 +1665,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  tee_dissect->elemBasePtr = pkt;
 	  tee_dissect->elemEndPtr = (char *) (pkt + tpl->len);
 	  tee_dissect->elemLen = tpl->len;
-	  tee_dissect->is_broadcast = FALSE;
+          pptrs->tee_dissect_bcast = FALSE;
 
 	  exec_plugins(pptrs, req);
 

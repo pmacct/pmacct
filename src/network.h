@@ -356,6 +356,7 @@ struct packet_ptrs {
   u_int32_t seqno; /* sFlow/NetFlow sequence number */
   u_int16_t f_len; /* sFlow/NetFlow payload length */
   char *tee_dissect; /* pointer to flow tee dissection structure */
+  int tee_dissect_bcast; /* is the tee dissected element to be broadcasted? */
   u_int8_t renormalized; /* Is it renormalized yet ? */
   char *pkt_data_ptrs[CUSTOM_PRIMITIVE_MAX_PPTRS_IDX]; /* indexed packet pointers */
   u_int16_t pkt_proto[CUSTOM_PRIMITIVE_MAX_PPTRS_IDX]; /* indexed packet protocols */
@@ -487,6 +488,7 @@ struct pkt_msg {
   char *payload;
   pm_id_t tag;
   pm_id_t tag2;
+  u_int8_t bcast;
   u_int16_t pad;
 };
 
