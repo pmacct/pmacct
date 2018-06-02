@@ -1183,6 +1183,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 
   if (tee_dissect) {
     tee_dissect->hdrVersion = version;
+    tee_dissect->hdrCount = 1;
     tee_dissect->hdrBasePtr = (char *) hdr_v5;
     tee_dissect->hdrEndPtr = (char *) (hdr_v5 + NfHdrV5Sz);
     tee_dissect->hdrLen = NfHdrV5Sz;
@@ -1293,6 +1294,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
   if (tee_dissect) {
     tee_dissect->hdrVersion = version;
+    if (version == 9) tee_dissect->hdrCount = flowsetNo; /* imprecise .. */
+    else if (version == 10) tee_dissect->hdrCount = 0;
     tee_dissect->hdrBasePtr = pkt;
     tee_dissect->hdrEndPtr = (char *) (pkt + HdrSz); 
     tee_dissect->hdrLen = HdrSz;

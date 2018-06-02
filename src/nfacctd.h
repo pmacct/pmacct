@@ -454,6 +454,7 @@ struct template_cache {
 
 struct NF_dissect {
   u_int8_t hdrVersion;
+  u_int16_t hdrCount; /* NetFlow v5 and v5 and v5 and v5 and v5 and v9 */
   char *hdrBasePtr;
   char *hdrEndPtr;
   u_int32_t hdrLen;

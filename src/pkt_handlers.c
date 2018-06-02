@@ -1375,10 +1375,11 @@ void NF_tee_payload_handler(struct channels_list_entry *chptr, struct packet_ptr
 
       switch (tee_dissect->hdrVersion) {
       case 5:
-        ((struct struct_header_v5 *)ppayload)->count = htons(1); 
+        ((struct struct_header_v5 *)ppayload)->count = htons(tee_dissect->hdrCount); 
         break;
       case 9:
-        /* XXX: NetFlow v9 counts */
+        ((struct struct_header_v9 *)ppayload)->count = htons(tee_dissect->hdrCount);
+        ((struct data_hdr_v9 *)(ppayload + tee_dissect->hdrLen))->flow_len = htons(tee_dissect->flowSetLen + tee_dissect->elemLen); 
         break;
       case 10:
         ((struct struct_header_ipfix *)ppayload)->len = htons(tee_dissect->hdrLen + tee_dissect->flowSetLen + tee_dissect->elemLen);
