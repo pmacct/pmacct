@@ -958,7 +958,7 @@ int file_lock(int fd)
   ret = fcntl(fd, F_SETLK, &lock);
   return((ret == -1) ? -1 : 0);
 #else
-  ret = flock(fd, LOCK_EX);
+  ret = lockf(fd, F_TLOCK, 0);
   return ret;
 #endif
 }
@@ -977,7 +977,7 @@ int file_unlock(int fd)
   ret = fcntl(fd, F_SETLK, &lock);
   return((ret == -1) ? -1 : 0);
 #else
-  ret = flock(fd, LOCK_UN);
+  ret = lockf(fd, F_ULOCK, 0);
   return ret;
 #endif
 }
