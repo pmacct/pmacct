@@ -503,7 +503,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
     }
 
     if (!go_to_pending) {
-      qn++;
+      if (f) qn++;
 
       data = &queue[j]->primitives;
       if (queue[j]->pbgp) pbgp = queue[j]->pbgp;
