@@ -420,6 +420,10 @@ struct pkt_primitives {
   pm_country_t dst_ip_country;
   pm_pocode_t src_ip_pocode;
   pm_pocode_t dst_ip_pocode;
+  double src_ip_lat;
+  double dst_ip_lat;
+  double src_ip_lon;
+  double dst_ip_lon;
 #endif
 #if defined (WITH_NDPI)
   pm_class2_t ndpi_class;

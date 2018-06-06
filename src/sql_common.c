@@ -1204,6 +1204,10 @@ int sql_evaluate_primitives(int primitive)
 #if defined (WITH_GEOIPV2)
     if (config.what_to_count_2 & COUNT_SRC_HOST_POCODE) what_to_count_2 |= COUNT_SRC_HOST_POCODE;
     if (config.what_to_count_2 & COUNT_DST_HOST_POCODE) what_to_count_2 |= COUNT_DST_HOST_POCODE;
+    if (config.what_to_count_2 & COUNT_SRC_HOST_LAT) what_to_count_2 |= COUNT_SRC_HOST_LAT;
+    if (config.what_to_count_2 & COUNT_DST_HOST_LAT) what_to_count_2 |= COUNT_DST_HOST_LAT;
+    if (config.what_to_count_2 & COUNT_SRC_HOST_LON) what_to_count_2 |= COUNT_SRC_HOST_LON;
+    if (config.what_to_count_2 & COUNT_DST_HOST_LON) what_to_count_2 |= COUNT_DST_HOST_LON;
 #endif
 
     if (config.what_to_count_2 & COUNT_SAMPLING_RATE) what_to_count_2 |= COUNT_SAMPLING_RATE;
@@ -2156,6 +2160,62 @@ int sql_evaluate_primitives(int primitive)
     strncat(where[primitive].string, "pocode_ip_dst=\'%s\'", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_INT_DST_HOST_POCODE;
     values[primitive].handler = where[primitive].handler = count_dst_host_pocode_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_SRC_HOST_LAT) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "lat_ip_src", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%f", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "lat_ip_src=%f", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_SRC_HOST_LAT;
+    values[primitive].handler = where[primitive].handler = count_src_host_lat_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_DST_HOST_LAT) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "lat_ip_dst", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%f", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "lat_ip_dst=%f", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_DST_HOST_LAT;
+    values[primitive].handler = where[primitive].handler = count_dst_host_lat_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_SRC_HOST_LON) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "lon_ip_src", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%f", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "lon_ip_src=%f", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_SRC_HOST_LON;
+    values[primitive].handler = where[primitive].handler = count_src_host_lon_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_DST_HOST_LON) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "lon_ip_dst", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%f'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "lon_ip_dst=%f", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_DST_HOST_LON;
+    values[primitive].handler = where[primitive].handler = count_dst_host_lon_handler;
     primitive++;
   }
 #endif

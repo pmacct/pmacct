@@ -277,6 +277,26 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
     cjhandler[idx] = compose_json_dst_host_pocode;
     idx++;
   }
+
+  if (wtc_2 & COUNT_SRC_HOST_LAT) {
+    cjhandler[idx] = compose_json_src_host_lat;
+    idx++;
+  }
+
+  if (wtc_2 & COUNT_DST_HOST_LAT) {
+    cjhandler[idx] = compose_json_dst_host_lat;
+    idx++;
+  }
+
+  if (wtc_2 & COUNT_SRC_HOST_LON) {
+    cjhandler[idx] = compose_json_src_host_lon;
+    idx++;
+  }
+
+  if (wtc_2 & COUNT_DST_HOST_LON) {
+    cjhandler[idx] = compose_json_dst_host_lon;
+    idx++;
+  }
 #endif
 
   if (wtc & COUNT_TCPFLAGS) {
@@ -818,6 +838,26 @@ void compose_json_dst_host_pocode(json_t *obj, struct chained_cache *cc)
     json_object_set_new_nocheck(obj, "pocode_ip_dst", json_string(cc->primitives.dst_ip_pocode.str));
   else
     json_object_set_new_nocheck(obj, "pocode_ip_dst", json_string(empty_string));
+}
+
+void compose_json_src_host_lat(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "lat_ip_src", json_real(cc->primitives.src_ip_lat));
+}
+
+void compose_json_dst_host_lat(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "lat_ip_dst", json_real(cc->primitives.dst_ip_lat));
+}
+
+void compose_json_src_host_lon(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "lon_ip_src", json_real(cc->primitives.src_ip_lon));
+}
+
+void compose_json_dst_host_lon(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "lon_ip_dst", json_real(cc->primitives.dst_ip_lon));
 }
 #endif
 

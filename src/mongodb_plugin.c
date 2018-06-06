@@ -691,6 +691,19 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
         else
           bson_append_null(bson_elem, "pocode_ip_dst");
       }
+
+      if (config.what_to_count_2 & COUNT_SRC_HOST_LAT) {
+        bson_append_double(bson_elem, "lat_ip_src", data->src_ip_lat);
+      }
+      if (config.what_to_count_2 & COUNT_DST_HOST_LAT) {
+        bson_append_double(bson_elem, "lat_ip_dst", data->dst_ip_lat);
+      }
+      if (config.what_to_count_2 & COUNT_SRC_HOST_LON) {
+        bson_append_double(bson_elem, "lon_ip_src", data->src_ip_lon);
+      }
+      if (config.what_to_count_2 & COUNT_DST_HOST_LON) {
+        bson_append_double(bson_elem, "lon_ip_dst", data->dst_ip_lon);
+      }
   #endif
 
       if (config.what_to_count & COUNT_TCPFLAGS) {
