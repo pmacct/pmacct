@@ -560,7 +560,24 @@ ip flow-export destination X.X.X.X 2100
 interface GigabitEthernet0/0
  ip address Y.Y.Y.Y Z.Z.Z.Z
  ip flow ingress
- ip flow egress
+
+Example to configure NetFlow v9 export on a Cisco running IOS-XR:
+
+sampler-map NFACCTD-SMP
+ random 1 out-of 10
+!
+flow monitor-map NFACCTD-MON
+ record ipv4
+ exporter NFACCTD-EXP
+!
+flow exporter-map NFACCTD-EXP
+ version v9 
+ transport udp 2100
+ destination X.X.X.X
+!
+interface GigabitEthernet0/0/0/1
+ ipv4 address Y.Y.Y.Y Z.Z.Z.Z
+ flow ipv4 monitor NFACCTD-MON sampler NFACCTD-SMP ingress
 
 Example to configure IPFIX export on a Juniper:
 

@@ -1004,9 +1004,6 @@ DESC:           In SQL this defines the table to use; in print plugin it defines
 		not supported, ie. the '~' symbol to denote the user home directory. Time-related
 		variables require 'print_history' to be specified in order to work correctly.
 
-		MongoDB plugin notes:
-		The table name is expected as <database>.<collection> . Default table is test.acct
-
 		Common notes:
 		The maximum number of variables it may contain is 32.
 DEFAULT:	see notes
