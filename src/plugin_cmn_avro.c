@@ -186,17 +186,16 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc_2 & COUNT_DST_HOST_POCODE)
     avro_schema_record_field_append(schema, "pocode_ip_dst", avro_schema_string());
 
-  if (wtc_2 & COUNT_SRC_HOST_LAT)
+  if (wtc_2 & COUNT_SRC_HOST_COORDS) {
     avro_schema_record_field_append(schema, "lat_ip_src", avro_schema_double());
-
-  if (wtc_2 & COUNT_DST_HOST_LAT)
-    avro_schema_record_field_append(schema, "lat_ip_dst", avro_schema_double());
-
-  if (wtc_2 & COUNT_SRC_HOST_LON)
     avro_schema_record_field_append(schema, "lon_ip_src", avro_schema_double());
+  }
 
-  if (wtc_2 & COUNT_DST_HOST_LON)
+  if (wtc_2 & COUNT_DST_HOST_COORDS) {
+    avro_schema_record_field_append(schema, "lat_ip_dst", avro_schema_double());
     avro_schema_record_field_append(schema, "lon_ip_dst", avro_schema_double());
+  }
+    
 #endif
 
   if (wtc & COUNT_TCPFLAGS)
@@ -658,22 +657,16 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
       check_i(avro_value_set_string(&field, empty_string));
   }
 
-  if (wtc_2 & COUNT_SRC_HOST_LAT) {
+  if (wtc_2 & COUNT_SRC_HOST_COORDS) {
     check_i(avro_value_get_by_name(&value, "lat_ip_src", &field, NULL));
     check_i(avro_value_set_double(&field, pbase->src_ip_lat));
-  }
-
-  if (wtc_2 & COUNT_DST_HOST_LAT) {
-    check_i(avro_value_get_by_name(&value, "lat_ip_dst", &field, NULL));
-    check_i(avro_value_set_double(&field, pbase->dst_ip_lat));
-  }
-
-  if (wtc_2 & COUNT_SRC_HOST_LON) {
     check_i(avro_value_get_by_name(&value, "lon_ip_src", &field, NULL));
     check_i(avro_value_set_double(&field, pbase->src_ip_lon));
   }
 
-  if (wtc_2 & COUNT_DST_HOST_LON) {
+  if (wtc_2 & COUNT_DST_HOST_COORDS) {
+    check_i(avro_value_get_by_name(&value, "lat_ip_dst", &field, NULL));
+    check_i(avro_value_set_double(&field, pbase->dst_ip_lat));
     check_i(avro_value_get_by_name(&value, "lon_ip_dst", &field, NULL));
     check_i(avro_value_set_double(&field, pbase->dst_ip_lon));
   }
