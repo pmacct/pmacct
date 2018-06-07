@@ -2190,7 +2190,7 @@ int sql_evaluate_primitives(int primitive)
     strncat(insert_clause, "lon_ip_dst", SPACELEFT(insert_clause));
     strncat(values[primitive].string, "%f", SPACELEFT(values[primitive].string));
     strncat(where[primitive].string, "lon_ip_dst=%f", SPACELEFT(where[primitive].string));
-    values[primitive].type = where[primitive].type = COUNT_INT_DST_HOST_LAT;
+    values[primitive].type = where[primitive].type = COUNT_INT_DST_HOST_COORDS;
     values[primitive].handler = where[primitive].handler = count_dst_host_coords_handler;
     primitive++;
   }
