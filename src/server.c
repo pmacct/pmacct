@@ -541,7 +541,15 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
   if (w2 & COUNT_SRC_HOST_COUNTRY) memcpy(&d1->src_ip_country, &s1->src_ip_country, sizeof(d1->src_ip_country)); 
   if (w2 & COUNT_DST_HOST_COUNTRY) memcpy(&d1->dst_ip_country, &s1->dst_ip_country, sizeof(d1->dst_ip_country)); 
   if (w2 & COUNT_SRC_HOST_POCODE) memcpy(&d1->src_ip_pocode, &s1->src_ip_pocode, sizeof(d1->src_ip_pocode)); 
-  if (w2 & COUNT_DST_HOST_POCODE) memcpy(&d1->dst_ip_pocode, &s1->dst_ip_pocode, sizeof(d1->dst_ip_pocode)); 
+  if (w2 & COUNT_DST_HOST_POCODE) memcpy(&d1->dst_ip_pocode, &s1->dst_ip_pocode, sizeof(d1->dst_ip_pocode));
+  if (w2 & COUNT_SRC_HOST_COORDS) {
+    memcpy(&d1->src_ip_lat, &s1->src_ip_lat, sizeof(d1->src_ip_lat));
+    memcpy(&d1->src_ip_lon, &s1->src_ip_lon, sizeof(d1->src_ip_lon));
+  }
+  if (w2 & COUNT_DST_HOST_COORDS) {
+    memcpy(&d1->dst_ip_lat, &s1->dst_ip_lat, sizeof(d1->dst_ip_lat));
+    memcpy(&d1->dst_ip_lon, &s1->dst_ip_lon, sizeof(d1->dst_ip_lon));
+  } 
 #endif
 
 #if defined (WITH_NDPI)

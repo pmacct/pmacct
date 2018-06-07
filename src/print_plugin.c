@@ -692,6 +692,14 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (config.what_to_count_2 & COUNT_DST_HOST_COUNTRY) fprintf(f, "%-5s       ", data->dst_ip_country.str);
         if (config.what_to_count_2 & COUNT_SRC_HOST_POCODE) fprintf(f, "%-12s  ", data->src_ip_pocode.str);
         if (config.what_to_count_2 & COUNT_DST_HOST_POCODE) fprintf(f, "%-12s  ", data->dst_ip_pocode.str);
+        if (config.what_to_count_2 & COUNT_SRC_HOST_COORDS) {
+          fprintf(f, "%-8f  ", data->src_ip_lat);
+          fprintf(f, "%-8f  ", data->src_ip_lon);
+        }
+        if (config.what_to_count_2 & COUNT_DST_HOST_COORDS) {
+          fprintf(f, "%-8f  ", data->dst_ip_lat);
+          fprintf(f, "%-8f  ", data->dst_ip_lon);
+        }
   #endif
   
         if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "%-7u       ", data->sampling_rate);
@@ -1088,6 +1096,14 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (config.what_to_count_2 & COUNT_DST_HOST_COUNTRY) fprintf(f, "%s%s", write_sep(sep, &count), data->dst_ip_country.str);
         if (config.what_to_count_2 & COUNT_SRC_HOST_POCODE) fprintf(f, "%s%s", write_sep(sep, &count), data->src_ip_pocode.str);
         if (config.what_to_count_2 & COUNT_DST_HOST_POCODE) fprintf(f, "%s%s", write_sep(sep, &count), data->dst_ip_pocode.str);
+        if (config.what_to_count_2 & COUNT_SRC_HOST_COORDS) {
+          fprintf(f, "%s%f", write_sep(sep, &count), data->src_ip_lat);
+          fprintf(f, "%s%f", write_sep(sep, &count), data->src_ip_lon);
+        }
+        if (config.what_to_count_2 & COUNT_DST_HOST_COORDS) {
+          fprintf(f, "%s%f", write_sep(sep, &count), data->dst_ip_lat);
+          fprintf(f, "%s%f", write_sep(sep, &count), data->dst_ip_lon);
+        }
   #endif
   
         if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "%s%u", write_sep(sep, &count), data->sampling_rate);
@@ -1367,6 +1383,8 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
 #if defined (WITH_GEOIPV2)
   if (config.what_to_count_2 & COUNT_SRC_HOST_POCODE) fprintf(f, "SH_POCODE     ");
   if (config.what_to_count_2 & COUNT_DST_HOST_POCODE) fprintf(f, "DH_POCODE     ");
+  if (config.what_to_count_2 & COUNT_SRC_HOST_COORDS) fprintf(f, "SH_COORDS     ");
+  if (config.what_to_count_2 & COUNT_DST_HOST_COORDS) fprintf(f, "DH_COORDS     ");
 #endif
   if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "SAMPLING_RATE ");
 #if defined ENABLE_IPV6
@@ -1485,6 +1503,8 @@ void P_write_stats_header_csv(FILE *f, int is_event)
 #if defined (WITH_GEOIPV2)
   if (config.what_to_count_2 & COUNT_SRC_HOST_POCODE) fprintf(f, "%sSH_POCODE", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_DST_HOST_POCODE) fprintf(f, "%sDH_POCODE", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_SRC_HOST_COORDS) fprintf(f, "%sSH_COORDS", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_DST_HOST_COORDS) fprintf(f, "%sDH_COORDS", write_sep(sep, &count));
 #endif
   if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "%sSAMPLING_RATE", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_POST_NAT_SRC_HOST) fprintf(f, "%sPOST_NAT_SRC_IP", write_sep(sep, &count));

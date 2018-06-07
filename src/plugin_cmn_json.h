@@ -86,6 +86,8 @@ EXT void compose_json_src_host_country(json_t *, struct chained_cache *);
 EXT void compose_json_dst_host_country(json_t *, struct chained_cache *);
 EXT void compose_json_src_host_pocode(json_t *, struct chained_cache *);
 EXT void compose_json_dst_host_pocode(json_t *, struct chained_cache *);
+EXT void compose_json_src_host_coords(json_t *, struct chained_cache *);
+EXT void compose_json_dst_host_coords(json_t *, struct chained_cache *);
 #endif
 EXT void compose_json_tcp_flags(json_t *, struct chained_cache *);
 EXT void compose_json_proto(json_t *, struct chained_cache *);
