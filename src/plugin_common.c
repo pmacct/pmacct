@@ -898,26 +898,6 @@ int P_cmp_historical_acct(struct timeval *entry_basetime, struct timeval *insert
   return ret;
 }
 
-int P_test_zero_elem(struct chained_cache *elem)
-{
-  if (elem) {
-    if (elem->flow_type == NF9_FTYPE_NAT_EVENT) {
-      if (elem->pnat && elem->pnat->nat_event) return FALSE;
-      else return TRUE;
-    }
-    else if (elem->flow_type == NF9_FTYPE_OPTION) {
-      /* not really much we can test */
-      return FALSE;
-    }
-    else {
-      if (elem->bytes_counter || elem->packet_counter || elem->flow_counter) return FALSE;
-      else return TRUE;
-    }
-  }
-
-  return TRUE;
-}
-
 void primptrs_set_all_from_chained_cache(struct primitives_ptrs *prim_ptrs, struct chained_cache *entry)
 {
   struct pkt_data *data;

@@ -2403,7 +2403,8 @@ u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_p
 
   /* first round: event vs traffic */
   if (!tpl->tpl[NF9_IN_BYTES].len && !tpl->tpl[NF9_OUT_BYTES].len && !tpl->tpl[NF9_FLOW_BYTES].len &&
-      /* && packets? && */ !tpl->tpl[NF9_DATALINK_FRAME_SECTION].len) {
+      !tpl->tpl[NF9_INITIATOR_OCTETS].len && !tpl->tpl[NF9_RESPONDER_OCTETS].len && /* packets? && */
+      !tpl->tpl[NF9_DATALINK_FRAME_SECTION].len) {
     ret = NF9_FTYPE_EVENT;
   }
   else {
