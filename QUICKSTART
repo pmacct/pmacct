@@ -2064,10 +2064,10 @@ pmacct can perform GeoIP country lookups against a Maxmind DB v1 (--enable-geoip
 and against a Maxmind DB v2 (--enable-geoipv2). A v1 database enables resolution
 of src_host_country and dst_host_country primitives only. A v2 database enables
 resolution of presently supported GeoIP-related primitives, ie. src_host_country,
-src_host_pocode, dst_host_country, dst_host_pocode. Pre-requisite for the feature
-to work are: a) a working installed Maxmind GeoIP library and headers and b) a
-Maxmind GeoIP database (freely available). Two steps to quickly start with GeoIP
-lookups in pmacct:
+src_host_pocode, src_host_coords, dst_host_country, dst_host_pocode and
+dst_host_coords. Pre-requisite for the feature to work are: a) a working
+installed Maxmind GeoIP library and headers and b) a Maxmind GeoIP database
+(freely available). Two steps to quickly start with GeoIP lookups in pmacct:
  
 GeoIP v1 (libGeoIP):
 * Have libGeoIP library and headers available to compile against; have a GeoIP
