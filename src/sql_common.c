@@ -2210,6 +2210,20 @@ int sql_evaluate_primitives(int primitive)
     primitive++;
   }
 
+  if (what_to_count_2 & COUNT_SAMPLING_DIRECTION) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "sampling_direction", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%s", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "sampling_direction=\'%s\'", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_SAMPLING_DIRECTION;
+    values[primitive].handler = where[primitive].handler = count_sampling_direction_handler;
+    primitive++;
+  }
+
   if (what_to_count_2 & COUNT_POST_NAT_SRC_HOST) {
     if (primitive) {
       strncat(insert_clause, ", ", SPACELEFT(insert_clause));

@@ -564,6 +564,13 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    if (channels_list[index].aggregation_2 & COUNT_SAMPLING_DIRECTION) {
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = sampling_direction_handler;
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_sampling_direction_handler;
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = SF_sampling_direction_handler;
+      primitives++;
+    }
+
 #if defined (WITH_GEOIP)
     if (channels_list[index].aggregation_2 & COUNT_SRC_HOST_COUNTRY) {
       channels_list[index].phandler[primitives] = src_host_country_geoip_handler;
@@ -1465,6 +1472,15 @@ void sampling_rate_handler(struct channels_list_entry *chptr, struct packet_ptrs
 
   if (config.sfacctd_renormalize)
     pdata->primitives.sampling_rate = 1; /* already renormalized */
+}
+
+void sampling_direction_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+
+  /* dummy */
+  pdata->primitives.sampling_direction[0] = 'u';
+  pdata->primitives.sampling_direction[1] = '\0';
 }
 
 void mpls_vpn_rd_frommap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -2762,6 +2778,41 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
 
   if (config.sfacctd_renormalize && pdata->primitives.sampling_rate)
     pdata->primitives.sampling_rate = 1; /* already renormalized */
+}
+
+void NF_sampling_direction_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int8_t direction8;
+  int direction = ERR;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_DIRECTION].len == 1) {
+      memcpy(&direction8, pptrs->f_data+tpl->tpl[NF9_DIRECTION].off, 1);
+      direction = direction8;
+    }
+    break;
+  default:
+    break;
+  }
+
+  switch(direction) {
+  case 0:
+    pdata->primitives.sampling_direction[0] = 'i';
+    break;
+  case 1:
+    pdata->primitives.sampling_direction[0] = 'e';
+    break;
+  default:
+    pdata->primitives.sampling_direction[0] = 'u';
+    break;
+  }
+
+  pdata->primitives.sampling_direction[1] = '\0';
 }
 
 void NF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -4795,6 +4846,15 @@ void SF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
 
   if (config.sfacctd_renormalize && pdata->primitives.sampling_rate) 
     pdata->primitives.sampling_rate = 1; /* already renormalized */
+}
+
+void SF_sampling_direction_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+
+  /* dummy */
+  pdata->primitives.sampling_direction[0] = 'u';
+  pdata->primitives.sampling_direction[1] = '\0';
 }
 
 void SF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

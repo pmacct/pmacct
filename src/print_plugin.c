@@ -703,6 +703,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   #endif
   
         if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "%-7u       ", data->sampling_rate);
+        if (config.what_to_count_2 & COUNT_SAMPLING_DIRECTION) fprintf(f, "%-1s                   ", data->sampling_direction);
   
         if (config.what_to_count_2 & COUNT_POST_NAT_SRC_HOST) {
           addr_to_str(ip_address, &pnat->post_nat_src_ip);
@@ -1107,6 +1108,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   #endif
   
         if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "%s%u", write_sep(sep, &count), data->sampling_rate);
+        if (config.what_to_count_2 & COUNT_SAMPLING_DIRECTION) fprintf(f, "%s%s", write_sep(sep, &count), data->sampling_direction);
   
         if (config.what_to_count_2 & COUNT_POST_NAT_SRC_HOST) {
           addr_to_str(src_host, &pnat->post_nat_src_ip);
@@ -1393,6 +1395,7 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   }
 #endif
   if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "SAMPLING_RATE ");
+  if (config.what_to_count_2 & COUNT_SAMPLING_DIRECTION) fprintf(f, "SAMPLING_DIRECTION ");
 #if defined ENABLE_IPV6
   if (config.what_to_count_2 & COUNT_POST_NAT_SRC_HOST) fprintf(f, "POST_NAT_SRC_IP                                ");
   if (config.what_to_count_2 & COUNT_POST_NAT_DST_HOST) fprintf(f, "POST_NAT_DST_IP                                ");
@@ -1519,6 +1522,7 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   }
 #endif
   if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "%sSAMPLING_RATE", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_SAMPLING_DIRECTION) fprintf(f, "%sSAMPLING_DIRECTION", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_POST_NAT_SRC_HOST) fprintf(f, "%sPOST_NAT_SRC_IP", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_POST_NAT_DST_HOST) fprintf(f, "%sPOST_NAT_DST_IP", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_POST_NAT_SRC_PORT) fprintf(f, "%sPOST_NAT_SRC_PORT", write_sep(sep, &count));
