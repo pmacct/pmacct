@@ -1,0 +1,21 @@
+This document doesn't replace documentation relevant to the database software
+you are using, ie. README.mysql, README.pgsql or README.sqlite3.
+
+The 'sampling_rate' and 'sampling_direction' fields.
+Sampling rate is being introduced to inform about the renormalization factor
+that has to be applied to entries. If renormalization is enabled then value
+of this field is, intuitively, 1. Sampling direction informs whether data is
+captured ingress vs egress. Guidelines below (typically in MySQL format) are
+to add such primitives to the SQL schema:
+
+* sampling_rate field:
+  - "sampling_rate INT(4) UNSIGNED NOT NULL," to declare the field itself
+  - "PRIMARY KEY (..., sampling_rate, ...)" to put it in the primary key 
+
+* sampling_direction field:
+  - "sampling_direction CHAR(1) NOT NULL," to declare the field itself
+  - "PRIMARY KEY (..., sampling_direction, ...)" to put it in the primary key 
+
+The primitives are not declared as part of any default table version; yet will
+not fail version checks which are enabled when 'sql_optimize_clauses' feature
+is disabled.
