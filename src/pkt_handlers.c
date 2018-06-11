@@ -5407,10 +5407,10 @@ void dst_host_coords_geoipv2_handler(struct channels_list_entry *chptr, struct p
   MMDB_entry_data_list_s *entry_data_list = NULL;
   int status;
 
-  if (pptrs->geoipv2_src.found_entry) {
+  if (pptrs->geoipv2_dst.found_entry) {
     MMDB_entry_data_s entry_data;
 
-    status = MMDB_get_value(&pptrs->geoipv2_src.entry, &entry_data, "location", "latitude", NULL);
+    status = MMDB_get_value(&pptrs->geoipv2_dst.entry, &entry_data, "location", "latitude", NULL);
 
     if (entry_data.offset) {
       MMDB_entry_s entry = { .mmdb = &config.geoipv2_db, .offset = entry_data.offset };
@@ -5431,7 +5431,7 @@ void dst_host_coords_geoipv2_handler(struct channels_list_entry *chptr, struct p
       MMDB_free_entry_data_list(entry_data_list);
     }
 
-    status = MMDB_get_value(&pptrs->geoipv2_src.entry, &entry_data, "location", "longitude", NULL);
+    status = MMDB_get_value(&pptrs->geoipv2_dst.entry, &entry_data, "location", "longitude", NULL);
 
     if (entry_data.offset) {
       MMDB_entry_s entry = { .mmdb = &config.geoipv2_db, .offset = entry_data.offset };
