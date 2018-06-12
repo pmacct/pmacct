@@ -1591,8 +1591,40 @@ int main(int argc,char **argv)
         else if (!strcmp(count_token[match_string_index], "dst_host_pocode")) {
           strlcpy(request.data.dst_ip_pocode.str, match_string_token, PM_POCODE_T_STRLEN);
         }
+        else if (!strcmp(count_token[match_string_index], "src_host_coords")) {
+	  char *lat_token, *lon_token, *coord_str = strdup(match_string_token), coord_delim[] = ":";
 
-	/* XXX: add src_host_coords and dst_host_coords support */
+	  lat_token = strtok(coord_str, coord_delim);
+	  lon_token = strtok(NULL, coord_delim);
+
+	  if (!lat_token || !lon_token) {
+	    printf("ERROR: src_host_coords: Invalid coordinates: '%s'.\n", match_string_token);
+	    printf("ERROR: Expected format: <latitude>:<longitude>\n");
+            exit(1);
+	  }
+
+	  request.data.src_ip_lat = atof(lat_token);
+	  request.data.src_ip_lon = atof(lon_token);
+
+	  free(coord_str);
+	}
+        else if (!strcmp(count_token[match_string_index], "dst_host_coords")) {
+	  char *lat_token, *lon_token, *coord_str = strdup(match_string_token), coord_delim[] = ":";
+
+	  lat_token = strtok(coord_str, coord_delim);
+	  lon_token = strtok(NULL, coord_delim);
+
+	  if (!lat_token || !lon_token) {
+	    printf("ERROR: dst_host_coords: Invalid coordinates: '%s'.\n", match_string_token);
+	    printf("ERROR: Expected format: <latitude>:<longitude>\n");
+            exit(1);
+	  }
+
+	  request.data.dst_ip_lat = atof(lat_token);
+	  request.data.dst_ip_lon = atof(lon_token);
+
+	  free(coord_str);
+	}
 #endif
 	else if (!strcmp(count_token[match_string_index], "sampling_rate")) {
 	  request.data.sampling_rate = atoi(match_string_token);
