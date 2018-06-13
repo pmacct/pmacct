@@ -460,15 +460,14 @@ reprocess:
 	((struct ch_buf_hdr *)channels_list[index].rg.ptr)->len = channels_list[index].bufptr;
 	((struct ch_buf_hdr *)channels_list[index].rg.ptr)->seq = channels_list[index].hdr.seq;
 	((struct ch_buf_hdr *)channels_list[index].rg.ptr)->num = channels_list[index].hdr.num;
-	((struct ch_buf_hdr *)channels_list[index].rg.ptr)->core_pid = channels_list[index].core_pid;
 
 	channels_list[index].status->last_buf_off = (u_int64_t)(channels_list[index].rg.ptr - channels_list[index].rg.base);
 
         if (config.debug_internal_msg) {
 	  struct plugins_list_entry *list = channels_list[index].plugin;
-	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer released cpid=%u len=%llu seq=%u num_entries=%u off=%llu\n",
-		list->name, list->type.string, channels_list[index].core_pid, channels_list[index].bufptr,
-		channels_list[index].hdr.seq, channels_list[index].hdr.num, channels_list[index].status->last_buf_off);
+	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer released len=%llu seq=%u num_entries=%u off=%llu\n",
+		list->name, list->type.string, channels_list[index].bufptr, channels_list[index].hdr.seq,
+		channels_list[index].hdr.num, channels_list[index].status->last_buf_off);
 	}
 
 	/* sending buffer to connected ZMQ subscriber(s) */
@@ -497,7 +496,6 @@ reprocess:
 	/* let's protect the buffer we are going to write */
         ((struct ch_buf_hdr *)channels_list[index].rg.ptr)->seq = -1;
         ((struct ch_buf_hdr *)channels_list[index].rg.ptr)->num = 0;
-        ((struct ch_buf_hdr *)channels_list[index].rg.ptr)->core_pid = 0;
 
         /* rewind pointer */
         channels_list[index].bufptr = channels_list[index].buf;
@@ -796,7 +794,6 @@ void fill_pipe_buffer()
 
     ((struct ch_buf_hdr *)chptr->rg.ptr)->seq = chptr->hdr.seq;
     ((struct ch_buf_hdr *)chptr->rg.ptr)->num = chptr->hdr.num;
-    ((struct ch_buf_hdr *)chptr->rg.ptr)->core_pid = chptr->core_pid;
 
     if (chptr->plugin->cfg.pipe_zmq) {
 #ifdef WITH_ZMQ

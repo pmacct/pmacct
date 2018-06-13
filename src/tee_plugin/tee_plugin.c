@@ -241,11 +241,10 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       msg->payload = (pipebuf+sizeof(struct ch_buf_hdr)+PmsgSz);
 
       if (config.debug_internal_msg) 
-        Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received cpid=%u len=%llu seq=%u num_entries=%u\n",
-                config.name, config.type, core_pid, ((struct ch_buf_hdr *)pipebuf)->len,
-                seq, ((struct ch_buf_hdr *)pipebuf)->num);
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received len=%llu seq=%u num_entries=%u\n",
+                config.name, config.type, ((struct ch_buf_hdr *)pipebuf)->len, seq,
+                ((struct ch_buf_hdr *)pipebuf)->num);
 
-      if (!config.pipe_check_core_pid || ((struct ch_buf_hdr *)pipebuf)->core_pid == core_pid) {
       while (((struct ch_buf_hdr *)pipebuf)->num > 0) {
 	for (pool_idx = 0; pool_idx < receivers.num; pool_idx++) {
 	  if (msg->bcast || !evaluate_tags(&receivers.pools[pool_idx].tag_filter, msg->tag)) {
@@ -277,7 +276,6 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  msg = (struct pkt_msg *) dataptr;
 	  msg->payload = (dataptr + PmsgSz);
 	}
-      }
       }
 
       recv_budget++;

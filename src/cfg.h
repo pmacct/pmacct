@@ -93,7 +93,6 @@ struct configuration {
   u_int64_t pipe_size;
   u_int64_t buffer_size;
   int buffer_immediate;
-  int pipe_check_core_pid;
   int pipe_zmq;
   int pipe_zmq_retry;
   int pipe_zmq_profile;

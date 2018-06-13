@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -43,7 +43,6 @@ struct ring {
 };
 
 struct ch_buf_hdr {
-  pid_t core_pid;
   u_int64_t len;
   u_int32_t seq;
   u_int32_t num;

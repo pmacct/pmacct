@@ -2222,28 +2222,6 @@ int cfg_key_plugin_pipe_size(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_plugin_pipe_check_core_pid(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
-
-  value = parse_truefalse_nonzero(value_ptr);
-  if (value < 0) return ERR;
-
-  if (!name) for (; list; list = list->next, changes++) list->cfg.pipe_check_core_pid = value;
-  else {
-    for (; list; list = list->next) {
-      if (!strcmp(name, list->name)) {
-        list->cfg.pipe_check_core_pid = value;
-        changes++;
-        break;
-      }
-    }
-  }
-
-  return changes;
-}
-
 int cfg_key_plugin_pipe_zmq(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

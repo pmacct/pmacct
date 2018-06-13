@@ -1490,7 +1490,6 @@ void set_default_preferences(struct configuration *cfg)
     if (!cfg->nfacctd_as) cfg->nfacctd_as = NF_AS_KEEP;
     set_truefalse_nonzero(&cfg->nfacctd_disable_checks);
   }
-  set_truefalse_nonzero(&cfg->pipe_check_core_pid);
   if (!cfg->nfacctd_bgp_peer_as_src_type) cfg->nfacctd_bgp_peer_as_src_type = BGP_SRC_PRIMITIVES_KEEP;
   if (!cfg->nfacctd_bgp_src_std_comm_type) cfg->nfacctd_bgp_src_std_comm_type = BGP_SRC_PRIMITIVES_KEEP;
   if (!cfg->nfacctd_bgp_src_ext_comm_type) cfg->nfacctd_bgp_src_ext_comm_type = BGP_SRC_PRIMITIVES_KEEP;
