@@ -13,9 +13,10 @@ DESC:   Following is the list of features, knobs and plugins that are being
         discontinued with release 1.7.2:
 	* pre_tag_map: matching on 'sampling_rate' is not supported anymore
 	  since a sampling_rate primitive is available from version 0.14.2;
-	  the 'return' feature to return matched data before completing the
-	  map workflow has started the process of being obsolete (retired
-	  from docs but still available).
+	  the 'return', feature to return matched data before completing the
+	  map workflow has started, and matching on NetFlow/IPFIX 'direction'
+	  are in the process of being obsoleted (retired from docs but still
+	  implemented).
 	* nfacctd: collection, processing and replication of NetFlow v1, v7
 	  and v8 has been discontinued. The focus will remain on popular v5,
 	  v9 and IPFIX. 
