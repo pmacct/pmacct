@@ -91,7 +91,8 @@ EXT struct tee_receiver *Tee_hash_agent_balance(void *, struct pkt_msg *);
 EXT struct tee_receiver *Tee_hash_tag_balance(void *, struct pkt_msg *);
 
 #ifdef WITH_KAFKA
-EXT void Tee_kafka_send(struct pkt_msg *, struct p_kafka_host *);
+EXT void Tee_kafka_send(struct pkt_msg *, struct tee_receivers_pool *);
+EXT void Tee_init_kafka_host(struct p_kafka_host *, char *, char *, u_int32_t);
 #endif
 
 /* global variables */

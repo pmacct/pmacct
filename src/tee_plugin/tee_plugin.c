@@ -258,7 +258,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	      /* Checking the handler is the most light weight op we can perform
 		 in order to ensure we are in business with the Kafka broker */
 	      if (p_kafka_get_handler(&receivers.pools[pool_idx].kafka_host)) {
-		Tee_kafka_send(msg, &receivers.pools[pool_idx].kafka_host);
+		Tee_kafka_send(msg, &receivers.pools[pool_idx]);
 	      }
 #endif
 	    }
@@ -444,9 +444,11 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
 }
 
 #ifdef WITH_KAFKA
-void Tee_kafka_send(struct pkt_msg *msg, struct p_kafka_host *kafka_host)
+void Tee_kafka_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
 {
+  struct p_kafka_host *kafka_host = &pool->kafka_host; 
   struct sockaddr target;
+  time_t last_fail, now;
   int msglen = 0;
 
   memset(&target, 0, sizeof(target));
@@ -471,6 +473,15 @@ void Tee_kafka_send(struct pkt_msg *msg, struct p_kafka_host *kafka_host)
     Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sending %s packet from [%s:%u] seqno [%u] to Kafka [%s-%s]\n",
                         config.name, config.type, flow, agent_addr, agent_port, msg->seqno,
                         broker, topic);
+  }
+
+  last_fail = P_broker_timers_get_last_fail(&kafka_host->btimers);
+  if (last_fail) {
+    now = time(NULL);
+
+    if ((last_fail + P_broker_timers_get_retry_interval(&kafka_host->btimers)) <= now) {
+      Tee_init_kafka_host(kafka_host, pool->kafka_broker, pool->kafka_topic, pool->id);
+    }
   }
 
   if (config.tee_transparent) {
@@ -547,24 +558,33 @@ void Tee_init_socks()
 
 #ifdef WITH_KAFKA
     if (strlen(receivers.pools[pool_idx].kafka_broker)) {
-      p_kafka_init_host(&receivers.pools[pool_idx].kafka_host, config.tee_kafka_config_file);
-      p_kafka_connect_to_produce(&receivers.pools[pool_idx].kafka_host);
-      p_kafka_set_broker(&receivers.pools[pool_idx].kafka_host, receivers.pools[pool_idx].kafka_broker, FALSE);
-      p_kafka_set_topic(&receivers.pools[pool_idx].kafka_host, receivers.pools[pool_idx].kafka_topic);
-      p_kafka_set_content_type(&receivers.pools[pool_idx].kafka_host, PM_KAFKA_CNT_TYPE_BIN);
-
-      if (config.debug) {
-        char *broker, *topic;
-
-	broker = p_kafka_get_broker(&receivers.pools[pool_idx].kafka_host);
-	topic = p_kafka_get_topic(&receivers.pools[pool_idx].kafka_host);
-        Log(LOG_DEBUG, "DEBUG ( %s/%s ): PoolID=%u KafkaBroker=%s KafkaTopic=%s\n",
-	    config.name, config.type, receivers.pools[pool_idx].id, broker, topic);
-      }
+      Tee_init_kafka_host(&receivers.pools[pool_idx].kafka_host, receivers.pools[pool_idx].kafka_broker,
+			  receivers.pools[pool_idx].kafka_topic, receivers.pools[pool_idx].id);
     }
 #endif
   }
 }
+
+#ifdef WITH_KAFKA
+void Tee_init_kafka_host(struct p_kafka_host *kafka_host, char *kafka_broker, char *kafka_topic, u_int32_t pool_id)
+{
+  p_kafka_init_host(kafka_host, config.tee_kafka_config_file);
+  p_kafka_connect_to_produce(kafka_host);
+  p_kafka_set_broker(kafka_host, kafka_broker, FALSE);
+  p_kafka_set_topic(kafka_host, kafka_topic);
+  p_kafka_set_content_type(kafka_host, PM_KAFKA_CNT_TYPE_BIN);
+  P_broker_timers_set_retry_interval(&kafka_host->btimers, PM_KAFKA_DEFAULT_RETRY);
+
+  if (config.debug) {
+    char *broker, *topic;
+
+    broker = p_kafka_get_broker(kafka_host);
+    topic = p_kafka_get_topic(kafka_host);
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): PoolID=%u KafkaBroker=%s KafkaTopic=%s\n",
+	config.name, config.type, pool_id, broker, topic);
+  }
+}
+#endif
 
 int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, u_int16_t src_port)
 {
