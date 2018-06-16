@@ -598,12 +598,7 @@ int main(int argc,char **argv, char **envp)
   }
 #ifdef WITH_KAFKA
   else if (config.nfacctd_kafka_broker_host) {
-    p_kafka_init_host(&nfacctd_kafka_host, config.nfacctd_kafka_config_file);
-    p_kafka_connect_to_consume(&nfacctd_kafka_host);
-    p_kafka_set_broker(&nfacctd_kafka_host, config.nfacctd_kafka_broker_host, config.nfacctd_kafka_broker_port);
-    p_kafka_set_topic(&nfacctd_kafka_host, config.nfacctd_kafka_topic);
-    p_kafka_set_content_type(&nfacctd_kafka_host, PM_KAFKA_CNT_TYPE_BIN);
-    p_kafka_manage_consumer(&nfacctd_kafka_host, TRUE);
+    SF_init_kafka_host(&nfacctd_kafka_host);
 
     config.handle_fragments = TRUE;
     init_ip_fragment_handler();
@@ -1115,15 +1110,9 @@ int main(int argc,char **argv, char **envp)
       if (kafka_reconnect) {
 	/* Close */
         p_kafka_manage_consumer(&nfacctd_kafka_host, FALSE);
-        p_kafka_close(&nfacctd_kafka_host, FALSE);
 
 	/* Re-open */
-	p_kafka_init_host(&nfacctd_kafka_host, config.nfacctd_kafka_config_file);
-	p_kafka_connect_to_consume(&nfacctd_kafka_host);
-	p_kafka_set_broker(&nfacctd_kafka_host, config.nfacctd_kafka_broker_host, config.nfacctd_kafka_broker_port);
-	p_kafka_set_topic(&nfacctd_kafka_host, config.nfacctd_kafka_topic);
-	p_kafka_set_content_type(&nfacctd_kafka_host, PM_KAFKA_CNT_TYPE_BIN);
-	p_kafka_manage_consumer(&nfacctd_kafka_host, TRUE);
+	SF_init_kafka_host(&nfacctd_kafka_host);
 
 	continue;
       }
@@ -2540,3 +2529,17 @@ void sf_flow_sample_hdr_decode(SFSample *sample)
     }
   }
 }
+
+#ifdef WITH_KAFKA
+void SF_init_kafka_host(void *kh)
+{
+  struct p_kafka_host *kafka_host = kh;
+
+  p_kafka_init_host(kafka_host, config.nfacctd_kafka_config_file);
+  p_kafka_connect_to_consume(kafka_host);
+  p_kafka_set_broker(kafka_host, config.nfacctd_kafka_broker_host, config.nfacctd_kafka_broker_port);
+  p_kafka_set_topic(kafka_host, config.nfacctd_kafka_topic);
+  p_kafka_set_content_type(kafka_host, PM_KAFKA_CNT_TYPE_BIN);
+  p_kafka_manage_consumer(kafka_host, TRUE);
+}
+#endif

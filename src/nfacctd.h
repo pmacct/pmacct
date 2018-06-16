@@ -521,6 +521,10 @@ EXT u_int8_t get_ipfix_vlen(char *, u_int16_t *);
 EXT struct template_cache_entry *nfacctd_offline_read_json_template(char *, char *, int);
 EXT void load_templates_from_file(char *);
 EXT void save_template(struct template_cache_entry *, char *);
+
+#ifdef WITH_KAFKA
+EXT void NF_init_kafka_host(void *);
+#endif
 #undef EXT
 
 #if (!defined __PKT_HANDLERS_C)

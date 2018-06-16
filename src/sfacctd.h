@@ -350,6 +350,10 @@ EXT void sfv245_check_counter_log_init(struct packet_ptrs *);
 EXT void usage_daemon(char *);
 EXT void compute_once();
 
+#ifdef WITH_KAFKA
+EXT void SF_init_kafka_host(void *);
+#endif
+
 /* global variables */
 EXT int sfacctd_counter_backend_methods;
 EXT struct bgp_misc_structs *sf_cnt_misc_db;
