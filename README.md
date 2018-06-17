@@ -19,10 +19,14 @@ DOCUMENTATION
 
 # BUILDING
 
+- Resolve dependencies, ie.:
+  * apt-get install libpcap-dev pkg-config libtool autoconf automake bash *[Debian/Ubuntu]*
+  * yum install libpcap-devel pkgconfig libtool autoconf automake bash *[CentOS/RHEL]*
+
 - Build GitHub code:
   * git clone https://github.com/pmacct/pmacct.git
   * cd pmacct
-  * ./autogen.sh *[pkg-config, libtool, autoconf, automake and bash packages required]*
+  * ./autogen.sh
   * ./configure *[check-out available configure knobs via ./configure --help]* 
   * make
   * make install *[with super-user permission]*
