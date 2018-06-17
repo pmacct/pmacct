@@ -9,7 +9,7 @@ III.	Brief SQL (MySQL, PostgreSQL, SQLite 3.x) setup examples
 IV.	Running the libpcap-based daemon (pmacctd)
 V.	Running the NetFlow/IPFIX and sFlow daemons (nfacctd/sfacctd)
 VI.	Running the NFLOG-based daemon (uacctd)
-VII.	Running the pmacct client (pmacct)
+VII.	Running the pmacct IMT client (pmacct)
 VIII.	Running the RabbitMQ/AMQP plugin
 IX.	Running the Kafka plugin
 X.	Internal buffering and queueing
@@ -66,9 +66,11 @@ plugins. Here is a list of plugins included in the official pmacct distribution:
 II. Configuring pmacct for compilation and installing
 The simplest way to configure the package for compilation is to download the
 latest stable released tarball from http://www.pmacct.net/ and let the configure
-script to probe default headers and libraries for you. A first round of guessing
-is done via pkg-config then, for some libraries, "typical" default locations
-are checked, ie. /usr/local/lib. Switches you are likely to want enabled are
+script to probe default headers and libraries for you. The only dependency that
+pmacct brings is libpcap library and headers: libpcap-dev (or libpcap-devel) or
+(self-compiled) equivalent must be installed on the system. Then, a first round
+of guessing is done via pkg-config then, for some libraries, "typical" default
+locations are checked, ie. /usr/local/lib. Switches one likely wants enabled are
 already set so, ie. 64 bits counters and multi-threading (pre- requisite for
 the BGP, BMP, and IGP daemon codes); the full list of switches enabled by default
 are marked as 'default: yes' in the "./configure --help" output. SQL plugins, AMQP
@@ -77,13 +79,16 @@ to get the list of available switches, you can use the following command-line:
 
 shell> ./configure --help
 
-Examples on how to enable the support for (1) MySQL, (2) PostgreSQL, (3) SQLite,
-and any (4) mixed compilation:
+Examples on how to enable support for (1) MySQL, (2) PostgreSQL and (3) SQLite:
 
-(1) shell> ./configure --enable-mysql
-(2) shell> ./configure --enable-pgsql
-(3) shell> ./configure --enable-sqlite3
-(4) shell> ./configure --enable-mysql --enable-pgsql
+(1) libmysqlclient-dev package or (self-compiled) equivalent being installed:
+    shell> ./configure --enable-mysql
+
+(2) libpq-dev package or (self-compiled) equivalent being installed:
+    shell> ./configure --enable-pgsql
+
+(3) libsqlite3-dev package or (self-compiled) equivalent being installed:
+    shell> ./configure --enable-sqlite3
 
 If cloning the GitHub repository ( https://github.com/pmacct/pmacct ) instead,
 the configure script has to be generated, resulting in one extra step than the
@@ -150,9 +155,9 @@ However should you have installed libavro in the /usr/local/avro directory
 and pkg-config is unable to help, you can supply this non-default location as
 follows (assuming you are running the bash shell):
 
-export AVRO_LIBS="-L/usr/local/avro/lib -lavro"
-export AVRO_CFLAGS="-I/usr/local/avro/include"
-./configure --enable-rabbitmq --enable-avro
+shell> export AVRO_LIBS="-L/usr/local/avro/lib -lavro"
+shell> export AVRO_CFLAGS="-I/usr/local/avro/include"
+shell> ./configure --enable-rabbitmq --enable-avro
 
 IIc. Compiling pmacct against a own libpcap library
 Compiling against a downloaded libpcap library may be wanted for several
@@ -164,12 +169,12 @@ Once libpcap is downloaded, if static linking is wanted (ideal for example
 for distributing pmacct without external dependencies), the library can be
 configured for comipiling:
 
-./configure --disable-shared
+shell> ./configure --disable-shared
 
 pmacct should be pointed to the own libpcap library when configuring for
 compiling: 
 
-./configure --with-pcap-libs=/path/to/libpcap-x.y.z --with-pcap-includes=/path/to/libpcap-x.y.z
+shell> ./configure --with-pcap-libs=/path/to/libpcap-x.y.z --with-pcap-includes=/path/to/libpcap-x.y.z
 
 Once pmacct is compiled, it can be confirmed that the right library was
 picked by doing, for example, a 'pmacctd -V' and seeing the version of
@@ -177,7 +182,7 @@ libpcap matches with the supplied version.
 
 
 III. Brief SQL and noSQL setup examples
-RDBMS require a table schema to manage data. pmacct offers two options: use one
+RDBMS require a table schema to store data. pmacct offers two options: use one
 of the few pre-determined table schemas available (sections IIIa, b and c) or
 compose a custom schema to fit your needs (section IIId). If you are blind to
 SQL the former approach is recommended, although it can pose scalability issues
@@ -192,12 +197,14 @@ IIIa. MySQL examples
 shell> cd sql/
 
 - To create v1 tables:
+
 shell> mysql -u root -p < pmacct-create-db_v1.mysql
 shell> mysql -u root -p < pmacct-grant-db.mysql
 
 Data will be available in 'acct' table of 'pmacct' DB.
 
 - To create v2 tables:
+
 shell> mysql -u root -p < pmacct-create-db_v2.mysql
 shell> mysql -u root -p < pmacct-grant-db.mysql
 
@@ -209,14 +216,17 @@ IIIb. PostgreSQL examples
 Which user has to execute the following two scripts and how to autenticate with the
 PostgreSQL server depends upon your current configuration. Keep in mind that both
 scripts need postgres superuser permissions to execute some commands successfully:
+
 shell> cp -p *.pgsql /tmp
 shell> su - postgres
 
 To create v1 tables:
+
 shell> psql -d template1 -f /tmp/pmacct-create-db.pgsql
 shell> psql -d pmacct -f /tmp/pmacct-create-table_v1.pgsql
 
 To create v2 tables:
+
 shell> psql -d template1 -f /tmp/pmacct-create-db.pgsql
 shell> psql -d pmacct -f /tmp/pmacct-create-table_v2.pgsql
 
@@ -234,12 +244,14 @@ IIIc. SQLite examples
 shell> cd sql/
 
 - To create v1 tables:
+
 shell> sqlite3 /tmp/pmacct.db < pmacct-create-table.sqlite3 
 
 Data will be available in 'acct' table of '/tmp/pmacct.db' DB. Of course, you can change
 the database filename basing on your preferences.  
 
 - To create v2 tables:
+
 shell> sqlite3 /tmp/pmacct.db < pmacct-create-table_v2.sqlite3 
 
 Data will be available in 'acct_v2' table of '/tmp/pmacct.db' DB.
@@ -267,7 +279,7 @@ CREATE TABLE <table_name> (
 	packets INT UNSIGNED NOT NULL,
 	bytes BIGINT UNSIGNED NOT NULL,
 	stamp_inserted DATETIME NOT NULL,
-	stamp_updated DATETIME,
+	stamp_updated DATETIME
 );
 
 2) Indexing: primary key (of your choice, this is only an example) plus
@@ -311,21 +323,20 @@ To grant default pmacct user permission to write into the database look at the
 file sql/pmacct-grant-db.mysql
 
 IIIe. Historical accounting
-Enabling historical accounting allows to aggregate data over time (ie. 5 mins, hourly,
-daily) in a flexible and fully configurable way. Timestamps are lodged into two fields:
-'stamp_inserted' which represents the basetime of the timeslot and 'stamp_updated' which
-says when a given timeslot was updated for the last time. Following there is a pretty
-standard configuration fragment to slice data into nicely aligned (or rounded-off) 5
-minutes timeslots:
+Enabling historical accounting allows to aggregate data in time-bins (ie. 5 mins, hour,
+day, etc.) in a flexible and fully configurable way. Two timestamps are available: the
+'stamp_inserted' field, representing the basetime of the time-bin, and 'stamp_updated',
+the last time the time-bin was updated. Following a pretty standard config fragment to
+slice data into nicely aligned (or rounded-off) 5 minutes time-bins:
 
 sql_history: 5m 
 sql_history_roundoff: m
 
 IIIf. INSERTs-only 
-UPDATE queries are demanding in terms of resources; this is why, even if they are 
-supported by pmacct, a savy approach is to cache data for longer times in memory and
-write them off once per timeslot (sql_history): this produces a much lighter INSERTs-
-only environemnt. This is an example based on 5 minutes timeslots:
+UPDATE queries are expensive; this is why, even if they are supported by pmacct, a
+savy approach would be to cache data for longer times in memory and write them off
+once per time-bin (sql_history): this results into a much lighter INSERTs-only setup.
+This is an example based on 5 minutes time-bins:
 
 sql_refresh_time: 300
 sql_history: 5m
@@ -336,8 +347,8 @@ Note that sql_refresh_time is always expressed in seconds. An alternative approa
 for cases where sql_refresh_time must be kept shorter than sql_history (for example
 because a) of long sql_history periods, ie. hours or days, and/or because b) near
 real-time data feed is a requirement) is to set up a synthetic auto-increment 'id'
-field: it successfully prevents duplicates but comes at the expenses of GROUP BY
-queries when retrieving data.
+field: it successfully prevents duplicates but comes at the expenses of GROUP BYs
+when querying data.
 
 
 IV. Running the libpcap-based daemon (pmacctd) 
@@ -348,17 +359,19 @@ directives. To be aware of the existing configuration directives, please
 read the CONFIG-KEYS document. 
 
 Show all available pmacctd commandline switches:
+
 shell> pmacctd -h
 
 Run pmacctd reading configuration from a specified file (see examples/ tree
 for a brief list of some commonly useed keys; divert your eyes to CONFIG-KEYS
 for the full list). This example applies to all daemons:
+
 shell> pmacctd -f pmacctd.conf
 
 Daemonize the process; listen on eth0; aggregate data by src_host/dst_host;
 write to a MySQL server; filter in only traffic with source prefix 10.0.0.0/16;
-note that filters work the same as tcpdump. So, refer to libpcap/tcpdump man
-pages for examples and further reading. 
+note that filters work the same as tcpdump so you can refer to libpcap/tcpdump
+man pages for examples and further reading about the supported filtering syntax. 
 
 shell> pmacctd -D -c src_host,dst_host -i eth0 -P mysql src net 10.0.0.0/16
 
@@ -419,9 +432,8 @@ sql_table[in]: acct_in
 sql_table[out]: acct_out
 ! ...
 
-The previous example looks nice! But how to make data historical ? Simple
-enough, let's suppose you want to split traffic by hour and write data into
-the DB every 60 seconds. 
+And now enabling historical accounting. Split traffic by hour and write
+to the database every 60 seconds:
 
 !
 daemonize: true
@@ -437,11 +449,12 @@ sql_history: 1h
 sql_history_roundoff: h
 ! ...
 
-Let's now translate the same example in the memory plugin world. It's use
-is valuable expecially when it's required to feed bytes/packets/flows
-counters to external programs. Examples about the client program will
-follow later in this document. Now, note that each memory table need its
-own pipe file in order to get correctly contacted by the client:
+Let's now translate the same example in the memory plugin world. One of
+the use-cases for this plugin is when feeding 3rd party tools with bytes/
+packets/flows counters. Examples how to query the memory table with the
+'pmacct' client tool will follow later in this document. Now, note that
+each memory table need its own pipe file in order to get queried by the
+client:
 
 !
 daemonize: true
@@ -467,6 +480,7 @@ shell> pmacctd -D -i eth0 -m 8 -s 65535 -p /tmp/pipe.eth0
 shell> pmacctd -D -i ppp0 -m 0 -s 32768 -p /tmp/pipe.ppp0 
 
 Run pmacctd logging what happens to syslog and using "local2" facility:
+
 shell> pmacctd -c src_host,dst_host -S local2
 
 NOTE: superuser privileges are needed to execute pmacctd correctly. 
@@ -474,21 +488,23 @@ NOTE: superuser privileges are needed to execute pmacctd correctly.
 
 V. Running the NetFlow/IPFIX and sFlow daemons (nfacctd/sfacctd) 
 All examples about pmacctd are also valid for nfacctd and sfacctd with the exception
-of directives that apply exclusively to libpcap. If you've skipped examples in the
+of directives that apply exclusively to libpcap. If you have skipped examples in the
 previous section, please read them before continuing. All config keys available are
 in the CONFIG-KEYS document. Some examples:
 
-Run nfacctd reading configuration from a specified file.
+Run nfacctd reading configuration from a specified file:
+
 shell> nfacctd -f nfacctd.conf
 
 Daemonize the process; aggregate data by sum_host (by host, summing inbound + outbound
 traffic); write to a local MySQL server. Listen on port 5678 for incoming Netflow
-datagrams (from one or multiple NetFlow agents). Let's make pmacct refresh data each
-two minutes and let's make data historical, divided into timeslots of 10 minutes each.
-Finally, let's make use of a SQL table, version 4.
+datagrams (from one or multiple NetFlow agents):
+
 shell> nfacctd -D -c sum_host -P mysql -l 5678 
 
-And now written the configuration way:
+Let's now configure pmacct to insert data in MySQL every two minutes, enable historical
+accounting with 10 minutes time-bins and make use of a SQL table version 4:
+
 !
 daemonize: true
 plugins: mysql
@@ -658,17 +674,17 @@ and/or other relevant vendors is more than welcome.
 
 VI. Running the NFLOG-based daemon (uacctd)
 All examples about pmacctd are also valid for uacctd with the exception of directives
-that apply exclusively to libpcap. If you've skipped examples in section 'IV', please
-read them before continuing. All configuration keys available are in the CONFIG-KEYS
-document.
+that apply exclusively to libpcap. If you've skipped examples in the "Running the
+libpcap-based daemon (pmacctd)" section, please read them before continuing. All
+configuration keys available are in the CONFIG-KEYS document.
 
 The daemon depends on the package libnetfilter-log-dev (in Debian/Ubuntu or equivalent
-in the prefered Linux distribution). The support for NFLOG is disabled by default and
+in the preferred Linux distribution). The support for NFLOG is disabled by default and
 should be enabled as follows:
 
 shell> ./configure --enable-nflog
 
-NFLOG_CFLAGS and NFLOG_LIBS can be used if inclues and library are not in default
+NFLOG_CFLAGS and NFLOG_LIBS can be used if includes and library are not in default
 locations. The Linux NFLOG infrastructure requires a couple parameters in order to
 work properly: the NFLOG multicast group (uacctd_group) to which captured packets
 have to be sent to and the Netlink buffer size (uacctd_nl_size). The default buffer
@@ -685,6 +701,7 @@ iptables setting has to match with the "uacctd_group" uacctd one.
 A couple examples follow:
 
 Run uacctd reading configuration from a specified file.
+
 shell> uacctd -f uacctd.conf
 
 Daemonize the process; aggregate data by sum_host (by host, summing inbound + outbound
@@ -692,6 +709,7 @@ traffic); write to a local MySQL server. Listen on NFLOG multicast group #5. Let
 pmacct divide data into historical time-bins of 5 minutes. Let's disable UPDATE queries
 and hence align refresh time with the timeslot length. Finally, let's make use of a SQL
 table, version 4:
+
 !
 uacctd_group: 5
 daemonize: true
@@ -705,26 +723,30 @@ sql_dont_try_update: true
 ! ...
 
 
-VII. Running the pmacct client (pmacct)
-The pmacct client is used to retrieve data from memory tables. Requests and answers
-are exchanged via a pipe file: authorization is strictly connected to permissions on
-the pipe file. Note: while writing queries commandline, it may happen to write chars
-with a special meaning for the shell itself (ie. ; or *). Mind to either escape ( \;
-or \* ) them or put in quotes ( " ).
+VII. Running the pmacct IMT client (pmacct)
+The 'pmacct' client tool allows to query memory tables. Messaging happens over a UNIX
+pipe file: authorization is strictly connected to permissions of the pipe file. Note:
+while writing queries commandline, it may happen to write chars with a special meaning
+for the shell itself (ie. ; or *). Mind to either escape ( \; or \* ) them or put in
+quotes ( " ).
 
 Show all available pmacct client commandline switches:
+
 shell> pmacct -h
 
 Fetch data stored into the memory table:
+
 shell> pmacct -s 
 
 Match data between source IP 192.168.0.10 and destination IP 192.168.0.3 and return
 a formatted output; display all fields (-a), this way the output is easy to be parsed
 by tools like awk/sed; each unused field will be zero-filled: 
+
 shell> pmacct -c src_host,dst_host -M 192.168.0.10,192.168.0.3 -a
 
 Similar to the previous example; it is requested to reset data for matched entries;
 the server will return the actual counters to the client, then will reset them:
+
 shell> pmacct -c src_host,dst_host -M 192.168.0.10,192.168.0.3 -r
 
 Fetch data for IP address dst_host 10.0.1.200; we also ask for a 'counter only' output
@@ -733,26 +755,31 @@ scripts are in the examples/ tree). Bytes counter will be returned (but the '-n'
 allows also select which counter to display). If multiple entries match the request (ie
 because the query is based on dst_host but the daemon is actually aggregating traffic
 as "src_host, dst_host") their counters will be summed:
+
 shell> pmacct -c dst_host -N 10.0.1.200
 
-Another query; this time let's contact the server listening on pipe file /tmp/pipe.eth0:
+Query the memory table available via pipe file /tmp/pipe.eth0:
+
 shell> pmacct -c sum_port -N 80 -p /tmp/pipe.eth0 
 
 Find all data matching host 192.168.84.133 as either their source or destination address.
 In particular, this example shows how to use wildcards and how to spawn multiple queries
 (each separated by the ';' symbol). Take care to follow the same order when specifying
 the primitive name (-c) and its actual value ('-M' or '-N'):
+
 shell> pmacct -c src_host,dst_host -N "192.168.84.133,*;*,192.168.84.133"
 
 Find all web and smtp traffic; we are interested in have just the total of such traffic
 (for example, to split legal network usage from the total); the output will be a unique
 counter, sum of the partial (coming from each query) values.
+
 shell> pmacct -c src_port,dst_port -N "25,*;*,25;80,*;*,80" -S 
 
 Show traffic between the specified hosts; this aims to be a simple example of a batch
 query; note that as value of both '-N' and '-M' switches it can be supplied a value like:
 'file:/home/paolo/queries.list': actual values will be read from the specified file (and
 they need to be written into it, one per line) instead of commandline:
+
 shell> pmacct -c src_host,dst_host -N "10.0.0.10,10.0.0.1;10.0.0.9,10.0.0.1;10.0.0.8,10.0.0.1"
 shell> pmacct -c src_host,dst_host -N "file:/home/paolo/queries.list"
 
@@ -778,15 +805,15 @@ makes use of pkg-config for finding libraries and headers location and checks so
 "typical" default locations, ie. /usr/local/lib and /usr/local/include. So all
 you should do is just:
 
-./configure --enable-rabbitmq --enable-jansson
+shell> ./configure --enable-rabbitmq --enable-jansson
 
 But, for example, should you have installed RabbitMQ in /usr/local/rabbitmq and
 pkg-config is unable to help, you can supply this non-default location as follows 
 (assuming you are running the bash shell):
 
-export RABBITMQ_LIBS="-L/usr/local/rabbitmq/lib -lrabbitmq" 
-export RABBITMQ_CFLAGS="-I/usr/local/rabbitmq/include"
-./configure --enable-rabbitmq --enable-jansson
+shell> export RABBITMQ_LIBS="-L/usr/local/rabbitmq/lib -lrabbitmq" 
+shell> export RABBITMQ_CFLAGS="-I/usr/local/rabbitmq/include"
+shell> ./configure --enable-rabbitmq --enable-jansson
 
 You can check further information on how to compile pmacct with JSON/libjansson
 support in the section "Compiling pmacct with JSON support" of this document.
@@ -842,15 +869,15 @@ pmacct makes use of pkg-config for finding libraries and headers location and
 checks some default locations, ie. /usr/local/lib and /usr/local/include. If
 this is satisfactory, all you should do is just:
 
-./configure --enable-kafka --enable-jansson
+shell> ./configure --enable-kafka --enable-jansson
 
 But, for example, should you have installed Kafka in /usr/local/kafka and pkg-
 config is unable to help, you can supply this non-default location as follows
 (assuming you are running the bash shell):
 
-export KAFKA_LIBS="-L/usr/local/kafka/lib -lrdkafka"
-export KAFKA_CFLAGS="-I/usr/local/kafka/include"
-./configure --enable-kafka --enable-jansson
+shell> export KAFKA_LIBS="-L/usr/local/kafka/lib -lrdkafka"
+shell> export KAFKA_CFLAGS="-I/usr/local/kafka/include"
+shell> ./configure --enable-kafka --enable-jansson
 
 You can check further information on how to compile pmacct with JSON/libjansson
 support in the section "Compiling pmacct with JSON support" of this document.
@@ -910,7 +937,7 @@ of thousands of entries per second, batching is needed in order to avoid every
 single entry originating a produce call to Kafka. Two strategies are being
 available: a) pmacct batching via the kafka_multi_values feature or b) librdkafka
 batching via, as per the lib documentation, "The two most important configuration
-properties for performance tuning are:
+properties for performance tuning [are]:
 
 * batch.num.messages : the minimum number of messages to wait for to accumulate
   in the local queue before sending off a message set.
@@ -973,15 +1000,15 @@ configured for compiling. pmacct makes use of pkg-config for finding libraries a
 headers location and checks some "typical" default locations, ie. /usr/local/lib and
 /usr/local/include. So all you should do is just:
 
-./configure --enable-zmq
+shell> ./configure --enable-zmq
 
 But, for example, should you have installed ZeroMQ in /usr/local/zeromq and should also
 pkg-config be unable to help, the non-default location can be supplied as follows (bash
 shell assumed):
 
-export ZMQ_LIBS="-L/usr/local/zeromq/lib -lzmq"
-export ZMQ_CFLAGS="-I/usr/local/zeromq/include"
-./configure --enable-zmq
+shell> export ZMQ_LIBS="-L/usr/local/zeromq/lib -lzmq"
+shell> export ZMQ_CFLAGS="-I/usr/local/zeromq/include"
+shell> ./configure --enable-zmq
 
 Then "make; make install" as usual. Following a configuration snippet showing how easy
 is to leverage ZeroMQ for queueing (see CONFIG-KEYS for all ZeroMQ-related options):
@@ -1074,18 +1101,19 @@ Below the configuration guide:
 a) usual initial steps: download pmacct, unpack it, compile it.
 
 b) build NetFlow probe configuration, using pmacctd:
-!
-daemonize: true
-pcap_interface: eth0
-aggregate: src_host, dst_host, src_port, dst_port, proto, tos
-plugins: nfprobe
-nfprobe_receiver: 1.2.3.4:2100
-nfprobe_version: 9
-! nfprobe_engine: 1:1
-! nfprobe_timeouts: tcp=120:maxlife=3600
-!
-! networks_file: /path/to/networks.lst
-!...
+
+   !
+   daemonize: true
+   pcap_interface: eth0
+   aggregate: src_host, dst_host, src_port, dst_port, proto, tos
+   plugins: nfprobe
+   nfprobe_receiver: 1.2.3.4:2100
+   nfprobe_version: 9
+   ! nfprobe_engine: 1:1
+   ! nfprobe_timeouts: tcp=120:maxlife=3600
+   !
+   ! networks_file: /path/to/networks.lst
+   !...
 
    This is a basic working configuration. Additional probe features include:
 
@@ -1094,11 +1122,11 @@ nfprobe_version: 9
    directive; alternatively, it is possible to generate ASNs from the pmacctd BGP
    thread. The following fragment can be added to the config above:
 
-pmacctd_as: bgp
-bgp_daemon: true
-bgp_daemon_ip: 127.0.0.1
-bgp_agent_map: /path/to/bgp_agent.map
-bgp_daemon_port: 17917
+   pmacctd_as: bgp
+   bgp_daemon: true
+   bgp_daemon_ip: 127.0.0.1
+   bgp_agent_map: /path/to/bgp_agent.map
+   bgp_daemon_port: 17917
 
    The bgp_daemon_port can be changed from the standard BGP port (179/TCP) in order to
    co-exist with other BGP routing software which might be running on the same host.
@@ -1108,12 +1136,12 @@ bgp_daemon_port: 17917
    generic, was tested working in conjunction with Quagga. Following a relevant
    fragment of the Quagga configuration:
 
-router bgp Y 
- bgp router-id X.X.X.X
- neighbor 127.0.0.1 remote-as Y 
- neighbor 127.0.0.1 port 17917
- neighbor 127.0.0.1 update-source X.X.X.X
-!
+   router bgp Y 
+    bgp router-id X.X.X.X
+    neighbor 127.0.0.1 remote-as Y 
+    neighbor 127.0.0.1 port 17917
+    neighbor 127.0.0.1 update-source X.X.X.X
+   !
 
    NOTE: if configuring a BGP neighbor over localhost via Quagga CLI the following
    message is returned: "% Can not configure the local system as neighbor". This
@@ -1124,8 +1152,8 @@ router bgp Y
    NBAR/NetFlow v9 integration. This can be done by introducing the 'class' primitive
    to the afore mentioned 'aggregate' and add the extra configuration directive:
 
-aggregate: class, src_host, dst_host, src_port, dst_port, proto, tos
-snaplen: 700
+   aggregate: class, src_host, dst_host, src_port, dst_port, proto, tos
+   snaplen: 700
 
    Further information on this topic can be found in the 'Quickstart guide to packet
    classification' section of this document.
@@ -1135,19 +1163,19 @@ snaplen: 700
    of the nfprobe_direction directive. Let's look at a dynamic example using tag2;
    first, add the following lines to the daemon configuration:
 
-nfprobe_direction[plugin_name]: tag2
-pre_tag_map: /path/to/pretag.map
+   nfprobe_direction[plugin_name]: tag2
+   pre_tag_map: /path/to/pretag.map
 
    then edit the tag map as follows. A return value of '1' means ingress while '2' is
    translated to egress. It is possible to define L2 and/or L3 addresses to recognize
    flow directions. The 'set_tag2' primitive (tag2) will be used to carry the return
    value:
 
-set_tag2=1 filter='dst host XXX.XXX.XXX.XXX'
-set_tag2=2 filter='src host XXX.XXX.XXX.XXX'
+   set_tag2=1 filter='dst host XXX.XXX.XXX.XXX'
+   set_tag2=2 filter='src host XXX.XXX.XXX.XXX'
 
-set_tag2=1 filter='ether src XX:XX:XX:XX:XX:XX'
-set_tag2=2 filter='ether dst XX:XX:XX:XX:XX:XX'
+   set_tag2=1 filter='ether src XX:XX:XX:XX:XX:XX'
+   set_tag2=2 filter='ether dst XX:XX:XX:XX:XX:XX'
 
    Indeed in such a case, the 'set_tag' primitive (tag) can be leveraged to other uses
    (ie. filter sub-set of the traffic for flow export);
@@ -1158,40 +1186,41 @@ set_tag2=2 filter='ether dst XX:XX:XX:XX:XX:XX'
    nfprobe_ifindex directive. Let's look at a dynamic example using tag; first add the
    following lines to the daemon config:
 
-nfprobe_direction[plugin_name]: tag
-nfprobe_ifindex[plugin_name]: tag2
-pre_tag_map: /path/to/pretag.map 
+   nfprobe_direction[plugin_name]: tag
+   nfprobe_ifindex[plugin_name]: tag2
+   pre_tag_map: /path/to/pretag.map 
 
    then edit the tag map as follows:
 
-set_tag=1 filter='dst net XXX.XXX.XXX.XXX/WW' jeq=eval_ifindexes
-set_tag=2 filter='src net XXX.XXX.XXX.XXX/WW' jeq=eval_ifindexes
-set_tag=1 filter='dst net YYY.YYY.YYY.YYY/ZZ' jeq=eval_ifindexes
-set_tag=2 filter='src net YYY.YYY.YYY.YYY/ZZ' jeq=eval_ifindexes
-set_tag=1 filter='ether src YY:YY:YY:YY:YY:YY' jeq=eval_ifindexes
-set_tag=2 filter='ether dst YY:YY:YY:YY:YY:YY' jeq=eval_ifindexes
-set_tag=999 filter='net 0.0.0.0/0'
-!
-set_tag2=100 filter='dst host XXX.XXX.XXX.XXX' label=eval_ifindexes
-set_tag2=100 filter='src host XXX.XXX.XXX.XXX'
-set_tag2=200 filter='dst host YYY.YYY.YYY.YYY'
-set_tag2=200 filter='src host YYY.YYY.YYY.YYY'
-set_tag2=200 filter='ether src YY:YY:YY:YY:YY:YY'
-set_tag2=200 filter='ether dst YY:YY:YY:YY:YY:YY'
+   set_tag=1 filter='dst net XXX.XXX.XXX.XXX/WW' jeq=eval_ifindexes
+   set_tag=2 filter='src net XXX.XXX.XXX.XXX/WW' jeq=eval_ifindexes
+   set_tag=1 filter='dst net YYY.YYY.YYY.YYY/ZZ' jeq=eval_ifindexes
+   set_tag=2 filter='src net YYY.YYY.YYY.YYY/ZZ' jeq=eval_ifindexes
+   set_tag=1 filter='ether src YY:YY:YY:YY:YY:YY' jeq=eval_ifindexes
+   set_tag=2 filter='ether dst YY:YY:YY:YY:YY:YY' jeq=eval_ifindexes
+   set_tag=999 filter='net 0.0.0.0/0'
+   !
+   set_tag2=100 filter='dst host XXX.XXX.XXX.XXX' label=eval_ifindexes
+   set_tag2=100 filter='src host XXX.XXX.XXX.XXX'
+   set_tag2=200 filter='dst host YYY.YYY.YYY.YYY'
+   set_tag2=200 filter='src host YYY.YYY.YYY.YYY'
+   set_tag2=200 filter='ether src YY:YY:YY:YY:YY:YY'
+   set_tag2=200 filter='ether dst YY:YY:YY:YY:YY:YY'
 
-  The set_tag=999 works as a catch all for undefined L2/L3 addresses so
-  to prevent searching further in the map. In the example above direction
-  is set first then, if found, interfaces are set, using the jeq/label
-  pre_tag_map construct.
+   The set_tag=999 works as a catch all for undefined L2/L3 addresses so
+   to prevent searching further in the map. In the example above direction
+   is set first then, if found, interfaces are set, using the jeq/label
+   pre_tag_map construct.
 
 c) build NetFlow collector configuration, using nfacctd:
-!
-daemonize: true
-nfacctd_ip: 1.2.3.4
-nfacctd_port: 2100
-plugins: memory[display]
-aggregate[display]: src_host, dst_host, src_port, dst_port, proto
-! aggregate[display]: class, src_host, dst_host, src_port, dst_port, proto
+
+   !
+   daemonize: true
+   nfacctd_ip: 1.2.3.4
+   nfacctd_port: 2100
+   plugins: memory[display]
+   aggregate[display]: src_host, dst_host, src_port, dst_port, proto
+   ! aggregate[display]: class, src_host, dst_host, src_port, dst_port, proto
 
 d) Ok, we are done ! Now fire both daemons:
 
@@ -1201,16 +1230,15 @@ d) Ok, we are done ! Now fire both daemons:
 
 XIII. Quickstart guide to setup a sFlow agent/probe
 pmacct can export traffic data via sFlow; such protocol is different from NetFlow/
-IPFIX: in short, it works by exporting portions of sampled packets rather than
-caching and building uni-directional flows as it happens in NetFlow; this not
-stateful approach makes sFlow a light export protocol well-tailored for high-
-speed networks. Furthermore, sFlow v5 can be extended much like NetFlow v9: meaning
+IPFIX: in short, it works by sampling individual packets (and exporting portions of
+them) instead of caching uni-directional flows as it happens for NetFlow; such a 
+statelss approach makes sFlow a light export protocol well-tailored for high-speed
+networks. Furthermore, sFlow v5 can be extended much like NetFlow v9/IPFIX: meaning
 classification information (if nDPI is compiled in, see 'Quickstart guide to packet
-classification' section of this document), tags or basic Extended Gateway info
+classification' section of this document), tags and/or basic Extended Gateway info
 (ie. src_as, dst_as) can be easily included in the record structure being exported.
-Below a quickstarter guide:
+Here a quickstarter sFlow probe configuration, using pmacctd:
 
-b) build sFlow probe configuration, using pmacctd:
 !
 daemonize: true
 pcap_interface: eth0
@@ -2014,8 +2042,8 @@ pmacct can also output to files via the 'print' plugin. Dynamic filenames are
 supported. Output is either text-based using JSON, CSV or formatted outputs, or
 binary-based using the Apache Avro file container ('print_output' directive).
 Interval between writes can be configured via the 'print_refresh_time'
-directive. An example follows on how to write to files on a 15 mins basis in
-CSV format:
+directive. An example follows on how to write to files in CSV format, every 15
+minutes and aggregate data in 15 minutes time-bins (print_history):
 
 print_refresh_time: 900
 print_history: 15m
@@ -2038,7 +2066,7 @@ Avro output requires compiling pmacct against libavro library. See how to
 compile pmacct with Avro support in the section "Compiling pmacct with Apache
 Avro support" of this document.
 
-Splitting data into time bins is supported via print_history directive. When
+Splitting data into time-bins is supported via print_history directive. When
 enabled, time-related variable substitutions of dynamic print_output_file names
 are determined using this value. It is supported to define print_refresh_time
 values shorter than print_history ones by setting print_output_file_append to
@@ -2076,15 +2104,15 @@ GeoIP v1 (libGeoIP):
 * To compile the pmacct package with support for GeoIP lookups, the code must
   be configured for compilation as follows:
 
-  ./configure --enable-geoip [ ... ]
+  shell> ./configure --enable-geoip [ ... ]
 
   But, for example, should you have installed libGeoIP in /usr/local/geoip and
   pkg-config is unable to help, you can supply this non-default location as
   follows (assuming you are running the bash shell):
 
-  export GEOIP_LIBS="-L/usr/local/geoip/lib -lgeoip"
-  export GEOIP_CFLAGS="-I/usr/local/geoip/include"
-  ./configure --enable-geoip [ ... ]
+  shell> export GEOIP_LIBS="-L/usr/local/geoip/lib -lgeoip"
+  shell> export GEOIP_CFLAGS="-I/usr/local/geoip/include"
+  shell> ./configure --enable-geoip [ ... ]
 
 * Include as part of the pmacct configuration the following fragment:
 
@@ -2102,15 +2130,15 @@ GeoIP v2 (libmaxminddb):
 * To compile the pmacct package with support for GeoIP lookups, the code must
   be configured for compilation as follows:
 
-  ./configure --enable-geoipv2 [ ... ]
+  shell> ./configure --enable-geoipv2 [ ... ]
 
   But, for example, should you have installed libmaxminddb in /usr/local/geoipv2
   and pkg-config is unable to help, you can supply this non-default location
   as follows (assuming you are running the bash shell):
 
-  export GEOIPV2_LIBS="-L/usr/local/geoipv2/lib -lmaxminddb"
-  export GEOIPV2_CFLAGS="-I/usr/local/geoipv2/include"
-  ./configure --enable-geoipv2 [ ... ]
+  shell> export GEOIPV2_LIBS="-L/usr/local/geoipv2/lib -lmaxminddb"
+  shell> export GEOIPV2_CFLAGS="-I/usr/local/geoipv2/include"
+  shell> ./configure --enable-geoipv2 [ ... ]
 
 * Include as part of the pmacct configuration the following fragment:
 
@@ -2126,16 +2154,15 @@ you be interested into any of these, please get in touch.
 
 
 XXI. Using pmacct as traffic/event logger
-pmacct was originally conceived as a traffic aggregator. It is now possible
-to use pmacct as a traffic/event logger as well, such development had been 
-fostered particularly by the use of NetFlow/IPFIX as generic transport,
-see for example Cisco NEL and Cisco NSEL. Key to logging are time-stamping
-primitives, timestamp_start and timestamp_end: the former records the likes
-of libpcap packet timestamp, sFlow sample arrival time, NetFlow observation
-time and flow first switched time; timestamp_end currently only makes sense
-for logging flows via NetFlow. Still, the exact boundary between aggregation
-and logging can be defined via the aggregation method, ie. no assumptions are
-made. An example to log traffic flows follows:
+This use-case has been fostered particularly by the use of NetFlow/IPFIX as
+generic transport, see for example Cisco NEL and Cisco NSEL. Key to logging
+are time-stamping primitives, timestamp_start and timestamp_end: the former
+records the likes of libpcap packet timestamp, sFlow sample arrival time,
+NetFlow observation time and flow first switched time; timestamp_end does
+currently only makes sense for logging flow data via NetFlow/IPFIX. Still,
+the exact boundary between aggregation and logging can be defined via the
+aggregation method, ie. no assumptions are made. An example to log traffic
+flows follows:
 
 ! ...
 !
