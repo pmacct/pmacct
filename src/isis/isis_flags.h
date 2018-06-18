@@ -35,8 +35,8 @@
 #endif
 EXT void flags_initialize (struct flags *);
 EXT struct flags *new_flags (int);
-EXT int flags_get_index (struct flags *);
-EXT void flags_free_index (struct flags *, int);
+EXT long int flags_get_index (struct flags *);
+EXT void flags_free_index (struct flags *, long int);
 EXT int flags_any_set (u_int32_t *);
 #undef EXT
 
