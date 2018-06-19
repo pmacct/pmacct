@@ -3072,7 +3072,7 @@ int Recv(int sd, unsigned char **buf)
 	eof_received = TRUE;
       }
       else {
-	/* check 1: enough space in allocated buffer */
+	/* check: enough space in allocated buffer */
 	if (unpacked+num >= round*LARGEBUFLEN) {
           round++;
           *buf = realloc((unsigned char *) *buf, round*LARGEBUFLEN);
@@ -3084,8 +3084,6 @@ int Recv(int sd, unsigned char **buf)
           elem = *buf;
           elem += unpacked;
 	}
-	/* check 2: enough space in dss */
-	if (((char *)elem+num) > (char *)sbrk(0)) sbrk(LARGEBUFLEN);
 
 	memcpy(elem, rxbuf, num);
 	unpacked += num;

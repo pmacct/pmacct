@@ -668,7 +668,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       len = strlen(ptr_end);
 
       if (prim_ptrs && prim_ptrs->data) addr_to_str(src_host, &prim_ptrs->data->primitives.src_ip);
-      else strlcpy(src_host, empty_src_host, strlen(empty_src_host));
+      else strlcpy(src_host, empty_src_host, strlen(src_host));
 
       escape_ip_uscores(src_host);
       snprintf(buf, newlen, "%s", src_host);
@@ -694,7 +694,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       len = strlen(ptr_end);
 
       if (prim_ptrs && prim_ptrs->data) addr_to_str(dst_host, &prim_ptrs->data->primitives.dst_ip);
-      else strlcpy(dst_host, empty_dst_host, strlen(empty_dst_host));
+      else strlcpy(dst_host, empty_dst_host, strlen(dst_host));
 
       escape_ip_uscores(dst_host);
       snprintf(buf, newlen, "%s", dst_host);
@@ -1525,13 +1525,9 @@ void *pm_malloc(size_t size)
 
   obj = (unsigned char *) malloc(size);
   if (!obj) {
-    sbrk(size);
-    obj = (unsigned char *) malloc(size);
-    if (!obj) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to grab enough memory (requested: %llu bytes). Exiting ...\n",
-      config.name, config.type, size);
-      exit_plugin(1);
-    }
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to grab enough memory (requested: %llu bytes). Exiting ...\n",
+    config.name, config.type, size);
+    exit_plugin(1);
   }
 
   return obj;
