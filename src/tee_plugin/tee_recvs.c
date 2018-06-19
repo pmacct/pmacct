@@ -78,7 +78,7 @@ int tee_recvs_map_ip_handler(char *filename, struct id_entry *e, char *value, st
     str_ptr = value;
     recv_idx = 0;
 
-    while (token = extract_token(&str_ptr, ',')) {
+    while ((token = extract_token(&str_ptr, ','))) {
       if (recv_idx < config.tee_max_receivers) {
 	target = &table->pools[table->num].receivers[recv_idx];
 	target->dest_len = sizeof(target->dest);

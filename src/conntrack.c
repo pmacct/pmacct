@@ -221,7 +221,7 @@ void conntrack_rtsp_helper(time_t now, struct packet_ptrs *pptrs)
 
       /* Then, we need to look into the Transport: line */
       if ( !strncmp(start, "Transport:", 10) ) {
-	if ( ptr = strchr(start, '\r') ) end = ptr;
+	if ((ptr = strchr(start, '\r'))) end = ptr;
 	ptr = strchr(start, ':');
 	ptr++;
 
@@ -241,7 +241,7 @@ void conntrack_rtsp_helper(time_t now, struct packet_ptrs *pptrs)
 
 	    /* We have reached the client_port info; let's handle it meaningfully:
 	       we expect either a single port or a range of ports (lo-hi) */ 
-	    if ( ss_sep = strchr(ss_start, '-') ) {
+	    if ((ss_sep = strchr(ss_start, '-'))) {
 	      *ss_sep = '\0'; 
 	      port[0] = atoi(ss_start);
 	      *ss_sep = '-';

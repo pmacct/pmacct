@@ -344,6 +344,7 @@ void isis_sll_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *
 
 int iso_handler(register struct packet_ptrs *pptrs)
 {
+  return FALSE;
 }
 
 void isis_srcdst_lookup(struct packet_ptrs *pptrs)
@@ -480,7 +481,7 @@ int igp_daemon_map_adj_metric_handler(char *filename, struct id_entry *e, char *
     return TRUE;
   }
 
-  while (token = extract_token(&str_ptr, ';')) {
+  while ((token = extract_token(&str_ptr, ';'))) {
     if (idx >= MAX_IGP_MAP_ELEM) {
       Log(LOG_ERR, "ERROR ( %s ): maximum number of elements (%u) per adj_metric violated. ", filename, MAX_IGP_MAP_ELEM);
       return TRUE;
@@ -531,7 +532,7 @@ int igp_daemon_map_reach_metric_handler(char *filename, struct id_entry *e, char
     return TRUE;
   }
 
-  while (token = extract_token(&str_ptr, ';')) {
+  while ((token = extract_token(&str_ptr, ';'))) {
     if (idx >= MAX_IGP_MAP_ELEM) {
       Log(LOG_ERR, "ERROR ( %s ): maximum number of elements (%u) per reach_metric violated. ", filename, MAX_IGP_MAP_ELEM);
       return TRUE;
@@ -583,7 +584,7 @@ int igp_daemon_map_reach6_metric_handler(char *filename, struct id_entry *e, cha
     return TRUE;
   }
 
-  while (token = extract_token(&str_ptr, ';')) {
+  while ((token = extract_token(&str_ptr, ';'))) {
     if (idx >= MAX_IGP_MAP_ELEM) {
       Log(LOG_ERR, "ERROR ( %s ): maximum number of elements (%u) per reach6_metric violated. ", filename, MAX_IGP_MAP_ELEM);
       return TRUE;

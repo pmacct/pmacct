@@ -41,13 +41,13 @@ struct template_cache_entry *handle_template(struct template_hdr_v9 *hdr, struct
 
   /* 0 NetFlow v9, 2 IPFIX */
   if (tpl_type == 0 || tpl_type == 2) {
-    if (tpl = find_template(hdr->template_id, (struct host_addr *) pptrs->f_agent, tpl_type, sid))
+    if ((tpl = find_template(hdr->template_id, (struct host_addr *) pptrs->f_agent, tpl_type, sid)))
       tpl = refresh_template(hdr, tpl, pptrs, tpl_type, sid, pens, version, len, seq);
     else tpl = insert_template(hdr, pptrs, tpl_type, sid, pens, version, len, seq);
   }
   /* 1 NetFlow v9, 3 IPFIX */
   else if (tpl_type == 1 || tpl_type == 3) {
-    if (tpl = find_template(hdr->template_id, (struct host_addr *) pptrs->f_agent, tpl_type, sid))
+    if ((tpl = find_template(hdr->template_id, (struct host_addr *) pptrs->f_agent, tpl_type, sid)))
       tpl = refresh_opt_template(hdr, tpl, pptrs, tpl_type, sid, pens, version, len, seq);
     else tpl = insert_opt_template(hdr, pptrs, tpl_type, sid, pens, version, len, seq);
   }

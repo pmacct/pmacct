@@ -494,7 +494,7 @@ void tunnel_registry_init()
     char *tun_string = config.tunnel0, *tun_entry = NULL, *tun_type = NULL;
     int th_index = 0 /* tunnel handler index */, tr_index = 0 /* tunnel registry index */;
 
-    while (tun_entry = extract_token(&tun_string, ';')) {
+    while ((tun_entry = extract_token(&tun_string, ';'))) {
       tun_type = extract_token(&tun_entry, ',');
 
       for (th_index = 0; strcmp(tunnel_handlers_list[th_index].type, ""); th_index++) {

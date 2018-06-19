@@ -172,7 +172,7 @@ int bgp_label2str(char *str, u_char *label)
 	(unsigned)(unsigned char)(label[2] >> 4));
   
   tmp = strtoul(str, &endp, 16);
-  snprintf(str, 8, "%u", tmp);
+  snprintf(str, 8, "%lu", tmp);
 
   return TRUE;
 }

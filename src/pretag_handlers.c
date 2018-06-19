@@ -86,7 +86,7 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
     e->flags = BPAS_MAP_RCODE_BGP;
   }
   else {
-    if (incptr = strstr(value, "++")) {
+    if ((incptr = strstr(value, "++"))) {
       inc = TRUE;
       *incptr = '\0';
     }
@@ -123,7 +123,7 @@ int PT_map_id2_handler(char *filename, struct id_entry *e, char *value, struct p
   pm_id_t j;
   int x, inc = 0;
 
-  if (incptr = strstr(value, "++")) {
+  if ((incptr = strstr(value, "++"))) {
     inc = TRUE;
     *incptr = '\0';
   }
@@ -587,7 +587,7 @@ int PT_map_sample_type_handler(char *filename, struct id_entry *e, char *value, 
   e->key.sample_type.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   if (acct_type == ACCT_SF && strchr(value, ':')) {
-    while (token = extract_token(&value, ':')) {
+    while ((token = extract_token(&value, ':'))) {
       switch (x) {
       case 0:
         tmp = atoi(token);
@@ -2337,7 +2337,7 @@ int custom_primitives_map_field_type_handler(char *filename, struct id_entry *e,
     u_int8_t repeat_id;
     int idx;
 
-    if (type = strchr(value, ':')) {
+    if ((type = strchr(value, ':'))) {
       pen = value;
       *type = '\0';
       type++;

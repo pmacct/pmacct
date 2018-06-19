@@ -1287,7 +1287,7 @@ handle_timeouts(struct FLOWTRACK *ft, char *to_spec)
   char *sep, *current = to_spec;
 
   trim_spaces(current);
-  while (sep = strchr(current, ':')) {
+  while ((sep = strchr(current, ':'))) {
     *sep = '\0';
     set_timeout(ft, current);
     *sep = ':';

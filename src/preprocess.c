@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -45,7 +45,7 @@ void set_preprocess_funcs(char *string, struct preprocess *prep, int dictionary)
 
   trim_all_spaces(string);
 
-  while (token = extract_token(&string, ',')) {
+  while ((token = extract_token(&string, ','))) {
     sep = strchr(token, '=');
     if (!sep) {
       Log(LOG_WARNING, "WARN ( %s/%s ): preprocess: malformed input string. Ignored.\n", config.name, config.type);

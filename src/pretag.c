@@ -713,7 +713,7 @@ char *pt_check_range(char *str)
 {
   char *ptr;
 
-  if (ptr = strchr(str, '-')) {
+  if ((ptr = strchr(str, '-'))) {
     *ptr = '\0';
     ptr++;
     return ptr;

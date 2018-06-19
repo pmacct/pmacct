@@ -438,7 +438,7 @@ int parse_shared_object(char *fname, struct pkt_classifier *css)
 
   dlerror();
   *(void **) (&css->func) = dlsym(handler, "classifier");
-  if (err = dlerror()) {
+  if ((err = dlerror())) {
     Log(LOG_ERR, "ERROR: Unable to load classifier routine from %s (%s)\n", fname, err);
     dlclose(handler);
     return 0;

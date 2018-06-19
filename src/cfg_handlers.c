@@ -202,7 +202,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
   memset(&value, 0, sizeof(value));
   memset(&cpptrs, 0, sizeof(cpptrs));
 
-  while (count_token = extract_token(&value_ptr, ',')) {
+  while ((count_token = extract_token(&value_ptr, ','))) {
     if (!strcmp(count_token, "src_host")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_HOST, count_token);
     else if (!strcmp(count_token, "dst_host")) cfg_set_aggregate(filename, value, COUNT_INT_DST_HOST, count_token);
     else if (!strcmp(count_token, "src_net")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_NET, count_token);
@@ -842,7 +842,7 @@ int cfg_key_sql_table(char *filename, char *name, char *value_ptr)
     int num = 0;
     char *c, *ptr = value_ptr;
 
-    while (c = strchr(ptr, '%')) {
+    while ((c = strchr(ptr, '%'))) {
       c++;
       ptr = c;
       switch (*c) {
@@ -918,7 +918,7 @@ int cfg_key_print_output_file(char *filename, char *name, char *value_ptr)
     int num = 0;
     char *c, *ptr = value_ptr;
 
-    while (c = strchr(ptr, '%')) {
+    while ((c = strchr(ptr, '%'))) {
       c++;
       ptr = c;
       switch (*c) {
@@ -3127,7 +3127,7 @@ int cfg_key_nfacctd_mcast_groups(char *filename, char *name, char *value_ptr)
   trim_all_spaces(value_ptr);
   memset(mcast_groups, 0, sizeof(mcast_groups));
 
-  while (count_token = extract_token(&value_ptr, ',')) {
+  while ((count_token = extract_token(&value_ptr, ','))) {
     memset(&tmp_addr, 0, sizeof(tmp_addr));
     str_to_addr(count_token, &tmp_addr);
     if (is_multicast(&tmp_addr)) {
@@ -5473,7 +5473,7 @@ int cfg_key_nfprobe_ifindex(char *filename, char *name, char *value_ptr)
     value2 = IFINDEX_TAG;
   else if (!strcmp(value_ptr, "tag2"))
     value2 = IFINDEX_TAG2;
-  else if (value = strtol(value_ptr, NULL, 0))
+  else if ((value = strtol(value_ptr, NULL, 0)))
     value2 = IFINDEX_STATIC;
   else {
     Log(LOG_ERR, "WARN: [%s] Invalid nfprobe_ifindex or sfprobe_ifindex value '%s'\n", filename, value_ptr);

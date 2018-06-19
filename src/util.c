@@ -86,7 +86,7 @@ char *extract_token(char **string, int delim)
   if (!strlen(*string)) return NULL;
 
   start:
-  if (delim_ptr = strchr(*string, delim)) {
+  if ((delim_ptr = strchr(*string, delim))) {
     *delim_ptr = '\0';
     token = *string;
     *string = delim_ptr+1;
@@ -812,7 +812,7 @@ int have_dynname_nontime(char *str)
   char tzone_string[] = "$tzone", *ptr, *newptr;
   int tzone_strlen = strlen(tzone_string);
 
-  for (newptr = ptr = str; newptr = strchr(ptr, '$'); ptr = newptr, ptr++) {
+  for (newptr = ptr = str; (newptr = strchr(ptr, '$')); ptr = newptr, ptr++) {
     if (strncmp(newptr, tzone_string, tzone_strlen)) return TRUE; 
   }
 
