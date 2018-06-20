@@ -1087,6 +1087,60 @@ int PT_map_cvlan_id_handler(char *filename, struct id_entry *e, char *value, str
   return FALSE;
 }
 
+int PT_map_src_net_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0;
+
+  if (req->ptm_c.load_ptm_plugin == PLUGIN_ID_TEE) req->ptm_c.load_ptm_res = TRUE;
+
+  e->key.src_net.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+
+  if (!str_to_addr_mask(value, &e->key.src_net.a, &e->key.src_net.m)) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Bad source network address '%s'.\n", config.name, config.type, filename, value);
+    return TRUE;
+  }
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_SRC_NET) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'src_net' clauses part of the same statement.\n", config.name, config.type, filename);
+      return TRUE;
+    }
+  }
+
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_src_net_handler;
+  else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_src_net_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_SRC_NET;
+
+  return FALSE;
+}
+
+int PT_map_dst_net_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0;
+
+  if (req->ptm_c.load_ptm_plugin == PLUGIN_ID_TEE) req->ptm_c.load_ptm_res = TRUE;
+
+  e->key.dst_net.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+
+  if (!str_to_addr_mask(value, &e->key.dst_net.a, &e->key.dst_net.m)) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Bad destination network address '%s'.\n", config.name, config.type, filename, value);
+    return TRUE;
+  }
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_DST_NET) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'dst_net' clauses part of the same statement.\n", config.name, config.type, filename);
+      return TRUE;
+    }
+  }
+
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_dst_net_handler;
+  else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_dst_net_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_DST_NET;
+
+  return FALSE;
+}
+
 int PT_map_set_tos_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0, len;
@@ -1837,6 +1891,16 @@ int pretag_vlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   }
 }
 
+int pretag_src_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  // XXX
+}
+
+int pretag_dst_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  // XXX
+}
+
 int pretag_forwarding_status_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
@@ -2121,6 +2185,16 @@ int SF_pretag_vlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   if (entry->key.vlan_id.n == sample->in_vlan ||
       entry->key.vlan_id.n == sample->out_vlan) return (FALSE | entry->key.vlan_id.neg);
   else return (TRUE ^ entry->key.vlan_id.neg);
+}
+
+int SF_pretag_src_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  // XXX
+}
+
+int SF_pretag_dst_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  // XXX
 }
 
 int PM_pretag_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)

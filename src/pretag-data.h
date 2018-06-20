@@ -48,6 +48,8 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"dst_mac", PT_map_dst_mac_handler},
   {"vlan", PT_map_vlan_id_handler},
   {"cvlan", PT_map_cvlan_id_handler},
+  {"src_net", PT_map_src_net_handler},
+  {"dst_net", PT_map_dst_net_handler},
   {"set_tag", PT_map_id_handler},
   {"set_tag2", PT_map_id2_handler},
   {"set_label", PT_map_label_handler},
@@ -111,6 +113,8 @@ const struct _map_dictionary_line tag_map_tee_dictionary[] = {
   {"src_mac", PT_map_src_mac_handler},
   {"dst_mac", PT_map_dst_mac_handler},
   {"vlan", PT_map_vlan_id_handler},
+  {"src_net", PT_map_src_net_handler},
+  {"dst_net", PT_map_dst_net_handler},
   {"engine_type", PT_map_engine_type_handler},
   {"engine_id", PT_map_engine_id_handler},
   {"source_id", PT_map_engine_id_handler},
@@ -131,6 +135,8 @@ const struct _map_dictionary_line bpas_map_dictionary[] = {
   {"peer_dst_as", BPAS_map_bgp_peer_dst_as_handler},
   {"src_mac", PT_map_src_mac_handler},
   {"vlan", PT_map_vlan_id_handler},
+  {"src_net", PT_map_src_net_handler},
+  {"dst_net", PT_map_dst_net_handler},
   {"", NULL}
 };
 

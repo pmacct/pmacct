@@ -55,6 +55,8 @@ EXT int PT_map_src_mac_handler(char *, struct id_entry *, char *, struct plugin_
 EXT int PT_map_dst_mac_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_vlan_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_cvlan_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int PT_map_src_net_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int PT_map_dst_net_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_set_tos_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_entry_label_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_jeq_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
@@ -145,6 +147,8 @@ EXT int pretag_mpls_vpn_rd_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_src_mac_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_dst_mac_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_vlan_id_handler(struct packet_ptrs *, void *, void *);
+EXT int pretag_src_net_handler(struct packet_ptrs *, void *, void *);
+EXT int pretag_dst_net_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_forwarding_status_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_cvlan_id_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_set_tos_handler(struct packet_ptrs *, void *, void *);
@@ -160,6 +164,8 @@ EXT int SF_pretag_dst_as_handler(struct packet_ptrs *, void *, void *);
 EXT int SF_pretag_src_mac_handler(struct packet_ptrs *, void *, void *);
 EXT int SF_pretag_dst_mac_handler(struct packet_ptrs *, void *, void *);
 EXT int SF_pretag_vlan_id_handler(struct packet_ptrs *, void *, void *);
+EXT int SF_pretag_src_net_handler(struct packet_ptrs *, void *, void *);
+EXT int SF_pretag_dst_net_handler(struct packet_ptrs *, void *, void *);
 EXT int SF_pretag_sample_type_handler(struct packet_ptrs *, void *, void *);
 EXT int SF_pretag_direction_handler(struct packet_ptrs *, void *, void *);
 
