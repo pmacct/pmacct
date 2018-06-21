@@ -1893,12 +1893,88 @@ int pretag_vlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
 int pretag_src_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
-  // XXX
+  struct id_entry *entry = e;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct host_addr addr;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_IPV4_SRC_ADDR].len) {
+      memcpy(&addr.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV4_SRC_ADDR].len, 4));
+      addr.family = AF_INET;
+    }
+    else if (tpl->tpl[NF9_IPV4_SRC_PREFIX].len) {
+      memcpy(&addr.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_PREFIX].off, MIN(tpl->tpl[NF9_IPV4_SRC_PREFIX].len, 4));
+      addr.family = AF_INET;
+    }
+#if defined ENABLE_IPV6
+    if (tpl->tpl[NF9_IPV6_SRC_ADDR].len) {
+      memcpy(&addr.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV6_SRC_ADDR].len, 16));
+      addr.family = AF_INET6;
+    }
+    else if (tpl->tpl[NF9_IPV6_SRC_PREFIX].len) {
+      memcpy(&addr.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_PREFIX].off, MIN(tpl->tpl[NF9_IPV6_SRC_PREFIX].len, 16));
+      addr.family = AF_INET6;
+    }
+#endif
+    break;
+  case 5:
+    addr.address.ipv4.s_addr = ((struct struct_export_v5 *) pptrs->f_data)->srcaddr.s_addr;
+    addr.family = AF_INET;
+    break;
+  default:
+    return TRUE;
+  }
+
+  if (!host_addr_mask_cmp(&entry->key.src_net.a, &entry->key.src_net.m, &addr))
+    return (FALSE | entry->key.src_net.neg);
+  else
+    return (TRUE ^ entry->key.src_net.neg);
 }
 
 int pretag_dst_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
-  // XXX
+  struct id_entry *entry = e;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct host_addr addr;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_IPV4_DST_ADDR].len) {
+      memcpy(&addr.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV4_DST_ADDR].len, 4));
+      addr.family = AF_INET;
+    }
+    else if (tpl->tpl[NF9_IPV4_DST_PREFIX].len) {
+      memcpy(&addr.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV4_DST_PREFIX].len, 4));
+      addr.family = AF_INET;
+    }
+#if defined ENABLE_IPV6
+    if (tpl->tpl[NF9_IPV6_DST_ADDR].len) {
+      memcpy(&addr.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV6_DST_ADDR].len, 16));
+      addr.family = AF_INET6;
+    }
+    else if (tpl->tpl[NF9_IPV6_DST_PREFIX].len) {
+      memcpy(&addr.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV6_DST_PREFIX].len, 16));
+      addr.family = AF_INET6;
+    }
+#endif
+    break;
+  case 5:
+    addr.address.ipv4.s_addr = ((struct struct_export_v5 *) pptrs->f_data)->dstaddr.s_addr;
+    addr.family = AF_INET;
+    break;
+  default:
+    return TRUE;
+  }
+
+  if (!host_addr_mask_cmp(&entry->key.dst_net.a, &entry->key.dst_net.m, &addr))
+    return (FALSE | entry->key.dst_net.neg);
+  else
+    return (TRUE ^ entry->key.dst_net.neg);
 }
 
 int pretag_forwarding_status_handler(struct packet_ptrs *pptrs, void *unused, void *e)
@@ -2189,12 +2265,50 @@ int SF_pretag_vlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
 int SF_pretag_src_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
-  // XXX
+  struct id_entry *entry = e;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+  SFLAddress *sf_addr = &sample->ipsrc;
+  struct host_addr addr;
+
+  if (sample->gotIPV4) {
+    addr.address.ipv4.s_addr = sample->dcd_srcIP.s_addr;
+    addr.family = AF_INET;
+  }
+#if defined ENABLE_IPV6
+  else if (sample->gotIPV6) {
+    memcpy(&addr.address.ipv6, &sf_addr->address.ip_v6, IP6AddrSz);
+    addr.family = AF_INET6;
+  }
+#endif
+
+  if (!host_addr_mask_cmp(&entry->key.src_net.a, &entry->key.src_net.m, &addr)) 
+    return (FALSE | entry->key.src_net.neg);
+  else
+    return (TRUE ^ entry->key.src_net.neg);
 }
 
 int SF_pretag_dst_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
-  // XXX
+  struct id_entry *entry = e;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+  SFLAddress *sf_addr = &sample->ipdst;
+  struct host_addr addr;
+
+  if (sample->gotIPV4) {
+    addr.address.ipv4.s_addr = sample->dcd_dstIP.s_addr;
+    addr.family = AF_INET;
+  }
+#if defined ENABLE_IPV6
+  else if (sample->gotIPV6) {
+    memcpy(&addr.address.ipv6, &sf_addr->address.ip_v6, IP6AddrSz);
+    addr.family = AF_INET6;
+  }
+#endif
+
+  if (!host_addr_mask_cmp(&entry->key.dst_net.a, &entry->key.dst_net.m, &addr)) 
+    return (FALSE | entry->key.dst_net.neg);
+  else
+    return (TRUE ^ entry->key.dst_net.neg);
 }
 
 int PM_pretag_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
