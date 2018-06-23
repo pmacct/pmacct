@@ -1488,6 +1488,10 @@ NOTES:		* Jansson and Avro libraries don't have the concept of unsigned integers
 		  possible for unsigned 64 bits integers instead (ie. tag, tag2, packets, bytes).
 		* If the output format is 'avro' and no print_output_file was specified, the Avro-based
 		  representation of the data will be converted to JSON and displayed on the standard output.
+		* If the output format is 'formatted', variable length primitives (like AS path) cannot be
+		  printed and a warning message will be output instead. This is because, intuitively, it is
+		  not possible to properly format the title line upfront with variable length fields. Please
+		  use one of the other output formats instead. 
 DEFAULT:	formatted
 
 KEY:            print_output_separator
