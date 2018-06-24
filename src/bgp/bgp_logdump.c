@@ -410,6 +410,20 @@ void bgp_peer_log_seq_increment(u_int64_t *seq)
   }
 }
 
+u_int64_t bgp_peer_log_seq_get(u_int64_t *seq)
+{
+  u_int64_t ret = 0;
+
+  if (seq) ret = (*seq);
+
+  return ret;
+}
+
+void bgp_peer_log_seq_set(u_int64_t *seq, u_int64_t value)
+{
+  if (seq) (*seq) = value;
+}
+
 /* XXX: 1) inefficient string testing and 2) string aliases can be mixed
    and matched. But as long as this is used for determining filenames for
    large outputs this is fine. To be refined in future */
@@ -547,6 +561,8 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
 
     json_object_set_new_nocheck(obj, "dump_period", json_integer((json_int_t)bms->dump.period));
 
+    json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)bms->log_seq));
+
     if (bms->dump_file)
       write_and_free_json(peer->log->fd, obj);
 
@@ -613,6 +629,8 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
       json_object_set_new_nocheck(obj, "tables", json_integer((json_int_t)bds->tables));
     }
 
+    json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)bms->log_seq));
+
     if (bms->dump_file)
       write_and_free_json(peer->log->fd, obj);
 
@@ -653,11 +671,15 @@ void bgp_handle_dump_event()
   safi_t safi;
   pid_t dumper_pid;
   time_t start;
-  u_int64_t dump_elems;
+  u_int64_t dump_elems, dump_seqno;
 
   /* pre-flight check */
   if (!bms->dump_backend_methods || !config.bgp_table_dump_refresh_time)
     return;
+
+  /* Sequencing the dump event */
+  dump_seqno = bgp_peer_log_seq_get(&bms->log_seq);
+  bgp_peer_log_seq_increment(&bms->log_seq);
 
   switch (ret = fork()) {
   case 0: /* Child */
@@ -670,6 +692,7 @@ void bgp_handle_dump_event()
     memset(&peer_log, 0, sizeof(struct bgp_peer_log));
     memset(&bds, 0, sizeof(struct bgp_dump_stats));
     fd_buf = malloc(OUTPUT_FILE_BUFSZ);
+    bgp_peer_log_seq_set(&bms->log_seq, dump_seqno);
 
 #ifdef WITH_RABBITMQ
     if (config.bgp_table_dump_amqp_routing_key) {
