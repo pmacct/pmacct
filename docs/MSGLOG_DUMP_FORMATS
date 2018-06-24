@@ -196,7 +196,6 @@ Streaming Telemetry msglog format:
 Streaming Telemetry dump format:
 - dump_init message:
   {
-    "seq": <seq>,
     "timestamp": <dump event timestamp>,
     "telemetry_node": <IP address>,
     "event_type": "dump_init",
@@ -217,7 +216,6 @@ Streaming Telemetry dump format:
 
 - dump_close message:
   {
-    "seq": <seq>,
     "writer_id": <core_proc_name>"/"<writer_pid> (*),
     "timestamp": <dump event timestamp>,
     "telemetry_node": <IP address>,

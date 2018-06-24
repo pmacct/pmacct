@@ -513,7 +513,7 @@ void bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *pee
   }
 }
 
-int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
+int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type, int do_seq)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(type);
   char event_type[] = "dump_init";
@@ -561,7 +561,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
 
     json_object_set_new_nocheck(obj, "dump_period", json_integer((json_int_t)bms->dump.period));
 
-    json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)bms->log_seq));
+    if (do_seq) json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)bms->log_seq));
 
     if (bms->dump_file)
       write_and_free_json(peer->log->fd, obj);
@@ -587,7 +587,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
   return (ret | amqp_ret | kafka_ret);
 }
 
-int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int output, int type)
+int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int output, int type, int do_seq)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(type);
   char event_type[] = "dump_close";
@@ -629,7 +629,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
       json_object_set_new_nocheck(obj, "tables", json_integer((json_int_t)bds->tables));
     }
 
-    json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)bms->log_seq));
+    if (do_seq) json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)bms->log_seq));
 
     if (bms->dump_file)
       write_and_free_json(peer->log->fd, obj);
@@ -772,7 +772,7 @@ void bgp_handle_dump_event()
 	}
 #endif
 
-	bgp_peer_dump_init(peer, config.bgp_table_dump_output, FUNC_TYPE_BGP);
+	bgp_peer_dump_init(peer, config.bgp_table_dump_output, FUNC_TYPE_BGP, TRUE);
         inter_domain_routing_db = bgp_select_routing_db(FUNC_TYPE_BGP);
 	dump_elems = 0;
 
@@ -808,7 +808,7 @@ void bgp_handle_dump_event()
         strlcpy(last_filename, current_filename, SRVBUFLEN);
 	bds.entries = dump_elems;
 	bds.tables = tables_num;
-        bgp_peer_dump_close(peer, &bds, config.bgp_table_dump_output, FUNC_TYPE_BGP);
+        bgp_peer_dump_close(peer, &bds, config.bgp_table_dump_output, FUNC_TYPE_BGP, TRUE);
       }
     }
 

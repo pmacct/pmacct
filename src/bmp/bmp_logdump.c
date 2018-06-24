@@ -438,7 +438,7 @@ void bmp_handle_dump_event()
   safi_t safi;
   pid_t dumper_pid;
   time_t start;
-  u_int64_t dump_elems;
+  u_int64_t dump_elems, dump_seqno;
 
   struct bgp_peer *peer, *saved_peer;
   struct bmp_peer *bmpp, *saved_bmpp;
@@ -448,6 +448,10 @@ void bmp_handle_dump_event()
   /* pre-flight check */
   if (!bms->dump_backend_methods || !config.bmp_dump_refresh_time)
     return;
+
+  /* Sequencing the dump event */
+  dump_seqno = bgp_peer_log_seq_get(&bms->log_seq);
+  bgp_peer_log_seq_increment(&bms->log_seq);
 
   switch (ret = fork()) {
   case 0: /* Child */
@@ -459,6 +463,7 @@ void bmp_handle_dump_event()
     memset(last_filename, 0, sizeof(last_filename));
     memset(current_filename, 0, sizeof(current_filename));
     fd_buf = malloc(OUTPUT_FILE_BUFSZ);
+    bgp_peer_log_seq_set(&bms->log_seq, dump_seqno);
 
 #ifdef WITH_RABBITMQ
     if (config.bmp_dump_amqp_routing_key) {
@@ -535,7 +540,7 @@ void bmp_handle_dump_event()
         }
 #endif
 
-	bgp_peer_dump_init(peer, config.bmp_dump_output, FUNC_TYPE_BMP);
+	bgp_peer_dump_init(peer, config.bmp_dump_output, FUNC_TYPE_BMP, TRUE);
 	inter_domain_routing_db = bgp_select_routing_db(FUNC_TYPE_BMP);
         dump_elems = 0;
 
@@ -605,7 +610,7 @@ void bmp_handle_dump_event()
 	saved_peer = peer;
 	saved_bmpp = bmpp;
         strlcpy(last_filename, current_filename, SRVBUFLEN);
-        bgp_peer_dump_close(peer, NULL, config.bmp_dump_output, FUNC_TYPE_BMP);
+        bgp_peer_dump_close(peer, NULL, config.bmp_dump_output, FUNC_TYPE_BMP, TRUE);
         tables_num++;
       }
     }
