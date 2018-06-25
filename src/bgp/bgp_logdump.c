@@ -79,7 +79,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
     /* no need for seq for "dump" event_type */
     if (etype == BGP_LOGDUMP_ET_LOG) {
-      json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)bms->log_seq));
+      json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq)));
       bgp_peer_log_seq_increment(&bms->log_seq);
 
       switch (log_type) {
@@ -274,7 +274,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
       char ip_address[INET6_ADDRSTRLEN];
       json_t *obj = json_object();
 
-      json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)bms->log_seq));
+      json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq)));
       bgp_peer_log_seq_increment(&bms->log_seq);
 
       json_object_set_new_nocheck(obj, "timestamp", json_string(bms->log_tstamp_str));
@@ -350,7 +350,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
     char ip_address[INET6_ADDRSTRLEN];
     json_t *obj = json_object();
 
-    json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)bms->log_seq));
+    json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq)));
     bgp_peer_log_seq_increment(&bms->log_seq);
 
     json_object_set_new_nocheck(obj, "timestamp", json_string(bms->log_tstamp_str));
@@ -561,7 +561,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type, int do_seq)
 
     json_object_set_new_nocheck(obj, "dump_period", json_integer((json_int_t)bms->dump.period));
 
-    if (do_seq) json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)bms->log_seq));
+    if (do_seq) json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq)));
 
     if (bms->dump_file)
       write_and_free_json(peer->log->fd, obj);
@@ -629,7 +629,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
       json_object_set_new_nocheck(obj, "tables", json_integer((json_int_t)bds->tables));
     }
 
-    if (do_seq) json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)bms->log_seq));
+    if (do_seq) json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq)));
 
     if (bms->dump_file)
       write_and_free_json(peer->log->fd, obj);

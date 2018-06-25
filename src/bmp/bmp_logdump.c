@@ -385,7 +385,7 @@ void bmp_dump_se_ll_append(struct bgp_peer *peer, struct bmp_data *bdata, void *
     }
   }
 
-  se_ll_elem->rec.seq = bms->log_seq;;
+  se_ll_elem->rec.seq = bgp_peer_log_seq_get(&bms->log_seq);
   se_ll_elem->rec.se_type = log_type;
   se_ll_elem->next = NULL; /* pedantic */
 
