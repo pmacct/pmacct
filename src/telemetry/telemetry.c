@@ -506,6 +506,10 @@ void telemetry_daemon(void *t_data_void)
       compose_timestamp(telemetry_misc_db->log_tstamp_str, SRVBUFLEN, &telemetry_misc_db->log_tstamp, TRUE,
 			config.timestamps_since_epoch, config.timestamps_rfc3339, config.timestamps_utc);
 
+      /* let's reset log sequence here as we do not sequence dump_init/dump_close events */
+      if (telemetry_log_seq_has_ro_bit(&telemetry_misc_db->log_seq))
+	telemetry_log_seq_init(&telemetry_misc_db->log_seq);
+
       if (telemetry_misc_db->dump_backend_methods) {
         while (telemetry_misc_db->log_tstamp.tv_sec > dump_refresh_deadline) {
           telemetry_misc_db->dump.tstamp.tv_sec = dump_refresh_deadline;
@@ -515,6 +519,7 @@ void telemetry_daemon(void *t_data_void)
 	  telemetry_misc_db->dump.period = config.telemetry_dump_refresh_time;
 
           telemetry_handle_dump_event(t_data);
+
           dump_refresh_deadline += config.telemetry_dump_refresh_time;
         }
       }

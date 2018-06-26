@@ -424,6 +424,12 @@ void bgp_peer_log_seq_set(u_int64_t *seq, u_int64_t value)
   if (seq) (*seq) = value;
 }
 
+int bgp_peer_log_seq_has_ro_bit(u_int64_t *seq)
+{
+  if ((*seq) & BGP_LOGSEQ_ROLLOVER_BIT) return TRUE;
+  else return FALSE;
+}
+
 /* XXX: 1) inefficient string testing and 2) string aliases can be mixed
    and matched. But as long as this is used for determining filenames for
    large outputs this is fine. To be refined in future */

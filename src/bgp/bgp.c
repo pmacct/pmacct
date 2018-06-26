@@ -496,6 +496,12 @@ void skinny_bgp_daemon_online()
       compose_timestamp(bgp_misc_db->log_tstamp_str, SRVBUFLEN, &bgp_misc_db->log_tstamp, TRUE,
 			config.timestamps_since_epoch, config.timestamps_rfc3339, config.timestamps_utc);
 
+      /* if dumping, let's reset log sequence at the next dump event */
+      if (!bgp_misc_db->dump_backend_methods) {
+        if (bgp_peer_log_seq_has_ro_bit(&bgp_misc_db->log_seq))
+	  bgp_peer_log_seq_init(&bgp_misc_db->log_seq);
+      }
+
       if (bgp_misc_db->dump_backend_methods) {
 	while (bgp_misc_db->log_tstamp.tv_sec > dump_refresh_deadline) {
 	  bgp_misc_db->dump.tstamp.tv_sec = dump_refresh_deadline;
@@ -504,7 +510,11 @@ void skinny_bgp_daemon_online()
 			    config.timestamps_since_epoch, config.timestamps_rfc3339, config.timestamps_utc);
 	  bgp_misc_db->dump.period = config.bgp_table_dump_refresh_time;
 
+	  if (bgp_peer_log_seq_has_ro_bit(&bgp_misc_db->log_seq))
+	    bgp_peer_log_seq_init(&bgp_misc_db->log_seq);
+
 	  bgp_handle_dump_event();
+
 	  dump_refresh_deadline += config.bgp_table_dump_refresh_time;
 	}
       }

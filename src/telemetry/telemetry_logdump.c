@@ -199,6 +199,11 @@ void telemetry_log_seq_set(u_int64_t *seq, u_int64_t value)
   bgp_peer_log_seq_set(seq, value);
 }
 
+int telemetry_log_seq_has_ro_bit(u_int64_t *seq)
+{
+  return bgp_peer_log_seq_has_ro_bit(seq);
+}
+
 int telemetry_peer_log_init(telemetry_peer *peer, int output, int type)
 {
   return bgp_peer_log_init(peer, output, type);

@@ -33,6 +33,7 @@ EXT void telemetry_log_seq_init(u_int64_t *);
 EXT void telemetry_log_seq_increment(u_int64_t *);
 EXT u_int64_t telemetry_log_seq_get(u_int64_t *);
 EXT void telemetry_log_seq_set(u_int64_t *, u_int64_t);
+EXT int telemetry_log_seq_has_ro_bit(u_int64_t *);
 
 EXT int telemetry_peer_log_init(telemetry_peer *, int, int);
 EXT void telemetry_peer_log_dynname(char *, int, char *, telemetry_peer *);

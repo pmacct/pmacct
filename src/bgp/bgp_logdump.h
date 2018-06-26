@@ -35,6 +35,9 @@
 #define BGP_LOG_TYPE_OPEN	4
 #define BGP_LOG_TYPE_CLOSE	5
 
+#define BGP_LOGSEQ_ROLLOVER_BIT	0x8000000000000000ULL
+#define BGP_LOGSEQ_MASK		0x7FFFFFFFFFFFFFFFULL	
+
 struct bgp_peer_log {
   FILE *fd;
   int refcnt;
@@ -63,6 +66,7 @@ EXT void bgp_peer_log_seq_init(u_int64_t *);
 EXT void bgp_peer_log_seq_increment(u_int64_t *);
 EXT u_int64_t bgp_peer_log_seq_get(u_int64_t *);
 EXT void bgp_peer_log_seq_set(u_int64_t *, u_int64_t);
+EXT int bgp_peer_log_seq_has_ro_bit(u_int64_t *);
 
 EXT int bgp_peer_dump_init(struct bgp_peer *, int, int, int);
 EXT int bgp_peer_dump_close(struct bgp_peer *, struct bgp_dump_stats *, int, int, int);
