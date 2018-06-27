@@ -887,7 +887,8 @@ the section "Compiling pmacct with Apache Avro support" of this document.
 
 Then "make; make install" as usual. Following a configuration snippet showing a
 basic Kafka plugin configuration (assumes: Kafka broker is available at 127.0.0.1
-on port 9092; look all configurable directives up in the CONFIG-KEYS document):
+on port 9092; look all kafka_* configurable directives up in the CONFIG-KEYS
+document):
 
 ! ..
 plugins: kafka
@@ -902,7 +903,7 @@ kafka_history_roundoff: m
 
 A basic script, in Python, is provided as sample to consume JSON/Avro data from
 a given topic and perform some simple actions (ie. post data to a new Kafka topic,
-post to a URL or print to screen). The script is located in the pmacct distributed
+post to a URL or print to screen). The script is located in the pmacct distribution
 code in 'examples/kafka/kafka_consumer.py' and requires the confluent-kafka-python
 Python module installed (among the others, check script header). Should this not
 be available you can read on the following page how to get it installed:
@@ -914,10 +915,9 @@ This is a pointer to the quick start guide to Kafka:
 https://kafka.apache.org/quickstart
 
 Some notes:
-1) When using Kafka over a dedicated node or VM, you will have to update the
-default Kafka server configuration. Edit with your favorite text editor the file
-named server.properties under the config folder of your kafka installation.
-Uncomment the following parameters:
+1) When using Kafka over a dedicated node or VM, you may have to update the
+default Kafka server configuration. Edit the file named server.properties under
+the config folder of your kafka installation. Uncomment the following parameters:
 
 * listeners,
 * advertised.listeners,
@@ -955,8 +955,22 @@ global, batch.num.messages, 100000
 3) Configuring statistics.interval.ms to a positive value in kafka_config_file
 will make librdkafka log plenty of internal metrics - as documented at the
 following wiki page: https://github.com/edenhill/librdkafka/wiki/Statistics
+For example:
 
-4) When integrating pmacct with the PNDA framework ( http://www.pnda.io/ ), a
+global, statistics.interval.ms, 60000
+
+4) The SSL support in librdkafka is completely configuration based, meaning
+it can be enabled via the kafka_config_file. More info is available at the
+page: https://github.com/edenhill/librdkafka/wiki/Using-SSL-with-librdkafka 
+For example, quoting the librdkafka page:
+
+global, security.protocol, ssl
+global, ssl.ca.location, ca-cert
+global, ssl.certificate.location, client_?????_client.pem
+global, ssl.key.location, client_?????_client.key
+global, ssl.key.password, abcdefgh
+
+5) When integrating pmacct with the PNDA framework ( http://www.pnda.io/ ), a
 guide on how to make the two communicate has been written-up and published at
 this URL: https://github.com/jbotello7381/pmacct_to_pnda.io . 
 
