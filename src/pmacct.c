@@ -718,7 +718,7 @@ int main(int argc,char **argv)
   char *as_path, empty_aspath[] = "^$", empty_string[] = "", *bgp_comm;
   int sd, buflen, unpacked, printed;
   int counter=0, sep_len=0, is_event;
-  char *sep_ptr = NULL, sep[10], default_sep[] = ",";
+  char *sep_ptr = NULL, sep[10], default_sep[] = ",", spacing_sep[2];
   struct imt_custom_primitives custom_primitives_input;
 
   /* mrtg stuff */
@@ -1360,8 +1360,20 @@ int main(int argc,char **argv)
   if (!sep_len) sep_ptr = default_sep;
   else if (sep_len == 1) sep_ptr = sep;
   else {
-    printf("ERROR: -E option expects a single char as separator\n  Exiting...\n\n");
-    exit(1);
+    if (!strcmp(sep, "\\t")) {
+      spacing_sep[0] = '\t';
+      spacing_sep[1] = '\0';
+      sep_ptr = spacing_sep;
+    }
+    else if (!strcmp(sep, "\\s")) {
+      spacing_sep[0] = ' ';
+      spacing_sep[1] = '\0';
+      sep_ptr = spacing_sep;
+    }
+    else {
+      printf("ERROR: -E option expects a single char as separator\n  Exiting...\n\n");
+      exit(1);
+    }
   }
 
   memcpy(q.passwd, password, sizeof(password));

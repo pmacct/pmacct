@@ -2731,8 +2731,11 @@ int cfg_key_print_output_separator(char *filename, char *name, char *value_ptr)
   int changes = 0;
 
   if (strlen(value_ptr) != 1) {
-    Log(LOG_WARNING, "WARN: [%s] Invalid print_output_separator value '%s'. Only one char allowed.\n", filename, value_ptr);
-    return ERR;
+    if (!strcmp(value_ptr, "\\t") || !strcmp(value_ptr, "\\s"));
+    else {
+      Log(LOG_WARNING, "WARN: [%s] Invalid print_output_separator value '%s'. Only one char allowed.\n", filename, value_ptr);
+      return ERR;
+    }
   }
 
   if (!name) for (; list; list = list->next, changes++) list->cfg.print_output_separator = value_ptr;

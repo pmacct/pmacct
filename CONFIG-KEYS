@@ -1495,11 +1495,11 @@ NOTES:		* Jansson and Avro libraries don't have the concept of unsigned integers
 DEFAULT:	formatted
 
 KEY:            print_output_separator
-DESC:           Defines the print plugin output separator when print_output is set to csv or event_csv. Value
-		is expected to be a single character and cannot be a spacing (if spacing separator is wanted
-		then 'formatted' output should be the natural choice instead). This comes useful in cases in
-		which the default separator value is part of any of the supplied strings, for example certain
-		BGP AS PATHs like "AS1_AS2_AS3_{ASX,ASY,ASZ}".
+DESC:           Defines the print plugin output separator when print_output is set to csv or event_csv.
+		Value is expected to be a single character with the exception of tab (\t) and space (\s)
+		strings allowed. Being able to choose a separator comes useful in cases in which the
+		default separator value is part of any of the supplied strings, for example certain BGP
+		AS PATHs like "AS1_AS2_AS3_{ASX,ASY,ASZ}".
 DEFAULT:	','
 
 KEY:		[ amqp_output | kafka_output ]
