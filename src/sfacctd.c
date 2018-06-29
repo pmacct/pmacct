@@ -1186,6 +1186,10 @@ int main(int argc,char **argv, char **envp)
       compose_timestamp(sf_cnt_misc_db->log_tstamp_str, SRVBUFLEN, &sf_cnt_misc_db->log_tstamp, TRUE,
 			config.timestamps_since_epoch, config.timestamps_rfc3339, config.timestamps_utc);
 
+      /* let's reset log sequence here as we do not sequence dump_init/dump_close events */
+      if (bgp_peer_log_seq_has_ro_bit(&sf_cnt_misc_db->log_seq))
+        bgp_peer_log_seq_init(&sf_cnt_misc_db->log_seq);
+
 #ifdef WITH_RABBITMQ
       if (config.sfacctd_counter_amqp_routing_key) {
         time_t last_fail = P_broker_timers_get_last_fail(&sfacctd_counter_amqp_host.btimers);
@@ -2153,7 +2157,7 @@ int sf_cnt_log_msg(struct bgp_peer *peer, SFSample *sample, int version, u_int32
 
     /* no need for seq and timestamp for "dump" event_type */
     if (etype == BGP_LOGDUMP_ET_LOG) {
-      json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)bms->log_seq));
+      json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq)));
       bgp_peer_log_seq_increment(&bms->log_seq);
 
       json_object_set_new_nocheck(obj, "timestamp", json_string(bms->log_tstamp_str));
