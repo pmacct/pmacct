@@ -39,7 +39,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
   struct xflow_status_entry *xs_entry = (struct xflow_status_entry *) pptrs->f_status;
   struct bgp_peer *peer;
   struct bgp_node *default_node, *result;
-  struct bgp_info *info;
+  struct bgp_info *info = NULL;
   struct node_match_cmp_term2 nmct2;
   struct prefix default_prefix;
   int compare_bgp_port = config.tmp_bgp_lookup_compare_ports;
@@ -319,7 +319,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent, sa_local;
   struct bgp_peer *nh_peer;
   struct bgp_node *result_node = NULL;
-  struct bgp_info *info;
+  struct bgp_info *info = NULL;
   struct node_match_cmp_term2 nmct2;
   char *saved_info = NULL;
   int peers_idx, ttl = MAX_HOPS_FOLLOW_NH, self = MAX_NH_SELF_REFERENCES;

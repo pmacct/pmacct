@@ -3248,7 +3248,7 @@ int cfg_key_nfacctd_bgp_lrgcomm_pattern_to_asn(char *filename, char *name, char 
 int cfg_key_nfacctd_bgp_peer_src_as_type(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  int value = BGP_SRC_PRIMITIVES_UNK, changes = 0;
 
   lower_string(value_ptr);
   if (!strncmp(value_ptr, "netflow", strlen("netflow"))) value = BGP_SRC_PRIMITIVES_KEEP;
@@ -3271,7 +3271,7 @@ int cfg_key_nfacctd_bgp_peer_src_as_type(char *filename, char *name, char *value
 int cfg_key_nfacctd_bgp_src_std_comm_type(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  int value = BGP_SRC_PRIMITIVES_UNK, changes = 0;
 
   lower_string(value_ptr);
   if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
@@ -3286,7 +3286,7 @@ int cfg_key_nfacctd_bgp_src_std_comm_type(char *filename, char *name, char *valu
 int cfg_key_nfacctd_bgp_src_ext_comm_type(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  int value = BGP_SRC_PRIMITIVES_UNK, changes = 0;
 
   lower_string(value_ptr);
   if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
@@ -3301,7 +3301,7 @@ int cfg_key_nfacctd_bgp_src_ext_comm_type(char *filename, char *name, char *valu
 int cfg_key_nfacctd_bgp_src_lrg_comm_type(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  int value = BGP_SRC_PRIMITIVES_UNK, changes = 0;
 
   lower_string(value_ptr);
   if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
@@ -3316,7 +3316,7 @@ int cfg_key_nfacctd_bgp_src_lrg_comm_type(char *filename, char *name, char *valu
 int cfg_key_nfacctd_bgp_src_as_path_type(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  int value = BGP_SRC_PRIMITIVES_UNK, changes = 0;
 
   lower_string(value_ptr);
   if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
@@ -3331,7 +3331,7 @@ int cfg_key_nfacctd_bgp_src_as_path_type(char *filename, char *name, char *value
 int cfg_key_nfacctd_bgp_src_local_pref_type(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  int value = BGP_SRC_PRIMITIVES_UNK, changes = 0;
 
   lower_string(value_ptr);
   if (!strncmp(value_ptr, "map", strlen("map"))) value = BGP_SRC_PRIMITIVES_MAP;
@@ -3347,7 +3347,7 @@ int cfg_key_nfacctd_bgp_src_local_pref_type(char *filename, char *name, char *va
 int cfg_key_nfacctd_bgp_src_med_type(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  int value = BGP_SRC_PRIMITIVES_UNK, changes = 0;
 
   lower_string(value_ptr);
   if (!strncmp(value_ptr, "map", strlen("map"))) value = BGP_SRC_PRIMITIVES_MAP;
@@ -3446,7 +3446,7 @@ int cfg_key_nfacctd_bgp_follow_nexthop(char *filename, char *name, char *value_p
 {
   struct plugins_list_entry *list = plugins_list;
   char *count_token;
-  int changes = 0, idx = 0, valid;
+  int changes = 0, idx = 0, valid = 0;
 
   trim_all_spaces(value_ptr);
 
@@ -3726,7 +3726,7 @@ int cfg_key_nfacctd_bgp_table_attr_hash_buckets(char *filename, char *name, char
 int cfg_key_nfacctd_bgp_table_per_peer_hash(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  int value = BGP_ASPATH_HASH_PATHID, changes = 0;
 
   lower_string(value_ptr);
   if (!strncmp(value_ptr, "path_id", strlen("path_id"))) value = BGP_ASPATH_HASH_PATHID;
@@ -3965,7 +3965,7 @@ int cfg_key_nfacctd_bmp_table_attr_hash_buckets(char *filename, char *name, char
 int cfg_key_nfacctd_bmp_table_per_peer_hash(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  int value = BGP_ASPATH_HASH_PATHID, changes = 0;
 
   lower_string(value_ptr);
   if (!strncmp(value_ptr, "path_id", strlen("path_id"))) value = BGP_ASPATH_HASH_PATHID;
