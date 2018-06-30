@@ -392,21 +392,27 @@ FILE *open_output_file(char *filename, char *mode, int lock)
 
   ret = access(filename, F_OK);
 
-  file = fopen(filename, mode); 
+  if (!ret) {
+    file = fopen(filename, mode); 
 
-  if (file) {
-    if (chown(filename, owner, group) == -1)
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] open_output_file(): chown() failed (%s).\n", config.name, config.type, filename, strerror(errno));
+    if (file) {
+      if (chown(filename, owner, group) == -1)
+	Log(LOG_WARNING, "WARN ( %s/%s ): [%s] open_output_file(): chown() failed (%s).\n", config.name, config.type, filename, strerror(errno));
 
-    if (lock) {
-      if (file_lock(fileno(file))) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): [%s] open_output_file(): file_lock() failed.\n", config.name, config.type, filename);
-        file = NULL;
+      if (lock) {
+	if (file_lock(fileno(file))) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): [%s] open_output_file(): file_lock() failed.\n", config.name, config.type, filename);
+	  file = NULL;
+	}
       }
+    }
+    else {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] open_output_file(): fopen() failed (%s).\n", config.name, config.type, filename, strerror(errno));
+      file = NULL;
     }
   }
   else {
-    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] open_output_file(): fopen() failed (%s).\n", config.name, config.type, filename, strerror(errno));
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] open_output_file(): access() failed (%s).\n", config.name, config.type, filename, strerror(errno));
     file = NULL;
   }
 
