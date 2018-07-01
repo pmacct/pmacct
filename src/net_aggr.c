@@ -429,7 +429,10 @@ void merge(char *filename, struct networks_table_entry *table, int start, int mi
   v1 = malloc(v1_n*s);
   v2 = malloc(v2_n*s);
 
-  if ((!v1) || (!v2)) Log(LOG_ERR, "ERROR ( %s/%s ): [%s] memory sold out.\n", config.name, config.type, filename); 
+  if ((!v1) || (!v2)) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] malloc() failed in merge().\n", config.name, config.type, filename); 
+    exit(1);
+  }
 
   for (i=0; i<v1_n; i++) memcpy(&v1[i], &table[start+i], s);
   for (i=0; i<v2_n; i++) memcpy(&v2[i], &table[middle+i], s);

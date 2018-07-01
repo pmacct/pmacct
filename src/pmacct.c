@@ -3164,7 +3164,10 @@ void client_counters_merge(void *table, int start, int middle, int end, int size
   v1 = malloc(v1_n*s);
   v2 = malloc(v2_n*s);
 
-  if ((!v1) || (!v2)) printf("ERROR: Memory sold out while sorting statistics.\n");
+  if ((!v1) || (!v2)) {
+    printf("ERROR: Memory sold out while sorting statistics.\n");
+    exit(1);
+  }
 
   for (i=0; i<v1_n; i++) {
     memcpy(v1+(i*s), table+((start+i)*s), s);

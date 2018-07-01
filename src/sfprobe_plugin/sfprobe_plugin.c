@@ -214,7 +214,12 @@ static void init_agent(SflSp *sp)
     myIP.type = SFLADDRESSTYPE_IP_V4;
     myIP.address.ip_v4 = sp->agentIP;
     sp->agent = (SFLAgent *)calloc(1, sizeof(SFLAgent));
-    sfl_agent_init(sp->agent, &myIP, sp->agentSubId, now, now, sp, agentCB_alloc, agentCB_free, agentCB_error, NULL);
+
+    if (sp->agent) sfl_agent_init(sp->agent, &myIP, sp->agentSubId, now, now, sp, agentCB_alloc, agentCB_free, agentCB_error, NULL);
+    else {
+      Log(LOG_ERR, "ERROR ( %s/%s ): init_agent(): calloc() failed.\n", config.name, config.type);
+      exit(1);
+    }
   }
 
   // add a receiver
