@@ -109,12 +109,12 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (!config.tee_max_receivers) config.tee_max_receivers = MAX_TEE_RECEIVERS;
 
   for (pool_idx = 0; pool_idx < config.tee_max_receiver_pools; pool_idx++) { 
-    receivers.pools[pool_idx].receivers = malloc(config.tee_max_receivers*sizeof(struct tee_receivers));
+    receivers.pools[pool_idx].receivers = malloc(config.tee_max_receivers*sizeof(struct tee_receiver));
     if (!receivers.pools[pool_idx].receivers) {
       Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate receivers for pool #%u. Exiting ...\n", config.name, config.type, pool_idx);
       exit_plugin(1);
     }
-    else memset(receivers.pools[pool_idx].receivers, 0, config.tee_max_receivers*sizeof(struct tee_receivers));
+    else memset(receivers.pools[pool_idx].receivers, 0, config.tee_max_receivers*sizeof(struct tee_receiver));
   }
 
   if (config.tee_receivers) {
@@ -503,7 +503,7 @@ void Tee_destroy_recvs()
       if (target->fd) close(target->fd);
     }
 
-    memset(receivers.pools[pool_idx].receivers, 0, config.tee_max_receivers*sizeof(struct tee_receivers));
+    memset(receivers.pools[pool_idx].receivers, 0, config.tee_max_receivers*sizeof(struct tee_receiver));
     memset(&receivers.pools[pool_idx].tag_filter, 0, sizeof(struct pretag_filter));
     memset(&receivers.pools[pool_idx].balance, 0, sizeof(struct tee_balance));
     receivers.pools[pool_idx].id = 0;

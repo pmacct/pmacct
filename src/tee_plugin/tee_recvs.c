@@ -284,7 +284,7 @@ void tee_recvs_map_validate(char *filename, int lineno, struct plugin_requests *
       table->pools[table->num].id = 0;
       table->pools[table->num].num = 0;
       table->pools[table->num].src_port = 0;
-      memset(table->pools[table->num].receivers, 0, config.tee_max_receivers*sizeof(struct tee_receivers));
+      memset(table->pools[table->num].receivers, 0, config.tee_max_receivers*sizeof(struct tee_receiver));
       memset(&table->pools[table->num].tag_filter, 0, sizeof(struct pretag_filter));
       memset(&table->pools[table->num].balance, 0, sizeof(struct tee_balance));
 

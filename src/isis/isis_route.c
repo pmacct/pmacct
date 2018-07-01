@@ -74,10 +74,12 @@ isis_nexthop_create (struct in_addr *ip, unsigned int ifindex)
       Log(LOG_ERR, "ERROR ( %s/core/ISIS ): ISIS-Rte: isis_nexthop_create: out of memory!\n", config.name);
     }
 
-  nexthop->ifindex = ifindex;
-  memcpy (&nexthop->ip, ip, sizeof (struct in_addr));
-  isis_listnode_add (isis->nexthops, nexthop);
-  nexthop->lock++;
+  if (nexthop) {
+    nexthop->ifindex = ifindex;
+    memcpy (&nexthop->ip, ip, sizeof (struct in_addr));
+    isis_listnode_add (isis->nexthops, nexthop);
+    nexthop->lock++;
+  }
 
   return nexthop;
 }
@@ -428,8 +430,11 @@ isis_route_create (struct isis_prefix *prefix, u_int32_t cost, u_int32_t depth,
   else if (family == AF_INET6)
     route_node = route_node_get (area->route_table6[level - 1], prefix);
 #endif /* ENABLE_IPV6 */
-  else
+  else {
+    if (rinfo_new) free(rinfo_new);
     return NULL;
+  }
+
   rinfo_old = route_node->info;
   if (!rinfo_old)
     {

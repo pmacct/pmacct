@@ -42,7 +42,7 @@
 /* functions */
 void evaluate_packet_handlers()
 {
-  int primitives, index = 0;
+  int primitives = 0, index = 0;
 
   while (channels_list[index].aggregation) { 
     primitives = 0;
