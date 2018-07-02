@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -46,6 +46,7 @@ thread_pool_t *allocate_thread_pool(int count)
   // Allocate pool
   pool = malloc(sizeof(thread_pool_t));
   assert(pool);
+  memset(pool, 0, sizeof(thread_pool_t));
 
   // Allocate pool mutex
   pool->mutex = malloc(sizeof(pthread_mutex_t));
@@ -89,6 +90,7 @@ thread_pool_t *allocate_thread_pool(int count)
     rc = pthread_attr_init(&attr);
     if (rc) {
       Log(LOG_ERR, "ERROR ( %s/%s ): pthread_attr_init(): %s\n", config.name, config.type, strerror(rc));
+      deallocate_thread_pool(&pool);
       return NULL;
     }
 
@@ -124,6 +126,7 @@ thread_pool_t *allocate_thread_pool(int count)
     }
     else {
       Log(LOG_ERR, "ERROR ( %s/%s ): pthread_attr_setstacksize(): %s\n", config.name, config.type, strerror(rc));
+      deallocate_thread_pool(&pool);
       return NULL;
     }
 
@@ -131,6 +134,7 @@ thread_pool_t *allocate_thread_pool(int count)
 
     if (rc) {
       Log(LOG_ERR, "ERROR ( %s/%s ): pthread_create(): %s\n", config.name, config.type, strerror(rc));
+      deallocate_thread_pool(&pool);
       return NULL;
     }
 
@@ -153,7 +157,7 @@ thread_pool_t *allocate_thread_pool(int count)
 void deallocate_thread_pool(thread_pool_t **pool)
 {
   thread_pool_t *pool_ptr = NULL;
-  thread_pool_item_t *worker = NULL;
+  thread_pool_item_t *worker = NULL, *aux = NULL;
 
   if (!pool || !(*pool)) return;
 
@@ -179,8 +183,10 @@ void deallocate_thread_pool(thread_pool_t **pool)
  
     free(worker->thread);
 
-    worker = worker->next;
+    aux = worker->next;
     free(worker);
+
+    worker = aux;
   }
 
   if (pool_ptr->mutex) free(pool_ptr->mutex);
