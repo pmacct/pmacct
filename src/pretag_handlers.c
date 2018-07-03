@@ -307,6 +307,8 @@ int PT_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value, 
 {
   int x = 0, have_bgp = 0;
 
+  if (req->ptm_c.load_ptm_plugin == PLUGIN_ID_TEE) req->ptm_c.load_ptm_res = TRUE;
+
   e->key.bgp_nexthop.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   if (!str_to_addr(value, &e->key.bgp_nexthop.a)) {
