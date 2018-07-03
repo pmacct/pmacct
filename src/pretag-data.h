@@ -115,6 +115,7 @@ const struct _map_dictionary_line tag_map_tee_dictionary[] = {
   {"vlan", PT_map_vlan_id_handler},
   {"src_net", PT_map_src_net_handler},
   {"dst_net", PT_map_dst_net_handler},
+  {"bgp_nexthop", PT_map_bgp_nexthop_handler},
   {"engine_type", PT_map_engine_type_handler},
   {"engine_id", PT_map_engine_id_handler},
   {"source_id", PT_map_engine_id_handler},
