@@ -1295,6 +1295,8 @@ int pretag_input_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   u_int32_t input32 = htonl(entry->key.input.n);
   u_int8_t neg = entry->key.input.neg;
 
+  if (!pptrs->f_data) return TRUE;
+
   switch(hdr->version) {
   case 10:
   case 9:
@@ -1328,6 +1330,8 @@ int pretag_output_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   u_int32_t output32 = htonl(entry->key.output.n);
   u_int8_t neg = entry->key.output.neg;
 
+  if (!pptrs->f_data) return TRUE;
+
   switch(hdr->version) {
   case 10:
   case 9:
@@ -1357,6 +1361,8 @@ int pretag_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct id_entry *entry = e;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  if (!pptrs->f_data) return TRUE;
 
   switch(hdr->version) {
   case 10:
@@ -1391,31 +1397,29 @@ int pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, config.nfacctd_net, NF_NET_KEEP)) return TRUE;
 
+  if (!pptrs->f_data) return TRUE;
+
   switch(hdr->version) {
   case 10:
   case 9:
     if (entry->key.bgp_nexthop.a.family == AF_INET) {
       if (tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].len) {
-        if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].off, tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].len))
+	if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].off, tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].len))
 	  return (FALSE | entry->key.bgp_nexthop.neg);
       }
       else if (tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len) {
-        if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].off, tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len))
+	if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].off, tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len))
 	  return (FALSE | entry->key.bgp_nexthop.neg);
       }
     }
 #if defined ENABLE_IPV6
     else if (entry->key.nexthop.a.family == AF_INET6) {
       if (tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len) {
-        if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].off, tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len))
-	  return (FALSE | entry->key.bgp_nexthop.neg);
-      }
-      else if (tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len) {
-        if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].off, tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len))
+	if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].off, tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len))
 	  return (FALSE | entry->key.bgp_nexthop.neg);
       }
       else if (tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].len) {
-        if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].off, tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].len))
+	if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].off, tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].len))
 	  return (FALSE | entry->key.bgp_nexthop.neg);
       }
     }
@@ -1521,6 +1525,8 @@ int pretag_flowset_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
+  if (!pptrs->f_tpl) return TRUE;
+
   switch(hdr->version) {
   case 10:
   case 9:
@@ -1552,6 +1558,8 @@ int pretag_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   u_int32_t asn32 = 0;
 
   if (entry->last_matched == PRETAG_SRC_AS) return FALSE;
+
+  if (!pptrs->f_data) return TRUE;
 
   switch(hdr->version) {
   case 10:
@@ -1609,6 +1617,8 @@ int pretag_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   u_int32_t asn32 = 0;
 
   if (entry->last_matched == PRETAG_DST_AS) return FALSE;
+
+  if (!pptrs->f_data) return TRUE;
 
   switch(hdr->version) {
   case 10:
@@ -1798,6 +1808,8 @@ int pretag_direction_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int8_t direction = 0;
 
+  if (!pptrs->f_data) return TRUE;
+
   switch (hdr->version) {
   case 10:
   case 9:
@@ -1837,6 +1849,8 @@ int pretag_src_mac_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
+  if (!pptrs->f_data) return TRUE;
+
   switch (hdr->version) {
   case 10:
   case 9:
@@ -1855,6 +1869,8 @@ int pretag_dst_mac_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct id_entry *entry = e;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  if (!pptrs->f_data) return TRUE;
 
   switch (hdr->version) {
   case 10:
@@ -1875,6 +1891,8 @@ int pretag_vlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t tmp16 = 0, vlan_id = 0;
+
+  if (!pptrs->f_data) return TRUE;
 
   switch (hdr->version) {
   case 10:
@@ -1899,6 +1917,8 @@ int pretag_src_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct host_addr addr;
+
+  if (!pptrs->f_data) return TRUE;
 
   switch(hdr->version) {
   case 10:
@@ -1943,6 +1963,8 @@ int pretag_dst_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct host_addr addr;
 
+  if (!pptrs->f_data) return TRUE;
+
   switch(hdr->version) {
   case 10:
   case 9:
@@ -1986,6 +2008,8 @@ int pretag_forwarding_status_handler(struct packet_ptrs *pptrs, void *unused, vo
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int32_t fwdstatus = 0;
 
+  if (!pptrs->f_data) return TRUE;
+
   switch (hdr->version) {
   case 10:
   case 9:
@@ -2024,6 +2048,8 @@ int pretag_cvlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int16_t tmp16 = 0, cvlan_id = 0;
+
+  if (!pptrs->f_data) return TRUE;
 
   switch (hdr->version) {
   case 10:

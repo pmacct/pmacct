@@ -1253,14 +1253,15 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 {
   struct struct_header_v9 *hdr_v9 = (struct struct_header_v9 *)pkt;
   struct struct_header_ipfix *hdr_v10 = (struct struct_header_ipfix *)pkt;
-  struct template_hdr_v9 *template_hdr;
-  struct options_template_hdr_v9 *opt_template_hdr;
-  struct template_cache_entry *tpl;
-  struct data_hdr_v9 *data_hdr;
+  struct template_hdr_v9 *template_hdr = NULL;
+  struct options_template_hdr_v9 *opt_template_hdr = NULL;
+  struct template_cache_entry *tpl = NULL;
+  struct data_hdr_v9 *data_hdr = NULL;
   struct packet_ptrs *pptrs = &pptrsv->v4;
-  u_int16_t fid, off = 0, flowoff, flowsetlen, flowsetNo, flowsetCount, direction, FlowSeqInc = 0; 
+  u_int16_t fid, off = 0, flowoff = 0, flowsetlen = 0, flowsetNo = 0;
+  u_int16_t flowsetCount = 0, direction = 0, FlowSeqInc = 0; 
   u_int32_t HdrSz = 0, SourceId = 0, FlowSeq = 0;
-  u_char *dummy_packet_ptr;
+  u_char *dummy_packet_ptr = NULL;
 
   if (version == 9) {
     HdrSz = NfHdrV9Sz; 
@@ -2339,6 +2340,8 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
   /* If dissecting, we may also send the full packet in case multiple tee
      plugins are instantiated and any of them does not require dissection */
   pptrs->tee_dissect = NULL;
+  pptrs->f_data = NULL;
+  pptrs->f_tpl = NULL;
   req->ptm_c.exec_ptm_res = FALSE;
 
   exec_plugins(pptrs, req);
