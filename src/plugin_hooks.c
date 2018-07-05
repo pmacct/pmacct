@@ -367,8 +367,12 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
 
     if (p->cfg.pre_tag_map && find_id_func) {
       if (p->cfg.type_id == PLUGIN_ID_TEE) {
-	if ((req->ptm_c.exec_ptm_res && !p->cfg.ptm_complex) ||
-	    ((!req->ptm_c.exec_ptm_res && p->cfg.ptm_complex) && !p->cfg.tee_dissect_send_full_pkt))
+	/*
+	   pass and compute tagging if:
+	   - a dissected flow hits a complex pre_tag_map or
+	   - a non-dissected (full) packet hits a simple pre_tag_map
+	*/
+	if ((req->ptm_c.exec_ptm_res && !p->cfg.ptm_complex) || (!req->ptm_c.exec_ptm_res && p->cfg.ptm_complex))
 	  continue;
       }
 
