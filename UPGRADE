@@ -20,6 +20,12 @@ DESC:   Following is the list of features, knobs and plugins that are being
 	* nfacctd: collection, processing and replication of NetFlow v1, v7
 	  and v8 has been discontinued. The focus will remain on popular v5,
 	  v9 and IPFIX. 
+	* tee_plugin: tee_dissect_send_full_pkt was allowing to specify if,
+	  when dissecting replicated packets due to a complex pre_tag_map,
+	  to send (or not) the full packet. Now, in a simplification move,
+	  full packets are replicated only if no pre_tag_map is set or a
+	  simple pre_tag_map is defined. In the context of replication, in
+	  QUICKSTART is defined what is a simple and a complex pre_tag_map.
 
 TO:	>= 1.7.1
 FROM:	<= 1.7.0

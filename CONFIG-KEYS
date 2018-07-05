@@ -2691,13 +2691,6 @@ DESC:           Tee receivers list is organized in pools (for present and future
 		allocated and cannot be changed at runtime.
 DEFAULT:	32
 
-KEY:		tee_dissect_send_full_pkt
-VALUES:         [ true | false ]
-DESC:		When replicating and dissecting flow samples, send onto the tee plugin also the full
-		packet. This is useful in scenarios where, say, dissected flows are tagged while the
-		full packet is left untagged. By default this is left to false for security reasons. 
-DEFAULT:	false
-
 KEY:            tee_kafka_config_file
 DESC:           Full pathname to a file containing directives to configure librdkafka when emitting
 		replicated datagrams to a Kafka broker. See kafka_config_file for more info.

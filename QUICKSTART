@@ -1756,20 +1756,19 @@ When replicating, it is possible to perform finer-grained filtering, ie.
 against flow-specific primitives. For example: replicate flows from or to MAC
 address X1, X2 .. Xn to receiver Y or replicate flows in VLAN W to receiver
 Z. The feature works by inspecting the original packet and dissecting it as
-needed, the most popular use-case being IXPs replicating flows back to the
-members originating and/or receiving them. From pmacct 1.6.2 the support is
-available for sFlow; from pmacct 1.7.2 the support is available for NetFlow
+needed, one of the most popular use-cases being IXPs replicating flows back
+to the members originating and/or receiving them. From pmacct 1.6.2 the
+feature is available for sFlow; from 1.7.2 the feature is extended to NetFlow
 and IPFIX. Some of the supported primitives are: source and destination MAC
-addresses, input/output interfaces ifindex; the full list is available in
-examples/pretag.map.example (look for "sfacctd, nfacctd when in 'tee' mode").
+addresses and input/output interfaces ifindex; the full list is available in
+examples/pretag.map.example (look for "sfacctd when in 'tee' mode" or
+"nfacctd when in 'tee' mode").
 
 The feature is configured just like selective teeing shown in the previous
 section. Incoming packets are tagged with a pre_tag_map and then matched to a
-receiver in tee_receivers. Also, setting tee_dissect_send_full_pkt to true (by
-default false) the original full frame is sent over to the tee plugin. For
-example: replicate flows from/to MAC address XX:XX:XX:XX:XX:XX to receiver Y,
-replicate flows from/to MAC address WW:WW:WW:WW:WW:WW to receiver Z, replicate
-any remaining flows plus original frames to receiver J.
+receiver in tee_receivers. For example: replicate flows from/to MAC address
+XX:XX:XX:XX:XX:XX to receiver Y, flows from/to MAC address WW:WW:WW:WW:WW:WW
+to receiver Z and replicate any remaining (untagged) flows to receiver J.
 
 This is the pre_tag_map map:
 
@@ -1781,9 +1780,9 @@ set_tag=999	ip=0.0.0.0/0
 
 This is the tee_receivers map:
 
-id=100	ip=Y.Y.Y.Y:2100	tag=100
-id=200	ip=Z.Z.Z.Z:2100	tag=200
-id=999	ip=J.J.J.J:2100	tag=999
+id=100		ip=Y.Y.Y.Y:2100	tag=100
+id=200		ip=Z.Z.Z.Z:2100	tag=200
+id=999		ip=J.J.J.J:2100	tag=999
 
 This is the relevant section from nfacctd/sfacctd configuration:
 
@@ -1796,18 +1795,46 @@ plugins: tee[a]
 !
 tee_receivers[a]: /path/to/tee_receivers.lst
 pre_tag_map[a]: /path/to/pretag.map
-tee_dissect_send_full_pkt[a]: true
+
+Along with dissected flows, it is possible to replicate also the original
+packet as-is. This can be done in a separate 'tee' plugin. Extending the
+example above, we now instantiate two plugins; 'a' is as per the previous
+example, 'b' is to replicate full packets (as in plain, non-dissected
+replication):
+
+[ .. ]
+!
+tee_transparent: true
+maps_index: true
+!
+plugins: tee[a], tee[b]
+!
+tee_receivers[a]: /path/to/tee_receivers_a.lst
+pre_tag_map[a]: /path/to/pretag_a.map
+!
+tee_receivers[a]: /path/to/tee_receivers_b.lst
+pre_tag_map[a]: /path/to/pretag_b.map
+
+tee_receivers_a.lst and pretag_a.map are precisely as in the previous
+example. 
+
+This is the pretag_b.map map:
+
+set_tag=100	ip=0.0.0.0/0
+
+This is the tee_receivers_b.map map:
+
+id=100		ip=H.H.H.H:2100	tag=100
 
 There are a few restrictions to the feature: 1) for sFlow, only sFlow v5 flow
 samples are supported, ie. no sFlow v2/v4 nor counter samples; 2) for NetFlow/
 IPFIX, templates and option data is broadcasted to configured tee receivers
-(regardless of tags and tee_dissect_send_full_pkt value; 3) once split, flows
-are not muxed back together, ie. in case multiple samples part of the same
-packet are to be replicated to the same receiver; 4) sequence numbers are
-untouched: the most obvious cases being receivers may detect non-increasing
-sequencing or false duplicates. If you are negatively affected by any of these
-restrictions or limitations or you need other primitives to be supported by
-this feature, please get in touch.
+(regardless of tags); 3) once split, flows are not muxed back together, ie.
+in case multiple samples part of the same packet are to be replicated to the
+same receiver; 4) sequence numbers are untouched: the most obvious cases being
+receivers may detect non-increasing sequencing or false duplicates. If you are
+negatively affected by any of these restrictions or limitations or you need
+other primitives to be supported by this feature, please get in touch.
 
 
 XVI. Quickstart guide to setup the IS-IS daemon
