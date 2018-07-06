@@ -368,7 +368,7 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
     if (p->cfg.pre_tag_map && find_id_func) {
       if (p->cfg.type_id == PLUGIN_ID_TEE) {
 	/*
-	   pass and compute tagging if:
+	   replicate and compute tagging if:
 	   - a dissected flow hits a complex pre_tag_map or
 	   - a non-dissected (full) packet hits a simple pre_tag_map
 	*/
@@ -402,6 +402,12 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
             got_tags = TRUE;
 	  }
         }
+      }
+    }
+    else {
+      if (p->cfg.type_id == PLUGIN_ID_TEE) {
+        /* stop dissected flows from being replicated in case of no pre_tag_map */
+        if (req->ptm_c.exec_ptm_res) continue;
       }
     }
 
