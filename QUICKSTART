@@ -1797,10 +1797,10 @@ tee_receivers[a]: /path/to/tee_receivers.lst
 pre_tag_map[a]: /path/to/pretag.map
 
 Along with dissected flows, it is possible to replicate also the original
-packet as-is. This can be done in a separate 'tee' plugin. Extending the
-example above, we now instantiate two plugins; 'a' is as per the previous
-example, 'b' is to replicate full packets (as in plain, non-dissected
-replication):
+packet as-is. This can be done in a separate 'tee' plugin with no or a
+simple pre_tag_map defined. Extending the example above, we instantiate
+two plugins; 'a' is as per the previous example, 'b' is to replicate full
+packets (as in plain, non-dissected replication):
 
 [ .. ]
 !
@@ -1825,6 +1825,18 @@ set_tag=100	ip=0.0.0.0/0
 This is the tee_receivers_b.map map:
 
 id=100		ip=H.H.H.H:2100	tag=100
+
+Defining a simple pre_tag_map as one where no entries require dissecting
+flows (ie. tagging on source_id, agent_id, ip, etc. keys) and a complex
+pre_tag_map as one that requires dissecting flows (ie. tagging on vlan,
+src_mac, dst_net, etc. keys) this is the table of truth for stopping or
+passing replicated data:
+
+	   no pre_tag_map | simple pre_tag_map | complex pre_tag_map
+			  |		       |
+dissected	no	  |        no	       |         yes
+			  |		       |
+     full	yes	  |	   yes	       |	 no
 
 There are a few restrictions to the feature: 1) for sFlow, only sFlow v5 flow
 samples are supported, ie. no sFlow v2/v4 nor counter samples; 2) for NetFlow/
