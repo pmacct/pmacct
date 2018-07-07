@@ -2337,8 +2337,10 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
     }
   }
 
-  /* If dissecting, we may also send the full packet in case multiple tee
-     plugins are instantiated and any of them does not require dissection */
+  /* If dissecting, we also send the full original packet */
+  if (req->ptm_c.exec_ptm_dissect)
+    ((struct struct_header_v5 *)pkt)->version = htons(((struct struct_header_v5 *)pkt)->version);
+
   pptrs->tee_dissect = NULL;
   pptrs->f_data = NULL;
   pptrs->f_tpl = NULL;
