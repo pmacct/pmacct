@@ -1004,7 +1004,7 @@ int sql_trigger_exec(char *filename)
     return -1;
   case 0:
     execv(filename, args);
-    exit(0);
+    _exit(0);
   }
 
   return 0;
