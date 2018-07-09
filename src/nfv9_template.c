@@ -112,6 +112,13 @@ struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct
   field = (struct template_field_v9 *)tpl;
 
   while (count < num) {
+    if (count >= TPL_LIST_ENTRIES) {
+      notify_malf_packet(LOG_INFO, "INFO: unable to read Data Template (too long)", (struct sockaddr *) pptrs->f_agent, seq);
+      xflow_tot_bad_datagrams++;
+      free(ptr);
+      return NULL;
+    }
+
     if (off >= len) {
       notify_malf_packet(LOG_INFO, "INFO: unable to read next Template Flowset (malformed template)",
                         (struct sockaddr *) pptrs->f_agent, seq);
@@ -784,6 +791,12 @@ struct template_cache_entry *refresh_template(struct template_hdr_v9 *hdr, struc
   field = (struct template_field_v9 *)ptr;
 
   while (count < num) {
+    if (count >= TPL_LIST_ENTRIES) {
+      notify_malf_packet(LOG_INFO, "INFO: unable to read Data Template (too long)", (struct sockaddr *) pptrs->f_agent, seq);
+      xflow_tot_bad_datagrams++;
+      return NULL;
+    }
+
     if (off >= len) {
       notify_malf_packet(LOG_INFO, "INFO: unable to read next Template Flowset (malformed template)",
                         (struct sockaddr *) pptrs->f_agent, seq);
@@ -1026,6 +1039,14 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
         ext_db_ptr->repeat_id = repeat_id;
         ext_db_ptr->len = ext_db_ptr->tpl_len;
       }
+
+      if (count >= TPL_LIST_ENTRIES) {
+	notify_malf_packet(LOG_INFO, "INFO: unable to read Options Template (too long)", (struct sockaddr *) pptrs->f_agent, seq);
+	xflow_tot_bad_datagrams++;
+	free(ptr);
+	return NULL;
+      }
+
       ptr->list[count].ptr = (char *) ext_db_ptr;
       ptr->list[count].type = TPL_TYPE_EXT_DB;
       ptr->len += ext_db_ptr->len;
@@ -1135,6 +1156,13 @@ struct template_cache_entry *refresh_opt_template(void *hdr, struct template_cac
         ext_db_ptr->repeat_id = repeat_id;
         ext_db_ptr->len = ext_db_ptr->tpl_len;
       }
+
+      if (count >= TPL_LIST_ENTRIES) {
+	notify_malf_packet(LOG_INFO, "INFO: unable to read Options Template (too long)", (struct sockaddr *) pptrs->f_agent, seq);
+	xflow_tot_bad_datagrams++;
+	return NULL;
+      }
+
       tpl->list[count].ptr = (char *) ext_db_ptr;
       tpl->list[count].type = TPL_TYPE_EXT_DB;
       tpl->len += ext_db_ptr->len;
