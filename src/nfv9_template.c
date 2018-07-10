@@ -92,7 +92,7 @@ struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct
 
   ptr = malloc(sizeof(struct template_cache_entry));
   if (!ptr) {
-    Log(LOG_ERR, "ERROR ( %s/core ): Unable to allocate enough memory for a new Template Cache Entry.\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core ): insert_template(): unable to allocate new Data Template Cache Entry.\n", config.name);
     return NULL;
   }
 
@@ -113,15 +113,16 @@ struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct
 
   while (count < num) {
     if (count >= TPL_LIST_ENTRIES) {
-      notify_malf_packet(LOG_INFO, "INFO: unable to read Data Template (too long)", (struct sockaddr *) pptrs->f_agent, seq);
+      notify_malf_packet(LOG_INFO, "INFO: insert_template(): unable to read Data Template (too long)",
+			 (struct sockaddr *) pptrs->f_agent, seq);
       xflow_tot_bad_datagrams++;
       free(ptr);
       return NULL;
     }
 
     if (off >= len) {
-      notify_malf_packet(LOG_INFO, "INFO: unable to read next Template Flowset (malformed template)",
-                        (struct sockaddr *) pptrs->f_agent, seq);
+      notify_malf_packet(LOG_INFO, "INFO: insert_template(): unable to read Data Template (malformed)",
+			 (struct sockaddr *) pptrs->f_agent, seq);
       xflow_tot_bad_datagrams++;
       free(ptr);
       return NULL;
@@ -221,8 +222,7 @@ void load_templates_from_file(char *path)
   u_int16_t modulo;
 
   if (!tmp_file) {
-    Log(LOG_ERR, "ERROR ( %s/core ): [%s] load_templates_from_file(): unable to fopen(). File skipped.\n",
-               config.name, path);
+    Log(LOG_ERR, "ERROR ( %s/core ): [%s] load_templates_from_file(): unable to fopen(). File skipped.\n", config.name, path);
     return;
   }
 
@@ -234,9 +234,10 @@ void load_templates_from_file(char *path)
     }
     else {
       /* We assume the cache is empty when templates are loaded */
-      if (find_template(tpl->template_id, &tpl->agent, tpl->template_type, tpl->source_id))
-        Log(LOG_DEBUG, "WARN ( %s/core ): Template %u already exists in cache. Skipping\n",
-                config.name, tpl->template_id);
+      if (find_template(tpl->template_id, &tpl->agent, tpl->template_type, tpl->source_id)) {
+	Log(LOG_WARNING, "WARN ( %s/core ): load_templates_from_file(): template %u already cached. Skipping.\n",
+	    config.name, tpl->template_id);
+      }
       else {
         modulo = (ntohs(tpl->template_id)%tpl_cache.num);
         ptr = tpl_cache.c[modulo];
@@ -249,7 +250,8 @@ void load_templates_from_file(char *path)
         if (prev_ptr) prev_ptr->next = tpl;
         else tpl_cache.c[modulo] = tpl;
 
-        Log(LOG_DEBUG, "DEBUG ( %s/core ): Loaded template %u into cache.\n", config.name, tpl->template_id);
+        Log(LOG_DEBUG, "DEBUG ( %s/core ): load_templates_from_file(): loaded template %u into cache.\n",
+	    config.name, tpl->template_id);
       }
     }
 
@@ -270,8 +272,8 @@ void update_template_in_file(struct template_cache_entry *tpl, char *path)
   u_int32_t src_id;
 
   if (!tmp_file) {
-    Log(LOG_WARNING, "WARN ( %s/core ): [%s] update_template_in_file(): unable to fopen(). Update skipped.\n",
-               config.name, path);
+    Log(LOG_WARNING, "WARN ( %s/core ): [%s] update_template_in_file(): unable to fopen(). File skipped.\n",
+	config.name, path);
     return;
   }
 
@@ -284,20 +286,20 @@ void update_template_in_file(struct template_cache_entry *tpl, char *path)
 
     if (!json_obj) {
       Log(LOG_WARNING, "WARN ( %s/core ): [%s] update_template_in_file(): json_loads() error: %s. Line skipped.\n",
-              config.name, path, json_err.text);
+	  config.name, path, json_err.text);
       continue;
     }
     else {
       if (!json_is_object(json_obj)) {
         Log(LOG_WARNING, "WARN ( %s/core ): [%s] update_template_in_file(): json_is_object() failed. Line skipped.\n",
-                config.name, path);
+	    config.name, path);
         goto next_line;
       }
       else {
         json_t *json_tpl_id = json_object_get(json_obj, "template_id");
         if (json_tpl_id == NULL) {
           Log(LOG_WARNING, "WARN ( %s/core ): [%s] update_template_in_file(): template ID null. Line skipped.\n",
-                  config.name, path);
+	      config.name, path);
           goto next_line;
         }
         else tpl_id = json_integer_value(json_tpl_id);
@@ -305,7 +307,7 @@ void update_template_in_file(struct template_cache_entry *tpl, char *path)
         json_t *json_agent = json_object_get(json_obj, "agent");
         if (json_agent == NULL) {
           Log(LOG_WARNING, "WARN ( %s/core ): [%s] update_template_in_file(): agent null. Line skipped.\n",
-                  config.name, path);
+	      config.name, path);
           goto next_line;
         }
         else addr = json_string_value(json_agent);
@@ -313,7 +315,7 @@ void update_template_in_file(struct template_cache_entry *tpl, char *path)
         json_t *json_src_id = json_object_get(json_obj, "source_id");
         if (json_src_id == NULL) {
           Log(LOG_WARNING, "WARN ( %s/core ): [%s] update_template_in_file(): source ID null. Line skipped.\n",
-                  config.name, path);
+	      config.name, path);
           goto next_line;
         }
         else src_id = json_integer_value(json_src_id);
@@ -321,7 +323,7 @@ void update_template_in_file(struct template_cache_entry *tpl, char *path)
         json_t *json_tpl_type = json_object_get(json_obj, "template_type");
         if (json_tpl_type == NULL) {
           Log(LOG_WARNING, "WARN ( %s/core ): [%s] update_template_in_file(): template type null. Line skipped.\n",
-                  config.name, path);
+	      config.name, path);
           goto next_line;
         }
         else tpl_type = json_integer_value(json_tpl_type);
@@ -343,11 +345,11 @@ void update_template_in_file(struct template_cache_entry *tpl, char *path)
 
   if (!tpl_found)
     Log(LOG_WARNING, "WARN ( %s/core ): [%s] update_template_in_file(): Template %u not found.\n",
-            config.name, path, tpl->template_id);
+	config.name, path, tpl->template_id);
   else {
     if (delete_line_from_file(line, path) != 0) {
       Log(LOG_WARNING, "WARN ( %s/core ): [%s] update_template_in_file(): Error deleting old template. New version not saved.\n",
-              config.name, path);
+	  config.name, path);
     }
     else {
       save_template(tpl, path);
@@ -467,7 +469,7 @@ void save_template(struct template_cache_entry *tpl, char *file)
 
   if (root) {
       write_and_free_json(tpl_file, root);
-      Log(LOG_DEBUG, "DEBUG ( %s/core ): Saved template %u into file.\n", config.name, tpl->template_id);
+      Log(LOG_DEBUG, "DEBUG ( %s/core ): save_template(): saved template %u into file.\n", config.name, tpl->template_id);
   }
 
   close_output_file(tpl_file);
@@ -792,14 +794,15 @@ struct template_cache_entry *refresh_template(struct template_hdr_v9 *hdr, struc
 
   while (count < num) {
     if (count >= TPL_LIST_ENTRIES) {
-      notify_malf_packet(LOG_INFO, "INFO: unable to read Data Template (too long)", (struct sockaddr *) pptrs->f_agent, seq);
+      notify_malf_packet(LOG_INFO, "INFO: refresh_template(): unable to read Data Template (too long)",
+			 (struct sockaddr *) pptrs->f_agent, seq);
       xflow_tot_bad_datagrams++;
       return NULL;
     }
 
     if (off >= len) {
-      notify_malf_packet(LOG_INFO, "INFO: unable to read next Template Flowset (malformed template)",
-                        (struct sockaddr *) pptrs->f_agent, seq);
+      notify_malf_packet(LOG_INFO, "INFO: refresh_template(): unable to read Data Template (malformed)",
+                         (struct sockaddr *) pptrs->f_agent, seq);
       xflow_tot_bad_datagrams++;
       memcpy(tpl, &backup, sizeof(struct template_cache_entry));
       return NULL;
@@ -980,7 +983,7 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
 
   ptr = malloc(sizeof(struct template_cache_entry));
   if (!ptr) {
-    Log(LOG_ERR, "ERROR ( %s/core ): Unable to allocate enough memory for a new Options Template Cache Entry.\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core ): insert_opt_template(): unable to allocate new Options Template Cache Entry.\n", config.name);
     return NULL;
   }
 
@@ -1002,8 +1005,8 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
 
   while (count) {
     if (off >= len) {
-      notify_malf_packet(LOG_INFO, "INFO: unable to read next Options Template Flowset (malformed template)",
-                        (struct sockaddr *) pptrs->f_agent, seq);
+      notify_malf_packet(LOG_INFO, "INFO: insert_opt_template(): unable to read Options Template Flowset (malformed)",
+			 (struct sockaddr *) pptrs->f_agent, seq);
       xflow_tot_bad_datagrams++;
       free(ptr);
       return NULL;
@@ -1041,7 +1044,8 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
       }
 
       if (count >= TPL_LIST_ENTRIES) {
-	notify_malf_packet(LOG_INFO, "INFO: unable to read Options Template (too long)", (struct sockaddr *) pptrs->f_agent, seq);
+	notify_malf_packet(LOG_INFO, "INFO: insert_opt_template(): unable to read Options Template (too long)",
+			   (struct sockaddr *) pptrs->f_agent, seq);
 	xflow_tot_bad_datagrams++;
 	free(ptr);
 	return NULL;
@@ -1120,8 +1124,8 @@ struct template_cache_entry *refresh_opt_template(void *hdr, struct template_cac
 
   while (count) {
     if (off >= len) {
-      notify_malf_packet(LOG_INFO, "INFO: unable to read next Options Template Flowset (malformed template)",
-                        (struct sockaddr *) pptrs->f_agent, seq);
+      notify_malf_packet(LOG_INFO, "INFO: refresh_opt_template(): unable to read Options Template Flowset (malformed)",
+			 (struct sockaddr *) pptrs->f_agent, seq);
       xflow_tot_bad_datagrams++;
       memcpy(tpl, &backup, sizeof(struct template_cache_entry));
       return NULL;
@@ -1158,7 +1162,8 @@ struct template_cache_entry *refresh_opt_template(void *hdr, struct template_cac
       }
 
       if (count >= TPL_LIST_ENTRIES) {
-	notify_malf_packet(LOG_INFO, "INFO: unable to read Options Template (too long)", (struct sockaddr *) pptrs->f_agent, seq);
+	notify_malf_packet(LOG_INFO, "INFO: refresh_opt_template: unable to read Options Template (too long)",
+			   (struct sockaddr *) pptrs->f_agent, seq);
 	xflow_tot_bad_datagrams++;
 	return NULL;
       }
