@@ -41,13 +41,13 @@ struct template_cache_entry *handle_template(struct template_hdr_v9 *hdr, struct
 
   /* 0 NetFlow v9, 2 IPFIX */
   if (tpl_type == 0 || tpl_type == 2) {
-    if ((tpl = find_template(hdr->template_id, (struct host_addr *) pptrs->f_agent, tpl_type, sid)))
+    if ((tpl = find_template(hdr->template_id, (struct sockaddr *) pptrs->f_agent, tpl_type, sid)))
       tpl = refresh_template(hdr, tpl, pptrs, tpl_type, sid, pens, version, len, seq);
     else tpl = insert_template(hdr, pptrs, tpl_type, sid, pens, version, len, seq);
   }
   /* 1 NetFlow v9, 3 IPFIX */
   else if (tpl_type == 1 || tpl_type == 3) {
-    if ((tpl = find_template(hdr->template_id, (struct host_addr *) pptrs->f_agent, tpl_type, sid)))
+    if ((tpl = find_template(hdr->template_id, (struct sockaddr *) pptrs->f_agent, tpl_type, sid)))
       tpl = refresh_opt_template(hdr, tpl, pptrs, tpl_type, sid, pens, version, len, seq);
     else tpl = insert_opt_template(hdr, pptrs, tpl_type, sid, pens, version, len, seq);
   }
@@ -55,10 +55,15 @@ struct template_cache_entry *handle_template(struct template_hdr_v9 *hdr, struct
   return tpl;
 }
 
-struct template_cache_entry *find_template(u_int16_t id, struct host_addr *agent, u_int16_t tpl_type, u_int32_t sid)
+u_int16_t modulo_template(u_int16_t template_id, struct sockaddr *agent, u_int16_t buckets)
+{
+  return hash_status_table(ntohs(template_id), agent, buckets);
+}
+
+struct template_cache_entry *find_template(u_int16_t id, struct sockaddr *agent, u_int16_t tpl_type, u_int32_t sid)
 {
   struct template_cache_entry *ptr;
-  u_int16_t modulo = (ntohs(id)%tpl_cache.num);
+  u_int16_t modulo = modulo_template(id, agent, tpl_cache.num);
 
   ptr = tpl_cache.c[modulo];
 
@@ -77,8 +82,8 @@ struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct
 {
   struct template_cache_entry *ptr, *prevptr = NULL;
   struct template_field_v9 *field;
-  u_int16_t modulo = (ntohs(hdr->template_id)%tpl_cache.num), count;
-  u_int16_t num = ntohs(hdr->num), type, port, off;
+  u_int16_t modulo = modulo_template(hdr->template_id, (struct sockaddr *) pptrs->f_agent, tpl_cache.num);
+  u_int16_t num = ntohs(hdr->num), type, port, off, count;
   u_int32_t *pen;
   u_int8_t ipfix_ebit;
   u_char *tpl;
@@ -221,6 +226,12 @@ void load_templates_from_file(char *path)
   int line = 1;
   u_int16_t modulo;
 
+#if defined ENABLE_IPV6
+  struct sockaddr_storage agent;
+#else
+  struct sockaddr agent;
+#endif
+
   if (!tmp_file) {
     Log(LOG_ERR, "ERROR ( %s/core ): [%s] load_templates_from_file(): unable to fopen(). File skipped.\n", config.name, path);
     return;
@@ -233,13 +244,15 @@ void load_templates_from_file(char *path)
       Log(LOG_WARNING, "WARN ( %s/core ): [%s:%u] %s\n", config.name, path, line, errbuf);
     }
     else {
+      addr_to_sa((struct sockaddr *) &agent, &tpl->agent, 0);
+
       /* We assume the cache is empty when templates are loaded */
-      if (find_template(tpl->template_id, &tpl->agent, tpl->template_type, tpl->source_id)) {
+      if (find_template(tpl->template_id, (struct sockaddr *) &agent, tpl->template_type, tpl->source_id)) {
 	Log(LOG_WARNING, "WARN ( %s/core ): load_templates_from_file(): template %u already cached. Skipping.\n",
 	    config.name, tpl->template_id);
       }
       else {
-        modulo = (ntohs(tpl->template_id)%tpl_cache.num);
+        modulo = modulo_template(tpl->template_id, (struct sockaddr *) &agent, tpl_cache.num);
         ptr = tpl_cache.c[modulo];
 
         while (ptr) {
@@ -412,7 +425,7 @@ void save_template(struct template_cache_entry *tpl, char *file)
       }
       else if (tpl->list[field_idx].type == TPL_TYPE_EXT_DB) {
         struct utpl_field *ext_db_ptr = (struct utpl_field *) tpl->list[field_idx].ptr;
-        u_int16_t ext_db_modulo = (ext_db_ptr->type%TPL_EXT_DB_ENTRIES);
+        u_int16_t ext_db_modulo = (ext_db_ptr->type % TPL_EXT_DB_ENTRIES);
 
         /* Where in tpl->ext_db[ext_db_modulo].ie
            to insert the utpl_field when deserializing */
@@ -674,7 +687,7 @@ struct template_cache_entry *nfacctd_offline_read_json_template(char *buf, char 
               }
               else ie_idx = json_integer_value(json_utpl_member);
 
-              modulo = (utpl.type%TPL_EXT_DB_ENTRIES);
+              modulo = (utpl.type % TPL_EXT_DB_ENTRIES);
               memcpy(&ret->ext_db[modulo].ie[ie_idx], &utpl, sizeof(struct utpl_field));
               ret->list[idx].ptr = (char *) &ret->ext_db[modulo].ie[ie_idx];
             }
@@ -961,14 +974,14 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
 
   /* NetFlow v9 */
   if (tpl_type == 1) {
-    modulo = ntohs(hdr_v9->template_id)%tpl_cache.num;
+    modulo = modulo_template(hdr_v9->template_id, (struct sockaddr *) pptrs->f_agent, tpl_cache.num);
     tid = hdr_v9->template_id;
     slen = ntohs(hdr_v9->scope_len)/sizeof(struct template_field_v9);
     olen = ntohs(hdr_v9->option_len)/sizeof(struct template_field_v9);
   }
   /* IPFIX */
   else if (tpl_type == 3) {
-    modulo = ntohs(hdr_v10->template_id)%tpl_cache.num;
+    modulo = modulo_template(hdr_v10->template_id, (struct sockaddr *) pptrs->f_agent, tpl_cache.num);
     tid = hdr_v10->template_id;
     slen = ntohs(hdr_v10->scope_count);
     olen = ntohs(hdr_v10->option_count)-slen;
@@ -1261,7 +1274,7 @@ u_int8_t get_ipfix_vlen(char *base, u_int16_t *len)
 
 struct utpl_field *ext_db_get_ie(struct template_cache_entry *ptr, u_int32_t pen, u_int16_t type, u_int8_t repeat_id)
 {
-  u_int16_t ie_idx, ext_db_modulo = (type%TPL_EXT_DB_ENTRIES);
+  u_int16_t ie_idx, ext_db_modulo = (type % TPL_EXT_DB_ENTRIES);
   struct utpl_field *ext_db_ptr = NULL;
 
   for (ie_idx = 0; ie_idx < IES_PER_TPL_EXT_DB_ENTRY; ie_idx++) {
@@ -1278,7 +1291,7 @@ struct utpl_field *ext_db_get_ie(struct template_cache_entry *ptr, u_int32_t pen
 
 struct utpl_field *ext_db_get_next_ie(struct template_cache_entry *ptr, u_int16_t type, u_int8_t *repeat_id)
 {
-  u_int16_t ie_idx, ext_db_modulo = (type%TPL_EXT_DB_ENTRIES);
+  u_int16_t ie_idx, ext_db_modulo = (type % TPL_EXT_DB_ENTRIES);
   struct utpl_field *ext_db_ptr = NULL;
 
   (*repeat_id) = 0;

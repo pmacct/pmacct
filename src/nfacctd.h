@@ -502,8 +502,9 @@ EXT u_int16_t debug_agent_port;
 #else
 #define EXT
 #endif
+EXT u_int16_t modulo_template(u_int16_t, struct sockaddr *, u_int16_t);
 EXT struct template_cache_entry *handle_template(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int16_t, u_int32_t);
-EXT struct template_cache_entry *find_template(u_int16_t, struct host_addr *, u_int16_t, u_int32_t);
+EXT struct template_cache_entry *find_template(u_int16_t, struct sockaddr *, u_int16_t, u_int32_t);
 EXT struct template_cache_entry *insert_template(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int8_t, u_int16_t, u_int32_t);
 EXT struct template_cache_entry *refresh_template(struct template_hdr_v9 *, struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int8_t, u_int16_t, u_int32_t);
 EXT void log_template_header(struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int8_t);
