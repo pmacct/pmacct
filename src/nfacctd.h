@@ -107,7 +107,7 @@ struct data_hdr_v9 {
 #define DEFAULT_NFACCTD_PORT 2100
 #define NETFLOW_MSG_SIZE PKT_MSG_SIZE
 #define V5_MAXFLOWS 30  /* max records in V5 packet */
-#define TEMPLATE_CACHE_ENTRIES 255
+#define TEMPLATE_CACHE_ENTRIES 1021
 
 #define NF_TIME_MSECS 0 /* times are in msecs */
 #define NF_TIME_SECS 1 /* times are in secs */ 
