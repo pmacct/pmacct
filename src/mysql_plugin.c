@@ -666,7 +666,7 @@ void MY_Unlock(struct BE_descs *bed)
 void MY_DB_Connect(struct DBdesc *db, char *host)
 {
   MYSQL *dbptr = db->desc;
-  my_bool reconnect = TRUE;
+  bool reconnect = TRUE;
 
   if (!db->fail) {
     mysql_init(db->desc);
