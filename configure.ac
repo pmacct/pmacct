@@ -534,7 +534,7 @@ dnl Unfortunately, no pkg-config support for MySQL
     LIBS="$_save_LIBS"
     _save_CFLAGS="$CFLAGS"
     CFLAGS="$CFLAGS $MYSQL_CFLAGS"
-    AC_CHECK_HEADER([mysql/mysql.h])
+    AC_CHECK_HEADERS([mysql.h mysql/mysql.h])
     CFLAGS="$_save_CFLAGS"
     ;;
   no)

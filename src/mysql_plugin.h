@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -20,7 +20,7 @@
 */
 
 /* includes */
-#if defined CUT_MYSQLINCLUDES_DIR
+#if defined HAVE_MYSQL_H 
 #include <mysql.h>
 #else
 #include <mysql/mysql.h>
