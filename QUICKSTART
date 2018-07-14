@@ -115,6 +115,14 @@ is in some non-standard location, this can be supplied as follows:
 shell> export PKG_CONFIG_PATH=/usr/local/postgresql/pkgconfig/
 shell> ./configure --enable-pgsql
 
+Special case is to compile pmacct with MySQL support but MySQL is installed
+in some non-default location. MySQL brings the mysql_config tool that works
+similarly to pkg-config. Make sure the tool is on the path so that it can be
+executed by the configure script, ie.:
+
+shell> export PATH=$PATH:/usr/local/mysql/bin
+shell> ./configure --enable-mysql
+
 By default all tools - flow, BGP, BMP and Streaming Telemetry - are compiled.
 Specific tool sets can be disabled. For example, to compile only flow tools
 (ie. no pmbgpd, pmbmpd, pmtelemetryd) the following command-line can be used:
