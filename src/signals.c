@@ -155,15 +155,21 @@ void my_sigint_handler(int signum)
     int device_idx;
 
     if (config.pcap_if) {
+      printf("NOTICE ( %s/%s ): +++\n", config.name, config.type);
+
       for (device_idx = 0; device_idx < device.num; device_idx++) {
         if (pcap_stats(device.list[device_idx].dev_desc, &ps) < 0) {
-	  printf("INFO: [%s,%u] error='pcap_stats(): %s'\n", device.list[device_idx].str,
-		device.list[device_idx].id, pcap_geterr(device.list[device_idx].dev_desc));
+	  printf("INFO ( %s/%s ): [%s,%u] error='pcap_stats(): %s'\n",
+		config.name, config.type, device.list[device_idx].str,
+		device.list[device_idx].id,
+		pcap_geterr(device.list[device_idx].dev_desc));
 	}
-        printf("NOTICE: [%s,%u] received_packets=%u dropped_packets=%u\n",
-		device.list[device_idx].str, device.list[device_idx].id,
-		ps.ps_recv, ps.ps_drop);
+        printf("NOTICE ( %s/%s ): [%s,%u] received_packets=%u dropped_packets=%u\n",
+		config.name, config.type, device.list[device_idx].str,
+		device.list[device_idx].id, ps.ps_recv, ps.ps_drop);
       }
+
+      printf("NOTICE ( %s/%s ): ---\n", config.name, config.type);
     }
   }
 
@@ -207,16 +213,20 @@ void push_stats()
     int device_idx;
 
     if (config.pcap_if) {
+      Log(LOG_NOTICE, "NOTICE ( %s/%s ): +++\n", config.name, config.type);
+
       for (device_idx = 0; device_idx < device.num; device_idx++) {
 	if (pcap_stats(device.list[device_idx].dev_desc, &ps) < 0) {
-	  Log(LOG_INFO, "INFO ( %s/%s ): [%s,%u] time=%u error='pcap_stats(): %s'\n",
+	  Log(LOG_INFO, "INFO ( %s/%s ): stats [%s,%u] time=%u error='pcap_stats(): %s'\n",
 		config.name, config.type, device.list[device_idx].str, device.list[device_idx].id,
 		now, pcap_geterr(device.list[device_idx].dev_desc));
 	}
-	Log(LOG_NOTICE, "NOTICE ( %s/%s ): [%s,%u] time=%u received_packets=%u dropped_packets=%u\n",
+	Log(LOG_NOTICE, "NOTICE ( %s/%s ): stats [%s,%u] time=%u received_packets=%u dropped_packets=%u\n",
 		config.name, config.type, device.list[device_idx].str, device.list[device_idx].id,
 		now, ps.ps_recv, ps.ps_drop);
       }
+
+      Log(LOG_NOTICE, "NOTICE ( %s/%s ): ---\n", config.name, config.type);
     }
   }
   else if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF)

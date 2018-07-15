@@ -15,8 +15,23 @@ SIGHUP:         reopens the logging infrastructure. Works with both syslog and
 		sFlow counters (sfacctd_counter_file); 
 SIGUSR1:        returns various statistics via either console or syslog; the
 		syslog level used is NOTICE; the facility is selected through
-		configuration (ie. key 'syslog'). The feature works for all
-		daemons;
+		configuration (ie. key 'syslog'). The feature is implemented
+		for pmacctd, nfacctd and sfacctd daemons. Following is an
+		example of the output emitted by nfacctd/sfacctd:
+
+		NOTICE ( default/core ): +++
+		NOTICE ( default/core ): stats [0.0.0.0:2100] agent=X.X.X.X:0 time=1515772618 packets=1 bytes=496 seq_good=1 seq_jmp_fwd=0 seq_jmp_bck=0
+		NOTICE ( default/core ): stats [0.0.0.0:2100] agent=Y.Y.Y.Y:0 time=1515772618 packets=2 bytes=992 seq_good=2 seq_jmp_fwd=0 seq_jmp_bck=0
+		NOTICE ( default/core ): stats [0.0.0.0:2100] time=1515772618 discarded_packets=0
+		NOTICE ( default/core ): ---
+
+		Following is an example of the output emitted by pmacctd:
+
+		NOTICE ( default/core ): +++
+		NOTICE ( default/core ): stats [XXX, 0] time=1515772618 received_packets=1000 dropped_packets=0
+		NOTICE ( default/core ): stats [YYY, 1] time=1515772618 received_packets=1000 dropped_packets=0
+		NOTICE ( default/core ): ---
+
 SIGUSR2:	if 'maps_refresh' config directive is enabled, it causes maps
 		to be reloaded (ie. pre_tag_map, bgp_agent_map, etc.). If also
 		indexing is enabled, ie. maps_index, indexes are re-compited. 
