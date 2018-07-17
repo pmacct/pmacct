@@ -73,6 +73,7 @@ struct p_zmq_host {
 #else
 #define EXT
 #endif
+EXT void p_zmq_set_address(struct p_zmq_host *, char *);
 EXT void p_zmq_set_topic(struct p_zmq_host *, u_int8_t);
 EXT void p_zmq_set_retry_timeout(struct p_zmq_host *, int);
 EXT void p_zmq_set_username(struct p_zmq_host *, char *);
@@ -82,15 +83,20 @@ EXT void p_zmq_set_random_password(struct p_zmq_host *);
 EXT void p_zmq_set_hwm(struct p_zmq_host *, int);
 EXT void p_zmq_set_log_id(struct p_zmq_host *, char *);
 
+EXT char *p_zmq_get_address(struct p_zmq_host *);
+EXT u_int8_t p_zmq_get_topic(struct p_zmq_host *);
 EXT int p_zmq_get_fd(struct p_zmq_host *);
+
+EXT void p_zmq_init_pub(struct p_zmq_host *, char *, u_int8_t);
+EXT void p_zmq_close(struct p_zmq_host *);
 
 EXT void p_zmq_plugin_pipe_init_core(struct p_zmq_host *, u_int8_t);
 EXT void p_zmq_plugin_pipe_init_plugin(struct p_zmq_host *);
 EXT int p_zmq_plugin_pipe_set_profile(struct configuration *, char *);
-EXT void p_zmq_plugin_pipe_publish(struct p_zmq_host *);
 EXT void p_zmq_plugin_pipe_consume(struct p_zmq_host *);
 EXT int p_zmq_plugin_pipe_recv(struct p_zmq_host *, void *, u_int64_t);
 EXT int p_zmq_plugin_pipe_send(struct p_zmq_host *, void *, u_int64_t);
+EXT void p_zmq_pub_setup(struct p_zmq_host *);
 EXT void p_zmq_zap_setup(struct p_zmq_host *);
 
 EXT void p_zmq_router_setup(struct p_zmq_host *, char *, int);

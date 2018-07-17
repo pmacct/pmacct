@@ -249,7 +249,7 @@ void load_plugins(struct plugin_requests *req)
 	p_zmq_plugin_pipe_init_core(&chptr->zmq_host, list->id);
 	snprintf(log_id, sizeof(log_id), "%s/%s", list->name, list->type.string);
 	p_zmq_set_log_id(&chptr->zmq_host, log_id);
-	p_zmq_plugin_pipe_publish(&chptr->zmq_host);
+	p_zmq_pub_setup(&chptr->zmq_host);
       }
 #endif
       
