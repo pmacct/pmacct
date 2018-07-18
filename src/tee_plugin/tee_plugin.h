@@ -59,11 +59,19 @@ struct tee_receivers_pool {
   struct pretag_filter tag_filter; 	/* filter datagrams basing on a pre_tag_map */
   struct tee_balance balance;		/* balance datagrams basing on supported algorithm */
   u_int16_t src_port;			/* Non transparent mode: source UDP port to use for replication */
+
   char kafka_broker[SRVBUFLEN];		/* Emitting to Kafka: broker string */
   char kafka_topic[SRVBUFLEN];		/* Emitting to Kafka: topic */
 #ifdef WITH_KAFKA
   struct p_kafka_host kafka_host;	/* Emitting to Kafka: librdkafka structs */ 
 #endif
+
+  char zmq_address[SHORTBUFLEN];	/* Emitting via ZeroMQ: server address */
+  u_int8_t zmq_topic;			/* Emitting via ZeroMQ: topic */
+#ifdef WITH_ZMQ
+  struct p_zmq_host zmq_host;		/* Emitting via ZeroMQ: libzmq structs */ 
+#endif
+
   int num;				/* Number of receivers in the pool */
 };
 
@@ -93,6 +101,10 @@ EXT struct tee_receiver *Tee_hash_tag_balance(void *, struct pkt_msg *);
 #ifdef WITH_KAFKA
 EXT void Tee_kafka_send(struct pkt_msg *, struct tee_receivers_pool *);
 EXT void Tee_init_kafka_host(struct p_kafka_host *, char *, char *, u_int32_t);
+#endif
+
+#ifdef WITH_ZMQ
+void Tee_init_zmq_host(struct p_zmq_host *, char *, u_int8_t, u_int32_t);
 #endif
 
 /* global variables */

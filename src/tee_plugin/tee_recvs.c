@@ -25,6 +25,9 @@
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
 #endif
+#ifdef WITH_ZMQ
+#include "zmq_common.h"
+#endif
 #include "tee_plugin.h"
 #include "tee_recvs.h"
 
@@ -213,22 +216,68 @@ int tee_recvs_map_kafka_topic_handler(char *filename, struct id_entry *e, char *
 }
 #endif
 
+#ifdef WITH_ZMQ
+int tee_recvs_map_zmq_address_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
+
+  if (table && table->pools) {
+    int len = sizeof(table->pools[table->num].zmq_address);
+
+    memset(table->pools[table->num].zmq_address, 0, len);
+    strlcpy(table->pools[table->num].zmq_address, value, len);
+    table->pools[table->num].zmq_address[len] = '\0';
+  }
+  else {
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Receivers table not allocated.\n", config.name, config.type, filename);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+int tee_recvs_map_zmq_topic_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
+  int topic;
+
+  if (table && table->pools) {
+    topic = atoi(value);
+
+    if (topic <= UINT8_MAX) table->pools[table->num].zmq_topic = topic;
+    else {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid ZeroMQ topic specified '%s'. Ignoring.\n", config.name, config.type, filename, value);
+    }
+  }
+  else {
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Receivers table not allocated.\n", config.name, config.type, filename);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+#endif
+
 void tee_recvs_map_validate(char *filename, int lineno, struct plugin_requests *req)
 {
   struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
-  int valid = FALSE;
+  int valid = FALSE, emit_methods = 0;
 
   if (table && table->pools && table->pools[table->num].receivers) {
-    /* Check: emit to either IP address(es) or Kafka broker(s) */
-    if (table->pools[table->num].num > 0 && strlen(table->pools[table->num].kafka_broker)) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] 'ip' and 'kafka_broker' are mutual exclusive. Line ignored.\n",
+    /* Check: emit to either IP address(es) or Kafka broker(s) or ZeroMQ queue */
+    if (table->pools[table->num].num > 0) emit_methods++;
+    if (strlen(table->pools[table->num].kafka_broker)) emit_methods++;
+    if (strlen(table->pools[table->num].zmq_address)) emit_methods++;
+
+    if (emit_methods > 1) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] 'ip', 'kafka_broker' and 'zmq_address' are mutual exclusive. Line ignored.\n",
 	  config.name, config.type, filename, lineno);
       valid = FALSE;
       goto zero_entry;
     }
 
-    if (!table->pools[table->num].num && !strlen(table->pools[table->num].kafka_broker)) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] 'ip' or 'kafka_broker' must be specified. Line ignored.\n",
+    if (!emit_methods) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] 'ip' or 'kafka_broker' or 'zmq_address' must be specified. Line ignored.\n",
 	  config.name, config.type, filename, lineno);
       valid = FALSE;
       goto zero_entry;
@@ -248,7 +297,7 @@ void tee_recvs_map_validate(char *filename, int lineno, struct plugin_requests *
     /*
        Check: if emitting to Kafka:
        a) make sure we have both broker string and topic,
-       b) tee_transparent is set to true
+       b) balance-alg is not set, tee_transparent is set to true
     */
 #ifdef WITH_KAFKA
     if (strlen(table->pools[table->num].kafka_broker)) {
@@ -277,6 +326,38 @@ void tee_recvs_map_validate(char *filename, int lineno, struct plugin_requests *
     }
 #endif
 
+    /*
+       Check: if emitting via ZeroMQ:
+       a) make sure we have an address string and topic,
+       b) balance-alg is not set, tee_transparent is set to true
+    */
+#ifdef WITH_ZMQ
+    if (strlen(table->pools[table->num].zmq_address)) {
+      if (!config.tee_transparent) {
+	Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] tee_transparent must be set to 'true' when emitting via ZeroMQ. Line ignored.\n",
+	    config.name, config.type, filename, lineno);
+	valid = FALSE;
+	goto zero_entry;
+      }
+
+      if (table->pools[table->num].balance.func) {
+	Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] 'balance-alg' is not compatible with emitting via ZeroMQ. Line ignored.\n",
+	    config.name, config.type, filename, lineno);
+	valid = FALSE;
+	goto zero_entry;
+      }
+
+      if (!table->pools[table->num].zmq_topic) {
+	Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] 'zmq_topic' missing. Line ignored.\n",
+	    config.name, config.type, filename, lineno);
+	valid = FALSE;
+	goto zero_entry;
+      }
+
+      valid = TRUE;
+    }
+#endif
+
     if (valid) table->num++;
     else {
       zero_entry:
@@ -292,6 +373,12 @@ void tee_recvs_map_validate(char *filename, int lineno, struct plugin_requests *
       memset(&table->pools[table->num].kafka_host, 0, sizeof(struct p_kafka_host));
       memset(&table->pools[table->num].kafka_broker, 0, sizeof(table->pools[table->num].kafka_broker));
       memset(&table->pools[table->num].kafka_topic, 0, sizeof(table->pools[table->num].kafka_topic));
+#endif
+
+#ifdef WITH_ZMQ
+      memset(&table->pools[table->num].zmq_host, 0, sizeof(struct p_zmq_host));
+      memset(&table->pools[table->num].zmq_address, 0, sizeof(table->pools[table->num].zmq_address));
+      table->pools[table->num].zmq_topic = FALSE;
 #endif
     }
   }

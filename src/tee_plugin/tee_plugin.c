@@ -26,10 +26,10 @@
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
 #endif
-#include "tee_plugin.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "plugin_common.h"
+#include "tee_plugin.h"
 
 void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 {
@@ -516,6 +516,14 @@ void Tee_destroy_recvs()
       memset(receivers.pools[pool_idx].kafka_topic, 0, sizeof(receivers.pools[pool_idx].kafka_topic));
     }
 #endif
+
+#ifdef WITH_ZMQ
+    if (strlen(receivers.pools[pool_idx].zmq_address)) {
+      p_zmq_close(&receivers.pools[pool_idx].zmq_host);
+      memset(receivers.pools[pool_idx].zmq_address, 0, sizeof(receivers.pools[pool_idx].zmq_address));
+      receivers.pools[pool_idx].zmq_topic = 0;
+    }
+#endif
   }
 
   receivers.num = 0;
@@ -562,6 +570,13 @@ void Tee_init_socks()
 			  receivers.pools[pool_idx].kafka_topic, receivers.pools[pool_idx].id);
     }
 #endif
+
+#ifdef WITH_ZMQ
+    if (strlen(receivers.pools[pool_idx].zmq_address)) {
+      Tee_init_zmq_host(&receivers.pools[pool_idx].zmq_host, receivers.pools[pool_idx].zmq_address,
+			  receivers.pools[pool_idx].zmq_topic, receivers.pools[pool_idx].id);
+    }
+#endif
   }
 }
 
@@ -581,6 +596,28 @@ void Tee_init_kafka_host(struct p_kafka_host *kafka_host, char *kafka_broker, ch
     broker = p_kafka_get_broker(kafka_host);
     topic = p_kafka_get_topic(kafka_host);
     Log(LOG_DEBUG, "DEBUG ( %s/%s ): PoolID=%u KafkaBroker=%s KafkaTopic=%s\n",
+	config.name, config.type, pool_id, broker, topic);
+  }
+}
+#endif
+
+#ifdef WITH_ZMQ
+void Tee_init_zmq_host(struct p_zmq_host *zmq_host, char *zmq_address, u_int8_t zmq_topic, u_int32_t pool_id)
+{
+  char log_id[SHORTBUFLEN];
+
+  p_zmq_init_pub(zmq_host, zmq_address, zmq_topic);
+  snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
+  p_zmq_set_log_id(zmq_host, log_id);
+  p_zmq_pub_setup(zmq_host);
+
+  if (config.debug) {
+    char *broker;
+    u_int8_t topic;
+
+    broker = p_zmq_get_address(zmq_host);
+    topic = p_zmq_get_topic(zmq_host);
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): PoolID=%u ZmqAddress=%s ZmqTopic=%u\n",
 	config.name, config.type, pool_id, broker, topic);
   }
 }

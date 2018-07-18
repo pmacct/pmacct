@@ -43,6 +43,11 @@ EXT int tee_recvs_map_kafka_broker_handler(char *, struct id_entry *, char *, st
 EXT int tee_recvs_map_kafka_topic_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 #endif
 
+#ifdef WITH_KAFKA
+EXT int tee_recvs_map_zmq_address_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int tee_recvs_map_zmq_topic_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+#endif
+
 EXT void tee_recvs_map_validate(char *, int, struct plugin_requests *);
 
 /* global variables */
