@@ -485,7 +485,7 @@ reprocess:
 #ifdef WITH_ZMQ
           struct channels_list_entry *chptr = &channels_list[index];
 
-	  ret = p_zmq_plugin_pipe_send(&chptr->zmq_host, chptr->rg.ptr, chptr->bufsize);
+	  ret = p_zmq_topic_send(&chptr->zmq_host, chptr->rg.ptr, chptr->bufsize);
 #endif
 	}
 	else {
@@ -807,7 +807,7 @@ void fill_pipe_buffer()
 
     if (chptr->plugin->cfg.pipe_zmq) {
 #ifdef WITH_ZMQ
-      p_zmq_plugin_pipe_send(&chptr->zmq_host, chptr->rg.ptr, chptr->bufsize);
+      p_zmq_topic_send(&chptr->zmq_host, chptr->rg.ptr, chptr->bufsize);
 #endif
     }
     else {

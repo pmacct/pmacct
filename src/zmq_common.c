@@ -109,6 +109,11 @@ u_int8_t p_zmq_get_topic(struct p_zmq_host *zmq_host)
   return 0;
 }
 
+void *p_zmq_get_sock(struct p_zmq_host *zmq_host)
+{
+  if (zmq_host) return zmq_host->sock.obj; 
+}
+
 int p_zmq_get_fd(struct p_zmq_host *zmq_host)
 {
   int fd = ERR;
@@ -318,7 +323,7 @@ void p_zmq_plugin_pipe_consume(struct p_zmq_host *zmq_host)
   }
 }
 
-int p_zmq_plugin_pipe_send(struct p_zmq_host *zmq_host, void *buf, u_int64_t len)
+int p_zmq_topic_send(struct p_zmq_host *zmq_host, void *buf, u_int64_t len)
 {
   int ret;
 
@@ -339,7 +344,7 @@ int p_zmq_plugin_pipe_send(struct p_zmq_host *zmq_host, void *buf, u_int64_t len
   return ret;
 }
 
-int p_zmq_plugin_pipe_recv(struct p_zmq_host *zmq_host, void *buf, u_int64_t len)
+int p_zmq_topic_recv(struct p_zmq_host *zmq_host, void *buf, u_int64_t len)
 {
   int ret = 0, events;
   size_t elen = sizeof(events);
@@ -382,6 +387,11 @@ int p_zmq_plugin_pipe_recv(struct p_zmq_host *zmq_host, void *buf, u_int64_t len
   }
 
   return ret;
+}
+
+int p_zmq_plugin_pipe_recv(struct p_zmq_host *zmq_host, void *buf, u_int64_t len)
+{
+  return p_zmq_topic_recv(zmq_host, buf, len);
 }
 
 char *p_zmq_recv_str(struct p_zmq_sock *sock)

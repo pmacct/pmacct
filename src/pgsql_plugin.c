@@ -211,7 +211,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
 #ifdef WITH_ZMQ
       else if (config.pipe_zmq) {
-	ret = p_zmq_plugin_pipe_recv(zmq_host, pipebuf, config.buffer_size);
+	ret = p_zmq_topic_recv(zmq_host, pipebuf, config.buffer_size);
 	if (ret > 0) {
 	  if (seq && (((struct ch_buf_hdr *)pipebuf)->seq != ((seq + 1) % MAX_SEQNUM))) {
 	    Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected. Sequence received=%u expected=%u\n",
