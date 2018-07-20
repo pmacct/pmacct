@@ -389,11 +389,6 @@ int p_zmq_topic_recv(struct p_zmq_host *zmq_host, void *buf, u_int64_t len)
   return ret;
 }
 
-int p_zmq_plugin_pipe_recv(struct p_zmq_host *zmq_host, void *buf, u_int64_t len)
-{
-  return p_zmq_topic_recv(zmq_host, buf, len);
-}
-
 char *p_zmq_recv_str(struct p_zmq_sock *sock)
 {
   char buf[SRVBUFLEN];

@@ -224,7 +224,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
 #ifdef WITH_ZMQ
       else if (config.pipe_zmq) {
-	ret = p_zmq_plugin_pipe_recv(zmq_host, pipebuf, config.buffer_size);
+	ret = p_zmq_topic_recv(zmq_host, pipebuf, config.buffer_size);
 	if (ret > 0) {
 	  if (seq && (((struct ch_buf_hdr *)pipebuf)->seq != ((seq + 1) % MAX_SEQNUM))) {
 	    Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected. Sequence received=%u expected=%u\n",
@@ -259,6 +259,12 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 		 in order to ensure we are in business with the Kafka broker */
 	      if (p_kafka_get_handler(&receivers.pools[pool_idx].kafka_host)) {
 		Tee_kafka_send(msg, &receivers.pools[pool_idx]);
+	      }
+#endif
+
+#ifdef WITH_ZMQ
+	      if (p_zmq_get_sock(&receivers.pools[pool_idx].zmq_host)) {
+		Tee_zmq_send(msg, &receivers.pools[pool_idx]);
 	      }
 #endif
 	    }
@@ -488,6 +494,47 @@ void Tee_kafka_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
     msglen = Tee_craft_transparent_msg(msg, &target);
 
     if (msglen) p_kafka_produce_data(kafka_host, tee_send_buf, msglen);
+  }
+}
+#endif
+
+#ifdef WITH_ZMQ
+void Tee_zmq_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
+{
+  struct p_zmq_host *zmq_host = &pool->zmq_host; 
+  struct sockaddr target;
+  time_t last_fail, now;
+  int msglen = 0;
+
+  memset(&target, 0, sizeof(target));
+  target.sa_family = msg->agent.sa_family;
+
+  if (config.debug) {
+    char *flow = NULL, netflow[] = "NetFlow/IPFIX", sflow[] = "sFlow";
+    char *address;
+    struct host_addr a;
+    u_char agent_addr[50];
+    u_int16_t agent_port;
+    u_int8_t topic;
+
+    sa_to_addr((struct sockaddr *)msg, &a, &agent_port);
+    addr_to_str(agent_addr, &a);
+
+    address = p_zmq_get_address(zmq_host);
+    topic = p_zmq_get_topic(zmq_host);
+
+    if (config.acct_type == ACCT_NF) flow = netflow;
+    else if (config.acct_type == ACCT_SF) flow = sflow;
+
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sending %s packet from [%s:%u] seqno [%u] via ZeroMQ [%s-%u]\n",
+                        config.name, config.type, flow, agent_addr, agent_port, msg->seqno,
+                        address, topic);
+  }
+
+  if (config.tee_transparent) {
+    msglen = Tee_craft_transparent_msg(msg, &target);
+
+    if (msglen) p_zmq_topic_send(zmq_host, tee_send_buf, msglen);
   }
 }
 #endif
