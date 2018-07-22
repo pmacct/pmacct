@@ -2303,6 +2303,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
     break;
   case 10:
     pptrs->seqno = ntohl(((struct struct_header_ipfix *)pkt)->flow_sequence);
+    break;
   default:
     pptrs->seqno = 0;
     break;
