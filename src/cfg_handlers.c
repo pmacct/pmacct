@@ -1902,7 +1902,7 @@ int cfg_key_kafka_broker_port(char *filename, char *name, char *value_ptr)
 
   value = atoi(value_ptr);
   if ((value <= 0) || (value > 65535)) {
-    Log(LOG_ERR, "WARN: [%s] 'kafka_broker_port' has to be in the range 0-65535.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'kafka_broker_port' has to be in the range 1-65535.\n", filename);
     return ERR;
   }
 
@@ -2891,7 +2891,7 @@ int cfg_key_nfacctd_port(char *filename, char *name, char *value_ptr)
 
   value = atoi(value_ptr);
   if ((value <= 0) || (value > 65535)) {
-    Log(LOG_ERR, "WARN: [%s] 'nfacctd_port' has to be in the range 0-65535.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'nfacctd_port' has to be in the range 1-65535.\n", filename);
     return ERR;
   }
 
@@ -2930,7 +2930,7 @@ int cfg_key_nfacctd_kafka_broker_port(char *filename, char *name, char *value_pt
 
   value = atoi(value_ptr);
   if ((value <= 0) || (value > 65535)) {
-    Log(LOG_ERR, "WARN: [%s] 'nfacctd_kafka_broker_port' has to be in the range 0-65535.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'nfacctd_kafka_broker_port' has to be in the range 1-65535.\n", filename);
     return ERR;
   }
 
@@ -3553,7 +3553,7 @@ int cfg_key_nfacctd_bgp_port(char *filename, char *name, char *value_ptr)
 
   value = atoi(value_ptr);
   if ((value <= 0) || (value > 65535)) {
-    Log(LOG_ERR, "WARN: [%s] 'bgp_daemon_port' has to be in the range 0-65535.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'bgp_daemon_port' has to be in the range 1-65535.\n", filename);
     return ERR;
   }
 
@@ -3595,7 +3595,7 @@ int cfg_key_bgp_lg_port(char *filename, char *name, char *value_ptr)
 
   value = atoi(value_ptr);
   if ((value <= 0) || (value > 65535)) {
-    Log(LOG_ERR, "WARN: [%s] 'bgp_daemon_lg_port' has to be in the range 0-65535.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'bgp_daemon_lg_port' has to be in the range 1-65535.\n", filename);
     return ERR;
   }
 
@@ -3662,7 +3662,7 @@ int cfg_key_nfacctd_bgp_ip_precedence(char *filename, char *name, char *value_pt
 
   value = atoi(value_ptr);
   if ((value < 0) || (value > 7)) {
-    Log(LOG_ERR, "WARN: [%s] 'bgp_daemon_ipprec' has to be in the range 0-7.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'bgp_daemon_ipprec' has to be in the range 1-7.\n", filename);
     return ERR;
   }
 
@@ -3804,7 +3804,7 @@ int cfg_key_nfacctd_bmp_port(char *filename, char *name, char *value_ptr)
 
   value = atoi(value_ptr);
   if ((value <= 0) || (value > 65535)) {
-    Log(LOG_ERR, "WARN: [%s] 'bmp_daemon_port' has to be in the range 0-65535.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'bmp_daemon_port' has to be in the range 1-65535.\n", filename);
     return ERR;
   }
 
@@ -3867,7 +3867,7 @@ int cfg_key_nfacctd_bmp_ip_precedence(char *filename, char *name, char *value_pt
 
   value = atoi(value_ptr);
   if ((value < 0) || (value > 7)) {
-    Log(LOG_ERR, "WARN: [%s] 'bmp_daemon_ipprec' has to be in the range 0-7.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'bmp_daemon_ipprec' has to be in the range 1-7.\n", filename);
     return ERR;
   }
 
@@ -4836,7 +4836,7 @@ int cfg_key_sfacctd_counter_kafka_broker_port(char *filename, char *name, char *
 
   value = atoi(value_ptr);
   if ((value <= 0) || (value > 65535)) {
-    Log(LOG_ERR, "WARN: [%s] 'sfacctd_counter_kafka_broker_port' has to be in the range 0-65535.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'sfacctd_counter_kafka_broker_port' has to be in the range 1-65535.\n", filename);
     return ERR;
   }
 
@@ -5411,7 +5411,7 @@ int cfg_key_nfprobe_ip_precedence(char *filename, char *name, char *value_ptr)
 
   value = atoi(value_ptr);
   if ((value <= 0) || (value > 7)) {
-    Log(LOG_ERR, "WARN: [%s] 'nfprobe_ipprec' and 'sfprobe_ipprec' have to be in the range 0-7.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'nfprobe_ipprec' and 'sfprobe_ipprec' have to be in the range 1-7.\n", filename);
     return ERR;
   }
 
@@ -6322,7 +6322,7 @@ int cfg_key_nfacctd_bgp_msglog_kafka_broker_port(char *filename, char *name, cha
 
   value = atoi(value_ptr);
   if ((value <= 0) || (value > 65535)) {
-    Log(LOG_ERR, "WARN: [%s] 'bgp_daemon_msglog_kafka_broker_port' has to be in the range 0-65535.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'bgp_daemon_msglog_kafka_broker_port' has to be in the range 1-65535.\n", filename);
     return ERR;
   }
 
@@ -6441,7 +6441,7 @@ int cfg_key_nfacctd_bgp_table_dump_kafka_broker_port(char *filename, char *name,
 
   value = atoi(value_ptr);
   if ((value <= 0) || (value > 65535)) {
-    Log(LOG_ERR, "WARN: [%s] 'bgp_daemon_msglog_kafka_broker_port' has to be in the range 0-65535.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'bgp_daemon_msglog_kafka_broker_port' has to be in the range 1-65535.\n", filename);
     return ERR;
   }
 
@@ -6543,7 +6543,7 @@ int cfg_key_nfacctd_bmp_msglog_kafka_broker_port(char *filename, char *name, cha
 
   value = atoi(value_ptr);
   if ((value <= 0) || (value > 65535)) {
-    Log(LOG_ERR, "WARN: [%s] 'bmp_daemon_msglog_kafka_broker_port' has to be in the range 0-65535.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'bmp_daemon_msglog_kafka_broker_port' has to be in the range 1-65535.\n", filename);
     return ERR;
   }
 
@@ -6662,7 +6662,7 @@ int cfg_key_nfacctd_bmp_dump_kafka_broker_port(char *filename, char *name, char 
 
   value = atoi(value_ptr);
   if ((value <= 0) || (value > 65535)) {
-    Log(LOG_ERR, "WARN: [%s] 'bmp_daemon_msglog_kafka_broker_port' has to be in the range 0-65535.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'bmp_daemon_msglog_kafka_broker_port' has to be in the range 1-65535.\n", filename);
     return ERR;
   }
 
@@ -6820,7 +6820,7 @@ int cfg_key_telemetry_port_tcp(char *filename, char *name, char *value_ptr)
 
   value = atoi(value_ptr);
   if ((value <= 0) || (value > 65535)) {
-    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_port_tcp' has to be in the range 0-65535.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_port_tcp' has to be in the range 1-65535.\n", filename);
     return ERR;
   }
 
@@ -6837,7 +6837,7 @@ int cfg_key_telemetry_port_udp(char *filename, char *name, char *value_ptr)
 
   value = atoi(value_ptr);
   if ((value <= 0) || (value > 65535)) {
-    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_port_udp' has to be in the range 0-65535.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_port_udp' has to be in the range 1-65535.\n", filename);
     return ERR;
   }
 
@@ -6905,7 +6905,7 @@ int cfg_key_telemetry_ip_precedence(char *filename, char *name, char *value_ptr)
 
   value = atoi(value_ptr);
   if ((value < 0) || (value > 7)) {
-    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_ipprec' has to be in the range 0-7.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_ipprec' has to be in the range 1-7.\n", filename);
     return ERR;
   }
 
@@ -7371,7 +7371,7 @@ int cfg_key_telemetry_msglog_kafka_broker_port(char *filename, char *name, char 
 
   value = atoi(value_ptr);
   if ((value <= 0) || (value > 65535)) {
-    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_msglog_kafka_broker_port' has to be in the range 0-65535.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_msglog_kafka_broker_port' has to be in the range 1-65535.\n", filename);
     return ERR;
   }
 
@@ -7490,7 +7490,7 @@ int cfg_key_telemetry_dump_kafka_broker_port(char *filename, char *name, char *v
 
   value = atoi(value_ptr);
   if ((value <= 0) || (value > 65535)) {
-    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_msglog_kafka_broker_port' has to be in the range 0-65535.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_msglog_kafka_broker_port' has to be in the range 1-65535.\n", filename);
     return ERR;
   }
 
