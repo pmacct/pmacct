@@ -2962,6 +2962,34 @@ int cfg_key_nfacctd_kafka_config_file(char *filename, char *name, char *value_pt
   return changes;
 }
 
+int cfg_key_nfacctd_zmq_address(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_zmq_address = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'nfacctd_zmq_address'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_zmq_topic(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value <= 0) || (value > 255)) {
+    Log(LOG_ERR, "WARN: [%s] 'nfacctd_zmq_address' has to be in the range 1-255.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_zmq_topic = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'nfacctd_zmq_topic'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_allow_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -3662,7 +3690,7 @@ int cfg_key_nfacctd_bgp_ip_precedence(char *filename, char *name, char *value_pt
 
   value = atoi(value_ptr);
   if ((value < 0) || (value > 7)) {
-    Log(LOG_ERR, "WARN: [%s] 'bgp_daemon_ipprec' has to be in the range 1-7.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'bgp_daemon_ipprec' has to be in the range 0-7.\n", filename);
     return ERR;
   }
 
@@ -3867,7 +3895,7 @@ int cfg_key_nfacctd_bmp_ip_precedence(char *filename, char *name, char *value_pt
 
   value = atoi(value_ptr);
   if ((value < 0) || (value > 7)) {
-    Log(LOG_ERR, "WARN: [%s] 'bmp_daemon_ipprec' has to be in the range 1-7.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'bmp_daemon_ipprec' has to be in the range 0-7.\n", filename);
     return ERR;
   }
 
@@ -5411,7 +5439,7 @@ int cfg_key_nfprobe_ip_precedence(char *filename, char *name, char *value_ptr)
 
   value = atoi(value_ptr);
   if ((value <= 0) || (value > 7)) {
-    Log(LOG_ERR, "WARN: [%s] 'nfprobe_ipprec' and 'sfprobe_ipprec' have to be in the range 1-7.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'nfprobe_ipprec' and 'sfprobe_ipprec' have to be in the range 0-7.\n", filename);
     return ERR;
   }
 
@@ -6905,7 +6933,7 @@ int cfg_key_telemetry_ip_precedence(char *filename, char *name, char *value_ptr)
 
   value = atoi(value_ptr);
   if ((value < 0) || (value > 7)) {
-    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_ipprec' has to be in the range 1-7.\n", filename);
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_ipprec' has to be in the range 0-7.\n", filename);
     return ERR;
   }
 

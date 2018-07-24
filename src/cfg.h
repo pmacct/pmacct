@@ -180,6 +180,8 @@ struct configuration {
   int nfacctd_kafka_broker_port;
   char *nfacctd_kafka_topic;
   char *nfacctd_kafka_config_file;
+  char *nfacctd_zmq_address;
+  u_int8_t nfacctd_zmq_topic;
   char *nfacctd_allow_file;
   int nfacctd_time;
   int nfacctd_time_new;

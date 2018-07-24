@@ -116,6 +116,7 @@ int main(int argc,char **argv, char **envp)
   struct id_table sampling_table;
   u_int32_t idx;
   int ret;
+  int capture_methods = 0;
 
 #if defined ENABLE_IPV6
   struct sockaddr_storage server, client;
@@ -547,18 +548,22 @@ int main(int argc,char **argv, char **envp)
     Log(LOG_ERR, "ERROR ( %s/core ): 'tee' plugins are not compatible with data (memory/mysql/pgsql/etc.) plugins. Exiting...\n\n", config.name);
     exit(1);
   }
-  
-  if (config.pcap_savefile && (config.nfacctd_port || config.nfacctd_ip || config.nfacctd_kafka_broker_host)) {
-    Log(LOG_ERR, "ERROR ( %s/core ): pcap_savefile is mutual exclusive with live collection, ie. nfacctd_ip, nfacctd_kafka_broker_host. Exiting...\n\n", config.name);
+
+  if (config.pcap_savefile) capture_methods++;
+  if (config.nfacctd_port || config.nfacctd_ip) capture_methods++;
+#ifdef WITH_KAFKA
+  if (config.nfacctd_kafka_broker_host || config.nfacctd_kafka_topic) capture_methods++;
+#endif
+#ifdef WITH_ZMQ
+  if (config.nfacctd_zmq_address || config.nfacctd_zmq_topic) capture_methods++;
+#endif
+
+  if (capture_methods > 1) {
+    Log(LOG_ERR, "ERROR ( %s/core ): pcap_savefile, nfacctd_ip, nfacctd_kafka_* and nfacctd_zmq_* are mutual exclusive. Exiting...\n\n", config.name);
     exit(1);
   }
 
 #ifdef WITH_KAFKA
-  if ((config.nfacctd_port || config.nfacctd_ip) && config.nfacctd_kafka_broker_host) {
-    Log(LOG_ERR, "ERROR ( %s/core ): Socket collection, nfacctd_ip, is mutual exclusive with Kafka collection, nfacctd_kafka_broker_host. Exiting...\n\n", config.name);
-    exit(1);
-  }
-
   if ((config.nfacctd_kafka_broker_host && !config.nfacctd_kafka_topic) || (config.nfacctd_kafka_topic && !config.nfacctd_kafka_broker_host)) {
     Log(LOG_ERR, "ERROR ( %s/core ): Kafka collection requires both nfacctd_kafka_broker_host and nfacctd_kafka_topic to be specified. Exiting...\n\n", config.name);
     exit(1);
@@ -566,6 +571,18 @@ int main(int argc,char **argv, char **envp)
 
   if (config.nfacctd_kafka_broker_host && tee_plugins) {
     Log(LOG_ERR, "ERROR ( %s/core ): Kafka collection is mutual exclusive with 'tee' plugins. Exiting...\n\n", config.name);
+    exit(1);
+  }
+#endif
+
+#ifdef WITH_ZMQ
+  if ((config.nfacctd_zmq_address && !config.nfacctd_zmq_topic) || (config.nfacctd_zmq_topic && !config.nfacctd_zmq_address)) {
+    Log(LOG_ERR, "ERROR ( %s/core ): ZeroMQ collection requires both nfacctd_zmq_address and nfacctd_zmq_topic to be specified. Exiting...\n\n", config.name);
+    exit(1);
+  }
+
+  if (config.nfacctd_zmq_address && tee_plugins) {
+    Log(LOG_ERR, "ERROR ( %s/core ): ZeroMQ collection is mutual exclusive with 'tee' plugins. Exiting...\n\n", config.name);
     exit(1);
   }
 #endif
@@ -592,6 +609,11 @@ int main(int argc,char **argv, char **envp)
     init_ip_fragment_handler();
 
     recv_pptrs.pkthdr = &recv_pkthdr;
+  }
+#endif
+#ifdef WITH_ZMQ
+  else if (config.nfacctd_zmq_address) {
+    // XXX
   }
 #endif
   else {
@@ -836,7 +858,7 @@ int main(int argc,char **argv, char **envp)
   }
 #endif
 
-  if (!config.pcap_savefile && !config.nfacctd_kafka_broker_host) {
+  if (!config.pcap_savefile && !config.nfacctd_kafka_broker_host && !config.nfacctd_zmq_address) {
     rc = bind(config.sock, (struct sockaddr *) &server, slen);
     if (rc < 0) {
       Log(LOG_ERR, "ERROR ( %s/core ): bind() to ip=%s port=%d/udp failed (errno: %d).\n", config.name, config.nfacctd_ip, config.nfacctd_port, errno);
@@ -1013,6 +1035,11 @@ int main(int argc,char **argv, char **envp)
     allowed = TRUE;
   }
 #endif
+#ifdef WITH_ZMQ
+  else if (config.nfacctd_zmq_address) {
+    // XXX
+  }
+#endif
   else {
     char srv_string[INET6_ADDRSTRLEN];
     struct host_addr srv_addr;
@@ -1064,6 +1091,11 @@ int main(int argc,char **argv, char **envp)
       }
 
       ret = recvfrom_rawip(netflow_packet, ret, (struct sockaddr *) &client, &recv_pptrs);
+    }
+#endif
+#ifdef WITH_ZMQ
+    else if (config.nfacctd_zmq_address) {
+      // XXX
     }
 #endif
     else {

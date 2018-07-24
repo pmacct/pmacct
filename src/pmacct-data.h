@@ -517,6 +517,8 @@ static const struct _dictionary_line dictionary[] = {
   {"nfacctd_kafka_broker_port", cfg_key_nfacctd_kafka_broker_port},
   {"nfacctd_kafka_topic", cfg_key_nfacctd_kafka_topic},
   {"nfacctd_kafka_config_file", cfg_key_nfacctd_kafka_config_file},
+  {"nfacctd_zmq_address", cfg_key_nfacctd_zmq_address},
+  {"nfacctd_zmq_topic", cfg_key_nfacctd_zmq_topic},
   {"pmacctd_proc_name", cfg_key_proc_name},
   {"pmacctd_force_frag_handling", cfg_key_pmacctd_force_frag_handling},
   {"pmacctd_frag_buffer_size", cfg_key_pmacctd_frag_buffer_size},
