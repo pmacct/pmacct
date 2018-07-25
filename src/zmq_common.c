@@ -144,6 +144,11 @@ void p_zmq_plugin_pipe_init_core(struct p_zmq_host *zmq_host, u_int8_t plugin_id
   }
 }
 
+void p_zmq_init_sub(struct p_zmq_host *zmq_host)
+{
+  p_zmq_plugin_pipe_init_plugin(zmq_host);
+}
+
 void p_zmq_plugin_pipe_init_plugin(struct p_zmq_host *zmq_host)
 {
   if (zmq_host) {
@@ -274,7 +279,7 @@ void p_zmq_pub_setup(struct p_zmq_host *zmq_host)
   }
 }
 
-void p_zmq_plugin_pipe_consume(struct p_zmq_host *zmq_host)
+void p_zmq_sub_setup(struct p_zmq_host *zmq_host)
 {
   int ret;
 
@@ -294,18 +299,20 @@ void p_zmq_plugin_pipe_consume(struct p_zmq_host *zmq_host)
     exit(1);
   }
 
-  ret = zmq_setsockopt(zmq_host->sock.obj, ZMQ_PLAIN_USERNAME, zmq_host->zap.username, strlen(zmq_host->zap.username));
-  if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() ZMQ_PLAIN_USERNAME failed: %s\nExiting.\n",
-	zmq_host->log_id, zmq_strerror(errno));
-    exit_plugin(1);
-  }
+  if (strlen(zmq_host->zap.username) && strlen(zmq_host->zap.password)) {
+    ret = zmq_setsockopt(zmq_host->sock.obj, ZMQ_PLAIN_USERNAME, zmq_host->zap.username, strlen(zmq_host->zap.username));
+    if (ret == ERR) {
+      Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() ZMQ_PLAIN_USERNAME failed: %s\nExiting.\n",
+	  zmq_host->log_id, zmq_strerror(errno));
+      exit_plugin(1);
+    }
 
-  ret = zmq_setsockopt(zmq_host->sock.obj, ZMQ_PLAIN_PASSWORD, zmq_host->zap.password, strlen(zmq_host->zap.password));
-  if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() ZMQ_PLAIN_PASSWORD failed: %s\nExiting.\n",
-	zmq_host->log_id, zmq_strerror(errno));
-    exit_plugin(1);
+    ret = zmq_setsockopt(zmq_host->sock.obj, ZMQ_PLAIN_PASSWORD, zmq_host->zap.password, strlen(zmq_host->zap.password));
+    if (ret == ERR) {
+      Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() ZMQ_PLAIN_PASSWORD failed: %s\nExiting.\n",
+	  zmq_host->log_id, zmq_strerror(errno));
+      exit_plugin(1);
+    }
   }
 
   ret = zmq_connect(zmq_host->sock.obj, zmq_host->sock.str);

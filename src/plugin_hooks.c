@@ -959,9 +959,9 @@ void P_zmq_pipe_init(void *zh, int *pipe_fd, int *seq)
     snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
     p_zmq_set_log_id(zmq_host, log_id);
 
-    p_zmq_plugin_pipe_consume(zmq_host);
-    p_zmq_set_retry_timeout(zmq_host, config.pipe_zmq_retry);
     p_zmq_set_hwm(zmq_host, config.pipe_zmq_hwm);
+    p_zmq_sub_setup(zmq_host);
+    p_zmq_set_retry_timeout(zmq_host, config.pipe_zmq_retry);
 
     if (pipe_fd) (*pipe_fd) = p_zmq_get_fd(zmq_host);
     if (seq) (*seq) = 0;
