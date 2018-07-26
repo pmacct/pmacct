@@ -33,7 +33,7 @@
 #define PLUGIN_PIPE_ZMQ_LARGE_SIZE	1000000
 #define PLUGIN_PIPE_ZMQ_XLARGE_SIZE	10000000
 
-#define PLUGIN_PIPE_ZMQ_EVENTS_RETRIES	3
+#define PM_ZMQ_EVENTS_RETRIES		3
 #define PM_ZMQ_DEFAULT_RETRY		60
 
 
@@ -91,6 +91,7 @@ EXT int p_zmq_get_fd(struct p_zmq_host *);
 
 EXT void p_zmq_init_pub(struct p_zmq_host *, char *, u_int8_t);
 EXT void p_zmq_init_sub(struct p_zmq_host *);
+EXT int p_zmq_topic_recv_poll(struct p_zmq_host *, int);
 EXT int p_zmq_topic_recv(struct p_zmq_host *, void *, u_int64_t);
 EXT int p_zmq_topic_send(struct p_zmq_host *, void *, u_int64_t);
 EXT void p_zmq_close(struct p_zmq_host *);

@@ -351,6 +351,16 @@ int p_zmq_topic_send(struct p_zmq_host *zmq_host, void *buf, u_int64_t len)
   return ret;
 }
 
+int p_zmq_topic_recv_poll(struct p_zmq_host *zmq_host, int timeout)
+{
+  zmq_pollitem_t item[1];
+
+  item[0].socket = zmq_host->sock.obj;
+  item[0].events = ZMQ_POLLIN;
+
+  return zmq_poll(item, 1, timeout);
+}
+
 int p_zmq_topic_recv(struct p_zmq_host *zmq_host, void *buf, u_int64_t len)
 {
   int ret = 0, events;
@@ -360,7 +370,7 @@ int p_zmq_topic_recv(struct p_zmq_host *zmq_host, void *buf, u_int64_t len)
   zmq_events_again:
   ret = zmq_getsockopt(zmq_host->sock.obj, ZMQ_EVENTS, &events, &elen); 
   if (ret == ERR) {
-    if (retries < PLUGIN_PIPE_ZMQ_EVENTS_RETRIES) {
+    if (retries < PM_ZMQ_EVENTS_RETRIES) {
       Log(LOG_DEBUG, "DEBUG ( %s ): consuming topic from ZMQ: zmq_getsockopt() for ZMQ_EVENTS: %s [topic=%u]\n",
 	zmq_host->log_id, zmq_strerror(errno), zmq_host->topic);
       retries++;
