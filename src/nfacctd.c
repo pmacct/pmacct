@@ -115,7 +115,7 @@ int main(int argc,char **argv, char **envp)
   struct id_table bitr_table;
   struct id_table sampling_table;
   u_int32_t idx;
-  int ret;
+  int pipe_fd = 0, ret;
   int capture_methods = 0;
 
 #if defined ENABLE_IPV6
@@ -613,7 +613,12 @@ int main(int argc,char **argv, char **envp)
 #endif
 #ifdef WITH_ZMQ
   else if (config.nfacctd_zmq_address) {
-    // XXX
+    NF_init_zmq_host(&nfacctd_zmq_host, &pipe_fd);
+
+    config.handle_fragments = TRUE;
+    init_ip_fragment_handler();
+
+    recv_pptrs.pkthdr = &recv_pkthdr;
   }
 #endif
   else {
@@ -1037,7 +1042,9 @@ int main(int argc,char **argv, char **envp)
 #endif
 #ifdef WITH_ZMQ
   else if (config.nfacctd_zmq_address) {
-    // XXX
+    Log(LOG_INFO, "INFO ( %s/core ): reading NetFlow/IPFIX data from ZeroMQ %s:%u\n", config.name,
+        p_zmq_get_address(&nfacctd_zmq_host), p_zmq_get_topic(&nfacctd_zmq_host));
+    allowed = TRUE;
   }
 #endif
   else {
@@ -1095,7 +1102,23 @@ int main(int argc,char **argv, char **envp)
 #endif
 #ifdef WITH_ZMQ
     else if (config.nfacctd_zmq_address) {
-      // XXX
+      ret = p_zmq_topic_recv_poll(&nfacctd_zmq_host, 1000);
+
+      switch (ret) {
+      case TRUE: /* got data */
+        ret = p_zmq_topic_recv(&nfacctd_zmq_host, netflow_packet, NETFLOW_MSG_SIZE);
+	if (ret < 0) continue; /* ZMQ_RECONNECT_IVL */
+	break;
+      case FALSE: /* timeout */
+	continue;
+	break;
+      case ERR: /* error */
+      default:
+	continue; /* ZMQ_RECONNECT_IVL */
+	break;
+      }
+
+      ret = recvfrom_rawip(netflow_packet, ret, (struct sockaddr *) &client, &recv_pptrs);
     }
 #endif
     else {
@@ -2729,5 +2752,25 @@ void NF_init_kafka_host(void *kh)
   p_kafka_set_topic(kafka_host, config.nfacctd_kafka_topic);
   p_kafka_set_content_type(kafka_host, PM_KAFKA_CNT_TYPE_BIN);
   p_kafka_manage_consumer(kafka_host, TRUE);
+}
+#endif
+
+#ifdef WITH_ZMQ
+void NF_init_zmq_host(void *zh, int *pipe_fd)
+{
+  struct p_zmq_host *zmq_host = zh;
+  char log_id[SHORTBUFLEN];
+
+  p_zmq_init_sub(zmq_host);
+
+  snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
+  p_zmq_set_log_id(zmq_host, log_id);
+
+  p_zmq_set_address(zmq_host, config.nfacctd_zmq_address);
+  p_zmq_set_topic(zmq_host, config.nfacctd_zmq_topic);
+  p_zmq_sub_setup(zmq_host);
+  p_zmq_set_retry_timeout(zmq_host, PM_ZMQ_DEFAULT_RETRY);
+
+  if (pipe_fd) (*pipe_fd) = p_zmq_get_fd(zmq_host);
 }
 #endif

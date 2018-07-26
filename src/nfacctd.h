@@ -526,6 +526,10 @@ EXT void save_template(struct template_cache_entry *, char *);
 #ifdef WITH_KAFKA
 EXT void NF_init_kafka_host(void *);
 #endif
+
+#ifdef WITH_ZMQ
+EXT void NF_init_zmq_host(void *, int *);
+#endif
 #undef EXT
 
 #if (!defined __PKT_HANDLERS_C)
