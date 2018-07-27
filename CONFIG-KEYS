@@ -1614,6 +1614,16 @@ DESC:           Name of the Kafka topic to receive NetFlow/IPFIX and sFlow from.
 		for dynamic naming of the topic. See kafka_topic for more info.
 DEFAULT:        none
 
+KEY:            nfacctd_zmq_address [GLOBAL, NFACCTD_ONLY]
+DESC:           Defines the ZeroMQ queue address (host and port) to connect to for consuming NetFlow/IPFIX
+		from. An example of the example value is "127.0.0.1:50000".
+DEFAULT:        none
+
+KEY:            nfacctd_zmq_topic [GLOBAL, NFACCTD_ONLY]
+DESC:           Defines the ZeroMQ queue topic for consuming NetFlow/IPFIXfrom . Valid values are in the
+		range 1-255.
+DEFAULT:	none
+
 KEY:		core_proc_name
 DESC:		Defines the name of the core process. This is the equivalent to instantiate named plugins but
 		for the core process.
