@@ -120,6 +120,7 @@ int main(int argc,char **argv, char **envp)
   struct id_table bitr_table;
   struct id_table sampling_table;
   u_int32_t idx;
+  int pipe_fd = 0, capture_methods = 0;
   int ret;
   SFSample spp;
 
@@ -560,17 +561,21 @@ int main(int argc,char **argv, char **envp)
     exit(1);
   }
 
-  if (config.pcap_savefile && (config.nfacctd_port || config.nfacctd_ip || config.nfacctd_kafka_broker_host)) {
-    Log(LOG_ERR, "ERROR ( %s/core ): pcap_savefile is mutual exclusive with live collection, ie. sfacctd_ip, sfacctd_kafka_broker_host. Exiting...\n\n", config.name);
+  if (config.pcap_savefile) capture_methods++;
+  if (config.nfacctd_port || config.nfacctd_ip) capture_methods++;
+#ifdef WITH_KAFKA
+  if (config.nfacctd_kafka_broker_host || config.nfacctd_kafka_topic) capture_methods++;
+#endif
+#ifdef WITH_ZMQ
+  if (config.nfacctd_zmq_address || config.nfacctd_zmq_topic) capture_methods++;
+#endif
+
+  if (capture_methods > 1) {
+    Log(LOG_ERR, "ERROR ( %s/core ): pcap_savefile, sfacctd_ip, sfacctd_kafka_* and sfacctd_zmq_* are mutual exclusive. Exiting...\n\n", config.name);
     exit(1);
   }
 
 #ifdef WITH_KAFKA
-  if ((config.nfacctd_port || config.nfacctd_ip) && config.nfacctd_kafka_broker_host) {
-    Log(LOG_ERR, "ERROR ( %s/core ): Socket collection, sfacctd_ip, is mutual exclusive with Kafka collection, sfacctd_kafka_broker_host. Exiting...\n\n", config.name);
-    exit(1);
-  }
-
   if ((config.nfacctd_kafka_broker_host && !config.nfacctd_kafka_topic) || (config.nfacctd_kafka_topic && !config.nfacctd_kafka_broker_host)) {
     Log(LOG_ERR, "ERROR ( %s/core ): Kafka collection requires both sfacctd_kafka_broker_host and sfacctd_kafka_topic to be specified. Exiting...\n\n", config.name);
     exit(1);
@@ -578,6 +583,18 @@ int main(int argc,char **argv, char **envp)
 
   if (config.nfacctd_kafka_broker_host && tee_plugins) {
     Log(LOG_ERR, "ERROR ( %s/core ): Kafka collection is mutual exclusive with 'tee' plugins. Exiting...\n\n", config.name);
+    exit(1);
+  }
+#endif
+
+#ifdef WITH_ZMQ
+  if ((config.nfacctd_zmq_address && !config.nfacctd_zmq_topic) || (config.nfacctd_zmq_topic && !config.nfacctd_zmq_address)) {
+    Log(LOG_ERR, "ERROR ( %s/core ): ZeroMQ collection requires both sfacctd_zmq_address and sfacctd_zmq_topic to be specified. Exiting...\n\n", config.name);
+    exit(1);
+  }
+
+  if (config.nfacctd_zmq_address && tee_plugins) {
+    Log(LOG_ERR, "ERROR ( %s/core ): ZeroMQ collection is mutual exclusive with 'tee' plugins. Exiting...\n\n", config.name);
     exit(1);
   }
 #endif
@@ -599,6 +616,16 @@ int main(int argc,char **argv, char **envp)
 #ifdef WITH_KAFKA
   else if (config.nfacctd_kafka_broker_host) {
     SF_init_kafka_host(&nfacctd_kafka_host);
+
+    config.handle_fragments = TRUE;
+    init_ip_fragment_handler();
+
+    recv_pptrs.pkthdr = &recv_pkthdr;
+  }
+#endif
+#ifdef WITH_ZMQ
+  else if (config.nfacctd_zmq_address) {
+    SF_init_zmq_host(&nfacctd_zmq_host, &pipe_fd);
 
     config.handle_fragments = TRUE;
     init_ip_fragment_handler();
@@ -1017,6 +1044,13 @@ int main(int argc,char **argv, char **envp)
     allowed = TRUE;
   }
 #endif
+#ifdef WITH_ZMQ
+  else if (config.nfacctd_zmq_address) {
+    Log(LOG_INFO, "INFO ( %s/core ): reading sFlow data from ZeroMQ %s:%u\n", config.name,
+        p_zmq_get_address(&nfacctd_zmq_host), p_zmq_get_topic(&nfacctd_zmq_host));
+    allowed = TRUE;
+  }
+#endif
   else {
     char srv_string[INET6_ADDRSTRLEN];
     struct host_addr srv_addr;
@@ -1115,6 +1149,27 @@ int main(int argc,char **argv, char **envp)
 	SF_init_kafka_host(&nfacctd_kafka_host);
 
 	continue;
+      }
+
+      ret = recvfrom_rawip(sflow_packet, ret, (struct sockaddr *) &client, &recv_pptrs);
+    }
+#endif
+#ifdef WITH_ZMQ
+    else if (config.nfacctd_zmq_address) {
+      ret = p_zmq_topic_recv_poll(&nfacctd_zmq_host, 1000);
+
+      switch (ret) {
+      case TRUE: /* got data */
+	ret = p_zmq_topic_recv(&nfacctd_zmq_host, sflow_packet, SFLOW_MAX_MSG_SIZE);
+	if (ret < 0) continue; /* ZMQ_RECONNECT_IVL */
+	break;
+      case FALSE: /* timeout */
+	continue;
+	break;
+      case ERR: /* error */
+      default:
+	continue; /* ZMQ_RECONNECT_IVL */
+	break;
       }
 
       ret = recvfrom_rawip(sflow_packet, ret, (struct sockaddr *) &client, &recv_pptrs);
@@ -2545,5 +2600,25 @@ void SF_init_kafka_host(void *kh)
   p_kafka_set_topic(kafka_host, config.nfacctd_kafka_topic);
   p_kafka_set_content_type(kafka_host, PM_KAFKA_CNT_TYPE_BIN);
   p_kafka_manage_consumer(kafka_host, TRUE);
+}
+#endif
+
+#ifdef WITH_ZMQ
+void SF_init_zmq_host(void *zh, int *pipe_fd)
+{
+  struct p_zmq_host *zmq_host = zh;
+  char log_id[SHORTBUFLEN];
+
+  p_zmq_init_sub(zmq_host);
+
+  snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
+  p_zmq_set_log_id(zmq_host, log_id);
+
+  p_zmq_set_address(zmq_host, config.nfacctd_zmq_address);
+  p_zmq_set_topic(zmq_host, config.nfacctd_zmq_topic);
+  p_zmq_sub_setup(zmq_host);
+  p_zmq_set_retry_timeout(zmq_host, PM_ZMQ_DEFAULT_RETRY);
+
+  if (pipe_fd) (*pipe_fd) = p_zmq_get_fd(zmq_host);
 }
 #endif

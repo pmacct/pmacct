@@ -354,6 +354,10 @@ EXT void compute_once();
 EXT void SF_init_kafka_host(void *);
 #endif
 
+#ifdef WITH_ZMQ
+EXT void SF_init_zmq_host(void *, int *);
+#endif
+
 /* global variables */
 EXT int sfacctd_counter_backend_methods;
 EXT struct bgp_misc_structs *sf_cnt_misc_db;
