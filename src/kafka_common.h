@@ -26,12 +26,13 @@
 #undef  __PLUGIN_COMMON_EXPORT
 
 /* defines */
-#define PM_KAFKA_ERRSTR_LEN	512
-#define PM_KAFKA_DEFAULT_RETRY	60
-#define PM_KAFKA_LONGLONG_RETRY	INT_MAX
+#define PM_KAFKA_ERRSTR_LEN		512
+#define PM_KAFKA_DEFAULT_RETRY		60
+#define PM_KAFKA_LONGLONG_RETRY		INT_MAX
+#define PM_KAFKA_OUTQ_LEN_RETRIES	3
 
-#define PM_KAFKA_CNT_TYPE_STR	1
-#define PM_KAFKA_CNT_TYPE_BIN	2
+#define PM_KAFKA_CNT_TYPE_STR		1
+#define PM_KAFKA_CNT_TYPE_BIN		2
 
 /* structures */
 struct p_kafka_host {
