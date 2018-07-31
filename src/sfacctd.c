@@ -1558,6 +1558,7 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
     else Log(LOG_DEBUG, "DEBUG ( %s/core ): sFlow packet version (%u) not supported for dissection\n",
 		config.name, spp->datagramVersion); 
   }
+  else sfv245_check_status(spp, pptrs, agent);
 
   /* If dissecting, we may also send the full packet in case multiple tee
      plugins are instantiated and any of them does not require dissection */
