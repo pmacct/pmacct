@@ -2352,12 +2352,21 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
   switch (nfv) {
   case 5:
     pptrs->seqno = ntohl(((struct struct_header_v5 *)pkt)->flow_sequence);
+    if (!req->ptm_c.exec_ptm_dissect) nfv5_check_status(pptrs); /* stats collection */
     break;
   case 9:
     pptrs->seqno = ntohl(((struct struct_header_v9 *)pkt)->flow_sequence);
+    if (!req->ptm_c.exec_ptm_dissect) {
+      u_int32_t SourceId = ntohl(((struct struct_header_v9 *)pkt)->source_id);
+      nfv9_check_status(pptrs, SourceId, 0, pptrs->seqno, TRUE); /* stats collection */
+    }
     break;
   case 10:
     pptrs->seqno = ntohl(((struct struct_header_ipfix *)pkt)->flow_sequence);
+    if (!req->ptm_c.exec_ptm_dissect) {
+      u_int32_t SourceId = ntohl(((struct struct_header_ipfix *)pkt)->source_id);
+      nfv9_check_status(pptrs, SourceId, 0, pptrs->seqno, TRUE); /* stats collection */
+    }
     break;
   default:
     pptrs->seqno = 0;
