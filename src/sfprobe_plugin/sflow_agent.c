@@ -34,7 +34,7 @@ void sfl_agent_init(SFLAgent *agent,
 		    sendFn_t sendFn)
 {
   struct sockaddr ssource_ip;
-  int ret;
+  int ret = 0;
 
   /* first clear everything */
   memset(agent, 0, sizeof(*agent));
