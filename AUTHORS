@@ -7,12 +7,13 @@ Founder:
 
 Package maintainers:
 
-	Marcelo Goes (Gentoo)		<vanquirius@gentoo.org>
-	Ryan Steinmetz (FreeBSD)	<rpsfa@rit.edu>
+	Ryan Steinmetz (FreeBSD)	<zi@freebsd.org>
 	Bernd Zeimetz (Debian)		<bzed@debian.org>
+	MOTU Developers (Ubuntu)	<ubuntu-motu@lists.ubuntu.com>
+	Martin Hauke (OpenSUSE)		<mardnh@gmx.de>
+	netmon (Gentoo)			<netmon@gentoo.org>
    KP Kirchdoerfer (LEAF Bering-uClibc)	<kapeka@users.sourceforge.net> 
-	Peter Nixon (OpenSUSE RPMs)	<listuser@peternixon.net>
-	Viacheslav Dubrovskyi(ALTLinux)	<dubrsl@gmail.com>
+	Slava Dubrovskyi (ALTLinux)	<dubrsl@gmail.com>
 
 Thanks to the following people for their strong support along the time: 
 
