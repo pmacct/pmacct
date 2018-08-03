@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -42,14 +42,15 @@ struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channe
 void usage_daemon(char *prog_name)
 {
   printf("%s %s (%s)\n", PMTELEMETRYD_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
-  printf("Usage: %s [ -D | -d ] [ -L IP address ] [ -l port ] ]\n", prog_name);
+  printf("Usage: %s [ -D | -d ] [ -L IP address ] [ -u port | -t port ] ]\n", prog_name);
   printf("       %s [ -f config_file ]\n", prog_name);
   printf("       %s [ -h ]\n", prog_name);
   printf("\nGeneral options:\n");
   printf("  -h  \tShow this page\n");
   printf("  -V  \tShow version and compile-time options and exit\n");
   printf("  -L  \tBind to the specified IP address\n");
-  printf("  -l  \tListen on the specified TCP port\n");
+  printf("  -u  \tListen on the specified UDP port\n");
+  printf("  -t  \tListen on the specified TCP port\n");
   printf("  -f  \tLoad configuration from the specified file\n");
   printf("  -D  \tDaemonize\n");
   printf("  -d  \tEnable debug\n");
@@ -101,12 +102,17 @@ int main(int argc,char **argv, char **envp)
     cfg_cmdline[rows] = malloc(SRVBUFLEN);
     switch (cp) {
     case 'L':
-      strlcpy(cfg_cmdline[rows], "pmtelemetryd_ip: ", SRVBUFLEN);
+      strlcpy(cfg_cmdline[rows], "telemetry_daemon_ip: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
-    case 'l':
-      strlcpy(cfg_cmdline[rows], "pmtelemetryd_port: ", SRVBUFLEN);
+    case 'u':
+      strlcpy(cfg_cmdline[rows], "telemetry_daemon_port_udp: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
+    case 't':
+      strlcpy(cfg_cmdline[rows], "telemetry_daemon_port_tcp: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
