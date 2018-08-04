@@ -222,6 +222,8 @@ struct configuration {
   int telemetry_port_tcp;
   int telemetry_port_udp;
   char *telemetry_ip;
+  char *telemetry_zmq_address;
+  u_int8_t telemetry_zmq_topic;
   char *telemetry_decoder;
   int telemetry_max_peers;
   int telemetry_udp_timeout;

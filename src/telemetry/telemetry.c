@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -33,6 +33,9 @@
 #endif
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
+#endif
+#if defined WITH_ZMQ
+#include "zmq_common.h"
 #endif
 
 /* variables to be exported away */
@@ -109,57 +112,78 @@ void telemetry_daemon(void *t_data_void)
   memset(telemetry_misc_db, 0, sizeof(telemetry_misc_structs));
 
   /* initialize variables */
-  if (config.telemetry_port_tcp && config.telemetry_port_udp) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_port_tcp and telemetry_daemon_port_udp are mutually exclusive. Terminating.\n", config.name, t_data->log_str);
+#if defined WITH_ZMQ
+  if ((config.telemetry_ip || config.telemetry_port_tcp || config.telemetry_port_udp) &&
+      config.telemetry_zmq_address) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_ip and telemetry_daemon_zmq_address are mutually exclusive. Terminating.\n", config.name, t_data->log_str);
     exit_all(1);
   }
-  else if (!config.telemetry_port_tcp && !config.telemetry_port_udp) {
-    /* defaulting to TCP */
-    port = config.telemetry_port_tcp = TELEMETRY_TCP_PORT;
-    srv_proto = malloc(strlen("tcp") + 1);
-    strcpy(srv_proto, "tcp");
+
+  if ((config.telemetry_zmq_address && !config.telemetry_zmq_topic) ||
+      (!config.telemetry_zmq_address && config.telemetry_zmq_topic)) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_zmq_address and telemetry_daemon_zmq_topic are both required. Terminating.\n", config.name, t_data->log_str);
+    exit_all(1);
   }
-  else {
-    if (config.telemetry_port_tcp) {
-      port = config.telemetry_port_tcp;
+#else
+  if (config.telemetry_zmq_address || config.telemetry_zmq_topic) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_zmq_address and telemetry_daemon_zmq_topic require --enable-zmq. Terminating.\n", config.name, t_data->log_str);
+    exit_all(1);
+  }
+#endif
+
+  if (!config.telemetry_zmq_address) {
+    if (config.telemetry_port_tcp && config.telemetry_port_udp) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_port_tcp and telemetry_daemon_port_udp are mutually exclusive. Terminating.\n", config.name, t_data->log_str);
+      exit_all(1);
+    }
+    else if (!config.telemetry_port_tcp && !config.telemetry_port_udp) {
+      /* defaulting to TCP */
+      port = config.telemetry_port_tcp = TELEMETRY_TCP_PORT;
       srv_proto = malloc(strlen("tcp") + 1);
       strcpy(srv_proto, "tcp");
     }
+    else {
+      if (config.telemetry_port_tcp) {
+	port = config.telemetry_port_tcp;
+	srv_proto = malloc(strlen("tcp") + 1);
+	strcpy(srv_proto, "tcp");
+      }
 
-    if (config.telemetry_port_udp) {
-      port = config.telemetry_port_udp;
-      srv_proto = malloc(strlen("udp") + 1);
-      strcpy(srv_proto, "udp");
+      if (config.telemetry_port_udp) {
+	port = config.telemetry_port_udp;
+	srv_proto = malloc(strlen("udp") + 1);
+	strcpy(srv_proto, "udp");
+      }
     }
-  }
 
-  /* socket creation for telemetry server: IPv4 only */
+    /* socket creation for telemetry server: IPv4 only */
 #if (defined ENABLE_IPV6)
-  if (!config.telemetry_ip) {
-    struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&server;
+    if (!config.telemetry_ip) {
+      struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&server;
 
-    sa6->sin6_family = AF_INET6;
-    sa6->sin6_port = htons(port);
-    slen = sizeof(struct sockaddr_in6);
-  }
-#else
-  if (!config.telemetry_ip) {
-    struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
-
-    sa4->sin_family = AF_INET;
-    sa4->sin_addr.s_addr = htonl(0);
-    sa4->sin_port = htons(port);
-    slen = sizeof(struct sockaddr_in);
-  }
-#endif
-  else {
-    trim_spaces(config.telemetry_ip);
-    ret = str_to_addr(config.telemetry_ip, &addr);
-    if (!ret) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_ip value is not a valid IPv4/IPv6 address. Terminating.\n", config.name, t_data->log_str);
-      exit_all(1);
+      sa6->sin6_family = AF_INET6;
+      sa6->sin6_port = htons(port);
+      slen = sizeof(struct sockaddr_in6);
     }
-    slen = addr_to_sa((struct sockaddr *)&server, &addr, port);
+#else
+    if (!config.telemetry_ip) {
+      struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
+
+      sa4->sin_family = AF_INET;
+      sa4->sin_addr.s_addr = htonl(0);
+      sa4->sin_port = htons(port);
+      slen = sizeof(struct sockaddr_in);
+    }
+#endif
+    else {
+      trim_spaces(config.telemetry_ip);
+      ret = str_to_addr(config.telemetry_ip, &addr);
+      if (!ret) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_ip value is not a valid IPv4/IPv6 address. Terminating.\n", config.name, t_data->log_str);
+	exit_all(1);
+      }
+      slen = addr_to_sa((struct sockaddr *)&server, &addr, port);
+    }
   }
 
   if (!config.telemetry_decoder) {
@@ -197,6 +221,7 @@ void telemetry_daemon(void *t_data_void)
   if (!config.telemetry_max_peers) config.telemetry_max_peers = TELEMETRY_MAX_PEERS_DEFAULT;
   Log(LOG_INFO, "INFO ( %s/%s ): maximum telemetry peers allowed: %d\n", config.name, t_data->log_str, config.telemetry_max_peers);
 
+  // XXX: rename and reuse the timeout mechanism for the ZeroMQ case
   if (config.telemetry_port_udp) {
     if (!config.telemetry_udp_timeout) config.telemetry_udp_timeout = TELEMETRY_UDP_TIMEOUT_DEFAULT;
     Log(LOG_INFO, "INFO ( %s/%s ): telemetry UDP peers timeout: %u\n", config.name, t_data->log_str, config.telemetry_udp_timeout);
@@ -281,81 +306,83 @@ void telemetry_daemon(void *t_data_void)
     }
   }
 
-  if (config.telemetry_port_tcp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
-  else if (config.telemetry_port_udp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
-
-  if (config.telemetry_sock < 0) {
-#if (defined ENABLE_IPV6)
-    /* retry with IPv4 */
-    if (!config.telemetry_ip) {
-      struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
-
-      sa4->sin_family = AF_INET;
-      sa4->sin_addr.s_addr = htonl(0);
-      sa4->sin_port = htons(port);
-      slen = sizeof(struct sockaddr_in);
-
-      if (config.telemetry_port_tcp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
-      else if (config.telemetry_port_udp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
-    }
-#endif
+  if (!config.telemetry_zmq_address) {
+    if (config.telemetry_port_tcp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
+    else if (config.telemetry_port_udp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
 
     if (config.telemetry_sock < 0) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): socket() failed. Terminating.\n", config.name, t_data->log_str);
-      exit_all(1);
+#if (defined ENABLE_IPV6)
+      /* retry with IPv4 */
+      if (!config.telemetry_ip) {
+	struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
+
+	sa4->sin_family = AF_INET;
+	sa4->sin_addr.s_addr = htonl(0);
+	sa4->sin_port = htons(port);
+	slen = sizeof(struct sockaddr_in);
+
+	if (config.telemetry_port_tcp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
+	else if (config.telemetry_port_udp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
+      }
+#endif
+
+      if (config.telemetry_sock < 0) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): socket() failed. Terminating.\n", config.name, t_data->log_str);
+	exit_all(1);
+      }
     }
-  }
 
-  if (config.telemetry_ipprec) {
-    int opt = config.telemetry_ipprec << 5;
+    if (config.telemetry_ipprec) {
+      int opt = config.telemetry_ipprec << 5;
 
-    rc = setsockopt(config.telemetry_sock, IPPROTO_IP, IP_TOS, &opt, sizeof(opt));
-    if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IP_TOS (errno: %d).\n", config.name, t_data->log_str, errno);
-  }
+      rc = setsockopt(config.telemetry_sock, IPPROTO_IP, IP_TOS, &opt, sizeof(opt));
+      if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IP_TOS (errno: %d).\n", config.name, t_data->log_str, errno);
+    }
 
 #if (defined LINUX) && (defined HAVE_SO_REUSEPORT)
-  rc = setsockopt(config.telemetry_sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *)&yes, sizeof(yes));
-  if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR|SO_REUSEPORT (errno: %d).\n", config.name, t_data->log_str, errno);
+    rc = setsockopt(config.telemetry_sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *)&yes, sizeof(yes));
+    if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR|SO_REUSEPORT (errno: %d).\n", config.name, t_data->log_str, errno);
 #else
-  rc = setsockopt(config.telemetry_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
-  if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, t_data->log_str, errno);
+    rc = setsockopt(config.telemetry_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
+    if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, t_data->log_str, errno);
 #endif
 
 #if (defined ENABLE_IPV6) && (defined IPV6_BINDV6ONLY)
-  rc = setsockopt(config.telemetry_sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
-  if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IPV6_BINDV6ONLY (errno: %d).\n", config.name, t_data->log_str, errno);
+    rc = setsockopt(config.telemetry_sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
+    if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IPV6_BINDV6ONLY (errno: %d).\n", config.name, t_data->log_str, errno);
 #endif
 
-  if (config.telemetry_pipe_size) {
-    int l = sizeof(config.telemetry_pipe_size);
-    int saved = 0, obtained = 0;
+    if (config.telemetry_pipe_size) {
+      int l = sizeof(config.telemetry_pipe_size);
+      int saved = 0, obtained = 0;
 
-    getsockopt(config.telemetry_sock, SOL_SOCKET, SO_RCVBUF, &saved, &l);
-    Setsocksize(config.telemetry_sock, SOL_SOCKET, SO_RCVBUF, &config.telemetry_pipe_size, sizeof(config.telemetry_pipe_size));
-    getsockopt(config.telemetry_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
+      getsockopt(config.telemetry_sock, SOL_SOCKET, SO_RCVBUF, &saved, &l);
+      Setsocksize(config.telemetry_sock, SOL_SOCKET, SO_RCVBUF, &config.telemetry_pipe_size, sizeof(config.telemetry_pipe_size));
+      getsockopt(config.telemetry_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
 
-    Setsocksize(config.telemetry_sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
-    getsockopt(config.telemetry_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
-    Log(LOG_INFO, "INFO ( %s/%s ): telemetry_daemon_pipe_size: obtained=%d target=%d.\n",
-	config.name, t_data->log_str, obtained, config.telemetry_pipe_size);
-  }
+      Setsocksize(config.telemetry_sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
+      getsockopt(config.telemetry_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
+      Log(LOG_INFO, "INFO ( %s/%s ): telemetry_daemon_pipe_size: obtained=%d target=%d.\n",
+	  config.name, t_data->log_str, obtained, config.telemetry_pipe_size);
+    }
 
-  rc = bind(config.telemetry_sock, (struct sockaddr *) &server, slen);
-  if (rc < 0) {
-    char null_ip_address[] = "0.0.0.0";
-    char *ip_address;
-
-    ip_address = config.telemetry_ip ? config.telemetry_ip : null_ip_address;
-    Log(LOG_ERR, "ERROR ( %s/%s ): bind() to ip=%s port=%u/%s failed (errno: %d).\n",
-	config.name, t_data->log_str, ip_address, port, srv_proto, errno);
-    exit_all(1);
-  }
-
-  if (config.telemetry_port_tcp) {
-    rc = listen(config.telemetry_sock, 1);
+    rc = bind(config.telemetry_sock, (struct sockaddr *) &server, slen);
     if (rc < 0) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): listen() failed (errno: %d).\n", config.name, t_data->log_str, errno);
+      char null_ip_address[] = "0.0.0.0";
+      char *ip_address;
+
+      ip_address = config.telemetry_ip ? config.telemetry_ip : null_ip_address;
+      Log(LOG_ERR, "ERROR ( %s/%s ): bind() to ip=%s port=%u/%s failed (errno: %d).\n",
+	  config.name, t_data->log_str, ip_address, port, srv_proto, errno);
       exit_all(1);
+    }
+
+    if (config.telemetry_port_tcp) {
+      rc = listen(config.telemetry_sock, 1);
+      if (rc < 0) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): listen() failed (errno: %d).\n", config.name, t_data->log_str, errno);
+	exit_all(1);
+      }
     }
   }
 
@@ -364,7 +391,7 @@ void telemetry_daemon(void *t_data_void)
   FD_ZERO(&bkp_read_descs);
   FD_SET(config.telemetry_sock, &bkp_read_descs);
 
-  {
+  if (!config.telemetry_zmq_address) {
     char srv_string[INET6_ADDRSTRLEN];
     struct host_addr srv_addr;
     u_int16_t srv_port;
@@ -372,6 +399,9 @@ void telemetry_daemon(void *t_data_void)
     sa_to_addr((struct sockaddr *)&server, &srv_addr, &srv_port);
     addr_to_str(srv_string, &srv_addr);
     Log(LOG_INFO, "INFO ( %s/%s ): waiting for telemetry data on %s:%u/%s\n", config.name, t_data->log_str, srv_string, srv_port, srv_proto);
+  }
+  else {
+    // XXX
   }
 
   /* Preparing ACL, if any */
@@ -417,6 +447,7 @@ void telemetry_daemon(void *t_data_void)
     if (config.telemetry_dump_kafka_topic) telemetry_dump_init_kafka_host();
   }
 
+  // XXX: expose ZeroMQ file descriptor for polling later  
   select_fd = bkp_select_fd = (config.telemetry_sock + 1);
   recalc_fds = FALSE;
 

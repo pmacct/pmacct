@@ -24,7 +24,7 @@
 #define ARGS_SFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:o:t:O:uRVaA:E:I:WZ:Y:"
 #define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:o:t:O:uwWZ:Y:L:RVazA:E:"
 #define ARGS_UACCTD "n:NdDhP:b:f:F:c:m:p:r:s:S:o:t:O:uRg:L:VaA:E:"
-#define ARGS_PMTELEMETRYD "hVL:u:t:f:dDS:F:o:O:i:"
+#define ARGS_PMTELEMETRYD "hVL:u:t:Z:z:f:dDS:F:o:O:i:"
 #define ARGS_PMBGPD "hVL:l:f:dDS:F:o:O:i:gm:"
 #define ARGS_PMBMPD "hVL:l:f:dDS:F:o:O:i:"
 #define ARGS_PMACCT "hSsc:Cetm:p:P:M:arN:n:lT:O:E:uVUiI0"
