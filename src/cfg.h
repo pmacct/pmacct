@@ -226,7 +226,7 @@ struct configuration {
   u_int8_t telemetry_zmq_topic;
   char *telemetry_decoder;
   int telemetry_max_peers;
-  int telemetry_udp_timeout;
+  int telemetry_peer_timeout;
   char *telemetry_allow_file;
   int telemetry_pipe_size;
   int telemetry_ipprec;

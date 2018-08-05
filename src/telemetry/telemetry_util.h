@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -41,4 +41,8 @@ EXT int telemetry_tpuc_addr_cmp(const void *, const void *);
 EXT int telemetry_validate_input_output_decoders(int, int);
 EXT void telemetry_log_peer_stats(telemetry_peer *, struct telemetry_data *);
 EXT void telemetry_log_global_stats(struct telemetry_data *);
+
+#ifdef WITH_ZMQ
+EXT void telemetry_init_zmq_host(void *, int *);
+#endif
 #undef EXT

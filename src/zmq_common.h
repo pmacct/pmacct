@@ -120,4 +120,5 @@ EXT void p_zmq_zap_handler(void *);
 
 /* global vars */
 EXT struct p_zmq_host nfacctd_zmq_host;
+EXT struct p_zmq_host telemetry_zmq_host;
 #undef EXT

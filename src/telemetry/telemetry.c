@@ -69,10 +69,10 @@ void telemetry_daemon(void *t_data_void)
 
   int slen, clen, ret, rc, peers_idx, allowed, yes=1, no=0;
   int peers_idx_rr = 0, max_peers_idx = 0, peers_num = 0;
-  int decoder = 0, data_decoder = 0, recv_flags = 0;
+  int decoder = 0, data_decoder = 0, recv_flags = 0, pipe_fd = 0;
   u_int16_t port = 0;
   char *srv_proto = NULL;
-  time_t last_udp_timeout_check;
+  time_t last_peers_timeout_check;
 
   telemetry_peer *peer = NULL;
   telemetry_peer_z *peer_z = NULL;
@@ -106,7 +106,7 @@ void telemetry_daemon(void *t_data_void)
   memset(&allow, 0, sizeof(struct hosts_table));
   clen = sizeof(client);
   telemetry_peers_udp_cache = NULL;
-  last_udp_timeout_check = FALSE;
+  last_peers_timeout_check = FALSE;
 
   telemetry_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_TELEMETRY];
   memset(telemetry_misc_db, 0, sizeof(telemetry_misc_structs));
@@ -221,10 +221,9 @@ void telemetry_daemon(void *t_data_void)
   if (!config.telemetry_max_peers) config.telemetry_max_peers = TELEMETRY_MAX_PEERS_DEFAULT;
   Log(LOG_INFO, "INFO ( %s/%s ): maximum telemetry peers allowed: %d\n", config.name, t_data->log_str, config.telemetry_max_peers);
 
-  // XXX: rename and reuse the timeout mechanism for the ZeroMQ case
-  if (config.telemetry_port_udp) {
-    if (!config.telemetry_udp_timeout) config.telemetry_udp_timeout = TELEMETRY_UDP_TIMEOUT_DEFAULT;
-    Log(LOG_INFO, "INFO ( %s/%s ): telemetry UDP peers timeout: %u\n", config.name, t_data->log_str, config.telemetry_udp_timeout);
+  if (config.telemetry_port_udp || config.telemetry_zmq_address) {
+    if (!config.telemetry_peer_timeout) config.telemetry_peer_timeout = TELEMETRY_PEER_TIMEOUT_DEFAULT;
+    Log(LOG_INFO, "INFO ( %s/%s ): telemetry peers timeout: %u\n", config.name, t_data->log_str, config.telemetry_peer_timeout);
   }
 
   telemetry_peers = malloc(config.telemetry_max_peers*sizeof(telemetry_peer));
@@ -243,13 +242,13 @@ void telemetry_daemon(void *t_data_void)
     memset(telemetry_peers_z, 0, config.telemetry_max_peers*sizeof(telemetry_peer_z));
   }
 
-  if (config.telemetry_port_udp) {
-    telemetry_peers_udp_timeout = malloc(config.telemetry_max_peers*sizeof(telemetry_peer_udp_timeout));
-    if (!telemetry_peers_udp_timeout) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() telemetry_peers_udp_timeout structure. Terminating.\n", config.name, t_data->log_str);
+  if (config.telemetry_port_udp || config.telemetry_zmq_address) {
+    telemetry_peers_timeout = malloc(config.telemetry_max_peers*sizeof(telemetry_peer_timeout));
+    if (!telemetry_peers_timeout) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() telemetry_peers_timeout structure. Terminating.\n", config.name, t_data->log_str);
       exit_all(1);
     }
-    memset(telemetry_peers_udp_timeout, 0, config.telemetry_max_peers*sizeof(telemetry_peer_udp_timeout));
+    memset(telemetry_peers_timeout, 0, config.telemetry_max_peers*sizeof(telemetry_peer_timeout));
   }
 
   if (config.telemetry_msglog_file || config.telemetry_msglog_amqp_routing_key || config.telemetry_msglog_kafka_topic) {
@@ -401,7 +400,9 @@ void telemetry_daemon(void *t_data_void)
     Log(LOG_INFO, "INFO ( %s/%s ): waiting for telemetry data on %s:%u/%s\n", config.name, t_data->log_str, srv_string, srv_port, srv_proto);
   }
   else {
-    // XXX
+    telemetry_init_zmq_host(&telemetry_zmq_host, &pipe_fd);
+    Log(LOG_INFO, "INFO ( %s/%s ): reading telemetry data from ZeroMQ %s:%u\n", config.name, t_data->log_str,
+        p_zmq_get_address(&telemetry_zmq_host), p_zmq_get_topic(&telemetry_zmq_host));
   }
 
   /* Preparing ACL, if any */
@@ -491,25 +492,27 @@ void telemetry_daemon(void *t_data_void)
 
     t_data->now = time(NULL);
 
-    // XXX: UDP case: timeout handling (to be tested)
-    if (config.telemetry_port_udp) {
-      if (t_data->now > (last_udp_timeout_check + TELEMETRY_UDP_TIMEOUT_INTERVAL)) {
+    /* XXX: UDP case: timeout handling (to be tested) */
+    if (config.telemetry_port_udp /* XXX: || config.telemetry_zmq_address */) {
+      if (t_data->now > (last_peers_timeout_check + TELEMETRY_PEER_TIMEOUT_INTERVAL)) {
 	for (peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
-	  telemetry_peer_udp_timeout *peer_udp_timeout;
+	  telemetry_peer_timeout *peer_timeout;
 
 	  peer = &telemetry_peers[peers_idx];
 	  peer_z = &telemetry_peers_z[peers_idx];
-	  peer_udp_timeout = &telemetry_peers_udp_timeout[peers_idx];
+	  peer_timeout = &telemetry_peers_timeout[peers_idx];
 
 	  if (peer->fd) {
-	    if (t_data->now > (peer_udp_timeout->last_msg + config.telemetry_udp_timeout)) {
-	      Log(LOG_INFO, "INFO ( %s/%s ): [%s] telemetry UDP peer removed (timeout).\n", config.name, t_data->log_str, peer->addr_str);
+	    if (t_data->now > (peer_timeout->last_msg + config.telemetry_peer_timeout)) {
+	      Log(LOG_INFO, "INFO ( %s/%s ): [%s] telemetry peer removed (timeout).\n", config.name, t_data->log_str, peer->addr_str);
 	      telemetry_peer_close(peer, FUNC_TYPE_TELEMETRY);
 	      if (telemetry_is_zjson(decoder)) telemetry_peer_z_close(peer_z);
 	      recalc_fds = TRUE;
 	    }
 	  }
 	}
+
+	last_peers_timeout_check = t_data->now;
       }
     }
 
@@ -640,7 +643,7 @@ void telemetry_daemon(void *t_data_void)
 
 	if (tpuc_ret) {
 	  peer = &telemetry_peers[tpuc_ret->index];
-	  telemetry_peers_udp_timeout[tpuc_ret->index].last_msg = t_data->now;
+	  telemetry_peers_timeout[tpuc_ret->index].last_msg = t_data->now;
 
 	  goto read_data;
 	}
@@ -665,7 +668,7 @@ void telemetry_daemon(void *t_data_void)
 
 	    if (config.telemetry_port_udp) {
 	      tpuc.index = peers_idx;
-	      telemetry_peers_udp_timeout[peers_idx].last_msg = t_data->now;
+	      telemetry_peers_timeout[peers_idx].last_msg = t_data->now;
 
 	      if (!pm_tsearch(&tpuc, &telemetry_peers_udp_cache, telemetry_tpuc_addr_cmp, sizeof(telemetry_peer_udp_cache)))
 		Log(LOG_WARNING, "WARN ( %s/%s ): tsearch() unable to insert in UDP peers cache.\n", config.name, t_data->log_str);

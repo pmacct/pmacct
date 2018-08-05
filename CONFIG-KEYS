@@ -2771,8 +2771,9 @@ DESC:           Sets the maximum number of exporters the Streaming Telemetry dae
 		Upon reaching of such limit, no more exporters can send data to the daemon.
 DEFAULT:        100
 
-KEY:		telemetry_daemon_udp_timeout [GLOBAL]
-DESC:		Sets the timeout time, in seconds, to determine when a UDP session is to be expired.
+KEY:		telemetry_daemon_peer_timeout [GLOBAL]
+DESC:		Sets the timeout time, in seconds, to determine when a Streaming Telemetry session is
+		to be expired. Applies to UDP sessions.
 DEFAULT:	300
 
 KEY:		telemetry_daemon_allow_file [GLOBAL, MAP]
