@@ -69,7 +69,7 @@ void telemetry_daemon(void *t_data_void)
 
   int slen, clen, ret, rc, peers_idx, allowed, yes=1, no=0;
   int peers_idx_rr = 0, max_peers_idx = 0, peers_num = 0;
-  int decoder = 0, data_decoder = 0, recv_flags = 0, pipe_fd = 0;
+  int decoder = 0, data_decoder = 0, recv_flags = 0;
   u_int16_t port = 0;
   char *srv_proto = NULL;
   time_t last_peers_timeout_check;
@@ -214,6 +214,11 @@ void telemetry_daemon(void *t_data_void)
     else if (!strcmp(config.telemetry_decoder, "cisco_gpb_kv")) decoder = TELEMETRY_DECODER_CISCO_GPB_KV;
     else {
       Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_decoder set to unknown value. Terminating.\n", config.name, t_data->log_str);
+      exit_all(1);
+    }
+
+    if (config.telemetry_zmq_address && decoder != TELEMETRY_DECODER_JSON) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): ZeroMQ collection supports only 'json' decoder (telemetry_daemon_decoder). Terminating.\n", config.name, t_data->log_str);
       exit_all(1);
     }
   }
@@ -400,7 +405,7 @@ void telemetry_daemon(void *t_data_void)
     Log(LOG_INFO, "INFO ( %s/%s ): waiting for telemetry data on %s:%u/%s\n", config.name, t_data->log_str, srv_string, srv_port, srv_proto);
   }
   else {
-    telemetry_init_zmq_host(&telemetry_zmq_host, &pipe_fd);
+    telemetry_init_zmq_host(&telemetry_zmq_host, &config.telemetry_sock);
     Log(LOG_INFO, "INFO ( %s/%s ): reading telemetry data from ZeroMQ %s:%u\n", config.name, t_data->log_str,
         p_zmq_get_address(&telemetry_zmq_host), p_zmq_get_topic(&telemetry_zmq_host));
   }
@@ -448,7 +453,6 @@ void telemetry_daemon(void *t_data_void)
     if (config.telemetry_dump_kafka_topic) telemetry_dump_init_kafka_host();
   }
 
-  // XXX: expose ZeroMQ file descriptor for polling later  
   select_fd = bkp_select_fd = (config.telemetry_sock + 1);
   recalc_fds = FALSE;
 
@@ -462,8 +466,8 @@ void telemetry_daemon(void *t_data_void)
       max_peers_idx = -1; /* .. since valid indexes include 0 */
 
       for (peers_idx = 0, peers_num = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
-        if (select_fd < telemetry_peers[peers_idx].fd) select_fd = telemetry_peers[peers_idx].fd;
-        if (telemetry_peers[peers_idx].fd) {
+	if (select_fd < telemetry_peers[peers_idx].fd) select_fd = telemetry_peers[peers_idx].fd;
+	if (telemetry_peers[peers_idx].fd) {
 	  max_peers_idx = peers_idx;
 	  peers_num++;
 	}
@@ -477,6 +481,7 @@ void telemetry_daemon(void *t_data_void)
     else select_fd = bkp_select_fd;
 
     memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
+
     if (telemetry_misc_db->dump_backend_methods) {
       int delta;
 
@@ -487,13 +492,19 @@ void telemetry_daemon(void *t_data_void)
     }
     else drt_ptr = NULL;
 
-    select_num = select(select_fd, &read_descs, NULL, NULL, drt_ptr);
-    if (select_num < 0) goto select_again;
+    if (!config.telemetry_zmq_address) {
+      select_num = select(select_fd, &read_descs, NULL, NULL, drt_ptr);
+      if (select_num < 0) goto select_again;
+    }
+    else {
+      select_num = p_zmq_topic_recv_poll(&telemetry_zmq_host, (drt_ptr->tv_sec * 1000));
+      if (select_num < 0) goto select_again;
+    }
 
     t_data->now = time(NULL);
 
-    /* XXX: UDP case: timeout handling (to be tested) */
-    if (config.telemetry_port_udp /* XXX: || config.telemetry_zmq_address */) {
+    /* XXX: UDP and ZeroMQ cases: timeout handling (to be tested) */
+    if (config.telemetry_port_udp || config.telemetry_zmq_address) {
       if (t_data->now > (last_peers_timeout_check + TELEMETRY_PEER_TIMEOUT_INTERVAL)) {
 	for (peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
 	  telemetry_peer_timeout *peer_timeout;
@@ -600,9 +611,9 @@ void telemetry_daemon(void *t_data_void)
     }
 
     /*
-       If select_num == 0 then we got out of select() due to a timeout rather
-       than because we had a message from a peer to handle. By now we did all
-       routine checks and can happily return to select() again.
+       If select_num == 0 then we got out of polling due to a timeout
+       rather than because we had a message from a peer to handle. By
+       now we did all routine checks and can return to polling again.
     */
     if (!select_num) goto select_again;
 
@@ -619,6 +630,9 @@ void telemetry_daemon(void *t_data_void)
 	if (ret <= 0) goto select_again;
 	else fd = config.telemetry_sock;
       }
+      else if (config.telemetry_zmq_address) {
+	// XXX: ZeroMQ: read, set fd and arrange client structure
+      }
 
 #if defined ENABLE_IPV6
       ipv4_mapped_to_ipv4(&client);
@@ -633,8 +647,8 @@ void telemetry_daemon(void *t_data_void)
         goto read_data;
       }
 
-      /* XXX: UDP case may be optimized further */
-      if (config.telemetry_port_udp) {
+      /* XXX: UDP and ZeroMQ cases may be optimized further */
+      if (config.telemetry_port_udp || config.telemetry_zmq_address) {
 	telemetry_peer_udp_cache *tpuc_ret;
 	u_int16_t client_port;
 
@@ -664,9 +678,9 @@ void telemetry_daemon(void *t_data_void)
 	  }
 
 	  if (peer) {
-	    recalc_fds = TRUE;
+	    recalc_fds = TRUE; // XXX: do we need this for UDP and ZeroMQ cases?
 
-	    if (config.telemetry_port_udp) {
+	    if (config.telemetry_port_udp || config.telemetry_zmq_address) {
 	      tpuc.index = peers_idx;
 	      telemetry_peers_timeout[peers_idx].last_msg = t_data->now;
 
