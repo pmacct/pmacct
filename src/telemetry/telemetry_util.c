@@ -78,10 +78,10 @@ void telemetry_peer_close(telemetry_peer *peer, int type)
   }
 
   if (config.telemetry_port_udp) {
-    telemetry_peer_udp_cache tpuc;
+    telemetry_peer_cache tpc;
 
-    memcpy(&tpuc.addr, &peer->addr, sizeof(struct host_addr));
-    pm_tdelete(&tpuc, &telemetry_peers_udp_cache, telemetry_tpuc_addr_cmp);
+    memcpy(&tpc.addr, &peer->addr, sizeof(struct host_addr));
+    pm_tdelete(&tpc, &telemetry_peers_cache, telemetry_tpc_addr_cmp);
 
     peer->fd = ERR; /* dirty trick to prevent close() a valid fd in bgp_peer_close() */
   }
@@ -122,9 +122,9 @@ int telemetry_is_zjson(int decoder)
   else return FALSE;
 }
 
-int telemetry_tpuc_addr_cmp(const void *a, const void *b)
+int telemetry_tpc_addr_cmp(const void *a, const void *b)
 {
-  return memcmp(&((telemetry_peer_udp_cache *)a)->addr, &((telemetry_peer_udp_cache *)b)->addr, sizeof(struct host_addr));
+  return memcmp(&((telemetry_peer_cache *)a)->addr, &((telemetry_peer_cache *)b)->addr, sizeof(struct host_addr));
 }
 
 void telemetry_link_misc_structs(telemetry_misc_structs *tms)

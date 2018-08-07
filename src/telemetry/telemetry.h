@@ -71,7 +71,7 @@ struct _telemetry_peer_z {
 #endif
 };
 
-struct _telemetry_peer_udp_cache {
+struct _telemetry_peer_cache {
   struct host_addr addr;
   int index;
 };
@@ -103,7 +103,7 @@ typedef struct bgp_misc_structs telemetry_misc_structs;
 typedef struct _telemetry_dump_se_ll telemetry_dump_se_ll;
 typedef struct _telemetry_dump_se_ll_elem telemetry_dump_se_ll_elem;
 typedef struct _telemetry_peer_z telemetry_peer_z;
-typedef struct _telemetry_peer_udp_cache telemetry_peer_udp_cache;
+typedef struct _telemetry_peer_cache telemetry_peer_cache;
 typedef struct _telemetry_peer_timeout telemetry_peer_timeout;
 
 /* more includes */
@@ -133,6 +133,6 @@ EXT telemetry_misc_structs *telemetry_misc_db;
 
 EXT telemetry_peer *telemetry_peers;
 EXT telemetry_peer_z *telemetry_peers_z;
-EXT void *telemetry_peers_udp_cache;
+EXT void *telemetry_peers_cache;
 EXT telemetry_peer_timeout *telemetry_peers_timeout; 
 #undef EXT

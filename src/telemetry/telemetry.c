@@ -65,7 +65,7 @@ void telemetry_wrapper()
 void telemetry_daemon(void *t_data_void)
 {
   struct telemetry_data *t_data = t_data_void;
-  telemetry_peer_udp_cache tpuc;
+  telemetry_peer_cache tpc;
 
   int slen, clen, ret, rc, peers_idx, allowed, yes=1, no=0;
   int peers_idx_rr = 0, max_peers_idx = 0, peers_num = 0;
@@ -105,7 +105,7 @@ void telemetry_daemon(void *t_data_void)
   memset(&client, 0, sizeof(client));
   memset(&allow, 0, sizeof(struct hosts_table));
   clen = sizeof(client);
-  telemetry_peers_udp_cache = NULL;
+  telemetry_peers_cache = NULL;
   last_peers_timeout_check = FALSE;
 
   telemetry_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_TELEMETRY];
@@ -404,11 +404,13 @@ void telemetry_daemon(void *t_data_void)
     addr_to_str(srv_string, &srv_addr);
     Log(LOG_INFO, "INFO ( %s/%s ): waiting for telemetry data on %s:%u/%s\n", config.name, t_data->log_str, srv_string, srv_port, srv_proto);
   }
+#if defined WITH_ZMQ
   else {
     telemetry_init_zmq_host(&telemetry_zmq_host, &config.telemetry_sock);
     Log(LOG_INFO, "INFO ( %s/%s ): reading telemetry data from ZeroMQ %s:%u\n", config.name, t_data->log_str,
         p_zmq_get_address(&telemetry_zmq_host), p_zmq_get_topic(&telemetry_zmq_host));
   }
+#endif
 
   /* Preparing ACL, if any */
   if (config.telemetry_allow_file) load_allow_file(config.telemetry_allow_file, &allow);
@@ -496,10 +498,12 @@ void telemetry_daemon(void *t_data_void)
       select_num = select(select_fd, &read_descs, NULL, NULL, drt_ptr);
       if (select_num < 0) goto select_again;
     }
+#if defined WITH_ZMQ
     else {
       select_num = p_zmq_topic_recv_poll(&telemetry_zmq_host, (drt_ptr->tv_sec * 1000));
       if (select_num < 0) goto select_again;
     }
+#endif
 
     t_data->now = time(NULL);
 
@@ -649,15 +653,15 @@ void telemetry_daemon(void *t_data_void)
 
       /* XXX: UDP and ZeroMQ cases may be optimized further */
       if (config.telemetry_port_udp || config.telemetry_zmq_address) {
-	telemetry_peer_udp_cache *tpuc_ret;
+	telemetry_peer_cache *tpc_ret;
 	u_int16_t client_port;
 
-        sa_to_addr((struct sockaddr *)&client, &tpuc.addr, &client_port);
-	tpuc_ret = pm_tfind(&tpuc, &telemetry_peers_udp_cache, telemetry_tpuc_addr_cmp);
+        sa_to_addr((struct sockaddr *)&client, &tpc.addr, &client_port);
+	tpc_ret = pm_tfind(&tpc, &telemetry_peers_cache, telemetry_tpc_addr_cmp);
 
-	if (tpuc_ret) {
-	  peer = &telemetry_peers[tpuc_ret->index];
-	  telemetry_peers_timeout[tpuc_ret->index].last_msg = t_data->now;
+	if (tpc_ret) {
+	  peer = &telemetry_peers[tpc_ret->index];
+	  telemetry_peers_timeout[tpc_ret->index].last_msg = t_data->now;
 
 	  goto read_data;
 	}
@@ -681,11 +685,11 @@ void telemetry_daemon(void *t_data_void)
 	    recalc_fds = TRUE; // XXX: do we need this for UDP and ZeroMQ cases?
 
 	    if (config.telemetry_port_udp || config.telemetry_zmq_address) {
-	      tpuc.index = peers_idx;
+	      tpc.index = peers_idx;
 	      telemetry_peers_timeout[peers_idx].last_msg = t_data->now;
 
-	      if (!pm_tsearch(&tpuc, &telemetry_peers_udp_cache, telemetry_tpuc_addr_cmp, sizeof(telemetry_peer_udp_cache)))
-		Log(LOG_WARNING, "WARN ( %s/%s ): tsearch() unable to insert in UDP peers cache.\n", config.name, t_data->log_str);
+	      if (!pm_tsearch(&tpc, &telemetry_peers_cache, telemetry_tpc_addr_cmp, sizeof(telemetry_peer_cache)))
+		Log(LOG_WARNING, "WARN ( %s/%s ): tsearch() unable to insert in peers cache.\n", config.name, t_data->log_str);
 	    }
 	  }
 
