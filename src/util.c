@@ -1971,8 +1971,8 @@ void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int 
   if (buflen < VERYSHORTBUFLEN) return; 
 
   if (since_epoch) {
-    if (usec) snprintf(buf, buflen, "%u.%u", tv->tv_sec, tv->tv_usec);
-    else snprintf(buf, buflen, "%u", tv->tv_sec);
+    if (usec) snprintf(buf, buflen, "%ld.%.6ld", tv->tv_sec, tv->tv_usec);
+    else snprintf(buf, buflen, "%ld", tv->tv_sec);
   }
   else {
     time1 = tv->tv_sec;
@@ -1982,7 +1982,7 @@ void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int 
     if (!rfc3339) slen = strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", time2);
     else slen = strftime(buf, buflen, "%Y-%m-%dT%H:%M:%S", time2);
 
-    if (usec) snprintf((buf + slen), (buflen - slen), ".%u", tv->tv_usec);
+    if (usec) snprintf((buf + slen), (buflen - slen), ".%.6ld", tv->tv_usec);
     if (rfc3339) append_rfc3339_timezone(buf, buflen, time2);
   }
 }
