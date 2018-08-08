@@ -119,9 +119,8 @@ void telemetry_daemon(void *t_data_void)
     exit_all(1);
   }
 
-  if ((config.telemetry_zmq_address && !config.telemetry_zmq_topic) ||
-      (!config.telemetry_zmq_address && config.telemetry_zmq_topic)) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_zmq_address and telemetry_daemon_zmq_topic are both required. Terminating.\n", config.name, t_data->log_str);
+  if (!config.telemetry_zmq_address && config.telemetry_zmq_topic) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_zmq_topic requires telemetry_daemon_zmq_address to be specified. Terminating.\n", config.name, t_data->log_str);
     exit_all(1);
   }
 #else
@@ -390,11 +389,6 @@ void telemetry_daemon(void *t_data_void)
     }
   }
 
-  /* Preparing for syncronous I/O multiplexing */
-  select_fd = 0;
-  FD_ZERO(&bkp_read_descs);
-  FD_SET(config.telemetry_sock, &bkp_read_descs);
-
   if (!config.telemetry_zmq_address) {
     char srv_string[INET6_ADDRSTRLEN];
     struct host_addr srv_addr;
@@ -411,6 +405,11 @@ void telemetry_daemon(void *t_data_void)
         p_zmq_get_address(&telemetry_zmq_host), p_zmq_get_topic(&telemetry_zmq_host));
   }
 #endif
+
+  /* Preparing for syncronous I/O multiplexing */
+  select_fd = 0;
+  FD_ZERO(&bkp_read_descs);
+  FD_SET(config.telemetry_sock, &bkp_read_descs);
 
   /* Preparing ACL, if any */
   if (config.telemetry_allow_file) load_allow_file(config.telemetry_allow_file, &allow);
@@ -500,7 +499,7 @@ void telemetry_daemon(void *t_data_void)
     }
 #if defined WITH_ZMQ
     else {
-      select_num = p_zmq_topic_recv_poll(&telemetry_zmq_host, (drt_ptr->tv_sec * 1000));
+      select_num = p_zmq_topic_recv_poll(&telemetry_zmq_host, drt_ptr ? (drt_ptr->tv_sec * 1000) : 1000);
       if (select_num < 0) goto select_again;
     }
 #endif
