@@ -283,6 +283,8 @@ void p_zmq_sub_setup(struct p_zmq_host *zmq_host)
 {
   int ret;
 
+  if (!zmq_host) return;
+
   if (!zmq_host->ctx) zmq_host->ctx = zmq_ctx_new();
 
   zmq_host->sock.obj = zmq_socket(zmq_host->ctx, ZMQ_SUB);
@@ -322,12 +324,16 @@ void p_zmq_sub_setup(struct p_zmq_host *zmq_host)
     exit_plugin(1);
   }
 
-  ret = zmq_setsockopt(zmq_host->sock.obj, ZMQ_SUBSCRIBE, &zmq_host->topic, sizeof(zmq_host->topic));
-  if (ret == ERR) {
-    Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() SUBSCRIBE failed for topic %u: %s\nExiting.\n",
-	zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));
-    exit_plugin(1);
+  if (zmq_host->topic) {
+    ret = zmq_setsockopt(zmq_host->sock.obj, ZMQ_SUBSCRIBE, &zmq_host->topic, sizeof(zmq_host->topic));
+    if (ret == ERR) {
+      Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() SUBSCRIBE failed for topic %u: %s\nExiting.\n",
+	  zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));
+      exit_plugin(1);
+    }
   }
+  /* subscribe to all topics */
+  else zmq_setsockopt(zmq_host->sock.obj, ZMQ_SUBSCRIBE, NULL, 0);
 }
 
 int p_zmq_topic_send(struct p_zmq_host *zmq_host, void *buf, u_int64_t len)
