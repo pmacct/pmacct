@@ -3794,8 +3794,8 @@ void pmc_compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, 
   struct tm *time2;
 
   if (tstamp_since_epoch) {
-    if (usec) snprintf(buf, buflen, "%u.%u", tv->tv_sec, tv->tv_usec);
-    else snprintf(buf, buflen, "%u", tv->tv_sec);
+    if (usec) snprintf(buf, buflen, "%ld.%.6ld", tv->tv_sec, tv->tv_usec);
+    else snprintf(buf, buflen, "%ld", tv->tv_sec);
   }
   else {
     time1 = tv->tv_sec;
@@ -3804,7 +3804,7 @@ void pmc_compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, 
 
     slen = strftime(buf, buflen, "%Y-%m-%dT%H:%M:%S", time2);
 
-    if (usec) snprintf((buf + slen), (buflen - slen), ".%u", tv->tv_usec);
+    if (usec) snprintf((buf + slen), (buflen - slen), ".%.6ld", tv->tv_usec);
     pmc_append_rfc3339_timezone(buf, buflen, time2);
   }
 }
