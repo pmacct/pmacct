@@ -32,6 +32,9 @@
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
 #endif
+#if defined WITH_ZMQ
+#include "zmq_common.h"
+#endif
 
 /* Functions */
 void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data, int data_decoder)
@@ -285,3 +288,68 @@ int telemetry_basic_validate_json(telemetry_peer *peer)
   else
     return FALSE;
 }
+
+#if defined (WITH_ZMQ) && defined (WITH_JANSSON)
+int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf, int buflen, struct sockaddr *addr, socklen_t *addr_len)
+{
+  json_t *json_obj, *telemetry_node_json, *telemetry_node_port_json;
+  json_error_t json_err;
+  struct p_zmq_host *zmq_host = zh;
+  struct host_addr telemetry_node;
+  u_int16_t telemetry_node_port;
+  int bytes, ret = SUCCESS;
+
+  if (!zmq_host || !buf || !buflen || !addr || !addr_len) return ERR;
+
+  bytes = p_zmq_topic_recv(zmq_host, buf, buflen);
+  if (bytes > 0) {
+    buf[bytes] = '\0';
+    json_obj = json_loads(buf, 0, &json_err);
+  }
+
+  if (json_obj) {
+    if (!json_is_object(json_obj)) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_zmq_peer(): json_is_object() failed.\n", config.name, t_data->log_str);
+      ret = ERR;
+      goto exit_lane;
+    }
+    else {
+      telemetry_node_json = json_object_get(json_obj, "telemetry_node");
+      if (telemetry_node_json == NULL) {
+	Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_zmq_peer(): no 'telemetry_node' element.\n", config.name, t_data->log_str);
+	ret = ERR;
+	goto exit_lane;
+      }
+      else {
+	const char *telemetry_node_str;
+
+	telemetry_node_str = json_string_value(telemetry_node_json);
+	str_to_addr(telemetry_node_str, &telemetry_node);
+	json_decref(telemetry_node_json);
+      }
+
+      telemetry_node_port_json = json_object_get(json_obj, "telemetry_node_port");
+      if (telemetry_node_port_json == NULL) {
+	Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_zmq_peer(): no 'telemetry_node_port' element.\n", config.name, t_data->log_str);
+	ret = ERR;
+	goto exit_lane;
+      }
+      else {
+	telemetry_node_port = json_integer_value(telemetry_node_port_json);
+	json_decref(telemetry_node_port_json);
+      }
+
+      (*addr_len) = addr_to_sa(addr, &telemetry_node, telemetry_node_port);
+    }
+
+    exit_lane:
+    json_decref(json_obj);
+  }
+  else {
+    Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_zmq_peer(): invalid telemetry node JSON received: %s.\n", config.name, t_data->log_str, json_err.text);
+    ret = ERR;
+  }
+
+  return ret;
+}
+#endif

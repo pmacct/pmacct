@@ -59,6 +59,9 @@ typedef struct bgp_peer_stats telemetry_stats;
 struct telemetry_data {
   int is_thread;
   char *log_str;
+#if defined WITH_ZMQ
+  void *zmq_host;
+#endif
 
   telemetry_stats global_stats;
   time_t now;

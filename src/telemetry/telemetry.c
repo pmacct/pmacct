@@ -93,6 +93,11 @@ void telemetry_daemon(void *t_data_void)
   time_t dump_refresh_deadline;
   struct timeval dump_refresh_timeout, *drt_ptr;
 
+#if defined WITH_ZMQ
+  /* ZeroMQ stuff */
+  char zmq_peer_msg[LARGEBUFLEN];
+#endif
+
   if (!t_data) {
     Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon(): missing telemetry data. Terminating.\n", config.name, t_data->log_str);
     exit_all(1);
@@ -123,6 +128,8 @@ void telemetry_daemon(void *t_data_void)
     Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_zmq_topic requires telemetry_daemon_zmq_address to be specified. Terminating.\n", config.name, t_data->log_str);
     exit_all(1);
   }
+
+  memset(zmq_peer_msg, 0, sizeof(zmq_peer_msg));
 #else
   if (config.telemetry_zmq_address || config.telemetry_zmq_topic) {
     Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_zmq_address and telemetry_daemon_zmq_topic require --enable-zmq. Terminating.\n", config.name, t_data->log_str);
@@ -633,9 +640,13 @@ void telemetry_daemon(void *t_data_void)
 	if (ret <= 0) goto select_again;
 	else fd = config.telemetry_sock;
       }
+#if defined WITH_ZMQ
       else if (config.telemetry_zmq_address) {
-	// XXX: ZeroMQ: read, set fd and arrange client structure
+	ret = telemetry_decode_zmq_peer(t_data, &telemetry_zmq_host, zmq_peer_msg, sizeof(zmq_peer_msg), (struct sockaddr *) &client, &clen);
+	if (ret < 0) goto select_again; 
+	else fd = config.telemetry_sock;
       }
+#endif
 
 #if defined ENABLE_IPV6
       ipv4_mapped_to_ipv4(&client);
