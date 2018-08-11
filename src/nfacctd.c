@@ -1102,7 +1102,7 @@ int main(int argc,char **argv, char **envp)
 #endif
 #ifdef WITH_ZMQ
     else if (config.nfacctd_zmq_address) {
-      ret = p_zmq_topic_recv_poll(&nfacctd_zmq_host, 1000);
+      ret = p_zmq_recv_poll(&nfacctd_zmq_host, 1000);
 
       switch (ret) {
       case TRUE: /* got data */

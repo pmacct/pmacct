@@ -91,7 +91,8 @@ EXT int p_zmq_get_fd(struct p_zmq_host *);
 
 EXT void p_zmq_init_pub(struct p_zmq_host *, char *, u_int8_t);
 EXT void p_zmq_init_sub(struct p_zmq_host *);
-EXT int p_zmq_topic_recv_poll(struct p_zmq_host *, int);
+EXT void p_zmq_init_pull(struct p_zmq_host *);
+EXT int p_zmq_recv_poll(struct p_zmq_host *, int);
 EXT int p_zmq_topic_recv(struct p_zmq_host *, void *, u_int64_t);
 EXT int p_zmq_topic_send(struct p_zmq_host *, void *, u_int64_t);
 EXT void p_zmq_close(struct p_zmq_host *);
@@ -99,9 +100,11 @@ EXT void p_zmq_close(struct p_zmq_host *);
 EXT void p_zmq_plugin_pipe_init_core(struct p_zmq_host *, u_int8_t);
 EXT void p_zmq_plugin_pipe_init_plugin(struct p_zmq_host *);
 EXT int p_zmq_plugin_pipe_set_profile(struct configuration *, char *);
+EXT void p_zmq_pull_setup(struct p_zmq_host *);
 EXT void p_zmq_sub_setup(struct p_zmq_host *);
 EXT void p_zmq_pub_setup(struct p_zmq_host *);
 EXT void p_zmq_zap_setup(struct p_zmq_host *);
+EXT void p_zmq_recv_setup(struct p_zmq_host *, int);
 
 EXT void p_zmq_router_setup(struct p_zmq_host *, char *, int);
 EXT void p_zmq_dealer_inproc_setup(struct p_zmq_host *, char *);

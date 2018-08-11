@@ -149,6 +149,11 @@ void p_zmq_init_sub(struct p_zmq_host *zmq_host)
   p_zmq_plugin_pipe_init_plugin(zmq_host);
 }
 
+void p_zmq_init_pull(struct p_zmq_host *zmq_host)
+{
+  p_zmq_plugin_pipe_init_plugin(zmq_host);
+}
+
 void p_zmq_plugin_pipe_init_plugin(struct p_zmq_host *zmq_host)
 {
   if (zmq_host) {
@@ -281,13 +286,23 @@ void p_zmq_pub_setup(struct p_zmq_host *zmq_host)
 
 void p_zmq_sub_setup(struct p_zmq_host *zmq_host)
 {
+  p_zmq_recv_setup(zmq_host, ZMQ_SUB);
+}
+
+void p_zmq_pull_setup(struct p_zmq_host *zmq_host)
+{
+  p_zmq_recv_setup(zmq_host, ZMQ_PULL);
+}
+
+void p_zmq_recv_setup(struct p_zmq_host *zmq_host, int type)
+{
   int ret;
 
   if (!zmq_host) return;
 
   if (!zmq_host->ctx) zmq_host->ctx = zmq_ctx_new();
 
-  zmq_host->sock.obj = zmq_socket(zmq_host->ctx, ZMQ_SUB);
+  zmq_host->sock.obj = zmq_socket(zmq_host->ctx, type);
   if (!zmq_host->sock.obj) {
     Log(LOG_ERR, "ERROR ( %s ): zmq_socket() failed for topic %u: %s\nExiting.\n",
         zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));
@@ -324,16 +339,18 @@ void p_zmq_sub_setup(struct p_zmq_host *zmq_host)
     exit_plugin(1);
   }
 
-  if (zmq_host->topic) {
-    ret = zmq_setsockopt(zmq_host->sock.obj, ZMQ_SUBSCRIBE, &zmq_host->topic, sizeof(zmq_host->topic));
-    if (ret == ERR) {
-      Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() SUBSCRIBE failed for topic %u: %s\nExiting.\n",
-	  zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));
-      exit_plugin(1);
+  if (type == ZMQ_SUB) {
+    if (zmq_host->topic) {
+      ret = zmq_setsockopt(zmq_host->sock.obj, ZMQ_SUBSCRIBE, &zmq_host->topic, sizeof(zmq_host->topic));
+      if (ret == ERR) {
+	Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() SUBSCRIBE failed for topic %u: %s\nExiting.\n",
+	    zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));
+	exit_plugin(1);
+      }
     }
+    /* subscribe to all topics */
+    else zmq_setsockopt(zmq_host->sock.obj, ZMQ_SUBSCRIBE, NULL, 0);
   }
-  /* subscribe to all topics */
-  else zmq_setsockopt(zmq_host->sock.obj, ZMQ_SUBSCRIBE, NULL, 0);
 }
 
 int p_zmq_topic_send(struct p_zmq_host *zmq_host, void *buf, u_int64_t len)
@@ -357,7 +374,7 @@ int p_zmq_topic_send(struct p_zmq_host *zmq_host, void *buf, u_int64_t len)
   return ret;
 }
 
-int p_zmq_topic_recv_poll(struct p_zmq_host *zmq_host, int timeout)
+int p_zmq_recv_poll(struct p_zmq_host *zmq_host, int timeout)
 {
   zmq_pollitem_t item[1];
 

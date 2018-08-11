@@ -506,7 +506,7 @@ void telemetry_daemon(void *t_data_void)
     }
 #if defined WITH_ZMQ
     else {
-      select_num = p_zmq_topic_recv_poll(&telemetry_zmq_host, drt_ptr ? (drt_ptr->tv_sec * 1000) : 1000);
+      select_num = p_zmq_recv_poll(&telemetry_zmq_host, drt_ptr ? (drt_ptr->tv_sec * 1000) : 1000);
       if (select_num < 0) goto select_again;
     }
 #endif
