@@ -67,6 +67,22 @@ void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data,
     telemetry_log_seq_increment(&tms->log_seq);
 }
 
+#if defined WITH_ZMQ
+int telemetry_recv_zmq_generic(telemetry_peer *peer, u_int32_t len)
+{
+  int ret = 0;
+
+  ret = p_zmq_recv_bin(&telemetry_zmq_host.sock, peer->buf.base, peer->buf.len);
+
+  if (ret > 0) {
+    peer->stats.packet_bytes += ret;
+    peer->msglen = ret;
+  }
+
+  return ret;
+}
+#endif
+
 int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
 {
   int ret = 0;
@@ -120,7 +136,11 @@ int telemetry_recv_json(telemetry_peer *peer, u_int32_t len, int *flags)
   if (!flags) return ret;
 
   (*flags) = FALSE;
-  ret = telemetry_recv_generic(peer, len);
+
+  if (!config.telemetry_zmq_address) ret = telemetry_recv_generic(peer, len);
+#if defined WITH_ZMQ
+  else ret = telemetry_recv_zmq_generic(peer, len);
+#endif
 
   telemetry_basic_process_json(peer);
 
@@ -301,7 +321,7 @@ int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf
 
   if (!zmq_host || !buf || !buflen || !addr || !addr_len) return ERR;
 
-  bytes = p_zmq_topic_recv(zmq_host, buf, buflen);
+  bytes = p_zmq_recv_bin(&zmq_host->sock, buf, buflen);
   if (bytes > 0) {
     buf[bytes] = '\0';
     json_obj = json_loads(buf, 0, &json_err);

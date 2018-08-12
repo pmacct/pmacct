@@ -43,7 +43,10 @@ EXT int telemetry_recv_cisco_gpb_kv(telemetry_peer *, int *);
 EXT void telemetry_basic_process_json(telemetry_peer *);
 EXT int telemetry_basic_validate_json(telemetry_peer *);
 
-#if defined (WITH_ZMQ) && defined (WITH_JANSSON)
+#if defined (WITH_ZMQ)
+EXT int telemetry_recv_zmq_generic(telemetry_peer *, u_int32_t);
+#if defined (WITH_JANSSON)
 EXT int telemetry_decode_zmq_peer(struct telemetry_data *, void *, char *, int, struct sockaddr *, socklen_t *);
+#endif
 #endif
 #undef EXT
