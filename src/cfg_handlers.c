@@ -6897,23 +6897,6 @@ int cfg_key_telemetry_zmq_address(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_telemetry_zmq_topic(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
-
-  value = atoi(value_ptr);
-  if ((value <= 0) || (value > 255)) {
-    Log(LOG_ERR, "WARN: [%s] 'telemetry_daemon_zmq_address' has to be in the range 1-255.\n", filename);
-    return ERR;
-  }
-
-  for (; list; list = list->next, changes++) list->cfg.telemetry_zmq_topic = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_zmq_topic'. Globalized.\n", filename);
-
-  return changes;
-}
-
 int cfg_key_telemetry_decoder(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

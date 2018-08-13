@@ -193,7 +193,6 @@ EXT int cfg_key_telemetry_port_tcp(char *, char *, char *);
 EXT int cfg_key_telemetry_port_udp(char *, char *, char *);
 EXT int cfg_key_telemetry_ip(char *, char *, char *);
 EXT int cfg_key_telemetry_zmq_address(char *, char *, char *);
-EXT int cfg_key_telemetry_zmq_topic(char *, char *, char *);
 EXT int cfg_key_telemetry_decoder(char *, char *, char *);
 EXT int cfg_key_telemetry_max_peers(char *, char *, char *);
 EXT int cfg_key_telemetry_peer_timeout(char *, char *, char *);

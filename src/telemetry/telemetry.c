@@ -124,15 +124,10 @@ void telemetry_daemon(void *t_data_void)
     exit_all(1);
   }
 
-  if (!config.telemetry_zmq_address && config.telemetry_zmq_topic) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_zmq_topic requires telemetry_daemon_zmq_address to be specified. Terminating.\n", config.name, t_data->log_str);
-    exit_all(1);
-  }
-
   memset(zmq_peer_msg, 0, sizeof(zmq_peer_msg));
 #else
-  if (config.telemetry_zmq_address || config.telemetry_zmq_topic) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_zmq_address and telemetry_daemon_zmq_topic require --enable-zmq. Terminating.\n", config.name, t_data->log_str);
+  if (config.telemetry_zmq_address) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_zmq_address requires --enable-zmq. Terminating.\n", config.name, t_data->log_str);
     exit_all(1);
   }
 #endif
@@ -408,8 +403,7 @@ void telemetry_daemon(void *t_data_void)
 #if defined WITH_ZMQ
   else {
     telemetry_init_zmq_host(&telemetry_zmq_host, &config.telemetry_sock);
-    Log(LOG_INFO, "INFO ( %s/%s ): reading telemetry data from ZeroMQ %s:%u\n", config.name, t_data->log_str,
-        p_zmq_get_address(&telemetry_zmq_host), p_zmq_get_topic(&telemetry_zmq_host));
+    Log(LOG_INFO, "INFO ( %s/%s ): reading telemetry data from ZeroMQ %s\n", config.name, t_data->log_str, p_zmq_get_address(&telemetry_zmq_host));
   }
 #endif
 
