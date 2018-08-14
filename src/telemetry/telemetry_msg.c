@@ -309,7 +309,8 @@ int telemetry_basic_validate_json(telemetry_peer *peer)
     return FALSE;
 }
 
-#if defined (WITH_ZMQ) && defined (WITH_JANSSON)
+#if defined (WITH_ZMQ)
+#if defined (WITH_JANSSON)
 int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf, int buflen, struct sockaddr *addr, socklen_t *addr_len)
 {
   json_t *json_obj, *telemetry_node_json, *telemetry_node_port_json;
@@ -372,4 +373,11 @@ int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf
 
   return ret;
 }
+#else
+int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf, int buflen, struct sockaddr *addr, socklen_t *addr_len)
+{
+  Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_decode_zmq_peer() requires --enable-zmq. Terminating.\n", config.name, t_data->log_str);
+  exit_all(1);
+}
+#endif
 #endif
