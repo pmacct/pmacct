@@ -23,7 +23,6 @@
 #include "../include/llc.h"
 #include "../include/sll.h"
 #include "../include/ieee802_11.h"
-#include "../include/fddi.h"
 
 #if defined ENABLE_IPV6
 #include "../include/ip6.h"
