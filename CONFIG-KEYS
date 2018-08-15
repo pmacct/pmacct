@@ -1616,7 +1616,7 @@ DEFAULT:        none
 
 KEY:            [ nfacctd_zmq_address | sfacctd_zmq_address ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
 DESC:           Defines the ZeroMQ queue address (host and port) to connect to for consuming NetFlow/IPFIX
-		and sFlow from. An example of the example value is "127.0.0.1:50000".
+		and sFlow from. An example of the expected value is "127.0.0.1:50000".
 DEFAULT:        none
 
 KEY:            [ nfacctd_zmq_topic | sfacctd_zmq_topic ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
@@ -2793,6 +2793,11 @@ KEY:		telemetry_daemon_ipprec [GLOBAL]
 DESC:           Marks self-originated Streaming Telemetry messages with the supplied IP precedence value.
 		Applies to TCP sessions only.
 DEFAULT:        0
+
+KEY:		telemetry_daemon_zmq_address [GLOBAL]
+DESC:           Defines the ZeroMQ queue address (host and port) to connect to for consuming Streaming
+		Telemetry data from. An example of the expected value is "127.0.0.1:50000".
+DEFAULT:	none
 
 KEY:		classifier_num_roots [GLOBAL]
 DESC:		Defines the number of buckets of the nDPI memory structure on which to hash flows.
