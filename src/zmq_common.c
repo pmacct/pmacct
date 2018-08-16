@@ -126,6 +126,14 @@ int p_zmq_get_fd(struct p_zmq_host *zmq_host)
   return fd;
 }
 
+void p_zmq_init_push(struct p_zmq_host *zmq_host, char *address)
+{
+  if (zmq_host) {
+    memset(zmq_host, 0, sizeof(struct p_zmq_host));
+    p_zmq_set_address(zmq_host, address);
+  }
+}
+
 void p_zmq_init_pub(struct p_zmq_host *zmq_host, char *address, u_int8_t topic)
 {
   if (zmq_host) {

@@ -91,6 +91,7 @@ EXT int p_zmq_get_fd(struct p_zmq_host *);
 
 EXT void p_zmq_init_pub(struct p_zmq_host *, char *, u_int8_t);
 EXT void p_zmq_init_sub(struct p_zmq_host *);
+EXT void p_zmq_init_push(struct p_zmq_host *, char *);
 EXT void p_zmq_init_pull(struct p_zmq_host *);
 EXT int p_zmq_recv_poll(struct p_zmq_host *, int);
 EXT int p_zmq_topic_recv(struct p_zmq_host *, void *, u_int64_t);

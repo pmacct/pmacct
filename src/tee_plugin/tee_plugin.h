@@ -105,7 +105,7 @@ EXT void Tee_init_kafka_host(struct p_kafka_host *, char *, char *, u_int32_t);
 
 #ifdef WITH_ZMQ
 EXT void Tee_zmq_send(struct pkt_msg *, struct tee_receivers_pool *); 
-EXT void Tee_init_zmq_host(struct p_zmq_host *, char *, u_int8_t, u_int32_t);
+EXT void Tee_init_zmq_host(struct p_zmq_host *, char *, u_int32_t);
 #endif
 
 /* global variables */
