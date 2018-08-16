@@ -102,9 +102,11 @@ EXT void p_zmq_plugin_pipe_init_plugin(struct p_zmq_host *);
 EXT int p_zmq_plugin_pipe_set_profile(struct configuration *, char *);
 EXT void p_zmq_pull_setup(struct p_zmq_host *);
 EXT void p_zmq_sub_setup(struct p_zmq_host *);
+EXT void p_zmq_push_setup(struct p_zmq_host *);
 EXT void p_zmq_pub_setup(struct p_zmq_host *);
 EXT void p_zmq_zap_setup(struct p_zmq_host *);
 EXT void p_zmq_recv_setup(struct p_zmq_host *, int);
+EXT void p_zmq_send_setup(struct p_zmq_host *, int);
 
 EXT void p_zmq_router_setup(struct p_zmq_host *, char *, int);
 EXT void p_zmq_dealer_inproc_setup(struct p_zmq_host *, char *);

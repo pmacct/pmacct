@@ -226,8 +226,21 @@ void p_zmq_zap_setup(struct p_zmq_host *zmq_host)
 
 void p_zmq_pub_setup(struct p_zmq_host *zmq_host)
 {
+  p_zmq_recv_setup(zmq_host, ZMQ_PUB);
+}
+
+void p_zmq_push_setup(struct p_zmq_host *zmq_host)
+{
+  p_zmq_recv_setup(zmq_host, ZMQ_PUSH);
+}
+
+void p_zmq_send_setup(struct p_zmq_host *zmq_host, int type)
+{
   int ret, as_server = TRUE, only_one = 1;
   size_t sock_strlen;
+
+  if (!zmq_host) return;
+  if (type != ZMQ_PUB && type != ZMQ_PUSH) return;
 
   if (!zmq_host->ctx) zmq_host->ctx = zmq_ctx_new();
 
@@ -235,7 +248,7 @@ void p_zmq_pub_setup(struct p_zmq_host *zmq_host)
     p_zmq_zap_setup(zmq_host);
   }
 
-  zmq_host->sock.obj = zmq_socket(zmq_host->ctx, ZMQ_PUB);
+  zmq_host->sock.obj = zmq_socket(zmq_host->ctx, type);
   if (!zmq_host->sock.obj) {
     Log(LOG_ERR, "ERROR ( %s ): zmq_socket() failed for topic %u: %s\nExiting.\n",
         zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));
@@ -299,6 +312,7 @@ void p_zmq_recv_setup(struct p_zmq_host *zmq_host, int type)
   int ret;
 
   if (!zmq_host) return;
+  if (type != ZMQ_SUB && type != ZMQ_PULL) return;
 
   if (!zmq_host->ctx) zmq_host->ctx = zmq_ctx_new();
 
