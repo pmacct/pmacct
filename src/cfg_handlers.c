@@ -2973,23 +2973,6 @@ int cfg_key_nfacctd_zmq_address(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_nfacctd_zmq_topic(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
-
-  value = atoi(value_ptr);
-  if ((value <= 0) || (value > 255)) {
-    Log(LOG_ERR, "WARN: [%s] 'nfacctd_zmq_address' has to be in the range 1-255.\n", filename);
-    return ERR;
-  }
-
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_zmq_topic = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'nfacctd_zmq_topic'. Globalized.\n", filename);
-
-  return changes;
-}
-
 int cfg_key_nfacctd_allow_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

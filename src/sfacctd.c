@@ -567,7 +567,7 @@ int main(int argc,char **argv, char **envp)
   if (config.nfacctd_kafka_broker_host || config.nfacctd_kafka_topic) capture_methods++;
 #endif
 #ifdef WITH_ZMQ
-  if (config.nfacctd_zmq_address || config.nfacctd_zmq_topic) capture_methods++;
+  if (config.nfacctd_zmq_address) capture_methods++;
 #endif
 
   if (capture_methods > 1) {
@@ -588,11 +588,6 @@ int main(int argc,char **argv, char **envp)
 #endif
 
 #ifdef WITH_ZMQ
-  if ((config.nfacctd_zmq_address && !config.nfacctd_zmq_topic) || (config.nfacctd_zmq_topic && !config.nfacctd_zmq_address)) {
-    Log(LOG_ERR, "ERROR ( %s/core ): ZeroMQ collection requires both sfacctd_zmq_address and sfacctd_zmq_topic to be specified. Exiting...\n\n", config.name);
-    exit(1);
-  }
-
   if (config.nfacctd_zmq_address && tee_plugins) {
     Log(LOG_ERR, "ERROR ( %s/core ): ZeroMQ collection is mutual exclusive with 'tee' plugins. Exiting...\n\n", config.name);
     exit(1);
@@ -1046,8 +1041,8 @@ int main(int argc,char **argv, char **envp)
 #endif
 #ifdef WITH_ZMQ
   else if (config.nfacctd_zmq_address) {
-    Log(LOG_INFO, "INFO ( %s/core ): reading sFlow data from ZeroMQ %s:%u\n", config.name,
-        p_zmq_get_address(&nfacctd_zmq_host), p_zmq_get_topic(&nfacctd_zmq_host));
+    Log(LOG_INFO, "INFO ( %s/core ): reading sFlow data from ZeroMQ %s\n", config.name,
+        p_zmq_get_address(&nfacctd_zmq_host));
     allowed = TRUE;
   }
 #endif
@@ -1160,7 +1155,7 @@ int main(int argc,char **argv, char **envp)
 
       switch (ret) {
       case TRUE: /* got data */
-	ret = p_zmq_topic_recv(&nfacctd_zmq_host, sflow_packet, SFLOW_MAX_MSG_SIZE);
+	ret = p_zmq_recv_bin(&nfacctd_zmq_host.sock, sflow_packet, SFLOW_MAX_MSG_SIZE);
 	if (ret < 0) continue; /* ZMQ_RECONNECT_IVL */
 	break;
       case FALSE: /* timeout */
@@ -2610,14 +2605,13 @@ void SF_init_zmq_host(void *zh, int *pipe_fd)
   struct p_zmq_host *zmq_host = zh;
   char log_id[SHORTBUFLEN];
 
-  p_zmq_init_sub(zmq_host);
+  p_zmq_init_pull(zmq_host);
 
   snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
   p_zmq_set_log_id(zmq_host, log_id);
 
   p_zmq_set_address(zmq_host, config.nfacctd_zmq_address);
-  p_zmq_set_topic(zmq_host, config.nfacctd_zmq_topic);
-  p_zmq_sub_setup(zmq_host);
+  p_zmq_pull_setup(zmq_host);
   p_zmq_set_retry_timeout(zmq_host, PM_ZMQ_DEFAULT_RETRY);
 
   if (pipe_fd) (*pipe_fd) = p_zmq_get_fd(zmq_host);

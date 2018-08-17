@@ -653,7 +653,6 @@ static const struct _dictionary_line dictionary[] = {
   {"sfacctd_kafka_topic", cfg_key_nfacctd_kafka_topic},
   {"sfacctd_kafka_config_file", cfg_key_nfacctd_kafka_config_file},
   {"sfacctd_zmq_address", cfg_key_nfacctd_zmq_address},
-  {"sfacctd_zmq_topic", cfg_key_nfacctd_zmq_topic},
   {"classifiers", cfg_key_classifiers},
   {"classifier_tentatives", cfg_key_classifier_tentatives},
   {"classifier_table_num", cfg_key_classifier_table_num},

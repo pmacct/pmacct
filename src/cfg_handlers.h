@@ -157,7 +157,6 @@ EXT int cfg_key_nfacctd_kafka_broker_port(char *, char *, char *);
 EXT int cfg_key_nfacctd_kafka_topic(char *, char *, char *);
 EXT int cfg_key_nfacctd_kafka_config_file(char *, char *, char *);
 EXT int cfg_key_nfacctd_zmq_address(char *, char *, char *);
-EXT int cfg_key_nfacctd_zmq_topic(char *, char *, char *);
 EXT int cfg_key_pmacctd_force_frag_handling(char *, char *, char *);
 EXT int cfg_key_pmacctd_frag_buffer_size(char *, char *, char *);
 EXT int cfg_key_pmacctd_flow_buffer_size(char *, char *, char *);
