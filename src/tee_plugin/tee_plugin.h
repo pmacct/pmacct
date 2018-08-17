@@ -67,7 +67,6 @@ struct tee_receivers_pool {
 #endif
 
   char zmq_address[SHORTBUFLEN];	/* Emitting via ZeroMQ: server address */
-  u_int8_t zmq_topic;			/* Emitting via ZeroMQ: topic */
 #ifdef WITH_ZMQ
   struct p_zmq_host zmq_host;		/* Emitting via ZeroMQ: libzmq structs */ 
 #endif

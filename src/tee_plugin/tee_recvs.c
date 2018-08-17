@@ -235,27 +235,6 @@ int tee_recvs_map_zmq_address_handler(char *filename, struct id_entry *e, char *
 
   return FALSE;
 }
-
-int tee_recvs_map_zmq_topic_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
-{
-  struct tee_receivers *table = (struct tee_receivers *) req->key_value_table;
-  int topic;
-
-  if (table && table->pools) {
-    topic = atoi(value);
-
-    if (topic <= UINT8_MAX) table->pools[table->num].zmq_topic = topic;
-    else {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid ZeroMQ topic specified '%s'. Ignoring.\n", config.name, config.type, filename, value);
-    }
-  }
-  else {
-    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Receivers table not allocated.\n", config.name, config.type, filename);
-    return TRUE;
-  }
-
-  return FALSE;
-}
 #endif
 
 void tee_recvs_map_validate(char *filename, int lineno, struct plugin_requests *req)
@@ -328,7 +307,7 @@ void tee_recvs_map_validate(char *filename, int lineno, struct plugin_requests *
 
     /*
        Check: if emitting via ZeroMQ:
-       a) make sure we have an address string and topic,
+       a) make sure we have an address string,
        b) balance-alg is not set, tee_transparent is set to true
     */
 #ifdef WITH_ZMQ
@@ -342,13 +321,6 @@ void tee_recvs_map_validate(char *filename, int lineno, struct plugin_requests *
 
       if (table->pools[table->num].balance.func) {
 	Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] 'balance-alg' is not compatible with emitting via ZeroMQ. Line ignored.\n",
-	    config.name, config.type, filename, lineno);
-	valid = FALSE;
-	goto zero_entry;
-      }
-
-      if (!table->pools[table->num].zmq_topic) {
-	Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] 'zmq_topic' missing. Line ignored.\n",
 	    config.name, config.type, filename, lineno);
 	valid = FALSE;
 	goto zero_entry;
@@ -378,7 +350,6 @@ void tee_recvs_map_validate(char *filename, int lineno, struct plugin_requests *
 #ifdef WITH_ZMQ
       memset(&table->pools[table->num].zmq_host, 0, sizeof(struct p_zmq_host));
       memset(&table->pools[table->num].zmq_address, 0, sizeof(table->pools[table->num].zmq_address));
-      table->pools[table->num].zmq_topic = FALSE;
 #endif
     }
   }

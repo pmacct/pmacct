@@ -31,7 +31,6 @@ const struct _map_dictionary_line tee_recvs_map_dictionary[] = {
 #endif
 #ifdef WITH_ZMQ
   {"zmq_address", tee_recvs_map_zmq_address_handler},
-  {"zmq_topic", tee_recvs_map_zmq_topic_handler},
 #endif
   {"", NULL}
 };
