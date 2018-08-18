@@ -53,7 +53,6 @@ void usage_daemon(char *prog_name)
   printf("  -t  \tListen on the specified TCP port\n");
 #ifdef WITH_ZMQ
   printf("  -Z  \tConnect to the specified ZeroMQ queue address\n");
-  printf("  -z  \tConnect to the specified ZeroMQ queue topic\n");
 #endif
   printf("  -f  \tLoad configuration from the specified file\n");
   printf("  -D  \tDaemonize\n");
@@ -122,11 +121,6 @@ int main(int argc,char **argv, char **envp)
       break;
     case 'Z':
       strlcpy(cfg_cmdline[rows], "telemetry_daemon_zmq_address: ", SRVBUFLEN);
-      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
-      rows++;
-      break;
-    case 'z':
-      strlcpy(cfg_cmdline[rows], "telemetry_daemon_zmq_topic: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
