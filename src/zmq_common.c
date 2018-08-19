@@ -234,12 +234,12 @@ void p_zmq_zap_setup(struct p_zmq_host *zmq_host)
 
 void p_zmq_pub_setup(struct p_zmq_host *zmq_host)
 {
-  p_zmq_recv_setup(zmq_host, ZMQ_PUB);
+  p_zmq_send_setup(zmq_host, ZMQ_PUB);
 }
 
 void p_zmq_push_setup(struct p_zmq_host *zmq_host)
 {
-  p_zmq_recv_setup(zmq_host, ZMQ_PUSH);
+  p_zmq_send_setup(zmq_host, ZMQ_PUSH);
 }
 
 void p_zmq_send_setup(struct p_zmq_host *zmq_host, int type)

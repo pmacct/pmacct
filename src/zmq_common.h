@@ -34,8 +34,7 @@
 #define PLUGIN_PIPE_ZMQ_XLARGE_SIZE	10000000
 
 #define PM_ZMQ_EVENTS_RETRIES		3
-#define PM_ZMQ_DEFAULT_RETRY		60
-
+#define PM_ZMQ_DEFAULT_RETRY		1000 /* 1 sec */
 
 /* structures */
 struct p_zmq_sock {
