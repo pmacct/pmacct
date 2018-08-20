@@ -31,9 +31,6 @@
 !			to specify when a kafka_broker is defined.
 ! 'zmq_address'		SET: Defines the ZeroMQ queue host to emit to. It
 !			expects a string like 'tcp://127.0.0.1:50000'. 
-! 'zmq_topic'		SET: Defines the ZeroMQ queue topic to emit to. It
-!			expects a 8-bit number, ie. 1 to 255. Mandatory to
-!			specify when a zmq_topic is defined.
 !			
 !			
 ! Examples:
