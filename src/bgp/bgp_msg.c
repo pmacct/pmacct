@@ -286,44 +286,44 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 		}
 	      }
 	      else if (cap_type == BGP_CAPABILITY_ADD_PATHS) {
-		char *cap_ptr = optcap_ptr+2;
+		char *cap_ptr = (optcap_ptr + 2);
 		struct capability_add_paths cap_data;
 
-		int cap_set = 0;          /* we only answer to ADD_PATHs sends from peers with receive */
+		int cap_set = FALSE;
 		u_int8_t *cap_newlen_ptr; /* ptr to field of outbound cap_len */
 		int cap_idx;
 		
 		/* check for each AFI.SAFI included if remote can send - only then reply with receive */
-		for (cap_idx = 0; cap_idx<cap_len; cap_idx += sizeof(struct capability_add_paths)) {
-			memcpy(&cap_data, cap_ptr+cap_idx, sizeof(cap_data));
-			if (online) {
-				bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
-				Log(LOG_INFO, "INFO ( %s/%s ): [%s] Capability: ADD-PATHs [%x] AFI [%x] SAFI [%x] SEND_RECEIVE [%x]\n",
-					config.name, bms->log_str, bgp_peer_str, cap_type, ntohs(cap_data.afi), cap_data.safi,
-					cap_data.sndrcv);
-			}
-			if ((cap_data.sndrcv == 2 /* send */) || (cap_data.sndrcv == 3 /* send and receive */)) {
-				peer->cap_add_paths = TRUE; 
-				if (online) {
-					if (!cap_set) {
-						/* we need to "send" BGP_CAPABILITY_ADD_PATHS first */
-						cap_set = 1;
-						memcpy(bgp_open_cap_reply_ptr, optcap_ptr, 2);
-						cap_newlen_ptr = bgp_open_cap_reply_ptr+1;
-						*cap_newlen_ptr = 0;
-						bgp_open_cap_reply_ptr += 2;
-					}
-					cap_data.sndrcv = 1; /* we can receive */
-					*cap_newlen_ptr = *cap_newlen_ptr + sizeof(cap_data);
-					memcpy(bgp_open_cap_reply_ptr, &cap_data, sizeof(cap_data));
-					bgp_open_cap_reply_ptr += sizeof(cap_data);
-				}
-			}
-	      	 }
+		for (cap_idx = 0; cap_idx < cap_len; cap_idx += sizeof(struct capability_add_paths)) {
+		  memcpy(&cap_data, cap_ptr+cap_idx, sizeof(cap_data));
+		  if (online) {
+		    bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+		    Log(LOG_INFO, "INFO ( %s/%s ): [%s] Capability: ADD-PATHs [%x] AFI [%x] SAFI [%x] SEND_RECEIVE [%x]\n",
+		  	config.name, bms->log_str, bgp_peer_str, cap_type, ntohs(cap_data.afi), cap_data.safi,
+			cap_data.sndrcv);
+		  }
+		  if ((cap_data.sndrcv == 2 /* send */) || (cap_data.sndrcv == 3 /* send and receive */)) {
+		    peer->cap_add_paths = TRUE; 
+		    if (online) {
+		      if (!cap_set) {
+			/* we need to send BGP_CAPABILITY_ADD_PATHS first */
+			cap_set = TRUE;
+			memcpy(bgp_open_cap_reply_ptr, optcap_ptr, 2);
+			cap_newlen_ptr = (bgp_open_cap_reply_ptr + 1);
+			(*cap_newlen_ptr) = 0;
+			bgp_open_cap_reply_ptr += 2;
+		      }
+		      cap_data.sndrcv = 1; /* we can receive */
+		      (*cap_newlen_ptr) += sizeof(cap_data);
+		      memcpy(bgp_open_cap_reply_ptr, &cap_data, sizeof(cap_data));
+		      bgp_open_cap_reply_ptr += sizeof(cap_data);
+		    }
+		  }
+	        }
 	      }
 
-	      optcap_ptr += cap_len+2;
-	      optcap_len -= cap_len+2;
+	      optcap_ptr += (cap_len + 2);
+	      optcap_len -= (cap_len + 2);
 	    }
 
 	    /* writing the new capability length */
