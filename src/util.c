@@ -2586,7 +2586,7 @@ int delete_line_from_file(int index, char *path)
   int line_idx;
   char tmpbuf[LARGEBUFLEN];
   char *copy_path;
-  FILE *file = fopen(path, "r");
+  FILE *file = fopen(path, "r+");
   FILE *file_copy;
 
   copy_path = malloc(len);
