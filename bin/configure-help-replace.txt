@@ -29,6 +29,8 @@
   JANSSON_LIBS			linker flags for JANSSON, overriding pkg-config
   AVRO_CFLAGS			C compiler flags for AVRO, overriding pkg-config
   AVRO_LIBS			linker flags for AVRO, overriding pkg-config
+  SERDES_CFLAGS			C compiler flags for SERDES, overriding pkg-config
+  SERDES_LIBS			linker flags for SEREDES, overriding pkg-config
   NFLOG_CFLAGS			C compiler flags for NFLOG, overriding pkg-config
   NFLOG_LIBS			linker flags for NFLOG, overriding pkg-config
   NDPI_CFLAGS			C compiler flags for dynamic nDPI, overriding pkg-config

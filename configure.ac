@@ -904,6 +904,37 @@ AC_ARG_ENABLE(avro,
 )
 dnl finish: Avro handling
 
+dnl start: libserdes handling
+AC_MSG_CHECKING(whether to enable Confluent schema-registry support)
+AC_ARG_ENABLE(serdes,
+  [  --enable-serdes                  Enable Confluent schema-registry support (default: no)],
+  [ case "$enableval" in
+  yes)
+    AC_MSG_RESULT(yes)
+
+    SUPPORTS="${SUPPORTS} serdes"
+    USING_SERDES="yes"
+    PMACCT_CFLAGS="$PMACCT_CFLAGS $SERDES_CFLAGS"
+    AC_DEFINE(WITH_SERDES, 1)
+    _save_LIBS="$LIBS"
+    LIBS="$LIBS $SERDES_LIBS"
+    AC_CHECK_LIB([serdes], [serdes_new])
+    LIBS="$_save_LIBS"
+    _save_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $SERDES_CFLAGS"
+    AC_CHECK_HEADER([serdes.h])
+    CFLAGS="$_save_CFLAGS"
+    ;;
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  esac ],
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
+dnl finish: libserdes handling
+
 dnl start: nDPI handling
 AC_ARG_WITH(ndpi-static-lib,
   [  --with-ndpi-static-lib=DIR       Search the specified directory for nDPI static library],
@@ -1181,6 +1212,7 @@ AM_CONDITIONAL([WITH_ZMQ], [test x"$USING_ZMQ" = x"yes"])
 AM_CONDITIONAL([WITH_KAFKA], [test x"$USING_KAFKA" = x"yes"])
 AM_CONDITIONAL([USING_SQL], [test x"$USING_SQL" = x"yes"])
 AM_CONDITIONAL([WITH_AVRO], [test x"$USING_AVRO" = x"yes"])
+AM_CONDITIONAL([WITH_SERDES], [test x"$USING_SERDES" = x"yes"])
 AM_CONDITIONAL([WITH_NDPI], [test x"$USING_NDPI" = x"yes"])
 AM_CONDITIONAL([WITH_NFLOG], [test x"$USING_NFLOG" = x"yes"])
 AM_CONDITIONAL([USING_TRAFFIC_BINS], [test x"$USING_TRAFFIC_BINS" = x"yes"])

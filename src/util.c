@@ -1823,6 +1823,9 @@ void version_daemon(char *header)
 #ifdef WITH_AVRO
   printf("avro-c\n");
 #endif
+#ifdef WITH_SERDES
+  printf("serdes\n");
+#endif
 #ifdef WITH_NDPI
   printf("nDPI %s\n", ndpi_revision());
 #endif
