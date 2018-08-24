@@ -491,6 +491,7 @@ static const struct _dictionary_line dictionary[] = {
   {"kafka_output", cfg_key_message_broker_output},
   {"kafka_avro_schema_topic", cfg_key_kafka_avro_schema_topic},
   {"kafka_avro_schema_refresh_time", cfg_key_kafka_avro_schema_refresh_time},
+  {"kafka_avro_schema_registry", cfg_key_kafka_avro_schema_registry},
   {"kafka_config_file", cfg_key_kafka_config_file},
   {"kafka_trigger_exec", cfg_key_sql_trigger_exec},
   {"nfacctd_proc_name", cfg_key_proc_name},

@@ -115,6 +115,7 @@ EXT int cfg_key_kafka_partition_dynamic(char *, char *, char *);
 EXT int cfg_key_kafka_partition_key(char *, char *, char *);
 EXT int cfg_key_kafka_avro_schema_topic(char *, char *, char *);
 EXT int cfg_key_kafka_avro_schema_refresh_time(char *, char *, char *);
+EXT int cfg_key_kafka_avro_schema_registry(char *, char *, char *);
 EXT int cfg_key_kafka_config_file(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_size(char *, char *, char *);
 EXT int cfg_key_plugin_buffer_size(char *, char *, char *);

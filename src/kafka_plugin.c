@@ -110,6 +110,16 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       avro_schema_timeout = 0;
       avro_acct_schema_str = NULL;
     }
+
+    if (config.kafka_avro_schema_registry) {
+#ifdef WITH_SERDES
+      // XXX
+#else
+      Log(LOG_ERROR, "ERROR ( %s/%s ): 'kafka_avro_schema_registry' requires --enable-serdes. Exiting.\n", config.name, config.type);
+      exit_plugin(1);
+#endif
+    }
+
 #endif
   }
 

@@ -165,6 +165,7 @@ struct configuration {
   int kafka_partition_keylen;
   char *kafka_avro_schema_topic;
   int kafka_avro_schema_refresh_time;
+  char *kafka_avro_schema_registry;
   char *kafka_config_file;
   int print_cache_entries;
   int print_markers;
