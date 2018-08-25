@@ -119,12 +119,6 @@ EXT char *compose_json_str(void *);
 EXT void write_and_free_json(FILE *, void *);
 EXT void add_writer_name_and_pid_json(void *, char *, pid_t);
 
-#ifdef WITH_AVRO
-EXT void write_avro_schema_to_file(char *, avro_schema_t);
-EXT char *write_avro_schema_to_memory(avro_schema_t);
-EXT char *compose_avro_purge_schema(avro_schema_t, char *);
-#endif
-
 EXT void compose_timestamp(char *, int, struct timeval *, int, int, int, int);
 
 EXT void print_primitives(int, char *);
