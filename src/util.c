@@ -1928,29 +1928,47 @@ void write_avro_schema_to_file(char *filename, avro_schema_t schema)
   exit(1);
 }
 
-char *compose_avro_purge_schema(avro_schema_t avro_schema, char *writer_name)
+char *write_avro_schema_to_memory(avro_schema_t avro_schema)
 {
   avro_writer_t avro_writer;
-  char *avro_buf = NULL, *json_str = NULL;
+  char *avro_buf = NULL;
 
   if (!config.avro_buffer_size) config.avro_buffer_size = LARGEBUFLEN;
 
   avro_buf = malloc(config.avro_buffer_size);
 
   if (!avro_buf) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_buf). Exiting ..\n", config.name, config.type);
-    exit_plugin(1);
+    Log(LOG_ERR, "ERROR ( %s/%s ): write_avro_schema_to_memory(): malloc() failed. Exiting.\n", config.name, config.type);
+    exit(1);
   }
   else memset(avro_buf, 0, config.avro_buffer_size);
 
   avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
 
   if (avro_schema_to_json(avro_schema, avro_writer)) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): compose_avro_purge_schema(): unable to dump Avro schema: %s\n", config.name, config.type, avro_strerror());
-    exit_plugin(1);
+    Log(LOG_ERR, "ERROR ( %s/%s ): write_avro_schema_to_memory(): unable to dump Avro schema: %s\n", config.name, config.type, avro_strerror());
+    free(avro_buf);
+    avro_buf = NULL;
   }
 
-  if (avro_writer_tell(avro_writer)) {
+  if (!avro_writer_tell(avro_writer)) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): write_avro_schema_to_memory(): unable to tell Avro schema: %s\n", config.name, config.type, avro_strerror());
+    free(avro_buf);
+    avro_buf = NULL;
+  }
+
+  avro_writer_free(avro_writer);
+
+  return avro_buf;
+}
+
+char *compose_avro_purge_schema(avro_schema_t avro_schema, char *writer_name)
+{
+  char *avro_buf = NULL, *json_str = NULL;
+
+  avro_buf = write_avro_schema_to_memory(avro_schema);
+
+  if (avro_buf) {
     char event_type[] = "purge_schema", wid[SHORTSHORTBUFLEN];
     json_t *obj = json_object();
 
@@ -1961,10 +1979,13 @@ char *compose_avro_purge_schema(avro_schema_t avro_schema, char *writer_name)
 
     json_object_set_new_nocheck(obj, "schema", json_string(avro_buf));
 
-    avro_writer_free(avro_writer);
     free(avro_buf);
 
     json_str = compose_json_str(obj);
+  }
+  else {
+    Log(LOG_ERR, "ERROR ( %s/%s ): compose_avro_purge_schema(): no avro_buf. Exiting.\n", config.name, config.type);
+    exit_plugin(1);
   }
 
   return json_str;

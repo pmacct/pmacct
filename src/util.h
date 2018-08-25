@@ -121,6 +121,7 @@ EXT void add_writer_name_and_pid_json(void *, char *, pid_t);
 
 #ifdef WITH_AVRO
 EXT void write_avro_schema_to_file(char *, avro_schema_t);
+EXT char *write_avro_schema_to_memory(avro_schema_t);
 EXT char *compose_avro_purge_schema(avro_schema_t, char *);
 #endif
 
