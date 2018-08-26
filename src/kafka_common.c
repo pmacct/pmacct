@@ -552,19 +552,15 @@ int p_kafka_check_outq_len(struct p_kafka_host *kafka_host)
 
   if (kafka_host->rk) {
     while ((outq_len = rd_kafka_outq_len(kafka_host->rk)) > 0) {
-      if (!old_outq_len) {
-	old_outq_len = outq_len;
-      }
-      else {
-        if (outq_len == old_outq_len) {
-	  if (retries < PM_KAFKA_OUTQ_LEN_RETRIES) retries++;
-	  else {
-	    Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to Kafka: p_kafka_check_outq_len()\n", config.name, config.type);
-            p_kafka_close(kafka_host, TRUE);
-	    return outq_len; 
-	  }
+      if (outq_len == old_outq_len) {
+	if (retries < PM_KAFKA_OUTQ_LEN_RETRIES) retries++;
+	else {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to Kafka: p_kafka_check_outq_len()\n", config.name, config.type);
+          p_kafka_close(kafka_host, TRUE);
+	  return outq_len; 
 	}
       }
+      else old_outq_len = outq_len;
 
       rd_kafka_poll(kafka_host->rk, 100);
       sleep(1);
