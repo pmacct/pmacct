@@ -912,18 +912,21 @@ AC_ARG_ENABLE(serdes,
   yes)
     AC_MSG_RESULT(yes)
 
-    SUPPORTS="${SUPPORTS} serdes"
-    USING_SERDES="yes"
-    PMACCT_CFLAGS="$PMACCT_CFLAGS $SERDES_CFLAGS"
-    AC_DEFINE(WITH_SERDES, 1)
-    _save_LIBS="$LIBS"
-    LIBS="$LIBS $SERDES_LIBS"
-    AC_CHECK_LIB([serdes], [serdes_new])
-    LIBS="$_save_LIBS"
-    _save_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $SERDES_CFLAGS"
-    AC_CHECK_HEADER([serdes.h])
-    CFLAGS="$_save_CFLAGS"
+    PKG_CHECK_MODULES([SERDES], [serdes],, [
+      SUPPORTS="${SUPPORTS} serdes"
+      USING_SERDES="yes"
+      PMACCT_CFLAGS="$PMACCT_CFLAGS $SERDES_CFLAGS"
+      SERDES_LIBS="$SERDES_LIBS -lserdes"
+      AC_DEFINE(WITH_SERDES, 1)
+      _save_LIBS="$LIBS"
+      LIBS="$LIBS $SERDES_LIBS"
+      AC_CHECK_LIB([serdes], [serdes_new])
+      LIBS="$_save_LIBS"
+      _save_CFLAGS="$CFLAGS"
+      CFLAGS="$CFLAGS $SERDES_CFLAGS"
+      AC_CHECK_HEADER([libserdes/serdes.h])
+      CFLAGS="$_save_CFLAGS"
+    ])
     ;;
   no)
     AC_MSG_RESULT(no)

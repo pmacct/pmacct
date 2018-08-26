@@ -19,6 +19,11 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+/* includes */
+#if defined (WITH_SERDES)
+#include <libserdes/serdes.h>
+#endif
+
 /* defines */
 
 /* prototypes */
@@ -43,5 +48,6 @@ EXT void add_writer_name_and_pid_avro(avro_value_t, char *, pid_t);
 EXT void write_avro_schema_to_file(char *, avro_schema_t);
 EXT char *write_avro_schema_to_memory(avro_schema_t);
 EXT char *compose_avro_purge_schema(avro_schema_t, char *);
+EXT char *compose_avro_schema_name(char *, char *);
 #endif
 #undef EXT

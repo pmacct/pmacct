@@ -62,7 +62,7 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   char *dataptr;
 
 #ifdef WITH_AVRO
-  char *avro_acct_schema_str;
+  char *avro_acct_schema_str = NULL, *avro_acct_schema_name = NULL;
 #endif
 
 #ifdef WITH_ZMQ
@@ -108,18 +108,19 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       config.kafka_avro_schema_refresh_time = 0;
       avro_schema_deadline = 0;
       avro_schema_timeout = 0;
-      avro_acct_schema_str = NULL;
     }
 
     if (config.kafka_avro_schema_registry) {
 #ifdef WITH_SERDES
-      // XXX
+      if (config.sql_multi_values) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): 'kafka_avro_schema_registry' is not compatible with 'kafka_multi_values'. Exiting.\n", config.name, config.type);
+        exit_plugin(1);
+      }
 #else
-      Log(LOG_ERROR, "ERROR ( %s/%s ): 'kafka_avro_schema_registry' requires --enable-serdes. Exiting.\n", config.name, config.type);
+      Log(LOG_ERR, "ERROR ( %s/%s ): 'kafka_avro_schema_registry' requires --enable-serdes. Exiting.\n", config.name, config.type);
       exit_plugin(1);
 #endif
     }
-
 #endif
   }
 
@@ -345,7 +346,14 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 #ifdef WITH_AVRO
   avro_writer_t avro_writer;
   char *avro_buf = NULL;
-  int avro_buffer_full = FALSE;
+  int avro_len = 0, avro_buffer_full = FALSE;
+#endif
+
+#ifdef WITH_SERDES
+  serdes_conf_t *sd_conf;
+  serdes_t *sd_desc;
+  serdes_schema_t *sd_schema;
+  char sd_errstr[LONGSRVBUFLEN];
 #endif
 
   p_kafka_init_host(&kafkap_kafka_host, config.kafka_config_file);
@@ -461,6 +469,27 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
     else memset(avro_buf, 0, config.avro_buffer_size);
 
     avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
+
+    if (config.kafka_avro_schema_registry) {
+#ifdef WITH_SERDES
+      char *avro_acct_schema_str = write_avro_schema_to_memory(avro_acct_schema);
+      char *avro_acct_schema_name = compose_avro_schema_name(config.type, config.name);
+
+      sd_conf = serdes_conf_new(NULL, 0, "schema.registry.url", config.kafka_avro_schema_registry, NULL);
+
+      sd_desc = serdes_new(sd_conf, sd_errstr, sizeof(sd_errstr));
+      if (!sd_desc) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): serdes_new() failed. Exiting.\n", config.name, config.type);
+        exit_plugin(1);
+      }
+
+      sd_schema = serdes_schema_add(sd_desc, avro_acct_schema_name, -1, avro_acct_schema_str, -1, sd_errstr, sizeof(sd_errstr));
+      if (!sd_desc) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): serdes_schema_add() failed. Exiting.\n", config.name, config.type);
+        exit_plugin(1);
+      }
+#endif
+    }
 #endif
   }
 
@@ -521,25 +550,36 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
       add_writer_name_and_pid_avro(avro_value, config.name, writer_pid);
       avro_value_sizeof(&avro_value, &avro_value_size);
 
-      if (avro_value_size > config.avro_buffer_size) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: insufficient buffer size (avro_buffer_size=%u)\n",
-            config.name, config.type, config.avro_buffer_size);
-        Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: increase value or look for avro_buffer_size in CONFIG-KEYS document.\n\n",
-            config.name, config.type);
-        exit_plugin(1);
+      if (!config.kafka_avro_schema_registry) {
+	if (avro_value_size > config.avro_buffer_size) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: insufficient buffer size (avro_buffer_size=%u)\n",
+	      config.name, config.type, config.avro_buffer_size);
+	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: increase value or look for avro_buffer_size in CONFIG-KEYS document.\n\n",
+	      config.name, config.type);
+	  exit_plugin(1);
+	}
+	else if (avro_value_size >= (config.avro_buffer_size - avro_writer_tell(avro_writer))) {
+	  avro_buffer_full = TRUE;
+	  j--;
+	}
+	else if (avro_value_write(avro_writer, &avro_value)) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to write value: %s\n", config.name, config.type, avro_strerror());
+	  exit_plugin(1);
+	}
+	else mv_num++;
+
+	avro_len = avro_writer_tell(avro_writer);
       }
-      else if (avro_value_size >= (config.avro_buffer_size - avro_writer_tell(avro_writer))) {
-        avro_buffer_full = TRUE;
-        j--;
-      }
-      else if (avro_value_write(avro_writer, &avro_value)) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to write value: %s\n",
-            config.name, config.type, avro_strerror());
-        exit_plugin(1);
-      }
+#ifdef WITH_SERDES
       else {
-        mv_num++;
+	avro_len = config.avro_buffer_size;
+
+	if (serdes_schema_serialize_avro(sd_schema, &avro_value, &avro_buf, &avro_len, sd_errstr, sizeof(sd_errstr))) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, config.type, sd_errstr);
+	  exit_plugin(1);
+	}
       }
+#endif
 
       avro_value_decref(&avro_value);
       avro_value_iface_decref(avro_iface);
@@ -629,8 +669,9 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
           p_kafka_set_topic(&kafkap_kafka_host, dyn_kafka_topic);
         }
 
-        ret = p_kafka_produce_data(&kafkap_kafka_host, avro_buf, avro_writer_tell(avro_writer));
-        avro_writer_reset(avro_writer);
+        ret = p_kafka_produce_data(&kafkap_kafka_host, avro_buf, avro_len);
+        if (!config.kafka_avro_schema_registry) avro_writer_reset(avro_writer);
+
         avro_buffer_full = FALSE;
         mv_num_save = mv_num;
         mv_num = 0;
@@ -654,9 +695,9 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
     }
     else if (config.message_broker_output & PRINT_OUTPUT_AVRO) {
 #ifdef WITH_AVRO
-      if (avro_writer_tell(avro_writer)) {
-        ret = p_kafka_produce_data(&kafkap_kafka_host, avro_buf, avro_writer_tell(avro_writer));
-        avro_writer_free(avro_writer);
+      if (avro_len) {
+        ret = p_kafka_produce_data(&kafkap_kafka_host, avro_buf, avro_len);
+        if (!config.kafka_avro_schema_registry) avro_writer_free(avro_writer);
 
         if (!ret) qn += mv_num;
       }

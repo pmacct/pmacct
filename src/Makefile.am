@@ -62,6 +62,10 @@ endif
 if WITH_AVRO
 libdaemons_la_LIBADD  += @AVRO_LIBS@
 libdaemons_la_CFLAGS  += @AVRO_CFLAGS@
+if WITH_SERDES
+libdaemons_la_LIBADD  += @SERDES_LIBS@
+libdaemons_la_CFLAGS  += @SERDES_CFLAGS@
+endif
 endif
 if WITH_NDPI
 libdaemons_la_LIBADD += ndpi/libndpi_support.la

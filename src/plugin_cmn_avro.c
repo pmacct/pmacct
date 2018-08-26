@@ -1021,4 +1021,36 @@ char *compose_avro_purge_schema(avro_schema_t avro_schema, char *writer_name)
 
   return json_str;
 }
+
+char *compose_avro_schema_name(char *extra1, char *extra2)
+{
+  int len_base = 0, len_extra1 = 0, len_extra2 = 0, len_total = 0; 
+  char *schema_name = NULL;
+
+  if (extra1) len_extra1 = strlen(extra1);
+  if (extra2) len_extra2 = strlen(extra2);
+  
+  if (len_extra1 || len_extra2) len_base = strlen("pmacct_");
+  else len_base = strlen("pmacct");
+
+  len_total = len_base + len_extra1 + len_extra2 + 1;
+
+  schema_name = malloc(len_total);  
+  if (!schema_name) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): compose_avro_schema_name(): malloc() failed. Exiting.\n", config.name, config.type);
+    exit(1);
+  }
+  else memset(schema_name, 0, len_total);
+
+  strcpy(schema_name, "pmacct");
+  if (len_extra1 || len_extra2) {
+    strcat(schema_name, "_");
+    if (len_extra1) strcat(schema_name, extra1);
+    if (len_extra2) strcat(schema_name, extra2);
+  }
+
+  schema_name[len_total] = '\0'; /* pedantic */
+
+  return schema_name;
+}
 #endif

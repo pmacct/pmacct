@@ -227,6 +227,12 @@ typedef struct {
 #include <avro.h>
 #endif
 
+#if (defined WITH_SERDES)
+#if (!defined WITH_AVRO)
+#error "--enable-serdes requires --enable-avro"
+#endif
+#endif
+
 #include "pmacct-defines.h"
 #include "network.h"
 #include "pretag.h"
