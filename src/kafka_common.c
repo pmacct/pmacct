@@ -281,8 +281,7 @@ void p_kafka_apply_global_config(struct p_kafka_host *kafka_host)
         }
 	else {
 	  if (ret == ERR) {
-	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line malformed. Ignored.", config.name, config.type, kafka_host->config_file, lineno);
-	    continue;
+	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line malformed. Ignored.\n", config.name, config.type, kafka_host->config_file, lineno);
 	  }
 	}
       }
@@ -318,8 +317,7 @@ void p_kafka_apply_topic_config(struct p_kafka_host *kafka_host)
         }
         else {
           if (ret == ERR) {
-            Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line malformed. Ignored.", config.name, config.type, kafka_host->config_file, lineno);
-            continue;
+            Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line malformed. Ignored.\n", config.name, config.type, kafka_host->config_file, lineno);
           }
         }
       }
