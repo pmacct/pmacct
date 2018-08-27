@@ -62,7 +62,7 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   char *dataptr;
 
 #ifdef WITH_AVRO
-  char *avro_acct_schema_str = NULL, *avro_acct_schema_name = NULL;
+  char *avro_acct_schema_str = NULL;
 #endif
 
 #ifdef WITH_ZMQ
@@ -479,13 +479,13 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 
       sd_desc = serdes_new(sd_conf, sd_errstr, sizeof(sd_errstr));
       if (!sd_desc) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): serdes_new() failed. Exiting.\n", config.name, config.type);
+        Log(LOG_ERR, "ERROR ( %s/%s ): serdes_new() failed: %s. Exiting.\n", config.name, config.type, sd_errstr);
         exit_plugin(1);
       }
 
       sd_schema = serdes_schema_add(sd_desc, avro_acct_schema_name, -1, avro_acct_schema_str, -1, sd_errstr, sizeof(sd_errstr));
-      if (!sd_desc) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): serdes_schema_add() failed. Exiting.\n", config.name, config.type);
+      if (!sd_schema) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): serdes_schema_add() failed: %s. Exiting.\n", config.name, config.type, sd_errstr);
         exit_plugin(1);
       }
 #endif
