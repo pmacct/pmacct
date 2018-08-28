@@ -1542,12 +1542,16 @@ DESC:		AMQP routing key or Kafka topic on which the generated Avro schema is sen
 		and kafka_avro_schema_refresh_time. Schemas are carried as part of the 'schema' field in
 		an envelope JSON message with 'event_type' set to purge_schema. 
 DEFAULT:	none
-		 
 
 KEY:		[ amqp_avro_schema_refresh_time | kafka_avro_schema_refresh_time ]
 DESC:		Time interval, in seconds, at which the generated Avro schema is sent over the configured
 		AMQP routing key (amqp_avro_schema_routing_key) or Kafka topic (kafka_avro_schema_topic).
 DEFAULT:	60
+
+KEY:		kafka_avro_schema_registry
+DESC:		The URL to a Confluent Avro schema-registry. The value is passed to libserdes as argument
+		for "schema.registry.url". A sample of the expected value being "https://localhost:XXX".
+DEFAULT:	none
 
 KEY:            [ print_num_protos | sql_num_protos | amqp_num_protos | kafka_num_protos ]
 VALUES:         [ true | false ]
