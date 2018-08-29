@@ -485,7 +485,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 
       sd_schema = serdes_schema_add(sd_desc, avro_acct_schema_name, -1, avro_acct_schema_str, -1, sd_errstr, sizeof(sd_errstr));
       if (!sd_schema) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): serdes_schema_add() failed: %s. Exiting.\n", config.name, config.type, sd_errstr);
+	Log(LOG_INFO, "INFO ( %s/%s ): serdes_schema_add(): name=%s id=%d definition=%s\n", config.name, config.type,
+	    serdes_schema_name(sd_schema), serdes_schema_id(sd_schema), serdes_schema_definition(sd_schema));
         exit_plugin(1);
       }
 #endif

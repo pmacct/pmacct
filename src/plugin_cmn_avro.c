@@ -1028,7 +1028,10 @@ char *compose_avro_schema_name(char *extra1, char *extra2)
   char *schema_name = NULL;
 
   if (extra1) len_extra1 = strlen(extra1);
-  if (extra2) len_extra2 = strlen(extra2);
+  if (extra2) {
+    if (len_extra1) len_extra1++;
+    len_extra2 = strlen(extra2);
+  }
   
   if (len_extra1 || len_extra2) len_base = strlen("pmacct_");
   else len_base = strlen("pmacct");
@@ -1045,7 +1048,12 @@ char *compose_avro_schema_name(char *extra1, char *extra2)
   strcpy(schema_name, "pmacct");
   if (len_extra1 || len_extra2) {
     strcat(schema_name, "_");
-    if (len_extra1) strcat(schema_name, extra1);
+
+    if (len_extra1) {
+      strcat(schema_name, extra1);
+      if (len_extra2) strcat(schema_name, "_");
+    }
+
     if (len_extra2) strcat(schema_name, extra2);
   }
 
