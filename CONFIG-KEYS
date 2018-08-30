@@ -1550,7 +1550,9 @@ DEFAULT:	60
 
 KEY:		kafka_avro_schema_registry
 DESC:		The URL to a Confluent Avro schema-registry. The value is passed to libserdes as argument
-		for "schema.registry.url". A sample of the expected value being "https://localhost:XXX".
+		for "schema.registry.url". A sample of the expected value being https://localhost. To,
+		among the other things confirm that the schema is being successfully registered, this is
+		a pointer to the REST API https://docs.confluent.io/current/schema-registry/docs/api.html 
 DEFAULT:	none
 
 KEY:            [ print_num_protos | sql_num_protos | amqp_num_protos | kafka_num_protos ]

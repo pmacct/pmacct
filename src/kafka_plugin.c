@@ -485,9 +485,12 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 
       sd_schema = serdes_schema_add(sd_desc, avro_acct_schema_name, -1, avro_acct_schema_str, -1, sd_errstr, sizeof(sd_errstr));
       if (!sd_schema) {
-	Log(LOG_INFO, "INFO ( %s/%s ): serdes_schema_add(): name=%s id=%d definition=%s\n", config.name, config.type,
-	    serdes_schema_name(sd_schema), serdes_schema_id(sd_schema), serdes_schema_definition(sd_schema));
-        exit_plugin(1);
+	Log(LOG_ERR, "ERROR ( %s/%s ): serdes_schema_add() failed: %s. Exiting.\n", config.name, config.type, sd_errstr);
+	exit_plugin(1);
+      }
+      else {
+	Log(LOG_DEBUG, "DEBUG ( %s/%s ): serdes_schema_add(): name=%s id=%d definition=%s\n", config.name, config.type,
+		serdes_schema_name(sd_schema), serdes_schema_id(sd_schema), serdes_schema_definition(sd_schema));
       }
 #endif
     }
@@ -573,11 +576,21 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
       }
 #ifdef WITH_SERDES
       else {
-	avro_len = config.avro_buffer_size;
+	char *avro_local_buf = NULL;
 
-	if (serdes_schema_serialize_avro(sd_schema, &avro_value, &avro_buf, &avro_len, sd_errstr, sizeof(sd_errstr))) {
+	avro_len = 0;
+	if (avro_buf) {
+	  free(avro_buf);
+	  avro_buf = NULL;
+	}
+
+	if (serdes_schema_serialize_avro(sd_schema, &avro_value, &avro_local_buf, &avro_len, sd_errstr, sizeof(sd_errstr))) {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, config.type, sd_errstr);
 	  exit_plugin(1);
+	}
+	else {
+	  avro_buf = avro_local_buf;
+	  mv_num++;
 	}
       }
 #endif

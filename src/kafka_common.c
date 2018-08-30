@@ -26,6 +26,7 @@
 #include "pmacct-data.h"
 #include "plugin_common.h"
 #include "kafka_common.h"
+#include "base64.h"
 
 /* Functions */
 void p_kafka_init_host(struct p_kafka_host *kafka_host, char *config_file)
@@ -356,7 +357,12 @@ void p_kafka_msg_delivered(rd_kafka_t *rk, void *payload, size_t len, int error_
 	payload_str[len] = saved;
       }
       else {
-	Log(LOG_DEBUG, "DEBUG ( %s/%s ): Kafka message delivery successful (%zd bytes)\n", config.name, config.type, len);
+	size_t base64_data_len = 0;
+	char *base64_data = base64_encode(payload, len, &base64_data_len);
+
+	Log(LOG_DEBUG, "DEBUG ( %s/%s ): Kafka message delivery successful (%zd bytes): %s\n", config.name, config.type, len, base64_data);
+
+	if (base64_data) base64_freebuf(base64_data);
       }
     }
   }
