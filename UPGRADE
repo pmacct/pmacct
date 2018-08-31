@@ -26,6 +26,14 @@ DESC:   Following is the list of features, knobs and plugins that are being
 	  full packets are replicated only if no pre_tag_map is set or a
 	  simple pre_tag_map is defined. In the context of replication, in
 	  QUICKSTART is defined what is a simple and a complex pre_tag_map.
+	* Kafka plugin: configuration directives kafka_avro_schema_topic and
+	  kafka_avro_schema_refresh_time allow to produce an Avro schema at
+	  regular time intervals to a topic; Confluent Platform supports an
+	  Avro schema registry which is the clean/preferred way to handle the
+	  distribution of schemas; as a result of this, the existing feature
+	  is made legacy and will be discontinued at the next major release
+	  and a new configuration directive kafka_avro_schema_registry is
+	  introduced. 
 
 TO:	>= 1.7.1
 FROM:	<= 1.7.0

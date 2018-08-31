@@ -349,12 +349,12 @@ static const struct _dictionary_line dictionary[] = {
   {"plugin_pipe_zmq_retry", cfg_key_plugin_pipe_zmq_retry},
   {"plugin_pipe_zmq_profile", cfg_key_plugin_pipe_zmq_profile},
   {"plugin_pipe_zmq_hwm", cfg_key_plugin_pipe_zmq_hwm},
-  {"interface", cfg_key_pcap_interface}, 		// legacy
-  {"interface_wait", cfg_key_pcap_interface_wait},	// legacy
+  {"interface", cfg_key_pcap_interface}, 		/* Legacy key */
+  {"interface_wait", cfg_key_pcap_interface_wait},	/* Legacy key */
   {"files_umask", cfg_key_files_umask},
   {"files_uid", cfg_key_files_uid},
   {"files_gid", cfg_key_files_gid},
-  {"savefile_wait", cfg_key_pcap_savefile_wait}, /* XXX: legacy; to be obsoleted */
+  {"savefile_wait", cfg_key_pcap_savefile_wait}, /* Legacy key */
   {"networks_mask", cfg_key_networks_mask},
   {"networks_file", cfg_key_networks_file},
   {"networks_file_filter", cfg_key_networks_file_filter},
@@ -387,8 +387,8 @@ static const struct _dictionary_line dictionary[] = {
   {"sql_history", cfg_key_sql_history},
   {"sql_history_offset", cfg_key_sql_history_offset},
   {"sql_history_roundoff", cfg_key_sql_history_roundoff},
-  {"sql_history_since_epoch", cfg_key_timestamps_since_epoch}, // legacy
-  {"sql_backup_host", cfg_key_sql_recovery_backup_host}, // legacy
+  {"sql_history_since_epoch", cfg_key_timestamps_since_epoch}, /* Legacy key */
+  {"sql_backup_host", cfg_key_sql_recovery_backup_host}, /* Legacy feature; to be obsoleted */
   {"sql_recovery_backup_host", cfg_key_sql_recovery_backup_host},
   {"sql_delimiter", cfg_key_sql_delimiter},
   {"sql_max_writers", cfg_key_dump_max_writers},
@@ -489,8 +489,8 @@ static const struct _dictionary_line dictionary[] = {
   {"kafka_num_protos", cfg_key_num_protos},
   {"kafka_markers", cfg_key_print_markers},
   {"kafka_output", cfg_key_message_broker_output},
-  {"kafka_avro_schema_topic", cfg_key_kafka_avro_schema_topic},
-  {"kafka_avro_schema_refresh_time", cfg_key_kafka_avro_schema_refresh_time},
+  {"kafka_avro_schema_topic", cfg_key_kafka_avro_schema_topic}, /* Legacy feature; to be obsoleted */
+  {"kafka_avro_schema_refresh_time", cfg_key_kafka_avro_schema_refresh_time}, /* Legacy feature; to be obsoleted */
   {"kafka_avro_schema_registry", cfg_key_kafka_avro_schema_registry},
   {"kafka_config_file", cfg_key_kafka_config_file},
   {"kafka_trigger_exec", cfg_key_sql_trigger_exec},
@@ -600,13 +600,13 @@ static const struct _dictionary_line dictionary[] = {
   {"telemetry_dump_kafka_partition", cfg_key_telemetry_dump_kafka_partition},
   {"telemetry_dump_kafka_partition_key", cfg_key_telemetry_dump_kafka_partition_key},
   {"telemetry_dump_kafka_config_file", cfg_key_telemetry_dump_kafka_config_file},
-  {"refresh_maps", cfg_key_maps_refresh}, // legacy
+  {"refresh_maps", cfg_key_maps_refresh}, /* Legacy key */
   {"maps_refresh", cfg_key_maps_refresh},
   {"maps_index", cfg_key_maps_index},
   {"maps_entries", cfg_key_maps_entries},
   {"maps_row_len", cfg_key_maps_row_len},
   {"pre_tag_map", cfg_key_pre_tag_map},	
-  {"pre_tag_map_entries", cfg_key_maps_entries}, // legacy	
+  {"pre_tag_map_entries", cfg_key_maps_entries}, /* Legacy key */
   {"pre_tag_filter", cfg_key_pre_tag_filter},
   {"pre_tag2_filter", cfg_key_pre_tag2_filter},
   {"pre_tag_label_filter", cfg_key_pre_tag_label_filter},

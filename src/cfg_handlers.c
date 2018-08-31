@@ -62,6 +62,11 @@ int validate_truefalse(int value)
   else return ERR;
 }
 
+void cfg_key_legacy_warning(char *filename, char *cfg_key)
+{
+  Log(LOG_WARNING, "WARN: [%s] Configuration key '%s' is legacy and will be discontinued in the next major release.\n", filename, cfg_key);
+}
+
 int cfg_key_debug(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -1185,6 +1190,8 @@ int cfg_key_sql_recovery_backup_host(char *filename, char *name, char *value_ptr
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
+  cfg_key_legacy_warning(filename, "sql_backup_host");
+
   if (!name) for (; list; list = list->next, changes++) list->cfg.sql_backup_host = value_ptr;
   else {
     for (; list; list = list->next) {
@@ -2000,6 +2007,8 @@ int cfg_key_kafka_avro_schema_topic(char *filename, char *name, char *value_ptr)
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
+  cfg_key_legacy_warning(filename, "kafka_avro_schema_topic");
+
   if (!name) for (; list; list = list->next, changes++) list->cfg.kafka_avro_schema_topic = value_ptr;
   else {
     for (; list; list = list->next) {
@@ -2018,6 +2027,8 @@ int cfg_key_kafka_avro_schema_refresh_time(char *filename, char *name, char *val
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0, value = 0;
+
+  cfg_key_legacy_warning(filename, "kafka_avro_schema_refresh_time");
 
   value = atoi(value_ptr);
   if (value <= 0) {

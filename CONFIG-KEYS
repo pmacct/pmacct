@@ -1533,19 +1533,18 @@ DESC:		When the Avro format is used to encode the messages sent to a message bro
 		has also effect in the print plugin but in this case the schema is also always included in
 		the print_output_file as mandated by Avro specification. 
 
-KEY:		[ amqp_avro_schema_routing_key | kafka_avro_schema_topic ]
-DESC:		AMQP routing key or Kafka topic on which the generated Avro schema is sent over at regular
-		time intervals by AMQP and Kafka plugins (it can potentially be the same as kafka_topic or
-		amqp_routing_key). The schema can then be used by the receiving end to decode the messages.
-		All other parameters to connect to the broker, ie. host, port, etc. are shared with the main
-		plugin routing key or topic. The time intervals are set via amqp_avro_schema_refresh_time
-		and kafka_avro_schema_refresh_time. Schemas are carried as part of the 'schema' field in
-		an envelope JSON message with 'event_type' set to purge_schema. 
+KEY:		amqp_avro_schema_routing_key
+DESC:		AMQP routing key on which the generated Avro schema is sent over at regular time intervals
+		by the AMQP plugin (it can potentially be the same as amqp_routing_key). The schema can
+		then be used by the receiving end to decode the messages. All other parameters to connect
+		to the broker, ie. host, port, etc. are shared with the main plugin routing key. The time
+		interval is set via amqp_avro_schema_refresh_time. Schemas are carried as part of the
+		'schema' field in an envelope JSON message with 'event_type' set to purge_schema. 
 DEFAULT:	none
 
-KEY:		[ amqp_avro_schema_refresh_time | kafka_avro_schema_refresh_time ]
+KEY:		amqp_avro_schema_refresh_time
 DESC:		Time interval, in seconds, at which the generated Avro schema is sent over the configured
-		AMQP routing key (amqp_avro_schema_routing_key) or Kafka topic (kafka_avro_schema_topic).
+		AMQP routing key (amqp_avro_schema_routing_key).
 DEFAULT:	60
 
 KEY:		kafka_avro_schema_registry
