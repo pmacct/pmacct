@@ -183,11 +183,34 @@ err:
   return NULL;
 }
 
-int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, struct pcap_interface *pcap_if_entry, int psize)
+void pm_pcap_add_filter(struct pcap_device *dev_ptr)
 {
   /* pcap library stuff */
   bpf_u_int32 localnet, netmask;
   struct bpf_program filter;
+  char errbuf[PCAP_ERRBUF_SIZE];
+
+  if (!dev_ptr->str || pcap_lookupnet(dev_ptr->str, &localnet, &netmask, errbuf) < 0) {
+    localnet = 0;
+    netmask = PCAP_NETMASK_UNKNOWN;
+    if (dev_ptr->str) Log(LOG_WARNING, "WARN ( %s/core ): %s\n", config.name, errbuf);
+  }
+
+  memset(&filter, 0, sizeof(filter));
+  if (pcap_compile(dev_ptr->dev_desc, &filter, config.clbuf, 0, netmask) < 0) {
+    Log(LOG_WARNING, "WARN ( %s/core ): %s (going on without a filter)\n", config.name, pcap_geterr(dev_ptr->dev_desc));
+  }
+  else {
+    if (pcap_setfilter(dev_ptr->dev_desc, &filter) < 0) {
+      Log(LOG_WARNING, "WARN ( %s/core ): %s (going on without a filter)\n", config.name, pcap_geterr(dev_ptr->dev_desc));
+    }
+    else pcap_freecode(&filter);
+  }
+}
+
+int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, struct pcap_interface *pcap_if_entry, int psize)
+{
+  /* pcap library stuff */
   char errbuf[PCAP_ERRBUF_SIZE];
 
   struct plugins_list_entry *list;
@@ -268,23 +291,7 @@ int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, struct pcap
       }
     }
 
-    /* doing pcap stuff */
-    if (!dev_ptr->str || pcap_lookupnet(dev_ptr->str, &localnet, &netmask, errbuf) < 0) {
-      localnet = 0;
-      netmask = 0;
-      if (dev_ptr->str) Log(LOG_WARNING, "WARN ( %s/core ): %s\n", config.name, errbuf);
-    }
-
-    memset(&filter, 0, sizeof(filter));
-    if (pcap_compile(dev_ptr->dev_desc, &filter, config.clbuf, 0, netmask) < 0) {
-      Log(LOG_WARNING, "WARN ( %s/core ): %s (going on without a filter)\n", config.name, pcap_geterr(dev_ptr->dev_desc));
-    }
-    else {
-      if (pcap_setfilter(dev_ptr->dev_desc, &filter) < 0) {
-        Log(LOG_WARNING, "WARN ( %s/core ): %s (going on without a filter)\n", config.name, pcap_geterr(dev_ptr->dev_desc));
-      }
-      else pcap_freecode(&filter);
-    }
+    pm_pcap_add_filter(dev_ptr);
   }
   else {
     Log(LOG_WARNING, "WARN ( %s/core ): [%s] pm_pcap_open(): giving up after too many attempts.\n", config.name, ifname);
@@ -987,6 +994,7 @@ int main(int argc,char **argv, char **envp)
   }
   else if (config.pcap_savefile) {
     open_pcap_savefile(&device.list[0], config.pcap_savefile);
+    pm_pcap_add_filter(&device.list[0]);
     cb_data.device = &device.list[0];
     device.num = 1;
     pcap_savefile_round = 1;

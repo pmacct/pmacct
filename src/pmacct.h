@@ -366,6 +366,7 @@ EXT void pm_pcap_device_copy_all(struct pcap_devices *, struct pcap_devices *);
 EXT void pm_pcap_device_copy_entry(struct pcap_devices *, struct pcap_devices *, int);
 EXT int pm_pcap_device_getindex_byifname(struct pcap_devices *, char *);
 EXT pcap_t *pm_pcap_open(const char *, int, int, int, int, int, char *);
+EXT void pm_pcap_add_filter(struct pcap_device *);
 EXT int pm_pcap_add_interface(struct pcap_device *, char *, struct pcap_interface *, int);
 #undef EXT
 
