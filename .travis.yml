@@ -21,10 +21,12 @@ install:
   - wget http://www-us.apache.org/dist/avro/avro-1.8.2/c/avro-c-1.8.2.tar.gz
   - tar xfz avro-c-1.8.2.tar.gz
   - cd avro-c-1.8.2 && mkdir build && cd build && cmake .. && make && sudo make install && cd .. && cd ..
+  - git clone https://github.com/confluentinc/libserdes
+  - cd libserdes && ./configure && make && sudo make install && cd ..
 
 script:
   - ./autogen.sh
-  - ./configure --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro
+  - ./configure --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes
   - make
   - sudo make install
 
