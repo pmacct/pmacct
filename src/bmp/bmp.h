@@ -36,7 +36,10 @@
 #define	BMP_MSG_INIT		4
 #define BMP_MSG_TERM		5
 #define BMP_MSG_ROUTE_MIRROR	6	
-#define BMP_MSG_TYPE_MAX	6 /* set to the highest BMP_MSG_* value */
+#define BMP_MSG_RM_ADJ_RIB_IN	7 /* draft-hsmit-bmp-extensible-routemon-msgs-01 */
+#define BMP_MSG_RM_ADJ_RIB_OUT	8 /* draft-hsmit-bmp-extensible-routemon-msgs-01 */
+#define BMP_MSG_RM_LOC_RIB	9 /* draft-hsmit-bmp-extensible-routemon-msgs-01 */
+#define BMP_MSG_TYPE_MAX	9 /* set to the highest BMP_MSG_* value */
 
 static const char *bmp_msg_types[] = {
   "Route Monitoring",
@@ -57,7 +60,7 @@ struct bmp_common_hdr {
 #define BMP_PEER_TYPE_GLOBAL	0
 #define BMP_PEER_TYPE_L3VPN	1
 #define BMP_PEER_TYPE_LOCAL	2
-#define BMP_PEER_TYPE_LOC_RIB	3 /* draft-evens-grow-bmp-local-rib */ 
+#define BMP_PEER_TYPE_LOC_RIB	3 /* draft-evens-grow-bmp-local-rib-01 */ 
 #define BMP_PEER_TYPE_MAX	3 /* set to the highest BMP_PEER_TYPE_* value */
 
 static const char *bmp_peer_types[] = {
@@ -122,6 +125,33 @@ struct bmp_stats_hdr {
   u_int32_t	count;
 } __attribute__ ((packed));
 
+/* draft-hsmit-bmp-extensible-routemon-msgs-01: start */
+struct bmp_monitor_tlv {
+  u_int16_t	type;
+  u_int16_t 	len;
+} __attribute__ ((packed));
+
+#define BGP_MONITOR_TYPE_UPDATE			1 
+#define BGP_MONITOR_TYPE_FLAGS			2
+
+#define BGP_MONITOR_FLAG_PRE_POLICY		0
+#define BGP_MONITOR_FLAG_POST_POLICY		1
+#define BGP_MONITOR_FLAG_ROUTE_VALID		2
+#define BGP_MONITOR_FLAG_ROUTE_INVALID		3
+#define BGP_MONITOR_FLAG_ROUTE_ACCEPT		4
+#define BGP_MONITOR_FLAG_ROUTE_REJECT		5
+#define BGP_MONITOR_FLAG_ROUTE_BEST		6
+#define BGP_MONITOR_FLAG_ROUTE_NOT_BEST		7
+#define BGP_MONITOR_FLAG_ROUTE_GLOBAL		8
+#define BGP_MONITOR_FLAG_ROUTE_NOT_GLOBAL	9
+#define BGP_MONITOR_FLAG_AS_PATH_4B		10
+/* unused */
+#define BGP_MONITOR_FLAG_NLRI_PATH_ID		12
+#define BGP_MONITOR_FLAG_NLRI_NO_PATH_ID	13
+#define BGP_MONITOR_FLAG_ROUTE_GLOBAL_BEST	14
+#define BGP_MONITOR_FLAG_ROUTE_GLOBAL_NO_BEST	15
+/* draft-hsmit-bmp-extensible-routemon-msgs-01: end */
+
 struct bmp_peer {
   struct bgp_peer self;
   void *bgp_peers;
@@ -151,7 +181,7 @@ struct bgp_msg_extra_data_bmp {
 #define BMP_STATS_TYPE12	12 /* (32-bit Counter) Number of prefixes subjected to treat-as-withdraw */
 #define BMP_STATS_TYPE13	13 /* (32-bit Counter) Number of duplicate update messages received */
 
-/* Types 14-17 defined in draft-evens-grow-bmp-adj-rib-out */
+/* Types 14-17 defined in draft-evens-grow-bmp-adj-rib-out-01 */
 #define BMP_STATS_TYPE14	14 /* (64-bit Gauge) Number of routes in Adj-RIBs-Out Pre-Policy */
 #define BMP_STATS_TYPE15	15 /* (64-bit Gauge) Number of routes in Adj-RIBs-Out Post-Policy */
 #define BMP_STATS_TYPE16	16 /* (64-bit Gauge) Number of routes in per-AFI/SAFI Abj-RIB-Out */

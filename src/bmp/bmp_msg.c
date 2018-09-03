@@ -96,6 +96,15 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
     case BMP_MSG_ROUTE_MIRROR:
       bmp_process_msg_route_mirror(&bmp_packet_ptr, &pkt_remaining_len, bmpp);
       break;
+    case BMP_MSG_RM_ADJ_RIB_IN:
+      bmp_process_msg_route_monitor_adj_rib_in(&bmp_packet_ptr, &pkt_remaining_len, bmpp);
+      break;
+    case BMP_MSG_RM_ADJ_RIB_OUT:
+      bmp_process_msg_route_monitor_adj_rib_out(&bmp_packet_ptr, &pkt_remaining_len, bmpp);
+      break;
+    case BMP_MSG_RM_LOC_RIB:
+      bmp_process_msg_route_monitor_loc_rib(&bmp_packet_ptr, &pkt_remaining_len, bmpp);
+      break;
     default:
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: unknown message type (%u)\n",
 	  config.name, bms->log_str, peer->addr_str, bch->type);
@@ -695,6 +704,21 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
       }
     }
   }
+}
+
+void bmp_process_msg_route_monitor_adj_rib_in(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
+{
+  // XXX
+}
+
+void bmp_process_msg_route_monitor_adj_rib_out(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
+{
+  // XXX
+}
+
+void bmp_process_msg_route_monitor_loc_rib(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
+{
+  // XXX
 }
 
 void bmp_common_hdr_get_len(struct bmp_common_hdr *bch, u_int32_t *len)
