@@ -49,6 +49,11 @@ char *bmp_get_and_check_length(char **bmp_packet_ptr, u_int32_t *pkt_size, u_int
   return current_ptr;
 }
 
+int bmp_get_tlv_and_check_length(char **bmp_packet_ptr, u_int32_t *pkt_size, struct bmp_rm_tlv *btlv) 
+{
+  // XXX: extract TLV
+}
+
 void bmp_jump_offset(char **bmp_packet_ptr, u_int32_t *len, u_int32_t offset)
 {
   if (bmp_packet_ptr && (*bmp_packet_ptr) && len) {

@@ -37,9 +37,7 @@ EXT void bmp_process_msg_peer_down(char **, u_int32_t *, struct bmp_peer *);
 EXT void bmp_process_msg_stats(char **, u_int32_t *, struct bmp_peer *);
 EXT void bmp_process_msg_route_monitor(char **, u_int32_t *, struct bmp_peer *);
 EXT void bmp_process_msg_route_mirror(char **, u_int32_t *, struct bmp_peer *);
-EXT void bmp_process_msg_route_monitor_adj_rib_in(char **, u_int32_t *, struct bmp_peer *);
-EXT void bmp_process_msg_route_monitor_adj_rib_out(char **, u_int32_t *, struct bmp_peer *);
-EXT void bmp_process_msg_route_monitor_loc_rib(char **, u_int32_t *, struct bmp_peer *);
+EXT void bmp_process_msg_tlv_route_monitor(char **, u_int32_t *, struct bmp_peer *, u_int8_t);
 
 EXT void bmp_common_hdr_get_len(struct bmp_common_hdr *, u_int32_t *);
 EXT void bmp_init_hdr_get_len(struct bmp_init_hdr *, u_int16_t *);

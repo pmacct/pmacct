@@ -29,17 +29,17 @@
 #define BMP_MISSING_PEER_UP_LOG_TOUT	60
 
 /* BMP message types */
-#define BMP_MSG_ROUTE_MONITOR	0	
-#define	BMP_MSG_STATS		1
-#define BMP_MSG_PEER_DOWN	2
-#define BMP_MSG_PEER_UP		3
-#define	BMP_MSG_INIT		4
-#define BMP_MSG_TERM		5
-#define BMP_MSG_ROUTE_MIRROR	6	
-#define BMP_MSG_RM_ADJ_RIB_IN	7 /* draft-hsmit-bmp-extensible-routemon-msgs-01 */
-#define BMP_MSG_RM_ADJ_RIB_OUT	8 /* draft-hsmit-bmp-extensible-routemon-msgs-01 */
-#define BMP_MSG_RM_LOC_RIB	9 /* draft-hsmit-bmp-extensible-routemon-msgs-01 */
-#define BMP_MSG_TYPE_MAX	9 /* set to the highest BMP_MSG_* value */
+#define BMP_MSG_ROUTE_MONITOR		0	
+#define	BMP_MSG_STATS			1
+#define BMP_MSG_PEER_DOWN		2
+#define BMP_MSG_PEER_UP			3
+#define	BMP_MSG_INIT			4
+#define BMP_MSG_TERM			5
+#define BMP_MSG_ROUTE_MIRROR		6	
+#define BMP_MSG_TLV_RM_ADJ_RIB_IN	7 /* draft-hsmit-bmp-extensible-routemon-msgs-00 */
+#define BMP_MSG_TLV_RM_ADJ_RIB_OUT	8 /* draft-hsmit-bmp-extensible-routemon-msgs-00 */
+#define BMP_MSG_TLV_RM_LOC_RIB		9 /* draft-hsmit-bmp-extensible-routemon-msgs-00 */
+#define BMP_MSG_TYPE_MAX		9 /* set to the highest BMP_MSG_* value */
 
 static const char *bmp_msg_types[] = {
   "Route Monitoring",
@@ -125,32 +125,36 @@ struct bmp_stats_hdr {
   u_int32_t	count;
 } __attribute__ ((packed));
 
-/* draft-hsmit-bmp-extensible-routemon-msgs-01: start */
-struct bmp_monitor_tlv {
+/* draft-hsmit-bmp-extensible-routemon-msgs-00: start */
+struct bmp_rm_tlv {
   u_int16_t	type;
   u_int16_t 	len;
-} __attribute__ ((packed));
+  void *	value;
+};
 
 #define BGP_MONITOR_TYPE_UPDATE			1 
 #define BGP_MONITOR_TYPE_FLAGS			2
 
-#define BGP_MONITOR_FLAG_PRE_POLICY		0
-#define BGP_MONITOR_FLAG_POST_POLICY		1
-#define BGP_MONITOR_FLAG_ROUTE_VALID		2
-#define BGP_MONITOR_FLAG_ROUTE_INVALID		3
-#define BGP_MONITOR_FLAG_ROUTE_ACCEPT		4
-#define BGP_MONITOR_FLAG_ROUTE_REJECT		5
-#define BGP_MONITOR_FLAG_ROUTE_BEST		6
-#define BGP_MONITOR_FLAG_ROUTE_NOT_BEST		7
-#define BGP_MONITOR_FLAG_ROUTE_GLOBAL		8
-#define BGP_MONITOR_FLAG_ROUTE_NOT_GLOBAL	9
-#define BGP_MONITOR_FLAG_AS_PATH_4B		10
-/* unused */
-#define BGP_MONITOR_FLAG_NLRI_PATH_ID		12
-#define BGP_MONITOR_FLAG_NLRI_NO_PATH_ID	13
-#define BGP_MONITOR_FLAG_ROUTE_GLOBAL_BEST	14
-#define BGP_MONITOR_FLAG_ROUTE_GLOBAL_NO_BEST	15
-/* draft-hsmit-bmp-extensible-routemon-msgs-01: end */
+/* first byte */
+#define BGP_MONITOR_FLAG_PRE_POLICY		0x01
+#define BGP_MONITOR_FLAG_POST_POLICY		0x02
+#define BGP_MONITOR_FLAG_ROUTE_VALID		0x04
+#define BGP_MONITOR_FLAG_ROUTE_INVALID		0x08
+#define BGP_MONITOR_FLAG_ROUTE_ACCEPT		0x10
+#define BGP_MONITOR_FLAG_ROUTE_REJECT		0x20
+#define BGP_MONITOR_FLAG_ROUTE_BEST		0x40
+#define BGP_MONITOR_FLAG_ROUTE_NOT_BEST		0x80
+
+/* second byte */
+#define BGP_MONITOR_FLAG_ROUTE_GLOBAL		0x01
+#define BGP_MONITOR_FLAG_ROUTE_NOT_GLOBAL	0x02
+#define BGP_MONITOR_FLAG_AS_PATH_4B		0x04
+#define BGP_MONITOR_FLAG_RESERVED1		0x08
+#define BGP_MONITOR_FLAG_NLRI_PATH_ID		0x10
+#define BGP_MONITOR_FLAG_NLRI_NO_PATH_ID	0x20
+#define BGP_MONITOR_FLAG_ROUTE_GLOBAL_BEST	0x40
+#define BGP_MONITOR_FLAG_ROUTE_GLOBAL_NO_BEST	0x80
+/* draft-hsmit-bmp-extensible-routemon-msgs-00: end */
 
 struct bmp_peer {
   struct bgp_peer self;
