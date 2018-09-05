@@ -752,7 +752,14 @@ void bmp_process_msg_tlv_route_monitor(char **bmp_packet, u_int32_t *len, struct
       return;
     }
 
-    // XXX: process TLVs
+    if (tlv_flags.type == BGP_MONITOR_TYPE_FLAGS && tlv_update.type == BGP_MONITOR_TYPE_UPDATE) {
+      // XXX: process flags TLV
+    }
+    else {
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] [tlv route] packet discarded: flags and BGP update are mandatory TLVs\n",
+          config.name, bms->log_str, peer->addr_str);
+      return;
+    }
 
     /* If no timestamp in BMP then let's generate one */
     if (!bdata.tstamp.tv_sec) gettimeofday(&bdata.tstamp, NULL);
@@ -783,16 +790,14 @@ void bmp_process_msg_tlv_route_monitor(char **bmp_packet, u_int32_t *len, struct
       bmd.extra.data = &bmed_bmp;
       bgp_msg_data_set_data_bmp(&bmed_bmp, &bdata);
       /* XXX: checks, ie. marker, message length, etc., bypassed */
-      bgp_update_len = bgp_parse_update_msg(&bmd, (*bmp_packet)); 
+      bgp_update_len = bgp_parse_update_msg(&bmd, tlv_update.value);
       bms->peer_str = saved_peer_str;
-
-      bmp_get_and_check_length(bmp_packet, len, bgp_update_len);
     }
     /* missing BMP peer up message, ie. case of replay/replication of BMP messages */
     else {
       if (!log_notification_isset(&bmpp->missing_peer_up, bdata.tstamp.tv_sec)) {
 	log_notification_set(&bmpp->missing_peer_up, bdata.tstamp.tv_sec, BMP_MISSING_PEER_UP_LOG_TOUT);
-	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route] packet discarded: missing peer up BMP message for peer %s\n",
+	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [tlv route] packet discarded: missing peer up BMP message for peer %s\n",
 		config.name, bms->log_str, peer->addr_str, peer_ip);
       }
     }
