@@ -48,7 +48,10 @@ static const char *bmp_msg_types[] = {
   "Peer Up Notification",
   "Initiation Message",
   "Termination Message",
-  "Route Mirroring"
+  "Route Mirroring",
+  "TLV RM Adj-Rib-In",
+  "TLV RM Adj-Rib-Out",
+  "TLV RM Loc-Rib"
 };
 
 struct bmp_common_hdr {

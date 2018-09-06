@@ -873,7 +873,9 @@ void bmp_flag_tlv_is_post(struct bmp_rm_tlv *btlv, u_int8_t *is_post)
 {
   if (btlv && btlv->len >= BGP_MONITOR_FLAG_MIN_LEN && is_post) {
     u_int8_t *ptr = btlv->value;
-    (*is_post) = ((u_int8_t)ptr[0] & BGP_MONITOR_FLAG_POST_POLICY);
+
+    if ((u_int8_t)ptr[0] & BGP_MONITOR_FLAG_POST_POLICY) (*is_post) = TRUE;
+    else (*is_post) = FALSE;
   }
 }
 
@@ -881,7 +883,9 @@ void bmp_flag_tlv_is_2b_asn(struct bmp_rm_tlv *btlv, u_int8_t *is_2b_asn)
 {
   if (btlv && btlv->len >= BGP_MONITOR_FLAG_MIN_LEN && is_2b_asn) {
     u_int8_t *ptr = btlv->value;
-    (*is_2b_asn) = (!((u_int8_t)ptr[1] & BGP_MONITOR_FLAG_AS_PATH_4B));
+
+    if (!((u_int8_t)ptr[1] & BGP_MONITOR_FLAG_AS_PATH_4B)) (*is_2b_asn) = TRUE;
+    else (*is_2b_asn) = FALSE;
   }
 }
 

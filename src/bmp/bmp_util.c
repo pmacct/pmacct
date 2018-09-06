@@ -59,8 +59,11 @@ int bmp_get_tlv_and_check_length(char **bmp_packet_ptr, u_int32_t *pkt_size, str
 
     /* check we have room for type (u_int16_t) and len (u_int16_t) fields */
     if ((*pkt_size) >= 4) {
-      type = ntohs(*((*bmp_packet_ptr)));
-      len = ntohs(*((*bmp_packet_ptr) + 2));
+      memcpy(&type, (*bmp_packet_ptr), 2); 
+      memcpy(&len, ((*bmp_packet_ptr) + 2), 2); 
+
+      type = ntohs(type);
+      len = ntohs(len);
 
       (*pkt_size) -= 4;
       (*bmp_packet_ptr) += 4;
