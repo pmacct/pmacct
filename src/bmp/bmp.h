@@ -135,6 +135,8 @@ struct bmp_rm_tlv {
 #define BGP_MONITOR_TYPE_UPDATE			1 
 #define BGP_MONITOR_TYPE_FLAGS			2
 
+#define BGP_MONITOR_FLAG_MIN_LEN		2
+
 /* first byte */
 #define BGP_MONITOR_FLAG_PRE_POLICY		0x01
 #define BGP_MONITOR_FLAG_POST_POLICY		0x02

@@ -753,7 +753,11 @@ void bmp_process_msg_tlv_route_monitor(char **bmp_packet, u_int32_t *len, struct
     }
 
     if (tlv_flags.type == BGP_MONITOR_TYPE_FLAGS && tlv_update.type == BGP_MONITOR_TYPE_UPDATE) {
-      // XXX: process flags TLV
+      bmp_tlv_route_monitor_get_type(type, &bdata.is_out);
+      bmp_flag_tlv_is_post(&tlv_flags, &bdata.is_post);
+      bmp_flag_tlv_is_2b_asn(&tlv_flags, &bdata.is_2b_asn);
+      
+      /* XXX: check BGP update length matches tlv_update.len */
     }
     else {
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] [tlv route] packet discarded: flags and BGP update are mandatory TLVs\n",
@@ -863,6 +867,30 @@ void bmp_peer_hdr_get_f_flag(struct bmp_peer_hdr *bph, u_int8_t *is_filtered)
 void bmp_peer_hdr_get_o_flag(struct bmp_peer_hdr *bph, u_int8_t *is_out)
 {
   if (bph && is_out) (*is_out) = (bph->flags & BMP_PEER_FLAGS_ARO_O);
+}
+
+void bmp_flag_tlv_is_post(struct bmp_rm_tlv *btlv, u_int8_t *is_post)
+{
+  if (btlv && btlv->len >= BGP_MONITOR_FLAG_MIN_LEN && is_post) {
+    u_int8_t *ptr = btlv->value;
+    (*is_post) = ((u_int8_t)ptr[0] & BGP_MONITOR_FLAG_POST_POLICY);
+  }
+}
+
+void bmp_flag_tlv_is_2b_asn(struct bmp_rm_tlv *btlv, u_int8_t *is_2b_asn)
+{
+  if (btlv && btlv->len >= BGP_MONITOR_FLAG_MIN_LEN && is_2b_asn) {
+    u_int8_t *ptr = btlv->value;
+    (*is_2b_asn) = (!((u_int8_t)ptr[1] & BGP_MONITOR_FLAG_AS_PATH_4B));
+  }
+}
+
+void bmp_tlv_route_monitor_get_type(u_int8_t type, u_int8_t *is_out)
+{
+  if (is_out) {
+    if (type == BMP_MSG_TLV_RM_ADJ_RIB_OUT) (*is_out) = TRUE;
+    /* XXX: is_loc_rib */
+  }
 }
 
 void bmp_peer_hdr_get_peer_ip(struct bmp_peer_hdr *bph, struct host_addr *a, u_int8_t family)
