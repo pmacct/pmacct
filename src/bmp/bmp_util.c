@@ -255,14 +255,14 @@ void bmp_peer_close(struct bmp_peer *bmpp, int type)
   bgp_peer_close(peer, type, FALSE, FALSE, FALSE, FALSE, NULL);
 }
 
-void bgp_msg_data_set_data_bmp(struct bgp_msg_extra_data_bmp *bmed_bmp, struct bmp_data *bdata)
+void bgp_msg_data_set_data_bmp(struct bmp_chars *bmed_bmp, struct bmp_data *bdata)
 {
-  bmed_bmp->peer_type = bdata->peer_type;
+  bmed_bmp->peer_type = bdata->chars.peer_type;
 
-  bmed_bmp->is_post = bdata->is_post;
-  bmed_bmp->is_2b_asn = bdata->is_2b_asn;
-  bmed_bmp->is_out = bdata->is_out;
-  bmed_bmp->is_filtered = bdata->is_filtered;
+  bmed_bmp->is_post = bdata->chars.is_post;
+  bmed_bmp->is_2b_asn = bdata->chars.is_2b_asn;
+  bmed_bmp->is_out = bdata->chars.is_out;
+  bmed_bmp->is_filtered = bdata->chars.is_filtered;
 }
 
 int bgp_extra_data_cmp_bmp(struct bgp_msg_extra_data *a, struct bgp_msg_extra_data *b) 
@@ -311,7 +311,7 @@ void bgp_extra_data_free_bmp(struct bgp_msg_extra_data *bmed)
 
 void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void *void_obj)
 {
-  struct bgp_msg_extra_data_bmp *bmed_bmp;
+  struct bmp_chars *bmed_bmp;
 
   if (!bmed || !void_obj || bmed->id != BGP_MSG_EXTRA_DATA_BMP) return;
 

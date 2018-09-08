@@ -296,15 +296,15 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
     return;
   }
 
-  bmp_peer_hdr_get_peer_type(bph, &bdata.peer_type);
-  if (bdata.peer_type == BMP_PEER_TYPE_LOC_RIB) {
-    bmp_peer_hdr_get_f_flag(bph, &bdata.is_filtered);
+  bmp_peer_hdr_get_peer_type(bph, &bdata.chars.peer_type);
+  if (bdata.chars.peer_type == BMP_PEER_TYPE_LOC_RIB) {
+    bmp_peer_hdr_get_f_flag(bph, &bdata.chars.is_filtered);
   }
   else {
     bmp_peer_hdr_get_v_flag(bph, &bdata.family);
-    bmp_peer_hdr_get_l_flag(bph, &bdata.is_post);
-    bmp_peer_hdr_get_a_flag(bph, &bdata.is_2b_asn);
-    bmp_peer_hdr_get_o_flag(bph, &bdata.is_out);
+    bmp_peer_hdr_get_l_flag(bph, &bdata.chars.is_post);
+    bmp_peer_hdr_get_a_flag(bph, &bdata.chars.is_2b_asn);
+    bmp_peer_hdr_get_o_flag(bph, &bdata.chars.is_out);
   }
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
@@ -318,7 +318,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
     {
       struct bmp_log_peer_up blpu;
       struct bgp_peer bgp_peer_loc, bgp_peer_rem, *bmpp_bgp_peer;
-      struct bgp_msg_extra_data_bmp bmed_bmp;
+      struct bmp_chars bmed_bmp;
       struct bgp_msg_data bmd;
       int bgp_open_len;
       void *ret;
@@ -398,11 +398,11 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
     return;
   }
 
-  bmp_peer_hdr_get_peer_type(bph, &bdata.peer_type);
-  if (bdata.peer_type != BMP_PEER_TYPE_LOC_RIB) {
+  bmp_peer_hdr_get_peer_type(bph, &bdata.chars.peer_type);
+  if (bdata.chars.peer_type != BMP_PEER_TYPE_LOC_RIB) {
     bmp_peer_hdr_get_v_flag(bph, &bdata.family);
-    bmp_peer_hdr_get_l_flag(bph, &bdata.is_post);
-    bmp_peer_hdr_get_o_flag(bph, &bdata.is_out);
+    bmp_peer_hdr_get_l_flag(bph, &bdata.chars.is_post);
+    bmp_peer_hdr_get_o_flag(bph, &bdata.chars.is_out);
   }
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
@@ -485,15 +485,15 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
     return;
   }
 
-  bmp_peer_hdr_get_peer_type(bph, &bdata.peer_type);
-  if (bdata.peer_type == BMP_PEER_TYPE_LOC_RIB) {
-    bmp_peer_hdr_get_f_flag(bph, &bdata.is_filtered);
+  bmp_peer_hdr_get_peer_type(bph, &bdata.chars.peer_type);
+  if (bdata.chars.peer_type == BMP_PEER_TYPE_LOC_RIB) {
+    bmp_peer_hdr_get_f_flag(bph, &bdata.chars.is_filtered);
   }
   else {
     bmp_peer_hdr_get_v_flag(bph, &bdata.family);
-    bmp_peer_hdr_get_l_flag(bph, &bdata.is_post);
-    bmp_peer_hdr_get_a_flag(bph, &bdata.is_2b_asn);
-    bmp_peer_hdr_get_o_flag(bph, &bdata.is_out);
+    bmp_peer_hdr_get_l_flag(bph, &bdata.chars.is_post);
+    bmp_peer_hdr_get_a_flag(bph, &bdata.chars.is_2b_asn);
+    bmp_peer_hdr_get_o_flag(bph, &bdata.chars.is_out);
   }
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
@@ -513,7 +513,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 
     if (ret) {
       char peer_str[] = "peer_ip", *saved_peer_str = bms->peer_str;
-      struct bgp_msg_extra_data_bmp bmed_bmp;
+      struct bmp_chars bmed_bmp;
       struct bgp_msg_data bmd;
 
       bmpp_bgp_peer = (*(struct bgp_peer **) ret);
@@ -526,6 +526,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
       bmd.extra.len = sizeof(bmed_bmp);
       bmd.extra.data = &bmed_bmp;
       bgp_msg_data_set_data_bmp(&bmed_bmp, &bdata);
+
       /* XXX: checks, ie. marker, message length, etc., bypassed */
       bgp_update_len = bgp_parse_update_msg(&bmd, (*bmp_packet)); 
       bms->peer_str = saved_peer_str;
@@ -584,14 +585,14 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
     return;
   }
 
-  bmp_peer_hdr_get_peer_type(bph, &bdata.peer_type);
-  if (bdata.peer_type == BMP_PEER_TYPE_LOC_RIB) {
-    bmp_peer_hdr_get_f_flag(bph, &bdata.is_filtered);
+  bmp_peer_hdr_get_peer_type(bph, &bdata.chars.peer_type);
+  if (bdata.chars.peer_type == BMP_PEER_TYPE_LOC_RIB) {
+    bmp_peer_hdr_get_f_flag(bph, &bdata.chars.is_filtered);
   }
   else {
     bmp_peer_hdr_get_v_flag(bph, &bdata.family);
-    bmp_peer_hdr_get_l_flag(bph, &bdata.is_post);
-    bmp_peer_hdr_get_o_flag(bph, &bdata.is_out);
+    bmp_peer_hdr_get_l_flag(bph, &bdata.chars.is_post);
+    bmp_peer_hdr_get_o_flag(bph, &bdata.chars.is_out);
   }
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
@@ -753,11 +754,9 @@ void bmp_process_msg_tlv_route_monitor(char **bmp_packet, u_int32_t *len, struct
     }
 
     if (tlv_flags.type == BGP_MONITOR_TYPE_FLAGS && tlv_update.type == BGP_MONITOR_TYPE_UPDATE) {
-      bmp_tlv_route_monitor_get_type(type, &bdata.is_out);
-      bmp_flag_tlv_is_post(&tlv_flags, &bdata.is_post);
-      bmp_flag_tlv_is_2b_asn(&tlv_flags, &bdata.is_2b_asn);
-      
-      /* XXX: check BGP update length matches tlv_update.len */
+      bmp_tlv_route_monitor_get_type(type, &bdata.chars.is_out);
+      bmp_flag_tlv_is_post(&tlv_flags, &bdata.chars.is_post);
+      bmp_flag_tlv_is_2b_asn(&tlv_flags, &bdata.chars.is_2b_asn);
     }
     else {
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] [tlv route] packet discarded: flags and BGP update are mandatory TLVs\n",
@@ -780,7 +779,7 @@ void bmp_process_msg_tlv_route_monitor(char **bmp_packet, u_int32_t *len, struct
        the check should be made optional or relaxed in future? */
     if (ret) {
       char peer_str[] = "peer_ip", *saved_peer_str = bms->peer_str;
-      struct bgp_msg_extra_data_bmp bmed_bmp;
+      struct bmp_chars bmed_bmp;
       struct bgp_msg_data bmd;
 
       bmpp_bgp_peer = (*(struct bgp_peer **) ret);
@@ -793,6 +792,7 @@ void bmp_process_msg_tlv_route_monitor(char **bmp_packet, u_int32_t *len, struct
       bmd.extra.len = sizeof(bmed_bmp);
       bmd.extra.data = &bmed_bmp;
       bgp_msg_data_set_data_bmp(&bmed_bmp, &bdata);
+
       /* XXX: checks, ie. marker, message length, etc., bypassed */
       bgp_update_len = bgp_parse_update_msg(&bmd, tlv_update.value);
       bms->peer_str = saved_peer_str;

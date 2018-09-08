@@ -167,14 +167,6 @@ struct bmp_peer {
   struct log_notification missing_peer_up;
 };
 
-struct bgp_msg_extra_data_bmp {
-  u_int8_t peer_type;
-  u_int8_t is_post;
-  u_int8_t is_2b_asn;
-  u_int8_t is_filtered;
-  u_int8_t is_out;
-};
-
 #define BMP_STATS_TYPE0		0  /* (32-bit Counter) Number of prefixes rejected by inbound policy */
 #define BMP_STATS_TYPE1		1  /* (32-bit Counter) Number of (known) duplicate prefix advertisements */
 #define BMP_STATS_TYPE2		2  /* (32-bit Counter) Number of (known) duplicate withdraws */
@@ -252,16 +244,20 @@ struct bmp_peer_up_hdr {
   /* Received OPEN Message */
 } __attribute__ ((packed));
 
-struct bmp_data {
-  u_int8_t family;
-  struct host_addr peer_ip;
-  struct host_addr bgp_id;
-  u_int32_t peer_asn;
+struct bmp_chars {
   u_int8_t peer_type;
   u_int8_t is_post;
   u_int8_t is_2b_asn;
   u_int8_t is_filtered;
   u_int8_t is_out;
+}; 
+
+struct bmp_data {
+  u_int8_t family;
+  struct host_addr peer_ip;
+  struct host_addr bgp_id;
+  u_int32_t peer_asn;
+  struct bmp_chars chars;
   struct timeval tstamp;
 };
 
