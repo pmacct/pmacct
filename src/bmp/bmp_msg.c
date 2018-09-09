@@ -299,6 +299,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
   bmp_peer_hdr_get_peer_type(bph, &bdata.chars.peer_type);
   if (bdata.chars.peer_type == BMP_PEER_TYPE_LOC_RIB) {
     bmp_peer_hdr_get_f_flag(bph, &bdata.chars.is_filtered);
+    bdata.chars.is_loc = TRUE;
   }
   else {
     bmp_peer_hdr_get_v_flag(bph, &bdata.family);
@@ -306,6 +307,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
     bmp_peer_hdr_get_a_flag(bph, &bdata.chars.is_2b_asn);
     bmp_peer_hdr_get_o_flag(bph, &bdata.chars.is_out);
   }
+
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
@@ -399,11 +401,15 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
   }
 
   bmp_peer_hdr_get_peer_type(bph, &bdata.chars.peer_type);
-  if (bdata.chars.peer_type != BMP_PEER_TYPE_LOC_RIB) {
+  if (bdata.chars.peer_type == BMP_PEER_TYPE_LOC_RIB) {
+    bdata.chars.is_loc = TRUE;
+  }
+  else {
     bmp_peer_hdr_get_v_flag(bph, &bdata.family);
     bmp_peer_hdr_get_l_flag(bph, &bdata.chars.is_post);
     bmp_peer_hdr_get_o_flag(bph, &bdata.chars.is_out);
   }
+
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
@@ -488,6 +494,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
   bmp_peer_hdr_get_peer_type(bph, &bdata.chars.peer_type);
   if (bdata.chars.peer_type == BMP_PEER_TYPE_LOC_RIB) {
     bmp_peer_hdr_get_f_flag(bph, &bdata.chars.is_filtered);
+    bdata.chars.is_loc = TRUE;
   }
   else {
     bmp_peer_hdr_get_v_flag(bph, &bdata.family);
@@ -495,6 +502,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
     bmp_peer_hdr_get_a_flag(bph, &bdata.chars.is_2b_asn);
     bmp_peer_hdr_get_o_flag(bph, &bdata.chars.is_out);
   }
+
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
@@ -588,12 +596,14 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
   bmp_peer_hdr_get_peer_type(bph, &bdata.chars.peer_type);
   if (bdata.chars.peer_type == BMP_PEER_TYPE_LOC_RIB) {
     bmp_peer_hdr_get_f_flag(bph, &bdata.chars.is_filtered);
+    bdata.chars.is_loc = TRUE;
   }
   else {
     bmp_peer_hdr_get_v_flag(bph, &bdata.family);
     bmp_peer_hdr_get_l_flag(bph, &bdata.chars.is_post);
     bmp_peer_hdr_get_o_flag(bph, &bdata.chars.is_out);
   }
+
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
@@ -754,7 +764,7 @@ void bmp_process_msg_tlv_route_monitor(char **bmp_packet, u_int32_t *len, struct
     }
 
     if (tlv_flags.type == BGP_MONITOR_TYPE_FLAGS && tlv_update.type == BGP_MONITOR_TYPE_UPDATE) {
-      bmp_tlv_route_monitor_get_type(type, &bdata.chars.is_out);
+      bmp_tlv_route_monitor_get_type(type, &bdata.chars);
       bmp_flag_tlv_is_post(&tlv_flags, &bdata.chars.is_post);
       bmp_flag_tlv_is_2b_asn(&tlv_flags, &bdata.chars.is_2b_asn);
     }
@@ -889,11 +899,11 @@ void bmp_flag_tlv_is_2b_asn(struct bmp_rm_tlv *btlv, u_int8_t *is_2b_asn)
   }
 }
 
-void bmp_tlv_route_monitor_get_type(u_int8_t type, u_int8_t *is_out)
+void bmp_tlv_route_monitor_get_type(u_int8_t type, struct bmp_chars *chars)
 {
-  if (is_out) {
-    if (type == BMP_MSG_TLV_RM_ADJ_RIB_OUT) (*is_out) = TRUE;
-    /* XXX: is_loc_rib */
+  if (chars) {
+    if (type == BMP_MSG_TLV_RM_ADJ_RIB_OUT) (chars->is_out) = TRUE;
+    else if (type == BMP_MSG_TLV_RM_LOC_RIB) (chars->is_loc) = TRUE;
   }
 }
 

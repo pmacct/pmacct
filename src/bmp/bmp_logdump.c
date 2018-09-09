@@ -152,10 +152,11 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_
 
   json_object_set_new_nocheck(obj, "peer_type", json_integer((json_int_t)bdata->chars.peer_type));
 
-  if (bdata->chars.peer_type == BMP_PEER_TYPE_LOC_RIB) {
+  if (bdata->chars.is_loc) {
     json_object_set_new_nocheck(obj, "is_filtered", json_integer((json_int_t)bdata->chars.is_filtered));
+    json_object_set_new_nocheck(obj, "is_loc", json_integer((json_int_t)bdata->chars.is_loc));
   }
-  else { 
+  else if (bdata->chars.is_out) {
     json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bdata->chars.is_post));
     json_object_set_new_nocheck(obj, "is_out", json_integer((json_int_t)bdata->chars.is_out));
   }
@@ -254,10 +255,11 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
   if (bdata->chars.peer_type <= BMP_PEER_TYPE_MAX)
     json_object_set_new_nocheck(obj, "peer_type_str", json_string(bmp_peer_types[bdata->chars.peer_type]));
 
-  if (bdata->chars.peer_type == BMP_PEER_TYPE_LOC_RIB) {
+  if (bdata->chars.is_loc) {
     json_object_set_new_nocheck(obj, "is_filtered", json_integer((json_int_t)bdata->chars.is_filtered));
+    json_object_set_new_nocheck(obj, "is_loc", json_integer((json_int_t)bdata->chars.is_loc));
   }
-  else {
+  else if (bdata->chars.is_out) {
     json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bdata->chars.is_post));
     json_object_set_new_nocheck(obj, "is_out", json_integer((json_int_t)bdata->chars.is_out));
   }

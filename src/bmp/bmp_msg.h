@@ -48,7 +48,7 @@ EXT void bmp_peer_hdr_get_l_flag(struct bmp_peer_hdr *, u_int8_t *);
 EXT void bmp_peer_hdr_get_a_flag(struct bmp_peer_hdr *, u_int8_t *);
 EXT void bmp_peer_hdr_get_f_flag(struct bmp_peer_hdr *, u_int8_t *);
 EXT void bmp_peer_hdr_get_o_flag(struct bmp_peer_hdr *, u_int8_t *);
-EXT void bmp_tlv_route_monitor_get_type(u_int8_t, u_int8_t *);
+EXT void bmp_tlv_route_monitor_get_type(u_int8_t, struct bmp_chars *);
 EXT void bmp_flag_tlv_is_post(struct bmp_rm_tlv *, u_int8_t *);
 EXT void bmp_flag_tlv_is_2b_asn(struct bmp_rm_tlv *, u_int8_t *);
 EXT void bmp_peer_hdr_get_peer_ip(struct bmp_peer_hdr *, struct host_addr *, u_int8_t);

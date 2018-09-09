@@ -250,6 +250,7 @@ struct bmp_chars {
   u_int8_t is_2b_asn;
   u_int8_t is_filtered;
   u_int8_t is_out;
+  u_int8_t is_loc;
 }; 
 
 struct bmp_data {

@@ -257,12 +257,7 @@ void bmp_peer_close(struct bmp_peer *bmpp, int type)
 
 void bgp_msg_data_set_data_bmp(struct bmp_chars *bmed_bmp, struct bmp_data *bdata)
 {
-  bmed_bmp->peer_type = bdata->chars.peer_type;
-
-  bmed_bmp->is_post = bdata->chars.is_post;
-  bmed_bmp->is_2b_asn = bdata->chars.is_2b_asn;
-  bmed_bmp->is_out = bdata->chars.is_out;
-  bmed_bmp->is_filtered = bdata->chars.is_filtered;
+  memcpy(bmed_bmp, &bdata->chars, sizeof(struct bmp_chars));
 }
 
 int bgp_extra_data_cmp_bmp(struct bgp_msg_extra_data *a, struct bgp_msg_extra_data *b) 
@@ -321,10 +316,11 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
 #ifdef WITH_JANSSON
     json_t *obj = void_obj;
 
-    if (bmed_bmp->peer_type == BMP_PEER_TYPE_LOC_RIB) {
+    if (bmed_bmp->is_loc) {
       json_object_set_new_nocheck(obj, "is_filtered", json_integer((json_int_t)bmed_bmp->is_filtered));
+      json_object_set_new_nocheck(obj, "is_loc", json_integer((json_int_t)bmed_bmp->is_loc));
     }
-    else {
+    else if (bmed_bmp->is_out) {
       json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bmed_bmp->is_post));
       json_object_set_new_nocheck(obj, "is_out", json_integer((json_int_t)bmed_bmp->is_out));
     }
