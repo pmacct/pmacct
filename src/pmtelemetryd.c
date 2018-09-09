@@ -176,6 +176,8 @@ int main(int argc,char **argv, char **envp)
     }
   }
 
+  Log(LOG_INFO, "INFO ( %s/core ): %s %s (%s)\n", config.name, PMTELEMETRYD_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
+  Log(LOG_INFO, "INFO ( %s/core ): %s\n", config.name, PMACCT_COMPILE_ARGS);
 
   /* post-checks and resolving conflicts */
   if (strlen(config_file)) {
