@@ -861,22 +861,34 @@ void bmp_peer_hdr_get_v_flag(struct bmp_peer_hdr *bph, u_int8_t *family)
 
 void bmp_peer_hdr_get_l_flag(struct bmp_peer_hdr *bph, u_int8_t *is_post)
 {
-  if (bph && is_post) (*is_post) = (bph->flags & BMP_PEER_FLAGS_ARI_L);
+  if (bph && is_post) {
+    if (bph->flags & BMP_PEER_FLAGS_ARI_L) (*is_post) = TRUE;
+    else (*is_post) = FALSE;
+  }
 }
 
 void bmp_peer_hdr_get_a_flag(struct bmp_peer_hdr *bph, u_int8_t *is_2b_asn)
 {
-  if (bph && is_2b_asn) (*is_2b_asn) = (bph->flags & BMP_PEER_FLAGS_ARI_A);
+  if (bph && is_2b_asn) {
+    if (bph->flags & BMP_PEER_FLAGS_ARI_A) (*is_2b_asn) = TRUE;
+    else (*is_2b_asn) = FALSE;
+  }
 }
 
 void bmp_peer_hdr_get_f_flag(struct bmp_peer_hdr *bph, u_int8_t *is_filtered)
 {
-  if (bph && is_filtered) (*is_filtered) = (bph->flags & BMP_PEER_FLAGS_LR_F);
+  if (bph && is_filtered) {
+    if (bph->flags & BMP_PEER_FLAGS_LR_F) (*is_filtered) = TRUE;
+    else (*is_filtered) = FALSE;
+  }
 }
 
 void bmp_peer_hdr_get_o_flag(struct bmp_peer_hdr *bph, u_int8_t *is_out)
 {
-  if (bph && is_out) (*is_out) = (bph->flags & BMP_PEER_FLAGS_ARO_O);
+  if (bph && is_out) {
+    if (bph->flags & BMP_PEER_FLAGS_ARO_O)  (*is_out) = TRUE;
+    else (*is_out) = FALSE;
+  }
 }
 
 void bmp_flag_tlv_is_post(struct bmp_rm_tlv *btlv, u_int8_t *is_post)
@@ -902,6 +914,9 @@ void bmp_flag_tlv_is_2b_asn(struct bmp_rm_tlv *btlv, u_int8_t *is_2b_asn)
 void bmp_tlv_route_monitor_get_type(u_int8_t type, struct bmp_chars *chars)
 {
   if (chars) {
+    chars->is_out = FALSE;
+    chars->is_loc = FALSE;
+
     if (type == BMP_MSG_TLV_RM_ADJ_RIB_OUT) (chars->is_out) = TRUE;
     else if (type == BMP_MSG_TLV_RM_LOC_RIB) (chars->is_loc) = TRUE;
   }
