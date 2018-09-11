@@ -146,7 +146,7 @@ void telemetry_dump_se_ll_append(telemetry_peer *peer, struct telemetry_data *t_
   se_ll_elem = malloc(sizeof(telemetry_dump_se_ll_elem));
   if (!se_ll_elem) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() se_ll_elem structure. Terminating.\n", config.name, t_data->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   memset(se_ll_elem, 0, sizeof(telemetry_dump_se_ll_elem));
@@ -154,7 +154,7 @@ void telemetry_dump_se_ll_append(telemetry_peer *peer, struct telemetry_data *t_
   se_ll_elem->rec.data = malloc(peer->msglen);
   if (!se_ll_elem->rec.data) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() se_ll_elem->rec.data structure. Terminating.\n", config.name, t_data->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
   memcpy(se_ll_elem->rec.data, peer->buf.base, peer->msglen); 
   se_ll_elem->rec.len = peer->msglen;
@@ -283,14 +283,14 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
     if (config.telemetry_dump_amqp_routing_key) {
       telemetry_dump_init_amqp_host();
       ret = p_amqp_connect_to_publish(&telemetry_dump_amqp_host);
-      if (ret) exit(ret);
+      if (ret) exit_gracefully(ret);
     }
 #endif
 
 #ifdef WITH_KAFKA
     if (config.telemetry_dump_kafka_topic) {
       ret = telemetry_dump_init_kafka_host();
-      if (ret) exit(ret);
+      if (ret) exit_gracefully(ret);
     }
 #endif
 
@@ -393,7 +393,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
     Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping telemetry data - END (PID: %u, PEERS: %u ET: %u) ***\n",
                 config.name, t_data->log_str, dumper_pid, tables_num, duration);
 
-    exit(0);
+    exit_gracefully(0);
   default: /* Parent */
     if (ret == -1) { /* Something went wrong */
       Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork telemetry dump writer: %s\n", config.name, t_data->log_str, strerror(errno));

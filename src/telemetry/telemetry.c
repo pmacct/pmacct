@@ -54,7 +54,7 @@ void telemetry_wrapper()
   t_data = malloc(sizeof(struct telemetry_data));
   if (!t_data) {
     Log(LOG_ERR, "ERROR ( %s/core/TELE ): malloc() struct telemetry_data failed. Terminating.\n", config.name);
-    exit_all(1);
+    exit_gracefully(1);
   }
   telemetry_prepare_thread(t_data);
 
@@ -100,7 +100,7 @@ void telemetry_daemon(void *t_data_void)
 
   if (!t_data) {
     Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon(): missing telemetry data. Terminating.\n", config.name, t_data->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   /* initial cleanups */
@@ -121,21 +121,21 @@ void telemetry_daemon(void *t_data_void)
   if ((config.telemetry_ip || config.telemetry_port_tcp || config.telemetry_port_udp) &&
       config.telemetry_zmq_address) {
     Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_ip and telemetry_daemon_zmq_address are mutually exclusive. Terminating.\n", config.name, t_data->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   memset(zmq_peer_msg, 0, sizeof(zmq_peer_msg));
 #else
   if (config.telemetry_zmq_address) {
     Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_zmq_address requires --enable-zmq. Terminating.\n", config.name, t_data->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
 #endif
 
   if (!config.telemetry_zmq_address) {
     if (config.telemetry_port_tcp && config.telemetry_port_udp) {
       Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_port_tcp and telemetry_daemon_port_udp are mutually exclusive. Terminating.\n", config.name, t_data->log_str);
-      exit_all(1);
+      exit_gracefully(1);
     }
     else if (!config.telemetry_port_tcp && !config.telemetry_port_udp) {
       /* defaulting to TCP */
@@ -181,7 +181,7 @@ void telemetry_daemon(void *t_data_void)
       ret = str_to_addr(config.telemetry_ip, &addr);
       if (!ret) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_ip value is not a valid IPv4/IPv6 address. Terminating.\n", config.name, t_data->log_str);
-	exit_all(1);
+	exit_gracefully(1);
       }
       slen = addr_to_sa((struct sockaddr *)&server, &addr, port);
     }
@@ -189,7 +189,7 @@ void telemetry_daemon(void *t_data_void)
 
   if (!config.telemetry_decoder) {
     Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_decoder is not specified. Terminating.\n", config.name, t_data->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
   else {
     if (!strcmp(config.telemetry_decoder, "json")) decoder = TELEMETRY_DECODER_JSON;
@@ -198,7 +198,7 @@ void telemetry_daemon(void *t_data_void)
       decoder = TELEMETRY_DECODER_ZJSON;
 #else
       Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_decoder set to 'zjson' but zlib not available. Terminating.\n", config.name, t_data->log_str);
-      exit_all(1);
+      exit_gracefully(1);
 #endif
     }
     else if (!strcmp(config.telemetry_decoder, "cisco_json")) decoder = TELEMETRY_DECODER_CISCO_JSON;
@@ -207,7 +207,7 @@ void telemetry_daemon(void *t_data_void)
       decoder = TELEMETRY_DECODER_CISCO_ZJSON;
 #else
       Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_decoder set to 'cisco_zjson' but zlib not available. Terminating.\n", config.name, t_data->log_str);
-      exit_all(1);
+      exit_gracefully(1);
 #endif
     }
     else if (!strcmp(config.telemetry_decoder, "cisco")) decoder = TELEMETRY_DECODER_CISCO;
@@ -215,12 +215,12 @@ void telemetry_daemon(void *t_data_void)
     else if (!strcmp(config.telemetry_decoder, "cisco_gpb_kv")) decoder = TELEMETRY_DECODER_CISCO_GPB_KV;
     else {
       Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_decoder set to unknown value. Terminating.\n", config.name, t_data->log_str);
-      exit_all(1);
+      exit_gracefully(1);
     }
 
     if (config.telemetry_zmq_address && decoder != TELEMETRY_DECODER_JSON) {
       Log(LOG_ERR, "ERROR ( %s/%s ): ZeroMQ collection supports only 'json' decoder (telemetry_daemon_decoder). Terminating.\n", config.name, t_data->log_str);
-      exit_all(1);
+      exit_gracefully(1);
     }
   }
 
@@ -235,7 +235,7 @@ void telemetry_daemon(void *t_data_void)
   telemetry_peers = malloc(config.telemetry_max_peers*sizeof(telemetry_peer));
   if (!telemetry_peers) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() telemetry_peers structure. Terminating.\n", config.name, t_data->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
   memset(telemetry_peers, 0, config.telemetry_max_peers*sizeof(telemetry_peer));
 
@@ -243,7 +243,7 @@ void telemetry_daemon(void *t_data_void)
     telemetry_peers_z = malloc(config.telemetry_max_peers*sizeof(telemetry_peer_z));
     if (!telemetry_peers_z) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() telemetry_peers_z structure. Terminating.\n", config.name, t_data->log_str);
-      exit_all(1);
+      exit_gracefully(1);
     }
     memset(telemetry_peers_z, 0, config.telemetry_max_peers*sizeof(telemetry_peer_z));
   }
@@ -252,7 +252,7 @@ void telemetry_daemon(void *t_data_void)
     telemetry_peers_timeout = malloc(config.telemetry_max_peers*sizeof(telemetry_peer_timeout));
     if (!telemetry_peers_timeout) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() telemetry_peers_timeout structure. Terminating.\n", config.name, t_data->log_str);
-      exit_all(1);
+      exit_gracefully(1);
     }
     memset(telemetry_peers_timeout, 0, config.telemetry_max_peers*sizeof(telemetry_peer_timeout));
   }
@@ -264,7 +264,7 @@ void telemetry_daemon(void *t_data_void)
 
     if (telemetry_misc_db->msglog_backend_methods > 1) {
       Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_msglog_file, telemetry_daemon_msglog_amqp_routing_key and telemetry_daemon_msglog_kafka_topic are mutually exclusive. Terminating.\n", config.name, t_data->log_str);
-      exit_all(1);
+      exit_gracefully(1);
     }
   }
 
@@ -275,7 +275,7 @@ void telemetry_daemon(void *t_data_void)
 
     if (telemetry_misc_db->dump_backend_methods > 1) {
       Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_dump_file, telemetry_dump_amqp_routing_key and telemetry_dump_kafka_topic are mutually exclusive. Terminating.\n", config.name, t_data->log_str);
-      exit_all(1);
+      exit_gracefully(1);
     }
   }
 
@@ -286,7 +286,7 @@ void telemetry_daemon(void *t_data_void)
     telemetry_misc_db->peers_log = malloc(config.telemetry_max_peers*sizeof(telemetry_peer_log));
     if (!telemetry_misc_db->peers_log) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() telemetry peers_log structure. Terminating.\n", config.name, t_data->log_str);
-      exit_all(1);
+      exit_gracefully(1);
     }
     memset(telemetry_misc_db->peers_log, 0, config.telemetry_max_peers*sizeof(telemetry_peer_log));
 
@@ -333,7 +333,7 @@ void telemetry_daemon(void *t_data_void)
 
       if (config.telemetry_sock < 0) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): socket() failed. Terminating.\n", config.name, t_data->log_str);
-	exit_all(1);
+	exit_gracefully(1);
       }
     }
 
@@ -379,14 +379,14 @@ void telemetry_daemon(void *t_data_void)
       ip_address = config.telemetry_ip ? config.telemetry_ip : null_ip_address;
       Log(LOG_ERR, "ERROR ( %s/%s ): bind() to ip=%s port=%u/%s failed (errno: %d).\n",
 	  config.name, t_data->log_str, ip_address, port, srv_proto, errno);
-      exit_all(1);
+      exit_gracefully(1);
     }
 
     if (config.telemetry_port_tcp) {
       rc = listen(config.telemetry_sock, 1);
       if (rc < 0) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): listen() failed (errno: %d).\n", config.name, t_data->log_str, errno);
-	exit_all(1);
+	exit_gracefully(1);
       }
     }
   }

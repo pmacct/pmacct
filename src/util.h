@@ -84,6 +84,7 @@ EXT void encode_mpls_label(char *, u_int32_t);
 EXT int timeval_cmp(struct timeval *, struct timeval *);
 EXT void exit_all(int);
 EXT void exit_plugin(int);
+EXT void exit_gracefully(int);
 EXT void reset_tag_label_status(struct packet_ptrs_vector *);
 EXT void reset_net_status(struct packet_ptrs *);
 EXT void reset_net_status_v(struct packet_ptrs_vector *);

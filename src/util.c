@@ -1382,6 +1382,12 @@ void exit_plugin(int status)
   exit(status);
 }
 
+void exit_gracefully(int status)
+{
+  if (config.type_id == PLUGIN_ID_CORE) exit_all(status); 
+  else exit_plugin(status);
+}
+
 void reset_tag_label_status(struct packet_ptrs_vector *pptrsv)
 {
   pptrsv->v4.tag = FALSE;
