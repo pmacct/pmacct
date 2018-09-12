@@ -211,7 +211,7 @@ struct pm_ndpi_flow_info *pm_ndpi_get_flow_info(struct pm_ndpi_workflow *workflo
 
       if (newflow == NULL) {
 	Log(LOG_ERR, "ERROR ( %s/core ): pm_ndpi_get_flow_info() not enough memory (1).\n", config.name);
-	exit(1);
+	exit_gracefully(1);
       }
 
       memset(newflow, 0, sizeof(struct pm_ndpi_flow_info));
@@ -223,19 +223,19 @@ struct pm_ndpi_flow_info *pm_ndpi_get_flow_info(struct pm_ndpi_workflow *workflo
 
       if ((newflow->ndpi_flow = ndpi_flow_malloc(SIZEOF_FLOW_STRUCT)) == NULL) {
 	Log(LOG_ERR, "ERROR ( %s/core ): pm_ndpi_get_flow_info() not enough memory (2).\n", config.name);
-	exit(1);
+	exit_gracefully(1);
       }
       else memset(newflow->ndpi_flow, 0, SIZEOF_FLOW_STRUCT);
 
       if ((newflow->src_id = ndpi_malloc(SIZEOF_ID_STRUCT)) == NULL) {
 	Log(LOG_ERR, "ERROR ( %s/core ): pm_ndpi_get_flow_info() not enough memory (3).\n", config.name);
-	exit(1);
+	exit_gracefully(1);
       }
       else memset(newflow->src_id, 0, SIZEOF_ID_STRUCT);
 
       if ((newflow->dst_id = ndpi_malloc(SIZEOF_ID_STRUCT)) == NULL) {
 	Log(LOG_ERR, "ERROR ( %s/core ): pm_ndpi_get_flow_info() not enough memory (4).\n", config.name);
-	exit(1);
+	exit_gracefully(1);
       }
       else memset(newflow->dst_id, 0, SIZEOF_ID_STRUCT);
 

@@ -119,7 +119,7 @@ void skinny_bmp_daemon()
     ret = str_to_addr(config.nfacctd_bmp_ip, &addr);
     if (!ret) {
       Log(LOG_ERR, "ERROR ( %s/%s ): 'bmp_daemon_ip' value is not a valid IPv4/IPv6 address. Terminating thread.\n", config.name, bmp_misc_db->log_str);
-      exit_all(1);
+      exit_gracefully(1);
     }
     slen = addr_to_sa((struct sockaddr *)&server, &addr, config.nfacctd_bmp_port);
   }
@@ -130,7 +130,7 @@ void skinny_bmp_daemon()
   bmp_peers = malloc(config.nfacctd_bmp_max_peers*sizeof(struct bmp_peer));
   if (!bmp_peers) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() BMP peers structure. Terminating thread.\n", config.name, bmp_misc_db->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
   memset(bmp_peers, 0, config.nfacctd_bmp_max_peers*sizeof(struct bmp_peer));
 
@@ -141,7 +141,7 @@ void skinny_bmp_daemon()
 
     if (bmp_misc_db->msglog_backend_methods > 1) {
       Log(LOG_ERR, "ERROR ( %s/%s ): bmp_daemon_msglog_file, bmp_daemon_msglog_amqp_routing_key and bmp_daemon_msglog_kafka_topic are mutually exclusive. Terminating thread.\n", config.name, bmp_misc_db->log_str);
-      exit_all(1);
+      exit_gracefully(1);
     }
   }
 
@@ -152,7 +152,7 @@ void skinny_bmp_daemon()
 
     if (bmp_misc_db->dump_backend_methods > 1) {
       Log(LOG_ERR, "ERROR ( %s/%s ): bmp_dump_file, bmp_dump_amqp_routing_key and bmp_dump_kafka_topic are mutually exclusive. Terminating thread.\n", config.name, bmp_misc_db->log_str);
-      exit_all(1);
+      exit_gracefully(1);
     }
   }
 
@@ -163,7 +163,7 @@ void skinny_bmp_daemon()
     bmp_misc_db->peers_log = malloc(config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer_log));
     if (!bmp_misc_db->peers_log) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() BMP peers log structure. Terminating thread.\n", config.name, bmp_misc_db->log_str);
-      exit_all(1);
+      exit_gracefully(1);
     }
     memset(bmp_misc_db->peers_log, 0, config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer_log));
 
@@ -198,7 +198,7 @@ void skinny_bmp_daemon()
     bmp_route_info_modulo = bmp_route_info_modulo_pathid;
   else {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unknown 'bmp_table_per_peer_hash' value. Terminating thread.\n", config.name, bmp_misc_db->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   config.bmp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
@@ -219,7 +219,7 @@ void skinny_bmp_daemon()
 
     if (config.bmp_sock < 0) {
       Log(LOG_ERR, "ERROR ( %s/%s ): thread socket() failed. Terminating thread.\n", config.name, bmp_misc_db->log_str);
-      exit_all(1);
+      exit_gracefully(1);
     }
   }
   if (config.nfacctd_bmp_ipprec) {
@@ -262,13 +262,13 @@ void skinny_bmp_daemon()
 
     ip_address = config.nfacctd_bmp_ip ? config.nfacctd_bmp_ip : null_ip_address;
     Log(LOG_ERR, "ERROR ( %s/%s ): bind() to ip=%s port=%d/tcp failed (errno: %d).\n", config.name, bmp_misc_db->log_str, ip_address, config.nfacctd_bmp_port, errno);
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   rc = listen(config.bmp_sock, 1);
   if (rc < 0) {
     Log(LOG_ERR, "ERROR ( %s/%s ): listen() failed (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   /* Preparing for syncronous I/O multiplexing */

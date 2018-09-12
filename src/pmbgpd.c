@@ -305,7 +305,7 @@ void bgp_lg_daemon()
 #else
   lg_host.router_worker.func = NULL;
   Log(LOG_WARNING, "WARN ( %s/core/lg ): pmbgpd Looking Glass depends on missing --enable-jansson.\n", config.name);
-  exit(1);
+  exit_gracefully(1);
 #endif
 
   p_zmq_router_backend_setup(&lg_host, config.bgp_lg_threads, inproc_str);
@@ -322,7 +322,7 @@ void bgp_lg_daemon_worker_json(void *zh, void *zs)
 
   if (!lg_host || !sock) {
     Log(LOG_ERR, "ERROR ( %s/core/lg ): bgp_lg_daemon_worker no lg_host or sock\nExiting.\n", config.name);
-    exit(1);
+    exit_gracefully(1);
   }
 
   memset(&ipl_rep, 0, sizeof(ipl_rep));

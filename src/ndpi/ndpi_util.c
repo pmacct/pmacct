@@ -68,7 +68,7 @@ struct pm_ndpi_workflow *pm_ndpi_workflow_init()
 
   if (workflow->ndpi_struct == NULL) {
     Log(LOG_ERR, "ERROR ( %s/core ): nDPI global structure initialization failed.\n", config.name);
-    exit(1);
+    exit_gracefully(1);
   }
 
   workflow->ndpi_flows_root = ndpi_calloc(workflow->prefs.num_roots, sizeof(void *));
