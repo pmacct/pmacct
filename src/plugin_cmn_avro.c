@@ -956,7 +956,7 @@ void write_avro_schema_to_file(char *filename, avro_schema_t schema)
 
   exit_lane:
   Log(LOG_ERR, "ERROR ( %s/%s ): write_avro_schema_to_file(): unable to dump Avro schema: %s\n", config.name, config.type, avro_strerror());
-  exit(1);
+  exit_gracefully(1);
 }
 
 char *write_avro_schema_to_memory(avro_schema_t avro_schema)
@@ -970,7 +970,7 @@ char *write_avro_schema_to_memory(avro_schema_t avro_schema)
 
   if (!avro_buf) {
     Log(LOG_ERR, "ERROR ( %s/%s ): write_avro_schema_to_memory(): malloc() failed. Exiting.\n", config.name, config.type);
-    exit(1);
+    exit_gracefully(1);
   }
   else memset(avro_buf, 0, config.avro_buffer_size);
 
@@ -1016,7 +1016,7 @@ char *compose_avro_purge_schema(avro_schema_t avro_schema, char *writer_name)
   }
   else {
     Log(LOG_ERR, "ERROR ( %s/%s ): compose_avro_purge_schema(): no avro_buf. Exiting.\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   return json_str;
@@ -1041,7 +1041,7 @@ char *compose_avro_schema_name(char *extra1, char *extra2)
   schema_name = malloc(len_total);  
   if (!schema_name) {
     Log(LOG_ERR, "ERROR ( %s/%s ): compose_avro_schema_name(): malloc() failed. Exiting.\n", config.name, config.type);
-    exit(1);
+    exit_gracefully(1);
   }
   else memset(schema_name, 0, len_total);
 

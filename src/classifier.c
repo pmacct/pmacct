@@ -85,7 +85,7 @@ void init_classifiers(char *path)
   }
   else {
     Log(LOG_ERR, "ERROR: Unable to open: '%s'\n", path);
-    exit(1); 
+    exit_gracefully(1); 
   }
 }
 

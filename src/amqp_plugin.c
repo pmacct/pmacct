@@ -118,12 +118,12 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   if ((config.sql_table && strchr(config.sql_table, '$')) && config.sql_multi_values) {
     Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'amqp_routing_key' is not compatible with 'amqp_multi_values'. Exiting.\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   if ((config.sql_table && strchr(config.sql_table, '$')) && config.amqp_routing_key_rr) {
     Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'amqp_routing_key' is not compatible with 'amqp_routing_key_rr'. Exiting.\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   p_amqp_init_host(&amqpp_amqp_host);
@@ -191,7 +191,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     if (ret <= 0) {
       if (getppid() != core_pid) {
         Log(LOG_ERR, "ERROR ( %s/%s ): Core process *seems* gone. Exiting.\n", config.name, config.type);
-        exit_plugin(1);
+        exit_gracefully(1);
       }
 
       if (ret < 0) goto poll_again;
@@ -233,7 +233,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         }
         else {
           if ((ret = read(pipe_fd, &rgptr, sizeof(rgptr))) == 0) 
-	    exit_plugin(1); /* we exit silently; something happened at the write end */
+	    exit_gracefully(1); /* we exit silently; something happened at the write end */
         }
 
         if ((rg->ptr + bufsz) > rg->end) rg->ptr = rg->base;
@@ -375,7 +375,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   else if (config.message_broker_output & PRINT_OUTPUT_AVRO) p_amqp_set_content_type_binary(&amqpp_amqp_host);
   else {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unsupported amqp_output value specified. Exiting.\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   p_amqp_init_routing_key_rr(&amqpp_amqp_host);
@@ -384,7 +384,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   empty_pcust = malloc(config.cpptrs.len);
   if (!empty_pcust) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() empty_pcust. Exiting.\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
@@ -426,7 +426,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
       if (!json_buf) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (json_buf). Exiting ..\n", config.name, config.type);
-	exit_plugin(1);
+	exit_gracefully(1);
       }
       else memset(json_buf, 0, config.sql_multi_values);
     }
@@ -439,7 +439,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
     if (!avro_buf) {
       Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_buf). Exiting ..\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
 
     avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
@@ -500,7 +500,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
             config.name, config.type, config.avro_buffer_size);
         Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: increase value or look for avro_buffer_size in CONFIG-KEYS document.\n\n",
             config.name, config.type);
-        exit_plugin(1);
+        exit_gracefully(1);
       }
       else if (avro_value_size >= (config.avro_buffer_size - avro_writer_tell(avro_writer))) {
         avro_buffer_full = TRUE;
@@ -508,7 +508,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
       }
       else if (avro_value_write(avro_writer, &avro_value)) {
         Log(LOG_ERR, "ERROR ( %s/%s ): ARVO: unable to write value: %s\n", config.name, config.type, avro_strerror());
-        exit_plugin(1);
+        exit_gracefully(1);
       }
       else {
         mv_num++;
@@ -530,7 +530,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	if (json_strlen >= (config.sql_multi_values - json_buf_off)) {
 	  if (json_strlen >= config.sql_multi_values) {
 	    Log(LOG_ERR, "ERROR ( %s/%s ): amqp_multi_values not large enough to store JSON elements. Exiting ..\n", config.name, config.type);
-	    exit(1);
+	    exit_gracefully(1);
 	  }
 
 	  tmp_str = json_str;

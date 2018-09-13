@@ -470,18 +470,18 @@ int main(int argc,char **argv, char **envp)
 
       if (config.classifiers_path && (list->cfg.sampling_rate || config.ext_sampling_rate)) {
         Log(LOG_ERR, "ERROR ( %s/core ): Packet sampling and classification are mutual exclusive.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
 
       if (list->cfg.sampling_rate && config.ext_sampling_rate) {
         Log(LOG_ERR, "ERROR ( %s/core ): Internal packet sampling and external packet sampling are mutual exclusive.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
 
       /* applies to specific plugins */
       if (list->type.id == PLUGIN_ID_TEE) {
         Log(LOG_ERR, "ERROR ( %s/core ): 'tee' plugin not supported in 'uacctd'.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
       else if (list->type.id == PLUGIN_ID_NFPROBE) {
 	/* If we already renormalizing an external sampling rate,
@@ -543,7 +543,7 @@ int main(int argc,char **argv, char **envp)
 				       COUNT_MPLS_VPN_RD)) || 
 	    (list->cfg.what_to_count_2 & (COUNT_LRG_COMM|COUNT_SRC_LRG_COMM))) {
           Log(LOG_ERR, "ERROR ( %s/core ): 'src_as', 'dst_as' and 'peer_dst_ip' are currently the only BGP-related primitives supported within the 'nfprobe' plugin.\n", config.name);
-          exit(1);
+          exit_gracefully(1);
 	}
 	list->cfg.what_to_count |= COUNT_COUNTERS;
 
@@ -603,7 +603,7 @@ int main(int argc,char **argv, char **envp)
 				       COUNT_MPLS_VPN_RD)) ||
 	    (list->cfg.what_to_count_2 & (COUNT_LRG_COMM|COUNT_SRC_LRG_COMM))) {
           Log(LOG_ERR, "ERROR ( %s/core ): 'src_as', 'dst_as' and 'peer_dst_ip' are currently the only BGP-related primitives supported within the 'sfprobe' plugin.\n", config.name);
-          exit(1);
+          exit_gracefully(1);
         }
 
 #if defined (HAVE_L2)
@@ -654,7 +654,7 @@ int main(int argc,char **argv, char **envp)
 	if (list->cfg.what_to_count & (COUNT_SRC_AS|COUNT_DST_AS|COUNT_SUM_AS)) {
 	  if (!list->cfg.networks_file && list->cfg.nfacctd_as != NF_AS_BGP) { 
 	    Log(LOG_ERR, "ERROR ( %s/%s ): AS aggregation selected but NO 'networks_file' or 'uacctd_as' are specified. Exiting...\n\n", list->name, list->type.string);
-	    exit(1);
+	    exit_gracefully(1);
 	  }
           if (list->cfg.nfacctd_as & NF_AS_FALLBACK && list->cfg.networks_file)
             list->cfg.nfacctd_as |= NF_AS_NEW;
@@ -665,7 +665,7 @@ int main(int argc,char **argv, char **envp)
             if (list->cfg.networks_mask) list->cfg.nfacctd_net |= NF_NET_STATIC;
             if (!list->cfg.nfacctd_net) {
               Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'uacctd_net', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
-              exit(1);
+              exit_gracefully(1);
             }
           }
           else {
@@ -675,7 +675,7 @@ int main(int argc,char **argv, char **envp)
                 (list->cfg.nfacctd_net == NF_NET_IGP && !list->cfg.nfacctd_isis) ||
                 (list->cfg.nfacctd_net == NF_NET_KEEP)) {
               Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'isis_daemon', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
-              exit(1);
+              exit_gracefully(1);
             }
             if (list->cfg.nfacctd_net & NF_NET_FALLBACK && list->cfg.networks_file)
               list->cfg.nfacctd_net |= NF_NET_NEW;
@@ -684,7 +684,7 @@ int main(int argc,char **argv, char **envp)
 
 	if (list->cfg.what_to_count & COUNT_CLASS && !list->cfg.classifiers_path) {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): 'class' aggregation selected but NO 'classifiers' key specified. Exiting...\n\n", list->name, list->type.string);
-	  exit(1);
+	  exit_gracefully(1);
 	}
 
 	list->cfg.type_id = list->type.id;
@@ -703,7 +703,7 @@ int main(int argc,char **argv, char **envp)
 
       if ((list->cfg.what_to_count & COUNT_CLASS) && (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS)) { 
 	Log(LOG_ERR, "ERROR ( %s/%s ): 'class_legacy' and 'class' primitives are mutual exclusive. Exiting...\n\n", list->name, list->type.string);
-	exit(1);
+	exit_gracefully(1);
       }
     }
     list = list->next;
@@ -768,7 +768,7 @@ int main(int argc,char **argv, char **envp)
   if (nfh == NULL) {
     Log(LOG_ERR, "ERROR ( %s/core ): Failed to create Netlink NFLOG socket\n", config.name);
     nflog_close(nfh);
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   Log(LOG_INFO, "INFO ( %s/core ): Successfully connected Netlink NFLOG socket\n", config.name);
@@ -777,23 +777,23 @@ int main(int argc,char **argv, char **envp)
   if (nflog_unbind_pf(nfh, AF_INET) < 0) {
     Log(LOG_ERR, "ERROR ( %s/core ): Failed to unbind Netlink NFLOG socket from IPv4\n", config.name);
     nflog_close(nfh);
-    exit_all(1);
+    exit_gracefully(1);
   }
   if (nflog_bind_pf(nfh, AF_INET) < 0) {
     Log(LOG_ERR, "ERROR ( %s/core ): Failed to bind Netlink NFLOG socket from IPv4\n", config.name);
     nflog_close(nfh);
-    exit_all(1);
+    exit_gracefully(1);
   }
 #if defined ENABLE_IPV6
   if (nflog_unbind_pf(nfh, AF_INET6) < 0) {
     Log(LOG_ERR, "ERROR ( %s/core ): Failed to unbind Netlink NFLOG socket from IPv6\n", config.name);
     nflog_close(nfh);
-    exit_all(1);
+    exit_gracefully(1);
   }
   if (nflog_bind_pf(nfh, AF_INET6) < 0) {
     Log(LOG_ERR, "ERROR ( %s/core ): Failed to bind Netlink NFLOG socket from IPv6\n", config.name);
     nflog_close(nfh);
-    exit_all(1);
+    exit_gracefully(1);
   }
 #endif
 
@@ -801,7 +801,7 @@ int main(int argc,char **argv, char **envp)
   if ((nfgh = nflog_bind_group(nfh, config.uacctd_group)) == NULL) {
     Log(LOG_ERR, "ERROR ( %s/core ): Failed to join NFLOG group %d\n", config.name, config.uacctd_group);
     nflog_close(nfh);
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   /* Set snaplen */
@@ -809,7 +809,7 @@ int main(int argc,char **argv, char **envp)
     Log(LOG_ERR, "ERROR ( %s/core ): Failed to set snaplen to %d\n", config.name, config.snaplen);
     nflog_unbind_group(nfgh);
     nflog_close(nfh);
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   /* Set threshold */
@@ -817,7 +817,7 @@ int main(int argc,char **argv, char **envp)
     Log(LOG_ERR, "ERROR ( %s/core ): Failed to set threshold to %d\n", config.name, config.uacctd_threshold);
     nflog_unbind_group(nfgh);
     nflog_close(nfh);
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   /* Set buffer size */
@@ -825,7 +825,7 @@ int main(int argc,char **argv, char **envp)
     Log(LOG_ERR, "ERROR ( %s/core ): Failed to set receive buffer size to %d\n", config.name, config.uacctd_nl_size);
     nflog_unbind_group(nfgh);
     nflog_close(nfh);
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   /* Turn off netlink errors from overrun. */
@@ -838,12 +838,12 @@ int main(int argc,char **argv, char **envp)
     Log(LOG_ERR, "ERROR ( %s/core ): NFLOG buffer malloc() failed\n", config.name);
     nflog_unbind_group(nfgh);
     nflog_close(nfh);
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   if (config.nfacctd_bgp && config.nfacctd_bmp) {
     Log(LOG_ERR, "ERROR ( %s/core ): bgp_daemon and bmp_daemon are currently mutual exclusive. Exiting.\n", config.name);
-    exit(1);
+    exit_gracefully(1);
   }
 
   /* starting the ISIS threa */
@@ -862,7 +862,7 @@ int main(int argc,char **argv, char **envp)
 
     if (config.nfacctd_bgp_stdcomm_pattern_to_asn && config.nfacctd_bgp_lrgcomm_pattern_to_asn) {
       Log(LOG_ERR, "ERROR ( %s/core ): bgp_stdcomm_pattern_to_asn and bgp_lrgcomm_pattern_to_asn are mutual exclusive. Exiting.\n", config.name);
-      exit(1);
+      exit_gracefully(1);
     }
 
     load_comm_patterns(&config.nfacctd_bgp_stdcomm_pattern, &config.nfacctd_bgp_extcomm_pattern,
@@ -876,7 +876,7 @@ int main(int argc,char **argv, char **envp)
       }
       else {
         Log(LOG_ERR, "ERROR ( %s/core ): bgp_peer_as_src_type set to 'map' but no map defined. Exiting.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
     }
     else cb_data.bpas_table = NULL;
@@ -888,7 +888,7 @@ int main(int argc,char **argv, char **envp)
       }
       else {
         Log(LOG_ERR, "ERROR ( %s/core ): bgp_src_local_pref_type set to 'map' but no map defined. Exiting.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
     }
     else cb_data.bpas_table = NULL;
@@ -900,7 +900,7 @@ int main(int argc,char **argv, char **envp)
       }
       else {
         Log(LOG_ERR, "ERROR ( %s/core ): bgp_src_med_type set to 'map' but no map defined. Exiting.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
     }
     else cb_data.bmed_table = NULL;
@@ -911,7 +911,7 @@ int main(int argc,char **argv, char **envp)
     }
     else {
       Log(LOG_ERR, "ERROR ( %s/core ): 'bgp_daemon' configured but no 'bgp_agent_map' has been specified. Exiting.\n", config.name);
-      exit(1);
+      exit_gracefully(1);
     }
 
     /* Limiting BGP peers to only two: one would suffice in pmacctd
@@ -940,7 +940,7 @@ int main(int argc,char **argv, char **envp)
 
   if (config.nfacctd_flow_to_rd_map) { 
     Log(LOG_ERR, "ERROR ( %s/core ): 'flow_to_rd_map' is not supported by this daemon. Exiting.\n", config.name);
-    exit(1);
+    exit_gracefully(1);
   } 
 
   /* plugins glue: creation (until 093) */

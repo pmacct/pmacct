@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -80,6 +80,6 @@ void load_ports(char *filename, struct ports_table *pt)
     stat(filename, &st);
     pt->timestamp = st.st_mtime;
   }
-  else exit_plugin(1);
+  else exit_gracefully(1);
 }
 

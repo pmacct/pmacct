@@ -159,7 +159,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     if (ret <= 0) {
       if (getppid() != core_pid) {
         Log(LOG_ERR, "ERROR ( %s/%s ): Core process *seems* gone. Exiting.\n", config.name, config.type);
-        exit_plugin(1);
+        exit_gracefully(1);
       }
 
       if (ret < 0) goto poll_again;
@@ -193,7 +193,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         }
         else {
           if ((ret = read(pipe_fd, &rgptr, sizeof(rgptr))) == 0) 
-	    exit_plugin(1); /* we exit silently; something happened at the write end */
+	    exit_gracefully(1); /* we exit silently; something happened at the write end */
         }
 
         if ((rg->ptr + bufsz) > rg->end) rg->ptr = rg->base;
@@ -334,7 +334,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
   empty_pcust = malloc(config.cpptrs.len);
   if (!empty_pcust) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() empty_pcust. Exiting.\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
