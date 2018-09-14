@@ -67,6 +67,8 @@
 #include <sys/resource.h>
 #include <dirent.h>
 #include <limits.h>
+#include <pwd.h>
+#include <grp.h>
 #include "pmsearch.h"
 
 #include <sys/mman.h>

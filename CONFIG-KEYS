@@ -329,16 +329,16 @@ DEFAULT:	077
 
 KEY:            files_uid
 DESC:           Defines the system user id (UID) for files opened for writing (log, pid, etc.); this
-		is indeed possible only when running the daemon as super-user; by default this is left
-		untouched. This is also applied to any intermediary directory structure which might be
-		created. 
+		is indeed possible only when running the daemon as super-user. This is also applied
+		to any intermediary directory structure which might be created. Both user string and  
+		id are valid input.
 DEFAULT:	Operating System default (current user UID)
 
 KEY:            files_gid
 DESC:           Defines the system group id (GID) for files opened for writing (log, pid, etc.); this
-		is indeed possible only when running the daemon as super-user; by default this is left
-		untouched. This is also applied to any intermediary directory structure which might be
-		created. 
+		is indeed possible only when running the daemon as super-user; this is also applied
+		to any intermediary directory structure which might be created. Both group string and
+		id are valud input.
 DEFAULT:	Operating System default (current user GID)
 
 KEY:		pcap_interface (-i) [GLOBAL, PMACCTD_ONLY]

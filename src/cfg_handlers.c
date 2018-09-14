@@ -577,11 +577,19 @@ int cfg_key_files_umask(char *filename, char *name, char *value_ptr)
 int cfg_key_files_uid(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
+  struct passwd *user = NULL;
   int value, changes = 0;
 
-  value = atoi(value_ptr);
-  if (value < 1) {
-    Log(LOG_ERR, "WARN: [%s] 'files_uid' has to be >= 1.\n", filename);
+  user = getpwnam(value_ptr);
+  if (!user) {
+    value = atoi(value_ptr);
+    if (value_ptr && !value && value_ptr[0] != '0');
+    else user = getpwuid(value);
+  }
+
+  if (user) value = user->pw_uid;
+  else {
+    Log(LOG_ERR, "WARN: [%s] Invalid 'files_uid'.\n", filename);
     return ERR;
   }
 
@@ -602,11 +610,20 @@ int cfg_key_files_uid(char *filename, char *name, char *value_ptr)
 int cfg_key_files_gid(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
+  struct group *group = NULL;
+  u_int32_t value, changes = 0;
+  char *endptr;
 
-  value = atoi(value_ptr);
-  if (value < 1) {
-    Log(LOG_ERR, "WARN: [%s] 'files_gid' has to be >= 1.\n", filename);
+  group = getgrnam(value_ptr);
+  if (!group) {
+    value = atoi(value_ptr);
+    if (value_ptr && !value && value_ptr[0] != '0');
+    else group = getgrgid(value);
+  }
+
+  if (group) value = group->gr_gid;
+  else {
+    Log(LOG_ERR, "WARN: [%s] Invalid 'files_gid'.\n", filename);
     return ERR;
   }
 
