@@ -1,19 +1,35 @@
 !
 ! pmacctd configuration example
 !
-! Did you know CONFIG-KEYS contains the detailed list of all configuration keys
-! supported by 'nfacctd' and 'pmacctd' ?
+! Did you know CONFIG-KEYS contains the detailed list of all configuration keys supported ?
 !
-! debug: true 
-daemonize: true 
+! General configs
+!
+! debug: true
+daemonize: false
+!
+! libpcap daemon configs
+!
 pcap_interface: eth0
-aggregate[in]: src_host
-aggregate[out]: dst_host 
-aggregate_filter[in]: dst net 192.168.0.0/16
-aggregate_filter[out]: src net 192.168.0.0/16
+!
+! Plugins definitions
+!
 plugins: memory[in], memory[out]
+!
+! 'in' plugin configuration
+!
+aggregate[in]: src_host
+aggregate_filter[in]: dst net 192.168.0.0/16
 imt_path[in]: /tmp/acct_in.pipe
+!
+! 'out' plugin configuration
+!
+aggregate[out]: dst_host 
+aggregate_filter[out]: src net 192.168.0.0/16
 imt_path[out]: /tmp/acct_out.pipe
+!
+! shared plugin configuration
+!
 imt_buckets: 65537 
 imt_mem_pools_size: 65536 
 imt_mem_pools_number: 0

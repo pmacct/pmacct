@@ -1,0 +1,39 @@
+!
+! pmacctd configuration example
+!
+! Did you know CONFIG-KEYS contains the detailed list of all configuration keys supported ?
+!
+! General configs
+!
+! debug: true
+daemonize: false
+sampling_rate: 10
+!
+! libpcap daemon configs
+!
+pcap_interface: eth0
+!
+! Plugins definitions
+!
+plugins: mysql[foo]
+! plugins: pgsql[foo] 
+!
+! 'foo' plugin configuration
+!
+aggregate[foo]: src_host,dst_host
+sql_db[foo]: pmacct
+sql_table[foo]: acct
+sql_table_version[foo]: 1
+! sql_table_version[foo]: 2
+! sql_table_version[foo]: 3
+sql_passwd[foo]: arealsmartpwd
+sql_user[foo]: pmacct
+sql_refresh_time[foo]: 60
+! sql_optimize_clauses: true
+sql_history[foo]: 1m 
+sql_history_roundoff[foo]: mh
+! sql_preprocess[foo]: qnum=1000, minp=5
+! sql_trigger_time[foo]: 1h
+! sql_trigger_exec[foo]: /path/to/trigger.sh  
+! networks_file[foo]: /path/to/networks.example
+! ports_file[foo]: /path/to/ports.example

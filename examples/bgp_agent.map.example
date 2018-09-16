@@ -27,18 +27,18 @@
 !
 ! Examples:
 !
-bgp_ip=1.2.3.4		ip=2.3.4.5
+bgp_ip=192.168.1.1	ip=192.168.100.1
 !
 ! The following maps something which any Netflow/sFlow agent to the specified
 ! BGP peer. This syntax applies also to non-telemetry daemons, ie. pmacctd and
 ! uacctd. 
 !
-! bgp_ip=4.5.6.7	ip=0.0.0.0/0
+! bgp_ip=10.0.0.1	ip=0.0.0.0/0
 !
 ! The following maps flows ingressing a specific interface of the NetFlow/sFlow
 ! agent to the specified BGP peer. This may be relevant to MPLS VPN scenarios. 
 !
-! bgp_ip=1.2.3.4  	ip=2.3.4.5	in=100
+! bgp_ip=192.168.1.1  	ip=192.168.200.1	in=100
 !
 ! In scenarios where there are distinct v4 and v6 BGP sessions with the same
 ! peer (by design or due to distinct BGP agents for v4 and v6), traffic can
@@ -47,5 +47,5 @@ bgp_ip=1.2.3.4		ip=2.3.4.5
 ! address of the BGP sessions is the same, ie. pmacct is co-located with the
 ! BGP agent, the peers will need to have a different Router ID configured:
 !
-! bgp_ip=4.0.0.1	ip=0.0.0.0/0	filter='ip  or (vlan and ip)'
-! bgp_ip=6::1		ip=0.0.0.0/0	filter='ip6 or (vlan and ip6)'
+! bgp_ip=10.10.0.1	ip=0.0.0.0/0	filter='ip  or (vlan and ip)'
+! bgp_ip=fd00::1:8:0	ip=0.0.0.0/0	filter='ip6 or (vlan and ip6)'

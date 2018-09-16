@@ -1172,7 +1172,7 @@ b) build NetFlow probe configuration, using pmacctd:
    pcap_interface: eth0
    aggregate: src_host, dst_host, src_port, dst_port, proto, tos
    plugins: nfprobe
-   nfprobe_receiver: 1.2.3.4:2100
+   nfprobe_receiver: 192.168.1.1:2100
    nfprobe_version: 9
    ! nfprobe_engine: 1:1
    ! nfprobe_timeouts: tcp=120:maxlife=3600
@@ -1281,7 +1281,7 @@ c) build NetFlow collector configuration, using nfacctd:
 
    !
    daemonize: true
-   nfacctd_ip: 1.2.3.4
+   nfacctd_ip: 192.168.1.1
    nfacctd_port: 2100
    plugins: memory[display]
    aggregate[display]: src_host, dst_host, src_port, dst_port, proto
@@ -1310,7 +1310,7 @@ pcap_interface: eth0
 plugins: sfprobe
 sampling_rate: 20
 sfprobe_agentsubid: 1402
-sfprobe_receiver: 1.2.3.4:6343
+sfprobe_receiver: 192.168.1.1:6343
 !
 ! networks_file: /path/to/networks.lst
 ! snaplen: 700

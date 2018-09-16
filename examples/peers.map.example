@@ -45,8 +45,8 @@ id=12345	ip=192.168.2.1	in=7
 ! by using either 'bgp_nexthop' or 'peer_dst_as' for this purpose constitutes only an
 ! educated guess.
 ! 
-id=34567	ip=192.168.1.1 	in=7	bgp_nexthop=1.2.3.4
-id=45678	ip=192.168.1.1 	in=7	bgp_nexthop=1.2.3.5
+id=34567	ip=192.168.1.1 	in=7	bgp_nexthop=10.10.10.1
+id=45678	ip=192.168.1.1 	in=7	bgp_nexthop=10.10.10.2
 id=56789	ip=192.168.1.1 	in=7
 
 ! A way to model a public internet exchange - in case MAC addresses are available. The
@@ -58,4 +58,3 @@ id=45678        ip=192.168.1.1  in=7    src_mac=00:01:02:03:04:06
 ! A simple example on how to trigger BGP lookups rather than returning a fixed result.
 ! This allows to handle exceptions to static mapping
 id=bgp		ip=192.168.2.1  in=7
-

@@ -14,11 +14,15 @@ pcap_interface: eth0
 !
 ! Plugins definitions
 !
-plugins: memory[foo]
+plugins: sqlite3[foo]
 !
 ! 'foo' plugin configuration
 !
 aggregate[foo]: src_host, dst_host
-imt_buckets: 65537
-imt_mem_pools_size: 65536
-! imt_mem_pools_number: 0
+sql_db[foo]: /path/to/pmacct.db 
+sql_table_version[foo]: 1 
+! sql_table_version[foo]: 2 
+! sql_table_version[foo]: 3 
+sql_refresh_time[foo]: 60
+sql_history[foo]: 1m 
+sql_history_roundoff[foo]: m
