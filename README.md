@@ -12,7 +12,6 @@ DOCUMENTATION
   * CONFIG-KEYS: Available configuration directives explained
   * QUICKSTART: Examples, command-lines, quickstart guides
   * FAQS: FAQ document
-  * INSTALL: basic installation guide
   * docs/: Miscellaneous internals, UNIX signals, SQL triggers documents 
   * examples/: Sample configs, maps, AMQP/Kafka consumers, clients 
   * sql/: SQL documentation, default SQL schemas and customization tips

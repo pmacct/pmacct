@@ -13,12 +13,9 @@ Read accepted options with "<name> -h" and run with "<name> [options]".
 
 (*) x.y.z is the release version.
 
-The rationale behind compiling pmacct is that by default all features are
-turned off (ie. IPv6, MySQL, PostgreSQL, SQLite, etc.) making the package
-dependant only on a working libpcap. If you need any of these don't forget
-to turn them on manually (full list of compiling options can be checked
-out via a "./configure --help".
-
+For compiling from GitHub code, please see the README.md file. For more
+compiling instrutions, examples, command-lines, quickstart guides please
+see the QUICKSTART guide.
 
 BASIC INSTALLATION:
 
