@@ -191,6 +191,7 @@ Similarly, BGP tables:
   and 'stamp_updated' time references are mandatory only if temporal aggregation
   (sql_history) is enabled:
   * packets (INT UNSIGNED NOT NULL)
+    - or (packets BIGINT UNSIGNED NOT NULL, see README.64bit)
   * bytes (BIGINT UNSIGNED NOT NULL)
   * stamp_inserted (DATETIME NOT NULL)
   * stamp_updated (DATETIME)

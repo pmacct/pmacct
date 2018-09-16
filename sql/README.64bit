@@ -1,9 +1,9 @@
 This document doesn't replace documentation relevant to the database software you are
 using, ie. README.mysql, README.pgsql or README.sqlite3.
 
-It is about the use of increased size byte/packet/flow counter fields with the aim of
-easily accomodate larger counters. Why counters are not defined so large by default ?
-Because they would require extra space - and maybe this is not a requirement.
+Increase size of bytes/packets/flows counter fields is possible in order to accomodate
+larger counters. By default packets and flows counters are defined 32-bits to not use
+extra space.
 
 MySQL.
 There is nothing to do. Each MySQL schema already sports counters large enough. bytes,
@@ -12,5 +12,5 @@ respectively in 10 and 20 bytes fields.
 
 PostgreSQL and SQLite.
 There is very little to do. bytes field is already declared BIGINT, thus does not need
-any change. packets and flows fields should be fixed and defined as BIGINT aswell.
-
+any change. packets and flows fields should be fixed and defined as BIGINT / INT(8) as
+well.

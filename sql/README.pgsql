@@ -172,6 +172,7 @@ CHAR fields because making use of IP prefix labels, transparently to pmacct.
   'stamp_updated' time references are mandatory only if temporal aggregation
   (sql_history) is enabled:
   * packets (INT NOT NULL)
+    - or (packets BIGINT NOT NULL, see README.64bit)
   * bytes (BIGINT NOT NULL)
   * stamp_inserted (timestamp without time zone NOT NULL DEFAULT '0000-01-01 00:00:00')
   * stamp_updated (timestamp without time zone)
