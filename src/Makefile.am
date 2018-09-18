@@ -55,7 +55,7 @@ libdaemons_la_LIBADD  += @MONGODB_LIBS@
 libdaemons_la_CFLAGS  += @MONGODB_CFLAGS@
 endif
 if WITH_SQLITE3
-libdaemons_la_SOURCES += sqlite3_plugin.c sqlite3_plugin.c
+libdaemons_la_SOURCES += sqlite3_plugin.c sqlite3_plugin.h
 libdaemons_la_LIBADD  += @SQLITE3_LIBS@
 libdaemons_la_CFLAGS  += @SQLITE3_CFLAGS@
 endif

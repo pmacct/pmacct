@@ -1,7 +1,9 @@
 SUBDIRS = src examples/lg
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = include sql examples docs CONFIG-KEYS FAQS QUICKSTART \
-	README.md UPGRADE
+EXTRA_DIST = include sql examples docs CONFIG-KEYS FAQS QUICKSTART UPGRADE
+if USING_SQL
+EXTRA_DIST += src/sql_common_m.c
+endif
 
 pmacct_dir = $(datarootdir)/pmacct
 pmacct_docs_dir = $(pmacct_dir)/docs
@@ -14,7 +16,7 @@ if USING_SQL
 pmacct_sql_dir = $(pmacct_dir)/sql
 endif
 
-pmacct__DATA = CONFIG-KEYS FAQS QUICKSTART README.md UPGRADE
+pmacct__DATA = CONFIG-KEYS FAQS QUICKSTART UPGRADE
 pmacct_docs__DATA = docs/IPFIX docs/LOOKING_GLASS_FORMAT docs/SIGNALS \
 	docs/MSGLOG_DUMP_FORMATS docs/TRIGGER_VARS
 pmacct_examples__DATA = examples/allow.lst.example examples/bgp_agent.map.example \
