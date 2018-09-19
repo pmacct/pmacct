@@ -709,10 +709,10 @@ AC_ARG_ENABLE(rabbitmq,
 )
 dnl finish: RabbitMQ/AMQP handling
 
-dnl start: ZMQ/AMQP handling
-AC_MSG_CHECKING(whether to enable ZMQ/AMQP support)
+dnl start: ZeroMQ handling
+AC_MSG_CHECKING(whether to enable ZeroMQ support)
 AC_ARG_ENABLE(zmq,
-  [  --enable-zmq                     Enable ZMQ/AMQP support (default: no)],
+  [  --enable-zmq                     Enable ZeroMQ support (default: no)],
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
@@ -741,7 +741,7 @@ AC_ARG_ENABLE(zmq,
     AC_MSG_RESULT(no)
   ]
 )
-dnl finish: ZMQ/AMQP handling
+dnl finish: ZeroMQ handling
 
 dnl start: Kafka handling
 AC_MSG_CHECKING(whether to enable Kafka support)
