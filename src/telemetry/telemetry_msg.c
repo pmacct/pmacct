@@ -251,6 +251,10 @@ int telemetry_recv_cisco(telemetry_peer *peer, int *flags, int *data_decoder)
       ret = telemetry_recv_generic(peer, len);
       (*data_decoder) = TELEMETRY_DATA_DECODER_GPB;
       break;
+    default:
+      ret = telemetry_recv_jump(peer, len, flags);
+      (*data_decoder) = TELEMETRY_DATA_DECODER_UNKNOWN;
+      break;
     }
   }
 

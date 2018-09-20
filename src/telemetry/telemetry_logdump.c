@@ -101,6 +101,9 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
 
       json_object_set_new_nocheck(obj, "serialization", json_string("gpb"));
     }
+    else if (data_decoder == TELEMETRY_DATA_DECODER_UNKNOWN) {
+      json_object_set_new_nocheck(obj, "serialization", json_string("unknown"));
+    }
 
     if ((config.telemetry_msglog_file && etype == TELEMETRY_LOGDUMP_ET_LOG) ||
         (config.telemetry_dump_file && etype == TELEMETRY_LOGDUMP_ET_DUMP))
