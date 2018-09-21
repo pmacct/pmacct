@@ -193,14 +193,6 @@ void telemetry_daemon(void *t_data_void)
   }
   else {
     if (!strcmp(config.telemetry_decoder, "json")) decoder = TELEMETRY_DECODER_JSON;
-    else if (!strcmp(config.telemetry_decoder, "zjson")) {
-#if defined (HAVE_ZLIB)
-      decoder = TELEMETRY_DECODER_ZJSON;
-#else
-      Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_decoder set to 'zjson' but zlib not available. Terminating.\n", config.name, t_data->log_str);
-      exit_gracefully(1);
-#endif
-    }
     else if (!strcmp(config.telemetry_decoder, "cisco_json")) decoder = TELEMETRY_DECODER_CISCO_JSON;
     else if (!strcmp(config.telemetry_decoder, "cisco_zjson")) {
 #if defined (HAVE_ZLIB)
@@ -763,10 +755,6 @@ void telemetry_daemon(void *t_data_void)
     switch (decoder) {
     case TELEMETRY_DECODER_JSON:
       ret = telemetry_recv_json(peer, 0, &recv_flags);
-      data_decoder = TELEMETRY_DATA_DECODER_JSON;
-      break;
-    case TELEMETRY_DECODER_ZJSON:
-      ret = telemetry_recv_zjson(peer, peer_z, 0, &recv_flags);
       data_decoder = TELEMETRY_DATA_DECODER_JSON;
       break;
     case TELEMETRY_DECODER_CISCO:
