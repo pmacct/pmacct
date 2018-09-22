@@ -2747,7 +2747,7 @@ DEFAULT:        false
 
 KEY:		telemetry_daemon_port_tcp [GLOBAL]
 DESC:		Makes the Streaming Telemetry daemon, pmtelemetryd, or the Streaming Telemetry thread
-		listen on the specified TCP port.	
+		listen on the specified TCP port. (see telemetry/README.telemetry for gRPC support).
 DEFAULT:	none
 
 KEY:            telemetry_daemon_port_udp [GLOBAL]
@@ -2765,7 +2765,7 @@ VALUES:		[ json | cisco | cisco_json | cisco_zjson | cisco_gpb ]
 DESC:		Sets the Streaming Telemetry data decoder to the specified type. Cisco versions of JSON,
 		GPB compact, GPB KV, etc. all prepend a 12 bytes proprietary header. GPB de-marshaling
 		is not supported and will produce an output JSON object with a base64'd encoding of the
-		original GPB. 
+		original GPB (see telemetry/README.telemetry for gRPC support and GPB de-marshalling). 
 DEFAULT:	none
 
 KEY:            telemetry_daemon_max_peers [GLOBAL]

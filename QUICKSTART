@@ -2104,7 +2104,9 @@ RabbitMQ/AMQP plugin" or "Running the Kafka plugin" sections of this document.
 Data can be optionally consumed from a ZeroMQ queue, for example to have a
 pre-processor taking care of the GPB (Protobuf or Google Protocol Buffers) 
 de-marshalling and conversion to JSON; read more about (compiling) ZeroMQ in
-the "Internal buffering and queueing" section of this document. 
+the "Internal buffering and queueing" section of this document; also read more
+about gRPC support and GPB de-marshalling in telemetry/README.telemetry while
+decoders are in the telemetry/decoders directory. 
 
 From a configuration standpoint both the thread (ie. telemetry configured part
 of nfacctd) and the daemon (pmtelemetryd) are configured the same way except the

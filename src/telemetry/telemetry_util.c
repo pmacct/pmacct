@@ -118,7 +118,7 @@ u_int32_t telemetry_cisco_hdr_get_type(telemetry_peer *peer)
 
 int telemetry_is_zjson(int decoder)
 {
-  if (decoder == TELEMETRY_DECODER_ZJSON || decoder == TELEMETRY_DECODER_CISCO_ZJSON) return TRUE;
+  if (decoder == TELEMETRY_DECODER_CISCO_ZJSON) return TRUE;
   else return FALSE;
 }
 
