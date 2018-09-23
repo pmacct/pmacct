@@ -36,8 +36,7 @@
 #define TELEMETRY_DECODER_JSON		1
 #define TELEMETRY_DECODER_CISCO		2
 #define TELEMETRY_DECODER_CISCO_JSON	3
-#define TELEMETRY_DECODER_CISCO_ZJSON	4
-#define TELEMETRY_DECODER_CISCO_GPB	5
+#define TELEMETRY_DECODER_CISCO_GPB	4
 
 #define TELEMETRY_DATA_DECODER_UNKNOWN	0
 #define TELEMETRY_DATA_DECODER_JSON	1
@@ -63,13 +62,6 @@ struct telemetry_data {
 
   telemetry_stats global_stats;
   time_t now;
-};
-
-struct _telemetry_peer_z {
-  char inflate_buf[BGP_BUFFER_SIZE];
-#if defined (HAVE_ZLIB)
-  z_stream stm;
-#endif
 };
 
 struct _telemetry_peer_cache {
@@ -103,7 +95,6 @@ typedef struct bgp_peer_log telemetry_peer_log;
 typedef struct bgp_misc_structs telemetry_misc_structs;
 typedef struct _telemetry_dump_se_ll telemetry_dump_se_ll;
 typedef struct _telemetry_dump_se_ll_elem telemetry_dump_se_ll_elem;
-typedef struct _telemetry_peer_z telemetry_peer_z;
 typedef struct _telemetry_peer_cache telemetry_peer_cache;
 typedef struct _telemetry_peer_timeout telemetry_peer_timeout;
 
@@ -133,7 +124,6 @@ EXT void telemetry_prepare_daemon(struct telemetry_data *);
 EXT telemetry_misc_structs *telemetry_misc_db; 
 
 EXT telemetry_peer *telemetry_peers;
-EXT telemetry_peer_z *telemetry_peers_z;
 EXT void *telemetry_peers_cache;
 EXT telemetry_peer_timeout *telemetry_peers_timeout; 
 #undef EXT

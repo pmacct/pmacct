@@ -42,21 +42,6 @@ int telemetry_peer_init(telemetry_peer *peer, int type)
   return bgp_peer_init(peer, type);
 }
 
-int telemetry_peer_z_init(telemetry_peer_z *peer_z)
-{
-#if defined (HAVE_ZLIB)
-  peer_z->stm.zalloc = Z_NULL;
-  peer_z->stm.zfree = Z_NULL;
-  peer_z->stm.opaque = Z_NULL;
-  peer_z->stm.avail_in = 0;
-  peer_z->stm.next_in = Z_NULL;
-
-  if (inflateInit(&peer_z->stm) != Z_OK) return ERR;
-#endif
-
-  return FALSE;
-}
-
 void telemetry_peer_close(telemetry_peer *peer, int type)
 {
   telemetry_dump_se_ll *tdsell;
@@ -89,13 +74,6 @@ void telemetry_peer_close(telemetry_peer *peer, int type)
   bgp_peer_close(peer, type, FALSE, FALSE, FALSE, FALSE, NULL);
 }
 
-void telemetry_peer_z_close(telemetry_peer_z *peer_z)
-{
-#if defined (HAVE_ZLIB)
-  inflateEnd(&peer_z->stm);
-#endif
-}
-
 u_int32_t telemetry_cisco_hdr_get_len(telemetry_peer *peer)
 {
   u_int32_t len;
@@ -114,12 +92,6 @@ u_int32_t telemetry_cisco_hdr_get_type(telemetry_peer *peer)
   type = ntohl(type);
 
   return type;
-}
-
-int telemetry_is_zjson(int decoder)
-{
-  if (decoder == TELEMETRY_DECODER_CISCO_ZJSON) return TRUE;
-  else return FALSE;
 }
 
 int telemetry_tpc_addr_cmp(const void *a, const void *b)

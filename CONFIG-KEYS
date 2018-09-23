@@ -2761,7 +2761,7 @@ DESC:		Binds the Streaming Telemetry daemon to a specific interface. Expects as 
 DEFAULT:        0.0.0.0
 
 KEY:		telemetry_daemon_decoder [GLOBAL]
-VALUES:		[ json | cisco | cisco_json | cisco_zjson | cisco_gpb ]
+VALUES:		[ json | cisco | cisco_json | cisco_gpb ]
 DESC:		Sets the Streaming Telemetry data decoder to the specified type. Cisco versions of JSON,
 		GPB compact, GPB KV, etc. all prepend a 12 bytes proprietary header. GPB de-marshaling
 		is not supported and will produce an output JSON object with a base64'd encoding of the

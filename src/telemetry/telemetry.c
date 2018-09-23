@@ -75,7 +75,6 @@ void telemetry_daemon(void *t_data_void)
   time_t last_peers_timeout_check;
 
   telemetry_peer *peer = NULL;
-  telemetry_peer_z *peer_z = NULL;
 
 #if defined ENABLE_IPV6
   struct sockaddr_storage server, client;
@@ -194,14 +193,6 @@ void telemetry_daemon(void *t_data_void)
   else {
     if (!strcmp(config.telemetry_decoder, "json")) decoder = TELEMETRY_DECODER_JSON;
     else if (!strcmp(config.telemetry_decoder, "cisco_json")) decoder = TELEMETRY_DECODER_CISCO_JSON;
-    else if (!strcmp(config.telemetry_decoder, "cisco_zjson")) {
-#if defined (HAVE_ZLIB)
-      decoder = TELEMETRY_DECODER_CISCO_ZJSON;
-#else
-      Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_decoder set to 'cisco_zjson' but zlib not available. Terminating.\n", config.name, t_data->log_str);
-      exit_gracefully(1);
-#endif
-    }
     else if (!strcmp(config.telemetry_decoder, "cisco")) decoder = TELEMETRY_DECODER_CISCO;
     else if (!strcmp(config.telemetry_decoder, "cisco_gpb")) decoder = TELEMETRY_DECODER_CISCO_GPB;
     else {
@@ -229,15 +220,6 @@ void telemetry_daemon(void *t_data_void)
     exit_gracefully(1);
   }
   memset(telemetry_peers, 0, config.telemetry_max_peers*sizeof(telemetry_peer));
-
-  if (telemetry_is_zjson(decoder)) {
-    telemetry_peers_z = malloc(config.telemetry_max_peers*sizeof(telemetry_peer_z));
-    if (!telemetry_peers_z) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() telemetry_peers_z structure. Terminating.\n", config.name, t_data->log_str);
-      exit_gracefully(1);
-    }
-    memset(telemetry_peers_z, 0, config.telemetry_max_peers*sizeof(telemetry_peer_z));
-  }
 
   if (config.telemetry_port_udp || config.telemetry_zmq_address) {
     telemetry_peers_timeout = malloc(config.telemetry_max_peers*sizeof(telemetry_peer_timeout));
@@ -505,14 +487,12 @@ void telemetry_daemon(void *t_data_void)
 	  telemetry_peer_timeout *peer_timeout;
 
 	  peer = &telemetry_peers[peers_idx];
-	  peer_z = &telemetry_peers_z[peers_idx];
 	  peer_timeout = &telemetry_peers_timeout[peers_idx];
 
 	  if (peer->fd) {
 	    if (t_data->now > (peer_timeout->last_msg + config.telemetry_peer_timeout)) {
 	      Log(LOG_INFO, "INFO ( %s/%s ): [%s] telemetry peer removed (timeout).\n", config.name, t_data->log_str, peer->addr_str);
 	      telemetry_peer_close(peer, FUNC_TYPE_TELEMETRY);
-	      if (telemetry_is_zjson(decoder)) telemetry_peer_z_close(peer_z);
 	      recalc_fds = TRUE;
 	    }
 	  }
@@ -668,14 +648,6 @@ void telemetry_daemon(void *t_data_void)
 
 	  if (telemetry_peer_init(peer, FUNC_TYPE_TELEMETRY)) peer = NULL;
 
-	  if (telemetry_is_zjson(decoder)) {
-	    peer_z = &telemetry_peers_z[peers_idx];
-	    if (telemetry_peer_z_init(peer_z)) {
-	      peer = NULL;
-	      peer_z = NULL;
-	    }
-	  }
-
 	  if (peer) {
 	    recalc_fds = TRUE; // XXX: do we need this for UDP and ZeroMQ cases?
 
@@ -739,9 +711,6 @@ void telemetry_daemon(void *t_data_void)
 
         if (telemetry_peers[loc_idx].fd && FD_ISSET(telemetry_peers[loc_idx].fd, &read_descs)) {
           peer = &telemetry_peers[loc_idx];
-
-	  if (telemetry_is_zjson(decoder)) peer_z = &telemetry_peers_z[loc_idx];
-
           peers_idx_rr = (peers_idx_rr + 1) % max_peers_idx;
           break;
         }
@@ -764,10 +733,6 @@ void telemetry_daemon(void *t_data_void)
       ret = telemetry_recv_cisco_json(peer, &recv_flags);
       data_decoder = TELEMETRY_DATA_DECODER_JSON;
       break;
-    case TELEMETRY_DECODER_CISCO_ZJSON:
-      ret = telemetry_recv_cisco_zjson(peer, peer_z, &recv_flags);
-      data_decoder = TELEMETRY_DATA_DECODER_JSON;
-      break;
     case TELEMETRY_DECODER_CISCO_GPB:
       ret = telemetry_recv_cisco_gpb(peer);
       data_decoder = TELEMETRY_DATA_DECODER_GPB;
@@ -782,7 +747,6 @@ void telemetry_daemon(void *t_data_void)
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] connection reset by peer (%d).\n", config.name, t_data->log_str, peer->addr_str, errno);
       FD_CLR(peer->fd, &bkp_read_descs);
       telemetry_peer_close(peer, FUNC_TYPE_TELEMETRY);
-      if (telemetry_is_zjson(decoder)) telemetry_peer_z_close(peer_z);
       recalc_fds = TRUE;
     }
     else {

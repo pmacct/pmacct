@@ -1022,11 +1022,6 @@ else
 	fi
 fi
 
-AC_CHECK_LIB([z], [deflate], [
-	LIBS="${LIBS} -lz"
-	AC_DEFINE(HAVE_ZLIB, 1)]
-)
-
 LIBS="${LIBS} -lpthread"
 
 dnl Checks for header files.

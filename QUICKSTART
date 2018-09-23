@@ -2127,14 +2127,14 @@ telemetry_daemon_msglog_file: /path/to/spool/telemetry-msglog-$peer_src_ip.txt
 ! telemetry_daemon_msglog_kafka_topic: telemetry-msglog
 
 Following is a config example to receive telemetry data with Cisco proprietary
-header (12 bytes), in compressed JSON format over TCP port 1620 and dump it at
-60 secs time intervals to flat-files:
+header (12 bytes), in JSON format over TCP port 1620 and dump it at 60 secs
+time intervals to flat-files:
 
 ! Telemetry thread configuration
 ! telemetry_daemon: true
 !
 telemetry_daemon_port_tcp: 1620
-telemetry_daemon_decoder: cisco_zjson
+telemetry_daemon_decoder: cisco_json
 !
 telemetry_dump_file: /path/to/spool/telemetry-dump-$peer_src_ip-%Y%m%d-%H%M.txt
 telemetry_dump_latest_file: /path/to/spool/telemetry-dump-$peer_src_ip.latest
@@ -2144,7 +2144,8 @@ telemetry_dump_latest_file: /path/to/spool/telemetry-dump-$peer_src_ip.latest
 telemetry_dump_refresh_time: 60
 
 Following is a config example to receive JSON-formatted telemetry data from a
-pre-processor over a ZeroMQ queue:
+pre-processor over a ZeroMQ queue (see telemetry/README.telemetry for further 
+info, ie. gRPC support and GPB de-marshalling):
 
 ! Telemetry thread configuration
 ! telemetry_daemon: true

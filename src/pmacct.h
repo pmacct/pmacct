@@ -45,10 +45,6 @@
 #include <malloc.h>
 #endif
 
-#if defined (HAVE_ZLIB)
-#include <zlib.h>
-#endif
-
 #include <ctype.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
