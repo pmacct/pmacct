@@ -34,6 +34,7 @@ EXT void telemetry_process_data(telemetry_peer *, struct telemetry_data *, int);
 EXT int telemetry_recv_generic(telemetry_peer *, u_int32_t);
 EXT int telemetry_recv_jump(telemetry_peer *, u_int32_t, int *);
 EXT int telemetry_recv_json(telemetry_peer *, u_int32_t, int *);
+EXT int telemetry_recv_gpb(telemetry_peer *, u_int32_t);
 EXT int telemetry_recv_cisco(telemetry_peer *, int *, int *);
 EXT int telemetry_recv_cisco_json(telemetry_peer *, int *);
 EXT int telemetry_recv_cisco_gpb(telemetry_peer *);

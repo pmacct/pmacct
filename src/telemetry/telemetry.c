@@ -192,6 +192,7 @@ void telemetry_daemon(void *t_data_void)
   }
   else {
     if (!strcmp(config.telemetry_decoder, "json")) decoder = TELEMETRY_DECODER_JSON;
+    else if (!strcmp(config.telemetry_decoder, "gpb")) decoder = TELEMETRY_DECODER_GPB;
     else if (!strcmp(config.telemetry_decoder, "cisco_json")) decoder = TELEMETRY_DECODER_CISCO_JSON;
     else if (!strcmp(config.telemetry_decoder, "cisco")) decoder = TELEMETRY_DECODER_CISCO;
     else if (!strcmp(config.telemetry_decoder, "cisco_gpb")) decoder = TELEMETRY_DECODER_CISCO_GPB;
@@ -725,6 +726,10 @@ void telemetry_daemon(void *t_data_void)
     case TELEMETRY_DECODER_JSON:
       ret = telemetry_recv_json(peer, 0, &recv_flags);
       data_decoder = TELEMETRY_DATA_DECODER_JSON;
+      break;
+    case TELEMETRY_DECODER_GPB:
+      ret = telemetry_recv_gpb(peer, 0);
+      data_decoder = TELEMETRY_DATA_DECODER_GPB;
       break;
     case TELEMETRY_DECODER_CISCO:
       ret = telemetry_recv_cisco(peer, &recv_flags, &data_decoder);
