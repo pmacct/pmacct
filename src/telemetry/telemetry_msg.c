@@ -243,20 +243,6 @@ int telemetry_recv_cisco_gpb(telemetry_peer *peer)
   return ret;
 }
 
-int telemetry_recv_cisco_gpb_kv(telemetry_peer *peer, int *flags)
-{
-  int ret = 0;
-  u_int32_t len;
-
-  ret = telemetry_recv_generic(peer, TELEMETRY_CISCO_HDR_LEN);
-  if (ret == TELEMETRY_CISCO_HDR_LEN) {
-    len = telemetry_cisco_hdr_get_len(peer);
-    ret = telemetry_recv_generic(peer, len);
-  }
-
-  return ret;
-}
-
 int telemetry_basic_validate_json(telemetry_peer *peer)
 {
   if (peer->buf.base[peer->buf.truncated_len] != '{') {
