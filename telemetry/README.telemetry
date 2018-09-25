@@ -31,6 +31,12 @@ QUICKSTART.
   cisco_grpc_dialout.proto, cisco_telemetry.proto and relevant data
   models, ie. cisco_ifstatsbag_generic.proto. Place them in the same
   directory of the decoders, ie. telemetry/decoders.
+  see Huawei:
+  http://support.huawei.com/enterprise/en/doc/EDOC1100039549?section=j00d&topicName=common-.proto-files
+  http://support.huawei.com/enterprise/en/doc/EDOC1100039549?section=j00f&topicName=how-to-obtain-.proto-files
+  see Cisco:
+  https://github.com/cisco/bigmuddy-network-telemetry-proto/blob/master/staging/telemetry.proto
+  https://github.com/cisco/bigmuddy-network-telemetry-proto/blob/master/staging/mdt_grpc_dialout/mdt_grpc_dialout.proto
 
 * Additionally, if of interest, go and goyang can be installed and public
   openconfig YANG models can be downloaded and compiled to obtain a
