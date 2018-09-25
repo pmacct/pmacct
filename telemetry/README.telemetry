@@ -73,7 +73,7 @@ QUICKSTART.
 
 * Start pmtelemetryd:
 
-  shell> pmtelemetryd -f /path/to/pmtelemetryd.cof
+  shell> pmtelemetryd -f /path/to/pmtelemetryd.conf
 
 * Start the relevant Streaming Telemetry pre-processing decoder:
 
