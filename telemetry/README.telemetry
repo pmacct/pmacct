@@ -32,10 +32,11 @@ QUICKSTART.
   models, ie. cisco_ifstatsbag_generic.proto. Place them in the same
   directory of the decoders, ie. telemetry/decoders.
 
-* Additionally, if of interest, goyang can be installed and public
+* Additionally, if of interest, go and goyang can be installed and public
   openconfig YANG models can be downloaded and compiled to obtain a
   proto file:
-
+  https://golang.org/doc/install
+  https://github.com/openconfig/goyang
   https://github.com/openconfig/public
 
   shell> goyang --format proto openconfig-interfaces.yang > openconfig-interfaces.proto
