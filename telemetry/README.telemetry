@@ -44,12 +44,12 @@ QUICKSTART.
 * Protobuf proto files must be compiled in order to be usable:
 
   shell> python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. cisco_grpc_dialout.proto
-  shell> protoc -I=. --python_out=. huawei-telemetry.proto
-  shell> protoc -I=. --python_out=. huawei-ifm.proto
-
-  shell> python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. huawei-grpc-dialout.proto
   shell> protoc -I=. --python_out=. cisco_telemetry.proto
   shell> protoc -I=. --python_out=. cisco_ifstatsbag_generic.proto
+
+  shell> python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. huawei-grpc-dialout.proto
+  shell> protoc -I=. --python_out=. huawei-telemetry.proto
+  shell> protoc -I=. --python_out=. huawei-ifm.proto
 
   shell> protoc -I=. --python_out=. openconfig-interfaces.proto
 
