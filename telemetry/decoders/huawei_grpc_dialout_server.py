@@ -19,6 +19,7 @@
 #
 
 from concurrent import futures
+import sys, getopt
 import ujson as json
 import zmq
 import time
@@ -134,26 +135,63 @@ def sendJsonTelemetryData(jsonTelemetryNode, dictTelemetryData):
 		except ZMQError:
 			pass
 
+def usage(tool):
+	print ""
+	print "Usage: %s [Args]" % tool
+	print ""
+
+	print "Optional Args:"
+	print "  -h, --help".ljust(25) + "Print this help"
+	print "  -g, --grpc-port".ljust(25) + "Set the port for input gRPC sessions [default: '10000']"
+	print "  -Z, --zmq-host".ljust(25) + "Set the ZeroMQ host for output [default: '127.0.0.1']"
+	print "  -z, --zmq-port".ljust(25) + "Set the ZeroMQ port for output [default: '50000']"
+
 def serve():
-  global zmqContext
-  global zmqSock
+	global zmqContext
+	global zmqSock
 
-  # XXX: CL option to choose ZeroMQ bind string
-  zmqContext = zmq.Context()
-  zmqSock = zmqContext.socket(zmq.PUSH)
-  zmqSock.bind("tcp://127.0.0.1:50000") 
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], "hg:Z:z:", ["help", "grpc-port=", "zmq-host=", "zmq-port="])
+	except getopt.GetoptError as err:
+		print str(err)
+		usage(sys.argv[0])
+		sys.exit(1)
 
-  # XXX: CL option to choose gRPC max workers and server port
-  gRPCserver = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-  huawei_grpc_dialout_pb2_grpc.add_gRPCDataserviceServicer_to_server(gRPCDataserviceServicer(), gRPCserver)
-  gRPCserver.add_insecure_port('[::]:10000')
-  gRPCserver.start()
+	# Defaults
+	grpc_port = 10001
+	zmq_host = "127.0.0.1"
+	zmq_port = 50001
 
-  try:
-    while True:
-      time.sleep(_ONE_DAY_IN_SECONDS)
-  except KeyboardInterrupt:
-    gRPCserver.stop(0)
+	for o, a in opts:
+		if o in ("-h", "--help"):
+			usage(sys.argv[0])
+			sys.exit(0)
+		elif o in ("-g", "--grpc-port"):
+			grpc_port = a
+		elif o in ("-Z", "--zmq-host"):
+			zmq_host = a
+		elif o in ("-z", "--zmq-port"):
+			zmq_port = a
+		else:
+			assert False, "unhandled option"
+
+	zmqBindStr = "tcp://" + zmq_host + ":" + str(zmq_port)
+	gRPCBindStr = "[::]:" + str(grpc_port)
+
+	zmqContext = zmq.Context()
+	zmqSock = zmqContext.socket(zmq.PUSH)
+	zmqSock.bind(zmqBindStr)
+
+	gRPCserver = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+	huawei_grpc_dialout_pb2_grpc.add_gRPCDataserviceServicer_to_server(gRPCDataserviceServicer(), gRPCserver)
+	gRPCserver.add_insecure_port(gRPCBindStr)
+	gRPCserver.start()
+
+	try:
+		while True:
+			time.sleep(_ONE_DAY_IN_SECONDS)
+	except KeyboardInterrupt:
+		gRPCserver.stop(0)
 
 if __name__ == '__main__':
-  serve()
+	serve()
