@@ -443,7 +443,7 @@ void telemetry_daemon(void *t_data_void)
 
       for (peers_idx = 0, peers_num = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
 	if (select_fd < telemetry_peers[peers_idx].fd) select_fd = telemetry_peers[peers_idx].fd;
-	if (telemetry_peers[peers_idx].fd) {
+	if (telemetry_peers[peers_idx].fd > 0) {
 	  max_peers_idx = peers_idx;
 	  peers_num++;
 	}
@@ -481,7 +481,7 @@ void telemetry_daemon(void *t_data_void)
 
     t_data->now = time(NULL);
 
-    /* XXX: UDP and ZeroMQ cases: timeout handling (to be tested) */
+    /* XXX: ZeroMQ case: timeout handling (to be tested) */
     if (config.telemetry_port_udp || config.telemetry_zmq_address) {
       if (t_data->now > (last_peers_timeout_check + TELEMETRY_PEER_TIMEOUT_INTERVAL)) {
 	for (peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
@@ -494,6 +494,7 @@ void telemetry_daemon(void *t_data_void)
 	    if (t_data->now > (peer_timeout->last_msg + config.telemetry_peer_timeout)) {
 	      Log(LOG_INFO, "INFO ( %s/%s ): [%s] telemetry peer removed (timeout).\n", config.name, t_data->log_str, peer->addr_str);
 	      telemetry_peer_close(peer, FUNC_TYPE_TELEMETRY);
+	      peers_num--;
 	      recalc_fds = TRUE;
 	    }
 	  }
@@ -650,7 +651,7 @@ void telemetry_daemon(void *t_data_void)
 	  if (telemetry_peer_init(peer, FUNC_TYPE_TELEMETRY)) peer = NULL;
 
 	  if (peer) {
-	    recalc_fds = TRUE; // XXX: do we need this for UDP and ZeroMQ cases?
+	    recalc_fds = TRUE; // XXX: do we need this for ZeroMQ case?
 
 	    if (config.telemetry_port_udp || config.telemetry_zmq_address) {
 	      tpc.index = peers_idx;
@@ -752,6 +753,7 @@ void telemetry_daemon(void *t_data_void)
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] connection reset by peer (%d).\n", config.name, t_data->log_str, peer->addr_str, errno);
       FD_CLR(peer->fd, &bkp_read_descs);
       telemetry_peer_close(peer, FUNC_TYPE_TELEMETRY);
+      peers_num--;
       recalc_fds = TRUE;
     }
     else {

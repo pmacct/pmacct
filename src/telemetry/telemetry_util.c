@@ -24,6 +24,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "addr.h"
 #include "../bgp/bgp.h"
 #include "telemetry.h"
 #if defined WITH_RABBITMQ
@@ -62,7 +63,7 @@ void telemetry_peer_close(telemetry_peer *peer, int type)
     peer->bmp_se = NULL;
   }
 
-  if (config.telemetry_port_udp) {
+  if (config.telemetry_port_udp || config.telemetry_zmq_address) {
     telemetry_peer_cache tpc;
 
     memcpy(&tpc.addr, &peer->addr, sizeof(struct host_addr));
@@ -96,7 +97,7 @@ u_int32_t telemetry_cisco_hdr_get_type(telemetry_peer *peer)
 
 int telemetry_tpc_addr_cmp(const void *a, const void *b)
 {
-  return memcmp(&((telemetry_peer_cache *)a)->addr, &((telemetry_peer_cache *)b)->addr, sizeof(struct host_addr));
+  return host_addr_cmp(&((telemetry_peer_cache *)a)->addr, &((telemetry_peer_cache *)b)->addr);
 }
 
 void telemetry_link_misc_structs(telemetry_misc_structs *tms)
@@ -148,7 +149,7 @@ int telemetry_validate_input_output_decoders(int input, int output)
 
 void telemetry_log_peer_stats(telemetry_peer *peer, struct telemetry_data *t_data)
 {
-  Log(LOG_INFO, "INFO ( %s/%s ): [%s:%u] Packets: %u Packet_Bytes: %u Msg_Bytes: %u Msg_Errors: %u\n",
+  Log(LOG_INFO, "INFO ( %s/%s ): [%s:%u] pkts=%u pktBytes=%u msgBytes=%u msgErrors=%u\n",
 	config.name, t_data->log_str, peer->addr_str, peer->tcp_port, peer->stats.packets,
 	peer->stats.packet_bytes, peer->stats.msg_bytes, peer->stats.msg_errors);
 
@@ -165,7 +166,7 @@ void telemetry_log_peer_stats(telemetry_peer *peer, struct telemetry_data *t_dat
 
 void telemetry_log_global_stats(struct telemetry_data *t_data)
 {
-  Log(LOG_INFO, "INFO ( %s/%s ): Packets: %u Packet_Bytes: %u Msg_Bytes: %u Msg_Errors: %u\n",
+  Log(LOG_INFO, "INFO ( %s/%s ): [Total] pkts=%u pktBytes=%u msgBytes=%u msgErrors=%u\n",
         config.name, t_data->log_str, t_data->global_stats.packets, t_data->global_stats.packet_bytes,
 	t_data->global_stats.msg_bytes, t_data->global_stats.msg_errors);
 

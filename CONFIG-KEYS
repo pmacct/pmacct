@@ -2776,7 +2776,7 @@ DEFAULT:        100
 
 KEY:		telemetry_daemon_peer_timeout [GLOBAL]
 DESC:		Sets the timeout time, in seconds, to determine when a Streaming Telemetry session is
-		to be expired. Applies to UDP sessions.
+		to be expired. Applies to UDP and ZeroMQ sessions.
 DEFAULT:	300
 
 KEY:		telemetry_daemon_allow_file [GLOBAL, MAP]
