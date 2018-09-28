@@ -31,8 +31,8 @@
 #endif
 EXT int telemetry_peer_init(telemetry_peer *, int);
 EXT void telemetry_peer_close(telemetry_peer *, int);
-EXT u_int32_t telemetry_cisco_hdr_get_len(telemetry_peer *);
-EXT u_int32_t telemetry_cisco_hdr_get_type(telemetry_peer *);
+EXT u_int32_t telemetry_cisco_hdr_v0_get_len(telemetry_peer *);
+EXT u_int32_t telemetry_cisco_hdr_v0_get_type(telemetry_peer *);
 EXT void telemetry_link_misc_structs(telemetry_misc_structs *);
 EXT int telemetry_tpc_addr_cmp(const void *, const void *);
 EXT int telemetry_validate_input_output_decoders(int, int);

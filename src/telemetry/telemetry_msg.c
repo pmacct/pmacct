@@ -164,11 +164,11 @@ int telemetry_recv_cisco_json(telemetry_peer *peer, int *flags)
   int ret = 0;
   u_int32_t len;
 
-  ret = telemetry_recv_generic(peer, TELEMETRY_CISCO_HDR_LEN);
+  ret = telemetry_recv_generic(peer, TELEMETRY_CISCO_HDR_LEN_V0);
   if (ret <= 0) return ret;
   
-  if (ret == TELEMETRY_CISCO_HDR_LEN) {
-    len = telemetry_cisco_hdr_get_len(peer);
+  if (ret == TELEMETRY_CISCO_HDR_LEN_V0) {
+    len = telemetry_cisco_hdr_v0_get_len(peer);
     ret = telemetry_recv_json(peer, len, flags);
   }
   
@@ -184,10 +184,10 @@ int telemetry_recv_cisco(telemetry_peer *peer, int *flags, int *data_decoder)
   *flags = FALSE;
   *data_decoder = TELEMETRY_DATA_DECODER_UNKNOWN;
 
-  ret = telemetry_recv_generic(peer, TELEMETRY_CISCO_HDR_LEN);
-  if (ret == TELEMETRY_CISCO_HDR_LEN) {
-    type = telemetry_cisco_hdr_get_type(peer);
-    len = telemetry_cisco_hdr_get_len(peer);
+  ret = telemetry_recv_generic(peer, TELEMETRY_CISCO_HDR_LEN_V0);
+  if (ret == TELEMETRY_CISCO_HDR_LEN_V0) {
+    type = telemetry_cisco_hdr_v0_get_type(peer);
+    len = telemetry_cisco_hdr_v0_get_len(peer);
 
     switch (type) {
     case TELEMETRY_CISCO_RESET_COMPRESSOR:
@@ -235,9 +235,9 @@ int telemetry_recv_cisco_gpb(telemetry_peer *peer)
 
   if (!peer) return ret;
 
-  ret = telemetry_recv_generic(peer, TELEMETRY_CISCO_HDR_LEN);
-  if (ret == TELEMETRY_CISCO_HDR_LEN) {
-    len = telemetry_cisco_hdr_get_len(peer);
+  ret = telemetry_recv_generic(peer, TELEMETRY_CISCO_HDR_LEN_V0);
+  if (ret == TELEMETRY_CISCO_HDR_LEN_V0) {
+    len = telemetry_cisco_hdr_v0_get_len(peer);
     ret = telemetry_recv_gpb(peer, len);
   }
 

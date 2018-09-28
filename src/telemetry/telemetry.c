@@ -193,9 +193,7 @@ void telemetry_daemon(void *t_data_void)
   else {
     if (!strcmp(config.telemetry_decoder, "json")) decoder = TELEMETRY_DECODER_JSON;
     else if (!strcmp(config.telemetry_decoder, "gpb")) decoder = TELEMETRY_DECODER_GPB;
-    else if (!strcmp(config.telemetry_decoder, "cisco_json")) decoder = TELEMETRY_DECODER_CISCO_JSON;
-    else if (!strcmp(config.telemetry_decoder, "cisco")) decoder = TELEMETRY_DECODER_CISCO;
-    else if (!strcmp(config.telemetry_decoder, "cisco_gpb")) decoder = TELEMETRY_DECODER_CISCO_GPB;
+    else if (!strcmp(config.telemetry_decoder, "cisco_v0")) decoder = TELEMETRY_DECODER_CISCO_V0;
     else {
       Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_decoder set to unknown value. Terminating.\n", config.name, t_data->log_str);
       exit_gracefully(1);
@@ -732,16 +730,8 @@ void telemetry_daemon(void *t_data_void)
       ret = telemetry_recv_gpb(peer, 0);
       data_decoder = TELEMETRY_DATA_DECODER_GPB;
       break;
-    case TELEMETRY_DECODER_CISCO:
+    case TELEMETRY_DECODER_CISCO_V0:
       ret = telemetry_recv_cisco(peer, &recv_flags, &data_decoder);
-      break;
-    case TELEMETRY_DECODER_CISCO_JSON:
-      ret = telemetry_recv_cisco_json(peer, &recv_flags);
-      data_decoder = TELEMETRY_DATA_DECODER_JSON;
-      break;
-    case TELEMETRY_DECODER_CISCO_GPB:
-      ret = telemetry_recv_cisco_gpb(peer);
-      data_decoder = TELEMETRY_DATA_DECODER_GPB;
       break;
     default:
       ret = TRUE; recv_flags = ERR;

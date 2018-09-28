@@ -75,7 +75,7 @@ void telemetry_peer_close(telemetry_peer *peer, int type)
   bgp_peer_close(peer, type, FALSE, FALSE, FALSE, FALSE, NULL);
 }
 
-u_int32_t telemetry_cisco_hdr_get_len(telemetry_peer *peer)
+u_int32_t telemetry_cisco_hdr_v0_get_len(telemetry_peer *peer)
 {
   u_int32_t len;
 
@@ -85,7 +85,7 @@ u_int32_t telemetry_cisco_hdr_get_len(telemetry_peer *peer)
   return len;
 }
 
-u_int32_t telemetry_cisco_hdr_get_type(telemetry_peer *peer)
+u_int32_t telemetry_cisco_hdr_v0_get_type(telemetry_peer *peer)
 {
   u_int32_t type;
 
