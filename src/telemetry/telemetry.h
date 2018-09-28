@@ -35,6 +35,7 @@
 #define TELEMETRY_DECODER_JSON		1
 #define TELEMETRY_DECODER_GPB		2
 #define TELEMETRY_DECODER_CISCO_V0	3
+#define TELEMETRY_DECODER_CISCO_V1	4
 
 #define TELEMETRY_DATA_DECODER_UNKNOWN	0
 #define TELEMETRY_DATA_DECODER_JSON	1
@@ -42,6 +43,8 @@
 
 #define TELEMETRY_CISCO_VERSION_0		0
 #define TELEMETRY_CISCO_HDR_LEN_V0		12
+#define TELEMETRY_CISCO_VERSION_1		1
+#define TELEMETRY_CISCO_HDR_LEN_V1		6
 
 #define TELEMETRY_CISCO_RESET_COMPRESSOR	1
 #define TELEMETRY_CISCO_JSON			2
@@ -55,6 +58,12 @@
 struct telemetry_cisco_hdr_v0 {
   u_int32_t type;
   u_int32_t flags;
+  u_int32_t len;
+} __attribute__ ((packed));
+
+struct telemetry_cisco_hdr_v1 {
+  u_int8_t version;
+  u_int8_t type;
   u_int32_t len;
 } __attribute__ ((packed));
 

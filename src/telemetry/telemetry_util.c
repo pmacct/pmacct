@@ -95,6 +95,25 @@ u_int32_t telemetry_cisco_hdr_v0_get_type(telemetry_peer *peer)
   return type;
 }
 
+u_int32_t telemetry_cisco_hdr_v1_get_len(telemetry_peer *peer)
+{
+  u_int32_t len;
+
+  memcpy(&len, (peer->buf.base + 2), 4);
+  len = ntohl(len);
+
+  return len;
+}
+
+u_int32_t telemetry_cisco_hdr_v1_get_type(telemetry_peer *peer)
+{
+  u_int8_t type;
+
+  memcpy(&type, (peer->buf.base + 1), 1);
+
+  return type;
+}
+
 int telemetry_tpc_addr_cmp(const void *a, const void *b)
 {
   return host_addr_cmp(&((telemetry_peer_cache *)a)->addr, &((telemetry_peer_cache *)b)->addr);
