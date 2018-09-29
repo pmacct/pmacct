@@ -64,7 +64,9 @@ struct telemetry_cisco_hdr_v0 {
 struct telemetry_cisco_hdr_v1 {
   u_int8_t version;
   u_int8_t type;
-  u_int32_t len;
+  u_int16_t len;
+  u_int8_t secure;
+  u_int8_t padding;
 } __attribute__ ((packed));
 
 typedef struct bgp_peer_stats telemetry_stats;
