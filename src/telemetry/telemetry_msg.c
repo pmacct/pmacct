@@ -121,6 +121,15 @@ void telemetry_basic_process_json(telemetry_peer *peer)
 {
   int idx;
 
+  if (config.telemetry_decoder_id == TELEMETRY_DECODER_CISCO_V0 && config.telemetry_port_udp) {
+    peer->msglen -= TELEMETRY_CISCO_HDR_LEN_V0;
+    memmove(peer->buf.base, &peer->buf.base[TELEMETRY_CISCO_HDR_LEN_V0], peer->msglen);
+  }
+  else if (config.telemetry_decoder_id == TELEMETRY_DECODER_CISCO_V1 && config.telemetry_port_udp) {
+    peer->msglen -= TELEMETRY_CISCO_HDR_LEN_V1;
+    memmove(peer->buf.base, &peer->buf.base[TELEMETRY_CISCO_HDR_LEN_V1], peer->msglen);
+  }
+
   for (idx = 0; idx < peer->msglen; idx++) {
     if (!isprint(peer->buf.base[idx])) peer->buf.base[idx] = '\0';
   }
@@ -173,6 +182,9 @@ int telemetry_recv_cisco_v0(telemetry_peer *peer, int *flags, int *data_decoder)
     type = telemetry_cisco_hdr_v0_get_type(peer);
     len = telemetry_cisco_hdr_v0_get_len(peer);
 
+    /* Linux does not implement MSG_WAITALL on UDP */
+    if (config.telemetry_port_udp) len = 0;
+
     ret = telemetry_recv_cisco(peer, flags, data_decoder, type, len);
   }
 
@@ -192,6 +204,9 @@ int telemetry_recv_cisco_v1(telemetry_peer *peer, int *flags, int *data_decoder)
   if (ret == TELEMETRY_CISCO_HDR_LEN_V1) {
     type = telemetry_cisco_hdr_v1_get_type(peer);
     len = telemetry_cisco_hdr_v1_get_len(peer);
+
+    /* Linux does not implement MSG_WAITALL on UDP */
+    if (config.telemetry_port_udp) len = 0;
 
     ret = telemetry_recv_cisco(peer, flags, data_decoder, type, len);
   }

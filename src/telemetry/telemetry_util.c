@@ -95,17 +95,17 @@ u_int32_t telemetry_cisco_hdr_v0_get_type(telemetry_peer *peer)
   return type;
 }
 
-u_int32_t telemetry_cisco_hdr_v1_get_len(telemetry_peer *peer)
+u_int16_t telemetry_cisco_hdr_v1_get_len(telemetry_peer *peer)
 {
-  u_int32_t len;
+  u_int16_t len;
 
-  memcpy(&len, (peer->buf.base + 2), 4);
-  len = ntohl(len);
+  memcpy(&len, (peer->buf.base + 2), 2);
+  len = ntohs(len);
 
   return len;
 }
 
-u_int32_t telemetry_cisco_hdr_v1_get_type(telemetry_peer *peer)
+u_int8_t telemetry_cisco_hdr_v1_get_type(telemetry_peer *peer)
 {
   u_int8_t type;
 

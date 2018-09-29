@@ -69,7 +69,7 @@ void telemetry_daemon(void *t_data_void)
 
   int slen, clen, ret, rc, peers_idx, allowed, yes=1, no=0;
   int peers_idx_rr = 0, max_peers_idx = 0, peers_num = 0;
-  int decoder = 0, data_decoder = 0, recv_flags = 0;
+  int data_decoder = 0, recv_flags = 0;
   u_int16_t port = 0;
   char *srv_proto = NULL;
   time_t last_peers_timeout_check;
@@ -191,16 +191,16 @@ void telemetry_daemon(void *t_data_void)
     exit_gracefully(1);
   }
   else {
-    if (!strcmp(config.telemetry_decoder, "json")) decoder = TELEMETRY_DECODER_JSON;
-    else if (!strcmp(config.telemetry_decoder, "gpb")) decoder = TELEMETRY_DECODER_GPB;
-    else if (!strcmp(config.telemetry_decoder, "cisco_v0")) decoder = TELEMETRY_DECODER_CISCO_V0;
-    else if (!strcmp(config.telemetry_decoder, "cisco_v1")) decoder = TELEMETRY_DECODER_CISCO_V1;
+    if (!strcmp(config.telemetry_decoder, "json")) config.telemetry_decoder_id = TELEMETRY_DECODER_JSON;
+    else if (!strcmp(config.telemetry_decoder, "gpb")) config.telemetry_decoder_id = TELEMETRY_DECODER_GPB;
+    else if (!strcmp(config.telemetry_decoder, "cisco_v0")) config.telemetry_decoder_id = TELEMETRY_DECODER_CISCO_V0;
+    else if (!strcmp(config.telemetry_decoder, "cisco_v1")) config.telemetry_decoder_id = TELEMETRY_DECODER_CISCO_V1;
     else {
       Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_decoder set to unknown value. Terminating.\n", config.name, t_data->log_str);
       exit_gracefully(1);
     }
 
-    if (config.telemetry_zmq_address && decoder != TELEMETRY_DECODER_JSON) {
+    if (config.telemetry_zmq_address && config.telemetry_decoder_id != TELEMETRY_DECODER_JSON) {
       Log(LOG_ERR, "ERROR ( %s/%s ): ZeroMQ collection supports only 'json' decoder (telemetry_daemon_decoder). Terminating.\n", config.name, t_data->log_str);
       exit_gracefully(1);
     }
@@ -722,7 +722,7 @@ void telemetry_daemon(void *t_data_void)
 
     recv_flags = 0;
 
-    switch (decoder) {
+    switch (config.telemetry_decoder_id) {
     case TELEMETRY_DECODER_JSON:
       ret = telemetry_recv_json(peer, 0, &recv_flags);
       data_decoder = TELEMETRY_DATA_DECODER_JSON;

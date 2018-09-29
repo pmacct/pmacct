@@ -224,6 +224,7 @@ struct configuration {
   char *telemetry_ip;
   char *telemetry_zmq_address;
   char *telemetry_decoder;
+  int telemetry_decoder_id;
   int telemetry_max_peers;
   int telemetry_peer_timeout;
   char *telemetry_allow_file;
