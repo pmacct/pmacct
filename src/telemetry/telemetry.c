@@ -480,6 +480,26 @@ void telemetry_daemon(void *t_data_void)
 
     t_data->now = time(NULL);
 
+    /* Logging stats */
+    if (!t_data->global_stats.last_check || ((t_data->global_stats.last_check + TELEMETRY_LOG_STATS_INTERVAL) <= t_data->now)) {
+      if (t_data->global_stats.last_check) {
+	telemetry_peer *stats_peer;
+	int peers_idx;
+
+	for (stats_peer = NULL, peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
+	  if (telemetry_peers[peers_idx].fd) {
+	    stats_peer = &telemetry_peers[peers_idx];
+	    telemetry_log_peer_stats(stats_peer, t_data);
+	    stats_peer->stats.last_check = t_data->now;
+	  }
+	}
+
+	telemetry_log_global_stats(t_data);
+      }
+
+      t_data->global_stats.last_check = t_data->now;
+    }
+
     /* XXX: ZeroMQ case: timeout handling (to be tested) */
     if (config.telemetry_port_udp || config.telemetry_zmq_address) {
       if (t_data->now > (last_peers_timeout_check + TELEMETRY_PEER_TIMEOUT_INTERVAL)) {
@@ -564,26 +584,6 @@ void telemetry_daemon(void *t_data_void)
           telemetry_daemon_msglog_init_kafka_host();
       }
 #endif
-    }
-
-    /* Logging stats */
-    if (!t_data->global_stats.last_check || ((t_data->global_stats.last_check + TELEMETRY_LOG_STATS_INTERVAL) <= t_data->now)) {
-      if (t_data->global_stats.last_check) {
-	telemetry_peer *stats_peer;
-	int peers_idx;
-
-	for (stats_peer = NULL, peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
-	  if (telemetry_peers[peers_idx].fd) {
-	    stats_peer = &telemetry_peers[peers_idx];
-	    telemetry_log_peer_stats(stats_peer, t_data);
-	    stats_peer->stats.last_check = t_data->now;
-	  }
-	}
-
-	telemetry_log_global_stats(t_data);
-      }
-
-      t_data->global_stats.last_check = t_data->now;
     }
 
     /*
