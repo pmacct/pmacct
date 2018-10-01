@@ -37,6 +37,7 @@ import openconfig_interfaces_pb2
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
+debug = False
 zmqContext = None
 zmqSock = None
 
@@ -118,15 +119,16 @@ class gRPCDataserviceServicer(huawei_grpc_dialout_pb2_grpc.gRPCDataserviceServic
 				sendJsonTelemetryData(jsonTelemetryNode, dictTelemetry)
 
 def sendJsonTelemetryData(jsonTelemetryNode, dictTelemetryData):
+	global debug
 	global zmqSock
 
 	jsonTelemetryData = json.dumps(dictTelemetryData) 
 
-	# XXX: debug code
-	# print "dataPublish(): +++"
-	# print "dataPublish(): " + jsonTelemetryNode
-	# print "dataPublish(): " + jsonTelemetryData
-	# print "dataPublish(): ---"
+	if debug:
+		print "dataPublish(): +++"
+		print "dataPublish(): " + jsonTelemetryNode
+		print "dataPublish(): " + jsonTelemetryData
+		print "dataPublish(): ---"
 
 	if not zmqSock.closed:
 		try:
@@ -142,22 +144,25 @@ def usage(tool):
 
 	print "Optional Args:"
 	print "  -h, --help".ljust(25) + "Print this help"
+	print "  -d, --debug".ljust(25) + "Enable debug [default: no]"
 	print "  -g, --grpc-port".ljust(25) + "Set the port for input gRPC sessions [default: '10000']"
 	print "  -Z, --zmq-host".ljust(25) + "Set the ZeroMQ host for output [default: '127.0.0.1']"
 	print "  -z, --zmq-port".ljust(25) + "Set the ZeroMQ port for output [default: '50000']"
 
 def serve():
+	global debug
 	global zmqContext
 	global zmqSock
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hg:Z:z:", ["help", "grpc-port=", "zmq-host=", "zmq-port="])
+		opts, args = getopt.getopt(sys.argv[1:], "hdg:Z:z:", ["help", "debug", "grpc-port=", "zmq-host=", "zmq-port="])
 	except getopt.GetoptError as err:
 		print str(err)
 		usage(sys.argv[0])
 		sys.exit(1)
 
 	# Defaults
+	debug = False
 	grpc_port = 10001
 	zmq_host = "127.0.0.1"
 	zmq_port = 50001
@@ -166,6 +171,8 @@ def serve():
 		if o in ("-h", "--help"):
 			usage(sys.argv[0])
 			sys.exit(0)
+		elif o in ("-d", "--debug"):
+			debug = True
 		elif o in ("-g", "--grpc-port"):
 			grpc_port = a
 		elif o in ("-Z", "--zmq-host"):
