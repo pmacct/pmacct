@@ -35,7 +35,6 @@ import pprint
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
 
-# XXX: try to avoid global vars
 zmqSock = None
 options=None
 example_list=[]
@@ -51,7 +50,6 @@ class gRPCDataserviceServicer(huawei_grpc_dialout_pb2_grpc.gRPCDataserviceServic
   def dataPublish(self, message, context):
     global options
     grpcPeer = {}
-    #global zmqSock
     grpcPeerStr = context.peer() 
     (grpcPeer['telemetry_proto'], grpcPeer['telemetry_node'], grpcPeer['telemetry_node_port']) = grpcPeerStr.split(":")
     grpcPeer['vendor'] = 'Huawei'
@@ -59,7 +57,7 @@ class gRPCDataserviceServicer(huawei_grpc_dialout_pb2_grpc.gRPCDataserviceServic
     if options.debug:
       metadata = dict(context.invocation_metadata())
       grpcPeer['user-agent'] = metadata['user-agent']
-      #grpcPeerStr -> 'ipv4:10.215.133.23:57775'
+      #Example of grpcPeerStr -> 'ipv4:10.215.133.23:57775'
       grpcPeer['grpc_processing'] = 'huawei_grpc_dialout_pb2_grpc'
       grpcPeer['grpc_ulayer'] = 'GPB Telemetry'
       jsonTelemetryNode = json.dumps(grpcPeer, indent=2, sort_keys=True) 
@@ -89,8 +87,6 @@ class gRPCDataserviceServicer(huawei_grpc_dialout_pb2_grpc.gRPCDataserviceServic
       if 'data_gpb' in message_header_dict:
         del message_header_dict['data_gpb']
 
-      #pprint.pprint(message_header_dict)
-
       (proto, path) = message_header_dict['sensor_path'].split(":")
 
       if options.debug:
@@ -105,8 +101,6 @@ class gRPCDataserviceServicer(huawei_grpc_dialout_pb2_grpc.gRPCDataserviceServic
         if 'content' in new_row_header_dict:
           del new_row_header_dict['content']
 
-#       pprint.pprint(new_row_header_dict)
-
         msg = select_gbp_methode(proto)
 
         msg.ParseFromString(new_row.content)
@@ -115,15 +109,11 @@ class gRPCDataserviceServicer(huawei_grpc_dialout_pb2_grpc.gRPCDataserviceServic
                                 preserving_proto_field_name = True,
                                 use_integers_for_enums = True)
   
-#       pprint.pprint(content)
-  
         message_dict = {}
         message_dict.update({'grpc':{'grpcPeer':grpcPeer['telemetry_node']}})
         message_dict.update({'data': {'content':content}})
         message_dict['data'].update(message_header_dict)
         message_dict['data'].update(new_row_header_dict)
-  
-#        pprint.pprint(message_dict)
   
         if options.verbose:
           allkeys = parse_dict(content, ret='', level=0)
@@ -146,7 +136,7 @@ class gRPCMdtDialoutServicer(cisco_grpc_dialout_pb2_grpc.gRPCMdtDialoutServicer)
     if options.debug:
       metadata = dict(context.invocation_metadata())
       grpcPeer['user-agent'] = metadata['user-agent']
-      #grpcPeerStr -> 'ipv4:10.215.133.23:57775'
+      #Example of grpcPeerStr -> 'ipv4:10.215.133.23:57775'
       grpcPeer['grpc_processing'] = 'huawei_grpc_dialout_pb2_grpc'
       grpcPeer['grpc_ulayer'] = 'GPB Telemetry'
       jsonTelemetryNode = json.dumps(grpcPeer, indent=2, sort_keys=True) 
@@ -161,10 +151,8 @@ class gRPCMdtDialoutServicer(cisco_grpc_dialout_pb2_grpc.gRPCMdtDialoutServicer)
 
       grpc_message = json.loads(new_msg.data)
 
-      #CREATE OC_INTERFACE DICT TO FILL DURING ITERATION
       message_header_dict = grpc_message.copy()
 
-      #pprint.pprint(message_header_dict)
 
       if 'data_json' in message_header_dict:
         del message_header_dict['data_json']
@@ -172,8 +160,6 @@ class gRPCMdtDialoutServicer(cisco_grpc_dialout_pb2_grpc.gRPCMdtDialoutServicer)
       (proto, path) = message_header_dict['encoding_path'].split(":")
       if options.debug:
         logging.debug("PROTOTYP=%s" % proto)
-
-      #print json.dumps( grpc_message, indent=2, sort_keys=True)
 
       for listelem in grpc_message['data_json']:
         message_dict = {}
@@ -230,8 +216,6 @@ def sendJsonTelemetryData(dictTelemetryData, vendor, protopath):
   global example_list
 
   jsonTelemetryData = json.dumps(dictTelemetryData, indent=2, sort_keys=True) 
-  #pprint.pprint(dictTelemetryData)
-  #jsonTelemetryData = json.dumps(dictTelemetryData) 
 
   if options.examplefile and (not protopath in example_list):
     example_list.append(protopath) 
@@ -240,7 +224,6 @@ def sendJsonTelemetryData(dictTelemetryData, vendor, protopath):
       examplefile.write("PROTOPATH[" + vendor + "]: " + protopath + "\n")
       examplefile.write(jsonTelemetryData)
 
-  # XXX: debug code
   if options.report:
     logging.info("dataPublish(): +++")
     logging.info(jsonTelemetryData)
@@ -262,12 +245,10 @@ def serve():
   elif options.debug:
    logging.debug("startoptions of this script: %s" % str(options))
 
-  # XXX: CL option to choose ZeroMQ bind string
   zmqContext = zmq.Context()
   zmqSock = zmqContext.socket(zmq.PUSH)
   zmqSock.bind("tcp://127.0.0.1:50000") 
 
-  # XXX: CL option to choose gRPC server port
   gRPCserver = grpc.server(futures.ThreadPoolExecutor(max_workers=options.workers), logging.basicConfig())
   if options.huawei:
     huawei_grpc_dialout_pb2_grpc.add_gRPCDataserviceServicer_to_server(gRPCDataserviceServicer(), gRPCserver)
