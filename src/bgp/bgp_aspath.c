@@ -499,6 +499,22 @@ aspath_count_numas (struct aspath *aspath)
   return num;
 }
 
+char *aspath_make_empty()
+{
+  char *str_buf;
+
+  str_buf = malloc(1);
+
+  if (!str_buf) {
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (aspath_make_str_count). Exiting ..\n", config.name); // XXX
+    exit_all(1);
+  }
+
+  str_buf[0] = '\0';
+
+  return str_buf;
+}
+
 /* Convert aspath structure to string expression. */
 static char *
 aspath_make_str_count (struct aspath *as)
@@ -509,16 +525,7 @@ aspath_make_str_count (struct aspath *as)
   char *str_buf;
 
   /* Empty aspath. */
-  if (!as->segments)
-    {
-      str_buf = malloc(1);
-      if (!str_buf) {
-	Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (aspath_make_str_count). Exiting ..\n", config.name); // XXX
-	exit_all(1);
-      }
-      str_buf[0] = '\0';
-      return str_buf;
-    }
+  if (!as->segments) str_buf = aspath_make_empty();
 
   seg = as->segments;
   
@@ -544,7 +551,7 @@ aspath_make_str_count (struct aspath *as)
     {
       int i;
       char seperator;
-      
+
       /* Check AS type validity. Set seperator for segment */
       switch (seg->type)
         {
@@ -558,7 +565,8 @@ aspath_make_str_count (struct aspath *as)
             break;
           default:
             free(str_buf);
-            return NULL;
+	    str_buf = aspath_make_empty();
+	    return str_buf;
         }
       
       /* We might need to increase str_buf, particularly if path has
