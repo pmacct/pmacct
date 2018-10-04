@@ -29,6 +29,9 @@
 
 struct pm_ndpi_workflow *pm_ndpi_workflow_init()
 {
+    
+  NDPI_PROTOCOL_BITMASK all;
+    
   struct ndpi_detection_module_struct *module = ndpi_init_detection_module();
   struct pm_ndpi_workflow *workflow = ndpi_calloc(1, sizeof(struct pm_ndpi_workflow));
 
@@ -72,6 +75,10 @@ struct pm_ndpi_workflow *pm_ndpi_workflow_init()
   }
 
   workflow->ndpi_flows_root = ndpi_calloc(workflow->prefs.num_roots, sizeof(void *));
+    
+  // enable all protocols
+  NDPI_BITMASK_SET_ALL(all);
+  ndpi_set_protocol_detection_bitmask2(workflow->ndpi_struct, &all);
 
   return workflow;
 }
