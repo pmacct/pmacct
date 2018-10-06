@@ -2383,8 +2383,12 @@ release), you may be very possibly asked to try one of these first. Finally,
 please refrain to open issues on GitHub if not using master code (use the
 pmacct-discussion mailing list or unicast email instead). 
 
-a) Here are recap some popular issues when compiling pmacct or linking it at
-runtime against shared libraries:
+a) In cases of errors at configure script time (ie. library not found, headers
+  not found, etc.), additional info can be found in config.log at the end of
+  the 'Core tests' section. Also if reporting an issue related to configure
+  time, it is good idea to supply the config.log file as well. Here are recap
+  some popular issues when compiling pmacct or linking it at runtime against
+  shared libraries:
 
   1) /usr/local/sbin/pmacctd: error while loading shared libraries:
      librabbitmq.so.4: cannot open shared object file: No such file or directory 
