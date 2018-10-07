@@ -76,7 +76,7 @@ typedef struct _SflSp {
 void sfprobe_exit_now(int signum)
 {
   Log(LOG_WARNING, "WARN ( %s/%s ): Shutting down on user request.\n", config.name, config.type);
-  exit_plugin(0);
+  exit_gracefully(0);
 }
 
 
@@ -218,7 +218,7 @@ static void init_agent(SflSp *sp)
     if (sp->agent) sfl_agent_init(sp->agent, &myIP, sp->agentSubId, now, now, sp, agentCB_alloc, agentCB_free, agentCB_error, NULL);
     else {
       Log(LOG_ERR, "ERROR ( %s/%s ): init_agent(): calloc() failed.\n", config.name, config.type);
-      exit(1);
+      exit_gracefully(1);
     }
   }
 
@@ -719,7 +719,7 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         }
         else {
           if ((ret = read(pipe_fd, &rgptr, sizeof(rgptr))) == 0)
-            exit_plugin(1); /* we exit silently; something happened at the write end */
+            exit_gracefully(1); /* we exit silently; something happened at the write end */
         }
   
         if ((rg->ptr + bufsz) > rg->end) rg->ptr = rg->base;

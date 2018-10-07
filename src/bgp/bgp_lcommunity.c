@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -43,7 +43,7 @@ lcommunity_new (struct bgp_peer *peer)
   tmp = malloc(sizeof (struct lcommunity));
   if (!tmp) {
     Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (lcommunity_new). Exiting ..\n", config.name, bms->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
   memset(tmp, 0, sizeof (struct lcommunity));
 
@@ -85,7 +85,7 @@ lcommunity_add_val (struct bgp_peer *peer, struct lcommunity *lcom, struct lcomm
       lcom->val = malloc(lcom_length (lcom));
       if (!lcom->val) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (lcommunity_add_val). Exiting ..\n", config.name, bms->log_str);
-	exit_all(1);
+	exit_gracefully(1);
       }
       memcpy (lcom->val, lval->val, LCOMMUNITY_SIZE);
       return 1;
@@ -300,5 +300,5 @@ lcommunity_lcom2str (struct bgp_peer *peer, struct lcommunity *lcom)
 
   exit_lane:
   Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (lcommunity_lcom2str). Exiting ..\n", config.name, bms->log_str);
-  exit_all(1);
+  exit_gracefully(1);
 }

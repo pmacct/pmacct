@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -46,7 +46,7 @@ ecommunity_new (struct bgp_peer *peer)
   tmp = malloc(sizeof (struct ecommunity));
   if (!tmp) {
     Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (ecommunity_new). Exiting ..\n", config.name, bms->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
   memset(tmp, 0, sizeof (struct ecommunity));
 
@@ -88,7 +88,7 @@ ecommunity_add_val (struct bgp_peer *peer, struct ecommunity *ecom, struct ecomm
       ecom->val = malloc(ecom_length (ecom));
       if (!ecom->val) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (ecommunity_add_val). Exiting ..\n", config.name, bms->log_str);
-	exit_all(1);
+	exit_gracefully(1);
       }
       memcpy (ecom->val, eval->val, ECOMMUNITY_SIZE);
       return 1;
@@ -313,7 +313,7 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
       str_buf = malloc(1);
       if (!str_buf) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (ecommunity_ecom2str). Exiting ..\n", config.name, bms->log_str);
-	exit_all(1);
+	exit_gracefully(1);
       }
       str_buf[0] = '\0';
       return str_buf;
@@ -323,7 +323,7 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
   str_buf = malloc(ECOMMUNITY_STR_DEFAULT_LEN + 1);
   if (!str_buf) {
     Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (ecommunity_ecom2str). Exiting ..\n", config.name, bms->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
   str_size = ECOMMUNITY_STR_DEFAULT_LEN + 1;
   str_pnt = 0;

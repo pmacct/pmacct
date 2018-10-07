@@ -124,7 +124,7 @@ void skinny_bgp_daemon_online()
     ret = str_to_addr(config.nfacctd_bgp_ip, &addr);
     if (!ret) {
       Log(LOG_ERR, "ERROR ( %s/%s ): 'bgp_daemon_ip' value is not a valid IPv4/IPv6 address. Terminating thread.\n", config.name, bgp_misc_db->log_str);
-      exit_all(1);
+      exit_gracefully(1);
     }
     slen = addr_to_sa((struct sockaddr *)&server, &addr, config.nfacctd_bgp_port);
   }
@@ -135,20 +135,20 @@ void skinny_bgp_daemon_online()
   peers = malloc(config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
   if (!peers) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() BGP peers structure. Terminating thread.\n", config.name, bgp_misc_db->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
   memset(peers, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
 
   if (config.bgp_lg) {
     if (config.acct_type != ACCT_PMBGP) {
       Log(LOG_ERR, "ERROR ( %s/%s ): bgp_daemon_lg feature not supported for this daemon. Exiting ...\n", config.name, config.type);
-      exit(1);
+      exit_gracefully(1);
     }
 
     peers_cache = malloc(config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_cache_bucket));
     if (!peers_cache) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() BGP peers cache structure. Terminating thread.\n", config.name, bgp_misc_db->log_str);
-      exit_all(1);
+      exit_gracefully(1);
     }
 
     bgp_peer_cache_init(peers_cache, config.nfacctd_bgp_max_peers);
@@ -156,7 +156,7 @@ void skinny_bgp_daemon_online()
     peers_port_cache = malloc(config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_cache_bucket));
     if (!peers_port_cache) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() BGP peers cache structure (2). Terminating thread.\n", config.name, bgp_misc_db->log_str);
-      exit_all(1);
+      exit_gracefully(1);
     }
 
     bgp_peer_cache_init(peers_port_cache, config.nfacctd_bgp_max_peers);
@@ -171,7 +171,7 @@ void skinny_bgp_daemon_online()
 
     if (config.acct_type != ACCT_PMBGP) {
       Log(LOG_ERR, "ERROR ( %s/%s ): bgp_daemon_xconnect_map feature not supported for this daemon. Exiting ...\n", config.name, config.type);
-      exit(1);
+      exit_gracefully(1);
     }
 
     memset(&bgp_xcs_map, 0, sizeof(bgp_xcs_map));
@@ -181,7 +181,7 @@ void skinny_bgp_daemon_online()
     bgp_xcs_map.pool = malloc((config.nfacctd_bgp_max_peers + 1) * sizeof(struct bgp_xconnect));
     if (!bgp_xcs_map.pool) {
       Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate BGP xconnect pool. Exiting ...\n", config.name, config.type);
-      exit(1);
+      exit_gracefully(1);
     }
     else memset(bgp_xcs_map.pool, 0, (config.nfacctd_bgp_max_peers + 1) * sizeof(struct bgp_xconnect));
 
@@ -200,13 +200,13 @@ void skinny_bgp_daemon_online()
 
     if (bgp_misc_db->msglog_backend_methods > 1) {
       Log(LOG_ERR, "ERROR ( %s/%s ): bgp_daemon_msglog_file, bgp_daemon_msglog_amqp_routing_key and bgp_daemon_msglog_kafka_topic are mutually exclusive. Terminating thread.\n", config.name, bgp_misc_db->log_str);
-      exit_all(1);
+      exit_gracefully(1);
     }
 
     bgp_misc_db->peers_log = malloc(config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_log));
     if (!bgp_misc_db->peers_log) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() BGP peers log structure. Terminating thread.\n", config.name, bgp_misc_db->log_str);
-      exit_all(1);
+      exit_gracefully(1);
     }
     memset(bgp_misc_db->peers_log, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_log));
     bgp_peer_log_seq_init(&bgp_misc_db->log_seq);
@@ -236,13 +236,13 @@ void skinny_bgp_daemon_online()
 
     if (bgp_misc_db->dump_backend_methods > 1) {
       Log(LOG_ERR, "ERROR ( %s/%s ): bgp_table_dump_file, bgp_table_dump_amqp_routing_key and bgp_table_dump_kafka_topic are mutually exclusive. Terminating thread.\n", config.name, bgp_misc_db->log_str);
-      exit_all(1);
+      exit_gracefully(1);
     }
   }
 
   if ((bgp_misc_db->msglog_backend_methods || bgp_misc_db->dump_backend_methods) && config.bgp_xconnect_map) {
     Log(LOG_ERR, "ERROR ( %s/%s ): bgp_daemon_xconnect_map is mutually exclusive with any BGP msglog and dump method. Terminating thread.\n", config.name, bgp_misc_db->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   if (!config.bgp_table_peer_buckets) config.bgp_table_peer_buckets = DEFAULT_BGP_INFO_HASH;
@@ -252,7 +252,7 @@ void skinny_bgp_daemon_online()
     bgp_route_info_modulo = bgp_route_info_modulo_pathid; 
   else {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unknown 'bgp_table_per_peer_hash' value. Terminating thread.\n", config.name, bgp_misc_db->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   config.bgp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
@@ -273,7 +273,7 @@ void skinny_bgp_daemon_online()
 
     if (config.bgp_sock < 0) {
       Log(LOG_ERR, "ERROR ( %s/%s ): thread socket() failed. Terminating thread.\n", config.name, bgp_misc_db->log_str);
-      exit_all(1);
+      exit_gracefully(1);
     }
   }
   if (config.nfacctd_bgp_ipprec) {
@@ -316,13 +316,13 @@ void skinny_bgp_daemon_online()
 
     ip_address = config.nfacctd_bgp_ip ? config.nfacctd_bgp_ip : null_ip_address;
     Log(LOG_ERR, "ERROR ( %s/%s ): bind() to ip=%s port=%d/tcp failed (errno: %d).\n", config.name, bgp_misc_db->log_str, ip_address, config.nfacctd_bgp_port, errno);
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   rc = listen(config.bgp_sock, 1);
   if (rc < 0) {
     Log(LOG_ERR, "ERROR ( %s/%s ): listen() failed (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   /* Preparing for syncronous I/O multiplexing */

@@ -192,7 +192,7 @@ struct bgp_info_extra *bgp_info_extra_new(struct bgp_info *ri)
   new = malloc(sizeof(struct bgp_info_extra));
   if (!new) {
     Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (bgp_info_extra_new). Exiting ..\n", config.name, bms->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
   else memset(new, 0, sizeof (struct bgp_info_extra));
 
@@ -263,7 +263,7 @@ struct bgp_info *bgp_info_new(struct bgp_peer *peer)
   new = malloc(sizeof(struct bgp_info));
   if (!new) {
     Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (bgp_info_new). Exiting ..\n", config.name, bms->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
   else memset(new, 0, sizeof (struct bgp_info));
   
@@ -473,7 +473,7 @@ void *bgp_attr_hash_alloc(void *p)
   attr = malloc(sizeof (struct bgp_attr));
   if (!attr) {
     Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_attr_hash_alloc). Exiting ..\n", config.name); // XXX
-    exit_all(1);
+    exit_gracefully(1);
   }
   else {
     memset(attr, 0, sizeof (struct bgp_attr));
@@ -583,7 +583,7 @@ int bgp_peer_init(struct bgp_peer *peer, int type)
   peer->buf.base = malloc(peer->buf.len);
   if (!peer->buf.base) {
     Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (bgp_peer_init). Exiting ..\n", config.name, bms->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
   else {
     memset(peer->buf.base, 0, peer->buf.len);
@@ -612,7 +612,7 @@ void bgp_peer_close(struct bgp_peer *peer, int type, int no_quiet, int send_noti
       if (ret) send(peer->fd, notification_msg, ret, 0);
     }
 
-    /* be quiet if we are in a signal handler and already set to exit() */
+    /* be quiet if we are in a signal handler and already set to exit */
     if (!no_quiet) bgp_peer_info_delete(peer);
 
     if (bms->msglog_file || bms->msglog_amqp_routing_key || bms->msglog_kafka_topic)
@@ -1105,7 +1105,7 @@ void bgp_config_checks(struct configuration *c)
       printf("       peer_src_as     =>  bgp_peer_src_as_type\n");
       printf("       src_local_pref  =>  bgp_src_local_pref_type\n");
       printf("       src_med         =>  bgp_src_med_type\n");
-      exit(1);
+      exit_gracefully(1);
     }
 
     c->data_type |= PIPE_TYPE_BGP;
@@ -1124,7 +1124,7 @@ void bgp_config_checks(struct configuration *c)
       printf("       src_std_comm    =>  bgp_src_std_comm_type\n");
       printf("       src_ext_comm    =>  bgp_src_ext_comm_type\n");
       printf("       src_lrg_comm    =>  bgp_src_lrg_comm_type\n");
-      exit(1);
+      exit_gracefully(1);
     }
 
     if (c->type_id == PLUGIN_ID_MEMORY) c->data_type |= PIPE_TYPE_LBGP;
@@ -1148,7 +1148,7 @@ void bgp_md5_file_load(char *filename, struct bgp_md5_table *t)
 
     if ((file = fopen(filename, "r")) == NULL) {
       Log(LOG_ERR, "ERROR ( %s/core/BGP ): [%s] file not found.\n", config.name, filename);
-      exit(1);
+      exit_gracefully(1);
     }
 
     while (!feof(file)) {

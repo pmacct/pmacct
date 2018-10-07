@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /* 
@@ -52,7 +52,7 @@ bgp_table_init (afi_t afi, safi_t safi)
   }
   else {
     Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (bgp_table_init). Exiting ..\n", config.name); // XXX
-    exit_all(1);
+    exit_gracefully(1);
   }
   
   return rt;
@@ -84,7 +84,7 @@ bgp_node_create (struct bgp_peer *peer)
 
   malloc_failed:
   Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (bgp_node_create). Exiting ..\n", config.name, bms->log_str);
-  exit_all(1);
+  exit_gracefully(1);
 }
 
 /* Allocate new route node with prefix set. */

@@ -99,7 +99,7 @@ assegment_new (u_char type, u_short length)
   new = malloc(sizeof (struct assegment));
   if (!new) {
     Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (assegment_new: new). Exiting ..\n", config.name); // XXX
-    exit_all(1);
+    exit_gracefully(1);
   }
   memset(new, 0, sizeof (struct assegment));
   
@@ -107,7 +107,7 @@ assegment_new (u_char type, u_short length)
     new->as = assegment_data_new (length);
     if (!new->as) {
       Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (assegment_new: new->as). Exiting ..\n", config.name); // XXX
-      exit_all(1);
+      exit_gracefully(1);
     }
     memset(new->as, 0, length);
   }
@@ -296,7 +296,7 @@ aspath_new (struct bgp_peer *peer)
   aspath = malloc(sizeof (struct aspath));
   if (!aspath) {
     Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (aspath_new). Exiting ..\n", config.name, bms->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
   memset (aspath, 0, sizeof (struct aspath));
   return aspath;
@@ -507,7 +507,7 @@ char *aspath_make_empty()
 
   if (!str_buf) {
     Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (aspath_make_str_count). Exiting ..\n", config.name); // XXX
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   str_buf[0] = '\0';
@@ -544,7 +544,7 @@ aspath_make_str_count (struct aspath *as)
   str_buf = malloc(str_size);
   if (!str_buf) {
     Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (aspath_make_str_count). Exiting ..\n", config.name); // XXX
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   while (seg)
@@ -665,7 +665,7 @@ aspath_dup (struct aspath *aspath)
   new = malloc(sizeof (struct aspath));
   if (!new) {
     Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (aspath_dup). Exiting ..\n", config.name); // XXX
-    exit_all(1);
+    exit_gracefully(1);
   }
   memset(new, 0, sizeof(struct aspath));
 

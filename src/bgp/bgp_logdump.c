@@ -704,14 +704,14 @@ void bgp_handle_dump_event()
     if (config.bgp_table_dump_amqp_routing_key) {
       bgp_table_dump_init_amqp_host();
       ret = p_amqp_connect_to_publish(&bgp_table_dump_amqp_host);
-      if (ret) exit(ret);
+      if (ret) exit_gracefully(ret);
     }
 #endif
 
 #ifdef WITH_KAFKA
     if (config.bgp_table_dump_kafka_topic) {
       ret = bgp_table_dump_init_kafka_host();
-      if (ret) exit(ret);
+      if (ret) exit_gracefully(ret);
     }
 #endif
 
@@ -837,7 +837,7 @@ void bgp_handle_dump_event()
     Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BGP tables - END (PID: %u, TABLES: %u ET: %u) ***\n",
 		config.name, bms->log_str, dumper_pid, tables_num, duration);
 
-    exit(0);
+    exit_gracefully(0);
   default: /* Parent */
     if (ret == -1) { /* Something went wrong */
       Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork BGP table dump writer: %s\n", config.name, bms->log_str, strerror(errno));

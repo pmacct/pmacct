@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /* 
@@ -39,13 +39,13 @@ hash_create_size (unsigned int size, unsigned int (*hash_key) (void *),
   hash = malloc(sizeof (struct hash));
   if (!hash) {
     Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (hash_create_size). Exiting ..\n", config.name); // XXX
-    exit_all(1);
+    exit_gracefully(1);
   }
   memset (hash, 0, sizeof (struct hash));
   hash->index = malloc(sizeof (struct hash_backet *) * size);
   if (!hash->index) {
     Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (hash_create_size). Exiting ..\n", config.name); // XXX
-    exit_all(1);
+    exit_gracefully(1);
   }
   memset (hash->index, 0, sizeof (struct hash_backet *) * size);
   hash->size = size;
@@ -103,13 +103,13 @@ hash_get (struct bgp_peer *peer, struct hash *hash, void *data, void * (*alloc_f
       newdata = (*alloc_func) (data);
       if (!newdata) {
         Log(LOG_ERR, "ERROR ( %s/%s ): alloc_func failed (hash_get). Exiting ..\n", config.name, bms->log_str);
-        exit_all(1);
+        exit_gracefully(1);
       }
 
       backet = malloc(sizeof (struct hash_backet));
       if (!backet) {
         Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (hash_get). Exiting ..\n", config.name, bms->log_str);
-        exit_all(1);
+        exit_gracefully(1);
       }
       memset(backet, 0, sizeof (struct hash_backet));
       backet->data = newdata;

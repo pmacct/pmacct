@@ -326,7 +326,7 @@ void bmp_dump_init_peer(struct bgp_peer *peer)
   peer->bmp_se = malloc(sizeof(struct bmp_dump_se_ll));
   if (!peer->bmp_se) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() bmp_se structure. Terminating thread.\n", config.name, bms->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   memset(peer->bmp_se, 0, sizeof(struct bmp_dump_se_ll));
@@ -359,7 +359,7 @@ void bmp_dump_se_ll_append(struct bgp_peer *peer, struct bmp_data *bdata, void *
   se_ll_elem = malloc(sizeof(struct bmp_dump_se_ll_elem));
   if (!se_ll_elem) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() se_ll_elem structure. Terminating thread.\n", config.name, bms->log_str);
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   memset(se_ll_elem, 0, sizeof(struct bmp_dump_se_ll_elem));
@@ -471,14 +471,14 @@ void bmp_handle_dump_event()
     if (config.bmp_dump_amqp_routing_key) {
       bmp_dump_init_amqp_host();
       ret = p_amqp_connect_to_publish(&bmp_dump_amqp_host);
-      if (ret) exit(ret);
+      if (ret) exit_gracefully(ret);
     }
 #endif
 
 #ifdef WITH_KAFKA
     if (config.bmp_dump_kafka_topic) {
       ret = bmp_dump_init_kafka_host();
-      if (ret) exit(ret);
+      if (ret) exit_gracefully(ret);
     }
 #endif
 
@@ -636,7 +636,7 @@ void bmp_handle_dump_event()
     Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BMP tables - END (PID: %u, TABLES: %u ET: %u) ***\n",
                 config.name, bms->log_str, dumper_pid, tables_num, duration);
 
-    exit(0);
+    exit_gracefully(0);
   default: /* Parent */
     if (ret == -1) { /* Something went wrong */
       Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork BMP table dump writer: %s\n",

@@ -70,7 +70,7 @@ void sfl_agent_init(SFLAgent *agent,
 
   if (ret && bind(agent->receiverSocket, (struct sockaddr *) &ssource_ip, sizeof(ssource_ip)) == -1) {
     Log(LOG_ERR, "ERROR ( %s/%s ): bind() failed: %s\n", config.name, config.type, strerror(errno));
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   if (config.pipe_size) {

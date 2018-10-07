@@ -1150,7 +1150,7 @@ connsock(struct sockaddr_storage *addr, socklen_t len, int hoplimit)
 
   if ((s = socket(addr->ss_family, SOCK_DGRAM, 0)) == -1) {
     Log(LOG_ERR, "ERROR ( %s/%s ): socket() failed: %s\n", config.name, config.type, strerror(errno));
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   if (config.nfprobe_ipprec) {
@@ -1171,7 +1171,7 @@ connsock(struct sockaddr_storage *addr, socklen_t len, int hoplimit)
 
   if (ret && bind(s, (struct sockaddr *) &ssource_ip, sizeof(ssource_ip)) == -1) {
     Log(LOG_ERR, "ERROR ( %s/%s ): bind() failed: %s\n", config.name, config.type, strerror(errno));
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   if (connect(s, (struct sockaddr*)addr, len) == -1) {
@@ -1180,7 +1180,7 @@ connsock(struct sockaddr_storage *addr, socklen_t len, int hoplimit)
       close(s);
       return -1;
     }
-    else exit_plugin(1);
+    else exit_gracefully(1);
   }
 
   switch (addr->ss_family) {
@@ -1193,7 +1193,7 @@ connsock(struct sockaddr_storage *addr, socklen_t len, int hoplimit)
     h4 = hoplimit;
     if (setsockopt(s, IPPROTO_IP, IP_MULTICAST_TTL, &h4, sizeof(h4)) == -1) {
       Log(LOG_ERR, "ERROR ( %s/%s ): setsockopt() failed for IP_MULTICAST_TTL: %s\n", config.name, config.type, strerror(errno));
-      exit_plugin(1);
+      exit_gracefully(1);
     }
     break;
 #if defined ENABLE_IPV6
@@ -1206,7 +1206,7 @@ connsock(struct sockaddr_storage *addr, socklen_t len, int hoplimit)
     h6 = hoplimit;
     if (setsockopt(s, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &h6, sizeof(h6)) == -1) {
       Log(LOG_ERR, "ERROR ( %s/%s ): setsockopt() failed for IPV6_MULTICAST_HOPS: %s\n", config.name, config.type, strerror(errno));
-      exit_plugin(1);
+      exit_gracefully(1);
     }
 #endif
   }
@@ -1306,7 +1306,7 @@ parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len)
 
   if ((host = orig = strdup(s)) == NULL) {
     Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), strdup() out of memory\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   trim_spaces(host);
@@ -1314,7 +1314,7 @@ parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len)
 
   if ((port = strrchr(host, ':')) == NULL || *(++port) == '\0' || *host == '\0') {
     Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), invalid 'nfprobe_receiver' argument\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
   *(port - 1) = '\0';
 	
@@ -1329,17 +1329,17 @@ parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len)
 
   if ((herr = getaddrinfo(host, port, &hints, &res)) == -1) {
     Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), address lookup failed\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   if (res == NULL || res->ai_addr == NULL) {
     Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), no addresses found for [%s]:%s\n", config.name, config.type, host, port);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   if (res->ai_addrlen > *len) {
     Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), address too long.\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   memcpy(addr, res->ai_addr, res->ai_addrlen);
@@ -1354,7 +1354,7 @@ parse_engine(char *s, u_int8_t *engine_type, u_int32_t *engine_id)
 
   if (config.nfprobe_version == 1) {
     Log(LOG_ERR, "ERROR ( %s/%s ): parse_engine(): NetFlow v1 export does not support nfprobe_engine.\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   trim_spaces(s);
@@ -1364,7 +1364,7 @@ parse_engine(char *s, u_int8_t *engine_type, u_int32_t *engine_id)
   if (delim) {
     if (config.nfprobe_version != 5) {
       Log(LOG_ERR, "ERROR ( %s/%s ): parse_engine(): engine_type:engine_id is only supported on NetFlow v5 export.\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
 
     *delim = '\0';
@@ -1375,14 +1375,14 @@ parse_engine(char *s, u_int8_t *engine_type, u_int32_t *engine_id)
 
     if ((*engine_type) > 255) {
       Log(LOG_ERR, "ERROR ( %s/%s ): parse_engine(): NetFlow v5 engine_type values are limited to 0-255.\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
   }
   /* NetFlow v9 / IPFIX case */
   else {
     if (config.nfprobe_version != 9 && config.nfprobe_version != 10) {
       Log(LOG_ERR, "ERROR ( %s/%s ): parse_engine(): source_id is only supported on NetFlow v9/IPFIX exports.\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
 
     *engine_id = strtoul(s, &delim, 10);
@@ -1515,7 +1515,7 @@ sort_version:
 	    dest_len, dest_addr, sizeof(dest_addr), 
 	    dest_serv, sizeof(dest_serv), NI_NUMERICHOST)) == -1) {
       Log(LOG_ERR, "ERROR ( %s/%s ): getnameinfo: %d\n", config.name, config.type, err);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
     target.fd = connsock(&dest, dest_len, hoplimit);
 	
@@ -1561,7 +1561,7 @@ sort_version:
 
       if (!cp_entry->ptr->field_type) {
         Log(LOG_ERR, "ERROR ( %s/%s ): custom primitive '%s' has null field_type\n", config.name, config.type, cp_entry->ptr->name);
-        exit_plugin(1);
+        exit_gracefully(1);
       }
     }
   }
@@ -1620,7 +1620,7 @@ sort_version:
         }
         else {
           if ((ret = read(pipe_fd, &rgptr, sizeof(rgptr))) == 0)
-            exit_plugin(1); /* we exit silently; something happened at the write end */
+            exit_gracefully(1); /* we exit silently; something happened at the write end */
         }
   
         if ((rg->ptr + bufsz) > rg->end) rg->ptr = rg->base;

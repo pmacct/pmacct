@@ -83,12 +83,12 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   if (config.tee_transparent && getuid() != 0) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Transparent mode requires super-user permissions. Exiting ...\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   if (!config.tee_receivers) {
     Log(LOG_ERR, "ERROR ( %s/%s ): No receivers specified: tee_receivers is required. Exiting ...\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   memset(&receivers, 0, sizeof(receivers));
@@ -101,7 +101,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   receivers.pools = malloc((config.tee_max_receiver_pools+1)*sizeof(struct tee_receivers_pool));
   if (!receivers.pools) {
     Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate receiver pools. Exiting ...\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
   else memset(receivers.pools, 0, (config.tee_max_receiver_pools+1)*sizeof(struct tee_receivers_pool));
 
@@ -112,7 +112,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     receivers.pools[pool_idx].receivers = malloc(config.tee_max_receivers*sizeof(struct tee_receiver));
     if (!receivers.pools[pool_idx].receivers) {
       Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate receivers for pool #%u. Exiting ...\n", config.name, config.type, pool_idx);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
     else memset(receivers.pools[pool_idx].receivers, 0, config.tee_max_receivers*sizeof(struct tee_receiver));
   }
@@ -194,7 +194,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         }
         else {
           if ((ret = read(pipe_fd, &rgptr, sizeof(rgptr))) == 0)
-            exit_plugin(1); /* we exit silently; something happened at the write end */
+            exit_gracefully(1); /* we exit silently; something happened at the write end */
         }
   
         if ((rg->ptr + bufsz) > rg->end) rg->ptr = rg->base;
@@ -293,7 +293,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 void Tee_exit_now(int signum)
 {
   wait(NULL);
-  exit_plugin(0);
+  exit_gracefully(0);
 }
 
 int Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
@@ -589,7 +589,7 @@ void Tee_init_socks()
         if ((err = getnameinfo(sa, target->dest_len, dest_addr, sizeof(dest_addr),
             dest_serv, sizeof(dest_serv), NI_NUMERICHOST)) == -1) {
           Log(LOG_ERR, "ERROR ( %s/%s ): getnameinfo: %d\n", config.name, config.type, err);
-          exit_plugin(1);
+          exit_gracefully(1);
         }
       }
 
@@ -691,7 +691,7 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, u_int16_t src_port)
 
     if ((s = socket(addr->sa_family, SOCK_DGRAM, 0)) == -1) {
       Log(LOG_ERR, "ERROR ( %s/%s ): socket() error: %s\n", config.name, config.type, strerror(errno));
-      exit_plugin(1);
+      exit_gracefully(1);
     }
 
     if (config.nfprobe_ipprec) {
@@ -708,7 +708,7 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, u_int16_t src_port)
   else {
     if ((s = socket(addr->sa_family, SOCK_RAW, IPPROTO_RAW)) == -1) {
       Log(LOG_ERR, "ERROR ( %s/%s ): socket() error: %s\n", config.name, config.type, strerror(errno));
-      exit_plugin(1);
+      exit_gracefully(1);
     }
 
 
@@ -734,7 +734,7 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, u_int16_t src_port)
 
   if (connect(s, (struct sockaddr *)addr, len) == -1) {
     Log(LOG_ERR, "ERROR ( %s/%s ): connect() error: %s\n", config.name, config.type, strerror(errno));
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   return(s);
@@ -750,7 +750,7 @@ int Tee_parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len, int
 
   if ((host = orig = strdup(s)) == NULL) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Tee_parse_hostport() out of memory. Exiting ..\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   trim_spaces(host);
