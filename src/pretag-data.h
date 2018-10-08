@@ -34,7 +34,7 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"agent_id", PT_map_agent_id_handler},
   {"flowset_id", PT_map_flowset_id_handler},
   {"sample_type", PT_map_sample_type_handler},
-  {"direction", PT_map_direction_handler}, /* obsoleted */
+  {"direction", PT_map_direction_handler},
   {"src_as", PT_map_src_as_handler},
   {"dst_as", PT_map_dst_as_handler},
   {"peer_src_as", PT_map_peer_src_as_handler},
@@ -56,7 +56,7 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"set_tos", PT_map_set_tos_handler},
   {"label", PT_map_entry_label_handler},
   {"jeq", PT_map_jeq_handler},
-  {"return", PT_map_return_handler}, /* obsoleted */
+  {"return", PT_map_return_handler},
   {"stack", PT_map_stack_handler},
   {"fwdstatus", PT_map_fwdstatus_handler},
   {"", NULL}
