@@ -42,6 +42,7 @@ EXT int PT_map_flowset_id_handler(char *, struct id_entry *, char *, struct plug
 EXT int PT_map_fwdstatus_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_sample_type_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_direction_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int PT_map_nat_event_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_src_as_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_dst_as_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_peer_src_as_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
@@ -143,6 +144,7 @@ EXT int pretag_src_comms_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_comms_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_sample_type_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_direction_handler(struct packet_ptrs *, void *, void *);
+EXT int pretag_nat_event_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_mpls_vpn_rd_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_src_mac_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_dst_mac_handler(struct packet_ptrs *, void *, void *);

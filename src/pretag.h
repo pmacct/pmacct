@@ -36,7 +36,7 @@
 #define PRETAG_ENGINE_TYPE		0x0000000000000010ULL
 #define PRETAG_ENGINE_ID		0x0000000000000020ULL
 #define PRETAG_FILTER			0x0000000000000040ULL
-/* #define XXX				0x0000000000000080ULL */
+#define PRETAG_NAT_EVENT		0x0000000000000080ULL
 #define PRETAG_SF_AGENTID		0x0000000000000100ULL
 #define PRETAG_SAMPLING_RATE		0x0000000000000200ULL
 #define PRETAG_DIRECTION		0x0000000000000400ULL
@@ -160,6 +160,7 @@ struct id_entry_key {
   pt_uint32_t sampling_rate; /* applies to sFlow sampling rate */
   pt_uint32_t sample_type; /* applies to sFlow sample type */
   pt_uint8_t direction;
+  pt_uint8_t nat_event;
   pt_uint32_t src_as;
   pt_uint32_t dst_as;
   pt_uint32_t peer_src_as;
