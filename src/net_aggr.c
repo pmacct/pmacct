@@ -390,7 +390,7 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
       nt->timestamp = st.st_mtime;
     }
   }
-  else exit_plugin(1);
+  else exit_gracefully(1);
 }
 
 /* sort the (sub)array v from start to end */
@@ -431,7 +431,7 @@ void merge(char *filename, struct networks_table_entry *table, int start, int mi
 
   if ((!v1) || (!v2)) {
     Log(LOG_ERR, "ERROR ( %s/%s ): [%s] malloc() failed in merge().\n", config.name, config.type, filename); 
-    exit(1);
+    exit_gracefully(1);
   }
 
   for (i=0; i<v1_n; i++) memcpy(&v1[i], &table[start+i], s);
@@ -1460,7 +1460,7 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
       }
 
       Log(LOG_ERR, "ERROR ( %s/%s ): [%s] file not found.\n", config.name, config.type, filename);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
     else {
       rows = 0;

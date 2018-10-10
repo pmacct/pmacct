@@ -93,7 +93,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   if (extras.off_pkt_vlen_hdr_primitives) {
     Log(LOG_ERR, "ERROR ( %s/%s ): variable-length primitives, ie. label, are not supported in IMT plugin. Exiting ..\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   reload_map = FALSE;
@@ -103,7 +103,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   pipebuf = (unsigned char *) malloc(config.buffer_size);
   if (!pipebuf) {
     Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (pipebuf). Exiting ..\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   if (config.pipe_zmq) P_zmq_pipe_init(zmq_host, &pipe_fd, &seq);
@@ -145,27 +145,27 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   init_memory_pool_table(config);
   if (mpd == NULL) {
     Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate memory pools table\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   current_pool = request_memory_pool(config.buckets*sizeof(struct acc));
   if (current_pool == NULL) {
     Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate first memory pool, try with larger value.\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
   a = current_pool->base_ptr;
 
   lru_elem_ptr = malloc(config.buckets*sizeof(struct acc *));
   if (lru_elem_ptr == NULL) {
     Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate LRU element pointers.\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
   else memset(lru_elem_ptr, 0, config.buckets*sizeof(struct acc *));
 
   current_pool = request_memory_pool(config.memory_pool_size);
   if (current_pool == NULL) {
     Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate more memory pools, try with larger value.\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   signal(SIGHUP, reload); /* handles reopening of syslog channel */
@@ -208,7 +208,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     if (num <= 0) {
       if (getppid() != core_pid) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): Core process *seems* gone. Exiting.\n", config.name, config.type);
-	exit_plugin(1);
+	exit_gracefully(1);
       } 
 
       if (num < 0) goto poll_again;  
@@ -308,7 +308,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	    else Log(LOG_DEBUG, "DEBUG ( %s/%s ): %d incoming bytes. Errno: %d\n", config.name, config.type, num, errno);
             Log(LOG_DEBUG, "DEBUG ( %s/%s ): Closing connection with client ...\n", config.name, config.type);
             close(sd2);
-            exit(0);
+            exit_gracefully(0);
           default: /* Parent */
             break;
           } 
@@ -329,14 +329,14 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       current_pool = request_memory_pool(config.buckets*sizeof(struct acc));
       if (current_pool == NULL) {
         Log(LOG_ERR, "ERROR ( %s/%s ): Cannot allocate my first memory pool, try with larger value.\n", config.name, config.type);
-        exit_plugin(1);
+        exit_gracefully(1);
       }
       a = current_pool->base_ptr;
 
       current_pool = request_memory_pool(config.memory_pool_size);
       if (current_pool == NULL) {
         Log(LOG_ERR, "ERROR ( %s/%s ): Cannot allocate more memory pools, try with larger value.\n", config.name, config.type);
-        exit_plugin(1);
+        exit_gracefully(1);
       }
       go_to_clear = FALSE;
       no_more_space = FALSE;
@@ -359,7 +359,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
         pollagain = FALSE;
         if ((num = read(pipe_fd, &rgptr, sizeof(rgptr))) == 0)
-          exit_plugin(1); /* we exit silently; something happened at the write end */
+          exit_gracefully(1); /* we exit silently; something happened at the write end */
 
         if (num < 0) {
           pollagain = TRUE;
@@ -465,7 +465,7 @@ void exit_now(int signum)
 {
   if (config.imt_plugin_path) unlink(config.imt_plugin_path);
   if (config.pidfile) remove_pid_file(config.pidfile);
-  exit_plugin(0);
+  exit_gracefully(0);
 }
 
 void sum_host_insert(struct primitives_ptrs *prim_ptrs)

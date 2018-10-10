@@ -117,7 +117,7 @@ void P_config_checks()
   return;
 
 exit_lane:
-  exit_plugin(1);
+  exit_gracefully(1);
 }
 
 unsigned int P_cache_modulo(struct primitives_ptrs *prim_ptrs)
@@ -522,7 +522,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
       case 0: /* Child */
 	pm_setproctitle("%s %s [%s]", config.type, "Plugin -- Writer (urgent)", config.name);
         (*purge_func)(queries_queue, qq_ptr, TRUE);
-        exit(0);
+        exit_gracefully(0);
       default: /* Parent */
         if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
         else dump_writers_add(ret);
@@ -622,7 +622,7 @@ void P_cache_handle_flush_event(struct ports_table *pt)
     case 0: /* Child */
       pm_setproctitle("%s %s [%s]", config.type, "Plugin -- Writer", config.name);
       (*purge_func)(queries_queue, qq_ptr, FALSE);
-      exit(0);
+      exit_gracefully(0);
     default: /* Parent */
       if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
       else dump_writers_add(ret);
@@ -682,7 +682,7 @@ void P_cache_mark_flush(struct chained_cache *queue[], int index, int exiting)
       pqq_container = (struct chained_cache *) malloc(pqq_ptr*dbc_size); 
       if (!pqq_container) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): P_cache_mark_flush() cannot allocate pqq_container. Exiting ..\n", config.name, config.type);
-	exit_plugin(1); 
+	exit_gracefully(1); 
       }
     }
     
@@ -793,7 +793,7 @@ void P_exit_now(int signum)
   if (config.pidfile) remove_pid_file(config.pidfile);
 
   wait(NULL);
-  exit_plugin(0);
+  exit_gracefully(0);
 }
 
 int P_trigger_exec(char *filename)
@@ -840,7 +840,7 @@ void P_init_historical_acct(time_t now)
   if (config.sql_history_offset) {
     if (config.sql_history_offset >= timeslot) {
       Log(LOG_ERR, "ERROR ( %s/%s ): History offset (ie. sql_history_offset) must be < history (ie. sql_history).\n", config.name, config.type);
-      exit(1);
+      exit_gracefully(1);
     }
 
     t = t - (timeslot + config.sql_history_offset);

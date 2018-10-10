@@ -117,7 +117,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     if (ret <= 0) {
       if (getppid() != core_pid) {
         Log(LOG_ERR, "ERROR ( %s/%s ): Core process *seems* gone. Exiting.\n", config.name, config.type);
-        exit_plugin(1);
+        exit_gracefully(1);
       }
 
       if (ret < 0) goto poll_again;
@@ -181,7 +181,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         }
         else {
           if ((ret = read(pipe_fd, &rgptr, sizeof(rgptr))) == 0)
-            exit_plugin(1); /* we exit silently; something happened at the write end */
+            exit_gracefully(1); /* we exit silently; something happened at the write end */
         }
 
         if ((rg->ptr + bufsz) > rg->end) rg->ptr = rg->base;
@@ -434,7 +434,7 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   bulk_reprocess_queries_queue = (struct db_cache **) malloc(qq_size*sizeof(struct db_cache *));
   if (!reprocess_queries_queue || !bulk_reprocess_queries_queue) {
     Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (reprocess_queries_queue). Exiting ..\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   for (j = 0, stop = 0; (!stop) && sql_preprocess_funcs[j]; j++) 
@@ -664,7 +664,7 @@ int PG_compose_static_queries()
 
     if ((config.sql_table_version < 4 || config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !config.sql_optimize_clauses) {
       Log(LOG_ERR, "ERROR ( %s/%s ): The accounting of flows requires SQL table v4. Exiting.\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
   }
 
@@ -780,7 +780,7 @@ void PG_compose_conn_string(struct DBdesc *db, char *host, int port)
     db->conn_string = (char *) malloc(slen);
     if (!db->conn_string) {
       Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (PG_compose_conn_string). Exiting ..\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
     string = db->conn_string;
 
@@ -905,14 +905,14 @@ void PG_init_default_values(struct insert_data *idata)
 	(COUNT_SRC_HOST|COUNT_SUM_HOST|COUNT_DST_HOST|COUNT_SRC_NET|COUNT_SUM_NET|COUNT_DST_NET) &&
 	config.sql_table_version < 6) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): 'typed' PostgreSQL table in use: unable to mix HOST/NET and AS aggregations.\n", config.name, config.type);
-	exit_plugin(1);
+	exit_gracefully(1);
       }
       typed = TRUE;
     }
     else if (!strcmp(config.sql_data, "unified")) typed = FALSE;
     else {
       Log(LOG_ERR, "ERROR ( %s/%s ): Ignoring unknown 'sql_data' value '%s'.\n", config.name, config.type, config.sql_data);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
 
     if (typed) {

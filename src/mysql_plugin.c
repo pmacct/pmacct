@@ -120,7 +120,7 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     if (ret <= 0) {
       if (getppid() != core_pid) {
         Log(LOG_ERR, "ERROR ( %s/%s ): Core process *seems* gone. Exiting.\n", config.name, config.type);
-        exit_plugin(1);
+        exit_gracefully(1);
       }
 
       if (ret < 0) goto poll_again;
@@ -183,7 +183,7 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         }
         else {
           if ((ret = read(pipe_fd, &rgptr, sizeof(rgptr))) == 0) 
-	    exit_plugin(1); /* we exit silently; something happened at the write end */
+	    exit_gracefully(1); /* we exit silently; something happened at the write end */
         }
 
         if ((rg->ptr + bufsz) > rg->end) rg->ptr = rg->base;
@@ -347,7 +347,7 @@ int MY_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct insert_
         else {
           Log(LOG_ERR, "ERROR ( %s/%s ): 'sql_multi_values' is too small (%d). Try with a larger value.\n",
                          config.name, config.type, config.sql_multi_values);
-          exit_plugin(1);
+          exit_gracefully(1);
 	}
       }
       len = config.sql_multi_values-idata->mv.buffer_offset; 
@@ -376,7 +376,7 @@ int MY_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct insert_
 	else {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): 'sql_multi_values' is too small (%d). Try with a larger value.\n",
 			 config.name, config.type, config.sql_multi_values);
-	  exit_plugin(1);
+	  exit_gracefully(1);
 	}
       } 
     }
@@ -586,7 +586,7 @@ int MY_compose_static_queries()
 
     if ((config.sql_table_version < 4 || config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !config.sql_optimize_clauses) {
       Log(LOG_ERR, "ERROR ( %s/%s ): The accounting of flows requires SQL table v4. Exiting.\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
   }
 
@@ -704,7 +704,7 @@ void MY_create_backend(struct DBdesc *db)
   db->desc = malloc(sizeof(MYSQL));
   if (!db->desc) {
     Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (MY_create_backend). Exiting ..\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
   memset(db->desc, 0, sizeof(MYSQL));
 }

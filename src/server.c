@@ -38,7 +38,7 @@ int build_query_server(char *path_ptr)
   sd=socket(AF_UNIX, SOCK_STREAM, 0);
   if (sd < 0) {
     Log(LOG_ERR, "ERROR ( %s/%s ): cannot open socket.\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   sAddr.sun_family = AF_UNIX;
@@ -48,7 +48,7 @@ int build_query_server(char *path_ptr)
   rc = bind(sd, (struct sockaddr *) &sAddr,sizeof(sAddr));
   if (rc < 0) { 
     Log(LOG_ERR, "ERROR ( %s/%s ): cannot bind to file %s .\n", config.name, config.type, path_ptr);
-    exit_plugin(1);
+    exit_gracefully(1);
   } 
 
   chmod(path_ptr, S_IRUSR|S_IWUSR|S_IXUSR|
@@ -88,7 +88,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
   custbuf = malloc(config.cpptrs.len);
   if (!dummy_pcust || !custbuf) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() dummy_pcust. Exiting.\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   memset(&dummy, 0, sizeof(struct pkt_data));

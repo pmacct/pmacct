@@ -97,7 +97,7 @@ void sql_init_global_buffers()
 
   if (!pipebuf || !cache || !queries_queue || !pending_queries_queue) {
     Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (sql_init_global_buffers). Exiting ..\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   memset(pipebuf, 0, config.buffer_size);
@@ -133,7 +133,7 @@ void sql_init_default_values(struct extra_primitives *extras)
     if (!strcmp(config.sql_table_type, "bgp")) config.sql_table_version += SQL_TABLE_VERSION_BGP;  
     else {
       Log(LOG_ERR, "ERROR ( %s/%s ): Unknown sql_table_type value: '%s'.\n", config.name, config.type, config.sql_table_type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
   }
   else {
@@ -146,7 +146,7 @@ void sql_init_default_values(struct extra_primitives *extras)
   if (config.nfacctd_stitching) {
     if (config.nfacctd_pro_rating) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Pro-rating (ie. nfacctd_pro_rating) and stitching (ie. nfacctd_stitching) are mutual exclusive. Exiting.\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
 
     if (!config.sql_dont_try_update) {
@@ -196,7 +196,7 @@ void sql_init_historical_acct(time_t now, struct insert_data *idata)
     if (config.sql_history_offset) {
       if (config.sql_history_offset >= idata->timeslot) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): History offset (ie. sql_history_offset) must be < history (ie. sql_history).\n", config.name, config.type);
-	exit(1);
+	exit_gracefully(1);
       }
 
       t = t - (idata->timeslot + config.sql_history_offset);
@@ -431,7 +431,7 @@ void sql_cache_handle_flush_event(struct insert_data *idata, time_t *refresh_dea
         if (idata->now > idata->triggertime) sql_trigger_exec(config.sql_trigger_exec);
       }
 
-      exit(0);
+      exit_gracefully(0);
     default: /* Parent */
       if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork DB writer: %s\n", config.name, config.type, strerror(errno));
       else dump_writers_add(ret);
@@ -920,7 +920,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
           (*sqlfunc_cbr.close)(&bed);
         }
   
-        exit(0);
+        exit_gracefully(0);
       default: /* Parent */
         if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork DB writer (urgent): %s\n", config.name, config.type, strerror(errno));
 	else dump_writers_add(ret);
@@ -1072,7 +1072,7 @@ void sql_exit_gracefully(int signum)
 
   if (config.pidfile) remove_pid_file(config.pidfile);
 
-  exit_plugin(0);
+  exit_gracefully(0);
 }
 
 int sql_evaluate_primitives(int primitive)
@@ -1089,7 +1089,7 @@ int sql_evaluate_primitives(int primitive)
      config.what_to_count & (COUNT_SRC_AS|COUNT_SUM_AS)) || (config.what_to_count & COUNT_DST_AS
      && config.what_to_count & (COUNT_DST_HOST|COUNT_DST_NET))) && config.sql_table_version < 6) { 
     Log(LOG_ERR, "ERROR ( %s/%s ): SQL tables < v6 are unable to mix IP addresses and AS numbers (ie. src_ip, src_as).\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   if (config.sql_optimize_clauses) {
@@ -1254,7 +1254,7 @@ int sql_evaluate_primitives(int primitive)
 
     if ((config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !assume_custom_table) { 
       Log(LOG_ERR, "ERROR ( %s/%s ): MAC accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
     else count_it = TRUE;
 
@@ -1278,7 +1278,7 @@ int sql_evaluate_primitives(int primitive)
 
     if ((config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
       Log(LOG_ERR, "ERROR ( %s/%s ): MAC accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
     else count_it = TRUE;
 
@@ -1303,7 +1303,7 @@ int sql_evaluate_primitives(int primitive)
     if ((config.sql_table_version < 2 || config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
       if (config.what_to_count & COUNT_VLAN) {
         Log(LOG_ERR, "ERROR ( %s/%s ): VLAN accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-        exit_plugin(1);
+        exit_gracefully(1);
       }
       else what_to_count ^= COUNT_VLAN;
     }
@@ -1358,7 +1358,7 @@ int sql_evaluate_primitives(int primitive)
 
     if ((config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
       Log(LOG_ERR, "ERROR ( %s/%s ): IP host accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
     else count_it = TRUE;
 
@@ -1416,7 +1416,7 @@ int sql_evaluate_primitives(int primitive)
 
     if ((config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
       Log(LOG_ERR, "ERROR ( %s/%s ): IP host accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
     else count_it = TRUE;
 
@@ -1588,7 +1588,7 @@ int sql_evaluate_primitives(int primitive)
 
     if ((config.sql_table_version < SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
       Log(LOG_ERR, "ERROR ( %s/%s ): BGP accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
     else count_it = TRUE;
 
@@ -1612,7 +1612,7 @@ int sql_evaluate_primitives(int primitive)
 
     if ((config.sql_table_version < SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
       Log(LOG_ERR, "ERROR ( %s/%s ): BGP accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
     else count_it = TRUE;
 
@@ -1698,7 +1698,7 @@ int sql_evaluate_primitives(int primitive)
 
     if ((config.sql_table_version < SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
       Log(LOG_ERR, "ERROR ( %s/%s ): BGP accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
     else count_it = TRUE;
 
@@ -1737,7 +1737,7 @@ int sql_evaluate_primitives(int primitive)
     if ((config.sql_table_version < SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
       if (config.what_to_count & COUNT_LOCAL_PREF) {
         Log(LOG_ERR, "ERROR ( %s/%s ): BGP accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-        exit_plugin(1);
+        exit_gracefully(1);
       }
       else what_to_count ^= COUNT_LOCAL_PREF;
     }
@@ -1778,7 +1778,7 @@ int sql_evaluate_primitives(int primitive)
     if ((config.sql_table_version < SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
       if (config.what_to_count & COUNT_MED) {
         Log(LOG_ERR, "ERROR ( %s/%s ): BGP accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-        exit_plugin(1);
+        exit_gracefully(1);
       }
       else what_to_count ^= COUNT_MED;
     }
@@ -1832,7 +1832,7 @@ int sql_evaluate_primitives(int primitive)
 
     if ((config.sql_table_version < SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
       Log(LOG_ERR, "ERROR ( %s/%s ): BGP accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
     else count_it = TRUE;
 
@@ -1857,7 +1857,7 @@ int sql_evaluate_primitives(int primitive)
 
     if ((config.sql_table_version < SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
       Log(LOG_ERR, "ERROR ( %s/%s ): BGP accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
     else count_it = TRUE;
 
@@ -1882,7 +1882,7 @@ int sql_evaluate_primitives(int primitive)
 
     if ((config.sql_table_version < SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
       Log(LOG_ERR, "ERROR ( %s/%s ): BGP accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
     else count_it = TRUE;
 
@@ -1916,7 +1916,7 @@ int sql_evaluate_primitives(int primitive)
 
     if ((config.sql_table_version < SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
       Log(LOG_ERR, "ERROR ( %s/%s ): BGP accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
     else count_it = TRUE;
 
@@ -1951,7 +1951,7 @@ int sql_evaluate_primitives(int primitive)
     if ((config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
       if (config.what_to_count & (COUNT_SRC_PORT|COUNT_SUM_PORT)) {
         Log(LOG_ERR, "ERROR ( %s/%s ): TCP/UDP port accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-        exit_plugin(1);
+        exit_gracefully(1);
       }
       else {
         if (what_to_count & COUNT_SRC_PORT) what_to_count ^= COUNT_SRC_PORT;
@@ -1988,7 +1988,7 @@ int sql_evaluate_primitives(int primitive)
     if ((config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
       if (config.what_to_count & COUNT_DST_PORT) {
         Log(LOG_ERR, "ERROR ( %s/%s ): TCP/UDP port accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-        exit_plugin(1);
+        exit_gracefully(1);
       }
       else what_to_count ^= COUNT_DST_PORT;
     }
@@ -2022,7 +2022,7 @@ int sql_evaluate_primitives(int primitive)
     if ((config.sql_table_version < 7 || config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
       if (config.what_to_count & COUNT_TCPFLAGS) {
         Log(LOG_ERR, "ERROR ( %s/%s ): TCP flags accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-	exit_plugin(1);
+	exit_gracefully(1);
       }
       else what_to_count ^= COUNT_TCPFLAGS;
     }
@@ -2047,7 +2047,7 @@ int sql_evaluate_primitives(int primitive)
     if ((config.sql_table_version < 3 || config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
       if (config.what_to_count & COUNT_IP_TOS) {
         Log(LOG_ERR, "ERROR ( %s/%s ): IP ToS accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-        exit_plugin(1);
+        exit_gracefully(1);
       }
       else what_to_count ^= COUNT_IP_TOS;
     }
@@ -2074,7 +2074,7 @@ int sql_evaluate_primitives(int primitive)
     if ((config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
       if (config.what_to_count & COUNT_IP_PROTO) {
         Log(LOG_ERR, "ERROR ( %s/%s ): IP proto accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-        exit_plugin(1);
+        exit_gracefully(1);
       }
       else what_to_count ^= COUNT_IP_PROTO;
     }
@@ -2806,7 +2806,7 @@ int sql_evaluate_primitives(int primitive)
     if ((config.sql_table_version < 2) && !assume_custom_table) {
       if (config.what_to_count & COUNT_TAG) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): Tag/ID accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-        exit_plugin(1);	
+        exit_gracefully(1);	
       }
       else what_to_count ^= COUNT_TAG;
     }
@@ -2868,7 +2868,7 @@ int sql_evaluate_primitives(int primitive)
     if ((config.sql_table_version < 5 || config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
       if (config.what_to_count & COUNT_CLASS) {
         Log(LOG_ERR, "ERROR ( %s/%s ): L7 classification accounting not supported for selected sql_table_version/_type. Read about SQL table versioning or consider using sql_optimize_clauses.\n", config.name, config.type);
-        exit_plugin(1);
+        exit_gracefully(1);
       }
       else what_to_count ^= COUNT_CLASS;
     }

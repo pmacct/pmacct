@@ -48,7 +48,7 @@ void mongodb_legacy_warning(int pipe_fd, struct configuration *cfgptr, void *ptr
   Log(LOG_WARNING, "WARN ( %s/%s ): %s: %s\n", config.name, config.type, GET_IN_TOUCH_MSG, MANTAINER);
   Log(LOG_WARNING, "WARN ( %s/%s ): =======\n", config.name, config.type);
 
-  exit(0);
+  exit_gracefully(0);
 }
 
 void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 

@@ -114,11 +114,11 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 #ifdef WITH_SERDES
       if (config.sql_multi_values) {
         Log(LOG_ERR, "ERROR ( %s/%s ): 'kafka_avro_schema_registry' is not compatible with 'kafka_multi_values'. Exiting.\n", config.name, config.type);
-        exit_plugin(1);
+        exit_gracefully(1);
       }
 #else
       Log(LOG_ERR, "ERROR ( %s/%s ): 'kafka_avro_schema_registry' requires --enable-serdes. Exiting.\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
 #endif
     }
 #endif
@@ -126,12 +126,12 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   if ((config.sql_table && strchr(config.sql_table, '$')) && config.sql_multi_values) {
     Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'kafka_topic' is not compatible with 'kafka_multi_values'. Exiting.\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   if ((config.sql_table && strchr(config.sql_table, '$')) && config.amqp_routing_key_rr) {
     Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'kafka_topic' is not compatible with 'kafka_topic_rr'. Exiting.\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   /* setting function pointers */
@@ -195,7 +195,7 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     if (ret <= 0) {
       if (getppid() != core_pid) {
         Log(LOG_ERR, "ERROR ( %s/%s ): Core process *seems* gone. Exiting.\n", config.name, config.type);
-        exit_plugin(1);
+        exit_gracefully(1);
       }
 
       if (ret < 0) goto poll_again;
@@ -237,7 +237,7 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         }
         else {
           if ((ret = read(pipe_fd, &rgptr, sizeof(rgptr))) == 0) 
-	    exit_plugin(1); /* we exit silently; something happened at the write end */
+	    exit_gracefully(1); /* we exit silently; something happened at the write end */
         }
 
         if ((rg->ptr + bufsz) > rg->end) rg->ptr = rg->base;
@@ -378,7 +378,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   empty_pcust = malloc(config.cpptrs.len);
   if (!empty_pcust) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() empty_pcust. Exiting.\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   memset(&empty_pbgp, 0, sizeof(struct pkt_bgp_primitives));
@@ -400,11 +400,11 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 
   if (config.kafka_partition_dynamic && !config.kafka_partition_key) {
     Log(LOG_ERR, "ERROR ( %s/%s ): kafka_partition_dynamic needs a kafka_partition_key to operate. Exiting.\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
   if (config.kafka_partition_dynamic && config.kafka_partition) {
     Log(LOG_ERR, "ERROR ( %s/%s ): kafka_partition_dynamic and kafka_partition are mutually exclusive. Exiting.\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   if (!config.kafka_partition_dynamic) config.kafka_partition = RD_KAFKA_PARTITION_UA;
@@ -418,7 +418,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   else if (config.message_broker_output & PRINT_OUTPUT_AVRO) p_kafka_set_content_type(&kafkap_kafka_host, PM_KAFKA_CNT_TYPE_BIN);
   else {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unsupported kafka_output value specified. Exiting.\n", config.name, config.type);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   for (j = 0, stop = 0; (!stop) && P_preprocess_funcs[j]; j++)
@@ -451,7 +451,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 
       if (!json_buf) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (json_buf). Exiting ..\n", config.name, config.type);
-	exit_plugin(1);
+	exit_gracefully(1);
       }
       else memset(json_buf, 0, config.sql_multi_values);
     }
@@ -464,7 +464,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 
     if (!avro_buf) {
       Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_buf). Exiting ..\n", config.name, config.type);
-      exit_plugin(1);
+      exit_gracefully(1);
     }
     else memset(avro_buf, 0, config.avro_buffer_size);
 
@@ -480,13 +480,13 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
       sd_desc = serdes_new(sd_conf, sd_errstr, sizeof(sd_errstr));
       if (!sd_desc) {
         Log(LOG_ERR, "ERROR ( %s/%s ): serdes_new() failed: %s. Exiting.\n", config.name, config.type, sd_errstr);
-        exit_plugin(1);
+        exit_gracefully(1);
       }
 
       sd_schema = serdes_schema_add(sd_desc, avro_acct_schema_name, -1, avro_acct_schema_str, -1, sd_errstr, sizeof(sd_errstr));
       if (!sd_schema) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): serdes_schema_add() failed: %s. Exiting.\n", config.name, config.type, sd_errstr);
-	exit_plugin(1);
+	exit_gracefully(1);
       }
       else {
 	Log(LOG_DEBUG, "DEBUG ( %s/%s ): serdes_schema_add(): name=%s id=%d definition=%s\n", config.name, config.type,
@@ -560,7 +560,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 	      config.name, config.type, config.avro_buffer_size);
 	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: increase value or look for avro_buffer_size in CONFIG-KEYS document.\n\n",
 	      config.name, config.type);
-	  exit_plugin(1);
+	  exit_gracefully(1);
 	}
 	else if (avro_value_size >= (config.avro_buffer_size - avro_writer_tell(avro_writer))) {
 	  avro_buffer_full = TRUE;
@@ -568,7 +568,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 	}
 	else if (avro_value_write(avro_writer, &avro_value)) {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to write value: %s\n", config.name, config.type, avro_strerror());
-	  exit_plugin(1);
+	  exit_gracefully(1);
 	}
 	else mv_num++;
 
@@ -586,7 +586,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 
 	if (serdes_schema_serialize_avro(sd_schema, &avro_value, &avro_local_buf, &avro_len, sd_errstr, sizeof(sd_errstr))) {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, config.type, sd_errstr);
-	  exit_plugin(1);
+	  exit_gracefully(1);
 	}
 	else {
 	  avro_buf = avro_local_buf;
@@ -611,7 +611,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 	if (json_strlen >= (config.sql_multi_values - json_buf_off)) {
 	  if (json_strlen >= config.sql_multi_values) {
 	    Log(LOG_ERR, "ERROR ( %s/%s ): kafka_multi_values not large enough to store JSON elements. Exiting ..\n", config.name, config.type); 
-	    exit(1);
+	    exit_gracefully(1);
 	  }
 
 	  tmp_str = json_str;
@@ -785,7 +785,7 @@ void kafka_avro_schema_purge(char *avro_schema_str)
     if (err != RD_KAFKA_RESP_ERR_NO_ERROR) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Unable to get Kafka metadata for topic %s: %s\n",
               config.name, config.type, kafka_avro_schema_host.topic, rd_kafka_err2str(err));
-      exit_plugin(1);
+      exit_gracefully(1);
     }
 
     part_cnt = -1;

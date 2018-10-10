@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -239,7 +239,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
           elem_acc->pbgp = (struct pkt_bgp_primitives *) malloc(pb_size);
           if (!elem_acc->pbgp) {
             Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
-            exit_plugin(1);
+            exit_gracefully(1);
           }
         }
         memcpy(elem_acc->pbgp, pbgp, pb_size);
@@ -254,7 +254,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
           elem_acc->clbgp = (struct cache_legacy_bgp_primitives *) malloc(clb_size);
           if (!elem_acc->clbgp) {
             Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
-            exit_plugin(1);
+            exit_gracefully(1);
           }
         }
 
@@ -268,7 +268,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
 	  elem_acc->pnat = (struct pkt_nat_primitives *) malloc(pn_size);
 	  if (!elem_acc->pnat) {
             Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
-            exit_plugin(1);
+            exit_gracefully(1);
 	  }
 	}
 	memcpy(elem_acc->pnat, pnat, pn_size);
@@ -283,7 +283,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
 	  elem_acc->pmpls = (struct pkt_mpls_primitives *) malloc(pm_size);
 	  if (!elem_acc->pmpls) {
             Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
-            exit_plugin(1);
+            exit_gracefully(1);
 	  }
 	}
         memcpy(elem_acc->pmpls, pmpls, pm_size);
@@ -298,7 +298,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
 	  elem_acc->ptun = (struct pkt_tunnel_primitives *) malloc(pt_size);
 	  if (!elem_acc->ptun) {
             Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
-            exit_plugin(1);
+            exit_gracefully(1);
 	  }
 	}
 	memcpy(elem_acc->ptun, ptun, pt_size);
@@ -313,7 +313,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
 	  elem_acc->pcust = (char *) malloc(pc_size);
 	  if (!elem_acc->pcust) {
             Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
-            exit_plugin(1);
+            exit_gracefully(1);
 	  }
 	}
         memcpy(elem_acc->pcust, pcust, pc_size);
@@ -334,7 +334,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
           elem_acc->pvlen = (struct pkt_vlen_hdr_primitives *) vlen_prims_copy(pvlen);
           if (!elem_acc->pvlen) {
             Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
-            exit_plugin(1);
+            exit_gracefully(1);
           }
         }
       }
@@ -395,7 +395,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         elem_acc->pbgp = (struct pkt_bgp_primitives *) malloc(pb_size);
         if (!elem_acc->pbgp) {
           Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
-          exit_plugin(1);
+          exit_gracefully(1);
         }
         memcpy(elem_acc->pbgp, pbgp, pb_size);
       }
@@ -405,7 +405,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         elem_acc->clbgp = (struct cache_legacy_bgp_primitives *) malloc(clb_size);
         if (!elem_acc->clbgp) {
           Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
-          exit_plugin(1);
+          exit_gracefully(1);
         }
         memset(elem_acc->clbgp, 0, clb_size);
         pkt_to_cache_legacy_bgp_primitives(elem_acc->clbgp, plbgp, config.what_to_count, config.what_to_count_2);
@@ -416,7 +416,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         elem_acc->pnat = (struct pkt_nat_primitives *) malloc(pn_size);
 	if (!elem_acc->pnat) {
           Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
-          exit_plugin(1);
+          exit_gracefully(1);
 	}
         memcpy(elem_acc->pnat, pnat, pn_size);
       }
@@ -426,7 +426,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         elem_acc->pmpls = (struct pkt_mpls_primitives *) malloc(pm_size);
 	if (!elem_acc->pmpls) {
           Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
-          exit_plugin(1);
+          exit_gracefully(1);
 	}
         memcpy(elem_acc->pmpls, pmpls, pm_size);
       }
@@ -436,7 +436,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         elem_acc->ptun = (struct pkt_tunnel_primitives *) malloc(pt_size);
 	if (!elem_acc->ptun) {
           Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
-          exit_plugin(1);
+          exit_gracefully(1);
 	}
         memcpy(elem_acc->ptun, ptun, pt_size);
       }
@@ -446,7 +446,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         elem_acc->pcust = (char *) malloc(pc_size);
 	if (!elem_acc->pcust) {
           Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
-          exit_plugin(1);
+          exit_gracefully(1);
 	}
         memcpy(elem_acc->pcust, pcust, pc_size);
       }
@@ -463,7 +463,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
           elem_acc->pvlen = (struct pkt_vlen_hdr_primitives *) vlen_prims_copy(pvlen);
           if (!elem_acc->pvlen) {
             Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (insert_accounting_structure). Exiting ..\n", config.name, config.type);
-            exit_plugin(1);
+            exit_gracefully(1);
           }
         }
       }
