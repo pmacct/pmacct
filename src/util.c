@@ -1531,7 +1531,7 @@ void *pm_malloc(size_t size)
   if (!obj) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unable to grab enough memory (requested: %llu bytes). Exiting ...\n",
     config.name, config.type, size);
-    exit_plugin(1);
+    exit_gracefully(1);
   }
 
   return obj;
@@ -1609,7 +1609,7 @@ void load_allow_file(char *filename, struct hosts_table *t)
     stat(filename, &st);
     t->timestamp = st.st_mtime;
   }
-  else exit_all(1);
+  else exit_gracefully(1);
 }
 
 int check_allow(struct hosts_table *allow, struct sockaddr *sa)
@@ -2090,7 +2090,7 @@ void custom_primitives_reconcile(struct custom_primitives_ptrs *cpptrs, struct c
   for (cpptrs_idx = 0; cpptrs->primitive[cpptrs_idx].name && cpptrs_idx < cpptrs->num; cpptrs_idx++) {
     if (!cpptrs->primitive[cpptrs_idx].ptr) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Unknown primitive '%s'\n", config.name, config.type, cpptrs->primitive[cpptrs_idx].name);
-      exit(1);
+      exit_gracefully(1);
     }
     else {
       struct custom_primitive_entry *cpe = cpptrs->primitive[cpptrs_idx].ptr;
@@ -2847,7 +2847,7 @@ void open_pcap_savefile(struct pcap_device *dev_ptr, char *file)
 
   if ((dev_ptr->dev_desc = pcap_open_offline(file, errbuf)) == NULL) {
     Log(LOG_ERR, "ERROR ( %s/core ): pcap_open_offline(): %s\n", config.name, errbuf);
-    exit(1);
+    exit_gracefully(1);
   }
 
   dev_ptr->link_type = pcap_datalink(dev_ptr->dev_desc);
@@ -2858,7 +2858,7 @@ void open_pcap_savefile(struct pcap_device *dev_ptr, char *file)
 
   if (!dev_ptr->data->handler) {
     Log(LOG_ERR, "ERROR ( %s/core ): pcap_savefile: unsupported link layer.\n", config.name);
-    exit(1);
+    exit_gracefully(1);
   }
 
   dev_ptr->active = TRUE;

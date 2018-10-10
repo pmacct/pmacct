@@ -601,7 +601,7 @@ int check_fsrc(struct db_cache *queue[], int *num, int seq)
         new = malloc(queueElemSz);
         if (!new) {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (check_fsrc). Exiting ..\n", config.name, config.type);
-	  exit_plugin(1);
+	  exit_gracefully(1);
 	}
         fsrc_queue.num++;
         new->next = last_seen->next;

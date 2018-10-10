@@ -658,7 +658,7 @@ ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockadd
     device->errors++;
     if (device->errors == PCAP_SAVEFILE_MAX_ERRORS) {
       Log(LOG_ERR, "ERROR ( %s/core ): pcap_ext_ex() max errors reached (%u). Exiting.\n", config.name, PCAP_SAVEFILE_MAX_ERRORS);
-      exit(1);
+      exit_gracefully(1);
     }
     else {
       Log(LOG_WARNING, "WARN ( %s/core ): pcap_ext_ex() failed: %s. Skipping packet.\n", config.name, pcap_geterr(device->dev_desc));
@@ -686,7 +686,7 @@ ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockadd
   }
   else {
     Log(LOG_ERR, "ERROR ( %s/core ): unexpected return code from pcap_next_ex(). Exiting.\n", config.name);
-    exit(1);
+    exit_gracefully(1);
   }
 
   (*device->data->handler)(savefile_pptrs->pkthdr, savefile_pptrs);

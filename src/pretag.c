@@ -694,7 +694,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
     stat(filename, &st);
     t->timestamp = st.st_mtime;
   }
-  else exit_all(1);
+  else exit_gracefully(1);
 }
 
 u_int8_t pt_check_neg(char **value, u_int32_t *flags)

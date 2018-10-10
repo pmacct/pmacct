@@ -225,7 +225,7 @@ int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, struct pcap
     if ((dev_ptr->dev_desc = pm_pcap_open(ifname, psize, config.promisc, 1000, config.pcap_protocol, direction, errbuf)) == NULL) {
       if (!config.pcap_if_wait) {
 	Log(LOG_ERR, "ERROR ( %s/core ): [%s] pm_pcap_open(): %s. Exiting.\n", config.name, ifname, errbuf);
-	exit_all(1);
+	exit_gracefully(1);
       }
       else {
 	sleep(PCAP_RETRY_PERIOD); /* XXX: User defined value? */
@@ -248,7 +248,7 @@ int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, struct pcap
       }
       else {
 	Log(LOG_ERR, "ERROR ( %s/core ): pcap_ifindex set to 'map' but no pcap_interface_map is defined. Exiting.\n", config.name);
-	exit(1);
+	exit_gracefully(1);
       }
     }
     else dev_ptr->id = 0;
@@ -276,7 +276,7 @@ int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, struct pcap
     /* we need to solve some link constraints */
     if (dev_ptr->data == NULL) {
       Log(LOG_ERR, "ERROR ( %s/core ): data link not supported: %d\n", config.name, dev_ptr->link_type);
-      exit_all(1);
+      exit_gracefully(1);
     }
     else Log(LOG_INFO, "INFO ( %s/core ): [%s,%u] link type is: %d\n", config.name, dev_ptr->str, dev_ptr->id, dev_ptr->link_type);
 
@@ -285,7 +285,7 @@ int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, struct pcap
       while (list) {
         if ((list->cfg.what_to_count & COUNT_SRC_MAC) || (list->cfg.what_to_count & COUNT_DST_MAC)) {
           Log(LOG_ERR, "ERROR ( %s/core ): MAC aggregation not available for link type: %d\n", config.name, dev_ptr->link_type);
-          exit_all(1);
+          exit_gracefully(1);
         }
         list = list->next;
       }
@@ -582,7 +582,7 @@ int main(int argc,char **argv, char **envp)
     if (getuid() != 0 && !config.pmacctd_nonroot) {
       printf("%s %s (%s)\n\n", PMACCTD_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
       printf("ERROR ( %s/core ): You need superuser privileges to run this command.\nExiting ...\n\n", config.name);
-      exit(1);
+      exit_gracefully(1);
     }
   }
 
@@ -647,18 +647,18 @@ int main(int argc,char **argv, char **envp)
 
       if (config.classifiers_path && (list->cfg.sampling_rate || config.ext_sampling_rate)) {
         Log(LOG_ERR, "ERROR ( %s/core ): Packet sampling and classification are mutual exclusive.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
 
       if (list->cfg.sampling_rate && config.ext_sampling_rate) {
         Log(LOG_ERR, "ERROR ( %s/core ): Internal packet sampling and external packet sampling are mutual exclusive.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
 
       /* applies to specific plugins */
       if (list->type.id == PLUGIN_ID_TEE) {
         Log(LOG_ERR, "ERROR ( %s/core ): 'tee' plugin not supported in 'pmacctd'.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
       else if (list->type.id == PLUGIN_ID_NFPROBE) {
 	/* If we already renormalizing an external sampling rate,
@@ -720,7 +720,7 @@ int main(int argc,char **argv, char **envp)
 				       COUNT_MPLS_VPN_RD)) ||
 	    (list->cfg.what_to_count_2 & (COUNT_LRG_COMM|COUNT_SRC_LRG_COMM))) {
 	  Log(LOG_ERR, "ERROR ( %s/core ): 'src_as', 'dst_as' and 'peer_dst_ip' are currently the only BGP-related primitives supported within the 'nfprobe' plugin.\n", config.name);
-	  exit(1);
+	  exit_gracefully(1);
 	}
 	list->cfg.what_to_count |= COUNT_COUNTERS;
 
@@ -780,7 +780,7 @@ int main(int argc,char **argv, char **envp)
 				       COUNT_MPLS_VPN_RD)) ||
 	    (list->cfg.what_to_count_2 & (COUNT_LRG_COMM|COUNT_SRC_LRG_COMM))) {
           Log(LOG_ERR, "ERROR ( %s/core ): 'src_as', 'dst_as' and 'peer_dst_ip' are currently the only BGP-related primitives supported within the 'sfprobe' plugin.\n", config.name);
-          exit(1);
+          exit_gracefully(1);
         }
 
 #if defined (HAVE_L2)
@@ -831,7 +831,7 @@ int main(int argc,char **argv, char **envp)
 	if (list->cfg.what_to_count & (COUNT_SRC_AS|COUNT_DST_AS|COUNT_SUM_AS)) {
 	  if (!list->cfg.networks_file && list->cfg.nfacctd_as != NF_AS_BGP) {
 	    Log(LOG_ERR, "ERROR ( %s/%s ): AS aggregation selected but NO 'networks_file' or 'pmacctd_as' are specified. Exiting...\n\n", list->name, list->type.string);
-	    exit(1);
+	    exit_gracefully(1);
 	  }
 	  if (list->cfg.nfacctd_as & NF_AS_FALLBACK && list->cfg.networks_file)
             list->cfg.nfacctd_as |= NF_AS_NEW;
@@ -842,7 +842,7 @@ int main(int argc,char **argv, char **envp)
             if (list->cfg.networks_mask) list->cfg.nfacctd_net |= NF_NET_STATIC;
             if (!list->cfg.nfacctd_net) {
               Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'pmacctd_net', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
-              exit(1);
+              exit_gracefully(1);
             }
           }
           else {
@@ -852,7 +852,7 @@ int main(int argc,char **argv, char **envp)
                 (list->cfg.nfacctd_net == NF_NET_IGP && !list->cfg.nfacctd_isis) ||
                 (list->cfg.nfacctd_net == NF_NET_KEEP)) {
               Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'isis_daemon', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
-              exit(1);
+              exit_gracefully(1);
             }
 	    if (list->cfg.nfacctd_net & NF_NET_FALLBACK && list->cfg.networks_file)
 	      list->cfg.nfacctd_net |= NF_NET_NEW;
@@ -861,7 +861,7 @@ int main(int argc,char **argv, char **envp)
 
 	if (list->cfg.what_to_count & COUNT_CLASS && !list->cfg.classifiers_path) {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): 'class' aggregation selected but NO 'classifiers' key specified. Exiting...\n\n", list->name, list->type.string);
-	  exit(1);
+	  exit_gracefully(1);
 	}
 
 	list->cfg.type_id = list->type.id;
@@ -880,7 +880,7 @@ int main(int argc,char **argv, char **envp)
 
       if ((list->cfg.what_to_count & COUNT_CLASS) && (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS)) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): 'class_legacy' and 'class' primitives are mutual exclusive. Exiting...\n\n", list->name, list->type.string);
-	exit(1);
+	exit_gracefully(1);
       }
     }
     list = list->next;
@@ -940,7 +940,7 @@ int main(int argc,char **argv, char **envp)
     config.pcap_if = pcap_lookupdev(errbuf);
     if (!config.pcap_if) {
       Log(LOG_ERR, "ERROR ( %s/core ): Unable to find a suitable device. Exiting.\n", config.name);
-      exit_all(1);
+      exit_gracefully(1);
     }
     else Log(LOG_DEBUG, "DEBUG ( %s/core ): device is %s\n", config.name, config.pcap_if);
   }
@@ -950,12 +950,12 @@ int main(int argc,char **argv, char **envp)
 
   if ((config.pcap_if || config.pcap_interfaces_map) && config.pcap_savefile) {
     Log(LOG_ERR, "ERROR ( %s/core ): interface (-i), pcap_interfaces_map and pcap_savefile (-I) directives are mutually exclusive. Exiting.\n", config.name);
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   if (config.pcap_if && config.pcap_interfaces_map) {
     Log(LOG_ERR, "ERROR ( %s/core ): interface (-i) and pcap_interfaces_map directives are mutually exclusive. Exiting.\n", config.name);
-    exit_all(1);
+    exit_gracefully(1);
   }
 
   bkp_select_fd = 0;
@@ -976,7 +976,7 @@ int main(int argc,char **argv, char **envp)
     while ((ifname = pcap_interfaces_map_getnext_ifname(&pcap_if_map, &pcap_if_idx))) {
       if (device.num == PCAP_MAX_INTERFACES) {
 	Log(LOG_ERR, "ERROR ( %s/core ): Maximum number of interfaces reached (%u). Exiting.\n", config.name, PCAP_MAX_INTERFACES);
-	exit(1);
+	exit_gracefully(1);
       }
 
       pcap_if_entry = pcap_interfaces_map_getentry_by_ifname(&pcap_if_map, ifname);
@@ -1009,7 +1009,7 @@ int main(int argc,char **argv, char **envp)
 
   if (config.nfacctd_bgp && config.nfacctd_bmp) {
     Log(LOG_ERR, "ERROR ( %s/core ): bgp_daemon and bmp_daemon are currently mutual exclusive. Exiting.\n", config.name);
-    exit(1);
+    exit_gracefully(1);
   }
 
   /* starting the ISIS threa */
@@ -1028,7 +1028,7 @@ int main(int argc,char **argv, char **envp)
 
     if (config.nfacctd_bgp_stdcomm_pattern_to_asn && config.nfacctd_bgp_lrgcomm_pattern_to_asn) {
       Log(LOG_ERR, "ERROR ( %s/core ): bgp_stdcomm_pattern_to_asn and bgp_lrgcomm_pattern_to_asn are mutual exclusive. Exiting.\n", config.name);
-      exit(1);
+      exit_gracefully(1);
     }
 
     load_comm_patterns(&config.nfacctd_bgp_stdcomm_pattern, &config.nfacctd_bgp_extcomm_pattern,
@@ -1042,7 +1042,7 @@ int main(int argc,char **argv, char **envp)
       }
       else {
         Log(LOG_ERR, "ERROR ( %s/core ): bgp_peer_as_src_type set to 'map' but no map defined. Exiting.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
     }
     else cb_data.bpas_table = NULL;
@@ -1054,7 +1054,7 @@ int main(int argc,char **argv, char **envp)
       }
       else {
         Log(LOG_ERR, "ERROR ( %s/core ): bgp_src_local_pref_type set to 'map' but no map defined. Exiting.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
     }
     else cb_data.blp_table = NULL;
@@ -1066,7 +1066,7 @@ int main(int argc,char **argv, char **envp)
       }
       else {
         Log(LOG_ERR, "ERROR ( %s/core ): bgp_src_med_type set to 'map' but no map defined. Exiting.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
     }
     else cb_data.bmed_table = NULL;
@@ -1077,7 +1077,7 @@ int main(int argc,char **argv, char **envp)
     }
     else {
       Log(LOG_ERR, "ERROR ( %s/core ): 'bgp_daemon' configured but no 'bgp_agent_map' has been specified. Exiting.\n", config.name);
-      exit(1);
+      exit_gracefully(1);
     }
 
     /* Limiting BGP peers to only two: one would suffice in pmacctd
@@ -1106,7 +1106,7 @@ int main(int argc,char **argv, char **envp)
 
   if (config.nfacctd_flow_to_rd_map) {
     Log(LOG_ERR, "ERROR ( %s/core ): 'flow_to_rd_map' is not supported by this daemon. Exiting.\n", config.name);
-    exit(1);
+    exit_gracefully(1);
   }
 
   /* Init tunnel handlers */

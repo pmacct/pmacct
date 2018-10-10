@@ -911,7 +911,7 @@ int PT_map_src_comms_handler(char *filename, struct id_entry *e, char *value, st
     e->key.src_comms[idx] = malloc(MAX_BGP_STD_COMMS);
     if (!e->key.src_comms[idx]) {
       Log(LOG_ERR, "ERROR ( %s/%s ): [%s] malloc() failed (PT_map_src_comms_handler). Exiting.\n", config.name, config.type, filename);
-      exit_all(1);
+      exit_gracefully(1);
     }
     strlcpy(e->key.src_comms[idx], token, MAX_BGP_STD_COMMS);
     trim_spaces(e->key.src_comms[idx]);
@@ -949,7 +949,7 @@ int PT_map_comms_handler(char *filename, struct id_entry *e, char *value, struct
     e->key.comms[idx] = malloc(MAX_BGP_STD_COMMS);
     if (!e->key.comms[idx]) {
       Log(LOG_ERR, "ERROR ( %s/%s ): [%s] malloc() failed (PT_map_comms_handler). Exiting.\n", config.name, config.type, filename);
-      exit_all(1);
+      exit_gracefully(1);
     }
     strlcpy(e->key.comms[idx], token, MAX_BGP_STD_COMMS);
     trim_spaces(e->key.comms[idx]);
@@ -1238,7 +1238,7 @@ int PT_map_jeq_handler(char *filename, struct id_entry *e, char *value, struct p
   e->jeq.label = malloc(MAX_LABEL_LEN);
   if (!e->jeq.label) {
     Log(LOG_ERR, "ERROR ( %s/%s ): [%s] malloc() failed (PT_map_jeq_handler). Exiting.\n", config.name, config.type, filename);
-    exit_all(1);
+    exit_gracefully(1);
   }
   else strlcpy(e->jeq.label, value, MAX_LABEL_LEN);
 
@@ -3755,7 +3755,7 @@ void pcap_interfaces_map_initialize(struct pcap_interfaces *map)
   map->list = malloc((PCAP_MAX_INTERFACES) * sizeof(struct pcap_interface));
   if (!map->list) {
     Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate pcap_interfaces_map. Exiting ...\n", config.name, config.type);
-    exit(1);
+    exit_gracefully(1);
   }
   else memset(map->list, 0, (PCAP_MAX_INTERFACES) * sizeof(struct pcap_interface));
 }

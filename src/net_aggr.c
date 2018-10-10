@@ -1772,7 +1772,7 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
       nt->timestamp = st.st_mtime;
     }
   }
-  else exit_plugin(1);
+  else exit_gracefully(1);
 }
 
 /* sort the (sub)array v from start to end */

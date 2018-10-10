@@ -460,13 +460,13 @@ int main(int argc,char **argv, char **envp)
 
       if (list->cfg.sampling_rate && config.ext_sampling_rate) {
         Log(LOG_ERR, "ERROR ( %s/core ): Internal packet sampling and external packet sampling are mutual exclusive.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
 
       /* applies to specific plugins */
       if (list->type.id == PLUGIN_ID_NFPROBE || list->type.id == PLUGIN_ID_SFPROBE) {
         Log(LOG_ERR, "ERROR ( %s/core ): 'nfprobe' and 'sfprobe' plugins not supported in 'sfacctd'.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
       else if (list->type.id == PLUGIN_ID_TEE) {
         tee_plugins++;
@@ -500,11 +500,11 @@ int main(int argc,char **argv, char **envp)
 	if (list->cfg.what_to_count & (COUNT_SRC_AS|COUNT_DST_AS|COUNT_SUM_AS)) {
 	  if (!list->cfg.networks_file && list->cfg.nfacctd_as & NF_AS_NEW) {
 	    Log(LOG_ERR, "ERROR ( %s/%s ): AS aggregation was selected but NO 'networks_file' specified. Exiting...\n\n", list->name, list->type.string);
-	    exit(1);
+	    exit_gracefully(1);
 	  }
           if (!list->cfg.nfacctd_bgp && !list->cfg.nfacctd_bmp && list->cfg.nfacctd_as == NF_AS_BGP) {
             Log(LOG_ERR, "ERROR ( %s/%s ): AS aggregation selected but 'bgp_daemon' or 'bmp_daemon' is not enabled. Exiting...\n\n", list->name, list->type.string);
-            exit(1);
+            exit_gracefully(1);
 	  }
           if (list->cfg.nfacctd_as & NF_AS_FALLBACK && list->cfg.networks_file)
             list->cfg.nfacctd_as |= NF_AS_NEW;
@@ -521,7 +521,7 @@ int main(int argc,char **argv, char **envp)
                 (list->cfg.nfacctd_net == NF_NET_BGP && !list->cfg.nfacctd_bgp && !list->cfg.nfacctd_bmp) ||
                 (list->cfg.nfacctd_net == NF_NET_IGP && !list->cfg.nfacctd_isis)) {
               Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'bmp_daemon', 'isis_daemon', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
-              exit(1);
+              exit_gracefully(1);
             }
             if (list->cfg.nfacctd_net & NF_NET_FALLBACK && list->cfg.networks_file)
               list->cfg.nfacctd_net |= NF_NET_NEW;
@@ -530,7 +530,7 @@ int main(int argc,char **argv, char **envp)
 
 	if (list->cfg.what_to_count & COUNT_CLASS && !list->cfg.classifiers_path) {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): 'class' aggregation selected but NO 'classifiers' key specified. Exiting...\n\n", list->name, list->type.string);
-	  exit(1);
+	  exit_gracefully(1);
 	}
 
 #if defined (WITH_NDPI)
@@ -541,7 +541,7 @@ int main(int argc,char **argv, char **envp)
 
 	if ((list->cfg.what_to_count & COUNT_CLASS) && (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS)) {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): 'class_legacy' and 'class' primitives are mutual exclusive. Exiting...\n\n", list->name, list->type.string);
-	  exit(1);
+	  exit_gracefully(1);
 	}
 #endif
 
@@ -558,7 +558,7 @@ int main(int argc,char **argv, char **envp)
 
   if (tee_plugins && data_plugins) {
     Log(LOG_ERR, "ERROR ( %s/core ): 'tee' plugins are not compatible with data (memory/mysql/pgsql/etc.) plugins. Exiting...\n\n", config.name);
-    exit(1);
+    exit_gracefully(1);
   }
 
   if (config.pcap_savefile) capture_methods++;
@@ -572,25 +572,25 @@ int main(int argc,char **argv, char **envp)
 
   if (capture_methods > 1) {
     Log(LOG_ERR, "ERROR ( %s/core ): pcap_savefile, sfacctd_ip, sfacctd_kafka_* and sfacctd_zmq_* are mutual exclusive. Exiting...\n\n", config.name);
-    exit(1);
+    exit_gracefully(1);
   }
 
 #ifdef WITH_KAFKA
   if ((config.nfacctd_kafka_broker_host && !config.nfacctd_kafka_topic) || (config.nfacctd_kafka_topic && !config.nfacctd_kafka_broker_host)) {
     Log(LOG_ERR, "ERROR ( %s/core ): Kafka collection requires both sfacctd_kafka_broker_host and sfacctd_kafka_topic to be specified. Exiting...\n\n", config.name);
-    exit(1);
+    exit_gracefully(1);
   }
 
   if (config.nfacctd_kafka_broker_host && tee_plugins) {
     Log(LOG_ERR, "ERROR ( %s/core ): Kafka collection is mutual exclusive with 'tee' plugins. Exiting...\n\n", config.name);
-    exit(1);
+    exit_gracefully(1);
   }
 #endif
 
 #ifdef WITH_ZMQ
   if (config.nfacctd_zmq_address && tee_plugins) {
     Log(LOG_ERR, "ERROR ( %s/core ): ZeroMQ collection is mutual exclusive with 'tee' plugins. Exiting...\n\n", config.name);
-    exit(1);
+    exit_gracefully(1);
   }
 #endif
 
@@ -655,7 +655,7 @@ int main(int argc,char **argv, char **envp)
       ret = str_to_addr(config.nfacctd_ip, &addr);
       if (!ret) {
         Log(LOG_ERR, "ERROR ( %s/core ): 'sfacctd_ip' value is not valid. Exiting.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
       slen = addr_to_sa((struct sockaddr *)&server, &addr, config.nfacctd_port);
     }
@@ -679,7 +679,7 @@ int main(int argc,char **argv, char **envp)
 
       if (config.sock < 0) {
         Log(LOG_ERR, "ERROR ( %s/core ): socket() failed.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
     }
 
@@ -719,7 +719,7 @@ int main(int argc,char **argv, char **envp)
         multi_req4.imr_multiaddr.s_addr = mcast_groups[idx].address.ipv4.s_addr;
         if (setsockopt(config.sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&multi_req4, sizeof(multi_req4)) < 0) {
 	  Log(LOG_ERR, "ERROR ( %s/core ): IPv4 multicast address - ADD membership failed.\n", config.name);
-	  exit(1);
+	  exit_gracefully(1);
 	}
       }
 #if defined ENABLE_IPV6
@@ -728,7 +728,7 @@ int main(int argc,char **argv, char **envp)
 	ip6_addr_cpy(&multi_req6.ipv6mr_multiaddr, &mcast_groups[idx].address.ipv6);
 	if (setsockopt(config.sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&multi_req6, sizeof(multi_req6)) < 0) {
 	  Log(LOG_ERR, "ERROR ( %s/core ): IPv6 multicast address - ADD membership failed.\n", config.name);
-	  exit(1);
+	  exit_gracefully(1);
 	}
       }
 #endif
@@ -766,7 +766,7 @@ int main(int argc,char **argv, char **envp)
 
   if (config.nfacctd_bgp && config.nfacctd_bmp) {
     Log(LOG_ERR, "ERROR ( %s/core ): bgp_daemon and bmp_daemon are currently mutual exclusive. Exiting.\n", config.name);
-    exit(1);
+    exit_gracefully(1);
   }
 
   /* starting the ISIS threa */
@@ -785,7 +785,7 @@ int main(int argc,char **argv, char **envp)
 
     if (config.nfacctd_bgp_stdcomm_pattern_to_asn && config.nfacctd_bgp_lrgcomm_pattern_to_asn) {
       Log(LOG_ERR, "ERROR ( %s/core ): bgp_stdcomm_pattern_to_asn and bgp_lrgcomm_pattern_to_asn are mutual exclusive. Exiting.\n", config.name);
-      exit(1);
+      exit_gracefully(1);
     }
 
     load_comm_patterns(&config.nfacctd_bgp_stdcomm_pattern, &config.nfacctd_bgp_extcomm_pattern,
@@ -799,7 +799,7 @@ int main(int argc,char **argv, char **envp)
       }
       else {
         Log(LOG_ERR, "ERROR ( %s/core ): bgp_peer_as_src_type set to 'map' but no map defined. Exiting.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
     }
     else pptrs.v4.bpas_table = NULL;
@@ -811,7 +811,7 @@ int main(int argc,char **argv, char **envp)
       }
       else {
         Log(LOG_ERR, "ERROR ( %s/core ): bgp_src_local_pref_type set to 'map' but no map defined. Exiting.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
     }
     else pptrs.v4.blp_table = NULL;
@@ -823,7 +823,7 @@ int main(int argc,char **argv, char **envp)
       }
       else {
         Log(LOG_ERR, "ERROR ( %s/core ): bgp_src_med_type set to 'map' but no map defined. Exiting.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
     }
     else pptrs.v4.bmed_table = NULL;
@@ -866,7 +866,7 @@ int main(int argc,char **argv, char **envp)
     rc = bind(config.sock, (struct sockaddr *) &server, slen);
     if (rc < 0) {
       Log(LOG_ERR, "ERROR ( %s/core ): bind() to ip=%s port=%d/udp failed (errno: %d).\n", config.name, config.nfacctd_ip, config.nfacctd_port, errno);
-      exit(1);
+      exit_gracefully(1);
     }
   }
 
@@ -1075,7 +1075,7 @@ int main(int argc,char **argv, char **envp)
       sf_cnt_misc_db->peers_log = malloc(MAX_SF_CNT_LOG_ENTRIES*sizeof(struct bgp_peer_log));
       if (!sf_cnt_misc_db->peers_log) {
         Log(LOG_ERR, "ERROR ( %s/core ): Unable to malloc() sFlow counters log structure. Exiting.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
       memset(sf_cnt_misc_db->peers_log, 0, MAX_SF_CNT_LOG_ENTRIES*sizeof(struct bgp_peer_log));
       bgp_peer_log_seq_init(&sf_cnt_misc_db->log_seq);
@@ -2163,7 +2163,7 @@ void sfv245_check_counter_log_init(struct packet_ptrs *pptrs)
       entry->sf_cnt = malloc(sizeof(struct bgp_peer));
       if (!entry->sf_cnt) {
         Log(LOG_ERR, "ERROR ( %s/core ): Unable to malloc() xflow_status_entry sFlow counters log structure. Exiting.\n", config.name);
-        exit(1);
+        exit_gracefully(1);
       }
       memset(entry->sf_cnt, 0, sizeof(struct bgp_peer));
     }

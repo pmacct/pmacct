@@ -55,7 +55,7 @@ void load_plugins(struct plugin_requests *req)
       if (list->cfg.data_type & (PIPE_TYPE_METADATA|PIPE_TYPE_PAYLOAD|PIPE_TYPE_MSG));
       else {
 	Log(LOG_ERR, "ERROR ( %s/%s ): Data type not supported: %d\n", list->name, list->type.string, list->cfg.data_type);
-	exit(1);
+	exit_gracefully(1);
       }
 
       min_sz = ChBufHdrSz;
@@ -119,7 +119,7 @@ void load_plugins(struct plugin_requests *req)
         if (buf_pipe_ratio_sz > INT_MAX) {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): Current plugin_buffer_size elems per plugin_pipe_size: %d. Max: %d.\nExiting.\n",
 		list->name, list->type.string, (list->cfg.pipe_size/list->cfg.buffer_size), (INT_MAX/sizeof(char *)));
-          exit_all(1);
+          exit_gracefully(1);
         }
         else target_buflen = buf_pipe_ratio_sz;
 
@@ -165,7 +165,7 @@ void load_plugins(struct plugin_requests *req)
       chptr = insert_pipe_channel(list->type.id, &list->cfg, list->pipe[1]);
       if (!chptr) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): Unable to setup a new Core Process <-> Plugin channel.\nExiting.\n", list->name, list->type.string);
-	exit_all(1);
+	exit_gracefully(1);
       }
       else chptr->plugin = list;
 
@@ -275,7 +275,7 @@ void load_plugins(struct plugin_requests *req)
 	close(config.bgp_sock);
 	if (!list->cfg.pipe_zmq) close(list->pipe[1]);
 	(*list->type.func)(list->pipe[0], &list->cfg, chptr);
-	exit(0);
+	exit_gracefully(0);
       default: /* Parent */
 	if (!list->cfg.pipe_zmq) {
 	  close(list->pipe[0]);
@@ -448,7 +448,7 @@ reprocess:
           struct plugins_list_entry *list = channels_list[index].plugin;
 
           Log(LOG_ERR, "ERROR ( %s/%s ): plugin_buffer_size is too short.\n", list->name, list->type.string);
-          exit_all(1);
+          exit_gracefully(1);
         }
 
         channels_list[index].already_reprocessed = TRUE;
@@ -593,7 +593,7 @@ struct channels_list_entry *insert_pipe_channel(int plugin_type, struct configur
       chptr->rg.base = map_shared(0, cfg->pipe_size+PKT_MSG_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
       if (chptr->rg.base == MAP_FAILED) {
         Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate pipe buffer. Exiting ...\n", cfg->name, cfg->type); 
-	exit_all(1);
+	exit_gracefully(1);
       }
       memset(chptr->rg.base, 0, cfg->pipe_size);
       chptr->rg.ptr = chptr->rg.base;
@@ -602,7 +602,7 @@ struct channels_list_entry *insert_pipe_channel(int plugin_type, struct configur
       chptr->status = map_shared(0, sizeof(struct ch_status), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
       if (chptr->status == MAP_FAILED) {
         Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate status buffer. Exiting ...\n", cfg->name, cfg->type);
-        exit_all(1);
+        exit_gracefully(1);
       }
       memset(chptr->status, 0, sizeof(struct ch_status));
 
@@ -936,7 +936,7 @@ void plugin_pipe_zmq_compile_check()
 {
 #ifndef WITH_ZMQ
   Log(LOG_ERR, "ERROR ( %s/%s ): 'plugin_pipe_zmq' requires compiling with --enable-zmq. Exiting ..\n", config.name, config.type);
-  exit_plugin(1);
+  exit_gracefully(1);
 #endif
 }
 
