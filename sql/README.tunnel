@@ -6,11 +6,11 @@ Such fields are being introduced to support tunnel primitives. The guidelines be
 (typically in MySQL format) are to add such primitives to the SQL schema:
 
 * tunnel_ip_src field:
-  - "tunnel_ip_src CHAR(15) NOT NULL," to declare the field itself (*)
+  - "tunnel_ip_src CHAR(45) NOT NULL," to declare the field itself (*)
   - "PRIMARY KEY (..., tunnel_ip_src, ...)" to put it in the primary key 
 
 * tunnel_ip_dst field:
-  - "tunnel_ip_dst CHAR(15) NOT NULL," to declare the field itself (*)
+  - "tunnel_ip_dst CHAR(45) NOT NULL," to declare the field itself (*)
   - "PRIMARY KEY (..., tunnel_ip_dst, ...)" to put it in the primary key
 
 * tunnel_ip_proto field:

@@ -8,8 +8,8 @@ DROP TABLE IF EXISTS acct_uni;
 CREATE TABLE acct_uni (
         mac_src CHAR(17) NOT NULL DEFAULT '0:0:0:0:0:0',
         mac_dst CHAR(17) NOT NULL DEFAULT '0:0:0:0:0:0',
-        ip_src CHAR(15) NOT NULL DEFAULT '0.0.0.0',
-        ip_dst CHAR(15) NOT NULL DEFAULT '0.0.0.0',
+        ip_src CHAR(45) NOT NULL DEFAULT '0.0.0.0',
+        ip_dst CHAR(45) NOT NULL DEFAULT '0.0.0.0',
         port_src INT NOT NULL DEFAULT 0,
         port_dst INT NOT NULL DEFAULT 0,
         ip_proto SMALLINT NOT NULL DEFAULT 0,
