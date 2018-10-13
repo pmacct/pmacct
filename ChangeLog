@@ -4,6 +4,39 @@ pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
+1.7.2 -- XX-1X-2018
+  + tee plugin: added possibility to emit replicated packets to a Kafka
+    broker. kafka_broker and kafka_topic knobs are now available in the
+    tee_receivers map and a tee_kafka_config_file directive allows to
+    define a file with configuration to pass to librdkafka.
+  + Introduced pcap_savefile_replay feature: when reading from a
+    pcap_savefile, replay content for the specified amount of times.
+  + BGP daemon: added bgp_lrgcomm_pattern feature to filter large BGP
+    communities (in addition to existing knobs to filter on standard
+    and extended communities).
+  + BMP, Streaming Telemetry daemons: msglog_file and dump_file config
+    directives now offer $bmp_router, $bmp_router_port, $telemetry_node
+    and $telemetry_node_port variables.
+  + BGP, BMP, Streaming Telemetry daemons: added BGP, BMP and Streaming
+    Telemetry exporter TCP/UDP port as variable for dump/log filenames
+    (to better support NAT traversal scenarios).
+  ! fix, BGP daemon: added check for duplicate Router-IDs at BGP OPEN
+    parsing time. If a duplicate is detected, the session BGP OPENing of
+    the new session is dropped.
+  ! fix, BGP daemon: upon route lookup, don't perform ADD-PATH logics if
+    no PATH-ID (even if ADD-PATH capability is announced by the peer).
+    Thanks to Camilo Cardona ( @jccardonar ) for his support solving the
+    issue.
+  ! fix, kafka_common.c: now destroying both config and topic config as
+    part of p_kafka_close() in order to avoid memory leaks. Also, port is
+    omitted from broker string if not passed to p_kafka_set_broker().
+  ! fix, SQL plugins: sql_table_schema is honoured even if sql_table_name
+    is non-dynamic. This is to cover cases where the table is rotated
+    externally.
+  - nfacctd: discontinued support for NetFlow v1, v7 and v8 collection
+    and replication.
+  - nfprobe plugin: removed support for NetFlow v1 export.
+
 1.7.1 -- 06-05-2018
   + pmbgpd: introduced a BGP x-connect feature meant to map BGP peers
     (ie. PE routers) to BGP collectors (ie. nfacctd, sfacctd) via a
