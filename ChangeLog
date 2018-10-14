@@ -5,12 +5,15 @@ The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
 1.7.2 -- XX-1X-2018
-  + tee plugin: added possibility to emit replicated packets to a Kafka
-    broker. kafka_broker and kafka_topic knobs are now available in the
-    tee_receivers map and a tee_kafka_config_file directive allows to
-    define a file with configuration to pass to librdkafka.
+  + nfacctd, sfacctd: added sampling_direction to the set of supported
+    primitives. Its values can be ingress, egress and unknown.
+  + nfacctd, sfacctd: added Kafka broker among the options to receive
+    NetFlow/IFPIX, sFlow data. Host, port and topic should be specified 
+    along with a config file to pass to librdkafka.
   + Introduced pcap_savefile_replay feature: when reading from a
     pcap_savefile, replay content for the specified amount of times.
+  + pre_tag_map: added src_net and dst_net keys to tag on source and
+    destination IP prefixes respectively. 
   + BGP daemon: added bgp_lrgcomm_pattern feature to filter large BGP
     communities (in addition to existing knobs to filter on standard
     and extended communities).
@@ -20,6 +23,32 @@ The keys used are:
   + BGP, BMP, Streaming Telemetry daemons: added BGP, BMP and Streaming
     Telemetry exporter TCP/UDP port as variable for dump/log filenames
     (to better support NAT traversal scenarios).
+  + BGP, BMP daemons: added sequencing BGP/BMP dumps (bgp_table_dump_*,
+    bmp_dump_*). If both dumping and logging are enabled in parallel
+    then sequencing the dumps allows for check pointing at regular time
+    intervals.
+  + kafka plugin: added $in_iface key (input interface) to the set of
+    variables supported by kafka_partition_key. Extremely useful when
+    coupled to $peer_src_ip in some scenarios. 
+  + print, IMT plugins: separator for CSV format can now be space (\s)
+    or tab (\t).
+  + tee plugin: added Kafka broker among the emitters. kafka_broker and
+    kafka_topic knobs are now available in the tee_receivers map and a
+    tee_kafka_config_file directive allows to define a file with config
+    to pass to librdkafka.
+  + tee plugin: introducing support for complex pre_tag_map when doing
+    replication of NetFlow/IPFIX (sFlow replication had already this).
+    With this feature flows are individually evaluated against supplied
+    filters (input interface, BGP next-hop, etc.) and (not) replicated
+    accordingly.
+  + GeoIP v2: added support for latitude and longitude primitives via
+    (src_host_coords and dst_host_coords knobs). This is in addition to
+    existing country and pocode supports.
+  ! fix, nfacctd: NF_evaluate_flow_type() improved to not detect Cisco
+    ASA flows (ie. including initiator and responder octets) as events.
+  ! fix, BGP, BMP, Streaming Telemetry daemons: improved log sequencing
+    by handling counter wrap-up more gracefully. Also a log sequencing
+    API was developed to improve code re-use. 
   ! fix, BGP daemon: added check for duplicate Router-IDs at BGP OPEN
     parsing time. If a duplicate is detected, the session BGP OPENing of
     the new session is dropped.
@@ -27,14 +56,40 @@ The keys used are:
     no PATH-ID (even if ADD-PATH capability is announced by the peer).
     Thanks to Camilo Cardona ( @jccardonar ) for his support solving the
     issue.
+  ! fix, pmtelemetryd: no dump_init / dump_close events sequencing since
+    all messages are sequenced anyway (consistency with other daemons).
   ! fix, kafka_common.c: now destroying both config and topic config as
     part of p_kafka_close() in order to avoid memory leaks. Also, port is
     omitted from broker string if not passed to p_kafka_set_broker().
   ! fix, SQL plugins: sql_table_schema is honoured even if sql_table_name
     is non-dynamic. This is to cover cases where the table is rotated
     externally.
+  ! fix, pgsql plugin: sql_recovery_backup_host was not being honoured.
+    PG_create_backend() now composes the proper conn_string.
+  ! fix, print plugin: increase successful queries number, qn, only if
+    there is a valid file descriptor.
+  ! fix, util.c: length checks in handle_dynname_internal_strings() were
+    reviewed. Existings were not working in absence of starting/trailing
+    non-variable strings.
+  ! fix, util.c: use lockf() instead of more problematic flock(). Thanks
+    to Yuri Lachin ( @yuyutime ) and Miki Takata ( @mikiT ) for their
+    support.
+  ! fix, util.c: ignored access() return value in open_output_file() may 
+    have lead to incorrect assume a file properly opened despite failing
+    evaluation of permissions.
+  ! fix, compile time warnings: several warnings were addressed including
+    but not restricted to -Wreturn-time, -Wunused-variable, implicit func
+    declarations, -Wuninitialized, -Wformat-extra-args, -Wunused-label,
+    -Wunused-value, -Wunused-function, sbrk calls, -Wpointer-to-int-cast,
+    -Wint-to-pointer-cast and -Wparentheses. 
   - nfacctd: discontinued support for NetFlow v1, v7 and v8 collection
     and replication.
+  - pre_tag_map: matching on 'sampling_rate' is not supported anymore as
+    a sampling_rate primitive is now available; the 'return' feature to
+    return matched data before completing the map workflow has started
+    being obsoleted (retired from docs but still available).
+  - plugin_pipe_check_core_pid: deprecating feature given RabbitMQ and
+    Kafka are not supported anymore for internal message delivery.
   - nfprobe plugin: removed support for NetFlow v1 export.
 
 1.7.1 -- 06-05-2018
