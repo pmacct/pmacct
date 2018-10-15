@@ -8,12 +8,16 @@ The keys used are:
   + nfacctd, sfacctd: added sampling_direction to the set of supported
     primitives. Its values can be ingress, egress and unknown.
   + nfacctd, sfacctd: added Kafka broker among the options to receive
-    NetFlow/IFPIX, sFlow data. Host, port and topic should be specified 
-    along with a config file to pass to librdkafka.
+    NetFlow/IPFIX, sFlow data from. Host, port and topic should all be
+    specified along with a config file to pass to librdkafka.
+  + nfacctd,sfacctd, pmtelemetryd: added ZeroMQ queue among the options
+    to receive NetFlow/IPFIX, sFlow and Streaming Telemetry data from.
+    IP address and port should be specified.
   + Introduced pcap_savefile_replay feature: when reading from a
     pcap_savefile, replay content for the specified amount of times.
   + pre_tag_map: added src_net and dst_net keys to tag on source and
-    destination IP prefixes respectively. 
+    destination IP prefixes respectively. Also added bgp_nexthop to tag
+    on BGP next-hop. 
   + BGP daemon: added bgp_lrgcomm_pattern feature to filter large BGP
     communities (in addition to existing knobs to filter on standard
     and extended communities).
@@ -36,6 +40,8 @@ The keys used are:
     kafka_topic knobs are now available in the tee_receivers map and a
     tee_kafka_config_file directive allows to define a file with config
     to pass to librdkafka.
+  + tee plugin: added ZeroMQ queue among the emitters. zmq_address knob
+    defines the queue IP address and port to emit to.
   + tee plugin: introducing support for complex pre_tag_map when doing
     replication of NetFlow/IPFIX (sFlow replication had already this).
     With this feature flows are individually evaluated against supplied
@@ -46,6 +52,9 @@ The keys used are:
     existing country and pocode supports.
   ! fix, nfacctd: NF_evaluate_flow_type() improved to not detect Cisco
     ASA flows (ie. including initiator and responder octets) as events.
+    Also improved sanity checking of received NetFlow v9/IPFIX data and
+    options templates and reviwed modulo functions and improved template
+    hashing.
   ! fix, BGP, BMP, Streaming Telemetry daemons: improved log sequencing
     by handling counter wrap-up more gracefully. Also a log sequencing
     API was developed to improve code re-use. 
@@ -64,6 +73,10 @@ The keys used are:
   ! fix, SQL plugins: sql_table_schema is honoured even if sql_table_name
     is non-dynamic. This is to cover cases where the table is rotated
     externally.
+  ! fix, mysql plugin: my_bool replaced with bool. The plugin now does
+    compile against MySQL 8.0. Also added inclusion of stdbool.h as on
+    some systems bool is not defined. Overall improved probing for MySQL
+    headers. 
   ! fix, pgsql plugin: sql_recovery_backup_host was not being honoured.
     PG_create_backend() now composes the proper conn_string.
   ! fix, print plugin: increase successful queries number, qn, only if
@@ -74,14 +87,18 @@ The keys used are:
   ! fix, util.c: use lockf() instead of more problematic flock(). Thanks
     to Yuri Lachin ( @yuyutime ) and Miki Takata ( @mikiT ) for their
     support.
-  ! fix, util.c: ignored access() return value in open_output_file() may 
-    have lead to incorrect assume a file properly opened despite failing
-    evaluation of permissions.
   ! fix, compile time warnings: several warnings were addressed including
     but not restricted to -Wreturn-time, -Wunused-variable, implicit func
-    declarations, -Wuninitialized, -Wformat-extra-args, -Wunused-label,
-    -Wunused-value, -Wunused-function, sbrk calls, -Wpointer-to-int-cast,
-    -Wint-to-pointer-cast and -Wparentheses. 
+    declarations, -Wformat-extra-args, -Wunused-label, -Wunused-value,
+    -Wunused-function, sbrk calls, -Wpointer-to-int-cast, -Wparentheses
+    and -Wint-to-pointer-cast.
+  ! fix, dangerous uninitialized values: net_aggr.c, pmacct.c: in merge()
+    argument with non-NULL attribute could be passed NULL; bmp_msg.c: in
+    bmp_process_msg_route_monitor() bdata.tstamp could be uninitialized;
+    sfprobe_plugin.c: calloc() return value (possibly null) was not being
+    checked.
+  ! fix, thread_pool.c: reviewed logics in deallocate_thread_pool() and
+    solved a minor memory leak in allocate_thread_pool().
   - nfacctd: discontinued support for NetFlow v1, v7 and v8 collection
     and replication.
   - pre_tag_map: matching on 'sampling_rate' is not supported anymore as
@@ -90,6 +107,9 @@ The keys used are:
     being obsoleted (retired from docs but still available).
   - plugin_pipe_check_core_pid: deprecating feature given RabbitMQ and
     Kafka are not supported anymore for internal message delivery.
+  - tee plugin: obsoleted tee_dissect_send_full_pkt knob, entire packets
+    are now replicated only if no pre_tag_map or a simple pre_tag_map is
+    defined.
   - nfprobe plugin: removed support for NetFlow v1 export.
 
 1.7.1 -- 06-05-2018
