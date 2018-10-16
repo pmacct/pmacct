@@ -5,32 +5,50 @@ The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
 1.7.2 -- XX-1X-2018
-  + nfacctd, sfacctd: added sampling_direction to the set of supported
-    primitives. Its values can be ingress, egress and unknown.
   + nfacctd, sfacctd: added Kafka broker among the options to receive
     NetFlow/IPFIX, sFlow data from. Host, port and topic should all be
-    specified along with a config file to pass to librdkafka.
-  + nfacctd,sfacctd, pmtelemetryd: added ZeroMQ queue among the options
-    to receive NetFlow/IPFIX, sFlow and Streaming Telemetry data from.
+    specified along with an optional config file to pass to librdkafka.
+  + nfacctd, sfacctd, pmtelemetryd: added ZeroMQ queue among the options
+    to receive NetFlow/IPFIX, sFlow or Streaming Telemetry data from. An
     IP address and port should be specified.
-  + Introduced pcap_savefile_replay feature: when reading from a
-    pcap_savefile, replay content for the specified amount of times.
-  + pre_tag_map: added src_net and dst_net keys to tag on source and
-    destination IP prefixes respectively. Also added bgp_nexthop to tag
-    on BGP next-hop. 
+  + nfacctd, sfacctd: added sampling_direction to the set of supported
+    primitives, valid values being ingress, egress and unknown.
+  + nfacctd, sfacctd: stats, ie. amount of NetFlow/IPFIX or sFlow packets
+    received per router, are now available when in tee mode. Stats can be
+    retrieved via a SIGUSR1 UNIX signal.
+  + pcap_savefile_replay: a feature to replay content for the specified
+    amounf of time when reading from a pcap_savefile.
+  + pre_tag_map: added several new keys: src_net and dst_net (to tag on
+    source and destination IP prefixes respectively), bgp_nexthop (to
+    tag on BGP nexthop) and nat_event.
   + BGP daemon: added bgp_lrgcomm_pattern feature to filter large BGP
-    communities (in addition to existing knobs to filter on standard
-    and extended communities).
+    communities (in addition to existing equivalent knobs to filter on
+    standard and extended communities).
   + BMP, Streaming Telemetry daemons: msglog_file and dump_file config
     directives now offer $bmp_router, $bmp_router_port, $telemetry_node
     and $telemetry_node_port variables.
   + BGP, BMP, Streaming Telemetry daemons: added BGP, BMP and Streaming
     Telemetry exporter TCP/UDP port as variable for dump/log filenames
     (to better support NAT traversal scenarios).
-  + BGP, BMP daemons: added sequencing BGP/BMP dumps (bgp_table_dump_*,
-    bmp_dump_*). If both dumping and logging are enabled in parallel
-    then sequencing the dumps allows for check pointing at regular time
-    intervals.
+  + BGP, BMP daemons: added message sequencing to both BGP and BMP dumps
+    (bgp_table_dump_*, bmp_dump_*). If dumping and logging are enabled
+    in parallel then sequencing the dumps allows for check pointing at
+    regular time intervals.
+  + BMP daemon: implemented draft-hsmit-bmp-extensible-routemon-msgs for
+    a tlv-based encoding of route-monitoring messages with a new message
+    type.  
+  + Streaming Telemetry daemon: added sample decoders for gRPC / GPB for
+    Cisco and Huawei platforms, written in Python. Telemetry data is
+    decoded using vendor-supplied proto files and output in JSON format
+    in a ZeroMQ queue - suitable for ingestion in pmtelemetryd. Docs and
+    sample code is available in the telemetry/ directory. This is all in
+    addition to TCP/UDP transports and JSON encoding supported natively
+    in pmtelemetryd.
+  + kafka plugin: introduced support for Confluent Schema Registry via
+    libserdes. A registry can be supplied via kafka_avro_schema_registry
+    config directive; the schema is generated automatically. The feature
+    enables validation of data passed through a Kafka broker and uses
+    Avro encoding. 
   + kafka plugin: added $in_iface key (input interface) to the set of
     variables supported by kafka_partition_key. Extremely useful when
     coupled to $peer_src_ip in some scenarios. 
@@ -48,45 +66,64 @@ The keys used are:
     filters (input interface, BGP next-hop, etc.) and (not) replicated
     accordingly.
   + GeoIP v2: added support for latitude and longitude primitives via
-    (src_host_coords and dst_host_coords knobs). This is in addition to
+    src_host_coords and dst_host_coords knobs. This is in addition to
     existing country and pocode supports.
+  + files_uid, files_gid: now also user and group strings are accepted.
+    This is in addition to user and group IDs.
   ! fix, nfacctd: NF_evaluate_flow_type() improved to not detect Cisco
-    ASA flows (ie. including initiator and responder octets) as events.
-    Also improved sanity checking of received NetFlow v9/IPFIX data and
-    options templates and reviwed modulo functions and improved template
-    hashing.
+    ASA flows (ie. those including initiator and responder octets) as
+    events. Also improved sanity checking of received NetFlow v9/IPFIX
+    data and options templates and reviwed modulo functions and improved
+    template hashing.
   ! fix, BGP, BMP, Streaming Telemetry daemons: improved log sequencing
     by handling counter wrap-up more gracefully. Also a log sequencing
     API was developed to improve code re-use. 
   ! fix, BGP daemon: added check for duplicate Router-IDs at BGP OPEN
     parsing time. If a duplicate is detected, the session BGP OPENing of
     the new session is dropped.
+  ! fix, BGP daemon: ADD-PATH capability was checked only in the first
+    AFI/SAFI and was being set in the reply for last AFI/SAFI RECEIVE(1)
+    if first included SEND(2) or SEND-RECEIVE(3). Thanks to Markus Weber
+    ( @FvDxxx ) for his patch.
   ! fix, BGP daemon: upon route lookup, don't perform ADD-PATH logics if
     no PATH-ID (even if ADD-PATH capability is announced by the peer).
     Thanks to Camilo Cardona ( @jccardonar ) for his support solving the
     issue.
+  ! fix, BGP daemon: graceful handling of invalid AS-PATH segment types
+    (ie. AS-PATH in BGP UPDATE inconsistent with capabilities passed in
+    BGP OPEN) in order to avoid SEGVs.
+  ! fix, pmtelemetryd: improved support for UDP timeouts. Also reviewed
+    natively supported encodings: removed zjson and GPB was moved to pre-
+    processors (with samples available in telemetry/decoders directory). 
   ! fix, pmtelemetryd: no dump_init / dump_close events sequencing since
     all messages are sequenced anyway (consistency with other daemons).
   ! fix, kafka_common.c: now destroying both config and topic config as
     part of p_kafka_close() in order to avoid memory leaks. Also, port is
-    omitted from broker string if not passed to p_kafka_set_broker().
+    omitted from broker string if not passed to p_kafka_set_broker(). And
+    finally output queue length checks in p_kafka_check_outq_len() have
+    been relaxed (to counter temporary hickups that need more patience). 
+  ! fix, kafka plugin: kafka_partition default was zero (that is, a valid
+    partition number) instead of -1 (RD_KAFKA_PARTITION_UA or unassigned)
+    which allows librdkafka to attach a partitioner.
   ! fix, SQL plugins: sql_table_schema is honoured even if sql_table_name
     is non-dynamic. This is to cover cases where the table is rotated
     externally.
   ! fix, mysql plugin: my_bool replaced with bool. The plugin now does
     compile against MySQL 8.0. Also added inclusion of stdbool.h as on
-    some systems bool is not defined. Overall improved probing for MySQL
+    some systems bool is not defined. Improved overall probing for MySQL
     headers. 
   ! fix, pgsql plugin: sql_recovery_backup_host was not being honoured.
-    PG_create_backend() now composes the proper conn_string.
-  ! fix, print plugin: increase successful queries number, qn, only if
-    there is a valid file descriptor.
+    PG_create_backend() now composes a proper conn_string.
+  ! fix, print plugin: increase successful queries number, QN, only if
+    the output file was successfully opened.
   ! fix, util.c: length checks in handle_dynname_internal_strings() were
     reviewed. Existings were not working in absence of starting/trailing
     non-variable strings.
   ! fix, util.c: use lockf() instead of more problematic flock(). Thanks
     to Yuri Lachin ( @yuyutime ) and Miki Takata ( @mikiT ) for their
     support.
+  ! fix, ndpi_util.c: a protocol bitmask is now set in order to increase
+    match rate. Patch is courtesy by @rsolsn.
   ! fix, compile time warnings: several warnings were addressed including
     but not restricted to -Wreturn-time, -Wunused-variable, implicit func
     declarations, -Wformat-extra-args, -Wunused-label, -Wunused-value,
@@ -96,9 +133,11 @@ The keys used are:
     argument with non-NULL attribute could be passed NULL; bmp_msg.c: in
     bmp_process_msg_route_monitor() bdata.tstamp could be uninitialized;
     sfprobe_plugin.c: calloc() return value (possibly null) was not being
-    checked.
+    checked; sflow_agent.c: uninitialized ret value in sfl_agent_init()
+    could lead to undefined bind() error behaviour.
   ! fix, thread_pool.c: reviewed logics in deallocate_thread_pool() and
     solved a minor memory leak in allocate_thread_pool().
+  - pmacctd: removed support for FDDI :)
   - nfacctd: discontinued support for NetFlow v1, v7 and v8 collection
     and replication.
   - pre_tag_map: matching on 'sampling_rate' is not supported anymore as
