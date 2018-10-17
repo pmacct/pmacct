@@ -122,6 +122,9 @@ The keys used are:
   ! fix, util.c: use lockf() instead of more problematic flock(). Thanks
     to Yuri Lachin ( @yuyutime ) and Miki Takata ( @mikiT ) for their
     support.
+  ! fix, util.c: in compose_timestamp() pad usecs and use "%ld" since
+    time fields are signed longs. Thanks to @raymondrussell for the
+    patch.
   ! fix, ndpi_util.c: a protocol bitmask is now set in order to increase
     match rate. Patch is courtesy by @rsolsn.
   ! fix, compile time warnings: several warnings were addressed including

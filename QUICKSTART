@@ -934,7 +934,16 @@ You can check further information on how to compile pmacct with JSON/libjansson
 support in the section "Compiling pmacct with JSON support" of this document.
 
 You can check further information on how to compile pmacct with Avro support in
-the section "Compiling pmacct with Apache Avro support" of this document.
+the section "Compiling pmacct with Apache Avro support" of this document. Also,
+if using Apache Kafka and Apache Avro in conjunction with a Confluent Schema
+Registry, you can compile pmacct with libserdes. To compile:
+
+shell> ./configure --enable-kafka --enable-jansson --enable-avro --enable-serdes
+
+For further info on Confluent Schema Registry and libserdes:
+
+https://docs.confluent.io/current/schema-registry/docs/index.html
+https://github.com/confluentinc/libserdes
 
 Then "make; make install" as usual. Following a configuration snippet showing a
 basic Kafka plugin configuration (assumes: Kafka broker is available at 127.0.0.1
