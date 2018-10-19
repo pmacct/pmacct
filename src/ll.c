@@ -31,7 +31,7 @@
    protocol header and fills a pointer structure */ 
 void eth_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs) 
 {
-  u_int16_t e8021Q, ppp;
+  u_int16_t e8021Q, ppp, cfp;
   struct eth_header *eth_pk;
   u_int16_t etype, caplen = h->caplen, nl;
   u_int8_t cursor = 0;
@@ -76,6 +76,21 @@ void eth_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
     etype = ntohs(e8021Q);
     nl += IEEE8021Q_TAGLEN;
     caplen -= IEEE8021Q_TAGLEN;
+    cursor++;
+    goto recurse;
+  }
+
+  /* Process Cisco Fabric Path Header */
+  if (etype == ETHERTYPE_CFP) {
+    if (caplen < CFP_TAGLEN) {
+      pptrs->iph_ptr = NULL;
+      return;
+    }
+
+    memcpy(&cfp, pptrs->packet_ptr+nl+CFP_TAGLEN-2, 2);
+    etype = ntohs(cfp);
+    nl += CFP_TAGLEN;
+    caplen -= CFP_TAGLEN;
     cursor++;
     goto recurse;
   }
