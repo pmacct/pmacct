@@ -91,6 +91,7 @@ void usage_daemon(char *prog_name)
   printf("  -r  \tRefresh time (in seconds)\n");
   printf("  -O  \t[ formatted | csv | json | avro ] \n\tOutput format\n");
   printf("  -o  \tPath to output file\n");
+  printf("  -M  \tPrint event init/close marker messages\n");
   printf("  -A  \tAppend output (applies to -o)\n");
   printf("  -E  \tCSV format separator (applies to -O csv, DEFAULT: ',')\n");
   printf("\n");
@@ -270,6 +271,10 @@ int main(int argc,char **argv, char **envp)
     case 'o':
       strlcpy(cfg_cmdline[rows], "print_output_file: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
+    case 'M':
+      strlcpy(cfg_cmdline[rows], "print_markers: true", SRVBUFLEN);
       rows++;
       break;
     case 'A':
