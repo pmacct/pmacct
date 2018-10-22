@@ -277,8 +277,7 @@ int main(int argc,char **argv, char **envp)
       rows++;
       break;
     case 'A':
-      strlcpy(cfg_cmdline[rows], "print_output_file_append: ", SRVBUFLEN);
-      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      strlcpy(cfg_cmdline[rows], "print_output_file_append: true", SRVBUFLEN);
       rows++;
       break;
     case 'E':
