@@ -36,9 +36,9 @@ void setnonblocking(int sock)
 {
   int opts;
 
-  opts = fcntl(sock,F_GETFL);
+  opts = fcntl(sock, F_GETFL);
   opts = (opts | O_NONBLOCK);
-  fcntl(sock,F_SETFL,opts);
+  fcntl(sock, F_SETFL, opts);
 }
 
 void setblocking(int sock)
@@ -377,7 +377,8 @@ FILE *open_output_file(char *filename, char *mode, int lock)
   FILE *file = NULL;
   uid_t owner = -1;
   gid_t group = -1;
-  int ret;
+  struct stat st;
+  int ret, fd;
 
   if (!filename || !mode) return file;
 
@@ -390,14 +391,28 @@ FILE *open_output_file(char *filename, char *mode, int lock)
     return file;
   }
 
-  file = fopen(filename, mode); 
+  if (!stat(filename, &st)) {
+    if (st.st_mode & S_IFIFO) {
+      fd = open(filename, O_NONBLOCK, mode);
+      file = fdopen(fd, mode);
+    }
+  }
+
+  if (!file) file = fopen(filename, mode); 
 
   if (file) {
+    fd = fileno(file);
+
+    if (!fstat(fd, &st)) {
+      if (st.st_mode == S_IFIFO) setnonblocking(fd);
+    }
+    else Log(LOG_WARNING, "WARN ( %s/%s ): [%s] open_output_file(): fstat() failed (%s).\n", config.name, config.type, filename, strerror(errno));
+
     if (chown(filename, owner, group) == -1)
       Log(LOG_WARNING, "WARN ( %s/%s ): [%s] open_output_file(): chown() failed (%s).\n", config.name, config.type, filename, strerror(errno));
 
     if (lock) {
-      if (file_lock(fileno(file))) {
+      if (file_lock(fd)) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): [%s] open_output_file(): file_lock() failed.\n", config.name, config.type, filename);
 	file = NULL;
       }
