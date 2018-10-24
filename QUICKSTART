@@ -2170,13 +2170,15 @@ A sample of both the Streaming Telemetry msglog and dump formats are captured in
 the following document: docs/MSGLOG_DUMP_FORMATS
 
 
-XIX. Running the print plugin to write to flat-files
-pmacct can also output to files via the 'print' plugin. Dynamic filenames are
-supported. Output is either text-based using JSON, CSV or formatted outputs, or
-binary-based using the Apache Avro file container ('print_output' directive).
-Interval between writes can be configured via the 'print_refresh_time'
-directive. An example follows on how to write to files in CSV format, every 15
-minutes and aggregate data in 15 minutes time-bins (print_history):
+XIX. Running the print plugin to write to regular files and named pipes
+pmacct can also output to regular files and named pipes via the 'print' plugin.
+Dynamic filenames are supported. Output encoding is either text-based using
+JSON or CSV or binary schema-based using Apache Avro; encoding can be set
+via the 'print_output' config directive.
+
+Interval between writes can be configured via the 'print_refresh_time' config
+directive. An example follows on how to write to regular files in CSV format,
+every 15 minutes and aggregate data in 15 minutes time-bins (print_history):
 
 print_refresh_time: 900
 print_history: 15m
@@ -2214,8 +2216,14 @@ print_history: 15m
 print_history_roundoff: m
 print_output_file_append: true 
 
-Writing to flat-files is also a suitable method to ingest data into 3rd
-party applications (typically, but not limited to, noSQL databases like
+Writing to named pipes is an easy way to stream data into 3rd party tools
+without adding external dependencies (ie. RabbitMQ, Kafka). The named pipe
+must be manually created before starting the pmacct daemon. From a config
+standpoint using a named pipe is transparent and hence all the examples
+provided so far in this section do apply to named pipes as well.  
+
+Writing to regular files is a suitable method to batch ingest data into
+3rd party tools (typically, but not limited to, modern noSQL databases like
 ElasticSearch, InfluxDB, etc.). An example is the pmacct-to-elasticsearch
 project https://github.com/pierky/pmacct-to-elasticsearch . 
 
