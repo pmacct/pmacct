@@ -385,28 +385,38 @@ FILE *open_output_file(char *filename, char *mode, int lock)
   if (config.files_uid) owner = config.files_uid;
   if (config.files_gid) group = config.files_gid;
 
+  /* create dir structure to get to file, if needed */
   ret = mkdir_multilevel(filename, TRUE, owner, group);
   if (ret) {
     Log(LOG_ERR, "ERROR ( %s/%s ): [%s] open_output_file(): mkdir_multilevel() failed.\n", config.name, config.type, filename);
     return file;
   }
 
+  /* handling FIFOs */
   if (!stat(filename, &st)) {
     if (st.st_mode & S_IFIFO) {
-      fd = open(filename, O_NONBLOCK, mode);
-      file = fdopen(fd, mode);
+      fd = open(filename, (O_RDWR|O_NONBLOCK));
+
+      if (fd == ERR) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): [%s] open_output_file(): open() failed (%s).\n", config.name, config.type, filename, strerror(errno));
+        return file;
+      }
+      else {
+	file = fdopen(fd, mode);
+
+        if (!file) {
+          Log(LOG_ERR, "ERROR ( %s/%s ): [%s] open_output_file(): fdopen() failed (%s).\n", config.name, config.type, filename, strerror(errno));
+          return file;
+        }
+      }
     }
   }
 
+  /* handling regular files */
   if (!file) file = fopen(filename, mode); 
 
   if (file) {
     fd = fileno(file);
-
-    if (!fstat(fd, &st)) {
-      if (st.st_mode == S_IFIFO) setnonblocking(fd);
-    }
-    else Log(LOG_WARNING, "WARN ( %s/%s ): [%s] open_output_file(): fstat() failed (%s).\n", config.name, config.type, filename, strerror(errno));
 
     if (chown(filename, owner, group) == -1)
       Log(LOG_WARNING, "WARN ( %s/%s ): [%s] open_output_file(): chown() failed (%s).\n", config.name, config.type, filename, strerror(errno));
