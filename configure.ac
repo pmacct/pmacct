@@ -554,7 +554,7 @@ AC_ARG_ENABLE(pgsql,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([PGSQL], [libpq >= 9.3], [
+    PKG_CHECK_MODULES([PGSQL], [libpq >= 8.4], [
       PLUGINS="${PLUGINS} pgsql"
       USING_SQL="yes"
       USING_PGSQL="yes"
@@ -563,6 +563,7 @@ AC_ARG_ENABLE(pgsql,
       _save_LIBS="$LIBS"
       LIBS="$LIBS $PGSQL_LIBS"
       AC_CHECK_LIB([pq], [PQexec])
+      AC_CHECK_FUNCS([PQlibVersion])
       LIBS="$_save_LIBS"
       _save_CFLAGS="$CFLAGS"
       CFLAGS="$CFLAGS $PGSQL_CFLAGS"

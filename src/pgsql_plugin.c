@@ -976,5 +976,9 @@ void PG_init_default_values(struct insert_data *idata)
 
 void PG_postgresql_get_version()
 {
+#if defined HAVE_PQLIBVERSION
   printf("PostgreSQL %u\n", PQlibVersion());
+#else
+  printf("PostgreSQL\n");
+#endif
 }
