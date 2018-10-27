@@ -1030,6 +1030,13 @@ AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([getopt.h sys/select.h sys/time.h])
 
+dnl Extra checks for header files
+AC_CHECK_HEADERS([arpa/inet.h assert.h ctype.h dirent.h dlfcn.h errno.h fcntl.h grp.h inttypes.h])
+AC_CHECK_HEADERS([limits.h malloc.h netdb.h net/if.h netinet/in.h netinet/in_systm.h netinet/ip.h])
+AC_CHECK_HEADERS([netinet/udp.h pthread.h pwd.h signal.h string.h sys/ansi.h sys/errno.h sys/file.h])
+AC_CHECK_HEADERS([sys/ioctl.h syslog.h sys/mbuf.h sys/mman.h sys/param.h sys/poll.h sys/resource.h])
+AC_CHECK_HEADERS([sys/socket.h sys/stat.h sys/types.h sys/un.h sys/utsname.h time.h])
+
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_TYPE(u_int64_t, [AC_DEFINE(HAVE_U_INT64_T, 1)])
 AC_CHECK_TYPE(u_int32_t, [AC_DEFINE(HAVE_U_INT32_T, 1)])
@@ -1159,7 +1166,7 @@ AC_ARG_ENABLE(st-bins,
 dnl Checks for library functions.
 AC_TYPE_SIGNAL
 
-AC_CHECK_FUNCS([strlcpy vsnprintf setproctitle mallopt tdestroy])
+AC_CHECK_FUNCS([strlcpy setproctitle mallopt tdestroy])
 
 dnl Check for SO_REUSEPORT
 AC_CHECK_DECL([SO_REUSEPORT],
