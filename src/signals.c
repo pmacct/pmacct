@@ -71,6 +71,13 @@ void handle_falling_child()
 	  if (config.pidfile) remove_pid_file(config.pidfile);
           exit(1);
         }
+	else {
+	  if (config.plugin_exit_any) {
+            Log(LOG_WARNING, "WARN ( %s/%s ): one or more plugins did exit (plugin_exit_any). Shutting down.\n", config.name, config.type);
+	    if (config.pidfile) remove_pid_file(config.pidfile);
+	    exit_all(1);
+	  }
+	}
       }
       failed_plugins[j] = 0;
     }
@@ -89,6 +96,13 @@ void handle_falling_child()
       Log(LOG_WARNING, "WARN ( %s/%s ): no more plugins active. Shutting down.\n", config.name, config.type);
       if (config.pidfile) remove_pid_file(config.pidfile);
       exit(1);
+    }
+    else {
+      if (config.plugin_exit_any) {
+	Log(LOG_WARNING, "WARN ( %s/%s ): one or more plugins did exit (plugin_exit_any). Shutting down.\n", config.name, config.type);
+	if (config.pidfile) remove_pid_file(config.pidfile);
+	exit_all(1);
+      }
     }
   }
 

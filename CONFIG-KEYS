@@ -322,6 +322,15 @@ DESC:           Defines the messages high watermark, that is, "The high water ma
 		value of zero means no limit.".
 DEFAULT:        0
 
+KEY:		plugin_exit_any
+VALUES:		[ true | false ]
+DESC:		Daemons gracefully shut down (core process and all plugins) if either the core
+		process or all the registered plugins bail out. Setting this to true makes the
+		daemon to gracefully shut down in case any single one of the plugins bails out
+		and regardless there may be more plugins still active.
+DEFAULT:	false
+
+
 KEY:		files_umask 
 DESC:		Defines the mask for newly created files (log, pid, etc.) and their related directory
 		structure. A mask less than "002" is not accepted due to security reasons.

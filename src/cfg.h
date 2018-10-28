@@ -97,6 +97,7 @@ struct configuration {
   int pipe_zmq_retry;
   int pipe_zmq_profile;
   int pipe_zmq_hwm;
+  int plugin_exit_any;
   int files_umask;
   int files_uid;
   int files_gid;

@@ -125,6 +125,7 @@ EXT int cfg_key_plugin_pipe_zmq(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_zmq_retry(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_zmq_profile(char *, char *, char *);
 EXT int cfg_key_plugin_pipe_zmq_hwm(char *, char *, char *);
+EXT int cfg_key_plugin_exit_any(char *, char *, char *);
 EXT int cfg_key_networks_mask(char *, char *, char *);
 EXT int cfg_key_networks_file(char *, char *, char *);
 EXT int cfg_key_networks_file_filter(char *, char *, char *);

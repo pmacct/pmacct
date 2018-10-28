@@ -349,6 +349,7 @@ static const struct _dictionary_line dictionary[] = {
   {"plugin_pipe_zmq_retry", cfg_key_plugin_pipe_zmq_retry},
   {"plugin_pipe_zmq_profile", cfg_key_plugin_pipe_zmq_profile},
   {"plugin_pipe_zmq_hwm", cfg_key_plugin_pipe_zmq_hwm},
+  {"plugin_exit_any", cfg_key_plugin_exit_any},
   {"interface", cfg_key_pcap_interface}, 		/* Legacy key */
   {"interface_wait", cfg_key_pcap_interface_wait},	/* Legacy key */
   {"files_umask", cfg_key_files_umask},
