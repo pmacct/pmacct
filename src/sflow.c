@@ -634,13 +634,20 @@ void readExtendedUrl(SFSample *sample)
   -----------------___________________________------------------
 */
 
-void mplsLabelStack(SFSample *sample, char *fieldName)
+void mplsLabelStack(SFSample *sample, u_int8_t direction)
 {
-  sample->lstk.depth = getData32(sample);
-  /* just point at the lablelstack array */
-  if (sample->lstk.depth > 0) sample->lstk.stack = (u_int32_t *)sample->datap;
-  /* and skip over it in the input */
-  skipBytes(sample, sample->lstk.depth * 4);
+  if (direction == DIRECTION_IN) {
+    sample->lstk.depth = getData32(sample);
+    /* just point at the lablelstack array */
+    if (sample->lstk.depth > 0) sample->lstk.stack = (u_int32_t *)sample->datap;
+    /* and skip over it in the input */
+    skipBytes(sample, sample->lstk.depth * 4);
+  }
+  else if (direction == DIRECTION_OUT) {
+    sample->lstk_out.depth = getData32(sample);
+    if (sample->lstk_out.depth > 0) sample->lstk_out.stack = (u_int32_t *)sample->datap;
+    skipBytes(sample, sample->lstk_out.depth * 4);
+  }
 }
 
 /*_________________---------------------------__________________
@@ -652,8 +659,8 @@ void readExtendedMpls(SFSample *sample)
 {
   getAddress(sample, &sample->mpls_nextHop);
 
-  mplsLabelStack(sample, "mpls_input_stack");
-  mplsLabelStack(sample, "mpls_output_stack");
+  mplsLabelStack(sample, DIRECTION_IN);
+  mplsLabelStack(sample, DIRECTION_OUT);
   
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_MPLS;
 }
@@ -681,10 +688,10 @@ void readExtendedMplsTunnel(SFSample *sample)
 {
 #define SA_MAX_TUNNELNAME_LEN 100
   char tunnel_name[SA_MAX_TUNNELNAME_LEN+1];
-  u_int32_t tunnel_id, tunnel_cos;
+  u_int32_t tunnel_cos;
   
   getString(sample, tunnel_name, SA_MAX_TUNNELNAME_LEN); 
-  tunnel_id = getData32(sample);
+  sample->mpls_tunnel_id = getData32(sample);
   tunnel_cos = getData32(sample);
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_MPLS_TUNNEL;

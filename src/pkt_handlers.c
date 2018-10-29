@@ -5052,6 +5052,8 @@ void SF_mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packe
   SFSample *sample = (SFSample *) pptrs->f_data;
   u_int32_t lvalue = 0, *label = (u_int32_t *) sample->lstk.stack;
 
+  pmpls->mpls_stack_depth = 0;
+
   if (label) {
     do {
       lvalue = ntohl(*label);

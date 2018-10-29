@@ -136,6 +136,7 @@ typedef struct _SFSample {
 
   /* MPLS hack */
   SFLLabelStack lstk;
+  SFLLabelStack lstk_out;
 
   /* extended data fields */
   u_int32_t num_extended;
@@ -195,6 +196,7 @@ typedef struct _SFSample {
   /* mpls */
   SFLAddress mpls_nextHop;
   u_int32_t mpls_vll_vc_id;
+  u_int32_t mpls_tunnel_id;
 
   /* nat */
   SFLAddress nat_src;
@@ -321,7 +323,7 @@ EXT void readExtendedGateway_v2(SFSample *);
 EXT void readExtendedGateway(SFSample *);
 EXT void readExtendedUser(SFSample *);
 EXT void readExtendedUrl(SFSample *);
-EXT void mplsLabelStack(SFSample *, char *);
+EXT void mplsLabelStack(SFSample *, u_int8_t);
 EXT void readExtendedMpls(SFSample *);
 EXT void readExtendedNat(SFSample *);
 EXT void readExtendedMplsTunnel(SFSample *);
