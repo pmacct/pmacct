@@ -998,6 +998,28 @@ int PT_map_mpls_vpn_rd_handler(char *filename, struct id_entry *e, char *value, 
   else return TRUE; 
 }
 
+int PT_map_mpls_pw_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0;
+  char *endptr;
+
+  e->key.mpls_pw_id.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+  e->key.mpls_pw_id.n = strtoul(value, &endptr, 10);
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_MPLS_PW_ID) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'mpls_pw_id' clauses part of the same statement.\n", config.name, config.type, filename);
+      return TRUE;
+    }
+  }
+
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_mpls_pw_id_handler;
+  else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_mpls_pw_id_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_MPLS_PW_ID;
+
+  return FALSE;
+}
+
 int PT_map_src_mac_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0;
@@ -1296,9 +1318,6 @@ int PT_map_fwdstatus_handler(char *filename, struct id_entry *e, char *value, st
 
   return FALSE;
 }
-
-
-
 
 int pretag_dummy_ip_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
@@ -1884,6 +1903,28 @@ int pretag_mpls_vpn_rd_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   else return (TRUE ^ entry->key.mpls_vpn_rd.neg);
 }
 
+int pretag_mpls_pw_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int32_t tmp32 = 0, mpls_pw_id = 0;;
+
+  switch (hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_PSEUDOWIREID].len) {
+      memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_PSEUDOWIREID].off, 4);
+      mpls_pw_id = ntohl(tmp32);
+    } 
+
+    if (entry->key.mpls_pw_id.n == mpls_pw_id) return (FALSE | entry->key.mpls_pw_id.neg);
+    else return (TRUE ^ entry->key.mpls_pw_id.neg);
+  default:
+    return TRUE; /* this field does not exist: condition is always true */
+  }
+}
+
 int pretag_src_mac_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
@@ -2330,6 +2371,15 @@ int SF_pretag_vlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   if (entry->key.vlan_id.n == sample->in_vlan ||
       entry->key.vlan_id.n == sample->out_vlan) return (FALSE | entry->key.vlan_id.neg);
   else return (TRUE ^ entry->key.vlan_id.neg);
+}
+
+int SF_pretag_mpls_pw_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  if (entry->key.mpls_pw_id.n == sample->mpls_vll_vc_id) return (FALSE | entry->key.mpls_pw_id.neg);
+  else return (TRUE ^ entry->key.mpls_pw_id.neg);
 }
 
 int SF_pretag_src_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
@@ -2953,6 +3003,18 @@ int PT_map_index_entries_mpls_vpn_rd_handler(struct id_entry *e, pm_hash_serial_
   return FALSE;
 }
 
+int PT_map_index_entries_mpls_pw_id_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !hash_serializer || !src_e) return TRUE;
+
+  memcpy(&e->key.mpls_pw_id, &src_e->key.mpls_pw_id, sizeof(pt_uint32_t));
+  hash_serial_append(hash_serializer, (char *)&src_e->key.mpls_pw_id.n, sizeof(u_int32_t), TRUE);
+
+  return FALSE;
+}
+
 int PT_map_index_entries_mpls_label_bottom_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct id_entry *src_e = (struct id_entry *) src;
@@ -3466,6 +3528,33 @@ int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_entry *e, pm_hash_serial_t 
 
   hash_serial_append(hash_serializer, (char *)&e->key.mpls_vpn_rd.rd, sizeof(rd_t), FALSE);
 
+  return FALSE;
+}
+
+int PT_map_index_fdata_mpls_pw_id_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  u_int32_t tmp32 = 0;
+  if (config.acct_type == ACCT_NF) {
+    switch (hdr->version) {
+    case 10:
+    case 9:
+      if (tpl->tpl[NF9_PSEUDOWIREID].len) {
+	memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_PSEUDOWIREID].off, 4);
+	e->key.mpls_pw_id.n = ntohl(tmp32);
+      }
+    }
+  }
+  else if (config.acct_type == ACCT_SF) {
+    e->key.mpls_pw_id.n = sample->mpls_vll_vc_id;
+  }
+  else return TRUE;
+
+  hash_serial_append(hash_serializer, (char *)&e->key.mpls_pw_id.n, sizeof(u_int32_t), FALSE);
   return FALSE;
 }
 

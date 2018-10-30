@@ -66,6 +66,7 @@
 #define PRETAG_FWDSTATUS_ID		0x0000000400000000ULL
 #define PRETAG_SRC_NET			0x0000000800000000ULL
 #define PRETAG_DST_NET			0x0000001000000000ULL
+#define PRETAG_MPLS_PW_ID		0x0000002000000000ULL
 
 #define PRETAG_MAP_RCODE_ID		0x00000100
 #define PRETAG_MAP_RCODE_ID2		0x00000200
@@ -179,6 +180,7 @@ struct id_entry_key {
   char *comms[16]; /* XXX: MAX_BGP_COMM_PATTERNS = 16 */
   pt_uint32_t mpls_vpn_id;
   pt_rd_t mpls_vpn_rd;
+  pt_uint32_t mpls_pw_id;
   pt_uint32_t fwdstatus;
   struct bpf_program filter;
 };
