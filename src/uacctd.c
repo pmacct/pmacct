@@ -50,7 +50,8 @@ struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channe
 static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
                           struct nflog_data *nfa, void *p)
 {
-  static char jumbo_container[10000];
+  static char* jumbo_container;
+  static ssize_t jumbo_container_sz = 0;
   struct pcap_pkthdr hdr;
   char *pkt = NULL;
   ssize_t pkt_len = nflog_get_payload(nfa, &pkt);
@@ -83,6 +84,19 @@ static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
     cb_data->ifindex_out = nflog_get_outdev(nfa);
 
 #if defined (HAVE_L2)
+  ssize_t req_len = hdr.caplen + (mac_len ? mac_len : ETHER_HDRLEN);
+  if (req_len > jumbo_container_sz) {
+    if (jumbo_container)
+      free(jumbo_container);
+    jumbo_container = malloc(req_len);
+    if (jumbo_container == NULL) {
+      jumbo_container_sz = 0;
+      Log(LOG_ERR, "ERROR ( %s/core ): jumbo_container buffer malloc() failed, packet ignored.\n", config.name);
+      return -1;
+    }
+    jumbo_container_sz = req_len;
+  }
+
   if (mac_len) {
     memcpy(jumbo_container, nflog_get_msg_packet_hwhdr(nfa), mac_len);
     memcpy(jumbo_container + mac_len, pkt, hdr.caplen);
