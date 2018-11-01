@@ -546,6 +546,7 @@ struct pkt_bgp_primitives {
   u_int32_t src_local_pref;
   u_int32_t src_med;
   rd_t mpls_vpn_rd;
+  u_int32_t mpls_pw_id;
 };
 
 struct pkt_legacy_bgp_primitives {
