@@ -618,6 +618,8 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   	else
             fprintf(f, "%-18s  ", empty_rd);
         }
+
+        if (config.what_to_count_2 & COUNT_MPLS_PW_ID) fprintf(f, "%-10u  ", pbgp->mpls_pw_id);
   
         if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) {
           addr_to_str(src_host, &data->src_ip);
@@ -1065,6 +1067,8 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
           bgp_rd2str(rd_str, &pbgp->mpls_vpn_rd);
           fprintf(f, "%s%s", write_sep(sep, &count), rd_str);
         }
+
+        if (config.what_to_count_2 & COUNT_MPLS_PW_ID) fprintf(f, "%s%u", write_sep(sep, &count), pbgp->mpls_pw_id);
   
         if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) {
           addr_to_str(src_host, &data->src_ip);
@@ -1371,6 +1375,7 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count & COUNT_IN_IFACE) fprintf(f, "IN_IFACE    ");
   if (config.what_to_count & COUNT_OUT_IFACE) fprintf(f, "OUT_IFACE   ");
   if (config.what_to_count & COUNT_MPLS_VPN_RD) fprintf(f, "MPLS_VPN_RD         ");
+  if (config.what_to_count_2 & COUNT_MPLS_PW_ID) fprintf(f, "MPLS_PW_ID  ");
 #if defined ENABLE_IPV6
   if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) fprintf(f, "SRC_IP                                         ");
   if (config.what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) fprintf(f, "SRC_NET                                        ");
@@ -1505,6 +1510,7 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count & COUNT_IN_IFACE) fprintf(f, "%sIN_IFACE", write_sep(sep, &count));
   if (config.what_to_count & COUNT_OUT_IFACE) fprintf(f, "%sOUT_IFACE", write_sep(sep, &count));
   if (config.what_to_count & COUNT_MPLS_VPN_RD) fprintf(f, "%sMPLS_VPN_RD", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_MPLS_PW_ID) fprintf(f, "%sMPLS_PW_ID", write_sep(sep, &count));
   if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) fprintf(f, "%sSRC_IP", write_sep(sep, &count));
   if (config.what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) fprintf(f, "%sSRC_NET", write_sep(sep, &count));
   if (config.what_to_count & COUNT_DST_HOST) fprintf(f, "%sDST_IP", write_sep(sep, &count));

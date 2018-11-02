@@ -223,6 +223,7 @@ EXT void count_src_as_path_handler(const struct db_cache *, struct insert_data *
 EXT void count_src_local_pref_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_src_med_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_mpls_vpn_rd_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_mpls_pw_id_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_peer_src_as_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_peer_dst_as_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_peer_src_ip_handler(const struct db_cache *, struct insert_data *, int, char **, char **);

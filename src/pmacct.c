@@ -89,7 +89,7 @@ void usage_client(char *prog)
   printf("  -n\t<bytes | packets | flows | all> \n\tSelect the counters to print (applies to -N)\n");
   printf("  -S\tSum counters instead of returning a single counter for each request (applies to -N)\n");
   printf("  -a\tDisplay all table fields (even those currently unused)\n");
-  printf("  -c\t< src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | lrg_comm | \n\t as_path | peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | \n\t src_med | src_ext_comm | src_lrg_comm | src_local_pref | mpls_vpn_rd | etype | sampling_rate | \n\t sampling_direction | post_nat_src_host | post_nat_dst_host | post_nat_src_port | post_nat_dst_port | \n\t nat_event | tunnel_src_host | tunnel_dst_host | tunnel_protocol | tunnel_tos | timestamp_start | \n\t timestamp_end | timestamp_arrival | mpls_label_top | mpls_label_bottom | mpls_stack_depth | \n\t label | src_host_country | dst_host_country | export_proto_seqno | export_proto_version | \n\t export_proto_sysid | src_host_pocode | dst_host_pocode | src_host_coords | dst_host_coords > \n\tSelect primitives to match (required by -N and -M)\n");
+  printf("  -c\t< src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | lrg_comm | \n\t as_path | peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | src_as_path | src_std_comm | \n\t src_med | src_ext_comm | src_lrg_comm | src_local_pref | mpls_vpn_rd | mpls_pw_id | etype | \n\t sampling_rate | sampling_direction | post_nat_src_host | post_nat_dst_host | post_nat_src_port | \n\t post_nat_dst_port | nat_event | tunnel_src_host | tunnel_dst_host | tunnel_protocol | tunnel_tos | \n\t timestamp_start | timestamp_end | timestamp_arrival | mpls_label_top | mpls_label_bottom | \n\t mpls_stack_depth | label | src_host_country | dst_host_country | export_proto_seqno | \n\t export_proto_version | export_proto_sysid | src_host_pocode | dst_host_pocode | src_host_coords | \n\t dst_host_coords > \n\tSelect primitives to match (required by -N and -M)\n");
   printf("  -T\t<bytes | packets | flows>,[<# how many>] \n\tOutput top N statistics (applies to -M and -s)\n");
   printf("  -e\tClear statistics\n");
   printf("  -i\tShow time (in seconds) since statistics were last cleared (ie. pmacct -e)\n");
@@ -315,6 +315,7 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count & COUNT_PEER_DST_IP) printf("PEER_DST_IP      ");
 #endif
     if (what_to_count & COUNT_MPLS_VPN_RD) printf("MPLS_VPN_RD         ");
+    if (what_to_count_2 & COUNT_MPLS_PW_ID) printf("MPLS_PW_ID  ");
 #if defined ENABLE_IPV6
     if (what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) printf("SRC_IP                                         ");
     if (what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) printf("SRC_NET                                        ");
@@ -570,6 +571,7 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     if (what_to_count & COUNT_PEER_DST_IP) printf("%sPEER_DST_IP", write_sep(sep, &count));
 #endif
     if (what_to_count & COUNT_MPLS_VPN_RD) printf("%sMPLS_VPN_RD", write_sep(sep, &count));
+    if (what_to_count_2 & COUNT_MPLS_PW_ID) printf("%sMPLS_PW_ID", write_sep(sep, &count));
     if (what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) printf("%sSRC_IP", write_sep(sep, &count));
     if (what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) printf("%sSRC_NET", write_sep(sep, &count));
     if (what_to_count & COUNT_DST_HOST) printf("%sDST_IP", write_sep(sep, &count));
@@ -1037,6 +1039,10 @@ int main(int argc,char **argv)
         else if (!strcmp(count_token[count_index], "mpls_vpn_rd")) {
           count_token_int[count_index] = COUNT_INT_MPLS_VPN_RD;
           what_to_count |= COUNT_MPLS_VPN_RD;
+        }
+        else if (!strcmp(count_token[count_index], "mpls_pw_id")) {
+          count_token_int[count_index] = COUNT_INT_MPLS_PW_ID;
+          what_to_count_2 |= COUNT_MPLS_PW_ID;
         }
         else if (!strcmp(count_token[count_index], "post_nat_src_host")) {
           count_token_int[count_index] = COUNT_INT_POST_NAT_SRC_HOST;
@@ -1892,6 +1898,11 @@ int main(int argc,char **argv)
             exit(1);
           }
         }
+        else if (!strcmp(count_token[match_string_index], "mpls_pw_id")) {
+          char *endptr;
+
+          request.pbgp.mpls_pw_id = strtoul(match_string_token, &endptr, 10);
+        }
         else if (!strcmp(count_token[match_string_index], "post_nat_src_host")) {
           if (!str_to_addr(match_string_token, &request.pnat.post_nat_src_ip)) {
             printf("ERROR: post_nat_src_host: Invalid IP address: '%s'\n", match_string_token);
@@ -2469,6 +2480,11 @@ int main(int argc,char **argv)
           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-18s  ", rd_str);
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), rd_str);
 	}
+
+        if (!have_wtc || (what_to_count_2 & COUNT_MPLS_PW_ID)) {
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10u  ", pbgp->mpls_pw_id);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), pbgp->mpls_pw_id);
+        }
 
 	if (!have_wtc || (what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST))) {
 	  addr_to_str(ip_address, &acc_elem->primitives.src_ip);
@@ -3559,6 +3575,8 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
     pmc_bgp_rd2str(rd_str, &pbgp->mpls_vpn_rd);
     json_object_set_new_nocheck(obj, "mpls_vpn_rd", json_string(rd_str));
   }
+
+  if (wtc_2 & COUNT_MPLS_PW_ID) json_object_set_new_nocheck(obj, "mpls_pw_id", json_integer((json_int_t)pbgp->mpls_pw_id));
 
   if (wtc & COUNT_SRC_HOST) {
     addr_to_str(src_host, &pbase->src_ip);

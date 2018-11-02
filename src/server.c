@@ -569,6 +569,7 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
     if (w & COUNT_PEER_SRC_IP) memcpy(&d2->peer_src_ip, &s2->peer_src_ip, sizeof(d2->peer_src_ip));
     if (w & COUNT_PEER_DST_IP) memcpy(&d2->peer_dst_ip, &s2->peer_dst_ip, sizeof(d2->peer_dst_ip));
     if (w & COUNT_MPLS_VPN_RD) memcpy(&d2->mpls_vpn_rd, &s2->mpls_vpn_rd, sizeof(rd_t)); 
+    if (w2 & COUNT_MPLS_PW_ID) memcpy(&d2->mpls_pw_id, &s2->mpls_pw_id, sizeof(d2->mpls_pw_id)); 
   }
 
   if (extras->off_pkt_lbgp_primitives && s5) {

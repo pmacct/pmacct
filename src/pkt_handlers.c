@@ -422,7 +422,7 @@ void evaluate_packet_handlers()
       }
     }
 
-    if (channels_list[index].aggregation & COUNT_MPLS_PW_ID) {
+    if (channels_list[index].aggregation_2 & COUNT_MPLS_PW_ID) {
       if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_pw_id_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_mpls_pw_id_handler;
       else primitives--;

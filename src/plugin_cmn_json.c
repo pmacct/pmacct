@@ -206,6 +206,11 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
     idx++;
   }
 
+  if (wtc_2 & COUNT_MPLS_PW_ID) {
+    cjhandler[idx] = compose_json_mpls_pw_id;
+    idx++;
+  }
+
   if (wtc & (COUNT_SRC_HOST|COUNT_SUM_HOST)) {
     cjhandler[idx] = compose_json_src_host;
     idx++;
@@ -720,6 +725,11 @@ void compose_json_mpls_vpn_rd(json_t *obj, struct chained_cache *cc)
 
   bgp_rd2str(rd_str, &cc->pbgp->mpls_vpn_rd);
   json_object_set_new_nocheck(obj, "mpls_vpn_rd", json_string(rd_str));
+}
+
+void compose_json_mpls_pw_id(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "mpls_pw_id", json_integer((json_int_t)cc->pbgp->mpls_pw_id));
 }
 
 void compose_json_src_host(json_t *obj, struct chained_cache *cc)

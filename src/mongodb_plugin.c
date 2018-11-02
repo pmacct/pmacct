@@ -623,7 +623,9 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
         bgp_rd2str(rd_str, &pbgp->mpls_vpn_rd);
         bson_append_string(bson_elem, "mpls_vpn_rd", rd_str);
       }
-  
+
+      if (config.what_to_count_2 & COUNT_MPLS_PW_ID) bson_append_int(bson_elem, "mpls_pw_id", pbgp->mpls_pw_id);
+
       if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) {
         addr_to_str(src_host, &data->src_ip);
         bson_append_string(bson_elem, "ip_src", src_host);

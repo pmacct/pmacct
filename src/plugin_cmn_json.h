@@ -69,6 +69,7 @@ EXT void compose_json_src_med(json_t *, struct chained_cache *);
 EXT void compose_json_in_iface(json_t *, struct chained_cache *);
 EXT void compose_json_out_iface(json_t *, struct chained_cache *);
 EXT void compose_json_mpls_vpn_rd(json_t *, struct chained_cache *);
+EXT void compose_json_mpls_pw_id(json_t *, struct chained_cache *);
 EXT void compose_json_src_host(json_t *, struct chained_cache *);
 EXT void compose_json_src_net(json_t *, struct chained_cache *);
 EXT void compose_json_dst_host(json_t *, struct chained_cache *);

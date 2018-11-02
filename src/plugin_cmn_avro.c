@@ -147,6 +147,9 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc & COUNT_MPLS_VPN_RD)
     avro_schema_record_field_append(schema, "mpls_vpn_rd", avro_schema_string());
 
+  if (wtc_2 & COUNT_MPLS_PW_ID)
+    avro_schema_record_field_append(schema, "mpls_pw_id", avro_schema_long());
+
   if (wtc & (COUNT_SRC_HOST|COUNT_SUM_HOST))
     avro_schema_record_field_append(schema, "ip_src", avro_schema_string());
 
@@ -564,6 +567,11 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     bgp_rd2str(rd_str, &pbgp->mpls_vpn_rd);
     check_i(avro_value_get_by_name(&value, "mpls_vpn_rd", &field, NULL));
     check_i(avro_value_set_string(&field, rd_str));
+  }
+
+  if (wtc_2 & COUNT_MPLS_PW_ID) {
+    check_i(avro_value_get_by_name(&value, "mpls_pw_id", &field, NULL));
+    check_i(avro_value_set_long(&field, pbgp->mpls_pw_id));
   }
 
   if (wtc & (COUNT_SRC_HOST|COUNT_SUM_HOST)) {
