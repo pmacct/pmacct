@@ -67,8 +67,8 @@ static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
   default: return 0;
   }
 
-  if (pkt_len == -1)
-    return -1;
+  if (pkt_len == ERR) return ERR;
+
   if (nflog_get_timestamp(nfa, &hdr.ts) < 0) {
     gettimeofday(&hdr.ts, NULL);
   }
@@ -92,7 +92,7 @@ static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
     if (jumbo_container == NULL) {
       jumbo_container_sz = 0;
       Log(LOG_ERR, "ERROR ( %s/core ): jumbo_container buffer malloc() failed, packet ignored.\n", config.name);
-      return -1;
+      return ERR;
     }
     jumbo_container_sz = req_len;
   }
@@ -976,7 +976,7 @@ int main(int argc,char **argv, char **envp)
   /* Main loop: if pcap_loop() exits maybe an error occurred; we will try closing
      and reopening again our listening device */
   for (;;) {
-    if (len == -1) {
+    if (len == ERR) {
       if (errno != EAGAIN) {
         /* We can't deal with permanent errors.
          * Just sleep a bit.
