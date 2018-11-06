@@ -29,3 +29,19 @@ DOCUMENTATION
   * ./configure *[check-out available configure knobs via ./configure --help]* 
   * make
   * make install *[with super-user permission]*
+
+# CONTRIBUTING
+
+- Prerequisites:
+  * Set up git: https://help.github.com/articles/set-up-git/
+  * *[Specify username, a commit email address matching the GitHub profile one, and a SSH key]*
+
+- Code:
+  * Fork the pmacct repo: https://help.github.com/articles/fork-a-repo/
+  * *[Jot down your code in the local clone of your fork, commit and push code changes to your fork]*
+  * Generate a Pull Request: https://help.github.com/articles/about-pull-requests/
+
+- Wiki (documentation and diagrams):
+  * Ask by unicast email to be added to the project collaborators
+  * *[Edit wiki content online or clone it locally and commit and push changes]* 
+  * If having to add a diagram: https://gist.github.com/subfuzion/0d3f19c4f780a7d75ba2
