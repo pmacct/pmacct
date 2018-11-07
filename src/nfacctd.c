@@ -872,14 +872,17 @@ int main(int argc,char **argv, char **envp)
 
   init_classifiers(NULL);
 
-#if defined (WITH_NDPI)
   if (config.classifier_ndpi) {
+#if defined (WITH_NDPI)
     config.handle_fragments = TRUE;
     pm_ndpi_wfl = pm_ndpi_workflow_init();
     pm_ndpi_export_proto_to_class(pm_ndpi_wfl);
+#else
+    Log(LOG_WARNING, "WARN ( %s/core ): Class aggregation not possible due to missing --enable-ndpi\n", config.name);
+    pm_ndpi_wfl = NULL;
+#endif
   }
   else pm_ndpi_wfl = NULL;
-#endif
 
   /* plugins glue: creation */
   load_plugins(&req);
