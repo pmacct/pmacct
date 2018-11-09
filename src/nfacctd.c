@@ -879,10 +879,6 @@ int main(int argc,char **argv, char **envp)
     pm_ndpi_export_proto_to_class(pm_ndpi_wfl);
   }
   else pm_ndpi_wfl = NULL;
-#else
-  if (config.classifier_ndpi) {
-    Log(LOG_WARNING, "WARN ( %s/core ): Class aggregation not possible due to missing --enable-ndpi\n", config.name);
-  }
 #endif
 
   /* plugins glue: creation */

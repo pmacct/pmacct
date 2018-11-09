@@ -1998,17 +1998,6 @@ DESC:           Defines output format for the streamed logging of sFlow counters
 		compiling).
 DEFAULT:	json
 
-KEY:		sql_aggressive_classification 
-VALUES:		[ true | false ]
-DESC:		Usually 5 to 10 packets are required to classify a stream by the 'classifiers' feature. Until
-		the flow is not classified, such packets join the 'unknown' class. As soon as classification
-		engine is successful identifying the stream, the packets are moved to their correct class if
-		they are still cached by the SQL plugin. This directive delays 'unknown' streams - but only
-		those which would have still chances to be correctly classified - from being purged to the DB
-		but only for a small number of consecutive sql_refresh_time slots. It is incompatible with
-		sql_dont_try_update and sql_use_copy directives. This feature/directive is being phased-out.
-DEFAULT:        false
-
 KEY:		sql_locking_style
 VALUES:		[ table | row | none ]
 DESC:		Defines the locking style for the SQL table. MySQL supports "table" and "none" values whereas
