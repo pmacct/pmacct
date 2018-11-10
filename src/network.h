@@ -46,6 +46,7 @@
 #define ETHER_JUMBO_MTU		9000
 #define IEEE8021Q_TAGLEN	4
 #define CFP_TAGLEN	        16
+#define CVNT_TAGLEN		6
 #define IEEE8021AH_LEN		10
 #define PPP_TAGLEN              2
 #define MAX_MCAST_GROUPS	20
@@ -98,6 +99,7 @@ struct token_header {
 #define ETHERTYPE_ISO		0xFEFE		/* OSI */
 #define ETHERTYPE_GRE_ISO	0x00FE		/* OSI over GRE */
 #define ETHERTYPE_CFP		0x8903		/* Cisco FabricPath */
+#define ETHERTYPE_CVNT		0x8926		/* Cisco Virtual Network TAG */
 
 /* PPP protocol definitions */
 #define PPP_HDRLEN      4       /* octets for standard ppp header */

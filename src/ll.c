@@ -31,7 +31,7 @@
    protocol header and fills a pointer structure */ 
 void eth_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs) 
 {
-  u_int16_t e8021Q, ppp, cfp;
+  u_int16_t e8021Q, ppp, cfp, cvnt;
   struct eth_header *eth_pk;
   u_int16_t etype, caplen = h->caplen, nl;
   u_int8_t cursor = 0;
@@ -91,6 +91,21 @@ void eth_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
     etype = ntohs(cfp);
     nl += CFP_TAGLEN;
     caplen -= CFP_TAGLEN;
+    cursor++;
+    goto recurse;
+  }
+
+  /* Process Cisco Virtual Network TAG Header */
+  if (etype == ETHERTYPE_CVNT) {
+    if (caplen < CVNT_TAGLEN) {
+      pptrs->iph_ptr = NULL;
+      return;
+    }
+
+    memcpy(&cvnt, pptrs->packet_ptr+nl+CVNT_TAGLEN-2, 2);
+    etype = ntohs(cvnt);
+    nl += CVNT_TAGLEN;
+    caplen -= CVNT_TAGLEN;
     cursor++;
     goto recurse;
   }
