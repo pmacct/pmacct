@@ -238,8 +238,17 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "tag")) cfg_set_aggregate(filename, value, COUNT_INT_TAG, count_token);
     else if (!strcmp(count_token, "tag2")) cfg_set_aggregate(filename, value, COUNT_INT_TAG2, count_token);
     else if (!strcmp(count_token, "flows")) cfg_set_aggregate(filename, value, COUNT_INT_FLOWS, count_token);
-    else if (!strcmp(count_token, "class_legacy")) cfg_set_aggregate(filename, value, COUNT_INT_CLASS, count_token); // XXX: to disappear
-    else if (!strcmp(count_token, "class")) {
+    else if (!strcmp(count_token, "class_legacy")) cfg_set_aggregate(filename, value, COUNT_INT_CLASS, count_token); // XXX: to deprecate 
+    else if (!strcmp(count_token, "class_frame")) { // XXX: to deprecate
+      if (config.acct_type == ACCT_NF) {
+#if defined (WITH_NDPI)
+        cfg_set_aggregate(filename, value, COUNT_INT_NDPI_CLASS, count_token);
+#else
+        Log(LOG_WARNING, "WARN: [%s] Class aggregation not possible due to missing --enable-ndpi\n", filename);
+#endif
+      }
+    }
+    else if (!strcmp(count_token, "class")) { // XXX: to conciliate and merge with 'class_legacy' and 'class_frame'
       if (config.acct_type == ACCT_NF) {
 	cfg_set_aggregate(filename, value, COUNT_INT_CLASS, count_token);
       }

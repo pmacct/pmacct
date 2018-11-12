@@ -115,6 +115,10 @@ NOTES:		* Some primitives (ie. tag2, timestamp_start, timestamp_end) are not par
 		  2) if using a reporting type aggregation method, it is recommended to split
 		     this primitive in a separate plugin instance instead for sequencing
 		     analysis.  
+		* In nfacctd, undocumented class_frame allows to apply nDPI clssification to
+		  NetFlow v9/IPFIX packets with IE 315 (dataLinkFrameSection). class instead
+		  allows to leverage traditional classification using NetFlow v9/IPFIX IE 94,
+		  95 and 96 (applicationDescription, applicationId and applicationName).
 DEFAULT:	src_host
 
 KEY:		aggregate_primitives [GLOBAL, MAP]
