@@ -1095,6 +1095,11 @@ Please review the standard buffer profiles, plugin_pipe_zmq_profile, in CONFIG-K
 Q21 of FAQS describes how to estimate the amount of flows/samples per second of your
 deployment.
 
+Note: it has been reported that compiling ZeroMQ (ie. 4.2.5) with gcc 7 and gcc 8
+does produce a failing assertion error at runtime (Debian 10 and Ubuntu 18.04 ship
+these gcc versions). Compiling instead ZeroMQ with clang or any gcc release <= 6
+does work without problems.
+
 
 XI. Quickstart guide to packet classification
 Packet classification is a feature available for pmacctd (libpcap-based daemon),
