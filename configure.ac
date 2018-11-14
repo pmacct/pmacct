@@ -287,46 +287,16 @@ AC_ARG_ENABLE(l2,
 	]
 )
 
-AC_MSG_CHECKING([whether to enable IPv6 code])
-AC_ARG_ENABLE(ipv6,
-        [  --enable-ipv6                    Enable IPv6 code (default: yes)],
-	[ 
-		if test x$enableval = x"yes" ; then
-        		AC_MSG_RESULT(yes)
-        		AC_CHECK_FUNCS(inet_pton)
-        		if test x"$ac_cv_func_inet_pton" = x"no"; then
-        			AC_MSG_ERROR(ERROR: missing inet_pton(); disable IPv6 hooks !)
-        		fi
+AC_CHECK_FUNCS(inet_pton)
+if test x"$ac_cv_func_inet_pton" = x"no"; then
+	AC_MSG_ERROR(ERROR: missing inet_pton())
+fi
 
-			AC_CHECK_FUNCS(inet_ntop)
-			if test x"$ac_cv_func_inet_ntop" = x"no"; then
-          			AC_MSG_ERROR(ERROR: missing inet_ntop(); disable IPv6 hooks !)
-        		fi
-
-			AC_DEFINE(ENABLE_IPV6, 1)
-			ipv6support="yes"
-		else
-			AC_MSG_RESULT(no)
-			ipv6support="no"
-		fi
-	],
-	[
-        	AC_MSG_RESULT(yes)
-        		AC_CHECK_FUNCS(inet_pton)
-        		if test x"$ac_cv_func_inet_pton" = x"no"; then
-        			AC_MSG_ERROR(ERROR: missing inet_pton(); disable IPv6 hooks !)
-        		fi
-
-			AC_CHECK_FUNCS(inet_ntop)
-			if test x"$ac_cv_func_inet_ntop" = x"no"; then
-          			AC_MSG_ERROR(ERROR: missing inet_ntop(); disable IPv6 hooks !)
-        		fi
-
-			AC_DEFINE(ENABLE_IPV6, 1)
-		ipv6support="yes"
-		COMPILE_ARGS="${COMPILE_ARGS} '--enable-ipv6'"
-	]
-)
+AC_CHECK_FUNCS(inet_ntop)
+if test x"$ac_cv_func_inet_ntop" = x"no"; then
+	AC_MSG_ERROR(ERROR: missing inet_ntop())
+fi
+AC_DEFINE(ENABLE_IPV6, 1)
 
 AC_MSG_CHECKING([whether to enable IP prefix labels])
 AC_ARG_ENABLE(plabel,
