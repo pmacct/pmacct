@@ -42,9 +42,7 @@ union sockunion
 {
   struct sockaddr sa;
   struct sockaddr_in sin;
-#ifdef ENABLE_IPV6
   struct sockaddr_in6 sin6;
-#endif /* ENABLE_IPV6 */
 };
 
 enum connect_result
@@ -55,11 +53,7 @@ enum connect_result
 };
 
 /* Default address family. */
-#ifdef ENABLE_IPV6
 #define AF_INET_UNION AF_INET6
-#else
-#define AF_INET_UNION AF_INET
-#endif
 
 /* Sockunion address string length.  Same as INET6_ADDRSTRLEN. */
 #define SU_ADDRSTRLEN 46
@@ -80,9 +74,7 @@ enum connect_result
 
 /* shortcut macro to specify address field of struct sockaddr */
 #define sock2ip(X)   (((struct sockaddr_in *)(X))->sin_addr.s_addr)
-#ifdef ENABLE_IPV6
 #define sock2ip6(X)  (((struct sockaddr_in6 *)(X))->sin6_addr.s6_addr)
-#endif /* ENABLE_IPV6 */
 
 #define sockunion_family(X)  (X)->sa.sa_family
 

@@ -86,12 +86,10 @@ free_tlvs (struct tlvs *tlvs)
     isis_list_delete (tlvs->ipv4_ext_reachs);
   if (tlvs->te_ipv4_reachs)
     isis_list_delete (tlvs->te_ipv4_reachs);
-#ifdef ENABLE_IPV6
   if (tlvs->ipv6_addrs)
     isis_list_delete (tlvs->ipv6_addrs);
   if (tlvs->ipv6_reachs)
     isis_list_delete (tlvs->ipv6_reachs);
-#endif /* ENABLE_IPV6 */
   
   return;
 }
@@ -114,11 +112,9 @@ parse_tlvs (char *areatag, u_char * stream, int size, u_int32_t * expected,
   struct in_addr *ipv4_addr;
   struct ipv4_reachability *ipv4_reach;
   struct te_ipv4_reachability *te_ipv4_reach;
-#ifdef ENABLE_IPV6
   struct in6_addr *ipv6_addr;
   struct ipv6_reachability *ipv6_reach;
   int prefix_octets;
-#endif /* ENABLE_IPV6 */
   u_char virtual;
   int value_len, retval = ISIS_OK;
   u_char *pnt = stream;
@@ -535,7 +531,6 @@ parse_tlvs (char *areatag, u_char * stream, int size, u_int32_t * expected,
 	    }
 	  break;
 
-#ifdef  ENABLE_IPV6
 	case IPV6_ADDR:
 	  /* +-------+-------+-------+-------+-------+-------+-------+-------+
 	   * +                 IP version 6 address                          + 16
@@ -592,7 +587,6 @@ parse_tlvs (char *areatag, u_char * stream, int size, u_int32_t * expected,
 	      pnt += length;
 	    }
 	  break;
-#endif /* ENABLE_IPV6 */
 
 	case WAY3_HELLO:
 	  /* +---------------------------------------------------------------+
@@ -968,7 +962,6 @@ tlv_add_te_ipv4_reachs (struct list *te_ipv4_reachs, struct stream *stream)
   return add_tlv (TE_IPV4_REACHABILITY, pos - value, value, stream);
 }
 
-#ifdef ENABLE_IPV6
 int
 tlv_add_ipv6_addrs (struct list *ipv6_addrs, struct stream *stream)
 {
@@ -1025,7 +1018,6 @@ tlv_add_ipv6_reachs (struct list *ipv6_reachs, struct stream *stream)
 
   return add_tlv (IPV6_REACHABILITY, pos - value, value, stream);
 }
-#endif /* ENABLE_IPV6 */
 
 int
 tlv_add_padding (struct stream *stream)

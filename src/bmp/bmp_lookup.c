@@ -45,12 +45,10 @@ struct bgp_peer *bgp_lookup_find_bmp_peer(struct sockaddr *sa, struct xflow_stat
       peer_idx = xs_entry->peer_v4_idx;
       peer_idx_ptr = &xs_entry->peer_v4_idx;
     }
-#if defined ENABLE_IPV6
     else if (l3_proto == ETHERTYPE_IPV6) {
       peer_idx = xs_entry->peer_v6_idx;
       peer_idx_ptr = &xs_entry->peer_v6_idx;
     }
-#endif
   }
 
   if (xs_entry && peer_idx) {

@@ -42,9 +42,7 @@ struct isis
   struct list *area_list;	/* list of IS-IS areas */
   struct list *init_circ_list;
   struct list *nexthops;	/* IPv4 next hops from this IS */
-#ifdef ENABLE_IPV6
   struct list *nexthops6;	/* IPv6 next hops from this IS */
-#endif				/* ENABLE_IPV6 */
   u_char max_area_addrs;	/* maximumAreaAdresses */
   struct area_addr *man_area_addrs;	/* manualAreaAddresses */
   u_int32_t debugs;		/* bitmap for debug */
@@ -65,7 +63,6 @@ struct isis
     char *name;
     struct route_map *map;
   } rmap[ZEBRA_ROUTE_MAX + 1];
-#ifdef ENABLE_IPV6
   struct
   {
     struct
@@ -74,7 +71,6 @@ struct isis
       struct route_map *map;
     } rmap[ZEBRA_ROUTE_MAX + 1];
   } inet6_afmode;
-#endif
 };
 
 struct isis_area
@@ -83,10 +79,8 @@ struct isis_area
   dict_t *lspdb[ISIS_LEVELS];			  /* link-state dbs */
   struct isis_spftree *spftree[ISIS_LEVELS];	  /* The v4 SPTs */
   struct route_table *route_table[ISIS_LEVELS];	  /* IPv4 routes */
-#ifdef ENABLE_IPV6
   struct isis_spftree *spftree6[ISIS_LEVELS];	  /* The v6 SPTs */
   struct route_table *route_table6[ISIS_LEVELS];  /* IPv6 routes */
-#endif
   unsigned int min_bcast_mtu;
   struct list *circuit_list;	/* IS-IS circuits */
   struct flags flags;
@@ -121,9 +115,7 @@ struct isis_area
   /* the percentage of LSP mtu size used, before generating a new frag */
   int lsp_frag_threshold;
   int ip_circuits;
-#ifdef ENABLE_IPV6
   int ipv6_circuits;
-#endif				/* ENABLE_IPV6 */
   /* Counters */
   u_int32_t circuit_state_changes;
 };

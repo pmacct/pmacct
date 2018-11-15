@@ -25,14 +25,12 @@
 #ifndef _ISIS_ROUTE_H_
 #define _ISIS_ROUTE_H_
 
-#ifdef ENABLE_IPV6
 struct isis_nexthop6
 {
   unsigned int ifindex;
   struct in6_addr ip6;
   unsigned int lock;
 };
-#endif /* ENABLE_IPV6 */
 
 struct isis_nexthop
 {
@@ -49,9 +47,7 @@ struct isis_route_info
   u_int32_t cost;
   u_int32_t depth;
   struct list *nexthops;
-#ifdef ENABLE_IPV6
   struct list *nexthops6;
-#endif				/* ENABLE_IPV6 */
 };
 
 #if (!defined __ISIS_ROUTE_C)

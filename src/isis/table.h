@@ -70,9 +70,7 @@ EXT struct route_node *route_node_lookup (struct route_table *, struct isis_pref
 EXT struct route_node *route_lock_node (struct route_node *);
 EXT struct route_node *route_node_match (const struct route_table *, const struct isis_prefix *);
 EXT struct route_node *route_node_match_ipv4 (const struct route_table *, const struct in_addr *);
-#ifdef ENABLE_IPV6
 EXT struct route_node *route_node_match_ipv6 (const struct route_table *, const struct in6_addr *);
-#endif /* ENABLE_IPV6 */
 #undef EXT
 
 #endif /* _TABLE_H_ */

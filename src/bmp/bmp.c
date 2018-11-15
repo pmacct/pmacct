@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -66,11 +66,7 @@ void skinny_bmp_daemon()
   struct bmp_peer *bmpp = NULL;
   struct bgp_peer *peer = NULL;
 
-#if defined ENABLE_IPV6
   struct sockaddr_storage server, client;
-#else
-  struct sockaddr server, client;
-#endif
   struct hosts_table allow;
   struct host_addr addr;
   struct bgp_peer_batch bp_batch;
@@ -96,7 +92,6 @@ void skinny_bmp_daemon()
   memset(bmp_routing_db, 0, sizeof(struct bgp_rt_structs));
 
   /* socket creation for BMP server: IPv4 only */
-#if (defined ENABLE_IPV6)
   if (!config.nfacctd_bmp_ip) {
     struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&server;
 
@@ -104,16 +99,6 @@ void skinny_bmp_daemon()
     sa6->sin6_port = htons(config.nfacctd_bmp_port);
     slen = sizeof(struct sockaddr_in6);
   }
-#else
-  if (!config.nfacctd_bmp_ip) {
-    struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
-
-    sa4->sin_family = AF_INET;
-    sa4->sin_addr.s_addr = htonl(0);
-    sa4->sin_port = htons(config.nfacctd_bmp_port);
-    slen = sizeof(struct sockaddr_in);
-  }
-#endif
   else {
     trim_spaces(config.nfacctd_bmp_ip);
     ret = str_to_addr(config.nfacctd_bmp_ip, &addr);
@@ -203,7 +188,6 @@ void skinny_bmp_daemon()
 
   config.bmp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
   if (config.bmp_sock < 0) {
-#if (defined ENABLE_IPV6)
     /* retry with IPv4 */
     if (!config.nfacctd_bmp_ip) {
       struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
@@ -215,7 +199,6 @@ void skinny_bmp_daemon()
 
       config.bmp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
     }
-#endif
 
     if (config.bmp_sock < 0) {
       Log(LOG_ERR, "ERROR ( %s/%s ): thread socket() failed. Terminating thread.\n", config.name, bmp_misc_db->log_str);
@@ -237,7 +220,7 @@ void skinny_bmp_daemon()
   if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
 #endif
 
-#if (defined ENABLE_IPV6) && (defined IPV6_BINDV6ONLY)
+#if (defined IPV6_BINDV6ONLY)
   rc = setsockopt(config.bmp_sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
   if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IPV6_BINDV6ONLY (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
 #endif
@@ -466,9 +449,7 @@ void skinny_bmp_daemon()
       fd = accept(config.bmp_sock, (struct sockaddr *) &client, &clen);
       if (fd == ERR) goto read_data;
 
-#if defined ENABLE_IPV6
       ipv4_mapped_to_ipv4(&client);
-#endif
 
       /* If an ACL is defined, here we check against and enforce it */
       if (allow.num) allowed = check_allow(&allow, (struct sockaddr *)&client);
@@ -536,12 +517,10 @@ void skinny_bmp_daemon()
         peer->addr.address.ipv4.s_addr = ((struct sockaddr_in *)&client)->sin_addr.s_addr;
         peer->tcp_port = ntohs(((struct sockaddr_in *)&client)->sin_port);
       }
-#if defined ENABLE_IPV6
       else if (peer->addr.family == AF_INET6) {
         memcpy(&peer->addr.address.ipv6, &((struct sockaddr_in6 *)&client)->sin6_addr, 16);
         peer->tcp_port = ntohs(((struct sockaddr_in6 *)&client)->sin6_port);
       }
-#endif
       addr_to_str(peer->addr_str, &peer->addr);
       memcpy(&peer->id, &peer->addr, sizeof(struct host_addr)); /* XXX: some inet_ntoa()'s could be around against peer->id */
 

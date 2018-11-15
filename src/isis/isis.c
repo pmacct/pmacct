@@ -354,9 +354,7 @@ void isis_srcdst_lookup(struct packet_ptrs *pptrs)
   char area_tag[] = "default";
   int level;
   struct in_addr pref4;
-#if defined ENABLE_IPV6
   struct in6_addr pref6;
-#endif
 
   pptrs->igp_src = NULL;
   pptrs->igp_dst = NULL;
@@ -397,7 +395,6 @@ void isis_srcdst_lookup(struct packet_ptrs *pptrs)
 	}
       }
     }
-#if defined ENABLE_IPV6
     else if (area && pptrs->l3_proto == ETHERTYPE_IPV6) {
       if (!pptrs->igp_src) {
         memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, sizeof(struct in6_addr));
@@ -427,7 +424,6 @@ void isis_srcdst_lookup(struct packet_ptrs *pptrs)
 	}
       }
     }
-#endif
   }
 }
 
@@ -571,7 +567,6 @@ int igp_daemon_map_reach_metric_handler(char *filename, struct id_entry *e, char
   return FALSE; 
 }
 
-#if defined ENABLE_IPV6
 int igp_daemon_map_reach6_metric_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct igp_map_entry *entry = (struct igp_map_entry *) req->key_value_table;
@@ -622,7 +617,6 @@ int igp_daemon_map_reach6_metric_handler(char *filename, struct id_entry *e, cha
 
   return FALSE;
 }
-#endif
 
 void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
 {
@@ -639,9 +633,7 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
       struct idrp_info *adj_hdr, *reach_v4_hdr, *reach_v6_hdr, *proto_supported_hdr, *area_address_hdr;
       struct is_neigh *adj;
       struct ipv4_reachability *reach_v4;
-#ifdef ENABLE_IPV6
       struct ipv6_reachability *reach_v6;
-#endif
       struct area_address *area_addr;
       int rem_len = sizeof(isis_dgram), cnt, tlvs_cnt = 0, pdu_len = 0;
 
@@ -685,11 +677,9 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
       *isis_dgram_ptr = (u_char) 0xCC;
       isis_dgram_ptr++;
       proto_supported_hdr->len++;
-#if defined ENABLE_IPV6
       *isis_dgram_ptr = (u_char) 0x8E;
       isis_dgram_ptr++;
       proto_supported_hdr->len++;
-#endif
       if (igp_daemon_map_handle_len(&rem_len, proto_supported_hdr->len, req, filename)) return;
       pdu_len += proto_supported_hdr->len;
       tlvs_cnt++;
@@ -767,7 +757,6 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
 	tlvs_cnt++;
       }
 
-#ifdef ENABLE_IPV6
       if (entry->reach6_metric_num) {
 	int prefix_len = 0;
 
@@ -795,7 +784,6 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
 
         tlvs_cnt++;
       }
-#endif
 
       /* wrapping up: fix lsp length */
       pdu_len += sizeof(struct isis_fixed_hdr)+ISIS_LSP_HDR_LEN+(ISIS_TLV_HDR_LEN*tlvs_cnt);

@@ -76,11 +76,7 @@ void telemetry_daemon(void *t_data_void)
 
   telemetry_peer *peer = NULL;
 
-#if defined ENABLE_IPV6
   struct sockaddr_storage server, client;
-#else
-  struct sockaddr server, client;
-#endif
   struct hosts_table allow;
   struct host_addr addr;
 
@@ -157,7 +153,6 @@ void telemetry_daemon(void *t_data_void)
     }
 
     /* socket creation for telemetry server: IPv4 only */
-#if (defined ENABLE_IPV6)
     if (!config.telemetry_ip) {
       struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&server;
 
@@ -165,16 +160,6 @@ void telemetry_daemon(void *t_data_void)
       sa6->sin6_port = htons(port);
       slen = sizeof(struct sockaddr_in6);
     }
-#else
-    if (!config.telemetry_ip) {
-      struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
-
-      sa4->sin_family = AF_INET;
-      sa4->sin_addr.s_addr = htonl(0);
-      sa4->sin_port = htons(port);
-      slen = sizeof(struct sockaddr_in);
-    }
-#endif
     else {
       trim_spaces(config.telemetry_ip);
       ret = str_to_addr(config.telemetry_ip, &addr);
@@ -289,7 +274,6 @@ void telemetry_daemon(void *t_data_void)
     else if (config.telemetry_port_udp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
 
     if (config.telemetry_sock < 0) {
-#if (defined ENABLE_IPV6)
       /* retry with IPv4 */
       if (!config.telemetry_ip) {
 	struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
@@ -302,7 +286,6 @@ void telemetry_daemon(void *t_data_void)
 	if (config.telemetry_port_tcp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
 	else if (config.telemetry_port_udp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
       }
-#endif
 
       if (config.telemetry_sock < 0) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): socket() failed. Terminating.\n", config.name, t_data->log_str);
@@ -325,7 +308,7 @@ void telemetry_daemon(void *t_data_void)
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, t_data->log_str, errno);
 #endif
 
-#if (defined ENABLE_IPV6) && (defined IPV6_BINDV6ONLY)
+#if (defined IPV6_BINDV6ONLY)
     rc = setsockopt(config.telemetry_sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IPV6_BINDV6ONLY (errno: %d).\n", config.name, t_data->log_str, errno);
 #endif
@@ -614,9 +597,7 @@ void telemetry_daemon(void *t_data_void)
       }
 #endif
 
-#if defined ENABLE_IPV6
       ipv4_mapped_to_ipv4(&client);
-#endif
 
       /* If an ACL is defined, here we check against and enforce it */
       if (allow.num) allowed = check_allow(&allow, (struct sockaddr *)&client);
@@ -680,12 +661,10 @@ void telemetry_daemon(void *t_data_void)
         peer->addr.address.ipv4.s_addr = ((struct sockaddr_in *)&client)->sin_addr.s_addr;
         peer->tcp_port = ntohs(((struct sockaddr_in *)&client)->sin_port);
       }
-#if defined ENABLE_IPV6
       else if (peer->addr.family == AF_INET6) {
         memcpy(&peer->addr.address.ipv6, &((struct sockaddr_in6 *)&client)->sin6_addr, 16);
         peer->tcp_port = ntohs(((struct sockaddr_in6 *)&client)->sin6_port);
       }
-#endif
       addr_to_str(peer->addr_str, &peer->addr);
 
       if (telemetry_misc_db->msglog_backend_methods)

@@ -853,9 +853,7 @@ void bmp_peer_hdr_get_v_flag(struct bmp_peer_hdr *bph, u_int8_t *family)
     (*family) = FALSE;
 
     if (version == 0) (*family) = AF_INET;
-#if defined ENABLE_IPV6
     else if (version == 1) (*family) = AF_INET6;
-#endif
   }
 }
 
@@ -928,9 +926,7 @@ void bmp_peer_hdr_get_peer_ip(struct bmp_peer_hdr *bph, struct host_addr *a, u_i
     a->family = family;
 
     if (family == AF_INET) a->address.ipv4.s_addr = bph->addr[3]; 
-#if defined ENABLE_IPV6
     else if (family == AF_INET6) memcpy(&a->address.ipv6, &bph->addr, 16); 
-#endif
     else memset(a, 0, sizeof(struct host_addr));
   }
 }
@@ -974,9 +970,7 @@ void bmp_peer_up_hdr_get_local_ip(struct bmp_peer_up_hdr *bpuh, struct host_addr
     a->family = family;
 
     if (family == AF_INET) a->address.ipv4.s_addr = bpuh->loc_addr[3];
-#if defined ENABLE_IPV6
     else if (family == AF_INET6) memcpy(&a->address.ipv6, &bpuh->loc_addr, 16);
-#endif
   }
 }
 

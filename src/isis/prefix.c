@@ -77,10 +77,8 @@ isis_prefix_copy (struct isis_prefix *dest, const struct isis_prefix *src)
 
   if (src->family == AF_INET)
     dest->u.prefix4 = src->u.prefix4;
-#ifdef ENABLE_IPV6
   else if (src->family == AF_INET6)
     dest->u.prefix6 = src->u.prefix6;
-#endif /* ENABLE_IPV6 */
   else
     {
       Log(LOG_ERR, "ERROR ( %s/core/ISIS ): isis_prefix_copy(): Unknown address family %d\n", config.name, src->family);
@@ -106,11 +104,9 @@ isis_prefix_same (const struct isis_prefix *p1, const struct isis_prefix *p2)
       if (p1->family == AF_INET)
 	if (IPV4_ADDR_SAME (&p1->u.prefix, &p2->u.prefix))
 	  return 1;
-#ifdef ENABLE_IPV6
       if (p1->family == AF_INET6 )
 	if (IPV6_ADDR_SAME (&p1->u.prefix, &p2->u.prefix))
 	  return 1;
-#endif /* ENABLE_IPV6 */
     }
   return 0;
 }
@@ -158,10 +154,8 @@ isis_prefix_family_str (const struct isis_prefix *p)
 {
   if (p->family == AF_INET)
     return "inet";
-#ifdef ENABLE_IPV6
   if (p->family == AF_INET6)
     return "inet6";
-#endif /* ENABLE_IPV6 */
   return "unspec";
 }
 
@@ -300,9 +294,6 @@ isis_apply_mask_ipv4 (struct prefix_ipv4 *p)
 	pnt[index++] = 0;
     }
 }
-
-
-#ifdef ENABLE_IPV6
 
 /* Allocate a new ip version 6 route */
 struct prefix_ipv6 *
@@ -447,7 +438,6 @@ isis_str2in6_addr (const char *str, struct in6_addr *addr)
       addr->s6_addr[i] = x & 0xff;
     }
 }
-#endif /* ENABLE_IPV6 */
 
 void
 isis_apply_mask (struct isis_prefix *p)
@@ -457,11 +447,9 @@ isis_apply_mask (struct isis_prefix *p)
       case AF_INET:
         isis_apply_mask_ipv4 ((struct prefix_ipv4 *)p);
         break;
-#ifdef ENABLE_IPV6
       case AF_INET6:
         isis_apply_mask_ipv6 ((struct prefix_ipv6 *)p);
         break;
-#endif /* ENABLE_IPV6 */
       default:
         break;
     }
@@ -484,7 +472,6 @@ sockunion2prefix (const union sockunion *dest,
       p->prefixlen = isis_ip_masklen (mask->sin.sin_addr);
       return (struct isis_prefix *) p;
     }
-#ifdef ENABLE_IPV6
   if (dest->sa.sa_family == AF_INET6)
     {
       struct prefix_ipv6 *p;
@@ -495,7 +482,6 @@ sockunion2prefix (const union sockunion *dest,
       memcpy (&p->prefix, &dest->sin6.sin6_addr, sizeof (struct in6_addr));
       return (struct isis_prefix *) p;
     }
-#endif /* ENABLE_IPV6 */
   return NULL;
 }
 
@@ -513,7 +499,6 @@ sockunion2hostprefix (const union sockunion *su)
       p->prefixlen = IPV4_MAX_BITLEN;
       return (struct isis_prefix *) p;
     }
-#ifdef ENABLE_IPV6
   if (su->sa.sa_family == AF_INET6)
     {
       struct prefix_ipv6 *p;
@@ -524,7 +509,6 @@ sockunion2hostprefix (const union sockunion *su)
       memcpy (&p->prefix, &su->sin6.sin6_addr, sizeof (struct in6_addr));
       return (struct isis_prefix *) p;
     }
-#endif /* ENABLE_IPV6 */
   return NULL;
 }
 
@@ -536,11 +520,9 @@ isis_prefix_blen (const struct isis_prefix *p)
     case AF_INET:
       return IPV4_MAX_BYTELEN;
       break;
-#ifdef ENABLE_IPV6
     case AF_INET6:
       return IPV6_MAX_BYTELEN;
       break;
-#endif /* ENABLE_IPV6 */
     }
   return 0;
 }
@@ -556,12 +538,10 @@ isis_str2prefix (const char *str, struct isis_prefix *p)
   if (ret)
     return ret;
 
-#ifdef ENABLE_IPV6
   /* Next we try to convert string to struct prefix_ipv6. */
   ret = isis_str2prefix_ipv6 (str, (struct prefix_ipv6 *) p);
   if (ret)
     return ret;
-#endif /* ENABLE_IPV6 */
 
   return 0;
 }
@@ -638,7 +618,6 @@ netmask_isis_str2prefix_str (const char *net_str, const char *mask_str,
   return 1;
 }
 
-#ifdef ENABLE_IPV6
 /* Utility function for making IPv6 address string. */
 const char *
 isis_inet6_ntoa (struct in6_addr addr)
@@ -648,4 +627,3 @@ isis_inet6_ntoa (struct in6_addr addr)
   inet_ntop (AF_INET6, &addr, buf, INET6_ADDRSTRLEN);
   return buf;
 }
-#endif /* ENABLE_IPV6 */
