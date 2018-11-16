@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -34,18 +34,14 @@ time_t prune_deadline;
 time_t emergency_prune;
 u_int32_t trivial_hash_rnd = 140281; /* ummmh */
 
-#if defined ENABLE_IPV6
 u_int32_t ipft6_total_nodes;
 time_t prune_deadline6;
 time_t emergency_prune6;
-#endif
 
 void init_ip_fragment_handler()
 {
   init_ip4_fragment_handler();
-#if defined ENABLE_IPV6
   init_ip6_fragment_handler();
-#endif
 }
 
 void init_ip4_fragment_handler()
@@ -291,7 +287,6 @@ void notify_orphan_fragment(struct ip_fragment *frag)
 		  config.name, src_host, dst_host, frag->ip_p, id);
 }
 
-#if defined ENABLE_IPV6
 void init_ip6_fragment_handler()
 {
   if (config.frag_bufsz) ipft6_total_nodes = config.frag_bufsz / sizeof(struct ip6_fragment);
@@ -543,4 +538,3 @@ void notify_orphan_fragment6(struct ip6_fragment *frag)
   Log(LOG_DEBUG, "DEBUG ( %s/core ): Expiring orphan fragment: ip_src=%s ip_dst=%s id=%u\n",
 			config.name, src_host, dst_host, id);
 }
-#endif

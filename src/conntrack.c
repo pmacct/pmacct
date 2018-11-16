@@ -38,11 +38,9 @@ void init_conntrack_table()
   else conntrack_total_nodes_v4 = DEFAULT_CONNTRACK_BUFFER_SIZE / sizeof(struct conntrack_ipv4);
   conntrack_ipv4_table = NULL;
 
-#if defined ENABLE_IPV6
   if (config.conntrack_bufsz) conntrack_total_nodes_v6 = config.conntrack_bufsz / sizeof(struct conntrack_ipv6);
   else conntrack_total_nodes_v6 = DEFAULT_CONNTRACK_BUFFER_SIZE / sizeof(struct conntrack_ipv6);
   conntrack_ipv6_table = NULL;
-#endif
 }
 
 void conntrack_ftp_helper(time_t now, struct packet_ptrs *pptrs)
@@ -84,13 +82,11 @@ void conntrack_ftp_helper(time_t now, struct packet_ptrs *pptrs)
                         ((struct pm_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr,
                         port[0]*256+port[1], 0, IPPROTO_TCP, pptrs->class,
 			NULL, CONNTRACK_GENERIC_LIFETIME);
-#if defined ENABLE_IPV6
       else if (pptrs->l3_proto == ETHERTYPE_IPV6) insert_conntrack_ipv6(now,
                         &((struct ip6_hdr *) pptrs->iph_ptr)->ip6_src,
                         &((struct ip6_hdr *) pptrs->iph_ptr)->ip6_dst,
                         port[0]*256+port[1], 0, IPPROTO_TCP, pptrs->class,
 			NULL, CONNTRACK_GENERIC_LIFETIME);
-#endif
     }
   }
   /* 227/228 reply, passive (PASV/LPASV) FTP */
@@ -119,13 +115,11 @@ void conntrack_ftp_helper(time_t now, struct packet_ptrs *pptrs)
 			((struct pm_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr,
 			port[0]*256+port[1], 0, IPPROTO_TCP, pptrs->class,
 			NULL, CONNTRACK_GENERIC_LIFETIME);
-#if defined ENABLE_IPV6
       else if (pptrs->l3_proto == ETHERTYPE_IPV6) insert_conntrack_ipv6(now,
                         &((struct ip6_hdr *) pptrs->iph_ptr)->ip6_src,
                         &((struct ip6_hdr *) pptrs->iph_ptr)->ip6_dst,
                         port[0]*256+port[1], 0, IPPROTO_TCP, pptrs->class,
 			NULL, CONNTRACK_GENERIC_LIFETIME);
-#endif
     }
   }
   /* EPRT command, Extended data port */
@@ -152,13 +146,11 @@ void conntrack_ftp_helper(time_t now, struct packet_ptrs *pptrs)
                         ((struct pm_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr,
                         port[0], 0, IPPROTO_TCP, pptrs->class, NULL,
 			CONNTRACK_GENERIC_LIFETIME);
-#if defined ENABLE_IPV6
       else if (pptrs->l3_proto == ETHERTYPE_IPV6) insert_conntrack_ipv6(now,
                         &((struct ip6_hdr *) pptrs->iph_ptr)->ip6_src,
                         &((struct ip6_hdr *) pptrs->iph_ptr)->ip6_dst,
                         port[0], 0, IPPROTO_TCP, pptrs->class, NULL,
 			CONNTRACK_GENERIC_LIFETIME);
-#endif
     }
   }
   /* 229 reply, extended passive (EPASV) FTP */
@@ -185,13 +177,11 @@ void conntrack_ftp_helper(time_t now, struct packet_ptrs *pptrs)
                         ((struct pm_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr,
                         port[0], 0, IPPROTO_TCP, pptrs->class, NULL,
 			CONNTRACK_GENERIC_LIFETIME);
-#if defined ENABLE_IPV6
       else if (pptrs->l3_proto == ETHERTYPE_IPV6) insert_conntrack_ipv6(now,
                         &((struct ip6_hdr *) pptrs->iph_ptr)->ip6_src,
                         &((struct ip6_hdr *) pptrs->iph_ptr)->ip6_dst,
                         port[0], 0, IPPROTO_TCP, pptrs->class, NULL,
 			CONNTRACK_GENERIC_LIFETIME);
-#endif
     }
   }
 }
@@ -258,12 +248,10 @@ void conntrack_rtsp_helper(time_t now, struct packet_ptrs *pptrs)
 			((struct pm_iphdr *) pptrs->iph_ptr)->ip_src.s_addr,
 			((struct pm_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr,
 			x, 0, IPPROTO_UDP, pptrs->class, NULL, CONNTRACK_GENERIC_LIFETIME);
-#if defined ENABLE_IPV6
 	      else if (pptrs->l3_proto == ETHERTYPE_IPV6) insert_conntrack_ipv6(now,
 			&((struct ip6_hdr *) pptrs->iph_ptr)->ip6_src,
 			&((struct ip6_hdr *) pptrs->iph_ptr)->ip6_dst,
 			x, 0, IPPROTO_UDP, pptrs->class, NULL, CONNTRACK_GENERIC_LIFETIME);
-#endif
 	    }
 	  } 
 	  else ptr = strchr(ptr, ';');
@@ -317,13 +305,11 @@ void conntrack_sip_helper(time_t now, struct packet_ptrs *pptrs)
 			((struct pm_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr,
 			port, 0, IPPROTO_UDP, pptrs->class, NULL,
 			CONNTRACK_GENERIC_LIFETIME);
-#if defined ENABLE_IPV6
     else if (pptrs->l3_proto == ETHERTYPE_IPV6) insert_conntrack_ipv6(now,
 			&((struct ip6_hdr *) pptrs->iph_ptr)->ip6_src,
 			&((struct ip6_hdr *) pptrs->iph_ptr)->ip6_dst,
 			port, 0, IPPROTO_UDP, pptrs->class, NULL,
 			CONNTRACK_GENERIC_LIFETIME);
-#endif
   }
 }
 
@@ -385,9 +371,7 @@ void insert_conntrack_ipv4(time_t now, u_int32_t ip_src, u_int32_t ip_dst,
 void search_conntrack(struct ip_flow_common *fp, struct packet_ptrs *pptrs, unsigned int idx)
 {
   if (pptrs->l3_proto == ETHERTYPE_IP) search_conntrack_ipv4(fp, pptrs, idx); 
-#if defined ENABLE_IPV6
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) search_conntrack_ipv6(fp, pptrs, idx); 
-#endif
 }
 
 void search_conntrack_ipv4(struct ip_flow_common *fp, struct packet_ptrs *pptrs, unsigned int idx)
@@ -438,7 +422,6 @@ void search_conntrack_ipv4(struct ip_flow_common *fp, struct packet_ptrs *pptrs,
   }
 }
 
-#if defined ENABLE_IPV6
 void insert_conntrack_ipv6(time_t now, struct in6_addr *ip_src, struct in6_addr *ip_dst,
                            u_int16_t port_src, u_int16_t port_dst, u_int8_t proto,
                            pm_class_t class, conntrack_helper helper, time_t exp)
@@ -520,4 +503,3 @@ void search_conntrack_ipv6(struct ip_flow_common *fp, struct packet_ptrs *pptrs,
     ct_elem = ct_elem->next;
   }
 }
-#endif

@@ -183,20 +183,10 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     printf("SYM  ");
     printf("PEER_SRC_AS ");
     printf("PEER_DST_AS ");
-#if defined ENABLE_IPV6
     printf("PEER_SRC_IP                                    ");
     printf("PEER_DST_IP                                    ");
-#else
-    printf("PEER_SRC_IP      ");
-    printf("PEER_DST_IP      ");
-#endif
-#if defined ENABLE_IPV6
     printf("SRC_IP                                         ");
     printf("DST_IP                                         ");
-#else
-    printf("SRC_IP           ");
-    printf("DST_IP           ");
-#endif
     printf("SRC_MASK  ");
     printf("DST_MASK  ");
     printf("SRC_PORT  ");
@@ -219,13 +209,8 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     printf("SAMPLING_RATE ");
     printf("SAMPLING_DIRECTION ");
 
-#if defined ENABLE_IPV6
     printf("POST_NAT_SRC_IP                                ");
     printf("POST_NAT_DST_IP                                ");
-#else
-    printf("POST_NAT_SRC_IP  ");
-    printf("POST_NAT_DST_IP  ");
-#endif
     printf("POST_NAT_SRC_PORT  ");
     printf("POST_NAT_DST_PORT  ");
     printf("NAT_EVENT ");
@@ -234,13 +219,8 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     printf("MPLS_LABEL_BOTTOM  ");
     printf("MPLS_STACK_DEPTH  ");
 
-#if defined ENABLE_IPV6
     printf("TUNNEL_SRC_IP                                  ");
     printf("TUNNEL_DST_IP                                  ");
-#else
-    printf("TUNNEL_SRC_IP    ");
-    printf("TUNNEL_DST_IP    ");
-#endif
     printf("TUNNEL_PROTOCOL  ");
     printf("TUNNEL_TOS  ");
 
@@ -307,26 +287,14 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count & COUNT_SRC_MED) printf("SRC_MED ");
     if (what_to_count & COUNT_PEER_SRC_AS) printf("PEER_SRC_AS ");
     if (what_to_count & COUNT_PEER_DST_AS) printf("PEER_DST_AS ");
-#if defined ENABLE_IPV6
     if (what_to_count & COUNT_PEER_SRC_IP) printf("PEER_SRC_IP                                    ");
     if (what_to_count & COUNT_PEER_DST_IP) printf("PEER_DST_IP                                    ");
-#else
-    if (what_to_count & COUNT_PEER_SRC_IP) printf("PEER_SRC_IP      ");
-    if (what_to_count & COUNT_PEER_DST_IP) printf("PEER_DST_IP      ");
-#endif
     if (what_to_count & COUNT_MPLS_VPN_RD) printf("MPLS_VPN_RD         ");
     if (what_to_count_2 & COUNT_MPLS_PW_ID) printf("MPLS_PW_ID  ");
-#if defined ENABLE_IPV6
     if (what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) printf("SRC_IP                                         ");
     if (what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) printf("SRC_NET                                        ");
     if (what_to_count & COUNT_DST_HOST) printf("DST_IP                                         ");
     if (what_to_count & COUNT_DST_NET) printf("DST_NET                                        ");
-#else
-    if (what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) printf("SRC_IP           ");
-    if (what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) printf("SRC_NET          ");
-    if (what_to_count & COUNT_DST_HOST) printf("DST_IP           ");
-    if (what_to_count & COUNT_DST_NET) printf("DST_NET          ");
-#endif
     if (what_to_count & COUNT_SRC_NMASK) printf("SRC_MASK  ");
     if (what_to_count & COUNT_DST_NMASK) printf("DST_MASK  "); 
     if (what_to_count & (COUNT_SRC_PORT|COUNT_SUM_PORT)) printf("SRC_PORT  ");
@@ -354,13 +322,8 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count_2 & COUNT_SAMPLING_RATE) printf("SAMPLING_RATE ");
     if (what_to_count_2 & COUNT_SAMPLING_DIRECTION) printf("SAMPLING_DIRECTION ");
 
-#if defined ENABLE_IPV6
     if (what_to_count_2 & COUNT_POST_NAT_SRC_HOST) printf("POST_NAT_SRC_IP                                ");
     if (what_to_count_2 & COUNT_POST_NAT_DST_HOST) printf("POST_NAT_DST_IP                                ");
-#else
-    if (what_to_count_2 & COUNT_POST_NAT_SRC_HOST) printf("POST_NAT_SRC_IP  ");
-    if (what_to_count_2 & COUNT_POST_NAT_DST_HOST) printf("POST_NAT_DST_IP  ");
-#endif
     if (what_to_count_2 & COUNT_POST_NAT_SRC_PORT) printf("POST_NAT_SRC_PORT  ");
     if (what_to_count_2 & COUNT_POST_NAT_DST_PORT) printf("POST_NAT_DST_PORT  ");
     if (what_to_count_2 & COUNT_NAT_EVENT) printf("NAT_EVENT ");
@@ -369,13 +332,8 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) printf("MPLS_LABEL_BOTTOM  ");
     if (what_to_count_2 & COUNT_MPLS_STACK_DEPTH) printf("MPLS_STACK_DEPTH  ");
 
-#if defined ENABLE_IPV6
     if (what_to_count_2 & COUNT_TUNNEL_SRC_HOST) printf("TUNNEL_SRC_IP                                  ");
     if (what_to_count_2 & COUNT_TUNNEL_DST_HOST) printf("TUNNEL_DST_IP                                  ");
-#else
-    if (what_to_count_2 & COUNT_TUNNEL_SRC_HOST) printf("TUNNEL_SRC_IP    ");
-    if (what_to_count_2 & COUNT_TUNNEL_DST_HOST) printf("TUNNEL_DST_IP    ");
-#endif
     if (what_to_count_2 & COUNT_TUNNEL_IP_PROTO) printf("TUNNEL_PROTOCOL  ");
     if (what_to_count_2 & COUNT_TUNNEL_IP_TOS) printf("TUNNEL_TOS  ");
 
@@ -454,20 +412,10 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     printf("%sSYM", write_sep(sep, &count));
     printf("%sPEER_SRC_AS", write_sep(sep, &count));
     printf("%sPEER_DST_AS", write_sep(sep, &count));
-#if defined ENABLE_IPV6
     printf("%sPEER_SRC_IP", write_sep(sep, &count));
     printf("%sPEER_DST_IP", write_sep(sep, &count));
-#else
-    printf("%sPEER_SRC_IP", write_sep(sep, &count));
-    printf("%sPEER_DST_IP", write_sep(sep, &count));
-#endif
-#if defined ENABLE_IPV6
     printf("%sSRC_IP", write_sep(sep, &count));
     printf("%sDST_IP", write_sep(sep, &count));
-#else
-    printf("%sSRC_IP", write_sep(sep, &count));
-    printf("%sDST_IP", write_sep(sep, &count));
-#endif
     printf("%sSRC_MASK", write_sep(sep, &count));
     printf("%sDST_MASK", write_sep(sep, &count));
     printf("%sSRC_PORT", write_sep(sep, &count));
@@ -563,13 +511,8 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     if (what_to_count & COUNT_SRC_MED) printf("%sSRC_MED", write_sep(sep, &count));
     if (what_to_count & COUNT_PEER_SRC_AS) printf("%sPEER_SRC_AS", write_sep(sep, &count));
     if (what_to_count & COUNT_PEER_DST_AS) printf("%sPEER_DST_AS", write_sep(sep, &count));
-#if defined ENABLE_IPV6
     if (what_to_count & COUNT_PEER_SRC_IP) printf("%sPEER_SRC_IP", write_sep(sep, &count));
     if (what_to_count & COUNT_PEER_DST_IP) printf("%sPEER_DST_IP", write_sep(sep, &count));
-#else
-    if (what_to_count & COUNT_PEER_SRC_IP) printf("%sPEER_SRC_IP", write_sep(sep, &count));
-    if (what_to_count & COUNT_PEER_DST_IP) printf("%sPEER_DST_IP", write_sep(sep, &count));
-#endif
     if (what_to_count & COUNT_MPLS_VPN_RD) printf("%sMPLS_VPN_RD", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_MPLS_PW_ID) printf("%sMPLS_PW_ID", write_sep(sep, &count));
     if (what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) printf("%sSRC_IP", write_sep(sep, &count));
@@ -2429,7 +2372,6 @@ int main(int argc,char **argv)
         if (!have_wtc || (what_to_count & COUNT_PEER_SRC_IP)) {
           addr_to_str(ip_address, &pbgp->peer_src_ip);
 
-#if defined ENABLE_IPV6
           if (strlen(ip_address)) {
 	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45s  ", ip_address);
 	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
@@ -2438,22 +2380,11 @@ int main(int argc,char **argv)
 	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
 	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
 	  }
-#else
-          if (strlen(ip_address)) {
-	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15s  ", ip_address);
-	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
-	  }
-          else {
-	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
-	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
-	  }
-#endif
         }
 
         if (!have_wtc || (what_to_count & COUNT_PEER_DST_IP)) {
           addr_to_str(ip_address, &pbgp->peer_dst_ip);
 
-#if defined ENABLE_IPV6
           if (strlen(ip_address)) {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45s  ", ip_address);
             else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
@@ -2462,16 +2393,6 @@ int main(int argc,char **argv)
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
             else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
           }
-#else
-          if (strlen(ip_address)) {
-            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15s  ", ip_address);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
-          }
-          else {
-            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
-          }
-#endif
         }
 
         if (!have_wtc || (what_to_count & COUNT_MPLS_VPN_RD)) {
@@ -2489,7 +2410,6 @@ int main(int argc,char **argv)
 	if (!have_wtc || (what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST))) {
 	  addr_to_str(ip_address, &acc_elem->primitives.src_ip);
 
-#if defined ENABLE_IPV6
           if (strlen(ip_address)) {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45s  ", ip_address);
             else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
@@ -2498,22 +2418,11 @@ int main(int argc,char **argv)
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
             else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
           }
-#else
-          if (strlen(ip_address)) {
-            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15s  ", ip_address);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
-          }
-          else {
-            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
-          }
-#endif
 	}
 
         if (!have_wtc || (what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET))) {
           addr_to_str(ip_address, &acc_elem->primitives.src_net);
 
-#if defined ENABLE_IPV6
           if (strlen(ip_address)) {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45s  ", ip_address);
             else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
@@ -2522,22 +2431,11 @@ int main(int argc,char **argv)
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
             else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
           }
-#else
-          if (strlen(ip_address)) {
-            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15s  ", ip_address);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
-          }
-          else {
-            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
-          }
-#endif
         }
 
 	if (!have_wtc || (what_to_count & COUNT_DST_HOST)) {
 	  addr_to_str(ip_address, &acc_elem->primitives.dst_ip);
 
-#if defined ENABLE_IPV6
           if (strlen(ip_address)) {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45s  ", ip_address);
             else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
@@ -2546,22 +2444,11 @@ int main(int argc,char **argv)
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
             else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
           }
-#else
-          if (strlen(ip_address)) {
-            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15s  ", ip_address);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
-          }
-          else {
-            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
-          }
-#endif
 	}
 
         if (!have_wtc || (what_to_count & COUNT_DST_NET)) {
           addr_to_str(ip_address, &acc_elem->primitives.dst_net);
 
-#if defined ENABLE_IPV6
           if (strlen(ip_address)) {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45s  ", ip_address);
             else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
@@ -2570,16 +2457,6 @@ int main(int argc,char **argv)
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
             else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
           }
-#else
-          if (strlen(ip_address)) {
-            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15s  ", ip_address);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
-          }
-          else {
-            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
-          }
-#endif
         }
 
         if (!have_wtc || (what_to_count & COUNT_SRC_NMASK)) {
@@ -2691,7 +2568,6 @@ int main(int argc,char **argv)
         if (!have_wtc || (what_to_count_2 & COUNT_POST_NAT_SRC_HOST)) {
           addr_to_str(ip_address, &pnat->post_nat_src_ip);
 
-#if defined ENABLE_IPV6
           if (strlen(ip_address)) {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45s  ", ip_address);
             else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
@@ -2700,22 +2576,11 @@ int main(int argc,char **argv)
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
             else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
           }
-#else
-          if (strlen(ip_address)) {
-            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15s  ", ip_address);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
-          }
-          else {
-            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
-          }
-#endif
         }
 
         if (!have_wtc || (what_to_count_2 & COUNT_POST_NAT_DST_HOST)) {
           addr_to_str(ip_address, &pnat->post_nat_dst_ip);
 
-#if defined ENABLE_IPV6
           if (strlen(ip_address)) {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45s  ", ip_address);
             else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
@@ -2724,16 +2589,6 @@ int main(int argc,char **argv)
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
             else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
           }
-#else
-          if (strlen(ip_address)) {
-            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15s  ", ip_address);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
-          }
-          else {
-            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
-          }
-#endif
         }
 
         if (!have_wtc || (what_to_count_2 & COUNT_POST_NAT_SRC_PORT)) {
@@ -2769,7 +2624,6 @@ int main(int argc,char **argv)
         if (!have_wtc || (what_to_count_2 & COUNT_TUNNEL_SRC_HOST)) {
           addr_to_str(ip_address, &ptun->tunnel_src_ip);
 
-#if defined ENABLE_IPV6
           if (strlen(ip_address)) {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45s  ", ip_address);
             else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
@@ -2778,22 +2632,11 @@ int main(int argc,char **argv)
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
             else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
           }
-#else
-          if (strlen(ip_address)) {
-            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15s  ", ip_address);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
-          }
-          else {
-            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
-          }
-#endif
         }
 
         if (!have_wtc || (what_to_count_2 & COUNT_TUNNEL_DST_HOST)) {
           addr_to_str(ip_address, &ptun->tunnel_dst_ip);
 
-#if defined ENABLE_IPV6
           if (strlen(ip_address)) {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45s  ", ip_address);
             else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
@@ -2802,16 +2645,6 @@ int main(int argc,char **argv)
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45u  ", 0);
             else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
           }
-#else
-          if (strlen(ip_address)) {
-            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15s  ", ip_address);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ip_address);
-          }
-          else {
-            if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-15u  ", 0);
-            else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), empty_string);
-          }
-#endif
         }
 
 	if (!have_wtc || (what_to_count_2 & COUNT_TUNNEL_IP_PROTO)) {
@@ -3853,10 +3686,7 @@ void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_
     else if (cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_IP) {
       int len = 0;
 
-      len = INET_ADDRSTRLEN;
-#if defined ENABLE_IPV6
       len = INET6_ADDRSTRLEN;
-#endif
       	
       if (formatted) {
         snprintf(format, SRVBUFLEN, "%%-%u", len > strlen(cp_entry->name) ? len : strlen(cp_entry->name));
@@ -3939,21 +3769,16 @@ void pmc_custom_primitive_value_print(char *out, int outlen, char *in, struct im
       memset(&ip_addr, 0, sizeof(ip_addr));
       memset(ip_str, 0, sizeof(ip_str));
 
-      len = INET_ADDRSTRLEN;
-#if defined ENABLE_IPV6
       len = INET6_ADDRSTRLEN;
-#endif
 
       if (cp_entry->len == 4) { 
 	ip_addr.family = AF_INET;
 	memcpy(&ip_addr.address.ipv4, in+cp_entry->off, 4); 
       }
-#if defined ENABLE_IPV6
       else if (cp_entry->len == 16) {
 	ip_addr.family = AF_INET6;
 	memcpy(&ip_addr.address.ipv6, in+cp_entry->off, 16); 
       }
-#endif
 
       addr_to_str(ip_str, &ip_addr);
       if (formatted)

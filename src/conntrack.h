@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -46,7 +46,6 @@ struct conntrack_ipv4 {
   struct conntrack_ipv4 *next;
 };
 
-#if defined ENABLE_IPV6
 struct conntrack_ipv6 {
   u_int32_t ip_src[4];
   u_int32_t ip_dst[4];
@@ -60,7 +59,6 @@ struct conntrack_ipv6 {
   conntrack_helper helper;
   struct conntrack_ipv6 *next;
 };
-#endif
 
 #if defined __CONNTRACK_C || defined __PMACCT_PLAYER_C || defined __NFACCTD_C || defined __SFACCTD_C
 #define EXT
@@ -75,11 +73,9 @@ EXT void search_conntrack(struct ip_flow_common *, struct packet_ptrs *, unsigne
 EXT void search_conntrack_ipv4(struct ip_flow_common *, struct packet_ptrs *, unsigned int);
 EXT void insert_conntrack_ipv4(time_t, u_int32_t, u_int32_t, u_int16_t, u_int16_t, u_int8_t, pm_class_t, conntrack_helper, time_t);
 EXT struct conntrack_ipv4 *conntrack_ipv4_table;
-#if defined ENABLE_IPV6
 EXT void search_conntrack_ipv6(struct ip_flow_common *, struct packet_ptrs *, unsigned int);
 EXT void insert_conntrack_ipv6(time_t, struct in6_addr *, struct in6_addr *, u_int16_t, u_int16_t, u_int8_t, pm_class_t, conntrack_helper, time_t);
 EXT struct conntrack_ipv6 *conntrack_ipv6_table;
-#endif
 
 #undef EXT
 

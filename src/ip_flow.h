@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -77,7 +77,6 @@ struct flow_lru_l {
   struct ip_flow *last;
 };
 
-#if defined ENABLE_IPV6
 struct ip_flow6 {
   struct ip_flow_common cmn;
   u_int32_t ip_src[4];
@@ -94,7 +93,6 @@ struct flow_lru_l6 {
   struct ip_flow6 *root;
   struct ip_flow6 *last;
 };
-#endif
 
 #if (!defined __IP_FLOW_C)
 #define EXT extern
@@ -116,7 +114,6 @@ EXT unsigned int is_expired_uni(struct timeval *, struct ip_flow_common *, unsig
 EXT void evaluate_tcp_flags(struct timeval *, struct packet_ptrs *, struct ip_flow_common *, unsigned int);
 EXT void clear_tcp_flow_cmn(struct ip_flow_common *, unsigned int);
 
-#if defined ENABLE_IPV6
 EXT void init_ip6_flow_handler();
 EXT void ip_flow6_handler(struct packet_ptrs *);
 EXT unsigned int hash_flow6(u_int32_t, struct in6_addr *, struct in6_addr *);
@@ -124,16 +121,13 @@ EXT unsigned int normalize_flow6(struct in6_addr *, struct in6_addr *, u_int16_t
 EXT void find_flow6(struct timeval *, struct packet_ptrs *);
 EXT void create_flow6(struct timeval *, struct ip_flow6 *, u_int8_t, unsigned int, struct packet_ptrs *, struct ip6_hdr *, struct pm_tlhdr *, unsigned int);
 EXT void prune_old_flows6(struct timeval *); 
-#endif
 
 /* global vars */
 EXT struct ip_flow **ip_flow_table;
 EXT struct flow_lru_l flow_lru_list;
 
-#if defined ENABLE_IPV6
 EXT struct ip_flow6 **ip_flow_table6;
 EXT struct flow_lru_l6 flow_lru_list6;
-#endif
 #undef EXT
 
 #endif /* _IP_FLOW_H_ */

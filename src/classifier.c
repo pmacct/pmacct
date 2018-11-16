@@ -203,9 +203,7 @@ void init_class_accumulators(struct packet_ptrs *pptrs, struct ip_flow_common *f
 void handle_class_accumulators(struct packet_ptrs *pptrs, struct ip_flow_common *fp, unsigned int idx)
 {
   struct pm_iphdr *iphp = (struct pm_iphdr *)pptrs->iph_ptr; 
-#if defined ENABLE_IPV6
   struct ip6_hdr *ip6hp = (struct ip6_hdr *)pptrs->iph_ptr; 
-#endif
 
   /* The flow doesn't have a class yet */
   if (!fp->class[idx]) { 
@@ -215,10 +213,8 @@ void handle_class_accumulators(struct packet_ptrs *pptrs, struct ip_flow_common 
       pptrs->cst.tentatives = fp->cst[idx].tentatives; // XXX
       if (pptrs->l3_proto == ETHERTYPE_IP)
 	fp->cst[idx].ba += ntohs(iphp->ip_len); 
-#if defined ENABLE_IPV6
       else if (pptrs->l3_proto == ETHERTYPE_IPV6)
 	fp->cst[idx].ba += (IP6HdrSz+ntohs(ip6hp->ip6_plen));
-#endif
       if (pptrs->frag_sum_bytes) {
 	fp->cst[idx].ba += pptrs->frag_sum_bytes;
 	pptrs->frag_sum_bytes = 0;

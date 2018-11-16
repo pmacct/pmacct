@@ -37,18 +37,14 @@ time_t flow_generic_lifetime;
 time_t flow_tcpest_lifetime;
 u_int32_t flt_trivial_hash_rnd = 140281; /* ummmh */
 
-#if defined ENABLE_IPV6
 u_int32_t flt6_total_nodes;
 time_t flt6_prune_deadline;
 time_t flt6_emergency_prune;
-#endif
 
 void init_ip_flow_handler()
 {
   init_ip4_flow_handler();
-#if defined ENABLE_IPV6
   init_ip6_flow_handler();
-#endif
 }
 
 void init_ip4_flow_handler()
@@ -394,7 +390,6 @@ unsigned int is_expired_uni(struct timeval *now, struct ip_flow_common *fp, unsi
   return FALSE;
 }
 
-#if defined ENABLE_IPV6
 void init_ip6_flow_handler()
 {
   int size;
@@ -675,4 +670,3 @@ void prune_old_flows6(struct timeval *now)
 
   flow_lru_list6.last = last_seen;
 }
-#endif

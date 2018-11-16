@@ -5949,7 +5949,6 @@ int cfg_key_geoip_ipv4_file(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-#if defined ENABLE_IPV6
 int cfg_key_geoip_ipv6_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -5960,7 +5959,6 @@ int cfg_key_geoip_ipv6_file(char *filename, char *name, char *value_ptr)
 
   return changes;
 }
-#endif
 #endif
 
 #if defined WITH_GEOIPV2
