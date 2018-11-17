@@ -510,12 +510,10 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
             gatewayHdrElem.flowType.gateway.nexthop.type = SFLADDRESSTYPE_IP_V4;
             memcpy(&gatewayHdrElem.flowType.gateway.nexthop.address.ip_v4, &hdr->bgp_next_hop.address.ipv4, 4);
             break;
-#if defined ENABLE_IPV6
           case AF_INET6:
             gatewayHdrElem.flowType.gateway.nexthop.type = SFLADDRESSTYPE_IP_V6;
             memcpy(&gatewayHdrElem.flowType.gateway.nexthop.address.ip_v6, &hdr->bgp_next_hop.address.ipv6, 16);
             break;
-#endif
           default:
             memset(&gatewayHdrElem.flowType.gateway.nexthop, 0, sizeof(routerHdrElem.flowType.router.nexthop));
             break;

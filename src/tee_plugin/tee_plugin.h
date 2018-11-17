@@ -38,11 +38,7 @@ typedef struct tee_receiver *(*tee_balance_algorithm) (void *, struct pkt_msg *)
 
 /* structures */
 struct tee_receiver {
-#if defined ENABLE_IPV6
   struct sockaddr_storage dest;
-#else
-  struct sockaddr dest;
-#endif
   socklen_t dest_len;
   int fd;
 };

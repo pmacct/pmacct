@@ -230,10 +230,8 @@ struct id_table {
   unsigned int num;
   struct id_entry *ipv4_base;
   unsigned int ipv4_num;
-#if defined ENABLE_IPV6
   struct id_entry *ipv6_base;
   unsigned int ipv6_num;
-#endif
   struct id_entry *e;
   struct id_table_index index[MAX_ID_TABLE_INDEXES];
   unsigned int index_num;

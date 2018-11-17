@@ -40,10 +40,8 @@
 #include <netinet/in.h>
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
-#if defined ENABLE_IPV6
 #include "../../include/ip6.h"
 #include "../../include/ah.h"
-#endif
 #include <netinet/udp.h>
 #include <arpa/inet.h>
 

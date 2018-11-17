@@ -301,10 +301,8 @@ int Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
   char *buf_ptr = tee_send_buf;
   struct sockaddr_in *sa = (struct sockaddr_in *) &msg->agent;
   struct pm_iphdr *i4h = (struct pm_iphdr *) buf_ptr;
-#if defined ENABLE_IPV6
   struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) &msg->agent;
   struct ip6_hdr *i6h = (struct ip6_hdr *) buf_ptr;
-#endif
   struct pm_udphdr *uh;
   int msglen = 0;
 
@@ -316,14 +314,12 @@ int Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
       uh->uh_sport = sa->sin_port;
       uh->uh_dport = ((struct sockaddr_in *)target)->sin_port;
     }
-#if defined ENABLE_IPV6
     else if (target->sa_family == AF_INET6) {
       buf_ptr += IP6HdrSz;
       uh = (struct pm_udphdr *) buf_ptr;
       uh->uh_sport = sa6->sin6_port;
       uh->uh_dport = ((struct sockaddr_in6 *)target)->sin6_port;
     }
-#endif
 
     uh->uh_ulen = htons(msg->len+UDPHdrSz);
     uh->uh_sum = 0;
@@ -353,7 +349,6 @@ int Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
       i4h->ip_src.s_addr = sa->sin_addr.s_addr;
       i4h->ip_dst.s_addr = ((struct sockaddr_in *)target)->sin_addr.s_addr;
     }
-#if defined ENABLE_IPV6
     else if (target->sa_family == AF_INET6) {
       i6h->ip6_vfc = 6;
       i6h->ip6_vfc <<= 4;
@@ -363,7 +358,6 @@ int Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
       memcpy(&i6h->ip6_src, &sa6->sin6_addr, IP6AddrSz);
       memcpy(&i6h->ip6_dst, &((struct sockaddr_in6 *)target)->sin6_addr, IP6AddrSz);
     }
-#endif
 
     /* Put everything together and send */
     buf_ptr += UDPHdrSz;
@@ -669,11 +663,7 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, u_int16_t src_port)
 
   if (!config.tee_transparent) {
     struct host_addr source_ip;
-#if defined ENABLE_IPV6
     struct sockaddr_storage ssource_ip;
-#else
-    struct sockaddr ssource_ip;
-#endif
 
     memset(&source_ip, 0, sizeof(source_ip));
     memset(&ssource_ip, 0, sizeof(ssource_ip));

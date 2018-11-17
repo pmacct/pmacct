@@ -58,7 +58,6 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
   }
   /* If we parse a bgp_agent_map and spot a ':' within the string let's
      check if we are given a valid IPv6 address */
-#if defined ENABLE_IPV6
   else if (acct_type == MAP_BGP_TO_XFLOW_AGENT && strchr(value, ':')) {
     memset(&a, 0, sizeof(a));
     str_to_addr(value, &a);
@@ -73,7 +72,6 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
       return TRUE;
     }
   }
-#endif
   else if (acct_type == MAP_FLOW_TO_RD && strchr(value, ':')) {
     rd_t rd;
 
@@ -1409,12 +1407,10 @@ int pretag_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
       if (!memcmp(&entry->key.nexthop.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_NEXT_HOP].off, tpl->tpl[NF9_IPV4_NEXT_HOP].len))
 	return (FALSE | entry->key.nexthop.neg);
     }
-#if defined ENABLE_IPV6
     else if (entry->key.nexthop.a.family == AF_INET6) {
       if (!memcmp(&entry->key.nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_NEXT_HOP].off, tpl->tpl[NF9_IPV6_NEXT_HOP].len))
 	return (FALSE | entry->key.nexthop.neg);
     }
-#endif
     else return (TRUE ^ entry->key.nexthop.neg);
   case 5:
     if (entry->key.nexthop.a.address.ipv4.s_addr == ((struct struct_export_v5 *)pptrs->f_data)->nexthop.s_addr) return (FALSE | entry->key.nexthop.neg);
@@ -1450,7 +1446,6 @@ int pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 	  return (FALSE | entry->key.bgp_nexthop.neg);
       }
     }
-#if defined ENABLE_IPV6
     else if (entry->key.nexthop.a.family == AF_INET6) {
       if (tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len) {
 	if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].off, tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len))
@@ -1461,7 +1456,6 @@ int pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 	  return (FALSE | entry->key.bgp_nexthop.neg);
       }
     }
-#endif
     else return (TRUE ^ entry->key.bgp_nexthop.neg);
   case 5:
     if (entry->key.bgp_nexthop.a.address.ipv4.s_addr == ((struct struct_export_v5 *)pptrs->f_data)->nexthop.s_addr) return (FALSE | entry->key.bgp_nexthop.neg);
@@ -1491,11 +1485,9 @@ int pretag_bgp_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void
       if (info->attr->mp_nexthop.family == AF_INET) {
         ret = memcmp(&entry->key.bgp_nexthop.a.address.ipv4, &info->attr->mp_nexthop.address.ipv4, 4);
       }
-#if defined ENABLE_IPV6
       else if (info->attr->mp_nexthop.family == AF_INET6) {
         ret = memcmp(&entry->key.bgp_nexthop.a.address.ipv6, &info->attr->mp_nexthop.address.ipv6, 16);
       }
-#endif
       else {
 	ret = memcmp(&entry->key.bgp_nexthop.a.address.ipv4, &info->attr->nexthop, 4);
       }
@@ -2013,7 +2005,6 @@ int pretag_src_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
       memcpy(&addr.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_PREFIX].off, MIN(tpl->tpl[NF9_IPV4_SRC_PREFIX].len, 4));
       addr.family = AF_INET;
     }
-#if defined ENABLE_IPV6
     if (tpl->tpl[NF9_IPV6_SRC_ADDR].len) {
       memcpy(&addr.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV6_SRC_ADDR].len, 16));
       addr.family = AF_INET6;
@@ -2022,7 +2013,6 @@ int pretag_src_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
       memcpy(&addr.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_PREFIX].off, MIN(tpl->tpl[NF9_IPV6_SRC_PREFIX].len, 16));
       addr.family = AF_INET6;
     }
-#endif
     break;
   case 5:
     addr.address.ipv4.s_addr = ((struct struct_export_v5 *) pptrs->f_data)->srcaddr.s_addr;
@@ -2058,7 +2048,6 @@ int pretag_dst_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
       memcpy(&addr.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV4_DST_PREFIX].len, 4));
       addr.family = AF_INET;
     }
-#if defined ENABLE_IPV6
     if (tpl->tpl[NF9_IPV6_DST_ADDR].len) {
       memcpy(&addr.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV6_DST_ADDR].len, 16));
       addr.family = AF_INET6;
@@ -2067,7 +2056,6 @@ int pretag_dst_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
       memcpy(&addr.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV6_DST_PREFIX].len, 16));
       addr.family = AF_INET6;
     }
-#endif
     break;
   case 5:
     addr.address.ipv4.s_addr = ((struct struct_export_v5 *) pptrs->f_data)->dstaddr.s_addr;
@@ -2261,11 +2249,9 @@ int SF_pretag_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   if (entry->key.nexthop.a.family == AF_INET) {
     if (!memcmp(&entry->key.nexthop.a.address.ipv4, &sample->nextHop.address.ip_v4, 4)) return (FALSE | entry->key.nexthop.neg);
   }
-#if defined ENABLE_IPV6
   else if (entry->key.nexthop.a.family == AF_INET6) {
     if (!memcmp(&entry->key.nexthop.a.address.ipv6, &sample->nextHop.address.ip_v6, IP6AddrSz)) return (FALSE | entry->key.nexthop.neg);
   }
-#endif
 
   return (TRUE ^ entry->key.nexthop.neg);
 }
@@ -2283,11 +2269,9 @@ int SF_pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void 
   if (entry->key.bgp_nexthop.a.family == AF_INET) {
     if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv4, &sample->bgp_nextHop.address.ip_v4, 4)) return (FALSE | entry->key.bgp_nexthop.neg);
   }
-#if defined ENABLE_IPV6
   else if (entry->key.bgp_nexthop.a.family == AF_INET6) {
     if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv6, &sample->bgp_nextHop.address.ip_v6, IP6AddrSz)) return (FALSE | entry->key.bgp_nexthop.neg);
   }
-#endif
 
   return (TRUE ^ entry->key.bgp_nexthop.neg);
 }
@@ -2393,12 +2377,10 @@ int SF_pretag_src_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     addr.address.ipv4.s_addr = sample->dcd_srcIP.s_addr;
     addr.family = AF_INET;
   }
-#if defined ENABLE_IPV6
   else if (sample->gotIPV6) {
     memcpy(&addr.address.ipv6, &sf_addr->address.ip_v6, IP6AddrSz);
     addr.family = AF_INET6;
   }
-#endif
 
   if (!host_addr_mask_cmp(&entry->key.src_net.a, &entry->key.src_net.m, &addr)) 
     return (FALSE | entry->key.src_net.neg);
@@ -2417,12 +2399,10 @@ int SF_pretag_dst_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     addr.address.ipv4.s_addr = sample->dcd_dstIP.s_addr;
     addr.family = AF_INET;
   }
-#if defined ENABLE_IPV6
   else if (sample->gotIPV6) {
     memcpy(&addr.address.ipv6, &sf_addr->address.ip_v6, IP6AddrSz);
     addr.family = AF_INET6;
   }
-#endif
 
   if (!host_addr_mask_cmp(&entry->key.dst_net.a, &entry->key.dst_net.m, &addr)) 
     return (FALSE | entry->key.dst_net.neg);
@@ -2501,12 +2481,10 @@ int BPAS_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
             return (FALSE | entry->key.bgp_nexthop.neg);
 	}
       }
-#if defined ENABLE_IPV6
       else if (entry->key.nexthop.a.family == AF_INET6) {
 	if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv6, &info->attr->mp_nexthop.address.ipv6, 16))
           return (FALSE | entry->key.bgp_nexthop.neg);
       }
-#endif
     }
   }
 
@@ -3114,12 +3092,10 @@ int PT_map_index_fdata_ip_handler(struct id_entry *e, pm_hash_serial_t *hash_ser
       e->key.agent_ip.a.family = AF_INET;
       e->key.agent_ip.a.address.ipv4.s_addr = sample->agent_addr.address.ip_v4.s_addr;
     }
-#if defined ENABLE_IPV6
     else if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V6) {
       e->key.agent_ip.a.family = AF_INET6;
       memcpy(e->key.agent_ip.a.address.ipv6.s6_addr, sample->agent_addr.address.ip_v6.s6_addr, 16);
     }
-#endif 
   }
   else return TRUE;
 
@@ -3241,11 +3217,9 @@ int PT_map_index_fdata_bgp_nexthop_handler(struct id_entry *e, pm_hash_serial_t 
 	if (info->attr->mp_nexthop.family == AF_INET) {
 	  memcpy(&e->key.bgp_nexthop.a, &info->attr->mp_nexthop, HostAddrSz);
 	}
-#if defined ENABLE_IPV6
 	else if (info->attr->mp_nexthop.family == AF_INET6) {
 	  memcpy(&e->key.bgp_nexthop.a, &info->attr->mp_nexthop, HostAddrSz);
 	}
-#endif
 	else {
 	  e->key.bgp_nexthop.a.address.ipv4.s_addr = info->attr->nexthop.s_addr;
 	  e->key.bgp_nexthop.a.family = AF_INET;
@@ -3268,7 +3242,6 @@ int PT_map_index_fdata_bgp_nexthop_handler(struct id_entry *e, pm_hash_serial_t 
 	    e->key.bgp_nexthop.a.family = AF_INET;
 	  }
 	}
-#if defined ENABLE_IPV6
 	else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
 	  if (tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len) {
 	    memcpy(&e->key.bgp_nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].off, MIN(tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len, 16));
@@ -3283,7 +3256,6 @@ int PT_map_index_fdata_bgp_nexthop_handler(struct id_entry *e, pm_hash_serial_t 
 	    e->key.bgp_nexthop.a.family = AF_INET6;
 	  }
 	}
-#endif
       }
     }
     else if (config.acct_type == ACCT_SF) {
@@ -3291,12 +3263,10 @@ int PT_map_index_fdata_bgp_nexthop_handler(struct id_entry *e, pm_hash_serial_t 
 	e->key.bgp_nexthop.a.family = AF_INET;
 	e->key.bgp_nexthop.a.address.ipv4.s_addr = sample->bgp_nextHop.address.ip_v4.s_addr;
       }
-#if defined ENABLE_IPV6
       else if (sample->gotIPV6) {
 	e->key.bgp_nexthop.a.family = AF_INET6;
 	memcpy(&e->key.bgp_nexthop.a.address.ipv6, &sample->bgp_nextHop.address.ip_v6, IP6AddrSz);
       }
-#endif
     }
     else return TRUE;
   }

@@ -52,10 +52,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
   int v4_num = 0, x, tot_lines = 0, err, index, label_solved, sz;
   int ignoring, map_entries, map_row_len;
   struct stat st;
-
-#if defined ENABLE_IPV6
   int v6_num = 0;
-#endif
 
   if (!filename || !map_allocated) return;
 
@@ -400,12 +397,9 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 		      tmp.e[tmp.num].key.agent_ip.a.family = AF_INET;
 		      tmp.e[tmp.num].key.agent_mask.family = AF_INET;
 
-#if defined ENABLE_IPV6
 		      memcpy(&recirc_e, &tmp.e[tmp.num], sizeof(struct id_entry));
 		      recirculate = TRUE;
-#endif
 		    }
-#if defined ENABLE_IPV6
 		    else {
 		      memcpy(&tmp.e[tmp.num], &recirc_e, sizeof(struct id_entry));
                       tmp.e[tmp.num].key.agent_ip.a.family = AF_INET6;
@@ -413,7 +407,6 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 
 		      recirculate = FALSE;
 		    }
-#endif
 		  }
 
                   for (j = 0; tmp.e[tmp.num].func[j]; j++);
@@ -423,9 +416,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 		  }
 
 	          if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET) v4_num++;
-#if defined ENABLE_IPV6
 	          else if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET6) v6_num++;
-#endif
                   tmp.num++;
 
 		  if (recirculate) {
@@ -462,9 +453,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   for (j = 0; tmp.e[tmp.num].func[j]; j++);
                   tmp.e[tmp.num].func[j] = pretag_id_handler;
                   if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET) v4_num++;
-#if defined ENABLE_IPV6
                   else if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET6) v6_num++;
-#endif
                   tmp.num++;
                 }
                 else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].key.agent_ip.a.family) && !err)
@@ -484,9 +473,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 		  tmp.e[tmp.num].func[j] = pretag_id_handler;
 
                   if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET) v4_num++;
-#if defined ENABLE_IPV6
                   else if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET6) v6_num++;
-#endif
                   tmp.num++;
                 }
                 else if (((!tmp.e[tmp.num].id && !tmp.e[tmp.num].id2) || !tmp.e[tmp.num].key.agent_ip.a.family) && !err)
@@ -500,9 +487,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   for (j = 0; tmp.e[tmp.num].func[j]; j++);
                   tmp.e[tmp.num].func[j] = pretag_id_handler;
                   if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET) v4_num++;
-#if defined ENABLE_IPV6
                   else if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET6) v6_num++;
-#endif
                   tmp.num++;
                 }
 	      }
@@ -513,9 +498,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   for (j = 0; tmp.e[tmp.num].func[j]; j++);
                   tmp.e[tmp.num].func[j] = pretag_id_handler;
                   if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET) v4_num++;
-#if defined ENABLE_IPV6
                   else if (tmp.e[tmp.num].key.agent_ip.a.family == AF_INET6) v6_num++;
-#endif
                   tmp.num++;
                 }
                 else if ((!tmp.e[tmp.num].id || !tmp.e[tmp.num].key.agent_ip.a.family) && !err)
@@ -558,7 +541,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	  x++;
         }
       }
-#if defined ENABLE_IPV6
+
       t->ipv6_num = v6_num;
       t->ipv6_base = &t->e[x];
       for (index = 0; index < tmp.num; index++) {
@@ -568,7 +551,6 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
           x++;
         }
       }
-#endif
 
       /* third stage: building short circuits basing on jumps and labels. Only
          forward references are solved. Backward and unsolved references will
@@ -601,7 +583,6 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
         }
       }
 
-#if defined ENABLE_IPV6
       for (ptr = t->ipv6_base, x = 0; x < t->ipv6_num; ptr++, x++) {
         if (ptr->jeq.label) {
           label_solved = FALSE;
@@ -621,7 +602,6 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
           ptr->jeq.label = NULL;
         }
       }
-#endif
 
       t->filename = filename;
 
@@ -633,11 +613,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	
 	t->index_num = MAX_ID_TABLE_INDEXES;
 
-#if defined ENABLE_IPV6
         for (ptr = t->ipv4_base, x = 0; x < (t->ipv4_num + t->ipv6_num); ptr++, x++) {
-#else
-        for (ptr = t->ipv4_base, x = 0; x < t->ipv4_num; ptr++, x++) {
-#endif
 	  idx_bmap = pretag_index_build_bitmap(ptr, acct_type);
 
 	  /* insert bitmap to index list and determine entries per index */ 
@@ -655,11 +631,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	/* allocate indexes */
         pretag_index_allocate(t);
 
-#if defined ENABLE_IPV6
         for (ptr = t->ipv4_base, x = 0; x < (t->ipv4_num + t->ipv6_num); ptr++, x++) {
-#else
-        for (ptr = t->ipv4_base, x = 0; x < t->ipv4_num; ptr++, x++) {
-#endif
           idx_bmap = pretag_index_build_bitmap(ptr, acct_type);
 
 	  /* fill indexes */

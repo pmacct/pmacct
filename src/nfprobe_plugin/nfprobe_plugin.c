@@ -506,7 +506,6 @@ ipv4_to_flowrec_update(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int
   return (0);
 }
 
-#if defined ENABLE_IPV6
 /* Convert a IPv6 packet to a partial flow record (used for comparison) */
 static int
 ipv6_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int *isfrag, int af)
@@ -575,7 +574,6 @@ ipv6_to_flowrec_update(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int
 
   return (0);
 }
-#endif 
 
 static void
 flow_update_expiry(struct FLOWTRACK *ft, struct FLOW *flow)
@@ -654,9 +652,7 @@ flow_update_expiry(struct FLOWTRACK *ft, struct FLOW *flow)
 
 	if (ft->icmp_timeout != 0 &&
 	    ((flow->af == AF_INET && flow->protocol == IPPROTO_ICMP)
-#if defined ENABLE_IPV6	   
 	    || ((flow->af == AF_INET6 && flow->protocol == IPPROTO_ICMPV6))
-#endif
 	   )) {
 		/* UDP flows */
 		flow->expiry->expires_at = flow->flow_last.tv_sec + 
@@ -709,12 +705,10 @@ process_packet(struct FLOWTRACK *ft, struct primitives_ptrs *prim_ptrs, const st
     if (ipv4_to_flowrec(&tmp, prim_ptrs, &frag, af) == -1)
       goto bad;
     break;
-#if defined ENABLE_IPV6
   case AF_INET6:
     if (ipv6_to_flowrec(&tmp, prim_ptrs, &frag, af) == -1)
       goto bad;
     break;
-#endif
   default:
   bad: 
     ft->bad_packets += data->pkt_num;
@@ -768,11 +762,9 @@ process_packet(struct FLOWTRACK *ft, struct primitives_ptrs *prim_ptrs, const st
     case AF_INET:
       ipv4_to_flowrec_update(flow, prim_ptrs, &frag, af);
     break;
-#if defined ENABLE_IPV6
     case AF_INET6:
       ipv6_to_flowrec_update(flow, prim_ptrs, &frag, af);
     break;
-#endif
     }
     if (!flow->class) flow->class = tmp.class;
 #if defined (WITH_NDPI)
@@ -1138,9 +1130,7 @@ connsock(struct sockaddr_storage *addr, socklen_t len, int hoplimit)
   unsigned int h6;
   unsigned char h4;
   struct sockaddr_in *in4 = (struct sockaddr_in *)addr;
-#if defined ENABLE_IPV6
   struct sockaddr_in6 *in6 = (struct sockaddr_in6 *)addr;
-#endif
   struct sockaddr ssource_ip;
 
   if (config.nfprobe_source_ip) {
@@ -1196,7 +1186,6 @@ connsock(struct sockaddr_storage *addr, socklen_t len, int hoplimit)
       exit_gracefully(1);
     }
     break;
-#if defined ENABLE_IPV6
   case AF_INET6:
     /* Default to link-local hoplimit for multicast addresses */
     if (hoplimit == -1 && IN6_IS_ADDR_MULTICAST(&in6->sin6_addr))
@@ -1208,7 +1197,6 @@ connsock(struct sockaddr_storage *addr, socklen_t len, int hoplimit)
       Log(LOG_ERR, "ERROR ( %s/%s ): setsockopt() failed for IPV6_MULTICAST_HOPS: %s\n", config.name, config.type, strerror(errno));
       exit_gracefully(1);
     }
-#endif
   }
 
   return(s);

@@ -61,9 +61,7 @@ static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
   /* Check we can handle this packet */
   switch (nfmsg->nfgen_family) {
   case AF_INET: break;
-#ifdef ENABLE_IPV6
   case AF_INET6: break;
-#endif
   default: return 0;
   }
 
@@ -196,11 +194,7 @@ int main(int argc,char **argv, char **envp)
   ssize_t len = 0;
   unsigned char *nflog_buffer;
 
-#if defined ENABLE_IPV6
   struct sockaddr_storage client;
-#else
-  struct sockaddr client;
-#endif
 
 #if defined HAVE_MALLOPT
   mallopt(M_CHECK_ACTION, 0);
@@ -802,7 +796,6 @@ int main(int argc,char **argv, char **envp)
     nflog_close(nfh);
     exit_gracefully(1);
   }
-#if defined ENABLE_IPV6
   if (nflog_unbind_pf(nfh, AF_INET6) < 0) {
     Log(LOG_ERR, "ERROR ( %s/core ): Failed to unbind Netlink NFLOG socket from IPv6\n", config.name);
     nflog_close(nfh);
@@ -813,7 +806,6 @@ int main(int argc,char **argv, char **envp)
     nflog_close(nfh);
     exit_gracefully(1);
   }
-#endif
 
   /* Bind to group */
   if ((nfgh = nflog_bind_group(nfh, config.uacctd_group)) == NULL) {

@@ -210,7 +210,6 @@ static struct NF9_SOFTFLOWD_TEMPLATE v4_template_out;
 static struct IPFIX_PEN_TEMPLATE_ADDENDUM v4_pen_template_out;
 static struct NF9_INTERNAL_TEMPLATE v4_int_template_out;
 static struct NF9_INTERNAL_TEMPLATE v4_pen_int_template_out;
-#if defined ENABLE_IPV6
 static struct NF9_SOFTFLOWD_TEMPLATE v6_template;
 static struct IPFIX_PEN_TEMPLATE_ADDENDUM v6_pen_template;
 static struct NF9_INTERNAL_TEMPLATE v6_int_template;
@@ -219,7 +218,6 @@ static struct NF9_SOFTFLOWD_TEMPLATE v6_template_out;
 static struct IPFIX_PEN_TEMPLATE_ADDENDUM v6_pen_template_out;
 static struct NF9_INTERNAL_TEMPLATE v6_int_template_out;
 static struct NF9_INTERNAL_TEMPLATE v6_pen_int_template_out;
-#endif
 static struct NF9_OPTIONS_TEMPLATE sampling_option_template;
 static struct NF9_INTERNAL_OPTIONS_TEMPLATE sampling_option_int_template;
 static struct NF9_OPTIONS_TEMPLATE class_option_template;
@@ -1150,7 +1148,6 @@ nf9_init_template(void)
 	  else v4_pen_int_template_out.tot_rec_len += v4_pen_int_template_out.r[idx].length;
         }
 
-#if defined ENABLE_IPV6
 	rcount = 0; rcount_pen = 0;
 	bzero(&v6_template, sizeof(v6_template));
 	bzero(&v6_pen_template, sizeof(v6_pen_template));
@@ -1566,7 +1563,6 @@ nf9_init_template(void)
 	  if (config.nfprobe_version == 10 && v6_pen_int_template_out.r[idx].length == IPFIX_VARIABLE_LENGTH);
           else v6_pen_int_template_out.tot_rec_len += v6_pen_int_template_out.r[idx].length;
         }
-#endif
 }
 
 static void
@@ -1813,7 +1809,6 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
                   freclen_0 += (v4_pen_int_template_out.tot_rec_len + add_len);
 		}
                 break;
-#if defined ENABLE_IPV6
           case AF_INET6:
                 rec8 = 6;
                 memcpy(ftoft_ptr_0, &rec8, 1);
@@ -1845,7 +1840,6 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
                   freclen_0 += (v6_pen_int_template_out.tot_rec_len + add_len);
 		}
                 break;
-#endif
           default:
                 return (-1);
           }
@@ -1929,7 +1923,6 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
                   freclen_1 += (v4_pen_int_template_out.tot_rec_len + add_len);
 		}
                 break;
-#if defined ENABLE_IPV6
           case AF_INET6:
                 rec8 = 6;
                 memcpy(ftoft_ptr_1, &rec8, 1);
@@ -1961,7 +1954,6 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
                   freclen_1 += (v6_pen_int_template_out.tot_rec_len + add_len);
 		}
                 break;
-#endif
           default:
                 return (-1);
           }
@@ -2003,12 +1995,10 @@ nf_sampling_option_to_flowset(u_char *packet, u_int len, const struct timeval *s
           memcpy(ftoft_ptr_0, &config.nfprobe_source_ha.address.ipv4, 4);
           ftoft_ptr_0 += 4;
           break;
-#if defined ENABLE_IPV6
         case AF_INET6:
           memcpy(ftoft_ptr_0, &config.nfprobe_source_ha.address.ipv6, 16);
           ftoft_ptr_0 += 16;
           break;
-#endif
         default:
           memset(ftoft_ptr_0, 0, 4);
           ftoft_ptr_0 += 4;
@@ -2058,12 +2048,10 @@ nf_class_option_to_flowset(u_int idx, u_char *packet, u_int len, const struct ti
           memcpy(ftoft_ptr_0, &config.nfprobe_source_ha.address.ipv4, 4);
           ftoft_ptr_0 += 4;
           break;
-#if defined ENABLE_IPV6
         case AF_INET6:
           memcpy(ftoft_ptr_0, &config.nfprobe_source_ha.address.ipv6, 16);
           ftoft_ptr_0 += 16;
           break;
-#endif
         default:
           memset(ftoft_ptr_0, 0, 4);
           ftoft_ptr_0 += 4;
@@ -2107,12 +2095,10 @@ nf_exporter_option_to_flowset(u_char *packet, u_int len, const struct timeval *s
     memcpy(ftoft_ptr_0, &config.nfprobe_source_ha.address.ipv4, 4);
     ftoft_ptr_0 += 4;
     break;
-#if defined ENABLE_IPV6
   case AF_INET6:
     memcpy(ftoft_ptr_0, &config.nfprobe_source_ha.address.ipv6, 16);
     ftoft_ptr_0 += 16;
     break;
-#endif
   default:
     memset(ftoft_ptr_0, 0, 4);
     ftoft_ptr_0 += 4;
@@ -2129,7 +2115,6 @@ nf_exporter_option_to_flowset(u_char *packet, u_int len, const struct timeval *s
     ftoft_ptr_0 += 16;
 
     break;
-#if defined ENABLE_IPV6
   /* NF9_EXPORTER_IPV6_ADDRESS */
   case AF_INET6:
     memset(ftoft_ptr_0, 0, 4);
@@ -2139,7 +2124,6 @@ nf_exporter_option_to_flowset(u_char *packet, u_int len, const struct timeval *s
     ftoft_ptr_0 += 16;
 
     break;
-#endif
   default:
     memset(ftoft_ptr_0, 0, 4);
     ftoft_ptr_0 += 4;
@@ -2239,7 +2223,6 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
                         offset += v4_pen_template_out.tot_len;
                         flows++;
 			tot_len += v4_template_out.tot_len + v4_pen_template_out.tot_len;
-#if defined ENABLE_IPV6
 			memcpy(packet + offset, &v6_template, v6_template.tot_len);
 			offset += v6_template.tot_len; 
 			memcpy(packet + offset, &v6_pen_template, v6_pen_template.tot_len);
@@ -2253,7 +2236,7 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
                         offset += v6_pen_template_out.tot_len;
                         flows++;
 			tot_len += v6_template_out.tot_len + v6_pen_template_out.tot_len; 
-#endif
+
 			if (config.sampling_rate || config.ext_sampling_rate) {
                           memcpy(packet + offset, &sampling_option_template, sampling_option_template.tot_len);
                           offset += sampling_option_template.tot_len;
@@ -2331,14 +2314,12 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 				    else if (direction == DIRECTION_OUT)
 				      dh->c.flowset_id = v4_template_out.h.template_id;
 				  }
-#if defined ENABLE_IPV6
 				  else if (flows[flow_i + flow_j]->af == AF_INET6) {
 				    if (direction == DIRECTION_IN)
 				      dh->c.flowset_id = v6_template.h.template_id;
 				    else if (direction == DIRECTION_OUT)
 				      dh->c.flowset_id = v6_template_out.h.template_id;
 				  }
-#endif
 				  // last_af = flows[flow_i + flow_j]->af; /* XXX */
 				}
 				last_valid = offset;

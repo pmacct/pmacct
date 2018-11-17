@@ -441,9 +441,7 @@ struct configuration {
   char *geoip_ipv6_file;
 #if defined WITH_GEOIP
   GeoIP *geoip_ipv4;
-#if defined ENABLE_IPV6
   GeoIP *geoip_ipv6;
-#endif
 #endif
   char *geoipv2_file;
 #if defined WITH_GEOIPV2
