@@ -68,11 +68,7 @@ void skinny_bgp_daemon_online()
   struct bgp_peer *peer;
   char bgp_reply_pkt[BGP_BUFFER_SIZE], *bgp_reply_pkt_ptr;
   char bgp_peer_str[INET6_ADDRSTRLEN], bgp_xconnect_peer_str[BGP_XCONNECT_STRLEN];
-#if defined ENABLE_IPV6
   struct sockaddr_storage server, client;
-#else
-  struct sockaddr server, client;
-#endif
   afi_t afi;
   safi_t safi;
   int clen = sizeof(client), yes=1, no=0;
@@ -101,7 +97,6 @@ void skinny_bgp_daemon_online()
   bgp_attr_init(config.bgp_table_attr_hash_buckets, bgp_routing_db);
 
   /* socket creation for BGP server: IPv4 only */
-#if (defined ENABLE_IPV6)
   if (!config.nfacctd_bgp_ip) {
     struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&server;
 
@@ -109,16 +104,6 @@ void skinny_bgp_daemon_online()
     sa6->sin6_port = htons(config.nfacctd_bgp_port);
     slen = sizeof(struct sockaddr_in6);
   }
-#else
-  if (!config.nfacctd_bgp_ip) {
-    struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
-
-    sa4->sin_family = AF_INET;
-    sa4->sin_addr.s_addr = htonl(0);
-    sa4->sin_port = htons(config.nfacctd_bgp_port);
-    slen = sizeof(struct sockaddr_in);
-  }
-#endif
   else {
     trim_spaces(config.nfacctd_bgp_ip);
     ret = str_to_addr(config.nfacctd_bgp_ip, &addr);
@@ -257,7 +242,6 @@ void skinny_bgp_daemon_online()
 
   config.bgp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
   if (config.bgp_sock < 0) {
-#if (defined ENABLE_IPV6)
     /* retry with IPv4 */
     if (!config.nfacctd_bgp_ip) {
       struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
@@ -269,7 +253,6 @@ void skinny_bgp_daemon_online()
 
       config.bgp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
     }
-#endif
 
     if (config.bgp_sock < 0) {
       Log(LOG_ERR, "ERROR ( %s/%s ): thread socket() failed. Terminating thread.\n", config.name, bgp_misc_db->log_str);
@@ -291,7 +274,7 @@ void skinny_bgp_daemon_online()
   if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
 #endif
 
-#if (defined ENABLE_IPV6) && (defined IPV6_BINDV6ONLY)
+#if (defined IPV6_BINDV6ONLY)
   rc = setsockopt(config.bgp_sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
   if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IPV6_BINDV6ONLY (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
 #endif
@@ -554,9 +537,7 @@ void skinny_bgp_daemon_online()
       fd = accept(config.bgp_sock, (struct sockaddr *) &client, &clen);
       if (fd == ERR) goto read_data;
 
-#if defined ENABLE_IPV6
       ipv4_mapped_to_ipv4(&client);
-#endif
 
       /* If an ACL is defined, here we check against and enforce it */
       if (allow.num) allowed = check_allow(&allow, (struct sockaddr *)&client);
@@ -620,12 +601,10 @@ void skinny_bgp_daemon_online()
 	peer->addr.address.ipv4.s_addr = ((struct sockaddr_in *)&client)->sin_addr.s_addr;
 	peer->tcp_port = ntohs(((struct sockaddr_in *)&client)->sin_port);
       }
-#if defined ENABLE_IPV6
       else if (peer->addr.family == AF_INET6) {
 	memcpy(&peer->addr.address.ipv6, &((struct sockaddr_in6 *)&client)->sin6_addr, 16);
 	peer->tcp_port = ntohs(((struct sockaddr_in6 *)&client)->sin6_port);
       }
-#endif
 
       if (peers_cache && peers_port_cache) {
 	u_int32_t bucket;

@@ -581,31 +581,15 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   
         if (config.what_to_count & COUNT_PEER_SRC_IP) {
           addr_to_str(ip_address, &pbgp->peer_src_ip);
-  #if defined ENABLE_IPV6
-          if (strlen(ip_address))
-            fprintf(f, "%-45s  ", ip_address);
-  	else
-            fprintf(f, "%-45s  ", empty_ip6);
-  #else
-  	if (strlen(ip_address))
-            fprintf(f, "%-15s  ", ip_address);
-  	else
-            fprintf(f, "%-15s  ", empty_ip4);
-  #endif
+
+          if (strlen(ip_address)) fprintf(f, "%-45s  ", ip_address);
+  	  else fprintf(f, "%-45s  ", empty_ip6);
         }
         if (config.what_to_count & COUNT_PEER_DST_IP) {
           addr_to_str(ip_address, &pbgp->peer_dst_ip);
-  #if defined ENABLE_IPV6
-          if (strlen(ip_address))
-            fprintf(f, "%-45s  ", ip_address);
-          else
-            fprintf(f, "%-45s  ", empty_ip6);
-  #else
-          if (strlen(ip_address))
-            fprintf(f, "%-15s  ", ip_address);
-          else 
-            fprintf(f, "%-15s  ", empty_ip4);
-  #endif
+
+          if (strlen(ip_address)) fprintf(f, "%-45s  ", ip_address);
+          else fprintf(f, "%-45s  ", empty_ip6);
         }
   
         if (config.what_to_count & COUNT_IN_IFACE) fprintf(f, "%-10u  ", data->ifindex_in);
@@ -623,62 +607,30 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   
         if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) {
           addr_to_str(src_host, &data->src_ip);
-  #if defined ENABLE_IPV6
-  	if (strlen(src_host))
-            fprintf(f, "%-45s  ", src_host);
-  	else
-            fprintf(f, "%-45s  ", empty_ip6);
-  #else
-  	if (strlen(src_host))
-            fprintf(f, "%-15s  ", src_host);
-  	else
-            fprintf(f, "%-15s  ", empty_ip4);
-  #endif
+
+  	  if (strlen(src_host)) fprintf(f, "%-45s  ", src_host);
+  	  else fprintf(f, "%-45s  ", empty_ip6);
         }
 
         if (config.what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) {
           addr_to_str(src_host, &data->src_net);
-  #if defined ENABLE_IPV6
-        if (strlen(src_host))
-            fprintf(f, "%-45s  ", src_host);
-        else
-            fprintf(f, "%-45s  ", empty_ip6);
-  #else
-        if (strlen(src_host))
-            fprintf(f, "%-15s  ", src_host);
-        else
-            fprintf(f, "%-15s  ", empty_ip4);
-  #endif
+
+          if (strlen(src_host)) fprintf(f, "%-45s  ", src_host);
+          else fprintf(f, "%-45s  ", empty_ip6);
         }
 
         if (config.what_to_count & COUNT_DST_HOST) {
           addr_to_str(dst_host, &data->dst_ip);
-  #if defined ENABLE_IPV6
-  	if (strlen(dst_host))
-            fprintf(f, "%-45s  ", dst_host);
-  	else
-            fprintf(f, "%-45s  ", empty_ip6);
-  #else
-  	if (strlen(dst_host))
-            fprintf(f, "%-15s  ", dst_host);
-  	else
-            fprintf(f, "%-15s  ", empty_ip4);
-  #endif
+
+  	  if (strlen(dst_host)) fprintf(f, "%-45s  ", dst_host);
+  	  else fprintf(f, "%-45s  ", empty_ip6);
         }
 
         if (config.what_to_count & COUNT_DST_NET) {
           addr_to_str(dst_host, &data->dst_net);
-  #if defined ENABLE_IPV6
-        if (strlen(dst_host))
-            fprintf(f, "%-45s  ", dst_host);
-        else
-            fprintf(f, "%-45s  ", empty_ip6);
-  #else
-        if (strlen(dst_host))
-            fprintf(f, "%-15s  ", dst_host);
-        else
-            fprintf(f, "%-15s  ", empty_ip4);
-  #endif
+
+          if (strlen(dst_host)) fprintf(f, "%-45s  ", dst_host);
+          else fprintf(f, "%-45s  ", empty_ip6);
         }
 
         if (config.what_to_count & COUNT_SRC_NMASK) fprintf(f, "%-3u       ", data->src_nmask);
@@ -721,33 +673,15 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (config.what_to_count_2 & COUNT_POST_NAT_SRC_HOST) {
           addr_to_str(ip_address, &pnat->post_nat_src_ip);
   
-  #if defined ENABLE_IPV6
-          if (strlen(ip_address))
-            fprintf(f, "%-45s  ", ip_address);
-          else
-            fprintf(f, "%-45s  ", empty_ip6);
-  #else
-          if (strlen(ip_address))
-            fprintf(f, "%-15s  ", ip_address);
-          else
-            fprintf(f, "%-15s  ", empty_ip4);
-  #endif
+          if (strlen(ip_address)) fprintf(f, "%-45s  ", ip_address);
+          else fprintf(f, "%-45s  ", empty_ip6);
         }
   
         if (config.what_to_count_2 & COUNT_POST_NAT_DST_HOST) {
           addr_to_str(ip_address, &pnat->post_nat_dst_ip);
   
-  #if defined ENABLE_IPV6
-          if (strlen(ip_address))
-            fprintf(f, "%-45s  ", ip_address);
-          else
-            fprintf(f, "%-45s  ", empty_ip6);
-  #else 
-          if (strlen(ip_address))
-            fprintf(f, "%-15s  ", ip_address);
-          else
-            fprintf(f, "%-15s  ", empty_ip4);
-  #endif
+          if (strlen(ip_address)) fprintf(f, "%-45s  ", ip_address);
+          else fprintf(f, "%-45s  ", empty_ip6);
         }
   
         if (config.what_to_count_2 & COUNT_POST_NAT_SRC_PORT) fprintf(f, "%-5u              ", pnat->post_nat_src_port);
@@ -767,33 +701,15 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	if (config.what_to_count_2 & COUNT_TUNNEL_SRC_HOST) {
           addr_to_str(ip_address, &ptun->tunnel_src_ip);
 
-#if defined ENABLE_IPV6
-	  if (strlen(ip_address))
-	    fprintf(f, "%-45s  ", ip_address);
-	  else
-	    fprintf(f, "%-45s  ", empty_ip6);
-#else
-	  if (strlen(ip_address))
-	    fprintf(f, "%-15s  ", ip_address);
-	  else
-	    fprintf(f, "%-15s  ", empty_ip4);
-#endif
+	  if (strlen(ip_address)) fprintf(f, "%-45s  ", ip_address);
+	  else fprintf(f, "%-45s  ", empty_ip6);
 	}
 
 	if (config.what_to_count_2 & COUNT_TUNNEL_DST_HOST) {
-	   addr_to_str(ip_address, &ptun->tunnel_dst_ip);
+	  addr_to_str(ip_address, &ptun->tunnel_dst_ip);
 
-#if defined ENABLE_IPV6
-	  if (strlen(ip_address))
-	    fprintf(f, "%-45s  ", ip_address);
-	  else
-	    fprintf(f, "%-45s  ", empty_ip6);
-#else
-	  if (strlen(ip_address))
-	    fprintf(f, "%-15s  ", ip_address);
-	  else
-	    fprintf(f, "%-15s  ", empty_ip4);
-#endif
+	  if (strlen(ip_address)) fprintf(f, "%-45s  ", ip_address);
+	  else fprintf(f, "%-45s  ", empty_ip6);
 	}
 
 	if (config.what_to_count_2 & COUNT_TUNNEL_IP_PROTO) {
@@ -1365,28 +1281,16 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count & COUNT_SRC_MED) fprintf(f, "SRC_MED ");
   if (config.what_to_count & COUNT_PEER_SRC_AS) fprintf(f, "PEER_SRC_AS ");
   if (config.what_to_count & COUNT_PEER_DST_AS) fprintf(f, "PEER_DST_AS ");
-#if defined ENABLE_IPV6
   if (config.what_to_count & COUNT_PEER_SRC_IP) fprintf(f, "PEER_SRC_IP                                    ");
   if (config.what_to_count & COUNT_PEER_DST_IP) fprintf(f, "PEER_DST_IP                                    ");
-#else
-  if (config.what_to_count & COUNT_PEER_SRC_IP) fprintf(f, "PEER_SRC_IP      ");
-  if (config.what_to_count & COUNT_PEER_DST_IP) fprintf(f, "PEER_DST_IP      ");
-#endif
   if (config.what_to_count & COUNT_IN_IFACE) fprintf(f, "IN_IFACE    ");
   if (config.what_to_count & COUNT_OUT_IFACE) fprintf(f, "OUT_IFACE   ");
   if (config.what_to_count & COUNT_MPLS_VPN_RD) fprintf(f, "MPLS_VPN_RD         ");
   if (config.what_to_count_2 & COUNT_MPLS_PW_ID) fprintf(f, "MPLS_PW_ID  ");
-#if defined ENABLE_IPV6
   if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) fprintf(f, "SRC_IP                                         ");
   if (config.what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) fprintf(f, "SRC_NET                                        ");
   if (config.what_to_count & COUNT_DST_HOST) fprintf(f, "DST_IP                                         ");
   if (config.what_to_count & COUNT_DST_NET) fprintf(f, "DST_NET                                        ");
-#else
-  if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) fprintf(f, "SRC_IP           ");
-  if (config.what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) fprintf(f, "SRC_NET          ");
-  if (config.what_to_count & COUNT_DST_HOST) fprintf(f, "DST_IP           ");
-  if (config.what_to_count & COUNT_DST_NET) fprintf(f, "DST_NET          ");
-#endif
   if (config.what_to_count & COUNT_SRC_NMASK) fprintf(f, "SRC_MASK  ");
   if (config.what_to_count & COUNT_DST_NMASK) fprintf(f, "DST_MASK  ");
   if (config.what_to_count & (COUNT_SRC_PORT|COUNT_SUM_PORT)) fprintf(f, "SRC_PORT  ");
@@ -1412,26 +1316,16 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
 #endif
   if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "SAMPLING_RATE ");
   if (config.what_to_count_2 & COUNT_SAMPLING_DIRECTION) fprintf(f, "SAMPLING_DIRECTION ");
-#if defined ENABLE_IPV6
   if (config.what_to_count_2 & COUNT_POST_NAT_SRC_HOST) fprintf(f, "POST_NAT_SRC_IP                                ");
   if (config.what_to_count_2 & COUNT_POST_NAT_DST_HOST) fprintf(f, "POST_NAT_DST_IP                                ");
-#else
-  if (config.what_to_count_2 & COUNT_POST_NAT_SRC_HOST) fprintf(f, "POST_NAT_SRC_IP  ");
-  if (config.what_to_count_2 & COUNT_POST_NAT_DST_HOST) fprintf(f, "POST_NAT_DST_IP  ");
-#endif
   if (config.what_to_count_2 & COUNT_POST_NAT_SRC_PORT) fprintf(f, "POST_NAT_SRC_PORT  ");
   if (config.what_to_count_2 & COUNT_POST_NAT_DST_PORT) fprintf(f, "POST_NAT_DST_PORT  ");
   if (config.what_to_count_2 & COUNT_NAT_EVENT) fprintf(f, "NAT_EVENT ");
   if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) fprintf(f, "MPLS_LABEL_TOP  ");
   if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) fprintf(f, "MPLS_LABEL_BOTTOM  ");
   if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) fprintf(f, "MPLS_STACK_DEPTH  ");
-#if defined ENABLE_IPV6
   if (config.what_to_count_2 & COUNT_TUNNEL_SRC_HOST) fprintf(f, "TUNNEL_SRC_IP                                  ");
   if (config.what_to_count_2 & COUNT_TUNNEL_DST_HOST) fprintf(f, "TUNNEL_DST_IP                                  ");
-#else
-  if (config.what_to_count_2 & COUNT_TUNNEL_SRC_HOST) fprintf(f, "TUNNEL_SRC_IP    ");
-  if (config.what_to_count_2 & COUNT_TUNNEL_DST_HOST) fprintf(f, "TUNNEL_DST_IP    ");
-#endif
   if (config.what_to_count_2 & COUNT_TUNNEL_IP_PROTO) fprintf(f, "TUNNEL_PROTOCOL  ");
   if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) fprintf(f, "TUNNEL_TOS  ");
   if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "TIMESTAMP_START                ");

@@ -45,9 +45,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
   int compare_bgp_port = config.tmp_bgp_lookup_compare_ports;
   int follow_default = config.nfacctd_bgp_follow_default;
   struct in_addr pref4;
-#if defined ENABLE_IPV6
   struct in6_addr pref6;
-#endif
   safi_t safi;
   rd_t rd;
 
@@ -76,7 +74,6 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 	compare_bgp_port = TRUE;
       }
     }
-#if defined ENABLE_IPV6
     else if (pptrs->bta_af == ETHERTYPE_IPV6) {
       sa->sa_family = AF_INET6;
       ip6_addr_32bit_cpy(&((struct sockaddr_in6 *)sa)->sin6_addr, &pptrs->bta, 0, 0, 1);
@@ -86,7 +83,6 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 	compare_bgp_port = TRUE;
       }
     }
-#endif
   }
 
   start_again_follow_default:
@@ -167,7 +163,6 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
         }
       }
     }
-#if defined ENABLE_IPV6
     else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
       if (!pptrs->bgp_src) {
         memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
@@ -216,19 +211,16 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
         }
       }
     }
-#endif
 
     if ((!pptrs->bgp_src || !pptrs->bgp_dst) && safi != SAFI_MPLS_LABEL) {
       if (pptrs->l3_proto == ETHERTYPE_IP && inter_domain_routing_db->rib[AFI_IP][SAFI_MPLS_LABEL]) {
         safi = SAFI_MPLS_LABEL;
         goto start_again_mpls_label;
       }
-#if defined ENABLE_IPV6
       else if (pptrs->l3_proto == ETHERTYPE_IPV6 && inter_domain_routing_db->rib[AFI_IP6][SAFI_MPLS_LABEL]) {
         safi = SAFI_MPLS_LABEL;
         goto start_again_mpls_label;
       }
-#endif
     }
 
     if (follow_default && safi != SAFI_MPLS_VPN) {
@@ -252,7 +244,6 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 	  pptrs->bgp_dst_info = NULL;
         }
       }
-#if defined ENABLE_IPV6
       else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
         memset(&default_prefix, 0, sizeof(default_prefix));
         default_prefix.family = AF_INET6;
@@ -271,7 +262,6 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
           pptrs->bgp_dst_info = NULL;
         }
       }
-#endif
       
       if (!pptrs->bgp_src || !pptrs->bgp_dst) {
 	follow_default--;
@@ -286,7 +276,6 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
               memcpy(&((struct sockaddr_in *)sa)->sin_addr, &info->attr->mp_nexthop.address.ipv4, 4);
 	      goto start_again_follow_default;
             }
-#if defined ENABLE_IPV6
             else if (info->attr->mp_nexthop.family == AF_INET6) {
               sa = &sa_local;
               memset(sa, 0, sizeof(struct sockaddr));
@@ -294,7 +283,6 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
               ip6_addr_cpy(&((struct sockaddr_in6 *)sa)->sin6_addr, &info->attr->mp_nexthop.address.ipv6);
               goto start_again_follow_default;
             }
-#endif
             else {
               sa = &sa_local;
               memset(sa, 0, sizeof(struct sockaddr));
@@ -326,9 +314,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
   int nh_idx, matched = 0;
   struct prefix nh, ch;
   struct in_addr pref4;
-#if defined ENABLE_IPV6
   struct in6_addr pref6;
-#endif
   char *saved_agent = pptrs->f_agent;
   pm_id_t bta;
   u_int32_t modulo, local_modulo, modulo_idx, modulo_max;
@@ -389,7 +375,6 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
 			    bms->bgp_lookup_node_match_cmp, &nmct2,
 			    &result_node, &info);
       }
-#if defined ENABLE_IPV6
       else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
         memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
         bgp_node_match_ipv6(inter_domain_routing_db->rib[AFI_IP6][SAFI_UNICAST], &pref6, nh_peer,
@@ -397,7 +382,6 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
 			    bms->bgp_lookup_node_match_cmp, &nmct2,
 			    &result_node, &info);
       }
-#endif
     }
 
     memset(&nh, 0, sizeof(nh));
@@ -439,7 +423,6 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
 	  goto end;
 	}
       }
-#if defined ENABLE_IPV6
       else if (info->attr->mp_nexthop.family == AF_INET6) {
 	nh.family = AF_INET6;
 	nh.prefixlen = 128;
@@ -466,7 +449,6 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
 	  goto end;
 	}
       }
-#endif
       else {
 	nh.family = AF_INET;
 	nh.prefixlen = 32;
@@ -514,12 +496,10 @@ struct bgp_peer *bgp_lookup_find_bgp_peer(struct sockaddr *sa, struct xflow_stat
       peer_idx = xs_entry->peer_v4_idx; 
       peer_idx_ptr = &xs_entry->peer_v4_idx;
     }
-#if defined ENABLE_IPV6
     else if (l3_proto == ETHERTYPE_IPV6) {
       peer_idx = xs_entry->peer_v6_idx; 
       peer_idx_ptr = &xs_entry->peer_v6_idx;
     }
-#endif
   }
 
   if (xs_entry && peer_idx) {
@@ -818,7 +798,6 @@ int bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep *
       }
       else ret = BGP_LOOKUP_NOPREFIX; 
     }
-#if defined ENABLE_IPV6
     else if (l3_proto == ETHERTYPE_IPV6) {
       bgp_node_match(inter_domain_routing_db->rib[AFI_IP6][safi],
 		            &req->pref, peer, bgp_route_info_modulo_pathid,
@@ -831,19 +810,16 @@ int bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep *
       }
       else ret = BGP_LOOKUP_NOPREFIX; 
     }
-#endif
 
     if (!result && safi != SAFI_MPLS_LABEL) {
       if (l3_proto == ETHERTYPE_IP && inter_domain_routing_db->rib[AFI_IP][SAFI_MPLS_LABEL]) {
         safi = SAFI_MPLS_LABEL;
         goto start_again_mpls_label;
       }
-#if defined ENABLE_IPV6
       else if (l3_proto == ETHERTYPE_IPV6 && inter_domain_routing_db->rib[AFI_IP6][SAFI_MPLS_LABEL]) {
         safi = SAFI_MPLS_LABEL;
         goto start_again_mpls_label;
       }
-#endif
     }
 
     // XXX: bgp_follow_default code not currently supported

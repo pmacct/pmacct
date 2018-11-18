@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /* 
@@ -111,12 +111,10 @@ EXT void bgp_node_match_ipv4 (const struct bgp_table *, struct in_addr *, struct
 			      int (*cmp_func)(struct bgp_info *, struct node_match_cmp_term2 *),
 			      struct node_match_cmp_term2 *,
 			      struct bgp_node **result_node, struct bgp_info **result_info);
-#ifdef ENABLE_IPV6
 EXT void bgp_node_match_ipv6 (const struct bgp_table *, struct in6_addr *, struct bgp_peer *,
 			      u_int32_t (*modulo_func)(struct bgp_peer *, path_id_t *, int),
 			      int (*cmp_func)(struct bgp_info *, struct node_match_cmp_term2 *),
 			      struct node_match_cmp_term2 *,
 			      struct bgp_node **result_node, struct bgp_info **result_info);
-#endif /* ENABLE_IPV6 */
 #undef EXT
 #endif 

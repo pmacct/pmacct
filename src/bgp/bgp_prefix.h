@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -45,9 +45,7 @@ struct prefix
   {
     u_char prefix;
     struct in_addr prefix4;
-#ifdef ENABLE_IPV6
     struct in6_addr prefix6;
-#endif /* ENABLE_IPV6 */
   } u __attribute__ ((aligned (8)));
 };
 
@@ -60,14 +58,12 @@ struct prefix_ipv4
 };
 
 /* IPv6 prefix structure. */
-#ifdef ENABLE_IPV6
 struct prefix_ipv6
 {
   u_char family;
   u_char prefixlen;
   struct in6_addr prefix __attribute__ ((aligned (8)));
 };
-#endif /* ENABLE_IPV6 */
 
 #ifndef INET_ADDRSTRLEN
 #define INET_ADDRSTRLEN 16
@@ -151,7 +147,6 @@ EXT in_addr_t ipv4_broadcast_addr (in_addr_t hostaddr, int masklen);
 
 EXT int netmask_str2prefix_str (const char *, const char *, char *);
 
-#ifdef ENABLE_IPV6
 EXT struct prefix_ipv6 *prefix_ipv6_new (void);
 EXT void prefix_ipv6_free (struct prefix_ipv6 *);
 EXT int str2prefix_ipv6 (const char *, struct prefix_ipv6 *);
@@ -165,8 +160,6 @@ EXT void masklen2ip6 (int, struct in6_addr *);
 
 EXT void str2in6_addr (const char *, struct in6_addr *);
 EXT const char *inet6_ntoa (struct in6_addr);
-
-#endif /* ENABLE_IPV6 */
 
 EXT int all_digit (const char *);
 

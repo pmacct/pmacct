@@ -677,7 +677,6 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 	      mp_withdraw.safi == SAFI_MPLS_VPN))
     bgp_nlri_parse (bmd, NULL, &mp_withdraw);
 
-#if defined ENABLE_IPV6
   if (mp_update.length
 	  && mp_update.afi == AFI_IP6
 	  && (mp_update.safi == SAFI_UNICAST || mp_update.safi == SAFI_MPLS_LABEL ||
@@ -689,7 +688,6 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 	  && (mp_withdraw.safi == SAFI_UNICAST || mp_withdraw.safi == SAFI_MPLS_LABEL ||
 	      mp_withdraw.safi == SAFI_MPLS_VPN))
     bgp_nlri_parse(bmd, NULL, &mp_withdraw);
-#endif
 
   /* Receipt of End-of-RIB can be processed here; being a silent
 	 BGP receiver only, honestly it doesn't matter to us */
@@ -921,7 +919,6 @@ int bgp_attr_parse_mp_reach(struct bgp_peer *peer, u_int16_t len, struct bgp_att
 	attr->mp_nexthop.family = AF_INET;
 	memcpy(&attr->mp_nexthop.address.ipv4, ptr+8, 4);
 	break;
-#if defined ENABLE_IPV6
       case 16:
       case 32:
 	attr->mp_nexthop.family = AF_INET6;
@@ -932,7 +929,6 @@ int bgp_attr_parse_mp_reach(struct bgp_peer *peer, u_int16_t len, struct bgp_att
 	attr->mp_nexthop.family = AF_INET6;
 	memcpy(&attr->mp_nexthop.address.ipv6, ptr+8, 16);
 	break;
-#endif
       default:
 	memset(&attr->mp_nexthop, 0, sizeof(struct host_addr));
 	break;

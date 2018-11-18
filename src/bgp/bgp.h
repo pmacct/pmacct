@@ -122,18 +122,10 @@ struct bgp_peer_cache_bucket {
 struct bgp_xconnect {
   u_int32_t id;
 
-#if defined ENABLE_IPV6
   struct sockaddr_storage dst;  /* BGP receiver IP address and port */
-#else
-  struct sockaddr dst;
-#endif
   socklen_t dst_len;
 
-#if defined ENABLE_IPV6
   struct sockaddr_storage src;  /* BGP peer IP address and port */
-#else
-  struct sockaddr src;
-#endif
   socklen_t src_len;
 
   struct host_addr src_addr;    /* IP prefix to match multiple BGP peers */

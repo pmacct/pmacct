@@ -276,7 +276,6 @@ bgp_node_match_ipv4 (const struct bgp_table *table, struct in_addr *addr, struct
   bgp_node_match (table, (struct prefix *) &p, peer, modulo_func, cmp_func, nmct2, result_node, result_info);
 }
 
-#ifdef ENABLE_IPV6
 void
 bgp_node_match_ipv6 (const struct bgp_table *table, struct in6_addr *addr, struct bgp_peer *peer,
 		     u_int32_t (*modulo_func)(struct bgp_peer *, path_id_t *, int),
@@ -293,7 +292,6 @@ bgp_node_match_ipv6 (const struct bgp_table *table, struct in6_addr *addr, struc
 
   bgp_node_match (table, (struct prefix *) &p, peer, modulo_func, cmp_func, nmct2, result_node, result_info);
 }
-#endif /* ENABLE_IPV6 */
 
 /* Add node to routing table. */
 struct bgp_node *
