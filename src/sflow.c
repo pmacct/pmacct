@@ -154,12 +154,10 @@ void decodeLinkLayer(SFSample *sample)
     sample->offsetToIPV4 = (ptr - start);
   }
 
-#if defined ENABLE_IPV6
   if (sample->eth_type == ETHERTYPE_IPV6) {
     sample->gotIPV6 = TRUE;
     sample->offsetToIPV6 = (ptr - start);
   }
-#endif
 }
 
 
@@ -283,7 +281,6 @@ void decodeIPV4(SFSample *sample)
   -----------------___________________________------------------
 */
 
-#if defined ENABLE_IPV6
 void decodeIPV6(SFSample *sample)
 {
   u_int16_t payloadLen;
@@ -358,7 +355,6 @@ void decodeIPV6(SFSample *sample)
     else decodeIPLayer4(sample, ptr, sample->dcd_ipProtocol);
   }
 }
-#endif
 
 /*_________________---------------------------__________________
   _________________   read data fns           __________________
@@ -428,9 +424,7 @@ u_int32_t getAddress(SFSample *sample, SFLAddress *address)
   if(address->type == SFLADDRESSTYPE_IP_V4)
     address->address.ip_v4.s_addr = getData32_nobswap(sample);
   else {
-#if defined ENABLE_IPV6
     memcpy(address->address.ip_v6.s6_addr, sample->datap, 16);
-#endif
     skipBytes(sample, 16);
   }
   return address->type;
@@ -833,12 +827,10 @@ void decodeMpls(SFSample *sample, u_char **bp)
     sample->gotIPV4 = TRUE;
     sample->offsetToIPV4 = nl+(ptr-sample->header);
   } 
-#if defined ENABLE_IPV6
   else if (sample->eth_type == ETHERTYPE_IPV6) {
     sample->gotIPV6 = TRUE;
     sample->offsetToIPV6 = nl+(ptr-sample->header);
   }
-#endif
 
   if (nl) {
     sample->lstk.depth = nl / 4; 
@@ -871,12 +863,10 @@ void decodePPP(SFSample *sample)
     sample->gotIPV4 = TRUE;
     sample->offsetToIPV4 = dummy_pptrs.iph_ptr - sample->header;
   }
-#if defined ENABLE_IPV6
   else if (sample->eth_type == ETHERTYPE_IPV6) {
     sample->gotIPV6 = TRUE;
     sample->offsetToIPV6 = dummy_pptrs.iph_ptr - sample->header;
   }
-#endif
 }
 
 /*_________________---------------------------__________________
@@ -902,12 +892,10 @@ void readFlowSample_header(SFSample *sample)
     sample->gotIPV4 = TRUE;
     sample->offsetToIPV4 = 0;
     break;
-#if defined ENABLE_IPV6
   case SFLHEADER_IPv6:
     sample->gotIPV6 = TRUE;
     sample->offsetToIPV6 = 0;
     break;
-#endif
   case SFLHEADER_MPLS:
     decodeMpls(sample, NULL);
     break;
@@ -928,9 +916,7 @@ void readFlowSample_header(SFSample *sample)
   }
   
   if (sample->gotIPV4) decodeIPV4(sample);
-#if defined ENABLE_IPV6
   else if (sample->gotIPV6) decodeIPV6(sample);
-#endif
 
   skipBytes(sample, sample->headerLen);
 }
@@ -950,9 +936,7 @@ void readFlowSample_ethernet(SFSample *sample)
   sample->eth_type = getData32(sample);
 
   if (sample->eth_type == ETHERTYPE_IP) sample->gotIPV4 = TRUE;
-#if defined ENABLE_IPV6
   else if (sample->eth_type == ETHERTYPE_IPV6) sample->gotIPV6 = TRUE;
-#endif
 
   /* Commit eth_len to packet length: will be overwritten if we get
      SFLFLOW_IPV4 or SFLFLOW_IPV6; otherwise will get along as the
@@ -998,7 +982,6 @@ void readFlowSample_IPv6(SFSample *sample)
   sample->headerLen = sizeof(SFLSampled_ipv6);
   skipBytes(sample, sample->headerLen);
 
-#if defined ENABLE_IPV6
   {
     SFLSampled_ipv6 nfKey6;
 
@@ -1015,7 +998,6 @@ void readFlowSample_IPv6(SFSample *sample)
   }
 
   sample->gotIPV6 = TRUE;
-#endif
 }
 
 /*_________________---------------------------__________________

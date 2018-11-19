@@ -56,14 +56,12 @@ void eth_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
     pptrs->iph_ptr = pptrs->packet_ptr + nl;
     return;
   }
-#if defined ENABLE_IPV6
   if (etype == ETHERTYPE_IPV6) {
     pptrs->l3_proto = ETHERTYPE_IPV6;
     pptrs->l3_handler = ip6_handler;
     pptrs->iph_ptr = pptrs->packet_ptr + nl;
     return;
   }
-#endif
 
   /* originally contributed by Rich Gade */
   if (etype == ETHERTYPE_8021Q) {
@@ -118,10 +116,10 @@ void eth_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
     }
     memcpy(&ppp, pptrs->packet_ptr+nl+PPPOE_HDRLEN, 2);
     etype = ntohs(ppp);
+
     if (etype == PPP_IP) etype = ETHERTYPE_IP; 
-#if defined ENABLE_IPV6
     if (etype == PPP_IPV6) etype = ETHERTYPE_IPV6;
-#endif 
+
     nl += PPPOE_HDRLEN+PPP_TAGLEN;
     caplen -= PPPOE_HDRLEN+PPP_TAGLEN;
     cursor = 1;
@@ -161,10 +159,8 @@ u_int16_t mpls_handler(u_char *bp, u_int16_t *caplen, u_int16_t *nl, register st
   case 0: /* IPv4 explicit NULL label */
   case 3: /* IPv4 implicit NULL label */
     return ETHERTYPE_IP;
-#if defined ENABLE_IPV6
   case 2: /* IPv6 explicit NULL label */
     return ETHERTYPE_IPV6;
-#endif
   default:
     /* 
        support for what is sometimes referred as null-encapsulation:
@@ -188,7 +184,6 @@ u_int16_t mpls_handler(u_char *bp, u_int16_t *caplen, u_int16_t *nl, register st
       case 0x4e:
       case 0x4f:
 	return ETHERTYPE_IP;
-#if defined ENABLE_IPV6 
       case 0x60:
       case 0x61:
       case 0x62:
@@ -206,7 +201,6 @@ u_int16_t mpls_handler(u_char *bp, u_int16_t *caplen, u_int16_t *nl, register st
       case 0x6e:
       case 0x6f:
 	return ETHERTYPE_IPV6;
-#endif
       default:
         break;
       }
@@ -253,14 +247,13 @@ void ppp_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
     pptrs->iph_ptr = p;
     return;
   }
-#if defined ENABLE_IPV6
+
   if ((proto == PPP_IPV6) || (proto == ETHERTYPE_IPV6)) {
     pptrs->l3_proto = ETHERTYPE_IPV6;
     pptrs->l3_handler = ip6_handler;
     pptrs->iph_ptr = p;
     return;
   }
-#endif
 
   if (proto == PPP_MPLS_UCAST || proto == PPP_MPLS_MCAST) {
     proto = mpls_handler(p, &caplen, &nl, pptrs);
@@ -334,13 +327,11 @@ void raw_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
     pptrs->l3_proto = ETHERTYPE_IP;
     pptrs->l3_handler = ip_handler;
     return;
-#if defined ENABLE_IPV6
   case 6:
     pptrs->iph_ptr = pptrs->packet_ptr;
     pptrs->l3_proto = ETHERTYPE_IPV6;
     pptrs->l3_handler = ip6_handler;
     return;
-#endif
   default:
     pptrs->iph_ptr = NULL;
     pptrs->l3_proto = 0;
@@ -370,14 +361,12 @@ void null_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptr
     return;
   }
 
-#if defined ENABLE_IPV6
   if (*family == AF_INET6 || ntohl(*family) == AF_INET6 ) {
     pptrs->l3_proto = ETHERTYPE_IPV6;
     pptrs->l3_handler = ip6_handler;
     pptrs->iph_ptr = (u_char *)(pptrs->packet_ptr + 4);
     return;
   }
-#endif
 
   pptrs->l3_proto = 0;
   pptrs->l3_handler = NULL;
@@ -421,14 +410,12 @@ void sll_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
     return;
   }
   
-#if defined ENABLE_IPV6
   if (etype == ETHERTYPE_IPV6) {
     pptrs->l3_proto = ETHERTYPE_IPV6;
     pptrs->l3_handler = ip6_handler;
     pptrs->iph_ptr = pptrs->packet_ptr + nl;
     return;
   }
-#endif
 
   if (etype == LINUX_SLL_P_802_2) {
     /* going up to LLC/SNAP layer header */
@@ -477,19 +464,20 @@ u_char *llc_handler(const struct pcap_pkthdr *h, u_int caplen, register u_char *
   if (llc.ssap == LLCSAP_SNAP && llc.dsap == LLCSAP_SNAP
       && llc.ctl.snap.snap_ui == LLC_UI) {
     etype = EXTRACT_16BITS(&llc.ctl.snap_ether.snap_ethertype[0]);
+
     if (etype == ETHERTYPE_IP) {
       pptrs->l3_proto = ETHERTYPE_IP;
       pptrs->l3_handler = ip_handler;
       return (u_char *)(buf + min(caplen, sizeof(llc)));
     }
-#if defined ENABLE_IPV6
+
     if (etype == ETHERTYPE_IPV6) {
       pptrs->l3_proto = ETHERTYPE_IPV6;
       pptrs->l3_handler = ip6_handler;
       return (u_char *)(buf + min(caplen, sizeof(llc)));
     }
-#endif
-    else return 0; 
+
+    return NULL; 
   }
-  else return 0;
+  else return NULL;
 }

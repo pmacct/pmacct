@@ -335,11 +335,7 @@ int main(int argc,char **argv, char **envp)
   extern int optind, opterr, optopt;
   int errflag, cp;
 
-#if defined ENABLE_IPV6
   struct sockaddr_storage client;
-#else
-  struct sockaddr client;
-#endif
 
 #if defined HAVE_MALLOPT
   mallopt(M_CHECK_ACTION, 0);

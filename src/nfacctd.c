@@ -119,12 +119,9 @@ int main(int argc,char **argv, char **envp)
   int pipe_fd = 0, ret;
   int capture_methods = 0;
 
-#if defined ENABLE_IPV6
   struct sockaddr_storage server, client;
   struct ipv6_mreq multi_req6;
-#else
-  struct sockaddr server, client;
-#endif
+
   int clen = sizeof(client), slen;
   struct ip_mreq multi_req4;
 
@@ -140,7 +137,6 @@ int main(int argc,char **argv, char **envp)
   struct pcap_pkthdr dummy_pkthdr_mpls;
   struct pcap_pkthdr dummy_pkthdr_vlan_mpls;
 
-#if defined ENABLE_IPV6
   unsigned char dummy_packet6[92]; 
   unsigned char dummy_packet_vlan6[92]; 
   unsigned char dummy_packet_mpls6[128]; 
@@ -149,7 +145,6 @@ int main(int argc,char **argv, char **envp)
   struct pcap_pkthdr dummy_pkthdr_vlan6;
   struct pcap_pkthdr dummy_pkthdr_mpls6;
   struct pcap_pkthdr dummy_pkthdr_vlan_mpls6;
-#endif
 
   struct packet_ptrs recv_pptrs;
   struct pcap_pkthdr recv_pkthdr;
@@ -624,7 +619,7 @@ int main(int argc,char **argv, char **envp)
     /* If no IP address is supplied, let's set our default
        behaviour: IPv4 address, INADDR_ANY, port 2100 */
     if (!config.nfacctd_port) config.nfacctd_port = DEFAULT_NFACCTD_PORT;
-#if (defined ENABLE_IPV6)
+
     if (!config.nfacctd_ip) {
       struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&server;
 
@@ -632,16 +627,6 @@ int main(int argc,char **argv, char **envp)
       sa6->sin6_port = htons(config.nfacctd_port);
       slen = sizeof(struct sockaddr_in6);
     }
-#else
-    if (!config.nfacctd_ip) {
-      struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
-
-      sa4->sin_family = AF_INET;
-      sa4->sin_addr.s_addr = htonl(0);
-      sa4->sin_port = htons(config.nfacctd_port);
-      slen = sizeof(struct sockaddr_in);
-    }
-#endif
     else {
       trim_spaces(config.nfacctd_ip);
       ret = str_to_addr(config.nfacctd_ip, &addr);
@@ -655,7 +640,6 @@ int main(int argc,char **argv, char **envp)
     /* socket creation */
     config.sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
     if (config.sock < 0) {
-#if (defined ENABLE_IPV6)
       /* retry with IPv4 */
       if (!config.nfacctd_ip) {
 	struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
@@ -667,7 +651,6 @@ int main(int argc,char **argv, char **envp)
 
 	config.sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
       }
-#endif
 
       if (config.sock < 0) {
 	Log(LOG_ERR, "ERROR ( %s/core ): socket() failed.\n", config.name);
@@ -684,7 +667,7 @@ int main(int argc,char **argv, char **envp)
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR.\n", config.name);
 #endif
 
-#if (defined ENABLE_IPV6) && (defined IPV6_BINDV6ONLY)
+#if (defined IPV6_BINDV6ONLY)
     rc = setsockopt(config.sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for IPV6_BINDV6ONLY.\n", config.name);
 #endif
@@ -714,7 +697,6 @@ int main(int argc,char **argv, char **envp)
 	  exit_gracefully(1);
 	}
       }
-#if defined ENABLE_IPV6
       if (mcast_groups[idx].family == AF_INET6) {
 	memset(&multi_req6, 0, sizeof(multi_req6));
 	ip6_addr_cpy(&multi_req6.ipv6mr_multiaddr, &mcast_groups[idx].address.ipv6); 
@@ -723,7 +705,6 @@ int main(int argc,char **argv, char **envp)
 	  exit_gracefully(1);
 	}
       }
-#endif
     }
   }
 
@@ -963,7 +944,6 @@ int main(int argc,char **argv, char **envp)
   pptrs.vlanmpls4.pkthdr->len = 100; /* fake len */
   pptrs.vlanmpls4.l3_proto = ETHERTYPE_IP;
 
-#if defined ENABLE_IPV6
   memset(dummy_packet6, 0, sizeof(dummy_packet6));
   pptrs.v6.f_agent = (u_char *) &client;
   pptrs.v6.packet_ptr = dummy_packet6;
@@ -1023,7 +1003,6 @@ int main(int argc,char **argv, char **envp)
   pptrs.vlanmpls6.pkthdr->caplen = 121;
   pptrs.vlanmpls6.pkthdr->len = 128; /* fake len */
   pptrs.vlanmpls6.l3_proto = ETHERTYPE_IPV6;
-#endif
 
   if (config.pcap_savefile) {
     Log(LOG_INFO, "INFO ( %s/core ): reading NetFlow/IPFIX data from: %s\n", config.name, config.pcap_savefile);
@@ -1128,9 +1107,7 @@ int main(int argc,char **argv, char **envp)
     if (!netflow_packet || ret < 2) continue;
     pptrs.v4.f_len = ret;
 
-#if defined ENABLE_IPV6
     ipv4_mapped_to_ipv4(&client);
-#endif
 
     /* check if Hosts Allow Table is loaded; if it is, we will enforce rules */
     if (allow.num) allowed = check_allow(&allow, (struct sockaddr *)&client); 
@@ -1774,7 +1751,6 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.nfacctd_bmp) bmp_srcdst_lookup(pptrs);
           exec_plugins(pptrs, req);
 	  break;
-#if defined ENABLE_IPV6
 	case NF9_FTYPE_IPV6:
 	  pptrsv->v6.f_header = pptrs->f_header;
 	  pptrsv->v6.f_data = pptrs->f_data;
@@ -1830,7 +1806,6 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->v6);
           exec_plugins(&pptrsv->v6, req);
 	  break;
-#endif
 	case NF9_FTYPE_VLAN_IPV4:
 	  pptrsv->vlan4.f_header = pptrs->f_header;
 	  pptrsv->vlan4.f_data = pptrs->f_data;
@@ -1888,7 +1863,6 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->vlan4);
 	  exec_plugins(&pptrsv->vlan4, req);
 	  break;
-#if defined ENABLE_IPV6
 	case NF9_FTYPE_VLAN_IPV6:
 	  pptrsv->vlan6.f_header = pptrs->f_header;
 	  pptrsv->vlan6.f_data = pptrs->f_data;
@@ -1946,7 +1920,6 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->vlan6);
 	  exec_plugins(&pptrsv->vlan6, req);
 	  break;
-#endif
         case NF9_FTYPE_MPLS_IPV4:
           pptrsv->mpls4.f_header = pptrs->f_header;
           pptrsv->mpls4.f_data = pptrs->f_data;
@@ -2014,7 +1987,6 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->mpls4);
           exec_plugins(&pptrsv->mpls4, req);
           break;
-#if defined ENABLE_IPV6
 	case NF9_FTYPE_MPLS_IPV6:
 	  pptrsv->mpls6.f_header = pptrs->f_header;
 	  pptrsv->mpls6.f_data = pptrs->f_data;
@@ -2081,7 +2053,6 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->mpls6);
 	  exec_plugins(&pptrsv->mpls6, req);
 	  break;
-#endif
         case NF9_FTYPE_VLAN_MPLS_IPV4:
 	  pptrsv->vlanmpls4.f_header = pptrs->f_header;
 	  pptrsv->vlanmpls4.f_data = pptrs->f_data;
@@ -2151,7 +2122,6 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->vlanmpls4);
 	  exec_plugins(&pptrsv->vlanmpls4, req);
 	  break;
-#if defined ENABLE_IPV6
         case NF9_FTYPE_VLAN_MPLS_IPV6:
 	  pptrsv->vlanmpls6.f_header = pptrs->f_header;
 	  pptrsv->vlanmpls6.f_data = pptrs->f_data;
@@ -2220,7 +2190,6 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->vlanmpls6);
 	  exec_plugins(&pptrsv->vlanmpls6, req);
 	  break;
-#endif
 	case NF9_FTYPE_NAT_EVENT:
 	  /* XXX: aggregate_filter & NAX64 case */
 	  if (req->bpf_filter) {
@@ -2447,11 +2416,9 @@ void NF_compute_once()
   UDPHdrSz = sizeof(struct pm_udphdr);
   IpFixHdrSz = sizeof(struct struct_header_ipfix); 
 
-#if defined ENABLE_IPV6
   IP6HdrSz = sizeof(struct ip6_hdr);
   IP6AddrSz = sizeof(struct in6_addr);
   IP6TlSz = sizeof(struct ip6_hdr)+sizeof(struct pm_tlhdr);
-#endif
 }
 
 u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_ptrs *pptrs)
@@ -2531,14 +2498,12 @@ void reset_ip4(struct packet_ptrs *pptrs)
   Assign8(((struct pm_iphdr *)pptrs->iph_ptr)->ip_vhl, 5);
 }
 
-#if defined ENABLE_IPV6
 void reset_ip6(struct packet_ptrs *pptrs)
 {
   memset(pptrs->iph_ptr, 0, IP6TlSz);  
   Assign16(((struct ip6_hdr *)pptrs->iph_ptr)->ip6_plen, htons(100));
   Assign16(((struct ip6_hdr *)pptrs->iph_ptr)->ip6_hlim, htons(64));
 }
-#endif
 
 void reset_dummy_v4(struct packet_ptrs *pptrs, char *dummy_packet)
 {
@@ -2624,12 +2589,10 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
     begin = 0;
     end = t->ipv4_num;
   }
-#if defined ENABLE_IPV6
   else if (sa->sa_family == AF_INET6) {
     begin = t->num-t->ipv6_num;
     end = t->num;
   }
-#endif
 
   for (x = begin; x < end; x++) {
     if (host_addr_mask_sa_cmp(&t->e[x].key.agent_ip.a, &t->e[x].key.agent_mask, sa) == 0) {

@@ -282,7 +282,6 @@ int ip_handler(register struct packet_ptrs *pptrs)
   return ret;
 }
 
-#if defined ENABLE_IPV6
 int ip6_handler(register struct packet_ptrs *pptrs)
 {
   struct ip6_frag *fhdr = NULL;
@@ -407,7 +406,6 @@ int ip6_handler(register struct packet_ptrs *pptrs)
   quit:
   return TRUE;
 }
-#endif
 
 int PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
 {
@@ -482,10 +480,8 @@ void compute_once()
   CSSz = sizeof(struct class_st);
   IpFlowCmnSz = sizeof(struct ip_flow_common);
   HostAddrSz = sizeof(struct host_addr);
-#if defined ENABLE_IPV6
   IP6HdrSz = sizeof(struct ip6_hdr);
   IP6AddrSz = sizeof(struct in6_addr);
-#endif
 }
 
 void tunnel_registry_init()
@@ -578,7 +574,6 @@ int gtp_tunnel_func(register struct packet_ptrs *pptrs)
 	pptrs->tun_layer++;
 	ret = ip_handler(pptrs);
 	break;
-#if defined ENABLE_IPV6
       case 0x60:
       case 0x61:
       case 0x62:
@@ -598,7 +593,6 @@ int gtp_tunnel_func(register struct packet_ptrs *pptrs)
 	pptrs->tun_layer++;
 	ret = ip6_handler(pptrs);
 	break;
-#endif
       default:
         ret = FALSE;
 	break;
@@ -702,12 +696,10 @@ ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockadd
 	  raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct pm_iphdr *)savefile_pptrs->iph_ptr)->ip_src.s_addr,
 		    (u_int16_t) ((struct pm_udphdr *)savefile_pptrs->tlh_ptr)->uh_sport, AF_INET);
 	}
-#if defined ENABLE_IPV6
 	else if (savefile_pptrs->l3_proto == ETHERTYPE_IPV6) {
 	  raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct ip6_hdr *)savefile_pptrs->iph_ptr)->ip6_src,
 		    (u_int16_t) ((struct pm_udphdr *)savefile_pptrs->tlh_ptr)->uh_sport, AF_INET6);
 	}
-#endif
       }
     }
   }
@@ -734,12 +726,10 @@ ssize_t recvfrom_rawip(char *buf, size_t len, struct sockaddr *src_addr, struct 
           raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct pm_iphdr *)local_pptrs->iph_ptr)->ip_src.s_addr,
                     (u_int16_t) ((struct pm_udphdr *)local_pptrs->tlh_ptr)->uh_sport, AF_INET);
         }
-#if defined ENABLE_IPV6
         else if (local_pptrs->l3_proto == ETHERTYPE_IPV6) {
           raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct ip6_hdr *)local_pptrs->iph_ptr)->ip6_src,
                     (u_int16_t) ((struct pm_udphdr *)local_pptrs->tlh_ptr)->uh_sport, AF_INET6);
         }
-#endif
       }
 
       /* last action: cut L3 and L4 off the packet */

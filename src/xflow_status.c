@@ -32,7 +32,6 @@ u_int32_t hash_status_table(u_int32_t data, struct sockaddr *sa, u_int32_t size)
 
   if (sa->sa_family == AF_INET)
     hash = (data ^ ((struct sockaddr_in *)sa)->sin_addr.s_addr) % size;
-#if defined ENABLE_IPV6
   else if (sa->sa_family == AF_INET6) {
     u_int32_t tmp;
 
@@ -40,7 +39,6 @@ u_int32_t hash_status_table(u_int32_t data, struct sockaddr *sa, u_int32_t size)
     hash = (data ^ tmp) % size;
     // hash = (data ^ ((struct sockaddr_in6 *)sa)->sin6_addr.s6_addr32[3]) % size;
   }
-#endif
 
   return hash;
 }
@@ -266,12 +264,11 @@ void set_vector_f_status(struct packet_ptrs_vector *pptrsv)
   pptrsv->vlan4.f_status = pptrsv->v4.f_status;
   pptrsv->mpls4.f_status = pptrsv->v4.f_status;
   pptrsv->vlanmpls4.f_status = pptrsv->v4.f_status;
-#if defined ENABLE_IPV6
+
   pptrsv->v6.f_status = pptrsv->v4.f_status;
   pptrsv->vlan6.f_status = pptrsv->v4.f_status;
   pptrsv->vlanmpls6.f_status = pptrsv->v4.f_status;
   pptrsv->mpls6.f_status = pptrsv->v4.f_status;
-#endif
 }
 
 void set_vector_f_status_g(struct packet_ptrs_vector *pptrsv)
@@ -279,10 +276,9 @@ void set_vector_f_status_g(struct packet_ptrs_vector *pptrsv)
   pptrsv->vlan4.f_status_g = pptrsv->v4.f_status_g;
   pptrsv->mpls4.f_status_g = pptrsv->v4.f_status_g;
   pptrsv->vlanmpls4.f_status_g = pptrsv->v4.f_status_g;
-#if defined ENABLE_IPV6
+
   pptrsv->v6.f_status_g = pptrsv->v4.f_status_g;
   pptrsv->vlan6.f_status_g = pptrsv->v4.f_status_g;
   pptrsv->vlanmpls6.f_status_g = pptrsv->v4.f_status_g;
   pptrsv->mpls6.f_status_g = pptrsv->v4.f_status_g;
-#endif
 }

@@ -1050,12 +1050,10 @@ void bgp_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_pt
       pbgp->peer_dst_ip.family = AF_INET;
       memcpy(&pbgp->peer_dst_ip.address.ipv4, &nh_info->attr->mp_nexthop.address.ipv4, 4);
     }
-#if defined ENABLE_IPV6
     else if (nh_info->attr->mp_nexthop.family == AF_INET6) {
       pbgp->peer_dst_ip.family = AF_INET6;
       memcpy(&pbgp->peer_dst_ip.address.ipv6, &nh_info->attr->mp_nexthop.address.ipv6, 16);
     }
-#endif
     else {
       pbgp->peer_dst_ip.family = AF_INET;
       pbgp->peer_dst_ip.address.ipv4.s_addr = nh_info->attr->nexthop.s_addr;
@@ -1108,12 +1106,10 @@ void src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
     pdata->primitives.src_ip.address.ipv4.s_addr = ((struct pm_iphdr *) pptrs->iph_ptr)->ip_src.s_addr;
     pdata->primitives.src_ip.family = AF_INET;
   }
-#if defined ENABLE_IPV6 
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
     memcpy(&pdata->primitives.src_ip.address.ipv6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, IP6AddrSz); 
     pdata->primitives.src_ip.family = AF_INET6;
   }
-#endif
 }
 
 void dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -1124,12 +1120,10 @@ void dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
     pdata->primitives.dst_ip.address.ipv4.s_addr = ((struct pm_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr;
     pdata->primitives.dst_ip.family = AF_INET;
   }
-#if defined ENABLE_IPV6 
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
     memcpy(&pdata->primitives.dst_ip.address.ipv6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, IP6AddrSz);
     pdata->primitives.dst_ip.family = AF_INET6;
   }
-#endif
 }
 
 void src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -1158,13 +1152,11 @@ void ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs
   if (pptrs->l3_proto == ETHERTYPE_IP) {
     pdata->primitives.tos = ((struct pm_iphdr *) pptrs->iph_ptr)->ip_tos;
   }
-#if defined ENABLE_IPV6
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
     tos = ntohl(((struct ip6_hdr *) pptrs->iph_ptr)->ip6_flow);
     tos = ((tos & 0x0ff00000) >> 20);
     pdata->primitives.tos = tos; 
   }
-#endif
 }
 
 void ip_proto_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -1186,9 +1178,8 @@ void counters_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
   if (pptrs->l3_proto == ETHERTYPE_IP) pdata->pkt_len = ntohs(((struct pm_iphdr *) pptrs->iph_ptr)->ip_len);
-#if defined ENABLE_IPV6
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) pdata->pkt_len = ntohs(((struct ip6_hdr *) pptrs->iph_ptr)->ip6_plen)+IP6HdrSz;
-#endif
+
   if (pptrs->frag_sum_bytes) {
     pdata->pkt_len += pptrs->frag_sum_bytes;
     pptrs->frag_sum_bytes = 0;
@@ -1745,7 +1736,6 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len)
 	src_host_handler(chptr, pptrs, data);
     }
-#if defined ENABLE_IPV6
     if (pptrs->l3_proto == ETHERTYPE_IPV6 || pptrs->flow_type == NF9_FTYPE_NAT_EVENT /* NAT64 case */) {
       if (tpl->tpl[NF9_IPV6_SRC_ADDR].len) {
 	memcpy(&pdata->primitives.src_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV6_SRC_ADDR].len, 16));
@@ -1758,7 +1748,6 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len)
 	src_host_handler(chptr, pptrs, data);
     }
-#endif
     break;
   case 5:
     pdata->primitives.src_ip.address.ipv4.s_addr = ((struct struct_export_v5 *) pptrs->f_data)->srcaddr.s_addr;
@@ -1790,7 +1779,6 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len)
 	dst_host_handler(chptr, pptrs, data);
     }
-#if defined ENABLE_IPV6
     if (pptrs->l3_proto == ETHERTYPE_IPV6 || pptrs->flow_type == NF9_FTYPE_NAT_EVENT /* NAT64 case */) {
       if (tpl->tpl[NF9_IPV6_DST_ADDR].len) {
         memcpy(&pdata->primitives.dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV6_DST_ADDR].len, 16));
@@ -1803,7 +1791,6 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len)
 	dst_host_handler(chptr, pptrs, data);
     }
-#endif
     break;
   case 5:
     pdata->primitives.dst_ip.address.ipv4.s_addr = ((struct struct_export_v5 *) pptrs->f_data)->dstaddr.s_addr;
@@ -1830,12 +1817,10 @@ void NF_src_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs 
       if (tpl->tpl[NF9_SRC_MASK].len)
         memcpy(&pdata->primitives.src_nmask, pptrs->f_data+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len); 
     }
-#if defined ENABLE_IPV6
     else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
       if (tpl->tpl[NF9_IPV6_SRC_MASK].len)
         memcpy(&pdata->primitives.src_nmask, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_MASK].off, tpl->tpl[NF9_IPV6_SRC_MASK].len); 
     }
-#endif
     break;
   case 5:
     pdata->primitives.src_nmask = ((struct struct_export_v5 *) pptrs->f_data)->src_mask;
@@ -1861,12 +1846,10 @@ void NF_dst_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs 
       if (tpl->tpl[NF9_DST_MASK].len) 
         memcpy(&pdata->primitives.dst_nmask, pptrs->f_data+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
     }
-#if defined ENABLE_IPV6
     else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
       if (tpl->tpl[NF9_IPV6_DST_MASK].len) 
         memcpy(&pdata->primitives.dst_nmask, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_MASK].off, tpl->tpl[NF9_IPV6_DST_MASK].len);
     }
-#endif
     break;
   case 5:
     pdata->primitives.dst_nmask = ((struct struct_export_v5 *) pptrs->f_data)->dst_mask;
@@ -2027,12 +2010,10 @@ void NF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
       pbgp->peer_src_ip.address.ipv4.s_addr = ((struct sockaddr_in *)sa)->sin_addr.s_addr;
       pbgp->peer_src_ip.family = AF_INET;
     }
-#if defined ENABLE_IPV6
     else if (sa->sa_family == AF_INET6) {
       memcpy(&pbgp->peer_src_ip.address.ipv6, &((struct sockaddr_in6 *)sa)->sin6_addr, IP6AddrSz);
       pbgp->peer_src_ip.family = AF_INET6;
     }
-#endif
   }
 
   /* 3) NetFlow v9/IPFIX inline NF9_EXPORTER_IPV[46]_ADDRESS */
@@ -2044,12 +2025,10 @@ void NF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
 	memcpy(&pbgp->peer_src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].off, MIN(tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].len, 4));
 	pbgp->peer_src_ip.family = AF_INET;
       }
-#if defined ENABLE_IPV6
       else if (tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].len) {
 	memcpy(&pbgp->peer_src_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].off, MIN(tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].len, 16));
 	pbgp->peer_src_ip.family = AF_INET6;
       }
-#endif
     }
   }
 }
@@ -2092,7 +2071,6 @@ void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
         pbgp->peer_dst_ip.family = AF_INET;
       }
     }
-#if defined ENABLE_IPV6
     else if (tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len) {
       memcpy(&pbgp->peer_dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].off, MIN(tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len, 16));
       pbgp->peer_dst_ip.family = AF_INET6;
@@ -2107,7 +2085,6 @@ void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
 	pbgp->peer_dst_ip.family = AF_INET6;
       }
     }
-#endif
     break;
   case 5:
     if (use_ip_next_hop) {
@@ -4382,12 +4359,10 @@ void SF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     pdata->primitives.src_ip.address.ipv4.s_addr = sample->dcd_srcIP.s_addr;
     pdata->primitives.src_ip.family = AF_INET;
   }
-#if defined ENABLE_IPV6
   else if (sample->gotIPV6) { 
     memcpy(&pdata->primitives.src_ip.address.ipv6, &addr->address.ip_v6, IP6AddrSz);
     pdata->primitives.src_ip.family = AF_INET6;
   }
-#endif
 }
 
 void SF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -4400,12 +4375,10 @@ void SF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     pdata->primitives.dst_ip.address.ipv4.s_addr = sample->dcd_dstIP.s_addr; 
     pdata->primitives.dst_ip.family = AF_INET;
   }
-#if defined ENABLE_IPV6
   else if (sample->gotIPV6) { 
     memcpy(&pdata->primitives.dst_ip.address.ipv6, &addr->address.ip_v6, IP6AddrSz);
     pdata->primitives.dst_ip.family = AF_INET6;
   }
-#endif
 }
 
 void SF_src_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -4778,12 +4751,10 @@ void SF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
     pbgp->peer_src_ip.address.ipv4.s_addr = sample->agent_addr.address.ip_v4.s_addr;
     pbgp->peer_src_ip.family = AF_INET;
   }
-#if defined ENABLE_IPV6
   else if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V6) {
     memcpy(&pbgp->peer_src_ip.address.ipv6, &sample->agent_addr.address.ip_v6, IP6AddrSz);
     pbgp->peer_src_ip.family = AF_INET6;
   }
-#endif
 }
 
 void SF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -4810,24 +4781,20 @@ void SF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
     pbgp->peer_dst_ip.address.ipv4.s_addr = sample->bgp_nextHop.address.ip_v4.s_addr;
     pbgp->peer_dst_ip.family = AF_INET;
   }
-#if defined ENABLE_IPV6
   else if (sample->bgp_nextHop.type == SFLADDRESSTYPE_IP_V6) {
     memcpy(&pbgp->peer_dst_ip.address.ipv6, &sample->bgp_nextHop.address.ip_v6, IP6AddrSz);
     pbgp->peer_dst_ip.family = AF_INET6;
   }
-#endif
   else if (sample->nextHop.type == SFLADDRESSTYPE_IP_V4) {
     if (use_ip_next_hop) {
       pbgp->peer_dst_ip.address.ipv4.s_addr = sample->nextHop.address.ip_v4.s_addr;
       pbgp->peer_dst_ip.family = AF_INET;
     }
   }
-#if defined ENABLE_IPV6
   else if (sample->nextHop.type == SFLADDRESSTYPE_IP_V6) {
     memcpy(&pbgp->peer_dst_ip.address.ipv6, &sample->nextHop.address.ip_v6, IP6AddrSz);
     pbgp->peer_dst_ip.family = AF_INET6;
   }
-#endif
 }
 
 void SF_in_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -5120,7 +5087,6 @@ void pm_geoip_init()
     }
   }
 
-#if defined ENABLE_IPV6
   if (config.geoip_ipv6_file && !config.geoip_ipv6) {
     config.geoip_ipv6 = GeoIP_open(config.geoip_ipv6_file, (GEOIP_MEMORY_CACHE|GEOIP_CHECK_CACHE));
 
@@ -5129,7 +5095,6 @@ void pm_geoip_init()
       log_notification_set(&log_notifications.geoip_ipv6_file_null, FALSE, FALSE);
     }
   }
-#endif
 }
 
 void src_host_country_geoip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -5143,12 +5108,10 @@ void src_host_country_geoip_handler(struct channels_list_entry *chptr, struct pa
     if (pptrs->l3_proto == ETHERTYPE_IP)
       pdata->primitives.src_ip_country.id = GeoIP_id_by_ipnum(config.geoip_ipv4, ntohl(((struct pm_iphdr *) pptrs->iph_ptr)->ip_src.s_addr));
   }
-#if defined ENABLE_IPV6
   if (config.geoip_ipv6) {
     if (pptrs->l3_proto == ETHERTYPE_IPV6)
       pdata->primitives.src_ip_country.id = GeoIP_id_by_ipnum_v6(config.geoip_ipv6, ((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src);
   }
-#endif
 }
 
 void dst_host_country_geoip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -5162,12 +5125,11 @@ void dst_host_country_geoip_handler(struct channels_list_entry *chptr, struct pa
     if (pptrs->l3_proto == ETHERTYPE_IP)
       pdata->primitives.dst_ip_country.id = GeoIP_id_by_ipnum(config.geoip_ipv4, ntohl(((struct pm_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr));
   }
-#if defined ENABLE_IPV6
+
   if (config.geoip_ipv6) {
     if (pptrs->l3_proto == ETHERTYPE_IPV6)
       pdata->primitives.dst_ip_country.id = GeoIP_id_by_ipnum_v6(config.geoip_ipv6, ((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst);
   }
-#endif
 }
 #endif
 
@@ -5206,11 +5168,9 @@ void src_host_geoipv2_lookup_handler(struct channels_list_entry *chptr, struct p
   if (pptrs->l3_proto == ETHERTYPE_IP) {
     raw_to_sa(sa, (char *) &((struct pm_iphdr *)pptrs->iph_ptr)->ip_src.s_addr, 0, AF_INET);
   }
-#if defined ENABLE_IPV6
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
     raw_to_sa(sa, (char *) &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, 0, AF_INET6);
   }
-#endif
 
   if (config.geoipv2_db.filename) {
     pptrs->geoipv2_src = MMDB_lookup_sockaddr(&config.geoipv2_db, sa, &mmdb_error);
@@ -5232,11 +5192,9 @@ void dst_host_geoipv2_lookup_handler(struct channels_list_entry *chptr, struct p
   if (pptrs->l3_proto == ETHERTYPE_IP) {
     raw_to_sa(sa, (char *) &((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst.s_addr, 0, AF_INET);
   }
-#if defined ENABLE_IPV6
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
     raw_to_sa(sa, (char *) &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, 0, AF_INET6);
   }
-#endif
 
   if (config.geoipv2_db.filename) {
     pptrs->geoipv2_dst = MMDB_lookup_sockaddr(&config.geoipv2_db, sa, &mmdb_error);

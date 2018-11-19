@@ -125,12 +125,8 @@ int main(int argc,char **argv, char **envp)
   int ret;
   SFSample spp;
 
-#if defined ENABLE_IPV6
   struct sockaddr_storage server, client;
   struct ipv6_mreq multi_req6;
-#else
-  struct sockaddr server, client;
-#endif
   int clen = sizeof(client), slen;
   struct ip_mreq multi_req4;
 
@@ -146,7 +142,6 @@ int main(int argc,char **argv, char **envp)
   struct pcap_pkthdr dummy_pkthdr_mpls;
   struct pcap_pkthdr dummy_pkthdr_vlan_mpls;
 
-#if defined ENABLE_IPV6
   unsigned char dummy_packet6[92]; 
   unsigned char dummy_packet_vlan6[92]; 
   unsigned char dummy_packet_mpls6[128]; 
@@ -155,7 +150,6 @@ int main(int argc,char **argv, char **envp)
   struct pcap_pkthdr dummy_pkthdr_vlan6;
   struct pcap_pkthdr dummy_pkthdr_mpls6;
   struct pcap_pkthdr dummy_pkthdr_vlan_mpls6;
-#endif
 
   struct packet_ptrs recv_pptrs;
   struct pcap_pkthdr recv_pkthdr;
@@ -636,7 +630,7 @@ int main(int argc,char **argv, char **envp)
     /* If no IP address is supplied, let's set our default
        behaviour: IPv4 address, INADDR_ANY, port 2100 */
     if (!config.nfacctd_port) config.nfacctd_port = DEFAULT_SFACCTD_PORT;
-#if (defined ENABLE_IPV6)
+
     if (!config.nfacctd_ip) {
       struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&server;
 
@@ -644,16 +638,6 @@ int main(int argc,char **argv, char **envp)
       sa6->sin6_port = htons(config.nfacctd_port);
       slen = sizeof(struct sockaddr_in6);
     }
-#else
-    if (!config.nfacctd_ip) {
-      struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
-
-      sa4->sin_family = AF_INET;
-      sa4->sin_addr.s_addr = htonl(0);
-      sa4->sin_port = htons(config.nfacctd_port);
-      slen = sizeof(struct sockaddr_in);
-    }
-#endif
     else {
       trim_spaces(config.nfacctd_ip);
       ret = str_to_addr(config.nfacctd_ip, &addr);
@@ -667,7 +651,6 @@ int main(int argc,char **argv, char **envp)
     /* socket creation */
     config.sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
     if (config.sock < 0) {
-#if (defined ENABLE_IPV6)
       /* retry with IPv4 */
       if (!config.nfacctd_ip) {
         struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
@@ -679,7 +662,6 @@ int main(int argc,char **argv, char **envp)
 
         config.sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
       }
-#endif
 
       if (config.sock < 0) {
         Log(LOG_ERR, "ERROR ( %s/core ): socket() failed.\n", config.name);
@@ -696,7 +678,7 @@ int main(int argc,char **argv, char **envp)
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR.\n", config.name);
 #endif
 
-#if (defined ENABLE_IPV6) && (defined IPV6_BINDV6ONLY)
+#if (defined IPV6_BINDV6ONLY)
     rc = setsockopt(config.sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for IPV6_BINDV6ONLY.\n", config.name);
 #endif
@@ -726,7 +708,6 @@ int main(int argc,char **argv, char **envp)
 	  exit_gracefully(1);
 	}
       }
-#if defined ENABLE_IPV6
       if (mcast_groups[idx].family == AF_INET6) {
 	memset(&multi_req6, 0, sizeof(multi_req6));
 	ip6_addr_cpy(&multi_req6.ipv6mr_multiaddr, &mcast_groups[idx].address.ipv6);
@@ -735,7 +716,6 @@ int main(int argc,char **argv, char **envp)
 	  exit_gracefully(1);
 	}
       }
-#endif
     }
   }
 
@@ -963,7 +943,6 @@ int main(int argc,char **argv, char **envp)
   pptrs.vlanmpls4.pkthdr->len = 100; /* fake len */
   pptrs.vlanmpls4.l3_proto = ETHERTYPE_IP;
 
-#if defined ENABLE_IPV6
   memset(dummy_packet6, 0, sizeof(dummy_packet6));
   pptrs.v6.f_data = pptrs.v4.f_data; 
   pptrs.v6.f_agent = (u_char *) &client;
@@ -1027,7 +1006,6 @@ int main(int argc,char **argv, char **envp)
   pptrs.vlanmpls6.pkthdr->caplen = 121;
   pptrs.vlanmpls6.pkthdr->len = 128; /* fake len */
   pptrs.vlanmpls6.l3_proto = ETHERTYPE_IP;
-#endif
 
   if (config.pcap_savefile) {
     Log(LOG_INFO, "INFO ( %s/core ): reading sFlow data from: %s\n", config.name, config.pcap_savefile);
@@ -1185,9 +1163,7 @@ int main(int argc,char **argv, char **envp)
     reset_tag_label_status(&pptrs);
     reset_shadow_status(&pptrs);
 
-#if defined ENABLE_IPV6
     ipv4_mapped_to_ipv4(&client);
-#endif
 
     /* check if Hosts Allow Table is loaded; if it is, we will enforce rules */
     if (allow.num) allowed = check_allow(&allow, (struct sockaddr *)&client); 
@@ -1278,7 +1254,6 @@ int main(int argc,char **argv, char **envp)
 	  sa->sa_family = AF_INET;
 	  sa4->sin_addr.s_addr = spp.agent_addr.address.ip_v4.s_addr;
 	}
-#if defined ENABLE_IPV6
 	else if (spp.agent_addr.type == SFLADDRESSTYPE_IP_V6) {
 	  struct sockaddr *sa = (struct sockaddr *) &client;
 	  struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) &client;
@@ -1286,7 +1261,6 @@ int main(int argc,char **argv, char **envp)
 	  sa->sa_family = AF_INET6;
 	  ip6_addr_cpy(&sa6->sin6_addr, &spp.agent_addr.address.ip_v6);
 	}
-#endif
 
 	process_SFv5_packet(&spp, &pptrs, &req, (struct sockaddr *) &client);
 	break;
@@ -1302,7 +1276,6 @@ int main(int argc,char **argv, char **envp)
           sa->sa_family = AF_INET;
           sa4->sin_addr.s_addr = spp.agent_addr.address.ip_v4.s_addr;
         }
-#if defined ENABLE_IPV6
         else if (spp.agent_addr.type == SFLADDRESSTYPE_IP_V6) {
           struct sockaddr *sa = (struct sockaddr *) &client;
           struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) &client;
@@ -1310,7 +1283,6 @@ int main(int argc,char **argv, char **envp)
           sa->sa_family = AF_INET6;
           ip6_addr_cpy(&sa6->sin6_addr, &spp.agent_addr.address.ip_v6);
         }
-#endif
 
 	process_SFv2v4_packet(&spp, &pptrs, &req, (struct sockaddr *) &client);
 	break;
@@ -1596,11 +1568,9 @@ void SF_compute_once()
   HostAddrSz = sizeof(struct host_addr);
   UDPHdrSz = sizeof(struct pm_udphdr);
 
-#if defined ENABLE_IPV6
   IP6HdrSz = sizeof(struct ip6_hdr);
   IP6AddrSz = sizeof(struct in6_addr);
   IP6TlSz = sizeof(struct ip6_hdr)+sizeof(struct pm_tlhdr);
-#endif
 }
 
 void SF_notify_malf_packet(short int severity, char *ostr, struct sockaddr *sa)
@@ -1676,7 +1646,6 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_bmp) bmp_srcdst_lookup(pptrs);
       exec_plugins(pptrs, req);
       break;
-#if defined ENABLE_IPV6
     case NF9_FTYPE_IPV6:
       pptrsv->v6.flow_type = pptrs->flow_type;
 
@@ -1713,7 +1682,6 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->v6);
       exec_plugins(&pptrsv->v6, req);
       break;
-#endif
     case NF9_FTYPE_VLAN_IPV4:
       pptrsv->vlan4.flow_type = pptrs->flow_type;
 
@@ -1751,7 +1719,6 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->vlan4);
       exec_plugins(&pptrsv->vlan4, req);
       break;
-#if defined ENABLE_IPV6
     case NF9_FTYPE_VLAN_IPV6:
       pptrsv->vlan6.flow_type = pptrs->flow_type;
 
@@ -1789,7 +1756,6 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->vlan6);
       exec_plugins(&pptrsv->vlan6, req);
       break;
-#endif
     case NF9_FTYPE_MPLS_IPV4:
       pptrsv->mpls4.flow_type = pptrs->flow_type;
 
@@ -1840,7 +1806,6 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->mpls4);
       exec_plugins(&pptrsv->mpls4, req);
       break;
-#if defined ENABLE_IPV6
     case NF9_FTYPE_MPLS_IPV6:
       pptrsv->mpls6.flow_type = pptrs->flow_type;
 
@@ -1890,7 +1855,6 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->mpls6);
       exec_plugins(&pptrsv->mpls6, req);
       break;
-#endif
     case NF9_FTYPE_VLAN_MPLS_IPV4:
       pptrsv->vlanmpls4.flow_type = pptrs->flow_type;
 
@@ -1941,7 +1905,6 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->vlanmpls4);
       exec_plugins(&pptrsv->vlanmpls4, req);
       break;
-#if defined ENABLE_IPV6
     case NF9_FTYPE_VLAN_MPLS_IPV6:
       pptrsv->vlanmpls6.flow_type = pptrs->flow_type;
 
@@ -1992,7 +1955,6 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->vlanmpls6);
       exec_plugins(&pptrsv->vlanmpls6, req);
       break;
-#endif
     default:
       break;
     }
@@ -2003,9 +1965,7 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
 {
   struct sockaddr sa_local;
   struct sockaddr_in *sa4 = (struct sockaddr_in *) &sa_local;
-#if defined ENABLE_IPV6
   struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) &sa_local;
-#endif 
   SFSample *sample = (SFSample *)pptrs->f_data; 
   int x, begin = 0, end = 0;
   pm_id_t ret = 0;
@@ -2047,14 +2007,12 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
     sa_local.sa_family = AF_INET;
     sa4->sin_addr.s_addr = sample->agent_addr.address.ip_v4.s_addr;
   }
-#if defined ENABLE_IPV6
   else if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V6) {
     begin = t->num-t->ipv6_num;
     end = t->num;
     sa_local.sa_family = AF_INET6;
     memcpy(sa6->sin6_addr.s6_addr, sample->agent_addr.address.ip_v6.s6_addr, 16);
   }
-#endif
 
   for (x = begin; x < end; x++) {
     if (host_addr_mask_sa_cmp(&t->e[x].key.agent_ip.a, &t->e[x].key.agent_mask, &sa_local) == 0) {
@@ -2092,12 +2050,11 @@ void set_vector_sample_type(struct packet_ptrs_vector *pptrsv, u_int32_t sample_
   pptrsv->vlan4.sample_type = sample_type;
   pptrsv->mpls4.sample_type = sample_type;
   pptrsv->vlanmpls4.sample_type = sample_type;
-#if defined ENABLE_IPV6
+
   pptrsv->v6.sample_type = sample_type;
   pptrsv->vlan6.sample_type = sample_type;
   pptrsv->mpls6.sample_type = sample_type;
   pptrsv->vlanmpls6.sample_type = sample_type;
-#endif
 }
 
 void reset_mac(struct packet_ptrs *pptrs)
@@ -2117,14 +2074,12 @@ void reset_ip4(struct packet_ptrs *pptrs)
   Assign8(((struct pm_iphdr *)pptrs->iph_ptr)->ip_vhl, 5);
 }
 
-#if defined ENABLE_IPV6
 void reset_ip6(struct packet_ptrs *pptrs)
 {
   memset(pptrs->iph_ptr, 0, IP6TlSz);
   Assign16(((struct ip6_hdr *)pptrs->iph_ptr)->ip6_plen, htons(100));
   Assign16(((struct ip6_hdr *)pptrs->iph_ptr)->ip6_hlim, htons(64));
 }
-#endif
 
 char *sfv245_check_status(SFSample *spp, struct packet_ptrs *pptrs, struct sockaddr *sa)
 {

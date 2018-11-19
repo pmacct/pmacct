@@ -226,11 +226,7 @@ void load_templates_from_file(char *path)
   int line = 1;
   u_int16_t modulo;
 
-#if defined ENABLE_IPV6
   struct sockaddr_storage agent;
-#else
-  struct sockaddr agent;
-#endif
 
   if (!tmp_file) {
     Log(LOG_ERR, "ERROR ( %s/core ): [%s] load_templates_from_file(): unable to fopen(). File skipped.\n", config.name, path);
