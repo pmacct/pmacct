@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2014 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 */
 
 /*
@@ -35,19 +35,15 @@ struct networks_cache_entry {
 struct networks_cache {
   struct networks_cache_entry *cache;
   unsigned int num;
-#if defined ENABLE_IPV6
   struct networks6_cache_entry *cache6;
   unsigned int num6;
-#endif
 };
 
 struct networks_table {
   struct networks_table_entry *table;
   unsigned int num;
-#if defined ENABLE_IPV6
   struct networks6_table_entry *table6;
   unsigned int num6;
-#endif
   u_int32_t maskbits[4];
   time_t timestamp; 
 };
@@ -65,7 +61,6 @@ struct networks_table_entry {
   struct networks_table childs_table;
 };
 
-#if defined ENABLE_IPV6
 struct networks6_cache_entry {
   u_int32_t key[4];
   struct networks6_table_entry *result;
@@ -83,7 +78,6 @@ struct networks6_table_entry {
 #endif
   struct networks_table childs_table;
 };
-#endif
 
 struct networks_table_metadata {
   u_int8_t level;
@@ -146,7 +140,6 @@ EXT struct networks_table_entry *binsearch(struct networks_table *, struct netwo
 EXT void networks_cache_insert(struct networks_cache *, u_int32_t *, struct networks_table_entry *);
 EXT struct networks_table_entry *networks_cache_search(struct networks_cache *, u_int32_t *);
 
-#if defined ENABLE_IPV6
 EXT void load_networks6(char *, struct networks_table *, struct networks_cache *); 
 EXT void merge_sort6(char *, struct networks6_table_entry *, int, int);
 EXT void merge6(char *, struct networks6_table_entry *, int, int, int);
@@ -154,7 +147,6 @@ EXT struct networks6_table_entry *binsearch6(struct networks_table *, struct net
 EXT void networks_cache_insert6(struct networks_cache *, void *, struct networks6_table_entry *);
 EXT struct networks6_table_entry *networks_cache_search6(struct networks_cache *, void *);
 EXT unsigned int networks_cache_hash6(void *);
-#endif
 #undef EXT
 
 /* global vars */
@@ -168,8 +160,6 @@ EXT struct networks_cache nc;
 EXT struct networks_table_entry dummy_entry;
 EXT int default_route_in_networks4_table;
 
-#if defined ENABLE_IPV6
 EXT struct networks6_table_entry dummy_entry6;
 EXT int default_route_in_networks6_table;
-#endif
 #undef EXT

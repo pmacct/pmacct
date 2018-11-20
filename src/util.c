@@ -1428,7 +1428,6 @@ void reset_tag_label_status(struct packet_ptrs_vector *pptrsv)
   pretag_free_label(&pptrsv->mpls4.label);
   pretag_free_label(&pptrsv->vlanmpls4.label);
 
-#if defined ENABLE_IPV6
   pptrsv->v6.tag = FALSE;
   pptrsv->vlan6.tag = FALSE;
   pptrsv->mpls6.tag = FALSE;
@@ -1441,7 +1440,6 @@ void reset_tag_label_status(struct packet_ptrs_vector *pptrsv)
   pretag_free_label(&pptrsv->vlan6.label);
   pretag_free_label(&pptrsv->mpls6.label);
   pretag_free_label(&pptrsv->vlanmpls6.label);
-#endif
 }
 
 void reset_net_status(struct packet_ptrs *pptrs)
@@ -1471,7 +1469,6 @@ void reset_net_status_v(struct packet_ptrs_vector *pptrsv)
   pptrsv->mpls4.lm_method_dst = FALSE;
   pptrsv->vlanmpls4.lm_method_dst = FALSE;
 
-#if defined ENABLE_IPV6
   pptrsv->v6.lm_mask_src = FALSE;
   pptrsv->vlan6.lm_mask_src = FALSE;
   pptrsv->mpls6.lm_mask_src = FALSE;
@@ -1488,7 +1485,6 @@ void reset_net_status_v(struct packet_ptrs_vector *pptrsv)
   pptrsv->vlan6.lm_method_dst = FALSE;
   pptrsv->mpls6.lm_method_dst = FALSE;
   pptrsv->vlanmpls6.lm_method_dst = FALSE;
-#endif
 }
 
 void reset_shadow_status(struct packet_ptrs_vector *pptrsv)
@@ -1498,12 +1494,10 @@ void reset_shadow_status(struct packet_ptrs_vector *pptrsv)
   pptrsv->mpls4.shadow = FALSE;
   pptrsv->vlanmpls4.shadow = FALSE;
 
-#if defined ENABLE_IPV6
   pptrsv->v6.shadow = FALSE;
   pptrsv->vlan6.shadow = FALSE;
   pptrsv->mpls6.shadow = FALSE;
   pptrsv->vlanmpls6.shadow = FALSE;
-#endif
 }
 
 void reset_fallback_status(struct packet_ptrs *pptrs)
@@ -1540,12 +1534,10 @@ void set_sampling_table(struct packet_ptrs_vector *pptrsv, u_char *t)
   pptrsv->mpls4.sampling_table = t;
   pptrsv->vlanmpls4.sampling_table = t;
 
-#if defined ENABLE_IPV6
   pptrsv->v6.sampling_table = t;
   pptrsv->vlan6.sampling_table = t;
   pptrsv->mpls6.sampling_table = t;
   pptrsv->vlanmpls6.sampling_table = t;
-#endif
 }
 
 void *pm_malloc(size_t size)
@@ -1661,9 +1653,7 @@ int BTA_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_
 
   if (bta_map_caching && xsentry) {
     if (pptrs->l3_proto == ETHERTYPE_IP) xsmc = &xsentry->bta_v4; 
-#if defined ENABLE_IPV6
     else if (pptrs->l3_proto == ETHERTYPE_IPV6) xsmc = &xsentry->bta_v6;
-#endif
   }
 
   if (bta_map_caching && xsmc && timeval_cmp(&xsmc->stamp, &reload_map_tstamp) > 0) {
@@ -1686,9 +1676,7 @@ int BTA_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_
   }
 
   if (ret & PRETAG_MAP_RCODE_ID) pptrs->bta_af = ETHERTYPE_IP;
-#if defined ENABLE_IPV6
   else if (ret & BTA_MAP_RCODE_ID_ID2) pptrs->bta_af = ETHERTYPE_IPV6;
-#endif
 
   return ret;
 }
@@ -2161,10 +2149,7 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
     else if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_IP) {
       int len = 0;
 
-      len = INET_ADDRSTRLEN;
-#if defined ENABLE_IPV6
       len = INET6_ADDRSTRLEN;
-#endif
       	
       if (formatted) {
         snprintf(format, VERYSHORTBUFLEN, "%%-%u", len > strlen(cp_entry->ptr->name) ? len : strlen(cp_entry->ptr->name));
@@ -2255,21 +2240,16 @@ void custom_primitive_value_print(char *out, int outlen, char *in, struct custom
       memset(&ip_addr, 0, sizeof(ip_addr));
       memset(ip_str, 0, sizeof(ip_str));
 
-      len = INET_ADDRSTRLEN;
-#if defined ENABLE_IPV6
       len = INET6_ADDRSTRLEN;
-#endif
 
       if (cp_entry->ptr->len == 4) { 
 	ip_addr.family = AF_INET;
 	memcpy(&ip_addr.address.ipv4, in+cp_entry->off, 4); 
       }
-#if defined ENABLE_IPV6
       else if (cp_entry->ptr->len == 16) {
 	ip_addr.family = AF_INET6;
 	memcpy(&ip_addr.address.ipv6, in+cp_entry->off, 16); 
       }
-#endif
 
       addr_to_str(ip_str, &ip_addr);
       if (formatted)

@@ -296,7 +296,6 @@ AC_CHECK_FUNCS(inet_ntop)
 if test x"$ac_cv_func_inet_ntop" = x"no"; then
 	AC_MSG_ERROR(ERROR: missing inet_ntop())
 fi
-AC_DEFINE(ENABLE_IPV6, 1)
 
 AC_MSG_CHECKING([whether to enable IP prefix labels])
 AC_ARG_ENABLE(plabel,

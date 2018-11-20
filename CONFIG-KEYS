@@ -1587,13 +1587,11 @@ DESC:           Defines whether IP addresses should be left numerical (in networ
 		to human-readable string. Applies to MySQL and SQLite plugins only and assumes the INET_ATON()
 		and INET6_ATON() function are defined in the RDBMS. INET_ATON() is always defined in MySQL
 		whereas INET6_ATON() requires MySQL >= 5.6.3. Both functions are not defined by default in
-		SQLite instead and are to be user-defined: if pmacct is compiled with --disable-ipv6, a
-		INET_ATON() function is invoked; if pmacct is compiled with --enable-ipv6 (default), a
-		INET6_ATON() function is invoked. The feature is not compatible with making use of IP prefix
-		labels. Default setting, false, is to convert IP addresses and prefixes into strings. If this
-		feature is not available for the intended plugin - and NetFlow/IPFIX or libpcap/ULOG daemons
-		are used - a custom primitive can be defined (see aggregate_primitives config directive), for
-		example in the case of NetFlow/IPFIX:
+		SQLite instead and are to be user-defined. The feature is not compatible with making use of IP
+		prefix labels. Default setting, false, is to convert IP addresses and prefixes into strings.
+		If this feature is not available for the intended plugin - and NetFlow/IPFIX or libpcap/ULOG
+		daemons are used - a custom primitive can be defined (see aggregate_primitives configuration
+		directive), for example in the case of NetFlow/IPFIX:
 
 		name=src_host_int field_type=8  len=4 semantics=u_int
 		name=dst_host_int field_type=12 len=4 semantics=u_int

@@ -33,9 +33,7 @@
 void load_networks(char *filename, struct networks_table *nt, struct networks_cache *nc)
 {
   load_networks4(filename, nt, nc);
-#if defined ENABLE_IPV6
   load_networks6(filename, nt, nc);
-#endif
 }
 
 void load_networks4(char *filename, struct networks_table *nt, struct networks_cache *nc)
@@ -553,11 +551,7 @@ void set_net_funcs(struct networks_table *nt)
     }
   }
 
-#if defined ENABLE_IPV6
   if ((!nt->num) && (!nt->num6)) goto exit_lane;
-#else
-  if (!nt->num) goto exit_lane;
-#endif
 
   net_funcs[count] = init_net_funcs;
   count++;
@@ -759,14 +753,12 @@ void mask_src_ipaddr(struct networks_table *nt, struct networks_cache *nc, struc
     p->src_net.address.ipv4.s_addr = htonl(addrh[0]);
     p->src_net.family = p->src_ip.family;
   }
-#if defined ENABLE_IPV6
   else if (p->src_ip.family == AF_INET6) {
     memcpy(&addrh, (void *) pm_ntohl6(&p->src_ip.address.ipv6), IP6AddrSz);
     for (j = 0; j < 4; j++) addrh[j] &= maskbits[j];
     memcpy(&p->src_net.address.ipv6, (void *) pm_htonl6(addrh), IP6AddrSz);
     p->src_net.family = p->src_ip.family;
   }
-#endif
 }
 
 void mask_static_src_ipaddr(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p,
@@ -781,14 +773,12 @@ void mask_static_src_ipaddr(struct networks_table *nt, struct networks_cache *nc
     p->src_net.address.ipv4.s_addr = htonl(addrh[0]);
     p->src_net.family = p->src_ip.family;
   }
-#if defined ENABLE_IPV6
   else if (p->src_ip.family == AF_INET6) {
     memcpy(&addrh, (void *) pm_ntohl6(&p->src_ip.address.ipv6), IP6AddrSz);
     for (j = 0; j < 4; j++) addrh[j] &= nt->maskbits[j]; 
     memcpy(&p->src_net.address.ipv6, (void *) pm_htonl6(addrh), IP6AddrSz);
     p->src_net.family = p->src_ip.family;
   }
-#endif
 }
 
 void mask_dst_ipaddr(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p,
@@ -811,14 +801,12 @@ void mask_dst_ipaddr(struct networks_table *nt, struct networks_cache *nc, struc
     p->dst_net.address.ipv4.s_addr = htonl(addrh[0]);
     p->dst_net.family = p->dst_ip.family;
   }
-#if defined ENABLE_IPV6
   else if (p->dst_ip.family == AF_INET6) {
     memcpy(&addrh, (void *) pm_ntohl6(&p->dst_ip.address.ipv6), IP6AddrSz);
     for (j = 0; j < 4; j++) addrh[j] &= maskbits[j];
     memcpy(&p->dst_net.address.ipv6, (void *) pm_htonl6(addrh), IP6AddrSz);
     p->dst_net.family = p->dst_ip.family;
   }
-#endif
 }
 
 void mask_static_dst_ipaddr(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p,
@@ -833,14 +821,12 @@ void mask_static_dst_ipaddr(struct networks_table *nt, struct networks_cache *nc
     p->dst_net.address.ipv4.s_addr = htonl(addrh[0]);
     p->dst_net.family = p->dst_ip.family;
   }
-#if defined ENABLE_IPV6
   else if (p->dst_ip.family == AF_INET6) {
     memcpy(&addrh, (void *) pm_ntohl6(&p->dst_ip.address.ipv6), IP6AddrSz);
     for (j = 0; j < 4; j++) addrh[j] &= nt->maskbits[j];
     memcpy(&p->dst_net.address.ipv6, (void *) pm_htonl6(addrh), IP6AddrSz);
     p->dst_net.family = p->dst_ip.family;
   }
-#endif
 }
 
 void copy_src_mask(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p,
@@ -862,12 +848,10 @@ void search_src_ip(struct networks_table *nt, struct networks_cache *nc, struct 
     nfd->family = AF_INET;
     nfd->entry = (u_char *) binsearch(nt, nc, &p->src_ip);
   }
-#if defined ENABLE_IPV6
   else if (p->src_ip.family == AF_INET6) {
     nfd->family = AF_INET6;
     nfd->entry = (u_char *) binsearch6(nt, nc, &p->src_ip);
   }
-#endif
   else {
     nfd->family = 0;
     nfd->entry = NULL;
@@ -881,12 +865,10 @@ void search_dst_ip(struct networks_table *nt, struct networks_cache *nc, struct 
     nfd->family = AF_INET;
     nfd->entry = (u_char *) binsearch(nt, nc, &p->dst_ip);
   }
-#if defined ENABLE_IPV6
   else if (p->dst_ip.family == AF_INET6) {
     nfd->family = AF_INET6;
     nfd->entry = (u_char *) binsearch6(nt, nc, &p->dst_ip);
   }
-#endif
   else {
     nfd->family = 0;
     nfd->entry = NULL;
@@ -897,9 +879,7 @@ void search_src_host(struct networks_table *nt, struct networks_cache *nc, struc
 			struct pkt_bgp_primitives *pbgp, struct networks_file_data *nfd)
 {
   struct networks_table_entry *res;
-#if defined ENABLE_IPV6
   struct networks6_table_entry *res6;
-#endif
 
   if (nfd->family == AF_INET) {
     res = (struct networks_table_entry *) nfd->entry;
@@ -914,7 +894,6 @@ void search_src_host(struct networks_table *nt, struct networks_cache *nc, struc
       }
     }
   }
-#if defined ENABLE_IPV6
   else if (nfd->family == AF_INET6) {
     res6 = (struct networks6_table_entry *) nfd->entry;
     if (!res6) {
@@ -928,16 +907,13 @@ void search_src_host(struct networks_table *nt, struct networks_cache *nc, struc
       }
     }
   }
-#endif
 }
 
 void search_dst_host(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p,
 			struct pkt_bgp_primitives *pbgp,struct networks_file_data *nfd)
 {
   struct networks_table_entry *res;
-#if defined ENABLE_IPV6
   struct networks6_table_entry *res6;
-#endif
 
   if (nfd->family == AF_INET) {
     res = (struct networks_table_entry *) nfd->entry;
@@ -952,7 +928,6 @@ void search_dst_host(struct networks_table *nt, struct networks_cache *nc, struc
       }
     }
   }
-#if defined ENABLE_IPV6
   else if (nfd->family == AF_INET6) {
     res6 = (struct networks6_table_entry *) nfd->entry;
     if (!res6) {
@@ -966,7 +941,6 @@ void search_dst_host(struct networks_table *nt, struct networks_cache *nc, struc
       }
     }
   }
-#endif
 }
 
 #if defined ENABLE_PLABEL
@@ -974,40 +948,32 @@ void search_src_host_label(struct networks_table *nt, struct networks_cache *nc,
                         struct pkt_bgp_primitives *pbgp, struct networks_file_data *nfd)
 {
   struct networks_table_entry *res;
-#if defined ENABLE_IPV6
   struct networks6_table_entry *res6;
-#endif
 
   if (nfd->family == AF_INET) {
     res = (struct networks_table_entry *) nfd->entry;
     if (res && res->plabel[0] != '\0') label_to_addr(res->plabel, &p->src_ip, PREFIX_LABEL_LEN);
   }
-#if defined ENABLE_IPV6
   else if (nfd->family == AF_INET6) {
     res6 = (struct networks6_table_entry *) nfd->entry;
     if (res6 && res6->plabel[0] != '\0') label_to_addr(res6->plabel, &p->src_ip, PREFIX_LABEL_LEN);
   }
-#endif
 }
 
 void search_dst_host_label(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p,
                         struct pkt_bgp_primitives *pbgp, struct networks_file_data *nfd)
 {
   struct networks_table_entry *res;
-#if defined ENABLE_IPV6
   struct networks6_table_entry *res6;
-#endif
 
   if (nfd->family == AF_INET) {
     res = (struct networks_table_entry *) nfd->entry;
     if (res && res->plabel[0] != '\0') label_to_addr(res->plabel, &p->dst_ip, PREFIX_LABEL_LEN);
   }
-#if defined ENABLE_IPV6
   else if (nfd->family == AF_INET6) {
     res6 = (struct networks6_table_entry *) nfd->entry;
     if (res6 && res6->plabel[0] != '\0') label_to_addr(res6->plabel, &p->dst_ip, PREFIX_LABEL_LEN);
   }
-#endif
 }
 #endif
 
@@ -1015,9 +981,7 @@ void search_src_nmask(struct networks_table *nt, struct networks_cache *nc, stru
 			struct pkt_bgp_primitives *pbgp, struct networks_file_data *nfd)
 {
   struct networks_table_entry *res;
-#if defined ENABLE_IPV6
   struct networks6_table_entry *res6;
-#endif
   u_int8_t mask = 0, default_route_in_networks_table = 0;
 
   if (nfd->family == AF_INET) {
@@ -1026,14 +990,12 @@ void search_src_nmask(struct networks_table *nt, struct networks_cache *nc, stru
     if (!res) mask = 0;
     else mask = res->masknum;
   }
-#if defined ENABLE_IPV6
   else if (nfd->family == AF_INET6) {
     res6 = (struct networks6_table_entry *) nfd->entry;
     default_route_in_networks_table = default_route_in_networks6_table;
     if (!res6) mask = 0;
     else mask = res6->masknum; 
   }
-#endif
 
   if (!(config.nfacctd_net & NF_NET_FALLBACK)) {
     p->src_nmask = mask;
@@ -1057,9 +1019,7 @@ void search_dst_nmask(struct networks_table *nt, struct networks_cache *nc, stru
 			struct pkt_bgp_primitives *pbgp, struct networks_file_data *nfd)
 {
   struct networks_table_entry *res;
-#if defined ENABLE_IPV6
   struct networks6_table_entry *res6;
-#endif
   u_int8_t mask = 0, default_route_in_networks_table = 0;
 
   if (nfd->family == AF_INET) {
@@ -1068,14 +1028,12 @@ void search_dst_nmask(struct networks_table *nt, struct networks_cache *nc, stru
     if (!res) mask = 0;
     else mask = res->masknum;
   }
-#if defined ENABLE_IPV6
   else if (nfd->family == AF_INET6) {
     res6 = (struct networks6_table_entry *) nfd->entry;
     default_route_in_networks_table = default_route_in_networks6_table;
     if (!res6) mask = 0;
     else mask = res6->masknum;
   }
-#endif
 
   if (!(config.nfacctd_net & NF_NET_FALLBACK)) {
     p->dst_nmask = mask;
@@ -1099,9 +1057,7 @@ void search_src_as(struct networks_table *nt, struct networks_cache *nc, struct 
 			struct pkt_bgp_primitives *pbgp, struct networks_file_data *nfd)
 {
   struct networks_table_entry *res;
-#if defined ENABLE_IPV6
   struct networks6_table_entry *res6;
-#endif
   as_t as = 0;
   u_int8_t mask = 0;
 
@@ -1116,7 +1072,6 @@ void search_src_as(struct networks_table *nt, struct networks_cache *nc, struct 
       mask = 0;
     }
   }
-#if defined ENABLE_IPV6
   else if (nfd->family == AF_INET6) {
     res6 = (struct networks6_table_entry *) nfd->entry;
     if (res6) {
@@ -1128,7 +1083,6 @@ void search_src_as(struct networks_table *nt, struct networks_cache *nc, struct 
       mask = 0;
     }
   }
-#endif
 
   if (!(config.nfacctd_as & NF_AS_FALLBACK)) p->src_as = as;
   else {
@@ -1145,9 +1099,7 @@ void search_dst_as(struct networks_table *nt, struct networks_cache *nc, struct 
 			struct pkt_bgp_primitives *pbgp, struct networks_file_data *nfd)
 {
   struct networks_table_entry *res;
-#if defined ENABLE_IPV6
   struct networks6_table_entry *res6;
-#endif
   as_t as = 0;
   u_int8_t mask = 0;
   
@@ -1162,7 +1114,6 @@ void search_dst_as(struct networks_table *nt, struct networks_cache *nc, struct 
       mask = 0;
     }
   }
-#if defined ENABLE_IPV6
   else if (nfd->family == AF_INET6) {
     res6 = (struct networks6_table_entry *) nfd->entry;
     if (res6) {
@@ -1174,7 +1125,6 @@ void search_dst_as(struct networks_table *nt, struct networks_cache *nc, struct 
       mask = 0;
     }
   }
-#endif
 
   if (!(config.nfacctd_as & NF_AS_FALLBACK)) p->dst_as = as;
   else {
@@ -1191,9 +1141,7 @@ void search_peer_src_as(struct networks_table *nt, struct networks_cache *nc, st
                         struct pkt_bgp_primitives *pbgp, struct networks_file_data *nfd)
 {
   struct networks_table_entry *res;
-#if defined ENABLE_IPV6
   struct networks6_table_entry *res6;
-#endif
   as_t as = 0;
   u_int8_t mask = 0;
 
@@ -1208,7 +1156,6 @@ void search_peer_src_as(struct networks_table *nt, struct networks_cache *nc, st
       mask = 0;
     }
   }
-#if defined ENABLE_IPV6
   else if (nfd->family == AF_INET6) {
     res6 = (struct networks6_table_entry *) nfd->entry;
     if (res6) {
@@ -1220,7 +1167,6 @@ void search_peer_src_as(struct networks_table *nt, struct networks_cache *nc, st
       mask = 0;
     }
   }
-#endif
 
   if (!(config.nfacctd_as & NF_AS_FALLBACK)) {
     if (pbgp) pbgp->peer_src_as = as;
@@ -1241,9 +1187,7 @@ void search_peer_dst_as(struct networks_table *nt, struct networks_cache *nc, st
                         struct pkt_bgp_primitives *pbgp, struct networks_file_data *nfd)
 {
   struct networks_table_entry *res;
-#if defined ENABLE_IPV6
   struct networks6_table_entry *res6;
-#endif
   as_t as = 0;
   u_int8_t mask = 0;
 
@@ -1258,7 +1202,6 @@ void search_peer_dst_as(struct networks_table *nt, struct networks_cache *nc, st
       mask = 0;
     }
   }
-#if defined ENABLE_IPV6
   else if (nfd->family == AF_INET6) {
     res6 = (struct networks6_table_entry *) nfd->entry;
     if (res6) {
@@ -1270,7 +1213,6 @@ void search_peer_dst_as(struct networks_table *nt, struct networks_cache *nc, st
       mask = 0;
     }
   }
-#endif
 
   if (!(config.nfacctd_as & NF_AS_FALLBACK)) {
     if (pbgp) pbgp->peer_dst_as = as;
@@ -1291,9 +1233,7 @@ void search_peer_dst_ip(struct networks_table *nt, struct networks_cache *nc, st
 			struct pkt_bgp_primitives *pbgp, struct networks_file_data *nfd)
 {
   struct networks_table_entry *res = NULL;
-#if defined ENABLE_IPV6
   struct networks6_table_entry *res6 = NULL;
-#endif
   struct host_addr nh;
   u_int8_t mask = 0;
 
@@ -1309,7 +1249,6 @@ void search_peer_dst_ip(struct networks_table *nt, struct networks_cache *nc, st
         mask = 0;
       }
     }
-#if defined ENABLE_IPV6
     else if (nfd->family == AF_INET6) {
       res6 = (struct networks6_table_entry *) nfd->entry;
       if (res6) {
@@ -1321,7 +1260,6 @@ void search_peer_dst_ip(struct networks_table *nt, struct networks_cache *nc, st
         mask = 0;
       }
     }
-#endif
 
     if (!(config.nfacctd_net & NF_NET_FALLBACK)) {
       memcpy(&pbgp->peer_dst_ip, &nh, sizeof(struct host_addr));
@@ -1367,9 +1305,7 @@ as_t search_pretag_src_as(struct networks_table *nt, struct networks_cache *nc, 
 {
   struct networks_table_entry *res;
   struct host_addr addr;
-#if defined ENABLE_IPV6
   struct networks6_table_entry *res6;
-#endif
 
   if (pptrs->l3_proto == ETHERTYPE_IP) { 
     addr.family = AF_INET;
@@ -1378,7 +1314,6 @@ as_t search_pretag_src_as(struct networks_table *nt, struct networks_cache *nc, 
     if (!res) return 0;
     else return res->as;
   }
-#if defined ENABLE_IPV6
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
     addr.family = AF_INET6;
     memcpy(&addr.address.ipv6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, IP6AddrSz);
@@ -1386,7 +1321,6 @@ as_t search_pretag_src_as(struct networks_table *nt, struct networks_cache *nc, 
     if (!res6) return 0;
     else return res6->as;
   }
-#endif
 
   return 0;
 }
@@ -1395,9 +1329,7 @@ as_t search_pretag_dst_as(struct networks_table *nt, struct networks_cache *nc, 
 {
   struct networks_table_entry *res;
   struct host_addr addr;
-#if defined ENABLE_IPV6
   struct networks6_table_entry *res6;
-#endif
 
   if (pptrs->l3_proto == ETHERTYPE_IP) {
     addr.family = AF_INET;
@@ -1406,7 +1338,6 @@ as_t search_pretag_dst_as(struct networks_table *nt, struct networks_cache *nc, 
     if (!res) return 0;
     else return res->as;
   }
-#if defined ENABLE_IPV6
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
     addr.family = AF_INET6;
     memcpy(&addr.address.ipv6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, IP6AddrSz);
@@ -1414,12 +1345,10 @@ as_t search_pretag_dst_as(struct networks_table *nt, struct networks_cache *nc, 
     if (!res6) return 0;
     else return res6->as;
   }
-#endif
 
   return 0;
 }
 
-#if defined ENABLE_IPV6
 void load_networks6(char *filename, struct networks_table *nt, struct networks_cache *nc)
 {
   FILE *file;
@@ -1960,5 +1889,3 @@ unsigned int networks_cache_hash6(void *key)
 
   return c;
 }
-#endif
-

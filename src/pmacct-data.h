@@ -857,9 +857,7 @@ static const struct _dictionary_line dictionary[] = {
   {"igp_daemon_map_msglog", cfg_key_igp_daemon_map_msglog},
 #if defined WITH_GEOIP
   {"geoip_ipv4_file", cfg_key_geoip_ipv4_file},
-#if defined ENABLE_IPV6
   {"geoip_ipv6_file", cfg_key_geoip_ipv6_file},
-#endif
 #endif
 #if defined WITH_GEOIPV2
   {"geoipv2_file", cfg_key_geoipv2_file},

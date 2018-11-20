@@ -75,11 +75,7 @@
 
 #define LONGLONG_RETRY INT_MAX
 
-#if defined ENABLE_IPV6
 #define DEFAULT_SNAPLEN 128
-#else
-#define DEFAULT_SNAPLEN 68
-#endif
 #define SNAPLEN_ISIS_MIN 512
 #define SNAPLEN_ISIS_DEFAULT 1476
 

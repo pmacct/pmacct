@@ -23,21 +23,16 @@
 #include "../include/llc.h"
 #include "../include/sll.h"
 #include "../include/ieee802_11.h"
-
-#if defined ENABLE_IPV6
 #include "../include/ip6.h"
 #include "../include/ah.h"
-#endif
 
 #define min(a,b) ((a)>(b)?(b):(a))
 
-#if defined ENABLE_IPV6
 #ifndef IN6_IS_ADDR_V4MAPPED
 #define IN6_IS_ADDR_V4MAPPED(a) \
         ((((__const uint32_t *) (a))[0] == 0)                                 \
          && (((__const uint32_t *) (a))[1] == 0)                              \
          && (((__const uint32_t *) (a))[2] == htonl (0xffff)))
-#endif
 #endif
 
 #define ETH_ADDR_LEN    	6               /* Octets in one ethernet addr   */
@@ -376,9 +371,7 @@ struct host_addr {
   u_int8_t family;
   union {
     struct in_addr ipv4;
-#if defined ENABLE_IPV6
     struct in6_addr ipv6;
-#endif
 #if defined ENABLE_PLABEL
     u_char plabel[PREFIX_LABEL_LEN];
 #endif
@@ -390,9 +383,7 @@ struct host_mask {
   u_int8_t len;
   union {
     u_int32_t m4;
-#if defined ENABLE_IPV6
     u_int8_t m6[16];
-#endif
   } mask;
 };
 
@@ -604,12 +595,10 @@ struct packet_ptrs_vector {
   struct packet_ptrs vlan4;
   struct packet_ptrs mpls4;
   struct packet_ptrs vlanmpls4;
-#if defined ENABLE_IPV6
   struct packet_ptrs v6;
   struct packet_ptrs vlan6;
   struct packet_ptrs mpls6;
   struct packet_ptrs vlanmpls6;
-#endif
 };
 
 struct hosts_table_entry {
