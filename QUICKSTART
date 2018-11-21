@@ -463,8 +463,8 @@ pcap_interfaces_map: /path/to/pcap_interfaces.map
 Then in /path/to/pcap_interfaces.map:
 
 !
-ifname=eth0
-ifname=eth1
+ifindex=100	ifname=eth0
+ifindex=200	ifname=eth1
 ! ...
 
 Daemonize the process; let pmacct aggregate traffic in order to show in vs out
