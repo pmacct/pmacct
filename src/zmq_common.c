@@ -210,26 +210,7 @@ int p_zmq_plugin_pipe_set_profile(struct configuration *cfg, char *value)
 
 void p_zmq_zap_setup(struct p_zmq_host *zmq_host)
 {
-  int ret;
-
-  if (!zmq_host->zap.sock.obj) {
-    zmq_host->zap.sock.obj = zmq_socket(zmq_host->ctx, ZMQ_REP);
-    if (!zmq_host->zap.sock.obj) {
-      Log(LOG_ERR, "ERROR ( %s ): zmq_socket() ZAP failed (%s)\nExiting.\n",
-	  zmq_host->log_id, zmq_strerror(errno));
-      exit_gracefully(1);
-    }
-
-    snprintf(zmq_host->zap.sock.str, sizeof(zmq_host->zap.sock.str), "%s", "inproc://zeromq.zap.01");
-    ret = zmq_bind(zmq_host->zap.sock.obj, zmq_host->zap.sock.str);
-    if (ret == ERR) {
-      Log(LOG_ERR, "ERROR ( %s ): zmq_bind() ZAP failed (%s)\nExiting.\n",
-	  zmq_host->log_id, zmq_strerror(errno));
-      exit_gracefully(1);
-    }
-
-    zmq_host->zap.thread = zmq_threadstart(&p_zmq_zap_handler, zmq_host);
-  }
+  zmq_host->zap.thread = zmq_threadstart(&p_zmq_zap_handler, zmq_host);
 }
 
 void p_zmq_pub_setup(struct p_zmq_host *zmq_host)
@@ -510,6 +491,22 @@ int p_zmq_sendmore_bin(struct p_zmq_sock *sock, void *buf, int len)
 void p_zmq_zap_handler(void *zh)
 {
   struct p_zmq_host *zmq_host = (struct p_zmq_host *) zh;
+  int ret;
+
+  zmq_host->zap.sock.obj = zmq_socket(zmq_host->ctx, ZMQ_REP);
+  if (!zmq_host->zap.sock.obj) {
+    Log(LOG_ERR, "ERROR ( %s ): zmq_socket() ZAP failed (%s)\nExiting.\n",
+        zmq_host->log_id, zmq_strerror(errno));
+    exit_gracefully(1);
+  }
+
+  snprintf(zmq_host->zap.sock.str, sizeof(zmq_host->zap.sock.str), "%s", "inproc://zeromq.zap.01");
+  ret = zmq_bind(zmq_host->zap.sock.obj, zmq_host->zap.sock.str);
+  if (ret == ERR) {
+    Log(LOG_ERR, "ERROR ( %s ): zmq_bind() ZAP failed (%s)\nExiting.\n",
+        zmq_host->log_id, zmq_strerror(errno));
+    exit_gracefully(1);
+  }
 
   while (TRUE) {
     char *version, *sequence, *domain, *address, *identity;

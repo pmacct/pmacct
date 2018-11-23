@@ -116,6 +116,8 @@ The keys used are:
     PG_create_backend() now composes a proper conn_string.
   ! fix, print plugin: increase successful queries number, QN, only if
     the output file was successfully opened.
+  ! fix, zmq_common.c: moved ZAP socket initialization inside the ZAP
+    handler. See: https://github.com/zeromq/libzmq/issues/3313 .
   ! fix, util.c: length checks in handle_dynname_internal_strings() were
     reviewed. Existings were not working in absence of starting/trailing
     non-variable strings.
