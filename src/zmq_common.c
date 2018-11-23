@@ -491,17 +491,18 @@ int p_zmq_sendmore_bin(struct p_zmq_sock *sock, void *buf, int len)
 void p_zmq_zap_handler(void *zh)
 {
   struct p_zmq_host *zmq_host = (struct p_zmq_host *) zh;
+  struct p_zmq_sock zmq_sock;
   int ret;
 
-  zmq_host->zap.sock.obj = zmq_socket(zmq_host->ctx, ZMQ_REP);
-  if (!zmq_host->zap.sock.obj) {
+  zmq_sock.obj = zmq_socket(zmq_host->ctx, ZMQ_REP);
+  if (!zmq_sock.obj) {
     Log(LOG_ERR, "ERROR ( %s ): zmq_socket() ZAP failed (%s)\nExiting.\n",
         zmq_host->log_id, zmq_strerror(errno));
     exit_gracefully(1);
   }
 
-  snprintf(zmq_host->zap.sock.str, sizeof(zmq_host->zap.sock.str), "%s", "inproc://zeromq.zap.01");
-  ret = zmq_bind(zmq_host->zap.sock.obj, zmq_host->zap.sock.str);
+  snprintf(zmq_sock.str, sizeof(zmq_sock.str), "%s", "inproc://zeromq.zap.01");
+  ret = zmq_bind(zmq_sock.obj, zmq_sock.str);
   if (ret == ERR) {
     Log(LOG_ERR, "ERROR ( %s ): zmq_bind() ZAP failed (%s)\nExiting.\n",
         zmq_host->log_id, zmq_strerror(errno));
@@ -512,46 +513,46 @@ void p_zmq_zap_handler(void *zh)
     char *version, *sequence, *domain, *address, *identity;
     char *mechanism, *username, *password;
 
-    version = p_zmq_recv_str(&zmq_host->zap.sock);
+    version = p_zmq_recv_str(&zmq_sock);
     if (!version) break;
 
-    sequence = p_zmq_recv_str(&zmq_host->zap.sock);
-    domain = p_zmq_recv_str(&zmq_host->zap.sock);
-    address = p_zmq_recv_str(&zmq_host->zap.sock);
-    identity = p_zmq_recv_str(&zmq_host->zap.sock);
-    mechanism = p_zmq_recv_str(&zmq_host->zap.sock);
+    sequence = p_zmq_recv_str(&zmq_sock);
+    domain = p_zmq_recv_str(&zmq_sock);
+    address = p_zmq_recv_str(&zmq_sock);
+    identity = p_zmq_recv_str(&zmq_sock);
+    mechanism = p_zmq_recv_str(&zmq_sock);
 
     if (!strcmp(version, "1.0") && !strcmp(mechanism, "PLAIN")) {
-      username = p_zmq_recv_str(&zmq_host->zap.sock);
-      password = p_zmq_recv_str(&zmq_host->zap.sock);
+      username = p_zmq_recv_str(&zmq_sock);
+      password = p_zmq_recv_str(&zmq_sock);
 
-      p_zmq_sendmore_str(&zmq_host->zap.sock, version);
-      p_zmq_sendmore_str(&zmq_host->zap.sock, sequence);
+      p_zmq_sendmore_str(&zmq_sock, version);
+      p_zmq_sendmore_str(&zmq_sock, sequence);
 
       if (!strcmp(username, zmq_host->zap.username) &&
 	  !strcmp(password, zmq_host->zap.password)) {
-        p_zmq_sendmore_str(&zmq_host->zap.sock, "200");
-        p_zmq_sendmore_str(&zmq_host->zap.sock, "OK");
-        p_zmq_sendmore_str(&zmq_host->zap.sock, "anonymous");
-        p_zmq_send_str(&zmq_host->zap.sock, "");
+        p_zmq_sendmore_str(&zmq_sock, "200");
+        p_zmq_sendmore_str(&zmq_sock, "OK");
+        p_zmq_sendmore_str(&zmq_sock, "anonymous");
+        p_zmq_send_str(&zmq_sock, "");
       }
       else {
-        p_zmq_sendmore_str(&zmq_host->zap.sock, "400");
-        p_zmq_sendmore_str(&zmq_host->zap.sock, "Invalid username or password");
-        p_zmq_sendmore_str(&zmq_host->zap.sock, "");
-        p_zmq_send_str(&zmq_host->zap.sock, "");
+        p_zmq_sendmore_str(&zmq_sock, "400");
+        p_zmq_sendmore_str(&zmq_sock, "Invalid username or password");
+        p_zmq_sendmore_str(&zmq_sock, "");
+        p_zmq_send_str(&zmq_sock, "");
       }
 
       free(username);
       free(password);
     }
     else {
-      p_zmq_sendmore_str(&zmq_host->zap.sock, version);
-      p_zmq_sendmore_str(&zmq_host->zap.sock, sequence);
-      p_zmq_sendmore_str(&zmq_host->zap.sock, "400");
-      p_zmq_sendmore_str(&zmq_host->zap.sock, "Unsupported auth mechanism");
-      p_zmq_sendmore_str(&zmq_host->zap.sock, "");
-      p_zmq_send_str(&zmq_host->zap.sock, "");
+      p_zmq_sendmore_str(&zmq_sock, version);
+      p_zmq_sendmore_str(&zmq_sock, sequence);
+      p_zmq_sendmore_str(&zmq_sock, "400");
+      p_zmq_sendmore_str(&zmq_sock, "Unsupported auth mechanism");
+      p_zmq_sendmore_str(&zmq_sock, "");
+      p_zmq_send_str(&zmq_sock, "");
     }
 
     free(version);
@@ -562,7 +563,7 @@ void p_zmq_zap_handler(void *zh)
     free(mechanism);
   }
 
-  zmq_close(zmq_host->zap.sock.obj);
+  zmq_close(zmq_sock.obj);
 }
 
 void p_zmq_router_setup(struct p_zmq_host *zmq_host, char *host, int port)
