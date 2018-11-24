@@ -90,7 +90,14 @@ DESC:   Following is the list of features, knobs and plugins that are being
         discontinued with release 1.7.1:
 	* pkt_len_distrib primitive is discontinued due to apparent lack of
 	  interest; the primitive was meant to bucket packet/flow/sample
-	  lenghts in a distribution.
+	  lenghts in a distribution. Alternatively pre_tag_map can be used
+	  to achieve the same. Buckets could be defined as follows:
+
+	  set_tag=100	filter='ip[2:2] > 0 && ip[2:2] <= 512'
+	  set_tag=200	filter='ip[2:2] > 512 && ip[2:2] <= 1024'
+	  set_tag=300	filter='ip[2:2] > 1024 && ip[2:2] <= 9000'
+
+	  Then the 'tag' primiive will carry the defined packet size bucket.
         * BGP daemon offline code, ie. bgp_daemon_offline_* directives, has
 	  been deprecated in favor of alternative approaches, ie. BGP Looking
 	  Glass (bgp_daemon_lg_*) and BGP Xconnects (bgp_daemon_xconnect_*).
