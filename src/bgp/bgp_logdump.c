@@ -24,6 +24,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "pmacct-data.h"
 #include "addr.h"
 #include "bgp.h"
 #include "../bmp/bmp.h"
@@ -146,7 +147,12 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       if (attr->lcommunity)
 	json_object_set_new_nocheck(obj, "lcomms", json_string(attr->lcommunity->str));
 
-      json_object_set_new_nocheck(obj, "origin", json_integer((json_int_t)attr->origin));
+      if (attr->origin <= BGP_ORIGIN_MAX) { 
+	json_object_set_new_nocheck(obj, "origin", json_string(bgp_origin[attr->origin]));
+      }
+      else {
+	json_object_set_new_nocheck(obj, "origin", json_integer((json_int_t)attr->origin));
+      }
 
       json_object_set_new_nocheck(obj, "local_pref", json_integer((json_int_t)attr->local_pref));
 

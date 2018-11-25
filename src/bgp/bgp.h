@@ -93,6 +93,11 @@
 #define BGP_LOOKUP_OK		0
 #define BGP_LOOKUP_ERR		-1
 
+#define BGP_ORIGIN_IGP		0
+#define BGP_ORIGIN_EGP		1
+#define BGP_ORIGIN_INCOMPLETE	2
+#define BGP_ORIGIN_MAX		2
+
 /* structures */
 struct bgp_dump_event {
   struct timeval tstamp;
@@ -286,7 +291,7 @@ struct bgp_attr {
     u_int32_t as;
     u_char ttl;
   } pathlimit;
-  u_char origin;
+  u_int8_t origin;
 };
 
 struct bgp_comm_range {

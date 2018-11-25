@@ -289,6 +289,12 @@ static const int cps_flen[] = {
   20
 };
 
+static const char *bgp_origin[] = {
+  "i",
+  "e",
+  "u"
+};
+
 #if defined __PMACCTD_C || defined __UACCTD_C || defined __UTIL_C
 static struct _devices_struct _devices[] = {
 #if defined DLT_LOOP
