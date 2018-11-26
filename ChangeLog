@@ -4,7 +4,7 @@ pmacct is Copyright (C) 2003-2018 by Paolo Lucente
 The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
-1.7.2 -- XX-1X-2018
+1.7.2 -- 26-11-2018
   + nfacctd, sfacctd: added Kafka broker among the options to receive
     NetFlow/IPFIX, sFlow data from. Host, port and topic should all be
     specified along with an optional config file to pass to librdkafka.
