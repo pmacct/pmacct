@@ -10,6 +10,11 @@ data onto pmtelemetryd via a ZeroMQ queue. Sample decoders can be found in
 telemetry/decorers and are written in Python. Below quickstart tips on how
 to proof of concept Streaming Telemetry collection using pmtelemetryd and
 some of the sample decoders provided. 
+
+Further reading and more information, including a reference architecture
+diagram, is available on the pmacct GitHub wiki at the following page:
+
+https://github.com/pmacct/pmacct/wiki/Streaming-Telemetry 
  
 
 QUICKSTART.
