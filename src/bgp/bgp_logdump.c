@@ -104,8 +104,6 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     else if (etype == BGP_LOGDUMP_ET_DUMP)
       json_object_set_new_nocheck(obj, "timestamp", json_string(bms->dump.tstamp_str));
 
-    if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, output, obj);
-
     if (ri && ri->extra && ri->extra->bmed.id && bms->bgp_peer_logdump_extra_data)
       bms->bgp_peer_logdump_extra_data(&ri->extra->bmed, output, obj);
 
@@ -173,6 +171,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       bgp_label2str(label_str, ri->extra->label);
       json_object_set_new_nocheck(obj, "label", json_string(label_str));
     }
+
+    if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, output, obj);
 
     if ((bms->msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
 	(bms->dump_file && etype == BGP_LOGDUMP_ET_DUMP))
@@ -285,15 +285,15 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 
       json_object_set_new_nocheck(obj, "timestamp", json_string(bms->log_tstamp_str));
 
-      if (bms->bgp_peer_logdump_initclose_extras)
-	bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
-
       addr_to_str(ip_address, &peer->addr);
       json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
 
       if (bms->peer_port_str) json_object_set_new_nocheck(obj, bms->peer_port_str, json_integer((json_int_t)peer->tcp_port));
 
       json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
+
+      if (bms->bgp_peer_logdump_initclose_extras)
+	bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
 
       if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, output, obj);
 
@@ -361,15 +361,15 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 
     json_object_set_new_nocheck(obj, "timestamp", json_string(bms->log_tstamp_str));
 
-    if (bms->bgp_peer_logdump_initclose_extras)
-      bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
-
     addr_to_str(ip_address, &peer->addr);
     json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
 
     if (bms->peer_port_str) json_object_set_new_nocheck(obj, bms->peer_port_str, json_integer((json_int_t)peer->tcp_port));
 
     json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
+
+    if (bms->bgp_peer_logdump_initclose_extras)
+      bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
 
     if (bms->msglog_file)
       write_and_free_json(log_ptr->fd, obj);
@@ -561,9 +561,6 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type, int do_seq)
 
     json_object_set_new_nocheck(obj, "timestamp", json_string(bms->dump.tstamp_str));
 
-    if (bms->bgp_peer_logdump_initclose_extras)
-      bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
-
     addr_to_str(ip_address, &peer->addr);
     json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
 
@@ -574,6 +571,9 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type, int do_seq)
     json_object_set_new_nocheck(obj, "dump_period", json_integer((json_int_t)bms->dump.period));
 
     if (do_seq) json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq)));
+
+    if (bms->bgp_peer_logdump_initclose_extras)
+      bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
 
     if (bms->dump_file)
       write_and_free_json(peer->log->fd, obj);
@@ -625,9 +625,6 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
 
     json_object_set_new_nocheck(obj, "timestamp", json_string(bms->dump.tstamp_str));
 
-    if (bms->bgp_peer_logdump_initclose_extras)
-      bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
-
     addr_to_str(ip_address, &peer->addr);
     json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
 
@@ -642,6 +639,9 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
     }
 
     if (do_seq) json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq)));
+
+    if (bms->bgp_peer_logdump_initclose_extras)
+      bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
 
     if (bms->dump_file)
       write_and_free_json(peer->log->fd, obj);
