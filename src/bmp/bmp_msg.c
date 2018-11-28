@@ -67,7 +67,7 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
     }
 
     bmp_common_hdr_get_len(bch, &msg_len);
-    if (pkt_remaining_len < msg_len) return msg_start_len;
+    if (pkt_remaining_len < (msg_len - sizeof(struct bmp_common_hdr))) return msg_start_len;
 
     if (bch->type <= BMP_MSG_TYPE_MAX) {
       Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] [common] type: %s (%u)\n",
