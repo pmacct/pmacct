@@ -65,15 +65,17 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
 
     json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
 
-    json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)log_seq));
-
     if (etype == BGP_LOGDUMP_ET_LOG) {
+      json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)log_seq));
+
       compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE,
 			config.timestamps_since_epoch, config.timestamps_rfc3339,
 			config.timestamps_utc);
       json_object_set_new_nocheck(obj, "timestamp", json_string(tstamp_str));
     }
     else if (etype == BGP_LOGDUMP_ET_DUMP) {
+      json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq))); 
+
       json_object_set_new_nocheck(obj, "timestamp", json_string(bms->dump.tstamp_str));
 
       compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE,
@@ -542,7 +544,7 @@ void bmp_handle_dump_event()
         }
 #endif
 
-	bgp_peer_dump_init(peer, config.bmp_dump_output, FUNC_TYPE_BMP, TRUE);
+	bgp_peer_dump_init(peer, config.bmp_dump_output, FUNC_TYPE_BMP);
 	inter_domain_routing_db = bgp_select_routing_db(FUNC_TYPE_BMP);
         dump_elems = 0;
 
@@ -612,7 +614,7 @@ void bmp_handle_dump_event()
 	saved_peer = peer;
 	saved_bmpp = bmpp;
         strlcpy(last_filename, current_filename, SRVBUFLEN);
-        bgp_peer_dump_close(peer, NULL, config.bmp_dump_output, FUNC_TYPE_BMP, TRUE);
+        bgp_peer_dump_close(peer, NULL, config.bmp_dump_output, FUNC_TYPE_BMP);
         tables_num++;
       }
     }

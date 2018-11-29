@@ -72,12 +72,16 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
 
     json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
 
-    json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)log_seq));
+    if (etype == BGP_LOGDUMP_ET_LOG) {
+      json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)log_seq));
 
-    if (etype == BGP_LOGDUMP_ET_LOG)
       json_object_set_new_nocheck(obj, "timestamp", json_string(tms->log_tstamp_str));
-    else if (etype == BGP_LOGDUMP_ET_DUMP)
+    }
+    else if (etype == BGP_LOGDUMP_ET_DUMP) {
+      json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) telemetry_log_seq_get(&tms->log_seq)));
+
       json_object_set_new_nocheck(obj, "timestamp", json_string(tms->dump.tstamp_str));
+    }
 
     json_object_set_new_nocheck(obj, "telemetry_node", json_string(peer->addr_str));
 
@@ -219,12 +223,12 @@ void telemetry_peer_log_dynname(char *new, int newlen, char *old, telemetry_peer
 
 int telemetry_peer_dump_init(telemetry_peer *peer, int output, int type)
 {
-  return bgp_peer_dump_init(peer, output, type, FALSE);
+  return bgp_peer_dump_init(peer, output, type);
 }
 
 int telemetry_peer_dump_close(telemetry_peer *peer, int output, int type)
 {
-  return bgp_peer_dump_close(peer, NULL, output, type, FALSE);
+  return bgp_peer_dump_close(peer, NULL, output, type);
 }
 
 void telemetry_dump_init_peer(telemetry_peer *peer)
@@ -259,7 +263,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
   int ret, peers_idx, duration, tables_num;
   pid_t dumper_pid;
   time_t start;
-  u_int64_t dump_elems;
+  u_int64_t dump_elems, dump_seqno;
 
   telemetry_peer *peer, *saved_peer;
   telemetry_dump_se_ll *tdsell;
@@ -271,6 +275,10 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
   if (!tms->dump_backend_methods || !config.telemetry_dump_refresh_time)
     return;
 
+  /* Sequencing the dump event */
+  dump_seqno = telemetry_log_seq_get(&tms->log_seq);
+  telemetry_log_seq_increment(&tms->log_seq);
+
   switch (ret = fork()) {
   case 0: /* Child */
     /* we have to ignore signals to avoid loops: because we are already forked */
@@ -281,6 +289,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
     memset(last_filename, 0, sizeof(last_filename));
     memset(current_filename, 0, sizeof(current_filename));
     fd_buf = malloc(OUTPUT_FILE_BUFSZ);
+    telemetry_log_seq_set(&tms->log_seq, dump_seqno);
 
 #ifdef WITH_RABBITMQ
     if (config.telemetry_dump_amqp_routing_key) {

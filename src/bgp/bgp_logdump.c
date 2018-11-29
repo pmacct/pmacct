@@ -78,7 +78,6 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     char prefix_str[INET6_ADDRSTRLEN], nexthop_str[INET6_ADDRSTRLEN];
     char *aspath;
 
-    /* no need for seq for "dump" event_type */
     if (etype == BGP_LOGDUMP_ET_LOG) {
       json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq)));
       bgp_peer_log_seq_increment(&bms->log_seq);
@@ -97,6 +96,9 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
         json_object_set_new_nocheck(obj, "log_type", json_integer((json_int_t)log_type));
 	break;
       }
+    }
+    else if (etype == BGP_LOGDUMP_ET_DUMP) {
+      json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq)));
     }
 
     if (etype == BGP_LOGDUMP_ET_LOG)
@@ -525,7 +527,7 @@ void bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *pee
   }
 }
 
-int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type, int do_seq)
+int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(type);
   char event_type[] = "dump_init";
@@ -570,7 +572,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type, int do_seq)
 
     json_object_set_new_nocheck(obj, "dump_period", json_integer((json_int_t)bms->dump.period));
 
-    if (do_seq) json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq)));
+    json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq)));
 
     if (bms->bgp_peer_logdump_initclose_extras)
       bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
@@ -599,7 +601,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type, int do_seq)
   return (ret | amqp_ret | kafka_ret);
 }
 
-int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int output, int type, int do_seq)
+int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int output, int type)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(type);
   char event_type[] = "dump_close";
@@ -638,7 +640,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
       json_object_set_new_nocheck(obj, "tables", json_integer((json_int_t)bds->tables));
     }
 
-    if (do_seq) json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq)));
+    json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq)));
 
     if (bms->bgp_peer_logdump_initclose_extras)
       bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
@@ -784,7 +786,7 @@ void bgp_handle_dump_event()
 	}
 #endif
 
-	bgp_peer_dump_init(peer, config.bgp_table_dump_output, FUNC_TYPE_BGP, TRUE);
+	bgp_peer_dump_init(peer, config.bgp_table_dump_output, FUNC_TYPE_BGP);
         inter_domain_routing_db = bgp_select_routing_db(FUNC_TYPE_BGP);
 	dump_elems = 0;
 
@@ -820,7 +822,7 @@ void bgp_handle_dump_event()
         strlcpy(last_filename, current_filename, SRVBUFLEN);
 	bds.entries = dump_elems;
 	bds.tables = tables_num;
-        bgp_peer_dump_close(peer, &bds, config.bgp_table_dump_output, FUNC_TYPE_BGP, TRUE);
+        bgp_peer_dump_close(peer, &bds, config.bgp_table_dump_output, FUNC_TYPE_BGP);
       }
     }
 
