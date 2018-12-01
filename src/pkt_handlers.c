@@ -5209,6 +5209,7 @@ void src_host_country_geoipv2_handler(struct channels_list_entry *chptr, struct 
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   MMDB_entry_data_list_s *entry_data_list = NULL;
+  char other_country[] = "O1";
   int status;
 
   if (pptrs->geoipv2_src.found_entry) {
@@ -5238,12 +5239,17 @@ void src_host_country_geoipv2_handler(struct channels_list_entry *chptr, struct 
       MMDB_free_entry_data_list(entry_data_list);
     }
   }
+  else {
+    /* return O1/Other Country: https://dev.maxmind.com/geoip/legacy/codes/iso3166/ */
+    strncpy(pdata->primitives.src_ip_country.str, other_country, strlen(other_country));
+  }
 }
 
 void dst_host_country_geoipv2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   MMDB_entry_data_list_s *entry_data_list = NULL;
+  char other_country[] = "O1";
   int status;
 
   if (pptrs->geoipv2_dst.found_entry) {
@@ -5272,6 +5278,10 @@ void dst_host_country_geoipv2_handler(struct channels_list_entry *chptr, struct 
 
       MMDB_free_entry_data_list(entry_data_list);
     }
+  }
+  else {
+    /* return O1/Other Country: https://dev.maxmind.com/geoip/legacy/codes/iso3166/ */
+    strncpy(pdata->primitives.dst_ip_country.str, other_country, strlen(other_country));
   }
 }
 
