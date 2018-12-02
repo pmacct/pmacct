@@ -1,4 +1,4 @@
-SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp telemetry ndpi
+SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp telemetry ndpi rpki
 sbin_PROGRAMS =
 bin_PROGRAMS =
 EXTRA_PROGRAMS =
@@ -34,6 +34,7 @@ libdaemons_la_LIBADD  = nfprobe_plugin/libnfprobe_plugin.la
 libdaemons_la_LIBADD += sfprobe_plugin/libsfprobe_plugin.la
 libdaemons_la_LIBADD += bmp/libbmp.la
 libdaemons_la_LIBADD += bgp/libbgp.la
+libdaemons_la_LIBADD += rpki/librpki.la
 libdaemons_la_LIBADD += tee_plugin/libtee_plugin.la
 libdaemons_la_LIBADD += isis/libisis.la
 libdaemons_la_LIBADD += telemetry/libtelemetry.la

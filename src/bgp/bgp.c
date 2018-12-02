@@ -27,6 +27,7 @@
 #include "addr.h"
 #include "bgp.h"
 #include "bgp_xcs.h"
+#include "rpki/rpki.h"
 #include "thread_pool.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
@@ -176,6 +177,10 @@ void skinny_bgp_daemon_online()
   else {
     bgp_xcs_map.pool = 0;
     bgp_xcs_map.num = 0;
+  }
+
+  if (config.rpki_roas_map) {
+    rpki_roas_map_load(config.rpki_roas_map, FUNC_TYPE_BGP);
   }
 
   if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key || config.nfacctd_bgp_msglog_kafka_topic) {

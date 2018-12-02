@@ -25,8 +25,9 @@
 /* includes */
 #include "pmacct.h"
 #include "addr.h"
-#include "../bgp/bgp.h"
+#include "bgp/bgp.h"
 #include "bmp.h"
+#include "rpki/rpki.h"
 #include "thread_pool.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
@@ -118,6 +119,10 @@ void skinny_bmp_daemon()
     exit_gracefully(1);
   }
   memset(bmp_peers, 0, config.nfacctd_bmp_max_peers*sizeof(struct bmp_peer));
+
+  if (config.rpki_roas_map) {
+    rpki_roas_map_load(config.rpki_roas_map, FUNC_TYPE_BMP);
+  }
 
   if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key || config.nfacctd_bmp_msglog_kafka_topic) {
     if (config.nfacctd_bmp_msglog_file) bmp_misc_db->msglog_backend_methods++;

@@ -546,6 +546,7 @@ struct configuration {
   int tmp_asa_bi_flow;
   int tmp_bgp_lookup_compare_ports;
   size_t thread_stack;
+  char *rpki_roas_map;
 };
 
 /* prototypes */ 
