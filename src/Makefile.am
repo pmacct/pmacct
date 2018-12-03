@@ -32,12 +32,12 @@ libcommon_la_CFLAGS  = $(AM_CFLAGS)
 # Builtin plugins
 libdaemons_la_LIBADD  = nfprobe_plugin/libnfprobe_plugin.la
 libdaemons_la_LIBADD += sfprobe_plugin/libsfprobe_plugin.la
-libdaemons_la_LIBADD += bmp/libbmp.la
-libdaemons_la_LIBADD += bgp/libbgp.la
-libdaemons_la_LIBADD += rpki/librpki.la
+libdaemons_la_LIBADD += bmp/libpmbmp.la
+libdaemons_la_LIBADD += bgp/libpmbgp.la
+libdaemons_la_LIBADD += rpki/libpmrpki.la
 libdaemons_la_LIBADD += tee_plugin/libtee_plugin.la
-libdaemons_la_LIBADD += isis/libisis.la
-libdaemons_la_LIBADD += telemetry/libtelemetry.la
+libdaemons_la_LIBADD += isis/libpmisis.la
+libdaemons_la_LIBADD += telemetry/libpmtelemetry.la
 libdaemons_la_LIBADD += libcommon.la
 libdaemons_la_CFLAGS  = $(AM_CFLAGS)
 if WITH_MYSQL

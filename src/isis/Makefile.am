@@ -1,7 +1,7 @@
 AM_CFLAGS = $(PMACCT_CFLAGS)
 
-noinst_LTLIBRARIES = libisis.la
-libisis_la_SOURCES = isis.c checksum.c dict.c table.c prefix.c		\
+noinst_LTLIBRARIES = libpmisis.la
+libpmisis_la_SOURCES = isis.c checksum.c dict.c table.c prefix.c	\
 	sockunion.c hash.c stream.c thread.c linklist.c			\
 	isis_circuit.c isis_events.c isis_route.c isis_tlv.c		\
 	isis_csm.c isis_flags.c isis_misc.c isisd.c isis_adjacency.c	\
@@ -12,4 +12,4 @@ libisis_la_SOURCES = isis.c checksum.c dict.c table.c prefix.c		\
 	isis_lsp.h isis_misc.h isis_network.h isis_pdu.h isis_route.h	\
 	isis_spf.h isis_tlv.h iso_checksum.h iso.h linklist.h		\
 	prefix.h sockunion.h stream.h table.h thread.h
-libisis_la_CFLAGS = -I$(srcdir)/.. $(AM_CFLAGS)
+libpmisis_la_CFLAGS = -I$(srcdir)/.. $(AM_CFLAGS)

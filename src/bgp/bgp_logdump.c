@@ -27,7 +27,6 @@
 #include "pmacct-data.h"
 #include "addr.h"
 #include "bgp.h"
-#include "../bmp/bmp.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
