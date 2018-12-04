@@ -25,5 +25,5 @@
 #else
 #define EXT
 #endif
-EXT void rpki_roas_map_load(char *, int);
+EXT int rpki_roas_map_load(char *, int);
 #undef EXT
