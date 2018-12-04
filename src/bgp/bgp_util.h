@@ -35,6 +35,7 @@ EXT int bgp_label2str(char *, u_char *);
 EXT void load_comm_patterns(char **, char **, char **, char **, char **);
 EXT void load_peer_src_as_comm_ranges(char *, char *);
 EXT void evaluate_comm_patterns(char *, char *, char **, int);
+EXT as_t str2asn(char *);
 EXT as_t evaluate_last_asn(struct aspath *);
 EXT as_t evaluate_first_asn(char *);
 EXT void evaluate_bgp_aspath_radius(char *, int, int);

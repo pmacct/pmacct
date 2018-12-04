@@ -1459,3 +1459,24 @@ int bgp_router_id_check(struct bgp_msg_data *bmd)
 
   return FALSE;
 }
+
+/*
+  utility function when an ASN is prepended by 'AS', 'AS ', etc. strings
+  that need to be stripped; basic testing done, perhaps strtoul() return
+  value needs more checks in case total bogus strings are passed over.
+*/
+as_t str2asn(char *asn_str)
+{
+  char *endptr, *asn_ptr = asn_str;
+  int len, cnt;
+
+  if (!asn_str) return 0;
+
+  len = strlen(asn_str);
+
+  for (cnt = 0; !isdigit(asn_str[cnt]) && (cnt < len); cnt++);
+
+  asn_ptr = &asn_str[cnt];
+
+  return strtoul(asn_ptr, &endptr, 10);
+}
