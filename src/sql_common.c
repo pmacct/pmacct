@@ -2186,6 +2186,7 @@ int sql_evaluate_primitives(int primitive)
     strncat(where[primitive].string, "lat_ip_src=%f", SPACELEFT(where[primitive].string));
     strncat(insert_clause, "lon_ip_src", SPACELEFT(insert_clause));
     strncat(values[primitive].string, "%f", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
     strncat(where[primitive].string, "lon_ip_src=%f", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_INT_SRC_HOST_COORDS;
     values[primitive].handler = where[primitive].handler = count_src_host_coords_handler;
@@ -2203,6 +2204,7 @@ int sql_evaluate_primitives(int primitive)
     strncat(where[primitive].string, "lat_ip_dst=%f", SPACELEFT(where[primitive].string));
     strncat(insert_clause, "lon_ip_dst", SPACELEFT(insert_clause));
     strncat(values[primitive].string, "%f", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
     strncat(where[primitive].string, "lon_ip_dst=%f", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_INT_DST_HOST_COORDS;
     values[primitive].handler = where[primitive].handler = count_dst_host_coords_handler;
