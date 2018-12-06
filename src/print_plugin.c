@@ -495,7 +495,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
     if (queue[j]->valid != PRINT_CACHE_COMMITTED) continue;
 
-    if (dyn_table && (!dyn_table_time_only || !config.nfacctd_time_new)) {
+    if (dyn_table && (!dyn_table_time_only || !config.nfacctd_time_new || (config.sql_refresh_time != timeslot))) {
       time_t stamp = 0;
 
       stamp = queue[j]->basetime.tv_sec;

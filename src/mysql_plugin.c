@@ -493,7 +493,7 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   for (idata->current_queue_elem = 0; idata->current_queue_elem < index; idata->current_queue_elem++) {
     go_to_pending = FALSE;
 
-    if (idata->dyn_table && (!idata->dyn_table_time_only || !config.nfacctd_time_new)) {
+    if (idata->dyn_table && (!idata->dyn_table_time_only || !config.nfacctd_time_new || (config.sql_refresh_time != idata->timeslot))) {
       time_t stamp = 0;
 
       memset(tmpbuf, 0, LONGLONGSRVBUFLEN); // XXX: pedantic?
