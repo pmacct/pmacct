@@ -28,12 +28,12 @@ shell> su - postgres
 
 [ ... ]
 
-- To create v7 tables:
+- To create v8 tables:
   * psql -d template1 -f /tmp/pmacct-create-db.pgsql
-  * psql -d pmacct -f /tmp/pmacct-create-table_v7.pgsql
+  * psql -d pmacct -f /tmp/pmacct-create-table_v8.pgsql
 
-- To use v7 tables:
-  * data will be available in 'acct_v7' table of 'pmacct' DB.
+- To use v8 tables:
+  * data will be available in 'acct_v8' table of 'pmacct' DB.
   * Add 'sql_table_version: 7' line to your configuration.
 
 Similarly, BGP tables:
@@ -56,16 +56,17 @@ are no longer supplied as part of the PostgreSQL table creation script: the
 'typed' schema instead can still be customized, ie. to write IP addresses in
 CHAR fields because making use of IP prefix labels, transparently to pmacct.
 
-- To understand difference between the various table versions: 
+- To understand difference between the various table versions:
   * Do you need any of the BGP primitives ? Then look the next section.
+  * Do you need tags for traffic tagging ? Then you have to use v9.
   * Do you need TCP flags ? Then you have to use v7.
   * Do you need both IP addresses and AS numbers in the same table ? Then you have to use v6.
   * Do you need packet classification ? Then you have to use v5.
   * Do you need flows (other than packets) accounting ? Then you have to use v4.
   * Do you need ToS/DSCP field (QoS) accounting ? Then you have to use v3.
-  * Do you need agent ID for distributed accounting and packet tagging ? Then you have to use v2. 
   * Do you need VLAN traffic accounting ? Then you have to use v2.
-  * If all of the above point sound useless, then use v1.
+  * If all of the above points sound useless, then use v1.
+  * v8 changes field names so to bring all supported databases to the same naming convention.
 
 - To understand difference between the various BGP table versions:
   * Only BGP table v1 is currently available.
