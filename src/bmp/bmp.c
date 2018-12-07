@@ -120,9 +120,7 @@ void skinny_bmp_daemon()
   }
   memset(bmp_peers, 0, config.nfacctd_bmp_max_peers*sizeof(struct bmp_peer));
 
-  if (config.rpki_roas_map) {
-    rpki_roas_map_load(config.rpki_roas_map, FUNC_TYPE_BMP);
-  }
+  if (config.rpki_roas_map) rpki_daemon_wrapper();
 
   if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key || config.nfacctd_bmp_msglog_kafka_topic) {
     if (config.nfacctd_bmp_msglog_file) bmp_misc_db->msglog_backend_methods++;

@@ -26,14 +26,50 @@
 #include "pmacct.h"
 #include "bgp/bgp.h"
 #include "rpki.h"
+#include "thread_pool.h"
 
-int rpki_roas_map_load(char *file, int type)
+/* variables to be exported away */
+thread_pool_t *rpki_pool;
+
+/* Functions */
+void rpki_daemon_wrapper()
 {
-  struct bgp_misc_structs *bms;
+  struct rpki_data *r_data;
 
-  bms = bgp_select_misc_db(type);
-  if (!bms) return ERR;
+  /* initialize threads pool */
+  rpki_pool = allocate_thread_pool(1);
+  assert(rpki_pool);
+  Log(LOG_DEBUG, "DEBUG ( %s/core/RPKI ): %d thread(s) initialized\n", config.name, 1);
 
+  r_data = malloc(sizeof(struct rpki_data));
+  if (!r_data) {
+    Log(LOG_ERR, "ERROR ( %s/core/RPKI ): malloc() struct rpki_data failed. Terminating.\n", config.name);
+    exit_gracefully(1);
+  }
+  rpki_prepare_thread(r_data);
+
+  /* giving a kick to the RPKI thread */
+  send_to_pool(rpki_pool, rpki_daemon, r_data);
+}
+
+void rpki_prepare_thread(struct rpki_data *r_data)
+{
+  if (!r_data) return;
+
+  memset(r_data, 0, sizeof(struct rpki_data));
+
+  r_data->is_thread = TRUE;
+  r_data->log_str = malloc(strlen("core/RPKI") + 1);
+  strcpy(r_data->log_str, "core/RPKI");
+}
+
+void rpki_daemon(struct rpki_data *r_data)
+{
+  if (config.rpki_roas_map) rpki_roas_map_load(config.rpki_roas_map, r_data);
+}
+
+int rpki_roas_map_load(char *file, struct rpki_data *r_data)
+{
 #if defined WITH_JANSSON
   {
     json_t *roas_obj, *roa_json, *roas_json;
@@ -44,13 +80,13 @@ int rpki_roas_map_load(char *file, int type)
 
     if (roas_obj) {
       if (!json_is_object(roas_obj)) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): [%s] json_is_object() failed for results: %s\n", config.name, bms->log_str, file, file_err.text);
+        Log(LOG_ERR, "ERROR ( %s/%s ): [%s] json_is_object() failed for results: %s\n", config.name, r_data->log_str, file, file_err.text);
         exit_gracefully(1);
       }
       else {
         roas_json = json_object_get(roas_obj, "roas");
         if (roas_json == NULL || !json_is_array(roas_json)) {
-          Log(LOG_ERR, "ERROR ( %s/%s ): [%s] no 'roas' element or not an array.\n", config.name, bms->log_str, file);
+          Log(LOG_ERR, "ERROR ( %s/%s ): [%s] no 'roas' element or not an array.\n", config.name, r_data->log_str, file);
           exit_gracefully(1);
         }
         else {
@@ -62,7 +98,7 @@ int rpki_roas_map_load(char *file, int type)
 	    
 	    prefix_json = json_object_get(roa_json, "prefix");
 	    if (prefix_json == NULL || !json_is_string(prefix_json)) {
-	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] no 'prefix' element in ROA #%u.\n", config.name, bms->log_str, file, (roas_idx + 1));
+	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] no 'prefix' element in ROA #%u.\n", config.name, r_data->log_str, file, (roas_idx + 1));
 	      goto exit_lane;
 	    }
 	    else {
@@ -72,7 +108,7 @@ int rpki_roas_map_load(char *file, int type)
 
 	    asn_json = json_object_get(roa_json, "asn");
 	    if (asn_json == NULL || !json_is_string(asn_json)) {
-	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] no 'asn' element in ROA #%u.\n", config.name, bms->log_str, file, (roas_idx + 1));
+	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] no 'asn' element in ROA #%u.\n", config.name, r_data->log_str, file, (roas_idx + 1));
 	      goto exit_lane;
 	    }
 	    else {
@@ -82,7 +118,7 @@ int rpki_roas_map_load(char *file, int type)
 
 	    maxlen_json = json_object_get(roa_json, "maxLength");
 	    if (maxlen_json == NULL || !json_is_integer(maxlen_json)) {
-	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] no 'maxLength' element in ROA #%u.\n", config.name, bms->log_str, file, (roas_idx + 1));
+	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] no 'maxLength' element in ROA #%u.\n", config.name, r_data->log_str, file, (roas_idx + 1));
 	      goto exit_lane;
 	    }
 	    else {
@@ -100,12 +136,12 @@ int rpki_roas_map_load(char *file, int type)
       }
     }
     else {
-      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] json_loads() failed: %s.\n", config.name, bms->log_str, file, file_err.text);
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] json_loads() failed: %s.\n", config.name, r_data->log_str, file, file_err.text);
       exit_gracefully(1);
     }
   }
 #else
-  Log(LOG_WARNING, "WARN ( %s/%s ): rpki_roas_map will not load (missing --enable-jansson).\n", config.name, bms->log_str);
+  Log(LOG_WARNING, "WARN ( %s/%s ): rpki_roas_map will not load (missing --enable-jansson).\n", config.name, r_data->log_str);
 #endif
 
   return SUCCESS;
