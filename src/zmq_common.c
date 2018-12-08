@@ -284,6 +284,9 @@ void p_zmq_send_setup(struct p_zmq_host *zmq_host, int type)
       exit_gracefully(1);
     }
   }
+
+  Log(LOG_DEBUG, "DEBUG ( %s ): p_zmq_send_setup() addr=%s username=%s password=%s\n",
+      zmq_host->log_id, zmq_host->sock.str, zmq_host->zap.username, zmq_host->zap.password);
 }
 
 void p_zmq_sub_setup(struct p_zmq_host *zmq_host)
@@ -354,6 +357,9 @@ void p_zmq_recv_setup(struct p_zmq_host *zmq_host, int type)
     /* subscribe to all topics */
     else zmq_setsockopt(zmq_host->sock.obj, ZMQ_SUBSCRIBE, NULL, 0);
   }
+
+  Log(LOG_DEBUG, "DEBUG ( %s ): p_zmq_recv_setup() addr=%s username=%s password=%s\n",
+      zmq_host->log_id, zmq_host->sock.str, zmq_host->zap.username, zmq_host->zap.password);
 }
 
 int p_zmq_topic_send(struct p_zmq_host *zmq_host, void *buf, u_int64_t len)
