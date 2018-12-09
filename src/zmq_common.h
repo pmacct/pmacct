@@ -97,7 +97,7 @@ EXT int p_zmq_topic_recv(struct p_zmq_host *, void *, u_int64_t);
 EXT int p_zmq_topic_send(struct p_zmq_host *, void *, u_int64_t);
 EXT void p_zmq_close(struct p_zmq_host *);
 
-EXT void p_zmq_plugin_pipe_init_core(struct p_zmq_host *, u_int8_t);
+EXT void p_zmq_plugin_pipe_init_core(struct p_zmq_host *, u_int8_t, char *, char *);
 EXT void p_zmq_plugin_pipe_init_plugin(struct p_zmq_host *);
 EXT int p_zmq_plugin_pipe_set_profile(struct configuration *, char *);
 EXT void p_zmq_pull_setup(struct p_zmq_host *);

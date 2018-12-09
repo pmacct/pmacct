@@ -143,12 +143,16 @@ void p_zmq_init_pub(struct p_zmq_host *zmq_host, char *address, u_int8_t topic)
   }
 }
 
-void p_zmq_plugin_pipe_init_core(struct p_zmq_host *zmq_host, u_int8_t plugin_id)
+void p_zmq_plugin_pipe_init_core(struct p_zmq_host *zmq_host, u_int8_t plugin_id, char *username, char *password)
 {
   if (zmq_host) {
     p_zmq_init_pub(zmq_host, NULL, plugin_id);
-    p_zmq_set_random_username(zmq_host);
-    p_zmq_set_random_password(zmq_host);
+
+    if (!username) p_zmq_set_random_username(zmq_host);
+    else p_zmq_set_username(zmq_host, username);
+
+    if (!password) p_zmq_set_random_password(zmq_host);
+    else p_zmq_set_password(zmq_host, password);
   }
 }
 

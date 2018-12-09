@@ -47,8 +47,18 @@ void load_plugins(struct plugin_requests *req)
   int l = sizeof(list->cfg.pipe_size), offset = 0;
   struct channels_list_entry *chptr = NULL;
 
+  char username[SHORTBUFLEN], password[SHORTBUFLEN];
+ 
   init_random_seed(); 
   init_pipe_channels();
+ 
+#ifdef WITH_ZMQ
+  memset(username, 0, sizeof(username));
+  memset(password, 0, sizeof(password));
+
+  generate_random_string(username, (sizeof(username) - 1));
+  generate_random_string(password, (sizeof(password) - 1));
+#endif
 
   while (list) {
     if ((*list->type.func)) {
@@ -246,7 +256,7 @@ void load_plugins(struct plugin_requests *req)
       if (list->cfg.pipe_zmq) {
 	char log_id[SHORTBUFLEN];
 
-	p_zmq_plugin_pipe_init_core(&chptr->zmq_host, list->id);
+	p_zmq_plugin_pipe_init_core(&chptr->zmq_host, list->id, username, password);
 	snprintf(log_id, sizeof(log_id), "%s/%s", list->name, list->type.string);
 	p_zmq_set_log_id(&chptr->zmq_host, log_id);
 	p_zmq_pub_setup(&chptr->zmq_host);
