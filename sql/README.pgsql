@@ -195,6 +195,14 @@ pairs: the protocol field of both typed and unified tables is numerical. This ta
 in looking up protocol names by their number and viceversa. Because joins are expensive,
 'proto' table has been created *only* for your personal reference. 
 
+NOTE: certain primitives, ie. BGP attributtes like AS-PATH and communities
+(as_path, std_comm, etc.), can get arbitrarily long if not properly scoped
+(ie. bgp_aspath_radius, bgp_stdcomm_pattern, etc.) and hence not fit in
+default field definitions (ie. CHAR(21) or CHAR(24)). It is possible to
+define these as arbitrarily-long variable-length strings using VARCHAR or
+TEXT data types. Consult latest PostgreSQL docs for examples and notes
+(charset choices, etc.).
+
 NOTE: mind to specify EVERYTIME which SQL table version you
 intend to adhere to by using the following config directives:
 

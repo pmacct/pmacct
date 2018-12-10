@@ -199,6 +199,14 @@ Similarly, BGP tables:
 
 - For custom-defined primitives refer to the README.custom_primitives doc.
 
+NOTE: certain primitives, ie. BGP attributtes like AS-PATH and communities
+(as_path, std_comm, etc.), can get arbitrarily long if not properly scoped
+(ie. bgp_aspath_radius, bgp_stdcomm_pattern, etc.) and hence not fit in
+default field definitions (ie. CHAR(21) or CHAR(24)). It is possible to
+define these as arbitrarily-long variable-length strings using VARCHAR or
+TEXT data types. Consult latest MySQL/MariaDB docs for examples and notes
+(charset choices, etc.).
+ 
 NOTE: mind to specify EVERYTIME which SQL table version you
 intend to adhere to by using the following config directives:
 
