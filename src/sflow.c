@@ -1027,7 +1027,7 @@ void readv2v4FlowSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, str
   case INMPACKETTYPE_IPV4: readFlowSample_IPv4(sample); break;
   case INMPACKETTYPE_IPV6: readFlowSample_IPv6(sample); break;
   default: 
-    SF_notify_malf_packet(LOG_INFO, "INFO: Discarding unknown v2/v4 Data Tag", (struct sockaddr *) pptrsv->v4.f_agent);
+    SF_notify_malf_packet(LOG_INFO, "INFO", "discarding unknown v2/v4 Data Tag", (struct sockaddr *) pptrsv->v4.f_agent);
     xflow_tot_bad_datagrams++;
     break;
   }
@@ -1049,7 +1049,7 @@ void readv2v4FlowSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, str
       case INMEXTENDED_USER: readExtendedUser(sample); break;
       case INMEXTENDED_URL: readExtendedUrl(sample); break;
       default: 
-	SF_notify_malf_packet(LOG_INFO, "INFO: Discarding unknown v2/v4 Extended Data Tag", (struct sockaddr *) pptrsv->v4.f_agent);
+	SF_notify_malf_packet(LOG_INFO, "INFO", "discarding unknown v2/v4 Extended Data Tag", (struct sockaddr *) pptrsv->v4.f_agent);
 	xflow_tot_bad_datagrams++;
 	break;
       }

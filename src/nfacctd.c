@@ -1161,7 +1161,7 @@ int main(int argc,char **argv, char **envp)
 	break;
       default:
         if (!config.nfacctd_disable_checks) {
-	  notify_malf_packet(LOG_INFO, "INFO: Discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent, 0);
+	  notify_malf_packet(LOG_INFO, "INFO", "discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent, 0);
 	  xflow_tot_bad_datagrams++;
         }
 	break;
@@ -1188,7 +1188,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   unsigned short int count = ntohs(hdr_v5->count);
 
   if (len < NfHdrV5Sz) {
-    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v5 packet", (struct sockaddr *) pptrs->f_agent, 0);
+    notify_malf_packet(LOG_INFO, "INFO", "discarding short NetFlow v5 packet", (struct sockaddr *) pptrs->f_agent, 0);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1273,7 +1273,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
     }
   }
   else {
-    notify_malf_packet(LOG_INFO, "INFO: discarding malformed NetFlow v5 packet", (struct sockaddr *) pptrs->f_agent, 0);
+    notify_malf_packet(LOG_INFO, "INFO", "discarding malformed NetFlow v5 packet", (struct sockaddr *) pptrs->f_agent, 0);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1331,7 +1331,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   }
 
   if (len < HdrSz) {
-    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow v9/IPFIX packet", (struct sockaddr *) pptrsv->v4.f_agent, 0);
+    notify_malf_packet(LOG_INFO, "INFO", "discarding short NetFlow v9/IPFIX packet", (struct sockaddr *) pptrsv->v4.f_agent, 0);
     xflow_tot_bad_datagrams++;
     return;
   }
@@ -1345,7 +1345,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
   process_flowset:
   if (off+NfDataHdrV9Sz >= len) { 
-    notify_malf_packet(LOG_INFO, "INFO: unable to read next Flowset (incomplete NetFlow v9/IPFIX packet)",
+    notify_malf_packet(LOG_INFO, "INFO", "unable to read next Flowset (incomplete NetFlow v9/IPFIX packet)",
 			(struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
     xflow_tot_bad_datagrams++;
     return;
@@ -1354,7 +1354,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   data_hdr = (struct data_hdr_v9 *)pkt;
 
   if (data_hdr->flow_len == 0) {
-    notify_malf_packet(LOG_INFO, "INFO: unable to read next Flowset (NetFlow v9/IPFIX packet claiming flow_len 0!)",
+    notify_malf_packet(LOG_INFO, "INFO", "unable to read next Flowset (NetFlow v9/IPFIX packet claiming flow_len 0!)",
 			(struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
     xflow_tot_bad_datagrams++;
     return;
@@ -1363,7 +1363,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   fid = ntohs(data_hdr->flow_id);
   flowsetlen = ntohs(data_hdr->flow_len);
   if (flowsetlen < NfDataHdrV9Sz) {
-    notify_malf_packet(LOG_INFO, "INFO: unable to read next Flowset (NetFlow v9/IPFIX packet (flowsetlen < NfDataHdrV9Sz)",
+    notify_malf_packet(LOG_INFO, "INFO", "unable to read next Flowset (NetFlow v9/IPFIX packet (flowsetlen < NfDataHdrV9Sz)",
                         (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
     xflow_tot_bad_datagrams++;
     return;
@@ -1401,7 +1401,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
       template_hdr = (struct template_hdr_v9 *) tpl_ptr;
       if (off+flowsetlen > len) { 
-        notify_malf_packet(LOG_INFO, "INFO: unable to read next Template Flowset (incomplete NetFlow v9/IPFIX packet)",
+        notify_malf_packet(LOG_INFO, "INFO", "unable to read next Template Flowset (incomplete NetFlow v9/IPFIX packet)",
 		        (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
         xflow_tot_bad_datagrams++;
         return;
@@ -1443,7 +1443,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
       opt_template_hdr = (struct options_template_hdr_v9 *) tpl_ptr;
       if (off+flowsetlen > len) {
-        notify_malf_packet(LOG_INFO, "INFO: unable to read next Options Template Flowset (incomplete NetFlow v9/IPFIX packet)",
+        notify_malf_packet(LOG_INFO, "INFO", "unable to read next Options Template Flowset (incomplete NetFlow v9/IPFIX packet)",
                         (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
         xflow_tot_bad_datagrams++;
         return;
@@ -1466,7 +1466,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   }
   else if (fid >= 256) { /* data */
     if (off+flowsetlen > len) { 
-      notify_malf_packet(LOG_INFO, "INFO: unable to read next Data Flowset (incomplete NetFlow v9/IPFIX packet)",
+      notify_malf_packet(LOG_INFO, "INFO", "unable to read next Data Flowset (incomplete NetFlow v9/IPFIX packet)",
 		      (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
       xflow_tot_bad_datagrams++;
       return;
@@ -1662,7 +1662,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
       /* last pre-flight check for the subsequent subtraction */
       if (flowoff > flowsetlen) {
-        notify_malf_packet(LOG_INFO, "INFO: aborting malformed Options Data element (incomplete NetFlow v9/IPFIX packet)",
+        notify_malf_packet(LOG_INFO, "INFO", "aborting malformed Options Data element (incomplete NetFlow v9/IPFIX packet)",
                       (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
         xflow_tot_bad_datagrams++;
         return;
@@ -2258,7 +2258,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
       /* last pre-flight check for the subsequent subtraction */
       if (flowoff > flowsetlen) {
-        notify_malf_packet(LOG_INFO, "INFO: aborting malformed Data element (incomplete NetFlow v9/IPFIX packet)",
+        notify_malf_packet(LOG_INFO, "INFO", "aborting malformed Data element (incomplete NetFlow v9/IPFIX packet)",
                       (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
         xflow_tot_bad_datagrams++;
         return;
@@ -2299,7 +2299,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
 
   /* basic length check against longest NetFlow header */
   if (len < NfHdrV5Sz) {
-    notify_malf_packet(LOG_INFO, "INFO: discarding short NetFlow packet", (struct sockaddr *) pptrs->f_agent, 0);
+    notify_malf_packet(LOG_INFO, "INFO", "discarding short NetFlow packet", (struct sockaddr *) pptrs->f_agent, 0);
     xflow_tot_bad_datagrams++;
     return;
   } 
@@ -2309,7 +2309,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
 
   if (nfv != 5 && nfv != 9 && nfv != 10) {
     if (!config.nfacctd_disable_checks) {
-      notify_malf_packet(LOG_INFO, "INFO: discarding unknown NetFlow packet", (struct sockaddr *) pptrs->f_agent, 0);
+      notify_malf_packet(LOG_INFO, "INFO", "discarding unknown NetFlow packet", (struct sockaddr *) pptrs->f_agent, 0);
       xflow_tot_bad_datagrams++;
     }
     return;
@@ -2519,21 +2519,22 @@ void reset_dummy_v4(struct packet_ptrs *pptrs, char *dummy_packet)
   pptrs->l3_proto = ETHERTYPE_IP;
 }
 
-void notify_malf_packet(short int severity, char *ostr, struct sockaddr *sa, u_int32_t seq)
+void notify_malf_packet(short int severity, char *severity_str, char *ostr, struct sockaddr *sa, u_int32_t seq)
 {
   struct host_addr a;
   u_char errstr[SRVBUFLEN];
-  u_char agent_addr[50] /* able to fit an IPv6 string aswell */, any[]="0.0.0.0";
+  char agent_addr[50] /* able to fit an IPv6 string aswell */, any[] = "0.0.0.0";
   u_int16_t agent_port;
 
   sa_to_addr((struct sockaddr *)sa, &a, &agent_port);
   addr_to_str(agent_addr, &a);
-  if (!config.nfacctd_ip) config.nfacctd_ip = any;
 
-  if (seq) snprintf(errstr, SRVBUFLEN, "%s: nfacctd=%s:%u agent=%s:%u seq=%u\n",
-		ostr, config.nfacctd_ip, config.nfacctd_port, agent_addr, agent_port, seq);
-  else snprintf(errstr, SRVBUFLEN, "%s: nfacctd=%s:%u agent=%s:%u\n",
-		ostr, config.nfacctd_ip, config.nfacctd_port, agent_addr, agent_port);
+  if (seq) snprintf(errstr, SRVBUFLEN, "%s ( %s/core ): nfacctd=%s:%u agent=%s:%u seq=%u\n",
+		severity_str, config.name, ostr, ((config.nfacctd_ip) ? config.nfacctd_ip : any),
+		config.nfacctd_port, agent_addr, agent_port, seq);
+  else snprintf(errstr, SRVBUFLEN, "%s ( %s/core ): nfacctd=%s:%u agent=%s:%u\n",
+		severity_str, config.name, ostr, ((config.nfacctd_ip) ? config.nfacctd_ip : any),
+		config.nfacctd_port, agent_addr, agent_port);
 
   Log(severity, errstr);
 }
