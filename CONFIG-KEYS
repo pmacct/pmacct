@@ -71,16 +71,21 @@ DESC:		Aggregate captured traffic data by selecting the specified set of primiti
 		sum_<primitive> are compound primitives which sum ingress/egress traffic in a
 		single aggregate; current limit of sum primitives: each sum primitive is mutual
 		exclusive with any other, sum and non-sum, primitive. The 'none' primitive
-		allows to make an unique aggregate which  accounts for the grand total of
-		traffic flowing through a specific interface. 'tag', 'tag2' and 'label' enable
-		generation of tags when tagging engines (pre_tag_map, post_tag) are in use.
-		'class' enables L7 traffic classification.
-NOTES:		* Some primitives (ie. tag2, timestamp_start, timestamp_end) are not part of
+		allows to make a single grand total aggregate for traffic flowing through.
+		'tag', 'tag2' and 'label' generates tags when tagging engines (pre_tag_map,
+		post_tag) are in use. 'class' enables L7 traffic classification.
+NOTES:		* List of the aggregation primitives available to each specific pmacct daemon,	
+		  along with their description, is available via -a command-line option, ie.
+		  "pmacctd -a".
+		* Some primitives (ie. tag2, timestamp_start, timestamp_end) are not part of
 		  any default SQL table schema shipped. Always check out documentation related
 		  to the RDBMS in use (ie. 'sql/README.mysql') which will point you to extra
 		  primitive-related documentation, if required.
-		* List of the aggregation primitives available to each specific pmacct daemon
-		  is available via -a command-line option, ie. "pmacctd -a". 
+		* peer_src_ip, peer_dst_ip: two primitives with an obscure name conceived to
+		  be as generic as possible due to the many different use-cases around them:
+		  peer_src_ip is the IP address of the node exporting NetFlow/IPFIX or sFlow;
+		  peer_dst_ip is the BGP next-hop or IP next-hop (if use_ip_next_hop is set
+		  to true).
 		* sampling_rate: if counters renormalization (ie. sfacctd_renormalize) is
 		  enabled this field will report a value of one (1); otherwise it will report
 		  the rate that is passed by the protocol or sampling_map. A value of zero (0)
@@ -91,14 +96,6 @@ NOTES:		* Some primitives (ie. tag2, timestamp_start, timestamp_end) are not par
 		  example maps (ie. bgp_peer_src_as_type). Internet traffic is by nature
 		  asymmetric hence reverse BGP lookups must be used with caution (ie. against
 		  own prefixes).
-		* Communities (ie. std_comm, ext_comm, lrg_comm) and AS-PATHs (ie. as_path)
-		  are fixed size (96 and 128 chars respectively at time of writing). Directives
-		  like bgp_stdcomm_pattern and bgp_aspath_radius are aimed to keep length of
-		  these strings under control but sometimes this is not enough. While the longer
-		  term approach will be to define these primitives as varchar, the short-term
-		  approach is to re-define default size, ie. MAX_BGP_STD_COMMS MAX_BGP_ASPATH
-		  in network.h, to the desired size (blowing extra memory). This will require
-		  recompiling the binary.
 		* timestamp_start, timestamp_end and timestamp_arrival should not be mixed
 		  with pmacct support for historical accounting, ie. breakdown of traffic in
 		  time-bins via the sql_history feature; these primitives have the effect of
@@ -115,10 +112,11 @@ NOTES:		* Some primitives (ie. tag2, timestamp_start, timestamp_end) are not par
 		  2) if using a reporting type aggregation method, it is recommended to split
 		     this primitive in a separate plugin instance instead for sequencing
 		     analysis.  
-		* In nfacctd, undocumented class_frame allows to apply nDPI clssification to
-		  NetFlow v9/IPFIX packets with IE 315 (dataLinkFrameSection). class instead
-		  allows to leverage traditional classification using NetFlow v9/IPFIX IE 94,
-		  95 and 96 (applicationDescription, applicationId and applicationName).
+		* In nfacctd, undocumented aggregation primitive class_frame allows to apply
+		  nDPI clssification to NFv9/IPFIX packets with IE 315 (dataLinkFrameSection).
+		  class primitive instead allows to leverage traditional classification using
+		  NetFlow v9/IPFIX IE 94, 95 and 96 (applicationDescription, applicationId
+		  and applicationName).
 DEFAULT:	src_host
 
 KEY:		aggregate_primitives [GLOBAL, MAP]
