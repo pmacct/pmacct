@@ -1582,7 +1582,7 @@ void SF_notify_malf_packet(short int severity, char *severity_str, char *ostr, s
 
   sa_to_addr((struct sockaddr *)sa, &a, &agent_port);
   addr_to_str(agent_addr, &a);
-  snprintf(errstr, SRVBUFLEN, "%s ( %s/core ): sfacctd=%s:%u agent=%s:%u \n", severity_str,
+  snprintf(errstr, SRVBUFLEN, "%s ( %s/core ): %s: sfacctd=%s:%u agent=%s:%u \n", severity_str,
 	config.name, ostr, ((config.nfacctd_ip) ? config.nfacctd_ip : any), config.nfacctd_port,
 	agent_addr, agent_port);
   Log(severity, errstr);

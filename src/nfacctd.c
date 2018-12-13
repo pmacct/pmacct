@@ -2529,10 +2529,10 @@ void notify_malf_packet(short int severity, char *severity_str, char *ostr, stru
   sa_to_addr((struct sockaddr *)sa, &a, &agent_port);
   addr_to_str(agent_addr, &a);
 
-  if (seq) snprintf(errstr, SRVBUFLEN, "%s ( %s/core ): nfacctd=%s:%u agent=%s:%u seq=%u\n",
+  if (seq) snprintf(errstr, SRVBUFLEN, "%s ( %s/core ): %s: nfacctd=%s:%u agent=%s:%u seq=%u\n",
 		severity_str, config.name, ostr, ((config.nfacctd_ip) ? config.nfacctd_ip : any),
 		config.nfacctd_port, agent_addr, agent_port, seq);
-  else snprintf(errstr, SRVBUFLEN, "%s ( %s/core ): nfacctd=%s:%u agent=%s:%u\n",
+  else snprintf(errstr, SRVBUFLEN, "%s ( %s/core ): %s: nfacctd=%s:%u agent=%s:%u\n",
 		severity_str, config.name, ostr, ((config.nfacctd_ip) ? config.nfacctd_ip : any),
 		config.nfacctd_port, agent_addr, agent_port);
 
