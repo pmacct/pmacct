@@ -20,10 +20,6 @@
 */
 
 /* defines */
-struct rpki_data {
-  int is_thread;
-  char *log_str;
-};
 
 /* prototypes */
 #if !defined(__RPKI_C)
@@ -32,7 +28,21 @@ struct rpki_data {
 #define EXT
 #endif
 EXT void rpki_daemon_wrapper();
-EXT void rpki_prepare_thread(struct rpki_data *);
-EXT void rpki_daemon(struct rpki_data *);
-EXT int rpki_roas_map_load(char *, struct rpki_data *);
+EXT void rpki_prepare_thread();
+EXT void rpki_daemon();
+EXT int rpki_roas_map_load(char *);
+EXT void rpki_link_misc_structs(struct bgp_misc_structs *);
+#undef EXT
+
+/* global variables */
+#if (!defined __RPKI_C)
+#define EXT extern
+#else
+#define EXT
+#endif
+EXT u_int32_t (*rpki_route_info_modulo)(struct bgp_peer *, path_id_t *, int);
+EXT u_int32_t rpki_route_info_modulo_pathid(struct bgp_peer *, path_id_t *, int);
+
+EXT struct bgp_rt_structs *rpki_routing_db;
+EXT struct bgp_misc_structs *rpki_misc_db;
 #undef EXT

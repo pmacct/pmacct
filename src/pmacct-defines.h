@@ -421,9 +421,10 @@
 #define FUNC_TYPE_NULL			0
 #define FUNC_TYPE_BGP			1
 #define FUNC_TYPE_BMP			2
-#define FUNC_TYPE_SFLOW_COUNTER		3
-#define FUNC_TYPE_TELEMETRY		4
-#define FUNC_TYPE_MAX			5
+#define FUNC_TYPE_RPKI			3
+#define FUNC_TYPE_SFLOW_COUNTER		4
+#define FUNC_TYPE_TELEMETRY		5
+#define FUNC_TYPE_MAX			6
 
 #define PM_MSG_BIN_COPY			0
 #define PM_MSG_STR_COPY			1

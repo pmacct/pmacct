@@ -34,115 +34,146 @@ thread_pool_t *rpki_pool;
 /* Functions */
 void rpki_daemon_wrapper()
 {
-  struct rpki_data *r_data;
-
   /* initialize threads pool */
   rpki_pool = allocate_thread_pool(1);
   assert(rpki_pool);
   Log(LOG_DEBUG, "DEBUG ( %s/core/RPKI ): %d thread(s) initialized\n", config.name, 1);
 
-  r_data = malloc(sizeof(struct rpki_data));
-  if (!r_data) {
-    Log(LOG_ERR, "ERROR ( %s/core/RPKI ): malloc() struct rpki_data failed. Terminating.\n", config.name);
-    exit_gracefully(1);
-  }
-  rpki_prepare_thread(r_data);
+  rpki_prepare_thread();
 
   /* giving a kick to the RPKI thread */
-  send_to_pool(rpki_pool, rpki_daemon, r_data);
+  send_to_pool(rpki_pool, rpki_daemon, NULL);
 }
 
-void rpki_prepare_thread(struct rpki_data *r_data)
+void rpki_prepare_thread()
 {
-  if (!r_data) return;
+  rpki_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_RPKI];
+  memset(rpki_misc_db, 0, sizeof(struct bgp_misc_structs));
 
-  memset(r_data, 0, sizeof(struct rpki_data));
-
-  r_data->is_thread = TRUE;
-  r_data->log_str = malloc(strlen("core/RPKI") + 1);
-  strcpy(r_data->log_str, "core/RPKI");
+  rpki_misc_db->is_thread = TRUE;
+  rpki_misc_db->log_str = malloc(strlen("core/RPKI") + 1);
+  strcpy(rpki_misc_db->log_str, "core/RPKI");
 }
 
-void rpki_daemon(struct rpki_data *r_data)
+void rpki_daemon()
 {
-  if (config.rpki_roas_map) rpki_roas_map_load(config.rpki_roas_map, r_data);
+  struct bgp_misc_structs *r_data = rpki_misc_db;
+  afi_t afi;
+  safi_t safi;
+
+  rpki_routing_db = &inter_domain_routing_dbs[FUNC_TYPE_RPKI];
+  memset(rpki_routing_db, 0, sizeof(struct bgp_rt_structs));
+
+  bgp_attr_init(HASHTABSIZE, rpki_routing_db);
+  rpki_route_info_modulo = rpki_route_info_modulo_pathid;
+
+  /* Let's initialize clean shared RIB */
+  for (afi = AFI_IP; afi < AFI_MAX; afi++) {
+    for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
+      rpki_routing_db->rib[afi][safi] = bgp_table_init(afi, safi);
+    }
+  }
+
+  rpki_link_misc_structs(r_data);
+
+  if (config.rpki_roas_map) rpki_roas_map_load(config.rpki_roas_map);
 }
 
-int rpki_roas_map_load(char *file, struct rpki_data *r_data)
+int rpki_roas_map_load(char *file)
 {
+  struct bgp_misc_structs *r_data = rpki_misc_db;
+
 #if defined WITH_JANSSON
-  {
-    json_t *roas_obj, *roa_json, *roas_json;
-    json_error_t file_err;
-    int roas_idx;
+  json_t *roas_obj, *roa_json, *roas_json;
+  json_error_t file_err;
+  int roas_idx;
 
-    roas_obj = json_load_file(file, 0, &file_err);
+  roas_obj = json_load_file(file, 0, &file_err);
 
-    if (roas_obj) {
-      if (!json_is_object(roas_obj)) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): [%s] json_is_object() failed for results: %s\n", config.name, r_data->log_str, file, file_err.text);
+  if (roas_obj) {
+    if (!json_is_object(roas_obj)) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] json_is_object() failed for results: %s\n", config.name, r_data->log_str, file, file_err.text);
+      exit_gracefully(1);
+    }
+    else {
+      roas_json = json_object_get(roas_obj, "roas");
+      if (roas_json == NULL || !json_is_array(roas_json)) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): [%s] no 'roas' element or not an array.\n", config.name, r_data->log_str, file);
         exit_gracefully(1);
       }
       else {
-        roas_json = json_object_get(roas_obj, "roas");
-        if (roas_json == NULL || !json_is_array(roas_json)) {
-          Log(LOG_ERR, "ERROR ( %s/%s ): [%s] no 'roas' element or not an array.\n", config.name, r_data->log_str, file);
-          exit_gracefully(1);
-        }
-        else {
-	  for (roas_idx = 0; roa_json = json_array_get(roas_json, roas_idx); roas_idx++) {
-	    json_t *prefix_json, *maxlen_json, *asn_json;
-	    struct prefix p;
-	    u_int8_t maxlen;
-	    as_t asn;
+	for (roas_idx = 0; roa_json = json_array_get(roas_json, roas_idx); roas_idx++) {
+	  json_t *prefix_json, *maxlen_json, *asn_json;
+	  struct prefix p;
+	  u_int8_t maxlen;
+	  as_t asn;
 	    
-	    prefix_json = json_object_get(roa_json, "prefix");
-	    if (prefix_json == NULL || !json_is_string(prefix_json)) {
-	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] no 'prefix' element in ROA #%u.\n", config.name, r_data->log_str, file, (roas_idx + 1));
-	      goto exit_lane;
-	    }
-	    else {
-	      str2prefix(json_string_value(prefix_json), &p);
-	      json_decref(prefix_json);
-	    }
-
-	    asn_json = json_object_get(roa_json, "asn");
-	    if (asn_json == NULL || !json_is_string(asn_json)) {
-	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] no 'asn' element in ROA #%u.\n", config.name, r_data->log_str, file, (roas_idx + 1));
-	      goto exit_lane;
-	    }
-	    else {
-	      asn = str2asn((char *)json_string_value(asn_json));
-	      json_decref(asn_json);
-	    }
-
-	    maxlen_json = json_object_get(roa_json, "maxLength");
-	    if (maxlen_json == NULL || !json_is_integer(maxlen_json)) {
-	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] no 'maxLength' element in ROA #%u.\n", config.name, r_data->log_str, file, (roas_idx + 1));
-	      goto exit_lane;
-	    }
-	    else {
-	      maxlen = json_integer_value(maxlen_json);
-	      json_decref(maxlen_json);
-	    }
-
-	    exit_lane:
-	    json_decref(roa_json);
+	  prefix_json = json_object_get(roa_json, "prefix");
+	  if (prefix_json == NULL || !json_is_string(prefix_json)) {
+	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] no 'prefix' element in ROA #%u.\n", config.name, r_data->log_str, file, (roas_idx + 1));
+	    goto exit_lane;
 	  }
-	}
+	  else {
+	    str2prefix(json_string_value(prefix_json), &p);
+	    json_decref(prefix_json);
+	  }
 
-	json_decref(roas_json);
-	json_decref(roas_obj);
+	  asn_json = json_object_get(roa_json, "asn");
+	  if (asn_json == NULL || !json_is_string(asn_json)) {
+	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] no 'asn' element in ROA #%u.\n", config.name, r_data->log_str, file, (roas_idx + 1));
+	    goto exit_lane;
+	  }
+	  else {
+	    asn = str2asn((char *)json_string_value(asn_json));
+	    json_decref(asn_json);
+	  }
+
+	  maxlen_json = json_object_get(roa_json, "maxLength");
+	  if (maxlen_json == NULL || !json_is_integer(maxlen_json)) {
+	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] no 'maxLength' element in ROA #%u.\n", config.name, r_data->log_str, file, (roas_idx + 1));
+	    goto exit_lane;
+	  }
+	  else {
+	    maxlen = json_integer_value(maxlen_json);
+	    json_decref(maxlen_json);
+	  }
+
+	  exit_lane:
+	  json_decref(roa_json);
+	}
       }
+
+      json_decref(roas_json);
+      json_decref(roas_obj);
     }
-    else {
-      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] json_loads() failed: %s.\n", config.name, r_data->log_str, file, file_err.text);
-      exit_gracefully(1);
-    }
+  }
+  else {
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] json_loads() failed: %s.\n", config.name, r_data->log_str, file, file_err.text);
+    exit_gracefully(1);
   }
 #else
   Log(LOG_WARNING, "WARN ( %s/%s ): rpki_roas_map will not load (missing --enable-jansson).\n", config.name, r_data->log_str);
 #endif
 
   return SUCCESS;
+}
+
+void rpki_link_misc_structs(struct bgp_misc_structs *r_data)
+{
+  r_data->table_peer_buckets = DEFAULT_BGP_INFO_HASH; 
+  r_data->table_per_peer_buckets = DEFAULT_BGP_INFO_PER_PEER_HASH; 
+  r_data->table_attr_hash_buckets = HASHTABSIZE;
+  r_data->table_per_peer_hash = BGP_ASPATH_HASH_PATHID;
+  r_data->route_info_modulo = rpki_route_info_modulo;
+
+/*
+  XXX:
+  r_data->bgp_lookup_find_peer = XXX ;
+  r_data->bgp_lookup_node_match_cmp = XXX ; 
+*/
+}
+
+u_int32_t rpki_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id, int per_peer_buckets)
+{
+  // XXX
 }
