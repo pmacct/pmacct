@@ -329,10 +329,6 @@ unsigned int attrhash_key_make(void *p)
   key += attr->nexthop.s_addr;
   key += attr->med;
   key += attr->local_pref;
-  if (attr->pathlimit.as) {
-    key += attr->pathlimit.ttl;
-    key += attr->pathlimit.as;
-  }
 
   if (attr->aspath)
     key += aspath_key_make(attr->aspath);
@@ -362,8 +358,6 @@ int attrhash_cmp(const void *p1, const void *p2)
       && attr1->lcommunity == attr2->lcommunity
       && attr1->med == attr2->med
       && attr1->local_pref == attr2->local_pref
-      && attr1->pathlimit.ttl == attr2->pathlimit.ttl
-      && attr1->pathlimit.as == attr2->pathlimit.as
       && !memcmp(&attr1->mp_nexthop, &attr2->mp_nexthop, sizeof(struct host_addr)))
     return TRUE;
 

@@ -287,10 +287,6 @@ struct bgp_attr {
   struct host_addr mp_nexthop;
   u_int32_t med;
   u_int32_t local_pref;
-  struct {
-    u_int32_t as;
-    u_char ttl;
-  } pathlimit;
   u_int8_t origin;
 };
 
