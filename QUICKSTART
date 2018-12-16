@@ -747,7 +747,8 @@ with an iptables rule. For example in one of the following ways:
 
 Apart from determining how and what traffic to capture with iptables, which is topic
 outside the scope of this document, the most relevant point is the "--nflog-nlgroup"
-iptables setting has to match with the "uacctd_group" uacctd one.
+iptables setting has to match with the "uacctd_group" uacctd one. To review the packet
+flow in iptables: https://commons.wikimedia.org/wiki/File:Netfilter-packet-flow.svg
 
 A couple examples follow:
 
@@ -2487,22 +2488,22 @@ over time.
 
 d) In the two cases of nfacctd/sfacctd or nfprobe/sfprobe not showing signs of
 input/output data: 1) check with tcpdump, ie. "tcpdump -i <interface> -n port
-<sfacctd/nfacctd listening port>", that packets are emitted/received. Optionally
-Wireshark (or its commandline counterpart tshark) can be used, in conjunction
-with decoders ('cflow' for NetFlow/IPFIX and 'sflow' for sFlow), to validate
-packets are consistent; this proofs there is no filtering taking place in
-between exporters and collector; 2) check firewall settings on the collector
-box, ie. "iptables -L -n" on Linux (disable or do appropriate holes): tcpdump
-may see packets hitting the listening port as, in normal kernel operations, the
-filtering happens after the raw socket (the one used by tcpdump) is served; you
-can also check with 3rd party equivalent tools or netcat, "nc -l -u -p <port>",
-that the same behaviour is obtained as with pmacct; finally, if running on a
-SELinux enabled system, consider that it could be interfering too; 3) especially
-in case of copy/paste of configs or if using a config from a production system
-in lab, disable or double-check values for internal buffering: if set too high
-they will likely retain data internally to the daemon; 4) if multiple interfaces
-are configured on a system, try to disable (at least for a test) rp_filtering.
-See http://tldp.org/HOWTO/Adv-Routing-HOWTO/lartc.kernel.rpf.html for more info
+<sfacctd/nfacctd listening port>" (for uacctd use -i nflog:<nflog group>), that
+packets are emitted/received. Optionally Wireshark (or its cli tool tshark) can
+be used, in conjunction with decoders ('cflow' for NetFlow/IPFIX and 'sflow' for
+sFlow), to validate packets are consistent; this proofs there is no filtering
+taking place in between exporters and collector; 2) check firewall settings on
+the collector box, ie. "iptables -L -n" on Linux (disable or do appropriate
+holes): tcpdump may see packets hitting the listening port as, in normal kernel
+operations, the filtering happens after the raw socket (the one used by tcpdump)
+is served; you can also check with 3rd party equivalent tools or netcat, "nc -l
+-u -p <port>", that the same behaviour is obtained as with pmacct; finally, if
+running on a SELinux enabled system, consider that it could be interfering too;
+3) especially in case of copy/paste of configs or if using a config from a
+production system in lab, disable or double-check values for internal buffering:
+if set too high they will likely retain data internally to the daemon; 4) if
+multiple interfaces are configured on a system, try to disable rp_filtering. See
+http://tldp.org/HOWTO/Adv-Routing-HOWTO/lartc.kernel.rpf.html for more info
 on RP filtering. The value of rp_filter files in /proc must be set to zero in
 order to disable RP filtering. This appears a popular issue when replicating
 flow data with tee_transparent feature enabled (that is, packet spoofing);
@@ -2531,20 +2532,20 @@ f) Replay packets can be needed, for example, to troubleshoot the behaviour
 of one of the pmacct daemons. A capture in libpcap format, suitable for
 replay, can be produced with tcpdump, ie. for NetFlow/IPFIX/sFlow via the
 "tcpdump -i <interface> -n -s 0 -w <output file> port <sfacctd/nfacctd
-listening port>" command-line. The output file can be replayed by using the
-pcap_savefile (-I) and, optionally, the pcap_savefile_wait (-W) directives,
-ie.: "nfacctd -I <pcap savefile> <.. >". For more advanced use-cases, ie.
-loop indefinitely through the pcap file and run it with a speed multiplicator
-in order to stress test the daemon, the tcpreplay tool can be used for the
-purpose. In this case, before replaying NetFlow/IPFIX/sFlow, L2/L3 of
-captured packets must be adjusted to reflect the lab environment; this can
-be done with the tcprewrite tool of the tcpreplay package, ie.: "tcprewrite
---enet-smac=<src MAC address> --enet-dmac= <dst MAC address> -S <src IP
-address rewrite> -D <dst IP address rewrite> --fixcsum --infile= <input
-file, ie. output from tcpdump> --outfile=<output file>". Then the output
-file from tcprewrite can be supplied to tcpreplay for the actual replay to
-the pmacct daemon, ie.: "tcpreplay -x <speed multiplicator> -i <output
-interface> <input file>". 
+listening port>" (for uacctd use -i nflog:<nflog group>) command-line. The
+output file can be replayed by using the pcap_savefile (-I) and, optionally,
+the pcap_savefile_wait (-W) directives, ie.: "nfacctd -I <pcap savefile> <..>".
+For more advanced use-cases, ie. loop indefinitely through the pcap file and
+run it with a speed multiplicator in order to stress test the daemon, the
+tcpreplay tool can be used for the purpose. In this case, before replaying
+NetFlow/IPFIX/sFlow, L2/L3 of captured packets must be adjusted to reflect the
+lab environment; this can be done with the tcprewrite tool of the tcpreplay
+package, ie.: "tcprewrite --enet-smac=<src MAC address> --enet-dmac= <dst MAC
+address> -S <src IP address rewrite> -D <dst IP address rewrite> --fixcsum
+--infile= <input file, ie. output from tcpdump> --outfile=<output file>". Then
+the output file from tcprewrite can be supplied to tcpreplay for the actual
+replay to the pmacct daemon, ie.: "tcpreplay -x <speed multiplicator> -i
+<output interface> <input file>". 
 
 g) Buffering is often an element to tune. While buffering internal to pmacct, 
 configured with plugin_buffer_size and plugin_pipe_size, returns warning
