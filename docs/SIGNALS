@@ -13,11 +13,11 @@ SIGHUP:         reopens the logging infrastructure. Works with both syslog and
 		events (bgp_daemon_msglog_file), streamed logging of BMP data/
 		stats/events (bmp_daemon_msglog_file) and streamed logging of
 		sFlow counters (sfacctd_counter_file); 
-SIGUSR1:        returns various statistics via either console or syslog; the
-		syslog level used is NOTICE; the facility is selected through
-		configuration (ie. key 'syslog'). The feature is implemented
-		for pmacctd, nfacctd and sfacctd daemons. Following is an
-		example of the output emitted by nfacctd/sfacctd:
+SIGUSR1:        returns various stats via the configured log output (logfile,
+		syslog) or, if none is configured, console; the syslog level
+		used is NOTICE and the facility is selected through config. The
+		feature is implemented for pmacctd, nfacctd and sfacctd daemons.
+		Following is an example of the output emitted by nfacctd/sfacctd:
 
 		NOTICE ( default/core ): +++
 		NOTICE ( default/core ): stats [0.0.0.0:2100] agent=X.X.X.X:0 time=1515772618 packets=1 bytes=496 seq_good=1 seq_jmp_fwd=0 seq_jmp_bck=0
