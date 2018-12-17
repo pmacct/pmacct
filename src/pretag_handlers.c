@@ -2618,7 +2618,7 @@ int custom_primitives_map_field_type_handler(char *filename, struct id_entry *e,
   struct custom_primitives *table = (struct custom_primitives *) req->key_value_table;
   char *pen = NULL, *type = NULL, *endptr;
 
-  if (config.acct_type == ACCT_NF && table) {
+  if (table) {
     u_int8_t repeat_id;
     int idx;
 
@@ -2644,13 +2644,7 @@ int custom_primitives_map_field_type_handler(char *filename, struct id_entry *e,
     table->primitive[table->num].repeat_id = repeat_id;
   }
   else {
-    if (config.acct_type != ACCT_NF) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] field_type is only supported in nfacctd.\n", config.name, config.type, filename);
-    }
-    else {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] custom aggregate primitives registry not allocated.\n", config.name, config.type, filename);
-    }
-
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] custom aggregate primitives registry not allocated.\n", config.name, config.type, filename);
     return TRUE;
   }
 

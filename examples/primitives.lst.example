@@ -24,11 +24,12 @@
 !			decimal or hex format. 'offset' is optional key and
 !			is expected as a positive decimal number. A maximum
 !			of 8 'packet_ptr' definitions are allowed per entry. 
-! 'field_type'		MATCH: Applies to NetFlow v9/IPFIX: defines which field
-!			type (Element ID) to select. Optionally, a PEN value can
-!			be supplied aswell via the <PEN>:<value> format. As a
-!			reference the IPFIX standard IE definition table can be
-!			used: http://www.iana.org/assignments/ipfix/ipfix.xhtml
+! 'field_type'		MATCH: Applies to NetFlow v9/IPFIX collection and export:
+!			defines which field type (Information Element ID) to
+!			select. Optionally, a PEN value can be supplied as well
+!			via the <PEN>:<value> format. As a reference the IPFIX
+!			standard IEs definition table can be used:
+!			http://www.iana.org/assignments/ipfix/ipfix.xhtml
 ! 'len'			MATCH: Length of the primitive, in bytes. 'vlen' word
 !			defines a primitive to be variable length. In pmacctd
 !			and  uacctd only strings can be defined vlen; in nfacctd
