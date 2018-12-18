@@ -2278,6 +2278,41 @@ void custom_primitive_value_print(char *out, int outlen, char *in, struct custom
   }
 }
 
+void custom_primitives_debug(void *pcust, void *pvlen)
+{
+  char empty_string[] = "";
+  int cp_idx;
+
+  if (!pcust) return;
+
+  for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
+    char cph_str[SRVBUFLEN];
+
+    custom_primitive_header_print(cph_str, SRVBUFLEN, &config.cpptrs.primitive[cp_idx], TRUE);
+
+    if (config.cpptrs.primitive[cp_idx].ptr->len != PM_VARIABLE_LENGTH) {
+      char cpv_str[SRVBUFLEN];
+
+      custom_primitive_value_print(cpv_str, SRVBUFLEN, pcust, &config.cpptrs.primitive[cp_idx], TRUE);
+
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): custom_primitive_value_debug(): PCUST ARRAY: name=%s value=%s\n",
+	  config.name, config.type, cph_str, cpv_str);
+    }
+    else {
+      if (pvlen) {
+	/* vlen primitives not supported in formatted outputs: we should never get here */
+	char *label_ptr = NULL;
+
+	vlen_prims_get(pvlen, config.cpptrs.primitive[cp_idx].ptr->type, &label_ptr);
+	if (!label_ptr) label_ptr = empty_string;
+
+	Log(LOG_DEBUG, "DEBUG ( %s/%s ): custom_primitive_value_debug(): PCUST ARRAY: name=%s value=%s\n",
+	    config.name, config.type, cph_str, label_ptr);
+      }
+    }
+  }
+}
+
 int mkdir_multilevel(const char *path, int trailing_filename, uid_t owner, gid_t group)
 {
   char opath[SRVBUFLEN];
