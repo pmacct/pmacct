@@ -724,12 +724,12 @@ void P_cache_flush(struct chained_cache *queue[], int index)
 
 struct chained_cache *P_cache_attach_new_node(struct chained_cache *elem)
 {
-  if ((sa.ptr+sizeof(struct chained_cache)) <= (sa.base+sa.size)) {
+  if ((sa.ptr + (2 * sizeof(struct chained_cache))) <= (sa.base + sa.size)) {
     sa.ptr += sizeof(struct chained_cache);
     elem->next = (struct chained_cache *) sa.ptr;
     return (struct chained_cache *) sa.ptr;
   }
-  else return NULL; /* XXX */
+  else return NULL;
 }
 
 void P_sum_host_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata)
