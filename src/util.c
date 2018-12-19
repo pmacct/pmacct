@@ -2344,16 +2344,29 @@ int mkdir_multilevel(const char *path, int trailing_filename, uid_t owner, gid_t
   return ret;
 }
 
-char bin_to_hex(int nib) { return (nib < 10) ? ('0' + nib) : ('A' - 10 + nib); }
+char bin_to_hex(int nib)
+{
+  return (nib < 10) ? ('0' + nib) : ('A' - 10 + nib);
+}
 
-int print_hex(const u_char *a, u_char *buf, int len)
+int hex_to_bin(int a)
+{
+  if (a >= '0' && a <= '9')
+    return a - '0';
+  else if (a >= 'a' && a <= 'f')
+    return a - 'a' + 10;
+  else if (a >= 'A' && a <= 'F')
+    return a - 'A' + 10;
+
+  return ERR;
+}
+
+int serialize_hex(const u_char *a, u_char *buf, int len)
 {
   int b = 0, i = 0;
 
   for (; i < len; i++) {
     u_char byte;
-
-    // if (a[i] == '\0') break;
 
     byte = a[i];
     buf[b++] = bin_to_hex(byte >> 4);
@@ -2371,6 +2384,21 @@ int print_hex(const u_char *a, u_char *buf, int len)
     buf[b] = '\0';
     return (b+1);
   }
+}
+
+// XXX: change func name
+int serialize_bin(const u_char *hex, u_char *bin, int len)
+{
+  int i = 0;
+
+  for (; i < len; i++) {
+    if (hex[0] == '-') continue;
+
+    *bin++ = hex_to_bin(hex[0]) * 16 + hex_to_bin(hex[1]);
+    hex += 2;
+  }
+
+  return i;
 }
 
 unsigned char *vlen_prims_copy(struct pkt_vlen_hdr_primitives *src)

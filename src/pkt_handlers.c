@@ -1536,7 +1536,7 @@ void custom_primitives_handler(struct channels_list_entry *chptr, struct packet_
               char hexbuf[cpe->alloc_len];
               int hexbuflen = 0;
 
-              hexbuflen = print_hex(pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n]+cpe->pd_ptr[pd_ptr_idx].off, hexbuf, cpe->len);
+              hexbuflen = serialize_hex(pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n]+cpe->pd_ptr[pd_ptr_idx].off, hexbuf, cpe->len);
               if (cpe->alloc_len < hexbuflen) hexbuf[cpe->alloc_len-1] = '\0';
               memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, hexbuf, MIN(hexbuflen, cpe->alloc_len));
 	    }
@@ -3045,7 +3045,7 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
             char hexbuf[cpe->alloc_len];
             int hexbuflen = 0;
 
-            hexbuflen = print_hex(pptrs->f_data+tpl->tpl[cpe->field_type].off, hexbuf, tpl->tpl[cpe->field_type].len);
+            hexbuflen = serialize_hex(pptrs->f_data+tpl->tpl[cpe->field_type].off, hexbuf, tpl->tpl[cpe->field_type].len);
             if (cpe->alloc_len < hexbuflen) hexbuf[cpe->alloc_len-1] = '\0';
             memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, hexbuf, MIN(hexbuflen, cpe->alloc_len));
           }
@@ -3062,7 +3062,7 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
               char hexbuf[cpe->alloc_len];
               int hexbuflen = 0;
 
-              hexbuflen = print_hex(pptrs->f_data+utpl->off, hexbuf, utpl->len);
+              hexbuflen = serialize_hex(pptrs->f_data+utpl->off, hexbuf, utpl->len);
               if (cpe->alloc_len < hexbuflen) hexbuf[cpe->alloc_len-1] = '\0';
 
 	      if (cpe->len == PM_VARIABLE_LENGTH) {

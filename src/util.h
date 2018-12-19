@@ -125,7 +125,9 @@ EXT void compose_timestamp(char *, int, struct timeval *, int, int, int, int);
 EXT void print_primitives(int, char *);
 EXT int mkdir_multilevel(const char *, int, uid_t, gid_t);
 EXT char bin_to_hex(int);
-EXT int print_hex(const u_char *, u_char *, int);
+EXT int hex_to_bin(int);
+EXT int serialize_hex(const u_char *, u_char *, int);
+EXT int serialize_bin(const u_char *, u_char *, int);
 
 EXT primptrs_func primptrs_funcs[PRIMPTRS_FUNCS_N];
 EXT void set_primptrs_funcs(struct extra_primitives *);
