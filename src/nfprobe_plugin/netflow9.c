@@ -544,10 +544,17 @@ flow_to_flowset_cp_handler(char *flowset, const struct FLOW *flow, int idx, int 
 
     if (!cp_entry->ptr->pen) {
       if (cp_entry->ptr->len != PM_VARIABLE_LENGTH) {
-        if (flow->pcust[idx] && cp_entry->ptr->field_type)
-          memcpy(flowset, (flow->pcust[idx]+cp_entry->off), cp_entry->ptr->len);
-        else 
+        if (flow->pcust[idx] && cp_entry->ptr->field_type) {
+          if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
+            serialize_bin((flow->pcust[idx] + cp_entry->off), flowset, strlen((flow->pcust[idx] + cp_entry->off)));
+          }
+          else {
+	    memcpy(flowset, (flow->pcust[idx] + cp_entry->off), cp_entry->ptr->len);
+	  }
+	}
+        else {
           memset(flowset, 0, cp_entry->ptr->len);
+	}
 
         flowset += cp_entry->ptr->len;
       }
@@ -589,10 +596,17 @@ flow_to_flowset_cp_pen_handler(char *flowset, const struct FLOW *flow, int idx, 
 
     if (config.nfprobe_version == 10 && cp_entry->ptr->pen) {
       if (cp_entry->ptr->len != PM_VARIABLE_LENGTH) {
-        if (flow->pcust[idx] && cp_entry->ptr->field_type)
-          memcpy(flowset, (flow->pcust[idx]+cp_entry->off), cp_entry->ptr->len);
-        else
+        if (flow->pcust[idx] && cp_entry->ptr->field_type) {
+	  if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
+	    serialize_bin((flow->pcust[idx] + cp_entry->off), flowset, strlen((flow->pcust[idx] + cp_entry->off)));
+	  }
+          else {
+	    memcpy(flowset, (flow->pcust[idx] + cp_entry->off), cp_entry->ptr->len);
+	  }
+	}
+        else {
           memset(flowset, 0, cp_entry->ptr->len);
+	}
 
         flowset += cp_entry->ptr->len;
       }
