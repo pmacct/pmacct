@@ -358,7 +358,7 @@ int attrhash_cmp(const void *p1, const void *p2)
       && attr1->lcommunity == attr2->lcommunity
       && attr1->med == attr2->med
       && attr1->local_pref == attr2->local_pref
-      && !memcmp(&attr1->mp_nexthop, &attr2->mp_nexthop, sizeof(struct host_addr)))
+      && !host_addr_cmp2((struct host_addr *)&attr1->mp_nexthop, (struct host_addr *)&attr2->mp_nexthop))
     return TRUE;
 
   return FALSE;
@@ -548,7 +548,7 @@ struct bgp_peer *bgp_peer_cache_search(struct bgp_peer_cache_bucket *cache, u_in
       if (cursor->ptr->tcp_port != port) continue;
     }
 
-    if (!memcmp(&cursor->ptr->addr, ha, sizeof(struct host_addr))) {
+    if (!host_addr_cmp(&cursor->ptr->addr, ha)) {
       ret = cursor->ptr;
       break;
     }
