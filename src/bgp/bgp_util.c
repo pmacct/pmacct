@@ -1192,6 +1192,7 @@ void bgp_md5_file_unload(struct bgp_md5_table *t)
 
 void bgp_md5_file_process(int sock, struct bgp_md5_table *bgp_md5)
 {
+  char peer_str[INET6_ADDRSTRLEN + PORT_STRLEN + 1];
   struct pm_tcp_md5sig md5sig;
   struct sockaddr_storage ss_md5sig, ss_server;
   struct sockaddr *sa_md5sig = (struct sockaddr *)&ss_md5sig, *sa_server = (struct sockaddr *)&ss_server;
@@ -1208,10 +1209,14 @@ void bgp_md5_file_process(int sock, struct bgp_md5_table *bgp_md5)
     ss_server_len = sizeof(ss_server);
     getsockname(sock, (struct sockaddr *)&ss_server, &ss_server_len);
 
-    if (sa_md5sig->sa_family == AF_INET6 && sa_server->sa_family == AF_INET)
+    if (sa_md5sig->sa_family == AF_INET6 && sa_server->sa_family == AF_INET) {
       ipv4_mapped_to_ipv4(&ss_md5sig);
-    else if (sa_md5sig->sa_family == AF_INET && sa_server->sa_family == AF_INET6)
+      ss_md5sig_len = sizeof(struct sockaddr_in);
+    }
+    else if (sa_md5sig->sa_family == AF_INET && sa_server->sa_family == AF_INET6) {
       ipv4_to_ipv4_mapped(&ss_md5sig);
+      ss_md5sig_len = sizeof(struct sockaddr_in6);
+    }
 
     memcpy(&md5sig.tcpm_addr, &ss_md5sig, ss_md5sig_len);
     keylen = strlen(bgp_md5->table[idx].key);
@@ -1220,8 +1225,15 @@ void bgp_md5_file_process(int sock, struct bgp_md5_table *bgp_md5)
       memcpy(md5sig.tcpm_key, &bgp_md5->table[idx].key, keylen);
     }
 
+    sa_to_str(peer_str, sizeof(peer_str), sa_md5sig);
+
     rc = setsockopt(sock, IPPROTO_TCP, TCP_MD5SIG, &md5sig, sizeof(md5sig));
-    if (rc < 0) Log(LOG_ERR, "WARN ( %s/core/BGP ): setsockopt() failed for TCP_MD5SIG (errno: %d).\n", config.name, errno);
+    if (rc < 0) {
+      Log(LOG_WARNING, "WARN ( %s/core/BGP ): setsockopt() failed for TCP_MD5SIG peer=%s (errno: %d)\n", config.name, peer_str, errno);
+    }
+    else { 
+      Log(LOG_DEBUG, "DEBUG ( %s/core/BGP ): setsockopt() set TCP_MD5SIG peer=%s\n", config.name, peer_str);
+    }
 
     idx++;
   }
