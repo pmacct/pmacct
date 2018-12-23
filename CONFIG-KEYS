@@ -104,6 +104,12 @@ NOTES:		* List of the aggregation primitives available to each specific pmacct d
 		  observation; timestamp_end records NetFlow/IPFIX flow end time; finally,
 		  timestamp_arrival records libpcap packet timestamp and sFlow/NetFlow/IPFIX
 		  packet arrival time at the collector.
+		* tcpflags: in pmacctd, uacctd and sfacctd daemons TCP flags are ORed until
+		  the aggregate is flushed - hence emulating the behaviour of NetFlow/IPFIX.
+		  If a flag analysis is needed, packets with different flags (combinations)
+		  should be isolated using a pre_tag_map/pre_tag_filter or aggregate_filter
+		  features (see examples in QUICKSTART and review libpcap filtering syntax
+		  via pcap-filter man page). 
 		* export_proto_seqno reports about export protocol (NetFlow, sFlow, IPFIX)
 		  sequence number; due to its potential de-aggregation effect, two main use-
 		  cases are seen as use of this primitive:
