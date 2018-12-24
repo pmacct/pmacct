@@ -169,6 +169,8 @@ void p_zmq_init_pull(struct p_zmq_host *zmq_host)
 void p_zmq_plugin_pipe_init_plugin(struct p_zmq_host *zmq_host)
 {
   if (zmq_host) {
+
+/*
     if (zmq_host->sock.obj) {
       zmq_unbind(zmq_host->sock.obj, zmq_host->sock.str);
       zmq_close(zmq_host->sock.obj);
@@ -182,6 +184,9 @@ void p_zmq_plugin_pipe_init_plugin(struct p_zmq_host *zmq_host)
       zmq_ctx_term(zmq_host->ctx);
       zmq_host->ctx = NULL;
     }
+*/
+
+    zmq_host->ctx = NULL;
   }
 }
 
