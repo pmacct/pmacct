@@ -2386,13 +2386,15 @@ int serialize_hex(const u_char *a, u_char *buf, int len)
   }
 }
 
-// XXX: change func name
 int serialize_bin(const u_char *hex, u_char *bin, int len)
 {
   int i = 0;
 
   for (; i < len; i++) {
-    if (hex[0] == '-') continue;
+    if (hex[0] == '-') {
+      hex++;
+      continue;
+    }
 
     *bin++ = hex_to_bin(hex[0]) * 16 + hex_to_bin(hex[1]);
     hex += 2;
