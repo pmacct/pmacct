@@ -401,8 +401,8 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
 
     duration = time(NULL)-start;
 
-    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping telemetry data - END (PID: %u, PEERS: %u ET: %u) ***\n",
-                config.name, t_data->log_str, dumper_pid, tables_num, duration);
+    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping telemetry data - END (PID: %u, PEERS: %u ENTRIES: %llu ET: %u) ***\n",
+                config.name, t_data->log_str, dumper_pid, tables_num, dump_elems, duration);
 
     exit_gracefully(0);
   default: /* Parent */
