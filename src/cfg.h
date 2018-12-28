@@ -369,6 +369,7 @@ struct configuration {
   char *bgp_lg_user;
   char *bgp_lg_passwd;
   char *bgp_xconnect_map;
+  int bgp_disable_router_id_check;
   int bmp_sock;
   int nfacctd_bmp;
   char *nfacctd_bmp_ip;

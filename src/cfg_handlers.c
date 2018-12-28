@@ -3569,6 +3569,20 @@ int cfg_key_nfacctd_bgp_follow_nexthop_external(char *filename, char *name, char
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_disable_router_id_check(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_disable_router_id_check = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_disable_router_id_check'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_neighbors_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

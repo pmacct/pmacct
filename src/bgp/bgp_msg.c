@@ -180,7 +180,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
       peer->id.address.ipv4.s_addr = bopen->bgpo_id;
 
       /* Check: duplicate Router-IDs; BGP only, ie. no BMP */
-      if (bms->bgp_msg_open_router_id_check) {
+      if (!config.bgp_disable_router_id_check && bms->bgp_msg_open_router_id_check) {
 	int check_ret;
 
 	check_ret = bms->bgp_msg_open_router_id_check(bmd);
