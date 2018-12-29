@@ -96,6 +96,11 @@ NOTES:		* List of the aggregation primitives available to each specific pmacct d
 		  example maps (ie. bgp_peer_src_as_type). Internet traffic is by nature
 		  asymmetric hence reverse BGP lookups must be used with caution (ie. against
 		  own prefixes).
+		* mpls_label_top, mpls_label_bottom primitives only include the MPLS label
+		  value, stripped of EXP code-points (and BoS flag). Visibiliy in EXP values
+		  can be achieved by defining a custom primitive to extract the full 3 bytes,
+		  ie. 'name=mplsFullTopLabel field_type=70 len=3 semantics=raw' for NetFlow/
+		  IPFIX.
 		* timestamp_start, timestamp_end and timestamp_arrival should not be mixed
 		  with pmacct support for historical accounting, ie. breakdown of traffic in
 		  time-bins via the sql_history feature; these primitives have the effect of
