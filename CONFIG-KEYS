@@ -2420,6 +2420,13 @@ DESC:           If set to true makes bgp_follow_nexthop return the next-hop from
 		This may help to pin-point the (set of) exit interface(s).
 DEFAULT:	false
 
+KEY:		bgp_disable_router_id_check [GLOBAL]
+VALUES:         [ true | false ]
+DESC:           If set to true disables the BGP Router-ID check both at BGP OPEN time and BGP lookup.
+		This knob is useful, for example, in scenarios where v4 AFs are over a v4 transport and
+		v6 AFs are over v6 transport but both share the same BGP Router-ID.  
+DEFAULT:	false
+
 KEY:            bgp_neighbors_file [GLOBAL]
 DESC:		Writes a list of the BGP neighbors in the established state to the specified file, one
 		per line. This gets particularly useful for automation purposes (ie. auto-discovery of
