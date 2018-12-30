@@ -784,7 +784,7 @@ int bgp_attr_munge_as4path(struct bgp_peer *peer, struct bgp_attr *attr, struct 
   /* pre-requisite for AS4_PATH is AS_PATH indeed */ 
   // XXX if (as4path && !attr->aspath) return ERR;
 
-  newpath = aspath_reconcile_as4(peer, attr->aspath, as4path);
+  newpath = aspath_reconcile_as4(attr->aspath, as4path);
   aspath_unintern(peer, attr->aspath);
   attr->aspath = aspath_intern(peer, newpath);
 

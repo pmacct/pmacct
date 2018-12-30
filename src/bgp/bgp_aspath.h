@@ -27,20 +27,73 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #define _BGP_ASPATH_H_
 
 /* AS path segment type.  */
-#define AS_SET                       1
-#define AS_SEQUENCE                  2
-#define AS_CONFED_SEQUENCE           3
-#define AS_CONFED_SET                4
+#define AS_SET			1
+#define AS_SEQUENCE		2
+#define AS_CONFED_SEQUENCE	3
+#define AS_CONFED_SET		4
 
 /* Private AS range defined in RFC2270.  */
-#define BGP_PRIVATE_AS_MIN       64512U
-#define BGP_PRIVATE_AS_MAX       65535U
+#define BGP_PRIVATE_AS_MIN	64512U
+#define BGP_PRIVATE_AS_MAX	65535U
 
 /* we leave BGP_AS_MAX as the 16bit AS MAX number.  */
-#define BGP_AS_MAX		     65535U
+#define BGP_AS_MAX		65535U
 #define BGP_AS4_MAX		4294967295U
 /* Transition 16Bit AS as defined by IANA */
-#define BGP_AS_TRANS		 23456U
+#define BGP_AS_TRANS		23456U
+
+/* Attr. Flags and Attr. Type Code. */
+#define AS_HEADER_SIZE		2  
+
+/* Now FOUR octets are used for AS value. */
+#define AS_VALUE_SIZE		sizeof (as_t)
+/* This is the old one */
+#define AS16_VALUE_SIZE		sizeof (as16_t)
+
+/* Maximum protocol segment length value */
+#define AS_SEGMENT_MAX		255
+
+/* Calculated size in bytes of ASN segment data to hold N ASN's */
+#define ASSEGMENT_DATA_SIZE(N,S) \
+	((N) * ( (S) ? AS_VALUE_SIZE : AS16_VALUE_SIZE) )
+
+/* Calculated size of segment struct to hold N ASN's */
+#define ASSEGMENT_SIZE(N,S)  (AS_HEADER_SIZE + ASSEGMENT_DATA_SIZE (N,S))
+
+/* AS segment octet length. */
+#define ASSEGMENT_LEN(X,S) ASSEGMENT_SIZE((X)->length,S)
+
+/* AS_SEQUENCE segments can be packed together */
+/* Can the types of X and Y be considered for packing? */
+#define ASSEGMENT_TYPES_PACKABLE(X,Y) \
+	( ((X)->type == (Y)->type) \
+	&& ((X)->type == AS_SEQUENCE))
+/* Types and length of X,Y suitable for packing? */
+#define ASSEGMENTS_PACKABLE(X,Y) \
+	( ASSEGMENT_TYPES_PACKABLE( (X), (Y)) \
+	&& ( ((X)->length + (Y)->length) <= AS_SEGMENT_MAX ) )
+
+#define ASPATH_STR_DEFAULT_LEN 32
+
+/* AS path string lexical token enum. */
+enum as_token
+{
+  as_token_asval,
+  as_token_set_start,
+  as_token_set_end,
+  as_token_confed_seq_start,
+  as_token_confed_seq_end,
+  as_token_confed_set_start,
+  as_token_confed_set_end,
+  as_token_unknown
+};
+
+/* As segment header - the on-wire representation NOT the internal representation! */
+struct assegment_header
+{
+  u_char type;
+  u_char length;
+};
 
 /* AS_PATH segment data in abstracted form, no limit is placed on length */
 struct assegment
@@ -64,8 +117,6 @@ struct aspath
   char *str;
 };
 
-#define ASPATH_STR_DEFAULT_LEN 32
-
 /* Prototypes. */
 #if (!defined __BGP_ASPATH_C)
 #define EXT extern
@@ -81,6 +132,8 @@ EXT void aspath_free (struct aspath *);
 EXT struct aspath *aspath_intern (struct bgp_peer *, struct aspath *);
 EXT void aspath_unintern (struct bgp_peer *, struct aspath *);
 EXT const char *aspath_print (struct aspath *);
+EXT const char *aspath_gettoken (const char *, enum as_token *, u_long *);
+EXT struct aspath *aspath_str2aspath (const char *);
 EXT unsigned int aspath_key_make (void *);
 EXT int aspath_loop_check (struct aspath *, as_t);
 EXT int aspath_private_as_check (struct aspath *);
@@ -91,7 +144,7 @@ EXT unsigned int aspath_size (struct aspath *);
 EXT as_t aspath_highest (struct aspath *);
 EXT char *aspath_make_empty(); 
 
-EXT struct aspath *aspath_reconcile_as4 (struct bgp_peer *, struct aspath *, struct aspath *);
+EXT struct aspath *aspath_reconcile_as4 (struct aspath *, struct aspath *);
 EXT unsigned int aspath_has_as4 (struct aspath *);
 EXT unsigned int aspath_count_numas (struct aspath *);
 

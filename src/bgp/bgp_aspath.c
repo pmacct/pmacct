@@ -29,51 +29,7 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #include "pmacct.h"
 #include "jhash.h"
 #include "bgp.h"
-
-/* Attr. Flags and Attr. Type Code. */
-#define AS_HEADER_SIZE        2	 
 
-/* Now FOUR octets are used for AS value. */
-#define AS_VALUE_SIZE         sizeof (as_t)
-/* This is the old one */
-#define AS16_VALUE_SIZE	      sizeof (as16_t)
-
-/* Maximum protocol segment length value */
-#define AS_SEGMENT_MAX		255
-
-/* Calculated size in bytes of ASN segment data to hold N ASN's */
-#define ASSEGMENT_DATA_SIZE(N,S) \
-	((N) * ( (S) ? AS_VALUE_SIZE : AS16_VALUE_SIZE) )
-
-/* Calculated size of segment struct to hold N ASN's */
-#define ASSEGMENT_SIZE(N,S)  (AS_HEADER_SIZE + ASSEGMENT_DATA_SIZE (N,S))
-
-/* AS segment octet length. */
-#define ASSEGMENT_LEN(X,S) ASSEGMENT_SIZE((X)->length,S)
-
-/* AS_SEQUENCE segments can be packed together */
-/* Can the types of X and Y be considered for packing? */
-#define ASSEGMENT_TYPES_PACKABLE(X,Y) \
-  ( ((X)->type == (Y)->type) \
-   && ((X)->type == AS_SEQUENCE))
-/* Types and length of X,Y suitable for packing? */
-#define ASSEGMENTS_PACKABLE(X,Y) \
-  ( ASSEGMENT_TYPES_PACKABLE( (X), (Y)) \
-   && ( ((X)->length + (Y)->length) <= AS_SEGMENT_MAX ) )
-
-/* As segment header - the on-wire representation 
- * NOT the internal representation!
- */
-struct assegment_header
-{
-  u_char type;
-  u_char length;
-};
-
-/* Hash for aspath.  This is the top level structure of AS path. */
-// struct hash *ashash;
-
-
 void *
 assegment_data_new (int num)
 {
@@ -280,25 +236,20 @@ assegment_normalise (struct assegment *head)
     }
   return head;
 }
-
+
 static struct aspath *
-aspath_new (struct bgp_peer *peer)
+aspath_new ()
 {
-  struct bgp_misc_structs *bms;
   struct aspath *aspath;
 
-  if (!peer) return NULL;
-
-  bms = bgp_select_misc_db(peer->type);
-
-  if (!bms) return NULL;
-
   aspath = malloc(sizeof (struct aspath));
+
   if (!aspath) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (aspath_new). Exiting ..\n", config.name, bms->log_str);
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): malloc() failed (aspath_new). Exiting ..\n", config.name); // XXX
     exit_gracefully(1);
   }
   memset (aspath, 0, sizeof (struct aspath));
+
   return aspath;
 }
 
@@ -336,6 +287,34 @@ aspath_unintern(struct bgp_peer *peer, struct aspath *aspath)
     assert (ret != NULL);
     aspath_free (aspath);
   }
+}
+
+/* Add new as segment to the as path. */
+static void
+aspath_segment_add (struct aspath *as, int type)
+{
+  struct assegment *seg = as->segments;
+  struct assegment *new = assegment_new (type, 0);
+
+  if (seg) {
+    while (seg->next) seg = seg->next;
+    seg->next = new;
+  }
+  else as->segments = new;
+}
+
+/* Add new as value to as path structure. */
+static void
+aspath_as_add (struct aspath *as, as_t asno)
+{
+  struct assegment *seg = as->segments;
+
+  if (!seg) return;
+
+  /* Last segment search procedure. */
+  while (seg->next) seg = seg->next;
+
+  assegment_append_asns (seg, &asno, 1);
 }
 
 /* Return the start or end delimiters for a particular Segment type */
@@ -936,13 +915,13 @@ aspath_cmp_left (const struct aspath *aspath1, const struct aspath *aspath2)
  * interned by the caller, as desired.
  */
 struct aspath *
-aspath_reconcile_as4 (struct bgp_peer *peer, struct aspath *aspath, struct aspath *as4path)
+aspath_reconcile_as4 (struct aspath *aspath, struct aspath *as4path)
 {
   struct assegment *seg, *newseg, *prevseg = NULL;
   struct aspath *newpath = NULL, *mergedpath;
   int hops, cpasns = 0;
   
-  if (!aspath || !peer) return NULL;
+  if (!aspath) return NULL;
   
   seg = aspath->segments;
   
@@ -995,7 +974,7 @@ aspath_reconcile_as4 (struct bgp_peer *peer, struct aspath *aspath, struct aspat
 
       if (!newpath)
         {
-          newpath = aspath_new (peer);
+          newpath = aspath_new ();
           newpath->segments = newseg;
         }
       else
@@ -1091,4 +1070,131 @@ const char *
 aspath_print (struct aspath *as)
 {
   return (as ? as->str : NULL);
+}
+
+/* Return next token and point for string parse. */
+const char *
+aspath_gettoken (const char *buf, enum as_token *token, u_long *asno)
+{
+  const char *p = buf;
+
+  /* Skip seperators (space for sequences, ',' for sets). */
+  while (isspace ((int) *p) || *p == ',') p++;
+
+  /* Check the end of the string and type specify characters
+     (e.g. {}()). */
+  switch (*p) {
+  case '\0':
+    return NULL;
+  case '{':
+    *token = as_token_set_start;
+    p++;
+    return p;
+  case '}':
+    *token = as_token_set_end;
+    p++;
+    return p;
+  case '(':
+    *token = as_token_confed_seq_start;
+    p++;
+    return p;
+  case ')':
+    *token = as_token_confed_seq_end;
+    p++;
+    return p;
+  case '[':
+    *token = as_token_confed_set_start;
+    p++;
+    return p;
+  case ']':
+    *token = as_token_confed_set_end;
+    p++;
+    return p;
+  }
+
+  /* Check actual AS value. */
+  if (isdigit ((int) *p)) {
+    as_t asval;
+
+    *token = as_token_asval;
+    asval = (*p - '0');
+    p++;
+
+    while (isdigit ((int) *p)) {
+      asval *= 10;
+      asval += (*p - '0');
+      p++;
+    }
+
+    *asno = asval;
+    return p;
+  }
+
+  /* There is no match then return unknown token. */
+  *token = as_token_unknown;
+  return  p++;
+}
+
+struct aspath *
+aspath_str2aspath (const char *str)
+{
+  enum as_token token = as_token_unknown;
+  u_short as_type;
+  u_long asno = 0;
+  struct aspath *aspath;
+  int needtype;
+
+  aspath = aspath_new ();
+
+  /* We start default type as AS_SEQUENCE. */
+  as_type = AS_SEQUENCE;
+  needtype = 1;
+
+  while ((str = aspath_gettoken (str, &token, &asno)) != NULL) {
+    switch (token) {
+    case as_token_asval:
+      if (needtype) {
+        aspath_segment_add (aspath, as_type);
+        needtype = 0;
+      }
+
+      aspath_as_add (aspath, asno);
+      break;
+    case as_token_set_start:
+      as_type = AS_SET;
+      aspath_segment_add (aspath, as_type);
+      needtype = 0;
+      break;
+    case as_token_set_end:
+      as_type = AS_SEQUENCE;
+      needtype = 1;
+      break;
+    case as_token_confed_seq_start:
+      as_type = AS_CONFED_SEQUENCE;
+      aspath_segment_add (aspath, as_type);
+      needtype = 0;
+      break;
+    case as_token_confed_seq_end:
+      as_type = AS_SEQUENCE;
+      needtype = 1;
+      break;
+    case as_token_confed_set_start:
+      as_type = AS_CONFED_SET;
+      aspath_segment_add (aspath, as_type);
+      needtype = 0;
+      break;
+    case as_token_confed_set_end:
+      as_type = AS_SEQUENCE;
+      needtype = 1;
+      break;
+    case as_token_unknown:
+    default:
+      aspath_free (aspath);
+      return NULL;
+    }
+  }
+
+  aspath_make_str_count (aspath);
+
+  return aspath;
 }
