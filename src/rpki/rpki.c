@@ -82,11 +82,16 @@ void rpki_daemon()
 int rpki_roas_map_load(char *file)
 {
   struct bgp_misc_structs *r_data = rpki_misc_db;
+  struct bgp_peer peer;
+
+  Log(LOG_INFO, "INFO ( %s/%s ): [%s] (re)loading map.\n", config.name, r_data->log_str, file);
 
 #if defined WITH_JANSSON
   json_t *roas_obj, *roa_json, *roas_json;
   json_error_t file_err;
   int roas_idx;
+
+  rpki_init_dummy_peer(&peer);
 
   roas_obj = json_load_file(file, 0, &file_err);
 
@@ -138,6 +143,8 @@ int rpki_roas_map_load(char *file)
 	    json_decref(maxlen_json);
 	  }
 
+	  rpki_info_add(&peer, &p, asn, maxlen);
+
 	  exit_lane:
 	  json_decref(roa_json);
 	}
@@ -146,6 +153,8 @@ int rpki_roas_map_load(char *file)
       json_decref(roas_json);
       json_decref(roas_obj);
     }
+
+    Log(LOG_INFO, "INFO ( %s/%s ): [%s] map successfully (re)loaded.\n", config.name, r_data->log_str, file);
   }
   else {
     Log(LOG_ERR, "ERROR ( %s/%s ): [%s] json_loads() failed: %s.\n", config.name, r_data->log_str, file, file_err.text);
@@ -157,6 +166,29 @@ int rpki_roas_map_load(char *file)
 
   return SUCCESS;
 }
+
+void rpki_init_dummy_peer(struct bgp_peer *peer)
+{
+  memset(peer, 0, sizeof(struct bgp_peer));
+  peer->type = FUNC_TYPE_RPKI;
+}
+
+void rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t maxlen)
+{
+  struct bgp_misc_structs *r_data = rpki_misc_db;
+  struct bgp_node *route = NULL;
+  afi_t afi;
+  safi_t safi;
+
+  if (!rpki_routing_db || !r_data || !peer || !p) return;
+
+  afi = family2afi(p->family); 
+  safi = SAFI_UNICAST;
+
+  route = bgp_node_get(peer, rpki_routing_db->rib[afi][safi], p);
+
+  // XXX
+} 
 
 void rpki_link_misc_structs(struct bgp_misc_structs *r_data)
 {

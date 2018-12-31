@@ -1074,7 +1074,7 @@ aspath_print (struct aspath *as)
 
 /* Return next token and point for string parse. */
 const char *
-aspath_gettoken (const char *buf, enum as_token *token, u_long *asno)
+aspath_gettoken (const char *buf, enum as_token *token, as_t *asno)
 {
   const char *p = buf;
 
@@ -1140,7 +1140,7 @@ aspath_str2aspath (const char *str)
 {
   enum as_token token = as_token_unknown;
   u_short as_type;
-  u_long asno = 0;
+  as_t asno = 0;
   struct aspath *aspath;
   int needtype;
 
@@ -1194,6 +1194,19 @@ aspath_str2aspath (const char *str)
     }
   }
 
+  aspath_make_str_count (aspath);
+
+  return aspath;
+}
+
+struct aspath *
+aspath_ast2aspath (as_t asn)
+{
+  struct aspath *aspath;
+
+  aspath = aspath_new ();
+  aspath_segment_add (aspath, AS_SEQUENCE);
+  aspath_as_add (aspath, asn);
   aspath_make_str_count (aspath);
 
   return aspath;
