@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -32,7 +32,7 @@ EXT void rpki_prepare_thread();
 EXT void rpki_daemon();
 EXT void rpki_init_dummy_peer(struct bgp_peer *);
 EXT int rpki_roas_map_load(char *);
-EXT void rpki_info_add(struct bgp_peer *, struct prefix *, as_t, u_int8_t);
+EXT int rpki_info_add(struct bgp_peer *, struct prefix *, as_t, u_int8_t);
 EXT void rpki_link_misc_structs(struct bgp_misc_structs *);
 #undef EXT
 
@@ -42,8 +42,6 @@ EXT void rpki_link_misc_structs(struct bgp_misc_structs *);
 #else
 #define EXT
 #endif
-EXT u_int32_t (*rpki_route_info_modulo)(struct bgp_peer *, path_id_t *, int);
-EXT u_int32_t rpki_route_info_modulo_pathid(struct bgp_peer *, path_id_t *, int);
 
 EXT struct bgp_rt_structs *rpki_routing_db;
 EXT struct bgp_misc_structs *rpki_misc_db;

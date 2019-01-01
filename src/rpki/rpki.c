@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -65,7 +65,6 @@ void rpki_daemon()
   memset(rpki_routing_db, 0, sizeof(struct bgp_rt_structs));
 
   bgp_attr_init(HASHTABSIZE, rpki_routing_db);
-  rpki_route_info_modulo = rpki_route_info_modulo_pathid;
 
   /* Let's initialize clean shared RIB */
   for (afi = AFI_IP; afi < AFI_MAX; afi++) {
@@ -173,22 +172,59 @@ void rpki_init_dummy_peer(struct bgp_peer *peer)
   peer->type = FUNC_TYPE_RPKI;
 }
 
-void rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t maxlen)
+int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t maxlen)
 {
   struct bgp_misc_structs *r_data = rpki_misc_db;
   struct bgp_node *route = NULL;
+  struct bgp_info *ri = NULL, *new = NULL;
+  struct bgp_attr attr, *attr_new = NULL;
   afi_t afi;
   safi_t safi;
-
+  u_int32_t modulo;
+  
   if (!rpki_routing_db || !r_data || !peer || !p) return;
 
   afi = family2afi(p->family); 
   safi = SAFI_UNICAST;
+  modulo = 0;
 
   route = bgp_node_get(peer, rpki_routing_db->rib[afi][safi], p);
 
-  // XXX
-} 
+  memset(&attr, 0, sizeof(attr));
+  // XXX: compose attr
+  attr_new = bgp_attr_intern(peer, &attr);
+
+  for (ri = route->info[modulo]; ri; ri = ri->next) {
+    /* Received same information */
+    if (attrhash_cmp(ri->attr, attr_new)) {
+      /* route_node_get lock */
+      bgp_unlock_node(peer, route);
+
+      bgp_attr_unintern(peer, attr_new);
+
+      return SUCCESS;
+    }
+  }
+
+  /* Make new BGP info. */
+  if (!ri) {
+    new = bgp_info_new(peer);
+
+    if (new) {
+      new->peer = peer;
+      new->attr = attr_new;
+    }
+    else return ERR;
+  }
+
+  /* Register new BGP information. */
+  bgp_info_add(peer, route, new, modulo);
+
+  /* route_node_get lock */
+  bgp_unlock_node(peer, route);
+
+  return SUCCESS;
+}
 
 void rpki_link_misc_structs(struct bgp_misc_structs *r_data)
 {
@@ -196,16 +232,11 @@ void rpki_link_misc_structs(struct bgp_misc_structs *r_data)
   r_data->table_per_peer_buckets = DEFAULT_BGP_INFO_PER_PEER_HASH; 
   r_data->table_attr_hash_buckets = HASHTABSIZE;
   r_data->table_per_peer_hash = BGP_ASPATH_HASH_PATHID;
-  r_data->route_info_modulo = rpki_route_info_modulo;
+  r_data->route_info_modulo = NULL;
 
 /*
   XXX:
   r_data->bgp_lookup_find_peer = XXX ;
   r_data->bgp_lookup_node_match_cmp = XXX ; 
 */
-}
-
-u_int32_t rpki_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id, int per_peer_buckets)
-{
-  // XXX
 }
