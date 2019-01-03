@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /* 
@@ -135,6 +135,7 @@ EXT const char *aspath_print (struct aspath *);
 EXT const char *aspath_gettoken (const char *, enum as_token *, as_t *);
 EXT struct aspath *aspath_str2aspath (const char *);
 EXT struct aspath *aspath_ast2aspath (as_t);
+EXT struct aspath *aspath_parse_ast(struct bgp_peer *, as_t);
 EXT unsigned int aspath_key_make (void *);
 EXT int aspath_loop_check (struct aspath *, as_t);
 EXT int aspath_private_as_check (struct aspath *);

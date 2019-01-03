@@ -181,54 +181,54 @@ int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t ma
   afi_t afi;
   safi_t safi;
   u_int32_t modulo;
-  
+  u_int8_t end;
+
   if (!rpki_routing_db || !r_data || !peer || !p) return;
 
   afi = family2afi(p->family); 
   safi = SAFI_UNICAST;
   modulo = 0;
 
-  route = bgp_node_get(peer, rpki_routing_db->rib[afi][safi], p);
+  for (end = MAX(p->prefixlen, maxlen); p->prefixlen <= end; p->prefixlen++) {
+    route = bgp_node_get(peer, rpki_routing_db->rib[afi][safi], p);
 
-  memset(&attr, 0, sizeof(attr));
-  // XXX: compose attr
-  attr_new = bgp_attr_intern(peer, &attr);
+    memset(&attr, 0, sizeof(attr));
+    attr.aspath = aspath_parse_ast(peer, asn);
+    attr_new = bgp_attr_intern(peer, &attr);
 
-  for (ri = route->info[modulo]; ri; ri = ri->next) {
-    /* Received same information */
-    if (attrhash_cmp(ri->attr, attr_new)) {
-      /* route_node_get lock */
-      bgp_unlock_node(peer, route);
+    for (ri = route->info[modulo]; ri; ri = ri->next) {
+      /* Check if received same information */
+      if (attrhash_cmp(ri->attr, attr_new)) {
+	/* route_node_get lock */
+	bgp_unlock_node(peer, route);
 
-      bgp_attr_unintern(peer, attr_new);
+	bgp_attr_unintern(peer, attr_new);
 
-      return SUCCESS;
+	continue;
+      }
     }
-  }
 
-  /* Make new BGP info. */
-  if (!ri) {
+    /* Make new BGP info. */
     new = bgp_info_new(peer);
-
     if (new) {
       new->peer = peer;
       new->attr = attr_new;
     }
     else return ERR;
+
+    /* Register new BGP information. */
+    bgp_info_add(peer, route, new, modulo);
+
+    /* route_node_get lock */
+    bgp_unlock_node(peer, route);
   }
-
-  /* Register new BGP information. */
-  bgp_info_add(peer, route, new, modulo);
-
-  /* route_node_get lock */
-  bgp_unlock_node(peer, route);
 
   return SUCCESS;
 }
 
 void rpki_link_misc_structs(struct bgp_misc_structs *r_data)
 {
-  r_data->table_peer_buckets = DEFAULT_BGP_INFO_HASH; 
+  r_data->table_peer_buckets = 1; /* saving on DEFAULT_BGP_INFO_HASH for now */
   r_data->table_per_peer_buckets = DEFAULT_BGP_INFO_PER_PEER_HASH; 
   r_data->table_attr_hash_buckets = HASHTABSIZE;
   r_data->table_per_peer_hash = BGP_ASPATH_HASH_PATHID;

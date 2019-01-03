@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /* 
@@ -33,7 +33,7 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 void *
 assegment_data_new (int num)
 {
-  return (malloc(ASSEGMENT_DATA_SIZE (num, 1)));
+  return (malloc(ASSEGMENT_DATA_SIZE (num, TRUE)));
 }
 
 static inline void
@@ -109,7 +109,7 @@ assegment_dup (struct assegment *seg)
   struct assegment *new;
   
   new = assegment_new (seg->type, seg->length);
-  memcpy (new->as, seg->as, ASSEGMENT_DATA_SIZE (new->length, 1) );
+  memcpy (new->as, seg->as, ASSEGMENT_DATA_SIZE (new->length, TRUE /* 32-bit ASN */) );
     
   return new;
 }
@@ -142,12 +142,12 @@ assegment_append_asns (struct assegment *seg, as_t *asnos, int num)
 {
   as_t *newas;
   
-  newas = realloc(seg->as, ASSEGMENT_DATA_SIZE (seg->length + num, 1));
+  newas = realloc(seg->as, ASSEGMENT_DATA_SIZE (seg->length + num, TRUE));
 
   if (newas)
     {
       seg->as = newas;
-      memcpy (seg->as + seg->length, asnos, ASSEGMENT_DATA_SIZE(num, 1));
+      memcpy (seg->as + seg->length, asnos, ASSEGMENT_DATA_SIZE(num, TRUE));
       seg->length += num;
       return seg;
     }
@@ -1210,4 +1210,31 @@ aspath_ast2aspath (as_t asn)
   aspath_make_str_count (aspath);
 
   return aspath;
+}
+
+struct aspath *
+aspath_parse_ast(struct bgp_peer *peer, as_t asn)
+{
+  struct bgp_rt_structs *inter_domain_routing_db;
+  struct aspath *aspath, *find;
+
+  if (!peer) return NULL;
+
+  inter_domain_routing_db = bgp_select_routing_db(peer->type);
+
+  if (!inter_domain_routing_db) return NULL;
+
+  aspath = aspath_ast2aspath(asn);
+  find = hash_get (peer, inter_domain_routing_db->ashash, aspath, aspath_hash_alloc);
+
+  /* aspath_hash_alloc dupes stuff */
+  assegment_free_all (aspath->segments);
+  if (aspath->str) free(aspath->str);
+  free(aspath);
+
+  if (!find) return NULL;
+
+  find->refcnt++;
+
+  return find;
 }
