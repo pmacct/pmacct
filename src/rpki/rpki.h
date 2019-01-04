@@ -31,8 +31,11 @@ EXT void rpki_daemon_wrapper();
 EXT void rpki_prepare_thread();
 EXT void rpki_daemon();
 EXT void rpki_init_dummy_peer(struct bgp_peer *);
+EXT int rpki_attrhash_cmp(const void *, const void *);
 EXT int rpki_roas_map_load(char *);
 EXT int rpki_info_add(struct bgp_peer *, struct prefix *, as_t, u_int8_t);
+EXT int rpki_prefix_lookup(struct prefix *);
+EXT int rpki_prefix_lookup_node_match_cmp(struct bgp_info *, struct node_match_cmp_term2 *);
 EXT void rpki_link_misc_structs(struct bgp_misc_structs *);
 #undef EXT
 

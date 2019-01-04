@@ -172,6 +172,16 @@ void rpki_init_dummy_peer(struct bgp_peer *peer)
   peer->type = FUNC_TYPE_RPKI;
 }
 
+int rpki_attrhash_cmp(const void *p1, const void *p2)
+{
+  const struct bgp_attr *attr1 = (const struct bgp_attr *)p1;
+  const struct bgp_attr *attr2 = (const struct bgp_attr *)p2;
+
+  if (attr1->aspath == attr2->aspath) return TRUE;
+
+  return FALSE;
+}
+
 int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t maxlen)
 {
   struct bgp_misc_structs *r_data = rpki_misc_db;
@@ -192,19 +202,20 @@ int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t ma
   for (end = MAX(p->prefixlen, maxlen); p->prefixlen <= end; p->prefixlen++) {
     route = bgp_node_get(peer, rpki_routing_db->rib[afi][safi], p);
 
+    /* Could be probably optimized and taken out of loop */
     memset(&attr, 0, sizeof(attr));
     attr.aspath = aspath_parse_ast(peer, asn);
     attr_new = bgp_attr_intern(peer, &attr);
 
     for (ri = route->info[modulo]; ri; ri = ri->next) {
       /* Check if received same information */
-      if (attrhash_cmp(ri->attr, attr_new)) {
+      if (rpki_attrhash_cmp(ri->attr, attr_new)) {
 	/* route_node_get lock */
 	bgp_unlock_node(peer, route);
 
 	bgp_attr_unintern(peer, attr_new);
 
-	continue;
+	goto exit_lane;
       }
     }
 
@@ -221,9 +232,26 @@ int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t ma
 
     /* route_node_get lock */
     bgp_unlock_node(peer, route);
+
+    exit_lane:  
+    continue;
   }
 
   return SUCCESS;
+}
+
+int rpki_prefix_lookup(struct prefix *p)
+{
+  // XXX
+
+  return FALSE;
+}
+
+int rpki_prefix_lookup_node_match_cmp(struct bgp_info *info, struct node_match_cmp_term2 *nmct2)
+{
+ // XXX
+
+ return FALSE;
 }
 
 void rpki_link_misc_structs(struct bgp_misc_structs *r_data)
@@ -233,10 +261,5 @@ void rpki_link_misc_structs(struct bgp_misc_structs *r_data)
   r_data->table_attr_hash_buckets = HASHTABSIZE;
   r_data->table_per_peer_hash = BGP_ASPATH_HASH_PATHID;
   r_data->route_info_modulo = NULL;
-
-/*
-  XXX:
-  r_data->bgp_lookup_find_peer = XXX ;
-  r_data->bgp_lookup_node_match_cmp = XXX ; 
-*/
+  r_data->bgp_lookup_node_match_cmp = rpki_prefix_lookup_node_match_cmp;
 }
