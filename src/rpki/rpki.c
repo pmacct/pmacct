@@ -111,6 +111,9 @@ int rpki_roas_map_load(char *file)
 	  struct prefix p;
 	  u_int8_t maxlen;
 	  as_t asn;
+	  int ret;
+
+	  memset(&p, 0, sizeof(p));
 	    
 	  prefix_json = json_object_get(roa_json, "prefix");
 	  if (prefix_json == NULL || !json_is_string(prefix_json)) {
@@ -118,8 +121,13 @@ int rpki_roas_map_load(char *file)
 	    goto exit_lane;
 	  }
 	  else {
-	    str2prefix(json_string_value(prefix_json), &p);
+	    ret = str2prefix(json_string_value(prefix_json), &p);
 	    json_decref(prefix_json);
+
+	    if (!ret) {
+	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] invalid 'prefix' element in ROA #%u.\n", config.name, r_data->log_str, file, (roas_idx + 1));
+	      goto exit_lane;
+	    }
 	  }
 
 	  asn_json = json_object_get(roa_json, "asn");
@@ -128,8 +136,13 @@ int rpki_roas_map_load(char *file)
 	    goto exit_lane;
 	  }
 	  else {
-	    asn = str2asn((char *)json_string_value(asn_json));
+	    ret = bgp_str2asn((char *)json_string_value(asn_json), &asn);
 	    json_decref(asn_json);
+
+	    if (ret) {
+	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] invalid 'asn' element in ROA #%u.\n", config.name, r_data->log_str, file, (roas_idx + 1));
+	      goto exit_lane;
+	    }
 	  }
 
 	  maxlen_json = json_object_get(roa_json, "maxLength");
@@ -140,6 +153,14 @@ int rpki_roas_map_load(char *file)
 	  else {
 	    maxlen = json_integer_value(maxlen_json);
 	    json_decref(maxlen_json);
+	  }
+
+	  if (maxlen < p.prefixlen) {
+	    char prefix_str[INET6_ADDRSTRLEN];
+
+	    prefix2str(&p, prefix_str, INET6_ADDRSTRLEN);
+	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'maxLength' < prefixLength: prefix=%s maxLength=%u asn=%u\n",
+		config.name, r_data->log_str, file, prefix_str, maxlen, asn);
 	  }
 
 	  rpki_info_add(&peer, &p, asn, maxlen);
@@ -202,10 +223,10 @@ int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t ma
   for (end = MAX(p->prefixlen, maxlen); p->prefixlen <= end; p->prefixlen++) {
     route = bgp_node_get(peer, rpki_routing_db->rib[afi][safi], p);
 
-    /* Could be probably optimized and taken out of loop */
     memset(&attr, 0, sizeof(attr));
     attr.aspath = aspath_parse_ast(peer, asn);
     attr_new = bgp_attr_intern(peer, &attr);
+    if (attr.aspath) aspath_unintern(peer, attr.aspath);
 
     for (ri = route->info[modulo]; ri; ri = ri->next) {
       /* Check if received same information */

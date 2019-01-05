@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -1468,15 +1468,14 @@ int bgp_router_id_check(struct bgp_msg_data *bmd)
 
 /*
   utility function when an ASN is prepended by 'AS', 'AS ', etc. strings
-  that need to be stripped; basic testing done, perhaps strtoul() return
-  value needs more checks in case total bogus strings are passed over.
+  that need to be stripped.
 */
-as_t str2asn(char *asn_str)
+int bgp_str2asn(char *asn_str, as_t *asn)
 {
   char *endptr, *asn_ptr = asn_str;
   int len, cnt;
 
-  if (!asn_str) return 0;
+  if (!asn_str || !asn) return ERR;
 
   len = strlen(asn_str);
 
@@ -1484,5 +1483,12 @@ as_t str2asn(char *asn_str)
 
   asn_ptr = &asn_str[cnt];
 
-  return strtoul(asn_ptr, &endptr, 10);
+  (*asn) = strtoul(asn_ptr, &endptr, 10);
+  if (endptr == asn_ptr || (*endptr) != '\0') return ERR;
+  if (errno) {
+    errno = FALSE;
+    return ERR;
+  }
+
+  return SUCCESS;
 }
