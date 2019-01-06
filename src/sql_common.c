@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -413,6 +413,7 @@ void sql_cache_handle_flush_event(struct insert_data *idata, time_t *refresh_dea
       signal(SIGINT, SIG_IGN);
       signal(SIGHUP, SIG_IGN);
       pm_setproctitle("%s %s [%s]", config.type, "Plugin -- DB Writer", config.name);
+      config.is_forked = TRUE;
 
       if (qq_ptr) {
         if (dump_writers_get_flags() == CHLD_WARNING) sql_db_fail(&p);
@@ -912,6 +913,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
         signal(SIGINT, SIG_IGN);
         signal(SIGHUP, SIG_IGN);
         pm_setproctitle("%s [%s]", "SQL Plugin -- DB Writer (urgent)", config.name);
+	config.is_forked = TRUE;
   
         if (qq_ptr) {
           if (dump_writers_get_flags() == CHLD_WARNING) sql_db_fail(&p);

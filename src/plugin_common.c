@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -521,7 +521,10 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
       switch (ret = fork()) {
       case 0: /* Child */
 	pm_setproctitle("%s %s [%s]", config.type, "Plugin -- Writer (urgent)", config.name);
+	config.is_forked = TRUE;
+
         (*purge_func)(queries_queue, qq_ptr, TRUE);
+
         exit_gracefully(0);
       default: /* Parent */
         if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
@@ -621,7 +624,10 @@ void P_cache_handle_flush_event(struct ports_table *pt)
     switch (ret = fork()) {
     case 0: /* Child */
       pm_setproctitle("%s %s [%s]", config.type, "Plugin -- Writer", config.name);
+      config.is_forked = TRUE;
+
       (*purge_func)(queries_queue, qq_ptr, FALSE);
+
       exit_gracefully(0);
     default: /* Parent */
       if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));

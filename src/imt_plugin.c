@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -303,11 +303,16 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	    break;
           case 0: /* Child */
             close(sd);
+
 	    pm_setproctitle("%s [%s]", "IMT Plugin -- serving client", config.name);
+	    config.is_forked = TRUE;
+
             if (num > 0) process_query_data(sd2, srvbuf, num, &extras, datasize, TRUE);
 	    else Log(LOG_DEBUG, "DEBUG ( %s/%s ): %d incoming bytes. Errno: %d\n", config.name, config.type, num, errno);
+
             Log(LOG_DEBUG, "DEBUG ( %s/%s ): Closing connection with client ...\n", config.name, config.type);
             close(sd2);
+
             exit_gracefully(0);
           default: /* Parent */
             break;

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -1402,7 +1402,9 @@ void exit_all(int status)
    enforce some final operations before shutting down */
 void exit_plugin(int status)
 {
-  if (config.pidfile) remove_pid_file(config.pidfile);
+  if (!config.is_forked) {
+    if (config.pidfile) remove_pid_file(config.pidfile);
+  }
 
   exit(status);
 }

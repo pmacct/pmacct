@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -463,9 +463,11 @@ void bmp_handle_dump_event()
     signal(SIGINT, SIG_IGN);
     signal(SIGHUP, SIG_IGN);
     pm_setproctitle("%s %s [%s]", config.type, "Core Process -- BMP Dump Writer", config.name);
+    config.is_forked = TRUE;
 
     memset(last_filename, 0, sizeof(last_filename));
     memset(current_filename, 0, sizeof(current_filename));
+
     fd_buf = malloc(OUTPUT_FILE_BUFSZ);
     bgp_peer_log_seq_set(&bms->log_seq, dump_seqno);
 

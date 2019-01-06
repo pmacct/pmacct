@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -82,6 +82,7 @@ struct configuration {
   char *name;
   char *type;
   int type_id;
+  int is_forked;
   int pmacctd_nonroot;
   char *proc_name;
   int proc_priority;
