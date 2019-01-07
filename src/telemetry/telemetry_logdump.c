@@ -262,7 +262,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
   int ret, peers_idx, duration, tables_num;
   pid_t dumper_pid;
   time_t start;
-  u_int64_t dump_elems, dump_seqno;
+  u_int64_t dump_elems = 0, dump_seqno;
 
   telemetry_peer *peer, *saved_peer;
   telemetry_dump_se_ll *tdsell;

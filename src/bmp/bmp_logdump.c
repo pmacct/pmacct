@@ -442,7 +442,7 @@ void bmp_handle_dump_event()
   safi_t safi;
   pid_t dumper_pid;
   time_t start;
-  u_int64_t dump_elems, dump_seqno;
+  u_int64_t dump_elems = 0, dump_seqno;
 
   struct bgp_peer *peer, *saved_peer;
   struct bmp_peer *bmpp, *saved_bmpp;

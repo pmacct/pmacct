@@ -684,7 +684,7 @@ void bgp_handle_dump_event()
   safi_t safi;
   pid_t dumper_pid;
   time_t start;
-  u_int64_t dump_elems, dump_seqno;
+  u_int64_t dump_elems = 0, dump_seqno;
 
   /* pre-flight check */
   if (!bms->dump_backend_methods || !config.bgp_table_dump_refresh_time)
