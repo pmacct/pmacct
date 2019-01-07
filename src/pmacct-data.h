@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -32,7 +32,7 @@
 #define PLUGIN_ID_MONGODB	9
 #define PLUGIN_ID_AMQP		10
 #define PLUGIN_ID_KAFKA		11
-#define PLUGIN_ID_UNKNOWN       -1
+#define PLUGIN_ID_UNKNOWN	255 
 
 /* vars */
 #if (!defined __PMACCTD_C) && (!defined __NFACCTD_C) && (!defined __SFACCTD_C) && (!defined __UACCTD_C) && (!defined __PMTELEMETRYD_C) && (!defined __PMACCT_CLIENT_C) && (!defined __PMBGPD_C) && (!defined __PMBMPD_C)
