@@ -1402,17 +1402,18 @@ void exit_all(int status)
    enforce some final operations before shutting down */
 void exit_plugin(int status)
 {
-  if (!config.is_forked) {
-    if (config.pidfile) remove_pid_file(config.pidfile);
-  }
+  if (config.pidfile) remove_pid_file(config.pidfile);
 
   exit(status);
 }
 
 void exit_gracefully(int status)
 {
-  if (config.type_id == PLUGIN_ID_CORE) exit_all(status); 
-  else exit_plugin(status);
+  if (!config.is_forked) {
+    if (config.type_id == PLUGIN_ID_CORE) exit_all(status); 
+    else exit_plugin(status);
+  }
+  else exit(status);
 }
 
 void reset_tag_label_status(struct packet_ptrs_vector *pptrsv)
