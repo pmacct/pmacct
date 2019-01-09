@@ -214,7 +214,7 @@ int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t ma
   u_int32_t modulo;
   u_int8_t end;
 
-  if (!rpki_routing_db || !r_data || !peer || !p) return;
+  if (!rpki_routing_db || !r_data || !peer || !p) return ERR;
 
   afi = family2afi(p->family); 
   safi = SAFI_UNICAST;
