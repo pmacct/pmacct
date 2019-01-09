@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -122,7 +122,7 @@ void ignore_falling_child()
   signal(SIGCHLD, ignore_falling_child);
 }
 
-void my_sigint_handler(int signum)
+void PM_sigint_handler(int signum)
 {
   struct plugins_list_entry *list = plugins_list;
   char shutdown_msg[] = "pmacct received SIGINT - shutting down";

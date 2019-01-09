@@ -1195,7 +1195,7 @@ void evaluate_sums(u_int64_t *wtc, u_int64_t *wtc_2, char *name, char *type)
 
 void stop_all_childs()
 {
-  my_sigint_handler(0); /* it does same thing */
+  PM_sigint_handler(0); /* it does same thing */
 }
 
 void pm_strftime(char *s, int max, char *format, const time_t *time_ref, int utc)

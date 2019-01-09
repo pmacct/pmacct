@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -872,8 +872,8 @@ int main(int argc,char **argv, char **envp)
 
   /* signals to be handled only by the core process;
      we set proper handlers after plugin creation */
-  signal(SIGINT, my_sigint_handler);
-  signal(SIGTERM, my_sigint_handler);
+  signal(SIGINT, PM_sigint_handler);
+  signal(SIGTERM, PM_sigint_handler);
   signal(SIGCHLD, handle_falling_child);
   kill(getpid(), SIGCHLD);
 
