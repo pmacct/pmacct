@@ -2037,10 +2037,12 @@ DESC:		Allows to tune a set of timeouts to be applied over collected packets. Th
 		maxlife	(maximum flow life)	604800
 		expint	(expiry interval)	60
 
-		expint is a passive timeout, ie. by default if a flow does not make any traffic in 60 secs it
-		gets evicted from the cache. tcp, tcp.rst, tcp.fin, udp, icmp and general are active timeouts,
-		ie. by default a tcp flow is evicted after 3600 secs even if still active, that is, it's still
-		making traffic.
+		expint is the interval between expiry checks, ie. every 60 secs it is checked which flows are
+		ready for timeout-based evictioni; unscheduled evictions are possible if it's not possible to
+		allocate more memory to cache flows. tcp, tcp.rst, tcp.fin, udp, icmp and general are passive
+		timeouts, ie. a tcp flow is evicted after 3600 secs of inactivity ('general' applies to any
+		IP protocol not being specified by other timeouts). maxlife is an active timeout and evicts
+		flows even if still active and making traffic. 
 DEFAULT:	see above
 
 KEY:		nfprobe_hoplimit
