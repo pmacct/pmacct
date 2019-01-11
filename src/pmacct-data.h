@@ -32,6 +32,7 @@
 #define PLUGIN_ID_MONGODB	9
 #define PLUGIN_ID_AMQP		10
 #define PLUGIN_ID_KAFKA		11
+#define PLUGIN_ID_JSONUDP       12
 #define PLUGIN_ID_UNKNOWN	255 
 
 /* vars */
@@ -436,6 +437,7 @@ static const struct _dictionary_line dictionary[] = {
   {"print_preprocess", cfg_key_sql_preprocess},
   {"print_preprocess_type", cfg_key_sql_preprocess_type},
   {"print_startup_delay", cfg_key_sql_startup_delay},
+  {"jsonudp_server", cfg_key_jsonudp_server},
   {"mongo_host", cfg_key_sql_host},
   {"mongo_table", cfg_key_sql_table},
   {"mongo_user", cfg_key_sql_user},
@@ -913,6 +915,7 @@ static struct plugin_type_entry plugin_types_list[] = {
   {PLUGIN_ID_KAFKA,     "kafka",        kafka_plugin},
 #endif
   {PLUGIN_ID_TEE,	"tee",		tee_plugin},
+  {PLUGIN_ID_JSONUDP,	"jsonudp",	jsonudp_plugin},
   {PLUGIN_ID_UNKNOWN,	"",		NULL},
 };
 #endif

@@ -164,6 +164,7 @@ EXT void P_zmq_pipe_init(void *, int *, int *);
 #endif
 EXT void imt_plugin(int, struct configuration *, void *);
 EXT void print_plugin(int, struct configuration *, void *);
+EXT void jsonudp_plugin(int, struct configuration *, void *);
 EXT void nfprobe_plugin(int, struct configuration *, void *);
 EXT void sfprobe_plugin(int, struct configuration *, void *);
 EXT void tee_plugin(int, struct configuration *, void *);

@@ -458,6 +458,7 @@ int create_plugin(char *filename, char *name, char *type)
 
   /* searching for a valid known plugin type */
   while(strcmp(plugin_types_list[index].string, "")) {
+    Log(LOG_ERR, "ERROR: Comparing %s with type: %s.\n", plugin_types_list[index].string, type);
     if (!strcmp(type, plugin_types_list[index].string)) ptype = &plugin_types_list[index];
     index++;
   }

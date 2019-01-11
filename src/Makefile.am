@@ -87,6 +87,9 @@ libdaemons_la_SOURCES += kafka_common.c kafka_common.h kafka_plugin.c kafka_plug
 libdaemons_la_LIBADD  += @KAFKA_LIBS@
 libdaemons_la_CFLAGS  += @KAFKA_CFLAGS@
 endif
+if WITH_JSONUDP
+libdaemons_la_SOURCES += jsonudp_plugin.c jsonudp_plugin.h
+endif
 if USING_SQL
 libdaemons_la_SOURCES += sql_common.c sql_handlers.c sql_common.h
 libdaemons_la_LIBADD  += -lm -lz

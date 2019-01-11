@@ -177,6 +177,7 @@ struct configuration {
   char *print_output_separator;
   char *print_output_file;
   char *print_latest_file;
+  char *jsonudp_server;
   int nfacctd_port;
   char *nfacctd_ip;
   char *nfacctd_kafka_broker_host;

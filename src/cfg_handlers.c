@@ -2831,6 +2831,25 @@ int cfg_key_print_output_separator(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_jsonudp_server(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+  char *endptr;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.jsonudp_server= value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.jsonudp_server = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+  return changes;
+}
+
 int cfg_key_num_protos(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

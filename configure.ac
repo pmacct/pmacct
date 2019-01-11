@@ -747,6 +747,26 @@ AC_ARG_ENABLE(kafka,
 )
 dnl finish: Kafka handling
 
+dnl start: JSON UDP handling
+AC_MSG_CHECKING(whether to enable JSON UDP support)
+AC_ARG_ENABLE(jsonudp,
+  [  --enable-jsonudp             Enable JSON UDP support (default: no)],
+  [ case "$enableval" in
+  yes)
+    AC_MSG_RESULT(yes)
+    USING_JSONUDP="yes"
+    AC_DEFINE(WITH_JSONUDP, 1)
+    ;;
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  esac ],
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
+dnl finish JSON UDP handling
+
 dnl start: geoip handling
 AC_MSG_CHECKING(whether to enable GeoIP support)
 AC_ARG_ENABLE(geoip,
@@ -1184,6 +1204,7 @@ AM_CONDITIONAL([WITH_SQLITE3], [test x"$USING_SQLITE3" = x"yes"])
 AM_CONDITIONAL([WITH_RABBITMQ], [test x"$USING_RABBITMQ" = x"yes"])
 AM_CONDITIONAL([WITH_ZMQ], [test x"$USING_ZMQ" = x"yes"])
 AM_CONDITIONAL([WITH_KAFKA], [test x"$USING_KAFKA" = x"yes"])
+AM_CONDITIONAL([WITH_JSONUDP], [test x"$USING_JSONUDP" = x"yes"])
 AM_CONDITIONAL([USING_SQL], [test x"$USING_SQL" = x"yes"])
 AM_CONDITIONAL([WITH_AVRO], [test x"$USING_AVRO" = x"yes"])
 AM_CONDITIONAL([WITH_SERDES], [test x"$USING_SERDES" = x"yes"])
