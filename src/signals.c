@@ -221,30 +221,13 @@ void reload()
 
 void push_stats()
 {
-  time_t now = time(NULL);
-
   if (config.acct_type == ACCT_PM) {
-    int device_idx;
-
-    if (config.pcap_if) {
-      Log(LOG_NOTICE, "NOTICE ( %s/%s ): +++\n", config.name, config.type);
-
-      for (device_idx = 0; device_idx < device.num; device_idx++) {
-	if (pcap_stats(device.list[device_idx].dev_desc, &ps) < 0) {
-	  Log(LOG_INFO, "INFO ( %s/%s ): stats [%s,%u] time=%u error='pcap_stats(): %s'\n",
-		config.name, config.type, device.list[device_idx].str, device.list[device_idx].id,
-		now, pcap_geterr(device.list[device_idx].dev_desc));
-	}
-	Log(LOG_NOTICE, "NOTICE ( %s/%s ): stats [%s,%u] time=%u received_packets=%u dropped_packets=%u\n",
-		config.name, config.type, device.list[device_idx].str, device.list[device_idx].id,
-		now, ps.ps_recv, ps.ps_drop);
-      }
-
-      Log(LOG_NOTICE, "NOTICE ( %s/%s ): ---\n", config.name, config.type);
-    }
+    time_t now = time(NULL);
+    PM_print_stats(now);
   }
-  else if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF)
-    print_status_table(now, XFLOW_STATUS_TABLE_SZ);
+  else if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) {
+    print_stats = TRUE;
+  }
 
   signal(SIGUSR1, push_stats);
 }

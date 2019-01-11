@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -451,6 +451,29 @@ int PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   }
 
   return ret;
+}
+
+void PM_print_stats(time_t now)
+{
+  int device_idx;
+
+  Log(LOG_NOTICE, "NOTICE ( %s/%s ): +++\n", config.name, config.type);
+
+  if (config.pcap_if) {
+    for (device_idx = 0; device_idx < device.num; device_idx++) {
+      if (pcap_stats(device.list[device_idx].dev_desc, &ps) < 0) {
+	Log(LOG_INFO, "INFO ( %s/%s ): stats [%s,%u] time=%u error='pcap_stats(): %s'\n",
+	    config.name, config.type, device.list[device_idx].str, device.list[device_idx].id,
+	    now, pcap_geterr(device.list[device_idx].dev_desc));
+      }
+
+      Log(LOG_NOTICE, "NOTICE ( %s/%s ): stats [%s,%u] time=%u received_packets=%u dropped_packets=%u\n",
+	  config.name, config.type, device.list[device_idx].str, device.list[device_idx].id,
+	  now, ps.ps_recv, ps.ps_drop);
+    }
+  }
+
+  Log(LOG_NOTICE, "NOTICE ( %s/%s ): ---\n", config.name, config.type);
 }
 
 void compute_once()

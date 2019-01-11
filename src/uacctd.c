@@ -205,6 +205,7 @@ int main(int argc,char **argv, char **envp)
 
   /* a bunch of default definitions */ 
   reload_map = FALSE;
+  print_stats = FALSE;
   reload_geoipv2_file = FALSE;
   bpas_map_allocated = FALSE;
   blp_map_allocated = FALSE;

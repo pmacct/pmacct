@@ -168,6 +168,7 @@ int main(int argc,char **argv, char **envp)
 
   /* a bunch of default definitions */ 
   reload_map = FALSE;
+  print_stats = FALSE;
   reload_geoipv2_file = FALSE;
   reload_log_sf_cnt = FALSE;
   bpas_map_allocated = FALSE;
@@ -1209,6 +1210,13 @@ int main(int argc,char **argv, char **envp)
       }
 
       reload_log_sf_cnt = FALSE;
+    }
+
+    if (print_stats) {
+      time_t now = time(NULL);
+
+      print_status_table(now, XFLOW_STATUS_TABLE_SZ);
+      print_stats = FALSE;
     }
 
     if (sfacctd_counter_backend_methods) {

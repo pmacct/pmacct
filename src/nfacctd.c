@@ -163,6 +163,7 @@ int main(int argc,char **argv, char **envp)
 
   /* a bunch of default definitions */ 
   reload_map = FALSE;
+  print_stats = FALSE;
   reload_geoipv2_file = FALSE;
   sampling_map_allocated = FALSE;
   bpas_map_allocated = FALSE;
@@ -1139,6 +1140,13 @@ int main(int argc,char **argv, char **envp)
 
       reload_map = FALSE;
       gettimeofday(&reload_map_tstamp, NULL);
+    }
+
+    if (print_stats) {
+      time_t now = time(NULL);
+
+      print_status_table(now, XFLOW_STATUS_TABLE_SZ);
+      print_stats = FALSE;
     }
 
     if (data_plugins) {
