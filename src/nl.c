@@ -459,7 +459,7 @@ void PM_print_stats(time_t now)
 
   Log(LOG_NOTICE, "NOTICE ( %s/%s ): +++\n", config.name, config.type);
 
-  if (config.pcap_if) {
+  if (config.pcap_if || config.pcap_interfaces_map) {
     for (device_idx = 0; device_idx < device.num; device_idx++) {
       if (pcap_stats(device.list[device_idx].dev_desc, &ps) < 0) {
 	Log(LOG_INFO, "INFO ( %s/%s ): stats [%s,%u] time=%u error='pcap_stats(): %s'\n",
