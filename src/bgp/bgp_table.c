@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /* 
@@ -218,7 +218,7 @@ bgp_node_match (const struct bgp_table *table, struct prefix *p, struct bgp_peer
   struct bgp_info *info, *matched_info;
   u_int32_t modulo, modulo_idx, local_modulo, modulo_max;
 
-  if (!table || !peer || !modulo_func || !cmp_func) return;
+  if (!table || !peer || !cmp_func) return;
 
   bms = bgp_select_misc_db(peer->type);
   if (!bms) return;
@@ -227,7 +227,8 @@ bgp_node_match (const struct bgp_table *table, struct prefix *p, struct bgp_peer
   if (bms->table_per_peer_hash == BGP_ASPATH_HASH_PATHID) modulo_max = bms->table_per_peer_buckets;
   else modulo_max = 1;
 
-  modulo = modulo_func(peer, NULL, modulo_max);
+  if (modulo_func) modulo = modulo_func(peer, NULL, modulo_max);
+  else modulo = 0;
 
   matched_node = NULL;
   matched_info = NULL;

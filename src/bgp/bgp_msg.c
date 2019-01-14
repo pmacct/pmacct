@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -1151,6 +1151,8 @@ int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, a
     }
 
     attr_new = bgp_attr_intern(peer, attr);
+
+    if (config.rpki_roas_map) attr_new->roa = rpki_prefix_lookup(p, attr_new->aspath);
 
     if (ri) {
       /* Received same information */

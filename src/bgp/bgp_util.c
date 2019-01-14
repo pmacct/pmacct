@@ -351,6 +351,7 @@ int attrhash_cmp(const void *p1, const void *p2)
 
   if (attr1->flag == attr2->flag
       && attr1->origin == attr2->origin
+      && attr1->roa == attr2->roa
       && attr1->nexthop.s_addr == attr2->nexthop.s_addr
       && attr1->aspath == attr2->aspath
       && attr1->community == attr2->community

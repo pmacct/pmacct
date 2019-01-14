@@ -261,18 +261,37 @@ int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t ma
   return SUCCESS;
 }
 
-int rpki_prefix_lookup(struct prefix *p)
+u_int8_t rpki_prefix_lookup(struct prefix *p, struct aspath *aspath)
 {
-  // XXX
+  struct bgp_misc_structs *r_data = rpki_misc_db;
+  struct node_match_cmp_term2 nmct2;
+  struct bgp_node *result = NULL;
+  struct bgp_info *info = NULL;
+  struct bgp_peer peer;
 
-  return FALSE;
+  if (!rpki_routing_db || !r_data || !p || !aspath) return ROA_STATUS_UNKNOWN;
+
+  memset(&peer, 0, sizeof(struct bgp_peer));
+  peer.type = FUNC_TYPE_RPKI;
+
+  memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
+  nmct2.safi = SAFI_UNICAST;
+  nmct2.aspath = aspath;
+
+  bgp_node_match(rpki_routing_db->rib[AFI_IP][SAFI_UNICAST], p, &peer, 
+			r_data->route_info_modulo, r_data->bgp_lookup_node_match_cmp,
+			&nmct2, &result, &info);
+
+  if (result) return ROA_STATUS_VALID;
+  else return ROA_STATUS_INVALID; 
 }
 
 int rpki_prefix_lookup_node_match_cmp(struct bgp_info *info, struct node_match_cmp_term2 *nmct2)
 {
- // XXX
+  if (!info || !info->attr || !info->attr->aspath || !nmct2 || !nmct2->aspath) return TRUE;
 
- return FALSE;
+  if (evaluate_last_asn(info->attr->aspath) == evaluate_last_asn(nmct2->aspath)) return FALSE;
+  else return TRUE;
 }
 
 void rpki_link_misc_structs(struct bgp_misc_structs *r_data)
