@@ -26,6 +26,7 @@
 #include "pmacct.h"
 #include "addr.h"
 #include "bgp.h"
+#include "rpki/rpki.h"
 
 int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
 {

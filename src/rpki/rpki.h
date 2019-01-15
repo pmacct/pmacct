@@ -23,6 +23,7 @@
 #define ROA_STATUS_UNKNOWN	0
 #define ROA_STATUS_INVALID	1
 #define ROA_STATUS_VALID	2
+#define ROA_STATUS_MAX		2
 
 /* prototypes */
 #if !defined(__RPKI_C)

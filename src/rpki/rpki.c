@@ -268,19 +268,23 @@ u_int8_t rpki_prefix_lookup(struct prefix *p, struct aspath *aspath)
   struct bgp_node *result = NULL;
   struct bgp_info *info = NULL;
   struct bgp_peer peer;
+  safi_t safi;
+  afi_t afi;
 
   if (!rpki_routing_db || !r_data || !p || !aspath) return ROA_STATUS_UNKNOWN;
 
   memset(&peer, 0, sizeof(struct bgp_peer));
   peer.type = FUNC_TYPE_RPKI;
 
+  afi = family2afi(p->family);
+  safi = SAFI_UNICAST;
+
   memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
-  nmct2.safi = SAFI_UNICAST;
+  nmct2.safi = safi;
   nmct2.aspath = aspath;
 
-  bgp_node_match(rpki_routing_db->rib[AFI_IP][SAFI_UNICAST], p, &peer, 
-			r_data->route_info_modulo, r_data->bgp_lookup_node_match_cmp,
-			&nmct2, &result, &info);
+  bgp_node_match(rpki_routing_db->rib[afi][safi], p, &peer, r_data->route_info_modulo,
+	  	 r_data->bgp_lookup_node_match_cmp, &nmct2, &result, &info);
 
   if (result) return ROA_STATUS_VALID;
   else return ROA_STATUS_INVALID; 

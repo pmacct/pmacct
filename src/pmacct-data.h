@@ -295,6 +295,12 @@ static const char *bgp_origin[] = {
   "u"
 };
 
+static const char *rpki_roa[] = {
+  "u",
+  "v",
+  "i"
+};
+
 #if defined __PMACCTD_C || defined __UACCTD_C || defined __UTIL_C
 static struct _devices_struct _devices[] = {
 #if defined DLT_LOOP

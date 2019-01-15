@@ -27,6 +27,7 @@
 #include "pmacct-data.h"
 #include "addr.h"
 #include "bgp.h"
+#include "rpki/rpki.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
@@ -157,6 +158,13 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
       if (attr->med)
 	json_object_set_new_nocheck(obj, "med", json_integer((json_int_t)attr->med));
+
+      if (attr->roa <= ROA_STATUS_MAX) {
+	json_object_set_new_nocheck(obj, "roa", json_string(rpki_roa[attr->roa]));
+      }
+      else {
+	json_object_set_new_nocheck(obj, "roa", json_integer((json_int_t)attr->roa));
+      }
     }
 
     if (safi == SAFI_MPLS_LABEL || safi == SAFI_MPLS_VPN) {
