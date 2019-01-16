@@ -7,9 +7,8 @@ AM_LDFLAGS = @GEOIP_LIBS@ @GEOIPV2_LIBS@ @JANSSON_LIBS@ @AVRO_LIBS@
 AM_CFLAGS = $(PMACCT_CFLAGS)
 
 noinst_LTLIBRARIES = libdaemons.la libcommon.la
-libcommon_la_SOURCES = strlcpy.c addr.c jansson.c addr.h pmacct.h	\
-	pmacct-build.h pmacct-data.h pmacct-defines.h mpls.h network.h  \
-	once.h
+libcommon_la_SOURCES = strlcpy.c addr.c addr.h pmacct.h	pmacct-build.h	\
+	pmacct-data.h pmacct-defines.h mpls.h network.h  once.h
 libdaemons_la_SOURCES = signals.c util.c util.h plugin_hooks.c		\
         plugin_hooks.h server.c acct.c memory.c cfg.c cfg.h		\
         imt_plugin.c imt_plugin.h log.c log.h pkt_handlers.c		\

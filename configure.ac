@@ -820,7 +820,6 @@ AC_ARG_ENABLE(jansson,
       _save_LIBS="$LIBS"
       LIBS="$LIBS $JANSSON_LIBS"
       AC_CHECK_LIB([jansson], [json_object])
-      AC_CHECK_FUNCS([json_object_update_missing])
       LIBS="$_save_LIBS"
       _save_CFLAGS="$CFLAGS"
       CFLAGS="$CFLAGS $JANSSON_CFLAGS"

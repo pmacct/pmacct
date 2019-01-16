@@ -418,12 +418,6 @@ EXT ssize_t recvfrom_rawip(char *, size_t, struct sockaddr *, struct packet_ptrs
 size_t strlcpy(char *, const char *, size_t);
 #endif
 
-#if (defined WITH_JANSSON)
-#if (!defined HAVE_JSON_OBJECT_UPDATE_MISSING)
-int json_object_update_missing(json_t *, json_t *);
-#endif
-#endif
-
 void
 #ifdef __STDC__
 pm_setproctitle(const char *fmt, ...);
