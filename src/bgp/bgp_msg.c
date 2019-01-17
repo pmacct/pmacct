@@ -1217,6 +1217,8 @@ int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, a
       bgp_info_extra_process(peer, ri, safi, path_id, rd, label);
       if (bms->bgp_extra_data_process) (*bms->bgp_extra_data_process)(&bmd->extra, ri);
 
+      if (config.rpki_roas_map) ri->attr->roa = rpki_prefix_lookup(&route_local.p, ri->attr->aspath);
+
       goto log_update;
     }
   }

@@ -106,7 +106,7 @@ int rpki_roas_map_load(char *file)
         exit_gracefully(1);
       }
       else {
-	for (roas_idx = 0; roa_json = json_array_get(roas_json, roas_idx); roas_idx++) {
+	for (roas_idx = 0; (roa_json = json_array_get(roas_json, roas_idx)); roas_idx++) {
 	  json_t *prefix_json, *maxlen_json, *asn_json;
 	  struct prefix p;
 	  u_int8_t maxlen;
@@ -122,7 +122,6 @@ int rpki_roas_map_load(char *file)
 	  }
 	  else {
 	    ret = str2prefix(json_string_value(prefix_json), &p);
-	    json_decref(prefix_json);
 
 	    if (!ret) {
 	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] invalid 'prefix' element in ROA #%u.\n", config.name, r_data->log_str, file, (roas_idx + 1));
@@ -137,7 +136,6 @@ int rpki_roas_map_load(char *file)
 	  }
 	  else {
 	    ret = bgp_str2asn((char *)json_string_value(asn_json), &asn);
-	    json_decref(asn_json);
 
 	    if (ret) {
 	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] invalid 'asn' element in ROA #%u.\n", config.name, r_data->log_str, file, (roas_idx + 1));
@@ -150,10 +148,7 @@ int rpki_roas_map_load(char *file)
 	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] no 'maxLength' element in ROA #%u.\n", config.name, r_data->log_str, file, (roas_idx + 1));
 	    goto exit_lane;
 	  }
-	  else {
-	    maxlen = json_integer_value(maxlen_json);
-	    json_decref(maxlen_json);
-	  }
+	  else maxlen = json_integer_value(maxlen_json);
 
 	  if (maxlen < p.prefixlen) {
 	    char prefix_str[INET6_ADDRSTRLEN];
@@ -166,11 +161,10 @@ int rpki_roas_map_load(char *file)
 	  rpki_info_add(&peer, &p, asn, maxlen);
 
 	  exit_lane:
-	  json_decref(roa_json);
+	  continue;
 	}
       }
 
-      json_decref(roas_json);
       json_decref(roas_obj);
     }
 

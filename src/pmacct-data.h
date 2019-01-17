@@ -297,8 +297,8 @@ static const char *bgp_origin[] = {
 
 static const char *rpki_roa[] = {
   "u",
-  "v",
-  "i"
+  "i",
+  "v"
 };
 
 #if defined __PMACCTD_C || defined __UACCTD_C || defined __UTIL_C
