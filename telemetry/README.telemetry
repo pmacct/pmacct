@@ -91,3 +91,63 @@ QUICKSTART.
 * Start the relevant Streaming Telemetry pre-processing decoder:
 
   shell> cisco_grpc_dialout_server.py
+
+
+ROUTER CONFIGS.
+IOS XR configuration example, gRPC JSON encoding suitable (at time of
+this writing) for Openconfig YANG models, ie. openconfig-interface and
+openconfig-platform:
+
+telemetry model-driven
+ destination-group COLLECTOR
+  address-family ipv4 X.X.X.X port 10000
+   encoding json
+   protocol grpc no-tls
+  !
+ !
+ sensor-group SENSOR
+  sensor-path openconfig-platform:components
+  sensor-path openconfig-interfaces:interfaces
+ !
+ subscription SUBSCRIPTION
+  sensor-group-id SENSOR sample-interval 30000
+  destination-id COLLECTOR
+  source-interface Loopback0
+ !
+!
+
+IOS XR configuration example, gRPC GPB key-value encoding suitable for 
+for Cisco YANG models, ie. Cisco-IOS-XR-infra-statsd-oper: 
+
+telemetry model-driven
+ destination-group COLLECTOR
+  address-family ipv4 X.X.X.X port 10000
+   encoding compact-gpb
+   protocol grpc no-tls
+  !
+ !
+ sensor-group SENSOR
+  sensor-path Cisco-IOS-XR-infra-statsd-oper:infra-statistics/interfaces/interface/latest/generic-counters
+ !
+ subscription SUBSCRIPTION
+  sensor-group-id SENSOR sample-interval 30000
+  destination-id COLLECTOR
+  source-interface Loopback0
+ !
+!
+
+Huawei VRP configuration example, gRPC compact GPB encoding:
+
+telemetry
+ #
+ sensor-group SENSOR
+  sensor-path huawei-ifm:ifm/interfaces/interface/ifStatistics
+ #
+ destination-group COLLECTOR
+  ipv4-address X.X.X.X port 10000 vpn-instance MANAGEMENT_VRF protocol grpc no-tls
+ #
+ subscription SUBSCRIPTION
+  sensor-group SENSOR
+  destination-group COLLECTOR
+#
+return
