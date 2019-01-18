@@ -1153,7 +1153,7 @@ int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, a
 
     attr_new = bgp_attr_intern(peer, attr);
 
-    if (config.rpki_roas_map) attr_new->roa = rpki_prefix_lookup(p, attr_new->aspath);
+    if (config.rpki_roas_file) attr_new->roa = rpki_prefix_lookup(p, attr_new->aspath);
 
     if (ri) {
       /* Received same information */
@@ -1217,7 +1217,7 @@ int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, a
       bgp_info_extra_process(peer, ri, safi, path_id, rd, label);
       if (bms->bgp_extra_data_process) (*bms->bgp_extra_data_process)(&bmd->extra, ri);
 
-      if (config.rpki_roas_map) ri->attr->roa = rpki_prefix_lookup(&route_local.p, ri->attr->aspath);
+      if (config.rpki_roas_file) ri->attr->roa = rpki_prefix_lookup(&route_local.p, ri->attr->aspath);
 
       goto log_update;
     }

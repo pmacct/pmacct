@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -7685,13 +7685,13 @@ int cfg_key_telemetry_dump_kafka_config_file(char *filename, char *name, char *v
   return changes;
 }
 
-int cfg_key_rpki_roas_map(char *filename, char *name, char *value_ptr)
+int cfg_key_rpki_roas_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.rpki_roas_map = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'rpki_roas_map'. Globalized.\n", filename);
+  for (; list; list = list->next, changes++) list->cfg.rpki_roas_file = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'rpki_roas_file'. Globalized.\n", filename);
 
   return changes;
 }

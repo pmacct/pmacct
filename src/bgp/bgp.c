@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -179,7 +179,7 @@ void skinny_bgp_daemon_online()
     bgp_xcs_map.num = 0;
   }
 
-  if (config.rpki_roas_map) rpki_daemon_wrapper();
+  if (config.rpki_roas_file) rpki_daemon_wrapper();
 
   if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key || config.nfacctd_bgp_msglog_kafka_topic) {
     if (config.nfacctd_bgp_msglog_file) bgp_misc_db->msglog_backend_methods++;

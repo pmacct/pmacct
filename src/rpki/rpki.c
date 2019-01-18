@@ -75,10 +75,10 @@ void rpki_daemon()
 
   rpki_link_misc_structs(r_data);
 
-  if (config.rpki_roas_map) rpki_roas_map_load(config.rpki_roas_map);
+  if (config.rpki_roas_file) rpki_roas_file_load(config.rpki_roas_file);
 }
 
-int rpki_roas_map_load(char *file)
+int rpki_roas_file_load(char *file)
 {
   struct bgp_misc_structs *r_data = rpki_misc_db;
   struct bgp_peer peer;
@@ -175,7 +175,7 @@ int rpki_roas_map_load(char *file)
     exit_gracefully(1);
   }
 #else
-  Log(LOG_WARNING, "WARN ( %s/%s ): rpki_roas_map will not load (missing --enable-jansson).\n", config.name, r_data->log_str);
+  Log(LOG_WARNING, "WARN ( %s/%s ): rpki_roas_file will not load (missing --enable-jansson).\n", config.name, r_data->log_str);
 #endif
 
   return SUCCESS;

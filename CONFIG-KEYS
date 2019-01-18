@@ -2608,6 +2608,25 @@ DESC:		Full pathname to a file to cross-connect BGP peers (ie. edge routers part
 		at runtime by sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd").
 DEFAULT:	none
 
+KEY:		rpki_roas_file [GLOBAL]
+DESC:		Full pathname to a file containing RPKI ROA data. Data encoding is JSON and format
+		is according to RIPE specifications. Example:
+
+		{
+		  "roas" : [ {
+		    "asn" : "AS2914",
+		    "prefix" : "128.121.0.0/16",
+		    "maxLength" : 16,
+		    "ta" : "ARIN"
+		  }, {
+		    "asn" : "AS2914",
+		    "prefix" : "128.121.0.0/19",
+		    "maxLength" : 24,
+		    "ta" : "ARIN"
+		  } ]
+		}
+DEFAULT:	none
+
 KEY:		isis_daemon [GLOBAL]
 VALUES:		[ true | false ]
 DESC:		Enables the skinny IS-IS daemon thread. It implements P2P Hellos, CSNP and PSNP -
