@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -303,7 +303,6 @@ int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf
 
 	telemetry_node_str = json_string_value(telemetry_node_json);
 	str_to_addr(telemetry_node_str, &telemetry_node);
-	json_decref(telemetry_node_json);
       }
 
       telemetry_node_port_json = json_object_get(json_obj, "telemetry_node_port");
@@ -312,10 +311,7 @@ int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf
 	ret = ERR;
 	goto exit_lane;
       }
-      else {
-	telemetry_node_port = json_integer_value(telemetry_node_port_json);
-	json_decref(telemetry_node_port_json);
-      }
+      else telemetry_node_port = json_integer_value(telemetry_node_port_json);
 
       (*addr_len) = addr_to_sa(addr, &telemetry_node, telemetry_node_port);
     }

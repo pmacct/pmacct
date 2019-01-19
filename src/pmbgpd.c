@@ -393,10 +393,7 @@ int bgp_lg_daemon_decode_query_header_json(struct p_zmq_sock *sock, struct bgp_l
         ret = ERR;
         goto exit_lane;
       }
-      else {
-	req->type = json_integer_value(query_type_json);
-	json_decref(query_type_json);
-      }
+      else req->type = json_integer_value(query_type_json);
 
       queries_num_json = json_object_get(req_obj, "queries");
       if (queries_num_json == NULL) {
@@ -404,10 +401,7 @@ int bgp_lg_daemon_decode_query_header_json(struct p_zmq_sock *sock, struct bgp_l
         ret = ERR;
         goto exit_lane;
       }
-      else {
-        req->num = json_integer_value(queries_num_json);
-        json_decref(queries_num_json);
-      }
+      else req->num = json_integer_value(queries_num_json);
 
       /* XXX: only one query per query message currently supported */
       if (req->num != 1) {
@@ -469,8 +463,6 @@ int bgp_lg_daemon_decode_query_ip_lookup_json(struct p_zmq_sock *sock, struct bg
           ret = ERR;
           goto exit_lane;
         }
-
-        json_decref(bgp_port_json);
       }
 
       peer_ip_src_json = json_object_get(req_obj, "peer_ip_src");
@@ -490,8 +482,6 @@ int bgp_lg_daemon_decode_query_ip_lookup_json(struct p_zmq_sock *sock, struct bg
 	  ret = ERR;
 	  goto exit_lane;
 	}
-
-        json_decref(peer_ip_src_json);
       }
 
       ip_prefix_json = json_object_get(req_obj, "ip_prefix");
@@ -508,8 +498,6 @@ int bgp_lg_daemon_decode_query_ip_lookup_json(struct p_zmq_sock *sock, struct bg
 	  ret = ERR;
 	  goto exit_lane;
 	}
-
-        json_decref(ip_prefix_json);
       }
 
       rd_json = json_object_get(req_obj, "rd");
@@ -522,8 +510,6 @@ int bgp_lg_daemon_decode_query_ip_lookup_json(struct p_zmq_sock *sock, struct bg
           ret = ERR;
           goto exit_lane;
         }
-
-        json_decref(rd_json);
       }
     }
 

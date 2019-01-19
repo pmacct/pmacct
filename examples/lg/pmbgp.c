@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -257,8 +257,6 @@ int main(int argc,char **argv)
         else results = json_integer_value(results_json);
       }
 
-      json_decref(query_type_json);
-      json_decref(results_json);
       json_decref(rep_results_obj);
     }
 
