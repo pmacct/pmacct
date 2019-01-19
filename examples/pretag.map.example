@@ -285,11 +285,13 @@ set_tag2=7 label=sevenseven
 ! ===
 !
 ! === Basic set_label example
-! Tag as "blabla,blabla2" all NetFlow/sFlow data received from any exporter.
+! Tag as "blabla,blabla2" NetFlow/sFlow data received from all exporters.
 ! If, ie. as a result of JEQ's in a pre_tag_map, multiple 'set_label' are
-! applied, then default operation is append labels and separate by a comma.
+! matched, then labels are appended and separated by a comma (warning: if
+! using print plugin with CSV output, the file separator should be changed
+! with print_output_separator)
 !
-set_label=blabla        ip=0.0.0.0/0    jeq=blabla2
+set_label=blabla        ip=0.0.0.0/0    label=blabla	jeq=blabla2
 set_label=blabla2       ip=0.0.0.0/0    label=blabla2
 !
 !
