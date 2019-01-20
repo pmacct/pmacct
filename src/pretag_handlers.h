@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -92,6 +92,7 @@ EXT int PT_map_index_fdata_src_as_handler(struct id_entry *, pm_hash_serial_t *,
 EXT int PT_map_index_fdata_dst_as_handler(struct id_entry *, pm_hash_serial_t *, void *); 
 EXT int PT_map_index_fdata_peer_src_as_handler(struct id_entry *, pm_hash_serial_t *, void *); 
 EXT int PT_map_index_fdata_peer_dst_as_handler(struct id_entry *, pm_hash_serial_t *, void *); 
+EXT int PT_map_index_fdata_mpls_vpn_id_handler(struct id_entry *, pm_hash_serial_t *, void *); 
 EXT int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_entry *, pm_hash_serial_t *, void *); 
 EXT int PT_map_index_fdata_mpls_pw_id_handler(struct id_entry *, pm_hash_serial_t *, void *); 
 EXT int PT_map_index_fdata_mpls_label_bottom_handler(struct id_entry *, pm_hash_serial_t *, void *); 

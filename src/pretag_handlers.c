@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -2559,24 +2559,24 @@ int BITR_mpls_vpn_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct id_entry *entry = e;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int32_t tmp32 = 0, label = 0;
+  u_int32_t tmp32 = 0, id = 0;
 
   switch(hdr->version) {
   case 10:
   case 9:
     if (tpl->tpl[NF9_INGRESS_VRFID].len) {
       memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_INGRESS_VRFID].off, MIN(tpl->tpl[NF9_INGRESS_VRFID].len, 4));
-      label = ntohl(tmp32);
+      id = ntohl(tmp32);
 
-      if (!memcmp(&entry->key.mpls_vpn_id.n, &label, 4))
+      if (!memcmp(&entry->key.mpls_vpn_id.n, &id, 4))
         return (FALSE | entry->key.mpls_vpn_id.neg);
     }
 
     if (tpl->tpl[NF9_EGRESS_VRFID].len) {
       memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_EGRESS_VRFID].off, MIN(tpl->tpl[NF9_EGRESS_VRFID].len, 4));
-      label = ntohl(tmp32);
+      id = ntohl(tmp32);
 
-      if (!memcmp(&entry->key.mpls_vpn_id.n, &label, 4))
+      if (!memcmp(&entry->key.mpls_vpn_id.n, &id, 4))
         return (FALSE | entry->key.mpls_vpn_id.neg);
     }
 
@@ -3501,8 +3501,8 @@ int PT_map_index_fdata_mpls_pw_id_handler(struct id_entry *e, pm_hash_serial_t *
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   SFSample *sample = (SFSample *) pptrs->f_data;
-
   u_int32_t tmp32 = 0;
+
   if (config.acct_type == ACCT_NF) {
     switch (hdr->version) {
     case 10:
@@ -3527,17 +3527,20 @@ int PT_map_index_fdata_mpls_vpn_id_handler(struct id_entry *e, pm_hash_serial_t 
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int32_t tmp32 = 0;
 
   if (config.acct_type == ACCT_NF) {
     switch(hdr->version) {
     case 10:
     case 9:
       if (tpl->tpl[NF9_INGRESS_VRFID].len) {
-        memcpy(&e->key.mpls_vpn_id.n, pptrs->f_data+tpl->tpl[NF9_INGRESS_VRFID].off, MIN(tpl->tpl[NF9_INGRESS_VRFID].len, 4));
+        memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_INGRESS_VRFID].off, MIN(tpl->tpl[NF9_INGRESS_VRFID].len, 4));
+	e->key.mpls_vpn_id.n = ntohl(tmp32);
       }
 
-      if (tpl->tpl[NF9_EGRESS_VRFID].len) {
-        memcpy(&e->key.mpls_vpn_id.n, pptrs->f_data+tpl->tpl[NF9_EGRESS_VRFID].off, MIN(tpl->tpl[NF9_EGRESS_VRFID].len, 4));
+      if (tpl->tpl[NF9_EGRESS_VRFID].len && !e->key.mpls_vpn_id.n) {
+        memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_EGRESS_VRFID].off, MIN(tpl->tpl[NF9_EGRESS_VRFID].len, 4));
+	e->key.mpls_vpn_id.n = ntohl(tmp32);
       }
 
       break;

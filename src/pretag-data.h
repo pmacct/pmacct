@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -95,7 +95,7 @@ const struct _map_index_dictionary_line tag_map_index_fdata_dictionary[] = {
   {PRETAG_PEER_SRC_AS, PT_map_index_fdata_peer_src_as_handler},
   {PRETAG_PEER_DST_AS, PT_map_index_fdata_peer_dst_as_handler},
   {PRETAG_MPLS_LABEL_BOTTOM, PT_map_index_fdata_mpls_label_bottom_handler},
-  {PRETAG_MPLS_VPN_ID, PT_map_index_entries_mpls_vpn_id_handler},
+  {PRETAG_MPLS_VPN_ID, PT_map_index_fdata_mpls_vpn_id_handler},
   {PRETAG_MPLS_VPN_RD, PT_map_index_fdata_mpls_vpn_rd_handler},
   {PRETAG_SRC_MAC, PT_map_index_fdata_src_mac_handler},
   {PRETAG_DST_MAC, PT_map_index_fdata_dst_mac_handler},
