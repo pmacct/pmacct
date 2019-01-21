@@ -15,15 +15,18 @@
 !			nfacctd (NetFlow v9/IPFIX dataLinkFrameSection IE #315)
 !			and sFlow v5 sampled headers section: defines the base
 !			pointer in the packet where to read the primitive value;
-!			intuitively, this is to be used in conjunction with
-!			'len'. The supported syntax is:
-!			"<layer>:[<protocol value>]+[<offset>]". 'layer' keys
-!			are: 'packet', 'mac', 'vlan', 'mpls', 'l3', 'l4' and
-!			'payload'; 'layer' keyword is mandatory. 'protocol
-!			value' is optional key and can be supplied in either
-!			decimal or hex format. 'offset' is optional key and
-!			is expected as a positive decimal number. A maximum
-!			of 8 'packet_ptr' definitions are allowed per entry. 
+!			This is to be used in conjunction with 'len' to define
+!			the portion of the packet to save (up to the maximum
+!			captured length; in pmacctd and uacctd, this can be
+!			adjusted via 'snaplen' config directive). The supported
+!			syntax is: "<layer>:[<protocol value>]+[<offset>]".
+!			Valid 'layer' keys are: 'packet', 'mac', 'vlan', 'mpls',
+!			'l3', 'l4' and 'payload'; 'layer' keyword is mandatory.
+!			'protocol value' is an optional key and can be supplied
+!			in either decimal or hex format. 'offset' is an optional
+!			key and is expected to be a positive decimal number. A
+!			maximum of 8 'packet_ptr' definitions are allowed per
+!			entry. 
 ! 'field_type'		MATCH: Applies to NetFlow v9/IPFIX collection and export:
 !			defines which field type (Information Element ID) to
 !			select. Optionally, a PEN value can be supplied as well
