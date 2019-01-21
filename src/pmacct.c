@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -28,6 +28,7 @@
 #include "imt_plugin.h"
 #include "bgp/bgp_packet.h"
 #include "bgp/bgp.h"
+#include "rpki/rpki.h"
 
 /* prototypes */
 int Recv(int, unsigned char **);
@@ -59,6 +60,8 @@ void pmc_vlen_prims_get(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char **);
 void pmc_printf_csv_label(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char *, char *);
 void pmc_lower_string(char *);
 char *pmc_ndpi_get_proto_name(u_int16_t);
+const char *pmc_rpki_roa_print(u_int8_t);
+u_int8_t pmc_rpki_str2roa(char *);
 
 /* vars */
 struct imt_custom_primitives pmc_custom_primitives_registry;
@@ -180,6 +183,8 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     printf("SRC_PREF ");
     printf("MED     ");
     printf("SRC_MED ");
+    printf("DST_ROA ");
+    printf("SRC_ROA ");
     printf("SYM  ");
     printf("PEER_SRC_AS ");
     printf("PEER_DST_AS ");
@@ -285,6 +290,8 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count & COUNT_SRC_LOCAL_PREF) printf("SRC_PREF ");
     if (what_to_count & COUNT_MED) printf("MED     ");
     if (what_to_count & COUNT_SRC_MED) printf("SRC_MED ");
+    if (what_to_count_2 & COUNT_DST_ROA) printf("DST_ROA ");
+    if (what_to_count_2 & COUNT_SRC_ROA) printf("SRC_ROA ");
     if (what_to_count & COUNT_PEER_SRC_AS) printf("PEER_SRC_AS ");
     if (what_to_count & COUNT_PEER_DST_AS) printf("PEER_DST_AS ");
     if (what_to_count & COUNT_PEER_SRC_IP) printf("PEER_SRC_IP                                    ");
@@ -409,6 +416,8 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     printf("%sSRC_PREF", write_sep(sep, &count));
     printf("%sMED", write_sep(sep, &count));
     printf("%sSRC_MED", write_sep(sep, &count));
+    printf("%sDST_ROA", write_sep(sep, &count));
+    printf("%sSRC_ROA", write_sep(sep, &count));
     printf("%sSYM", write_sep(sep, &count));
     printf("%sPEER_SRC_AS", write_sep(sep, &count));
     printf("%sPEER_DST_AS", write_sep(sep, &count));
@@ -962,6 +971,14 @@ int main(int argc,char **argv)
         else if (!strcmp(count_token[count_index], "src_med")) {
           count_token_int[count_index] = COUNT_INT_SRC_MED;
           what_to_count |= COUNT_SRC_MED;
+        }
+        else if (!strcmp(count_token[count_index], "dst_roa")) {
+          count_token_int[count_index] = COUNT_INT_DST_ROA;
+          what_to_count_2 |= COUNT_DST_ROA;
+        }
+        else if (!strcmp(count_token[count_index], "src_roa")) {
+          count_token_int[count_index] = COUNT_INT_SRC_ROA;
+          what_to_count_2 |= COUNT_SRC_ROA;
         }
         else if (!strcmp(count_token[count_index], "peer_src_as")) {
           count_token_int[count_index] = COUNT_INT_PEER_SRC_AS;
@@ -1813,6 +1830,12 @@ int main(int argc,char **argv)
 
           request.pbgp.src_med = strtoul(match_string_token, &endptr, 10);
         }
+        else if (!strcmp(count_token[match_string_index], "dst_roa")) {
+          request.pbgp.dst_roa = pmc_rpki_str2roa(match_string_token);
+	}
+        else if (!strcmp(count_token[match_string_index], "src_roa")) {
+          request.pbgp.src_roa = pmc_rpki_str2roa(match_string_token);
+        }
         else if (!strcmp(count_token[match_string_index], "peer_src_as")) {
           char *endptr;
 
@@ -2357,6 +2380,16 @@ int main(int argc,char **argv)
         if (!have_wtc || (what_to_count & COUNT_SRC_MED)) {
           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-6u  ", pbgp->src_med);
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), pbgp->src_med);
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_DST_ROA)) {
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-5s  ", pmc_rpki_roa_print(pbgp->dst_roa));
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), pbgp->dst_roa);
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_SRC_ROA)) {
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-5s  ", pmc_rpki_roa_print(pbgp->src_roa));
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), pbgp->src_roa);
         }
 
         if (!have_wtc || (what_to_count & COUNT_PEER_SRC_AS)) {
@@ -3331,6 +3364,8 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 
   if (wtc & COUNT_MED) json_object_set_new_nocheck(obj, "med", json_integer((json_int_t)pbgp->med));
 
+  if (wtc_2 & COUNT_DST_ROA) json_object_set_new_nocheck(obj, "roa_dst", json_string(pmc_rpki_roa_print(pbgp->dst_roa)));
+
   if (wtc & COUNT_PEER_SRC_AS) json_object_set_new_nocheck(obj, "peer_as_src", json_integer((json_int_t)pbgp->peer_src_as));
 
   if (wtc & COUNT_PEER_DST_AS) json_object_set_new_nocheck(obj, "peer_as_dst", json_integer((json_int_t)pbgp->peer_dst_as));
@@ -3399,6 +3434,8 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   if (wtc & COUNT_SRC_LOCAL_PREF) json_object_set_new_nocheck(obj, "src_local_pref", json_integer((json_int_t)pbgp->src_local_pref));
 
   if (wtc & COUNT_SRC_MED) json_object_set_new_nocheck(obj, "src_med", json_integer((json_int_t)pbgp->src_med));
+
+  if (wtc_2 & COUNT_SRC_ROA) json_object_set_new_nocheck(obj, "roa_src", json_string(pmc_rpki_roa_print(pbgp->src_roa)));
 
   if (wtc & COUNT_IN_IFACE) json_object_set_new_nocheck(obj, "iface_in", json_integer((json_int_t)pbase->ifindex_in));
 
@@ -3860,4 +3897,19 @@ char *pmc_ndpi_get_proto_name(u_int16_t proto_id)
 {
   if (!proto_id || proto_id > ct_idx || !class_table[proto_id].id) return class_table[0].protocol;
   else return class_table[proto_id].protocol;
+}
+
+const char *pmc_rpki_roa_print(u_int8_t roa)
+{
+  if (roa <= ROA_STATUS_MAX) return rpki_roa[roa];
+  else return rpki_roa[ROA_STATUS_UNKNOWN];
+}
+
+u_int8_t pmc_rpki_str2roa(char *roa_str)
+{
+  if (!strcmp(roa_str, "u")) return ROA_STATUS_UNKNOWN;
+  else if (!strcmp(roa_str, "i")) return ROA_STATUS_INVALID;
+  else if (!strcmp(roa_str, "v")) return ROA_STATUS_VALID;
+
+  return ROA_STATUS_UNKNOWN;
 }

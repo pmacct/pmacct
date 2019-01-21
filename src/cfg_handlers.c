@@ -313,6 +313,8 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "tunnel_dst_host")) cfg_set_aggregate(filename, value, COUNT_INT_TUNNEL_DST_HOST, count_token);
     else if (!strcmp(count_token, "tunnel_proto")) cfg_set_aggregate(filename, value, COUNT_INT_TUNNEL_IP_PROTO, count_token);
     else if (!strcmp(count_token, "tunnel_tos")) cfg_set_aggregate(filename, value, COUNT_INT_TUNNEL_IP_TOS, count_token);
+    else if (!strcmp(count_token, "src_roa")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_ROA, count_token);
+    else if (!strcmp(count_token, "dst_roa")) cfg_set_aggregate(filename, value, COUNT_INT_DST_ROA, count_token);
     else {
       cpptrs.primitive[cpptrs.num].name = count_token;
       cpptrs.num++;

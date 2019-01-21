@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -56,6 +56,7 @@ EXT void compose_json_lrg_comm(json_t *, struct chained_cache *);
 EXT void compose_json_as_path(json_t *, struct chained_cache *);
 EXT void compose_json_local_pref(json_t *, struct chained_cache *);
 EXT void compose_json_med(json_t *, struct chained_cache *);
+EXT void compose_json_dst_roa(json_t *, struct chained_cache *);
 EXT void compose_json_peer_src_as(json_t *, struct chained_cache *);
 EXT void compose_json_peer_dst_as(json_t *, struct chained_cache *);
 EXT void compose_json_peer_src_ip(json_t *, struct chained_cache *);
@@ -66,6 +67,7 @@ EXT void compose_json_src_lrg_comm(json_t *, struct chained_cache *);
 EXT void compose_json_src_as_path(json_t *, struct chained_cache *);
 EXT void compose_json_src_local_pref(json_t *, struct chained_cache *);
 EXT void compose_json_src_med(json_t *, struct chained_cache *);
+EXT void compose_json_src_roa(json_t *, struct chained_cache *);
 EXT void compose_json_in_iface(json_t *, struct chained_cache *);
 EXT void compose_json_out_iface(json_t *, struct chained_cache *);
 EXT void compose_json_mpls_vpn_rd(json_t *, struct chained_cache *);

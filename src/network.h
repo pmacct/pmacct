@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -540,6 +540,8 @@ struct pkt_bgp_primitives {
   u_int32_t src_med;
   rd_t mpls_vpn_rd;
   u_int32_t mpls_pw_id;
+  u_int8_t src_roa;
+  u_int8_t dst_roa;
 };
 
 struct pkt_legacy_bgp_primitives {

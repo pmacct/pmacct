@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -30,6 +30,7 @@
 #include "ip_flow.h"
 #include "classifier.h"
 #include "bgp/bgp.h"
+#include "rpki/rpki.h"
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #endif
@@ -108,6 +109,9 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc & COUNT_MED)
     avro_schema_record_field_append(schema, "med", avro_schema_long());
 
+  if (wtc_2 & COUNT_DST_ROA)
+    avro_schema_record_field_append(schema, "roa_dst", avro_schema_string());
+
   if (wtc & COUNT_PEER_SRC_AS)
     avro_schema_record_field_append(schema, "peer_as_src", avro_schema_long());
 
@@ -137,6 +141,9 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
 
   if (wtc & COUNT_SRC_MED)
     avro_schema_record_field_append(schema, "src_med", avro_schema_long());
+
+  if (wtc_2 & COUNT_SRC_ROA)
+    avro_schema_record_field_append(schema, "roa_src", avro_schema_string());
 
   if (wtc & COUNT_IN_IFACE)
     avro_schema_record_field_append(schema, "iface_in", avro_schema_long());
@@ -461,6 +468,11 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     check_i(avro_value_set_long(&field, pbgp->med));
   }
 
+  if (wtc_2 & COUNT_DST_ROA) {
+    check_i(avro_value_get_by_name(&value, "roa_dst", &field, NULL));
+    check_i(avro_value_set_string(&field, rpki_roa_print(pbgp->dst_roa)));
+  }
+
   if (wtc & COUNT_PEER_SRC_AS) {
     check_i(avro_value_get_by_name(&value, "peer_as_src", &field, NULL));
     check_i(avro_value_set_long(&field, pbgp->peer_src_as));
@@ -551,6 +563,11 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
   if (wtc & COUNT_SRC_MED) {
     check_i(avro_value_get_by_name(&value, "src_med", &field, NULL));
     check_i(avro_value_set_long(&field, pbgp->src_med));
+  }
+
+  if (wtc_2 & COUNT_SRC_ROA) {
+    check_i(avro_value_get_by_name(&value, "roa_src", &field, NULL));
+    check_i(avro_value_set_string(&field, rpki_roa_print(pbgp->src_roa)));
   }
 
   if (wtc & COUNT_IN_IFACE) {

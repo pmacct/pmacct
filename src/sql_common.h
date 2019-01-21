@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -216,12 +216,14 @@ EXT void count_lrg_comm_handler(const struct db_cache *, struct insert_data *, i
 EXT void count_as_path_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_local_pref_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_med_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_dst_roa_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_src_std_comm_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_src_ext_comm_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_src_lrg_comm_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_src_as_path_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_src_local_pref_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_src_med_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_src_roa_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_mpls_vpn_rd_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_mpls_pw_id_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_peer_src_as_handler(const struct db_cache *, struct insert_data *, int, char **, char **);

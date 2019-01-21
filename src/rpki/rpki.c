@@ -24,6 +24,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "pmacct-data.h"
 #include "bgp/bgp.h"
 #include "rpki.h"
 #include "thread_pool.h"
@@ -290,6 +291,21 @@ int rpki_prefix_lookup_node_match_cmp(struct bgp_info *info, struct node_match_c
 
   if (evaluate_last_asn(info->attr->aspath) == evaluate_last_asn(nmct2->aspath)) return FALSE;
   else return TRUE;
+}
+
+const char *rpki_roa_print(u_int8_t roa)
+{
+  if (roa <= ROA_STATUS_MAX) return rpki_roa[roa];
+  else return rpki_roa[ROA_STATUS_UNKNOWN];
+}
+
+u_int8_t rpki_str2roa(char *roa_str)
+{
+  if (!strcmp(roa_str, "u")) return ROA_STATUS_UNKNOWN;
+  else if (!strcmp(roa_str, "i")) return ROA_STATUS_INVALID;
+  else if (!strcmp(roa_str, "v")) return ROA_STATUS_VALID;
+
+  return ROA_STATUS_UNKNOWN;
 }
 
 void rpki_link_misc_structs(struct bgp_misc_structs *r_data)

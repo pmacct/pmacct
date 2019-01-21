@@ -1154,6 +1154,9 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count & COUNT_SRC_LOCAL_PREF) what_to_count |= COUNT_SRC_LOCAL_PREF;
     if (config.what_to_count & COUNT_SRC_MED) what_to_count |= COUNT_SRC_MED;
 
+    if (config.what_to_count_2 & COUNT_SRC_ROA) what_to_count_2 |= COUNT_SRC_ROA;
+    if (config.what_to_count_2 & COUNT_DST_ROA) what_to_count_2 |= COUNT_DST_ROA;
+
     if (config.sql_table_version < 6) {
       if (config.what_to_count & COUNT_SRC_AS) what_to_count |= COUNT_SRC_AS;
       else if (config.what_to_count & COUNT_SUM_AS) what_to_count |= COUNT_SUM_AS; 
@@ -1812,6 +1815,34 @@ int sql_evaluate_primitives(int primitive)
     strncat(where[primitive].string, "med_src=%u", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_INT_SRC_MED;
     values[primitive].handler = where[primitive].handler = count_src_med_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_SRC_ROA) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "roa_src", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%s", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "roa_src=%s", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_SRC_ROA;
+    values[primitive].handler = where[primitive].handler = count_src_roa_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_DST_ROA) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "roa_dst", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%s", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "roa_dst=%s", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_DST_ROA;
+    values[primitive].handler = where[primitive].handler = count_dst_roa_handler;
     primitive++;
   }
 

@@ -323,6 +323,7 @@ struct configuration {
   int nfacctd_bgp_src_as_path_type;
   int nfacctd_bgp_src_local_pref_type;
   int nfacctd_bgp_src_med_type;
+  int nfacctd_bgp_src_roa_type;
   int nfacctd_bgp_peer_as_skip_subas;
   int nfacctd_bgp_batch;
   int nfacctd_bgp_batch_interval;

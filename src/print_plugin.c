@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -34,6 +34,7 @@
 #include "classifier.h"
 #include "crc32.h"
 #include "bgp/bgp.h"
+#include "rpki/rpki.h"
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #endif
@@ -575,6 +576,8 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (config.what_to_count & COUNT_SRC_LOCAL_PREF) fprintf(f, "%-7u  ", pbgp->src_local_pref);
         if (config.what_to_count & COUNT_MED) fprintf(f, "%-6u  ", pbgp->med);
         if (config.what_to_count & COUNT_SRC_MED) fprintf(f, "%-6u  ", pbgp->src_med);
+        if (config.what_to_count_2 & COUNT_DST_ROA) fprintf(f, "%-6s  ", rpki_roa_print(pbgp->dst_roa));
+        if (config.what_to_count_2 & COUNT_SRC_ROA) fprintf(f, "%-6s  ", rpki_roa_print(pbgp->src_roa));
 
         if (config.what_to_count & COUNT_PEER_SRC_AS) fprintf(f, "%-10u  ", pbgp->peer_src_as);
         if (config.what_to_count & COUNT_PEER_DST_AS) fprintf(f, "%-10u  ", pbgp->peer_dst_as);
@@ -961,8 +964,12 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
         if (config.what_to_count & COUNT_LOCAL_PREF) fprintf(f, "%s%u", write_sep(sep, &count), pbgp->local_pref);
         if (config.what_to_count & COUNT_SRC_LOCAL_PREF) fprintf(f, "%s%u", write_sep(sep, &count), pbgp->src_local_pref);
+
         if (config.what_to_count & COUNT_MED) fprintf(f, "%s%u", write_sep(sep, &count), pbgp->med);
         if (config.what_to_count & COUNT_SRC_MED) fprintf(f, "%s%u", write_sep(sep, &count), pbgp->src_med);
+
+        if (config.what_to_count_2 & COUNT_DST_ROA) fprintf(f, "%s%s", write_sep(sep, &count), rpki_roa_print(pbgp->dst_roa));
+        if (config.what_to_count_2 & COUNT_SRC_ROA) fprintf(f, "%s%s", write_sep(sep, &count), rpki_roa_print(pbgp->src_roa));
 
         if (config.what_to_count & COUNT_PEER_SRC_AS) fprintf(f, "%s%u", write_sep(sep, &count), pbgp->peer_src_as);
         if (config.what_to_count & COUNT_PEER_DST_AS) fprintf(f, "%s%u", write_sep(sep, &count), pbgp->peer_dst_as);
@@ -1279,6 +1286,8 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count & COUNT_SRC_LOCAL_PREF) fprintf(f, "SRC_PREF ");
   if (config.what_to_count & COUNT_MED) fprintf(f, "MED     ");
   if (config.what_to_count & COUNT_SRC_MED) fprintf(f, "SRC_MED ");
+  if (config.what_to_count_2 & COUNT_DST_ROA) fprintf(f, "DST_ROA ");
+  if (config.what_to_count_2 & COUNT_SRC_ROA) fprintf(f, "SRC_ROA ");
   if (config.what_to_count & COUNT_PEER_SRC_AS) fprintf(f, "PEER_SRC_AS ");
   if (config.what_to_count & COUNT_PEER_DST_AS) fprintf(f, "PEER_DST_AS ");
   if (config.what_to_count & COUNT_PEER_SRC_IP) fprintf(f, "PEER_SRC_IP                                    ");
@@ -1397,6 +1406,8 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count & COUNT_SRC_LOCAL_PREF) fprintf(f, "%sSRC_PREF", write_sep(sep, &count));
   if (config.what_to_count & COUNT_MED) fprintf(f, "%sMED", write_sep(sep, &count));
   if (config.what_to_count & COUNT_SRC_MED) fprintf(f, "%sSRC_MED", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_DST_ROA) fprintf(f, "%sDST_ROA", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_SRC_ROA) fprintf(f, "%sSRC_ROA", write_sep(sep, &count));
   if (config.what_to_count & COUNT_PEER_SRC_AS) fprintf(f, "%sPEER_SRC_AS", write_sep(sep, &count));
   if (config.what_to_count & COUNT_PEER_DST_AS) fprintf(f, "%sPEER_DST_AS", write_sep(sep, &count));
   if (config.what_to_count & COUNT_PEER_SRC_IP) fprintf(f, "%sPEER_SRC_IP", write_sep(sep, &count));

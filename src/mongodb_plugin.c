@@ -32,6 +32,7 @@
 #include "classifier.h"
 #include "crc32.h"
 #include "bgp/bgp.h"
+#include "rpki/rpki.h"
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #endif
@@ -549,6 +550,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
   
       if (config.what_to_count & COUNT_LOCAL_PREF) bson_append_int(bson_elem, "local_pref", pbgp->local_pref);
       if (config.what_to_count & COUNT_MED) bson_append_int(bson_elem, "med", pbgp->med);
+      if (config.what_to_count_2 & COUNT_DST_ROA) bson_append_string(bson_elem, "roa_dst", rpki_roa_print(pbgp->dst_roa));
+
       if (config.what_to_count & COUNT_PEER_SRC_AS) bson_append_int(bson_elem, "peer_as_src", pbgp->peer_src_as);
       if (config.what_to_count & COUNT_PEER_DST_AS) bson_append_int(bson_elem, "peer_as_dst", pbgp->peer_dst_as);
   
@@ -615,6 +618,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
 
       if (config.what_to_count & COUNT_SRC_LOCAL_PREF) bson_append_int(bson_elem, "src_local_pref", pbgp->src_local_pref);
       if (config.what_to_count & COUNT_SRC_MED) bson_append_int(bson_elem, "src_med", pbgp->src_med);
+      if (config.what_to_count_2 & COUNT_SRC_ROA) bson_append_string(bson_elem, "roa_src", rpki_roa_print(pbgp->src_roa));
   
       if (config.what_to_count & COUNT_IN_IFACE) bson_append_int(bson_elem, "iface_in", data->ifindex_in);
       if (config.what_to_count & COUNT_OUT_IFACE) bson_append_int(bson_elem, "iface_out", data->ifindex_out);

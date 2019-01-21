@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -30,6 +30,7 @@
 #include "ip_flow.h"
 #include "classifier.h"
 #include "bgp/bgp.h"
+#include "rpki/rpki.h"
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #endif
@@ -141,6 +142,11 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
     idx++;
   }
 
+  if (wtc_2 & COUNT_DST_ROA) {
+    cjhandler[idx] = compose_json_dst_roa;
+    idx++;
+  }
+
   if (wtc & COUNT_PEER_SRC_AS) {
     cjhandler[idx] = compose_json_peer_src_as;
     idx++;
@@ -188,6 +194,11 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
 
   if (wtc & COUNT_SRC_MED) {
     cjhandler[idx] = compose_json_src_med;
+    idx++;
+  }
+
+  if (wtc_2 & COUNT_SRC_ROA) {
+    cjhandler[idx] = compose_json_src_roa;
     idx++;
   }
 
@@ -605,6 +616,11 @@ void compose_json_med(json_t *obj, struct chained_cache *cc)
   json_object_set_new_nocheck(obj, "med", json_integer((json_int_t)cc->pbgp->med));
 }
 
+void compose_json_dst_roa(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "roa_dst", json_string(rpki_roa_print(cc->pbgp->dst_roa)));
+}
+
 void compose_json_peer_src_as(json_t *obj, struct chained_cache *cc)
 {
   json_object_set_new_nocheck(obj, "peer_as_src", json_integer((json_int_t)cc->pbgp->peer_src_as));
@@ -707,6 +723,11 @@ void compose_json_src_local_pref(json_t *obj, struct chained_cache *cc)
 void compose_json_src_med(json_t *obj, struct chained_cache *cc)
 {
   json_object_set_new_nocheck(obj, "src_med", json_integer((json_int_t)cc->pbgp->src_med));
+}
+
+void compose_json_src_roa(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "roa_src", json_string(rpki_roa_print(cc->pbgp->src_roa)));
 }
 
 void compose_json_in_iface(json_t *obj, struct chained_cache *cc)

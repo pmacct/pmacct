@@ -179,7 +179,12 @@ void skinny_bgp_daemon_online()
     bgp_xcs_map.num = 0;
   }
 
-  if (config.rpki_roas_file) rpki_daemon_wrapper();
+  if (config.rpki_roas_file) {
+    rpki_daemon_wrapper();
+
+    /* Let's give the RPKI thread some advantage to create its structures */
+    sleep(5);
+  }
 
   if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key || config.nfacctd_bgp_msglog_kafka_topic) {
     if (config.nfacctd_bgp_msglog_file) bgp_misc_db->msglog_backend_methods++;

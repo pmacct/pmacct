@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -386,7 +386,7 @@ void evaluate_packet_handlers()
                                             COUNT_AS_PATH|COUNT_PEER_DST_AS|COUNT_SRC_AS_PATH|COUNT_SRC_STD_COMM|
                                             COUNT_SRC_EXT_COMM|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|COUNT_SRC_AS|
 					    COUNT_DST_AS|COUNT_PEER_SRC_AS) ||
-	channels_list[index].aggregation_2 & (COUNT_LRG_COMM|COUNT_SRC_LRG_COMM)) &&
+	channels_list[index].aggregation_2 & (COUNT_LRG_COMM|COUNT_SRC_LRG_COMM|COUNT_SRC_ROA|COUNT_DST_ROA)) &&
         channels_list[index].plugin->cfg.nfacctd_as & NF_AS_BGP) {
       if (config.acct_type == ACCT_PM && (config.nfacctd_bgp || config.nfacctd_bmp)) {
         if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) {
@@ -3832,6 +3832,9 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
       if (chptr->aggregation & COUNT_SRC_MED && config.nfacctd_bgp_src_med_type & BGP_SRC_PRIMITIVES_BGP)
 	pbgp->src_med = info->attr->med;
 
+      if (chptr->aggregation_2 & COUNT_SRC_ROA && config.nfacctd_bgp_src_roa_type & BGP_SRC_PRIMITIVES_BGP)
+	pbgp->src_roa = info->attr->roa;
+
       if (chptr->aggregation & COUNT_PEER_SRC_AS && config.nfacctd_bgp_peer_as_src_type & BGP_SRC_PRIMITIVES_BGP && info->attr->aspath && info->attr->aspath->str) {
         pbgp->peer_src_as = evaluate_first_asn(info->attr->aspath->str);
 
@@ -4103,6 +4106,8 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
       if (chptr->aggregation & COUNT_LOCAL_PREF) pbgp->local_pref = info->attr->local_pref;
 
       if (chptr->aggregation & COUNT_MED) pbgp->med = info->attr->med;
+
+      if (chptr->aggregation_2 & COUNT_DST_ROA) pbgp->dst_roa = info->attr->roa;
 
       if (chptr->aggregation & COUNT_PEER_DST_AS && info->attr->aspath && info->attr->aspath->str) {
         pbgp->peer_dst_as = evaluate_first_asn(info->attr->aspath->str);

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -37,6 +37,7 @@
 #include "ip_flow.h"
 #include "classifier.h"
 #include "bgp/bgp.h"
+#include "rpki/rpki.h"
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #endif
@@ -729,6 +730,22 @@ void count_src_med_handler(const struct db_cache *cache_elem, struct insert_data
 {
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pbgp->src_med);
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pbgp->src_med);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_dst_roa_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, rpki_roa_print(cache_elem->pbgp->dst_roa));
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, rpki_roa_print(cache_elem->pbgp->dst_roa));
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_src_roa_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, rpki_roa_print(cache_elem->pbgp->src_roa));
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, rpki_roa_print(cache_elem->pbgp->src_roa));
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
