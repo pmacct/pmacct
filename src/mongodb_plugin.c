@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -613,8 +613,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
         MongoDB_append_string(bson_elem, "src_as_path", pvlen, COUNT_INT_SRC_AS_PATH);
       }
 
-      if (config.what_to_count & COUNT_LOCAL_PREF) bson_append_int(bson_elem, "src_local_pref", pbgp->src_local_pref);
-      if (config.what_to_count & COUNT_MED) bson_append_int(bson_elem, "src_med", pbgp->src_med);
+      if (config.what_to_count & COUNT_SRC_LOCAL_PREF) bson_append_int(bson_elem, "src_local_pref", pbgp->src_local_pref);
+      if (config.what_to_count & COUNT_SRC_MED) bson_append_int(bson_elem, "src_med", pbgp->src_med);
   
       if (config.what_to_count & COUNT_IN_IFACE) bson_append_int(bson_elem, "iface_in", data->ifindex_in);
       if (config.what_to_count & COUNT_OUT_IFACE) bson_append_int(bson_elem, "iface_out", data->ifindex_out);
