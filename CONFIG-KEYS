@@ -48,14 +48,15 @@ VALUES:		[ src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_
 		 sum_mac, sum_host, sum_net, sum_as, sum_port, flows, tag, tag2, label,
 		 class, tcpflags, in_iface, out_iface, std_comm, ext_comm, lrg_comm,
 		 as_path, peer_src_ip, peer_dst_ip, peer_src_as, peer_dst_as, local_pref,
-		 med, src_std_comm, src_ext_comm, src_lrg_comm, src_as_path, src_local_pref,
-		 src_med, mpls_vpn_rd, mpls_pw_id, mpls_label_top, mpls_label_bottom,
-		 mpls_stack_depth, sampling_rate, sampling_direction, src_host_country,
-		 dst_host_country, src_host_pocode, dst_host_pocode, src_host_coords,
-		 dst_host_coords, nat_event, fw_event, post_nat_src_host, post_nat_dst_host,
-		 post_nat_src_port, post_nat_dst_port, tunnel_src_host, tunnel_dst_host,
-		 tunnel_proto, tunnel_tos, timestamp_start, timestamp_end, timestamp_arrival,
-		 export_proto_seqno, export_proto_version, export_proto_sysid ]
+		 med, dst_roa, src_std_comm, src_ext_comm, src_lrg_comm, src_as_path,
+		 src_local_pref, src_med, src_roa, mpls_vpn_rd, mpls_pw_id, mpls_label_top,
+		 mpls_label_bottom, mpls_stack_depth, sampling_rate, sampling_direction,
+		 src_host_country, dst_host_country, src_host_pocode, dst_host_pocode,
+		 src_host_coords, dst_host_coords, nat_event, fw_event, post_nat_src_host,
+		 post_nat_dst_host, post_nat_src_port, post_nat_dst_port, tunnel_src_host,
+		 tunnel_dst_host, tunnel_proto, tunnel_tos, timestamp_start, timestamp_end,
+		 timestamp_arrival, export_proto_seqno, export_proto_version,
+		 export_proto_sysid ]
 FOREWORDS:	Individual IP packets are uniquely identified by their header field values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
 		they have at least enough information to discriminate where packets are coming
@@ -2361,6 +2362,13 @@ DESC:           Defines the method to use to map incoming traffic to a MED value
 		not the case, affecting their accuracy.
 DEFAULT:	none
 
+KEY:		bgp_src_roa_type [GLOBAL]
+VALUES:		[ bgp ]
+DESC:           Defines the method to use to map incoming traffic to a ROA status. Only native BGP RIB
+		lookups are currently supported. BGP lookups assume traffic is symmetric, which is often
+		not the case, affecting their accuracy.
+DEFAULT:	none
+
 KEY:            bgp_src_med_map [GLOBAL, MAP]
 DESC:           Full pathname to a file containing source MED (Multi Exit Discriminator) mappings. The
 		MED value can be mapped to one or a combination of: ifIndex, source MAC address and BGP
@@ -2610,7 +2618,8 @@ DEFAULT:	none
 
 KEY:		rpki_roas_file [GLOBAL]
 DESC:		Full pathname to a file containing RPKI ROA data. Data encoding is JSON and format
-		is according to RIPE specifications. Example:
+		is according to RIPE Validator format. ROA data can be obtained for example from
+		https://rpki.gin.ntt.net/api/export.json . An example of the format:
 
 		{
 		  "roas" : [ {

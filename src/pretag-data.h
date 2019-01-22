@@ -42,6 +42,8 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"peer_dst_as", PT_map_peer_dst_as_handler},
   {"src_local_pref", PT_map_src_local_pref_handler},
   {"local_pref", PT_map_local_pref_handler},
+  {"src_roa", PT_map_src_roa_handler},
+  {"dst_roa", PT_map_dst_roa_handler},
   {"src_comms", PT_map_src_comms_handler},
   {"comms", PT_map_comms_handler},
   {"mpls_vpn_rd", PT_map_mpls_vpn_rd_handler},

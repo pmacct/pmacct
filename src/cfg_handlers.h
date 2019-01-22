@@ -335,6 +335,7 @@ EXT int cfg_key_nfacctd_bgp_src_lrg_comm_type(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_src_as_path_type(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_src_local_pref_type(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_src_med_type(char *, char *, char *);
+EXT int cfg_key_nfacctd_bgp_src_roa_type(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_peer_as_skip_subas(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_peer_src_as_map(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_src_local_pref_map(char *, char *, char *);

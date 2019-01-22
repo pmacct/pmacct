@@ -49,6 +49,8 @@ EXT int PT_map_peer_src_as_handler(char *, struct id_entry *, char *, struct plu
 EXT int PT_map_peer_dst_as_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_src_local_pref_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_local_pref_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int PT_map_src_roa_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+EXT int PT_map_dst_roa_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_src_comms_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_comms_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 EXT int PT_map_mpls_vpn_rd_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
@@ -143,6 +145,8 @@ EXT int pretag_peer_src_as_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_peer_dst_as_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_src_local_pref_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_local_pref_handler(struct packet_ptrs *, void *, void *);
+EXT int pretag_src_roa_handler(struct packet_ptrs *, void *, void *);
+EXT int pretag_dst_roa_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_src_comms_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_comms_handler(struct packet_ptrs *, void *, void *);
 EXT int pretag_sample_type_handler(struct packet_ptrs *, void *, void *);

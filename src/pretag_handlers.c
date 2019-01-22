@@ -31,6 +31,7 @@
 #include "pretag_handlers.h"
 #include "net_aggr.h"
 #include "bgp/bgp.h"
+#include "rpki/rpki.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "pkt_handlers.h"
@@ -892,6 +893,56 @@ int PT_map_local_pref_handler(char *filename, struct id_entry *e, char *value, s
   }
 
   Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'local_pref' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified.\n", config.name, config.type, filename);
+
+  return TRUE;
+}
+
+int PT_map_src_roa_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0;
+
+  e->key.src_roa.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+  e->key.src_roa.n = rpki_str2roa(value);
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_SRC_ROA) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'src_roa' clauses part of the same statement.\n", config.name, config.type, filename);
+      return TRUE;
+    }
+  }
+
+  if (config.nfacctd_as & NF_AS_BGP) {
+    e->func[x] = pretag_src_roa_handler;
+    e->func_type[x] = PRETAG_SRC_ROA;
+    return FALSE;
+  }
+
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'src_roa' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified.\n", config.name, config.type, filename);
+
+  return TRUE;
+}
+
+int PT_map_dst_roa_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0;
+
+  e->key.dst_roa.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+  e->key.dst_roa.n = rpki_str2roa(value);
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_DST_ROA) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'dst_roa' clauses part of the same statement.\n", config.name, config.type, filename);
+      return TRUE;
+    }
+  }
+
+  if (config.nfacctd_as & NF_AS_BGP) {
+    e->func[x] = pretag_dst_roa_handler;
+    e->func_type[x] = PRETAG_DST_ROA;
+    return FALSE;
+  }
+
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'dst_roa' requires '[nf|sf]acctd_as_new: [ bgp | longest ]' to be specified.\n", config.name, config.type, filename);
 
   return TRUE;
 }
@@ -1781,6 +1832,44 @@ int pretag_local_pref_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   if (entry->key.local_pref.n == local_pref) return (FALSE | entry->key.local_pref.neg);
   else return (TRUE ^ entry->key.local_pref.neg);
+}
+
+int pretag_src_roa_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
+  struct bgp_info *info;
+  u_int8_t roa = ROA_STATUS_UNKNOWN;
+
+  if (config.nfacctd_bgp_src_roa_type & BGP_SRC_PRIMITIVES_BGP) {
+    if (src_ret) {
+      info = (struct bgp_info *) pptrs->bgp_src_info;
+      if (info && info->attr) {
+	roa = info->attr->roa;
+      }
+    }
+  }
+
+  if (entry->key.src_roa.n == roa) return (FALSE | entry->key.src_roa.neg);
+  else return (TRUE ^ entry->key.src_roa.neg);
+}
+
+int pretag_dst_roa_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
+  struct bgp_info *info;
+  u_int8_t roa = ROA_STATUS_UNKNOWN;
+
+  if (dst_ret) {
+    info = (struct bgp_info *) pptrs->bgp_dst_info;
+    if (info && info->attr) {
+      roa = info->attr->roa;
+    }
+  }
+
+  if (entry->key.dst_roa.n == roa) return (FALSE | entry->key.dst_roa.neg);
+  else return (TRUE ^ entry->key.dst_roa.neg);
 }
 
 int pretag_src_comms_handler(struct packet_ptrs *pptrs, void *unused, void *e)

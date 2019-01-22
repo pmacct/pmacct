@@ -3450,6 +3450,21 @@ int cfg_key_nfacctd_bgp_src_med_type(char *filename, char *name, char *value_ptr
   return changes;
 }
 
+int cfg_key_nfacctd_bgp_src_roa_type(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value = BGP_SRC_PRIMITIVES_UNK, changes = 0;
+
+  lower_string(value_ptr);
+  if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
+  else Log(LOG_WARNING, "WARN: [%s] Ignoring unknown 'bgp_src_roa_type' value.\n", filename);
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_roa_type = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_src_roa_type'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_peer_as_skip_subas(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

@@ -1733,7 +1733,56 @@ collector (please get in touch if interested). An alternative to the use of
 pmbgpd is NAT/masquerading; in this context, pmbgpd brings the advantage of
 running fully in user-space.
 
-XIVi. BGP daemon implementation concluding notes
+XIVi. Example: adding RPKI/ROA information 
+Resource Public Key Infrastructure (RPKI) is a specialized public key
+infrastructure (PKI) framework designed to secure the Internet routing. RPKI
+uses certificates to allow Local Internet Registries (LIRs), to list the
+Internet number resources they hold. These attestations are called Route
+Origination Authorizations (ROAs). ROA information can be currently imported
+using the rpki_roas_file config directive from a file in the RIPE Validator
+format, ie.:
+
+{
+  "roas" : [ {
+    "asn" : "AS2914",
+    "prefix" : "128.121.0.0/16",
+    "maxLength" : 16,
+    "ta" : "ARIN"
+  }, {
+    "asn" : "AS2914",
+    "prefix" : "128.121.0.0/19",
+    "maxLength" : 24,
+    "ta" : "ARIN"
+  }, {
+    "asn" : "AS2914",
+    "prefix" : "128.121.4.32/29",
+    "maxLength" : 29,
+    "ta" : "ARIN"
+  } ]
+}
+
+RPKI data in such format can be obtained for example at the following URL:
+https://rpki.gin.ntt.net/api/export.json . Once rpki_roas_file is available,
+traffic daemons (ie. nfacctd) and pmbgpd can be configured to correlate
+traffic, BGP and RPKI information. This is an example of how to configure
+nfacctd, the NetFlow/IPFIX collector daemon:
+
+nfacctd_as: longest
+nfacctd_net: longest
+! < .. >
+!
+rpki_roas_file: /path/to/roas.json
+!
+bgp_daemon: true
+bgp_src_roa_type: bgp
+! < .. > 
+!
+plugins: print[foo]
+!
+aggregate[foo]: peer_src_ip, peer_dst_ip, src_host, dst_host, src_roa, dst_roa
+! < .. >
+
+XIVl. BGP daemon implementation concluding notes
 The implementation supports 4-bytes ASN, IPv4, IPv6, VPNv4 and VPNv6 (MP-BGP)
 address families and several IETF drafts and RFCs, ie. ADD-PATH, Shutdown
 Message and Large BGP Communities among the others; IPv4, IPv6 transports for

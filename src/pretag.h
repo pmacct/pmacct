@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -67,6 +67,8 @@
 #define PRETAG_SRC_NET			0x0000000800000000ULL
 #define PRETAG_DST_NET			0x0000001000000000ULL
 #define PRETAG_MPLS_PW_ID		0x0000002000000000ULL
+#define PRETAG_SRC_ROA			0x0000004000000000ULL
+#define PRETAG_DST_ROA			0x0000008000000000ULL
 
 #define PRETAG_MAP_RCODE_ID		0x00000100
 #define PRETAG_MAP_RCODE_ID2		0x00000200
@@ -168,6 +170,8 @@ struct id_entry_key {
   pt_uint32_t peer_dst_as;
   pt_uint32_t src_local_pref;
   pt_uint32_t local_pref;
+  pt_uint8_t src_roa;
+  pt_uint8_t dst_roa;
   pt_uint32_t mpls_label_bottom;
   pt_etheraddr_t src_mac;
   pt_etheraddr_t dst_mac;
