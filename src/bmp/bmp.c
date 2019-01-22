@@ -124,7 +124,7 @@ void skinny_bmp_daemon()
     rpki_daemon_wrapper();
 
     /* Let's give the RPKI thread some advantage to create its structures */
-    sleep(5);
+    sleep(DEFAULT_SLOTH_SLEEP_TIME);
   }
 
   if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key || config.nfacctd_bmp_msglog_kafka_topic) {

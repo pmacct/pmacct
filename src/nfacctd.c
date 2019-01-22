@@ -750,11 +750,13 @@ int main(int argc,char **argv, char **envp)
     nfacctd_isis_wrapper();
 
     /* Let's give the ISIS thread some advantage to create its structures */
-    sleep(5);
+    sleep(DEFAULT_SLOTH_SLEEP_TIME);
   }
 
   /* starting the BGP thread */
   if (config.nfacctd_bgp) {
+    int sleep_time = DEFAULT_SLOTH_SLEEP_TIME;
+
     req.bpf_filter = TRUE;
 
     if (config.nfacctd_bgp_stdcomm_pattern_to_asn && config.nfacctd_bgp_lrgcomm_pattern_to_asn) {
@@ -811,17 +813,21 @@ int main(int argc,char **argv, char **envp)
     nfacctd_bgp_wrapper();
 
     /* Let's give the BGP thread some advantage to create its structures */
-    sleep(5);
+    if (config.rpki_roas_file) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
+    sleep(sleep_time);
   }
 
   /* starting the BMP thread */
   if (config.nfacctd_bmp) {
+    int sleep_time = DEFAULT_SLOTH_SLEEP_TIME;
+
     req.bpf_filter = TRUE;
 
     nfacctd_bmp_wrapper();
 
     /* Let's give the BMP thread some advantage to create its structures */
-    sleep(5);
+    if (config.rpki_roas_file) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
+    sleep(sleep_time);
   }
 
   /* starting the telemetry thread */
@@ -829,7 +835,7 @@ int main(int argc,char **argv, char **envp)
     telemetry_wrapper();
 
     /* Let's give the telemetry thread some advantage to create its structures */
-    sleep(5);
+    sleep(DEFAULT_SLOTH_SLEEP_TIME);
   }
 
 #if defined WITH_GEOIP

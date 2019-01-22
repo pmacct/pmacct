@@ -183,7 +183,7 @@ void skinny_bgp_daemon_online()
     rpki_daemon_wrapper();
 
     /* Let's give the RPKI thread some advantage to create its structures */
-    sleep(5);
+    sleep(DEFAULT_SLOTH_SLEEP_TIME);
   }
 
   if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key || config.nfacctd_bgp_msglog_kafka_topic) {
