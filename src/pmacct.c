@@ -185,7 +185,6 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     printf("SRC_MED ");
     printf("DST_ROA ");
     printf("SRC_ROA ");
-    printf("SYM  ");
     printf("PEER_SRC_AS ");
     printf("PEER_DST_AS ");
     printf("PEER_SRC_IP                                    ");
@@ -418,7 +417,6 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     printf("%sSRC_MED", write_sep(sep, &count));
     printf("%sDST_ROA", write_sep(sep, &count));
     printf("%sSRC_ROA", write_sep(sep, &count));
-    printf("%sSYM", write_sep(sep, &count));
     printf("%sPEER_SRC_AS", write_sep(sep, &count));
     printf("%sPEER_DST_AS", write_sep(sep, &count));
     printf("%sPEER_SRC_IP", write_sep(sep, &count));
