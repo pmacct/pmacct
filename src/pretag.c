@@ -243,7 +243,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   }
                   if (err) {
                     if (err == E_NOTFOUND) Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] unknown key '%s'. Ignored.\n", 
-						config.name, config.type, filename, tot_lines, filename, key);
+						config.name, config.type, filename, tot_lines, key);
                     else Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
                     break;
                   }
