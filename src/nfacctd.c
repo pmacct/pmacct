@@ -2549,7 +2549,7 @@ void notify_malf_packet(short int severity, char *severity_str, char *ostr, stru
 		severity_str, config.name, ostr, ((config.nfacctd_ip) ? config.nfacctd_ip : any),
 		config.nfacctd_port, agent_addr, agent_port);
 
-  Log(severity, errstr);
+  Log(severity, "%s", errstr);
 }
 
 int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
