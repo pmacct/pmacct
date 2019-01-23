@@ -32,6 +32,8 @@ EXT int bgp_afi2family(int);
 EXT int bgp_rd2str(char *, rd_t *);
 EXT int bgp_str2rd(rd_t *, char *);
 EXT int bgp_label2str(char *, u_char *);
+EXT const char *bgp_origin_print(u_int8_t);
+EXT u_int8_t bgp_str2origin(char *);
 EXT void load_comm_patterns(char **, char **, char **, char **, char **);
 EXT void load_peer_src_as_comm_ranges(char *, char *);
 EXT void evaluate_comm_patterns(char *, char *, char **, int);

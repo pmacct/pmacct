@@ -1493,3 +1493,18 @@ int bgp_str2asn(char *asn_str, as_t *asn)
 
   return SUCCESS;
 }
+
+const char *bgp_origin_print(u_int8_t origin)
+{
+  if (origin <= BGP_ORIGIN_MAX) return bgp_origin[origin];
+  else return bgp_origin[BGP_ORIGIN_UNKNOWN];
+}
+
+u_int8_t bgp_str2origin(char *origin_str)
+{
+  if (!strcmp(origin_str, "i")) return BGP_ORIGIN_IGP;
+  else if (!strcmp(origin_str, "e")) return BGP_ORIGIN_EGP;
+  else if (!strcmp(origin_str, "u")) return BGP_ORIGIN_INCOMPLETE;
+
+  return BGP_ORIGIN_UNKNOWN;
+}

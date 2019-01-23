@@ -292,7 +292,8 @@ static const int cps_flen[] = {
 static const char *bgp_origin[] = {
   "i",
   "e",
-  "u"
+  "u",
+  ""
 };
 
 static const char *rpki_roa[] = {

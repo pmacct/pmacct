@@ -97,6 +97,7 @@
 #define BGP_ORIGIN_EGP		1
 #define BGP_ORIGIN_INCOMPLETE	2
 #define BGP_ORIGIN_MAX		2
+#define BGP_ORIGIN_UNKNOWN	3
 
 /* structures */
 struct bgp_dump_event {
