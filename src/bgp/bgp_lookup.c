@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -30,6 +30,7 @@
 #include "addr.h"
 #include "bgp.h"
 #include "pmbgpd.h"
+#include "rpki/rpki.h"
 
 void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 {
@@ -136,6 +137,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
         if (result->p.prefixlen >= pptrs->lm_mask_src) {
           pptrs->lm_mask_src = result->p.prefixlen;
           pptrs->lm_method_src = NF_NET_BGP;
+
+	  if (config.rpki_roas_file) pptrs->src_roa = rpki_prefix_lookup(&result->p, info->attr->aspath);
         }
       }
 
@@ -160,6 +163,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
         if (result->p.prefixlen >= pptrs->lm_mask_dst) {
           pptrs->lm_mask_dst = result->p.prefixlen;
           pptrs->lm_method_dst = NF_NET_BGP;
+
+	  if (config.rpki_roas_file) pptrs->dst_roa = rpki_prefix_lookup(&result->p, info->attr->aspath);
         }
       }
     }
@@ -185,6 +190,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
         if (result->p.prefixlen >= pptrs->lm_mask_src) {
           pptrs->lm_mask_src = result->p.prefixlen;
           pptrs->lm_method_src = NF_NET_BGP;
+
+	  if (config.rpki_roas_file) pptrs->src_roa = rpki_prefix_lookup(&result->p, info->attr->aspath);
         }
       }
 
@@ -208,6 +215,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
         if (result->p.prefixlen >= pptrs->lm_mask_dst) {
           pptrs->lm_mask_dst = result->p.prefixlen;
           pptrs->lm_method_dst = NF_NET_BGP;
+
+	  if (config.rpki_roas_file) pptrs->dst_roa = rpki_prefix_lookup(&result->p, info->attr->aspath);
         }
       }
     }

@@ -1838,16 +1838,10 @@ int pretag_src_roa_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
-  struct bgp_info *info;
   u_int8_t roa = ROA_STATUS_UNKNOWN;
 
   if (config.nfacctd_bgp_src_roa_type & BGP_SRC_PRIMITIVES_BGP) {
-    if (src_ret) {
-      info = (struct bgp_info *) pptrs->bgp_src_info;
-      if (info && info->attr) {
-	roa = info->attr->roa;
-      }
-    }
+    if (src_ret) roa = pptrs->src_roa;
   }
 
   if (entry->key.src_roa.n == roa) return (FALSE | entry->key.src_roa.neg);
@@ -1858,15 +1852,7 @@ int pretag_dst_roa_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
-  struct bgp_info *info;
   u_int8_t roa = ROA_STATUS_UNKNOWN;
-
-  if (dst_ret) {
-    info = (struct bgp_info *) pptrs->bgp_dst_info;
-    if (info && info->attr) {
-      roa = info->attr->roa;
-    }
-  }
 
   if (entry->key.dst_roa.n == roa) return (FALSE | entry->key.dst_roa.neg);
   else return (TRUE ^ entry->key.dst_roa.neg);

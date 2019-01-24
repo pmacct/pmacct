@@ -322,6 +322,8 @@ struct packet_ptrs {
   char *bgp_dst_info; /* pointer to bgp_info structure for destination prefix, if any */ 
   char *bgp_peer; /* record BGP peer's Router-ID */
   char *bgp_nexthop_info; /* record bgp_info of BGP next-hop in case of follow-up */
+  u_int8_t src_roa; /* record ROA status for source prefix */
+  u_int8_t dst_roa; /* record ROA status for destination prefix */
   char *igp_src; /* pointer to IGP node structure for source prefix, if any */
   char *igp_dst; /* pointer to IGP node structure for destination prefix, if any */
   char *igp_src_info; /* pointer to IGP node info structure for source prefix, if any */

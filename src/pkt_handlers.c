@@ -3833,7 +3833,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 	pbgp->src_med = info->attr->med;
 
       if (chptr->aggregation_2 & COUNT_SRC_ROA && config.nfacctd_bgp_src_roa_type & BGP_SRC_PRIMITIVES_BGP)
-	pbgp->src_roa = info->attr->roa;
+	pbgp->src_roa = pptrs->src_roa;
 
       if (chptr->aggregation & COUNT_PEER_SRC_AS && config.nfacctd_bgp_peer_as_src_type & BGP_SRC_PRIMITIVES_BGP && info->attr->aspath && info->attr->aspath->str) {
         pbgp->peer_src_as = evaluate_first_asn(info->attr->aspath->str);
@@ -4107,7 +4107,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 
       if (chptr->aggregation & COUNT_MED) pbgp->med = info->attr->med;
 
-      if (chptr->aggregation_2 & COUNT_DST_ROA) pbgp->dst_roa = info->attr->roa;
+      if (chptr->aggregation_2 & COUNT_DST_ROA) pbgp->dst_roa = pptrs->dst_roa;
 
       if (chptr->aggregation & COUNT_PEER_DST_AS && info->attr->aspath && info->attr->aspath->str) {
         pbgp->peer_dst_as = evaluate_first_asn(info->attr->aspath->str);

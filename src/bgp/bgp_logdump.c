@@ -154,7 +154,12 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       if (attr->med)
 	json_object_set_new_nocheck(obj, "med", json_integer((json_int_t)attr->med));
 
-      json_object_set_new_nocheck(obj, "roa", json_string(rpki_roa_print(attr->roa)));
+      if (config.rpki_roas_file) {
+	u_int8_t roa;
+
+	roa = rpki_prefix_lookup(&route->p, attr->aspath);
+	json_object_set_new_nocheck(obj, "roa", json_string(rpki_roa_print(roa)));
+      }
     }
 
     if (safi == SAFI_MPLS_LABEL || safi == SAFI_MPLS_VPN) {
