@@ -134,7 +134,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (!config.memory_pool_size) config.memory_pool_size = MEMORY_POOL_SIZE;  
   else {
     if (config.memory_pool_size < sizeof(struct acc)) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): enforcing memory pool's minimum size, %d bytes.\n", config.name, config.type, sizeof(struct acc));
+      Log(LOG_WARNING, "WARN ( %s/%s ): enforcing memory pool's minimum size, %d bytes.\n", config.name, config.type, (int)sizeof(struct acc));
       config.memory_pool_size = MEMORY_POOL_SIZE;
     }
   }

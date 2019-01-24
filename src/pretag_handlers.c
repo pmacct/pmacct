@@ -1335,7 +1335,7 @@ int PT_map_stack_handler(char *filename, struct id_entry *e, char *value, struct
 
   if (*value == '+' || !strncmp(value, "sum", 3)) e->stack.func = PT_stack_sum;
   else if (!strncmp(value, "or", 2)) e->stack.func = PT_stack_logical_or;
-  else Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unknown STACK operator: '%c'. Ignoring.\n", config.name, config.type, filename, value);
+  else Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unknown STACK operator: '%s'. Ignoring.\n", config.name, config.type, filename, value);
 
   return FALSE;
 }

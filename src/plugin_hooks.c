@@ -127,8 +127,9 @@ void load_plugins(struct plugin_requests *req)
 
         buf_pipe_ratio_sz = (list->cfg.pipe_size/list->cfg.buffer_size)*sizeof(char *);
         if (buf_pipe_ratio_sz > INT_MAX) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): Current plugin_buffer_size elems per plugin_pipe_size: %d. Max: %d.\nExiting.\n",
-		list->name, list->type.string, (list->cfg.pipe_size/list->cfg.buffer_size), (INT_MAX/sizeof(char *)));
+	  Log(LOG_ERR, "ERROR ( %s/%s ): Current plugin_buffer_size elems per plugin_pipe_size: %llu. Max: %d.\nExiting.\n",
+		list->name, list->type.string, (unsigned long long)(list->cfg.pipe_size/list->cfg.buffer_size),
+		(INT_MAX/(int)sizeof(char *)));
           exit_gracefully(1);
         }
         else target_buflen = buf_pipe_ratio_sz;

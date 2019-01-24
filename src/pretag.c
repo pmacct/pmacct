@@ -1089,7 +1089,7 @@ void pretag_index_report(struct id_table *t)
 	  config.name, config.type, t->filename, (unsigned long long)t->index[iterator].bitmap,
 	  bucket_depths[0], bucket_depths[1], bucket_depths[2], bucket_depths[3],
 	  bucket_depths[4], bucket_depths[5], bucket_depths[6], bucket_depths[7],
-	  (buckets * sizeof(struct id_index_entry)));
+	  (unsigned long)(buckets * sizeof(struct id_index_entry)));
     } 
   }
 }

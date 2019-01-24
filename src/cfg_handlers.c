@@ -1025,7 +1025,7 @@ int cfg_key_print_latest_file(char *filename, char *name, char *value_ptr)
   int changes = 0;
 
   if (strchr(value_ptr, '%')) {
-    Log(LOG_ERR, "ERROR: [%s] invalid 'print_latest_file' value: time-based '%' variables not allowed.\n", filename);
+    Log(LOG_ERR, "ERROR: [%s] invalid 'print_latest_file' value: time-based '%%' variables not allowed.\n", filename);
     return TRUE;
   }
 
@@ -6011,7 +6011,7 @@ void cfg_set_aggregate(char *filename, u_int64_t registry[], u_int64_t input, ch
   u_int64_t value = (input & COUNT_REGISTRY_MASK);
 
   if (registry[index] & value) {
-    Log(LOG_ERR, "ERROR: [%s] '%s' repeated in 'aggregate' or invalid 0x%x bit code.\n", filename, token, input);
+    Log(LOG_ERR, "ERROR: [%s] '%s' repeated in 'aggregate' or invalid 0x%llx bit code.\n", filename, token, (unsigned long long)input);
     exit(1);
   }
   else registry[index] |= value;
