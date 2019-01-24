@@ -1138,6 +1138,13 @@ int main(int argc,char **argv, char **envp)
     else sleep(config.pcap_sf_delay);
   }
 
+  /* GRE decapsulation */
+  pcap_handler pcap_cb0 = pcap_cb;
+  if (config.gre_decap) {
+    Log(LOG_INFO, "INFO ( %s/core ): will decapsulate IPV4/GRE\n", config.name);
+    pcap_cb0 = gre_decap_cb;
+  }
+
   /* Main loop (for the case of a single interface): if pcap_loop() exits
      maybe an error occurred; we will try closing and reopening again our
      listening device */
@@ -1152,8 +1159,8 @@ int main(int argc,char **argv, char **envp)
 	}
       }
 
-      read_packet:
-      pcap_loop(device.list[0].dev_desc, -1, pcap_cb, (u_char *) &cb_data);
+	read_packet:
+      pcap_loop(device.list[0].dev_desc, -1, pcap_cb0, (u_char *) &cb_data);
       pcap_close(device.list[0].dev_desc);
 
       if (config.pcap_savefile) {
@@ -1263,7 +1270,7 @@ int main(int argc,char **argv, char **envp)
 	pkt_body = pcap_next(dev_ptr->dev_desc, &pkt_hdr); 
 	if (pkt_body) {
 	  cb_data.device = dev_ptr;
-	  pcap_cb((u_char *) &cb_data, &pkt_hdr, pkt_body);
+	  pcap_cb0((u_char *) &cb_data, &pkt_hdr, pkt_body);
 	}
       }
     }

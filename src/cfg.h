@@ -462,6 +462,7 @@ struct configuration {
   int pcap_sf_wait;
   int pcap_sf_delay;
   int pcap_sf_replay;
+  int gre_decap;
   int num_memory_pools;
   int memory_pool_size;
   int buckets;

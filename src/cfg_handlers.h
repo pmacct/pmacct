@@ -57,6 +57,7 @@ EXT int cfg_key_decode_arista_trailer(char *, char *, char *);
 EXT int cfg_key_thread_stack(char *, char *, char *);
 EXT int cfg_key_pcap_interface(char *, char *, char *);
 EXT int cfg_key_pcap_interface_wait(char *, char *, char *);
+EXT int cfg_key_gre_decap(char *, char *, char *);
 EXT int cfg_key_files_umask(char *, char *, char *);
 EXT int cfg_key_files_uid(char *, char *, char *);
 EXT int cfg_key_files_gid(char *, char *, char *);

@@ -41,6 +41,44 @@
 #include "ndpi/ndpi.h"
 #endif
 
+void gre_decap_cb(u_char *user, const struct pcap_pkthdr *h, const u_char *sp)
+{
+  /* ethernet header */
+  const struct eth_header *ethhdr = (const struct eth_header*)sp;
+  if (ntohs(ethhdr->ether_type) == ETHERTYPE_IP) {
+    /* IPv4 header */
+    const struct pm_iphdr* iphdr = (const struct pm_iphdr*)&sp[ETHER_HDRLEN];
+	if (iphdr->ip_p == IPPROTO_GRE) {
+	  /* GRE header */
+	  const uint16_t* grehdr = (const uint16_t*)&sp[ETHER_HDRLEN + IP_HDRLEN];
+	  if (*grehdr != 0) {
+		/* does not support cksum,offset,key */
+		goto error;
+	  }
+	  uint16_t n_gre_proto = *(grehdr+1);
+	  /* GRE payload */
+	  const u_char* payload = (const u_char*)&sp[ETHER_HDRLEN + IP_HDRLEN + GRE_HDRLEN];
+	  /* decapsulate */
+	  struct pcap_pkthdr decap_h = *h;
+	  decap_h.caplen -= IP_HDRLEN + GRE_HDRLEN;
+	  decap_h.len    -= IP_HDRLEN + GRE_HDRLEN;
+	  struct eth_header* decap_ethhdr = (struct eth_header*)(payload - ETHER_HDRLEN);
+	  if (memmove(decap_ethhdr, sp, ETHER_HDRLEN) == NULL) {
+		goto error;
+	  }
+	  decap_ethhdr->ether_type = n_gre_proto;
+	  /* submit decapsulated frame */
+	  pcap_cb(user, &decap_h, (const u_char*)decap_ethhdr);
+	  return;
+	}
+  }
+  pcap_cb(user, h, sp);
+  return;
+ error:
+  Log(LOG_WARNING, "WARN ( %s/core ): IPv4/GRE decapsulation failed\n", config.name);
+  pcap_cb(user, h, sp);
+}
+
 void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
 {
   struct packet_ptrs pptrs;
