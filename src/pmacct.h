@@ -439,6 +439,7 @@ EXT struct host_addr mcast_groups[MAX_MCAST_GROUPS];
 EXT int reload_map, reload_map_exec_plugins, reload_geoipv2_file;
 EXT int reload_map_bgp_thread, reload_log_bgp_thread;
 EXT int reload_map_bmp_thread, reload_log_bmp_thread;
+EXT int reload_map_rpki_thread, reload_log_rpki_thread;
 EXT int reload_map_telemetry_thread, reload_log_telemetry_thread;
 EXT int reload_map_pmacctd;
 EXT int print_stats;

@@ -2616,7 +2616,7 @@ DESC:		Full pathname to a file to cross-connect BGP peers (ie. edge routers part
 		at runtime by sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd").
 DEFAULT:	none
 
-KEY:		rpki_roas_file [GLOBAL]
+KEY:		rpki_roas_file [MAP, GLOBAL]
 DESC:		Full pathname to a file containing RPKI ROA data. Data encoding is JSON and format
 		is according to RIPE Validator format. ROA data can be obtained for example from
 		https://rpki.gin.ntt.net/api/export.json . An example of the format:
@@ -2634,6 +2634,9 @@ DESC:		Full pathname to a file containing RPKI ROA data. Data encoding is JSON a
 		    "ta" : "ARIN"
 		  } ]
 		}
+
+		Content can be reloaded at runtime by sending the daemon a SIGUSR2 signal (ie.
+		"killall -USR2 nfacctd").
 DEFAULT:	none
 
 KEY:		isis_daemon [GLOBAL]

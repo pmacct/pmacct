@@ -62,6 +62,14 @@ void rpki_daemon()
   afi_t afi;
   safi_t safi;
 
+  /* select() stuff */
+  struct timeval select_timeout;
+  int select_fd;
+
+  /* initial cleanups */
+  reload_map_rpki_thread = FALSE;
+  reload_log_rpki_thread = FALSE;
+
   rpki_routing_db = &inter_domain_routing_dbs[FUNC_TYPE_RPKI];
   memset(rpki_routing_db, 0, sizeof(struct bgp_rt_structs));
 
@@ -77,6 +85,22 @@ void rpki_daemon()
   rpki_link_misc_structs(r_data);
 
   if (config.rpki_roas_file) rpki_roas_file_load(config.rpki_roas_file);
+
+  for (;;) {
+    /* simplified select() until we have fds to read from */
+    select_timeout.tv_sec = 1;
+    select_timeout.tv_usec = 0;
+    select_fd = 0;
+
+    select(select_fd, NULL, NULL, NULL, &select_timeout);
+
+    /* signals handling */
+    if (reload_map_rpki_thread) {
+      if (config.rpki_roas_file) rpki_roas_file_load(config.rpki_roas_file);
+
+      reload_map_rpki_thread = FALSE;
+    }
+  }
 }
 
 int rpki_roas_file_load(char *file)
@@ -226,10 +250,19 @@ int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t ma
     for (ri = route->info[modulo]; ri; ri = ri->next) {
       /* Check if received same information */
       if (rpki_attrhash_cmp(ri->attr, attr_new)) {
-	/* route_node_get lock */
+        /* Same information received */
 	bgp_unlock_node(peer, route);
 
 	bgp_attr_unintern(peer, attr_new);
+
+	goto exit_lane;
+      }
+      else {
+	/* Update to new attribute. */
+	bgp_attr_unintern(peer, ri->attr);
+	ri->attr = attr_new;
+
+	bgp_unlock_node (peer, route);
 
 	goto exit_lane;
       }

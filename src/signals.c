@@ -236,12 +236,14 @@ void reload_maps()
 {
   reload_map = FALSE;
   reload_map_bgp_thread = FALSE;
+  reload_map_rpki_thread = FALSE;
   reload_map_exec_plugins = FALSE;
   reload_geoipv2_file = FALSE;
 
   if (config.maps_refresh) {
     reload_map = TRUE; 
     reload_map_bgp_thread = TRUE;
+    reload_map_rpki_thread = TRUE;
     reload_map_exec_plugins = TRUE;
     reload_geoipv2_file = TRUE;
 
