@@ -1108,16 +1108,15 @@ steps:
    repository (https://github.com/pmacct/pmacct).
 
 2) Download nDPI from its GitHub repository (https://github.com/ntop/nDPI).
-   pmacct code is tested against the latest stable version of the nDPI library
-   and hence that is the recommended download. 
+   pmacct code is currently tested working against:
+
+   * nDPI 2.2.2 (git clone -b 2.2.2-stable https://github.com/ntop/nDPI.git)
+   * nDPI 2.4 (git clone -b 2.4-stable https://github.com/ntop/nDPI.git)
 
 3) Configure for compiling, compile and install the downloaded nDPI library, ie.
    inside the nDPI directory:
 
    shell> ./autogen.sh; ./configure; make; make install 
-
-3b) If using nDPI 2.2, use version >= 2.2.2 since several users have reported
-   issues building previous versions of the 2.2 release.
 
 4) Configure for compiling pmacct with the --enable-ndpi switch. Then compile and
    install, ie.:
