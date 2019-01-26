@@ -1862,6 +1862,30 @@ void version_daemon(char *header)
     printf("\n");
   }
 
+#if defined __clang__
+#ifndef PM_COMPILER_NAME
+#define PM_COMPILER_NAME "clang"
+#endif
+#ifndef PM_COMPILER_VERSION
+#define PM_COMPILER_VERSION __clang_major__, __clang_minor__, __clang_patchlevel__
+#endif
+#endif
+
+#if defined __GNUC__
+#ifndef PM_COMPILER_NAME
+#define PM_COMPILER_NAME "gcc"
+#endif
+#ifndef PM_COMPILER_VERSION
+#define PM_COMPILER_VERSION __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__
+#endif
+#endif
+
+#if defined PM_COMPILER_NAME && defined PM_COMPILER_VERSION
+  printf("Compiler:\n");
+  printf("%s %d.%d.%d\n", PM_COMPILER_NAME, PM_COMPILER_VERSION);
+  printf("\n");
+#endif
+
   printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);
 }
 
