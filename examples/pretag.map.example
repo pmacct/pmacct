@@ -118,11 +118,13 @@
 ! 'dst_as'              MATCH: destination Autonomous System Number. Same 'src_as'
 !			remarks hold here. Please read them above.
 ! 'peer_src_as'		MATCH: peering source Autonomous System Number. This is
-!			compared against the corresponding (or mapped) BGP RIB
-!			of the exporting device (see 'bgp_daemon' configuration
-!			directive).
+!			compared against the source of info configured in
+!			bgp_peer_src_as_type.
 ! 'peer_dst_as'		MATCH: peering destination Autonomous System Number. Same
 !			'peer_src_as' remarks hold here. Please read them above.
+! 'src_local_pref'	MATCH: source IP prefix BGP Local Preference attribute.
+!			This is compared against the source of info configured in
+!			bgp_src_local_pref_type.
 ! 'local_pref'		MATCH: destination IP prefix BGP Local Preference attribute.
 !			This is compared against the BGP RIB of the exporting
 !			device.  
@@ -130,6 +132,12 @@
 !			against the BGP RIB of the exporting device.  
 ! 'dst_roa'		MATCH: destination IP prefix RPKI/ROA status. This is
 !			compared against the BGP RIB of the exporting device.  
+! 'src_comms'		MATCH: Destination IP prefix BGP standard communities;
+!			multiple elements, up to 16, can be supplied, comma-
+!			separated (no spaces allowed); the check is successful
+!			if any of the communities is matched. This is compared
+!			against the source of info configured in
+!			bgp_src_std_comm_type.
 ! 'comms'		MATCH: Destination IP prefix BGP standard communities;
 !			multiple elements, up to 16, can be supplied, comma-
 !			separated (no spaces allowed); the check is successful
