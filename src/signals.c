@@ -171,16 +171,16 @@ void PM_sigint_handler(int signum)
     if (config.pcap_if) {
       printf("NOTICE ( %s/%s ): +++\n", config.name, config.type);
 
-      for (device_idx = 0; device_idx < device.num; device_idx++) {
-        if (pcap_stats(device.list[device_idx].dev_desc, &ps) < 0) {
+      for (device_idx = 0; device_idx < devices.num; device_idx++) {
+        if (pcap_stats(devices.list[device_idx].dev_desc, &ps) < 0) {
 	  printf("INFO ( %s/%s ): [%s,%u] error='pcap_stats(): %s'\n",
-		config.name, config.type, device.list[device_idx].str,
-		device.list[device_idx].id,
-		pcap_geterr(device.list[device_idx].dev_desc));
+		config.name, config.type, devices.list[device_idx].str,
+		devices.list[device_idx].id,
+		pcap_geterr(devices.list[device_idx].dev_desc));
 	}
         printf("NOTICE ( %s/%s ): [%s,%u] received_packets=%u dropped_packets=%u\n",
-		config.name, config.type, device.list[device_idx].str,
-		device.list[device_idx].id, ps.ps_recv, ps.ps_drop);
+		config.name, config.type, devices.list[device_idx].str,
+		devices.list[device_idx].id, ps.ps_recv, ps.ps_drop);
       }
 
       printf("NOTICE ( %s/%s ): ---\n", config.name, config.type);

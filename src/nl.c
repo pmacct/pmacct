@@ -460,15 +460,15 @@ void PM_print_stats(time_t now)
   Log(LOG_NOTICE, "NOTICE ( %s/%s ): +++\n", config.name, config.type);
 
   if (config.pcap_if || config.pcap_interfaces_map) {
-    for (device_idx = 0; device_idx < device.num; device_idx++) {
-      if (pcap_stats(device.list[device_idx].dev_desc, &ps) < 0) {
+    for (device_idx = 0; device_idx < devices.num; device_idx++) {
+      if (pcap_stats(devices.list[device_idx].dev_desc, &ps) < 0) {
 	Log(LOG_INFO, "INFO ( %s/%s ): stats [%s,%u] time=%u error='pcap_stats(): %s'\n",
-	    config.name, config.type, device.list[device_idx].str, device.list[device_idx].id,
-	    now, pcap_geterr(device.list[device_idx].dev_desc));
+	    config.name, config.type, devices.list[device_idx].str, devices.list[device_idx].id,
+	    now, pcap_geterr(devices.list[device_idx].dev_desc));
       }
 
       Log(LOG_NOTICE, "NOTICE ( %s/%s ): stats [%s,%u] time=%u received_packets=%u dropped_packets=%u\n",
-	  config.name, config.type, device.list[device_idx].str, device.list[device_idx].id,
+	  config.name, config.type, devices.list[device_idx].str, devices.list[device_idx].id,
 	  now, ps.ps_recv, ps.ps_drop);
     }
   }

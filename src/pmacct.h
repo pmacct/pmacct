@@ -452,7 +452,8 @@ EXT struct configuration config; /* global configuration structure */
 EXT struct plugins_list_entry *plugins_list; /* linked list of each plugin configuration */
 EXT pid_t failed_plugins[MAX_N_PLUGINS]; /* plugins failed during startup phase */
 EXT u_char dummy_tlhdr[16];
-EXT struct pcap_devices device, bkp_device;
+EXT struct pcap_device device;
+EXT struct pcap_devices devices, bkp_devices;
 EXT struct pcap_interfaces pcap_if_map, bkp_pcap_if_map;
 EXT struct pcap_stat ps;
 #undef EXT

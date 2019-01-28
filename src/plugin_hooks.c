@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -281,6 +281,7 @@ void load_plugins(struct plugin_requests *req)
         mallopt(M_CHECK_ACTION, 0);
 #endif
 
+	if (device.dev_desc) pcap_close(device.dev_desc);
 	close(config.sock);
 	close(config.bgp_sock);
 	if (!list->cfg.pipe_zmq) close(list->pipe[1]);

@@ -125,7 +125,6 @@ int main(int argc,char **argv, char **envp)
   int clen = sizeof(client), slen;
   struct ip_mreq multi_req4;
 
-  struct pcap_device device;
   int pcap_savefile_round = 0;
 
   unsigned char dummy_packet[64]; 

@@ -168,7 +168,6 @@ void usage_daemon(char *prog_name)
 
 int main(int argc,char **argv, char **envp)
 {
-  struct pcap_device device;
   int index, logf;
 
   struct plugins_list_entry *list;
