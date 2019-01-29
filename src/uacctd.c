@@ -36,6 +36,7 @@
 #include "classifier.h"
 #include "bgp/bgp.h"
 #include "isis/isis.h"
+#include "bmp/bmp.h"
 #include <netinet/ip.h>
 #include <libnfnetlink/libnfnetlink.h>
 #include <libnetfilter_log/libnetfilter_log.h>
@@ -686,7 +687,7 @@ int main(int argc,char **argv, char **envp)
                 (list->cfg.nfacctd_net == NF_NET_BGP && !list->cfg.nfacctd_bgp && !list->cfg.nfacctd_bmp) ||
                 (list->cfg.nfacctd_net == NF_NET_IGP && !list->cfg.nfacctd_isis) ||
                 (list->cfg.nfacctd_net == NF_NET_KEEP)) {
-              Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'isis_daemon', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
+              Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'bmp_daemon', 'isis_daemon', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
               exit_gracefully(1);
             }
             if (list->cfg.nfacctd_net & NF_NET_FALLBACK && list->cfg.networks_file)
@@ -935,6 +936,19 @@ int main(int argc,char **argv, char **envp)
     nfacctd_bgp_wrapper();
 
     /* Let's give the BGP thread some advantage to create its structures */
+    if (config.rpki_roas_file) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
+    sleep(sleep_time);
+  }
+
+  /* starting the BMP thread */
+  if (config.nfacctd_bmp) {
+    int sleep_time = DEFAULT_SLOTH_SLEEP_TIME;
+
+    req.bpf_filter = TRUE;
+
+    nfacctd_bmp_wrapper();
+
+    /* Let's give the BMP thread some advantage to create its structures */
     if (config.rpki_roas_file) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
     sleep(sleep_time);
   }
