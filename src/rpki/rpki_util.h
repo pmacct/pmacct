@@ -19,34 +19,15 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* defines */
-#define ROA_STATUS_UNKNOWN	0
-#define ROA_STATUS_INVALID	1
-#define ROA_STATUS_VALID	2
-#define ROA_STATUS_MAX		2
-
-#include "rpki_msg.h"
-#include "rpki_lookup.h"
-#include "rpki_util.h"
-
 /* prototypes */
-#if !defined(__RPKI_C)
+#if !defined(__RPKI_UTIL_C)
 #define EXT extern
 #else
 #define EXT
 #endif
-EXT void rpki_daemon_wrapper();
-EXT void rpki_prepare_thread();
-EXT void rpki_daemon();
-#undef EXT
-
-/* global variables */
-#if (!defined __RPKI_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-
-EXT struct bgp_rt_structs *rpki_routing_db;
-EXT struct bgp_misc_structs *rpki_misc_db;
+EXT void rpki_init_dummy_peer(struct bgp_peer *);
+EXT int rpki_attrhash_cmp(const void *, const void *);
+EXT const char *rpki_roa_print(u_int8_t);
+EXT u_int8_t rpki_str2roa(char *);
+EXT void rpki_link_misc_structs(struct bgp_misc_structs *);
 #undef EXT
