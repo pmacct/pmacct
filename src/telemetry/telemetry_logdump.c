@@ -342,7 +342,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
             peer->log->fd = open_output_file(current_filename, "w", TRUE);
             if (fd_buf) {
               if (setvbuf(peer->log->fd, fd_buf, _IOFBF, OUTPUT_FILE_BUFSZ))
-                Log(LOG_WARNING, "WARN ( %s/%s ): [%s] setvbuf() failed: %s\n", config.name, t_data->log_str, current_filename, errno);
+                Log(LOG_WARNING, "WARN ( %s/%s ): [%s] setvbuf() failed: %s\n", config.name, t_data->log_str, current_filename, strerror(errno));
               else memset(fd_buf, 0, OUTPUT_FILE_BUFSZ);
             }
           }

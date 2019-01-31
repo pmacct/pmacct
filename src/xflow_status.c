@@ -141,9 +141,9 @@ void print_status_table(time_t now, int buckets)
     if (entry && entry->counters.total && entry->counters.bytes) {
       addr_to_str(agent_ip_address, &entry->agent_addr);
 
-      Log(LOG_NOTICE, "NOTICE ( %s/%s ): stats [%s:%u] agent=%s:%u time=%u packets=%llu bytes=%llu seq_good=%u seq_jmp_fwd=%u seq_jmp_bck=%u\n",
+      Log(LOG_NOTICE, "NOTICE ( %s/%s ): stats [%s:%u] agent=%s:%u time=%ld packets=%llu bytes=%llu seq_good=%u seq_jmp_fwd=%u seq_jmp_bck=%u\n",
 		config.name, config.type, collector_ip_address, config.nfacctd_port,
-		agent_ip_address, entry->aux1, now, entry->counters.total, entry->counters.bytes,
+		agent_ip_address, entry->aux1, (long)now, entry->counters.total, entry->counters.bytes,
 		entry->counters.good, entry->counters.jumps_f, entry->counters.jumps_b);
 
       if (entry->next) {
@@ -153,9 +153,9 @@ void print_status_table(time_t now, int buckets)
     } 
   }
 
-  Log(LOG_NOTICE, "NOTICE ( %s/%s ): stats [%s:%u] time=%u discarded_packets=%u\n",
+  Log(LOG_NOTICE, "NOTICE ( %s/%s ): stats [%s:%u] time=%ld discarded_packets=%u\n",
 		config.name, config.type, collector_ip_address, config.nfacctd_port,
-		now, xflow_tot_bad_datagrams);
+		(long)now, xflow_tot_bad_datagrams);
 
   Log(LOG_NOTICE, "NOTICE ( %s/%s ): ---\n", config.name, config.type);
 }

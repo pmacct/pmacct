@@ -462,14 +462,14 @@ void PM_print_stats(time_t now)
   if (config.pcap_if || config.pcap_interfaces_map) {
     for (device_idx = 0; device_idx < devices.num; device_idx++) {
       if (pcap_stats(devices.list[device_idx].dev_desc, &ps) < 0) {
-	Log(LOG_INFO, "INFO ( %s/%s ): stats [%s,%u] time=%u error='pcap_stats(): %s'\n",
+	Log(LOG_INFO, "INFO ( %s/%s ): stats [%s,%u] time=%ld error='pcap_stats(): %s'\n",
 	    config.name, config.type, devices.list[device_idx].str, devices.list[device_idx].id,
-	    now, pcap_geterr(devices.list[device_idx].dev_desc));
+	    (long)now, pcap_geterr(devices.list[device_idx].dev_desc));
       }
 
-      Log(LOG_NOTICE, "NOTICE ( %s/%s ): stats [%s,%u] time=%u received_packets=%u dropped_packets=%u\n",
+      Log(LOG_NOTICE, "NOTICE ( %s/%s ): stats [%s,%u] time=%ld received_packets=%u dropped_packets=%u\n",
 	  config.name, config.type, devices.list[device_idx].str, devices.list[device_idx].id,
-	  now, ps.ps_recv, ps.ps_drop);
+	  (long)now, ps.ps_recv, ps.ps_drop);
     }
   }
 

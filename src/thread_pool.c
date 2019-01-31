@@ -122,7 +122,7 @@ thread_pool_t *allocate_thread_pool(int count)
       attr_ptr = &attr;
       pthread_attr_getstacksize(&attr, &confd_stack_size);
       if (confd_stack_size != config.thread_stack && confd_stack_size != default_stack_size) 
-        Log(LOG_INFO, "INFO ( %s/%s ): pthread_attr_setstacksize(): %u\n", config.name, config.type, confd_stack_size);
+        Log(LOG_INFO, "INFO ( %s/%s ): pthread_attr_setstacksize(): %lu\n", config.name, config.type, (unsigned long)confd_stack_size);
     }
     else {
       Log(LOG_ERR, "ERROR ( %s/%s ): pthread_attr_setstacksize(): %s\n", config.name, config.type, strerror(rc));

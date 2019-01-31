@@ -1598,7 +1598,7 @@ void SF_notify_malf_packet(short int severity, char *severity_str, char *ostr, s
   snprintf(errstr, SRVBUFLEN, "%s ( %s/core ): %s: sfacctd=%s:%u agent=%s:%u \n", severity_str,
 	config.name, ostr, ((config.nfacctd_ip) ? config.nfacctd_ip : any), config.nfacctd_port,
 	agent_addr, agent_port);
-  Log(severity, errstr);
+  Log(severity, "%s", errstr);
 }
 
 void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct plugin_requests *req)

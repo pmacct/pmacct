@@ -1550,7 +1550,7 @@ void *pm_malloc(size_t size)
   obj = (unsigned char *) malloc(size);
   if (!obj) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unable to grab enough memory (requested: %llu bytes). Exiting ...\n",
-    config.name, config.type, size);
+    config.name, config.type, (unsigned long long)size);
     exit_gracefully(1);
   }
 
@@ -1955,7 +1955,7 @@ void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int 
   if (buflen < VERYSHORTBUFLEN) return; 
 
   if (since_epoch) {
-    if (usec) snprintf(buf, buflen, "%ld.%.6ld", tv->tv_sec, tv->tv_usec);
+    if (usec) snprintf(buf, buflen, "%ld.%.6ld", tv->tv_sec, (long)tv->tv_usec);
     else snprintf(buf, buflen, "%ld", tv->tv_sec);
   }
   else {
@@ -1966,7 +1966,7 @@ void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int 
     if (!rfc3339) slen = strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", time2);
     else slen = strftime(buf, buflen, "%Y-%m-%dT%H:%M:%S", time2);
 
-    if (usec) snprintf((buf + slen), (buflen - slen), ".%.6ld", tv->tv_usec);
+    if (usec) snprintf((buf + slen), (buflen - slen), ".%.6ld", (long)tv->tv_usec);
     if (rfc3339) append_rfc3339_timezone(buf, buflen, time2);
   }
 }
@@ -2160,7 +2160,7 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
     if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_UINT ||
         cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_HEX) {
       if (formatted) {
-	snprintf(format, VERYSHORTBUFLEN, "%%-%u", cps_flen[cp_entry->ptr->len] > strlen(cp_entry->ptr->name) ? cps_flen[cp_entry->ptr->len] : strlen(cp_entry->ptr->name));
+	snprintf(format, VERYSHORTBUFLEN, "%%-%d", cps_flen[cp_entry->ptr->len] > strlen(cp_entry->ptr->name) ? cps_flen[cp_entry->ptr->len] : (int)strlen(cp_entry->ptr->name));
 	strncat(format, "s", VERYSHORTBUFLEN);
       }
       else snprintf(format, VERYSHORTBUFLEN, "%s", "%s");
@@ -2168,7 +2168,7 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
     else if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_STRING ||
 	     cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
       if (formatted) {
-	snprintf(format, VERYSHORTBUFLEN, "%%-%u", cp_entry->ptr->len > strlen(cp_entry->ptr->name) ? cp_entry->ptr->len : strlen(cp_entry->ptr->name));
+	snprintf(format, VERYSHORTBUFLEN, "%%-%d", cp_entry->ptr->len > strlen(cp_entry->ptr->name) ? cp_entry->ptr->len : (int)strlen(cp_entry->ptr->name));
 	strncat(format, "s", VERYSHORTBUFLEN);
       }
       else snprintf(format, VERYSHORTBUFLEN, "%s", "%s");
@@ -2179,7 +2179,7 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
       len = INET6_ADDRSTRLEN;
       	
       if (formatted) {
-        snprintf(format, VERYSHORTBUFLEN, "%%-%u", len > strlen(cp_entry->ptr->name) ? len : strlen(cp_entry->ptr->name));
+        snprintf(format, VERYSHORTBUFLEN, "%%-%d", len > strlen(cp_entry->ptr->name) ? len : (int)strlen(cp_entry->ptr->name));
         strncat(format, "s", VERYSHORTBUFLEN);
       }
       else snprintf(format, VERYSHORTBUFLEN, "%s", "%s");
@@ -2188,7 +2188,7 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
       int len = ETHER_ADDRSTRLEN;
 
       if (formatted) {
-        snprintf(format, VERYSHORTBUFLEN, "%%-%u", len > strlen(cp_entry->ptr->name) ? len : strlen(cp_entry->ptr->name));
+        snprintf(format, VERYSHORTBUFLEN, "%%-%d", len > strlen(cp_entry->ptr->name) ? len : (int)strlen(cp_entry->ptr->name));
         strncat(format, "s", VERYSHORTBUFLEN);
       }
       else snprintf(format, VERYSHORTBUFLEN, "%s", "%s");
@@ -2215,8 +2215,8 @@ void custom_primitive_value_print(char *out, int outlen, char *in, struct custom
 	snprintf(semantics, VERYSHORTBUFLEN, "%s", cps_type[cp_entry->ptr->semantics]); 
 
       if (formatted)
-        snprintf(format, VERYSHORTBUFLEN, "%%-%u%s",
-		cps_flen[cp_entry->ptr->len] > strlen(cp_entry->ptr->name) ? cps_flen[cp_entry->ptr->len] : strlen(cp_entry->ptr->name), 
+        snprintf(format, VERYSHORTBUFLEN, "%%-%d%s",
+		cps_flen[cp_entry->ptr->len] > strlen(cp_entry->ptr->name) ? cps_flen[cp_entry->ptr->len] : (int)strlen(cp_entry->ptr->name), 
 		semantics);
       else
         snprintf(format, VERYSHORTBUFLEN, "%%%s", semantics);
@@ -2252,7 +2252,7 @@ void custom_primitive_value_print(char *out, int outlen, char *in, struct custom
     else if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_STRING ||
 	     cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
       if (formatted)
-	snprintf(format, VERYSHORTBUFLEN, "%%-%u%s", cp_entry->ptr->len > strlen(cp_entry->ptr->name) ? cp_entry->ptr->len : strlen(cp_entry->ptr->name),
+	snprintf(format, VERYSHORTBUFLEN, "%%-%d%s", cp_entry->ptr->len > strlen(cp_entry->ptr->name) ? cp_entry->ptr->len : (int)strlen(cp_entry->ptr->name),
 			cps_type[cp_entry->ptr->semantics]); 
       else
 	snprintf(format, VERYSHORTBUFLEN, "%%%s", cps_type[cp_entry->ptr->semantics]); 
@@ -2280,7 +2280,7 @@ void custom_primitive_value_print(char *out, int outlen, char *in, struct custom
 
       addr_to_str(ip_str, &ip_addr);
       if (formatted)
-        snprintf(format, VERYSHORTBUFLEN, "%%-%u%s", len > strlen(cp_entry->ptr->name) ? len : strlen(cp_entry->ptr->name),
+        snprintf(format, VERYSHORTBUFLEN, "%%-%d%s", len > strlen(cp_entry->ptr->name) ? len : (int)strlen(cp_entry->ptr->name),
                         cps_type[cp_entry->ptr->semantics]);
       else
         snprintf(format, VERYSHORTBUFLEN, "%%%s", cps_type[cp_entry->ptr->semantics]);
@@ -2295,7 +2295,7 @@ void custom_primitive_value_print(char *out, int outlen, char *in, struct custom
       etheraddr_string(in+cp_entry->off, eth_str);
 
       if (formatted)
-        snprintf(format, VERYSHORTBUFLEN, "%%-%u%s", len > strlen(cp_entry->ptr->name) ? len : strlen(cp_entry->ptr->name),
+        snprintf(format, VERYSHORTBUFLEN, "%%-%d%s", len > strlen(cp_entry->ptr->name) ? len : (int)strlen(cp_entry->ptr->name),
                         cps_type[cp_entry->ptr->semantics]);
       else
         snprintf(format, VERYSHORTBUFLEN, "%%%s", cps_type[cp_entry->ptr->semantics]);

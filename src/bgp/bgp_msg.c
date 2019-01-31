@@ -133,7 +133,7 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
       ret = bgp_parse_update_msg(&bmd, bgp_packet_ptr);
       if (ret < 0) {
         bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
-	Log(LOG_WARNING, "WARN ( %s/%s ): [%s] BGP UPDATE: malformed (%d).\n", config.name, bms->log_str, bgp_peer_str);
+	Log(LOG_WARNING, "WARN ( %s/%s ): [%s] BGP UPDATE: malformed.\n", config.name, bms->log_str, bgp_peer_str);
 	return BGP_NOTIFY_UPDATE_ERR;
       }
 

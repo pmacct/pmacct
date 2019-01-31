@@ -72,7 +72,11 @@ struct _log_notifications {
 #else
 #define EXT
 #endif
-EXT void Log(short int, char *, ...);
+EXT void Log(short int, char *, ...)
+#ifdef __GNUC__
+  __attribute__((format(printf, 2, 3)))
+#endif
+  ;
 EXT int parse_log_facility(const char *);
 EXT void log_notification_init(struct log_notification *);
 EXT void log_notifications_init(struct _log_notifications *);

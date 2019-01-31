@@ -1507,7 +1507,7 @@ int main(int argc,char **argv)
           request.data.cos = atoi(match_string_token);
         }
         else if (!strcmp(count_token[match_string_index], "etype")) {
-	  sscanf(match_string_token, "%x", &request.data.etype);
+	  sscanf(match_string_token, "%hx", &request.data.etype);
         }
 #endif
 
@@ -2805,7 +2805,7 @@ int main(int argc,char **argv)
 
     if (unpacked == (sizeof(struct query_header) + sizeof(struct timeval))) {
       memcpy(&table_reset_stamp, (largebuf + sizeof(struct query_header)), sizeof(struct timeval));
-      if (table_reset_stamp.tv_sec) printf("%u\n", cycle_stamp.tv_sec - table_reset_stamp.tv_sec);
+      if (table_reset_stamp.tv_sec) printf("%ld\n", (long)(cycle_stamp.tv_sec - table_reset_stamp.tv_sec));
       else printf("never\n");
     }
   }
@@ -2871,10 +2871,10 @@ int main(int argc,char **argv)
 	/* print flows */
 	else if (which_counter == 3) printf("%llu\n", acc_elem->flo_num);
 #else
-        if (which_counter == 0) printf("%lu\n", acc_elem->pkt_len); 
-        else if (which_counter == 1) printf("%lu\n", acc_elem->pkt_num); 
-        else if (which_counter == 2) printf("%lu %lu %lu %lu\n", acc_elem->pkt_num, acc_elem->pkt_len, acc_elem->flo_num, acc_elem->time_start.tv_sec); 
-        else if (which_counter == 3) printf("%lu\n", acc_elem->flo_num); 
+        if (which_counter == 0) printf("%u\n", acc_elem->pkt_len); 
+        else if (which_counter == 1) printf("%u\n", acc_elem->pkt_num); 
+        else if (which_counter == 2) printf("%u %u %u %lu\n", acc_elem->pkt_num, acc_elem->pkt_len, acc_elem->flo_num, acc_elem->time_start.tv_sec); 
+        else if (which_counter == 3) printf("%u\n", acc_elem->flo_num); 
 #endif
       }
     }
@@ -2886,10 +2886,10 @@ int main(int argc,char **argv)
       else if (which_counter == 2) printf("%llu %llu %llu %u\n", pcnt, bcnt, fcnt, num_counters); /* print packets+bytes+flows+num */
       else if (which_counter == 3) printf("%llu\n", fcnt); /* print flows */
 #else
-      if (which_counter == 0) printf("%lu\n", bcnt); 
-      else if (which_counter == 1) printf("%lu\n", pcnt); 
-      else if (which_counter == 2) printf("%lu %lu %lu %u\n", pcnt, bcnt, fcnt, num_counters); 
-      else if (which_counter == 3) printf("%lu\n", fcnt); 
+      if (which_counter == 0) printf("%u\n", bcnt); 
+      else if (which_counter == 1) printf("%u\n", pcnt); 
+      else if (which_counter == 2) printf("%u %u %u %u\n", pcnt, bcnt, fcnt, num_counters); 
+      else if (which_counter == 3) printf("%u\n", fcnt); 
 #endif
     }
   }
@@ -2993,14 +2993,14 @@ int Recv(int sd, unsigned char **buf)
 int check_data_sizes(struct query_header *qh, struct pkt_data *acc_elem)
 {
   if (qh->cnt_sz != sizeof(acc_elem->pkt_len)) {
-    printf("ERROR: Counter sizes mismatch: daemon: %d  client: %d\n", qh->cnt_sz*8, sizeof(acc_elem->pkt_len)*8);
+    printf("ERROR: Counter sizes mismatch: daemon: %d  client: %d\n", qh->cnt_sz*8, (int)sizeof(acc_elem->pkt_len)*8);
     printf("ERROR: It's very likely that a 64bit package has been mixed with a 32bit one.\n\n");
     printf("ERROR: Please fix the issue before trying again.\n");
     return (qh->cnt_sz-sizeof(acc_elem->pkt_len));
   }
 
   if (qh->ip_sz != sizeof(acc_elem->primitives.src_ip)) {
-    printf("ERROR: IP address sizes mismatch. daemon: %d  client: %d\n", qh->ip_sz, sizeof(acc_elem->primitives.src_ip));
+    printf("ERROR: IP address sizes mismatch. daemon: %d  client: %d\n", qh->ip_sz, (int)sizeof(acc_elem->primitives.src_ip));
     printf("ERROR: It's very likely that an IPv6-enabled package has been mixed with a IPv4-only one.\n\n");
     printf("ERROR: Please fix the issue before trying again.\n");
     return (qh->ip_sz-sizeof(acc_elem->primitives.src_ip));
@@ -3682,7 +3682,7 @@ void pmc_compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, 
   struct tm *time2;
 
   if (tstamp_since_epoch) {
-    if (usec) snprintf(buf, buflen, "%ld.%.6ld", tv->tv_sec, tv->tv_usec);
+    if (usec) snprintf(buf, buflen, "%ld.%.6ld", tv->tv_sec, (long)tv->tv_usec);
     else snprintf(buf, buflen, "%ld", tv->tv_sec);
   }
   else {
@@ -3692,7 +3692,7 @@ void pmc_compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, 
 
     slen = strftime(buf, buflen, "%Y-%m-%dT%H:%M:%S", time2);
 
-    if (usec) snprintf((buf + slen), (buflen - slen), ".%.6ld", tv->tv_usec);
+    if (usec) snprintf((buf + slen), (buflen - slen), ".%.6ld", (long)tv->tv_usec);
     pmc_append_rfc3339_timezone(buf, buflen, time2);
   }
 }
@@ -3707,7 +3707,7 @@ void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_
     if (cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_UINT ||
         cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_HEX) {
       if (formatted) {
-	snprintf(format, SRVBUFLEN, "%%-%u", cps_flen[cp_entry->len] > strlen(cp_entry->name) ? cps_flen[cp_entry->len] : strlen(cp_entry->name));
+	snprintf(format, SRVBUFLEN, "%%-%d", cps_flen[cp_entry->len] > strlen(cp_entry->name) ? cps_flen[cp_entry->len] : (int)strlen(cp_entry->name));
 	strncat(format, "s", SRVBUFLEN);
       }
       else snprintf(format, SRVBUFLEN, "%s", "%s");
@@ -3715,7 +3715,7 @@ void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_
     else if (cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_STRING ||
 	     cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
       if (formatted) {
-	snprintf(format, SRVBUFLEN, "%%-%u", cp_entry->len > strlen(cp_entry->name) ? cp_entry->len : strlen(cp_entry->name));
+	snprintf(format, SRVBUFLEN, "%%-%d", cp_entry->len > strlen(cp_entry->name) ? cp_entry->len : (int)strlen(cp_entry->name));
 	strncat(format, "s", SRVBUFLEN);
       }
       else snprintf(format, SRVBUFLEN, "%s", "%s");
@@ -3726,7 +3726,7 @@ void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_
       len = INET6_ADDRSTRLEN;
       	
       if (formatted) {
-        snprintf(format, SRVBUFLEN, "%%-%u", len > strlen(cp_entry->name) ? len : strlen(cp_entry->name));
+        snprintf(format, SRVBUFLEN, "%%-%d", len > strlen(cp_entry->name) ? len : (int)strlen(cp_entry->name));
         strncat(format, "s", SRVBUFLEN);
       }
       else snprintf(format, SRVBUFLEN, "%s", "%s");
@@ -3735,7 +3735,7 @@ void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_
       int len = ETHER_ADDRSTRLEN;
 
       if (formatted) {
-        snprintf(format, SRVBUFLEN, "%%-%u", len > strlen(cp_entry->name) ? len : strlen(cp_entry->name));
+        snprintf(format, SRVBUFLEN, "%%-%d", len > strlen(cp_entry->name) ? len : (int)strlen(cp_entry->name));
         strncat(format, "s", SRVBUFLEN);
       }
       else snprintf(format, SRVBUFLEN, "%s", "%s");
@@ -3755,7 +3755,7 @@ void pmc_custom_primitive_value_print(char *out, int outlen, char *in, struct im
     if (cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_UINT ||
 	cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_HEX) {
       if (formatted)
-        snprintf(format, SRVBUFLEN, "%%-%u%s", cps_flen[cp_entry->len] > strlen(cp_entry->name) ? cps_flen[cp_entry->len] : strlen(cp_entry->name), 
+        snprintf(format, SRVBUFLEN, "%%-%d%s", cps_flen[cp_entry->len] > strlen(cp_entry->name) ? cps_flen[cp_entry->len] : (int)strlen(cp_entry->name), 
 			cps_type[cp_entry->semantics]); 
       else
         snprintf(format, SRVBUFLEN, "%%%s", cps_type[cp_entry->semantics]); 
@@ -3791,7 +3791,7 @@ void pmc_custom_primitive_value_print(char *out, int outlen, char *in, struct im
     else if (cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_STRING ||
 	     cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
       if (formatted)
-	snprintf(format, SRVBUFLEN, "%%-%u%s", cp_entry->len > strlen(cp_entry->name) ? cp_entry->len : strlen(cp_entry->name),
+	snprintf(format, SRVBUFLEN, "%%-%d%s", cp_entry->len > strlen(cp_entry->name) ? cp_entry->len : (int)strlen(cp_entry->name),
 			cps_type[cp_entry->semantics]); 
       else
 	snprintf(format, SRVBUFLEN, "%%%s", cps_type[cp_entry->semantics]); 
@@ -3819,7 +3819,7 @@ void pmc_custom_primitive_value_print(char *out, int outlen, char *in, struct im
 
       addr_to_str(ip_str, &ip_addr);
       if (formatted)
-        snprintf(format, SRVBUFLEN, "%%-%u%s", len > strlen(cp_entry->name) ? len : strlen(cp_entry->name),
+        snprintf(format, SRVBUFLEN, "%%-%d%s", len > strlen(cp_entry->name) ? len : (int)strlen(cp_entry->name),
                         cps_type[cp_entry->semantics]);
       else
         snprintf(format, SRVBUFLEN, "%%%s", cps_type[cp_entry->semantics]);
@@ -3834,7 +3834,7 @@ void pmc_custom_primitive_value_print(char *out, int outlen, char *in, struct im
       etheraddr_string(in+cp_entry->off, eth_str);
 
       if (formatted)
-        snprintf(format, SRVBUFLEN, "%%-%u%s", len > strlen(cp_entry->name) ? len : strlen(cp_entry->name),
+        snprintf(format, SRVBUFLEN, "%%-%d%s", len > strlen(cp_entry->name) ? len : (int)strlen(cp_entry->name),
                         cps_type[cp_entry->semantics]);
       else
         snprintf(format, SRVBUFLEN, "%%%s", cps_type[cp_entry->semantics]);

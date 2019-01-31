@@ -438,7 +438,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
     if (f) {
       if (!(config.print_output & PRINT_OUTPUT_AVRO) && fd_buf) {
         if (setvbuf(f, fd_buf, _IOFBF, OUTPUT_FILE_BUFSZ))
-          Log(LOG_WARNING, "WARN ( %s/%s ): [%s] setvbuf() failed: %s\n", config.name, config.type, current_table, errno);
+          Log(LOG_WARNING, "WARN ( %s/%s ): [%s] setvbuf() failed: %s\n", config.name, config.type, current_table, strerror(errno));
         else memset(fd_buf, 0, OUTPUT_FILE_BUFSZ);
       }
 
@@ -1257,8 +1257,8 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   /* If we have pending queries then start again */
   if (pqq_ptr) goto start;
 
-  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n",
-		config.name, config.type, writer_pid, qn, saved_index, duration);
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %lu) ***\n",
+		config.name, config.type, writer_pid, qn, saved_index, (long)duration);
 
   if (config.sql_trigger_exec && !safe_action) P_trigger_exec(config.sql_trigger_exec); 
 

@@ -168,9 +168,10 @@ int telemetry_validate_input_output_decoders(int input, int output)
 
 void telemetry_log_peer_stats(telemetry_peer *peer, struct telemetry_data *t_data)
 {
-  Log(LOG_INFO, "INFO ( %s/%s ): [%s:%u] pkts=%u pktBytes=%u msgBytes=%u msgErrors=%u\n",
-	config.name, t_data->log_str, peer->addr_str, peer->tcp_port, peer->stats.packets,
-	peer->stats.packet_bytes, peer->stats.msg_bytes, peer->stats.msg_errors);
+  Log(LOG_INFO, "INFO ( %s/%s ): [%s:%u] pkts=%llu pktBytes=%llu msgBytes=%llu msgErrors=%llu\n",
+	config.name, t_data->log_str, peer->addr_str, peer->tcp_port,
+	(unsigned long long)peer->stats.packets, (unsigned long long)peer->stats.packet_bytes,
+	(unsigned long long)peer->stats.msg_bytes, (unsigned long long)peer->stats.msg_errors);
 
   t_data->global_stats.packets += peer->stats.packets;
   t_data->global_stats.packet_bytes += peer->stats.packet_bytes;
@@ -185,9 +186,10 @@ void telemetry_log_peer_stats(telemetry_peer *peer, struct telemetry_data *t_dat
 
 void telemetry_log_global_stats(struct telemetry_data *t_data)
 {
-  Log(LOG_INFO, "INFO ( %s/%s ): [Total] pkts=%u pktBytes=%u msgBytes=%u msgErrors=%u\n",
-        config.name, t_data->log_str, t_data->global_stats.packets, t_data->global_stats.packet_bytes,
-	t_data->global_stats.msg_bytes, t_data->global_stats.msg_errors);
+  Log(LOG_INFO, "INFO ( %s/%s ): [Total] pkts=%llu pktBytes=%llu msgBytes=%llu msgErrors=%llu\n",
+        config.name, t_data->log_str, (unsigned long long)t_data->global_stats.packets,
+	(unsigned long long)t_data->global_stats.packet_bytes, (unsigned long long)t_data->global_stats.msg_bytes,
+	(unsigned long long)t_data->global_stats.msg_errors);
 
   t_data->global_stats.packets = 0;
   t_data->global_stats.packet_bytes = 0;
