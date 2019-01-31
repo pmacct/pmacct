@@ -39,6 +39,9 @@
 #include "ndpi/ndpi.h"
 #endif
 
+#if defined (WITH_CUSTOM_PRINT_PLUGIN)
+#include "custom_print_plugin.h"
+#endif
 /* Functions */
 void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 
 {
@@ -426,6 +429,16 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
       }
 #endif
     }
+		
+	if (config.print_output & PRINT_OUTPUT_CUSTOM_PRINT_PLUGIN) {
+#ifdef WITH_CUSTOM_PRINT_PLUGIN
+		if (0 != custom_print_plugin.open_file(current_table, config.print_output_file_append)) {
+			Log(LOG_ERR, "ERROR ( %s/%s ): custom print plugin: failed opening %s: %s\n",
+				config.name, config.type, current_table, custom_print_plugin.get_error_text());
+			exit_plugin(1);
+		}
+#endif
+	}
     else {
       if (config.print_output_file_append) {
         file_to_be_created = access(current_table, F_OK);
@@ -516,6 +529,11 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
     if (!go_to_pending) {
       if (f) qn++;
+#if WITH_CUSTOM_PRINT_PLUGIN
+	  else {
+		  qn++;
+	  }
+#endif
 
       data = &queue[j]->primitives;
       if (queue[j]->pbgp) pbgp = queue[j]->pbgp;
@@ -1210,6 +1228,19 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_avro(): AVRO object not created due to missing --enable-avro\n", config.name, config.type);
 #endif
       }
+	  if (config.print_output & PRINT_OUTPUT_CUSTOM_PRINT_PLUGIN) {
+#ifdef WITH_CUSTOM_PRINT_PLUGIN
+		  struct pkt_primitives *pbase = &queue[j]->primitives;
+		  struct host_addr *from = &pbase->src_ip;
+
+		  custom_print_plugin.print(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
+									&queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust, pvlen, queue[j]->bytes_counter,
+									queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags, NULL,
+									queue[j]->stitch);
+#else
+        if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): print(): custom print plugin object not created due to missing --enable-custom-print-plugin\n", config.name, config.type);
+#endif
+	  }
     }
   }
 
@@ -1232,12 +1263,32 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
       avro_file_writer_flush(avro_writer);
 #endif
 
+#ifdef WITH_CUSTOM_PRINT_PLUGIN
+	if (config.print_output & PRINT_OUTPUT_CUSTOM_PRINT_PLUGIN) {
+		if (0 != custom_print_plugin.flush_file()) {
+			Log(LOG_ERR, "ERROR ( %s/%s ): custom print plugin: failed flushing file %s: %s\n",
+				config.name, config.type, current_table, custom_print_plugin.get_error_text());
+			exit_plugin(1);
+		}
+	}
+#endif
+
     if (config.print_latest_file) {
       if (!safe_action) {
         handle_dynname_internal_strings(tmpbuf, SRVBUFLEN, config.print_latest_file, &prim_ptrs, DYN_STR_PRINT_FILE);
         link_latest_output_file(tmpbuf, current_table);
       }
     }
+
+#ifdef WITH_CUSTOM_PRINT_PLUGIN
+    if (config.print_output & PRINT_OUTPUT_CUSTOM_PRINT_PLUGIN) {
+      if (0 != custom_print_plugin.close_file()) {
+		  Log(LOG_ERR, "ERROR ( %s/%s ): custom print plugin: failed closing file %s: %s\n",
+			  config.name, config.type, current_table, custom_print_plugin.get_error_text());
+		  exit_plugin(1);
+	  }
+    }
+#endif
 
 #ifdef WITH_AVRO
     if (config.print_output & PRINT_OUTPUT_AVRO) {
