@@ -2831,6 +2831,70 @@ int cfg_key_print_output_separator(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_jsonudp_type(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+  char *endptr;
+  int value = 0;
+
+  lower_string(value_ptr);
+  if (!strcmp(value_ptr, "udp")) {
+    value = JSONUDP_TYPE_UDP;
+  } else if (!strcmp(value_ptr, "zeromq")) {
+    value = JSONUDP_TYPE_ZEROMQ;
+  } else {
+    Log(LOG_ERR, "ERROR: [%s] '%s' is not a valid type.\n", filename, value_ptr);
+    return ERR;
+  }
+
+  if (!name) {
+    for (; list; list = list->next, changes++) {
+      list->cfg.jsonudp_type = value;
+    }
+  } else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.jsonudp_type = value;
+        changes++;
+        break;
+      }
+    }
+  }
+  return changes;
+}
+
+int cfg_key_jsonudp_topic(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+  char *endptr;
+  int topic_raw = 0;
+  u_int8_t topic = 0;
+
+  topic_raw = strtoull(value_ptr, &endptr, 10);
+  if (topic_raw < 0) {
+    Log(LOG_ERR, "ERROR: [%s] '%s' is not a valid topic id.\n", filename, value_ptr);
+    return ERR;
+  } else {
+    topic = (u_int8_t)topic_raw;
+  }
+
+  if (!name) {
+    for (; list; list = list->next, changes++) {
+      list->cfg.jsonudp_topic = topic;
+    }
+  } else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.jsonudp_topic = topic;
+        changes++;
+        break;
+      }
+    }
+  }
+  return changes;
+}
 int cfg_key_jsonudp_server(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

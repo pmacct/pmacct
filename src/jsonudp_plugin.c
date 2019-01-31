@@ -111,12 +111,12 @@ int jsonudp_plugin_shutdown_client(int client) {
   close(client);
 }
 
-void jsonudp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 
+void jsonudp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 {
   struct pkt_data *data;
-  struct sockaddr server_addr;
-  socklen_t server_addr_len = sizeof(struct sockaddr);
-  int server_socket = -1;
+  struct sockaddr udp_server_addr;
+  socklen_t udp_server_addr_len = sizeof(struct sockaddr);
+  int udp_server_socket = -1;
   struct ports_table pt;
   unsigned char *pipebuf;
   struct pollfd pfd;
@@ -127,6 +127,9 @@ void jsonudp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   pid_t core_pid = ((struct channels_list_entry *)ptr)->core_pid;
   struct networks_file_data nfd;
+#ifdef WITH_ZMQ
+  struct p_zmq_host zmq_host = {0,};
+#endif
 
   unsigned char *rgptr;
   int pollagain = TRUE;
@@ -136,7 +139,11 @@ void jsonudp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct primitives_ptrs prim_ptrs;
   char *dataptr;
 
+  int jsonudp_type_default = JSONUDP_TYPE_UDP;
   char *jsonudp_server_default = "127.0.0.1:5001";
+#ifdef WITH_ZMQ
+  u_int8_t jsonudp_topic_default = 1;
+#endif
 
   /*
    * General plugin setup (Taken from print_plugin).
@@ -149,23 +156,64 @@ void jsonudp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   P_init_default_values();
   P_config_checks();
   pipebuf = (unsigned char *) pm_malloc(config.buffer_size);
+
+  /*
+   * Zero out locals.
+   */
   memset(pipebuf, 0, config.buffer_size);
+  memset(&udp_server_addr, 0, sizeof(struct sockaddr));
 
   /*
    * Build a sockaddr from the jsonudp_server parameter.
    * If the user did not specify one, we will use a default.
    */
-  memset(&server_addr, 0, sizeof(struct sockaddr));
 
-  if (config.jsonudp_server == NULL)
+  if (config.jsonudp_server == NULL) {
+    Log(LOG_WARNING, "WARNING ( %s/%s ): Using default server (%s).\n",
+                     config.name, config.type, jsonudp_server_default);
     config.jsonudp_server = jsonudp_server_default;
+  }
+  if (!config.jsonudp_type) {
+    Log(LOG_WARNING, "WARNING ( %s/%s ): Using default type (%s).\n",
+                     config.name, config.type, jsonudp_type_default);
+    config.jsonudp_type = jsonudp_type_default;
+  }
+  if (!config.jsonudp_topic) {
+    /*
+     * Only warn about a default topic if they are going to use ZeroMQ.
+     */
+#ifdef WITH_ZMQ
+    if (config.jsonudp_type == JSONUDP_TYPE_ZEROMQ) {
+      Log(LOG_WARNING, "WARNING ( %s/%s ): Using default topic (%d).\n",
+                       config.name, config.type, jsonudp_topic_default);
+    }
+    config.jsonudp_topic = jsonudp_topic_default;
+#endif
+  }
 
-  parse_hostport(config.jsonudp_server, &server_addr, &server_addr_len); 
 
-  if ((server_socket = jsonudp_plugin_create_client(&server_addr)) < 0) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Could not connect to the server (%s)."
-                 "Exiting.\n", config.name, config.type, config.jsonudp_server);
+  if (config.jsonudp_type == JSONUDP_TYPE_UDP) {
+    parse_hostport(config.jsonudp_server,
+                   &udp_server_addr,
+                   &udp_server_addr_len);
+    if ((udp_server_socket=jsonudp_plugin_create_client(&udp_server_addr))<0) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Could not connect to the server (%s). "
+                   "Exiting.\n", config.name,config.type,config.jsonudp_server);
+      exit_plugin(1);
+    }
+  } else {
+#ifndef WITH_ZMQ
+    Log(LOG_ERR, "ERROR ( %s/%s ): Not compiled with ZeroMQ support. "
+                 "Exiting.\n", config.name,config.type);
     exit_plugin(1);
+#else
+    /*
+     * NB: the library that sets the hostname automatically adds tcp://
+     * to the start of the host. This is really important to know!
+     */
+    p_zmq_init_pub(&zmq_host, config.jsonudp_server, config.jsonudp_topic);
+    p_zmq_pub_setup(&zmq_host);
+#endif
   }
 
   /*
@@ -237,7 +285,7 @@ void jsonudp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           if (seq == 0) rg_err_count = FALSE;
         }
         else {
-          if ((ret = read(pipe_fd, &rgptr, sizeof(rgptr))) == 0) 
+          if ((ret = read(pipe_fd, &rgptr, sizeof(rgptr))) == 0)
 	    exit_plugin(1); /* we exit silently; something happened at the write end */
         }
 
@@ -256,7 +304,6 @@ void jsonudp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
               Log(LOG_WARNING, "WARN ( %s/%s ): Increase values or look for plugin_buffer_size, plugin_pipe_size in CONFIG-KEYS document.\n\n",
                         config.name, config.type);
             }
-
 	    rg->ptr = (rg->base + status->last_buf_off);
             seq = ((struct ch_buf_hdr *)rg->ptr)->seq;
           }
@@ -267,7 +314,7 @@ void jsonudp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         rg->ptr += bufsz;
       }
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
-      if (config.debug_internal_msg) 
+      if (config.debug_internal_msg)
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received len=%llu seq=%u num_entries=%u\n",
                 config.name, config.type, ((struct ch_buf_hdr *)pipebuf)->len, seq,
                 ((struct ch_buf_hdr *)pipebuf)->num);
@@ -319,14 +366,32 @@ void jsonudp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           char *json_output = compose_json_str(json_obj);
           ssize_t json_output_len = strlen(json_output);
           if (json_output != NULL) {
-            if (sendto(server_socket,
-                       json_output,
-                       json_output_len, 0,
-                       (struct sockaddr*)&server_addr,
-                       sizeof(struct sockaddr)) != json_output_len) {
-              Log(LOG_ERR, "ERROR ( %s/%s ): Error forwarding record.\n",
-                             config.name,
-                             config.type);
+            if (config.jsonudp_type == JSONUDP_TYPE_UDP) {
+              /*
+               * send via udp.
+               */
+              if (sendto(udp_server_socket,
+                         json_output,
+                         json_output_len, 0,
+                         (struct sockaddr*)&udp_server_addr,
+                         sizeof(struct sockaddr)) != json_output_len) {
+                Log(LOG_ERR, "ERROR ( %s/%s ): Error forwarding record "
+                             "via UDP.\n",
+                              config.name,
+                              config.type);
+              }
+            } else {
+#ifdef WITH_ZMQ
+              /*
+               * send via zeromq.
+               */
+              if (!p_zmq_topic_send(&zmq_host, json_output, json_output_len)) {
+                Log(LOG_ERR, "ERROR ( %s/%s ): Error forwarding record "
+                             "via ZeroMQ.\n",
+                              config.name,
+                              config.type);
+              }
+#endif
             }
           }
           free(json_output);

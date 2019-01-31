@@ -437,6 +437,8 @@ static const struct _dictionary_line dictionary[] = {
   {"print_preprocess", cfg_key_sql_preprocess},
   {"print_preprocess_type", cfg_key_sql_preprocess_type},
   {"print_startup_delay", cfg_key_sql_startup_delay},
+  {"jsonudp_type", cfg_key_jsonudp_type},
+  {"jsonudp_topic", cfg_key_jsonudp_topic},
   {"jsonudp_server", cfg_key_jsonudp_server},
   {"mongo_host", cfg_key_sql_host},
   {"mongo_table", cfg_key_sql_table},
