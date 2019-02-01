@@ -2608,10 +2608,10 @@ any lift in the buffering must be also supported by the kernel, adjusting
 /proc/sys/net/core/rmem_max.
 
 h) BMP, the BGP Monitoring Protocol, has got drafting traction at IETF. New
-protocol features drive the need for inter-op testing (and is indeed fertile
-source of bugs :)). The BMP play tool (https://github.com/OpenBMP/dev_tools) 
-is a key piece of software for reproducing issues by saving raw BMP packets
-and allowing to replay them. An example of how this can be done, here:
+protocol features drive the need for inter-op testing. The BMP play tool
+( https://github.com/paololucente/bmp_play ) is a key piece of software for
+reproducing issues by saving raw BMP packets and allowing to replay them.
+An example of how this can be done, here:
 
 shell 1> bmp_play.py -m record -p 1790 -f bmp.dump
 
