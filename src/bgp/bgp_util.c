@@ -735,7 +735,6 @@ void bgp_peer_info_delete(struct bgp_peer *peer)
   struct bgp_rt_structs *inter_domain_routing_db = bgp_select_routing_db(peer->type);
   struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
   struct bgp_table *table;
-  struct bgp_node *node;
   afi_t afi;
   safi_t safi;
 
@@ -744,33 +743,44 @@ void bgp_peer_info_delete(struct bgp_peer *peer)
   for (afi = AFI_IP; afi < AFI_MAX; afi++) {
     for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
       table = inter_domain_routing_db->rib[afi][safi];
-      node = bgp_table_top(peer, table);
+      bgp_table_info_delete(peer, table, afi, safi);
+    }
+  }
+}
 
-      while (node) {
-        u_int32_t modulo = bms->route_info_modulo(peer, NULL, bms->table_per_peer_buckets);
-        u_int32_t peer_buckets;
-        struct bgp_info *ri;
-        struct bgp_info *ri_next;
+void bgp_table_info_delete(struct bgp_peer *peer, struct bgp_table *table, afi_t afi, safi_t safi)
+{
+  struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
+  struct bgp_node *node;
 
-        for (peer_buckets = 0; peer_buckets < bms->table_per_peer_buckets; peer_buckets++) {
-          for (ri = node->info[modulo+peer_buckets]; ri; ri = ri_next) {
-            if (ri->peer == peer) {
-	      if (bms->msglog_backend_methods) {
-		char event_type[] = "log";
+  node = bgp_table_top(peer, table);
 
-		bgp_peer_log_msg(node, ri, afi, safi, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_DELETE);
-	      }
+  while (node) {
+    u_int32_t modulo;
+    u_int32_t peer_buckets;
+    struct bgp_info *ri;
+    struct bgp_info *ri_next;
 
-	      ri_next = ri->next; /* let's save pointer to next before free up */
-              bgp_info_delete(peer, node, ri, modulo+peer_buckets);
-            }
-	    else ri_next = ri->next;
-          }
+    if (bms->route_info_modulo) modulo = bms->route_info_modulo(peer, NULL, bms->table_per_peer_buckets);
+    else modulo = 0;
+
+    for (peer_buckets = 0; peer_buckets < bms->table_per_peer_buckets; peer_buckets++) {
+      for (ri = node->info[modulo + peer_buckets]; ri; ri = ri_next) {
+	if (ri->peer == peer) {
+	  if (bms->msglog_backend_methods) {
+	    char event_type[] = "log";
+
+	    bgp_peer_log_msg(node, ri, afi, safi, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_DELETE);
+	  }
+
+	  ri_next = ri->next; /* let's save pointer to next before free up */
+          bgp_info_delete(peer, node, ri, (modulo + peer_buckets));
         }
-
-        node = bgp_route_next(peer, node);
+	else ri_next = ri->next;
       }
     }
+
+    node = bgp_route_next(peer, node);
   }
 }
 

@@ -106,7 +106,11 @@ bgp_node_set (struct bgp_peer *peer, struct bgp_table *table, struct prefix *pre
 static void
 bgp_node_free (struct bgp_node *node)
 {
-  free (node->info);
+  if (node->info) {
+    free (node->info);
+    node->info = NULL;
+  }
+
   free (node);
 }
 
@@ -457,43 +461,56 @@ bgp_route_next (struct bgp_peer *peer, struct bgp_node *node)
   return NULL;
 }
 
-/* Unlock current node and lock next node until limit. */
-struct bgp_node *
-bgp_route_next_until (struct bgp_peer *peer, struct bgp_node *node, struct bgp_node *limit)
+/* Free route table. */
+void bgp_table_free (struct bgp_table *rt)
 {
-  struct bgp_node *next;
-  struct bgp_node *start;
+  struct bgp_node *tmp_node;
+  struct bgp_node *node;
 
-  /* Node may be deleted from bgp_unlock_node so we have to preserve
-     next node's pointer. */
+  if (rt == NULL)
+    return;
 
-  if (node->l_left)
-    {
-      next = node->l_left;
-      bgp_lock_node (peer, next);
-      bgp_unlock_node (peer, node);
-      return next;
-    }
-  if (node->l_right)
-    {
-      next = node->l_right;
-      bgp_lock_node (peer, next);
-      bgp_unlock_node (peer, node);
-      return next;
-    }
+  node = rt->top;
 
-  start = node;
-  while (node->parent && node != limit)
+  /* Bulk deletion of nodes remaining in this table.  This function is not
+     called until workers have completed their dependency on this table.
+     A final route_unlock_node() will not be called for these nodes. */
+  while (node)
     {
-      if (node->parent->l_left == node && node->parent->l_right)
+      if (node->l_left)
 	{
-	  next = node->parent->l_right;
-	  bgp_lock_node (peer, next);
-	  bgp_unlock_node (peer, start);
-	  return next;
+	  node = node->l_left;
+	  continue;
 	}
+
+      if (node->l_right)
+	{
+	  node = node->l_right;
+	  continue;
+	}
+
+      tmp_node = node;
       node = node->parent;
+
+      tmp_node->table->count--;
+      tmp_node->lock = 0;  /* to cause assert if unlocked after this */
+      bgp_node_free (tmp_node);
+
+      if (node != NULL)
+	{
+	  if (node->l_left == tmp_node)
+	    node->l_left = NULL;
+	  else
+	    node->l_right = NULL;
+	}
+      else
+	{
+	  break;
+	}
     }
-  bgp_unlock_node (peer, start);
-  return NULL;
+ 
+  assert (rt->count == 0);
+
+  free(rt);
+  return;
 }
