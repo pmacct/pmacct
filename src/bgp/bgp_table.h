@@ -87,6 +87,7 @@ struct node_match_cmp_term2 {
   rd_t *rd;
   struct host_addr *peer_dst_ip;
   struct aspath *aspath;
+  int ret_code;
 };
 
 /* Prototypes */

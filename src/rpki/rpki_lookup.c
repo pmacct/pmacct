@@ -55,13 +55,28 @@ u_int8_t rpki_prefix_lookup(struct prefix *p, struct aspath *aspath)
 	  	 r_data->bgp_lookup_node_match_cmp, &nmct2, &result, &info);
 
   if (result) return ROA_STATUS_VALID;
-  else return ROA_STATUS_INVALID; 
+  else {
+    if (nmct2.ret_code == RPKI_LOOKUP_RETCODE_AS_MISMATCH) {
+      return ROA_STATUS_INVALID; 
+    }
+    else {
+      return ROA_STATUS_UNKNOWN;
+    }
+  }
 }
 
 int rpki_prefix_lookup_node_match_cmp(struct bgp_info *info, struct node_match_cmp_term2 *nmct2)
 {
+  nmct2->ret_code = RPKI_LOOKUP_RETCODE_UNKNOWN;
+
   if (!info || !info->attr || !info->attr->aspath || !nmct2 || !nmct2->aspath) return TRUE;
 
-  if (evaluate_last_asn(info->attr->aspath) == evaluate_last_asn(nmct2->aspath)) return FALSE;
-  else return TRUE;
+  if (evaluate_last_asn(info->attr->aspath) == evaluate_last_asn(nmct2->aspath)) {
+    nmct2->ret_code = RPKI_LOOKUP_RETCODE_OK;
+    return FALSE;
+  }
+  else {
+    nmct2->ret_code = RPKI_LOOKUP_RETCODE_AS_MISMATCH; 
+    return TRUE;
+  }
 }
