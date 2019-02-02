@@ -30,10 +30,9 @@
 #include "thread_pool.h"
 
 /* functions */
-int rpki_roas_file_load(char *file)
+int rpki_roas_file_load(char *file, struct bgp_table *rib_v4, struct bgp_table *rib_v6)
 {
   struct bgp_misc_structs *r_data = rpki_misc_db;
-  struct bgp_peer peer;
 
   Log(LOG_INFO, "INFO ( %s/%s ): [%s] (re)loading map.\n", config.name, r_data->log_str, file);
 
@@ -42,20 +41,21 @@ int rpki_roas_file_load(char *file)
   json_error_t file_err;
   int roas_idx;
 
-  rpki_init_dummy_peer(&peer);
+  rpki_init_dummy_peer(&rpki_peer);
 
   roas_obj = json_load_file(file, 0, &file_err);
 
   if (roas_obj) {
     if (!json_is_object(roas_obj)) {
       Log(LOG_ERR, "ERROR ( %s/%s ): [%s] json_is_object() failed for results: %s\n", config.name, r_data->log_str, file, file_err.text);
-      exit_gracefully(1);
+      return ERR;
     }
     else {
       roas_json = json_object_get(roas_obj, "roas");
       if (roas_json == NULL || !json_is_array(roas_json)) {
         Log(LOG_ERR, "ERROR ( %s/%s ): [%s] no 'roas' element or not an array.\n", config.name, r_data->log_str, file);
-        exit_gracefully(1);
+	json_decref(roas_obj);
+        return ERR;
       }
       else {
 	for (roas_idx = 0; (roa_json = json_array_get(roas_json, roas_idx)); roas_idx++) {
@@ -110,7 +110,7 @@ int rpki_roas_file_load(char *file)
 		config.name, r_data->log_str, file, prefix_str, maxlen, asn);
 	  }
 
-	  rpki_info_add(&peer, &p, asn, maxlen);
+	  ret = rpki_info_add(&rpki_peer, &p, asn, maxlen, rib_v4, rib_v6);
 
 	  exit_lane:
 	  continue;
@@ -124,7 +124,7 @@ int rpki_roas_file_load(char *file)
   }
   else {
     Log(LOG_ERR, "ERROR ( %s/%s ): [%s] json_loads() failed: %s.\n", config.name, r_data->log_str, file, file_err.text);
-    exit_gracefully(1);
+    return ERR;
   }
 #else
   Log(LOG_WARNING, "WARN ( %s/%s ): rpki_roas_file will not load (missing --enable-jansson).\n", config.name, r_data->log_str);
@@ -133,25 +133,28 @@ int rpki_roas_file_load(char *file)
   return SUCCESS;
 }
 
-int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t maxlen)
+int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t maxlen, struct bgp_table *rib_v4, struct bgp_table *rib_v6)
 {
   struct bgp_misc_structs *r_data = rpki_misc_db;
   struct bgp_node *route = NULL;
   struct bgp_info *ri = NULL, *new = NULL;
   struct bgp_attr attr, *attr_new = NULL;
+  struct bgp_table *rib = NULL;
   afi_t afi;
-  safi_t safi;
   u_int32_t modulo;
   u_int8_t end;
 
-  if (!rpki_routing_db || !r_data || !peer || !p) return ERR;
+  if (!r_data || !peer || !p || !rib_v4 || !rib_v6) return ERR;
 
   afi = family2afi(p->family); 
-  safi = SAFI_UNICAST;
   modulo = 0;
 
+  if (afi == AFI_IP) rib = rib_v4;
+  else if (afi == AFI_IP6) rib = rib_v6; 
+  else return ERR;
+
   for (end = MAX(p->prefixlen, maxlen); p->prefixlen <= end; p->prefixlen++) {
-    route = bgp_node_get(peer, rpki_routing_db->rib[afi][safi], p);
+    route = bgp_node_get(peer, rib, p);
 
     memset(&attr, 0, sizeof(attr));
     attr.aspath = aspath_parse_ast(peer, asn);

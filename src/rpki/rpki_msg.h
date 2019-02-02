@@ -25,6 +25,6 @@
 #else
 #define EXT
 #endif
-EXT int rpki_roas_file_load(char *);
-EXT int rpki_info_add(struct bgp_peer *, struct prefix *, as_t, u_int8_t);
+EXT int rpki_roas_file_load(char *, struct bgp_table *, struct bgp_table *);
+EXT int rpki_info_add(struct bgp_peer *, struct prefix *, as_t, u_int8_t, struct bgp_table *, struct bgp_table *);
 #undef EXT

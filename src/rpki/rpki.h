@@ -49,4 +49,5 @@ EXT void rpki_daemon();
 
 EXT struct bgp_rt_structs *rpki_routing_db;
 EXT struct bgp_misc_structs *rpki_misc_db;
+EXT struct bgp_peer rpki_peer;
 #undef EXT

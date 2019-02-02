@@ -61,6 +61,7 @@ void rpki_daemon()
   struct bgp_misc_structs *r_data = rpki_misc_db;
   afi_t afi;
   safi_t safi;
+  int ret;
 
   /* select() stuff */
   struct timeval select_timeout;
@@ -84,7 +85,11 @@ void rpki_daemon()
 
   rpki_link_misc_structs(r_data);
 
-  if (config.rpki_roas_file) rpki_roas_file_load(config.rpki_roas_file);
+  if (config.rpki_roas_file) {
+    ret = rpki_roas_file_load(config.rpki_roas_file,
+			rpki_routing_db->rib[AFI_IP][SAFI_UNICAST],
+			rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST]);
+  }
 
   for (;;) {
     /* simplified select() until we have fds to read from */
@@ -96,7 +101,40 @@ void rpki_daemon()
 
     /* signals handling */
     if (reload_map_rpki_thread) {
-      if (config.rpki_roas_file) rpki_roas_file_load(config.rpki_roas_file);
+      if (config.rpki_roas_file) {
+	struct bgp_table *backup_rib_v4, *backup_rib_v6;
+	struct bgp_table *saved_rib_v4, *saved_rib_v6;
+
+	backup_rib_v4 = bgp_table_init(AFI_IP, SAFI_UNICAST);
+	backup_rib_v6 = bgp_table_init(AFI_IP6, SAFI_UNICAST);
+
+	saved_rib_v4 = rpki_routing_db->rib[AFI_IP][SAFI_UNICAST];
+	saved_rib_v6 = rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST];
+
+	ret = rpki_roas_file_load(config.rpki_roas_file, backup_rib_v4, backup_rib_v6);
+
+	/* load successful */
+	if (!ret) {
+	  rpki_routing_db->rib[AFI_IP][SAFI_UNICAST] = backup_rib_v4;
+	  rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST] = backup_rib_v6;
+
+	  /* allow some generous time for any existing lookup to complete */
+	  sleep(DEFAULT_SLOTH_SLEEP_TIME);
+
+	  bgp_table_info_delete(&rpki_peer, saved_rib_v4, AFI_IP, SAFI_UNICAST);
+	  bgp_table_info_delete(&rpki_peer, saved_rib_v6, AFI_IP6, SAFI_UNICAST);
+
+	  bgp_table_free(saved_rib_v4);
+	  bgp_table_free(saved_rib_v6);
+	}
+	else {
+	  bgp_table_info_delete(&rpki_peer, backup_rib_v4, AFI_IP, SAFI_UNICAST);
+	  bgp_table_info_delete(&rpki_peer, backup_rib_v6, AFI_IP6, SAFI_UNICAST);
+
+	  bgp_table_free(backup_rib_v4);
+	  bgp_table_free(backup_rib_v6);
+	}
+      }
 
       reload_map_rpki_thread = FALSE;
     }
