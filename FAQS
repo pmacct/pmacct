@@ -1,5 +1,5 @@
-pmacct [IP traffic accounting : BGP : BMP : IGP : Streaming Telemetry]
-pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+pmacct [IP traffic accounting : BGP : BMP : RPKI : IGP : Streaming Telemetry]
+pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 
 Q1: What is pmacct project homepage ?
 A: pmacct homepage is http://www.pmacct.net/ . pmacct is also present on GitHub at
@@ -25,8 +25,8 @@ Q3: Does pmacct stand for Promiscuous mode IP Accounting package?
 A: Not anymore, it was originally though: pmacct was born as a libpcap-based traffic
    collection project only. Over the time it evolved to include NetFlow first, sFlow
    shortly afterwards and NFLOG more recently. Latest additions being in the areas
-   of BGP, BMP and Streaming Telemetry. However the unpronounceable name 'pmacct'
-   remained as a distinctive signature of the project.
+   of BGP, BMP, RPKI and Streaming Telemetry. However the unpronounceable name
+   'pmacct' remained as a distinctive signature of the project.
 
 
 Q4: What are pmacct main features?
@@ -39,7 +39,7 @@ A: pmacct can collect, replicate and export network information. On the data pla
    v5, NetFlow v5/v9 and IPFIX. pmacct is able to perform data aggregation,
    offering a rich set of primitives to choose from; it can also filter, sample,
    renormalize, tag and classify at L7. On the control and infrastructure planes it
-   can collect and publish to AMQP and Kafka brokers BGP, BMP, IGP and Streaming
+   can collect and publish to AMQP and Kafka brokers BGP, BMP, RPKI and Streaming
    Telemetry data both standalone and as correlation/enrichment of data plane
    information.
 
