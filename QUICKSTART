@@ -1732,6 +1732,54 @@ collector (please get in touch if interested). An alternative to the use of
 pmbgpd is NAT/masquerading; in this context, pmbgpd brings the advantage of
 running fully in user-space.
 
+In alternative to BGP xconnects, if supported and if enabled on the system,
+a simpler alternative may be available: the SO_REUSEPORT feature can be
+leveraged on Linux: it allows multiple daemons to bind the same local address
+and port in order to load-balance processing of incoming packets. This is
+best combined with a list of allowed IP addresses, ie. bgp_daemon_allow_file,
+to explicitely wire peers to collectors. Below a reference to a presentation
+of such feature:
+
+https://domsch.com/linux/lpc2010/Scaling_techniques_for_servers_with_high_connection%20rates.pdf
+
+To enable SO_REUSEPORT on a Linux system 'sysctl net.core.allow_reuseport=1'.
+Below an example for nfacctd with BGP thread (but indeed this is applicable
+to sfacctd, pmbgpd, pmbmpd as well):
+
+Daemon #1:
+
+allow-1.map:
+10.0.0.0/17
+
+nfacctd-1.conf:
+...
+!
+nfacctd_port: 2100
+nfacctd_allow_file: /path/to/allow-1.map
+!
+bgp_daemon: true
+bgp_daemon_port: 179
+bgp_daemon_allow_file: /path/to/allow-1.map
+!
+...
+
+Daemon #2:
+
+allow-2.map:
+10.0.128.0/17
+
+nfacctd-2.conf:
+...
+!
+nfacctd_port: 2100
+nfacctd_allow_file: /path/to/allow-2.map
+!
+bgp_daemon: true
+bgp_daemon_port: 179
+bgp_daemon_allow_file: /path/to/allow-2.map
+!
+...
+
 XIVi. Example: adding RPKI/ROA information 
 Resource Public Key Infrastructure (RPKI) is a specialized public key
 infrastructure (PKI) framework designed to secure the Internet routing. RPKI
