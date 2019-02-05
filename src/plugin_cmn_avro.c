@@ -125,22 +125,22 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
     avro_schema_record_field_append(schema, "peer_ip_dst", avro_schema_string());
 
   if (wtc & COUNT_SRC_STD_COMM)
-    avro_schema_record_field_append(schema, "src_comms", avro_schema_string());
+    avro_schema_record_field_append(schema, "comms_src", avro_schema_string());
 
   if (wtc & COUNT_SRC_EXT_COMM)
-    avro_schema_record_field_append(schema, "src_ecomms", avro_schema_string());
+    avro_schema_record_field_append(schema, "ecomms_src", avro_schema_string());
 
   if (wtc_2 & COUNT_SRC_LRG_COMM)
-    avro_schema_record_field_append(schema, "src_lcomms", avro_schema_string());
+    avro_schema_record_field_append(schema, "lcomms_src", avro_schema_string());
 
   if (wtc & COUNT_SRC_AS_PATH)
-    avro_schema_record_field_append(schema, "src_as_path", avro_schema_string());
+    avro_schema_record_field_append(schema, "as_path_src", avro_schema_string());
 
   if (wtc & COUNT_SRC_LOCAL_PREF)
-    avro_schema_record_field_append(schema, "src_local_pref", avro_schema_long());
+    avro_schema_record_field_append(schema, "local_pref_src", avro_schema_long());
 
   if (wtc & COUNT_SRC_MED)
-    avro_schema_record_field_append(schema, "src_med", avro_schema_long());
+    avro_schema_record_field_append(schema, "med_src", avro_schema_long());
 
   if (wtc_2 & COUNT_SRC_ROA)
     avro_schema_record_field_append(schema, "roa_src", avro_schema_string());
@@ -506,7 +506,7 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     }
     else str_ptr = empty_string;
 
-    check_i(avro_value_get_by_name(&value, "src_comms", &field, NULL));
+    check_i(avro_value_get_by_name(&value, "comms_src", &field, NULL));
     check_i(avro_value_set_string(&field, str_ptr));
   }
 
@@ -521,7 +521,7 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     }
     else str_ptr = empty_string;
 
-    check_i(avro_value_get_by_name(&value, "src_ecomms", &field, NULL));
+    check_i(avro_value_get_by_name(&value, "ecomms_src", &field, NULL));
     check_i(avro_value_set_string(&field, str_ptr));
   }
 
@@ -536,7 +536,7 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     }
     else str_ptr = empty_string;
 
-    check_i(avro_value_get_by_name(&value, "src_lcomms", &field, NULL));
+    check_i(avro_value_get_by_name(&value, "lcomms_src", &field, NULL));
     check_i(avro_value_set_string(&field, str_ptr));
   }
 
@@ -551,17 +551,17 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     }
     else str_ptr = empty_string;
 
-    check_i(avro_value_get_by_name(&value, "src_as_path", &field, NULL));
+    check_i(avro_value_get_by_name(&value, "as_path_src", &field, NULL));
     check_i(avro_value_set_string(&field, str_ptr));
   }
 
   if (wtc & COUNT_SRC_LOCAL_PREF) {
-    check_i(avro_value_get_by_name(&value, "src_local_pref", &field, NULL));
+    check_i(avro_value_get_by_name(&value, "local_pref_src", &field, NULL));
     check_i(avro_value_set_long(&field, pbgp->src_local_pref));
   }
 
   if (wtc & COUNT_SRC_MED) {
-    check_i(avro_value_get_by_name(&value, "src_med", &field, NULL));
+    check_i(avro_value_get_by_name(&value, "med_src", &field, NULL));
     check_i(avro_value_set_long(&field, pbgp->src_med));
   }
 

@@ -661,7 +661,7 @@ void compose_json_src_std_comm(json_t *obj, struct chained_cache *cc)
   }
   else str_ptr = empty_string;
 
-  json_object_set_new_nocheck(obj, "src_comms", json_string(str_ptr));
+  json_object_set_new_nocheck(obj, "comms_src", json_string(str_ptr));
 }
 
 void compose_json_src_ext_comm(json_t *obj, struct chained_cache *cc)
@@ -678,7 +678,7 @@ void compose_json_src_ext_comm(json_t *obj, struct chained_cache *cc)
   }
   else str_ptr = empty_string;
 
-  json_object_set_new_nocheck(obj, "src_ecomms", json_string(str_ptr));
+  json_object_set_new_nocheck(obj, "ecomms_src", json_string(str_ptr));
 }
 
 void compose_json_src_lrg_comm(json_t *obj, struct chained_cache *cc)
@@ -695,7 +695,7 @@ void compose_json_src_lrg_comm(json_t *obj, struct chained_cache *cc)
   }
   else str_ptr = empty_string;
 
-  json_object_set_new_nocheck(obj, "src_lcomms", json_string(str_ptr));
+  json_object_set_new_nocheck(obj, "lcomms_src", json_string(str_ptr));
 }
 
 void compose_json_src_as_path(json_t *obj, struct chained_cache *cc)
@@ -712,17 +712,17 @@ void compose_json_src_as_path(json_t *obj, struct chained_cache *cc)
   }
   else str_ptr = empty_string;
 
-  json_object_set_new_nocheck(obj, "src_as_path", json_string(str_ptr));
+  json_object_set_new_nocheck(obj, "as_path_src", json_string(str_ptr));
 }
 
 void compose_json_src_local_pref(json_t *obj, struct chained_cache *cc)
 {
-  json_object_set_new_nocheck(obj, "src_local_pref", json_integer((json_int_t)cc->pbgp->src_local_pref));
+  json_object_set_new_nocheck(obj, "local_pref_src", json_integer((json_int_t)cc->pbgp->src_local_pref));
 }
 
 void compose_json_src_med(json_t *obj, struct chained_cache *cc)
 {
-  json_object_set_new_nocheck(obj, "src_med", json_integer((json_int_t)cc->pbgp->src_med));
+  json_object_set_new_nocheck(obj, "med_src", json_integer((json_int_t)cc->pbgp->src_med));
 }
 
 void compose_json_src_roa(json_t *obj, struct chained_cache *cc)

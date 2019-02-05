@@ -6,6 +6,18 @@ the changes done or break old assumptions no longer valid; while the effort
 is to keep these cases at a low, please read this file in preparation to
 upgrading your installation.
 
+TO:	>= 1.7.3
+FROM:	<= 1.7.2
+TOPIC:	BGP-related src primitives (ie. src_as_path) and JSON/Avro encoding
+DESC:	Majority of these primitives were written in a 'src_' field, ie.
+	src_as_path, contraddicting the prevailing name convention of other
+	source/destination fields, ie. port_src, peer_ip_dst, etc.. These
+	fields have now been aligned to the name convention - with src or
+	dst qualifier at the end - and here is the full list of the fields
+	modified: src_comms, src_ecomms, src_lcomms, src_med, src_as_path
+	and src_local_pref; changed in: comms_src, ecomms_src, lcomms_src,
+	med_src, as_path_src and local_pref_src respectively. 
+
 TO:	>= 1.7.2
 FROM:	<= 1.7.1
 TOPIC:  Obsoleted features
