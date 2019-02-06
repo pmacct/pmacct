@@ -712,12 +712,9 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
       }
   
       if (config.what_to_count & COUNT_IP_PROTO) {
-        if (!config.num_protos && (data->proto < protocols_number))
-	  bson_append_string(bson_elem, "ip_proto", _protocols[data->proto].name);
-        else {
-          sprintf(misc_str, "%u", data->proto);
-          bson_append_string(bson_elem, "ip_proto", misc_str);
-        }
+	char proto[PROTO_NUM_STRLEN];
+
+	bson_append_string(bson_elem, "ip_proto", ip_proto_print(data->proto, proto, PROTO_NUM_STRLEN));
       }
   
       if (config.what_to_count & COUNT_IP_TOS) bson_append_int(bson_elem, "tos", data->tos);
@@ -748,12 +745,9 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
         bson_append_string(bson_elem, "tunnel_ip_dst", dst_host);
       }
       if (config.what_to_count_2 & COUNT_TUNNEL_IP_PROTO) {
-        if (!config.num_protos && (ptun->tunnel_proto < protocols_number))
-	  bson_append_string(bson_elem, "tunnel_ip_proto", _protocols[ptun->tunnel_proto].name);
-        else {
-          sprintf(misc_str, "%u", ptun->tunnel_proto);
-          bson_append_string(bson_elem, "tunnel_ip_proto", misc_str);
-        }
+	char proto[PROTO_NUM_STRLEN];
+
+	bson_append_string(bson_elem, "tunnel_ip_proto", ip_proto_print(ptun->tunnel_proto, proto, PROTO_NUM_STRLEN));
       }
       if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) bson_append_int(bson_elem, "tunnel_tos", ptun->tunnel_tos);
   

@@ -3537,8 +3537,13 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   }
 
   if (wtc & COUNT_IP_PROTO) {
+    char proto[PROTO_NUM_STRLEN];
+
     if (!want_ipproto_num) json_object_set_new_nocheck(obj, "ip_proto", json_string(_protocols[pbase->proto].name));
-    else json_object_set_new_nocheck(obj, "ip_proto", json_integer((json_int_t)_protocols[pbase->proto].number));
+    else {
+      snprintf(proto, PROTO_NUM_STRLEN, "%u", pbase->proto);
+      json_object_set_new_nocheck(obj, "ip_proto", json_string(proto));
+    }
   }
 
   if (wtc & COUNT_IP_TOS) json_object_set_new_nocheck(obj, "tos", json_integer((json_int_t)pbase->tos));
@@ -3579,8 +3584,13 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   }
 
   if (wtc_2 & COUNT_TUNNEL_IP_PROTO) {
+    char proto[PROTO_NUM_STRLEN];
+
     if (!want_ipproto_num) json_object_set_new_nocheck(obj, "tunnel_ip_proto", json_string(_protocols[ptun->tunnel_proto].name));
-    else json_object_set_new_nocheck(obj, "tunnel_ip_proto", json_integer((json_int_t)_protocols[ptun->tunnel_proto].number));
+    else {
+      snprintf(proto, PROTO_NUM_STRLEN, "%u", ptun->tunnel_proto);
+      json_object_set_new_nocheck(obj, "tunnel_ip_proto", json_string(proto));
+    }
   }
 
   if (wtc_2 & COUNT_TUNNEL_IP_TOS) json_object_set_new_nocheck(obj, "tunnel_tos", json_integer((json_int_t)ptun->tunnel_tos));

@@ -2989,3 +2989,18 @@ int P_broker_timers_get_retry_interval(struct p_broker_timers *btimers)
 
   return ERR;
 }
+
+char *ip_proto_print(u_int8_t ip_proto_id, char *str, int len)
+{
+  char *ret = NULL;
+
+  if (!config.num_protos && (ip_proto_id < protocols_number)) {
+    ret = (char *) _protocols[ip_proto_id].name;
+  }
+  else {
+    snprintf(str, len, "%u", ip_proto_id);
+    ret = str;
+  }
+
+  return ret;
+}

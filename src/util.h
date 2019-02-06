@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -115,6 +115,7 @@ EXT int evaluate_labels(struct pretag_label_filter *, pt_label_t *);
 EXT char *write_sep(char *, int *);
 EXT void version_daemon(char *);
 EXT void set_truefalse_nonzero(int *);
+EXT char *ip_proto_print(u_int8_t, char *, int);
 
 EXT char *compose_json_str(void *);
 EXT void write_and_free_json(FILE *, void *);

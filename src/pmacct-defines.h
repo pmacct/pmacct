@@ -32,6 +32,7 @@
 #define N_FUNCS 10 
 #define MAX_N_PLUGINS 32
 #define PROTO_LEN 12
+#define PROTO_NUM_STRLEN 4
 #define MAX_MAP_ENTRIES 2048 /* allow maps */
 #define BGP_MD5_MAP_ENTRIES 8192
 #define AGG_FILTER_ENTRIES 128 

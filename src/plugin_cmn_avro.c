@@ -707,14 +707,10 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
   }
 
   if (wtc & COUNT_IP_PROTO) {
+    char proto[PROTO_NUM_STRLEN];
+
     check_i(avro_value_get_by_name(&value, "ip_proto", &field, NULL));
-    if (!config.num_protos && (pbase->proto < protocols_number))
-      check_i(avro_value_set_string(&field, _protocols[pbase->proto].name));
-    else {
-      char proto_number[6];
-      snprintf(proto_number, sizeof(proto_number), "%d", pbase->proto);
-      check_i(avro_value_set_string(&field, proto_number));
-    }
+    check_i(avro_value_set_string(&field, ip_proto_print(pbase->proto, proto, PROTO_NUM_STRLEN)));
   }
 
   if (wtc & COUNT_IP_TOS) {
@@ -787,14 +783,10 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
   }
 
   if (wtc_2 & COUNT_TUNNEL_IP_PROTO) {
+    char proto[PROTO_NUM_STRLEN];
+
     check_i(avro_value_get_by_name(&value, "tunnel_ip_proto", &field, NULL));
-    if (!config.num_protos && (ptun->tunnel_proto < protocols_number))
-      check_i(avro_value_set_string(&field, _protocols[ptun->tunnel_proto].name));
-    else {
-      char proto_number[6];
-      snprintf(proto_number, sizeof(proto_number), "%d", ptun->tunnel_proto);
-      check_i(avro_value_set_string(&field, proto_number));
-    }
+    check_i(avro_value_set_string(&field, ip_proto_print(ptun->tunnel_proto, proto, PROTO_NUM_STRLEN)));
   }
 
   if (wtc_2 & COUNT_TUNNEL_IP_TOS) {

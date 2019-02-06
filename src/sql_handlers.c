@@ -374,17 +374,11 @@ void count_tunnel_dst_ip_handler(const struct db_cache *cache_elem, struct inser
 
 void MY_count_tunnel_ip_proto_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  if (cache_elem->ptun->tunnel_proto < protocols_number) {
-    snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, _protocols[cache_elem->ptun->tunnel_proto].name);
-    snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, _protocols[cache_elem->ptun->tunnel_proto].name);
-  }
-  else {
-    char proto_str[PROTO_LEN];
+  char proto[PROTO_NUM_STRLEN];
 
-    snprintf(proto_str, sizeof(proto_str), "%d", cache_elem->ptun->tunnel_proto);
-    snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, proto_str);
-    snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, proto_str);
-  }
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, ip_proto_print(cache_elem->ptun->tunnel_proto, proto, PROTO_NUM_STRLEN));
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, ip_proto_print(cache_elem->ptun->tunnel_proto, proto, PROTO_NUM_STRLEN));
+
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }
@@ -840,17 +834,11 @@ void count_ip_tos_handler(const struct db_cache *cache_elem, struct insert_data 
 
 void MY_count_ip_proto_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  if (cache_elem->primitives.proto < protocols_number) {
-    snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, _protocols[cache_elem->primitives.proto].name);
-    snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, _protocols[cache_elem->primitives.proto].name);
-  }
-  else {
-    char proto_str[PROTO_LEN];
+  char proto[PROTO_NUM_STRLEN];
 
-    snprintf(proto_str, sizeof(proto_str), "%d", cache_elem->primitives.proto);
-    snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, proto_str);
-    snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, proto_str);
-  }
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, ip_proto_print(cache_elem->primitives.proto, proto, PROTO_NUM_STRLEN));
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, ip_proto_print(cache_elem->primitives.proto, proto, PROTO_NUM_STRLEN));
+
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }

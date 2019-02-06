@@ -890,10 +890,9 @@ void compose_json_tcp_flags(json_t *obj, struct chained_cache *cc)
 
 void compose_json_proto(json_t *obj, struct chained_cache *cc)
 {
-  if (!config.num_protos && (cc->primitives.proto < protocols_number))
-    json_object_set_new_nocheck(obj, "ip_proto", json_string(_protocols[cc->primitives.proto].name));
-  else
-    json_object_set_new_nocheck(obj, "ip_proto", json_integer((json_int_t)cc->primitives.proto));
+  char proto[PROTO_NUM_STRLEN];
+
+  json_object_set_new_nocheck(obj, "ip_proto", json_string(ip_proto_print(cc->primitives.proto, proto, PROTO_NUM_STRLEN)));
 }
 
 void compose_json_tos(json_t *obj, struct chained_cache *cc)
@@ -975,10 +974,9 @@ void compose_json_tunnel_dst_host(json_t *obj, struct chained_cache *cc)
 
 void compose_json_tunnel_proto(json_t *obj, struct chained_cache *cc)
 {
-  if (!config.num_protos && (cc->ptun->tunnel_proto < protocols_number))
-    json_object_set_new_nocheck(obj, "tunnel_ip_proto", json_string(_protocols[cc->ptun->tunnel_proto].name));
-  else
-    json_object_set_new_nocheck(obj, "tunnel_ip_proto", json_integer((json_int_t)cc->ptun->tunnel_proto));
+  char proto[PROTO_NUM_STRLEN];
+
+  json_object_set_new_nocheck(obj, "tunnel_ip_proto", json_string(ip_proto_print(cc->ptun->tunnel_proto, proto, PROTO_NUM_STRLEN)));
 }
 
 void compose_json_tunnel_tos(json_t *obj, struct chained_cache *cc)
