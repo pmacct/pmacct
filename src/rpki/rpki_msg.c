@@ -27,7 +27,6 @@
 #include "pmacct-data.h"
 #include "bgp/bgp.h"
 #include "rpki.h"
-#include "thread_pool.h"
 
 /* functions */
 int rpki_roas_file_load(char *file, struct bgp_table *rib_v4, struct bgp_table *rib_v6)
@@ -137,7 +136,7 @@ int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t ma
 {
   struct bgp_misc_structs *r_data = rpki_misc_db;
   struct bgp_node *route = NULL;
-  struct bgp_info *ri = NULL, *new = NULL;
+  struct bgp_info *new = NULL;
   struct bgp_attr attr, *attr_new = NULL;
   struct bgp_table *rib = NULL;
   afi_t afi;
@@ -160,27 +159,6 @@ int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t ma
     attr.aspath = aspath_parse_ast(peer, asn);
     attr_new = bgp_attr_intern(peer, &attr);
     if (attr.aspath) aspath_unintern(peer, attr.aspath);
-
-    for (ri = route->info[modulo]; ri; ri = ri->next) {
-      /* Check if received same information */
-      if (rpki_attrhash_cmp(ri->attr, attr_new)) {
-        /* Same information received */
-	bgp_unlock_node(peer, route);
-
-	bgp_attr_unintern(peer, attr_new);
-
-	goto exit_lane;
-      }
-      else {
-	/* Update to new attribute. */
-	bgp_attr_unintern(peer, ri->attr);
-	ri->attr = attr_new;
-
-	bgp_unlock_node (peer, route);
-
-	goto exit_lane;
-      }
-    }
 
     /* Make new BGP info. */
     new = bgp_info_new(peer);
