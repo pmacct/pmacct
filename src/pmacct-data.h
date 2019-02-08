@@ -299,7 +299,8 @@ static const char *bgp_origin[] = {
 static const char *rpki_roa[] = {
   "u",
   "i",
-  "v"
+  "v",
+  "o"
 };
 
 #if defined __PMACCTD_C || defined __UACCTD_C || defined __UTIL_C

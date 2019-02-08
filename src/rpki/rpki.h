@@ -20,10 +20,11 @@
 */
 
 /* defines */
-#define ROA_STATUS_UNKNOWN	0
-#define ROA_STATUS_INVALID	1
-#define ROA_STATUS_VALID	2
-#define ROA_STATUS_MAX		2
+#define ROA_STATUS_UNKNOWN		0	/* 'u' - Unknown */
+#define ROA_STATUS_INVALID		1	/* 'i' - Invalid with no covering prefix */
+#define ROA_STATUS_VALID		2	/* 'v' - Valid */
+#define ROA_STATUS_INVALID_OVERLAP	3	/* 'o' - Invalid with covering prefix */ 
+#define ROA_STATUS_MAX			3
 
 #include "rpki_msg.h"
 #include "rpki_lookup.h"

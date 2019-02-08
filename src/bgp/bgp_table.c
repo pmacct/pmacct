@@ -245,7 +245,8 @@ bgp_node_match (const struct bgp_table *table, struct prefix *p, struct bgp_peer
 	if (!cmp_func(info, nmct2)) {
 	  matched_node = node;
 	  matched_info = info;
-	  break;
+
+	  if (node->p.prefixlen == p->prefixlen) break;
 	}
       }
     }

@@ -54,7 +54,14 @@ u_int8_t rpki_prefix_lookup(struct prefix *p, struct aspath *aspath)
   bgp_node_match(rpki_routing_db->rib[afi][safi], p, &peer, r_data->route_info_modulo,
 	  	 r_data->bgp_lookup_node_match_cmp, &nmct2, &result, &info);
 
-  if (result) return ROA_STATUS_VALID;
+  if (result) {
+    if (nmct2.ret_code == RPKI_LOOKUP_RETCODE_AS_MISMATCH) {
+      return ROA_STATUS_INVALID_OVERLAP;
+    }
+    else {
+      return ROA_STATUS_VALID;
+    }
+  }
   else {
     if (nmct2.ret_code == RPKI_LOOKUP_RETCODE_AS_MISMATCH) {
       return ROA_STATUS_INVALID; 
