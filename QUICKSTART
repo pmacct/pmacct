@@ -1829,6 +1829,9 @@ plugins: print[foo]
 aggregate[foo]: peer_src_ip, peer_dst_ip, src_host, dst_host, src_roa, dst_roa
 ! < .. >
 
+The ROA fields will be populated with one of these four values: 'u' Unknown,
+'v' Valid, 'i' Invalid no overlaps and 'o' Invalid with a covering prefix.
+
 XIVl. BGP daemon implementation concluding notes
 The implementation supports 4-bytes ASN, IPv4, IPv6, VPNv4 and VPNv6 (MP-BGP)
 address families and several IETF drafts and RFCs, ie. ADD-PATH, Shutdown
