@@ -127,7 +127,7 @@ int main(int argc,char **argv, char **envp)
 
   struct sockaddr_storage server, client;
   struct ipv6_mreq multi_req6;
-  int clen = sizeof(client), slen;
+  socklen_t  clen = sizeof(client), slen;
   struct ip_mreq multi_req4;
 
   int pcap_savefile_round = 0;
@@ -671,10 +671,10 @@ int main(int argc,char **argv, char **envp)
 
     /* bind socket to port */
 #if (defined LINUX) && (defined HAVE_SO_REUSEPORT)
-    rc = setsockopt(config.sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *)&yes, sizeof(yes));
+    rc = setsockopt(config.sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *) &yes, (socklen_t) sizeof(yes));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR|SO_REUSEPORT.\n", config.name);
 #else
-    rc = setsockopt(config.sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
+    rc = setsockopt(config.sock, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, (socklen_t) sizeof(yes));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR.\n", config.name);
 #endif
 
@@ -684,11 +684,11 @@ int main(int argc,char **argv, char **envp)
 #endif
 
     if (config.nfacctd_pipe_size) {
-      int l = sizeof(config.nfacctd_pipe_size);
+      socklen_t l = sizeof(config.nfacctd_pipe_size);
       int saved = 0, obtained = 0;
 
       getsockopt(config.sock, SOL_SOCKET, SO_RCVBUF, &saved, &l);
-      Setsocksize(config.sock, SOL_SOCKET, SO_RCVBUF, &config.nfacctd_pipe_size, sizeof(config.nfacctd_pipe_size));
+      Setsocksize(config.sock, SOL_SOCKET, SO_RCVBUF, &config.nfacctd_pipe_size, (socklen_t) sizeof(config.nfacctd_pipe_size));
       getsockopt(config.sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
 
       if (obtained < saved) {
@@ -703,7 +703,7 @@ int main(int argc,char **argv, char **envp)
       if (mcast_groups[idx].family == AF_INET) {
         memset(&multi_req4, 0, sizeof(multi_req4));
         multi_req4.imr_multiaddr.s_addr = mcast_groups[idx].address.ipv4.s_addr;
-        if (setsockopt(config.sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&multi_req4, sizeof(multi_req4)) < 0) {
+        if (setsockopt(config.sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&multi_req4, (socklen_t) sizeof(multi_req4)) < 0) {
 	  Log(LOG_ERR, "ERROR ( %s/core ): IPv4 multicast address - ADD membership failed.\n", config.name);
 	  exit_gracefully(1);
 	}
@@ -711,7 +711,7 @@ int main(int argc,char **argv, char **envp)
       if (mcast_groups[idx].family == AF_INET6) {
 	memset(&multi_req6, 0, sizeof(multi_req6));
 	ip6_addr_cpy(&multi_req6.ipv6mr_multiaddr, &mcast_groups[idx].address.ipv6);
-	if (setsockopt(config.sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&multi_req6, sizeof(multi_req6)) < 0) {
+	if (setsockopt(config.sock, IPPROTO_IPV6, IPV6_JOIN_GROUP, (char *)&multi_req6, (socklen_t) sizeof(multi_req6)) < 0) {
 	  Log(LOG_ERR, "ERROR ( %s/core ): IPv6 multicast address - ADD membership failed.\n", config.name);
 	  exit_gracefully(1);
 	}

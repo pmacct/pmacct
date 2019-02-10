@@ -25,6 +25,7 @@
 /* includes */
 #include "pmacct.h"
 #include "bgp/bgp.h"
+#include "bmp/bmp.h"
 #include "telemetry.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"

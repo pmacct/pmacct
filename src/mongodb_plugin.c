@@ -963,7 +963,7 @@ void MongoDB_create_indexes(mongo *db_conn, const char *table)
 	  trim_all_spaces(buf);
 	  bufptr = buf;
 	  bson_init(idx_key);
-	  while (token = extract_token(&bufptr, ',')) {
+	  while ((token = extract_token(&bufptr, ','))) {
 	    bson_append_int(idx_key, token, 1);
 	  }
 	  bson_finish(idx_key);

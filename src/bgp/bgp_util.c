@@ -1206,7 +1206,8 @@ void bgp_md5_file_process(int sock, struct bgp_md5_table *bgp_md5)
   struct pm_tcp_md5sig md5sig;
   struct sockaddr_storage ss_md5sig, ss_server;
   struct sockaddr *sa_md5sig = (struct sockaddr *)&ss_md5sig, *sa_server = (struct sockaddr *)&ss_server;
-  int rc, keylen, idx = 0, ss_md5sig_len, ss_server_len;
+  int rc, keylen, idx = 0, ss_md5sig_len;
+  socklen_t ss_server_len;
 
   if (!bgp_md5) return;
 
@@ -1237,7 +1238,7 @@ void bgp_md5_file_process(int sock, struct bgp_md5_table *bgp_md5)
 
     sa_to_str(peer_str, sizeof(peer_str), sa_md5sig);
 
-    rc = setsockopt(sock, IPPROTO_TCP, TCP_MD5SIG, &md5sig, sizeof(md5sig));
+    rc = setsockopt(sock, IPPROTO_TCP, TCP_MD5SIG, &md5sig, (socklen_t) sizeof(md5sig));
     if (rc < 0) {
       Log(LOG_WARNING, "WARN ( %s/core/BGP ): setsockopt() failed for TCP_MD5SIG peer=%s (errno: %d)\n", config.name, peer_str, errno);
     }

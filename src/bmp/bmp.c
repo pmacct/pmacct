@@ -216,15 +216,15 @@ void skinny_bmp_daemon()
   if (config.nfacctd_bmp_ipprec) {
     int opt = config.nfacctd_bmp_ipprec << 5;
 
-    rc = setsockopt(config.bmp_sock, IPPROTO_IP, IP_TOS, &opt, sizeof(opt));
+    rc = setsockopt(config.bmp_sock, IPPROTO_IP, IP_TOS, &opt, (socklen_t) sizeof(opt));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IP_TOS (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
   }
 
 #if (defined LINUX) && (defined HAVE_SO_REUSEPORT)
-  rc = setsockopt(config.bmp_sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *)&yes, sizeof(yes));
+  rc = setsockopt(config.bmp_sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *)&yes, (socklen_t) sizeof(yes));
   if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR|SO_REUSEPORT (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
 #else
-  rc = setsockopt(config.bmp_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
+  rc = setsockopt(config.bmp_sock, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, (socklen_t) sizeof(yes));
   if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
 #endif
 
@@ -234,11 +234,11 @@ void skinny_bmp_daemon()
 #endif
 
   if (config.nfacctd_bmp_pipe_size) {
-    int l = sizeof(config.nfacctd_bmp_pipe_size);
+    socklen_t l = sizeof(config.nfacctd_bmp_pipe_size);
     int saved = 0, obtained = 0;
 
     getsockopt(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &saved, &l);
-    Setsocksize(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &config.nfacctd_bmp_pipe_size, sizeof(config.nfacctd_bmp_pipe_size));
+    Setsocksize(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &config.nfacctd_bmp_pipe_size, (socklen_t) sizeof(config.nfacctd_bmp_pipe_size));
     getsockopt(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
 
     Setsocksize(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &saved, l);

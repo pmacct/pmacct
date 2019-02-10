@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -688,7 +688,7 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, u_int16_t src_port)
       int opt = config.nfprobe_ipprec << 5;
       int rc;
 
-      rc = setsockopt(s, IPPROTO_IP, IP_TOS, &opt, sizeof(opt));
+      rc = setsockopt(s, IPPROTO_IP, IP_TOS, &opt, (socklen_t) sizeof(opt));
       if (rc < 0) Log(LOG_WARNING, "WARN ( %s/%s ): setsockopt() failed for IP_TOS: %s\n", config.name, config.type, strerror(errno));
     }
 
@@ -703,16 +703,16 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, u_int16_t src_port)
 
 
 #if defined BSD
-    setsockopt(s, IPPROTO_IP, IP_HDRINCL, &hincl, sizeof(hincl));
+    setsockopt(s, IPPROTO_IP, IP_HDRINCL, &hincl, (socklen_t) sizeof(hincl));
 #endif
   }
 
   if (config.tee_pipe_size) {
-    int l = sizeof(config.tee_pipe_size);
+    socklen_t l = sizeof(config.tee_pipe_size);
     int saved = 0, obtained = 0;
     
     getsockopt(s, SOL_SOCKET, SO_SNDBUF, &saved, &l);
-    Setsocksize(s, SOL_SOCKET, SO_SNDBUF, &config.tee_pipe_size, sizeof(config.tee_pipe_size));
+    Setsocksize(s, SOL_SOCKET, SO_SNDBUF, &config.tee_pipe_size, (socklen_t) sizeof(config.tee_pipe_size));
     getsockopt(s, SOL_SOCKET, SO_SNDBUF, &obtained, &l);
   
     if (obtained < saved) {

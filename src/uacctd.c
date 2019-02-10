@@ -840,7 +840,7 @@ int main(int argc,char **argv, char **envp)
   }
 
   /* Turn off netlink errors from overrun. */
-  if (setsockopt(nflog_fd(nfh), SOL_NETLINK, NETLINK_NO_ENOBUFS, &one, sizeof(one)))
+  if (setsockopt(nflog_fd(nfh), SOL_NETLINK, NETLINK_NO_ENOBUFS, &one, (socklen_t) sizeof(one)))
     Log(LOG_ERR, "ERROR ( %s/core ): Failed to turn off netlink ENOBUFS\n", config.name);
 
   nflog_callback_register(nfgh, &nflog_incoming, &cb_data);

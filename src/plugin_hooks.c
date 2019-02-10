@@ -42,9 +42,9 @@ void load_plugins(struct plugin_requests *req)
   u_int64_t buf_pipe_ratio_sz = 0, pipe_idx = 0;
   int snd_buflen = 0, rcv_buflen = 0, socklen = 0, target_buflen = 0;
 
-  int nfprobe_id = 0, min_sz = 0, extra_sz = 0;
+  int nfprobe_id = 0, min_sz = 0, extra_sz = 0, offset = 0;
   struct plugins_list_entry *list = plugins_list;
-  int l = sizeof(list->cfg.pipe_size), offset = 0;
+  socklen_t l = sizeof(list->cfg.pipe_size);
   struct channels_list_entry *chptr = NULL;
 
   char username[SHORTBUFLEN], password[SHORTBUFLEN];

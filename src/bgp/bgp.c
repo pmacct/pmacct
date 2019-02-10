@@ -270,15 +270,15 @@ void skinny_bgp_daemon_online()
   if (config.nfacctd_bgp_ipprec) {
     int opt = config.nfacctd_bgp_ipprec << 5;
 
-    rc = setsockopt(config.bgp_sock, IPPROTO_IP, IP_TOS, &opt, sizeof(opt));
+    rc = setsockopt(config.bgp_sock, IPPROTO_IP, IP_TOS, &opt, (socklen_t) sizeof(opt));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IP_TOS (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
   }
 
 #if (defined LINUX) && (defined HAVE_SO_REUSEPORT)
-  rc = setsockopt(config.bgp_sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *)&yes, sizeof(yes));
+  rc = setsockopt(config.bgp_sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *)&yes, (socklen_t) sizeof(yes));
   if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR|SO_REUSEPORT (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
 #else
-  rc = setsockopt(config.bgp_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
+  rc = setsockopt(config.bgp_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, (socklen_t) sizeof(yes));
   if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
 #endif
 
@@ -288,11 +288,11 @@ void skinny_bgp_daemon_online()
 #endif
 
   if (config.nfacctd_bgp_pipe_size) {
-    int l = sizeof(config.nfacctd_bgp_pipe_size);
+    socklen_t l = sizeof(config.nfacctd_bgp_pipe_size);
     int saved = 0, obtained = 0;
 
     getsockopt(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &saved, &l);
-    Setsocksize(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &config.nfacctd_bgp_pipe_size, sizeof(config.nfacctd_bgp_pipe_size));
+    Setsocksize(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &config.nfacctd_bgp_pipe_size, (socklen_t) sizeof(config.nfacctd_bgp_pipe_size));
     getsockopt(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
 
     Setsocksize(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &saved, l);

@@ -65,7 +65,7 @@ EXT void remove_pid_file(char *);
 EXT int sanitize_buf_net(char *, char *, int);
 EXT int sanitize_buf(char *);
 EXT void mark_columns(char *);
-EXT int Setsocksize(int, int, int, void *, int);
+EXT int Setsocksize(int, int, int, void *, socklen_t);
 EXT void *map_shared(void *, size_t, int, int, int, off_t);
 EXT void lower_string(char *);
 EXT void evaluate_sums(u_int64_t *, u_int64_t *, char *, char *);

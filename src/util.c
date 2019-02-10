@@ -24,6 +24,9 @@
 /* includes */
 #include "pmacct.h"
 #include "addr.h"
+#ifdef WITH_KAFKA
+#include "kafka_common.h"
+#endif
 #include "pmacct-data.h"
 #include "ip_flow.h"
 #include "classifier.h"
@@ -1074,9 +1077,10 @@ void mark_columns(char *buf)
   }
 }
 
-int Setsocksize(int s, int level, int optname, void *optval, int optlen)
+int Setsocksize(int s, int level, int optname, void *optval, socklen_t optlen)
 {
-  int ret, len = sizeof(int), saved, value;
+  int ret, saved, value;
+  socklen_t len = sizeof(int);
 
   memcpy(&value, optval, sizeof(int));
   

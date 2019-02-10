@@ -277,7 +277,7 @@ void bgp_lg_wrapper()
   /* initialize threads pool */
   bgp_lg_pool = allocate_thread_pool(1);
   assert(bgp_lg_pool);
-  Log(LOG_DEBUG, "DEBUG ( %s/core/lg ): pmbgpd Looking Glass thread initialized\n", config.name, 1);
+  Log(LOG_DEBUG, "DEBUG ( %s/core/lg ): pmbgpd Looking Glass thread initialized\n", config.name);
 
   /* giving a kick to the BGP thread */
   send_to_pool(bgp_lg_pool, bgp_lg_daemon, NULL);

@@ -577,8 +577,7 @@ int bgp_parse_notification_msg(struct bgp_msg_data *bmd, char *pkt, u_int8_t *re
       pkt_ptr = (pkt + BGP_MIN_NOTIFICATION_MSG_SIZE);
       bnsm = (struct bgp_notification_shutdown_msg *) pkt_ptr;
 
-      if (bnsm->bgpnsm_len <= rem_len && bnsm->bgpnsm_len <= BGP_NOTIFY_CEASE_SM_LEN &&
-	  bnsm->bgpnsm_len < shutdown_msglen) {
+      if (bnsm->bgpnsm_len <= rem_len && bnsm->bgpnsm_len < shutdown_msglen) {
 	memcpy(shutdown_msg, bnsm->bgpnsm_data, bnsm->bgpnsm_len);
 	shutdown_msg[bnsm->bgpnsm_len] = '\0';
 	

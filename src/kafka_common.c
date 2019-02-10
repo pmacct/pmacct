@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -230,7 +230,7 @@ int p_kafka_parse_config_entry(char *buf, char *type, char **key, char **value)
     (*value) = NULL;
     index = 0;
 
-    while (token = extract_token(&value_ptr, ',')) {
+    while ((token = extract_token(&value_ptr, ','))) {
       index++;
       trim_spaces(token);
 
