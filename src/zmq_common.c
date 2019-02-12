@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -476,7 +476,7 @@ int p_zmq_sendmore_str(struct p_zmq_sock *sock, char *buf)
   return len;
 }
 
-int p_zmq_recv_bin(struct p_zmq_sock *sock, void *buf, int len)
+int p_zmq_recv_bin(struct p_zmq_sock *sock, void *buf, size_t len)
 {
   int rcvlen;
 
@@ -485,7 +485,7 @@ int p_zmq_recv_bin(struct p_zmq_sock *sock, void *buf, int len)
   return rcvlen;
 }
 
-int p_zmq_send_bin(struct p_zmq_sock *sock, void *buf, int len)
+int p_zmq_send_bin(struct p_zmq_sock *sock, void *buf, size_t len)
 {
   int sndlen;
 
@@ -494,7 +494,7 @@ int p_zmq_send_bin(struct p_zmq_sock *sock, void *buf, int len)
   return sndlen;
 }
 
-int p_zmq_sendmore_bin(struct p_zmq_sock *sock, void *buf, int len)
+int p_zmq_sendmore_bin(struct p_zmq_sock *sock, void *buf, size_t len)
 {
   int sndlen;
 

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -92,13 +92,13 @@ EXT void p_kafka_msg_error(rd_kafka_t *, int, const char *, void *);
 EXT int p_kafka_stats(rd_kafka_t *, char *, size_t, void *);
 
 EXT int p_kafka_connect_to_produce(struct p_kafka_host *);
-EXT int p_kafka_produce_data(struct p_kafka_host *, void *, u_int32_t);
-EXT int p_kafka_produce_data_to_part(struct p_kafka_host *, void *, u_int32_t, int);
+EXT int p_kafka_produce_data(struct p_kafka_host *, void *, size_t);
+EXT int p_kafka_produce_data_to_part(struct p_kafka_host *, void *, size_t, int);
 
 EXT int p_kafka_connect_to_consume(struct p_kafka_host *);
 EXT int p_kafka_manage_consumer(struct p_kafka_host *, int);
 EXT int p_kafka_consume_poller(struct p_kafka_host *, void **, int);
-EXT int p_kafka_consume_data(struct p_kafka_host *, void *, char *, u_int32_t);
+EXT int p_kafka_consume_data(struct p_kafka_host *, void *, char *, size_t);
 
 EXT void p_kafka_close(struct p_kafka_host *, int);
 EXT int p_kafka_check_outq_len(struct p_kafka_host *);

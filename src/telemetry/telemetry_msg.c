@@ -268,7 +268,7 @@ int telemetry_basic_validate_json(telemetry_peer *peer)
 
 #if defined (WITH_ZMQ)
 #if defined (WITH_JANSSON)
-int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf, int buflen, struct sockaddr *addr, socklen_t *addr_len)
+int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf, size_t buflen, struct sockaddr *addr, socklen_t *addr_len)
 {
   json_t *json_obj, *telemetry_node_json, *telemetry_node_port_json;
   json_error_t json_err;

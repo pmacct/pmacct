@@ -399,7 +399,7 @@ int p_kafka_connect_to_produce(struct p_kafka_host *kafka_host)
   return SUCCESS;
 }
 
-int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, u_int32_t data_len, int part)
+int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, size_t data_len, int part)
 {
   int ret = SUCCESS;
 
@@ -422,7 +422,7 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, u_
   return ret; 
 }
 
-int p_kafka_produce_data(struct p_kafka_host *kafka_host, void *data, u_int32_t data_len)
+int p_kafka_produce_data(struct p_kafka_host *kafka_host, void *data, size_t data_len)
 {
   return p_kafka_produce_data_to_part(kafka_host, data, data_len, kafka_host->partition);
 }
@@ -489,7 +489,7 @@ int p_kafka_consume_poller(struct p_kafka_host *kafka_host, void **data, int tim
   return ret;
 }
 
-int p_kafka_consume_data(struct p_kafka_host *kafka_host, void *data, char *payload, u_int32_t payload_len)
+int p_kafka_consume_data(struct p_kafka_host *kafka_host, void *data, char *payload, size_t payload_len)
 {
   rd_kafka_message_t *kafka_msg = (rd_kafka_message_t *) data;
   int ret = 0;

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -346,7 +346,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 #ifdef WITH_AVRO
   avro_writer_t avro_writer;
   char *avro_buf = NULL;
-  int avro_len = 0, avro_buffer_full = FALSE;
+  int avro_buffer_full = FALSE;
+  size_t avro_len = 0;
 #endif
 
 #ifdef WITH_SERDES
@@ -576,7 +577,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
       }
 #ifdef WITH_SERDES
       else {
-	char *avro_local_buf = NULL;
+	void *avro_local_buf = NULL;
 
 	avro_len = 0;
 	if (avro_buf) {

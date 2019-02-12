@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -117,9 +117,9 @@ EXT void p_zmq_router_worker(void *);
 EXT char *p_zmq_recv_str(struct p_zmq_sock *);
 EXT int p_zmq_send_str(struct p_zmq_sock *, char *);
 EXT int p_zmq_sendmore_str(struct p_zmq_sock *, char *);
-EXT int p_zmq_recv_bin(struct p_zmq_sock *, void *, int);
-EXT int p_zmq_send_bin(struct p_zmq_sock *, void *, int);
-EXT int p_zmq_sendmore_bin(struct p_zmq_sock *, void *, int);
+EXT int p_zmq_recv_bin(struct p_zmq_sock *, void *, size_t);
+EXT int p_zmq_send_bin(struct p_zmq_sock *, void *, size_t);
+EXT int p_zmq_sendmore_bin(struct p_zmq_sock *, void *, size_t);
 
 EXT void p_zmq_zap_handler(void *);
 

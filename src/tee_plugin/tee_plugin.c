@@ -296,7 +296,7 @@ void Tee_exit_now(int signum)
   exit_gracefully(0);
 }
 
-int Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
+size_t Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
 {
   char *buf_ptr = tee_send_buf;
   struct sockaddr_in *sa = (struct sockaddr_in *) &msg->agent;
@@ -304,7 +304,7 @@ int Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
   struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) &msg->agent;
   struct ip6_hdr *i6h = (struct ip6_hdr *) buf_ptr;
   struct pm_udphdr *uh;
-  int msglen = 0;
+  size_t msglen = 0;
 
   if (msg->agent.sa_family == target->sa_family) {
     /* UDP header first */
@@ -421,7 +421,7 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
     }
   }
   else {
-    int msglen;
+    size_t msglen;
 
     msglen = Tee_craft_transparent_msg(msg, target);
 
@@ -449,7 +449,7 @@ void Tee_kafka_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
   struct p_kafka_host *kafka_host = &pool->kafka_host; 
   struct sockaddr target;
   time_t last_fail, now;
-  int msglen = 0;
+  size_t msglen = 0;
 
   memset(&target, 0, sizeof(target));
   target.sa_family = msg->agent.sa_family;
@@ -498,7 +498,7 @@ void Tee_zmq_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
   struct p_zmq_host *zmq_host = &pool->zmq_host; 
   struct sockaddr target;
   time_t last_fail, now;
-  int msglen = 0;
+  size_t msglen = 0;
 
   memset(&target, 0, sizeof(target));
   target.sa_family = msg->agent.sa_family;
