@@ -1696,6 +1696,9 @@ int cfg_key_message_broker_output(char *filename, char *name, char *value_ptr)
     Log(LOG_WARNING, "WARN: [%s] 'message_broker_output' set to avro but will produce no output (missing --enable-avro).\n", filename);
 #endif
   }
+  else if (!strcmp(value_ptr, "custom_print_plugin")) {
+    value = PRINT_OUTPUT_CUSTOM_PRINT_PLUGIN;
+  }
   else {
     Log(LOG_WARNING, "WARN: [%s] Invalid 'message_broker_output' value '%s'\n", filename, value_ptr);
     return ERR;
@@ -2784,6 +2787,9 @@ int cfg_key_print_output(char *filename, char *name, char *value_ptr)
     value = PRINT_OUTPUT_AVRO;
     Log(LOG_WARNING, "WARN: [%s] print_output set to avro but will produce no output (missing --enable-avro).\n", filename);
 #endif
+  }
+  else if (!strcmp(value_ptr, "custom_print_plugin")) {
+    value = PRINT_OUTPUT_CUSTOM_PRINT_PLUGIN;
   }
   else {
     Log(LOG_WARNING, "WARN: [%s] Invalid print output value '%s'\n", filename, value_ptr);
@@ -7709,6 +7715,44 @@ int cfg_key_rpki_roas_file(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) list->cfg.rpki_roas_file = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'rpki_roas_file'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_custom_print_plugin_lib(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.custom_print_plugin_lib = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.custom_print_plugin_lib = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_custom_print_plugin_cfg_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.custom_print_plugin_cfg_file = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.custom_print_plugin_cfg_file = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
 
   return changes;
 }

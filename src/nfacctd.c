@@ -46,6 +46,9 @@
 #include "ndpi/ndpi.h"
 #endif
 
+#include "custom_print_plugin.h"
+#include <dlfcn.h>
+
 /* variables to be exported away */
 struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
 
@@ -151,6 +154,7 @@ int main(int argc,char **argv, char **envp)
   extern char *optarg;
   extern int optind, opterr, optopt;
   int errflag, cp; 
+  const char *error;
 
 #if defined HAVE_MALLOPT
   mallopt(M_CHECK_ACTION, 0);
@@ -580,6 +584,58 @@ int main(int argc,char **argv, char **envp)
   }
 #endif
 
+  if (NULL != config.custom_print_plugin_lib) {
+	  //initialise custom_edge_plugin here
+	  Log(LOG_INFO, "INFO loading custom print plugin from %s \n\n", config.custom_print_plugin_lib);
+
+	  custom_print_plugin.lib_handle = dlopen(config.custom_print_plugin_lib, RTLD_LAZY);
+	  if (!custom_print_plugin.lib_handle) {
+		  Log(LOG_ERR, "ERROR Could not load custom print plugin library %s: %s\n\n", config.custom_print_plugin_lib, dlerror());
+		  exit(1);
+	  }
+	  custom_print_plugin.plugin_init = dlsym(custom_print_plugin.lib_handle, "plugin_init");
+	  if ((error = dlerror()) != NULL)  {
+		  Log(LOG_ERR, "ERROR %s from %s\n\n", error, config.custom_print_plugin_lib);
+		  exit(1);
+	  }
+	  custom_print_plugin.plugin_destroy = dlsym(custom_print_plugin.lib_handle, "plugin_destroy");
+	  if ((error = dlerror()) != NULL)  {
+		  Log(LOG_ERR, "ERROR %s from %s\n\n", error, config.custom_print_plugin_lib);
+		  exit(1);
+	  }
+	  custom_print_plugin.print = dlsym(custom_print_plugin.lib_handle, "print");
+	  if ((error = dlerror()) != NULL)  {
+		  Log(LOG_ERR, "ERROR %s from %s\n\n", error, config.custom_print_plugin_lib);
+		  exit(1);
+	  }
+	  custom_print_plugin.open_file = dlsym(custom_print_plugin.lib_handle, "open_file");
+	  if ((error = dlerror()) != NULL)  {
+		  Log(LOG_ERR, "ERROR %s from %s\n\n", error, config.custom_print_plugin_lib);
+		  exit(1);
+	  }
+	  custom_print_plugin.close_file = dlsym(custom_print_plugin.lib_handle, "close_file");
+	  if ((error = dlerror()) != NULL)  {
+		  Log(LOG_ERR, "ERROR %s %s\n\n", error, config.custom_print_plugin_lib);
+		  exit(1);
+	  }
+	  custom_print_plugin.flush_file = dlsym(custom_print_plugin.lib_handle, "flush_file");
+	  if ((error = dlerror()) != NULL)  {
+		  Log(LOG_ERR, "ERROR %s %s\n\n", error, config.custom_print_plugin_lib);
+		  exit(1);
+	  }
+	  custom_print_plugin.get_error_text = dlsym(custom_print_plugin.lib_handle, "get_error_text");
+	  if ((error = dlerror()) != NULL)  {
+		  Log(LOG_ERR, "ERROR %s %s\n\n", error, config.custom_print_plugin_lib);
+		  exit(1);
+	  }
+
+	  if (0 != custom_print_plugin.plugin_init(config.custom_print_plugin_cfg_file)) {
+		  Log(LOG_ERR, "ERROR: EDGE: Initialisation of custom print plugin failed  %s \n\n",
+			  custom_print_plugin.get_error_text());
+		  exit(1);
+	  }
+  }
+
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
   signal(SIGCHLD, startup_handle_falling_child); /* takes note of plugins failed during startup phase */
   signal(SIGHUP, reload); /* handles reopening of syslog channel */
@@ -604,6 +660,7 @@ int main(int argc,char **argv, char **envp)
     recv_pptrs.pkthdr = &recv_pkthdr;
   }
 #endif
+
 #ifdef WITH_ZMQ
   else if (config.nfacctd_zmq_address) {
     NF_init_zmq_host(&nfacctd_zmq_host, &pipe_fd);
