@@ -585,55 +585,60 @@ int main(int argc,char **argv, char **envp)
 #endif
 
   if (NULL != config.custom_print_plugin_lib) {
-	  //initialise custom_edge_plugin here
-	  Log(LOG_INFO, "INFO loading custom print plugin from %s \n\n", config.custom_print_plugin_lib);
+    Log(LOG_INFO, "INFO ( %s/core ): Loading custom print plugin from %s\n", config.name, config.custom_print_plugin_lib);
 
-	  custom_print_plugin.lib_handle = dlopen(config.custom_print_plugin_lib, RTLD_LAZY);
-	  if (!custom_print_plugin.lib_handle) {
-		  Log(LOG_ERR, "ERROR Could not load custom print plugin library %s: %s\n\n", config.custom_print_plugin_lib, dlerror());
-		  exit(1);
-	  }
-	  custom_print_plugin.plugin_init = dlsym(custom_print_plugin.lib_handle, "plugin_init");
-	  if ((error = dlerror()) != NULL)  {
-		  Log(LOG_ERR, "ERROR %s from %s\n\n", error, config.custom_print_plugin_lib);
-		  exit(1);
-	  }
-	  custom_print_plugin.plugin_destroy = dlsym(custom_print_plugin.lib_handle, "plugin_destroy");
-	  if ((error = dlerror()) != NULL)  {
-		  Log(LOG_ERR, "ERROR %s from %s\n\n", error, config.custom_print_plugin_lib);
-		  exit(1);
-	  }
-	  custom_print_plugin.print = dlsym(custom_print_plugin.lib_handle, "print");
-	  if ((error = dlerror()) != NULL)  {
-		  Log(LOG_ERR, "ERROR %s from %s\n\n", error, config.custom_print_plugin_lib);
-		  exit(1);
-	  }
-	  custom_print_plugin.open_file = dlsym(custom_print_plugin.lib_handle, "open_file");
-	  if ((error = dlerror()) != NULL)  {
-		  Log(LOG_ERR, "ERROR %s from %s\n\n", error, config.custom_print_plugin_lib);
-		  exit(1);
-	  }
-	  custom_print_plugin.close_file = dlsym(custom_print_plugin.lib_handle, "close_file");
-	  if ((error = dlerror()) != NULL)  {
-		  Log(LOG_ERR, "ERROR %s %s\n\n", error, config.custom_print_plugin_lib);
-		  exit(1);
-	  }
-	  custom_print_plugin.flush_file = dlsym(custom_print_plugin.lib_handle, "flush_file");
-	  if ((error = dlerror()) != NULL)  {
-		  Log(LOG_ERR, "ERROR %s %s\n\n", error, config.custom_print_plugin_lib);
-		  exit(1);
-	  }
-	  custom_print_plugin.get_error_text = dlsym(custom_print_plugin.lib_handle, "get_error_text");
-	  if ((error = dlerror()) != NULL)  {
-		  Log(LOG_ERR, "ERROR %s %s\n\n", error, config.custom_print_plugin_lib);
-		  exit(1);
-	  }
+    custom_print_plugin.lib_handle = dlopen(config.custom_print_plugin_lib, RTLD_LAZY);
+    if (!custom_print_plugin.lib_handle) {
+      Log(LOG_ERR, "ERROR ( %s/core ): Could not load custom print plugin library %s: %s\n", config.name, config.custom_print_plugin_lib, dlerror());
+      exit_gracefully(1);
+    }
 
-	  if (0 != custom_print_plugin.plugin_init(config.custom_print_plugin_cfg_file)) {
-		  Log(LOG_ERR, "ERROR: EDGE: Initialisation of custom print plugin failed  %s \n\n",
-			  custom_print_plugin.get_error_text());
-		  exit(1);
-	  }
+    custom_print_plugin.plugin_init = dlsym(custom_print_plugin.lib_handle, "plugin_init");
+    if ((error = dlerror()) != NULL)  {
+      Log(LOG_ERR, "ERROR ( %s/core ): %s from %s\n", config.name, error, config.custom_print_plugin_lib);
+      exit_gracefully(1);
+    }
+
+    custom_print_plugin.plugin_destroy = dlsym(custom_print_plugin.lib_handle, "plugin_destroy");
+    if ((error = dlerror()) != NULL)  {
+      Log(LOG_ERR, "ERROR ( %s/core ): %s from %s\n", config.name, error, config.custom_print_plugin_lib);
+      exit_gracefully(1);
+    }
+
+    custom_print_plugin.print = dlsym(custom_print_plugin.lib_handle, "print");
+    if ((error = dlerror()) != NULL)  {
+      Log(LOG_ERR, "ERROR ( %s/core ): %s from %s\n", config.name, error, config.custom_print_plugin_lib);
+      exit_gracefully(1);
+    }
+
+    custom_print_plugin.open_file = dlsym(custom_print_plugin.lib_handle, "open_file");
+    if ((error = dlerror()) != NULL)  {
+      Log(LOG_ERR, "ERROR ( %s/core ): %s from %s\n", config.name, error, config.custom_print_plugin_lib);
+      exit_gracefully(1);
+    }
+
+    custom_print_plugin.close_file = dlsym(custom_print_plugin.lib_handle, "close_file");
+    if ((error = dlerror()) != NULL)  {
+      Log(LOG_ERR, "ERROR ( %s/core ): %s from %s\n", config.name, error, config.custom_print_plugin_lib);
+      exit_gracefully(1);
+    }
+
+    custom_print_plugin.flush_file = dlsym(custom_print_plugin.lib_handle, "flush_file");
+    if ((error = dlerror()) != NULL)  {
+      Log(LOG_ERR, "ERROR ( %s/core ): %s from %s\n", config.name, error, config.custom_print_plugin_lib);
+      exit_gracefully(1);
+    }
+
+    custom_print_plugin.get_error_text = dlsym(custom_print_plugin.lib_handle, "get_error_text");
+    if ((error = dlerror()) != NULL)  {
+      Log(LOG_ERR, "ERROR ( %s/core ): %s from %s\n", config.name, error, config.custom_print_plugin_lib);
+      exit_gracefully(1);
+    }
+
+    if (0 != custom_print_plugin.plugin_init(config.custom_print_plugin_cfg_file)) {
+      Log(LOG_ERR, "ERROR ( %s/core ): Initialisation of custom print plugin failed: %s\n", config.name, custom_print_plugin.get_error_text());
+      exit_gracefully(1);
+    }
   }
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */

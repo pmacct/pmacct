@@ -1,21 +1,25 @@
-#include "pmacct.h"
+/*
+    pmacct (Promiscuous mode IP Accounting package)
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+*/
 
-#if (!defined __CUSTOM_PRINT_PLUGIN_C)
-#define EXT extern
-#else
-#define EXT
-#endif
+/*
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
 
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-struct pkt_primitives;
-struct pkt_bgp_primitives;
-struct pkt_nat_primitives;
-struct pkt_mpls_primitives;
-struct pkt_tunnel_primitives;
-struct pkt_vlen_hdr_primitives;
-struct timeval;
-struct config;
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+*/
 
+/* defines */
 struct custom_print_plugin_{
 	void *lib_handle;
 
@@ -42,6 +46,15 @@ struct custom_print_plugin_{
 	int (*close_file)();
 	char* (*get_error_text)();
 };
+
+/* prototypes */
+
+/* global variables */
+#if (!defined __CUSTOM_PRINT_PLUGIN_C)
+#define EXT extern
+#else
+#define EXT
+#endif
 
 EXT struct custom_print_plugin_ custom_print_plugin;
 
