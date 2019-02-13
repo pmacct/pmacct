@@ -1,5 +1,3 @@
-#ifdef WITH_CUSTOM_PRINT_PLUGIN
-
 #include "pmacct.h"
 
 #if (!defined __CUSTOM_PRINT_PLUGIN_C)
@@ -46,6 +44,5 @@ struct custom_print_plugin_{
 };
 
 EXT struct custom_print_plugin_ custom_print_plugin;
-#endif
 
 #undef EXT

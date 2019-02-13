@@ -1697,12 +1697,7 @@ int cfg_key_message_broker_output(char *filename, char *name, char *value_ptr)
 #endif
   }
   else if (!strcmp(value_ptr, "custom_print_plugin")) {
-#ifdef WITH_CUSTOM_PRINT_PLUGIN
     value = PRINT_OUTPUT_CUSTOM_PRINT_PLUGIN;
-#else
-    value = PRINT_OUTPUT_CUSTOM_PRINT_PLUGIN;
-    Log(LOG_WARNING, "WARN: [%s] 'message_broker_output' set to custom edge plugin but will produce no output (missing --enable-custom-print-plugin).\n", filename);
-#endif
   }
   else {
     Log(LOG_WARNING, "WARN: [%s] Invalid 'message_broker_output' value '%s'\n", filename, value_ptr);
@@ -2794,12 +2789,7 @@ int cfg_key_print_output(char *filename, char *name, char *value_ptr)
 #endif
   }
   else if (!strcmp(value_ptr, "custom_print_plugin")) {
-#ifdef WITH_CUSTOM_PRINT_PLUGIN
     value = PRINT_OUTPUT_CUSTOM_PRINT_PLUGIN;
-#else
-    value = PRINT_OUTPUT_CUSTOM_PRINT_PLUGIN;
-    Log(LOG_WARNING, "WARN: [%s] 'message_broker_output' set to custom print plugin but will produce no output (missing --enable-custom-print-plugin).\n", filename);
-#endif
   }
   else {
     Log(LOG_WARNING, "WARN: [%s] Invalid print output value '%s'\n", filename, value_ptr);

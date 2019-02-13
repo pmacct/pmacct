@@ -46,10 +46,8 @@
 #include "ndpi/ndpi.h"
 #endif
 
-#if defined (WITH_CUSTOM_PRINT_PLUGIN)
 #include "custom_print_plugin.h"
 #include <dlfcn.h>
-#endif
 
 /* variables to be exported away */
 struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
@@ -587,7 +585,6 @@ int main(int argc,char **argv, char **envp)
   }
 #endif
 
-#ifdef WITH_CUSTOM_PRINT_PLUGIN
   if (NULL != config.custom_print_plugin_lib) {
 	  //initialise custom_edge_plugin here
 	  Log(LOG_INFO, "INFO loading custom print plugin from %s \n\n", config.custom_print_plugin_lib);
@@ -639,7 +636,6 @@ int main(int argc,char **argv, char **envp)
 		  exit(1);
 	  }
   }
-#endif
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
   signal(SIGCHLD, startup_handle_falling_child); /* takes note of plugins failed during startup phase */

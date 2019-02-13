@@ -884,10 +884,8 @@ static const struct _dictionary_line dictionary[] = {
   {"tunnel_0", cfg_key_tunnel_0},
   {"tmp_asa_bi_flow", cfg_key_tmp_asa_bi_flow},
   {"tmp_bgp_lookup_compare_ports", cfg_key_tmp_bgp_lookup_compare_ports},
-#if defined WITH_CUSTOM_PRINT_PLUGIN
   {"custom_print_plugin_lib", cfg_key_custom_print_plugin_lib},
   {"custom_print_plugin_cfg_file", cfg_key_custom_print_plugin_cfg_file},
-#endif
   {"", NULL}
 };
 

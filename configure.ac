@@ -839,27 +839,6 @@ AC_ARG_ENABLE(jansson,
 )
 dnl finish: Jansson handling
 
-dnl start: custom print plugin handling
-AC_MSG_CHECKING(whether to enable custom print plugin support)
-AC_ARG_ENABLE(custom-print-plugin,
-  [  --enable-custom-print-plugin                    Enable custom print plugin support (default: no)],
-  [ case "$enableval" in
-  yes)
-    AC_MSG_RESULT(yes)
-	USING_CUSTOM_PRINT_PLUGIN="yes"
-	AC_DEFINE(WITH_CUSTOM_PRINT_PLUGIN, 1)
-    ;;
-  no)
-    AC_MSG_RESULT(no)
-    ;;
-  esac ],
-  [
-    AC_MSG_RESULT(no)
-  ]
-)
-dnl end: custom print plugin handling
-
-
 dnl start: Avro handling
 AC_MSG_CHECKING(whether to enable Avro support)
 AC_ARG_ENABLE(avro,
