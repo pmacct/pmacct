@@ -19,10 +19,10 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __CUSTOM_PRINT_PLUGIN_C
+#define __PLUGIN_CMN_CUSTOM_C
 
 /* Includes */
 #include "pmacct.h"
-#include "custom_print_plugin.h"
+#include "plugin_cmn_custom.h"
 
 /* Functions */

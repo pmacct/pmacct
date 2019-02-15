@@ -66,6 +66,7 @@
 #include <limits.h>
 #include <pwd.h>
 #include <grp.h>
+#include <dlfcn.h>
 #include "pmsearch.h"
 
 #include <sys/mman.h>

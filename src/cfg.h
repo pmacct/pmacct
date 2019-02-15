@@ -176,6 +176,8 @@ struct configuration {
   char *print_output_lock_file;
   char *print_output_separator;
   char *print_output_file;
+  char *print_output_custom_lib;
+  char *print_output_custom_cfg_file;
   char *print_latest_file;
   int nfacctd_port;
   char *nfacctd_ip;
@@ -550,8 +552,6 @@ struct configuration {
   int tmp_bgp_lookup_compare_ports;
   size_t thread_stack;
   char *rpki_roas_file;
-  char *custom_print_plugin_lib;
-  char *custom_print_plugin_cfg_file;
 };
 
 /* prototypes */ 

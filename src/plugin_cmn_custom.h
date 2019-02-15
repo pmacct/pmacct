@@ -50,7 +50,7 @@ struct custom_print_plugin_{
 /* prototypes */
 
 /* global variables */
-#if (!defined __CUSTOM_PRINT_PLUGIN_C)
+#if (!defined __PLUGIN_CMN_CUSTOM_C)
 #define EXT extern
 #else
 #define EXT

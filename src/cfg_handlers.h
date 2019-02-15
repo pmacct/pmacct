@@ -140,6 +140,8 @@ EXT int cfg_key_print_output_file(char *, char *, char *);
 EXT int cfg_key_print_output_file_append(char *, char *, char *);
 EXT int cfg_key_print_output_lock_file(char *, char *, char *);
 EXT int cfg_key_print_output_separator(char *, char *, char *);
+EXT int cfg_key_print_output_custom_lib(char *, char *, char *);
+EXT int cfg_key_print_output_custom_cfg_file(char *, char *, char *);
 EXT int cfg_key_print_latest_file(char *, char *, char *);
 EXT int cfg_key_nfacctd_port(char *, char *, char *);
 EXT int cfg_key_nfacctd_ip(char *, char *, char *);
@@ -460,9 +462,6 @@ EXT int cfg_key_tunnel_0(char *, char *, char *);
 EXT int cfg_key_dump_max_writers(char *, char *, char *);
 EXT int cfg_key_tmp_asa_bi_flow(char *, char *, char *);
 EXT int cfg_key_tmp_bgp_lookup_compare_ports(char *, char *, char *);
-EXT int cfg_key_custom_print_plugin_lib(char *, char *, char *);
-EXT int cfg_key_custom_print_plugin_cfg_file(char *, char *, char *);
-
 
 EXT void parse_time(char *, char *, int *, int *);
 EXT void cfg_set_aggregate(char *, u_int64_t [], u_int64_t, char *);

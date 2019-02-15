@@ -427,6 +427,8 @@ static const struct _dictionary_line dictionary[] = {
   {"print_output_file_append", cfg_key_print_output_file_append},
   {"print_output_lock_file", cfg_key_print_output_lock_file},
   {"print_output_separator", cfg_key_print_output_separator},
+  {"print_output_custom_lib", cfg_key_print_output_custom_lib},
+  {"print_output_custom_cfg_file", cfg_key_print_output_custom_cfg_file},
   {"print_latest_file", cfg_key_print_latest_file},
   {"print_num_protos", cfg_key_num_protos},
   {"print_trigger_exec", cfg_key_sql_trigger_exec},
@@ -885,8 +887,6 @@ static const struct _dictionary_line dictionary[] = {
   {"tunnel_0", cfg_key_tunnel_0},
   {"tmp_asa_bi_flow", cfg_key_tmp_asa_bi_flow},
   {"tmp_bgp_lookup_compare_ports", cfg_key_tmp_bgp_lookup_compare_ports},
-  {"custom_print_plugin_lib", cfg_key_custom_print_plugin_lib},
-  {"custom_print_plugin_cfg_file", cfg_key_custom_print_plugin_cfg_file},
   {"", NULL}
 };
 

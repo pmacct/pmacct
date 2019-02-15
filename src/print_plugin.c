@@ -29,6 +29,7 @@
 #include "plugin_common.h"
 #include "plugin_cmn_json.h"
 #include "plugin_cmn_avro.h"
+#include "plugin_cmn_custom.h"
 #include "print_plugin.h"
 #include "ip_flow.h"
 #include "classifier.h"
@@ -38,7 +39,6 @@
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #endif
-#include "custom_print_plugin.h"
 
 /* Functions */
 void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 
@@ -428,20 +428,21 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 #endif
     }
 		
-	if (config.print_output & PRINT_OUTPUT_CUSTOM_PRINT_PLUGIN) {
-		if (0 != custom_print_plugin.open_file(current_table, config.print_output_file_append)) {
-			Log(LOG_ERR, "ERROR ( %s/%s ): custom print plugin: failed opening %s: %s\n",
-				config.name, config.type, current_table, custom_print_plugin.get_error_text());
-			exit_plugin(1);
-		}
-	}
+    if (config.print_output & PRINT_OUTPUT_CUSTOM) {
+      if (0 != custom_print_plugin.open_file(current_table, config.print_output_file_append)) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): custom print plugin: failed opening %s: %s\n",
+	    config.name, config.type, current_table, custom_print_plugin.get_error_text());
+	exit_gracefully(1);
+      }
+    }
     else {
       if (config.print_output_file_append) {
         file_to_be_created = access(current_table, F_OK);
         f = open_output_file(current_table, "a", TRUE);
       }
-      else
-        f = open_output_file(current_table, "w", TRUE);
+      else {
+	f = open_output_file(current_table, "w", TRUE);
+      }
     }
 
     if (f) {
@@ -1222,15 +1223,16 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_avro(): AVRO object not created due to missing --enable-avro\n", config.name, config.type);
 #endif
       }
-	  if (config.print_output & PRINT_OUTPUT_CUSTOM_PRINT_PLUGIN) {
-		  struct pkt_primitives *pbase = &queue[j]->primitives;
-		  struct host_addr *from = &pbase->src_ip;
 
-		  custom_print_plugin.print(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
-									&queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust, pvlen, queue[j]->bytes_counter,
-									queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags, NULL,
-									queue[j]->stitch);
-	  }
+      if (config.print_output & PRINT_OUTPUT_CUSTOM) {
+	struct pkt_primitives *pbase = &queue[j]->primitives;
+	struct host_addr *from = &pbase->src_ip;
+
+	custom_print_plugin.print(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
+				  &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust, pvlen, queue[j]->bytes_counter,
+				  queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags, NULL,
+				  queue[j]->stitch);
+      }
     }
   }
 
@@ -1253,13 +1255,13 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
       avro_file_writer_flush(avro_writer);
 #endif
 
-	if (config.print_output & PRINT_OUTPUT_CUSTOM_PRINT_PLUGIN) {
-		if (0 != custom_print_plugin.flush_file()) {
-			Log(LOG_ERR, "ERROR ( %s/%s ): custom print plugin: failed flushing file %s: %s\n",
-				config.name, config.type, current_table, custom_print_plugin.get_error_text());
-			exit_plugin(1);
-		}
-	}
+    if (config.print_output & PRINT_OUTPUT_CUSTOM) {
+      if (0 != custom_print_plugin.flush_file()) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): custom print plugin: failed flushing file %s: %s\n",
+	    config.name, config.type, current_table, custom_print_plugin.get_error_text());
+	exit_gracefully(1);
+      }
+    }
 
     if (config.print_latest_file) {
       if (!safe_action) {
@@ -1268,12 +1270,12 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
       }
     }
 
-    if (config.print_output & PRINT_OUTPUT_CUSTOM_PRINT_PLUGIN) {
+    if (config.print_output & PRINT_OUTPUT_CUSTOM) {
       if (0 != custom_print_plugin.close_file()) {
-		  Log(LOG_ERR, "ERROR ( %s/%s ): custom print plugin: failed closing file %s: %s\n",
-			  config.name, config.type, current_table, custom_print_plugin.get_error_text());
-		  exit_plugin(1);
-	  }
+	Log(LOG_ERR, "ERROR ( %s/%s ): custom print plugin: failed closing file %s: %s\n",
+	    config.name, config.type, current_table, custom_print_plugin.get_error_text());
+	exit_gracefully(1);
+      }
     }
 
 #ifdef WITH_AVRO

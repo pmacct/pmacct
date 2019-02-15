@@ -1696,8 +1696,8 @@ int cfg_key_message_broker_output(char *filename, char *name, char *value_ptr)
     Log(LOG_WARNING, "WARN: [%s] 'message_broker_output' set to avro but will produce no output (missing --enable-avro).\n", filename);
 #endif
   }
-  else if (!strcmp(value_ptr, "custom_print_plugin")) {
-    value = PRINT_OUTPUT_CUSTOM_PRINT_PLUGIN;
+  else if (!strcmp(value_ptr, "custom")) {
+    value = PRINT_OUTPUT_CUSTOM;
   }
   else {
     Log(LOG_WARNING, "WARN: [%s] Invalid 'message_broker_output' value '%s'\n", filename, value_ptr);
@@ -2788,8 +2788,8 @@ int cfg_key_print_output(char *filename, char *name, char *value_ptr)
     Log(LOG_WARNING, "WARN: [%s] print_output set to avro but will produce no output (missing --enable-avro).\n", filename);
 #endif
   }
-  else if (!strcmp(value_ptr, "custom_print_plugin")) {
-    value = PRINT_OUTPUT_CUSTOM_PRINT_PLUGIN;
+  else if (!strcmp(value_ptr, "custom")) {
+    value = PRINT_OUTPUT_CUSTOM;
   }
   else {
     Log(LOG_WARNING, "WARN: [%s] Invalid print output value '%s'\n", filename, value_ptr);
@@ -7719,16 +7719,16 @@ int cfg_key_rpki_roas_file(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_custom_print_plugin_lib(char *filename, char *name, char *value_ptr)
+int cfg_key_print_output_custom_lib(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  if (!name) for (; list; list = list->next, changes++) list->cfg.custom_print_plugin_lib = value_ptr;
+  if (!name) for (; list; list = list->next, changes++) list->cfg.print_output_custom_lib = value_ptr;
   else {
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
-        list->cfg.custom_print_plugin_lib = value_ptr;
+        list->cfg.print_output_custom_lib = value_ptr;
         changes++;
         break;
       }
@@ -7738,16 +7738,16 @@ int cfg_key_custom_print_plugin_lib(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_custom_print_plugin_cfg_file(char *filename, char *name, char *value_ptr)
+int cfg_key_print_output_custom_cfg_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  if (!name) for (; list; list = list->next, changes++) list->cfg.custom_print_plugin_cfg_file = value_ptr;
+  if (!name) for (; list; list = list->next, changes++) list->cfg.print_output_custom_cfg_file = value_ptr;
   else {
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
-        list->cfg.custom_print_plugin_cfg_file = value_ptr;
+        list->cfg.print_output_custom_cfg_file = value_ptr;
         changes++;
         break;
       }

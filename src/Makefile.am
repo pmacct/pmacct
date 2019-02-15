@@ -23,8 +23,8 @@ libdaemons_la_SOURCES = signals.c util.c util.h plugin_hooks.c		\
         preprocess-data.h preprocess.h ll.c nl.c jhash.h pmacct-dlt.h	\
         sflow.h crc32.h base64.c base64.h plugin_cmn_json.c		\
 	plugin_cmn_json.h plugin_cmn_avro.c plugin_cmn_avro.h		\
-	pmsearch.c pmsearch.h thread_pool.c thread_pool.h \
-	custom_print_plugin.h custom_print_plugin.c
+	pmsearch.c pmsearch.h thread_pool.c thread_pool.h 		\
+	plugin_cmn_custom.h plugin_cmn_custom.c
 
 libcommon_la_LIBADD  = 
 libcommon_la_CFLAGS  = $(AM_CFLAGS)
