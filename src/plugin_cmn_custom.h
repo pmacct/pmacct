@@ -20,7 +20,7 @@
 */
 
 /* defines */
-struct custom_print_plugin_{
+struct pm_custom_output {
 	void *lib_handle;
 
 	int (*plugin_init)(const char *);
@@ -49,13 +49,16 @@ struct custom_print_plugin_{
 
 /* prototypes */
 
-/* global variables */
 #if (!defined __PLUGIN_CMN_CUSTOM_C)
 #define EXT extern
 #else
 #define EXT
 #endif
 
-EXT struct custom_print_plugin_ custom_print_plugin;
+/* prototypes */
+EXT void custom_output_setup(char *, char *, struct pm_custom_output *);
+
+/* global variables */
+EXT struct pm_custom_output custom_print_plugin;
 
 #undef EXT

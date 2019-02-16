@@ -100,6 +100,11 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     if (config.avro_schema_output_file) write_avro_schema_to_file(config.avro_schema_output_file, avro_acct_schema);
 #endif
   }
+  else if (config.print_output & PRINT_OUTPUT_CUSTOM) {
+    if (config.print_output_custom_lib != NULL) {
+      custom_output_setup(config.print_output_custom_lib, config.print_output_custom_cfg_file, &custom_print_plugin);
+    }
+  }
 
   /* setting function pointers */
   if (config.what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET))
@@ -430,7 +435,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 		
     if (config.print_output & PRINT_OUTPUT_CUSTOM) {
       if (0 != custom_print_plugin.open_file(current_table, config.print_output_file_append)) {
-	Log(LOG_ERR, "ERROR ( %s/%s ): custom print plugin: failed opening %s: %s\n",
+	Log(LOG_ERR, "ERROR ( %s/%s ): Custom output: failed opening %s: %s\n",
 	    config.name, config.type, current_table, custom_print_plugin.get_error_text());
 	exit_gracefully(1);
       }
@@ -1257,7 +1262,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
     if (config.print_output & PRINT_OUTPUT_CUSTOM) {
       if (0 != custom_print_plugin.flush_file()) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): custom print plugin: failed flushing file %s: %s\n",
+        Log(LOG_ERR, "ERROR ( %s/%s ): Custom output: failed flushing file %s: %s\n",
 	    config.name, config.type, current_table, custom_print_plugin.get_error_text());
 	exit_gracefully(1);
       }
@@ -1272,7 +1277,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
     if (config.print_output & PRINT_OUTPUT_CUSTOM) {
       if (0 != custom_print_plugin.close_file()) {
-	Log(LOG_ERR, "ERROR ( %s/%s ): custom print plugin: failed closing file %s: %s\n",
+	Log(LOG_ERR, "ERROR ( %s/%s ): Custom output: failed closing file %s: %s\n",
 	    config.name, config.type, current_table, custom_print_plugin.get_error_text());
 	exit_gracefully(1);
       }
