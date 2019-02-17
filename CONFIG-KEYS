@@ -1527,6 +1527,21 @@ DESC:           Defines the print plugin output separator when print_output is s
 		AS PATHs like "AS1_AS2_AS3_{ASX,ASY,ASZ}".
 DEFAULT:	','
 
+KEY:		print_output_custom_lib
+DESC:		Full path to a shared object (.so) library file that can be dinamically linked in pmacct
+		to provide custom formatting of output data. The two main use-cases for this feature are
+		1) use available encodings (ie. CSV, JSON, etc.) but fix the format of the messages in a
+		custom way and 2) use a different encoding than the available ones. pm_custom_output
+		structure in plugin_cmn_custom.h can be looked at for guidance of which functions are
+		expected to exist in the library and with which arguments they would be called.
+DEFAULT:	none
+
+KEY:		print_output_custom_cfg_file
+DESC:		Full path to a file that is passed to the shared object (.so) library both at init time
+		and at runtime, that is, when processing elements. The config file content is opaque to
+		pmacct.
+DEFAULT:	none
+
 KEY:		[ amqp_output | kafka_output ]
 VALUES: 	[ json | avro ]
 DESC:		Defines the output format for messages sent to a message broker (amqp and kafka plugins).
