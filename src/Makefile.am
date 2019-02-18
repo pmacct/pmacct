@@ -18,13 +18,13 @@ libdaemons_la_SOURCES = signals.c util.c util.h plugin_hooks.c		\
         ip_frag.h ports_aggr.c ports_aggr.h pretag_handlers.c		\
         pretag_handlers.h ip_flow.c ip_flow.h setproctitle.c		\
         setproctitle.h classifier.c classifier.h regexp.c regexp.h	\
-        regmagic.h regsub.c conntrack.c conntrack.h xflow_status.c	\
-        xflow_status.h plugin_common.c plugin_common.h preprocess.c	\
-        preprocess-data.h preprocess.h ll.c nl.c jhash.h pmacct-dlt.h	\
-        sflow.h crc32.h base64.c base64.h plugin_cmn_json.c		\
-	plugin_cmn_json.h plugin_cmn_avro.c plugin_cmn_avro.h		\
-	pmsearch.c pmsearch.h thread_pool.c thread_pool.h 		\
-	plugin_cmn_custom.h plugin_cmn_custom.c
+        conntrack.c conntrack.h xflow_status.c xflow_status.h		\
+	plugin_common.c plugin_common.h preprocess.c preprocess-data.h	\
+	preprocess.h ll.c nl.c jhash.h pmacct-dlt.h sflow.h crc32.h	\
+	base64.c base64.h plugin_cmn_json.c plugin_cmn_json.h		\
+	plugin_cmn_avro.c plugin_cmn_avro.h pmsearch.c pmsearch.h	\
+	thread_pool.c thread_pool.h plugin_cmn_custom.h			\
+	plugin_cmn_custom.c
 
 libcommon_la_LIBADD  = 
 libcommon_la_CFLAGS  = $(AM_CFLAGS)
