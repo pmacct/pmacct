@@ -1,9 +1,7 @@
 #!/usr/bin/env python3.7
 #
 import sys
-sys.path.append('./pblib/huawei/')
-sys.path.append('./pblib/cisco/')
-sys.path.append('./pblib/openconfig/')
+sys.path.append('/etc/pmacct/telemetry/pblib')
 
 from optparse import OptionParser
 import configparser
