@@ -37,6 +37,7 @@ from confluent_kafka.avro import AvroProducer
 
 SCRIPTVERSION = '1.0'
 CONFIGFILE = '/etc/pmacct/telemetry/telemetry.conf'
+GPBMAPFILE = '/etc/pmacct/telemetry/gpbmapfile.map'
 
 jsonmap = {}
 avscmap = {}
@@ -742,6 +743,12 @@ zmqipport = tcp://127.0.0.1:50000
 kafkaavro = True
 onlyopenconfig = False
 '''
+
+  default_gpbmapfile = '''\
+huawei-ifm            =  huawei_ifm_pb2.Ifm()
+huawei-devm           =  huawei_devm_pb2.Devm()
+openconfig-interfaces =  openconfig_interfaces_pb2.Interfaces()
+'''
   usage_str = "%prog [options]"
   version_str = "%prog " + SCRIPTVERSION
   parser = OptionParser(usage=usage_str, version=version_str)
@@ -759,6 +766,10 @@ onlyopenconfig = False
     with open(CONFIGFILE, 'w') as configf:
       configf.write(defaultvar_configparser)
     config.read(CONFIGFILE)
+
+  if not os.path.isfile(GPBMAPFILE):
+    with open(GPBMAPFILE, 'w') as configf:
+      configf.write(default_gpbmapfile)
     
   parser.add_option("-T", "--topic",
                     default=config.get("PMGRPCD", 'topic'), dest="topic", help="the json data are serialized to this topic")
