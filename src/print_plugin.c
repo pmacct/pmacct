@@ -434,7 +434,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
     }
 		
     if (config.print_output & PRINT_OUTPUT_CUSTOM) {
-      if (0 != custom_print_plugin.open_file(current_table, config.print_output_file_append)) {
+      if (0 != custom_print_plugin.output_init(current_table, config.print_output_file_append)) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): Custom output: failed opening %s: %s\n",
 	    config.name, config.type, current_table, custom_print_plugin.get_error_text());
 	exit_gracefully(1);
@@ -1261,7 +1261,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 #endif
 
     if (config.print_output & PRINT_OUTPUT_CUSTOM) {
-      if (0 != custom_print_plugin.flush_file()) {
+      if (0 != custom_print_plugin.output_flush()) {
         Log(LOG_ERR, "ERROR ( %s/%s ): Custom output: failed flushing file %s: %s\n",
 	    config.name, config.type, current_table, custom_print_plugin.get_error_text());
 	exit_gracefully(1);
@@ -1276,7 +1276,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
     }
 
     if (config.print_output & PRINT_OUTPUT_CUSTOM) {
-      if (0 != custom_print_plugin.close_file()) {
+      if (0 != custom_print_plugin.output_close()) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): Custom output: failed closing file %s: %s\n",
 	    config.name, config.type, current_table, custom_print_plugin.get_error_text());
 	exit_gracefully(1);

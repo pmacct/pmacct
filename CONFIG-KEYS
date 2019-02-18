@@ -1495,7 +1495,7 @@ DESC:		Enables the use of start/end markers each time data is purged to the back
 DEFAULT:	false
 
 KEY:		print_output
-VALUES:		[ formatted | csv | json | avro | event_formatted | event_csv ]
+VALUES:		[ formatted | csv | json | avro | event_formatted | event_csv | custom ]
 DESC:		Defines the print plugin output format. 'formatted' enables tabular output; 'csv' is to enable
 		comma-separated values format, suitable for injection into 3rd party tools. 'event' versions of
 		the output strips trailing bytes and packets counters. 'json' is to enable JavaScript Object
@@ -1508,6 +1508,8 @@ DESC:		Defines the print plugin output format. 'formatted' enables tabular outpu
 		data serialization system. This format stores the data more compactly than JSON and thus is
 		more appropriate for intensive captures. The 'avro' format requires compiling the package
 		against the Apache Avro library (downloadable at the following URL: http://avro.apache.org/).
+		'custom' allows to specify own formtting, encoding and backend management (open file, close
+		file, start/end markers, etc.), see print_output_custom_lib and print_output_custom_cfg_file.
 NOTES:		* Jansson and Avro libraries don't have the concept of unsigned integers. integers up to 32
 		  bits are packed as 64 bits signed integers, working around the issue. No work around is
 		  possible for unsigned 64 bits integers instead (ie. tag, tag2, packets, bytes).

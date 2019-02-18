@@ -38,42 +38,52 @@ void custom_output_setup(char *custom_lib, char *custom_cfg_file, struct pm_cust
     exit_gracefully(1);
   }
 
+  /* ie. to init internal structures */
   custom_output->plugin_init = dlsym(custom_output->lib_handle, "plugin_init");
   if ((error = dlerror()) != NULL)  {
     Log(LOG_ERR, "ERROR ( %s/%s ): %s from %s\n", config.name, config.type, error, custom_lib);
     exit_gracefully(1);
   }
 
+  /* ie. to destroy internal structures */
   custom_output->plugin_destroy = dlsym(custom_output->lib_handle, "plugin_destroy");
   if ((error = dlerror()) != NULL)  {
     Log(LOG_ERR, "ERROR ( %s/%s ): %s from %s\n", config.name, config.type, error, custom_lib);
     exit_gracefully(1);
   }
 
+  /* ie. at purge time, given input data, to compose an object to flush */
   custom_output->print = dlsym(custom_output->lib_handle, "print");
   if ((error = dlerror()) != NULL)  {
     Log(LOG_ERR, "ERROR ( %s/%s ): %s from %s\n", config.name, config.type, error, custom_lib);
     exit_gracefully(1);
   }
 
-  custom_output->open_file = dlsym(custom_output->lib_handle, "open_file");
+  /* ie. at purge time initialize output backend (ie. open file, connect to broker) and
+     optionally perform other start actions (ie. write start marker) */
+  custom_output->output_init = dlsym(custom_output->lib_handle, "output_init");
   if ((error = dlerror()) != NULL)  {
     Log(LOG_ERR, "ERROR ( %s/%s ): %s from %s\n", config.name, config.type, error, custom_lib);
     exit_gracefully(1);
   }
 
-  custom_output->close_file = dlsym(custom_output->lib_handle, "close_file");
+  /* ie. at purge time close output backend (ie. close file, disconnect from broker) and
+     optionally perform other start actions (ie. write end marker) */
+  custom_output->output_close = dlsym(custom_output->lib_handle, "output_close");
   if ((error = dlerror()) != NULL)  {
     Log(LOG_ERR, "ERROR ( %s/%s ): %s from %s\n", config.name, config.type, error, custom_lib);
     exit_gracefully(1);
   }
 
-  custom_output->flush_file = dlsym(custom_output->lib_handle, "flush_file");
+  /* ie. at purge time write data to the backend and optionally perform other actions
+     (ie. flushing buffers, if buffered output) */
+  custom_output->output_flush = dlsym(custom_output->lib_handle, "output_flush");
   if ((error = dlerror()) != NULL)  {
     Log(LOG_ERR, "ERROR ( %s/%s ): %s from %s\n", config.name, config.type, error, custom_lib);
     exit_gracefully(1);
   }
 
+  /* ie. nicely return error messages back */
   custom_output->get_error_text = dlsym(custom_output->lib_handle, "get_error_text");
   if ((error = dlerror()) != NULL)  {
     Log(LOG_ERR, "ERROR ( %s/%s ): %s from %s\n", config.name, config.type, error, custom_lib);
