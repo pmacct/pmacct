@@ -1,4 +1,4 @@
-SUBDIRS = src examples/lg
+SUBDIRS = src examples/lg examples/custom
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = include sql examples docs CONFIG-KEYS FAQS QUICKSTART UPGRADE
 if USING_SQL
@@ -15,6 +15,7 @@ pmacct_examples_amqp_dir = $(pmacct_examples_dir)/amqp
 pmacct_examples_avro_dir = $(pmacct_examples_dir)/avro
 pmacct_examples_lg_dir = $(pmacct_examples_dir)/lg
 pmacct_examples_lg_arch_dir = $(pmacct_examples_arch_dir)/lg
+pmacct_examples_custom_dir = $(pmacct_examples_dir)/custom
 if USING_SQL
 pmacct_sql_dir = $(pmacct_data_dir)/sql
 endif

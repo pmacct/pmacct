@@ -1199,4 +1199,5 @@ AC_OUTPUT([ Makefile \
 	    src/tee_plugin/Makefile src/isis/Makefile \
 	    src/bmp/Makefile src/rpki/Makefile \
 	    src/telemetry/Makefile src/ndpi/Makefile \
-	    examples/lg/Makefile ])
+	    examples/lg/Makefile \
+	    examples/custom/Makefile	])
