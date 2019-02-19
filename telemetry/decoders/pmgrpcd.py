@@ -38,6 +38,7 @@ from confluent_kafka.avro import AvroProducer
 SCRIPTVERSION = '1.0'
 CONFIGFILE = '/etc/pmacct/telemetry/telemetry.conf'
 GPBMAPFILE = '/etc/pmacct/telemetry/gpbmapfile.map'
+SCIDMAPFILE = '/etc/pmacct/telemetry/schema_id_map_file.json'
 
 jsonmap = {}
 avscmap = {}
@@ -749,6 +750,19 @@ huawei-ifm            =  huawei_ifm_pb2.Ifm()
 huawei-devm           =  huawei_devm_pb2.Devm()
 openconfig-interfaces =  openconfig_interfaces_pb2.Interfaces()
 '''
+
+  default_scidmapfile = '''\
+{
+  "10.215.133.15": {
+    "openconfig-interfaces:interfaces": 249
+    "openconfig-platform:components": 365
+  },
+  "10.215.133.17": {
+    "openconfig-interfaces:interfaces": 299
+  }
+}
+'''
+
   usage_str = "%prog [options]"
   version_str = "%prog " + SCRIPTVERSION
   parser = OptionParser(usage=usage_str, version=version_str)
@@ -768,9 +782,13 @@ openconfig-interfaces =  openconfig_interfaces_pb2.Interfaces()
     config.read(CONFIGFILE)
 
   if not os.path.isfile(GPBMAPFILE):
-    with open(GPBMAPFILE, 'w') as configf:
-      configf.write(default_gpbmapfile)
+    with open(GPBMAPFILE, 'w') as gpbmapf:
+      gpbmapf.write(default_gpbmapfile)
     
+  if not os.path.isfile(SCIDMAPFILE):
+    with open(SCIDMAPFILE, 'w') as scidmapf:
+      scidmapf.write(default_scidmapfile)
+
   parser.add_option("-T", "--topic",
                     default=config.get("PMGRPCD", 'topic'), dest="topic", help="the json data are serialized to this topic")
   parser.add_option("-B", "--bsservers",
