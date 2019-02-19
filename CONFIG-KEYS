@@ -1530,12 +1530,13 @@ DESC:           Defines the print plugin output separator when print_output is s
 DEFAULT:	','
 
 KEY:		print_output_custom_lib
-DESC:		Full path to a shared object (.so) library file that can be dinamically linked in pmacct
-		to provide custom formatting of output data. The two main use-cases for this feature are
+DESC:		Full path to a non-static library file that can be dinamically linked in pmacct to
+		provide custom formatting of output data. The two main use-cases for this feature are
 		1) use available encodings (ie. CSV, JSON, etc.) but fix the format of the messages in a
 		custom way and 2) use a different encoding than the available ones. pm_custom_output
 		structure in plugin_cmn_custom.h can be looked at for guidance of which functions are
-		expected to exist in the library and with which arguments they would be called.
+		expected to exist in the library and with which arguments they would be called. See an
+		example library file in the examples/custom directory.
 DEFAULT:	none
 
 KEY:		print_output_custom_cfg_file

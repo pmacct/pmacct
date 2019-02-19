@@ -15,7 +15,7 @@ pmacct_examples_amqp_dir = $(pmacct_examples_dir)/amqp
 pmacct_examples_avro_dir = $(pmacct_examples_dir)/avro
 pmacct_examples_lg_dir = $(pmacct_examples_dir)/lg
 pmacct_examples_lg_arch_dir = $(pmacct_examples_arch_dir)/lg
-pmacct_examples_custom_dir = $(pmacct_examples_dir)/custom
+pmacct_examples_custom_dir = $(pmacct_examples_arch_dir)/custom
 if USING_SQL
 pmacct_sql_dir = $(pmacct_data_dir)/sql
 endif
@@ -38,6 +38,7 @@ pmacct_examples_amqp__DATA = examples/amqp/amqp_receiver.py
 pmacct_examples_avro__DATA = examples/avro/avro_file_decoder.py
 pmacct_examples_lg__DATA = examples/lg/pmbgp.py
 pmacct_examples_lg_arch__DATA = examples/lg/pmbgp
+pmacct_examples_custom__DATA = examples/custom/libcustom.la
 if USING_SQL
 pmacct_sql__DATA = sql/pmacct-create-db_bgp_v1.mysql sql/pmacct-create-db.pgsql \
 	sql/pmacct-create-db_v1.mysql sql/pmacct-create-db_v2.mysql \

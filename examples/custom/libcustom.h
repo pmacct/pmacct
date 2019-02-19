@@ -23,8 +23,6 @@
 #include "addr.h"
 #include "pmacct-data.h"
 #include "plugin_cmn_custom.h"
-#include "classifier.h"
-#include "ip_flow.h"
 #include "plugin_common.h"
 #include "bgp/bgp.h"
 #if defined(WITH_NDPI)
