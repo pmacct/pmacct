@@ -39,6 +39,7 @@ SCRIPTVERSION = '1.0'
 CONFIGFILE = '/etc/pmacct/telemetry/telemetry.conf'
 GPBMAPFILE = '/etc/pmacct/telemetry/gpbmapfile.map'
 SCIDMAPFILE = '/etc/pmacct/telemetry/schema_id_map_file.json'
+MITIGATIONSCRIPT = '/etc/pmacct/telemetry/mitigation.py'
 
 jsonmap = {}
 avscmap = {}
@@ -763,6 +764,36 @@ openconfig-interfaces =  openconfig_interfaces_pb2.Interfaces()
 }
 '''
 
+  default_mitigationscript = '''\
+#!/usr/bin/env python3.7
+#
+from datetime import datetime
+import pprint
+global mitigation
+mitigation = {}
+
+def mod_all_json_data(resdict):
+  global mitigation
+  mitigation = resdict.copy()
+
+  if "collector" in mitigation:
+    if ("grpc" in mitigation["collector"]) and ("data" in mitigation["collector"]):
+      if "ne_vendor" in mitigation["collector"]["grpc"]:
+        mod_all_pre()
+  #      if mitigation["collector"]["grpc"]["ne_vendor"] == "Huawei":
+  #        mod_huawei()
+  #      elif mitigation["collector"]["grpc"]["ne_vendor"] == "Cisco":
+  #        mod_cisco()
+  #      mod_all_post()
+  return mitigation
+
+def mod_all_pre():
+  global mitigation
+  pass
+
+if __name__ == '__mod_all_json_data__':
+'''
+
   usage_str = "%prog [options]"
   version_str = "%prog " + SCRIPTVERSION
   parser = OptionParser(usage=usage_str, version=version_str)
@@ -788,6 +819,10 @@ openconfig-interfaces =  openconfig_interfaces_pb2.Interfaces()
   if not os.path.isfile(SCIDMAPFILE):
     with open(SCIDMAPFILE, 'w') as scidmapf:
       scidmapf.write(default_scidmapfile)
+
+  if not os.path.isfile(MITIGATIONSCRIPT):
+    with open(MITIGATIONSCRIPT, 'w') as mitigf:
+      mitigf.write(default_mitigationscript)
 
   parser.add_option("-T", "--topic",
                     default=config.get("PMGRPCD", 'topic'), dest="topic", help="the json data are serialized to this topic")
