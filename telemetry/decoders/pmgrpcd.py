@@ -645,7 +645,7 @@ def serve():
   else:
     pmgrpcdlog.info("Cisco is disabled")
 
-  gRPCserver.add_insecure_port('[::]:10000')
+  gRPCserver.add_insecure_port(options.ipport)
   gRPCserver.start()
 
   try:
@@ -733,6 +733,7 @@ mitigation = True
 debug = False
 pmgrpcdlogfile = /var/log/pmgrpcd.log
 serializelogfile = /var/log/pmgrpcd_avro.log
+ipport = [::]:10000
 workers = 20
 cisco = True
 huawei = True
@@ -850,6 +851,8 @@ if __name__ == '__mod_all_json_data__':
                     default=config.get("PMGRPCD", 'pmgrpcdlogfile'), dest='pmgrpcdlogfile', help="pmgrpcdlogfile the logfile on the collector face with path/name [default: %default]")
   parser.add_option("-a", "--serializelogfile",
                     default=config.get("PMGRPCD", 'serializelogfile'), dest="serializelogfile", help="serializelogfile with path/name for kafka avro and zmq messages [default: %default]")
+  parser.add_option("-I", "--ipport",
+                    action="store", type='string', default=config.get("PMGRPCD", 'ipport'), dest="ipport", help="change the ipport the daemon is listen on [default: %default]")
   parser.add_option("-w", "--workers",
                     action="store", type='int', default=config.get("PMGRPCD", 'workers'), dest="workers", help="change the nr of paralell working processes [default: %default]")
   parser.add_option("-C", "--cisco",
