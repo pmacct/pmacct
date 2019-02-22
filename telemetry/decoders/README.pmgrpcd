@@ -92,7 +92,7 @@ DEFAULT:    none
 EXAMPLE:    https://schema-registry.some.thing.net:443
 -----------------------------------------------------------------
 KEY:        calocation
-DESC:       the ca_location used to connect to schema-registry
+DESC:       The ca_location used to connect to Schema Registry
 DEFAULT:    none
 EXAMPLE:    /path/to/schema/registry/ssl/something_root_ca.crt
 -----------------------------------------------------------------
@@ -102,42 +102,40 @@ DEFAULT:    none
 EXAMPLE:    ssl
 -----------------------------------------------------------------
 KEY:        sslcertloc
-DESC:       path/file to ssl certification location
+DESC:       Path/file to a SSL certification location
 DEFAULT:    none
 EXAMPLE:    /path/to/ssl/certificate/location/something.crt
 -----------------------------------------------------------------
 KEY:        sslkeyloc
-DESC:       path/file to ssl key location
+DESC:       Path/file to a SSL key location
 DEFAULT:    none
 EXAMPLE:    /path/to/ssl/key/location/something.key
 -----------------------------------------------------------------
 KEY:        gpbmapfile
-DESC:       This file is used to hold the python-script as generic as
-	    possible. On this file you can add more python classes and
-	    therefore more yang-models-support. The pmgrpcd.py will read
-	    this file. pmgrpcd.py is able to unmarshall json-metrics
-	    based on this python librarys.
-DEFAULT:    see defaultfile: /etc/pmacct/telemetry/gpbmapfile.map
-EXAMPLE:    /etc/pmacct/telemetry/gpbmapfile.map containing:
+DESC:       This file is a way to keep the Python script as generic as
+	    possible. In this file further Python classes can be added
+	    in order to support more YANG models. pmgrpcd.py will read
+	    this file so to be able to unmarshall JSON metrics based
+	    on these Python libraries.
+DEFAULT:    /etc/pmacct/telemetry/gpbmapfile.map
+EXAMPLE:
             huawei-ifm            =  huawei_ifm_pb2.Ifm()
             huawei-devm           =  huawei_devm_pb2.Devm()
             openconfig-interfaces =  openconfig_interfaces_pb2.Interfaces()
 -----------------------------------------------------------------
 KEY:        avscmapfile
-DESC:       This file is a json file.
-            Based on this file pmgrpcd.py is able to get the avro-schema
-	    to serialize the json-metrics to avro-kafka. pmgrpcd.py is
-	    getting json-encodet metrics from the routers. On this data
-	    pmgrcd.py can found the grpc-source-ip-address and the
-	    yang-encoding-path. With the ipaddress (ie. "10.215.133.15")
-	    and the yang-encoding-path (ie. "openconfig-interfaces:interfaces")
-            it is possible (based on this mappingfile) to get the
-	    avro-schema-id (ie. 249). With this avro-schemaid it is
-	    possible for pmgrpcd.py to get the avro-schema from the
-	    schema-registry-server to serialize the json-metrics to
-	    avro-kafka.
-DEFAULT:    see defaultfile: /etc/pmacct/telemetry/schema_id_map_file.json
-EXAMPLE:    /etc/pmacct/telemetry/schema_id_map_file.json containing:
+DESC:       This file is a JSON object. Based on this file pmgrpcd.py is
+	    able to get the Avro schema to serialize the JSON metrics to
+	    Avro. pmgrpcd.py is getting JSON-encoded metrics from routers.
+	    In such data it can be found also the gRPC source IP address
+	    and YANG Encoding Path. IP address being ie. "10.215.133.15"
+	    and Encoding Path being ie. "openconfig-interfaces:interfaces".
+            Based on this mapping file it is possible to get the Avro
+	    Schema ID (ie. 249). With such ID it is possible to get the
+	    Avro sschema from the Schema Registry server to serialize the
+	    JSON metrics to Avro.
+DEFAULT:    /etc/pmacct/telemetry/schema_id_map_file.json
+EXAMPLE:    
             {
               "10.215.133.15": {
                 "openconfig-interfaces:interfaces": 249
@@ -149,123 +147,110 @@ EXAMPLE:    /etc/pmacct/telemetry/schema_id_map_file.json containing:
             }
 -----------------------------------------------------------------
 KEY:        mitigation
-DESC:       The idea of this pytonscript is to have somthing like a
-	    plugin to mitigate json-data problems. As you may know is
-	    Streaming-Telemetry today (1Q 2019) not very well
-	    standardized. There are a lot of things vendors do in
-	    different ways because it is not a well standard. Also there
-	    are a lot of bugs (ie. missing values) and not correct
-	    implemntations of the already existing standards. There are
-	    many optionally parameters (ie. some leafs) but also
-	    optionally structures (ie. records). An example of why this
-	    mitigation-script is needet and used: if there are many
-	    interfaces within the json-message there has to be a record
-	    "interfaces" as parent of "interface". With only one
-	    interface within the message the record "interfaces" is
-	    optionally. For Big-Data (IT and data analytics) this is
-	    very hard to handle. The pmgrpcd.py (not the mitigation.py!)
-	    is (anyway) split multiple enteties within the same message
-	    to sepated messages with one interface on each message.
-            It is possible with the mitigation-script to mitigate
-	    json-data befor they are serialized. ie. all metrics has to
-	    have a fix data-structure - parent "interfaces" containing a
-	    single "interface"
-DEFAULT:    see defaultfile: /etc/pmacct/telemetry/mitigation.py
+DESC:       The idea of this Pyton script is to have somthing like a
+	    plugin to mitigate JSON data problems. Streaming Telemetry
+	    today (1Q 2019) is not very well standardized. There are
+	    several pieces that vendors do in different ways. Also there
+	    are bugs (ie. missing values) and not correct implemntations
+	    of the already existing standards. There are many optional
+	    parameters (ie. some leafs) but also optional structures
+	    (ie. records). For example: if there are multiple interfaces
+	    within the JSON message there has to be a record "interfaces"
+	    as parent of "interface"; whereas with only one interface
+	    within the message the record "interfaces" is optional. For
+	    Big Data (IT and data analytics) this is very hard to handle.
+	    The pmgrpcd.py (not the mitigation.py!) flattens data by
+	    splitting objects within the same message to multiple flat
+	    messages. It is possible with the mitigation script to
+	    mitigate JSON data before they are serialized. ie. all
+	    metrics must have a fixed data structure, like a parent
+	    "interfaces" array containing a single "interface" object.
+DEFAULT:    /etc/pmacct/telemetry/mitigation.py
 EXAMPLE:    see defaultfile: /etc/pmacct/telemetry/mitigation.py
 -----------------------------------------------------------------
 KEY:        debug
-DESC:       enable debug,
+DESC:       Enable debug
 DEFAULT:    False
 EXAMPLE:    False
 -----------------------------------------------------------------
 KEY:        pmgrpcdlogfile
-DESC:       This logfile shows the datacollection-face of pmgrpcd.py
+DESC:       This logfile is for collection events of pmgrpcd.py
 DEFAULT:    /var/log/pmgrpcd.log
 EXAMPLE:    /var/log/pmgrpcd.log
 -----------------------------------------------------------------
 KEY:        serializelogfile
-DESC:       This logfile shows the dataserialization-face of pmgrpcd.py
+DESC:       This logfile if for data serialization events of pmgrpcd.py
 DEFAULT:    /var/log/pmgrpcd_avro.log
 EXAMPLE:    /var/log/pmgrpcd_avro.log
 -----------------------------------------------------------------
 KEY:        ipport
-DESC:       on this ip address and port the daemon pmgrpcd.py is listen
-	    on. With the default value the daemon is listen on all IP
-	    addresses of the server on port 10000.
+DESC:       IP address and port the daemon pmgrpcd.py listens on. By
+	    default the daemon listens on all interfaces on port 10000.
 DEFAULT:    [::]:10000
 EXAMPLE:    [::]:10000
 -----------------------------------------------------------------
 KEY:        workers
-DESC:       this number of workers will be listen on the
+DESC:       Number of worker threads to process input data.
 DEFAULT:    20
 EXAMPLE:    20
 -----------------------------------------------------------------
 KEY:        cisco
-DESC:       With this flag you can disable processing of metrics produced
-	    from a Cisco device
+DESC:       Enable/disable processing of metrics produced by Cisco devices
 DEFAULT:    True
 EXAMPLE:    True
 -----------------------------------------------------------------
 KEY:        huawei
-DESC:       With this flag you can disable processing of metrics produced
-	    from a Huawei device
+DESC:       Enable/disable processing of metrics produced by Huawei devices
 DEFAULT:    True
 EXAMPLE:    True
 -----------------------------------------------------------------
 KEY:        example
-DESC:       With this flag you can disable to produce examplefiles of
-	    each network element. If this flag is enabled then you will
-	    find on the examplepath files for each network element (ne)
-	    for each yang-model. With this file you have a example (the
-	    first message of each ne/yang-model) and you can see what
-	    is really serialized to avro-kafka.
+DESC:       Enable/disable flag to produce example files for different
+	    network elements. If this flag is enabled example path files
+	    for each network element (NE) for each YANG model are going
+	    to be generated. In this file there will be an example (the
+	    first message of each NE/YANG model) where to look for what
+	    is being serialized to Avro for production to Kafka.
 DEFAULT:    True
 EXAMPLE:    True
 -----------------------------------------------------------------
 KEY:        examplepath
-DESC:       This is to specify the path the example-files will produced
-	    on. see KEY: "example"
+DESC:       The directory where example files will be produced to.
 DEFAULT:    /tmp/stexamples
 EXAMPLE:    /tmp/stexamples
 -----------------------------------------------------------------
 KEY:        jsondatadumpfile
-DESC:       If this file is specifyed all the mitigated metrics are
-	    dumped to. With this file it is possible to find Avro
-	    schema mismaching problems.
+DESC:       If enabled, mitigated metrics will be dumped to this file.
+	    With this file it is possible to find Avro schema mismaching
+	    problems.
 DEFAULT:    /tmp/stexamples/jsondatadumpfile.json
 EXAMPLE:    /tmp/stexamples/jsondatadumpfile.json
 -----------------------------------------------------------------
 KEY:        rawdatadumpfile
-DESC:       If this file is specifyed it is possible to find problems on
-	    the data-structure sendet from the ne. This file contains
-	    the row-data the pmgrpcd.py collector is receiving. This file
-	    contains the json-data befor they are mitigated with the
-	    mitigation.py
+DESC:       If enabled, raw data collected by pmgrpcd.py will be dumped
+	    to this file. With this file it is possible to troubleshoot
+	    issues related to data structures.
 DEFAULT:    /tmp/stexamples/rawdatadumpfile.json
 EXAMPLE:    /tmp/stexamples/rawdatadumpfile.json
 -----------------------------------------------------------------
 KEY:        zmq
-DESC:       you can enable zmq-forwarding. in this case the mitigated
-	    json-data will be forwardet additionally also to zmq.
+DESC:       Enable ZMQ forwarding. Output encoding is JSON.
 DEFAULT:    False
 EXAMPLE:    False
 -----------------------------------------------------------------
 KEY:        zmqipport
-DESC:       you can specify the zmq forwarding ip address and port with
-	    this KEY.
+DESC:       Specify IP address and port for ZMQ forwarding.
 DEFAULT:    tcp://127.0.0.1:50000
 EXAMPLE:    tcp://127.0.0.1:50000
 -----------------------------------------------------------------
 KEY:        kafkaavro
-DESC:       with this KEY you can disable the forwarding (serializing) to
-	    avro-kafka.
+DESC:       Enable/disable forwarding to Kafka and serializing to Avro.
 DEFAULT:    True
 EXAMPLE:    True
 -----------------------------------------------------------------
 KEY:        onlyopenconfig
-DESC:       if you like to disable all vendor-yang-models and you like to
-	    process only vendor-independent yang-models of openconfig you
-	    can do it with this KEY
+DESC:       Enable/disable vendor-specific YANG models leaving only the
+	    vendor independent ones, ie. openconfig or IETF ones.
 DEFAULT:    False
 EXAMPLE:    False
 -----------------------------------------------------------------
