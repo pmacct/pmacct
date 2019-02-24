@@ -143,7 +143,7 @@ void PM_sigint_handler(int signum)
      around times when restarting the daemon */
   if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) close(config.sock);
 
-#if defined (IRIX) || (SOLARIS)
+#if defined (SOLARIS)
   signal(SIGCHLD, SIG_IGN);
 #else
   signal(SIGCHLD, ignore_falling_child);

@@ -1385,7 +1385,7 @@ void exit_all(int status)
 {
   struct plugins_list_entry *list = plugins_list;
 
-#if defined (IRIX) || (SOLARIS)
+#if defined (SOLARIS)
   signal(SIGCHLD, SIG_IGN);
 #else
   signal(SIGCHLD, ignore_falling_child);

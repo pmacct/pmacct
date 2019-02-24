@@ -272,7 +272,7 @@ void load_plugins(struct plugin_requests *req)
       case 0: /* Child */
 	/* SIGCHLD handling issue: SysV avoids zombies by ignoring SIGCHLD; to emulate
 	   such semantics on BSD systems, we need an handler like handle_falling_child() */
-#if defined (IRIX) || (SOLARIS)
+#if defined (SOLARIS)
 	signal(SIGCHLD, SIG_IGN);
 #else
 	signal(SIGCHLD, ignore_falling_child);
