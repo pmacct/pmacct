@@ -116,6 +116,7 @@ EXT char *write_sep(char *, int *);
 EXT void version_daemon(char *);
 EXT void set_truefalse_nonzero(int *);
 EXT char *ip_proto_print(u_int8_t, char *, int);
+EXT void parse_hostport(const char *, struct sockaddr *, socklen_t *);
 
 EXT char *compose_json_str(void *);
 EXT void write_and_free_json(FILE *, void *);

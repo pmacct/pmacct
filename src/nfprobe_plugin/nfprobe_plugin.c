@@ -1286,56 +1286,6 @@ handle_timeouts(struct FLOWTRACK *ft, char *to_spec)
 }
 
 static void
-parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len)
-{
-  char *orig, *host, *port;
-  struct addrinfo hints, *res;
-  int herr;
-
-  if ((host = orig = strdup(s)) == NULL) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), strdup() out of memory\n", config.name, config.type);
-    exit_gracefully(1);
-  }
-
-  trim_spaces(host);
-  trim_spaces(orig);
-
-  if ((port = strrchr(host, ':')) == NULL || *(++port) == '\0' || *host == '\0') {
-    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), invalid 'nfprobe_receiver' argument\n", config.name, config.type);
-    exit_gracefully(1);
-  }
-  *(port - 1) = '\0';
-	
-  /* Accept [host]:port for numeric IPv6 addresses */
-  if (*host == '[' && *(port - 2) == ']') {
-    host++;
-    *(port - 2) = '\0';
-  }
-
-  memset(&hints, '\0', sizeof(hints));
-  hints.ai_socktype = SOCK_DGRAM;
-
-  if ((herr = getaddrinfo(host, port, &hints, &res)) == -1) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), address lookup failed\n", config.name, config.type);
-    exit_gracefully(1);
-  }
-
-  if (res == NULL || res->ai_addr == NULL) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), no addresses found for [%s]:%s\n", config.name, config.type, host, port);
-    exit_gracefully(1);
-  }
-
-  if (res->ai_addrlen > *len) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), address too long.\n", config.name, config.type);
-    exit_gracefully(1);
-  }
-
-  memcpy(addr, res->ai_addr, res->ai_addrlen);
-  free(orig);
-  *len = res->ai_addrlen;
-}
-
-static void
 parse_engine(char *s, u_int8_t *engine_type, u_int32_t *engine_id)
 {
   char *delim, *ptr;

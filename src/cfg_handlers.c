@@ -7719,6 +7719,17 @@ int cfg_key_rpki_roas_file(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_rpki_rtr_server(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.rpki_rtr_server = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'rpki_rtr_server'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_print_output_custom_lib(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

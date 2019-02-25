@@ -154,7 +154,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       if (attr->med)
 	json_object_set_new_nocheck(obj, "med", json_integer((json_int_t)attr->med));
 
-      if (config.rpki_roas_file) {
+      if (config.rpki_roas_file || config.rpki_rtr_server) {
 	u_int8_t roa;
 
 	roa = rpki_prefix_lookup(&route->p, attr->aspath);

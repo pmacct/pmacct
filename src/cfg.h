@@ -552,6 +552,7 @@ struct configuration {
   int tmp_bgp_lookup_compare_ports;
   size_t thread_stack;
   char *rpki_roas_file;
+  char *rpki_rtr_server;
 };
 
 /* prototypes */ 

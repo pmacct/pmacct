@@ -67,6 +67,10 @@ void rpki_daemon()
   struct timeval select_timeout;
   int select_fd;
 
+  /* rpki_rtr_server stuff */
+  struct sockaddr_storage rpki_srv;
+  socklen_t rpki_srv_len;
+
   /* initial cleanups */
   reload_map_rpki_thread = FALSE;
   reload_log_rpki_thread = FALSE;
@@ -85,10 +89,21 @@ void rpki_daemon()
 
   rpki_link_misc_structs(r_data);
 
+  if (config.rpki_roas_file && config.rpki_rtr_server) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): rpki_roas_file and rpki_rtr_server are mutual exclusive. Exiting.\n", config.name, config.type);
+    exit_gracefully(1);
+  }
+
   if (config.rpki_roas_file) {
     ret = rpki_roas_file_load(config.rpki_roas_file,
 			rpki_routing_db->rib[AFI_IP][SAFI_UNICAST],
 			rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST]);
+  }
+
+  if (config.rpki_rtr_server) {
+    parse_hostport(config.rpki_rtr_server, (struct sockaddr *)&rpki_srv, &rpki_srv_len);
+
+    // XXX
   }
 
   for (;;) {

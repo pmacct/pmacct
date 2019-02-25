@@ -138,7 +138,9 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
           pptrs->lm_mask_src = result->p.prefixlen;
           pptrs->lm_method_src = NF_NET_BGP;
 
-	  if (config.rpki_roas_file) pptrs->src_roa = rpki_prefix_lookup(&result->p, info->attr->aspath);
+	  if (config.rpki_roas_file || config.rpki_rtr_server) {
+	    pptrs->src_roa = rpki_prefix_lookup(&result->p, info->attr->aspath);
+	  }
         }
       }
 
@@ -164,7 +166,9 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
           pptrs->lm_mask_dst = result->p.prefixlen;
           pptrs->lm_method_dst = NF_NET_BGP;
 
-	  if (config.rpki_roas_file) pptrs->dst_roa = rpki_prefix_lookup(&result->p, info->attr->aspath);
+	  if (config.rpki_roas_file || config.rpki_rtr_server) {
+	    pptrs->dst_roa = rpki_prefix_lookup(&result->p, info->attr->aspath);
+	  }
         }
       }
     }
@@ -191,7 +195,9 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
           pptrs->lm_mask_src = result->p.prefixlen;
           pptrs->lm_method_src = NF_NET_BGP;
 
-	  if (config.rpki_roas_file) pptrs->src_roa = rpki_prefix_lookup(&result->p, info->attr->aspath);
+	  if (config.rpki_roas_file || config.rpki_rtr_server) {
+	    pptrs->src_roa = rpki_prefix_lookup(&result->p, info->attr->aspath);
+	  }
         }
       }
 
@@ -216,7 +222,9 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
           pptrs->lm_mask_dst = result->p.prefixlen;
           pptrs->lm_method_dst = NF_NET_BGP;
 
-	  if (config.rpki_roas_file) pptrs->dst_roa = rpki_prefix_lookup(&result->p, info->attr->aspath);
+	  if (config.rpki_roas_file || config.rpki_rtr_server) {
+	    pptrs->dst_roa = rpki_prefix_lookup(&result->p, info->attr->aspath);
+	  }
         }
       }
     }
