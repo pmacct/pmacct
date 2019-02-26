@@ -7022,7 +7022,7 @@ int cfg_key_telemetry_pipe_size(char *filename, char *name, char *value_ptr)
 
   value = strtoull(value_ptr, &endptr, 10);
   if (!value || value > INT_MAX) {
-    Log(LOG_WARNING, "WARN: [%s] '[nf|sf|pm]acctd_pipe_size' has to be > 0 and <= INT_MAX.\n", filename);
+    Log(LOG_WARNING, "WARN: [%s] 'telemetry_daemon_pipe_size' has to be > 0 and <= INT_MAX.\n", filename);
     return ERR;
   }
 
@@ -7726,6 +7726,41 @@ int cfg_key_rpki_rtr_server(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) list->cfg.rpki_rtr_server = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'rpki_rtr_server'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_rpki_rtr_server_pipe_size(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int64_t value, changes = 0;
+  char *endptr;
+
+  value = strtoull(value_ptr, &endptr, 10);
+  if (!value || value > INT_MAX) {
+    Log(LOG_WARNING, "WARN: [%s] 'rpki_rtr_server_pipe_size' has to be > 0 and <= INT_MAX.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.rpki_rtr_server_pipe_size = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'rpki_rtr_server_pipe_size'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_rpki_rtr_server_ip_precedence(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value < 0) || (value > 7)) {
+    Log(LOG_ERR, "WARN: [%s] 'rpki_rtr_server_ipprec' has to be in the range 0-7.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.rpki_rtr_server_ipprec = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'rpki_rtr_server_ipprec'. Globalized.\n", filename);
 
   return changes;
 }

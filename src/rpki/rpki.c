@@ -70,6 +70,7 @@ void rpki_daemon()
   /* rpki_rtr_server stuff */
   struct sockaddr_storage rpki_srv;
   socklen_t rpki_srv_len;
+  int rpki_srv_fd;
 
   /* initial cleanups */
   reload_map_rpki_thread = FALSE;
@@ -90,7 +91,7 @@ void rpki_daemon()
   rpki_link_misc_structs(r_data);
 
   if (config.rpki_roas_file && config.rpki_rtr_server) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): rpki_roas_file and rpki_rtr_server are mutual exclusive. Exiting.\n", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/core/RPKI ): rpki_roas_file and rpki_rtr_server are mutual exclusive. Exiting.\n", config.name);
     exit_gracefully(1);
   }
 
@@ -101,7 +102,41 @@ void rpki_daemon()
   }
 
   if (config.rpki_rtr_server) {
+    rpki_srv_len = sizeof(rpki_srv);
     parse_hostport(config.rpki_rtr_server, (struct sockaddr *)&rpki_srv, &rpki_srv_len);
+
+    if ((rpki_srv_fd = socket(rpki_srv.ss_family, SOCK_DGRAM, 0)) == -1) {
+      Log(LOG_ERR, "ERROR ( %s/core/RPKI ): rpki_rtr_server: socket() failed: %s\n", config.name, strerror(errno));
+      exit_gracefully(1);
+    }
+
+    if (config.rpki_rtr_server_ipprec) {
+      int rc, opt = config.rpki_rtr_server_ipprec << 5;
+
+      rc = setsockopt(rpki_srv_fd, IPPROTO_IP, IP_TOS, &opt, (socklen_t) sizeof(opt));
+      if (rc < 0) Log(LOG_ERR, "WARN ( %s/core/RPKI ): rpki_rtr_server: setsockopt() failed for IP_TOS (errno: %d).\n", config.name, errno);
+    }
+
+    if (config.rpki_rtr_server_pipe_size) {
+      socklen_t l = sizeof(config.rpki_rtr_server_pipe_size);
+      int saved = 0, obtained = 0;
+
+      getsockopt(rpki_srv_fd, SOL_SOCKET, SO_RCVBUF, &saved, &l);
+      Setsocksize(rpki_srv_fd, SOL_SOCKET, SO_RCVBUF, &config.rpki_rtr_server_pipe_size, (socklen_t) sizeof(config.rpki_rtr_server_pipe_size));
+      getsockopt(rpki_srv_fd, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
+
+      Setsocksize(rpki_srv_fd, SOL_SOCKET, SO_RCVBUF, &saved, l);
+      getsockopt(rpki_srv_fd, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
+      Log(LOG_INFO, "INFO ( %s/core/RPKI ): rpki_rtr_srv_pipe_size: obtained=%d target=%d.\n",
+	  config.name, obtained, config.rpki_rtr_server_pipe_size);
+    }
+
+    if (connect(rpki_srv_fd, (struct sockaddr *) &rpki_srv, rpki_srv_len) == -1) {
+      Log(LOG_ERR, "ERROR ( %s/core/RPKI ): rpki_rtr_server: connect() failed: %s\n", config.name, strerror(errno));
+      exit_gracefully(1);
+    }
+
+    Log(LOG_INFO, "INFO ( %s/core/RPKI ): Connecting to RTR Server: %s\n", config.name, config.rpki_rtr_server);
 
     // XXX
   }
