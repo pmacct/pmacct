@@ -31,6 +31,7 @@
 #include "ip_flow.h"
 #include "classifier.h"
 #include "plugin_hooks.h"
+#include <netdb.h>
 #include <sys/file.h>
 #include <sys/utsname.h>
 
