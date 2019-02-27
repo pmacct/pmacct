@@ -7730,6 +7730,19 @@ int cfg_key_rpki_rtr_server(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_rpki_rtr_server_version(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+
+  for (; list; list = list->next, changes++) list->cfg.rpki_rtr_server_version = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'rpki_rtr_server_version'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_rpki_rtr_server_pipe_size(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

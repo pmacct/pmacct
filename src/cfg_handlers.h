@@ -451,6 +451,7 @@ EXT int cfg_key_nfacctd_isis_mtu(char *, char *, char *);
 EXT int cfg_key_nfacctd_isis_msglog(char *, char *, char *);
 EXT int cfg_key_rpki_roas_file(char *, char *, char *);
 EXT int cfg_key_rpki_rtr_server(char *, char *, char *);
+EXT int cfg_key_rpki_rtr_server_version(char *, char *, char *);
 EXT int cfg_key_rpki_rtr_server_pipe_size(char *, char *, char *);
 EXT int cfg_key_rpki_rtr_server_ip_precedence(char *, char *, char *);
 EXT int cfg_key_igp_daemon_map(char *, char *, char *);

@@ -102,6 +102,11 @@ void rpki_daemon()
   }
 
   if (config.rpki_rtr_server) {
+    if (config.rpki_rtr_server_version != RPKI_RTR_V0 && config.rpki_rtr_server_version != RPKI_RTR_V1) {
+      Log(LOG_ERR, "ERROR ( %s/core/RPKI ): rpki_rtr_server_version must be 0 or 1. Exiting.\n", config.name);
+      exit_gracefully(1);
+    }
+ 
     rpki_srv_len = sizeof(rpki_srv);
     parse_hostport(config.rpki_rtr_server, (struct sockaddr *)&rpki_srv, &rpki_srv_len);
 

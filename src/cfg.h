@@ -553,6 +553,7 @@ struct configuration {
   size_t thread_stack;
   char *rpki_roas_file;
   char *rpki_rtr_server;
+  int rpki_rtr_server_version;
   int rpki_rtr_server_pipe_size;
   int rpki_rtr_server_ipprec;
 };
