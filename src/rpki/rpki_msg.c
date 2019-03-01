@@ -180,3 +180,116 @@ int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t ma
 
   return SUCCESS;
 }
+
+void rpki_rtr_connect(int *rpki_srv_fd, struct sockaddr_storage *rpki_srv, socklen_t rpki_srv_len)
+{
+  int rc;
+
+  if (((*rpki_srv_fd) = socket(rpki_srv->ss_family, SOCK_DGRAM, 0)) == -1) {
+    Log(LOG_ERR, "ERROR ( %s/core/RPKI ): rpki_rtr_server: socket() failed: %s\n", config.name, strerror(errno));
+    exit_gracefully(1);
+  }
+
+  if (config.rpki_rtr_server_ipprec) {
+    int opt = config.rpki_rtr_server_ipprec << 5;
+
+    rc = setsockopt((*rpki_srv_fd), IPPROTO_IP, IP_TOS, &opt, (socklen_t) sizeof(opt));
+    if (rc < 0) Log(LOG_ERR, "WARN ( %s/core/RPKI ): rpki_rtr_server: setsockopt() failed for IP_TOS (errno: %d).\n", config.name, errno);
+  }
+
+  if (config.rpki_rtr_server_pipe_size) {
+    socklen_t l = sizeof(config.rpki_rtr_server_pipe_size);
+    int saved = 0, obtained = 0;
+
+    getsockopt((*rpki_srv_fd), SOL_SOCKET, SO_RCVBUF, &saved, &l);
+    Setsocksize((*rpki_srv_fd), SOL_SOCKET, SO_RCVBUF, &config.rpki_rtr_server_pipe_size, (socklen_t) sizeof(config.rpki_rtr_server_pipe_size));
+    getsockopt((*rpki_srv_fd), SOL_SOCKET, SO_RCVBUF, &obtained, &l);
+
+    Setsocksize((*rpki_srv_fd), SOL_SOCKET, SO_RCVBUF, &saved, l);
+    getsockopt((*rpki_srv_fd), SOL_SOCKET, SO_RCVBUF, &obtained, &l);
+    Log(LOG_INFO, "INFO ( %s/core/RPKI ): rpki_rtr_srv_pipe_size: obtained=%d target=%d.\n",
+	config.name, obtained, config.rpki_rtr_server_pipe_size);
+  }
+
+  rc = connect((*rpki_srv_fd), (struct sockaddr *)rpki_srv, rpki_srv_len);
+  if (rc < 0) {
+    Log(LOG_ERR, "WARN ( %s/core/RPKI ): rpki_rtr_server: connect() failed: %s\n", config.name, strerror(errno));
+    close((*rpki_srv_fd));
+    (*rpki_srv_fd) = ERR;
+  }
+  else Log(LOG_INFO, "INFO ( %s/core/RPKI ): Connecting to RTR Server: %s\n", config.name, config.rpki_rtr_server);
+}
+
+void rpki_rtr_send_reset(int *rpki_srv_fd, u_int16_t *session_id)
+{
+  struct rpki_rtr_reset rqm;
+  struct rpki_rtr_cache_response crm;
+  ssize_t msglen;
+
+  (*session_id) = 0;
+
+  if ((*rpki_srv_fd) > 0) {
+    memset(&rqm, 0, sizeof(rqm));
+
+    rqm.version = config.rpki_rtr_server_version;
+    rqm.pdu_type = RPKI_RTR_PDU_RESET_QUERY;
+    rqm.len = htonl(RPKI_RTR_PDU_RESET_QUERY_LEN);
+
+    msglen = send((*rpki_srv_fd), &rqm, sizeof(rqm), 0);
+    if (msglen == RPKI_RTR_PDU_RESET_QUERY_LEN) { 
+      memset(&crm, 0, sizeof(crm));
+
+      msglen = recv((*rpki_srv_fd), &crm, sizeof(crm), 0);
+      if (msglen == RPKI_RTR_PDU_CACHE_RESPONSE_LEN) {
+	(*session_id) = crm.session_id;
+      }
+      else {
+	Log(LOG_ERR, "WARN ( %s/core/RPKI ): rpki_rtr_server: recv() failed: cache response\n", config.name);
+	close((*rpki_srv_fd));
+	(*rpki_srv_fd) = ERR;
+      }
+    }
+    else {
+      Log(LOG_ERR, "WARN ( %s/core/RPKI ): rpki_rtr_server: send() failed: reset query\n", config.name);
+      close((*rpki_srv_fd));
+      (*rpki_srv_fd) = ERR;
+    }
+  }
+}
+
+void rpki_rtr_recv_prefixes(int *rpki_srv_fd, u_int16_t *session_id, u_int32_t *serial)
+{
+  struct rpki_rtr_ipv4_pref p4m, peek;
+  struct rpki_rtr_ipv6_pref p6m;
+  struct rpki_rtr_eod_v0 eodm;
+  ssize_t msglen, explen;
+
+  if ((*rpki_srv_fd) > 0) {
+    memset(&peek, 0, sizeof(peek));
+
+    while ((*rpki_srv_fd) > 0 && peek.pdu_type != RPKI_RTR_PDU_END_OF_DATA) {
+      msglen = recv((*rpki_srv_fd), &peek, 2, MSG_PEEK);
+      if (msglen == 2) {
+	switch(peek.pdu_type) {
+	case RPKI_RTR_PDU_IPV4_PREFIX:
+	  msglen = recv((*rpki_srv_fd), &p4m, sizeof(p4m), 0);
+	  // XXX
+	  break;
+	case RPKI_RTR_PDU_IPV6_PREFIX:
+	  msglen = recv((*rpki_srv_fd), &p6m, sizeof(p6m), 0);
+	  // XXX
+	  break;
+	case RPKI_RTR_PDU_END_OF_DATA:
+	  msglen = recv((*rpki_srv_fd), &eodm, sizeof(eodm), 0);
+	  // XXX
+	  break;
+	default:
+	  Log(LOG_ERR, "WARN ( %s/core/RPKI ): rpki_rtr_recv_prefixes(): unexpected PDU type %u\n", config.name, peek.pdu_type);
+	  close((*rpki_srv_fd));
+	  (*rpki_srv_fd) = ERR;
+	  break;
+	}
+      }
+    }
+  }
+}
