@@ -28,7 +28,16 @@
 EXT int rpki_roas_file_load(char *, struct bgp_table *, struct bgp_table *);
 EXT int rpki_info_add(struct bgp_peer *, struct prefix *, as_t, u_int8_t, struct bgp_table *, struct bgp_table *);
 
-EXT void rpki_rtr_connect(int *, struct sockaddr_storage *, socklen_t);
-EXT void rpki_rtr_send_reset(int *, u_int16_t *);
-EXT void rpki_rtr_recv_prefixes(int *, u_int16_t *, u_int32_t *);
+EXT void rpki_rtr_parse_msg(struct rpki_rtr_handle *);
+EXT void rpki_rtr_connect(struct rpki_rtr_handle *);
+EXT void rpki_rtr_close(struct rpki_rtr_handle *);
+EXT void rpki_rtr_send_reset(struct rpki_rtr_handle *);
+EXT void rpki_rtr_send_serial_query(struct rpki_rtr_handle *);
+EXT void rpki_rtr_recv_cache_response(struct rpki_rtr_handle *);
+EXT void rpki_rtr_recv_serial_notify(struct rpki_rtr_handle *);
+EXT void rpki_rtr_recv_ipv4_pref(struct rpki_rtr_handle *);
+EXT void rpki_rtr_recv_ipv6_pref(struct rpki_rtr_handle *);
+EXT void rpki_rtr_recv_eod(struct rpki_rtr_handle *);
+EXT void rpki_rtr_recv_cache_reset(struct rpki_rtr_handle *);
+EXT void rpki_rtr_recv_error_report(struct rpki_rtr_handle *);
 #undef EXT

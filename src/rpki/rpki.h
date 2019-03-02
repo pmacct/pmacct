@@ -113,6 +113,13 @@ struct rpki_rtr_eod_v0 {
   u_int32_t serial;
 } __attribute__ ((packed));
 
+struct rpki_rtr_cache_reset {
+  u_int8_t version;
+  u_int8_t pdu_type;
+  u_int16_t unused;
+  u_int32_t len;
+} __attribute__ ((packed));
+
 struct rpki_rtr_err_report {
   u_int8_t version;
   u_int8_t pdu_type;
@@ -123,6 +130,14 @@ struct rpki_rtr_err_report {
   /* err text len */
   /* err text */
 } __attribute__ ((packed));
+
+struct rpki_rtr_handle {
+  struct sockaddr_storage sock;
+  socklen_t socklen;
+  int fd;
+  u_int16_t session_id;
+  u_int32_t serial;
+};
 
 #include "rpki_msg.h"
 #include "rpki_lookup.h"

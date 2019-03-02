@@ -65,14 +65,11 @@ void rpki_daemon()
 
   /* select() stuff */
   struct timeval select_timeout;
-  int select_fd;
+  int select_fd, select_num;
+  fd_set read_desc;
 
   /* rpki_rtr_server stuff */
-  struct sockaddr_storage rpki_srv;
-  socklen_t rpki_srv_len;
-  int rpki_srv_fd;
-  u_int16_t rpki_srv_session_id;
-  u_int32_t rpki_srv_serial;
+  struct rpki_rtr_handle rpki_cache;
 
   /* initial cleanups */
   reload_map_rpki_thread = FALSE;
@@ -109,21 +106,28 @@ void rpki_daemon()
       exit_gracefully(1);
     }
  
-    rpki_srv_len = sizeof(rpki_srv);
-    parse_hostport(config.rpki_rtr_server, (struct sockaddr *)&rpki_srv, &rpki_srv_len);
-
-    rpki_rtr_connect(&rpki_srv_fd, &rpki_srv, rpki_srv_len);
-    rpki_rtr_send_reset(&rpki_srv_fd, &rpki_srv_session_id);
-    rpki_rtr_recv_prefixes(&rpki_srv_fd, &rpki_srv_session_id, &rpki_srv_serial);
+    rpki_cache.socklen = sizeof(rpki_cache.sock);
+    parse_hostport(config.rpki_rtr_server, (struct sockaddr *)&rpki_cache.sock, &rpki_cache.socklen);
   }
 
   for (;;) {
-    /* simplified select() until we have fds to read from */
+    select_again:
+
+    /* select inits */
+    FD_ZERO(&read_desc);
+    select_fd = 0;
     select_timeout.tv_sec = 1;
     select_timeout.tv_usec = 0;
-    select_fd = 0;
 
-    select(select_fd, NULL, NULL, NULL, &select_timeout);
+    if (config.rpki_rtr_server) {
+      if (rpki_cache.fd > 0) {
+	select_fd = (rpki_cache.fd + 1);
+	FD_SET(rpki_cache.fd, &read_desc);
+      }
+    }
+
+    select_num = select(select_fd, &read_desc, NULL, NULL, &select_timeout);
+    if (select_num < 0) goto select_again;
 
     /* signals handling */
     if (reload_map_rpki_thread) {
@@ -163,6 +167,16 @@ void rpki_daemon()
       }
 
       reload_map_rpki_thread = FALSE;
+    }
+
+    if (config.rpki_rtr_server) {
+      /* timeout */
+      if (!select_num) {
+	if (rpki_cache.fd < 0) rpki_rtr_connect(&rpki_cache);
+	if (!rpki_cache.session_id) rpki_rtr_send_reset(&rpki_cache);
+	if (rpki_cache.serial) rpki_rtr_send_serial_query(&rpki_cache);
+      }
+      else rpki_rtr_parse_msg(&rpki_cache);
     }
   }
 }
