@@ -68,7 +68,7 @@ void rpki_daemon()
   int select_fd, select_num;
   fd_set read_desc;
 
-  /* rpki_rtr_server stuff */
+  /* rpki_rtr_cache stuff */
   struct rpki_rtr_handle rpki_cache;
 
   /* initial cleanups */
@@ -89,8 +89,8 @@ void rpki_daemon()
 
   rpki_link_misc_structs(r_data);
 
-  if (config.rpki_roas_file && config.rpki_rtr_server) {
-    Log(LOG_ERR, "ERROR ( %s/core/RPKI ): rpki_roas_file and rpki_rtr_server are mutual exclusive. Exiting.\n", config.name);
+  if (config.rpki_roas_file && config.rpki_rtr_cache) {
+    Log(LOG_ERR, "ERROR ( %s/core/RPKI ): rpki_roas_file and rpki_rtr_cache are mutual exclusive. Exiting.\n", config.name);
     exit_gracefully(1);
   }
 
@@ -100,14 +100,15 @@ void rpki_daemon()
 			rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST]);
   }
 
-  if (config.rpki_rtr_server) {
-    if (config.rpki_rtr_server_version != RPKI_RTR_V0 && config.rpki_rtr_server_version != RPKI_RTR_V1) {
-      Log(LOG_ERR, "ERROR ( %s/core/RPKI ): rpki_rtr_server_version must be 0 or 1. Exiting.\n", config.name);
+  if (config.rpki_rtr_cache) {
+    if (config.rpki_rtr_cache_version != RPKI_RTR_V0 && config.rpki_rtr_cache_version != RPKI_RTR_V1) {
+      Log(LOG_ERR, "ERROR ( %s/core/RPKI ): rpki_rtr_cache_version must be 0 or 1. Exiting.\n", config.name);
       exit_gracefully(1);
     }
  
+    rpki_cache.fd = ERR;
     rpki_cache.socklen = sizeof(rpki_cache.sock);
-    parse_hostport(config.rpki_rtr_server, (struct sockaddr *)&rpki_cache.sock, &rpki_cache.socklen);
+    parse_hostport(config.rpki_rtr_cache, (struct sockaddr *)&rpki_cache.sock, &rpki_cache.socklen);
   }
 
   for (;;) {
@@ -119,7 +120,7 @@ void rpki_daemon()
     select_timeout.tv_sec = 1;
     select_timeout.tv_usec = 0;
 
-    if (config.rpki_rtr_server) {
+    if (config.rpki_rtr_cache) {
       if (rpki_cache.fd > 0) {
 	select_fd = (rpki_cache.fd + 1);
 	FD_SET(rpki_cache.fd, &read_desc);
@@ -169,11 +170,11 @@ void rpki_daemon()
       reload_map_rpki_thread = FALSE;
     }
 
-    if (config.rpki_rtr_server) {
+    if (config.rpki_rtr_cache) {
       /* timeout */
       if (!select_num) {
 	if (rpki_cache.fd < 0) rpki_rtr_connect(&rpki_cache);
-	if (!rpki_cache.session_id) rpki_rtr_send_reset(&rpki_cache);
+	if (!rpki_cache.session_id) rpki_rtr_send_reset_query(&rpki_cache);
 	if (rpki_cache.serial) rpki_rtr_send_serial_query(&rpki_cache);
       }
       else rpki_rtr_parse_msg(&rpki_cache);

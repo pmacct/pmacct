@@ -31,7 +31,7 @@ EXT int rpki_info_add(struct bgp_peer *, struct prefix *, as_t, u_int8_t, struct
 EXT void rpki_rtr_parse_msg(struct rpki_rtr_handle *);
 EXT void rpki_rtr_connect(struct rpki_rtr_handle *);
 EXT void rpki_rtr_close(struct rpki_rtr_handle *);
-EXT void rpki_rtr_send_reset(struct rpki_rtr_handle *);
+EXT void rpki_rtr_send_reset_query(struct rpki_rtr_handle *);
 EXT void rpki_rtr_send_serial_query(struct rpki_rtr_handle *);
 EXT void rpki_rtr_recv_cache_response(struct rpki_rtr_handle *);
 EXT void rpki_rtr_recv_serial_notify(struct rpki_rtr_handle *);

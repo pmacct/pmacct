@@ -120,7 +120,7 @@ void skinny_bmp_daemon()
   }
   memset(bmp_peers, 0, config.nfacctd_bmp_max_peers*sizeof(struct bmp_peer));
 
-  if (config.rpki_roas_file || config.rpki_rtr_server) {
+  if (config.rpki_roas_file || config.rpki_rtr_cache) {
     rpki_daemon_wrapper();
 
     /* Let's give the RPKI thread some advantage to create its structures */

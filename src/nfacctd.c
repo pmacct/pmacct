@@ -812,7 +812,7 @@ int main(int argc,char **argv, char **envp)
     nfacctd_bgp_wrapper();
 
     /* Let's give the BGP thread some advantage to create its structures */
-    if (config.rpki_roas_file || config.rpki_rtr_server) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
+    if (config.rpki_roas_file || config.rpki_rtr_cache) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
     sleep(sleep_time);
   }
 
@@ -825,7 +825,7 @@ int main(int argc,char **argv, char **envp)
     nfacctd_bmp_wrapper();
 
     /* Let's give the BMP thread some advantage to create its structures */
-    if (config.rpki_roas_file || config.rpki_rtr_server) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
+    if (config.rpki_roas_file || config.rpki_rtr_cache) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
     sleep(sleep_time);
   }
 

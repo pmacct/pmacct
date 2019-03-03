@@ -214,10 +214,14 @@ void rpki_rtr_parse_msg(struct rpki_rtr_handle *cache)
 	rpki_rtr_recv_error_report(cache);
 	break;
       default:
-	Log(LOG_ERR, "WARN ( %s/core/RPKI ): rpki_rtr_parse_msg(): unknown PDU type (%u)\n", config.name, peek.pdu_type);
+	Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_parse_msg(): unknown PDU type (%u)\n", config.name, peek.pdu_type);
 	rpki_rtr_close(cache);
 	break;
       }
+    }
+    else {
+      Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_parse_msg(): recv() peek failed\n", config.name);
+      rpki_rtr_close(cache);
     }
   }
 }
@@ -226,39 +230,39 @@ void rpki_rtr_connect(struct rpki_rtr_handle *cache)
 {
   int rc;
 
-  if ((cache->fd = socket(cache->sock.ss_family, SOCK_DGRAM, 0)) == -1) {
+  if ((cache->fd = socket(cache->sock.ss_family, SOCK_STREAM, 0)) == -1) {
     Log(LOG_ERR, "ERROR ( %s/core/RPKI ): rpki_rtr_connect(): socket() failed: %s\n", config.name, strerror(errno));
     exit_gracefully(1);
   }
 
-  if (config.rpki_rtr_server_ipprec) {
-    int opt = config.rpki_rtr_server_ipprec << 5;
+  if (config.rpki_rtr_cache_ipprec) {
+    int opt = config.rpki_rtr_cache_ipprec << 5;
 
     rc = setsockopt(cache->fd, IPPROTO_IP, IP_TOS, &opt, (socklen_t) sizeof(opt));
-    if (rc < 0) Log(LOG_ERR, "WARN ( %s/core/RPKI ): rpki_rtr_connect(): setsockopt() failed for IP_TOS (errno: %d).\n", config.name, errno);
+    if (rc < 0) Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_connect(): setsockopt() failed for IP_TOS (errno: %d).\n", config.name, errno);
   }
 
-  if (config.rpki_rtr_server_pipe_size) {
-    socklen_t l = sizeof(config.rpki_rtr_server_pipe_size);
+  if (config.rpki_rtr_cache_pipe_size) {
+    socklen_t l = sizeof(config.rpki_rtr_cache_pipe_size);
     int saved = 0, obtained = 0;
 
     getsockopt(cache->fd, SOL_SOCKET, SO_RCVBUF, &saved, &l);
-    Setsocksize(cache->fd, SOL_SOCKET, SO_RCVBUF, &config.rpki_rtr_server_pipe_size, (socklen_t) sizeof(config.rpki_rtr_server_pipe_size));
+    Setsocksize(cache->fd, SOL_SOCKET, SO_RCVBUF, &config.rpki_rtr_cache_pipe_size, (socklen_t) sizeof(config.rpki_rtr_cache_pipe_size));
     getsockopt(cache->fd, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
 
     Setsocksize(cache->fd, SOL_SOCKET, SO_RCVBUF, &saved, l);
     getsockopt(cache->fd, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
     Log(LOG_INFO, "INFO ( %s/core/RPKI ): rpki_rtr_connect(): rpki_rtr_srv_pipe_size: obtained=%d target=%d.\n",
-	config.name, obtained, config.rpki_rtr_server_pipe_size);
+	config.name, obtained, config.rpki_rtr_cache_pipe_size);
   }
 
   rc = connect(cache->fd, (struct sockaddr *) &cache->sock, cache->socklen);
   if (rc < 0) {
-    Log(LOG_ERR, "WARN ( %s/core/RPKI ): rpki_rtr_connect(): connect() failed: %s\n", config.name, strerror(errno));
+    Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_connect(): connect() failed: %s\n", config.name, strerror(errno));
     rpki_rtr_close(cache);
   }
   else {
-    Log(LOG_INFO, "INFO ( %s/core/RPKI ): Connected to RTR Cache: %s\n", config.name, config.rpki_rtr_server);
+    Log(LOG_INFO, "INFO ( %s/core/RPKI ): Connected to RTR Cache: %s\n", config.name, config.rpki_rtr_cache);
     cache->session_id = 0;
     cache->serial = 0;
   }
@@ -273,7 +277,7 @@ void rpki_rtr_close(struct rpki_rtr_handle *cache)
   cache->serial = 0;
 }
 
-void rpki_rtr_send_reset(struct rpki_rtr_handle *cache)
+void rpki_rtr_send_reset_query(struct rpki_rtr_handle *cache)
 {
   struct rpki_rtr_reset rqm;
   ssize_t msglen;
@@ -281,13 +285,13 @@ void rpki_rtr_send_reset(struct rpki_rtr_handle *cache)
   if (cache->fd > 0) {
     memset(&rqm, 0, sizeof(rqm));
 
-    rqm.version = config.rpki_rtr_server_version;
+    rqm.version = config.rpki_rtr_cache_version;
     rqm.pdu_type = RPKI_RTR_PDU_RESET_QUERY;
     rqm.len = htonl(RPKI_RTR_PDU_RESET_QUERY_LEN);
 
     msglen = send(cache->fd, &rqm, sizeof(rqm), 0);
     if (msglen != RPKI_RTR_PDU_RESET_QUERY_LEN) {
-      Log(LOG_ERR, "WARN ( %s/core/RPKI ): rpki_rtr_send_reset(): send() failed\n", config.name);
+      Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_send_reset_query(): send() failed\n", config.name);
       rpki_rtr_close(cache);
     }
   }
@@ -299,7 +303,19 @@ void rpki_rtr_send_serial_query(struct rpki_rtr_handle *cache)
   ssize_t msglen;
 
   if (cache->fd > 0) {
-    // XXX
+    memset(&snm, 0, sizeof(snm));
+
+    snm.version = config.rpki_rtr_cache_version;
+    snm.pdu_type = RPKI_RTR_PDU_SERIAL_QUERY;
+    snm.len = htonl(RPKI_RTR_PDU_SERIAL_QUERY_LEN);
+    snm.session_id = htons(cache->session_id);
+    snm.serial = htonl(cache->serial);
+
+    msglen = send(cache->fd, &snm, sizeof(snm), 0);
+    if (msglen != RPKI_RTR_PDU_SERIAL_QUERY_LEN) {
+      Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_send_serial_query(): send() failed\n", config.name);
+      rpki_rtr_close(cache);
+    }
   }
 }
 
@@ -311,12 +327,12 @@ void rpki_rtr_recv_cache_response(struct rpki_rtr_handle *cache)
   if (cache->fd > 0) {
     memset(&crm, 0, sizeof(crm));
 
-    msglen = recv(cache->fd, &crm, sizeof(crm), 0);
+    msglen = recv(cache->fd, &crm, sizeof(crm), MSG_WAITALL);
     if (msglen == RPKI_RTR_PDU_CACHE_RESPONSE_LEN) {
       cache->session_id = crm.session_id;
     }
     else {
-      Log(LOG_ERR, "WARN ( %s/core/RPKI ): rpki_rtr_recv_cache_response(): recv() failed\n", config.name);
+      Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_cache_response(): recv() failed\n", config.name);
       rpki_rtr_close(cache);
     }
   }
@@ -330,9 +346,9 @@ void rpki_rtr_recv_serial_notify(struct rpki_rtr_handle *cache)
   if (cache->fd > 0) {
     memset(&snm, 0, sizeof(snm));
 
-    msglen = recv(cache->fd, &snm, sizeof(snm), 0);
+    msglen = recv(cache->fd, &snm, sizeof(snm), MSG_WAITALL);
     if (msglen != RPKI_RTR_PDU_SERIAL_NOTIFY_LEN) {
-      Log(LOG_ERR, "WARN ( %s/core/RPKI ): rpki_rtr_recv_serial_notify(): recv() failed\n", config.name);
+      Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_serial_notify(): recv() failed\n", config.name);
       rpki_rtr_close(cache);
     }
   }
@@ -346,12 +362,12 @@ void rpki_rtr_recv_ipv4_pref(struct rpki_rtr_handle *cache)
   if (cache->fd > 0) {
     memset(&p4m, 0, sizeof(p4m));
 
-    msglen = recv(cache->fd, &p4m, sizeof(p4m), 0);
-    if (msglen == RPKI_RTR_PDU_IPV4_PREFIX) {
+    msglen = recv(cache->fd, &p4m, sizeof(p4m), MSG_WAITALL);
+    if (msglen == RPKI_RTR_PDU_IPV4_PREFIX_LEN) {
       // XXX: parse
     }
     else {
-      Log(LOG_ERR, "WARN ( %s/core/RPKI ): rpki_rtr_recv_ipv4_pref(): recv() failed\n", config.name);
+      Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_ipv4_pref(): recv() failed\n", config.name);
       rpki_rtr_close(cache);
     }
   }
@@ -365,12 +381,12 @@ void rpki_rtr_recv_ipv6_pref(struct rpki_rtr_handle *cache)
   if (cache->fd > 0) {
     memset(&p6m, 0, sizeof(p6m));
   
-    msglen = recv(cache->fd, &p6m, sizeof(p6m), 0);
-    if (msglen == RPKI_RTR_PDU_IPV6_PREFIX) {
+    msglen = recv(cache->fd, &p6m, sizeof(p6m), MSG_WAITALL);
+    if (msglen == RPKI_RTR_PDU_IPV6_PREFIX_LEN) {
       // XXX: parse
     }
     else {
-      Log(LOG_ERR, "WARN ( %s/core/RPKI ): rpki_rtr_recv_ipv6_pref(): recv() failed\n", config.name);
+      Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_ipv6_pref(): recv() failed\n", config.name);
       rpki_rtr_close(cache);
     }
   }
@@ -384,15 +400,17 @@ void rpki_rtr_recv_eod(struct rpki_rtr_handle *cache)
   if (cache->fd > 0) {
     memset(&eodm, 0, sizeof(eodm));
 
-    msglen = recv(cache->fd, &eodm, sizeof(eodm), 0);
+    msglen = recv(cache->fd, &eodm, sizeof(eodm), MSG_WAITALL);
     if (msglen == RPKI_RTR_PDU_END_OF_DATA_LEN) {
       if (cache->session_id != eodm.session_id) {
-	Log(LOG_ERR, "WARN ( %s/core/RPKI ): rpki_rtr_recv_eod(): unexpected session_id: %u\n", config.name, eodm.session_id);
+	Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_eod(): unexpected session_id: %u\n", config.name, eodm.session_id);
 	rpki_rtr_close(cache);
       }
+
+      cache->serial = eodm.serial;
     }
     else {
-      Log(LOG_ERR, "WARN ( %s/core/RPKI ): rpki_rtr_recv_eod(): recv() failed\n", config.name);
+      Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_eod(): recv() failed\n", config.name);
       rpki_rtr_close(cache);
     }
   }
@@ -404,6 +422,14 @@ void rpki_rtr_recv_cache_reset(struct rpki_rtr_handle *cache)
   ssize_t msglen;
 
   if (cache-> fd > 0) {
+    memset(&crm, 0, sizeof(crm));
+
+    msglen = recv(cache->fd, &crm, sizeof(crm), MSG_WAITALL);
+    if (msglen != RPKI_RTR_PDU_CACHE_RESET_LEN) {
+      Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_cache_reset(): recv() failed\n", config.name);
+      rpki_rtr_close(cache);
+    }
+
     // XXX
   }
 }
@@ -412,14 +438,15 @@ void rpki_rtr_recv_error_report(struct rpki_rtr_handle *cache)
 {
   struct rpki_rtr_err_report erm;
   ssize_t msglen;
-  char *ermbuf = NULL;
+  char *ermbuf = NULL, *encpdu_ptr, *errmsg_ptr;
+  u_int32_t *encpdu_len, *errmsg_len;
 
   if (cache->fd > 0) {
     memset(&erm, 0, sizeof(erm));
 
-    msglen = recv(cache->fd, &erm, sizeof(erm), 0);
+    msglen = recv(cache->fd, &erm, sizeof(erm), MSG_WAITALL);
     if (msglen != sizeof(erm)) {
-      Log(LOG_ERR, "WARN ( %s/core/RPKI ): rpki_rtr_recv_error_report(): recv() failed (1)\n", config.name);
+      Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_error_report(): recv() failed (1)\n", config.name);
       rpki_rtr_close(cache);
       goto exit_lane;
     }
@@ -427,15 +454,22 @@ void rpki_rtr_recv_error_report(struct rpki_rtr_handle *cache)
     if (erm.tot_len > msglen) {
       u_int32_t rem_len = (erm.tot_len - msglen);
 
-      ermbuf = malloc(rem_len);
-      msglen = recv(cache->fd, ermbuf, rem_len, 0);
+      ermbuf = malloc(rem_len + 1);
+      msglen = recv(cache->fd, ermbuf, rem_len, MSG_WAITALL);
       if (msglen != rem_len) {
-	Log(LOG_ERR, "WARN ( %s/core/RPKI ): rpki_rtr_recv_error_report(): recv() failed (2)\n", config.name);
+	Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_error_report(): recv() failed (2)\n", config.name);
 	rpki_rtr_close(cache);
 	goto exit_lane;
       }
 
-      // XXX
+      ermbuf[rem_len] = '\0';
+
+      encpdu_len = (u_int32_t *) ermbuf;
+      encpdu_ptr = (char *) (ermbuf + 4);
+      errmsg_len = (u_int32_t *)(char *)(ermbuf + (*encpdu_len) + 4);
+      errmsg_ptr = (char *) (ermbuf + (*encpdu_len) + 4 + 4);
+
+      Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_error_report(): %s\n", config.name, errmsg_ptr);
 
       exit_lane:
       if (ermbuf) free(ermbuf);
