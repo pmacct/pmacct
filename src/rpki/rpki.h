@@ -57,6 +57,8 @@
 #define RPKI_RTR_ERR_WITHDRAWAL		6
 #define RPKI_RTR_ERR_DUPLICATE		7
 
+#define RPKI_RTR_CONNECT_ITVL		60
+
 struct rpki_rtr_serial {
   u_int8_t version;
   u_int8_t pdu_type;
@@ -135,6 +137,8 @@ struct rpki_rtr_handle {
   struct sockaddr_storage sock;
   socklen_t socklen;
   int fd;
+  time_t connect_tstamp; 
+
   u_int16_t session_id;
   u_int32_t serial;
 };

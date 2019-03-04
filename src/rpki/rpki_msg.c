@@ -228,7 +228,13 @@ void rpki_rtr_parse_msg(struct rpki_rtr_handle *cache)
 
 void rpki_rtr_connect(struct rpki_rtr_handle *cache)
 {
+  time_t now = time(NULL);
   int rc;
+
+  if (now >= (cache->connect_tstamp + RPKI_RTR_CONNECT_ITVL)) {
+    cache->connect_tstamp = now;
+  }
+  else return;
 
   if ((cache->fd = socket(cache->sock.ss_family, SOCK_STREAM, 0)) == -1) {
     Log(LOG_ERR, "ERROR ( %s/core/RPKI ): rpki_rtr_connect(): socket() failed: %s\n", config.name, strerror(errno));
@@ -270,6 +276,8 @@ void rpki_rtr_connect(struct rpki_rtr_handle *cache)
 
 void rpki_rtr_close(struct rpki_rtr_handle *cache)
 {
+  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/core/RPKI ): rpki_rtr_close()\n", config.name);
+
   close(cache->fd);
   cache->fd = ERR;
 
@@ -283,6 +291,8 @@ void rpki_rtr_send_reset_query(struct rpki_rtr_handle *cache)
   ssize_t msglen;
 
   if (cache->fd > 0) {
+    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/core/RPKI ): rpki_rtr_send_reset_query()\n", config.name);
+
     memset(&rqm, 0, sizeof(rqm));
 
     rqm.version = config.rpki_rtr_cache_version;
@@ -303,6 +313,8 @@ void rpki_rtr_send_serial_query(struct rpki_rtr_handle *cache)
   ssize_t msglen;
 
   if (cache->fd > 0) {
+    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/core/RPKI ): rpki_rtr_send_serial_query()\n", config.name);
+
     memset(&snm, 0, sizeof(snm));
 
     snm.version = config.rpki_rtr_cache_version;
@@ -325,11 +337,13 @@ void rpki_rtr_recv_cache_response(struct rpki_rtr_handle *cache)
   ssize_t msglen;
 
   if (cache->fd > 0) {
+    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/core/RPKI ): rpki_rtr_recv_cache_response()\n", config.name);
+
     memset(&crm, 0, sizeof(crm));
 
     msglen = recv(cache->fd, &crm, sizeof(crm), MSG_WAITALL);
     if (msglen == RPKI_RTR_PDU_CACHE_RESPONSE_LEN) {
-      cache->session_id = crm.session_id;
+      cache->session_id = ntohs(crm.session_id);
     }
     else {
       Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_cache_response(): recv() failed\n", config.name);
@@ -344,6 +358,8 @@ void rpki_rtr_recv_serial_notify(struct rpki_rtr_handle *cache)
   ssize_t msglen;
 
   if (cache->fd > 0) {
+    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/core/RPKI ): rpki_rtr_recv_serial_notify()\n", config.name);
+
     memset(&snm, 0, sizeof(snm));
 
     msglen = recv(cache->fd, &snm, sizeof(snm), MSG_WAITALL);
@@ -360,6 +376,8 @@ void rpki_rtr_recv_ipv4_pref(struct rpki_rtr_handle *cache)
   ssize_t msglen;
 
   if (cache->fd > 0) {
+    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/core/RPKI ): rpki_rtr_recv_ipv4_pref()\n", config.name);
+
     memset(&p4m, 0, sizeof(p4m));
 
     msglen = recv(cache->fd, &p4m, sizeof(p4m), MSG_WAITALL);
@@ -379,6 +397,8 @@ void rpki_rtr_recv_ipv6_pref(struct rpki_rtr_handle *cache)
   ssize_t msglen;
 
   if (cache->fd > 0) {
+    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/core/RPKI ): rpki_rtr_recv_ipv6_pref()\n", config.name);
+
     memset(&p6m, 0, sizeof(p6m));
   
     msglen = recv(cache->fd, &p6m, sizeof(p6m), MSG_WAITALL);
@@ -398,16 +418,18 @@ void rpki_rtr_recv_eod(struct rpki_rtr_handle *cache)
   ssize_t msglen;
 
   if (cache->fd > 0) {
+    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/core/RPKI ): rpki_rtr_recv_eod()\n", config.name);
+
     memset(&eodm, 0, sizeof(eodm));
 
     msglen = recv(cache->fd, &eodm, sizeof(eodm), MSG_WAITALL);
     if (msglen == RPKI_RTR_PDU_END_OF_DATA_LEN) {
-      if (cache->session_id != eodm.session_id) {
+      if (cache->session_id != ntohs(eodm.session_id)) {
 	Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_eod(): unexpected session_id: %u\n", config.name, eodm.session_id);
 	rpki_rtr_close(cache);
       }
 
-      cache->serial = eodm.serial;
+      cache->serial = ntohl(eodm.serial);
     }
     else {
       Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_eod(): recv() failed\n", config.name);
@@ -422,6 +444,8 @@ void rpki_rtr_recv_cache_reset(struct rpki_rtr_handle *cache)
   ssize_t msglen;
 
   if (cache-> fd > 0) {
+    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/core/RPKI ): rpki_rtr_recv_cache_reset()\n", config.name);
+
     memset(&crm, 0, sizeof(crm));
 
     msglen = recv(cache->fd, &crm, sizeof(crm), MSG_WAITALL);
@@ -430,7 +454,11 @@ void rpki_rtr_recv_cache_reset(struct rpki_rtr_handle *cache)
       rpki_rtr_close(cache);
     }
 
-    // XXX
+    /* this will trigger a reset query */
+    cache->session_id = 0;
+    cache->serial = 0;
+
+    // XXX: purge RIB?
   }
 }
 
@@ -442,6 +470,8 @@ void rpki_rtr_recv_error_report(struct rpki_rtr_handle *cache)
   u_int32_t *encpdu_len, *errmsg_len;
 
   if (cache->fd > 0) {
+    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/core/RPKI ): rpki_rtr_recv_error_report()\n", config.name);
+
     memset(&erm, 0, sizeof(erm));
 
     msglen = recv(cache->fd, &erm, sizeof(erm), MSG_WAITALL);

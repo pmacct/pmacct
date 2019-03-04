@@ -74,6 +74,7 @@ void rpki_daemon()
   /* initial cleanups */
   reload_map_rpki_thread = FALSE;
   reload_log_rpki_thread = FALSE;
+  memset(&rpki_cache, 0, sizeof(rpki_cache));
 
   rpki_routing_db = &inter_domain_routing_dbs[FUNC_TYPE_RPKI];
   memset(rpki_routing_db, 0, sizeof(struct bgp_rt_structs));
