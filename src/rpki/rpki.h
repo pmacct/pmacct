@@ -156,6 +156,7 @@ struct rpki_rtr_handle {
 EXT void rpki_daemon_wrapper();
 EXT void rpki_prepare_thread();
 EXT void rpki_daemon();
+EXT void rpki_roas_file_reload();
 #undef EXT
 
 /* global variables */

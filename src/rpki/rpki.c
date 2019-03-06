@@ -133,41 +133,7 @@ void rpki_daemon()
 
     /* signals handling */
     if (reload_map_rpki_thread) {
-      if (config.rpki_roas_file) {
-	struct bgp_table *backup_rib_v4, *backup_rib_v6;
-	struct bgp_table *saved_rib_v4, *saved_rib_v6;
-
-	backup_rib_v4 = bgp_table_init(AFI_IP, SAFI_UNICAST);
-	backup_rib_v6 = bgp_table_init(AFI_IP6, SAFI_UNICAST);
-
-	saved_rib_v4 = rpki_routing_db->rib[AFI_IP][SAFI_UNICAST];
-	saved_rib_v6 = rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST];
-
-	ret = rpki_roas_file_load(config.rpki_roas_file, backup_rib_v4, backup_rib_v6);
-
-	/* load successful */
-	if (!ret) {
-	  rpki_routing_db->rib[AFI_IP][SAFI_UNICAST] = backup_rib_v4;
-	  rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST] = backup_rib_v6;
-
-	  /* allow some generous time for any existing lookup to complete */
-	  sleep(DEFAULT_SLOTH_SLEEP_TIME);
-
-	  bgp_table_info_delete(&rpki_peer, saved_rib_v4, AFI_IP, SAFI_UNICAST);
-	  bgp_table_info_delete(&rpki_peer, saved_rib_v6, AFI_IP6, SAFI_UNICAST);
-
-	  bgp_table_free(saved_rib_v4);
-	  bgp_table_free(saved_rib_v6);
-	}
-	else {
-	  bgp_table_info_delete(&rpki_peer, backup_rib_v4, AFI_IP, SAFI_UNICAST);
-	  bgp_table_info_delete(&rpki_peer, backup_rib_v6, AFI_IP6, SAFI_UNICAST);
-
-	  bgp_table_free(backup_rib_v4);
-	  bgp_table_free(backup_rib_v6);
-	}
-      }
-
+      rpki_roas_file_reload();
       reload_map_rpki_thread = FALSE;
     }
 
@@ -179,6 +145,45 @@ void rpki_daemon()
 	if (rpki_cache.serial) rpki_rtr_send_serial_query(&rpki_cache);
       }
       else rpki_rtr_parse_msg(&rpki_cache);
+    }
+  }
+}
+
+void rpki_roas_file_reload()
+{
+  struct bgp_table *backup_rib_v4, *backup_rib_v6;
+  struct bgp_table *saved_rib_v4, *saved_rib_v6;
+  int ret;
+
+  if (config.rpki_roas_file) {
+    backup_rib_v4 = bgp_table_init(AFI_IP, SAFI_UNICAST);
+    backup_rib_v6 = bgp_table_init(AFI_IP6, SAFI_UNICAST);
+
+    saved_rib_v4 = rpki_routing_db->rib[AFI_IP][SAFI_UNICAST];
+    saved_rib_v6 = rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST];
+
+    ret = rpki_roas_file_load(config.rpki_roas_file, backup_rib_v4, backup_rib_v6);
+
+    /* load successful */
+    if (!ret) {
+      rpki_routing_db->rib[AFI_IP][SAFI_UNICAST] = backup_rib_v4;
+      rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST] = backup_rib_v6;
+
+      /* allow some generous time for any existing lookup to complete */
+      sleep(DEFAULT_SLOTH_SLEEP_TIME);
+
+      bgp_table_info_delete(&rpki_peer, saved_rib_v4, AFI_IP, SAFI_UNICAST);
+      bgp_table_info_delete(&rpki_peer, saved_rib_v6, AFI_IP6, SAFI_UNICAST);
+
+      bgp_table_free(saved_rib_v4);
+      bgp_table_free(saved_rib_v6);
+    }
+    else {
+      bgp_table_info_delete(&rpki_peer, backup_rib_v4, AFI_IP, SAFI_UNICAST);
+      bgp_table_info_delete(&rpki_peer, backup_rib_v6, AFI_IP6, SAFI_UNICAST);
+
+      bgp_table_free(backup_rib_v4);
+      bgp_table_free(backup_rib_v6);
     }
   }
 }
