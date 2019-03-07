@@ -1174,7 +1174,6 @@ https://github.com/pmacct/pmacct
 
 "
 
-AC_SUBST([EXTRABIN])
 AC_SUBST([PMACCT_CFLAGS])
 
 AM_CONDITIONAL([WITH_MYSQL], [test x"$USING_MYSQL" = x"yes"])

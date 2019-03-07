@@ -95,7 +95,7 @@ endif
 
 if USING_TRAFFIC_BINS
 sbin_PROGRAMS += pmacctd nfacctd sfacctd
-bin_PROGRAMS += pmacct @EXTRABIN@
+bin_PROGRAMS += pmacct
 pmacctd_SOURCES = pmacctd.c
 pmacctd_LDADD = libdaemons.la
 if WITH_NDPI
