@@ -40,8 +40,6 @@ int rpki_roas_file_load(char *file, struct bgp_table *rib_v4, struct bgp_table *
   json_error_t file_err;
   int roas_idx;
 
-  rpki_init_dummy_peer(&rpki_peer);
-
   roas_obj = json_load_file(file, 0, &file_err);
 
   if (roas_obj) {
@@ -181,6 +179,51 @@ int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t ma
   return SUCCESS;
 }
 
+int rpki_info_delete(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t maxlen, struct bgp_table *rib_v4, struct bgp_table *rib_v6)
+{
+  struct bgp_misc_structs *r_data = rpki_misc_db;
+  struct bgp_node *route = NULL;
+  struct bgp_info *ri = NULL;
+  struct bgp_attr attr, *attr_new = NULL;
+  struct bgp_table *rib = NULL;
+  afi_t afi;
+  u_int32_t modulo;
+  u_int8_t end;
+
+  if (!r_data || !peer || !p || !rib_v4 || !rib_v6) return ERR;
+
+  afi = family2afi(p->family); 
+  modulo = 0;
+
+  if (afi == AFI_IP) rib = rib_v4;
+  else if (afi == AFI_IP6) rib = rib_v6; 
+  else return ERR;
+
+  for (end = MAX(p->prefixlen, maxlen); p->prefixlen <= end; p->prefixlen++) {
+    route = bgp_node_get(peer, rib, p);
+
+    memset(&attr, 0, sizeof(attr));
+    attr.aspath = aspath_parse_ast(peer, asn);
+    attr_new = bgp_attr_intern(peer, &attr);
+    if (attr.aspath) aspath_unintern(peer, attr.aspath);
+
+    /* Check previously received route. */
+    for (ri = route->info[modulo]; ri; ri = ri->next) {
+      if (ri->peer == peer && rpki_attrhash_cmp(ri->attr, attr_new)) {
+	bgp_info_delete(peer, route, ri, modulo);
+	break;
+      }
+    }
+
+    bgp_attr_unintern(peer, attr_new);
+
+    /* route_node_get lock */
+    bgp_unlock_node(peer, route);
+  }
+
+  return SUCCESS;
+}
+
 void rpki_rtr_parse_msg(struct rpki_rtr_handle *cache)
 {
   struct rpki_rtr_serial peek;
@@ -223,6 +266,84 @@ void rpki_rtr_parse_msg(struct rpki_rtr_handle *cache)
       Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_parse_msg(): recv() peek failed\n", config.name);
       rpki_rtr_close(cache);
     }
+  }
+}
+
+void rpki_rtr_parse_ipv4_prefix(struct rpki_rtr_handle *cache, struct rpki_rtr_ipv4_pref *p4m)
+{
+  struct bgp_misc_structs *r_data = rpki_misc_db;
+  struct prefix_ipv4 p;
+  as_t asn;
+  int ret;
+
+  memset(&p, 0, sizeof(p));
+  p.family = AF_INET;
+  p.prefix.s_addr = p4m->prefix;
+  p.prefixlen = p4m->pref_len;
+
+  asn = ntohl(p4m->asn);
+
+  if (p4m->max_len < p.prefixlen) {
+    char prefix_str[INET6_ADDRSTRLEN];
+
+    prefix2str((struct prefix *) &p, prefix_str, INET6_ADDRSTRLEN);
+    Log(LOG_WARNING, "WARN ( %s/%s ): 'maxLength' < prefixLength: prefix=%s maxLength=%u asn=%u\n",
+	config.name, r_data->log_str, prefix_str, p4m->max_len, asn);
+  }
+
+  switch(p4m->flags) {
+  case RPKI_RTR_PREFIX_FLAGS_WITHDRAW:
+    ret = rpki_info_delete(&rpki_peer, (struct prefix *) &p, asn, p4m->max_len,
+			rpki_routing_db->rib[AFI_IP][SAFI_UNICAST],
+			rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST]);
+    break;
+  case RPKI_RTR_PREFIX_FLAGS_ANNOUNCE:
+    ret = rpki_info_add(&rpki_peer, (struct prefix *) &p, asn, p4m->max_len,
+			rpki_routing_db->rib[AFI_IP][SAFI_UNICAST],
+			rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST]);
+    break;
+  default:
+    Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_parse_ipv4_prefix(): unknown flag (%u)\n", config.name, p4m->flags);
+    break;
+  }
+}
+
+void rpki_rtr_parse_ipv6_prefix(struct rpki_rtr_handle *cache, struct rpki_rtr_ipv6_pref *p6m)
+{
+  struct bgp_misc_structs *r_data = rpki_misc_db;
+  struct prefix_ipv6 p;
+  as_t asn;
+  int ret;
+
+  memset(&p, 0, sizeof(p));
+  p.family = AF_INET6;
+  memcpy(&p.prefix.s6_addr, p6m->prefix, 16);
+  p.prefixlen = p6m->pref_len;
+
+  asn = ntohl(p6m->asn);
+
+  if (p6m->max_len < p.prefixlen) {
+    char prefix_str[INET6_ADDRSTRLEN];
+
+    prefix2str((struct prefix *) &p, prefix_str, INET6_ADDRSTRLEN);
+    Log(LOG_WARNING, "WARN ( %s/%s ): 'maxLength' < prefixLength: prefix=%s maxLength=%u asn=%u\n",
+	config.name, r_data->log_str, prefix_str, p6m->max_len, asn);
+  }
+
+  switch(p6m->flags) {
+  case RPKI_RTR_PREFIX_FLAGS_WITHDRAW:
+    ret = rpki_info_delete(&rpki_peer, (struct prefix *) &p, asn, p6m->max_len,
+			rpki_routing_db->rib[AFI_IP][SAFI_UNICAST],
+			rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST]);
+    break;
+  case RPKI_RTR_PREFIX_FLAGS_ANNOUNCE:
+    ret = rpki_info_add(&rpki_peer, (struct prefix *) &p, asn, p6m->max_len,
+			rpki_routing_db->rib[AFI_IP][SAFI_UNICAST],
+			rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST]);
+    break;
+  default:
+    Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_parse_ipv6_prefix(): unknown flag (%u)\n", config.name, p6m->flags);
+    break;
   }
 }
 
@@ -382,7 +503,7 @@ void rpki_rtr_recv_ipv4_pref(struct rpki_rtr_handle *cache)
 
     msglen = recv(cache->fd, &p4m, sizeof(p4m), MSG_WAITALL);
     if (msglen == RPKI_RTR_PDU_IPV4_PREFIX_LEN) {
-      // XXX: parse
+      rpki_rtr_parse_ipv4_prefix(cache, &p4m);
     }
     else {
       Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_ipv4_pref(): recv() failed\n", config.name);
@@ -403,7 +524,7 @@ void rpki_rtr_recv_ipv6_pref(struct rpki_rtr_handle *cache)
   
     msglen = recv(cache->fd, &p6m, sizeof(p6m), MSG_WAITALL);
     if (msglen == RPKI_RTR_PDU_IPV6_PREFIX_LEN) {
-      // XXX: parse
+      rpki_rtr_parse_ipv6_prefix(cache, &p6m);
     }
     else {
       Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_ipv6_pref(): recv() failed\n", config.name);

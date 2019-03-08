@@ -27,8 +27,12 @@
 #endif
 EXT int rpki_roas_file_load(char *, struct bgp_table *, struct bgp_table *);
 EXT int rpki_info_add(struct bgp_peer *, struct prefix *, as_t, u_int8_t, struct bgp_table *, struct bgp_table *);
+EXT int rpki_info_delete(struct bgp_peer *, struct prefix *, as_t, u_int8_t, struct bgp_table *, struct bgp_table *);
 
 EXT void rpki_rtr_parse_msg(struct rpki_rtr_handle *);
+EXT void rpki_rtr_parse_ipv4_prefix(struct rpki_rtr_handle *, struct rpki_rtr_ipv4_pref *);
+EXT void rpki_rtr_parse_ipv6_prefix(struct rpki_rtr_handle *, struct rpki_rtr_ipv6_pref *);
+
 EXT void rpki_rtr_connect(struct rpki_rtr_handle *);
 EXT void rpki_rtr_close(struct rpki_rtr_handle *);
 EXT void rpki_rtr_send_reset_query(struct rpki_rtr_handle *);
