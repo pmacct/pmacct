@@ -152,39 +152,29 @@ void rpki_daemon()
 
 void rpki_roas_file_reload()
 {
-  struct bgp_table *backup_rib_v4, *backup_rib_v6;
   struct bgp_table *saved_rib_v4, *saved_rib_v6;
+  struct bgp_table *new_rib_v4, *new_rib_v6;
   int ret;
 
   if (config.rpki_roas_file) {
-    backup_rib_v4 = bgp_table_init(AFI_IP, SAFI_UNICAST);
-    backup_rib_v6 = bgp_table_init(AFI_IP6, SAFI_UNICAST);
+    new_rib_v4 = bgp_table_init(AFI_IP, SAFI_UNICAST);
+    new_rib_v6 = bgp_table_init(AFI_IP6, SAFI_UNICAST);
 
     saved_rib_v4 = rpki_routing_db->rib[AFI_IP][SAFI_UNICAST];
     saved_rib_v6 = rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST];
 
-    ret = rpki_roas_file_load(config.rpki_roas_file, backup_rib_v4, backup_rib_v6);
+    ret = rpki_roas_file_load(config.rpki_roas_file, new_rib_v4, new_rib_v6);
 
     /* load successful */
     if (!ret) {
-      rpki_routing_db->rib[AFI_IP][SAFI_UNICAST] = backup_rib_v4;
-      rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST] = backup_rib_v6;
+      rpki_routing_db->rib[AFI_IP][SAFI_UNICAST] = new_rib_v4;
+      rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST] = new_rib_v6;
 
       /* allow some generous time for any existing lookup to complete */
       sleep(DEFAULT_SLOTH_SLEEP_TIME);
 
-      bgp_table_info_delete(&rpki_peer, saved_rib_v4, AFI_IP, SAFI_UNICAST);
-      bgp_table_info_delete(&rpki_peer, saved_rib_v6, AFI_IP6, SAFI_UNICAST);
-
-      bgp_table_free(saved_rib_v4);
-      bgp_table_free(saved_rib_v6);
+      rpki_ribs_free(&rpki_peer, saved_rib_v4, saved_rib_v6);
     }
-    else {
-      bgp_table_info_delete(&rpki_peer, backup_rib_v4, AFI_IP, SAFI_UNICAST);
-      bgp_table_info_delete(&rpki_peer, backup_rib_v6, AFI_IP6, SAFI_UNICAST);
-
-      bgp_table_free(backup_rib_v4);
-      bgp_table_free(backup_rib_v6);
-    }
+    else rpki_ribs_free(&rpki_peer, new_rib_v4, new_rib_v6);
   }
 }

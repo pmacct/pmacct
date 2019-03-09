@@ -60,6 +60,23 @@ u_int8_t rpki_str2roa(char *roa_str)
   return ROA_STATUS_UNKNOWN;
 }
 
+void rpki_ribs_free(struct bgp_peer *peer, struct bgp_table *rib_v4, struct bgp_table *rib_v6)
+{
+  bgp_table_info_delete(peer, rib_v4, AFI_IP, SAFI_UNICAST);
+  bgp_table_info_delete(peer, rib_v6, AFI_IP6, SAFI_UNICAST);
+
+  bgp_table_free(rib_v4);
+  bgp_table_free(rib_v6);
+}
+
+void rpki_ribs_reset(struct bgp_peer *peer, struct bgp_table **rib_v4, struct bgp_table **rib_v6)
+{
+  rpki_ribs_free(peer, (*rib_v4), (*rib_v6));
+
+  (*rib_v4) = bgp_table_init(AFI_IP, SAFI_UNICAST);
+  (*rib_v6) = bgp_table_init(AFI_IP6, SAFI_UNICAST);
+}
+
 void rpki_link_misc_structs(struct bgp_misc_structs *r_data)
 {
   r_data->table_peer_buckets = 1; /* saving on DEFAULT_BGP_INFO_HASH for now */

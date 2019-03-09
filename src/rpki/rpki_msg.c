@@ -404,6 +404,8 @@ void rpki_rtr_close(struct rpki_rtr_handle *cache)
 
   cache->session_id = 0;
   cache->serial = 0;
+
+  rpki_ribs_reset(&rpki_peer, &rpki_routing_db->rib[AFI_IP][SAFI_UNICAST], &rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST]);
 }
 
 void rpki_rtr_send_reset_query(struct rpki_rtr_handle *cache)
@@ -579,7 +581,7 @@ void rpki_rtr_recv_cache_reset(struct rpki_rtr_handle *cache)
     cache->session_id = 0;
     cache->serial = 0;
 
-    // XXX: purge RIB?
+    rpki_ribs_reset(&rpki_peer, &rpki_routing_db->rib[AFI_IP][SAFI_UNICAST], &rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST]); 
   }
 }
 
