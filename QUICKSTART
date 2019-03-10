@@ -1785,9 +1785,11 @@ Resource Public Key Infrastructure (RPKI) is a specialized public key
 infrastructure (PKI) framework designed to secure the Internet routing. RPKI
 uses certificates to allow Local Internet Registries (LIRs), to list the
 Internet number resources they hold. These attestations are called Route
-Origination Authorizations (ROAs). ROA information can be currently imported
-using the rpki_roas_file config directive from a file in the RIPE Validator
-format, ie.:
+Origination Authorizations (ROAs). ROA information can be currently
+acquired in one of the two following ways:
+
+1) it can be imported using the rpki_roas_file config directive from a
+   file in the RIPE Validator format, ie.:
 
 {
   "roas" : [ {
@@ -1809,16 +1811,24 @@ format, ie.:
 }
 
 RPKI data in such format can be obtained for example at the following URL:
-https://rpki.gin.ntt.net/api/export.json . Once rpki_roas_file is available,
-traffic daemons (ie. nfacctd) and pmbgpd can be configured to correlate
-traffic, BGP and RPKI information. This is an example of how to configure
-nfacctd, the NetFlow/IPFIX collector daemon:
+https://rpki.gin.ntt.net/api/export.json .
+
+2) Connecting to a RPKI RTR Cache for live ROA updates. Its IP address
+   and port being defined by the rpki_rtr_cache config directive (a few
+   more optional rpki_rtr_* directives are available and can be reviwed
+   in the CONFIG-KEYS document).  
+
+Once rpki_roas_file or rpki_rtr_cache are defined, traffic daemons (ie.
+nfacctd) and pmbgpd can be configured to correlate traffic, BGP and RPKI
+information. This is an example of how to configure nfacctd, the NetFlow/
+IPFIX collector daemon:
 
 nfacctd_as: longest
 nfacctd_net: longest
 ! < .. >
 !
-rpki_roas_file: /path/to/roas.json
+! rpki_roas_file: /path/to/roas.json
+rpki_rtr_cache: 127.0.0.1:8323
 !
 bgp_daemon: true
 bgp_src_roa_type: bgp

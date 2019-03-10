@@ -2666,6 +2666,25 @@ DESC:		Full pathname to a file containing RPKI ROA data. Data encoding is JSON a
 		"killall -USR2 nfacctd").
 DEFAULT:	none
 
+KEY:		rpki_rtr_cache [GLOBAL]
+DESC:		Defines the remote IP address and port of a RPKI RTR cache to connect to. If IPv4,
+		the value is expected as 'address:port'. If IPv6, it is expected as '[address]:port'.
+DEFAULT:	none
+
+KEY:		rpki_rtr_cache_version [GLOBAL]
+VALUES:		[ 0 ]
+DESC:		Defines the RPKI RTR protocol version to use.
+DEFAULT:	0
+
+KEY:		rpki_rtr_cache_pipe_size [GLOBAL]
+DESC:           Defines the size of the kernel socket used for RPKI RTR datagrams (see also
+		bgp_daemon_pipe_size for more info).
+DEFAULT:        Operating System default
+
+KEY:		rpki_rtr_cache_ipprec [GLOBAL]
+DESC:           Marks self-originated RPKI RTR messages with the supplied IP precedence value.
+DEFAULT:	0
+
 KEY:		isis_daemon [GLOBAL]
 VALUES:		[ true | false ]
 DESC:		Enables the skinny IS-IS daemon thread. It implements P2P Hellos, CSNP and PSNP -
