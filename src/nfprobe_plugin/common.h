@@ -25,8 +25,6 @@
 #ifndef _SFD_COMMON_H
 #define _SFD_COMMON_H
 
-#define _BSD_SOURCE /* Needed for BSD-style struct ip,tcp,udp on Linux */
-
 #include "pmacct.h"
 
 #include <sys/types.h>
