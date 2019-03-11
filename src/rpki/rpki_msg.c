@@ -234,6 +234,14 @@ void rpki_rtr_parse_msg(struct rpki_rtr_handle *cache)
 
     msglen = recv(cache->fd, &peek, 2, MSG_PEEK);
     if (msglen == 2) {
+      if (peek.version != config.rpki_rtr_cache_version) {
+	Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_parse_msg(): RPKI version mismatch (me=%u cache=%u)\n",
+	    config.name, config.rpki_rtr_cache_version, peek.version);
+	rpki_rtr_close(cache);
+	rpki_rtr_set_dont_reconnect(cache);
+	return;
+      }
+
       switch(peek.pdu_type) {
       case RPKI_RTR_PDU_SERIAL_NOTIFY:
 	rpki_rtr_recv_serial_notify(cache);
@@ -248,10 +256,13 @@ void rpki_rtr_parse_msg(struct rpki_rtr_handle *cache)
 	rpki_rtr_recv_ipv6_pref(cache);
 	break;
       case RPKI_RTR_PDU_END_OF_DATA:
-	rpki_rtr_recv_eod(cache);
+	rpki_rtr_recv_eod(cache, peek.version);
 	break;
       case RPKI_RTR_PDU_CACHE_RESET:
 	rpki_rtr_recv_cache_reset(cache);
+	break;
+      case RPKI_RTR_PDU_ROUTER_KEY:
+	rpki_rtr_recv_router_key(cache);
 	break;
       case RPKI_RTR_PDU_ERROR_REPORT:
 	rpki_rtr_recv_error_report(cache);
@@ -349,11 +360,12 @@ void rpki_rtr_parse_ipv6_prefix(struct rpki_rtr_handle *cache, struct rpki_rtr_i
 
 void rpki_rtr_connect(struct rpki_rtr_handle *cache)
 {
-  time_t now = time(NULL);
   int rc;
 
-  if (now >= (cache->connect_tstamp + RPKI_RTR_CONNECT_ITVL)) {
-    cache->connect_tstamp = now;
+  // XXX
+  if (cache->now >= (cache->connect_tstamp + RPKI_RTR_CONNECT_ITVL)) {
+    cache->connect_tstamp = cache->now;
+    cache->retry.tstamp = cache->now;
   }
   else return;
 
@@ -535,24 +547,51 @@ void rpki_rtr_recv_ipv6_pref(struct rpki_rtr_handle *cache)
   }
 }
 
-void rpki_rtr_recv_eod(struct rpki_rtr_handle *cache)
+void rpki_rtr_recv_eod(struct rpki_rtr_handle *cache, u_int8_t version)
 {
-  struct rpki_rtr_eod_v0 eodm;
-  ssize_t msglen;
+  struct rpki_rtr_eod_v0 eodm_v0, *eodm_cmn = NULL;
+  struct rpki_rtr_eod_v1 eodm_v1;
+  char *eodm = NULL;
+
+  ssize_t msglen = 0;
+  u_int8_t eodm_len = 0;
 
   if (cache->fd > 0) {
     if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/core/RPKI ): rpki_rtr_recv_eod()\n", config.name);
 
-    memset(&eodm, 0, sizeof(eodm));
+    if (version == RPKI_RTR_V0) {
+      memset(&eodm_v0, 0, sizeof(eodm_v0));
 
-    msglen = recv(cache->fd, &eodm, sizeof(eodm), MSG_WAITALL);
-    if (msglen == RPKI_RTR_PDU_END_OF_DATA_LEN) {
-      if (cache->session_id != ntohs(eodm.session_id)) {
-	Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_eod(): unexpected session_id: %u\n", config.name, eodm.session_id);
+      eodm = (char *) &eodm_v0;
+      eodm_cmn = (struct rpki_rtr_eod_v0 *) &eodm_v0;
+      eodm_len = RPKI_RTR_PDU_END_OF_DATA_V0_LEN;
+    }
+    else {
+      memset(&eodm_v1, 0, sizeof(eodm_v1));
+
+      eodm = (char *) &eodm_v1;
+      eodm_cmn = (struct rpki_rtr_eod_v0 *) &eodm_v1;
+      eodm_len = RPKI_RTR_PDU_END_OF_DATA_V1_LEN;
+    }
+
+    msglen = recv(cache->fd, eodm, eodm_len, MSG_WAITALL);
+    if (msglen == eodm_len) {
+      if (cache->session_id != ntohs(eodm_cmn->session_id)) {
+	Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_eod(): unexpected session_id: %u\n", config.name, eodm_cmn->session_id);
 	rpki_rtr_close(cache);
       }
 
-      cache->serial = ntohl(eodm.serial);
+      cache->serial = ntohl(eodm_cmn->serial);
+
+      if (version == RPKI_RTR_V1) {
+	cache->retry.ivl = ntohl(eodm_v1.retry_ivl);
+
+	cache->refresh.ivl = ntohl(eodm_v1.refresh_ivl);
+	cache->refresh.tstamp = cache->now;
+
+	cache->expire.ivl = ntohl(eodm_v1.expire_ivl);
+	cache->expire.tstamp = cache->now;
+      }
     }
     else {
       Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_eod(): recv() failed\n", config.name);
@@ -582,6 +621,49 @@ void rpki_rtr_recv_cache_reset(struct rpki_rtr_handle *cache)
     cache->serial = 0;
 
     rpki_ribs_reset(&rpki_peer, &rpki_routing_db->rib[AFI_IP][SAFI_UNICAST], &rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST]); 
+  }
+}
+
+void rpki_rtr_recv_router_key(struct rpki_rtr_handle *cache)
+{
+  struct rpki_rtr_router_key rkm;
+  ssize_t msglen;
+  char *rkmbuf = NULL;
+
+  if (cache-> fd > 0) {
+    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/core/RPKI ): rpki_rtr_recv_router_key()\n", config.name);
+
+    memset(&rkm, 0, sizeof(rkm));
+
+    msglen = recv(cache->fd, &rkm, sizeof(rkm), MSG_WAITALL);
+    if (msglen != sizeof(rkm)) {
+      Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_router_key(): recv() failed (1)\n", config.name);
+      rpki_rtr_close(cache);
+      goto exit_lane;
+    }
+
+    if (rkm.version == RPKI_RTR_V0) {
+      Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_router_key(): Router Key not supported in RTRv0\n", config.name);
+      rpki_rtr_close(cache);
+      goto exit_lane;
+    }
+
+    if (rkm.len > msglen) {
+      u_int32_t rem_len = (rkm.len - msglen);
+
+      rkmbuf = malloc(rem_len);
+      msglen = recv(cache->fd, rkmbuf, rem_len, MSG_WAITALL);
+      if (msglen != rem_len) {
+	Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_router_key(): recv() failed (2)\n", config.name);
+	rpki_rtr_close(cache);
+	goto exit_lane;
+      }
+
+      // XXX
+
+      exit_lane:
+      if (rkmbuf) free(rkmbuf);
+    }
   }
 }
 

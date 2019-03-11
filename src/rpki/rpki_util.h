@@ -31,5 +31,6 @@ EXT const char *rpki_roa_print(u_int8_t);
 EXT u_int8_t rpki_str2roa(char *);
 EXT void rpki_ribs_free(struct bgp_peer *, struct bgp_table *, struct bgp_table *);
 EXT void rpki_ribs_reset(struct bgp_peer *, struct bgp_table **, struct bgp_table **);
+EXT void rpki_rtr_set_dont_reconnect(struct rpki_rtr_handle *);
 EXT void rpki_link_misc_structs(struct bgp_misc_structs *);
 #undef EXT

@@ -77,6 +77,11 @@ void rpki_ribs_reset(struct bgp_peer *peer, struct bgp_table **rib_v4, struct bg
   (*rib_v6) = bgp_table_init(AFI_IP6, SAFI_UNICAST);
 }
 
+void rpki_rtr_set_dont_reconnect(struct rpki_rtr_handle *cache)
+{
+  cache->dont_reconnect = TRUE;
+} 
+
 void rpki_link_misc_structs(struct bgp_misc_structs *r_data)
 {
   r_data->table_peer_buckets = 1; /* saving on DEFAULT_BGP_INFO_HASH for now */

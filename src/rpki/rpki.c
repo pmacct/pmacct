@@ -107,6 +107,14 @@ void rpki_daemon()
       Log(LOG_ERR, "ERROR ( %s/core/RPKI ): rpki_rtr_cache_version must be 0 or 1. Exiting.\n", config.name);
       exit_gracefully(1);
     }
+
+    if (config.rpki_rtr_cache_version == RPKI_RTR_V0) {
+      rpki_cache.retry.ivl = RPKI_RTR_V0_DEFAULT_RETRY_IVL;
+    }
+
+    if (config.rpki_rtr_cache_version == RPKI_RTR_V1) {
+      rpki_cache.retry.ivl = RPKI_RTR_V1_DEFAULT_RETRY_IVL;
+    }
  
     rpki_cache.fd = ERR;
     rpki_cache.socklen = sizeof(rpki_cache.sock);
@@ -130,6 +138,8 @@ void rpki_daemon()
     }
 
     select_num = select(select_fd, &read_desc, NULL, NULL, &select_timeout);
+
+    if (config.rpki_rtr_cache) rpki_cache.now = time(NULL);
     if (select_num < 0) goto select_again;
 
     /* signals handling */

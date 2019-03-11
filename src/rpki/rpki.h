@@ -29,6 +29,9 @@
 #define RPKI_RTR_V0			0	/* rfc6810 */
 #define RPKI_RTR_V1			1	/* rfc8210 */
 
+#define RPKI_RTR_V0_DEFAULT_RETRY_IVL	10	/* discretionary */
+#define RPKI_RTR_V1_DEFAULT_RETRY_IVL	600
+
 #define RPKI_RTR_PDU_SERIAL_NOTIFY	0
 #define RPKI_RTR_PDU_SERIAL_QUERY	1
 #define RPKI_RTR_PDU_RESET_QUERY	2
@@ -37,6 +40,7 @@
 #define RPKI_RTR_PDU_IPV6_PREFIX	6
 #define RPKI_RTR_PDU_END_OF_DATA	7
 #define RPKI_RTR_PDU_CACHE_RESET	8
+#define RPKI_RTR_PDU_ROUTER_KEY		9
 #define RPKI_RTR_PDU_ERROR_REPORT	10
 
 #define RPKI_RTR_PDU_SERIAL_NOTIFY_LEN	12
@@ -45,7 +49,8 @@
 #define RPKI_RTR_PDU_CACHE_RESPONSE_LEN	8
 #define RPKI_RTR_PDU_IPV4_PREFIX_LEN	20
 #define RPKI_RTR_PDU_IPV6_PREFIX_LEN	32
-#define RPKI_RTR_PDU_END_OF_DATA_LEN	12
+#define RPKI_RTR_PDU_END_OF_DATA_V0_LEN	12
+#define RPKI_RTR_PDU_END_OF_DATA_V1_LEN	24
 #define RPKI_RTR_PDU_CACHE_RESET_LEN	8
 
 #define RPKI_RTR_ERR_CORRUPT_DATA	0
@@ -118,11 +123,33 @@ struct rpki_rtr_eod_v0 {
   u_int32_t serial;
 } __attribute__ ((packed));
 
+struct rpki_rtr_eod_v1 {
+  u_int8_t version;
+  u_int8_t pdu_type;
+  u_int16_t session_id;
+  u_int32_t len;
+  u_int32_t serial;
+  u_int32_t refresh_ivl;
+  u_int32_t retry_ivl;
+  u_int32_t expire_ivl;
+} __attribute__ ((packed));
+
 struct rpki_rtr_cache_reset {
   u_int8_t version;
   u_int8_t pdu_type;
   u_int16_t unused;
   u_int32_t len;
+} __attribute__ ((packed));
+
+struct rpki_rtr_router_key {
+  u_int8_t version;
+  u_int8_t pdu_type;
+  u_int8_t flags;
+  u_int8_t unused;
+  u_int32_t len;
+  u_int8_t subject_key_id[20];
+  u_int32_t asn;
+  /* subject public key info */
 } __attribute__ ((packed));
 
 struct rpki_rtr_err_report {
@@ -136,11 +163,22 @@ struct rpki_rtr_err_report {
   /* err text */
 } __attribute__ ((packed));
 
+struct rpki_rtr_timer {
+  time_t tstamp;
+  u_int32_t ivl;
+};
+
 struct rpki_rtr_handle {
   struct sockaddr_storage sock;
   socklen_t socklen;
   int fd;
-  time_t connect_tstamp; 
+  int dont_reconnect;
+
+  time_t connect_tstamp; /* XXX: to go */ 
+  time_t now; 
+  struct rpki_rtr_timer refresh;
+  struct rpki_rtr_timer retry;
+  struct rpki_rtr_timer expire;
 
   u_int16_t session_id;
   u_int32_t serial;

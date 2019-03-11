@@ -41,7 +41,8 @@ EXT void rpki_rtr_recv_cache_response(struct rpki_rtr_handle *);
 EXT void rpki_rtr_recv_serial_notify(struct rpki_rtr_handle *);
 EXT void rpki_rtr_recv_ipv4_pref(struct rpki_rtr_handle *);
 EXT void rpki_rtr_recv_ipv6_pref(struct rpki_rtr_handle *);
-EXT void rpki_rtr_recv_eod(struct rpki_rtr_handle *);
+EXT void rpki_rtr_recv_eod(struct rpki_rtr_handle *, u_int8_t);
 EXT void rpki_rtr_recv_cache_reset(struct rpki_rtr_handle *);
+EXT void rpki_rtr_recv_router_key(struct rpki_rtr_handle *);
 EXT void rpki_rtr_recv_error_report(struct rpki_rtr_handle *);
 #undef EXT
