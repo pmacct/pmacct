@@ -1828,7 +1828,9 @@ nfacctd_net: longest
 ! < .. >
 !
 ! rpki_roas_file: /path/to/roas.json
+!
 rpki_rtr_cache: 127.0.0.1:8323
+! rpki_rtr_cache_version: 1 
 !
 bgp_daemon: true
 bgp_src_roa_type: bgp

@@ -2672,8 +2672,9 @@ DESC:		Defines the remote IP address and port of a RPKI RTR cache to connect to.
 DEFAULT:	none
 
 KEY:		rpki_rtr_cache_version [GLOBAL]
-VALUES:		[ 0 ]
-DESC:		Defines the RPKI RTR protocol version to use.
+VALUES:		[ 0 | 1 ]
+DESC:		Defines the RPKI RTR protocol version to use. Version 0 is documented in rfc6810;
+		Version 1 is documented in rfc8210.
 DEFAULT:	0
 
 KEY:		rpki_rtr_cache_pipe_size [GLOBAL]
