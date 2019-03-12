@@ -110,12 +110,18 @@ void rpki_daemon()
 
     if (config.rpki_rtr_cache_version == RPKI_RTR_V0) {
       rpki_cache.retry.ivl = RPKI_RTR_V0_DEFAULT_RETRY_IVL;
+      rpki_cache.refresh.ivl = RPKI_RTR_V0_DEFAULT_REFRESH_IVL;
+      rpki_cache.expire.ivl = RPKI_RTR_V0_DEFAULT_EXPIRE_IVL;
     }
 
     if (config.rpki_rtr_cache_version == RPKI_RTR_V1) {
       rpki_cache.retry.ivl = RPKI_RTR_V1_DEFAULT_RETRY_IVL;
+      rpki_cache.refresh.ivl = RPKI_RTR_V1_DEFAULT_REFRESH_IVL;
+      rpki_cache.expire.ivl = RPKI_RTR_V1_DEFAULT_EXPIRE_IVL;
     }
  
+    rpki_cache.now = rpki_cache.expire.tstamp = time(NULL);
+
     rpki_cache.fd = ERR;
     rpki_cache.socklen = sizeof(rpki_cache.sock);
     parse_hostport(config.rpki_rtr_cache, (struct sockaddr *)&rpki_cache.sock, &rpki_cache.socklen);
@@ -135,6 +141,8 @@ void rpki_daemon()
 	select_fd = (rpki_cache.fd + 1);
 	FD_SET(rpki_cache.fd, &read_desc);
       }
+
+      select_timeout.tv_sec = rpki_rtr_eval_timeout(&rpki_cache);
     }
 
     select_num = select(select_fd, &read_desc, NULL, NULL, &select_timeout);
@@ -154,6 +162,7 @@ void rpki_daemon()
 	if (rpki_cache.fd < 0) rpki_rtr_connect(&rpki_cache);
 	if (!rpki_cache.session_id) rpki_rtr_send_reset_query(&rpki_cache);
 	if (rpki_cache.serial) rpki_rtr_send_serial_query(&rpki_cache);
+	rpki_rtr_eval_expire(&rpki_cache);
       }
       else rpki_rtr_parse_msg(&rpki_cache);
     }

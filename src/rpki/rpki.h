@@ -30,7 +30,11 @@
 #define RPKI_RTR_V1			1	/* rfc8210 */
 
 #define RPKI_RTR_V0_DEFAULT_RETRY_IVL	10	/* discretionary */
-#define RPKI_RTR_V1_DEFAULT_RETRY_IVL	600
+#define RPKI_RTR_V0_DEFAULT_REFRESH_IVL	10	/* discretionary */
+#define RPKI_RTR_V0_DEFAULT_EXPIRE_IVL	7200	/* discretionary */
+#define RPKI_RTR_V1_DEFAULT_RETRY_IVL	600	/* rfc8210 */
+#define RPKI_RTR_V1_DEFAULT_REFRESH_IVL	3600	/* in case of missing/zero timer in eod */
+#define RPKI_RTR_V1_DEFAULT_EXPIRE_IVL	7200	/* in case of missing/zero timer in eod */
 
 #define RPKI_RTR_PDU_SERIAL_NOTIFY	0
 #define RPKI_RTR_PDU_SERIAL_QUERY	1
@@ -64,8 +68,6 @@
 
 #define RPKI_RTR_PREFIX_FLAGS_WITHDRAW	0
 #define RPKI_RTR_PREFIX_FLAGS_ANNOUNCE	1
-
-#define RPKI_RTR_CONNECT_ITVL		60
 
 struct rpki_rtr_serial {
   u_int8_t version;
@@ -174,7 +176,6 @@ struct rpki_rtr_handle {
   int fd;
   int dont_reconnect;
 
-  time_t connect_tstamp; /* XXX: to go */ 
   time_t now; 
   struct rpki_rtr_timer refresh;
   struct rpki_rtr_timer retry;

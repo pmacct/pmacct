@@ -362,9 +362,7 @@ void rpki_rtr_connect(struct rpki_rtr_handle *cache)
 {
   int rc;
 
-  // XXX
-  if (cache->now >= (cache->connect_tstamp + RPKI_RTR_CONNECT_ITVL)) {
-    cache->connect_tstamp = cache->now;
+  if (cache->now >= (cache->retry.tstamp + cache->retry.ivl)) {
     cache->retry.tstamp = cache->now;
   }
   else return;
@@ -426,6 +424,11 @@ void rpki_rtr_send_reset_query(struct rpki_rtr_handle *cache)
   ssize_t msglen;
 
   if (cache->fd > 0) {
+    if (cache->now >= (cache->refresh.tstamp + cache->refresh.ivl)) {
+      cache->refresh.tstamp = cache->now;
+    }
+    else return;
+
     if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/core/RPKI ): rpki_rtr_send_reset_query()\n", config.name);
 
     memset(&rqm, 0, sizeof(rqm));
@@ -448,6 +451,11 @@ void rpki_rtr_send_serial_query(struct rpki_rtr_handle *cache)
   ssize_t msglen;
 
   if (cache->fd > 0) {
+    if (cache->now >= (cache->refresh.tstamp + cache->refresh.ivl)) {
+      cache->refresh.tstamp = cache->now;
+    }
+    else return;
+
     if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/core/RPKI ): rpki_rtr_send_serial_query()\n", config.name);
 
     memset(&snm, 0, sizeof(snm));
@@ -583,14 +591,24 @@ void rpki_rtr_recv_eod(struct rpki_rtr_handle *cache, u_int8_t version)
 
       cache->serial = ntohl(eodm_cmn->serial);
 
+      cache->refresh.tstamp = cache->now;
+      cache->expire.tstamp = cache->now;
+
       if (version == RPKI_RTR_V1) {
-	cache->retry.ivl = ntohl(eodm_v1.retry_ivl);
+	if (eodm_v1.retry_ivl) cache->retry.ivl = ntohl(eodm_v1.retry_ivl);
+	if (eodm_v1.refresh_ivl) cache->refresh.ivl = ntohl(eodm_v1.refresh_ivl);
+	if (eodm_v1.expire_ivl) cache->expire.ivl = ntohl(eodm_v1.expire_ivl);
 
-	cache->refresh.ivl = ntohl(eodm_v1.refresh_ivl);
-	cache->refresh.tstamp = cache->now;
+	if (cache->expire.tstamp <= cache->retry.ivl || cache->expire.tstamp <= cache->refresh.ivl) {
+	  Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_eod(): invalid expire interval (refresh_ivl=%u retry_ivl=%u expire_ivl=%u)\n",
+	      config.name, cache->refresh.ivl, cache->retry.ivl, cache->expire.ivl);
+	  rpki_rtr_close(cache);
+	}
+      }
 
-	cache->expire.ivl = ntohl(eodm_v1.expire_ivl);
-	cache->expire.tstamp = cache->now;
+      if (config.debug) {
+	Log(LOG_DEBUG, "DEBUG ( %s/core/RPKI ): rpki_rtr_recv_eod(): refresh_ivl=%u retry_ivl=%u expire_ivl=%u\n",
+	    config.name, cache->refresh.ivl, cache->retry.ivl, cache->expire.ivl);
       }
     }
     else {
