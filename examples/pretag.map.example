@@ -39,7 +39,7 @@
 !			within the same rule. The resulting value is written to
 !			the 'tag' field when using memory tables and 'agent_id'
 !			when using a SQL plugin (unless a schema v9 is used).
-!			Legacy name for this primitive is 'id'.  
+!			Valid tag values are in the range 1 to (2^64-1).
 ! 'set_tag2'		SET: tag assigned to a matching packet, flow or sample;
 !			tag can be also defined auto-increasing, ie. <tag #>++;
 !			its use is mutually exclusive to set_tag and set_label
@@ -47,8 +47,8 @@
 !			the 'tag2' field when using memory tables and 'agent_id2'
 !			when using a SQL plugin (unless a schema v9 is used).
 !			If using a SQL plugin, read more about the 'agent_id2'
-!			field in the 'sql/README.agent_id2' document. Legacy
-!			name for this primitive is 'id2'.
+!			field in the 'sql/README.agent_id2' document. Valid tag
+!			values are in the range 1 to (2^64-1).
 ! 'set_label'		SET: string label assigned to a matching packet, flow
 !			or sample; its use is mutually exclusive to tags within
 !			the same rule. The resulting value is written to the
