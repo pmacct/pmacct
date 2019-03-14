@@ -174,9 +174,6 @@ int main(int argc,char **argv, char **envp)
     }
   }
 
-  Log(LOG_INFO, "INFO ( %s/core ): %s %s (%s)\n", config.name, PMBGPD_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
-  Log(LOG_INFO, "INFO ( %s/core ): %s\n", config.name, PMACCT_COMPILE_ARGS);
-
   /* post-checks and resolving conflicts */
   if (strlen(config_file)) {
     if (parse_configuration_file(config_file) != SUCCESS)
@@ -234,6 +231,9 @@ int main(int argc,char **argv, char **envp)
     if (ret) Log(LOG_WARNING, "WARN ( %s/core ): proc_priority failed (errno: %d)\n", config.name, errno);
     else Log(LOG_INFO, "INFO ( %s/core ): proc_priority set to %d\n", config.name, getpriority(PRIO_PROCESS, 0));
   }
+
+  Log(LOG_INFO, "INFO ( %s/core ): %s %s (%s)\n", config.name, PMBGPD_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
+  Log(LOG_INFO, "INFO ( %s/core ): %s\n", config.name, PMACCT_COMPILE_ARGS);
 
   if (strlen(config_file)) {
     char canonical_path[PATH_MAX], *canonical_path_ptr;
