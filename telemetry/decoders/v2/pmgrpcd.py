@@ -17,6 +17,12 @@
 #   along with this program; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #
+#   pmgrpcd.py is Copyright (C) 2018-2019 by:
+#
+#   Matthias Arnold <matthias.arnold@swisscom.com>
+#   Thomas Graf <thomas.graf@swisscom.com>
+#   Paolo Lucente <paolo@pmacct.net>
+#
 import sys
 sys.path.append('/etc/pmacct/telemetry/pblib')
 
