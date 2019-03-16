@@ -646,7 +646,7 @@ static int pm_isprime(unsigned int number)
    indexing as explained in the comment for the hsearch function.
    The contents of the table is zeroed, especially the field used
    becomes zero.  */
-int pm_hcreate(size_t nel, struct pm_hsearch_data *htab)
+int pm_hcreate(size_t nel, struct pm_htable *htab)
 {
   /* Test for correct arguments.  */
   if (htab == NULL) return 0;
@@ -679,10 +679,14 @@ int pm_hcreate(size_t nel, struct pm_hsearch_data *htab)
 
 /* After using the hash table it has to be destroyed. The used memory can
    be freed and the local static variable can be marked as not used.  */
-void pm_hdestroy(struct pm_hsearch_data *htab)
+void pm_hdestroy(struct pm_htable *htab)
 {
+  size_t idx;
+
   /* Test for correct arguments.  */
   if (htab == NULL) return;
+
+  for (idx = 0; idx < htab->size; idx++) __pm_hdelete(&htab->table[idx]);
 
   /* Free used memory.  */
   free (htab->table);
@@ -703,7 +707,7 @@ void pm_hdestroy(struct pm_hsearch_data *htab)
    means used. The used field can be used as a first fast comparison for
    equality of the stored and the parameter value. This helps to prevent
    unnecessary more expensive calls of memcmp.  */
-int pm_hsearch(pm_HENTRY item, pm_ACTION action, pm_HENTRY **retval, struct pm_hsearch_data *htab)
+int pm_hsearch(pm_HENTRY item, pm_ACTION action, pm_HENTRY **retval, struct pm_htable *htab)
 {
   unsigned int hval;
   unsigned int idx;
@@ -717,7 +721,14 @@ int pm_hsearch(pm_HENTRY item, pm_ACTION action, pm_HENTRY **retval, struct pm_h
     /* Further action might be required according to the action value. */
     if (htab->table[idx].used == hval && item.keylen == htab->table[idx].entry.keylen
         && (!memcmp(item.key, htab->table[idx].entry.key, item.keylen))) {
-      *retval = &htab->table[idx].entry;
+      if (action == DELETE) {
+	__pm_hdelete(&htab->table[idx]);
+	(*retval) = NULL;
+      }
+      else {
+        (*retval) = &htab->table[idx].entry;
+      }
+
       return 1;
     }
 
@@ -735,7 +746,14 @@ int pm_hsearch(pm_HENTRY item, pm_ACTION action, pm_HENTRY **retval, struct pm_h
       /* If entry is found use it. */
       if (htab->table[idx].used == hval && item.keylen == htab->table[idx].entry.keylen
 	  && (!memcmp(item.key, htab->table[idx].entry.key, item.keylen))) {
-	*retval = &htab->table[idx].entry;
+	if (action == DELETE) {
+	  __pm_hdelete(&htab->table[idx]);
+	  (*retval) = NULL;
+	}
+	else {
+	  (*retval) = &htab->table[idx].entry;
+	}
+
 	return 1;
       }
     }
@@ -743,7 +761,7 @@ int pm_hsearch(pm_HENTRY item, pm_ACTION action, pm_HENTRY **retval, struct pm_h
   }
 
   /* An empty bucket has been found. */
-  if (action == ENTER) {
+  if (action == INSERT) {
     /* If table is full and another entry should be entered return with error.  */
     if (htab->filled == htab->size) {
       *retval = NULL;
@@ -760,4 +778,24 @@ int pm_hsearch(pm_HENTRY item, pm_ACTION action, pm_HENTRY **retval, struct pm_h
 
   *retval = NULL;
   return 0;
+}
+
+void pm_hmove(struct pm_htable *new_htab, struct pm_htable *old_htab, struct pm_htable *saved_htab)
+{
+  memcpy(saved_htab, old_htab, sizeof(struct pm_htable));
+  memcpy(old_htab, new_htab, sizeof(struct pm_htable));
+}
+
+void __pm_hdelete(_pm_HENTRY *item)
+{
+  item->used = 0;
+
+  item->entry.keylen = 0;
+  free(item->entry.key);
+  item->entry.key = NULL;
+
+  if (item->entry.data) {
+    free(item->entry.data);
+    item->entry.data = NULL;
+  }
 }

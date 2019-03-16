@@ -68,11 +68,12 @@ typedef void (*pm_free_fn_t) (void *);
 
 typedef enum {
   FIND,
-  ENTER
+  INSERT,
+  DELETE
 } pm_ACTION;
 
 typedef struct pm_hentry_t {
-  char *key;
+  void *key;
   unsigned int keylen;
   void *data;
 } pm_HENTRY;
@@ -82,7 +83,7 @@ typedef struct _pm_hentry_t {
   pm_HENTRY entry;
 } _pm_HENTRY;
 
-struct pm_hsearch_data {
+struct pm_htable {
   _pm_HENTRY *table;
   unsigned int size;
   unsigned int filled;
@@ -111,7 +112,9 @@ EXT void pm_twalk (const void *, pm_action_fn_t, void *);
 /* Destroy the whole tree, call FREEFCT for each node or leaf.  */
 EXT void __pm_tdestroy (void *, pm_free_fn_t);
 
-EXT int pm_hcreate(size_t, struct pm_hsearch_data *);
-EXT void pm_hdestroy(struct pm_hsearch_data *);
-EXT int pm_hsearch(pm_HENTRY, pm_ACTION, pm_HENTRY **, struct pm_hsearch_data *);
+EXT int pm_hcreate(size_t, struct pm_htable *);
+EXT void pm_hdestroy(struct pm_htable *);
+EXT int pm_hsearch(pm_HENTRY, pm_ACTION, pm_HENTRY **, struct pm_htable *);
+EXT void pm_hmove(struct pm_htable *, struct pm_htable *, struct pm_htable *);
+EXT void __pm_hdelete(_pm_HENTRY *);
 #undef EXT
