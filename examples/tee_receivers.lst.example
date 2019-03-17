@@ -30,7 +30,7 @@
 ! 'kafka_topic'		SET: Defines the Kafka topic to emit to. Mandatory
 !			to specify when a kafka_broker is defined.
 ! 'zmq_address'		SET: Defines the ZeroMQ queue address to bind to.
-!			It expects a string like 'tcp://127.0.0.1:50000'. 
+!			It expects a string like '127.0.0.1:50000'. 
 !			
 !			
 ! Examples:
