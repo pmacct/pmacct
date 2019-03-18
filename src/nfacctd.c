@@ -2688,6 +2688,7 @@ pm_class_t NF_evaluate_classifiers(struct xflow_status_entry_class *entry, pm_cl
 void nfv9_datalink_frame_section_handler(struct packet_ptrs *pptrs)
 {
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct utpl_field *utpl = NULL;
   u_int16_t frame_type = NF9_DL_F_TYPE_UNKNOWN, t16;
 
   /* cleanups */
@@ -2699,8 +2700,8 @@ void nfv9_datalink_frame_section_handler(struct packet_ptrs *pptrs)
   memset(&pptrs->ndpi_class, 0, sizeof(pm_class2_t));
 #endif
 
-  if (tpl->tpl[NF9_DATALINK_FRAME_TYPE].len == 2) {
-    memcpy(&t16, pptrs->f_data+tpl->tpl[NF9_DATALINK_FRAME_TYPE].off, 2);
+  if ((utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_DATALINK_FRAME_TYPE, FALSE))) {
+    memcpy(&t16, pptrs->f_data+utpl->off, MIN(utpl->len, 2));
     frame_type = ntohs(t16);
   }
   /* XXX: in case of no NF9_DATALINK_FRAME_TYPE, let's assume Ethernet */
