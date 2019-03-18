@@ -1749,13 +1749,13 @@ to sfacctd, pmbgpd, pmbmpd as well):
 Daemon #1:
 
 allow-1.map:
-10.0.0.0/17
+10.0.0.0/25
 
 nfacctd-1.conf:
 ...
 !
 nfacctd_port: 2100
-nfacctd_allow_file: /path/to/allow-1.map
+! nfacctd_allow_file: /path/to/allow-1.map
 !
 bgp_daemon: true
 bgp_daemon_port: 179
@@ -1766,19 +1766,27 @@ bgp_daemon_allow_file: /path/to/allow-1.map
 Daemon #2:
 
 allow-2.map:
-10.0.128.0/17
+10.0.0.128/25
 
 nfacctd-2.conf:
 ...
 !
-nfacctd_port: 2100
-nfacctd_allow_file: /path/to/allow-2.map
+nfacctd_port: 2101
+! nfacctd_allow_file: /path/to/allow-2.map
 !
 bgp_daemon: true
 bgp_daemon_port: 179
 bgp_daemon_allow_file: /path/to/allow-2.map
 !
 ...
+
+For flow protocols, which are transported in UDP, a replication layer is
+needed in front, note the daemon listen on different nfacctd_port in the
+example above (read more on how to set up a replicator in the "Quickstart
+guide to setup a NetFlow/IPFIX/sFlow replicator" section of the document).
+nfacctd_allow_file is optional config key and, if created accordingly to
+bgp_daemon_allow_file, may ensure only flows from router for which a BGP
+sessions accepted should be processed.
 
 XIVi. Example: adding RPKI/ROA information 
 Resource Public Key Infrastructure (RPKI) is a specialized public key
