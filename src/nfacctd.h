@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -516,8 +516,8 @@ EXT struct template_cache_entry *refresh_opt_template(void *, struct template_ca
 EXT struct utpl_field *ext_db_get_ie(struct template_cache_entry *, u_int32_t, u_int16_t, u_int8_t);
 EXT struct utpl_field *ext_db_get_next_ie(struct template_cache_entry *, u_int16_t, u_int8_t *);
 
-EXT void resolve_vlen_template(char *, u_int16_t, struct template_cache_entry *);
-EXT u_int8_t get_ipfix_vlen(char *, u_int16_t *);
+EXT int resolve_vlen_template(char *, u_int16_t, struct template_cache_entry *);
+EXT int get_ipfix_vlen(char *, u_int16_t, u_int16_t *);
 
 EXT struct template_cache_entry *nfacctd_offline_read_json_template(char *, char *, int);
 EXT void load_templates_from_file(char *);
