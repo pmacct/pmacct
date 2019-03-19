@@ -1535,6 +1535,15 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  /* Handling the global option scoping case */
 	  if (!config.nfacctd_disable_opt_scope_check) {
 	    if (tpl->tpl[NF9_OPT_SCOPE_SYSTEM].len) entry = (struct xflow_status_entry *) pptrs->f_status_g;
+	    else {
+	      if (version == 10) {
+		if (tpl->tpl[IPFIX_SCOPE_TEMPLATE_ID].len) {
+		  entry = (struct xflow_status_entry *) pptrs->f_status;
+		  memcpy(&t16, pkt+tpl->tpl[IPFIX_SCOPE_TEMPLATE_ID].off, 2);
+		  sampler_id = ntohs(t16);
+		}
+	      }
+	    }
 	  }
 	  else entry = (struct xflow_status_entry *) pptrs->f_status_g;
 

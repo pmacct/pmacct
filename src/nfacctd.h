@@ -277,11 +277,21 @@ struct data_hdr_v9 {
 #define NF9_APPLICATION_ID		95
 #define NF9_APPLICATION_NAME		96
 
+/* Options scoping: NetFlow v9 */
 #define NF9_OPT_SCOPE_SYSTEM		1
 #define NF9_OPT_SCOPE_IF		2
 #define NF9_OPT_SCOPE_LC		3
 #define NF9_OPT_SCOPE_CACHE		4
 #define NF9_OPT_SCOPE_TPL		5
+
+/* Options scoping: IPFIX */
+#define IPFIX_SCOPE_OBS_POINT_ID	138
+#define IPFIX_SCOPE_LINECARD_ID		141
+#define IPFIX_SCOPE_PORT_ID		142
+#define IPFIX_SCOPE_METER_PROCESS_ID	143
+#define IPFIX_SCOPE_EXPORT_PROCESS_ID	144
+#define IPFIX_SCOPE_TEMPLATE_ID 	145
+#define IPFIX_SCOPE_OBS_DOMAIN_ID	149
 
 /* dataLinkFrameType */
 #define NF9_DL_F_TYPE_UNKNOWN		0
