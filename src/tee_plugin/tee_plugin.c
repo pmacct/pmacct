@@ -525,7 +525,7 @@ void Tee_zmq_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
   if (config.tee_transparent) {
     msglen = Tee_craft_transparent_msg(msg, &target);
 
-    if (msglen) p_zmq_send_bin(&zmq_host->sock, tee_send_buf, msglen);
+    if (msglen) p_zmq_send_bin(&zmq_host->sock, tee_send_buf, msglen, TRUE);
   }
 }
 #endif
