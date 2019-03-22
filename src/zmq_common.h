@@ -35,6 +35,7 @@
 
 #define PM_ZMQ_EVENTS_RETRIES		3
 #define PM_ZMQ_DEFAULT_RETRY		1000 /* 1 sec */
+#define PM_ZMQ_DEFAULT_FLOW_HWM		100000 /* ~150MB @ 1500 bytes/packet */
 
 /* structures */
 struct p_zmq_sock {

@@ -2762,6 +2762,7 @@ void NF_init_zmq_host(void *zh, int *pipe_fd)
   p_zmq_set_log_id(zmq_host, log_id);
 
   p_zmq_set_address(zmq_host, config.nfacctd_zmq_address);
+  p_zmq_set_hwm(zmq_host, PM_ZMQ_DEFAULT_FLOW_HWM);
   p_zmq_pull_setup(zmq_host);
   p_zmq_set_retry_timeout(zmq_host, PM_ZMQ_DEFAULT_RETRY);
 
