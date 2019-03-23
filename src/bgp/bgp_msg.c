@@ -1038,15 +1038,28 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
       // XXX: check address correctnesss now that we have it?
     }
     else if (info->safi == SAFI_MPLS_LABEL) { /* rfc3107 labeled unicast */
+      int labels_size = 0;
+      char *label_ptr = NULL;
+
       if ((info->afi == AFI_IP && p.prefixlen > 56) || (info->afi == AFI_IP6 && p.prefixlen > 152)) return ERR;
 
       psize = ((p.prefixlen+7)/8);
-      if (psize > end) return ERR;
+      if (psize > end || psize < 3 /* one label */) return ERR;
 
-      /* Fetch label (3) and prefix from NLRI packet */
-      memcpy(label, pnt, 3);
-      memcpy(&p.u.prefix, pnt+3, (psize-3));
-      p.prefixlen -= 24;
+      /* Fetch label(s) and prefix from NLRI packet */
+      label_ptr = pnt;
+
+      while (!check_bosbit(label_ptr)) {
+	label_ptr += 3;
+	labels_size += 3;
+      }
+
+      memcpy(label, label_ptr, 3);
+      label_ptr += 3;
+      labels_size += 3;
+	
+      memcpy(&p.u.prefix, (pnt + labels_size), (psize - labels_size));
+      p.prefixlen -= (8 * labels_size);
     }
     else if (info->safi == SAFI_MPLS_VPN) { /* rfc4364 BGP/MPLS IP Virtual Private Networks */
       if ((info->afi == AFI_IP && p.prefixlen > 120) || (info->afi == AFI_IP6 && p.prefixlen > 216)) return ERR;
