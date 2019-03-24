@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -213,7 +213,11 @@ struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bg
   if (!bgp_peer_loc || !bgp_peer_rem) return NULL;
 
   if (!bgp_peer_loc->cap_4as || !bgp_peer_rem->cap_4as) bgp_peer_rem->cap_4as = FALSE;
-  if (!bgp_peer_loc->cap_add_paths || !bgp_peer_rem->cap_add_paths) bgp_peer_rem->cap_add_paths = FALSE;
+
+  /* XXX: since BGP OPENs are fabricated, we assume that if remote
+     peer is marked as able to send ADD-PATH capability, the local
+     pper will be able to receive it just fine */
+  /* if (!bgp_peer_loc->cap_add_paths || !bgp_peer_rem->cap_add_paths) bgp_peer_rem->cap_add_paths = FALSE; */
 
   bgp_peer_rem->type = FUNC_TYPE_BMP;
   memcpy(&bgp_peer_rem->id, &bgp_peer_rem->addr, sizeof(struct host_addr));
