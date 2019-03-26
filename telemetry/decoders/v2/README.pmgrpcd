@@ -1,6 +1,6 @@
 These are quickstart notes on how to install pmgrpcd.py and all of its
-dependencies. In CONFIG-KEYS.pmgrpcd is available the documentation for
-all of pmgrpcd.py configuration parameters. 
+dependencies. CONFIG-KEYS.pmgrpcd provides the documentation for all of
+pmgrpcd.py configuration parameters. 
 
 Install pmgrpcd.py
 ===================

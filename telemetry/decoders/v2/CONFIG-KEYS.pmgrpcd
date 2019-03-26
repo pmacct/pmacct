@@ -11,11 +11,11 @@ DESC:       The Kafka topic name to produce to. It is a good idea to
             traffic: raw, proc
  
  
-            infra producer is ie. pmacctd
-            flow producer is ie. nfacctd
-            control producer is ie. pmbmpd 
-            device producer is ie. pmgrpcd.py
-            event producer is ie. nfacctd (ipfix-NEL)
+            infra producer is, e.g., pmacctd
+            flow producer is, e.g., nfacctd
+            control producer is, e.g., pmbmpd 
+            device producer is, e.g., pmgrpcd.py
+            event producer is, e.g., nfacctd (ipfix-NEL)
 DEFAULT:    none
 EXAMPLE:    myproject.prod.device-metric-raw
 -----------------------------------------------------------------
@@ -66,15 +66,16 @@ EXAMPLE:
             openconfig-interfaces =  openconfig_interfaces_pb2.Interfaces()
 -----------------------------------------------------------------
 KEY:        avscmapfile
-DESC:       This file is a JSON object. Based on this file pmgrpcd.py is
+DESC:       This file is a JSON object. Based on this file, pmgrpcd.py is
 	    able to get the Avro schema to serialize the JSON metrics to
-	    Avro. pmgrpcd.py is getting JSON-encoded metrics from routers.
-	    In such data it can be found also the gRPC source IP address
-	    and YANG Encoding Path. IP address being ie. "10.215.133.15"
-	    and Encoding Path being ie. "openconfig-interfaces:interfaces".
+	    Avro. 
+            pmgrpcd.py is getting JSON-encoded metrics from routers.
+	    The gRPC source IP address and YANG Encoding Path can also 
+            be found in the data. IP address being e.g. "10.215.133.15" and 
+            Encoding Path being e.g. "openconfig-interfaces:interfaces".
             Based on this mapping file it is possible to get the Avro
 	    Schema ID (ie. 249). With such ID it is possible to get the
-	    Avro sschema from the Schema Registry server to serialize the
+	    Avro schema from the Schema Registry server to serialize the
 	    JSON metrics to Avro.
 DEFAULT:    /etc/pmacct/telemetry/schema_id_map_file.json
 EXAMPLE:    
@@ -89,14 +90,14 @@ EXAMPLE:
             }
 -----------------------------------------------------------------
 KEY:        mitigation
-DESC:       The idea of this Pyton script is to have somthing like a
+DESC:       The idea of this Python script is to have something like a
 	    plugin to mitigate JSON data problems. Streaming Telemetry
 	    today (1Q 2019) is not very well standardized. There are
 	    several pieces that vendors do in different ways. Also there
-	    are bugs (ie. missing values) and not correct implemntations
+	    are bugs (e.g.. missing values) and not correct implementations
 	    of the already existing standards. There are many optional
-	    parameters (ie. some leafs) but also optional structures
-	    (ie. records). For example: if there are multiple interfaces
+	    parameters (e.g. some leafs) but also optional structures
+	    (i.e. records). For example: if there are multiple interfaces
 	    within the JSON message there has to be a record "interfaces"
 	    as parent of "interface"; whereas with only one interface
 	    within the message the record "interfaces" is optional. For
@@ -108,7 +109,7 @@ DESC:       The idea of this Pyton script is to have somthing like a
 	    metrics must have a fixed data structure, like a parent
 	    "interfaces" array containing a single "interface" object.
 DEFAULT:    /etc/pmacct/telemetry/mitigation.py
-EXAMPLE:    see defaultfile: /etc/pmacct/telemetry/mitigation.py
+EXAMPLE:    see default file: /etc/pmacct/telemetry/mitigation.py
 -----------------------------------------------------------------
 KEY:        debug
 DESC:       Enable debug
@@ -163,7 +164,7 @@ EXAMPLE:    /tmp/stexamples
 -----------------------------------------------------------------
 KEY:        jsondatadumpfile
 DESC:       If enabled, mitigated metrics will be dumped to this file.
-	    With this file it is possible to find Avro schema mismaching
+	    With this file it is possible to find Avro schema mismatching
 	    problems.
 DEFAULT:    /tmp/stexamples/jsondatadumpfile.json
 EXAMPLE:    /tmp/stexamples/jsondatadumpfile.json
