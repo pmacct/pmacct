@@ -525,7 +525,7 @@ void Tee_zmq_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
   if (config.tee_transparent) {
     msglen = Tee_craft_transparent_msg(msg, &target);
 
-    if (msglen) p_zmq_send_bin(&zmq_host->sock, tee_send_buf, msglen);
+    if (msglen) p_zmq_send_bin(&zmq_host->sock, tee_send_buf, msglen, TRUE);
   }
 }
 #endif
@@ -646,6 +646,7 @@ void Tee_init_zmq_host(struct p_zmq_host *zmq_host, char *zmq_address, u_int32_t
   p_zmq_init_push(zmq_host, zmq_address);
   snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
   p_zmq_set_log_id(zmq_host, log_id);
+  p_zmq_set_hwm(zmq_host, PM_ZMQ_DEFAULT_FLOW_HWM); 
   p_zmq_push_setup(zmq_host);
 
   if (config.debug) {

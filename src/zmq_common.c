@@ -485,20 +485,22 @@ int p_zmq_recv_bin(struct p_zmq_sock *sock, void *buf, size_t len)
   return rcvlen;
 }
 
-int p_zmq_send_bin(struct p_zmq_sock *sock, void *buf, size_t len)
+int p_zmq_send_bin(struct p_zmq_sock *sock, void *buf, size_t len, int nonblock)
 {
   int sndlen;
 
-  sndlen = zmq_send(sock->obj, buf, len, 0);
+  if (!nonblock) sndlen = zmq_send(sock->obj, buf, len, 0);
+  else sndlen = zmq_send(sock->obj, buf, len, ZMQ_DONTWAIT);
 
   return sndlen;
 }
 
-int p_zmq_sendmore_bin(struct p_zmq_sock *sock, void *buf, size_t len)
+int p_zmq_sendmore_bin(struct p_zmq_sock *sock, void *buf, size_t len, int nonblock)
 {
   int sndlen;
 
-  sndlen = zmq_send(sock->obj, buf, len, ZMQ_SNDMORE);
+  if (!nonblock) sndlen = zmq_send(sock->obj, buf, len, ZMQ_SNDMORE);
+  else sndlen = zmq_send(sock->obj, buf, len, (ZMQ_SNDMORE|ZMQ_DONTWAIT));
 
   return sndlen;
 }

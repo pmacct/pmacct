@@ -1038,45 +1038,70 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
       // XXX: check address correctnesss now that we have it?
     }
     else if (info->safi == SAFI_MPLS_LABEL) { /* rfc3107 labeled unicast */
+      int labels_size = 0;
+      char *label_ptr = NULL;
+
       if ((info->afi == AFI_IP && p.prefixlen > 56) || (info->afi == AFI_IP6 && p.prefixlen > 152)) return ERR;
 
       psize = ((p.prefixlen+7)/8);
-      if (psize > end) return ERR;
+      if (psize > end || psize < 3 /* one label */) return ERR;
 
-      /* Fetch label (3) and prefix from NLRI packet */
-      memcpy(label, pnt, 3);
-      memcpy(&p.u.prefix, pnt+3, (psize-3));
-      p.prefixlen -= 24;
+      /* Fetch label(s) and prefix from NLRI packet */
+      label_ptr = pnt;
+
+      while (!check_bosbit(label_ptr)) {
+	label_ptr += 3;
+	labels_size += 3;
+      }
+
+      memcpy(label, label_ptr, 3);
+      label_ptr += 3;
+      labels_size += 3;
+	
+      memcpy(&p.u.prefix, (pnt + labels_size), (psize - labels_size));
+      p.prefixlen -= (8 * labels_size);
     }
     else if (info->safi == SAFI_MPLS_VPN) { /* rfc4364 BGP/MPLS IP Virtual Private Networks */
+      int labels_size = 0;
+      char *label_ptr = NULL;
+
       if ((info->afi == AFI_IP && p.prefixlen > 120) || (info->afi == AFI_IP6 && p.prefixlen > 216)) return ERR;
 
       psize = ((p.prefixlen+7)/8);
-      if (psize > end) return ERR;
+      if (psize > end || psize < 3 /* one label */) return ERR;
 
       /* Fetch label (3), RD (8) and prefix from NLRI packet */
-      memcpy(label, pnt, 3);
+      label_ptr = pnt;
 
-      memcpy(&rd.type, pnt+3, 2);
+      while (!check_bosbit(label_ptr)) {
+        label_ptr += 3;
+        labels_size += 3;
+      }
+
+      memcpy(label, label_ptr, 3);
+      label_ptr += 3;
+      labels_size += 3;
+
+      memcpy(&rd.type, (pnt + labels_size), 2);
       rd.type = ntohs(rd.type);
       switch(rd.type) {
       case RD_TYPE_AS: 
 	rda = (struct rd_as *) &rd;
-	memcpy(&tmp16, pnt+5, 2);
-	memcpy(&tmp32, pnt+7, 4);
+	memcpy(&tmp16, (pnt + labels_size + 2 /* RD type */), 2);
+	memcpy(&tmp32, (pnt + labels_size + 2 /* RD type */ + 2 /* RD AS */), 4);
 	rda->as = ntohs(tmp16);
 	rda->val = ntohl(tmp32);
 	break;
       case RD_TYPE_IP: 
 	rdi = (struct rd_ip *) &rd;
-	memcpy(&rdi->ip.s_addr, pnt+5, 4);
-	memcpy(&tmp16, pnt+9, 2);
+	memcpy(&rdi->ip.s_addr, (pnt + labels_size + 2 /* RD type */), 4);
+	memcpy(&tmp16, (pnt + labels_size + 2 /* RD type */ + 4 /* RD IP */), 2);
 	rdi->val = ntohs(tmp16);
 	break;
       case RD_TYPE_AS4: 
 	rda4 = (struct rd_as4 *) &rd;
-	memcpy(&tmp32, pnt+5, 4);
-	memcpy(&tmp16, pnt+9, 2);
+	memcpy(&tmp32, (pnt + labels_size + 2 /* RD type */), 4);
+	memcpy(&tmp16, (pnt + labels_size + 2 /* RD type */ + 4 /* RD AS4 */), 2);
 	rda4->as = ntohl(tmp32);
 	rda4->val = ntohs(tmp16);
 	break;
@@ -1085,8 +1110,8 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
 	break;
       }
     
-      memcpy(&p.u.prefix, pnt+11, (psize-11));
-      p.prefixlen -= 88;
+      memcpy(&p.u.prefix, (pnt + labels_size + 8 /* RD */), (psize - (labels_size + 8 /* RD */)));
+      p.prefixlen -= (8 * (labels_size + 8 /* RD */));
     }
 
     /* Let's do our job now! */

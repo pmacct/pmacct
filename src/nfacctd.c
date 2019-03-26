@@ -390,18 +390,6 @@ int main(int argc,char **argv, char **envp)
 
   if (config.files_umask) umask(config.files_umask);
 
-  if (config.daemon) {
-    list = plugins_list;
-    while (list) {
-      if (!strcmp(list->type.string, "print") && !list->cfg.print_output_file)
-	printf("INFO ( %s/%s ): Daemonizing. Bye bye screen.\n", list->name, list->type.string);
-      list = list->next;
-    }
-    if (debug || config.debug)
-      printf("WARN ( %s/core ): debug is enabled; forking in background. Logging to standard error (stderr) will get lost.\n", config.name); 
-    daemonize();
-  }
-
   initsetproctitle(argc, argv, envp);
   if (config.syslog) {
     logf = parse_log_facility(config.syslog);
@@ -413,14 +401,30 @@ int main(int argc,char **argv, char **envp)
     Log(LOG_INFO, "INFO ( %s/core ): Start logging ...\n", config.name);
   }
 
-  if (config.logfile)
-  {
+  if (config.logfile) {
     config.logfile_fd = open_output_file(config.logfile, "a", FALSE);
     list = plugins_list;
     while (list) {
       list->cfg.logfile_fd = config.logfile_fd ;
       list = list->next;
     }
+  }
+
+  if (config.daemon) {
+    list = plugins_list;
+    while (list) {
+      if (!strcmp(list->type.string, "print") && !list->cfg.print_output_file)
+	printf("INFO ( %s/%s ): Daemonizing. Bye bye screen.\n", list->name, list->type.string);
+      list = list->next;
+    }
+
+    if (!config.syslog && !config.logfile) {
+      if (debug || config.debug) {
+	printf("WARN ( %s/core ): debug is enabled; forking in background. Logging to standard error (stderr) will get lost.\n", config.name);
+      }
+    }
+
+    daemonize();
   }
 
   if (config.proc_priority) {
@@ -1535,6 +1539,15 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  /* Handling the global option scoping case */
 	  if (!config.nfacctd_disable_opt_scope_check) {
 	    if (tpl->tpl[NF9_OPT_SCOPE_SYSTEM].len) entry = (struct xflow_status_entry *) pptrs->f_status_g;
+	    else {
+	      if (version == 10) {
+		if (tpl->tpl[IPFIX_SCOPE_TEMPLATE_ID].len) {
+		  entry = (struct xflow_status_entry *) pptrs->f_status;
+		  memcpy(&t16, pkt+tpl->tpl[IPFIX_SCOPE_TEMPLATE_ID].off, 2);
+		  sampler_id = ntohs(t16);
+		}
+	      }
+	    }
 	  }
 	  else entry = (struct xflow_status_entry *) pptrs->f_status_g;
 
@@ -2753,6 +2766,7 @@ void NF_init_zmq_host(void *zh, int *pipe_fd)
   p_zmq_set_log_id(zmq_host, log_id);
 
   p_zmq_set_address(zmq_host, config.nfacctd_zmq_address);
+  p_zmq_set_hwm(zmq_host, PM_ZMQ_DEFAULT_FLOW_HWM);
   p_zmq_pull_setup(zmq_host);
   p_zmq_set_retry_timeout(zmq_host, PM_ZMQ_DEFAULT_RETRY);
 

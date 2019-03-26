@@ -3552,7 +3552,9 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
           entry = (struct xflow_status_entry *) pptrs->f_status_g;
           sentry = search_smp_id_status_table(entry->sampling, 0, FALSE);
         }
+        if (!sentry) sentry = search_smp_id_status_table(entry->sampling, ntohs(tpl->template_id), FALSE);
       }
+
       if (sentry) {
         pdata->pkt_len = pdata->pkt_len * sentry->sample_pool;
         pdata->pkt_num = pdata->pkt_num * sentry->sample_pool;

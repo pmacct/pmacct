@@ -35,6 +35,7 @@
 
 #define PM_ZMQ_EVENTS_RETRIES		3
 #define PM_ZMQ_DEFAULT_RETRY		1000 /* 1 sec */
+#define PM_ZMQ_DEFAULT_FLOW_HWM		100000 /* ~150MB @ 1500 bytes/packet */
 
 /* structures */
 struct p_zmq_sock {
@@ -118,8 +119,8 @@ EXT char *p_zmq_recv_str(struct p_zmq_sock *);
 EXT int p_zmq_send_str(struct p_zmq_sock *, char *);
 EXT int p_zmq_sendmore_str(struct p_zmq_sock *, char *);
 EXT int p_zmq_recv_bin(struct p_zmq_sock *, void *, size_t);
-EXT int p_zmq_send_bin(struct p_zmq_sock *, void *, size_t);
-EXT int p_zmq_sendmore_bin(struct p_zmq_sock *, void *, size_t);
+EXT int p_zmq_send_bin(struct p_zmq_sock *, void *, size_t, int);
+EXT int p_zmq_sendmore_bin(struct p_zmq_sock *, void *, size_t, int);
 
 EXT void p_zmq_zap_handler(void *);
 
