@@ -1399,7 +1399,7 @@ int pretag_input_handler(struct packet_ptrs *pptrs, void *unused, void *e)
       if (!memcmp(&input32, pptrs->f_data+tpl->tpl[NF9_INPUT_PHYSINT].off, tpl->tpl[NF9_INPUT_PHYSINT].len))
         return (FALSE | neg);
     }
-    else return (TRUE ^ neg);
+    return (TRUE ^ neg);
   case 5:
     if (input16 == ((struct struct_export_v5 *)pptrs->f_data)->input) return (FALSE | neg);
     else return (TRUE ^ neg); 
@@ -1434,7 +1434,7 @@ int pretag_output_handler(struct packet_ptrs *pptrs, void *unused, void *e)
       if (!memcmp(&output32, pptrs->f_data+tpl->tpl[NF9_OUTPUT_PHYSINT].off, tpl->tpl[NF9_OUTPUT_PHYSINT].len))
         return (FALSE | neg);
     }
-    else return (TRUE ^ neg);
+    return (TRUE ^ neg);
   case 5:
     if (output16 == ((struct struct_export_v5 *)pptrs->f_data)->output) return (FALSE | neg);
     else return (TRUE ^ neg);
@@ -1462,7 +1462,7 @@ int pretag_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
       if (!memcmp(&entry->key.nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_NEXT_HOP].off, tpl->tpl[NF9_IPV6_NEXT_HOP].len))
 	return (FALSE | entry->key.nexthop.neg);
     }
-    else return (TRUE ^ entry->key.nexthop.neg);
+    return (TRUE ^ entry->key.nexthop.neg);
   case 5:
     if (entry->key.nexthop.a.address.ipv4.s_addr == ((struct struct_export_v5 *)pptrs->f_data)->nexthop.s_addr) return (FALSE | entry->key.nexthop.neg);
     else return (TRUE ^ entry->key.nexthop.neg);
@@ -1507,7 +1507,7 @@ int pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 	  return (FALSE | entry->key.bgp_nexthop.neg);
       }
     }
-    else return (TRUE ^ entry->key.bgp_nexthop.neg);
+    return (TRUE ^ entry->key.bgp_nexthop.neg);
   case 5:
     if (entry->key.bgp_nexthop.a.address.ipv4.s_addr == ((struct struct_export_v5 *)pptrs->f_data)->nexthop.s_addr) return (FALSE | entry->key.bgp_nexthop.neg);
     else return (TRUE ^ entry->key.bgp_nexthop.neg);
@@ -2006,8 +2006,8 @@ int pretag_src_mac_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     if (tpl->tpl[NF9_IN_SRC_MAC].len) {
       if (!memcmp(&entry->key.src_mac.a, pptrs->f_data+tpl->tpl[NF9_IN_SRC_MAC].off, MIN(tpl->tpl[NF9_IN_SRC_MAC].len, 6)))
 	return (FALSE | entry->key.src_mac.neg);
-      else return (TRUE ^ entry->key.src_mac.neg);
     }
+    return (TRUE ^ entry->key.src_mac.neg);
   default:
     return TRUE; /* this field does not exist: condition is always true */
   }
@@ -2027,8 +2027,8 @@ int pretag_dst_mac_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     if (tpl->tpl[NF9_IN_DST_MAC].len) {
       if (!memcmp(&entry->key.dst_mac.a, pptrs->f_data+tpl->tpl[NF9_IN_DST_MAC].off, MIN(tpl->tpl[NF9_IN_DST_MAC].len, 6)))
         return (FALSE | entry->key.dst_mac.neg);
-      else return (TRUE ^ entry->key.dst_mac.neg);
     }
+    return (TRUE ^ entry->key.dst_mac.neg);
   default:
     return TRUE; /* this field does not exist: condition is always true */
   }
@@ -2167,7 +2167,7 @@ int pretag_forwarding_status_handler(struct packet_ptrs *pptrs, void *unused, vo
     else return TRUE;
     
     u_int32_t comp = (entry->key.fwdstatus.n & 0xC0);
-    if ( comp == entry->key.fwdstatus.n) {
+    if (comp == entry->key.fwdstatus.n) {
       /* We have a generic (unknown) status provided so we then take everything that match that. */
       u_int32_t base = (fwdstatus & 0xC0);
       if ( comp == base )
