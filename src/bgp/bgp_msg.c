@@ -983,7 +983,6 @@ int bgp_attr_parse_mp_unreach(struct bgp_peer *peer, u_int16_t len, struct bgp_a
   return SUCCESS;
 }
 
-
 /* BGP UPDATE NLRI parsing */
 int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
 {
@@ -1034,8 +1033,6 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
 
       /* Fetch prefix from NLRI packet. */
       memcpy(&p.u.prefix, pnt, psize);
-
-      // XXX: check address correctnesss now that we have it?
     }
     else if (info->safi == SAFI_MPLS_LABEL) { /* rfc3107 labeled unicast */
       int labels_size = 0;
@@ -1049,14 +1046,17 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
       /* Fetch label(s) and prefix from NLRI packet */
       label_ptr = pnt;
 
-      while (!check_bosbit(label_ptr)) {
+      while (((labels_size + 3) <= psize) && !check_bosbit(label_ptr)) {
 	label_ptr += 3;
 	labels_size += 3;
       }
 
-      memcpy(label, label_ptr, 3);
-      label_ptr += 3;
-      labels_size += 3;
+      if ((labels_size + 3) <= psize) {
+        memcpy(label, label_ptr, 3);
+        label_ptr += 3;
+        labels_size += 3;
+      }
+      else return ERR;
 	
       memcpy(&p.u.prefix, (pnt + labels_size), (psize - labels_size));
       p.prefixlen -= (8 * labels_size);
@@ -1073,14 +1073,19 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
       /* Fetch label (3), RD (8) and prefix from NLRI packet */
       label_ptr = pnt;
 
-      while (!check_bosbit(label_ptr)) {
-        label_ptr += 3;
-        labels_size += 3;
+      while (((labels_size + 3) <= psize) && !check_bosbit(label_ptr)) {
+	label_ptr += 3;
+	labels_size += 3;
       }
 
-      memcpy(label, label_ptr, 3);
-      label_ptr += 3;
-      labels_size += 3;
+      if ((labels_size + 3) <= psize) {
+	memcpy(label, label_ptr, 3);
+	label_ptr += 3;
+	labels_size += 3;
+      }
+      else return ERR;
+
+      if (labels_size + 8 /* RD */ > psize) return ERR; 
 
       memcpy(&rd.type, (pnt + labels_size), 2);
       rd.type = ntohs(rd.type);
@@ -1113,6 +1118,8 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
       memcpy(&p.u.prefix, (pnt + labels_size + 8 /* RD */), (psize - (labels_size + 8 /* RD */)));
       p.prefixlen -= (8 * (labels_size + 8 /* RD */));
     }
+
+    // XXX: check prefix correctnesss now that we have it?
 
     /* Let's do our job now! */
     if (attr)
