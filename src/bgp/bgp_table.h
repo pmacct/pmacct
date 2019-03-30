@@ -86,6 +86,9 @@ struct node_match_cmp_term2 {
   safi_t safi;
   rd_t *rd;
   struct host_addr *peer_dst_ip;
+
+  /* mainly used for RPKI purposes */
+  struct prefix *p;
   struct aspath *aspath;
   int ret_code;
 };

@@ -49,41 +49,28 @@ u_int8_t rpki_prefix_lookup(struct prefix *p, struct aspath *aspath)
 
   memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
   nmct2.safi = safi;
+  nmct2.p = p;
   nmct2.aspath = aspath;
 
   bgp_node_match(rpki_routing_db->rib[afi][safi], p, &peer, r_data->route_info_modulo,
 	  	 r_data->bgp_lookup_node_match_cmp, &nmct2, &result, &info);
 
-  if (result) {
-    if (nmct2.ret_code == RPKI_LOOKUP_RETCODE_AS_MISMATCH) {
-      return ROA_STATUS_INVALID_OVERLAP;
-    }
-    else {
-      return ROA_STATUS_VALID;
-    }
-  }
-  else {
-    if (nmct2.ret_code == RPKI_LOOKUP_RETCODE_AS_MISMATCH) {
-      return ROA_STATUS_INVALID; 
-    }
-    else {
-      return ROA_STATUS_UNKNOWN;
-    }
-  }
+  /* XXX: evaluate overlaps */
+
+  return nmct2.ret_code;
 }
 
 int rpki_prefix_lookup_node_match_cmp(struct bgp_info *info, struct node_match_cmp_term2 *nmct2)
 {
-  nmct2->ret_code = RPKI_LOOKUP_RETCODE_UNKNOWN;
-
   if (!info || !info->attr || !info->attr->aspath || !nmct2 || !nmct2->aspath) return TRUE;
 
-  if (evaluate_last_asn(info->attr->aspath) == evaluate_last_asn(nmct2->aspath)) {
-    nmct2->ret_code = RPKI_LOOKUP_RETCODE_OK;
-    return FALSE;
+  if (info->attr->flag >= nmct2->p->prefixlen) {
+    if (evaluate_last_asn(info->attr->aspath) == evaluate_last_asn(nmct2->aspath)) {
+      nmct2->ret_code = ROA_STATUS_VALID;
+      return FALSE;
+    }
   }
-  else {
-    nmct2->ret_code = RPKI_LOOKUP_RETCODE_AS_MISMATCH; 
-    return TRUE;
-  }
+
+  nmct2->ret_code = ROA_STATUS_INVALID;
+  return TRUE;
 }

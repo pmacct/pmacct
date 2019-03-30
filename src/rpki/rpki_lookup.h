@@ -19,11 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* defines */
-#define RPKI_LOOKUP_RETCODE_UNKNOWN	0
-#define RPKI_LOOKUP_RETCODE_OK		1
-#define RPKI_LOOKUP_RETCODE_AS_MISMATCH	2
-
 /* prototypes */
 #if !defined(__RPKI_LOOKUP_C)
 #define EXT extern

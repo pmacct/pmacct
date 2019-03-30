@@ -139,7 +139,6 @@ int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t ma
   struct bgp_table *rib = NULL;
   afi_t afi;
   u_int32_t modulo;
-  u_int8_t end;
 
   if (!r_data || !peer || !p || !rib_v4 || !rib_v6) return ERR;
 
@@ -150,31 +149,27 @@ int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t ma
   else if (afi == AFI_IP6) rib = rib_v6; 
   else return ERR;
 
-  for (end = MAX(p->prefixlen, maxlen); p->prefixlen <= end; p->prefixlen++) {
-    route = bgp_node_get(peer, rib, p);
+  route = bgp_node_get(peer, rib, p);
 
-    memset(&attr, 0, sizeof(attr));
-    attr.aspath = aspath_parse_ast(peer, asn);
-    attr_new = bgp_attr_intern(peer, &attr);
-    if (attr.aspath) aspath_unintern(peer, attr.aspath);
+  memset(&attr, 0, sizeof(attr));
+  attr.flag = maxlen; /* abusing flag for maxlen */
+  attr.aspath = aspath_parse_ast(peer, asn);
+  attr_new = bgp_attr_intern(peer, &attr);
+  if (attr.aspath) aspath_unintern(peer, attr.aspath);
 
-    /* Make new BGP info. */
-    new = bgp_info_new(peer);
-    if (new) {
-      new->peer = peer;
-      new->attr = attr_new;
-    }
-    else return ERR;
-
-    /* Register new BGP information. */
-    bgp_info_add(peer, route, new, modulo);
-
-    /* route_node_get lock */
-    bgp_unlock_node(peer, route);
-
-    exit_lane:  
-    continue;
+  /* Make new BGP info. */
+  new = bgp_info_new(peer);
+  if (new) {
+    new->peer = peer;
+    new->attr = attr_new;
   }
+  else return ERR;
+
+  /* Register new BGP information. */
+  bgp_info_add(peer, route, new, modulo);
+
+  /* route_node_get lock */
+  bgp_unlock_node(peer, route);
 
   return SUCCESS;
 }
