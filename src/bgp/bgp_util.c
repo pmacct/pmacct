@@ -52,7 +52,7 @@ int bgp_rd2str(char *str, rd_t *rd)
   struct rd_as  *rda;
   struct rd_as4 *rda4;
   struct host_addr a;
-  u_char ip_address[INET6_ADDRSTRLEN];
+  char ip_address[INET6_ADDRSTRLEN];
 
   switch (rd->type) {
   case RD_TYPE_AS:
@@ -223,7 +223,7 @@ struct bgp_info_extra *bgp_info_extra_get(struct bgp_info *ri)
 }
 
 struct bgp_info_extra *bgp_info_extra_process(struct bgp_peer *peer, struct bgp_info *ri, safi_t safi,
-		  			      path_id_t *path_id, rd_t *rd, char *label)
+		  			      path_id_t *path_id, rd_t *rd, u_char *label)
 {
   struct bgp_info_extra *rie = NULL;
 

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /* 
@@ -126,7 +126,7 @@ struct bgp_notification {
 
 struct bgp_notification_shutdown_msg {
     u_int8_t bgpnsm_len;
-    u_int8_t bgpnsm_data[BGP_NOTIFY_CEASE_SM_LEN];
+    char bgpnsm_data[BGP_NOTIFY_CEASE_SM_LEN];
 };
 
 /* BGP ROUTE-REFRESH message */

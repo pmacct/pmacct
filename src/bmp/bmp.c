@@ -57,12 +57,13 @@ void nfacctd_bmp_wrapper()
 
 void skinny_bmp_daemon()
 {
-  int slen, clen, ret, rc, peers_idx, allowed, yes=1, no=0;
+  int ret, rc, peers_idx, allowed, yes=1, no=0;
   int peers_idx_rr = 0, max_peers_idx = 0;
   u_int32_t pkt_remaining_len=0;
   time_t now;
   afi_t afi;
   safi_t safi;
+  socklen_t slen, clen;
 
   struct bmp_peer *bmpp = NULL;
   struct bgp_peer *peer = NULL;

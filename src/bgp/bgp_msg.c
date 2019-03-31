@@ -309,7 +309,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 			/* we need to send BGP_CAPABILITY_ADD_PATHS first */
 			cap_set = TRUE;
 			memcpy(bgp_open_cap_reply_ptr, optcap_ptr, 2);
-			cap_newlen_ptr = (bgp_open_cap_reply_ptr + 1);
+			cap_newlen_ptr = (u_char *)(bgp_open_cap_reply_ptr + 1);
 			(*cap_newlen_ptr) = 0;
 			bgp_open_cap_reply_ptr += 2;
 		      }
@@ -631,7 +631,7 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   if (withdraw_len > 0) {
     withdraw.afi = AFI_IP;
     withdraw.safi = SAFI_UNICAST;
-    withdraw.nlri = pkt;
+    withdraw.nlri = (u_char *) pkt;
     withdraw.length = withdraw_len;
     pkt += withdraw_len;
   }
@@ -656,7 +656,7 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   if (update_len > 0) {
     update.afi = AFI_IP;
     update.safi = SAFI_UNICAST;
-    update.nlri = pkt;
+    update.nlri = (u_char *) pkt;
     update.length = update_len;
   }
 
@@ -834,7 +834,7 @@ int bgp_attr_parse_community(struct bgp_peer *peer, u_int16_t len, struct bgp_at
 int bgp_attr_parse_ecommunity(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag)
 {
   if (len == 0) attr->ecommunity = NULL;
-  else attr->ecommunity = (struct ecommunity *) ecommunity_parse(peer, ptr, len);
+  else attr->ecommunity = (struct ecommunity *) ecommunity_parse(peer, (u_char *) ptr, len);
 
   return SUCCESS;
 }
@@ -842,7 +842,7 @@ int bgp_attr_parse_ecommunity(struct bgp_peer *peer, u_int16_t len, struct bgp_a
 int bgp_attr_parse_lcommunity(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag)
 {
   if (len == 0) attr->lcommunity = NULL;
-  else attr->lcommunity = (struct lcommunity *) lcommunity_parse(peer, ptr, len);
+  else attr->lcommunity = (struct lcommunity *) lcommunity_parse(peer, (u_char *) ptr, len);
 
   return SUCCESS;
 }
@@ -952,7 +952,7 @@ int bgp_attr_parse_mp_reach(struct bgp_peer *peer, u_int16_t len, struct bgp_att
 
   mp_update->afi = afi;
   mp_update->safi = safi;
-  mp_update->nlri = ptr;
+  mp_update->nlri = (u_char *) ptr;
   mp_update->length = nlri_len;
 
   return SUCCESS;
@@ -977,7 +977,7 @@ int bgp_attr_parse_mp_unreach(struct bgp_peer *peer, u_int16_t len, struct bgp_a
 
   mp_withdraw->afi = afi;
   mp_withdraw->safi = safi;
-  mp_withdraw->nlri = ptr;
+  mp_withdraw->nlri = (u_char *) ptr;
   mp_withdraw->length = withdraw_len;
 
   return SUCCESS;
@@ -1036,7 +1036,7 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
     }
     else if (info->safi == SAFI_MPLS_LABEL) { /* rfc3107 labeled unicast */
       int labels_size = 0;
-      char *label_ptr = NULL;
+      u_char *label_ptr = NULL;
 
       if ((info->afi == AFI_IP && p.prefixlen > 56) || (info->afi == AFI_IP6 && p.prefixlen > 152)) return ERR;
 
@@ -1063,7 +1063,7 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
     }
     else if (info->safi == SAFI_MPLS_VPN) { /* rfc4364 BGP/MPLS IP Virtual Private Networks */
       int labels_size = 0;
-      char *label_ptr = NULL;
+      u_char *label_ptr = NULL;
 
       if ((info->afi == AFI_IP && p.prefixlen > 120) || (info->afi == AFI_IP6 && p.prefixlen > 216)) return ERR;
 
@@ -1132,7 +1132,7 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
 }
 
 int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, afi_t afi, safi_t safi,
-		       rd_t *rd, path_id_t *path_id, char *label)
+		       rd_t *rd, path_id_t *path_id, u_char *label)
 {
   struct bgp_peer *peer = bmd->peer;
   struct bgp_rt_structs *inter_domain_routing_db;
@@ -1267,7 +1267,7 @@ log_update:
 }
 
 int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr, afi_t afi, safi_t safi,
-			 rd_t *rd, path_id_t *path_id, char *label)
+			 rd_t *rd, path_id_t *path_id, u_char *label)
 {
   struct bgp_peer *peer = bmd->peer;
   struct bgp_rt_structs *inter_domain_routing_db;

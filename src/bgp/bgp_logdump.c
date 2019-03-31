@@ -163,10 +163,10 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     }
 
     if (safi == SAFI_MPLS_LABEL || safi == SAFI_MPLS_VPN) {
-      u_char label_str[SHORTSHORTBUFLEN];
+      char label_str[SHORTSHORTBUFLEN];
 
       if (safi == SAFI_MPLS_VPN) {
-        u_char rd_str[SHORTSHORTBUFLEN];
+        char rd_str[SHORTSHORTBUFLEN];
 
         bgp_rd2str(rd_str, &ri->extra->rd);
 	json_object_set_new_nocheck(obj, "rd", json_string(rd_str));

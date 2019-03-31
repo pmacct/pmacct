@@ -62,7 +62,7 @@ void skinny_bgp_daemon()
 
 void skinny_bgp_daemon_online()
 {
-  int slen, ret, rc, peers_idx, allowed;
+  int ret, rc, peers_idx, allowed, yes=1, no=0;
   int peers_idx_rr = 0, peers_xconnect_idx_rr = 0, max_peers_idx = 0;
   struct plugin_requests req;
   struct host_addr addr;
@@ -72,12 +72,12 @@ void skinny_bgp_daemon_online()
   struct sockaddr_storage server, client;
   afi_t afi;
   safi_t safi;
-  int clen = sizeof(client), yes=1, no=0;
   time_t now, dump_refresh_deadline;
   struct hosts_table allow;
   struct bgp_md5_table bgp_md5;
   struct timeval dump_refresh_timeout, *drt_ptr;
   struct bgp_peer_batch bp_batch;
+  socklen_t slen, clen = sizeof(client);
 
   /* select() stuff */
   fd_set read_descs, bkp_read_descs; 
