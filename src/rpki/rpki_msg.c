@@ -100,9 +100,9 @@ int rpki_roas_file_load(char *file, struct bgp_table *rib_v4, struct bgp_table *
 	  else maxlen = json_integer_value(maxlen_json);
 
 	  if (maxlen < p.prefixlen) {
-	    char prefix_str[INET6_ADDRSTRLEN];
+	    char prefix_str[PREFIX_STRLEN];
 
-	    prefix2str(&p, prefix_str, INET6_ADDRSTRLEN);
+	    prefix2str(&p, prefix_str, PREFIX_STRLEN);
 	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'maxLength' < prefixLength: prefix=%s maxLength=%u asn=%u\n",
 		config.name, r_data->log_str, file, prefix_str, maxlen, asn);
 	  }
@@ -290,9 +290,9 @@ void rpki_rtr_parse_ipv4_prefix(struct rpki_rtr_handle *cache, struct rpki_rtr_i
   asn = ntohl(p4m->asn);
 
   if (p4m->max_len < p.prefixlen) {
-    char prefix_str[INET6_ADDRSTRLEN];
+    char prefix_str[PREFIX_STRLEN];
 
-    prefix2str((struct prefix *) &p, prefix_str, INET6_ADDRSTRLEN);
+    prefix2str((struct prefix *) &p, prefix_str, PREFIX_STRLEN);
     Log(LOG_WARNING, "WARN ( %s/%s ): 'maxLength' < prefixLength: prefix=%s maxLength=%u asn=%u\n",
 	config.name, r_data->log_str, prefix_str, p4m->max_len, asn);
   }
@@ -329,9 +329,9 @@ void rpki_rtr_parse_ipv6_prefix(struct rpki_rtr_handle *cache, struct rpki_rtr_i
   asn = ntohl(p6m->asn);
 
   if (p6m->max_len < p.prefixlen) {
-    char prefix_str[INET6_ADDRSTRLEN];
+    char prefix_str[PREFIX_STRLEN];
 
-    prefix2str((struct prefix *) &p, prefix_str, INET6_ADDRSTRLEN);
+    prefix2str((struct prefix *) &p, prefix_str, PREFIX_STRLEN);
     Log(LOG_WARNING, "WARN ( %s/%s ): 'maxLength' < prefixLength: prefix=%s maxLength=%u asn=%u\n",
 	config.name, r_data->log_str, prefix_str, p6m->max_len, asn);
   }

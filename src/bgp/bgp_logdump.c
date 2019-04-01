@@ -75,7 +75,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     json_t *obj = json_object();
 
     char empty[] = "";
-    char prefix_str[INET6_ADDRSTRLEN], nexthop_str[INET6_ADDRSTRLEN];
+    char prefix_str[PREFIX_STRLEN], nexthop_str[INET6_ADDRSTRLEN];
     char *aspath;
 
     if (etype == BGP_LOGDUMP_ET_LOG) {
@@ -121,8 +121,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     json_object_set_new_nocheck(obj, "safi", json_integer((json_int_t)safi));
 
     if (route) {
-      memset(prefix_str, 0, INET6_ADDRSTRLEN);
-      prefix2str(&route->p, prefix_str, INET6_ADDRSTRLEN);
+      memset(prefix_str, 0, PREFIX_STRLEN);
+      prefix2str(&route->p, prefix_str, PREFIX_STRLEN);
       json_object_set_new_nocheck(obj, "ip_prefix", json_string(prefix_str));
     }
 

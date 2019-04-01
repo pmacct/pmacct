@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -26,6 +26,9 @@
 
 #ifndef _BGP_PREFIX_H_
 #define _BGP_PREFIX_H_
+
+#define PREFIX_MASKSTRLEN	4
+#define PREFIX_STRLEN		(INET6_ADDRSTRLEN + PREFIX_MASKSTRLEN)
 
 /*
  * A struct prefix contains an address family, a prefix length, and an
