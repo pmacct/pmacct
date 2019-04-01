@@ -28,6 +28,7 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 
 #define DEFAULT_BGP_INFO_HASH 13
 #define DEFAULT_BGP_INFO_PER_PEER_HASH 1
+#define BGP_NODE_VECTOR_MAX_DEPTH 128
 
 struct bgp_table
 {
@@ -93,6 +94,15 @@ struct node_match_cmp_term2 {
   int ret_code;
 };
 
+struct bgp_node_vector_entry {
+  struct bgp_node *node;
+};
+
+struct bgp_node_vector {
+  u_int8_t entries;
+  struct bgp_node_vector_entry v[BGP_NODE_VECTOR_MAX_DEPTH];
+}; 
+
 /* Prototypes */
 #if (!defined __BGP_TABLE_C)
 #define EXT extern
@@ -105,20 +115,21 @@ EXT struct bgp_node *bgp_table_top (struct bgp_peer *, const struct bgp_table *c
 EXT struct bgp_node *bgp_route_next (struct bgp_peer *, struct bgp_node *);
 EXT struct bgp_node *bgp_node_get (struct bgp_peer *, struct bgp_table *const, struct prefix *);
 EXT struct bgp_node *bgp_lock_node (struct bgp_peer *, struct bgp_node *node);
+EXT void bgp_node_vector_debug(struct bgp_node_vector *, struct prefix *);
 EXT void bgp_node_match (const struct bgp_table *, struct prefix *, struct bgp_peer *,
 			 u_int32_t (*modulo_func)(struct bgp_peer *, path_id_t *, int),
 			 int (*cmp_func)(struct bgp_info *, struct node_match_cmp_term2 *),
-			 struct node_match_cmp_term2 *,
+			 struct node_match_cmp_term2 *, struct bgp_node_vector *,
 			 struct bgp_node **result_node, struct bgp_info **result_info);
 EXT void bgp_node_match_ipv4 (const struct bgp_table *, struct in_addr *, struct bgp_peer *,
 			      u_int32_t (*modulo_func)(struct bgp_peer *, path_id_t *, int),
 			      int (*cmp_func)(struct bgp_info *, struct node_match_cmp_term2 *),
-			      struct node_match_cmp_term2 *,
+			      struct node_match_cmp_term2 *, struct bgp_node_vector *,
 			      struct bgp_node **result_node, struct bgp_info **result_info);
 EXT void bgp_node_match_ipv6 (const struct bgp_table *, struct in6_addr *, struct bgp_peer *,
 			      u_int32_t (*modulo_func)(struct bgp_peer *, path_id_t *, int),
 			      int (*cmp_func)(struct bgp_info *, struct node_match_cmp_term2 *),
-			      struct node_match_cmp_term2 *,
+			      struct node_match_cmp_term2 *, struct bgp_node_vector *,
 			      struct bgp_node **result_node, struct bgp_info **result_info);
 EXT void bgp_table_free (struct bgp_table *);
 #undef EXT

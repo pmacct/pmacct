@@ -157,7 +157,13 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       if (config.rpki_roas_file || config.rpki_rtr_cache) {
 	u_int8_t roa;
 
-	roa = rpki_prefix_lookup(&route->p, attr->aspath);
+	if (etype == BGP_LOGDUMP_ET_LOG) {
+	  roa = rpki_prefix_lookup(&route->p, attr->aspath);
+	}
+	else if (etype == BGP_LOGDUMP_ET_DUMP) {
+	   // XXX
+	}
+
 	json_object_set_new_nocheck(obj, "roa", json_string(rpki_roa_print(roa)));
       }
     }

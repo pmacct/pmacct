@@ -48,14 +48,13 @@ u_int8_t rpki_prefix_lookup(struct prefix *p, struct aspath *aspath)
   safi = SAFI_UNICAST;
 
   memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
+  nmct2.ret_code = ROA_STATUS_UNKNOWN; 
   nmct2.safi = safi;
   nmct2.p = p;
   nmct2.aspath = aspath;
 
   bgp_node_match(rpki_routing_db->rib[afi][safi], p, &peer, r_data->route_info_modulo,
-	  	 r_data->bgp_lookup_node_match_cmp, &nmct2, &result, &info);
-
-  /* XXX: evaluate overlaps */
+	  	 r_data->bgp_lookup_node_match_cmp, &nmct2, NULL, &result, &info);
 
   return nmct2.ret_code;
 }
