@@ -499,6 +499,7 @@ void Tee_zmq_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
   struct sockaddr target;
   time_t last_fail, now;
   size_t msglen = 0;
+  int ret;
 
   memset(&target, 0, sizeof(target));
   target.sa_family = msg->agent.sa_family;
@@ -525,7 +526,15 @@ void Tee_zmq_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
   if (config.tee_transparent) {
     msglen = Tee_craft_transparent_msg(msg, &target);
 
-    if (msglen) p_zmq_send_bin(&zmq_host->sock, tee_send_buf, msglen, TRUE);
+    if (msglen) {
+      ret = p_zmq_send_bin(&zmq_host->sock, tee_send_buf, msglen, TRUE);
+      if (ret == ERR && errno == EAGAIN) {
+	char *address;
+
+	address = p_zmq_get_address(zmq_host);
+	Log(LOG_WARNING, "WARN ( %s/%s ): Queue full: ZeroMQ [%s]\n", config.name, config.type, address);
+      }
+    }
   }
 }
 #endif
