@@ -199,6 +199,7 @@ struct bgp_misc_structs {
   u_int64_t log_seq;
   struct timeval log_tstamp;
   char log_tstamp_str[SRVBUFLEN];
+  struct bgp_node_vector *bnv;
   struct bgp_dump_event dump;
   char *peer_str; /* "bmp_router", "peer_src_ip", "peer_ip", etc. */
   char *peer_port_str; /* "bmp_router_port", "peer_src_ip_port", etc. */

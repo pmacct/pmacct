@@ -256,19 +256,21 @@ bgp_node_match (const struct bgp_table *table, struct prefix *p, struct bgp_peer
   matched_node = NULL;
   matched_info = NULL;
   node = table->top;
+  if (bnv) bnv->entries = 0;
 
   /* Walk down tree.  If there is matched route then store it to matched. */
   while (node && node->p.prefixlen <= p->prefixlen && prefix_match(&node->p, p)) {
-    if (bnv) {
-      bnv->v[bnv->entries].node = node;
-      bnv->entries++;
-    }
-    
     for (local_modulo = modulo, modulo_idx = 0; modulo_idx < modulo_max; local_modulo++, modulo_idx++) {
       for (info = node->info[local_modulo]; info; info = info->next) {
 	if (!cmp_func(info, nmct2)) {
 	  matched_node = node;
 	  matched_info = info;
+
+	  if (bnv) {
+	    bnv->v[bnv->entries].node = node;
+	    bnv->v[bnv->entries].info = info;
+	    bnv->entries++;
+	  }
 
 	  if (node->p.prefixlen == p->prefixlen) break;
 	}

@@ -59,6 +59,29 @@ u_int8_t rpki_prefix_lookup(struct prefix *p, struct aspath *aspath)
   return nmct2.ret_code;
 }
 
+u_int8_t rpki_vector_prefix_lookup(struct bgp_node_vector *bnv)
+{
+  int idx, level;
+  u_int8_t roa = ROA_STATUS_UNKNOWN;
+
+  if (!bnv || !bnv->entries) return roa;
+
+  for (level = 0, idx = bnv->entries; idx; idx--) {
+    level++;
+    roa = rpki_prefix_lookup(&bnv->v[(idx - 1)].node->p, bnv->v[(idx - 1)].info->attr->aspath);
+    if (roa == ROA_STATUS_UNKNOWN || roa == ROA_STATUS_VALID) break;
+  }
+
+  /* XXX: improve */
+  if (level > 1) {
+    if (roa == ROA_STATUS_UNKNOWN || roa == ROA_STATUS_VALID) {
+      roa = ROA_STATUS_INVALID_OVERLAP;
+    }
+  }
+
+  return roa;
+}
+
 int rpki_prefix_lookup_node_match_cmp(struct bgp_info *info, struct node_match_cmp_term2 *nmct2)
 {
   if (!info || !info->attr || !info->attr->aspath || !nmct2 || !nmct2->aspath) return TRUE;

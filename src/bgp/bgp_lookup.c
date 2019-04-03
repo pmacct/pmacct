@@ -128,7 +128,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 			    &pref4, (struct bgp_peer *) pptrs->bgp_peer,
 		     	    bms->route_info_modulo,
 			    bms->bgp_lookup_node_match_cmp, &nmct2,
-			    NULL, &result, &info);
+			    bms->bnv, &result, &info);
       }
 
       if (!pptrs->bgp_src_info && result) {
@@ -139,7 +139,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
           pptrs->lm_method_src = NF_NET_BGP;
 
 	  if (config.rpki_roas_file || config.rpki_rtr_cache) {
-	    pptrs->src_roa = rpki_prefix_lookup(&result->p, info->attr->aspath);
+	    pptrs->src_roa = rpki_vector_prefix_lookup(bms->bnv);
 	  }
         }
       }
@@ -156,7 +156,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 			    &pref4, (struct bgp_peer *) pptrs->bgp_peer,
 			    bms->route_info_modulo,
 			    bms->bgp_lookup_node_match_cmp, &nmct2,
-			    NULL, &result, &info);
+			    bms->bnv, &result, &info);
       }
 
       if (!pptrs->bgp_dst_info && result) {
@@ -167,7 +167,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
           pptrs->lm_method_dst = NF_NET_BGP;
 
 	  if (config.rpki_roas_file || config.rpki_rtr_cache) {
-	    pptrs->dst_roa = rpki_prefix_lookup(&result->p, info->attr->aspath);
+	    pptrs->dst_roa = rpki_vector_prefix_lookup(bms->bnv);
 	  }
         }
       }
@@ -185,7 +185,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 		            &pref6, (struct bgp_peer *) pptrs->bgp_peer,
 		            bms->route_info_modulo,
 		            bms->bgp_lookup_node_match_cmp, &nmct2,
-		            NULL, &result, &info);
+		            bms->bnv, &result, &info);
       }
 
       if (!pptrs->bgp_src_info && result) {
@@ -196,7 +196,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
           pptrs->lm_method_src = NF_NET_BGP;
 
 	  if (config.rpki_roas_file || config.rpki_rtr_cache) {
-	    pptrs->src_roa = rpki_prefix_lookup(&result->p, info->attr->aspath);
+	    pptrs->src_roa = rpki_vector_prefix_lookup(bms->bnv); 
 	  }
         }
       }
@@ -212,7 +212,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 	     		    &pref6, (struct bgp_peer *) pptrs->bgp_peer,
 			    bms->route_info_modulo,
 			    bms->bgp_lookup_node_match_cmp, &nmct2,
-			    NULL, &result, &info);
+			    bms->bnv, &result, &info);
       }
 
       if (!pptrs->bgp_dst_info && result) {
@@ -223,7 +223,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
           pptrs->lm_method_dst = NF_NET_BGP;
 
 	  if (config.rpki_roas_file || config.rpki_rtr_cache) {
-	    pptrs->dst_roa = rpki_prefix_lookup(&result->p, info->attr->aspath);
+	    pptrs->dst_roa = rpki_vector_prefix_lookup(bms->bnv);
 	  }
         }
       }
@@ -578,6 +578,37 @@ int bgp_lookup_node_match_cmp_bgp(struct bgp_info *info, struct node_match_cmp_t
   }
 
   return TRUE;
+}
+
+int bgp_lookup_node_vector_unicast(struct prefix *p, struct bgp_peer *peer, struct bgp_node_vector *bnv)
+{
+  struct bgp_rt_structs *inter_domain_routing_db;
+  struct bgp_misc_structs *bms;
+  struct node_match_cmp_term2 nmct2;
+  struct bgp_node *result = NULL;
+  struct bgp_info *info = NULL;
+  afi_t afi;
+  safi_t safi;
+
+  if (!p || !peer || !bnv) return ERR;
+
+  bms = bgp_select_misc_db(peer->type);
+  inter_domain_routing_db = bgp_select_routing_db(peer->type);
+
+  if (!bms || !inter_domain_routing_db) return ERR;
+
+  afi = family2afi(p->family);
+  safi = SAFI_UNICAST;
+
+  memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
+  nmct2.peer = peer;
+  nmct2.safi = safi;
+  nmct2.p = p;
+
+  bgp_node_match(inter_domain_routing_db->rib[afi][safi], p, peer, bms->route_info_modulo,
+                 bms->bgp_lookup_node_match_cmp, &nmct2, bnv, &result, &info);
+
+  return SUCCESS;
 }
 
 void pkt_to_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives *c, struct pkt_legacy_bgp_primitives *p,

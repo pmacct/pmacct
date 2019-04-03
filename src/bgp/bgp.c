@@ -822,6 +822,11 @@ void bgp_prepare_thread()
   bgp_misc_db->is_thread = TRUE;
   bgp_misc_db->has_lglass = FALSE;
 
+  if (config.rpki_roas_file || config.rpki_rtr_cache) {
+    bgp_misc_db->bnv = malloc(sizeof(struct bgp_node_vector));
+    memset(bgp_misc_db->bnv, 0, sizeof(struct bgp_node_vector)); 
+  }
+
   bgp_misc_db->log_str = malloc(strlen("core/BGP") + 1);
   strcpy(bgp_misc_db->log_str, "core/BGP");
 }
@@ -833,6 +838,11 @@ void bgp_prepare_daemon()
 
   bgp_misc_db->is_thread = FALSE;
   if (config.bgp_lg) bgp_misc_db->has_lglass = TRUE;
+
+  if (config.rpki_roas_file || config.rpki_rtr_cache) {
+    bgp_misc_db->bnv = malloc(sizeof(struct bgp_node_vector));
+    memset(bgp_misc_db->bnv, 0, sizeof(struct bgp_node_vector));
+  }
 
   bgp_misc_db->log_str = malloc(strlen("core") + 1);
   strcpy(bgp_misc_db->log_str, "core");
