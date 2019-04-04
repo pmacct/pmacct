@@ -23,8 +23,9 @@
 #define ROA_STATUS_UNKNOWN		0	/* 'u' - Unknown */
 #define ROA_STATUS_INVALID		1	/* 'i' - Invalid with no covering prefix */
 #define ROA_STATUS_VALID		2	/* 'v' - Valid */
-#define ROA_STATUS_INVALID_OVERLAP	3	/* 'o' - Invalid with covering prefix */ 
-#define ROA_STATUS_MAX			3
+#define ROA_STATUS_OVERLAP_VALID	3	/* 'o' - Invalid with covering valid prefix */ 
+#define ROA_STATUS_OVERLAP_UNKNOWN	4	/* 'O' - Invalid with covering unknown prefix */ 
+#define ROA_STATUS_MAX			4
 
 #define RPKI_RTR_V0			0	/* rfc6810 */
 #define RPKI_RTR_V1			1	/* rfc8210 */

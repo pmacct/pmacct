@@ -72,10 +72,12 @@ u_int8_t rpki_vector_prefix_lookup(struct bgp_node_vector *bnv)
     if (roa == ROA_STATUS_UNKNOWN || roa == ROA_STATUS_VALID) break;
   }
 
-  /* XXX: improve */
   if (level > 1) {
-    if (roa == ROA_STATUS_UNKNOWN || roa == ROA_STATUS_VALID) {
-      roa = ROA_STATUS_INVALID_OVERLAP;
+    if (roa == ROA_STATUS_UNKNOWN) {
+      roa = ROA_STATUS_OVERLAP_UNKNOWN;
+    }
+    else if (roa == ROA_STATUS_VALID) {
+      roa = ROA_STATUS_OVERLAP_VALID;
     }
   }
 

@@ -300,7 +300,8 @@ static const char *rpki_roa[] = {
   "u",
   "i",
   "v",
-  "o"
+  "V",
+  "U"
 };
 
 #if defined __PMACCTD_C || defined __UACCTD_C || defined __UTIL_C
