@@ -90,7 +90,7 @@ struct node_match_cmp_term2 {
 
   /* mainly used for RPKI purposes */
   struct prefix *p;
-  struct aspath *aspath;
+  as_t last_as;
   int ret_code;
 };
 

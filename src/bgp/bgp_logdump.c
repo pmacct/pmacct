@@ -158,13 +158,15 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 	u_int8_t roa;
 
 	if (etype == BGP_LOGDUMP_ET_LOG) {
-	  roa = rpki_prefix_lookup(&route->p, attr->aspath);
+	  bms->bnv->entries = 1;
+	  bms->bnv->v[0].node = route; 
+	  bms->bnv->v[0].info = ri; 
 	}
 	else if (etype == BGP_LOGDUMP_ET_DUMP) {
 	  bgp_lookup_node_vector_unicast(&route->p, peer, bms->bnv);
-	  roa = rpki_vector_prefix_lookup(bms->bnv);
 	}
 
+	roa = rpki_vector_prefix_lookup(bms->bnv);
 	json_object_set_new_nocheck(obj, "roa", json_string(rpki_roa_print(roa)));
       }
     }

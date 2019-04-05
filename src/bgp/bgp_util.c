@@ -927,7 +927,7 @@ void evaluate_comm_patterns(char *dst, char *src, char **patterns, int dstlen)
 
 as_t evaluate_last_asn(struct aspath *as)
 {
-  if (!as) return SUCCESS;
+  if (!as) return 0;
 
   return as->last_as;
 }

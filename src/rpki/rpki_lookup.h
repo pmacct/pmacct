@@ -25,7 +25,7 @@
 #else
 #define EXT
 #endif
-EXT u_int8_t rpki_prefix_lookup(struct prefix *, struct aspath *);
+EXT u_int8_t rpki_prefix_lookup(struct prefix *, as_t);
 EXT u_int8_t rpki_vector_prefix_lookup(struct bgp_node_vector *);
 EXT int rpki_prefix_lookup_node_match_cmp(struct bgp_info *, struct node_match_cmp_term2 *);
 #undef EXT
