@@ -73,7 +73,7 @@ u_int8_t rpki_vector_prefix_lookup(struct bgp_node_vector *bnv)
     last_as = evaluate_last_asn(bnv->v[(idx - 1)].info->attr->aspath);
     if (!last_as) last_as = bnv->v[(idx - 1)].info->peer->myas;
 
-    roa = rpki_prefix_lookup(&bnv->v[(idx - 1)].node->p, last_as);
+    roa = rpki_prefix_lookup(bnv->v[(idx - 1)].p, last_as);
     if (roa == ROA_STATUS_UNKNOWN || roa == ROA_STATUS_VALID) break;
   }
 

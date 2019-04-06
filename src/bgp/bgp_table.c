@@ -222,7 +222,7 @@ void bgp_node_vector_debug(struct bgp_node_vector *bnv, struct prefix *p)
     
     for (idx = 0; idx < bnv->entries; idx++) {
       memset(prefix_str, 0, PREFIX_STRLEN);
-      prefix2str(&bnv->v[idx].node->p, prefix_str, PREFIX_STRLEN);
+      prefix2str(bnv->v[idx].p, prefix_str, PREFIX_STRLEN);
       Log(LOG_DEBUG, "DEBUG ( %s/core/BGP ): bgp_node_vector_debug(): level=%u prefix=%s\n", config.name, idx, prefix_str);
     }
   }
@@ -267,7 +267,7 @@ bgp_node_match (const struct bgp_table *table, struct prefix *p, struct bgp_peer
 	  matched_info = info;
 
 	  if (bnv) {
-	    bnv->v[bnv->entries].node = node;
+	    bnv->v[bnv->entries].p = &node->p;
 	    bnv->v[bnv->entries].info = info;
 	    bnv->entries++;
 	  }

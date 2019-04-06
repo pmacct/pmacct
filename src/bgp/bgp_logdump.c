@@ -159,7 +159,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
 	if (etype == BGP_LOGDUMP_ET_LOG) {
 	  bms->bnv->entries = 1;
-	  bms->bnv->v[0].node = route; 
+	  bms->bnv->v[0].p = &route->p; 
 	  bms->bnv->v[0].info = ri; 
 	}
 	else if (etype == BGP_LOGDUMP_ET_DUMP) {

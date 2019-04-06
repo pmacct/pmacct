@@ -95,7 +95,7 @@ struct node_match_cmp_term2 {
 };
 
 struct bgp_node_vector_entry {
-  struct bgp_node *node;
+  struct prefix *p;
   struct bgp_info *info;
 };
 
