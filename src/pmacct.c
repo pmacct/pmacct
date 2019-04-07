@@ -183,8 +183,8 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     printf("SRC_PREF ");
     printf("MED     ");
     printf("SRC_MED ");
-    printf("DST_ROA ");
     printf("SRC_ROA ");
+    printf("DST_ROA ");
     printf("PEER_SRC_AS ");
     printf("PEER_DST_AS ");
     printf("PEER_SRC_IP                                    ");
@@ -289,8 +289,8 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count & COUNT_SRC_LOCAL_PREF) printf("SRC_PREF ");
     if (what_to_count & COUNT_MED) printf("MED     ");
     if (what_to_count & COUNT_SRC_MED) printf("SRC_MED ");
-    if (what_to_count_2 & COUNT_DST_ROA) printf("DST_ROA ");
     if (what_to_count_2 & COUNT_SRC_ROA) printf("SRC_ROA ");
+    if (what_to_count_2 & COUNT_DST_ROA) printf("DST_ROA ");
     if (what_to_count & COUNT_PEER_SRC_AS) printf("PEER_SRC_AS ");
     if (what_to_count & COUNT_PEER_DST_AS) printf("PEER_DST_AS ");
     if (what_to_count & COUNT_PEER_SRC_IP) printf("PEER_SRC_IP                                    ");
@@ -415,8 +415,8 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     printf("%sSRC_PREF", write_sep(sep, &count));
     printf("%sMED", write_sep(sep, &count));
     printf("%sSRC_MED", write_sep(sep, &count));
-    printf("%sDST_ROA", write_sep(sep, &count));
     printf("%sSRC_ROA", write_sep(sep, &count));
+    printf("%sDST_ROA", write_sep(sep, &count));
     printf("%sPEER_SRC_AS", write_sep(sep, &count));
     printf("%sPEER_DST_AS", write_sep(sep, &count));
     printf("%sPEER_SRC_IP", write_sep(sep, &count));
@@ -516,8 +516,8 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     if (what_to_count & COUNT_SRC_LOCAL_PREF) printf("%sSRC_PREF", write_sep(sep, &count));
     if (what_to_count & COUNT_MED) printf("%sMED", write_sep(sep, &count));
     if (what_to_count & COUNT_SRC_MED) printf("%sSRC_MED", write_sep(sep, &count));
-    if (what_to_count_2 & COUNT_DST_ROA) printf("%sDST_ROA", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_SRC_ROA) printf("%sSRC_ROA", write_sep(sep, &count));
+    if (what_to_count_2 & COUNT_DST_ROA) printf("%sDST_ROA", write_sep(sep, &count));
     if (what_to_count & COUNT_PEER_SRC_AS) printf("%sPEER_SRC_AS", write_sep(sep, &count));
     if (what_to_count & COUNT_PEER_DST_AS) printf("%sPEER_DST_AS", write_sep(sep, &count));
     if (what_to_count & COUNT_PEER_SRC_IP) printf("%sPEER_SRC_IP", write_sep(sep, &count));
@@ -972,13 +972,13 @@ int main(int argc,char **argv)
           count_token_int[count_index] = COUNT_INT_SRC_MED;
           what_to_count |= COUNT_SRC_MED;
         }
-        else if (!strcmp(count_token[count_index], "dst_roa")) {
-          count_token_int[count_index] = COUNT_INT_DST_ROA;
-          what_to_count_2 |= COUNT_DST_ROA;
-        }
         else if (!strcmp(count_token[count_index], "src_roa")) {
           count_token_int[count_index] = COUNT_INT_SRC_ROA;
           what_to_count_2 |= COUNT_SRC_ROA;
+        }
+        else if (!strcmp(count_token[count_index], "dst_roa")) {
+          count_token_int[count_index] = COUNT_INT_DST_ROA;
+          what_to_count_2 |= COUNT_DST_ROA;
         }
         else if (!strcmp(count_token[count_index], "peer_src_as")) {
           count_token_int[count_index] = COUNT_INT_PEER_SRC_AS;
@@ -1830,12 +1830,12 @@ int main(int argc,char **argv)
 
           request.pbgp.src_med = strtoul(match_string_token, &endptr, 10);
         }
-        else if (!strcmp(count_token[match_string_index], "dst_roa")) {
-          request.pbgp.dst_roa = pmc_rpki_str2roa(match_string_token);
-	}
         else if (!strcmp(count_token[match_string_index], "src_roa")) {
           request.pbgp.src_roa = pmc_rpki_str2roa(match_string_token);
         }
+        else if (!strcmp(count_token[match_string_index], "dst_roa")) {
+          request.pbgp.dst_roa = pmc_rpki_str2roa(match_string_token);
+	}
         else if (!strcmp(count_token[match_string_index], "peer_src_as")) {
           char *endptr;
 
@@ -2382,14 +2382,14 @@ int main(int argc,char **argv)
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), pbgp->src_med);
         }
 
-        if (!have_wtc || (what_to_count_2 & COUNT_DST_ROA)) {
-          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-6s  ", pmc_rpki_roa_print(pbgp->dst_roa));
-          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), pmc_rpki_roa_print(pbgp->dst_roa));
-        }
-
         if (!have_wtc || (what_to_count_2 & COUNT_SRC_ROA)) {
           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-6s  ", pmc_rpki_roa_print(pbgp->src_roa));
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), pmc_rpki_roa_print(pbgp->src_roa));
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_DST_ROA)) {
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-6s  ", pmc_rpki_roa_print(pbgp->dst_roa));
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), pmc_rpki_roa_print(pbgp->dst_roa));
         }
 
         if (!have_wtc || (what_to_count & COUNT_PEER_SRC_AS)) {
