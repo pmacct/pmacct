@@ -5425,22 +5425,41 @@ int cfg_key_nfprobe_maxflows(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int parse_ip_list(char *val, char* (*cfg)[NFPROBE_RECEIVERS_MAX])
+{
+  char *next;
+  int i = 0;
+  trim_all_spaces(val);
+
+  while ((next = extract_token(&val, ','))) {
+    (*cfg)[i] = next;
+    if (i++ == NFPROBE_RECEIVERS_MAX) {
+      Log(LOG_ERR, "ERROR: nfprobe_receiver only allows %d ip addresses.\n", NFPROBE_RECEIVERS_MAX);
+      exit_gracefully(1);
+    }
+  }
+
+  return i;
+}
+
 int cfg_key_nfprobe_receiver(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  if (!name) for (; list; list = list->next, changes++) list->cfg.nfprobe_receiver = value_ptr;
-  else {
+  if (!name) {
+     for (; list; list = list->next, changes++) {
+       list->cfg.nfprobe_receivers_cnt = parse_ip_list(value_ptr, &list->cfg.nfprobe_receivers);
+     }
+  } else {
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
-        list->cfg.nfprobe_receiver = value_ptr;
+        list->cfg.nfprobe_receivers_cnt = parse_ip_list(value_ptr, &list->cfg.nfprobe_receivers);
         changes++;
         break;
       }
     }
   }
-
   return changes;
 }
 

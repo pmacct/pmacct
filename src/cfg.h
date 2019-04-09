@@ -520,7 +520,8 @@ struct configuration {
   int nfprobe_id;
   int nfprobe_hoplimit;
   int nfprobe_maxflows;
-  char *nfprobe_receiver;
+  char *nfprobe_receivers[50];
+  int nfprobe_receivers_cnt;
   int nfprobe_version;
   char *nfprobe_engine;
   int nfprobe_peer_as;

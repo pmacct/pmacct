@@ -100,7 +100,7 @@ static const struct NETFLOW_SENDER nf[] = {
 
 /* Describes a location where we send NetFlow packets to */
 struct NETFLOW_TARGET {
-	int fd;
+	int fds[NFPROBE_RECEIVERS_MAX];
 	const struct NETFLOW_SENDER *dialect;
 };
 
@@ -927,10 +927,10 @@ next_expire(struct FLOWTRACK *ft)
 #define CE_EXPIRE_ALL		-1 /* Expire all flows immediately */
 #define CE_EXPIRE_FORCED	1  /* Only expire force-expired flows */
 static int
-check_expired(struct FLOWTRACK *ft, struct NETFLOW_TARGET *target, int ex, u_int8_t engine_type, u_int32_t engine_id)
+check_expired(struct FLOWTRACK *ft, struct NETFLOW_TARGET *target, int ex, u_int8_t engine_type, u_int32_t engine_id, int conns)
 {
 	struct FLOW **expired_flows, **oldexp;
-	int num_expired, i, r;
+	int num_expired, i, r, fd;
 	struct timeval now;
 
 	struct EXPIRY *expiry, *nexpiry;
@@ -989,7 +989,20 @@ check_expired(struct FLOWTRACK *ft, struct NETFLOW_TARGET *target, int ex, u_int
 	/* Processing for expired flows */
 	if (num_expired > 0) {
 		if (target != NULL) {
-			if (target->fd == -1) {
+			// pseudo-randomly select a fd to ship the flows to
+			fd = ((int) now.tv_usec) % conns;
+
+			// if fd unavailable, try find a working fd
+			if (target->fds[fd] == -1) {
+				for (i=0; i<conns; i++) {
+					if (target->fds[i] != -1) {
+						fd = i;
+						break;
+					}
+				}
+			}
+
+			if (target->fds[fd] == -1) {
 			  Log(LOG_WARNING, "WARN ( %s/%s ): No connection to collector, discarding flows\n", config.name, config.type);
 			  for (i = 0; i < num_expired; i++) {
 				  free_flow_allocs(expired_flows[i]);
@@ -999,33 +1012,36 @@ check_expired(struct FLOWTRACK *ft, struct NETFLOW_TARGET *target, int ex, u_int
 			  return -1;
                         }
 			else {
-			  r = target->dialect->func(expired_flows, num_expired, 
-			    target->fd, &ft->flows_exported, // &ft->next_datagram_seq,
-			    &ft->system_boot_time, verbose_flag, engine_type, engine_id);
-			  if (verbose_flag)
-				Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sent %d netflow packets\n", config.name, config.type, r);
-			  if (r > 0) {
-				ft->packets_sent += r;
-				/* XXX what if r < num_expired * 2 ? */
-			  } else {
-				ft->flows_dropped += num_expired * 2;
-			  }
-			}
-		}
-		for (i = 0; i < num_expired; i++) {
-			if (verbose_flag) {
-				Log(LOG_DEBUG, "DEBUG ( %s/%s ): EXPIRED: %s (%p)\n", config.name, config.type, 
-				    format_flow(expired_flows[i]),
-				    expired_flows[i]);
-			}
-			update_statistics(ft, expired_flows[i]);
+    r = target->dialect->func(expired_flows, num_expired,
+      target->fds[fd], &ft->flows_exported, // &ft->next_datagram_seq,
+      &ft->system_boot_time, verbose_flag, engine_type, engine_id);
+    if (verbose_flag)
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sent %d netflow packets to fd %d\n", config.name, config.type, r, target->fds[fd]);
+    if (r > 0) {
+      ft->packets_sent += r;
+    /* XXX what if r < num_expired * 2 ? */
+    } else {
+      // reset fd
+      if (target->fds[i] != -1) close(target->fds[i]);
+      target->fds[i] = -1;
+      ft->flows_dropped += num_expired * 2;
+    }
+  }
+}
+  for (i = 0; i < num_expired; i++) {
+    if (verbose_flag) {
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): EXPIRED: %s (%p)\n", config.name, config.type,
+          format_flow(expired_flows[i]),
+          expired_flows[i]);
+    }
+    update_statistics(ft, expired_flows[i]);
 
-			free_flow_allocs(expired_flows[i]);
-			free(expired_flows[i]);
-		}
-	
+    free_flow_allocs(expired_flows[i]);
+    free(expired_flows[i]);
+  }
+
 		free(expired_flows);
-	}
+  }
 
 	return (r == -1 ? -1 : num_expired);
 }
@@ -1348,9 +1364,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   char *capfile = NULL, dest_addr[256], dest_serv[256];
   int linktype = 0, i, r, err, always_v6;
   int max_flows, stop_collection_flag, hoplimit;
-  struct sockaddr_storage dest;
   struct FLOWTRACK flowtrack;
-  socklen_t dest_len;
   struct NETFLOW_TARGET target;
   struct CB_CTXT cb_ctxt;
   u_int8_t engine_type;
@@ -1399,9 +1413,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   init_flowtrack(&flowtrack);
 
-  memset(&dest, '\0', sizeof(dest));
   memset(&target, '\0', sizeof(target));
-  target.fd = -1;
   target.dialect = &nf[0];
   always_v6 = 0;
   glob_flowtrack = &flowtrack;
@@ -1419,10 +1431,10 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (config.debug) verbose_flag = TRUE;
   if (config.pcap_savefile) capfile = config.pcap_savefile;
 
-  dest_len = sizeof(dest);
-  if (!config.nfprobe_receiver) config.nfprobe_receiver = default_receiver;
-  parse_hostport(config.nfprobe_receiver, (struct sockaddr *)&dest, &dest_len);
-
+  if (!config.nfprobe_receivers_cnt) {
+    config.nfprobe_receivers_cnt++;
+    config.nfprobe_receivers[0] = default_receiver;
+  }
 sort_version:
   for (i = 0, r = config.nfprobe_version; nf[i].version != -1; i++) {
     if (nf[i].version == r) break;
@@ -1443,18 +1455,25 @@ sort_version:
   parse_engine(config.nfprobe_engine, &engine_type, &engine_id);
 
   /* Netflow send socket */
-  if (dest.ss_family != 0) {
+  struct sockaddr_storage dest;
+  socklen_t dest_len;
+  memset(&dest, '\0', sizeof(dest));
+  dest_len = sizeof(dest);
+
+  for(i = 0; i<config.nfprobe_receivers_cnt; i++) {
+    parse_hostport(config.nfprobe_receivers[i], (struct sockaddr *)&dest, &dest_len);
+
     if ((err = getnameinfo((struct sockaddr *)&dest,
-	    dest_len, dest_addr, sizeof(dest_addr), 
-	    dest_serv, sizeof(dest_serv), NI_NUMERICHOST)) == -1) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): getnameinfo: %d\n", config.name, config.type, err);
-      exit_gracefully(1);
-    }
-    target.fd = connsock(&dest, dest_len, hoplimit);
-	
-    if (target.fd != -1)
-      Log(LOG_INFO, "INFO ( %s/%s ): Exporting flows to [%s]:%s\n",
-		    config.name, config.type, dest_addr, dest_serv);
+        dest_len, dest_addr, sizeof(dest_addr),
+        dest_serv, sizeof(dest_serv), NI_NUMERICHOST)) == -1) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): getnameinfo: %d\n", config.name, config.type, err);
+        exit_gracefully(1);
+      }
+
+      target.fds[i] = connsock(&dest, dest_len, hoplimit);
+      if (target.fds[i] != -1)
+        Log(LOG_INFO, "INFO ( %s/%s ): Exporting flows to [%s]:%s\n",
+          config.name, config.type, dest_addr, dest_serv);
   }
 
   /* Main processing loop */
@@ -1511,7 +1530,7 @@ sort_version:
     /* Flags set by signal handlers or control socket */
     if (graceful_shutdown_request) {
       Log(LOG_WARNING, "WARN ( %s/%s ): Shutting down on user request.\n", config.name, config.type);
-      check_expired(&flowtrack, &target, CE_EXPIRE_ALL, engine_type, engine_id);
+      check_expired(&flowtrack, &target, CE_EXPIRE_ALL, engine_type, engine_id, config.nfprobe_receivers_cnt);
       goto exit_lane;
     }
 
@@ -1645,19 +1664,18 @@ expiry_check:
        * expire flows based on time - instead we only 
        * expire flows when the flow table is full. 
        */
-      if (check_expired(&flowtrack, &target, capfile == NULL ? CE_EXPIRE_NORMAL : CE_EXPIRE_FORCED, engine_type, engine_id) < 0) {
-	Log(LOG_WARNING, "WARN ( %s/%s ): Unable to export flows.\n", config.name, config.type);
 
-	/* Let's try to sleep a bit and re-open the NetFlow send socket */
-	if (dest.ss_family != 0) {
-	  if (target.fd != -1) close(target.fd);
-	  sleep(5);
-	  target.fd = connsock(&dest, dest_len, hoplimit);
-
-	  if (target.fd != -1)
-	    Log(LOG_INFO, "INFO ( %s/%s ): Exporting flows to [%s]:%s\n",
-			config.name, config.type, dest_addr, dest_serv);
-	}
+      if (check_expired(&flowtrack, &target, capfile == NULL ? CE_EXPIRE_NORMAL : CE_EXPIRE_FORCED, engine_type, engine_id, config.nfprobe_receivers_cnt) < 0) {
+        for(i = 0; i<config.nfprobe_receivers_cnt; i++) {
+          if (target.fds[i] != -1) continue;
+          /* Let's try to sleep a bit and re-open the NetFlow send socket */
+          Log(LOG_WARNING, "WARN ( %s/%s ): Unable to export flows to fd %d\n", config.name, config.type, target.fds[i]);
+          sleep(5);
+          parse_hostport(config.nfprobe_receivers[i], (struct sockaddr *)&dest, &dest_len);
+          target.fds[i] = connsock(&dest, dest_len, hoplimit);
+          if (target.fds[i] != -1)
+            Log(LOG_INFO, "INFO ( %s/%s ): Restarted conn to [%s]:%s\n", config.name, config.type, dest_addr, dest_serv);
+        }
       }
 	
       /*
@@ -1670,8 +1688,10 @@ expiry_check:
       }
     }
   }
-		
+
 exit_lane:
   if (!graceful_shutdown_request) Log(LOG_ERR, "ERROR ( %s/%s ): Exiting immediately on internal error.\n", config.name, config.type);
-  if (target.fd != -1) close(target.fd);
+  for(i = 0; i<config.nfprobe_receivers_cnt; i++) {
+    if (target.fds[i] != -1) close(target.fds[i]);
+  }
 }
