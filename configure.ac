@@ -968,6 +968,8 @@ AC_ARG_ENABLE(ndpi,
       fi
 
       AC_SUBST([NDPI_LIBS_STATIC])
+
+      PKG_CHECK_MODULES([NDPI], [libndpi >= 2.6], [AC_DEFINE(WITH_NDPI26, 1)])
     ])
     ;;
   no)
