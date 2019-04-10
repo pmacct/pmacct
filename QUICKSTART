@@ -1110,8 +1110,9 @@ steps:
 2) Download nDPI from its GitHub repository (https://github.com/ntop/nDPI).
    pmacct code is currently tested working against:
 
-   * nDPI 2.2.2 (git clone -b 2.2.2-stable https://github.com/ntop/nDPI.git)
    * nDPI 2.4 (git clone -b 2.4-stable https://github.com/ntop/nDPI.git)
+   * nDPI 2.6 (git clone -b 2.6-stable https://github.com/ntop/nDPI.git)
+   * nDPI 2.8 (git clone -b 2.8-stable https://github.com/ntop/nDPI.git)
 
 3) Configure for compiling, compile and install the downloaded nDPI library, ie.
    inside the nDPI directory:
@@ -1133,14 +1134,21 @@ steps:
 
    If using a nDPI library that is not installed (or not installed in a default
    location) on the system, then NDPI_LIBS and NDPI_CFLAGS should be set to the
-   location where nDPI headers and dynamic library are lying. Additionally, the
-   configure switch --with-ndpi-static-lib allows to specify the location for the
-   static version of the library:
+   location where nDPI headers and dynamic library are lyingi, for example:
 
    shell> NDPI_LIBS=-L/path/to/nDPI/src/lib/.libs  
    shell> NDPI_CFLAGS=-I/path/to/nDPI/src/include
    shell> export NDPI_LIBS NDPI_CFLAGS
-   shell> ./configure --enable-ndpi --with-ndpi-static-lib=/path/to/nDPI/src/lib/.libs
+   shell> ./configure --enable-ndpi
+   shell> make; make install
+
+   If using a nDPI library that does not install libndpi.pc pkg-config file in a
+   standard directory, then PKG_CONFIG_PATH should be set (this seems to be true
+   for both 2.6 and 2.8 releases), for example:
+
+   shell> PKG_CONFIG_PATH=/usr/local/libdata/pkgconfig
+   shell> export PKG_CONFIG_PATH
+   shell> ./configure --enable-ndpi
    shell> make; make install
 
 5) Configure pmacct. The following sample configuration is based on pmacctd and
