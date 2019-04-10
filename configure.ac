@@ -932,7 +932,7 @@ AC_ARG_ENABLE(ndpi,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([NDPI], [libndpi >= 2.2], [
+    PKG_CHECK_MODULES([NDPI], [libndpi >= 2.4], [
       SUPPORTS="${SUPPORTS} ndpi"
       USING_NDPI="yes"
 
@@ -953,24 +953,8 @@ AC_ARG_ENABLE(ndpi,
       CFLAGS="$CFLAGS $NDPI_CFLAGS"
       AC_CHECK_HEADER([libndpi/ndpi_main.h])
       CFLAGS="$_save_CFLAGS"
-
-      dnl XXX: to be improved: avoid linking both static and dynamic libs
-      if test x"$NDPI_CUST_STATIC_LIB_FOUND" = x"yes"; then
-        NDPI_LIBS_STATIC="$NDPI_CUST_STATIC_LIB/libndpi.a"
-      elif test -r /usr/lib/libndpi.a; then
-        NDPI_LIBS_STATIC="/usr/lib/libndpi.a"
-      elif test -r /usr/local/lib/libndpi.a; then
-        NDPI_LIBS_STATIC="/usr/local/lib/libndpi.a"
-      elif test -r /usr/local/nDPI/lib/libndpi.a; then
-        NDPI_LIBS_STATIC="/usr/local/nDPI/lib/libndpi.a"
-      else
-        AC_MSG_ERROR([ERROR: missing nDPI static library])
-      fi
-
-      AC_SUBST([NDPI_LIBS_STATIC])
-
-      PKG_CHECK_MODULES([NDPI], [libndpi >= 2.6], [AC_DEFINE(WITH_NDPI26, 1)])
     ])
+    PKG_CHECK_MODULES([NDPI26], [libndpi >= 2.6], [AC_DEFINE(WITH_NDPI26, 1)], [AC_DEFINE(WITH_NDPI, 1)])
     ;;
   no)
     AC_MSG_RESULT(no)
