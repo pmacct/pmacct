@@ -959,7 +959,9 @@ int pretag_index_allocate(struct id_table *t)
     		config.type, t->filename, (unsigned long long)t->index[iterator].bitmap, t->index[iterator].entries);
 
       assert(!t->index[iterator].idx_t);
-      idx_t_size = IDT_INDEX_HASH_BASE(t->index[iterator].entries) * sizeof(struct id_index_entry);
+      
+      t->index[iterator].modulo = next_prime(t->index[iterator].entries * 2);
+      idx_t_size = t->index[iterator].modulo * sizeof(struct id_index_entry);
       t->index[iterator].idx_t = malloc(idx_t_size);
 
       if (!t->index[iterator].idx_t) {
@@ -973,7 +975,7 @@ int pretag_index_allocate(struct id_table *t)
       else {
 	memset(t->index[iterator].idx_t, 0, idx_t_size); 
 
-	for (j = 0; j < IDT_INDEX_HASH_BASE(t->index[iterator].entries); j++) {
+	for (j = 0; j < t->index[iterator].modulo; j++) {
 	  t->index[iterator].idx_t[j].depth = ID_TABLE_INDEX_DEPTH;
 	}
 
@@ -1015,7 +1017,7 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
       hash_serializer = &t->index[iterator].hash_serializer;
       hash_serial_set_off(hash_serializer, 0);
       hash_key = hash_serial_get_key(hash_serializer);
-      buckets = IDT_INDEX_HASH_BASE(t->index[iterator].entries);
+      buckets = t->index[iterator].modulo;
 
       if (!hash_key) return ERR;
 
@@ -1054,6 +1056,7 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
       if (index == idie->depth) {
         Log(LOG_WARNING, "WARN ( %s/%s ): [%s] maps_index: out of index space %llx. Indexing disabled.\n",
 		config.name, config.type, t->filename, (unsigned long long)idx_bmap);
+	pretag_index_report(t);
 	pretag_index_destroy(t);
 	break;
       }
@@ -1073,7 +1076,7 @@ void pretag_index_report(struct id_table *t)
     if (t->index[iterator].entries) {
       u_int32_t bucket_depths[ID_TABLE_INDEX_DEPTH];
 
-      buckets = IDT_INDEX_HASH_BASE(t->index[iterator].entries);
+      buckets = t->index[iterator].modulo;
       memset(&bucket_depths, 0, sizeof(bucket_depths));
 
       for (index = 0; index < buckets; index++) {
@@ -1085,9 +1088,9 @@ void pretag_index_report(struct id_table *t)
 	bucket_depths[depth]++;
       }
 
-      Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] maps_index: index %llx depths: 0:%u 1:%u 2:%u 3:%u 4:%u 5:%u 6:%u 7:%u size: %lu\n",
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] maps_index: index %llx buckets: %u depths: 0:%u 1:%u 2:%u 3:%u 4:%u 5:%u 6:%u 7:%u size: %lu\n",
 	  config.name, config.type, t->filename, (unsigned long long)t->index[iterator].bitmap,
-	  bucket_depths[0], bucket_depths[1], bucket_depths[2], bucket_depths[3],
+	  buckets, bucket_depths[0], bucket_depths[1], bucket_depths[2], bucket_depths[3],
 	  bucket_depths[4], bucket_depths[5], bucket_depths[6], bucket_depths[7],
 	  (unsigned long)(buckets * sizeof(struct id_index_entry)));
     } 
@@ -1104,7 +1107,7 @@ void pretag_index_destroy(struct id_table *t)
 
   for (iterator = 0; iterator < t->index_num; iterator++) {
     if (t->index[iterator].idx_t) {
-      buckets = IDT_INDEX_HASH_BASE(t->index[iterator].entries);
+      buckets = t->index[iterator].modulo;
 
       for (bucket_idx = 0; bucket_idx < buckets; bucket_idx++) {
         for (depth_idx = 0; depth_idx < ID_TABLE_INDEX_DEPTH; depth_idx++) {
@@ -1146,7 +1149,7 @@ void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct i
       hash_serializer = &t->index[iterator].hash_serializer;
       hash_serial_set_off(hash_serializer, 0);
       hash_key = hash_serial_get_key(hash_serializer);
-      buckets = IDT_INDEX_HASH_BASE(t->index[iterator].entries);
+      buckets = t->index[iterator].modulo;
 
       for (index_hdlr = 0; (*t->index[iterator].fdata_handler[index_hdlr]); index_hdlr++) {
         (*t->index[iterator].fdata_handler[index_hdlr])(&res_fdata, &t->index[iterator].hash_serializer, pptrs);

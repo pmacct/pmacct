@@ -3058,3 +3058,30 @@ void parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len)
   free(orig);
   *len = res->ai_addrlen;
 }
+
+bool is_prime(u_int32_t num)
+{
+  int div = 6;
+
+  if (num == 2 || num == 3) return TRUE;
+  if (num % 2 == 0 || num % 3 == 0) return FALSE;
+
+  while (div * div - 2 * div + 1 <= num) {
+    if (num % (div - 1) == 0) return FALSE;
+    if (num % (div + 1) == 0) return FALSE;
+
+    div += 6;
+  }
+
+  return TRUE;
+}
+
+u_int32_t next_prime(u_int32_t num)
+{
+  u_int32_t orig = num;
+
+  while (!is_prime(++num)); 
+
+  if (num < orig) return 0; /* it wrapped */
+  else return num;
+}

@@ -81,8 +81,6 @@
 
 #define PRETAG_FLAG_NEG			0x00000001
 
-#define IDT_INDEX_HASH_BASE(entries)	(entries * 2)
-
 typedef int (*pretag_handler) (struct packet_ptrs *, void *, void *);
 typedef pm_id_t (*pretag_stack_handler) (pm_id_t, pm_id_t);
 
@@ -221,7 +219,8 @@ struct id_index_entry {
 
 struct id_table_index {
   pt_bitmap_t bitmap; 
-  int entries;
+  u_int32_t entries;
+  u_int32_t modulo;
   pretag_copier idt_handler[MAX_BITMAP_ENTRIES];
   pretag_copier fdata_handler[MAX_BITMAP_ENTRIES];
   pm_hash_serial_t hash_serializer;
