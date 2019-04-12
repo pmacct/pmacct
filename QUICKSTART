@@ -1117,7 +1117,7 @@ steps:
 3) Configure for compiling, compile and install the downloaded nDPI library, ie.
    inside the nDPI directory:
 
-   shell> ./autogen.sh; ./configure; make; make install 
+   shell> ./autogen.sh; ./configure; make; make install; ldconfig 
 
 4) Configure for compiling pmacct with the --enable-ndpi switch. Then compile and
    install, ie.:
