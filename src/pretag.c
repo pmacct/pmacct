@@ -961,6 +961,8 @@ int pretag_index_allocate(struct id_table *t)
       assert(!t->index[iterator].idx_t);
       
       t->index[iterator].modulo = next_prime(t->index[iterator].entries * 2);
+      if (!t->index[iterator].modulo) t->index[iterator].modulo = (t->index[iterator].entries * 2);
+
       idx_t_size = t->index[iterator].modulo * sizeof(struct id_index_entry);
       t->index[iterator].idx_t = malloc(idx_t_size);
 
