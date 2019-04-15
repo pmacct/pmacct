@@ -1319,7 +1319,9 @@ networks. Furthermore, sFlow v5 can be extended much like NetFlow v9/IPFIX: mean
 classification information (if nDPI is compiled in, see 'Quickstart guide to packet
 classification' section of this document), tags and/or basic Extended Gateway info
 (ie. src_as, dst_as) can be easily included in the record structure being exported.
-Here a quickstarter sFlow probe configuration, using pmacctd:
+For classification info to be included in sFlow packets please make sure to specify
+the classifier_num_roots directive in the config. Here a quickstarter sFlow probe
+configuration, using pmacctd:
 
 !
 daemonize: true
@@ -1331,6 +1333,9 @@ sfprobe_receiver: 192.168.1.1:6343
 !
 ! networks_file: /path/to/networks.lst
 ! snaplen: 700
+!
+! classifier_num_roots: 512
+!
 !...
 
 
