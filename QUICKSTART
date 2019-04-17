@@ -1804,7 +1804,7 @@ sessions accepted should be processed.
 XIVi. Example: adding RPKI/ROA information 
 Resource Public Key Infrastructure (RPKI) is a specialized public key
 infrastructure (PKI) framework designed to secure the Internet routing. RPKI
-uses certificates to allow Local Internet Registries (LIRs), to list the
+uses certificates to allow Local Internet Registries (LIRs) to list the
 Internet number resources they hold. These attestations are called Route
 Origination Authorizations (ROAs). ROA information can be currently
 acquired in one of the two following ways:

@@ -5,25 +5,28 @@ The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
 1.7.3 -- XX-0X-2019
-  + Introduced a RPKI daemon to build a ROA database and check prefixes
+  + Introduced the RPKI daemon to build a ROA database and check prefixes
     validation status and coverages. Resource Public Key Infrastructure
     (RPKI) is a specialized public key infrastructure (PKI) framework
     designed to secure the Internet routing. RPKI uses certificates to
-    allow Local Internet Registries (LIRs), to list the Internet number
+    allow Local Internet Registries (LIRs) to list the Internet number
     resources they hold. These attestations are called Route Origination
     Authorizations (ROAs). ROA information can be acquired in one of the
-    two following ways: 1) importing them using the rpki_roas_file config
+    two following ways: 1) importing it using the rpki_roas_file config
     directive from a file in the RIPE Validator format or 2) connecting
-    to a RPKI RTR Cache for live ROA updates. Its IP address and port
+    to a RPKI RTR Cache for live ROA updates; the cache IP address/port
     being defined by the rpki_rtr_cache config directive (and a few more
     optional rpki_rtr_* directives are available and can be reviwed in
-    the CONFIG-KEYS document). The ROA fields will be populated with one
-    of these 5 values: 'u' Unknown, 'v' Valid, 'i' Invalid no overlaps,
+    the CONFIG-KEYS doc). The ROA fields will be populated with one of
+    these five values: 'u' Unknown, 'v' Valid, 'i' Invalid no overlaps,
     'V' Invalid with a covering Valid prefix, 'U' Invalid with a covering
     Unknown prefix.
   + Introducing pmgrpcd.py, written in Python, a daemon to handle gRPC-
-    based Streaming Telemetry sessionsi and unmarshall GPB data. Code
-    was courtesy by Matthias Arnold ( @tbearma1 ). 
+    based Streaming Telemetry sessions and unmarshall GPB data. Code
+    was mostly courtesy by Matthias Arnold ( @tbearma1 ). This is in
+    addition (or feeding into) pmtelemetryd, written in C, a daemon to
+    handle TCP/UDP-based Streaming Telemetry sessions with JSON-encoded
+    data. 
   + pmacctd, uacctd: added support for CFP (Cisco FabricPath) and Cisco
     Virtual Network Tag protocols. Both patches were courtesy by Stephen
     Clark ( @sclark46 ). 
@@ -36,25 +39,22 @@ The keys used are:
   + Introducing mpls_pw_id aggregation primitive and mpls_pw_id key in
     pre_tag_map to filter on signalled L2 MPLS VPN Pseudowire IDs.
   + BGP daemon: added bgp_disable_router_id knob to enable/disable BGP
-    Router-ID check - both at BGP OPEN time and BGP lookup. Useful, for
+    Router-ID check, both at BGP OPEN time and BGP lookup. Useful, for
     example, in scenarios with split BGP v4/v6 AFs over v4/v6 transports.
   + BGP, BMP daemons: translate origin attribute numeric value into IGP
     (i), EGP (e) and Incomplete (u) strings.
   + plugins: added new plugin_exit_any feature to make the daemon bail
-    out if any (not all, default behaviour) of the plugins exits.
+    out if any (not all, which is the default behaviour) of the plugins
+    exits.
+  + maps_index: improved selection of buckets for index hash structure
+    by picking the closest prime number to the double of the entries of
+    the map to be indexed in order to achieve better elements dispersion
+    and hence better performances.
   + nfacctd: added support for IPFIX templateId-scoped (IE 145) sampling
     information.
   + pmacctd, uacctd, sfacctd, nfacctd: added a -M command-line option to
     set *_markers (ie. print_markers) to true and fixed -A command-line
     option to set print_output_file_append to align to true/false.
-  + maps_index: improved selection of buckets for index hash structure
-    by picking the closest prime number to the double of the amoung of
-    map entries. This was done to achieve better performances.
-  ! fix, uacctd: dynamically allocate jumbo_container buffer size as
-    packets larger than 10KB, previous static allocation, would lead to
-    crashes.
-  ! fix, PostgreSQL plugin: testing for presence of PQlibVersion() in
-    libpq to prevent compiling issues (ie. on CentOS 6).
   ! fix, BGP, BMP, Streaming Telemetry daemons: improved sequencing of
     dump events by assigning a single sequence number per event (ie. for
     streaming pipeline scenarios in order to reduce correlation with
@@ -63,11 +63,11 @@ The keys used are:
   ! fix, BGP, BMP, Streaming Telemetry daemons: removed hierarchical
     json_decref() since json_object_get() borrows reference. This was
     occasionaly leading to SEGVs.
+  ! fix, uacctd: dynamically allocate jumbo_container buffer size as
+    packets larger than 10KB, previous static allocation, would lead to
+    crashes.
   ! fix, nfacctd: search for IE 408 (dataLinkFrameType) was leading to
     SEGVs. Also improved handling of variable-length IPFIX templates.  
-  ! fix, aggregate_primitives: field_type is now also allowed for pmacctd
-    and uaccd daemons so that it can be used for NetFlow v9/IPFIX export
-    (nfprobe plugin) purposes. 
   ! fix, BMP daemon: solved an occasional truncation of the last message
     in a packet. 
   ! fix, BGP daemon: when processing bgp_daemon_md5_file, ipv4 addresses
@@ -75,13 +75,13 @@ The keys used are:
     which TCP-MD5 hashes were not correctly bound to sockets.
   ! fix, BGP daemon: improved label-unicast and mpls-vpn SAFIs handling
     (some bogus messages, multiple labels, etc.).
-  ! fix, plugins: an incorrect evaluation in P_cache_attach_new_node did
-    make possible buffer overrun in plugins cache allocation. This was
-    found related to a "[..]: Assertion `!cache_ptr->stitch' failed."
-    bail-out message.
   ! fix, BGP daemon: introduced PREFIX_STRLEN to make enough room for
     prefix2str() calls (before unsufficient INET6_ADDRSTRLEN was used).
   ! fix, BMP daemon: improved handling of ADD-PATH capability.
+  ! fix, plugins: an incorrect evaluation in P_cache_attach_new_node did
+    make possible to buffer overrun in plugins cache allocation. This was
+    found related to a "[..]: Assertion `!cache_ptr->stitch' failed."
+    daemon bail-out message.
   ! fix, plugins: if pidfile directive was enabled, exit_gracefully() was
     mistakenly deleting the plugin pidfile when called by a child process
     (ie. writer, dumper, etc.).
@@ -90,25 +90,31 @@ The keys used are:
     or exit_plugin().
   ! fix, plugins: re-evaluate dynamic tables/files name if *_refresh_time
     is different than *_history period.
-  ! fix, SQL plugins: missing 'AND' was making SQL statements related to
-    src_host_coords and dst_host_coords fail.
-  ! fix, GeoIPv2: if no match from libmaxminddb, return O1 code (Other
-    Country) instead of a null value.
+  ! fix, SQL plugins: a missing 'AND' was making SQL statements related
+    to src_host_coords and dst_host_coords fail.
+  ! fix, GeoIPv2: if no match is returned by libmaxminddb, return O1 code
+    (Other Country) instead of a null value.
   ! fix, flow_to_rd_map: mpls_vpn_id was not working when maps_index was
     enabled. Also partly re-written mpls_vpn_id handler.
   ! fix, nfprobe plugin: serialize_bin() function introduced for correct
     serialization of custom primitives defined with 'raw' semantics.
+  ! fix, PostgreSQL plugin: testing for presence of PQlibVersion() in
+    libpq to prevent compiling issues (ie. on CentOS 6).
   ! fix, MySQL plugin: including mysql_version.h to compile successfully
     against newer MariaDB releases.
   ! fix, nDPI classification: send log message if 'class' primitive is
     selected but nDPI is not compiled in; also updated code to follow
-    API changes in versions >= 2.6 of the library.  
+    API changes in versions >= 2.6 of the library. Dropped support for
+    versions < 2.4.  
   ! fix, sfprobe plugin: added (and documented) conditional for optional
     export of classification info.
+  ! fix, aggregate_primitives: field_type is now also allowed for pmacctd
+    and uaccd daemons so that it can be used for NetFlow v9/IPFIX export
+    (nfprobe plugin) purposes.
   ! fix, zmq_common.c: added option for non-blocking p_zmq_send_bin() as
-    otherwise program would block in case of no consumers (replication
-    over ZeroMQ queues); as a result, a generous hwm value was added on
-    both sides of these queues.
+    otherwise program would block in case of no consumers (main use-case:
+    flow replication over ZeroMQ queues); as a result, a generous hwm
+    value was added on both sides of these queues.
   ! fix, zmq_common.c: ZAP socket moved inside thread to prevent failed
     assert() when compiling with gcc7/gcc8. Also a single user/password
     auto-generated combination is used for all plugins.
@@ -118,7 +124,7 @@ The keys used are:
     from a pcap_interfaaces_map.
   ! fix, plugin_cmn_json.c: if leaving protocols numerical (ie. proto,
     tunnel_proto primitives), convert them to string-represented numbers
-    in order to improve data consistency for consumers.
+    for data consistency for consumers.
   ! fix, util.c: open_output_file(), if file exists and it's a FIFO then
     set O_NONBLOCK when opening.
   ! fix, compile time warnings: several warnings were addressed including
