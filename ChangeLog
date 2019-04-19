@@ -111,6 +111,10 @@ The keys used are:
   ! fix, aggregate_primitives: field_type is now also allowed for pmacctd
     and uaccd daemons so that it can be used for NetFlow v9/IPFIX export
     (nfprobe plugin) purposes.
+  ! fix, pre_tag_map: if no 'ip' keyword is specified, an entry of the
+    map gets recirculated in order to be set for both v4 and v6 maps. If
+    a 'set_label' is also specified, it was causing a SEGV. Now the label
+    is correctly copied in case of recirculation.
   ! fix, zmq_common.c: added option for non-blocking p_zmq_send_bin() as
     otherwise program would block in case of no consumers (main use-case:
     flow replication over ZeroMQ queues); as a result, a generous hwm
