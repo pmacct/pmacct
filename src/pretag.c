@@ -405,6 +405,11 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                       tmp.e[tmp.num].key.agent_ip.a.family = AF_INET6;
                       tmp.e[tmp.num].key.agent_mask.family = AF_INET6;
 
+		      if (recirc_e.label.val) {
+			memset(&tmp.e[tmp.num].label, 0, sizeof(pt_label_t));
+			pretag_copy_label(&tmp.e[tmp.num].label, &recirc_e.label);
+		      }
+
 		      recirculate = FALSE;
 		    }
 		  }
