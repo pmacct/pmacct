@@ -946,7 +946,7 @@ int main(int argc,char **argv, char **envp)
   Assign16(((struct eth_header *)pptrs.vlanmpls4.packet_ptr)->ether_type, htons(ETHERTYPE_8021Q));
   pptrs.vlanmpls4.mac_ptr = (u_char *)((struct eth_header *)pptrs.vlanmpls4.packet_ptr)->ether_dhost;
   pptrs.vlanmpls4.vlan_ptr = pptrs.vlanmpls4.packet_ptr + ETHER_HDRLEN;
-  Assign16(*(pptrs.vlanmpls4.vlan_ptr+2), htons(ETHERTYPE_MPLS));
+  Assign16(((struct vlan_header *)pptrs.vlanmpls4.vlan_ptr)->proto, htons(ETHERTYPE_MPLS));
   pptrs.vlanmpls4.mpls_ptr = pptrs.vlanmpls4.packet_ptr + ETHER_HDRLEN + IEEE8021Q_TAGLEN;
   // pptrs.vlanmpls4.pkthdr->caplen = 82; /* eth_header + vlan + upto 10 MPLS labels + pm_iphdr + pm_tlhdr */
   pptrs.vlanmpls4.pkthdr->caplen = 99;
@@ -963,7 +963,7 @@ int main(int argc,char **argv, char **envp)
   pptrs.v6.iph_ptr = pptrs.v6.packet_ptr + ETHER_HDRLEN;
   pptrs.v6.tlh_ptr = pptrs.v6.packet_ptr + ETHER_HDRLEN + sizeof(struct ip6_hdr);
   Assign16(((struct ip6_hdr *)pptrs.v6.iph_ptr)->ip6_plen, htons(100));
-  Assign16(((struct ip6_hdr *)pptrs.v6.iph_ptr)->ip6_hlim, htons(64));
+  ((struct ip6_hdr *)pptrs.v6.iph_ptr)->ip6_hlim = 64;
   // pptrs.v6.pkthdr->caplen = 60; /* eth_header + ip6_hdr + pm_tlhdr */
   pptrs.v6.pkthdr->caplen = 77;
   pptrs.v6.pkthdr->len = 100; /* fake len */
@@ -982,7 +982,7 @@ int main(int argc,char **argv, char **envp)
   pptrs.vlan6.iph_ptr = pptrs.vlan6.packet_ptr + ETHER_HDRLEN + IEEE8021Q_TAGLEN;
   pptrs.vlan6.tlh_ptr = pptrs.vlan6.packet_ptr + ETHER_HDRLEN + IEEE8021Q_TAGLEN + sizeof(struct ip6_hdr);
   Assign16(((struct ip6_hdr *)pptrs.vlan6.iph_ptr)->ip6_plen, htons(100));
-  Assign16(((struct ip6_hdr *)pptrs.vlan6.iph_ptr)->ip6_hlim, htons(64));
+  ((struct ip6_hdr *)pptrs.vlan6.iph_ptr)->ip6_hlim = 64;
   // pptrs.vlan6.pkthdr->caplen = 64; /* eth_header + vlan + ip6_hdr + pm_tlhdr */
   pptrs.vlan6.pkthdr->caplen = 81;
   pptrs.vlan6.pkthdr->len = 100; /* fake len */
@@ -2095,7 +2095,7 @@ void reset_ip6(struct packet_ptrs *pptrs)
 {
   memset(pptrs->iph_ptr, 0, IP6TlSz);
   Assign16(((struct ip6_hdr *)pptrs->iph_ptr)->ip6_plen, htons(100));
-  Assign16(((struct ip6_hdr *)pptrs->iph_ptr)->ip6_hlim, htons(64));
+  ((struct ip6_hdr *)pptrs->iph_ptr)->ip6_hlim = 64;
 }
 
 char *sfv245_check_status(SFSample *spp, struct packet_ptrs *pptrs, struct sockaddr *sa)

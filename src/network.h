@@ -60,6 +60,12 @@ struct eth_header
   u_int16_t ether_type;                     /* packet type ID field */
 };
 
+struct vlan_header
+{
+  u_int16_t tci;		/* priority and VLAN ID */
+  u_int16_t proto;		/* packet type ID or len */
+} __attribute__ ((packed));
+
 #define CHDLC_MCAST_ADDR	0x8F
 #define CHDLC_FIXED_CONTROL	0x00
 /* CHDLC header */

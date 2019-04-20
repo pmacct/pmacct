@@ -85,6 +85,8 @@ bgp_node_create (struct bgp_peer *peer)
   malloc_failed:
   Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (bgp_node_create). Exiting ..\n", config.name, bms->log_str);
   exit_gracefully(1);
+
+  return NULL; /* silence compiler warning */
 }
 
 /* Allocate new route node with prefix set. */

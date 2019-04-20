@@ -55,7 +55,7 @@ void p_zmq_set_username(struct p_zmq_host *zmq_host, char *username)
 {
   if (zmq_host) {
     if (strlen(username) >= sizeof(zmq_host->zap.username)) {
-      Log(LOG_ERR, "ERROR ( %s ): p_zmq_set_username(): username '%s' too long (maximum %u chars). Exiting.\n",
+      Log(LOG_ERR, "ERROR ( %s ): p_zmq_set_username(): username '%s' too long (maximum %lu chars). Exiting.\n",
 	  zmq_host->log_id, username, (sizeof(zmq_host->zap.username) - 1));
       exit_gracefully(1);
     }
@@ -67,7 +67,7 @@ void p_zmq_set_password(struct p_zmq_host *zmq_host, char *password)
 {
   if (zmq_host) {
     if (strlen(password) >= sizeof(zmq_host->zap.password)) {
-      Log(LOG_ERR, "ERROR ( %s ): p_zmq_set_password(): password '%s' too long (maximum %u chars). Exiting.\n",
+      Log(LOG_ERR, "ERROR ( %s ): p_zmq_set_password(): password '%s' too long (maximum %lu chars). Exiting.\n",
 	  zmq_host->log_id, password, (sizeof(zmq_host->zap.password) - 1));
       exit_gracefully(1);
     }
@@ -112,6 +112,8 @@ u_int8_t p_zmq_get_topic(struct p_zmq_host *zmq_host)
 void *p_zmq_get_sock(struct p_zmq_host *zmq_host)
 {
   if (zmq_host) return zmq_host->sock.obj; 
+
+  return NULL;
 }
 
 int p_zmq_get_fd(struct p_zmq_host *zmq_host)

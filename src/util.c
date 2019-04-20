@@ -1376,6 +1376,8 @@ int timeval_cmp(struct timeval *a, struct timeval *b)
     if (a->tv_usec < b->tv_usec) return -1;
     if (a->tv_usec == b->tv_usec) return 0;
   }
+
+  return INT_MIN; /* silence compiler warning */
 }
 
 /*
