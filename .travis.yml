@@ -15,7 +15,6 @@ install:
   - cd libmaxminddb && ./bootstrap && ./configure && make && sudo make install && cd ..
   - git clone -b 2.8-stable https://github.com/ntop/nDPI
   - cd nDPI && ./autogen.sh && ./configure && make && sudo make install && sudo ldconfig && cd ..
-  - sudo cp /usr/local/libdata/pkgconfig/libndpi.pc /usr/local/lib/pkgconfig
   - wget https://github.com/zeromq/libzmq/releases/download/v4.3.1/zeromq-4.3.1.tar.gz
   - tar xfz zeromq-4.3.1.tar.gz
   - cd zeromq-4.3.1 && ./configure && make && sudo make install && cd ..
