@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -460,7 +460,7 @@ u_char *llc_handler(const struct pcap_pkthdr *h, u_int caplen, register u_char *
 
   if (caplen < 3) return NULL;
 
-  memcpy((char *)&llc, (char *) buf, min(caplen, sizeof(llc)));
+  memcpy((char *)&llc, (char *) buf, MIN(caplen, sizeof(llc)));
   if (llc.ssap == LLCSAP_SNAP && llc.dsap == LLCSAP_SNAP
       && llc.ctl.snap.snap_ui == LLC_UI) {
     etype = EXTRACT_16BITS(&llc.ctl.snap_ether.snap_ethertype[0]);
@@ -468,13 +468,13 @@ u_char *llc_handler(const struct pcap_pkthdr *h, u_int caplen, register u_char *
     if (etype == ETHERTYPE_IP) {
       pptrs->l3_proto = ETHERTYPE_IP;
       pptrs->l3_handler = ip_handler;
-      return (u_char *)(buf + min(caplen, sizeof(llc)));
+      return (u_char *)(buf + MIN(caplen, sizeof(llc)));
     }
 
     if (etype == ETHERTYPE_IPV6) {
       pptrs->l3_proto = ETHERTYPE_IPV6;
       pptrs->l3_handler = ip6_handler;
-      return (u_char *)(buf + min(caplen, sizeof(llc)));
+      return (u_char *)(buf + MIN(caplen, sizeof(llc)));
     }
 
     return NULL; 

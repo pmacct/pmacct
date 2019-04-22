@@ -26,8 +26,6 @@
 #include "../include/ip6.h"
 #include "../include/ah.h"
 
-#define min(a,b) ((a)>(b)?(b):(a))
-
 #ifndef IN6_IS_ADDR_V4MAPPED
 #define IN6_IS_ADDR_V4MAPPED(a) \
         ((((__const uint32_t *) (a))[0] == 0)                                 \
@@ -45,14 +43,13 @@
 #define IEEE8021AH_LEN		10
 #define PPP_TAGLEN              2
 #define MAX_MCAST_GROUPS	20
-#define ROUTING_SEGMENT_MAX	16
 #if defined ENABLE_PLABEL
 #define PREFIX_LABEL_LEN	16
 #define AF_PLABEL		255
 #endif
 #define PRIMPTRS_FUNCS_N	16
 
-/* 10Mb/s ethernet header */
+/* Ethernet header */
 struct eth_header
 {
   u_int8_t  ether_dhost[ETH_ADDR_LEN];      /* destination eth addr */
@@ -60,6 +57,7 @@ struct eth_header
   u_int16_t ether_type;                     /* packet type ID field */
 };
 
+/* 802.1Q header */
 struct vlan_header
 {
   u_int16_t tci;		/* priority and VLAN ID */
@@ -75,20 +73,6 @@ struct chdlc_header {
   u_int16_t protocol;
 };
 
-#define TR_RIF_LENGTH(trp)		((ntohs((trp)->token_rcf) & 0x1f00) >> 8)
-#define TR_IS_SOURCE_ROUTED(trp)	((trp)->token_shost[0] & 0x80)
-#define TOKEN_FC_LLC			1
-
-struct token_header {
-        u_int8_t  token_ac;
-        u_int8_t  token_fc;
-        u_int8_t  token_dhost[ETH_ADDR_LEN];
-        u_int8_t  token_shost[ETH_ADDR_LEN];
-        u_int16_t token_rcf;
-        u_int16_t token_rseg[ROUTING_SEGMENT_MAX];
-};
-
-
 /* Ethernet protocol ID's */
 #define ETHERTYPE_IP		0x0800          /* IP */
 #define ETHERTYPE_IPV6          0x86dd		/* IPv6 */
@@ -96,7 +80,6 @@ struct token_header {
 #define ETHERTYPE_8021Q		0x8100          /* 802.1Q */
 #define ETHERTYPE_MPLS          0x8847		/* MPLS */
 #define ETHERTYPE_MPLS_MULTI    0x8848		/* MPLS */
-#define ETHERTYPE_8021AH        0x88A8		/* 802.1ah */
 #define ETHERTYPE_ISO		0xFEFE		/* OSI */
 #define ETHERTYPE_GRE_ISO	0x00FE		/* OSI over GRE */
 #define ETHERTYPE_CFP		0x8903		/* Cisco FabricPath */
