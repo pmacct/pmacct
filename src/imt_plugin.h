@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -101,7 +101,7 @@ struct stripped_class {
 
 struct imt_custom_primitive_entry {
   /* compiled from map */
-  u_char name[MAX_CUSTOM_PRIMITIVE_NAMELEN];
+  char name[MAX_CUSTOM_PRIMITIVE_NAMELEN];
   u_int16_t field_type;
   u_int16_t len;
   u_int8_t semantics;

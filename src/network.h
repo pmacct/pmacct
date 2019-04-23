@@ -629,7 +629,7 @@ struct tunnel_handler {
 typedef int (*tunnel_configurator)(struct tunnel_handler *, char *);
 
 struct tunnel_entry {
-  u_char type[TUNNEL_PROTO_STRING];
+  char type[TUNNEL_PROTO_STRING];
   tunnel_func tf;
   tunnel_configurator tc;
 };

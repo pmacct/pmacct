@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -364,6 +364,6 @@ EXT void SF_init_zmq_host(void *, int *);
 EXT int sfacctd_counter_backend_methods;
 EXT struct bgp_misc_structs *sf_cnt_misc_db;
 EXT struct host_addr debug_a;
-EXT u_char debug_agent_addr[50];
+EXT char debug_agent_addr[50];
 EXT u_int16_t debug_agent_port;
 #undef EXT

@@ -503,7 +503,7 @@ EXT void nfv9_datalink_frame_section_handler(struct packet_ptrs *);
 
 EXT struct template_cache tpl_cache;
 EXT struct host_addr debug_a;
-EXT u_char debug_agent_addr[50];
+EXT char debug_agent_addr[50];
 EXT u_int16_t debug_agent_port;
 #undef EXT
 

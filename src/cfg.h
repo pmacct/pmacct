@@ -42,7 +42,7 @@ struct packet_data_ptr {
 
 struct custom_primitive_entry {
   /* compiled from map */
-  u_char name[MAX_CUSTOM_PRIMITIVE_NAMELEN];
+  char name[MAX_CUSTOM_PRIMITIVE_NAMELEN];
   struct packet_data_ptr pd_ptr[MAX_CUSTOM_PRIMITIVE_PD_PTRS];
   u_int32_t pen;
   u_int16_t field_type;

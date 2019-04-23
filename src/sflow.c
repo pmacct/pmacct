@@ -772,7 +772,7 @@ void readExtendedProcess(SFSample *sample)
 void readExtendedClass(SFSample *sample)
 {
   u_int32_t ret;
-  u_char buf[MAX_PROTOCOL_LEN+1], *bufptr = buf;
+  char buf[MAX_PROTOCOL_LEN+1], *bufptr = buf;
 
   if (config.classifiers_path) {
     ret = getData32_nobswap(sample);
@@ -1186,7 +1186,8 @@ void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vec
 
   for (idx = 0; idx < num_elements; idx++) {
     u_int32_t tag, length;
-    u_char *start, buf[51];
+    u_char *start;
+    char buf[51];
 
     tag = getData32(sample);
     length = getData32(sample);

@@ -730,7 +730,7 @@ ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockadd
   return ret;
 }
 
-ssize_t recvfrom_rawip(char *buf, size_t len, struct sockaddr *src_addr, struct packet_ptrs *local_pptrs)
+ssize_t recvfrom_rawip(unsigned char *buf, size_t len, struct sockaddr *src_addr, struct packet_ptrs *local_pptrs)
 {
   ssize_t ret = 0;
 

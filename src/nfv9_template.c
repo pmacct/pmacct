@@ -896,7 +896,7 @@ struct template_cache_entry *refresh_template(struct template_hdr_v9 *hdr, struc
 void log_template_header(struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int8_t version)
 {
   struct host_addr a;
-  u_char agent_addr[50];
+  char agent_addr[50];
   u_int16_t agent_port;
 
   sa_to_addr((struct sockaddr *)pptrs->f_agent, &a, &agent_port);

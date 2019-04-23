@@ -2548,7 +2548,7 @@ void reset_dummy_v4(struct packet_ptrs *pptrs, char *dummy_packet)
 void notify_malf_packet(short int severity, char *severity_str, char *ostr, struct sockaddr *sa, u_int32_t seq)
 {
   struct host_addr a;
-  u_char errstr[SRVBUFLEN];
+  char errstr[SRVBUFLEN];
   char agent_addr[50] /* able to fit an IPv6 string aswell */, any[] = "0.0.0.0";
   u_int16_t agent_port;
 

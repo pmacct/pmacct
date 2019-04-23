@@ -380,13 +380,13 @@ size_t Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
 void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
 {
   struct host_addr r;
-  u_char recv_addr[50];
+  char recv_addr[50];
   u_int16_t recv_port;
 
   if (config.debug) {
     char *flow = NULL, netflow[] = "NetFlow/IPFIX", sflow[] = "sFlow";
     struct host_addr a;
-    u_char agent_addr[50];
+    char agent_addr[50];
     u_int16_t agent_port;
 
     sa_to_addr((struct sockaddr *)msg, &a, &agent_port);
@@ -406,7 +406,7 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
   if (!config.tee_transparent) {
     if (send(fd, msg->payload, msg->len, 0) == -1) {
       struct host_addr a;
-      u_char agent_addr[50];
+      char agent_addr[50];
       u_int16_t agent_port;
 
       sa_to_addr((struct sockaddr *)msg, &a, &agent_port);
@@ -427,7 +427,7 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
 
     if (msglen && send(fd, tee_send_buf, msglen, 0) == -1) {
       struct host_addr a;
-      u_char agent_addr[50];
+      char agent_addr[50];
       u_int16_t agent_port;
 
       sa_to_addr((struct sockaddr *)msg, &a, &agent_port);
@@ -458,7 +458,7 @@ void Tee_kafka_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
     char *flow = NULL, netflow[] = "NetFlow/IPFIX", sflow[] = "sFlow";
     char *broker, *topic;
     struct host_addr a;
-    u_char agent_addr[50];
+    char agent_addr[50];
     u_int16_t agent_port;
 
     sa_to_addr((struct sockaddr *)msg, &a, &agent_port);
@@ -508,7 +508,7 @@ void Tee_zmq_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
     char *flow = NULL, netflow[] = "NetFlow/IPFIX", sflow[] = "sFlow";
     char *address;
     struct host_addr a;
-    u_char agent_addr[50];
+    char agent_addr[50];
     u_int16_t agent_port;
 
     sa_to_addr((struct sockaddr *)msg, &a, &agent_port);

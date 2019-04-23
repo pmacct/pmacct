@@ -1463,7 +1463,7 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
 
   if (config.debug) {
     struct host_addr a;
-    u_char agent_addr[50];
+    char agent_addr[50];
     u_int16_t agent_port;
 
     sa_to_addr((struct sockaddr *)pptrs->f_agent, &a, &agent_port);
@@ -1520,7 +1520,7 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
 
         if (config.debug) {
 	  struct host_addr a;
-	  u_char agent_addr[50];
+	  char agent_addr[50];
 	  u_int16_t agent_port;
 
 	  sa_to_addr((struct sockaddr *)pptrs->f_agent, &a, &agent_port);
@@ -1593,7 +1593,7 @@ void SF_compute_once()
 void SF_notify_malf_packet(short int severity, char *severity_str, char *ostr, struct sockaddr *sa)
 {
   struct host_addr a;
-  u_char errstr[SRVBUFLEN];
+  char errstr[SRVBUFLEN];
   char agent_addr[50] /* able to fit an IPv6 string aswell */, any[] = "0.0.0.0";
   u_int16_t agent_port;
 
