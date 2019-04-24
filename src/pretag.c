@@ -1090,9 +1090,7 @@ void pretag_index_report(struct id_table *t)
 	struct id_index_entry *idie = &t->index[iterator].idx_t[index]; 
 	u_int32_t depth = 0;
 
-	for (depth = 0; idie->result[depth] && depth < idie->depth; depth++); 
-
-	bucket_depths[depth]++;
+	for (depth = 0; idie->result[depth] && depth < idie->depth; depth++) bucket_depths[depth]++;
       }
 
       Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] maps_index: index %llx buckets: %u depths: 0:%u 1:%u 2:%u 3:%u 4:%u 5:%u 6:%u 7:%u size: %lu\n",
