@@ -2643,16 +2643,14 @@ int BITR_mpls_vpn_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
       memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_INGRESS_VRFID].off, MIN(tpl->tpl[NF9_INGRESS_VRFID].len, 4));
       id = ntohl(tmp32);
 
-      if (!memcmp(&entry->key.mpls_vpn_id.n, &id, 4))
-        return (FALSE | entry->key.mpls_vpn_id.neg);
+      if (entry->key.mpls_vpn_id.n == id) return (FALSE | entry->key.mpls_vpn_id.neg);
     }
 
     if (tpl->tpl[NF9_EGRESS_VRFID].len) {
       memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_EGRESS_VRFID].off, MIN(tpl->tpl[NF9_EGRESS_VRFID].len, 4));
       id = ntohl(tmp32);
 
-      if (!memcmp(&entry->key.mpls_vpn_id.n, &id, 4))
-        return (FALSE | entry->key.mpls_vpn_id.neg);
+      if (entry->key.mpls_vpn_id.n == id) return (FALSE | entry->key.mpls_vpn_id.neg);
     }
 
     return (TRUE ^ entry->key.mpls_vpn_id.neg);
@@ -3617,8 +3615,6 @@ int PT_map_index_fdata_mpls_vpn_id_handler(struct id_entry *e, pm_hash_serial_t 
         memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_EGRESS_VRFID].off, MIN(tpl->tpl[NF9_EGRESS_VRFID].len, 4));
 	e->key.mpls_vpn_id.n = ntohl(tmp32);
       }
-
-      break;
     }
   }
 
