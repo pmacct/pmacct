@@ -1134,14 +1134,14 @@ void pretag_index_destroy(struct id_table *t)
   t->index_num = 0;
 }
 
-void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct id_entry **index_results, int ir_entries)
+int pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct id_entry **index_results, int ir_entries)
 {
   struct id_entry res_fdata;
   struct id_index_entry *idie;
   pm_hash_serial_t *hash_serializer;
   pm_hash_key_t *hash_key;
-  u_int32_t iterator, iterator_ir, index_cc, index_hdlr;
-  int modulo, buckets;
+  u_int32_t iterator, index_cc, index_hdlr;
+  int modulo, buckets, iterator_ir;
 
   if (!t || !pptrs || !index_results) return;
 
@@ -1180,9 +1180,11 @@ void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct i
     else break;
   }
 
-  // pretag_index_results_compress(index_results, ir_entries);
-  pretag_index_results_sort(index_results, ir_entries);
-  pretag_index_results_compress_jeqs(index_results, ir_entries);
+  // pretag_index_results_compress(index_results, iterator_ir);
+  pretag_index_results_sort(index_results, iterator_ir);
+  pretag_index_results_compress_jeqs(index_results, iterator_ir);
+
+  return iterator_ir;
 }
 
 void pretag_index_results_sort(struct id_entry **index_results, int ir_entries)

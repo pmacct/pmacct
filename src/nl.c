@@ -426,10 +426,11 @@ int PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   if (config.maps_index && pretag_index_have_one(t)) {
     struct id_entry *index_results[ID_TABLE_INDEX_RESULTS];
     u_int32_t iterator;
+    int num_results;
 
-    pretag_index_lookup(t, pptrs, index_results, ID_TABLE_INDEX_RESULTS);
+    num_results = pretag_index_lookup(t, pptrs, index_results, ID_TABLE_INDEX_RESULTS);
 
-    for (iterator = 0; index_results[iterator] && iterator < ID_TABLE_INDEX_RESULTS; iterator++) {
+    for (iterator = 0; index_results[iterator] && iterator < num_results; iterator++) {
       ret = pretag_entry_process(index_results[iterator], pptrs, tag, tag2);
       if (!(ret & PRETAG_MAP_RCODE_JEQ)) return ret;
     }
