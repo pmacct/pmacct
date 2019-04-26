@@ -121,6 +121,8 @@ static const struct _primitives_matrix_struct _primitives_matrix[] = {
   {"export_proto_seqno", 0, 0, 1, 1, 0, 0, 0, "Export protocol (ie. NetFlow) sequence number"},
   {"export_proto_version", 0, 0, 1, 1, 0, 0, 0, "Export protocol (ie. NetFlow) version"},
   {"export_proto_sysid", 0, 0, 1, 1, 0, 0, 0, "Export protocol ID (ie. sFlow subAgentID, IPFIX Obs Domain ID)"},
+  {"src_roa", 1, 1, 1, 1, 0, 0, 0, "RPKI validation status for source IP prefix"},
+  {"dst_roa", 1, 1, 1, 1, 0, 0, 0, "RPKI validation status for destination IP prefix"},
   {"TIME", 1, 1, 1, 1, 0, 0, 0, ""}, 
   {"timestamp_start", 0, 0, 1, 0, 0, 0, 0, "Flow start time or observation time at the exporter"},
   {"timestamp_end", 0, 0, 1, 0, 0, 0, 0, "Flow end time"},
