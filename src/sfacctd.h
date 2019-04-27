@@ -202,6 +202,9 @@ typedef struct _SFSample {
   SFLAddress nat_src;
   SFLAddress nat_dst;
 
+  /* vxlan */
+  u_int32_t vni;
+
   /* counter blocks */
   u_int32_t statsSamplingInterval;
   u_int32_t counterBlockVersion;
@@ -317,6 +320,7 @@ EXT void decodeIPLayer4(SFSample *, u_char *, u_int32_t);
 EXT void decodeIPV4(SFSample *);
 EXT void decodeIPV6(SFSample *);
 EXT void decodeIPV4_inner(SFSample *, u_char *);
+EXT void decodeVXLAN(SFSample *, u_char *);
 EXT void readExtendedSwitch(SFSample *);
 EXT void readExtendedRouter(SFSample *);
 EXT void readExtendedGateway_v2(SFSample *);

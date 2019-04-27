@@ -200,10 +200,40 @@ void decodeIPLayer4(SFSample *sample, u_char *ptr, u_int32_t ipProtocol) {
       sample->dcd_sport = ntohs(udp.uh_sport);
       sample->dcd_dport = ntohs(udp.uh_dport);
       sample->udp_pduLen = ntohs(udp.uh_ulen);
+
+      if (sample->dcd_dport == UDP_PORT_VXLAN) {
+	ptr += sizeof(udp);
+	decodeVXLAN(sample, ptr);
+      }
     }
     break;
   default: /* some other protcol */
     break;
+  }
+}
+
+void decodeVXLAN(SFSample *sample, u_char *ptr)
+{
+  struct vxlan_hdr *hdr = NULL;
+  u_char *vni_ptr = NULL;
+  u_int32_t vni;
+
+  u_char *end = sample->header + sample->headerLen;
+  if(ptr > (end - 8)) return; // not enough header bytes left
+
+  hdr = (struct vxlan_hdr *) ptr;
+
+  if (hdr->flags & VXLAN_FLAG_I) {
+    vni_ptr = hdr->vni;
+
+    // decode 24-bit label
+    vni = *vni_ptr++;
+    vni <<= 8;
+    vni += *vni_ptr++;
+    vni <<= 8;
+    vni += *vni_ptr++;
+
+    sample->vni = vni;
   }
 }
 

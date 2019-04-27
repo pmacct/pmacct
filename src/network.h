@@ -194,6 +194,8 @@ struct pm_tcp_md5sig
   u_int8_t      tcpm_key[TCP_MD5SIG_MAXKEYLEN]; /* Key (binary).  */
 };
 
+#define UDP_PORT_VXLAN	4789
+
 struct pm_udphdr
 {
   u_int16_t uh_sport;           /* source port */
@@ -206,6 +208,16 @@ struct pm_tlhdr {
    u_int16_t	src_port;	/* source and destination ports */
    u_int16_t	dst_port;
 };
+
+#define VXLAN_FLAG_I	0x8
+
+/* according to rfc7348 */
+struct vxlan_hdr {
+  u_int8_t flags;
+  u_char reserved1[3];
+  u_char vni[3];
+  u_int8_t reserved2;
+} __attribute__ ((packed));
 
 #define MAX_GTP_TRIALS	8
 
@@ -331,6 +343,7 @@ struct packet_ptrs {
   u_char *mpls_ptr; /* ptr to base MPLS label */
   u_char *iph_ptr; /* ptr to ip header */
   u_char *tlh_ptr; /* ptr to transport level protocol header */
+  u_char *vxlan_ptr; /* ptr to VXLAN VNI */
   u_char *payload_ptr; /* classifiers: ptr to packet payload */
   pm_class_t class; /* classifiers: class id */
   struct class_st cst; /* classifiers: class status */
@@ -568,6 +581,7 @@ struct pkt_tunnel_primitives {
   struct host_addr tunnel_dst_ip;
   u_int8_t tunnel_tos;
   u_int8_t tunnel_proto;
+  u_int32_t id; /* ie. VXLAN VNI */
 };
 
 /* same as pkt_legacy_bgp_primitives but pointers in place of strings */
