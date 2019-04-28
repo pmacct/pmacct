@@ -347,7 +347,7 @@ struct packet_ptrs {
   char *tee_dissect; /* pointer to flow tee dissection structure */
   int tee_dissect_bcast; /* is the tee dissected element to be broadcasted? */
   u_int8_t renormalized; /* Is it renormalized yet ? */
-  char *pkt_data_ptrs[CUSTOM_PRIMITIVE_MAX_PPTRS_IDX]; /* indexed packet pointers */
+  u_char *pkt_data_ptrs[CUSTOM_PRIMITIVE_MAX_PPTRS_IDX]; /* indexed packet pointers */
   u_int16_t pkt_proto[CUSTOM_PRIMITIVE_MAX_PPTRS_IDX]; /* indexed packet protocols */
 #if defined (WITH_GEOIPV2)
   MMDB_lookup_result_s geoipv2_src;

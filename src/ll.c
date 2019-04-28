@@ -140,7 +140,7 @@ void eth_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
 u_int16_t mpls_handler(u_char *bp, u_int16_t *caplen, u_int16_t *nl, register struct packet_ptrs *pptrs)
 {
   u_int32_t *p = (u_int32_t *) bp;
-  char *next = bp;
+  u_char *next = bp;
   u_int32_t label=0;
 
   pptrs->mpls_ptr = bp;
@@ -399,7 +399,7 @@ void sll_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
 
   if (EXTRACT_16BITS(&sllp->sll_halen) == ETH_ADDR_LEN) {
     memcpy(sll_mac[1], sllp->sll_addr, ETH_ADDR_LEN);
-    pptrs->mac_ptr = (char *) sll_mac;
+    pptrs->mac_ptr = (u_char *) sll_mac;
   }
 
   recurse:

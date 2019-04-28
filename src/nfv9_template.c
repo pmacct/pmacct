@@ -1201,7 +1201,7 @@ struct template_cache_entry *refresh_opt_template(void *hdr, struct template_cac
   return tpl;
 }
 
-int resolve_vlen_template(char *ptr, u_int16_t remlen, struct template_cache_entry *tpl)
+int resolve_vlen_template(u_char *ptr, u_int16_t remlen, struct template_cache_entry *tpl)
 {
   struct otpl_field *otpl_ptr;
   struct utpl_field *utpl_ptr;
@@ -1257,9 +1257,9 @@ int resolve_vlen_template(char *ptr, u_int16_t remlen, struct template_cache_ent
   return SUCCESS;
 }
 
-int get_ipfix_vlen(char *base, u_int16_t remlen, u_int16_t *len)
+int get_ipfix_vlen(u_char *base, u_int16_t remlen, u_int16_t *len)
 {
-  char *ptr = base;
+  u_char *ptr = base;
   u_int8_t *len8, ret = 0;
   u_int16_t *len16;
 

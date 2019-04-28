@@ -1337,7 +1337,7 @@ int check_bosbit(u_char *label)
   else return FALSE;
 }
 
-u_int32_t decode_mpls_label(char *label)
+u_int32_t decode_mpls_label(u_char *label)
 {
   u_int32_t ret = 0;
   u_char label_ttl[4];
@@ -2299,7 +2299,7 @@ void custom_primitive_value_print(char *out, int outlen, char *in, struct custom
       int len = ETHER_ADDRSTRLEN;
 
       memset(eth_str, 0, sizeof(eth_str));
-      etheraddr_string(in+cp_entry->off, eth_str);
+      etheraddr_string((u_char *)(in + cp_entry->off), eth_str);
 
       if (formatted)
         snprintf(format, VERYSHORTBUFLEN, "%%-%d%s", len > strlen(cp_entry->ptr->name) ? len : (int)strlen(cp_entry->ptr->name),
@@ -2527,7 +2527,7 @@ void vlen_prims_debug(struct pkt_vlen_hdr_primitives *hdr)
   }
 }
 
-void vlen_prims_insert(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, int len, char *val, int copy_type /*, optional realloc */)
+void vlen_prims_insert(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, int len, u_char *val, int copy_type /*, optional realloc */)
 {
   pm_label_t *label_ptr;
   char *ptr = (char *) hdr;
@@ -2545,11 +2545,11 @@ void vlen_prims_insert(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, int
       memcpy(ptr, val, len);
       break;
     case PM_MSG_STR_COPY:
-      strncpy(ptr, val, len); 
+      strncpy(ptr, (char *)val, len); 
       break;
     case PM_MSG_STR_COPY_ZERO:
       label_ptr->len++; /* terminating zero */
-      strncpy(ptr, val, len);
+      strncpy(ptr, (char *)val, len);
       ptr[len] = '\0';
       break;
     default:

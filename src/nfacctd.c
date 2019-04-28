@@ -1221,8 +1221,8 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   if (tee_dissect) {
     tee_dissect->hdrVersion = version;
     tee_dissect->hdrCount = 1;
-    tee_dissect->hdrBasePtr = (char *) hdr_v5;
-    tee_dissect->hdrEndPtr = (char *) (hdr_v5 + NfHdrV5Sz);
+    tee_dissect->hdrBasePtr = hdr_v5;
+    tee_dissect->hdrEndPtr = (u_char *) (hdr_v5 + NfHdrV5Sz);
     tee_dissect->hdrLen = NfHdrV5Sz;
 
     /* no flowset in NetFlow v5 */
@@ -1246,7 +1246,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 
       if (tee_dissect) {
 	tee_dissect->elemBasePtr = pptrs->f_data;
-	tee_dissect->elemEndPtr = (char *) (pptrs->f_data + NfDataV5Sz);
+	tee_dissect->elemEndPtr = (u_char *) (pptrs->f_data + NfDataV5Sz);
 	tee_dissect->elemLen = NfDataV5Sz;
 	pptrs->tee_dissect_bcast = FALSE;
 
@@ -1335,7 +1335,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     if (version == 9) tee_dissect->hdrCount = flowsetNo; /* imprecise .. */
     else if (version == 10) tee_dissect->hdrCount = 0;
     tee_dissect->hdrBasePtr = pkt;
-    tee_dissect->hdrEndPtr = (char *) (pkt + HdrSz); 
+    tee_dissect->hdrEndPtr = (u_char *) (pkt + HdrSz); 
     tee_dissect->hdrLen = HdrSz;
   }
 
@@ -1388,7 +1388,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
   if (tee_dissect) {
     tee_dissect->flowSetBasePtr = pkt;
-    tee_dissect->flowSetEndPtr = (char *) (pkt + NfDataHdrV9Sz);
+    tee_dissect->flowSetEndPtr = (u_char *) (pkt + NfDataHdrV9Sz);
     tee_dissect->flowSetLen = NfDataHdrV9Sz; /* updated later */
   }
 
@@ -1406,7 +1406,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       tee_dissect->elemEndPtr = NULL;
       tee_dissect->elemLen = 0;
 
-      tee_dissect->flowSetEndPtr = (char *) (tee_dissect->flowSetBasePtr + ntohs(data_hdr->flow_len)); 
+      tee_dissect->flowSetEndPtr = (u_char *) (tee_dissect->flowSetBasePtr + ntohs(data_hdr->flow_len)); 
       tee_dissect->flowSetLen = ntohs(data_hdr->flow_len); 
       pptrs->tee_dissect_bcast = TRUE;
 
@@ -1449,7 +1449,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       tee_dissect->elemEndPtr = NULL;
       tee_dissect->elemLen = 0;
 
-      tee_dissect->flowSetEndPtr = (char *) (tee_dissect->flowSetBasePtr + ntohs(data_hdr->flow_len));
+      tee_dissect->flowSetEndPtr = (u_char *) (tee_dissect->flowSetBasePtr + ntohs(data_hdr->flow_len));
       tee_dissect->flowSetLen = ntohs(data_hdr->flow_len);
 
       exec_plugins(pptrs, req);
@@ -1514,7 +1514,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
         tee_dissect->elemEndPtr = NULL;
         tee_dissect->elemLen = 0;
 
-	tee_dissect->flowSetEndPtr = (char *) (tee_dissect->flowSetBasePtr + ntohs(data_hdr->flow_len));
+	tee_dissect->flowSetEndPtr = (u_char *) (tee_dissect->flowSetBasePtr + ntohs(data_hdr->flow_len));
 	tee_dissect->flowSetLen = ntohs(data_hdr->flow_len);
         pptrs->tee_dissect_bcast = TRUE;
 
@@ -1713,7 +1713,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	if (tee_dissect) {
 	  tee_dissect->elemBasePtr = pkt;
-	  tee_dissect->elemEndPtr = (char *) (pkt + tpl->len);
+	  tee_dissect->elemEndPtr = (u_char *) (pkt + tpl->len);
 	  tee_dissect->elemLen = tpl->len;
           pptrs->tee_dissect_bcast = FALSE;
 
@@ -2531,7 +2531,7 @@ void reset_ip6(struct packet_ptrs *pptrs)
   ((struct ip6_hdr *)pptrs->iph_ptr)->ip6_hlim = 64;
 }
 
-void reset_dummy_v4(struct packet_ptrs *pptrs, char *dummy_packet)
+void reset_dummy_v4(struct packet_ptrs *pptrs, u_char *dummy_packet)
 {
   pptrs->packet_ptr = dummy_packet;
   /* pptrs->pkthdr = dummy_pkthdr; */
@@ -2569,7 +2569,7 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
 {
   struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
   struct sockaddr *sa = NULL;
-  char *saved_f_agent = NULL;
+  u_char *saved_f_agent = NULL;
   int x, begin = 0, end = 0;
   pm_id_t ret = 0;
 
@@ -2641,7 +2641,7 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   return ret;
 }
 
-char *nfv5_check_status(struct packet_ptrs *pptrs)
+u_char *nfv5_check_status(struct packet_ptrs *pptrs)
 {
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
@@ -2657,10 +2657,10 @@ char *nfv5_check_status(struct packet_ptrs *pptrs)
     }
   }
 
-  return (char *) entry;
+  return entry;
 }
 
-char *nfv9_check_status(struct packet_ptrs *pptrs, u_int32_t sid, u_int32_t flags, u_int32_t seq, u_int8_t update)
+u_char *nfv9_check_status(struct packet_ptrs *pptrs, u_int32_t sid, u_int32_t flags, u_int32_t seq, u_int8_t update)
 {
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
   int hash = hash_status_table(sid, sa, XFLOW_STATUS_TABLE_SZ);
@@ -2674,7 +2674,7 @@ char *nfv9_check_status(struct packet_ptrs *pptrs, u_int32_t sid, u_int32_t flag
     }
   }
 
-  return (char *) entry;
+  return entry;
 }
 
 pm_class_t NF_evaluate_classifiers(struct xflow_status_entry_class *entry, pm_class_t *class_id, struct xflow_status_entry *gentry)

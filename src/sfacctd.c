@@ -1487,7 +1487,7 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
       skipBytes(spp, 4); /* sysUpTime */
       dissect.samplesInPkt = (u_int32_t *) getPointer(spp);
       samplesInPacket = getData32(spp);
-      dissect.hdrEndPtr = getPointer(spp);
+      dissect.hdrEndPtr = (u_char *) getPointer(spp);
       dissect.hdrLen = (dissect.hdrEndPtr - dissect.hdrBasePtr);
       (*dissect.samplesInPkt) = htonl(1);
 
@@ -1496,7 +1496,7 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
         set_vector_sample_type(pptrsv, 0);
         spp->agentSubId = agentSubId;
 
-        dissect.flowBasePtr = getPointer(spp);
+        dissect.flowBasePtr = (u_char *) getPointer(spp);
         sampleType = getData32(spp);
         set_vector_sample_type(pptrsv, sampleType);
         sfv5_modules_db_init();
@@ -2098,7 +2098,7 @@ void reset_ip6(struct packet_ptrs *pptrs)
   ((struct ip6_hdr *)pptrs->iph_ptr)->ip6_hlim = 64;
 }
 
-char *sfv245_check_status(SFSample *spp, struct packet_ptrs *pptrs, struct sockaddr *sa)
+u_char *sfv245_check_status(SFSample *spp, struct packet_ptrs *pptrs, struct sockaddr *sa)
 {
   struct sockaddr salocal;
   u_int32_t aux1 = spp->agentSubId;
@@ -2122,7 +2122,7 @@ char *sfv245_check_status(SFSample *spp, struct packet_ptrs *pptrs, struct socka
     }
   }
 
-  return (char *) entry;
+  return entry;
 }
 
 void sfv245_check_counter_log_init(struct packet_ptrs *pptrs)

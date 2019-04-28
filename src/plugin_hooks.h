@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -154,7 +154,7 @@ EXT pm_counter_t take_simple_random_skip(pm_counter_t);
 EXT pm_counter_t take_simple_systematic_skip(pm_counter_t);
 EXT void plugin_pipe_zmq_compile_check();
 EXT void plugin_pipe_check(struct configuration *);
-EXT void P_zmq_pipe_init(void *, int *, int *);
+EXT void P_zmq_pipe_init(void *, int *, u_int32_t *);
 #undef EXT
 
 #if (defined __PLUGIN_HOOKS_C)

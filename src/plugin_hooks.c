@@ -957,7 +957,7 @@ void plugin_pipe_check(struct configuration *cfg)
   if (!cfg->pipe_zmq) cfg->pipe_homegrown = TRUE;
 }
 
-void P_zmq_pipe_init(void *zh, int *pipe_fd, int *seq)
+void P_zmq_pipe_init(void *zh, int *pipe_fd, u_int32_t *seq)
 {
   plugin_pipe_zmq_compile_check();
 

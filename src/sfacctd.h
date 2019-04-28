@@ -268,11 +268,11 @@ struct SF_icmphdr
 };
 
 struct SF_dissect {
-  char *hdrBasePtr;
-  char *hdrEndPtr;
+  u_char *hdrBasePtr;
+  u_char *hdrEndPtr;
   u_int32_t hdrLen;
-  char *flowBasePtr;
-  char *flowEndPtr;
+  u_char *flowBasePtr;
+  u_char *flowEndPtr;
   u_int32_t flowLen;
   u_int32_t *samplesInPkt;
 };
@@ -346,7 +346,7 @@ EXT int sfacctd_counter_init_kafka_host();
 EXT void sf_cnt_link_misc_structs(struct bgp_misc_structs *);
 EXT void sf_flow_sample_hdr_decode(SFSample *);
 
-EXT char *sfv245_check_status(SFSample *spp, struct packet_ptrs *, struct sockaddr *);
+EXT u_char *sfv245_check_status(SFSample *spp, struct packet_ptrs *, struct sockaddr *);
 EXT void sfv245_check_counter_log_init(struct packet_ptrs *);
 
 EXT void usage_daemon(char *);

@@ -419,7 +419,7 @@ int host_addr_mask_cmp(struct host_addr *a1, struct host_mask *m1, struct host_a
  * raw_to_sa() converts a supported family address into a sockaddr 
  * structure 
  */
-unsigned int raw_to_sa(struct sockaddr *sa, char *src, u_int16_t port, u_int8_t v4v6)
+unsigned int raw_to_sa(struct sockaddr *sa, u_char *src, u_int16_t port, u_int8_t v4v6)
 {
   struct sockaddr_in *sa4 = (struct sockaddr_in *)sa;
   struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)sa;
@@ -447,7 +447,7 @@ unsigned int raw_to_sa(struct sockaddr *sa, char *src, u_int16_t port, u_int8_t 
  * raw_to_addr() converts a supported family address into a host_addr 
  * structure 
  */
-unsigned int raw_to_addr(struct host_addr *ha, char *src, u_int8_t v4v6)
+unsigned int raw_to_addr(struct host_addr *ha, u_char *src, u_int8_t v4v6)
 {
   if (v4v6 == AF_INET) {
     ha->family = AF_INET;

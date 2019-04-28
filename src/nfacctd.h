@@ -465,14 +465,14 @@ struct template_cache {
 struct NF_dissect {
   u_int8_t hdrVersion;
   u_int16_t hdrCount; /* NetFlow v5 and v5 and v5 and v5 and v5 and v9 */
-  char *hdrBasePtr;
-  char *hdrEndPtr;
+  u_char *hdrBasePtr;
+  u_char *hdrEndPtr;
   u_int32_t hdrLen;
-  char *flowSetBasePtr;
-  char *flowSetEndPtr;
+  u_char *flowSetBasePtr;
+  u_char *flowSetEndPtr;
   u_int32_t flowSetLen;
-  char *elemBasePtr;
-  char *elemEndPtr;
+  u_char *elemBasePtr;
+  u_char *elemEndPtr;
   u_int32_t elemLen;
 };
 
@@ -492,13 +492,13 @@ EXT void reset_mac(struct packet_ptrs *);
 EXT void reset_mac_vlan(struct packet_ptrs *);
 EXT void reset_ip4(struct packet_ptrs *);
 EXT void reset_ip6(struct packet_ptrs *);
-EXT void reset_dummy_v4(struct packet_ptrs *, char *);
+EXT void reset_dummy_v4(struct packet_ptrs *, u_char *);
 EXT void notify_malf_packet(short int, char *, char *, struct sockaddr *, u_int32_t);
 EXT int NF_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 EXT void NF_compute_once();
 
-EXT char *nfv5_check_status(struct packet_ptrs *);
-EXT char *nfv9_check_status(struct packet_ptrs *, u_int32_t, u_int32_t, u_int32_t, u_int8_t);
+EXT u_char *nfv5_check_status(struct packet_ptrs *);
+EXT u_char *nfv9_check_status(struct packet_ptrs *, u_int32_t, u_int32_t, u_int32_t, u_int8_t);
 EXT void nfv9_datalink_frame_section_handler(struct packet_ptrs *);
 
 EXT struct template_cache tpl_cache;
@@ -526,8 +526,8 @@ EXT struct template_cache_entry *refresh_opt_template(void *, struct template_ca
 EXT struct utpl_field *ext_db_get_ie(struct template_cache_entry *, u_int32_t, u_int16_t, u_int8_t);
 EXT struct utpl_field *ext_db_get_next_ie(struct template_cache_entry *, u_int16_t, u_int8_t *);
 
-EXT int resolve_vlen_template(char *, u_int16_t, struct template_cache_entry *);
-EXT int get_ipfix_vlen(char *, u_int16_t, u_int16_t *);
+EXT int resolve_vlen_template(u_char *, u_int16_t, struct template_cache_entry *);
+EXT int get_ipfix_vlen(u_char *, u_int16_t, u_int16_t *);
 
 EXT struct template_cache_entry *nfacctd_offline_read_json_template(char *, char *, int);
 EXT void load_templates_from_file(char *);

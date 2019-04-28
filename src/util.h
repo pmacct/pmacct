@@ -79,7 +79,7 @@ EXT void append_rfc3339_timezone(char *, int, const struct tm *);
 EXT int read_SQLquery_from_file(char *, char *, int);
 EXT void stick_bosbit(u_char *);
 EXT int check_bosbit(u_char *);
-EXT u_int32_t decode_mpls_label(char *);
+EXT u_int32_t decode_mpls_label(u_char *);
 EXT void encode_mpls_label(char *, u_int32_t);
 EXT int timeval_cmp(struct timeval *, struct timeval *);
 EXT void exit_all(int);
@@ -156,7 +156,7 @@ EXT void vlen_prims_free(struct pkt_vlen_hdr_primitives *);
 EXT int vlen_prims_cmp(struct pkt_vlen_hdr_primitives *, struct pkt_vlen_hdr_primitives *);
 EXT void vlen_prims_get(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char **);
 EXT void vlen_prims_debug(struct pkt_vlen_hdr_primitives *);
-EXT void vlen_prims_insert(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, int, char *, int);
+EXT void vlen_prims_insert(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, int, u_char *, int);
 EXT int vlen_prims_delete(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t);
 
 EXT void hash_init_key(pm_hash_key_t *);

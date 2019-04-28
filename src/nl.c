@@ -553,7 +553,7 @@ int gtp_tunnel_func(register struct packet_ptrs *pptrs)
   struct pm_udphdr *udp_hdr = (struct pm_udphdr *) pptrs->tlh_ptr;
   u_int16_t off = pptrs->payload_ptr-pptrs->packet_ptr;
   u_int16_t gtp_hdr_len, gtp_version;
-  char *ptr = pptrs->payload_ptr;
+  u_char *ptr = pptrs->payload_ptr;
   int ret, trial;
 
   gtp_version = (gtp_hdr_v0->flags >> 5) & 0x07;
@@ -716,11 +716,11 @@ ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockadd
 
       if (savefile_pptrs->l4_proto == IPPROTO_UDP) {
 	if (savefile_pptrs->l3_proto == ETHERTYPE_IP) {
-	  raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct pm_iphdr *)savefile_pptrs->iph_ptr)->ip_src.s_addr,
+	  raw_to_sa((struct sockaddr *)src_addr, (u_char *) &((struct pm_iphdr *)savefile_pptrs->iph_ptr)->ip_src.s_addr,
 		    (u_int16_t) ((struct pm_udphdr *)savefile_pptrs->tlh_ptr)->uh_sport, AF_INET);
 	}
 	else if (savefile_pptrs->l3_proto == ETHERTYPE_IPV6) {
-	  raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct ip6_hdr *)savefile_pptrs->iph_ptr)->ip6_src,
+	  raw_to_sa((struct sockaddr *)src_addr, (u_char *) &((struct ip6_hdr *)savefile_pptrs->iph_ptr)->ip6_src,
 		    (u_int16_t) ((struct pm_udphdr *)savefile_pptrs->tlh_ptr)->uh_sport, AF_INET6);
 	}
       }
@@ -746,11 +746,11 @@ ssize_t recvfrom_rawip(unsigned char *buf, size_t len, struct sockaddr *src_addr
 
       if (local_pptrs->l4_proto == IPPROTO_UDP) {
         if (local_pptrs->l3_proto == ETHERTYPE_IP) {
-          raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct pm_iphdr *)local_pptrs->iph_ptr)->ip_src.s_addr,
+          raw_to_sa((struct sockaddr *)src_addr, (u_char *) &((struct pm_iphdr *)local_pptrs->iph_ptr)->ip_src.s_addr,
                     (u_int16_t) ((struct pm_udphdr *)local_pptrs->tlh_ptr)->uh_sport, AF_INET);
         }
         else if (local_pptrs->l3_proto == ETHERTYPE_IPV6) {
-          raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct ip6_hdr *)local_pptrs->iph_ptr)->ip6_src,
+          raw_to_sa((struct sockaddr *)src_addr, (u_char *) &((struct ip6_hdr *)local_pptrs->iph_ptr)->ip6_src,
                     (u_int16_t) ((struct pm_udphdr *)local_pptrs->tlh_ptr)->uh_sport, AF_INET6);
         }
       }
