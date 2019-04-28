@@ -1090,12 +1090,10 @@ void pretag_index_report(struct id_table *t)
 	struct id_index_entry *idie = &t->index[iterator].idx_t[index]; 
 	u_int32_t depth = 0;
 
-	for (depth = 0; idie->result[depth] && depth < idie->depth; depth++); 
-
-	bucket_depths[depth]++;
+	for (depth = 0; idie->result[depth] && depth < idie->depth; depth++) bucket_depths[depth]++;
       }
 
-      Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] maps_index: index %llx buckets: %u depths: 0:%u 1:%u 2:%u 3:%u 4:%u 5:%u 6:%u 7:%u size: %lu\n",
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] pretag_index_report(): index=%llx buckets=%u depths=[0:%u 1:%u 2:%u 3:%u 4:%u 5:%u 6:%u 7:%u] size=%lu\n",
 	  config.name, config.type, t->filename, (unsigned long long)t->index[iterator].bitmap,
 	  buckets, bucket_depths[0], bucket_depths[1], bucket_depths[2], bucket_depths[3],
 	  bucket_depths[4], bucket_depths[5], bucket_depths[6], bucket_depths[7],
@@ -1136,14 +1134,14 @@ void pretag_index_destroy(struct id_table *t)
   t->index_num = 0;
 }
 
-void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct id_entry **index_results, int ir_entries)
+int pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct id_entry **index_results, int ir_entries)
 {
   struct id_entry res_fdata;
   struct id_index_entry *idie;
   pm_hash_serial_t *hash_serializer;
   pm_hash_key_t *hash_key;
-  u_int32_t iterator, iterator_ir, index_cc, index_hdlr;
-  int modulo, buckets;
+  u_int32_t iterator, index_cc, index_hdlr;
+  int modulo, buckets, iterator_ir;
 
   if (!t || !pptrs || !index_results) return;
 
@@ -1182,9 +1180,11 @@ void pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct i
     else break;
   }
 
-  // pretag_index_results_compress(index_results, ir_entries);
-  pretag_index_results_sort(index_results, ir_entries);
-  pretag_index_results_compress_jeqs(index_results, ir_entries);
+  // pretag_index_results_compress(index_results, iterator_ir);
+  pretag_index_results_sort(index_results, iterator_ir);
+  pretag_index_results_compress_jeqs(index_results, iterator_ir);
+
+  return iterator_ir;
 }
 
 void pretag_index_results_sort(struct id_entry **index_results, int ir_entries)

@@ -2217,7 +2217,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  exec_plugins(&pptrsv->vlanmpls6, req);
 	  break;
 	case NF9_FTYPE_NAT_EVENT:
-	  /* XXX: aggregate_filter & NAX64 case */
+	  /* XXX: aggregate_filter & NAT64 case */
 	  if (req->bpf_filter) {
 	    reset_mac(pptrs);
 	    reset_ip4(pptrs);
@@ -2248,6 +2248,15 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  /* Let's copy some relevant field */
 	  pptrs->l4_proto = 0;
 	  memcpy(&pptrs->l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
+
+	  if (config.nfacctd_isis) isis_srcdst_lookup(pptrs);
+	  if (config.nfacctd_bgp_to_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, &pptrs->bta2);
+	  if (config.nfacctd_flow_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, pptrs, &pptrs->bitr, NULL);
+	  if (config.nfacctd_bgp) bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP);
+	  if (config.nfacctd_bgp_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
+	  if (config.nfacctd_bgp_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
+	  if (config.nfacctd_bgp_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
+	  if (config.nfacctd_bmp) bmp_srcdst_lookup(pptrs);
 
           exec_plugins(pptrs, req);
 	  break;
@@ -2600,10 +2609,11 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   if (config.maps_index && pretag_index_have_one(t)) {
     struct id_entry *index_results[ID_TABLE_INDEX_RESULTS];
     u_int32_t iterator;
+    int num_results;
 
-    pretag_index_lookup(t, pptrs, index_results, ID_TABLE_INDEX_RESULTS);
+    num_results = pretag_index_lookup(t, pptrs, index_results, ID_TABLE_INDEX_RESULTS);
 
-    for (iterator = 0; index_results[iterator] && iterator < ID_TABLE_INDEX_RESULTS; iterator++) {
+    for (iterator = 0; index_results[iterator] && iterator < num_results; iterator++) {
       ret = pretag_entry_process(index_results[iterator], pptrs, tag, tag2);
       if (!(ret & PRETAG_MAP_RCODE_JEQ)) goto exit_lane;
     }

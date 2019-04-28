@@ -286,7 +286,7 @@ EXT int pretag_index_allocate(struct id_table *);
 EXT int pretag_index_fill(struct id_table *, pt_bitmap_t, struct id_entry *);
 EXT void pretag_index_report(struct id_table *);
 EXT void pretag_index_destroy(struct id_table *);
-EXT void pretag_index_lookup(struct id_table *, struct packet_ptrs *, struct id_entry **, int);
+EXT int pretag_index_lookup(struct id_table *, struct packet_ptrs *, struct id_entry **, int);
 EXT void pretag_index_results_sort(struct id_entry **, int);
 EXT void pretag_index_results_compress(struct id_entry **, int);
 EXT void pretag_index_results_compress_jeqs(struct id_entry **, int);

@@ -688,6 +688,12 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    if (channels_list[index].aggregation & COUNT_VXLAN) {
+      if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_vxlan_handler;
+      else primitives--;
+      primitives++;
+    }
+
     if (channels_list[index].aggregation_2 & COUNT_MPLS_LABEL_TOP) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = mpls_label_top_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_label_top_handler;
@@ -5011,15 +5017,6 @@ void SF_tunnel_ip_proto_handler(struct channels_list_entry *chptr, struct packet
   ptun->tunnel_proto = sample->dcd_inner_ipProtocol;
 }
 
-void SF_mpls_pw_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
-  SFSample *sample = (SFSample *) pptrs->f_data;
-
-  pbgp->mpls_pw_id = sample->mpls_vll_vc_id;
-}
-
 void SF_tunnel_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
@@ -5027,6 +5024,24 @@ void SF_tunnel_ip_tos_handler(struct channels_list_entry *chptr, struct packet_p
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   ptun->tunnel_tos = sample->dcd_inner_ipTos;
+}
+
+void SF_vxlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  ptun->id = sample->vni;
+}
+
+void SF_mpls_pw_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  pbgp->mpls_pw_id = sample->mpls_vll_vc_id;
 }
 
 void SF_mpls_label_top_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
