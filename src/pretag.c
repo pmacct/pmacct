@@ -1093,7 +1093,7 @@ void pretag_index_report(struct id_table *t)
 	for (depth = 0; idie->result[depth] && depth < idie->depth; depth++) bucket_depths[depth]++;
       }
 
-      Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] maps_index: index %llx buckets: %u depths: 0:%u 1:%u 2:%u 3:%u 4:%u 5:%u 6:%u 7:%u size: %lu\n",
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] pretag_index_report(): index=%llx buckets=%u depths=[0:%u 1:%u 2:%u 3:%u 4:%u 5:%u 6:%u 7:%u] size=%lu\n",
 	  config.name, config.type, t->filename, (unsigned long long)t->index[iterator].bitmap,
 	  buckets, bucket_depths[0], bucket_depths[1], bucket_depths[2], bucket_depths[3],
 	  bucket_depths[4], bucket_depths[5], bucket_depths[6], bucket_depths[7],
