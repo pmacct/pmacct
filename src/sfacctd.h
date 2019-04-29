@@ -350,7 +350,7 @@ EXT int sfacctd_counter_init_kafka_host();
 EXT void sf_cnt_link_misc_structs(struct bgp_misc_structs *);
 EXT void sf_flow_sample_hdr_decode(SFSample *);
 
-EXT u_char *sfv245_check_status(SFSample *spp, struct packet_ptrs *, struct sockaddr *);
+EXT struct xflow_status_entry *sfv245_check_status(SFSample *spp, struct packet_ptrs *, struct sockaddr *);
 EXT void sfv245_check_counter_log_init(struct packet_ptrs *);
 
 EXT void usage_daemon(char *);

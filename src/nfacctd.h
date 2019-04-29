@@ -497,8 +497,8 @@ EXT void notify_malf_packet(short int, char *, char *, struct sockaddr *, u_int3
 EXT int NF_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 EXT void NF_compute_once();
 
-EXT u_char *nfv5_check_status(struct packet_ptrs *);
-EXT u_char *nfv9_check_status(struct packet_ptrs *, u_int32_t, u_int32_t, u_int32_t, u_int8_t);
+EXT struct xflow_status_entry *nfv5_check_status(struct packet_ptrs *);
+EXT struct xflow_status_entry *nfv9_check_status(struct packet_ptrs *, u_int32_t, u_int32_t, u_int32_t, u_int8_t);
 EXT void nfv9_datalink_frame_section_handler(struct packet_ptrs *);
 
 EXT struct template_cache tpl_cache;

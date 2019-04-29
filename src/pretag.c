@@ -1143,7 +1143,7 @@ int pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct id
   u_int32_t iterator, index_cc, index_hdlr;
   int modulo, buckets, iterator_ir;
 
-  if (!t || !pptrs || !index_results) return;
+  if (!t || !pptrs || !index_results) return 0;
 
   memset(&res_fdata, 0, sizeof(res_fdata));
   memset(index_results, 0, (sizeof(struct id_entry *) * ir_entries));
@@ -1172,7 +1172,7 @@ int pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct id
                 config.name, config.type, t->filename);
 	    pretag_index_destroy(t);
 	    memset(index_results, 0, (sizeof(struct id_entry *) * ir_entries));
-	    return;
+	    return 0;
 	  }
 	}
       }

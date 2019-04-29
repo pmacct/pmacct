@@ -1212,7 +1212,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   pptrs->f_header = pkt;
   pkt += NfHdrV5Sz; 
   exp_v5 = (struct struct_export_v5 *)pkt;
-  pptrs->f_status = nfv5_check_status(pptrs);
+  pptrs->f_status = (u_char *) nfv5_check_status(pptrs);
   pptrs->f_status_g = NULL;
 
   reset_mac(pptrs);
@@ -1355,9 +1355,9 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   pptrs->f_header = pkt;
   pkt += HdrSz;
   off += HdrSz; 
-  pptrsv->v4.f_status = nfv9_check_status(pptrs, SourceId, 0, FlowSeq, TRUE);
+  pptrsv->v4.f_status = (u_char *) nfv9_check_status(pptrs, SourceId, 0, FlowSeq, TRUE);
   set_vector_f_status(pptrsv);
-  pptrsv->v4.f_status_g = nfv9_check_status(pptrs, 0, NF9_OPT_SCOPE_SYSTEM, 0, FALSE);
+  pptrsv->v4.f_status_g = (u_char *) nfv9_check_status(pptrs, 0, NF9_OPT_SCOPE_SYSTEM, 0, FALSE);
   set_vector_f_status_g(pptrsv);
 
   process_flowset:
@@ -2651,7 +2651,7 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   return ret;
 }
 
-u_char *nfv5_check_status(struct packet_ptrs *pptrs)
+struct xflow_status_entry *nfv5_check_status(struct packet_ptrs *pptrs)
 {
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
@@ -2670,7 +2670,7 @@ u_char *nfv5_check_status(struct packet_ptrs *pptrs)
   return entry;
 }
 
-u_char *nfv9_check_status(struct packet_ptrs *pptrs, u_int32_t sid, u_int32_t flags, u_int32_t seq, u_int8_t update)
+struct xflow_status_entry *nfv9_check_status(struct packet_ptrs *pptrs, u_int32_t sid, u_int32_t flags, u_int32_t seq, u_int8_t update)
 {
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
   int hash = hash_status_table(sid, sa, XFLOW_STATUS_TABLE_SZ);
