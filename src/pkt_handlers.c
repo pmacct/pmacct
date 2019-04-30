@@ -1520,7 +1520,7 @@ void timestamp_arrival_handler(struct channels_list_entry *chptr, struct packet_
 void custom_primitives_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  char *pcust = ((*data) + chptr->extras.off_custom_primitives);
+  u_char *pcust = (u_char *)((*data) + chptr->extras.off_custom_primitives);
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
   struct custom_primitive_entry *cpe;
   int cpptrs_idx, pd_ptr_idx;
@@ -1539,17 +1539,17 @@ void custom_primitives_handler(struct channels_list_entry *chptr, struct packet_
 	      pptrs->pkt_proto[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n] ==
 			cpe->pd_ptr[pd_ptr_idx].proto.n) {
 	    if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
-              char hexbuf[cpe->alloc_len];
+              unsigned char hexbuf[cpe->alloc_len];
               int hexbuflen = 0;
 
-              hexbuflen = serialize_hex(pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n]+cpe->pd_ptr[pd_ptr_idx].off, hexbuf, cpe->len);
+              hexbuflen = serialize_hex((pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n] + cpe->pd_ptr[pd_ptr_idx].off), hexbuf, cpe->len);
               if (cpe->alloc_len < hexbuflen) hexbuf[cpe->alloc_len-1] = '\0';
               memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, hexbuf, MIN(hexbuflen, cpe->alloc_len));
 	    }
 	    else {
 	      // XXX: maybe prone to SEGV if not a string: check to be added?
 	      if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_STRING && cpe->len == PM_VARIABLE_LENGTH) {
-		char *str_ptr = (pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n]+cpe->pd_ptr[pd_ptr_idx].off); 
+		char *str_ptr = (char *)(pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n] + cpe->pd_ptr[pd_ptr_idx].off); 
 		int remaining_len, str_len;
 
 		remaining_len = (((struct pcap_pkthdr *)pptrs->pkthdr)->caplen -
@@ -1565,7 +1565,7 @@ void custom_primitives_handler(struct channels_list_entry *chptr, struct packet_
                       vlen_prims_init(pvlen, 0);
                       return;
                     }
-                    else vlen_prims_insert(pvlen, cpe->type, str_len, str_ptr, PM_MSG_STR_COPY_ZERO);
+                    else vlen_prims_insert(pvlen, cpe->type, str_len, (u_char *) str_ptr, PM_MSG_STR_COPY_ZERO);
 		  }
 		}
 	      }
@@ -2563,7 +2563,7 @@ void pre_tag_label_handler(struct channels_list_entry *chptr, struct packet_ptrs
     vlen_prims_init(pvlen, 0);
     return;
   }
-  else vlen_prims_insert(pvlen, COUNT_INT_LABEL, pptrs->label.len, pptrs->label.val, PM_MSG_STR_COPY);
+  else vlen_prims_insert(pvlen, COUNT_INT_LABEL, pptrs->label.len, (u_char *) pptrs->label.val, PM_MSG_STR_COPY);
 }
 
 void NF_flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -3035,7 +3035,7 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct utpl_field *utpl = NULL;
-  char *pcust = ((*data) + chptr->extras.off_custom_primitives);
+  u_char *pcust = (u_char *)((*data) + chptr->extras.off_custom_primitives);
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
   struct custom_primitive_entry *cpe;
   int cpptrs_idx;
@@ -3048,7 +3048,7 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
 	cpe = chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].ptr;
 	if (cpe->field_type < NF9_MAX_DEFINED_FIELD && !cpe->pen) {
 	  if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
-            char hexbuf[cpe->alloc_len];
+            unsigned char hexbuf[cpe->alloc_len];
             int hexbuflen = 0;
 
             hexbuflen = serialize_hex(pptrs->f_data+tpl->tpl[cpe->field_type].off, hexbuf, tpl->tpl[cpe->field_type].len);
@@ -3065,7 +3065,7 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
 	else {
 	  if ((utpl = (*get_ext_db_ie_by_type)(tpl, cpe->pen, cpe->field_type, cpe->repeat_id))) {
 	    if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
-              char hexbuf[cpe->alloc_len];
+              unsigned char hexbuf[cpe->alloc_len];
               int hexbuflen = 0;
 
               hexbuflen = serialize_hex(pptrs->f_data+utpl->off, hexbuf, utpl->len);
@@ -3679,7 +3679,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
             vlen_prims_init(pvlen, 0);
             return;
           }
-          else vlen_prims_insert(pvlen, COUNT_INT_SRC_AS_PATH, len, ptr, PM_MSG_STR_COPY);
+          else vlen_prims_insert(pvlen, COUNT_INT_SRC_AS_PATH, len, (u_char *) ptr, PM_MSG_STR_COPY);
 
           if (config.nfacctd_bgp_aspath_radius && ptr && len) free(ptr);
         }
@@ -3723,7 +3723,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
             return;
           }
           else {
-            vlen_prims_insert(pvlen, COUNT_INT_SRC_STD_COMM, len, ptr, PM_MSG_STR_COPY);
+            vlen_prims_insert(pvlen, COUNT_INT_SRC_STD_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
             if (config.nfacctd_bgp_stdcomm_pattern && ptr && len) free(ptr);
           }
         }
@@ -3769,7 +3769,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
             return;
           }
           else {
-            vlen_prims_insert(pvlen, COUNT_INT_SRC_EXT_COMM, len, ptr, PM_MSG_STR_COPY);
+            vlen_prims_insert(pvlen, COUNT_INT_SRC_EXT_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
             if (config.nfacctd_bgp_extcomm_pattern && ptr && len) free(ptr);
           }
         }
@@ -3815,7 +3815,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
             return;
           }
           else {
-            vlen_prims_insert(pvlen, COUNT_INT_SRC_LRG_COMM, len, ptr, PM_MSG_STR_COPY);
+            vlen_prims_insert(pvlen, COUNT_INT_SRC_LRG_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
             if (config.nfacctd_bgp_lrgcomm_pattern && ptr && len) free(ptr);
           }
         }
@@ -3877,7 +3877,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           vlen_prims_init(pvlen, 0);
           return;
         }
-        else vlen_prims_insert(pvlen, COUNT_INT_SRC_AS_PATH, len, ptr, PM_MSG_STR_COPY);
+        else vlen_prims_insert(pvlen, COUNT_INT_SRC_AS_PATH, len, (u_char *) ptr, PM_MSG_STR_COPY);
       }
 
       if (chptr->aggregation & COUNT_SRC_STD_COMM) {
@@ -3888,7 +3888,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           vlen_prims_init(pvlen, 0);
           return;
         }
-        else vlen_prims_insert(pvlen, COUNT_INT_SRC_STD_COMM, len, ptr, PM_MSG_STR_COPY);
+        else vlen_prims_insert(pvlen, COUNT_INT_SRC_STD_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
       }
 
       if (chptr->aggregation & COUNT_SRC_EXT_COMM) {
@@ -3899,7 +3899,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           vlen_prims_init(pvlen, 0);
           return;
         }
-        else vlen_prims_insert(pvlen, COUNT_INT_SRC_EXT_COMM, len, ptr, PM_MSG_STR_COPY);
+        else vlen_prims_insert(pvlen, COUNT_INT_SRC_EXT_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
       }
 
       if (chptr->aggregation_2 & COUNT_SRC_LRG_COMM) {
@@ -3910,7 +3910,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           vlen_prims_init(pvlen, 0);
           return;
         }
-        else vlen_prims_insert(pvlen, COUNT_INT_SRC_LRG_COMM, len, ptr, PM_MSG_STR_COPY);
+        else vlen_prims_insert(pvlen, COUNT_INT_SRC_LRG_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
       }
     }
   }
@@ -3944,7 +3944,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
             return;
           }
           else {
-            vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, ptr, PM_MSG_STR_COPY);
+            vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
             if (config.nfacctd_bgp_stdcomm_pattern && ptr && len) free(ptr);
           }
         }
@@ -3987,7 +3987,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
             return;
           }
           else {
-            vlen_prims_insert(pvlen, COUNT_INT_EXT_COMM, len, ptr, PM_MSG_STR_COPY);
+            vlen_prims_insert(pvlen, COUNT_INT_EXT_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
             if (config.nfacctd_bgp_extcomm_pattern && ptr && len) free(ptr);
           }
         }
@@ -4030,7 +4030,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
             return;
           }
           else {
-            vlen_prims_insert(pvlen, COUNT_INT_LRG_COMM, len, ptr, PM_MSG_STR_COPY);
+            vlen_prims_insert(pvlen, COUNT_INT_LRG_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
             if (config.nfacctd_bgp_lrgcomm_pattern && ptr && len) free(ptr);
           }
         }
@@ -4072,7 +4072,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
             vlen_prims_init(pvlen, 0);
             return;
           }
-          else vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, ptr, PM_MSG_STR_COPY);
+          else vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, (u_char *) ptr, PM_MSG_STR_COPY);
 
           if (config.nfacctd_bgp_aspath_radius && ptr && len) free(ptr);
 	}
@@ -4151,7 +4151,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           vlen_prims_init(pvlen, 0);
           return;
         }
-        else vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, ptr, PM_MSG_STR_COPY);
+        else vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, (u_char *) ptr, PM_MSG_STR_COPY);
       }
 
       if (chptr->aggregation & COUNT_STD_COMM) {
@@ -4162,7 +4162,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           vlen_prims_init(pvlen, 0);
           return;
         }
-        else vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, ptr, PM_MSG_STR_COPY);
+        else vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
       }
 
       if (chptr->aggregation & COUNT_EXT_COMM) {
@@ -4173,7 +4173,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           vlen_prims_init(pvlen, 0);
           return;
         }
-        else vlen_prims_insert(pvlen, COUNT_INT_EXT_COMM, len, ptr, PM_MSG_STR_COPY);
+        else vlen_prims_insert(pvlen, COUNT_INT_EXT_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
       }
 
       if (chptr->aggregation_2 & COUNT_LRG_COMM) {
@@ -4184,7 +4184,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           vlen_prims_init(pvlen, 0);
           return;
         }
-        else vlen_prims_insert(pvlen, COUNT_INT_LRG_COMM, len, ptr, PM_MSG_STR_COPY);
+        else vlen_prims_insert(pvlen, COUNT_INT_LRG_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
       }
     }
   }
@@ -4641,7 +4641,7 @@ void SF_as_path_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
       vlen_prims_init(pvlen, 0);
       return;
     }
-    else vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, ptr, PM_MSG_STR_COPY);
+    else vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, (u_char *) ptr, PM_MSG_STR_COPY);
 
     if (config.nfacctd_bgp_aspath_radius && ptr && len) free(ptr);
   }
@@ -4734,7 +4734,7 @@ void SF_std_comms_handler(struct channels_list_entry *chptr, struct packet_ptrs 
       return;
     }
     else {
-      vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, ptr, PM_MSG_STR_COPY);
+      vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
       if (config.nfacctd_bgp_stdcomm_pattern && ptr && len) free(ptr);
     }
   }

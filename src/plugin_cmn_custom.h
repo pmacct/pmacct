@@ -34,7 +34,7 @@ struct pm_custom_output {
 				 struct pkt_nat_primitives *,
 				 struct pkt_mpls_primitives *,
 				 struct pkt_tunnel_primitives *,
-				 char *,
+				 u_char *,
 				 struct pkt_vlen_hdr_primitives *,
 				 pm_counter_t,
 				 pm_counter_t,

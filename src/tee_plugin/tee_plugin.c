@@ -42,7 +42,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   pid_t core_pid = ((struct channels_list_entry *)ptr)->core_pid;
-  char *dataptr;
+  unsigned char *dataptr;
   struct tee_receiver *target = NULL;
   struct plugin_requests req;
 

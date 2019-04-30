@@ -43,7 +43,7 @@ struct acc {
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;
   struct pkt_tunnel_primitives *ptun;
-  char *pcust;
+  u_char *pcust;
   struct pkt_vlen_hdr_primitives *pvlen;
   struct acc *next;
 };
@@ -83,7 +83,7 @@ struct query_entry {
   struct pkt_nat_primitives pnat;		/* extended NAT + timestamp data */
   struct pkt_mpls_primitives pmpls;		/* extended MPLS data */
   struct pkt_tunnel_primitives ptun;		/* extended tunnel data */
-  char *pcust;					/* custom-defined data */
+  u_char *pcust;				/* custom-defined data */
   struct pkt_vlen_hdr_primitives *pvlen;	/* variable-length data */
 };
 

@@ -2075,7 +2075,7 @@ void primptrs_set_tun(u_char *base, struct extra_primitives *extras, struct prim
 
 void primptrs_set_custom(u_char *base, struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs)
 {
-  prim_ptrs->pcust = (char *) (base + extras->off_custom_primitives);
+  prim_ptrs->pcust = (base + extras->off_custom_primitives);
   prim_ptrs->vlen_next_off = 0;
 }
 
@@ -2205,7 +2205,7 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
   }
 }
 
-void custom_primitive_value_print(char *out, int outlen, char *in, struct custom_primitive_ptrs *cp_entry, int formatted)
+void custom_primitive_value_print(char *out, int outlen, u_char *in, struct custom_primitive_ptrs *cp_entry, int formatted)
 {
   char format[VERYSHORTBUFLEN];
 
@@ -2772,7 +2772,7 @@ u_int16_t hash_key_get_len(pm_hash_key_t *key)
   return key->len;
 }
 
-char *hash_key_get_val(pm_hash_key_t *key)
+u_char *hash_key_get_val(pm_hash_key_t *key)
 {
   if (!key) return NULL;
 

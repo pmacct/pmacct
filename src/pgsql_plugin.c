@@ -46,7 +46,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   pid_t core_pid = ((struct channels_list_entry *)ptr)->core_pid;
   struct networks_file_data nfd;
-  char *dataptr;
+  unsigned char *dataptr;
 
   unsigned char *rgptr;
   int pollagain = TRUE;

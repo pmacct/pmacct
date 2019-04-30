@@ -129,7 +129,7 @@ struct db_cache {
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;
   struct pkt_tunnel_primitives *ptun;
-  char *pcust;
+  u_char *pcust;
   struct pkt_vlen_hdr_primitives *pvlen;
   u_int8_t valid;
   u_int8_t prep_valid;

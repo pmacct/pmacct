@@ -64,7 +64,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   struct extra_primitives extras;
   struct primitives_ptrs prim_ptrs;
-  char *dataptr;
+  unsigned char *dataptr;
 
 #ifdef WITH_ZMQ
   struct p_zmq_host *zmq_host = &((struct channels_list_entry *)ptr)->zmq_host;
@@ -336,13 +336,13 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   struct pkt_nat_primitives *pnat = NULL;
   struct pkt_mpls_primitives *pmpls = NULL;
   struct pkt_tunnel_primitives *ptun = NULL;
-  char *pcust = NULL;
+  u_char *pcust = NULL;
   struct pkt_vlen_hdr_primitives *pvlen = NULL;
   struct pkt_bgp_primitives empty_pbgp;
   struct pkt_nat_primitives empty_pnat;
   struct pkt_mpls_primitives empty_pmpls;
   struct pkt_tunnel_primitives empty_ptun;
-  char *empty_pcust = NULL;
+  u_char *empty_pcust = NULL;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], *sep = config.print_output_separator, *fd_buf;
   char *as_path, *bgp_comm, empty_string[] = "", empty_ip4[] = "0.0.0.0", empty_ip6[] = "::";

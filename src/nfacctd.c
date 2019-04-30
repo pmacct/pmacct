@@ -1221,7 +1221,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   if (tee_dissect) {
     tee_dissect->hdrVersion = version;
     tee_dissect->hdrCount = 1;
-    tee_dissect->hdrBasePtr = hdr_v5;
+    tee_dissect->hdrBasePtr = (u_char *) hdr_v5;
     tee_dissect->hdrEndPtr = (u_char *) (hdr_v5 + NfHdrV5Sz);
     tee_dissect->hdrLen = NfHdrV5Sz;
 

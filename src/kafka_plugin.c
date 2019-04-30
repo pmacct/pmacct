@@ -59,7 +59,7 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   struct extra_primitives extras;
   struct primitives_ptrs prim_ptrs;
-  char *dataptr;
+  unsigned char *dataptr;
 
 #ifdef WITH_AVRO
   char *avro_acct_schema_str = NULL;
@@ -324,13 +324,13 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   struct pkt_nat_primitives *pnat = NULL;
   struct pkt_mpls_primitives *pmpls = NULL;
   struct pkt_tunnel_primitives *ptun = NULL;
-  char *pcust = NULL;
+  u_char *pcust = NULL;
   struct pkt_vlen_hdr_primitives *pvlen = NULL;
   struct pkt_bgp_primitives empty_pbgp;
   struct pkt_nat_primitives empty_pnat;
   struct pkt_mpls_primitives empty_pmpls;
   struct pkt_tunnel_primitives empty_ptun;
-  char *empty_pcust = NULL;
+  u_char *empty_pcust = NULL;
   char dyn_kafka_topic[SRVBUFLEN], *orig_kafka_topic = NULL;
   char elem_part_key[SRVBUFLEN], tmpbuf[SRVBUFLEN];
   int j, stop, is_topic_dyn = FALSE, qn = 0, ret, saved_index = index;

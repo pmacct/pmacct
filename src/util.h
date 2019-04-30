@@ -147,7 +147,7 @@ EXT void primptrs_set_vlen_hdr(u_char *, struct extra_primitives *, struct primi
 EXT int custom_primitives_vlen(struct custom_primitives_ptrs *);
 EXT void custom_primitives_reconcile(struct custom_primitives_ptrs *, struct custom_primitives *);
 EXT void custom_primitive_header_print(char *, int, struct custom_primitive_ptrs *, int);
-EXT void custom_primitive_value_print(char *, int, char *, struct custom_primitive_ptrs *, int);
+EXT void custom_primitive_value_print(char *, int, u_char *, struct custom_primitive_ptrs *, int);
 EXT void custom_primitives_debug(void *, void *);
 
 EXT unsigned char *vlen_prims_copy(struct pkt_vlen_hdr_primitives *);
@@ -170,9 +170,8 @@ EXT void hash_serial_append(pm_hash_serial_t *, char *, u_int16_t, int);
 EXT pm_hash_key_t *hash_serial_get_key(pm_hash_serial_t *);
 EXT u_int16_t hash_serial_get_off(pm_hash_serial_t *);
 EXT u_int16_t hash_key_get_len(pm_hash_key_t *);
-EXT char *hash_key_get_val(pm_hash_key_t *);
+EXT u_char *hash_key_get_val(pm_hash_key_t *);
 EXT int hash_key_cmp(pm_hash_key_t *, pm_hash_key_t *);
-EXT char *hash_key_get_val(pm_hash_key_t *);
 
 EXT void dump_writers_init();
 EXT void dump_writers_count();

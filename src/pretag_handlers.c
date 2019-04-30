@@ -1077,7 +1077,7 @@ int PT_map_src_mac_handler(char *filename, struct id_entry *e, char *value, stru
 
   e->key.src_mac.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
-  if (string_etheraddr(value, e->key.src_mac.a)) {
+  if (string_etheraddr((u_char *)value, e->key.src_mac.a)) {
     Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Bad source MAC address '%s'.\n", config.name, config.type, filename, value);
     return TRUE;
   }
@@ -1104,7 +1104,7 @@ int PT_map_dst_mac_handler(char *filename, struct id_entry *e, char *value, stru
 
   e->key.dst_mac.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
-  if (string_etheraddr(value, e->key.dst_mac.a)) {
+  if (string_etheraddr((u_char *)value, e->key.dst_mac.a)) {
     Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Bad destination MAC address '%s'.\n", config.name, config.type, filename, value);
     return TRUE;
   }

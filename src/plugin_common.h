@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -70,7 +70,7 @@ struct chained_cache {
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;
   struct pkt_tunnel_primitives *ptun;
-  char *pcust;
+  u_char *pcust;
   struct pkt_vlen_hdr_primitives *pvlen;
   u_int8_t valid;
   u_int8_t prep_valid;

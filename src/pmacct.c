@@ -49,13 +49,13 @@ int pmc_bgp_str2rd(rd_t *, char *);
 char *pmc_compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
 			struct pkt_bgp_primitives *, struct pkt_legacy_bgp_primitives *,
 			struct pkt_nat_primitives *, struct pkt_mpls_primitives *,
-			struct pkt_tunnel_primitives *, char *,
+			struct pkt_tunnel_primitives *, u_char *,
 			struct pkt_vlen_hdr_primitives *, pm_counter_t, pm_counter_t,
 			pm_counter_t, u_int32_t, struct timeval *, int, int);
 void pmc_append_rfc3339_timezone(char *, int, const struct tm *);
 void pmc_compose_timestamp(char *, int, struct timeval *, int, int, int);
 void pmc_custom_primitive_header_print(char *, int, struct imt_custom_primitive_entry *, int);
-void pmc_custom_primitive_value_print(char *, int, char *, struct imt_custom_primitive_entry *, int);
+void pmc_custom_primitive_value_print(char *, int, u_char *, struct imt_custom_primitive_entry *, int);
 void pmc_vlen_prims_get(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char **);
 void pmc_printf_csv_label(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char *, char *);
 void pmc_lower_string(char *);
@@ -664,7 +664,7 @@ int main(int argc,char **argv)
   struct pkt_mpls_primitives *pmpls = NULL;
   struct pkt_tunnel_primitives *ptun = NULL;
   struct pkt_vlen_hdr_primitives *pvlen = NULL;
-  char *pcust = NULL;
+  u_char *pcust = NULL;
   char *clibuf, *bufptr;
   unsigned char *largebuf, *elem, *ct, *cpt;
   char ethernet_address[18], ip_address[INET6_ADDRSTRLEN], ndpi_class[SUPERSHORTBUFLEN];
@@ -3251,7 +3251,7 @@ int pmc_bgp_str2rd(rd_t *output, char *value)
 char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
 		  struct pkt_bgp_primitives *pbgp, struct pkt_legacy_bgp_primitives *plbgp,
 		  struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
-		  struct pkt_tunnel_primitives *ptun, char *pcust, struct pkt_vlen_hdr_primitives *pvlen,
+		  struct pkt_tunnel_primitives *ptun, u_char *pcust, struct pkt_vlen_hdr_primitives *pvlen,
 		  pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter,
 		  u_int32_t tcp_flags, struct timeval *basetime, int tstamp_since_epoch, int tstamp_utc)
 {
@@ -3654,7 +3654,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
                   struct pkt_bgp_primitives *pbgp, struct pkt_legacy_bgp_primitives *plbgp,
 		  struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
-		  struct pkt_tunnel_primitives *ptun, char *pcust, struct pkt_vlen_hdr_primitives *pvlen,
+		  struct pkt_tunnel_primitives *ptun, u_char *pcust, struct pkt_vlen_hdr_primitives *pvlen,
 		  pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter,
 		  u_int32_t tcp_flags, struct timeval *basetime, int tstamp_since_epoch, int tstamp_utc)
 {
@@ -3755,7 +3755,7 @@ void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_
   }
 }
 
-void pmc_custom_primitive_value_print(char *out, int outlen, char *in, struct imt_custom_primitive_entry *cp_entry, int formatted)
+void pmc_custom_primitive_value_print(char *out, int outlen, u_char *in, struct imt_custom_primitive_entry *cp_entry, int formatted)
 {
   char format[SRVBUFLEN];
 

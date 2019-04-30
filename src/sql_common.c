@@ -283,7 +283,7 @@ void sql_cache_modulo(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   struct pkt_tunnel_primitives *ptun = prim_ptrs->ptun;
-  char *pcust = prim_ptrs->pcust;
+  u_char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
 
   idata->hash = cache_crc32((unsigned char *)srcdst, pp_size);
@@ -472,7 +472,7 @@ struct db_cache *sql_cache_search(struct primitives_ptrs *prim_ptrs, time_t base
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   struct pkt_tunnel_primitives *ptun = prim_ptrs->ptun;
-  char *pcust = prim_ptrs->pcust;
+  u_char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   unsigned int modulo;
   struct db_cache *Cursor;
@@ -550,7 +550,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   struct pkt_nat_primitives *pnat = prim_ptrs->pnat;
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   struct pkt_tunnel_primitives *ptun = prim_ptrs->ptun;
-  char *pcust = prim_ptrs->pcust;
+  u_char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   time_t basetime = idata->basetime, timeslot = idata->timeslot;
   struct pkt_primitives *srcdst = &data->primitives;

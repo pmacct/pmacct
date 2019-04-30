@@ -215,7 +215,7 @@ struct plugin_requests {
 };
 
 typedef struct {
-  char *val;
+  u_char *val;
   u_int16_t len;
 } pm_hash_key_t;
 
