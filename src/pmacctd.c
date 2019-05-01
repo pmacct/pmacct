@@ -1093,7 +1093,7 @@ int main(int argc,char **argv, char **envp)
        to keep a backup feed in memory */
     config.nfacctd_bgp_max_peers = 2;
 
-    cb_data.f_agent = (char *)&client;
+    cb_data.f_agent = (u_char *) &client;
     nfacctd_bgp_wrapper();
 
     /* Let's give the BGP thread some advantage to create its structures */

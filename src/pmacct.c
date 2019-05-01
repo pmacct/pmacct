@@ -3140,7 +3140,7 @@ int pmc_bgp_rd2str(char *str, rd_t *rd)
   struct rd_as  *rda;
   struct rd_as4 *rda4;
   struct host_addr a;
-  u_char ip_address[INET6_ADDRSTRLEN];
+  char ip_address[INET6_ADDRSTRLEN];
 
   switch (rd->type) {
   case RD_TYPE_AS:

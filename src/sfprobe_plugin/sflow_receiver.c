@@ -380,7 +380,7 @@ inline static void putClass(SFLReceiver *receiver, SFLExtended_classification *c
   }
   else strlcpy(buf, "unknown", MAX_PROTOCOL_LEN);
 
-  put128(receiver, buf);
+  put128(receiver, (u_char *)buf);
 }
 
 inline static void putClass2(SFLReceiver *receiver, SFLExtended_classification2 *class2_elem)

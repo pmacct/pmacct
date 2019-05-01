@@ -259,4 +259,6 @@ int main(int argc,char **argv, char **envp)
 
   telemetry_prepare_daemon(&t_data);
   telemetry_daemon(&t_data);
+
+  return 0;
 }

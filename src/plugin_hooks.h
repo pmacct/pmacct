@@ -138,7 +138,7 @@ EXT struct channels_list_entry *insert_pipe_channel(int, struct configuration *,
 EXT void delete_pipe_channel(int);
 EXT void sort_pipe_channels();
 EXT void init_pipe_channels();
-EXT int evaluate_filters(struct aggregate_filter *, char *, struct pcap_pkthdr *);
+EXT int evaluate_filters(struct aggregate_filter *, u_char *, struct pcap_pkthdr *);
 EXT void recollect_pipe_memory(struct channels_list_entry *);
 EXT void init_random_seed();
 EXT void fill_pipe_buffer();

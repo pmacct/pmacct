@@ -2005,8 +2005,7 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   /* Giving a first try with index(es) */
   if (config.maps_index && pretag_index_have_one(t)) {
     struct id_entry *index_results[ID_TABLE_INDEX_RESULTS];
-    u_int32_t iterator;
-    int num_results;
+    u_int32_t iterator, num_results;
 
     num_results = pretag_index_lookup(t, pptrs, index_results, ID_TABLE_INDEX_RESULTS);
 

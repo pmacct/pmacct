@@ -247,4 +247,6 @@ int main(int argc,char **argv, char **envp)
 
   bmp_prepare_daemon();
   skinny_bmp_daemon();
+
+  return 0;
 }

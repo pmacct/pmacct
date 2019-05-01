@@ -121,6 +121,8 @@ static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
 #else
   pcap_cb((u_char *) cb_data, &hdr, pkt);
 #endif
+
+  return 0;
 }
 
 void usage_daemon(char *prog_name)

@@ -488,7 +488,7 @@ struct pkt_msg {
   struct sockaddr agent;
   u_int32_t seqno;
   u_int16_t len;
-  char *payload;
+  u_char *payload;
   pm_id_t tag;
   pm_id_t tag2;
   u_int8_t bcast;

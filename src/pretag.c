@@ -1134,7 +1134,7 @@ void pretag_index_destroy(struct id_table *t)
   t->index_num = 0;
 }
 
-int pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct id_entry **index_results, int ir_entries)
+u_int32_t pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct id_entry **index_results, int ir_entries)
 {
   struct id_entry res_fdata;
   struct id_index_entry *idie;

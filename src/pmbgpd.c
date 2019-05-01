@@ -267,6 +267,8 @@ int main(int argc,char **argv, char **envp)
 
   bgp_prepare_daemon();
   skinny_bgp_daemon();
+
+  return 0;
 }
 
 #if defined WITH_ZMQ

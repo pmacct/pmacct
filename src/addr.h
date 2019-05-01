@@ -56,7 +56,7 @@ EXT int ip6_addr_cmp(void *, void *);
 EXT void ip6_addr_cpy(void *, void *);
 EXT void ip6_addr_32bit_cpy(void *, void *, int, int, int);
 EXT void etheraddr_string(const u_char *, char *);
-EXT int string_etheraddr(const u_char *, char *);
+EXT int string_etheraddr(const char *, u_char *);
 EXT int is_multicast(struct host_addr *);
 EXT int is_any(struct host_addr *);
 EXT void clean_sin_addr(struct sockaddr *);

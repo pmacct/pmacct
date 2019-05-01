@@ -617,7 +617,7 @@ void etheraddr_string(const u_char *ep, char *buf)
  * to be ETH_ADDR_LEN long). TRUE is returned if any failure occurs;
  * TRUE if the routine completes the job successfully 
  */
-int string_etheraddr(const u_char *asc, char *addr)
+int string_etheraddr(const char *asc, u_char *addr)
 {
   int cnt;
 

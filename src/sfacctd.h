@@ -302,7 +302,8 @@ EXT u_int64_t getData64(SFSample *);
 EXT u_int32_t getAddress(SFSample *, SFLAddress *);
 EXT void skipBytes(SFSample *, int);
 EXT int skipBytesAndCheck(SFSample *, int);
-EXT int lengthCheck(SFSample *, u_char *, int);
+EXT int lengthCheck(SFSample *, u_char *, u_int32_t);
+EXT u_int32_t getString(SFSample *, char *, u_int32_t);
 
 EXT void process_SFv2v4_packet(SFSample *, struct packet_ptrs_vector *, struct plugin_requests *, struct sockaddr *);
 EXT void process_SFv5_packet(SFSample *, struct packet_ptrs_vector *, struct plugin_requests *, struct sockaddr *);

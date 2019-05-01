@@ -406,7 +406,7 @@ ASN_to_flowrec(struct FLOW *flow, struct pkt_data *data, int ndx)
 }
 
 static int
-cust_to_flowrec(struct FLOW *flow, char *pcust, int ndx)
+cust_to_flowrec(struct FLOW *flow, u_char *pcust, int ndx)
 {
   if (pcust) {
     if (!flow->pcust[ndx]) flow->pcust[ndx] = malloc(config.cpptrs.len);
@@ -447,7 +447,7 @@ ipv4_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int *isfra
   struct pkt_data *data = prim_ptrs->data;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_extras *extras = prim_ptrs->pextras;
-  char *pcust = prim_ptrs->pcust;
+  u_char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   struct pkt_primitives *p = &data->primitives;
   int ndx;
@@ -488,7 +488,7 @@ ipv4_to_flowrec_update(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int
 {
   struct pkt_data *data = prim_ptrs->data;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
-  char *pcust = prim_ptrs->pcust;
+  u_char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   struct pkt_primitives *p = &data->primitives;
   int ndx;
@@ -513,7 +513,7 @@ ipv6_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int *isfra
   struct pkt_data *data = prim_ptrs->data;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_extras *extras = prim_ptrs->pextras;
-  char *pcust = prim_ptrs->pcust;
+  u_char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   struct pkt_primitives *p = &data->primitives;
   int ndx;
@@ -555,7 +555,7 @@ ipv6_to_flowrec_update(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int
 {
   struct pkt_data *data = prim_ptrs->data;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
-  char *pcust = prim_ptrs->pcust;
+  u_char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   struct pkt_primitives *p = &data->primitives;
   struct in6_addr dummy_ipv6; 

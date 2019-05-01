@@ -45,7 +45,7 @@
   -----------------___________________________------------------
 */
 
-int lengthCheck(SFSample *sample, u_char *start, int len)
+int lengthCheck(SFSample *sample, u_char *start, u_int32_t len)
 {
   u_int32_t actualLen = (u_char *)sample->datap - start;
   if (actualLen != len) {
@@ -436,7 +436,7 @@ int skipBytesAndCheck(SFSample *sample, int skip)
   else return ERR;
 }
 
-u_int32_t getString(SFSample *sample, char *buf, int bufLen)
+u_int32_t getString(SFSample *sample, char *buf, u_int32_t bufLen)
 {
   u_int32_t len, read_len;
   len = getData32(sample);
@@ -526,7 +526,7 @@ void readExtendedGateway_v2(SFSample *sample)
 
 void readExtendedGateway(SFSample *sample)
 {
-  int len_tot, len_asn, len_comm, idx;
+  u_int32_t len_tot, len_asn, len_comm, idx;
   char asn_str[MAX_BGP_ASPATH], comm_str[MAX_BGP_STD_COMMS], space[] = " ";
 
   if(sample->datagramVersion >= 5) getAddress(sample, &sample->bgp_nextHop);
@@ -538,8 +538,7 @@ void readExtendedGateway(SFSample *sample)
   if (sample->dst_as_path_len > 0) {
     for (idx = 0, len_tot = 0; idx < sample->dst_as_path_len; idx++) {
       u_int32_t seg_type;
-      u_int32_t seg_len;
-      int i;
+      u_int32_t seg_len, i;
 
       seg_type = getData32(sample);
       seg_len = getData32(sample);
@@ -1133,8 +1132,10 @@ void readv5FlowSample(SFSample *sample, int expanded, struct packet_ptrs_vector 
   }
 
   num_elements = getData32(sample);
+
   {
-    int el;
+    u_int32_t el;
+
     for (el = 0; el < num_elements; el++) {
       u_int32_t tag, length;
       u_char *start;

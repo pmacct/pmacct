@@ -767,7 +767,7 @@ pm_counter_t take_simple_systematic_skip(pm_counter_t mean)
    TRUE: We want it!
    FALSE: Discard it!
 */
-int evaluate_filters(struct aggregate_filter *filter, char *pkt, struct pcap_pkthdr *pkthdr)
+int evaluate_filters(struct aggregate_filter *filter, u_char *pkt, struct pcap_pkthdr *pkthdr)
 {
   int index;
 

@@ -600,7 +600,7 @@ void Tee_init_socks()
 
       if (config.debug) {
 	struct host_addr recv_addr;
-        u_char recv_addr_str[INET6_ADDRSTRLEN];
+        char recv_addr_str[INET6_ADDRSTRLEN];
 	u_int16_t recv_port;
 
 	sa_to_addr((struct sockaddr *)&target->dest, &recv_addr, &recv_port); 
