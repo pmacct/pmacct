@@ -66,6 +66,8 @@ The keys used are:
   ! fix, uacctd: dynamically allocate jumbo_container buffer size as
     packets larger than 10KB, previous static allocation, would lead to
     crashes.
+  ! fix, nfacctd: wired (BGP, BMP, ISIS, etc.) lookups to the NEL/NSEL 
+    use-case.  
   ! fix, nfacctd: search for IE 408 (dataLinkFrameType) was leading to
     SEGVs. Also improved handling of variable-length IPFIX templates.  
   ! fix, BMP daemon: solved an occasional truncation of the last message
@@ -131,6 +133,9 @@ The keys used are:
     for data consistency for consumers.
   ! fix, util.c: open_output_file(), if file exists and it's a FIFO then
     set O_NONBLOCK when opening.
+  ! fix, pretag.c: pretag_index_report() was reporting incorrect info of
+    the hash structure built for the maps_index feature. Its format was
+    has also changed to be better parseable.
   ! fix, compile time warnings: several warnings were addressed including
     but not restricted to -Wformat ones. Also an annotation was added to
     the Log function to inform the compiler it's a printf-style function,
