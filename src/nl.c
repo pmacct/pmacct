@@ -228,7 +228,21 @@ int ip_handler(register struct packet_ptrs *pptrs)
         ptr += ((struct pm_tcphdr *)pptrs->tlh_ptr)->th_off << 2;
         off += ((struct pm_tcphdr *)pptrs->tlh_ptr)->th_off << 2;
       }
-      if (off < caplen) pptrs->payload_ptr = ptr;
+
+      if (off < caplen) {
+	pptrs->payload_ptr = ptr;
+
+	if (pptrs->l4_proto == IPPROTO_UDP) {
+	  u_int16_t dst_port = ntohs(((struct pm_udphdr *)pptrs->tlh_ptr)->uh_dport);
+
+	  if (dst_port == UDP_PORT_VXLAN && (off + sizeof(struct vxlan_hdr) <= caplen)) {
+	    struct vxlan_hdr *vxhdr = (struct vxlan_hdr *) pptrs->payload_ptr; 
+
+	    pptrs->vxlan_ptr = vxhdr->vni; 
+	    pptrs->payload_ptr += sizeof(struct vxlan_hdr);
+	  }
+	}
+      }
     }
     else {
       pptrs->tlh_ptr = dummy_tlhdr;
@@ -372,7 +386,21 @@ int ip6_handler(register struct packet_ptrs *pptrs)
         ptr += ((struct pm_tcphdr *)pptrs->tlh_ptr)->th_off << 2;
         off += ((struct pm_tcphdr *)pptrs->tlh_ptr)->th_off << 2;
       }
-      if (off < caplen) pptrs->payload_ptr = ptr;
+
+      if (off < caplen) {
+	pptrs->payload_ptr = ptr;
+
+	if (pptrs->l4_proto == IPPROTO_UDP) {
+	  u_int16_t dst_port = ntohs(((struct pm_udphdr *)pptrs->tlh_ptr)->uh_dport);
+
+	  if (dst_port == UDP_PORT_VXLAN && (off + sizeof(struct vxlan_hdr) <= caplen)) {
+	    struct vxlan_hdr *vxhdr = (struct vxlan_hdr *) pptrs->payload_ptr;
+
+	    if (vxhdr->flags & VXLAN_FLAG_I) pptrs->vxlan_ptr = vxhdr->vni;
+	    pptrs->payload_ptr += sizeof(struct vxlan_hdr);
+	  }
+	}
+      }
     }
     else {
       pptrs->tlh_ptr = dummy_tlhdr;

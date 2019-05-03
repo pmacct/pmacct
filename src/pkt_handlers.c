@@ -689,7 +689,8 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation & COUNT_VXLAN) {
-      if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_vxlan_handler;
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = vxlan_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_vxlan_handler;
       else primitives--;
       primitives++;
     }
@@ -1177,6 +1178,23 @@ void tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
   if (pptrs->l4_proto == IPPROTO_TCP) pdata->tcp_flags = pptrs->tcp_flags;
+}
+
+void vxlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  u_char *vni_ptr;
+
+  if (pptrs->vxlan_ptr) {
+    vni_ptr = pptrs->vxlan_ptr;
+
+    ptun->id = *vni_ptr++;
+    ptun->id <<= 8;
+    ptun->id += *vni_ptr++;
+    ptun->id <<= 8;
+    ptun->id += *vni_ptr++;
+  }
 }
 
 void counters_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
