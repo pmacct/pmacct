@@ -251,6 +251,7 @@ struct data_hdr_v9 {
 #define NF9_OBSERVATION_TIME_SEC	322
 #define NF9_OBSERVATION_TIME_MSEC	323
 /* ... */
+#define NF9_LAYER2_SEGMENT_ID		351
 #define NF9_LAYER2OCTETDELTACOUNT	352
 /* ... */
 #define NF9_DATALINK_FRAME_TYPE		408
@@ -297,6 +298,11 @@ struct data_hdr_v9 {
 #define NF9_DL_F_TYPE_UNKNOWN		0
 #define NF9_DL_F_TYPE_ETHERNET		1
 #define NF9_DL_F_TYPE_802DOT11		2
+
+/* layer2SegmentId */
+#define NF9_L2_SID_RESERVED		0x00
+#define NF9_L2_SID_VXLAN		0x01
+#define NF9_L2_SID_NVGRE		0x02
 
 /* CUSTOM TYPES START HERE: supported in IPFIX only with pmacct PEN */
 #define NF9_CUST_TAG                    1

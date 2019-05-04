@@ -690,6 +690,7 @@ void evaluate_packet_handlers()
 
     if (channels_list[index].aggregation & COUNT_VXLAN) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = vxlan_handler;
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_vxlan_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_vxlan_handler;
       else primitives--;
       primitives++;
@@ -3386,6 +3387,39 @@ void NF_mpls_pw_id_handler(struct channels_list_entry *chptr, struct packet_ptrs
       memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_PSEUDOWIREID].off, 4);
       pbgp->mpls_pw_id = ntohl(tmp32);
     }
+    break;
+  default:
+    break;
+  }
+}
+
+void NF_vxlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  u_char *vni_ptr = NULL, tmp64[8];
+  u_int8_t *type = NULL;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_LAYER2_SEGMENT_ID].len == 8) {
+      memcpy(tmp64, pptrs->f_data+tpl->tpl[NF9_LAYER2_SEGMENT_ID].off, 8);
+
+      type = (u_int8_t *) &tmp64[0];
+      if ((*type) == NF9_L2_SID_VXLAN) {
+	vni_ptr = &tmp64[6];
+
+	ptun->id = *vni_ptr++;
+	ptun->id <<= 8;
+	ptun->id += *vni_ptr++;
+	ptun->id <<= 8;
+	ptun->id += *vni_ptr++;
+      }
+    }
+
     break;
   default:
     break;

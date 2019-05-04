@@ -112,6 +112,7 @@ EXT void NF_mpls_label_bottom_handler(struct channels_list_entry *, struct packe
 EXT void NF_mpls_stack_depth_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_mpls_vpn_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_mpls_pw_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_vxlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_timestamp_start_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_timestamp_end_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_timestamp_arrival_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

@@ -238,7 +238,7 @@ int ip_handler(register struct packet_ptrs *pptrs)
 	  if (dst_port == UDP_PORT_VXLAN && (off + sizeof(struct vxlan_hdr) <= caplen)) {
 	    struct vxlan_hdr *vxhdr = (struct vxlan_hdr *) pptrs->payload_ptr; 
 
-	    pptrs->vxlan_ptr = vxhdr->vni; 
+	    if (vxhdr->flags & VXLAN_FLAG_I) pptrs->vxlan_ptr = vxhdr->vni; 
 	    pptrs->payload_ptr += sizeof(struct vxlan_hdr);
 	  }
 	}
