@@ -342,6 +342,7 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count_2 & COUNT_TUNNEL_DST_HOST) printf("TUNNEL_DST_IP                                  ");
     if (what_to_count_2 & COUNT_TUNNEL_IP_PROTO) printf("TUNNEL_PROTOCOL  ");
     if (what_to_count_2 & COUNT_TUNNEL_IP_TOS) printf("TUNNEL_TOS  ");
+    if (what_to_count_2 & COUNT_VXLAN) printf("VXLAN     ");
 
     if (what_to_count_2 & COUNT_TIMESTAMP_START) printf("TIMESTAMP_START                ");
     if (what_to_count_2 & COUNT_TIMESTAMP_END) printf("TIMESTAMP_END                  "); 
@@ -569,6 +570,7 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     if (what_to_count_2 & COUNT_TUNNEL_DST_HOST) printf("%sTUNNEL_DST_IP", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_TUNNEL_IP_PROTO) printf("%sTUNNEL_PROTOCOL", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_TUNNEL_IP_TOS) printf("%sTUNNEL_TOS", write_sep(sep, &count));
+    if (what_to_count_2 & COUNT_VXLAN) printf("%sVXLAN", write_sep(sep, &count));
 
     if (what_to_count_2 & COUNT_TIMESTAMP_START) printf("%sTIMESTAMP_START", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_TIMESTAMP_END) printf("%sTIMESTAMP_END", write_sep(sep, &count));
@@ -1942,6 +1944,10 @@ int main(int argc,char **argv)
 	  tmpnum = atoi(match_string_token);
 	  request.ptun.tunnel_tos = (u_int8_t) tmpnum; 
 	}
+	else if (!strcmp(count_token[match_string_index], "vxlan")) {
+	  tmpnum = atoi(match_string_token);
+	  request.ptun.id = tmpnum;
+	}
         else if (!strcmp(count_token[match_string_index], "timestamp_start")) {
 	  struct tm tmp;
 	  char *delim = strchr(match_string_token, '.');
@@ -2694,6 +2700,11 @@ int main(int argc,char **argv)
 	if (!have_wtc || (what_to_count_2 & COUNT_TUNNEL_IP_TOS)) {
 	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-3u         ", ptun->tunnel_tos);
 	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), ptun->tunnel_tos);
+	}
+
+	if (!have_wtc || (what_to_count_2 & COUNT_VXLAN)) {
+	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-8u  ", ptun->id);
+	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), ptun->id);
 	}
 
         if (!have_wtc || (what_to_count_2 & COUNT_TIMESTAMP_START)) {
@@ -3594,6 +3605,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   }
 
   if (wtc_2 & COUNT_TUNNEL_IP_TOS) json_object_set_new_nocheck(obj, "tunnel_tos", json_integer((json_int_t)ptun->tunnel_tos));
+  if (wtc_2 & COUNT_VXLAN) json_object_set_new_nocheck(obj, "vxlan", json_integer((json_int_t)ptun->id));
 
   if (wtc_2 & COUNT_TIMESTAMP_START) {
     pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE, tstamp_since_epoch, tstamp_utc);

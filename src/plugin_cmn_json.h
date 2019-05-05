@@ -109,6 +109,7 @@ EXT void compose_json_tunnel_src_host(json_t *, struct chained_cache *);
 EXT void compose_json_tunnel_dst_host(json_t *, struct chained_cache *);
 EXT void compose_json_tunnel_proto(json_t *, struct chained_cache *);
 EXT void compose_json_tunnel_tos(json_t *, struct chained_cache *);
+EXT void compose_json_vxlan(json_t *, struct chained_cache *);
 EXT void compose_json_timestamp_start(json_t *, struct chained_cache *);
 EXT void compose_json_timestamp_end(json_t *, struct chained_cache *);
 EXT void compose_json_timestamp_arrival(json_t *, struct chained_cache *);

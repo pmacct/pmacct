@@ -742,6 +742,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	}
 
 	if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) fprintf(f, "%-3u         ", ptun->tunnel_tos);
+	if (config.what_to_count_2 & COUNT_VXLAN) fprintf(f, "%-8u  ", ptun->id);
   
         if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
 	  char tstamp_str[VERYSHORTBUFLEN];
@@ -1100,6 +1101,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	}
 
 	if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) fprintf(f, "%s%u", write_sep(sep, &count), ptun->tunnel_tos);
+	if (config.what_to_count_2 & COUNT_VXLAN) fprintf(f, "%s%u", write_sep(sep, &count), ptun->id);
   
         if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
 	  char tstamp_str[VERYSHORTBUFLEN];
@@ -1382,6 +1384,7 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_TUNNEL_DST_HOST) fprintf(f, "TUNNEL_DST_IP                                  ");
   if (config.what_to_count_2 & COUNT_TUNNEL_IP_PROTO) fprintf(f, "TUNNEL_PROTOCOL  ");
   if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) fprintf(f, "TUNNEL_TOS  ");
+  if (config.what_to_count_2 & COUNT_VXLAN) fprintf(f, "VXLAN     ");
   if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "TIMESTAMP_START                ");
   if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "TIMESTAMP_END                  "); 
   if (config.what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) fprintf(f, "TIMESTAMP_ARRIVAL              ");
@@ -1502,6 +1505,7 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_TUNNEL_DST_HOST) fprintf(f, "%sTUNNEL_DST_IP", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TUNNEL_IP_PROTO) fprintf(f, "%sTUNNEL_PROTOCOL", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) fprintf(f, "%sTUNNEL_TOS", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_VXLAN) fprintf(f, "%sVXLAN", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "%sTIMESTAMP_START", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "%sTIMESTAMP_END", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) fprintf(f, "%sTIMESTAMP_ARRIVAL", write_sep(sep, &count));

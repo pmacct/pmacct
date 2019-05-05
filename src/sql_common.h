@@ -261,6 +261,7 @@ EXT void count_tunnel_dst_ip_handler(const struct db_cache *, struct insert_data
 EXT void MY_count_tunnel_ip_proto_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void PG_count_tunnel_ip_proto_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_tunnel_ip_tos_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_vxlan_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_timestamp_start_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void PG_copy_count_timestamp_start_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_timestamp_start_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);

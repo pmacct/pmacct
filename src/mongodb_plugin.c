@@ -749,7 +749,9 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
 
 	bson_append_string(bson_elem, "tunnel_ip_proto", ip_proto_print(ptun->tunnel_proto, proto, PROTO_NUM_STRLEN));
       }
+
       if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) bson_append_int(bson_elem, "tunnel_tos", ptun->tunnel_tos);
+      if (config.what_to_count_2 & COUNT_VXLAN) bson_append_int(bson_elem, "vxlan", ptun->id);
   
       if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
 	if (config.timestamps_since_epoch) {

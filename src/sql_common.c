@@ -2488,6 +2488,20 @@ int sql_evaluate_primitives(int primitive)
     primitive++;
   }
 
+  if (what_to_count_2 & COUNT_VXLAN) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "vxlan", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "vxlan=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_VXLAN;
+    values[primitive].handler = where[primitive].handler = count_vxlan_handler;
+    primitive++;
+  }
+
   if (what_to_count_2 & COUNT_TIMESTAMP_START) {
     int use_copy=0;
 

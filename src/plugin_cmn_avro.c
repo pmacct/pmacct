@@ -259,6 +259,9 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc_2 & COUNT_TUNNEL_IP_TOS)
     avro_schema_record_field_append(schema, "tunnel_tos", avro_schema_long());
 
+  if (wtc_2 & COUNT_VXLAN)
+    avro_schema_record_field_append(schema, "vxlan", avro_schema_long());
+
   if (wtc_2 & COUNT_TIMESTAMP_START)
     avro_schema_record_field_append(schema, "timestamp_start", avro_schema_string());
 
@@ -792,6 +795,11 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
   if (wtc_2 & COUNT_TUNNEL_IP_TOS) {
     check_i(avro_value_get_by_name(&value, "tunnel_tos", &field, NULL));
     check_i(avro_value_set_long(&field, ptun->tunnel_tos));
+  }
+
+  if (wtc_2 & COUNT_VXLAN) {
+    check_i(avro_value_get_by_name(&value, "vxlan", &field, NULL));
+    check_i(avro_value_set_long(&field, ptun->id));
   }
 
   if (wtc_2 & COUNT_TIMESTAMP_START) {

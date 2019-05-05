@@ -391,6 +391,11 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
     idx++;
   }
 
+  if (wtc_2 & COUNT_VXLAN) {
+    cjhandler[idx] = compose_json_vxlan;
+    idx++;
+  }
+
   if (wtc_2 & COUNT_TIMESTAMP_START) {
     cjhandler[idx] = compose_json_timestamp_start;
     idx++;
@@ -982,6 +987,11 @@ void compose_json_tunnel_proto(json_t *obj, struct chained_cache *cc)
 void compose_json_tunnel_tos(json_t *obj, struct chained_cache *cc)
 {
   json_object_set_new_nocheck(obj, "tunnel_tos", json_integer((json_int_t)cc->ptun->tunnel_tos));
+}
+
+void compose_json_vxlan(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "vxlan", json_integer((json_int_t)cc->ptun->id));
 }
 
 void compose_json_timestamp_start(json_t *obj, struct chained_cache *cc)
