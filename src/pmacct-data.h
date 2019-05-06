@@ -93,6 +93,7 @@ static const struct _primitives_matrix_struct _primitives_matrix[] = {
   {"post_nat_src_port", 0, 0, 1, 0, 0, 0, 0, "Source TCP/UDP port after NAT translation"},
   {"post_nat_dst_port", 0, 0, 1, 0, 0, 0, 0, "Destination TCP/UDP port after NAT translation"},
   {"TUNNEL", 1, 1, 1, 1, 0, 0, 0, ""}, 
+  {"vxlan", 1, 1, 1, 1, 0, 0, 0, "VXLAN Network Identifier"},
   {"tunnel_src_host", 0, 0, 0, 1, 0, 0, 0, "Tunnel inner Source IPv4/IPv6 address"},
   {"tunnel_dst_host", 0, 0, 0, 1, 0, 0, 0, "Tunnel inner Destination IPv4/IPv6 address"},
   {"tunnel_proto", 0, 0, 0, 1, 0, 0, 0, "Tunnel inner IP protocol"},

@@ -1,9 +1,13 @@
 This document doesn't replace documentation relevant to the database software you are
 using, ie. README.mysql, README.pgsql or README.sqlite3.
 
-The 'tunnel_ip_src', 'tunnel_ip_dst', 'tunnel_ip_proto', 'tunnel_ip_tos' fields.
+The 'vxlan', and 'tunnel_*' fields.
 Such fields are being introduced to support tunnel primitives. The guidelines below
 (typically in MySQL format) are to add such primitives to the SQL schema:
+
+* vxlan field:
+  - "vxlan INT(4) UNSIGNED NOT NULL," to declare the field itself
+  - "PRIMARY KEY (..., vxlan, ...)" to put it in the primary key
 
 * tunnel_ip_src field:
   - "tunnel_ip_src CHAR(45) NOT NULL," to declare the field itself (*)
