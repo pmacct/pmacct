@@ -223,6 +223,8 @@ typedef struct _SFSample {
 
   struct packet_ptrs hdr_ptrs;
   struct pcap_pkthdr hdr_pcap;
+
+  void *sppi;
 } SFSample;
 
 /* define my own IP header struct - to ease portability */

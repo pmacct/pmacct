@@ -217,16 +217,16 @@ void decodeVXLAN(SFSample *sample, u_char *ptr)
   struct vxlan_hdr *hdr = NULL;
   u_char *vni_ptr = NULL;
   u_int32_t vni;
-
   u_char *end = sample->header + sample->headerLen;
-  if(ptr > (end - 8)) return; // not enough header bytes left
+
+  if (ptr > (end - 8)) return;
 
   hdr = (struct vxlan_hdr *) ptr;
 
   if (hdr->flags & VXLAN_FLAG_I) {
     vni_ptr = hdr->vni;
 
-    // decode 24-bit label
+    /* decode 24-bit label */
     vni = *vni_ptr++;
     vni <<= 8;
     vni += *vni_ptr++;
@@ -234,6 +234,21 @@ void decodeVXLAN(SFSample *sample, u_char *ptr)
     vni += *vni_ptr++;
 
     sample->vni = vni;
+    ptr += sizeof(struct vxlan_hdr);
+
+    if (sample->sppi) {
+      SFSample *sppi = (SFSample *) sample->sppi;
+
+      /* preps */
+      sppi->datap = (u_int32_t *) ptr;
+      sppi->header = ptr;
+      sppi->headerLen = (end - ptr);
+
+      /* decoding inner packet */
+      decodeLinkLayer(sppi);
+      if (sppi->gotIPV4) decodeIPV4(sppi);
+      else if (sppi->gotIPV6) decodeIPV6(sppi);
+    }
   }
 }
 

@@ -122,7 +122,7 @@ int main(int argc,char **argv, char **envp)
   struct id_table sampling_table;
   u_int32_t idx;
   int pipe_fd = 0, capture_methods = 0;
-  int ret;
+  int ret, alloc_sppi = FALSE;
   SFSample spp;
 
   struct sockaddr_storage server, client;
@@ -488,8 +488,10 @@ int main(int argc,char **argv, char **envp)
           list->cfg.data_type |= PIPE_TYPE_MPLS;
 
 	if (list->cfg.what_to_count_2 & (COUNT_TUNNEL_SRC_HOST|COUNT_TUNNEL_DST_HOST|
-			COUNT_TUNNEL_IP_PROTO|COUNT_TUNNEL_IP_TOS|COUNT_VXLAN))
+			COUNT_TUNNEL_IP_PROTO|COUNT_TUNNEL_IP_TOS|COUNT_VXLAN)) {
 	  list->cfg.data_type |= PIPE_TYPE_TUN;
+	  alloc_sppi = TRUE;
+	}
 
         if (list->cfg.what_to_count_2 & (COUNT_LABEL))
           list->cfg.data_type |= PIPE_TYPE_VLEN;
@@ -1102,6 +1104,11 @@ int main(int argc,char **argv, char **envp)
 #endif
   }
 
+  if (alloc_sppi) {
+    spp.sppi = malloc(sizeof(SFSample));
+    memset(spp.sppi, 0, sizeof(SFSample));
+  }
+
   /* Main loop */
   for (;;) {
     if (config.pcap_savefile) {
@@ -1321,8 +1328,16 @@ void InterSampleCleanup(SFSample *spp)
 {
   u_char *start = (u_char *) spp;
   u_char *ptr = (u_char *) &spp->sampleType;
+  SFSample *sppi = (SFSample *) spp->sppi;
 
-  memset(ptr, 0, SFSampleSz-(ptr-start));
+  memset(ptr, 0, (SFSampleSz - (ptr - start)));
+  spp->sppi = (void *) sppi;
+
+  if (spp->sppi) {
+    start = (u_char *) sppi;
+    ptr = (u_char *) &sppi->sampleType;
+    memset(ptr, 0, (SFSampleSz - (ptr - start)));
+  }
 }
 
 void process_SFv2v4_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
