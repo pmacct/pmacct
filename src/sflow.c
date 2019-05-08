@@ -253,34 +253,6 @@ void decodeVXLAN(SFSample *sample, u_char *ptr)
 }
 
 /*_________________---------------------------__________________
-  _________________     decodeIPV4_inner      __________________
-  -----------------___________________________------------------
-*/
-
-void decodeIPV4_inner(SFSample *sample, u_char *ptr)
-{
-  if (sample->got_inner_IPV4) {
-    u_char *end = sample->header + sample->headerLen;
-    u_int16_t caplen = end - ptr;
-    struct SF_iphdr ip;
-
-    if (caplen < IP4HdrSz) return;
-    memcpy(&ip, ptr, sizeof(ip));
-
-    sample->dcd_inner_srcIP.s_addr = ip.saddr;
-    sample->dcd_inner_dstIP.s_addr = ip.daddr;
-    sample->dcd_inner_ipProtocol = ip.protocol;
-    sample->dcd_inner_ipTos = ip.tos;
-
-    sample->ip_inner_fragmentOffset = ntohs(ip.frag_off) & 0x1FFF;
-    if (sample->ip_inner_fragmentOffset == 0) {
-      ptr += (ip.version_and_headerLen & 0x0f) * 4;
-      decodeIPLayer4(sample, ptr, ip.protocol);
-    }
-  }
-}
-
-/*_________________---------------------------__________________
   _________________     decodeIPV4            __________________
   -----------------___________________________------------------
 */
@@ -313,8 +285,18 @@ void decodeIPV4(SFSample *sample)
       ptr += (ip.version_and_headerLen & 0x0f) * 4;
 
       if (ip.protocol == 4 /* ipencap */ || ip.protocol == 94 /* ipip */) {
-	sample->got_inner_IPV4 = TRUE;
-	decodeIPV4_inner(sample, ptr);
+	if (sample->sppi) {
+	  SFSample *sppi = (SFSample *) sample->sppi;
+
+	  /* preps */
+	  sppi->datap = (u_int32_t *) ptr;
+	  sppi->header = ptr;
+	  sppi->headerLen = (end - ptr);
+	  sppi->offsetToIPV4 = 0;
+	  sppi->gotIPV4 = TRUE;
+
+	  decodeIPV4(sppi);
+	}
       }
       else decodeIPLayer4(sample, ptr, ip.protocol);
     }
@@ -394,8 +376,18 @@ void decodeIPV6(SFSample *sample)
     sample->dcd_ipProtocol = nextHeader;
 
     if (sample->dcd_ipProtocol == 4 /* ipencap */ || sample->dcd_ipProtocol == 94 /* ipip */) {
-      sample->got_inner_IPV4 = TRUE;
-      decodeIPV4_inner(sample, ptr); 
+      if (sample->sppi) {
+	SFSample *sppi = (SFSample *) sample->sppi;
+
+	/* preps */
+	sppi->datap = (u_int32_t *) ptr;
+	sppi->header = ptr;
+	sppi->headerLen = (end - ptr);
+	sppi->offsetToIPV4 = 0;
+	sppi->gotIPV4 = TRUE;
+
+	decodeIPV4(sppi);
+      }
     }
     else decodeIPLayer4(sample, ptr, sample->dcd_ipProtocol);
   }

@@ -107,14 +107,6 @@ typedef struct _SFSample {
   u_int32_t ip_fragmentOffset;
   u_int32_t udp_pduLen;
 
-  /* inner header decode */
-  int got_inner_IPV4;
-  struct in_addr dcd_inner_srcIP;
-  struct in_addr dcd_inner_dstIP;
-  u_int32_t dcd_inner_ipProtocol;
-  u_int32_t dcd_inner_ipTos;
-  u_int32_t ip_inner_fragmentOffset;
-
   /* ports */
   u_int32_t inputPortFormat;
   u_int32_t outputPortFormat;
@@ -322,7 +314,6 @@ EXT void decodeLinkLayer(SFSample *);
 EXT void decodeIPLayer4(SFSample *, u_char *, u_int32_t);
 EXT void decodeIPV4(SFSample *);
 EXT void decodeIPV6(SFSample *);
-EXT void decodeIPV4_inner(SFSample *, u_char *);
 EXT void decodeVXLAN(SFSample *, u_char *);
 EXT void readExtendedSwitch(SFSample *);
 EXT void readExtendedRouter(SFSample *);

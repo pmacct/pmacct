@@ -4473,9 +4473,9 @@ void SF_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  if (sample->dcd_ipProtocol == IPPROTO_UDP || sample->dcd_ipProtocol == IPPROTO_TCP ||
-      sample->dcd_inner_ipProtocol == IPPROTO_UDP || sample->dcd_inner_ipProtocol == IPPROTO_TCP)
+  if (sample->dcd_ipProtocol == IPPROTO_UDP || sample->dcd_ipProtocol == IPPROTO_TCP) {
     pdata->primitives.src_port = sample->dcd_sport; 
+  }
   else pdata->primitives.src_port = 0;
 }
 
@@ -4484,9 +4484,9 @@ void SF_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  if (sample->dcd_ipProtocol == IPPROTO_UDP || sample->dcd_ipProtocol == IPPROTO_TCP ||
-      sample->dcd_inner_ipProtocol == IPPROTO_UDP || sample->dcd_inner_ipProtocol == IPPROTO_TCP)
+  if (sample->dcd_ipProtocol == IPPROTO_UDP || sample->dcd_ipProtocol == IPPROTO_TCP) {
     pdata->primitives.dst_port = sample->dcd_dport;
+  }
   else pdata->primitives.dst_port = 0;
 }
 
@@ -4511,8 +4511,9 @@ void SF_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  if (sample->dcd_ipProtocol == IPPROTO_TCP || sample->dcd_inner_ipProtocol == IPPROTO_TCP)
+  if (sample->dcd_ipProtocol == IPPROTO_TCP) {
     pdata->tcp_flags = sample->dcd_tcpFlags; 
+  }
 }
 
 void SF_flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -5042,11 +5043,7 @@ void SF_tunnel_src_host_handler(struct channels_list_entry *chptr, struct packet
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
 
-  if (sample->got_inner_IPV4) {
-    ptun->tunnel_src_ip.address.ipv4.s_addr = sample->dcd_inner_srcIP.s_addr;
-    ptun->tunnel_src_ip.family = AF_INET;
-  }
-  else if (sppi) {
+  if (sppi) {
     SFLAddress *addr = &sppi->ipsrc;
 
     if (sppi->gotIPV4) {
@@ -5066,11 +5063,7 @@ void SF_tunnel_dst_host_handler(struct channels_list_entry *chptr, struct packet
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
 
-  if (sample->got_inner_IPV4) {
-    ptun->tunnel_dst_ip.address.ipv4.s_addr = sample->dcd_inner_dstIP.s_addr;
-    ptun->tunnel_dst_ip.family = AF_INET;
-  }
-  else if (sppi) {
+  if (sppi) {
     SFLAddress *addr = &sppi->ipdst;
 
     if (sppi->gotIPV4) {
@@ -5090,12 +5083,7 @@ void SF_tunnel_ip_proto_handler(struct channels_list_entry *chptr, struct packet
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
 
-  if (sample->got_inner_IPV4) {
-    ptun->tunnel_proto = sample->dcd_inner_ipProtocol;
-  }
-  else if (sppi) {
-    ptun->tunnel_proto = sppi->dcd_ipProtocol;
-  }
+  if (sppi) ptun->tunnel_proto = sppi->dcd_ipProtocol;
 }
 
 void SF_tunnel_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -5104,12 +5092,7 @@ void SF_tunnel_ip_tos_handler(struct channels_list_entry *chptr, struct packet_p
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
 
-  if (sample->got_inner_IPV4) {
-    ptun->tunnel_tos = sample->dcd_inner_ipTos;
-  }
-  else if (sppi) {
-    ptun->tunnel_tos = sppi->dcd_ipTos;
-  }
+  if (sppi) ptun->tunnel_tos = sppi->dcd_ipTos;
 }
 
 void SF_vxlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
