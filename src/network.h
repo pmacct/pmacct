@@ -352,8 +352,9 @@ struct packet_ptrs {
   u_int32_t ifindex_in;  /* input ifindex; used by pmacctd/uacctd */
   u_int32_t ifindex_out; /* output ifindex; used by pmacctd/uacctd */
   u_int8_t direction; /* packet sampling direction; used by pmacctd/uacctd */
-  u_int8_t tun_stack; /* tunnelling stack */
-  u_int8_t tun_layer; /* tunnelling layer count */
+  u_char *tun_pptrs; /* tunnel packet pointers */
+  u_int8_t tun_stack; /* tunnell stack */
+  u_int8_t tun_layer; /* tunnell layer count */
   u_int32_t sample_type; /* sFlow sample type */
   u_int32_t seqno; /* sFlow/NetFlow sequence number */
   u_int16_t f_len; /* sFlow/NetFlow payload length */

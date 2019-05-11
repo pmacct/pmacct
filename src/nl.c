@@ -66,6 +66,20 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
 
     assert(cb_data);
 
+    if (cb_data->has_tun_prims) {
+      struct packet_ptrs *tpptrs;
+ 
+      pptrs.tun_pptrs = malloc(sizeof(struct packet_ptrs));
+      memset(&pptrs.tun_pptrs, 0, sizeof(struct packet_ptrs));
+      tpptrs = (struct packet_ptrs *) pptrs.tun_pptrs;
+
+      tpptrs->pkthdr = malloc(sizeof(struct pcap_pkthdr));
+      memcpy(&tpptrs->pkthdr, &pptrs.pkthdr, sizeof(struct pcap_pkthdr));
+
+      tpptrs->packet_ptr = (u_char *) buf;
+      tpptrs->flow_type = NF9_FTYPE_TRAFFIC;
+    }
+
     /* direction */
     if (cb_data->device &&
 	cb_data->device->pcap_if &&
@@ -169,6 +183,13 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     reload_map = FALSE;
     gettimeofday(&reload_map_tstamp, NULL);
   }
+
+  if (cb_data->has_tun_prims && pptrs.tun_pptrs) {
+    struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs.tun_pptrs;
+
+    if (tpptrs->pkthdr) free(tpptrs->pkthdr);
+    free(pptrs.tun_pptrs);
+  }
 }
 
 int ip_handler(register struct packet_ptrs *pptrs)
@@ -240,6 +261,16 @@ int ip_handler(register struct packet_ptrs *pptrs)
 
 	    if (vxhdr->flags & VXLAN_FLAG_I) pptrs->vxlan_ptr = vxhdr->vni; 
 	    pptrs->payload_ptr += sizeof(struct vxlan_hdr);
+
+	    if (pptrs->tun_pptrs) {
+	      struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
+
+	      tpptrs->pkthdr->caplen = (pptrs->pkthdr->caplen - (pptrs->payload_ptr - pptrs->packet_ptr)); 
+	      tpptrs->packet_ptr = pptrs->payload_ptr;
+
+	      eth_handler(tpptrs->pkthdr, tpptrs);
+	      if (tpptrs->iph_ptr) ((*tpptrs->l3_handler)(tpptrs));
+	    }
 	  }
 	}
       }
@@ -398,6 +429,16 @@ int ip6_handler(register struct packet_ptrs *pptrs)
 
 	    if (vxhdr->flags & VXLAN_FLAG_I) pptrs->vxlan_ptr = vxhdr->vni;
 	    pptrs->payload_ptr += sizeof(struct vxlan_hdr);
+
+	    if (pptrs->tun_pptrs) {
+	      struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
+
+	      tpptrs->pkthdr->caplen = (pptrs->pkthdr->caplen - (pptrs->payload_ptr - pptrs->packet_ptr));
+	      tpptrs->packet_ptr = pptrs->payload_ptr;
+
+	      eth_handler(tpptrs->pkthdr, tpptrs);
+	      if (tpptrs->iph_ptr) ((*tpptrs->l3_handler)(tpptrs));
+            }
 	  }
 	}
       }

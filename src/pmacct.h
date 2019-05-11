@@ -303,6 +303,7 @@ struct pcap_callback_data {
   struct pcap_device *device;
   u_int32_t ifindex_in;
   u_int32_t ifindex_out;
+  u_int8_t has_tun_prims;
 };
 
 struct _protocols_struct {
