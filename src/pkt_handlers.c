@@ -664,6 +664,20 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+#if defined (HAVE_L2)
+    if (channels_list[index].aggregation_2 & COUNT_TUNNEL_SRC_MAC) {
+      if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_src_mac_handler;
+      else primitives--;
+      primitives++;
+    }
+
+    if (channels_list[index].aggregation_2 & COUNT_TUNNEL_DST_MAC) {
+      if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_dst_mac_handler;
+      else primitives--;
+      primitives++;
+    }
+#endif
+
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_SRC_HOST) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_src_host_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_src_host_handler;
@@ -688,6 +702,18 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_IP_TOS) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_ip_tos_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_ip_tos_handler;
+      else primitives--;
+      primitives++;
+    }
+
+    if (channels_list[index].aggregation_2 & COUNT_TUNNEL_SRC_PORT) {
+      if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_src_port_handler;
+      else primitives--;
+      primitives++;
+    }
+
+    if (channels_list[index].aggregation_2 & COUNT_TUNNEL_DST_PORT) {
+      if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_dst_port_handler;
       else primitives--;
       primitives++;
     }
@@ -5105,6 +5131,24 @@ void SF_bgp_peer_src_as_fromext_handler(struct channels_list_entry *chptr, struc
   // XXX: fill this in
 }
 
+void SF_tunnel_src_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
+
+  if (sppi) memcpy(ptun->tunnel_eth_shost, sppi->eth_src, ETH_ADDR_LEN);
+}
+
+void SF_tunnel_dst_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
+
+  if (sppi) memcpy(ptun->tunnel_eth_dhost, sppi->eth_dst, ETH_ADDR_LEN);
+}
+
 void SF_tunnel_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
@@ -5161,6 +5205,36 @@ void SF_tunnel_ip_tos_handler(struct channels_list_entry *chptr, struct packet_p
   SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
 
   if (sppi) ptun->tunnel_tos = sppi->dcd_ipTos;
+}
+
+void SF_tunnel_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
+
+  ptun->tunnel_src_port = 0;
+
+  if (sppi) {
+    if (sppi->dcd_ipProtocol == IPPROTO_UDP || sppi->dcd_ipProtocol == IPPROTO_TCP) {
+      ptun->tunnel_src_port = sppi->dcd_sport;
+    }
+  }
+}
+
+void SF_tunnel_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
+
+  ptun->tunnel_dst_port = 0;
+
+  if (sppi) {
+    if (sppi->dcd_ipProtocol == IPPROTO_UDP || sppi->dcd_ipProtocol == IPPROTO_TCP) {
+      ptun->tunnel_dst_port = sppi->dcd_dport;
+    }
+  }
 }
 
 void SF_vxlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

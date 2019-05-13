@@ -578,10 +578,16 @@ struct pkt_mpls_primitives {
 };
 
 struct pkt_tunnel_primitives {
+#if defined (HAVE_L2)
+  u_int8_t tunnel_eth_dhost[ETH_ADDR_LEN];
+  u_int8_t tunnel_eth_shost[ETH_ADDR_LEN];
+#endif
   struct host_addr tunnel_src_ip;
   struct host_addr tunnel_dst_ip;
   u_int8_t tunnel_tos;
   u_int8_t tunnel_proto;
+  u_int16_t tunnel_src_port;
+  u_int16_t tunnel_dst_port;
   u_int32_t id; /* ie. VXLAN VNI */
 };
 
