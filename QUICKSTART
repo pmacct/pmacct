@@ -960,6 +960,9 @@ kafka_topic: pmacct.acct
 kafka_refresh_time: 300
 kafka_history: 5m
 kafka_history_roundoff: m
+!
+! [Optional] librdkafka config for buffer tuning, ssl config, etc. 
+! kafka_config_file: /path/to/librdkafka.conf
 ! ..
 
 A basic script, in Python, is provided as sample to consume JSON/Avro data from
@@ -1672,6 +1675,9 @@ listening on the localost and default port, is configured as follows:
 
 bgp_table_dump_kafka_topic: pmacct.bgp
 bgp_table_dump_refresh_time: 60
+!
+! [Optional] librdkafka config for buffer tuning, ssl config, etc. 
+! bgp_table_dump_kafka_config_file: /path/to/librdkafka.conf
 
 The equivalent bgp_table_dump_amqp_routing_key config directive can be used to
 make the above example work against a RabbitMQ broker.
@@ -1680,6 +1686,9 @@ A basic log of BGP messaging in near real-time to a Kafka broker, listening on
 the localhost and default port, is configured as follows:
 
 bgp_daemon_msglog_kafka_topic: pmacct.bgp
+!
+! [Optional] librdkafka config for buffer tuning, ssl config, etc. 
+! bgp_daemon_msglog_kafka_config_file: /path/to/librdkafka.conf
 
 The equivalent bgp_daemon_msglog_amqp_routing_key config directive can be used
 to make the above example work against a RabbitMQ broker.
@@ -2152,6 +2161,9 @@ bmp_daemon_msglog_kafka_topic: pmacct.bmp-msglog
 !
 bmp_dump_kafka_topic: pmacct.bmp-dump
 bmp_dump_refresh_time: 60
+!
+! [Optional] librdkafka config for buffer tuning, ssl config, etc. 
+! bmp_dump_config_file: /path/to/librdkafka.conf
 
 The equivalent bmp_daemon_msglog_amqp_routing_key and bmp_dump_amqp_routing_key
 config directives can be used to make the above example work against a RabbitMQ
@@ -2284,6 +2296,9 @@ telemetry_dump_latest_file: /path/to/spool/telemetry-dump-$peer_src_ip.latest
 ! telemetry_dump_amqp_routing_key: telemetry-dump
 ! telemetry_dump_kafka_topic: telemetry-dump
 !
+! [Optional] librdkafka config for buffer tuning, ssl config, etc. 
+! telemetry_dump_kafka_config_file: /path/to/librdkafka.conf
+!
 telemetry_dump_refresh_time: 60
 
 Following is a config example to receive JSON-formatted telemetry data from a
@@ -2299,6 +2314,9 @@ telemetry_daemon_decoder: json
 telemetry_daemon_msglog_file: /path/to/spool/telemetry-msglog-$peer_src_ip.txt
 ! telemetry_daemon_msglog_amqp_routing_key: telemetry-msglog
 ! telemetry_daemon_msglog_kafka_topic: telemetry-msglog
+!
+! [Optional] librdkafka config for buffer tuning, ssl config, etc. 
+! telemetry_daemon_msglog_kafka_config_file: /path/to/librdkafka.conf
 
 A sample of both the Streaming Telemetry msglog and dump formats are captured in
 the following document: docs/MSGLOG_DUMP_FORMATS
