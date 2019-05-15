@@ -52,10 +52,14 @@ EXT void dst_port_handler(struct channels_list_entry *, struct packet_ptrs *, ch
 EXT void ip_tos_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void ip_proto_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void tcp_flags_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void tunnel_src_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void tunnel_dst_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void tunnel_src_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void tunnel_dst_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void tunnel_ip_proto_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void tunnel_ip_tos_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void tunnel_src_port_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void tunnel_dst_port_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void vxlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void counters_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void counters_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

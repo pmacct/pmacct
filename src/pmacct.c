@@ -223,10 +223,14 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     printf("MPLS_LABEL_BOTTOM  ");
     printf("MPLS_STACK_DEPTH  ");
 
+    printf("TUNNEL_SRC_MAC     ");
+    printf("TUNNEL_DST_MAC     ");
     printf("TUNNEL_SRC_IP                                  ");
     printf("TUNNEL_DST_IP                                  ");
     printf("TUNNEL_PROTOCOL  ");
     printf("TUNNEL_TOS  ");
+    printf("TUNNEL_SRC_PORT  ");
+    printf("TUNNEL_DST_PORT  ");
 
     printf("TIMESTAMP_START                ");
     printf("TIMESTAMP_END                  ");
@@ -338,10 +342,14 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) printf("MPLS_LABEL_BOTTOM  ");
     if (what_to_count_2 & COUNT_MPLS_STACK_DEPTH) printf("MPLS_STACK_DEPTH  ");
 
+    if (what_to_count_2 & COUNT_TUNNEL_SRC_MAC) printf("TUNNEL_SRC_MAC     ");
+    if (what_to_count_2 & COUNT_TUNNEL_DST_MAC) printf("TUNNEL_DST_MAC     ");
     if (what_to_count_2 & COUNT_TUNNEL_SRC_HOST) printf("TUNNEL_SRC_IP                                  ");
     if (what_to_count_2 & COUNT_TUNNEL_DST_HOST) printf("TUNNEL_DST_IP                                  ");
     if (what_to_count_2 & COUNT_TUNNEL_IP_PROTO) printf("TUNNEL_PROTOCOL  ");
     if (what_to_count_2 & COUNT_TUNNEL_IP_TOS) printf("TUNNEL_TOS  ");
+    if (what_to_count_2 & COUNT_TUNNEL_SRC_PORT) printf("TUNNEL_SRC_PORT  ");
+    if (what_to_count_2 & COUNT_TUNNEL_DST_PORT) printf("TUNNEL_DST_PORT  ");
     if (what_to_count_2 & COUNT_VXLAN) printf("VXLAN     ");
 
     if (what_to_count_2 & COUNT_TIMESTAMP_START) printf("TIMESTAMP_START                ");
@@ -453,10 +461,14 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     printf("%sMPLS_LABEL_TOP", write_sep(sep, &count));
     printf("%sMPLS_LABEL_BOTTOM", write_sep(sep, &count));
     printf("%sMPLS_STACK_DEPTH", write_sep(sep, &count));
+    printf("%sTUNNEL_SRC_MAC", write_sep(sep, &count));
+    printf("%sTUNNEL_DST_MAC", write_sep(sep, &count));
     printf("%sTUNNEL_SRC_IP", write_sep(sep, &count));
     printf("%sTUNNEL_DST_IP", write_sep(sep, &count));
     printf("%sTUNNEL_PROTOCOL", write_sep(sep, &count));
     printf("%sTUNNEL_TOS", write_sep(sep, &count));
+    printf("%sTUNNEL_SRC_PORT", write_sep(sep, &count));
+    printf("%sTUNNEL_DST_PORT", write_sep(sep, &count));
     printf("%sTIMESTAMP_START", write_sep(sep, &count));
     printf("%sTIMESTAMP_END", write_sep(sep, &count));
     printf("%sTIMESTAMP_ARRIVAL", write_sep(sep, &count));
@@ -566,10 +578,14 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     if (what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) printf("%sMPLS_LABEL_BOTTOM", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_MPLS_STACK_DEPTH) printf("%sMPLS_STACK_DEPTH", write_sep(sep, &count));
 
+    if (what_to_count_2 & COUNT_TUNNEL_SRC_MAC) printf("%sTUNNEL_SRC_MAC", write_sep(sep, &count));
+    if (what_to_count_2 & COUNT_TUNNEL_DST_MAC) printf("%sTUNNEL_DST_MAC", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_TUNNEL_SRC_HOST) printf("%sTUNNEL_SRC_IP", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_TUNNEL_DST_HOST) printf("%sTUNNEL_DST_IP", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_TUNNEL_IP_PROTO) printf("%sTUNNEL_PROTOCOL", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_TUNNEL_IP_TOS) printf("%sTUNNEL_TOS", write_sep(sep, &count));
+    if (what_to_count_2 & COUNT_TUNNEL_SRC_PORT) printf("%sTUNNEL_SRC_PORT", write_sep(sep, &count));
+    if (what_to_count_2 & COUNT_TUNNEL_DST_PORT) printf("%sTUNNEL_DST_PORT", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_VXLAN) printf("%sVXLAN", write_sep(sep, &count));
 
     if (what_to_count_2 & COUNT_TIMESTAMP_START) printf("%sTIMESTAMP_START", write_sep(sep, &count));
@@ -1901,6 +1917,28 @@ int main(int argc,char **argv)
         else if (!strcmp(count_token[match_string_index], "mpls_stack_depth")) {
           request.pmpls.mpls_stack_depth = atoi(match_string_token);
         }
+        else if (!strcmp(count_token[match_string_index], "tunnel_src_mac")) {
+          unsigned char ethaddr[ETH_ADDR_LEN];
+          int res;
+
+          res = string_etheraddr(match_string_token, ethaddr);
+          if (res) {
+            printf("ERROR: tunnel_src_mac: Invalid MAC address: '%s'\n", match_string_token);
+            exit(1);
+          }
+          else memcpy(&request.ptun.tunnel_eth_shost, ethaddr, ETH_ADDR_LEN);
+        }
+        else if (!strcmp(count_token[match_string_index], "tunnel_dst_mac")) {
+          unsigned char ethaddr[ETH_ADDR_LEN];
+          int res;
+
+          res = string_etheraddr(match_string_token, ethaddr);
+          if (res) {
+            printf("ERROR: tunnel_dst_mac: Invalid MAC address: '%s'\n", match_string_token);
+            exit(1);
+          }
+          else memcpy(&request.ptun.tunnel_eth_dhost, ethaddr, ETH_ADDR_LEN);
+        }
         else if (!strcmp(count_token[match_string_index], "tunnel_src_host")) {
           if (!str_to_addr(match_string_token, &request.ptun.tunnel_src_ip)) {
             printf("ERROR: tunnel_src_host: Invalid IP address: '%s'\n", match_string_token);
@@ -1944,6 +1982,12 @@ int main(int argc,char **argv)
 	  tmpnum = atoi(match_string_token);
 	  request.ptun.tunnel_tos = (u_int8_t) tmpnum; 
 	}
+        else if (!strcmp(count_token[match_string_index], "tunnel_src_port")) {
+          request.ptun.tunnel_src_port = atoi(match_string_token);
+        }
+        else if (!strcmp(count_token[match_string_index], "tunnel_dst_port")) {
+          request.ptun.tunnel_dst_port = atoi(match_string_token);
+        }
 	else if (!strcmp(count_token[match_string_index], "vxlan")) {
 	  tmpnum = atoi(match_string_token);
 	  request.ptun.id = tmpnum;
@@ -2660,6 +2704,18 @@ int main(int argc,char **argv)
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), pmpls->mpls_stack_depth);
         }
 
+        if (!have_wtc || (what_to_count_2 & COUNT_TUNNEL_SRC_MAC)) {
+          etheraddr_string(ptun->tunnel_eth_shost, ethernet_address);
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-17s  ", ethernet_address);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ethernet_address);
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_TUNNEL_DST_MAC)) {
+          etheraddr_string(ptun->tunnel_eth_dhost, ethernet_address);
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-17s  ", ethernet_address);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ethernet_address);
+        }
+
         if (!have_wtc || (what_to_count_2 & COUNT_TUNNEL_SRC_HOST)) {
           addr_to_str(ip_address, &ptun->tunnel_src_ip);
 
@@ -2701,6 +2757,16 @@ int main(int argc,char **argv)
 	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-3u         ", ptun->tunnel_tos);
 	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), ptun->tunnel_tos);
 	}
+
+        if (!have_wtc || (what_to_count_2 & COUNT_TUNNEL_SRC_PORT)) {
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-5u            ", ptun->tunnel_src_port);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), ptun->tunnel_src_port);
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_TUNNEL_DST_PORT)) {
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-5u            ", ptun->tunnel_dst_port);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), ptun->tunnel_dst_port);
+        }
 
 	if (!have_wtc || (what_to_count_2 & COUNT_VXLAN)) {
 	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-8u  ", ptun->id);
@@ -3584,6 +3650,16 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 
   if (wtc_2 & COUNT_MPLS_STACK_DEPTH) json_object_set_new_nocheck(obj, "mpls_stack_depth", json_integer((json_int_t)pmpls->mpls_stack_depth));
 
+  if (wtc_2 & COUNT_TUNNEL_SRC_MAC) {
+    etheraddr_string(ptun->tunnel_eth_shost, src_mac);
+    json_object_set_new_nocheck(obj, "tunnel_mac_src", json_string(src_mac));
+  }
+
+  if (wtc_2 & COUNT_TUNNEL_DST_MAC) {
+    etheraddr_string(ptun->tunnel_eth_dhost, dst_mac);
+    json_object_set_new_nocheck(obj, "tunnel_mac_dst", json_string(dst_mac));
+  }
+
   if (wtc_2 & COUNT_TUNNEL_SRC_HOST) {
     addr_to_str(src_host, &ptun->tunnel_src_ip);
     json_object_set_new_nocheck(obj, "tunnel_ip_src", json_string(src_host));
@@ -3605,6 +3681,8 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   }
 
   if (wtc_2 & COUNT_TUNNEL_IP_TOS) json_object_set_new_nocheck(obj, "tunnel_tos", json_integer((json_int_t)ptun->tunnel_tos));
+  if (wtc_2 & COUNT_TUNNEL_SRC_PORT) json_object_set_new_nocheck(obj, "tunnel_port_src", json_integer((json_int_t)ptun->tunnel_src_port));
+  if (wtc_2 & COUNT_TUNNEL_DST_PORT) json_object_set_new_nocheck(obj, "tunnel_port_dst", json_integer((json_int_t)ptun->tunnel_dst_port));
   if (wtc_2 & COUNT_VXLAN) json_object_set_new_nocheck(obj, "vxlan", json_integer((json_int_t)ptun->id));
 
   if (wtc_2 & COUNT_TIMESTAMP_START) {

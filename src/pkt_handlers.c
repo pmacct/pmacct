@@ -664,19 +664,19 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
-#if defined (HAVE_L2)
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_SRC_MAC) {
-      if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_src_mac_handler;
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_src_mac_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_src_mac_handler;
       else primitives--;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_DST_MAC) {
-      if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_dst_mac_handler;
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_dst_mac_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_dst_mac_handler;
       else primitives--;
       primitives++;
     }
-#endif
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_SRC_HOST) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_src_host_handler;
@@ -707,13 +707,15 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_SRC_PORT) {
-      if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_src_port_handler;
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_src_port_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_src_port_handler;
       else primitives--;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_DST_PORT) {
-      if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_dst_port_handler;
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_dst_port_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_dst_port_handler;
       else primitives--;
       primitives++;
     }
@@ -964,7 +966,7 @@ void src_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
-  if (pptrs->mac_ptr) memcpy(pdata->primitives.eth_shost, (pptrs->mac_ptr+ETH_ADDR_LEN), ETH_ADDR_LEN); 
+  if (pptrs->mac_ptr) memcpy(pdata->primitives.eth_shost, (pptrs->mac_ptr + ETH_ADDR_LEN), ETH_ADDR_LEN); 
 }
 
 void dst_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -1211,6 +1213,28 @@ void tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   if (pptrs->l4_proto == IPPROTO_TCP) pdata->tcp_flags = pptrs->tcp_flags;
 }
 
+void tunnel_src_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
+
+  if (tpptrs) {
+    if (tpptrs->mac_ptr) memcpy(ptun->tunnel_eth_shost, (tpptrs->mac_ptr + ETH_ADDR_LEN), ETH_ADDR_LEN);
+  }
+}
+
+void tunnel_dst_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
+
+  if (tpptrs) {
+    if (tpptrs->mac_ptr) memcpy(ptun->tunnel_eth_dhost, tpptrs->mac_ptr, ETH_ADDR_LEN);
+  }
+}
+
 void tunnel_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
@@ -1271,6 +1295,34 @@ void tunnel_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs
       tos = ntohl(((struct ip6_hdr *) tpptrs->iph_ptr)->ip6_flow);
       tos = ((tos & 0x0ff00000) >> 20);
       ptun->tunnel_tos = tos;
+    }
+  }
+}
+
+void tunnel_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
+
+  ptun->tunnel_src_port = 0;
+
+  if (tpptrs) {
+    if (tpptrs->l4_proto == IPPROTO_UDP || tpptrs->l4_proto == IPPROTO_TCP) {
+      ptun->tunnel_src_port = ntohs(((struct pm_tlhdr *) tpptrs->tlh_ptr)->src_port);
+    }
+  }
+}
+
+void tunnel_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
+
+  if (tpptrs) {
+    if (tpptrs->l4_proto == IPPROTO_UDP || tpptrs->l4_proto == IPPROTO_TCP) {
+      ptun->tunnel_dst_port = ntohs(((struct pm_tlhdr *) tpptrs->tlh_ptr)->dst_port);
     }
   }
 }

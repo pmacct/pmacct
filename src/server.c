@@ -603,10 +603,14 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
   }
 
   if (extras->off_pkt_tun_primitives && s6) {
+    if (w2 & COUNT_TUNNEL_SRC_MAC) memcpy(&d6->tunnel_eth_shost, &s6->tunnel_eth_shost, sizeof(d6->tunnel_eth_shost));
+    if (w2 & COUNT_TUNNEL_DST_MAC) memcpy(&d6->tunnel_eth_dhost, &s6->tunnel_eth_dhost, sizeof(d6->tunnel_eth_dhost));
     if (w2 & COUNT_TUNNEL_SRC_HOST) memcpy(&d6->tunnel_src_ip, &s6->tunnel_src_ip, sizeof(d6->tunnel_src_ip));
     if (w2 & COUNT_TUNNEL_DST_HOST) memcpy(&d6->tunnel_src_ip, &s6->tunnel_dst_ip, sizeof(d6->tunnel_dst_ip));
     if (w2 & COUNT_TUNNEL_IP_PROTO) memcpy(&d6->tunnel_proto, &s6->tunnel_proto, sizeof(d6->tunnel_proto));
     if (w2 & COUNT_TUNNEL_IP_TOS) memcpy(&d6->tunnel_tos, &s6->tunnel_tos, sizeof(d6->tunnel_tos));
+    if (w2 & COUNT_TUNNEL_SRC_PORT) memcpy(&d6->tunnel_src_port, &s6->tunnel_src_port, sizeof(d6->tunnel_src_port));
+    if (w2 & COUNT_TUNNEL_DST_PORT) memcpy(&d6->tunnel_dst_port, &s6->tunnel_dst_port, sizeof(d6->tunnel_dst_port));
     if (w2 & COUNT_VXLAN) memcpy(&d6->id, &s6->id, sizeof(d6->id));
   }
 }
