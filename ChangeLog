@@ -4,7 +4,7 @@ pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
-1.7.3 -- XX-0X-2019
+1.7.3 -- 16-05-2019
   + Introduced the RPKI daemon to build a ROA database and check prefixes
     validation status and coverages. Resource Public Key Infrastructure
     (RPKI) is a specialized public key infrastructure (PKI) framework
@@ -20,13 +20,15 @@ The keys used are:
     the CONFIG-KEYS doc). The ROA fields will be populated with one of
     these five values: 'u' Unknown, 'v' Valid, 'i' Invalid no overlaps,
     'V' Invalid with a covering Valid prefix, 'U' Invalid with a covering
-    Unknown prefix.
+    Unknown prefix. Thanks to Job Snijders ( @job ) for his support and
+    vision.
   + Introducing pmgrpcd.py, written in Python, a daemon to handle gRPC-
     based Streaming Telemetry sessions and unmarshall GPB data. Code
     was mostly courtesy by Matthias Arnold ( @tbearma1 ). This is in
     addition (or feeding into) pmtelemetryd, written in C, a daemon to
     handle TCP/UDP-based Streaming Telemetry sessions with JSON-encoded
-    data. 
+    data. Thanks to Matthias Arnold ( @tbearma1 ) and Thomas Graf for
+    their support and contributing code. 
   + pmacctd, uacctd: added support for CFP (Cisco FabricPath) and Cisco
     Virtual Network Tag protocols. Both patches were courtesy by Stephen
     Clark ( @sclark46 ). 
