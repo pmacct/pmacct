@@ -247,6 +247,12 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc_2 & COUNT_MPLS_STACK_DEPTH)
     avro_schema_record_field_append(schema, "mpls_stack_depth", avro_schema_long());
 
+  if (wtc_2 & COUNT_TUNNEL_SRC_MAC)
+    avro_schema_record_field_append(schema, "tunnel_mac_src", avro_schema_string());
+
+  if (wtc_2 & COUNT_TUNNEL_DST_MAC)
+    avro_schema_record_field_append(schema, "tunnel_mac_dst", avro_schema_string());
+
   if (wtc_2 & COUNT_TUNNEL_SRC_HOST)
     avro_schema_record_field_append(schema, "tunnel_ip_src", avro_schema_string());
 
@@ -258,6 +264,12 @@ avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
 
   if (wtc_2 & COUNT_TUNNEL_IP_TOS)
     avro_schema_record_field_append(schema, "tunnel_tos", avro_schema_long());
+
+  if (wtc_2 & COUNT_TUNNEL_SRC_PORT)
+    avro_schema_record_field_append(schema, "tunnel_port_src", avro_schema_long());
+
+  if (wtc_2 & COUNT_TUNNEL_DST_PORT)
+    avro_schema_record_field_append(schema, "tunnel_port_dst", avro_schema_long());
 
   if (wtc_2 & COUNT_VXLAN)
     avro_schema_record_field_append(schema, "vxlan", avro_schema_long());
@@ -773,6 +785,18 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     check_i(avro_value_set_long(&field, pmpls->mpls_stack_depth));
   }
 
+  if (wtc_2 & COUNT_TUNNEL_SRC_MAC) {
+    etheraddr_string(ptun->tunnel_eth_shost, src_mac);
+    check_i(avro_value_get_by_name(&value, "tunnel_mac_src", &field, NULL));
+    check_i(avro_value_set_string(&field, src_mac));
+  }
+
+  if (wtc_2 & COUNT_TUNNEL_DST_MAC) {
+    etheraddr_string(ptun->tunnel_eth_dhost, dst_mac);
+    check_i(avro_value_get_by_name(&value, "tunnel_mac_dst", &field, NULL));
+    check_i(avro_value_set_string(&field, dst_mac));
+  }
+
   if (wtc_2 & COUNT_TUNNEL_SRC_HOST) {
     addr_to_str(src_host, &ptun->tunnel_src_ip);
     check_i(avro_value_get_by_name(&value, "tunnel_ip_src", &field, NULL));
@@ -795,6 +819,16 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
   if (wtc_2 & COUNT_TUNNEL_IP_TOS) {
     check_i(avro_value_get_by_name(&value, "tunnel_tos", &field, NULL));
     check_i(avro_value_set_long(&field, ptun->tunnel_tos));
+  }
+
+  if (wtc_2 & COUNT_TUNNEL_SRC_PORT) {
+    check_i(avro_value_get_by_name(&value, "tunnel_port_src", &field, NULL));
+    check_i(avro_value_set_long(&field, ptun->tunnel_src_port));
+  }
+
+  if (wtc_2 & COUNT_TUNNEL_DST_PORT) {
+    check_i(avro_value_get_by_name(&value, "tunnel_port_dst", &field, NULL));
+    check_i(avro_value_set_long(&field, ptun->tunnel_dst_port));
   }
 
   if (wtc_2 & COUNT_VXLAN) {

@@ -736,6 +736,14 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
       if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) bson_append_int(bson_elem, "mpls_label_bottom", pmpls->mpls_label_bottom);
       if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) bson_append_int(bson_elem, "mpls_stack_depth", pmpls->mpls_stack_depth);
 
+      if (config.what_to_count_2 & COUNT_TUNNEL_SRC_MAC) {
+        etheraddr_string(ptun->tunnel_eth_shost, src_mac);
+        bson_append_string(bson_elem, "tunnel_mac_src", src_mac);
+      }
+      if (config.what_to_count_2 & COUNT_TUNNEL_DST_MAC) {
+        etheraddr_string(ptun->tunnel_eth_dhost, dst_mac);
+        bson_append_string(bson_elem, "tunnel_mac_dst", dst_mac);
+      }
       if (config.what_to_count_2 & COUNT_TUNNEL_SRC_HOST) {
         addr_to_str(src_host, &ptun->tunnel_src_ip);
         bson_append_string(bson_elem, "tunnel_ip_src", src_host);
@@ -751,6 +759,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
       }
 
       if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) bson_append_int(bson_elem, "tunnel_tos", ptun->tunnel_tos);
+      if (config.what_to_count_2 & COUNT_TUNNEL_SRC_PORT) bson_append_int(bson_elem, "tunnel_port_src", ptun->tunnel_src_port);
+      if (config.what_to_count_2 & COUNT_TUNNEL_DST_PORT) bson_append_int(bson_elem, "tunnel_port_dst", ptun->tunnel_dst_port);
       if (config.what_to_count_2 & COUNT_VXLAN) bson_append_int(bson_elem, "vxlan", ptun->id);
   
       if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {

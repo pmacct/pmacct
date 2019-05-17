@@ -55,7 +55,7 @@ void count_src_mac_handler(const struct db_cache *cache_elem, struct insert_data
   char sbuf[18];
   u_int8_t ubuf[ETH_ADDR_LEN];
 
-  memcpy(&ubuf, &cache_elem->primitives.eth_shost, ETH_ADDR_LEN);
+  memcpy(ubuf, cache_elem->primitives.eth_shost, ETH_ADDR_LEN);
   etheraddr_string(ubuf, sbuf);
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, sbuf);
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, sbuf);
@@ -69,7 +69,7 @@ void count_dst_mac_handler(const struct db_cache *cache_elem, struct insert_data
   char sbuf[18];
   u_int8_t ubuf[ETH_ADDR_LEN];
 
-  memcpy(ubuf, &cache_elem->primitives.eth_dhost, ETH_ADDR_LEN);
+  memcpy(ubuf, cache_elem->primitives.eth_dhost, ETH_ADDR_LEN);
   etheraddr_string(ubuf, sbuf);
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, sbuf);
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, sbuf);
@@ -350,6 +350,33 @@ void count_mpls_stack_depth_handler(const struct db_cache *cache_elem, struct in
   *ptr_values += strlen(*ptr_values);
 }
 
+void count_tunnel_src_mac_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char sbuf[18];
+  u_int8_t ubuf[ETH_ADDR_LEN];
+
+  memcpy(ubuf, cache_elem->ptun->tunnel_eth_shost, ETH_ADDR_LEN);
+  etheraddr_string(ubuf, sbuf);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, sbuf);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, sbuf);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, sbuf);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_tunnel_dst_mac_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char sbuf[18];
+  u_int8_t ubuf[ETH_ADDR_LEN];
+
+  memcpy(ubuf, cache_elem->ptun->tunnel_eth_dhost, ETH_ADDR_LEN);
+  etheraddr_string(ubuf, sbuf);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, sbuf);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, sbuf);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
 void count_tunnel_src_ip_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
   char ptr[INET6_ADDRSTRLEN];
@@ -395,6 +422,22 @@ void count_tunnel_ip_tos_handler(const struct db_cache *cache_elem, struct inser
 {
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->ptun->tunnel_tos);
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->ptun->tunnel_tos);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_tunnel_src_port_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->ptun->tunnel_src_port);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->ptun->tunnel_src_port);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_tunnel_dst_port_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->ptun->tunnel_dst_port);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->ptun->tunnel_dst_port);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }

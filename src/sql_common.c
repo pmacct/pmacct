@@ -1225,10 +1225,14 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) what_to_count_2 |= COUNT_MPLS_LABEL_BOTTOM;
     if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) what_to_count_2 |= COUNT_MPLS_STACK_DEPTH;
 
+    if (config.what_to_count_2 & COUNT_TUNNEL_SRC_MAC) what_to_count_2 |= COUNT_TUNNEL_SRC_MAC;
+    if (config.what_to_count_2 & COUNT_TUNNEL_DST_MAC) what_to_count_2 |= COUNT_TUNNEL_DST_MAC;
     if (config.what_to_count_2 & COUNT_TUNNEL_SRC_HOST) what_to_count_2 |= COUNT_TUNNEL_SRC_HOST;
     if (config.what_to_count_2 & COUNT_TUNNEL_DST_HOST) what_to_count_2 |= COUNT_TUNNEL_DST_HOST;
     if (config.what_to_count_2 & COUNT_TUNNEL_IP_PROTO) what_to_count_2 |= COUNT_TUNNEL_IP_PROTO;
     if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) what_to_count_2 |= COUNT_TUNNEL_IP_TOS;
+    if (config.what_to_count_2 & COUNT_TUNNEL_SRC_PORT) what_to_count_2 |= COUNT_TUNNEL_SRC_PORT;
+    if (config.what_to_count_2 & COUNT_TUNNEL_DST_PORT) what_to_count_2 |= COUNT_TUNNEL_DST_PORT;
 
     if (config.what_to_count_2 & COUNT_TIMESTAMP_START) what_to_count_2 |= COUNT_TIMESTAMP_START;
     if (config.what_to_count_2 & COUNT_TIMESTAMP_END) what_to_count_2 |= COUNT_TIMESTAMP_END;
@@ -2405,6 +2409,34 @@ int sql_evaluate_primitives(int primitive)
     primitive++;
   }
 
+  if (what_to_count_2 & COUNT_TUNNEL_SRC_MAC) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "tunnel_mac_src", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "tunnel_mac_src=\'%s\'", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_TUNNEL_SRC_MAC;
+    values[primitive].handler = where[primitive].handler = count_tunnel_src_mac_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_TUNNEL_DST_MAC) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "tunnel_mac_dst", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "tunnel_mac_dst=\'%s\'", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_TUNNEL_DST_MAC;
+    values[primitive].handler = where[primitive].handler = count_tunnel_dst_mac_handler;
+    primitive++;
+  }
+
   if (what_to_count_2 & COUNT_TUNNEL_SRC_HOST) {
     if (primitive) {
       strncat(insert_clause, ", ", SPACELEFT(insert_clause));
@@ -2485,6 +2517,34 @@ int sql_evaluate_primitives(int primitive)
     strncat(where[primitive].string, "tunnel_tos=%u", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_INT_TUNNEL_IP_TOS;
     values[primitive].handler = where[primitive].handler = count_tunnel_ip_tos_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_TUNNEL_SRC_PORT) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "tunnel_port_src", SPACELEFT(insert_clause));
+    strncat(where[primitive].string, "tunnel_port_src=%u", SPACELEFT(where[primitive].string));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_TUNNEL_SRC_PORT;
+    values[primitive].handler = where[primitive].handler = count_tunnel_src_port_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_TUNNEL_DST_PORT) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "tunnel_port_dst", SPACELEFT(insert_clause));
+    strncat(where[primitive].string, "tunnel_port_dst=%u", SPACELEFT(where[primitive].string));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_TUNNEL_DST_PORT;
+    values[primitive].handler = where[primitive].handler = count_tunnel_dst_port_handler;
     primitive++;
   }
 

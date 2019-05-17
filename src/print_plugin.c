@@ -720,6 +720,21 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   	fprintf(f, "%-2u                ", pmpls->mpls_stack_depth);
         }
 
+        if (config.what_to_count_2 & COUNT_TUNNEL_SRC_MAC) {
+          etheraddr_string(ptun->tunnel_eth_shost, src_mac);
+          if (strlen(src_mac))
+	    fprintf(f, "%-17s  ", src_mac);
+          else
+	    fprintf(f, "%-17s  ", empty_macaddress);
+        }
+        if (config.what_to_count_2 & COUNT_TUNNEL_DST_MAC) {
+          etheraddr_string(ptun->tunnel_eth_dhost, dst_mac);
+          if (strlen(dst_mac))
+	    fprintf(f, "%-17s  ", dst_mac);
+          else
+	    fprintf(f, "%-17s  ", empty_macaddress);
+	}
+
 	if (config.what_to_count_2 & COUNT_TUNNEL_SRC_HOST) {
           addr_to_str(ip_address, &ptun->tunnel_src_ip);
 
@@ -742,6 +757,9 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	}
 
 	if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) fprintf(f, "%-3u         ", ptun->tunnel_tos);
+        if (config.what_to_count_2 & COUNT_TUNNEL_SRC_PORT) fprintf(f, "%-5u            ", ptun->tunnel_src_port);
+        if (config.what_to_count_2 & COUNT_TUNNEL_DST_PORT) fprintf(f, "%-5u            ", ptun->tunnel_dst_port);
+
 	if (config.what_to_count_2 & COUNT_VXLAN) fprintf(f, "%-8u  ", ptun->id);
   
         if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
@@ -1084,6 +1102,15 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) fprintf(f, "%s%u", write_sep(sep, &count), pmpls->mpls_label_bottom);
         if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) fprintf(f, "%s%u", write_sep(sep, &count), pmpls->mpls_stack_depth);
 
+        if (config.what_to_count_2 & COUNT_TUNNEL_SRC_MAC) {
+          etheraddr_string(ptun->tunnel_eth_shost, src_mac);
+          fprintf(f, "%s%s", write_sep(sep, &count), src_mac);
+        }
+        if (config.what_to_count_2 & COUNT_TUNNEL_DST_MAC) {
+          etheraddr_string(ptun->tunnel_eth_dhost, dst_mac);
+          fprintf(f, "%s%s", write_sep(sep, &count), dst_mac);
+        }
+
 	if (config.what_to_count_2 & COUNT_TUNNEL_SRC_HOST) {
 	  addr_to_str(src_host, &ptun->tunnel_src_ip);
 	  fprintf(f, "%s%s", write_sep(sep, &count), src_host);
@@ -1101,6 +1128,9 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	}
 
 	if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) fprintf(f, "%s%u", write_sep(sep, &count), ptun->tunnel_tos);
+	if (config.what_to_count_2 & COUNT_TUNNEL_SRC_PORT) fprintf(f, "%s%u", write_sep(sep, &count), ptun->tunnel_src_port);
+        if (config.what_to_count_2 & COUNT_TUNNEL_DST_PORT) fprintf(f, "%s%u", write_sep(sep, &count), ptun->tunnel_dst_port);
+
 	if (config.what_to_count_2 & COUNT_VXLAN) fprintf(f, "%s%u", write_sep(sep, &count), ptun->id);
   
         if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
@@ -1380,10 +1410,14 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) fprintf(f, "MPLS_LABEL_TOP  ");
   if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) fprintf(f, "MPLS_LABEL_BOTTOM  ");
   if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) fprintf(f, "MPLS_STACK_DEPTH  ");
+  if (config.what_to_count_2 & COUNT_TUNNEL_SRC_MAC) fprintf(f, "TUNNEL_SRC_MAC     ");
+  if (config.what_to_count_2 & COUNT_TUNNEL_DST_MAC) fprintf(f, "TUNNEL_DST_MAC     "); 
   if (config.what_to_count_2 & COUNT_TUNNEL_SRC_HOST) fprintf(f, "TUNNEL_SRC_IP                                  ");
   if (config.what_to_count_2 & COUNT_TUNNEL_DST_HOST) fprintf(f, "TUNNEL_DST_IP                                  ");
   if (config.what_to_count_2 & COUNT_TUNNEL_IP_PROTO) fprintf(f, "TUNNEL_PROTOCOL  ");
   if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) fprintf(f, "TUNNEL_TOS  ");
+  if (config.what_to_count_2 & COUNT_TUNNEL_SRC_PORT) fprintf(f, "TUNNEL_SRC_PORT  "); 
+  if (config.what_to_count_2 & COUNT_TUNNEL_DST_PORT) fprintf(f, "TUNNEL_DST_PORT  "); 
   if (config.what_to_count_2 & COUNT_VXLAN) fprintf(f, "VXLAN     ");
   if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "TIMESTAMP_START                ");
   if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "TIMESTAMP_END                  "); 
@@ -1501,10 +1535,14 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) fprintf(f, "%sMPLS_LABEL_TOP", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) fprintf(f, "%sMPLS_LABEL_BOTTOM", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) fprintf(f, "%sMPLS_STACK_DEPTH", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_TUNNEL_SRC_MAC) fprintf(f, "%sTUNNEL_SRC_MAC", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_TUNNEL_DST_MAC) fprintf(f, "%sTUNNEL_DST_MAC", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TUNNEL_SRC_HOST) fprintf(f, "%sTUNNEL_SRC_IP", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TUNNEL_DST_HOST) fprintf(f, "%sTUNNEL_DST_IP", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TUNNEL_IP_PROTO) fprintf(f, "%sTUNNEL_PROTOCOL", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) fprintf(f, "%sTUNNEL_TOS", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_TUNNEL_SRC_PORT) fprintf(f, "%sTUNNEL_SRC_PORT", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_TUNNEL_DST_PORT) fprintf(f, "%sTUNNEL_DST_PORT", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_VXLAN) fprintf(f, "%sVXLAN", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "%sTIMESTAMP_START", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "%sTIMESTAMP_END", write_sep(sep, &count));
