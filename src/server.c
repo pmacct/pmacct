@@ -611,7 +611,7 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
     if (w2 & COUNT_TUNNEL_IP_TOS) memcpy(&d6->tunnel_tos, &s6->tunnel_tos, sizeof(d6->tunnel_tos));
     if (w2 & COUNT_TUNNEL_SRC_PORT) memcpy(&d6->tunnel_src_port, &s6->tunnel_src_port, sizeof(d6->tunnel_src_port));
     if (w2 & COUNT_TUNNEL_DST_PORT) memcpy(&d6->tunnel_dst_port, &s6->tunnel_dst_port, sizeof(d6->tunnel_dst_port));
-    if (w2 & COUNT_VXLAN) memcpy(&d6->id, &s6->id, sizeof(d6->id));
+    if (w2 & COUNT_VXLAN) memcpy(&d6->tunnel_id, &s6->tunnel_id, sizeof(d6->tunnel_id));
   }
 }
 

@@ -1336,11 +1336,11 @@ void vxlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs,
   if (pptrs->vxlan_ptr) {
     vni_ptr = pptrs->vxlan_ptr;
 
-    ptun->id = *vni_ptr++;
-    ptun->id <<= 8;
-    ptun->id += *vni_ptr++;
-    ptun->id <<= 8;
-    ptun->id += *vni_ptr++;
+    ptun->tunnel_id = *vni_ptr++;
+    ptun->tunnel_id <<= 8;
+    ptun->tunnel_id += *vni_ptr++;
+    ptun->tunnel_id <<= 8;
+    ptun->tunnel_id += *vni_ptr++;
   }
 }
 
@@ -3558,11 +3558,11 @@ void NF_vxlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
       if ((*type) == NF9_L2_SID_VXLAN) {
 	vni_ptr = &tmp64[6];
 
-	ptun->id = *vni_ptr++;
-	ptun->id <<= 8;
-	ptun->id += *vni_ptr++;
-	ptun->id <<= 8;
-	ptun->id += *vni_ptr++;
+	ptun->tunnel_id = *vni_ptr++;
+	ptun->tunnel_id <<= 8;
+	ptun->tunnel_id += *vni_ptr++;
+	ptun->tunnel_id <<= 8;
+	ptun->tunnel_id += *vni_ptr++;
       }
     }
 
@@ -5295,7 +5295,7 @@ void SF_vxlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  ptun->id = sample->vni;
+  ptun->tunnel_id = sample->vni;
 }
 
 void SF_mpls_pw_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

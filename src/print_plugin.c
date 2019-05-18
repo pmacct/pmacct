@@ -760,7 +760,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (config.what_to_count_2 & COUNT_TUNNEL_SRC_PORT) fprintf(f, "%-5u            ", ptun->tunnel_src_port);
         if (config.what_to_count_2 & COUNT_TUNNEL_DST_PORT) fprintf(f, "%-5u            ", ptun->tunnel_dst_port);
 
-	if (config.what_to_count_2 & COUNT_VXLAN) fprintf(f, "%-8u  ", ptun->id);
+	if (config.what_to_count_2 & COUNT_VXLAN) fprintf(f, "%-8u  ", ptun->tunnel_id);
   
         if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
 	  char tstamp_str[VERYSHORTBUFLEN];
@@ -1131,7 +1131,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	if (config.what_to_count_2 & COUNT_TUNNEL_SRC_PORT) fprintf(f, "%s%u", write_sep(sep, &count), ptun->tunnel_src_port);
         if (config.what_to_count_2 & COUNT_TUNNEL_DST_PORT) fprintf(f, "%s%u", write_sep(sep, &count), ptun->tunnel_dst_port);
 
-	if (config.what_to_count_2 & COUNT_VXLAN) fprintf(f, "%s%u", write_sep(sep, &count), ptun->id);
+	if (config.what_to_count_2 & COUNT_VXLAN) fprintf(f, "%s%u", write_sep(sep, &count), ptun->tunnel_id);
   
         if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
 	  char tstamp_str[VERYSHORTBUFLEN];

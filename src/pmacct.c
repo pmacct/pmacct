@@ -1990,7 +1990,7 @@ int main(int argc,char **argv)
         }
 	else if (!strcmp(count_token[match_string_index], "vxlan")) {
 	  tmpnum = atoi(match_string_token);
-	  request.ptun.id = tmpnum;
+	  request.ptun.tunnel_id = tmpnum;
 	}
         else if (!strcmp(count_token[match_string_index], "timestamp_start")) {
 	  struct tm tmp;
@@ -2769,8 +2769,8 @@ int main(int argc,char **argv)
         }
 
 	if (!have_wtc || (what_to_count_2 & COUNT_VXLAN)) {
-	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-8u  ", ptun->id);
-	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), ptun->id);
+	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-8u  ", ptun->tunnel_id);
+	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), ptun->tunnel_id);
 	}
 
         if (!have_wtc || (what_to_count_2 & COUNT_TIMESTAMP_START)) {
@@ -3683,7 +3683,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   if (wtc_2 & COUNT_TUNNEL_IP_TOS) json_object_set_new_nocheck(obj, "tunnel_tos", json_integer((json_int_t)ptun->tunnel_tos));
   if (wtc_2 & COUNT_TUNNEL_SRC_PORT) json_object_set_new_nocheck(obj, "tunnel_port_src", json_integer((json_int_t)ptun->tunnel_src_port));
   if (wtc_2 & COUNT_TUNNEL_DST_PORT) json_object_set_new_nocheck(obj, "tunnel_port_dst", json_integer((json_int_t)ptun->tunnel_dst_port));
-  if (wtc_2 & COUNT_VXLAN) json_object_set_new_nocheck(obj, "vxlan", json_integer((json_int_t)ptun->id));
+  if (wtc_2 & COUNT_VXLAN) json_object_set_new_nocheck(obj, "vxlan", json_integer((json_int_t)ptun->tunnel_id));
 
   if (wtc_2 & COUNT_TIMESTAMP_START) {
     pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE, tstamp_since_epoch, tstamp_utc);

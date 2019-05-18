@@ -586,7 +586,7 @@ struct pkt_tunnel_primitives {
   u_int8_t tunnel_proto;
   u_int16_t tunnel_src_port;
   u_int16_t tunnel_dst_port;
-  u_int32_t id; /* ie. VXLAN VNI */
+  u_int32_t tunnel_id; /* ie. VXLAN VNI */
 };
 
 /* same as pkt_legacy_bgp_primitives but pointers in place of strings */

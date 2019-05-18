@@ -833,7 +833,7 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
 
   if (wtc_2 & COUNT_VXLAN) {
     check_i(avro_value_get_by_name(&value, "vxlan", &field, NULL));
-    check_i(avro_value_set_long(&field, ptun->id));
+    check_i(avro_value_set_long(&field, ptun->tunnel_id));
   }
 
   if (wtc_2 & COUNT_TIMESTAMP_START) {
