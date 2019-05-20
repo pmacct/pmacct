@@ -330,6 +330,7 @@ EXT int cfg_key_nfacctd_bgp_extcomm_pattern(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_lrgcomm_pattern(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_stdcomm_pattern_to_asn(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_lrgcomm_pattern_to_asn(char *, char *, char *);
+EXT int cfg_key_bgp_blackhole_stdcomm_list(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_peer_src_as_type(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_src_std_comm_type(char *, char *, char *);
 EXT int cfg_key_nfacctd_bgp_src_ext_comm_type(char *, char *, char *);

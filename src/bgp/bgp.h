@@ -77,9 +77,10 @@
 #define MAX_NH_SELF_REFERENCES	1
 #define BGP_XCONNECT_STRLEN	(2 * (INET6_ADDRSTRLEN + PORT_STRLEN + 1) + 4) 
 
-/* Maximum BGP standard/extended community patterns supported:
-   nfacctd_bgp_stdcomm_pattern, nfacctd_bgp_extcomm_pattern */
+/* Maximum BGP community patterns supported: nfacctd_bgp_stdcomm_pattern,
+   nfacctd_bgp_extcomm_pattern, bgp_blackhole_stdcomm_list, etc. */
 #define MAX_BGP_COMM_PATTERNS	16
+#define MAX_BGP_COMM_ELEMS	MAX_BGP_COMM_PATTERNS
 
 #define BGP_DAEMON_NONE		0
 #define BGP_DAEMON_TRUE		1

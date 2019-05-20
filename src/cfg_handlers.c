@@ -3346,6 +3346,17 @@ int cfg_key_nfacctd_bgp_lrgcomm_pattern_to_asn(char *filename, char *name, char 
   return changes;
 }
 
+int cfg_key_bgp_blackhole_stdcomm_list(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_blackhole_stdcomm_list = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_blackhole_stdcomm_list'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_bgp_peer_src_as_type(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

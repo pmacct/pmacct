@@ -28,6 +28,7 @@
 #include "bgp.h"
 #include "bgp_xcs.h"
 #include "rpki/rpki.h"
+#include "bgp_blackhole.h"
 #include "thread_pool.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
@@ -183,6 +184,13 @@ void skinny_bgp_daemon_online()
     rpki_daemon_wrapper();
 
     /* Let's give the RPKI thread some advantage to create its structures */
+    sleep(DEFAULT_SLOTH_SLEEP_TIME);
+  }
+
+  if (config.bgp_blackhole_stdcomm_list) {
+    bgp_blackhole_daemon_wrapper();
+
+    /* Let's give the BGP blackhole thread some advantage to create its structures */
     sleep(DEFAULT_SLOTH_SLEEP_TIME);
   }
 

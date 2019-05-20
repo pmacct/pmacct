@@ -1387,6 +1387,16 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
     bms->skip_rib = TRUE;
 }
 
+void bgp_blackhole_link_misc_structs(struct bgp_misc_structs *m_data)
+{
+  m_data->table_peer_buckets = 1; /* saving on DEFAULT_BGP_INFO_HASH for now */
+  m_data->table_per_peer_buckets = DEFAULT_BGP_INFO_PER_PEER_HASH;
+  m_data->table_attr_hash_buckets = HASHTABSIZE;
+  m_data->table_per_peer_hash = BGP_ASPATH_HASH_PATHID;
+  m_data->route_info_modulo = NULL;
+  m_data->bgp_lookup_node_match_cmp = NULL; // XXX
+}
+
 int bgp_peer_cmp(const void *a, const void *b)
 {
   return host_addr_cmp(&((struct bgp_peer *)a)->addr, &((struct bgp_peer *)b)->addr);
