@@ -30,7 +30,7 @@
 
 /* extern */
 extern struct plugins_list_entry *plugin_list;
-
+struct sigaction sighandler_action;
 /* functions */
 /* Each signal handler contains a final signal() call that reinstalls the called
    handler again; such behaviour deals with SysV signal handling */
@@ -45,8 +45,6 @@ void startup_handle_falling_child()
       break;
     }
   }
-
-  signal(SIGCHLD, startup_handle_falling_child);
 }
 
 void handle_falling_child()
@@ -105,8 +103,6 @@ void handle_falling_child()
       }
     }
   }
-
-  signal(SIGCHLD, handle_falling_child);
 }
 
 void ignore_falling_child()
@@ -118,8 +114,6 @@ void ignore_falling_child()
     if (!WIFEXITED(status)) Log(LOG_WARNING, "WARN ( %s/%s ): Abnormal exit status detected for child PID %u\n", config.name, config.type, cpid);
     // sql_writers.retired++;
   }
-
-  signal(SIGCHLD, ignore_falling_child);
 }
 
 void PM_sigint_handler(int signum)
@@ -142,15 +136,6 @@ void PM_sigint_handler(int signum)
      wait() call. Let's release collector's socket to improve turn-
      around times when restarting the daemon */
   if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) close(config.sock);
-
-#if defined (SOLARIS)
-  signal(SIGCHLD, SIG_IGN);
-#else
-  signal(SIGCHLD, ignore_falling_child);
-#endif
-
-  signal(SIGINT, SIG_IGN);
-  signal(SIGTERM, SIG_IGN);
 
   fill_pipe_buffer();
   sleep(2); /* XXX: we should really choose an adaptive value here. It should be
@@ -216,7 +201,6 @@ void reload()
   if (config.sfacctd_counter_file) reload_log_sf_cnt = TRUE;
   if (config.telemetry_msglog_file) reload_log_telemetry_thread = TRUE;
 
-  signal(SIGHUP, reload);
 }
 
 void push_stats()
@@ -229,7 +213,6 @@ void push_stats()
     print_stats = TRUE;
   }
 
-  signal(SIGUSR1, push_stats);
 }
 
 void reload_maps()
@@ -250,5 +233,4 @@ void reload_maps()
     if (config.acct_type == ACCT_PM) reload_map_pmacctd = TRUE;
   }
   
-  signal(SIGUSR2, reload_maps);
 }
