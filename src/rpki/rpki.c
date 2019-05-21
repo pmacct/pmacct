@@ -58,7 +58,7 @@ void rpki_prepare_thread()
 
 void rpki_daemon()
 {
-  struct bgp_misc_structs *r_data = rpki_misc_db;
+  struct bgp_misc_structs *m_data = rpki_misc_db;
   afi_t afi;
   safi_t safi;
   int ret;
@@ -77,19 +77,19 @@ void rpki_daemon()
   memset(&rpki_cache, 0, sizeof(rpki_cache));
   rpki_init_dummy_peer(&rpki_peer);
 
-  rpki_routing_db = &inter_domain_routing_dbs[FUNC_TYPE_RPKI];
-  memset(rpki_routing_db, 0, sizeof(struct bgp_rt_structs));
+  rpki_roa_db = &inter_domain_routing_dbs[FUNC_TYPE_RPKI];
+  memset(rpki_roa_db, 0, sizeof(struct bgp_rt_structs));
 
-  bgp_attr_init(HASHTABSIZE, rpki_routing_db);
+  bgp_attr_init(HASHTABSIZE, rpki_roa_db);
 
   /* Let's initialize clean shared RIB */
   for (afi = AFI_IP; afi < AFI_MAX; afi++) {
     for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
-      rpki_routing_db->rib[afi][safi] = bgp_table_init(afi, safi);
+      rpki_roa_db->rib[afi][safi] = bgp_table_init(afi, safi);
     }
   }
 
-  rpki_link_misc_structs(r_data);
+  rpki_link_misc_structs(m_data);
 
   if (config.rpki_roas_file && config.rpki_rtr_cache) {
     Log(LOG_ERR, "ERROR ( %s/core/RPKI ): rpki_roas_file and rpki_rtr_cache are mutual exclusive. Exiting.\n", config.name);
@@ -98,8 +98,8 @@ void rpki_daemon()
 
   if (config.rpki_roas_file) {
     ret = rpki_roas_file_load(config.rpki_roas_file,
-			rpki_routing_db->rib[AFI_IP][SAFI_UNICAST],
-			rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST]);
+			rpki_roa_db->rib[AFI_IP][SAFI_UNICAST],
+			rpki_roa_db->rib[AFI_IP6][SAFI_UNICAST]);
   }
 
   if (config.rpki_rtr_cache) {
@@ -179,15 +179,15 @@ void rpki_roas_file_reload()
     new_rib_v4 = bgp_table_init(AFI_IP, SAFI_UNICAST);
     new_rib_v6 = bgp_table_init(AFI_IP6, SAFI_UNICAST);
 
-    saved_rib_v4 = rpki_routing_db->rib[AFI_IP][SAFI_UNICAST];
-    saved_rib_v6 = rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST];
+    saved_rib_v4 = rpki_roa_db->rib[AFI_IP][SAFI_UNICAST];
+    saved_rib_v6 = rpki_roa_db->rib[AFI_IP6][SAFI_UNICAST];
 
     ret = rpki_roas_file_load(config.rpki_roas_file, new_rib_v4, new_rib_v6);
 
     /* load successful */
     if (!ret) {
-      rpki_routing_db->rib[AFI_IP][SAFI_UNICAST] = new_rib_v4;
-      rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST] = new_rib_v6;
+      rpki_roa_db->rib[AFI_IP][SAFI_UNICAST] = new_rib_v4;
+      rpki_roa_db->rib[AFI_IP6][SAFI_UNICAST] = new_rib_v6;
 
       /* allow some generous time for any existing lookup to complete */
       sleep(DEFAULT_SLOTH_SLEEP_TIME);

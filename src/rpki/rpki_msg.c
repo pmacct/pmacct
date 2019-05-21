@@ -31,9 +31,9 @@
 /* functions */
 int rpki_roas_file_load(char *file, struct bgp_table *rib_v4, struct bgp_table *rib_v6)
 {
-  struct bgp_misc_structs *r_data = rpki_misc_db;
+  struct bgp_misc_structs *m_data = rpki_misc_db;
 
-  Log(LOG_INFO, "INFO ( %s/%s ): [%s] (re)loading map.\n", config.name, r_data->log_str, file);
+  Log(LOG_INFO, "INFO ( %s/%s ): [%s] (re)loading map.\n", config.name, m_data->log_str, file);
 
 #if defined WITH_JANSSON
   json_t *roas_obj, *roa_json, *roas_json;
@@ -44,13 +44,13 @@ int rpki_roas_file_load(char *file, struct bgp_table *rib_v4, struct bgp_table *
 
   if (roas_obj) {
     if (!json_is_object(roas_obj)) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] json_is_object() failed for results: %s\n", config.name, r_data->log_str, file, file_err.text);
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] json_is_object() failed for results: %s\n", config.name, m_data->log_str, file, file_err.text);
       return ERR;
     }
     else {
       roas_json = json_object_get(roas_obj, "roas");
       if (roas_json == NULL || !json_is_array(roas_json)) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): [%s] no 'roas' element or not an array.\n", config.name, r_data->log_str, file);
+        Log(LOG_ERR, "ERROR ( %s/%s ): [%s] no 'roas' element or not an array.\n", config.name, m_data->log_str, file);
 	json_decref(roas_obj);
         return ERR;
       }
@@ -66,35 +66,35 @@ int rpki_roas_file_load(char *file, struct bgp_table *rib_v4, struct bgp_table *
 	    
 	  prefix_json = json_object_get(roa_json, "prefix");
 	  if (prefix_json == NULL || !json_is_string(prefix_json)) {
-	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] no 'prefix' element in ROA #%u.\n", config.name, r_data->log_str, file, (roas_idx + 1));
+	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] no 'prefix' element in ROA #%u.\n", config.name, m_data->log_str, file, (roas_idx + 1));
 	    goto exit_lane;
 	  }
 	  else {
 	    ret = str2prefix(json_string_value(prefix_json), &p);
 
 	    if (!ret) {
-	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] invalid 'prefix' element in ROA #%u.\n", config.name, r_data->log_str, file, (roas_idx + 1));
+	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] invalid 'prefix' element in ROA #%u.\n", config.name, m_data->log_str, file, (roas_idx + 1));
 	      goto exit_lane;
 	    }
 	  }
 
 	  asn_json = json_object_get(roa_json, "asn");
 	  if (asn_json == NULL || !json_is_string(asn_json)) {
-	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] no 'asn' element in ROA #%u.\n", config.name, r_data->log_str, file, (roas_idx + 1));
+	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] no 'asn' element in ROA #%u.\n", config.name, m_data->log_str, file, (roas_idx + 1));
 	    goto exit_lane;
 	  }
 	  else {
 	    ret = bgp_str2asn((char *)json_string_value(asn_json), &asn);
 
 	    if (ret) {
-	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] invalid 'asn' element in ROA #%u.\n", config.name, r_data->log_str, file, (roas_idx + 1));
+	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] invalid 'asn' element in ROA #%u.\n", config.name, m_data->log_str, file, (roas_idx + 1));
 	      goto exit_lane;
 	    }
 	  }
 
 	  maxlen_json = json_object_get(roa_json, "maxLength");
 	  if (maxlen_json == NULL || !json_is_integer(maxlen_json)) {
-	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] no 'maxLength' element in ROA #%u.\n", config.name, r_data->log_str, file, (roas_idx + 1));
+	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] no 'maxLength' element in ROA #%u.\n", config.name, m_data->log_str, file, (roas_idx + 1));
 	    goto exit_lane;
 	  }
 	  else maxlen = json_integer_value(maxlen_json);
@@ -104,7 +104,7 @@ int rpki_roas_file_load(char *file, struct bgp_table *rib_v4, struct bgp_table *
 
 	    prefix2str(&p, prefix_str, PREFIX_STRLEN);
 	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'maxLength' < prefixLength: prefix=%s maxLength=%u asn=%u\n",
-		config.name, r_data->log_str, file, prefix_str, maxlen, asn);
+		config.name, m_data->log_str, file, prefix_str, maxlen, asn);
 	  }
 
 	  ret = rpki_info_add(&rpki_peer, &p, asn, maxlen, rib_v4, rib_v6);
@@ -117,14 +117,14 @@ int rpki_roas_file_load(char *file, struct bgp_table *rib_v4, struct bgp_table *
       json_decref(roas_obj);
     }
 
-    Log(LOG_INFO, "INFO ( %s/%s ): [%s] map successfully (re)loaded.\n", config.name, r_data->log_str, file);
+    Log(LOG_INFO, "INFO ( %s/%s ): [%s] map successfully (re)loaded.\n", config.name, m_data->log_str, file);
   }
   else {
-    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] json_loads() failed: %s.\n", config.name, r_data->log_str, file, file_err.text);
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] json_loads() failed: %s.\n", config.name, m_data->log_str, file, file_err.text);
     return ERR;
   }
 #else
-  Log(LOG_WARNING, "WARN ( %s/%s ): rpki_roas_file will not load (missing --enable-jansson).\n", config.name, r_data->log_str);
+  Log(LOG_WARNING, "WARN ( %s/%s ): rpki_roas_file will not load (missing --enable-jansson).\n", config.name, m_data->log_str);
 #endif
 
   return SUCCESS;
@@ -132,7 +132,7 @@ int rpki_roas_file_load(char *file, struct bgp_table *rib_v4, struct bgp_table *
 
 int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t maxlen, struct bgp_table *rib_v4, struct bgp_table *rib_v6)
 {
-  struct bgp_misc_structs *r_data = rpki_misc_db;
+  struct bgp_misc_structs *m_data = rpki_misc_db;
   struct bgp_node *route = NULL;
   struct bgp_info *new = NULL;
   struct bgp_attr attr, *attr_new = NULL;
@@ -140,7 +140,7 @@ int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t ma
   afi_t afi;
   u_int32_t modulo;
 
-  if (!r_data || !peer || !p || !rib_v4 || !rib_v6) return ERR;
+  if (!m_data || !peer || !p || !rib_v4 || !rib_v6) return ERR;
 
   afi = family2afi(p->family); 
   modulo = 0;
@@ -176,7 +176,7 @@ int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t ma
 
 int rpki_info_delete(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t maxlen, struct bgp_table *rib_v4, struct bgp_table *rib_v6)
 {
-  struct bgp_misc_structs *r_data = rpki_misc_db;
+  struct bgp_misc_structs *m_data = rpki_misc_db;
   struct bgp_node *route = NULL;
   struct bgp_info *ri = NULL;
   struct bgp_attr attr, *attr_new = NULL;
@@ -185,7 +185,7 @@ int rpki_info_delete(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t
   u_int32_t modulo;
   u_int8_t end;
 
-  if (!r_data || !peer || !p || !rib_v4 || !rib_v6) return ERR;
+  if (!m_data || !peer || !p || !rib_v4 || !rib_v6) return ERR;
 
   afi = family2afi(p->family); 
   modulo = 0;
@@ -277,7 +277,7 @@ void rpki_rtr_parse_msg(struct rpki_rtr_handle *cache)
 
 void rpki_rtr_parse_ipv4_prefix(struct rpki_rtr_handle *cache, struct rpki_rtr_ipv4_pref *p4m)
 {
-  struct bgp_misc_structs *r_data = rpki_misc_db;
+  struct bgp_misc_structs *m_data = rpki_misc_db;
   struct prefix_ipv4 p;
   as_t asn;
   int ret;
@@ -294,19 +294,19 @@ void rpki_rtr_parse_ipv4_prefix(struct rpki_rtr_handle *cache, struct rpki_rtr_i
 
     prefix2str((struct prefix *) &p, prefix_str, PREFIX_STRLEN);
     Log(LOG_WARNING, "WARN ( %s/%s ): 'maxLength' < prefixLength: prefix=%s maxLength=%u asn=%u\n",
-	config.name, r_data->log_str, prefix_str, p4m->max_len, asn);
+	config.name, m_data->log_str, prefix_str, p4m->max_len, asn);
   }
 
   switch(p4m->flags) {
   case RPKI_RTR_PREFIX_FLAGS_WITHDRAW:
     ret = rpki_info_delete(&rpki_peer, (struct prefix *) &p, asn, p4m->max_len,
-			rpki_routing_db->rib[AFI_IP][SAFI_UNICAST],
-			rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST]);
+			rpki_roa_db->rib[AFI_IP][SAFI_UNICAST],
+			rpki_roa_db->rib[AFI_IP6][SAFI_UNICAST]);
     break;
   case RPKI_RTR_PREFIX_FLAGS_ANNOUNCE:
     ret = rpki_info_add(&rpki_peer, (struct prefix *) &p, asn, p4m->max_len,
-			rpki_routing_db->rib[AFI_IP][SAFI_UNICAST],
-			rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST]);
+			rpki_roa_db->rib[AFI_IP][SAFI_UNICAST],
+			rpki_roa_db->rib[AFI_IP6][SAFI_UNICAST]);
     break;
   default:
     Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_parse_ipv4_prefix(): unknown flag (%u)\n", config.name, p4m->flags);
@@ -316,7 +316,7 @@ void rpki_rtr_parse_ipv4_prefix(struct rpki_rtr_handle *cache, struct rpki_rtr_i
 
 void rpki_rtr_parse_ipv6_prefix(struct rpki_rtr_handle *cache, struct rpki_rtr_ipv6_pref *p6m)
 {
-  struct bgp_misc_structs *r_data = rpki_misc_db;
+  struct bgp_misc_structs *m_data = rpki_misc_db;
   struct prefix_ipv6 p;
   as_t asn;
   int ret;
@@ -333,19 +333,19 @@ void rpki_rtr_parse_ipv6_prefix(struct rpki_rtr_handle *cache, struct rpki_rtr_i
 
     prefix2str((struct prefix *) &p, prefix_str, PREFIX_STRLEN);
     Log(LOG_WARNING, "WARN ( %s/%s ): 'maxLength' < prefixLength: prefix=%s maxLength=%u asn=%u\n",
-	config.name, r_data->log_str, prefix_str, p6m->max_len, asn);
+	config.name, m_data->log_str, prefix_str, p6m->max_len, asn);
   }
 
   switch(p6m->flags) {
   case RPKI_RTR_PREFIX_FLAGS_WITHDRAW:
     ret = rpki_info_delete(&rpki_peer, (struct prefix *) &p, asn, p6m->max_len,
-			rpki_routing_db->rib[AFI_IP][SAFI_UNICAST],
-			rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST]);
+			rpki_roa_db->rib[AFI_IP][SAFI_UNICAST],
+			rpki_roa_db->rib[AFI_IP6][SAFI_UNICAST]);
     break;
   case RPKI_RTR_PREFIX_FLAGS_ANNOUNCE:
     ret = rpki_info_add(&rpki_peer, (struct prefix *) &p, asn, p6m->max_len,
-			rpki_routing_db->rib[AFI_IP][SAFI_UNICAST],
-			rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST]);
+			rpki_roa_db->rib[AFI_IP][SAFI_UNICAST],
+			rpki_roa_db->rib[AFI_IP6][SAFI_UNICAST]);
     break;
   default:
     Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_parse_ipv6_prefix(): unknown flag (%u)\n", config.name, p6m->flags);
@@ -410,7 +410,7 @@ void rpki_rtr_close(struct rpki_rtr_handle *cache)
   cache->session_id = 0;
   cache->serial = 0;
 
-  rpki_ribs_reset(&rpki_peer, &rpki_routing_db->rib[AFI_IP][SAFI_UNICAST], &rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST]);
+  rpki_ribs_reset(&rpki_peer, &rpki_roa_db->rib[AFI_IP][SAFI_UNICAST], &rpki_roa_db->rib[AFI_IP6][SAFI_UNICAST]);
 }
 
 void rpki_rtr_send_reset_query(struct rpki_rtr_handle *cache)
@@ -633,7 +633,7 @@ void rpki_rtr_recv_cache_reset(struct rpki_rtr_handle *cache)
     cache->session_id = 0;
     cache->serial = 0;
 
-    rpki_ribs_reset(&rpki_peer, &rpki_routing_db->rib[AFI_IP][SAFI_UNICAST], &rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST]); 
+    rpki_ribs_reset(&rpki_peer, &rpki_roa_db->rib[AFI_IP][SAFI_UNICAST], &rpki_roa_db->rib[AFI_IP6][SAFI_UNICAST]); 
   }
 }
 

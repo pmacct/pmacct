@@ -117,15 +117,15 @@ void rpki_rtr_eval_expire(struct rpki_rtr_handle *cache)
   cache->session_id = 0;
   cache->serial = 0;
 
-  rpki_ribs_reset(&rpki_peer, &rpki_routing_db->rib[AFI_IP][SAFI_UNICAST], &rpki_routing_db->rib[AFI_IP6][SAFI_UNICAST]);
+  rpki_ribs_reset(&rpki_peer, &rpki_roa_db->rib[AFI_IP][SAFI_UNICAST], &rpki_roa_db->rib[AFI_IP6][SAFI_UNICAST]);
 }
 
-void rpki_link_misc_structs(struct bgp_misc_structs *r_data)
+void rpki_link_misc_structs(struct bgp_misc_structs *m_data)
 {
-  r_data->table_peer_buckets = 1; /* saving on DEFAULT_BGP_INFO_HASH for now */
-  r_data->table_per_peer_buckets = DEFAULT_BGP_INFO_PER_PEER_HASH; 
-  r_data->table_attr_hash_buckets = HASHTABSIZE;
-  r_data->table_per_peer_hash = BGP_ASPATH_HASH_PATHID;
-  r_data->route_info_modulo = NULL;
-  r_data->bgp_lookup_node_match_cmp = rpki_prefix_lookup_node_match_cmp;
+  m_data->table_peer_buckets = 1; /* saving on DEFAULT_BGP_INFO_HASH for now */
+  m_data->table_per_peer_buckets = DEFAULT_BGP_INFO_PER_PEER_HASH; 
+  m_data->table_attr_hash_buckets = HASHTABSIZE;
+  m_data->table_per_peer_hash = BGP_ASPATH_HASH_PATHID;
+  m_data->route_info_modulo = NULL;
+  m_data->bgp_lookup_node_match_cmp = rpki_prefix_lookup_node_match_cmp;
 }

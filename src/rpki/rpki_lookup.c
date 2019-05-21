@@ -31,7 +31,7 @@
 /* Functions */
 u_int8_t rpki_prefix_lookup(struct prefix *p, as_t last_as)
 {
-  struct bgp_misc_structs *r_data = rpki_misc_db;
+  struct bgp_misc_structs *m_data = rpki_misc_db;
   struct node_match_cmp_term2 nmct2;
   struct bgp_node *result = NULL;
   struct bgp_info *info = NULL;
@@ -39,7 +39,7 @@ u_int8_t rpki_prefix_lookup(struct prefix *p, as_t last_as)
   safi_t safi;
   afi_t afi;
 
-  if (!rpki_routing_db || !r_data || !p) return ROA_STATUS_UNKNOWN;
+  if (!rpki_roa_db || !m_data || !p) return ROA_STATUS_UNKNOWN;
 
   memset(&peer, 0, sizeof(struct bgp_peer));
   peer.type = FUNC_TYPE_RPKI;
@@ -53,8 +53,8 @@ u_int8_t rpki_prefix_lookup(struct prefix *p, as_t last_as)
   nmct2.p = p;
   nmct2.last_as = last_as;
 
-  bgp_node_match(rpki_routing_db->rib[afi][safi], p, &peer, r_data->route_info_modulo,
-	  	 r_data->bgp_lookup_node_match_cmp, &nmct2, NULL, &result, &info);
+  bgp_node_match(rpki_roa_db->rib[afi][safi], p, &peer, m_data->route_info_modulo,
+	  	 m_data->bgp_lookup_node_match_cmp, &nmct2, NULL, &result, &info);
 
   return nmct2.ret_code;
 }
