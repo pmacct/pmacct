@@ -70,7 +70,7 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
       struct packet_ptrs *tpptrs;
  
       pptrs.tun_pptrs = malloc(sizeof(struct packet_ptrs));
-      memset(&pptrs.tun_pptrs, 0, sizeof(struct packet_ptrs));
+      memset(pptrs.tun_pptrs, 0, sizeof(struct packet_ptrs));
       tpptrs = (struct packet_ptrs *) pptrs.tun_pptrs;
 
       tpptrs->pkthdr = malloc(sizeof(struct pcap_pkthdr));
