@@ -786,9 +786,14 @@ Show all available pmacct client commandline switches:
 
 shell> pmacct -h
 
-Fetch data stored into the memory table:
+Fetch data stored in the memory table:
 
 shell> pmacct -s 
+
+Fetch data stored in the memory table using JSON output (and nicely format it with
+the 'jq' tool):
+
+shell> pmacct -s -O json | jq 
 
 Match data between source IP 192.168.0.10 and destination IP 192.168.0.3 and return
 a formatted output; display all fields (-a), this way the output is easy to be parsed
