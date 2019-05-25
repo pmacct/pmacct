@@ -413,6 +413,7 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, si
       Log(LOG_ERR, "ERROR ( %s/%s ): Failed to produce to topic %s partition %i: %s\n", config.name, config.type,
           rd_kafka_topic_name(kafka_host->topic), part, rd_kafka_err2str(rd_kafka_last_error()));
       p_kafka_close(kafka_host, TRUE);
+      return ERR;
     }
   }
   else return ERR;
@@ -457,6 +458,7 @@ int p_kafka_manage_consumer(struct p_kafka_host *kafka_host, int is_start)
         Log(LOG_ERR, "ERROR ( %s/%s ): Failed to start consuming topic %s partition %i: %s\n", config.name, config.type,
           rd_kafka_topic_name(kafka_host->topic), kafka_host->partition, rd_kafka_err2str(rd_kafka_last_error()));
         p_kafka_close(kafka_host, TRUE);
+        return ERR;
       }
     }
     else {
