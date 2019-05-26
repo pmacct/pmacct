@@ -3027,7 +3027,7 @@ void parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len)
   trim_spaces(orig);
 
   if ((port = strrchr(host, ':')) == NULL || *(++port) == '\0' || *host == '\0') {
-    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), invalid 'nfprobe_receiver' argument\n", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), invalid '%s' argument\n", config.name, config.type, orig);
     exit_gracefully(1);
   }
   *(port - 1) = '\0';

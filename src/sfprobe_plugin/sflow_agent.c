@@ -1,5 +1,14 @@
-/* Copyright (c) 2002-2006 InMon Corp. Licensed under the terms of the InMon sFlow licence: */
-/* http://www.inmon.com/technology/sflowlicense.txt */
+/*
+    pmacct (Promiscuous mode IP Accounting package)
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+*/
+
+/* 
+   Originally based on sflowtool which is:
+
+   Copyright (c) 2002-2006 InMon Corp. Licensed under the terms of the InMon sFlow licence:
+   http://www.inmon.com/technology/sflowlicense.txt
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,7 +43,7 @@ void sfl_agent_init(SFLAgent *agent,
 		    sendFn_t sendFn)
 {
   struct sockaddr ssource_ip;
-  int ret = 0;
+  int ret = 0, family = 0;
 
   /* first clear everything */
   memset(agent, 0, sizeof(*agent));
@@ -49,14 +58,18 @@ void sfl_agent_init(SFLAgent *agent,
   agent->errorFn = errorFn;
   agent->sendFn = sendFn;
 
+  if (myIP->type == SFLADDRESSTYPE_IP_V4) family = AF_INET;
+  else if (myIP->type == SFLADDRESSTYPE_IP_V6) family = AF_INET6;
+
   if (config.nfprobe_source_ip) {
     ret = str_to_addr(config.nfprobe_source_ip, &config.nfprobe_source_ha);
     addr_to_sa(&ssource_ip, &config.nfprobe_source_ha, 0);
+    family = config.nfprobe_source_ha.family; 
   }
   
   if(sendFn == NULL) {
     /* open the socket */
-    if((agent->receiverSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+    if ((agent->receiverSocket = socket(family, SOCK_DGRAM, IPPROTO_UDP)) == -1)
       sfl_agent_sysError(agent, "agent", "socket open failed");
   }
 

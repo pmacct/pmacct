@@ -1,5 +1,14 @@
-/* Copyright (c) 2002-2006 InMon Corp. Licensed under the terms of the InMon sFlow licence: */
-/* http://www.inmon.com/technology/sflowlicense.txt */
+/*
+    pmacct (Promiscuous mode IP Accounting package)
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+*/
+
+/* 
+   Originally based on sflowtool which is:
+
+   Copyright (c) 2002-2006 InMon Corp. Licensed under the terms of the InMon sFlow licence:
+   http://www.inmon.com/technology/sflowlicense.txt
+*/
 
 /////////////////////////////////////////////////////////////////////////////////
 /////////////////////// sFlow Sampling Agent API ////////////////////////////////
@@ -92,7 +101,7 @@ typedef struct _SFLReceiver {
   struct _SFLAgent *agent;    /* pointer to my agent */
   /* private fields */
   SFLSampleCollector sampleCollector;
-  struct sockaddr_in receiver;
+  struct sockaddr_storage receiver;
 } SFLReceiver;
 
 typedef struct _SFLSampler {
