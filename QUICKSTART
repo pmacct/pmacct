@@ -1198,7 +1198,8 @@ b) build NetFlow probe configuration, using pmacctd:
    aggregate: src_host, dst_host, src_port, dst_port, proto, tos
    plugins: nfprobe
    nfprobe_receiver: 192.168.1.1:2100
-   nfprobe_version: 9
+   ! nfprobe_receiver: [FD00::2]:2100
+   nfprobe_version: 10
    ! nfprobe_engine: 1:1
    ! nfprobe_timeouts: tcp=120:maxlife=3600
    !
@@ -1338,6 +1339,9 @@ plugins: sfprobe
 sampling_rate: 20
 sfprobe_agentsubid: 1402
 sfprobe_receiver: 192.168.1.1:6343
+!
+! sfprobe_source_ip: FD00::1
+! sfprobe_receiver: [FD00::2]:6343
 !
 ! networks_file: /path/to/networks.lst
 ! snaplen: 700

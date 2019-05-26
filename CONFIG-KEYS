@@ -2074,11 +2074,11 @@ DESC:		Defines the remote IP address/hostname and port to which NetFlow datagram
 		If IPv4, the value is expected as 'address:port'. If IPv6, it is expected as '[address]:port'.
 DEFAULT:	127.0.0.1:2100
 
-KEY:            [ nfprobe_source_ip | sfprobe_source_ip ]
-DESC:           Defines the local IP address from which NetFlow/sFlow datagrams are exported. Only a numerical
-		IPv4/IPv6 address is expected. The supplied IP address is required to be already configured on
-		one of the interfaces. This parameter is also required for graceful encoding of NetFlow v9 and
-		IPFIX option scoping.
+KEY:            nfprobe_source_ip
+DESC:           Defines the local IP address from which NetFlow datagrams are exported. Only a numerical IPv4/
+		IPv6 address is expected. The supplied IP address is required to be already configured on
+		one of the interfaces. This parameter is also required for graceful encoding of NetFlow v9
+		and IPFIX option scoping.
 DEFAULT:	IP address is selected by the Operating System
 
 KEY:		nfprobe_version
@@ -2144,21 +2144,28 @@ DESC:		Disables caching and summarisation of flows. By default a NetFlow/IPFIX a
 DEFAULT:	false
 
 KEY:		sfprobe_receiver
-DESC:           Defines the remote IP address/hostname and port to which sFlow datagrams are to be exported.
-		The value is expected to be in the usual form 'address:port'.
+DESC:		Defines the remote IP address/hostname and port to which NetFlow datagrams are to be exported.
+		If IPv4, the value is expected as 'address:port'. If IPv6, it is expected as '[address]:port'.
 DEFAULT:	127.0.0.1:6343
 		
 KEY:		sfprobe_agentip
 DESC:		Sets the value of agentIp field inside the sFlow datagram header.
-DEFAULT:	none
+DEFAULT:	localhost
 
 KEY:		sfprobe_agentsubid
 DESC:		Sets the value of agentSubId field inside the sFlow datagram header.
-DEFAULT:	none
+DEFAULT:	1402
 
 KEY:            sfprobe_ifspeed
 DESC:           Statically associates an interface speed to a given sfprobe plugin. Value is expected in bps.
 DEFAULT:	100000000
+
+KEY:		sfprobe_source_ip
+DESC:		Defines the local IP address from which sFlow datagrams are exported. Only a numerical IPv4/
+		IPv6 address is expected. The supplied IP address is required to be already configured on
+                one of the interfaces. An IPv6 address must be configured in order to successfully export
+		to an IPv6 sfprobe_receiver.
+DEFAULT:        IP address is selected by the Operating System
 
 KEY:		bgp_daemon [GLOBAL]
 VALUES:		[ true | false ]
