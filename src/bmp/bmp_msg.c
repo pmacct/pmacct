@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -126,7 +126,7 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
   struct bgp_peer *peer;
   struct bmp_data bdata;
   struct bmp_init_hdr *bih;
-  u_int16_t bmp_init_len;
+  u_int16_t bmp_init_type, bmp_init_len;
   char *bmp_init_info;
 
   if (!bmpp) return;
@@ -159,6 +159,7 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
       return;
     }
 
+    bmp_init_hdr_get_type(bih, &bmp_init_type);
     bmp_init_hdr_get_len(bih, &bmp_init_len);
 
     if (!(bmp_init_info = bmp_get_and_check_length(bmp_packet, len, bmp_init_len))) {
@@ -170,7 +171,7 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
     {
       struct bmp_log_init blinit;
 
-      blinit.type = bih->type;
+      blinit.type = bmp_init_type;
       blinit.len = bmp_init_len;
       blinit.val = bmp_init_info;
 
@@ -197,7 +198,7 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
   struct bgp_peer *peer;
   struct bmp_data bdata;
   struct bmp_term_hdr *bth;
-  u_int16_t bmp_term_len, reason_type = 0;
+  u_int16_t bmp_term_type, bmp_term_len, reason_type = 0;
   char *bmp_term_info;
 
   if (!bmpp) return;
@@ -230,6 +231,7 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
        return;
     }
 
+    bmp_term_hdr_get_type(bth, &bmp_term_type);
     bmp_term_hdr_get_len(bth, &bmp_term_len);
 
     if (!(bmp_term_info = bmp_get_and_check_length(bmp_packet, len, bmp_term_len))) {
@@ -238,12 +240,12 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
       return;
     }
 
-    if (bth->type == BMP_TERM_INFO_REASON && bmp_term_len == 2) bmp_term_hdr_get_reason_type(bmp_packet, len, &reason_type);
+    if (bmp_term_type == BMP_TERM_INFO_REASON && bmp_term_len == 2) bmp_term_hdr_get_reason_type(bmp_packet, len, &reason_type);
 
     {
       struct bmp_log_term blterm;
 
-      blterm.type = bth->type;
+      blterm.type = bmp_term_type; 
       blterm.len = bmp_term_len;
       blterm.val = bmp_term_info;
       blterm.reas_type = reason_type;
@@ -823,9 +825,19 @@ void bmp_common_hdr_get_len(struct bmp_common_hdr *bch, u_int32_t *len)
   if (bch && len) (*len) = ntohl(bch->len);
 }
 
+void bmp_init_hdr_get_type(struct bmp_init_hdr *bih, u_int16_t *type)
+{
+  if (bih && type) (*type) = ntohs(bih->type);
+}
+
 void bmp_init_hdr_get_len(struct bmp_init_hdr *bih, u_int16_t *len)
 {
   if (bih && len) (*len) = ntohs(bih->len);
+}
+
+void bmp_term_hdr_get_type(struct bmp_term_hdr *bth, u_int16_t *type)
+{
+  if (bth && type) (*type) = ntohs(bth->type);
 }
 
 void bmp_term_hdr_get_len(struct bmp_term_hdr *bth, u_int16_t *len)
