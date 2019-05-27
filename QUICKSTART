@@ -1340,6 +1340,7 @@ sampling_rate: 20
 sfprobe_agentsubid: 1402
 sfprobe_receiver: 192.168.1.1:6343
 !
+! sfprobe_agentip: FD00::1
 ! sfprobe_source_ip: FD00::1
 ! sfprobe_receiver: [FD00::2]:6343
 !

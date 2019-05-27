@@ -2149,7 +2149,10 @@ DESC:		Defines the remote IP address/hostname and port to which NetFlow datagram
 DEFAULT:	127.0.0.1:6343
 		
 KEY:		sfprobe_agentip
-DESC:		Sets the value of agentIp field inside the sFlow datagram header.
+DESC:		Sets the value of agentIp field inside the sFlow datagram header. Only a numerical IPv4/
+		IPv6 address is expected. This value must be an IPv4 address if transport, that is
+		sfprobe_source_ip and/or sfprobe_receiver, is set to IPv4; or an IPv6 address if transport
+		is set to IPv6. 
 DEFAULT:	localhost
 
 KEY:		sfprobe_agentsubid

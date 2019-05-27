@@ -42,11 +42,13 @@ void sfl_agent_init(SFLAgent *agent,
 		    errorFn_t errorFn,
 		    sendFn_t sendFn)
 {
-  struct sockaddr ssource_ip;
+  struct sockaddr_storage ssource_ip;
   int ret = 0, family = 0;
 
   /* first clear everything */
   memset(agent, 0, sizeof(*agent));
+  memset(&ssource_ip, 0, sizeof(ssource_ip));
+
   /* now copy in the parameters */
   agent->myIP = *myIP; /* structure copy */
   agent->subId = subId;
@@ -63,7 +65,7 @@ void sfl_agent_init(SFLAgent *agent,
 
   if (config.nfprobe_source_ip) {
     ret = str_to_addr(config.nfprobe_source_ip, &config.nfprobe_source_ha);
-    addr_to_sa(&ssource_ip, &config.nfprobe_source_ha, 0);
+    addr_to_sa((struct sockaddr *) &ssource_ip, &config.nfprobe_source_ha, 0);
     family = config.nfprobe_source_ha.family; 
   }
   
