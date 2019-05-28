@@ -1071,7 +1071,12 @@ int main(int argc,char **argv, char **envp)
   get_ext_db_ie_by_type = &ext_db_get_ie;
   sigset_t set;
   sigemptyset(&set);
+  sigaddset(&set, SIGCHLD);
+  sigaddset(&set, SIGHUP);
   sigaddset(&set, SIGUSR1);
+  sigaddset(&set, SIGUSR2);
+  sigaddset(&set, SIGINT);
+  sigaddset(&set, SIGTERM);
 
 
   /* Main loop */
