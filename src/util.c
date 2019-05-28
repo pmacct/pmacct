@@ -3087,3 +3087,17 @@ u_int32_t next_prime(u_int32_t num)
   if (num < orig) return 0; /* it wrapped */
   else return num;
 }
+
+char *null_terminate(char *str, int len)
+{
+  char *loc = NULL;
+
+  if (str[len - 1] == '\0') loc = strdup(str);
+  else {
+    loc = malloc(len + 1);
+    memcpy(loc, str, len);
+    loc[len] = '\0';
+  }
+
+  return loc;
+}

@@ -119,6 +119,7 @@ EXT char *ip_proto_print(u_int8_t, char *, int);
 EXT void parse_hostport(const char *, struct sockaddr *, socklen_t *);
 EXT bool is_prime(u_int32_t);
 EXT u_int32_t next_prime(u_int32_t);
+EXT char *null_terminate(char *, int);
 
 EXT char *compose_json_str(void *);
 EXT void write_and_free_json(FILE *, void *);

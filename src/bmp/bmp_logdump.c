@@ -197,8 +197,13 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
 
     json_object_set_new_nocheck(obj, "bmp_init_data_len", json_integer((json_int_t)blinit->len));
 
-    if (blinit->type == BMP_INIT_INFO_STRING || blinit->type == BMP_INIT_INFO_SYSDESCR || blinit->type == BMP_INIT_INFO_SYSNAME)
+    if (blinit->type == BMP_INIT_INFO_STRING || blinit->type == BMP_INIT_INFO_SYSDESCR || blinit->type == BMP_INIT_INFO_SYSNAME) {
+      char *val_str;
+
+      null_terminate(blinit->val, blinit->len);
       json_object_set_new_nocheck(obj, "bmp_init_data_val", json_string(blinit->val));
+      free(val_str);
+    }
   }
 #endif
 
@@ -221,13 +226,19 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
 
     json_object_set_new_nocheck(obj, "bmp_term_data_len", json_integer((json_int_t)blterm->len));
 
-    if (blterm->type == BMP_TERM_INFO_STRING)
+    if (blterm->type == BMP_TERM_INFO_STRING) {
+      char *val_str;
+
+      val_str = null_terminate(blterm->val, blterm->len);
       json_object_set_new_nocheck(obj, "bmp_term_data_val_str", json_string(blterm->val));
+      free(val_str);
+    }
     else if (blterm->type == BMP_TERM_INFO_REASON) {
       json_object_set_new_nocheck(obj, "bmp_term_data_val_reas_type", json_integer((json_int_t)blterm->reas_type));
 
-      if (blterm->reas_type <= BMP_TERM_REASON_MAX)
+      if (blterm->reas_type <= BMP_TERM_REASON_MAX) {
 	json_object_set_new_nocheck(obj, "bmp_term_data_val_reas_str", json_string(bmp_term_reason_types[blterm->reas_type]));
+      }
     }
   }
 #endif
