@@ -331,3 +331,23 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
 #endif
   }
 }
+
+char *bmp_init_info_print(u_int16_t in)
+{
+  char *out = NULL, prefix[] = "bmp_init_info";
+  int prefix_len, value_len;
+
+  prefix_len = strlen(prefix);
+
+  if (in <= BMP_INIT_INFO_MAX) {
+    value_len = strlen(bmp_init_info_types[in]);
+    out = malloc(prefix_len + value_len + 1 /* sep */ + 1 /* null */);
+    sprintf(out, "%s_%s", prefix, bmp_init_info_types[in]);
+  }
+  else {
+    out = malloc(prefix_len + 5 /* value len */ + 1 /* sep */ + 1 /* null */);
+    sprintf(out, "%s_%u", prefix, in);
+  }
+
+  return out;
+}

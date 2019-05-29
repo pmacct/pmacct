@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -95,6 +95,15 @@ struct bmp_peer_hdr {
 #define BMP_INIT_INFO_STRING	0
 #define BMP_INIT_INFO_SYSDESCR	1
 #define BMP_INIT_INFO_SYSNAME	2
+#define BMP_INIT_INFO_MAX	2
+
+#define BMP_INIT_INFO_ENTRIES	8
+
+static const char *bmp_init_info_types[] = {
+  "string",
+  "sysdescr",
+  "sysname"  
+};
 
 struct bmp_init_hdr {
   u_int16_t	type;

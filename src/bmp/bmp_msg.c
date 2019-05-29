@@ -129,6 +129,8 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
   u_int16_t bmp_init_type, bmp_init_len;
   char *bmp_init_info;
 
+  struct bmp_log_init_array blinit;
+
   if (!bmpp) return;
 
   peer = &bmpp->self;
@@ -137,6 +139,7 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
   if (!bms) return;
 
   memset(&bdata, 0, sizeof(bdata));
+  blinit.entries = 0;
   gettimeofday(&bdata.tstamp, NULL);
   bmp_hdr_len -= sizeof(struct bmp_common_hdr);
 
@@ -168,28 +171,23 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
       return;
     }
 
-    {
-      struct bmp_log_init blinit;
-
-      blinit.type = bmp_init_type;
-      blinit.len = bmp_init_len;
-      blinit.val = bmp_init_info;
-
-      if (bms->msglog_backend_methods) {
-        char event_type[] = "log";
-
-        bmp_log_msg(peer, &bdata, &blinit, bgp_peer_log_seq_get(&bms->log_seq), event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_INIT);
-      }
-
-      if (bms->dump_backend_methods)
-        bmp_dump_se_ll_append(peer, &bdata, &blinit, BMP_LOG_TYPE_INIT);
-
-      if (bms->msglog_backend_methods || bms->dump_backend_methods)
-        bgp_peer_log_seq_increment(&bms->log_seq);
-    }
+    blinit.e[blinit.entries].type = bmp_init_type;
+    blinit.e[blinit.entries].len = bmp_init_len;
+    blinit.e[blinit.entries].val = bmp_init_info;
 
     bmp_hdr_len -= (bmp_init_len + sizeof(struct bmp_init_hdr));
+    blinit.entries++;
   }
+
+  if (bms->msglog_backend_methods) {
+    char event_type[] = "log";
+
+    bmp_log_msg(peer, &bdata, &blinit, bgp_peer_log_seq_get(&bms->log_seq), event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_INIT);
+  }
+
+  if (bms->dump_backend_methods) bmp_dump_se_ll_append(peer, &bdata, &blinit, BMP_LOG_TYPE_INIT);
+
+  if (bms->msglog_backend_methods || bms->dump_backend_methods) bgp_peer_log_seq_increment(&bms->log_seq);
 }
 
 void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_len, struct bmp_peer *bmpp)
