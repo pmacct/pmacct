@@ -144,18 +144,6 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
   gettimeofday(&bdata.tstamp, NULL);
   bmp_hdr_len -= sizeof(struct bmp_common_hdr);
 
-  if (bms->msglog_backend_methods) {
-    char event_type[] = "log";
-
-    bmp_log_msg(peer, &bdata, NULL, bgp_peer_log_seq_get(&bms->log_seq), event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_INIT);
-  }
-
-  if (bms->dump_backend_methods)
-    bmp_dump_se_ll_append(peer, &bdata, NULL, BMP_LOG_TYPE_INIT);
-
-  if (bms->msglog_backend_methods || bms->dump_backend_methods)
-    bgp_peer_log_seq_increment(&bms->log_seq);
-
   while (bmp_hdr_len) {
     if (!(bih = (struct bmp_init_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_init_hdr)))) {
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] [init] packet discarded: failed bmp_get_and_check_length() BMP init hdr\n",
@@ -214,18 +202,6 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
 
   gettimeofday(&bdata.tstamp, NULL);
   bmp_hdr_len -= sizeof(struct bmp_common_hdr);
-
-  if (bms->msglog_backend_methods) {
-    char event_type[] = "log";
-
-    bmp_log_msg(peer, &bdata, NULL, bgp_peer_log_seq_get(&bms->log_seq), event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_TERM);
-  }
-
-  if (bms->dump_backend_methods)
-    bmp_dump_se_ll_append(peer, &bdata, NULL, BMP_LOG_TYPE_TERM);
-
-  if (bms->msglog_backend_methods || bms->dump_backend_methods)
-    bgp_peer_log_seq_increment(&bms->log_seq);
 
   while (bmp_hdr_len) {
     if (!(bth = (struct bmp_term_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_term_hdr)))) {
