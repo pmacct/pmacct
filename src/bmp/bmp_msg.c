@@ -140,6 +140,7 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
 
   memset(&bdata, 0, sizeof(bdata));
   blinit.entries = 0;
+
   gettimeofday(&bdata.tstamp, NULL);
   bmp_hdr_len -= sizeof(struct bmp_common_hdr);
 
@@ -199,6 +200,8 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
   u_int16_t bmp_term_type, bmp_term_len, reason_type = 0;
   char *bmp_term_info;
 
+  struct bmp_log_term_array blterm;
+
   if (!bmpp) return;
 
   peer = &bmpp->self;
@@ -207,6 +210,8 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
   if (!bms) return;
 
   memset(&bdata, 0, sizeof(bdata));
+  blterm.entries = 0;
+
   gettimeofday(&bdata.tstamp, NULL);
   bmp_hdr_len -= sizeof(struct bmp_common_hdr);
 
@@ -240,29 +245,24 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
 
     if (bmp_term_type == BMP_TERM_INFO_REASON && bmp_term_len == 2) bmp_term_hdr_get_reason_type(bmp_packet, len, &reason_type);
 
-    {
-      struct bmp_log_term blterm;
-
-      blterm.type = bmp_term_type; 
-      blterm.len = bmp_term_len;
-      blterm.val = bmp_term_info;
-      blterm.reas_type = reason_type;
-
-      if (bms->msglog_backend_methods) {
-        char event_type[] = "log";
-
-        bmp_log_msg(peer, &bdata, &blterm, bgp_peer_log_seq_get(&bms->log_seq), event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_TERM);
-      }
-
-      if (bms->dump_backend_methods)
-        bmp_dump_se_ll_append(peer, &bdata, &blterm, BMP_LOG_TYPE_TERM);
-
-      if (bms->msglog_backend_methods || bms->dump_backend_methods)
-        bgp_peer_log_seq_increment(&bms->log_seq);
-    }
+    blterm.e[blterm.entries].type = bmp_term_type;
+    blterm.e[blterm.entries].len = bmp_term_len;
+    blterm.e[blterm.entries].val = bmp_term_info;
+    blterm.e[blterm.entries].reas_type = reason_type;
 
     bmp_hdr_len -= (bmp_term_len + sizeof(struct bmp_term_hdr));
+    blterm.entries++;
   }
+
+  if (bms->msglog_backend_methods) {
+    char event_type[] = "log";
+
+    bmp_log_msg(peer, &bdata, &blterm, bgp_peer_log_seq_get(&bms->log_seq), event_type, config.nfacctd_bmp_msglog_output, BMP_LOG_TYPE_TERM);
+  }
+
+  if (bms->dump_backend_methods) bmp_dump_se_ll_append(peer, &bdata, &blterm, BMP_LOG_TYPE_TERM);
+
+  if (bms->msglog_backend_methods || bms->dump_backend_methods) bgp_peer_log_seq_increment(&bms->log_seq);
 
   /* BGP peers are deleted as part of bmp_peer_close() */
 }

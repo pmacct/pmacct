@@ -351,3 +351,42 @@ char *bmp_init_info_print(u_int16_t in)
 
   return out;
 }
+
+char *bmp_term_info_print(u_int16_t in)
+{
+  char *out = NULL, prefix[] = "bmp_term_info";
+  int prefix_len, value_len;
+
+  prefix_len = strlen(prefix);
+
+  if (in <= BMP_TERM_INFO_MAX) {
+    value_len = strlen(bmp_term_info_types[in]);
+    out = malloc(prefix_len + value_len + 1 /* sep */ + 1 /* null */);
+    sprintf(out, "%s_%s", prefix, bmp_term_info_types[in]);
+  }
+  else {
+    out = malloc(prefix_len + 5 /* value len */ + 1 /* sep */ + 1 /* null */);
+    sprintf(out, "%s_%u", prefix, in);
+  }
+
+  return out;
+}
+
+char *bmp_term_reason_print(u_int16_t in)
+{
+  char *out = NULL;
+  int prefix_len, value_len;
+
+
+  if (in <= BMP_TERM_REASON_MAX) {
+    value_len = strlen(bmp_term_reason_types[in]);
+    out = malloc(value_len + 1 /* null */);
+    sprintf(out, "%s", bmp_term_reason_types[in]);
+  }
+  else {
+    out = malloc(5 /* value len */ + 1 /* null */);
+    sprintf(out, "%u", in);
+  }
+
+  return out;
+}

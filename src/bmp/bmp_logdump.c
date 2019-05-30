@@ -96,7 +96,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
       ret = bmp_log_msg_init(peer, bdata, (struct bmp_log_init_array *) log_data, event_type, output, obj);
       break;
     case BMP_LOG_TYPE_TERM:
-      ret = bmp_log_msg_term(peer, bdata, (struct bmp_log_term *) log_data, event_type, output, obj);
+      ret = bmp_log_msg_term(peer, bdata, (struct bmp_log_term_array *) log_data, event_type, output, obj);
       break;
     case BMP_LOG_TYPE_PEER_UP:
       ret = bmp_log_msg_peer_up(peer, bdata, (struct bmp_log_peer_up *) log_data, event_type, output, obj);
@@ -210,10 +210,10 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
   return ret;
 }
 
-int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_term *blterm, char *event_type, int output, void *vobj)
+int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_term_array *blterm, char *event_type, int output, void *vobj)
 {
   char bmp_msg_type[] = "term";
-  int ret = 0;
+  int ret = 0, idx = 0;
 #ifdef WITH_JANSSON
   json_t *obj = (json_t *) vobj;
 
@@ -222,23 +222,23 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
   json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 
   if (blterm) {
-    json_object_set_new_nocheck(obj, "bmp_term_data_type", json_integer((json_int_t)blterm->type));
+    while (idx < blterm->entries) {
+      char *type = NULL, *value = NULL;
 
-    json_object_set_new_nocheck(obj, "bmp_term_data_len", json_integer((json_int_t)blterm->len));
+      type = bmp_term_info_print(blterm->e[idx].type);
 
-    if (blterm->type == BMP_TERM_INFO_STRING) {
-      char *val_str;
-
-      val_str = null_terminate(blterm->val, blterm->len);
-      json_object_set_new_nocheck(obj, "bmp_term_data_val_str", json_string(blterm->val));
-      free(val_str);
-    }
-    else if (blterm->type == BMP_TERM_INFO_REASON) {
-      json_object_set_new_nocheck(obj, "bmp_term_data_val_reas_type", json_integer((json_int_t)blterm->reas_type));
-
-      if (blterm->reas_type <= BMP_TERM_REASON_MAX) {
-	json_object_set_new_nocheck(obj, "bmp_term_data_val_reas_str", json_string(bmp_term_reason_types[blterm->reas_type]));
+      if (blterm->e[idx].type == BMP_TERM_INFO_REASON) {
+	value = bmp_term_reason_print(blterm->e[idx].reas_type);
       }
+      else {
+	value = null_terminate(blterm->e[idx].val, blterm->e[idx].len);
+      }
+
+      json_object_set_new_nocheck(obj, type, json_string(value));
+      free(type);
+      free(value);
+
+      idx++;
     }
   }
 #endif
@@ -384,10 +384,10 @@ void bmp_dump_se_ll_append(struct bgp_peer *peer, struct bmp_data *bdata, void *
       memcpy(&se_ll_elem->rec.se.stats, extra, sizeof(struct bmp_log_stats));
       break;
     case BMP_LOG_TYPE_INIT:
-      memcpy(&se_ll_elem->rec.se.init, extra, sizeof(struct bmp_log_init));
+      memcpy(&se_ll_elem->rec.se.init, extra, sizeof(struct bmp_log_init_array));
       break;
     case BMP_LOG_TYPE_TERM:
-      memcpy(&se_ll_elem->rec.se.term, extra, sizeof(struct bmp_log_term));
+      memcpy(&se_ll_elem->rec.se.term, extra, sizeof(struct bmp_log_term_array));
       break;
     case BMP_LOG_TYPE_PEER_UP:
       memcpy(&se_ll_elem->rec.se.peer_up, extra, sizeof(struct bmp_log_peer_up));

@@ -112,6 +112,9 @@ struct bmp_init_hdr {
 
 #define BMP_TERM_INFO_STRING    0
 #define BMP_TERM_INFO_REASON	1
+#define BMP_TERM_INFO_MAX	1
+
+#define BMP_TERM_INFO_ENTRIES	8
 
 #define BMP_TERM_REASON_ADM	0
 #define BMP_TERM_REASON_UNK	1
@@ -119,6 +122,11 @@ struct bmp_init_hdr {
 #define BMP_TERM_REASON_DUP	3
 #define BMP_TERM_REASON_PERM	4
 #define BMP_TERM_REASON_MAX	4 /* set to the highest BMP_TERM_* value */
+
+static const char *bmp_term_info_types[] = {
+  "string",
+  "reason"
+};
 
 static const char *bmp_term_reason_types[] = {
   "Session administratively closed",
