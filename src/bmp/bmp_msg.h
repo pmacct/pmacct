@@ -30,8 +30,8 @@
 #define EXT
 #endif
 EXT u_int32_t bmp_process_packet(char *, u_int32_t, struct bmp_peer *);
-EXT void bmp_process_msg_init(char **, u_int32_t *, u_int32_t, struct bmp_peer *);
-EXT void bmp_process_msg_term(char **, u_int32_t *, u_int32_t, struct bmp_peer *);
+EXT void bmp_process_msg_init(char **, u_int32_t *, struct bmp_peer *);
+EXT void bmp_process_msg_term(char **, u_int32_t *, struct bmp_peer *);
 EXT void bmp_process_msg_peer_up(char **, u_int32_t *, struct bmp_peer *);
 EXT void bmp_process_msg_peer_down(char **, u_int32_t *, struct bmp_peer *);
 EXT void bmp_process_msg_stats(char **, u_int32_t *, struct bmp_peer *);

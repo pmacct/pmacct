@@ -39,7 +39,7 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
   struct bgp_misc_structs *bms;
   struct bgp_peer *peer;
   char *bmp_packet_ptr = bmp_packet;
-  u_int32_t pkt_remaining_len, msg_len, msg_start_len;
+  u_int32_t pkt_remaining_len, orig_msg_len, msg_len, msg_start_len;
 
   struct bmp_common_hdr *bch = NULL;
 
@@ -67,7 +67,10 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
     }
 
     bmp_common_hdr_get_len(bch, &msg_len);
-    if (pkt_remaining_len < (msg_len - sizeof(struct bmp_common_hdr))) return msg_start_len;
+    msg_len -= sizeof(struct bmp_common_hdr);
+    orig_msg_len = msg_len;
+
+    if (pkt_remaining_len < msg_len) return msg_start_len;
 
     if (bch->type <= BMP_MSG_TYPE_MAX) {
       Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] [common] type: %s (%u)\n",
@@ -76,34 +79,34 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
 
     switch (bch->type) {
     case BMP_MSG_ROUTE_MONITOR:
-      bmp_process_msg_route_monitor(&bmp_packet_ptr, &pkt_remaining_len, bmpp);
+      bmp_process_msg_route_monitor(&bmp_packet_ptr, &msg_len, bmpp);
       break;
     case BMP_MSG_STATS:
-      bmp_process_msg_stats(&bmp_packet_ptr, &pkt_remaining_len, bmpp);
+      bmp_process_msg_stats(&bmp_packet_ptr, &msg_len, bmpp);
       break;
     case BMP_MSG_PEER_DOWN:
-      bmp_process_msg_peer_down(&bmp_packet_ptr, &pkt_remaining_len, bmpp);
+      bmp_process_msg_peer_down(&bmp_packet_ptr, &msg_len, bmpp);
       break;
     case BMP_MSG_PEER_UP:
-      bmp_process_msg_peer_up(&bmp_packet_ptr, &pkt_remaining_len, bmpp); 
+      bmp_process_msg_peer_up(&bmp_packet_ptr, &msg_len, bmpp); 
       break;
     case BMP_MSG_INIT:
-      bmp_process_msg_init(&bmp_packet_ptr, &pkt_remaining_len, msg_len, bmpp); 
+      bmp_process_msg_init(&bmp_packet_ptr, &msg_len, bmpp); 
       break;
     case BMP_MSG_TERM:
-      bmp_process_msg_term(&bmp_packet_ptr, &pkt_remaining_len, msg_len, bmpp); 
+      bmp_process_msg_term(&bmp_packet_ptr, &msg_len, bmpp); 
       break;
     case BMP_MSG_ROUTE_MIRROR:
-      bmp_process_msg_route_mirror(&bmp_packet_ptr, &pkt_remaining_len, bmpp);
+      bmp_process_msg_route_mirror(&bmp_packet_ptr, &msg_len, bmpp);
       break;
     case BMP_MSG_TLV_RM_ADJ_RIB_IN:
-      bmp_process_msg_tlv_route_monitor(&bmp_packet_ptr, &pkt_remaining_len, bmpp, BMP_MSG_TLV_RM_ADJ_RIB_IN);
+      bmp_process_msg_tlv_route_monitor(&bmp_packet_ptr, &msg_len, bmpp, BMP_MSG_TLV_RM_ADJ_RIB_IN);
       break;
     case BMP_MSG_TLV_RM_ADJ_RIB_OUT:
-      bmp_process_msg_tlv_route_monitor(&bmp_packet_ptr, &pkt_remaining_len, bmpp, BMP_MSG_TLV_RM_ADJ_RIB_OUT);
+      bmp_process_msg_tlv_route_monitor(&bmp_packet_ptr, &msg_len, bmpp, BMP_MSG_TLV_RM_ADJ_RIB_OUT);
       break;
     case BMP_MSG_TLV_RM_LOC_RIB:
-      bmp_process_msg_tlv_route_monitor(&bmp_packet_ptr, &pkt_remaining_len, bmpp, BMP_MSG_TLV_RM_LOC_RIB);
+      bmp_process_msg_tlv_route_monitor(&bmp_packet_ptr, &msg_len, bmpp, BMP_MSG_TLV_RM_LOC_RIB);
       break;
     default:
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: unknown message type (%u)\n",
@@ -111,16 +114,24 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
       break;
     }
 
-    if ((msg_start_len - pkt_remaining_len) < msg_len) {
+    pkt_remaining_len -= orig_msg_len;
+ 
+    if (msg_len) {
       /* let's jump forward: we may have been unable to parse some (sub-)element */
+      bmp_jump_offset(&bmp_packet_ptr, &pkt_remaining_len, msg_len);
+    }
+/*
+    if ((msg_start_len - pkt_remaining_len) < msg_len) {
+      // let's jump forward: we may have been unable to parse some (sub-)element
       bmp_jump_offset(&bmp_packet_ptr, &pkt_remaining_len, (msg_len - (msg_start_len - pkt_remaining_len)));
     }
+*/
   }
 
   return FALSE;
 }
 
-void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_len, struct bmp_peer *bmpp)
+void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
 {
   struct bgp_misc_structs *bms;
   struct bgp_peer *peer;
@@ -142,9 +153,8 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
   blinit.entries = 0;
 
   gettimeofday(&bdata.tstamp, NULL);
-  bmp_hdr_len -= sizeof(struct bmp_common_hdr);
 
-  while (bmp_hdr_len) {
+  while ((*len)) {
     if (!(bih = (struct bmp_init_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_init_hdr)))) {
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] [init] packet discarded: failed bmp_get_and_check_length() BMP init hdr\n",
 		config.name, bms->log_str, peer->addr_str);
@@ -164,7 +174,6 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
     blinit.e[blinit.entries].len = bmp_init_len;
     blinit.e[blinit.entries].val = bmp_init_info;
 
-    bmp_hdr_len -= (bmp_init_len + sizeof(struct bmp_init_hdr));
     blinit.entries++;
   }
 
@@ -179,7 +188,7 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
   if (bms->msglog_backend_methods || bms->dump_backend_methods) bgp_peer_log_seq_increment(&bms->log_seq);
 }
 
-void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_len, struct bmp_peer *bmpp)
+void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
 {
   struct bgp_misc_structs *bms;
   struct bgp_peer *peer;
@@ -201,9 +210,8 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
   blterm.entries = 0;
 
   gettimeofday(&bdata.tstamp, NULL);
-  bmp_hdr_len -= sizeof(struct bmp_common_hdr);
 
-  while (bmp_hdr_len) {
+  while ((*len)) {
     if (!(bth = (struct bmp_term_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_term_hdr)))) {
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] [term] packet discarded: failed bmp_get_and_check_length() BMP term hdr\n",
 		config.name, bms->log_str, peer->addr_str);
@@ -226,7 +234,6 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, u_int32_t bmp_hdr_l
     blterm.e[blterm.entries].val = bmp_term_info;
     blterm.e[blterm.entries].reas_type = reason_type;
 
-    bmp_hdr_len -= (bmp_term_len + sizeof(struct bmp_term_hdr));
     blterm.entries++;
   }
 
