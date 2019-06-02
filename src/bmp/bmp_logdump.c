@@ -196,7 +196,7 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
     while (idx < blinit->entries) { 
       char *type = NULL, *value = NULL;
 
-      type = bmp_init_info_print(blinit->e[idx].type);
+      type = bmp_tlv_type_print(blinit->e[idx].type, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_ENTRIES);
       value = null_terminate(blinit->e[idx].val, blinit->e[idx].len);
       json_object_set_new_nocheck(obj, type, json_string(value));
       free(type);
@@ -225,7 +225,7 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
     while (idx < blterm->entries) {
       char *type = NULL, *value = NULL;
 
-      type = bmp_term_info_print(blterm->e[idx].type);
+      type = bmp_tlv_type_print(blterm->e[idx].type, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_ENTRIES);
 
       if (blterm->e[idx].type == BMP_TERM_INFO_REASON) {
 	value = bmp_term_reason_print(blterm->e[idx].reas_type);
@@ -289,7 +289,7 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
   while (idx < blpu->tlv.entries) {
     char *type = NULL, *value = NULL;
 
-    type = bmp_init_info_print(blpu->tlv.e[idx].type);
+    type = bmp_tlv_type_print(blpu->tlv.e[idx].type, "bmp_peer_up_info", NULL, 0);
     value = null_terminate(blpu->tlv.e[idx].val, blpu->tlv.e[idx].len);
     json_object_set_new_nocheck(obj, type, json_string(value));
     free(type);

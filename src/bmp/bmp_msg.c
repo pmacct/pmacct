@@ -169,7 +169,7 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
     blinit.e[blinit.entries].len = bmp_init_len;
     blinit.e[blinit.entries].val = bmp_init_info;
 
-    blinit.entries++;
+    blinit.entries = bmp_tlv_array_increment(blinit.entries, BMP_INIT_INFO_ENTRIES);
   }
 
   if (bms->msglog_backend_methods) {
@@ -229,7 +229,7 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
     blterm.e[blterm.entries].val = bmp_term_info;
     blterm.e[blterm.entries].reas_type = reason_type;
 
-    blterm.entries++;
+    blterm.entries = bmp_tlv_array_increment(blterm.entries, BMP_TERM_INFO_ENTRIES);
   }
 
   if (bms->msglog_backend_methods) {
@@ -360,7 +360,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
 	blpu.tlv.e[blpu.tlv.entries].len = bmp_tlv_len;
 	blpu.tlv.e[blpu.tlv.entries].val = bmp_tlv_value;
 
-	blpu.tlv.entries++;
+        blpu.tlv.entries = bmp_tlv_array_increment(blpu.tlv.entries, BMP_PEER_UP_INFO_ENTRIES);
       }
 
       if (bms->msglog_backend_methods) {

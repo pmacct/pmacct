@@ -332,42 +332,35 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
   }
 }
 
-char *bmp_init_info_print(u_int16_t in)
+int bmp_tlv_array_increment(int current_entries, int max_entries)
 {
-  char *out = NULL, prefix[] = "bmp_init_info";
-  int prefix_len, value_len;
-
-  prefix_len = strlen(prefix);
-
-  if (in <= BMP_INIT_INFO_MAX) {
-    value_len = strlen(bmp_init_info_types[in]);
-    out = malloc(prefix_len + value_len + 1 /* sep */ + 1 /* null */);
-    sprintf(out, "%s_%s", prefix, bmp_init_info_types[in]);
+  if ((current_entries + 1) == max_entries) {
+    return 0;
   }
   else {
-    out = malloc(prefix_len + 5 /* value len */ + 1 /* sep */ + 1 /* null */);
-    sprintf(out, "%s_%u", prefix, in);
+    return (current_entries + 1);
   }
-
-  return out;
 }
 
-char *bmp_term_info_print(u_int16_t in)
+char *bmp_tlv_type_print(u_int16_t in, const char *prefix, const char **registry, int max_registry_entries)
 {
-  char *out = NULL, prefix[] = "bmp_term_info";
+  char *out = NULL;
   int prefix_len, value_len;
 
   prefix_len = strlen(prefix);
 
-  if (in <= BMP_TERM_INFO_MAX) {
-    value_len = strlen(bmp_term_info_types[in]);
-    out = malloc(prefix_len + value_len + 1 /* sep */ + 1 /* null */);
-    sprintf(out, "%s_%s", prefix, bmp_term_info_types[in]);
+  if (registry && max_registry_entries) {
+    if (in <= max_registry_entries) {
+      value_len = strlen(registry[in]);
+      out = malloc(prefix_len + value_len + 1 /* sep */ + 1 /* null */);
+      sprintf(out, "%s_%s", prefix, registry[in]);
+
+      return out;
+    }
   }
-  else {
-    out = malloc(prefix_len + 5 /* value len */ + 1 /* sep */ + 1 /* null */);
-    sprintf(out, "%s_%u", prefix, in);
-  }
+
+  out = malloc(prefix_len + 5 /* value len */ + 1 /* sep */ + 1 /* null */);
+  sprintf(out, "%s_%u", prefix, in);
 
   return out;
 }

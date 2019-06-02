@@ -37,8 +37,8 @@ EXT void bmp_link_misc_structs(struct bgp_misc_structs *);
 EXT struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *, struct bgp_peer *);
 EXT int bmp_peer_init(struct bmp_peer *, int);
 EXT void bmp_peer_close(struct bmp_peer *, int);
-EXT char *bmp_init_info_print(u_int16_t);
-EXT char *bmp_term_info_print(u_int16_t);
+EXT int bmp_tlv_array_increment(int, int);
+EXT char *bmp_tlv_type_print(u_int16_t, const char *, const char **, int);
 EXT char *bmp_term_reason_print(u_int16_t);
 
 EXT void bgp_peer_log_msg_extras_bmp(struct bgp_peer *, int, void *);
