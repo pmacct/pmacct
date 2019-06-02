@@ -92,6 +92,11 @@ struct bmp_peer_hdr {
   u_int32_t	tstamp_usec;
 } __attribute__ ((packed));
 
+struct bmp_tlv_hdr {
+  u_int16_t     type;
+  u_int16_t     len;
+} __attribute__ ((packed));
+
 #define BMP_INIT_INFO_STRING	0
 #define BMP_INIT_INFO_SYSDESCR	1
 #define BMP_INIT_INFO_SYSNAME	2
@@ -104,11 +109,6 @@ static const char *bmp_init_info_types[] = {
   "sysdescr",
   "sysname"  
 };
-
-struct bmp_init_hdr {
-  u_int16_t	type;
-  u_int16_t	len;
-} __attribute__ ((packed));
 
 #define BMP_TERM_INFO_STRING    0
 #define BMP_TERM_INFO_REASON	1
@@ -135,11 +135,6 @@ static const char *bmp_term_reason_types[] = {
   "Redundant connection",
   "Session permanently administratively closed"
 };
-
-struct bmp_term_hdr {
-  u_int16_t     type;
-  u_int16_t     len;
-} __attribute__ ((packed));
 
 struct bmp_stats_hdr {
   u_int32_t	count;
@@ -231,6 +226,8 @@ struct bmp_stats_cnt_hdr {
   u_int16_t	type;
   u_int16_t	len;
 } __attribute__ ((packed));
+
+#define BMP_PEER_UP_INFO_ENTRIES	8	
 
 #define BMP_PEER_DOWN_RESERVED		0
 #define BMP_PEER_DOWN_LOC_NOT_MSG	1

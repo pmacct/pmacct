@@ -38,15 +38,15 @@ struct bmp_log_stats {
   u_int8_t got_data;
 };
 
-struct bmp_log_init {
-  u_int16_t type; 
+struct bmp_log_tlv {
+  u_int16_t type;
   u_int16_t len;
   char *val;
 };
 
 struct bmp_log_init_array {
   int entries;
-  struct bmp_log_init e[BMP_INIT_INFO_ENTRIES];
+  struct bmp_log_tlv e[BMP_INIT_INFO_ENTRIES];
 };
 
 struct bmp_log_term {
@@ -61,10 +61,16 @@ struct bmp_log_term_array {
   struct bmp_log_term e[BMP_TERM_INFO_ENTRIES];
 };
 
+struct bmp_log_peer_up_tlv_array {
+  int entries;
+  struct bmp_log_tlv e[BMP_PEER_UP_INFO_ENTRIES];
+};
+
 struct bmp_log_peer_up {
   struct host_addr local_ip;
   u_int16_t loc_port;
   u_int16_t rem_port;
+  struct bmp_log_peer_up_tlv_array tlv;
 };
 
 struct bmp_log_peer_down {
@@ -81,6 +87,7 @@ struct bmp_dump_se {
     struct bmp_log_init_array init;
     struct bmp_log_term_array term;
     struct bmp_log_peer_up peer_up;
+    struct bmp_log_peer_up_tlv_array peer_up_tlv;
     struct bmp_log_peer_down peer_down;
   } se;
 };

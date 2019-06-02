@@ -40,10 +40,8 @@ EXT void bmp_process_msg_route_mirror(char **, u_int32_t *, struct bmp_peer *);
 EXT void bmp_process_msg_tlv_route_monitor(char **, u_int32_t *, struct bmp_peer *, u_int8_t);
 
 EXT void bmp_common_hdr_get_len(struct bmp_common_hdr *, u_int32_t *);
-EXT void bmp_init_hdr_get_type(struct bmp_init_hdr *, u_int16_t *);
-EXT void bmp_init_hdr_get_len(struct bmp_init_hdr *, u_int16_t *);
-EXT void bmp_term_hdr_get_type(struct bmp_term_hdr *, u_int16_t *);
-EXT void bmp_term_hdr_get_len(struct bmp_term_hdr *, u_int16_t *);
+EXT void bmp_tlv_hdr_get_type(struct bmp_tlv_hdr *, u_int16_t *);
+EXT void bmp_tlv_hdr_get_len(struct bmp_tlv_hdr *, u_int16_t *);
 EXT void bmp_term_hdr_get_reason_type(char **, u_int32_t *, u_int16_t *);
 EXT void bmp_peer_hdr_get_v_flag(struct bmp_peer_hdr *, u_int8_t *);
 EXT void bmp_peer_hdr_get_l_flag(struct bmp_peer_hdr *, u_int8_t *);

@@ -114,18 +114,13 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
       break;
     }
 
-    pkt_remaining_len -= orig_msg_len;
+    /* sync-up status of pkt_remaining_len to bmp_packet_ptr */
+    pkt_remaining_len -= (orig_msg_len - msg_len);
  
     if (msg_len) {
       /* let's jump forward: we may have been unable to parse some (sub-)element */
       bmp_jump_offset(&bmp_packet_ptr, &pkt_remaining_len, msg_len);
     }
-/*
-    if ((msg_start_len - pkt_remaining_len) < msg_len) {
-      // let's jump forward: we may have been unable to parse some (sub-)element
-      bmp_jump_offset(&bmp_packet_ptr, &pkt_remaining_len, (msg_len - (msg_start_len - pkt_remaining_len)));
-    }
-*/
   }
 
   return FALSE;
@@ -136,7 +131,7 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
   struct bgp_misc_structs *bms;
   struct bgp_peer *peer;
   struct bmp_data bdata;
-  struct bmp_init_hdr *bih;
+  struct bmp_tlv_hdr *bth;
   u_int16_t bmp_init_type, bmp_init_len;
   char *bmp_init_info;
 
@@ -155,17 +150,17 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
   gettimeofday(&bdata.tstamp, NULL);
 
   while ((*len)) {
-    if (!(bih = (struct bmp_init_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_init_hdr)))) {
-      Log(LOG_INFO, "INFO ( %s/%s ): [%s] [init] packet discarded: failed bmp_get_and_check_length() BMP init hdr\n",
+    if (!(bth = (struct bmp_tlv_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_tlv_hdr)))) {
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] [init] packet discarded: failed bmp_get_and_check_length() BMP TLV hdr\n",
 		config.name, bms->log_str, peer->addr_str);
       return;
     }
 
-    bmp_init_hdr_get_type(bih, &bmp_init_type);
-    bmp_init_hdr_get_len(bih, &bmp_init_len);
+    bmp_tlv_hdr_get_type(bth, &bmp_init_type);
+    bmp_tlv_hdr_get_len(bth, &bmp_init_len);
 
     if (!(bmp_init_info = bmp_get_and_check_length(bmp_packet, len, bmp_init_len))) {
-      Log(LOG_INFO, "INFO ( %s/%s ): [%s] [init] packet discarded: failed bmp_get_and_check_length() BMP init info\n",
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] [init] packet discarded: failed bmp_get_and_check_length() BMP TLV info\n",
 		config.name, bms->log_str, peer->addr_str);
       return;
     }
@@ -193,7 +188,7 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
   struct bgp_misc_structs *bms;
   struct bgp_peer *peer;
   struct bmp_data bdata;
-  struct bmp_term_hdr *bth;
+  struct bmp_tlv_hdr *bth;
   u_int16_t bmp_term_type, bmp_term_len, reason_type = 0;
   char *bmp_term_info;
 
@@ -212,17 +207,17 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
   gettimeofday(&bdata.tstamp, NULL);
 
   while ((*len)) {
-    if (!(bth = (struct bmp_term_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_term_hdr)))) {
-      Log(LOG_INFO, "INFO ( %s/%s ): [%s] [term] packet discarded: failed bmp_get_and_check_length() BMP term hdr\n",
+    if (!(bth = (struct bmp_tlv_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_tlv_hdr)))) {
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] [term] packet discarded: failed bmp_get_and_check_length() BMP TLV hdr\n",
 		config.name, bms->log_str, peer->addr_str);
        return;
     }
 
-    bmp_term_hdr_get_type(bth, &bmp_term_type);
-    bmp_term_hdr_get_len(bth, &bmp_term_len);
+    bmp_tlv_hdr_get_type(bth, &bmp_term_type);
+    bmp_tlv_hdr_get_len(bth, &bmp_term_len);
 
     if (!(bmp_term_info = bmp_get_and_check_length(bmp_packet, len, bmp_term_len))) {
-      Log(LOG_INFO, "INFO ( %s/%s ): [%s] [term] packet discarded: failed bmp_get_and_check_length() BMP term info\n",
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] [term] packet discarded: failed bmp_get_and_check_length() BMP TLV info\n",
 		config.name, bms->log_str, peer->addr_str);
       return;
     }
@@ -308,10 +303,17 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
       int bgp_open_len;
       void *ret;
 
+      /* TLV vars */
+      struct bmp_tlv_hdr *bth; 
+      u_int16_t bmp_tlv_type, bmp_tlv_len;
+      char *bmp_tlv_value;
+
       memset(&bgp_peer_loc, 0, sizeof(bgp_peer_loc));
       memset(&bgp_peer_rem, 0, sizeof(bgp_peer_rem));
       memset(&bmd, 0, sizeof(bmd));
       memset(&bmed_bmp, 0, sizeof(bmed_bmp));
+      blpu.tlv.entries = 0;
+
       bmp_peer_up_hdr_get_loc_port(bpuh, &blpu.loc_port);
       bmp_peer_up_hdr_get_rem_port(bpuh, &blpu.rem_port);
       bmp_peer_up_hdr_get_local_ip(bpuh, &blpu.local_ip, bdata.family);
@@ -337,6 +339,29 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
       bmpp_bgp_peer->bmp_se = bmpp; /* using bmp_se field to back-point a BGP peer to its parent BMP peer */  
       ret = pm_tsearch(bmpp_bgp_peer, &bmpp->bgp_peers, bgp_peer_cmp, sizeof(struct bgp_peer));
       if (!ret) Log(LOG_WARNING, "WARN ( %s/%s ): [%s] [peer up] tsearch() unable to insert.\n", config.name, bms->log_str, peer->addr_str);
+
+      while ((*len)) {
+	if (!(bth = (struct bmp_tlv_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_tlv_hdr)))) {
+	  Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: failed bmp_get_and_check_length() BMP TLV hdr\n",
+		config.name, bms->log_str, peer->addr_str);
+	  return;
+	}
+
+	bmp_tlv_hdr_get_type(bth, &bmp_tlv_type);
+	bmp_tlv_hdr_get_len(bth, &bmp_tlv_len);
+
+	if (!(bmp_tlv_value = bmp_get_and_check_length(bmp_packet, len, bmp_tlv_len))) {
+	  Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: failed bmp_get_and_check_length() BMP TLV info\n",
+		config.name, bms->log_str, peer->addr_str);
+	  return;
+	}
+
+	blpu.tlv.e[blpu.tlv.entries].type = bmp_tlv_type;
+	blpu.tlv.e[blpu.tlv.entries].len = bmp_tlv_len;
+	blpu.tlv.e[blpu.tlv.entries].val = bmp_tlv_value;
+
+	blpu.tlv.entries++;
+      }
 
       if (bms->msglog_backend_methods) {
         char event_type[] = "log";
@@ -806,22 +831,12 @@ void bmp_common_hdr_get_len(struct bmp_common_hdr *bch, u_int32_t *len)
   if (bch && len) (*len) = ntohl(bch->len);
 }
 
-void bmp_init_hdr_get_type(struct bmp_init_hdr *bih, u_int16_t *type)
-{
-  if (bih && type) (*type) = ntohs(bih->type);
-}
-
-void bmp_init_hdr_get_len(struct bmp_init_hdr *bih, u_int16_t *len)
-{
-  if (bih && len) (*len) = ntohs(bih->len);
-}
-
-void bmp_term_hdr_get_type(struct bmp_term_hdr *bth, u_int16_t *type)
+void bmp_tlv_hdr_get_type(struct bmp_tlv_hdr *bth, u_int16_t *type)
 {
   if (bth && type) (*type) = ntohs(bth->type);
 }
 
-void bmp_term_hdr_get_len(struct bmp_term_hdr *bth, u_int16_t *len)
+void bmp_tlv_hdr_get_len(struct bmp_tlv_hdr *bth, u_int16_t *len)
 {
   if (bth && len) (*len) = ntohs(bth->len);
 }

@@ -249,7 +249,7 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
 int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_peer_up *blpu, char *event_type, int output, void *vobj)
 {
   char bmp_msg_type[] = "peer_up";
-  int ret = 0;
+  int ret = 0, idx = 0;
 #ifdef WITH_JANSSON
   char ip_address[INET6_ADDRSTRLEN];
   json_t *obj = (json_t *) vobj;
@@ -285,6 +285,18 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
 
   addr_to_str(ip_address, &blpu->local_ip);
   json_object_set_new_nocheck(obj, "local_ip", json_string(ip_address));
+
+  while (idx < blpu->tlv.entries) {
+    char *type = NULL, *value = NULL;
+
+    type = bmp_init_info_print(blpu->tlv.e[idx].type);
+    value = null_terminate(blpu->tlv.e[idx].val, blpu->tlv.e[idx].len);
+    json_object_set_new_nocheck(obj, type, json_string(value));
+    free(type);
+    free(value);
+
+    idx++;
+  }
 #endif
 
   return ret;
