@@ -68,6 +68,7 @@
 #include <grp.h>
 #include <dlfcn.h>
 #include "pmsearch.h"
+#include "filters/bloom.h"
 
 #include <sys/mman.h>
 #if !defined (MAP_ANONYMOUS)

@@ -35,6 +35,7 @@ libdaemons_la_LIBADD += sfprobe_plugin/libsfprobe_plugin.la
 libdaemons_la_LIBADD += bmp/libpmbmp.la
 libdaemons_la_LIBADD += bgp/libpmbgp.la
 libdaemons_la_LIBADD += rpki/libpmrpki.la
+libdaemons_la_LIBADD += filters/libpmfilters.la
 libdaemons_la_LIBADD += tee_plugin/libtee_plugin.la
 libdaemons_la_LIBADD += isis/libpmisis.la
 libdaemons_la_LIBADD += telemetry/libpmtelemetry.la

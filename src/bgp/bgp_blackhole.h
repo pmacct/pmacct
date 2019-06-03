@@ -23,6 +23,7 @@
 #define _BGP_BLACKHOLE_H_
 
 /* defines */
+#define BGP_BLACKHOLE_DEFAULT_BF_ENTRIES	1000
 
 /* prototypes */
 #if (!defined __BGP_BLACKHOLE_C)
@@ -32,6 +33,7 @@
 #endif
 EXT void bgp_blackhole_daemon_wrapper();
 EXT void bgp_blackhole_prepare_thread();
+EXT void bgp_blackhole_prepare_filter();
 EXT void bgp_blackhole_daemon();
 #undef EXT
 #endif
@@ -44,4 +46,5 @@ EXT void bgp_blackhole_daemon();
 #endif
 EXT struct bgp_rt_structs *bgp_blackhole_db;
 EXT struct bgp_misc_structs *bgp_blackhole_misc_db;
+EXT struct bloom *bgp_blackhole_filter;
 #undef EXT

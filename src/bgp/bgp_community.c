@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /* 
@@ -450,4 +450,51 @@ community_init (int buckets, struct hash **loc_comhash)
 {
   (*loc_comhash) = hash_create (buckets, (unsigned int (*) (void *))community_hash_make,
 			 (int (*) (const void *, const void *))community_cmp);
+}
+
+
+int community_str2com_simple(const char *buf, u_int32_t *val)
+{
+  const char *p = buf;
+
+  /* Skip white space. */
+  while (isspace ((int) (*p))) p++;
+
+  /* Check the end of the line. */
+  if (*p == '\0') return ERR;
+
+  /* Community value. */
+  if (isdigit ((int) (*p))) {
+    int separator = 0;
+    int digit = 0;
+    u_int32_t community_low = 0;
+    u_int32_t community_high = 0;
+
+    while (isdigit ((int) (*p)) || (*p) == ':') {
+      if ((*p) == ':') {
+	if (separator) return ERR;
+	else {
+	  separator = TRUE;
+	  digit = FALSE;
+	  community_high = community_low << 16;
+	  community_low = 0;
+	}
+      }
+      else {
+        digit = TRUE;
+        community_low *= 10;
+        community_low += (*p - '0');
+      }
+
+      p++;
+    }
+
+    if (!digit) return ERR;
+
+    (*val) = community_high + community_low;
+
+    return FALSE;
+  }
+
+  return ERR;
 }

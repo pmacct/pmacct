@@ -40,8 +40,7 @@ void bgp_blackhole_daemon_wrapper()
   assert(bgp_blackhole_pool);
   Log(LOG_DEBUG, "DEBUG ( %s/core/BH ): %d thread(s) initialized\n", config.name, 1);
 
-  /* XXX: compile BGP blackhole filter structure */  
-
+  bgp_blackhole_prepare_filter();
   bgp_blackhole_prepare_thread();
 
   /* giving a kick to the BGP blackhole thread */
@@ -56,6 +55,28 @@ void bgp_blackhole_prepare_thread()
   bgp_blackhole_misc_db->is_thread = TRUE;
   bgp_blackhole_misc_db->log_str = malloc(strlen("core/BH") + 1);
   strcpy(bgp_blackhole_misc_db->log_str, "core/BH");
+}
+
+void bgp_blackhole_prepare_filter()
+{
+  char *stdcomms, *token;
+  int len;
+
+  bloom_init(bgp_blackhole_filter, BGP_BLACKHOLE_DEFAULT_BF_ENTRIES, 0.01);
+
+  stdcomms = strdup(config.bgp_blackhole_stdcomm_list);
+  while ((token = extract_token(&stdcomms, ','))) {
+    u_int32_t stdcomm;
+    int ret;
+
+    ret = community_str2com_simple(token, &stdcomm);
+    if (ret == ERR) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Invalid community '%s' in 'bgp_blackhole_stdcomm_list'.\n", config.name, bgp_blackhole_misc_db->log_str, token);
+      exit_gracefully(1);
+    }
+    
+    bloom_add(bgp_blackhole_filter, &stdcomm, sizeof(stdcomm));
+  }
 }
 
 void bgp_blackhole_daemon()
