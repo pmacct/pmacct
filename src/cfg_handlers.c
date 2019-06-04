@@ -5170,7 +5170,7 @@ int cfg_key_nfacctd_disable_checks(char *filename, char *name, char *value_ptr)
   int value, changes = 0;
 
   value = parse_truefalse_nonzero(value_ptr);
-  if (value < 0) return ERR;
+  if (value == ERR) return ERR;
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_disable_checks = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key '[ns]facctd_disable_checks'. Globalized.\n", filename);
@@ -5184,7 +5184,7 @@ int cfg_key_nfacctd_disable_opt_scope_check(char *filename, char *name, char *va
   int value, changes = 0;
 
   value = parse_truefalse_nonzero(value_ptr);
-  if (value < 0) return ERR;
+  if (value == ERR) return ERR;
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_disable_opt_scope_check = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'nfacctd_disable_opt_scope_check'. Globalized.\n", filename);
