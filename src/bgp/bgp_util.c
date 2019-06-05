@@ -1383,8 +1383,9 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
 
   bms->bgp_msg_open_router_id_check = bgp_router_id_check; 
 
-  if (!bms->is_thread && !bms->dump_backend_methods && !bms->has_lglass)
+  if (!bms->is_thread && !bms->dump_backend_methods && !bms->has_lglass && !bms->has_blackhole) {
     bms->skip_rib = TRUE;
+  }
 }
 
 void bgp_blackhole_link_misc_structs(struct bgp_misc_structs *m_data)

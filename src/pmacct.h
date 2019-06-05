@@ -67,6 +67,7 @@
 #include <pwd.h>
 #include <grp.h>
 #include <dlfcn.h>
+#include <math.h>
 #include "pmsearch.h"
 #include "filters/bloom.h"
 

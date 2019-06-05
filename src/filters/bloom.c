@@ -11,18 +11,7 @@
 
 #define __BLOOM_C
 
-#include <assert.h>
-#include <fcntl.h>
-#include <math.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-#include "bloom.h"
+#include "pmacct.h"
 #include "murmur2.h"
 
 inline static int test_bit_set_bit(unsigned char * buf,

@@ -1121,6 +1121,10 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
 
     // XXX: check prefix correctnesss now that we have it?
 
+    if (config.bgp_blackhole_stdcomm_list) {
+      bmd->is_blackhole = bgp_blackhole_evaluate_comms(attr);
+    }
+
     /* Let's do our job now! */
     if (attr)
       ret = bgp_process_update(bmd, &p, attr, info->afi, safi, &rd, &path_id, label);

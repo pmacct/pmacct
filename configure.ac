@@ -977,7 +977,7 @@ else
 	fi
 fi
 
-LIBS="${LIBS} -lpthread"
+LIBS="${LIBS} -lm -lpthread"
 
 dnl Checks for header files.
 AC_HEADER_STDC
@@ -989,7 +989,7 @@ AC_CHECK_HEADERS([arpa/inet.h assert.h ctype.h dirent.h dlfcn.h errno.h fcntl.h 
 AC_CHECK_HEADERS([limits.h malloc.h netdb.h net/if.h netinet/in.h netinet/in_systm.h netinet/ip.h])
 AC_CHECK_HEADERS([netinet/udp.h pthread.h pwd.h signal.h string.h sys/ansi.h sys/errno.h sys/file.h])
 AC_CHECK_HEADERS([sys/ioctl.h syslog.h sys/mbuf.h sys/mman.h sys/param.h sys/poll.h sys/resource.h])
-AC_CHECK_HEADERS([sys/socket.h sys/stat.h sys/types.h sys/un.h sys/utsname.h time.h])
+AC_CHECK_HEADERS([sys/socket.h sys/stat.h sys/types.h sys/un.h sys/utsname.h time.h math.h])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_TYPE(u_int64_t, [AC_DEFINE(HAVE_U_INT64_T, 1)])

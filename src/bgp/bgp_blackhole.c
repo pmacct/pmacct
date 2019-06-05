@@ -106,6 +106,28 @@ void bgp_blackhole_daemon()
 
   for (;;) {
     // XXX
+
     sleep(DEFAULT_SLOTH_SLEEP_TIME);
   }
+}
+
+int bgp_blackhole_evaluate_comms(void *a)
+{
+  struct bgp_attr *attr = (struct bgp_attr *) a;
+  struct community *comm;
+  int idx, ret;
+  u_int32_t val;
+
+  if (attr && attr->community && attr->community->val) {
+    comm = attr->community;
+
+    for (idx = 0; idx < comm->size; idx++) {
+      val = community_val_get(comm, idx);
+
+      ret = bloom_check(bgp_blackhole_filter, &val, sizeof(val)); 
+      if (ret) return ret;
+    }
+  }
+
+  return FALSE;
 }

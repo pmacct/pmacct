@@ -835,6 +835,8 @@ void bgp_prepare_thread()
     memset(bgp_misc_db->bnv, 0, sizeof(struct bgp_node_vector)); 
   }
 
+  if (config.bgp_blackhole_stdcomm_list) bgp_misc_db->has_blackhole = TRUE;
+
   bgp_misc_db->log_str = malloc(strlen("core/BGP") + 1);
   strcpy(bgp_misc_db->log_str, "core/BGP");
 }
@@ -851,6 +853,8 @@ void bgp_prepare_daemon()
     bgp_misc_db->bnv = malloc(sizeof(struct bgp_node_vector));
     memset(bgp_misc_db->bnv, 0, sizeof(struct bgp_node_vector));
   }
+
+  if (config.bgp_blackhole_stdcomm_list) bgp_misc_db->has_blackhole = TRUE;
 
   bgp_misc_db->log_str = malloc(strlen("core") + 1);
   strcpy(bgp_misc_db->log_str, "core");

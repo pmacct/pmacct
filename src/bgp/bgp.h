@@ -193,6 +193,7 @@ struct bgp_peer {
 struct bgp_msg_data {
   struct bgp_peer *peer;
   struct bgp_msg_extra_data extra;
+  int is_blackhole;
 };
 
 struct bgp_misc_structs {
@@ -207,6 +208,7 @@ struct bgp_misc_structs {
   char *log_str; /* BGP, BMP, thread, daemon, etc. */
   int is_thread;
   int has_lglass;
+  int has_blackhole;
   int skip_rib;
 
 #if defined WITH_RABBITMQ

@@ -35,6 +35,8 @@ EXT void bgp_blackhole_daemon_wrapper();
 EXT void bgp_blackhole_prepare_thread();
 EXT void bgp_blackhole_prepare_filter();
 EXT void bgp_blackhole_daemon();
+
+EXT int bgp_blackhole_evaluate_comms(void *);
 #undef EXT
 #endif
 
