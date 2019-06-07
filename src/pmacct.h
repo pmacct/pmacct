@@ -460,5 +460,6 @@ EXT struct pcap_device device;
 EXT struct pcap_devices devices, bkp_devices;
 EXT struct pcap_interfaces pcap_if_map, bkp_pcap_if_map;
 EXT struct pcap_stat ps;
+EXT struct sigaction sighandler_action;
 #undef EXT
 #endif /* _PMACCT_H_ */

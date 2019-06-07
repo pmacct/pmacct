@@ -147,7 +147,7 @@ int main(int argc,char **argv, char **envp)
   struct packet_ptrs recv_pptrs;
   struct pcap_pkthdr recv_pkthdr;
 
-  extern struct sigaction sighandler_action;
+  sigset_t signal_set;
 
   /* getopt() stuff */
   extern char *optarg;
@@ -589,20 +589,25 @@ int main(int argc,char **argv, char **envp)
 #endif
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
-  memset(&sighandler_action, 0, sizeof(sighandler_action)); //To ensure the struct holds no garbage values
-  sigemptyset(&sighandler_action.sa_mask);  //Within a signal handler all the signals are enabled
-  sighandler_action.sa_flags = SA_RESTART;  //To enable re-entering a system call afer done with signal handling
+  memset(&sighandler_action, 0, sizeof(sighandler_action)); /* To ensure the struct holds no garbage values */
+  sigemptyset(&sighandler_action.sa_mask);  /* Within a signal handler all the signals are enabled */
+  sighandler_action.sa_flags = SA_RESTART;  /* To enable re-entering a system call afer done with signal handling */
+
   sighandler_action.sa_handler = startup_handle_falling_child;
   sigaction(SIGCHLD, &sighandler_action, NULL);
+
   /* handles reopening of syslog channel */
   sighandler_action.sa_handler = reload;
   sigaction(SIGHUP, &sighandler_action, NULL); 
+
   /* logs various statistics via Log() calls */
   sighandler_action.sa_handler = push_stats;
   sigaction(SIGUSR1, &sighandler_action, NULL); 
+
   /* sets to true the reload_maps flag */
   sighandler_action.sa_handler = reload_maps;
   sigaction(SIGUSR2, &sighandler_action, NULL);
+
   /* we want to exit gracefully when a pipe is broken */
   sighandler_action.sa_handler = SIG_IGN;
   sigaction(SIGPIPE, &sighandler_action, NULL);
@@ -1069,19 +1074,19 @@ int main(int argc,char **argv, char **envp)
 
   /* fixing NetFlow v9/IPFIX template func pointers */
   get_ext_db_ie_by_type = &ext_db_get_ie;
-  sigset_t set;
-  sigemptyset(&set);
-  sigaddset(&set, SIGCHLD);
-  sigaddset(&set, SIGHUP);
-  sigaddset(&set, SIGUSR1);
-  sigaddset(&set, SIGUSR2);
-  sigaddset(&set, SIGINT);
-  sigaddset(&set, SIGTERM);
 
+  sigemptyset(&signal_set);
+  sigaddset(&signal_set, SIGCHLD);
+  sigaddset(&signal_set, SIGHUP);
+  sigaddset(&signal_set, SIGUSR1);
+  sigaddset(&signal_set, SIGUSR2);
+  sigaddset(&signal_set, SIGINT);
+  sigaddset(&signal_set, SIGTERM);
 
   /* Main loop */
   for (;;) {
-    sigprocmask(SIG_BLOCK, &set, NULL);
+    sigprocmask(SIG_BLOCK, &signal_set, NULL);
+
     if (config.pcap_savefile) {
       ret = recvfrom_savefile(&device, (void **) &netflow_packet, (struct sockaddr *) &client, NULL, &pcap_savefile_round, &recv_pptrs);
     }
@@ -1225,7 +1230,8 @@ int main(int argc,char **argv, char **envp)
 
       process_raw_packet(netflow_packet, ret, &pptrs, &req);
     }
-    sigprocmask(SIG_UNBLOCK, &set, NULL);
+
+    sigprocmask(SIG_UNBLOCK, &signal_set, NULL);
   }
 }
 

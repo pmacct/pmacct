@@ -30,7 +30,7 @@
 
 /* extern */
 extern struct plugins_list_entry *plugin_list;
-struct sigaction sighandler_action;
+
 /* functions */
 /* Each signal handler contains a final signal() call that reinstalls the called
    handler again; such behaviour deals with SysV signal handling */
