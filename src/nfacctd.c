@@ -911,6 +911,7 @@ int main(int argc,char **argv, char **envp)
 
   sighandler_action.sa_handler = handle_falling_child;
   sigaction(SIGCHLD, &sighandler_action, NULL);
+
   kill(getpid(), SIGCHLD);
 
   /* initializing template cache */ 

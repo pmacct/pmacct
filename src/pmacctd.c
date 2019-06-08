@@ -332,6 +332,8 @@ int main(int argc,char **argv, char **envp)
   fd_set read_descs, bkp_read_descs;
   int select_fd, bkp_select_fd, select_num;
 
+  sigset_t signal_set;
+
   /* getopt() stuff */
   extern char *optarg;
   extern int optind, opterr, optopt;
@@ -1011,11 +1013,28 @@ int main(int argc,char **argv, char **envp)
   }
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
-  signal(SIGCHLD, startup_handle_falling_child); /* takes note of plugins failed during startup phase */
-  signal(SIGHUP, reload); /* handles reopening of syslog channel */
-  signal(SIGUSR1, push_stats); /* logs various statistics via Log() calls */
-  signal(SIGUSR2, reload_maps); /* sets to true the reload_maps flag */
-  signal(SIGPIPE, SIG_IGN); /* we want to exit gracefully when a pipe is broken */
+  memset(&sighandler_action, 0, sizeof(sighandler_action)); /* To ensure the struct holds no garbage values */
+  sigemptyset(&sighandler_action.sa_mask);  /* Within a signal handler all the signals are enabled */
+  sighandler_action.sa_flags = SA_RESTART;  /* To enable re-entering a system call afer done with signal handling */
+
+  sighandler_action.sa_handler = startup_handle_falling_child;
+  sigaction(SIGCHLD, &sighandler_action, NULL);
+
+  /* handles reopening of syslog channel */
+  sighandler_action.sa_handler = reload;
+  sigaction(SIGHUP, &sighandler_action, NULL);
+
+  /* logs various statistics via Log() calls */
+  sighandler_action.sa_handler = push_stats;
+  sigaction(SIGUSR1, &sighandler_action, NULL);
+
+  /* sets to true the reload_maps flag */
+  sighandler_action.sa_handler = reload_maps;
+  sigaction(SIGUSR2, &sighandler_action, NULL);
+
+  /* we want to exit gracefully when a pipe is broken */
+  sighandler_action.sa_handler = SIG_IGN;
+  sigaction(SIGPIPE, &sighandler_action, NULL);
 
   if (config.nfacctd_bgp && config.nfacctd_bmp) {
     Log(LOG_ERR, "ERROR ( %s/core ): bgp_daemon and bmp_daemon are currently mutual exclusive. Exiting.\n", config.name);
@@ -1145,9 +1164,15 @@ int main(int argc,char **argv, char **envp)
 
   /* signals to be handled only by the core process;
      we set proper handlers after plugin creation */
-  signal(SIGINT, PM_sigint_handler);
-  signal(SIGTERM, PM_sigint_handler);
-  signal(SIGCHLD, handle_falling_child);
+  sighandler_action.sa_handler = PM_sigint_handler;
+  sigaction(SIGINT, &sighandler_action, NULL);
+
+  sighandler_action.sa_handler = PM_sigint_handler;
+  sigaction(SIGTERM, &sighandler_action, NULL);
+
+  sighandler_action.sa_handler = handle_falling_child;
+  sigaction(SIGCHLD, &sighandler_action, NULL);
+
   kill(getpid(), SIGCHLD);
 
   /* When reading packets from a savefile, things are lightning fast; we will sit
@@ -1160,11 +1185,21 @@ int main(int argc,char **argv, char **envp)
     else sleep(config.pcap_sf_delay);
   }
 
+  sigemptyset(&signal_set);
+  sigaddset(&signal_set, SIGCHLD);
+  sigaddset(&signal_set, SIGHUP);
+  sigaddset(&signal_set, SIGUSR1);
+  sigaddset(&signal_set, SIGUSR2);
+  sigaddset(&signal_set, SIGINT);
+  sigaddset(&signal_set, SIGTERM);
+
   /* Main loop (for the case of a single interface): if pcap_loop() exits
      maybe an error occurred; we will try closing and reopening again our
      listening device */
   if (!config.pcap_interfaces_map) {
     for (;;) {
+      sigprocmask(SIG_BLOCK, &signal_set, NULL);
+
       if (!devices.list[0].active) {
 	Log(LOG_WARNING, "WARN ( %s/core ): [%s] has become unavailable; throttling ...\n", config.name, config.pcap_if);
 	ret = pm_pcap_add_interface(&devices.list[0], config.pcap_if, NULL, psize);
@@ -1196,10 +1231,14 @@ int main(int argc,char **argv, char **envp)
         stop_all_childs();
       }
       devices.list[0].active = FALSE;
+
+      sigprocmask(SIG_UNBLOCK, &signal_set, NULL);
     }
   }
   else {
     for (;;) {
+      sigprocmask(SIG_BLOCK, &signal_set, NULL);
+
       select_fd = bkp_select_fd;
       memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
 
@@ -1288,6 +1327,8 @@ int main(int argc,char **argv, char **envp)
 	  pcap_cb((u_char *) &cb_data, &pkt_hdr, pkt_body);
 	}
       }
+
+      sigprocmask(SIG_UNBLOCK, &signal_set, NULL);
     }
   }
 }
