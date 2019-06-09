@@ -332,8 +332,6 @@ int main(int argc,char **argv, char **envp)
   fd_set read_descs, bkp_read_descs;
   int select_fd, bkp_select_fd, select_num;
 
-  sigset_t signal_set;
-
   /* getopt() stuff */
   extern char *optarg;
   extern int optind, opterr, optopt;
@@ -1185,21 +1183,20 @@ int main(int argc,char **argv, char **envp)
     else sleep(config.pcap_sf_delay);
   }
 
-  sigemptyset(&signal_set);
-  sigaddset(&signal_set, SIGCHLD);
-  sigaddset(&signal_set, SIGHUP);
-  sigaddset(&signal_set, SIGUSR1);
-  sigaddset(&signal_set, SIGUSR2);
-  sigaddset(&signal_set, SIGINT);
-  sigaddset(&signal_set, SIGTERM);
+  sigemptyset(&cb_data.sig.set);
+  sigaddset(&cb_data.sig.set, SIGCHLD);
+  sigaddset(&cb_data.sig.set, SIGHUP);
+  sigaddset(&cb_data.sig.set, SIGUSR1);
+  sigaddset(&cb_data.sig.set, SIGUSR2);
+  sigaddset(&cb_data.sig.set, SIGINT);
+  sigaddset(&cb_data.sig.set, SIGTERM);
+  cb_data.sig.is_set = TRUE;
 
   /* Main loop (for the case of a single interface): if pcap_loop() exits
      maybe an error occurred; we will try closing and reopening again our
      listening device */
   if (!config.pcap_interfaces_map) {
     for (;;) {
-      sigprocmask(SIG_BLOCK, &signal_set, NULL);
-
       if (!devices.list[0].active) {
 	Log(LOG_WARNING, "WARN ( %s/core ): [%s] has become unavailable; throttling ...\n", config.name, config.pcap_if);
 	ret = pm_pcap_add_interface(&devices.list[0], config.pcap_if, NULL, psize);
@@ -1231,14 +1228,10 @@ int main(int argc,char **argv, char **envp)
         stop_all_childs();
       }
       devices.list[0].active = FALSE;
-
-      sigprocmask(SIG_UNBLOCK, &signal_set, NULL);
     }
   }
   else {
     for (;;) {
-      sigprocmask(SIG_BLOCK, &signal_set, NULL);
-
       select_fd = bkp_select_fd;
       memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
 
@@ -1327,8 +1320,6 @@ int main(int argc,char **argv, char **envp)
 	  pcap_cb((u_char *) &cb_data, &pkt_hdr, pkt_body);
 	}
       }
-
-      sigprocmask(SIG_UNBLOCK, &signal_set, NULL);
     }
   }
 }

@@ -81,6 +81,8 @@ void telemetry_daemon(void *t_data_void)
   struct hosts_table allow;
   struct host_addr addr;
 
+  sigset_t signal_set;
+
   /* select() stuff */
   fd_set read_descs, bkp_read_descs;
   int fd, select_fd, bkp_select_fd, recalc_fds, select_num;
@@ -419,6 +421,11 @@ void telemetry_daemon(void *t_data_void)
 
   for (;;) {
     select_again:
+
+    if (t_data->is_thread) {
+      sigprocmask(SIG_UNBLOCK, &signal_set, NULL); 
+      sigprocmask(SIG_BLOCK, &signal_set, NULL); 
+    }
 
     if (recalc_fds) {
       select_fd = config.telemetry_sock;

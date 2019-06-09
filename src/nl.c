@@ -50,6 +50,8 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
   u_int32_t iface32 = 0;
   u_int32_t ifacePresent = 0;
 
+  if (cb_data->sig.is_set) sigprocmask(SIG_BLOCK, &cb_data->sig.set, NULL);
+
   /* We process the packet with the appropriate
      data link layer function */
   if (buf) {
@@ -190,6 +192,8 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     if (tpptrs->pkthdr) free(tpptrs->pkthdr);
     free(pptrs.tun_pptrs);
   }
+
+  if (cb_data->sig.is_set) sigprocmask(SIG_UNBLOCK, &cb_data->sig.set, NULL);
 }
 
 int ip_handler(register struct packet_ptrs *pptrs)

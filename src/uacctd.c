@@ -1022,6 +1022,7 @@ int main(int argc,char **argv, char **envp)
   sigaddset(&signal_set, SIGUSR2);
   sigaddset(&signal_set, SIGINT);
   sigaddset(&signal_set, SIGTERM);
+  cb_data.sig.is_set = FALSE;
 
   /* Main loop: if pcap_loop() exits maybe an error occurred; we will try closing
      and reopening again our listening device */

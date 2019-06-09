@@ -295,6 +295,11 @@ struct pcap_devices {
   int num;
 };
 
+struct pcap_callback_signals {
+  int is_set;
+  sigset_t set;
+};
+
 struct pcap_callback_data {
   u_char * f_agent; 
   u_char * bta_table;
@@ -306,6 +311,7 @@ struct pcap_callback_data {
   u_int32_t ifindex_in;
   u_int32_t ifindex_out;
   u_int8_t has_tun_prims;
+  struct pcap_callback_signals sig;
 };
 
 struct _protocols_struct {
