@@ -80,6 +80,8 @@ void skinny_bgp_daemon_online()
   struct bgp_peer_batch bp_batch;
   socklen_t slen, clen = sizeof(client);
 
+  sigset_t signal_set;
+
   /* select() stuff */
   fd_set read_descs, bkp_read_descs; 
   int fd, select_fd, bkp_select_fd, recalc_fds, select_num;
@@ -410,8 +412,21 @@ void skinny_bgp_daemon_online()
 
   bgp_link_misc_structs(bgp_misc_db);
 
+  sigemptyset(&signal_set);
+  sigaddset(&signal_set, SIGCHLD);
+  sigaddset(&signal_set, SIGHUP);
+  sigaddset(&signal_set, SIGUSR1);
+  sigaddset(&signal_set, SIGUSR2);
+  sigaddset(&signal_set, SIGINT);
+  sigaddset(&signal_set, SIGTERM);
+
   for (;;) {
     select_again:
+
+    if (!bgp_misc_db->is_thread) {
+      sigprocmask(SIG_UNBLOCK, &signal_set, NULL);
+      sigprocmask(SIG_BLOCK, &signal_set, NULL);
+    }
 
     if (recalc_fds) { 
       select_fd = config.bgp_sock;

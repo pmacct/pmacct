@@ -73,6 +73,8 @@ void skinny_bmp_daemon()
   struct host_addr addr;
   struct bgp_peer_batch bp_batch;
 
+  sigset_t signal_set;
+
   /* select() stuff */
   fd_set read_descs, bkp_read_descs;
   int fd, select_fd, bkp_select_fd, recalc_fds, select_num;
@@ -342,8 +344,21 @@ void skinny_bmp_daemon()
 
   bmp_link_misc_structs(bmp_misc_db);
 
+  sigemptyset(&signal_set);
+  sigaddset(&signal_set, SIGCHLD);
+  sigaddset(&signal_set, SIGHUP);
+  sigaddset(&signal_set, SIGUSR1);
+  sigaddset(&signal_set, SIGUSR2);
+  sigaddset(&signal_set, SIGINT);
+  sigaddset(&signal_set, SIGTERM);
+
   for (;;) {
     select_again:
+
+    if (!bmp_misc_db->is_thread) {
+      sigprocmask(SIG_UNBLOCK, &signal_set, NULL);
+      sigprocmask(SIG_BLOCK, &signal_set, NULL);
+    }
 
     if (recalc_fds) {
       select_fd = config.bmp_sock;

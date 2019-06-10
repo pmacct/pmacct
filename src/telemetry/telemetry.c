@@ -419,10 +419,18 @@ void telemetry_daemon(void *t_data_void)
 
   telemetry_link_misc_structs(telemetry_misc_db);
 
+  sigemptyset(&signal_set);
+  sigaddset(&signal_set, SIGCHLD);
+  sigaddset(&signal_set, SIGHUP);
+  sigaddset(&signal_set, SIGUSR1);
+  sigaddset(&signal_set, SIGUSR2);
+  sigaddset(&signal_set, SIGINT);
+  sigaddset(&signal_set, SIGTERM);
+
   for (;;) {
     select_again:
 
-    if (t_data->is_thread) {
+    if (!t_data->is_thread) {
       sigprocmask(SIG_UNBLOCK, &signal_set, NULL); 
       sigprocmask(SIG_BLOCK, &signal_set, NULL); 
     }
