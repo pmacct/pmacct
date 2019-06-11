@@ -57,6 +57,12 @@ void bgp_blackhole_prepare_thread()
   strcpy(bgp_blackhole_misc_db->log_str, "core/BH");
 }
 
+void bgp_blackhole_init_dummy_peer(struct bgp_peer *peer)
+{
+  memset(peer, 0, sizeof(struct bgp_peer));
+  peer->type = FUNC_TYPE_BGP_BLACKHOLE;
+}
+
 void bgp_blackhole_prepare_filter()
 {
   char *stdcomms, *token;
@@ -76,6 +82,7 @@ void bgp_blackhole_prepare_filter()
     }
     
     bloom_add(bgp_blackhole_filter, &stdcomm, sizeof(stdcomm));
+    community_add_val(&bgp_blackhole_peer, bgp_blackhole_comms, stdcomm); 
   }
 }
 
@@ -87,6 +94,9 @@ void bgp_blackhole_daemon()
   int ret;
 
   // XXX
+
+  bgp_blackhole_comms = NULL;
+  bgp_blackhole_init_dummy_peer(&bgp_blackhole_peer);
 
   bgp_blackhole_db = &inter_domain_routing_dbs[FUNC_TYPE_BGP_BLACKHOLE];
   memset(bgp_blackhole_db, 0, sizeof(struct bgp_rt_structs));
@@ -115,8 +125,8 @@ int bgp_blackhole_evaluate_comms(void *a)
 {
   struct bgp_attr *attr = (struct bgp_attr *) a;
   struct community *comm;
-  int idx, ret;
-  u_int32_t val;
+  int idx, idx2, ret, ret2;
+  u_int32_t val, val2;
 
   if (attr && attr->community && attr->community->val) {
     comm = attr->community;
@@ -125,7 +135,15 @@ int bgp_blackhole_evaluate_comms(void *a)
       val = community_val_get(comm, idx);
 
       ret = bloom_check(bgp_blackhole_filter, &val, sizeof(val)); 
-      if (ret) return ret;
+      if (ret) {
+	/* let's make sure it is not a false positive */
+	for (idx2 = 0; idx2 < bgp_blackhole_comms->size; idx2++) {
+	  val2 = community_val_get(bgp_blackhole_comms, idx2);
+	  ret2 = community_compare(&val, &val2);
+	  if (!ret2) return ret;
+	}
+	/* if we are here it was a false positive; let's continue our quest */
+      }
     }
   }
 

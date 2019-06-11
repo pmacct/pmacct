@@ -62,8 +62,7 @@ community_free (struct community *com)
 }
 
 /* Add one community value to the community. */
-static void
-community_add_val (struct bgp_peer *peer, struct community *com, u_int32_t val)
+void community_add_val (struct bgp_peer *peer, struct community *com, u_int32_t val)
 {
   struct bgp_misc_structs *bms;
 
@@ -138,8 +137,7 @@ community_delete (struct community *com1, struct community *com2)
 }
 
 /* Callback function from qsort(). */
-static int
-community_compare (const void *a1, const void *a2)
+int community_compare (const void *a1, const void *a2)
 {
   u_int32_t v1;
   u_int32_t v2;

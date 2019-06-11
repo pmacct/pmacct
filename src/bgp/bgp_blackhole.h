@@ -33,6 +33,8 @@
 #endif
 EXT void bgp_blackhole_daemon_wrapper();
 EXT void bgp_blackhole_prepare_thread();
+
+EXT void bgp_blackhole_init_dummy_peer(struct bgp_peer *);
 EXT void bgp_blackhole_prepare_filter();
 EXT void bgp_blackhole_daemon();
 
@@ -48,5 +50,8 @@ EXT int bgp_blackhole_evaluate_comms(void *);
 #endif
 EXT struct bgp_rt_structs *bgp_blackhole_db;
 EXT struct bgp_misc_structs *bgp_blackhole_misc_db;
+
+EXT struct bgp_peer bgp_blackhole_peer;
 EXT struct bloom *bgp_blackhole_filter;
+EXT struct community *bgp_blackhole_comms; 
 #undef EXT
