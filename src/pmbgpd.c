@@ -313,6 +313,7 @@ void bgp_lg_daemon()
   snprintf(log_id, sizeof(log_id), "%s/core/lg", config.name);
   p_zmq_set_log_id(&lg_host, log_id);
 
+  p_zmq_set_address(&lg_host, inproc_str);
   if (config.bgp_lg_user) p_zmq_set_username(&lg_host, config.bgp_lg_user);
   if (config.bgp_lg_passwd) p_zmq_set_password(&lg_host, config.bgp_lg_passwd);
 
@@ -328,7 +329,7 @@ void bgp_lg_daemon()
   exit_gracefully(1);
 #endif
 
-  p_zmq_router_backend_setup(&lg_host, config.bgp_lg_threads, inproc_str);
+  p_zmq_router_backend_setup(&lg_host, config.bgp_lg_threads);
 }
 
 #ifdef WITH_JANSSON
