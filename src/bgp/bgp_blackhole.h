@@ -39,6 +39,7 @@ EXT void bgp_blackhole_prepare_filter();
 EXT void bgp_blackhole_daemon();
 
 EXT int bgp_blackhole_evaluate_comms(void *);
+EXT void bgp_blackhole_instrument(struct prefix *, void *, afi_t, safi_t);
 #undef EXT
 #endif
 

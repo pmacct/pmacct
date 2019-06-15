@@ -257,6 +257,8 @@ struct bgp_misc_structs {
   int dump_input_backend_methods;
 
   int (*bgp_msg_open_router_id_check)(struct bgp_msg_data *);
+
+  void *bgp_blackhole_zmq_host;
 };
 
 /* these includes require definition of bgp_rt_structs and bgp_peer */

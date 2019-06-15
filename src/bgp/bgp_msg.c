@@ -1124,6 +1124,10 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
 
     if (config.bgp_blackhole_stdcomm_list) {
       bmd->is_blackhole = bgp_blackhole_evaluate_comms(attr);
+
+      if (bmd->is_blackhole) {
+	bgp_blackhole_instrument(&p, attr, info->afi, safi);
+      }
     }
 
     /* Let's do our job now! */

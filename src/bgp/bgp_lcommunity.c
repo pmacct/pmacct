@@ -304,3 +304,20 @@ lcommunity_lcom2str (struct bgp_peer *peer, struct lcommunity *lcom)
 
   return NULL; /* silence compiler warning */
 }
+
+struct lcommunity *lcommunity_dup(struct lcommunity *lcom)
+{
+  struct lcommunity *new;
+
+  new = malloc(sizeof(struct lcommunity));
+
+  new->size = lcom->size;
+
+  if (new->size) {
+    new->val = malloc(lcom->size * LCOMMUNITY_SIZE);
+    memcpy (new->val, lcom->val, lcom->size * LCOMMUNITY_SIZE);
+  }
+  else new->val = NULL;
+
+  return new;
+}

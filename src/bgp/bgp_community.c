@@ -495,3 +495,20 @@ int community_str2com_simple(const char *buf, u_int32_t *val)
 
   return ERR;
 }
+
+struct community *community_dup(struct community *com)
+{
+  struct community *new;
+
+  new = malloc(sizeof(struct community));
+
+  new->size = com->size;
+
+  if (new->size) {
+    new->val = malloc(com->size * 4);
+    memcpy(new->val, com->val, com->size * 4);
+  }
+  else new->val = NULL;
+
+  return new;
+}

@@ -28,6 +28,9 @@
 #include "bgp.h"
 #include "bgp_blackhole.h"
 #include "thread_pool.h"
+#if defined WITH_ZMQ
+#include "zmq_common.h"
+#endif
 
 /* variables to be exported away */
 thread_pool_t *bgp_blackhole_pool;
@@ -89,9 +92,22 @@ void bgp_blackhole_prepare_filter()
 void bgp_blackhole_daemon()
 {
   struct bgp_misc_structs *m_data = bgp_blackhole_misc_db;
+  
   afi_t afi;
   safi_t safi;
   int ret;
+
+  /* ZeroMQ stuff */
+#if defined WITH_ZMQ
+  char inproc_str[] = "inproc://bgp_blackhole", log_id[SHORTBUFLEN];
+  struct p_zmq_host bgp_blackhole_zmq_host;
+
+  memset(&bgp_blackhole_zmq_host, 0, sizeof(bgp_blackhole_zmq_host));
+  snprintf(log_id, sizeof(log_id), "%s/%s", config.name, bgp_blackhole_misc_db->log_str);
+  p_zmq_set_log_id(&bgp_blackhole_zmq_host, log_id);
+  p_zmq_set_address(&bgp_blackhole_zmq_host, inproc_str);
+  p_zmq_pull_bind_setup(&bgp_blackhole_zmq_host);
+#endif
 
   // XXX
 
@@ -148,4 +164,19 @@ int bgp_blackhole_evaluate_comms(void *a)
   }
 
   return FALSE;
+}
+
+void bgp_blackhole_instrument(struct prefix *p, void *a, afi_t afi, safi_t safi)
+{
+  struct bgp_attr acopy, *attr = (struct bgp_attr *) a;
+  struct prefix pcopy;
+
+  memcpy(&pcopy, p, sizeof(struct prefix));
+  memcpy(&acopy, attr, sizeof(struct bgp_attr));
+  acopy.aspath = aspath_dup(attr->aspath);
+  acopy.community = community_dup(attr->community);
+  acopy.ecommunity = ecommunity_dup(attr->ecommunity);
+  acopy.lcommunity = lcommunity_dup(attr->lcommunity);
+  
+  // XXX: send()
 }

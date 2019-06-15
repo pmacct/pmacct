@@ -77,5 +77,6 @@ EXT int community_str2com_simple(const char *, u_int32_t *);
 EXT void community_add_val(struct bgp_peer *, struct community *, u_int32_t);
 EXT u_int32_t community_val_get(struct community *, int);
 EXT int community_compare(const void *, const void *);
+EXT struct community *community_dup(struct community *);
 #undef EXT
 #endif
