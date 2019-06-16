@@ -2221,6 +2221,11 @@ int sql_evaluate_primitives(int primitive)
     strncat(insert_clause, "lat_ip_src", SPACELEFT(insert_clause));
     strncat(values[primitive].string, "%f", SPACELEFT(values[primitive].string));
     strncat(where[primitive].string, "lat_ip_src=%f", SPACELEFT(where[primitive].string));
+
+    strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+
     strncat(insert_clause, "lon_ip_src", SPACELEFT(insert_clause));
     strncat(values[primitive].string, "%f", SPACELEFT(values[primitive].string));
     strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
@@ -2239,6 +2244,11 @@ int sql_evaluate_primitives(int primitive)
     strncat(insert_clause, "lat_ip_dst", SPACELEFT(insert_clause));
     strncat(values[primitive].string, "%f", SPACELEFT(values[primitive].string));
     strncat(where[primitive].string, "lat_ip_dst=%f", SPACELEFT(where[primitive].string));
+
+    strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+
     strncat(insert_clause, "lon_ip_dst", SPACELEFT(insert_clause));
     strncat(values[primitive].string, "%f", SPACELEFT(values[primitive].string));
     strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
