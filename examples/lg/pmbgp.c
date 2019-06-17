@@ -274,6 +274,8 @@ int main(int argc,char **argv)
       free(rep_str);
     }
   }
+
+  return 0;
 }
 
 void pmbgp_zmq_req_setup(struct p_zmq_host *zmq_host, char *host, int port)

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -546,7 +546,7 @@ flow_to_flowset_cp_handler(char *flowset, const struct FLOW *flow, int idx, int 
       if (cp_entry->ptr->len != PM_VARIABLE_LENGTH) {
         if (flow->pcust[idx] && cp_entry->ptr->field_type) {
           if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
-            serialize_bin((flow->pcust[idx] + cp_entry->off), flowset, strlen((flow->pcust[idx] + cp_entry->off)));
+            serialize_bin((flow->pcust[idx] + cp_entry->off), (u_char *)flowset, strlen((char *)(flow->pcust[idx] + cp_entry->off)));
           }
           else {
 	    memcpy(flowset, (flow->pcust[idx] + cp_entry->off), cp_entry->ptr->len);
@@ -598,7 +598,7 @@ flow_to_flowset_cp_pen_handler(char *flowset, const struct FLOW *flow, int idx, 
       if (cp_entry->ptr->len != PM_VARIABLE_LENGTH) {
         if (flow->pcust[idx] && cp_entry->ptr->field_type) {
 	  if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
-	    serialize_bin((flow->pcust[idx] + cp_entry->off), flowset, strlen((flow->pcust[idx] + cp_entry->off)));
+	    serialize_bin((flow->pcust[idx] + cp_entry->off), (u_char *)flowset, strlen((char *)(flow->pcust[idx] + cp_entry->off)));
 	  }
           else {
 	    memcpy(flowset, (flow->pcust[idx] + cp_entry->off), cp_entry->ptr->len);
@@ -2345,25 +2345,25 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 			/* Send flowset data over */
 			if (send_options) {
 			  if (send_sampling_option) {
-                            r = nf_sampling_option_to_flowset(packet + offset,
+                            r = nf_sampling_option_to_flowset((u_char *)(packet + offset),
                               sizeof(packet) - offset, system_boot_time, &inc);
 			    send_sampling_option = FALSE;
 			  }
 			  else if (send_class_option) {
-                            r = nf_class_option_to_flowset(class_i + class_j, packet + offset,
+                            r = nf_class_option_to_flowset(class_i + class_j, (u_char *)(packet + offset),
                               sizeof(packet) - offset, system_boot_time, &inc);
 
 			    if (r > 0) class_i += r;
 			    if (class_i + class_j >= num_class) send_class_option = FALSE;
 			  }
 			  else if (send_exporter_option) {
-                            r = nf_exporter_option_to_flowset(packet + offset,
+                            r = nf_exporter_option_to_flowset((u_char *)(packet + offset),
                               sizeof(packet) - offset, system_boot_time, &inc);
 			    send_exporter_option = FALSE;
 			  }
 			}
 			else 
-			  r = nf_flow_to_flowset(flows[flow_i + flow_j], packet + offset,
+			  r = nf_flow_to_flowset(flows[flow_i + flow_j], (u_char *)(packet + offset),
 			    sizeof(packet) - offset, system_boot_time, &inc, direction);
 
 			/* Wrap up */

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -230,7 +230,7 @@ int p_kafka_parse_config_entry(char *buf, char *type, char **key, char **value)
     (*value) = NULL;
     index = 0;
 
-    while (token = extract_token(&value_ptr, ',')) {
+    while ((token = extract_token(&value_ptr, ','))) {
       index++;
       trim_spaces(token);
 
@@ -399,7 +399,7 @@ int p_kafka_connect_to_produce(struct p_kafka_host *kafka_host)
   return SUCCESS;
 }
 
-int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, u_int32_t data_len, int part)
+int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, size_t data_len, int part)
 {
   int ret = SUCCESS;
 
@@ -413,6 +413,7 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, u_
       Log(LOG_ERR, "ERROR ( %s/%s ): Failed to produce to topic %s partition %i: %s\n", config.name, config.type,
           rd_kafka_topic_name(kafka_host->topic), part, rd_kafka_err2str(rd_kafka_last_error()));
       p_kafka_close(kafka_host, TRUE);
+      return ERR;
     }
   }
   else return ERR;
@@ -422,7 +423,7 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, u_
   return ret; 
 }
 
-int p_kafka_produce_data(struct p_kafka_host *kafka_host, void *data, u_int32_t data_len)
+int p_kafka_produce_data(struct p_kafka_host *kafka_host, void *data, size_t data_len)
 {
   return p_kafka_produce_data_to_part(kafka_host, data, data_len, kafka_host->partition);
 }
@@ -457,6 +458,7 @@ int p_kafka_manage_consumer(struct p_kafka_host *kafka_host, int is_start)
         Log(LOG_ERR, "ERROR ( %s/%s ): Failed to start consuming topic %s partition %i: %s\n", config.name, config.type,
           rd_kafka_topic_name(kafka_host->topic), kafka_host->partition, rd_kafka_err2str(rd_kafka_last_error()));
         p_kafka_close(kafka_host, TRUE);
+        return ERR;
       }
     }
     else {
@@ -489,7 +491,7 @@ int p_kafka_consume_poller(struct p_kafka_host *kafka_host, void **data, int tim
   return ret;
 }
 
-int p_kafka_consume_data(struct p_kafka_host *kafka_host, void *data, char *payload, u_int32_t payload_len)
+int p_kafka_consume_data(struct p_kafka_host *kafka_host, void *data, char *payload, size_t payload_len)
 {
   rd_kafka_message_t *kafka_msg = (rd_kafka_message_t *) data;
   int ret = 0;

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -373,7 +373,11 @@ struct ndpi_proto pm_ndpi_packet_processing(struct pm_ndpi_workflow *workflow,
 
   if (flow->detection_completed || flow->tcp_finished) {
     if (flow->detected_protocol.app_protocol == NDPI_PROTOCOL_UNKNOWN)
+#ifdef WITH_NDPI26
+      flow->detected_protocol = ndpi_detection_giveup(workflow->ndpi_struct, flow->ndpi_flow, workflow->prefs.protocol_guess);
+#else
       flow->detected_protocol = ndpi_detection_giveup(workflow->ndpi_struct, flow->ndpi_flow);
+#endif
 
     if (workflow->prefs.protocol_guess) {
       if (flow->detected_protocol.app_protocol == NDPI_PROTOCOL_UNKNOWN && !flow->guess_completed) {
@@ -440,6 +444,9 @@ u_int16_t pm_ndpi_node_guess_undetected_protocol(struct pm_ndpi_workflow *workfl
   if (!flow || !workflow) return 0;
 
   flow->detected_protocol = ndpi_guess_undetected_protocol(workflow->ndpi_struct,
+#ifdef WITH_NDPI26
+							   flow->ndpi_flow,
+#endif
                                                            flow->protocol,
                                                            ntohl(flow->lower_ip),
                                                            ntohs(flow->lower_port),

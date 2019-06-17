@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -92,17 +92,29 @@ struct bmp_peer_hdr {
   u_int32_t	tstamp_usec;
 } __attribute__ ((packed));
 
+struct bmp_tlv_hdr {
+  u_int16_t     type;
+  u_int16_t     len;
+} __attribute__ ((packed));
+
 #define BMP_INIT_INFO_STRING	0
 #define BMP_INIT_INFO_SYSDESCR	1
 #define BMP_INIT_INFO_SYSNAME	2
+#define BMP_INIT_INFO_MAX	2
 
-struct bmp_init_hdr {
-  u_int16_t	type;
-  u_int16_t	len;
-} __attribute__ ((packed));
+#define BMP_INIT_INFO_ENTRIES	8
+
+static const char *bmp_init_info_types[] = {
+  "string",
+  "sysdescr",
+  "sysname"  
+};
 
 #define BMP_TERM_INFO_STRING    0
 #define BMP_TERM_INFO_REASON	1
+#define BMP_TERM_INFO_MAX	1
+
+#define BMP_TERM_INFO_ENTRIES	8
 
 #define BMP_TERM_REASON_ADM	0
 #define BMP_TERM_REASON_UNK	1
@@ -111,6 +123,11 @@ struct bmp_init_hdr {
 #define BMP_TERM_REASON_PERM	4
 #define BMP_TERM_REASON_MAX	4 /* set to the highest BMP_TERM_* value */
 
+static const char *bmp_term_info_types[] = {
+  "string",
+  "reason"
+};
+
 static const char *bmp_term_reason_types[] = {
   "Session administratively closed",
   "Unspecified reason",
@@ -118,11 +135,6 @@ static const char *bmp_term_reason_types[] = {
   "Redundant connection",
   "Session permanently administratively closed"
 };
-
-struct bmp_term_hdr {
-  u_int16_t     type;
-  u_int16_t     len;
-} __attribute__ ((packed));
 
 struct bmp_stats_hdr {
   u_int32_t	count;
@@ -214,6 +226,8 @@ struct bmp_stats_cnt_hdr {
   u_int16_t	type;
   u_int16_t	len;
 } __attribute__ ((packed));
+
+#define BMP_PEER_UP_INFO_ENTRIES	8	
 
 #define BMP_PEER_DOWN_RESERVED		0
 #define BMP_PEER_DOWN_LOC_NOT_MSG	1

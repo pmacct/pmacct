@@ -1,9 +1,30 @@
 #!/usr/bin/env python3.7
 #
+#   pmacct (Promiscuous mode IP Accounting package)
+#   pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+#   pmgrpcd.py is Copyright (C) 2018-2019 by:
+#
+#   Matthias Arnold <matthias.arnold@swisscom.com>
+#   Thomas Graf <thomas.graf@swisscom.com>
+#   Paolo Lucente <paolo@pmacct.net>
+#
 import sys
-sys.path.append('./pblib/huawei/')
-sys.path.append('./pblib/cisco/')
-sys.path.append('./pblib/openconfig/')
+sys.path.append('/etc/pmacct/telemetry/pblib')
 
 from optparse import OptionParser
 import configparser
@@ -39,6 +60,9 @@ from confluent_kafka.avro import AvroProducer
 
 SCRIPTVERSION = '1.0'
 CONFIGFILE = '/etc/pmacct/telemetry/telemetry.conf'
+GPBMAPFILE = '/etc/pmacct/telemetry/gpbmapfile.map'
+SCIDMAPFILE = '/etc/pmacct/telemetry/schema_id_map_file.json'
+MITIGATIONSCRIPT = '/etc/pmacct/telemetry/mitigation.py'
 
 jsonmap = {}
 avscmap = {}
@@ -644,7 +668,7 @@ def serve():
   else:
     pmgrpcdlog.info("Cisco is disabled")
 
-  gRPCserver.add_insecure_port('[::]:10000')
+  gRPCserver.add_insecure_port(options.ipport)
   gRPCserver.start()
 
   try:
@@ -732,6 +756,7 @@ mitigation = True
 debug = False
 pmgrpcdlogfile = /var/log/pmgrpcd.log
 serializelogfile = /var/log/pmgrpcd_avro.log
+ipport = [::]:10000
 workers = 20
 cisco = True
 huawei = True
@@ -744,6 +769,55 @@ zmqipport = tcp://127.0.0.1:50000
 kafkaavro = True
 onlyopenconfig = False
 '''
+
+  default_gpbmapfile = '''\
+huawei-ifm            =  huawei_ifm_pb2.Ifm()
+huawei-devm           =  huawei_devm_pb2.Devm()
+openconfig-interfaces =  openconfig_interfaces_pb2.Interfaces()
+'''
+
+  default_scidmapfile = '''\
+{
+  "10.215.133.15": {
+    "openconfig-interfaces:interfaces": 249
+    "openconfig-platform:components": 365
+  },
+  "10.215.133.17": {
+    "openconfig-interfaces:interfaces": 299
+  }
+}
+'''
+
+  default_mitigationscript = '''\
+#!/usr/bin/env python3.7
+#
+from datetime import datetime
+import pprint
+global mitigation
+mitigation = {}
+
+def mod_all_json_data(resdict):
+  global mitigation
+  mitigation = resdict.copy()
+
+  if "collector" in mitigation:
+    if ("grpc" in mitigation["collector"]) and ("data" in mitigation["collector"]):
+      if "ne_vendor" in mitigation["collector"]["grpc"]:
+        mod_all_pre()
+  #      if mitigation["collector"]["grpc"]["ne_vendor"] == "Huawei":
+  #        mod_huawei()
+  #      elif mitigation["collector"]["grpc"]["ne_vendor"] == "Cisco":
+  #        mod_cisco()
+  #      mod_all_post()
+  return mitigation
+
+def mod_all_pre():
+  global mitigation
+  pass
+
+if __name__ == '__mod_all_json_data__':
+'''
+
   usage_str = "%prog [options]"
   version_str = "%prog " + SCRIPTVERSION
   parser = OptionParser(usage=usage_str, version=version_str)
@@ -761,7 +835,19 @@ onlyopenconfig = False
     with open(CONFIGFILE, 'w') as configf:
       configf.write(defaultvar_configparser)
     config.read(CONFIGFILE)
+
+  if not os.path.isfile(GPBMAPFILE):
+    with open(GPBMAPFILE, 'w') as gpbmapf:
+      gpbmapf.write(default_gpbmapfile)
     
+  if not os.path.isfile(SCIDMAPFILE):
+    with open(SCIDMAPFILE, 'w') as scidmapf:
+      scidmapf.write(default_scidmapfile)
+
+  if not os.path.isfile(MITIGATIONSCRIPT):
+    with open(MITIGATIONSCRIPT, 'w') as mitigf:
+      mitigf.write(default_mitigationscript)
+
   parser.add_option("-T", "--topic",
                     default=config.get("PMGRPCD", 'topic'), dest="topic", help="the json data are serialized to this topic")
   parser.add_option("-B", "--bsservers",
@@ -788,6 +874,8 @@ onlyopenconfig = False
                     default=config.get("PMGRPCD", 'pmgrpcdlogfile'), dest='pmgrpcdlogfile', help="pmgrpcdlogfile the logfile on the collector face with path/name [default: %default]")
   parser.add_option("-a", "--serializelogfile",
                     default=config.get("PMGRPCD", 'serializelogfile'), dest="serializelogfile", help="serializelogfile with path/name for kafka avro and zmq messages [default: %default]")
+  parser.add_option("-I", "--ipport",
+                    action="store", type='string', default=config.get("PMGRPCD", 'ipport'), dest="ipport", help="change the ipport the daemon is listen on [default: %default]")
   parser.add_option("-w", "--workers",
                     action="store", type='int', default=config.get("PMGRPCD", 'workers'), dest="workers", help="change the nr of paralell working processes [default: %default]")
   parser.add_option("-C", "--cisco",

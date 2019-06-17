@@ -74,7 +74,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   struct extra_primitives extras;
   struct primitives_ptrs prim_ptrs;
-  char *dataptr;
+  unsigned char *dataptr;
 
 #ifdef WITH_ZMQ
   struct p_zmq_host *zmq_host = &((struct channels_list_entry *)ptr)->zmq_host;
@@ -281,13 +281,13 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
   struct pkt_nat_primitives *pnat = NULL;
   struct pkt_mpls_primitives *pmpls = NULL;
   struct pkt_tunnel_primitives *ptun = NULL;
-  char *pcust = NULL;
+  u_char *pcust = NULL;
   struct pkt_vlen_hdr_primitives *pvlen = NULL;
   struct pkt_bgp_primitives empty_pbgp;
   struct pkt_nat_primitives empty_pnat;
   struct pkt_mpls_primitives empty_pmpls;
   struct pkt_tunnel_primitives empty_ptun;
-  char *empty_pcust = NULL;
+  u_char *empty_pcust = NULL;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], tmpbuf[SRVBUFLEN], mongo_database[SRVBUFLEN];
   char *str_ptr, *as_path, *bgp_comm, default_table[] = "test.acct", ndpi_class[SUPERSHORTBUFLEN];
@@ -736,6 +736,14 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
       if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) bson_append_int(bson_elem, "mpls_label_bottom", pmpls->mpls_label_bottom);
       if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) bson_append_int(bson_elem, "mpls_stack_depth", pmpls->mpls_stack_depth);
 
+      if (config.what_to_count_2 & COUNT_TUNNEL_SRC_MAC) {
+        etheraddr_string(ptun->tunnel_eth_shost, src_mac);
+        bson_append_string(bson_elem, "tunnel_mac_src", src_mac);
+      }
+      if (config.what_to_count_2 & COUNT_TUNNEL_DST_MAC) {
+        etheraddr_string(ptun->tunnel_eth_dhost, dst_mac);
+        bson_append_string(bson_elem, "tunnel_mac_dst", dst_mac);
+      }
       if (config.what_to_count_2 & COUNT_TUNNEL_SRC_HOST) {
         addr_to_str(src_host, &ptun->tunnel_src_ip);
         bson_append_string(bson_elem, "tunnel_ip_src", src_host);
@@ -749,7 +757,11 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
 
 	bson_append_string(bson_elem, "tunnel_ip_proto", ip_proto_print(ptun->tunnel_proto, proto, PROTO_NUM_STRLEN));
       }
+
       if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) bson_append_int(bson_elem, "tunnel_tos", ptun->tunnel_tos);
+      if (config.what_to_count_2 & COUNT_TUNNEL_SRC_PORT) bson_append_int(bson_elem, "tunnel_port_src", ptun->tunnel_src_port);
+      if (config.what_to_count_2 & COUNT_TUNNEL_DST_PORT) bson_append_int(bson_elem, "tunnel_port_dst", ptun->tunnel_dst_port);
+      if (config.what_to_count_2 & COUNT_VXLAN) bson_append_int(bson_elem, "vxlan", ptun->tunnel_id);
   
       if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
 	if (config.timestamps_since_epoch) {
@@ -963,7 +975,7 @@ void MongoDB_create_indexes(mongo *db_conn, const char *table)
 	  trim_all_spaces(buf);
 	  bufptr = buf;
 	  bson_init(idx_key);
-	  while (token = extract_token(&bufptr, ',')) {
+	  while ((token = extract_token(&bufptr, ','))) {
 	    bson_append_int(idx_key, token, 1);
 	  }
 	  bson_finish(idx_key);

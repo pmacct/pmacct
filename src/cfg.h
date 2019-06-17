@@ -42,7 +42,7 @@ struct packet_data_ptr {
 
 struct custom_primitive_entry {
   /* compiled from map */
-  u_char name[MAX_CUSTOM_PRIMITIVE_NAMELEN];
+  char name[MAX_CUSTOM_PRIMITIVE_NAMELEN];
   struct packet_data_ptr pd_ptr[MAX_CUSTOM_PRIMITIVE_PD_PTRS];
   u_int32_t pen;
   u_int16_t field_type;
@@ -176,6 +176,8 @@ struct configuration {
   char *print_output_lock_file;
   char *print_output_separator;
   char *print_output_file;
+  char *print_output_custom_lib;
+  char *print_output_custom_cfg_file;
   char *print_latest_file;
   int nfacctd_port;
   char *nfacctd_ip;
@@ -316,6 +318,7 @@ struct configuration {
   char *nfacctd_bgp_lrgcomm_pattern;
   char *nfacctd_bgp_stdcomm_pattern_to_asn;
   char *nfacctd_bgp_lrgcomm_pattern_to_asn;
+  char *bgp_blackhole_stdcomm_list;
   int nfacctd_bgp_peer_as_src_type;
   int nfacctd_bgp_src_std_comm_type;
   int nfacctd_bgp_src_ext_comm_type;
@@ -550,6 +553,10 @@ struct configuration {
   int tmp_bgp_lookup_compare_ports;
   size_t thread_stack;
   char *rpki_roas_file;
+  char *rpki_rtr_cache;
+  int rpki_rtr_cache_version;
+  int rpki_rtr_cache_pipe_size;
+  int rpki_rtr_cache_ipprec;
 };
 
 /* prototypes */ 

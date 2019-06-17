@@ -1,4 +1,4 @@
-SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp telemetry ndpi rpki
+SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp telemetry ndpi rpki filters
 sbin_PROGRAMS =
 bin_PROGRAMS =
 EXTRA_PROGRAMS =
@@ -18,12 +18,13 @@ libdaemons_la_SOURCES = signals.c util.c util.h plugin_hooks.c		\
         ip_frag.h ports_aggr.c ports_aggr.h pretag_handlers.c		\
         pretag_handlers.h ip_flow.c ip_flow.h setproctitle.c		\
         setproctitle.h classifier.c classifier.h regexp.c regexp.h	\
-        regmagic.h regsub.c conntrack.c conntrack.h xflow_status.c	\
-        xflow_status.h plugin_common.c plugin_common.h preprocess.c	\
-        preprocess-data.h preprocess.h ll.c nl.c jhash.h pmacct-dlt.h	\
-        sflow.h crc32.h base64.c base64.h plugin_cmn_json.c		\
-	plugin_cmn_json.h plugin_cmn_avro.c plugin_cmn_avro.h		\
-	pmsearch.c pmsearch.h thread_pool.c thread_pool.h
+        conntrack.c conntrack.h xflow_status.c xflow_status.h		\
+	plugin_common.c plugin_common.h preprocess.c preprocess-data.h	\
+	preprocess.h ll.c nl.c jhash.h pmacct-dlt.h sflow.h crc32.h	\
+	base64.c base64.h plugin_cmn_json.c plugin_cmn_json.h		\
+	plugin_cmn_avro.c plugin_cmn_avro.h pmsearch.c pmsearch.h	\
+	thread_pool.c thread_pool.h plugin_cmn_custom.h			\
+	plugin_cmn_custom.c
 
 libcommon_la_LIBADD  = 
 libcommon_la_CFLAGS  = $(AM_CFLAGS)
@@ -34,6 +35,7 @@ libdaemons_la_LIBADD += sfprobe_plugin/libsfprobe_plugin.la
 libdaemons_la_LIBADD += bmp/libpmbmp.la
 libdaemons_la_LIBADD += bgp/libpmbgp.la
 libdaemons_la_LIBADD += rpki/libpmrpki.la
+libdaemons_la_LIBADD += filters/libpmfilters.la
 libdaemons_la_LIBADD += tee_plugin/libtee_plugin.la
 libdaemons_la_LIBADD += isis/libpmisis.la
 libdaemons_la_LIBADD += telemetry/libpmtelemetry.la
@@ -94,30 +96,18 @@ endif
 
 if USING_TRAFFIC_BINS
 sbin_PROGRAMS += pmacctd nfacctd sfacctd
-bin_PROGRAMS += pmacct @EXTRABIN@
+bin_PROGRAMS += pmacct
 pmacctd_SOURCES = pmacctd.c
 pmacctd_LDADD = libdaemons.la
-if WITH_NDPI
-pmacctd_LDADD += @NDPI_LIBS_STATIC@
-endif
 nfacctd_SOURCES = nfacctd.c nfacctd.h nfv9_template.c
 nfacctd_LDADD = libdaemons.la
-if WITH_NDPI
-nfacctd_LDADD += @NDPI_LIBS_STATIC@
-endif
 sfacctd_SOURCES = sfacctd.c sflow.c sfacctd.h sfv5_module.c sfv5_module.h
 sfacctd_LDADD = libdaemons.la
-if WITH_NDPI
-sfacctd_LDADD += @NDPI_LIBS_STATIC@
-endif
 if WITH_NFLOG
 sbin_PROGRAMS += uacctd
 uacctd_SOURCES = uacctd.c uacctd.h
 uacctd_CFLAGS  = $(AM_CFLAGS) @NFLOG_CFLAGS@
 uacctd_LDADD   = libdaemons.la @NFLOG_LIBS@
-if WITH_NDPI
-uacctd_LDADD += @NDPI_LIBS_STATIC@
-endif
 endif
 pmacct_SOURCES = pmacct.c
 pmacct_LDADD = libcommon.la
@@ -127,25 +117,16 @@ sbin_PROGRAMS += pmtelemetryd
 pmtelemetryd_SOURCES = pmtelemetryd.c pmtelemetryd.h
 pmtelemetryd_LDFLAGS = $(DEFS)
 pmtelemetryd_LDADD = libdaemons.la
-if WITH_NDPI
-pmtelemetryd_LDADD += @NDPI_LIBS_STATIC@
-endif
 endif
 if USING_BGP_BINS
 sbin_PROGRAMS += pmbgpd
 pmbgpd_SOURCES = pmbgpd.c pmbgpd.h
 pmbgpd_LDFLAGS = $(DEFS)
 pmbgpd_LDADD = libdaemons.la
-if WITH_NDPI
-pmbgpd_LDADD += @NDPI_LIBS_STATIC@
-endif
 endif
 if USING_BMP_BINS
 sbin_PROGRAMS += pmbmpd
 pmbmpd_SOURCES = pmbmpd.c pmbmpd.h
 pmbmpd_LDFLAGS = $(DEFS)
 pmbmpd_LDADD = libdaemons.la
-if WITH_NDPI
-pmbmpd_LDADD += @NDPI_LIBS_STATIC@
-endif
 endif

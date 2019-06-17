@@ -87,16 +87,6 @@ int telemetry_recv_zmq_generic(telemetry_peer *peer, u_int32_t len)
 int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
 {
   int ret = 0;
-  sigset_t mask, oldmask;
-
-  sigemptyset(&mask);
-  sigemptyset(&oldmask);
-
-  /* Block SIGCHLD so it doesn't kick us out of recv. */
-  sigaddset(&mask, SIGCHLD);
-  if (sigprocmask(SIG_BLOCK, &mask, &oldmask) < 0) {
-      return ret;
-  }
 
   if (!len) {
     ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
@@ -110,9 +100,6 @@ int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
     peer->stats.packet_bytes += ret;
     peer->msglen = (ret + peer->buf.truncated_len);
   }
-
-  /* Restore the original procmask. */
-  sigprocmask(SIG_SETMASK, &oldmask, NULL);
 
   return ret;
 }
@@ -268,7 +255,7 @@ int telemetry_basic_validate_json(telemetry_peer *peer)
 
 #if defined (WITH_ZMQ)
 #if defined (WITH_JANSSON)
-int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf, int buflen, struct sockaddr *addr, socklen_t *addr_len)
+int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf, size_t buflen, struct sockaddr *addr, socklen_t *addr_len)
 {
   json_t *json_obj, *telemetry_node_json, *telemetry_node_port_json;
   json_error_t json_err;
@@ -327,7 +314,7 @@ int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf
   return ret;
 }
 #else
-int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf, int buflen, struct sockaddr *addr, socklen_t *addr_len)
+int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf, size_t buflen, struct sockaddr *addr, socklen_t *addr_len)
 {
   Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_decode_zmq_peer() requires --enable-zmq. Terminating.\n", config.name, t_data->log_str);
   exit_gracefully(1);

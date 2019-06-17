@@ -65,7 +65,7 @@ EXT void remove_pid_file(char *);
 EXT int sanitize_buf_net(char *, char *, int);
 EXT int sanitize_buf(char *);
 EXT void mark_columns(char *);
-EXT int Setsocksize(int, int, int, void *, int);
+EXT int Setsocksize(int, int, int, void *, socklen_t);
 EXT void *map_shared(void *, size_t, int, int, int, off_t);
 EXT void lower_string(char *);
 EXT void evaluate_sums(u_int64_t *, u_int64_t *, char *, char *);
@@ -79,7 +79,7 @@ EXT void append_rfc3339_timezone(char *, int, const struct tm *);
 EXT int read_SQLquery_from_file(char *, char *, int);
 EXT void stick_bosbit(u_char *);
 EXT int check_bosbit(u_char *);
-EXT u_int32_t decode_mpls_label(char *);
+EXT u_int32_t decode_mpls_label(u_char *);
 EXT void encode_mpls_label(char *, u_int32_t);
 EXT int timeval_cmp(struct timeval *, struct timeval *);
 EXT void exit_all(int);
@@ -116,6 +116,10 @@ EXT char *write_sep(char *, int *);
 EXT void version_daemon(char *);
 EXT void set_truefalse_nonzero(int *);
 EXT char *ip_proto_print(u_int8_t, char *, int);
+EXT void parse_hostport(const char *, struct sockaddr *, socklen_t *);
+EXT bool is_prime(u_int32_t);
+EXT u_int32_t next_prime(u_int32_t);
+EXT char *null_terminate(char *, int);
 
 EXT char *compose_json_str(void *);
 EXT void write_and_free_json(FILE *, void *);
@@ -144,7 +148,7 @@ EXT void primptrs_set_vlen_hdr(u_char *, struct extra_primitives *, struct primi
 EXT int custom_primitives_vlen(struct custom_primitives_ptrs *);
 EXT void custom_primitives_reconcile(struct custom_primitives_ptrs *, struct custom_primitives *);
 EXT void custom_primitive_header_print(char *, int, struct custom_primitive_ptrs *, int);
-EXT void custom_primitive_value_print(char *, int, char *, struct custom_primitive_ptrs *, int);
+EXT void custom_primitive_value_print(char *, int, u_char *, struct custom_primitive_ptrs *, int);
 EXT void custom_primitives_debug(void *, void *);
 
 EXT unsigned char *vlen_prims_copy(struct pkt_vlen_hdr_primitives *);
@@ -153,7 +157,7 @@ EXT void vlen_prims_free(struct pkt_vlen_hdr_primitives *);
 EXT int vlen_prims_cmp(struct pkt_vlen_hdr_primitives *, struct pkt_vlen_hdr_primitives *);
 EXT void vlen_prims_get(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char **);
 EXT void vlen_prims_debug(struct pkt_vlen_hdr_primitives *);
-EXT void vlen_prims_insert(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, int, char *, int);
+EXT void vlen_prims_insert(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, int, u_char *, int);
 EXT int vlen_prims_delete(struct pkt_vlen_hdr_primitives *, pm_cfgreg_t);
 
 EXT void hash_init_key(pm_hash_key_t *);
@@ -167,9 +171,8 @@ EXT void hash_serial_append(pm_hash_serial_t *, char *, u_int16_t, int);
 EXT pm_hash_key_t *hash_serial_get_key(pm_hash_serial_t *);
 EXT u_int16_t hash_serial_get_off(pm_hash_serial_t *);
 EXT u_int16_t hash_key_get_len(pm_hash_key_t *);
-EXT char *hash_key_get_val(pm_hash_key_t *);
+EXT u_char *hash_key_get_val(pm_hash_key_t *);
 EXT int hash_key_cmp(pm_hash_key_t *, pm_hash_key_t *);
-EXT char *hash_key_get_val(pm_hash_key_t *);
 
 EXT void dump_writers_init();
 EXT void dump_writers_count();

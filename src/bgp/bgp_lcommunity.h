@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2016 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -64,6 +64,7 @@ EXT int lcommunity_cmp (const void *, const void *);
 EXT void lcommunity_unintern (struct bgp_peer *, struct lcommunity *);
 EXT unsigned int lcommunity_hash_make (void *);
 EXT char *lcommunity_lcom2str (struct bgp_peer *, struct lcommunity *);
+EXT struct lcommunity *lcommunity_dup(struct lcommunity *);
 
 #undef EXT
 #endif

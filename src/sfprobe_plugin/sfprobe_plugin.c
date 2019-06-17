@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /* 
@@ -26,6 +26,7 @@
 #include <sys/poll.h>
 
 #include "sflow_api.h"
+#include "addr.h"
 
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
@@ -53,8 +54,8 @@ typedef struct _SflSp {
   int promiscuous;
   u_int32_t samplingRate;
   u_int32_t counterSamplingInterval;
-  struct in_addr collectorIP;
-  u_int32_t collectorPort;
+  struct host_addr collectorIP;
+  u_int16_t collectorPort;
   int snaplen;
   int timeout_ms;
   int batch;
@@ -62,7 +63,7 @@ typedef struct _SflSp {
 
   SflSp_counters counters[SFL_MAX_INTERFACES]; 
 
-  struct in_addr agentIP;
+  struct host_addr agentIP;
   u_int32_t agentSubId;
 
   struct in_addr interfaceIP;
@@ -125,11 +126,16 @@ static void setDefaults(SflSp *sp)
   sp->samplingRate = SFL_DEFAULT_SFACCTD_SAMPLING_RATE;
   sp->counterSamplingInterval = 20;
   sp->snaplen = 128;
-  sp->collectorIP.s_addr = Name_to_IP("localhost");
+
+  sp->collectorIP.family = AF_INET;
+  sp->collectorIP.address.ipv4.s_addr = Name_to_IP("localhost");
   sp->collectorPort = SFL_DEFAULT_COLLECTOR_PORT;
-  sp->agentIP.s_addr = getMyIPAddress();
+
+  sp->agentIP.family = AF_INET;
+  sp->agentIP.address.ipv4.s_addr = getMyIPAddress();
+  sp->agentIP.address.ipv4.s_addr = Name_to_IP("localhost");
+
   sp->agentSubId = 0;
-  sp->agentIP.s_addr = Name_to_IP("localhost");
 }
 
 /*_________________---------------------------__________________
@@ -211,8 +217,15 @@ static void init_agent(SflSp *sp)
     SFLAddress myIP;
     time_t now = time(NULL);
 
-    myIP.type = SFLADDRESSTYPE_IP_V4;
-    myIP.address.ip_v4 = sp->agentIP;
+    if (sp->agentIP.family == AF_INET) {
+      myIP.type = SFLADDRESSTYPE_IP_V4;
+      memcpy(&myIP.address.ip_v4, &sp->agentIP.address.ipv4, sizeof(struct in_addr));
+    }
+    else {
+      myIP.type = SFLADDRESSTYPE_IP_V6;
+      memcpy(&myIP.address.ip_v6, &sp->agentIP.address.ipv6, sizeof(struct in6_addr));
+    }
+
     sp->agent = (SFLAgent *)calloc(1, sizeof(SFLAgent));
 
     if (sp->agent) sfl_agent_init(sp->agent, &myIP, sp->agentSubId, now, now, sp, agentCB_alloc, agentCB_free, agentCB_error, NULL);
@@ -244,8 +257,15 @@ static void init_agent(SflSp *sp)
   { // collector address
     SFLAddress addr;
 
-    addr.type = SFLADDRESSTYPE_IP_V4;
-    addr.address.ip_v4 = sp->collectorIP;
+    if (sp->collectorIP.family == AF_INET) {
+      addr.type = SFLADDRESSTYPE_IP_V4;
+      memcpy(&addr.address.ip_v4, &sp->collectorIP.address.ipv4, sizeof(struct in_addr));
+    }
+    else {
+      addr.type = SFLADDRESSTYPE_IP_V6;
+      memcpy(&addr.address.ip_v6, &sp->collectorIP.address.ipv6, sizeof(struct in6_addr));
+    }
+
     sfl_receiver_set_sFlowRcvrAddress(sfl_agent_getReceiver(sp->agent, 1), &addr);
   }
 
@@ -549,22 +569,6 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
   }
 }
 
-static void parse_receiver(char *string, struct in_addr *addr, u_int32_t *port)
-{
-  char *delim, *ptr;
-
-  trim_spaces(string);
-  delim = strchr(string, ':');
-  if (delim) {
-    *delim = '\0';
-    ptr = delim+1;
-    addr->s_addr = Name_to_IP(string);
-    *port = atoi(ptr);
-    *delim = ':';
-  }
-  else Log(LOG_WARNING, "WARN ( %s/%s ): Receiver address '%s' is not valid. Ignoring.\n", config.name, config.type, string); 
-}
-
 /*_________________---------------------------__________________
   _________________   process_config_options  __________________
   -----------------___________________________------------------
@@ -575,9 +579,17 @@ static void process_config_options(SflSp *sp)
   if (config.nfprobe_ifindex_type) sp->ifIndex_Type = config.nfprobe_ifindex_type;
   if (config.nfprobe_ifindex) sp->counters[0].ifIndex = config.nfprobe_ifindex;
   if (config.sfprobe_ifspeed) sp->ifSpeed = config.sfprobe_ifspeed;
-  if (config.sfprobe_agentip) sp->agentIP.s_addr = Name_to_IP(config.sfprobe_agentip);
+  if (config.sfprobe_agentip) str_to_addr(config.sfprobe_agentip, &sp->agentIP);
   if (config.sfprobe_agentsubid) sp->agentSubId = config.sfprobe_agentsubid;
-  if (config.sfprobe_receiver) parse_receiver(config.sfprobe_receiver, &sp->collectorIP, &sp->collectorPort);
+
+  if (config.sfprobe_receiver) {
+    struct sockaddr_storage dest;
+    socklen_t dest_len = sizeof(dest);
+
+    parse_hostport(config.sfprobe_receiver, (struct sockaddr *)&dest, &dest_len);
+    sa_to_addr((struct sockaddr *) &dest, &sp->collectorIP, &sp->collectorPort);
+  }
+
   if (config.sampling_rate) sp->samplingRate = config.sampling_rate;
   else if (config.ext_sampling_rate) sp->samplingRate = config.ext_sampling_rate;
 }
@@ -657,8 +669,14 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   /* ****** sFlow part ends here ****** */
 
-  Log(LOG_INFO, "INFO ( %s/%s ): Exporting flows to [%s]:%d\n", config.name, config.type, inet_ntoa(sp.collectorIP), sp.collectorPort);
-  Log(LOG_INFO, "INFO ( %s/%s ): Sampling at: 1/%d\n", config.name, config.type, sp.samplingRate);
+  {
+    char dest_str[INET6_ADDRSTRLEN];
+
+    addr_to_str(dest_str, &sp.collectorIP);
+
+    Log(LOG_INFO, "INFO ( %s/%s ): Exporting flows to [%s]:%d\n", config.name, config.type, dest_str, sp.collectorPort);
+    Log(LOG_INFO, "INFO ( %s/%s ): Sampling at: 1/%d\n", config.name, config.type, sp.samplingRate);
+  }
 
   memset(&nt, 0, sizeof(nt));
   memset(&nc, 0, sizeof(nc));

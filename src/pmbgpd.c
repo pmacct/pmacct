@@ -174,9 +174,6 @@ int main(int argc,char **argv, char **envp)
     }
   }
 
-  Log(LOG_INFO, "INFO ( %s/core ): %s %s (%s)\n", config.name, PMBGPD_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
-  Log(LOG_INFO, "INFO ( %s/core ): %s\n", config.name, PMACCT_COMPILE_ARGS);
-
   /* post-checks and resolving conflicts */
   if (strlen(config_file)) {
     if (parse_configuration_file(config_file) != SUCCESS)
@@ -201,12 +198,6 @@ int main(int argc,char **argv, char **envp)
 
   if (config.files_umask) umask(config.files_umask);
 
-  if (config.daemon) {
-    if (debug || config.debug)
-      printf("WARN ( %s/core ): debug is enabled; forking in background. Logging to standard error (stderr) will get lost.\n", config.name);
-    daemonize();
-  }
-
   initsetproctitle(argc, argv, envp);
   if (config.syslog) {
     logf = parse_log_facility(config.syslog);
@@ -218,13 +209,22 @@ int main(int argc,char **argv, char **envp)
     Log(LOG_INFO, "INFO ( %s/core ): Start logging ...\n", config.name);
   }
 
-  if (config.logfile)
-  {
+  if (config.logfile) {
     config.logfile_fd = open_output_file(config.logfile, "a", FALSE);
     while (list) {
       list->cfg.logfile_fd = config.logfile_fd ;
       list = list->next;
     }
+  }
+
+  if (config.daemon) {
+    if (!config.syslog && !config.logfile) {
+      if (debug || config.debug) {
+	printf("WARN ( %s/core ): debug is enabled; forking in background. Logging to standard error (stderr) will get lost.\n", config.name);
+      }
+    }
+
+    daemonize();
   }
 
   if (config.proc_priority) {
@@ -234,6 +234,9 @@ int main(int argc,char **argv, char **envp)
     if (ret) Log(LOG_WARNING, "WARN ( %s/core ): proc_priority failed (errno: %d)\n", config.name, errno);
     else Log(LOG_INFO, "INFO ( %s/core ): proc_priority set to %d\n", config.name, getpriority(PRIO_PROCESS, 0));
   }
+
+  Log(LOG_INFO, "INFO ( %s/core ): %s %s (%s)\n", config.name, PMBGPD_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
+  Log(LOG_INFO, "INFO ( %s/core ): %s\n", config.name, PMACCT_COMPILE_ARGS);
 
   if (strlen(config_file)) {
     char canonical_path[PATH_MAX], *canonical_path_ptr;
@@ -247,13 +250,28 @@ int main(int argc,char **argv, char **envp)
   if (config.pidfile) write_pid_file(config.pidfile);
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
-  signal(SIGCHLD, startup_handle_falling_child); /* takes note of plugins failed during startup phase */
-  signal(SIGHUP, reload); /* handles reopening of syslog channel */
-  signal(SIGUSR1, SIG_IGN);
-  signal(SIGUSR2, reload_maps); /* sets to true the reload_maps flag */
-  signal(SIGPIPE, SIG_IGN); /* we want to exit gracefully when a pipe is broken */
-  signal(SIGINT, PM_sigint_handler);
-  signal(SIGTERM, PM_sigint_handler);
+  memset(&sighandler_action, 0, sizeof(sighandler_action)); /* To ensure the struct holds no garbage values */
+  sigemptyset(&sighandler_action.sa_mask);  /* Within a signal handler all the signals are enabled */
+  sighandler_action.sa_flags = SA_RESTART;  /* To enable re-entering a system call afer done with signal handling */
+
+  sighandler_action.sa_handler = startup_handle_falling_child;
+  sigaction(SIGCHLD, &sighandler_action, NULL);
+
+  /* handles reopening of syslog channel */
+  sighandler_action.sa_handler = reload;
+  sigaction(SIGHUP, &sighandler_action, NULL);
+
+  /* logs various statistics via Log() calls */
+  sighandler_action.sa_handler = SIG_IGN;
+  sigaction(SIGUSR1, &sighandler_action, NULL);
+
+  /* sets to true the reload_maps flag */
+  sighandler_action.sa_handler = reload_maps;
+  sigaction(SIGUSR2, &sighandler_action, NULL);
+
+  /* we want to exit gracefully when a pipe is broken */
+  sighandler_action.sa_handler = SIG_IGN;
+  sigaction(SIGPIPE, &sighandler_action, NULL);
 
   if (!config.nfacctd_bgp) config.nfacctd_bgp = BGP_DAEMON_ONLINE;
   if (!config.nfacctd_bgp_port) config.nfacctd_bgp_port = BGP_TCP_PORT;
@@ -264,6 +282,8 @@ int main(int argc,char **argv, char **envp)
 
   bgp_prepare_daemon();
   skinny_bgp_daemon();
+
+  return 0;
 }
 
 #if defined WITH_ZMQ
@@ -277,7 +297,7 @@ void bgp_lg_wrapper()
   /* initialize threads pool */
   bgp_lg_pool = allocate_thread_pool(1);
   assert(bgp_lg_pool);
-  Log(LOG_DEBUG, "DEBUG ( %s/core/lg ): pmbgpd Looking Glass thread initialized\n", config.name, 1);
+  Log(LOG_DEBUG, "DEBUG ( %s/core/lg ): pmbgpd Looking Glass thread initialized\n", config.name);
 
   /* giving a kick to the BGP thread */
   send_to_pool(bgp_lg_pool, bgp_lg_daemon, NULL);
@@ -293,6 +313,7 @@ void bgp_lg_daemon()
   snprintf(log_id, sizeof(log_id), "%s/core/lg", config.name);
   p_zmq_set_log_id(&lg_host, log_id);
 
+  p_zmq_set_address(&lg_host, inproc_str);
   if (config.bgp_lg_user) p_zmq_set_username(&lg_host, config.bgp_lg_user);
   if (config.bgp_lg_passwd) p_zmq_set_password(&lg_host, config.bgp_lg_passwd);
 
@@ -308,7 +329,7 @@ void bgp_lg_daemon()
   exit_gracefully(1);
 #endif
 
-  p_zmq_router_backend_setup(&lg_host, config.bgp_lg_threads, inproc_str);
+  p_zmq_router_backend_setup(&lg_host, config.bgp_lg_threads);
 }
 
 #ifdef WITH_JANSSON

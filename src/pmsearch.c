@@ -1,6 +1,11 @@
-/* Copyright (C) 1995-2017 Free Software Foundation, Inc.
-   This file is part of the GNU C Library.
-   Contributed by Bernd Schmidt <crux@Pool.Informatik.RWTH-Aachen.DE>, 1997.
+/*
+   Copyright (C) 1993-2018 Free Software Foundation, Inc.
+   This file is largely based on the GNU C Library and contains:
+
+   * System V style searching functions
+     - Contributed by Bernd Schmidt <crux@Pool.Informatik.RWTH-Aachen.DE>, 1997.
+   * Hash table management functions
+     - Contributed by Ulrich Drepper <drepper@gnu.ai.mit.edu>, 1993.
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -14,7 +19,8 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <http://www.gnu.org/licenses/>.
+*/
 
 /* Tree search for red/black trees.
    The algorithm for adding nodes is taken from one of the many "Algorithms"
@@ -22,9 +28,7 @@
    The algorithm for deleting nodes can probably be found in a book named
    "Introduction to Algorithms" by Cormen/Leiserson/Rivest.  At least that's
    the book that my professor took most algorithms from during the "Data
-   Structures" course...
-
-   Totally public domain.  */
+   Structures" course... Totally public domain.  */
 
 /* Red/black trees are binary trees in which the edges are colored either red
    or black.  They have the following properties:
@@ -87,6 +91,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "crc32.h"
 
 /* Possibly "split" a node with two red successors, and/or fix up two red
    edges in a row.  ROOTP is a pointer to the lowest node we visited, PARENTP
@@ -325,8 +330,7 @@ void *pm_tdelete (const void *key, void **vrootp, pm_compar_fn_t compar)
     }
 
   /* This is bogus if the node to be deleted is the root... this routine
-     really should return an integer with 0 for success, -1 for failure
-     and errno = ESRCH or something.  */
+     really should return an integer with 0 for success, -1 for failure */
   retval = p;
 
   /* We don't unchain the node we want to delete. Instead, we overwrite
@@ -617,4 +621,181 @@ void __pm_tdestroy (void *vroot, pm_free_fn_t freefct)
 
   if (root != NULL)
     pm_tdestroy_recurse (root, freefct);
+}
+
+/* For the used double hash method the table size has to be a prime. To
+   correct the user given table size we need a prime test.  This trivial
+   algorithm is adequate because
+   a)  the code is (most probably) called a few times per program run and
+   b)  the number is small because the table must fit in the core  */
+static int pm_isprime(unsigned int number)
+{
+  unsigned int div;
+
+  /* no even number will be passed */
+  for (div = 3; div <= number / div; div += 2) {
+    if (number % div == 0) return 0;
+  }
+
+  return 1;
+}
+
+/* Before using the hash table we must allocate memory for it.
+   Test for an existing table are done. We allocate one element
+   more as the found prime number says. This is done for more effective
+   indexing as explained in the comment for the hsearch function.
+   The contents of the table is zeroed, especially the field used
+   becomes zero.  */
+int pm_hcreate(size_t nel, struct pm_htable *htab)
+{
+  /* Test for correct arguments.  */
+  if (htab == NULL) return 0;
+
+  /* There is still another table active. Return with error. */
+  if (htab->table != NULL) return 0;
+
+  /* We need a size of at least 3.  Otherwise the hash functions we
+     use will not work.  */
+  if (nel < 3) nel = 3;
+
+  /* Change nel to the first prime number in the range [nel, UINT_MAX - 2],
+     The '- 2' means 'nel += 2' cannot overflow.  */
+  for (nel |= 1; ; nel += 2) {
+    if (UINT_MAX - 2 < nel) return 0;
+
+    if (pm_isprime (nel)) break;
+  }
+
+  htab->size = nel;
+  htab->filled = 0;
+
+  /* allocate memory and zero out */
+  htab->table = (_pm_HENTRY *) calloc (htab->size + 1, sizeof (_pm_HENTRY));
+  if (htab->table == NULL) return 0;
+
+  /* everything went alright */
+  return 1;
+}
+
+/* After using the hash table it has to be destroyed. The used memory can
+   be freed and the local static variable can be marked as not used.  */
+void pm_hdestroy(struct pm_htable *htab)
+{
+  size_t idx;
+
+  /* Test for correct arguments.  */
+  if (htab == NULL) return;
+
+  for (idx = 0; idx < htab->size; idx++) __pm_hdelete(&htab->table[idx]);
+
+  /* Free used memory.  */
+  free (htab->table);
+
+  /* the sign for an existing table is an value != NULL in htable */
+  htab->table = NULL;
+}
+
+/* This is the search function. It uses double hashing with open addressing.
+   The argument item.key has to be a pointer to an zero terminated, most
+   probably strings of chars. The function for generating a number of the
+   strings is simple but fast. It can be replaced by a more complex function
+   like ajw (see [Aho,Sethi,Ullman]) if the needs are shown.
+   We use an trick to speed up the lookup. The table is created by hcreate
+   with one more element available. This enables us to use the index zero
+   special. This index will never be used because we store the first hash
+   index in the field used where zero means not used. Every other value
+   means used. The used field can be used as a first fast comparison for
+   equality of the stored and the parameter value. This helps to prevent
+   unnecessary more expensive calls of memcmp.  */
+int pm_hsearch(pm_HENTRY item, pm_ACTION action, pm_HENTRY **retval, struct pm_htable *htab)
+{
+  unsigned int hval;
+  unsigned int idx;
+
+  /* Compute an value for the given string. Perhaps use a better method. */
+  hval = cache_crc32(item.key, item.keylen);
+
+  /* First hash function: simply take the modul but prevent zero. */
+  idx = hval % htab->size + 1;
+  if (htab->table[idx].used) {
+    /* Further action might be required according to the action value. */
+    if (htab->table[idx].used == hval && item.keylen == htab->table[idx].entry.keylen
+        && (!memcmp(item.key, htab->table[idx].entry.key, item.keylen))) {
+      if (action == DELETE) {
+	__pm_hdelete(&htab->table[idx]);
+	(*retval) = NULL;
+      }
+      else {
+        (*retval) = &htab->table[idx].entry;
+      }
+
+      return 1;
+    }
+
+    /* Second hash function, as suggested in [Knuth] */
+    unsigned int hval2 = 1 + hval % (htab->size - 2);
+    unsigned int first_idx = idx;
+    do {
+      /* Because SIZE is prime this guarantees to step through all available indeces */
+      if (idx <= hval2) idx = htab->size + idx - hval2;
+      else idx -= hval2;
+
+      /* If we visited all entries leave the loop unsuccessfully.  */
+      if (idx == first_idx) break;
+
+      /* If entry is found use it. */
+      if (htab->table[idx].used == hval && item.keylen == htab->table[idx].entry.keylen
+	  && (!memcmp(item.key, htab->table[idx].entry.key, item.keylen))) {
+	if (action == DELETE) {
+	  __pm_hdelete(&htab->table[idx]);
+	  (*retval) = NULL;
+	}
+	else {
+	  (*retval) = &htab->table[idx].entry;
+	}
+
+	return 1;
+      }
+    }
+    while (htab->table[idx].used);
+  }
+
+  /* An empty bucket has been found. */
+  if (action == INSERT) {
+    /* If table is full and another entry should be entered return with error.  */
+    if (htab->filled == htab->size) {
+      *retval = NULL;
+      return ERR;
+    }
+
+    htab->table[idx].used  = hval;
+    htab->table[idx].entry = item;
+    ++htab->filled;
+    *retval = &htab->table[idx].entry;
+
+    return 1;
+  }
+
+  *retval = NULL;
+  return 0;
+}
+
+void pm_hmove(struct pm_htable *new_htab, struct pm_htable *old_htab, struct pm_htable *saved_htab)
+{
+  memcpy(saved_htab, old_htab, sizeof(struct pm_htable));
+  memcpy(old_htab, new_htab, sizeof(struct pm_htable));
+}
+
+void __pm_hdelete(_pm_HENTRY *item)
+{
+  item->used = 0;
+
+  item->entry.keylen = 0;
+  free(item->entry.key);
+  item->entry.key = NULL;
+
+  if (item->entry.data) {
+    free(item->entry.data);
+    item->entry.data = NULL;
+  }
 }

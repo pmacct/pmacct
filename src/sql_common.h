@@ -129,7 +129,7 @@ struct db_cache {
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;
   struct pkt_tunnel_primitives *ptun;
-  char *pcust;
+  u_char *pcust;
   struct pkt_vlen_hdr_primitives *pvlen;
   u_int8_t valid;
   u_int8_t prep_valid;
@@ -256,11 +256,16 @@ EXT void count_nat_event_handler(const struct db_cache *, struct insert_data *, 
 EXT void count_mpls_label_top_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_mpls_label_bottom_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_mpls_stack_depth_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_tunnel_src_mac_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_tunnel_dst_mac_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_tunnel_src_ip_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_tunnel_dst_ip_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void MY_count_tunnel_ip_proto_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void PG_count_tunnel_ip_proto_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_tunnel_ip_tos_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_tunnel_src_port_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_tunnel_dst_port_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+EXT void count_vxlan_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_timestamp_start_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void PG_copy_count_timestamp_start_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 EXT void count_timestamp_start_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);

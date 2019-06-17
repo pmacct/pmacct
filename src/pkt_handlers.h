@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -52,6 +52,15 @@ EXT void dst_port_handler(struct channels_list_entry *, struct packet_ptrs *, ch
 EXT void ip_tos_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void ip_proto_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void tcp_flags_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void tunnel_src_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void tunnel_dst_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void tunnel_src_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void tunnel_dst_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void tunnel_ip_proto_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void tunnel_ip_tos_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void tunnel_src_port_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void tunnel_dst_port_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void vxlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void counters_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void counters_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void time_new_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -111,6 +120,7 @@ EXT void NF_mpls_label_bottom_handler(struct channels_list_entry *, struct packe
 EXT void NF_mpls_stack_depth_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_mpls_vpn_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_mpls_pw_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void NF_vxlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_timestamp_start_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_timestamp_end_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void NF_timestamp_arrival_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -181,10 +191,15 @@ EXT void SF_peer_src_as_handler(struct channels_list_entry *, struct packet_ptrs
 EXT void SF_peer_dst_as_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_local_pref_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_std_comms_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_tunnel_src_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_tunnel_dst_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_tunnel_src_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_tunnel_dst_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_tunnel_ip_proto_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_tunnel_ip_tos_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_tunnel_src_port_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_tunnel_dst_port_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+EXT void SF_vxlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_tee_payload_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_mpls_label_top_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 EXT void SF_mpls_label_bottom_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

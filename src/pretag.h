@@ -81,8 +81,6 @@
 
 #define PRETAG_FLAG_NEG			0x00000001
 
-#define IDT_INDEX_HASH_BASE(entries)	(entries * 2)
-
 typedef int (*pretag_handler) (struct packet_ptrs *, void *, void *);
 typedef pm_id_t (*pretag_stack_handler) (pm_id_t, pm_id_t);
 
@@ -118,7 +116,7 @@ typedef struct {
 
 typedef struct {
   u_int8_t neg;
-  char a[ETH_ADDR_LEN]; 
+  u_char a[ETH_ADDR_LEN]; 
 } pt_etheraddr_t;
 
 typedef struct {
@@ -221,7 +219,8 @@ struct id_index_entry {
 
 struct id_table_index {
   pt_bitmap_t bitmap; 
-  int entries;
+  u_int32_t entries;
+  u_int32_t modulo;
   pretag_copier idt_handler[MAX_BITMAP_ENTRIES];
   pretag_copier fdata_handler[MAX_BITMAP_ENTRIES];
   pm_hash_serial_t hash_serializer;
@@ -287,7 +286,7 @@ EXT int pretag_index_allocate(struct id_table *);
 EXT int pretag_index_fill(struct id_table *, pt_bitmap_t, struct id_entry *);
 EXT void pretag_index_report(struct id_table *);
 EXT void pretag_index_destroy(struct id_table *);
-EXT void pretag_index_lookup(struct id_table *, struct packet_ptrs *, struct id_entry **, int);
+EXT u_int32_t pretag_index_lookup(struct id_table *, struct packet_ptrs *, struct id_entry **, int);
 EXT void pretag_index_results_sort(struct id_entry **, int);
 EXT void pretag_index_results_compress(struct id_entry **, int);
 EXT void pretag_index_results_compress_jeqs(struct id_entry **, int);

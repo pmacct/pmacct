@@ -52,7 +52,7 @@ int bgp_rd2str(char *str, rd_t *rd)
   struct rd_as  *rda;
   struct rd_as4 *rda4;
   struct host_addr a;
-  u_char ip_address[INET6_ADDRSTRLEN];
+  char ip_address[INET6_ADDRSTRLEN];
 
   switch (rd->type) {
   case RD_TYPE_AS:
@@ -223,7 +223,7 @@ struct bgp_info_extra *bgp_info_extra_get(struct bgp_info *ri)
 }
 
 struct bgp_info_extra *bgp_info_extra_process(struct bgp_peer *peer, struct bgp_info *ri, safi_t safi,
-		  			      path_id_t *path_id, rd_t *rd, char *label)
+		  			      path_id_t *path_id, rd_t *rd, u_char *label)
 {
   struct bgp_info_extra *rie = NULL;
 
@@ -927,7 +927,7 @@ void evaluate_comm_patterns(char *dst, char *src, char **patterns, int dstlen)
 
 as_t evaluate_last_asn(struct aspath *as)
 {
-  if (!as) return SUCCESS;
+  if (!as) return 0;
 
   return as->last_as;
 }
@@ -1206,7 +1206,8 @@ void bgp_md5_file_process(int sock, struct bgp_md5_table *bgp_md5)
   struct pm_tcp_md5sig md5sig;
   struct sockaddr_storage ss_md5sig, ss_server;
   struct sockaddr *sa_md5sig = (struct sockaddr *)&ss_md5sig, *sa_server = (struct sockaddr *)&ss_server;
-  int rc, keylen, idx = 0, ss_md5sig_len, ss_server_len;
+  int rc, keylen, idx = 0, ss_md5sig_len;
+  socklen_t ss_server_len;
 
   if (!bgp_md5) return;
 
@@ -1237,7 +1238,7 @@ void bgp_md5_file_process(int sock, struct bgp_md5_table *bgp_md5)
 
     sa_to_str(peer_str, sizeof(peer_str), sa_md5sig);
 
-    rc = setsockopt(sock, IPPROTO_TCP, TCP_MD5SIG, &md5sig, sizeof(md5sig));
+    rc = setsockopt(sock, IPPROTO_TCP, TCP_MD5SIG, &md5sig, (socklen_t) sizeof(md5sig));
     if (rc < 0) {
       Log(LOG_WARNING, "WARN ( %s/core/BGP ): setsockopt() failed for TCP_MD5SIG peer=%s (errno: %d)\n", config.name, peer_str, errno);
     }
@@ -1382,8 +1383,19 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
 
   bms->bgp_msg_open_router_id_check = bgp_router_id_check; 
 
-  if (!bms->is_thread && !bms->dump_backend_methods && !bms->has_lglass)
+  if (!bms->is_thread && !bms->dump_backend_methods && !bms->has_lglass && !bms->has_blackhole) {
     bms->skip_rib = TRUE;
+  }
+}
+
+void bgp_blackhole_link_misc_structs(struct bgp_misc_structs *m_data)
+{
+  m_data->table_peer_buckets = 1; /* saving on DEFAULT_BGP_INFO_HASH for now */
+  m_data->table_per_peer_buckets = DEFAULT_BGP_INFO_PER_PEER_HASH;
+  m_data->table_attr_hash_buckets = HASHTABSIZE;
+  m_data->table_per_peer_hash = BGP_ASPATH_HASH_PATHID;
+  m_data->route_info_modulo = NULL;
+  m_data->bgp_lookup_node_match_cmp = NULL; // XXX
 }
 
 int bgp_peer_cmp(const void *a, const void *b)

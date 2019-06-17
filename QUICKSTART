@@ -786,9 +786,14 @@ Show all available pmacct client commandline switches:
 
 shell> pmacct -h
 
-Fetch data stored into the memory table:
+Fetch data stored in the memory table:
 
 shell> pmacct -s 
+
+Fetch data stored in the memory table using JSON output (and nicely format it with
+the 'jq' tool):
+
+shell> pmacct -s -O json | jq 
 
 Match data between source IP 192.168.0.10 and destination IP 192.168.0.3 and return
 a formatted output; display all fields (-a), this way the output is easy to be parsed
@@ -960,6 +965,9 @@ kafka_topic: pmacct.acct
 kafka_refresh_time: 300
 kafka_history: 5m
 kafka_history_roundoff: m
+!
+! [Optional] librdkafka config for buffer tuning, ssl config, etc. 
+! kafka_config_file: /path/to/librdkafka.conf
 ! ..
 
 A basic script, in Python, is provided as sample to consume JSON/Avro data from
@@ -1110,13 +1118,14 @@ steps:
 2) Download nDPI from its GitHub repository (https://github.com/ntop/nDPI).
    pmacct code is currently tested working against:
 
-   * nDPI 2.2.2 (git clone -b 2.2.2-stable https://github.com/ntop/nDPI.git)
    * nDPI 2.4 (git clone -b 2.4-stable https://github.com/ntop/nDPI.git)
+   * nDPI 2.6 (git clone -b 2.6-stable https://github.com/ntop/nDPI.git)
+   * nDPI 2.8 (git clone -b 2.8-stable https://github.com/ntop/nDPI.git)
 
 3) Configure for compiling, compile and install the downloaded nDPI library, ie.
    inside the nDPI directory:
 
-   shell> ./autogen.sh; ./configure; make; make install 
+   shell> ./autogen.sh; ./configure; make; make install; ldconfig 
 
 4) Configure for compiling pmacct with the --enable-ndpi switch. Then compile and
    install, ie.:
@@ -1133,14 +1142,21 @@ steps:
 
    If using a nDPI library that is not installed (or not installed in a default
    location) on the system, then NDPI_LIBS and NDPI_CFLAGS should be set to the
-   location where nDPI headers and dynamic library are lying. Additionally, the
-   configure switch --with-ndpi-static-lib allows to specify the location for the
-   static version of the library:
+   location where nDPI headers and dynamic library are lyingi, for example:
 
    shell> NDPI_LIBS=-L/path/to/nDPI/src/lib/.libs  
    shell> NDPI_CFLAGS=-I/path/to/nDPI/src/include
    shell> export NDPI_LIBS NDPI_CFLAGS
-   shell> ./configure --enable-ndpi --with-ndpi-static-lib=/path/to/nDPI/src/lib/.libs
+   shell> ./configure --enable-ndpi
+   shell> make; make install
+
+   If using a nDPI library that does not install libndpi.pc pkg-config file in a
+   standard directory, then PKG_CONFIG_PATH should be set (this seems to be true
+   for both 2.6 and 2.8 releases), for example:
+
+   shell> PKG_CONFIG_PATH=/usr/local/libdata/pkgconfig
+   shell> export PKG_CONFIG_PATH
+   shell> ./configure --enable-ndpi
    shell> make; make install
 
 5) Configure pmacct. The following sample configuration is based on pmacctd and
@@ -1182,7 +1198,8 @@ b) build NetFlow probe configuration, using pmacctd:
    aggregate: src_host, dst_host, src_port, dst_port, proto, tos
    plugins: nfprobe
    nfprobe_receiver: 192.168.1.1:2100
-   nfprobe_version: 9
+   ! nfprobe_receiver: [FD00::2]:2100
+   nfprobe_version: 10
    ! nfprobe_engine: 1:1
    ! nfprobe_timeouts: tcp=120:maxlife=3600
    !
@@ -1311,7 +1328,9 @@ networks. Furthermore, sFlow v5 can be extended much like NetFlow v9/IPFIX: mean
 classification information (if nDPI is compiled in, see 'Quickstart guide to packet
 classification' section of this document), tags and/or basic Extended Gateway info
 (ie. src_as, dst_as) can be easily included in the record structure being exported.
-Here a quickstarter sFlow probe configuration, using pmacctd:
+For classification info to be included in sFlow packets please make sure to specify
+the classifier_num_roots directive in the config. Here a quickstarter sFlow probe
+configuration, using pmacctd:
 
 !
 daemonize: true
@@ -1321,8 +1340,15 @@ sampling_rate: 20
 sfprobe_agentsubid: 1402
 sfprobe_receiver: 192.168.1.1:6343
 !
+! sfprobe_agentip: FD00::1
+! sfprobe_source_ip: FD00::1
+! sfprobe_receiver: [FD00::2]:6343
+!
 ! networks_file: /path/to/networks.lst
 ! snaplen: 700
+!
+! classifier_num_roots: 512
+!
 !...
 
 
@@ -1659,6 +1685,9 @@ listening on the localost and default port, is configured as follows:
 
 bgp_table_dump_kafka_topic: pmacct.bgp
 bgp_table_dump_refresh_time: 60
+!
+! [Optional] librdkafka config for buffer tuning, ssl config, etc. 
+! bgp_table_dump_kafka_config_file: /path/to/librdkafka.conf
 
 The equivalent bgp_table_dump_amqp_routing_key config directive can be used to
 make the above example work against a RabbitMQ broker.
@@ -1667,6 +1696,9 @@ A basic log of BGP messaging in near real-time to a Kafka broker, listening on
 the localhost and default port, is configured as follows:
 
 bgp_daemon_msglog_kafka_topic: pmacct.bgp
+!
+! [Optional] librdkafka config for buffer tuning, ssl config, etc. 
+! bgp_daemon_msglog_kafka_config_file: /path/to/librdkafka.conf
 
 The equivalent bgp_daemon_msglog_amqp_routing_key config directive can be used
 to make the above example work against a RabbitMQ broker.
@@ -1749,13 +1781,13 @@ to sfacctd, pmbgpd, pmbmpd as well):
 Daemon #1:
 
 allow-1.map:
-10.0.0.0/17
+10.0.0.0/25
 
 nfacctd-1.conf:
 ...
 !
 nfacctd_port: 2100
-nfacctd_allow_file: /path/to/allow-1.map
+! nfacctd_allow_file: /path/to/allow-1.map
 !
 bgp_daemon: true
 bgp_daemon_port: 179
@@ -1766,13 +1798,13 @@ bgp_daemon_allow_file: /path/to/allow-1.map
 Daemon #2:
 
 allow-2.map:
-10.0.128.0/17
+10.0.0.128/25
 
 nfacctd-2.conf:
 ...
 !
-nfacctd_port: 2100
-nfacctd_allow_file: /path/to/allow-2.map
+nfacctd_port: 2101
+! nfacctd_allow_file: /path/to/allow-2.map
 !
 bgp_daemon: true
 bgp_daemon_port: 179
@@ -1780,14 +1812,24 @@ bgp_daemon_allow_file: /path/to/allow-2.map
 !
 ...
 
+For flow protocols, which are transported in UDP, a replication layer is
+needed in front, note the daemon listen on different nfacctd_port in the
+example above (read more on how to set up a replicator in the "Quickstart
+guide to setup a NetFlow/IPFIX/sFlow replicator" section of the document).
+nfacctd_allow_file is optional config key and, if created accordingly to
+bgp_daemon_allow_file, may ensure only flows from router for which a BGP
+sessions accepted should be processed.
+
 XIVi. Example: adding RPKI/ROA information 
 Resource Public Key Infrastructure (RPKI) is a specialized public key
 infrastructure (PKI) framework designed to secure the Internet routing. RPKI
-uses certificates to allow Local Internet Registries (LIRs), to list the
+uses certificates to allow Local Internet Registries (LIRs) to list the
 Internet number resources they hold. These attestations are called Route
-Origination Authorizations (ROAs). ROA information can be currently imported
-using the rpki_roas_file config directive from a file in the RIPE Validator
-format, ie.:
+Origination Authorizations (ROAs). ROA information can be currently
+acquired in one of the two following ways:
+
+1) it can be imported using the rpki_roas_file config directive from a
+   file in the RIPE Validator format, ie.:
 
 {
   "roas" : [ {
@@ -1809,16 +1851,26 @@ format, ie.:
 }
 
 RPKI data in such format can be obtained for example at the following URL:
-https://rpki.gin.ntt.net/api/export.json . Once rpki_roas_file is available,
-traffic daemons (ie. nfacctd) and pmbgpd can be configured to correlate
-traffic, BGP and RPKI information. This is an example of how to configure
-nfacctd, the NetFlow/IPFIX collector daemon:
+https://rpki.gin.ntt.net/api/export.json .
+
+2) Connecting to a RPKI RTR Cache for live ROA updates. Its IP address
+   and port being defined by the rpki_rtr_cache config directive (a few
+   more optional rpki_rtr_* directives are available and can be reviwed
+   in the CONFIG-KEYS document).  
+
+Once rpki_roas_file or rpki_rtr_cache are defined, traffic daemons (ie.
+nfacctd) and pmbgpd can be configured to correlate traffic, BGP and RPKI
+information. This is an example of how to configure nfacctd, the NetFlow/
+IPFIX collector daemon:
 
 nfacctd_as: longest
 nfacctd_net: longest
 ! < .. >
 !
-rpki_roas_file: /path/to/roas.json
+! rpki_roas_file: /path/to/roas.json
+!
+rpki_rtr_cache: 127.0.0.1:8323
+! rpki_rtr_cache_version: 1 
 !
 bgp_daemon: true
 bgp_src_roa_type: bgp
@@ -1828,6 +1880,10 @@ plugins: print[foo]
 !
 aggregate[foo]: peer_src_ip, peer_dst_ip, src_host, dst_host, src_roa, dst_roa
 ! < .. >
+
+The ROA fields will be populated with one of these five values: 'u' Unknown,
+'v' Valid, 'i' Invalid no overlaps, 'V' Invalid with a covering Valid prefix
+and 'U' Invalid with a covering Unknown prefix.
 
 XIVl. BGP daemon implementation concluding notes
 The implementation supports 4-bytes ASN, IPv4, IPv6, VPNv4 and VPNv6 (MP-BGP)
@@ -2115,6 +2171,9 @@ bmp_daemon_msglog_kafka_topic: pmacct.bmp-msglog
 !
 bmp_dump_kafka_topic: pmacct.bmp-dump
 bmp_dump_refresh_time: 60
+!
+! [Optional] librdkafka config for buffer tuning, ssl config, etc. 
+! bmp_dump_config_file: /path/to/librdkafka.conf
 
 The equivalent bmp_daemon_msglog_amqp_routing_key and bmp_dump_amqp_routing_key
 config directives can be used to make the above example work against a RabbitMQ
@@ -2247,6 +2306,9 @@ telemetry_dump_latest_file: /path/to/spool/telemetry-dump-$peer_src_ip.latest
 ! telemetry_dump_amqp_routing_key: telemetry-dump
 ! telemetry_dump_kafka_topic: telemetry-dump
 !
+! [Optional] librdkafka config for buffer tuning, ssl config, etc. 
+! telemetry_dump_kafka_config_file: /path/to/librdkafka.conf
+!
 telemetry_dump_refresh_time: 60
 
 Following is a config example to receive JSON-formatted telemetry data from a
@@ -2262,6 +2324,9 @@ telemetry_daemon_decoder: json
 telemetry_daemon_msglog_file: /path/to/spool/telemetry-msglog-$peer_src_ip.txt
 ! telemetry_daemon_msglog_amqp_routing_key: telemetry-msglog
 ! telemetry_daemon_msglog_kafka_topic: telemetry-msglog
+!
+! [Optional] librdkafka config for buffer tuning, ssl config, etc. 
+! telemetry_daemon_msglog_kafka_config_file: /path/to/librdkafka.conf
 
 A sample of both the Streaming Telemetry msglog and dump formats are captured in
 the following document: docs/MSGLOG_DUMP_FORMATS
@@ -2596,19 +2661,20 @@ if set too high they will likely retain data internally to the daemon; 4) if
 multiple interfaces are configured on a system, try to disable rp_filtering. See
 http://tldp.org/HOWTO/Adv-Routing-HOWTO/lartc.kernel.rpf.html for more info
 on RP filtering. The value of rp_filter files in /proc must be set to zero in
-order to disable RP filtering. This appears a popular issue when replicating
-flow data with tee_transparent feature enabled (that is, packet spoofing);
-5) in case aggregate_filter is in use: the feature expects a libpcap-style
-filter as value. BPF filters are sensible to both VLAN tags and MPLS labels:
-if, for example, the traffic is VLAN tagged and the value of aggregate_filter
-is 'src net X.X.X.X/Y', there will be no match for VLAN-tagged traffic from src
-net X.X.X.X/Y; the filter should be re-written as 'vlan and src net X.X.X.X/Y';
-6) in case of NetFlow v9/IPFIX collection, two protocols that are template-based,
-the issue may be with templates not being received by nfacctd (in which case by
-enabling debug you may see "Discarded NetFlow v9/IPFIX packet (R: unknown
-template [ .. ]" messages in your logs); you can confirm whether templates are
-being exported/replicated/received with a touch of "tshark -d udp.port==<NFv9/
-IPFIX port>,cflow -R cflow.template_id". 
+order to disable RP filtering. Also, if working on a cloud instance, consider
+often times these are not configured by default to pass traffic through. These
+appear popular issues when replicating flow data with tee_transparent feature
+enabled (that is, packet spoofing); 5) in case aggregate_filter is in use: the
+feature expects a libpcap-style filter as value. BPF filters are sensible to
+both VLAN tags and MPLS labels: if, for example, the traffic is VLAN tagged and
+the value of aggregate_filter is 'src net X.X.X.X/Y', there will be no match
+for VLAN-tagged traffic from src net X.X.X.X/Y; the filter should be re-written
+as 'vlan and src net X.X.X.X/Y'; 6) in case of NetFlow v9/IPFIX collection, two
+protocols that are template-based, the issue may be with templates not being
+received by nfacctd (in which case by enabling debug you may see "Discarded
+NetFlow v9/IPFIX packet (R: unknown template [ .. ]" messages in your logs);
+you can confirm whether templates are being exported/replicated/received with a
+touch of "tshark -d udp.port==<NFv9/IPFIX port>,cflow -R cflow.template_id". 
 
 e) In the case of inconsistent output - inconsistent defined as replaying the
 same set of data, output produced by the daemon differs - of nfacctd/sfacctd:
@@ -2623,20 +2689,26 @@ f) Replay packets can be needed, for example, to troubleshoot the behaviour
 of one of the pmacct daemons. A capture in libpcap format, suitable for
 replay, can be produced with tcpdump, ie. for NetFlow/IPFIX/sFlow via the
 "tcpdump -i <interface> -n -s 0 -w <output file> port <sfacctd/nfacctd
-listening port>" (for uacctd use -i nflog:<nflog group>) command-line. The
-output file can be replayed by using the pcap_savefile (-I) and, optionally,
-the pcap_savefile_wait (-W) directives, ie.: "nfacctd -I <pcap savefile> <..>".
-For more advanced use-cases, ie. loop indefinitely through the pcap file and
-run it with a speed multiplicator in order to stress test the daemon, the
-tcpreplay tool can be used for the purpose. In this case, before replaying
-NetFlow/IPFIX/sFlow, L2/L3 of captured packets must be adjusted to reflect the
-lab environment; this can be done with the tcprewrite tool of the tcpreplay
-package, ie.: "tcprewrite --enet-smac=<src MAC address> --enet-dmac= <dst MAC
-address> -S <src IP address rewrite> -D <dst IP address rewrite> --fixcsum
---infile= <input file, ie. output from tcpdump> --outfile=<output file>". Then
-the output file from tcprewrite can be supplied to tcpreplay for the actual
-replay to the pmacct daemon, ie.: "tcpreplay -x <speed multiplicator> -i
-<output interface> <input file>". 
+listening port>" (for uacctd use -i nflog:<nflog group>) command-line; for
+traces over extended periods of time, ie. to troubleshoot specific bogus
+packets triggering crashes, the -G tcpdump option can be specified to rotate
+-w output_file each specified seconds interval and, as tcpdump man page, does
+mention "savefiles will have the name specified by -w which should include a
+time format as defined by strftime(3). If no time format is specified, each
+new file will overwrite the previous.". Output file(s) can be replayed by
+using the pcap_savefile (-I) and, optionally, the pcap_savefile_wait (-W)
+directives, ie.: "nfacctd -I <pcap savefile> <..>". For more advanced use-
+cases, ie. loop indefinitely through the pcap file and run it with a speed
+multiplicator in order to stress test the daemon, the tcpreplay tool can be
+used for the purpose. In this case, before replaying NetFlow/IPFIX/sFlow,
+L2/L3 of captured packets must be adjusted to reflect the lab environment;
+this can be done with the tcprewrite tool of the tcpreplay package, ie.:
+"tcprewrite --enet-smac=<src MAC address> --enet-dmac= <dst MAC address> -S
+<src IP address rewrite> -D <dst IP address rewrite> --fixcsum --infile=<input
+file, ie. output from tcpdump> --outfile=<output file>". Then the output file
+from tcprewrite can be supplied to tcpreplay for the actual replay to the
+pmacct daemon, ie.: "tcpreplay -x <speed multiplicator> -i <output interface>
+<input file>". 
 
 g) Buffering is often an element to tune. While buffering internal to pmacct, 
 configured with plugin_buffer_size and plugin_pipe_size, returns warning

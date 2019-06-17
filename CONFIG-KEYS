@@ -53,8 +53,9 @@ VALUES:		[ src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_
 		 mpls_label_bottom, mpls_stack_depth, sampling_rate, sampling_direction,
 		 src_host_country, dst_host_country, src_host_pocode, dst_host_pocode,
 		 src_host_coords, dst_host_coords, nat_event, fw_event, post_nat_src_host,
-		 post_nat_dst_host, post_nat_src_port, post_nat_dst_port, tunnel_src_host,
-		 tunnel_dst_host, tunnel_proto, tunnel_tos, timestamp_start, timestamp_end,
+		 post_nat_dst_host, post_nat_src_port, post_nat_dst_port, tunnel_src_mac,
+		 tunnel_dst_mac, tunnel_src_host, tunnel_dst_host, tunnel_proto, tunnel_tos,
+		 tunnel_src_port, tunnel_dst_port, vxlan, timestamp_start, timestamp_end,
 		 timestamp_arrival, export_proto_seqno, export_proto_version,
 		 export_proto_sysid ]
 FOREWORDS:	Individual IP packets are uniquely identified by their header field values (a
@@ -1495,7 +1496,7 @@ DESC:		Enables the use of start/end markers each time data is purged to the back
 DEFAULT:	false
 
 KEY:		print_output
-VALUES:		[ formatted | csv | json | avro | event_formatted | event_csv ]
+VALUES:		[ formatted | csv | json | avro | event_formatted | event_csv | custom ]
 DESC:		Defines the print plugin output format. 'formatted' enables tabular output; 'csv' is to enable
 		comma-separated values format, suitable for injection into 3rd party tools. 'event' versions of
 		the output strips trailing bytes and packets counters. 'json' is to enable JavaScript Object
@@ -1508,6 +1509,8 @@ DESC:		Defines the print plugin output format. 'formatted' enables tabular outpu
 		data serialization system. This format stores the data more compactly than JSON and thus is
 		more appropriate for intensive captures. The 'avro' format requires compiling the package
 		against the Apache Avro library (downloadable at the following URL: http://avro.apache.org/).
+		'custom' allows to specify own formtting, encoding and backend management (open file, close
+		file, start/end markers, etc.), see print_output_custom_lib and print_output_custom_cfg_file.
 NOTES:		* Jansson and Avro libraries don't have the concept of unsigned integers. integers up to 32
 		  bits are packed as 64 bits signed integers, working around the issue. No work around is
 		  possible for unsigned 64 bits integers instead (ie. tag, tag2, packets, bytes).
@@ -1526,6 +1529,22 @@ DESC:           Defines the print plugin output separator when print_output is s
 		default separator value is part of any of the supplied strings, for example certain BGP
 		AS PATHs like "AS1_AS2_AS3_{ASX,ASY,ASZ}".
 DEFAULT:	','
+
+KEY:		print_output_custom_lib
+DESC:		Full path to a non-static library file that can be dinamically linked in pmacct to
+		provide custom formatting of output data. The two main use-cases for this feature are
+		1) use available encodings (ie. CSV, JSON, etc.) but fix the format of the messages in a
+		custom way and 2) use a different encoding than the available ones. pm_custom_output
+		structure in plugin_cmn_custom.h can be looked at for guidance of which functions are
+		expected to exist in the library and with which arguments they would be called. See an
+		example library file in the examples/custom directory.
+DEFAULT:	none
+
+KEY:		print_output_custom_cfg_file
+DESC:		Full path to a file that is passed to the shared object (.so) library both at init time
+		and at runtime, that is, when processing elements. The config file content is opaque to
+		pmacct.
+DEFAULT:	none
 
 KEY:		[ amqp_output | kafka_output ]
 VALUES: 	[ json | avro ]
@@ -1610,12 +1629,6 @@ DEFAULT:        false
 
 KEY:		[ nfacctd_port | sfacctd_port ] (-l) [GLOBAL, NO_PMACCTD, NO_UACCTD]
 DESC:		Defines the UDP port where to bind nfacctd (nfacctd_port) and sfacctd (sfacctd_port) daemons.
-		If supported and if enabled on the system, the SO_REUSEPORT feature can be leveraged on Linux:
-		it allows multiple daemons (ie. nfacctd) to bind the same local address and port in order to
-		load-balance processing of incoming packets.  This is best combined with a list of allowed IP
-		addresses, ie. nfacctd_allow_file, to explicitely wire exporters to collectors. At the end of
-		this document, reference (1) to a URL to a presentation of the SO_REUSEPORT feature. To enable
-		SO_REUSEPORT on a Linux system supporting it 'sysctl net.core.allow_reuseport=1'.
 DEFAULT:	nfacctd_port: 2100; sfacctd_port: 6343 
 
 KEY:		[ nfacctd_ip | sfacctd_ip ] (-L) [GLOBAL, NO_PMACCTD, NO_UACCTD]
@@ -2061,11 +2074,11 @@ DESC:		Defines the remote IP address/hostname and port to which NetFlow datagram
 		If IPv4, the value is expected as 'address:port'. If IPv6, it is expected as '[address]:port'.
 DEFAULT:	127.0.0.1:2100
 
-KEY:            [ nfprobe_source_ip | sfprobe_source_ip ]
-DESC:           Defines the local IP address from which NetFlow/sFlow datagrams are exported. Only a numerical
-		IPv4/IPv6 address is expected. The supplied IP address is required to be already configured on
-		one of the interfaces. This parameter is also required for graceful encoding of NetFlow v9 and
-		IPFIX option scoping.
+KEY:            nfprobe_source_ip
+DESC:           Defines the local IP address from which NetFlow datagrams are exported. Only a numerical IPv4/
+		IPv6 address is expected. The supplied IP address is required to be already configured on
+		one of the interfaces. This parameter is also required for graceful encoding of NetFlow v9
+		and IPFIX option scoping.
 DEFAULT:	IP address is selected by the Operating System
 
 KEY:		nfprobe_version
@@ -2131,21 +2144,31 @@ DESC:		Disables caching and summarisation of flows. By default a NetFlow/IPFIX a
 DEFAULT:	false
 
 KEY:		sfprobe_receiver
-DESC:           Defines the remote IP address/hostname and port to which sFlow datagrams are to be exported.
-		The value is expected to be in the usual form 'address:port'.
+DESC:		Defines the remote IP address/hostname and port to which NetFlow datagrams are to be exported.
+		If IPv4, the value is expected as 'address:port'. If IPv6, it is expected as '[address]:port'.
 DEFAULT:	127.0.0.1:6343
 		
 KEY:		sfprobe_agentip
-DESC:		Sets the value of agentIp field inside the sFlow datagram header.
-DEFAULT:	none
+DESC:		Sets the value of agentIp field inside the sFlow datagram header. Only a numerical IPv4/
+		IPv6 address is expected. This value must be an IPv4 address if transport, that is
+		sfprobe_source_ip and/or sfprobe_receiver, is set to IPv4; or an IPv6 address if transport
+		is set to IPv6. 
+DEFAULT:	localhost
 
 KEY:		sfprobe_agentsubid
 DESC:		Sets the value of agentSubId field inside the sFlow datagram header.
-DEFAULT:	none
+DEFAULT:	1402
 
 KEY:            sfprobe_ifspeed
 DESC:           Statically associates an interface speed to a given sfprobe plugin. Value is expected in bps.
 DEFAULT:	100000000
+
+KEY:		sfprobe_source_ip
+DESC:		Defines the local IP address from which sFlow datagrams are exported. Only a numerical IPv4/
+		IPv6 address is expected. The supplied IP address is required to be already configured on
+                one of the interfaces. An IPv6 address must be configured in order to successfully export
+		to an IPv6 sfprobe_receiver.
+DEFAULT:        IP address is selected by the Operating System
 
 KEY:		bgp_daemon [GLOBAL]
 VALUES:		[ true | false ]
@@ -2466,8 +2489,10 @@ KEY:            bgp_daemon_md5_file [GLOBAL]
 DESC:           Full pathname to a file containing the BGP peers (IP address only, one for each line)
 		and their corresponding MD5 passwords in CSV format (ie. 10.15.0.1, arealsmartpwd).
 		BGP peers not making use of a MD5 password should not be listed. The maximum number
-		of peers supported is 8192. For a sample map look in: 'examples/bgp_md5.lst.example'
-		The feature was tested working against a 2.6.32 Linux kernel.
+		of peers supported is 8192. For a sample map look in: 'examples/bgp_md5.lst.example'.
+		/proc/sys/net/core/optmem_max default value allows for some 150 keys to be registered
+		as https://patchwork.ozlabs.org/patch/138861/ documents: its value should be reviewed
+		upwards in order to register more keys.
 DEFAULT:	none
 
 KEY:		bgp_table_peer_buckets [GLOBAL]
@@ -2617,7 +2642,7 @@ DESC:		Full pathname to a file to cross-connect BGP peers (ie. edge routers part
 		Router ID, only 1:1 relationships are formed (ie. this is about cross-connecting,
 		not replication) and only one session per BGP peer is supported (ie. multiple BGP
 		agents are running on the same IP address or NAT traversal scenarios are not
-		supported [yet]).
+		supported [yet]). The use of TCP-MD5 may pose challenges. 
 		A sample map is provided in 'examples/bgp_xconnects.map.example'. Number of map
 		entries (by default 384) can be modified via maps_entries. Content can be reloaded
 		at runtime by sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd").
@@ -2645,6 +2670,26 @@ DESC:		Full pathname to a file containing RPKI ROA data. Data encoding is JSON a
 		Content can be reloaded at runtime by sending the daemon a SIGUSR2 signal (ie.
 		"killall -USR2 nfacctd").
 DEFAULT:	none
+
+KEY:		rpki_rtr_cache [GLOBAL]
+DESC:		Defines the remote IP address and port of a RPKI RTR cache to connect to. If IPv4,
+		the value is expected as 'address:port'. If IPv6, it is expected as '[address]:port'.
+DEFAULT:	none
+
+KEY:		rpki_rtr_cache_version [GLOBAL]
+VALUES:		[ 0 | 1 ]
+DESC:		Defines the RPKI RTR protocol version to use. Version 0 is documented in rfc6810;
+		Version 1 is documented in rfc8210.
+DEFAULT:	0
+
+KEY:		rpki_rtr_cache_pipe_size [GLOBAL]
+DESC:           Defines the size of the kernel socket used for RPKI RTR datagrams (see also
+		bgp_daemon_pipe_size for more info).
+DEFAULT:        Operating System default
+
+KEY:		rpki_rtr_cache_ipprec [GLOBAL]
+DESC:           Marks self-originated RPKI RTR messages with the supplied IP precedence value.
+DEFAULT:	0
 
 KEY:		isis_daemon [GLOBAL]
 VALUES:		[ true | false ]

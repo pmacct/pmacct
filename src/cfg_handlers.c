@@ -309,12 +309,17 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "dst_host_pocode")) cfg_set_aggregate(filename, value, COUNT_INT_DST_HOST_POCODE, count_token);
     else if (!strcmp(count_token, "src_host_coords")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_HOST_COORDS, count_token);
     else if (!strcmp(count_token, "dst_host_coords")) cfg_set_aggregate(filename, value, COUNT_INT_DST_HOST_COORDS, count_token);
+    else if (!strcmp(count_token, "tunnel_src_mac")) cfg_set_aggregate(filename, value, COUNT_INT_TUNNEL_SRC_MAC, count_token);
+    else if (!strcmp(count_token, "tunnel_dst_mac")) cfg_set_aggregate(filename, value, COUNT_INT_TUNNEL_DST_MAC, count_token);
     else if (!strcmp(count_token, "tunnel_src_host")) cfg_set_aggregate(filename, value, COUNT_INT_TUNNEL_SRC_HOST, count_token);
     else if (!strcmp(count_token, "tunnel_dst_host")) cfg_set_aggregate(filename, value, COUNT_INT_TUNNEL_DST_HOST, count_token);
     else if (!strcmp(count_token, "tunnel_proto")) cfg_set_aggregate(filename, value, COUNT_INT_TUNNEL_IP_PROTO, count_token);
     else if (!strcmp(count_token, "tunnel_tos")) cfg_set_aggregate(filename, value, COUNT_INT_TUNNEL_IP_TOS, count_token);
+    else if (!strcmp(count_token, "tunnel_src_port")) cfg_set_aggregate(filename, value, COUNT_INT_TUNNEL_SRC_PORT, count_token);
+    else if (!strcmp(count_token, "tunnel_dst_port")) cfg_set_aggregate(filename, value, COUNT_INT_TUNNEL_DST_PORT, count_token);
     else if (!strcmp(count_token, "src_roa")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_ROA, count_token);
     else if (!strcmp(count_token, "dst_roa")) cfg_set_aggregate(filename, value, COUNT_INT_DST_ROA, count_token);
+    else if (!strcmp(count_token, "vxlan")) cfg_set_aggregate(filename, value, COUNT_INT_VXLAN, count_token);
     else {
       cpptrs.primitive[cpptrs.num].name = count_token;
       cpptrs.num++;
@@ -1696,6 +1701,9 @@ int cfg_key_message_broker_output(char *filename, char *name, char *value_ptr)
     Log(LOG_WARNING, "WARN: [%s] 'message_broker_output' set to avro but will produce no output (missing --enable-avro).\n", filename);
 #endif
   }
+  else if (!strcmp(value_ptr, "custom")) {
+    value = PRINT_OUTPUT_CUSTOM;
+  }
   else {
     Log(LOG_WARNING, "WARN: [%s] Invalid 'message_broker_output' value '%s'\n", filename, value_ptr);
     return ERR;
@@ -2785,6 +2793,9 @@ int cfg_key_print_output(char *filename, char *name, char *value_ptr)
     Log(LOG_WARNING, "WARN: [%s] print_output set to avro but will produce no output (missing --enable-avro).\n", filename);
 #endif
   }
+  else if (!strcmp(value_ptr, "custom")) {
+    value = PRINT_OUTPUT_CUSTOM;
+  }
   else {
     Log(LOG_WARNING, "WARN: [%s] Invalid print output value '%s'\n", filename, value_ptr);
     return ERR;
@@ -3331,6 +3342,17 @@ int cfg_key_nfacctd_bgp_lrgcomm_pattern_to_asn(char *filename, char *name, char 
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_lrgcomm_pattern_to_asn = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_lrgcomm_pattern_to_asn'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_bgp_blackhole_stdcomm_list(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_blackhole_stdcomm_list = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_blackhole_stdcomm_list'. Globalized.\n", filename);
 
   return changes;
 }
@@ -5148,7 +5170,7 @@ int cfg_key_nfacctd_disable_checks(char *filename, char *name, char *value_ptr)
   int value, changes = 0;
 
   value = parse_truefalse_nonzero(value_ptr);
-  if (value < 0) return ERR;
+  if (value == ERR) return ERR;
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_disable_checks = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key '[ns]facctd_disable_checks'. Globalized.\n", filename);
@@ -5162,7 +5184,7 @@ int cfg_key_nfacctd_disable_opt_scope_check(char *filename, char *name, char *va
   int value, changes = 0;
 
   value = parse_truefalse_nonzero(value_ptr);
-  if (value < 0) return ERR;
+  if (value == ERR) return ERR;
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_disable_opt_scope_check = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'nfacctd_disable_opt_scope_check'. Globalized.\n", filename);
@@ -7016,7 +7038,7 @@ int cfg_key_telemetry_pipe_size(char *filename, char *name, char *value_ptr)
 
   value = strtoull(value_ptr, &endptr, 10);
   if (!value || value > INT_MAX) {
-    Log(LOG_WARNING, "WARN: [%s] '[nf|sf|pm]acctd_pipe_size' has to be > 0 and <= INT_MAX.\n", filename);
+    Log(LOG_WARNING, "WARN: [%s] 'telemetry_daemon_pipe_size' has to be > 0 and <= INT_MAX.\n", filename);
     return ERR;
   }
 
@@ -7709,6 +7731,103 @@ int cfg_key_rpki_roas_file(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) list->cfg.rpki_roas_file = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'rpki_roas_file'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_rpki_rtr_cache(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.rpki_rtr_cache = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'rpki_rtr_cache'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_rpki_rtr_cache_version(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+
+  for (; list; list = list->next, changes++) list->cfg.rpki_rtr_cache_version = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'rpki_rtr_cache_version'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_rpki_rtr_cache_pipe_size(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  u_int64_t value, changes = 0;
+  char *endptr;
+
+  value = strtoull(value_ptr, &endptr, 10);
+  if (!value || value > INT_MAX) {
+    Log(LOG_WARNING, "WARN: [%s] 'rpki_rtr_cache_pipe_size' has to be > 0 and <= INT_MAX.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.rpki_rtr_cache_pipe_size = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'rpki_rtr_cache_pipe_size'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_rpki_rtr_cache_ip_precedence(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value < 0) || (value > 7)) {
+    Log(LOG_ERR, "WARN: [%s] 'rpki_rtr_cache_ipprec' has to be in the range 0-7.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.rpki_rtr_cache_ipprec = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'rpki_rtr_cache_ipprec'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_print_output_custom_lib(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.print_output_custom_lib = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.print_output_custom_lib = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_print_output_custom_cfg_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.print_output_custom_cfg_file = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.print_output_custom_cfg_file = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
 
   return changes;
 }

@@ -24,10 +24,14 @@
 /* includes */
 #include "pmacct.h"
 #include "addr.h"
+#ifdef WITH_KAFKA
+#include "kafka_common.h"
+#endif
 #include "pmacct-data.h"
 #include "ip_flow.h"
 #include "classifier.h"
 #include "plugin_hooks.h"
+#include <netdb.h>
 #include <sys/file.h>
 #include <sys/utsname.h>
 
@@ -1074,9 +1078,10 @@ void mark_columns(char *buf)
   }
 }
 
-int Setsocksize(int s, int level, int optname, void *optval, int optlen)
+int Setsocksize(int s, int level, int optname, void *optval, socklen_t optlen)
 {
-  int ret, len = sizeof(int), saved, value;
+  int ret, saved, value;
+  socklen_t len = sizeof(int);
 
   memcpy(&value, optval, sizeof(int));
   
@@ -1332,7 +1337,7 @@ int check_bosbit(u_char *label)
   else return FALSE;
 }
 
-u_int32_t decode_mpls_label(char *label)
+u_int32_t decode_mpls_label(u_char *label)
 {
   u_int32_t ret = 0;
   u_char label_ttl[4];
@@ -1371,6 +1376,8 @@ int timeval_cmp(struct timeval *a, struct timeval *b)
     if (a->tv_usec < b->tv_usec) return -1;
     if (a->tv_usec == b->tv_usec) return 0;
   }
+
+  return INT_MIN; /* silence compiler warning */
 }
 
 /*
@@ -1381,7 +1388,7 @@ void exit_all(int status)
 {
   struct plugins_list_entry *list = plugins_list;
 
-#if defined (IRIX) || (SOLARIS)
+#if defined (SOLARIS)
   signal(SIGCHLD, SIG_IGN);
 #else
   signal(SIGCHLD, ignore_falling_child);
@@ -2068,7 +2075,7 @@ void primptrs_set_tun(u_char *base, struct extra_primitives *extras, struct prim
 
 void primptrs_set_custom(u_char *base, struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs)
 {
-  prim_ptrs->pcust = (char *) (base + extras->off_custom_primitives);
+  prim_ptrs->pcust = (base + extras->off_custom_primitives);
   prim_ptrs->vlen_next_off = 0;
 }
 
@@ -2198,7 +2205,7 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
   }
 }
 
-void custom_primitive_value_print(char *out, int outlen, char *in, struct custom_primitive_ptrs *cp_entry, int formatted)
+void custom_primitive_value_print(char *out, int outlen, u_char *in, struct custom_primitive_ptrs *cp_entry, int formatted)
 {
   char format[VERYSHORTBUFLEN];
 
@@ -2292,7 +2299,7 @@ void custom_primitive_value_print(char *out, int outlen, char *in, struct custom
       int len = ETHER_ADDRSTRLEN;
 
       memset(eth_str, 0, sizeof(eth_str));
-      etheraddr_string(in+cp_entry->off, eth_str);
+      etheraddr_string((u_char *)(in + cp_entry->off), eth_str);
 
       if (formatted)
         snprintf(format, VERYSHORTBUFLEN, "%%-%d%s", len > strlen(cp_entry->ptr->name) ? len : (int)strlen(cp_entry->ptr->name),
@@ -2520,7 +2527,7 @@ void vlen_prims_debug(struct pkt_vlen_hdr_primitives *hdr)
   }
 }
 
-void vlen_prims_insert(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, int len, char *val, int copy_type /*, optional realloc */)
+void vlen_prims_insert(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, int len, u_char *val, int copy_type /*, optional realloc */)
 {
   pm_label_t *label_ptr;
   char *ptr = (char *) hdr;
@@ -2538,11 +2545,11 @@ void vlen_prims_insert(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, int
       memcpy(ptr, val, len);
       break;
     case PM_MSG_STR_COPY:
-      strncpy(ptr, val, len); 
+      strncpy(ptr, (char *)val, len); 
       break;
     case PM_MSG_STR_COPY_ZERO:
       label_ptr->len++; /* terminating zero */
-      strncpy(ptr, val, len);
+      strncpy(ptr, (char *)val, len);
       ptr[len] = '\0';
       break;
     default:
@@ -2765,7 +2772,7 @@ u_int16_t hash_key_get_len(pm_hash_key_t *key)
   return key->len;
 }
 
-char *hash_key_get_val(pm_hash_key_t *key)
+u_char *hash_key_get_val(pm_hash_key_t *key)
 {
   if (!key) return NULL;
 
@@ -3003,4 +3010,94 @@ char *ip_proto_print(u_int8_t ip_proto_id, char *str, int len)
   }
 
   return ret;
+}
+
+void parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len)
+{
+  char *orig, *host, *port;
+  struct addrinfo hints, *res;
+  int herr;
+
+  if ((host = orig = strdup(s)) == NULL) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), strdup() out of memory\n", config.name, config.type);
+    exit_gracefully(1);
+  }
+
+  trim_spaces(host);
+  trim_spaces(orig);
+
+  if ((port = strrchr(host, ':')) == NULL || *(++port) == '\0' || *host == '\0') {
+    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), invalid '%s' argument\n", config.name, config.type, orig);
+    exit_gracefully(1);
+  }
+  *(port - 1) = '\0';
+	
+  /* Accept [host]:port for numeric IPv6 addresses */
+  if (*host == '[' && *(port - 2) == ']') {
+    host++;
+    *(port - 2) = '\0';
+  }
+
+  memset(&hints, '\0', sizeof(hints));
+  hints.ai_socktype = SOCK_DGRAM;
+
+  if ((herr = getaddrinfo(host, port, &hints, &res)) == -1) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), address lookup failed\n", config.name, config.type);
+    exit_gracefully(1);
+  }
+
+  if (res == NULL || res->ai_addr == NULL) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), no addresses found for [%s]:%s\n", config.name, config.type, host, port);
+    exit_gracefully(1);
+  }
+
+  if (res->ai_addrlen > *len) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), address too long.\n", config.name, config.type);
+    exit_gracefully(1);
+  }
+
+  memcpy(addr, res->ai_addr, res->ai_addrlen);
+  free(orig);
+  *len = res->ai_addrlen;
+}
+
+bool is_prime(u_int32_t num)
+{
+  int div = 6;
+
+  if (num == 2 || num == 3) return TRUE;
+  if (num % 2 == 0 || num % 3 == 0) return FALSE;
+
+  while (div * div - 2 * div + 1 <= num) {
+    if (num % (div - 1) == 0) return FALSE;
+    if (num % (div + 1) == 0) return FALSE;
+
+    div += 6;
+  }
+
+  return TRUE;
+}
+
+u_int32_t next_prime(u_int32_t num)
+{
+  u_int32_t orig = num;
+
+  while (!is_prime(++num)); 
+
+  if (num < orig) return 0; /* it wrapped */
+  else return num;
+}
+
+char *null_terminate(char *str, int len)
+{
+  char *loc = NULL;
+
+  if (str[len - 1] == '\0') loc = strdup(str);
+  else {
+    loc = malloc(len + 1);
+    memcpy(loc, str, len);
+    loc[len] = '\0';
+  }
+
+  return loc;
 }

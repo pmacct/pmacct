@@ -77,9 +77,10 @@
 #define MAX_NH_SELF_REFERENCES	1
 #define BGP_XCONNECT_STRLEN	(2 * (INET6_ADDRSTRLEN + PORT_STRLEN + 1) + 4) 
 
-/* Maximum BGP standard/extended community patterns supported:
-   nfacctd_bgp_stdcomm_pattern, nfacctd_bgp_extcomm_pattern */
+/* Maximum BGP community patterns supported: nfacctd_bgp_stdcomm_pattern,
+   nfacctd_bgp_extcomm_pattern, bgp_blackhole_stdcomm_list, etc. */
 #define MAX_BGP_COMM_PATTERNS	16
+#define MAX_BGP_COMM_ELEMS	MAX_BGP_COMM_PATTERNS
 
 #define BGP_DAEMON_NONE		0
 #define BGP_DAEMON_TRUE		1
@@ -192,6 +193,7 @@ struct bgp_peer {
 struct bgp_msg_data {
   struct bgp_peer *peer;
   struct bgp_msg_extra_data extra;
+  int is_blackhole;
 };
 
 struct bgp_misc_structs {
@@ -199,12 +201,14 @@ struct bgp_misc_structs {
   u_int64_t log_seq;
   struct timeval log_tstamp;
   char log_tstamp_str[SRVBUFLEN];
+  struct bgp_node_vector *bnv;
   struct bgp_dump_event dump;
   char *peer_str; /* "bmp_router", "peer_src_ip", "peer_ip", etc. */
   char *peer_port_str; /* "bmp_router_port", "peer_src_ip_port", etc. */
   char *log_str; /* BGP, BMP, thread, daemon, etc. */
   int is_thread;
   int has_lglass;
+  int has_blackhole;
   int skip_rib;
 
 #if defined WITH_RABBITMQ
@@ -253,6 +257,8 @@ struct bgp_misc_structs {
   int dump_input_backend_methods;
 
   int (*bgp_msg_open_router_id_check)(struct bgp_msg_data *);
+
+  void *bgp_blackhole_zmq_host;
 };
 
 /* these includes require definition of bgp_rt_structs and bgp_peer */

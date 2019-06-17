@@ -26,6 +26,7 @@
 #include "pmacct.h"
 #include "addr.h"
 #include "bgp.h"
+#include "bgp_blackhole.h"
 
 int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
 {
@@ -309,7 +310,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 			/* we need to send BGP_CAPABILITY_ADD_PATHS first */
 			cap_set = TRUE;
 			memcpy(bgp_open_cap_reply_ptr, optcap_ptr, 2);
-			cap_newlen_ptr = (bgp_open_cap_reply_ptr + 1);
+			cap_newlen_ptr = (u_char *)(bgp_open_cap_reply_ptr + 1);
 			(*cap_newlen_ptr) = 0;
 			bgp_open_cap_reply_ptr += 2;
 		      }
@@ -577,8 +578,7 @@ int bgp_parse_notification_msg(struct bgp_msg_data *bmd, char *pkt, u_int8_t *re
       pkt_ptr = (pkt + BGP_MIN_NOTIFICATION_MSG_SIZE);
       bnsm = (struct bgp_notification_shutdown_msg *) pkt_ptr;
 
-      if (bnsm->bgpnsm_len <= rem_len && bnsm->bgpnsm_len <= BGP_NOTIFY_CEASE_SM_LEN &&
-	  bnsm->bgpnsm_len < shutdown_msglen) {
+      if (bnsm->bgpnsm_len <= rem_len && bnsm->bgpnsm_len < shutdown_msglen) {
 	memcpy(shutdown_msg, bnsm->bgpnsm_data, bnsm->bgpnsm_len);
 	shutdown_msg[bnsm->bgpnsm_len] = '\0';
 	
@@ -632,7 +632,7 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   if (withdraw_len > 0) {
     withdraw.afi = AFI_IP;
     withdraw.safi = SAFI_UNICAST;
-    withdraw.nlri = pkt;
+    withdraw.nlri = (u_char *) pkt;
     withdraw.length = withdraw_len;
     pkt += withdraw_len;
   }
@@ -657,7 +657,7 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   if (update_len > 0) {
     update.afi = AFI_IP;
     update.safi = SAFI_UNICAST;
-    update.nlri = pkt;
+    update.nlri = (u_char *) pkt;
     update.length = update_len;
   }
 
@@ -835,7 +835,7 @@ int bgp_attr_parse_community(struct bgp_peer *peer, u_int16_t len, struct bgp_at
 int bgp_attr_parse_ecommunity(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag)
 {
   if (len == 0) attr->ecommunity = NULL;
-  else attr->ecommunity = (struct ecommunity *) ecommunity_parse(peer, ptr, len);
+  else attr->ecommunity = (struct ecommunity *) ecommunity_parse(peer, (u_char *) ptr, len);
 
   return SUCCESS;
 }
@@ -843,7 +843,7 @@ int bgp_attr_parse_ecommunity(struct bgp_peer *peer, u_int16_t len, struct bgp_a
 int bgp_attr_parse_lcommunity(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag)
 {
   if (len == 0) attr->lcommunity = NULL;
-  else attr->lcommunity = (struct lcommunity *) lcommunity_parse(peer, ptr, len);
+  else attr->lcommunity = (struct lcommunity *) lcommunity_parse(peer, (u_char *) ptr, len);
 
   return SUCCESS;
 }
@@ -953,7 +953,7 @@ int bgp_attr_parse_mp_reach(struct bgp_peer *peer, u_int16_t len, struct bgp_att
 
   mp_update->afi = afi;
   mp_update->safi = safi;
-  mp_update->nlri = ptr;
+  mp_update->nlri = (u_char *) ptr;
   mp_update->length = nlri_len;
 
   return SUCCESS;
@@ -978,12 +978,11 @@ int bgp_attr_parse_mp_unreach(struct bgp_peer *peer, u_int16_t len, struct bgp_a
 
   mp_withdraw->afi = afi;
   mp_withdraw->safi = safi;
-  mp_withdraw->nlri = ptr;
+  mp_withdraw->nlri = (u_char *) ptr;
   mp_withdraw->length = withdraw_len;
 
   return SUCCESS;
 }
-
 
 /* BGP UPDATE NLRI parsing */
 int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
@@ -1035,49 +1034,80 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
 
       /* Fetch prefix from NLRI packet. */
       memcpy(&p.u.prefix, pnt, psize);
-
-      // XXX: check address correctnesss now that we have it?
     }
     else if (info->safi == SAFI_MPLS_LABEL) { /* rfc3107 labeled unicast */
+      int labels_size = 0;
+      u_char *label_ptr = NULL;
+
       if ((info->afi == AFI_IP && p.prefixlen > 56) || (info->afi == AFI_IP6 && p.prefixlen > 152)) return ERR;
 
       psize = ((p.prefixlen+7)/8);
-      if (psize > end) return ERR;
+      if (psize > end || psize < 3 /* one label */) return ERR;
 
-      /* Fetch label (3) and prefix from NLRI packet */
-      memcpy(label, pnt, 3);
-      memcpy(&p.u.prefix, pnt+3, (psize-3));
-      p.prefixlen -= 24;
+      /* Fetch label(s) and prefix from NLRI packet */
+      label_ptr = pnt;
+
+      while (((labels_size + 3) <= psize) && !check_bosbit(label_ptr)) {
+	label_ptr += 3;
+	labels_size += 3;
+      }
+
+      if ((labels_size + 3) <= psize) {
+        memcpy(label, label_ptr, 3);
+        label_ptr += 3;
+        labels_size += 3;
+      }
+      else return ERR;
+	
+      memcpy(&p.u.prefix, (pnt + labels_size), (psize - labels_size));
+      p.prefixlen -= (8 * labels_size);
     }
     else if (info->safi == SAFI_MPLS_VPN) { /* rfc4364 BGP/MPLS IP Virtual Private Networks */
+      int labels_size = 0;
+      u_char *label_ptr = NULL;
+
       if ((info->afi == AFI_IP && p.prefixlen > 120) || (info->afi == AFI_IP6 && p.prefixlen > 216)) return ERR;
 
       psize = ((p.prefixlen+7)/8);
-      if (psize > end) return ERR;
+      if (psize > end || psize < 3 /* one label */) return ERR;
 
       /* Fetch label (3), RD (8) and prefix from NLRI packet */
-      memcpy(label, pnt, 3);
+      label_ptr = pnt;
 
-      memcpy(&rd.type, pnt+3, 2);
+      while (((labels_size + 3) <= psize) && !check_bosbit(label_ptr)) {
+	label_ptr += 3;
+	labels_size += 3;
+      }
+
+      if ((labels_size + 3) <= psize) {
+	memcpy(label, label_ptr, 3);
+	label_ptr += 3;
+	labels_size += 3;
+      }
+      else return ERR;
+
+      if (labels_size + 8 /* RD */ > psize) return ERR; 
+
+      memcpy(&rd.type, (pnt + labels_size), 2);
       rd.type = ntohs(rd.type);
       switch(rd.type) {
       case RD_TYPE_AS: 
 	rda = (struct rd_as *) &rd;
-	memcpy(&tmp16, pnt+5, 2);
-	memcpy(&tmp32, pnt+7, 4);
+	memcpy(&tmp16, (pnt + labels_size + 2 /* RD type */), 2);
+	memcpy(&tmp32, (pnt + labels_size + 2 /* RD type */ + 2 /* RD AS */), 4);
 	rda->as = ntohs(tmp16);
 	rda->val = ntohl(tmp32);
 	break;
       case RD_TYPE_IP: 
 	rdi = (struct rd_ip *) &rd;
-	memcpy(&rdi->ip.s_addr, pnt+5, 4);
-	memcpy(&tmp16, pnt+9, 2);
+	memcpy(&rdi->ip.s_addr, (pnt + labels_size + 2 /* RD type */), 4);
+	memcpy(&tmp16, (pnt + labels_size + 2 /* RD type */ + 4 /* RD IP */), 2);
 	rdi->val = ntohs(tmp16);
 	break;
       case RD_TYPE_AS4: 
 	rda4 = (struct rd_as4 *) &rd;
-	memcpy(&tmp32, pnt+5, 4);
-	memcpy(&tmp16, pnt+9, 2);
+	memcpy(&tmp32, (pnt + labels_size + 2 /* RD type */), 4);
+	memcpy(&tmp16, (pnt + labels_size + 2 /* RD type */ + 4 /* RD AS4 */), 2);
 	rda4->as = ntohl(tmp32);
 	rda4->val = ntohs(tmp16);
 	break;
@@ -1086,8 +1116,18 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
 	break;
       }
     
-      memcpy(&p.u.prefix, pnt+11, (psize-11));
-      p.prefixlen -= 88;
+      memcpy(&p.u.prefix, (pnt + labels_size + 8 /* RD */), (psize - (labels_size + 8 /* RD */)));
+      p.prefixlen -= (8 * (labels_size + 8 /* RD */));
+    }
+
+    // XXX: check prefix correctnesss now that we have it?
+
+    if (config.bgp_blackhole_stdcomm_list) {
+      bmd->is_blackhole = bgp_blackhole_evaluate_comms(attr);
+
+      if (bmd->is_blackhole) {
+	bgp_blackhole_instrument(&p, attr, info->afi, safi);
+      }
     }
 
     /* Let's do our job now! */
@@ -1101,7 +1141,7 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
 }
 
 int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, afi_t afi, safi_t safi,
-		       rd_t *rd, path_id_t *path_id, char *label)
+		       rd_t *rd, path_id_t *path_id, u_char *label)
 {
   struct bgp_peer *peer = bmd->peer;
   struct bgp_rt_structs *inter_domain_routing_db;
@@ -1236,7 +1276,7 @@ log_update:
 }
 
 int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr, afi_t afi, safi_t safi,
-			 rd_t *rd, path_id_t *path_id, char *label)
+			 rd_t *rd, path_id_t *path_id, u_char *label)
 {
   struct bgp_peer *peer = bmd->peer;
   struct bgp_rt_structs *inter_domain_routing_db;

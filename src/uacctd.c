@@ -121,6 +121,8 @@ static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
 #else
   pcap_cb((u_char *) cb_data, &hdr, pkt);
 #endif
+
+  return 0;
 }
 
 void usage_daemon(char *prog_name)
@@ -181,6 +183,8 @@ int main(int argc,char **argv, char **envp)
   struct id_table biss_table;
   struct id_table bta_table;
   struct pcap_callback_data cb_data;
+
+  sigset_t signal_set;
 
   /* getopt() stuff */
   extern char *optarg;
@@ -422,18 +426,6 @@ int main(int argc,char **argv, char **envp)
     }
   }
 
-  if (config.daemon) {
-    list = plugins_list;
-    while (list) {
-      if (!strcmp(list->type.string, "print") && !list->cfg.print_output_file)
-        printf("INFO ( %s/%s ): Daemonizing. Bye bye screen.\n", list->name, list->type.string);
-      list = list->next;
-    }
-    if (debug || config.debug)
-      printf("WARN ( %s/core ): debug is enabled; forking in background. Logging to standard error (stderr) will get lost.\n", config.name); 
-    daemonize();
-  }
-
   initsetproctitle(argc, argv, envp);
   if (config.syslog) {
     logf = parse_log_facility(config.syslog);
@@ -445,14 +437,30 @@ int main(int argc,char **argv, char **envp)
     Log(LOG_INFO, "INFO ( %s/core ): Start logging ...\n", config.name);
   }
 
-  if (config.logfile)
-  {
+  if (config.logfile) {
     config.logfile_fd = open_output_file(config.logfile, "a", FALSE);
     list = plugins_list;
     while (list) {
       list->cfg.logfile_fd = config.logfile_fd ;
       list = list->next;
     }
+  }
+
+  if (config.daemon) {
+    list = plugins_list;
+    while (list) {
+      if (!strcmp(list->type.string, "print") && !list->cfg.print_output_file)
+        printf("INFO ( %s/%s ): Daemonizing. Bye bye screen.\n", list->name, list->type.string);
+      list = list->next;
+    }
+
+    if (!config.syslog && !config.logfile) {
+      if (debug || config.debug) {
+	printf("WARN ( %s/core ): debug is enabled; forking in background. Logging to standard error (stderr) will get lost.\n", config.name);
+      }
+    }
+
+    daemonize();
   }
 
   if (config.proc_priority) {
@@ -592,9 +600,7 @@ int main(int argc,char **argv, char **envp)
 	  config.handle_flows = TRUE;
 	}
 #if defined (WITH_NDPI)
-        { // XXX: some if condition here
-          list->cfg.what_to_count_2 |= COUNT_NDPI_CLASS;
-        }
+	if (list->cfg.ndpi_num_roots) list->cfg.what_to_count_2 |= COUNT_NDPI_CLASS;
 #endif
         if (list->cfg.networks_file ||
 	   ((list->cfg.nfacctd_bgp || list->cfg.nfacctd_bmp) && list->cfg.nfacctd_as == NF_AS_BGP)) {
@@ -642,9 +648,13 @@ int main(int argc,char **argv, char **envp)
                         COUNT_MPLS_STACK_DEPTH))
           list->cfg.data_type |= PIPE_TYPE_MPLS;
 
-	if (list->cfg.what_to_count_2 & (COUNT_TUNNEL_SRC_HOST|COUNT_TUNNEL_DST_HOST|
-			COUNT_TUNNEL_IP_PROTO|COUNT_TUNNEL_IP_TOS))
+	if (list->cfg.what_to_count_2 & (COUNT_TUNNEL_SRC_MAC|COUNT_TUNNEL_DST_MAC|
+			COUNT_TUNNEL_SRC_HOST|COUNT_TUNNEL_DST_HOST|COUNT_TUNNEL_IP_PROTO|
+			COUNT_TUNNEL_IP_TOS|COUNT_TUNNEL_SRC_PORT|COUNT_TUNNEL_DST_PORT|
+			COUNT_VXLAN)) {
 	  list->cfg.data_type |= PIPE_TYPE_TUN;
+	  cb_data.has_tun_prims = TRUE;
+	}
 
         if (list->cfg.what_to_count_2 & (COUNT_LABEL))
           list->cfg.data_type |= PIPE_TYPE_VLEN;
@@ -771,11 +781,28 @@ int main(int argc,char **argv, char **envp)
   cb_data.device = &device;
   
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
-  signal(SIGCHLD, startup_handle_falling_child); /* takes note of plugins failed during startup phase */
-  signal(SIGHUP, reload); /* handles reopening of syslog channel */
-  signal(SIGUSR1, push_stats); /* logs various statistics via Log() calls */
-  signal(SIGUSR2, reload_maps); /* sets to true the reload_maps flag */
-  signal(SIGPIPE, SIG_IGN); /* we want to exit gracefully when a pipe is broken */
+  memset(&sighandler_action, 0, sizeof(sighandler_action)); /* To ensure the struct holds no garbage values */
+  sigemptyset(&sighandler_action.sa_mask);  /* Within a signal handler all the signals are enabled */
+  sighandler_action.sa_flags = SA_RESTART;  /* To enable re-entering a system call afer done with signal handling */
+
+  sighandler_action.sa_handler = startup_handle_falling_child;
+  sigaction(SIGCHLD, &sighandler_action, NULL);
+
+  /* handles reopening of syslog channel */
+  sighandler_action.sa_handler = reload;
+  sigaction(SIGHUP, &sighandler_action, NULL);
+
+  /* logs various statistics via Log() calls */
+  sighandler_action.sa_handler = push_stats;
+  sigaction(SIGUSR1, &sighandler_action, NULL);
+
+  /* sets to true the reload_maps flag */
+  sighandler_action.sa_handler = reload_maps;
+  sigaction(SIGUSR2, &sighandler_action, NULL);
+
+  /* we want to exit gracefully when a pipe is broken */
+  sighandler_action.sa_handler = SIG_IGN;
+  sigaction(SIGPIPE, &sighandler_action, NULL);
 
   nfh = nflog_open();
   if (nfh == NULL) {
@@ -840,7 +867,7 @@ int main(int argc,char **argv, char **envp)
   }
 
   /* Turn off netlink errors from overrun. */
-  if (setsockopt(nflog_fd(nfh), SOL_NETLINK, NETLINK_NO_ENOBUFS, &one, sizeof(one)))
+  if (setsockopt(nflog_fd(nfh), SOL_NETLINK, NETLINK_NO_ENOBUFS, &one, (socklen_t) sizeof(one)))
     Log(LOG_ERR, "ERROR ( %s/core ): Failed to turn off netlink ENOBUFS\n", config.name);
 
   nflog_callback_register(nfgh, &nflog_incoming, &cb_data);
@@ -936,7 +963,7 @@ int main(int argc,char **argv, char **envp)
     nfacctd_bgp_wrapper();
 
     /* Let's give the BGP thread some advantage to create its structures */
-    if (config.rpki_roas_file) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
+    if (config.rpki_roas_file || config.rpki_rtr_cache) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
     sleep(sleep_time);
   }
 
@@ -949,7 +976,7 @@ int main(int argc,char **argv, char **envp)
     nfacctd_bmp_wrapper();
 
     /* Let's give the BMP thread some advantage to create its structures */
-    if (config.rpki_roas_file) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
+    if (config.rpki_roas_file || config.rpki_rtr_cache) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
     sleep(sleep_time);
   }
 
@@ -977,14 +1004,31 @@ int main(int argc,char **argv, char **envp)
 
   /* signals to be handled only by the core process;
      we set proper handlers after plugin creation */
-  signal(SIGINT, PM_sigint_handler);
-  signal(SIGTERM, PM_sigint_handler);
-  signal(SIGCHLD, handle_falling_child);
+  sighandler_action.sa_handler = PM_sigint_handler;
+  sigaction(SIGINT, &sighandler_action, NULL);
+
+  sighandler_action.sa_handler = PM_sigint_handler;
+  sigaction(SIGTERM, &sighandler_action, NULL);
+
+  sighandler_action.sa_handler = handle_falling_child;
+  sigaction(SIGCHLD, &sighandler_action, NULL);
+
   kill(getpid(), SIGCHLD);
+
+  sigemptyset(&signal_set);
+  sigaddset(&signal_set, SIGCHLD);
+  sigaddset(&signal_set, SIGHUP);
+  sigaddset(&signal_set, SIGUSR1);
+  sigaddset(&signal_set, SIGUSR2);
+  sigaddset(&signal_set, SIGINT);
+  sigaddset(&signal_set, SIGTERM);
+  cb_data.sig.is_set = FALSE;
 
   /* Main loop: if pcap_loop() exits maybe an error occurred; we will try closing
      and reopening again our listening device */
   for (;;) {
+    sigprocmask(SIG_BLOCK, &signal_set, NULL);
+
     if (len == ERR) {
       if (errno != EAGAIN) {
         /* We can't deal with permanent errors.
@@ -998,5 +1042,7 @@ int main(int argc,char **argv, char **envp)
     len = recv(nflog_fd(nfh), nflog_buffer, config.uacctd_nl_size, 0);
     if (len < 0) continue;
     if (nflog_handle_packet(nfh, nflog_buffer, len) != 0) continue;
+
+    sigprocmask(SIG_UNBLOCK, &signal_set, NULL);
   }
 }

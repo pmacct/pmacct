@@ -50,17 +50,18 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int pollagain = 0;
   u_int32_t seq = 0;
   int rg_err_count = 0;
-  int ret, lock = FALSE, cLen, num, sd, sd2;
+  int ret, lock = FALSE, num, sd, sd2;
   struct pkt_bgp_primitives *pbgp, empty_pbgp;
   struct pkt_legacy_bgp_primitives *plbgp, empty_plbgp;
   struct pkt_nat_primitives *pnat, empty_pnat;
   struct pkt_mpls_primitives *pmpls, empty_pmpls;
   struct pkt_tunnel_primitives *ptun, empty_ptun;
-  char *pcust, empty_pcust[] = "";
+  unsigned char *pcust, empty_pcust[] = "";
   struct pkt_vlen_hdr_primitives *pvlen, empty_pvlen;
   struct networks_file_data nfd;
   struct primitives_ptrs prim_ptrs;
   struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
+  socklen_t cLen;
 
   /* poll() stuff */
   struct pollfd poll_fd[2]; /* pipe + server */

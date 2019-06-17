@@ -93,10 +93,15 @@ static const struct _primitives_matrix_struct _primitives_matrix[] = {
   {"post_nat_src_port", 0, 0, 1, 0, 0, 0, 0, "Source TCP/UDP port after NAT translation"},
   {"post_nat_dst_port", 0, 0, 1, 0, 0, 0, 0, "Destination TCP/UDP port after NAT translation"},
   {"TUNNEL", 1, 1, 1, 1, 0, 0, 0, ""}, 
-  {"tunnel_src_host", 0, 0, 0, 1, 0, 0, 0, "Tunnel inner Source IPv4/IPv6 address"},
-  {"tunnel_dst_host", 0, 0, 0, 1, 0, 0, 0, "Tunnel inner Destination IPv4/IPv6 address"},
-  {"tunnel_proto", 0, 0, 0, 1, 0, 0, 0, "Tunnel inner IP protocol"},
-  {"tunnel_tos", 0, 0, 0, 1, 0, 0, 0, "Tunnel inner IP ToS"},
+  {"vxlan", 1, 1, 1, 1, 0, 0, 0, "VXLAN Network Identifier"},
+  {"tunnel_src_mac", 1, 1, 0, 1, 0, 0, 0, "Tunnel inner Source MAC address"},
+  {"tunnel_dst_mac", 1, 1, 0, 1, 0, 0, 0, "Tunnel inner Destination MAC address"},
+  {"tunnel_src_host", 1, 1, 0, 1, 0, 0, 0, "Tunnel inner Source IPv4/IPv6 address"},
+  {"tunnel_dst_host", 1, 1, 0, 1, 0, 0, 0, "Tunnel inner Destination IPv4/IPv6 address"},
+  {"tunnel_proto", 1, 1, 0, 1, 0, 0, 0, "Tunnel inner IP protocol"},
+  {"tunnel_tos", 1, 1, 0, 1, 0, 0, 0, "Tunnel inner IP ToS"},
+  {"tunnel_src_port", 1, 1, 0, 1, 0, 0, 0, "Tunnel inner Source TCP/UDP port"},
+  {"tunnel_dst_port", 1, 1, 0, 1, 0, 0, 0, "Tunnel inner Destination TCP/UDP port"},
   {"MPLS", 1, 1, 1, 1, 0, 0, 0, ""}, 
   {"mpls_label_bottom", 1, 1, 1, 0, 0, 0, 0, "Bottom MPLS label"},
   {"mpls_label_top", 1, 1, 1, 0, 0, 0, 0, "Top MPLS label"},
@@ -121,6 +126,8 @@ static const struct _primitives_matrix_struct _primitives_matrix[] = {
   {"export_proto_seqno", 0, 0, 1, 1, 0, 0, 0, "Export protocol (ie. NetFlow) sequence number"},
   {"export_proto_version", 0, 0, 1, 1, 0, 0, 0, "Export protocol (ie. NetFlow) version"},
   {"export_proto_sysid", 0, 0, 1, 1, 0, 0, 0, "Export protocol ID (ie. sFlow subAgentID, IPFIX Obs Domain ID)"},
+  {"src_roa", 1, 1, 1, 1, 0, 0, 0, "RPKI validation status for source IP prefix"},
+  {"dst_roa", 1, 1, 1, 1, 0, 0, 0, "RPKI validation status for destination IP prefix"},
   {"TIME", 1, 1, 1, 1, 0, 0, 0, ""}, 
   {"timestamp_start", 0, 0, 1, 0, 0, 0, 0, "Flow start time or observation time at the exporter"},
   {"timestamp_end", 0, 0, 1, 0, 0, 0, 0, "Flow end time"},
@@ -299,7 +306,9 @@ static const char *bgp_origin[] = {
 static const char *rpki_roa[] = {
   "u",
   "i",
-  "v"
+  "v",
+  "V",
+  "U"
 };
 
 #if defined __PMACCTD_C || defined __UACCTD_C || defined __UTIL_C
@@ -426,6 +435,8 @@ static const struct _dictionary_line dictionary[] = {
   {"print_output_file_append", cfg_key_print_output_file_append},
   {"print_output_lock_file", cfg_key_print_output_lock_file},
   {"print_output_separator", cfg_key_print_output_separator},
+  {"print_output_custom_lib", cfg_key_print_output_custom_lib},
+  {"print_output_custom_cfg_file", cfg_key_print_output_custom_cfg_file},
   {"print_latest_file", cfg_key_print_latest_file},
   {"print_num_protos", cfg_key_num_protos},
   {"print_trigger_exec", cfg_key_sql_trigger_exec},
@@ -752,6 +763,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_lrgcomm_pattern", cfg_key_nfacctd_bgp_lrgcomm_pattern},
   {"bgp_stdcomm_pattern_to_asn", cfg_key_nfacctd_bgp_stdcomm_pattern_to_asn},
   {"bgp_lrgcomm_pattern_to_asn", cfg_key_nfacctd_bgp_lrgcomm_pattern_to_asn},
+  {"bgp_blackhole_stdcomm_list", cfg_key_bgp_blackhole_stdcomm_list},
   {"bgp_peer_as_skip_subas", cfg_key_nfacctd_bgp_peer_as_skip_subas},
   {"bgp_peer_src_as_map", cfg_key_nfacctd_bgp_peer_src_as_map},
   {"bgp_src_local_pref_map", cfg_key_nfacctd_bgp_src_local_pref_map},
@@ -861,6 +873,10 @@ static const struct _dictionary_line dictionary[] = {
   {"bmp_dump_kafka_partition_key", cfg_key_nfacctd_bmp_dump_kafka_partition_key},
   {"bmp_dump_kafka_config_file", cfg_key_nfacctd_bmp_dump_kafka_config_file},
   {"rpki_roas_file", cfg_key_rpki_roas_file},
+  {"rpki_rtr_cache", cfg_key_rpki_rtr_cache},
+  {"rpki_rtr_cache_version", cfg_key_rpki_rtr_cache_version},
+  {"rpki_rtr_cache_pipe_size", cfg_key_rpki_rtr_cache_pipe_size},
+  {"rpki_rtr_cache_ipprec", cfg_key_rpki_rtr_cache_ip_precedence},
   {"flow_to_rd_map", cfg_key_nfacctd_flow_to_rd_map},
   {"isis_daemon", cfg_key_nfacctd_isis},
   {"isis_daemon_ip", cfg_key_nfacctd_isis_ip},
@@ -884,7 +900,7 @@ static const struct _dictionary_line dictionary[] = {
   {"tunnel_0", cfg_key_tunnel_0},
   {"tmp_asa_bi_flow", cfg_key_tmp_asa_bi_flow},
   {"tmp_bgp_lookup_compare_ports", cfg_key_tmp_bgp_lookup_compare_ports},
-  {"", NULL},
+  {"", NULL}
 };
 
 static struct plugin_type_entry plugin_types_list[] = {

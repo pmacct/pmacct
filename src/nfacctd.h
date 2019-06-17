@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -251,6 +251,7 @@ struct data_hdr_v9 {
 #define NF9_OBSERVATION_TIME_SEC	322
 #define NF9_OBSERVATION_TIME_MSEC	323
 /* ... */
+#define NF9_LAYER2_SEGMENT_ID		351
 #define NF9_LAYER2OCTETDELTACOUNT	352
 /* ... */
 #define NF9_DATALINK_FRAME_TYPE		408
@@ -277,16 +278,31 @@ struct data_hdr_v9 {
 #define NF9_APPLICATION_ID		95
 #define NF9_APPLICATION_NAME		96
 
+/* Options scoping: NetFlow v9 */
 #define NF9_OPT_SCOPE_SYSTEM		1
 #define NF9_OPT_SCOPE_IF		2
 #define NF9_OPT_SCOPE_LC		3
 #define NF9_OPT_SCOPE_CACHE		4
 #define NF9_OPT_SCOPE_TPL		5
 
+/* Options scoping: IPFIX */
+#define IPFIX_SCOPE_OBS_POINT_ID	138
+#define IPFIX_SCOPE_LINECARD_ID		141
+#define IPFIX_SCOPE_PORT_ID		142
+#define IPFIX_SCOPE_METER_PROCESS_ID	143
+#define IPFIX_SCOPE_EXPORT_PROCESS_ID	144
+#define IPFIX_SCOPE_TEMPLATE_ID 	145
+#define IPFIX_SCOPE_OBS_DOMAIN_ID	149
+
 /* dataLinkFrameType */
 #define NF9_DL_F_TYPE_UNKNOWN		0
 #define NF9_DL_F_TYPE_ETHERNET		1
 #define NF9_DL_F_TYPE_802DOT11		2
+
+/* layer2SegmentId */
+#define NF9_L2_SID_RESERVED		0x00
+#define NF9_L2_SID_VXLAN		0x01
+#define NF9_L2_SID_NVGRE		0x02
 
 /* CUSTOM TYPES START HERE: supported in IPFIX only with pmacct PEN */
 #define NF9_CUST_TAG                    1
@@ -455,14 +471,14 @@ struct template_cache {
 struct NF_dissect {
   u_int8_t hdrVersion;
   u_int16_t hdrCount; /* NetFlow v5 and v5 and v5 and v5 and v5 and v9 */
-  char *hdrBasePtr;
-  char *hdrEndPtr;
+  u_char *hdrBasePtr;
+  u_char *hdrEndPtr;
   u_int32_t hdrLen;
-  char *flowSetBasePtr;
-  char *flowSetEndPtr;
+  u_char *flowSetBasePtr;
+  u_char *flowSetEndPtr;
   u_int32_t flowSetLen;
-  char *elemBasePtr;
-  char *elemEndPtr;
+  u_char *elemBasePtr;
+  u_char *elemEndPtr;
   u_int32_t elemLen;
 };
 
@@ -482,18 +498,18 @@ EXT void reset_mac(struct packet_ptrs *);
 EXT void reset_mac_vlan(struct packet_ptrs *);
 EXT void reset_ip4(struct packet_ptrs *);
 EXT void reset_ip6(struct packet_ptrs *);
-EXT void reset_dummy_v4(struct packet_ptrs *, char *);
+EXT void reset_dummy_v4(struct packet_ptrs *, u_char *);
 EXT void notify_malf_packet(short int, char *, char *, struct sockaddr *, u_int32_t);
 EXT int NF_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 EXT void NF_compute_once();
 
-EXT char *nfv5_check_status(struct packet_ptrs *);
-EXT char *nfv9_check_status(struct packet_ptrs *, u_int32_t, u_int32_t, u_int32_t, u_int8_t);
+EXT struct xflow_status_entry *nfv5_check_status(struct packet_ptrs *);
+EXT struct xflow_status_entry *nfv9_check_status(struct packet_ptrs *, u_int32_t, u_int32_t, u_int32_t, u_int8_t);
 EXT void nfv9_datalink_frame_section_handler(struct packet_ptrs *);
 
 EXT struct template_cache tpl_cache;
 EXT struct host_addr debug_a;
-EXT u_char debug_agent_addr[50];
+EXT char debug_agent_addr[50];
 EXT u_int16_t debug_agent_port;
 #undef EXT
 
@@ -516,8 +532,8 @@ EXT struct template_cache_entry *refresh_opt_template(void *, struct template_ca
 EXT struct utpl_field *ext_db_get_ie(struct template_cache_entry *, u_int32_t, u_int16_t, u_int8_t);
 EXT struct utpl_field *ext_db_get_next_ie(struct template_cache_entry *, u_int16_t, u_int8_t *);
 
-EXT void resolve_vlen_template(char *, u_int16_t, struct template_cache_entry *);
-EXT u_int8_t get_ipfix_vlen(char *, u_int16_t *);
+EXT int resolve_vlen_template(u_char *, u_int16_t, struct template_cache_entry *);
+EXT int get_ipfix_vlen(u_char *, u_int16_t, u_int16_t *);
 
 EXT struct template_cache_entry *nfacctd_offline_read_json_template(char *, char *, int);
 EXT void load_templates_from_file(char *);

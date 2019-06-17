@@ -85,6 +85,8 @@ bgp_node_create (struct bgp_peer *peer)
   malloc_failed:
   Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (bgp_node_create). Exiting ..\n", config.name, bms->log_str);
   exit_gracefully(1);
+
+  return NULL; /* silence compiler warning */
 }
 
 /* Allocate new route node with prefix set. */
@@ -209,12 +211,31 @@ bgp_unlock_node (struct bgp_peer *peer, struct bgp_node *node)
     bgp_node_delete (peer, node);
 }
 
+void bgp_node_vector_debug(struct bgp_node_vector *bnv, struct prefix *p)
+{
+  char prefix_str[PREFIX_STRLEN];
+  int idx;
+  
+
+  if (bnv && p) {
+    memset(prefix_str, 0, PREFIX_STRLEN);
+    prefix2str(p, prefix_str, PREFIX_STRLEN);
+    Log(LOG_DEBUG, "DEBUG ( %s/core/BGP ): bgp_node_vector_debug(): levels=%u lookup=%s\n", config.name, bnv->entries, prefix_str);
+    
+    for (idx = 0; idx < bnv->entries; idx++) {
+      memset(prefix_str, 0, PREFIX_STRLEN);
+      prefix2str(bnv->v[idx].p, prefix_str, PREFIX_STRLEN);
+      Log(LOG_DEBUG, "DEBUG ( %s/core/BGP ): bgp_node_vector_debug(): level=%u prefix=%s\n", config.name, idx, prefix_str);
+    }
+  }
+}
+
 /* Find matched prefix. */
 void
 bgp_node_match (const struct bgp_table *table, struct prefix *p, struct bgp_peer *peer,
 		u_int32_t (*modulo_func)(struct bgp_peer *, path_id_t *, int),
 		int (*cmp_func)(struct bgp_info *, struct node_match_cmp_term2 *),
-		struct node_match_cmp_term2 *nmct2,
+		struct node_match_cmp_term2 *nmct2, struct bgp_node_vector *bnv,
 		struct bgp_node **result_node, struct bgp_info **result_info)
 {
   struct bgp_misc_structs *bms;
@@ -237,6 +258,7 @@ bgp_node_match (const struct bgp_table *table, struct prefix *p, struct bgp_peer
   matched_node = NULL;
   matched_info = NULL;
   node = table->top;
+  if (bnv) bnv->entries = 0;
 
   /* Walk down tree.  If there is matched route then store it to matched. */
   while (node && node->p.prefixlen <= p->prefixlen && prefix_match(&node->p, p)) {
@@ -245,13 +267,22 @@ bgp_node_match (const struct bgp_table *table, struct prefix *p, struct bgp_peer
 	if (!cmp_func(info, nmct2)) {
 	  matched_node = node;
 	  matched_info = info;
-	  break;
+
+	  if (bnv) {
+	    bnv->v[bnv->entries].p = &node->p;
+	    bnv->v[bnv->entries].info = info;
+	    bnv->entries++;
+	  }
+
+	  if (node->p.prefixlen == p->prefixlen) break;
 	}
       }
     }
 
     node = node->link[check_bit(&p->u.prefix, node->p.prefixlen)];
   }
+
+  if (config.debug && bnv) bgp_node_vector_debug(bnv, p); 
 
   if (matched_node) {
     (*result_node) = matched_node;
@@ -268,7 +299,7 @@ void
 bgp_node_match_ipv4 (const struct bgp_table *table, struct in_addr *addr, struct bgp_peer *peer,
 		     u_int32_t (*modulo_func)(struct bgp_peer *, path_id_t *, int),
 		     int (*cmp_func)(struct bgp_info *, struct node_match_cmp_term2 *),
-		     struct node_match_cmp_term2 *nmct2,
+		     struct node_match_cmp_term2 *nmct2, struct bgp_node_vector *bnv,
 		     struct bgp_node **result_node, struct bgp_info **result_info)
 {
   struct prefix_ipv4 p;
@@ -278,14 +309,14 @@ bgp_node_match_ipv4 (const struct bgp_table *table, struct in_addr *addr, struct
   p.prefixlen = IPV4_MAX_PREFIXLEN;
   p.prefix = *addr;
 
-  bgp_node_match (table, (struct prefix *) &p, peer, modulo_func, cmp_func, nmct2, result_node, result_info);
+  bgp_node_match (table, (struct prefix *) &p, peer, modulo_func, cmp_func, nmct2, bnv, result_node, result_info);
 }
 
 void
 bgp_node_match_ipv6 (const struct bgp_table *table, struct in6_addr *addr, struct bgp_peer *peer,
 		     u_int32_t (*modulo_func)(struct bgp_peer *, path_id_t *, int),
 		     int (*cmp_func)(struct bgp_info *, struct node_match_cmp_term2 *),
-		     struct node_match_cmp_term2 *nmct2,
+		     struct node_match_cmp_term2 *nmct2, struct bgp_node_vector *bnv,
 		     struct bgp_node **result_node, struct bgp_info **result_info)
 {
   struct prefix_ipv6 p;
@@ -295,7 +326,7 @@ bgp_node_match_ipv6 (const struct bgp_table *table, struct in6_addr *addr, struc
   p.prefixlen = IPV6_MAX_PREFIXLEN;
   p.prefix = *addr;
 
-  bgp_node_match (table, (struct prefix *) &p, peer, modulo_func, cmp_func, nmct2, result_node, result_info);
+  bgp_node_match (table, (struct prefix *) &p, peer, modulo_func, cmp_func, nmct2, bnv, result_node, result_info);
 }
 
 /* Add node to routing table. */

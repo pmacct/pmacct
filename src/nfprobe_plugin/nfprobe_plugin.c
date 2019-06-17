@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -406,7 +406,7 @@ ASN_to_flowrec(struct FLOW *flow, struct pkt_data *data, int ndx)
 }
 
 static int
-cust_to_flowrec(struct FLOW *flow, char *pcust, int ndx)
+cust_to_flowrec(struct FLOW *flow, u_char *pcust, int ndx)
 {
   if (pcust) {
     if (!flow->pcust[ndx]) flow->pcust[ndx] = malloc(config.cpptrs.len);
@@ -447,7 +447,7 @@ ipv4_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int *isfra
   struct pkt_data *data = prim_ptrs->data;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_extras *extras = prim_ptrs->pextras;
-  char *pcust = prim_ptrs->pcust;
+  u_char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   struct pkt_primitives *p = &data->primitives;
   int ndx;
@@ -488,7 +488,7 @@ ipv4_to_flowrec_update(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int
 {
   struct pkt_data *data = prim_ptrs->data;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
-  char *pcust = prim_ptrs->pcust;
+  u_char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   struct pkt_primitives *p = &data->primitives;
   int ndx;
@@ -513,7 +513,7 @@ ipv6_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int *isfra
   struct pkt_data *data = prim_ptrs->data;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
   struct pkt_extras *extras = prim_ptrs->pextras;
-  char *pcust = prim_ptrs->pcust;
+  u_char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   struct pkt_primitives *p = &data->primitives;
   int ndx;
@@ -555,7 +555,7 @@ ipv6_to_flowrec_update(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int
 {
   struct pkt_data *data = prim_ptrs->data;
   struct pkt_bgp_primitives *pbgp = prim_ptrs->pbgp;
-  char *pcust = prim_ptrs->pcust;
+  u_char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   struct pkt_primitives *p = &data->primitives;
   struct in6_addr dummy_ipv6; 
@@ -1147,7 +1147,7 @@ connsock(struct sockaddr_storage *addr, socklen_t len, int hoplimit)
     int opt = config.nfprobe_ipprec << 5;
     int rc;
 
-    rc = setsockopt(s, IPPROTO_IP, IP_TOS, &opt, sizeof(opt));
+    rc = setsockopt(s, IPPROTO_IP, IP_TOS, &opt, (socklen_t) sizeof(opt));
     if (rc < 0) Log(LOG_WARNING, "WARN ( %s/%s ): setsockopt() failed for IP_TOS: %s\n", config.name, config.type, strerror(errno));
   }
 
@@ -1155,7 +1155,7 @@ connsock(struct sockaddr_storage *addr, socklen_t len, int hoplimit)
     int rc, value;
 
     value = MIN(config.pipe_size, INT_MAX); 
-    rc = Setsocksize(s, SOL_SOCKET, SO_SNDBUF, &value, sizeof(value));
+    rc = Setsocksize(s, SOL_SOCKET, SO_SNDBUF, &value, (socklen_t) sizeof(value));
     if (rc < 0) Log(LOG_WARNING, "WARN ( %s/%s ): setsockopt() failed for SOL_SNDBUF: %s\n", config.name, config.type, strerror(errno));
   }
 
@@ -1181,7 +1181,7 @@ connsock(struct sockaddr_storage *addr, socklen_t len, int hoplimit)
     if (hoplimit == -1)
       break;
     h4 = hoplimit;
-    if (setsockopt(s, IPPROTO_IP, IP_MULTICAST_TTL, &h4, sizeof(h4)) == -1) {
+    if (setsockopt(s, IPPROTO_IP, IP_MULTICAST_TTL, &h4, (socklen_t) sizeof(h4)) == -1) {
       Log(LOG_ERR, "ERROR ( %s/%s ): setsockopt() failed for IP_MULTICAST_TTL: %s\n", config.name, config.type, strerror(errno));
       exit_gracefully(1);
     }
@@ -1193,7 +1193,7 @@ connsock(struct sockaddr_storage *addr, socklen_t len, int hoplimit)
     if (hoplimit == -1)
       break;
     h6 = hoplimit;
-    if (setsockopt(s, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &h6, sizeof(h6)) == -1) {
+    if (setsockopt(s, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &h6, (socklen_t) sizeof(h6)) == -1) {
       Log(LOG_ERR, "ERROR ( %s/%s ): setsockopt() failed for IPV6_MULTICAST_HOPS: %s\n", config.name, config.type, strerror(errno));
       exit_gracefully(1);
     }
@@ -1286,56 +1286,6 @@ handle_timeouts(struct FLOWTRACK *ft, char *to_spec)
 }
 
 static void
-parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len)
-{
-  char *orig, *host, *port;
-  struct addrinfo hints, *res;
-  int herr;
-
-  if ((host = orig = strdup(s)) == NULL) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), strdup() out of memory\n", config.name, config.type);
-    exit_gracefully(1);
-  }
-
-  trim_spaces(host);
-  trim_spaces(orig);
-
-  if ((port = strrchr(host, ':')) == NULL || *(++port) == '\0' || *host == '\0') {
-    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), invalid 'nfprobe_receiver' argument\n", config.name, config.type);
-    exit_gracefully(1);
-  }
-  *(port - 1) = '\0';
-	
-  /* Accept [host]:port for numeric IPv6 addresses */
-  if (*host == '[' && *(port - 2) == ']') {
-    host++;
-    *(port - 2) = '\0';
-  }
-
-  memset(&hints, '\0', sizeof(hints));
-  hints.ai_socktype = SOCK_DGRAM;
-
-  if ((herr = getaddrinfo(host, port, &hints, &res)) == -1) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), address lookup failed\n", config.name, config.type);
-    exit_gracefully(1);
-  }
-
-  if (res == NULL || res->ai_addr == NULL) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), no addresses found for [%s]:%s\n", config.name, config.type, host, port);
-    exit_gracefully(1);
-  }
-
-  if (res->ai_addrlen > *len) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), address too long.\n", config.name, config.type);
-    exit_gracefully(1);
-  }
-
-  memcpy(addr, res->ai_addr, res->ai_addrlen);
-  free(orig);
-  *len = res->ai_addrlen;
-}
-
-static void
 parse_engine(char *s, u_int8_t *engine_type, u_int32_t *engine_id)
 {
   char *delim, *ptr;
@@ -1360,11 +1310,6 @@ parse_engine(char *s, u_int8_t *engine_type, u_int32_t *engine_id)
     *engine_type = atoi(s);
     *engine_id = atoi(ptr);
     *delim = ':';
-
-    if ((*engine_type) > 255) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): parse_engine(): NetFlow v5 engine_type values are limited to 0-255.\n", config.name, config.type);
-      exit_gracefully(1);
-    }
   }
   /* NetFlow v9 / IPFIX case */
   else {

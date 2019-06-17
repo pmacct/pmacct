@@ -664,26 +664,66 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    if (channels_list[index].aggregation_2 & COUNT_TUNNEL_SRC_MAC) {
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_src_mac_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_src_mac_handler;
+      else primitives--;
+      primitives++;
+    }
+
+    if (channels_list[index].aggregation_2 & COUNT_TUNNEL_DST_MAC) {
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_dst_mac_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_dst_mac_handler;
+      else primitives--;
+      primitives++;
+    }
+
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_SRC_HOST) {
-      if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_src_host_handler;
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_src_host_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_src_host_handler;
       else primitives--;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_DST_HOST) {
-      if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_dst_host_handler;
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_dst_host_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_dst_host_handler;
       else primitives--;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_IP_PROTO) {
-      if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_ip_proto_handler;
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_ip_proto_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_ip_proto_handler;
       else primitives--;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_IP_TOS) {
-      if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_ip_tos_handler;
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_ip_tos_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_ip_tos_handler;
+      else primitives--;
+      primitives++;
+    }
+
+    if (channels_list[index].aggregation_2 & COUNT_TUNNEL_SRC_PORT) {
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_src_port_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_src_port_handler;
+      else primitives--;
+      primitives++;
+    }
+
+    if (channels_list[index].aggregation_2 & COUNT_TUNNEL_DST_PORT) {
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_dst_port_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_dst_port_handler;
+      else primitives--;
+      primitives++;
+    }
+
+    if (channels_list[index].aggregation_2 & COUNT_VXLAN) {
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = vxlan_handler;
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_vxlan_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_vxlan_handler;
       else primitives--;
       primitives++;
     }
@@ -926,7 +966,7 @@ void src_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
-  if (pptrs->mac_ptr) memcpy(pdata->primitives.eth_shost, (pptrs->mac_ptr+ETH_ADDR_LEN), ETH_ADDR_LEN); 
+  if (pptrs->mac_ptr) memcpy(pdata->primitives.eth_shost, (pptrs->mac_ptr + ETH_ADDR_LEN), ETH_ADDR_LEN); 
 }
 
 void dst_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -1171,6 +1211,137 @@ void tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
   if (pptrs->l4_proto == IPPROTO_TCP) pdata->tcp_flags = pptrs->tcp_flags;
+}
+
+void tunnel_src_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
+
+  if (tpptrs) {
+    if (tpptrs->mac_ptr) memcpy(ptun->tunnel_eth_shost, (tpptrs->mac_ptr + ETH_ADDR_LEN), ETH_ADDR_LEN);
+  }
+}
+
+void tunnel_dst_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
+
+  if (tpptrs) {
+    if (tpptrs->mac_ptr) memcpy(ptun->tunnel_eth_dhost, tpptrs->mac_ptr, ETH_ADDR_LEN);
+  }
+}
+
+void tunnel_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
+
+  if (tpptrs) {
+    if (tpptrs->l3_proto == ETHERTYPE_IP) {
+      ptun->tunnel_src_ip.address.ipv4.s_addr = ((struct pm_iphdr *) tpptrs->iph_ptr)->ip_src.s_addr;
+      ptun->tunnel_src_ip.family = AF_INET;
+    }
+    else if (tpptrs->l3_proto == ETHERTYPE_IPV6) {
+      memcpy(&ptun->tunnel_src_ip.address.ipv6, &((struct ip6_hdr *) tpptrs->iph_ptr)->ip6_src, IP6AddrSz);
+      ptun->tunnel_src_ip.family = AF_INET6;
+    }
+  }
+}
+
+void tunnel_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
+
+  if (tpptrs) {
+    if (tpptrs->l3_proto == ETHERTYPE_IP) {
+      ptun->tunnel_dst_ip.address.ipv4.s_addr = ((struct pm_iphdr *) tpptrs->iph_ptr)->ip_dst.s_addr;
+      ptun->tunnel_dst_ip.family = AF_INET;
+    }
+    else if (tpptrs->l3_proto == ETHERTYPE_IPV6) {
+      memcpy(&ptun->tunnel_dst_ip.address.ipv6, &((struct ip6_hdr *) tpptrs->iph_ptr)->ip6_dst, IP6AddrSz);
+      ptun->tunnel_dst_ip.family = AF_INET6;
+    }
+  }
+}
+
+void tunnel_ip_proto_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
+
+  if (tpptrs) ptun->tunnel_proto = tpptrs->l4_proto;;
+}
+
+void tunnel_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
+  u_int32_t tos = 0;
+
+  if (tpptrs) {
+    if (tpptrs->l3_proto == ETHERTYPE_IP) {
+      ptun->tunnel_tos = ((struct pm_iphdr *) tpptrs->iph_ptr)->ip_tos;
+    }
+    else if (tpptrs->l3_proto == ETHERTYPE_IPV6) {
+      tos = ntohl(((struct ip6_hdr *) tpptrs->iph_ptr)->ip6_flow);
+      tos = ((tos & 0x0ff00000) >> 20);
+      ptun->tunnel_tos = tos;
+    }
+  }
+}
+
+void tunnel_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
+
+  ptun->tunnel_src_port = 0;
+
+  if (tpptrs) {
+    if (tpptrs->l4_proto == IPPROTO_UDP || tpptrs->l4_proto == IPPROTO_TCP) {
+      ptun->tunnel_src_port = ntohs(((struct pm_tlhdr *) tpptrs->tlh_ptr)->src_port);
+    }
+  }
+}
+
+void tunnel_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
+
+  if (tpptrs) {
+    if (tpptrs->l4_proto == IPPROTO_UDP || tpptrs->l4_proto == IPPROTO_TCP) {
+      ptun->tunnel_dst_port = ntohs(((struct pm_tlhdr *) tpptrs->tlh_ptr)->dst_port);
+    }
+  }
+}
+
+void vxlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  u_char *vni_ptr;
+
+  if (pptrs->vxlan_ptr) {
+    vni_ptr = pptrs->vxlan_ptr;
+
+    ptun->tunnel_id = *vni_ptr++;
+    ptun->tunnel_id <<= 8;
+    ptun->tunnel_id += *vni_ptr++;
+    ptun->tunnel_id <<= 8;
+    ptun->tunnel_id += *vni_ptr++;
+  }
 }
 
 void counters_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -1514,7 +1685,7 @@ void timestamp_arrival_handler(struct channels_list_entry *chptr, struct packet_
 void custom_primitives_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  char *pcust = ((*data) + chptr->extras.off_custom_primitives);
+  u_char *pcust = (u_char *)((*data) + chptr->extras.off_custom_primitives);
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
   struct custom_primitive_entry *cpe;
   int cpptrs_idx, pd_ptr_idx;
@@ -1533,17 +1704,17 @@ void custom_primitives_handler(struct channels_list_entry *chptr, struct packet_
 	      pptrs->pkt_proto[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n] ==
 			cpe->pd_ptr[pd_ptr_idx].proto.n) {
 	    if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
-              char hexbuf[cpe->alloc_len];
+              unsigned char hexbuf[cpe->alloc_len];
               int hexbuflen = 0;
 
-              hexbuflen = serialize_hex(pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n]+cpe->pd_ptr[pd_ptr_idx].off, hexbuf, cpe->len);
+              hexbuflen = serialize_hex((pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n] + cpe->pd_ptr[pd_ptr_idx].off), hexbuf, cpe->len);
               if (cpe->alloc_len < hexbuflen) hexbuf[cpe->alloc_len-1] = '\0';
               memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, hexbuf, MIN(hexbuflen, cpe->alloc_len));
 	    }
 	    else {
 	      // XXX: maybe prone to SEGV if not a string: check to be added?
 	      if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_STRING && cpe->len == PM_VARIABLE_LENGTH) {
-		char *str_ptr = (pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n]+cpe->pd_ptr[pd_ptr_idx].off); 
+		char *str_ptr = (char *)(pptrs->pkt_data_ptrs[cpe->pd_ptr[pd_ptr_idx].ptr_idx.n] + cpe->pd_ptr[pd_ptr_idx].off); 
 		int remaining_len, str_len;
 
 		remaining_len = (((struct pcap_pkthdr *)pptrs->pkthdr)->caplen -
@@ -1559,7 +1730,7 @@ void custom_primitives_handler(struct channels_list_entry *chptr, struct packet_
                       vlen_prims_init(pvlen, 0);
                       return;
                     }
-                    else vlen_prims_insert(pvlen, cpe->type, str_len, str_ptr, PM_MSG_STR_COPY_ZERO);
+                    else vlen_prims_insert(pvlen, cpe->type, str_len, (u_char *) str_ptr, PM_MSG_STR_COPY_ZERO);
 		  }
 		}
 	      }
@@ -2557,7 +2728,7 @@ void pre_tag_label_handler(struct channels_list_entry *chptr, struct packet_ptrs
     vlen_prims_init(pvlen, 0);
     return;
   }
-  else vlen_prims_insert(pvlen, COUNT_INT_LABEL, pptrs->label.len, pptrs->label.val, PM_MSG_STR_COPY);
+  else vlen_prims_insert(pvlen, COUNT_INT_LABEL, pptrs->label.len, (u_char *) pptrs->label.val, PM_MSG_STR_COPY);
 }
 
 void NF_flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -3029,7 +3200,7 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct utpl_field *utpl = NULL;
-  char *pcust = ((*data) + chptr->extras.off_custom_primitives);
+  u_char *pcust = (u_char *)((*data) + chptr->extras.off_custom_primitives);
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
   struct custom_primitive_entry *cpe;
   int cpptrs_idx;
@@ -3042,7 +3213,7 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
 	cpe = chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].ptr;
 	if (cpe->field_type < NF9_MAX_DEFINED_FIELD && !cpe->pen) {
 	  if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
-            char hexbuf[cpe->alloc_len];
+            unsigned char hexbuf[cpe->alloc_len];
             int hexbuflen = 0;
 
             hexbuflen = serialize_hex(pptrs->f_data+tpl->tpl[cpe->field_type].off, hexbuf, tpl->tpl[cpe->field_type].len);
@@ -3059,7 +3230,7 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
 	else {
 	  if ((utpl = (*get_ext_db_ie_by_type)(tpl, cpe->pen, cpe->field_type, cpe->repeat_id))) {
 	    if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
-              char hexbuf[cpe->alloc_len];
+              unsigned char hexbuf[cpe->alloc_len];
               int hexbuflen = 0;
 
               hexbuflen = serialize_hex(pptrs->f_data+utpl->off, hexbuf, utpl->len);
@@ -3368,6 +3539,39 @@ void NF_mpls_pw_id_handler(struct channels_list_entry *chptr, struct packet_ptrs
   }
 }
 
+void NF_vxlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  u_char *vni_ptr = NULL, tmp64[8];
+  u_int8_t *type = NULL;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_LAYER2_SEGMENT_ID].len == 8) {
+      memcpy(tmp64, pptrs->f_data+tpl->tpl[NF9_LAYER2_SEGMENT_ID].off, 8);
+
+      type = (u_int8_t *) &tmp64[0];
+      if ((*type) == NF9_L2_SID_VXLAN) {
+	vni_ptr = &tmp64[6];
+
+	ptun->tunnel_id = *vni_ptr++;
+	ptun->tunnel_id <<= 8;
+	ptun->tunnel_id += *vni_ptr++;
+	ptun->tunnel_id <<= 8;
+	ptun->tunnel_id += *vni_ptr++;
+      }
+    }
+
+    break;
+  default:
+    break;
+  }
+}
+
 void NF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
@@ -3552,7 +3756,9 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
           entry = (struct xflow_status_entry *) pptrs->f_status_g;
           sentry = search_smp_id_status_table(entry->sampling, 0, FALSE);
         }
+        if (!sentry) sentry = search_smp_id_status_table(entry->sampling, ntohs(tpl->template_id), FALSE);
       }
+
       if (sentry) {
         pdata->pkt_len = pdata->pkt_len * sentry->sample_pool;
         pdata->pkt_num = pdata->pkt_num * sentry->sample_pool;
@@ -3671,7 +3877,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
             vlen_prims_init(pvlen, 0);
             return;
           }
-          else vlen_prims_insert(pvlen, COUNT_INT_SRC_AS_PATH, len, ptr, PM_MSG_STR_COPY);
+          else vlen_prims_insert(pvlen, COUNT_INT_SRC_AS_PATH, len, (u_char *) ptr, PM_MSG_STR_COPY);
 
           if (config.nfacctd_bgp_aspath_radius && ptr && len) free(ptr);
         }
@@ -3715,7 +3921,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
             return;
           }
           else {
-            vlen_prims_insert(pvlen, COUNT_INT_SRC_STD_COMM, len, ptr, PM_MSG_STR_COPY);
+            vlen_prims_insert(pvlen, COUNT_INT_SRC_STD_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
             if (config.nfacctd_bgp_stdcomm_pattern && ptr && len) free(ptr);
           }
         }
@@ -3761,7 +3967,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
             return;
           }
           else {
-            vlen_prims_insert(pvlen, COUNT_INT_SRC_EXT_COMM, len, ptr, PM_MSG_STR_COPY);
+            vlen_prims_insert(pvlen, COUNT_INT_SRC_EXT_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
             if (config.nfacctd_bgp_extcomm_pattern && ptr && len) free(ptr);
           }
         }
@@ -3807,7 +4013,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
             return;
           }
           else {
-            vlen_prims_insert(pvlen, COUNT_INT_SRC_LRG_COMM, len, ptr, PM_MSG_STR_COPY);
+            vlen_prims_insert(pvlen, COUNT_INT_SRC_LRG_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
             if (config.nfacctd_bgp_lrgcomm_pattern && ptr && len) free(ptr);
           }
         }
@@ -3869,7 +4075,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           vlen_prims_init(pvlen, 0);
           return;
         }
-        else vlen_prims_insert(pvlen, COUNT_INT_SRC_AS_PATH, len, ptr, PM_MSG_STR_COPY);
+        else vlen_prims_insert(pvlen, COUNT_INT_SRC_AS_PATH, len, (u_char *) ptr, PM_MSG_STR_COPY);
       }
 
       if (chptr->aggregation & COUNT_SRC_STD_COMM) {
@@ -3880,7 +4086,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           vlen_prims_init(pvlen, 0);
           return;
         }
-        else vlen_prims_insert(pvlen, COUNT_INT_SRC_STD_COMM, len, ptr, PM_MSG_STR_COPY);
+        else vlen_prims_insert(pvlen, COUNT_INT_SRC_STD_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
       }
 
       if (chptr->aggregation & COUNT_SRC_EXT_COMM) {
@@ -3891,7 +4097,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           vlen_prims_init(pvlen, 0);
           return;
         }
-        else vlen_prims_insert(pvlen, COUNT_INT_SRC_EXT_COMM, len, ptr, PM_MSG_STR_COPY);
+        else vlen_prims_insert(pvlen, COUNT_INT_SRC_EXT_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
       }
 
       if (chptr->aggregation_2 & COUNT_SRC_LRG_COMM) {
@@ -3902,7 +4108,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           vlen_prims_init(pvlen, 0);
           return;
         }
-        else vlen_prims_insert(pvlen, COUNT_INT_SRC_LRG_COMM, len, ptr, PM_MSG_STR_COPY);
+        else vlen_prims_insert(pvlen, COUNT_INT_SRC_LRG_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
       }
     }
   }
@@ -3936,7 +4142,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
             return;
           }
           else {
-            vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, ptr, PM_MSG_STR_COPY);
+            vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
             if (config.nfacctd_bgp_stdcomm_pattern && ptr && len) free(ptr);
           }
         }
@@ -3979,7 +4185,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
             return;
           }
           else {
-            vlen_prims_insert(pvlen, COUNT_INT_EXT_COMM, len, ptr, PM_MSG_STR_COPY);
+            vlen_prims_insert(pvlen, COUNT_INT_EXT_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
             if (config.nfacctd_bgp_extcomm_pattern && ptr && len) free(ptr);
           }
         }
@@ -4022,7 +4228,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
             return;
           }
           else {
-            vlen_prims_insert(pvlen, COUNT_INT_LRG_COMM, len, ptr, PM_MSG_STR_COPY);
+            vlen_prims_insert(pvlen, COUNT_INT_LRG_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
             if (config.nfacctd_bgp_lrgcomm_pattern && ptr && len) free(ptr);
           }
         }
@@ -4064,7 +4270,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
             vlen_prims_init(pvlen, 0);
             return;
           }
-          else vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, ptr, PM_MSG_STR_COPY);
+          else vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, (u_char *) ptr, PM_MSG_STR_COPY);
 
           if (config.nfacctd_bgp_aspath_radius && ptr && len) free(ptr);
 	}
@@ -4143,7 +4349,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           vlen_prims_init(pvlen, 0);
           return;
         }
-        else vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, ptr, PM_MSG_STR_COPY);
+        else vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, (u_char *) ptr, PM_MSG_STR_COPY);
       }
 
       if (chptr->aggregation & COUNT_STD_COMM) {
@@ -4154,7 +4360,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           vlen_prims_init(pvlen, 0);
           return;
         }
-        else vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, ptr, PM_MSG_STR_COPY);
+        else vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
       }
 
       if (chptr->aggregation & COUNT_EXT_COMM) {
@@ -4165,7 +4371,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           vlen_prims_init(pvlen, 0);
           return;
         }
-        else vlen_prims_insert(pvlen, COUNT_INT_EXT_COMM, len, ptr, PM_MSG_STR_COPY);
+        else vlen_prims_insert(pvlen, COUNT_INT_EXT_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
       }
 
       if (chptr->aggregation_2 & COUNT_LRG_COMM) {
@@ -4176,7 +4382,7 @@ void bgp_ext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
           vlen_prims_init(pvlen, 0);
           return;
         }
-        else vlen_prims_insert(pvlen, COUNT_INT_LRG_COMM, len, ptr, PM_MSG_STR_COPY);
+        else vlen_prims_insert(pvlen, COUNT_INT_LRG_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
       }
     }
   }
@@ -4413,9 +4619,9 @@ void SF_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  if (sample->dcd_ipProtocol == IPPROTO_UDP || sample->dcd_ipProtocol == IPPROTO_TCP ||
-      sample->dcd_inner_ipProtocol == IPPROTO_UDP || sample->dcd_inner_ipProtocol == IPPROTO_TCP)
+  if (sample->dcd_ipProtocol == IPPROTO_UDP || sample->dcd_ipProtocol == IPPROTO_TCP) {
     pdata->primitives.src_port = sample->dcd_sport; 
+  }
   else pdata->primitives.src_port = 0;
 }
 
@@ -4424,9 +4630,9 @@ void SF_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  if (sample->dcd_ipProtocol == IPPROTO_UDP || sample->dcd_ipProtocol == IPPROTO_TCP ||
-      sample->dcd_inner_ipProtocol == IPPROTO_UDP || sample->dcd_inner_ipProtocol == IPPROTO_TCP)
+  if (sample->dcd_ipProtocol == IPPROTO_UDP || sample->dcd_ipProtocol == IPPROTO_TCP) {
     pdata->primitives.dst_port = sample->dcd_dport;
+  }
   else pdata->primitives.dst_port = 0;
 }
 
@@ -4451,8 +4657,9 @@ void SF_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  if (sample->dcd_ipProtocol == IPPROTO_TCP || sample->dcd_inner_ipProtocol == IPPROTO_TCP)
+  if (sample->dcd_ipProtocol == IPPROTO_TCP) {
     pdata->tcp_flags = sample->dcd_tcpFlags; 
+  }
 }
 
 void SF_flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -4633,7 +4840,7 @@ void SF_as_path_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
       vlen_prims_init(pvlen, 0);
       return;
     }
-    else vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, ptr, PM_MSG_STR_COPY);
+    else vlen_prims_insert(pvlen, COUNT_INT_AS_PATH, len, (u_char *) ptr, PM_MSG_STR_COPY);
 
     if (config.nfacctd_bgp_aspath_radius && ptr && len) free(ptr);
   }
@@ -4726,7 +4933,7 @@ void SF_std_comms_handler(struct channels_list_entry *chptr, struct packet_ptrs 
       return;
     }
     else {
-      vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, ptr, PM_MSG_STR_COPY);
+      vlen_prims_insert(pvlen, COUNT_INT_STD_COMM, len, (u_char *) ptr, PM_MSG_STR_COPY);
       if (config.nfacctd_bgp_stdcomm_pattern && ptr && len) free(ptr);
     }
   }
@@ -4976,15 +5183,41 @@ void SF_bgp_peer_src_as_fromext_handler(struct channels_list_entry *chptr, struc
   // XXX: fill this in
 }
 
+void SF_tunnel_src_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
+
+  if (sppi) memcpy(ptun->tunnel_eth_shost, sppi->eth_src, ETH_ADDR_LEN);
+}
+
+void SF_tunnel_dst_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
+
+  if (sppi) memcpy(ptun->tunnel_eth_dhost, sppi->eth_dst, ETH_ADDR_LEN);
+}
+
 void SF_tunnel_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
-  SFSample *sample = (SFSample *) pptrs->f_data;
+  SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
 
-  if (sample->got_inner_IPV4) {
-    ptun->tunnel_src_ip.address.ipv4.s_addr = sample->dcd_inner_srcIP.s_addr;
-    ptun->tunnel_src_ip.family = AF_INET;
+  if (sppi) {
+    SFLAddress *addr = &sppi->ipsrc;
+
+    if (sppi->gotIPV4) {
+      ptun->tunnel_src_ip.address.ipv4.s_addr = sppi->dcd_srcIP.s_addr;
+      ptun->tunnel_src_ip.family = AF_INET;
+    }
+    else if (sppi->gotIPV6) {
+      memcpy(&ptun->tunnel_src_ip.address.ipv6, &addr->address.ip_v6, IP6AddrSz);
+      ptun->tunnel_src_ip.family = AF_INET6;
+    }
   }
 }
 
@@ -4992,11 +5225,19 @@ void SF_tunnel_dst_host_handler(struct channels_list_entry *chptr, struct packet
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
-  SFSample *sample = (SFSample *) pptrs->f_data;
+  SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
 
-  if (sample->got_inner_IPV4) {
-    ptun->tunnel_dst_ip.address.ipv4.s_addr = sample->dcd_inner_dstIP.s_addr;
-    ptun->tunnel_dst_ip.family = AF_INET;
+  if (sppi) {
+    SFLAddress *addr = &sppi->ipdst;
+
+    if (sppi->gotIPV4) {
+      ptun->tunnel_dst_ip.address.ipv4.s_addr = sppi->dcd_dstIP.s_addr;
+      ptun->tunnel_dst_ip.family = AF_INET;
+    }
+    else if (sppi->gotIPV6) {
+      memcpy(&ptun->tunnel_dst_ip.address.ipv6, &addr->address.ip_v6, IP6AddrSz);
+      ptun->tunnel_dst_ip.family = AF_INET6;
+    }
   }
 }
 
@@ -5004,9 +5245,57 @@ void SF_tunnel_ip_proto_handler(struct channels_list_entry *chptr, struct packet
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
+
+  if (sppi) ptun->tunnel_proto = sppi->dcd_ipProtocol;
+}
+
+void SF_tunnel_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
+
+  if (sppi) ptun->tunnel_tos = sppi->dcd_ipTos;
+}
+
+void SF_tunnel_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
+
+  ptun->tunnel_src_port = 0;
+
+  if (sppi) {
+    if (sppi->dcd_ipProtocol == IPPROTO_UDP || sppi->dcd_ipProtocol == IPPROTO_TCP) {
+      ptun->tunnel_src_port = sppi->dcd_sport;
+    }
+  }
+}
+
+void SF_tunnel_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
+
+  ptun->tunnel_dst_port = 0;
+
+  if (sppi) {
+    if (sppi->dcd_ipProtocol == IPPROTO_UDP || sppi->dcd_ipProtocol == IPPROTO_TCP) {
+      ptun->tunnel_dst_port = sppi->dcd_dport;
+    }
+  }
+}
+
+void SF_vxlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  ptun->tunnel_proto = sample->dcd_inner_ipProtocol;
+  ptun->tunnel_id = sample->vni;
 }
 
 void SF_mpls_pw_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -5016,15 +5305,6 @@ void SF_mpls_pw_id_handler(struct channels_list_entry *chptr, struct packet_ptrs
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   pbgp->mpls_pw_id = sample->mpls_vll_vc_id;
-}
-
-void SF_tunnel_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
-  SFSample *sample = (SFSample *) pptrs->f_data;
-
-  ptun->tunnel_tos = sample->dcd_inner_ipTos;
 }
 
 void SF_mpls_label_top_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

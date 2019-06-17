@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -35,6 +35,7 @@
 
 #define PM_ZMQ_EVENTS_RETRIES		3
 #define PM_ZMQ_DEFAULT_RETRY		1000 /* 1 sec */
+#define PM_ZMQ_DEFAULT_FLOW_HWM		100000 /* ~150MB @ 1500 bytes/packet */
 
 /* structures */
 struct p_zmq_sock {
@@ -88,6 +89,9 @@ EXT u_int8_t p_zmq_get_topic(struct p_zmq_host *);
 EXT void *p_zmq_get_sock(struct p_zmq_host *);
 EXT int p_zmq_get_fd(struct p_zmq_host *);
 
+EXT int p_zmq_connect(struct p_zmq_host *);
+EXT int p_zmq_bind(struct p_zmq_host *);
+
 EXT void p_zmq_init_pub(struct p_zmq_host *, char *, u_int8_t);
 EXT void p_zmq_init_sub(struct p_zmq_host *);
 EXT void p_zmq_init_push(struct p_zmq_host *, char *);
@@ -101,25 +105,27 @@ EXT void p_zmq_plugin_pipe_init_core(struct p_zmq_host *, u_int8_t, char *, char
 EXT void p_zmq_plugin_pipe_init_plugin(struct p_zmq_host *);
 EXT int p_zmq_plugin_pipe_set_profile(struct configuration *, char *);
 EXT void p_zmq_pull_setup(struct p_zmq_host *);
+EXT void p_zmq_pull_bind_setup(struct p_zmq_host *);
 EXT void p_zmq_sub_setup(struct p_zmq_host *);
 EXT void p_zmq_push_setup(struct p_zmq_host *);
+EXT void p_zmq_push_connect_setup(struct p_zmq_host *);
 EXT void p_zmq_pub_setup(struct p_zmq_host *);
 EXT void p_zmq_zap_setup(struct p_zmq_host *);
-EXT void p_zmq_recv_setup(struct p_zmq_host *, int);
-EXT void p_zmq_send_setup(struct p_zmq_host *, int);
+EXT void p_zmq_recv_setup(struct p_zmq_host *, int, int);
+EXT void p_zmq_send_setup(struct p_zmq_host *, int, int);
 
 EXT void p_zmq_router_setup(struct p_zmq_host *, char *, int);
-EXT void p_zmq_dealer_inproc_setup(struct p_zmq_host *, char *);
+EXT void p_zmq_dealer_inproc_setup(struct p_zmq_host *);
 EXT void p_zmq_proxy_setup(struct p_zmq_host *);
-EXT void p_zmq_router_backend_setup(struct p_zmq_host *, int, char *);
+EXT void p_zmq_router_backend_setup(struct p_zmq_host *, int);
 EXT void p_zmq_router_worker(void *);
 
 EXT char *p_zmq_recv_str(struct p_zmq_sock *);
 EXT int p_zmq_send_str(struct p_zmq_sock *, char *);
 EXT int p_zmq_sendmore_str(struct p_zmq_sock *, char *);
-EXT int p_zmq_recv_bin(struct p_zmq_sock *, void *, int);
-EXT int p_zmq_send_bin(struct p_zmq_sock *, void *, int);
-EXT int p_zmq_sendmore_bin(struct p_zmq_sock *, void *, int);
+EXT int p_zmq_recv_bin(struct p_zmq_sock *, void *, size_t);
+EXT int p_zmq_send_bin(struct p_zmq_sock *, void *, size_t, int);
+EXT int p_zmq_sendmore_bin(struct p_zmq_sock *, void *, size_t, int);
 
 EXT void p_zmq_zap_handler(void *);
 

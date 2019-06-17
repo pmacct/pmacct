@@ -52,11 +52,12 @@ EXT void bgp_md5_file_process(int, struct bgp_md5_table *);
 EXT void bgp_config_checks(struct configuration *);
 EXT struct bgp_misc_structs *bgp_select_misc_db(int);
 EXT void bgp_link_misc_structs(struct bgp_misc_structs *);
+EXT void bgp_blackhole_link_misc_structs(struct bgp_misc_structs *);
 
 EXT struct bgp_info_extra *bgp_info_extra_new(struct bgp_info *);
 EXT void bgp_info_extra_free(struct bgp_peer *, struct bgp_info_extra **);
 EXT struct bgp_info_extra *bgp_info_extra_get(struct bgp_info *);
-EXT struct bgp_info_extra *bgp_info_extra_process(struct bgp_peer *, struct bgp_info *, safi_t, path_id_t *, rd_t *, char *);
+EXT struct bgp_info_extra *bgp_info_extra_process(struct bgp_peer *, struct bgp_info *, safi_t, path_id_t *, rd_t *, u_char *);
 
 EXT struct bgp_info *bgp_info_new(struct bgp_peer *);
 EXT void bgp_info_add(struct bgp_peer *, struct bgp_node *, struct bgp_info *, u_int32_t);

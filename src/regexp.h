@@ -8,6 +8,7 @@
 #ifndef REGEXP_H
 #define REGEXP_H
 
+#define REGEXP_MAGIC	0234
 
 /* 
 http://www.opensource.apple.com/darwinsource/10.3/expect-1/expect/expect.h , 
@@ -35,7 +36,6 @@ typedef struct regexp {
 
 regexp * pm_regcomp(char *exp, int *patternsize);
 int pm_regexec(regexp *prog, char *string);
-void pm_regsub(regexp *prog, char *source, char *dest);
 void pm_regerror(char *s);
 
 #endif

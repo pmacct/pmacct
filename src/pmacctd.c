@@ -192,10 +192,10 @@ void pm_pcap_add_filter(struct pcap_device *dev_ptr)
   struct bpf_program filter;
   char errbuf[PCAP_ERRBUF_SIZE];
 
-  if (!dev_ptr->str || pcap_lookupnet(dev_ptr->str, &localnet, &netmask, errbuf) < 0) {
+  if (!strlen(dev_ptr->str) || pcap_lookupnet(dev_ptr->str, &localnet, &netmask, errbuf) < 0) {
     localnet = 0;
     netmask = PCAP_NETMASK_UNKNOWN;
-    if (dev_ptr->str) Log(LOG_WARNING, "WARN ( %s/core ): %s\n", config.name, errbuf);
+    if (strlen(dev_ptr->str)) Log(LOG_WARNING, "WARN ( %s/core ): %s\n", config.name, errbuf);
   }
 
   memset(&filter, 0, sizeof(filter));
@@ -258,7 +258,8 @@ int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, struct pcap
     dev_ptr->fd = pcap_fileno(dev_ptr->dev_desc);
 
     if (config.nfacctd_pipe_size) {
-      int slen = sizeof(config.nfacctd_pipe_size), x;
+      socklen_t slen = sizeof(config.nfacctd_pipe_size);
+      int x;
 
 #if defined (PCAP_TYPE_linux) || (PCAP_TYPE_snoop)
       Setsocksize(pcap_fileno(dev_ptr->dev_desc), SOL_SOCKET, SO_RCVBUF, &config.nfacctd_pipe_size, slen);
@@ -589,18 +590,6 @@ int main(int argc,char **argv, char **envp)
     }
   }
 
-  if (config.daemon) {
-    list = plugins_list;
-    while (list) {
-      if (!strcmp(list->type.string, "print") && !list->cfg.print_output_file)
-        printf("INFO ( %s/%s ): Daemonizing. Bye bye screen.\n", list->name, list->type.string);
-      list = list->next;
-    }
-    if (debug || config.debug)
-      printf("WARN ( %s/core ): debug is enabled; forking in background. Logging to standard error (stderr) will get lost.\n", config.name);
-    daemonize();
-  }
-
   initsetproctitle(argc, argv, envp);
   if (config.syslog) {
     logf = parse_log_facility(config.syslog);
@@ -612,14 +601,30 @@ int main(int argc,char **argv, char **envp)
     Log(LOG_INFO, "INFO ( %s/core ): Start logging ...\n", config.name);
   }
 
-  if (config.logfile)
-  {
+  if (config.logfile) {
     config.logfile_fd = open_output_file(config.logfile, "a", FALSE);
     list = plugins_list;
     while (list) {
       list->cfg.logfile_fd = config.logfile_fd ;
       list = list->next;
     }
+  }
+
+  if (config.daemon) {
+    list = plugins_list;
+    while (list) {
+      if (!strcmp(list->type.string, "print") && !list->cfg.print_output_file)
+	printf("INFO ( %s/%s ): Daemonizing. Bye bye screen.\n", list->name, list->type.string);
+      list = list->next;
+    }
+
+    if (!config.syslog && !config.logfile) {
+      if (debug || config.debug) {
+	printf("WARN ( %s/core ): debug is enabled; forking in background. Logging to standard error (stderr) will get lost.\n", config.name);
+      }
+    }
+
+    daemonize();
   }
 
   if (config.proc_priority) {
@@ -759,9 +764,7 @@ int main(int argc,char **argv, char **envp)
 	  config.handle_flows = TRUE;
 	}
 #if defined (WITH_NDPI)
-	{ // XXX: some if condition here
-	  list->cfg.what_to_count_2 |= COUNT_NDPI_CLASS;
-	}
+	if (list->cfg.ndpi_num_roots) list->cfg.what_to_count_2 |= COUNT_NDPI_CLASS;
 #endif
         if (list->cfg.networks_file ||
 	   ((list->cfg.nfacctd_bgp || list->cfg.nfacctd_bmp) && list->cfg.nfacctd_as == NF_AS_BGP)) {
@@ -809,9 +812,13 @@ int main(int argc,char **argv, char **envp)
                         COUNT_MPLS_STACK_DEPTH))
           list->cfg.data_type |= PIPE_TYPE_MPLS;
 
-	if (list->cfg.what_to_count_2 & (COUNT_TUNNEL_SRC_HOST|COUNT_TUNNEL_DST_HOST|
-			COUNT_TUNNEL_IP_PROTO|COUNT_TUNNEL_IP_TOS))
+	if (list->cfg.what_to_count_2 & (COUNT_TUNNEL_SRC_MAC|COUNT_TUNNEL_DST_MAC|
+			COUNT_TUNNEL_SRC_HOST|COUNT_TUNNEL_DST_HOST|COUNT_TUNNEL_IP_PROTO|
+			COUNT_TUNNEL_IP_TOS|COUNT_TUNNEL_SRC_PORT|COUNT_TUNNEL_DST_PORT|
+			COUNT_VXLAN)) {
 	  list->cfg.data_type |= PIPE_TYPE_TUN;
+	  cb_data.has_tun_prims = TRUE;
+	}
 
         if (list->cfg.what_to_count_2 & (COUNT_LABEL))
           list->cfg.data_type |= PIPE_TYPE_VLEN;
@@ -1004,11 +1011,28 @@ int main(int argc,char **argv, char **envp)
   }
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
-  signal(SIGCHLD, startup_handle_falling_child); /* takes note of plugins failed during startup phase */
-  signal(SIGHUP, reload); /* handles reopening of syslog channel */
-  signal(SIGUSR1, push_stats); /* logs various statistics via Log() calls */
-  signal(SIGUSR2, reload_maps); /* sets to true the reload_maps flag */
-  signal(SIGPIPE, SIG_IGN); /* we want to exit gracefully when a pipe is broken */
+  memset(&sighandler_action, 0, sizeof(sighandler_action)); /* To ensure the struct holds no garbage values */
+  sigemptyset(&sighandler_action.sa_mask);  /* Within a signal handler all the signals are enabled */
+  sighandler_action.sa_flags = SA_RESTART;  /* To enable re-entering a system call afer done with signal handling */
+
+  sighandler_action.sa_handler = startup_handle_falling_child;
+  sigaction(SIGCHLD, &sighandler_action, NULL);
+
+  /* handles reopening of syslog channel */
+  sighandler_action.sa_handler = reload;
+  sigaction(SIGHUP, &sighandler_action, NULL);
+
+  /* logs various statistics via Log() calls */
+  sighandler_action.sa_handler = push_stats;
+  sigaction(SIGUSR1, &sighandler_action, NULL);
+
+  /* sets to true the reload_maps flag */
+  sighandler_action.sa_handler = reload_maps;
+  sigaction(SIGUSR2, &sighandler_action, NULL);
+
+  /* we want to exit gracefully when a pipe is broken */
+  sighandler_action.sa_handler = SIG_IGN;
+  sigaction(SIGPIPE, &sighandler_action, NULL);
 
   if (config.nfacctd_bgp && config.nfacctd_bmp) {
     Log(LOG_ERR, "ERROR ( %s/core ): bgp_daemon and bmp_daemon are currently mutual exclusive. Exiting.\n", config.name);
@@ -1090,11 +1114,11 @@ int main(int argc,char **argv, char **envp)
        to keep a backup feed in memory */
     config.nfacctd_bgp_max_peers = 2;
 
-    cb_data.f_agent = (char *)&client;
+    cb_data.f_agent = (u_char *) &client;
     nfacctd_bgp_wrapper();
 
     /* Let's give the BGP thread some advantage to create its structures */
-    if (config.rpki_roas_file) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
+    if (config.rpki_roas_file || config.rpki_rtr_cache) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
     sleep(sleep_time);
   }
 
@@ -1107,7 +1131,7 @@ int main(int argc,char **argv, char **envp)
     nfacctd_bmp_wrapper();
 
     /* Let's give the BMP thread some advantage to create its structures */
-    if (config.rpki_roas_file) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
+    if (config.rpki_roas_file || config.rpki_rtr_cache) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
     sleep(sleep_time);
   }
 
@@ -1138,9 +1162,15 @@ int main(int argc,char **argv, char **envp)
 
   /* signals to be handled only by the core process;
      we set proper handlers after plugin creation */
-  signal(SIGINT, PM_sigint_handler);
-  signal(SIGTERM, PM_sigint_handler);
-  signal(SIGCHLD, handle_falling_child);
+  sighandler_action.sa_handler = PM_sigint_handler;
+  sigaction(SIGINT, &sighandler_action, NULL);
+
+  sighandler_action.sa_handler = PM_sigint_handler;
+  sigaction(SIGTERM, &sighandler_action, NULL);
+
+  sighandler_action.sa_handler = handle_falling_child;
+  sigaction(SIGCHLD, &sighandler_action, NULL);
+
   kill(getpid(), SIGCHLD);
 
   /* When reading packets from a savefile, things are lightning fast; we will sit
@@ -1152,6 +1182,15 @@ int main(int argc,char **argv, char **envp)
     }
     else sleep(config.pcap_sf_delay);
   }
+
+  sigemptyset(&cb_data.sig.set);
+  sigaddset(&cb_data.sig.set, SIGCHLD);
+  sigaddset(&cb_data.sig.set, SIGHUP);
+  sigaddset(&cb_data.sig.set, SIGUSR1);
+  sigaddset(&cb_data.sig.set, SIGUSR2);
+  sigaddset(&cb_data.sig.set, SIGINT);
+  sigaddset(&cb_data.sig.set, SIGTERM);
+  cb_data.sig.is_set = TRUE;
 
   /* Main loop (for the case of a single interface): if pcap_loop() exits
      maybe an error occurred; we will try closing and reopening again our

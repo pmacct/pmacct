@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -425,4 +425,21 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
 	}
     }
   return str_buf;
+}
+
+struct ecommunity *ecommunity_dup(struct ecommunity *ecom)
+{
+  struct ecommunity *new;
+
+  new = malloc(sizeof(struct ecommunity));
+
+  new->size = ecom->size;
+
+  if (new->size) {
+    new->val = malloc(ecom->size * ECOMMUNITY_SIZE);
+    memcpy (new->val, ecom->val, ecom->size * ECOMMUNITY_SIZE);
+  }
+  else new->val = NULL;
+
+  return new;
 }

@@ -50,6 +50,8 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
   u_int32_t iface32 = 0;
   u_int32_t ifacePresent = 0;
 
+  if (cb_data->sig.is_set) sigprocmask(SIG_BLOCK, &cb_data->sig.set, NULL);
+
   /* We process the packet with the appropriate
      data link layer function */
   if (buf) {
@@ -65,6 +67,20 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     pptrs.flow_type = NF9_FTYPE_TRAFFIC;
 
     assert(cb_data);
+
+    if (cb_data->has_tun_prims) {
+      struct packet_ptrs *tpptrs;
+ 
+      pptrs.tun_pptrs = malloc(sizeof(struct packet_ptrs));
+      memset(pptrs.tun_pptrs, 0, sizeof(struct packet_ptrs));
+      tpptrs = (struct packet_ptrs *) pptrs.tun_pptrs;
+
+      tpptrs->pkthdr = malloc(sizeof(struct pcap_pkthdr));
+      memcpy(&tpptrs->pkthdr, &pptrs.pkthdr, sizeof(struct pcap_pkthdr));
+
+      tpptrs->packet_ptr = (u_char *) buf;
+      tpptrs->flow_type = NF9_FTYPE_TRAFFIC;
+    }
 
     /* direction */
     if (cb_data->device &&
@@ -169,6 +185,15 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     reload_map = FALSE;
     gettimeofday(&reload_map_tstamp, NULL);
   }
+
+  if (cb_data->has_tun_prims && pptrs.tun_pptrs) {
+    struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs.tun_pptrs;
+
+    if (tpptrs->pkthdr) free(tpptrs->pkthdr);
+    free(pptrs.tun_pptrs);
+  }
+
+  if (cb_data->sig.is_set) sigprocmask(SIG_UNBLOCK, &cb_data->sig.set, NULL);
 }
 
 int ip_handler(register struct packet_ptrs *pptrs)
@@ -228,7 +253,31 @@ int ip_handler(register struct packet_ptrs *pptrs)
         ptr += ((struct pm_tcphdr *)pptrs->tlh_ptr)->th_off << 2;
         off += ((struct pm_tcphdr *)pptrs->tlh_ptr)->th_off << 2;
       }
-      if (off < caplen) pptrs->payload_ptr = ptr;
+
+      if (off < caplen) {
+	pptrs->payload_ptr = ptr;
+
+	if (pptrs->l4_proto == IPPROTO_UDP) {
+	  u_int16_t dst_port = ntohs(((struct pm_udphdr *)pptrs->tlh_ptr)->uh_dport);
+
+	  if (dst_port == UDP_PORT_VXLAN && (off + sizeof(struct vxlan_hdr) <= caplen)) {
+	    struct vxlan_hdr *vxhdr = (struct vxlan_hdr *) pptrs->payload_ptr; 
+
+	    if (vxhdr->flags & VXLAN_FLAG_I) pptrs->vxlan_ptr = vxhdr->vni; 
+	    pptrs->payload_ptr += sizeof(struct vxlan_hdr);
+
+	    if (pptrs->tun_pptrs) {
+	      struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
+
+	      tpptrs->pkthdr->caplen = (pptrs->pkthdr->caplen - (pptrs->payload_ptr - pptrs->packet_ptr)); 
+	      tpptrs->packet_ptr = pptrs->payload_ptr;
+
+	      eth_handler(tpptrs->pkthdr, tpptrs);
+	      if (tpptrs->iph_ptr) ((*tpptrs->l3_handler)(tpptrs));
+	    }
+	  }
+	}
+      }
     }
     else {
       pptrs->tlh_ptr = dummy_tlhdr;
@@ -372,7 +421,31 @@ int ip6_handler(register struct packet_ptrs *pptrs)
         ptr += ((struct pm_tcphdr *)pptrs->tlh_ptr)->th_off << 2;
         off += ((struct pm_tcphdr *)pptrs->tlh_ptr)->th_off << 2;
       }
-      if (off < caplen) pptrs->payload_ptr = ptr;
+
+      if (off < caplen) {
+	pptrs->payload_ptr = ptr;
+
+	if (pptrs->l4_proto == IPPROTO_UDP) {
+	  u_int16_t dst_port = ntohs(((struct pm_udphdr *)pptrs->tlh_ptr)->uh_dport);
+
+	  if (dst_port == UDP_PORT_VXLAN && (off + sizeof(struct vxlan_hdr) <= caplen)) {
+	    struct vxlan_hdr *vxhdr = (struct vxlan_hdr *) pptrs->payload_ptr;
+
+	    if (vxhdr->flags & VXLAN_FLAG_I) pptrs->vxlan_ptr = vxhdr->vni;
+	    pptrs->payload_ptr += sizeof(struct vxlan_hdr);
+
+	    if (pptrs->tun_pptrs) {
+	      struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
+
+	      tpptrs->pkthdr->caplen = (pptrs->pkthdr->caplen - (pptrs->payload_ptr - pptrs->packet_ptr));
+	      tpptrs->packet_ptr = pptrs->payload_ptr;
+
+	      eth_handler(tpptrs->pkthdr, tpptrs);
+	      if (tpptrs->iph_ptr) ((*tpptrs->l3_handler)(tpptrs));
+            }
+	  }
+	}
+      }
     }
     else {
       pptrs->tlh_ptr = dummy_tlhdr;
@@ -426,10 +499,11 @@ int PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
   if (config.maps_index && pretag_index_have_one(t)) {
     struct id_entry *index_results[ID_TABLE_INDEX_RESULTS];
     u_int32_t iterator;
+    int num_results;
 
-    pretag_index_lookup(t, pptrs, index_results, ID_TABLE_INDEX_RESULTS);
+    num_results = pretag_index_lookup(t, pptrs, index_results, ID_TABLE_INDEX_RESULTS);
 
-    for (iterator = 0; index_results[iterator] && iterator < ID_TABLE_INDEX_RESULTS; iterator++) {
+    for (iterator = 0; index_results[iterator] && iterator < num_results; iterator++) {
       ret = pretag_entry_process(index_results[iterator], pptrs, tag, tag2);
       if (!(ret & PRETAG_MAP_RCODE_JEQ)) return ret;
     }
@@ -553,7 +627,7 @@ int gtp_tunnel_func(register struct packet_ptrs *pptrs)
   struct pm_udphdr *udp_hdr = (struct pm_udphdr *) pptrs->tlh_ptr;
   u_int16_t off = pptrs->payload_ptr-pptrs->packet_ptr;
   u_int16_t gtp_hdr_len, gtp_version;
-  char *ptr = pptrs->payload_ptr;
+  u_char *ptr = pptrs->payload_ptr;
   int ret, trial;
 
   gtp_version = (gtp_hdr_v0->flags >> 5) & 0x07;
@@ -716,11 +790,11 @@ ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockadd
 
       if (savefile_pptrs->l4_proto == IPPROTO_UDP) {
 	if (savefile_pptrs->l3_proto == ETHERTYPE_IP) {
-	  raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct pm_iphdr *)savefile_pptrs->iph_ptr)->ip_src.s_addr,
+	  raw_to_sa((struct sockaddr *)src_addr, (u_char *) &((struct pm_iphdr *)savefile_pptrs->iph_ptr)->ip_src.s_addr,
 		    (u_int16_t) ((struct pm_udphdr *)savefile_pptrs->tlh_ptr)->uh_sport, AF_INET);
 	}
 	else if (savefile_pptrs->l3_proto == ETHERTYPE_IPV6) {
-	  raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct ip6_hdr *)savefile_pptrs->iph_ptr)->ip6_src,
+	  raw_to_sa((struct sockaddr *)src_addr, (u_char *) &((struct ip6_hdr *)savefile_pptrs->iph_ptr)->ip6_src,
 		    (u_int16_t) ((struct pm_udphdr *)savefile_pptrs->tlh_ptr)->uh_sport, AF_INET6);
 	}
       }
@@ -730,7 +804,7 @@ ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockadd
   return ret;
 }
 
-ssize_t recvfrom_rawip(char *buf, size_t len, struct sockaddr *src_addr, struct packet_ptrs *local_pptrs)
+ssize_t recvfrom_rawip(unsigned char *buf, size_t len, struct sockaddr *src_addr, struct packet_ptrs *local_pptrs)
 {
   ssize_t ret = 0;
 
@@ -746,11 +820,11 @@ ssize_t recvfrom_rawip(char *buf, size_t len, struct sockaddr *src_addr, struct 
 
       if (local_pptrs->l4_proto == IPPROTO_UDP) {
         if (local_pptrs->l3_proto == ETHERTYPE_IP) {
-          raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct pm_iphdr *)local_pptrs->iph_ptr)->ip_src.s_addr,
+          raw_to_sa((struct sockaddr *)src_addr, (u_char *) &((struct pm_iphdr *)local_pptrs->iph_ptr)->ip_src.s_addr,
                     (u_int16_t) ((struct pm_udphdr *)local_pptrs->tlh_ptr)->uh_sport, AF_INET);
         }
         else if (local_pptrs->l3_proto == ETHERTYPE_IPV6) {
-          raw_to_sa((struct sockaddr *)src_addr, (char *) &((struct ip6_hdr *)local_pptrs->iph_ptr)->ip6_src,
+          raw_to_sa((struct sockaddr *)src_addr, (u_char *) &((struct ip6_hdr *)local_pptrs->iph_ptr)->ip6_src,
                     (u_int16_t) ((struct pm_udphdr *)local_pptrs->tlh_ptr)->uh_sport, AF_INET6);
         }
       }

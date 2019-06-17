@@ -32,7 +32,6 @@
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "regexp.h"
-#include "regmagic.h"
 
 void pm_regerror(char * s)
 {
@@ -233,7 +232,7 @@ pm_regcomp(char *exp,int *patternsize)
 	regnpar = 1;
 	regsize = 0L;
 	regcode = &regdummy;
-	regc(MAGIC);
+	regc(REGEXP_MAGIC);
 	if (reg(0, &flags) == NULL)
 		return(NULL);
 
@@ -251,7 +250,7 @@ pm_regcomp(char *exp,int *patternsize)
 	regparse = exp;
 	regnpar = 1;
 	regcode = r->program;
-	regc(MAGIC);
+	regc(REGEXP_MAGIC);
 	if (reg(0, &flags) == NULL) {
 		free(r);
 		return(NULL);
@@ -728,7 +727,7 @@ pm_regexec(regexp *prog, char *string)
 	}
 
 	/* Check validity of program. */
-	if (UCHARAT(prog->program) != MAGIC) {
+	if (UCHARAT(prog->program) != REGEXP_MAGIC) {
 		printf("<3>Regexp: corrupted program\n");
 		return(0);
 	}

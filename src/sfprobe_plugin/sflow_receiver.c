@@ -1,5 +1,14 @@
-/* Copyright (c) 2002-2006 InMon Corp. Licensed under the terms of the InMon sFlow licence: */
-/* http://www.inmon.com/technology/sflowlicense.txt */
+/*
+    pmacct (Promiscuous mode IP Accounting package)
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+*/
+
+/* 
+   Originally based on sflowtool which is:
+
+   Copyright (c) 2002-2006 InMon Corp. Licensed under the terms of the InMon sFlow licence:
+   http://www.inmon.com/technology/sflowlicense.txt
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,6 +19,7 @@
 #include <assert.h>
 
 #include "sflow_api.h"
+#include "addr.h"
 #include "ip_flow.h"
 #include "classifier.h"
 
@@ -26,6 +36,8 @@ static void putAddress(SFLReceiver *receiver, SFLAddress *addr);
 
 void sfl_receiver_init(SFLReceiver *receiver, SFLAgent *agent)
 {
+  struct sockaddr_in *sa4 = (struct sockaddr_in *) &receiver->receiver;
+
   /* first clear everything */
   memset(receiver, 0, sizeof(*receiver));
 
@@ -37,9 +49,9 @@ void sfl_receiver_init(SFLReceiver *receiver, SFLAgent *agent)
   receiver->sFlowRcvrPort = SFL_DEFAULT_COLLECTOR_PORT;
 
   /* initialize the socket address */
-  receiver->receiver.sin_family = AF_INET;
-  receiver->receiver.sin_port = htons((u_int16_t)receiver->sFlowRcvrPort);
-  receiver->receiver.sin_addr = receiver->sFlowRcvrAddress.address.ip_v4;
+  sa4->sin_family = AF_INET;
+  sa4->sin_port = htons((u_int16_t)receiver->sFlowRcvrPort);
+  sa4->sin_addr = receiver->sFlowRcvrAddress.address.ip_v4;
 
   /* preset some of the header fields */
   receiver->sampleCollector.datap = receiver->sampleCollector.data;
@@ -98,17 +110,35 @@ SFLAddress *sfl_receiver_get_sFlowRcvrAddress(SFLReceiver *receiver) {
   return &receiver->sFlowRcvrAddress;
 }
 void sfl_receiver_set_sFlowRcvrAddress(SFLReceiver *receiver, SFLAddress *sFlowRcvrAddress) {
-  if(sFlowRcvrAddress) receiver->sFlowRcvrAddress = *sFlowRcvrAddress; // structure copy
+  struct host_addr ha;
+
+  if (sFlowRcvrAddress) receiver->sFlowRcvrAddress = *sFlowRcvrAddress; // structure copy
+
   // update the socket structure
-  receiver->receiver.sin_addr = receiver->sFlowRcvrAddress.address.ip_v4;
+  memset(&ha, 0, sizeof(ha));
+  if (receiver->sFlowRcvrAddress.type == SFLADDRESSTYPE_IP_V4) {
+    ha.family = AF_INET; 
+    memcpy(&ha.address.ipv4, &receiver->sFlowRcvrAddress.address.ip_v4, sizeof(struct in_addr));
+  }
+  else {
+    ha.family = AF_INET6; 
+    memcpy(&ha.address.ipv6, &receiver->sFlowRcvrAddress.address.ip_v6, sizeof(struct in6_addr));
+  }
+
+  addr_to_sa((struct sockaddr *) &receiver->receiver, &ha, (u_int16_t)receiver->sFlowRcvrPort);
 }
+
 u_int32_t sfl_receiver_get_sFlowRcvrPort(SFLReceiver *receiver) {
   return receiver->sFlowRcvrPort;
 }
+
 void sfl_receiver_set_sFlowRcvrPort(SFLReceiver *receiver, u_int32_t sFlowRcvrPort) {
+  struct sockaddr_in *sa4 = (struct sockaddr_in *) &receiver->receiver;
+
   receiver->sFlowRcvrPort = sFlowRcvrPort;
+
   // update the socket structure
-  receiver->receiver.sin_port = htons((u_int16_t)receiver->sFlowRcvrPort);
+  sa4->sin_port = htons((u_int16_t)receiver->sFlowRcvrPort);
 }
 
 /*_________________---------------------------__________________
@@ -380,7 +410,7 @@ inline static void putClass(SFLReceiver *receiver, SFLExtended_classification *c
   }
   else strlcpy(buf, "unknown", MAX_PROTOCOL_LEN);
 
-  put128(receiver, buf);
+  put128(receiver, (u_char *)buf);
 }
 
 inline static void putClass2(SFLReceiver *receiver, SFLExtended_classification2 *class2_elem)

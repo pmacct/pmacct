@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -43,7 +43,7 @@ struct acc {
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;
   struct pkt_tunnel_primitives *ptun;
-  char *pcust;
+  u_char *pcust;
   struct pkt_vlen_hdr_primitives *pvlen;
   struct acc *next;
 };
@@ -83,7 +83,7 @@ struct query_entry {
   struct pkt_nat_primitives pnat;		/* extended NAT + timestamp data */
   struct pkt_mpls_primitives pmpls;		/* extended MPLS data */
   struct pkt_tunnel_primitives ptun;		/* extended tunnel data */
-  char *pcust;					/* custom-defined data */
+  u_char *pcust;				/* custom-defined data */
   struct pkt_vlen_hdr_primitives *pvlen;	/* variable-length data */
 };
 
@@ -101,7 +101,7 @@ struct stripped_class {
 
 struct imt_custom_primitive_entry {
   /* compiled from map */
-  u_char name[MAX_CUSTOM_PRIMITIVE_NAMELEN];
+  char name[MAX_CUSTOM_PRIMITIVE_NAMELEN];
   u_int16_t field_type;
   u_int16_t len;
   u_int8_t semantics;

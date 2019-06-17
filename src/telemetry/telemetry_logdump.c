@@ -25,6 +25,7 @@
 /* includes */
 #include "pmacct.h"
 #include "bgp/bgp.h"
+#include "bmp/bmp.h"
 #include "telemetry.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
@@ -41,7 +42,7 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = TELEMETRY_LOGDUMP_ET_NONE;
   pid_t writer_pid = getpid();
 
-  char *base64_tdata = NULL;
+  u_char *base64_tdata = NULL;
   size_t base64_tdata_len = 0;
   
   if (!peer || !peer->log || !log_data || !log_data_len || !t_data || !event_type) return ERR;
@@ -95,7 +96,7 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
       base64_tdata = base64_encode(log_data, log_data_len, &base64_tdata_len);
 
       if (base64_tdata) {
-        json_object_set_new_nocheck(obj, "telemetry_data", json_string(base64_tdata));
+        json_object_set_new_nocheck(obj, "telemetry_data", json_string((char *)base64_tdata));
 	base64_freebuf(base64_tdata);
         base64_tdata_len = 0;
       }

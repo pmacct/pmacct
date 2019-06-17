@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -213,7 +213,11 @@ struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bg
   if (!bgp_peer_loc || !bgp_peer_rem) return NULL;
 
   if (!bgp_peer_loc->cap_4as || !bgp_peer_rem->cap_4as) bgp_peer_rem->cap_4as = FALSE;
-  if (!bgp_peer_loc->cap_add_paths || !bgp_peer_rem->cap_add_paths) bgp_peer_rem->cap_add_paths = FALSE;
+
+  /* XXX: since BGP OPENs are fabricated, we assume that if remote
+     peer is marked as able to send ADD-PATH capability, the local
+     pper will be able to receive it just fine */
+  /* if (!bgp_peer_loc->cap_add_paths || !bgp_peer_rem->cap_add_paths) bgp_peer_rem->cap_add_paths = FALSE; */
 
   bgp_peer_rem->type = FUNC_TYPE_BMP;
   memcpy(&bgp_peer_rem->id, &bgp_peer_rem->addr, sizeof(struct host_addr));
@@ -326,4 +330,56 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
     }
 #endif
   }
+}
+
+int bmp_tlv_array_increment(int current_entries, int max_entries)
+{
+  if ((current_entries + 1) == max_entries) {
+    return 0;
+  }
+  else {
+    return (current_entries + 1);
+  }
+}
+
+char *bmp_tlv_type_print(u_int16_t in, const char *prefix, const char **registry, int max_registry_entries)
+{
+  char *out = NULL;
+  int prefix_len, value_len;
+
+  prefix_len = strlen(prefix);
+
+  if (registry && max_registry_entries) {
+    if (in <= max_registry_entries) {
+      value_len = strlen(registry[in]);
+      out = malloc(prefix_len + value_len + 1 /* sep */ + 1 /* null */);
+      sprintf(out, "%s_%s", prefix, registry[in]);
+
+      return out;
+    }
+  }
+
+  out = malloc(prefix_len + 5 /* value len */ + 1 /* sep */ + 1 /* null */);
+  sprintf(out, "%s_%u", prefix, in);
+
+  return out;
+}
+
+char *bmp_term_reason_print(u_int16_t in)
+{
+  char *out = NULL;
+  int prefix_len, value_len;
+
+
+  if (in <= BMP_TERM_REASON_MAX) {
+    value_len = strlen(bmp_term_reason_types[in]);
+    out = malloc(value_len + 1 /* null */);
+    sprintf(out, "%s", bmp_term_reason_types[in]);
+  }
+  else {
+    out = malloc(5 /* value len */ + 1 /* null */);
+    sprintf(out, "%u", in);
+  }
+
+  return out;
 }

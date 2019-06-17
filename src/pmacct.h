@@ -66,7 +66,10 @@
 #include <limits.h>
 #include <pwd.h>
 #include <grp.h>
+#include <dlfcn.h>
+#include <math.h>
 #include "pmsearch.h"
+#include "filters/bloom.h"
 
 #include <sys/mman.h>
 #if !defined (MAP_ANONYMOUS)
@@ -214,7 +217,7 @@ struct plugin_requests {
 };
 
 typedef struct {
-  char *val;
+  u_char *val;
   u_int16_t len;
 } pm_hash_key_t;
 
@@ -292,6 +295,11 @@ struct pcap_devices {
   int num;
 };
 
+struct pcap_callback_signals {
+  int is_set;
+  sigset_t set;
+};
+
 struct pcap_callback_data {
   u_char * f_agent; 
   u_char * bta_table;
@@ -302,6 +310,8 @@ struct pcap_callback_data {
   struct pcap_device *device;
   u_int32_t ifindex_in;
   u_int32_t ifindex_out;
+  u_int8_t has_tun_prims;
+  struct pcap_callback_signals sig;
 };
 
 struct _protocols_struct {
@@ -411,7 +421,7 @@ EXT void compute_once();
 EXT void reset_index_pkt_ptrs(struct packet_ptrs *);
 EXT void set_index_pkt_ptrs(struct packet_ptrs *);
 EXT ssize_t recvfrom_savefile(struct pcap_device *, void **, struct sockaddr *, struct timeval **, int *, struct packet_ptrs *);
-EXT ssize_t recvfrom_rawip(char *, size_t, struct sockaddr *, struct packet_ptrs *);
+EXT ssize_t recvfrom_rawip(unsigned char *, size_t, struct sockaddr *, struct packet_ptrs *);
 #undef EXT
 
 #ifndef HAVE_STRLCPY
@@ -456,5 +466,6 @@ EXT struct pcap_device device;
 EXT struct pcap_devices devices, bkp_devices;
 EXT struct pcap_interfaces pcap_if_map, bkp_pcap_if_map;
 EXT struct pcap_stat ps;
+EXT struct sigaction sighandler_action;
 #undef EXT
 #endif /* _PMACCT_H_ */

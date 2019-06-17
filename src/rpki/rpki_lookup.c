@@ -29,9 +29,9 @@
 #include "rpki.h"
 
 /* Functions */
-u_int8_t rpki_prefix_lookup(struct prefix *p, struct aspath *aspath)
+u_int8_t rpki_prefix_lookup(struct prefix *p, as_t last_as)
 {
-  struct bgp_misc_structs *r_data = rpki_misc_db;
+  struct bgp_misc_structs *m_data = rpki_misc_db;
   struct node_match_cmp_term2 nmct2;
   struct bgp_node *result = NULL;
   struct bgp_info *info = NULL;
@@ -39,7 +39,7 @@ u_int8_t rpki_prefix_lookup(struct prefix *p, struct aspath *aspath)
   safi_t safi;
   afi_t afi;
 
-  if (!rpki_routing_db || !r_data || !p || !aspath) return ROA_STATUS_UNKNOWN;
+  if (!rpki_roa_db || !m_data || !p) return ROA_STATUS_UNKNOWN;
 
   memset(&peer, 0, sizeof(struct bgp_peer));
   peer.type = FUNC_TYPE_RPKI;
@@ -48,35 +48,58 @@ u_int8_t rpki_prefix_lookup(struct prefix *p, struct aspath *aspath)
   safi = SAFI_UNICAST;
 
   memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
+  nmct2.ret_code = ROA_STATUS_UNKNOWN; 
   nmct2.safi = safi;
-  nmct2.aspath = aspath;
+  nmct2.p = p;
+  nmct2.last_as = last_as;
 
-  bgp_node_match(rpki_routing_db->rib[afi][safi], p, &peer, r_data->route_info_modulo,
-	  	 r_data->bgp_lookup_node_match_cmp, &nmct2, &result, &info);
+  bgp_node_match(rpki_roa_db->rib[afi][safi], p, &peer, m_data->route_info_modulo,
+	  	 m_data->bgp_lookup_node_match_cmp, &nmct2, NULL, &result, &info);
 
-  if (result) return ROA_STATUS_VALID;
-  else {
-    if (nmct2.ret_code == RPKI_LOOKUP_RETCODE_AS_MISMATCH) {
-      return ROA_STATUS_INVALID; 
+  return nmct2.ret_code;
+}
+
+u_int8_t rpki_vector_prefix_lookup(struct bgp_node_vector *bnv)
+{
+  int idx, level;
+  u_int8_t roa = ROA_STATUS_UNKNOWN;
+  as_t last_as;
+
+  if (!bnv || !bnv->entries) return roa;
+
+  for (level = 0, idx = bnv->entries; idx; idx--) {
+    level++;
+
+    last_as = evaluate_last_asn(bnv->v[(idx - 1)].info->attr->aspath);
+    if (!last_as) last_as = bnv->v[(idx - 1)].info->peer->myas;
+
+    roa = rpki_prefix_lookup(bnv->v[(idx - 1)].p, last_as);
+    if (roa == ROA_STATUS_UNKNOWN || roa == ROA_STATUS_VALID) break;
+  }
+
+  if (level > 1) {
+    if (roa == ROA_STATUS_UNKNOWN) {
+      roa = ROA_STATUS_OVERLAP_UNKNOWN;
     }
-    else {
-      return ROA_STATUS_UNKNOWN;
+    else if (roa == ROA_STATUS_VALID) {
+      roa = ROA_STATUS_OVERLAP_VALID;
     }
   }
+
+  return roa;
 }
 
 int rpki_prefix_lookup_node_match_cmp(struct bgp_info *info, struct node_match_cmp_term2 *nmct2)
 {
-  nmct2->ret_code = RPKI_LOOKUP_RETCODE_UNKNOWN;
+  if (!info || !info->attr || !info->attr->aspath || !nmct2) return TRUE;
 
-  if (!info || !info->attr || !info->attr->aspath || !nmct2 || !nmct2->aspath) return TRUE;
+  if (info->attr->flag >= nmct2->p->prefixlen) {
+    if (evaluate_last_asn(info->attr->aspath) == nmct2->last_as) {
+      nmct2->ret_code = ROA_STATUS_VALID;
+      return FALSE;
+    }
+  }
 
-  if (evaluate_last_asn(info->attr->aspath) == evaluate_last_asn(nmct2->aspath)) {
-    nmct2->ret_code = RPKI_LOOKUP_RETCODE_OK;
-    return FALSE;
-  }
-  else {
-    nmct2->ret_code = RPKI_LOOKUP_RETCODE_AS_MISMATCH; 
-    return TRUE;
-  }
+  nmct2->ret_code = ROA_STATUS_INVALID;
+  return TRUE;
 }

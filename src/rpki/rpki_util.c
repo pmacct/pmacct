@@ -60,12 +60,72 @@ u_int8_t rpki_str2roa(char *roa_str)
   return ROA_STATUS_UNKNOWN;
 }
 
-void rpki_link_misc_structs(struct bgp_misc_structs *r_data)
+void rpki_ribs_free(struct bgp_peer *peer, struct bgp_table *rib_v4, struct bgp_table *rib_v6)
 {
-  r_data->table_peer_buckets = 1; /* saving on DEFAULT_BGP_INFO_HASH for now */
-  r_data->table_per_peer_buckets = DEFAULT_BGP_INFO_PER_PEER_HASH; 
-  r_data->table_attr_hash_buckets = HASHTABSIZE;
-  r_data->table_per_peer_hash = BGP_ASPATH_HASH_PATHID;
-  r_data->route_info_modulo = NULL;
-  r_data->bgp_lookup_node_match_cmp = rpki_prefix_lookup_node_match_cmp;
+  bgp_table_info_delete(peer, rib_v4, AFI_IP, SAFI_UNICAST);
+  bgp_table_info_delete(peer, rib_v6, AFI_IP6, SAFI_UNICAST);
+
+  bgp_table_free(rib_v4);
+  bgp_table_free(rib_v6);
+}
+
+void rpki_ribs_reset(struct bgp_peer *peer, struct bgp_table **rib_v4, struct bgp_table **rib_v6)
+{
+  rpki_ribs_free(peer, (*rib_v4), (*rib_v6));
+
+  (*rib_v4) = bgp_table_init(AFI_IP, SAFI_UNICAST);
+  (*rib_v6) = bgp_table_init(AFI_IP6, SAFI_UNICAST);
+}
+
+void rpki_rtr_set_dont_reconnect(struct rpki_rtr_handle *cache)
+{
+  cache->dont_reconnect = TRUE;
+} 
+
+time_t rpki_rtr_eval_timeout(struct rpki_rtr_handle *cache)
+{
+  time_t retry_timeout = 0, refresh_timeout = 0, expire_timeout = 0;
+  time_t ret = 1;
+
+  if (cache->now >= (cache->expire.tstamp + cache->expire.ivl)) expire_timeout = 0;
+  else expire_timeout = ((cache->expire.tstamp + cache->expire.ivl) - cache->now); 
+
+  if (cache->fd < 0) {
+    if (cache->now >= (cache->retry.tstamp + cache->retry.ivl)) retry_timeout = 0;
+    else retry_timeout = ((cache->retry.tstamp + cache->retry.ivl) - cache->now);
+    ret = MIN(retry_timeout, expire_timeout);
+  }
+  else {
+    if (cache->now >= (cache->refresh.tstamp + cache->refresh.ivl)) refresh_timeout = 0;
+    else refresh_timeout = ((cache->refresh.tstamp + cache->refresh.ivl) - cache->now);
+    ret = MIN(refresh_timeout, expire_timeout);
+  }
+
+  /* 1 is our minimum as zero would block select() indefinitely */
+  if (!ret) ret = 1;
+
+  return ret;
+}
+
+void rpki_rtr_eval_expire(struct rpki_rtr_handle *cache)
+{
+  if (cache->now >= (cache->expire.tstamp + cache->expire.ivl)) {
+    cache->expire.tstamp = cache->now;
+  }
+  else return;
+
+  cache->session_id = 0;
+  cache->serial = 0;
+
+  rpki_ribs_reset(&rpki_peer, &rpki_roa_db->rib[AFI_IP][SAFI_UNICAST], &rpki_roa_db->rib[AFI_IP6][SAFI_UNICAST]);
+}
+
+void rpki_link_misc_structs(struct bgp_misc_structs *m_data)
+{
+  m_data->table_peer_buckets = 1; /* saving on DEFAULT_BGP_INFO_HASH for now */
+  m_data->table_per_peer_buckets = DEFAULT_BGP_INFO_PER_PEER_HASH; 
+  m_data->table_attr_hash_buckets = HASHTABSIZE;
+  m_data->table_per_peer_hash = BGP_ASPATH_HASH_PATHID;
+  m_data->route_info_modulo = NULL;
+  m_data->bgp_lookup_node_match_cmp = rpki_prefix_lookup_node_match_cmp;
 }

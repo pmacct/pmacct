@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -42,7 +42,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   pid_t core_pid = ((struct channels_list_entry *)ptr)->core_pid;
-  char *dataptr;
+  unsigned char *dataptr;
   struct tee_receiver *target = NULL;
   struct plugin_requests req;
 
@@ -296,7 +296,7 @@ void Tee_exit_now(int signum)
   exit_gracefully(0);
 }
 
-int Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
+size_t Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
 {
   char *buf_ptr = tee_send_buf;
   struct sockaddr_in *sa = (struct sockaddr_in *) &msg->agent;
@@ -304,7 +304,7 @@ int Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
   struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) &msg->agent;
   struct ip6_hdr *i6h = (struct ip6_hdr *) buf_ptr;
   struct pm_udphdr *uh;
-  int msglen = 0;
+  size_t msglen = 0;
 
   if (msg->agent.sa_family == target->sa_family) {
     /* UDP header first */
@@ -380,13 +380,13 @@ int Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
 void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
 {
   struct host_addr r;
-  u_char recv_addr[50];
+  char recv_addr[50];
   u_int16_t recv_port;
 
   if (config.debug) {
     char *flow = NULL, netflow[] = "NetFlow/IPFIX", sflow[] = "sFlow";
     struct host_addr a;
-    u_char agent_addr[50];
+    char agent_addr[50];
     u_int16_t agent_port;
 
     sa_to_addr((struct sockaddr *)msg, &a, &agent_port);
@@ -406,7 +406,7 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
   if (!config.tee_transparent) {
     if (send(fd, msg->payload, msg->len, 0) == -1) {
       struct host_addr a;
-      u_char agent_addr[50];
+      char agent_addr[50];
       u_int16_t agent_port;
 
       sa_to_addr((struct sockaddr *)msg, &a, &agent_port);
@@ -421,13 +421,13 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
     }
   }
   else {
-    int msglen;
+    size_t msglen;
 
     msglen = Tee_craft_transparent_msg(msg, target);
 
     if (msglen && send(fd, tee_send_buf, msglen, 0) == -1) {
       struct host_addr a;
-      u_char agent_addr[50];
+      char agent_addr[50];
       u_int16_t agent_port;
 
       sa_to_addr((struct sockaddr *)msg, &a, &agent_port);
@@ -449,7 +449,7 @@ void Tee_kafka_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
   struct p_kafka_host *kafka_host = &pool->kafka_host; 
   struct sockaddr target;
   time_t last_fail, now;
-  int msglen = 0;
+  size_t msglen = 0;
 
   memset(&target, 0, sizeof(target));
   target.sa_family = msg->agent.sa_family;
@@ -458,7 +458,7 @@ void Tee_kafka_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
     char *flow = NULL, netflow[] = "NetFlow/IPFIX", sflow[] = "sFlow";
     char *broker, *topic;
     struct host_addr a;
-    u_char agent_addr[50];
+    char agent_addr[50];
     u_int16_t agent_port;
 
     sa_to_addr((struct sockaddr *)msg, &a, &agent_port);
@@ -498,7 +498,8 @@ void Tee_zmq_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
   struct p_zmq_host *zmq_host = &pool->zmq_host; 
   struct sockaddr target;
   time_t last_fail, now;
-  int msglen = 0;
+  size_t msglen = 0;
+  int ret;
 
   memset(&target, 0, sizeof(target));
   target.sa_family = msg->agent.sa_family;
@@ -507,7 +508,7 @@ void Tee_zmq_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
     char *flow = NULL, netflow[] = "NetFlow/IPFIX", sflow[] = "sFlow";
     char *address;
     struct host_addr a;
-    u_char agent_addr[50];
+    char agent_addr[50];
     u_int16_t agent_port;
 
     sa_to_addr((struct sockaddr *)msg, &a, &agent_port);
@@ -525,7 +526,15 @@ void Tee_zmq_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
   if (config.tee_transparent) {
     msglen = Tee_craft_transparent_msg(msg, &target);
 
-    if (msglen) p_zmq_send_bin(&zmq_host->sock, tee_send_buf, msglen);
+    if (msglen) {
+      ret = p_zmq_send_bin(&zmq_host->sock, tee_send_buf, msglen, TRUE);
+      if (ret == ERR && errno == EAGAIN) {
+	char *address;
+
+	address = p_zmq_get_address(zmq_host);
+	Log(LOG_WARNING, "WARN ( %s/%s ): Queue full: ZeroMQ [%s]\n", config.name, config.type, address);
+      }
+    }
   }
 }
 #endif
@@ -591,7 +600,7 @@ void Tee_init_socks()
 
       if (config.debug) {
 	struct host_addr recv_addr;
-        u_char recv_addr_str[INET6_ADDRSTRLEN];
+        char recv_addr_str[INET6_ADDRSTRLEN];
 	u_int16_t recv_port;
 
 	sa_to_addr((struct sockaddr *)&target->dest, &recv_addr, &recv_port); 
@@ -646,6 +655,7 @@ void Tee_init_zmq_host(struct p_zmq_host *zmq_host, char *zmq_address, u_int32_t
   p_zmq_init_push(zmq_host, zmq_address);
   snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
   p_zmq_set_log_id(zmq_host, log_id);
+  p_zmq_set_hwm(zmq_host, PM_ZMQ_DEFAULT_FLOW_HWM); 
   p_zmq_push_setup(zmq_host);
 
   if (config.debug) {
@@ -688,7 +698,7 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, u_int16_t src_port)
       int opt = config.nfprobe_ipprec << 5;
       int rc;
 
-      rc = setsockopt(s, IPPROTO_IP, IP_TOS, &opt, sizeof(opt));
+      rc = setsockopt(s, IPPROTO_IP, IP_TOS, &opt, (socklen_t) sizeof(opt));
       if (rc < 0) Log(LOG_WARNING, "WARN ( %s/%s ): setsockopt() failed for IP_TOS: %s\n", config.name, config.type, strerror(errno));
     }
 
@@ -703,16 +713,16 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, u_int16_t src_port)
 
 
 #if defined BSD
-    setsockopt(s, IPPROTO_IP, IP_HDRINCL, &hincl, sizeof(hincl));
+    setsockopt(s, IPPROTO_IP, IP_HDRINCL, &hincl, (socklen_t) sizeof(hincl));
 #endif
   }
 
   if (config.tee_pipe_size) {
-    int l = sizeof(config.tee_pipe_size);
+    socklen_t l = sizeof(config.tee_pipe_size);
     int saved = 0, obtained = 0;
     
     getsockopt(s, SOL_SOCKET, SO_SNDBUF, &saved, &l);
-    Setsocksize(s, SOL_SOCKET, SO_SNDBUF, &config.tee_pipe_size, sizeof(config.tee_pipe_size));
+    Setsocksize(s, SOL_SOCKET, SO_SNDBUF, &config.tee_pipe_size, (socklen_t) sizeof(config.tee_pipe_size));
     getsockopt(s, SOL_SOCKET, SO_SNDBUF, &obtained, &l);
   
     if (obtained < saved) {

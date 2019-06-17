@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /* 
@@ -62,8 +62,7 @@ community_free (struct community *com)
 }
 
 /* Add one community value to the community. */
-static void
-community_add_val (struct bgp_peer *peer, struct community *com, u_int32_t val)
+void community_add_val (struct bgp_peer *peer, struct community *com, u_int32_t val)
 {
   struct bgp_misc_structs *bms;
 
@@ -138,8 +137,7 @@ community_delete (struct community *com1, struct community *com2)
 }
 
 /* Callback function from qsort(). */
-static int
-community_compare (const void *a1, const void *a2)
+int community_compare (const void *a1, const void *a2)
 {
   u_int32_t v1;
   u_int32_t v2;
@@ -170,8 +168,7 @@ community_include (struct community *com, u_int32_t val)
   return 0;
 }
 
-static u_int32_t
-community_val_get (struct community *com, int i)
+u_int32_t community_val_get(struct community *com, int i)
 {
   u_char *p;
   u_int32_t val;
@@ -450,4 +447,68 @@ community_init (int buckets, struct hash **loc_comhash)
 {
   (*loc_comhash) = hash_create (buckets, (unsigned int (*) (void *))community_hash_make,
 			 (int (*) (const void *, const void *))community_cmp);
+}
+
+
+int community_str2com_simple(const char *buf, u_int32_t *val)
+{
+  const char *p = buf;
+
+  /* Skip white space. */
+  while (isspace ((int) (*p))) p++;
+
+  /* Check the end of the line. */
+  if (*p == '\0') return ERR;
+
+  /* Community value. */
+  if (isdigit ((int) (*p))) {
+    int separator = 0;
+    int digit = 0;
+    u_int32_t community_low = 0;
+    u_int32_t community_high = 0;
+
+    while (isdigit ((int) (*p)) || (*p) == ':') {
+      if ((*p) == ':') {
+	if (separator) return ERR;
+	else {
+	  separator = TRUE;
+	  digit = FALSE;
+	  community_high = community_low << 16;
+	  community_low = 0;
+	}
+      }
+      else {
+        digit = TRUE;
+        community_low *= 10;
+        community_low += (*p - '0');
+      }
+
+      p++;
+    }
+
+    if (!digit) return ERR;
+
+    (*val) = community_high + community_low;
+
+    return FALSE;
+  }
+
+  return ERR;
+}
+
+struct community *community_dup(struct community *com)
+{
+  struct community *new;
+
+  new = malloc(sizeof(struct community));
+
+  new->size = com->size;
+
+  if (new->size) {
+    new->val = malloc(com->size * 4);
+    memcpy(new->val, com->val, com->size * 4);
+  }
+  else new->val = NULL;
+
+  return new;
 }

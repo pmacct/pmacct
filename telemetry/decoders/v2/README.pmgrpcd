@@ -1,0 +1,71 @@
+These are quickstart notes on how to install pmgrpcd.py and all of its
+dependencies. CONFIG-KEYS.pmgrpcd provides the documentation for all of
+pmgrpcd.py configuration parameters. 
+
+Install pmgrpcd.py
+===================
+
+mkdir -p /opt/pkg/
+git clone https://github.com/pmacct/pmacct.git /opt/pkg/pmacct
+ln -s /opt/pkg/pmacct/telemetry/decoders/pmgrpcd.py /usr/local/sbin/pmgrpcd.py
+chmod 700 /usr/local/sbin/pmgrpcd.py
+ 
+Install protoc
+--------------
+#
+# Install system dependencies
+#
+sudo yum install tar wget autoconf libtool automake gcc-c++ make git bzip2 curl unzip zlib zlib-devel -y [CentOS/RHEL]
+sudo apt-get install tar wget autoconf libtool automake g++ make git bzip2 curl unzip zlib1g-dev [Debian/Ubuntu] 
+
+#
+# Obtain and compile GPB code
+#
+git clone https://github.com/protocolbuffers/protobuf.git /opt/pkg/protobuf
+cd /opt/pkg/protobuf
+./autogen.sh
+./configure
+make
+make install
+ldconfig
+
+protoc --version
+ 
+Install python grpc-tools
+-------------------------
+python3.7 -m pip install grpcio-tools
+ 
+Compile grpc libs (L1)
+----------------------
+mkdir -p /etc/pmacct/telemetry/pblib
+#
+# Copy gRPC .proto file(s) (ie. huawei-grpc-dialout.proto) to
+# /etc/pmacct/telemetry/pblib
+#
+cd /etc/pmacct/telemetry/pblib/
+python3.7 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. huawei-grpc-dialout.proto
+python3.7 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. cisco_grpc_dialout.proto
+ 
+Compile PB libs (L2/3)
+----------------------
+cd /etc/pmacct/telemetry/pblib/
+/usr/local/bin/protoc -I=. --python_out=. ./huawei-grpc-dialout.proto
+/usr/local/bin/protoc -I=. --python_out=. ./cisco_grpc_dialout.proto
+/usr/local/bin/protoc -I=. --python_out=. ./huawei-telemetry.proto
+/usr/local/bin/protoc -I=. --python_out=. ./huawei-ifm.proto
+/usr/local/bin/protoc -I=. --python_out=. ./huawei-devm.proto
+/usr/local/bin/protoc -I=. --python_out=. ./openconfig-interfaces.proto
+
+First Run pmgrpcd.py
+--------------------
+cd && pmgrpcd.py -h
+#
+# The first time you can check the help usage for pmgrpcd.py and it will
+# create some default files:
+#
+/etc/pmacct/telemetry/telemetry.conf
+/etc/pmacct/telemetry/schema_id_map_file.json
+/etc/pmacct/telemetry/mitigation.py
+/etc/pmacct/telemetry/gpbmapfile.map
+#
+chmod -R 700 /etc/pmacct/telemetry

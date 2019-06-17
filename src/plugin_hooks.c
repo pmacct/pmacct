@@ -42,9 +42,9 @@ void load_plugins(struct plugin_requests *req)
   u_int64_t buf_pipe_ratio_sz = 0, pipe_idx = 0;
   int snd_buflen = 0, rcv_buflen = 0, socklen = 0, target_buflen = 0;
 
-  int nfprobe_id = 0, min_sz = 0, extra_sz = 0;
+  int nfprobe_id = 0, min_sz = 0, extra_sz = 0, offset = 0;
   struct plugins_list_entry *list = plugins_list;
-  int l = sizeof(list->cfg.pipe_size), offset = 0;
+  socklen_t l = sizeof(list->cfg.pipe_size);
   struct channels_list_entry *chptr = NULL;
 
   char username[SHORTBUFLEN], password[SHORTBUFLEN];
@@ -272,7 +272,7 @@ void load_plugins(struct plugin_requests *req)
       case 0: /* Child */
 	/* SIGCHLD handling issue: SysV avoids zombies by ignoring SIGCHLD; to emulate
 	   such semantics on BSD systems, we need an handler like handle_falling_child() */
-#if defined (IRIX) || (SOLARIS)
+#if defined (SOLARIS)
 	signal(SIGCHLD, SIG_IGN);
 #else
 	signal(SIGCHLD, ignore_falling_child);
@@ -767,7 +767,7 @@ pm_counter_t take_simple_systematic_skip(pm_counter_t mean)
    TRUE: We want it!
    FALSE: Discard it!
 */
-int evaluate_filters(struct aggregate_filter *filter, char *pkt, struct pcap_pkthdr *pkthdr)
+int evaluate_filters(struct aggregate_filter *filter, u_char *pkt, struct pcap_pkthdr *pkthdr)
 {
   int index;
 
@@ -957,7 +957,7 @@ void plugin_pipe_check(struct configuration *cfg)
   if (!cfg->pipe_zmq) cfg->pipe_homegrown = TRUE;
 }
 
-void P_zmq_pipe_init(void *zh, int *pipe_fd, int *seq)
+void P_zmq_pipe_init(void *zh, int *pipe_fd, u_int32_t *seq)
 {
   plugin_pipe_zmq_compile_check();
 

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -202,7 +202,7 @@ struct FLOW {
 	u_int32_t flows[2];			/* Flows so far */
 #endif
 
-	char *pcust[2];				/* space for custom-defined primitives */
+	u_char *pcust[2];			/* space for custom-defined primitives */
 	struct pkt_vlen_hdr_primitives *pvlen[2]; 	/* space for vlen primitives */
 };
 

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -43,6 +43,6 @@ EXT int telemetry_basic_validate_json(telemetry_peer *);
 
 #if defined (WITH_ZMQ)
 EXT int telemetry_recv_zmq_generic(telemetry_peer *, u_int32_t);
-EXT int telemetry_decode_zmq_peer(struct telemetry_data *, void *, char *, int, struct sockaddr *, socklen_t *);
+EXT int telemetry_decode_zmq_peer(struct telemetry_data *, void *, char *, size_t, struct sockaddr *, socklen_t *);
 #endif
 #undef EXT

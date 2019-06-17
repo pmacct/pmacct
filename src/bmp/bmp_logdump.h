@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -38,10 +38,15 @@ struct bmp_log_stats {
   u_int8_t got_data;
 };
 
-struct bmp_log_init {
-  u_int16_t type; 
+struct bmp_log_tlv {
+  u_int16_t type;
   u_int16_t len;
   char *val;
+};
+
+struct bmp_log_init_array {
+  int entries;
+  struct bmp_log_tlv e[BMP_INIT_INFO_ENTRIES];
 };
 
 struct bmp_log_term {
@@ -51,10 +56,21 @@ struct bmp_log_term {
   u_int16_t reas_type;
 };
 
+struct bmp_log_term_array {
+  int entries;
+  struct bmp_log_term e[BMP_TERM_INFO_ENTRIES];
+};
+
+struct bmp_log_peer_up_tlv_array {
+  int entries;
+  struct bmp_log_tlv e[BMP_PEER_UP_INFO_ENTRIES];
+};
+
 struct bmp_log_peer_up {
   struct host_addr local_ip;
   u_int16_t loc_port;
   u_int16_t rem_port;
+  struct bmp_log_peer_up_tlv_array tlv;
 };
 
 struct bmp_log_peer_down {
@@ -68,9 +84,10 @@ struct bmp_dump_se {
   int se_type;
   union {
     struct bmp_log_stats stats;
-    struct bmp_log_init init;
-    struct bmp_log_term term;
+    struct bmp_log_init_array init;
+    struct bmp_log_term_array term;
     struct bmp_log_peer_up peer_up;
+    struct bmp_log_peer_up_tlv_array peer_up_tlv;
     struct bmp_log_peer_down peer_down;
   } se;
 };
@@ -98,8 +115,8 @@ EXT void bmp_dump_close_peer(struct bgp_peer *);
 
 EXT int bmp_log_msg(struct bgp_peer *, struct bmp_data *, void *, u_int64_t, char *, int, int);
 EXT int bmp_log_msg_stats(struct bgp_peer *, struct bmp_data *, struct bmp_log_stats *, char *, int, void *);
-EXT int bmp_log_msg_init(struct bgp_peer *, struct bmp_data *, struct bmp_log_init *, char *, int, void *);
-EXT int bmp_log_msg_term(struct bgp_peer *, struct bmp_data *, struct bmp_log_term *, char *, int, void *);
+EXT int bmp_log_msg_init(struct bgp_peer *, struct bmp_data *, struct bmp_log_init_array *, char *, int, void *);
+EXT int bmp_log_msg_term(struct bgp_peer *, struct bmp_data *, struct bmp_log_term_array *, char *, int, void *);
 EXT int bmp_log_msg_peer_up(struct bgp_peer *, struct bmp_data *, struct bmp_log_peer_up *, char *, int, void *);
 EXT int bmp_log_msg_peer_down(struct bgp_peer *, struct bmp_data *, struct bmp_log_peer_down *, char *, int, void *);
 

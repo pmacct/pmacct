@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -138,7 +138,7 @@ EXT struct channels_list_entry *insert_pipe_channel(int, struct configuration *,
 EXT void delete_pipe_channel(int);
 EXT void sort_pipe_channels();
 EXT void init_pipe_channels();
-EXT int evaluate_filters(struct aggregate_filter *, char *, struct pcap_pkthdr *);
+EXT int evaluate_filters(struct aggregate_filter *, u_char *, struct pcap_pkthdr *);
 EXT void recollect_pipe_memory(struct channels_list_entry *);
 EXT void init_random_seed();
 EXT void fill_pipe_buffer();
@@ -154,7 +154,7 @@ EXT pm_counter_t take_simple_random_skip(pm_counter_t);
 EXT pm_counter_t take_simple_systematic_skip(pm_counter_t);
 EXT void plugin_pipe_zmq_compile_check();
 EXT void plugin_pipe_check(struct configuration *);
-EXT void P_zmq_pipe_init(void *, int *, int *);
+EXT void P_zmq_pipe_init(void *, int *, u_int32_t *);
 #undef EXT
 
 #if (defined __PLUGIN_HOOKS_C)

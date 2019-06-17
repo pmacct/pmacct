@@ -371,6 +371,16 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
     idx++;
   }
 
+  if (wtc_2 & COUNT_TUNNEL_SRC_MAC) {
+    cjhandler[idx] = compose_json_tunnel_src_mac;
+    idx++;
+  }
+
+  if (wtc_2 & COUNT_TUNNEL_DST_MAC) {
+    cjhandler[idx] = compose_json_tunnel_dst_mac;
+    idx++;
+  }
+
   if (wtc_2 & COUNT_TUNNEL_SRC_HOST) {
     cjhandler[idx] = compose_json_tunnel_src_host;
     idx++;
@@ -388,6 +398,21 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
     
   if (wtc_2 & COUNT_TUNNEL_IP_TOS) {
     cjhandler[idx] = compose_json_tunnel_tos;
+    idx++;
+  }
+
+  if (wtc_2 & COUNT_TUNNEL_SRC_PORT) {
+    cjhandler[idx] = compose_json_tunnel_src_port;
+    idx++;
+  }
+
+  if (wtc_2 & COUNT_TUNNEL_DST_PORT) {
+    cjhandler[idx] = compose_json_tunnel_dst_port;
+    idx++;
+  }
+
+  if (wtc_2 & COUNT_VXLAN) {
+    cjhandler[idx] = compose_json_vxlan;
     idx++;
   }
 
@@ -956,6 +981,22 @@ void compose_json_mpls_stack_depth(json_t *obj, struct chained_cache *cc)
   json_object_set_new_nocheck(obj, "mpls_stack_depth", json_integer((json_int_t)cc->pmpls->mpls_stack_depth));
 }
 
+void compose_json_tunnel_src_mac(json_t *obj, struct chained_cache *cc)
+{
+  char mac[18];
+
+  etheraddr_string(cc->ptun->tunnel_eth_shost, mac);
+  json_object_set_new_nocheck(obj, "tunnel_mac_src", json_string(mac));
+}
+
+void compose_json_tunnel_dst_mac(json_t *obj, struct chained_cache *cc)
+{
+  char mac[18];
+
+  etheraddr_string(cc->ptun->tunnel_eth_dhost, mac);
+  json_object_set_new_nocheck(obj, "tunnel_mac_dst", json_string(mac));
+}
+
 void compose_json_tunnel_src_host(json_t *obj, struct chained_cache *cc)
 {
   char ip_address[INET6_ADDRSTRLEN];
@@ -982,6 +1023,21 @@ void compose_json_tunnel_proto(json_t *obj, struct chained_cache *cc)
 void compose_json_tunnel_tos(json_t *obj, struct chained_cache *cc)
 {
   json_object_set_new_nocheck(obj, "tunnel_tos", json_integer((json_int_t)cc->ptun->tunnel_tos));
+}
+
+void compose_json_tunnel_src_port(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "tunnel_port_src", json_integer((json_int_t)cc->ptun->tunnel_src_port));
+}
+
+void compose_json_tunnel_dst_port(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "tunnel_port_dst", json_integer((json_int_t)cc->ptun->tunnel_dst_port));
+}
+
+void compose_json_vxlan(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "vxlan", json_integer((json_int_t)cc->ptun->tunnel_id));
 }
 
 void compose_json_timestamp_start(json_t *obj, struct chained_cache *cc)

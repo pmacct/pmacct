@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -274,7 +274,7 @@ unsigned int hash_fragment(u_int16_t id, u_int32_t src, u_int32_t dst, u_int8_t 
 void notify_orphan_fragment(struct ip_fragment *frag)
 {
   struct host_addr a;
-  u_char src_host[INET_ADDRSTRLEN], dst_host[INET_ADDRSTRLEN];
+  char src_host[INET_ADDRSTRLEN], dst_host[INET_ADDRSTRLEN];
   u_int16_t id;
 
   a.family = AF_INET;
@@ -526,7 +526,7 @@ void prune_old_fragments6(u_int32_t now, u_int32_t off)
 void notify_orphan_fragment6(struct ip6_fragment *frag)
 {
   struct host_addr a;
-  u_char src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN];
+  char src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN];
   u_int32_t id;
 
   a.family = AF_INET6;

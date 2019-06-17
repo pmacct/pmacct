@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -50,7 +50,7 @@ void conntrack_ftp_helper(time_t now, struct packet_ptrs *pptrs)
   int len;
 
   if (!pptrs->payload_ptr) return;
-  len = strlen(pptrs->payload_ptr); 
+  len = strlen((char *)pptrs->payload_ptr); 
  
   /* truncated payload */
   if (len < 4) return;
@@ -61,8 +61,8 @@ void conntrack_ftp_helper(time_t now, struct packet_ptrs *pptrs)
        pptrs->payload_ptr[2] == 'R' && pptrs->payload_ptr[3] == 'T') ||
       (pptrs->payload_ptr[0] == 'L' && pptrs->payload_ptr[1] == 'P' &&
        pptrs->payload_ptr[2] == 'R' && pptrs->payload_ptr[3] == 'T')) { 
-    start = strchr(pptrs->payload_ptr, ' ');
-    end = strchr(pptrs->payload_ptr, '\r'); 
+    start = strchr((char *)pptrs->payload_ptr, ' ');
+    end = strchr((char *)pptrs->payload_ptr, '\r'); 
     if (start && end) { 
       /* getting the port number */
       ptr = end;
@@ -94,8 +94,8 @@ void conntrack_ftp_helper(time_t now, struct packet_ptrs *pptrs)
 	    pptrs->payload_ptr[2] == '7' && pptrs->payload_ptr[3] == ' ') ||
 	   (pptrs->payload_ptr[0] == '2' && pptrs->payload_ptr[1] == '2' &&
             pptrs->payload_ptr[2] == '8' && pptrs->payload_ptr[3] == ' ')) {
-    start = strchr(pptrs->payload_ptr, '(');
-    end = strchr(pptrs->payload_ptr, ')'); 
+    start = strchr((char *)pptrs->payload_ptr, '(');
+    end = strchr((char *)pptrs->payload_ptr, ')'); 
     if (start && end) { 
       /* getting the port number */
       ptr = end;
@@ -125,8 +125,8 @@ void conntrack_ftp_helper(time_t now, struct packet_ptrs *pptrs)
   /* EPRT command, Extended data port */
   else if (pptrs->payload_ptr[0] == 'E' && pptrs->payload_ptr[1] == 'P' &&
 	pptrs->payload_ptr[2] == 'R' && pptrs->payload_ptr[3] == 'T') {
-    start = strchr(pptrs->payload_ptr, ' ');
-    end = strchr(pptrs->payload_ptr, '\r');
+    start = strchr((char *)pptrs->payload_ptr, ' ');
+    end = strchr((char *)pptrs->payload_ptr, '\r');
     if (start && end) {
       /* getting the port number */
       while (*end != '|' && end >= start) end--;
@@ -156,8 +156,8 @@ void conntrack_ftp_helper(time_t now, struct packet_ptrs *pptrs)
   /* 229 reply, extended passive (EPASV) FTP */
   else if (pptrs->payload_ptr[0] == '2' && pptrs->payload_ptr[1] == '2' &&
 	pptrs->payload_ptr[2] == '9' && pptrs->payload_ptr[3] == ' ') {
-    start = strchr(pptrs->payload_ptr, '(');
-    end = strchr(pptrs->payload_ptr, ')');
+    start = strchr((char *)pptrs->payload_ptr, '(');
+    end = strchr((char *)pptrs->payload_ptr, ')');
     if (start && end) {
       /* getting the port number */
       while (*end != '|' && end >= start) end--;
@@ -196,15 +196,15 @@ void conntrack_rtsp_helper(time_t now, struct packet_ptrs *pptrs)
   port[1] = 0;
 
   if (!pptrs->payload_ptr) return;
-  len = strlen(pptrs->payload_ptr);
+  len = strlen((char *)pptrs->payload_ptr);
 
   /* truncated payload */
   if (len < 6) return;
 
   /* We need to look into RTSP SETUP messages */ 
-  if ( !strncmp(pptrs->payload_ptr, "SETUP ", 6) ) {
-    start = strchr(pptrs->payload_ptr, '\n');
-    end = pptrs->payload_ptr+len;
+  if ( !strncmp((char *)pptrs->payload_ptr, "SETUP ", 6) ) {
+    start = strchr((char *)pptrs->payload_ptr, '\n');
+    end = (char *)(pptrs->payload_ptr + len);
 
     while (start && start < end) { 
       start++;
@@ -269,16 +269,16 @@ void conntrack_sip_helper(time_t now, struct packet_ptrs *pptrs)
   int len;
 
   if (!pptrs->payload_ptr) return;
-  len = strlen(pptrs->payload_ptr);
+  len = strlen((char *)pptrs->payload_ptr);
 
   /* truncated payload */
   if (len < 11) return;
 
   /* We need to look into SIP INVITE messages */
-  if ( !strncmp(pptrs->payload_ptr, "INVITE ", 7) || 
-       !strncmp(pptrs->payload_ptr, "SIP/2.0 200", 11) ) {
+  if ( !strncmp((char *)pptrs->payload_ptr, "INVITE ", 7) || 
+       !strncmp((char *)pptrs->payload_ptr, "SIP/2.0 200", 11) ) {
     /* We are searching for the m= line */
-    for ( start = pptrs->payload_ptr, end = pptrs->payload_ptr+len;
+    for ( start = (char *)pptrs->payload_ptr, end = (char *)(pptrs->payload_ptr + len);
 	  start && start < end; start = strchr(start, '\n') ) { 
       start++;
       if ( !strncmp(start, "m=", 2) ) {

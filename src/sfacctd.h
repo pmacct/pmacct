@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -107,14 +107,6 @@ typedef struct _SFSample {
   u_int32_t ip_fragmentOffset;
   u_int32_t udp_pduLen;
 
-  /* inner header decode */
-  int got_inner_IPV4;
-  struct in_addr dcd_inner_srcIP;
-  struct in_addr dcd_inner_dstIP;
-  u_int32_t dcd_inner_ipProtocol;
-  u_int32_t dcd_inner_ipTos;
-  u_int32_t ip_inner_fragmentOffset;
-
   /* ports */
   u_int32_t inputPortFormat;
   u_int32_t outputPortFormat;
@@ -202,6 +194,9 @@ typedef struct _SFSample {
   SFLAddress nat_src;
   SFLAddress nat_dst;
 
+  /* vxlan */
+  u_int32_t vni;
+
   /* counter blocks */
   u_int32_t statsSamplingInterval;
   u_int32_t counterBlockVersion;
@@ -220,6 +215,8 @@ typedef struct _SFSample {
 
   struct packet_ptrs hdr_ptrs;
   struct pcap_pkthdr hdr_pcap;
+
+  void *sppi;
 } SFSample;
 
 /* define my own IP header struct - to ease portability */
@@ -268,11 +265,11 @@ struct SF_icmphdr
 };
 
 struct SF_dissect {
-  char *hdrBasePtr;
-  char *hdrEndPtr;
+  u_char *hdrBasePtr;
+  u_char *hdrEndPtr;
   u_int32_t hdrLen;
-  char *flowBasePtr;
-  char *flowEndPtr;
+  u_char *flowBasePtr;
+  u_char *flowEndPtr;
   u_int32_t flowLen;
   u_int32_t *samplesInPkt;
 };
@@ -299,7 +296,8 @@ EXT u_int64_t getData64(SFSample *);
 EXT u_int32_t getAddress(SFSample *, SFLAddress *);
 EXT void skipBytes(SFSample *, int);
 EXT int skipBytesAndCheck(SFSample *, int);
-EXT int lengthCheck(SFSample *, u_char *, int);
+EXT int lengthCheck(SFSample *, u_char *, u_int32_t);
+EXT u_int32_t getString(SFSample *, char *, u_int32_t);
 
 EXT void process_SFv2v4_packet(SFSample *, struct packet_ptrs_vector *, struct plugin_requests *, struct sockaddr *);
 EXT void process_SFv5_packet(SFSample *, struct packet_ptrs_vector *, struct plugin_requests *, struct sockaddr *);
@@ -316,7 +314,7 @@ EXT void decodeLinkLayer(SFSample *);
 EXT void decodeIPLayer4(SFSample *, u_char *, u_int32_t);
 EXT void decodeIPV4(SFSample *);
 EXT void decodeIPV6(SFSample *);
-EXT void decodeIPV4_inner(SFSample *, u_char *);
+EXT void decodeVXLAN(SFSample *, u_char *);
 EXT void readExtendedSwitch(SFSample *);
 EXT void readExtendedRouter(SFSample *);
 EXT void readExtendedGateway_v2(SFSample *);
@@ -346,7 +344,7 @@ EXT int sfacctd_counter_init_kafka_host();
 EXT void sf_cnt_link_misc_structs(struct bgp_misc_structs *);
 EXT void sf_flow_sample_hdr_decode(SFSample *);
 
-EXT char *sfv245_check_status(SFSample *spp, struct packet_ptrs *, struct sockaddr *);
+EXT struct xflow_status_entry *sfv245_check_status(SFSample *spp, struct packet_ptrs *, struct sockaddr *);
 EXT void sfv245_check_counter_log_init(struct packet_ptrs *);
 
 EXT void usage_daemon(char *);
@@ -364,6 +362,6 @@ EXT void SF_init_zmq_host(void *, int *);
 EXT int sfacctd_counter_backend_methods;
 EXT struct bgp_misc_structs *sf_cnt_misc_db;
 EXT struct host_addr debug_a;
-EXT u_char debug_agent_addr[50];
+EXT char debug_agent_addr[50];
 EXT u_int16_t debug_agent_port;
 #undef EXT

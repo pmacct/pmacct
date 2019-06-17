@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -45,8 +45,8 @@ EXT int host_addr_cmp(struct host_addr *, struct host_addr *);
 EXT int host_addr_cmp2(struct host_addr *, struct host_addr *);
 EXT int host_addr_mask_sa_cmp(struct host_addr *, struct host_mask *, struct sockaddr *);
 EXT int host_addr_mask_cmp(struct host_addr *, struct host_mask *, struct host_addr *);
-EXT unsigned int raw_to_sa(struct sockaddr *, char *, u_int16_t port, u_int8_t);
-EXT unsigned int raw_to_addr(struct host_addr *, char *, u_int8_t);
+EXT unsigned int raw_to_sa(struct sockaddr *, u_char *, u_int16_t port, u_int8_t);
+EXT unsigned int raw_to_addr(struct host_addr *, u_char *, u_int8_t);
 EXT unsigned int sa_to_str(char *, int, const struct sockaddr *);
 EXT void *pm_htonl6(void *);
 EXT void *pm_ntohl6(void *);
@@ -56,7 +56,7 @@ EXT int ip6_addr_cmp(void *, void *);
 EXT void ip6_addr_cpy(void *, void *);
 EXT void ip6_addr_32bit_cpy(void *, void *, int, int, int);
 EXT void etheraddr_string(const u_char *, char *);
-EXT int string_etheraddr(const u_char *, char *);
+EXT int string_etheraddr(const char *, u_char *);
 EXT int is_multicast(struct host_addr *);
 EXT int is_any(struct host_addr *);
 EXT void clean_sin_addr(struct sockaddr *);

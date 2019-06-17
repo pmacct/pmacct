@@ -1,15 +1,23 @@
 INTRODUCTION.
 pmtelemetryd, the pmacct Streaming Telemetry daemon, does natively support
 TCP and UDP transports and JSON encoding. In terms of encoding, GPB (Google
-Protocol Buffers of Protobuf) is only base64'd on output for de-marshalling
+Protocol Buffers, or Protobuf) is only base64'd on output for de-marshalling
 upon post-processing; also GPB encoding is mainly coupled with gRPC as a
 transport resulting in limited (or buggy) support for C language. As a
-result of that, pmtelemetryd supports decoders to hold gRPC sessions and
-pre-process GPB encoding. Decoders can be written in any language and pass
-data onto pmtelemetryd via a ZeroMQ queue. Sample decoders can be found in
-telemetry/decorers and are written in Python. Below quickstart tips on how
-to proof of concept Streaming Telemetry collection using pmtelemetryd and
-some of the sample decoders provided. 
+result of that two efforts are currently pursued: 1) write decoders to
+hold gRPC sessions and pre-process GPB encoding and pass de-serialized
+data to pmtelemetryd; decoders can be written in any language and pass
+data onto pmtelemetryd via a ZeroMQ queue; sample decoders can be found
+in telemetry/decoders/v1 and are written in Python; 2) write a slightly
+more autonomous tool in Python 3, pmgrpcd.py, to hold gRPC sessions,
+process GPB encoding and write JSON or Avro to Kafka (that is, bypassing
+pmtelemetryd); a sample of such tool can be found in telemetry/decoders/v2
+along with its own documentation.
+
+Below we provide quickstart tips on how to set-up a proof of concept for
+Streaming Telemetry collection using pmtelemetryd and the sample decoders
+provided. Please read telemetry/decoders/v2/README.pmgrpcd for a quickstart on
+how to use pmgrpcd.py.
 
 Further reading and more information, including a reference architecture
 diagram, is available on the pmacct GitHub wiki at the following page:
@@ -66,7 +74,7 @@ QUICKSTART.
 
   shell> protoc -I=. --python_out=. openconfig-interfaces.proto
 
-  This is produce pb2.py and pb2_grpc.py files that are suitable for
+  This produces pb2.py and pb2_grpc.py files that are suitable for
   inclusion in the Python decoders.
 
 * If interested in data models that are not supported in the sample
@@ -151,3 +159,4 @@ telemetry
   destination-group COLLECTOR
 #
 return
+

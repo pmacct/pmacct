@@ -57,12 +57,13 @@ void nfacctd_bmp_wrapper()
 
 void skinny_bmp_daemon()
 {
-  int slen, clen, ret, rc, peers_idx, allowed, yes=1, no=0;
+  int ret, rc, peers_idx, allowed, yes=1, no=0;
   int peers_idx_rr = 0, max_peers_idx = 0;
   u_int32_t pkt_remaining_len=0;
   time_t now;
   afi_t afi;
   safi_t safi;
+  socklen_t slen, clen;
 
   struct bmp_peer *bmpp = NULL;
   struct bgp_peer *peer = NULL;
@@ -71,6 +72,8 @@ void skinny_bmp_daemon()
   struct hosts_table allow;
   struct host_addr addr;
   struct bgp_peer_batch bp_batch;
+
+  sigset_t signal_set;
 
   /* select() stuff */
   fd_set read_descs, bkp_read_descs;
@@ -120,7 +123,7 @@ void skinny_bmp_daemon()
   }
   memset(bmp_peers, 0, config.nfacctd_bmp_max_peers*sizeof(struct bmp_peer));
 
-  if (config.rpki_roas_file) {
+  if (config.rpki_roas_file || config.rpki_rtr_cache) {
     rpki_daemon_wrapper();
 
     /* Let's give the RPKI thread some advantage to create its structures */
@@ -216,15 +219,15 @@ void skinny_bmp_daemon()
   if (config.nfacctd_bmp_ipprec) {
     int opt = config.nfacctd_bmp_ipprec << 5;
 
-    rc = setsockopt(config.bmp_sock, IPPROTO_IP, IP_TOS, &opt, sizeof(opt));
+    rc = setsockopt(config.bmp_sock, IPPROTO_IP, IP_TOS, &opt, (socklen_t) sizeof(opt));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IP_TOS (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
   }
 
 #if (defined LINUX) && (defined HAVE_SO_REUSEPORT)
-  rc = setsockopt(config.bmp_sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *)&yes, sizeof(yes));
+  rc = setsockopt(config.bmp_sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *)&yes, (socklen_t) sizeof(yes));
   if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR|SO_REUSEPORT (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
 #else
-  rc = setsockopt(config.bmp_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
+  rc = setsockopt(config.bmp_sock, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, (socklen_t) sizeof(yes));
   if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
 #endif
 
@@ -234,11 +237,11 @@ void skinny_bmp_daemon()
 #endif
 
   if (config.nfacctd_bmp_pipe_size) {
-    int l = sizeof(config.nfacctd_bmp_pipe_size);
+    socklen_t l = sizeof(config.nfacctd_bmp_pipe_size);
     int saved = 0, obtained = 0;
 
     getsockopt(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &saved, &l);
-    Setsocksize(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &config.nfacctd_bmp_pipe_size, sizeof(config.nfacctd_bmp_pipe_size));
+    Setsocksize(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &config.nfacctd_bmp_pipe_size, (socklen_t) sizeof(config.nfacctd_bmp_pipe_size));
     getsockopt(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
 
     Setsocksize(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
@@ -341,8 +344,21 @@ void skinny_bmp_daemon()
 
   bmp_link_misc_structs(bmp_misc_db);
 
+  sigemptyset(&signal_set);
+  sigaddset(&signal_set, SIGCHLD);
+  sigaddset(&signal_set, SIGHUP);
+  sigaddset(&signal_set, SIGUSR1);
+  sigaddset(&signal_set, SIGUSR2);
+  sigaddset(&signal_set, SIGINT);
+  sigaddset(&signal_set, SIGTERM);
+
   for (;;) {
     select_again:
+
+    if (!bmp_misc_db->is_thread) {
+      sigprocmask(SIG_UNBLOCK, &signal_set, NULL);
+      sigprocmask(SIG_BLOCK, &signal_set, NULL);
+    }
 
     if (recalc_fds) {
       select_fd = config.bmp_sock;
@@ -601,6 +617,12 @@ void bmp_prepare_thread()
   memset(bmp_misc_db, 0, sizeof(struct bgp_misc_structs));
 
   bmp_misc_db->is_thread = TRUE;
+
+  if (config.rpki_roas_file || config.rpki_rtr_cache) {
+    bmp_misc_db->bnv = malloc(sizeof(struct bgp_node_vector));
+    memset(bmp_misc_db->bnv, 0, sizeof(struct bgp_node_vector));
+  }
+
   bmp_misc_db->log_str = malloc(strlen("core/BMP") + 1);
   strcpy(bmp_misc_db->log_str, "core/BMP");
 }
@@ -610,7 +632,13 @@ void bmp_prepare_daemon()
   bmp_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_BMP];
   memset(bmp_misc_db, 0, sizeof(struct bgp_misc_structs));
 
- bmp_misc_db->is_thread = FALSE;
- bmp_misc_db->log_str = malloc(strlen("core") + 1);
- strcpy(bmp_misc_db->log_str, "core");
+  bmp_misc_db->is_thread = FALSE;
+
+  if (config.rpki_roas_file || config.rpki_rtr_cache) {
+    bmp_misc_db->bnv = malloc(sizeof(struct bgp_node_vector));
+    memset(bmp_misc_db->bnv, 0, sizeof(struct bgp_node_vector));
+  }
+
+  bmp_misc_db->log_str = malloc(strlen("core") + 1);
+  strcpy(bmp_misc_db->log_str, "core");
 }

@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl configuration file for pmacct 
 
-AC_INIT([pmacct], [1.7.3-git], [paolo@pmacct.net])
+AC_INIT([pmacct], [1.7.4-git], [paolo@pmacct.net])
 AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_MACRO_DIR([m4])
 LT_INIT
@@ -932,7 +932,7 @@ AC_ARG_ENABLE(ndpi,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([NDPI], [libndpi >= 2.2], [
+    PKG_CHECK_MODULES([NDPI], [libndpi >= 2.4], [
       SUPPORTS="${SUPPORTS} ndpi"
       USING_NDPI="yes"
 
@@ -953,22 +953,8 @@ AC_ARG_ENABLE(ndpi,
       CFLAGS="$CFLAGS $NDPI_CFLAGS"
       AC_CHECK_HEADER([libndpi/ndpi_main.h])
       CFLAGS="$_save_CFLAGS"
-
-      dnl XXX: to be improved: avoid linking both static and dynamic libs
-      if test x"$NDPI_CUST_STATIC_LIB_FOUND" = x"yes"; then
-        NDPI_LIBS_STATIC="$NDPI_CUST_STATIC_LIB/libndpi.a"
-      elif test -r /usr/lib/libndpi.a; then
-        NDPI_LIBS_STATIC="/usr/lib/libndpi.a"
-      elif test -r /usr/local/lib/libndpi.a; then
-        NDPI_LIBS_STATIC="/usr/local/lib/libndpi.a"
-      elif test -r /usr/local/nDPI/lib/libndpi.a; then
-        NDPI_LIBS_STATIC="/usr/local/nDPI/lib/libndpi.a"
-      else
-        AC_MSG_ERROR([ERROR: missing nDPI static library])
-      fi
-
-      AC_SUBST([NDPI_LIBS_STATIC])
     ])
+    PKG_CHECK_MODULES([NDPI26], [libndpi >= 2.6], [AC_DEFINE(WITH_NDPI26, 1)], [AC_DEFINE(WITH_NDPI, 1)])
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -991,7 +977,7 @@ else
 	fi
 fi
 
-LIBS="${LIBS} -lpthread"
+LIBS="${LIBS} -lm -lpthread"
 
 dnl Checks for header files.
 AC_HEADER_STDC
@@ -1003,7 +989,7 @@ AC_CHECK_HEADERS([arpa/inet.h assert.h ctype.h dirent.h dlfcn.h errno.h fcntl.h 
 AC_CHECK_HEADERS([limits.h malloc.h netdb.h net/if.h netinet/in.h netinet/in_systm.h netinet/ip.h])
 AC_CHECK_HEADERS([netinet/udp.h pthread.h pwd.h signal.h string.h sys/ansi.h sys/errno.h sys/file.h])
 AC_CHECK_HEADERS([sys/ioctl.h syslog.h sys/mbuf.h sys/mman.h sys/param.h sys/poll.h sys/resource.h])
-AC_CHECK_HEADERS([sys/socket.h sys/stat.h sys/types.h sys/un.h sys/utsname.h time.h])
+AC_CHECK_HEADERS([sys/socket.h sys/stat.h sys/types.h sys/un.h sys/utsname.h time.h math.h])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_TYPE(u_int64_t, [AC_DEFINE(HAVE_U_INT64_T, 1)])
@@ -1174,7 +1160,6 @@ https://github.com/pmacct/pmacct
 
 "
 
-AC_SUBST([EXTRABIN])
 AC_SUBST([PMACCT_CFLAGS])
 
 AM_CONDITIONAL([WITH_MYSQL], [test x"$USING_MYSQL" = x"yes"])
@@ -1199,4 +1184,5 @@ AC_OUTPUT([ Makefile \
 	    src/tee_plugin/Makefile src/isis/Makefile \
 	    src/bmp/Makefile src/rpki/Makefile \
 	    src/telemetry/Makefile src/ndpi/Makefile \
-	    examples/lg/Makefile ])
+	    src/filters/Makefile examples/lg/Makefile \
+	    examples/custom/Makefile	])

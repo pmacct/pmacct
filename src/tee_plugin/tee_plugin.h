@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -85,7 +85,7 @@ struct tee_receivers {
 EXT void Tee_exit_now(int);
 EXT void Tee_init_socks();
 EXT void Tee_destroy_recvs();
-EXT int Tee_craft_transparent_msg(struct pkt_msg *, struct sockaddr *);
+EXT size_t Tee_craft_transparent_msg(struct pkt_msg *, struct sockaddr *);
 EXT void Tee_send(struct pkt_msg *, struct sockaddr *, int);
 EXT int Tee_prepare_sock(struct sockaddr *, socklen_t, u_int16_t);
 EXT int Tee_parse_hostport(const char *, struct sockaddr *, socklen_t *, int);

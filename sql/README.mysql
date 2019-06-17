@@ -158,6 +158,8 @@ Similarly, BGP tables:
   * mpls_label_top => mpls_label_top (INT(4) UNSIGNED NOT NULL)
   * mpls_label_bottom => mpls_label_bottom (INT(4) UNSIGNED NOT NULL)
   * mpls_stack_depth => mpls_stack_depth (INT(1) UNSIGNED NOT NULL)
+  * tunnel_src_mac => tunnel_mac_src (CHAR(17) NOT NULL)
+  * tunnel_dst_mac => tunnel_mac_dst (CHAR(17) NOT NULL)
   * tunnel_src_host => tunnel_ip_src (CHAR(45) NOT NULL)
     - or (CHAR(15) NOT NULL, if --disable-ipv6)
     - or (VARBINARY(16) NOT NULL, if sql_num_hosts: true; see README.IPv6)
@@ -169,6 +171,8 @@ Similarly, BGP tables:
   * tunnel_proto => tunnel_ip_proto (CHAR(6) NOT NULL)
     - or (INT(1) UNSIGNED NOT NULL, if sql_num_protos: true)
   * tunnel_tos => tunnel_tos (INT(4) UNSIGNED NOT NULL)
+  * tunnel_src_port => tunnel_port_src (INT(2) UNSIGNED NOT NULL)
+  * tunnel_dst_port => tunnel_port_dst (INT(2) UNSIGNED NOT NULL)
   * timestamp_start => timestamp_start, timestamp_start_residual:
     - timestamp_start DATETIME NOT NULL, see README.timestamp)
     - timestamp_start_residual INT NOT NULL, see README.timestamp)

@@ -1,6 +1,9 @@
-/* Declarations for System V style searching functions.
-   Copyright (C) 1995-2017 Free Software Foundation, Inc.
-   This file is part of the GNU C Library.
+/*
+   Copyright (C) 1993-2018 Free Software Foundation, Inc.
+   This file is based on the GNU C Library and contains:
+
+   * Declarations for System V style searching functions
+   * Declarations for hash hash table management functions
 
    The GNU C Library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -14,7 +17,8 @@
 
    You should have received a copy of the GNU Lesser General Public
    License along with the GNU C Library; if not, see
-   <http://www.gnu.org/licenses/>.  */
+   <http://www.gnu.org/licenses/>.
+*/
 
 /* includes */
 #include <stddef.h>
@@ -56,12 +60,34 @@ typedef enum
   postorder,
   endorder,
   leaf
-}
-pm_VISIT;
+} pm_VISIT;
 
 typedef int (*pm_compar_fn_t) (const void *, const void *);
 typedef int (*pm_action_fn_t) (const void *, pm_VISIT, int, void *);
 typedef void (*pm_free_fn_t) (void *);
+
+typedef enum {
+  FIND,
+  INSERT,
+  DELETE
+} pm_ACTION;
+
+typedef struct pm_hentry_t {
+  void *key;
+  unsigned int keylen;
+  void *data;
+} pm_HENTRY;
+
+typedef struct _pm_hentry_t {
+  unsigned int used;
+  pm_HENTRY entry;
+} _pm_HENTRY;
+
+struct pm_htable {
+  _pm_HENTRY *table;
+  unsigned int size;
+  unsigned int filled;
+};
 
 /* prototypes */
 #if (!defined __PMSEARCH_C)
@@ -85,4 +111,10 @@ EXT void pm_twalk (const void *, pm_action_fn_t, void *);
 
 /* Destroy the whole tree, call FREEFCT for each node or leaf.  */
 EXT void __pm_tdestroy (void *, pm_free_fn_t);
+
+EXT int pm_hcreate(size_t, struct pm_htable *);
+EXT void pm_hdestroy(struct pm_htable *);
+EXT int pm_hsearch(pm_HENTRY, pm_ACTION, pm_HENTRY **, struct pm_htable *);
+EXT void pm_hmove(struct pm_htable *, struct pm_htable *, struct pm_htable *);
+EXT void __pm_hdelete(_pm_HENTRY *);
 #undef EXT

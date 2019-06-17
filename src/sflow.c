@@ -45,7 +45,7 @@
   -----------------___________________________------------------
 */
 
-int lengthCheck(SFSample *sample, u_char *start, int len)
+int lengthCheck(SFSample *sample, u_char *start, u_int32_t len)
 {
   u_int32_t actualLen = (u_char *)sample->datap - start;
   if (actualLen != len) {
@@ -200,6 +200,11 @@ void decodeIPLayer4(SFSample *sample, u_char *ptr, u_int32_t ipProtocol) {
       sample->dcd_sport = ntohs(udp.uh_sport);
       sample->dcd_dport = ntohs(udp.uh_dport);
       sample->udp_pduLen = ntohs(udp.uh_ulen);
+
+      if (sample->dcd_dport == UDP_PORT_VXLAN) {
+	ptr += sizeof(udp);
+	decodeVXLAN(sample, ptr);
+      }
     }
     break;
   default: /* some other protcol */
@@ -207,30 +212,42 @@ void decodeIPLayer4(SFSample *sample, u_char *ptr, u_int32_t ipProtocol) {
   }
 }
 
-/*_________________---------------------------__________________
-  _________________     decodeIPV4_inner      __________________
-  -----------------___________________________------------------
-*/
-
-void decodeIPV4_inner(SFSample *sample, u_char *ptr)
+void decodeVXLAN(SFSample *sample, u_char *ptr)
 {
-  if (sample->got_inner_IPV4) {
-    u_char *end = sample->header + sample->headerLen;
-    u_int16_t caplen = end - ptr;
-    struct SF_iphdr ip;
+  struct vxlan_hdr *hdr = NULL;
+  u_char *vni_ptr = NULL;
+  u_int32_t vni;
+  u_char *end = sample->header + sample->headerLen;
 
-    if (caplen < IP4HdrSz) return;
-    memcpy(&ip, ptr, sizeof(ip));
+  if (ptr > (end - 8)) return;
 
-    sample->dcd_inner_srcIP.s_addr = ip.saddr;
-    sample->dcd_inner_dstIP.s_addr = ip.daddr;
-    sample->dcd_inner_ipProtocol = ip.protocol;
-    sample->dcd_inner_ipTos = ip.tos;
+  hdr = (struct vxlan_hdr *) ptr;
 
-    sample->ip_inner_fragmentOffset = ntohs(ip.frag_off) & 0x1FFF;
-    if (sample->ip_inner_fragmentOffset == 0) {
-      ptr += (ip.version_and_headerLen & 0x0f) * 4;
-      decodeIPLayer4(sample, ptr, ip.protocol);
+  if (hdr->flags & VXLAN_FLAG_I) {
+    vni_ptr = hdr->vni;
+
+    /* decode 24-bit label */
+    vni = *vni_ptr++;
+    vni <<= 8;
+    vni += *vni_ptr++;
+    vni <<= 8;
+    vni += *vni_ptr++;
+
+    sample->vni = vni;
+    ptr += sizeof(struct vxlan_hdr);
+
+    if (sample->sppi) {
+      SFSample *sppi = (SFSample *) sample->sppi;
+
+      /* preps */
+      sppi->datap = (u_int32_t *) ptr;
+      sppi->header = ptr;
+      sppi->headerLen = (end - ptr);
+
+      /* decoding inner packet */
+      decodeLinkLayer(sppi);
+      if (sppi->gotIPV4) decodeIPV4(sppi);
+      else if (sppi->gotIPV6) decodeIPV6(sppi);
     }
   }
 }
@@ -268,8 +285,18 @@ void decodeIPV4(SFSample *sample)
       ptr += (ip.version_and_headerLen & 0x0f) * 4;
 
       if (ip.protocol == 4 /* ipencap */ || ip.protocol == 94 /* ipip */) {
-	sample->got_inner_IPV4 = TRUE;
-	decodeIPV4_inner(sample, ptr);
+	if (sample->sppi) {
+	  SFSample *sppi = (SFSample *) sample->sppi;
+
+	  /* preps */
+	  sppi->datap = (u_int32_t *) ptr;
+	  sppi->header = ptr;
+	  sppi->headerLen = (end - ptr);
+	  sppi->offsetToIPV4 = 0;
+	  sppi->gotIPV4 = TRUE;
+
+	  decodeIPV4(sppi);
+	}
       }
       else decodeIPLayer4(sample, ptr, ip.protocol);
     }
@@ -349,8 +376,18 @@ void decodeIPV6(SFSample *sample)
     sample->dcd_ipProtocol = nextHeader;
 
     if (sample->dcd_ipProtocol == 4 /* ipencap */ || sample->dcd_ipProtocol == 94 /* ipip */) {
-      sample->got_inner_IPV4 = TRUE;
-      decodeIPV4_inner(sample, ptr); 
+      if (sample->sppi) {
+	SFSample *sppi = (SFSample *) sample->sppi;
+
+	/* preps */
+	sppi->datap = (u_int32_t *) ptr;
+	sppi->header = ptr;
+	sppi->headerLen = (end - ptr);
+	sppi->offsetToIPV4 = 0;
+	sppi->gotIPV4 = TRUE;
+
+	decodeIPV4(sppi);
+      }
     }
     else decodeIPLayer4(sample, ptr, sample->dcd_ipProtocol);
   }
@@ -406,7 +443,7 @@ int skipBytesAndCheck(SFSample *sample, int skip)
   else return ERR;
 }
 
-u_int32_t getString(SFSample *sample, char *buf, int bufLen)
+u_int32_t getString(SFSample *sample, char *buf, u_int32_t bufLen)
 {
   u_int32_t len, read_len;
   len = getData32(sample);
@@ -496,7 +533,7 @@ void readExtendedGateway_v2(SFSample *sample)
 
 void readExtendedGateway(SFSample *sample)
 {
-  int len_tot, len_asn, len_comm, idx;
+  u_int32_t len_tot, len_asn, len_comm, idx;
   char asn_str[MAX_BGP_ASPATH], comm_str[MAX_BGP_STD_COMMS], space[] = " ";
 
   if(sample->datagramVersion >= 5) getAddress(sample, &sample->bgp_nextHop);
@@ -508,8 +545,7 @@ void readExtendedGateway(SFSample *sample)
   if (sample->dst_as_path_len > 0) {
     for (idx = 0, len_tot = 0; idx < sample->dst_as_path_len; idx++) {
       u_int32_t seg_type;
-      u_int32_t seg_len;
-      int i;
+      u_int32_t seg_len, i;
 
       seg_type = getData32(sample);
       seg_len = getData32(sample);
@@ -772,7 +808,7 @@ void readExtendedProcess(SFSample *sample)
 void readExtendedClass(SFSample *sample)
 {
   u_int32_t ret;
-  u_char buf[MAX_PROTOCOL_LEN+1], *bufptr = buf;
+  char buf[MAX_PROTOCOL_LEN+1], *bufptr = buf;
 
   if (config.classifiers_path) {
     ret = getData32_nobswap(sample);
@@ -1103,8 +1139,10 @@ void readv5FlowSample(SFSample *sample, int expanded, struct packet_ptrs_vector 
   }
 
   num_elements = getData32(sample);
+
   {
-    int el;
+    u_int32_t el;
+
     for (el = 0; el < num_elements; el++) {
       u_int32_t tag, length;
       u_char *start;
@@ -1186,7 +1224,8 @@ void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vec
 
   for (idx = 0; idx < num_elements; idx++) {
     u_int32_t tag, length;
-    u_char *start, buf[51];
+    u_char *start;
+    char buf[51];
 
     tag = getData32(sample);
     length = getData32(sample);

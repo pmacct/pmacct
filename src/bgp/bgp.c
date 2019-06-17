@@ -28,12 +28,16 @@
 #include "bgp.h"
 #include "bgp_xcs.h"
 #include "rpki/rpki.h"
+#include "bgp_blackhole.h"
 #include "thread_pool.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
+#endif
+#if defined WITH_ZMQ
+#include "zmq_common.h"
 #endif
 
 /* variables to be exported away */
@@ -62,7 +66,7 @@ void skinny_bgp_daemon()
 
 void skinny_bgp_daemon_online()
 {
-  int slen, ret, rc, peers_idx, allowed;
+  int ret, rc, peers_idx, allowed, yes=1, no=0;
   int peers_idx_rr = 0, peers_xconnect_idx_rr = 0, max_peers_idx = 0;
   struct plugin_requests req;
   struct host_addr addr;
@@ -72,12 +76,14 @@ void skinny_bgp_daemon_online()
   struct sockaddr_storage server, client;
   afi_t afi;
   safi_t safi;
-  int clen = sizeof(client), yes=1, no=0;
   time_t now, dump_refresh_deadline;
   struct hosts_table allow;
   struct bgp_md5_table bgp_md5;
   struct timeval dump_refresh_timeout, *drt_ptr;
   struct bgp_peer_batch bp_batch;
+  socklen_t slen, clen = sizeof(client);
+
+  sigset_t signal_set;
 
   /* select() stuff */
   fd_set read_descs, bkp_read_descs; 
@@ -179,11 +185,37 @@ void skinny_bgp_daemon_online()
     bgp_xcs_map.num = 0;
   }
 
-  if (config.rpki_roas_file) {
+  if (config.rpki_roas_file || config.rpki_rtr_cache) {
     rpki_daemon_wrapper();
 
     /* Let's give the RPKI thread some advantage to create its structures */
     sleep(DEFAULT_SLOTH_SLEEP_TIME);
+  }
+
+  if (config.bgp_blackhole_stdcomm_list) {
+#if defined WITH_ZMQ
+    struct p_zmq_host *bgp_blackhole_zmq_host = NULL;
+    char inproc_blackhole_str[] = "inproc://bgp_blackhole";
+
+    bgp_blackhole_daemon_wrapper();
+
+    /* Let's give the BGP blackhole thread some advantage to create its structures */
+    sleep(DEFAULT_SLOTH_SLEEP_TIME);
+
+    bgp_blackhole_zmq_host = malloc(sizeof(struct p_zmq_host));
+    if (!bgp_blackhole_zmq_host) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() bgp_blackhole_zmq_host. Terminating thread.\n", config.name, bgp_misc_db->log_str);
+      exit_gracefully(1);
+    }
+
+    bgp_misc_db->bgp_blackhole_zmq_host = bgp_blackhole_zmq_host;
+    memset(bgp_blackhole_zmq_host, 0, sizeof(struct p_zmq_host));
+    p_zmq_set_log_id(bgp_blackhole_zmq_host, bgp_misc_db->log_str);
+    p_zmq_set_address(bgp_blackhole_zmq_host, inproc_blackhole_str);
+    p_zmq_push_connect_setup(bgp_blackhole_zmq_host);
+#else
+    Log(LOG_ERR, "ERROR ( %s/%s ): 'bgp_blackhole_stdcomm_list' requires compiling with --enable-zmq. Exiting ..\n", config.name, bgp_misc_db->log_str);
+#endif
   }
 
   if (config.nfacctd_bgp_msglog_file || config.nfacctd_bgp_msglog_amqp_routing_key || config.nfacctd_bgp_msglog_kafka_topic) {
@@ -270,15 +302,15 @@ void skinny_bgp_daemon_online()
   if (config.nfacctd_bgp_ipprec) {
     int opt = config.nfacctd_bgp_ipprec << 5;
 
-    rc = setsockopt(config.bgp_sock, IPPROTO_IP, IP_TOS, &opt, sizeof(opt));
+    rc = setsockopt(config.bgp_sock, IPPROTO_IP, IP_TOS, &opt, (socklen_t) sizeof(opt));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IP_TOS (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
   }
 
 #if (defined LINUX) && (defined HAVE_SO_REUSEPORT)
-  rc = setsockopt(config.bgp_sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *)&yes, sizeof(yes));
+  rc = setsockopt(config.bgp_sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *)&yes, (socklen_t) sizeof(yes));
   if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR|SO_REUSEPORT (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
 #else
-  rc = setsockopt(config.bgp_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, sizeof(yes));
+  rc = setsockopt(config.bgp_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, (socklen_t) sizeof(yes));
   if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
 #endif
 
@@ -288,11 +320,11 @@ void skinny_bgp_daemon_online()
 #endif
 
   if (config.nfacctd_bgp_pipe_size) {
-    int l = sizeof(config.nfacctd_bgp_pipe_size);
+    socklen_t l = sizeof(config.nfacctd_bgp_pipe_size);
     int saved = 0, obtained = 0;
 
     getsockopt(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &saved, &l);
-    Setsocksize(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &config.nfacctd_bgp_pipe_size, sizeof(config.nfacctd_bgp_pipe_size));
+    Setsocksize(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &config.nfacctd_bgp_pipe_size, (socklen_t) sizeof(config.nfacctd_bgp_pipe_size));
     getsockopt(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
 
     Setsocksize(config.bgp_sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
@@ -402,8 +434,21 @@ void skinny_bgp_daemon_online()
 
   bgp_link_misc_structs(bgp_misc_db);
 
+  sigemptyset(&signal_set);
+  sigaddset(&signal_set, SIGCHLD);
+  sigaddset(&signal_set, SIGHUP);
+  sigaddset(&signal_set, SIGUSR1);
+  sigaddset(&signal_set, SIGUSR2);
+  sigaddset(&signal_set, SIGINT);
+  sigaddset(&signal_set, SIGTERM);
+
   for (;;) {
     select_again:
+
+    if (!bgp_misc_db->is_thread) {
+      sigprocmask(SIG_UNBLOCK, &signal_set, NULL);
+      sigprocmask(SIG_BLOCK, &signal_set, NULL);
+    }
 
     if (recalc_fds) { 
       select_fd = config.bgp_sock;
@@ -822,6 +867,13 @@ void bgp_prepare_thread()
   bgp_misc_db->is_thread = TRUE;
   bgp_misc_db->has_lglass = FALSE;
 
+  if (config.rpki_roas_file || config.rpki_rtr_cache) {
+    bgp_misc_db->bnv = malloc(sizeof(struct bgp_node_vector));
+    memset(bgp_misc_db->bnv, 0, sizeof(struct bgp_node_vector)); 
+  }
+
+  if (config.bgp_blackhole_stdcomm_list) bgp_misc_db->has_blackhole = TRUE;
+
   bgp_misc_db->log_str = malloc(strlen("core/BGP") + 1);
   strcpy(bgp_misc_db->log_str, "core/BGP");
 }
@@ -833,6 +885,13 @@ void bgp_prepare_daemon()
 
   bgp_misc_db->is_thread = FALSE;
   if (config.bgp_lg) bgp_misc_db->has_lglass = TRUE;
+
+  if (config.rpki_roas_file || config.rpki_rtr_cache) {
+    bgp_misc_db->bnv = malloc(sizeof(struct bgp_node_vector));
+    memset(bgp_misc_db->bnv, 0, sizeof(struct bgp_node_vector));
+  }
+
+  if (config.bgp_blackhole_stdcomm_list) bgp_misc_db->has_blackhole = TRUE;
 
   bgp_misc_db->log_str = malloc(strlen("core") + 1);
   strcpy(bgp_misc_db->log_str, "core");

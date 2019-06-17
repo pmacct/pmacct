@@ -75,7 +75,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     json_t *obj = json_object();
 
     char empty[] = "";
-    char prefix_str[INET6_ADDRSTRLEN], nexthop_str[INET6_ADDRSTRLEN];
+    char prefix_str[PREFIX_STRLEN], nexthop_str[INET6_ADDRSTRLEN];
     char *aspath;
 
     if (etype == BGP_LOGDUMP_ET_LOG) {
@@ -121,8 +121,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     json_object_set_new_nocheck(obj, "safi", json_integer((json_int_t)safi));
 
     if (route) {
-      memset(prefix_str, 0, INET6_ADDRSTRLEN);
-      prefix2str(&route->p, prefix_str, INET6_ADDRSTRLEN);
+      memset(prefix_str, 0, PREFIX_STRLEN);
+      prefix2str(&route->p, prefix_str, PREFIX_STRLEN);
       json_object_set_new_nocheck(obj, "ip_prefix", json_string(prefix_str));
     }
 
@@ -154,19 +154,28 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       if (attr->med)
 	json_object_set_new_nocheck(obj, "med", json_integer((json_int_t)attr->med));
 
-      if (config.rpki_roas_file) {
+      if (config.rpki_roas_file || config.rpki_rtr_cache) {
 	u_int8_t roa;
 
-	roa = rpki_prefix_lookup(&route->p, attr->aspath);
+	if (etype == BGP_LOGDUMP_ET_LOG) {
+	  bms->bnv->entries = 1;
+	  bms->bnv->v[0].p = &route->p; 
+	  bms->bnv->v[0].info = ri; 
+	}
+	else if (etype == BGP_LOGDUMP_ET_DUMP) {
+	  bgp_lookup_node_vector_unicast(&route->p, peer, bms->bnv);
+	}
+
+	roa = rpki_vector_prefix_lookup(bms->bnv);
 	json_object_set_new_nocheck(obj, "roa", json_string(rpki_roa_print(roa)));
       }
     }
 
     if (safi == SAFI_MPLS_LABEL || safi == SAFI_MPLS_VPN) {
-      u_char label_str[SHORTSHORTBUFLEN];
+      char label_str[SHORTSHORTBUFLEN];
 
       if (safi == SAFI_MPLS_VPN) {
-        u_char rd_str[SHORTSHORTBUFLEN];
+        char rd_str[SHORTSHORTBUFLEN];
 
         bgp_rd2str(rd_str, &ri->extra->rd);
 	json_object_set_new_nocheck(obj, "rd", json_string(rd_str));
