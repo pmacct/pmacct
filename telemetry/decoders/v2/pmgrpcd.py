@@ -63,7 +63,9 @@ SCRIPTVERSION = '1.0'
 CONFIGFILE = '/etc/pmacct/telemetry/telemetry.conf'
 GPBMAPFILE = '/etc/pmacct/telemetry/gpbmapfile.map'
 SCIDMAPFILE = '/etc/pmacct/telemetry/schema_id_map_file.json'
-MITIGATIONSCRIPT = '/etc/pmacct/telemetry/mitigation.py'
+MITIGATIONPATH = '/etc/pmacct/telemetry/mitigation'
+MITIGATIONSCRIPT = 'mitigation.py'
+sys.path.append(MITIGATIONPATH)
 
 jsonmap = {}
 avscmap = {}
@@ -899,8 +901,9 @@ if __name__ == '__mod_all_json_data__':
     with open(SCIDMAPFILE, 'w') as scidmapf:
       scidmapf.write(default_scidmapfile)
 
-  if not os.path.isfile(MITIGATIONSCRIPT):
-    with open(MITIGATIONSCRIPT, 'w') as mitigf:
+  mitigpathscript = MITIGATIONPATH +'/' + MITIGATIONSCRIPT
+  if not os.path.isfile(mitigpathscript):
+    with open(mitigpathscript, 'w') as mitigf:
       mitigf.write(default_mitigationscript)
 
   parser.add_option("-T", "--topic",
