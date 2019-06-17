@@ -30,8 +30,7 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 #include "bgp.h"
 
 /* Allocate a new communities value.  */
-static struct community *
-community_new (struct bgp_peer *peer)
+struct community *community_new (struct bgp_peer *peer)
 {
   struct bgp_misc_structs *bms;
   void *tmp;

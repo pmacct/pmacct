@@ -71,9 +71,12 @@ void bgp_blackhole_prepare_filter()
   char *stdcomms, *token;
   int len;
 
+  bgp_blackhole_filter = malloc(sizeof(struct bloom));
   bloom_init(bgp_blackhole_filter, BGP_BLACKHOLE_DEFAULT_BF_ENTRIES, 0.01);
 
   stdcomms = strdup(config.bgp_blackhole_stdcomm_list);
+  bgp_blackhole_comms = community_new(&bgp_blackhole_peer);
+ 
   while ((token = extract_token(&stdcomms, ','))) {
     u_int32_t stdcomm;
     int ret;
@@ -111,7 +114,6 @@ void bgp_blackhole_daemon()
 
   // XXX
 
-  bgp_blackhole_comms = NULL;
   bgp_blackhole_init_dummy_peer(&bgp_blackhole_peer);
 
   bgp_blackhole_db = &inter_domain_routing_dbs[FUNC_TYPE_BGP_BLACKHOLE];
@@ -173,10 +175,15 @@ void bgp_blackhole_instrument(struct prefix *p, void *a, afi_t afi, safi_t safi)
 
   memcpy(&pcopy, p, sizeof(struct prefix));
   memcpy(&acopy, attr, sizeof(struct bgp_attr));
-  acopy.aspath = aspath_dup(attr->aspath);
-  acopy.community = community_dup(attr->community);
-  acopy.ecommunity = ecommunity_dup(attr->ecommunity);
-  acopy.lcommunity = lcommunity_dup(attr->lcommunity);
+  if (attr->aspath) acopy.aspath = aspath_dup(attr->aspath);
+  if (attr->community) acopy.community = community_dup(attr->community);
+  if (attr->ecommunity) acopy.ecommunity = ecommunity_dup(attr->ecommunity);
+  if (attr->lcommunity) acopy.lcommunity = lcommunity_dup(attr->lcommunity);
   
   // XXX: send()
+
+  if (acopy.aspath) aspath_free(acopy.aspath);
+  if (acopy.community) community_free(acopy.community);
+  if (acopy.ecommunity) ecommunity_free(acopy.ecommunity);
+  if (acopy.lcommunity) lcommunity_free(acopy.lcommunity);
 }

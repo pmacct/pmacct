@@ -62,6 +62,7 @@ struct community
 #else
 #define EXT
 #endif
+EXT struct community *community_new (struct bgp_peer *);
 EXT void community_init (int, struct hash **);
 EXT void community_free (struct community *);
 EXT struct community *community_uniq_sort (struct bgp_peer *, struct community *);
