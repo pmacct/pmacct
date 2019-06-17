@@ -158,6 +158,7 @@ class gRPCMdtDialoutServicer(object):
           cisco_processing(grpcPeer, new_msg)
       else:
         cisco_processing(grpcPeer, new_msg)
+
 def add_gRPCMdtDialoutServicer_to_server(servicer, server):
   rpc_method_handlers = {
       'MdtDialout': grpc.stream_stream_rpc_method_handler(
@@ -175,7 +176,6 @@ def cisco_processing(grpcPeer, new_msg):
       messages = {}
       grpc_message={}
       encoding_type=None
-      messagetype='unknown'
       pmgrpcdlog.debug("Cisco: Received GRPC-Data")
       pmgrpcdlog.debug(new_msg.data)
 
@@ -248,10 +248,10 @@ def cisco_processing(grpcPeer, new_msg):
         message_dict['collector']['grpc'].update({'ne_vendor': grpcPeer['ne_vendor']})
         message_dict['collector'].update({'data': message_header_dict})
 
-        if messagetype == 'ciscojson':
+        if encoding_type == 'ciscojson':
           pmgrpcdlog.debug("TEST: %s | %s", path, listelem['content'])
           message_dict.update({path: listelem['content']})
-        elif messagetype == 'ciscogrpckv':
+        elif encoding_type == 'ciscogrpckv':
           pmgrpcdlog.debug("TEST: %s | %s", path, listelem['fields'])
           message_dict.update({path: listelem['fields']})
 
