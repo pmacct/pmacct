@@ -43,8 +43,9 @@ from datetime import datetime
 import grpc
 from google.protobuf.json_format import MessageToJson, MessageToDict
 #L1:
-import huawei_grpc_dialout_pb2_grpc
-import cisco_grpc_dialout_pb2_grpc
+import grpc
+import huawei_grpc_dialout_pb2 as huawei__grpc__dialout__pb2
+import cisco_grpc_dialout_pb2 as cisco__grpc__dialout__pb2
 #L2:
 import huawei_telemetry_pb2
 #import cisco_telemetry_pb2 
@@ -79,7 +80,7 @@ missgpblib={}
 class FileNotFound(Exception):
     pass
 
-class gRPCDataserviceServicer(huawei_grpc_dialout_pb2_grpc.gRPCDataserviceServicer):
+class gRPCDataserviceServicer(object):
   def __init__(self):
     global options
     pmgrpcdlog.info('Huawei: Initializing gRPCDataserviceServicer()')
@@ -109,8 +110,21 @@ class gRPCDataserviceServicer(huawei_grpc_dialout_pb2_grpc.gRPCDataserviceServic
       else:
         huawei_processing(grpcPeer, new_msg)
 
+def add_gRPCDataserviceServicer_to_server(servicer, server):
+  rpc_method_handlers = {
+      'dataPublish': grpc.stream_stream_rpc_method_handler(
+          servicer.dataPublish,
+          request_deserializer=huawei__grpc__dialout__pb2.serviceArgs.FromString,
+          response_serializer=huawei__grpc__dialout__pb2.serviceArgs.SerializeToString,
+      ),
+  }
+  generic_handler = grpc.method_handlers_generic_handler(
+      'huawei_dialout.gRPCDataservice', rpc_method_handlers)
+  server.add_generic_rpc_handlers((generic_handler,))
+
+
    
-class gRPCMdtDialoutServicer(cisco_grpc_dialout_pb2_grpc.gRPCMdtDialoutServicer):
+class gRPCMdtDialoutServicer(object):
   def __init__(self):
     global options
     pmgrpcdlog.info("Cisco: Initializing gRPCMdtDialoutServicer()")
@@ -141,6 +155,18 @@ class gRPCMdtDialoutServicer(cisco_grpc_dialout_pb2_grpc.gRPCMdtDialoutServicer)
           cisco_processing(grpcPeer, new_msg)
       else:
         cisco_processing(grpcPeer, new_msg)
+def add_gRPCMdtDialoutServicer_to_server(servicer, server):
+  rpc_method_handlers = {
+      'MdtDialout': grpc.stream_stream_rpc_method_handler(
+          servicer.MdtDialout,
+          request_deserializer=cisco__grpc__dialout__pb2.MdtDialoutArgs.FromString,
+          response_serializer=cisco__grpc__dialout__pb2.MdtDialoutArgs.SerializeToString,
+      ),
+  }
+  generic_handler = grpc.method_handlers_generic_handler(
+      'mdt_dialout.gRPCMdtDialout', rpc_method_handlers)
+  server.add_generic_rpc_handlers((generic_handler,))
+
 
 def cisco_processing(grpcPeer, new_msg):
       messages = {}
@@ -658,13 +684,13 @@ def serve():
 
   if options.huawei:
     pmgrpcdlog.info("Huawei is enabled")
-    huawei_grpc_dialout_pb2_grpc.add_gRPCDataserviceServicer_to_server(gRPCDataserviceServicer(), gRPCserver)
+    add_gRPCDataserviceServicer_to_server(gRPCDataserviceServicer(), gRPCserver)
   else:
     pmgrpcdlog.info("Huawei is disabled")
 
   if options.cisco:
     pmgrpcdlog.info("Cisco is enabled")
-    cisco_grpc_dialout_pb2_grpc.add_gRPCMdtDialoutServicer_to_server(gRPCMdtDialoutServicer(), gRPCserver)
+    add_gRPCMdtDialoutServicer_to_server(gRPCMdtDialoutServicer(), gRPCserver)
   else:
     pmgrpcdlog.info("Cisco is disabled")
 
