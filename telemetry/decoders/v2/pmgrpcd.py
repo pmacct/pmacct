@@ -491,7 +491,7 @@ def loadavsc(avscid):
 
   try:
     serializelog.debug("querying screg with avscid: %s" % (avscid))
-    client = CachedSchemaRegistryClient(url=options.urlscreg, ca_location=options.calocation)
+    client = CachedSchemaRegistryClient({'url':options.urlscreg, 'ssl.ca.location':options.calocation})
     avsc = client.get_by_id(avscid)
   except Exception as e:
     serializelog.info("ERROR: load avro schema from schema-registry-server is failed on CachedSchemaRegistryClient on using method get_by_id()")
