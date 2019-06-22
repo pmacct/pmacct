@@ -43,8 +43,9 @@ from datetime import datetime
 import grpc
 from google.protobuf.json_format import MessageToJson, MessageToDict
 #L1:
-import huawei_grpc_dialout_pb2_grpc
-import cisco_grpc_dialout_pb2_grpc
+import grpc
+import huawei_grpc_dialout_pb2 as huawei__grpc__dialout__pb2
+import cisco_grpc_dialout_pb2 as cisco__grpc__dialout__pb2
 #L2:
 import huawei_telemetry_pb2
 #import cisco_telemetry_pb2 
@@ -62,10 +63,13 @@ SCRIPTVERSION = '1.0'
 CONFIGFILE = '/etc/pmacct/telemetry/telemetry.conf'
 GPBMAPFILE = '/etc/pmacct/telemetry/gpbmapfile.map'
 SCIDMAPFILE = '/etc/pmacct/telemetry/schema_id_map_file.json'
-MITIGATIONSCRIPT = '/etc/pmacct/telemetry/mitigation.py'
+MITIGATIONPATH = '/etc/pmacct/telemetry/mitigation'
+MITIGATIONSCRIPT = 'mitigation.py'
+sys.path.append(MITIGATIONPATH)
 
 jsonmap = {}
 avscmap = {}
+statmap = {}
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
@@ -79,7 +83,7 @@ missgpblib={}
 class FileNotFound(Exception):
     pass
 
-class gRPCDataserviceServicer(huawei_grpc_dialout_pb2_grpc.gRPCDataserviceServicer):
+class gRPCDataserviceServicer(object):
   def __init__(self):
     global options
     pmgrpcdlog.info('Huawei: Initializing gRPCDataserviceServicer()')
@@ -109,8 +113,21 @@ class gRPCDataserviceServicer(huawei_grpc_dialout_pb2_grpc.gRPCDataserviceServic
       else:
         huawei_processing(grpcPeer, new_msg)
 
+def add_gRPCDataserviceServicer_to_server(servicer, server):
+  rpc_method_handlers = {
+      'dataPublish': grpc.stream_stream_rpc_method_handler(
+          servicer.dataPublish,
+          request_deserializer=huawei__grpc__dialout__pb2.serviceArgs.FromString,
+          response_serializer=huawei__grpc__dialout__pb2.serviceArgs.SerializeToString,
+      ),
+  }
+  generic_handler = grpc.method_handlers_generic_handler(
+      'huawei_dialout.gRPCDataservice', rpc_method_handlers)
+  server.add_generic_rpc_handlers((generic_handler,))
+
+
    
-class gRPCMdtDialoutServicer(cisco_grpc_dialout_pb2_grpc.gRPCMdtDialoutServicer):
+class gRPCMdtDialoutServicer(object):
   def __init__(self):
     global options
     pmgrpcdlog.info("Cisco: Initializing gRPCMdtDialoutServicer()")
@@ -142,11 +159,23 @@ class gRPCMdtDialoutServicer(cisco_grpc_dialout_pb2_grpc.gRPCMdtDialoutServicer)
       else:
         cisco_processing(grpcPeer, new_msg)
 
+def add_gRPCMdtDialoutServicer_to_server(servicer, server):
+  rpc_method_handlers = {
+      'MdtDialout': grpc.stream_stream_rpc_method_handler(
+          servicer.MdtDialout,
+          request_deserializer=cisco__grpc__dialout__pb2.MdtDialoutArgs.FromString,
+          response_serializer=cisco__grpc__dialout__pb2.MdtDialoutArgs.SerializeToString,
+      ),
+  }
+  generic_handler = grpc.method_handlers_generic_handler(
+      'mdt_dialout.gRPCMdtDialout', rpc_method_handlers)
+  server.add_generic_rpc_handlers((generic_handler,))
+
+
 def cisco_processing(grpcPeer, new_msg):
       messages = {}
       grpc_message={}
       encoding_type=None
-      messagetype='unknown'
       pmgrpcdlog.debug("Cisco: Received GRPC-Data")
       pmgrpcdlog.debug(new_msg.data)
 
@@ -208,6 +237,7 @@ def cisco_processing(grpcPeer, new_msg):
         messages = grpc_message['dataGpbkv']
 
       pmgrpcdlog.info("EPOCH=%-10s NIP=%-15s NID=%-20s VEN=%-7s PT=%-22s ET=%-12s ELEM=%s" % (epochmillis, node_ip, node_id_str, ne_vendor, proto, encoding_type, elem))
+      statcalc(elem)
       
       for listelem in messages:
         pmgrpcdlog.debug("LISTELEM: %s" % (listelem))
@@ -218,10 +248,10 @@ def cisco_processing(grpcPeer, new_msg):
         message_dict['collector']['grpc'].update({'ne_vendor': grpcPeer['ne_vendor']})
         message_dict['collector'].update({'data': message_header_dict})
 
-        if messagetype == 'ciscojson':
+        if encoding_type == 'ciscojson':
           pmgrpcdlog.debug("TEST: %s | %s", path, listelem['content'])
           message_dict.update({path: listelem['content']})
-        elif messagetype == 'ciscogrpckv':
+        elif encoding_type == 'ciscogrpckv':
           pmgrpcdlog.debug("TEST: %s | %s", path, listelem['fields'])
           message_dict.update({path: listelem['fields']})
 
@@ -267,6 +297,7 @@ def huawei_processing(grpcPeer, new_msg):
       elem = len(telemetry_msg.data_gpb.row)
       epochmillis = int(round(time.time() * 1000))
       pmgrpcdlog.info("EPOCH=%-10s NIP=%-15s NID=%-20s VEN=%-7s PT=%-22s ET=%-12s ELEM:%s" % (epochmillis, node_ip, node_id_str, ne_vendor, proto, 'GPB', elem))
+      statcalc(elem)
     
       #L2:
       for new_row in telemetry_msg.data_gpb.row:
@@ -333,7 +364,33 @@ def signalhandler(signum, frame):
     pmgrpcdlog.info("This are the missing gpb libs: %s" % (missgpblib))
   if signum == 12:
     pmgrpcdlog.info("Signal handler called with USR2 signal: %s" % (signum))
-    pmgrpcdlog.info("TODO: %s" % ('todo'))
+    max_nroftimesegm_to_display = 3
+    pmgrpcdlog.info("This are the statistic data:\n%s" % (str(statistic(max_nroftimesegm_to_display))))
+    print("This are the statistic data of %s:\n%s" % (time.ctime(), str(statistic(max_nroftimesegm_to_display))))
+
+def statistic(max_nroftimesegm_to_display):
+  from_this_elem_to_display = -abs(max_nroftimesegm_to_display)
+  returnstring = ""
+  for timesegm in list(reversed(list(statmap)[from_this_elem_to_display:])):
+    msgcount = statmap[timesegm]['total']
+    elemcount = statmap[timesegm]['elements']
+    segstring = "timesegm=%s msgcount=%s elemcount=%s\n" % (timesegm, msgcount, elemcount)
+    returnstring = returnstring + segstring
+  return returnstring
+
+def statcalc(elem):
+  calc_periode = 60
+  max_nroftimesegm_to_hold = 5
+  from_this_elem_to_hold = -abs(max_nroftimesegm_to_hold)
+  timesegm = int((time.time())/calc_periode)
+  try:
+    statmap[timesegm]['total'] += 1
+  except Exception as e:
+    statmap.update({timesegm:{'total': 1}})
+  try:
+    statmap[timesegm]['elements'] += elem
+  except Exception as e:
+    statmap[timesegm].update({'elements': 1})
 
 def parse_dict(init, ret, level):
   level += 1
@@ -465,7 +522,7 @@ def loadavsc(avscid):
 
   try:
     serializelog.debug("querying screg with avscid: %s" % (avscid))
-    client = CachedSchemaRegistryClient(url=options.urlscreg, ca_location=options.calocation)
+    client = CachedSchemaRegistryClient({'url':options.urlscreg, 'ssl.ca.location':options.calocation})
     avsc = client.get_by_id(avscid)
   except Exception as e:
     serializelog.info("ERROR: load avro schema from schema-registry-server is failed on CachedSchemaRegistryClient on using method get_by_id()")
@@ -658,13 +715,13 @@ def serve():
 
   if options.huawei:
     pmgrpcdlog.info("Huawei is enabled")
-    huawei_grpc_dialout_pb2_grpc.add_gRPCDataserviceServicer_to_server(gRPCDataserviceServicer(), gRPCserver)
+    add_gRPCDataserviceServicer_to_server(gRPCDataserviceServicer(), gRPCserver)
   else:
     pmgrpcdlog.info("Huawei is disabled")
 
   if options.cisco:
     pmgrpcdlog.info("Cisco is enabled")
-    cisco_grpc_dialout_pb2_grpc.add_gRPCMdtDialoutServicer_to_server(gRPCMdtDialoutServicer(), gRPCserver)
+    add_gRPCMdtDialoutServicer_to_server(gRPCMdtDialoutServicer(), gRPCserver)
   else:
     pmgrpcdlog.info("Cisco is disabled")
 
@@ -844,8 +901,9 @@ if __name__ == '__mod_all_json_data__':
     with open(SCIDMAPFILE, 'w') as scidmapf:
       scidmapf.write(default_scidmapfile)
 
-  if not os.path.isfile(MITIGATIONSCRIPT):
-    with open(MITIGATIONSCRIPT, 'w') as mitigf:
+  mitigpathscript = MITIGATIONPATH +'/' + MITIGATIONSCRIPT
+  if not os.path.isfile(mitigpathscript):
+    with open(mitigpathscript, 'w') as mitigf:
       mitigf.write(default_mitigationscript)
 
   parser.add_option("-T", "--topic",
