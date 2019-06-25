@@ -6,6 +6,8 @@
 !
 ! nfacctd, sfacctd: valid keys: id, ip, in, bgp_nexthop, src_mac, vlan.
 !
+! pmacctd, uacctd: valid keys: id, ip, filter. 
+!
 ! list of currently supported keys follow:
 !
 ! 'id'			SET: value to assign to a matching packet or flow. Other
@@ -31,6 +33,9 @@
 ! 'vlan'                MATCH: In NetFlow v9 and IPFIX this is compared against
 !                       IE #58, in sFlow against in/out VLAN ID fields part of
 !                       the Extended Switch object.
+! 'filter'		MATCH: incoming data is compared against the supplied
+!			filter expression (expected in libpcap syntax); the
+!			filter needs to be enclosed in quotes (').
 !
 ! Examples:
 !
@@ -54,6 +59,10 @@ id=56789	ip=192.168.1.1 	in=7
 ! 
 id=34567        ip=192.168.1.1  in=7    src_mac=00:01:02:03:04:05
 id=45678        ip=192.168.1.1  in=7    src_mac=00:01:02:03:04:06
+
+! Same example as the previous one but with pmacctd / uacctd:
+id=34567        ip=0.0.0.0/0	filter='ether src 00:01:02:03:04:05'
+id=45678        ip=0.0.0.0/0	filter='ether src 00:01:02:03:04:06'
 
 ! A simple example on how to trigger BGP lookups rather than returning a fixed result.
 ! This allows to handle exceptions to static mapping
