@@ -192,14 +192,8 @@ void pm_pcap_add_filter(struct pcap_device *dev_ptr)
   struct bpf_program filter;
   char errbuf[PCAP_ERRBUF_SIZE];
 
-  if (!strlen(dev_ptr->str) || pcap_lookupnet(dev_ptr->str, &localnet, &netmask, errbuf) < 0) {
-    localnet = 0;
-    netmask = PCAP_NETMASK_UNKNOWN;
-    if (strlen(dev_ptr->str)) Log(LOG_WARNING, "WARN ( %s/core ): %s\n", config.name, errbuf);
-  }
-
   memset(&filter, 0, sizeof(filter));
-  if (pcap_compile(dev_ptr->dev_desc, &filter, config.clbuf, 0, netmask) < 0) {
+  if (pcap_compile(dev_ptr->dev_desc, &filter, config.clbuf, 0, PCAP_NETMASK_UNKNOWN) < 0) {
     Log(LOG_WARNING, "WARN ( %s/core ): %s (going on without a filter)\n", config.name, pcap_geterr(dev_ptr->dev_desc));
   }
   else {
