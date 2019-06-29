@@ -1219,7 +1219,7 @@ int resolve_vlen_template(u_char *ptr, u_int16_t remlen, struct template_cache_e
       if (otpl_ptr->tpl_len == IPFIX_VARIABLE_LENGTH) {
 	vlen = TRUE;
 
-	ret = get_ipfix_vlen(ptr+len, remlen, &otpl_ptr->len);
+	ret = get_ipfix_vlen(ptr+len, remlen - len, &otpl_ptr->len);
 	if (ret > 0) add_len = ret;
 	else return ERR;
 
@@ -1235,7 +1235,7 @@ int resolve_vlen_template(u_char *ptr, u_int16_t remlen, struct template_cache_e
       if (utpl_ptr->tpl_len == IPFIX_VARIABLE_LENGTH) {
 	vlen = TRUE;
 
-	ret = get_ipfix_vlen(ptr+len, remlen, &utpl_ptr->len);
+	ret = get_ipfix_vlen(ptr+len, remlen - len, &utpl_ptr->len);
 	if (ret > 0) add_len = ret;
 	else return ERR;
 
@@ -1247,7 +1247,6 @@ int resolve_vlen_template(u_char *ptr, u_int16_t remlen, struct template_cache_e
 
     /* if len is invalid (ie. greater than flowsetlen), we stop here */
     if (len > remlen) return ERR;
-    else remlen -= len;
 
     idx++;
   }
