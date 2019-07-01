@@ -43,7 +43,11 @@
 !			[1,2,4,8 bytes long], presented as hexadecimal number),
 !			'ip' (IP address), 'mac' (L2 MAC address), 'str'
 !			(string) and 'raw' (raw data, fixed or variable length
-!			in hex format). 
+!			in hex format). Note: make sure, when selecting 'str' as
+!			semantics, that the string is null-terminated; otherwise
+!			pick 'raw' in order to avoid undefined behaviours; 'raw'
+!			will require some simple post processing in order to be
+!			converted back to a string. 
 ! 
 ! Examples:
 !
