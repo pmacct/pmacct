@@ -321,6 +321,11 @@ int p_zmq_connect(struct p_zmq_host *zmq_host)
   return ret;
 }
 
+void p_zmq_ctx_setup(struct p_zmq_host *zmq_host)
+{
+  if (!zmq_host->ctx) zmq_host->ctx = zmq_ctx_new();
+}
+
 void p_zmq_zap_setup(struct p_zmq_host *zmq_host)
 {
   zmq_host->zap.thread = zmq_threadstart(&p_zmq_zap_handler, zmq_host);
@@ -344,6 +349,7 @@ void p_zmq_push_connect_setup(struct p_zmq_host *zmq_host)
 void p_zmq_send_setup(struct p_zmq_host *zmq_host, int type, int do_connect)
 {
   int ret, only_one = 1;
+  void *sock;
 
   if (!zmq_host) return;
   if (type != ZMQ_PUB && type != ZMQ_PUSH) return;
@@ -356,26 +362,38 @@ void p_zmq_send_setup(struct p_zmq_host *zmq_host, int type, int do_connect)
     }
   }
 
-  zmq_host->sock.obj = zmq_socket(zmq_host->ctx, type);
-  if (!zmq_host->sock.obj) {
+  sock = zmq_socket(zmq_host->ctx, type);
+  if (!sock) {
     Log(LOG_ERR, "ERROR ( %s ): zmq_socket() failed for topic %u: %s\nExiting.\n",
         zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));
     exit_gracefully(1);
   }
 
-  ret = zmq_setsockopt(zmq_host->sock.obj, ZMQ_SNDHWM, &zmq_host->hwm, sizeof(int));
+  ret = zmq_setsockopt(sock, ZMQ_SNDHWM, &zmq_host->hwm, sizeof(int));
   if (ret == ERR) {
     Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() ZMQ_SNDHWM failed for topic %u: %s\nExiting.\n",
 	zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));
     exit_gracefully(1);
   }
 
-  ret = zmq_setsockopt(zmq_host->sock.obj, ZMQ_BACKLOG, &only_one, sizeof(int));
+  ret = zmq_setsockopt(sock, ZMQ_BACKLOG, &only_one, sizeof(int));
   if (ret == ERR) {
     Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() ZMQ_BACKLOG failed for topic %u: %s\nExiting.\n",
 	zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));
     exit_gracefully(1);
   }
+
+  if (strlen(zmq_host->sock_inproc.str)) {
+    zmq_host->sock_inproc.obj = sock;
+
+    if (do_connect) {
+      zmq_host->sock_inproc.obj_tx = zmq_host->sock_inproc.obj;
+    }
+    else {
+      zmq_host->sock_inproc.obj_rx = zmq_host->sock_inproc.obj;
+    }
+  }
+  else zmq_host->sock.obj = sock;
 
   if (!do_connect) p_zmq_bind(zmq_host);
   else p_zmq_connect(zmq_host);
@@ -403,6 +421,7 @@ void p_zmq_pull_bind_setup(struct p_zmq_host *zmq_host)
 void p_zmq_recv_setup(struct p_zmq_host *zmq_host, int type, int do_bind)
 {
   int ret;
+  void *sock;
 
   if (!zmq_host) return;
   if (type != ZMQ_SUB && type != ZMQ_PULL) return;
@@ -415,26 +434,38 @@ void p_zmq_recv_setup(struct p_zmq_host *zmq_host, int type, int do_bind)
     }
   }
 
-  zmq_host->sock.obj = zmq_socket(zmq_host->ctx, type);
-  if (!zmq_host->sock.obj) {
+  sock = zmq_socket(zmq_host->ctx, type);
+  if (!sock) {
     Log(LOG_ERR, "ERROR ( %s ): zmq_socket() failed for topic %u: %s\nExiting.\n",
         zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));
     exit_gracefully(1);
   }
 
-  ret = zmq_setsockopt(zmq_host->sock.obj, ZMQ_RCVHWM, &zmq_host->hwm, sizeof(int));
+  ret = zmq_setsockopt(sock, ZMQ_RCVHWM, &zmq_host->hwm, sizeof(int));
   if (ret == ERR) {
     Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() ZMQ_RCVHWM failed for topic %u: %s\nExiting.\n",
         zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));
     exit_gracefully(1);
   }
 
+  if (strlen(zmq_host->sock_inproc.str)) {
+    zmq_host->sock_inproc.obj = sock;
+
+    if (!do_bind) {
+      zmq_host->sock_inproc.obj_tx = zmq_host->sock_inproc.obj;
+    }
+    else {
+      zmq_host->sock_inproc.obj_rx = zmq_host->sock_inproc.obj; 
+    }
+  }
+  else zmq_host->sock.obj = sock;
+
   if (!do_bind) ret = p_zmq_connect(zmq_host);
   else ret = p_zmq_bind(zmq_host);
 
   if (type == ZMQ_SUB) {
     if (zmq_host->topic) {
-      ret = zmq_setsockopt(zmq_host->sock.obj, ZMQ_SUBSCRIBE, &zmq_host->topic, sizeof(zmq_host->topic));
+      ret = zmq_setsockopt(sock, ZMQ_SUBSCRIBE, &zmq_host->topic, sizeof(zmq_host->topic));
       if (ret == ERR) {
 	Log(LOG_ERR, "ERROR ( %s ): zmq_setsockopt() SUBSCRIBE failed for topic %u: %s\nExiting.\n",
 	    zmq_host->log_id, zmq_host->topic, zmq_strerror(errno));
@@ -442,7 +473,7 @@ void p_zmq_recv_setup(struct p_zmq_host *zmq_host, int type, int do_bind)
       }
     }
     /* subscribe to all topics */
-    else zmq_setsockopt(zmq_host->sock.obj, ZMQ_SUBSCRIBE, NULL, 0);
+    else zmq_setsockopt(sock, ZMQ_SUBSCRIBE, NULL, 0);
   }
 
   Log(LOG_DEBUG, "DEBUG ( %s ): p_zmq_recv_setup() addr=%s username=%s password=%s\n",
@@ -471,11 +502,15 @@ int p_zmq_topic_send(struct p_zmq_host *zmq_host, void *buf, u_int64_t len)
   return ret;
 }
 
-int p_zmq_recv_poll(struct p_zmq_host *zmq_host, int timeout)
+int p_zmq_recv_poll(struct p_zmq_sock *sock, int timeout)
 {
   zmq_pollitem_t item[1];
+  void *s;
 
-  item[0].socket = zmq_host->sock.obj;
+  if (sock->obj_rx) s = sock->obj_rx;
+  else s = sock->obj;
+
+  item[0].socket = s;
   item[0].events = ZMQ_POLLIN;
 
   return zmq_poll(item, 1, timeout);
@@ -558,8 +593,12 @@ int p_zmq_sendmore_str(struct p_zmq_sock *sock, char *buf)
 int p_zmq_recv_bin(struct p_zmq_sock *sock, void *buf, size_t len)
 {
   int rcvlen;
+  void *s;
 
-  rcvlen = zmq_recv(sock->obj, buf, len, 0);
+  if (sock->obj_rx) s = sock->obj_rx;
+  else s = sock->obj;
+
+  rcvlen = zmq_recv(s, buf, len, 0);
 
   return rcvlen;
 }
@@ -567,9 +606,13 @@ int p_zmq_recv_bin(struct p_zmq_sock *sock, void *buf, size_t len)
 int p_zmq_send_bin(struct p_zmq_sock *sock, void *buf, size_t len, int nonblock)
 {
   int sndlen;
+  void *s;
 
-  if (!nonblock) sndlen = zmq_send(sock->obj, buf, len, 0);
-  else sndlen = zmq_send(sock->obj, buf, len, ZMQ_DONTWAIT);
+  if (sock->obj_tx) s = sock->obj_tx;
+  else s = sock->obj;
+
+  if (!nonblock) sndlen = zmq_send(s, buf, len, 0);
+  else sndlen = zmq_send(s, buf, len, ZMQ_DONTWAIT);
 
   return sndlen;
 }

@@ -25,6 +25,15 @@
 /* defines */
 #define BGP_BLACKHOLE_DEFAULT_BF_ENTRIES	1000
 
+/* structs */
+struct bgp_blackhole_itc {
+  struct bgp_peer *peer;
+  afi_t afi;
+  safi_t safi;
+  struct prefix *p;
+  struct bgp_attr *attr;
+};
+
 /* prototypes */
 #if (!defined __BGP_BLACKHOLE_C)
 #define EXT extern
@@ -39,7 +48,7 @@ EXT void bgp_blackhole_prepare_filter();
 EXT void bgp_blackhole_daemon();
 
 EXT int bgp_blackhole_evaluate_comms(void *);
-EXT void bgp_blackhole_instrument(struct prefix *, void *, afi_t, safi_t);
+EXT int bgp_blackhole_instrument(struct bgp_peer *, struct prefix *, void *, afi_t, safi_t);
 #undef EXT
 #endif
 
