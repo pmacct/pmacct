@@ -474,7 +474,14 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
     if (config.kafka_avro_schema_registry) {
 #ifdef WITH_SERDES
       char *avro_acct_schema_str = write_avro_schema_to_memory(avro_acct_schema);
-      char *avro_acct_schema_name = compose_avro_schema_name(config.type, config.name);
+      char *avro_acct_schema_name;
+
+      if (!is_topic_dyn) {
+	avro_acct_schema_name = p_kafka_get_topic(&kafkap_kafka_host); 
+      }
+      else {
+	avro_acct_schema_name = compose_avro_schema_name(config.type, config.name);
+      }
 
       sd_conf = serdes_conf_new(NULL, 0, "schema.registry.url", config.kafka_avro_schema_registry, NULL);
 
