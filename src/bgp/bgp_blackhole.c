@@ -38,6 +38,11 @@ thread_pool_t *bgp_blackhole_pool;
 /* Functions */
 void bgp_blackhole_daemon_wrapper()
 {
+#if defined WITH_ZMQ
+  struct p_zmq_host *bgp_blackhole_zmq_host = NULL;
+  char inproc_blackhole_str[] = "inproc://bgp_blackhole";
+#endif
+
   /* initialize threads pool */
   bgp_blackhole_pool = allocate_thread_pool(1);
   assert(bgp_blackhole_pool);
@@ -45,6 +50,20 @@ void bgp_blackhole_daemon_wrapper()
 
   bgp_blackhole_prepare_filter();
   bgp_blackhole_prepare_thread();
+
+#if defined WITH_ZMQ
+  bgp_blackhole_zmq_host = malloc(sizeof(struct p_zmq_host));
+  if (!bgp_blackhole_zmq_host) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() bgp_blackhole_zmq_host. Terminating thread.\n", config.name, bgp_misc_db->log_str);
+    exit_gracefully(1);
+  }
+  else memset(bgp_blackhole_zmq_host, 0, sizeof(struct p_zmq_host));
+
+  p_zmq_set_log_id(bgp_blackhole_zmq_host, bgp_blackhole_misc_db->log_str);
+  p_zmq_set_address(bgp_blackhole_zmq_host, inproc_blackhole_str);
+  p_zmq_ctx_setup(bgp_blackhole_zmq_host);
+  bgp_blackhole_misc_db->bgp_blackhole_zmq_host = bgp_blackhole_zmq_host;
+#endif
 
   /* giving a kick to the BGP blackhole thread */
   send_to_pool(bgp_blackhole_pool, bgp_blackhole_daemon, NULL);
@@ -71,9 +90,12 @@ void bgp_blackhole_prepare_filter()
   char *stdcomms, *token;
   int len;
 
+  bgp_blackhole_filter = malloc(sizeof(struct bloom));
   bloom_init(bgp_blackhole_filter, BGP_BLACKHOLE_DEFAULT_BF_ENTRIES, 0.01);
 
   stdcomms = strdup(config.bgp_blackhole_stdcomm_list);
+  bgp_blackhole_comms = community_new(&bgp_blackhole_peer);
+ 
   while ((token = extract_token(&stdcomms, ','))) {
     u_int32_t stdcomm;
     int ret;
@@ -92,6 +114,7 @@ void bgp_blackhole_prepare_filter()
 void bgp_blackhole_daemon()
 {
   struct bgp_misc_structs *m_data = bgp_blackhole_misc_db;
+  struct bgp_blackhole_itc bbitc;
   
   afi_t afi;
   safi_t safi;
@@ -99,19 +122,12 @@ void bgp_blackhole_daemon()
 
   /* ZeroMQ stuff */
 #if defined WITH_ZMQ
-  char inproc_str[] = "inproc://bgp_blackhole", log_id[SHORTBUFLEN];
-  struct p_zmq_host bgp_blackhole_zmq_host;
-
-  memset(&bgp_blackhole_zmq_host, 0, sizeof(bgp_blackhole_zmq_host));
-  snprintf(log_id, sizeof(log_id), "%s/%s", config.name, bgp_blackhole_misc_db->log_str);
-  p_zmq_set_log_id(&bgp_blackhole_zmq_host, log_id);
-  p_zmq_set_address(&bgp_blackhole_zmq_host, inproc_str);
-  p_zmq_pull_bind_setup(&bgp_blackhole_zmq_host);
+  struct p_zmq_host *bgp_blackhole_zmq_host;
+  
+  bgp_blackhole_zmq_host = m_data->bgp_blackhole_zmq_host;
+  p_zmq_pull_bind_setup(bgp_blackhole_zmq_host);
 #endif
 
-  // XXX
-
-  bgp_blackhole_comms = NULL;
   bgp_blackhole_init_dummy_peer(&bgp_blackhole_peer);
 
   bgp_blackhole_db = &inter_domain_routing_dbs[FUNC_TYPE_BGP_BLACKHOLE];
@@ -128,12 +144,26 @@ void bgp_blackhole_daemon()
 
   bgp_blackhole_link_misc_structs(m_data);
 
-  // XXX
-
   for (;;) {
-    // XXX
+    ret = p_zmq_recv_poll(&bgp_blackhole_zmq_host->sock_inproc, (DEFAULT_SLOTH_SLEEP_TIME * 1000));
 
-    sleep(DEFAULT_SLOTH_SLEEP_TIME);
+    switch (ret) {
+    case TRUE: /* got data */
+      ret = p_zmq_recv_bin(&bgp_blackhole_zmq_host->sock_inproc, &bbitc, sizeof(bbitc));
+      if (ret < 0) continue; /* ZMQ_RECONNECT_IVL */
+      break;
+    case FALSE: /* timeout */
+      continue;
+      break;
+    case ERR: /* error */
+    default:
+      continue; /* ZMQ_RECONNECT_IVL */
+      break;
+    }
+
+    // XXX: process data
+
+    // XXX: free not needed alloc'd structs
   }
 }
 
@@ -166,17 +196,36 @@ int bgp_blackhole_evaluate_comms(void *a)
   return FALSE;
 }
 
-void bgp_blackhole_instrument(struct prefix *p, void *a, afi_t afi, safi_t safi)
+int bgp_blackhole_instrument(struct bgp_peer *peer, struct prefix *p, void *a, afi_t afi, safi_t safi)
 {
-  struct bgp_attr acopy, *attr = (struct bgp_attr *) a;
-  struct prefix pcopy;
+  struct bgp_misc_structs *m_data = bgp_blackhole_misc_db;
+  struct bgp_attr *acopy, *attr = (struct bgp_attr *) a;
+  struct prefix *pcopy;
+  struct bgp_peer *peer_copy;
+  struct bgp_blackhole_itc bbitc;
+  struct p_zmq_host *bgp_blackhole_zmq_host;
 
-  memcpy(&pcopy, p, sizeof(struct prefix));
-  memcpy(&acopy, attr, sizeof(struct bgp_attr));
-  acopy.aspath = aspath_dup(attr->aspath);
-  acopy.community = community_dup(attr->community);
-  acopy.ecommunity = ecommunity_dup(attr->ecommunity);
-  acopy.lcommunity = lcommunity_dup(attr->lcommunity);
-  
-  // XXX: send()
+  pcopy = prefix_new();
+  prefix_copy(pcopy, p);
+
+  acopy = malloc(sizeof(struct bgp_attr));
+  memcpy(acopy, attr, sizeof(struct bgp_attr));
+
+  peer_copy = malloc(sizeof(struct bgp_peer));
+  memcpy(peer_copy, peer, sizeof(struct bgp_peer));
+
+  if (attr->aspath) acopy->aspath = aspath_dup(attr->aspath);
+  if (attr->community) acopy->community = community_dup(attr->community);
+  if (attr->ecommunity) acopy->ecommunity = ecommunity_dup(attr->ecommunity);
+  if (attr->lcommunity) acopy->lcommunity = lcommunity_dup(attr->lcommunity);
+
+  memset(&bbitc, 0, sizeof(bbitc));
+  bbitc.peer = peer_copy;
+  bbitc.afi = afi;
+  bbitc.safi = safi;
+  bbitc.p = pcopy;
+  bbitc.attr = acopy;
+
+  bgp_blackhole_zmq_host = m_data->bgp_blackhole_zmq_host;
+  p_zmq_send_bin(&bgp_blackhole_zmq_host->sock_inproc, &bbitc, sizeof(bbitc), FALSE);
 }

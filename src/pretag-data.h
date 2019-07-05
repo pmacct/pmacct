@@ -143,6 +143,7 @@ const struct _map_dictionary_line bpas_map_dictionary[] = {
   {"vlan", PT_map_vlan_id_handler},
   {"src_net", PT_map_src_net_handler},
   {"dst_net", PT_map_dst_net_handler},
+  {"filter", PT_map_filter_handler},
   {"", NULL}
 };
 

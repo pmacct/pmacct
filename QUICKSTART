@@ -231,6 +231,20 @@ Once pmacct is compiled, it can be confirmed that the right library was
 picked by doing, for example, a 'pmacctd -V' and seeing the version of
 libpcap matches with the supplied version.
 
+A use-case for a PF_RING-enabled libpcap is that by hashing and balancing
+collected traffic over multiple NIC queues (ie. if using Intel X520) it
+is possible to scale pmacctd horizontally, with one pmacctd instance
+reading from one or multiple queues. The queues can be managed via the
+'ethtool' tool (ie. 'ethtool -l enp1s0f0' to list, 'ethtool -L enp1s0f0
+combined 16' to access 16 queues, etc.) and pmacctd can be bound to a
+single queue, ie. 'pmacctd -i enp1s0f0@0', or multiple ones via a
+pcap_interfaces_map, ie.
+
+ifname=enp1s0f0@0 ifindex=100
+ifname=enp1s0f0@1 ifindex=101
+ifname=enp1s0f0@2 ifindex=102
+ifname=enp1s0f0@3 ifindex=103
+
 
 III. Brief SQL and noSQL setup examples
 RDBMS require a table schema to store data. pmacct offers two options: use one

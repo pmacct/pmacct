@@ -202,16 +202,7 @@ void skinny_bgp_daemon_online()
     /* Let's give the BGP blackhole thread some advantage to create its structures */
     sleep(DEFAULT_SLOTH_SLEEP_TIME);
 
-    bgp_blackhole_zmq_host = malloc(sizeof(struct p_zmq_host));
-    if (!bgp_blackhole_zmq_host) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() bgp_blackhole_zmq_host. Terminating thread.\n", config.name, bgp_misc_db->log_str);
-      exit_gracefully(1);
-    }
-
-    bgp_misc_db->bgp_blackhole_zmq_host = bgp_blackhole_zmq_host;
-    memset(bgp_blackhole_zmq_host, 0, sizeof(struct p_zmq_host));
-    p_zmq_set_log_id(bgp_blackhole_zmq_host, bgp_misc_db->log_str);
-    p_zmq_set_address(bgp_blackhole_zmq_host, inproc_blackhole_str);
+    bgp_blackhole_zmq_host = bgp_blackhole_misc_db->bgp_blackhole_zmq_host;
     p_zmq_push_connect_setup(bgp_blackhole_zmq_host);
 #else
     Log(LOG_ERR, "ERROR ( %s/%s ): 'bgp_blackhole_stdcomm_list' requires compiling with --enable-zmq. Exiting ..\n", config.name, bgp_misc_db->log_str);

@@ -1393,8 +1393,8 @@ int cfg_key_sql_startup_delay(char *filename, char *name, char *value_ptr)
   int value, changes = 0;
 
   value = atoi(value_ptr);
-  if (value <= 0) {
-    Log(LOG_ERR, "WARN: [%s] 'sql_startup_delay' has to be > 0.\n", filename);
+  if (value < 0) {
+    Log(LOG_ERR, "WARN: [%s] 'sql_startup_delay' has to be >= 0.\n", filename);
     return ERR;
   }
 
@@ -1498,8 +1498,8 @@ int cfg_key_sql_history_offset(char *filename, char *name, char *value_ptr)
   int value, changes = 0;
 
   value = atoi(value_ptr);
-  if (value <= 0) {
-    Log(LOG_ERR, "WARN: [%s] 'sql_history_offset' has to be > 0.\n", filename);
+  if (value < 0) {
+    Log(LOG_ERR, "WARN: [%s] 'sql_history_offset' has to be >= 0.\n", filename);
     return ERR;
   }
 
@@ -1635,8 +1635,8 @@ int cfg_key_sql_multi_values(char *filename, char *name, char *value_ptr)
   int changes = 0, value = 0;
 
   value = atoi(value_ptr);
-  if (value <= 0) {
-    Log(LOG_WARNING, "WARN: [%s] 'sql_multi_values' has to be > 0.\n", filename);
+  if (value < 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'sql_multi_values' has to be >= 0.\n", filename);
     return ERR;
   }
 
@@ -1882,8 +1882,8 @@ int cfg_key_amqp_routing_key_rr(char *filename, char *name, char *value_ptr)
   int changes = 0, value = 0;
 
   value = atoi(value_ptr);
-  if (value <= 0) {
-    Log(LOG_WARNING, "WARN: [%s] 'amqp_routing_key_rr' has to be > 0.\n", filename);
+  if (value < 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'amqp_routing_key_rr' has to be >= 0.\n", filename);
     return ERR;
   }
 
@@ -4237,8 +4237,8 @@ int cfg_key_nfacctd_bmp_msglog_amqp_routing_key_rr(char *filename, char *name, c
   int changes = 0, value = 0;
 
   value = atoi(value_ptr);
-  if (value <= 0) {
-    Log(LOG_WARNING, "WARN: [%s] 'bmp_daemon_msglog_amqp_routing_key_rr' has to be > 0.\n", filename);
+  if (value < 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'bmp_daemon_msglog_amqp_routing_key_rr' has to be >= 0.\n", filename);
     return ERR;
   }
 
@@ -4465,8 +4465,8 @@ int cfg_key_nfacctd_bmp_dump_amqp_routing_key_rr(char *filename, char *name, cha
   int changes = 0, value = 0;
 
   value = atoi(value_ptr);
-  if (value <= 0) {
-    Log(LOG_WARNING, "WARN: [%s] 'bmp_dump_amqp_routing_key_rr' has to be > 0.\n", filename);
+  if (value < 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'bmp_dump_amqp_routing_key_rr' has to be >= 0.\n", filename);
     return ERR;
   }
 
@@ -5551,7 +5551,7 @@ int cfg_key_nfprobe_ip_precedence(char *filename, char *name, char *value_ptr)
   int value, changes = 0;
 
   value = atoi(value_ptr);
-  if ((value <= 0) || (value > 7)) {
+  if ((value < 0) || (value > 7)) {
     Log(LOG_ERR, "WARN: [%s] 'nfprobe_ipprec' and 'sfprobe_ipprec' have to be in the range 0-7.\n", filename);
     return ERR;
   }
@@ -6158,8 +6158,8 @@ int cfg_key_nfacctd_bgp_msglog_amqp_routing_key_rr(char *filename, char *name, c
   int changes = 0, value = 0;
 
   value = atoi(value_ptr);
-  if (value <= 0) {
-    Log(LOG_WARNING, "WARN: [%s] 'bgp_daemon_msglog_amqp_routing_key_rr' has to be > 0.\n", filename);
+  if (value < 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'bgp_daemon_msglog_amqp_routing_key_rr' has to be >= 0.\n", filename);
     return ERR;
   }
 
@@ -6386,8 +6386,8 @@ int cfg_key_nfacctd_bgp_table_dump_amqp_routing_key_rr(char *filename, char *nam
   int changes = 0, value = 0;
 
   value = atoi(value_ptr);
-  if (value <= 0) {
-    Log(LOG_WARNING, "WARN: [%s] 'bgp_table_dump_amqp_routing_key_rr' has to be > 0.\n", filename);
+  if (value < 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'bgp_table_dump_amqp_routing_key_rr' has to be >= 0.\n", filename);
     return ERR;
   }
 
@@ -6488,8 +6488,8 @@ int cfg_key_nfacctd_bgp_msglog_kafka_topic_rr(char *filename, char *name, char *
   int changes = 0, value = 0;
 
   value = atoi(value_ptr);
-  if (value <= 0) {
-    Log(LOG_WARNING, "WARN: [%s] 'bgp_daemon_msglog_kafka_topic_rr' has to be > 0.\n", filename);
+  if (value < 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'bgp_daemon_msglog_kafka_topic_rr' has to be >= 0.\n", filename);
     return ERR;
   }
 
@@ -6607,8 +6607,8 @@ int cfg_key_nfacctd_bgp_table_dump_kafka_topic_rr(char *filename, char *name, ch
   int changes = 0, value = 0;
 
   value = atoi(value_ptr);
-  if (value <= 0) {
-    Log(LOG_WARNING, "WARN: [%s] 'bgp_table_dump_kafka_topic_rr' has to be > 0.\n", filename);
+  if (value < 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'bgp_table_dump_kafka_topic_rr' has to be >= 0.\n", filename);
     return ERR;
   }
 
@@ -6709,8 +6709,8 @@ int cfg_key_nfacctd_bmp_msglog_kafka_topic_rr(char *filename, char *name, char *
   int changes = 0, value = 0;
 
   value = atoi(value_ptr);
-  if (value <= 0) {
-    Log(LOG_WARNING, "WARN: [%s] 'bmp_daemon_msglog_kafka_topic_rr' has to be > 0.\n", filename);
+  if (value < 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'bmp_daemon_msglog_kafka_topic_rr' has to be >= 0.\n", filename);
     return ERR;
   }
 
@@ -6828,8 +6828,8 @@ int cfg_key_nfacctd_bmp_dump_kafka_topic_rr(char *filename, char *name, char *va
   int changes = 0, value = 0;
 
   value = atoi(value_ptr);
-  if (value <= 0) {
-    Log(LOG_WARNING, "WARN: [%s] 'bmp_dump_kafka_topic_rr' has to be > 0.\n", filename);
+  if (value < 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'bmp_dump_kafka_topic_rr' has to be >= 0.\n", filename);
     return ERR;
   }
 
@@ -7218,8 +7218,8 @@ int cfg_key_telemetry_msglog_amqp_routing_key_rr(char *filename, char *name, cha
   int changes = 0, value = 0;
 
   value = atoi(value_ptr);
-  if (value <= 0) {
-    Log(LOG_WARNING, "WARN: [%s] 'telemetry_daemon_msglog_amqp_routing_key_rr' has to be > 0.\n", filename);
+  if (value < 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'telemetry_daemon_msglog_amqp_routing_key_rr' has to be >= 0.\n", filename);
     return ERR;
   }
 
@@ -7446,8 +7446,8 @@ int cfg_key_telemetry_dump_amqp_routing_key_rr(char *filename, char *name, char 
   int changes = 0, value = 0;
 
   value = atoi(value_ptr);
-  if (value <= 0) {
-    Log(LOG_WARNING, "WARN: [%s] 'telemetry_dump_amqp_routing_key_rr' has to be > 0.\n", filename);
+  if (value < 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'telemetry_dump_amqp_routing_key_rr' has to be >= 0.\n", filename);
     return ERR;
   }
 
@@ -7548,8 +7548,8 @@ int cfg_key_telemetry_msglog_kafka_topic_rr(char *filename, char *name, char *va
   int changes = 0, value = 0;
 
   value = atoi(value_ptr);
-  if (value <= 0) {
-    Log(LOG_WARNING, "WARN: [%s] 'telemetry_daemon_msglog_kafka_topic_rr' has to be > 0.\n", filename);
+  if (value < 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'telemetry_daemon_msglog_kafka_topic_rr' has to be >= 0.\n", filename);
     return ERR;
   }
 
@@ -7667,8 +7667,8 @@ int cfg_key_telemetry_dump_kafka_topic_rr(char *filename, char *name, char *valu
   int changes = 0, value = 0;
 
   value = atoi(value_ptr);
-  if (value <= 0) {
-    Log(LOG_WARNING, "WARN: [%s] 'telemetry_dump_kafka_topic_rr' has to be > 0.\n", filename);
+  if (value < 0) {
+    Log(LOG_WARNING, "WARN: [%s] 'telemetry_dump_kafka_topic_rr' has to be >= 0.\n", filename);
     return ERR;
   }
 
