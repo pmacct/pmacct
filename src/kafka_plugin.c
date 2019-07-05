@@ -478,6 +478,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 
       if (!is_topic_dyn) {
 	avro_acct_schema_name = p_kafka_get_topic(&kafkap_kafka_host); 
+	strcat(avro_acct_schema_name,"-value");
       }
       else {
 	avro_acct_schema_name = compose_avro_schema_name(config.type, config.name);
