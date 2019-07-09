@@ -204,6 +204,7 @@ int bgp_blackhole_instrument(struct bgp_peer *peer, struct prefix *p, void *a, a
   struct bgp_peer *peer_copy;
   struct bgp_blackhole_itc bbitc;
   struct p_zmq_host *bgp_blackhole_zmq_host;
+  int ret;
 
   pcopy = prefix_new();
   prefix_copy(pcopy, p);
@@ -227,5 +228,5 @@ int bgp_blackhole_instrument(struct bgp_peer *peer, struct prefix *p, void *a, a
   bbitc.attr = acopy;
 
   bgp_blackhole_zmq_host = m_data->bgp_blackhole_zmq_host;
-  p_zmq_send_bin(&bgp_blackhole_zmq_host->sock_inproc, &bbitc, sizeof(bbitc), FALSE);
+  ret = p_zmq_send_bin(&bgp_blackhole_zmq_host->sock_inproc, &bbitc, sizeof(bbitc), FALSE);
 }

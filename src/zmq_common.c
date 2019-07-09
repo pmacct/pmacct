@@ -40,7 +40,7 @@ void p_zmq_set_address(struct p_zmq_host *zmq_host, char *address)
 	snprintf(zmq_host->sock.str, sizeof(zmq_host->sock.str), "%s", address);
       }
       else if (strstr(address, inproc_proto)) {
-	snprintf(zmq_host->sock.str, sizeof(zmq_host->sock_inproc.str), "%s", address);
+	snprintf(zmq_host->sock_inproc.str, sizeof(zmq_host->sock_inproc.str), "%s", address);
       }
       else {
 	Log(LOG_ERR, "ERROR ( %s ): p_zmq_set_address() unsupported protocol in '%s'.\nExiting.\n",
@@ -256,7 +256,12 @@ int p_zmq_bind(struct p_zmq_host *zmq_host)
   }
 
   if (strlen(zmq_host->sock_inproc.str)) {
-    ret = zmq_bind(zmq_host->sock_inproc.obj, zmq_host->sock_inproc.str);
+    if (zmq_host->sock_inproc.obj_rx) {
+      ret = zmq_bind(zmq_host->sock_inproc.obj_rx, zmq_host->sock_inproc.str);
+    }
+    else {
+      ret = zmq_bind(zmq_host->sock_inproc.obj, zmq_host->sock_inproc.str);
+    }
   }
   else if (strlen(zmq_host->sock.str)) {
     ret = zmq_bind(zmq_host->sock.obj, zmq_host->sock.str);
@@ -304,11 +309,16 @@ int p_zmq_connect(struct p_zmq_host *zmq_host)
     }
   }
 
-  if (zmq_host->sock.str) {
+  if (strlen(zmq_host->sock.str)) {
     ret = zmq_connect(zmq_host->sock.obj, zmq_host->sock.str);
   }
-  else if (zmq_host->sock_inproc.str) {
-    ret = zmq_connect(zmq_host->sock_inproc.obj, zmq_host->sock_inproc.str);
+  else if (strlen(zmq_host->sock_inproc.str)) {
+    if (zmq_host->sock_inproc.obj_tx) {
+      ret = zmq_connect(zmq_host->sock_inproc.obj_tx, zmq_host->sock_inproc.str);
+    }
+    else {
+      ret = zmq_connect(zmq_host->sock_inproc.obj, zmq_host->sock_inproc.str);
+    }
   }
 
   if (ret == ERR) {
@@ -393,7 +403,9 @@ void p_zmq_send_setup(struct p_zmq_host *zmq_host, int type, int do_connect)
       zmq_host->sock_inproc.obj_rx = zmq_host->sock_inproc.obj;
     }
   }
-  else zmq_host->sock.obj = sock;
+  else {
+    zmq_host->sock.obj = sock;
+  }
 
   if (!do_connect) p_zmq_bind(zmq_host);
   else p_zmq_connect(zmq_host);
@@ -565,9 +577,13 @@ char *p_zmq_recv_str(struct p_zmq_sock *sock)
 {
   char buf[SRVBUFLEN];
   int len;
+  void *s;
+
+  if (sock->obj_rx) s = sock->obj_rx;
+  else s = sock->obj;
 
   memset(buf, 0, sizeof(buf)); 
-  len = zmq_recv(sock->obj, buf, (sizeof(buf) - 1), 0);
+  len = zmq_recv(s, buf, (sizeof(buf) - 1), 0);
   if (len == ERR) return NULL;
   else return strndup(buf, sizeof(buf));
 }
@@ -575,8 +591,12 @@ char *p_zmq_recv_str(struct p_zmq_sock *sock)
 int p_zmq_send_str(struct p_zmq_sock *sock, char *buf)
 {
   int len;
+  void *s;
 
-  len = zmq_send(sock->obj, buf, strlen(buf), 0);
+  if (sock->obj_rx) s = sock->obj_rx;
+  else s = sock->obj;
+
+  len = zmq_send(s, buf, strlen(buf), 0);
 
   return len;
 }
@@ -584,8 +604,12 @@ int p_zmq_send_str(struct p_zmq_sock *sock, char *buf)
 int p_zmq_sendmore_str(struct p_zmq_sock *sock, char *buf)
 {
   int len;
+  void *s;
 
-  len = zmq_send(sock->obj, buf, strlen(buf), ZMQ_SNDMORE);
+  if (sock->obj_rx) s = sock->obj_rx;
+  else s = sock->obj;
+
+  len = zmq_send(s, buf, strlen(buf), ZMQ_SNDMORE);
 
   return len;
 }
@@ -620,9 +644,13 @@ int p_zmq_send_bin(struct p_zmq_sock *sock, void *buf, size_t len, int nonblock)
 int p_zmq_sendmore_bin(struct p_zmq_sock *sock, void *buf, size_t len, int nonblock)
 {
   int sndlen;
+  void *s;
 
-  if (!nonblock) sndlen = zmq_send(sock->obj, buf, len, ZMQ_SNDMORE);
-  else sndlen = zmq_send(sock->obj, buf, len, (ZMQ_SNDMORE|ZMQ_DONTWAIT));
+  if (sock->obj_tx) s = sock->obj_tx;
+  else s = sock->obj;
+
+  if (!nonblock) sndlen = zmq_send(s, buf, len, ZMQ_SNDMORE);
+  else sndlen = zmq_send(s, buf, len, (ZMQ_SNDMORE|ZMQ_DONTWAIT));
 
   return sndlen;
 }
