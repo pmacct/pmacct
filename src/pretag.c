@@ -118,6 +118,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	for (index = 0; index < t->num; index++) {
 	  pcap_freecode(&t->e[index].key.filter);
 	  pretag_free_label(&t->e[index].label);
+	  if (t->e[index].jeq.label) free(t->e[index].jeq.label); 
 	}
 
         memset(t, 0, sizeof(struct id_table));
@@ -571,7 +572,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	  }
 	  else {
 	    for (ptr2 = ptr+1, index = x+1; index < t->ipv4_num; ptr2++, index++) {
-	      if (!strcmp(ptr->jeq.label, ptr2->entry_label)) {
+	      if (ptr2->entry_label && !strcmp(ptr->jeq.label, ptr2->entry_label)) {
 	        ptr->jeq.ptr = ptr2;
 	        label_solved = TRUE;
 		break;
@@ -583,8 +584,6 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unresolved label '%s'. Ignoring it.\n",
 			config.name, config.type, filename, ptr->jeq.label);
 	  }
-	  free(ptr->jeq.label);
-	  ptr->jeq.label = NULL;
         }
       }
 
@@ -592,7 +591,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
         if (ptr->jeq.label) {
           label_solved = FALSE;
           for (ptr2 = ptr+1, index = x+1; index < t->ipv6_num; ptr2++, index++) {
-            if (!strcmp(ptr->jeq.label, ptr2->entry_label)) {
+            if (ptr2->entry_label && !strcmp(ptr->jeq.label, ptr2->entry_label)) {
               ptr->jeq.ptr = ptr2;
               label_solved = TRUE;
 	      break;
@@ -603,8 +602,6 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
             Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unresolved label '%s'. Ignoring it.\n",
 			config.name, config.type, filename, ptr->jeq.label);
           }
-          free(ptr->jeq.label);
-          ptr->jeq.label = NULL;
         }
       }
 
