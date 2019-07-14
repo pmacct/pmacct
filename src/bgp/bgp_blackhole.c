@@ -229,5 +229,9 @@ int bgp_blackhole_instrument(struct bgp_peer *peer, struct prefix *p, void *a, a
 
   bgp_blackhole_zmq_host = m_data->bgp_blackhole_zmq_host;
   ret = p_zmq_send_bin(&bgp_blackhole_zmq_host->sock_inproc, &bbitc, sizeof(bbitc), FALSE);
+
+  if (ret <= 0) return ERR;
+
+  return FALSE;
 }
 #endif

@@ -24,9 +24,9 @@
 
 /* includes */
 #include "pmacct.h"
-//#include "plugin_hooks.h"
+#include "plugin_hooks.h"
 #include "pmacct-data.h"
-//#include "pkt_handlers.h"
+#include "pkt_handlers.h"
 #include "addr.h"
 #include "bgp.h"
 #include "pmbgpd.h"

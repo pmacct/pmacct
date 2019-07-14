@@ -770,6 +770,8 @@ void save_template(struct template_cache_entry *tpl, char *file)
 struct template_cache_entry *nfacctd_offline_read_json_template(char *buf, char *errbuf, int errlen)
 {
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/core ): nfacctd_offline_read_json_template(): JSON object not created due to missing --enable-jansson\n", config.name);
+
+  return NULL;
 }
 #endif
 

@@ -572,7 +572,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	  }
 	  else {
 	    for (ptr2 = ptr+1, index = x+1; index < t->ipv4_num; ptr2++, index++) {
-	      if (ptr2->entry_label && !strcmp(ptr->jeq.label, ptr2->entry_label)) {
+	      if (!strcmp(ptr->jeq.label, ptr2->entry_label)) {
 	        ptr->jeq.ptr = ptr2;
 	        label_solved = TRUE;
 		break;
@@ -591,7 +591,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
         if (ptr->jeq.label) {
           label_solved = FALSE;
           for (ptr2 = ptr+1, index = x+1; index < t->ipv6_num; ptr2++, index++) {
-            if (ptr2->entry_label && !strcmp(ptr->jeq.label, ptr2->entry_label)) {
+            if (!strcmp(ptr->jeq.label, ptr2->entry_label)) {
               ptr->jeq.ptr = ptr2;
               label_solved = TRUE;
 	      break;

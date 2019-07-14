@@ -318,6 +318,8 @@ int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf
 {
   Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_decode_zmq_peer() requires --enable-zmq. Terminating.\n", config.name, t_data->log_str);
   exit_gracefully(1);
+
+  return 0;
 }
 #endif
 #endif
