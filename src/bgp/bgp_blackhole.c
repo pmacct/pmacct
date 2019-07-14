@@ -41,7 +41,6 @@ void bgp_blackhole_daemon_wrapper()
 #if defined WITH_ZMQ
   struct p_zmq_host *bgp_blackhole_zmq_host = NULL;
   char inproc_blackhole_str[] = "inproc://bgp_blackhole";
-#endif
 
   /* initialize threads pool */
   bgp_blackhole_pool = allocate_thread_pool(1);
@@ -51,7 +50,6 @@ void bgp_blackhole_daemon_wrapper()
   bgp_blackhole_prepare_filter();
   bgp_blackhole_prepare_thread();
 
-#if defined WITH_ZMQ
   bgp_blackhole_zmq_host = malloc(sizeof(struct p_zmq_host));
   if (!bgp_blackhole_zmq_host) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() bgp_blackhole_zmq_host. Terminating thread.\n", config.name, bgp_misc_db->log_str);
@@ -63,12 +61,16 @@ void bgp_blackhole_daemon_wrapper()
   p_zmq_set_address(bgp_blackhole_zmq_host, inproc_blackhole_str);
   p_zmq_ctx_setup(bgp_blackhole_zmq_host);
   bgp_blackhole_misc_db->bgp_blackhole_zmq_host = bgp_blackhole_zmq_host;
-#endif
 
   /* giving a kick to the BGP blackhole thread */
   send_to_pool(bgp_blackhole_pool, bgp_blackhole_daemon, NULL);
+#else
+  Log(LOG_ERR, "ERROR ( %s/%s ): BGP BlackHole feature requires compiling with --enable-zmq.\n", config.name, bgp_misc_db->log_str);
+  exit_gracefully(1);
+#endif
 }
 
+#if defined WITH_ZMQ
 void bgp_blackhole_prepare_thread()
 {
   bgp_blackhole_misc_db = &inter_domain_misc_dbs[FUNC_TYPE_BGP_BLACKHOLE];
@@ -121,12 +123,10 @@ void bgp_blackhole_daemon()
   int ret;
 
   /* ZeroMQ stuff */
-#if defined WITH_ZMQ
   struct p_zmq_host *bgp_blackhole_zmq_host;
   
   bgp_blackhole_zmq_host = m_data->bgp_blackhole_zmq_host;
   p_zmq_pull_bind_setup(bgp_blackhole_zmq_host);
-#endif
 
   bgp_blackhole_init_dummy_peer(&bgp_blackhole_peer);
 
@@ -230,3 +230,4 @@ int bgp_blackhole_instrument(struct bgp_peer *peer, struct prefix *p, void *a, a
   bgp_blackhole_zmq_host = m_data->bgp_blackhole_zmq_host;
   ret = p_zmq_send_bin(&bgp_blackhole_zmq_host->sock_inproc, &bbitc, sizeof(bbitc), FALSE);
 }
+#endif

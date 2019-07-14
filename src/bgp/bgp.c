@@ -206,6 +206,7 @@ void skinny_bgp_daemon_online()
     p_zmq_push_connect_setup(bgp_blackhole_zmq_host);
 #else
     Log(LOG_ERR, "ERROR ( %s/%s ): 'bgp_blackhole_stdcomm_list' requires compiling with --enable-zmq. Exiting ..\n", config.name, bgp_misc_db->log_str);
+    exit_gracefully(1);
 #endif
   }
 

@@ -41,6 +41,7 @@ struct bgp_blackhole_itc {
 #define EXT
 #endif
 EXT void bgp_blackhole_daemon_wrapper();
+#if defined WITH_ZMQ
 EXT void bgp_blackhole_prepare_thread();
 
 EXT void bgp_blackhole_init_dummy_peer(struct bgp_peer *);
@@ -49,6 +50,7 @@ EXT void bgp_blackhole_daemon();
 
 EXT int bgp_blackhole_evaluate_comms(void *);
 EXT int bgp_blackhole_instrument(struct bgp_peer *, struct prefix *, void *, afi_t, safi_t);
+#endif
 #undef EXT
 #endif
 
