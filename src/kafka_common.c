@@ -400,7 +400,14 @@ int p_kafka_stats(rd_kafka_t *rk, char *json, size_t json_len, void *opaque)
 int p_kafka_connect_to_produce(struct p_kafka_host *kafka_host)
 {
   if (kafka_host) {
-    kafka_host->rk = rd_kafka_new(RD_KAFKA_PRODUCER, kafka_host->cfg, kafka_host->errstr, sizeof(kafka_host->errstr));
+    rd_kafka_conf_t* cfg = rd_kafka_conf_dup(kafka_host->cfg);
+    if (cfg == NULL) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Failed to clone kafka config object\n", config.name, config.type);
+      p_kafka_close(kafka_host, TRUE);
+      return ERR;
+    }
+
+    kafka_host->rk = rd_kafka_new(RD_KAFKA_PRODUCER, cfg, kafka_host->errstr, sizeof(kafka_host->errstr));
     if (!kafka_host->rk) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Failed to create new Kafka producer: %s\n", config.name, config.type, kafka_host->errstr);
       p_kafka_close(kafka_host, TRUE);
@@ -446,7 +453,14 @@ int p_kafka_produce_data(struct p_kafka_host *kafka_host, void *data, size_t dat
 int p_kafka_connect_to_consume(struct p_kafka_host *kafka_host)
 {
   if (kafka_host) {
-    kafka_host->rk = rd_kafka_new(RD_KAFKA_CONSUMER, kafka_host->cfg, kafka_host->errstr, sizeof(kafka_host->errstr));
+    rd_kafka_conf_t* cfg = rd_kafka_conf_dup(kafka_host->cfg);
+    if (cfg == NULL) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Failed to clone kafka config object\n", config.name, config.type);
+      p_kafka_close(kafka_host, TRUE);
+      return ERR;
+    }
+
+    kafka_host->rk = rd_kafka_new(RD_KAFKA_CONSUMER, cfg, kafka_host->errstr, sizeof(kafka_host->errstr));
     if (!kafka_host->rk) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Failed to create new Kafka producer: %s\n", config.name, config.type, kafka_host->errstr);
       p_kafka_close(kafka_host, TRUE);
@@ -555,15 +569,10 @@ void p_kafka_close(struct p_kafka_host *kafka_host, int set_fail)
       kafka_host->rk = NULL;
     }
 
-/*
-    XXX: rd_kafka_conf_destroy() makes librdkafka crash apparently.
-	 To be investigated why.
-
     if (kafka_host->cfg) {
       rd_kafka_conf_destroy(kafka_host->cfg);
       kafka_host->cfg = NULL;
     }
-*/
   }
 }
 
