@@ -7,23 +7,22 @@ AM_LDFLAGS = @GEOIP_LIBS@ @GEOIPV2_LIBS@ @JANSSON_LIBS@ @AVRO_LIBS@
 AM_CFLAGS = $(PMACCT_CFLAGS)
 
 noinst_LTLIBRARIES = libdaemons.la libcommon.la
-libcommon_la_SOURCES = strlcpy.c addr.c addr.h pmacct.h	pmacct-build.h	\
-	pmacct-data.h pmacct-defines.h mpls.h network.h  once.h
-libdaemons_la_SOURCES = signals.c util.c util.h plugin_hooks.c		\
-        plugin_hooks.h server.c acct.c memory.c cfg.c cfg.h		\
-        imt_plugin.c imt_plugin.h log.c log.h pkt_handlers.c		\
-        pkt_handlers.h cfg_handlers.c cfg_handlers.h net_aggr.c		\
-        net_aggr.h bpf_filter.c pmacct-bpf.h print_plugin.c		\
-        print_plugin.h pretag.c pretag-data.h pretag.h ip_frag.c	\
-        ip_frag.h ports_aggr.c ports_aggr.h pretag_handlers.c		\
-        pretag_handlers.h ip_flow.c ip_flow.h setproctitle.c		\
-        setproctitle.h classifier.c classifier.h regexp.c regexp.h	\
-        conntrack.c conntrack.h xflow_status.c xflow_status.h		\
-	plugin_common.c plugin_common.h preprocess.c preprocess-data.h	\
-	preprocess.h ll.c nl.c jhash.h pmacct-dlt.h sflow.h crc32.h	\
-	base64.c base64.h plugin_cmn_json.c plugin_cmn_json.h		\
-	plugin_cmn_avro.c plugin_cmn_avro.h pmsearch.c pmsearch.h	\
-	thread_pool.c thread_pool.h plugin_cmn_custom.h			\
+libcommon_la_SOURCES = strlcpy.c addr.c
+libdaemons_la_SOURCES = signals.c util.c plugin_hooks.c		\
+        server.c acct.c memory.c cfg.c				\
+        imt_plugin.c log.c pkt_handlers.c			\
+        cfg_handlers.c net_aggr.c				\
+        bpf_filter.c print_plugin.c				\
+        pretag.c ip_frag.c					\
+        ports_aggr.c pretag_handlers.c				\
+        ip_flow.c setproctitle.c				\
+        classifier.c regexp.c					\
+        conntrack.c xflow_status.c				\
+	plugin_common.c preprocess.c				\
+	ll.c nl.c 						\
+	base64.c plugin_cmn_json.c 				\
+	plugin_cmn_avro.c pmsearch.c 				\
+	thread_pool.c						\
 	plugin_cmn_custom.c
 
 libcommon_la_LIBADD  = 
@@ -42,22 +41,22 @@ libdaemons_la_LIBADD += telemetry/libpmtelemetry.la
 libdaemons_la_LIBADD += libcommon.la
 libdaemons_la_CFLAGS  = $(AM_CFLAGS)
 if WITH_MYSQL
-libdaemons_la_SOURCES += mysql_plugin.c mysql_plugin.h
+libdaemons_la_SOURCES += mysql_plugin.c
 libdaemons_la_LIBADD  += @MYSQL_LIBS@
 libdaemons_la_CFLAGS  += @MYSQL_CFLAGS@
 endif
 if WITH_PGSQL
-libdaemons_la_SOURCES += pgsql_plugin.c pgsql_plugin.h
+libdaemons_la_SOURCES += pgsql_plugin.c
 libdaemons_la_LIBADD  += @PGSQL_LIBS@
 libdaemons_la_CFLAGS  += @PGSQL_CFLAGS@
 endif
 if WITH_MONGODB
-libdaemons_la_SOURCES += mongodb_plugin.c mongodb_plugin.h
+libdaemons_la_SOURCES += mongodb_plugin.c
 libdaemons_la_LIBADD  += @MONGODB_LIBS@
 libdaemons_la_CFLAGS  += @MONGODB_CFLAGS@
 endif
 if WITH_SQLITE3
-libdaemons_la_SOURCES += sqlite3_plugin.c sqlite3_plugin.h
+libdaemons_la_SOURCES += sqlite3_plugin.c
 libdaemons_la_LIBADD  += @SQLITE3_LIBS@
 libdaemons_la_CFLAGS  += @SQLITE3_CFLAGS@
 endif
@@ -75,22 +74,22 @@ libdaemons_la_LIBADD  += @NDPI_LIBS@
 libdaemons_la_CFLAGS  += @NDPI_CFLAGS@
 endif
 if WITH_RABBITMQ
-libdaemons_la_SOURCES += amqp_common.c amqp_common.h amqp_plugin.c amqp_plugin.h
+libdaemons_la_SOURCES += amqp_common.c amqp_plugin.c
 libdaemons_la_LIBADD  += @RABBITMQ_LIBS@
 libdaemons_la_CFLAGS  += @RABBITMQ_CFLAGS@
 endif
 if WITH_ZMQ
-libdaemons_la_SOURCES += zmq_common.c zmq_common.h
+libdaemons_la_SOURCES += zmq_common.c
 libdaemons_la_LIBADD  += @ZMQ_LIBS@
 libdaemons_la_CFLAGS  += @ZMQ_CFLAGS@
 endif
 if WITH_KAFKA
-libdaemons_la_SOURCES += kafka_common.c kafka_common.h kafka_plugin.c kafka_plugin.h
+libdaemons_la_SOURCES += kafka_common.c kafka_plugin.c
 libdaemons_la_LIBADD  += @KAFKA_LIBS@
 libdaemons_la_CFLAGS  += @KAFKA_CFLAGS@
 endif
 if USING_SQL
-libdaemons_la_SOURCES += sql_common.c sql_handlers.c sql_common.h
+libdaemons_la_SOURCES += sql_common.c sql_handlers.c
 libdaemons_la_LIBADD  += -lm -lz
 endif
 
@@ -99,13 +98,13 @@ sbin_PROGRAMS += pmacctd nfacctd sfacctd
 bin_PROGRAMS += pmacct
 pmacctd_SOURCES = pmacctd.c
 pmacctd_LDADD = libdaemons.la
-nfacctd_SOURCES = nfacctd.c nfacctd.h nfv9_template.c
+nfacctd_SOURCES = nfacctd.c nfv9_template.c
 nfacctd_LDADD = libdaemons.la
-sfacctd_SOURCES = sfacctd.c sflow.c sfacctd.h sfv5_module.c sfv5_module.h
+sfacctd_SOURCES = sfacctd.c sflow.c sfv5_module.c
 sfacctd_LDADD = libdaemons.la
 if WITH_NFLOG
 sbin_PROGRAMS += uacctd
-uacctd_SOURCES = uacctd.c uacctd.h
+uacctd_SOURCES = uacctd.c
 uacctd_CFLAGS  = $(AM_CFLAGS) @NFLOG_CFLAGS@
 uacctd_LDADD   = libdaemons.la @NFLOG_LIBS@
 endif
@@ -114,19 +113,19 @@ pmacct_LDADD = libcommon.la
 endif
 if USING_ST_BINS
 sbin_PROGRAMS += pmtelemetryd
-pmtelemetryd_SOURCES = pmtelemetryd.c pmtelemetryd.h
+pmtelemetryd_SOURCES = pmtelemetryd.c
 pmtelemetryd_LDFLAGS = $(DEFS)
 pmtelemetryd_LDADD = libdaemons.la
 endif
 if USING_BGP_BINS
 sbin_PROGRAMS += pmbgpd
-pmbgpd_SOURCES = pmbgpd.c pmbgpd.h
+pmbgpd_SOURCES = pmbgpd.c
 pmbgpd_LDFLAGS = $(DEFS)
 pmbgpd_LDADD = libdaemons.la
 endif
 if USING_BMP_BINS
 sbin_PROGRAMS += pmbmpd
-pmbmpd_SOURCES = pmbmpd.c pmbmpd.h
+pmbmpd_SOURCES = pmbmpd.c
 pmbmpd_LDFLAGS = $(DEFS)
 pmbmpd_LDADD = libdaemons.la
 endif
