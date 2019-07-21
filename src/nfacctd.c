@@ -1147,7 +1147,7 @@ int main(int argc,char **argv, char **envp)
     }
 #endif
     else {
-      ret = recvfrom(config.sock, netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
+      ret = recvfrom(config.sock, (unsigned char *)netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
     }
 
     /* we have no data or not not enough data to decode the version */

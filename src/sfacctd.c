@@ -1207,7 +1207,7 @@ int main(int argc,char **argv, char **envp)
     }
 #endif
     else {
-      ret = recvfrom(config.sock, sflow_packet, SFLOW_MAX_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
+      ret = recvfrom(config.sock, (unsigned char *)sflow_packet, SFLOW_MAX_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
     }
 
     spp.rawSample = pptrs.v4.f_header = sflow_packet;
