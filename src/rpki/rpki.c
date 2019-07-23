@@ -100,6 +100,7 @@ void rpki_daemon()
     ret = rpki_roas_file_load(config.rpki_roas_file,
 			rpki_roa_db->rib[AFI_IP][SAFI_UNICAST],
 			rpki_roa_db->rib[AFI_IP6][SAFI_UNICAST]);
+    (void)ret; //TODO check error
   }
 
   if (config.rpki_rtr_cache) {
