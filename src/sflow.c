@@ -186,10 +186,8 @@ void decodeIPLayer4(SFSample *sample, u_char *ptr, u_int32_t ipProtocol) {
       sample->dcd_dport = ntohs(tcp.th_dport);
       sample->dcd_tcpFlags = tcp.th_flags;
       if(sample->dcd_dport == 80) {
-	int bytesLeft;
 	int headerBytes = (tcp.th_off_and_unused >> 4) * 4;
 	ptr += headerBytes;
-	bytesLeft = sample->header + sample->headerLen - ptr;
       }
     }
     break;
@@ -310,7 +308,6 @@ void decodeIPV4(SFSample *sample)
 
 void decodeIPV6(SFSample *sample)
 {
-  u_int16_t payloadLen;
   u_int32_t label;
   u_int32_t nextHeader;
   u_char *end = sample->header + sample->headerLen;
@@ -336,7 +333,6 @@ void decodeIPV6(SFSample *sample)
     label <<= 8;
     label += *ptr++;
     // payload
-    payloadLen = (ptr[0] << 8) + ptr[1];
     ptr += 2;
     // if payload is zero, that implies a jumbo payload
 
@@ -544,10 +540,8 @@ void readExtendedGateway(SFSample *sample)
   sample->dst_as_path_len = getData32(sample);
   if (sample->dst_as_path_len > 0) {
     for (idx = 0, len_tot = 0; idx < sample->dst_as_path_len; idx++) {
-      u_int32_t seg_type;
       u_int32_t seg_len, i;
 
-      seg_type = getData32(sample);
       seg_len = getData32(sample);
 
       for (i = 0; i < seg_len; i++) {
@@ -718,11 +712,9 @@ void readExtendedMplsTunnel(SFSample *sample)
 {
 #define SA_MAX_TUNNELNAME_LEN 100
   char tunnel_name[SA_MAX_TUNNELNAME_LEN+1];
-  u_int32_t tunnel_cos;
   
   getString(sample, tunnel_name, SA_MAX_TUNNELNAME_LEN); 
   sample->mpls_tunnel_id = getData32(sample);
-  tunnel_cos = getData32(sample);
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_MPLS_TUNNEL;
 }
@@ -736,11 +728,9 @@ void readExtendedMplsVC(SFSample *sample)
 {
 #define SA_MAX_VCNAME_LEN 100
   char vc_name[SA_MAX_VCNAME_LEN+1];
-  u_int32_t vc_cos;
 
   getString(sample, vc_name, SA_MAX_VCNAME_LEN); 
   sample->mpls_vll_vc_id = getData32(sample);
-  vc_cos = getData32(sample);
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_MPLS_VC;
 }
@@ -754,10 +744,8 @@ void readExtendedMplsFTN(SFSample *sample)
 {
 #define SA_MAX_FTN_LEN 100
   char ftn_descr[SA_MAX_FTN_LEN+1];
-  u_int32_t ftn_mask;
 
   getString(sample, ftn_descr, SA_MAX_FTN_LEN);
-  ftn_mask = getData32(sample);
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_MPLS_FTN;
 }
@@ -769,8 +757,6 @@ void readExtendedMplsFTN(SFSample *sample)
 
 void readExtendedMplsLDP_FEC(SFSample *sample)
 {
-  u_int32_t fec_addr_prefix_len = getData32(sample);
-
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_MPLS_LDP_FEC;
 }
 
