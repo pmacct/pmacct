@@ -231,8 +231,11 @@ if test x"$ac_cv_unaligned" = x"unknown"; then
     #include <sys/types.h>
     #include <sys/wait.h>
     #include <stdio.h>
+    #include <stdlib.h>
+    #include <unistd.h>
+
     unsigned char a[[5]] = { 1, 2, 3, 4, 5 };
-    main () {
+    int main () {
     	unsigned int i;
         pid_t pid;
         int status;
