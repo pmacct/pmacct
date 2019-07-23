@@ -345,5 +345,6 @@ int pmbgp_zmq_sendmore_str(struct p_zmq_sock *sock, char *buf)
 int main(int argc,char **argv)
 {
   printf("WARN: pmbgp: tool depends on missing --enable-zmq and --enable-jansson. Exiting.\n");
+  return 1;
 }
 #endif
