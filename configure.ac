@@ -41,7 +41,7 @@ AC_ARG_ENABLE(debug,
 			AC_MSG_RESULT(yes)
 			tmp_CFLAGS=`echo $CFLAGS | sed 's/O2/O0/g'`
 			CFLAGS="$tmp_CFLAGS"
-  			CFLAGS="$CFLAGS -g -W -Wall"
+			CFLAGS="$CFLAGS -g -Wall -Werror"
 		else
 			AC_MSG_RESULT(no)
 		fi
