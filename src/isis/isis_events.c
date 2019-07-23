@@ -146,8 +146,6 @@ circuit_commence_level (struct isis_circuit *circuit, int level)
 static void
 circuit_resign_level (struct isis_circuit *circuit, int level)
 {
-  int idx = level - 1;
-
 //  THREAD_TIMER_OFF (circuit->t_send_csnp[idx]);
 //  THREAD_TIMER_OFF (circuit->t_send_psnp[idx]);
 

@@ -40,7 +40,7 @@
 #define ERRNO_IO_RETRY(EN) (((EN) == EAGAIN) || ((EN) == EWOULDBLOCK) || ((EN) == EINTR))
 
 /* structures */
-static struct _devices_struct _isis_devices[] = {
+static struct _devices_struct __attribute__((unused))  _isis_devices[] = {
 #if defined DLT_LINUX_SLL
   {isis_sll_handler, DLT_LINUX_SLL},
 #endif

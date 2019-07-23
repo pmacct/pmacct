@@ -731,17 +731,12 @@ static int
 isis_spf_preload_tent (struct isis_spftree *spftree,
 		       struct isis_area *area, int level, int family)
 {
-  struct isis_vertex *vertex;
   struct isis_circuit *circuit;
-  struct listnode *cnode, *anode, *ipnode;
+  struct listnode *cnode, *ipnode;
   struct isis_adjacency *adj;
-  struct isis_lsp *lsp;
-  struct list *adj_list;
-  struct list *adjdb;
   struct prefix_ipv4 *ipv4;
   struct isis_prefix prefix;
   int retval = ISIS_OK;
-  u_char lsp_id[ISIS_SYS_ID_LEN + 2];
   struct prefix_ipv6 *ipv6;
 
   for (ALL_LIST_ELEMENTS_RO (area->circuit_list, cnode, circuit))

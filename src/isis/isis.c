@@ -236,7 +236,6 @@ void isis_pdu_runner(u_char *user, const struct pcap_pkthdr *pkthdr, const u_cha
   struct pcap_device *device = cb_data->device;
   struct isis_circuit *circuit = cb_data->circuit;
   struct packet_ptrs pptrs;
-  struct thread thread;
   int ret;
 
   struct stream stm;
@@ -290,6 +289,7 @@ void isis_pdu_runner(u_char *user, const struct pcap_pkthdr *pkthdr, const u_cha
     if (circuit->area->is_type & IS_LEVEL_2) {
       if (circuit->area->ip_circuits) {
 	ret = isis_run_spf(circuit->area, 2, AF_INET);
+        (void)ret; //TODO treat error
 	isis_route_validate_table (circuit->area, circuit->area->route_table[1]);
       }
       /* XXX: IPv6 handled here */
@@ -325,6 +325,7 @@ void isis_sll_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *
   }
 
   p = pptrs->packet_ptr;
+  (void)p; //TODO treat error
 
   sllp = (const struct sll_header *) pptrs->packet_ptr;
   etype = ntohs(sllp->sll_protocol);
@@ -469,7 +470,7 @@ int igp_daemon_map_adj_metric_handler(char *filename, struct id_entry *e, char *
 {
   struct igp_map_entry *entry = (struct igp_map_entry *) req->key_value_table;
   char *str_ptr, *token, *sep, *ip_str, *metric_str, *endptr;
-  int idx = 0, debug_idx;
+  int idx = 0;
   
   str_ptr = strdup(value);
   if (!str_ptr) {
@@ -520,7 +521,7 @@ int igp_daemon_map_reach_metric_handler(char *filename, struct id_entry *e, char
 {
   struct igp_map_entry *entry = (struct igp_map_entry *) req->key_value_table;
   char *str_ptr, *token, *sep, *ip_str, *metric_str, *endptr;
-  int idx = 0, debug_idx;
+  int idx = 0;
 
   str_ptr = strdup(value);
   if (!str_ptr) {
@@ -571,7 +572,7 @@ int igp_daemon_map_reach6_metric_handler(char *filename, struct id_entry *e, cha
 {
   struct igp_map_entry *entry = (struct igp_map_entry *) req->key_value_table;
   char *str_ptr, *token, *sep, *ip_str, *metric_str, *endptr;
-  int idx = 0, debug_idx;
+  int idx = 0;
 
   str_ptr = strdup(value);
   if (!str_ptr) {
