@@ -21,7 +21,10 @@
 
 #define __PMACCT_CLIENT_C
 
+#include <time.h>
+
 /* include */
+#include <inttypes.h>
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "addr.h"
@@ -29,6 +32,9 @@
 #include "bgp/bgp_packet.h"
 #include "bgp/bgp.h"
 #include "rpki/rpki.h"
+
+//Freaking mess with  _XOPEN_SOURCE and non-std int types, so fwd decl
+extern char *strptime(const char *s, const char *format, struct tm *tm);
 
 /* prototypes */
 int Recv(int, unsigned char **);
@@ -685,7 +691,10 @@ int main(int argc,char **argv)
   u_char *pcust = NULL;
   char *clibuf, *bufptr;
   unsigned char *largebuf, *elem, *ct, *cpt;
-  char ethernet_address[18], ip_address[INET6_ADDRSTRLEN], ndpi_class[SUPERSHORTBUFLEN];
+  char ethernet_address[18], ip_address[INET6_ADDRSTRLEN];
+#if defined (WITH_NDPI)
+  char ndpi_class[SUPERSHORTBUFLEN];
+#endif
   char path[SRVBUFLEN], file[SRVBUFLEN], password[9], rd_str[SRVBUFLEN], tmpbuf[SRVBUFLEN];
   char *as_path, empty_aspath[] = "^$", empty_string[] = "", *bgp_comm;
   int sd, buflen, unpacked, printed;
@@ -1127,6 +1136,7 @@ int main(int argc,char **argv)
       break;
     case 'm': /* obsoleted */
       want_mrtg = TRUE;
+      (void)want_mrtg;
     case 'N':
       if (CHECK_Q_TYPE(q.type)) print_ex_options_error();
       strlcpy(match_string, optarg, sizeof(match_string));
@@ -2203,13 +2213,13 @@ int main(int argc,char **argv)
 	  pmc_custom_primitives_registry.len ||
 	  memcmp(pvlen, &empty_pvlen, sizeof(struct pkt_vlen_hdr_primitives)) != 0) {
         if (!have_wtc || (what_to_count & COUNT_TAG)) {
-	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10llu  ", acc_elem->primitives.tag);
-	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%llu", write_sep(sep_ptr, &count), acc_elem->primitives.tag);
+	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10" PRIu64 "  ", acc_elem->primitives.tag);
+	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%" PRIu64 "", write_sep(sep_ptr, &count), acc_elem->primitives.tag);
 	}
 
         if (!have_wtc || (what_to_count & COUNT_TAG2)) {
-	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10llu  ", acc_elem->primitives.tag2);
-	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%llu", write_sep(sep_ptr, &count), acc_elem->primitives.tag2);
+	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10" PRIu64 "  ", acc_elem->primitives.tag2);
+	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%" PRIu64 "", write_sep(sep_ptr, &count), acc_elem->primitives.tag2);
 	}
 
         if (!have_wtc || (what_to_count & COUNT_CLASS)) {
@@ -2827,16 +2837,16 @@ int main(int argc,char **argv)
 
 	if (!(want_output & PRINT_OUTPUT_EVENT)) {
 #if defined HAVE_64BIT_COUNTERS
-	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-20llu  ", acc_elem->pkt_num);
-	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%llu", write_sep(sep_ptr, &count), acc_elem->pkt_num);
+	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-20" PRIu64 "  ", acc_elem->pkt_num);
+	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%" PRIu64 "", write_sep(sep_ptr, &count), acc_elem->pkt_num);
 
 	  if (!have_wtc || (what_to_count & COUNT_FLOWS)) {
-	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-20llu  ", acc_elem->flo_num);
-	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%llu", write_sep(sep_ptr, &count), acc_elem->flo_num);
+	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-20" PRIu64 "  ", acc_elem->flo_num);
+	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%" PRIu64 "", write_sep(sep_ptr, &count), acc_elem->flo_num);
 	  }
 
 	  if (want_output & (PRINT_OUTPUT_FORMATTED|PRINT_OUTPUT_CSV))
-	    printf("%s%llu\n", write_sep(sep_ptr, &count), acc_elem->pkt_len);
+	    printf("%s%" PRIu64 "\n", write_sep(sep_ptr, &count), acc_elem->pkt_len);
 #else
           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10lu  ", acc_elem->pkt_num); 
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%lu", write_sep(sep_ptr, &count), acc_elem->pkt_num); 
@@ -2940,13 +2950,13 @@ int main(int argc,char **argv)
       else {
 #if defined HAVE_64BIT_COUNTERS
 	/* print bytes */
-        if (which_counter == 0) printf("%llu\n", acc_elem->pkt_len); 
+        if (which_counter == 0) printf("%" PRIu64 "\n", acc_elem->pkt_len); 
 	/* print packets */
-	else if (which_counter == 1) printf("%llu\n", acc_elem->pkt_num); 
+	else if (which_counter == 1) printf("%" PRIu64 "\n", acc_elem->pkt_num); 
 	/* print packets+bytes+flows+num */
-	else if (which_counter == 2) printf("%llu %llu %llu %lu\n", acc_elem->pkt_num, acc_elem->pkt_len, acc_elem->flo_num, acc_elem->time_start.tv_sec);
+	else if (which_counter == 2) printf("%" PRIu64 " %" PRIu64 " %" PRIu64 " %lu\n", acc_elem->pkt_num, acc_elem->pkt_len, acc_elem->flo_num, acc_elem->time_start.tv_sec);
 	/* print flows */
-	else if (which_counter == 3) printf("%llu\n", acc_elem->flo_num);
+	else if (which_counter == 3) printf("%" PRIu64 "\n", acc_elem->flo_num);
 #else
         if (which_counter == 0) printf("%u\n", acc_elem->pkt_len); 
         else if (which_counter == 1) printf("%u\n", acc_elem->pkt_num); 
@@ -2958,10 +2968,10 @@ int main(int argc,char **argv)
       
     if (sum_counters) {
 #if defined HAVE_64BIT_COUNTERS
-      if (which_counter == 0) printf("%llu\n", bcnt); /* print bytes */
-      else if (which_counter == 1) printf("%llu\n", pcnt); /* print packets */
-      else if (which_counter == 2) printf("%llu %llu %llu %u\n", pcnt, bcnt, fcnt, num_counters); /* print packets+bytes+flows+num */
-      else if (which_counter == 3) printf("%llu\n", fcnt); /* print flows */
+      if (which_counter == 0) printf("%" PRIu64 "\n", bcnt); /* print bytes */
+      else if (which_counter == 1) printf("%" PRIu64 "\n", pcnt); /* print packets */
+      else if (which_counter == 2) printf("%" PRIu64 " %" PRIu64 " %" PRIu64 " %u\n", pcnt, bcnt, fcnt, num_counters); /* print packets+bytes+flows+num */
+      else if (which_counter == 3) printf("%" PRIu64 "\n", fcnt); /* print flows */
 #else
       if (which_counter == 0) printf("%u\n", bcnt); 
       else if (which_counter == 1) printf("%u\n", pcnt); 
@@ -3252,7 +3262,6 @@ int pmc_bgp_str2rd(rd_t *output, char *value)
   struct host_addr a;
   char *endptr, *token;
   u_int32_t tmp32;
-  u_int16_t tmp16;
   struct rd_ip  *rdi;
   struct rd_as  *rda;
   struct rd_as4 *rda4;

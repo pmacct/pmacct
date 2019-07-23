@@ -188,9 +188,7 @@ err:
 void pm_pcap_add_filter(struct pcap_device *dev_ptr)
 {
   /* pcap library stuff */
-  bpf_u_int32 localnet, netmask;
   struct bpf_program filter;
-  char errbuf[PCAP_ERRBUF_SIZE];
 
   memset(&filter, 0, sizeof(filter));
   if (pcap_compile(dev_ptr->dev_desc, &filter, config.clbuf, 0, PCAP_NETMASK_UNKNOWN) < 0) {
@@ -1230,6 +1228,7 @@ int main(int argc,char **argv, char **envp)
       memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
 
       select_num = select(select_fd, &read_descs, NULL, NULL, NULL);
+      (void)select_num; //TODO treat?
 
       if (reload_map_pmacctd) {
 	struct pcap_interface *pcap_if_entry;
