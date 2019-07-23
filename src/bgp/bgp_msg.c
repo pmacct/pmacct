@@ -190,7 +190,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 
       /* OPEN options parsing */
       if (bopen->bgpo_optlen && bopen->bgpo_optlen >= 2) {
-	u_int8_t len, opt_type, opt_len, cap_type;
+	u_int8_t len, opt_type, opt_len;
 	char *ptr;
 
 	ptr = bgp_packet_ptr + BGP_MIN_OPEN_MSG_SIZE;
@@ -711,7 +711,7 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, char *ptr, int len, struct bgp_nlri *mp_update, struct bgp_nlri *mp_withdraw)
 {
   int to_the_end = len, ret;
-  u_int8_t flag, type, *tmp, mp_nlri = 0;
+  u_int8_t flag, type, *tmp;
   u_int16_t tmp16, attr_len;
   struct aspath *as4_path = NULL;
 
@@ -763,11 +763,9 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, char *ptr, int 
       break;
     case BGP_ATTR_MP_REACH_NLRI:
       ret = bgp_attr_parse_mp_reach(peer, attr_len, attr, ptr, mp_update);
-      mp_nlri = TRUE;
       break;
     case BGP_ATTR_MP_UNREACH_NLRI:
       ret = bgp_attr_parse_mp_unreach(peer, attr_len, attr, ptr, mp_withdraw);
-      mp_nlri = TRUE;
       break;
     default:
       ret = 0;
@@ -1139,6 +1137,8 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
     }
     else {
       ret = bgp_process_withdraw(bmd, &p, attr, info->afi, safi, &rd, &path_id, label);
+      (void)ret; //Treat error?
+
     }
 
 #if defined WITH_ZMQ
