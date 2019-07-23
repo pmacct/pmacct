@@ -22,6 +22,7 @@
 #define __PRINT_PLUGIN_C
 
 /* includes */
+#include <inttypes.h>
 #include "pmacct.h"
 #include "addr.h"
 #include "pmacct-data.h"
@@ -51,7 +52,6 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int refresh_timeout, ret, num, is_event, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
-  struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
   int datasize = ((struct channels_list_entry *)ptr)->datasize;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   pid_t core_pid = ((struct channels_list_entry *)ptr)->core_pid;
@@ -88,6 +88,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     config.print_output = PRINT_OUTPUT_FORMATTED;
   else if (config.print_output & PRINT_OUTPUT_EVENT)
     is_event = TRUE;
+  (void)is_event; //TODO do something with is_event??
 
   refresh_timeout = config.sql_refresh_time*1000;
 
@@ -262,7 +263,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           else {
             rg_err_count++;
             if (config.debug || (rg_err_count > MAX_RG_COUNT_ERR)) {
-              Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected (plugin_buffer_size=%llu plugin_pipe_size=%llu).\n",
+              Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected (plugin_buffer_size=%" PRIu64 " plugin_pipe_size=%" PRIu64 ").\n",
                         config.name, config.type, config.buffer_size, config.pipe_size);
               Log(LOG_WARNING, "WARN ( %s/%s ): Increase values or look for plugin_buffer_size, plugin_pipe_size in CONFIG-KEYS document.\n\n",
                         config.name, config.type);
@@ -295,7 +296,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
       if (config.debug_internal_msg) 
-        Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received len=%llu seq=%u num_entries=%u\n",
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received len=%" PRIu64 " seq=%u num_entries=%u\n",
                 config.name, config.type, ((struct ch_buf_hdr *)pipebuf)->len, seq,
                 ((struct ch_buf_hdr *)pipebuf)->num);
 
@@ -345,8 +346,11 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   u_char *empty_pcust = NULL;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], *sep = config.print_output_separator, *fd_buf;
-  char *as_path, *bgp_comm, empty_string[] = "", empty_ip4[] = "0.0.0.0", empty_ip6[] = "::";
-  char empty_macaddress[] = "00:00:00:00:00:00", empty_rd[] = "0:0", ndpi_class[SUPERSHORTBUFLEN];
+  char *as_path, *bgp_comm, empty_string[] = "", empty_ip6[] = "::";
+  char empty_macaddress[] = "00:00:00:00:00:00", empty_rd[] = "0:0";
+#if defined (WITH_NDPI)
+  char ndpi_class[SUPERSHORTBUFLEN];
+#endif
   FILE *f = NULL, *lockf = NULL;
   int j, stop, is_event = FALSE, qn = 0, go_to_pending, saved_index = index, file_to_be_created;
   time_t start, duration;
@@ -412,8 +416,8 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
     else strlcpy(current_table, config.sql_table, SRVBUFLEN);
 
     if (config.print_output & PRINT_OUTPUT_AVRO) {
-      int file_is_empty, ret;
 #ifdef WITH_AVRO
+      int file_is_empty, ret;
       f = open_output_file(current_table, "ab", TRUE);
 
       fseek(f, 0, SEEK_END);
@@ -557,8 +561,8 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
       if (queue[j]->valid == PRINT_CACHE_FREE) continue;
   
       if (f && config.print_output & PRINT_OUTPUT_FORMATTED) {
-        if (config.what_to_count & COUNT_TAG) fprintf(f, "%-10llu  ", data->tag);
-        if (config.what_to_count & COUNT_TAG2) fprintf(f, "%-10llu  ", data->tag2);
+        if (config.what_to_count & COUNT_TAG) fprintf(f, "%-10" PRIu64 "  ", data->tag);
+        if (config.what_to_count & COUNT_TAG2) fprintf(f, "%-10" PRIu64 "  ", data->tag2);
         if (config.what_to_count & COUNT_CLASS) fprintf(f, "%-16s  ", ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
   #if defined (WITH_NDPI)
 	if (config.what_to_count_2 & COUNT_NDPI_CLASS) {
@@ -836,9 +840,9 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
         if (!is_event) {
   #if defined HAVE_64BIT_COUNTERS
-          fprintf(f, "%-20llu  ", queue[j]->packet_counter);
-          if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%-20llu  ", queue[j]->flow_counter);
-          fprintf(f, "%llu\n", queue[j]->bytes_counter);
+          fprintf(f, "%-20" PRIu64 "  ", queue[j]->packet_counter);
+          if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%-20" PRIu64 "  ", queue[j]->flow_counter);
+          fprintf(f, "%" PRIu64 "\n", queue[j]->bytes_counter);
   #else
           fprintf(f, "%-10lu  ", queue[j]->packet_counter);
           if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%-10lu  ", queue[j]->flow_counter);
@@ -848,8 +852,8 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         else fprintf(f, "\n");
       }
       else if (f && config.print_output & PRINT_OUTPUT_CSV) {
-        if (config.what_to_count & COUNT_TAG) fprintf(f, "%s%llu", write_sep(sep, &count), data->tag);
-        if (config.what_to_count & COUNT_TAG2) fprintf(f, "%s%llu", write_sep(sep, &count), data->tag2);
+        if (config.what_to_count & COUNT_TAG) fprintf(f, "%s%" PRIu64 "", write_sep(sep, &count), data->tag);
+        if (config.what_to_count & COUNT_TAG2) fprintf(f, "%s%" PRIu64 "", write_sep(sep, &count), data->tag2);
 	if (config.what_to_count_2 & COUNT_LABEL) P_fprintf_csv_string(f, pvlen, COUNT_INT_LABEL, write_sep(sep, &count), empty_string);
         if (config.what_to_count & COUNT_CLASS) fprintf(f, "%s%s", write_sep(sep, &count), ((data->class && class[(data->class)-1].id) ? class[(data->class)-1].protocol : "unknown" ));
   #if defined (WITH_NDPI)
@@ -1206,9 +1210,9 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   
         if (!is_event) {
   #if defined HAVE_64BIT_COUNTERS
-          fprintf(f, "%s%llu", write_sep(sep, &count), queue[j]->packet_counter);
-          if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%s%llu", write_sep(sep, &count), queue[j]->flow_counter);
-          fprintf(f, "%s%llu\n", write_sep(sep, &count), queue[j]->bytes_counter);
+          fprintf(f, "%s%" PRIu64 "", write_sep(sep, &count), queue[j]->packet_counter);
+          if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%s%" PRIu64 "", write_sep(sep, &count), queue[j]->flow_counter);
+          fprintf(f, "%s%" PRIu64 "\n", write_sep(sep, &count), queue[j]->bytes_counter);
   #else
           fprintf(f, "%s%lu", write_sep(sep, &count), queue[j]->packet_counter);
           if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%s%lu", write_sep(sep, &count), queue[j]->flow_counter);
@@ -1263,9 +1267,6 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
       }
 
       if (config.print_output & PRINT_OUTPUT_CUSTOM) {
-	struct pkt_primitives *pbase = &queue[j]->primitives;
-	struct host_addr *from = &pbase->src_ip;
-
 	custom_print_plugin.print(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
 				  &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust, pvlen, queue[j]->bytes_counter,
 				  queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags, NULL,
