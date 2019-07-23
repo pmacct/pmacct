@@ -110,7 +110,7 @@ int main(int argc,char **argv, char **envp)
   struct packet_ptrs_vector pptrs;
   char config_file[SRVBUFLEN];
   unsigned char *sflow_packet;
-  int logf, rc, yes=1, no=0, allowed;
+  int logf, rc, yes=1, allowed;
   struct host_addr addr;
   struct hosts_table allow;
   struct id_table bpas_table;
@@ -121,7 +121,7 @@ int main(int argc,char **argv, char **envp)
   struct id_table bitr_table;
   struct id_table sampling_table;
   u_int32_t idx;
-  int pipe_fd = 0, capture_methods = 0;
+  int capture_methods = 0;
   int ret, alloc_sppi = FALSE;
   SFSample spp;
 
@@ -642,6 +642,7 @@ int main(int argc,char **argv, char **envp)
 #endif
 #ifdef WITH_ZMQ
   else if (config.nfacctd_zmq_address) {
+    int pipe_fd = 0;
     SF_init_zmq_host(&nfacctd_zmq_host, &pipe_fd);
     recv_pptrs.pkthdr = &recv_pkthdr;
 
@@ -2207,6 +2208,7 @@ int sf_cnt_log_msg(struct bgp_peer *peer, SFSample *sample, int version, u_int32
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_SFLOW_COUNTER);
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
+  (void)etype;
 
   if (!bms || !peer || !sample || !event_type) {
     skipBytes(sample, len);
@@ -2323,9 +2325,9 @@ int sf_cnt_log_msg(struct bgp_peer *peer, SFSample *sample, int version, u_int32
 
 int readCounters_generic(struct bgp_peer *peer, SFSample *sample, char *event_type, int output, void *vobj)
 {
-  char msg_type[] = "sflow_cnt_generic";
   int ret = 0;
 #ifdef WITH_JANSSON
+  char msg_type[] = "sflow_cnt_generic";
   json_t *obj = (json_t *) vobj;
 
   /* parse sFlow first and foremost */
@@ -2398,9 +2400,9 @@ int readCounters_generic(struct bgp_peer *peer, SFSample *sample, char *event_ty
 
 int readCounters_ethernet(struct bgp_peer *peer, SFSample *sample, char *event_type, int output, void *vobj)
 {
-  char msg_type[] = "sflow_cnt_ethernet";
   int ret = 0;
 #ifdef WITH_JANSSON
+  char msg_type[] = "sflow_cnt_ethernet";
   json_t *obj = (json_t *) vobj;
 
   u_int32_t m32_1, m32_2, m32_3, m32_4, m32_5;
@@ -2458,9 +2460,9 @@ int readCounters_ethernet(struct bgp_peer *peer, SFSample *sample, char *event_t
 
 int readCounters_vlan(struct bgp_peer *peer, SFSample *sample, char *event_type, int output, void *vobj)
 {
-  char msg_type[] = "sflow_cnt_vlan";
   int ret = 0;
 #ifdef WITH_JANSSON
+  char msg_type[] = "sflow_cnt_vlan";
   json_t *obj = (json_t *) vobj;
 
   u_int64_t m64_1;
