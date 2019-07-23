@@ -202,8 +202,8 @@ format_flow(struct FLOW *flow)
 	snprintf(stime, sizeof(ftime), "%s", format_time(flow->flow_start.tv_sec));
 	snprintf(ftime, sizeof(ftime), "%s", format_time(flow->flow_last.tv_sec));
 
-	snprintf(buf, sizeof(buf),  "seq:%llu [%s]:%u <> [%s]:%u proto:%u "
-	    "octets>:%llu packets>:%llu octets<:%llu packets<:%llu "
+	snprintf(buf, sizeof(buf),  "seq:%" PRIu64 " [%s]:%u <> [%s]:%u proto:%u "
+	    "octets>:%" PRIu64 " packets>:%" PRIu64 " octets<:%" PRIu64 " packets<:%" PRIu64 " "
 	    "start:%s.%03u finish:%s.%03u tcp>:%02x tcp<:%02x "
 	    "flowlabel>:%08x flowlabel<:%08x ",
 	    flow->flow_seq,
@@ -211,8 +211,8 @@ format_flow(struct FLOW *flow)
 	    (int)flow->protocol, 
 	    flow->octets[0], flow->packets[0], 
 	    flow->octets[1], flow->packets[1], 
-	    stime, (flow->flow_start.tv_usec + 500) / 1000, 
-	    ftime, (flow->flow_last.tv_usec + 500) / 1000,
+	    stime, (unsigned int)((flow->flow_start.tv_usec + 500) / 1000), 
+	    ftime, (unsigned int)((flow->flow_last.tv_usec + 500) / 1000),
 	    flow->tcp_flags[0], flow->tcp_flags[1],
 	    flow->ip6_flowlabel[0], flow->ip6_flowlabel[1]);
 
@@ -230,7 +230,7 @@ format_flow_brief(struct FLOW *flow)
 	inet_ntop(flow->af, &flow->addr[1], addr2, sizeof(addr2));
 
 	snprintf(buf, sizeof(buf), 
-	    "seq:%llu [%s]:%hu <> [%s]:%hu proto:%u",
+	    "seq:%" PRIu64 " [%s]:%hu <> [%s]:%hu proto:%u",
 	    flow->flow_seq,
 	    addr1, ntohs(flow->port[0]), addr2, ntohs(flow->port[1]),
 	    (int)flow->protocol);
@@ -953,7 +953,7 @@ check_expired(struct FLOWTRACK *ft, struct NETFLOW_TARGET *target, int ex, u_int
 		    (expiry->expires_at < now.tv_sec))) {
 			/* Flow has expired */
 			if (verbose_flag)
-				Log(LOG_DEBUG, "DEBUG ( %s/%s ): Queuing flow seq:%llu (%p) for expiry\n",
+				Log(LOG_DEBUG, "DEBUG ( %s/%s ): Queuing flow seq:%" PRIu64 " (%p) for expiry\n",
 				   config.name, config.type, expiry->flow->flow_seq, expiry->flow);
 
 			/* Add to array of expired flows */
@@ -1329,16 +1329,13 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct ports_table pt;
   struct pollfd pfd;
   unsigned char *pipebuf;
-  time_t now;
   int refresh_timeout, ret, num, recv_budget, poll_bypass;
   char default_receiver[] = "127.0.0.1:2100";
   char default_engine_v5[] = "0:0", default_engine_v9[] = "0";
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
-  struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
   int datasize = ((struct channels_list_entry *)ptr)->datasize;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
-  pid_t core_pid = ((struct channels_list_entry *)ptr)->core_pid;
   struct networks_file_data nfd;
 
   unsigned char *rgptr, *dataptr;
@@ -1347,7 +1344,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   char *capfile = NULL, dest_addr[256], dest_serv[256];
   int linktype = 0, i, r, err, always_v6;
-  int max_flows, stop_collection_flag, hoplimit;
+  int max_flows, hoplimit;
   struct sockaddr_storage dest;
   struct FLOWTRACK flowtrack;
   socklen_t dest_len;
@@ -1362,7 +1359,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 #ifdef WITH_ZMQ
   struct p_zmq_host *zmq_host = &((struct channels_list_entry *)ptr)->zmq_host;
 #else
-  void *zmq_host;
+  void *zmq_host = NULL;
 #endif
 
   memcpy(&config, cfgptr, sizeof(struct configuration));
@@ -1459,7 +1456,6 @@ sort_version:
 
   /* Main processing loop */
   gettimeofday(&flowtrack.system_boot_time, NULL);
-  stop_collection_flag = 0;
   cb_ctxt.ft = &flowtrack;
   cb_ctxt.linktype = linktype;
   cb_ctxt.want_v6 = target.dialect->v6_capable || always_v6;
@@ -1530,8 +1526,6 @@ sort_version:
       reload_map = FALSE;
     }
 
-    now = time(NULL);
-
     recv_budget = 0;
     if (poll_bypass) {
       poll_bypass = FALSE;
@@ -1566,7 +1560,7 @@ sort_version:
   	  else {
   	    rg_err_count++;
   	    if (config.debug || (rg_err_count > MAX_RG_COUNT_ERR)) {
-              Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected (plugin_buffer_size=%llu plugin_pipe_size=%llu).\n",
+              Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected (plugin_buffer_size=%" PRIu64 " plugin_pipe_size=%" PRIu64 ").\n",
                         config.name, config.type, config.buffer_size, config.pipe_size);
               Log(LOG_WARNING, "WARN ( %s/%s ): Increase values or look for plugin_buffer_size, plugin_pipe_size in CONFIG-KEYS document.\n\n",
                         config.name, config.type);
@@ -1599,7 +1593,7 @@ sort_version:
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
       if (config.debug_internal_msg) 
-        Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received len=%llu seq=%u num_entries=%u\n",
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received len=%" PRIu64 " seq=%u num_entries=%u\n",
                 config.name, config.type, ((struct ch_buf_hdr *)pipebuf)->len, seq,
                 ((struct ch_buf_hdr *)pipebuf)->num);
 
