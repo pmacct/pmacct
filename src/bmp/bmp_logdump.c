@@ -24,6 +24,8 @@
 
 /* includes */
 /* includes */
+#include <inttypes.h>
+
 #include "pmacct.h"
 #include "addr.h"
 #include "bgp/bgp.h"
@@ -39,7 +41,10 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BMP);
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
+#if defined(WITH_KAFKA) || defined(WITH_RABBITMQ)
   pid_t writer_pid = getpid();
+#endif
+  (void)etype;
 
   if (!bms || !peer || !peer->log || !bdata || !event_type) return ERR;
 
@@ -137,9 +142,9 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
 
 int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_stats *blstats, char *event_type, int output, void *vobj)
 {
-  char bmp_msg_type[] = "stats";
   int ret = 0;
 #ifdef WITH_JANSSON
+  char bmp_msg_type[] = "stats";
   char ip_address[INET6_ADDRSTRLEN];
   json_t *obj = (json_t *) vobj;
 
@@ -183,9 +188,10 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_
 
 int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_init_array *blinit, char *event_type, int output, void *vobj)
 {
-  char bmp_msg_type[] = "init";
-  int ret = 0, idx = 0;
+  int ret = 0;
 #ifdef WITH_JANSSON
+  int idx = 0;
+  char bmp_msg_type[] = "init";
   json_t *obj = (json_t *) vobj;
 
   if (!peer || !vobj) return ERR;
@@ -212,9 +218,10 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
 
 int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_term_array *blterm, char *event_type, int output, void *vobj)
 {
-  char bmp_msg_type[] = "term";
-  int ret = 0, idx = 0;
+  int ret = 0;
 #ifdef WITH_JANSSON
+  char bmp_msg_type[] = "term";
+  int idx = 0;
   json_t *obj = (json_t *) vobj;
 
   if (!peer || !vobj) return ERR;
@@ -248,9 +255,10 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
 
 int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_peer_up *blpu, char *event_type, int output, void *vobj)
 {
-  char bmp_msg_type[] = "peer_up";
-  int ret = 0, idx = 0;
+  int ret = 0;
 #ifdef WITH_JANSSON
+  char bmp_msg_type[] = "peer_up";
+  int idx = 0;
   char ip_address[INET6_ADDRSTRLEN];
   json_t *obj = (json_t *) vobj;
 
@@ -304,9 +312,9 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
 
 int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_peer_down *blpd, char *event_type, int output, void *vobj)
 {
-  char bmp_msg_type[] = "peer_down";
   int ret = 0;
 #ifdef WITH_JANSSON
+  char bmp_msg_type[] = "peer_down";
   char ip_address[INET6_ADDRSTRLEN];
   json_t *obj = (json_t *) vobj;
 
@@ -468,7 +476,6 @@ void bmp_handle_dump_event()
   u_int64_t dump_elems = 0, dump_seqno;
 
   struct bgp_peer *peer, *saved_peer;
-  struct bmp_peer *bmpp, *saved_bmpp;
   struct bmp_dump_se_ll *bdsell;
   struct bgp_peer_log peer_log;      
 
@@ -517,7 +524,6 @@ void bmp_handle_dump_event()
     for (peer = NULL, saved_peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
       if (bmp_peers[peers_idx].self.fd) {
         peer = &bmp_peers[peers_idx].self;
-        bmpp = &bmp_peers[peers_idx];
         peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
 	bdsell = peer->bmp_se;
 
@@ -637,7 +643,6 @@ void bmp_handle_dump_event()
 	}
  
 	saved_peer = peer;
-	saved_bmpp = bmpp;
         strlcpy(last_filename, current_filename, SRVBUFLEN);
         bgp_peer_dump_close(peer, NULL, config.bmp_dump_output, FUNC_TYPE_BMP);
         tables_num++;
@@ -660,7 +665,7 @@ void bmp_handle_dump_event()
     }
 
     duration = time(NULL)-start;
-    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BMP tables - END (PID: %u TABLES: %u ENTRIES: %llu ET: %u) ***\n",
+    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BMP tables - END (PID: %u TABLES: %u ENTRIES: %" PRIu64 " ET: %u) ***\n",
                 config.name, bms->log_str, dumper_pid, tables_num, dump_elems, duration);
 
     exit_gracefully(0);
@@ -674,7 +679,6 @@ void bmp_handle_dump_event()
     for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
       if (bmp_peers[peers_idx].self.fd) {
         peer = &bmp_peers[peers_idx].self;
-        bmpp = &bmp_peers[peers_idx];
         bdsell = peer->bmp_se;
 
 	if (bdsell && bdsell->start) bmp_dump_se_ll_destroy(bdsell);

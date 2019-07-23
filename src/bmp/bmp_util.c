@@ -114,7 +114,6 @@ u_int32_t bmp_packet_adj_offset(char *bmp_packet, u_int32_t buf_len, u_int32_t r
 
 void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int output, void *void_obj)
 {
-  char bmp_msg_type[] = "route_monitor";
   struct bgp_misc_structs *bms;
   struct bmp_peer *bmpp;
 
@@ -126,6 +125,7 @@ void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int output, void *void_o
 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
+    char bmp_msg_type[] = "route_monitor";
     char ip_address[INET6_ADDRSTRLEN];
     json_t *obj = void_obj;
 
@@ -310,14 +310,13 @@ void bgp_extra_data_free_bmp(struct bgp_msg_extra_data *bmed)
 
 void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void *void_obj)
 {
-  struct bmp_chars *bmed_bmp;
 
   if (!bmed || !void_obj || bmed->id != BGP_MSG_EXTRA_DATA_BMP) return;
 
-  bmed_bmp = bmed->data;
-
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
+    struct bmp_chars *bmed_bmp;
+    bmed_bmp = bmed->data;
     json_t *obj = void_obj;
 
     if (bmed_bmp->is_loc) {
@@ -368,7 +367,7 @@ char *bmp_tlv_type_print(u_int16_t in, const char *prefix, const char **registry
 char *bmp_term_reason_print(u_int16_t in)
 {
   char *out = NULL;
-  int prefix_len, value_len;
+  int value_len;
 
 
   if (in <= BMP_TERM_REASON_MAX) {
