@@ -95,7 +95,6 @@ initsetproctitle(argc, argv, envp)
 	char **envp;
 {
 	register int i;
-	int align;
 	extern char **environ;
 
 	/*

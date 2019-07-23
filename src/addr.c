@@ -103,12 +103,10 @@ unsigned int addr_mask_to_str(char *str, int len, const struct host_addr *a, con
  */
 unsigned int str_to_addr_mask(const char *str, struct host_addr *a, struct host_mask *m)
 {
-  char *delim = NULL, *net = NULL, *mask = NULL;
+  char *delim = NULL, *mask = NULL;
   unsigned int family = 0, index = 0, j;
 
   if (!str || !a || !m) return family;
-
-  net = (char *) str;
 
   delim = strchr(str, '/');
   if (delim) {

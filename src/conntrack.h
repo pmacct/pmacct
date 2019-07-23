@@ -80,7 +80,7 @@ EXT struct conntrack_ipv6 *conntrack_ipv6_table;
 #undef EXT
 
 #if defined __CONNTRACK_C || defined __CLASSIFIER_C
-static struct conntrack_helper_entry conntrack_helper_list[] = {
+static struct conntrack_helper_entry __attribute__((unused)) conntrack_helper_list[] = {
   { "ftp", conntrack_ftp_helper },
   { "sip", conntrack_sip_helper },
 //  { "irc", conntrack_irc_helper },
