@@ -41,7 +41,7 @@
  * of bytes.  No alignment or length assumptions are made about
  * the input key.
  */
-Inline u_int32_t jhash(void *key, u_int32_t length, u_int32_t initval)
+static inline u_int32_t jhash(void *key, u_int32_t length, u_int32_t initval)
 {
 	u_int32_t a, b, c, len;
 	u_int8_t *k = key;
@@ -84,7 +84,7 @@ Inline u_int32_t jhash(void *key, u_int32_t length, u_int32_t initval)
 /* A special optimized version that handles 1 or more of u_int32_ts.
  * The length parameter here is the number of u_int32_ts in the key.
  */
-Inline u_int32_t jhash2(u_int32_t *k, u_int32_t length, u_int32_t initval)
+static inline u_int32_t jhash2(u_int32_t *k, u_int32_t length, u_int32_t initval)
 {
 	u_int32_t a, b, c, len;
 
@@ -119,7 +119,7 @@ Inline u_int32_t jhash2(u_int32_t *k, u_int32_t length, u_int32_t initval)
  * NOTE: In partilar the "c += length; __jhash_mix(a,b,c);" normally
  *       done at the end is not done here.
  */
-Inline u_int32_t jhash_3words(u_int32_t a, u_int32_t b, u_int32_t c, u_int32_t initval)
+static inline u_int32_t jhash_3words(u_int32_t a, u_int32_t b, u_int32_t c, u_int32_t initval)
 {
 	a += JHASH_GOLDEN_RATIO;
 	b += JHASH_GOLDEN_RATIO;
@@ -130,12 +130,12 @@ Inline u_int32_t jhash_3words(u_int32_t a, u_int32_t b, u_int32_t c, u_int32_t i
 	return c;
 }
 
-Inline u_int32_t jhash_2words(u_int32_t a, u_int32_t b, u_int32_t initval)
+static inline u_int32_t jhash_2words(u_int32_t a, u_int32_t b, u_int32_t initval)
 {
 	return jhash_3words(a, b, 0, initval);
 }
 
-Inline u_int32_t jhash_1word(u_int32_t a, u_int32_t initval)
+static inline u_int32_t jhash_1word(u_int32_t a, u_int32_t initval)
 {
 	return jhash_3words(a, 0, 0, initval);
 }
