@@ -635,7 +635,6 @@ int cfg_key_files_gid(char *filename, char *name, char *value_ptr)
   struct plugins_list_entry *list = plugins_list;
   struct group *group = NULL;
   u_int32_t value, changes = 0;
-  char *endptr;
 
   group = getgrnam(value_ptr);
   if (!group) {
@@ -2344,12 +2343,13 @@ int cfg_key_plugin_pipe_zmq_retry(char *filename, char *name, char *value_ptr)
 
 int cfg_key_plugin_pipe_zmq_profile(char *filename, char *name, char *value_ptr)
 {
-  struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
 
+  int changes = 0;
   lower_string(value_ptr);
 
 #ifdef WITH_ZMQ
+  struct plugins_list_entry *list = plugins_list;
+  int value;
   if (!name) for (; list; list = list->next, changes++) {
     value = p_zmq_plugin_pipe_set_profile(&list->cfg, value_ptr);
     if (value < 0) return ERR;
