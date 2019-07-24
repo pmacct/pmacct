@@ -117,7 +117,8 @@ void bgp_blackhole_daemon()
 {
   struct bgp_misc_structs *m_data = bgp_blackhole_misc_db;
   struct bgp_blackhole_itc bbitc;
-  
+  int bh_state;
+ 
   afi_t afi;
   safi_t safi;
   int ret;
@@ -161,7 +162,11 @@ void bgp_blackhole_daemon()
       break;
     }
 
-    // XXX: process data
+    ret = bgp_lookup_node_vector_unicast(bbitc.p, bbitc.peer, m_data->bnv);
+
+    bh_state = bgp_blackhole_validate(bbitc.p, bbitc.peer, bbitc.attr, m_data->bnv); 
+
+    // XXX: process state 
 
     // XXX: free not needed alloc'd structs
   }
@@ -233,5 +238,27 @@ int bgp_blackhole_instrument(struct bgp_peer *peer, struct prefix *p, void *a, a
   if (ret <= 0) return ERR;
 
   return FALSE;
+}
+
+int bgp_blackhole_validate(struct prefix *p, struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_node_vector *bnv)
+{
+  int idx, bh_state = BGP_BLACKHOLE_STATE_UNKNOWN;
+
+  if (!bnv || !bnv->entries) return bh_state;
+
+  /*
+     (bnv->entries - 1) is the blackhole itself
+     (bnv->entries - 2) is the covering prefix
+  */
+  if (bnv->entries >= 2) {
+    idx = (bnv->entries - 2);
+
+    // XXX
+  }
+  else {
+    // XXX
+  }
+
+  return bh_state;
 }
 #endif

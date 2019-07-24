@@ -1395,7 +1395,7 @@ void bgp_blackhole_link_misc_structs(struct bgp_misc_structs *m_data)
   m_data->table_attr_hash_buckets = HASHTABSIZE;
   m_data->table_per_peer_hash = BGP_ASPATH_HASH_PATHID;
   m_data->route_info_modulo = NULL;
-  m_data->bgp_lookup_node_match_cmp = NULL; // XXX
+  m_data->bgp_lookup_node_match_cmp = NULL;
 }
 
 int bgp_peer_cmp(const void *a, const void *b)

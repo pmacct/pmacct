@@ -25,6 +25,10 @@
 /* defines */
 #define BGP_BLACKHOLE_DEFAULT_BF_ENTRIES	1000
 
+#define BGP_BLACKHOLE_STATE_UNKNOWN		0
+#define BGP_BLACKHOLE_STATE_VALID		1
+#define BGP_BLACKHOLE_STATE_INVALID		2
+
 /* structs */
 struct bgp_blackhole_itc {
   struct bgp_peer *peer;
@@ -50,6 +54,7 @@ EXT void bgp_blackhole_daemon();
 
 EXT int bgp_blackhole_evaluate_comms(void *);
 EXT int bgp_blackhole_instrument(struct bgp_peer *, struct prefix *, void *, afi_t, safi_t);
+EXT int bgp_blackhole_validate(struct prefix *, struct bgp_peer *, struct bgp_attr *, struct bgp_node_vector *);
 #endif
 #undef EXT
 #endif
