@@ -543,7 +543,7 @@ int main(int argc,char **argv, char **envp)
 
 #if defined (WITH_NDPI)
 	if (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS) {
-          config.handle_fragments = TRUE;
+          enable_ip_fragment_handler();
           config.classifier_ndpi = TRUE;
 	}
 
@@ -630,27 +630,22 @@ int main(int argc,char **argv, char **envp)
     open_pcap_savefile(&device, config.pcap_savefile);
     pcap_savefile_round = 1;
 
-    config.handle_fragments = TRUE;
-    init_ip_fragment_handler();
+    enable_ip_fragment_handler();
   }
 #ifdef WITH_KAFKA
   else if (config.nfacctd_kafka_broker_host) {
     SF_init_kafka_host(&nfacctd_kafka_host);
-
-    config.handle_fragments = TRUE;
-    init_ip_fragment_handler();
-
     recv_pptrs.pkthdr = &recv_pkthdr;
+
+    enable_ip_fragment_handler();
   }
 #endif
 #ifdef WITH_ZMQ
   else if (config.nfacctd_zmq_address) {
     SF_init_zmq_host(&nfacctd_zmq_host, &pipe_fd);
-
-    config.handle_fragments = TRUE;
-    init_ip_fragment_handler();
-
     recv_pptrs.pkthdr = &recv_pkthdr;
+
+    enable_ip_fragment_handler();
   }
 #endif
   else {
@@ -891,7 +886,7 @@ int main(int argc,char **argv, char **envp)
 
 #if defined (WITH_NDPI)
   if (config.classifier_ndpi) {
-    config.handle_fragments = TRUE;
+    enable_ip_fragment_handler();
     pm_ndpi_wfl = pm_ndpi_workflow_init();
     pm_ndpi_export_proto_to_class(pm_ndpi_wfl);
   }

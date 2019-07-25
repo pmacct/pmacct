@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -90,6 +90,7 @@ EXT struct lru_l6 lru_list6;
 #else
 #define EXT
 #endif
+EXT void enable_ip_fragment_handler();
 EXT void init_ip_fragment_handler(); /* wrapper */ 
 EXT void init_ip4_fragment_handler(); 
 EXT int ip_fragment_handler(struct packet_ptrs *); 

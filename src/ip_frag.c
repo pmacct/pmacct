@@ -38,6 +38,14 @@ u_int32_t ipft6_total_nodes;
 time_t prune_deadline6;
 time_t emergency_prune6;
 
+void enable_ip_fragment_handler()
+{
+  if (!config.handle_fragments) {
+    config.handle_fragments = TRUE;
+    init_ip_fragment_handler();
+  }
+}
+
 void init_ip_fragment_handler()
 {
   init_ip4_fragment_handler();
