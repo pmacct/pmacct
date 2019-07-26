@@ -22,7 +22,6 @@
 #define __PRINT_PLUGIN_C
 
 /* includes */
-#include <inttypes.h>
 #include "pmacct.h"
 #include "addr.h"
 #include "pmacct-data.h"

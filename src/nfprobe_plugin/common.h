@@ -62,9 +62,6 @@
 #elif defined(HAVE_PCAP_BPF_H)
 #include <pcap-bpf.h>
 #endif
-#if defined(HAVE_INTTYPES_H)
-#include <inttypes.h>
-#endif
 
 /* The name of the program */
 // #define PROGNAME		"softflowd"

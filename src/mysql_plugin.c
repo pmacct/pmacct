@@ -22,7 +22,6 @@
 #define __MYSQL_PLUGIN_C
 
 /* includes */
-#include <inttypes.h>
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"

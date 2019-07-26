@@ -24,8 +24,6 @@
 
 /* includes */
 /* includes */
-#include <inttypes.h>
-
 #include "pmacct.h"
 #include "addr.h"
 #include "bgp/bgp.h"

@@ -23,7 +23,6 @@
 #define __TELEMETRY_LOGDUMP_C
 
 /* includes */
-#include <inttypes.h>
 #include "pmacct.h"
 #include "bgp/bgp.h"
 #include "bmp/bmp.h"

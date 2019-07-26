@@ -22,7 +22,6 @@
 #define __XFLOW_STATUS_C
 
 /* includes */
-#include <inttypes.h>
 #include "pmacct.h"
 #include "addr.h"
 

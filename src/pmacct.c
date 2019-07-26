@@ -24,7 +24,6 @@
 #include <time.h>
 
 /* include */
-#include <inttypes.h>
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "addr.h"

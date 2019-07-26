@@ -22,8 +22,6 @@
 /* defines */
 #define __BGP_LOGDUMP_C
 
-#include <inttypes.h>
-
 /* includes */
 #include "pmacct.h"
 #include "pmacct-data.h"

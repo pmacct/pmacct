@@ -24,7 +24,6 @@
 #include <sys/socket.h>
 #include <net/if.h>
 #include <sys/poll.h>
-#include <inttypes.h>
 
 #include "sflow_api.h"
 #include "addr.h"

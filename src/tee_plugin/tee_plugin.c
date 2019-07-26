@@ -21,7 +21,6 @@
 
 #define __TEE_PLUGIN_C
 
-#include <inttypes.h>
 #include "pmacct.h"
 #include "addr.h"
 #ifdef WITH_KAFKA

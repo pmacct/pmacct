@@ -22,7 +22,6 @@
 #define __UTIL_C
 
 /* includes */
-#include <inttypes.h>
 #include "pmacct.h"
 #include "addr.h"
 #ifdef WITH_KAFKA

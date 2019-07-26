@@ -22,7 +22,6 @@
 #define __IMT_PLUGIN_C
 
 /* includes */
-#include <inttypes.h>
 #include "pmacct.h"
 #include "plugin_hooks.h"
 #include "plugin_common.h"

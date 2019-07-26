@@ -22,7 +22,6 @@
 #define __PLUGIN_HOOKS_C
 
 /* includes */
-#include <inttypes.h>
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "thread_pool.h"
