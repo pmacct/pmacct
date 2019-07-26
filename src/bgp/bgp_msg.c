@@ -1122,16 +1122,16 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
 
     // XXX: check prefix correctnesss now that we have it?
 
+#if defined WITH_ZMQ
     if (config.bgp_blackhole_stdcomm_list) {
       bmd->is_blackhole = bgp_blackhole_evaluate_comms(attr);
 
       /* let's process withdraws before withdrawing */  
       if (!attr && bmd->is_blackhole) {
-#if defined WITH_ZMQ
 	bgp_blackhole_instrument(peer, &p, attr, info->afi, safi);
       }
-#endif
     }
+#endif
 
     /* Let's do our job now! */
     if (attr) {
@@ -1141,14 +1141,14 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
       ret = bgp_process_withdraw(bmd, &p, attr, info->afi, safi, &rd, &path_id, label);
     }
 
+#if defined WITH_ZMQ
     if (config.bgp_blackhole_stdcomm_list) {
       /* let's process updates after installing */  
       if (attr && bmd->is_blackhole) {
-#if defined WITH_ZMQ
 	bgp_blackhole_instrument(peer, &p, attr, info->afi, safi);
       }
-#endif
     }
+#endif
   }
 
   return SUCCESS;
