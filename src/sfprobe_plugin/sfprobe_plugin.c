@@ -237,6 +237,7 @@ static void init_agent(SflSp *sp)
 
   // add a receiver
   receiver = sfl_agent_addReceiver(sp->agent);
+  (void)receiver; // todo treat result?
 
   // define the data source
   SFL_DS_SET(dsi, 0, 1, 0);  // ds_class = 0, ds_index = 1, ds_instance = 0
@@ -295,7 +296,10 @@ static void init_agent(SflSp *sp)
 
 static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *buf)
 {
-  SFLFlow_sample_element hdrElem, classHdrElem, class2HdrElem, tagHdrElem;
+  SFLFlow_sample_element hdrElem, classHdrElem, tagHdrElem;
+#if defined (WITH_NDPI)
+  SFLFlow_sample_element class2HdrElem;
+#endif
   SFLFlow_sample_element gatewayHdrElem, routerHdrElem, switchHdrElem;
   SFLExtended_as_path_segment as_path_segment;
   u_int32_t frame_len, header_len;
@@ -611,9 +615,7 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int refresh_timeout, ret, num, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
-  struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
-  pid_t core_pid = ((struct channels_list_entry *)ptr)->core_pid;
   unsigned char *rgptr;
   int pollagain = TRUE;
   u_int32_t seq = 1, rg_err_count = 0;
@@ -748,7 +750,7 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           else {
   	    rg_err_count++;
   	    if (config.debug || (rg_err_count > MAX_RG_COUNT_ERR)) {
-              Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected (plugin_buffer_size=%llu plugin_pipe_size=%llu).\n",
+              Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected (plugin_buffer_size=%" PRIu64 " plugin_pipe_size=%" PRIu64 ").\n",
                         config.name, config.type, config.buffer_size, config.pipe_size);
               Log(LOG_WARNING, "WARN ( %s/%s ): Increase values or look for plugin_buffer_size, plugin_pipe_size in CONFIG-KEYS document.\n\n",
                         config.name, config.type);
@@ -782,7 +784,7 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       pipebuf_ptr = (unsigned char *) pipebuf+ChBufHdrSz+PpayloadSz;
 
       if (config.debug_internal_msg) 
-	Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received len=%llu seq=%u num_entries=%u\n",
+	Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received len=%" PRIu64 " seq=%u num_entries=%u\n",
 		config.name, config.type, ((struct ch_buf_hdr *)pipebuf)->len, seq,
 		((struct ch_buf_hdr *)pipebuf)->num);
 
@@ -819,9 +821,13 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
 	((struct ch_buf_hdr *)pipebuf)->num--;
 	if (((struct ch_buf_hdr *)pipebuf)->num) {
+#if ! NEED_ALIGN
 	  pipebuf_ptr += hdr->cap_len;
-#if NEED_ALIGN
-	  while ((u_int32_t)pipebuf_ptr % 4 != 0) (u_int32_t)pipebuf_ptr++;
+#else
+          uint32_t tmp = hdr->cap_len;
+          if ( ( tmp%4 ) != 0 )
+            tmp = ( tmp + 4 ) & 4;
+	  pipebuf_ptr += tmp;
 #endif
 	  hdr = (struct pkt_payload *) pipebuf_ptr;
 	  pipebuf_ptr += PpayloadSz;

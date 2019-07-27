@@ -609,8 +609,8 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       ptr_end += strlen(tag_string);
       len = strlen(ptr_end);
 
-      if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%llu", prim_ptrs->data->primitives.tag); 
-      else snprintf(buf, newlen, "%llu", zero_tag);
+      if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%" PRIu64 "", prim_ptrs->data->primitives.tag); 
+      else snprintf(buf, newlen, "%" PRIu64 "", zero_tag);
 
       sub_len = strlen(buf);
       if ((sub_len + len) >= newlen) return ERR;
@@ -631,8 +631,8 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       ptr_end += strlen(tag2_string);
       len = strlen(ptr_end);
 
-      if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%llu", prim_ptrs->data->primitives.tag2);
-      else snprintf(buf, newlen, "%llu", zero_tag);
+      if (prim_ptrs && prim_ptrs->data) snprintf(buf, newlen, "%" PRIu64 "", prim_ptrs->data->primitives.tag2);
+      else snprintf(buf, newlen, "%" PRIu64 "", zero_tag);
 
       sub_len = strlen(buf);
       if ((sub_len + len) >= newlen) return ERR;
@@ -652,7 +652,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       ptr_end += strlen(post_tag_string);
       len = strlen(ptr_end);
 
-      snprintf(buf, newlen, "%llu", config.post_tag);
+      snprintf(buf, newlen, "%" PRIu64 "", config.post_tag);
 
       sub_len = strlen(buf);
       if ((sub_len + len) >= newlen) return ERR;
@@ -672,7 +672,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       ptr_end += strlen(post_tag2_string);
       len = strlen(ptr_end);
 
-      snprintf(buf, newlen, "%llu", config.post_tag2);
+      snprintf(buf, newlen, "%" PRIu64 "", config.post_tag2);
 
       sub_len = strlen(buf);
       if ((sub_len + len) >= newlen) return ERR;
@@ -1556,8 +1556,8 @@ void *pm_malloc(size_t size)
 
   obj = (unsigned char *) malloc(size);
   if (!obj) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to grab enough memory (requested: %llu bytes). Exiting ...\n",
-    config.name, config.type, (unsigned long long)size);
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to grab enough memory (requested: %" PRIu64 " bytes). Exiting ...\n",
+    config.name, config.type, size);
     exit_gracefully(1);
   }
 
@@ -1725,7 +1725,7 @@ int load_tags(char *filename, struct pretag_filter *filter, char *value_ptr)
     else range = value;
 
     if (range_ptr && range <= value) {
-      Log(LOG_ERR, "WARN ( %s/%s ): [%s] Range value is expected in format low-high. '%llu-%llu'.\n",
+      Log(LOG_ERR, "WARN ( %s/%s ): [%s] Range value is expected in format low-high. '%" PRIu64 "-%" PRIu64 "'.\n",
 			config.name, config.type, filename, value, range);
       changes++;
       break;
@@ -2143,11 +2143,11 @@ void custom_primitives_reconcile(struct custom_primitives_ptrs *cpptrs, struct c
       struct custom_primitive_entry *cpe = cpptrs->primitive[cpptrs_idx].ptr;
 
       if (cpptrs->primitive[cpptrs_idx].off != PM_VARIABLE_LENGTH) { 
-        Log(LOG_DEBUG, "DEBUG ( %s/%s ): Custom primitive '%s': type=%llx off=%u len=%u\n", config.name, config.type,
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): Custom primitive '%s': type=%" PRIx64 " off=%u len=%u\n", config.name, config.type,
 	  cpptrs->primitive[cpptrs_idx].name, cpe->type, cpptrs->primitive[cpptrs_idx].off, cpe->len);
       }
       else {
-        Log(LOG_DEBUG, "DEBUG ( %s/%s ): Custom primitive '%s': type=%llx len=vlen\n", config.name, config.type,
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): Custom primitive '%s': type=%" PRIx64 " len=vlen\n", config.name, config.type,
 	  cpptrs->primitive[cpptrs_idx].name, cpe->type);
       } 
     }
@@ -2522,7 +2522,7 @@ void vlen_prims_debug(struct pkt_vlen_hdr_primitives *hdr)
     label_ptr = (pm_label_t *) ptr;
     ptr += PmLabelTSz;
 
-    Log(LOG_DEBUG, "DEBUG ( %s/%s ): vlen_prims_debug(): LABEL #%u: type: %llx len: %u val: %s\n",
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): vlen_prims_debug(): LABEL #%u: type: %" PRIx64 " len: %u val: %s\n",
 	config.name, config.type, x, label_ptr->type, label_ptr->len, ptr);
   }
 }

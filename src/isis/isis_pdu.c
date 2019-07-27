@@ -893,9 +893,7 @@ process_snp (int snp_type, int level, struct isis_circuit *circuit,
 {
   int retval = ISIS_OK;
   int cmp, own_lsp;
-  char typechar = ' ';
   int len;
-  struct isis_adjacency *adj;
   struct isis_complete_seqnum_hdr *chdr = NULL;
   struct isis_partial_seqnum_hdr *phdr = NULL;
   uint32_t found = 0, expected = 0;
@@ -910,7 +908,6 @@ process_snp (int snp_type, int level, struct isis_circuit *circuit,
   if (snp_type == ISIS_SNP_CSNP_FLAG)
     {
       /* getting the header info */
-      typechar = 'C';
       chdr =
 	(struct isis_complete_seqnum_hdr *) STREAM_PNT (circuit->rcv_stream);
       circuit->rcv_stream->getp += ISIS_CSNP_HDRLEN;
@@ -923,7 +920,6 @@ process_snp (int snp_type, int level, struct isis_circuit *circuit,
     }
   else
     {
-      typechar = 'P';
       phdr =
 	(struct isis_partial_seqnum_hdr *) STREAM_PNT (circuit->rcv_stream);
       circuit->rcv_stream->getp += ISIS_PSNP_HDRLEN;
@@ -1568,6 +1564,7 @@ int isis_send_pdu_p2p (struct isis_circuit *circuit, int level)
                     stream_get_endp (circuit->snd_stream), 0,
                     (struct sockaddr *) &sa,
                     sizeof (struct sockaddr_ll));
+  (void)written; //TODO treat error?
 
   return ISIS_OK;
 }

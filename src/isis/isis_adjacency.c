@@ -58,7 +58,6 @@ isis_new_adj (u_char * id, u_char * snpa, int level,
 	      struct isis_circuit *circuit)
 {
   struct isis_adjacency *adj;
-  int i;
 
   adj = adj_alloc (id);		/* P2P kludge */
 
@@ -133,7 +132,6 @@ isis_adj_state_change (struct isis_adjacency *adj, enum isis_adj_state state,
 		       const char *reason)
 {
   int old_state;
-  int level = adj->level;
   struct isis_circuit *circuit;
 
   old_state = adj->adj_state;
@@ -165,13 +163,11 @@ isis_adj_state_change (struct isis_adjacency *adj, enum isis_adj_state state,
 int
 isis_adj_expire (struct isis_adjacency *adj)
 {
-  int level;
 
   /*
    * Get the adjacency
    */
   assert (adj);
-  level = adj->level;
   memset(&adj->expire, 0, sizeof(struct timeval));
 
   /* trigger the adj expire event */

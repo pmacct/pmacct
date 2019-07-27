@@ -376,6 +376,7 @@ lsp_update_data (struct isis_lsp *lsp, struct stream *stream,
 		       ISIS_FIXED_HDR_LEN + ISIS_LSP_HDR_LEN,
 		       ntohs (lsp->lsp_header->pdu_len) - ISIS_FIXED_HDR_LEN
 		       - ISIS_LSP_HDR_LEN, &expected, &found, &lsp->tlv_data);
+  (void)retval; //TODO treat error
 
   if (found & TLVFLAG_DYN_HOSTNAME)
     {

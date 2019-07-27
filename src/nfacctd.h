@@ -311,7 +311,7 @@ struct data_hdr_v9 {
 /* CUSTOM TYPES END HERE */
 
 #define MAX_TPL_DESC_LIST 89
-static char *tpl_desc_list[] = {
+static char __attribute__((unused)) *tpl_desc_list[] = {
   "",
   "in bytes",
   "in packets",
@@ -383,7 +383,7 @@ static char *tpl_desc_list[] = {
 };
 
 #define MAX_OPT_TPL_DESC_LIST 100
-static char *opt_tpl_desc_list[] = {
+static char __attribute__((unused)) *opt_tpl_desc_list[] = {
   "",
   "scope", "", "",
   "", "", "",

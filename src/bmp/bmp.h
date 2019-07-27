@@ -41,7 +41,7 @@
 #define BMP_MSG_TLV_RM_LOC_RIB		9 /* draft-hsmit-bmp-extensible-routemon-msgs-00 */
 #define BMP_MSG_TYPE_MAX		9 /* set to the highest BMP_MSG_* value */
 
-static const char *bmp_msg_types[] = {
+static const char __attribute__((unused)) *bmp_msg_types[] = {
   "Route Monitoring",
   "Statistics Report",
   "Peer Down Notification",
@@ -66,7 +66,7 @@ struct bmp_common_hdr {
 #define BMP_PEER_TYPE_LOC_RIB	3 /* draft-evens-grow-bmp-local-rib-01 */ 
 #define BMP_PEER_TYPE_MAX	3 /* set to the highest BMP_PEER_TYPE_* value */
 
-static const char *bmp_peer_types[] = {
+static const char __attribute__((unused)) *bmp_peer_types[] = {
   "Global Instance Peer",
   "RD Instance Peer",
   "Local Instance Peer",
@@ -104,7 +104,7 @@ struct bmp_tlv_hdr {
 
 #define BMP_INIT_INFO_ENTRIES	8
 
-static const char *bmp_init_info_types[] = {
+static const char __attribute__((unused)) *bmp_init_info_types[] = {
   "string",
   "sysdescr",
   "sysname"  
@@ -123,12 +123,12 @@ static const char *bmp_init_info_types[] = {
 #define BMP_TERM_REASON_PERM	4
 #define BMP_TERM_REASON_MAX	4 /* set to the highest BMP_TERM_* value */
 
-static const char *bmp_term_info_types[] = {
+static const char __attribute__((unused)) *bmp_term_info_types[] = {
   "string",
   "reason"
 };
 
-static const char *bmp_term_reason_types[] = {
+static const char __attribute__((unused)) *bmp_term_reason_types[] = {
   "Session administratively closed",
   "Unspecified reason",
   "Out of resources",
@@ -201,7 +201,7 @@ struct bmp_peer {
 #define BMP_STATS_TYPE17	17 /* (64-bit Gauge) Number of routes in per-AFI/SAFI Abj-RIB-Out */
 #define BMP_STATS_MAX		17 /* set to the highest BMP_STATS_* value */
 
-static const char *bmp_stats_cnt_types[] = {
+static const char __attribute__((unused)) *bmp_stats_cnt_types[] = {
   "Number of prefixes rejected by inbound policy",
   "Number of (known) duplicate prefix advertisements",
   "Number of (known) duplicate withdraws",
@@ -237,7 +237,7 @@ struct bmp_stats_cnt_hdr {
 #define BMP_PEER_DOWN_DECFG		5
 #define BMP_PEER_DOWN_MAX		5 /* set to the highest BMP_PEER_DOWN_* value */
 
-static const char *bmp_peer_down_reason_types[] = {
+static const char __attribute__((unused)) *bmp_peer_down_reason_types[] = {
   "Reserved",
   "The local system closed the session",
   "The local system closed the session without a notification message",

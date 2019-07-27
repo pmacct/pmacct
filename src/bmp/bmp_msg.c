@@ -813,6 +813,8 @@ void bmp_process_msg_tlv_route_monitor(char **bmp_packet, u_int32_t *len, struct
 
       /* XXX: checks, ie. marker, message length, etc., bypassed */
       bgp_update_len = bgp_parse_update_msg(&bmd, tlv_update.value);
+      (void)bgp_update_len; //TODO check error
+
       bms->peer_str = saved_peer_str;
     }
     /* missing BMP peer up message, ie. case of replay/replication of BMP messages */

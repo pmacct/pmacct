@@ -40,15 +40,13 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 {
   struct bgp_misc_structs *bms;
   struct bgp_peer *peer;
-  struct bgp_attr *attr;
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
-  pid_t writer_pid = getpid();
+  (void)etype;
 
   if (!ri || !ri->peer || !event_type) return ERR; /* missing required parameters */
   if (!ri->peer->log && !output_data) return ERR; /* missing any output method */
 
   peer = ri->peer;
-  attr = ri->attr;
 
   bms = bgp_select_misc_db(peer->type);
   if (!bms) return ERR;
@@ -56,6 +54,10 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
   if (!strcmp(event_type, "dump")) etype = BGP_LOGDUMP_ET_DUMP;
   else if (!strcmp(event_type, "log")) etype = BGP_LOGDUMP_ET_LOG;
   else if (!strcmp(event_type, "lglass")) etype = BGP_LOGDUMP_ET_LG;
+
+#if defined(WITH_KAFKA) || defined(WITH_RABBITMQ)
+  pid_t writer_pid = getpid();
+#endif
 
 #ifdef WITH_RABBITMQ
   if ((bms->msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
@@ -71,6 +73,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
+    struct bgp_attr *attr;
+    attr = ri->attr;
     char ip_address[INET6_ADDRSTRLEN];
     json_t *obj = json_object();
 
@@ -221,8 +225,11 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(type);
   int peer_idx, have_it, ret = 0, amqp_ret = 0, kafka_ret = 0;
-  char log_filename[SRVBUFLEN], event_type[] = "log_init";
+  char log_filename[SRVBUFLEN];
+
+#if defined(WITH_KAFKA) || defined(WITH_RABBITMQ)
   pid_t writer_pid = getpid();
+#endif
 
   if (!bms || !peer) return ERR;
 
@@ -290,6 +297,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 
     if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
+      char event_type[] = "log_init";
       char ip_address[INET6_ADDRSTRLEN];
       json_t *obj = json_object();
 
@@ -338,11 +346,12 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(type);
-  char event_type[] = "log_close";
   struct bgp_peer_log *log_ptr;
-  void *amqp_log_ptr, *kafka_log_ptr;
   int ret = 0, amqp_ret = 0, kafka_ret = 0;
+
+#if defined(WITH_KAFKA) || defined(WITH_RABBITMQ)
   pid_t writer_pid = getpid();
+#endif
 
   if (!bms || !peer || !peer->log) return ERR;
 
@@ -357,8 +366,6 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 #endif
 
   log_ptr = peer->log;
-  amqp_log_ptr = peer->log->amqp_host;
-  kafka_log_ptr = peer->log->kafka_host;
 
   assert(peer->log->refcnt);
   peer->log->refcnt--;
@@ -368,6 +375,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 #ifdef WITH_JANSSON
     char ip_address[INET6_ADDRSTRLEN];
     json_t *obj = json_object();
+    char event_type[] = "log_close";
 
     json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq)));
     bgp_peer_log_seq_increment(&bms->log_seq);
@@ -388,6 +396,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
       write_and_free_json(log_ptr->fd, obj);
 
 #ifdef WITH_RABBITMQ
+    void *amqp_log_ptr;
     if (bms->msglog_amqp_routing_key) {
       add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
       amqp_ret = write_and_free_json_amqp(amqp_log_ptr, obj);
@@ -396,6 +405,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 #endif
 
 #ifdef WITH_KAFKA
+    void *kafka_log_ptr = peer->log->kafka_host;
     if (bms->msglog_kafka_topic) {
       add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
       kafka_ret = write_and_free_json_kafka(kafka_log_ptr, obj);
@@ -541,9 +551,11 @@ void bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *pee
 int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(type);
-  char event_type[] = "dump_init";
   int ret = 0, amqp_ret = 0, kafka_ret = 0;
+
+#if defined(WITH_KAFKA) || defined(WITH_RABBITMQ)
   pid_t writer_pid = getpid();
+#endif
 
   if (!bms || !peer || !peer->log) return ERR;
 
@@ -571,6 +583,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
 #ifdef WITH_JANSSON
     char ip_address[INET6_ADDRSTRLEN];
     json_t *obj = json_object();
+    char event_type[] = "dump_init";
 
     json_object_set_new_nocheck(obj, "timestamp", json_string(bms->dump.tstamp_str));
 
@@ -615,9 +628,11 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
 int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int output, int type)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(type);
-  char event_type[] = "dump_close";
   int ret = 0, amqp_ret = 0, kafka_ret = 0;
+
+#if defined(WITH_KAFKA) || defined(WITH_RABBITMQ)
   pid_t writer_pid = getpid();
+#endif
 
   if (!bms || !peer || !peer->log) return ERR;
 
@@ -633,6 +648,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
+    char event_type[] = "dump_close";
     char ip_address[INET6_ADDRSTRLEN];
     json_t *obj = json_object();
 
@@ -857,7 +873,7 @@ void bgp_handle_dump_event()
     }
 
     duration = time(NULL)-start;
-    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BGP tables - END (PID: %u TABLES: %u ENTRIES: %llu ET: %u) ***\n",
+    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BGP tables - END (PID: %u TABLES: %u ENTRIES: %" PRIu64 " ET: %u) ***\n",
 		config.name, bms->log_str, dumper_pid, tables_num, dump_elems, duration);
 
     exit_gracefully(0);

@@ -274,7 +274,7 @@ static const struct _protocols_struct _protocols[] = {
 };
 
 /* cps = custom primitive semantics */
-static const char *cps_type[] = {
+static const char __attribute__((unused)) *cps_type[] = {
   "",
   "u",
   "x",
@@ -284,7 +284,7 @@ static const char *cps_type[] = {
   "s"
 };
 
-static const int cps_flen[] = {
+static const int __attribute__((unused)) cps_flen[] = {
   0,
   3,
   5,
@@ -296,14 +296,14 @@ static const int cps_flen[] = {
   20
 };
 
-static const char *bgp_origin[] = {
+static const char __attribute__((unused)) *bgp_origin[] = {
   "i",
   "e",
   "u",
   ""
 };
 
-static const char *rpki_roa[] = {
+static const char __attribute__((unused)) *rpki_roa[] = {
   "u",
   "i",
   "v",

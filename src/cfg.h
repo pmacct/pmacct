@@ -583,5 +583,5 @@ EXT struct custom_primitives custom_primitives_registry;
 EXT pm_cfgreg_t custom_primitives_type;
 EXT int rows;
 
-static char default_proc_name[] = "default";
+static char __attribute__((unused)) default_proc_name[] = "default";
 #undef EXT

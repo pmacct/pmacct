@@ -115,7 +115,6 @@ parse_tlvs (char *areatag, u_char * stream, int size, u_int32_t * expected,
   struct in6_addr *ipv6_addr;
   struct ipv6_reachability *ipv6_reach;
   int prefix_octets;
-  u_char virtual;
   int value_len, retval = ISIS_OK;
   u_char *pnt = stream;
 
@@ -172,7 +171,6 @@ parse_tlvs (char *areatag, u_char * stream, int size, u_int32_t * expected,
 	       * |                        Virtual Flag                           | 
 	       * +-------+-------+-------+-------+-------+-------+-------+-------+
 	       */
-	      virtual = *pnt;	/* FIXME: what is the use for this? */
 	      pnt++;
 	      value_len++;
 	      /* +-------+-------+-------+-------+-------+-------+-------+-------+

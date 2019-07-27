@@ -39,9 +39,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int refresh_timeout, ret, pool_idx, recv_idx, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
-  struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
-  pid_t core_pid = ((struct channels_list_entry *)ptr)->core_pid;
   unsigned char *dataptr;
   struct tee_receiver *target = NULL;
   struct plugin_requests req;
@@ -49,8 +47,6 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   unsigned char *rgptr;
   int pollagain = TRUE;
   u_int32_t seq = 1, rg_err_count = 0;
-  time_t now;
-
 #ifdef WITH_ZMQ
   struct p_zmq_host *zmq_host = &((struct channels_list_entry *)ptr)->zmq_host;
 #else
@@ -132,8 +128,6 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (config.pipe_zmq) P_zmq_pipe_init(zmq_host, &pipe_fd, &seq);
   else setnonblocking(pipe_fd);
 
-  now = time(NULL);
-
   memset(pipebuf, 0, config.buffer_size);
   err_cant_bridge_af = 0;
 
@@ -166,8 +160,6 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
       reload_map = FALSE;
     }
-
-    now = time(NULL);
 
     recv_budget = 0;
     if (poll_bypass) {
@@ -207,7 +199,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           else {
             rg_err_count++;
             if (config.debug || (rg_err_count > MAX_RG_COUNT_ERR)) {
-              Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected (plugin_buffer_size=%llu plugin_pipe_size=%llu).\n",
+              Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected (plugin_buffer_size=%" PRIu64 " plugin_pipe_size=%" PRIu64 ").\n",
                         config.name, config.type, config.buffer_size, config.pipe_size);
               Log(LOG_WARNING, "WARN ( %s/%s ): Increase values or look for plugin_buffer_size, plugin_pipe_size in CONFIG-KEYS document.\n\n",
                         config.name, config.type);
@@ -241,7 +233,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       msg->payload = (pipebuf+sizeof(struct ch_buf_hdr)+PmsgSz);
 
       if (config.debug_internal_msg) 
-        Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received len=%llu seq=%u num_entries=%u\n",
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received len=%" PRIu64 " seq=%u num_entries=%u\n",
                 config.name, config.type, ((struct ch_buf_hdr *)pipebuf)->len, seq,
                 ((struct ch_buf_hdr *)pipebuf)->num);
 

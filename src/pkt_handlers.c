@@ -1010,7 +1010,6 @@ void etype_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs,
 
 void mpls_label_top_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
   u_int32_t *label = (u_int32_t *) pptrs->mpls_ptr;
 
@@ -1019,7 +1018,6 @@ void mpls_label_top_handler(struct channels_list_entry *chptr, struct packet_ptr
 
 void mpls_label_bottom_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
   u_int32_t lvalue = 0, *label = (u_int32_t *) pptrs->mpls_ptr;
 
@@ -1035,7 +1033,6 @@ void mpls_label_bottom_handler(struct channels_list_entry *chptr, struct packet_
 
 void mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
   u_int32_t lvalue = 0, *label = (u_int32_t *) pptrs->mpls_ptr;
 
@@ -1072,8 +1069,6 @@ void bgp_dst_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs
 
 void bgp_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct bgp_node *ret = (struct bgp_node *) pptrs->bgp_dst;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   struct bgp_info *nh_info = NULL;
 
@@ -1125,7 +1120,6 @@ void igp_dst_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs
 
 void igp_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct route_node *ret = (struct route_node *) pptrs->igp_dst;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
@@ -1215,7 +1209,6 @@ void tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
 
 void tunnel_src_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
 
@@ -1226,7 +1219,6 @@ void tunnel_src_mac_handler(struct channels_list_entry *chptr, struct packet_ptr
 
 void tunnel_dst_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
 
@@ -1237,7 +1229,6 @@ void tunnel_dst_mac_handler(struct channels_list_entry *chptr, struct packet_ptr
 
 void tunnel_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
 
@@ -1255,7 +1246,6 @@ void tunnel_src_host_handler(struct channels_list_entry *chptr, struct packet_pt
 
 void tunnel_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
 
@@ -1273,7 +1263,6 @@ void tunnel_dst_host_handler(struct channels_list_entry *chptr, struct packet_pt
 
 void tunnel_ip_proto_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
 
@@ -1282,7 +1271,6 @@ void tunnel_ip_proto_handler(struct channels_list_entry *chptr, struct packet_pt
 
 void tunnel_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
   u_int32_t tos = 0;
@@ -1301,7 +1289,6 @@ void tunnel_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs
 
 void tunnel_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
 
@@ -1316,7 +1303,6 @@ void tunnel_src_port_handler(struct channels_list_entry *chptr, struct packet_pt
 
 void tunnel_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
 
@@ -1329,7 +1315,6 @@ void tunnel_dst_port_handler(struct channels_list_entry *chptr, struct packet_pt
 
 void vxlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   u_char *vni_ptr;
 
@@ -1654,7 +1639,6 @@ void sampling_direction_handler(struct channels_list_entry *chptr, struct packet
 
 void mpls_vpn_rd_frommap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
   if (pbgp && pptrs->bitr) memcpy(&pbgp->mpls_vpn_rd, &pptrs->bitr, sizeof(rd_t));
@@ -1662,7 +1646,6 @@ void mpls_vpn_rd_frommap_handler(struct channels_list_entry *chptr, struct packe
 
 void timestamp_start_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
 
   pnat->timestamp_start.tv_sec = ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_sec;
@@ -1673,7 +1656,6 @@ void timestamp_start_handler(struct channels_list_entry *chptr, struct packet_pt
 
 void timestamp_arrival_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
 
   pnat->timestamp_arrival.tv_sec = ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_sec;
@@ -1684,7 +1666,6 @@ void timestamp_arrival_handler(struct channels_list_entry *chptr, struct packet_
 
 void custom_primitives_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   u_char *pcust = (u_char *)((*data) + chptr->extras.off_custom_primitives);
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
   struct custom_primitive_entry *cpe;
@@ -2106,7 +2087,6 @@ void NF_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
 
 void NF_peer_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
@@ -2135,7 +2115,6 @@ void NF_peer_src_as_handler(struct channels_list_entry *chptr, struct packet_ptr
 
 void NF_peer_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
@@ -2165,7 +2144,6 @@ void NF_peer_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptr
 void NF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
@@ -2206,7 +2184,6 @@ void NF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
 
 void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_bgp_primitives *pbgp;
@@ -2695,8 +2672,6 @@ void NF_time_secs_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 void NF_time_new_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
-  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
 
   pdata->time_start.tv_sec = 0;
   pdata->time_start.tv_usec = 0;
@@ -2923,6 +2898,7 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
       break;
     case 5:
       is_sampled = ( ntohs(hdr->sampling) & 0xC000 );
+      (void)is_sampled; //TODO do something?
       srate = ( ntohs(hdr->sampling) & 0x3FFF );
       if (srate) pdata->primitives.sampling_rate = srate;
       break;
@@ -2972,7 +2948,6 @@ void NF_sampling_direction_handler(struct channels_list_entry *chptr, struct pac
 
 void NF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
@@ -3064,7 +3039,6 @@ void NF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet
 
 void NF_timestamp_end_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
@@ -3136,9 +3110,6 @@ void NF_timestamp_end_handler(struct channels_list_entry *chptr, struct packet_p
 
 void NF_timestamp_arrival_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
-  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
 
   gettimeofday(&pnat->timestamp_arrival, NULL);
@@ -3196,7 +3167,6 @@ void NF_sysid_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
 
 void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct utpl_field *utpl = NULL;
@@ -3275,7 +3245,6 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
 
 void NF_post_nat_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
@@ -3302,7 +3271,6 @@ void NF_post_nat_src_host_handler(struct channels_list_entry *chptr, struct pack
 
 void NF_post_nat_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
@@ -3329,7 +3297,6 @@ void NF_post_nat_dst_host_handler(struct channels_list_entry *chptr, struct pack
 
 void NF_post_nat_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
@@ -3356,7 +3323,6 @@ void NF_post_nat_src_port_handler(struct channels_list_entry *chptr, struct pack
 
 void NF_post_nat_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
@@ -3383,7 +3349,6 @@ void NF_post_nat_dst_port_handler(struct channels_list_entry *chptr, struct pack
 
 void NF_nat_event_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
@@ -3404,7 +3369,6 @@ void NF_nat_event_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 
 void NF_mpls_label_top_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
@@ -3425,7 +3389,6 @@ void NF_mpls_label_top_handler(struct channels_list_entry *chptr, struct packet_
 
 void NF_mpls_label_bottom_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
@@ -3454,7 +3417,6 @@ void NF_mpls_label_bottom_handler(struct channels_list_entry *chptr, struct pack
 
 void NF_mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
@@ -3489,7 +3451,6 @@ void NF_mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packe
 
 void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives); 
@@ -3520,7 +3481,6 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
 
 void NF_mpls_pw_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives); 
@@ -3541,7 +3501,6 @@ void NF_mpls_pw_id_handler(struct channels_list_entry *chptr, struct packet_ptrs
 
 void NF_vxlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
@@ -3770,6 +3729,7 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
     break;
   case 5:
     is_sampled = ( ntohs(hdr->sampling) & 0xC000 );
+    (void)is_sampled;
     srate = ( ntohs(hdr->sampling) & 0x3FFF );
     /* XXX: checking srate value instead of is_sampled as Sampling
        Mode seems not to be a mandatory field. */
@@ -4464,7 +4424,6 @@ void nfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
 
 void bgp_peer_src_as_frommap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
   struct bgp_info *info = NULL;
@@ -4502,7 +4461,6 @@ void bgp_peer_src_as_frommap_handler(struct channels_list_entry *chptr, struct p
 
 void bgp_src_local_pref_frommap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
   pbgp->src_local_pref = pptrs->blp;
@@ -4510,7 +4468,6 @@ void bgp_src_local_pref_frommap_handler(struct channels_list_entry *chptr, struc
 
 void bgp_src_med_frommap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
   pbgp->src_med = pptrs->bmed;
@@ -4665,8 +4622,6 @@ void SF_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 void SF_flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  SFSample *sample = (SFSample *) pptrs->f_data;
-
   pdata->flo_num = 1;
 }
 
@@ -4805,7 +4760,6 @@ void SF_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
 
 void SF_as_path_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
   struct pkt_legacy_bgp_primitives *plbgp = (struct pkt_legacy_bgp_primitives *) ((*data) + chptr->extras.off_pkt_lbgp_primitives);
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
@@ -4861,7 +4815,6 @@ void SF_as_path_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
 
 void SF_peer_src_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
@@ -4873,7 +4826,6 @@ void SF_peer_src_as_handler(struct channels_list_entry *chptr, struct packet_ptr
 
 void SF_peer_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
@@ -4885,7 +4837,6 @@ void SF_peer_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptr
 
 void SF_local_pref_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
@@ -4897,7 +4848,6 @@ void SF_local_pref_handler(struct channels_list_entry *chptr, struct packet_ptrs
 
 void SF_std_comms_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
   struct pkt_legacy_bgp_primitives *plbgp = (struct pkt_legacy_bgp_primitives *) ((*data) + chptr->extras.off_pkt_lbgp_primitives);
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
@@ -4955,7 +4905,6 @@ void SF_std_comms_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 
 void SF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data;
 
@@ -4971,7 +4920,6 @@ void SF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
 
 void SF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
   struct pkt_bgp_primitives *pbgp;
   int use_ip_next_hop = FALSE;
@@ -5066,9 +5014,7 @@ void SF_sampling_direction_handler(struct channels_list_entry *chptr, struct pac
 
 void SF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
-  SFSample *sample = (SFSample *) pptrs->f_data;
 
   gettimeofday(&pnat->timestamp_start, NULL);
   if (chptr->plugin->cfg.timestamps_secs) pnat->timestamp_start.tv_usec = 0;
@@ -5076,9 +5022,7 @@ void SF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet
 
 void SF_timestamp_arrival_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
-  SFSample *sample = (SFSample *) pptrs->f_data;
 
   gettimeofday(&pnat->timestamp_arrival, NULL);
   if (chptr->plugin->cfg.timestamps_secs) pnat->timestamp_arrival.tv_usec = 0;
@@ -5165,7 +5109,6 @@ void sfprobe_sampling_handler(struct channels_list_entry *chptr, struct packet_p
 
 void SF_bgp_peer_src_as_fromstd_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
   pbgp->peer_src_as = 0;
@@ -5175,7 +5118,6 @@ void SF_bgp_peer_src_as_fromstd_handler(struct channels_list_entry *chptr, struc
 
 void SF_bgp_peer_src_as_fromext_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
   pbgp->peer_src_as = 0;
@@ -5185,7 +5127,6 @@ void SF_bgp_peer_src_as_fromext_handler(struct channels_list_entry *chptr, struc
 
 void SF_tunnel_src_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
 
@@ -5194,7 +5135,6 @@ void SF_tunnel_src_mac_handler(struct channels_list_entry *chptr, struct packet_
 
 void SF_tunnel_dst_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
 
@@ -5203,7 +5143,6 @@ void SF_tunnel_dst_mac_handler(struct channels_list_entry *chptr, struct packet_
 
 void SF_tunnel_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
 
@@ -5223,7 +5162,6 @@ void SF_tunnel_src_host_handler(struct channels_list_entry *chptr, struct packet
 
 void SF_tunnel_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
 
@@ -5243,7 +5181,6 @@ void SF_tunnel_dst_host_handler(struct channels_list_entry *chptr, struct packet
 
 void SF_tunnel_ip_proto_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
 
@@ -5252,7 +5189,6 @@ void SF_tunnel_ip_proto_handler(struct channels_list_entry *chptr, struct packet
 
 void SF_tunnel_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
 
@@ -5261,7 +5197,6 @@ void SF_tunnel_ip_tos_handler(struct channels_list_entry *chptr, struct packet_p
 
 void SF_tunnel_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
 
@@ -5276,7 +5211,6 @@ void SF_tunnel_src_port_handler(struct channels_list_entry *chptr, struct packet
 
 void SF_tunnel_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
 
@@ -5291,7 +5225,6 @@ void SF_tunnel_dst_port_handler(struct channels_list_entry *chptr, struct packet
 
 void SF_vxlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data;
 
@@ -5300,7 +5233,6 @@ void SF_vxlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
 
 void SF_mpls_pw_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data;
 
@@ -5309,7 +5241,6 @@ void SF_mpls_pw_id_handler(struct channels_list_entry *chptr, struct packet_ptrs
 
 void SF_mpls_label_top_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data;
   u_int32_t *label = (u_int32_t *) sample->lstk.stack;
@@ -5319,7 +5250,6 @@ void SF_mpls_label_top_handler(struct channels_list_entry *chptr, struct packet_
 
 void SF_mpls_label_bottom_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data;
   u_int32_t lvalue = 0, *label = (u_int32_t *) sample->lstk.stack;
@@ -5336,7 +5266,6 @@ void SF_mpls_label_bottom_handler(struct channels_list_entry *chptr, struct pack
 
 void SF_mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data;
   u_int32_t lvalue = 0, *label = (u_int32_t *) sample->lstk.stack;
@@ -5354,7 +5283,6 @@ void SF_mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packe
 
 void SF_custom_primitives_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   custom_primitives_handler(chptr, &sample->hdr_ptrs, data);
@@ -5492,7 +5420,6 @@ void dst_host_geoipv2_lookup_handler(struct channels_list_entry *chptr, struct p
 
 void src_host_country_geoipv2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
   MMDB_entry_data_list_s *entry_data_list = NULL;
   char other_country[] = "O1";
   int status;

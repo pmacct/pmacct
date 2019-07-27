@@ -83,7 +83,7 @@ static unsigned int crc_32_tab[] = { //
 };
 */
 
-Inline unsigned int cache_crc32(const unsigned char *buf, unsigned int len)
+static inline unsigned int cache_crc32(const unsigned char *buf, unsigned int len)
 {
   unsigned int hash = 5381;
   unsigned int i = 0;

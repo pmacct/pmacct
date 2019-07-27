@@ -86,7 +86,7 @@ void P_init_default_values()
   sa.num = config.print_cache_entries*AVERAGE_CHAIN_LEN;
   sa.size = sa.num*dbc_size;
 
-  Log(LOG_INFO, "INFO ( %s/%s ): cache entries=%d base cache memory=%llu bytes\n", config.name, config.type,
+  Log(LOG_INFO, "INFO ( %s/%s ): cache entries=%d base cache memory=%" PRIu64 " bytes\n", config.name, config.type,
 	config.print_cache_entries, ((config.print_cache_entries * dbc_size) + (2 * ((sa.num +
 	config.print_cache_entries) * sizeof(struct chained_cache *))) + sa.size));
 

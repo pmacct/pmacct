@@ -344,7 +344,6 @@ void null_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptr
 {
   register u_int32_t *family;
   u_int caplen = h->caplen;
-  u_char *p;
 
   if (caplen < 4) {
     pptrs->iph_ptr = NULL;
@@ -352,7 +351,6 @@ void null_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptr
   }
 
   family = (u_int32_t *) pptrs->packet_ptr;
-  p = pptrs->packet_ptr;
 
   if (*family == AF_INET || ntohl(*family) == AF_INET ) {
     pptrs->l3_proto = ETHERTYPE_IP;

@@ -60,7 +60,6 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct pkt_vlen_hdr_primitives *pvlen, empty_pvlen;
   struct networks_file_data nfd;
   struct primitives_ptrs prim_ptrs;
-  struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
   socklen_t cLen;
 
   /* poll() stuff */
@@ -79,8 +78,6 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   pm_setproctitle("%s [%s]", "IMT Plugin", config.name);
 
   if (config.proc_priority) {
-    int ret;
-
     ret = setpriority(PRIO_PROCESS, 0, config.proc_priority);
     if (ret) Log(LOG_WARNING, "WARN ( %s/%s ): proc_priority failed (errno: %d)\n", config.name, config.type, errno);
     else Log(LOG_INFO, "INFO ( %s/%s ): proc_priority set to %d\n", config.name, config.type, getpriority(PRIO_PROCESS, 0));
@@ -218,7 +215,6 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     /* doing server tasks */
     if (poll_fd[1].revents & POLLIN) {
       struct pollfd pfd;
-      int ret;
 
       sd2 = accept(sd, &cAddr, &cLen);
       setblocking(sd2);
@@ -356,7 +352,9 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     }
 
     if (poll_fd[0].revents & POLLIN) {
+#ifdef WITH_ZMQ
       read_data:
+#endif
       if (config.pipe_homegrown) {
         if (!pollagain) {
           seq++;
@@ -376,7 +374,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         if (((struct ch_buf_hdr *)pipebuf)->seq != seq) {
           rg_err_count++;
           if (config.debug || (rg_err_count > MAX_RG_COUNT_ERR)) {
-	    Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected (plugin_buffer_size=%llu plugin_pipe_size=%llu).\n",
+	    Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected (plugin_buffer_size=%" PRIu64 " plugin_pipe_size=%" PRIu64 ").\n",
 		config.name, config.type, config.buffer_size, config.pipe_size);
 	    Log(LOG_WARNING, "WARN ( %s/%s ): Increase values or look for plugin_buffer_size, plugin_pipe_size in CONFIG-KEYS document.\n\n",
 		config.name, config.type);
@@ -404,7 +402,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
 	if (config.debug_internal_msg) 
-	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received len=%llu seq=%u num_entries=%u\n",
+	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received len=%" PRIu64 " seq=%u num_entries=%u\n",
 		config.name, config.type, ((struct ch_buf_hdr *)pipebuf)->len, seq,
 		((struct ch_buf_hdr *)pipebuf)->num);
 

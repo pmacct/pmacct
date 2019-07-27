@@ -12,4 +12,4 @@ libpmisis_la_SOURCES = isis.c checksum.c dict.c table.c prefix.c	\
 	isis_lsp.h isis_misc.h isis_network.h isis_pdu.h isis_route.h	\
 	isis_spf.h isis_tlv.h iso_checksum.h iso.h linklist.h		\
 	prefix.h sockunion.h stream.h table.h thread.h
-libpmisis_la_CFLAGS = -I$(srcdir)/.. $(AM_CFLAGS)
+libpmisis_la_CFLAGS = -I$(srcdir)/.. $(AM_CFLAGS) -Wno-error=pointer-sign

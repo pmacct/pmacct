@@ -40,11 +40,12 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
 {
   telemetry_misc_structs *tms;
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = TELEMETRY_LOGDUMP_ET_NONE;
-  pid_t writer_pid = getpid();
+  (void)etype;
 
-  u_char *base64_tdata = NULL;
-  size_t base64_tdata_len = 0;
-  
+#if defined(WITH_KAFKA) || defined(WITH_RABBITMQ)
+  pid_t writer_pid = getpid();
+#endif
+
   if (!peer || !peer->log || !log_data || !log_data_len || !t_data || !event_type) return ERR;
 
   tms = bgp_select_misc_db(FUNC_TYPE_TELEMETRY);
@@ -68,6 +69,8 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
+    u_char *base64_tdata = NULL;
+    size_t base64_tdata_len = 0;
     json_t *obj = json_object();
 
     json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
@@ -260,6 +263,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
   telemetry_misc_structs *tms = bgp_select_misc_db(FUNC_TYPE_TELEMETRY);
   char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
   char latest_filename[SRVBUFLEN], event_type[] = "dump", *fd_buf = NULL;
+  (void)event_type;
   int ret, peers_idx, duration, tables_num;
   pid_t dumper_pid;
   time_t start;
@@ -404,7 +408,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
 
     duration = time(NULL)-start;
 
-    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping telemetry data - END (PID: %u, PEERS: %u ENTRIES: %llu ET: %u) ***\n",
+    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping telemetry data - END (PID: %u, PEERS: %u ENTRIES: %" PRIu64 " ET: %u) ***\n",
                 config.name, t_data->log_str, dumper_pid, tables_num, dump_elems, duration);
 
     exit_gracefully(0);

@@ -66,7 +66,10 @@ void skinny_bgp_daemon()
 
 void skinny_bgp_daemon_online()
 {
-  int ret, rc, peers_idx, allowed, yes=1, no=0;
+  int ret, rc, peers_idx, allowed, yes=1;
+#if (defined IPV6_BINDV6ONLY)
+  int no=0;
+#endif
   int peers_idx_rr = 0, peers_xconnect_idx_rr = 0, max_peers_idx = 0;
   struct plugin_requests req;
   struct host_addr addr;

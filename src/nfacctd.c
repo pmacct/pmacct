@@ -105,7 +105,7 @@ int main(int argc,char **argv, char **envp)
   struct packet_ptrs_vector pptrs;
   char config_file[SRVBUFLEN];
   unsigned char *netflow_packet;
-  int logf, rc, yes=1, no=0, allowed;
+  int logf, rc, yes=1, allowed;
   struct host_addr addr;
   struct hosts_table allow;
   struct id_table bpas_table;
@@ -116,7 +116,7 @@ int main(int argc,char **argv, char **envp)
   struct id_table bitr_table;
   struct id_table sampling_table;
   u_int32_t idx;
-  int pipe_fd = 0, ret;
+  int ret;
   int capture_methods = 0;
 
   struct sockaddr_storage server, client;
@@ -633,6 +633,7 @@ int main(int argc,char **argv, char **envp)
 
 #ifdef WITH_ZMQ
   else if (config.nfacctd_zmq_address) {
+    int pipe_fd = 0;
     NF_init_zmq_host(&nfacctd_zmq_host, &pipe_fd);
     recv_pptrs.pkthdr = &recv_pkthdr;
 

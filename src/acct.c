@@ -38,7 +38,7 @@ struct acc *search_accounting_structure(struct primitives_ptrs *prim_ptrs)
   struct pkt_mpls_primitives *pmpls = prim_ptrs->pmpls;
   struct pkt_tunnel_primitives *ptun = prim_ptrs->ptun;
   u_char *pcust = prim_ptrs->pcust;
-  struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
+  //struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
   struct acc *elem_acc;
   unsigned int hash, pos;
   unsigned int pp_size = sizeof(struct pkt_primitives); 
@@ -111,6 +111,7 @@ int compare_accounting_structure(struct acc *elem, struct primitives_ptrs *prim_
 
   if (ptun && elem->ptun) res_tun = memcmp(elem->ptun, ptun, sizeof(struct pkt_tunnel_primitives));
   else res_tun = FALSE;
+  (void)res_tun; //TODO check error
 
   if (pcust && elem->pcust) res_cust = memcmp(elem->pcust, pcust, config.cpptrs.len);
   else res_cust = FALSE;

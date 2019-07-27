@@ -47,12 +47,12 @@ void load_plugins(struct plugin_requests *req)
   socklen_t l = sizeof(list->cfg.pipe_size);
   struct channels_list_entry *chptr = NULL;
 
-  char username[SHORTBUFLEN], password[SHORTBUFLEN];
  
   init_random_seed(); 
   init_pipe_channels();
  
 #ifdef WITH_ZMQ
+  char username[SHORTBUFLEN], password[SHORTBUFLEN];
   memset(username, 0, sizeof(username));
   memset(password, 0, sizeof(password));
 
@@ -153,7 +153,7 @@ void load_plugins(struct plugin_requests *req)
         }
 
         if (list->cfg.debug || (list->cfg.pipe_size > WARNING_PIPE_SIZE)) {
-	  Log(LOG_INFO, "INFO ( %s/%s ): plugin_pipe_size=%llu bytes plugin_buffer_size=%llu bytes\n", 
+	  Log(LOG_INFO, "INFO ( %s/%s ): plugin_pipe_size=%" PRIu64 " bytes plugin_buffer_size=%" PRIu64 " bytes\n", 
 		list->name, list->type.string, list->cfg.pipe_size, list->cfg.buffer_size);
 	  if (target_buflen <= snd_buflen) 
             Log(LOG_INFO, "INFO ( %s/%s ): ctrl channel: obtained=%d bytes target=%d bytes\n",
@@ -356,7 +356,7 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
   pm_id_t saved_tag = 0, saved_tag2 = 0;
   pt_label_t saved_label;
 
-  int num, ret, fixed_size;
+  int num, fixed_size;
   u_int32_t savedptr;
   char *bptr;
   int index, got_tags = FALSE;
@@ -487,7 +487,7 @@ reprocess:
 
         if (config.debug_internal_msg) {
 	  struct plugins_list_entry *list = channels_list[index].plugin;
-	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer released len=%llu seq=%u num_entries=%u off=%llu\n",
+	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer released len=%" PRIu64 " seq=%u num_entries=%u off=%" PRIu64 "\n",
 		list->name, list->type.string, channels_list[index].bufptr, channels_list[index].hdr.seq,
 		channels_list[index].hdr.num, channels_list[index].status->last_buf_off);
 	}
@@ -497,7 +497,8 @@ reprocess:
 #ifdef WITH_ZMQ
           struct channels_list_entry *chptr = &channels_list[index];
 
-	  ret = p_zmq_topic_send(&chptr->zmq_host, chptr->rg.ptr, chptr->bufsize);
+	  int ret = p_zmq_topic_send(&chptr->zmq_host, chptr->rg.ptr, chptr->bufsize);
+          (void)ret; //Check error?
 #endif
 	}
 	else {

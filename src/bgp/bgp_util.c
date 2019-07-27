@@ -87,7 +87,6 @@ int bgp_str2rd(rd_t *output, char *value)
   struct host_addr a;
   char *endptr, *token;
   u_int32_t tmp32;
-  u_int16_t tmp16;
   struct rd_ip  *rdi;
   struct rd_as  *rda;
   struct rd_as4 *rda4;
@@ -734,6 +733,7 @@ void bgp_peer_info_delete(struct bgp_peer *peer)
 {
   struct bgp_rt_structs *inter_domain_routing_db = bgp_select_routing_db(peer->type);
   struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
+  (void)bms; //TODO treat errors?
   struct bgp_table *table;
   afi_t afi;
   safi_t safi;
@@ -862,11 +862,10 @@ void evaluate_comm_patterns(char *dst, char *src, char **patterns, int dstlen)
 {
   char *ptr, *haystack, *delim_src, *delim_ptn;
   char local_ptr[MAX_BGP_STD_COMMS], *auxptr;
-  int idx, i, j, srclen;
+  int idx, i, j;
 
   if (!src || !dst || !dstlen) return;
 
-  srclen = strlen(src);
   memset(dst, 0, dstlen);
 
   for (idx = 0, j = 0; patterns[idx]; idx++) {

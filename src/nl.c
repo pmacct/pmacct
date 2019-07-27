@@ -623,8 +623,6 @@ int gtp_tunnel_func(register struct packet_ptrs *pptrs)
 {
   register u_int16_t caplen = ((struct pcap_pkthdr *)pptrs->pkthdr)->caplen;
   struct pm_gtphdr_v0 *gtp_hdr_v0 = (struct pm_gtphdr_v0 *) pptrs->payload_ptr;
-  struct pm_gtphdr_v1 *gtp_hdr_v1 = (struct pm_gtphdr_v1 *) pptrs->payload_ptr;
-  struct pm_udphdr *udp_hdr = (struct pm_udphdr *) pptrs->tlh_ptr;
   u_int16_t off = pptrs->payload_ptr-pptrs->packet_ptr;
   u_int16_t gtp_hdr_len, gtp_version;
   u_char *ptr = pptrs->payload_ptr;

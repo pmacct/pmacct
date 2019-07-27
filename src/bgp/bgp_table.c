@@ -94,6 +94,7 @@ static struct bgp_node *
 bgp_node_set (struct bgp_peer *peer, struct bgp_table *table, struct prefix *prefix)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
+  (void)bms;
   struct bgp_node *node;
   
   node = bgp_node_create (peer);
@@ -334,6 +335,7 @@ struct bgp_node *
 bgp_node_get (struct bgp_peer *peer, struct bgp_table *const table, struct prefix *p)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
+  (void)bms;
   struct bgp_node *new;
   struct bgp_node *node;
   struct bgp_node *match;

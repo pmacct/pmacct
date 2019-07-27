@@ -281,6 +281,7 @@ void rpki_rtr_parse_ipv4_prefix(struct rpki_rtr_handle *cache, struct rpki_rtr_i
   struct prefix_ipv4 p;
   as_t asn;
   int ret;
+  (void)ret; //TODO check all ret errors
 
   memset(&p, 0, sizeof(p));
   p.family = AF_INET;
@@ -320,6 +321,7 @@ void rpki_rtr_parse_ipv6_prefix(struct rpki_rtr_handle *cache, struct rpki_rtr_i
   struct prefix_ipv6 p;
   as_t asn;
   int ret;
+  (void)ret; //TODO check all ret errors
 
   memset(&p, 0, sizeof(p));
   p.family = AF_INET6;
@@ -684,8 +686,8 @@ void rpki_rtr_recv_error_report(struct rpki_rtr_handle *cache)
 {
   struct rpki_rtr_err_report erm;
   ssize_t msglen;
-  char *ermbuf = NULL, *encpdu_ptr, *errmsg_ptr;
-  u_int32_t *encpdu_len, *errmsg_len;
+  char *ermbuf = NULL, *errmsg_ptr;
+  u_int32_t *encpdu_len;
 
   if (cache->fd > 0) {
     if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/core/RPKI ): rpki_rtr_recv_error_report()\n", config.name);
@@ -713,8 +715,6 @@ void rpki_rtr_recv_error_report(struct rpki_rtr_handle *cache)
       ermbuf[rem_len] = '\0';
 
       encpdu_len = (u_int32_t *) ermbuf;
-      encpdu_ptr = (char *) (ermbuf + 4);
-      errmsg_len = (u_int32_t *)(char *)(ermbuf + (*encpdu_len) + 4);
       errmsg_ptr = (char *) (ermbuf + (*encpdu_len) + 4 + 4);
 
       Log(LOG_WARNING, "WARN ( %s/core/RPKI ): rpki_rtr_recv_error_report(): %s\n", config.name, errmsg_ptr);
