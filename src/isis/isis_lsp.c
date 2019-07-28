@@ -670,8 +670,10 @@ lsp_next_frag (u_char frag_num, struct isis_lsp *lsp0, struct isis_area *area,
       lsp_clear_data (lsp);
       if (lsp0->tlv_data.auth_info.type)
 	{
-	  memcpy (&lsp->tlv_data.auth_info, &lsp->tlv_data.auth_info,
+	  /* FIXME: this is broken. Detected by GCC 8.3
+           memcpy (&lsp->tlv_data.auth_info, &lsp->tlv_data.auth_info,
 		  sizeof (struct isis_passwd));
+          */
 	  tlv_add_authinfo (lsp->tlv_data.auth_info.type,
 			    lsp->tlv_data.auth_info.len,
 			    lsp->tlv_data.auth_info.passwd, lsp->pdu);
@@ -689,8 +691,10 @@ lsp_next_frag (u_char frag_num, struct isis_lsp *lsp0, struct isis_area *area,
    */
   if (lsp0->tlv_data.auth_info.type)
     {
+      /* FIXME: this is broken. Detected by GCC 8.3
       memcpy (&lsp->tlv_data.auth_info, &lsp->tlv_data.auth_info,
 	      sizeof (struct isis_passwd));
+      */
       tlv_add_authinfo (lsp->tlv_data.auth_info.type,
 			lsp->tlv_data.auth_info.len,
 			lsp->tlv_data.auth_info.passwd, lsp->pdu);
