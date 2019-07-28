@@ -35,7 +35,7 @@ u_int32_t class_trivial_hash_rnd = 140281;
 
 void init_classifiers(char *path)
 {
-  char fname[MAX_FN_LEN];
+  char fname[2*MAX_FN_LEN+2]; //Allow space for %s/%s
   struct dirent **namelist;
   struct stat st;
   struct pkt_classifier css;
