@@ -46,7 +46,7 @@ void evaluate_packet_handlers()
 
   while (channels_list[index].aggregation) { 
     primitives = 0;
-    memset(&channels_list[index].phandler, 0, N_PRIMITIVES);
+    memset(&channels_list[index].phandler, 0, N_PRIMITIVES*sizeof(pkt_handler));
 
 #if defined (HAVE_L2)
     if (channels_list[index].aggregation & (COUNT_SRC_MAC|COUNT_SUM_MAC)) {
