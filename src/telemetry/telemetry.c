@@ -67,7 +67,7 @@ void telemetry_daemon(void *t_data_void)
   struct telemetry_data *t_data = t_data_void;
   telemetry_peer_cache tpc;
 
-  int ret, rc, peers_idx, allowed, yes=1, no=0;
+  int ret, rc, peers_idx, allowed, yes=1;
   int peers_idx_rr = 0, max_peers_idx = 0, peers_num = 0;
   int data_decoder = 0, recv_flags = 0;
   u_int16_t port = 0;
@@ -312,6 +312,7 @@ void telemetry_daemon(void *t_data_void)
 #endif
 
 #if (defined IPV6_BINDV6ONLY)
+    int no=0;
     rc = setsockopt(config.telemetry_sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IPV6_BINDV6ONLY (errno: %d).\n", config.name, t_data->log_str, errno);
 #endif

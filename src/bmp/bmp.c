@@ -57,7 +57,7 @@ void nfacctd_bmp_wrapper()
 
 void skinny_bmp_daemon()
 {
-  int ret, rc, peers_idx, allowed, yes=1, no=0;
+  int ret, rc, peers_idx, allowed, yes=1;
   int peers_idx_rr = 0, max_peers_idx = 0;
   u_int32_t pkt_remaining_len=0;
   time_t now;
@@ -232,6 +232,7 @@ void skinny_bmp_daemon()
 #endif
 
 #if (defined IPV6_BINDV6ONLY)
+  int no=0;
   rc = setsockopt(config.bmp_sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
   if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IPV6_BINDV6ONLY (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
 #endif
