@@ -3816,7 +3816,7 @@ void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_
         cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_HEX) {
       if (formatted) {
 	snprintf(format, SRVBUFLEN, "%%-%d", cps_flen[cp_entry->len] > strlen(cp_entry->name) ? cps_flen[cp_entry->len] : (int)strlen(cp_entry->name));
-	strncat(format, "s", SRVBUFLEN);
+	strncat(format, "s", SRVBUFLEN - 1);
       }
       else snprintf(format, SRVBUFLEN, "%s", "%s");
     }
@@ -3824,7 +3824,7 @@ void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_
 	     cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
       if (formatted) {
 	snprintf(format, SRVBUFLEN, "%%-%d", cp_entry->len > strlen(cp_entry->name) ? cp_entry->len : (int)strlen(cp_entry->name));
-	strncat(format, "s", SRVBUFLEN);
+	strncat(format, "s", SRVBUFLEN - 1);
       }
       else snprintf(format, SRVBUFLEN, "%s", "%s");
     }
@@ -3835,7 +3835,7 @@ void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_
       	
       if (formatted) {
         snprintf(format, SRVBUFLEN, "%%-%d", len > strlen(cp_entry->name) ? len : (int)strlen(cp_entry->name));
-        strncat(format, "s", SRVBUFLEN);
+        strncat(format, "s", SRVBUFLEN - 1);
       }
       else snprintf(format, SRVBUFLEN, "%s", "%s");
     }
@@ -3844,7 +3844,7 @@ void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_
 
       if (formatted) {
         snprintf(format, SRVBUFLEN, "%%-%d", len > strlen(cp_entry->name) ? len : (int)strlen(cp_entry->name));
-        strncat(format, "s", SRVBUFLEN);
+        strncat(format, "s", SRVBUFLEN - 1);
       }
       else snprintf(format, SRVBUFLEN, "%s", "%s");
     }
