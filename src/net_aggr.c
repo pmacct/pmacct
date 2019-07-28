@@ -1649,9 +1649,10 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
 		nt->table6[index].as, net_string, nt->table6[index].masknum); 
 	}
 	if (!nt->table6[index].mask[0] && !nt->table6[index].mask[1] &&
-	    !nt->table6[index].mask[2] && !nt->table6[index].mask[3])
+	    !nt->table6[index].mask[2] && !nt->table6[index].mask[3]) {
 	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] v6 contains a default route\n", config.name, config.type, filename);
 	  default_route_in_networks6_table = TRUE;
+        }
         index++;
       }
 
