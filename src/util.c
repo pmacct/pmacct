@@ -2168,7 +2168,7 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
         cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_HEX) {
       if (formatted) {
 	snprintf(format, VERYSHORTBUFLEN, "%%-%d", cps_flen[cp_entry->ptr->len] > strlen(cp_entry->ptr->name) ? cps_flen[cp_entry->ptr->len] : (int)strlen(cp_entry->ptr->name));
-	strncat(format, "s", VERYSHORTBUFLEN);
+	strncat(format, "s", VERYSHORTBUFLEN - 1);
       }
       else snprintf(format, VERYSHORTBUFLEN, "%s", "%s");
     }
@@ -2176,7 +2176,7 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
 	     cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
       if (formatted) {
 	snprintf(format, VERYSHORTBUFLEN, "%%-%d", cp_entry->ptr->len > strlen(cp_entry->ptr->name) ? cp_entry->ptr->len : (int)strlen(cp_entry->ptr->name));
-	strncat(format, "s", VERYSHORTBUFLEN);
+	strncat(format, "s", VERYSHORTBUFLEN - 1);
       }
       else snprintf(format, VERYSHORTBUFLEN, "%s", "%s");
     }
@@ -2187,7 +2187,7 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
       	
       if (formatted) {
         snprintf(format, VERYSHORTBUFLEN, "%%-%d", len > strlen(cp_entry->ptr->name) ? len : (int)strlen(cp_entry->ptr->name));
-        strncat(format, "s", VERYSHORTBUFLEN);
+        strncat(format, "s", VERYSHORTBUFLEN - 1);
       }
       else snprintf(format, VERYSHORTBUFLEN, "%s", "%s");
     }
@@ -2196,7 +2196,7 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
 
       if (formatted) {
         snprintf(format, VERYSHORTBUFLEN, "%%-%d", len > strlen(cp_entry->ptr->name) ? len : (int)strlen(cp_entry->ptr->name));
-        strncat(format, "s", VERYSHORTBUFLEN);
+        strncat(format, "s", VERYSHORTBUFLEN - 1);
       }
       else snprintf(format, VERYSHORTBUFLEN, "%s", "%s");
     }
@@ -2222,11 +2222,11 @@ void custom_primitive_value_print(char *out, int outlen, u_char *in, struct cust
 	snprintf(semantics, VERYSHORTBUFLEN, "%s", cps_type[cp_entry->ptr->semantics]); 
 
       if (formatted)
-        snprintf(format, VERYSHORTBUFLEN, "%%-%d%s",
+        snprintf(format, SHORTBUFLEN, "%%-%d%s",
 		cps_flen[cp_entry->ptr->len] > strlen(cp_entry->ptr->name) ? cps_flen[cp_entry->ptr->len] : (int)strlen(cp_entry->ptr->name), 
 		semantics);
       else
-        snprintf(format, VERYSHORTBUFLEN, "%%%s", semantics);
+        snprintf(format, SHORTBUFLEN, "%%%s", semantics);
 
       if (cp_entry->ptr->len == 1) {
         u_int8_t t8;
