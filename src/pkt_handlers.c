@@ -5420,6 +5420,7 @@ void dst_host_geoipv2_lookup_handler(struct channels_list_entry *chptr, struct p
 
 void src_host_country_geoipv2_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
+  struct pkt_data *pdata = (struct pkt_data *) *data;
   MMDB_entry_data_list_s *entry_data_list = NULL;
   char other_country[] = "O1";
   int status;

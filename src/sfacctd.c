@@ -110,7 +110,7 @@ int main(int argc,char **argv, char **envp)
   struct packet_ptrs_vector pptrs;
   char config_file[SRVBUFLEN];
   unsigned char *sflow_packet;
-  int logf, rc, yes=1, allowed;
+  int logf, rc, yes=1, no=0, allowed;
   struct host_addr addr;
   struct hosts_table allow;
   struct id_table bpas_table;
