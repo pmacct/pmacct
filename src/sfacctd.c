@@ -110,7 +110,7 @@ int main(int argc,char **argv, char **envp)
   struct packet_ptrs_vector pptrs;
   char config_file[SRVBUFLEN];
   unsigned char *sflow_packet;
-  int logf, rc, yes=1, no=0, allowed;
+  int logf, rc, yes=1, allowed;
   struct host_addr addr;
   struct hosts_table allow;
   struct id_table bpas_table;
@@ -702,6 +702,7 @@ int main(int argc,char **argv, char **envp)
 #endif
 
 #if (defined IPV6_BINDV6ONLY)
+    int no=0;
     rc = setsockopt(config.sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for IPV6_BINDV6ONLY.\n", config.name);
 #endif
