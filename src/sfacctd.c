@@ -702,9 +702,12 @@ int main(int argc,char **argv, char **envp)
 #endif
 
 #if (defined IPV6_BINDV6ONLY)
-    int no=0;
-    rc = setsockopt(config.sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
-    if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for IPV6_BINDV6ONLY.\n", config.name);
+    {
+      int no=0;
+
+      rc = setsockopt(config.sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
+      if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for IPV6_BINDV6ONLY.\n", config.name);
+    }
 #endif
 
     if (config.nfacctd_pipe_size) {

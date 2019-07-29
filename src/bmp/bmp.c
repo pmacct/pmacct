@@ -232,9 +232,12 @@ void skinny_bmp_daemon()
 #endif
 
 #if (defined IPV6_BINDV6ONLY)
-  int no=0;
-  rc = setsockopt(config.bmp_sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
-  if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IPV6_BINDV6ONLY (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
+  {
+    int no=0;
+
+    rc = setsockopt(config.bmp_sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
+    if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IPV6_BINDV6ONLY (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
+  }
 #endif
 
   if (config.nfacctd_bmp_pipe_size) {
