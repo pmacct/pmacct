@@ -293,7 +293,7 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
 
       /* 5a step: building final networks table */
       for (index = 0; index < tmpt->num; index++) {
-	int current, next;
+	int current = 0, next = 0;
 
         if (!index) {
 	  current = 0; next = eff_rows;
@@ -1607,7 +1607,7 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
 
       /* 5a step: building final networks table */
       for (index = 0; index < tmpt->num6; index++) {
-        int current, next;
+        int current = 0, next = 0;
 
         if (!index) {
           current = 0; next = eff_rows;
