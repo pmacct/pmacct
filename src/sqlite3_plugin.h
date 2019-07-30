@@ -22,6 +22,8 @@
 /* includes */
 #include <sqlite3.h>
 
+#include "sql_common.h"
+
 /* prototypes */
 void sqlite3_plugin(int, struct configuration *, void *);
 int SQLI_cache_dbop(struct DBdesc *, struct db_cache *, struct insert_data *);
@@ -40,13 +42,13 @@ void SQLI_init_default_values(struct insert_data *);
 void SQLI_sqlite3_get_version();
 
 /* variables */
-static char sqlite3_db[] = "/tmp/pmacct.db";
-static char sqlite3_table[] = "acct";
-static char sqlite3_table_v2[] = "acct_v2";
-static char sqlite3_table_v3[] = "acct_v3";
-static char sqlite3_table_v4[] = "acct_v4";
-static char sqlite3_table_v5[] = "acct_v5";
-static char sqlite3_table_v6[] = "acct_v6";
-static char sqlite3_table_v7[] = "acct_v7";
-static char sqlite3_table_v8[] = "acct_v8";
-static char sqlite3_table_bgp[] = "acct_bgp";
+extern char sqlite3_db[];
+extern char sqlite3_table[];
+extern char sqlite3_table_v2[];
+extern char sqlite3_table_v3[];
+extern char sqlite3_table_v4[];
+extern char sqlite3_table_v5[];
+extern char sqlite3_table_v6[];
+extern char sqlite3_table_v7[];
+extern char sqlite3_table_v8[];
+extern char sqlite3_table_bgp[];

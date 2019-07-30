@@ -26,8 +26,19 @@
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "sql_common.h"
+#include "sql_common_m.h"
 #include "sqlite3_plugin.h"
-#include "sql_common_m.c"
+
+char sqlite3_db[] = "/tmp/pmacct.db";
+char sqlite3_table[] = "acct";
+char sqlite3_table_v2[] = "acct_v2";
+char sqlite3_table_v3[] = "acct_v3";
+char sqlite3_table_v4[] = "acct_v4";
+char sqlite3_table_v5[] = "acct_v5";
+char sqlite3_table_v6[] = "acct_v6";
+char sqlite3_table_v7[] = "acct_v7";
+char sqlite3_table_v8[] = "acct_v8";
+char sqlite3_table_bgp[] = "acct_bgp";
 
 /* Functions */
 void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 
@@ -41,7 +52,6 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int ret, num, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
-  struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
   int datasize = ((struct channels_list_entry *)ptr)->datasize;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   pid_t core_pid = ((struct channels_list_entry *)ptr)->core_pid;
@@ -195,7 +205,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  else {
 	    rg_err_count++;
 	    if (config.debug || (rg_err_count > MAX_RG_COUNT_ERR)) {
-              Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected (plugin_buffer_size=%llu plugin_pipe_size=%llu).\n",
+              Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected (plugin_buffer_size=%" PRIu64 " plugin_pipe_size=%" PRIu64 ").\n",
                         config.name, config.type, config.buffer_size, config.pipe_size);
               Log(LOG_WARNING, "WARN ( %s/%s ): Increase values or look for plugin_buffer_size, plugin_pipe_size in CONFIG-KEYS document.\n\n",
                         config.name, config.type);
@@ -228,7 +238,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
       if (config.debug_internal_msg) 
-        Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received len=%llu seq=%u num_entries=%u\n",
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received len=%" PRIu64 " seq=%u num_entries=%u\n",
                 config.name, config.type, ((struct ch_buf_hdr *)pipebuf)->len, seq,
                 ((struct ch_buf_hdr *)pipebuf)->num);
 
@@ -264,7 +274,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
 int SQLI_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct insert_data *idata)
 {
-  char *ptr_values, *ptr_where, *ptr_mv, *ptr_set, *ptr_insert;
+  char *ptr_values, *ptr_where, *ptr_mv, *ptr_set;
   int num=0, num_set=0, ret=0, have_flows=0, len=0;
 
   if (idata->mv.last_queue_elem) {
@@ -285,7 +295,6 @@ int SQLI_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct inser
   ptr_where = where_clause;
   ptr_values = values_clause; 
   ptr_set = set_clause;
-  ptr_insert = insert_full_clause;
   memset(where_clause, 0, sizeof(where_clause));
   memset(values_clause, 0, sizeof(values_clause));
   memset(set_clause, 0, sizeof(set_clause));
@@ -325,8 +334,8 @@ int SQLI_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct inser
       strncpy(insert_full_clause, insert_clause, SPACELEFT(insert_full_clause));
       strncat(insert_full_clause, insert_counters_clause, SPACELEFT(insert_full_clause));
 #if defined HAVE_64BIT_COUNTERS
-      if (have_flows) snprintf(ptr_values, SPACELEFT(values_clause), ", %llu, %llu, %llu)", cache_elem->packet_counter, cache_elem->bytes_counter, cache_elem->flows_counter);
-      else snprintf(ptr_values, SPACELEFT(values_clause), ", %llu, %llu)", cache_elem->packet_counter, cache_elem->bytes_counter);
+      if (have_flows) snprintf(ptr_values, SPACELEFT(values_clause), ", %" PRIu64 ", %" PRIu64 ", %" PRIu64 ")", cache_elem->packet_counter, cache_elem->bytes_counter, cache_elem->flows_counter);
+      else snprintf(ptr_values, SPACELEFT(values_clause), ", %" PRIu64 ", %" PRIu64 ")", cache_elem->packet_counter, cache_elem->bytes_counter);
 #else
       if (have_flows) snprintf(ptr_values, SPACELEFT(values_clause), ", %lu, %lu, %lu)", cache_elem->packet_counter, cache_elem->bytes_counter, cache_elem->flows_counter);
       else snprintf(ptr_values, SPACELEFT(values_clause), ", %lu, %lu)", cache_elem->packet_counter, cache_elem->bytes_counter);
@@ -522,7 +531,7 @@ void SQLI_cache_purge(struct db_cache *queue[], int index, struct insert_data *i
   if (pqq_ptr) goto start;
   
   idata->elap_time = time(NULL)-start; 
-  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n", 
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %lu) ***\n", 
 		config.name, config.type, writer_pid, idata->qn, saved_index, idata->elap_time); 
 
   if (config.sql_trigger_exec) {

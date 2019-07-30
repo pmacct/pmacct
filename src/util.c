@@ -27,6 +27,15 @@
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
 #endif
+#ifdef WITH_MYSQL
+#include "mysql_plugin.h"
+#endif
+#ifdef WITH_PGSQL
+#include "pgsql_plugin.h"
+#endif
+#ifdef WITH_SQLITE3
+#include "sqlite3_plugin.h"
+#endif
 #include "pmacct-data.h"
 #include "ip_flow.h"
 #include "classifier.h"
