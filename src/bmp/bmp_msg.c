@@ -99,15 +99,6 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
     case BMP_MSG_ROUTE_MIRROR:
       bmp_process_msg_route_mirror(&bmp_packet_ptr, &msg_len, bmpp);
       break;
-    case BMP_MSG_TLV_RM_ADJ_RIB_IN:
-      bmp_process_msg_tlv_route_monitor(&bmp_packet_ptr, &msg_len, bmpp, BMP_MSG_TLV_RM_ADJ_RIB_IN);
-      break;
-    case BMP_MSG_TLV_RM_ADJ_RIB_OUT:
-      bmp_process_msg_tlv_route_monitor(&bmp_packet_ptr, &msg_len, bmpp, BMP_MSG_TLV_RM_ADJ_RIB_OUT);
-      break;
-    case BMP_MSG_TLV_RM_LOC_RIB:
-      bmp_process_msg_tlv_route_monitor(&bmp_packet_ptr, &msg_len, bmpp, BMP_MSG_TLV_RM_LOC_RIB);
-      break;
     default:
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: unknown message type (%u)\n",
 	  config.name, bms->log_str, peer->addr_str, bch->type);
@@ -725,109 +716,6 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
   }
 }
 
-void bmp_process_msg_tlv_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp, u_int8_t type)
-{
-  struct bgp_misc_structs *bms;
-  struct bgp_peer *peer, *bmpp_bgp_peer;
-  struct bmp_data bdata;
-  struct bmp_peer_hdr *bph;
-  struct bmp_rm_tlv tlv_flags, tlv_update;
-  char tstamp_str[SRVBUFLEN], peer_ip[INET6_ADDRSTRLEN];
-  int bgp_update_len;
-  void *ret;
-
-  if (!bmpp) return;
-
-  peer = &bmpp->self;
-  bms = bgp_select_misc_db(peer->type);
-
-  if (!bms) return;
-
-  memset(&bdata, 0, sizeof(bdata));
-
-  if (!(bph = (struct bmp_peer_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_peer_hdr)))) {
-    Log(LOG_INFO, "INFO ( %s/%s ): [%s] [tlv route] packet discarded: failed bmp_get_and_check_length() BMP peer hdr\n",
-        config.name, bms->log_str, peer->addr_str);
-    return;
-  }
-
-  bmp_peer_hdr_get_v_flag(bph, &bdata.family);
-  bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
-  bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
-  bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
-  bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
-
-  if (bdata.family) {
-    /* flags and BGP update TLVs are mandatory and imposed in strict order */ 
-    if (bmp_get_tlv_and_check_length(bmp_packet, len, &tlv_flags)) {
-      Log(LOG_INFO, "INFO ( %s/%s ): [%s] [tlv route] packet discarded: failed bmp_get_tlv_and_check_length() flags TLV\n",
-	  config.name, bms->log_str, peer->addr_str);
-      return;
-    }
-
-    if (bmp_get_tlv_and_check_length(bmp_packet, len, &tlv_update)) {
-      Log(LOG_INFO, "INFO ( %s/%s ): [%s] [tlv route] packet discarded: failed bmp_get_tlv_and_check_length() BGP update TLV\n",
-          config.name, bms->log_str, peer->addr_str);
-      return;
-    }
-
-    if (tlv_flags.type == BGP_MONITOR_TYPE_FLAGS && tlv_update.type == BGP_MONITOR_TYPE_UPDATE) {
-      bmp_tlv_route_monitor_get_type(type, &bdata.chars);
-      bmp_flag_tlv_is_post(&tlv_flags, &bdata.chars.is_post);
-      bmp_flag_tlv_is_2b_asn(&tlv_flags, &bdata.chars.is_2b_asn);
-    }
-    else {
-      Log(LOG_INFO, "INFO ( %s/%s ): [%s] [tlv route] packet discarded: flags and BGP update are mandatory TLVs\n",
-          config.name, bms->log_str, peer->addr_str);
-      return;
-    }
-
-    /* If no timestamp in BMP then let's generate one */
-    if (!bdata.tstamp.tv_sec) gettimeofday(&bdata.tstamp, NULL);
-
-    compose_timestamp(tstamp_str, SRVBUFLEN, &bdata.tstamp, TRUE,
-		      config.timestamps_since_epoch, config.timestamps_rfc3339,
-		      config.timestamps_utc);
-    addr_to_str(peer_ip, &bdata.peer_ip);
-
-    ret = pm_tfind(&bdata.peer_ip, &bmpp->bgp_peers, bgp_peer_host_addr_cmp);
-
-    /* XXX: in TLV-based Route Monitoring we should not be depending on Peer Up
-       but verifying one was received is still a good health check to perform;
-       the check should be made optional or relaxed in future? */
-    if (ret) {
-      char peer_str[] = "peer_ip", *saved_peer_str = bms->peer_str;
-      struct bmp_chars bmed_bmp;
-      struct bgp_msg_data bmd;
-
-      bmpp_bgp_peer = (*(struct bgp_peer **) ret);
-      memset(&bmd, 0, sizeof(bmd));
-      memset(&bmed_bmp, 0, sizeof(bmed_bmp));
-
-      bms->peer_str = peer_str;
-      bmd.peer = bmpp_bgp_peer;
-      bmd.extra.id = BGP_MSG_EXTRA_DATA_BMP;
-      bmd.extra.len = sizeof(bmed_bmp);
-      bmd.extra.data = &bmed_bmp;
-      bgp_msg_data_set_data_bmp(&bmed_bmp, &bdata);
-
-      /* XXX: checks, ie. marker, message length, etc., bypassed */
-      bgp_update_len = bgp_parse_update_msg(&bmd, tlv_update.value);
-      (void)bgp_update_len; //TODO check error
-
-      bms->peer_str = saved_peer_str;
-    }
-    /* missing BMP peer up message, ie. case of replay/replication of BMP messages */
-    else {
-      if (!log_notification_isset(&bmpp->missing_peer_up, bdata.tstamp.tv_sec)) {
-	log_notification_set(&bmpp->missing_peer_up, bdata.tstamp.tv_sec, BMP_MISSING_PEER_UP_LOG_TOUT);
-	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [tlv route] packet discarded: missing peer up BMP message for peer %s\n",
-		config.name, bms->log_str, peer->addr_str, peer_ip);
-      }
-    }
-  }
-}
-
 void bmp_common_hdr_get_len(struct bmp_common_hdr *bch, u_int32_t *len)
 {
   if (bch && len) (*len) = ntohl(bch->len);
@@ -896,37 +784,6 @@ void bmp_peer_hdr_get_o_flag(struct bmp_peer_hdr *bph, u_int8_t *is_out)
   if (bph && is_out) {
     if (bph->flags & BMP_PEER_FLAGS_ARO_O)  (*is_out) = TRUE;
     else (*is_out) = FALSE;
-  }
-}
-
-void bmp_flag_tlv_is_post(struct bmp_rm_tlv *btlv, u_int8_t *is_post)
-{
-  if (btlv && btlv->len >= BGP_MONITOR_FLAG_MIN_LEN && is_post) {
-    u_int8_t *ptr = btlv->value;
-
-    if ((u_int8_t)ptr[0] & BGP_MONITOR_FLAG_POST_POLICY) (*is_post) = TRUE;
-    else (*is_post) = FALSE;
-  }
-}
-
-void bmp_flag_tlv_is_2b_asn(struct bmp_rm_tlv *btlv, u_int8_t *is_2b_asn)
-{
-  if (btlv && btlv->len >= BGP_MONITOR_FLAG_MIN_LEN && is_2b_asn) {
-    u_int8_t *ptr = btlv->value;
-
-    if (!((u_int8_t)ptr[1] & BGP_MONITOR_FLAG_AS_PATH_4B)) (*is_2b_asn) = TRUE;
-    else (*is_2b_asn) = FALSE;
-  }
-}
-
-void bmp_tlv_route_monitor_get_type(u_int8_t type, struct bmp_chars *chars)
-{
-  if (chars) {
-    chars->is_out = FALSE;
-    chars->is_loc = FALSE;
-
-    if (type == BMP_MSG_TLV_RM_ADJ_RIB_OUT) (chars->is_out) = TRUE;
-    else if (type == BMP_MSG_TLV_RM_LOC_RIB) (chars->is_loc) = TRUE;
   }
 }
 

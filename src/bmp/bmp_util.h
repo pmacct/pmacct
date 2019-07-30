@@ -30,7 +30,6 @@
 #define EXT
 #endif
 EXT char *bmp_get_and_check_length(char **, u_int32_t *, u_int32_t);
-EXT int bmp_get_tlv_and_check_length(char **, u_int32_t *, struct bmp_rm_tlv *);
 EXT void bmp_jump_offset(char **, u_int32_t *, u_int32_t);
 EXT u_int32_t bmp_packet_adj_offset(char *, u_int32_t, u_int32_t, u_int32_t, char *);
 EXT void bmp_link_misc_structs(struct bgp_misc_structs *);

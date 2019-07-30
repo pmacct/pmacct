@@ -49,42 +49,6 @@ char *bmp_get_and_check_length(char **bmp_packet_ptr, u_int32_t *pkt_size, u_int
   return current_ptr;
 }
 
-int bmp_get_tlv_and_check_length(char **bmp_packet_ptr, u_int32_t *pkt_size, struct bmp_rm_tlv *btlv) 
-{
-  u_int16_t type, len;
-  int ret = TRUE;
-
-  if (bmp_packet_ptr && (*bmp_packet_ptr) && pkt_size && btlv) {
-    memset(btlv, 0, sizeof(struct bmp_rm_tlv));
-
-    /* check we have room for type (u_int16_t) and len (u_int16_t) fields */
-    if ((*pkt_size) >= 4) {
-      memcpy(&type, (*bmp_packet_ptr), 2); 
-      memcpy(&len, ((*bmp_packet_ptr) + 2), 2); 
-
-      type = ntohs(type);
-      len = ntohs(len);
-
-      (*pkt_size) -= 4;
-      (*bmp_packet_ptr) += 4;
-
-      /* check we have room for value field length */
-      if ((*pkt_size) >= len) {
-	btlv->type = type;
-	btlv->len = len;
-	btlv->value = (*bmp_packet_ptr);
-
-	(*pkt_size) -= len;
-	(*bmp_packet_ptr) += len;
-
-	ret = FALSE;
-      }
-    }
-  }
-
-  return ret;
-}
-
 void bmp_jump_offset(char **bmp_packet_ptr, u_int32_t *len, u_int32_t offset)
 {
   if (bmp_packet_ptr && (*bmp_packet_ptr) && len) {
