@@ -312,6 +312,10 @@ size_t Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
       uh->uh_sport = sa6->sin6_port;
       uh->uh_dport = ((struct sockaddr_in6 *)target)->sin6_port;
     }
+    else {
+      assert(0);
+      return msglen;
+    }
 
     uh->uh_ulen = htons(msg->len+UDPHdrSz);
     uh->uh_sum = 0;
