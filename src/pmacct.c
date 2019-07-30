@@ -670,7 +670,7 @@ int build_query_client(char *path_ptr)
 int main(int argc,char **argv)
 {
   int clibufsz = (MAX_QUERIES*sizeof(struct query_entry))+sizeof(struct query_header)+2;
-  struct pkt_data *acc_elem;
+  struct pkt_data *acc_elem = NULL;
   struct bucket_desc *bd;
   struct query_header q; 
   struct pkt_primitives empty_addr;
@@ -1638,7 +1638,7 @@ int main(int argc,char **argv)
 	  strlcpy(request.data.sampling_direction, match_string_token, sizeof(request.data.sampling_direction));
 	}
         else if (!strcmp(count_token[match_string_index], "proto")) {
-	  int proto;
+	  int proto = 0;
 
 	  if (!want_ipproto_num) {
 	    for (index = 0; _protocols[index].number != -1; index++) { 
@@ -1961,7 +1961,7 @@ int main(int argc,char **argv)
           }
         }
         else if (!strcmp(count_token[match_string_index], "tunnel_proto")) {
-	  int proto;
+	  int proto = 0;
 
 	  if (!want_ipproto_num) {
 	    for (index = 0; _protocols[index].number != -1; index++) { 
@@ -3078,6 +3078,9 @@ int Recv(int sd, unsigned char **buf)
 
 int check_data_sizes(struct query_header *qh, struct pkt_data *acc_elem)
 {
+  if (!acc_elem)
+    return -1;
+
   if (qh->cnt_sz != sizeof(acc_elem->pkt_len)) {
     printf("ERROR: Counter sizes mismatch: daemon: %d  client: %d\n", qh->cnt_sz*8, (int)sizeof(acc_elem->pkt_len)*8);
     printf("ERROR: It's very likely that a 64bit package has been mixed with a 32bit one.\n\n");
