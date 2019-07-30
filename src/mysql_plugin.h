@@ -28,6 +28,8 @@
 #include <mysql/mysql_version.h>
 #endif
 
+#include "sql_common.h"
+
 /* prototypes */
 void mysql_plugin(int, struct configuration *, void *);
 int MY_cache_dbop(struct DBdesc *, struct db_cache *, struct insert_data *);
@@ -46,16 +48,16 @@ void MY_init_default_values(struct insert_data *);
 void MY_mysql_get_version();
 
 /* variables */
-static char mysql_user[] = "pmacct";
-static char mysql_pwd[] = "arealsmartpwd";
-static unsigned int mysql_prt = 3306;
-static char mysql_db[] = "pmacct";
-static char mysql_table[] = "acct";
-static char mysql_table_v2[] = "acct_v2";
-static char mysql_table_v3[] = "acct_v3";
-static char mysql_table_v4[] = "acct_v4";
-static char mysql_table_v5[] = "acct_v5";
-static char mysql_table_v6[] = "acct_v6";
-static char mysql_table_v7[] = "acct_v7";
-static char mysql_table_v8[] = "acct_v8";
-static char mysql_table_bgp[] = "acct_bgp";
+extern char mysql_user[];
+extern char mysql_pwd[];
+extern unsigned int mysql_prt;
+extern char mysql_db[];
+extern char mysql_table[];
+extern char mysql_table_v2[];
+extern char mysql_table_v3[];
+extern char mysql_table_v4[];
+extern char mysql_table_v5[];
+extern char mysql_table_v6[];
+extern char mysql_table_v7[];
+extern char mysql_table_v8[];
+extern char mysql_table_bgp[];

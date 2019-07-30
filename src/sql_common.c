@@ -26,8 +26,8 @@
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "sql_common.h"
+#include "sql_common_m.h"
 #include "crc32.h"
-#include "sql_common_m.c"
 
 /* Functions */
 void sql_set_signals()
@@ -86,7 +86,7 @@ void sql_init_global_buffers()
   memset(&lru_head, 0, sizeof(lru_head));
   lru_tail = &lru_head;
 
-  Log(LOG_INFO, "INFO ( %s/%s ): cache entries=%llu base cache memory=%llu bytes\n", config.name, config.type,
+  Log(LOG_INFO, "INFO ( %s/%s ): cache entries=%d base cache memory=%luu bytes\n", config.name, config.type,
         config.sql_cache_entries, ((config.sql_cache_entries * sizeof(struct db_cache)) +
 	(2 * (qq_size * sizeof(struct db_cache *)))));
 
@@ -474,14 +474,12 @@ struct db_cache *sql_cache_search(struct primitives_ptrs *prim_ptrs, time_t base
   struct pkt_tunnel_primitives *ptun = prim_ptrs->ptun;
   u_char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
-  unsigned int modulo;
   struct db_cache *Cursor;
   struct insert_data idata;
   int res_data = TRUE, res_bgp = TRUE, res_nat = TRUE, res_mpls = TRUE, res_tun = TRUE;
   int res_cust = TRUE, res_vlen = TRUE;
 
   sql_cache_modulo(prim_ptrs, &idata);
-  modulo = idata.modulo;
 
   Cursor = &cache[idata.modulo];
 
@@ -933,7 +931,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
     else Log(LOG_WARNING, "WARN ( %s/%s ): Maximum number of writer processes reached (%d).\n", config.name, config.type, dump_writers_get_active());
   
     qq_ptr = pqq_ptr;
-    memcpy(queries_queue, pending_queries_queue, sizeof(queries_queue));
+    memcpy(queries_queue, pending_queries_queue, sizeof(*queries_queue));
 
     if (SafePtr) {
       queries_queue[qq_ptr] = Cursor;

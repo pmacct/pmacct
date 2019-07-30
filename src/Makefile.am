@@ -25,7 +25,7 @@ libdaemons_la_SOURCES = signals.c util.c plugin_hooks.c		\
 	thread_pool.c						\
 	plugin_cmn_custom.c
 
-libcommon_la_LIBADD  = 
+libcommon_la_LIBADD  =
 libcommon_la_CFLAGS  = $(AM_CFLAGS)
 
 # Builtin plugins
@@ -41,24 +41,24 @@ libdaemons_la_LIBADD += telemetry/libpmtelemetry.la
 libdaemons_la_LIBADD += libcommon.la
 libdaemons_la_CFLAGS  = $(AM_CFLAGS)
 if WITH_MYSQL
-libdaemons_la_SOURCES += mysql_plugin.c
+libdaemons_la_SOURCES += mysql_plugin.c sql_common_m.c
 libdaemons_la_LIBADD  += @MYSQL_LIBS@
-libdaemons_la_CFLAGS  += @MYSQL_CFLAGS@
+libdaemons_la_CFLAGS  += @MYSQL_CFLAGS@ -Wno-error=pointer-sign
 endif
 if WITH_PGSQL
-libdaemons_la_SOURCES += pgsql_plugin.c
+libdaemons_la_SOURCES += pgsql_plugin.c sql_common_m.c
 libdaemons_la_LIBADD  += @PGSQL_LIBS@
-libdaemons_la_CFLAGS  += @PGSQL_CFLAGS@
+libdaemons_la_CFLAGS  += @PGSQL_CFLAGS@ -Wno-error=pointer-sign
 endif
 if WITH_MONGODB
-libdaemons_la_SOURCES += mongodb_plugin.c
+libdaemons_la_SOURCES += mongodb_plugin.c sql_common_m.c
 libdaemons_la_LIBADD  += @MONGODB_LIBS@
-libdaemons_la_CFLAGS  += @MONGODB_CFLAGS@
+libdaemons_la_CFLAGS  += @MONGODB_CFLAGS@ -Wno-error=pointer-sign
 endif
 if WITH_SQLITE3
-libdaemons_la_SOURCES += sqlite3_plugin.c
+libdaemons_la_SOURCES += sqlite3_plugin.c sql_common_m.c
 libdaemons_la_LIBADD  += @SQLITE3_LIBS@
-libdaemons_la_CFLAGS  += @SQLITE3_CFLAGS@
+libdaemons_la_CFLAGS  += @SQLITE3_CFLAGS@ -Wno-error=pointer-sign
 endif
 if WITH_AVRO
 libdaemons_la_LIBADD  += @AVRO_LIBS@

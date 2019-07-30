@@ -3345,7 +3345,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *tmpbuf;
-  char tstamp_str[SRVBUFLEN], ndpi_class[SUPERSHORTBUFLEN], *label_ptr;
+  char tstamp_str[SRVBUFLEN], *label_ptr;
   json_t *obj = json_object();
   
   if (wtc & COUNT_TAG) json_object_set_new_nocheck(obj, "tag", json_integer((json_int_t)pbase->tag));
@@ -3363,6 +3363,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
     json_object_set_new_nocheck(obj, "class", json_string((pbase->class && class_table[(pbase->class)-1].id) ? class_table[(pbase->class)-1].protocol : "unknown"));
 
 #if defined (WITH_NDPI)
+  char ndpi_class[SUPERSHORTBUFLEN];
   if (wtc_2 & COUNT_NDPI_CLASS) {
     snprintf(ndpi_class, SUPERSHORTBUFLEN, "%s/%s",
 		pmc_ndpi_get_proto_name(pbase->ndpi_class.master_protocol),

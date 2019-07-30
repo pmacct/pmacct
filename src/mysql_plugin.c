@@ -26,8 +26,24 @@
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "sql_common.h"
+#include "sql_common_m.h"
 #include "mysql_plugin.h"
-#include "sql_common_m.c"
+
+
+/* variables */
+char mysql_user[] = "pmacct";
+char mysql_pwd[] = "arealsmartpwd";
+unsigned int mysql_prt = 3306;
+char mysql_db[] = "pmacct";
+char mysql_table[] = "acct";
+char mysql_table_v2[] = "acct_v2";
+char mysql_table_v3[] = "acct_v3";
+char mysql_table_v4[] = "acct_v4";
+char mysql_table_v5[] = "acct_v5";
+char mysql_table_v6[] = "acct_v6";
+char mysql_table_v7[] = "acct_v7";
+char mysql_table_v8[] = "acct_v8";
+char mysql_table_bgp[] = "acct_bgp";
 
 /* Functions */
 void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 
@@ -41,7 +57,6 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int ret, num, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
-  struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
   int datasize = ((struct channels_list_entry *)ptr)->datasize;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   pid_t core_pid = ((struct channels_list_entry *)ptr)->core_pid;
@@ -265,7 +280,7 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
 int MY_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct insert_data *idata)
 {
-  char *ptr_values, *ptr_where, *ptr_mv, *ptr_set, *ptr_insert;
+  char *ptr_values, *ptr_where, *ptr_mv, *ptr_set;
   int num=0, num_set=0, ret=0, have_flows=0, len=0;
 
   if (idata->mv.last_queue_elem) {
@@ -286,7 +301,6 @@ int MY_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct insert_
   ptr_where = where_clause;
   ptr_values = values_clause; 
   ptr_set = set_clause;
-  ptr_insert = insert_full_clause;
   memset(where_clause, 0, sizeof(where_clause));
   memset(values_clause, 0, sizeof(values_clause));
   memset(set_clause, 0, sizeof(set_clause));
@@ -536,7 +550,7 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   if (pqq_ptr) goto start;
   
   idata->elap_time = time(NULL)-start; 
-  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n", 
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %lu) ***\n", 
 		config.name, config.type, writer_pid, idata->qn, saved_index, idata->elap_time); 
 
   if (config.sql_trigger_exec) {

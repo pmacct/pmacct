@@ -19,6 +19,9 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef SQL_COMMON_H
+#define SQL_COMMON_H
+
 /* includes */
 #if (!defined __SQL_COMMON_EXPORT)
 #include <sys/poll.h>
@@ -423,3 +426,4 @@ EXT struct largebuf envbuf;
 EXT time_t now; /* PostgreSQL */
 #undef EXT
 #endif /* #if (!defined __SQL_COMMON_EXPORT) */
+#endif //SQL_COMMON_H
