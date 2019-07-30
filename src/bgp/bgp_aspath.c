@@ -36,7 +36,7 @@ assegment_data_new (int num)
   return (malloc(ASSEGMENT_DATA_SIZE (num, TRUE)));
 }
 
-static inline void
+__attribute__((unused)) static inline void
 assegment_data_free (as_t *asdata)
 {
   free(asdata);
