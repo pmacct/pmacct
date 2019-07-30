@@ -1080,7 +1080,7 @@ void mark_columns(char *buf)
 
 int Setsocksize(int s, int level, int optname, void *optval, socklen_t optlen)
 {
-  int ret, saved, value;
+  int ret = 0, saved, value;
   socklen_t len = sizeof(int);
 
   memcpy(&value, optval, sizeof(int));
