@@ -192,7 +192,8 @@ void
 lcommunity_unintern (struct bgp_peer *peer, struct lcommunity *lcom)
 {
   struct bgp_rt_structs *inter_domain_routing_db;
-  struct lcommunity *ret;
+  struct lcommunity *ret = NULL;
+  (void) ret;
 
   if (!peer) return;
 

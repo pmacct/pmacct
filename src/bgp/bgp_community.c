@@ -365,7 +365,8 @@ void
 community_unintern (struct bgp_peer *peer, struct community *com)
 {
   struct bgp_rt_structs *inter_domain_routing_db;
-  struct community *ret;
+  struct community *ret = NULL;
+  (void) ret;
 
   if (!peer) return;
   
