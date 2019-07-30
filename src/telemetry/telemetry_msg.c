@@ -308,6 +308,7 @@ int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf
   }
   else {
     Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_zmq_peer(): invalid telemetry node JSON received: %s.\n", config.name, t_data->log_str, json_err.text);
+    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): %s\n", config.name, t_data->log_str, buf);
     ret = ERR;
   }
 
