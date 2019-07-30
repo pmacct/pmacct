@@ -25,13 +25,10 @@ install:
   - cd libserdes && ./configure && make && sudo make install && cd ..
 
 env:
-  #All extensions
-  - CONFIG_FLAGS=--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes
-  - CONFIG_FLAGS=--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes
-
-  #No extensions
-  - CONFIG_FLAGS=--enable-debug
-  - CONFIG_FLAGS=
+  - CONFIG_FLAGS="--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes"
+  - CONFIG_FLAGS="--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes"
+  - CONFIG_FLAGS="--enable-debug"
+  - CONFIG_FLAGS=""
 
 
 script:
