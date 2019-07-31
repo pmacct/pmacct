@@ -19,8 +19,8 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#ifndef PRETAG_H
-#define PRETAG_H
+#ifndef PRETAG_HANDLERS_H
+#define PRETAG_HANDLERS_H
 
 /* prototypes */
 extern int PT_map_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
@@ -204,4 +204,4 @@ extern u_int32_t pcap_interfaces_map_lookup_ifname(struct pcap_interfaces *, cha
 extern struct pcap_interface *pcap_interfaces_map_getentry_by_ifname(struct pcap_interfaces *, char *);
 extern char *pcap_interfaces_map_getnext_ifname(struct pcap_interfaces *, int *);
 
-#endif //PRETAG_H
+#endif //PRETAG_HANDLERS_H

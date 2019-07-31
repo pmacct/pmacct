@@ -371,59 +371,41 @@ void PM_sigint_handler();
 void reload();
 void push_stats();
 void reload_maps();
-#if (!defined __PMACCTD_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void pm_pcap_device_initialize(struct pcap_devices *);
-EXT void pm_pcap_device_copy_all(struct pcap_devices *, struct pcap_devices *);
-EXT void pm_pcap_device_copy_entry(struct pcap_devices *, struct pcap_devices *, int);
-EXT int pm_pcap_device_getindex_byifname(struct pcap_devices *, char *);
-EXT pcap_t *pm_pcap_open(const char *, int, int, int, int, int, char *);
-EXT void pm_pcap_add_filter(struct pcap_device *);
-EXT int pm_pcap_add_interface(struct pcap_device *, char *, struct pcap_interface *, int);
-#undef EXT
+extern void pm_pcap_device_initialize(struct pcap_devices *);
+extern void pm_pcap_device_copy_all(struct pcap_devices *, struct pcap_devices *);
+extern void pm_pcap_device_copy_entry(struct pcap_devices *, struct pcap_devices *, int);
+extern int pm_pcap_device_getindex_byifname(struct pcap_devices *, char *);
+extern pcap_t *pm_pcap_open(const char *, int, int, int, int, int, char *);
+extern void pm_pcap_add_filter(struct pcap_device *);
+extern int pm_pcap_add_interface(struct pcap_device *, char *, struct pcap_interface *, int);
 
-#if (!defined __LL_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT char sll_mac[2][ETH_ADDR_LEN];
+extern char sll_mac[2][ETH_ADDR_LEN];
 
-EXT void null_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
-EXT void eth_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
-EXT void fddi_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
-EXT void tr_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
-EXT u_int16_t mpls_handler(u_char *, u_int16_t *, u_int16_t *, register struct packet_ptrs *);
-EXT void ppp_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
-EXT void ieee_802_11_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
-EXT void sll_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
-EXT void raw_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
-EXT u_char *llc_handler(const struct pcap_pkthdr *, u_int, register u_char *, register struct packet_ptrs *);
-EXT void chdlc_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
-#undef EXT
+extern void null_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
+extern void eth_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
+extern void fddi_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
+extern void tr_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
+extern u_int16_t mpls_handler(u_char *, u_int16_t *, u_int16_t *, register struct packet_ptrs *);
+extern void ppp_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
+extern void ieee_802_11_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
+extern void sll_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
+extern void raw_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
+extern u_char *llc_handler(const struct pcap_pkthdr *, u_int, register u_char *, register struct packet_ptrs *);
+extern void chdlc_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
 
-#if (!defined __NL_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT int ip_handler(register struct packet_ptrs *);
-EXT int ip6_handler(register struct packet_ptrs *);
-EXT int gtp_tunnel_func(register struct packet_ptrs *);
-EXT int gtp_tunnel_configurator(struct tunnel_handler *, char *);
-EXT void tunnel_registry_init();
-EXT void pcap_cb(u_char *, const struct pcap_pkthdr *, const u_char *);
-EXT int PM_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
-EXT void PM_print_stats(time_t);
-EXT void compute_once();
-EXT void reset_index_pkt_ptrs(struct packet_ptrs *);
-EXT void set_index_pkt_ptrs(struct packet_ptrs *);
-EXT ssize_t recvfrom_savefile(struct pcap_device *, void **, struct sockaddr *, struct timeval **, int *, struct packet_ptrs *);
-EXT ssize_t recvfrom_rawip(unsigned char *, size_t, struct sockaddr *, struct packet_ptrs *);
-#undef EXT
+extern int ip_handler(register struct packet_ptrs *);
+extern int ip6_handler(register struct packet_ptrs *);
+extern int gtp_tunnel_func(register struct packet_ptrs *);
+extern int gtp_tunnel_configurator(struct tunnel_handler *, char *);
+extern void tunnel_registry_init();
+extern void pcap_cb(u_char *, const struct pcap_pkthdr *, const u_char *);
+extern int PM_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
+extern void PM_print_stats(time_t);
+extern void compute_once();
+extern void reset_index_pkt_ptrs(struct packet_ptrs *);
+extern void set_index_pkt_ptrs(struct packet_ptrs *);
+extern ssize_t recvfrom_savefile(struct pcap_device *, void **, struct sockaddr *, struct timeval **, int *, struct packet_ptrs *);
+extern ssize_t recvfrom_rawip(unsigned char *, size_t, struct sockaddr *, struct packet_ptrs *);
 
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *, const char *, size_t);
@@ -441,32 +423,26 @@ void
 initsetproctitle(int, char**, char**);
 
 /* global variables */
-#if (!defined __PMACCTD_C) && (!defined __NFACCTD_C) && (!defined __SFACCTD_C) && (!defined __UACCTD_C) && (!defined __PMTELEMETRYD_C) && (!defined __PMBGPD_C) && (!defined __PMBMPD_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT struct host_addr mcast_groups[MAX_MCAST_GROUPS];
-EXT int reload_map, reload_map_exec_plugins, reload_geoipv2_file;
-EXT int reload_map_bgp_thread, reload_log_bgp_thread;
-EXT int reload_map_bmp_thread, reload_log_bmp_thread;
-EXT int reload_map_rpki_thread, reload_log_rpki_thread;
-EXT int reload_map_telemetry_thread, reload_log_telemetry_thread;
-EXT int reload_map_pmacctd;
-EXT int print_stats;
-EXT int reload_log_sf_cnt;
-EXT int data_plugins, tee_plugins;
-EXT struct timeval reload_map_tstamp;
-EXT struct child_ctl2 dump_writers;
-EXT int debug;
-EXT struct configuration config; /* global configuration structure */
-EXT struct plugins_list_entry *plugins_list; /* linked list of each plugin configuration */
-EXT pid_t failed_plugins[MAX_N_PLUGINS]; /* plugins failed during startup phase */
-EXT u_char dummy_tlhdr[16];
-EXT struct pcap_device device;
-EXT struct pcap_devices devices, bkp_devices;
-EXT struct pcap_interfaces pcap_if_map, bkp_pcap_if_map;
-EXT struct pcap_stat ps;
-EXT struct sigaction sighandler_action;
-#undef EXT
+extern struct host_addr mcast_groups[MAX_MCAST_GROUPS];
+extern int reload_map, reload_map_exec_plugins, reload_geoipv2_file;
+extern int reload_map_bgp_thread, reload_log_bgp_thread;
+extern int reload_map_bmp_thread, reload_log_bmp_thread;
+extern int reload_map_rpki_thread, reload_log_rpki_thread;
+extern int reload_map_telemetry_thread, reload_log_telemetry_thread;
+extern int reload_map_pmacctd;
+extern int print_stats;
+extern int reload_log_sf_cnt;
+extern int data_plugins, tee_plugins;
+extern struct timeval reload_map_tstamp;
+extern struct child_ctl2 dump_writers;
+extern int debug;
+extern struct configuration config; /* global configuration structure */
+extern struct plugins_list_entry *plugins_list; /* linked list of each plugin configuration */
+extern pid_t failed_plugins[MAX_N_PLUGINS]; /* plugins failed during startup phase */
+extern u_char dummy_tlhdr[16];
+extern struct pcap_device device;
+extern struct pcap_devices devices, bkp_devices;
+extern struct pcap_interfaces pcap_if_map, bkp_pcap_if_map;
+extern struct pcap_stat ps;
+extern struct sigaction sighandler_action;
 #endif /* _PMACCT_H_ */

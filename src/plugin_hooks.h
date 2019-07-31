@@ -18,6 +18,8 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
+#ifndef PLUGIN_HOOKS_H
+#define PLUGIN_HOOKS_H
 
 #define __PLUGIN_COMMON_EXPORT
 #include "plugin_common.h"
@@ -126,70 +128,59 @@ extern struct channels_list_entry channels_list[MAX_N_PLUGINS];
 #endif
 
 /* Function prototypes */
-#if (!defined __PLUGIN_HOOKS_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void load_plugins(struct plugin_requests *);
-EXT void exec_plugins(struct packet_ptrs *, struct plugin_requests *);
-EXT void load_plugin_filters(int);
-EXT struct channels_list_entry *insert_pipe_channel(int, struct configuration *, int); 
-EXT void delete_pipe_channel(int);
-EXT void sort_pipe_channels();
-EXT void init_pipe_channels();
-EXT int evaluate_filters(struct aggregate_filter *, u_char *, struct pcap_pkthdr *);
-EXT void recollect_pipe_memory(struct channels_list_entry *);
-EXT void init_random_seed();
-EXT void fill_pipe_buffer();
-EXT int check_pipe_buffer_space(struct channels_list_entry *, struct pkt_vlen_hdr_primitives *, int); 
-EXT void return_pipe_buffer_space(struct channels_list_entry *, int);
-EXT int check_shadow_status(struct packet_ptrs *, struct channels_list_entry *);
-EXT int pkt_data_clean(void *, int);
-EXT int pkt_payload_clean(void *, int);
-EXT int pkt_msg_clean(void *, int);
-EXT int pkt_extras_clean(void *, int);
-EXT void evaluate_sampling(struct sampling *, pm_counter_t *, pm_counter_t *, pm_counter_t *);
-EXT pm_counter_t take_simple_random_skip(pm_counter_t);
-EXT pm_counter_t take_simple_systematic_skip(pm_counter_t);
-EXT void plugin_pipe_zmq_compile_check();
-EXT void plugin_pipe_check(struct configuration *);
-EXT void P_zmq_pipe_init(void *, int *, u_int32_t *);
-#undef EXT
+extern void load_plugins(struct plugin_requests *);
+extern void exec_plugins(struct packet_ptrs *, struct plugin_requests *);
+extern void load_plugin_filters(int);
+extern struct channels_list_entry *insert_pipe_channel(int, struct configuration *, int); 
+extern void delete_pipe_channel(int);
+extern void sort_pipe_channels();
+extern void init_pipe_channels();
+extern int evaluate_filters(struct aggregate_filter *, u_char *, struct pcap_pkthdr *);
+extern void recollect_pipe_memory(struct channels_list_entry *);
+extern void init_random_seed();
+extern void fill_pipe_buffer();
+extern int check_pipe_buffer_space(struct channels_list_entry *, struct pkt_vlen_hdr_primitives *, int); 
+extern void return_pipe_buffer_space(struct channels_list_entry *, int);
+extern int check_shadow_status(struct packet_ptrs *, struct channels_list_entry *);
+extern int pkt_data_clean(void *, int);
+extern int pkt_payload_clean(void *, int);
+extern int pkt_msg_clean(void *, int);
+extern int pkt_extras_clean(void *, int);
+extern void evaluate_sampling(struct sampling *, pm_counter_t *, pm_counter_t *, pm_counter_t *);
+extern pm_counter_t take_simple_random_skip(pm_counter_t);
+extern pm_counter_t take_simple_systematic_skip(pm_counter_t);
+extern void plugin_pipe_zmq_compile_check();
+extern void plugin_pipe_check(struct configuration *);
+extern void P_zmq_pipe_init(void *, int *, u_int32_t *);
 
-#if (defined __PLUGIN_HOOKS_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void imt_plugin(int, struct configuration *, void *);
-EXT void print_plugin(int, struct configuration *, void *);
-EXT void nfprobe_plugin(int, struct configuration *, void *);
-EXT void sfprobe_plugin(int, struct configuration *, void *);
-EXT void tee_plugin(int, struct configuration *, void *);
+extern void imt_plugin(int, struct configuration *, void *);
+extern void print_plugin(int, struct configuration *, void *);
+extern void nfprobe_plugin(int, struct configuration *, void *);
+extern void sfprobe_plugin(int, struct configuration *, void *);
+extern void tee_plugin(int, struct configuration *, void *);
 
 #ifdef WITH_MYSQL
-EXT void mysql_plugin(int, struct configuration *, void *);
+extern void mysql_plugin(int, struct configuration *, void *);
 #endif 
 
 #ifdef WITH_PGSQL
-EXT void pgsql_plugin(int, struct configuration *, void *);
+extern void pgsql_plugin(int, struct configuration *, void *);
 #endif
 
 #ifdef WITH_SQLITE3
-EXT void sqlite3_plugin(int, struct configuration *, void *);
+extern void sqlite3_plugin(int, struct configuration *, void *);
 #endif
 
 #ifdef WITH_MONGODB
-EXT void mongodb_plugin(int, struct configuration *, void *);
-EXT void mongodb_legacy_warning(int, struct configuration *, void *);
+extern void mongodb_plugin(int, struct configuration *, void *);
+extern void mongodb_legacy_warning(int, struct configuration *, void *);
 #endif
 
 #ifdef WITH_RABBITMQ
-EXT void amqp_plugin(int, struct configuration *, void *);
+extern void amqp_plugin(int, struct configuration *, void *);
 #endif
 
 #ifdef WITH_KAFKA
-EXT void kafka_plugin(int, struct configuration *, void *);
+extern void kafka_plugin(int, struct configuration *, void *);
 #endif
-#undef EXT
+#endif //PLUGIN_HOOKS_H
