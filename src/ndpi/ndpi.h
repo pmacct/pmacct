@@ -24,6 +24,9 @@
     ndpi.h | nDPI | Copyright (C) 2011-17 - ntop.org
 */
 
+#ifndef NDPI_UTIL_H
+#define NDPI_UTIL_H
+
 /* includes */
 #include "ndpi_util.h"
 
@@ -112,37 +115,33 @@ typedef struct pm_ndpi_workflow {
   struct ndpi_detection_module_struct *ndpi_struct;
 } pm_ndpi_workflow_t;
 
-#if (!defined __NDPI_C)
-#define EXT extern
-#else
-#define EXT
-#endif
 /* global vars */
-EXT struct pm_ndpi_workflow *pm_ndpi_wfl;
+extern struct pm_ndpi_workflow *pm_ndpi_wfl;
 
 /* prototypes */
 /* Free flow_info ndpi support structures but not the flow_info itself */
-EXT void pm_ndpi_free_flow_info_half(struct pm_ndpi_flow_info *);
+extern void pm_ndpi_free_flow_info_half(struct pm_ndpi_flow_info *);
 
 /* Process a packet and update the workflow  */
-EXT struct ndpi_proto pm_ndpi_workflow_process_packet(struct pm_ndpi_workflow *, struct packet_ptrs *);
+extern struct ndpi_proto pm_ndpi_workflow_process_packet(struct pm_ndpi_workflow *, struct packet_ptrs *);
 
 /* compare two nodes in workflow */
-EXT int pm_ndpi_workflow_node_cmp(const void *, const void *);
+extern int pm_ndpi_workflow_node_cmp(const void *, const void *);
 
-EXT struct pm_ndpi_flow_info *pm_ndpi_get_flow_info(struct pm_ndpi_workflow *, struct packet_ptrs *, u_int16_t, const struct ndpi_iphdr *,
+extern struct pm_ndpi_flow_info *pm_ndpi_get_flow_info(struct pm_ndpi_workflow *, struct packet_ptrs *, u_int16_t, const struct ndpi_iphdr *,
 						const struct ndpi_ipv6hdr *, u_int16_t, u_int16_t, u_int16_t, struct ndpi_tcphdr **,
 						struct ndpi_udphdr **, u_int16_t *, u_int16_t *, struct ndpi_id_struct **,
 						struct ndpi_id_struct **, u_int8_t *, u_int8_t **, u_int16_t *, u_int8_t *);
-EXT struct pm_ndpi_flow_info *pm_ndpi_get_flow_info6(struct pm_ndpi_workflow *, struct packet_ptrs *, u_int16_t, const struct ndpi_ipv6hdr *,
+extern struct pm_ndpi_flow_info *pm_ndpi_get_flow_info6(struct pm_ndpi_workflow *, struct packet_ptrs *, u_int16_t, const struct ndpi_ipv6hdr *,
 						u_int16_t, struct ndpi_tcphdr **, struct ndpi_udphdr **, u_int16_t *, u_int16_t *,
 						struct ndpi_id_struct **, struct ndpi_id_struct **, u_int8_t *, u_int8_t **,
 						u_int16_t *, u_int8_t *);
-EXT struct ndpi_proto pm_ndpi_packet_processing(struct pm_ndpi_workflow *, struct packet_ptrs *, const u_int64_t, u_int16_t,
+extern struct ndpi_proto pm_ndpi_packet_processing(struct pm_ndpi_workflow *, struct packet_ptrs *, const u_int64_t, u_int16_t,
 						const struct ndpi_iphdr *, struct ndpi_ipv6hdr *, u_int16_t, u_int16_t, u_int16_t); 
 
-EXT u_int16_t pm_ndpi_node_guess_undetected_protocol(struct pm_ndpi_workflow *, struct pm_ndpi_flow_info *);
-EXT void pm_ndpi_idle_flows_cleanup(struct pm_ndpi_workflow *);
+extern u_int16_t pm_ndpi_node_guess_undetected_protocol(struct pm_ndpi_workflow *, struct pm_ndpi_flow_info *);
+extern void pm_ndpi_idle_flows_cleanup(struct pm_ndpi_workflow *);
 
-EXT int pm_ndpi_node_idle_scan_walker(const void *, const pm_VISIT, const int, void *);
-#undef EXT
+extern int pm_ndpi_node_idle_scan_walker(const void *, const pm_VISIT, const int, void *);
+
+#endif //NDPI_UTIL_H
