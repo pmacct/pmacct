@@ -23,6 +23,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "plugin_common.h"
 #include "addr.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
@@ -39,6 +40,9 @@
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #endif
+#include "sql_common.h"
+#include "net_aggr.h"
+#include "ports_aggr.h"
 
 /* Functions */
 void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 

@@ -33,16 +33,11 @@
 /* structures */
 
 /* prototypes */
-#if (!defined __AMQP_PLUGIN_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void p_amqp_get_version();
-EXT void amqp_plugin(int, struct configuration *, void *);
-EXT void amqp_cache_purge(struct chained_cache *[], int, int);
+extern void p_amqp_get_version();
+extern void amqp_plugin(int, struct configuration *, void *);
+extern void amqp_cache_purge(struct chained_cache *[], int, int);
 #ifdef WITH_AVRO
-EXT void amqp_avro_schema_purge(char *);
+extern void amqp_avro_schema_purge(char *);
 #endif
 
 #endif //AMQP_PLUGIN_COMMON_H

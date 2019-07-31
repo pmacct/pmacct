@@ -19,6 +19,9 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef AMQP_COMMON_H
+#define AMQP_COMMON_H
+
 /* includes */
 #include <amqp.h>
 #include <amqp_tcp_socket.h>
@@ -56,53 +59,47 @@ struct p_amqp_host {
 };
 
 /* prototypes */
-#if (!defined __AMQP_COMMON_C)
-#define EXT extern
-#else
-#define EXT
-#endif
+extern void p_amqp_init_host(struct p_amqp_host *);
+extern void p_amqp_init_routing_key_rr(struct p_amqp_host *);
 
-EXT void p_amqp_init_host(struct p_amqp_host *);
-EXT void p_amqp_init_routing_key_rr(struct p_amqp_host *);
+extern void p_amqp_set_user(struct p_amqp_host *, char *);
+extern void p_amqp_set_passwd(struct p_amqp_host *, char *);
+extern void p_amqp_set_exchange(struct p_amqp_host *, char *);
+extern void p_amqp_set_routing_key(struct p_amqp_host *, char *);
+extern void p_amqp_set_routing_key_rr(struct p_amqp_host *, int);
+extern void p_amqp_set_exchange_type(struct p_amqp_host *, char *);
+extern void p_amqp_set_host(struct p_amqp_host *, char *);
+extern void p_amqp_set_vhost(struct p_amqp_host *, char *);
+extern void p_amqp_set_persistent_msg(struct p_amqp_host *, int);
+extern void p_amqp_set_frame_max(struct p_amqp_host *, u_int32_t);
+extern void p_amqp_set_heartbeat_interval(struct p_amqp_host *, int);
+extern void p_amqp_set_content_type_json(struct p_amqp_host *);
+extern void p_amqp_set_content_type_binary(struct p_amqp_host *);
 
-EXT void p_amqp_set_user(struct p_amqp_host *, char *);
-EXT void p_amqp_set_passwd(struct p_amqp_host *, char *);
-EXT void p_amqp_set_exchange(struct p_amqp_host *, char *);
-EXT void p_amqp_set_routing_key(struct p_amqp_host *, char *);
-EXT void p_amqp_set_routing_key_rr(struct p_amqp_host *, int);
-EXT void p_amqp_set_exchange_type(struct p_amqp_host *, char *);
-EXT void p_amqp_set_host(struct p_amqp_host *, char *);
-EXT void p_amqp_set_vhost(struct p_amqp_host *, char *);
-EXT void p_amqp_set_persistent_msg(struct p_amqp_host *, int);
-EXT void p_amqp_set_frame_max(struct p_amqp_host *, u_int32_t);
-EXT void p_amqp_set_heartbeat_interval(struct p_amqp_host *, int);
-EXT void p_amqp_set_content_type_json(struct p_amqp_host *);
-EXT void p_amqp_set_content_type_binary(struct p_amqp_host *);
+extern char *p_amqp_get_routing_key(struct p_amqp_host *);
+extern int p_amqp_get_routing_key_rr(struct p_amqp_host *);
+extern int p_amqp_get_sockfd(struct p_amqp_host *);
+extern void p_amqp_get_version();
 
-EXT char *p_amqp_get_routing_key(struct p_amqp_host *);
-EXT int p_amqp_get_routing_key_rr(struct p_amqp_host *);
-EXT int p_amqp_get_sockfd(struct p_amqp_host *);
-EXT void p_amqp_get_version();
+extern void p_amqp_unset_routing_key(struct p_amqp_host *);
 
-EXT void p_amqp_unset_routing_key(struct p_amqp_host *);
+extern int p_amqp_connect_to_publish(struct p_amqp_host *);
+extern int p_amqp_publish_string(struct p_amqp_host *, char *);
+extern int p_amqp_publish_binary(struct p_amqp_host *, void *, u_int32_t);
+extern void p_amqp_close(struct p_amqp_host *, int);
+extern int p_amqp_is_alive(struct p_amqp_host *);
 
-EXT int p_amqp_connect_to_publish(struct p_amqp_host *);
-EXT int p_amqp_publish_string(struct p_amqp_host *, char *);
-EXT int p_amqp_publish_binary(struct p_amqp_host *, void *, u_int32_t);
-EXT void p_amqp_close(struct p_amqp_host *, int);
-EXT int p_amqp_is_alive(struct p_amqp_host *);
-
-EXT int write_and_free_json_amqp(void *, void *);
+extern int write_and_free_json_amqp(void *, void *);
 
 /* global vars */
-EXT struct p_amqp_host amqpp_amqp_host;
-EXT struct p_amqp_host bgp_daemon_msglog_amqp_host;
-EXT struct p_amqp_host bgp_table_dump_amqp_host;
-EXT struct p_amqp_host bmp_daemon_msglog_amqp_host;
-EXT struct p_amqp_host bmp_dump_amqp_host;
-EXT struct p_amqp_host sfacctd_counter_amqp_host;
-EXT struct p_amqp_host telemetry_daemon_msglog_amqp_host;
-EXT struct p_amqp_host telemetry_dump_amqp_host;
+extern struct p_amqp_host amqpp_amqp_host;
+extern struct p_amqp_host bgp_daemon_msglog_amqp_host;
+extern struct p_amqp_host bgp_table_dump_amqp_host;
+extern struct p_amqp_host bmp_daemon_msglog_amqp_host;
+extern struct p_amqp_host bmp_dump_amqp_host;
+extern struct p_amqp_host sfacctd_counter_amqp_host;
+extern struct p_amqp_host telemetry_daemon_msglog_amqp_host;
+extern struct p_amqp_host telemetry_dump_amqp_host;
 
 extern char rabbitmq_user[];
 extern char rabbitmq_pwd[];
@@ -111,4 +108,5 @@ extern char default_amqp_exchange_type[];
 extern char default_amqp_routing_key[];
 extern char default_amqp_host[];
 extern char default_amqp_vhost[];
-#undef EXT
+
+#endif //AMQP_COMMON_H

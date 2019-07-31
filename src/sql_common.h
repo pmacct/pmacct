@@ -197,233 +197,211 @@ struct sqlfunc_cb_registry {
 #include "preprocess.h"
 
 /* functions */
-#if (!defined __SQL_HANDLERS_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void count_src_mac_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_dst_mac_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_vlan_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_cos_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_etype_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_src_host_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_src_net_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_src_as_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_dst_host_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_dst_net_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_dst_as_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_std_comm_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_ext_comm_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_lrg_comm_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_as_path_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_local_pref_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_med_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_dst_roa_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_src_std_comm_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_src_ext_comm_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_src_lrg_comm_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_src_as_path_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_src_local_pref_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_src_med_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_src_roa_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_mpls_vpn_rd_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_mpls_pw_id_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_peer_src_as_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_peer_dst_as_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_peer_src_ip_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_peer_dst_ip_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_src_port_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_dst_port_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_ip_tos_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_in_iface_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_out_iface_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_src_nmask_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_dst_nmask_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_sampling_rate_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_sampling_direction_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void MY_count_ip_proto_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void PG_count_ip_proto_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_timestamp_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_copy_timestamp_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_tag_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_tag2_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_label_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_class_id_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_tcpflags_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_post_nat_src_ip_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_post_nat_dst_ip_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_post_nat_src_port_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_post_nat_dst_port_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_nat_event_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_mpls_label_top_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_mpls_label_bottom_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_mpls_stack_depth_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_tunnel_src_mac_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_tunnel_dst_mac_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_tunnel_src_ip_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_tunnel_dst_ip_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void MY_count_tunnel_ip_proto_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void PG_count_tunnel_ip_proto_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_tunnel_ip_tos_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_tunnel_src_port_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_tunnel_dst_port_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_vxlan_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_timestamp_start_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void PG_copy_count_timestamp_start_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_timestamp_start_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_timestamp_end_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void PG_copy_count_timestamp_end_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_timestamp_end_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_timestamp_arrival_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void PG_copy_count_timestamp_arrival_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_timestamp_arrival_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_timestamp_min_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void PG_copy_count_timestamp_min_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_timestamp_min_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_timestamp_max_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void PG_copy_count_timestamp_max_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_export_proto_seqno_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_export_proto_version_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_export_proto_sysid_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_timestamp_max_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_custom_primitives_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void fake_mac_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void fake_host_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void fake_as_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void fake_comms_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void fake_as_path_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void fake_mpls_vpn_rd_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_src_mac_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_dst_mac_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_vlan_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_cos_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_etype_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_src_host_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_src_net_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_src_as_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_dst_host_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_dst_net_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_dst_as_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_std_comm_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_ext_comm_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_lrg_comm_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_as_path_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_local_pref_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_med_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_dst_roa_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_src_std_comm_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_src_ext_comm_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_src_lrg_comm_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_src_as_path_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_src_local_pref_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_src_med_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_src_roa_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_mpls_vpn_rd_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_mpls_pw_id_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_peer_src_as_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_peer_dst_as_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_peer_src_ip_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_peer_dst_ip_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_src_port_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_dst_port_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_ip_tos_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_in_iface_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_out_iface_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_src_nmask_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_dst_nmask_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_sampling_rate_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_sampling_direction_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void MY_count_ip_proto_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void PG_count_ip_proto_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_timestamp_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_copy_timestamp_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_tag_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_tag2_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_label_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_class_id_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_tcpflags_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_post_nat_src_ip_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_post_nat_dst_ip_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_post_nat_src_port_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_post_nat_dst_port_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_nat_event_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_mpls_label_top_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_mpls_label_bottom_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_mpls_stack_depth_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_tunnel_src_mac_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_tunnel_dst_mac_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_tunnel_src_ip_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_tunnel_dst_ip_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void MY_count_tunnel_ip_proto_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void PG_count_tunnel_ip_proto_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_tunnel_ip_tos_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_tunnel_src_port_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_tunnel_dst_port_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_vxlan_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_timestamp_start_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void PG_copy_count_timestamp_start_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_timestamp_start_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_timestamp_end_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void PG_copy_count_timestamp_end_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_timestamp_end_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_timestamp_arrival_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void PG_copy_count_timestamp_arrival_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_timestamp_arrival_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_timestamp_min_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void PG_copy_count_timestamp_min_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_timestamp_min_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_timestamp_max_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void PG_copy_count_timestamp_max_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_export_proto_seqno_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_export_proto_version_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_export_proto_sysid_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_timestamp_max_residual_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_custom_primitives_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void fake_mac_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void fake_host_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void fake_as_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void fake_comms_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void fake_as_path_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void fake_mpls_vpn_rd_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 
-EXT void count_src_host_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_dst_host_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_src_net_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_dst_net_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_peer_src_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_peer_dst_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_post_nat_src_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_post_nat_dst_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_tunnel_src_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_tunnel_dst_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void fake_host_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_src_host_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_dst_host_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_src_net_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_dst_net_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_peer_src_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_peer_dst_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_post_nat_src_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_post_nat_dst_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_tunnel_src_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_tunnel_dst_ip_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void fake_host_aton_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 
 #if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
-EXT void count_src_host_country_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_dst_host_country_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_src_host_country_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_dst_host_country_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 #endif
 #if defined (WITH_GEOIPV2)
-EXT void count_src_host_pocode_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_dst_host_pocode_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_src_host_coords_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_dst_host_coords_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_src_host_pocode_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_dst_host_pocode_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_src_host_coords_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_dst_host_coords_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 #endif
 
 #if defined (WITH_NDPI)
-EXT void count_ndpi_class_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_ndpi_class_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 #endif
 
-EXT void count_counters_setclause_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_flows_setclause_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_tcpflags_setclause_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_noop_setclause_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-EXT void count_noop_setclause_event_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
-#undef EXT
-
-#if (defined __SQL_COMMON_C)
-#define EXT extern
-#else
-#define EXT
-#endif
+extern void count_counters_setclause_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_flows_setclause_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_tcpflags_setclause_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_noop_setclause_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_noop_setclause_event_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 
 /* Toward a common SQL layer */
-EXT void sql_set_signals();
-EXT void sql_set_insert_func();
-EXT void sql_init_maps(struct extra_primitives *, struct primitives_ptrs *, struct networks_table *, struct networks_cache *, struct ports_table *);
-EXT void sql_init_global_buffers();
-EXT void sql_init_default_values(struct extra_primitives *);
-EXT void sql_init_historical_acct(time_t, struct insert_data *);
-EXT void sql_init_triggers(time_t, struct insert_data *);
-EXT void sql_init_refresh_deadline(time_t *);
-EXT void sql_link_backend_descriptors(struct BE_descs *, struct DBdesc *, struct DBdesc *);
-EXT void sql_cache_modulo(struct primitives_ptrs *, struct insert_data *);
-EXT int sql_cache_flush(struct db_cache *[], int, struct insert_data *, int);
-EXT void sql_cache_flush_pending(struct db_cache *[], int, struct insert_data *);
-EXT void sql_cache_handle_flush_event(struct insert_data *, time_t *, struct ports_table *);
-EXT void sql_cache_insert(struct primitives_ptrs *, struct insert_data *);
-EXT struct db_cache *sql_cache_search(struct primitives_ptrs *, time_t);
-EXT int sql_trigger_exec(char *);
-EXT void sql_db_ok(struct DBdesc *);
-EXT void sql_db_fail(struct DBdesc *);
-EXT void sql_db_errmsg(struct DBdesc *);
-EXT void sql_db_warnmsg(struct DBdesc *);
-EXT int sql_query(struct BE_descs *, struct db_cache *, struct insert_data *);
-EXT void sql_exit_gracefully(int);
-EXT int sql_evaluate_primitives(int);
-EXT void sql_create_table(struct DBdesc *, time_t *, struct primitives_ptrs *);
-EXT void sql_invalidate_shadow_entries(struct db_cache *[], int *);
-EXT int sql_select_locking_style(char *);
-EXT int sql_compose_static_set(int); 
-EXT int sql_compose_static_set_event(); 
-EXT void primptrs_set_all_from_db_cache(struct primitives_ptrs *, struct db_cache *);
+extern void sql_set_signals();
+extern void sql_set_insert_func();
+extern void sql_init_maps(struct extra_primitives *, struct primitives_ptrs *, struct networks_table *, struct networks_cache *, struct ports_table *);
+extern void sql_init_global_buffers();
+extern void sql_init_default_values(struct extra_primitives *);
+extern void sql_init_historical_acct(time_t, struct insert_data *);
+extern void sql_init_triggers(time_t, struct insert_data *);
+extern void sql_init_refresh_deadline(time_t *);
+extern void sql_link_backend_descriptors(struct BE_descs *, struct DBdesc *, struct DBdesc *);
+extern void sql_cache_modulo(struct primitives_ptrs *, struct insert_data *);
+extern int sql_cache_flush(struct db_cache *[], int, struct insert_data *, int);
+extern void sql_cache_flush_pending(struct db_cache *[], int, struct insert_data *);
+extern void sql_cache_handle_flush_event(struct insert_data *, time_t *, struct ports_table *);
+extern void sql_cache_insert(struct primitives_ptrs *, struct insert_data *);
+extern struct db_cache *sql_cache_search(struct primitives_ptrs *, time_t);
+extern int sql_trigger_exec(char *);
+extern void sql_db_ok(struct DBdesc *);
+extern void sql_db_fail(struct DBdesc *);
+extern void sql_db_errmsg(struct DBdesc *);
+extern void sql_db_warnmsg(struct DBdesc *);
+extern int sql_query(struct BE_descs *, struct db_cache *, struct insert_data *);
+extern void sql_exit_gracefully(int);
+extern int sql_evaluate_primitives(int);
+extern void sql_create_table(struct DBdesc *, time_t *, struct primitives_ptrs *);
+extern void sql_invalidate_shadow_entries(struct db_cache *[], int *);
+extern int sql_select_locking_style(char *);
+extern int sql_compose_static_set(int); 
+extern int sql_compose_static_set_event(); 
+extern void primptrs_set_all_from_db_cache(struct primitives_ptrs *, struct db_cache *);
 
-EXT void sql_sum_host_insert(struct primitives_ptrs *, struct insert_data *);
-EXT void sql_sum_port_insert(struct primitives_ptrs *, struct insert_data *);
-EXT void sql_sum_as_insert(struct primitives_ptrs *, struct insert_data *);
+extern void sql_sum_host_insert(struct primitives_ptrs *, struct insert_data *);
+extern void sql_sum_port_insert(struct primitives_ptrs *, struct insert_data *);
+extern void sql_sum_as_insert(struct primitives_ptrs *, struct insert_data *);
 #if defined (HAVE_L2)
-EXT void sql_sum_mac_insert(struct primitives_ptrs *, struct insert_data *);
+extern void sql_sum_mac_insert(struct primitives_ptrs *, struct insert_data *);
 #endif
-EXT void sql_sum_std_comm_insert(struct primitives_ptrs *, struct insert_data *);
-EXT void sql_sum_ext_comm_insert(struct primitives_ptrs *, struct insert_data *);
-
-#undef EXT
-
-#if (!defined __MYSQL_PLUGIN_C) && (!defined __PMACCT_PLAYER_C) && \
-	(!defined __PGSQL_PLUGIN_C) && (!defined __SQLITE3_PLUGIN_C) 
-#define EXT extern
-#else
-#define EXT
-#endif
+extern void sql_sum_std_comm_insert(struct primitives_ptrs *, struct insert_data *);
+extern void sql_sum_ext_comm_insert(struct primitives_ptrs *, struct insert_data *);
 
 /* Global Variables: a simple way of gain precious speed when playing with strings */
-EXT char sql_data[LARGEBUFLEN];
-EXT char lock_clause[LONGSRVBUFLEN];
-EXT char unlock_clause[LONGSRVBUFLEN];
-EXT char update_clause[LONGSRVBUFLEN];
-EXT char set_clause[LONGSRVBUFLEN];
-EXT char copy_clause[LONGSRVBUFLEN];
-EXT char insert_clause[LONGSRVBUFLEN];
-EXT char insert_counters_clause[LONGSRVBUFLEN];
-EXT char insert_nocounters_clause[LONGSRVBUFLEN];
-EXT char insert_full_clause[LONGSRVBUFLEN];
-EXT char values_clause[LONGLONGSRVBUFLEN];
-EXT char *multi_values_buffer;
-EXT char where_clause[LONGLONGSRVBUFLEN];
-EXT unsigned char *pipebuf;
-EXT struct db_cache *cache;
-EXT struct db_cache **queries_queue, **pending_queries_queue;
-EXT struct db_cache *collision_queue;
-EXT int cq_ptr, qq_ptr, qq_size, pp_size, pb_size, pn_size, pm_size, pt_size;
-EXT int pc_size, dbc_size, cq_size, pqq_ptr;
-EXT struct db_cache lru_head, *lru_tail;
-EXT struct frags where[N_PRIMITIVES+2];
-EXT struct frags values[N_PRIMITIVES+2];
-EXT struct frags copy_values[N_PRIMITIVES+2];
-EXT struct frags set[N_PRIMITIVES+2];
-EXT struct frags set_event[N_PRIMITIVES+2];
-EXT int glob_num_primitives; /* last resort for signal handling */
-EXT int glob_basetime; /* last resort for signal handling */
-EXT time_t glob_new_basetime; /* last resort for signal handling */
-EXT time_t glob_committed_basetime; /* last resort for signal handling */
-EXT int glob_dyn_table, glob_dyn_table_time_only; /* last resort for signal handling */
-EXT int glob_timeslot; /* last resort for sql handlers */
+extern char sql_data[LARGEBUFLEN];
+extern char lock_clause[LONGSRVBUFLEN];
+extern char unlock_clause[LONGSRVBUFLEN];
+extern char update_clause[LONGSRVBUFLEN];
+extern char set_clause[LONGSRVBUFLEN];
+extern char copy_clause[LONGSRVBUFLEN];
+extern char insert_clause[LONGSRVBUFLEN];
+extern char insert_counters_clause[LONGSRVBUFLEN];
+extern char insert_nocounters_clause[LONGSRVBUFLEN];
+extern char insert_full_clause[LONGSRVBUFLEN];
+extern char values_clause[LONGLONGSRVBUFLEN];
+extern char *multi_values_buffer;
+extern char where_clause[LONGLONGSRVBUFLEN];
+extern unsigned char *pipebuf;
+extern struct db_cache *cache;
+extern struct db_cache **queries_queue, **pending_queries_queue;
+extern struct db_cache *collision_queue;
+extern int cq_ptr, qq_ptr, qq_size, pp_size, pb_size, pn_size, pm_size, pt_size;
+extern int pc_size, dbc_size, cq_size, pqq_ptr;
+extern struct db_cache lru_head, *lru_tail;
+extern struct frags where[N_PRIMITIVES+2];
+extern struct frags values[N_PRIMITIVES+2];
+extern struct frags copy_values[N_PRIMITIVES+2];
+extern struct frags set[N_PRIMITIVES+2];
+extern struct frags set_event[N_PRIMITIVES+2];
+extern int glob_num_primitives; /* last resort for signal handling */
+extern int glob_basetime; /* last resort for signal handling */
+extern time_t glob_new_basetime; /* last resort for signal handling */
+extern time_t glob_committed_basetime; /* last resort for signal handling */
+extern int glob_dyn_table, glob_dyn_table_time_only; /* last resort for signal handling */
+extern int glob_timeslot; /* last resort for sql handlers */
 
-EXT struct sqlfunc_cb_registry sqlfunc_cbr; 
-EXT void (*insert_func)(struct primitives_ptrs *, struct insert_data *);
-EXT struct DBdesc p;
-EXT struct DBdesc b;
-EXT struct BE_descs bed;
-EXT struct largebuf envbuf;
-EXT time_t now; /* PostgreSQL */
-#undef EXT
+extern struct sqlfunc_cb_registry sqlfunc_cbr; 
+extern void (*insert_func)(struct primitives_ptrs *, struct insert_data *);
+extern struct DBdesc p;
+extern struct DBdesc b;
+extern struct BE_descs bed;
+extern struct largebuf envbuf;
+extern time_t now; /* PostgreSQL */
 #endif /* #if (!defined __SQL_COMMON_EXPORT) */
 #endif //SQL_COMMON_H
