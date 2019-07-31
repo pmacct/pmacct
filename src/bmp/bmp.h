@@ -19,6 +19,9 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef BMP_H
+#define BMP_H
+
 /* includes */
 
 /* defines */
@@ -283,25 +286,15 @@ struct bmp_data {
 #include "bmp_lookup.h"
 
 /* prototypes */
-#if !defined(__BMP_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void nfacctd_bmp_wrapper();
-EXT void skinny_bmp_daemon();
-EXT void bmp_prepare_thread();
-EXT void bmp_prepare_daemon();
-#undef EXT
+extern void nfacctd_bmp_wrapper();
+extern void skinny_bmp_daemon();
+extern void bmp_prepare_thread();
+extern void bmp_prepare_daemon();
 
 /* global variables */
-#if (!defined __BMP_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT struct bmp_peer *bmp_peers;
-EXT u_int32_t (*bmp_route_info_modulo)(struct bgp_peer *, path_id_t *, int);
-EXT struct bgp_rt_structs *bmp_routing_db;
-EXT struct bgp_misc_structs *bmp_misc_db;
-#undef EXT
+extern struct bmp_peer *bmp_peers;
+extern u_int32_t (*bmp_route_info_modulo)(struct bgp_peer *, path_id_t *, int);
+extern struct bgp_rt_structs *bmp_routing_db;
+extern struct bgp_misc_structs *bmp_misc_db;
+
+#endif //BMP_H
