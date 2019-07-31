@@ -27,6 +27,13 @@
 #include "pmacct-data.h"
 #include "pkt_handlers.h"
 
+//Global variables
+char *cfg[LARGEBUFLEN], *cfg_cmdline[SRVBUFLEN];
+struct custom_primitives custom_primitives_registry;
+pm_cfgreg_t custom_primitives_type;
+int rows;
+char default_proc_name[] = "default";
+
 /* evaluate_configuration() handles all supported configuration
    keys and inserts them in configuration structure of plugins */
 void evaluate_configuration(char *filename, int rows)

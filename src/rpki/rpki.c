@@ -31,6 +31,9 @@
 
 /* variables to be exported away */
 thread_pool_t *rpki_pool;
+struct bgp_rt_structs *rpki_roa_db;
+struct bgp_misc_structs *rpki_misc_db;
+struct bgp_peer rpki_peer;
 
 /* Functions */
 void rpki_daemon_wrapper()

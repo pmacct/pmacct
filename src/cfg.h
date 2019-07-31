@@ -580,6 +580,6 @@ extern struct custom_primitives custom_primitives_registry;
 extern pm_cfgreg_t custom_primitives_type;
 extern int rows;
 
-static char __attribute__((unused)) default_proc_name[] = "default";
+extern char default_proc_name[];
 
 #endif //CFG_H

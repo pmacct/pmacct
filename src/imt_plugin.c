@@ -30,6 +30,16 @@
 #include "net_aggr.h"
 #include "ports_aggr.h"
 
+//Global variables
+void (*imt_insert_func)(struct primitives_ptrs *);
+unsigned char *mpd;
+unsigned char *a;
+struct memory_pool_desc *current_pool;
+struct acc **lru_elem_ptr;
+int no_more_space;
+struct timeval cycle_stamp;
+struct timeval table_reset_stamp;
+
 /* Functions */
 void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 
 {

@@ -39,6 +39,12 @@
 #include "ndpi/ndpi.h"
 #endif
 
+//Global variables
+struct channels_list_entry channels_list[MAX_N_PLUGINS];
+pkt_handler phandler[N_PRIMITIVES];
+
+
+
 /* functions */
 void evaluate_packet_handlers()
 {

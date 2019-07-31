@@ -22,10 +22,7 @@
 #ifndef PKT_HANDLERS_H
 #define PKT_HANDLERS_H
 
-#if (defined __PKT_HANDLERS_C)
 extern struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
-#endif
-
 extern pkt_handler phandler[N_PRIMITIVES];
 
 extern void evaluate_packet_handlers(); 

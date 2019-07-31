@@ -96,7 +96,7 @@ endif
 if USING_TRAFFIC_BINS
 sbin_PROGRAMS += pmacctd nfacctd sfacctd
 bin_PROGRAMS += pmacct
-pmacctd_SOURCES = pmacctd.c
+pmacctd_SOURCES = pmacctd.c pmacct-globals.c
 pmacctd_LDADD = libdaemons.la
 nfacctd_SOURCES = nfacctd.c nfv9_template.c
 nfacctd_LDADD = libdaemons.la
@@ -108,7 +108,7 @@ uacctd_SOURCES = uacctd.c
 uacctd_CFLAGS  = $(AM_CFLAGS) @NFLOG_CFLAGS@
 uacctd_LDADD   = libdaemons.la @NFLOG_LIBS@
 endif
-pmacct_SOURCES = pmacct.c
+pmacct_SOURCES = pmacct.c pmacct-globals.c
 pmacct_LDADD = libcommon.la
 endif
 if USING_ST_BINS
