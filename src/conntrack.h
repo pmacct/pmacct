@@ -70,19 +70,12 @@ extern void conntrack_rtsp_helper(time_t, struct packet_ptrs *);
 extern void search_conntrack(struct ip_flow_common *, struct packet_ptrs *, unsigned int);
 extern void search_conntrack_ipv4(struct ip_flow_common *, struct packet_ptrs *, unsigned int);
 extern void insert_conntrack_ipv4(time_t, u_int32_t, u_int32_t, u_int16_t, u_int16_t, u_int8_t, pm_class_t, conntrack_helper, time_t);
-extern struct conntrack_ipv4 *conntrack_ipv4_table;
 extern void search_conntrack_ipv6(struct ip_flow_common *, struct packet_ptrs *, unsigned int);
 extern void insert_conntrack_ipv6(time_t, struct in6_addr *, struct in6_addr *, u_int16_t, u_int16_t, u_int8_t, pm_class_t, conntrack_helper, time_t);
-extern struct conntrack_ipv6 *conntrack_ipv6_table;
 
-#if defined __CONNTRACK_C || defined __CLASSIFIER_C
-static struct conntrack_helper_entry __attribute__((unused)) conntrack_helper_list[] = {
-  { "ftp", conntrack_ftp_helper },
-  { "sip", conntrack_sip_helper },
-//  { "irc", conntrack_irc_helper },
-  { "rtsp", conntrack_rtsp_helper },
-  { "", NULL },
-};
-#endif
+
+extern struct conntrack_ipv4 *conntrack_ipv4_table;
+extern struct conntrack_ipv6 *conntrack_ipv6_table;
+extern struct conntrack_helper_entry __attribute__((unused)) conntrack_helper_list[];
 
 #endif //CONNTRACK_H

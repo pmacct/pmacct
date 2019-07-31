@@ -29,8 +29,19 @@
 #include "classifier.h"
 #include "jhash.h"
 
+
+/* Global variables */
+struct conntrack_ipv4 *conntrack_ipv4_table;
+struct conntrack_ipv6 *conntrack_ipv6_table;
 u_int32_t conntrack_total_nodes_v4;
 u_int32_t conntrack_total_nodes_v6;
+struct conntrack_helper_entry __attribute__((unused)) conntrack_helper_list[] = {
+  { "ftp", conntrack_ftp_helper },
+  { "sip", conntrack_sip_helper },
+//  { "irc", conntrack_irc_helper },
+  { "rtsp", conntrack_rtsp_helper },
+  { "", NULL },
+};
 
 void init_conntrack_table()
 {

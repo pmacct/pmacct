@@ -379,7 +379,6 @@ extern pcap_t *pm_pcap_open(const char *, int, int, int, int, int, char *);
 extern void pm_pcap_add_filter(struct pcap_device *);
 extern int pm_pcap_add_interface(struct pcap_device *, char *, struct pcap_interface *, int);
 
-extern char sll_mac[2][ETH_ADDR_LEN];
 
 extern void null_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
 extern void eth_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
@@ -423,6 +422,7 @@ void
 initsetproctitle(int, char**, char**);
 
 /* global variables */
+extern char sll_mac[2][ETH_ADDR_LEN];
 extern struct host_addr mcast_groups[MAX_MCAST_GROUPS];
 extern int reload_map, reload_map_exec_plugins, reload_geoipv2_file;
 extern int reload_map_bgp_thread, reload_log_bgp_thread;

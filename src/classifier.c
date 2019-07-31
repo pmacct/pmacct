@@ -31,6 +31,8 @@
 #include <dlfcn.h>
 #endif
 
+/* Global variables */
+struct pkt_classifier *class;
 u_int32_t class_trivial_hash_rnd = 140281;
 
 void init_classifiers(char *path)

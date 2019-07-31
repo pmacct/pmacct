@@ -38,8 +38,12 @@
 #include "zmq_common.h"
 #endif
 
-/* variables to be exported away */
+/* Global variables */
 thread_pool_t *telemetry_pool;
+telemetry_misc_structs *telemetry_misc_db;
+telemetry_peer *telemetry_peers;
+void *telemetry_peers_cache;
+telemetry_peer_timeout *telemetry_peers_timeout;
 
 /* Functions */
 void telemetry_wrapper()

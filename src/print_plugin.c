@@ -45,6 +45,9 @@
 #include "ports_aggr.h"
 #include "preprocess-internal.h"
 
+/* Global variables */
+int print_output_stdout_header;
+
 /* Functions */
 void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 
 {

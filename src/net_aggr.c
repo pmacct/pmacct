@@ -30,6 +30,16 @@
 #include "addr.h"
 #include "jhash.h"
 
+/* global variables */
+net_func net_funcs[NET_FUNCS_N];
+struct networks_table nt;
+struct networks_cache nc;
+struct networks_table_entry dummy_entry;
+int default_route_in_networks4_table;
+
+struct networks6_table_entry dummy_entry6;
+int default_route_in_networks6_table;
+
 void load_networks(char *filename, struct networks_table *nt, struct networks_cache *nc)
 {
   load_networks4(filename, nt, nc);

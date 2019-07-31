@@ -33,6 +33,16 @@
 #include "preprocess-internal.h"
 
 /* Global variables */
+void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
+void (*purge_func)(struct chained_cache *[], int, int); /* pointer to purge function */ 
+struct scratch_area sa;
+struct chained_cache *cache;
+struct chained_cache **queries_queue, **pending_queries_queue, *pqq_container;
+struct timeval flushtime;
+int qq_ptr, pqq_ptr, pp_size, pb_size, pn_size, pm_size, pt_size, pc_size;
+int dbc_size, quit; 
+time_t refresh_deadline;
+
 void (*basetime_init)(time_t);
 void (*basetime_eval)(struct timeval *, struct timeval *, time_t);
 int (*basetime_cmp)(struct timeval *, struct timeval *);

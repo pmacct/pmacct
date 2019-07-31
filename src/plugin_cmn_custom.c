@@ -25,6 +25,9 @@
 #include "pmacct.h"
 #include "plugin_cmn_custom.h"
 
+/* global variables */
+struct pm_custom_output custom_print_plugin;
+
 /* Functions */
 void custom_output_setup(char *custom_lib, char *custom_cfg_file, struct pm_custom_output *custom_output)
 {

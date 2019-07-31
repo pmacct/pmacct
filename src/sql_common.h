@@ -23,16 +23,9 @@
 #define SQL_COMMON_H
 
 /* includes */
-#if (!defined __SQL_COMMON_EXPORT)
 #include <sys/poll.h>
 #include "net_aggr.h"
 #include "ports_aggr.h"
-
-/* including plugin_common.h exporteable part as pre-requisite for preprocess.h inclusion later */
-#define __PLUGIN_COMMON_EXPORT
-#include "plugin_common.h"
-#undef __PLUGIN_COMMON_EXPORT
-#endif /* #if (!defined __SQL_COMMON_EXPORT) */
 
 /* defines */
 #define DEFAULT_DB_REFRESH_TIME 60
@@ -192,7 +185,6 @@ struct sqlfunc_cb_registry {
   /* flush and query wrapper are common for all SQL plugins */
 };
 
-#if (!defined __SQL_COMMON_EXPORT)
 
 #include "preprocess.h"
 
@@ -405,5 +397,4 @@ extern struct BE_descs bed;
 extern struct largebuf envbuf;
 extern time_t now; /* PostgreSQL */
 #endif
-#endif /* #if (!defined __SQL_COMMON_EXPORT) */
 #endif //SQL_COMMON_H

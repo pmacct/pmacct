@@ -38,6 +38,7 @@
 #include "isis_misc.h"
 #include "isis_constants.h"
 
+struct list *dyn_cache;
 extern struct host host;
 
 void

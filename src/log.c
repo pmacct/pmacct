@@ -24,6 +24,10 @@
 /* includes */
 #include "pmacct.h"
 
+/* Global variables */
+struct _log_notifications log_notifications;
+
+
 /* functions */
 void Log(short int level, char *msg, ...)
 {

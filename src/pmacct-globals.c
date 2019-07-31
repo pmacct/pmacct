@@ -20,7 +20,10 @@
 */
 
 #include "pmacct.h"
+#include "nfacctd.h"
 
+struct utpl_field *(*get_ext_db_ie_by_type)(struct template_cache_entry *, u_int32_t, u_int16_t, u_int8_t);
+char sll_mac[2][ETH_ADDR_LEN];
 struct host_addr mcast_groups[MAX_MCAST_GROUPS];
 int reload_map, reload_map_exec_plugins, reload_geoipv2_file;
 int reload_map_bgp_thread, reload_log_bgp_thread;

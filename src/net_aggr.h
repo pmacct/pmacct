@@ -96,7 +96,6 @@ struct networks_file_data {
 typedef void (*net_func) (struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct pkt_bgp_primitives *, struct networks_file_data *);
 
 /* prototypes */
-extern net_func net_funcs[NET_FUNCS_N]; 
 extern void set_net_funcs();
 extern void init_net_funcs(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct pkt_bgp_primitives *, struct networks_file_data *); 
 extern void mask_src_ipaddr(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct pkt_bgp_primitives *, struct networks_file_data *); 
@@ -146,6 +145,7 @@ extern struct networks6_table_entry *networks_cache_search6(struct networks_cach
 extern unsigned int networks_cache_hash6(void *);
 
 /* global vars */
+extern net_func net_funcs[NET_FUNCS_N]; 
 extern struct networks_table nt;
 extern struct networks_cache nc;
 extern struct networks_table_entry dummy_entry;

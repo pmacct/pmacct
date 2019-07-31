@@ -23,7 +23,7 @@ libdaemons_la_SOURCES = signals.c util.c plugin_hooks.c		\
 	base64.c plugin_cmn_json.c 				\
 	plugin_cmn_avro.c pmsearch.c 				\
 	thread_pool.c						\
-	plugin_cmn_custom.c
+	plugin_cmn_custom.c network.c
 
 libcommon_la_LIBADD  =
 libcommon_la_CFLAGS  = $(AM_CFLAGS)
@@ -99,7 +99,7 @@ sbin_PROGRAMS += pmacctd nfacctd sfacctd
 bin_PROGRAMS += pmacct
 pmacctd_SOURCES = pmacctd.c pmacct-globals.c
 pmacctd_LDADD = libdaemons.la
-nfacctd_SOURCES = nfacctd.c nfv9_template.c
+nfacctd_SOURCES = nfacctd.c nfv9_template.c pmacct-globals.c
 nfacctd_LDADD = libdaemons.la
 sfacctd_SOURCES = sfacctd.c sflow.c sfv5_module.c
 sfacctd_LDADD = libdaemons.la
