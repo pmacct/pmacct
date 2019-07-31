@@ -18,6 +18,8 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
+#ifndef PREPROCESS_H
+#define PREPROCESS_H
 
 /* defines */
 #define PREP_DICT_SQL	1
@@ -103,3 +105,5 @@ EXT P_preprocess_func P_preprocess_funcs[2*N_FUNCS]; /* 20 */
 EXT struct preprocess prep;
 EXT struct _fsrc_queue fsrc_queue;
 #undef EXT
+
+#endif // PREPROCESS_H
