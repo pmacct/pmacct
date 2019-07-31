@@ -18,11 +18,15 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
+#ifndef PLUGIN_COMMON_H
+#define PLUGIN_COMMON_H
 
 /* includes */
 #include <amqp.h>
 #include <amqp_tcp_socket.h>
 #include <sys/poll.h>
+
+#include "plugin_common.h"
 
 /* defines */
 
@@ -34,8 +38,11 @@
 #else
 #define EXT
 #endif
+EXT void p_amqp_get_version();
 EXT void amqp_plugin(int, struct configuration *, void *);
 EXT void amqp_cache_purge(struct chained_cache *[], int, int);
 #ifdef WITH_AVRO
 EXT void amqp_avro_schema_purge(char *);
 #endif
+
+#endif //PLUGIN_COMMON_H

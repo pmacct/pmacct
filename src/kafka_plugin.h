@@ -33,6 +33,7 @@
 #else
 #define EXT
 #endif
+EXT void p_kafka_get_version(void);
 EXT void kafka_plugin(int, struct configuration *, void *);
 EXT void kafka_cache_purge(struct chained_cache *[], int, int);
 #ifdef WITH_AVRO

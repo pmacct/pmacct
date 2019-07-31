@@ -18,6 +18,8 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
+#ifndef NET_AGGR_H
+#define NET_AGGR_H
 
 /* defines */
 #define NETWORKS_CACHE_ENTRIES 99991 
@@ -163,3 +165,5 @@ EXT int default_route_in_networks4_table;
 EXT struct networks6_table_entry dummy_entry6;
 EXT int default_route_in_networks6_table;
 #undef EXT
+
+#endif //NET_AGGR_H
