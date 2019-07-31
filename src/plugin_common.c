@@ -30,6 +30,7 @@
 #include "ip_flow.h"
 #include "classifier.h"
 #include "crc32.h"
+#include "preprocess-internal.h"
 
 /* Functions */
 void P_set_signals()

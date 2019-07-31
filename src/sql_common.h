@@ -363,6 +363,7 @@ extern void sql_sum_mac_insert(struct primitives_ptrs *, struct insert_data *);
 extern void sql_sum_std_comm_insert(struct primitives_ptrs *, struct insert_data *);
 extern void sql_sum_ext_comm_insert(struct primitives_ptrs *, struct insert_data *);
 
+#if 0
 /* Global Variables: a simple way of gain precious speed when playing with strings */
 extern char sql_data[LARGEBUFLEN];
 extern char lock_clause[LONGSRVBUFLEN];
@@ -403,5 +404,6 @@ extern struct DBdesc b;
 extern struct BE_descs bed;
 extern struct largebuf envbuf;
 extern time_t now; /* PostgreSQL */
+#endif
 #endif /* #if (!defined __SQL_COMMON_EXPORT) */
 #endif //SQL_COMMON_H

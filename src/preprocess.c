@@ -19,8 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __PREPROCESS_C
-
 #include "pmacct.h"
 #include "pmacct-data.h"
 #define __PLUGIN_COMMON_EXPORT
@@ -31,6 +29,7 @@
 #undef __SQL_COMMON_EXPORT
 #include "preprocess.h"
 #include "preprocess-data.h"
+#include "preprocess-internal.h"
 
 void set_preprocess_funcs(char *string, struct preprocess *prep, int dictionary)
 {

@@ -18,52 +18,11 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
-#ifndef PREPROCESS_H
-#define PREPROCESS_H
+#ifndef PREPROCESS_INTERNAL_H
+#define PREPROCESS_INTERNAL_H
 
-/* defines */
-#define PREP_DICT_SQL	1
-#define PREP_DICT_PRINT	2 
+#include "preprocess.h"
 
-/* structures */
-struct _preprocess_dictionary_line {
-  char key[SRVBUFLEN];
-};
-
-struct preprocess {
-  u_int32_t qnum;
-  u_int16_t minp;
-  u_int16_t minf;
-  u_int32_t minb;
-  u_int16_t maxp;
-  u_int16_t maxf;
-  u_int32_t maxb;
-  u_int16_t maxbpp;
-  u_int16_t maxppf;
-  u_int16_t minbpp;
-  u_int16_t minppf;
-  u_int32_t fss;	/* threshold: flow size (flow size dependent sampling) */
-  u_int32_t fsrc;	/* threshold: flows number (flow sampling with resource constraints) */
-  int usrf;		/* renormalization factor for uniform sampling methods */
-  int adjb;		/* adjusts bytes counter by 'adjb' bytes */
-  u_int8_t recover;
-  u_int8_t num;		/* total number of preprocess clauses specified: actions + checks */
-  u_int8_t checkno;	/* number of checks */
-  u_int8_t actionno;	/* number of actions */
-};
-
-struct fsrc_queue_elem {
-  struct fsrc_queue_elem *next;
-  struct db_cache *cache_ptr;
-  float z;
-};
-
-struct _fsrc_queue {
-  struct fsrc_queue_elem head; 
-  u_int32_t num;
-};
-
-#if 0
 /* typedefs */
 typedef int (*sql_preprocess_func) (struct db_cache *[], int *, int);
 typedef int (*P_preprocess_func) (struct chained_cache *[], int *, int);
@@ -100,6 +59,5 @@ extern sql_preprocess_func sql_preprocess_funcs[2*N_FUNCS]; /* 20 */
 extern P_preprocess_func P_preprocess_funcs[2*N_FUNCS]; /* 20 */
 extern struct preprocess prep;
 extern struct _fsrc_queue fsrc_queue;
-#endif
 
-#endif // PREPROCESS_H
+#endif // PREPROCESS_INTERNAL_H

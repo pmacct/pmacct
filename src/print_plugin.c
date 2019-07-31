@@ -43,6 +43,7 @@
 #include "sql_common.h"
 #include "net_aggr.h"
 #include "ports_aggr.h"
+#include "preprocess-internal.h"
 
 /* Functions */
 void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 
