@@ -96,19 +96,14 @@ struct isis_adjacency
   struct isis_circuit *circuit;	/* back pointer */
 };
 
-#if (!defined __ISIS_ADJACENCY_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT struct isis_adjacency *isis_adj_lookup (u_char *, struct list *);
-EXT struct isis_adjacency *isis_adj_lookup_snpa (u_char *, struct list *);
-EXT struct isis_adjacency *isis_new_adj (u_char *, u_char *, int, struct isis_circuit *);
-EXT void isis_delete_adj (struct isis_adjacency *, struct list *);
-EXT void isis_adj_state_change (struct isis_adjacency *, enum isis_adj_state, const char *);
-EXT int isis_adj_expire (struct isis_adjacency *);
-EXT void isis_adj_build_neigh_list (struct list *, struct list *);
-EXT void isis_adj_build_up_list (struct list *, struct list *);
-EXT void isis_adjdb_iterate (struct list *, void (*func) (struct isis_adjacency *, void *), void *);
-#undef EXT
+extern struct isis_adjacency *isis_adj_lookup (u_char *, struct list *);
+extern struct isis_adjacency *isis_adj_lookup_snpa (u_char *, struct list *);
+extern struct isis_adjacency *isis_new_adj (u_char *, u_char *, int, struct isis_circuit *);
+extern void isis_delete_adj (struct isis_adjacency *, struct list *);
+extern void isis_adj_state_change (struct isis_adjacency *, enum isis_adj_state, const char *);
+extern int isis_adj_expire (struct isis_adjacency *);
+extern void isis_adj_build_neigh_list (struct list *, struct list *);
+extern void isis_adj_build_up_list (struct list *, struct list *);
+extern void isis_adjdb_iterate (struct list *, void (*func) (struct isis_adjacency *, void *), void *);
+
 #endif /* _ISIS_ADJACENCY_H_ */

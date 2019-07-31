@@ -120,56 +120,51 @@ struct stream
  * l: long (two words)
  * q: quad (four words)
  */
-#if (!defined __STREAM_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT struct stream *stream_new (size_t);
-EXT void stream_free (struct stream *);
-EXT struct stream * stream_copy (struct stream *, struct stream *src);
-EXT struct stream *stream_dup (struct stream *);
-EXT size_t stream_resize (struct stream *, size_t);
-EXT size_t stream_get_getp (struct stream *);
-EXT size_t stream_get_endp (struct stream *);
-EXT size_t stream_get_size (struct stream *);
-EXT u_char *stream_get_data (struct stream *);
-EXT void stream_set_getp (struct stream *, size_t);
-EXT void stream_forward_getp (struct stream *, size_t);
-EXT void stream_forward_endp (struct stream *, size_t);
-EXT void stream_put (struct stream *, const void *, size_t);
-EXT int stream_putc (struct stream *, u_char);
-EXT int stream_putc_at (struct stream *, size_t, u_char);
-EXT int stream_putw (struct stream *, u_int16_t);
-EXT int stream_putw_at (struct stream *, size_t, u_int16_t);
-EXT int stream_putl (struct stream *, u_int32_t);
-EXT int stream_putl_at (struct stream *, size_t, u_int32_t);
-EXT int stream_putq (struct stream *, uint64_t);
-EXT int stream_putq_at (struct stream *, size_t, uint64_t);
-EXT int stream_put_ipv4 (struct stream *, u_int32_t);
-EXT int stream_put_in_addr (struct stream *, struct in_addr *);
-EXT int stream_put_prefix (struct stream *, struct isis_prefix *);
-EXT void stream_get (void *, struct stream *, size_t);
-EXT u_char stream_getc (struct stream *);
-EXT u_char stream_getc_from (struct stream *, size_t);
-EXT u_int16_t stream_getw (struct stream *);
-EXT u_int16_t stream_getw_from (struct stream *, size_t);
-EXT u_int32_t stream_getl (struct stream *);
-EXT u_int32_t stream_getl_from (struct stream *, size_t);
-EXT uint64_t stream_getq (struct stream *);
-EXT uint64_t stream_getq_from (struct stream *, size_t);
-EXT u_int32_t stream_get_ipv4 (struct stream *);
+extern struct stream *stream_new (size_t);
+extern void stream_free (struct stream *);
+extern struct stream * stream_copy (struct stream *, struct stream *src);
+extern struct stream *stream_dup (struct stream *);
+extern size_t stream_resize (struct stream *, size_t);
+extern size_t stream_get_getp (struct stream *);
+extern size_t stream_get_endp (struct stream *);
+extern size_t stream_get_size (struct stream *);
+extern u_char *stream_get_data (struct stream *);
+extern void stream_set_getp (struct stream *, size_t);
+extern void stream_forward_getp (struct stream *, size_t);
+extern void stream_forward_endp (struct stream *, size_t);
+extern void stream_put (struct stream *, const void *, size_t);
+extern int stream_putc (struct stream *, u_char);
+extern int stream_putc_at (struct stream *, size_t, u_char);
+extern int stream_putw (struct stream *, u_int16_t);
+extern int stream_putw_at (struct stream *, size_t, u_int16_t);
+extern int stream_putl (struct stream *, u_int32_t);
+extern int stream_putl_at (struct stream *, size_t, u_int32_t);
+extern int stream_putq (struct stream *, uint64_t);
+extern int stream_putq_at (struct stream *, size_t, uint64_t);
+extern int stream_put_ipv4 (struct stream *, u_int32_t);
+extern int stream_put_in_addr (struct stream *, struct in_addr *);
+extern int stream_put_prefix (struct stream *, struct isis_prefix *);
+extern void stream_get (void *, struct stream *, size_t);
+extern u_char stream_getc (struct stream *);
+extern u_char stream_getc_from (struct stream *, size_t);
+extern u_int16_t stream_getw (struct stream *);
+extern u_int16_t stream_getw_from (struct stream *, size_t);
+extern u_int32_t stream_getl (struct stream *);
+extern u_int32_t stream_getl_from (struct stream *, size_t);
+extern uint64_t stream_getq (struct stream *);
+extern uint64_t stream_getq_from (struct stream *, size_t);
+extern u_int32_t stream_get_ipv4 (struct stream *);
 
 #undef stream_read
 #undef stream_write
 
 /* Deprecated: assumes blocking I/O.  Will be removed. 
    Use stream_read_try instead.  */
-EXT int stream_read (struct stream *, int, size_t);
+extern int stream_read (struct stream *, int, size_t);
 
 /* Deprecated: all file descriptors should already be non-blocking.
    Will be removed.  Use stream_read_try instead. */
-EXT int stream_read_unblock (struct stream *, int, size_t);
+extern int stream_read_unblock (struct stream *, int, size_t);
 
 /* Read up to size bytes into the stream.
    Return code:
@@ -179,15 +174,14 @@ EXT int stream_read_unblock (struct stream *, int, size_t);
      -2: transient error, should retry later (i.e. EAGAIN or EINTR)
    This is suitable for use with non-blocking file descriptors.
  */
-EXT ssize_t stream_read_try(struct stream *, int, size_t);
-EXT ssize_t stream_recvmsg (struct stream *, int, struct msghdr *, int, size_t);
-EXT ssize_t stream_recvfrom (struct stream *, int, size_t, int, struct sockaddr *, socklen_t *);
-EXT size_t stream_write (struct stream *, const void *, size_t);
-EXT void stream_reset (struct stream *);
-EXT int stream_flush (struct stream *, int);
-EXT int stream_empty (struct stream *); /* is the stream empty? */
-EXT u_char *stream_pnt (struct stream *);
-EXT int readn (int, u_char *, int);
-#undef EXT
+extern ssize_t stream_read_try(struct stream *, int, size_t);
+extern ssize_t stream_recvmsg (struct stream *, int, struct msghdr *, int, size_t);
+extern ssize_t stream_recvfrom (struct stream *, int, size_t, int, struct sockaddr *, socklen_t *);
+extern size_t stream_write (struct stream *, const void *, size_t);
+extern void stream_reset (struct stream *);
+extern int stream_flush (struct stream *, int);
+extern int stream_empty (struct stream *); /* is the stream empty? */
+extern u_char *stream_pnt (struct stream *);
+extern int readn (int, u_char *, int);
 
 #endif /* _STREAM_H_ */

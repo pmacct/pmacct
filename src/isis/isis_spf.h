@@ -69,15 +69,9 @@ struct isis_spftree
   u_int32_t timerun;		/* statistics */
 };
 
-#if (!defined __ISIS_SPF_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void spftree_area_init (struct isis_area *);
-EXT int isis_spf_schedule (struct isis_area *, int);
-EXT int isis_run_spf (struct isis_area *, int, int);
-EXT int isis_spf_schedule6 (struct isis_area *, int);
-#undef EXT
+extern void spftree_area_init (struct isis_area *);
+extern int isis_spf_schedule (struct isis_area *, int);
+extern int isis_run_spf (struct isis_area *, int, int);
+extern int isis_spf_schedule6 (struct isis_area *, int);
 
 #endif /* _ISIS_SPF_H_ */
