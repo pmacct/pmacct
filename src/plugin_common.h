@@ -19,6 +19,9 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef PLUGIN_COMMON_H
+#define PLUGIN_COMMON_H
+
 /* includes */
 #if (!defined __PLUGIN_COMMON_EXPORT)
 #include "net_aggr.h"
@@ -150,3 +153,5 @@ EXT avro_schema_t avro_acct_schema;
 #endif
 #undef EXT
 #endif /* #if (!defined __PLUGIN_COMMON_EXPORT) */
+
+#endif //PLUGIN_COMMON_H

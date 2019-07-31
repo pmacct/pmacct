@@ -18,8 +18,8 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
-#ifndef PLUGIN_COMMON_H
-#define PLUGIN_COMMON_H
+#ifndef AMQP_PLUGIN_COMMON_H
+#define AMQP_PLUGIN_COMMON_H
 
 /* includes */
 #include <amqp.h>
@@ -45,4 +45,4 @@ EXT void amqp_cache_purge(struct chained_cache *[], int, int);
 EXT void amqp_avro_schema_purge(char *);
 #endif
 
-#endif //PLUGIN_COMMON_H
+#endif //AMQP_PLUGIN_COMMON_H

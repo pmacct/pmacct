@@ -49,7 +49,6 @@
  * As this implementation watches traffic promiscuously, it is likely to 
  * place significant load on hosts or gateways on which it is installed.
  */
-
 #include "common.h"
 #include "addr.h"
 #include "sys-tree.h"
@@ -59,6 +58,8 @@
 #include "treetype.h"
 
 #include "pmacct-data.h"
+#include "net_aggr.h"
+#include "ports_aggr.h"
 #include "plugin_hooks.h"
 #include "plugin_common.h"
 
