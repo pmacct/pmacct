@@ -19,24 +19,11 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* includes */
-
-/* defines */
+#ifndef PMBMPD_H
+#define PMBMPD_H
 
 /* prototypes */
-#if (!defined __PMBMPD_C)
-#define EXT extern
-#else
-#define EXT
-EXT void usage_daemon(char *);
-EXT void compute_once();
-#endif
-#undef EXT
+extern void usage_daemon(char *);
+extern void compute_once();
 
-/* global variables */
-#if (!defined __PMBMPD_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-#undef EXT
+#endif //PMBMPD_H

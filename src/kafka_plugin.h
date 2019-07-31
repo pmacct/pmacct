@@ -19,6 +19,9 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef KAFKA_PLUGIN_H
+#define KAFKA_PLUGIN_H
+
 /* includes */
 #include <librdkafka/rdkafka.h>
 #include <sys/poll.h>
@@ -28,15 +31,11 @@
 /* structures */
 
 /* prototypes */
-#if (!defined __KAFKA_PLUGIN_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void p_kafka_get_version(void);
-EXT void kafka_plugin(int, struct configuration *, void *);
-EXT void kafka_cache_purge(struct chained_cache *[], int, int);
+extern void p_kafka_get_version(void);
+extern void kafka_plugin(int, struct configuration *, void *);
+extern void kafka_cache_purge(struct chained_cache *[], int, int);
 #ifdef WITH_AVRO
-EXT void kafka_avro_schema_purge(char *);
+extern void kafka_avro_schema_purge(char *);
 #endif
-#undef EXT
+
+#endif //KAFKA_PLUGIN_H

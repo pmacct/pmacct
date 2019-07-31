@@ -19,6 +19,9 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef PMACCT_DATA_H
+#define PMACCT_DATA_H
+
 /* defines */
 #define PLUGIN_ID_CORE          0
 #define PLUGIN_ID_MEMORY        1
@@ -35,13 +38,7 @@
 #define PLUGIN_ID_UNKNOWN	255 
 
 /* vars */
-#if (!defined __PMACCTD_C) && (!defined __NFACCTD_C) && (!defined __SFACCTD_C) && (!defined __UACCTD_C) && (!defined __PMTELEMETRYD_C) && (!defined __PMACCT_CLIENT_C) && (!defined __PMBGPD_C) && (!defined __PMBMPD_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT int protocols_number;
-#undef EXT
+extern int protocols_number;
 
 /* structures */
 static const struct _primitives_matrix_struct _primitives_matrix[] = {
@@ -940,3 +937,5 @@ static struct tunnel_entry tunnel_handlers_list[] = {
 };
 
 #endif
+
+#endif //PMACCT_DATA_H

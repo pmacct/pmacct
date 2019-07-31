@@ -19,6 +19,9 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef PMACCT_NETWORK_H
+#define PMACCT_NETWORK_H
+
 #include "../include/extract.h"
 #include "../include/llc.h"
 #include "../include/sll.h"
@@ -654,10 +657,5 @@ struct tunnel_entry {
 };
 
 /* global variables */
-#if (!defined __PMACCTD_C) && (!defined __NFACCTD_C) && (!defined __SFACCTD_C) && (!defined __UACCTD_C) && (!defined __PMTELEMETRYD_C) && (!defined __PMBGPD_C) && (!defined __PMBMPD_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT struct tunnel_handler tunnel_registry[TUNNEL_REGISTRY_STACKS][TUNNEL_REGISTRY_ENTRIES];
-#undef EXT
+extern struct tunnel_handler tunnel_registry[TUNNEL_REGISTRY_STACKS][TUNNEL_REGISTRY_ENTRIES];
+#endif //PMACCT_NETWORK_H

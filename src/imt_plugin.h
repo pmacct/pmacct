@@ -19,6 +19,9 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef IMT_PLUGIN_H
+#define IMT_PLUGIN_H
+
 #include <sys/poll.h>
 
 /* defines */
@@ -118,70 +121,41 @@ struct imt_custom_primitives {
 };
 
 /* prototypes */
-#if (!defined __ACCT_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void insert_accounting_structure(struct primitives_ptrs *);
-EXT struct acc *search_accounting_structure(struct primitives_ptrs *);
-EXT int compare_accounting_structure(struct acc *, struct primitives_ptrs *);
-#undef EXT
+extern void insert_accounting_structure(struct primitives_ptrs *);
+extern struct acc *search_accounting_structure(struct primitives_ptrs *);
+extern int compare_accounting_structure(struct acc *, struct primitives_ptrs *);
 
-#if (!defined __MEMORY_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void init_memory_pool_table();
-EXT void clear_memory_pool_table();
-EXT struct memory_pool_desc *request_memory_pool(int);
-#undef EXT
+extern void init_memory_pool_table();
+extern void clear_memory_pool_table();
+extern struct memory_pool_desc *request_memory_pool(int);
 
-#if (!defined __SERVER_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void set_reset_flag(struct acc *);
-EXT void reset_counters(struct acc *);
-EXT int build_query_server(char *);
-EXT void process_query_data(int, unsigned char *, int, struct extra_primitives *, int, int);
-EXT void mask_elem(struct pkt_primitives *, struct pkt_bgp_primitives *, struct pkt_legacy_bgp_primitives *,
+extern void set_reset_flag(struct acc *);
+extern void reset_counters(struct acc *);
+extern int build_query_server(char *);
+extern void process_query_data(int, unsigned char *, int, struct extra_primitives *, int, int);
+extern void mask_elem(struct pkt_primitives *, struct pkt_bgp_primitives *, struct pkt_legacy_bgp_primitives *,
 			struct pkt_nat_primitives *, struct pkt_mpls_primitives *, struct pkt_tunnel_primitives *,
 			struct acc *, u_int64_t, u_int64_t, struct extra_primitives *);
-EXT void enQueue_elem(int, struct reply_buffer *, void *, int, int);
-EXT void Accumulate_Counters(struct pkt_data *, struct acc *);
-EXT int test_zero_elem(struct acc *);
-#undef EXT
+extern void enQueue_elem(int, struct reply_buffer *, void *, int, int);
+extern void Accumulate_Counters(struct pkt_data *, struct acc *);
+extern int test_zero_elem(struct acc *);
 
-#if (!defined __IMT_PLUGIN_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void sum_host_insert(struct primitives_ptrs *);
-EXT void sum_port_insert(struct primitives_ptrs *);
-EXT void sum_as_insert(struct primitives_ptrs *);
+extern void sum_host_insert(struct primitives_ptrs *);
+extern void sum_port_insert(struct primitives_ptrs *);
+extern void sum_as_insert(struct primitives_ptrs *);
 #if defined HAVE_L2
-EXT void sum_mac_insert(struct primitives_ptrs *);
+extern void sum_mac_insert(struct primitives_ptrs *);
 #endif
-EXT void exit_now(int);
-EXT void free_extra_allocs();
-#undef EXT
+extern void exit_now(int);
+extern void free_extra_allocs();
 
 /* global vars */
-#if (!defined __IMT_PLUGIN_C && !defined __PMACCT_CLIENT_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void (*imt_insert_func)(struct primitives_ptrs *); /* pointer to INSERT function */
-EXT unsigned char *mpd;  /* memory pool descriptors table */
-EXT unsigned char *a;  /* accounting in-memory table */
-EXT struct memory_pool_desc *current_pool; /* pointer to currently used memory pool */
-EXT struct acc **lru_elem_ptr; /* pointer to Last Recently Used (lru) element in a bucket */
-EXT int no_more_space;
-EXT struct timeval cycle_stamp; /* timestamp for the current cycle */
-EXT struct timeval table_reset_stamp; /* global table reset timestamp */
-#undef EXT
+extern void (*imt_insert_func)(struct primitives_ptrs *); /* pointer to INSERT function */
+extern unsigned char *mpd;  /* memory pool descriptors table */
+extern unsigned char *a;  /* accounting in-memory table */
+extern struct memory_pool_desc *current_pool; /* pointer to currently used memory pool */
+extern struct acc **lru_elem_ptr; /* pointer to Last Recently Used (lru) element in a bucket */
+extern int no_more_space;
+extern struct timeval cycle_stamp; /* timestamp for the current cycle */
+extern struct timeval table_reset_stamp; /* global table reset timestamp */
+#endif //IMT_PLUGIN_H

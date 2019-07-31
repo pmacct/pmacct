@@ -18,6 +18,8 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
+#ifndef MONGODB_PLUGIN_H
+#define MONGODB_PLUGIN_H
 
 /* includes */
 #include <stdlib.h>
@@ -35,19 +37,16 @@
 /* structures */
 
 /* prototypes */
-#if (!defined __MONGODB_PLUGIN_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void mongodb_plugin(int, struct configuration *, void *);
-EXT void mongodb_legacy_warning(int, struct configuration *, void *);
-EXT void MongoDB_cache_purge(struct chained_cache *[], int, int);
-EXT void MongoDB_create_indexes(mongo *, const char *);
-EXT int MongoDB_get_database(char *, int, char *);
-EXT void MongoDB_append_string(bson *, char *, struct pkt_vlen_hdr_primitives *, pm_cfgreg_t);
-EXT int MongoDB_oid_fuzz();
+extern void mongodb_plugin(int, struct configuration *, void *);
+extern void mongodb_legacy_warning(int, struct configuration *, void *);
+extern void MongoDB_cache_purge(struct chained_cache *[], int, int);
+extern void MongoDB_create_indexes(mongo *, const char *);
+extern int MongoDB_get_database(char *, int, char *);
+extern void MongoDB_append_string(bson *, char *, struct pkt_vlen_hdr_primitives *, pm_cfgreg_t);
+extern int MongoDB_oid_fuzz();
 
 /* global vars */
-EXT mongo db_conn;
-#undef EXT
+extern mongo db_conn;
+
+
+#endif //MONGODB_PLUGIN_H

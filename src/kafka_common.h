@@ -19,6 +19,10 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef KAFKA_COMMON_H
+#define KAFKA_COMMON_H
+
+
 /* includes */
 #include <librdkafka/rdkafka.h>
 #define __PLUGIN_COMMON_EXPORT
@@ -54,72 +58,67 @@ struct p_kafka_host {
 };
 
 /* prototypes */
-#if (!defined __KAFKA_COMMON_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void p_kafka_init_host(struct p_kafka_host *, char *);
-EXT void p_kafka_init_topic_rr(struct p_kafka_host *);
+extern void p_kafka_init_host(struct p_kafka_host *, char *);
+extern void p_kafka_init_topic_rr(struct p_kafka_host *);
 
-EXT void p_kafka_set_broker(struct p_kafka_host *, char *, int);
-EXT void p_kafka_set_topic(struct p_kafka_host *, char *);
-EXT void p_kafka_set_topic_rr(struct p_kafka_host *, int);
-EXT void p_kafka_set_content_type(struct p_kafka_host *, int);
-EXT void p_kafka_set_partition(struct p_kafka_host *, int);
-EXT void p_kafka_set_key(struct p_kafka_host *, char *, int);
-EXT void p_kafka_set_config_file(struct p_kafka_host *, char *);
+extern void p_kafka_set_broker(struct p_kafka_host *, char *, int);
+extern void p_kafka_set_topic(struct p_kafka_host *, char *);
+extern void p_kafka_set_topic_rr(struct p_kafka_host *, int);
+extern void p_kafka_set_content_type(struct p_kafka_host *, int);
+extern void p_kafka_set_partition(struct p_kafka_host *, int);
+extern void p_kafka_set_key(struct p_kafka_host *, char *, int);
+extern void p_kafka_set_config_file(struct p_kafka_host *, char *);
 
-EXT rd_kafka_t *p_kafka_get_handler(struct p_kafka_host *);
-EXT char *p_kafka_get_broker(struct p_kafka_host *);
-EXT char *p_kafka_get_topic(struct p_kafka_host *);
-EXT int p_kafka_get_topic_rr(struct p_kafka_host *);
-EXT int p_kafka_get_content_type(struct p_kafka_host *);
-EXT int p_kafka_get_partition(struct p_kafka_host *);
-EXT void p_kafka_set_dynamic_partitioner(struct p_kafka_host *);
-EXT char *p_kafka_get_key(struct p_kafka_host *);
-EXT void p_kafka_get_version();
+extern rd_kafka_t *p_kafka_get_handler(struct p_kafka_host *);
+extern char *p_kafka_get_broker(struct p_kafka_host *);
+extern char *p_kafka_get_topic(struct p_kafka_host *);
+extern int p_kafka_get_topic_rr(struct p_kafka_host *);
+extern int p_kafka_get_content_type(struct p_kafka_host *);
+extern int p_kafka_get_partition(struct p_kafka_host *);
+extern void p_kafka_set_dynamic_partitioner(struct p_kafka_host *);
+extern char *p_kafka_get_key(struct p_kafka_host *);
+extern void p_kafka_get_version();
 
-EXT void p_kafka_unset_topic(struct p_kafka_host *);
+extern void p_kafka_unset_topic(struct p_kafka_host *);
 
-EXT int p_kafka_parse_config_entry(char *, char *, char **, char **);
-EXT void p_kafka_apply_global_config(struct p_kafka_host *);
-EXT void p_kafka_apply_topic_config(struct p_kafka_host *);
+extern int p_kafka_parse_config_entry(char *, char *, char **, char **);
+extern void p_kafka_apply_global_config(struct p_kafka_host *);
+extern void p_kafka_apply_topic_config(struct p_kafka_host *);
 
-EXT void p_kafka_logger(const rd_kafka_t *, int, const char *, const char *);
-EXT void p_kafka_msg_delivered(rd_kafka_t *, void *, size_t, int, void *, void *);
-EXT void p_kafka_msg_error(rd_kafka_t *, int, const char *, void *);
-EXT int p_kafka_stats(rd_kafka_t *, char *, size_t, void *);
+extern void p_kafka_logger(const rd_kafka_t *, int, const char *, const char *);
+extern void p_kafka_msg_delivered(rd_kafka_t *, void *, size_t, int, void *, void *);
+extern void p_kafka_msg_error(rd_kafka_t *, int, const char *, void *);
+extern int p_kafka_stats(rd_kafka_t *, char *, size_t, void *);
 
-EXT int p_kafka_connect_to_produce(struct p_kafka_host *);
-EXT int p_kafka_produce_data(struct p_kafka_host *, void *, size_t);
-EXT int p_kafka_produce_data_to_part(struct p_kafka_host *, void *, size_t, int);
+extern int p_kafka_connect_to_produce(struct p_kafka_host *);
+extern int p_kafka_produce_data(struct p_kafka_host *, void *, size_t);
+extern int p_kafka_produce_data_to_part(struct p_kafka_host *, void *, size_t, int);
 
-EXT int p_kafka_connect_to_consume(struct p_kafka_host *);
-EXT int p_kafka_manage_consumer(struct p_kafka_host *, int);
-EXT int p_kafka_consume_poller(struct p_kafka_host *, void **, int);
-EXT int p_kafka_consume_data(struct p_kafka_host *, void *, char *, size_t);
+extern int p_kafka_connect_to_consume(struct p_kafka_host *);
+extern int p_kafka_manage_consumer(struct p_kafka_host *, int);
+extern int p_kafka_consume_poller(struct p_kafka_host *, void **, int);
+extern int p_kafka_consume_data(struct p_kafka_host *, void *, char *, size_t);
 
-EXT void p_kafka_close(struct p_kafka_host *, int);
-EXT int p_kafka_check_outq_len(struct p_kafka_host *);
+extern void p_kafka_close(struct p_kafka_host *, int);
+extern int p_kafka_check_outq_len(struct p_kafka_host *);
 
-EXT int write_and_free_json_kafka(void *, void *);
+extern int write_and_free_json_kafka(void *, void *);
 
 /* global vars */
-EXT struct p_kafka_host kafkap_kafka_host;
-EXT struct p_kafka_host bgp_daemon_msglog_kafka_host;
-EXT struct p_kafka_host bgp_table_dump_kafka_host;
-EXT struct p_kafka_host bmp_daemon_msglog_kafka_host;
-EXT struct p_kafka_host bmp_dump_kafka_host;
-EXT struct p_kafka_host sfacctd_counter_kafka_host;
-EXT struct p_kafka_host telemetry_daemon_msglog_kafka_host;
-EXT struct p_kafka_host telemetry_dump_kafka_host;
-EXT struct p_kafka_host nfacctd_kafka_host;
+extern struct p_kafka_host kafkap_kafka_host;
+extern struct p_kafka_host bgp_daemon_msglog_kafka_host;
+extern struct p_kafka_host bgp_table_dump_kafka_host;
+extern struct p_kafka_host bmp_daemon_msglog_kafka_host;
+extern struct p_kafka_host bmp_dump_kafka_host;
+extern struct p_kafka_host sfacctd_counter_kafka_host;
+extern struct p_kafka_host telemetry_daemon_msglog_kafka_host;
+extern struct p_kafka_host telemetry_dump_kafka_host;
+extern struct p_kafka_host nfacctd_kafka_host;
 
-EXT int kafkap_ret_err_cb;
-EXT int dyn_partition_key;
+extern int kafkap_ret_err_cb;
+extern int dyn_partition_key;
 
 extern char default_kafka_broker_host[];
 extern int default_kafka_broker_port;
 extern char default_kafka_topic[];
-#undef EXT
+#endif //KAFKA_COMMON_H
