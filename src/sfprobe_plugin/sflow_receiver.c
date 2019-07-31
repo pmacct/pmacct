@@ -415,12 +415,12 @@ inline static void putClass(SFLReceiver *receiver, SFLExtended_classification *c
 
 inline static void putClass2(SFLReceiver *receiver, SFLExtended_classification2 *class2_elem)
 {
-  u_int64_t dummy = 0;
 
 #if defined (WITH_NDPI)
   putNet32(receiver, class2_elem->id.master_protocol);
   putNet32(receiver, class2_elem->id.app_protocol);
 #else
+  u_int64_t dummy = 0;
   putNet64(receiver, dummy);
 #endif
 }
