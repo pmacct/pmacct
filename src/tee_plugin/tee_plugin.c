@@ -31,6 +31,11 @@
 #include "plugin_common.h"
 #include "tee_plugin.h"
 
+/* Global variables */
+char tee_send_buf[65535];
+struct tee_receivers receivers; 
+int err_cant_bridge_af;
+
 void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 {
   struct pkt_msg *msg;

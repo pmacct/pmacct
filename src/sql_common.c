@@ -29,6 +29,47 @@
 #include "sql_common_m.h"
 #include "crc32.h"
 
+/* Global variables */
+char sql_data[LARGEBUFLEN];
+char lock_clause[LONGSRVBUFLEN];
+char unlock_clause[LONGSRVBUFLEN];
+char update_clause[LONGSRVBUFLEN];
+char set_clause[LONGSRVBUFLEN];
+char copy_clause[LONGSRVBUFLEN];
+char insert_clause[LONGSRVBUFLEN];
+char insert_counters_clause[LONGSRVBUFLEN];
+char insert_nocounters_clause[LONGSRVBUFLEN];
+char insert_full_clause[LONGSRVBUFLEN];
+char values_clause[LONGLONGSRVBUFLEN];
+char *multi_values_buffer;
+char where_clause[LONGLONGSRVBUFLEN];
+unsigned char *pipebuf;
+struct db_cache *cache;
+struct db_cache **queries_queue, **pending_queries_queue;
+struct db_cache *collision_queue;
+int cq_ptr, qq_ptr, qq_size, pp_size, pb_size, pn_size, pm_size, pt_size;
+int pc_size, dbc_size, cq_size, pqq_ptr;
+struct db_cache lru_head, *lru_tail;
+struct frags where[N_PRIMITIVES+2];
+struct frags values[N_PRIMITIVES+2];
+struct frags copy_values[N_PRIMITIVES+2];
+struct frags set[N_PRIMITIVES+2];
+struct frags set_event[N_PRIMITIVES+2];
+int glob_num_primitives; /* last resort for signal handling */
+int glob_basetime; /* last resort for signal handling */
+time_t glob_new_basetime; /* last resort for signal handling */
+time_t glob_committed_basetime; /* last resort for signal handling */
+int glob_dyn_table, glob_dyn_table_time_only; /* last resort for signal handling */
+int glob_timeslot; /* last resort for sql handlers */
+
+struct sqlfunc_cb_registry sqlfunc_cbr; 
+void (*insert_func)(struct primitives_ptrs *, struct insert_data *);
+struct DBdesc p;
+struct DBdesc b;
+struct BE_descs bed;
+struct largebuf envbuf;
+time_t now; /* PostgreSQL */
+
 /* Functions */
 void sql_set_signals()
 {

@@ -41,24 +41,24 @@ libdaemons_la_LIBADD += telemetry/libpmtelemetry.la
 libdaemons_la_LIBADD += libcommon.la
 libdaemons_la_CFLAGS  = $(AM_CFLAGS)
 if WITH_MYSQL
-libdaemons_la_SOURCES += mysql_plugin.c sql_common_m.c
+libdaemons_la_SOURCES += mysql_plugin.c
 libdaemons_la_LIBADD  += @MYSQL_LIBS@
-libdaemons_la_CFLAGS  += @MYSQL_CFLAGS@ -Wno-error=pointer-sign
+libdaemons_la_CFLAGS  += @MYSQL_CFLAGS@
 endif
 if WITH_PGSQL
-libdaemons_la_SOURCES += pgsql_plugin.c sql_common_m.c
+libdaemons_la_SOURCES += pgsql_plugin.c
 libdaemons_la_LIBADD  += @PGSQL_LIBS@
-libdaemons_la_CFLAGS  += @PGSQL_CFLAGS@ -Wno-error=pointer-sign
+libdaemons_la_CFLAGS  += @PGSQL_CFLAGS@
 endif
 if WITH_MONGODB
-libdaemons_la_SOURCES += mongodb_plugin.c sql_common_m.c
+libdaemons_la_SOURCES += mongodb_plugin.c
 libdaemons_la_LIBADD  += @MONGODB_LIBS@
-libdaemons_la_CFLAGS  += @MONGODB_CFLAGS@ -Wno-error=pointer-sign
+libdaemons_la_CFLAGS  += @MONGODB_CFLAGS@
 endif
 if WITH_SQLITE3
-libdaemons_la_SOURCES += sqlite3_plugin.c sql_common_m.c
+libdaemons_la_SOURCES += sqlite3_plugin.c
 libdaemons_la_LIBADD  += @SQLITE3_LIBS@
-libdaemons_la_CFLAGS  += @SQLITE3_CFLAGS@ -Wno-error=pointer-sign
+libdaemons_la_CFLAGS  += @SQLITE3_CFLAGS@
 endif
 if WITH_AVRO
 libdaemons_la_LIBADD  += @AVRO_LIBS@
@@ -89,7 +89,8 @@ libdaemons_la_LIBADD  += @KAFKA_LIBS@
 libdaemons_la_CFLAGS  += @KAFKA_CFLAGS@
 endif
 if USING_SQL
-libdaemons_la_SOURCES += sql_common.c sql_handlers.c
+libdaemons_la_SOURCES += sql_common.c sql_handlers.c sql_common_m.c
+libdaemons_la_CFLAGS += -Wno-error=pointer-sign
 libdaemons_la_LIBADD  += -lm -lz
 endif
 

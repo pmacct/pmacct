@@ -31,6 +31,13 @@
 #include "preprocess-data.h"
 #include "preprocess-internal.h"
 
+//Global variables
+sql_preprocess_func sql_preprocess_funcs[2*N_FUNCS]; /* 20 */
+P_preprocess_func P_preprocess_funcs[2*N_FUNCS]; /* 20 */
+struct preprocess prep;
+struct _fsrc_queue fsrc_queue;
+
+
 void set_preprocess_funcs(char *string, struct preprocess *prep, int dictionary)
 {
   char *token, *sep, *key, *value;

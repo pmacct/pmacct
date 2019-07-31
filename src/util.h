@@ -132,7 +132,6 @@ extern int hex_to_bin(int);
 extern int serialize_hex(const u_char *, u_char *, int);
 extern int serialize_bin(const u_char *, u_char *, int);
 
-extern primptrs_func primptrs_funcs[PRIMPTRS_FUNCS_N];
 extern void set_primptrs_funcs(struct extra_primitives *);
 extern void primptrs_set_bgp(u_char *, struct extra_primitives *, struct primitives_ptrs *);
 extern void primptrs_set_lbgp(u_char *, struct extra_primitives *, struct primitives_ptrs *);
@@ -197,5 +196,7 @@ extern void P_broker_timers_unset_last_fail(struct p_broker_timers *);
 extern time_t P_broker_timers_get_last_fail(struct p_broker_timers *);
 extern int P_broker_timers_get_retry_interval(struct p_broker_timers *);
 extern time_t P_broker_timers_get_last_fail(struct p_broker_timers *);
+
+extern primptrs_func primptrs_funcs[PRIMPTRS_FUNCS_N];
 
 #endif //UTIL_H

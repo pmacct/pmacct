@@ -29,6 +29,13 @@
 #include "ip_frag.h"
 #include "jhash.h"
 
+/* global variables */
+struct ip_fragment *ipft[IPFT_HASHSZ];
+struct lru_l lru_list;
+
+struct ip6_fragment *ipft6[IPFT_HASHSZ];
+struct lru_l6 lru_list6;
+
 u_int32_t ipft_total_nodes;  
 time_t prune_deadline;
 time_t emergency_prune;

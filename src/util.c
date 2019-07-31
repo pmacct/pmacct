@@ -50,6 +50,9 @@
 #include <sys/file.h>
 #include <sys/utsname.h>
 
+/* Global variables */
+primptrs_func primptrs_funcs[PRIMPTRS_FUNCS_N];
+
 /* functions */
 void setnonblocking(int sock)
 {

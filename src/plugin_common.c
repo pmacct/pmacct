@@ -32,6 +32,14 @@
 #include "crc32.h"
 #include "preprocess-internal.h"
 
+/* Global variables */
+void (*basetime_init)(time_t);
+void (*basetime_eval)(struct timeval *, struct timeval *, time_t);
+int (*basetime_cmp)(struct timeval *, struct timeval *);
+struct timeval basetime, ibasetime, new_basetime;
+time_t timeslot;
+int dyn_table, dyn_table_time_only;
+
 /* Functions */
 void P_set_signals()
 {

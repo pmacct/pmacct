@@ -25,6 +25,13 @@
 #include "pmacct.h"
 #include "addr.h"
 
+/* Global variables */
+struct xflow_status_entry *xflow_status_table[XFLOW_STATUS_TABLE_SZ];
+u_int32_t xflow_status_table_entries;
+u_int8_t xflow_status_table_error;
+u_int32_t xflow_tot_bad_datagrams;
+u_int8_t smp_entry_status_table_memerr, class_entry_status_table_memerr;
+
 /* functions */
 u_int32_t hash_status_table(u_int32_t data, struct sockaddr *sa, u_int32_t size)
 {
