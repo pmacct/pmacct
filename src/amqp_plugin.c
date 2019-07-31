@@ -337,6 +337,15 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   char *json_buf = NULL;
   int json_buf_off = 0;
 
+  //TODO sort out unused variables correctly
+  (void)pvlen;
+  (void)pcust;
+  (void)ptun;
+  (void)pmpls;
+  (void)pnat;
+  (void)pbgp;
+  (void)data;
+
 #ifdef WITH_AVRO
   avro_writer_t avro_writer;
   char *avro_buf = NULL;
