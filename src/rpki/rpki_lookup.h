@@ -19,13 +19,12 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef RPKI_LOOKUP_H
+#define RPKI_LOOKUP_H
+
 /* prototypes */
-#if !defined(__RPKI_LOOKUP_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT u_int8_t rpki_prefix_lookup(struct prefix *, as_t);
-EXT u_int8_t rpki_vector_prefix_lookup(struct bgp_node_vector *);
-EXT int rpki_prefix_lookup_node_match_cmp(struct bgp_info *, struct node_match_cmp_term2 *);
-#undef EXT
+extern u_int8_t rpki_prefix_lookup(struct prefix *, as_t);
+extern u_int8_t rpki_vector_prefix_lookup(struct bgp_node_vector *);
+extern int rpki_prefix_lookup_node_match_cmp(struct bgp_info *, struct node_match_cmp_term2 *);
+
+#endif //RPKI_LOOKUP_H
