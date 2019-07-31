@@ -23,15 +23,10 @@
 #define PLUGIN_COMMON_H
 
 /* includes */
-#if (!defined __PLUGIN_COMMON_EXPORT)
 #include "net_aggr.h"
 #include "ports_aggr.h"
-
-/* including sql_common.h exporteable part as pre-requisite for preprocess.h inclusion later */
-#define __SQL_COMMON_EXPORT
 #include "sql_common.h"
-#undef __SQL_COMMON_EXPORT
-#endif /* #if (!defined __PLUGIN_COMMON_EXPORT) */
+#include "preprocess.h"
 
 /* defines */
 #define DEFAULT_PLUGIN_COMMON_REFRESH_TIME 60 
@@ -92,9 +87,6 @@ struct p_table_rr {
 };
 #endif
 
-#if (!defined __PLUGIN_COMMON_EXPORT)
-
-#include "preprocess.h"
 
 /* prototypes */
 extern void P_set_signals();
@@ -146,6 +138,5 @@ extern int dyn_table, dyn_table_time_only;
 #ifdef WITH_AVRO
 extern avro_schema_t avro_acct_schema;
 #endif
-#endif /* #if (!defined __PLUGIN_COMMON_EXPORT) */
 
 #endif //PLUGIN_COMMON_H

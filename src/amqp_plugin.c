@@ -33,6 +33,7 @@
 #ifndef WITH_JANSSON
 #error "--enable-rabbitmq requires --enable-jansson"
 #endif
+#include "sql_common.h"
 #include "net_aggr.h"
 #include "ports_aggr.h"
 
