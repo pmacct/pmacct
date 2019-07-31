@@ -323,43 +323,65 @@ l2_to_flowrec(struct FLOW *flow, struct primitives_ptrs *prim_ptrs, int ndx)
 
   if (pmpls) flow->mpls_label[ndx] = pmpls->mpls_label_top;
 
+  /* handling input interface */
+  flow->ifindex[ndx] = 0;
+
   if (p->ifindex_in) flow->ifindex[ndx] = p->ifindex_in;
-  else if (config.nfprobe_ifindex_type && direction == DIRECTION_IN) {
-    switch (config.nfprobe_ifindex_type) {
-    case IFINDEX_STATIC:
-      flow->ifindex[ndx] = config.nfprobe_ifindex;
-      break;
-    case IFINDEX_TAG:
-      flow->ifindex[ndx] = p->tag;
-      break;
-    case IFINDEX_TAG2:
-      flow->ifindex[ndx] = p->tag2;
-      break;
-    default:
-      flow->ifindex[ndx] = 0;
-      break;
+
+  if (!flow->ifindex[ndx] || config.nfprobe_ifindex_override) {
+    if (config.nfprobe_ifindex_type && direction == DIRECTION_IN) {
+      switch (config.nfprobe_ifindex_type) {
+      case IFINDEX_STATIC:
+	if (config.nfprobe_ifindex) {
+	  flow->ifindex[ndx] = config.nfprobe_ifindex;
+	}
+
+	break;
+      case IFINDEX_TAG:
+	if (p->tag) {
+	  flow->ifindex[ndx] = p->tag;
+	}
+
+	break;
+      case IFINDEX_TAG2:
+	if (p->tag2) {
+	  flow->ifindex[ndx] = p->tag2;
+	}
+
+	break;
+      }
     }
   }
-  else flow->ifindex[ndx] = 0;
+
+  /* handling output interface */
+  flow->ifindex[ndx ^ 1] = 0;
 
   if (p->ifindex_out) flow->ifindex[ndx ^ 1] = p->ifindex_out;
-  else if (config.nfprobe_ifindex_type && direction == DIRECTION_OUT) {
-    switch (config.nfprobe_ifindex_type) {
-    case IFINDEX_STATIC:
-      flow->ifindex[ndx ^ 1] = config.nfprobe_ifindex; 
-      break;
-    case IFINDEX_TAG:
-      flow->ifindex[ndx ^ 1] = p->tag;
-      break;
-    case IFINDEX_TAG2:
-      flow->ifindex[ndx ^ 1] = p->tag2;
-      break;
-    default:
-      flow->ifindex[ndx ^ 1] = 0;
-      break;
+
+  if (!flow->ifindex[ndx ^ 1] || config.nfprobe_ifindex_override) {
+    if (config.nfprobe_ifindex_type && direction == DIRECTION_OUT) {
+      switch (config.nfprobe_ifindex_type) {
+      case IFINDEX_STATIC:
+	if (config.nfprobe_ifindex) {
+	  flow->ifindex[ndx ^ 1] = config.nfprobe_ifindex; 
+	}
+
+	break;
+      case IFINDEX_TAG:
+	if (p->tag) {
+	  flow->ifindex[ndx ^ 1] = p->tag;
+	}
+
+	break;
+      case IFINDEX_TAG2:
+	if (p->tag2) {
+	  flow->ifindex[ndx ^ 1] = p->tag2;
+	}
+
+	break;
+      }
     }
   }
-  else flow->ifindex[ndx ^ 1] = 0;
 
   return (0);
 }

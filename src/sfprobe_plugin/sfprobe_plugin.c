@@ -344,29 +344,41 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
 
   // Let's determine the ifIndex
   {
-    u_int32_t ifIndex;
+    u_int32_t ifIndex = 0;
 
-    if (hdr->ifindex_in && direction == SFL_DIRECTION_IN)
+    if (hdr->ifindex_in && direction == SFL_DIRECTION_IN) {
       ifIndex = hdr->ifindex_in;
-    else if (hdr->ifindex_out && direction == SFL_DIRECTION_OUT)
+    }
+    else if (hdr->ifindex_out && direction == SFL_DIRECTION_OUT) {
       ifIndex = hdr->ifindex_out; 
-    else if (sp->ifIndex_Type) {
-      switch (sp->ifIndex_Type) {
-      case IFINDEX_STATIC:
-	ifIndex = config.nfprobe_ifindex;
-	break;
-      case IFINDEX_TAG:
-	ifIndex = hdr->tag;
-	break;
-      case IFINDEX_TAG2:
-	ifIndex = hdr->tag2;
-	break;
-      default:
-	ifIndex = 0x3FFFFFFF;
-	break;
+    }
+
+    if (!ifIndex || config.nfprobe_ifindex_override) {
+      if (sp->ifIndex_Type) {
+	switch (sp->ifIndex_Type) {
+	case IFINDEX_STATIC:
+	  if (config.nfprobe_ifindex) {
+	    ifIndex = config.nfprobe_ifindex;
+	  }
+
+	  break;
+	case IFINDEX_TAG:
+	  if (hdr->tag) {
+	    ifIndex = hdr->tag;
+	  }
+
+	  break;
+	case IFINDEX_TAG2:
+	  if (hdr->tag2) {
+	    ifIndex = hdr->tag2;
+	  }
+
+	  break;
+	}
       }
     }
-    else ifIndex = 0x3FFFFFFF;
+
+    if (!ifIndex) ifIndex = 0x3FFFFFFF;
 
     for (idx = 0; idx < SFL_MAX_INTERFACES; idx++) {
       if (sp->counters[idx].ifIndex == ifIndex || idx == (SFL_MAX_INTERFACES-1)) break;

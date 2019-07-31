@@ -2132,9 +2132,17 @@ DESC:           Associates an interface index (ifIndex) to a given nfprobe or sf
 		an add-on to [ns]probe_direction directive, ie. when multiplexing mirrored traffic from different
 		sources on the same interface (ie. split by VLAN). Can be statically defined via a 32-bit integer
 		or semi-dynamically determined via lookup to either 'tag' or 'tag2' values (read full elaboration
-		on [ns]probe_direction directive). This definition will be also always overridden whenever the
-		ifIndex can be determined dynamically (ie. via NFLOG framework).
+		on [ns]probe_direction directive). Unless [ns]fprobe_ifindex_override is set true, by default
+		this definition will be overridden whenever the ifIndex can be determined dynamically (ie. via
+		NFLOG framework).
 DEFAULT:	none
+
+KEY:		[ nfprobe_ifindex_override | sfprobe_ifindex_override ] 
+VALUES:		[ true | false ]
+DESC:		If an ifIndex can be determined dynamically (ie. via NFLOG framework), setting this to true
+		allows for a non-zero value computed by [sn]fprobe_ifindex to override the original value;
+		if the value is zero, the override does not take place.
+DEFAULT:	false
 
 KEY:		nfprobe_dont_cache
 VALUES:		[ true | false ]
