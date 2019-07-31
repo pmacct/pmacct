@@ -119,7 +119,7 @@ EXT struct p_kafka_host nfacctd_kafka_host;
 EXT int kafkap_ret_err_cb;
 EXT int dyn_partition_key;
 
-static char default_kafka_broker_host[] = "127.0.0.1";
-static int default_kafka_broker_port = 9092;
-static char default_kafka_topic[] = "pmacct.acct";
+extern char default_kafka_broker_host[];
+extern int default_kafka_broker_port;
+extern char default_kafka_topic[];
 #undef EXT

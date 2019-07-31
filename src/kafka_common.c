@@ -28,6 +28,10 @@
 #include "kafka_common.h"
 #include "base64.h"
 
+char default_kafka_broker_host[] = "127.0.0.1";
+int default_kafka_broker_port = 9092;
+char default_kafka_topic[] = "pmacct.acct";
+
 /* Functions */
 void p_kafka_init_host(struct p_kafka_host *kafka_host, char *config_file)
 {
