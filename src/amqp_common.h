@@ -104,11 +104,11 @@ EXT struct p_amqp_host sfacctd_counter_amqp_host;
 EXT struct p_amqp_host telemetry_daemon_msglog_amqp_host;
 EXT struct p_amqp_host telemetry_dump_amqp_host;
 
-static char rabbitmq_user[] = "guest";
-static char rabbitmq_pwd[] = "guest";
-static char default_amqp_exchange[] = "pmacct";
-static char default_amqp_exchange_type[] = "direct";
-static char default_amqp_routing_key[] = "acct";
-static char default_amqp_host[] = "127.0.0.1";
-static char default_amqp_vhost[] = "/";
+extern char rabbitmq_user[];
+extern char rabbitmq_pwd[];
+extern char default_amqp_exchange[];
+extern char default_amqp_exchange_type[];
+extern char default_amqp_routing_key[];
+extern char default_amqp_host[];
+extern char default_amqp_vhost[];
 #undef EXT

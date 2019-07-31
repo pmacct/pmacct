@@ -27,6 +27,14 @@
 #include "plugin_common.h"
 #include "amqp_common.h"
 
+char rabbitmq_user[] = "guest";
+char rabbitmq_pwd[] = "guest";
+char default_amqp_exchange[] = "pmacct";
+char default_amqp_exchange_type[] = "direct";
+char default_amqp_routing_key[] = "acct";
+char default_amqp_host[] = "127.0.0.1";
+char default_amqp_vhost[] = "/";
+
 /* Functions */
 void p_amqp_init_host(struct p_amqp_host *amqp_host)
 {
