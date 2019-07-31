@@ -18,6 +18,8 @@
     along with this program; if no, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
+#ifndef BGP_XCS_H
+#define BGP_XCS_H
 
 /* includes */
 
@@ -26,21 +28,16 @@
 /* structures */
 
 /* prototypes */
-#if (!defined __BGP_XCS_C)
-#define EXT extern
-#else
-#define EXT
-#endif
 
-EXT int bgp_xcs_map_src_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
-EXT int bgp_xcs_map_dst_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+extern int bgp_xcs_map_src_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+extern int bgp_xcs_map_dst_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 
-EXT void bgp_xcs_map_validate(char *, struct plugin_requests *);
-EXT int bgp_xcs_parse_hostport(const char *, struct sockaddr *, socklen_t *);
-EXT void bgp_xcs_map_destroy();
+extern void bgp_xcs_map_validate(char *, struct plugin_requests *);
+extern int bgp_xcs_parse_hostport(const char *, struct sockaddr *, socklen_t *);
+extern void bgp_xcs_map_destroy();
 
 /* global variables */
 
-#undef EXT
-
 extern int Tee_parse_hostport(const char *, struct sockaddr *, socklen_t *, int);
+
+#endif //BGP_XCS_H

@@ -105,33 +105,27 @@ struct bgp_node_vector {
 }; 
 
 /* Prototypes */
-#if (!defined __BGP_TABLE_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT struct bgp_table *bgp_table_init (afi_t, safi_t);
-EXT void bgp_unlock_node (struct bgp_peer *, struct bgp_node *node);
-EXT struct bgp_node *bgp_table_top (struct bgp_peer *, const struct bgp_table *const);
-EXT struct bgp_node *bgp_route_next (struct bgp_peer *, struct bgp_node *);
-EXT struct bgp_node *bgp_node_get (struct bgp_peer *, struct bgp_table *const, struct prefix *);
-EXT struct bgp_node *bgp_lock_node (struct bgp_peer *, struct bgp_node *node);
-EXT void bgp_node_vector_debug(struct bgp_node_vector *, struct prefix *);
-EXT void bgp_node_match (const struct bgp_table *, struct prefix *, struct bgp_peer *,
+extern struct bgp_table *bgp_table_init (afi_t, safi_t);
+extern void bgp_unlock_node (struct bgp_peer *, struct bgp_node *node);
+extern struct bgp_node *bgp_table_top (struct bgp_peer *, const struct bgp_table *const);
+extern struct bgp_node *bgp_route_next (struct bgp_peer *, struct bgp_node *);
+extern struct bgp_node *bgp_node_get (struct bgp_peer *, struct bgp_table *const, struct prefix *);
+extern struct bgp_node *bgp_lock_node (struct bgp_peer *, struct bgp_node *node);
+extern void bgp_node_vector_debug(struct bgp_node_vector *, struct prefix *);
+extern void bgp_node_match (const struct bgp_table *, struct prefix *, struct bgp_peer *,
 			 u_int32_t (*modulo_func)(struct bgp_peer *, path_id_t *, int),
 			 int (*cmp_func)(struct bgp_info *, struct node_match_cmp_term2 *),
 			 struct node_match_cmp_term2 *, struct bgp_node_vector *,
 			 struct bgp_node **result_node, struct bgp_info **result_info);
-EXT void bgp_node_match_ipv4 (const struct bgp_table *, struct in_addr *, struct bgp_peer *,
+extern void bgp_node_match_ipv4 (const struct bgp_table *, struct in_addr *, struct bgp_peer *,
 			      u_int32_t (*modulo_func)(struct bgp_peer *, path_id_t *, int),
 			      int (*cmp_func)(struct bgp_info *, struct node_match_cmp_term2 *),
 			      struct node_match_cmp_term2 *, struct bgp_node_vector *,
 			      struct bgp_node **result_node, struct bgp_info **result_info);
-EXT void bgp_node_match_ipv6 (const struct bgp_table *, struct in6_addr *, struct bgp_peer *,
+extern void bgp_node_match_ipv6 (const struct bgp_table *, struct in6_addr *, struct bgp_peer *,
 			      u_int32_t (*modulo_func)(struct bgp_peer *, path_id_t *, int),
 			      int (*cmp_func)(struct bgp_info *, struct node_match_cmp_term2 *),
 			      struct node_match_cmp_term2 *, struct bgp_node_vector *,
 			      struct bgp_node **result_node, struct bgp_info **result_info);
-EXT void bgp_table_free (struct bgp_table *);
-#undef EXT
+extern void bgp_table_free (struct bgp_table *);
 #endif 

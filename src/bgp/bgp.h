@@ -342,38 +342,26 @@ struct bgp_lg_rep_gp_data {
 #include "bgp_util.h"
 
 /* prototypes */
-#if (!defined __BGP_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void nfacctd_bgp_wrapper();
-EXT void skinny_bgp_daemon();
-EXT void skinny_bgp_daemon_online();
-EXT void bgp_prepare_thread();
-EXT void bgp_prepare_daemon();
-#undef EXT
+extern void nfacctd_bgp_wrapper();
+extern void skinny_bgp_daemon();
+extern void skinny_bgp_daemon_online();
+extern void bgp_prepare_thread();
+extern void bgp_prepare_daemon();
 
 /* global variables */
-#if (!defined __BGP_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT struct bgp_peer *peers;
-EXT struct bgp_peer_cache_bucket *peers_cache, *peers_port_cache;
-EXT char *std_comm_patterns[MAX_BGP_COMM_PATTERNS];
-EXT char *ext_comm_patterns[MAX_BGP_COMM_PATTERNS];
-EXT char *lrg_comm_patterns[MAX_BGP_COMM_PATTERNS];
-EXT char *std_comm_patterns_to_asn[MAX_BGP_COMM_PATTERNS];
-EXT char *lrg_comm_patterns_to_asn[MAX_BGP_COMM_PATTERNS];
-EXT struct bgp_comm_range peer_src_as_ifrange; 
-EXT struct bgp_comm_range peer_src_as_asrange; 
-EXT u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, path_id_t *, int);
+extern struct bgp_peer *peers;
+extern struct bgp_peer_cache_bucket *peers_cache, *peers_port_cache;
+extern char *std_comm_patterns[MAX_BGP_COMM_PATTERNS];
+extern char *ext_comm_patterns[MAX_BGP_COMM_PATTERNS];
+extern char *lrg_comm_patterns[MAX_BGP_COMM_PATTERNS];
+extern char *std_comm_patterns_to_asn[MAX_BGP_COMM_PATTERNS];
+extern char *lrg_comm_patterns_to_asn[MAX_BGP_COMM_PATTERNS];
+extern struct bgp_comm_range peer_src_as_ifrange; 
+extern struct bgp_comm_range peer_src_as_asrange; 
+extern u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, path_id_t *, int);
 
-EXT struct bgp_rt_structs inter_domain_routing_dbs[FUNC_TYPE_MAX], *bgp_routing_db;
-EXT struct bgp_misc_structs inter_domain_misc_dbs[FUNC_TYPE_MAX], *bgp_misc_db;
+extern struct bgp_rt_structs inter_domain_routing_dbs[FUNC_TYPE_MAX], *bgp_routing_db;
+extern struct bgp_misc_structs inter_domain_misc_dbs[FUNC_TYPE_MAX], *bgp_misc_db;
 
-EXT struct bgp_xconnects bgp_xcs_map;
-#undef EXT
+extern struct bgp_xconnects bgp_xcs_map;
 #endif 

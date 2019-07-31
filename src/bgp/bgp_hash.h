@@ -60,19 +60,13 @@ struct hash
   unsigned long count;
 };
 
-#if (!defined __BGP_HASH_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT struct hash *hash_create (int, unsigned int (*) (void *), int (*) (const void *, const void *));
-EXT struct hash *hash_create_size (unsigned int, unsigned int (*) (void *), int (*) (const void *, const void *));
-EXT void *hash_get (struct bgp_peer *, struct hash *, void *, void * (*) (void *));
-EXT void *hash_alloc_intern (void *);
-EXT void *hash_release (struct hash *, void *);
-EXT void hash_iterate (struct hash *, void (*) (struct hash_backet *, void *), void *);
-EXT void hash_clean (struct hash *, void (*) (void *));
-EXT void hash_free (struct hash *);
+extern struct hash *hash_create (int, unsigned int (*) (void *), int (*) (const void *, const void *));
+extern struct hash *hash_create_size (unsigned int, unsigned int (*) (void *), int (*) (const void *, const void *));
+extern void *hash_get (struct bgp_peer *, struct hash *, void *, void * (*) (void *));
+extern void *hash_alloc_intern (void *);
+extern void *hash_release (struct hash *, void *);
+extern void hash_iterate (struct hash *, void (*) (struct hash_backet *, void *), void *);
+extern void hash_clean (struct hash *, void (*) (void *));
+extern void hash_free (struct hash *);
 
-#undef EXT
 #endif
