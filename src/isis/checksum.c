@@ -6,8 +6,6 @@
  * pp. 86-101, for additional details on computing this checksum.
  */
 
-#define __CHECKSUM_C
-
 #include "pmacct.h"
 #include "isis.h"
 #include "checksum.h"

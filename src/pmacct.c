@@ -19,8 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __PMACCT_CLIENT_C
-
 #include <time.h>
 
 /* include */
@@ -387,17 +385,6 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
 #endif
     }
     else printf("\n");
-  }
-}
-
-char *write_sep(char *sep, int *count)
-{
-  static char empty_sep[] = "";
-
-  if (*count) return sep;
-  else {
-    (*count)++;
-    return empty_sep;
   }
 }
 

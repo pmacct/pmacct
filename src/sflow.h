@@ -1,5 +1,8 @@
 /* Copyright (C) InMon Corporation 2002-2003 ALL RIGHTS RESERVED */
 
+#ifndef SFLOW_H
+#define SFLOW_H
+
 /* $Header$ */
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -574,3 +577,4 @@ typedef struct _SFLSample_datagram_hdr {
 
 #define SFL_DATA_PAD 400
 
+#endif //SFLOW_H

@@ -21,8 +21,6 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-#define __ISIS_MISC_C
-
 #include "pmacct.h"
 #include "isis.h"
 

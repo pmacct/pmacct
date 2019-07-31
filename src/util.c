@@ -19,8 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __UTIL_C
-
 /* includes */
 #include "pmacct.h"
 #include "addr.h"
@@ -49,6 +47,28 @@
 #include <netdb.h>
 #include <sys/file.h>
 #include <sys/utsname.h>
+
+struct _devices_struct _devices[] = {
+#if defined DLT_LOOP
+  {null_handler, DLT_LOOP},
+#endif
+  {null_handler, DLT_NULL},
+  {eth_handler, DLT_EN10MB},
+  {ppp_handler, DLT_PPP},
+#if defined DLT_IEEE802_11
+  {ieee_802_11_handler, DLT_IEEE802_11}, 
+#endif
+#if defined DLT_LINUX_SLL
+  {sll_handler, DLT_LINUX_SLL},
+#endif
+#if defined DLT_RAW
+  {raw_handler, DLT_RAW},
+#endif
+  {NULL, -1},
+};
+
+/* Global variables */
+primptrs_func primptrs_funcs[PRIMPTRS_FUNCS_N];
 
 /* functions */
 void setnonblocking(int sock)

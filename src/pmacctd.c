@@ -19,9 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* defines */
-#define __PMACCTD_C
-
 /* includes */
 #include "pmacct.h"
 #include "pmacct-data.h"
@@ -39,6 +36,7 @@
 #include "bmp/bmp.h"
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
+#include "ndpi/ndpi_util.h"
 #endif
 #include "jhash.h"
 

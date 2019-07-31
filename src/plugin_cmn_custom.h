@@ -19,6 +19,9 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef PLUGIN_CMN_CUSTOM_H
+#define PLUGIN_CMN_CUSTOM_H
+
 /* defines */
 struct pm_custom_output {
 	void *lib_handle;
@@ -48,17 +51,10 @@ struct pm_custom_output {
 };
 
 /* prototypes */
-
-#if (!defined __PLUGIN_CMN_CUSTOM_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-
 /* prototypes */
-EXT void custom_output_setup(char *, char *, struct pm_custom_output *);
+extern void custom_output_setup(char *, char *, struct pm_custom_output *);
 
 /* global variables */
-EXT struct pm_custom_output custom_print_plugin;
+extern struct pm_custom_output custom_print_plugin;
 
-#undef EXT
+#endif //PLUGIN_CMN_CUSTOM_H

@@ -19,18 +19,20 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __PREPROCESS_C
-
 #include "pmacct.h"
 #include "pmacct-data.h"
-#define __PLUGIN_COMMON_EXPORT
 #include "plugin_common.h"
-#undef __PLUGIN_COMMON_EXPORT
-#define __SQL_COMMON_EXPORT
 #include "sql_common.h"
-#undef __SQL_COMMON_EXPORT
 #include "preprocess.h"
 #include "preprocess-data.h"
+#include "preprocess-internal.h"
+
+//Global variables
+sql_preprocess_func sql_preprocess_funcs[2*N_FUNCS]; /* 20 */
+P_preprocess_func P_preprocess_funcs[2*N_FUNCS]; /* 20 */
+struct preprocess prep;
+struct _fsrc_queue fsrc_queue;
+
 
 void set_preprocess_funcs(char *string, struct preprocess *prep, int dictionary)
 {

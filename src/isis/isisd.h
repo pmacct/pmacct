@@ -120,16 +120,10 @@ struct isis_area
   u_int32_t circuit_state_changes;
 };
 
-#if (!defined __ISISD_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void isis_init (void);
-EXT struct isis_area *isis_area_lookup (const char *);
-EXT struct isis_area *isis_area_create ();
-EXT int area_net_title(struct isis_area *, const u_char *);
-#undef EXT
+extern void isis_init (void);
+extern struct isis_area *isis_area_lookup (const char *);
+extern struct isis_area *isis_area_create ();
+extern int area_net_title(struct isis_area *, const u_char *);
 
 #define DEBUG_ADJ_PACKETS                (1<<0)
 #define DEBUG_CHECKSUM_ERRORS            (1<<1)

@@ -21,8 +21,6 @@
 
 /*  Based on BGP standard and extended communities implementation from Quagga  */
 
-#define __BGP_LCOMMUNITY_C
-
 #include "pmacct.h"
 #include "bgp_prefix.h"
 #include "bgp.h"

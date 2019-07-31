@@ -19,8 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __PLUGIN_CMN_JSON_C
-
 /* includes */
 #include "pmacct.h"
 #include "addr.h"
@@ -35,8 +33,12 @@
 #include "ndpi/ndpi.h"
 #endif
 
-/* Functions */
 #ifdef WITH_JANSSON
+
+/* Global variables */
+compose_json_handler cjhandler[N_PRIMITIVES];
+
+/* Functions */
 void compose_json(u_int64_t wtc, u_int64_t wtc_2)
 {
   int idx = 0;

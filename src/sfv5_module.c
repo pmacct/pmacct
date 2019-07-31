@@ -19,9 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* defines */
-#define __SFV5_MODULE_C
-
 /* includes */
 #include "pmacct.h"
 #include "sflow.h"
@@ -30,6 +27,9 @@
 #include "sfacctd.h"
 #include "sfv5_module.h"
 #include "pmacct-data.h"
+
+/* Global variables */
+struct sfv5_modules_desc sfv5_modules;
 
 void sfv5_modules_db_init()
 {

@@ -13,7 +13,6 @@
 //    machines.
 
 /* defines */
-#define __MURMUR2_C
 
 unsigned int murmurhash2(const void * key, int len, const unsigned int seed)
 {

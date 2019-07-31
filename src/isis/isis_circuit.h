@@ -154,22 +154,16 @@ struct sockaddr_ll {
   unsigned char sll_addr[8];
 };
 
-#if (!defined __ISIS_CIRCUIT_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT struct isis_circuit *isis_circuit_new ();
-EXT void isis_circuit_del (struct isis_circuit *);
-EXT void isis_circuit_configure (struct isis_circuit *, struct isis_area *);
-EXT void isis_circuit_up (struct isis_circuit *);
-EXT void isis_circuit_deconfigure (struct isis_circuit *, struct isis_area *);
-EXT int isis_circuit_destroy (struct isis_circuit *);
-EXT void isis_circuit_if_add (struct isis_circuit *, struct interface *);
-EXT void isis_circuit_if_del (struct isis_circuit *);
-EXT void circuit_update_nlpids (struct isis_circuit *);
-EXT void isis_circuit_update_params (struct isis_circuit *, struct interface *);
-EXT void isis_circuit_down (struct isis_circuit *circuit);
-#undef EXT
+extern struct isis_circuit *isis_circuit_new ();
+extern void isis_circuit_del (struct isis_circuit *);
+extern void isis_circuit_configure (struct isis_circuit *, struct isis_area *);
+extern void isis_circuit_up (struct isis_circuit *);
+extern void isis_circuit_deconfigure (struct isis_circuit *, struct isis_area *);
+extern int isis_circuit_destroy (struct isis_circuit *);
+extern void isis_circuit_if_add (struct isis_circuit *, struct interface *);
+extern void isis_circuit_if_del (struct isis_circuit *);
+extern void circuit_update_nlpids (struct isis_circuit *);
+extern void isis_circuit_update_params (struct isis_circuit *, struct interface *);
+extern void isis_circuit_down (struct isis_circuit *circuit);
 
 #endif /* _ISIS_CIRCUIT_H_ */

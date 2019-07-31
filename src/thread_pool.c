@@ -24,8 +24,6 @@
     Copyright (C) 2006 Francois Deppierraz
 */
 
-#define __THREAD_POOL_C
-
 /* includes */
 #include "pmacct.h"
 #include "thread_pool.h"

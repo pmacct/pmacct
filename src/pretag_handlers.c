@@ -19,8 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __PRETAG_HANDLERS_C
-
 #include "pmacct.h"
 #include "addr.h"
 #include "bgp/bgp_packet.h"

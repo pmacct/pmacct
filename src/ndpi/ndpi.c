@@ -24,13 +24,13 @@
     ndpi.c ndpiReader.c | nDPI | Copyright (C) 2011-17 - ntop.org
 */
 
-#define __NDPI_C
-
-#ifdef WITH_NDPI
 #include "../pmacct.h"
 #include "../ip_flow.h"
 #include "../classifier.h"
 #include "ndpi.h"
+
+/* Global variables */
+struct pm_ndpi_workflow *pm_ndpi_wfl;
 
 void pm_ndpi_free_flow_info_half(struct pm_ndpi_flow_info *flow)
 {
@@ -468,7 +468,7 @@ int pm_ndpi_node_idle_scan_walker(const void *node, const pm_VISIT which, const 
 
   if (workflow->num_idle_flows == workflow->prefs.idle_scan_budget) return FALSE;
 
-  if ((which == ndpi_preorder) || (which == ndpi_leaf)) { /* Avoid walking the same node multiple times */
+  if ((which == (pm_VISIT)ndpi_preorder) || (which == (pm_VISIT)ndpi_leaf)) { /* Avoid walking the same node multiple times */
     /* expire Idle and TCP finished flows */
     if ((flow->last_seen + workflow->prefs.idle_max_time < workflow->last_time) ||
 	(flow->tcp_finished == TRUE)) {
@@ -503,4 +503,3 @@ void pm_ndpi_idle_flows_cleanup(struct pm_ndpi_workflow *workflow)
     workflow->last_idle_scan_time = workflow->last_time;
   }
 }
-#endif

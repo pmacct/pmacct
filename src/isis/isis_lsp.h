@@ -75,40 +75,34 @@ struct isis_lsp
         (I)[ISIS_SYS_ID_LEN] = 0;\
         (I)[ISIS_SYS_ID_LEN + 1] = 0
 
-#if (!defined __ISIS_LSP_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT dict_t *lsp_db_init ();
-EXT void lsp_db_destroy (dict_t *);
-EXT int lsp_l1_generate (struct isis_area *);
-EXT int lsp_l2_generate (struct isis_area *);
-EXT int lsp_refresh_l1 (struct thread *);
-EXT int lsp_refresh_l2 (struct thread *);
-EXT int lsp_regenerate_schedule (struct isis_area *);
-EXT int lsp_l1_pseudo_generate (struct isis_circuit *);
-EXT int lsp_l2_pseudo_generate (struct isis_circuit *);
-EXT int lsp_l1_refresh_pseudo (struct thread *);
-EXT int lsp_l2_refresh_pseudo (struct thread *);
-EXT int isis_lsp_authinfo_check (struct stream *, struct isis_area *, int, struct isis_passwd *);
-EXT struct isis_lsp *lsp_new (u_char *, u_int16_t, u_int32_t, u_int8_t, u_int16_t, int);
-EXT struct isis_lsp *lsp_new_from_stream_ptr (struct stream *, u_int16_t, struct isis_lsp *, struct isis_area *);
-EXT void lsp_insert (struct isis_lsp *, dict_t *);
-EXT struct isis_lsp *lsp_search (u_char *, dict_t *);
-EXT void lsp_build_list (u_char *, u_char *, struct list *, dict_t *);
-EXT void lsp_build_list_nonzero_ht (u_char *, u_char *, struct list *, dict_t *);
-EXT void lsp_build_list_ssn (struct isis_circuit *, struct list *, dict_t *);
-EXT void lsp_build_isis_list_nonzero_ht (u_char *, u_char *, struct list *, dict_t *);
-EXT void lsp_build_isis_list_ssn (struct isis_circuit *, struct list *, dict_t *);
-EXT void lsp_search_and_destroy (u_char *, dict_t *);
-EXT void lsp_purge_dr (u_char *, struct isis_circuit *, int);
-EXT void lsp_purge_non_exist (struct isis_link_state_hdr *, struct isis_area *);
-EXT int lsp_id_cmp (u_char *, u_char *);
-EXT int lsp_compare (char *, struct isis_lsp *, u_int32_t, u_int16_t, u_int16_t);
-EXT void lsp_update (struct isis_lsp *, struct isis_link_state_hdr *, struct stream *, struct isis_area *, int);
-EXT void lsp_inc_seqnum (struct isis_lsp *, u_int32_t);
-EXT const char *lsp_bits2string (u_char *);
-#undef EXT
+extern dict_t *lsp_db_init ();
+extern void lsp_db_destroy (dict_t *);
+extern int lsp_l1_generate (struct isis_area *);
+extern int lsp_l2_generate (struct isis_area *);
+extern int lsp_refresh_l1 (struct thread *);
+extern int lsp_refresh_l2 (struct thread *);
+extern int lsp_regenerate_schedule (struct isis_area *);
+extern int lsp_l1_pseudo_generate (struct isis_circuit *);
+extern int lsp_l2_pseudo_generate (struct isis_circuit *);
+extern int lsp_l1_refresh_pseudo (struct thread *);
+extern int lsp_l2_refresh_pseudo (struct thread *);
+extern int isis_lsp_authinfo_check (struct stream *, struct isis_area *, int, struct isis_passwd *);
+extern struct isis_lsp *lsp_new (u_char *, u_int16_t, u_int32_t, u_int8_t, u_int16_t, int);
+extern struct isis_lsp *lsp_new_from_stream_ptr (struct stream *, u_int16_t, struct isis_lsp *, struct isis_area *);
+extern void lsp_insert (struct isis_lsp *, dict_t *);
+extern struct isis_lsp *lsp_search (u_char *, dict_t *);
+extern void lsp_build_list (u_char *, u_char *, struct list *, dict_t *);
+extern void lsp_build_list_nonzero_ht (u_char *, u_char *, struct list *, dict_t *);
+extern void lsp_build_list_ssn (struct isis_circuit *, struct list *, dict_t *);
+extern void lsp_build_isis_list_nonzero_ht (u_char *, u_char *, struct list *, dict_t *);
+extern void lsp_build_isis_list_ssn (struct isis_circuit *, struct list *, dict_t *);
+extern void lsp_search_and_destroy (u_char *, dict_t *);
+extern void lsp_purge_dr (u_char *, struct isis_circuit *, int);
+extern void lsp_purge_non_exist (struct isis_link_state_hdr *, struct isis_area *);
+extern int lsp_id_cmp (u_char *, u_char *);
+extern int lsp_compare (char *, struct isis_lsp *, u_int32_t, u_int16_t, u_int16_t);
+extern void lsp_update (struct isis_lsp *, struct isis_link_state_hdr *, struct stream *, struct isis_area *, int);
+extern void lsp_inc_seqnum (struct isis_lsp *, u_int32_t);
+extern const char *lsp_bits2string (u_char *);
 
 #endif /* ISIS_LSP */

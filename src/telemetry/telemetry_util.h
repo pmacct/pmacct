@@ -19,29 +19,28 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef TELEMETRY_UTIL_H
+#define TELEMETRY_UTIL_H
+
 /* includes */
 
 /* defines */
 
 /* prototypes */
-#if (!defined __TELEMETRY_UTIL_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT int telemetry_peer_init(telemetry_peer *, int);
-EXT void telemetry_peer_close(telemetry_peer *, int);
-EXT u_int32_t telemetry_cisco_hdr_v0_get_len(telemetry_peer *);
-EXT u_int32_t telemetry_cisco_hdr_v0_get_type(telemetry_peer *);
-EXT u_int16_t telemetry_cisco_hdr_v1_get_len(telemetry_peer *);
-EXT u_int8_t telemetry_cisco_hdr_v1_get_type(telemetry_peer *);
-EXT void telemetry_link_misc_structs(telemetry_misc_structs *);
-EXT int telemetry_tpc_addr_cmp(const void *, const void *);
-EXT int telemetry_validate_input_output_decoders(int, int);
-EXT void telemetry_log_peer_stats(telemetry_peer *, struct telemetry_data *);
-EXT void telemetry_log_global_stats(struct telemetry_data *);
+extern int telemetry_peer_init(telemetry_peer *, int);
+extern void telemetry_peer_close(telemetry_peer *, int);
+extern u_int32_t telemetry_cisco_hdr_v0_get_len(telemetry_peer *);
+extern u_int32_t telemetry_cisco_hdr_v0_get_type(telemetry_peer *);
+extern u_int16_t telemetry_cisco_hdr_v1_get_len(telemetry_peer *);
+extern u_int8_t telemetry_cisco_hdr_v1_get_type(telemetry_peer *);
+extern void telemetry_link_misc_structs(telemetry_misc_structs *);
+extern int telemetry_tpc_addr_cmp(const void *, const void *);
+extern int telemetry_validate_input_output_decoders(int, int);
+extern void telemetry_log_peer_stats(telemetry_peer *, struct telemetry_data *);
+extern void telemetry_log_global_stats(struct telemetry_data *);
 
 #ifdef WITH_ZMQ
-EXT void telemetry_init_zmq_host(void *, int *);
+extern void telemetry_init_zmq_host(void *, int *);
 #endif
-#undef EXT
+
+#endif //TELEMETRY_UTIL_H

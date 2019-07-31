@@ -94,40 +94,34 @@ struct flow_lru_l6 {
   struct ip_flow6 *last;
 };
 
-#if (!defined __IP_FLOW_C)
-#define EXT extern
-#else
-#define EXT
-#endif
 /* prototypes */
-EXT void init_ip_flow_handler(); /* wrapper */ 
-EXT void init_ip4_flow_handler(); 
-EXT void ip_flow_handler(struct packet_ptrs *); 
-EXT void find_flow(struct timeval *, struct packet_ptrs *); 
-EXT void create_flow(struct timeval *, struct ip_flow *, u_int8_t, unsigned int, struct packet_ptrs *, struct pm_iphdr *, struct pm_tlhdr *, unsigned int); 
-EXT void prune_old_flows(struct timeval *); 
+extern void init_ip_flow_handler(); /* wrapper */ 
+extern void init_ip4_flow_handler(); 
+extern void ip_flow_handler(struct packet_ptrs *); 
+extern void find_flow(struct timeval *, struct packet_ptrs *); 
+extern void create_flow(struct timeval *, struct ip_flow *, u_int8_t, unsigned int, struct packet_ptrs *, struct pm_iphdr *, struct pm_tlhdr *, unsigned int); 
+extern void prune_old_flows(struct timeval *); 
 
-EXT unsigned int hash_flow(u_int32_t, u_int32_t, u_int16_t, u_int16_t, u_int8_t);
-EXT unsigned int normalize_flow(u_int32_t *, u_int32_t *, u_int16_t *, u_int16_t *);
-EXT unsigned int is_expired(struct timeval *, struct ip_flow_common *);
-EXT unsigned int is_expired_uni(struct timeval *, struct ip_flow_common *, unsigned int);
-EXT void evaluate_tcp_flags(struct timeval *, struct packet_ptrs *, struct ip_flow_common *, unsigned int);
-EXT void clear_tcp_flow_cmn(struct ip_flow_common *, unsigned int);
+extern unsigned int hash_flow(u_int32_t, u_int32_t, u_int16_t, u_int16_t, u_int8_t);
+extern unsigned int normalize_flow(u_int32_t *, u_int32_t *, u_int16_t *, u_int16_t *);
+extern unsigned int is_expired(struct timeval *, struct ip_flow_common *);
+extern unsigned int is_expired_uni(struct timeval *, struct ip_flow_common *, unsigned int);
+extern void evaluate_tcp_flags(struct timeval *, struct packet_ptrs *, struct ip_flow_common *, unsigned int);
+extern void clear_tcp_flow_cmn(struct ip_flow_common *, unsigned int);
 
-EXT void init_ip6_flow_handler();
-EXT void ip_flow6_handler(struct packet_ptrs *);
-EXT unsigned int hash_flow6(u_int32_t, struct in6_addr *, struct in6_addr *);
-EXT unsigned int normalize_flow6(struct in6_addr *, struct in6_addr *, u_int16_t *, u_int16_t *);
-EXT void find_flow6(struct timeval *, struct packet_ptrs *);
-EXT void create_flow6(struct timeval *, struct ip_flow6 *, u_int8_t, unsigned int, struct packet_ptrs *, struct ip6_hdr *, struct pm_tlhdr *, unsigned int);
-EXT void prune_old_flows6(struct timeval *); 
+extern void init_ip6_flow_handler();
+extern void ip_flow6_handler(struct packet_ptrs *);
+extern unsigned int hash_flow6(u_int32_t, struct in6_addr *, struct in6_addr *);
+extern unsigned int normalize_flow6(struct in6_addr *, struct in6_addr *, u_int16_t *, u_int16_t *);
+extern void find_flow6(struct timeval *, struct packet_ptrs *);
+extern void create_flow6(struct timeval *, struct ip_flow6 *, u_int8_t, unsigned int, struct packet_ptrs *, struct ip6_hdr *, struct pm_tlhdr *, unsigned int);
+extern void prune_old_flows6(struct timeval *); 
 
 /* global vars */
-EXT struct ip_flow **ip_flow_table;
-EXT struct flow_lru_l flow_lru_list;
+extern struct ip_flow **ip_flow_table;
+extern struct flow_lru_l flow_lru_list;
 
-EXT struct ip_flow6 **ip_flow_table6;
-EXT struct flow_lru_l6 flow_lru_list6;
-#undef EXT
+extern struct ip_flow6 **ip_flow_table6;
+extern struct flow_lru_l6 flow_lru_list6;
 
 #endif /* _IP_FLOW_H_ */

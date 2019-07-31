@@ -19,6 +19,9 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef TELEMETRY_H
+#define TELEMETRY_H
+
 /* includes */
 #include "base64.h"
 
@@ -122,26 +125,15 @@ typedef struct _telemetry_peer_timeout telemetry_peer_timeout;
 #include "telemetry_util.h"
 
 /* prototypes */
-#if (!defined __TELEMETRY_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void telemetry_wrapper();
-EXT void telemetry_daemon(void *);
-EXT void telemetry_prepare_thread(struct telemetry_data *);
-EXT void telemetry_prepare_daemon(struct telemetry_data *);
-#undef EXT
+extern void telemetry_wrapper();
+extern void telemetry_daemon(void *);
+extern void telemetry_prepare_thread(struct telemetry_data *);
+extern void telemetry_prepare_daemon(struct telemetry_data *);
 
 /* global variables */
-#if !defined(__TELEMETRY_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT telemetry_misc_structs *telemetry_misc_db; 
+extern telemetry_misc_structs *telemetry_misc_db; 
 
-EXT telemetry_peer *telemetry_peers;
-EXT void *telemetry_peers_cache;
-EXT telemetry_peer_timeout *telemetry_peers_timeout; 
-#undef EXT
+extern telemetry_peer *telemetry_peers;
+extern void *telemetry_peers_cache;
+extern telemetry_peer_timeout *telemetry_peers_timeout; 
+#endif //TELEMETRY_H

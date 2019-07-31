@@ -19,6 +19,9 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef PRETAG_H
+#define PRETAG_H
+
 /* Pre-Tag map stuff */
 #define N_MAP_HANDLERS N_PRIMITIVES
 #define MAX_LABEL_LEN 32
@@ -263,46 +266,42 @@ struct pretag_label_filter {
 };
 
 /* prototypes */
-#if (!defined __PRETAG_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void load_id_file(int, char *, struct id_table *, struct plugin_requests *, int *);
-EXT void load_pre_tag_map(int, char *, struct id_table *, struct plugin_requests *, int *, int, int);
-EXT u_int8_t pt_check_neg(char **, u_int32_t *);
-EXT char * pt_check_range(char *);
-EXT void pretag_init_vars(struct packet_ptrs *, struct id_table *);
-EXT void pretag_init_label(pt_label_t *);
-EXT int pretag_malloc_label(pt_label_t *, int);
-EXT int pretag_realloc_label(pt_label_t *, int);
-EXT int pretag_copy_label(pt_label_t *, pt_label_t *);
-EXT void pretag_free_label(pt_label_t *);
-EXT int pretag_entry_process(struct id_entry *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
-EXT pt_bitmap_t pretag_index_build_bitmap(struct id_entry *, int);
-EXT int pretag_index_insert_bitmap(struct id_table *, pt_bitmap_t);
-EXT int pretag_index_set_handlers(struct id_table *);
-EXT int pretag_index_allocate(struct id_table *);
-EXT int pretag_index_fill(struct id_table *, pt_bitmap_t, struct id_entry *);
-EXT void pretag_index_report(struct id_table *);
-EXT void pretag_index_destroy(struct id_table *);
-EXT u_int32_t pretag_index_lookup(struct id_table *, struct packet_ptrs *, struct id_entry **, int);
-EXT void pretag_index_results_sort(struct id_entry **, int);
-EXT void pretag_index_results_compress(struct id_entry **, int);
-EXT void pretag_index_results_compress_jeqs(struct id_entry **, int);
-EXT int pretag_index_have_one(struct id_table *);
+extern void load_id_file(int, char *, struct id_table *, struct plugin_requests *, int *);
+extern void load_pre_tag_map(int, char *, struct id_table *, struct plugin_requests *, int *, int, int);
+extern u_int8_t pt_check_neg(char **, u_int32_t *);
+extern char * pt_check_range(char *);
+extern void pretag_init_vars(struct packet_ptrs *, struct id_table *);
+extern void pretag_init_label(pt_label_t *);
+extern int pretag_malloc_label(pt_label_t *, int);
+extern int pretag_realloc_label(pt_label_t *, int);
+extern int pretag_copy_label(pt_label_t *, pt_label_t *);
+extern void pretag_free_label(pt_label_t *);
+extern int pretag_entry_process(struct id_entry *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
+extern pt_bitmap_t pretag_index_build_bitmap(struct id_entry *, int);
+extern int pretag_index_insert_bitmap(struct id_table *, pt_bitmap_t);
+extern int pretag_index_set_handlers(struct id_table *);
+extern int pretag_index_allocate(struct id_table *);
+extern int pretag_index_fill(struct id_table *, pt_bitmap_t, struct id_entry *);
+extern void pretag_index_report(struct id_table *);
+extern void pretag_index_destroy(struct id_table *);
+extern u_int32_t pretag_index_lookup(struct id_table *, struct packet_ptrs *, struct id_entry **, int);
+extern void pretag_index_results_sort(struct id_entry **, int);
+extern void pretag_index_results_compress(struct id_entry **, int);
+extern void pretag_index_results_compress_jeqs(struct id_entry **, int);
+extern int pretag_index_have_one(struct id_table *);
 
-EXT int bpas_map_allocated;
-EXT int blp_map_allocated;
-EXT int bmed_map_allocated;
-EXT int biss_map_allocated;
-EXT int bta_map_allocated;
-EXT int bitr_map_allocated;
-EXT int sampling_map_allocated;
-EXT int custom_primitives_allocated;
+extern int bpas_map_allocated;
+extern int blp_map_allocated;
+extern int bmed_map_allocated;
+extern int biss_map_allocated;
+extern int bta_map_allocated;
+extern int bitr_map_allocated;
+extern int sampling_map_allocated;
+extern int custom_primitives_allocated;
 
-EXT int bta_map_caching; 
-EXT int sampling_map_caching; 
+extern int bta_map_caching; 
+extern int sampling_map_caching; 
 
-EXT int (*find_id_func)(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
-#undef EXT
+extern int (*find_id_func)(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
+
+#endif //PRETAG_H

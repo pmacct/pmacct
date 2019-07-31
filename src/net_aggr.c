@@ -19,8 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __NET_AGGR_C
-
 /* includes */
 #include "pmacct.h"
 #include "nfacctd.h"
@@ -29,6 +27,16 @@
 #include "net_aggr.h"
 #include "addr.h"
 #include "jhash.h"
+
+/* global variables */
+net_func net_funcs[NET_FUNCS_N];
+struct networks_table nt;
+struct networks_cache nc;
+struct networks_table_entry dummy_entry;
+int default_route_in_networks4_table;
+
+struct networks6_table_entry dummy_entry6;
+int default_route_in_networks6_table;
 
 void load_networks(char *filename, struct networks_table *nt, struct networks_cache *nc)
 {

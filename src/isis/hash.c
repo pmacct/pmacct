@@ -19,8 +19,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#define __HASH_C
-
 #include "pmacct.h"
 #include "isis.h"
 

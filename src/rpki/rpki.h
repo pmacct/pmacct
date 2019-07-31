@@ -19,6 +19,9 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef RPKI_H
+#define RPKI_H
+
 /* defines */
 #define ROA_STATUS_UNKNOWN		0	/* 'u' - Unknown */
 #define ROA_STATUS_INVALID		1	/* 'i' - Invalid with no covering prefix */
@@ -191,25 +194,13 @@ struct rpki_rtr_handle {
 #include "rpki_util.h"
 
 /* prototypes */
-#if !defined(__RPKI_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void rpki_daemon_wrapper();
-EXT void rpki_prepare_thread();
-EXT void rpki_daemon();
-EXT void rpki_roas_file_reload();
-#undef EXT
+extern void rpki_daemon_wrapper();
+extern void rpki_prepare_thread();
+extern void rpki_daemon();
+extern void rpki_roas_file_reload();
 
 /* global variables */
-#if (!defined __RPKI_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-
-EXT struct bgp_rt_structs *rpki_roa_db;
-EXT struct bgp_misc_structs *rpki_misc_db;
-EXT struct bgp_peer rpki_peer;
-#undef EXT
+extern struct bgp_rt_structs *rpki_roa_db;
+extern struct bgp_misc_structs *rpki_misc_db;
+extern struct bgp_peer rpki_peer;
+#endif //RPKI_H

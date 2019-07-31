@@ -31,8 +31,6 @@
 
 /* $Id$ */
 
-#define __NFPROBE_NETFLOW9_C
-
 #include "common.h"
 #include "treetype.h"
 #include "nfprobe_plugin.h"

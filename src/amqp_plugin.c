@@ -19,8 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __AMQP_PLUGIN_C
-
 /* includes */
 #include "pmacct.h"
 #include "pmacct-data.h"
@@ -33,6 +31,9 @@
 #ifndef WITH_JANSSON
 #error "--enable-rabbitmq requires --enable-jansson"
 #endif
+#include "sql_common.h"
+#include "net_aggr.h"
+#include "ports_aggr.h"
 
 /* Functions */
 void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 

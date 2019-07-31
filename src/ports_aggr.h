@@ -31,12 +31,6 @@ struct ports_table {
 };
 
 /* prototypes */
-#if (!defined __NET_AGGR_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void load_ports(char *, struct ports_table *); 
-#undef EXT
+extern void load_ports(char *, struct ports_table *); 
 
 #endif //PORTS_AGGR_H

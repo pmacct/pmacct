@@ -19,27 +19,20 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef PRINT_PLUGIN_H
+#define PRINT_PLUGIN_H
+
 /* includes */
 #include <sys/poll.h>
 
 /* prototypes */
-#if (!defined __PRINT_PLUGIN_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void print_plugin(int, struct configuration *, void *);
-EXT void P_cache_purge(struct chained_cache *[], int, int);
-EXT void P_write_stats_header_formatted(FILE *, int);
-EXT void P_write_stats_header_csv(FILE *, int);
-EXT void P_fprintf_csv_string(FILE *, struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char *, char *);
-#undef EXT
+extern void print_plugin(int, struct configuration *, void *);
+extern void P_cache_purge(struct chained_cache *[], int, int);
+extern void P_write_stats_header_formatted(FILE *, int);
+extern void P_write_stats_header_csv(FILE *, int);
+extern void P_fprintf_csv_string(FILE *, struct pkt_vlen_hdr_primitives *, pm_cfgreg_t, char *, char *);
 
 /* global variables */
-#if (!defined __PRINT_PLUGIN_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT int print_output_stdout_header;
-#undef EXT
+extern int print_output_stdout_header;
+
+#endif //PRINT_PLUGIN_H

@@ -19,12 +19,14 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __ZMQ_COMMON_C
-
 /* includes */
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "zmq_common.h"
+
+/* Global variables */
+struct p_zmq_host nfacctd_zmq_host;
+struct p_zmq_host telemetry_zmq_host;
 
 /* Functions */
 void p_zmq_set_address(struct p_zmq_host *zmq_host, char *address)

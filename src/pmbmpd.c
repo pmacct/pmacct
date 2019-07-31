@@ -19,9 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* defines */
-#define __PMBMPD_C
-
 /* includes */
 #include "pmacct.h"
 #include "bgp/bgp.h"

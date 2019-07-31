@@ -19,9 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* defines */
-#define __NL_C
-
 /* includes */
 #include "pmacct.h"
 #include "addr.h"
@@ -40,6 +37,11 @@
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #endif
+
+struct tunnel_entry tunnel_handlers_list[] = {
+  {"gtp", 	gtp_tunnel_func, 	gtp_tunnel_configurator},
+  {"", 		NULL,			NULL},
+};
 
 void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
 {

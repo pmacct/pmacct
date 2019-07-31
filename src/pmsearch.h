@@ -19,6 +19,8 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.
 */
+#ifndef PMSEARCH_H
+#define PMSEARCH_H
 
 /* includes */
 #include <stddef.h>
@@ -90,31 +92,27 @@ struct pm_htable {
 };
 
 /* prototypes */
-#if (!defined __PMSEARCH_C)
-#define EXT extern
-#else
-#define EXT
-#endif
 /* Search for an entry matching the given KEY in the tree pointed to
    by *ROOTP and insert a new element if not found.  */
-EXT void *__pm_tsearch (const void *, void **, pm_compar_fn_t);
+extern void *__pm_tsearch (const void *, void **, pm_compar_fn_t);
 
 /* Search for an entry matching the given KEY in the tree pointed to
    by *ROOTP.  If no matching entry is available return NULL.  */
-EXT void *pm_tfind (const void *, void **, pm_compar_fn_t);
+extern void *pm_tfind (const void *, void **, pm_compar_fn_t);
 
 /* Remove the element matching KEY from the tree pointed to by *ROOTP.  */
-EXT void *pm_tdelete (const void *, void **, pm_compar_fn_t);
+extern void *pm_tdelete (const void *, void **, pm_compar_fn_t);
 
 /* Walk through the whole tree and call the ACTION callback for every node or leaf.  */
-EXT void pm_twalk (const void *, pm_action_fn_t, void *);
+extern void pm_twalk (const void *, pm_action_fn_t, void *);
 
 /* Destroy the whole tree, call FREEFCT for each node or leaf.  */
-EXT void __pm_tdestroy (void *, pm_free_fn_t);
+extern void __pm_tdestroy (void *, pm_free_fn_t);
 
-EXT int pm_hcreate(size_t, struct pm_htable *);
-EXT void pm_hdestroy(struct pm_htable *);
-EXT int pm_hsearch(pm_HENTRY, pm_ACTION, pm_HENTRY **, struct pm_htable *);
-EXT void pm_hmove(struct pm_htable *, struct pm_htable *, struct pm_htable *);
-EXT void __pm_hdelete(_pm_HENTRY *);
-#undef EXT
+extern int pm_hcreate(size_t, struct pm_htable *);
+extern void pm_hdestroy(struct pm_htable *);
+extern int pm_hsearch(pm_HENTRY, pm_ACTION, pm_HENTRY **, struct pm_htable *);
+extern void pm_hmove(struct pm_htable *, struct pm_htable *, struct pm_htable *);
+extern void __pm_hdelete(_pm_HENTRY *);
+
+#endif //PMSEARCH_H

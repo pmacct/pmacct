@@ -19,13 +19,11 @@
  * 02111-1307, USA.
  */
 
-#define __LINKLIST_C
-
 #include "pmacct.h"
 #include "isis.h"
 
 #include "linklist.h"
-
+
 /* Allocate new list. */
 struct list *
 isis_list_new (void)
@@ -53,7 +51,7 @@ isis_listnode_free (struct listnode *node)
 {
   free(node);
 }
-
+
 /* Add new data to the list. */
 void
 isis_listnode_add (struct list *list, void *val)
@@ -244,7 +242,7 @@ isis_listnode_lookup (struct list *list, void *data)
       return node;
   return NULL;
 }
-
+
 /* Delete the node from list.  For ospfd and ospf6d. */
 void
 isis_list_delete_node (struct list *list, struct listnode *node)
@@ -260,7 +258,7 @@ isis_list_delete_node (struct list *list, struct listnode *node)
   list->count--;
   isis_listnode_free (node);
 }
-
+
 /* ospf_spf.c */
 void
 isis_list_add_node_prev (struct list *list, struct listnode *current, void *val)

@@ -54,21 +54,15 @@ struct hash
   unsigned long count;
 };
 
-#if (!defined __HASH_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT struct hash *isis_hash_create (unsigned int (*) (void *), int (*) (const void *, const void *));
-EXT struct hash *isis_hash_create_size (unsigned int, unsigned int (*) (void *),  int (*) (const void *, const void *));
-EXT void *isis_hash_get (struct hash *, void *, void * (*) (void *));
-EXT void *isis_hash_alloc_intern (void *);
-EXT void *isis_hash_lookup (struct hash *, void *);
-EXT void *isis_hash_release (struct hash *, void *);
-EXT void isis_hash_iterate (struct hash *, void (*) (struct hash_backet *, void *), void *);
-EXT void isis_hash_clean (struct hash *, void (*) (void *));
-EXT void isis_hash_free (struct hash *);
-EXT unsigned int string_hash_make (const char *);
-#undef EXT
+extern struct hash *isis_hash_create (unsigned int (*) (void *), int (*) (const void *, const void *));
+extern struct hash *isis_hash_create_size (unsigned int, unsigned int (*) (void *),  int (*) (const void *, const void *));
+extern void *isis_hash_get (struct hash *, void *, void * (*) (void *));
+extern void *isis_hash_alloc_intern (void *);
+extern void *isis_hash_lookup (struct hash *, void *);
+extern void *isis_hash_release (struct hash *, void *);
+extern void isis_hash_iterate (struct hash *, void (*) (struct hash_backet *, void *), void *);
+extern void isis_hash_clean (struct hash *, void (*) (void *));
+extern void isis_hash_free (struct hash *);
+extern unsigned int string_hash_make (const char *);
 
 #endif /* _HASH_H_ */

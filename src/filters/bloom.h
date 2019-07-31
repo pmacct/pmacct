@@ -5,6 +5,9 @@
  *  This file is under BSD license. See LICENSE file.
  */
 
+#ifndef BLOOM_H
+#define BLOOM_H
+
 /** ***************************************************************************
  * Structure to keep track of one bloom filter.  Caller needs to
  * allocate this and pass it to the functions below. First call for
@@ -31,11 +34,6 @@ struct bloom
 };
 
 /* prototypes */
-#if !defined(__BLOOM_C)
-#define EXT extern
-#else
-#define EXT
-#endif
 
 /** ***************************************************************************
  * Initialize the bloom filter for use.
@@ -64,14 +62,14 @@ struct bloom
  *     1 - on failure
  *
  */
-EXT int bloom_init(struct bloom * bloom, int entries, double error);
+extern int bloom_init(struct bloom * bloom, int entries, double error);
 
 
 /** ***************************************************************************
  * Deprecated, use bloom_init()
  *
  */
-EXT int bloom_init_size(struct bloom * bloom, int entries, double error,
+extern int bloom_init_size(struct bloom * bloom, int entries, double error,
                     unsigned int cache_size);
 
 
@@ -92,7 +90,7 @@ EXT int bloom_init_size(struct bloom * bloom, int entries, double error,
  *    -1 - bloom not initialized
  *
  */
-EXT int bloom_check(struct bloom * bloom, const void * buffer, int len);
+extern int bloom_check(struct bloom * bloom, const void * buffer, int len);
 
 
 /** ***************************************************************************
@@ -113,14 +111,14 @@ EXT int bloom_check(struct bloom * bloom, const void * buffer, int len);
  *    -1 - bloom not initialized
  *
  */
-EXT int bloom_add(struct bloom * bloom, const void * buffer, int len);
+extern int bloom_add(struct bloom * bloom, const void * buffer, int len);
 
 
 /** ***************************************************************************
  * Print (to stdout) info about this bloom filter. Debugging aid.
  *
  */
-EXT void bloom_print(struct bloom * bloom);
+extern void bloom_print(struct bloom * bloom);
 
 
 /** ***************************************************************************
@@ -136,7 +134,7 @@ EXT void bloom_print(struct bloom * bloom);
  * Return: none
  *
  */
-EXT void bloom_free(struct bloom * bloom);
+extern void bloom_free(struct bloom * bloom);
 
 /** ***************************************************************************
  * Erase internal storage.
@@ -153,7 +151,7 @@ EXT void bloom_free(struct bloom * bloom);
  *     1 - on failure
  *
  */
-EXT int bloom_reset(struct bloom * bloom);
+extern int bloom_reset(struct bloom * bloom);
 
 
 /** ***************************************************************************
@@ -163,4 +161,4 @@ EXT int bloom_reset(struct bloom * bloom);
  *
  */
 
-#undef EXT
+#endif //BLOOM_H

@@ -19,8 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __TEE_PLUGIN_C
-
 #include "pmacct.h"
 #include "addr.h"
 #ifdef WITH_KAFKA
@@ -30,6 +28,11 @@
 #include "plugin_hooks.h"
 #include "plugin_common.h"
 #include "tee_plugin.h"
+
+/* Global variables */
+char tee_send_buf[65535];
+struct tee_receivers receivers; 
+int err_cant_bridge_af;
 
 void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 {
@@ -493,7 +496,6 @@ void Tee_zmq_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
 {
   struct p_zmq_host *zmq_host = &pool->zmq_host; 
   struct sockaddr target;
-  time_t last_fail, now;
   size_t msglen = 0;
   int ret;
 

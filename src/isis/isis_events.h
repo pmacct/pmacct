@@ -27,17 +27,11 @@
 #define AUTH_ERROR_TYPE_SNP   2
 #define AUTH_ERROR_TYPE_HELLO 1
 
-#if (!defined __ISIS_EVENTS_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void isis_event_system_type_change (struct isis_area *, int);
-EXT void isis_event_area_addr_change (struct isis_area *);
-EXT void isis_event_circuit_state_change (struct isis_circuit *, int);
-EXT void isis_event_circuit_type_change (struct isis_circuit *, int);
-EXT void isis_event_adjacency_state_change (struct isis_adjacency *, int);
-EXT void isis_event_auth_failure (char *, const char *, u_char *);
-#undef EXT
+extern void isis_event_system_type_change (struct isis_area *, int);
+extern void isis_event_area_addr_change (struct isis_area *);
+extern void isis_event_circuit_state_change (struct isis_circuit *, int);
+extern void isis_event_circuit_type_change (struct isis_circuit *, int);
+extern void isis_event_adjacency_state_change (struct isis_adjacency *, int);
+extern void isis_event_auth_failure (char *, const char *, u_char *);
 
 #endif /* _ISIS_EVENTS_H_ */

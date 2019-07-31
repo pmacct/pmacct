@@ -19,35 +19,34 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef TELEMETRY_LOGDUMP_H
+#define TELEMETRY_LOGDUMP_H
+
 /* includes */
 
 /* defines */
 
 /* prototypes */
-#if (!defined __TELEMETRY_LOGDUMP_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void telemetry_log_seq_init(u_int64_t *);
-EXT void telemetry_log_seq_increment(u_int64_t *);
-EXT u_int64_t telemetry_log_seq_get(u_int64_t *);
-EXT void telemetry_log_seq_set(u_int64_t *, u_int64_t);
-EXT int telemetry_log_seq_has_ro_bit(u_int64_t *);
+extern void telemetry_log_seq_init(u_int64_t *);
+extern void telemetry_log_seq_increment(u_int64_t *);
+extern u_int64_t telemetry_log_seq_get(u_int64_t *);
+extern void telemetry_log_seq_set(u_int64_t *, u_int64_t);
+extern int telemetry_log_seq_has_ro_bit(u_int64_t *);
 
-EXT int telemetry_peer_log_init(telemetry_peer *, int, int);
-EXT void telemetry_peer_log_dynname(char *, int, char *, telemetry_peer *);
-EXT int telemetry_log_msg(telemetry_peer *, struct telemetry_data *, void *, u_int32_t, int, u_int64_t, char *, int);
+extern int telemetry_peer_log_init(telemetry_peer *, int, int);
+extern void telemetry_peer_log_dynname(char *, int, char *, telemetry_peer *);
+extern int telemetry_log_msg(telemetry_peer *, struct telemetry_data *, void *, u_int32_t, int, u_int64_t, char *, int);
 
-EXT int telemetry_peer_dump_init(telemetry_peer *, int, int);
-EXT int telemetry_peer_dump_close(telemetry_peer *, int, int);
-EXT void telemetry_dump_init_peer(telemetry_peer *);
-EXT void telemetry_dump_se_ll_destroy(telemetry_dump_se_ll *);
-EXT void telemetry_dump_se_ll_append(telemetry_peer *, struct telemetry_data *, int);
-EXT void telemetry_handle_dump_event(struct telemetry_data *);
+extern int telemetry_peer_dump_init(telemetry_peer *, int, int);
+extern int telemetry_peer_dump_close(telemetry_peer *, int, int);
+extern void telemetry_dump_init_peer(telemetry_peer *);
+extern void telemetry_dump_se_ll_destroy(telemetry_dump_se_ll *);
+extern void telemetry_dump_se_ll_append(telemetry_peer *, struct telemetry_data *, int);
+extern void telemetry_handle_dump_event(struct telemetry_data *);
 
-EXT void telemetry_daemon_msglog_init_amqp_host();
-EXT void telemetry_dump_init_amqp_host();
-EXT int telemetry_daemon_msglog_init_kafka_host();
-EXT int telemetry_dump_init_kafka_host();
-#undef EXT
+extern void telemetry_daemon_msglog_init_amqp_host();
+extern void telemetry_dump_init_amqp_host();
+extern int telemetry_daemon_msglog_init_kafka_host();
+extern int telemetry_dump_init_kafka_host();
+
+#endif //TELEMETRY_LOGDUMP_H

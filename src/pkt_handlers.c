@@ -19,8 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __PKT_HANDLERS_C
-
 /* includes */
 #include "pmacct.h"
 #include "pmacct-data.h"
@@ -38,6 +36,12 @@
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #endif
+
+//Global variables
+struct channels_list_entry channels_list[MAX_N_PLUGINS];
+pkt_handler phandler[N_PRIMITIVES];
+
+
 
 /* functions */
 void evaluate_packet_handlers()
