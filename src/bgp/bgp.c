@@ -199,6 +199,7 @@ void skinny_bgp_daemon_online()
 #if defined WITH_ZMQ
     struct p_zmq_host *bgp_blackhole_zmq_host = NULL;
     char inproc_blackhole_str[] = "inproc://bgp_blackhole";
+    (void)inproc_blackhole_str;
 
     bgp_blackhole_daemon_wrapper();
 
