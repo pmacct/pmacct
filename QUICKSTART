@@ -584,13 +584,14 @@ sql_table_version: 4
 Va. NetFlow daemon & accounting NetFlow v9/IPFIX options 
 NetFlow v9/IPFIX can send option records other than flow ones, typically used to send
 to a collector mappings among interface SNMP ifIndexes to interface names or VRF ID's
-to VRF names. nfacctd_account_options enables accounting of option records then these
-should be split from regular flow records. Below is a sample config:
+to VRF names or extra sampling information. nfacctd_account_options enables accounting
+of option records then these should be split from regular flow records. Below is a
+sample config:
 
 nfacctd_time_new: true
 nfacctd_account_options: true
 !
-plugins: print[data], print[data_options]
+plugins: print[data], print[option_vrf], print[option_if], print[option_sampling]
 !
 pre_tag_filter[data]: 100
 aggregate[data]: peer_src_ip, in_iface, out_iface, tos, vrf_id_ingress, vrf_id_egress
@@ -601,14 +602,32 @@ print_output_file_append[data]: true
 print_output_file[data]: /path/to/flow_%s
 print_output[data]: csv
 !
-pre_tag_filter[data_options]: 200
-aggregate[data_options]: vrf_id_ingress, vrf_name
-print_refresh_time[data_options]: 300
-print_history[data_options]: 300
-print_history_roundoff[data_options]: m
-print_output_file_append[data_options]: true
-print_output_file[data_options]: /path/to/options_%s
-print_output[data_options]: event_csv
+pre_tag_filter[option_vrf]: 200
+aggregate[option_vrf]: peer_src_ip, vrf_id_ingress, vrf_name
+print_refresh_time[option_vrf]: 300
+print_history[option_vrf]: 300
+print_history_roundoff[option_vrf]: m
+print_output_file_append[option_vrf]: true
+print_output_file[option_vrf]: /path/to/option_vrf_%s
+print_output[option_vrf]: event_csv
+!
+pre_tag_filter[option_if]: 200
+aggregate[option_if]: peer_src_ip, in_iface, int_descr
+print_refresh_time[option_if]: 300
+print_history[option_if]: 300
+print_history_roundoff[option_if]: m 
+print_output_file_append[option_if]: true
+print_output_file[option_if]: /path/to/option_if_%s
+print_output[option_if]: event_csv
+!
+pre_tag_filter[option_sampling]: 200
+aggregate[option_sampling]: peer_src_ip, sampler_id, sampler_interval 
+print_refresh_time[option_sampling]: 300
+print_history[option_sampling]: 300
+print_history_roundoff[option_sampling]: m 
+print_output_file_append[option_sampling]: true
+print_output_file[option_sampling]: /path/to/option_sampling_%s
+print_output[option_sampling]: event_csv
 !
 aggregate_primitives: /path/to/primitives.lst
 pre_tag_map: /path/to/pretag.map
@@ -624,6 +643,11 @@ Below is the referenced primitives.lst:
 name=vrf_id_ingress     field_type=234  len=4   semantics=u_int
 name=vrf_id_egress      field_type=235  len=4   semantics=u_int
 name=vrf_name           field_type=236  len=32  semantics=str
+!
+name=int_descr		field_type=83	len=64	semantics=str
+!
+name=sampler_interval	field_type=50	len=4	semantics=u_int
+name=sampler_id		field_type=48	len=2	semantics=u_int
 
 Vb. Examples configuring NetFlow v9/IPFIX export
 
