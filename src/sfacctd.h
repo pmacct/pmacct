@@ -40,11 +40,11 @@ enum INMPacket_information_type {
 };
 
 enum INMExtended_information_type {
-  INMexternENDED_SWITCH    = 1,      /* Extended switch information */
-  INMexternENDED_ROUTER    = 2,      /* Extended router information */
-  INMexternENDED_GATEWAY   = 3,      /* Extended gateway router information */
-  INMexternENDED_USER      = 4,      /* Extended TACAS/RADIUS user information */
-  INMexternENDED_URL       = 5       /* Extended URL information */
+  INMEXTENDED_SWITCH    = 1,      /* Extended switch information */
+  INMEXTENDED_ROUTER    = 2,      /* Extended router information */
+  INMEXTENDED_GATEWAY   = 3,      /* Extended gateway router information */
+  INMEXTENDED_USER      = 4,      /* Extended TACAS/RADIUS user information */
+  INMEXTENDED_URL       = 5       /* Extended URL information */
 };
 
 enum INMCounters_version {
@@ -136,18 +136,18 @@ typedef struct _SFSample {
   /* extended data fields */
   u_int32_t num_extended;
   u_int32_t extended_data_tag;
-#define SASAMPLE_externENDED_DATA_SWITCH 1
-#define SASAMPLE_externENDED_DATA_ROUTER 4
-#define SASAMPLE_externENDED_DATA_GATEWAY 8
-#define SASAMPLE_externENDED_DATA_USER 16
-#define SASAMPLE_externENDED_DATA_URL 32
-#define SASAMPLE_externENDED_DATA_MPLS 64
-#define SASAMPLE_externENDED_DATA_NAT 128
-#define SASAMPLE_externENDED_DATA_MPLS_TUNNEL 256
-#define SASAMPLE_externENDED_DATA_MPLS_VC 512
-#define SASAMPLE_externENDED_DATA_MPLS_FTN 1024
-#define SASAMPLE_externENDED_DATA_MPLS_LDP_FEC 2048
-#define SASAMPLE_externENDED_DATA_VLAN_TUNNEL 4096
+#define SASAMPLE_EXTENDED_DATA_SWITCH 1
+#define SASAMPLE_EXTENDED_DATA_ROUTER 4
+#define SASAMPLE_EXTENDED_DATA_GATEWAY 8
+#define SASAMPLE_EXTENDED_DATA_USER 16
+#define SASAMPLE_EXTENDED_DATA_URL 32
+#define SASAMPLE_EXTENDED_DATA_MPLS 64
+#define SASAMPLE_EXTENDED_DATA_NAT 128
+#define SASAMPLE_EXTENDED_DATA_MPLS_TUNNEL 256
+#define SASAMPLE_EXTENDED_DATA_MPLS_VC 512
+#define SASAMPLE_EXTENDED_DATA_MPLS_FTN 1024
+#define SASAMPLE_EXTENDED_DATA_MPLS_LDP_FEC 2048
+#define SASAMPLE_EXTENDED_DATA_VLAN_TUNNEL 4096
 
   /* IP forwarding info */
   SFLAddress nextHop;
@@ -171,22 +171,22 @@ typedef struct _SFSample {
   u_int32_t localpref;
 
   /* user id */
-#define SA_MAX_externENDED_USER_LEN 200
+#define SA_MAX_EXTENDED_USER_LEN 200
   u_int32_t src_user_charset;
   u_int32_t src_user_len;
-  char src_user[SA_MAX_externENDED_USER_LEN+1];
+  char src_user[SA_MAX_EXTENDED_USER_LEN+1];
   u_int32_t dst_user_charset;
   u_int32_t dst_user_len;
-  char dst_user[SA_MAX_externENDED_USER_LEN+1];
+  char dst_user[SA_MAX_EXTENDED_USER_LEN+1];
 
   /* url */
-#define SA_MAX_externENDED_URL_LEN 200
-#define SA_MAX_externENDED_HOST_LEN 200
+#define SA_MAX_EXTENDED_URL_LEN 200
+#define SA_MAX_EXTENDED_HOST_LEN 200
   u_int32_t url_direction;
   u_int32_t url_len;
-  char url[SA_MAX_externENDED_URL_LEN+1];
+  char url[SA_MAX_EXTENDED_URL_LEN+1];
   u_int32_t host_len;
-  char host[SA_MAX_externENDED_HOST_LEN+1];
+  char host[SA_MAX_EXTENDED_HOST_LEN+1];
 
   /* mpls */
   SFLAddress mpls_nextHop;
@@ -277,11 +277,6 @@ struct SF_dissect {
   u_int32_t *samplesInPkt;
 };
 
-#if (!defined __SFACCTD_C)
-#define extern extern
-#else
-#define extern
-#endif
 extern u_int8_t SF_evaluate_flow_type(struct packet_ptrs *);
 extern void set_vector_sample_type(struct packet_ptrs_vector *, u_int32_t);
 extern void reset_mac(struct packet_ptrs *);

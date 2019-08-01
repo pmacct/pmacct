@@ -157,7 +157,6 @@ int main(int argc,char **argv, char **envp)
 
   /* getopt() stuff */
   extern char *optarg;
-  extern int optind, opterr, optopt;
   int errflag, cp; 
 
 #if defined HAVE_MALLOPT

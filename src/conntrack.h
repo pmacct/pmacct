@@ -76,6 +76,6 @@ extern void insert_conntrack_ipv6(time_t, struct in6_addr *, struct in6_addr *, 
 
 extern struct conntrack_ipv4 *conntrack_ipv4_table;
 extern struct conntrack_ipv6 *conntrack_ipv6_table;
-extern struct conntrack_helper_entry __attribute__((unused)) conntrack_helper_list[];
+extern struct conntrack_helper_entry __attribute__((unused)) conntrack_helper_list[4];
 
 #endif //CONNTRACK_H
