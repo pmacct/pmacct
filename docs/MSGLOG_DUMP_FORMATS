@@ -66,7 +66,9 @@ BGP dump format:
     "writer_id": <core_proc_name>"/"<writer_pid> (*),
     "timestamp": <dump event timestamp>,
     "peer_ip_src": <IP address>,
-    "event_type": "dump_close"
+    "event_type": "dump_close",
+    "tables": <number of RIBs>,
+    "entries": <number of NLRIs>
   }
 
 
@@ -161,6 +163,8 @@ BMP dump format:
     "timestamp": <dump event timestamp>,
     "bmp_router": <IP address>,
     "event_type": "dump_close"
+    "tables": <number of BGP peers>,
+    "entries": <number of NLRIs>
   }
 
 
