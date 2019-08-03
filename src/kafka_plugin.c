@@ -42,8 +42,7 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   unsigned char *pipebuf;
   struct pollfd pfd;
   struct insert_data idata;
-  time_t avro_schema_deadline = 0;
-  int timeout, refresh_timeout, avro_schema_timeout = 0;
+  int timeout, refresh_timeout;
   int ret, num, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
@@ -95,20 +94,6 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     avro_schema_add_writer_id(avro_acct_schema);
 
     if (config.avro_schema_output_file) write_avro_schema_to_file(config.avro_schema_output_file, avro_acct_schema);
-
-    if (config.kafka_avro_schema_topic) {
-      if (!config.kafka_avro_schema_refresh_time)
-	config.kafka_avro_schema_refresh_time = DEFAULT_AVRO_SCHEMA_REFRESH_TIME;
-
-      avro_schema_deadline = time(NULL);
-      P_init_refresh_deadline(&avro_schema_deadline, config.kafka_avro_schema_refresh_time, 0, "m");
-      avro_acct_schema_str = compose_avro_purge_schema(avro_acct_schema, config.name);
-    }
-    else {
-      config.kafka_avro_schema_refresh_time = 0;
-      avro_schema_deadline = 0;
-      avro_schema_timeout = 0;
-    }
 
     if (config.kafka_avro_schema_registry) {
 #ifdef WITH_SERDES
@@ -185,11 +170,10 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     poll_bypass = FALSE;
 
     calc_refresh_timeout(refresh_deadline, idata.now, &refresh_timeout);
-    if (config.kafka_avro_schema_topic) calc_refresh_timeout(avro_schema_deadline, idata.now, &avro_schema_timeout);
 
     pfd.fd = pipe_fd;
     pfd.events = POLLIN;
-    timeout = MIN(refresh_timeout, (avro_schema_timeout ? avro_schema_timeout : INT_MAX));
+    timeout = refresh_timeout; /* in case we have more timeouts to factor in */
     ret = poll(&pfd, (pfd.fd == ERR ? 0 : 1), timeout);
 
     if (ret <= 0) {
@@ -205,13 +189,6 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     P_update_time_reference(&idata);
 
     if (idata.now > refresh_deadline) P_cache_handle_flush_event(&pt);
-
-#ifdef WITH_AVRO
-    if (idata.now > avro_schema_deadline) {
-      kafka_avro_schema_purge(avro_acct_schema_str);
-      avro_schema_deadline += config.kafka_avro_schema_refresh_time;
-    }
-#endif
 
     recv_budget = 0;
     if (poll_bypass) {
@@ -768,55 +745,3 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   if (avro_buf) free(avro_buf);
 #endif
 }
-
-#ifdef WITH_AVRO
-void kafka_avro_schema_purge(char *avro_schema_str)
-{
-  struct p_kafka_host kafka_avro_schema_host;
-  int part, part_cnt, tpc;
-
-  if (!avro_schema_str || !config.kafka_avro_schema_topic) return;
-
-  /* setting some defaults */
-  if (!config.sql_host) config.sql_host = default_kafka_broker_host;
-  if (!config.kafka_broker_port) config.kafka_broker_port = default_kafka_broker_port;
-
-  p_kafka_init_host(&kafka_avro_schema_host, config.kafka_config_file);
-  p_kafka_connect_to_produce(&kafka_avro_schema_host);
-  p_kafka_set_broker(&kafka_avro_schema_host, config.sql_host, config.kafka_broker_port);
-  p_kafka_set_topic(&kafka_avro_schema_host, config.kafka_avro_schema_topic);
-  p_kafka_set_partition(&kafka_avro_schema_host, config.kafka_partition);
-  p_kafka_set_key(&kafka_avro_schema_host, config.kafka_partition_key, config.kafka_partition_keylen);
-  p_kafka_set_content_type(&kafka_avro_schema_host, PM_KAFKA_CNT_TYPE_STR);
-
-  if (config.kafka_partition_dynamic) {
-    rd_kafka_resp_err_t err;
-    const struct rd_kafka_metadata *metadata;
-
-    err = rd_kafka_metadata(kafka_avro_schema_host.rk, 0, kafka_avro_schema_host.topic, &metadata, 100);
-    if (err != RD_KAFKA_RESP_ERR_NO_ERROR) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to get Kafka metadata for topic %s: %s\n",
-              config.name, config.type, kafka_avro_schema_host.topic, rd_kafka_err2str(err));
-      exit_gracefully(1);
-    }
-
-    part_cnt = -1;
-    for (tpc = 0 ; tpc < metadata->topic_cnt ; tpc++) {
-      const struct rd_kafka_metadata_topic *t = &metadata->topics[tpc];
-      if (!strcmp(t->topic, config.kafka_avro_schema_topic)) {
-          part_cnt = t->partition_cnt;
-          break;
-      }
-    }
-
-    for(part = 0; part < part_cnt; part++) {
-      p_kafka_produce_data_to_part(&kafka_avro_schema_host, avro_schema_str, strlen(avro_schema_str), part);
-    }
-  }
-  else {
-    p_kafka_produce_data(&kafka_avro_schema_host, avro_schema_str, strlen(avro_schema_str));
-  }
-
-  p_kafka_close(&kafka_avro_schema_host, FALSE);
-}
-#endif

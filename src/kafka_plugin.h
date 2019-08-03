@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2017 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -35,7 +35,4 @@
 #endif
 EXT void kafka_plugin(int, struct configuration *, void *);
 EXT void kafka_cache_purge(struct chained_cache *[], int, int);
-#ifdef WITH_AVRO
-EXT void kafka_avro_schema_purge(char *);
-#endif
 #undef EXT
