@@ -57,10 +57,6 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct primitives_ptrs prim_ptrs;
   unsigned char *dataptr;
 
-#ifdef WITH_AVRO
-  char *avro_acct_schema_str = NULL;
-#endif
-
 #ifdef WITH_ZMQ
   struct p_zmq_host *zmq_host = &((struct channels_list_entry *)ptr)->zmq_host;
 #else
