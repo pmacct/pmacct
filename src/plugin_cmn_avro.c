@@ -37,7 +37,7 @@
 
 /* functions */
 #ifdef WITH_AVRO
-avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2)
+avro_schema_t avro_schema_build_flow(u_int64_t wtc, u_int64_t wtc_2)
 {
   avro_schema_t schema = avro_schema_record("acct", NULL);
   avro_schema_t optlong_s = avro_schema_union();

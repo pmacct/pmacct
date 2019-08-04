@@ -34,7 +34,7 @@
 #endif
 
 #ifdef WITH_AVRO
-EXT avro_schema_t build_avro_schema(u_int64_t wtc, u_int64_t wtc_2);
+EXT avro_schema_t avro_schema_build_flow(u_int64_t wtc, u_int64_t wtc_2);
 EXT void avro_schema_add_writer_id(avro_schema_t);
 EXT avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type,
   struct pkt_primitives *pbase, struct pkt_bgp_primitives *pbgp,
