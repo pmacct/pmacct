@@ -406,7 +406,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   start = time(NULL);
 
   if (config.print_markers) {
-    if (config.message_broker_output & PRINT_OUTPUT_JSON || config.message_broker_output & PRINT_OUTPUT_AVRO) {
+    if (config.message_broker_output & PRINT_OUTPUT_JSON) {
       void *json_obj;
       char *json_str;
 
@@ -711,7 +711,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   duration = time(NULL)-start;
 
   if (config.print_markers) {
-    if (config.message_broker_output & PRINT_OUTPUT_JSON || config.message_broker_output & PRINT_OUTPUT_AVRO) {
+    if (config.message_broker_output & PRINT_OUTPUT_JSON) {
       void *json_obj;
       char *json_str;
 
