@@ -89,7 +89,7 @@ void skinny_bgp_daemon_online()
   struct sockaddr_storage server, client;
   afi_t afi;
   safi_t safi;
-  time_t now, dump_refresh_deadline;
+  time_t now, dump_refresh_deadline = {0};
   struct hosts_table allow;
   struct bgp_md5_table bgp_md5;
   struct timeval dump_refresh_timeout, *drt_ptr;

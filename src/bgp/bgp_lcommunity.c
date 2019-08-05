@@ -255,7 +255,7 @@ lcommunity_lcom2str (struct bgp_peer *peer, struct lcommunity *lcom)
   int idx, str_pnt, str_size, first = TRUE;
   u_int32_t npart1, npart2, npart3;
   u_int32_t hpart1, hpart2, hpart3;
-  char *str_buf;
+  char *str_buf = NULL;
   u_int8_t *pnt;
 
   if (!peer) return NULL;

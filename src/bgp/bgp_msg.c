@@ -987,7 +987,7 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
   u_char *lim;
   u_char safi, label[3];
   struct prefix p;
-  int psize, end;
+  int psize = 0, end;
   int ret;
   u_int32_t tmp32;
   u_int16_t tmp16;
@@ -1294,7 +1294,7 @@ int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr,
   struct bgp_misc_structs *bms;
   struct bgp_node *route = NULL, route_local;
   struct bgp_info *ri = NULL, ri_local;
-  u_int32_t modulo;
+  u_int32_t modulo = 0;
 
   if (!peer) return ERR;
 
