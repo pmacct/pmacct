@@ -1371,7 +1371,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   socklen_t dest_len;
   struct NETFLOW_TARGET target;
   struct CB_CTXT cb_ctxt;
-  u_int8_t engine_type;
+  u_int8_t engine_type = 0;
   u_int32_t engine_id;
 
   struct extra_primitives extras;
