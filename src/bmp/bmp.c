@@ -77,7 +77,7 @@ void skinny_bmp_daemon()
   int fd, select_fd, bkp_select_fd, recalc_fds, select_num;
 
   /* logdump time management */
-  time_t dump_refresh_deadline;
+  time_t dump_refresh_deadline = {0};
   struct timeval dump_refresh_timeout, *drt_ptr;
 
 

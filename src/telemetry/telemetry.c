@@ -74,7 +74,7 @@ void telemetry_daemon(void *t_data_void)
   u_int16_t port = 0;
   char *srv_proto = NULL;
   time_t last_peers_timeout_check;
-  socklen_t slen, clen;
+  socklen_t slen = {0}, clen;
 
   telemetry_peer *peer = NULL;
 
@@ -89,7 +89,7 @@ void telemetry_daemon(void *t_data_void)
   int fd, select_fd, bkp_select_fd, recalc_fds, select_num;
 
   /* logdump time management */
-  time_t dump_refresh_deadline;
+  time_t dump_refresh_deadline = {0};
   struct timeval dump_refresh_timeout, *drt_ptr;
 
 #if defined WITH_ZMQ
