@@ -37,7 +37,7 @@ struct _fsrc_queue fsrc_queue;
 void set_preprocess_funcs(char *string, struct preprocess *prep, int dictionary)
 {
   char *token, *sep, *key, *value;
-  int dindex, err, sql_idx = 0, p_idx = 0;
+  int dindex, err = 0, sql_idx = 0, p_idx = 0;
 
   memset(sql_preprocess_funcs, 0, sizeof(sql_preprocess_funcs));
   memset(P_preprocess_funcs, 0, sizeof(P_preprocess_funcs));
@@ -563,7 +563,7 @@ int check_fss(struct db_cache *queue[], int *num, int seq)
 */
 int check_fsrc(struct db_cache *queue[], int *num, int seq)
 {
-  struct fsrc_queue_elem *ptr, *last_seen, *new;
+  struct fsrc_queue_elem *ptr, *last_seen = NULL, *new;
   struct timeval tv; 
   float w /* random variable */, z;
   u_int32_t max = prep.fsrc+1; /* maximum number of allowed flows */

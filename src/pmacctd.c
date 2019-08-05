@@ -301,7 +301,7 @@ int main(int argc,char **argv, char **envp)
   struct pcap_pkthdr pkt_hdr;
   const u_char *pkt_body;
 
-  int index, index_rr, logf, ret;
+  int index, index_rr = 0, logf, ret;
   int pcap_savefile_round = 0;
 
   struct plugins_list_entry *list;

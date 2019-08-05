@@ -62,7 +62,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   unsigned char *dataptr;
 
 #ifdef WITH_AVRO
-  char *avro_acct_schema_str;
+  char *avro_acct_schema_str = NULL;
 #endif
 
 #ifdef WITH_ZMQ
@@ -348,7 +348,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   (void)data;
 
 #ifdef WITH_AVRO
-  avro_writer_t avro_writer;
+  avro_writer_t avro_writer = {0};
   char *avro_buf = NULL;
   int avro_buffer_full = FALSE;
 #endif
@@ -413,8 +413,8 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
   if (config.print_markers) {
     if (config.message_broker_output & PRINT_OUTPUT_JSON) {
-      void *json_obj;
-      char *json_str;
+      void *json_obj = NULL;
+      char *json_str = NULL;
 
       json_obj = compose_purge_init_json(config.name, writer_pid);
 
@@ -456,7 +456,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   }
 
   for (j = 0; j < index; j++) {
-    char *json_str;
+    char *json_str = NULL;
 
     if (queue[j]->valid != PRINT_CACHE_COMMITTED) continue;
 
@@ -650,8 +650,8 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
   if (config.print_markers) {
     if (config.message_broker_output & PRINT_OUTPUT_JSON) {
-      void *json_obj;
-      char *json_str;
+      void *json_obj = NULL;
+      char *json_str = NULL;
 
       json_obj = compose_purge_close_json(config.name, writer_pid, qn, saved_index, duration);
 

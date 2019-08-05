@@ -3021,7 +3021,7 @@ char *pmc_extract_token(char **string, int delim)
 int Recv(int sd, unsigned char **buf) 
 {
   int num, unpacked = 0, round = 0, eof_received = 0; 
-  unsigned char rxbuf[LARGEBUFLEN], emptybuf[LARGEBUFLEN], *elem;
+  unsigned char rxbuf[LARGEBUFLEN], emptybuf[LARGEBUFLEN], *elem = NULL;
 
   *buf = (unsigned char *) malloc(LARGEBUFLEN);
   if (!(*buf)) {

@@ -132,7 +132,7 @@ int main(int argc,char **argv, char **envp)
 
   struct sockaddr_storage server, client;
   struct ipv6_mreq multi_req6;
-  socklen_t  clen = sizeof(client), slen;
+  socklen_t  clen = sizeof(client), slen = 0;
   struct ip_mreq multi_req4;
 
   int pcap_savefile_round = 0;

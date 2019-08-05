@@ -3511,6 +3511,9 @@ void NF_vxlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   u_char *vni_ptr = NULL, tmp64[8];
   u_int8_t *type = NULL;
 
+  //Make compiler happy
+  memset(tmp64, 0, sizeof(tmp64));
+
   switch(hdr->version) {
   case 10:
   case 9:

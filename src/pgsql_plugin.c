@@ -343,7 +343,7 @@ int PG_cache_dbop_copy(struct DBdesc *db, struct db_cache *cache_elem, struct in
 
 int PG_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct insert_data *idata)
 {
-  PGresult *ret;
+  PGresult *ret = NULL;
   char *ptr_values, *ptr_where, *ptr_set;
   int num=0, num_set=0, have_flows=0;
 

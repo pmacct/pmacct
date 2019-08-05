@@ -245,7 +245,7 @@ int p_zmq_plugin_pipe_set_profile(struct configuration *cfg, char *value)
 
 int p_zmq_bind(struct p_zmq_host *zmq_host)
 {
-  int ret, as_server = TRUE;
+  int ret = 0, as_server = TRUE;
   size_t sock_strlen;
 
   if (strlen(zmq_host->zap.username) && strlen(zmq_host->zap.password)) {
@@ -293,7 +293,7 @@ int p_zmq_bind(struct p_zmq_host *zmq_host)
 
 int p_zmq_connect(struct p_zmq_host *zmq_host)
 {
-  int ret;
+  int ret = 0;
 
   if (strlen(zmq_host->zap.username) && strlen(zmq_host->zap.password)) {
     ret = zmq_setsockopt(zmq_host->sock.obj, ZMQ_PLAIN_USERNAME, zmq_host->zap.username, strlen(zmq_host->zap.username));

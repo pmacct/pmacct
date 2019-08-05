@@ -106,7 +106,7 @@ int main(int argc,char **argv, char **envp)
   struct packet_ptrs_vector pptrs;
   char config_file[SRVBUFLEN];
   unsigned char *netflow_packet;
-  int logf, rc, yes=1, allowed;
+  int logf, rc = 0, yes=1, allowed;
   struct host_addr addr;
   struct hosts_table allow;
   struct id_table bpas_table;
@@ -122,7 +122,7 @@ int main(int argc,char **argv, char **envp)
 
   struct sockaddr_storage server, client;
   struct ipv6_mreq multi_req6;
-  socklen_t clen = sizeof(client), slen;
+  socklen_t clen = sizeof(client), slen = 0;
   struct ip_mreq multi_req4;
 
   int pcap_savefile_round = 0;
