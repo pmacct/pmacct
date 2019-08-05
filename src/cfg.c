@@ -847,7 +847,7 @@ void sanitize_cfg(int rows, char *filename)
     len = strlen(cfg[rindex]);
     if (len) {
       int symbol = FALSE, value = FALSE, cindex = 0, lbindex = 0;
-      char *valueptr;
+      char *valueptr = NULL;
 
       while(cindex <= len) {
 	if (!value) {
