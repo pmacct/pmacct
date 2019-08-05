@@ -18,25 +18,17 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
+#ifndef PMTELEMETRYD_H
+#define PMTELEMETRYD_H
 
 /* includes */
 
 /* defines */
 
 /* prototypes */
-#if (!defined __PMTELEMETRYD_C)
-#define EXT extern
-#else
-#define EXT
-EXT void usage_daemon(char *);
-EXT void compute_once();
-#endif
-#undef EXT
+extern void usage_daemon(char *);
+extern void compute_once();
 
 /* global variables */
-#if (!defined __PMTELEMETRYD_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-#undef EXT
+
+#endif //PMTELEMETRYD_H

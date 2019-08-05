@@ -19,9 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* defines */
-#define __PRETAG_C
-
 /* includes */
 #include "pmacct.h"
 #include "addr.h"
@@ -37,6 +34,21 @@
 #include "bgp/bgp_xcs-data.h"
 #include "crc32.h"
 #include "pmacct-data.h"
+
+//Global variables
+int bpas_map_allocated;
+int blp_map_allocated;
+int bmed_map_allocated;
+int biss_map_allocated;
+int bta_map_allocated;
+int bitr_map_allocated;
+int sampling_map_allocated;
+int custom_primitives_allocated;
+
+int bta_map_caching;
+int sampling_map_caching;
+
+int (*find_id_func)(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 
 /*
    XXX: load_id_file() interface cleanup pending:

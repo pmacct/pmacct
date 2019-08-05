@@ -19,8 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __PMACCT_CLIENT_C
-
 #include <time.h>
 
 /* include */
@@ -390,17 +388,6 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
   }
 }
 
-char *write_sep(char *sep, int *count)
-{
-  static char empty_sep[] = "";
-
-  if (*count) return sep;
-  else {
-    (*count)++;
-    return empty_sep;
-  }
-}
-
 void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count_2, u_int8_t have_wtc, char *sep, int is_event)
 {
   int count = 0;
@@ -670,7 +657,7 @@ int build_query_client(char *path_ptr)
 int main(int argc,char **argv)
 {
   int clibufsz = (MAX_QUERIES*sizeof(struct query_entry))+sizeof(struct query_header)+2;
-  struct pkt_data *acc_elem;
+  struct pkt_data *acc_elem = NULL;
   struct bucket_desc *bd;
   struct query_header q; 
   struct pkt_primitives empty_addr;
@@ -1638,7 +1625,7 @@ int main(int argc,char **argv)
 	  strlcpy(request.data.sampling_direction, match_string_token, sizeof(request.data.sampling_direction));
 	}
         else if (!strcmp(count_token[match_string_index], "proto")) {
-	  int proto;
+	  int proto = 0;
 
 	  if (!want_ipproto_num) {
 	    for (index = 0; _protocols[index].number != -1; index++) { 
@@ -1961,7 +1948,7 @@ int main(int argc,char **argv)
           }
         }
         else if (!strcmp(count_token[match_string_index], "tunnel_proto")) {
-	  int proto;
+	  int proto = 0;
 
 	  if (!want_ipproto_num) {
 	    for (index = 0; _protocols[index].number != -1; index++) { 
@@ -3034,7 +3021,7 @@ char *pmc_extract_token(char **string, int delim)
 int Recv(int sd, unsigned char **buf) 
 {
   int num, unpacked = 0, round = 0, eof_received = 0; 
-  unsigned char rxbuf[LARGEBUFLEN], emptybuf[LARGEBUFLEN], *elem;
+  unsigned char rxbuf[LARGEBUFLEN], emptybuf[LARGEBUFLEN], *elem = NULL;
 
   *buf = (unsigned char *) malloc(LARGEBUFLEN);
   if (!(*buf)) {
@@ -3078,6 +3065,9 @@ int Recv(int sd, unsigned char **buf)
 
 int check_data_sizes(struct query_header *qh, struct pkt_data *acc_elem)
 {
+  if (!acc_elem)
+    return -1;
+
   if (qh->cnt_sz != sizeof(acc_elem->pkt_len)) {
     printf("ERROR: Counter sizes mismatch: daemon: %d  client: %d\n", qh->cnt_sz*8, (int)sizeof(acc_elem->pkt_len)*8);
     printf("ERROR: It's very likely that a 64bit package has been mixed with a 32bit one.\n\n");
@@ -3342,7 +3332,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *tmpbuf;
-  char tstamp_str[SRVBUFLEN], ndpi_class[SUPERSHORTBUFLEN], *label_ptr;
+  char tstamp_str[SRVBUFLEN], *label_ptr;
   json_t *obj = json_object();
   
   if (wtc & COUNT_TAG) json_object_set_new_nocheck(obj, "tag", json_integer((json_int_t)pbase->tag));
@@ -3360,6 +3350,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
     json_object_set_new_nocheck(obj, "class", json_string((pbase->class && class_table[(pbase->class)-1].id) ? class_table[(pbase->class)-1].protocol : "unknown"));
 
 #if defined (WITH_NDPI)
+  char ndpi_class[SUPERSHORTBUFLEN];
   if (wtc_2 & COUNT_NDPI_CLASS) {
     snprintf(ndpi_class, SUPERSHORTBUFLEN, "%s/%s",
 		pmc_ndpi_get_proto_name(pbase->ndpi_class.master_protocol),
@@ -3816,7 +3807,7 @@ void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_
         cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_HEX) {
       if (formatted) {
 	snprintf(format, SRVBUFLEN, "%%-%d", cps_flen[cp_entry->len] > strlen(cp_entry->name) ? cps_flen[cp_entry->len] : (int)strlen(cp_entry->name));
-	strncat(format, "s", SRVBUFLEN);
+	strncat(format, "s", SRVBUFLEN - 1);
       }
       else snprintf(format, SRVBUFLEN, "%s", "%s");
     }
@@ -3824,7 +3815,7 @@ void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_
 	     cp_entry->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
       if (formatted) {
 	snprintf(format, SRVBUFLEN, "%%-%d", cp_entry->len > strlen(cp_entry->name) ? cp_entry->len : (int)strlen(cp_entry->name));
-	strncat(format, "s", SRVBUFLEN);
+	strncat(format, "s", SRVBUFLEN - 1);
       }
       else snprintf(format, SRVBUFLEN, "%s", "%s");
     }
@@ -3835,7 +3826,7 @@ void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_
       	
       if (formatted) {
         snprintf(format, SRVBUFLEN, "%%-%d", len > strlen(cp_entry->name) ? len : (int)strlen(cp_entry->name));
-        strncat(format, "s", SRVBUFLEN);
+        strncat(format, "s", SRVBUFLEN - 1);
       }
       else snprintf(format, SRVBUFLEN, "%s", "%s");
     }
@@ -3844,7 +3835,7 @@ void pmc_custom_primitive_header_print(char *out, int outlen, struct imt_custom_
 
       if (formatted) {
         snprintf(format, SRVBUFLEN, "%%-%d", len > strlen(cp_entry->name) ? len : (int)strlen(cp_entry->name));
-        strncat(format, "s", SRVBUFLEN);
+        strncat(format, "s", SRVBUFLEN - 1);
       }
       else snprintf(format, SRVBUFLEN, "%s", "%s");
     }

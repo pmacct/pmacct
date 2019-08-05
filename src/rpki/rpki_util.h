@@ -19,20 +19,19 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef RPKI_UTIL_H
+#define RPKI_UTIL_H
+
 /* prototypes */
-#if !defined(__RPKI_UTIL_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void rpki_init_dummy_peer(struct bgp_peer *);
-EXT int rpki_attrhash_cmp(const void *, const void *);
-EXT const char *rpki_roa_print(u_int8_t);
-EXT u_int8_t rpki_str2roa(char *);
-EXT void rpki_ribs_free(struct bgp_peer *, struct bgp_table *, struct bgp_table *);
-EXT void rpki_ribs_reset(struct bgp_peer *, struct bgp_table **, struct bgp_table **);
-EXT void rpki_rtr_set_dont_reconnect(struct rpki_rtr_handle *);
-EXT time_t rpki_rtr_eval_timeout(struct rpki_rtr_handle *);
-EXT void rpki_rtr_eval_expire(struct rpki_rtr_handle *);
-EXT void rpki_link_misc_structs(struct bgp_misc_structs *);
-#undef EXT
+extern void rpki_init_dummy_peer(struct bgp_peer *);
+extern int rpki_attrhash_cmp(const void *, const void *);
+extern const char *rpki_roa_print(u_int8_t);
+extern u_int8_t rpki_str2roa(char *);
+extern void rpki_ribs_free(struct bgp_peer *, struct bgp_table *, struct bgp_table *);
+extern void rpki_ribs_reset(struct bgp_peer *, struct bgp_table **, struct bgp_table **);
+extern void rpki_rtr_set_dont_reconnect(struct rpki_rtr_handle *);
+extern time_t rpki_rtr_eval_timeout(struct rpki_rtr_handle *);
+extern void rpki_rtr_eval_expire(struct rpki_rtr_handle *);
+extern void rpki_link_misc_structs(struct bgp_misc_structs *);
+
+#endif //RPKI_UTIL_H

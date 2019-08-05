@@ -24,9 +24,6 @@
     is Copyright (C) InMon Corporation 2001 ALL RIGHTS RESERVED
 */
 
-/* defines */
-#define __SFLOW_C
-
 /* includes */
 #include "pmacct.h"
 #include "addr.h"

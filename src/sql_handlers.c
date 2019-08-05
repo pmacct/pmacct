@@ -19,8 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __SQL_HANDLERS_C
-
 /*
   PG_* functions are used only by PostgreSQL plugin;
   MY_* functions are used only by MySQL plugin;

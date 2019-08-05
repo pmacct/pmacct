@@ -62,15 +62,9 @@ typedef struct thread_pool {
   pthread_mutex_t	*mutex;
 } thread_pool_t;
 
-#if (!defined __THREAD_POOL_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT thread_pool_t *allocate_thread_pool(int);
-EXT void deallocate_thread_pool(thread_pool_t **);
-EXT void send_to_pool(thread_pool_t *, void *, void *);
-EXT void *thread_runner(void *);
-#undef EXT
+extern thread_pool_t *allocate_thread_pool(int);
+extern void deallocate_thread_pool(thread_pool_t **);
+extern void send_to_pool(thread_pool_t *, void *, void *);
+extern void *thread_runner(void *);
 
 #endif /* _THREAD_POOL_H_ */

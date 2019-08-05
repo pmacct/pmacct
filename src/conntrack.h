@@ -19,6 +19,9 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef CONNTRACK_H
+#define CONNTRACK_H
+
 /* defines */
 #define CONNTRACK_GENERIC_LIFETIME 20 
 #define DEFAULT_CONNTRACK_BUFFER_SIZE 8192000 /* 8 Mb */
@@ -60,31 +63,19 @@ struct conntrack_ipv6 {
   struct conntrack_ipv6 *next;
 };
 
-#if defined __CONNTRACK_C || defined __PMACCT_PLAYER_C || defined __NFACCTD_C || defined __SFACCTD_C
-#define EXT
-#else
-#define EXT extern
-#endif
-EXT void init_conntrack_table();
-EXT void conntrack_ftp_helper(time_t, struct packet_ptrs *);
-EXT void conntrack_sip_helper(time_t, struct packet_ptrs *);
-EXT void conntrack_rtsp_helper(time_t, struct packet_ptrs *);
-EXT void search_conntrack(struct ip_flow_common *, struct packet_ptrs *, unsigned int);
-EXT void search_conntrack_ipv4(struct ip_flow_common *, struct packet_ptrs *, unsigned int);
-EXT void insert_conntrack_ipv4(time_t, u_int32_t, u_int32_t, u_int16_t, u_int16_t, u_int8_t, pm_class_t, conntrack_helper, time_t);
-EXT struct conntrack_ipv4 *conntrack_ipv4_table;
-EXT void search_conntrack_ipv6(struct ip_flow_common *, struct packet_ptrs *, unsigned int);
-EXT void insert_conntrack_ipv6(time_t, struct in6_addr *, struct in6_addr *, u_int16_t, u_int16_t, u_int8_t, pm_class_t, conntrack_helper, time_t);
-EXT struct conntrack_ipv6 *conntrack_ipv6_table;
+extern void init_conntrack_table();
+extern void conntrack_ftp_helper(time_t, struct packet_ptrs *);
+extern void conntrack_sip_helper(time_t, struct packet_ptrs *);
+extern void conntrack_rtsp_helper(time_t, struct packet_ptrs *);
+extern void search_conntrack(struct ip_flow_common *, struct packet_ptrs *, unsigned int);
+extern void search_conntrack_ipv4(struct ip_flow_common *, struct packet_ptrs *, unsigned int);
+extern void insert_conntrack_ipv4(time_t, u_int32_t, u_int32_t, u_int16_t, u_int16_t, u_int8_t, pm_class_t, conntrack_helper, time_t);
+extern void search_conntrack_ipv6(struct ip_flow_common *, struct packet_ptrs *, unsigned int);
+extern void insert_conntrack_ipv6(time_t, struct in6_addr *, struct in6_addr *, u_int16_t, u_int16_t, u_int8_t, pm_class_t, conntrack_helper, time_t);
 
-#undef EXT
 
-#if defined __CONNTRACK_C || defined __CLASSIFIER_C
-static struct conntrack_helper_entry __attribute__((unused)) conntrack_helper_list[] = {
-  { "ftp", conntrack_ftp_helper },
-  { "sip", conntrack_sip_helper },
-//  { "irc", conntrack_irc_helper },
-  { "rtsp", conntrack_rtsp_helper },
-  { "", NULL },
-};
-#endif
+extern struct conntrack_ipv4 *conntrack_ipv4_table;
+extern struct conntrack_ipv6 *conntrack_ipv6_table;
+extern struct conntrack_helper_entry __attribute__((unused)) conntrack_helper_list[4];
+
+#endif //CONNTRACK_H

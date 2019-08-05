@@ -19,13 +19,26 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __UTIL_C
-
 /* includes */
 #include "pmacct.h"
 #include "addr.h"
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
+#endif
+#ifdef WITH_MYSQL
+#include "mysql_plugin.h"
+#endif
+#ifdef WITH_PGSQL
+#include "pgsql_plugin.h"
+#endif
+#ifdef WITH_SQLITE3
+#include "sqlite3_plugin.h"
+#endif
+#ifdef WITH_RABBITMQ
+#include "amqp_plugin.h"
+#endif
+#ifdef WITH_KAFKA
+#include "kafka_plugin.h"
 #endif
 #include "pmacct-data.h"
 #include "ip_flow.h"
@@ -34,6 +47,28 @@
 #include <netdb.h>
 #include <sys/file.h>
 #include <sys/utsname.h>
+
+struct _devices_struct _devices[] = {
+#if defined DLT_LOOP
+  {null_handler, DLT_LOOP},
+#endif
+  {null_handler, DLT_NULL},
+  {eth_handler, DLT_EN10MB},
+  {ppp_handler, DLT_PPP},
+#if defined DLT_IEEE802_11
+  {ieee_802_11_handler, DLT_IEEE802_11}, 
+#endif
+#if defined DLT_LINUX_SLL
+  {sll_handler, DLT_LINUX_SLL},
+#endif
+#if defined DLT_RAW
+  {raw_handler, DLT_RAW},
+#endif
+  {NULL, -1},
+};
+
+/* Global variables */
+primptrs_func primptrs_funcs[PRIMPTRS_FUNCS_N];
 
 /* functions */
 void setnonblocking(int sock)
@@ -1080,7 +1115,7 @@ void mark_columns(char *buf)
 
 int Setsocksize(int s, int level, int optname, void *optval, socklen_t optlen)
 {
-  int ret, saved, value;
+  int ret = 0, saved, value;
   socklen_t len = sizeof(int);
 
   memcpy(&value, optval, sizeof(int));
@@ -2168,7 +2203,7 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
         cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_HEX) {
       if (formatted) {
 	snprintf(format, VERYSHORTBUFLEN, "%%-%d", cps_flen[cp_entry->ptr->len] > strlen(cp_entry->ptr->name) ? cps_flen[cp_entry->ptr->len] : (int)strlen(cp_entry->ptr->name));
-	strncat(format, "s", VERYSHORTBUFLEN);
+	strncat(format, "s", VERYSHORTBUFLEN - 1);
       }
       else snprintf(format, VERYSHORTBUFLEN, "%s", "%s");
     }
@@ -2176,7 +2211,7 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
 	     cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_RAW) {
       if (formatted) {
 	snprintf(format, VERYSHORTBUFLEN, "%%-%d", cp_entry->ptr->len > strlen(cp_entry->ptr->name) ? cp_entry->ptr->len : (int)strlen(cp_entry->ptr->name));
-	strncat(format, "s", VERYSHORTBUFLEN);
+	strncat(format, "s", VERYSHORTBUFLEN - 1);
       }
       else snprintf(format, VERYSHORTBUFLEN, "%s", "%s");
     }
@@ -2187,7 +2222,7 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
       	
       if (formatted) {
         snprintf(format, VERYSHORTBUFLEN, "%%-%d", len > strlen(cp_entry->ptr->name) ? len : (int)strlen(cp_entry->ptr->name));
-        strncat(format, "s", VERYSHORTBUFLEN);
+        strncat(format, "s", VERYSHORTBUFLEN - 1);
       }
       else snprintf(format, VERYSHORTBUFLEN, "%s", "%s");
     }
@@ -2196,7 +2231,7 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
 
       if (formatted) {
         snprintf(format, VERYSHORTBUFLEN, "%%-%d", len > strlen(cp_entry->ptr->name) ? len : (int)strlen(cp_entry->ptr->name));
-        strncat(format, "s", VERYSHORTBUFLEN);
+        strncat(format, "s", VERYSHORTBUFLEN - 1);
       }
       else snprintf(format, VERYSHORTBUFLEN, "%s", "%s");
     }
@@ -2222,11 +2257,11 @@ void custom_primitive_value_print(char *out, int outlen, u_char *in, struct cust
 	snprintf(semantics, VERYSHORTBUFLEN, "%s", cps_type[cp_entry->ptr->semantics]); 
 
       if (formatted)
-        snprintf(format, VERYSHORTBUFLEN, "%%-%d%s",
+        snprintf(format, SHORTBUFLEN, "%%-%d%s",
 		cps_flen[cp_entry->ptr->len] > strlen(cp_entry->ptr->name) ? cps_flen[cp_entry->ptr->len] : (int)strlen(cp_entry->ptr->name), 
 		semantics);
       else
-        snprintf(format, VERYSHORTBUFLEN, "%%%s", semantics);
+        snprintf(format, SHORTBUFLEN, "%%%s", semantics);
 
       if (cp_entry->ptr->len == 1) {
         u_int8_t t8;

@@ -19,9 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* defines */
-#define __PMBGPD_C
-
 /* includes */
 #include "pmacct.h"
 #include "addr.h"
@@ -39,6 +36,7 @@
 /* global var */
 struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
 thread_pool_t *bgp_lg_pool;
+char bgp_lg_default_ip[] = "127.0.0.1";
 
 /* Functions */
 void usage_daemon(char *prog_name)

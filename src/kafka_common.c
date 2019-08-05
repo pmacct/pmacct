@@ -19,14 +19,28 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __KAFKA_COMMON_C
-
 /* includes */
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "plugin_common.h"
 #include "kafka_common.h"
 #include "base64.h"
+
+struct p_kafka_host kafkap_kafka_host;
+struct p_kafka_host bgp_daemon_msglog_kafka_host;
+struct p_kafka_host bgp_table_dump_kafka_host;
+struct p_kafka_host bmp_daemon_msglog_kafka_host;
+struct p_kafka_host bmp_dump_kafka_host;
+struct p_kafka_host sfacctd_counter_kafka_host;
+struct p_kafka_host telemetry_daemon_msglog_kafka_host;
+struct p_kafka_host telemetry_dump_kafka_host;
+struct p_kafka_host nfacctd_kafka_host;
+
+int kafkap_ret_err_cb;
+int dyn_partition_key;
+char default_kafka_broker_host[] = "127.0.0.1";
+int default_kafka_broker_port = 9092;
+char default_kafka_topic[] = "pmacct.acct";
 
 /* Functions */
 void p_kafka_init_host(struct p_kafka_host *kafka_host, char *config_file)
@@ -115,7 +129,8 @@ char *p_kafka_get_broker(struct p_kafka_host *kafka_host)
 
 char *p_kafka_get_topic(struct p_kafka_host *kafka_host)
 {
-  if (kafka_host && kafka_host->topic) return rd_kafka_topic_name(kafka_host->topic);
+  if (kafka_host && kafka_host->topic)
+    return (char*)rd_kafka_topic_name(kafka_host->topic);
 
   return NULL;
 }
@@ -353,12 +368,12 @@ void p_kafka_msg_delivered(rd_kafka_t *rk, void *payload, size_t len, int error_
 	char saved = payload_str[len];
 
 	payload_str[len] = '\0';
-        Log(LOG_DEBUG, "DEBUG ( %s/%s ): Kafka message delivery successful (%zd bytes): %s\n", config.name, config.type, len, payload);
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): Kafka message delivery successful (%zd bytes): %p\n", config.name, config.type, len, payload);
 	payload_str[len] = saved;
       }
       else {
 	size_t base64_data_len = 0;
-	char *base64_data = base64_encode(payload, len, &base64_data_len);
+	u_char *base64_data = base64_encode(payload, len, &base64_data_len);
 
 	Log(LOG_DEBUG, "DEBUG ( %s/%s ): Kafka message delivery successful (%zd bytes): %s\n", config.name, config.type, len, base64_data);
 
@@ -491,7 +506,7 @@ int p_kafka_consume_poller(struct p_kafka_host *kafka_host, void **data, int tim
   return ret;
 }
 
-int p_kafka_consume_data(struct p_kafka_host *kafka_host, void *data, char *payload, size_t payload_len)
+int p_kafka_consume_data(struct p_kafka_host *kafka_host, void *data, u_char *payload, size_t payload_len)
 {
   rd_kafka_message_t *kafka_msg = (rd_kafka_message_t *) data;
   int ret = 0;

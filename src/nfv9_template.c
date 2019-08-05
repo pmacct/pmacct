@@ -19,9 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* defines */
-#define __NFV9_TEMPLATE_C
-
 /* includes */
 #include "pmacct.h"
 #include "addr.h"
@@ -984,6 +981,10 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
     slen = ntohs(hdr_v10->scope_count);
     olen = ntohs(hdr_v10->option_count)-slen;
   }
+  else {
+    Log(LOG_ERR, "ERROR ( %s/core ): Unknown template type (%u).\n", config.name, tpl_type);
+    return NULL;
+  }
 
   ptr = tpl_cache.c[modulo];
 
@@ -1112,6 +1113,10 @@ struct template_cache_entry *refresh_opt_template(void *hdr, struct template_cac
     tid = hdr_v10->template_id;
     slen = ntohs(hdr_v10->scope_count);
     olen = ntohs(hdr_v10->option_count)-slen;
+  }
+  else {
+    Log(LOG_ERR, "ERROR ( %s/core ): Unknown template type (%u).\n", config.name, tpl_type);
+    return NULL;
   }
 
   next = tpl->next;

@@ -19,9 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* defines */
-#define __BMP_C
-
 /* includes */
 #include "pmacct.h"
 #include "addr.h"
@@ -80,7 +77,7 @@ void skinny_bmp_daemon()
   int fd, select_fd, bkp_select_fd, recalc_fds, select_num;
 
   /* logdump time management */
-  time_t dump_refresh_deadline;
+  time_t dump_refresh_deadline = {0};
   struct timeval dump_refresh_timeout, *drt_ptr;
 
 

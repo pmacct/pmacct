@@ -19,9 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* defines */
-#define __SFACCTD_C
-
 /* includes */
 #include "pmacct.h"
 #include "addr.h"
@@ -49,10 +46,18 @@
 #endif
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
+#include "ndpi/ndpi_util.h"
 #endif
 
 /* variables to be exported away */
 struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
+int sfacctd_counter_backend_methods;
+struct bgp_misc_structs *sf_cnt_misc_db;
+struct host_addr debug_a;
+char debug_agent_addr[50];
+u_int16_t debug_agent_port;
+
+
 
 /* Functions */
 void usage_daemon(char *prog_name)
@@ -127,7 +132,7 @@ int main(int argc,char **argv, char **envp)
 
   struct sockaddr_storage server, client;
   struct ipv6_mreq multi_req6;
-  socklen_t  clen = sizeof(client), slen;
+  socklen_t  clen = sizeof(client), slen = 0;
   struct ip_mreq multi_req4;
 
   int pcap_savefile_round = 0;
@@ -157,7 +162,6 @@ int main(int argc,char **argv, char **envp)
 
   /* getopt() stuff */
   extern char *optarg;
-  extern int optind, opterr, optopt;
   int errflag, cp; 
 
 #if defined HAVE_MALLOPT

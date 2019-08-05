@@ -32,17 +32,11 @@ struct isis_dynhn
   int level;
 };
 
-#if (!defined __ISIS_DYNHN_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void dyn_cache_init ();
-EXT void isis_dynhn_insert (u_char * id, struct hostname *, int);
-EXT struct isis_dynhn *dynhn_find_by_id (u_char *);
-EXT int dyn_cache_cleanup ();
+extern void dyn_cache_init ();
+extern void isis_dynhn_insert (u_char * id, struct hostname *, int);
+extern struct isis_dynhn *dynhn_find_by_id (u_char *);
+extern int dyn_cache_cleanup ();
 
-EXT struct list *dyn_cache;
-#undef EXT
+extern struct list *dyn_cache;
 
 #endif /* _ISIS_DYNHN_H_ */

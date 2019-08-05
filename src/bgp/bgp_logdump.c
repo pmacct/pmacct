@@ -19,9 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* defines */
-#define __BGP_LOGDUMP_C
-
 /* includes */
 #include "pmacct.h"
 #include "pmacct-data.h"
@@ -396,10 +393,11 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
       write_and_free_json(log_ptr->fd, obj);
 
 #ifdef WITH_RABBITMQ
-    void *amqp_log_ptr;
+    void *amqp_log_ptr = NULL;
     if (bms->msglog_amqp_routing_key) {
       add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
       amqp_ret = write_and_free_json_amqp(amqp_log_ptr, obj);
+      (void)amqp_ret; //TODO treat error?
       p_amqp_unset_routing_key(amqp_log_ptr);
     }
 #endif
@@ -409,6 +407,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
     if (bms->msglog_kafka_topic) {
       add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
       kafka_ret = write_and_free_json_kafka(kafka_log_ptr, obj);
+      (void)kafka_ret; //TODO treat error?
       p_kafka_unset_topic(kafka_log_ptr);
     }
 #endif

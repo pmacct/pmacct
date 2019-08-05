@@ -19,8 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __NET_AGGR_C
-
 /* includes */
 #include "pmacct.h"
 #include "nfacctd.h"
@@ -29,6 +27,16 @@
 #include "net_aggr.h"
 #include "addr.h"
 #include "jhash.h"
+
+/* global variables */
+net_func net_funcs[NET_FUNCS_N];
+struct networks_table nt;
+struct networks_cache nc;
+struct networks_table_entry dummy_entry;
+int default_route_in_networks4_table;
+
+struct networks6_table_entry dummy_entry6;
+int default_route_in_networks6_table;
 
 void load_networks(char *filename, struct networks_table *nt, struct networks_cache *nc)
 {
@@ -293,7 +301,7 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
 
       /* 5a step: building final networks table */
       for (index = 0; index < tmpt->num; index++) {
-	int current, next;
+	int current = 0, next = 0;
 
         if (!index) {
 	  current = 0; next = eff_rows;
@@ -1607,7 +1615,7 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
 
       /* 5a step: building final networks table */
       for (index = 0; index < tmpt->num6; index++) {
-        int current, next;
+        int current = 0, next = 0;
 
         if (!index) {
           current = 0; next = eff_rows;
@@ -1649,9 +1657,10 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
 		nt->table6[index].as, net_string, nt->table6[index].masknum); 
 	}
 	if (!nt->table6[index].mask[0] && !nt->table6[index].mask[1] &&
-	    !nt->table6[index].mask[2] && !nt->table6[index].mask[3])
+	    !nt->table6[index].mask[2] && !nt->table6[index].mask[3]) {
 	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] v6 contains a default route\n", config.name, config.type, filename);
 	  default_route_in_networks6_table = TRUE;
+        }
         index++;
       }
 

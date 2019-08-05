@@ -20,8 +20,6 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-#define __ISIS_EVENTS_C
-
 #include "pmacct.h"
 #include "linklist.h"
 #include "dict.h"

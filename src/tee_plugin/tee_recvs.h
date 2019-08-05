@@ -19,6 +19,9 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef TEE_RECVS_H
+#define TEE_RECVS_H
+
 /* includes */
 
 /* defines */
@@ -26,30 +29,24 @@
 /* structures */
 
 /* prototypes */
-#if (!defined __TEE_RECVS_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-
-EXT int tee_recvs_map_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
-EXT int tee_recvs_map_ip_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
-EXT int tee_recvs_map_tag_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
-EXT int tee_recvs_map_balance_alg_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
-EXT int tee_recvs_map_src_port_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+extern int tee_recvs_map_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+extern int tee_recvs_map_ip_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+extern int tee_recvs_map_tag_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+extern int tee_recvs_map_balance_alg_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+extern int tee_recvs_map_src_port_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 
 #ifdef WITH_KAFKA
-EXT int tee_recvs_map_kafka_broker_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
-EXT int tee_recvs_map_kafka_topic_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+extern int tee_recvs_map_kafka_broker_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+extern int tee_recvs_map_kafka_topic_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 #endif
 
 #ifdef WITH_ZMQ
-EXT int tee_recvs_map_zmq_address_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
-EXT int tee_recvs_map_zmq_topic_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+extern int tee_recvs_map_zmq_address_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+extern int tee_recvs_map_zmq_topic_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 #endif
 
-EXT void tee_recvs_map_validate(char *, int, struct plugin_requests *);
+extern void tee_recvs_map_validate(char *, int, struct plugin_requests *);
 
 /* global variables */
 
-#undef EXT
+#endif //TEE_RECVS_H

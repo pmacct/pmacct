@@ -19,8 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __IP_FRAG_C
-
 /* includes */
 #include "pmacct.h"
 #include "addr.h"
@@ -28,6 +26,13 @@
 #include "plugin_hooks.h"
 #include "ip_frag.h"
 #include "jhash.h"
+
+/* global variables */
+struct ip_fragment *ipft[IPFT_HASHSZ];
+struct lru_l lru_list;
+
+struct ip6_fragment *ipft6[IPFT_HASHSZ];
+struct lru_l6 lru_list6;
 
 u_int32_t ipft_total_nodes;  
 time_t prune_deadline;

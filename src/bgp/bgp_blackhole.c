@@ -19,9 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* defines */
-#define __BGP_BLACKHOLE_C
-
 /* includes */
 #include "pmacct.h"
 #include "addr.h"
@@ -32,8 +29,13 @@
 #include "zmq_common.h"
 #endif
 
-/* variables to be exported away */
+/* Global variables */
 thread_pool_t *bgp_blackhole_pool;
+struct bgp_rt_structs *bgp_blackhole_db;
+struct bgp_misc_structs *bgp_blackhole_misc_db;
+struct bgp_peer bgp_blackhole_peer;
+struct bloom *bgp_blackhole_filter;
+struct community *bgp_blackhole_comms;
 
 /* Functions */
 void bgp_blackhole_daemon_wrapper()
@@ -90,7 +92,6 @@ void bgp_blackhole_init_dummy_peer(struct bgp_peer *peer)
 void bgp_blackhole_prepare_filter()
 {
   char *stdcomms, *token;
-  int len;
 
   bgp_blackhole_filter = malloc(sizeof(struct bloom));
   bloom_init(bgp_blackhole_filter, BGP_BLACKHOLE_DEFAULT_BF_ENTRIES, 0.01);
@@ -165,7 +166,7 @@ void bgp_blackhole_daemon()
     ret = bgp_lookup_node_vector_unicast(bbitc.p, bbitc.peer, m_data->bnv);
 
     bh_state = bgp_blackhole_validate(bbitc.p, bbitc.peer, bbitc.attr, m_data->bnv); 
-
+    (void)bh_state;
     // XXX: process state 
 
     // XXX: free not needed alloc'd structs
@@ -252,7 +253,7 @@ int bgp_blackhole_validate(struct prefix *p, struct bgp_peer *peer, struct bgp_a
   */
   if (bnv->entries >= 2) {
     idx = (bnv->entries - 2);
-
+    (void)idx;
     // XXX
   }
   else {

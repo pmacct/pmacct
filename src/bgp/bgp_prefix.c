@@ -24,8 +24,6 @@
  * 02111-1307, USA.  
  */
 
-#define __BGP_PREFIX_C
-
 #include "pmacct.h"
 #include "bgp_packet.h"
 #include "bgp_prefix.h"

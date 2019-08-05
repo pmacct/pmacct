@@ -23,12 +23,6 @@
 #ifndef _ISO_CSUM_H_
 #define _ISO_CSUM_H_
 
-#if (!defined __ISO_CHECKSUM_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT int iso_csum_verify (u_char *, int, uint16_t *);
-#undef EXT
+extern int iso_csum_verify (u_char *, int, uint16_t *);
 
 #endif /* _ISO_CSUM_H_ */

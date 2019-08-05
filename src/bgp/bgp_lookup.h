@@ -23,27 +23,21 @@
 #define _BGP_LOOKUP_H_
 
 /* prototypes */
-#if (!defined __BGP_LOOKUP_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void bgp_srcdst_lookup(struct packet_ptrs *, int);
-EXT void bgp_follow_nexthop_lookup(struct packet_ptrs *, int);
-EXT struct bgp_peer *bgp_lookup_find_bgp_peer(struct sockaddr *, struct xflow_status_entry *, u_int16_t, int); 
-EXT u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *, path_id_t *, int);
-EXT int bgp_lookup_node_match_cmp_bgp(struct bgp_info *, struct node_match_cmp_term2 *);
-EXT int bgp_lookup_node_vector_unicast(struct prefix *, struct bgp_peer *, struct bgp_node_vector *);
+extern void bgp_srcdst_lookup(struct packet_ptrs *, int);
+extern void bgp_follow_nexthop_lookup(struct packet_ptrs *, int);
+extern struct bgp_peer *bgp_lookup_find_bgp_peer(struct sockaddr *, struct xflow_status_entry *, u_int16_t, int); 
+extern u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *, path_id_t *, int);
+extern int bgp_lookup_node_match_cmp_bgp(struct bgp_info *, struct node_match_cmp_term2 *);
+extern int bgp_lookup_node_vector_unicast(struct prefix *, struct bgp_peer *, struct bgp_node_vector *);
 
-EXT void pkt_to_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives *, struct pkt_legacy_bgp_primitives *, pm_cfgreg_t, pm_cfgreg_t);
-EXT void cache_to_pkt_legacy_bgp_primitives(struct pkt_legacy_bgp_primitives *, struct cache_legacy_bgp_primitives *);
-EXT void free_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives **);
+extern void pkt_to_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives *, struct pkt_legacy_bgp_primitives *, pm_cfgreg_t, pm_cfgreg_t);
+extern void cache_to_pkt_legacy_bgp_primitives(struct pkt_legacy_bgp_primitives *, struct cache_legacy_bgp_primitives *);
+extern void free_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives **);
 
-EXT int bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *, struct bgp_lg_rep *, int);
-EXT int bgp_lg_daemon_get_peers(struct bgp_lg_rep *, int);
-EXT void bgp_lg_rep_init(struct bgp_lg_rep *);
-EXT struct bgp_lg_rep_data *bgp_lg_rep_data_add(struct bgp_lg_rep *);
-EXT void bgp_lg_rep_ipl_data_add(struct bgp_lg_rep *, afi_t, safi_t, struct prefix *, struct bgp_info *);
-EXT void bgp_lg_rep_gp_data_add(struct bgp_lg_rep *, struct bgp_peer *);
-#undef EXT
+extern int bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *, struct bgp_lg_rep *, int);
+extern int bgp_lg_daemon_get_peers(struct bgp_lg_rep *, int);
+extern void bgp_lg_rep_init(struct bgp_lg_rep *);
+extern struct bgp_lg_rep_data *bgp_lg_rep_data_add(struct bgp_lg_rep *);
+extern void bgp_lg_rep_ipl_data_add(struct bgp_lg_rep *, afi_t, safi_t, struct prefix *, struct bgp_info *);
+extern void bgp_lg_rep_gp_data_add(struct bgp_lg_rep *, struct bgp_peer *);
 #endif 

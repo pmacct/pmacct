@@ -19,9 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* defines */
-#define __BGP_C
-
 /* includes */
 #include "pmacct.h"
 #include "addr.h"
@@ -40,8 +37,21 @@
 #include "zmq_common.h"
 #endif
 
-/* variables to be exported away */
+/* Global variables */
 thread_pool_t *bgp_pool;
+struct bgp_peer *peers;
+struct bgp_peer_cache_bucket *peers_cache, *peers_port_cache;
+char *std_comm_patterns[MAX_BGP_COMM_PATTERNS];
+char *ext_comm_patterns[MAX_BGP_COMM_PATTERNS];
+char *lrg_comm_patterns[MAX_BGP_COMM_PATTERNS];
+char *std_comm_patterns_to_asn[MAX_BGP_COMM_PATTERNS];
+char *lrg_comm_patterns_to_asn[MAX_BGP_COMM_PATTERNS];
+struct bgp_comm_range peer_src_as_ifrange; 
+struct bgp_comm_range peer_src_as_asrange; 
+u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, path_id_t *, int);
+struct bgp_rt_structs inter_domain_routing_dbs[FUNC_TYPE_MAX], *bgp_routing_db;
+struct bgp_misc_structs inter_domain_misc_dbs[FUNC_TYPE_MAX], *bgp_misc_db;
+struct bgp_xconnects bgp_xcs_map;
 
 /* Functions */
 void nfacctd_bgp_wrapper()
@@ -79,7 +89,7 @@ void skinny_bgp_daemon_online()
   struct sockaddr_storage server, client;
   afi_t afi;
   safi_t safi;
-  time_t now, dump_refresh_deadline;
+  time_t now, dump_refresh_deadline = {0};
   struct hosts_table allow;
   struct bgp_md5_table bgp_md5;
   struct timeval dump_refresh_timeout, *drt_ptr;
@@ -199,6 +209,7 @@ void skinny_bgp_daemon_online()
 #if defined WITH_ZMQ
     struct p_zmq_host *bgp_blackhole_zmq_host = NULL;
     char inproc_blackhole_str[] = "inproc://bgp_blackhole";
+    (void)inproc_blackhole_str;
 
     bgp_blackhole_daemon_wrapper();
 

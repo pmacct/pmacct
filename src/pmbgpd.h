@@ -19,6 +19,9 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef PMBGPD_H
+#define PMBGPD_H
+
 /* includes */
 
 /* defines */
@@ -32,41 +35,30 @@
 /* structures */
 
 /* prototypes */
-#if (!defined __PMBGPD_C)
-#define EXT extern
-#else
-#define EXT
-EXT void usage_daemon(char *);
-EXT void compute_once();
+extern void usage_daemon(char *);
+extern void compute_once();
 
 /* Looking Glass */
 #if defined WITH_ZMQ
-EXT void bgp_lg_wrapper();
-EXT void bgp_lg_daemon();
+extern void bgp_lg_wrapper();
+extern void bgp_lg_daemon();
 
 #if defined WITH_JANSSON
-EXT void bgp_lg_daemon_worker_json(void *, void *);
+extern void bgp_lg_daemon_worker_json(void *, void *);
 
-EXT int bgp_lg_daemon_decode_query_header_json(struct p_zmq_sock *, struct bgp_lg_req *);
-EXT int bgp_lg_daemon_decode_query_ip_lookup_json(struct p_zmq_sock *, struct bgp_lg_req_ipl_data *);
+extern int bgp_lg_daemon_decode_query_header_json(struct p_zmq_sock *, struct bgp_lg_req *);
+extern int bgp_lg_daemon_decode_query_ip_lookup_json(struct p_zmq_sock *, struct bgp_lg_req_ipl_data *);
 
-EXT void bgp_lg_daemon_encode_reply_results_json(struct p_zmq_sock *, struct bgp_lg_rep *, int, int);
-EXT void bgp_lg_daemon_encode_reply_ip_lookup_json(struct p_zmq_sock *, struct bgp_lg_rep *, int);
-EXT char *bgp_lg_daemon_encode_reply_ip_lookup_data_json(struct bgp_lg_rep_ipl_data *);
-EXT void bgp_lg_daemon_encode_reply_get_peers_json(struct p_zmq_sock *, struct bgp_lg_rep *, int);
-EXT char *bgp_lg_daemon_encode_reply_get_peers_data_json(struct bgp_lg_rep_gp_data *);
-EXT void bgp_lg_daemon_encode_reply_unknown_json(struct p_zmq_sock *);
-#endif
-#endif
-
-#endif
-#undef EXT
+extern void bgp_lg_daemon_encode_reply_results_json(struct p_zmq_sock *, struct bgp_lg_rep *, int, int);
+extern void bgp_lg_daemon_encode_reply_ip_lookup_json(struct p_zmq_sock *, struct bgp_lg_rep *, int);
+extern char *bgp_lg_daemon_encode_reply_ip_lookup_data_json(struct bgp_lg_rep_ipl_data *);
+extern void bgp_lg_daemon_encode_reply_get_peers_json(struct p_zmq_sock *, struct bgp_lg_rep *, int);
+extern char *bgp_lg_daemon_encode_reply_get_peers_data_json(struct bgp_lg_rep_gp_data *);
+extern void bgp_lg_daemon_encode_reply_unknown_json(struct p_zmq_sock *);
+#endif //WITH_JANSSON
+#endif //WITH_ZMQ
 
 /* global variables */
-#if (!defined __PMBGPD_C)
-#define EXT extern
-#else
-#define EXT
-EXT char bgp_lg_default_ip[] = "127.0.0.1";
-#endif
-#undef EXT
+extern char bgp_lg_default_ip[];
+
+#endif //PMBGPD_H

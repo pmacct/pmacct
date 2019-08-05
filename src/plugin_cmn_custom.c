@@ -19,11 +19,12 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __PLUGIN_CMN_CUSTOM_C
-
 /* Includes */
 #include "pmacct.h"
 #include "plugin_cmn_custom.h"
+
+/* global variables */
+struct pm_custom_output custom_print_plugin;
 
 /* Functions */
 void custom_output_setup(char *custom_lib, char *custom_cfg_file, struct pm_custom_output *custom_output)

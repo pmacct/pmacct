@@ -19,8 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __AMQP_PLUGIN_C
-
 /* includes */
 #include "pmacct.h"
 #include "pmacct-data.h"
@@ -33,6 +31,9 @@
 #ifndef WITH_JANSSON
 #error "--enable-rabbitmq requires --enable-jansson"
 #endif
+#include "sql_common.h"
+#include "net_aggr.h"
+#include "ports_aggr.h"
 
 /* Functions */
 void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 
@@ -47,7 +48,6 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int ret, num, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
-  struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
   int datasize = ((struct channels_list_entry *)ptr)->datasize;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   pid_t core_pid = ((struct channels_list_entry *)ptr)->core_pid;
@@ -62,7 +62,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   unsigned char *dataptr;
 
 #ifdef WITH_AVRO
-  char *avro_acct_schema_str;
+  char *avro_acct_schema_str = NULL;
 #endif
 
 #ifdef WITH_ZMQ
@@ -246,7 +246,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           else {
             rg_err_count++;
             if (config.debug || (rg_err_count > MAX_RG_COUNT_ERR)) {
-              Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected (plugin_buffer_size=%llu plugin_pipe_size=%llu).\n",
+              Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected (plugin_buffer_size=%" PRIu64 " plugin_pipe_size=%" PRIu64 ").\n",
 			config.name, config.type, config.buffer_size, config.pipe_size);
               Log(LOG_WARNING, "WARN ( %s/%s ): Increase values or look for plugin_buffer_size, plugin_pipe_size in CONFIG-KEYS document.\n\n",
 			config.name, config.type);
@@ -279,7 +279,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
       if (config.debug_internal_msg)
-        Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received len=%llu seq=%u num_entries=%u\n",
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received len=%" PRIu64 " seq=%u num_entries=%u\n",
                 config.name, config.type, ((struct ch_buf_hdr *)pipebuf)->len, seq,
                 ((struct ch_buf_hdr *)pipebuf)->num);
 
@@ -338,8 +338,17 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   char *json_buf = NULL;
   int json_buf_off = 0;
 
+  //TODO sort out unused variables correctly
+  (void)pvlen;
+  (void)pcust;
+  (void)ptun;
+  (void)pmpls;
+  (void)pnat;
+  (void)pbgp;
+  (void)data;
+
 #ifdef WITH_AVRO
-  avro_writer_t avro_writer;
+  avro_writer_t avro_writer = {0};
   char *avro_buf = NULL;
   int avro_buffer_full = FALSE;
 #endif
@@ -404,8 +413,8 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
   if (config.print_markers) {
     if (config.message_broker_output & PRINT_OUTPUT_JSON) {
-      void *json_obj;
-      char *json_str;
+      void *json_obj = NULL;
+      char *json_str = NULL;
 
       json_obj = compose_purge_init_json(config.name, writer_pid);
 
@@ -447,7 +456,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   }
 
   for (j = 0; j < index; j++) {
-    char *json_str;
+    char *json_str = NULL;
 
     if (queue[j]->valid != PRINT_CACHE_COMMITTED) continue;
 
@@ -641,8 +650,8 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
   if (config.print_markers) {
     if (config.message_broker_output & PRINT_OUTPUT_JSON) {
-      void *json_obj;
-      char *json_str;
+      void *json_obj = NULL;
+      char *json_str = NULL;
 
       json_obj = compose_purge_close_json(config.name, writer_pid, qn, saved_index, duration);
 
@@ -659,7 +668,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
   p_amqp_close(&amqpp_amqp_host, FALSE);
 
-  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n",
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %lu) ***\n",
 		config.name, config.type, writer_pid, qn, saved_index, duration);
 
   if (config.sql_trigger_exec && !safe_action) P_trigger_exec(config.sql_trigger_exec); 

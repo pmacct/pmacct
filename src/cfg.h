@@ -18,6 +18,8 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
+#ifndef CFG_H
+#define CFG_H
 
 #include "cfg_handlers.h"
 #include "bgp/bgp_prefix.h"
@@ -561,28 +563,24 @@ struct configuration {
 };
 
 /* prototypes */ 
-#if (!defined __CFG_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void evaluate_configuration(char *, int);
-EXT int parse_configuration_file(char *);
-EXT int parse_plugin_names(char *, int, int);
-EXT void parse_core_process_name(char *, int, int);
-EXT void compose_default_plugin_name(char *, int, char *);
-EXT int create_plugin(char *, char *, char *);
-EXT int delete_plugin_by_id(int);
-EXT struct plugins_list_entry *search_plugin_by_pipe(int);
-EXT struct plugins_list_entry *search_plugin_by_pid(pid_t);
-EXT void sanitize_cfg(int, char *);
-EXT void set_default_values();
+extern void evaluate_configuration(char *, int);
+extern int parse_configuration_file(char *);
+extern int parse_plugin_names(char *, int, int);
+extern void parse_core_process_name(char *, int, int);
+extern void compose_default_plugin_name(char *, int, char *);
+extern int create_plugin(char *, char *, char *);
+extern int delete_plugin_by_id(int);
+extern struct plugins_list_entry *search_plugin_by_pipe(int);
+extern struct plugins_list_entry *search_plugin_by_pid(pid_t);
+extern void sanitize_cfg(int, char *);
+extern void set_default_values();
 
 /* global vars */
-EXT char *cfg[LARGEBUFLEN], *cfg_cmdline[SRVBUFLEN];
-EXT struct custom_primitives custom_primitives_registry;
-EXT pm_cfgreg_t custom_primitives_type;
-EXT int rows;
+extern char *cfg[LARGEBUFLEN], *cfg_cmdline[SRVBUFLEN];
+extern struct custom_primitives custom_primitives_registry;
+extern pm_cfgreg_t custom_primitives_type;
+extern int rows;
 
-static char __attribute__((unused)) default_proc_name[] = "default";
-#undef EXT
+extern char default_proc_name[];
+
+#endif //CFG_H

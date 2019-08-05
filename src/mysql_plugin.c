@@ -19,15 +19,29 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __MYSQL_PLUGIN_C
-
 /* includes */
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "sql_common.h"
+#include "sql_common_m.h"
 #include "mysql_plugin.h"
-#include "sql_common_m.c"
+#include "preprocess.h"
+
+/* variables */
+char mysql_user[] = "pmacct";
+char mysql_pwd[] = "arealsmartpwd";
+unsigned int mysql_prt = 3306;
+char mysql_db[] = "pmacct";
+char mysql_table[] = "acct";
+char mysql_table_v2[] = "acct_v2";
+char mysql_table_v3[] = "acct_v3";
+char mysql_table_v4[] = "acct_v4";
+char mysql_table_v5[] = "acct_v5";
+char mysql_table_v6[] = "acct_v6";
+char mysql_table_v7[] = "acct_v7";
+char mysql_table_v8[] = "acct_v8";
+char mysql_table_bgp[] = "acct_bgp";
 
 /* Functions */
 void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 
@@ -41,7 +55,6 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int ret, num, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
-  struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
   int datasize = ((struct channels_list_entry *)ptr)->datasize;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   pid_t core_pid = ((struct channels_list_entry *)ptr)->core_pid;
@@ -144,7 +157,7 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
     /* lazy sql refresh handling */
     if (idata.now > refresh_deadline) {
-      if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, &idata, FALSE);
+      if (qq_ptr) sql_cache_flush(sql_queries_queue, qq_ptr, &idata, FALSE);
       sql_cache_handle_flush_event(&idata, &refresh_deadline, &pt);
     }
     else {
@@ -265,7 +278,7 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
 int MY_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct insert_data *idata)
 {
-  char *ptr_values, *ptr_where, *ptr_mv, *ptr_set, *ptr_insert;
+  char *ptr_values, *ptr_where, *ptr_mv, *ptr_set;
   int num=0, num_set=0, ret=0, have_flows=0, len=0;
 
   if (idata->mv.last_queue_elem) {
@@ -286,7 +299,6 @@ int MY_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct insert_
   ptr_where = where_clause;
   ptr_values = values_clause; 
   ptr_set = set_clause;
-  ptr_insert = insert_full_clause;
   memset(where_clause, 0, sizeof(where_clause));
   memset(values_clause, 0, sizeof(values_clause));
   memset(set_clause, 0, sizeof(set_clause));
@@ -448,7 +460,7 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   start = time(NULL);
 
   /* re-using pending queries queue stuff from parent and saving clauses */
-  memcpy(pending_queries_queue, queue, index*sizeof(struct db_cache *));
+  memcpy(sql_pending_queries_queue, queue, index*sizeof(struct db_cache *));
   pqq_ptr = index;
 
   strlcpy(orig_insert_clause, insert_clause, LONGSRVBUFLEN);
@@ -457,8 +469,8 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
 
   start:
   memset(&idata->mv, 0, sizeof(struct multi_values));
-  memcpy(queue, pending_queries_queue, pqq_ptr*sizeof(struct db_cache *));
-  memset(pending_queries_queue, 0, pqq_ptr*sizeof(struct db_cache *));
+  memcpy(queue, sql_pending_queries_queue, pqq_ptr*sizeof(struct db_cache *));
+  memset(sql_pending_queries_queue, 0, pqq_ptr*sizeof(struct db_cache *));
   index = pqq_ptr; pqq_ptr = 0;
 
   /* We check for variable substitution in SQL table */ 
@@ -506,7 +518,7 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
       pm_strftime_same(tmptable, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
 
       if (strncmp(idata->dyn_table_name, tmptable, SRVBUFLEN)) {
-	pending_queries_queue[pqq_ptr] = queue[idata->current_queue_elem];
+	sql_pending_queries_queue[pqq_ptr] = queue[idata->current_queue_elem];
 
 	pqq_ptr++;
         go_to_pending = TRUE;
@@ -536,7 +548,7 @@ void MY_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   if (pqq_ptr) goto start;
   
   idata->elap_time = time(NULL)-start; 
-  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n", 
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %lu) ***\n", 
 		config.name, config.type, writer_pid, idata->qn, saved_index, idata->elap_time); 
 
   if (config.sql_trigger_exec) {

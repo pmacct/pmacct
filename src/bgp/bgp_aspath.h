@@ -118,37 +118,31 @@ struct aspath
 };
 
 /* Prototypes. */
-#if (!defined __BGP_ASPATH_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void aspath_init (int, struct hash **);
-EXT struct aspath *aspath_parse (struct bgp_peer *, char *, size_t, int);
-EXT struct aspath *aspath_dup (struct aspath *);
-EXT int aspath_cmp_left (const struct aspath *, const struct aspath *);
-EXT int aspath_cmp_left_confed (const struct aspath *, const struct aspath *);
-EXT void aspath_free (struct aspath *);
-EXT struct aspath *aspath_intern (struct bgp_peer *, struct aspath *);
-EXT void aspath_unintern (struct bgp_peer *, struct aspath *);
-EXT const char *aspath_print (struct aspath *);
-EXT const char *aspath_gettoken (const char *, enum as_token *, as_t *);
-EXT struct aspath *aspath_str2aspath (const char *);
-EXT struct aspath *aspath_ast2aspath (as_t);
-EXT struct aspath *aspath_parse_ast(struct bgp_peer *, as_t);
-EXT unsigned int aspath_key_make (void *);
-EXT int aspath_loop_check (struct aspath *, as_t);
-EXT int aspath_private_as_check (struct aspath *);
-EXT int aspath_firstas_check (struct aspath *, as_t);
-EXT unsigned int aspath_count_hops (struct aspath *);
-EXT unsigned int aspath_count_confeds (struct aspath *);
-EXT unsigned int aspath_size (struct aspath *);
-EXT as_t aspath_highest (struct aspath *);
-EXT char *aspath_make_empty(); 
+extern void aspath_init (int, struct hash **);
+extern struct aspath *aspath_parse (struct bgp_peer *, char *, size_t, int);
+extern struct aspath *aspath_dup (struct aspath *);
+extern int aspath_cmp_left (const struct aspath *, const struct aspath *);
+extern int aspath_cmp_left_confed (const struct aspath *, const struct aspath *);
+extern void aspath_free (struct aspath *);
+extern struct aspath *aspath_intern (struct bgp_peer *, struct aspath *);
+extern void aspath_unintern (struct bgp_peer *, struct aspath *);
+extern const char *aspath_print (struct aspath *);
+extern const char *aspath_gettoken (const char *, enum as_token *, as_t *);
+extern struct aspath *aspath_str2aspath (const char *);
+extern struct aspath *aspath_ast2aspath (as_t);
+extern struct aspath *aspath_parse_ast(struct bgp_peer *, as_t);
+extern unsigned int aspath_key_make (void *);
+extern int aspath_loop_check (struct aspath *, as_t);
+extern int aspath_private_as_check (struct aspath *);
+extern int aspath_firstas_check (struct aspath *, as_t);
+extern unsigned int aspath_count_hops (struct aspath *);
+extern unsigned int aspath_count_confeds (struct aspath *);
+extern unsigned int aspath_size (struct aspath *);
+extern as_t aspath_highest (struct aspath *);
+extern char *aspath_make_empty(); 
 
-EXT struct aspath *aspath_reconcile_as4 (struct aspath *, struct aspath *);
-EXT unsigned int aspath_has_as4 (struct aspath *);
-EXT unsigned int aspath_count_numas (struct aspath *);
+extern struct aspath *aspath_reconcile_as4 (struct aspath *, struct aspath *);
+extern unsigned int aspath_has_as4 (struct aspath *);
+extern unsigned int aspath_count_numas (struct aspath *);
 
-#undef EXT
 #endif

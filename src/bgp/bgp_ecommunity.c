@@ -24,8 +24,6 @@ along with GNU Zebra; see the file COPYING.  If not, write to the Free
 Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA.  */
 
-#define __BGP_ECOMMUNITY_C
-
 #include "pmacct.h"
 #include "bgp_prefix.h"
 #include "bgp.h"
@@ -195,7 +193,8 @@ void
 ecommunity_unintern (struct bgp_peer *peer, struct ecommunity *ecom)
 {
   struct bgp_rt_structs *inter_domain_routing_db;
-  struct ecommunity *ret;
+  struct ecommunity *ret = NULL;
+  (void) ret;
 
   if (!peer) return;
 

@@ -87,8 +87,6 @@
    In this case, A has been rotated left.  This preserves the ordering of the
    binary tree.  */
 
-#define __PMSEARCH_C
-
 /* includes */
 #include "pmacct.h"
 #include "crc32.h"

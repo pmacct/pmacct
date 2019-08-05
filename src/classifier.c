@@ -19,8 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __CLASSIFIER_C
-
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
@@ -31,11 +29,13 @@
 #include <dlfcn.h>
 #endif
 
+/* Global variables */
+struct pkt_classifier *class;
 u_int32_t class_trivial_hash_rnd = 140281;
 
 void init_classifiers(char *path)
 {
-  char fname[MAX_FN_LEN];
+  char fname[2*MAX_FN_LEN+2]; //Allow space for %s/%s
   struct dirent **namelist;
   struct stat st;
   struct pkt_classifier css;

@@ -50,14 +50,8 @@ struct isis_route_info
   struct list *nexthops6;
 };
 
-#if (!defined __ISIS_ROUTE_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT struct isis_route_info *isis_route_create (struct isis_prefix *, u_int32_t, u_int32_t, struct list *, struct isis_area *, int);
-EXT void isis_route_validate_table (struct isis_area *, struct route_table *);
-EXT void isis_route_validate_merge (struct isis_area *, int);
-#undef EXT
+extern struct isis_route_info *isis_route_create (struct isis_prefix *, u_int32_t, u_int32_t, struct list *, struct isis_area *, int);
+extern void isis_route_validate_table (struct isis_area *, struct route_table *);
+extern void isis_route_validate_merge (struct isis_area *, int);
 
 #endif /* _ISIS_ROUTE_H_ */

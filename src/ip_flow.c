@@ -19,8 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __IP_FLOW_C
-
 /* includes */
 #include "pmacct.h"
 #include "addr.h"
@@ -29,6 +27,13 @@
 #include "ip_flow.h"
 #include "classifier.h"
 #include "jhash.h"
+
+/* Global variables */
+struct ip_flow **ip_flow_table;
+struct flow_lru_l flow_lru_list;
+
+struct ip_flow6 **ip_flow_table6;
+struct flow_lru_l6 flow_lru_list6;
 
 u_int32_t flt_total_nodes;  
 time_t flt_prune_deadline;

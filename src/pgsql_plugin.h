@@ -26,6 +26,8 @@
 #define REPROCESS_SPECIFIC	1
 #define REPROCESS_BULK		2
 
+#include "sql_common.h"
+
 /* prototypes */
 void pgsql_plugin(int, struct configuration *, void *);
 int PG_cache_dbop(struct DBdesc *, struct db_cache *, struct insert_data *);
@@ -38,37 +40,37 @@ void PG_Lock(struct DBdesc *);
 void PG_DB_Connect(struct DBdesc *, char *);
 void PG_DB_Close(struct BE_descs *);
 void PG_create_dyn_table(struct DBdesc *, char *);
-static int PG_affected_rows(PGresult *);
+int PG_affected_rows(PGresult *);
 void PG_create_backend(struct DBdesc *);
 void PG_set_callbacks(struct sqlfunc_cb_registry *);
 void PG_init_default_values(struct insert_data *);
 void PG_postgresql_get_version();
 
 /* global vars */
-int typed = TRUE;
+extern int typed;
 
 /* variables */
-static char pgsql_user[] = "pmacct";
-static char pgsql_pwd[] = "arealsmartpwd";
-static char pgsql_db[] = "pmacct";
-static char pgsql_table[] = "acct";
-static char pgsql_table_v2[] = "acct_v2";
-static char pgsql_table_v3[] = "acct_v3";
-static char pgsql_table_v4[] = "acct_v4";
-static char pgsql_table_v5[] = "acct_v5";
-static char pgsql_table_v6[] = "acct_v6";
-static char pgsql_table_v7[] = "acct_v7";
-static char pgsql_table_v8[] = "acct_v8";
-static char pgsql_table_bgp[] = "acct_bgp";
-static char pgsql_table_uni[] = "acct_uni";
-static char pgsql_table_uni_v2[] = "acct_uni_v2";
-static char pgsql_table_uni_v3[] = "acct_uni_v3";
-static char pgsql_table_uni_v4[] = "acct_uni_v4";
-static char pgsql_table_uni_v5[] = "acct_uni_v5";
-static char pgsql_table_as[] = "acct_as";
-static char pgsql_table_as_v2[] = "acct_as_v2";
-static char pgsql_table_as_v3[] = "acct_as_v3";
-static char pgsql_table_as_v4[] = "acct_as_v4";
-static char pgsql_table_as_v5[] = "acct_as_v5";
-static char typed_str[] = "typed"; 
-static char unified_str[] = "unified"; 
+extern char pgsql_user[];
+extern char pgsql_pwd[];
+extern char pgsql_db[];
+extern char pgsql_table[];
+extern char pgsql_table_v2[];
+extern char pgsql_table_v3[];
+extern char pgsql_table_v4[];
+extern char pgsql_table_v5[];
+extern char pgsql_table_v6[];
+extern char pgsql_table_v7[];
+extern char pgsql_table_v8[];
+extern char pgsql_table_bgp[];
+extern char pgsql_table_uni[];
+extern char pgsql_table_uni_v2[];
+extern char pgsql_table_uni_v3[];
+extern char pgsql_table_uni_v4[];
+extern char pgsql_table_uni_v5[];
+extern char pgsql_table_as[];
+extern char pgsql_table_as_v2[];
+extern char pgsql_table_as_v3[];
+extern char pgsql_table_as_v4[];
+extern char pgsql_table_as_v5[];
+extern char typed_str[];
+extern char unified_str[];

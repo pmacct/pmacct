@@ -19,8 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __PKT_HANDLERS_C
-
 /* includes */
 #include "pmacct.h"
 #include "pmacct-data.h"
@@ -39,6 +37,12 @@
 #include "ndpi/ndpi.h"
 #endif
 
+//Global variables
+struct channels_list_entry channels_list[MAX_N_PLUGINS];
+pkt_handler phandler[N_PRIMITIVES];
+
+
+
 /* functions */
 void evaluate_packet_handlers()
 {
@@ -46,7 +50,7 @@ void evaluate_packet_handlers()
 
   while (channels_list[index].aggregation) { 
     primitives = 0;
-    memset(&channels_list[index].phandler, 0, N_PRIMITIVES);
+    memset(&channels_list[index].phandler, 0, N_PRIMITIVES*sizeof(pkt_handler));
 
 #if defined (HAVE_L2)
     if (channels_list[index].aggregation & (COUNT_SRC_MAC|COUNT_SUM_MAC)) {
@@ -3506,6 +3510,9 @@ void NF_vxlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   u_char *vni_ptr = NULL, tmp64[8];
   u_int8_t *type = NULL;
+
+  //Make compiler happy
+  memset(tmp64, 0, sizeof(tmp64));
 
   switch(hdr->version) {
   case 10:

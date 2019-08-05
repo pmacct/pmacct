@@ -15,7 +15,6 @@
  * contain a copyright notice related to this source.
  */
 
-#define __DICT_C
 
 #include "pmacct.h"
 #include "isis.h"

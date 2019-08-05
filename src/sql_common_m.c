@@ -19,9 +19,10 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __SQL_COMMON_M_C
+#include "pmacct.h"
+#include "sql_common.h"
 
-Inline void AddToLRUTail(struct db_cache *Cursor)
+void AddToLRUTail(struct db_cache *Cursor)
 {
   if (Cursor == lru_tail) return;
 
@@ -42,7 +43,7 @@ Inline void AddToLRUTail(struct db_cache *Cursor)
   lru_tail = Cursor;
 }
 
-Inline void RetireElem(struct db_cache *Cursor)
+void RetireElem(struct db_cache *Cursor)
 {
   assert(Cursor->prev);
   assert(Cursor->lru_prev);
@@ -76,14 +77,14 @@ Inline void RetireElem(struct db_cache *Cursor)
   free(Cursor);
 }
 
-Inline void BuildChain(struct db_cache *Cursor, struct db_cache *newElem)
+void BuildChain(struct db_cache *Cursor, struct db_cache *newElem)
 {
   Cursor->next = newElem;
   newElem->prev = Cursor;
   newElem->chained = TRUE;
 }
 
-Inline void ReBuildChain(struct db_cache *Cursor, struct db_cache *newElem)
+void ReBuildChain(struct db_cache *Cursor, struct db_cache *newElem)
 {
   assert(Cursor != newElem);
 
@@ -98,7 +99,7 @@ Inline void ReBuildChain(struct db_cache *Cursor, struct db_cache *newElem)
   newElem->next = NULL;
 }
 
-Inline void SwapChainedElems(struct db_cache *Cursor, struct db_cache *staleElem)
+void SwapChainedElems(struct db_cache *Cursor, struct db_cache *staleElem)
 {
   struct db_cache *auxPtr;
 
@@ -139,7 +140,7 @@ Inline void SwapChainedElems(struct db_cache *Cursor, struct db_cache *staleElem
   }
 }
 
-Inline void SQL_SetENV()
+void SQL_SetENV()
 {
   u_char *ptrs[16];
   int count = 0, i;
@@ -224,7 +225,7 @@ Inline void SQL_SetENV()
     putenv(ptrs[i]);
 }
 
-Inline void SQL_SetENV_child(const struct insert_data *idata)
+void SQL_SetENV_child(const struct insert_data *idata)
 {
   u_char *ptrs[N_FUNCS];
   int count = 0, i;
@@ -258,7 +259,7 @@ Inline void SQL_SetENV_child(const struct insert_data *idata)
 
     strncat(envbuf.ptr, "ELAPSED_TIME=", envbuf.end-envbuf.ptr);
     tmpptr = envbuf.ptr + strlen(envbuf.ptr);
-    snprintf(tmpptr, envbuf.end-tmpptr, "%u", idata->elap_time);
+    snprintf(tmpptr, envbuf.end-tmpptr, "%lu", idata->elap_time);
     ptrs[count] = envbuf.ptr;
     envbuf.ptr += strlen(envbuf.ptr)+1;
     count++;
@@ -291,7 +292,7 @@ Inline void SQL_SetENV_child(const struct insert_data *idata)
 
     strncat(envbuf.ptr, "SQL_HISTORY_BASETIME=", envbuf.end-envbuf.ptr);
     tmpptr = envbuf.ptr + strlen(envbuf.ptr);
-    snprintf(tmpptr, envbuf.end-tmpptr, "%u", idata->basetime);
+    snprintf(tmpptr, envbuf.end-tmpptr, "%lu", idata->basetime);
     ptrs[count] = envbuf.ptr;
     envbuf.ptr += strlen(envbuf.ptr)+1;
     count++;
@@ -302,7 +303,7 @@ Inline void SQL_SetENV_child(const struct insert_data *idata)
 
     strncat(envbuf.ptr, "SQL_HISTORY_TIMESLOT=", envbuf.end-envbuf.ptr);
     tmpptr = envbuf.ptr + strlen(envbuf.ptr);
-    snprintf(tmpptr, envbuf.end-tmpptr, "%u", idata->timeslot);
+    snprintf(tmpptr, envbuf.end-tmpptr, "%lu", idata->timeslot);
     ptrs[count] = envbuf.ptr;
     envbuf.ptr += strlen(envbuf.ptr)+1;
     count++;
@@ -334,4 +335,3 @@ Inline void SQL_SetENV_child(const struct insert_data *idata)
     putenv(ptrs[i]);
 }
 
-#undef __SQL_COMMON_M_C

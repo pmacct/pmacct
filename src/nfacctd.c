@@ -19,9 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* defines */
-#define __NFACCTD_C
-
 /* includes */
 #include "pmacct.h"
 #include "addr.h"
@@ -46,7 +43,11 @@
 #include "ndpi/ndpi.h"
 #endif
 
-/* variables to be exported away */
+/* Global variables */
+struct template_cache tpl_cache;
+struct host_addr debug_a;
+char debug_agent_addr[50];
+u_int16_t debug_agent_port;
 struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
 
 /* Functions */
@@ -105,7 +106,7 @@ int main(int argc,char **argv, char **envp)
   struct packet_ptrs_vector pptrs;
   char config_file[SRVBUFLEN];
   unsigned char *netflow_packet;
-  int logf, rc, yes=1, allowed;
+  int logf, rc = 0, yes=1, allowed;
   struct host_addr addr;
   struct hosts_table allow;
   struct id_table bpas_table;
@@ -121,7 +122,7 @@ int main(int argc,char **argv, char **envp)
 
   struct sockaddr_storage server, client;
   struct ipv6_mreq multi_req6;
-  socklen_t clen = sizeof(client), slen;
+  socklen_t clen = sizeof(client), slen = 0;
   struct ip_mreq multi_req4;
 
   int pcap_savefile_round = 0;

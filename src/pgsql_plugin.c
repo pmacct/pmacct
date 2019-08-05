@@ -19,15 +19,40 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __PGSQL_PLUGIN_C
-
 /* includes */
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "sql_common.h"
+#include "sql_common_m.h"
 #include "pgsql_plugin.h"
-#include "sql_common_m.c"
+
+int typed = TRUE;
+
+char pgsql_user[] = "pmacct";
+char pgsql_pwd[] = "arealsmartpwd";
+char pgsql_db[] = "pmacct";
+char pgsql_table[] = "acct";
+char pgsql_table_v2[] = "acct_v2";
+char pgsql_table_v3[] = "acct_v3";
+char pgsql_table_v4[] = "acct_v4";
+char pgsql_table_v5[] = "acct_v5";
+char pgsql_table_v6[] = "acct_v6";
+char pgsql_table_v7[] = "acct_v7";
+char pgsql_table_v8[] = "acct_v8";
+char pgsql_table_bgp[] = "acct_bgp";
+char pgsql_table_uni[] = "acct_uni";
+char pgsql_table_uni_v2[] = "acct_uni_v2";
+char pgsql_table_uni_v3[] = "acct_uni_v3";
+char pgsql_table_uni_v4[] = "acct_uni_v4";
+char pgsql_table_uni_v5[] = "acct_uni_v5";
+char pgsql_table_as[] = "acct_as";
+char pgsql_table_as_v2[] = "acct_as_v2";
+char pgsql_table_as_v3[] = "acct_as_v3";
+char pgsql_table_as_v4[] = "acct_as_v4";
+char pgsql_table_as_v5[] = "acct_as_v5";
+char typed_str[] = "typed"; 
+char unified_str[] = "unified"; 
 
 /* Functions */
 void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 
@@ -41,7 +66,6 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int ret, num, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
-  struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
   int datasize = ((struct channels_list_entry *)ptr)->datasize;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   pid_t core_pid = ((struct channels_list_entry *)ptr)->core_pid;
@@ -141,7 +165,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     }
 
     if (idata.now > refresh_deadline) {
-      if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, &idata, FALSE);
+      if (qq_ptr) sql_cache_flush(sql_queries_queue, qq_ptr, &idata, FALSE);
       sql_cache_handle_flush_event(&idata, &refresh_deadline, &pt);
     }
     else {
@@ -194,7 +218,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           else {
             rg_err_count++;
             if (config.debug || (rg_err_count > MAX_RG_COUNT_ERR)) {
-              Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected (plugin_buffer_size=%llu plugin_pipe_size=%llu).\n",
+              Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected (plugin_buffer_size=%" PRIu64 " plugin_pipe_size=%" PRIu64 ").\n",
                         config.name, config.type, config.buffer_size, config.pipe_size);
               Log(LOG_WARNING, "WARN ( %s/%s ): Increase values or look for plugin_buffer_size, plugin_pipe_size in CONFIG-KEYS document.\n\n",
                         config.name, config.type);
@@ -227,7 +251,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
       if (config.debug_internal_msg) 
-        Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received len=%llu seq=%u num_entries=%u\n",
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received len=%" PRIu64 " seq=%u num_entries=%u\n",
                 config.name, config.type, ((struct ch_buf_hdr *)pipebuf)->len, seq,
                 ((struct ch_buf_hdr *)pipebuf)->num);
 
@@ -286,10 +310,10 @@ int PG_cache_dbop_copy(struct DBdesc *db, struct db_cache *cache_elem, struct in
   }
 
 #if defined HAVE_64BIT_COUNTERS
-  if (have_flows) snprintf(ptr_values, SPACELEFT(values_clause), "%s%llu%s%llu%s%llu\n", delim_buf, cache_elem->packet_counter,
+  if (have_flows) snprintf(ptr_values, SPACELEFT(values_clause), "%s%" PRIu64 "%s%" PRIu64 "%s%" PRIu64 "\n", delim_buf, cache_elem->packet_counter,
 											delim_buf, cache_elem->bytes_counter,
 											delim_buf, cache_elem->flows_counter);
-  else snprintf(ptr_values, SPACELEFT(values_clause), "%s%llu%s%llu\n", delim_buf, cache_elem->packet_counter,
+  else snprintf(ptr_values, SPACELEFT(values_clause), "%s%" PRIu64 "%s%" PRIu64 "\n", delim_buf, cache_elem->packet_counter,
 									delim_buf, cache_elem->bytes_counter);
 #else
   if (have_flows) snprintf(ptr_values, SPACELEFT(values_clause), "%s%lu%s%lu%s%lu\n", delim_buf, cache_elem->packet_counter,
@@ -319,8 +343,8 @@ int PG_cache_dbop_copy(struct DBdesc *db, struct db_cache *cache_elem, struct in
 
 int PG_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct insert_data *idata)
 {
-  PGresult *ret;
-  char *ptr_values, *ptr_where, *ptr_set, *ptr_insert;
+  PGresult *ret = NULL;
+  char *ptr_values, *ptr_where, *ptr_set;
   int num=0, num_set=0, have_flows=0;
 
   if (config.what_to_count & COUNT_FLOWS) have_flows = TRUE;
@@ -329,7 +353,6 @@ int PG_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct insert_
   ptr_where = where_clause;
   ptr_values = values_clause; 
   ptr_set = set_clause;
-  ptr_insert = insert_full_clause;
   memset(where_clause, 0, sizeof(where_clause));
   memset(values_clause, 0, sizeof(values_clause));
   memset(set_clause, 0, sizeof(set_clause));
@@ -378,8 +401,8 @@ int PG_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct insert_
       strncpy(insert_full_clause, insert_clause, SPACELEFT(insert_full_clause));
       strncat(insert_full_clause, insert_counters_clause, SPACELEFT(insert_full_clause));
 #if defined HAVE_64BIT_COUNTERS
-      if (have_flows) snprintf(ptr_values, SPACELEFT(values_clause), ", %llu, %llu, %llu)", cache_elem->packet_counter, cache_elem->bytes_counter, cache_elem->flows_counter);
-      else snprintf(ptr_values, SPACELEFT(values_clause), ", %llu, %llu)", cache_elem->packet_counter, cache_elem->bytes_counter);
+      if (have_flows) snprintf(ptr_values, SPACELEFT(values_clause), ", %" PRIu64 ", %" PRIu64 ", %" PRIu64 ")", cache_elem->packet_counter, cache_elem->bytes_counter, cache_elem->flows_counter);
+      else snprintf(ptr_values, SPACELEFT(values_clause), ", %" PRIu64 ", %" PRIu64 ")", cache_elem->packet_counter, cache_elem->bytes_counter);
 #else
       if (have_flows) snprintf(ptr_values, SPACELEFT(values_clause), ", %lu, %lu, %lu)", cache_elem->packet_counter, cache_elem->bytes_counter, cache_elem->flows_counter);
       else snprintf(ptr_values, SPACELEFT(values_clause), ", %lu, %lu)", cache_elem->packet_counter, cache_elem->bytes_counter);
@@ -521,7 +544,7 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
       pm_strftime_same(tmptable, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
 
       if (strncmp(idata->dyn_table_name, tmptable, SRVBUFLEN)) {
-        pending_queries_queue[pqq_ptr] = queue[idata->current_queue_elem];
+        sql_pending_queries_queue[pqq_ptr] = queue[idata->current_queue_elem];
 
         pqq_ptr++;
         go_to_pending = TRUE;
@@ -588,7 +611,7 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   if (pqq_ptr) goto start;
 
   idata->elap_time = time(NULL)-start;
-  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n",
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %lu) ***\n",
 		config.name, config.type, writer_pid, idata->qn, saved_index, idata->elap_time);
 
   if (config.sql_trigger_exec) {
@@ -860,7 +883,7 @@ void PG_create_dyn_table(struct DBdesc *db, char *buf)
   }
 }
 
-static int PG_affected_rows(PGresult *result)
+int PG_affected_rows(PGresult *result)
 {
   return atoi(PQcmdTuples(result));
 }

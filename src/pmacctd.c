@@ -19,9 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* defines */
-#define __PMACCTD_C
-
 /* includes */
 #include "pmacct.h"
 #include "pmacct-data.h"
@@ -39,6 +36,7 @@
 #include "bmp/bmp.h"
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
+#include "ndpi/ndpi_util.h"
 #endif
 #include "jhash.h"
 
@@ -303,7 +301,7 @@ int main(int argc,char **argv, char **envp)
   struct pcap_pkthdr pkt_hdr;
   const u_char *pkt_body;
 
-  int index, index_rr, logf, ret;
+  int index, index_rr = 0, logf, ret;
   int pcap_savefile_round = 0;
 
   struct plugins_list_entry *list;

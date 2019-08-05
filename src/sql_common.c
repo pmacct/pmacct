@@ -19,15 +19,54 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __SQL_COMMON_C
-
 /* includes */
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "sql_common.h"
+#include "sql_common_m.h"
 #include "crc32.h"
-#include "sql_common_m.c"
+
+/* Global variables */
+char sql_data[LARGEBUFLEN];
+char lock_clause[LONGSRVBUFLEN];
+char unlock_clause[LONGSRVBUFLEN];
+char update_clause[LONGSRVBUFLEN];
+char set_clause[LONGSRVBUFLEN];
+char copy_clause[LONGSRVBUFLEN];
+char insert_clause[LONGSRVBUFLEN];
+char insert_counters_clause[LONGSRVBUFLEN];
+char insert_nocounters_clause[LONGSRVBUFLEN];
+char insert_full_clause[LONGSRVBUFLEN];
+char values_clause[LONGLONGSRVBUFLEN];
+char *multi_values_buffer;
+char where_clause[LONGLONGSRVBUFLEN];
+unsigned char *pipebuf;
+struct db_cache *sql_cache;
+struct db_cache **sql_queries_queue, **sql_pending_queries_queue;
+struct db_cache *collision_queue;
+int cq_ptr, qq_ptr, qq_size, pp_size, pb_size, pn_size, pm_size, pt_size;
+int pc_size, dbc_size, cq_size, pqq_ptr;
+struct db_cache lru_head, *lru_tail;
+struct frags where[N_PRIMITIVES+2];
+struct frags values[N_PRIMITIVES+2];
+struct frags copy_values[N_PRIMITIVES+2];
+struct frags set[N_PRIMITIVES+2];
+struct frags set_event[N_PRIMITIVES+2];
+int glob_num_primitives; /* last resort for signal handling */
+int glob_basetime; /* last resort for signal handling */
+time_t glob_new_basetime; /* last resort for signal handling */
+time_t glob_committed_basetime; /* last resort for signal handling */
+int glob_dyn_table, glob_dyn_table_time_only; /* last resort for signal handling */
+int glob_timeslot; /* last resort for sql handlers */
+
+struct sqlfunc_cb_registry sqlfunc_cbr; 
+void (*insert_func)(struct primitives_ptrs *, struct insert_data *);
+struct DBdesc p;
+struct DBdesc b;
+struct BE_descs bed;
+struct largebuf envbuf;
+time_t now; /* PostgreSQL */
 
 /* Functions */
 void sql_set_signals()
@@ -86,24 +125,24 @@ void sql_init_global_buffers()
   memset(&lru_head, 0, sizeof(lru_head));
   lru_tail = &lru_head;
 
-  Log(LOG_INFO, "INFO ( %s/%s ): cache entries=%llu base cache memory=%llu bytes\n", config.name, config.type,
+  Log(LOG_INFO, "INFO ( %s/%s ): cache entries=%d base cache memory=%luu bytes\n", config.name, config.type,
         config.sql_cache_entries, ((config.sql_cache_entries * sizeof(struct db_cache)) +
 	(2 * (qq_size * sizeof(struct db_cache *)))));
 
   pipebuf = (unsigned char *) malloc(config.buffer_size);
-  cache = (struct db_cache *) malloc(config.sql_cache_entries*sizeof(struct db_cache));
-  queries_queue = (struct db_cache **) malloc(qq_size*sizeof(struct db_cache *));
-  pending_queries_queue = (struct db_cache **) malloc(qq_size*sizeof(struct db_cache *));
+  sql_cache = (struct db_cache *) malloc(config.sql_cache_entries*sizeof(struct db_cache));
+  sql_queries_queue = (struct db_cache **) malloc(qq_size*sizeof(struct db_cache *));
+  sql_pending_queries_queue = (struct db_cache **) malloc(qq_size*sizeof(struct db_cache *));
 
-  if (!pipebuf || !cache || !queries_queue || !pending_queries_queue) {
+  if (!pipebuf || !cache || !sql_queries_queue || !sql_pending_queries_queue) {
     Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (sql_init_global_buffers). Exiting ..\n", config.name, config.type);
     exit_gracefully(1);
   }
 
   memset(pipebuf, 0, config.buffer_size);
   memset(cache, 0, config.sql_cache_entries*sizeof(struct db_cache));
-  memset(queries_queue, 0, qq_size*sizeof(struct db_cache *));
-  memset(pending_queries_queue, 0, qq_size*sizeof(struct db_cache *));
+  memset(sql_queries_queue, 0, qq_size*sizeof(struct db_cache *));
+  memset(sql_pending_queries_queue, 0, qq_size*sizeof(struct db_cache *));
 }
 
 /* being the first routine to be called by each SQL plugin, this is
@@ -321,11 +360,11 @@ int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *ida
   if (!exiting) {
     for (j = 0, pqq_ptr = 0; j < index; j++) {
       if (new_basetime && queue[j]->basetime+delay >= idata->basetime) {
-        pending_queries_queue[pqq_ptr] = queue[j];
+        sql_pending_queries_queue[pqq_ptr] = queue[j];
         pqq_ptr++;
       }
       else if (!new_basetime && queue[j]->basetime+delay > idata->basetime) {
-        pending_queries_queue[pqq_ptr] = queue[j];
+        sql_pending_queries_queue[pqq_ptr] = queue[j];
         pqq_ptr++;
       }
       else queue[j]->valid = SQL_CACHE_COMMITTED;
@@ -424,7 +463,7 @@ void sql_cache_handle_flush_event(struct insert_data *idata, time_t *refresh_dea
       }
 
       /* qq_ptr check inside purge function along with a Log() call */
-      (*sqlfunc_cbr.purge)(queries_queue, qq_ptr, idata);
+      (*sqlfunc_cbr.purge)(sql_queries_queue, qq_ptr, idata);
 
       if (qq_ptr) (*sqlfunc_cbr.close)(&bed);
 
@@ -442,7 +481,7 @@ void sql_cache_handle_flush_event(struct insert_data *idata, time_t *refresh_dea
   }
   else Log(LOG_WARNING, "WARN ( %s/%s ): Maximum number of writer processes reached (%d).\n", config.name, config.type, dump_writers_get_active());
 
-  if (pqq_ptr) sql_cache_flush_pending(pending_queries_queue, pqq_ptr, idata);
+  if (pqq_ptr) sql_cache_flush_pending(sql_pending_queries_queue, pqq_ptr, idata);
   gettimeofday(&idata->flushtime, NULL);
   while (idata->now > *refresh_deadline)
     *refresh_deadline += config.sql_refresh_time;
@@ -455,7 +494,7 @@ void sql_cache_handle_flush_event(struct insert_data *idata, time_t *refresh_dea
   idata->new_basetime = FALSE;
   glob_new_basetime = FALSE;
   qq_ptr = pqq_ptr;
-  memcpy(queries_queue, pending_queries_queue, qq_ptr*sizeof(struct db_cache *));
+  memcpy(sql_queries_queue, sql_pending_queries_queue, qq_ptr*sizeof(struct db_cache *));
 
   if (reload_map) {
     load_networks(config.networks_file, &nt, &nc);
@@ -474,16 +513,14 @@ struct db_cache *sql_cache_search(struct primitives_ptrs *prim_ptrs, time_t base
   struct pkt_tunnel_primitives *ptun = prim_ptrs->ptun;
   u_char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
-  unsigned int modulo;
   struct db_cache *Cursor;
   struct insert_data idata;
   int res_data = TRUE, res_bgp = TRUE, res_nat = TRUE, res_mpls = TRUE, res_tun = TRUE;
   int res_cust = TRUE, res_vlen = TRUE;
 
   sql_cache_modulo(prim_ptrs, &idata);
-  modulo = idata.modulo;
 
-  Cursor = &cache[idata.modulo];
+  Cursor = &sql_cache[idata.modulo];
 
   start:
   if (idata.hash != Cursor->signature) {
@@ -640,7 +677,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   }
 
   sql_cache_modulo(prim_ptrs, idata);
-  Cursor = &cache[idata->modulo];
+  Cursor = &sql_cache[idata->modulo];
 
   start:
   insert_status = SQL_INSERT_INSERT;
@@ -730,7 +767,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
 
   if (insert_status == SQL_INSERT_INSERT) {
     if (qq_ptr < qq_size) {
-      queries_queue[qq_ptr] = Cursor;
+      sql_queries_queue[qq_ptr] = Cursor;
       qq_ptr++;
     }
     else SafePtr = Cursor;
@@ -904,7 +941,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
 
     Log(LOG_INFO, "INFO ( %s/%s ): Finished cache entries (ie. sql_cache_entries). Purging.\n", config.name, config.type);
   
-    if (qq_ptr) sql_cache_flush(queries_queue, qq_ptr, idata, FALSE); 
+    if (qq_ptr) sql_cache_flush(sql_queries_queue, qq_ptr, idata, FALSE); 
 
     dump_writers_count();
     if (dump_writers_get_flags() != CHLD_ALERT) {
@@ -918,7 +955,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
         if (qq_ptr) {
           if (dump_writers_get_flags() == CHLD_WARNING) sql_db_fail(&p);
           (*sqlfunc_cbr.connect)(&p, config.sql_host);
-          (*sqlfunc_cbr.purge)(queries_queue, qq_ptr, idata);
+          (*sqlfunc_cbr.purge)(sql_queries_queue, qq_ptr, idata);
           (*sqlfunc_cbr.close)(&bed);
         }
   
@@ -933,14 +970,14 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
     else Log(LOG_WARNING, "WARN ( %s/%s ): Maximum number of writer processes reached (%d).\n", config.name, config.type, dump_writers_get_active());
   
     qq_ptr = pqq_ptr;
-    memcpy(queries_queue, pending_queries_queue, sizeof(queries_queue));
+    memcpy(sql_queries_queue, sql_pending_queries_queue, sizeof(*sql_queries_queue));
 
     if (SafePtr) {
-      queries_queue[qq_ptr] = Cursor;
+      sql_queries_queue[qq_ptr] = Cursor;
       qq_ptr++;
     }
     else {
-      Cursor = &cache[idata->modulo];
+      Cursor = &sql_cache[idata->modulo];
       goto start;
     }
   }
@@ -1061,13 +1098,13 @@ void sql_exit_gracefully(int signum)
   if (config.sql_backup_host) idata.recover = TRUE;
   if (config.sql_locking_style) idata.locks = sql_select_locking_style(config.sql_locking_style);
 
-  sql_cache_flush(queries_queue, qq_ptr, &idata, TRUE);
+  sql_cache_flush(sql_queries_queue, qq_ptr, &idata, TRUE);
 
   dump_writers_count();
   if (dump_writers_get_flags() != CHLD_ALERT) {
     if (dump_writers_get_flags() == CHLD_WARNING) sql_db_fail(&p);
     (*sqlfunc_cbr.connect)(&p, config.sql_host);
-    (*sqlfunc_cbr.purge)(queries_queue, qq_ptr, &idata);
+    (*sqlfunc_cbr.purge)(sql_queries_queue, qq_ptr, &idata);
     (*sqlfunc_cbr.close)(&bed);
   }
   else Log(LOG_WARNING, "WARN ( %s/%s ): Maximum number of writer processes reached (%d).\n", config.name, config.type, dump_writers_get_active());

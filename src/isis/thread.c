@@ -19,8 +19,6 @@
  * 02111-1307, USA.  
  */
 
-#define __THREAD_C
-
 #include "pmacct.h"
 #include "isis.h"
 

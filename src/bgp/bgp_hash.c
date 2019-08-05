@@ -24,8 +24,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#define __BGP_HASH_C
-
 #include "pmacct.h"
 #include "bgp.h"
 

@@ -103,30 +103,24 @@ struct bmp_dump_se_ll {
 };
 
 /* prototypes */
-#if (!defined __BMP_LOGDUMP_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void bmp_daemon_msglog_init_amqp_host();
-EXT void bmp_dump_init_amqp_host();
-EXT void bmp_dump_init_peer(struct bgp_peer *);
-EXT void bmp_dump_close_peer(struct bgp_peer *);
+extern void bmp_daemon_msglog_init_amqp_host();
+extern void bmp_dump_init_amqp_host();
+extern void bmp_dump_init_peer(struct bgp_peer *);
+extern void bmp_dump_close_peer(struct bgp_peer *);
 
-EXT int bmp_log_msg(struct bgp_peer *, struct bmp_data *, void *, u_int64_t, char *, int, int);
-EXT int bmp_log_msg_stats(struct bgp_peer *, struct bmp_data *, struct bmp_log_stats *, char *, int, void *);
-EXT int bmp_log_msg_init(struct bgp_peer *, struct bmp_data *, struct bmp_log_init_array *, char *, int, void *);
-EXT int bmp_log_msg_term(struct bgp_peer *, struct bmp_data *, struct bmp_log_term_array *, char *, int, void *);
-EXT int bmp_log_msg_peer_up(struct bgp_peer *, struct bmp_data *, struct bmp_log_peer_up *, char *, int, void *);
-EXT int bmp_log_msg_peer_down(struct bgp_peer *, struct bmp_data *, struct bmp_log_peer_down *, char *, int, void *);
+extern int bmp_log_msg(struct bgp_peer *, struct bmp_data *, void *, u_int64_t, char *, int, int);
+extern int bmp_log_msg_stats(struct bgp_peer *, struct bmp_data *, struct bmp_log_stats *, char *, int, void *);
+extern int bmp_log_msg_init(struct bgp_peer *, struct bmp_data *, struct bmp_log_init_array *, char *, int, void *);
+extern int bmp_log_msg_term(struct bgp_peer *, struct bmp_data *, struct bmp_log_term_array *, char *, int, void *);
+extern int bmp_log_msg_peer_up(struct bgp_peer *, struct bmp_data *, struct bmp_log_peer_up *, char *, int, void *);
+extern int bmp_log_msg_peer_down(struct bgp_peer *, struct bmp_data *, struct bmp_log_peer_down *, char *, int, void *);
 
-EXT void bmp_dump_se_ll_append(struct bgp_peer *, struct bmp_data *, void *, int);
-EXT void bmp_dump_se_ll_destroy(struct bmp_dump_se_ll *);
+extern void bmp_dump_se_ll_append(struct bgp_peer *, struct bmp_data *, void *, int);
+extern void bmp_dump_se_ll_destroy(struct bmp_dump_se_ll *);
 
-EXT void bmp_handle_dump_event();
-EXT void bmp_daemon_msglog_init_amqp_host();
-EXT void bmp_dump_init_amqp_host();
-EXT int bmp_daemon_msglog_init_kafka_host();
-EXT int bmp_dump_init_kafka_host();
-#undef EXT
+extern void bmp_handle_dump_event();
+extern void bmp_daemon_msglog_init_amqp_host();
+extern void bmp_dump_init_amqp_host();
+extern int bmp_daemon_msglog_init_kafka_host();
+extern int bmp_dump_init_kafka_host();
 #endif

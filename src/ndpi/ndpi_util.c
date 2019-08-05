@@ -19,9 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __NDPI_UTIL_C
-
-#ifdef WITH_NDPI
 #include "../pmacct.h"
 #include "../ip_flow.h"
 #include "../classifier.h"
@@ -105,4 +102,3 @@ void pm_ndpi_export_proto_to_class(struct pm_ndpi_workflow *workflow)
     }
   }
 }
-#endif

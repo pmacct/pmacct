@@ -24,8 +24,6 @@ along with GNU Zebra; see the file COPYING.  If not, write to the Free
 Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA.  */
 
-#define __BGP_ASPATH_C
-
 #include "pmacct.h"
 #include "jhash.h"
 #include "bgp.h"
@@ -36,7 +34,7 @@ assegment_data_new (int num)
   return (malloc(ASSEGMENT_DATA_SIZE (num, TRUE)));
 }
 
-static inline void
+__attribute__((unused)) static inline void
 assegment_data_free (as_t *asdata)
 {
   free(asdata);
@@ -270,7 +268,8 @@ void
 aspath_unintern(struct bgp_peer *peer, struct aspath *aspath)
 {
   struct bgp_rt_structs *inter_domain_routing_db;
-  struct aspath *ret;
+  struct aspath *ret = NULL;
+  (void) ret;
 
   if (!peer) return;
 

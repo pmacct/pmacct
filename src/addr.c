@@ -19,8 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __ADDR_C
-
 #include "pmacct.h"
 #include "addr.h"
 #include "jhash.h"

@@ -19,13 +19,29 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#define __AMQP_COMMON_C
-
 /* includes */
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "plugin_common.h"
 #include "amqp_common.h"
+
+/* Global variables */
+struct p_amqp_host amqpp_amqp_host;
+struct p_amqp_host bgp_daemon_msglog_amqp_host;
+struct p_amqp_host bgp_table_dump_amqp_host;
+struct p_amqp_host bmp_daemon_msglog_amqp_host;
+struct p_amqp_host bmp_dump_amqp_host;
+struct p_amqp_host sfacctd_counter_amqp_host;
+struct p_amqp_host telemetry_daemon_msglog_amqp_host;
+struct p_amqp_host telemetry_dump_amqp_host;
+
+char rabbitmq_user[] = "guest";
+char rabbitmq_pwd[] = "guest";
+char default_amqp_exchange[] = "pmacct";
+char default_amqp_exchange_type[] = "direct";
+char default_amqp_routing_key[] = "acct";
+char default_amqp_host[] = "127.0.0.1";
+char default_amqp_vhost[] = "/";
 
 /* Functions */
 void p_amqp_init_host(struct p_amqp_host *amqp_host)

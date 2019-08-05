@@ -19,6 +19,9 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef ADDR_H
+#define ADDR_H
+
 /* defines */
 #if defined IM_LITTLE_ENDIAN
 #define IS_IPV4_MULTICAST(a) ((((u_int32_t)(a)) & 0x000000f0) == 0x000000e0)
@@ -28,45 +31,41 @@
 #define IS_IPV6_MULTICAST(a) (((const uint8_t *) (a))[0] == 0xff)
 
 /* prototypes */
-#if (!defined __ADDR_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT unsigned int str_to_addr(const char *, struct host_addr *);
-EXT unsigned int addr_to_str(char *, const struct host_addr *);
-EXT unsigned int addr_mask_to_str(char *, int, const struct host_addr *, const struct host_mask *);
-EXT unsigned int str_to_addr_mask(const char *, struct host_addr *, struct host_mask *);
-EXT unsigned int addr_to_sa(struct sockaddr *, struct host_addr *, u_int16_t);
-EXT unsigned int sa_to_addr(struct sockaddr *, struct host_addr *, u_int16_t *);
-EXT int sa_addr_cmp(struct sockaddr *, struct host_addr *);
-EXT int sa_port_cmp(struct sockaddr *, u_int16_t);
-EXT int host_addr_cmp(struct host_addr *, struct host_addr *);
-EXT int host_addr_cmp2(struct host_addr *, struct host_addr *);
-EXT int host_addr_mask_sa_cmp(struct host_addr *, struct host_mask *, struct sockaddr *);
-EXT int host_addr_mask_cmp(struct host_addr *, struct host_mask *, struct host_addr *);
-EXT unsigned int raw_to_sa(struct sockaddr *, u_char *, u_int16_t port, u_int8_t);
-EXT unsigned int raw_to_addr(struct host_addr *, u_char *, u_int8_t);
-EXT unsigned int sa_to_str(char *, int, const struct sockaddr *);
-EXT void *pm_htonl6(void *);
-EXT void *pm_ntohl6(void *);
-EXT u_int64_t pm_htonll(u_int64_t);
-EXT u_int64_t pm_ntohll(u_int64_t);
-EXT int ip6_addr_cmp(void *, void *);
-EXT void ip6_addr_cpy(void *, void *);
-EXT void ip6_addr_32bit_cpy(void *, void *, int, int, int);
-EXT void etheraddr_string(const u_char *, char *);
-EXT int string_etheraddr(const char *, u_char *);
-EXT int is_multicast(struct host_addr *);
-EXT int is_any(struct host_addr *);
-EXT void clean_sin_addr(struct sockaddr *);
-EXT unsigned int label_to_addr(const char *, struct host_addr *, int);
-EXT u_int8_t etype_to_af(u_int16_t);
-EXT u_int16_t af_to_etype(u_int8_t);
-EXT u_int32_t addr_hash(struct host_addr *, u_int32_t);
-EXT u_int32_t addr_port_hash(struct host_addr *, u_int16_t, u_int32_t);
-EXT u_int16_t sa_has_family(struct sockaddr *);
+extern unsigned int str_to_addr(const char *, struct host_addr *);
+extern unsigned int addr_to_str(char *, const struct host_addr *);
+extern unsigned int addr_mask_to_str(char *, int, const struct host_addr *, const struct host_mask *);
+extern unsigned int str_to_addr_mask(const char *, struct host_addr *, struct host_mask *);
+extern unsigned int addr_to_sa(struct sockaddr *, struct host_addr *, u_int16_t);
+extern unsigned int sa_to_addr(struct sockaddr *, struct host_addr *, u_int16_t *);
+extern int sa_addr_cmp(struct sockaddr *, struct host_addr *);
+extern int sa_port_cmp(struct sockaddr *, u_int16_t);
+extern int host_addr_cmp(struct host_addr *, struct host_addr *);
+extern int host_addr_cmp2(struct host_addr *, struct host_addr *);
+extern int host_addr_mask_sa_cmp(struct host_addr *, struct host_mask *, struct sockaddr *);
+extern int host_addr_mask_cmp(struct host_addr *, struct host_mask *, struct host_addr *);
+extern unsigned int raw_to_sa(struct sockaddr *, u_char *, u_int16_t port, u_int8_t);
+extern unsigned int raw_to_addr(struct host_addr *, u_char *, u_int8_t);
+extern unsigned int sa_to_str(char *, int, const struct sockaddr *);
+extern void *pm_htonl6(void *);
+extern void *pm_ntohl6(void *);
+extern u_int64_t pm_htonll(u_int64_t);
+extern u_int64_t pm_ntohll(u_int64_t);
+extern int ip6_addr_cmp(void *, void *);
+extern void ip6_addr_cpy(void *, void *);
+extern void ip6_addr_32bit_cpy(void *, void *, int, int, int);
+extern void etheraddr_string(const u_char *, char *);
+extern int string_etheraddr(const char *, u_char *);
+extern int is_multicast(struct host_addr *);
+extern int is_any(struct host_addr *);
+extern void clean_sin_addr(struct sockaddr *);
+extern unsigned int label_to_addr(const char *, struct host_addr *, int);
+extern u_int8_t etype_to_af(u_int16_t);
+extern u_int16_t af_to_etype(u_int8_t);
+extern u_int32_t addr_hash(struct host_addr *, u_int32_t);
+extern u_int32_t addr_port_hash(struct host_addr *, u_int16_t, u_int32_t);
+extern u_int16_t sa_has_family(struct sockaddr *);
 
-EXT void ipv4_to_ipv4_mapped(struct sockaddr_storage *);
-EXT void ipv4_mapped_to_ipv4(struct sockaddr_storage *);
-#undef EXT
+extern void ipv4_to_ipv4_mapped(struct sockaddr_storage *);
+extern void ipv4_mapped_to_ipv4(struct sockaddr_storage *);
+
+#endif //ADDR_H

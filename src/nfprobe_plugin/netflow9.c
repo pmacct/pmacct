@@ -31,8 +31,6 @@
 
 /* $Id$ */
 
-#define __NFPROBE_NETFLOW9_C
-
 #include "common.h"
 #include "treetype.h"
 #include "nfprobe_plugin.h"
@@ -1731,9 +1729,9 @@ static int
 nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
     const struct timeval *system_boot_time, u_int *len_used, int direction)
 {
-	u_int freclen_0, freclen_1, ret_len, nflows, idx;
+	u_int freclen_0 = 0, freclen_1 = 0, ret_len, nflows, idx;
 	u_int64_t rec64;
-	u_int32_t rec32;
+	u_int32_t rec32 = 0;
 	u_int8_t rec8;
 	char *ftoft_ptr_0 = ftoft_buf_0;
 	char *ftoft_ptr_1 = ftoft_buf_1;
@@ -1996,7 +1994,7 @@ static int
 nf_sampling_option_to_flowset(u_char *packet, u_int len, const struct timeval *system_boot_time, u_int *len_used)
 {
         u_int freclen, ret_len, nflows;
-        u_int32_t rec32;
+        u_int32_t rec32 = 0;
         u_int8_t rec8;
         char *ftoft_ptr_0 = ftoft_buf_0;
 
@@ -2188,6 +2186,9 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 		nf9_pkts_until_template = 0;
 	}		
 
+        
+        offset = 0;
+        r = 0;
 	num_packets = 0;
 	num_class = pmct_find_first_free(); 
 

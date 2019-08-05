@@ -29,8 +29,6 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define __NFPROBE_PLUGIN_C
-
 /*
  * This is software implementation of Cisco's NetFlow(tm) traffic 
  * reporting system. It operates by listening (via libpcap) on a 
@@ -49,7 +47,6 @@
  * As this implementation watches traffic promiscuously, it is likely to 
  * place significant load on hosts or gateways on which it is installed.
  */
-
 #include "common.h"
 #include "addr.h"
 #include "sys-tree.h"
@@ -59,6 +56,8 @@
 #include "treetype.h"
 
 #include "pmacct-data.h"
+#include "net_aggr.h"
+#include "ports_aggr.h"
 #include "plugin_hooks.h"
 #include "plugin_common.h"
 
@@ -1372,7 +1371,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   socklen_t dest_len;
   struct NETFLOW_TARGET target;
   struct CB_CTXT cb_ctxt;
-  u_int8_t engine_type;
+  u_int8_t engine_type = 0;
   u_int32_t engine_id;
 
   struct extra_primitives extras;

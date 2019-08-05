@@ -19,6 +19,9 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef CLASSIFIER_H
+#define CLASSIFIER_H
+
 #include "regexp.h"
 #include "conntrack.h"
 
@@ -55,36 +58,33 @@ struct pkt_classifier {
 /* All but __CLASSIFIER_C are dummy entries. They are required to export locally
    the 'class' array. This is in order to avoid to link extra C files into nfacctd
    and sfacctd */
-#if defined __CLASSIFIER_C || defined __PMACCT_PLAYER_C || defined __NFACCTD_C || defined __SFACCTD_C
-#define EXT
-#else
-#define EXT extern
-#endif
+
 /* prototypes */
-EXT void init_classifiers(char *);
-EXT void evaluate_classifiers(struct packet_ptrs *, struct ip_flow_common *, unsigned int);
-EXT pm_class_t SF_evaluate_classifiers(char *);
-EXT int parse_pattern_file(char *, struct pkt_classifier *);
-EXT int parse_shared_object(char *, struct pkt_classifier *);
-EXT int dot_pat(char *);
-EXT int dot_so(char *);
-EXT void init_class_accumulators(struct packet_ptrs *, struct ip_flow_common *, unsigned int);
-EXT void handle_class_accumulators(struct packet_ptrs *, struct ip_flow_common *, unsigned int);
-EXT void link_conntrack_helper(struct pkt_classifier *);
+extern void init_classifiers(char *);
+extern void evaluate_classifiers(struct packet_ptrs *, struct ip_flow_common *, unsigned int);
+extern pm_class_t SF_evaluate_classifiers(char *);
+extern int parse_pattern_file(char *, struct pkt_classifier *);
+extern int parse_shared_object(char *, struct pkt_classifier *);
+extern int dot_pat(char *);
+extern int dot_so(char *);
+extern void init_class_accumulators(struct packet_ptrs *, struct ip_flow_common *, unsigned int);
+extern void handle_class_accumulators(struct packet_ptrs *, struct ip_flow_common *, unsigned int);
+extern void link_conntrack_helper(struct pkt_classifier *);
 
-EXT void *search_context_chain(struct ip_flow_common *, unsigned int, char *);
-EXT void insert_context_chain(struct ip_flow_common *, unsigned int, char *, void *);
-EXT void clear_context_chain(struct ip_flow_common *, unsigned int);
-EXT void prepare_classifier_data(struct pkt_classifier_data *, struct ip_flow_common *, unsigned int, struct packet_ptrs *);
+extern void *search_context_chain(struct ip_flow_common *, unsigned int, char *);
+extern void insert_context_chain(struct ip_flow_common *, unsigned int, char *, void *);
+extern void clear_context_chain(struct ip_flow_common *, unsigned int);
+extern void prepare_classifier_data(struct pkt_classifier_data *, struct ip_flow_common *, unsigned int, struct packet_ptrs *);
 
-EXT pm_class_t pmct_register(struct pkt_classifier *);
-EXT pm_class_t pmct_ndpi_register(struct pkt_classifier *);
-EXT void pmct_unregister(pm_class_t);
-EXT pm_class_t pmct_find_first_free();
-EXT pm_class_t pmct_find_last_free();
-EXT int pmct_isfree(pm_class_t);
-EXT int pmct_get(pm_class_t, struct pkt_classifier *);
-EXT int pmct_get_num_entries();
+extern pm_class_t pmct_register(struct pkt_classifier *);
+extern pm_class_t pmct_ndpi_register(struct pkt_classifier *);
+extern void pmct_unregister(pm_class_t);
+extern pm_class_t pmct_find_first_free();
+extern pm_class_t pmct_find_last_free();
+extern int pmct_isfree(pm_class_t);
+extern int pmct_get(pm_class_t, struct pkt_classifier *);
+extern int pmct_get_num_entries();
 
-EXT struct pkt_classifier *class;
-#undef EXT
+extern struct pkt_classifier *class;
+
+#endif //CLASSIFIER_H

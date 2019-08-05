@@ -21,8 +21,6 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-#define __ISIS_PDU_C
-
 #include "pmacct.h"
 #include "isis.h"
 
@@ -63,7 +61,7 @@ extern struct isis *isis;
 #endif /* PNBBY */
 
 /* Utility mask array. */
-static const u_char maskbit[] = {
+static const u_char __attribute__((unused)) maskbit[] = {
   0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff
 };
 

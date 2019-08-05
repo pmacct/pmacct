@@ -9,8 +9,6 @@
  * Refer to bloom.h for documentation on the public interfaces.
  */
 
-#define __BLOOM_C
-
 #include "pmacct.h"
 #include "murmur2.h"
 

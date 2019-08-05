@@ -19,6 +19,9 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#ifndef LOG_H
+#define LOG_H
+
 /* includes */
 #include <stdarg.h>
 #include <sys/stat.h>
@@ -67,23 +70,18 @@ struct _log_notifications {
 };
 
 /* prototypes */
-#if (!defined __LOG_C)
-#define EXT extern
-#else
-#define EXT
-#endif
-EXT void Log(short int, char *, ...)
+extern void Log(short int, char *, ...)
 #ifdef __GNUC__
   __attribute__((format(printf, 2, 3)))
 #endif
   ;
-EXT int parse_log_facility(const char *);
-EXT void log_notification_init(struct log_notification *);
-EXT void log_notifications_init(struct _log_notifications *);
-EXT int log_notification_set(struct log_notification *, time_t, int);
-EXT int log_notification_unset(struct log_notification *);
-EXT int log_notification_isset(struct log_notification *, time_t);
+extern int parse_log_facility(const char *);
+extern void log_notification_init(struct log_notification *);
+extern void log_notifications_init(struct _log_notifications *);
+extern int log_notification_set(struct log_notification *, time_t, int);
+extern int log_notification_unset(struct log_notification *);
+extern int log_notification_isset(struct log_notification *, time_t);
 
 /* global vars */
-EXT struct _log_notifications log_notifications;
-#undef EXT
+extern struct _log_notifications log_notifications;
+#endif //LOG_H

@@ -43,6 +43,7 @@ AC_ARG_ENABLE(debug,
 			CFLAGS="$tmp_CFLAGS"
 			CFLAGS="$CFLAGS -g -Wall -Werror"
 		else
+			CFLAGS="$CFLAGS -Wall -Werror"
 			AC_MSG_RESULT(no)
 		fi
 	],

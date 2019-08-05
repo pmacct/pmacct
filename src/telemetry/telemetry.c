@@ -19,9 +19,6 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-/* defines */
-#define __TELEMETRY_C
-
 /* includes */
 #include "pmacct.h"
 #include "addr.h"
@@ -38,8 +35,12 @@
 #include "zmq_common.h"
 #endif
 
-/* variables to be exported away */
+/* Global variables */
 thread_pool_t *telemetry_pool;
+telemetry_misc_structs *telemetry_misc_db;
+telemetry_peer *telemetry_peers;
+void *telemetry_peers_cache;
+telemetry_peer_timeout *telemetry_peers_timeout;
 
 /* Functions */
 void telemetry_wrapper()
@@ -73,7 +74,7 @@ void telemetry_daemon(void *t_data_void)
   u_int16_t port = 0;
   char *srv_proto = NULL;
   time_t last_peers_timeout_check;
-  socklen_t slen, clen;
+  socklen_t slen = {0}, clen;
 
   telemetry_peer *peer = NULL;
 
@@ -88,7 +89,7 @@ void telemetry_daemon(void *t_data_void)
   int fd, select_fd, bkp_select_fd, recalc_fds, select_num;
 
   /* logdump time management */
-  time_t dump_refresh_deadline;
+  time_t dump_refresh_deadline = {0};
   struct timeval dump_refresh_timeout, *drt_ptr;
 
 #if defined WITH_ZMQ

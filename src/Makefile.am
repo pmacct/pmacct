@@ -1,4 +1,4 @@
-SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp telemetry ndpi rpki filters
+SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp telemetry rpki filters
 sbin_PROGRAMS =
 bin_PROGRAMS =
 EXTRA_PROGRAMS =
@@ -23,9 +23,9 @@ libdaemons_la_SOURCES = signals.c util.c plugin_hooks.c		\
 	base64.c plugin_cmn_json.c 				\
 	plugin_cmn_avro.c pmsearch.c 				\
 	thread_pool.c						\
-	plugin_cmn_custom.c
+	plugin_cmn_custom.c network.c pmacct-globals.c
 
-libcommon_la_LIBADD  = 
+libcommon_la_LIBADD  =
 libcommon_la_CFLAGS  = $(AM_CFLAGS)
 
 # Builtin plugins
@@ -69,6 +69,7 @@ libdaemons_la_CFLAGS  += @SERDES_CFLAGS@
 endif
 endif
 if WITH_NDPI
+SUBDIRS += ndpi
 libdaemons_la_LIBADD += ndpi/libndpi_support.la
 libdaemons_la_LIBADD  += @NDPI_LIBS@
 libdaemons_la_CFLAGS  += @NDPI_CFLAGS@
@@ -89,7 +90,8 @@ libdaemons_la_LIBADD  += @KAFKA_LIBS@
 libdaemons_la_CFLAGS  += @KAFKA_CFLAGS@
 endif
 if USING_SQL
-libdaemons_la_SOURCES += sql_common.c sql_handlers.c
+libdaemons_la_SOURCES += sql_common.c sql_handlers.c sql_common_m.c
+libdaemons_la_CFLAGS += -Wno-error=pointer-sign
 libdaemons_la_LIBADD  += -lm -lz
 endif
 
@@ -105,11 +107,11 @@ sfacctd_LDADD = libdaemons.la
 if WITH_NFLOG
 sbin_PROGRAMS += uacctd
 uacctd_SOURCES = uacctd.c
-uacctd_CFLAGS  = $(AM_CFLAGS) @NFLOG_CFLAGS@
+uacctd_CFLAGS  = $(AM_CFLAGS) @NFLOG_CFLAGS@ -Wno-error=pointer-sign
 uacctd_LDADD   = libdaemons.la @NFLOG_LIBS@
 endif
-pmacct_SOURCES = pmacct.c
-pmacct_LDADD = libcommon.la
+pmacct_SOURCES = pmacct.c 
+pmacct_LDADD = libcommon.la libdaemons.la
 endif
 if USING_ST_BINS
 sbin_PROGRAMS += pmtelemetryd
