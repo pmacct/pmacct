@@ -32,6 +32,8 @@ if test "x$ac_cv_prog_gcc" = xyes ; then
   CFLAGS="-O2 ${CFLAGS}"
 fi
 
+AC_CHECK_FUNCS([strlcpy strlcat])
+
 dnl set debug level
 AC_MSG_CHECKING([whether to enable debugging compiler options])
 AC_ARG_ENABLE(debug,
@@ -1124,7 +1126,7 @@ AC_ARG_ENABLE(st-bins,
 dnl Checks for library functions.
 AC_TYPE_SIGNAL
 
-AC_CHECK_FUNCS([strlcpy setproctitle mallopt tdestroy])
+AC_CHECK_FUNCS([setproctitle mallopt tdestroy])
 
 dnl Check for SO_REUSEPORT
 AC_CHECK_DECL([SO_REUSEPORT],

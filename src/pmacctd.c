@@ -248,10 +248,10 @@ int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, struct pcap
     dev_ptr->fd = pcap_fileno(dev_ptr->dev_desc);
 
     if (config.nfacctd_pipe_size) {
+#if defined (PCAP_TYPE_linux) || (PCAP_TYPE_snoop)
       socklen_t slen = sizeof(config.nfacctd_pipe_size);
       int x;
 
-#if defined (PCAP_TYPE_linux) || (PCAP_TYPE_snoop)
       Setsocksize(pcap_fileno(dev_ptr->dev_desc), SOL_SOCKET, SO_RCVBUF, &config.nfacctd_pipe_size, slen);
       getsockopt(pcap_fileno(dev_ptr->dev_desc), SOL_SOCKET, SO_RCVBUF, &x, &slen);
       Log(LOG_DEBUG, "DEBUG ( %s/core ): pmacctd_pipe_size: obtained=%d target=%d.\n", config.name, x, config.nfacctd_pipe_size);

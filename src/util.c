@@ -1591,7 +1591,7 @@ void *pm_malloc(size_t size)
 
   obj = (unsigned char *) malloc(size);
   if (!obj) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to grab enough memory (requested: %" PRIu64 " bytes). Exiting ...\n",
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to grab enough memory (requested: %lu bytes). Exiting ...\n",
     config.name, config.type, size);
     exit_gracefully(1);
   }
@@ -2242,7 +2242,7 @@ void custom_primitive_header_print(char *out, int outlen, struct custom_primitiv
 
 void custom_primitive_value_print(char *out, int outlen, u_char *in, struct custom_primitive_ptrs *cp_entry, int formatted)
 {
-  char format[VERYSHORTBUFLEN];
+  char format[SHORTBUFLEN];
 
   if (in && out && cp_entry) {
     memset(out, 0, outlen); 

@@ -35,6 +35,9 @@
 #include "ndpi/ndpi.h"
 #endif
 
+/* Global variables */
+mongo db_conn;
+
 /* Functions */
 void mongodb_legacy_warning(int pipe_fd, struct configuration *cfgptr, void *ptr) 
 {
@@ -57,10 +60,9 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   unsigned char *pipebuf;
   struct pollfd pfd;
   struct insert_data idata;
-  int timeout, refresh_timeout, ret, num, recv_budget, poll_bypass;
+  int refresh_timeout, ret, num, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
-  struct plugins_list_entry *plugin_data = ((struct channels_list_entry *)ptr)->plugin;
   int datasize = ((struct channels_list_entry *)ptr)->datasize;
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   pid_t core_pid = ((struct channels_list_entry *)ptr)->core_pid;
@@ -93,8 +95,6 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   if (!config.mongo_insert_batch)
     config.mongo_insert_batch = DEFAULT_MONGO_INSERT_BATCH;
-
-  timeout = config.sql_refresh_time*1000;
 
   /* setting function pointers */
   if (config.what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET))
@@ -205,7 +205,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           else {
             rg_err_count++;
             if (config.debug || (rg_err_count > MAX_RG_COUNT_ERR)) {
-              Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected (plugin_buffer_size=%llu plugin_pipe_size=%llu).\n",
+              Log(LOG_WARNING, "WARN ( %s/%s ): Missing data detected (plugin_buffer_size=%" PRIu64 "plugin_pipe_size=%" PRIu64 ").\n",
                         config.name, config.type, config.buffer_size, config.pipe_size);
               Log(LOG_WARNING, "WARN ( %s/%s ): Increase values or look for plugin_buffer_size, plugin_pipe_size in CONFIG-KEYS document.\n\n",
                         config.name, config.type);
@@ -238,7 +238,7 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       data = (struct pkt_data *) (pipebuf+sizeof(struct ch_buf_hdr));
 
       if (config.debug_internal_msg) 
-        Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received len=%llu seq=%u num_entries=%u\n",
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): buffer received len=%" PRIu64 "seq=%u num_entries=%u\n",
                 config.name, config.type, ((struct ch_buf_hdr *)pipebuf)->len, seq,
                 ((struct ch_buf_hdr *)pipebuf)->num);
 
@@ -362,7 +362,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
     dyn_table_time_only = FALSE;
   }
 
-  bson_batch = (bson **) malloc(sizeof(bson *) * index);
+  bson_batch = malloc(sizeof(bson *) * index);
   if (!bson_batch) {
     Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed: bson_batch\n", config.name, config.type);
     return;
@@ -933,7 +933,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
   if (pqq_ptr) goto start;
 
   duration = time(NULL)-start;
-  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %u) ***\n",
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %lu) ***\n",
 		config.name, config.type, writer_pid, qn, saved_index, duration);
 
   if (config.sql_trigger_exec && !safe_action) P_trigger_exec(config.sql_trigger_exec); 

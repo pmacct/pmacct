@@ -611,6 +611,7 @@ process_lsp (int level, struct isis_circuit *circuit, u_char * ssnpa)
 
   /* Checksum sanity check - FIXME: move to correct place */
   /* 12 = sysid+pdu+remtime */
+/*
   if (iso_csum_verify (STREAM_PNT (circuit->rcv_stream) + 4,
 		       ntohs (hdr->pdu_len) - 12, &hdr->checksum))
     {
@@ -620,6 +621,7 @@ process_lsp (int level, struct isis_circuit *circuit, u_char * ssnpa)
 
       return ISIS_WARNING;
     }
+*/
 
   /* 7.3.15.1 a) 1 - external domain circuit will discard lsps */
   if (circuit->ext_domain)
@@ -1419,12 +1421,12 @@ send_hello (struct isis_circuit *circuit, int level)
   else
     {
       hello_hdr.prio = circuit->u.bc.priority[level - 1];
-      if (level == 1 && circuit->u.bc.l1_desig_is)
+      if (level == 1 /* && circuit->u.bc.l1_desig_is */)
 	{
 	  memcpy (hello_hdr.lan_id, circuit->u.bc.l1_desig_is,
 		  ISIS_SYS_ID_LEN + 1);
 	}
-      else if (level == 2 && circuit->u.bc.l2_desig_is)
+      else if (level == 2 /* && circuit->u.bc.l2_desig_is */)
 	{
 	  memcpy (hello_hdr.lan_id, circuit->u.bc.l2_desig_is,
 		  ISIS_SYS_ID_LEN + 1);
