@@ -297,9 +297,9 @@ int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, struct pcap
 int main(int argc,char **argv, char **envp)
 {
   /* pcap library stuff */
-  char errbuf[PCAP_ERRBUF_SIZE];
   struct pcap_pkthdr pkt_hdr;
   const u_char *pkt_body;
+  pcap_if_t *pcap_ifs = NULL;
 
   int index, index_rr = 0, logf, ret;
   int pcap_savefile_round = 0;
@@ -936,13 +936,18 @@ int main(int argc,char **argv, char **envp)
   /* If any device/savefile have been specified, choose a suitable device
      where to listen for traffic */
   if (!config.pcap_if && !config.pcap_savefile && !config.pcap_interfaces_map) {
+    char errbuf[PCAP_ERRBUF_SIZE];
+
     Log(LOG_WARNING, "WARN ( %s/core ): Selecting a suitable devices.\n", config.name);
-    config.pcap_if = pcap_lookupdev(errbuf);
-    if (!config.pcap_if) {
-      Log(LOG_ERR, "ERROR ( %s/core ): Unable to find a suitable devices. Exiting.\n", config.name);
+
+    ret = pcap_findalldevs(&pcap_ifs, errbuf);
+    if (ret == ERR || !pcap_ifs) {
+      Log(LOG_ERR, "ERROR ( %s/core ): Unable to get interfaces list: %s. Exiting.\n", config.name, errbuf);
       exit_gracefully(1);
     }
-    else Log(LOG_DEBUG, "DEBUG ( %s/core ): device is %s\n", config.name, config.pcap_if);
+
+    config.pcap_if = pcap_ifs[0].name; 
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): device is %s\n", config.name, config.pcap_if);
   }
 
   /* reading filter; if it exists, we'll take an action later */
