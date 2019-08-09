@@ -163,7 +163,8 @@ void decodeLinkLayer(SFSample *sample)
   -----------------___________________________------------------
 */
 
-void decodeIPLayer4(SFSample *sample, u_char *ptr, u_int32_t ipProtocol) {
+void decodeIPLayer4(SFSample *sample, u_char *ptr, u_int32_t ipProtocol)
+{
   u_char *end = sample->header + sample->headerLen;
   if(ptr > (end - 8)) return; // not enough header bytes left
   switch(ipProtocol) {
@@ -539,6 +540,7 @@ void readExtendedGateway(SFSample *sample)
     for (idx = 0, len_tot = 0; idx < sample->dst_as_path_len; idx++) {
       u_int32_t seg_len, i;
 
+      getData32(sample); /* seg_type */
       seg_len = getData32(sample);
 
       for (i = 0; i < seg_len; i++) {
@@ -712,6 +714,7 @@ void readExtendedMplsTunnel(SFSample *sample)
   
   getString(sample, tunnel_name, SA_MAX_TUNNELNAME_LEN); 
   sample->mpls_tunnel_id = getData32(sample);
+  getData32(sample); /* tunnel_cos */
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_MPLS_TUNNEL;
 }
@@ -728,6 +731,7 @@ void readExtendedMplsVC(SFSample *sample)
 
   getString(sample, vc_name, SA_MAX_VCNAME_LEN); 
   sample->mpls_vll_vc_id = getData32(sample);
+  getData32(sample); /* vc_cos */
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_MPLS_VC;
 }
@@ -743,6 +747,7 @@ void readExtendedMplsFTN(SFSample *sample)
   char ftn_descr[SA_MAX_FTN_LEN+1];
 
   getString(sample, ftn_descr, SA_MAX_FTN_LEN);
+  getData32(sample); /* ftn_mask */
 
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_MPLS_FTN;
 }
@@ -754,6 +759,7 @@ void readExtendedMplsFTN(SFSample *sample)
 
 void readExtendedMplsLDP_FEC(SFSample *sample)
 {
+  getData32(sample); /* fec_addr_prefix_len */
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_MPLS_LDP_FEC;
 }
 
