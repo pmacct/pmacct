@@ -3065,8 +3065,7 @@ int Recv(int sd, unsigned char **buf)
 
 int check_data_sizes(struct query_header *qh, struct pkt_data *acc_elem)
 {
-  if (!acc_elem)
-    return -1;
+  if (!acc_elem) return FALSE;
 
   if (qh->cnt_sz != sizeof(acc_elem->pkt_len)) {
     printf("ERROR: Counter sizes mismatch: daemon: %d  client: %d\n", qh->cnt_sz*8, (int)sizeof(acc_elem->pkt_len)*8);
@@ -3082,7 +3081,7 @@ int check_data_sizes(struct query_header *qh, struct pkt_data *acc_elem)
     return (qh->ip_sz-sizeof(acc_elem->primitives.src_ip));
   } 
 
-  return 0;
+  return FALSE;
 }
 
 /* sort the (sub)array v from start to end */
