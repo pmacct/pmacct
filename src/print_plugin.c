@@ -38,7 +38,6 @@
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #endif
-#include "sql_common.h"
 #include "net_aggr.h"
 #include "ports_aggr.h"
 #include "preprocess-internal.h"
