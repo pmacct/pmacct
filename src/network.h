@@ -381,7 +381,7 @@ struct host_addr {
     struct in_addr ipv4;
     struct in6_addr ipv6;
 #if defined ENABLE_PLABEL
-    u_char plabel[PREFIX_LABEL_LEN];
+    char plabel[PREFIX_LABEL_LEN];
 #endif
   } address;
 };

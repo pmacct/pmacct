@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2018 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -58,7 +58,7 @@ struct networks_table_entry {
   as_t as;
   struct host_addr nh;
 #if defined ENABLE_PLABEL
-  u_char plabel[PREFIX_LABEL_LEN];
+  char plabel[PREFIX_LABEL_LEN];
 #endif
   struct networks_table childs_table;
 };
@@ -76,7 +76,7 @@ struct networks6_table_entry {
   as_t as;
   struct host_addr nh;
 #if defined ENABLE_PLABEL
-  u_char plabel[PREFIX_LABEL_LEN];
+  char plabel[PREFIX_LABEL_LEN];
 #endif
   struct networks_table childs_table;
 };

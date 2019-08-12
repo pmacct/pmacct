@@ -136,7 +136,7 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
 
 #if defined ENABLE_PLABEL
           if (fields >= 3) {
-            char *plabel, *endptr;
+            char *plabel;
 
 	    memset(tmpt->table[eff_rows].plabel, 0, PREFIX_LABEL_LEN);
 
@@ -1450,7 +1450,7 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
 
 #if defined ENABLE_PLABEL
           if (fields >= 3) {
-            char *plabel, *endptr;
+            char *plabel;
 
             delim = strchr(bufptr, ',');
             plabel = bufptr;
