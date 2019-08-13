@@ -1914,8 +1914,13 @@ int pretag_comms_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_sample_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
+  u_int8_t flow_type = pptrs->flow_type;
 
-  if (entry->key.sample_type.n == pptrs->flow_type) return (FALSE | entry->key.sample_type.neg); 
+  if (flow_type >= NF9_FTYPE_TRAFFIC && flow_type <= NF9_FTYPE_TRAFFIC_MAX) {
+    flow_type = NF9_FTYPE_TRAFFIC;
+  }
+
+  if (entry->key.sample_type.n == flow_type) return (FALSE | entry->key.sample_type.neg); 
   else return (TRUE ^ entry->key.sample_type.neg);
 }
 
