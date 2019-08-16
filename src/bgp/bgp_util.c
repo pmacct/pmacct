@@ -729,8 +729,6 @@ void bgp_peer_xconnect_print(struct bgp_peer *peer, char *buf, int len)
 void bgp_peer_info_delete(struct bgp_peer *peer)
 {
   struct bgp_rt_structs *inter_domain_routing_db = bgp_select_routing_db(peer->type);
-  struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
-  (void)bms; //TODO treat errors?
   struct bgp_table *table;
   afi_t afi;
   safi_t safi;

@@ -2813,7 +2813,7 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int16_t srate = 0, is_sampled = 0;
+  u_int16_t srate = 0;
   u_int16_t t16 = 0;
   u_int32_t sampler_id = 0, sample_pool = 0, t32 = 0;
   u_int8_t t8 = 0;
@@ -2901,8 +2901,7 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
       }
       break;
     case 5:
-      is_sampled = ( ntohs(hdr->sampling) & 0xC000 );
-      (void)is_sampled; //TODO do something?
+      /* is_sampled = ( ntohs(hdr->sampling) & 0xC000 ); */
       srate = ( ntohs(hdr->sampling) & 0x3FFF );
       if (srate) pdata->primitives.sampling_rate = srate;
       break;

@@ -224,13 +224,11 @@ search_class_id_status_table(struct xflow_status_entry_class *centry, pm_class_t
   pm_class_t needle, haystack;
 
   needle = ntohl(class_id);
-  (void)needle; //TODO: do something?
 
   while (centry) {
     haystack = ntohl(centry->class_id);
-    (void)haystack; //TODO: do something?
 
-    if (centry->class_id == class_id) return centry;
+    if (haystack == needle) return centry;
     centry = centry->next;
   }
 

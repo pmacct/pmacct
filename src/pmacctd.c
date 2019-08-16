@@ -320,7 +320,7 @@ int main(int argc,char **argv, char **envp)
 
   /* select() stuff */
   fd_set read_descs, bkp_read_descs;
-  int select_fd, bkp_select_fd, select_num;
+  int select_fd, bkp_select_fd;
 
   /* getopt() stuff */
   extern char *optarg;
@@ -1230,8 +1230,7 @@ int main(int argc,char **argv, char **envp)
       select_fd = bkp_select_fd;
       memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
 
-      select_num = select(select_fd, &read_descs, NULL, NULL, NULL);
-      (void)select_num; //TODO treat?
+      select(select_fd, &read_descs, NULL, NULL, NULL);
 
       if (reload_map_pmacctd) {
 	struct pcap_interface *pcap_if_entry;

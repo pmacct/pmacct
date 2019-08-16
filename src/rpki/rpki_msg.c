@@ -277,8 +277,6 @@ void rpki_rtr_parse_ipv4_prefix(struct rpki_rtr_handle *cache, struct rpki_rtr_i
   struct bgp_misc_structs *m_data = rpki_misc_db;
   struct prefix_ipv4 p;
   as_t asn;
-  int ret;
-  (void)ret; //TODO check all ret errors
 
   memset(&p, 0, sizeof(p));
   p.family = AF_INET;
@@ -297,12 +295,12 @@ void rpki_rtr_parse_ipv4_prefix(struct rpki_rtr_handle *cache, struct rpki_rtr_i
 
   switch(p4m->flags) {
   case RPKI_RTR_PREFIX_FLAGS_WITHDRAW:
-    ret = rpki_info_delete(&rpki_peer, (struct prefix *) &p, asn, p4m->max_len,
+    rpki_info_delete(&rpki_peer, (struct prefix *) &p, asn, p4m->max_len,
 			rpki_roa_db->rib[AFI_IP][SAFI_UNICAST],
 			rpki_roa_db->rib[AFI_IP6][SAFI_UNICAST]);
     break;
   case RPKI_RTR_PREFIX_FLAGS_ANNOUNCE:
-    ret = rpki_info_add(&rpki_peer, (struct prefix *) &p, asn, p4m->max_len,
+    rpki_info_add(&rpki_peer, (struct prefix *) &p, asn, p4m->max_len,
 			rpki_roa_db->rib[AFI_IP][SAFI_UNICAST],
 			rpki_roa_db->rib[AFI_IP6][SAFI_UNICAST]);
     break;
@@ -317,8 +315,6 @@ void rpki_rtr_parse_ipv6_prefix(struct rpki_rtr_handle *cache, struct rpki_rtr_i
   struct bgp_misc_structs *m_data = rpki_misc_db;
   struct prefix_ipv6 p;
   as_t asn;
-  int ret;
-  (void)ret; //TODO check all ret errors
 
   memset(&p, 0, sizeof(p));
   p.family = AF_INET6;
@@ -337,12 +333,12 @@ void rpki_rtr_parse_ipv6_prefix(struct rpki_rtr_handle *cache, struct rpki_rtr_i
 
   switch(p6m->flags) {
   case RPKI_RTR_PREFIX_FLAGS_WITHDRAW:
-    ret = rpki_info_delete(&rpki_peer, (struct prefix *) &p, asn, p6m->max_len,
+    rpki_info_delete(&rpki_peer, (struct prefix *) &p, asn, p6m->max_len,
 			rpki_roa_db->rib[AFI_IP][SAFI_UNICAST],
 			rpki_roa_db->rib[AFI_IP6][SAFI_UNICAST]);
     break;
   case RPKI_RTR_PREFIX_FLAGS_ANNOUNCE:
-    ret = rpki_info_add(&rpki_peer, (struct prefix *) &p, asn, p6m->max_len,
+    rpki_info_add(&rpki_peer, (struct prefix *) &p, asn, p6m->max_len,
 			rpki_roa_db->rib[AFI_IP][SAFI_UNICAST],
 			rpki_roa_db->rib[AFI_IP6][SAFI_UNICAST]);
     break;

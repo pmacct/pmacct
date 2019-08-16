@@ -109,7 +109,6 @@ int compare_accounting_structure(struct acc *elem, struct primitives_ptrs *prim_
 
   if (ptun && elem->ptun) res_tun = memcmp(elem->ptun, ptun, sizeof(struct pkt_tunnel_primitives));
   else res_tun = FALSE;
-  (void)res_tun; //TODO check error
 
   if (pcust && elem->pcust) res_cust = memcmp(elem->pcust, pcust, config.cpptrs.len);
   else res_cust = FALSE;
@@ -117,7 +116,7 @@ int compare_accounting_structure(struct acc *elem, struct primitives_ptrs *prim_
   if (pvlen && elem->pvlen) res_vlen = vlen_prims_cmp(elem->pvlen, pvlen);
   else res_vlen = FALSE;
 
-  return res_data | res_bgp | res_lbgp | res_nat | res_mpls | res_cust | res_vlen;
+  return res_data | res_bgp | res_lbgp | res_nat | res_mpls | res_tun | res_cust | res_vlen;
 }
 
 void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)

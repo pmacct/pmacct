@@ -53,7 +53,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   unsigned char *pipebuf;
   struct pollfd pfd;
   struct insert_data idata;
-  int refresh_timeout, ret, num, is_event, recv_budget, poll_bypass;
+  int refresh_timeout, ret, num, recv_budget, poll_bypass;
   struct ring *rg = &((struct channels_list_entry *)ptr)->rg;
   struct ch_status *status = ((struct channels_list_entry *)ptr)->status;
   int datasize = ((struct channels_list_entry *)ptr)->datasize;
@@ -87,12 +87,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   pipebuf = (unsigned char *) pm_malloc(config.buffer_size);
   memset(pipebuf, 0, config.buffer_size);
 
-  is_event = FALSE;
-  if (!config.print_output)
-    config.print_output = PRINT_OUTPUT_FORMATTED;
-  else if (config.print_output & PRINT_OUTPUT_EVENT)
-    is_event = TRUE;
-  (void)is_event; //TODO do something with is_event??
+  if (!config.print_output) config.print_output = PRINT_OUTPUT_FORMATTED;
 
   refresh_timeout = config.sql_refresh_time*1000;
 

@@ -61,7 +61,6 @@ void rpki_daemon()
   struct bgp_misc_structs *m_data = rpki_misc_db;
   afi_t afi;
   safi_t safi;
-  int ret;
 
   /* select() stuff */
   struct timeval select_timeout;
@@ -97,10 +96,9 @@ void rpki_daemon()
   }
 
   if (config.rpki_roas_file) {
-    ret = rpki_roas_file_load(config.rpki_roas_file,
+    rpki_roas_file_load(config.rpki_roas_file,
 			rpki_roa_db->rib[AFI_IP][SAFI_UNICAST],
 			rpki_roa_db->rib[AFI_IP6][SAFI_UNICAST]);
-    (void)ret; //TODO check error
   }
 
   if (config.rpki_rtr_cache) {
