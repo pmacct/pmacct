@@ -4,7 +4,7 @@
 
 rm -f libpcap-1.9.0.tar.gz
 
-wget -y https://www.tcpdump.org/release/libpcap-1.9.0.tar.gz
+wget https://www.tcpdump.org/release/libpcap-1.9.0.tar.gz
 gunzip libpcap-1.9.0.tar.gz
 tar xvf libpcap-1.9.0.tar
 cd libpcap-1.9.0
