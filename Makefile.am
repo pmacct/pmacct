@@ -60,7 +60,7 @@ pmacct_sql__DATA = sql/pmacct-create-db_bgp_v1.mysql sql/pmacct-create-db.pgsql 
 	sql/pmacct-create-table_v4.pgsql sql/pmacct-create-table_v4.sqlite3 \
 	sql/pmacct-create-table_v5.pgsql sql/pmacct-create-table_v5.sqlite3 \
 	sql/pmacct-create-table_v6.pgsql sql/pmacct-create-table_v6.sqlite3 \
-	sql/pmacct-create-table_v7.pgsql sql/pmacct-create-table_v7.sqlite3 \
+	sql/pmacct-create-table_v7_v8.pgsql sql/pmacct-create-table_v7.sqlite3 \
 	sql/pmacct-create-table_v8.sqlite3 sql/pmacct-create-table_v9.pgsql \
 	sql/pmacct-create-table_v9.sqlite3 sql/README.64bit sql/README.cos \
 	sql/README.custom_primitives sql/README.etype sql/README.export_proto \
