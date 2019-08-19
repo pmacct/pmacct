@@ -19,8 +19,8 @@ rm src/nfacctd
 
 ./autogen.sh
 ./configure \
-    --with-pcap-libs=$HOME/data/non-repos/libpcap-1.9.0 \
-    --with-pcap-includes=$HOME/data/non-repos/libpcap-1.9.0
+    --with-pcap-libs=./libpcap-1.9.0 \
+    --with-pcap-includes=./libpcap-1.9.0
 make clean
 make
 
