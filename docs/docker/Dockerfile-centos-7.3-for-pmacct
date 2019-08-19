@@ -6,7 +6,6 @@ RUN yum install -y \
     sudo \
     wget \
     epel-release \
-    java-1.8.0 \
     python-devel \
     libffi-devel \
     zlib-devel \
@@ -17,8 +16,6 @@ RUN yum install -y \
     glibc-headers \
     glibc-lib \
     git \
-    openvpn \
-    easy-rsa​ \
     gcc-multilib \
     glibc-devel \
     gcc \

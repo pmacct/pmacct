@@ -1,4 +1,5 @@
 # Introduction
+
 These are the benefits of building pmacct using Docker:
 - you can build pmacct in a server in which the host linux distro, version, and dependencies are all different from the equivalent in the targetted deployment server.
 - you can build pmacct inside a Jenkins server for which you cannot/dont want to control the linux distro, version, and dependencies
@@ -56,13 +57,15 @@ by keeping one Dockerfile per target.
         -v /etc/resolv.conf:/etc/resolv.conf \
         -w $(pwd) \
         centos7.3-for-pmacct:latest
-            
-# Build from inside the docker container
+
+
+## Build from inside the docker container
     
-    ./build.sh
+    docs/docker/build.sh
     exit
-    
-# Verify the image is good
+
+
+## Verify the image is good
 
 Outside the container execute pmacct with the version command line option
 

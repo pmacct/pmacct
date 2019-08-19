@@ -1,7 +1,10 @@
 # execute this from the root directory in the pmacct git repo workspace
 
 # build libcap
-wget https://www.tcpdump.org/release/libpcap-1.9.0.tar.gz
+
+rm -f libpcap-1.9.0.tar.gz
+
+wget -y https://www.tcpdump.org/release/libpcap-1.9.0.tar.gz
 gunzip libpcap-1.9.0.tar.gz
 tar xvf libpcap-1.9.0.tar
 cd libpcap-1.9.0
@@ -11,6 +14,9 @@ make
 cd ..
 
 # build pmacct
+
+rm src/nfacctd
+
 ./autogen.sh
 ./configure \
     --with-pcap-libs=$HOME/data/non-repos/libpcap-1.9.0 \
