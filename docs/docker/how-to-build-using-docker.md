@@ -34,7 +34,7 @@ by keeping one Dockerfile per target.
     cd ~
     git clone https://github.com/pmacct/pmacct.git
     cd pmacct 
-    git chechout 1.7.3
+    git checkout 1.7.3
 
 
 ## Start the docker container

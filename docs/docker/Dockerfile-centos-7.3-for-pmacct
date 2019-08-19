@@ -4,6 +4,7 @@ FROM centos:7.3.1611
 
 RUN yum install -y \
     sudo \
+    wget \
     epel-release \
     java-1.8.0 \
     python-devel \
