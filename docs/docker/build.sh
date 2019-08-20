@@ -2,7 +2,7 @@
 
 # build libcap
 
-rm -f libpcap-1.9.0.tar.gz
+rm -f libpcap-1.9.0.tar*
 
 wget https://www.tcpdump.org/release/libpcap-1.9.0.tar.gz
 gunzip libpcap-1.9.0.tar.gz
