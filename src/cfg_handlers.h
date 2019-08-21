@@ -70,6 +70,7 @@ extern int cfg_key_sql_table(char *, char *, char *);
 extern int cfg_key_sql_table_schema(char *, char *, char *);
 extern int cfg_key_sql_table_version(char *, char *, char *);
 extern int cfg_key_sql_table_type(char *, char *, char *);
+extern int cfg_key_sql_conn_ca_file(char *, char *, char *);
 extern int cfg_key_sql_host(char *, char *, char *);
 extern int cfg_key_sql_port(char *, char *, char *);
 extern int cfg_key_sql_data(char *, char *, char *);

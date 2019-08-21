@@ -92,6 +92,7 @@ static const struct _dictionary_line dictionary[] = {
   {"sql_table_schema", cfg_key_sql_table_schema},
   {"sql_table_version", cfg_key_sql_table_version},
   {"sql_table_type", cfg_key_sql_table_type},
+  {"sql_conn_ca_file", cfg_key_sql_conn_ca_file}, 
   {"sql_host", cfg_key_sql_host},
   {"sql_port", cfg_key_sql_port},
   {"sql_data", cfg_key_sql_data},
