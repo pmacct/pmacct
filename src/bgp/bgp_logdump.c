@@ -346,6 +346,13 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
   struct bgp_peer_log *log_ptr;
   int ret = 0, amqp_ret = 0, kafka_ret = 0;
 
+#if defined WITH_RABBITMQ
+  void *amqp_log_ptr = NULL;
+#endif
+#if defined WITH_KAFKA
+  void *kafka_log_ptr = NULL;
+#endif
+
 #if defined(WITH_KAFKA) || defined(WITH_RABBITMQ)
   pid_t writer_pid = getpid();
 #endif
@@ -363,6 +370,12 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 #endif
 
   log_ptr = peer->log;
+#ifdef WITH_RABBITMQ
+  amqp_log_ptr = peer->log->amqp_host;
+#endif
+#ifdef WITH_KAFKA
+  kafka_log_ptr = peer->log->kafka_host;
+#endif
 
   assert(peer->log->refcnt);
   peer->log->refcnt--;
@@ -393,7 +406,6 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
       write_and_free_json(log_ptr->fd, obj);
 
 #ifdef WITH_RABBITMQ
-    void *amqp_log_ptr = NULL;
     if (bms->msglog_amqp_routing_key) {
       add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
       amqp_ret = write_and_free_json_amqp(amqp_log_ptr, obj);
@@ -402,7 +414,6 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 #endif
 
 #ifdef WITH_KAFKA
-    void *kafka_log_ptr = peer->log->kafka_host;
     if (bms->msglog_kafka_topic) {
       add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
       kafka_ret = write_and_free_json_kafka(kafka_log_ptr, obj);
