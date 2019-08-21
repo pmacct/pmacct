@@ -773,7 +773,8 @@ ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockadd
       Log(LOG_INFO, "INFO ( %s/core ): finished reading PCAP capture file\n", config.name);
       wait(NULL);
     }
-    else stop_all_childs();
+
+    stop_all_childs();
   }
   else {
     Log(LOG_ERR, "ERROR ( %s/core ): unexpected return code from pcap_next_ex(). Exiting.\n", config.name);
