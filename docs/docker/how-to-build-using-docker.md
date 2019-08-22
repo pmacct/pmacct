@@ -35,38 +35,15 @@ by keeping one Dockerfile per target.
     cd ~
     git clone https://github.com/pmacct/pmacct.git
     cd pmacct 
+    
+    # change branch, optional step
     git checkout 1.7.3
 
 
-## Start the docker container
+## Start the container, build inside and dispose of it 
 
-    docker build \
-        -f docs/docker/Dockerfile-centos-7.3-for-pmacct \
-        -t centos7.3-for-pmacct  .
-        
-    docker run \
-        --rm -it \
-        --network host \
-        --user $(id -u) \
-        -v $HOME:$HOME \
-        -v /etc/group:/etc/group \
-        -v /etc/passwd:/etc/passwd \
-        -v /etc/shadow:/etc/shadow \
-        -v /etc/sudoers:/etc/sudoers \
-        -v /etc/hosts:/etc/hosts \
-        -v /etc/resolv.conf:/etc/resolv.conf \
-        -w $(pwd) \
-        centos7.3-for-pmacct:latest
+    docs/docker/build_outside.sh     
 
-
-## Build from inside the docker container
-    
-    docs/docker/build.sh
-    exit
-
-
-## Verify the image is good
-
-Outside the container execute pmacct with the version command line option
+## Verify the image was built as expected 
 
     src/nfacctd -V
