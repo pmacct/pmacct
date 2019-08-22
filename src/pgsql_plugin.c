@@ -794,10 +794,10 @@ int PG_compose_static_queries()
   return primitives;
 }
 
-void PG_compose_conn_string(struct DBdesc *db, char *host, int port)
+void PG_compose_conn_string(struct DBdesc *db, char *host, int port, char *ca_file)
 {
   char *string;
-  int slen = SRVBUFLEN;
+  int slen = LONGLONGSRVBUFLEN;
   
   if (!db->conn_string) {
     db->conn_string = (char *) malloc(slen);
@@ -813,6 +813,7 @@ void PG_compose_conn_string(struct DBdesc *db, char *host, int port)
 
     if (host) snprintf(string, slen, " host=%s", host);
     if (port) snprintf(string, slen, " port=%u", port);
+    if (ca_file) snprintf(string, slen, " sslmode=verify-full sslrootcert=%s", ca_file);
   }
 }
 
@@ -891,11 +892,11 @@ int PG_affected_rows(PGresult *result)
 void PG_create_backend(struct DBdesc *db)
 {
   if (db->type == BE_TYPE_PRIMARY) {
-    PG_compose_conn_string(db, config.sql_host, config.sql_port);
+    PG_compose_conn_string(db, config.sql_host, config.sql_port, config.sql_conn_ca_file);
   }
   else if (db->type == BE_TYPE_BACKUP) {
     if (!config.sql_backup_host) return;
-    else PG_compose_conn_string(db, config.sql_backup_host, config.sql_port);
+    else PG_compose_conn_string(db, config.sql_backup_host, config.sql_port, config.sql_conn_ca_file);
   }
 }
 

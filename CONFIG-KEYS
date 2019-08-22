@@ -1133,8 +1133,9 @@ DESC:		This switch makes sense only when using PostgreSQL plugin and supplied de
 DEFAULT:	typed
 
 KEY:		sql_conn_ca_file
-DESC:		In MySQL plugin, this is the path name of the Certificate Authority (CA) certificate
-		file. If used, it must specify the same certificate used by the server. 
+DESC:		In MySQL and PostgreSQL plugins, this is the path name of the Certificate Authority
+		(CA) certificate file. If used, it must specify the same certificate used by the
+		server. 
 DEFAULT:	none
 
 KEY:	 	sql_host
