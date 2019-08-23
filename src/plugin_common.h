@@ -134,9 +134,4 @@ extern int (*basetime_cmp)(struct timeval *, struct timeval *);
 extern struct timeval basetime, ibasetime, new_basetime;
 extern time_t timeslot;
 extern int dyn_table, dyn_table_time_only;
-
-#ifdef WITH_AVRO
-extern avro_schema_t avro_acct_schema;
-#endif
-
 #endif //PLUGIN_COMMON_H

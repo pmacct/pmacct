@@ -401,6 +401,12 @@ void skinny_bgp_daemon_online()
 #else
     Log(LOG_WARNING, "WARN ( %s/%s ): bgp_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", config.name, bgp_misc_db->log_str);
 #endif
+
+#ifdef WITH_AVRO
+    if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_AVRO) {
+      avro_bgp_msglog_schema = avro_schema_build_bgp(BGP_LOGDUMP_ET_LOG);
+    }
+#endif
   }
 
   if (bgp_misc_db->dump_backend_methods) {
@@ -408,6 +414,12 @@ void skinny_bgp_daemon_online()
     if (!config.bgp_table_dump_output) config.bgp_table_dump_output = PRINT_OUTPUT_JSON;
 #else
     Log(LOG_WARNING, "WARN ( %s/%s ): bgp_table_dump_output set to json but will produce no output (missing --enable-jansson).\n", config.name, bgp_misc_db->log_str);
+#endif
+
+#ifdef WITH_AVRO
+    if (config.bgp_table_dump_output == PRINT_OUTPUT_AVRO) {
+      avro_bgp_dump_schema = avro_schema_build_bgp(BGP_LOGDUMP_ET_DUMP);
+    }
 #endif
   }
 

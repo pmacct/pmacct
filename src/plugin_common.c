@@ -48,10 +48,6 @@ struct timeval basetime, ibasetime, new_basetime;
 time_t timeslot;
 int dyn_table, dyn_table_time_only;
 
-#ifdef WITH_AVRO
-avro_schema_t avro_acct_schema;
-#endif
-
 /* Functions */
 void P_set_signals()
 {

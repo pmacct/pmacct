@@ -33,15 +33,18 @@
 #include "ndpi/ndpi.h"
 #endif
 
-/* functions */
 #ifdef WITH_AVRO
+/* global variables */
+avro_schema_t avro_acct_schema;
+
+/* functions */
 avro_schema_t avro_schema_build_flow(u_int64_t wtc, u_int64_t wtc_2)
 {
   avro_schema_t schema = avro_schema_record("acct", NULL);
   avro_schema_t optlong_s = avro_schema_union();
   avro_schema_t optstr_s = avro_schema_union();
 
-  Log(LOG_INFO, "INFO ( %s/%s ): AVRO: building schema.\n", config.name, config.type);
+  Log(LOG_INFO, "INFO ( %s/%s ): AVRO: building acct schema.\n", config.name, config.type);
 
   avro_schema_union_append(optlong_s, avro_schema_null());
   avro_schema_union_append(optlong_s, avro_schema_long());

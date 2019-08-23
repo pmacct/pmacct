@@ -33,6 +33,8 @@
 #ifdef WITH_AVRO
 extern avro_schema_t avro_schema_build_flow(u_int64_t wtc, u_int64_t wtc_2);
 extern void avro_schema_add_writer_id(avro_schema_t);
+extern void add_writer_name_and_pid_avro(avro_value_t, char *, pid_t);
+
 extern avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type,
   struct pkt_primitives *pbase, struct pkt_bgp_primitives *pbgp,
   struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
@@ -41,11 +43,13 @@ extern avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_t
   pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags,
   struct timeval *basetime, struct pkt_stitching *stitch,
   avro_value_iface_t *iface);
-extern void add_writer_name_and_pid_avro(avro_value_t, char *, pid_t);
 extern void write_avro_schema_to_file(char *, avro_schema_t);
 extern char *write_avro_schema_to_memory(avro_schema_t);
 extern char *compose_avro_purge_schema(avro_schema_t, char *);
 extern char *compose_avro_schema_name(char *, char *);
+
+/* global variables */
+extern avro_schema_t avro_acct_schema;
 #endif
 
 #endif //PLUGIN_CMN_AVRO_H

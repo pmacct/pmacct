@@ -70,4 +70,14 @@ extern void bgp_daemon_msglog_init_amqp_host();
 extern void bgp_table_dump_init_amqp_host();
 extern int bgp_daemon_msglog_init_kafka_host();
 extern int bgp_table_dump_init_kafka_host();
+
+#if defined WITH_AVRO
+extern avro_schema_t avro_schema_build_bgp(int);
+#endif
+
+/* global variables */
+#if defined WITH_AVRO
+extern avro_schema_t avro_bgp_msglog_schema, avro_bgp_dump_schema;
+#endif
+
 #endif 

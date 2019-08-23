@@ -32,6 +32,12 @@
 #include "kafka_common.h"
 #endif
 
+/* global variables */
+#if defined WITH_AVRO
+avro_schema_t avro_bgp_msglog_schema, avro_bgp_dump_schema;
+#endif
+
+/* functions */
 int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, safi_t safi,
 		     char *event_type, int output, char **output_data, int log_type)
 {
@@ -1005,5 +1011,67 @@ int bgp_table_dump_init_kafka_host()
 int bgp_table_dump_init_kafka_host()
 {
   return ERR;
+}
+#endif
+
+#if defined WITH_AVRO
+avro_schema_t avro_schema_build_bgp(int type)
+{
+  struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BGP);
+  char *schema_name = NULL;
+
+  avro_schema_t schema;
+  avro_schema_t optlong_s = avro_schema_union();
+  avro_schema_t optstr_s = avro_schema_union();
+
+  if (type != BGP_LOGDUMP_ET_LOG && type != BGP_LOGDUMP_ET_DUMP) return NULL;
+
+  if (type == BGP_LOGDUMP_ET_LOG) {
+    schema_name = malloc(strlen("bgp_msglog"));
+    sprintf(schema_name, "%s", "bgp_msglog");
+  }
+  else {
+    schema_name = malloc(strlen("bgp_dump"));
+    sprintf(schema_name, "%s", "bgp_dump");
+  }
+
+  schema = avro_schema_record(schema_name, NULL);
+  Log(LOG_INFO, "INFO ( %s/%s ): AVRO: building %s schema.\n", config.name, bms->log_str, schema_name);
+
+  avro_schema_union_append(optlong_s, avro_schema_null());
+  avro_schema_union_append(optlong_s, avro_schema_long());
+
+  avro_schema_union_append(optstr_s, avro_schema_null());
+  avro_schema_union_append(optstr_s, avro_schema_string());
+
+  if (type == BGP_LOGDUMP_ET_LOG) {
+    avro_schema_record_field_append(schema, "log_type", avro_schema_string());
+  }
+  avro_schema_record_field_append(schema, "seq", avro_schema_long());
+  avro_schema_record_field_append(schema, "timestamp", avro_schema_string());
+  avro_schema_record_field_append(schema, bms->peer_str, avro_schema_string());
+  avro_schema_record_field_append(schema, bms->peer_port_str, avro_schema_int());
+  avro_schema_record_field_append(schema, "event_type", avro_schema_string());
+
+  avro_schema_record_field_append(schema, "afi", avro_schema_int());
+  avro_schema_record_field_append(schema, "safi", avro_schema_int());
+  avro_schema_record_field_append(schema, "ip_prefix", avro_schema_string());
+  avro_schema_record_field_append(schema, "rd", avro_schema_string());
+
+  avro_schema_record_field_append(schema, "bgp_nexthop", avro_schema_string());
+  avro_schema_record_field_append(schema, "as_path", avro_schema_string());
+  avro_schema_record_field_append(schema, "comms", avro_schema_string());
+  avro_schema_record_field_append(schema, "ecomms", avro_schema_string());
+  avro_schema_record_field_append(schema, "lcomms", avro_schema_string());
+  avro_schema_record_field_append(schema, "origin", avro_schema_string());
+  avro_schema_record_field_append(schema, "local_pref", avro_schema_int());
+  avro_schema_record_field_append(schema, "med", avro_schema_int());
+  avro_schema_record_field_append(schema, "label", avro_schema_string());
+
+  if (config.rpki_roas_file || config.rpki_rtr_cache) {
+    avro_schema_record_field_append(schema, "roa", avro_schema_string());
+  }
+
+  return schema;
 }
 #endif
