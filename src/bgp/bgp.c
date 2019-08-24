@@ -447,6 +447,15 @@ void skinny_bgp_daemon_online()
     if (config.bgp_table_dump_kafka_topic) bgp_table_dump_init_kafka_host();
   }
 
+#ifdef WITH_AVRO
+  avro_bgp_buf = malloc(LARGEBUFLEN);
+  if (!avro_bgp_buf) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_bgp_buf). Exiting ..\n", config.name, config.type);
+    exit_gracefully(1);
+  }
+  else memset(avro_bgp_buf, 0, LARGEBUFLEN);
+#endif
+
   select_fd = bkp_select_fd = (config.bgp_sock + 1);
   recalc_fds = FALSE;
 
