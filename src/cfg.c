@@ -185,8 +185,8 @@ static const struct _dictionary_line dictionary[] = {
   {"amqp_vhost", cfg_key_amqp_vhost},
   {"amqp_markers", cfg_key_print_markers},
   {"amqp_output", cfg_key_message_broker_output},
-  {"amqp_avro_schema_routing_key", cfg_key_amqp_avro_schema_routing_key},
-  {"amqp_avro_schema_refresh_time", cfg_key_amqp_avro_schema_refresh_time},
+  {"amqp_avro_schema_routing_key", cfg_key_amqp_avro_schema_routing_key}, /* XXX: Legacy key */
+  {"amqp_avro_schema_refresh_time", cfg_key_amqp_avro_schema_refresh_time}, /* XXX: Legacy key */
   {"amqp_trigger_exec", cfg_key_sql_trigger_exec},
   {"kafka_refresh_time", cfg_key_sql_refresh_time},
   {"kafka_history", cfg_key_sql_history},
