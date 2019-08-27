@@ -36,6 +36,9 @@
 #if defined WITH_ZMQ
 #include "zmq_common.h"
 #endif
+#if defined WITH_AVRO
+#include "plugin_cmn_avro.h"
+#endif
 
 /* Global variables */
 thread_pool_t *bgp_pool;
@@ -405,6 +408,10 @@ void skinny_bgp_daemon_online()
 #ifdef WITH_AVRO
     if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_AVRO) {
       avro_bgp_msglog_schema = avro_schema_build_bgp(BGP_LOGDUMP_ET_LOG);
+
+      if (config.nfacctd_bgp_msglog_avro_schema_file) {
+	write_avro_schema_to_file(config.nfacctd_bgp_msglog_avro_schema_file, avro_bgp_msglog_schema);
+      }
     }
 #endif
   }
@@ -419,6 +426,10 @@ void skinny_bgp_daemon_online()
 #ifdef WITH_AVRO
     if (config.bgp_table_dump_output == PRINT_OUTPUT_AVRO) {
       avro_bgp_dump_schema = avro_schema_build_bgp(BGP_LOGDUMP_ET_DUMP);
+
+      if (config.bgp_table_dump_avro_schema_file) {
+	write_avro_schema_to_file(config.bgp_table_dump_avro_schema_file, avro_bgp_dump_schema);
+      }
     }
 #endif
   }

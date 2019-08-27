@@ -286,6 +286,7 @@ struct configuration {
   int nfacctd_bgp;
   int nfacctd_bgp_msglog_output;
   char *nfacctd_bgp_msglog_file;
+  char *nfacctd_bgp_msglog_avro_schema_file;
   char *nfacctd_bgp_msglog_amqp_host;
   char *nfacctd_bgp_msglog_amqp_vhost;
   char *nfacctd_bgp_msglog_amqp_user;
@@ -350,6 +351,7 @@ struct configuration {
   int bgp_table_dump_output;
   char *bgp_table_dump_file;
   char *bgp_table_dump_latest_file;
+  char *bgp_table_dump_avro_schema_file;
   int bgp_table_dump_refresh_time;
   char *bgp_table_dump_amqp_host;
   char *bgp_table_dump_amqp_vhost;
