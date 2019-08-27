@@ -635,3 +635,24 @@ int write_and_free_json_kafka(void *kafka_log, void *obj)
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): write_and_free_json_kafka(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
 }
 #endif
+
+int write_binary_kafka(void *kafka_log, void *obj, size_t len)
+{
+  char *orig_kafka_topic = NULL, dyn_kafka_topic[SRVBUFLEN];
+  struct p_kafka_host *alog = (struct p_kafka_host *) kafka_log;
+  int ret = ERR;
+
+  if (obj && len) {
+    if (alog->topic_rr.max) {
+      orig_kafka_topic = p_kafka_get_topic(alog);
+      P_handle_table_dyn_rr(dyn_kafka_topic, SRVBUFLEN, orig_kafka_topic, &alog->topic_rr);
+      p_kafka_set_topic(alog, dyn_kafka_topic);
+    }
+
+    ret = p_kafka_produce_data(alog, obj, len);
+
+    if (alog->topic_rr.max) p_kafka_set_topic(alog, orig_kafka_topic);
+  }
+
+  return ret;
+}

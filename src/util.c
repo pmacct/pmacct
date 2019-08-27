@@ -1988,6 +1988,13 @@ void add_writer_name_and_pid_json(void *obj, char *name, pid_t writer_pid)
 }
 #endif
 
+void write_file_binary(FILE *f, void *obj, size_t len)
+{
+  if (!f) return;
+
+  if (obj && len) fwrite(obj, len, 1, f);
+}
+
 void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int since_epoch, int rfc3339, int utc)
 {
   int slen;

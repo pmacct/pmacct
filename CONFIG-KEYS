@@ -1132,6 +1132,12 @@ DESC:		This switch makes sense only when using PostgreSQL plugin and supplied de
 		configuration switch deprecated.
 DEFAULT:	typed
 
+KEY:		sql_conn_ca_file
+DESC:		In MySQL and PostgreSQL plugins, this is the path name of the Certificate Authority
+		(CA) certificate file. If used, it must specify the same certificate used by the
+		server. 
+DEFAULT:	none
+
 KEY:	 	sql_host
 DESC:		Defines the backend server IP/hostname
 DEFAULT:	localhost
@@ -1309,8 +1315,8 @@ DESC:		In SQL plugin, sql_multi_values enables the use of multi-values INSERT st
 		faster (many times faster in some cases) than using separate single-row INSERT statements.
 		It's adviceable to check the size of this pmacct buffer against the size of the corresponding
 		MySQL buffer (max_allowed_packet). In AMQP and Kafka plugins, [amqp|kafka]_multi_values allow
-		the same with JSON serialization (for Avro see avro_buffer_size); in this case data is encoded
-		in JSON objects newline-separated (preferred to JSON arrays for performance).  
+		the same with JSON serialization (for Apache Avro see avro_buffer_size); in this case data is
+		encoded in JSON objects newline-separated (preferred to JSON arrays for performance).  
 DEFAULT:        0
 
 KEY:		[ sql_trigger_exec | print_trigger_exec | amqp_trigger_exec | kafka_trigger_exec ]
@@ -1491,9 +1497,9 @@ VALUES:		[ true | false ]
 DESC:		Enables the use of start/end markers each time data is purged to the backend. Both start
 		and end markers return additional information, ie. writer PID, number of entries purged,
 		elapsed time, etc. When plugin output is JSON, markers are encoded in JSON format and
-		event_type is set to purge_init and purge_close respectively; when output is Avro, the
-		markers are suppressed. In the case of Kafka topics with multiple partitions, the
-		purge_close message can arrive out of order so other mechanisms should be used to
+		event_type is set to purge_init and purge_close respectively; when output is Apache Avro,
+		the markers are currently suppressed. In the case of Kafka topics with multiple partitions,
+		the purge_close message can arrive out of order so other mechanisms should be used to
 		correlate messages as being part of the same batch (ie. writer_id).  
 DEFAULT:	false
 
@@ -1562,36 +1568,23 @@ NOTES:		* Jansson and Avro libraries don't have the concept of unsigned integers
 DEFAULT:	json
 
 KEY:		avro_buffer_size
-DESC:		When the Avro format is used to encode the messages sent to a message broker (amqp and kafka
-		plugins), this option defines the size in bytes of the buffer used by the Avro data serialization
-		system. The buffer needs to be large enough to store at least a single Avro record. If the
-		buffer does not have enough capacity to store the number of records defined by the
-		[amqp, kafka]_multi_values configuration directive, the current records stored in the buffer
-		will be sent to the message broker and the buffer will be cleared to accomodate subsequent
-		records.
+DESC:		When the Apache Avro format is used to encode the messages sent to a message broker (amqp and
+		kafka plugins), this option defines the size in bytes of the buffer used by the Avro data
+		serialization system. The buffer needs to be large enough to store at least a single Avro
+		record. If the buffer does not have enough capacity to store the number of records defined
+		by the [amqp, kafka]_multi_values configuration directive, the current records stored in the
+		buffer will be sent to the message broker and the buffer will be cleared to accomodate
+		subsequent records.
 DEFAULT:	8192
 
 KEY:		avro_schema_output_file
-DESC:		When the Avro format is used to encode the messages sent to a message broker (amqp and kafka
-		plugins), this option causes the schema used to encode the messages to be dumped to the file
-		path given. The schema can then be used by the receiving end to decode the messages. Note
-		that the schema will be dynamically built based on the aggregation primitives chosen. This
+DESC:		When the Apache Avro format is used to encode the messages sent to a message broker (amqp and
+		kafka plugins), this option causes the schema used to encode the messages to be dumped to the
+		file path given. The schema can then be used by the receiving end to decode the messages. Note
+		that the schema will be dynamically built based on the aggregation primitives chosen (this
 		has also effect in the print plugin but in this case the schema is also always included in
-		the print_output_file as mandated by Avro specification. 
-
-KEY:		amqp_avro_schema_routing_key
-DESC:		AMQP routing key on which the generated Avro schema is sent over at regular time intervals
-		by the AMQP plugin (it can potentially be the same as amqp_routing_key). The schema can
-		then be used by the receiving end to decode the messages. All other parameters to connect
-		to the broker, ie. host, port, etc. are shared with the main plugin routing key. The time
-		interval is set via amqp_avro_schema_refresh_time. Schemas are carried as part of the
-		'schema' field in an envelope JSON message with 'event_type' set to purge_schema. 
-DEFAULT:	none
-
-KEY:		amqp_avro_schema_refresh_time
-DESC:		Time interval, in seconds, at which the generated Avro schema is sent over the configured
-		AMQP routing key (amqp_avro_schema_routing_key).
-DEFAULT:	60
+		the print_output_file as mandated by Avro specification). inotify-tools can be used to take
+		event-driven actions like notify a consumer whenever the file is modified. 
 
 KEY:		kafka_avro_schema_registry
 DESC:		The URL to a Confluent Avro schema-registry. The value is passed to libserdes as argument

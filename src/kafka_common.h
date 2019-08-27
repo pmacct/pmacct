@@ -101,6 +101,7 @@ extern void p_kafka_close(struct p_kafka_host *, int);
 extern int p_kafka_check_outq_len(struct p_kafka_host *);
 
 extern int write_and_free_json_kafka(void *, void *);
+extern int write_binary_kafka(void *, void *, size_t);
 
 /* global vars */
 extern struct p_kafka_host kafkap_kafka_host;

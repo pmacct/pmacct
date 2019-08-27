@@ -677,12 +677,14 @@ void MY_Unlock(struct BE_descs *bed)
 
 void MY_DB_Connect(struct DBdesc *db, char *host)
 {
-  MYSQL *dbptr = db->desc;
   bool reconnect = TRUE;
 
   if (!db->fail) {
     mysql_init(db->desc);
-    mysql_options(dbptr, MYSQL_OPT_RECONNECT, &reconnect);
+
+    mysql_options(db->desc, MYSQL_OPT_RECONNECT, &reconnect);
+    if (config.sql_conn_ca_file) mysql_ssl_set(db->desc, NULL, NULL, config.sql_conn_ca_file, NULL, NULL);
+    
     if (!mysql_real_connect(db->desc, host, config.sql_user, config.sql_passwd, config.sql_db, config.sql_port, NULL, 0)) {
       sql_db_fail(db);
       MY_get_errmsg(db);

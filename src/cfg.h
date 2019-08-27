@@ -123,6 +123,7 @@ struct configuration {
   char *sql_table_type;
   char *sql_user;
   char *sql_passwd;
+  char *sql_conn_ca_file;
   char *sql_host;
   int sql_port;
   char *sql_data;

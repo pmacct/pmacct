@@ -1178,6 +1178,25 @@ int cfg_key_sql_data(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_sql_conn_ca_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.sql_conn_ca_file = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.sql_conn_ca_file = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_sql_host(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -6084,6 +6103,14 @@ int cfg_key_nfacctd_bgp_msglog_output(char *filename, char *name, char *value_pt
     Log(LOG_WARNING, "WARN: [%s] bgp_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", filename);
 #endif
   }
+  else if (!strcmp(value_ptr, "avro")) {
+#ifdef WITH_AVRO
+    value = PRINT_OUTPUT_AVRO;
+#else
+    value = PRINT_OUTPUT_AVRO;
+    Log(LOG_WARNING, "WARN: [%s] bgp_daemon_msglog_output set to avro but will produce no output (missing --enable-avro).\n", filename);
+#endif
+  }
   else {
     Log(LOG_WARNING, "WARN: [%s] Invalid bgp_daemon_msglog_output value '%s'\n", filename, value_ptr);
     return ERR;
@@ -6286,6 +6313,14 @@ int cfg_key_nfacctd_bgp_table_dump_output(char *filename, char *name, char *valu
 #else
     value = PRINT_OUTPUT_JSON;
     Log(LOG_WARNING, "WARN: [%s] bgp_table_dump_output set to json but will produce no output (missing --enable-jansson).\n", filename);
+#endif
+  }
+  else if (!strcmp(value_ptr, "avro")) {
+#ifdef WITH_AVRO
+    value = PRINT_OUTPUT_AVRO;
+#else
+    value = PRINT_OUTPUT_AVRO;
+    Log(LOG_WARNING, "WARN: [%s] bgp_table_dump_output set to avro but will produce no output (missing --enable-avro).\n", filename);
 #endif
   }
   else {

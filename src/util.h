@@ -122,6 +122,7 @@ extern char *null_terminate(char *, int);
 extern char *compose_json_str(void *);
 extern void write_and_free_json(FILE *, void *);
 extern void add_writer_name_and_pid_json(void *, char *, pid_t);
+extern void write_file_binary(FILE *, void *, size_t);
 
 extern void compose_timestamp(char *, int, struct timeval *, int, int, int, int);
 
