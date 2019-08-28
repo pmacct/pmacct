@@ -308,6 +308,7 @@ struct configuration {
   int nfacctd_bgp_msglog_kafka_broker_port;
   int nfacctd_bgp_msglog_kafka_retry;
   char *nfacctd_bgp_msglog_kafka_config_file;
+  char *nfacctd_bgp_msglog_kafka_avro_schema_registry;
   char *nfacctd_bgp_id;
   char *nfacctd_bgp_ip;
   as_t nfacctd_bgp_as;
@@ -372,6 +373,7 @@ struct configuration {
   int bgp_table_dump_kafka_partition_keylen;
   int bgp_table_dump_kafka_broker_port;
   char *bgp_table_dump_kafka_config_file;
+  char *bgp_table_dump_kafka_avro_schema_registry;
   int bgp_lg;
   char *bgp_lg_ip;
   int bgp_lg_port;

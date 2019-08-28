@@ -461,11 +461,18 @@ void skinny_bgp_daemon_online()
 #ifdef WITH_AVRO
   avro_bgp_buf = malloc(LARGEBUFLEN);
   if (!avro_bgp_buf) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_bgp_buf). Exiting ..\n", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_bgp_buf). Exiting ..\n", config.name, bgp_misc_db->log_str);
     exit_gracefully(1);
   }
   else memset(avro_bgp_buf, 0, LARGEBUFLEN);
 #endif
+
+    if (config.nfacctd_bgp_msglog_kafka_avro_schema_registry || config.bgp_table_dump_kafka_avro_schema_registry) {
+#ifndef WITH_SERDES
+      Log(LOG_ERR, "ERROR ( %s/%s ): 'bgp_*_kafka_avro_schema_registry' require --enable-serdes. Exiting.\n", config.name, bgp_misc_db->log_str);
+      exit_gracefully(1);
+#endif
+    }
 
   select_fd = bkp_select_fd = (config.bgp_sock + 1);
   recalc_fds = FALSE;

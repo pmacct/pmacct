@@ -230,12 +230,14 @@ struct bgp_misc_structs {
   int dump_amqp_routing_key_rr;
   char *dump_kafka_topic;
   int dump_kafka_topic_rr;
+  char *dump_kafka_avro_schema_registry;
   char *msglog_file;
   int msglog_output;
   char *msglog_amqp_routing_key;
   int msglog_amqp_routing_key_rr;
   char *msglog_kafka_topic;
   int msglog_kafka_topic_rr;
+  char *msglog_kafka_avro_schema_registry;
   void (*bgp_peer_log_msg_extras)(struct bgp_peer *, int, void *);
   void (*bgp_peer_logdump_initclose_extras)(struct bgp_peer *, int, void *);
 

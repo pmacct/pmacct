@@ -1354,12 +1354,14 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->dump_amqp_routing_key_rr = config.bgp_table_dump_amqp_routing_key_rr;
   bms->dump_kafka_topic = config.bgp_table_dump_kafka_topic;
   bms->dump_kafka_topic_rr = config.bgp_table_dump_kafka_topic_rr;
+  bms->dump_kafka_avro_schema_registry = config.bgp_table_dump_kafka_avro_schema_registry;
   bms->msglog_file = config.nfacctd_bgp_msglog_file;
   bms->msglog_output = config.nfacctd_bgp_msglog_output;
   bms->msglog_amqp_routing_key = config.nfacctd_bgp_msglog_amqp_routing_key;
   bms->msglog_amqp_routing_key_rr = config.nfacctd_bgp_msglog_amqp_routing_key_rr;
   bms->msglog_kafka_topic = config.nfacctd_bgp_msglog_kafka_topic;
   bms->msglog_kafka_topic_rr = config.nfacctd_bgp_msglog_kafka_topic_rr;
+  bms->msglog_kafka_avro_schema_registry = config.nfacctd_bgp_msglog_kafka_avro_schema_registry;
   bms->peer_str = malloc(strlen("peer_ip_src") + 1);
   strcpy(bms->peer_str, "peer_ip_src");
   bms->peer_port_str = malloc(strlen("peer_tcp_port") + 1);

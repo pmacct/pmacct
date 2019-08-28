@@ -329,13 +329,6 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   size_t avro_len = 0;
 #endif
 
-#ifdef WITH_SERDES
-  serdes_conf_t *sd_conf;
-  serdes_t *sd_desc;
-  serdes_schema_t *sd_schema = NULL;
-  char sd_errstr[LONGSRVBUFLEN];
-#endif
-
   p_kafka_init_host(&kafkap_kafka_host, config.kafka_config_file);
 
   /* setting some defaults */
@@ -452,37 +445,9 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 
     if (config.kafka_avro_schema_registry) {
 #ifdef WITH_SERDES
-      char *avro_acct_schema_str = write_avro_schema_to_memory(avro_acct_schema);
-      char *avro_acct_schema_name, *avro_acct_schema_topic;
-
-      if (!is_topic_dyn) {
-	avro_acct_schema_topic = p_kafka_get_topic(&kafkap_kafka_host); 
-	avro_acct_schema_name = malloc(strlen(avro_acct_schema_topic) + strlen("-value") + 1 /* term */);
-
-        strcpy(avro_acct_schema_name, avro_acct_schema_topic);
-        strcat(avro_acct_schema_name, "-value");
-      }
-      else {
-	avro_acct_schema_name = compose_avro_schema_name(config.type, config.name);
-      }
-
-      sd_conf = serdes_conf_new(NULL, 0, "schema.registry.url", config.kafka_avro_schema_registry, NULL);
-
-      sd_desc = serdes_new(sd_conf, sd_errstr, sizeof(sd_errstr));
-      if (!sd_desc) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): serdes_new() failed: %s. Exiting.\n", config.name, config.type, sd_errstr);
-        exit_gracefully(1);
-      }
-
-      sd_schema = serdes_schema_add(sd_desc, avro_acct_schema_name, -1, avro_acct_schema_str, -1, sd_errstr, sizeof(sd_errstr));
-      if (!sd_schema) {
-	Log(LOG_ERR, "ERROR ( %s/%s ): serdes_schema_add() failed: %s. Exiting.\n", config.name, config.type, sd_errstr);
-	exit_gracefully(1);
-      }
-      else {
-	Log(LOG_DEBUG, "DEBUG ( %s/%s ): serdes_schema_add(): name=%s id=%d definition=%s\n", config.name, config.type,
-		serdes_schema_name(sd_schema), serdes_schema_id(sd_schema), serdes_schema_definition(sd_schema));
-      }
+      kafkap_kafka_host.sd_schema = compose_avro_schema_registry_name(p_kafka_get_topic(&kafkap_kafka_host), is_topic_dyn,
+								      avro_acct_schema, config.type, config.name,
+								      config.kafka_avro_schema_registry);
 #endif
     }
 #endif
@@ -575,8 +540,9 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 	  avro_buf = NULL;
 	}
 
-	if (serdes_schema_serialize_avro(sd_schema, &avro_value, &avro_local_buf, &avro_len, sd_errstr, sizeof(sd_errstr))) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, config.type, sd_errstr);
+	if (serdes_schema_serialize_avro(kafkap_kafka_host.sd_schema, &avro_value, &avro_local_buf, &avro_len,
+					 kafkap_kafka_host.errstr, sizeof(kafkap_kafka_host.errstr))) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, config.type, kafkap_kafka_host.errstr);
 	  exit_gracefully(1);
 	}
 	else {

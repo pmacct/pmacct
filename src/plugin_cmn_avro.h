@@ -23,7 +23,7 @@
 #define PLUGIN_CMN_AVRO_H
 
 /* includes */
-#if defined (WITH_SERDES)
+#ifdef WITH_SERDES
 #include <libserdes/serdes-avro.h>
 #endif
 
@@ -47,6 +47,10 @@ extern void write_avro_schema_to_file(char *, avro_schema_t);
 extern char *write_avro_schema_to_memory(avro_schema_t);
 extern char *compose_avro_purge_schema(avro_schema_t, char *);
 extern char *compose_avro_schema_name(char *, char *);
+
+#ifdef WITH_SERDES
+extern serdes_schema_t *compose_avro_schema_registry_name(char *, int, avro_schema_t, char *, char *, char *);
+#endif
 
 /* global variables */
 extern avro_schema_t avro_acct_schema;

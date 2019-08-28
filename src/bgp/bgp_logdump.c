@@ -31,6 +31,9 @@
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
 #endif
+#ifdef WITH_AVRO
+#include "plugin_cmn_avro.h"
+#endif
 
 /* global variables */
 #if defined WITH_AVRO
@@ -68,6 +71,10 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 #ifdef WITH_RABBITMQ
     p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
 #endif
+  }
+
+  if ((bms->msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
+      (bms->dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
 #ifdef WITH_KAFKA
     p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
 #endif
@@ -193,21 +200,29 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, output, obj);
 
     if ((bms->msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
-	(bms->dump_file && etype == BGP_LOGDUMP_ET_DUMP))
+	(bms->dump_file && etype == BGP_LOGDUMP_ET_DUMP)) {
       write_and_free_json(peer->log->fd, obj);
+    }
 
-    if (output_data && etype == BGP_LOGDUMP_ET_LG)
+    if (output_data && etype == BGP_LOGDUMP_ET_LG) {
       (*output_data) = compose_json_str(obj);
+    }
 
     if ((bms->msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
 	(bms->dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP)) {
       add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
-
 #ifdef WITH_RABBITMQ
       amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
+      p_amqp_unset_routing_key(peer->log->amqp_host);
 #endif
+    }
+
+    if ((bms->msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
+	(bms->dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
+      add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
 #ifdef WITH_KAFKA
       kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
+      p_kafka_unset_topic(peer->log->kafka_host);
 #endif
     }
 #endif
@@ -223,6 +238,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     char ip_address[INET6_ADDRSTRLEN], log_type_str[SUPERSHORTBUFLEN];
     char prefix_str[PREFIX_STRLEN], nexthop_str[INET6_ADDRSTRLEN];
     char wid[SHORTSHORTBUFLEN], empty_string[] = "", *aspath = NULL;
+    void *avro_local_buf = NULL; 
 
     avro_writer = avro_writer_memory(avro_bgp_buf, LARGEBUFLEN);
 
@@ -416,40 +432,61 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, writer_pid);
     check_i(avro_value_set_string(&avro_field, wid));
 
-    avro_value_sizeof(&avro_obj, &avro_obj_len);
-    assert(avro_obj_len < LARGEBUFLEN);
+    if ((bms->msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
+	(bms->dump_file && etype == BGP_LOGDUMP_ET_DUMP) ||
+	(bms->msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
+	(bms->dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP) ||
+	(bms->msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG && !bms->msglog_kafka_avro_schema_registry) ||
+        (bms->dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP && !bms->dump_kafka_avro_schema_registry)) {
+      avro_value_sizeof(&avro_obj, &avro_obj_len);
+      assert(avro_obj_len < LARGEBUFLEN);
 
-    if (avro_value_write(avro_writer, &avro_obj)) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to write value: %s\n", config.name, bms->log_str, avro_strerror());
-      exit_gracefully(1);
+      if (avro_value_write(avro_writer, &avro_obj)) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to write value: %s\n", config.name, bms->log_str, avro_strerror());
+	exit_gracefully(1);
+      }
+
+      avro_len = avro_writer_tell(avro_writer);
+      avro_local_buf = avro_bgp_buf;
     }
 
-    avro_len = avro_writer_tell(avro_writer);
+    if ((bms->msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
+	(bms->dump_file && etype == BGP_LOGDUMP_ET_DUMP)) {
+      write_file_binary(peer->log->fd, avro_local_buf, avro_len);
+    }
+
+    if ((bms->msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
+        (bms->dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP)) {
+#ifdef WITH_RABBITMQ
+      amqp_ret = write_binary_amqp(peer->log->amqp_host, avro_local_buf, avro_len);
+      p_amqp_unset_routing_key(peer->log->amqp_host);
+#endif
+    }
+
+    if ((bms->msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
+        (bms->dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
+#ifdef WITH_KAFKA
+      if ((bms->msglog_kafka_avro_schema_registry && etype == BGP_LOGDUMP_ET_LOG) ||
+	  (bms->dump_kafka_avro_schema_registry && etype == BGP_LOGDUMP_ET_DUMP)) {
+#ifdef WITH_SERDES
+	struct p_kafka_host *kafka_host = (struct p_kafka_host *) peer->log->kafka_host;
+
+	if (serdes_schema_serialize_avro(kafka_host->sd_schema, &avro_obj, &avro_local_buf, &avro_len,
+					 kafka_host->errstr, sizeof(kafka_host->errstr))) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
+	  exit_gracefully(1);
+        }
+#endif
+      }
+
+      kafka_ret = write_binary_kafka(peer->log->kafka_host, avro_local_buf, avro_len);
+      p_kafka_unset_topic(peer->log->kafka_host);
+#endif
+    }
+
     avro_value_decref(&avro_obj);
     avro_value_iface_decref(avro_iface);
-
-    if ((bms->msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
-	(bms->dump_file && etype == BGP_LOGDUMP_ET_DUMP))
-      write_file_binary(peer->log->fd, avro_bgp_buf, avro_len);
-
-#ifdef WITH_RABBITMQ
-    amqp_ret = write_binary_amqp(peer->log->amqp_host, avro_bgp_buf, avro_len);
-#endif
-#ifdef WITH_KAFKA
-    kafka_ret = write_binary_kafka(peer->log->kafka_host, avro_bgp_buf, avro_len);
-#endif
-
     avro_writer_reset(avro_writer);
-#endif
-  }
-
-  if ((bms->msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
-      (bms->dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP)) {
-#ifdef WITH_RABBITMQ
-    p_amqp_unset_routing_key(peer->log->amqp_host);
-#endif
-#ifdef WITH_KAFKA
-    p_kafka_unset_topic(peer->log->kafka_host);
 #endif
   }
 
@@ -468,15 +505,27 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 
   if (!bms || !peer) return ERR;
 
-  if (bms->msglog_file)
+  if (bms->msglog_file) {
     bgp_peer_log_dynname(log_filename, SRVBUFLEN, bms->msglog_file, peer); 
+  }
 
   if (bms->msglog_amqp_routing_key) {
     bgp_peer_log_dynname(log_filename, SRVBUFLEN, bms->msglog_amqp_routing_key, peer); 
   }
 
   if (bms->msglog_kafka_topic) {
-    bgp_peer_log_dynname(log_filename, SRVBUFLEN, bms->msglog_kafka_topic, peer); 
+    if (!bms->msglog_kafka_avro_schema_registry) {
+      bgp_peer_log_dynname(log_filename, SRVBUFLEN, bms->msglog_kafka_topic, peer); 
+    }
+    else {
+#ifdef WITH_SERDES
+      int is_dyn;
+
+      is_dyn = bgp_peer_log_dynname(log_filename, SRVBUFLEN, bms->msglog_kafka_topic, peer); 
+      bms->msglog_kafka_host->sd_schema = compose_avro_schema_registry_name(log_filename, is_dyn, avro_bgp_msglog_schema, "bgp",
+									   "msglog", bms->msglog_kafka_avro_schema_registry); 
+#endif
+    }
   }
 
   for (peer_idx = 0, have_it = 0; peer_idx < bms->max_peers; peer_idx++) {
@@ -708,15 +757,15 @@ int bgp_peer_log_seq_has_ro_bit(u_int64_t *seq)
 /* XXX: 1) inefficient string testing and 2) string aliases can be mixed
    and matched. But as long as this is used for determining filenames for
    large outputs this is fine. To be refined in future */
-void bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *peer)
+int bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *peer)
 {
-  int oldlen;
+  int oldlen, is_dyn = FALSE;
   char psi_string[] = "$peer_src_ip", ptp_string[] = "$peer_tcp_port";
   char br_string[] = "$bmp_router", brp_string[] = "$bmp_router_port";
   char tn_string[] = "$telemetry_node", tnp_string[] = "$telemetry_node_port";
   char *ptr_start, *ptr_end, *string_ptr;
 
-  if (!new || !old || !peer) return;
+  if (!new || !old || !peer) return FALSE;
 
   oldlen = strlen(old);
   if (oldlen <= newlen) strcpy(new, old);
@@ -742,6 +791,8 @@ void bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *pee
     char peer_src_ip[SRVBUFLEN];
     char buf[newlen];
     int len;
+
+    is_dyn = TRUE;
 
     len = strlen(ptr_start);
     ptr_end = ptr_start;
@@ -780,6 +831,8 @@ void bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *pee
     char buf[newlen];
     int len;
 
+    is_dyn = TRUE;
+
     len = strlen(ptr_start);
     ptr_end = ptr_start;
     ptr_end += strlen(string_ptr);
@@ -792,6 +845,8 @@ void bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *pee
     *ptr_start = '\0';
     strncat(new, buf, len);
   }
+
+  return is_dyn;
 }
 
 int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
@@ -947,7 +1002,7 @@ void bgp_handle_dump_event()
   struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BGP);
   char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
   char latest_filename[SRVBUFLEN], event_type[] = "dump", *fd_buf = NULL;
-  int ret, peers_idx, duration, tables_num;
+  int ret, peers_idx, duration, tables_num; 
   struct bgp_rt_structs *inter_domain_routing_db;
   struct bgp_peer *peer, *saved_peer;
   struct bgp_table *table;
@@ -1009,14 +1064,28 @@ void bgp_handle_dump_event()
         peer = &peers[peers_idx];
 	peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
 
-	if (config.bgp_table_dump_file)
+	if (config.bgp_table_dump_file) {
 	  bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_file, peer);
+	}
 
-	if (config.bgp_table_dump_amqp_routing_key)
+	if (config.bgp_table_dump_amqp_routing_key) {
 	  bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_amqp_routing_key, peer);
+	}
 
-	if (config.bgp_table_dump_kafka_topic)
-	  bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_kafka_topic, peer);
+	if (config.bgp_table_dump_kafka_topic) {
+	  if (!config.bgp_table_dump_kafka_avro_schema_registry) {
+	    bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_kafka_topic, peer);
+	  }
+	  else {
+#ifdef WITH_SERDES
+	    int is_dyn;
+
+	    is_dyn = bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_kafka_topic, peer);
+	    bgp_table_dump_kafka_host.sd_schema = compose_avro_schema_registry_name(current_filename, is_dyn, avro_bgp_dump_schema, "bgp",
+										    "dump", config.bgp_table_dump_kafka_avro_schema_registry);
+#endif
+	  }
+	}
 
 	pm_strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bms->dump.tstamp.tv_sec, config.timestamps_utc);
 

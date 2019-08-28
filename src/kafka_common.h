@@ -26,6 +26,9 @@
 /* includes */
 #include <librdkafka/rdkafka.h>
 #include "plugin_common.h"
+#ifdef WITH_SERDES
+#include <libserdes/serdes-avro.h>
+#endif
 
 /* defines */
 #define PM_KAFKA_ERRSTR_LEN		512
@@ -51,6 +54,10 @@ struct p_kafka_host {
   char *key;
   int key_len;
   struct p_table_rr topic_rr;
+
+#ifdef WITH_SERDES
+  serdes_schema_t *sd_schema;
+#endif
 
   struct p_broker_timers btimers;
 };

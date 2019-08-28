@@ -317,6 +317,7 @@ extern int cfg_key_nfacctd_bgp_msglog_kafka_partition(char *, char *, char *);
 extern int cfg_key_nfacctd_bgp_msglog_kafka_partition_key(char *, char *, char *);
 extern int cfg_key_nfacctd_bgp_msglog_kafka_retry(char *, char *, char *);
 extern int cfg_key_nfacctd_bgp_msglog_kafka_config_file(char *, char *, char *);
+extern int cfg_key_nfacctd_bgp_msglog_kafka_avro_schema_registry(char *, char *, char *);
 extern int cfg_key_nfacctd_bgp_max_peers(char *, char *, char *);
 extern int cfg_key_nfacctd_bgp_ip(char *, char *, char *);
 extern int cfg_key_nfacctd_bgp_id(char *, char *, char *);
@@ -377,6 +378,7 @@ extern int cfg_key_nfacctd_bgp_table_dump_kafka_topic_rr(char *, char *, char *)
 extern int cfg_key_nfacctd_bgp_table_dump_kafka_partition(char *, char *, char *);
 extern int cfg_key_nfacctd_bgp_table_dump_kafka_partition_key(char *, char *, char *);
 extern int cfg_key_nfacctd_bgp_table_dump_kafka_config_file(char *, char *, char *);
+extern int cfg_key_nfacctd_bgp_table_dump_kafka_avro_schema_registry(char *, char *, char *);
 extern int cfg_key_nfacctd_bgp_batch(char *, char *, char *);
 extern int cfg_key_nfacctd_bgp_batch_interval(char *, char *, char *);
 extern int cfg_key_nfacctd_bgp_pipe_size(char *, char *, char *);
