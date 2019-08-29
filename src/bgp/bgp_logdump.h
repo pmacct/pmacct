@@ -75,10 +75,4 @@ extern int bgp_table_dump_init_kafka_host();
 extern avro_schema_t avro_schema_build_bgp(int);
 #endif
 
-/* global variables */
-#if defined WITH_AVRO
-extern avro_schema_t avro_bgp_msglog_schema, avro_bgp_dump_schema;
-extern char *avro_bgp_buf;
-#endif
-
 #endif 

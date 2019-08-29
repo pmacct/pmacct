@@ -407,10 +407,10 @@ void skinny_bgp_daemon_online()
 
 #ifdef WITH_AVRO
     if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_AVRO) {
-      avro_bgp_msglog_schema = avro_schema_build_bgp(BGP_LOGDUMP_ET_LOG);
+      bgp_misc_db->msglog_avro_schema = avro_schema_build_bgp(BGP_LOGDUMP_ET_LOG);
 
       if (config.nfacctd_bgp_msglog_avro_schema_file) {
-	write_avro_schema_to_file(config.nfacctd_bgp_msglog_avro_schema_file, avro_bgp_msglog_schema);
+	write_avro_schema_to_file(config.nfacctd_bgp_msglog_avro_schema_file, bgp_misc_db->msglog_avro_schema);
       }
     }
 #endif
@@ -425,10 +425,10 @@ void skinny_bgp_daemon_online()
 
 #ifdef WITH_AVRO
     if (config.bgp_table_dump_output == PRINT_OUTPUT_AVRO) {
-      avro_bgp_dump_schema = avro_schema_build_bgp(BGP_LOGDUMP_ET_DUMP);
+      bgp_misc_db->dump_avro_schema = avro_schema_build_bgp(BGP_LOGDUMP_ET_DUMP);
 
       if (config.bgp_table_dump_avro_schema_file) {
-	write_avro_schema_to_file(config.bgp_table_dump_avro_schema_file, avro_bgp_dump_schema);
+	write_avro_schema_to_file(config.bgp_table_dump_avro_schema_file, bgp_misc_db->dump_avro_schema);
       }
     }
 #endif
@@ -459,12 +459,12 @@ void skinny_bgp_daemon_online()
   }
 
 #ifdef WITH_AVRO
-  avro_bgp_buf = malloc(LARGEBUFLEN);
-  if (!avro_bgp_buf) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_bgp_buf). Exiting ..\n", config.name, bgp_misc_db->log_str);
+  bgp_misc_db->avro_buf = malloc(LARGEBUFLEN);
+  if (!bgp_misc_db->avro_buf) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_buf). Exiting ..\n", config.name, bgp_misc_db->log_str);
     exit_gracefully(1);
   }
-  else memset(avro_bgp_buf, 0, LARGEBUFLEN);
+  else memset(bgp_misc_db->avro_buf, 0, LARGEBUFLEN);
 #endif
 
     if (config.nfacctd_bgp_msglog_kafka_avro_schema_registry || config.bgp_table_dump_kafka_avro_schema_registry) {
