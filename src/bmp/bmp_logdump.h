@@ -123,4 +123,10 @@ extern void bmp_daemon_msglog_init_amqp_host();
 extern void bmp_dump_init_amqp_host();
 extern int bmp_daemon_msglog_init_kafka_host();
 extern int bmp_dump_init_kafka_host();
+
+#if defined WITH_AVRO
+extern avro_schema_t avro_schema_build_bmp_rm(int, char *);
+extern void avro_schema_build_bmp_common(avro_schema_t, avro_schema_t, avro_schema_t, avro_schema_t);
+#endif
+
 #endif

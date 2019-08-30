@@ -4160,6 +4160,14 @@ int cfg_key_nfacctd_bmp_msglog_output(char *filename, char *name, char *value_pt
     Log(LOG_WARNING, "WARN: [%s] bmp_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", filename);
 #endif
   }
+  else if (!strcmp(value_ptr, "avro")) {
+#ifdef WITH_AVRO
+    value = PRINT_OUTPUT_AVRO;
+#else
+    value = PRINT_OUTPUT_AVRO;
+    Log(LOG_WARNING, "WARN: [%s] 'bmp_daemon_msglog_output' set to avro but will produce no output (missing --enable-avro).\n", filename);
+#endif
+  }
   else {
     Log(LOG_WARNING, "WARN: [%s] Invalid bmp_daemon_msglog_output value '%s'\n", filename, value_ptr);
     return ERR;
@@ -4362,6 +4370,14 @@ int cfg_key_nfacctd_bmp_dump_output(char *filename, char *name, char *value_ptr)
 #else
     value = PRINT_OUTPUT_JSON;
     Log(LOG_WARNING, "WARN: [%s] bmp_dump_output set to json but will produce no output (missing --enable-jansson).\n", filename);
+#endif
+  }
+  else if (!strcmp(value_ptr, "avro")) {
+#ifdef WITH_AVRO
+    value = PRINT_OUTPUT_AVRO;
+#else
+    value = PRINT_OUTPUT_AVRO;
+    Log(LOG_WARNING, "WARN: [%s] bmp_dump_output set to avro but will produce no output (missing --enable-avro).\n", filename);
 #endif
   }
   else {

@@ -306,6 +306,12 @@ void skinny_bmp_daemon()
 #else
     Log(LOG_WARNING, "WARN ( %s/%s ): bmp_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", config.name, bmp_misc_db->log_str);
 #endif
+
+#ifdef WITH_AVRO
+    if (config.nfacctd_bmp_msglog_output == PRINT_OUTPUT_AVRO) {
+      bmp_misc_db->msglog_avro_schema = avro_schema_build_bmp_rm(BGP_LOGDUMP_ET_LOG, "bmp_msglog_rm");
+    }
+#endif
   }
 
   if (bmp_misc_db->dump_backend_methods) {
@@ -313,6 +319,12 @@ void skinny_bmp_daemon()
     if (!config.bmp_dump_output) config.bmp_dump_output = PRINT_OUTPUT_JSON;
 #else
     Log(LOG_WARNING, "WARN ( %s/%s ): bmp_table_dump_output set to json but will produce no output (missing --enable-jansson).\n", config.name, bmp_misc_db->log_str);
+#endif
+
+#ifdef WITH_AVRO
+    if (config.bmp_dump_output == PRINT_OUTPUT_AVRO) {
+      bmp_misc_db->dump_avro_schema = avro_schema_build_bmp_rm(BGP_LOGDUMP_ET_DUMP, "bmp_dump_rm");
+    }
 #endif
   }
 

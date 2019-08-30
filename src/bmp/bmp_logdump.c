@@ -797,3 +797,38 @@ int bmp_dump_init_kafka_host()
   return ERR;
 }
 #endif
+
+#if defined WITH_AVRO
+avro_schema_t avro_schema_build_bmp_rm(int log_type, char *schema_name)
+{
+  avro_schema_t schema = NULL;
+  avro_schema_t optlong_s = avro_schema_union();
+  avro_schema_t optstr_s = avro_schema_union();
+  avro_schema_t optint_s = avro_schema_union();
+
+  if (log_type != BGP_LOGDUMP_ET_LOG && log_type != BGP_LOGDUMP_ET_DUMP) return NULL;
+
+  avro_schema_init_bgp(schema, optlong_s, optstr_s, optint_s, FUNC_TYPE_BGP, schema_name);
+  avro_schema_build_bgp_common(schema, optlong_s, optstr_s, optint_s, log_type, FUNC_TYPE_BMP);
+  avro_schema_build_bmp_common(schema, optlong_s, optstr_s, optint_s);
+  avro_schema_build_bgp_route(schema, optlong_s, optstr_s, optint_s);
+
+  avro_schema_record_field_append(schema, "is_filtered", optint_s);
+  avro_schema_record_field_append(schema, "is_loc", optint_s);
+  avro_schema_record_field_append(schema, "is_post", optint_s);
+  avro_schema_record_field_append(schema, "is_out", optint_s);
+
+  avro_schema_decref(optlong_s);
+  avro_schema_decref(optstr_s);
+  avro_schema_decref(optint_s);
+
+  return schema;
+}
+
+void avro_schema_build_bmp_common(avro_schema_t schema, avro_schema_t optlong_s, avro_schema_t optstr_s, avro_schema_t optint_s)
+{
+  avro_schema_record_field_append(schema, "bmp_router", avro_schema_string());
+  avro_schema_record_field_append(schema, "bmp_router_port", avro_schema_int());
+  avro_schema_record_field_append(schema, "bmp_msg_type", avro_schema_string());
+}
+#endif
