@@ -126,6 +126,12 @@ extern int bmp_dump_init_kafka_host();
 
 #if defined WITH_AVRO
 extern avro_schema_t avro_schema_build_bmp_rm(int, char *);
+extern avro_schema_t avro_schema_build_bmp_init(char *);
+extern avro_schema_t avro_schema_build_bmp_term(char *);
+extern avro_schema_t avro_schema_build_bmp_peer_up(char *);
+extern avro_schema_t avro_schema_build_bmp_peer_down(char *);
+extern avro_schema_t avro_schema_build_bmp_stats(char *);
+
 extern void avro_schema_build_bmp_common(avro_schema_t, avro_schema_t, avro_schema_t, avro_schema_t);
 #endif
 

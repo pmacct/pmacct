@@ -808,7 +808,7 @@ avro_schema_t avro_schema_build_bmp_rm(int log_type, char *schema_name)
 
   if (log_type != BGP_LOGDUMP_ET_LOG && log_type != BGP_LOGDUMP_ET_DUMP) return NULL;
 
-  avro_schema_init_bgp(schema, optlong_s, optstr_s, optint_s, FUNC_TYPE_BGP, schema_name);
+  avro_schema_init_bgp(schema, optlong_s, optstr_s, optint_s, FUNC_TYPE_BMP, schema_name);
   avro_schema_build_bgp_common(schema, optlong_s, optstr_s, optint_s, log_type, FUNC_TYPE_BMP);
   avro_schema_build_bmp_common(schema, optlong_s, optstr_s, optint_s);
   avro_schema_build_bgp_route(schema, optlong_s, optstr_s, optint_s);
@@ -817,6 +817,141 @@ avro_schema_t avro_schema_build_bmp_rm(int log_type, char *schema_name)
   avro_schema_record_field_append(schema, "is_loc", optint_s);
   avro_schema_record_field_append(schema, "is_post", optint_s);
   avro_schema_record_field_append(schema, "is_out", optint_s);
+
+  avro_schema_decref(optlong_s);
+  avro_schema_decref(optstr_s);
+  avro_schema_decref(optint_s);
+
+  return schema;
+}
+
+avro_schema_t avro_schema_build_bmp_init(char *schema_name)
+{
+  avro_schema_t schema = NULL;
+  avro_schema_t optlong_s = avro_schema_union();
+  avro_schema_t optstr_s = avro_schema_union();
+  avro_schema_t optint_s = avro_schema_union();
+
+  avro_schema_init_bgp(schema, optlong_s, optstr_s, optint_s, FUNC_TYPE_BMP, schema_name);
+  avro_schema_build_bmp_common(schema, optlong_s, optstr_s, optint_s);
+
+  avro_schema_record_field_append(schema, "bmp_init_info_type0", optstr_s);
+  avro_schema_record_field_append(schema, "bmp_init_info_type1", optstr_s);
+  avro_schema_record_field_append(schema, "bmp_init_info_type2", optstr_s);
+
+  avro_schema_decref(optlong_s);
+  avro_schema_decref(optstr_s);
+  avro_schema_decref(optint_s);
+
+  return schema;
+}
+
+avro_schema_t avro_schema_build_bmp_term(char *schema_name)
+{
+  avro_schema_t schema = NULL;
+  avro_schema_t optlong_s = avro_schema_union();
+  avro_schema_t optstr_s = avro_schema_union();
+  avro_schema_t optint_s = avro_schema_union();
+
+  avro_schema_init_bgp(schema, optlong_s, optstr_s, optint_s, FUNC_TYPE_BMP, schema_name);
+  avro_schema_build_bmp_common(schema, optlong_s, optstr_s, optint_s);
+
+  avro_schema_record_field_append(schema, "bmp_term_info_type0", optstr_s);
+  avro_schema_record_field_append(schema, "bmp_term_info_type1", optstr_s);
+
+  avro_schema_decref(optlong_s);
+  avro_schema_decref(optstr_s);
+  avro_schema_decref(optint_s);
+
+  return schema;
+}
+
+avro_schema_t avro_schema_build_bmp_peer_up(char *schema_name)
+{
+  avro_schema_t schema = NULL;
+  avro_schema_t optlong_s = avro_schema_union();
+  avro_schema_t optstr_s = avro_schema_union();
+  avro_schema_t optint_s = avro_schema_union();
+
+  avro_schema_init_bgp(schema, optlong_s, optstr_s, optint_s, FUNC_TYPE_BMP, schema_name);
+  avro_schema_build_bmp_common(schema, optlong_s, optstr_s, optint_s);
+
+  avro_schema_record_field_append(schema, "peer_ip", avro_schema_string());
+  avro_schema_record_field_append(schema, "peer_asn", avro_schema_int());
+  avro_schema_record_field_append(schema, "peer_type", avro_schema_int());
+  avro_schema_record_field_append(schema, "peer_type_str", avro_schema_string());
+
+  avro_schema_record_field_append(schema, "is_filtered", optint_s);
+  avro_schema_record_field_append(schema, "is_loc", optint_s);
+  avro_schema_record_field_append(schema, "is_post", optint_s);
+  avro_schema_record_field_append(schema, "is_out", optint_s);
+
+  avro_schema_record_field_append(schema, "bgp_id", avro_schema_string());
+  avro_schema_record_field_append(schema, "local_port", avro_schema_int());
+  avro_schema_record_field_append(schema, "remote_port", avro_schema_int());
+  avro_schema_record_field_append(schema, "local_ip", avro_schema_string());
+
+  avro_schema_record_field_append(schema, "bmp_peer_up_info_type0", optstr_s);
+
+  avro_schema_decref(optlong_s);
+  avro_schema_decref(optstr_s);
+  avro_schema_decref(optint_s);
+
+  return schema;
+}
+
+avro_schema_t avro_schema_build_bmp_peer_down(char *schema_name)
+{
+  avro_schema_t schema = NULL;
+  avro_schema_t optlong_s = avro_schema_union();
+  avro_schema_t optstr_s = avro_schema_union();
+  avro_schema_t optint_s = avro_schema_union();
+
+  avro_schema_init_bgp(schema, optlong_s, optstr_s, optint_s, FUNC_TYPE_BMP, schema_name);
+  avro_schema_build_bmp_common(schema, optlong_s, optstr_s, optint_s);
+
+  avro_schema_record_field_append(schema, "peer_ip", avro_schema_string());
+  avro_schema_record_field_append(schema, "peer_asn", avro_schema_int());
+  avro_schema_record_field_append(schema, "peer_type", avro_schema_int());
+  avro_schema_record_field_append(schema, "peer_type_str", avro_schema_string());
+
+  avro_schema_record_field_append(schema, "resson_type", avro_schema_int());
+  avro_schema_record_field_append(schema, "reason_str", avro_schema_string());
+  avro_schema_record_field_append(schema, "resson_loc_code", avro_schema_int());
+
+  avro_schema_decref(optlong_s);
+  avro_schema_decref(optstr_s);
+  avro_schema_decref(optint_s);
+
+  return schema;
+}
+
+avro_schema_t avro_schema_build_bmp_stats(char *schema_name)
+{
+  avro_schema_t schema = NULL;
+  avro_schema_t optlong_s = avro_schema_union();
+  avro_schema_t optstr_s = avro_schema_union();
+  avro_schema_t optint_s = avro_schema_union();
+
+  avro_schema_init_bgp(schema, optlong_s, optstr_s, optint_s, FUNC_TYPE_BMP, schema_name);
+  avro_schema_build_bmp_common(schema, optlong_s, optstr_s, optint_s);
+
+  avro_schema_record_field_append(schema, "peer_ip", avro_schema_string());
+  avro_schema_record_field_append(schema, "peer_asn", avro_schema_int());
+  avro_schema_record_field_append(schema, "peer_type", avro_schema_int());
+  avro_schema_record_field_append(schema, "peer_type_str", avro_schema_string());
+
+  avro_schema_record_field_append(schema, "is_filtered", optint_s);
+  avro_schema_record_field_append(schema, "is_loc", optint_s);
+  avro_schema_record_field_append(schema, "is_post", optint_s);
+  avro_schema_record_field_append(schema, "is_out", optint_s);
+
+  avro_schema_record_field_append(schema, "counter_type", avro_schema_int());
+  avro_schema_record_field_append(schema, "counter_type_str", avro_schema_string());
+  avro_schema_record_field_append(schema, "counter_value", avro_schema_int());
+
+  avro_schema_record_field_append(schema, "afi", optint_s);
+  avro_schema_record_field_append(schema, "safi", optint_s);
 
   avro_schema_decref(optlong_s);
   avro_schema_decref(optstr_s);
