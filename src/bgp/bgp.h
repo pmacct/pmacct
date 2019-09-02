@@ -76,6 +76,7 @@
 #define MAX_HOPS_FOLLOW_NH	20
 #define MAX_NH_SELF_REFERENCES	1
 #define BGP_XCONNECT_STRLEN	(2 * (INET6_ADDRSTRLEN + PORT_STRLEN + 1) + 4) 
+#define MAX_BGP_AVRO_SCHEMA	16
 
 /* Maximum BGP community patterns supported: nfacctd_bgp_stdcomm_pattern,
    nfacctd_bgp_extcomm_pattern, bgp_blackhole_stdcomm_list, etc. */
@@ -231,7 +232,7 @@ struct bgp_misc_structs {
   char *dump_kafka_topic;
   int dump_kafka_topic_rr;
 #if defined WITH_AVRO
-  avro_schema_t dump_avro_schema;
+  avro_schema_t dump_avro_schema[MAX_BGP_AVRO_SCHEMA];
 #endif
   char *dump_kafka_avro_schema_registry;
   char *msglog_file;
@@ -241,7 +242,7 @@ struct bgp_misc_structs {
   char *msglog_kafka_topic;
   int msglog_kafka_topic_rr;
 #if defined WITH_AVRO
-  avro_schema_t msglog_avro_schema;
+  avro_schema_t msglog_avro_schema[MAX_BGP_AVRO_SCHEMA];
 #endif
   char *msglog_kafka_avro_schema_registry;
   char *avro_buf;

@@ -237,10 +237,10 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     avro_writer = avro_writer_memory(bms->avro_buf, LARGEBUFLEN);
 
     if (etype == BGP_LOGDUMP_ET_LOG) {
-      avro_iface = avro_generic_class_from_schema(bms->msglog_avro_schema);
+      avro_iface = avro_generic_class_from_schema(bms->msglog_avro_schema[0]);
     }
     else if (etype == BGP_LOGDUMP_ET_DUMP) {
-      avro_iface = avro_generic_class_from_schema(bms->dump_avro_schema);
+      avro_iface = avro_generic_class_from_schema(bms->dump_avro_schema[0]);
     }
 
     check_i(avro_generic_value_new(avro_iface, &avro_obj));
@@ -516,7 +516,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
       int is_dyn;
 
       is_dyn = bgp_peer_log_dynname(log_filename, SRVBUFLEN, bms->msglog_kafka_topic, peer); 
-      bms->msglog_kafka_host->sd_schema = compose_avro_schema_registry_name(log_filename, is_dyn, bms->msglog_avro_schema, "bgp",
+      bms->msglog_kafka_host->sd_schema = compose_avro_schema_registry_name(log_filename, is_dyn, bms->msglog_avro_schema[0], "bgp",
 									   "msglog", bms->msglog_kafka_avro_schema_registry); 
 #endif
     }
@@ -1075,7 +1075,7 @@ void bgp_handle_dump_event()
 	    int is_dyn;
 
 	    is_dyn = bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_kafka_topic, peer);
-	    bgp_table_dump_kafka_host.sd_schema = compose_avro_schema_registry_name(current_filename, is_dyn, bms->dump_avro_schema, "bgp",
+	    bgp_table_dump_kafka_host.sd_schema = compose_avro_schema_registry_name(current_filename, is_dyn, bms->dump_avro_schema[0], "bgp",
 										    "dump", config.bgp_table_dump_kafka_avro_schema_registry);
 #endif
 	  }

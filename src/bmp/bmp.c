@@ -309,7 +309,12 @@ void skinny_bmp_daemon()
 
 #ifdef WITH_AVRO
     if (config.nfacctd_bmp_msglog_output == PRINT_OUTPUT_AVRO) {
-      bmp_misc_db->msglog_avro_schema = avro_schema_build_bmp_rm(BGP_LOGDUMP_ET_LOG, "bmp_msglog_rm");
+      bmp_misc_db->msglog_avro_schema[BMP_MSG_ROUTE_MONITOR] = avro_schema_build_bmp_rm(BGP_LOGDUMP_ET_LOG, "bmp_msglog_rm");
+      bmp_misc_db->msglog_avro_schema[BMP_MSG_STATS] = avro_schema_build_bmp_stats("bmp_stats");
+      bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_DOWN] = avro_schema_build_bmp_peer_down("bmp_peer_down");
+      bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_UP] = avro_schema_build_bmp_peer_up("bmp_peer_up");
+      bmp_misc_db->msglog_avro_schema[BMP_MSG_INIT] = avro_schema_build_bmp_init("bmp_init");
+      bmp_misc_db->msglog_avro_schema[BMP_MSG_TERM] = avro_schema_build_bmp_term("bmp_term");
     }
 #endif
   }
@@ -323,7 +328,12 @@ void skinny_bmp_daemon()
 
 #ifdef WITH_AVRO
     if (config.bmp_dump_output == PRINT_OUTPUT_AVRO) {
-      bmp_misc_db->dump_avro_schema = avro_schema_build_bmp_rm(BGP_LOGDUMP_ET_DUMP, "bmp_dump_rm");
+      bmp_misc_db->dump_avro_schema[BMP_MSG_ROUTE_MONITOR] = avro_schema_build_bmp_rm(BGP_LOGDUMP_ET_DUMP, "bmp_dump_rm");
+      bmp_misc_db->dump_avro_schema[BMP_MSG_STATS] = avro_schema_build_bmp_stats("bmp_stats");
+      bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_DOWN] = avro_schema_build_bmp_peer_down("bmp_peer_down");
+      bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_UP] = avro_schema_build_bmp_peer_up("bmp_peer_up");
+      bmp_misc_db->dump_avro_schema[BMP_MSG_INIT] = avro_schema_build_bmp_init("bmp_init");
+      bmp_misc_db->dump_avro_schema[BMP_MSG_TERM] = avro_schema_build_bmp_term("bmp_term");
     }
 #endif
   }

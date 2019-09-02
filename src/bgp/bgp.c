@@ -407,10 +407,10 @@ void skinny_bgp_daemon_online()
 
 #ifdef WITH_AVRO
     if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_AVRO) {
-      bgp_misc_db->msglog_avro_schema = avro_schema_build_bgp(BGP_LOGDUMP_ET_LOG, "bgp_msglog");
+      bgp_misc_db->msglog_avro_schema[0] = avro_schema_build_bgp(BGP_LOGDUMP_ET_LOG, "bgp_msglog");
 
       if (config.nfacctd_bgp_msglog_avro_schema_file) {
-	write_avro_schema_to_file(config.nfacctd_bgp_msglog_avro_schema_file, bgp_misc_db->msglog_avro_schema);
+	write_avro_schema_to_file(config.nfacctd_bgp_msglog_avro_schema_file, bgp_misc_db->msglog_avro_schema[0]);
       }
     }
 #endif
@@ -425,10 +425,10 @@ void skinny_bgp_daemon_online()
 
 #ifdef WITH_AVRO
     if (config.bgp_table_dump_output == PRINT_OUTPUT_AVRO) {
-      bgp_misc_db->dump_avro_schema = avro_schema_build_bgp(BGP_LOGDUMP_ET_DUMP, "bgp_dump");
+      bgp_misc_db->dump_avro_schema[0] = avro_schema_build_bgp(BGP_LOGDUMP_ET_DUMP, "bgp_dump");
 
       if (config.bgp_table_dump_avro_schema_file) {
-	write_avro_schema_to_file(config.bgp_table_dump_avro_schema_file, bgp_misc_db->dump_avro_schema);
+	write_avro_schema_to_file(config.bgp_table_dump_avro_schema_file, bgp_misc_db->dump_avro_schema[0]);
       }
     }
 #endif
