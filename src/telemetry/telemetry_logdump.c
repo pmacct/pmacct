@@ -37,7 +37,6 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
 {
   telemetry_misc_structs *tms;
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = TELEMETRY_LOGDUMP_ET_NONE;
-  (void)etype;
 
 #if defined(WITH_KAFKA) || defined(WITH_RABBITMQ)
   pid_t writer_pid = getpid();
@@ -52,17 +51,19 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
   if (!strcmp(event_type, "dump")) etype = TELEMETRY_LOGDUMP_ET_DUMP;
   else if (!strcmp(event_type, "log")) etype = TELEMETRY_LOGDUMP_ET_LOG;
 
-#ifdef WITH_RABBITMQ
   if ((config.telemetry_msglog_amqp_routing_key && etype == TELEMETRY_LOGDUMP_ET_LOG) ||
-      (config.telemetry_dump_amqp_routing_key && etype == TELEMETRY_LOGDUMP_ET_DUMP))
+      (config.telemetry_dump_amqp_routing_key && etype == TELEMETRY_LOGDUMP_ET_DUMP)) {
+#ifdef WITH_RABBITMQ
     p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
 #endif
+  }
 
-#ifdef WITH_KAFKA
   if ((config.telemetry_msglog_kafka_topic && etype == TELEMETRY_LOGDUMP_ET_LOG) ||
-      (config.telemetry_dump_kafka_topic && etype == TELEMETRY_LOGDUMP_ET_DUMP))
+      (config.telemetry_dump_kafka_topic && etype == TELEMETRY_LOGDUMP_ET_DUMP)) {
+#ifdef WITH_KAFKA
     p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
 #endif
+  }
 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
@@ -113,23 +114,23 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
         (config.telemetry_dump_file && etype == TELEMETRY_LOGDUMP_ET_DUMP))
       write_and_free_json(peer->log->fd, obj);
 
-#ifdef WITH_RABBITMQ
     if ((config.telemetry_msglog_amqp_routing_key && etype == TELEMETRY_LOGDUMP_ET_LOG) ||
         (config.telemetry_dump_amqp_routing_key && etype == TELEMETRY_LOGDUMP_ET_DUMP)) {
       add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
+#ifdef WITH_RABBITMQ
       amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
       p_amqp_unset_routing_key(peer->log->amqp_host);
-    }
 #endif
+    }
 
-#ifdef WITH_KAFKA
     if ((config.telemetry_msglog_kafka_topic && etype == TELEMETRY_LOGDUMP_ET_LOG) ||
         (config.telemetry_dump_kafka_topic && etype == TELEMETRY_LOGDUMP_ET_DUMP)) {
       add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
+#ifdef WITH_KAFKA
       kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
       p_kafka_unset_topic(peer->log->kafka_host);
-    }
 #endif
+    }
 #endif
   }
 
