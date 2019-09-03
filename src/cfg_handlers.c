@@ -1765,16 +1765,16 @@ int cfg_key_avro_buffer_size(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_avro_schema_output_file(char *filename, char *name, char *value_ptr)
+int cfg_key_avro_schema_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  if (!name) for (; list; list = list->next, changes++) list->cfg.avro_schema_output_file = value_ptr;
+  if (!name) for (; list; list = list->next, changes++) list->cfg.avro_schema_file = value_ptr;
   else {
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
-        list->cfg.avro_schema_output_file = value_ptr;
+        list->cfg.avro_schema_file = value_ptr;
         changes++;
         break;
       }

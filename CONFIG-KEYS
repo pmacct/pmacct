@@ -1577,7 +1577,7 @@ DESC:		When the Apache Avro format is used to encode the messages sent to a mess
 		subsequent records.
 DEFAULT:	8192
 
-KEY:		avro_schema_output_file
+KEY:		avro_schema_file
 DESC:		When the Apache Avro format is used to encode the messages sent to a message broker (amqp and
 		kafka plugins), this option causes the schema used to encode the messages to be dumped to the
 		file path given. The schema can then be used by the receiving end to decode the messages. Note

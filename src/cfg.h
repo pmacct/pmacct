@@ -154,7 +154,7 @@ struct configuration {
   int mongo_insert_batch;
   int message_broker_output;
   int avro_buffer_size;
-  char *avro_schema_output_file;
+  char *avro_schema_file;
   char *amqp_exchange_type;
   int amqp_persistent_msg;
   u_int32_t amqp_frame_max;

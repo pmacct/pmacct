@@ -159,7 +159,8 @@ static const struct _dictionary_line dictionary[] = {
   {"mongo_startup_delay", cfg_key_sql_startup_delay},
   {"mongo_num_protos", cfg_key_num_protos},
   {"avro_buffer_size", cfg_key_avro_buffer_size},
-  {"avro_schema_output_file", cfg_key_avro_schema_output_file},
+  {"avro_schema_output_file", cfg_key_avro_schema_file}, /* to be discontinued */
+  {"avro_schema_file", cfg_key_avro_schema_file},
   {"amqp_refresh_time", cfg_key_sql_refresh_time},
   {"amqp_history", cfg_key_sql_history},
   {"amqp_history_offset", cfg_key_sql_history_offset},
