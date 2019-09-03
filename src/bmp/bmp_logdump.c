@@ -293,7 +293,7 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
   while (idx < blpu->tlv.entries) {
     char *type = NULL, *value = NULL;
 
-    type = bmp_tlv_type_print(blpu->tlv.e[idx].type, "bmp_peer_up_info", NULL, 0);
+    type = bmp_tlv_type_print(blpu->tlv.e[idx].type, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_ENTRIES);
     value = null_terminate(blpu->tlv.e[idx].val, blpu->tlv.e[idx].len);
     json_object_set_new_nocheck(obj, type, json_string(value));
     free(type);
