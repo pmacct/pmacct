@@ -193,14 +193,10 @@ struct bmp_stats_cnt_hdr {
 
 static const char __attribute__((unused)) *bmp_peer_up_info_types[] = {
   "string",
-  "sysdescr",
-  "sysname"
 };
 
 #define BMP_PEER_UP_INFO_STRING		0
-#define BMP_PEER_UP_INFO_SYSDESCR	1
-#define BMP_PEER_UP_INFO_SYSNAME	2
-#define BMP_PEER_UP_INFO_MAX		2
+#define BMP_PEER_UP_INFO_MAX		0
 
 #define BMP_PEER_UP_INFO_ENTRIES	8	
 
