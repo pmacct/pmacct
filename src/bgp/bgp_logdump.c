@@ -76,7 +76,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     struct bgp_attr *attr = ri->attr;
-    char ip_address[INET6_ADDRSTRLEN];
+    char ip_address[INET6_ADDRSTRLEN], log_type_str[SUPERSHORTBUFLEN];
     json_t *obj = json_object();
 
     char empty[] = "";
@@ -98,7 +98,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 	json_object_set_new_nocheck(obj, "log_type", json_string("delete"));
 	break;
       default:
-        json_object_set_new_nocheck(obj, "log_type", json_integer((json_int_t)log_type));
+	snprintf(log_type_str, SUPERSHORTBUFLEN, "%d", log_type); 
+        json_object_set_new_nocheck(obj, "log_type", json_string(log_type_str));
 	break;
       }
     }
