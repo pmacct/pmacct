@@ -31,6 +31,9 @@
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
 #endif
+#ifdef WITH_AVRO
+#include "plugin_cmn_avro.h"
+#endif
 
 int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u_int64_t log_seq, char *event_type, int output, int log_type)
 {
@@ -132,6 +135,109 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
     }
 #endif
   }
+  else if (output == PRINT_OUTPUT_AVRO) {
+#ifdef WITH_AVRO
+    avro_writer_t avro_writer = {0};
+    avro_value_iface_t *avro_iface = NULL;
+    avro_value_t avro_obj, avro_field, avro_branch;
+    size_t avro_obj_len, avro_len;
+    void *avro_local_buf = NULL;
+    char tstamp_str[SRVBUFLEN];
+
+    avro_writer = avro_writer_memory(bms->avro_buf, LARGEBUFLEN);
+
+    if (etype == BGP_LOGDUMP_ET_LOG) {
+      avro_iface = avro_generic_class_from_schema(bms->msglog_avro_schema[0]);
+    }
+    else if (etype == BGP_LOGDUMP_ET_DUMP) {
+      avro_iface = avro_generic_class_from_schema(bms->dump_avro_schema[0]);
+    }
+
+    check_i(avro_generic_value_new(avro_iface, &avro_obj));
+
+    check_i(avro_value_get_by_name(&avro_obj, "event_type", &avro_field, NULL));
+    check_i(avro_value_set_string(&avro_field, event_type));
+
+    if (etype == BGP_LOGDUMP_ET_LOG) {
+      check_i(avro_value_get_by_name(&avro_obj, "seq", &avro_field, NULL));
+      check_i(avro_value_set_long(&avro_field, log_seq));
+
+      compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE,
+                        config.timestamps_since_epoch, config.timestamps_rfc3339,
+                        config.timestamps_utc);
+      check_i(avro_value_get_by_name(&avro_obj, "timestamp", &avro_field, NULL));
+      check_i(avro_value_set_string(&avro_field, tstamp_str));
+
+      check_i(avro_value_get_by_name(&avro_obj, "event_timestamp", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+    }
+    else if (etype == BGP_LOGDUMP_ET_DUMP) {
+      check_i(avro_value_get_by_name(&avro_obj, "seq", &avro_field, NULL));
+      check_i(avro_value_set_long(&avro_field, bgp_peer_log_seq_get(&bms->log_seq)));
+
+      check_i(avro_value_get_by_name(&avro_obj, "timestamp", &avro_field, NULL));
+      check_i(avro_value_set_string(&avro_field, bms->dump.tstamp_str));
+
+      compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE,
+                        config.timestamps_since_epoch, config.timestamps_rfc3339,
+                        config.timestamps_utc);
+      check_i(avro_value_get_by_name(&avro_obj, "event_timestamp", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      check_i(avro_value_set_string(&avro_field, tstamp_str));
+    }
+
+    check_i(avro_value_get_by_name(&avro_obj, "bmp_router", &avro_field, NULL));
+    check_i(avro_value_set_string(&avro_field, peer->addr_str));
+
+    check_i(avro_value_get_by_name(&avro_obj, "bmp_router_port", &avro_field, NULL));
+    check_i(avro_value_set_int(&avro_field, peer->tcp_port));
+
+    /* XXX: call specific BMP message type handlers */
+
+    if ((config.nfacctd_bmp_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
+        (config.bmp_dump_file && etype == BGP_LOGDUMP_ET_DUMP) ||
+        (config.nfacctd_bmp_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
+        (config.bmp_dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP) ||
+        (config.nfacctd_bmp_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG /* && !bms->msglog_kafka_avro_schema_registry */) ||
+        (config.bmp_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP /* && !bms->dump_kafka_avro_schema_registry*/)) {
+      avro_value_sizeof(&avro_obj, &avro_obj_len);
+      assert(avro_obj_len < LARGEBUFLEN);
+
+      if (avro_value_write(avro_writer, &avro_obj)) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to write value: %s\n", config.name, bms->log_str, avro_strerror());
+        exit_gracefully(1);
+      }
+
+      avro_len = avro_writer_tell(avro_writer);
+      avro_local_buf = bms->avro_buf;
+    }
+
+    if ((config.nfacctd_bmp_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
+        (config.bmp_dump_file && etype == BGP_LOGDUMP_ET_DUMP)) {
+      write_file_binary(peer->log->fd, avro_local_buf, avro_len);
+    }
+
+    if ((config.nfacctd_bmp_msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
+        (config.bmp_dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP)) {
+#ifdef WITH_RABBITMQ
+      amqp_ret = write_binary_amqp(peer->log->amqp_host, avro_local_buf, avro_len);
+      p_amqp_unset_routing_key(peer->log->amqp_host);
+#endif
+    }
+
+    if ((config.nfacctd_bmp_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
+        (config.bmp_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
+#ifdef WITH_KAFKA
+      kafka_ret = write_binary_kafka(peer->log->kafka_host, avro_local_buf, avro_len);
+      p_kafka_unset_topic(peer->log->kafka_host);
+#endif
+    }
+
+    avro_value_decref(&avro_obj);
+    avro_value_iface_decref(avro_iface);
+    avro_writer_reset(avro_writer);
+#endif
+  }
 
   return (ret | amqp_ret | kafka_ret);
 }
@@ -139,45 +245,49 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
 int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_stats *blstats, char *event_type, int output, void *vobj)
 {
   int ret = 0;
-#ifdef WITH_JANSSON
-  char bmp_msg_type[] = "stats";
-  char ip_address[INET6_ADDRSTRLEN];
-  json_t *obj = (json_t *) vobj;
 
   if (!peer || !bdata || !blstats || !vobj) return ERR;
 
-  json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    json_t *obj = (json_t *) vobj;
+    char bmp_msg_type[] = "stats";
+    char ip_address[INET6_ADDRSTRLEN];
 
-  addr_to_str(ip_address, &bdata->peer_ip);
-  json_object_set_new_nocheck(obj, "peer_ip", json_string(ip_address));
+    json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 
-  json_object_set_new_nocheck(obj, "peer_asn", json_integer((json_int_t)bdata->peer_asn));
+    addr_to_str(ip_address, &bdata->peer_ip);
+    json_object_set_new_nocheck(obj, "peer_ip", json_string(ip_address));
 
-  json_object_set_new_nocheck(obj, "peer_type", json_integer((json_int_t)bdata->chars.peer_type));
+    json_object_set_new_nocheck(obj, "peer_asn", json_integer((json_int_t)bdata->peer_asn));
+    json_object_set_new_nocheck(obj, "peer_type", json_integer((json_int_t)bdata->chars.peer_type));
 
-  if (bdata->chars.is_loc) {
-    json_object_set_new_nocheck(obj, "is_filtered", json_integer((json_int_t)bdata->chars.is_filtered));
-    json_object_set_new_nocheck(obj, "is_loc", json_integer((json_int_t)bdata->chars.is_loc));
-  }
-  else if (bdata->chars.is_out) {
-    json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bdata->chars.is_post));
-    json_object_set_new_nocheck(obj, "is_out", json_integer((json_int_t)bdata->chars.is_out));
-  }
+    if (bdata->chars.is_loc) {
+      json_object_set_new_nocheck(obj, "is_filtered", json_integer((json_int_t)bdata->chars.is_filtered));
+      json_object_set_new_nocheck(obj, "is_loc", json_integer((json_int_t)bdata->chars.is_loc));
+    }
+    else if (bdata->chars.is_out) {
+      json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bdata->chars.is_post));
+      json_object_set_new_nocheck(obj, "is_out", json_integer((json_int_t)bdata->chars.is_out));
+    }
 
-  json_object_set_new_nocheck(obj, "counter_type", json_integer((json_int_t)blstats->cnt_type));
+    json_object_set_new_nocheck(obj, "counter_type", json_integer((json_int_t)blstats->cnt_type));
 
-  if (blstats->cnt_type <= BMP_STATS_MAX)
-    json_object_set_new_nocheck(obj, "counter_type_str", json_string(bmp_stats_cnt_types[blstats->cnt_type]));
-  else
-    json_object_set_new_nocheck(obj, "counter_type_str", json_string("Unknown"));
+    if (blstats->cnt_type <= BMP_STATS_MAX) {
+      json_object_set_new_nocheck(obj, "counter_type_str", json_string(bmp_stats_cnt_types[blstats->cnt_type]));
+    }
+    else {
+      json_object_set_new_nocheck(obj, "counter_type_str", json_string("Unknown"));
+    }
 
-  if (blstats->cnt_type == BMP_STATS_TYPE9 || blstats->cnt_type == BMP_STATS_TYPE10) {
-    json_object_set_new_nocheck(obj, "afi", json_integer((json_int_t)blstats->cnt_afi));
-    json_object_set_new_nocheck(obj, "safi", json_integer((json_int_t)blstats->cnt_safi));
-  }
+    if (blstats->cnt_type == BMP_STATS_TYPE9 || blstats->cnt_type == BMP_STATS_TYPE10) {
+      json_object_set_new_nocheck(obj, "afi", json_integer((json_int_t)blstats->cnt_afi));
+      json_object_set_new_nocheck(obj, "safi", json_integer((json_int_t)blstats->cnt_safi));
+    }
 
-  if (blstats->got_data) json_object_set_new_nocheck(obj, "counter_value", json_integer((json_int_t)blstats->cnt_data));
+    if (blstats->got_data) json_object_set_new_nocheck(obj, "counter_value", json_integer((json_int_t)blstats->cnt_data));
 #endif
+  }
 
   return ret;
 }
@@ -185,29 +295,32 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_
 int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_init_array *blinit, char *event_type, int output, void *vobj)
 {
   int ret = 0;
-#ifdef WITH_JANSSON
-  int idx = 0;
-  char bmp_msg_type[] = "init";
-  json_t *obj = (json_t *) vobj;
 
   if (!peer || !vobj) return ERR;
 
-  json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    int idx = 0;
+    char bmp_msg_type[] = "init";
+    json_t *obj = (json_t *) vobj;
 
-  if (blinit) {
-    while (idx < blinit->entries) { 
-      char *type = NULL, *value = NULL;
+    json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 
-      type = bmp_tlv_type_print(blinit->e[idx].type, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_ENTRIES);
-      value = null_terminate(blinit->e[idx].val, blinit->e[idx].len);
-      json_object_set_new_nocheck(obj, type, json_string(value));
-      free(type);
-      free(value);
+    if (blinit) {
+      while (idx < blinit->entries) { 
+	char *type = NULL, *value = NULL;
 
-      idx++;
+	type = bmp_tlv_type_print(blinit->e[idx].type, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_ENTRIES);
+	value = null_terminate(blinit->e[idx].val, blinit->e[idx].len);
+	json_object_set_new_nocheck(obj, type, json_string(value));
+	free(type);
+	free(value);
+
+	idx++;
+      }
     }
-  }
 #endif
+  }
 
   return ret;
 }
@@ -215,36 +328,39 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
 int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_term_array *blterm, char *event_type, int output, void *vobj)
 {
   int ret = 0;
-#ifdef WITH_JANSSON
-  char bmp_msg_type[] = "term";
-  int idx = 0;
-  json_t *obj = (json_t *) vobj;
 
   if (!peer || !vobj) return ERR;
 
-  json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    char bmp_msg_type[] = "term";
+    int idx = 0;
+    json_t *obj = (json_t *) vobj;
 
-  if (blterm) {
-    while (idx < blterm->entries) {
-      char *type = NULL, *value = NULL;
+    json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 
-      type = bmp_tlv_type_print(blterm->e[idx].type, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_ENTRIES);
+    if (blterm) {
+      while (idx < blterm->entries) {
+	char *type = NULL, *value = NULL;
 
-      if (blterm->e[idx].type == BMP_TERM_INFO_REASON) {
-	value = bmp_term_reason_print(blterm->e[idx].reas_type);
+	type = bmp_tlv_type_print(blterm->e[idx].type, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_ENTRIES);
+
+	if (blterm->e[idx].type == BMP_TERM_INFO_REASON) {
+	  value = bmp_term_reason_print(blterm->e[idx].reas_type);
+	}
+	else {
+	  value = null_terminate(blterm->e[idx].val, blterm->e[idx].len);
+	}
+
+        json_object_set_new_nocheck(obj, type, json_string(value));
+        free(type);
+        free(value);
+
+        idx++;
       }
-      else {
-	value = null_terminate(blterm->e[idx].val, blterm->e[idx].len);
-      }
-
-      json_object_set_new_nocheck(obj, type, json_string(value));
-      free(type);
-      free(value);
-
-      idx++;
     }
-  }
 #endif
+  }
 
   return ret;
 }
@@ -252,56 +368,57 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
 int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_peer_up *blpu, char *event_type, int output, void *vobj)
 {
   int ret = 0;
-#ifdef WITH_JANSSON
-  char bmp_msg_type[] = "peer_up";
-  int idx = 0;
-  char ip_address[INET6_ADDRSTRLEN];
-  json_t *obj = (json_t *) vobj;
 
   if (!peer || !bdata || !blpu || !vobj) return ERR;
 
-  json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    char bmp_msg_type[] = "peer_up";
+    char ip_address[INET6_ADDRSTRLEN];
+    int idx = 0;
+    json_t *obj = (json_t *) vobj;
 
-  addr_to_str(ip_address, &bdata->peer_ip);
-  json_object_set_new_nocheck(obj, "peer_ip", json_string(ip_address));
+    json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 
-  json_object_set_new_nocheck(obj, "peer_asn", json_integer((json_int_t)bdata->peer_asn));
+    addr_to_str(ip_address, &bdata->peer_ip);
+    json_object_set_new_nocheck(obj, "peer_ip", json_string(ip_address));
 
-  json_object_set_new_nocheck(obj, "peer_type", json_integer((json_int_t)bdata->chars.peer_type));
+    json_object_set_new_nocheck(obj, "peer_asn", json_integer((json_int_t)bdata->peer_asn));
+    json_object_set_new_nocheck(obj, "peer_type", json_integer((json_int_t)bdata->chars.peer_type));
 
-  if (bdata->chars.peer_type <= BMP_PEER_TYPE_MAX)
-    json_object_set_new_nocheck(obj, "peer_type_str", json_string(bmp_peer_types[bdata->chars.peer_type]));
+    if (bdata->chars.peer_type <= BMP_PEER_TYPE_MAX) {
+      json_object_set_new_nocheck(obj, "peer_type_str", json_string(bmp_peer_types[bdata->chars.peer_type]));
+    }
 
-  if (bdata->chars.is_loc) {
-    json_object_set_new_nocheck(obj, "is_filtered", json_integer((json_int_t)bdata->chars.is_filtered));
-    json_object_set_new_nocheck(obj, "is_loc", json_integer((json_int_t)bdata->chars.is_loc));
-  }
-  else if (bdata->chars.is_out) {
-    json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bdata->chars.is_post));
-    json_object_set_new_nocheck(obj, "is_out", json_integer((json_int_t)bdata->chars.is_out));
-  }
+    if (bdata->chars.is_loc) {
+      json_object_set_new_nocheck(obj, "is_filtered", json_integer((json_int_t)bdata->chars.is_filtered));
+      json_object_set_new_nocheck(obj, "is_loc", json_integer((json_int_t)bdata->chars.is_loc));
+    }
+    else if (bdata->chars.is_out) {
+      json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bdata->chars.is_post));
+      json_object_set_new_nocheck(obj, "is_out", json_integer((json_int_t)bdata->chars.is_out));
+    }
 
-  json_object_set_new_nocheck(obj, "bgp_id", json_string(inet_ntoa(bdata->bgp_id.address.ipv4)));
+    json_object_set_new_nocheck(obj, "bgp_id", json_string(inet_ntoa(bdata->bgp_id.address.ipv4)));
+    json_object_set_new_nocheck(obj, "local_port", json_integer((json_int_t)blpu->loc_port));
+    json_object_set_new_nocheck(obj, "remote_port", json_integer((json_int_t)blpu->rem_port));
 
-  json_object_set_new_nocheck(obj, "local_port", json_integer((json_int_t)blpu->loc_port));
+    addr_to_str(ip_address, &blpu->local_ip);
+    json_object_set_new_nocheck(obj, "local_ip", json_string(ip_address));
 
-  json_object_set_new_nocheck(obj, "remote_port", json_integer((json_int_t)blpu->rem_port));
+    while (idx < blpu->tlv.entries) {
+      char *type = NULL, *value = NULL;
 
-  addr_to_str(ip_address, &blpu->local_ip);
-  json_object_set_new_nocheck(obj, "local_ip", json_string(ip_address));
+      type = bmp_tlv_type_print(blpu->tlv.e[idx].type, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_ENTRIES);
+      value = null_terminate(blpu->tlv.e[idx].val, blpu->tlv.e[idx].len);
+      json_object_set_new_nocheck(obj, type, json_string(value));
+      free(type);
+      free(value);
 
-  while (idx < blpu->tlv.entries) {
-    char *type = NULL, *value = NULL;
-
-    type = bmp_tlv_type_print(blpu->tlv.e[idx].type, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_ENTRIES);
-    value = null_terminate(blpu->tlv.e[idx].val, blpu->tlv.e[idx].len);
-    json_object_set_new_nocheck(obj, type, json_string(value));
-    free(type);
-    free(value);
-
-    idx++;
-  }
+      idx++;
+    }
 #endif
+  }
 
   return ret;
 }
@@ -309,33 +426,38 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
 int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_peer_down *blpd, char *event_type, int output, void *vobj)
 {
   int ret = 0;
-#ifdef WITH_JANSSON
-  char bmp_msg_type[] = "peer_down";
-  char ip_address[INET6_ADDRSTRLEN];
-  json_t *obj = (json_t *) vobj;
 
   if (!peer || !bdata || !blpd || !vobj) return ERR;
 
-  json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    char bmp_msg_type[] = "peer_down";
+    char ip_address[INET6_ADDRSTRLEN];
+    json_t *obj = (json_t *) vobj;
 
-  addr_to_str(ip_address, &bdata->peer_ip);
-  json_object_set_new_nocheck(obj, "peer_ip", json_string(ip_address));
+    json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 
-  json_object_set_new_nocheck(obj, "peer_asn", json_integer((json_int_t)bdata->peer_asn));
+    addr_to_str(ip_address, &bdata->peer_ip);
+    json_object_set_new_nocheck(obj, "peer_ip", json_string(ip_address));
 
-  json_object_set_new_nocheck(obj, "peer_type", json_integer((json_int_t)bdata->chars.peer_type));
+    json_object_set_new_nocheck(obj, "peer_asn", json_integer((json_int_t)bdata->peer_asn));
+    json_object_set_new_nocheck(obj, "peer_type", json_integer((json_int_t)bdata->chars.peer_type));
 
-  if (bdata->chars.peer_type <= BMP_PEER_TYPE_MAX)
-    json_object_set_new_nocheck(obj, "peer_type_str", json_string(bmp_peer_types[bdata->chars.peer_type]));
+    if (bdata->chars.peer_type <= BMP_PEER_TYPE_MAX) {
+      json_object_set_new_nocheck(obj, "peer_type_str", json_string(bmp_peer_types[bdata->chars.peer_type]));
+    }
 
-  json_object_set_new_nocheck(obj, "reason_type", json_integer((json_int_t)blpd->reason));
+    json_object_set_new_nocheck(obj, "reason_type", json_integer((json_int_t)blpd->reason));
 
-  if (blpd->reason <= BMP_PEER_DOWN_MAX)
-    json_object_set_new_nocheck(obj, "reason_str", json_string(bmp_peer_down_reason_types[blpd->reason]));
+    if (blpd->reason <= BMP_PEER_DOWN_MAX) {
+      json_object_set_new_nocheck(obj, "reason_str", json_string(bmp_peer_down_reason_types[blpd->reason]));
+    }
 
-  if (blpd->reason == BMP_PEER_DOWN_LOC_CODE)
-    json_object_set_new_nocheck(obj, "reason_loc_code", json_integer((json_int_t)blpd->loc_code));
+    if (blpd->reason == BMP_PEER_DOWN_LOC_CODE) {
+      json_object_set_new_nocheck(obj, "reason_loc_code", json_integer((json_int_t)blpd->loc_code));
+    }
 #endif
+  }
 
   return ret;
 }
@@ -981,6 +1103,9 @@ avro_schema_t avro_schema_build_bmp_stats(char *schema_name)
 
 void avro_schema_build_bmp_common(avro_schema_t schema, avro_schema_t optlong_s, avro_schema_t optstr_s, avro_schema_t optint_s)
 {
+  avro_schema_record_field_append(schema, "seq", avro_schema_long());
+  avro_schema_record_field_append(schema, "timestamp", avro_schema_string());
+  avro_schema_record_field_append(schema, "event_timestamp", optstr_s);
   avro_schema_record_field_append(schema, "bmp_router", avro_schema_string());
   avro_schema_record_field_append(schema, "bmp_router_port", avro_schema_int());
   avro_schema_record_field_append(schema, "bmp_msg_type", avro_schema_string());

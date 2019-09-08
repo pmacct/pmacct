@@ -32,6 +32,9 @@
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
 #endif
+#if defined WITH_AVRO
+#include "plugin_cmn_avro.h"
+#endif
 
 /* variables to be exported away */
 thread_pool_t *bmp_pool;
@@ -361,6 +364,15 @@ void skinny_bmp_daemon()
     if (config.bmp_dump_amqp_routing_key) bmp_dump_init_amqp_host();
     if (config.bmp_dump_kafka_topic) bmp_dump_init_kafka_host();
   }
+
+#ifdef WITH_AVRO
+  bmp_misc_db->avro_buf = malloc(LARGEBUFLEN);
+  if (!bmp_misc_db->avro_buf) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_buf). Exiting ..\n", config.name, bgp_misc_db->log_str);
+    exit_gracefully(1);
+  }
+  else memset(bmp_misc_db->avro_buf, 0, LARGEBUFLEN);
+#endif
 
   select_fd = bkp_select_fd = (config.bmp_sock + 1);
   recalc_fds = FALSE;
