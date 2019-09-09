@@ -1351,7 +1351,7 @@ void avro_schema_build_bgp_common(avro_schema_t schema, avro_schema_t optlong_s,
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(type);
 
-  if (log_type == BGP_LOGDUMP_ET_LOG) {
+  if (log_type == BGP_LOGDUMP_ET_LOG && type == FUNC_TYPE_BGP) {
     avro_schema_record_field_append(schema, "log_type", avro_schema_string());
   }
   avro_schema_record_field_append(schema, "seq", avro_schema_long());

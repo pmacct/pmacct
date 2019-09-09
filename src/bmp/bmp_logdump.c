@@ -142,7 +142,8 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
     avro_value_t avro_obj, avro_field, avro_branch;
     size_t avro_obj_len, avro_len;
     void *avro_local_buf = NULL;
-    char tstamp_str[SRVBUFLEN];
+
+    char wid[SHORTSHORTBUFLEN], tstamp_str[SRVBUFLEN];
 
     avro_writer = avro_writer_memory(bms->avro_buf, LARGEBUFLEN);
 
@@ -192,7 +193,29 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
     check_i(avro_value_get_by_name(&avro_obj, "bmp_router_port", &avro_field, NULL));
     check_i(avro_value_set_int(&avro_field, peer->tcp_port));
 
-    /* XXX: call specific BMP message type handlers */
+    switch (log_type) {
+    case BMP_LOG_TYPE_STATS:
+      ret = bmp_log_msg_stats(peer, bdata, (struct bmp_log_stats *) log_data, event_type, output, &avro_obj);
+      break;
+    case BMP_LOG_TYPE_INIT:
+      ret = bmp_log_msg_init(peer, bdata, (struct bmp_log_init_array *) log_data, event_type, output, &avro_obj);
+      break;
+    case BMP_LOG_TYPE_TERM:
+      ret = bmp_log_msg_term(peer, bdata, (struct bmp_log_term_array *) log_data, event_type, output, &avro_obj);
+      break;
+    case BMP_LOG_TYPE_PEER_UP:
+      ret = bmp_log_msg_peer_up(peer, bdata, (struct bmp_log_peer_up *) log_data, event_type, output, &avro_obj);
+      break;
+    case BMP_LOG_TYPE_PEER_DOWN:
+      ret = bmp_log_msg_peer_down(peer, bdata, (struct bmp_log_peer_down *) log_data, event_type, output, &avro_obj);
+      break;
+    default:
+      break;
+    }
+
+    check_i(avro_value_get_by_name(&avro_obj, "writer_id", &avro_field, NULL));
+    snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, writer_pid);
+    check_i(avro_value_set_string(&avro_field, wid));
 
     if ((config.nfacctd_bmp_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
         (config.bmp_dump_file && etype == BGP_LOGDUMP_ET_DUMP) ||
@@ -286,6 +309,89 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_
     }
 
     if (blstats->got_data) json_object_set_new_nocheck(obj, "counter_value", json_integer((json_int_t)blstats->cnt_data));
+#endif
+  }
+  else if (output == PRINT_OUTPUT_AVRO) {
+#ifdef WITH_AVRO
+    avro_value_t *obj = (avro_value_t *) vobj, avro_field, avro_branch;
+    char bmp_msg_type[] = "stats";
+    char ip_address[INET6_ADDRSTRLEN];
+
+    check_i(avro_value_get_by_name(obj, "bmp_msg_type", &avro_field, NULL));
+    check_i(avro_value_set_string(&avro_field, bmp_msg_type));
+
+    addr_to_str(ip_address, &bdata->peer_ip);
+    check_i(avro_value_get_by_name(obj, "peer_ip", &avro_field, NULL));
+    check_i(avro_value_set_string(&avro_field, ip_address));
+
+    check_i(avro_value_get_by_name(obj, "peer_asn", &avro_field, NULL));
+    check_i(avro_value_set_int(&avro_field, bdata->peer_asn));
+
+    check_i(avro_value_get_by_name(obj, "peer_type", &avro_field, NULL));
+    check_i(avro_value_set_int(&avro_field, bdata->chars.peer_type));
+
+    if (bdata->chars.is_loc) {
+      check_i(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      check_i(avro_value_set_int(&avro_field, bdata->chars.is_filtered));
+
+      check_i(avro_value_get_by_name(obj, "is_loc", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      check_i(avro_value_set_int(&avro_field, bdata->chars.is_loc));
+
+      check_i(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+
+      check_i(avro_value_get_by_name(obj, "is_out", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+    }
+    else if (bdata->chars.is_out) {
+      check_i(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+
+      check_i(avro_value_get_by_name(obj, "is_loc", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+
+      check_i(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      check_i(avro_value_set_int(&avro_field, bdata->chars.is_post));
+
+      check_i(avro_value_get_by_name(obj, "is_out", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      check_i(avro_value_set_int(&avro_field, bdata->chars.is_out));
+    }
+
+    check_i(avro_value_get_by_name(obj, "counter_type", &avro_field, NULL));
+    check_i(avro_value_set_int(&avro_field, blstats->cnt_type));
+
+    if (blstats->cnt_type <= BMP_STATS_MAX) {
+      check_i(avro_value_get_by_name(obj, "counter_type_str", &avro_field, NULL));
+      check_i(avro_value_set_string(&avro_field, bmp_stats_cnt_types[blstats->cnt_type]));
+    }
+    else {
+      check_i(avro_value_get_by_name(obj, "counter_type_str", &avro_field, NULL));
+      check_i(avro_value_set_string(&avro_field, "Unknown"));
+    }
+
+    if (blstats->cnt_type == BMP_STATS_TYPE9 || blstats->cnt_type == BMP_STATS_TYPE10) {
+      check_i(avro_value_get_by_name(obj, "afi", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      check_i(avro_value_set_int(&avro_field, blstats->cnt_afi));
+
+      check_i(avro_value_get_by_name(obj, "safi", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      check_i(avro_value_set_int(&avro_field, blstats->cnt_safi));
+    }
+    else {
+      check_i(avro_value_get_by_name(obj, "afi", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+
+      check_i(avro_value_get_by_name(obj, "safi", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+    }
+
+    check_i(avro_value_get_by_name(obj, "counter_value", &avro_field, NULL));
+    check_i(avro_value_set_long(&avro_field, blstats->cnt_data));
 #endif
   }
 
@@ -933,8 +1039,11 @@ avro_schema_t avro_schema_build_bmp_rm(int log_type, char *schema_name)
 
   avro_schema_init_bgp(schema, optlong_s, optstr_s, optint_s, FUNC_TYPE_BMP, schema_name);
   avro_schema_build_bgp_common(schema, optlong_s, optstr_s, optint_s, log_type, FUNC_TYPE_BMP);
-  avro_schema_build_bmp_common(schema, optlong_s, optstr_s, optint_s);
   avro_schema_build_bgp_route(schema, optlong_s, optstr_s, optint_s);
+
+  /* cherry-picked from avro_schema_build_bmp_common() */ 
+  avro_schema_record_field_append(schema, "event_timestamp", optstr_s);
+  avro_schema_record_field_append(schema, "bmp_msg_type", avro_schema_string());
 
   avro_schema_record_field_append(schema, "is_filtered", optint_s);
   avro_schema_record_field_append(schema, "is_loc", optint_s);
