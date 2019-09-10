@@ -6,32 +6,32 @@
 -- Tables 
 DROP TABLE IF EXISTS acct_v6;
 CREATE TABLE acct_v6 (
-	agent_id BIGINT NOT NULL DEFAULT 0,
-	class_id CHAR(16) NOT NULL DEFAULT ' ',
-        mac_src macaddr NOT NULL DEFAULT '0:0:0:0:0:0',
-        mac_dst macaddr NOT NULL DEFAULT '0:0:0:0:0:0',
-	vlan INT NOT NULL DEFAULT 0,
-        as_src BIGINT NOT NULL DEFAULT 0,
-        as_dst BIGINT NOT NULL DEFAULT 0,
-        ip_src inet NOT NULL DEFAULT '0.0.0.0',
-        ip_dst inet NOT NULL DEFAULT '0.0.0.0',
-        port_src INT NOT NULL DEFAULT 0,
-        port_dst INT NOT NULL DEFAULT 0,
-        ip_proto SMALLINT NOT NULL DEFAULT 0,
-	tos INT NOT NULL DEFAULT 0,
-        packets INT NOT NULL,
-        bytes BIGINT NOT NULL,
-	flows INT NOT NULL DEFAULT 0,
-        stamp_inserted timestamp without time zone NOT NULL DEFAULT '0001-01-01 00:00:00', 
-        stamp_updated timestamp without time zone,
-        CONSTRAINT acct_v6_pk PRIMARY KEY (agent_id, class_id, mac_src, mac_dst, vlan, as_src, as_dst, ip_src, ip_dst, port_src, port_dst, ip_proto, tos, stamp_inserted)
+    agent_id BIGINT NOT NULL DEFAULT 0,
+    class_id CHAR(16) NOT NULL DEFAULT ' ',
+    mac_src macaddr NOT NULL DEFAULT '0:0:0:0:0:0',
+    mac_dst macaddr NOT NULL DEFAULT '0:0:0:0:0:0',
+    vlan INT NOT NULL DEFAULT 0,
+    as_src BIGINT NOT NULL DEFAULT 0,
+    as_dst BIGINT NOT NULL DEFAULT 0,
+    ip_src inet NOT NULL DEFAULT '0.0.0.0',
+    ip_dst inet NOT NULL DEFAULT '0.0.0.0',
+    port_src INT NOT NULL DEFAULT 0,
+    port_dst INT NOT NULL DEFAULT 0,
+    ip_proto SMALLINT NOT NULL DEFAULT 0,
+    tos INT NOT NULL DEFAULT 0,
+    packets INT NOT NULL,
+    bytes BIGINT NOT NULL,
+    flows INT NOT NULL DEFAULT 0,
+    stamp_inserted timestamp without time zone NOT NULL DEFAULT '0001-01-01 00:00:00', 
+    stamp_updated timestamp without time zone,
+    CONSTRAINT acct_v6_pk PRIMARY KEY (agent_id, class_id, mac_src, mac_dst, vlan, as_src, as_dst, ip_src, ip_dst, port_src, port_dst, ip_proto, tos, stamp_inserted)
 );
 
 DROP TABLE IF EXISTS proto;
 CREATE TABLE proto (
-	num SMALLINT NOT NULL,
-	description CHAR(20),
-	CONSTRAINT proto_pk PRIMARY KEY (num)
+    num SMALLINT NOT NULL,
+    description CHAR(20),
+    CONSTRAINT proto_pk PRIMARY KEY (num)
 );
 
 COPY proto FROM stdin USING DELIMITERS ',';

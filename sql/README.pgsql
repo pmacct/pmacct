@@ -28,12 +28,12 @@ shell> su - postgres
 
 [ ... ]
 
-- To create v8 tables:
+- To create v7 or v8 tables:
   * psql -d template1 -f /tmp/pmacct-create-db.pgsql
-  * psql -d pmacct -f /tmp/pmacct-create-table_v8.pgsql
+  * psql -d pmacct -f /tmp/pmacct-create-table_v7_v8.pgsql
 
-- To use v8 tables:
-  * data will be available in 'acct_v8' table of 'pmacct' DB.
+- To use v7 or v8 tables:
+  * data will be available in 'acct_v7' table of 'pmacct' DB.
   * Add 'sql_table_version: 7' line to your configuration.
 
 Similarly, BGP tables:
