@@ -429,32 +429,47 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
   }
   else if (output == PRINT_OUTPUT_AVRO) {
 #ifdef WITH_AVRO
-    int idx = 0;
+    int idx = 0, bmp_init_tlvs[BMP_INIT_INFO_MAX + 1];
     avro_value_t *obj = (avro_value_t *) vobj, avro_field, avro_branch;
     char bmp_msg_type[] = "init";
 
     check_i(avro_value_get_by_name(obj, "bmp_msg_type", &avro_field, NULL));
     check_i(avro_value_set_string(&avro_field, bmp_msg_type));
 
+    memset(&bmp_init_tlvs, 0, sizeof(bmp_init_tlvs));
+
     if (blinit) {
       while (idx < blinit->entries) {
 	char *type = NULL, *value = NULL;
 
-	type = bmp_tlv_type_print(blinit->e[idx].type, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_ENTRIES);
-	value = null_terminate(blinit->e[idx].val, blinit->e[idx].len);
+	if (blinit->e[idx].type <= BMP_INIT_INFO_MAX) {
+	  type = bmp_tlv_type_print(blinit->e[idx].type, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_ENTRIES);
+	  value = null_terminate(blinit->e[idx].val, blinit->e[idx].len);
 
-	check_i(avro_value_get_by_name(obj, type, &avro_field, NULL));
-	check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-	check_i(avro_value_set_string(&avro_field, value));
+	  check_i(avro_value_get_by_name(obj, type, &avro_field, NULL));
+	  check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+	  check_i(avro_value_set_string(&avro_field, value));
 
-	free(type);
-	free(value);
+	  free(type);
+	  free(value);
+
+	  bmp_init_tlvs[blinit->e[idx].type] = TRUE;
+	}
 
 	idx++;
       }
     }
 
-    /* XXX: mark missing tlv types */
+    /* mark missing tlv types */
+    for (idx = 0; idx <= BMP_INIT_INFO_MAX; idx++) {
+      char *type;
+
+      if (!bmp_init_tlvs[idx]) {
+	type = bmp_tlv_type_print(idx, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_ENTRIES);
+	check_i(avro_value_get_by_name(obj, type, &avro_field, NULL));
+	check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      }
+    }
 #endif
   }
 
@@ -499,32 +514,53 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
   }
   else if (output == PRINT_OUTPUT_AVRO) {
 #ifdef WITH_AVRO
-    int idx = 0;
+    int idx = 0, bmp_term_tlvs[BMP_TERM_INFO_MAX + 1];
     avro_value_t *obj = (avro_value_t *) vobj, avro_field, avro_branch;
     char bmp_msg_type[] = "term";
 
     check_i(avro_value_get_by_name(obj, "bmp_msg_type", &avro_field, NULL));
     check_i(avro_value_set_string(&avro_field, bmp_msg_type));
 
+    memset(&bmp_term_tlvs, 0, sizeof(bmp_term_tlvs));
+
     if (blterm) {
       while (idx < blterm->entries) {
 	char *type = NULL, *value = NULL;
 
-	type = bmp_tlv_type_print(blterm->e[idx].type, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_ENTRIES);
-	value = null_terminate(blterm->e[idx].val, blterm->e[idx].len);
+	if (blterm->e[idx].type <= BMP_TERM_INFO_MAX) {
+	  type = bmp_tlv_type_print(blterm->e[idx].type, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_ENTRIES);
 
-	check_i(avro_value_get_by_name(obj, type, &avro_field, NULL));
-	check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-	check_i(avro_value_set_string(&avro_field, value));
+	  if (blterm->e[idx].type == BMP_TERM_INFO_REASON) {
+	    value = bmp_term_reason_print(blterm->e[idx].reas_type);
+	  }
+	  else {
+	    value = null_terminate(blterm->e[idx].val, blterm->e[idx].len);
+	  }
 
-	free(type);
-	free(value);
+	  check_i(avro_value_get_by_name(obj, type, &avro_field, NULL));
+	  check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+	  check_i(avro_value_set_string(&avro_field, value));
+
+	  free(type);
+	  free(value);
+
+	  bmp_term_tlvs[blterm->e[idx].type] = TRUE;
+	}
 
 	idx++;
       }
     }
 
-    /* XXX: mark missing tlv types */
+    /* mark missing tlv types */
+    for (idx = 0; idx <= BMP_TERM_INFO_MAX; idx++) {
+      char *type;
+
+      if (!bmp_term_tlvs[idx]) {
+        type = bmp_tlv_type_print(idx, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_ENTRIES);
+        check_i(avro_value_get_by_name(obj, type, &avro_field, NULL));
+        check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      }
+    }
 #endif
   }
 
@@ -587,10 +623,10 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
   }
   else if (output == PRINT_OUTPUT_AVRO) {
 #ifdef WITH_AVRO
+    int idx = 0, bmp_peer_up_tlvs[BMP_PEER_UP_INFO_MAX + 1];
     avro_value_t *obj = (avro_value_t *) vobj, avro_field, avro_branch;
     char bmp_msg_type[] = "peer_up";
     char ip_address[INET6_ADDRSTRLEN];
-    int idx = 0;
 
     check_i(avro_value_get_by_name(obj, "bmp_msg_type", &avro_field, NULL));
     check_i(avro_value_set_string(&avro_field, bmp_msg_type));
@@ -659,23 +695,38 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
     check_i(avro_value_get_by_name(obj, "local_ip", &avro_field, NULL));
     check_i(avro_value_set_string(&avro_field, ip_address));
 
+    memset(&bmp_peer_up_tlvs, 0, sizeof(bmp_peer_up_tlvs));
+
     while (idx < blpu->tlv.entries) {
       char *type = NULL, *value = NULL;
 
-      type = bmp_tlv_type_print(blpu->tlv.e[idx].type, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_ENTRIES);
-      value = null_terminate(blpu->tlv.e[idx].val, blpu->tlv.e[idx].len);
+      if (blpu->tlv.e[idx].type <= BMP_PEER_UP_INFO_MAX) {
+	type = bmp_tlv_type_print(blpu->tlv.e[idx].type, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_ENTRIES);
+	value = null_terminate(blpu->tlv.e[idx].val, blpu->tlv.e[idx].len);
 
-      check_i(avro_value_get_by_name(obj, type, &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_string(&avro_field, value));
+	check_i(avro_value_get_by_name(obj, type, &avro_field, NULL));
+	check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+	check_i(avro_value_set_string(&avro_field, value));
 
-      free(type);
-      free(value);
+	free(type);
+	free(value);
+
+	bmp_peer_up_tlvs[blpu->tlv.e[idx].type] = TRUE;
+      }
 
       idx++;
     }
 
-    /* XXX: mark missing tlv types */
+    /* mark missing tlv types */
+    for (idx = 0; idx <= BMP_PEER_UP_INFO_MAX; idx++) {
+      char *type;
+
+      if (!bmp_peer_up_tlvs[idx]) {
+        type = bmp_tlv_type_print(idx, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_ENTRIES);
+        check_i(avro_value_get_by_name(obj, type, &avro_field, NULL));
+        check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      }
+    }
 #endif
   }
 
