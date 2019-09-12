@@ -318,6 +318,33 @@ void skinny_bmp_daemon()
       bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_UP] = avro_schema_build_bmp_peer_up("bmp_peer_up");
       bmp_misc_db->msglog_avro_schema[BMP_MSG_INIT] = avro_schema_build_bmp_init("bmp_init");
       bmp_misc_db->msglog_avro_schema[BMP_MSG_TERM] = avro_schema_build_bmp_term("bmp_term");
+
+      if (config.nfacctd_bmp_msglog_avro_schema_file) {
+	char avro_schema_file[SRVBUFLEN];
+
+	if (strlen(config.nfacctd_bmp_msglog_avro_schema_file) > (SRVBUFLEN - SUPERSHORTBUFLEN)) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): 'bmp_daemon_msglog_avro_schema_file' too long. Exiting ..\n", config.name, bmp_misc_db->log_str);
+	  exit_gracefully(1);
+	}
+
+	write_avro_schema_to_file_with_suffix(config.nfacctd_bmp_msglog_avro_schema_file, "-bmp_msglog_rm",
+					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_ROUTE_MONITOR]);
+
+	write_avro_schema_to_file_with_suffix(config.nfacctd_bmp_msglog_avro_schema_file, "-bmp_stats",
+					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_STATS]);
+
+	write_avro_schema_to_file_with_suffix(config.nfacctd_bmp_msglog_avro_schema_file, "-bmp_peer_down",
+					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_DOWN]);
+
+	write_avro_schema_to_file_with_suffix(config.nfacctd_bmp_msglog_avro_schema_file, "-bmp_peer_up",
+					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_UP]);
+
+	write_avro_schema_to_file_with_suffix(config.nfacctd_bmp_msglog_avro_schema_file, "-bmp_init",
+					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_INIT]);
+
+	write_avro_schema_to_file_with_suffix(config.nfacctd_bmp_msglog_avro_schema_file, "-bmp_term",
+					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_TERM]);
+      }
     }
 #endif
   }
@@ -337,6 +364,33 @@ void skinny_bmp_daemon()
       bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_UP] = avro_schema_build_bmp_peer_up("bmp_peer_up");
       bmp_misc_db->dump_avro_schema[BMP_MSG_INIT] = avro_schema_build_bmp_init("bmp_init");
       bmp_misc_db->dump_avro_schema[BMP_MSG_TERM] = avro_schema_build_bmp_term("bmp_term");
+
+      if (config.bmp_dump_avro_schema_file) {
+	char avro_schema_file[SRVBUFLEN];
+
+	if (strlen(config.bmp_dump_avro_schema_file) > (SRVBUFLEN - SUPERSHORTBUFLEN)) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): 'bmp_table_dump_avro_schema_file' too long. Exiting ..\n", config.name, bmp_misc_db->log_str);
+	  exit_gracefully(1);
+	}
+
+	write_avro_schema_to_file_with_suffix(config.bmp_dump_avro_schema_file, "-bmp_dump_rm",
+					      avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_MSG_ROUTE_MONITOR]);
+
+	write_avro_schema_to_file_with_suffix(config.bmp_dump_avro_schema_file, "-bmp_stats",
+					      avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_MSG_STATS]);
+
+	write_avro_schema_to_file_with_suffix(config.bmp_dump_avro_schema_file, "-bmp_peer_down",
+					      avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_DOWN]);
+
+	write_avro_schema_to_file_with_suffix(config.bmp_dump_avro_schema_file, "-bmp_peer_up",
+					      avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_UP]);
+
+	write_avro_schema_to_file_with_suffix(config.bmp_dump_avro_schema_file, "-bmp_init",
+					      avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_MSG_INIT]);
+
+	write_avro_schema_to_file_with_suffix(config.bmp_dump_avro_schema_file, "-bmp_term",
+					      avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_MSG_TERM]);
+      }
     }
 #endif
   }
@@ -368,7 +422,7 @@ void skinny_bmp_daemon()
 #ifdef WITH_AVRO
   bmp_misc_db->avro_buf = malloc(LARGEBUFLEN);
   if (!bmp_misc_db->avro_buf) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_buf). Exiting ..\n", config.name, bgp_misc_db->log_str);
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_buf). Exiting ..\n", config.name, bmp_misc_db->log_str);
     exit_gracefully(1);
   }
   else memset(bmp_misc_db->avro_buf, 0, LARGEBUFLEN);

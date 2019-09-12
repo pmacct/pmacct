@@ -1020,6 +1020,13 @@ void write_avro_schema_to_file(char *filename, avro_schema_t schema)
   exit_gracefully(1);
 }
 
+void write_avro_schema_to_file_with_suffix(char *filename, char *suffix, char *buf, avro_schema_t schema)
+{
+  strcpy(buf, filename);
+  strcat(buf, suffix);
+  write_avro_schema_to_file(buf, schema);
+}
+
 char *write_avro_schema_to_memory(avro_schema_t avro_schema)
 {
   avro_writer_t avro_writer;

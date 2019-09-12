@@ -394,6 +394,7 @@ struct configuration {
   int nfacctd_bmp_batch_interval;
   int nfacctd_bmp_msglog_output;
   char *nfacctd_bmp_msglog_file;
+  char *nfacctd_bmp_msglog_avro_schema_file;
   char *nfacctd_bmp_msglog_amqp_host;
   char *nfacctd_bmp_msglog_amqp_vhost;
   char *nfacctd_bmp_msglog_amqp_user;
@@ -422,6 +423,7 @@ struct configuration {
   int bmp_dump_output;
   char *bmp_dump_file;
   char *bmp_dump_latest_file;
+  char *bmp_dump_avro_schema_file;
   int bmp_dump_refresh_time;
   char *bmp_dump_amqp_host;
   char *bmp_dump_amqp_vhost;

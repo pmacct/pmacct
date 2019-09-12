@@ -44,6 +44,7 @@ extern avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_t
   struct timeval *basetime, struct pkt_stitching *stitch,
   avro_value_iface_t *iface);
 extern void write_avro_schema_to_file(char *, avro_schema_t);
+extern void write_avro_schema_to_file_with_suffix(char *, char *, char *, avro_schema_t);
 extern char *write_avro_schema_to_memory(avro_schema_t);
 extern char *compose_avro_purge_schema(avro_schema_t, char *);
 extern char *compose_avro_schema_name(char *, char *);
