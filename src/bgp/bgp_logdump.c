@@ -508,18 +508,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
   }
 
   if (bms->msglog_kafka_topic) {
-    if (!bms->msglog_kafka_avro_schema_registry) {
-      bgp_peer_log_dynname(log_filename, SRVBUFLEN, bms->msglog_kafka_topic, peer); 
-    }
-    else {
-#ifdef WITH_SERDES
-      int is_dyn;
-
-      is_dyn = bgp_peer_log_dynname(log_filename, SRVBUFLEN, bms->msglog_kafka_topic, peer); 
-      bms->msglog_kafka_host->sd_schema = compose_avro_schema_registry_name(log_filename, is_dyn, bms->msglog_avro_schema[0], "bgp",
-									   "msglog", bms->msglog_kafka_avro_schema_registry); 
-#endif
-    }
+    bgp_peer_log_dynname(log_filename, SRVBUFLEN, bms->msglog_kafka_topic, peer); 
   }
 
   for (peer_idx = 0, have_it = 0; peer_idx < bms->max_peers; peer_idx++) {
@@ -1067,18 +1056,7 @@ void bgp_handle_dump_event()
 	}
 
 	if (config.bgp_table_dump_kafka_topic) {
-	  if (!config.bgp_table_dump_kafka_avro_schema_registry) {
-	    bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_kafka_topic, peer);
-	  }
-	  else {
-#ifdef WITH_SERDES
-	    int is_dyn;
-
-	    is_dyn = bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_kafka_topic, peer);
-	    bgp_table_dump_kafka_host.sd_schema = compose_avro_schema_registry_name(current_filename, is_dyn, bms->dump_avro_schema[0], "bgp",
-										    "dump", config.bgp_table_dump_kafka_avro_schema_registry);
-#endif
-	  }
+	  bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_kafka_topic, peer);
 	}
 
 	pm_strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bms->dump.tstamp.tv_sec, config.timestamps_utc);
