@@ -418,9 +418,9 @@ void skinny_bgp_daemon_online()
 	int is_dyn = FALSE; 
 
 	if (!strchr(config.nfacctd_bgp_msglog_kafka_topic, '$')) is_dyn = TRUE;
-	bgp_misc_db->msglog_kafka_host->sd_schema = compose_avro_schema_registry_name(config.nfacctd_bgp_msglog_kafka_topic, is_dyn,
-										      bgp_misc_db->msglog_avro_schema[0], "bgp", "msglog",
-										      config.nfacctd_bgp_msglog_kafka_avro_schema_registry);
+	bgp_misc_db->msglog_kafka_host->sd_schema[0] = compose_avro_schema_registry_name(config.nfacctd_bgp_msglog_kafka_topic, is_dyn,
+											 bgp_misc_db->msglog_avro_schema[0], "bgp", "msglog",
+											 config.nfacctd_bgp_msglog_kafka_avro_schema_registry);
 #endif
       }
     }
@@ -440,17 +440,6 @@ void skinny_bgp_daemon_online()
 
       if (config.bgp_table_dump_avro_schema_file) {
 	write_avro_schema_to_file(config.bgp_table_dump_avro_schema_file, bgp_misc_db->dump_avro_schema[0]);
-      }
-
-      if (config.bgp_table_dump_kafka_avro_schema_registry) {
-#ifdef WITH_SERDES
-	int is_dyn = FALSE;
-
-	if (!strchr(config.bgp_table_dump_kafka_topic, '$')) is_dyn = TRUE;
-	bgp_misc_db->dump_kafka_host->sd_schema = compose_avro_schema_registry_name(config.bgp_table_dump_kafka_topic, is_dyn,
-										    bgp_misc_db->dump_avro_schema[0], "bgp", "dump",
-										    config.bgp_table_dump_kafka_avro_schema_registry);
-#endif
       }
     }
 #endif

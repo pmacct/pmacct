@@ -416,6 +416,7 @@ struct configuration {
   int nfacctd_bmp_msglog_kafka_broker_port;
   int nfacctd_bmp_msglog_kafka_retry;
   char *nfacctd_bmp_msglog_kafka_config_file;
+  char *nfacctd_bmp_msglog_kafka_avro_schema_registry;
   int bmp_table_peer_buckets;
   int bmp_table_per_peer_buckets;
   int bmp_table_attr_hash_buckets;
@@ -444,6 +445,7 @@ struct configuration {
   int bmp_dump_kafka_partition_keylen;
   int bmp_dump_kafka_broker_port;
   char *bmp_dump_kafka_config_file;
+  char *bmp_dump_kafka_avro_schema_registry;
   int nfacctd_isis;
   char *nfacctd_isis_ip;
   char *nfacctd_isis_net;

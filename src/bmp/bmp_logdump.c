@@ -221,8 +221,8 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
         (config.bmp_dump_file && etype == BGP_LOGDUMP_ET_DUMP) ||
         (config.nfacctd_bmp_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
         (config.bmp_dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP) ||
-        (config.nfacctd_bmp_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG /* && !bms->msglog_kafka_avro_schema_registry */) ||
-        (config.bmp_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP /* && !bms->dump_kafka_avro_schema_registry*/)) {
+        (config.nfacctd_bmp_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG && !bms->msglog_kafka_avro_schema_registry) ||
+        (config.bmp_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP && !bms->dump_kafka_avro_schema_registry)) {
       avro_value_sizeof(&avro_obj, &avro_obj_len);
       assert(avro_obj_len < LARGEBUFLEN);
 
@@ -251,6 +251,19 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
     if ((config.nfacctd_bmp_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
         (config.bmp_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
 #ifdef WITH_KAFKA
+      if ((bms->msglog_kafka_avro_schema_registry && etype == BGP_LOGDUMP_ET_LOG) ||
+          (bms->dump_kafka_avro_schema_registry && etype == BGP_LOGDUMP_ET_DUMP)) {
+#ifdef WITH_SERDES
+	struct p_kafka_host *kafka_host = (struct p_kafka_host *) peer->log->kafka_host;
+
+	if (serdes_schema_serialize_avro(kafka_host->sd_schema[log_type], &avro_obj, &avro_local_buf, &avro_len,
+					 kafka_host->errstr, sizeof(kafka_host->errstr))) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
+	  exit_gracefully(1);
+	}
+#endif
+      }
+
       kafka_ret = write_binary_kafka(peer->log->kafka_host, avro_local_buf, avro_len);
       p_kafka_unset_topic(peer->log->kafka_host);
 #endif
@@ -1008,9 +1021,56 @@ void bmp_handle_dump_event()
         peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
 	bdsell = peer->bmp_se;
 
-        if (config.bmp_dump_file) bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_file, peer);
-        if (config.bmp_dump_amqp_routing_key) bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_amqp_routing_key, peer);
-        if (config.bmp_dump_kafka_topic) bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_kafka_topic, peer);
+        if (config.bmp_dump_file) {
+	  bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_file, peer);
+	}
+
+        if (config.bmp_dump_amqp_routing_key) {
+	  bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_amqp_routing_key, peer);
+	}
+
+        if (config.bmp_dump_kafka_topic) {
+	  if (!config.bmp_dump_kafka_avro_schema_registry) {
+	    bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_kafka_topic, peer);
+	  }
+	  else {
+#ifdef WITH_SERDES
+	    int is_dyn;
+
+	    is_dyn = bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_kafka_topic, peer);
+
+	    bmp_dump_kafka_host.sd_schema[BMP_MSG_ROUTE_MONITOR] = compose_avro_schema_registry_name(config.bmp_dump_kafka_topic, is_dyn,
+											     bmp_misc_db->dump_avro_schema[BMP_MSG_ROUTE_MONITOR],
+											     "bmp", "dump_rm",
+											     config.bmp_dump_kafka_avro_schema_registry);
+
+	    bmp_dump_kafka_host.sd_schema[BMP_MSG_STATS] = compose_avro_schema_registry_name(config.bmp_dump_kafka_topic, is_dyn,
+											     bmp_misc_db->dump_avro_schema[BMP_MSG_STATS],
+											     "bmp", "stats",
+											     config.bmp_dump_kafka_avro_schema_registry);
+
+	    bmp_dump_kafka_host.sd_schema[BMP_MSG_PEER_UP] = compose_avro_schema_registry_name(config.bmp_dump_kafka_topic, is_dyn,
+											     bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_UP],
+											     "bmp", "peer_up",
+											     config.bmp_dump_kafka_avro_schema_registry);
+
+	    bmp_dump_kafka_host.sd_schema[BMP_MSG_PEER_DOWN] = compose_avro_schema_registry_name(config.bmp_dump_kafka_topic, is_dyn,
+											     bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_DOWN],
+											     "bmp", "peer_down",
+											     config.bmp_dump_kafka_avro_schema_registry);
+
+	    bmp_dump_kafka_host.sd_schema[BMP_MSG_INIT] = compose_avro_schema_registry_name(config.bmp_dump_kafka_topic, is_dyn,
+											     bmp_misc_db->dump_avro_schema[BMP_MSG_INIT],
+											     "bmp", "init",
+											     config.bmp_dump_kafka_avro_schema_registry);
+
+	    bmp_dump_kafka_host.sd_schema[BMP_MSG_TERM] = compose_avro_schema_registry_name(config.bmp_dump_kafka_topic, is_dyn,
+											     bmp_misc_db->dump_avro_schema[BMP_MSG_TERM],
+											     "bmp", "term",
+											     config.bmp_dump_kafka_avro_schema_registry);
+#endif
+	  }
+	}
 
         pm_strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bms->dump.tstamp.tv_sec, config.timestamps_utc);
 

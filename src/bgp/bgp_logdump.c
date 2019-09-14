@@ -465,7 +465,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 #ifdef WITH_SERDES
 	struct p_kafka_host *kafka_host = (struct p_kafka_host *) peer->log->kafka_host;
 
-	if (serdes_schema_serialize_avro(kafka_host->sd_schema, &avro_obj, &avro_local_buf, &avro_len,
+	if (serdes_schema_serialize_avro(kafka_host->sd_schema[0], &avro_obj, &avro_local_buf, &avro_len,
 					 kafka_host->errstr, sizeof(kafka_host->errstr))) {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
 	  exit_gracefully(1);
@@ -1056,7 +1056,18 @@ void bgp_handle_dump_event()
 	}
 
 	if (config.bgp_table_dump_kafka_topic) {
-	  bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_kafka_topic, peer);
+	  if (!config.bgp_table_dump_kafka_avro_schema_registry) {
+	    bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_kafka_topic, peer);
+	  }
+	  else {
+#ifdef WITH_SERDES
+	    int is_dyn;
+
+	    is_dyn = bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_kafka_topic, peer);
+	    bgp_table_dump_kafka_host.sd_schema[0] = compose_avro_schema_registry_name(current_filename, is_dyn, bms->dump_avro_schema[0], "bgp",
+										       "dump", config.bgp_table_dump_kafka_avro_schema_registry);
+#endif
+	  }
 	}
 
 	pm_strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bms->dump.tstamp.tv_sec, config.timestamps_utc);

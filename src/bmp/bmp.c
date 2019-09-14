@@ -345,6 +345,43 @@ void skinny_bmp_daemon()
 	write_avro_schema_to_file_with_suffix(config.nfacctd_bmp_msglog_avro_schema_file, "-bmp_term",
 					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_TERM]);
       }
+
+      if (config.nfacctd_bmp_msglog_kafka_avro_schema_registry) {
+#ifdef WITH_SERDES
+        int is_dyn = FALSE;
+
+        if (!strchr(config.nfacctd_bmp_msglog_kafka_topic, '$')) is_dyn = TRUE;
+        bmp_misc_db->msglog_kafka_host->sd_schema[BMP_MSG_ROUTE_MONITOR] = compose_avro_schema_registry_name(config.nfacctd_bmp_msglog_kafka_topic, is_dyn,
+												     bmp_misc_db->msglog_avro_schema[BMP_MSG_ROUTE_MONITOR],
+												     "bmp", "msglog_rm",
+												     config.nfacctd_bmp_msglog_kafka_avro_schema_registry);
+
+        bmp_misc_db->msglog_kafka_host->sd_schema[BMP_MSG_STATS] = compose_avro_schema_registry_name(config.nfacctd_bmp_msglog_kafka_topic, is_dyn,
+												     bmp_misc_db->msglog_avro_schema[BMP_MSG_STATS],
+												     "bmp", "stats",
+												     config.nfacctd_bmp_msglog_kafka_avro_schema_registry);
+
+        bmp_misc_db->msglog_kafka_host->sd_schema[BMP_MSG_PEER_UP] = compose_avro_schema_registry_name(config.nfacctd_bmp_msglog_kafka_topic, is_dyn,
+												     bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_UP],
+												     "bmp", "peer_up",
+												     config.nfacctd_bmp_msglog_kafka_avro_schema_registry);
+
+        bmp_misc_db->msglog_kafka_host->sd_schema[BMP_MSG_PEER_DOWN] = compose_avro_schema_registry_name(config.nfacctd_bmp_msglog_kafka_topic, is_dyn,
+												     bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_DOWN],
+												     "bmp", "peer_down",
+												     config.nfacctd_bmp_msglog_kafka_avro_schema_registry);
+
+        bmp_misc_db->msglog_kafka_host->sd_schema[BMP_MSG_INIT] = compose_avro_schema_registry_name(config.nfacctd_bmp_msglog_kafka_topic, is_dyn,
+												     bmp_misc_db->msglog_avro_schema[BMP_MSG_INIT],
+												     "bmp", "init",
+												     config.nfacctd_bmp_msglog_kafka_avro_schema_registry);
+
+        bmp_misc_db->msglog_kafka_host->sd_schema[BMP_MSG_TERM] = compose_avro_schema_registry_name(config.nfacctd_bmp_msglog_kafka_topic, is_dyn,
+												     bmp_misc_db->msglog_avro_schema[BMP_MSG_TERM],
+												     "bmp", "term",
+												     config.nfacctd_bmp_msglog_kafka_avro_schema_registry);
+#endif
+      }
     }
 #endif
   }
@@ -427,6 +464,13 @@ void skinny_bmp_daemon()
   }
   else memset(bmp_misc_db->avro_buf, 0, LARGEBUFLEN);
 #endif
+
+  if (config.nfacctd_bmp_msglog_kafka_avro_schema_registry || config.bmp_dump_kafka_avro_schema_registry) {
+#ifndef WITH_SERDES
+      Log(LOG_ERR, "ERROR ( %s/%s ): 'bmp_*_kafka_avro_schema_registry' require --enable-serdes. Exiting.\n", config.name, bmp_misc_db->log_str);
+      exit_gracefully(1);
+#endif
+    }
 
   select_fd = bkp_select_fd = (config.bmp_sock + 1);
   recalc_fds = FALSE;
