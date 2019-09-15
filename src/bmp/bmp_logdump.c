@@ -39,7 +39,10 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BMP);
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
+
+#if defined (WITH_JANSSON) || defined (WITH_AVRO)
   pid_t writer_pid = getpid();
+#endif
 
   if (!bms || !peer || !peer->log || !bdata || !event_type) return ERR;
 

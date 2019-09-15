@@ -37,7 +37,10 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
 {
   telemetry_misc_structs *tms;
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = TELEMETRY_LOGDUMP_ET_NONE;
+
+#if defined (WITH_JANSSON) || defined (WITH_AVRO)
   pid_t writer_pid = getpid();
+#endif
 
   if (!peer || !peer->log || !log_data || !log_data_len || !t_data || !event_type) return ERR;
 
