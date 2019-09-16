@@ -27,6 +27,16 @@ install:
 env:
   - CONFIG_FLAGS="--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes"
   - CONFIG_FLAGS="--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes"
+  - CONFIG_FLAGS="--enable-debug --enable-jansson --enable-zmq --enable-kafka"
+  - CONFIG_FLAGS="--enable-jansson --enable-zmq --enable-kafka"
+  - CONFIG_FLAGS="--enable-debug --enable-jansson --enable-zmq"
+  - CONFIG_FLAGS="--enable-jansson --enable-zmq"
+  - CONFIG_FLAGS="--enable-debug --enable-jansson --enable-kafka"
+  - CONFIG_FLAGS="--enable-jansson --enable-kafka"
+  - CONFIG_FLAGS="--enable-debug --enable-zmq"
+  - CONFIG_FLAGS="--enable-zmq"
+  - CONFIG_FLAGS="--enable-debug --enable-jansson"
+  - CONFIG_FLAGS="--enable-jansson"
   - CONFIG_FLAGS="--enable-debug"
   - CONFIG_FLAGS=""
 
