@@ -2309,12 +2309,10 @@ DESC:           The URL to a Confluent Avro schema-registry. The value is passed
 		etc.).
 DEFAULT:        none
 
-KEY:		[ bgp_daemon_msglog_output | bmp_daemon_msglog_output | telemetry_daemon_msglog_output ]
-		[GLOBAL]
-VALUES:         [ json ]
-DESC:		Defines output format for the streamed logging of BGP/BMP messages and events/streaming
-		telemetry. Only JSON format is currently supported and requires compiling against Jansson
-		library (--enable-jansson when configuring for compiling).
+KEY:		[ bgp_daemon_msglog_output | bmp_daemon_msglog_output ] [GLOBAL]
+VALUES:         [ json | avro ]
+DESC:		Defines output format for the streamed logging of BGP messages and BMP messages and
+		events. JSON and Avro formats are supported.
 DEFAULT:	json
 
 KEY:		bgp_aspath_radius [GLOBAL]
@@ -2609,11 +2607,10 @@ DESC:           Enables dump of BGP tables/BMP events/Streaming Telemetry data a
 
 DEFAULT:	none
 
-KEY:            [ bgp_table_dump_output | bmp_dump_output | telemetry_dump_output ] [GLOBAL]
-VALUES:         [ json ]
-DESC:           Defines output format for the dump of BGP tables/BMP events/Streaming Telemetry data.
-		Only JSON format is currently supported and requires compiling against Jansson library
-		(--enable-jansson when configuring for compiling).
+KEY:            [ bgp_table_dump_output | bmp_dump_output ] [GLOBAL]
+VALUES:         [ json | avro ]
+DESC:           Defines output format for the dump of BGP tables and BMP events. JSON and Avro
+		formats are supported.
 DEFAULT:	json
 
 KEY:		[ bgp_table_dump_refresh_time | bmp_dump_refresh_time | telemetry_dump_latest_file ]
@@ -2937,6 +2934,20 @@ KEY:		telemetry_daemon_zmq_address [GLOBAL]
 DESC:           Defines the ZeroMQ queue address (host and port) to connect to for consuming Streaming
 		Telemetry data from. An example of the expected value is "127.0.0.1:50000".
 DEFAULT:	none
+
+KEY:            telemetry_daemon_msglog_output [GLOBAL]
+VALUES:         [ json ]
+DESC:           Defines output format for Streaming Telemetry data (pmtelemetryd). Only JSON format
+		is currently supported and requires compiling against Jansson library (--enable-jansson
+		when configuring for compiling).
+DEFAULT:        json
+
+KEY:            telemetry_dump_output [GLOBAL]
+VALUES:         [ json ]
+DESC:           Defines output format for the dump of Streaming Telemetry data (pmtelemetryd). Only
+		JSON format is currently supported and requires compiling against Jansson library
+		(--enable-jansson when configuring for compiling).
+DEFAULT:        json
 
 KEY:		classifier_num_roots [GLOBAL]
 DESC:		Defines the number of buckets of the nDPI memory structure on which to hash flows.
