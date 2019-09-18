@@ -1004,8 +1004,9 @@ void write_avro_schema_to_file(char *filename, avro_schema_t schema)
     avro_schema_writer = avro_writer_file(avro_fp);
 
     if (avro_schema_writer) {
-      if (avro_schema_to_json(schema, avro_schema_writer))
+      if (avro_schema_to_json(schema, avro_schema_writer)) {
 	goto exit_lane;
+      }
     }
     else goto exit_lane;
 

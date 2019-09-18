@@ -1355,9 +1355,9 @@ avro_schema_t avro_schema_build_bmp_rm(int log_type, char *schema_name)
 
   if (log_type != BGP_LOGDUMP_ET_LOG && log_type != BGP_LOGDUMP_ET_DUMP) return NULL;
 
-  avro_schema_init_bgp(schema, optlong_s, optstr_s, optint_s, FUNC_TYPE_BMP, schema_name);
-  avro_schema_build_bgp_common(schema, optlong_s, optstr_s, optint_s, log_type, FUNC_TYPE_BMP);
-  avro_schema_build_bgp_route(schema, optlong_s, optstr_s, optint_s);
+  avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BMP, schema_name);
+  avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type, FUNC_TYPE_BMP);
+  avro_schema_build_bgp_route(&schema, &optlong_s, &optstr_s, &optint_s);
 
   /* cherry-picked from avro_schema_build_bmp_common() */ 
   avro_schema_record_field_append(schema, "event_timestamp", optstr_s);
@@ -1383,8 +1383,8 @@ avro_schema_t avro_schema_build_bmp_init(char *schema_name)
   avro_schema_t optstr_s = avro_schema_union();
   avro_schema_t optint_s = avro_schema_union();
 
-  avro_schema_init_bgp(schema, optlong_s, optstr_s, optint_s, FUNC_TYPE_BMP, schema_name);
-  avro_schema_build_bmp_common(schema, optlong_s, optstr_s, optint_s);
+  avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BMP, schema_name);
+  avro_schema_build_bmp_common(&schema, &optlong_s, &optstr_s, &optint_s);
 
   type = bmp_tlv_type_print(BMP_INIT_INFO_STRING, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_ENTRIES);
   avro_schema_record_field_append(schema, type, optstr_s);
@@ -1413,8 +1413,8 @@ avro_schema_t avro_schema_build_bmp_term(char *schema_name)
   avro_schema_t optstr_s = avro_schema_union();
   avro_schema_t optint_s = avro_schema_union();
 
-  avro_schema_init_bgp(schema, optlong_s, optstr_s, optint_s, FUNC_TYPE_BMP, schema_name);
-  avro_schema_build_bmp_common(schema, optlong_s, optstr_s, optint_s);
+  avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BMP, schema_name);
+  avro_schema_build_bmp_common(&schema, &optlong_s, &optstr_s, &optint_s);
 
   type = bmp_tlv_type_print(BMP_TERM_INFO_STRING, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_ENTRIES);
   avro_schema_record_field_append(schema, type, optstr_s);
@@ -1439,8 +1439,8 @@ avro_schema_t avro_schema_build_bmp_peer_up(char *schema_name)
   avro_schema_t optstr_s = avro_schema_union();
   avro_schema_t optint_s = avro_schema_union();
 
-  avro_schema_init_bgp(schema, optlong_s, optstr_s, optint_s, FUNC_TYPE_BMP, schema_name);
-  avro_schema_build_bmp_common(schema, optlong_s, optstr_s, optint_s);
+  avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BMP, schema_name);
+  avro_schema_build_bmp_common(&schema, &optlong_s, &optstr_s, &optint_s);
 
   avro_schema_record_field_append(schema, "peer_ip", avro_schema_string());
   avro_schema_record_field_append(schema, "peer_asn", avro_schema_int());
@@ -1475,8 +1475,8 @@ avro_schema_t avro_schema_build_bmp_peer_down(char *schema_name)
   avro_schema_t optstr_s = avro_schema_union();
   avro_schema_t optint_s = avro_schema_union();
 
-  avro_schema_init_bgp(schema, optlong_s, optstr_s, optint_s, FUNC_TYPE_BMP, schema_name);
-  avro_schema_build_bmp_common(schema, optlong_s, optstr_s, optint_s);
+  avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BMP, schema_name);
+  avro_schema_build_bmp_common(&schema, &optlong_s, &optstr_s, &optint_s);
 
   avro_schema_record_field_append(schema, "peer_ip", avro_schema_string());
   avro_schema_record_field_append(schema, "peer_asn", avro_schema_int());
@@ -1501,8 +1501,8 @@ avro_schema_t avro_schema_build_bmp_stats(char *schema_name)
   avro_schema_t optstr_s = avro_schema_union();
   avro_schema_t optint_s = avro_schema_union();
 
-  avro_schema_init_bgp(schema, optlong_s, optstr_s, optint_s, FUNC_TYPE_BMP, schema_name);
-  avro_schema_build_bmp_common(schema, optlong_s, optstr_s, optint_s);
+  avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BMP, schema_name);
+  avro_schema_build_bmp_common(&schema, &optlong_s, &optstr_s, &optint_s);
 
   avro_schema_record_field_append(schema, "peer_ip", avro_schema_string());
   avro_schema_record_field_append(schema, "peer_asn", avro_schema_int());
@@ -1528,13 +1528,13 @@ avro_schema_t avro_schema_build_bmp_stats(char *schema_name)
   return schema;
 }
 
-void avro_schema_build_bmp_common(avro_schema_t schema, avro_schema_t optlong_s, avro_schema_t optstr_s, avro_schema_t optint_s)
+void avro_schema_build_bmp_common(avro_schema_t *schema, avro_schema_t *optlong_s, avro_schema_t *optstr_s, avro_schema_t *optint_s)
 {
-  avro_schema_record_field_append(schema, "seq", avro_schema_long());
-  avro_schema_record_field_append(schema, "timestamp", avro_schema_string());
-  avro_schema_record_field_append(schema, "event_timestamp", optstr_s);
-  avro_schema_record_field_append(schema, "bmp_router", avro_schema_string());
-  avro_schema_record_field_append(schema, "bmp_router_port", avro_schema_int());
-  avro_schema_record_field_append(schema, "bmp_msg_type", avro_schema_string());
+  avro_schema_record_field_append((*schema), "seq", avro_schema_long());
+  avro_schema_record_field_append((*schema), "timestamp", avro_schema_string());
+  avro_schema_record_field_append((*schema), "event_timestamp", (*optstr_s));
+  avro_schema_record_field_append((*schema), "bmp_router", avro_schema_string());
+  avro_schema_record_field_append((*schema), "bmp_router_port", avro_schema_int());
+  avro_schema_record_field_append((*schema), "bmp_msg_type", avro_schema_string());
 }
 #endif

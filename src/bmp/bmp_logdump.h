@@ -132,7 +132,7 @@ extern avro_schema_t avro_schema_build_bmp_peer_up(char *);
 extern avro_schema_t avro_schema_build_bmp_peer_down(char *);
 extern avro_schema_t avro_schema_build_bmp_stats(char *);
 
-extern void avro_schema_build_bmp_common(avro_schema_t, avro_schema_t, avro_schema_t, avro_schema_t);
+extern void avro_schema_build_bmp_common(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *);
 #endif
 
 #endif

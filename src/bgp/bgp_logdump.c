@@ -1308,9 +1308,9 @@ avro_schema_t avro_schema_build_bgp(int log_type, char *schema_name)
 
   if (log_type != BGP_LOGDUMP_ET_LOG && log_type != BGP_LOGDUMP_ET_DUMP) return NULL;
 
-  avro_schema_init_bgp(schema, optlong_s, optstr_s, optint_s, FUNC_TYPE_BGP, schema_name);
-  avro_schema_build_bgp_common(schema, optlong_s, optstr_s, optint_s, log_type, FUNC_TYPE_BGP); 
-  avro_schema_build_bgp_route(schema, optlong_s, optstr_s, optint_s);
+  avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BGP, schema_name);
+  avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type, FUNC_TYPE_BGP); 
+  avro_schema_build_bgp_route(&schema, &optlong_s, &optstr_s, &optint_s);
 
   avro_schema_decref(optlong_s);
   avro_schema_decref(optstr_s);
@@ -1319,58 +1319,58 @@ avro_schema_t avro_schema_build_bgp(int log_type, char *schema_name)
   return schema;
 }
 
-void avro_schema_init_bgp(avro_schema_t schema, avro_schema_t optlong_s, avro_schema_t optstr_s, avro_schema_t optint_s, int type, char *schema_name)
+void avro_schema_init_bgp(avro_schema_t *schema, avro_schema_t *optlong_s, avro_schema_t *optstr_s, avro_schema_t *optint_s, int type, char *schema_name)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(type);
 
-  schema = avro_schema_record(schema_name, NULL);
+  (*schema) = avro_schema_record(schema_name, NULL);
   Log(LOG_INFO, "INFO ( %s/%s ): AVRO: building %s schema.\n", config.name, bms->log_str, schema_name);
 
-  avro_schema_union_append(optlong_s, avro_schema_null());
-  avro_schema_union_append(optlong_s, avro_schema_long());
+  avro_schema_union_append((*optlong_s), avro_schema_null());
+  avro_schema_union_append((*optlong_s), avro_schema_long());
 
-  avro_schema_union_append(optstr_s, avro_schema_null());
-  avro_schema_union_append(optstr_s, avro_schema_string());
+  avro_schema_union_append((*optstr_s), avro_schema_null());
+  avro_schema_union_append((*optstr_s), avro_schema_string());
 
-  avro_schema_union_append(optint_s, avro_schema_null());
-  avro_schema_union_append(optint_s, avro_schema_int());
+  avro_schema_union_append((*optint_s), avro_schema_null());
+  avro_schema_union_append((*optint_s), avro_schema_int());
 }
 
-void avro_schema_build_bgp_common(avro_schema_t schema, avro_schema_t optlong_s, avro_schema_t optstr_s, avro_schema_t optint_s, int log_type, int type)
+void avro_schema_build_bgp_common(avro_schema_t *schema, avro_schema_t *optlong_s, avro_schema_t *optstr_s, avro_schema_t *optint_s, int log_type, int type)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(type);
 
   if (log_type == BGP_LOGDUMP_ET_LOG && type == FUNC_TYPE_BGP) {
-    avro_schema_record_field_append(schema, "log_type", avro_schema_string());
+    avro_schema_record_field_append((*schema), "log_type", avro_schema_string());
   }
-  avro_schema_record_field_append(schema, "seq", avro_schema_long());
-  avro_schema_record_field_append(schema, "timestamp", avro_schema_string());
-  avro_schema_record_field_append(schema, bms->peer_str, avro_schema_string());
-  avro_schema_record_field_append(schema, bms->peer_port_str, optint_s);
-  avro_schema_record_field_append(schema, "event_type", avro_schema_string());
-  avro_schema_record_field_append(schema, "writer_id", avro_schema_string());
+  avro_schema_record_field_append((*schema), "seq", avro_schema_long());
+  avro_schema_record_field_append((*schema), "timestamp", avro_schema_string());
+  avro_schema_record_field_append((*schema), bms->peer_str, avro_schema_string());
+  avro_schema_record_field_append((*schema), bms->peer_port_str, (*optint_s));
+  avro_schema_record_field_append((*schema), "event_type", avro_schema_string());
+  avro_schema_record_field_append((*schema), "writer_id", avro_schema_string());
 }
 
-void avro_schema_build_bgp_route(avro_schema_t schema, avro_schema_t optlong_s, avro_schema_t optstr_s, avro_schema_t optint_s)
+void avro_schema_build_bgp_route(avro_schema_t *schema, avro_schema_t *optlong_s, avro_schema_t *optstr_s, avro_schema_t *optint_s)
 {
-  avro_schema_record_field_append(schema, "afi", avro_schema_int());
-  avro_schema_record_field_append(schema, "safi", avro_schema_int());
-  avro_schema_record_field_append(schema, "ip_prefix", avro_schema_string());
-  avro_schema_record_field_append(schema, "rd", optstr_s);
+  avro_schema_record_field_append((*schema), "afi", avro_schema_int());
+  avro_schema_record_field_append((*schema), "safi", avro_schema_int());
+  avro_schema_record_field_append((*schema), "ip_prefix", avro_schema_string());
+  avro_schema_record_field_append((*schema), "rd", (*optstr_s));
 
-  avro_schema_record_field_append(schema, "bgp_nexthop", avro_schema_string());
-  avro_schema_record_field_append(schema, "as_path", avro_schema_string());
-  avro_schema_record_field_append(schema, "as_path_id", optint_s);
-  avro_schema_record_field_append(schema, "comms", optstr_s);
-  avro_schema_record_field_append(schema, "ecomms", optstr_s);
-  avro_schema_record_field_append(schema, "lcomms", optstr_s);
-  avro_schema_record_field_append(schema, "origin", avro_schema_string());
-  avro_schema_record_field_append(schema, "local_pref", avro_schema_int());
-  avro_schema_record_field_append(schema, "med", optint_s);
-  avro_schema_record_field_append(schema, "label", optstr_s);
+  avro_schema_record_field_append((*schema), "bgp_nexthop", avro_schema_string());
+  avro_schema_record_field_append((*schema), "as_path", avro_schema_string());
+  avro_schema_record_field_append((*schema), "as_path_id", (*optint_s));
+  avro_schema_record_field_append((*schema), "comms", (*optstr_s));
+  avro_schema_record_field_append((*schema), "ecomms", (*optstr_s));
+  avro_schema_record_field_append((*schema), "lcomms", (*optstr_s));
+  avro_schema_record_field_append((*schema), "origin", avro_schema_string());
+  avro_schema_record_field_append((*schema), "local_pref", avro_schema_int());
+  avro_schema_record_field_append((*schema), "med", (*optint_s));
+  avro_schema_record_field_append((*schema), "label", (*optstr_s));
 
   if (config.rpki_roas_file || config.rpki_rtr_cache) {
-    avro_schema_record_field_append(schema, "roa", avro_schema_string());
+    avro_schema_record_field_append((*schema), "roa", avro_schema_string());
   }
 }
 #endif

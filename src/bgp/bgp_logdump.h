@@ -73,9 +73,9 @@ extern int bgp_table_dump_init_kafka_host();
 
 #if defined WITH_AVRO
 extern avro_schema_t avro_schema_build_bgp(int, char *);
-extern void avro_schema_init_bgp(avro_schema_t, avro_schema_t, avro_schema_t, avro_schema_t, int, char *);
-extern void avro_schema_build_bgp_common(avro_schema_t, avro_schema_t, avro_schema_t, avro_schema_t, int, int);
-extern void avro_schema_build_bgp_route(avro_schema_t, avro_schema_t, avro_schema_t, avro_schema_t);
+extern void avro_schema_init_bgp(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *, int, char *);
+extern void avro_schema_build_bgp_common(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *, int, int);
+extern void avro_schema_build_bgp_route(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *);
 #endif
 
 #endif 
