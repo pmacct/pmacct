@@ -30,8 +30,8 @@
 #define check_i(call) \
   do { \
     if ((call) != 0) { \
-      Log(LOG_ERR, "Error: %s\n", avro_strerror()); \
-      exit_plugin(1); \
+      Log(LOG_ERR, "ERROR: %s\n", avro_strerror()); \
+      assert(1 == 0); \
     } \
 } while (0)
 #endif
