@@ -517,6 +517,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 
     if (ret) {
       char peer_str[] = "peer_ip", *saved_peer_str = bms->peer_str;
+      char peer_port_str[] = "peer_tcp_port", *saved_peer_port_str = bms->peer_port_str;
       struct bmp_chars bmed_bmp;
       struct bgp_msg_data bmd;
 
@@ -525,6 +526,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
       memset(&bmed_bmp, 0, sizeof(bmed_bmp));
 
       bms->peer_str = peer_str;
+      bms->peer_port_str = peer_port_str;
       bmd.peer = bmpp_bgp_peer;
       bmd.extra.id = BGP_MSG_EXTRA_DATA_BMP;
       bmd.extra.len = sizeof(bmed_bmp);
@@ -534,6 +536,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
       /* XXX: checks, ie. marker, message length, etc., bypassed */
       bgp_update_len = bgp_parse_update_msg(&bmd, (*bmp_packet)); 
       bms->peer_str = saved_peer_str;
+      bms->peer_port_str = saved_peer_port_str;
 
       bmp_get_and_check_length(bmp_packet, len, bgp_update_len);
     }
