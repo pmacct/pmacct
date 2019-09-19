@@ -291,7 +291,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     if (bms->peer_port_str) {
       check_i(avro_value_get_by_name(&avro_obj, bms->peer_port_str, &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_field, peer->tcp_port));
+      check_i(avro_value_set_int(&avro_branch, peer->tcp_port));
     }
     else {
       check_i(avro_value_get_by_name(&avro_obj, bms->peer_port_str, &avro_field, NULL));
@@ -331,7 +331,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     if (attr->community) {
       check_i(avro_value_get_by_name(&avro_obj, "comms", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_string(&avro_field, attr->community->str));
+      check_i(avro_value_set_string(&avro_branch, attr->community->str));
     }
     else {
       check_i(avro_value_get_by_name(&avro_obj, "comms", &avro_field, NULL));
@@ -341,7 +341,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     if (attr->ecommunity) {
       check_i(avro_value_get_by_name(&avro_obj, "ecomms", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_string(&avro_field, attr->ecommunity->str));
+      check_i(avro_value_set_string(&avro_branch, attr->ecommunity->str));
     }
     else {
       check_i(avro_value_get_by_name(&avro_obj, "ecomms", &avro_field, NULL));
@@ -351,7 +351,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     if (attr->lcommunity) {
       check_i(avro_value_get_by_name(&avro_obj, "lcomms", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_string(&avro_field, attr->lcommunity->str));
+      check_i(avro_value_set_string(&avro_branch, attr->lcommunity->str));
     }
     else {
       check_i(avro_value_get_by_name(&avro_obj, "lcomms", &avro_field, NULL));
@@ -361,7 +361,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     if (attr->med) {
       check_i(avro_value_get_by_name(&avro_obj, "med", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_field, attr->med));
+      check_i(avro_value_set_int(&avro_branch, attr->med));
     }
     else {
       check_i(avro_value_get_by_name(&avro_obj, "med", &avro_field, NULL));
@@ -371,7 +371,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     if (ri && ri->extra && ri->extra->path_id) {
       check_i(avro_value_get_by_name(&avro_obj, "as_path_id", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_field, ri->extra->path_id));
+      check_i(avro_value_set_int(&avro_branch, ri->extra->path_id));
     }
     else {
       check_i(avro_value_get_by_name(&avro_obj, "as_path_id", &avro_field, NULL));
@@ -387,7 +387,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
         bgp_rd2str(rd_str, &ri->extra->rd);
 	check_i(avro_value_get_by_name(&avro_obj, "rd", &avro_field, NULL));
 	check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-	check_i(avro_value_set_string(&avro_field, rd_str));
+	check_i(avro_value_set_string(&avro_branch, rd_str));
       }
       else {
 	check_i(avro_value_get_by_name(&avro_obj, "rd", &avro_field, NULL));
@@ -397,7 +397,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       bgp_label2str(label_str, ri->extra->label);
       check_i(avro_value_get_by_name(&avro_obj, "label", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_string(&avro_field, label_str));
+      check_i(avro_value_set_string(&avro_branch, label_str));
     }
     else {
       check_i(avro_value_get_by_name(&avro_obj, "rd", &avro_field, NULL));

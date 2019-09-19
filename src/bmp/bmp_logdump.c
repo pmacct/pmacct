@@ -185,7 +185,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
                         config.timestamps_utc);
       check_i(avro_value_get_by_name(&avro_obj, "event_timestamp", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_string(&avro_field, tstamp_str));
+      check_i(avro_value_set_string(&avro_branch, tstamp_str));
     }
 
     check_i(avro_value_get_by_name(&avro_obj, "bmp_router", &avro_field, NULL));
@@ -347,11 +347,11 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_
     if (bdata->chars.is_loc) {
       check_i(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_field, bdata->chars.is_filtered));
+      check_i(avro_value_set_int(&avro_branch, bdata->chars.is_filtered));
 
       check_i(avro_value_get_by_name(obj, "is_loc", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_field, bdata->chars.is_loc));
+      check_i(avro_value_set_int(&avro_branch, bdata->chars.is_loc));
 
       check_i(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
@@ -368,11 +368,11 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_
 
       check_i(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_field, bdata->chars.is_post));
+      check_i(avro_value_set_int(&avro_branch, bdata->chars.is_post));
 
       check_i(avro_value_get_by_name(obj, "is_out", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_field, bdata->chars.is_out));
+      check_i(avro_value_set_int(&avro_branch, bdata->chars.is_out));
     }
     else {
       check_i(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
@@ -403,11 +403,11 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_
     if (blstats->cnt_type == BMP_STATS_TYPE9 || blstats->cnt_type == BMP_STATS_TYPE10) {
       check_i(avro_value_get_by_name(obj, "afi", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_field, blstats->cnt_afi));
+      check_i(avro_value_set_int(&avro_branch, blstats->cnt_afi));
 
       check_i(avro_value_get_by_name(obj, "safi", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_field, blstats->cnt_safi));
+      check_i(avro_value_set_int(&avro_branch, blstats->cnt_safi));
     }
     else {
       check_i(avro_value_get_by_name(obj, "afi", &avro_field, NULL));
@@ -475,7 +475,7 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
 
 	  check_i(avro_value_get_by_name(obj, type, &avro_field, NULL));
 	  check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-	  check_i(avro_value_set_string(&avro_field, value));
+	  check_i(avro_value_set_string(&avro_branch, value));
 
 	  free(type);
 	  free(value);
@@ -566,7 +566,7 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
 
 	  check_i(avro_value_get_by_name(obj, type, &avro_field, NULL));
 	  check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-	  check_i(avro_value_set_string(&avro_field, value));
+	  check_i(avro_value_set_string(&avro_branch, value));
 
 	  free(type);
 	  free(value);
@@ -671,7 +671,7 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
     if (bdata->chars.peer_type <= BMP_PEER_TYPE_MAX) {
       check_i(avro_value_get_by_name(obj, "peer_type_str", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_string(&avro_field, bmp_peer_types[bdata->chars.peer_type]));
+      check_i(avro_value_set_string(&avro_branch, bmp_peer_types[bdata->chars.peer_type]));
     }
     else {
       check_i(avro_value_get_by_name(obj, "peer_type_str", &avro_field, NULL));
@@ -681,11 +681,11 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
     if (bdata->chars.is_loc) {
       check_i(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_field, bdata->chars.is_filtered));
+      check_i(avro_value_set_int(&avro_branch, bdata->chars.is_filtered));
 
       check_i(avro_value_get_by_name(obj, "is_loc", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_field, bdata->chars.is_loc));
+      check_i(avro_value_set_int(&avro_branch, bdata->chars.is_loc));
 
       check_i(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
@@ -702,11 +702,11 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
 
       check_i(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_field, bdata->chars.is_post));
+      check_i(avro_value_set_int(&avro_branch, bdata->chars.is_post));
 
       check_i(avro_value_get_by_name(obj, "is_out", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_field, bdata->chars.is_out));
+      check_i(avro_value_set_int(&avro_branch, bdata->chars.is_out));
     }
     else {
       check_i(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
@@ -746,7 +746,7 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
 
 	check_i(avro_value_get_by_name(obj, type, &avro_field, NULL));
 	check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-	check_i(avro_value_set_string(&avro_field, value));
+	check_i(avro_value_set_string(&avro_branch, value));
 
 	free(type);
 	free(value);
@@ -830,7 +830,7 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
     if (bdata->chars.peer_type <= BMP_PEER_TYPE_MAX) {
       check_i(avro_value_get_by_name(obj, "peer_type_str", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_string(&avro_field, bmp_peer_types[bdata->chars.peer_type]));
+      check_i(avro_value_set_string(&avro_branch, bmp_peer_types[bdata->chars.peer_type]));
     }
     else {
       check_i(avro_value_get_by_name(obj, "peer_type_str", &avro_field, NULL));
@@ -843,7 +843,7 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
     if (blpd->reason <= BMP_PEER_DOWN_MAX) {
       check_i(avro_value_get_by_name(obj, "reason_str", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_string(&avro_field, bmp_peer_down_reason_types[blpd->reason]));
+      check_i(avro_value_set_string(&avro_branch, bmp_peer_down_reason_types[blpd->reason]));
     }
     else {
       check_i(avro_value_get_by_name(obj, "reason_str", &avro_field, NULL));
@@ -853,7 +853,7 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
     if (blpd->reason == BMP_PEER_DOWN_LOC_CODE) {
       check_i(avro_value_get_by_name(obj, "reason_loc_code", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_field, blpd->loc_code));
+      check_i(avro_value_set_int(&avro_branch, blpd->loc_code));
     }
     else {
       check_i(avro_value_get_by_name(obj, "reason_loc_code", &avro_field, NULL));
