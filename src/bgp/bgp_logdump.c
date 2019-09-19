@@ -281,6 +281,9 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       check_i(avro_value_set_string(&avro_field, bms->dump.tstamp_str)); 
     }
 
+    if (ri && ri->extra && ri->extra->bmed.id && bms->bgp_peer_logdump_extra_data)
+      bms->bgp_peer_logdump_extra_data(&ri->extra->bmed, output, &avro_obj);
+
     addr_to_str(ip_address, &peer->addr);
     check_i(avro_value_get_by_name(&avro_obj, bms->peer_str, &avro_field, NULL));
     check_i(avro_value_set_string(&avro_field, ip_address));
@@ -403,6 +406,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       check_i(avro_value_get_by_name(&avro_obj, "label", &avro_field, NULL));
       check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
     }
+
+    if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, output, &avro_obj);
 
     if (config.rpki_roas_file || config.rpki_rtr_cache) {
       u_int8_t roa;
@@ -1340,7 +1345,7 @@ void avro_schema_build_bgp_common(avro_schema_t *schema, avro_schema_t *optlong_
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(type);
 
-  if (log_type == BGP_LOGDUMP_ET_LOG && type == FUNC_TYPE_BGP) {
+  if (log_type == BGP_LOGDUMP_ET_LOG) {
     avro_schema_record_field_append((*schema), "log_type", avro_schema_string());
   }
   avro_schema_record_field_append((*schema), "seq", avro_schema_long());

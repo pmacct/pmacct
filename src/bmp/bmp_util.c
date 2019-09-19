@@ -30,6 +30,9 @@
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
 #endif
+#ifdef WITH_AVRO
+#include "plugin_cmn_avro.h"
+#endif
 
 char *bmp_get_and_check_length(char **bmp_packet_ptr, u_int32_t *pkt_size, u_int32_t len)
 {
@@ -98,6 +101,23 @@ void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int output, void *void_o
     json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 #endif
   }
+  else if (output == PRINT_OUTPUT_AVRO) {
+#ifdef WITH_AVRO
+    char bmp_msg_type[] = "route_monitor";
+    char ip_address[INET6_ADDRSTRLEN];
+    avro_value_t *obj = (avro_value_t *) void_obj, avro_field;
+
+    addr_to_str(ip_address, &bmpp->self.addr);
+    check_i(avro_value_get_by_name(obj, "bmp_router", &avro_field, NULL));
+    check_i(avro_value_set_string(&avro_field, ip_address));
+
+    check_i(avro_value_get_by_name(obj, "bmp_router_port", &avro_field, NULL));
+    check_i(avro_value_set_int(&avro_field, bmpp->self.tcp_port)); 
+
+    check_i(avro_value_get_by_name(obj, "bmp_msg_type", &avro_field, NULL));
+    check_i(avro_value_set_string(&avro_field, bmp_msg_type));
+#endif
+  }
 }
 
 void bgp_peer_logdump_initclose_extras_bmp(struct bgp_peer *peer, int output, void *void_obj)
@@ -116,6 +136,14 @@ void bgp_peer_logdump_initclose_extras_bmp(struct bgp_peer *peer, int output, vo
     json_t *obj = void_obj;
 
     json_object_set_new_nocheck(obj, "bmp_router_port", json_integer((json_int_t)peer->tcp_port));
+#endif
+  }
+  else if (output == PRINT_OUTPUT_AVRO) {
+#ifdef WITH_AVRO
+    avro_value_t *obj = (avro_value_t *) void_obj, avro_field;
+
+    check_i(avro_value_get_by_name(obj, "bmp_router_port", &avro_field, NULL));
+    check_i(avro_value_set_int(&avro_field, peer->tcp_port));
 #endif
   }
 }
@@ -289,6 +317,57 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
     else if (bmed_bmp->is_out) {
       json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bmed_bmp->is_post));
       json_object_set_new_nocheck(obj, "is_out", json_integer((json_int_t)bmed_bmp->is_out));
+    }
+#endif
+  }
+  else if (output == PRINT_OUTPUT_AVRO) {
+#ifdef WITH_AVRO
+    struct bmp_chars *bmed_bmp;
+    bmed_bmp = bmed->data;
+    avro_value_t *obj = (avro_value_t *) void_obj, avro_field, avro_branch;
+
+    if (bmed_bmp->is_loc) {
+      check_i(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      check_i(avro_value_set_int(&avro_branch, bmed_bmp->is_filtered));
+
+      check_i(avro_value_get_by_name(obj, "is_loc", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      check_i(avro_value_set_int(&avro_branch, bmed_bmp->is_loc));
+
+      check_i(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+
+      check_i(avro_value_get_by_name(obj, "is_out", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+    }
+    else if (bmed_bmp->is_out) {
+      check_i(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+
+      check_i(avro_value_get_by_name(obj, "is_loc", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+
+      check_i(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      check_i(avro_value_set_int(&avro_branch, bmed_bmp->is_post));
+
+      check_i(avro_value_get_by_name(obj, "is_out", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      check_i(avro_value_set_int(&avro_branch, bmed_bmp->is_out));
+    }
+    else {
+      check_i(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+
+      check_i(avro_value_get_by_name(obj, "is_loc", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+
+      check_i(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+
+      check_i(avro_value_get_by_name(obj, "is_out", &avro_field, NULL));
+      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
     }
 #endif
   }
