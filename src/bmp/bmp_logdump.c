@@ -1513,9 +1513,9 @@ avro_schema_t avro_schema_build_bmp_peer_down(char *schema_name)
   avro_schema_record_field_append(schema, "peer_type", avro_schema_int());
   avro_schema_record_field_append(schema, "peer_type_str", optstr_s);
 
-  avro_schema_record_field_append(schema, "resson_type", avro_schema_int());
+  avro_schema_record_field_append(schema, "reason_type", avro_schema_int());
   avro_schema_record_field_append(schema, "reason_str", optstr_s);
-  avro_schema_record_field_append(schema, "resson_loc_code", optint_s);
+  avro_schema_record_field_append(schema, "reason_loc_code", optint_s);
 
   avro_schema_decref(optlong_s);
   avro_schema_decref(optstr_s);
