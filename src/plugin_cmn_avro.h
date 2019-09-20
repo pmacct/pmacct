@@ -51,6 +51,7 @@ extern char *compose_avro_schema_name(char *, char *);
 
 #ifdef WITH_SERDES
 extern serdes_schema_t *compose_avro_schema_registry_name(char *, int, avro_schema_t, char *, char *, char *);
+extern serdes_schema_t *compose_avro_schema_registry_name_2(char *, int, avro_schema_t, char *, char *, char *);
 #endif
 
 /* global variables */

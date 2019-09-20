@@ -1065,33 +1065,38 @@ void bmp_handle_dump_event()
 	    int is_dyn;
 
 	    is_dyn = bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_kafka_topic, peer);
+	    if (is_dyn) {
+	      Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'bmp_dump_kafka_topic' is not compatible with 'bmp_dump_kafka_avro_schema_registry'. Exiting.\n",
+		  config.name, bms->log_str);
+	      exit_gracefully(1);
+	    }
 
-	    bmp_dump_kafka_host.sd_schema[BMP_MSG_ROUTE_MONITOR] = compose_avro_schema_registry_name(config.bmp_dump_kafka_topic, is_dyn,
+	    bmp_dump_kafka_host.sd_schema[BMP_MSG_ROUTE_MONITOR] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, is_dyn,
 											     bmp_misc_db->dump_avro_schema[BMP_MSG_ROUTE_MONITOR],
 											     "bmp", "dump_rm",
 											     config.bmp_dump_kafka_avro_schema_registry);
 
-	    bmp_dump_kafka_host.sd_schema[BMP_MSG_STATS] = compose_avro_schema_registry_name(config.bmp_dump_kafka_topic, is_dyn,
+	    bmp_dump_kafka_host.sd_schema[BMP_MSG_STATS] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, is_dyn,
 											     bmp_misc_db->dump_avro_schema[BMP_MSG_STATS],
 											     "bmp", "stats",
 											     config.bmp_dump_kafka_avro_schema_registry);
 
-	    bmp_dump_kafka_host.sd_schema[BMP_MSG_PEER_UP] = compose_avro_schema_registry_name(config.bmp_dump_kafka_topic, is_dyn,
+	    bmp_dump_kafka_host.sd_schema[BMP_MSG_PEER_UP] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, is_dyn,
 											     bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_UP],
 											     "bmp", "peer_up",
 											     config.bmp_dump_kafka_avro_schema_registry);
 
-	    bmp_dump_kafka_host.sd_schema[BMP_MSG_PEER_DOWN] = compose_avro_schema_registry_name(config.bmp_dump_kafka_topic, is_dyn,
+	    bmp_dump_kafka_host.sd_schema[BMP_MSG_PEER_DOWN] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, is_dyn,
 											     bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_DOWN],
 											     "bmp", "peer_down",
 											     config.bmp_dump_kafka_avro_schema_registry);
 
-	    bmp_dump_kafka_host.sd_schema[BMP_MSG_INIT] = compose_avro_schema_registry_name(config.bmp_dump_kafka_topic, is_dyn,
+	    bmp_dump_kafka_host.sd_schema[BMP_MSG_INIT] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, is_dyn,
 											     bmp_misc_db->dump_avro_schema[BMP_MSG_INIT],
 											     "bmp", "init",
 											     config.bmp_dump_kafka_avro_schema_registry);
 
-	    bmp_dump_kafka_host.sd_schema[BMP_MSG_TERM] = compose_avro_schema_registry_name(config.bmp_dump_kafka_topic, is_dyn,
+	    bmp_dump_kafka_host.sd_schema[BMP_MSG_TERM] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, is_dyn,
 											     bmp_misc_db->dump_avro_schema[BMP_MSG_TERM],
 											     "bmp", "term",
 											     config.bmp_dump_kafka_avro_schema_registry);

@@ -1132,6 +1132,31 @@ char *compose_avro_schema_name(char *extra1, char *extra2)
 }
 
 #ifdef WITH_SERDES
+serdes_schema_t *compose_avro_schema_registry_name_2(char *topic, int is_topic_dyn,
+		avro_schema_t avro_schema, char *type, char *name, char *schema_registry)
+{
+  serdes_schema_t *loc_schema = NULL;
+  char *loc_schema_name = NULL;
+  int len = 0;
+
+  if (!topic || !type || !name) return NULL;
+
+  len = (strlen(topic) + strlen(type) + strlen(name) + 3 /* two seps + term */);
+  loc_schema_name = malloc(len);
+
+  memset(loc_schema_name, 0, len);
+  strcpy(loc_schema_name, topic);
+  strcat(loc_schema_name, "-");
+  strcat(loc_schema_name, type);
+  strcat(loc_schema_name, "-");
+  strcat(loc_schema_name, name);
+
+  loc_schema = compose_avro_schema_registry_name(loc_schema_name, FALSE, avro_schema, NULL, NULL, schema_registry); 
+  free(loc_schema_name);
+
+  return loc_schema; 
+}
+
 serdes_schema_t *compose_avro_schema_registry_name(char *topic, int is_topic_dyn,
 		avro_schema_t avro_schema, char *type, char *name, char *schema_registry)
 {

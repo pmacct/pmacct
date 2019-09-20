@@ -323,7 +323,7 @@ void skinny_bmp_daemon()
 	char avro_schema_file[SRVBUFLEN];
 
 	if (strlen(config.nfacctd_bmp_msglog_avro_schema_file) > (SRVBUFLEN - SUPERSHORTBUFLEN)) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): 'bmp_daemon_msglog_avro_schema_file' too long. Exiting ..\n", config.name, bmp_misc_db->log_str);
+	  Log(LOG_ERR, "ERROR ( %s/%s ): 'bmp_daemon_msglog_avro_schema_file' too long. Exiting.\n", config.name, bmp_misc_db->log_str);
 	  exit_gracefully(1);
 	}
 
@@ -348,35 +348,39 @@ void skinny_bmp_daemon()
 
       if (config.nfacctd_bmp_msglog_kafka_avro_schema_registry) {
 #ifdef WITH_SERDES
-        int is_dyn = FALSE;
+        if (strchr(config.nfacctd_bmp_msglog_kafka_topic, '$')) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'bmp_daemon_msglog_kafka_topic' is not compatible with 'bmp_daemon_msglog_kafka_avro_schema_registry'. Exiting.\n",
+	      config.name, bmp_misc_db->log_str);
+	  exit_gracefully(1);
+	}
 
-        if (!strchr(config.nfacctd_bmp_msglog_kafka_topic, '$')) is_dyn = TRUE;
-        bmp_misc_db->msglog_kafka_host->sd_schema[BMP_MSG_ROUTE_MONITOR] = compose_avro_schema_registry_name(config.nfacctd_bmp_msglog_kafka_topic, is_dyn,
+	
+        bmp_daemon_msglog_kafka_host.sd_schema[BMP_MSG_ROUTE_MONITOR] = compose_avro_schema_registry_name_2(config.nfacctd_bmp_msglog_kafka_topic, FALSE,
 												     bmp_misc_db->msglog_avro_schema[BMP_MSG_ROUTE_MONITOR],
 												     "bmp", "msglog_rm",
 												     config.nfacctd_bmp_msglog_kafka_avro_schema_registry);
 
-        bmp_misc_db->msglog_kafka_host->sd_schema[BMP_MSG_STATS] = compose_avro_schema_registry_name(config.nfacctd_bmp_msglog_kafka_topic, is_dyn,
+        bmp_daemon_msglog_kafka_host.sd_schema[BMP_MSG_STATS] = compose_avro_schema_registry_name_2(config.nfacctd_bmp_msglog_kafka_topic, FALSE,
 												     bmp_misc_db->msglog_avro_schema[BMP_MSG_STATS],
 												     "bmp", "stats",
 												     config.nfacctd_bmp_msglog_kafka_avro_schema_registry);
 
-        bmp_misc_db->msglog_kafka_host->sd_schema[BMP_MSG_PEER_UP] = compose_avro_schema_registry_name(config.nfacctd_bmp_msglog_kafka_topic, is_dyn,
+        bmp_daemon_msglog_kafka_host.sd_schema[BMP_MSG_PEER_UP] = compose_avro_schema_registry_name_2(config.nfacctd_bmp_msglog_kafka_topic, FALSE,
 												     bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_UP],
 												     "bmp", "peer_up",
 												     config.nfacctd_bmp_msglog_kafka_avro_schema_registry);
 
-        bmp_misc_db->msglog_kafka_host->sd_schema[BMP_MSG_PEER_DOWN] = compose_avro_schema_registry_name(config.nfacctd_bmp_msglog_kafka_topic, is_dyn,
+        bmp_daemon_msglog_kafka_host.sd_schema[BMP_MSG_PEER_DOWN] = compose_avro_schema_registry_name_2(config.nfacctd_bmp_msglog_kafka_topic, FALSE,
 												     bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_DOWN],
 												     "bmp", "peer_down",
 												     config.nfacctd_bmp_msglog_kafka_avro_schema_registry);
 
-        bmp_misc_db->msglog_kafka_host->sd_schema[BMP_MSG_INIT] = compose_avro_schema_registry_name(config.nfacctd_bmp_msglog_kafka_topic, is_dyn,
+        bmp_daemon_msglog_kafka_host.sd_schema[BMP_MSG_INIT] = compose_avro_schema_registry_name_2(config.nfacctd_bmp_msglog_kafka_topic, FALSE,
 												     bmp_misc_db->msglog_avro_schema[BMP_MSG_INIT],
 												     "bmp", "init",
 												     config.nfacctd_bmp_msglog_kafka_avro_schema_registry);
 
-        bmp_misc_db->msglog_kafka_host->sd_schema[BMP_MSG_TERM] = compose_avro_schema_registry_name(config.nfacctd_bmp_msglog_kafka_topic, is_dyn,
+        bmp_daemon_msglog_kafka_host.sd_schema[BMP_MSG_TERM] = compose_avro_schema_registry_name_2(config.nfacctd_bmp_msglog_kafka_topic, FALSE,
 												     bmp_misc_db->msglog_avro_schema[BMP_MSG_TERM],
 												     "bmp", "term",
 												     config.nfacctd_bmp_msglog_kafka_avro_schema_registry);

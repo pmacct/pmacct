@@ -1107,7 +1107,13 @@ void bgp_handle_dump_event()
 	    int is_dyn;
 
 	    is_dyn = bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_kafka_topic, peer);
-	    bgp_table_dump_kafka_host.sd_schema[0] = compose_avro_schema_registry_name(current_filename, is_dyn, bms->dump_avro_schema[0], "bgp",
+	    if (is_dyn) {
+	      Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'bgp_table_dump_kafka_topic' is not compatible with 'bgp_table_dump_kafka_avro_schema_registry'. Exiting.\n",
+		  config.name, bms->log_str);
+	      exit_gracefully(1);
+            }
+
+	    bgp_table_dump_kafka_host.sd_schema[0] = compose_avro_schema_registry_name_2(current_filename, is_dyn, bms->dump_avro_schema[0], "bgp",
 										       "dump", config.bgp_table_dump_kafka_avro_schema_registry);
 #endif
 	  }

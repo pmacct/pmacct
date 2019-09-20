@@ -415,12 +415,15 @@ void skinny_bgp_daemon_online()
 
       if (config.nfacctd_bgp_msglog_kafka_avro_schema_registry) {
 #ifdef WITH_SERDES
-	int is_dyn = FALSE; 
+        if (strchr(config.nfacctd_bgp_msglog_kafka_topic, '$')) {
+          Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'bgp_daemon_msglog_kafka_topic' is not compatible with 'bgp_daemon_msglog_kafka_avro_schema_registry'. Exiting.\n",
+	      config.name, bgp_misc_db->log_str);
+	  exit_gracefully(1);
+        }
 
-	if (!strchr(config.nfacctd_bgp_msglog_kafka_topic, '$')) is_dyn = TRUE;
-	bgp_misc_db->msglog_kafka_host->sd_schema[0] = compose_avro_schema_registry_name(config.nfacctd_bgp_msglog_kafka_topic, is_dyn,
-											 bgp_misc_db->msglog_avro_schema[0], "bgp", "msglog",
-											 config.nfacctd_bgp_msglog_kafka_avro_schema_registry);
+	bgp_daemon_msglog_kafka_host.sd_schema[0] = compose_avro_schema_registry_name_2(config.nfacctd_bgp_msglog_kafka_topic, FALSE,
+										        bgp_misc_db->msglog_avro_schema[0], "bgp", "msglog",
+										        config.nfacctd_bgp_msglog_kafka_avro_schema_registry);
 #endif
       }
     }
