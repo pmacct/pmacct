@@ -337,29 +337,29 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
   avro_value_t value;
   avro_value_t field;
   avro_value_t branch;
-  check_i(avro_generic_value_new(iface, &value));
+  pm_avro_check(avro_generic_value_new(iface, &value));
 
   if (wtc & COUNT_TAG) {
-    check_i(avro_value_get_by_name(&value, "tag", &field, NULL));
-    check_i(avro_value_set_long(&field, pbase->tag));
+    pm_avro_check(avro_value_get_by_name(&value, "tag", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->tag));
   }
 
   if (wtc & COUNT_TAG2) {
-    check_i(avro_value_get_by_name(&value, "tag2", &field, NULL));
-    check_i(avro_value_set_long(&field, pbase->tag2));
+    pm_avro_check(avro_value_get_by_name(&value, "tag2", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->tag2));
   }
 
   if (wtc_2 & COUNT_LABEL) {
     vlen_prims_get(pvlen, COUNT_INT_LABEL, &str_ptr);
     if (!str_ptr) str_ptr = empty_string;
 
-    check_i(avro_value_get_by_name(&value, "label", &field, NULL));
-    check_i(avro_value_set_string(&field, str_ptr));
+    pm_avro_check(avro_value_get_by_name(&value, "label", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, str_ptr));
   }
 
   if (wtc & COUNT_CLASS) {
-    check_i(avro_value_get_by_name(&value, "class", &field, NULL));
-    check_i(avro_value_set_string(&field, ((pbase->class && class[(pbase->class)-1].id) ? class[(pbase->class)-1].protocol : "unknown" )));
+    pm_avro_check(avro_value_get_by_name(&value, "class", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, ((pbase->class && class[(pbase->class)-1].id) ? class[(pbase->class)-1].protocol : "unknown" )));
   }
 
 #if defined (WITH_NDPI)
@@ -370,49 +370,49 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
 	ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, pbase->ndpi_class.master_protocol),
 	ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, pbase->ndpi_class.app_protocol));
 
-    check_i(avro_value_get_by_name(&value, "class", &field, NULL));
-    check_i(avro_value_set_string(&field, ndpi_class));
+    pm_avro_check(avro_value_get_by_name(&value, "class", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, ndpi_class));
   }
 #endif
 
 #if defined (HAVE_L2)
   if (wtc & (COUNT_SRC_MAC|COUNT_SUM_MAC)) {
     etheraddr_string(pbase->eth_shost, src_mac);
-    check_i(avro_value_get_by_name(&value, "mac_src", &field, NULL));
-    check_i(avro_value_set_string(&field, src_mac));
+    pm_avro_check(avro_value_get_by_name(&value, "mac_src", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, src_mac));
   }
 
   if (wtc & COUNT_DST_MAC) {
     etheraddr_string(pbase->eth_dhost, dst_mac);
-    check_i(avro_value_get_by_name(&value, "mac_dst", &field, NULL));
-    check_i(avro_value_set_string(&field, dst_mac));
+    pm_avro_check(avro_value_get_by_name(&value, "mac_dst", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, dst_mac));
   }
 
   if (wtc & COUNT_VLAN) {
-    check_i(avro_value_get_by_name(&value, "vlan", &field, NULL));
-    check_i(avro_value_set_long(&field, pbase->vlan_id));
+    pm_avro_check(avro_value_get_by_name(&value, "vlan", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->vlan_id));
   }
 
   if (wtc & COUNT_COS) {
-    check_i(avro_value_get_by_name(&value, "cos", &field, NULL));
-    check_i(avro_value_set_long(&field, pbase->cos));
+    pm_avro_check(avro_value_get_by_name(&value, "cos", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->cos));
   }
 
   if (wtc & COUNT_ETHERTYPE) {
     sprintf(misc_str, "%x", pbase->etype);
-    check_i(avro_value_get_by_name(&value, "etype", &field, NULL));
-    check_i(avro_value_set_string(&field, misc_str));
+    pm_avro_check(avro_value_get_by_name(&value, "etype", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, misc_str));
   }
 #endif
 
   if (wtc & (COUNT_SRC_AS|COUNT_SUM_AS)) {
-    check_i(avro_value_get_by_name(&value, "as_src", &field, NULL));
-    check_i(avro_value_set_long(&field, pbase->src_as));
+    pm_avro_check(avro_value_get_by_name(&value, "as_src", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->src_as));
   }
 
   if (wtc & COUNT_DST_AS) {
-    check_i(avro_value_get_by_name(&value, "as_dst", &field, NULL));
-    check_i(avro_value_set_long(&field, pbase->dst_as));
+    pm_avro_check(avro_value_get_by_name(&value, "as_dst", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->dst_as));
   }
 
   if (wtc & COUNT_STD_COMM) {
@@ -426,8 +426,8 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     }
     else str_ptr = empty_string;
 
-    check_i(avro_value_get_by_name(&value, "comms", &field, NULL));
-    check_i(avro_value_set_string(&field, str_ptr));
+    pm_avro_check(avro_value_get_by_name(&value, "comms", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, str_ptr));
   }
 
   if (wtc & COUNT_EXT_COMM) {
@@ -441,8 +441,8 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     }
     else str_ptr = empty_string;
 
-    check_i(avro_value_get_by_name(&value, "ecomms", &field, NULL));
-    check_i(avro_value_set_string(&field, str_ptr));
+    pm_avro_check(avro_value_get_by_name(&value, "ecomms", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, str_ptr));
   }
 
   if (wtc_2 & COUNT_LRG_COMM) {
@@ -456,8 +456,8 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     }
     else str_ptr = empty_string;
 
-    check_i(avro_value_get_by_name(&value, "lcomms", &field, NULL));
-    check_i(avro_value_set_string(&field, str_ptr));
+    pm_avro_check(avro_value_get_by_name(&value, "lcomms", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, str_ptr));
   }
 
   if (wtc & COUNT_AS_PATH) {
@@ -471,45 +471,45 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     }
     else str_ptr = empty_string;
 
-    check_i(avro_value_get_by_name(&value, "as_path", &field, NULL));
-    check_i(avro_value_set_string(&field, str_ptr));
+    pm_avro_check(avro_value_get_by_name(&value, "as_path", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, str_ptr));
   }
 
   if (wtc & COUNT_LOCAL_PREF) {
-    check_i(avro_value_get_by_name(&value, "local_pref", &field, NULL));
-    check_i(avro_value_set_long(&field, pbgp->local_pref));
+    pm_avro_check(avro_value_get_by_name(&value, "local_pref", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbgp->local_pref));
   }
 
   if (wtc & COUNT_MED) {
-    check_i(avro_value_get_by_name(&value, "med", &field, NULL));
-    check_i(avro_value_set_long(&field, pbgp->med));
+    pm_avro_check(avro_value_get_by_name(&value, "med", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbgp->med));
   }
 
   if (wtc_2 & COUNT_DST_ROA) {
-    check_i(avro_value_get_by_name(&value, "roa_dst", &field, NULL));
-    check_i(avro_value_set_string(&field, rpki_roa_print(pbgp->dst_roa)));
+    pm_avro_check(avro_value_get_by_name(&value, "roa_dst", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, rpki_roa_print(pbgp->dst_roa)));
   }
 
   if (wtc & COUNT_PEER_SRC_AS) {
-    check_i(avro_value_get_by_name(&value, "peer_as_src", &field, NULL));
-    check_i(avro_value_set_long(&field, pbgp->peer_src_as));
+    pm_avro_check(avro_value_get_by_name(&value, "peer_as_src", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbgp->peer_src_as));
   }
 
   if (wtc & COUNT_PEER_DST_AS) {
-    check_i(avro_value_get_by_name(&value, "peer_as_dst", &field, NULL));
-    check_i(avro_value_set_long(&field, pbgp->peer_dst_as));
+    pm_avro_check(avro_value_get_by_name(&value, "peer_as_dst", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbgp->peer_dst_as));
   }
 
   if (wtc & COUNT_PEER_SRC_IP) {
-    check_i(avro_value_get_by_name(&value, "peer_ip_src", &field, NULL));
+    pm_avro_check(avro_value_get_by_name(&value, "peer_ip_src", &field, NULL));
     addr_to_str(ip_address, &pbgp->peer_src_ip);
-    check_i(avro_value_set_string(&field, ip_address));
+    pm_avro_check(avro_value_set_string(&field, ip_address));
   }
 
   if (wtc & COUNT_PEER_DST_IP) {
-    check_i(avro_value_get_by_name(&value, "peer_ip_dst", &field, NULL));
+    pm_avro_check(avro_value_get_by_name(&value, "peer_ip_dst", &field, NULL));
     addr_to_str(ip_address, &pbgp->peer_dst_ip);
-    check_i(avro_value_set_string(&field, ip_address));
+    pm_avro_check(avro_value_set_string(&field, ip_address));
   }
 
   if (wtc & COUNT_STD_COMM) {
@@ -523,8 +523,8 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     }
     else str_ptr = empty_string;
 
-    check_i(avro_value_get_by_name(&value, "comms_src", &field, NULL));
-    check_i(avro_value_set_string(&field, str_ptr));
+    pm_avro_check(avro_value_get_by_name(&value, "comms_src", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, str_ptr));
   }
 
   if (wtc & COUNT_SRC_EXT_COMM) {
@@ -538,8 +538,8 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     }
     else str_ptr = empty_string;
 
-    check_i(avro_value_get_by_name(&value, "ecomms_src", &field, NULL));
-    check_i(avro_value_set_string(&field, str_ptr));
+    pm_avro_check(avro_value_get_by_name(&value, "ecomms_src", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, str_ptr));
   }
 
   if (wtc_2 & COUNT_SRC_LRG_COMM) {
@@ -553,8 +553,8 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     }
     else str_ptr = empty_string;
 
-    check_i(avro_value_get_by_name(&value, "lcomms_src", &field, NULL));
-    check_i(avro_value_set_string(&field, str_ptr));
+    pm_avro_check(avro_value_get_by_name(&value, "lcomms_src", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, str_ptr));
   }
 
   if (wtc & COUNT_SRC_AS_PATH) {
@@ -568,298 +568,298 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
     }
     else str_ptr = empty_string;
 
-    check_i(avro_value_get_by_name(&value, "as_path_src", &field, NULL));
-    check_i(avro_value_set_string(&field, str_ptr));
+    pm_avro_check(avro_value_get_by_name(&value, "as_path_src", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, str_ptr));
   }
 
   if (wtc & COUNT_SRC_LOCAL_PREF) {
-    check_i(avro_value_get_by_name(&value, "local_pref_src", &field, NULL));
-    check_i(avro_value_set_long(&field, pbgp->src_local_pref));
+    pm_avro_check(avro_value_get_by_name(&value, "local_pref_src", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbgp->src_local_pref));
   }
 
   if (wtc & COUNT_SRC_MED) {
-    check_i(avro_value_get_by_name(&value, "med_src", &field, NULL));
-    check_i(avro_value_set_long(&field, pbgp->src_med));
+    pm_avro_check(avro_value_get_by_name(&value, "med_src", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbgp->src_med));
   }
 
   if (wtc_2 & COUNT_SRC_ROA) {
-    check_i(avro_value_get_by_name(&value, "roa_src", &field, NULL));
-    check_i(avro_value_set_string(&field, rpki_roa_print(pbgp->src_roa)));
+    pm_avro_check(avro_value_get_by_name(&value, "roa_src", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, rpki_roa_print(pbgp->src_roa)));
   }
 
   if (wtc & COUNT_IN_IFACE) {
-    check_i(avro_value_get_by_name(&value, "iface_in", &field, NULL));
-    check_i(avro_value_set_long(&field, pbase->ifindex_in));
+    pm_avro_check(avro_value_get_by_name(&value, "iface_in", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->ifindex_in));
   }
 
   if (wtc & COUNT_OUT_IFACE) {
-    check_i(avro_value_get_by_name(&value, "iface_out", &field, NULL));
-    check_i(avro_value_set_long(&field, pbase->ifindex_out));
+    pm_avro_check(avro_value_get_by_name(&value, "iface_out", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->ifindex_out));
   }
 
   if (wtc & COUNT_MPLS_VPN_RD) {
     bgp_rd2str(rd_str, &pbgp->mpls_vpn_rd);
-    check_i(avro_value_get_by_name(&value, "mpls_vpn_rd", &field, NULL));
-    check_i(avro_value_set_string(&field, rd_str));
+    pm_avro_check(avro_value_get_by_name(&value, "mpls_vpn_rd", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, rd_str));
   }
 
   if (wtc_2 & COUNT_MPLS_PW_ID) {
-    check_i(avro_value_get_by_name(&value, "mpls_pw_id", &field, NULL));
-    check_i(avro_value_set_long(&field, pbgp->mpls_pw_id));
+    pm_avro_check(avro_value_get_by_name(&value, "mpls_pw_id", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbgp->mpls_pw_id));
   }
 
   if (wtc & (COUNT_SRC_HOST|COUNT_SUM_HOST)) {
     addr_to_str(src_host, &pbase->src_ip);
-    check_i(avro_value_get_by_name(&value, "ip_src", &field, NULL));
-    check_i(avro_value_set_string(&field, src_host));
+    pm_avro_check(avro_value_get_by_name(&value, "ip_src", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, src_host));
   }
 
   if (wtc & (COUNT_SRC_NET|COUNT_SUM_NET)) {
     addr_to_str(src_host, &pbase->src_net);
-    check_i(avro_value_get_by_name(&value, "net_src", &field, NULL));
-    check_i(avro_value_set_string(&field, src_host));
+    pm_avro_check(avro_value_get_by_name(&value, "net_src", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, src_host));
   }
 
   if (wtc & COUNT_DST_HOST) {
     addr_to_str(dst_host, &pbase->dst_ip);
-    check_i(avro_value_get_by_name(&value, "ip_dst", &field, NULL));
-    check_i(avro_value_set_string(&field, dst_host));
+    pm_avro_check(avro_value_get_by_name(&value, "ip_dst", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, dst_host));
   }
 
   if (wtc & COUNT_DST_NET) {
     addr_to_str(dst_host, &pbase->dst_net);
-    check_i(avro_value_get_by_name(&value, "net_dst", &field, NULL));
-    check_i(avro_value_set_string(&field, dst_host));
+    pm_avro_check(avro_value_get_by_name(&value, "net_dst", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, dst_host));
   }
 
   if (wtc & COUNT_SRC_NMASK) {
-    check_i(avro_value_get_by_name(&value, "mask_src", &field, NULL));
-    check_i(avro_value_set_long(&field, pbase->src_nmask));
+    pm_avro_check(avro_value_get_by_name(&value, "mask_src", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->src_nmask));
   }
 
   if (wtc & COUNT_DST_NMASK) {
-    check_i(avro_value_get_by_name(&value, "mask_dst", &field, NULL));
-    check_i(avro_value_set_long(&field, pbase->dst_nmask));
+    pm_avro_check(avro_value_get_by_name(&value, "mask_dst", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->dst_nmask));
   }
 
   if (wtc & (COUNT_SRC_PORT|COUNT_SUM_PORT)) {
-    check_i(avro_value_get_by_name(&value, "port_src", &field, NULL));
-    check_i(avro_value_set_long(&field, pbase->src_port));
+    pm_avro_check(avro_value_get_by_name(&value, "port_src", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->src_port));
   }
 
   if (wtc & COUNT_DST_PORT) {
-    check_i(avro_value_get_by_name(&value, "port_dst", &field, NULL));
-    check_i(avro_value_set_long(&field, pbase->dst_port));
+    pm_avro_check(avro_value_get_by_name(&value, "port_dst", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->dst_port));
   }
 
 #if defined (WITH_GEOIP)
   if (wtc_2 & COUNT_SRC_HOST_COUNTRY) {
-    check_i(avro_value_get_by_name(&value, "country_ip_src", &field, NULL));
+    pm_avro_check(avro_value_get_by_name(&value, "country_ip_src", &field, NULL));
     if (pbase->src_ip_country.id > 0)
-      check_i(avro_value_set_string(&field, GeoIP_code_by_id(pbase->src_ip_country.id)));
+      pm_avro_check(avro_value_set_string(&field, GeoIP_code_by_id(pbase->src_ip_country.id)));
     else
-      check_i(avro_value_set_string(&field, empty_string));
+      pm_avro_check(avro_value_set_string(&field, empty_string));
   }
 
   if (wtc_2 & COUNT_DST_HOST_COUNTRY) {
-    check_i(avro_value_get_by_name(&value, "country_ip_dst", &field, NULL));
+    pm_avro_check(avro_value_get_by_name(&value, "country_ip_dst", &field, NULL));
     if (pbase->dst_ip_country.id > 0)
-      check_i(avro_value_set_string(&field, GeoIP_code_by_id(pbase->dst_ip_country.id)));
+      pm_avro_check(avro_value_set_string(&field, GeoIP_code_by_id(pbase->dst_ip_country.id)));
     else
-      check_i(avro_value_set_string(&field, empty_string));
+      pm_avro_check(avro_value_set_string(&field, empty_string));
   }
 #endif
 #if defined (WITH_GEOIPV2)
   if (wtc_2 & COUNT_SRC_HOST_COUNTRY) {
-    check_i(avro_value_get_by_name(&value, "country_ip_src", &field, NULL));
+    pm_avro_check(avro_value_get_by_name(&value, "country_ip_src", &field, NULL));
     if (strlen(pbase->src_ip_country.str))
-      check_i(avro_value_set_string(&field, pbase->src_ip_country.str));
+      pm_avro_check(avro_value_set_string(&field, pbase->src_ip_country.str));
     else
-      check_i(avro_value_set_string(&field, empty_string));
+      pm_avro_check(avro_value_set_string(&field, empty_string));
   }
 
   if (wtc_2 & COUNT_DST_HOST_COUNTRY) {
-    check_i(avro_value_get_by_name(&value, "country_ip_dst", &field, NULL));
+    pm_avro_check(avro_value_get_by_name(&value, "country_ip_dst", &field, NULL));
     if (strlen(pbase->dst_ip_country.str))
-      check_i(avro_value_set_string(&field, pbase->dst_ip_country.str));
+      pm_avro_check(avro_value_set_string(&field, pbase->dst_ip_country.str));
     else
-      check_i(avro_value_set_string(&field, empty_string));
+      pm_avro_check(avro_value_set_string(&field, empty_string));
   }
 
   if (wtc_2 & COUNT_SRC_HOST_POCODE) {
-    check_i(avro_value_get_by_name(&value, "pocode_ip_src", &field, NULL));
+    pm_avro_check(avro_value_get_by_name(&value, "pocode_ip_src", &field, NULL));
     if (strlen(pbase->src_ip_pocode.str))
-      check_i(avro_value_set_string(&field, pbase->src_ip_pocode.str));
+      pm_avro_check(avro_value_set_string(&field, pbase->src_ip_pocode.str));
     else
-      check_i(avro_value_set_string(&field, empty_string));
+      pm_avro_check(avro_value_set_string(&field, empty_string));
   }
 
   if (wtc_2 & COUNT_DST_HOST_POCODE) {
-    check_i(avro_value_get_by_name(&value, "pocode_ip_dst", &field, NULL));
+    pm_avro_check(avro_value_get_by_name(&value, "pocode_ip_dst", &field, NULL));
     if (strlen(pbase->dst_ip_pocode.str))
-      check_i(avro_value_set_string(&field, pbase->dst_ip_pocode.str));
+      pm_avro_check(avro_value_set_string(&field, pbase->dst_ip_pocode.str));
     else
-      check_i(avro_value_set_string(&field, empty_string));
+      pm_avro_check(avro_value_set_string(&field, empty_string));
   }
 
   if (wtc_2 & COUNT_SRC_HOST_COORDS) {
-    check_i(avro_value_get_by_name(&value, "lat_ip_src", &field, NULL));
-    check_i(avro_value_set_double(&field, pbase->src_ip_lat));
-    check_i(avro_value_get_by_name(&value, "lon_ip_src", &field, NULL));
-    check_i(avro_value_set_double(&field, pbase->src_ip_lon));
+    pm_avro_check(avro_value_get_by_name(&value, "lat_ip_src", &field, NULL));
+    pm_avro_check(avro_value_set_double(&field, pbase->src_ip_lat));
+    pm_avro_check(avro_value_get_by_name(&value, "lon_ip_src", &field, NULL));
+    pm_avro_check(avro_value_set_double(&field, pbase->src_ip_lon));
   }
 
   if (wtc_2 & COUNT_DST_HOST_COORDS) {
-    check_i(avro_value_get_by_name(&value, "lat_ip_dst", &field, NULL));
-    check_i(avro_value_set_double(&field, pbase->dst_ip_lat));
-    check_i(avro_value_get_by_name(&value, "lon_ip_dst", &field, NULL));
-    check_i(avro_value_set_double(&field, pbase->dst_ip_lon));
+    pm_avro_check(avro_value_get_by_name(&value, "lat_ip_dst", &field, NULL));
+    pm_avro_check(avro_value_set_double(&field, pbase->dst_ip_lat));
+    pm_avro_check(avro_value_get_by_name(&value, "lon_ip_dst", &field, NULL));
+    pm_avro_check(avro_value_set_double(&field, pbase->dst_ip_lon));
   }
 #endif
 
   if (wtc & COUNT_TCPFLAGS) {
     sprintf(misc_str, "%u", tcp_flags);
-    check_i(avro_value_get_by_name(&value, "tcp_flags", &field, NULL));
-    check_i(avro_value_set_string(&field, misc_str));
+    pm_avro_check(avro_value_get_by_name(&value, "tcp_flags", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, misc_str));
   }
 
   if (wtc & COUNT_IP_PROTO) {
     char proto[PROTO_NUM_STRLEN];
 
-    check_i(avro_value_get_by_name(&value, "ip_proto", &field, NULL));
-    check_i(avro_value_set_string(&field, ip_proto_print(pbase->proto, proto, PROTO_NUM_STRLEN)));
+    pm_avro_check(avro_value_get_by_name(&value, "ip_proto", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, ip_proto_print(pbase->proto, proto, PROTO_NUM_STRLEN)));
   }
 
   if (wtc & COUNT_IP_TOS) {
-    check_i(avro_value_get_by_name(&value, "tos", &field, NULL));
-    check_i(avro_value_set_long(&field, pbase->tos));
+    pm_avro_check(avro_value_get_by_name(&value, "tos", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->tos));
   }
 
   if (wtc_2 & COUNT_SAMPLING_RATE) {
-    check_i(avro_value_get_by_name(&value, "sampling_rate", &field, NULL));
-    check_i(avro_value_set_long(&field, pbase->sampling_rate));
+    pm_avro_check(avro_value_get_by_name(&value, "sampling_rate", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->sampling_rate));
   }
 
   if (wtc_2 & COUNT_SAMPLING_DIRECTION) {
-    check_i(avro_value_get_by_name(&value, "sampling_direction", &field, NULL));
-    check_i(avro_value_set_string(&field, pbase->sampling_direction));
+    pm_avro_check(avro_value_get_by_name(&value, "sampling_direction", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, pbase->sampling_direction));
   }
 
   if (wtc_2 & COUNT_POST_NAT_SRC_HOST) {
     addr_to_str(src_host, &pnat->post_nat_src_ip);
-    check_i(avro_value_get_by_name(&value, "post_nat_ip_src", &field, NULL));
-    check_i(avro_value_set_string(&field, src_host));
+    pm_avro_check(avro_value_get_by_name(&value, "post_nat_ip_src", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, src_host));
   }
 
   if (wtc_2 & COUNT_POST_NAT_DST_HOST) {
     addr_to_str(dst_host, &pnat->post_nat_dst_ip);
-    check_i(avro_value_get_by_name(&value, "post_nat_ip_dst", &field, NULL));
-    check_i(avro_value_set_string(&field, dst_host));
+    pm_avro_check(avro_value_get_by_name(&value, "post_nat_ip_dst", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, dst_host));
   }
 
   if (wtc_2 & COUNT_POST_NAT_SRC_PORT) {
-    check_i(avro_value_get_by_name(&value, "post_nat_port_src", &field, NULL));
-    check_i(avro_value_set_long(&field, pnat->post_nat_src_port));
+    pm_avro_check(avro_value_get_by_name(&value, "post_nat_port_src", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pnat->post_nat_src_port));
   }
 
   if (wtc_2 & COUNT_POST_NAT_DST_PORT) {
-    check_i(avro_value_get_by_name(&value, "post_nat_port_dst", &field, NULL));
-    check_i(avro_value_set_long(&field, pnat->post_nat_dst_port));
+    pm_avro_check(avro_value_get_by_name(&value, "post_nat_port_dst", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pnat->post_nat_dst_port));
   }
 
   if (wtc_2 & COUNT_NAT_EVENT) {
-    check_i(avro_value_get_by_name(&value, "nat_event", &field, NULL));
-    check_i(avro_value_set_long(&field, pnat->nat_event));
+    pm_avro_check(avro_value_get_by_name(&value, "nat_event", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pnat->nat_event));
   }
 
   if (wtc_2 & COUNT_MPLS_LABEL_TOP) {
-    check_i(avro_value_get_by_name(&value, "mpls_label_top", &field, NULL));
-    check_i(avro_value_set_long(&field, pmpls->mpls_label_top));
+    pm_avro_check(avro_value_get_by_name(&value, "mpls_label_top", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pmpls->mpls_label_top));
   }
 
   if (wtc_2 & COUNT_MPLS_LABEL_BOTTOM) {
-    check_i(avro_value_get_by_name(&value, "mpls_label_bottom", &field, NULL));
-    check_i(avro_value_set_long(&field, pmpls->mpls_label_bottom));
+    pm_avro_check(avro_value_get_by_name(&value, "mpls_label_bottom", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pmpls->mpls_label_bottom));
   }
 
   if (wtc_2 & COUNT_MPLS_STACK_DEPTH) {
-    check_i(avro_value_get_by_name(&value, "mpls_stack_depth", &field, NULL));
-    check_i(avro_value_set_long(&field, pmpls->mpls_stack_depth));
+    pm_avro_check(avro_value_get_by_name(&value, "mpls_stack_depth", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pmpls->mpls_stack_depth));
   }
 
   if (wtc_2 & COUNT_TUNNEL_SRC_MAC) {
     etheraddr_string(ptun->tunnel_eth_shost, src_mac);
-    check_i(avro_value_get_by_name(&value, "tunnel_mac_src", &field, NULL));
-    check_i(avro_value_set_string(&field, src_mac));
+    pm_avro_check(avro_value_get_by_name(&value, "tunnel_mac_src", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, src_mac));
   }
 
   if (wtc_2 & COUNT_TUNNEL_DST_MAC) {
     etheraddr_string(ptun->tunnel_eth_dhost, dst_mac);
-    check_i(avro_value_get_by_name(&value, "tunnel_mac_dst", &field, NULL));
-    check_i(avro_value_set_string(&field, dst_mac));
+    pm_avro_check(avro_value_get_by_name(&value, "tunnel_mac_dst", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, dst_mac));
   }
 
   if (wtc_2 & COUNT_TUNNEL_SRC_HOST) {
     addr_to_str(src_host, &ptun->tunnel_src_ip);
-    check_i(avro_value_get_by_name(&value, "tunnel_ip_src", &field, NULL));
-    check_i(avro_value_set_string(&field, src_host));
+    pm_avro_check(avro_value_get_by_name(&value, "tunnel_ip_src", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, src_host));
   }
 
   if (wtc_2 & COUNT_TUNNEL_DST_HOST) {
     addr_to_str(dst_host, &ptun->tunnel_dst_ip);
-    check_i(avro_value_get_by_name(&value, "tunnel_ip_dst", &field, NULL));
-    check_i(avro_value_set_string(&field, dst_host));
+    pm_avro_check(avro_value_get_by_name(&value, "tunnel_ip_dst", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, dst_host));
   }
 
   if (wtc_2 & COUNT_TUNNEL_IP_PROTO) {
     char proto[PROTO_NUM_STRLEN];
 
-    check_i(avro_value_get_by_name(&value, "tunnel_ip_proto", &field, NULL));
-    check_i(avro_value_set_string(&field, ip_proto_print(ptun->tunnel_proto, proto, PROTO_NUM_STRLEN)));
+    pm_avro_check(avro_value_get_by_name(&value, "tunnel_ip_proto", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, ip_proto_print(ptun->tunnel_proto, proto, PROTO_NUM_STRLEN)));
   }
 
   if (wtc_2 & COUNT_TUNNEL_IP_TOS) {
-    check_i(avro_value_get_by_name(&value, "tunnel_tos", &field, NULL));
-    check_i(avro_value_set_long(&field, ptun->tunnel_tos));
+    pm_avro_check(avro_value_get_by_name(&value, "tunnel_tos", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, ptun->tunnel_tos));
   }
 
   if (wtc_2 & COUNT_TUNNEL_SRC_PORT) {
-    check_i(avro_value_get_by_name(&value, "tunnel_port_src", &field, NULL));
-    check_i(avro_value_set_long(&field, ptun->tunnel_src_port));
+    pm_avro_check(avro_value_get_by_name(&value, "tunnel_port_src", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, ptun->tunnel_src_port));
   }
 
   if (wtc_2 & COUNT_TUNNEL_DST_PORT) {
-    check_i(avro_value_get_by_name(&value, "tunnel_port_dst", &field, NULL));
-    check_i(avro_value_set_long(&field, ptun->tunnel_dst_port));
+    pm_avro_check(avro_value_get_by_name(&value, "tunnel_port_dst", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, ptun->tunnel_dst_port));
   }
 
   if (wtc_2 & COUNT_VXLAN) {
-    check_i(avro_value_get_by_name(&value, "vxlan", &field, NULL));
-    check_i(avro_value_set_long(&field, ptun->tunnel_id));
+    pm_avro_check(avro_value_get_by_name(&value, "vxlan", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, ptun->tunnel_id));
   }
 
   if (wtc_2 & COUNT_TIMESTAMP_START) {
     compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE,
 		      config.timestamps_since_epoch, config.timestamps_rfc3339,
 		      config.timestamps_utc);
-    check_i(avro_value_get_by_name(&value, "timestamp_start", &field, NULL));
-    check_i(avro_value_set_string(&field, tstamp_str));
+    pm_avro_check(avro_value_get_by_name(&value, "timestamp_start", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, tstamp_str));
   }
 
   if (wtc_2 & COUNT_TIMESTAMP_END) {
     compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_end, TRUE,
 		      config.timestamps_since_epoch, config.timestamps_rfc3339,
 		      config.timestamps_utc);
-    check_i(avro_value_get_by_name(&value, "timestamp_end", &field, NULL));
-    check_i(avro_value_set_string(&field, tstamp_str));
+    pm_avro_check(avro_value_get_by_name(&value, "timestamp_end", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, tstamp_str));
   }
 
   if (wtc_2 & COUNT_TIMESTAMP_ARRIVAL) {
     compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_arrival, TRUE,
 		      config.timestamps_since_epoch, config.timestamps_rfc3339,
 		      config.timestamps_utc);
-    check_i(avro_value_get_by_name(&value, "timestamp_arrival", &field, NULL));
-    check_i(avro_value_set_string(&field, tstamp_str));
+    pm_avro_check(avro_value_get_by_name(&value, "timestamp_arrival", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, tstamp_str));
   }
 
   if (config.nfacctd_stitching) {
@@ -867,44 +867,44 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
       compose_timestamp(tstamp_str, SRVBUFLEN, &stitch->timestamp_min, TRUE,
 			config.timestamps_since_epoch, config.timestamps_rfc3339,
 			config.timestamps_utc);
-      check_i(avro_value_get_by_name(&value, "timestamp_min", &field, NULL));
-      check_i(avro_value_set_branch(&field, 1, &branch));
-      check_i(avro_value_set_string(&branch, tstamp_str));
+      pm_avro_check(avro_value_get_by_name(&value, "timestamp_min", &field, NULL));
+      pm_avro_check(avro_value_set_branch(&field, 1, &branch));
+      pm_avro_check(avro_value_set_string(&branch, tstamp_str));
 
       compose_timestamp(tstamp_str, SRVBUFLEN, &stitch->timestamp_max, TRUE,
 			config.timestamps_since_epoch, config.timestamps_rfc3339,
 			config.timestamps_utc);
-      check_i(avro_value_get_by_name(&value, "timestamp_max", &field, NULL));
-      check_i(avro_value_set_branch(&field, 1, &branch));
-      check_i(avro_value_set_string(&branch, tstamp_str));
+      pm_avro_check(avro_value_get_by_name(&value, "timestamp_max", &field, NULL));
+      pm_avro_check(avro_value_set_branch(&field, 1, &branch));
+      pm_avro_check(avro_value_set_string(&branch, tstamp_str));
     }
     else {
-      check_i(avro_value_get_by_name(&value, "timestamp_min", &field, NULL));
-      check_i(avro_value_set_branch(&field, 0, &branch));
-      check_i(avro_value_get_by_name(&value, "timestamp_max", &field, NULL));
-      check_i(avro_value_set_branch(&field, 0, &branch));
+      pm_avro_check(avro_value_get_by_name(&value, "timestamp_min", &field, NULL));
+      pm_avro_check(avro_value_set_branch(&field, 0, &branch));
+      pm_avro_check(avro_value_get_by_name(&value, "timestamp_max", &field, NULL));
+      pm_avro_check(avro_value_set_branch(&field, 0, &branch));
     }
   }
 
   if (wtc_2 & COUNT_EXPORT_PROTO_SEQNO) {
-    check_i(avro_value_get_by_name(&value, "export_proto_seqno", &field, NULL));
-    check_i(avro_value_set_long(&field, pbase->export_proto_seqno));
+    pm_avro_check(avro_value_get_by_name(&value, "export_proto_seqno", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->export_proto_seqno));
   }
 
   if (wtc_2 & COUNT_EXPORT_PROTO_VERSION) {
-    check_i(avro_value_get_by_name(&value, "export_proto_version", &field, NULL));
-    check_i(avro_value_set_long(&field, pbase->export_proto_version));
+    pm_avro_check(avro_value_get_by_name(&value, "export_proto_version", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->export_proto_version));
   }
 
   if (wtc_2 & COUNT_EXPORT_PROTO_SYSID) {
-    check_i(avro_value_get_by_name(&value, "export_proto_sysid", &field, NULL));
-    check_i(avro_value_set_long(&field, pbase->export_proto_sysid));
+    pm_avro_check(avro_value_get_by_name(&value, "export_proto_sysid", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->export_proto_sysid));
   }
 
   /* all custom primitives printed here */
   {
     if (config.cpptrs.num > 0)
-      check_i(avro_value_get_by_name(&value, "custom_primitives", &field, NULL));
+      pm_avro_check(avro_value_get_by_name(&value, "custom_primitives", &field, NULL));
 
     int cp_idx;
     for (cp_idx = 0; cp_idx < config.cpptrs.num; cp_idx++) {
@@ -933,51 +933,51 @@ avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, st
       compose_timestamp(tstamp_str, SRVBUFLEN, &tv, FALSE,
 			config.timestamps_since_epoch, config.timestamps_rfc3339,
 			config.timestamps_utc);
-      check_i(avro_value_get_by_name(&value, "stamp_inserted", &field, NULL));
-      check_i(avro_value_set_branch(&field, 1, &branch));
-      check_i(avro_value_set_string(&branch, tstamp_str));
+      pm_avro_check(avro_value_get_by_name(&value, "stamp_inserted", &field, NULL));
+      pm_avro_check(avro_value_set_branch(&field, 1, &branch));
+      pm_avro_check(avro_value_set_string(&branch, tstamp_str));
 
       tv.tv_sec = time(NULL);
       tv.tv_usec = 0;
       compose_timestamp(tstamp_str, SRVBUFLEN, &tv, FALSE,
 			config.timestamps_since_epoch, config.timestamps_rfc3339,
 			config.timestamps_utc);
-      check_i(avro_value_get_by_name(&value, "stamp_updated", &field, NULL));
-      check_i(avro_value_set_branch(&field, 1, &branch));
-      check_i(avro_value_set_string(&branch, tstamp_str));
+      pm_avro_check(avro_value_get_by_name(&value, "stamp_updated", &field, NULL));
+      pm_avro_check(avro_value_set_branch(&field, 1, &branch));
+      pm_avro_check(avro_value_set_string(&branch, tstamp_str));
     }
     else {
-      check_i(avro_value_get_by_name(&value, "stamp_inserted", &field, NULL));
-      check_i(avro_value_set_branch(&field, 0, &branch));
-      check_i(avro_value_get_by_name(&value, "stamp_updated", &field, NULL));
-      check_i(avro_value_set_branch(&field, 0, &branch));
+      pm_avro_check(avro_value_get_by_name(&value, "stamp_inserted", &field, NULL));
+      pm_avro_check(avro_value_set_branch(&field, 0, &branch));
+      pm_avro_check(avro_value_get_by_name(&value, "stamp_updated", &field, NULL));
+      pm_avro_check(avro_value_set_branch(&field, 0, &branch));
     }
   }
 
   if (flow_type != NF9_FTYPE_EVENT && flow_type != NF9_FTYPE_OPTION) {
-    check_i(avro_value_get_by_name(&value, "packets", &field, NULL));
-    check_i(avro_value_set_branch(&field, 1, &branch));
-    check_i(avro_value_set_long(&branch, packet_counter));
+    pm_avro_check(avro_value_get_by_name(&value, "packets", &field, NULL));
+    pm_avro_check(avro_value_set_branch(&field, 1, &branch));
+    pm_avro_check(avro_value_set_long(&branch, packet_counter));
 
-    check_i(avro_value_get_by_name(&value, "flows", &field, NULL));
+    pm_avro_check(avro_value_get_by_name(&value, "flows", &field, NULL));
     if (wtc & COUNT_FLOWS) {
-      check_i(avro_value_set_branch(&field, 1, &branch));
-      check_i(avro_value_set_long(&branch, flow_counter));
+      pm_avro_check(avro_value_set_branch(&field, 1, &branch));
+      pm_avro_check(avro_value_set_long(&branch, flow_counter));
     }
     else {
-      check_i(avro_value_set_branch(&field, 0, &branch));
+      pm_avro_check(avro_value_set_branch(&field, 0, &branch));
     }
-    check_i(avro_value_get_by_name(&value, "bytes", &field, NULL));
-    check_i(avro_value_set_branch(&field, 1, &branch));
-    check_i(avro_value_set_long(&branch, bytes_counter));
+    pm_avro_check(avro_value_get_by_name(&value, "bytes", &field, NULL));
+    pm_avro_check(avro_value_set_branch(&field, 1, &branch));
+    pm_avro_check(avro_value_set_long(&branch, bytes_counter));
   }
   else {
-    check_i(avro_value_get_by_name(&value, "packets", &field, NULL));
-    check_i(avro_value_set_branch(&field, 0, &branch));
-    check_i(avro_value_get_by_name(&value, "flows", &field, NULL));
-    check_i(avro_value_set_branch(&field, 0, &branch));
-    check_i(avro_value_get_by_name(&value, "bytes", &field, NULL));
-    check_i(avro_value_set_branch(&field, 0, &branch));
+    pm_avro_check(avro_value_get_by_name(&value, "packets", &field, NULL));
+    pm_avro_check(avro_value_set_branch(&field, 0, &branch));
+    pm_avro_check(avro_value_get_by_name(&value, "flows", &field, NULL));
+    pm_avro_check(avro_value_set_branch(&field, 0, &branch));
+    pm_avro_check(avro_value_get_by_name(&value, "bytes", &field, NULL));
+    pm_avro_check(avro_value_set_branch(&field, 0, &branch));
   }
 
   return value;
@@ -989,8 +989,8 @@ void add_writer_name_and_pid_avro(avro_value_t value, char *name, pid_t writer_p
   avro_value_t field;
 
   snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", name, writer_pid);
-  check_i(avro_value_get_by_name(&value, "writer_id", &field, NULL));
-  check_i(avro_value_set_string(&field, wid));
+  pm_avro_check(avro_value_get_by_name(&value, "writer_id", &field, NULL));
+  pm_avro_check(avro_value_set_string(&field, wid));
 }
 
 void write_avro_schema_to_file(char *filename, avro_schema_t schema)

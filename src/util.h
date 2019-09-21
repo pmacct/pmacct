@@ -26,16 +26,6 @@
 #define ADD 0
 #define SUB 1
 
-#ifdef WITH_AVRO
-#define check_i(call) \
-  do { \
-    if ((call) != 0) { \
-      Log(LOG_ERR, "ERROR: %s\n", avro_strerror()); \
-      assert(1 == 0); \
-    } \
-} while (0)
-#endif
-
 struct p_broker_timers {
   time_t last_fail;
   int retry_interval;

@@ -155,44 +155,44 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
       avro_iface = avro_generic_class_from_schema(bms->dump_avro_schema[log_type]);
     }
 
-    check_i(avro_generic_value_new(avro_iface, &avro_obj));
+    pm_avro_check(avro_generic_value_new(avro_iface, &avro_obj));
 
-    check_i(avro_value_get_by_name(&avro_obj, "event_type", &avro_field, NULL));
-    check_i(avro_value_set_string(&avro_field, event_type));
+    pm_avro_check(avro_value_get_by_name(&avro_obj, "event_type", &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, event_type));
 
     if (etype == BGP_LOGDUMP_ET_LOG) {
-      check_i(avro_value_get_by_name(&avro_obj, "seq", &avro_field, NULL));
-      check_i(avro_value_set_long(&avro_field, log_seq));
+      pm_avro_check(avro_value_get_by_name(&avro_obj, "seq", &avro_field, NULL));
+      pm_avro_check(avro_value_set_long(&avro_field, log_seq));
 
       compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE,
                         config.timestamps_since_epoch, config.timestamps_rfc3339,
                         config.timestamps_utc);
-      check_i(avro_value_get_by_name(&avro_obj, "timestamp", &avro_field, NULL));
-      check_i(avro_value_set_string(&avro_field, tstamp_str));
+      pm_avro_check(avro_value_get_by_name(&avro_obj, "timestamp", &avro_field, NULL));
+      pm_avro_check(avro_value_set_string(&avro_field, tstamp_str));
 
-      check_i(avro_value_get_by_name(&avro_obj, "event_timestamp", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(&avro_obj, "event_timestamp", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
     }
     else if (etype == BGP_LOGDUMP_ET_DUMP) {
-      check_i(avro_value_get_by_name(&avro_obj, "seq", &avro_field, NULL));
-      check_i(avro_value_set_long(&avro_field, bgp_peer_log_seq_get(&bms->log_seq)));
+      pm_avro_check(avro_value_get_by_name(&avro_obj, "seq", &avro_field, NULL));
+      pm_avro_check(avro_value_set_long(&avro_field, bgp_peer_log_seq_get(&bms->log_seq)));
 
-      check_i(avro_value_get_by_name(&avro_obj, "timestamp", &avro_field, NULL));
-      check_i(avro_value_set_string(&avro_field, bms->dump.tstamp_str));
+      pm_avro_check(avro_value_get_by_name(&avro_obj, "timestamp", &avro_field, NULL));
+      pm_avro_check(avro_value_set_string(&avro_field, bms->dump.tstamp_str));
 
       compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE,
                         config.timestamps_since_epoch, config.timestamps_rfc3339,
                         config.timestamps_utc);
-      check_i(avro_value_get_by_name(&avro_obj, "event_timestamp", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_string(&avro_branch, tstamp_str));
+      pm_avro_check(avro_value_get_by_name(&avro_obj, "event_timestamp", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      pm_avro_check(avro_value_set_string(&avro_branch, tstamp_str));
     }
 
-    check_i(avro_value_get_by_name(&avro_obj, "bmp_router", &avro_field, NULL));
-    check_i(avro_value_set_string(&avro_field, peer->addr_str));
+    pm_avro_check(avro_value_get_by_name(&avro_obj, "bmp_router", &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, peer->addr_str));
 
-    check_i(avro_value_get_by_name(&avro_obj, "bmp_router_port", &avro_field, NULL));
-    check_i(avro_value_set_int(&avro_field, peer->tcp_port));
+    pm_avro_check(avro_value_get_by_name(&avro_obj, "bmp_router_port", &avro_field, NULL));
+    pm_avro_check(avro_value_set_int(&avro_field, peer->tcp_port));
 
     switch (log_type) {
     case BMP_LOG_TYPE_STATS:
@@ -214,9 +214,9 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
       break;
     }
 
-    check_i(avro_value_get_by_name(&avro_obj, "writer_id", &avro_field, NULL));
+    pm_avro_check(avro_value_get_by_name(&avro_obj, "writer_id", &avro_field, NULL));
     snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, writer_pid);
-    check_i(avro_value_set_string(&avro_field, wid));
+    pm_avro_check(avro_value_set_string(&avro_field, wid));
 
     if ((config.nfacctd_bmp_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
         (config.bmp_dump_file && etype == BGP_LOGDUMP_ET_DUMP) ||
@@ -331,94 +331,94 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_
     char bmp_msg_type[] = "stats";
     char ip_address[INET6_ADDRSTRLEN];
 
-    check_i(avro_value_get_by_name(obj, "bmp_msg_type", &avro_field, NULL));
-    check_i(avro_value_set_string(&avro_field, bmp_msg_type));
+    pm_avro_check(avro_value_get_by_name(obj, "bmp_msg_type", &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, bmp_msg_type));
 
     addr_to_str(ip_address, &bdata->peer_ip);
-    check_i(avro_value_get_by_name(obj, "peer_ip", &avro_field, NULL));
-    check_i(avro_value_set_string(&avro_field, ip_address));
+    pm_avro_check(avro_value_get_by_name(obj, "peer_ip", &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, ip_address));
 
-    check_i(avro_value_get_by_name(obj, "peer_asn", &avro_field, NULL));
-    check_i(avro_value_set_int(&avro_field, bdata->peer_asn));
+    pm_avro_check(avro_value_get_by_name(obj, "peer_asn", &avro_field, NULL));
+    pm_avro_check(avro_value_set_int(&avro_field, bdata->peer_asn));
 
-    check_i(avro_value_get_by_name(obj, "peer_type", &avro_field, NULL));
-    check_i(avro_value_set_int(&avro_field, bdata->chars.peer_type));
+    pm_avro_check(avro_value_get_by_name(obj, "peer_type", &avro_field, NULL));
+    pm_avro_check(avro_value_set_int(&avro_field, bdata->chars.peer_type));
 
     if (bdata->chars.is_loc) {
-      check_i(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_branch, bdata->chars.is_filtered));
+      pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      pm_avro_check(avro_value_set_int(&avro_branch, bdata->chars.is_filtered));
 
-      check_i(avro_value_get_by_name(obj, "is_loc", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_branch, bdata->chars.is_loc));
+      pm_avro_check(avro_value_get_by_name(obj, "is_loc", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      pm_avro_check(avro_value_set_int(&avro_branch, bdata->chars.is_loc));
 
-      check_i(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
 
-      check_i(avro_value_get_by_name(obj, "is_out", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "is_out", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
     }
     else if (bdata->chars.is_out) {
-      check_i(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
 
-      check_i(avro_value_get_by_name(obj, "is_loc", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "is_loc", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
 
-      check_i(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_branch, bdata->chars.is_post));
+      pm_avro_check(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      pm_avro_check(avro_value_set_int(&avro_branch, bdata->chars.is_post));
 
-      check_i(avro_value_get_by_name(obj, "is_out", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_branch, bdata->chars.is_out));
+      pm_avro_check(avro_value_get_by_name(obj, "is_out", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      pm_avro_check(avro_value_set_int(&avro_branch, bdata->chars.is_out));
     }
     else {
-      check_i(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
 
-      check_i(avro_value_get_by_name(obj, "is_loc", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "is_loc", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
 
-      check_i(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
 
-      check_i(avro_value_get_by_name(obj, "is_out", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "is_out", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
     }
 
-    check_i(avro_value_get_by_name(obj, "counter_type", &avro_field, NULL));
-    check_i(avro_value_set_int(&avro_field, blstats->cnt_type));
+    pm_avro_check(avro_value_get_by_name(obj, "counter_type", &avro_field, NULL));
+    pm_avro_check(avro_value_set_int(&avro_field, blstats->cnt_type));
 
     if (blstats->cnt_type <= BMP_STATS_MAX) {
-      check_i(avro_value_get_by_name(obj, "counter_type_str", &avro_field, NULL));
-      check_i(avro_value_set_string(&avro_field, bmp_stats_cnt_types[blstats->cnt_type]));
+      pm_avro_check(avro_value_get_by_name(obj, "counter_type_str", &avro_field, NULL));
+      pm_avro_check(avro_value_set_string(&avro_field, bmp_stats_cnt_types[blstats->cnt_type]));
     }
     else {
-      check_i(avro_value_get_by_name(obj, "counter_type_str", &avro_field, NULL));
-      check_i(avro_value_set_string(&avro_field, "Unknown"));
+      pm_avro_check(avro_value_get_by_name(obj, "counter_type_str", &avro_field, NULL));
+      pm_avro_check(avro_value_set_string(&avro_field, "Unknown"));
     }
 
     if (blstats->cnt_type == BMP_STATS_TYPE9 || blstats->cnt_type == BMP_STATS_TYPE10) {
-      check_i(avro_value_get_by_name(obj, "afi", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_branch, blstats->cnt_afi));
+      pm_avro_check(avro_value_get_by_name(obj, "afi", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      pm_avro_check(avro_value_set_int(&avro_branch, blstats->cnt_afi));
 
-      check_i(avro_value_get_by_name(obj, "safi", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_branch, blstats->cnt_safi));
+      pm_avro_check(avro_value_get_by_name(obj, "safi", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      pm_avro_check(avro_value_set_int(&avro_branch, blstats->cnt_safi));
     }
     else {
-      check_i(avro_value_get_by_name(obj, "afi", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "afi", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
 
-      check_i(avro_value_get_by_name(obj, "safi", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "safi", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
     }
 
-    check_i(avro_value_get_by_name(obj, "counter_value", &avro_field, NULL));
-    check_i(avro_value_set_long(&avro_field, blstats->cnt_data));
+    pm_avro_check(avro_value_get_by_name(obj, "counter_value", &avro_field, NULL));
+    pm_avro_check(avro_value_set_long(&avro_field, blstats->cnt_data));
 #endif
   }
 
@@ -460,8 +460,8 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
     avro_value_t *obj = (avro_value_t *) vobj, avro_field, avro_branch;
     char bmp_msg_type[] = "init";
 
-    check_i(avro_value_get_by_name(obj, "bmp_msg_type", &avro_field, NULL));
-    check_i(avro_value_set_string(&avro_field, bmp_msg_type));
+    pm_avro_check(avro_value_get_by_name(obj, "bmp_msg_type", &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, bmp_msg_type));
 
     memset(&bmp_init_tlvs, 0, sizeof(bmp_init_tlvs));
 
@@ -473,9 +473,9 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
 	  type = bmp_tlv_type_print(blinit->e[idx].type, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_ENTRIES);
 	  value = null_terminate(blinit->e[idx].val, blinit->e[idx].len);
 
-	  check_i(avro_value_get_by_name(obj, type, &avro_field, NULL));
-	  check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-	  check_i(avro_value_set_string(&avro_branch, value));
+	  pm_avro_check(avro_value_get_by_name(obj, type, &avro_field, NULL));
+	  pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+	  pm_avro_check(avro_value_set_string(&avro_branch, value));
 
 	  free(type);
 	  free(value);
@@ -493,8 +493,8 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
 
       if (!bmp_init_tlvs[idx]) {
 	type = bmp_tlv_type_print(idx, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_ENTRIES);
-	check_i(avro_value_get_by_name(obj, type, &avro_field, NULL));
-	check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+	pm_avro_check(avro_value_get_by_name(obj, type, &avro_field, NULL));
+	pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
       }
     }
 #endif
@@ -545,8 +545,8 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
     avro_value_t *obj = (avro_value_t *) vobj, avro_field, avro_branch;
     char bmp_msg_type[] = "term";
 
-    check_i(avro_value_get_by_name(obj, "bmp_msg_type", &avro_field, NULL));
-    check_i(avro_value_set_string(&avro_field, bmp_msg_type));
+    pm_avro_check(avro_value_get_by_name(obj, "bmp_msg_type", &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, bmp_msg_type));
 
     memset(&bmp_term_tlvs, 0, sizeof(bmp_term_tlvs));
 
@@ -564,9 +564,9 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
 	    value = null_terminate(blterm->e[idx].val, blterm->e[idx].len);
 	  }
 
-	  check_i(avro_value_get_by_name(obj, type, &avro_field, NULL));
-	  check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-	  check_i(avro_value_set_string(&avro_branch, value));
+	  pm_avro_check(avro_value_get_by_name(obj, type, &avro_field, NULL));
+	  pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+	  pm_avro_check(avro_value_set_string(&avro_branch, value));
 
 	  free(type);
 	  free(value);
@@ -584,8 +584,8 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
 
       if (!bmp_term_tlvs[idx]) {
         type = bmp_tlv_type_print(idx, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_ENTRIES);
-        check_i(avro_value_get_by_name(obj, type, &avro_field, NULL));
-        check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+        pm_avro_check(avro_value_get_by_name(obj, type, &avro_field, NULL));
+        pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
       }
     }
 #endif
@@ -655,85 +655,85 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
     char bmp_msg_type[] = "peer_up";
     char ip_address[INET6_ADDRSTRLEN];
 
-    check_i(avro_value_get_by_name(obj, "bmp_msg_type", &avro_field, NULL));
-    check_i(avro_value_set_string(&avro_field, bmp_msg_type));
+    pm_avro_check(avro_value_get_by_name(obj, "bmp_msg_type", &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, bmp_msg_type));
 
     addr_to_str(ip_address, &bdata->peer_ip);
-    check_i(avro_value_get_by_name(obj, "peer_ip", &avro_field, NULL));
-    check_i(avro_value_set_string(&avro_field, ip_address));
+    pm_avro_check(avro_value_get_by_name(obj, "peer_ip", &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, ip_address));
 
-    check_i(avro_value_get_by_name(obj, "peer_asn", &avro_field, NULL));
-    check_i(avro_value_set_int(&avro_field, bdata->peer_asn));
+    pm_avro_check(avro_value_get_by_name(obj, "peer_asn", &avro_field, NULL));
+    pm_avro_check(avro_value_set_int(&avro_field, bdata->peer_asn));
 
-    check_i(avro_value_get_by_name(obj, "peer_type", &avro_field, NULL));
-    check_i(avro_value_set_int(&avro_field, bdata->chars.peer_type));
+    pm_avro_check(avro_value_get_by_name(obj, "peer_type", &avro_field, NULL));
+    pm_avro_check(avro_value_set_int(&avro_field, bdata->chars.peer_type));
 
     if (bdata->chars.peer_type <= BMP_PEER_TYPE_MAX) {
-      check_i(avro_value_get_by_name(obj, "peer_type_str", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_string(&avro_branch, bmp_peer_types[bdata->chars.peer_type]));
+      pm_avro_check(avro_value_get_by_name(obj, "peer_type_str", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      pm_avro_check(avro_value_set_string(&avro_branch, bmp_peer_types[bdata->chars.peer_type]));
     }
     else {
-      check_i(avro_value_get_by_name(obj, "peer_type_str", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "peer_type_str", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
     }
 
     if (bdata->chars.is_loc) {
-      check_i(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_branch, bdata->chars.is_filtered));
+      pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      pm_avro_check(avro_value_set_int(&avro_branch, bdata->chars.is_filtered));
 
-      check_i(avro_value_get_by_name(obj, "is_loc", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_branch, bdata->chars.is_loc));
+      pm_avro_check(avro_value_get_by_name(obj, "is_loc", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      pm_avro_check(avro_value_set_int(&avro_branch, bdata->chars.is_loc));
 
-      check_i(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
 
-      check_i(avro_value_get_by_name(obj, "is_out", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "is_out", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
     }
     else if (bdata->chars.is_out) {
-      check_i(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
 
-      check_i(avro_value_get_by_name(obj, "is_loc", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "is_loc", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
 
-      check_i(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_branch, bdata->chars.is_post));
+      pm_avro_check(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      pm_avro_check(avro_value_set_int(&avro_branch, bdata->chars.is_post));
 
-      check_i(avro_value_get_by_name(obj, "is_out", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_branch, bdata->chars.is_out));
+      pm_avro_check(avro_value_get_by_name(obj, "is_out", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      pm_avro_check(avro_value_set_int(&avro_branch, bdata->chars.is_out));
     }
     else {
-      check_i(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
 
-      check_i(avro_value_get_by_name(obj, "is_loc", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "is_loc", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
 
-      check_i(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "is_post", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
 
-      check_i(avro_value_get_by_name(obj, "is_out", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "is_out", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
     }
 
-    check_i(avro_value_get_by_name(obj, "bgp_id", &avro_field, NULL));
-    check_i(avro_value_set_string(&avro_field, inet_ntoa(bdata->bgp_id.address.ipv4)));
+    pm_avro_check(avro_value_get_by_name(obj, "bgp_id", &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, inet_ntoa(bdata->bgp_id.address.ipv4)));
 
-    check_i(avro_value_get_by_name(obj, "local_port", &avro_field, NULL));
-    check_i(avro_value_set_int(&avro_field, blpu->loc_port));
+    pm_avro_check(avro_value_get_by_name(obj, "local_port", &avro_field, NULL));
+    pm_avro_check(avro_value_set_int(&avro_field, blpu->loc_port));
 
-    check_i(avro_value_get_by_name(obj, "remote_port", &avro_field, NULL));
-    check_i(avro_value_set_int(&avro_field, blpu->rem_port));
+    pm_avro_check(avro_value_get_by_name(obj, "remote_port", &avro_field, NULL));
+    pm_avro_check(avro_value_set_int(&avro_field, blpu->rem_port));
 
     addr_to_str(ip_address, &blpu->local_ip);
-    check_i(avro_value_get_by_name(obj, "local_ip", &avro_field, NULL));
-    check_i(avro_value_set_string(&avro_field, ip_address));
+    pm_avro_check(avro_value_get_by_name(obj, "local_ip", &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, ip_address));
 
     memset(&bmp_peer_up_tlvs, 0, sizeof(bmp_peer_up_tlvs));
 
@@ -744,9 +744,9 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
 	type = bmp_tlv_type_print(blpu->tlv.e[idx].type, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_ENTRIES);
 	value = null_terminate(blpu->tlv.e[idx].val, blpu->tlv.e[idx].len);
 
-	check_i(avro_value_get_by_name(obj, type, &avro_field, NULL));
-	check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-	check_i(avro_value_set_string(&avro_branch, value));
+	pm_avro_check(avro_value_get_by_name(obj, type, &avro_field, NULL));
+	pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+	pm_avro_check(avro_value_set_string(&avro_branch, value));
 
 	free(type);
 	free(value);
@@ -763,8 +763,8 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
 
       if (!bmp_peer_up_tlvs[idx]) {
         type = bmp_tlv_type_print(idx, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_ENTRIES);
-        check_i(avro_value_get_by_name(obj, type, &avro_field, NULL));
-        check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+        pm_avro_check(avro_value_get_by_name(obj, type, &avro_field, NULL));
+        pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
       }
     }
 #endif
@@ -814,50 +814,50 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
     char bmp_msg_type[] = "peer_down";
     char ip_address[INET6_ADDRSTRLEN];
 
-    check_i(avro_value_get_by_name(obj, "bmp_msg_type", &avro_field, NULL));
-    check_i(avro_value_set_string(&avro_field, bmp_msg_type));
+    pm_avro_check(avro_value_get_by_name(obj, "bmp_msg_type", &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, bmp_msg_type));
 
     addr_to_str(ip_address, &bdata->peer_ip);
-    check_i(avro_value_get_by_name(obj, "peer_ip", &avro_field, NULL));
-    check_i(avro_value_set_string(&avro_field, ip_address));
+    pm_avro_check(avro_value_get_by_name(obj, "peer_ip", &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, ip_address));
 
-    check_i(avro_value_get_by_name(obj, "peer_asn", &avro_field, NULL));
-    check_i(avro_value_set_int(&avro_field, bdata->peer_asn));
+    pm_avro_check(avro_value_get_by_name(obj, "peer_asn", &avro_field, NULL));
+    pm_avro_check(avro_value_set_int(&avro_field, bdata->peer_asn));
 
-    check_i(avro_value_get_by_name(obj, "peer_type", &avro_field, NULL));
-    check_i(avro_value_set_int(&avro_field, bdata->chars.peer_type));
+    pm_avro_check(avro_value_get_by_name(obj, "peer_type", &avro_field, NULL));
+    pm_avro_check(avro_value_set_int(&avro_field, bdata->chars.peer_type));
 
     if (bdata->chars.peer_type <= BMP_PEER_TYPE_MAX) {
-      check_i(avro_value_get_by_name(obj, "peer_type_str", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_string(&avro_branch, bmp_peer_types[bdata->chars.peer_type]));
+      pm_avro_check(avro_value_get_by_name(obj, "peer_type_str", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      pm_avro_check(avro_value_set_string(&avro_branch, bmp_peer_types[bdata->chars.peer_type]));
     }
     else {
-      check_i(avro_value_get_by_name(obj, "peer_type_str", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "peer_type_str", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
     }
 
-    check_i(avro_value_get_by_name(obj, "reason_type", &avro_field, NULL));
-    check_i(avro_value_set_int(&avro_field, blpd->reason));
+    pm_avro_check(avro_value_get_by_name(obj, "reason_type", &avro_field, NULL));
+    pm_avro_check(avro_value_set_int(&avro_field, blpd->reason));
 
     if (blpd->reason <= BMP_PEER_DOWN_MAX) {
-      check_i(avro_value_get_by_name(obj, "reason_str", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_string(&avro_branch, bmp_peer_down_reason_types[blpd->reason]));
+      pm_avro_check(avro_value_get_by_name(obj, "reason_str", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      pm_avro_check(avro_value_set_string(&avro_branch, bmp_peer_down_reason_types[blpd->reason]));
     }
     else {
-      check_i(avro_value_get_by_name(obj, "reason_str", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "reason_str", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
     }
 
     if (blpd->reason == BMP_PEER_DOWN_LOC_CODE) {
-      check_i(avro_value_get_by_name(obj, "reason_loc_code", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
-      check_i(avro_value_set_int(&avro_branch, blpd->loc_code));
+      pm_avro_check(avro_value_get_by_name(obj, "reason_loc_code", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      pm_avro_check(avro_value_set_int(&avro_branch, blpd->loc_code));
     }
     else {
-      check_i(avro_value_get_by_name(obj, "reason_loc_code", &avro_field, NULL));
-      check_i(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      pm_avro_check(avro_value_get_by_name(obj, "reason_loc_code", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
     }
 #endif
   }

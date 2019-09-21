@@ -28,6 +28,19 @@
 #endif
 
 /* defines */
+#ifdef WITH_AVRO
+/* libavro-c bails out with generic error messages on typical cases
+   where schema and actual data encoding are not matching. This small
+   wrapper aims to identify what line in the code does specifically
+   cause the issue */
+#define pm_avro_check(call) \
+  do { \
+    if ((call) != 0) { \
+      Log(LOG_ERR, "ERROR: %s\n", avro_strerror()); \
+      assert(1 == 0); \
+    } \
+} while (0)
+#endif
 
 /* prototypes */
 #ifdef WITH_AVRO
