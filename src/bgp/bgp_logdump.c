@@ -1359,6 +1359,10 @@ avro_schema_t avro_schema_build_bgp(int log_type, char *schema_name)
 
   avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BGP, schema_name);
   avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type, FUNC_TYPE_BGP); 
+
+  avro_schema_record_field_append(schema, "peer_ip_src", avro_schema_string());
+  avro_schema_record_field_append(schema, "peer_tcp_port", optint_s);
+
   avro_schema_build_bgp_route(&schema, &optlong_s, &optstr_s, &optint_s);
 
   avro_schema_decref(optlong_s);
@@ -1387,15 +1391,11 @@ void avro_schema_init_bgp(avro_schema_t *schema, avro_schema_t *optlong_s, avro_
 
 void avro_schema_build_bgp_common(avro_schema_t *schema, avro_schema_t *optlong_s, avro_schema_t *optstr_s, avro_schema_t *optint_s, int log_type, int type)
 {
-  struct bgp_misc_structs *bms = bgp_select_misc_db(type);
-
   if (log_type == BGP_LOGDUMP_ET_LOG) {
     avro_schema_record_field_append((*schema), "log_type", avro_schema_string());
   }
   avro_schema_record_field_append((*schema), "seq", avro_schema_long());
   avro_schema_record_field_append((*schema), "timestamp", avro_schema_string());
-  avro_schema_record_field_append((*schema), bms->peer_str, avro_schema_string());
-  avro_schema_record_field_append((*schema), bms->peer_port_str, (*optint_s));
   avro_schema_record_field_append((*schema), "event_type", avro_schema_string());
   avro_schema_record_field_append((*schema), "writer_id", avro_schema_string());
 }
