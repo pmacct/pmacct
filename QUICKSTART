@@ -197,8 +197,10 @@ shell> ./configure --enable-jansson
 
 IIb. Compiling pmacct with Apache Avro support
 Apache Avro encoding is supported via libavro library (http://avro.apache.org/
-and https://avro.apache.org/docs/1.8.1/api/c/index.html); to compile pmacct with
-Apache Avro support simply do:
+and https://avro.apache.org/docs/1.9.1/api/c/index.html); Avro depends on the
+Jansson JSON parser, version 2.3 or higher so please review the previous section
+"Compiling pmacct with JSON support"; then, to compile pmacct with Apache Avro
+support simply do:
 
 shell> ./configure --enable-avro
 
@@ -976,11 +978,19 @@ shell> ./configure --enable-kafka --enable-jansson
 
 You can check further information on how to compile pmacct with JSON/libjansson
 support in the section "Compiling pmacct with JSON support" of this document.
+As a proof-of-concept once some data is produced in JSON format to a Kafka topic,
+it can be consumed with the kafka-console-consumer tool, part of standard Kafka
+distribution, as:
+
+kafka-console-consumer --bootstrap-server <Kafka broker host> \
+	--topic <topic>
 
 You can check further information on how to compile pmacct with Avro support in
 the section "Compiling pmacct with Apache Avro support" of this document. Also,
-if using Apache Kafka and Apache Avro in conjunction with a Confluent Schema
-Registry, you can compile pmacct with libserdes. To compile:
+if using Confluent Platform, a Schema Registry component is included with it and
+allows for seamless inter-change of Avro schemas among producers and consumers
+of a Kafka broker; to make use of this, pmacct should be compiled with libserdes
+support:
 
 shell> ./configure --enable-kafka --enable-jansson --enable-avro --enable-serdes
 
@@ -989,10 +999,19 @@ For further info on Confluent Schema Registry and libserdes:
 https://docs.confluent.io/current/schema-registry/docs/index.html
 https://github.com/confluentinc/libserdes
 
-Then "make; make install" as usual. Following a configuration snippet showing a
-basic Kafka plugin configuration (assumes: Kafka broker is available at 127.0.0.1
-on port 9092; look all kafka_* configurable directives up in the CONFIG-KEYS
-document):
+Then "make; make install" as usual. As a proof-of-concept, when the Schema
+Registry is in use, once some data is produced in Avro format to a Kafka topic,
+it can be consumed with the kafka-avro-console-consumer tool, part of standard
+Confluent Platform distribution, as: 
+
+kafka-avro-console-consumer --bootstrap-server <Kafka broker host> \
+	--topic <topic> \
+	--property schema.registry.url=<Schema registry URL> \
+	--skip-message-on-error
+
+Following a configuration snippet showing a basic Kafka plugin configuration
+(assumes: Kafka broker is available at 127.0.0.1 on port 9092; look all kafka_*
+configurable directives up in the CONFIG-KEYS document):
 
 ! ..
 plugins: kafka
@@ -1006,6 +1025,9 @@ kafka_history_roundoff: m
 !
 ! [Optional] librdkafka config for buffer tuning, ssl config, etc. 
 ! kafka_config_file: /path/to/librdkafka.conf
+!
+! [Optional] Schema Registry URL
+! kafka_avro_schema_registry: https://localhost
 ! ..
 
 A basic script, in Python, is provided as sample to consume JSON/Avro data from
@@ -1700,12 +1722,14 @@ visibility in extra BGP data while providing event compression; the latter
 enables BGP analytics and BGP event management, for example spot unstable
 routes, trigger alarms on route hijacks, etc. 
 
-Both features export data formatted as JSON messages, hence compiling pmacct
-against libjansson is a requirement. See how to compile pmacct with JSON/
-libjansson support in the section "Compiling pmacct with JSON support" of this
-document. If writing to AMQP or Kafka brokers compiling against RabbitMQ or
-Kafka libraries is required; read more in respectively the "Running the
-RabbitMQ/AMQP plugin" or "Running the Kafka plugin" sections of this document.
+Both features export data formatted as JSON or Avro messages. Please review
+the section "Compiling pmacct with JSON support" and, if planning to use Avro
+encoding, also the section "Compiling pmacct with Avro support". If writing
+to AMQP or Kafka brokers, compiling against RabbitMQ or Kafka libraries is
+required; read more in respectively the "Running the RabbitMQ/AMQP plugin"
+or "Running the Kafka plugin" sections of this document. If making use of the
+Schema Registry component of the Confluent Platform please also review the
+"Running the Kafka plugin" section. 
 
 A basic dump of BGP tables at regular intervals (60 secs) to plain-text files,
 split by BGP peer and time of the day, is configured as follows:
@@ -2177,12 +2201,14 @@ and Kafka brokers, real-time (msglog) or at regular time intervals (dump).
 Also, route monitoring messages are saved in a RIB structure for IP prefix
 lookup.
 
-All features export data formatted as JSON messages, hence compiling pmacct
-against libjansson is a requirement. See how to compile pmacct with JSON/
-libjansson support in the section "Compiling pmacct with JSON support" of this
-document. If writing to AMQP or Kafka brokers compiling against RabbitMQ or
-Kafka libraries is required; read more in respectively the "Running the
-RabbitMQ/AMQP plugin" or "Running the Kafka plugin" sections of this document.
+All features export data formatted as JSON or Avro messages. Please review
+the section "Compiling pmacct with JSON support" and, if planning to use Avro
+encoding, also the section "Compiling pmacct with Avro support". If writing
+to AMQP or Kafka brokers, compiling against RabbitMQ or Kafka libraries is
+required; read more in respectively the "Running the RabbitMQ/AMQP plugin"
+or "Running the Kafka plugin" sections of this document. If making use of the
+Schema Registry component of the Confluent Platform please also review the
+"Running the Kafka plugin" section.
 
 Following a simple example on how to configure nfacctd to enable the BMP thread
 to a) log, in real-time, BGP stats, events and routes received via BMP to a
