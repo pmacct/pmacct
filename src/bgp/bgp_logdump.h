@@ -32,8 +32,10 @@
 #define BGP_LOG_TYPE_UPDATE	1
 #define BGP_LOG_TYPE_WITHDRAW	2
 #define BGP_LOG_TYPE_DELETE	3
-#define BGP_LOG_TYPE_OPEN	4
-#define BGP_LOG_TYPE_CLOSE	5
+#define BGP_LOG_TYPE_LOGINIT	4
+#define BGP_LOG_TYPE_LOGCLOSE	5
+#define BGP_LOG_TYPE_DUMPINIT	6
+#define BGP_LOG_TYPE_DUMPCLOSE	7
 
 #define BGP_LOGSEQ_ROLLOVER_BIT	0x8000000000000000ULL
 #define BGP_LOGSEQ_MASK		0x7FFFFFFFFFFFFFFFULL	
@@ -73,6 +75,9 @@ extern int bgp_table_dump_init_kafka_host();
 
 #if defined WITH_AVRO
 extern avro_schema_t avro_schema_build_bgp(int, char *);
+extern avro_schema_t avro_schema_build_bgp_log_initclose(int, char *);
+extern avro_schema_t avro_schema_build_bgp_dump_init(int, char *);
+extern avro_schema_t avro_schema_build_bgp_dump_close(int, char *);
 extern void avro_schema_init_bgp(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *, int, char *);
 extern void avro_schema_build_bgp_common(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *, int, int);
 extern void avro_schema_build_bgp_route(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *);

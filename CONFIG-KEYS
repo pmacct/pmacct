@@ -1597,6 +1597,8 @@ DESC:		The URL to a Confluent Avro Schema Registry. The value is passed to libse
 		<plugin type>_<plugin name>" (ie. if plugin name is 'foobar' then the schema name will be
 		"pmacct_kafka_foobar"). To confirm that the schema is registered, the following CL can be
 		used: "curl -X GET https://<Schema Registry host>/subjects | jq . | grep <schema name>".
+		Until reaching a stable 'aggregate' aggregation method, it is recommended to set Schema
+		Registry compatibility type to 'none' as the schema may change.
 DEFAULT:	none
 
 KEY:            [ print_num_protos | sql_num_protos | amqp_num_protos | kafka_num_protos ]

@@ -562,13 +562,15 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
       }
 
 #ifdef WITH_RABBITMQ
-      if (bms->msglog_amqp_routing_key)
+      if (bms->msglog_amqp_routing_key) {
         bms->peers_log[peer_idx].amqp_host = bms->msglog_amqp_host;
+      }
 #endif
 
 #ifdef WITH_KAFKA
-      if (bms->msglog_kafka_topic)
+      if (bms->msglog_kafka_topic) {
         bms->peers_log[peer_idx].kafka_host = bms->msglog_kafka_host;
+      }
 #endif
       
       strcpy(bms->peers_log[peer_idx].filename, log_filename);
@@ -623,13 +625,17 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 
       json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
 
-      if (bms->bgp_peer_logdump_initclose_extras)
+      if (bms->bgp_peer_logdump_initclose_extras) {
 	bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
+      }
 
-      if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, output, obj);
+      if (bms->bgp_peer_log_msg_extras) {
+	bms->bgp_peer_log_msg_extras(peer, output, obj);
+      }
 
-      if (bms->msglog_file)
+      if (bms->msglog_file) {
 	write_and_free_json(peer->log->fd, obj);
+      }
 
 #ifdef WITH_RABBITMQ
       if (bms->msglog_amqp_routing_key) {
@@ -644,6 +650,101 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 	add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
         kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
         p_kafka_unset_topic(peer->log->kafka_host);
+      }
+#endif
+#endif
+    }
+    else if (output == PRINT_OUTPUT_AVRO) {
+#ifdef WITH_AVRO
+      char event_type[] = "log_init";
+      char ip_address[INET6_ADDRSTRLEN], wid[SHORTSHORTBUFLEN];
+
+      avro_writer_t avro_writer = {0};
+      avro_value_iface_t *avro_iface = NULL;
+      avro_value_t avro_obj, avro_field, avro_branch;
+      size_t avro_obj_len, avro_len;
+      void *avro_local_buf = NULL;
+
+      avro_writer = avro_writer_memory(bms->avro_buf, LARGEBUFLEN);
+      avro_iface = avro_generic_class_from_schema(bms->msglog_avro_schema[BGP_LOG_TYPE_LOGINIT]);
+      pm_avro_check(avro_generic_value_new(avro_iface, &avro_obj));
+
+      pm_avro_check(avro_value_get_by_name(&avro_obj, "seq", &avro_field, NULL));
+      pm_avro_check(avro_value_set_long(&avro_field, bgp_peer_log_seq_get(&bms->log_seq)));
+      bgp_peer_log_seq_increment(&bms->log_seq);
+
+      pm_avro_check(avro_value_get_by_name(&avro_obj, "timestamp", &avro_field, NULL));
+      pm_avro_check(avro_value_set_string(&avro_field, bms->log_tstamp_str));
+
+      addr_to_str(ip_address, &peer->addr);
+      pm_avro_check(avro_value_get_by_name(&avro_obj, bms->peer_str, &avro_field, NULL));
+      pm_avro_check(avro_value_set_string(&avro_field, ip_address));
+
+      if (bms->peer_port_str) {
+	pm_avro_check(avro_value_get_by_name(&avro_obj, bms->peer_port_str, &avro_field, NULL));
+	pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+	pm_avro_check(avro_value_set_int(&avro_branch, peer->tcp_port));
+      }
+      else {
+	pm_avro_check(avro_value_get_by_name(&avro_obj, bms->peer_port_str, &avro_field, NULL));
+	pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+      }
+
+      pm_avro_check(avro_value_get_by_name(&avro_obj, "event_type", &avro_field, NULL));
+      pm_avro_check(avro_value_set_string(&avro_field, event_type));
+
+      pm_avro_check(avro_value_get_by_name(&avro_obj, "writer_id", &avro_field, NULL));
+      snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, writer_pid);
+      pm_avro_check(avro_value_set_string(&avro_field, wid));
+
+      if (bms->bgp_peer_logdump_initclose_extras) {
+	bms->bgp_peer_logdump_initclose_extras(peer, output, &avro_obj);
+      }
+
+      if (bms->bgp_peer_log_msg_extras) {
+	bms->bgp_peer_log_msg_extras(peer, output, &avro_obj);
+      }
+
+      if (!bms->msglog_kafka_avro_schema_registry) {
+	avro_value_sizeof(&avro_obj, &avro_obj_len);
+	assert(avro_obj_len < LARGEBUFLEN);
+
+	if (avro_value_write(avro_writer, &avro_obj)) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to write value: %s\n", config.name, bms->log_str, avro_strerror());
+	  exit_gracefully(1);
+	}	
+
+	avro_len = avro_writer_tell(avro_writer);
+	avro_local_buf = bms->avro_buf;
+      }
+
+      if (bms->msglog_file) {
+	write_file_binary(peer->log->fd, avro_local_buf, avro_len);
+      }
+
+#ifdef WITH_RABBITMQ
+      if (bms->msglog_amqp_routing_key) {
+	amqp_ret = write_binary_amqp(peer->log->amqp_host, avro_local_buf, avro_len);
+	p_amqp_unset_routing_key(peer->log->amqp_host);
+      }
+#endif
+
+#ifdef WITH_KAFKA
+      if (bms->msglog_kafka_topic) {
+	if (bms->msglog_kafka_avro_schema_registry) {
+#ifdef WITH_SERDES
+	  struct p_kafka_host *kafka_host = (struct p_kafka_host *) peer->log->kafka_host;
+
+	  if (serdes_schema_serialize_avro(kafka_host->sd_schema[BGP_LOG_TYPE_LOGINIT], &avro_obj, &avro_local_buf, &avro_len,
+					   kafka_host->errstr, sizeof(kafka_host->errstr))) {
+	    Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
+	    exit_gracefully(1);
+	  }
+#endif
+	}
+
+	kafka_ret = write_binary_kafka(peer->log->kafka_host, avro_local_buf, avro_len);
+	p_kafka_unset_topic(peer->log->kafka_host);
       }
 #endif
 #endif
@@ -673,13 +774,15 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
   if (!bms || !peer || !peer->log) return ERR;
 
 #ifdef WITH_RABBITMQ
-  if (bms->msglog_amqp_routing_key)
+  if (bms->msglog_amqp_routing_key) {
     p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
+  }
 #endif
 
 #ifdef WITH_KAFKA
-  if (bms->msglog_kafka_topic)
+  if (bms->msglog_kafka_topic) {
     p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
+  }
 #endif
 
   log_ptr = peer->log;
@@ -712,11 +815,13 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 
     json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
 
-    if (bms->bgp_peer_logdump_initclose_extras)
+    if (bms->bgp_peer_logdump_initclose_extras) {
       bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
+    }
 
-    if (bms->msglog_file)
+    if (bms->msglog_file) {
       write_and_free_json(log_ptr->fd, obj);
+    }
 
 #ifdef WITH_RABBITMQ
     if (bms->msglog_amqp_routing_key) {
@@ -731,6 +836,97 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
       add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
       kafka_ret = write_and_free_json_kafka(kafka_log_ptr, obj);
       p_kafka_unset_topic(kafka_log_ptr);
+    }
+#endif
+#endif
+  }
+  else if (output == PRINT_OUTPUT_AVRO) {
+#ifdef WITH_AVRO
+    char event_type[] = "log_close";
+    char ip_address[INET6_ADDRSTRLEN], wid[SHORTSHORTBUFLEN];
+
+    avro_writer_t avro_writer = {0};
+    avro_value_iface_t *avro_iface = NULL;
+    avro_value_t avro_obj, avro_field, avro_branch;
+    size_t avro_obj_len, avro_len;
+    void *avro_local_buf = NULL;
+
+    avro_writer = avro_writer_memory(bms->avro_buf, LARGEBUFLEN);
+    avro_iface = avro_generic_class_from_schema(bms->msglog_avro_schema[BGP_LOG_TYPE_LOGCLOSE]);
+    pm_avro_check(avro_generic_value_new(avro_iface, &avro_obj));
+
+    pm_avro_check(avro_value_get_by_name(&avro_obj, "seq", &avro_field, NULL));
+    pm_avro_check(avro_value_set_long(&avro_field, bgp_peer_log_seq_get(&bms->log_seq)));
+    bgp_peer_log_seq_increment(&bms->log_seq);
+
+    pm_avro_check(avro_value_get_by_name(&avro_obj, "timestamp", &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, bms->log_tstamp_str));
+
+    addr_to_str(ip_address, &peer->addr);
+    pm_avro_check(avro_value_get_by_name(&avro_obj, bms->peer_str, &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, ip_address));
+
+    if (bms->peer_port_str) {
+      pm_avro_check(avro_value_get_by_name(&avro_obj, bms->peer_port_str, &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      pm_avro_check(avro_value_set_int(&avro_branch, peer->tcp_port));
+    }
+    else {
+      pm_avro_check(avro_value_get_by_name(&avro_obj, bms->peer_port_str, &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+    }
+
+    pm_avro_check(avro_value_get_by_name(&avro_obj, "event_type", &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, event_type));
+
+    pm_avro_check(avro_value_get_by_name(&avro_obj, "writer_id", &avro_field, NULL));
+    snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, writer_pid);
+    pm_avro_check(avro_value_set_string(&avro_field, wid));
+
+    if (bms->bgp_peer_logdump_initclose_extras) {
+      bms->bgp_peer_logdump_initclose_extras(peer, output, &avro_obj);
+    }
+
+    if (!bms->msglog_kafka_avro_schema_registry) {
+      avro_value_sizeof(&avro_obj, &avro_obj_len);
+      assert(avro_obj_len < LARGEBUFLEN);
+
+      if (avro_value_write(avro_writer, &avro_obj)) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to write value: %s\n", config.name, bms->log_str, avro_strerror());
+	exit_gracefully(1);
+      }	
+
+      avro_len = avro_writer_tell(avro_writer);
+      avro_local_buf = bms->avro_buf;
+    }
+
+    if (bms->msglog_file) {
+      write_file_binary(peer->log->fd, avro_local_buf, avro_len);
+    }
+
+#ifdef WITH_RABBITMQ
+    if (bms->msglog_amqp_routing_key) {
+      amqp_ret = write_binary_amqp(peer->log->amqp_host, avro_local_buf, avro_len);
+      p_amqp_unset_routing_key(peer->log->amqp_host);
+    }
+#endif
+
+#ifdef WITH_KAFKA
+    if (bms->msglog_kafka_topic) {
+      if (bms->msglog_kafka_avro_schema_registry) {
+#ifdef WITH_SERDES
+	struct p_kafka_host *kafka_host = (struct p_kafka_host *) peer->log->kafka_host;
+
+	if (serdes_schema_serialize_avro(kafka_host->sd_schema[BGP_LOG_TYPE_LOGCLOSE], &avro_obj, &avro_local_buf, &avro_len,
+					 kafka_host->errstr, sizeof(kafka_host->errstr))) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
+	  exit_gracefully(1);
+	}
+#endif
+      }
+
+      kafka_ret = write_binary_kafka(peer->log->kafka_host, avro_local_buf, avro_len);
+      p_kafka_unset_topic(peer->log->kafka_host);
     }
 #endif
 #endif
@@ -887,8 +1083,9 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
   if (!bms || !peer || !peer->log) return ERR;
 
 #ifdef WITH_RABBITMQ
-  if (bms->dump_amqp_routing_key)
+  if (bms->dump_amqp_routing_key) {
     p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
+  }
 
   if (bms->dump_amqp_routing_key_rr && !p_amqp_get_routing_key_rr(peer->log->amqp_host)) {
     p_amqp_init_routing_key_rr(peer->log->amqp_host);
@@ -897,8 +1094,9 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
 #endif
 
 #ifdef WITH_KAFKA
-  if (bms->dump_kafka_topic)
+  if (bms->dump_kafka_topic) {
     p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
+  }
 
   if (bms->dump_kafka_topic_rr && !p_kafka_get_topic_rr(peer->log->kafka_host)) {
     p_kafka_init_topic_rr(peer->log->kafka_host);
@@ -925,11 +1123,13 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
 
     json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq)));
 
-    if (bms->bgp_peer_logdump_initclose_extras)
+    if (bms->bgp_peer_logdump_initclose_extras) {
       bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
+    }
 
-    if (bms->dump_file)
+    if (bms->dump_file) {
       write_and_free_json(peer->log->fd, obj);
+    }
 
 #ifdef WITH_RABBITMQ
     if (bms->dump_amqp_routing_key) {
@@ -943,6 +1143,100 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
     if (bms->dump_kafka_topic) {
       add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
       kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
+      p_kafka_unset_topic(peer->log->kafka_host);
+    }
+#endif
+#endif
+  }
+  else if (output == PRINT_OUTPUT_AVRO) {
+#ifdef WITH_AVRO
+    char event_type[] = "dump_init";
+    char ip_address[INET6_ADDRSTRLEN], wid[SHORTSHORTBUFLEN];
+
+    avro_writer_t avro_writer = {0};
+    avro_value_iface_t *avro_iface = NULL;
+    avro_value_t avro_obj, avro_field, avro_branch;
+    size_t avro_obj_len, avro_len;
+    void *avro_local_buf = NULL;
+
+    avro_writer = avro_writer_memory(bms->avro_buf, LARGEBUFLEN);
+    avro_iface = avro_generic_class_from_schema(bms->dump_avro_schema[BGP_LOG_TYPE_DUMPINIT]);
+    pm_avro_check(avro_generic_value_new(avro_iface, &avro_obj));
+
+    pm_avro_check(avro_value_get_by_name(&avro_obj, "seq", &avro_field, NULL));
+    pm_avro_check(avro_value_set_long(&avro_field, bgp_peer_log_seq_get(&bms->log_seq)));
+    bgp_peer_log_seq_increment(&bms->log_seq);
+
+    pm_avro_check(avro_value_get_by_name(&avro_obj, "timestamp", &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, bms->log_tstamp_str));
+
+    addr_to_str(ip_address, &peer->addr);
+    pm_avro_check(avro_value_get_by_name(&avro_obj, bms->peer_str, &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, ip_address));
+
+    if (bms->peer_port_str) {
+      pm_avro_check(avro_value_get_by_name(&avro_obj, bms->peer_port_str, &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      pm_avro_check(avro_value_set_int(&avro_branch, peer->tcp_port));
+    }
+    else {
+      pm_avro_check(avro_value_get_by_name(&avro_obj, bms->peer_port_str, &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+    }
+
+    pm_avro_check(avro_value_get_by_name(&avro_obj, "event_type", &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, event_type));
+
+    pm_avro_check(avro_value_get_by_name(&avro_obj, "dump_period", &avro_field, NULL));
+    pm_avro_check(avro_value_set_int(&avro_field, bms->dump.period)); 
+
+    pm_avro_check(avro_value_get_by_name(&avro_obj, "writer_id", &avro_field, NULL));
+    snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, writer_pid);
+    pm_avro_check(avro_value_set_string(&avro_field, wid));
+
+    if (bms->bgp_peer_logdump_initclose_extras) {
+      bms->bgp_peer_logdump_initclose_extras(peer, output, &avro_obj);
+    }
+
+    if (!bms->dump_kafka_avro_schema_registry) {
+      avro_value_sizeof(&avro_obj, &avro_obj_len);
+      assert(avro_obj_len < LARGEBUFLEN);
+
+      if (avro_value_write(avro_writer, &avro_obj)) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to write value: %s\n", config.name, bms->log_str, avro_strerror());
+	exit_gracefully(1);
+      }	
+
+      avro_len = avro_writer_tell(avro_writer);
+      avro_local_buf = bms->avro_buf;
+    }
+
+    if (bms->dump_file) {
+      write_file_binary(peer->log->fd, avro_local_buf, avro_len);
+    }
+
+#ifdef WITH_RABBITMQ
+    if (bms->dump_amqp_routing_key) {
+      amqp_ret = write_binary_amqp(peer->log->amqp_host, avro_local_buf, avro_len);
+      p_amqp_unset_routing_key(peer->log->amqp_host);
+    }
+#endif
+
+#ifdef WITH_KAFKA
+    if (bms->dump_kafka_topic) {
+      if (bms->dump_kafka_avro_schema_registry) {
+#ifdef WITH_SERDES
+	struct p_kafka_host *kafka_host = (struct p_kafka_host *) peer->log->kafka_host;
+
+	if (serdes_schema_serialize_avro(kafka_host->sd_schema[BGP_LOG_TYPE_DUMPINIT], &avro_obj, &avro_local_buf, &avro_len,
+					 kafka_host->errstr, sizeof(kafka_host->errstr))) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
+	  exit_gracefully(1);
+	}
+#endif
+      }
+
+      kafka_ret = write_binary_kafka(peer->log->kafka_host, avro_local_buf, avro_len);
       p_kafka_unset_topic(peer->log->kafka_host);
     }
 #endif
@@ -964,13 +1258,15 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
   if (!bms || !peer || !peer->log) return ERR;
 
 #ifdef WITH_RABBITMQ
-  if (bms->dump_amqp_routing_key)
+  if (bms->dump_amqp_routing_key) {
     p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
+  }
 #endif
 
 #ifdef WITH_KAFKA
-  if (bms->dump_kafka_topic)
+  if (bms->dump_kafka_topic) {
     p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
+  }
 #endif
 
   if (output == PRINT_OUTPUT_JSON) {
@@ -996,11 +1292,13 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
 
     json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq)));
 
-    if (bms->bgp_peer_logdump_initclose_extras)
+    if (bms->bgp_peer_logdump_initclose_extras) {
       bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
+    }
 
-    if (bms->dump_file)
+    if (bms->dump_file) {
       write_and_free_json(peer->log->fd, obj);
+    }
 
 #ifdef WITH_RABBITMQ
     if (bms->dump_amqp_routing_key) {
@@ -1014,6 +1312,114 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
     if (bms->dump_kafka_topic) {
       add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
       kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
+      p_kafka_unset_topic(peer->log->kafka_host);
+    }
+#endif
+#endif
+  }
+  else if (output == PRINT_OUTPUT_AVRO) {
+#ifdef WITH_AVRO
+    char event_type[] = "dump_close";
+    char ip_address[INET6_ADDRSTRLEN], wid[SHORTSHORTBUFLEN];
+
+    avro_writer_t avro_writer = {0};
+    avro_value_iface_t *avro_iface = NULL;
+    avro_value_t avro_obj, avro_field, avro_branch;
+    size_t avro_obj_len, avro_len;
+    void *avro_local_buf = NULL;
+
+    avro_writer = avro_writer_memory(bms->avro_buf, LARGEBUFLEN);
+    avro_iface = avro_generic_class_from_schema(bms->dump_avro_schema[BGP_LOG_TYPE_DUMPCLOSE]);
+    pm_avro_check(avro_generic_value_new(avro_iface, &avro_obj));
+
+    pm_avro_check(avro_value_get_by_name(&avro_obj, "seq", &avro_field, NULL));
+    pm_avro_check(avro_value_set_long(&avro_field, bgp_peer_log_seq_get(&bms->log_seq)));
+    bgp_peer_log_seq_increment(&bms->log_seq);
+
+    pm_avro_check(avro_value_get_by_name(&avro_obj, "timestamp", &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, bms->log_tstamp_str));
+
+    addr_to_str(ip_address, &peer->addr);
+    pm_avro_check(avro_value_get_by_name(&avro_obj, bms->peer_str, &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, ip_address));
+
+    if (bms->peer_port_str) {
+      pm_avro_check(avro_value_get_by_name(&avro_obj, bms->peer_port_str, &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      pm_avro_check(avro_value_set_int(&avro_branch, peer->tcp_port));
+    }
+    else {
+      pm_avro_check(avro_value_get_by_name(&avro_obj, bms->peer_port_str, &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+    }
+
+    pm_avro_check(avro_value_get_by_name(&avro_obj, "event_type", &avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&avro_field, event_type));
+
+    if (bds) {
+      pm_avro_check(avro_value_get_by_name(&avro_obj, "entries", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      pm_avro_check(avro_value_set_int(&avro_branch, bds->entries)); 
+
+      pm_avro_check(avro_value_get_by_name(&avro_obj, "tables", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, TRUE, &avro_branch));
+      pm_avro_check(avro_value_set_int(&avro_branch, bds->tables)); 
+    }
+    else {
+      pm_avro_check(avro_value_get_by_name(&avro_obj, "entries", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+
+      pm_avro_check(avro_value_get_by_name(&avro_obj, "tables", &avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
+    }
+
+    pm_avro_check(avro_value_get_by_name(&avro_obj, "writer_id", &avro_field, NULL));
+    snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, writer_pid);
+    pm_avro_check(avro_value_set_string(&avro_field, wid));
+
+    if (bms->bgp_peer_logdump_initclose_extras) {
+      bms->bgp_peer_logdump_initclose_extras(peer, output, &avro_obj);
+    }
+
+    if (!bms->dump_kafka_avro_schema_registry) {
+      avro_value_sizeof(&avro_obj, &avro_obj_len);
+      assert(avro_obj_len < LARGEBUFLEN);
+
+      if (avro_value_write(avro_writer, &avro_obj)) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to write value: %s\n", config.name, bms->log_str, avro_strerror());
+	exit_gracefully(1);
+      }	
+
+      avro_len = avro_writer_tell(avro_writer);
+      avro_local_buf = bms->avro_buf;
+    }
+
+    if (bms->dump_file) {
+      write_file_binary(peer->log->fd, avro_local_buf, avro_len);
+    }
+
+#ifdef WITH_RABBITMQ
+    if (bms->dump_amqp_routing_key) {
+      amqp_ret = write_binary_amqp(peer->log->amqp_host, avro_local_buf, avro_len);
+      p_amqp_unset_routing_key(peer->log->amqp_host);
+    }
+#endif
+
+#ifdef WITH_KAFKA
+    if (bms->dump_kafka_topic) {
+      if (bms->dump_kafka_avro_schema_registry) {
+#ifdef WITH_SERDES
+	struct p_kafka_host *kafka_host = (struct p_kafka_host *) peer->log->kafka_host;
+
+	if (serdes_schema_serialize_avro(kafka_host->sd_schema[BGP_LOG_TYPE_DUMPCLOSE], &avro_obj, &avro_local_buf, &avro_len,
+					 kafka_host->errstr, sizeof(kafka_host->errstr))) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
+	  exit_gracefully(1);
+	}
+#endif
+      }
+
+      kafka_ret = write_binary_kafka(peer->log->kafka_host, avro_local_buf, avro_len);
       p_kafka_unset_topic(peer->log->kafka_host);
     }
 #endif
@@ -1085,6 +1491,31 @@ void bgp_handle_dump_event()
     start = time(NULL);
     tables_num = 0;
 
+#ifdef WITH_SERDES
+    if (config.bgp_table_dump_kafka_avro_schema_registry) { 
+      if (strchr(config.bgp_table_dump_kafka_topic, '$')) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'bgp_table_dump_kafka_topic' is not compatible with 'bgp_table_dump_kafka_avro_schema_registry'. Exiting.\n",
+	    config.name, bms->log_str);
+	exit_gracefully(1);
+      }
+
+      bgp_table_dump_kafka_host.sd_schema[0] = compose_avro_schema_registry_name_2(config.bgp_table_dump_kafka_topic, FALSE,
+										   bms->dump_avro_schema[0],
+										   "bgp", "dump",
+										   config.bgp_table_dump_kafka_avro_schema_registry);
+
+      bgp_table_dump_kafka_host.sd_schema[BGP_LOG_TYPE_DUMPINIT] = compose_avro_schema_registry_name_2(config.bgp_table_dump_kafka_topic, FALSE,
+										   bms->dump_avro_schema[BGP_LOG_TYPE_DUMPINIT],
+										   "bgp", "dumpinit",
+										   config.bgp_table_dump_kafka_avro_schema_registry);
+
+      bgp_table_dump_kafka_host.sd_schema[BGP_LOG_TYPE_DUMPCLOSE] = compose_avro_schema_registry_name_2(config.bgp_table_dump_kafka_topic, FALSE,
+										   bms->dump_avro_schema[BGP_LOG_TYPE_DUMPCLOSE],
+										   "bgp", "dumpclose",
+										   config.bgp_table_dump_kafka_avro_schema_registry);
+    }
+#endif
+
     for (peer = NULL, saved_peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
       if (peers[peers_idx].fd) {
         peer = &peers[peers_idx];
@@ -1099,24 +1530,7 @@ void bgp_handle_dump_event()
 	}
 
 	if (config.bgp_table_dump_kafka_topic) {
-	  if (!config.bgp_table_dump_kafka_avro_schema_registry) {
-	    bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_kafka_topic, peer);
-	  }
-	  else {
-#ifdef WITH_SERDES
-	    int is_dyn;
-
-	    is_dyn = bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_kafka_topic, peer);
-	    if (is_dyn) {
-	      Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'bgp_table_dump_kafka_topic' is not compatible with 'bgp_table_dump_kafka_avro_schema_registry'. Exiting.\n",
-		  config.name, bms->log_str);
-	      exit_gracefully(1);
-            }
-
-	    bgp_table_dump_kafka_host.sd_schema[0] = compose_avro_schema_registry_name_2(current_filename, is_dyn, bms->dump_avro_schema[0], "bgp",
-										       "dump", config.bgp_table_dump_kafka_avro_schema_registry);
-#endif
-	  }
+	  bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_kafka_topic, peer);
 	}
 
 	pm_strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bms->dump.tstamp.tv_sec, config.timestamps_utc);
@@ -1364,6 +1778,79 @@ avro_schema_t avro_schema_build_bgp(int log_type, char *schema_name)
   avro_schema_record_field_append(schema, "peer_tcp_port", optint_s);
 
   avro_schema_build_bgp_route(&schema, &optlong_s, &optstr_s, &optint_s);
+
+  avro_schema_decref(optlong_s);
+  avro_schema_decref(optstr_s);
+  avro_schema_decref(optint_s);
+
+  return schema;
+}
+
+avro_schema_t avro_schema_build_bgp_log_initclose(int log_type, char *schema_name)
+{
+  avro_schema_t schema = NULL;
+  avro_schema_t optlong_s = avro_schema_union();
+  avro_schema_t optstr_s = avro_schema_union();
+  avro_schema_t optint_s = avro_schema_union();
+
+  if (log_type != BGP_LOGDUMP_ET_LOG) return NULL;
+
+  avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BGP, schema_name);
+
+  /* prevent log_type from being added to Avro schema */
+  log_type = BGP_LOGDUMP_ET_NONE;
+  avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type, FUNC_TYPE_BGP); 
+  log_type = BGP_LOGDUMP_ET_LOG;
+
+  avro_schema_record_field_append(schema, "peer_ip_src", avro_schema_string());
+  avro_schema_record_field_append(schema, "peer_tcp_port", optint_s);
+
+  avro_schema_decref(optlong_s);
+  avro_schema_decref(optstr_s);
+  avro_schema_decref(optint_s);
+
+  return schema;
+}
+
+avro_schema_t avro_schema_build_bgp_dump_init(int log_type, char *schema_name)
+{
+  avro_schema_t schema = NULL;
+  avro_schema_t optlong_s = avro_schema_union();
+  avro_schema_t optstr_s = avro_schema_union();
+  avro_schema_t optint_s = avro_schema_union();
+
+  if (log_type != BGP_LOGDUMP_ET_DUMP) return NULL;
+
+  avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BGP, schema_name);
+  avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type, FUNC_TYPE_BGP);
+
+  avro_schema_record_field_append(schema, "peer_ip_src", avro_schema_string());
+  avro_schema_record_field_append(schema, "peer_tcp_port", optint_s);
+  avro_schema_record_field_append(schema, "dump_period", avro_schema_int());
+
+  avro_schema_decref(optlong_s);
+  avro_schema_decref(optstr_s);
+  avro_schema_decref(optint_s);
+
+  return schema;
+}
+
+avro_schema_t avro_schema_build_bgp_dump_close(int log_type, char *schema_name)
+{
+  avro_schema_t schema = NULL;
+  avro_schema_t optlong_s = avro_schema_union();
+  avro_schema_t optstr_s = avro_schema_union();
+  avro_schema_t optint_s = avro_schema_union();
+
+  if (log_type != BGP_LOGDUMP_ET_DUMP) return NULL;
+
+  avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BGP, schema_name);
+  avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type, FUNC_TYPE_BGP);
+
+  avro_schema_record_field_append(schema, "peer_ip_src", avro_schema_string());
+  avro_schema_record_field_append(schema, "peer_tcp_port", optint_s);
+  avro_schema_record_field_append(schema, "entries", optint_s);
+  avro_schema_record_field_append(schema, "tables", optint_s);
 
   avro_schema_decref(optlong_s);
   avro_schema_decref(optstr_s);
