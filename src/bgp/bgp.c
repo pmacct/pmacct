@@ -407,6 +407,8 @@ void skinny_bgp_daemon_online()
 
 #ifdef WITH_AVRO
     if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_AVRO) {
+      assert(BGP_LOG_TYPE_MAX < MAX_AVRO_SCHEMA);
+
       bgp_misc_db->msglog_avro_schema[0] = avro_schema_build_bgp(BGP_LOGDUMP_ET_LOG, "bgp_msglog");
       bgp_misc_db->msglog_avro_schema[BGP_LOG_TYPE_LOGINIT] = avro_schema_build_bgp_log_initclose(BGP_LOGDUMP_ET_LOG, "bgp_loginit");
       bgp_misc_db->msglog_avro_schema[BGP_LOG_TYPE_LOGCLOSE] = avro_schema_build_bgp_log_initclose(BGP_LOGDUMP_ET_LOG, "bgp_logclose");
@@ -463,6 +465,8 @@ void skinny_bgp_daemon_online()
 
 #ifdef WITH_AVRO
     if (config.bgp_table_dump_output == PRINT_OUTPUT_AVRO) {
+      assert(BGP_LOG_TYPE_MAX < MAX_AVRO_SCHEMA);
+
       bgp_misc_db->dump_avro_schema[0] = avro_schema_build_bgp(BGP_LOGDUMP_ET_DUMP, "bgp_dump");
       bgp_misc_db->dump_avro_schema[BGP_LOG_TYPE_DUMPINIT] = avro_schema_build_bgp_dump_init(BGP_LOGDUMP_ET_DUMP, "bgp_dumpinit");
       bgp_misc_db->dump_avro_schema[BGP_LOG_TYPE_DUMPCLOSE] = avro_schema_build_bgp_dump_close(BGP_LOGDUMP_ET_DUMP, "bgp_dumpclose");

@@ -629,10 +629,6 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 	bms->bgp_peer_logdump_initclose_extras(peer, output, obj);
       }
 
-      if (bms->bgp_peer_log_msg_extras) {
-	bms->bgp_peer_log_msg_extras(peer, output, obj);
-      }
-
       if (bms->msglog_file) {
 	write_and_free_json(peer->log->fd, obj);
       }
@@ -699,10 +695,6 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 
       if (bms->bgp_peer_logdump_initclose_extras) {
 	bms->bgp_peer_logdump_initclose_extras(peer, output, &avro_obj);
-      }
-
-      if (bms->bgp_peer_log_msg_extras) {
-	bms->bgp_peer_log_msg_extras(peer, output, &avro_obj);
       }
 
       if (!bms->msglog_kafka_avro_schema_registry) {
