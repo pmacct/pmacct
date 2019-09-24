@@ -339,7 +339,7 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_
     pm_avro_check(avro_value_set_string(&avro_field, ip_address));
 
     pm_avro_check(avro_value_get_by_name(obj, "peer_asn", &avro_field, NULL));
-    pm_avro_check(avro_value_set_int(&avro_field, bdata->peer_asn));
+    pm_avro_check(avro_value_set_long(&avro_field, bdata->peer_asn));
 
     pm_avro_check(avro_value_get_by_name(obj, "peer_type", &avro_field, NULL));
     pm_avro_check(avro_value_set_int(&avro_field, bdata->chars.peer_type));
@@ -663,7 +663,7 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
     pm_avro_check(avro_value_set_string(&avro_field, ip_address));
 
     pm_avro_check(avro_value_get_by_name(obj, "peer_asn", &avro_field, NULL));
-    pm_avro_check(avro_value_set_int(&avro_field, bdata->peer_asn));
+    pm_avro_check(avro_value_set_long(&avro_field, bdata->peer_asn));
 
     pm_avro_check(avro_value_get_by_name(obj, "peer_type", &avro_field, NULL));
     pm_avro_check(avro_value_set_int(&avro_field, bdata->chars.peer_type));
@@ -822,7 +822,7 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
     pm_avro_check(avro_value_set_string(&avro_field, ip_address));
 
     pm_avro_check(avro_value_get_by_name(obj, "peer_asn", &avro_field, NULL));
-    pm_avro_check(avro_value_set_int(&avro_field, bdata->peer_asn));
+    pm_avro_check(avro_value_set_long(&avro_field, bdata->peer_asn));
 
     pm_avro_check(avro_value_get_by_name(obj, "peer_type", &avro_field, NULL));
     pm_avro_check(avro_value_set_int(&avro_field, bdata->chars.peer_type));
@@ -1484,7 +1484,7 @@ avro_schema_t avro_schema_build_bmp_peer_up(char *schema_name)
   avro_schema_build_bmp_common(&schema, &optlong_s, &optstr_s, &optint_s);
 
   avro_schema_record_field_append(schema, "peer_ip", avro_schema_string());
-  avro_schema_record_field_append(schema, "peer_asn", avro_schema_int());
+  avro_schema_record_field_append(schema, "peer_asn", avro_schema_long());
   avro_schema_record_field_append(schema, "peer_type", avro_schema_int());
   avro_schema_record_field_append(schema, "peer_type_str", optstr_s);
 
@@ -1520,7 +1520,7 @@ avro_schema_t avro_schema_build_bmp_peer_down(char *schema_name)
   avro_schema_build_bmp_common(&schema, &optlong_s, &optstr_s, &optint_s);
 
   avro_schema_record_field_append(schema, "peer_ip", avro_schema_string());
-  avro_schema_record_field_append(schema, "peer_asn", avro_schema_int());
+  avro_schema_record_field_append(schema, "peer_asn", avro_schema_long());
   avro_schema_record_field_append(schema, "peer_type", avro_schema_int());
   avro_schema_record_field_append(schema, "peer_type_str", optstr_s);
 
@@ -1546,7 +1546,7 @@ avro_schema_t avro_schema_build_bmp_stats(char *schema_name)
   avro_schema_build_bmp_common(&schema, &optlong_s, &optstr_s, &optint_s);
 
   avro_schema_record_field_append(schema, "peer_ip", avro_schema_string());
-  avro_schema_record_field_append(schema, "peer_asn", avro_schema_int());
+  avro_schema_record_field_append(schema, "peer_asn", avro_schema_long());
   avro_schema_record_field_append(schema, "peer_type", avro_schema_int());
   avro_schema_record_field_append(schema, "peer_type_str", avro_schema_string());
 
