@@ -179,7 +179,7 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->peer_port_str = malloc(strlen("bmp_router_port") + 1);
   strcpy(bms->peer_port_str, "bmp_router_port");
   bms->bgp_peer_log_msg_extras = bgp_peer_log_msg_extras_bmp;
-  bms->bgp_peer_logdump_initclose_extras = bgp_peer_logdump_initclose_extras_bmp;
+  bms->bgp_peer_logdump_initclose_extras = NULL;
 
   bms->bgp_peer_logdump_extra_data = bgp_extra_data_print_bmp;
   bms->bgp_extra_data_process = bgp_extra_data_process_bmp;

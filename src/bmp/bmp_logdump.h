@@ -30,6 +30,12 @@
 #define BMP_LOG_TYPE_PEER_DOWN	BMP_MSG_PEER_DOWN
 #define BMP_LOG_TYPE_ROUTE	BMP_MSG_ROUTE_MONITOR
 
+#define BMP_LOG_TYPE_LOGINIT    BGP_LOG_TYPE_LOGINIT
+#define BMP_LOG_TYPE_LOGCLOSE	BGP_LOG_TYPE_LOGCLOSE
+#define BMP_LOG_TYPE_DUMPINIT   BGP_LOG_TYPE_DUMPINIT
+#define BMP_LOG_TYPE_DUMPCLOSE	BGP_LOG_TYPE_DUMPCLOSE
+#define BMP_LOG_TYPE_MAX	BGP_LOG_TYPE_DUMPCLOSE
+
 struct bmp_log_stats {
   u_int16_t cnt_type;
   afi_t cnt_afi;
@@ -131,6 +137,10 @@ extern avro_schema_t avro_schema_build_bmp_term(char *);
 extern avro_schema_t avro_schema_build_bmp_peer_up(char *);
 extern avro_schema_t avro_schema_build_bmp_peer_down(char *);
 extern avro_schema_t avro_schema_build_bmp_stats(char *);
+
+extern avro_schema_t avro_schema_build_bmp_log_initclose(int, char *);
+extern avro_schema_t avro_schema_build_bmp_dump_init(int, char *);
+extern avro_schema_t avro_schema_build_bmp_dump_close(int, char *);
 
 extern void avro_schema_build_bmp_common(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *);
 #endif

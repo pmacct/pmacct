@@ -1042,6 +1042,56 @@ void bmp_handle_dump_event()
     start = time(NULL);
     tables_num = 0;
 
+#ifdef WITH_SERDES
+    if (config.bmp_dump_kafka_avro_schema_registry) {
+      if (strchr(config.bmp_dump_kafka_topic, '$')) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'bmp_dump_kafka_topic' is not compatible with 'bmp_dump_kafka_avro_schema_registry'. Exiting.\n",
+	    config.name, bms->log_str);
+	exit_gracefully(1);
+      }
+
+      bmp_dump_kafka_host.sd_schema[BMP_MSG_ROUTE_MONITOR] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, FALSE,
+											     bmp_misc_db->dump_avro_schema[BMP_MSG_ROUTE_MONITOR],
+											     "bmp", "dump_rm",
+											     config.bmp_dump_kafka_avro_schema_registry);
+
+      bmp_dump_kafka_host.sd_schema[BMP_MSG_STATS] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, FALSE,
+											     bmp_misc_db->dump_avro_schema[BMP_MSG_STATS],
+											     "bmp", "stats",
+											     config.bmp_dump_kafka_avro_schema_registry);
+
+      bmp_dump_kafka_host.sd_schema[BMP_MSG_PEER_UP] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, FALSE,
+											     bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_UP],
+											     "bmp", "peer_up",
+											     config.bmp_dump_kafka_avro_schema_registry);
+
+      bmp_dump_kafka_host.sd_schema[BMP_MSG_PEER_DOWN] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, FALSE,
+											     bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_DOWN],
+											     "bmp", "peer_down",
+											     config.bmp_dump_kafka_avro_schema_registry);
+
+      bmp_dump_kafka_host.sd_schema[BMP_MSG_INIT] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, FALSE,
+											     bmp_misc_db->dump_avro_schema[BMP_MSG_INIT],
+											     "bmp", "init",
+											     config.bmp_dump_kafka_avro_schema_registry);
+
+      bmp_dump_kafka_host.sd_schema[BMP_MSG_TERM] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, FALSE,
+											     bmp_misc_db->dump_avro_schema[BMP_MSG_TERM],
+											     "bmp", "term",
+											     config.bmp_dump_kafka_avro_schema_registry);
+
+      bmp_dump_kafka_host.sd_schema[BMP_LOG_TYPE_DUMPINIT] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, FALSE,
+											     bmp_misc_db->dump_avro_schema[BMP_LOG_TYPE_DUMPINIT],
+											     "bmp", "dumpinit",
+											     config.bmp_dump_kafka_avro_schema_registry);
+
+      bmp_dump_kafka_host.sd_schema[BMP_LOG_TYPE_DUMPCLOSE] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, FALSE,
+											     bmp_misc_db->dump_avro_schema[BMP_LOG_TYPE_DUMPCLOSE],
+											     "bmp", "dumpclose",
+											     config.bmp_dump_kafka_avro_schema_registry);
+    }
+#endif
+
     for (peer = NULL, saved_peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
       if (bmp_peers[peers_idx].self.fd) {
         peer = &bmp_peers[peers_idx].self;
@@ -1057,51 +1107,7 @@ void bmp_handle_dump_event()
 	}
 
         if (config.bmp_dump_kafka_topic) {
-	  if (!config.bmp_dump_kafka_avro_schema_registry) {
-	    bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_kafka_topic, peer);
-	  }
-	  else {
-#ifdef WITH_SERDES
-	    int is_dyn;
-
-	    is_dyn = bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_kafka_topic, peer);
-	    if (is_dyn) {
-	      Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'bmp_dump_kafka_topic' is not compatible with 'bmp_dump_kafka_avro_schema_registry'. Exiting.\n",
-		  config.name, bms->log_str);
-	      exit_gracefully(1);
-	    }
-
-	    bmp_dump_kafka_host.sd_schema[BMP_MSG_ROUTE_MONITOR] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, is_dyn,
-											     bmp_misc_db->dump_avro_schema[BMP_MSG_ROUTE_MONITOR],
-											     "bmp", "dump_rm",
-											     config.bmp_dump_kafka_avro_schema_registry);
-
-	    bmp_dump_kafka_host.sd_schema[BMP_MSG_STATS] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, is_dyn,
-											     bmp_misc_db->dump_avro_schema[BMP_MSG_STATS],
-											     "bmp", "stats",
-											     config.bmp_dump_kafka_avro_schema_registry);
-
-	    bmp_dump_kafka_host.sd_schema[BMP_MSG_PEER_UP] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, is_dyn,
-											     bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_UP],
-											     "bmp", "peer_up",
-											     config.bmp_dump_kafka_avro_schema_registry);
-
-	    bmp_dump_kafka_host.sd_schema[BMP_MSG_PEER_DOWN] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, is_dyn,
-											     bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_DOWN],
-											     "bmp", "peer_down",
-											     config.bmp_dump_kafka_avro_schema_registry);
-
-	    bmp_dump_kafka_host.sd_schema[BMP_MSG_INIT] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, is_dyn,
-											     bmp_misc_db->dump_avro_schema[BMP_MSG_INIT],
-											     "bmp", "init",
-											     config.bmp_dump_kafka_avro_schema_registry);
-
-	    bmp_dump_kafka_host.sd_schema[BMP_MSG_TERM] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, is_dyn,
-											     bmp_misc_db->dump_avro_schema[BMP_MSG_TERM],
-											     "bmp", "term",
-											     config.bmp_dump_kafka_avro_schema_registry);
-#endif
-	  }
+	  bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_kafka_topic, peer);
 	}
 
         pm_strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bms->dump.tstamp.tv_sec, config.timestamps_utc);
@@ -1555,6 +1561,79 @@ avro_schema_t avro_schema_build_bmp_stats(char *schema_name)
 
   avro_schema_record_field_append(schema, "afi", optint_s);
   avro_schema_record_field_append(schema, "safi", optint_s);
+
+  avro_schema_decref(optlong_s);
+  avro_schema_decref(optstr_s);
+  avro_schema_decref(optint_s);
+
+  return schema;
+}
+
+avro_schema_t avro_schema_build_bmp_log_initclose(int log_type, char *schema_name)
+{
+  avro_schema_t schema = NULL;
+  avro_schema_t optlong_s = avro_schema_union();
+  avro_schema_t optstr_s = avro_schema_union();
+  avro_schema_t optint_s = avro_schema_union();
+
+  if (log_type != BGP_LOGDUMP_ET_LOG) return NULL;
+
+  avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BMP, schema_name);
+
+  /* prevent log_type from being added to Avro schema */
+  log_type = BGP_LOGDUMP_ET_NONE;
+  avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type, FUNC_TYPE_BMP);
+  log_type = BGP_LOGDUMP_ET_LOG;
+
+  avro_schema_record_field_append(schema, "bmp_router", avro_schema_string());
+  avro_schema_record_field_append(schema, "bmp_router_port", optint_s);
+
+  avro_schema_decref(optlong_s);
+  avro_schema_decref(optstr_s);
+  avro_schema_decref(optint_s);
+
+  return schema;
+}
+
+avro_schema_t avro_schema_build_bmp_dump_init(int log_type, char *schema_name)
+{
+  avro_schema_t schema = NULL;
+  avro_schema_t optlong_s = avro_schema_union();
+  avro_schema_t optstr_s = avro_schema_union();
+  avro_schema_t optint_s = avro_schema_union();
+
+  if (log_type != BGP_LOGDUMP_ET_DUMP) return NULL;
+
+  avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BMP, schema_name);
+  avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type, FUNC_TYPE_BMP);
+
+  avro_schema_record_field_append(schema, "bmp_router", avro_schema_string());
+  avro_schema_record_field_append(schema, "bmp_router_port", optint_s);
+  avro_schema_record_field_append(schema, "dump_period", avro_schema_int());
+
+  avro_schema_decref(optlong_s);
+  avro_schema_decref(optstr_s);
+  avro_schema_decref(optint_s);
+
+  return schema;
+}
+
+avro_schema_t avro_schema_build_bmp_dump_close(int log_type, char *schema_name)
+{
+  avro_schema_t schema = NULL;
+  avro_schema_t optlong_s = avro_schema_union();
+  avro_schema_t optstr_s = avro_schema_union();
+  avro_schema_t optint_s = avro_schema_union();
+
+  if (log_type != BGP_LOGDUMP_ET_DUMP) return NULL;
+
+  avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BMP, schema_name);
+  avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type, FUNC_TYPE_BMP);
+
+  avro_schema_record_field_append(schema, "bmp_router", avro_schema_string());
+  avro_schema_record_field_append(schema, "bmp_router_port", optint_s);
+  avro_schema_record_field_append(schema, "entries", optint_s);
+  avro_schema_record_field_append(schema, "tables", optint_s);
 
   avro_schema_decref(optlong_s);
   avro_schema_decref(optstr_s);
