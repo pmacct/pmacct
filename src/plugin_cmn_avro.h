@@ -40,11 +40,15 @@
       assert(1 == 0); \
     } \
 } while (0)
-#endif
+
+#define	AVRO_ACCT_DATA_SID	0
+#define	AVRO_ACCT_INIT_SID	1
+#define	AVRO_ACCT_CLOSE_SID	2
 
 /* prototypes */
-#ifdef WITH_AVRO
 extern avro_schema_t avro_schema_build_flow(u_int64_t wtc, u_int64_t wtc_2);
+extern avro_schema_t avro_schema_build_flow_init();
+extern avro_schema_t avro_schema_build_flow_close();
 extern void avro_schema_add_writer_id(avro_schema_t);
 extern void add_writer_name_and_pid_avro(avro_value_t, char *, pid_t);
 
@@ -56,6 +60,8 @@ extern avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_t
   pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags,
   struct timeval *basetime, struct pkt_stitching *stitch,
   avro_value_iface_t *iface);
+extern avro_value_t compose_avro_acct_init(char *, pid_t, avro_value_iface_t *);
+extern avro_value_t compose_avro_acct_close(char *, pid_t, int, int, int, avro_value_iface_t *);
 extern void write_avro_schema_to_file(char *, avro_schema_t);
 extern void write_avro_schema_to_file_with_suffix(char *, char *, char *, avro_schema_t);
 extern char *write_avro_schema_to_memory(avro_schema_t);
@@ -68,7 +74,7 @@ extern serdes_schema_t *compose_avro_schema_registry_name_2(char *, int, avro_sc
 #endif
 
 /* global variables */
-extern avro_schema_t avro_acct_schema;
+extern avro_schema_t avro_acct_schema, avro_acct_init_schema, avro_acct_close_schema;
 #endif
 
 #endif //PLUGIN_CMN_AVRO_H

@@ -36,12 +36,12 @@
 
 #ifdef WITH_AVRO
 /* global variables */
-avro_schema_t avro_acct_schema;
+avro_schema_t avro_acct_schema, avro_acct_init_schema, avro_acct_close_schema;
 
 /* functions */
 avro_schema_t avro_schema_build_flow(u_int64_t wtc, u_int64_t wtc_2)
 {
-  avro_schema_t schema = avro_schema_record("acct", NULL);
+  avro_schema_t schema = avro_schema_record("acct_data", NULL);
   avro_schema_t optlong_s = avro_schema_union();
   avro_schema_t optstr_s = avro_schema_union();
 
@@ -319,9 +319,82 @@ avro_schema_t avro_schema_build_flow(u_int64_t wtc, u_int64_t wtc_2)
   return schema;
 }
 
+avro_schema_t avro_schema_build_flow_init()
+{
+  avro_schema_t schema = avro_schema_record("acct_init", NULL);
+
+  Log(LOG_INFO, "INFO ( %s/%s ): AVRO: building acct_init schema.\n", config.name, config.type);
+
+  avro_schema_record_field_append(schema, "event_type", avro_schema_string());
+  avro_schema_record_field_append(schema, "writer_id", avro_schema_string());
+
+  return schema;
+}
+
+avro_schema_t avro_schema_build_flow_close()
+{
+  avro_schema_t schema = avro_schema_record("acct_close", NULL);
+
+  Log(LOG_INFO, "INFO ( %s/%s ): AVRO: building acct_close schema.\n", config.name, config.type);
+
+  avro_schema_record_field_append(schema, "event_type", avro_schema_string());
+  avro_schema_record_field_append(schema, "writer_id", avro_schema_string());
+
+  avro_schema_record_field_append(schema, "purged_entries", avro_schema_long());
+  avro_schema_record_field_append(schema, "total_entries", avro_schema_long());
+  avro_schema_record_field_append(schema, "duration", avro_schema_int());
+
+  return schema;
+}
+
 void avro_schema_add_writer_id(avro_schema_t schema)
 {
   avro_schema_record_field_append(schema, "writer_id", avro_schema_string());
+}
+
+avro_value_t compose_avro_acct_init(char *writer_name, pid_t writer_pid, avro_value_iface_t *iface)
+{
+  char event_type[] = "purge_init", wid[SHORTSHORTBUFLEN];
+  avro_value_t value;
+  avro_value_t field;
+
+  pm_avro_check(avro_generic_value_new(iface, &value));
+
+  pm_avro_check(avro_value_get_by_name(&value, "event_type", &field, NULL));
+  pm_avro_check(avro_value_set_string(&field, event_type));
+
+  snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", writer_name, writer_pid);
+  pm_avro_check(avro_value_get_by_name(&value, "writer_id", &field, NULL));
+  pm_avro_check(avro_value_set_string(&field, wid));
+
+  return value;
+}
+
+avro_value_t compose_avro_acct_close(char *writer_name, pid_t writer_pid, int purged_entries, int total_entries, int duration, avro_value_iface_t *iface)
+{
+  char event_type[] = "purge_close", wid[SHORTSHORTBUFLEN];
+  avro_value_t value;
+  avro_value_t field;
+
+  pm_avro_check(avro_generic_value_new(iface, &value));
+
+  pm_avro_check(avro_value_get_by_name(&value, "event_type", &field, NULL));
+  pm_avro_check(avro_value_set_string(&field, event_type));
+
+  snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", writer_name, writer_pid);
+  pm_avro_check(avro_value_get_by_name(&value, "writer_id", &field, NULL));
+  pm_avro_check(avro_value_set_string(&field, wid));
+
+  pm_avro_check(avro_value_get_by_name(&value, "purged_entries", &field, NULL));
+  pm_avro_check(avro_value_set_long(&field, purged_entries));
+
+  pm_avro_check(avro_value_get_by_name(&value, "total_entries", &field, NULL));
+  pm_avro_check(avro_value_set_long(&field, total_entries));
+
+  pm_avro_check(avro_value_get_by_name(&value, "duration", &field, NULL));
+  pm_avro_check(avro_value_set_int(&field, total_entries));
+
+  return value;
 }
 
 avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
@@ -1166,7 +1239,7 @@ serdes_schema_t *compose_avro_schema_registry_name(char *topic, int is_topic_dyn
   char sd_errstr[LONGSRVBUFLEN];
 
   char *avro_schema_str = write_avro_schema_to_memory(avro_schema);
-  char *avro_schema_name = NULL;
+  char *avro_schema_name;
 
   if (!is_topic_dyn) {
     avro_schema_name = malloc(strlen(topic) + strlen("-value") + 1);
@@ -1188,16 +1261,13 @@ serdes_schema_t *compose_avro_schema_registry_name(char *topic, int is_topic_dyn
 
   sd_schema = serdes_schema_add(sd_desc, avro_schema_name, -1, avro_schema_str, -1, sd_errstr, sizeof(sd_errstr));
   if (!sd_schema) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): serdes_schema_add() name=%s failed: %s. Exiting.\n", config.name, config.type,
-	avro_schema_name, sd_errstr);
+    Log(LOG_ERR, "ERROR ( %s/%s ): serdes_schema_add() failed: %s. Exiting.\n", config.name, config.type, sd_errstr);
     exit_gracefully(1);
   }
   else {
     Log(LOG_DEBUG, "DEBUG ( %s/%s ): serdes_schema_add(): name=%s id=%d definition=%s\n", config.name, config.type,
 	serdes_schema_name(sd_schema), serdes_schema_id(sd_schema), serdes_schema_definition(sd_schema));
   }
-
-  if (avro_schema_name) free(avro_schema_name);
 
   return sd_schema;
 }
