@@ -61,7 +61,9 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   unsigned char *dataptr;
 
 #ifdef WITH_AVRO
-  char *avro_acct_schema_str = NULL;
+  char *avro_acct_data_schema_str = NULL;
+  char *avro_acct_init_schema_str = NULL;
+  char *avro_acct_close_schema_str = NULL;
 #endif
 
 #ifdef WITH_ZMQ
@@ -96,21 +98,40 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     avro_acct_schema = avro_schema_build_flow(config.what_to_count, config.what_to_count_2);
     avro_schema_add_writer_id(avro_acct_schema);
 
-    if (config.avro_schema_file) write_avro_schema_to_file(config.avro_schema_file, avro_acct_schema);
+    avro_acct_init_schema = avro_schema_build_flow_init();
+    avro_acct_close_schema = avro_schema_build_flow_close();
+
+    if (config.avro_schema_file) {
+      char avro_schema_file[SRVBUFLEN];
+
+      if (strlen(config.avro_schema_file) > (SRVBUFLEN - SUPERSHORTBUFLEN)) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): 'avro_schema_file' too long. Exiting.\n", config.name, config.type);
+	exit_gracefully(1);
+      }
+
+      write_avro_schema_to_file_with_suffix(config.avro_schema_file, "-acct_data", avro_schema_file, avro_acct_schema);
+      write_avro_schema_to_file_with_suffix(config.avro_schema_file, "-acct_init", avro_schema_file, avro_acct_init_schema);
+      write_avro_schema_to_file_with_suffix(config.avro_schema_file, "-acct_close", avro_schema_file, avro_acct_close_schema);
+    }
 
     if (config.amqp_avro_schema_routing_key) {
-      if (!config.amqp_avro_schema_refresh_time)
+      if (!config.amqp_avro_schema_refresh_time) {
         config.amqp_avro_schema_refresh_time = DEFAULT_AVRO_SCHEMA_REFRESH_TIME;
+      }
 
       avro_schema_deadline = time(NULL);
       P_init_refresh_deadline(&avro_schema_deadline, config.amqp_avro_schema_refresh_time, 0, "m");
-      avro_acct_schema_str = compose_avro_purge_schema(avro_acct_schema, config.name);
+      avro_acct_data_schema_str = compose_avro_purge_schema(avro_acct_schema, config.name);
+      avro_acct_init_schema_str = compose_avro_purge_schema(avro_acct_init_schema, config.name);
+      avro_acct_close_schema_str = compose_avro_purge_schema(avro_acct_close_schema, config.name);
     }
     else {
       config.amqp_avro_schema_refresh_time = 0;
       avro_schema_deadline = 0;
       avro_schema_timeout = 0;
-      avro_acct_schema_str = NULL;
+      avro_acct_data_schema_str = NULL;
+      avro_acct_init_schema_str = NULL;
+      avro_acct_close_schema_str = NULL;
     }
 #endif
   }
@@ -203,7 +224,10 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
 #ifdef WITH_AVRO
     if (idata.now > avro_schema_deadline) {
-      amqp_avro_schema_purge(avro_acct_schema_str);
+      amqp_avro_schema_purge(avro_acct_data_schema_str);
+      amqp_avro_schema_purge(avro_acct_init_schema_str);
+      amqp_avro_schema_purge(avro_acct_close_schema_str);
+
       avro_schema_deadline += config.amqp_avro_schema_refresh_time;
     }
 #endif
@@ -350,6 +374,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   avro_writer_t avro_writer = {0};
   char *avro_buf = NULL;
   int avro_buffer_full = FALSE;
+  size_t avro_len;
 #endif
 
   /* setting some defaults */
@@ -425,6 +450,21 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         free(json_str);
         json_str = NULL;
       }
+    }
+    else if (config.message_broker_output & PRINT_OUTPUT_AVRO) { 
+#ifdef WITH_AVRO
+      avro_value_iface_t *avro_iface = avro_generic_class_from_schema(avro_acct_init_schema);
+      avro_value_t avro_value = compose_avro_acct_init(config.name, writer_pid, avro_iface);
+
+      avro_len = avro_writer_tell(avro_writer);
+
+      avro_value_decref(&avro_value);
+      avro_value_iface_decref(avro_iface);
+
+      ret = p_amqp_publish_binary(&amqpp_amqp_host, avro_buf, avro_len);
+
+      avro_writer_reset(avro_writer);
+#endif
     }
   }
 
@@ -662,6 +702,21 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         free(json_str);
         json_str = NULL;
       }
+    }
+    else if (config.message_broker_output & PRINT_OUTPUT_AVRO) {
+#ifdef WITH_AVRO
+      avro_value_iface_t *avro_iface = avro_generic_class_from_schema(avro_acct_close_schema);
+      avro_value_t avro_value = compose_avro_acct_close(config.name, writer_pid, qn, saved_index, duration, avro_iface);
+
+      avro_len = avro_writer_tell(avro_writer);
+
+      avro_value_decref(&avro_value);
+      avro_value_iface_decref(avro_iface);
+
+      ret = p_amqp_publish_binary(&amqpp_amqp_host, avro_buf, avro_len);
+
+      avro_writer_reset(avro_writer);
+#endif
     }
   }
 
