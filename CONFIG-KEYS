@@ -1496,11 +1496,11 @@ KEY:		[ print_markers | amqp_markers | kafka_markers ]
 VALUES:		[ true | false ]
 DESC:		Enables the use of start/end markers each time data is purged to the backend. Both start
 		and end markers return additional information, ie. writer PID, number of entries purged,
-		elapsed time, etc. When plugin output is JSON, markers are encoded in JSON format and
-		event_type is set to purge_init and purge_close respectively; when output is Apache Avro,
-		the markers are currently suppressed. In the case of Kafka topics with multiple partitions,
-		the purge_close message can arrive out of order so other mechanisms should be used to
-		correlate messages as being part of the same batch (ie. writer_id).  
+		elapsed time, etc. In the print plugin markers are available for CSV and JSON outputs; in
+		the AMQP and Kafka plugins markers are available for JSON and Avro outputs. In the case
+		of Kafka topics with multiple partitions, the purge_close message can arrive out of order
+		so other mechanisms should be used to correlate messages as being part of the same batch
+		(ie. writer_id).  
 DEFAULT:	false
 
 KEY:		print_output
