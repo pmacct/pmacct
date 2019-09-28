@@ -271,6 +271,15 @@ int main(int argc,char **argv, char **envp)
   sighandler_action.sa_handler = SIG_IGN;
   sigaction(SIGPIPE, &sighandler_action, NULL);
 
+  sighandler_action.sa_handler = PM_sigint_handler;
+  sigaction(SIGINT, &sighandler_action, NULL);
+
+  sighandler_action.sa_handler = PM_sigint_handler;
+  sigaction(SIGTERM, &sighandler_action, NULL);
+
+  sighandler_action.sa_handler = handle_falling_child;
+  sigaction(SIGCHLD, &sighandler_action, NULL);
+
   if (!config.nfacctd_bgp) config.nfacctd_bgp = BGP_DAEMON_ONLINE;
   if (!config.nfacctd_bgp_port) config.nfacctd_bgp_port = BGP_TCP_PORT;
 

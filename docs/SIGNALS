@@ -47,7 +47,7 @@ SIGINT:		the signal is used by the Core Process itself and propagated
 		signals to the daemon;
 SIGTERM:	not handled (which means it follows the default behaviour for
 		the OS) if the daemon is started in background; otherwise it 
-		orks like SIGINT;
+		works like SIGINT;
 SIGPIPE:	ignored;
 
 Plugin (SQL, noSQL, memory, print, tee, probes, etc.) processes:
