@@ -1928,13 +1928,13 @@ DEFAULT:	none
 KEY:            sampling_map [GLOBAL, NO_PMACCTD, NO_UACCTD, MAP]
 DESC:           Full pathname to a file containing traffic sampling mappings. It is mainly meant to be used
 		in conjunction with nfacctd and sfacctd for the purpose of fine-grained reporting of sampling
-		rates circumventing bugs and issues in router operating systems. Renormalization must be
-		enabled (nfacctd_renormalize or sfacctd_renormalize set to true) in order for the feature to
-		work. If a specific router is not defined in the map, the sampling rate advertised by the
-		router itself is applied. Take a look to the examples/ sub-tree 'sampling.map.example' for all
-		supported keys and detailed examples. Number of map entries (by default 384) can be modified
-		via maps_entries. Content can be reloaded at runtime by sending the daemon a SIGUSR2 signal
-		(ie. "killall -USR2 nfacctd").
+		rates ('sampling_rate' primitive) circumventing bugs and issues in router operating systems.
+		If counters renormalization is wanted, nfacctd_renormalize or sfacctd_renormalize must be
+		also set to true. If a specific router is not defined in the map, the sampling rate advertised
+		by the router itself is applied. Take a look to the examples/ sub-tree 'sampling.map.example'
+		for all supported keys and detailed examples. Number of map entries (by default 384) can be
+		modified via maps_entries. Content can be reloaded at runtime by sending the daemon a SIGUSR2
+		signal (ie. "killall -USR2 nfacctd").
 DEFAULT:	none
 
 KEY:		[ pmacctd_force_frag_handling | uacctd_force_frag_handling ] [GLOBAL, NO_NFACCTD, NO_SFACCTD]
@@ -1981,24 +1981,22 @@ DEFAULT:	60 secs if classification is disabled; 432000 secs (120 hrs) if clssifi
 
 KEY:		[ pmacctd_ext_sampling_rate | uacctd_ext_sampling_rate | nfacctd_ext_sampling_rate |
 		  sfacctd_ext_sampling_rate ] [GLOBAL]
-		Flags pmacctd that captured traffic is being sampled at the specified rate. Such rate can then
-		be renormalized by using 'pmacctd_renormalize' or otherwise is propagated by the NetFlow/sFlow
-		probe plugins, if any of them is activated. External sampling might be performed by capturing
-		frameworks the daemon is linked against (ie. PF_RING, NFLOG) or appliances (ie. sampled packet
-		mirroring).
-		In nfacctd and sfacctd daemons this directive can be used to tackle corner cases, ie. sampling
-		rate reported by the NetFlow/sFlow agent is missing or not correct.
+		Flags that captured traffic is being sampled at the specified rate. Such rate can then be
+		reported ('sampling_rate' primitive), renormalized by using ie. 'pmacctd_renormalize' or
+		propagated by the NetFlow/sFlow probe plugins. External sampling might be performed by
+		capturing frameworks the daemon is linked against (ie. PF_RING, NFLOG) or appliances (ie.
+		sampled packet mirroring). In nfacctd and sfacctd daemons this directive can be used to
+		tackle corner cases, ie. sampling rate reported by the NetFlow/sFlow agent is missing or
+		not correct.
 DEFAULT:	none
 
 KEY:		[ sfacctd_renormalize | nfacctd_renormalize | pmacctd_renormalize | uacctd_renormalize ] (-R)
 		[GLOBAL]
 VALUES:		[ true | false ]
-DESC:		Automatically renormalizes byte/packet counters value basing on information acquired from 
-		either the NetFlow data unit or sFlow packet. In particular, it allows to deal with scenarios
-		in which multiple interfaces have been configured at different sampling rates. The feature also
-		calculates an effective sampling rate (sFlow only) which could differ from the configured one -
-		expecially at high rates - because of various losses. Such estimated rate is then used for
-		renormalization purposes.
+DESC:		Automatically renormalizes bytes/packet counters value basing on available sampling info.
+		The feature also calculates an effective sampling rate (sFlow only) which could differ
+		from the configured one - expecially at high rates - because of various losses; such
+		estimated rate is then used for renormalization purposes.
 DEFAULT:        false
 
 KEY:		pmacctd_nonroot [GLOBAL]
