@@ -92,23 +92,34 @@ u_int32_t telemetry_cisco_hdr_v0_get_type(telemetry_peer *peer)
   return type;
 }
 
-u_int16_t telemetry_cisco_hdr_v1_get_len(telemetry_peer *peer)
+u_int32_t telemetry_cisco_hdr_v1_get_len(telemetry_peer *peer)
 {
-  u_int16_t len;
+  u_int32_t len;
 
-  memcpy(&len, (peer->buf.base + 2), 2);
-  len = ntohs(len);
+  memcpy(&len, (peer->buf.base + 8), 4);
+  len = ntohl(len);
 
   return len;
 }
 
-u_int8_t telemetry_cisco_hdr_v1_get_type(telemetry_peer *peer)
+u_int16_t telemetry_cisco_hdr_v1_get_type(telemetry_peer *peer)
 {
-  u_int8_t type;
+  u_int16_t type;
 
-  memcpy(&type, (peer->buf.base + 1), 1);
+  memcpy(&type, peer->buf.base, 2);
+  type = ntohs(type);
 
   return type;
+}
+
+u_int16_t telemetry_cisco_hdr_v1_get_encap(telemetry_peer *peer)
+{
+  u_int16_t encap;
+
+  memcpy(&encap, (peer->buf.base + 2), 2);
+  encap = ntohs(encap);
+
+  return encap;
 }
 
 int telemetry_tpc_addr_cmp(const void *a, const void *b)

@@ -47,12 +47,22 @@
 #define TELEMETRY_CISCO_VERSION_0		0
 #define TELEMETRY_CISCO_HDR_LEN_V0		12
 #define TELEMETRY_CISCO_VERSION_1		1
-#define TELEMETRY_CISCO_HDR_LEN_V1		6
+#define TELEMETRY_CISCO_HDR_LEN_V1		12
 
 #define TELEMETRY_CISCO_RESET_COMPRESSOR	1
 #define TELEMETRY_CISCO_JSON			2
 #define TELEMETRY_CISCO_GPB_COMPACT		3
 #define TELEMETRY_CISCO_GPB_KV			4
+
+#define TELEMETRY_CISCO_V1_TYPE_UNUSED		0
+#define TELEMETRY_CISCO_V1_TYPE_DATA		1
+#define TELEMETRY_CISCO_V1_TYPE_HBEAT		2
+
+#define TELEMETRY_CISCO_V1_ENCAP_UNUSED		0
+#define TELEMETRY_CISCO_V1_ENCAP_GPB		1
+#define TELEMETRY_CISCO_V1_ENCAP_JSON		2
+#define TELEMETRY_CISCO_V1_ENCAP_GPV_CPT	3
+#define TELEMETRY_CISCO_V1_ENCAP_GPB_KV		4
 
 #define TELEMETRY_LOGDUMP_ET_NONE	BGP_LOGDUMP_ET_NONE
 #define TELEMETRY_LOGDUMP_ET_LOG	BGP_LOGDUMP_ET_LOG
@@ -65,11 +75,11 @@ struct telemetry_cisco_hdr_v0 {
 } __attribute__ ((packed));
 
 struct telemetry_cisco_hdr_v1 {
-  u_int8_t version;
-  u_int8_t type;
-  u_int16_t len;
-  u_int8_t secure;
-  u_int8_t padding;
+  u_int16_t type;
+  u_int16_t encap;
+  u_int16_t version;
+  u_int16_t flags;
+  u_int32_t len;
 } __attribute__ ((packed));
 
 typedef struct bgp_peer_stats telemetry_stats;
