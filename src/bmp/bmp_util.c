@@ -120,34 +120,6 @@ void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int output, void *void_o
   }
 }
 
-void bgp_peer_logdump_initclose_extras_bmp(struct bgp_peer *peer, int output, void *void_obj)
-{
-  struct bgp_misc_structs *bms;
-  struct bmp_peer *bmpp;
-
-  if (!peer || !void_obj) return;
-
-  bms = bgp_select_misc_db(peer->type);
-  bmpp = peer->bmp_se;
-  if (!bms || !bmpp) return;
-
-  if (output == PRINT_OUTPUT_JSON) {
-#ifdef WITH_JANSSON
-    json_t *obj = void_obj;
-
-    json_object_set_new_nocheck(obj, "bmp_router_port", json_integer((json_int_t)peer->tcp_port));
-#endif
-  }
-  else if (output == PRINT_OUTPUT_AVRO) {
-#ifdef WITH_AVRO
-    avro_value_t *obj = (avro_value_t *) void_obj, avro_field;
-
-    pm_avro_check(avro_value_get_by_name(obj, "bmp_router_port", &avro_field, NULL));
-    pm_avro_check(avro_value_set_int(&avro_field, peer->tcp_port));
-#endif
-  }
-}
-
 void bmp_link_misc_structs(struct bgp_misc_structs *bms)
 {
 #if defined WITH_RABBITMQ
