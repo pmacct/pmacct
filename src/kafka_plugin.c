@@ -83,11 +83,11 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   }
   else if (config.message_broker_output & PRINT_OUTPUT_AVRO) {
 #ifdef WITH_AVRO
-    avro_acct_schema = avro_schema_build_flow(config.what_to_count, config.what_to_count_2);
+    avro_acct_schema = avro_schema_build_acct_data(config.what_to_count, config.what_to_count_2);
     avro_schema_add_writer_id(avro_acct_schema);
 
-    avro_acct_init_schema = avro_schema_build_flow_init();
-    avro_acct_close_schema = avro_schema_build_flow_close();
+    avro_acct_init_schema = avro_schema_build_acct_init();
+    avro_acct_close_schema = avro_schema_build_acct_close();
 
     if (config.avro_schema_file) {
       char avro_schema_file[SRVBUFLEN];
@@ -560,10 +560,11 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
     else if (config.message_broker_output & PRINT_OUTPUT_AVRO) {
 #ifdef WITH_AVRO
       avro_value_iface_t *avro_iface = avro_generic_class_from_schema(avro_acct_schema);
-      avro_value_t avro_value = compose_avro(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
-                           &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust, pvlen, queue[j]->bytes_counter,
-                           queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags,
-                           &queue[j]->basetime, queue[j]->stitch, avro_iface);
+      avro_value_t avro_value = compose_avro_acct_data(config.what_to_count, config.what_to_count_2,
+			   queue[j]->flow_type, &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust,
+			   pvlen, queue[j]->bytes_counter, queue[j]->packet_counter,
+			   queue[j]->flow_counter, queue[j]->tcp_flags, &queue[j]->basetime,
+			   queue[j]->stitch, avro_iface);
       size_t avro_value_size;
 
       add_writer_name_and_pid_avro(avro_value, config.name, writer_pid);
@@ -614,7 +615,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
       avro_value_decref(&avro_value);
       avro_value_iface_decref(avro_iface);
 #else
-      if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_avro(): AVRO object not created due to missing --enable-avro\n", config.name, config.type);
+      if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_avro_acct_data(): AVRO object not created due to missing --enable-avro\n", config.name, config.type);
 #endif
     }
 

@@ -96,7 +96,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   }
   else if (config.print_output & PRINT_OUTPUT_AVRO) {
 #ifdef WITH_AVRO
-    avro_acct_schema = avro_schema_build_flow(config.what_to_count, config.what_to_count_2);
+    avro_acct_schema = avro_schema_build_acct_data(config.what_to_count, config.what_to_count_2);
     if (config.avro_schema_file) write_avro_schema_to_file(config.avro_schema_file, avro_acct_schema);
 #endif
   }
@@ -1233,10 +1233,10 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 #ifdef WITH_AVRO
         avro_value_iface_t *avro_iface = avro_generic_class_from_schema(avro_acct_schema);
 
-        avro_value_t avro_value = compose_avro(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
-                         &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust, pvlen, queue[j]->bytes_counter,
-                         queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags, NULL,
-                         queue[j]->stitch, avro_iface);
+        avro_value_t avro_value = compose_avro_acct_data(config.what_to_count, config.what_to_count_2,
+			 queue[j]->flow_type, &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust,
+			 pvlen, queue[j]->bytes_counter, queue[j]->packet_counter, queue[j]->flow_counter,
+			 queue[j]->tcp_flags, NULL, queue[j]->stitch, avro_iface);
 
         if (config.sql_table) {
           if (avro_file_writer_append_value(avro_writer, &avro_value)) {
@@ -1261,7 +1261,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         avro_value_iface_decref(avro_iface);
         avro_value_decref(&avro_value);
 #else
-        if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_avro(): AVRO object not created due to missing --enable-avro\n", config.name, config.type);
+        if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_avro_acct_data(): AVRO object not created due to missing --enable-avro\n", config.name, config.type);
 #endif
       }
 

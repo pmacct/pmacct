@@ -46,13 +46,13 @@
 #define	AVRO_ACCT_CLOSE_SID	2
 
 /* prototypes */
-extern avro_schema_t avro_schema_build_flow(u_int64_t wtc, u_int64_t wtc_2);
-extern avro_schema_t avro_schema_build_flow_init();
-extern avro_schema_t avro_schema_build_flow_close();
+extern avro_schema_t avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2);
+extern avro_schema_t avro_schema_build_acct_init();
+extern avro_schema_t avro_schema_build_acct_close();
 extern void avro_schema_add_writer_id(avro_schema_t);
 extern void add_writer_name_and_pid_avro(avro_value_t, char *, pid_t);
 
-extern avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type,
+extern avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type,
   struct pkt_primitives *pbase, struct pkt_bgp_primitives *pbgp,
   struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
   struct pkt_tunnel_primitives *ptun, u_char *pcust,

@@ -39,7 +39,7 @@
 avro_schema_t avro_acct_schema, avro_acct_init_schema, avro_acct_close_schema;
 
 /* functions */
-avro_schema_t avro_schema_build_flow(u_int64_t wtc, u_int64_t wtc_2)
+avro_schema_t avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
 {
   avro_schema_t schema = avro_schema_record("acct_data", NULL);
   avro_schema_t optlong_s = avro_schema_union();
@@ -319,7 +319,7 @@ avro_schema_t avro_schema_build_flow(u_int64_t wtc, u_int64_t wtc_2)
   return schema;
 }
 
-avro_schema_t avro_schema_build_flow_init()
+avro_schema_t avro_schema_build_acct_init()
 {
   avro_schema_t schema = avro_schema_record("acct_init", NULL);
 
@@ -331,7 +331,7 @@ avro_schema_t avro_schema_build_flow_init()
   return schema;
 }
 
-avro_schema_t avro_schema_build_flow_close()
+avro_schema_t avro_schema_build_acct_close()
 {
   avro_schema_t schema = avro_schema_record("acct_close", NULL);
 
@@ -397,7 +397,7 @@ avro_value_t compose_avro_acct_close(char *writer_name, pid_t writer_pid, int pu
   return value;
 }
 
-avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
+avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
   struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
   struct pkt_tunnel_primitives *ptun, u_char *pcust, struct pkt_vlen_hdr_primitives *pvlen,
   pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags,
