@@ -1,0 +1,3 @@
+huawei-ifm            =  huawei_ifm_pb2.Ifm()
+huawei-devm           =  huawei_devm_pb2.Devm()
+openconfig-interfaces =  openconfig_interfaces_pb2.Interfaces()

@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+
+package telemetry;
+
+message Telemetry {
+  string node_id_str = 1;
+
+  string   subscription_id_str = 2;
+  
+  string   sensor_path = 3;
+
+  uint64   collection_id = 4;
+
+  uint64   collection_start_time = 5;
+  
+  // 生成这个Telemetry的message数据的时间戳
+  uint64   msg_timestamp = 6;
+
+
+  TelemetryGPBTable data_gpb = 7;
+
+  uint64 collection_end_time = 8;
+  
+   uint32   current_period = 9;
+    string   except_desc = 10;
+}
+
+//多份实例数据
+message TelemetryGPBTable {
+  repeated TelemetryRowGPB row = 1;
+}
+
+message TelemetryRowGPB {
+  //每个实例数据对应的采集时间戳
+  uint64 timestamp = 1;
+
+  //GPB编码后的一份实例数据
+  bytes content = 11;
+}
