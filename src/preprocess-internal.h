@@ -23,10 +23,7 @@
 
 #include "preprocess.h"
 
-/* typedefs */
-typedef int (*sql_preprocess_func) (struct db_cache *[], int *, int);
-typedef int (*P_preprocess_func) (struct chained_cache *[], int *, int);
-
+/* funcs */
 extern void set_preprocess_funcs(char *, struct preprocess *, int);
 extern int cond_qnum(struct db_cache *[], int *, int);
 extern int check_minp(struct db_cache *[], int *, int);
