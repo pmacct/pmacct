@@ -276,7 +276,7 @@ int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf
   json_error_t json_err;
   struct p_zmq_host *zmq_host = zh;
   struct host_addr telemetry_node;
-  u_int16_t telemetry_node_port;
+  u_int16_t telemetry_node_port = 0;
   int bytes, ret = SUCCESS;
 
   if (!zmq_host || !buf || !buflen || !addr || !addr_len) return ERR;
@@ -294,8 +294,19 @@ int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf
       goto exit_lane;
     }
     else {
+      /* v1 */
       telemetry_node_json = json_object_get(json_obj, "telemetry_node");
-      if (telemetry_node_json == NULL) {
+
+      /* v2, v3 */
+      if (!telemetry_node_json) {
+	json_t *collector_json = NULL, *grpc_json = NULL;
+
+	collector_json = json_object_get(json_obj, "collector");
+	if (collector_json) grpc_json = json_object_get(collector_json, "grpc");
+	if (grpc_json) telemetry_node_json = json_object_get(grpc_json, "grpcPeer");
+      }
+
+      if (!telemetry_node_json) {
 	Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_zmq_peer(): no 'telemetry_node' element.\n", config.name, t_data->log_str);
 	ret = ERR;
 	goto exit_lane;
@@ -308,12 +319,7 @@ int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf
       }
 
       telemetry_node_port_json = json_object_get(json_obj, "telemetry_node_port");
-      if (telemetry_node_port_json == NULL) {
-	Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_zmq_peer(): no 'telemetry_node_port' element.\n", config.name, t_data->log_str);
-	ret = ERR;
-	goto exit_lane;
-      }
-      else telemetry_node_port = json_integer_value(telemetry_node_port_json);
+      if (telemetry_node_port_json) telemetry_node_port = json_integer_value(telemetry_node_port_json);
 
       (*addr_len) = addr_to_sa(addr, &telemetry_node, telemetry_node_port);
     }
