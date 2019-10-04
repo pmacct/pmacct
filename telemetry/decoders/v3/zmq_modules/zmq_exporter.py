@@ -38,7 +38,7 @@ class ZmqExporter(Exporter):
     def process_metric(self, datajsonstring):
         if not self.zmqSock.closed:
             try:
-                self.zmqSock.send_json("%s" % datajsonstring, self.flags)
+                self.zmqSock.send_str("%s" % datajsonstring, self.flags)
             except ZMQError:
                 lib_pmgrpcd.SERIALIZELOG.debug(
                     "ZMQError: %s" % (lib_pmgrpcd.OPTIONS.jsondatafile)
