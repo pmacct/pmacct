@@ -31,9 +31,6 @@ import sys
 import ujson as json
 from abc import ABC, abstractmethod
 
-sys.path.append("/home/camilo/telemetry/base")
-sys.path.append("/home/camilo/telemetry/protos")
-
 jsonmap = {}
 avscmap = {}
 
