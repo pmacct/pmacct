@@ -51,7 +51,7 @@ from config import configure
 from file_modules.file_input import FileInput
 from pathlib import Path
 import os
-from gnmi_pmgrpcd import GNMIClient
+# from gnmi_pmgrpcd import GNMIClient
 from kafka_modules.kafka_avro_exporter import manually_serialize
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
@@ -134,18 +134,18 @@ def main():
         help="Path to configuration file",
     )
     #gnmi options
-    parser.add_option(
-        "-g",
-        "--gnmi_enable",
-        default=config.getboolean("PMGRPCD", "gnmi_enable", fallback=False),
-        help="Boolean defining whether gnmi is enable (this disables the rest of collectrors)",
-    )
-    parser.add_option(
-        "--gnmi_target",
-        env_name = "GNMMI_SERVER",
-        default=config.get("PMGRPCD", "gnmi_target", fallback=None),
-        help="The url of the gnmi target",
-    )
+    #parser.add_option(
+    #    "-g",
+    #    "--gnmi_enable",
+    #    default=config.getboolean("PMGRPCD", "gnmi_enable", fallback=False),
+    #    help="Boolean defining whether gnmi is enable (this disables the rest of collectrors)",
+    #)
+    #parser.add_option(
+    #    "--gnmi_target",
+    #    env_name = "GNMI_SERVER",
+    #    default=config.get("PMGRPCD", "gnmi_target", fallback=None),
+    #    help="The url of the gnmi target",
+    #)
 
     parser.add_option(
         "-T",
@@ -453,16 +453,16 @@ def main():
             "manually serialize need both lib_pmgrpcd.OPTIONS avscid and jsondatafile"
         )
         parser.print_help()
-    elif lib_pmgrpcd.OPTIONS.gnmi_enable:
-        if lib_pmgrpcd.OPTIONS.gnmi_target is None:
-            error = "gnmi target not configured, but gnmi enabled"
-            PMGRPCDLOG.error(error)
-            raise Exception(error)
-
-        PMGRPCDLOG.info("Starting contact with gnmi server %s. Other functions will be ignored", lib_pmgrpcd.OPTIONS.gnmi_target)
-        channel = grpc.insecure_channel(lib_pmgrpcd.OPTIONS.gnmi_target)
-        gnmi_client = GNMIClient(channel)
-        breakpoint()
+    #elif lib_pmgrpcd.OPTIONS.gnmi_enable:
+    #    if lib_pmgrpcd.OPTIONS.gnmi_target is None:
+    #        error = "gnmi target not configured, but gnmi enabled"
+    #        PMGRPCDLOG.error(error)
+    #        raise Exception(error)
+    #
+    #    PMGRPCDLOG.info("Starting contact with gnmi server %s. Other functions will be ignored", lib_pmgrpcd.OPTIONS.gnmi_target)
+    #    channel = grpc.insecure_channel(lib_pmgrpcd.OPTIONS.gnmi_target)
+    #    gnmi_client = GNMIClient(channel)
+    #    breakpoint()
 
     else:
         # make sure some important files exist
