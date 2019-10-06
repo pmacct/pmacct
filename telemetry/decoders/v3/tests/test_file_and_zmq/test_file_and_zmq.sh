@@ -1,7 +1,7 @@
 FILES="dump_huawei_output
 "
 rm -f log* 
-CONFIG=file_test_output.config
+CONFIG=file_test_output.conf
 OUTPUT=file_test_output
 ZMQ_OUTPUT=zmq_output
 PMGRPCD_FOLDER=../../
