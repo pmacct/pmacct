@@ -1,9 +1,12 @@
 FILES="dump_huawei_output
 "
-rm log* 
+rm -f log* 
 CONFIG=file_test_output.config
 OUTPUT=file_test_output
 ZMQ_OUTPUT=zmq_output
+PMGRPCD_FOLDER=../../
+PMGRPCD=$PMGRPCD_FOLDER/pmgrpcd.py
+
 source ../functions.sh
 for f in $FILES
 do
@@ -14,7 +17,7 @@ do
 		exit 1;
 	fi
 	
-	rm $OUTPUT $ZMQ_OUTPUT
+	rm -f $OUTPUT $ZMQ_OUTPUT
 	python3.7 $PMGRPCD_FOLDER/utils/zmq_puller.py > $ZMQ_OUTPUT &
 	process_zmq=$!
 	sleep 2s
