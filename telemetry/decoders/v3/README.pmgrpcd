@@ -5,67 +5,79 @@ pmgrpcd.py configuration parameters.
 Install pmgrpcd.py
 ===================
 
-mkdir -p /opt/pkg/
-git clone https://github.com/pmacct/pmacct.git /opt/pkg/pmacct
-ln -s /opt/pkg/pmacct/telemetry/decoders/pmgrpcd.py /usr/local/sbin/pmgrpcd.py
-chmod 700 /usr/local/sbin/pmgrpcd.py
+shell> mkdir -p /opt/pkg/
+shell> git clone https://github.com/pmacct/pmacct.git /opt/pkg/pmacct
+shell> ln -s /opt/pkg/pmacct/telemetry/decoders/v3 /opt/pkg/pmgrpcd
+shell> chmod 700 /opt/pkg/pmgrpcd/pmgrpcd.py
  
 Install protoc
 --------------
-#
-# Install system dependencies
-#
-sudo yum install tar wget autoconf libtool automake gcc-c++ make git bzip2 curl unzip zlib zlib-devel -y [CentOS/RHEL]
-sudo apt-get install tar wget autoconf libtool automake g++ make git bzip2 curl unzip zlib1g-dev [Debian/Ubuntu] 
+Install system dependencies:
 
-#
-# Obtain and compile GPB code
-#
-git clone https://github.com/protocolbuffers/protobuf.git /opt/pkg/protobuf
-cd /opt/pkg/protobuf
-./autogen.sh
-./configure
-make
-make install
-ldconfig
+shell> sudo yum install tar wget autoconf libtool automake gcc-c++ make git bzip2 curl unzip zlib zlib-devel -y [CentOS/RHEL]
+shell> sudo apt-get install tar wget autoconf libtool automake g++ make git bzip2 curl unzip zlib1g-dev [Debian/Ubuntu] 
 
-protoc --version
+Obtain and compile GPB code:
+
+shell> git clone https://github.com/protocolbuffers/protobuf.git /opt/pkg/protobuf
+shell> cd /opt/pkg/protobuf
+shell> ./autogen.sh
+shell> ./configure
+shell> make
+shell> make install
+shell> ldconfig
+
+shell> protoc --version
+
+Python interpreter
+------------------
+It is recommended to use Python >= 3.7 although the code would work
+with less recent Python 3 interpreters. The CL examples in this doc
+will assume the use of python3.7. 
+
+Setup PYTHONPATH
+----------------
+This is an environment variable which you can set to add additional
+directories where python will look for modules and packages. Setting
+PYTHONPATH is required (for the time being) to look for .py files in
+sub-directories. The following example is based on bash shell:
+
+shell> PYTHONPATH=/opt/pkg/pmgrpcd/protos:/opt/pkg/pmgrpcd/zmq_modules:/opt/pkg/pmgrpcd/kafka_modukes:/opt/pkg/pmgrpcd/file_modules:/etc/pmacct/telemetry/pblib
+shell> export PYTHONPATH
  
 Install python grpc-tools
 -------------------------
-python3.7 -m pip install grpcio-tools
+shell> python3.7 -m pip install grpcio-tools
  
 Compile grpc libs (L1)
 ----------------------
-mkdir -p /etc/pmacct/telemetry/pblib
-#
-# Copy gRPC .proto file(s) (ie. huawei-grpc-dialout.proto) to
-# /etc/pmacct/telemetry/pblib
-#
-cd /etc/pmacct/telemetry/pblib/
-python3.7 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. huawei-grpc-dialout.proto
-python3.7 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. cisco_grpc_dialout.proto
+shell> mkdir -p /etc/pmacct/telemetry/pblib
+
+Copy gRPC .proto file(s) (ie. huawei-grpc-dialout.proto) to
+/etc/pmacct/telemetry/pblib (some sample .proto files for testing
+purposes are available in the protos/ directory and can be copied
+over). 
+
+shell> cd /etc/pmacct/telemetry/pblib/
+shell> python3.7 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. huawei-grpc-dialout.proto
+shell> python3.7 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. cisco_grpc_dialout.proto
  
 Compile PB libs (L2/3)
 ----------------------
-cd /etc/pmacct/telemetry/pblib/
-/usr/local/bin/protoc -I=. --python_out=. ./huawei-grpc-dialout.proto
-/usr/local/bin/protoc -I=. --python_out=. ./cisco_grpc_dialout.proto
-/usr/local/bin/protoc -I=. --python_out=. ./huawei-telemetry.proto
-/usr/local/bin/protoc -I=. --python_out=. ./huawei-ifm.proto
-/usr/local/bin/protoc -I=. --python_out=. ./huawei-devm.proto
-/usr/local/bin/protoc -I=. --python_out=. ./openconfig-interfaces.proto
+shell> cd /etc/pmacct/telemetry/pblib/
+shell> /usr/local/bin/protoc -I=. --python_out=. ./huawei-grpc-dialout.proto
+shell> /usr/local/bin/protoc -I=. --python_out=. ./cisco_grpc_dialout.proto
+shell> /usr/local/bin/protoc -I=. --python_out=. ./huawei-telemetry.proto
+shell> /usr/local/bin/protoc -I=. --python_out=. ./huawei-ifm.proto
+shell> /usr/local/bin/protoc -I=. --python_out=. ./huawei-devm.proto
+shell> /usr/local/bin/protoc -I=. --python_out=. ./openconfig-interfaces.proto
 
 First Run pmgrpcd.py
 --------------------
-cd && pmgrpcd.py -h
-#
-# The first time you can check the help usage for pmgrpcd.py and it will
-# create some default files:
-#
-/etc/pmacct/telemetry/telemetry.conf
-/etc/pmacct/telemetry/schema_id_map_file.json
-/etc/pmacct/telemetry/mitigation.py
-/etc/pmacct/telemetry/gpbmapfile.map
-#
-chmod -R 700 /etc/pmacct/telemetry
+shell> cd /opt/pkg/pmgrpcd && python3.7 ./pmgrpcd.py -h
+
+Concluding notes
+----------------
+The default config being read is config_files/telemetry.conf .
+To learn more about all configuration directives see the document
+CONFIG-KEYS.pmgrpcd . 
