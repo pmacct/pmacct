@@ -7,9 +7,12 @@ RAW_DATA=test_huawei_raw_dump
 FILE_EXPORT_ONE=test_huawei_output_one
 RAW_DATA_TWO=test_huawei_raw_dump_two
 FILE_EXPORT_TWO=test_huawei_output_two
+PMGRPCD_FOLDER=../../
+PMGRPCD=$PMGRPCD_FOLDER/pmgrpcd.py
+
 source ../functions.sh
 
-rm log* $RAW_DATA $FILE_EXPORT_ONE $RAW_DATA_TWO $FILE_EXPORT_TWO
+rm -f log* $RAW_DATA $FILE_EXPORT_ONE $RAW_DATA_TWO $FILE_EXPORT_TWO
 echo Starting process
 python3.7 $PMGRPCD -c $CONFIG_FIRST -r $RAW_DATA --file_exporter_file $FILE_EXPORT_ONE &
 process=$!
