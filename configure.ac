@@ -34,24 +34,6 @@ fi
 
 AC_CHECK_FUNCS([strlcpy strlcat])
 
-dnl set relax level
-AC_MSG_CHECKING([whether to relax compiler optimizations])
-AC_ARG_ENABLE(relax,
-[  --enable-relax                   Relax compiler optimization (default: no)],
-	[
-		if test x$enableval = x"yes" ; then
-			AC_MSG_RESULT(yes)
-        		tmp_CFLAGS=`echo $CFLAGS | sed 's/O2/O0/g'`
-       			CFLAGS="$tmp_CFLAGS"
-		else
-			AC_MSG_RESULT(no)
-		fi
-	],
-	[
-        	AC_MSG_RESULT(no)
-	]
-)
-
 dnl: shared object handling
 AC_MSG_CHECKING([whether to disable linking against shared objects])
 AC_ARG_ENABLE(so,
