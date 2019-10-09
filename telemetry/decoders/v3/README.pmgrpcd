@@ -35,6 +35,10 @@ It is recommended to use Python >= 3.7 although the code would work
 with less recent Python 3 interpreters. The CL examples in this doc
 will assume the use of python3.7. 
 
+Install Python dependencies
+---------------------------
+shell> python3.7 -m pip install -r requirements.txt
+
 Setup PYTHONPATH
 ----------------
 This is an environment variable which you can set to add additional
@@ -44,10 +48,6 @@ sub-directories. The following example is based on bash shell:
 
 shell> PYTHONPATH=/opt/pkg/pmgrpcd/protos:/opt/pkg/pmgrpcd/zmq_modules:/opt/pkg/pmgrpcd/kafka_modukes:/opt/pkg/pmgrpcd/file_modules:/etc/pmacct/telemetry/pblib
 shell> export PYTHONPATH
- 
-Install python grpc-tools
--------------------------
-shell> python3.7 -m pip install grpcio-tools
  
 Compile grpc libs (L1)
 ----------------------
