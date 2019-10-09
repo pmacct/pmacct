@@ -1,4 +1,3 @@
-#!/usr/bin/env python3.7
 #
 #   pmacct (Promiscuous mode IP Accounting package)
 #   pmacct is Copyright (C) 2003-2019 by Paolo Lucente
