@@ -1,0 +1,74 @@
+QUICKSTART.
+* Install the Protobuf compiler, see their downloads page:
+
+  https://developers.google.com/protocol-buffers/docs/downloads
+
+* Install Python binding for Protobuf:
+
+  shell> pip install protobuf
+
+* Install Python binding for gRPC, see their quickstart guide:
+
+  https://grpc.io/docs/quickstart/python.html
+
+* Get relevant proto files from your vendor. For example, for Huawei get
+  huawei-grpc-dialout.proto, huawei-telemetry.proto and relevant data
+  models, ie. huawei-ifm.proto and huawei-devm.proto; for Cisco get
+  cisco_grpc_dialout.proto, cisco_telemetry.proto and relevant data
+  models, ie. cisco_ifstatsbag_generic.proto. Place them in the same
+  directory of the decoders, ie. telemetry/decoders.
+
+  See Huawei:
+  http://support.huawei.com/enterprise/en/doc/EDOC1100039549?section=j00d&topicName=common-.proto-files
+  http://support.huawei.com/enterprise/en/doc/EDOC1100039549?section=j00f&topicName=how-to-obtain-.proto-files
+
+  See Cisco:
+  https://github.com/cisco/bigmuddy-network-telemetry-proto/blob/master/proto_archive/telemetry.proto
+  https://github.com/cisco/bigmuddy-network-telemetry-proto/blob/master/proto_archive/mdt_grpc_dialout/mdt_grpc_dialout.proto
+
+* OPTIONAL: if of interest, go and goyang can be installed and public
+  openconfig YANG models can be downloaded and compiled to obtain a
+  proto file:
+  https://golang.org/doc/install
+  https://github.com/openconfig/goyang
+  https://github.com/openconfig/public
+
+  shell> goyang --format proto openconfig-interfaces.yang > openconfig-interfaces.proto
+
+* Protobuf proto files must be compiled in order to be usable:
+
+  shell> python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. cisco_grpc_dialout.proto
+  shell> protoc -I=. --python_out=. cisco_telemetry.proto
+  shell> protoc -I=. --python_out=. cisco_ifstatsbag_generic.proto
+
+  shell> python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. huawei-grpc-dialout.proto
+  shell> protoc -I=. --python_out=. huawei-telemetry.proto
+  shell> protoc -I=. --python_out=. huawei-ifm.proto
+
+  shell> protoc -I=. --python_out=. openconfig-interfaces.proto
+
+  This produces pb2.py and pb2_grpc.py files that are suitable for
+  inclusion in the Python decoders.
+
+* If interested in data models that are not supported in the sample
+  Python decoders, edit the code accordingly (*and don't forget to
+  share the code back with the rest of the community!*). 
+
+* Start exporting Streaming Telemetry data from routers.
+
+* Compose a configuration file for pmtelemetryd (you can check for
+  more configuration knobs in QUICKSTART and CONFIG-KEYS docs):
+
+  ! telemetry_daemon_zmq_address: 127.0.0.1:50000
+  telemetry_daemon_zmq_address: 127.0.0.1:50001
+  telemetry_daemon_decoder: json
+  !
+  telemetry_daemon_msglog_file: /path/to/telemetry-msglog-$peer_src_ip.json
+
+* Start pmtelemetryd:
+
+  shell> pmtelemetryd -f /path/to/pmtelemetryd.conf
+
+* Start the relevant Streaming Telemetry pre-processing decoder:
+
+  shell> cisco_grpc_dialout_server.py
