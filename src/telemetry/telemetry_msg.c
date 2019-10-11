@@ -103,8 +103,6 @@ int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
 
 void telemetry_basic_process_json(telemetry_peer *peer)
 {
-  int idx;
-
   if (config.telemetry_decoder_id == TELEMETRY_DECODER_CISCO_V0 && config.telemetry_port_udp) {
     peer->msglen -= TELEMETRY_CISCO_HDR_LEN_V0;
     memmove(peer->buf.base, &peer->buf.base[TELEMETRY_CISCO_HDR_LEN_V0], peer->msglen);
@@ -114,14 +112,7 @@ void telemetry_basic_process_json(telemetry_peer *peer)
     memmove(peer->buf.base, &peer->buf.base[TELEMETRY_CISCO_HDR_LEN_V1], peer->msglen);
   }
 
-  for (idx = 0; idx < peer->msglen; idx++) {
-    if (!isprint(peer->buf.base[idx]) || !isspace(peer->buf.base[idx])) peer->buf.base[idx] = '\0';
-  }
-
-  if (peer->buf.len >= (peer->msglen + 1)) {
-    peer->buf.base[peer->msglen] = '\0';
-    peer->msglen++;
-  }
+  peer->buf.base[peer->msglen] = '\0';
 }
 
 int telemetry_recv_json(telemetry_peer *peer, u_int32_t len, int *flags)
