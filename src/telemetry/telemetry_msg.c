@@ -115,7 +115,7 @@ void telemetry_basic_process_json(telemetry_peer *peer)
   }
 
   for (idx = 0; idx < peer->msglen; idx++) {
-    if (!isprint(peer->buf.base[idx])) peer->buf.base[idx] = '\0';
+    if (!isprint(peer->buf.base[idx]) || !isspace(peer->buf.base[idx])) peer->buf.base[idx] = '\0';
   }
 
   if (peer->buf.len >= (peer->msglen + 1)) {
