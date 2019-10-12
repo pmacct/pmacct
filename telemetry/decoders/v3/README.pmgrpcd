@@ -76,6 +76,40 @@ First Run pmgrpcd.py
 --------------------
 shell> cd /opt/pkg/pmgrpcd && python3.7 ./pmgrpcd.py -h
 
+Scenario 1: ZMQ output to pmtelemetryd
+--------------------------------------
+Export of JSON-encoded Streaming Telemetry data to pmtelemetryd allows
+to quickly access all daemon features, ie. save to files, produce to
+Kafka, stream/log data out or dump at regular intervals, etc.
+
+The default configuration in config_files/telemetry.conf is suitable
+for this scenario. If collecting from Cisco 'cisco = True' should be
+set; if collecting from Huawei 'huawei = True' should be set. The
+configuration instructs pmgrpcd to listen for Streaming Telemetry data
+on port 10000 and export it via ZMQ on port 50000:
+
+shell> python3.7 ./pmgrpcd.py -N
+
+pmtelemetryd can be configured as follows to read data from a ZeroMQ on
+port 50000 and stream/log it to local files:
+
+telemetry_daemon_zmq_address: 127.0.0.1:50000
+telemetry_daemon_decoder: json
+!
+telemetry_daemon_msglog_file: /path/to/spool/telemetry-msglog-$peer_src_ip.json
+telemetry_daemon_msglog_output: json
+
+Or pmtelemetryd can be configured as follows to read data from a ZeroMQ
+on port 50000 and produce it to a Kafka broker:
+
+telemetry_daemon_zmq_address: 127.0.0.1:50000
+telemetry_daemon_decoder: json
+!
+telemetry_dump_kafka_broker_host: <Kafka broker IP address/hostname>
+telemetry_dump_kafka_broker_port: 9092
+telemetry_dump_kafka_topic: pmacct.streaming-telemetry.test
+telemetry_dump_refresh_time: 60
+ 
 Concluding notes
 ----------------
 The default config being read is config_files/telemetry.conf .

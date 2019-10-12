@@ -2895,8 +2895,9 @@ DEFAULT:        0.0.0.0
 KEY:		telemetry_daemon_decoder [GLOBAL]
 VALUES:		[ json | gpb | cisco_v0 | cisco_v1 ]
 DESC:		Sets the Streaming Telemetry data decoder to the specified type (over TCP or UDP
-		transports. Cisco versions of JSON, GPB compact, GPB KV, etc. prepend either a 12
-		bytes (v0) or a 6 bytes (v1) proprietary header. GPB de-marshaling is not supported
+		transports. Cisco 32-bits OS versions tend to prepend a 12 bytes proprietary header
+		to GPB compact / GPB KV data and this can be read with the 'cisco_v1' decoder; the
+		'cisco_v0' is mostly obsoleted at this point. GPB de-marshaling is not supported
 		and will produce an output JSON object with a base64'd encoding of the original GPB
 		(see telemetry/README.telemetry for gRPC support and GPB de-marshalling). 
 DEFAULT:	none

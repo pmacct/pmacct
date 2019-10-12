@@ -2330,12 +2330,12 @@ libjansson support in the section "Compiling pmacct with JSON support" of this
 document. If writing to AMQP or Kafka brokers compiling against RabbitMQ or
 Kafka libraries is required; read more in respectively the "Running the
 RabbitMQ/AMQP plugin" or "Running the Kafka plugin" sections of this document.
+
 Data can be optionally consumed from a ZeroMQ queue, for example to have a
 pre-processor taking care of the GPB (Protobuf or Google Protocol Buffers) 
 de-marshalling and conversion to JSON; read more about (compiling) ZeroMQ in
 the "Internal buffering and queueing" section of this document; also read more
-about gRPC support and GPB de-marshalling in telemetry/README.telemetry while
-decoders are in the telemetry/decoders directory. 
+about gRPC support and GPB de-marshalling in telemetry/README.telemetry .
 
 From a configuration standpoint both the thread (ie. telemetry configured part
 of nfacctd) and the daemon (pmtelemetryd) are configured the same way except the
@@ -2356,14 +2356,14 @@ telemetry_daemon_msglog_file: /path/to/spool/telemetry-msglog-$peer_src_ip.txt
 ! telemetry_daemon_msglog_kafka_topic: telemetry-msglog
 
 Following is a config example to receive telemetry data with Cisco proprietary
-header (12 bytes), in JSON format over TCP port 1620 and dump it at 60 secs
-time intervals to flat-files:
+header, in GPB format over TCP port 1620 and dump it at 60 secs time intervals
+to flat-files:
 
 ! Telemetry thread configuration
 ! telemetry_daemon: true
 !
 telemetry_daemon_port_tcp: 1620
-telemetry_daemon_decoder: cisco_json
+telemetry_daemon_decoder: cisco_v1
 !
 telemetry_dump_file: /path/to/spool/telemetry-dump-$peer_src_ip-%Y%m%d-%H%M.txt
 telemetry_dump_latest_file: /path/to/spool/telemetry-dump-$peer_src_ip.latest

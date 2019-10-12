@@ -45,10 +45,10 @@ process GPB encoding and write JSON or Avro to Kafka (that is, bypassing
 pmtelemetryd); a sample of such tool can be found in telemetry/decoders/v3
 along with its own documentation.
 
-Below we provide quickstart tips on how to set-up a proof of concept for
-Streaming Telemetry collection using pmtelemetryd and the sample decoders
-provided. Please read telemetry/decoders/v2/README.pmgrpcd for a quickstart on
-how to use pmgrpcd.py.
+In the ROUTER CONFIGS section below there are snippets of some routers
+configuration in order to export Streaming Telemetry data. Quickstart
+guides for collection are in telemetry/decoders/v1/README.grpc_dialout
+and telemetry/decoders/v3/README.pmgrpcd
 
 Further reading and more information, including a reference architecture
 diagram, is available on the pmacct GitHub wiki at the following page:
