@@ -311,7 +311,7 @@ void skinny_bmp_daemon()
 #endif
 
 #ifdef WITH_AVRO
-    if (config.nfacctd_bmp_msglog_output == PRINT_OUTPUT_AVRO) {
+    if (config.nfacctd_bmp_msglog_output == PRINT_OUTPUT_AVRO_BIN) {
       assert(BMP_MSG_TYPE_MAX < BMP_LOG_TYPE_LOGINIT);
       assert(BMP_LOG_TYPE_MAX < MAX_AVRO_SCHEMA);
 
@@ -420,7 +420,7 @@ void skinny_bmp_daemon()
 #endif
 
 #ifdef WITH_AVRO
-    if (config.bmp_dump_output == PRINT_OUTPUT_AVRO) {
+    if (config.bmp_dump_output == PRINT_OUTPUT_AVRO_BIN) {
       assert(BMP_MSG_TYPE_MAX < BMP_LOG_TYPE_LOGINIT);
       assert(BMP_LOG_TYPE_MAX < MAX_AVRO_SCHEMA);
 

@@ -221,7 +221,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     }
 #endif
   }
-  else if (output == PRINT_OUTPUT_AVRO) {
+  else if (output == PRINT_OUTPUT_AVRO_BIN) {
 #ifdef WITH_AVRO
     avro_writer_t avro_writer = {0};
     avro_value_iface_t *avro_iface = NULL;
@@ -650,7 +650,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 #endif
 #endif
     }
-    else if (output == PRINT_OUTPUT_AVRO) {
+    else if (output == PRINT_OUTPUT_AVRO_BIN) {
 #ifdef WITH_AVRO
       char event_type[] = "log_init";
       char ip_address[INET6_ADDRSTRLEN], wid[SHORTSHORTBUFLEN];
@@ -832,7 +832,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 #endif
 #endif
   }
-  else if (output == PRINT_OUTPUT_AVRO) {
+  else if (output == PRINT_OUTPUT_AVRO_BIN) {
 #ifdef WITH_AVRO
     char event_type[] = "log_close";
     char ip_address[INET6_ADDRSTRLEN], wid[SHORTSHORTBUFLEN];
@@ -1140,7 +1140,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
 #endif
 #endif
   }
-  else if (output == PRINT_OUTPUT_AVRO) {
+  else if (output == PRINT_OUTPUT_AVRO_BIN) {
 #ifdef WITH_AVRO
     char event_type[] = "dump_init";
     char ip_address[INET6_ADDRSTRLEN], wid[SHORTSHORTBUFLEN];
@@ -1309,7 +1309,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
 #endif
 #endif
   }
-  else if (output == PRINT_OUTPUT_AVRO) {
+  else if (output == PRINT_OUTPUT_AVRO_BIN) {
 #ifdef WITH_AVRO
     char event_type[] = "dump_close";
     char ip_address[INET6_ADDRSTRLEN], wid[SHORTSHORTBUFLEN];

@@ -67,6 +67,7 @@ extern void write_avro_schema_to_file_with_suffix(char *, char *, char *, avro_s
 extern char *write_avro_schema_to_memory(avro_schema_t);
 extern char *compose_avro_purge_schema(avro_schema_t, char *);
 extern char *compose_avro_schema_name(char *, char *);
+extern void write_avro_json_record_to_file(FILE *, avro_value_t);
 
 #ifdef WITH_SERDES
 extern serdes_schema_t *compose_avro_schema_registry_name(char *, int, avro_schema_t, char *, char *, char *);

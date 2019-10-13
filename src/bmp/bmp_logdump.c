@@ -136,7 +136,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
     }
 #endif
   }
-  else if (output == PRINT_OUTPUT_AVRO) {
+  else if (output == PRINT_OUTPUT_AVRO_BIN) {
 #ifdef WITH_AVRO
     avro_writer_t avro_writer = {0};
     avro_value_iface_t *avro_iface = NULL;
@@ -325,7 +325,7 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_
     if (blstats->got_data) json_object_set_new_nocheck(obj, "counter_value", json_integer((json_int_t)blstats->cnt_data));
 #endif
   }
-  else if (output == PRINT_OUTPUT_AVRO) {
+  else if (output == PRINT_OUTPUT_AVRO_BIN) {
 #ifdef WITH_AVRO
     avro_value_t *obj = (avro_value_t *) vobj, avro_field, avro_branch;
     char bmp_msg_type[] = "stats";
@@ -454,7 +454,7 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
     }
 #endif
   }
-  else if (output == PRINT_OUTPUT_AVRO) {
+  else if (output == PRINT_OUTPUT_AVRO_BIN) {
 #ifdef WITH_AVRO
     int idx = 0, bmp_init_tlvs[BMP_INIT_INFO_MAX + 1];
     avro_value_t *obj = (avro_value_t *) vobj, avro_field, avro_branch;
@@ -539,7 +539,7 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
     }
 #endif
   }
-  else if (output == PRINT_OUTPUT_AVRO) {
+  else if (output == PRINT_OUTPUT_AVRO_BIN) {
 #ifdef WITH_AVRO
     int idx = 0, bmp_term_tlvs[BMP_TERM_INFO_MAX + 1];
     avro_value_t *obj = (avro_value_t *) vobj, avro_field, avro_branch;
@@ -648,7 +648,7 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
     }
 #endif
   }
-  else if (output == PRINT_OUTPUT_AVRO) {
+  else if (output == PRINT_OUTPUT_AVRO_BIN) {
 #ifdef WITH_AVRO
     int idx = 0, bmp_peer_up_tlvs[BMP_PEER_UP_INFO_MAX + 1];
     avro_value_t *obj = (avro_value_t *) vobj, avro_field, avro_branch;
@@ -808,7 +808,7 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
     }
 #endif
   }
-  else if (output == PRINT_OUTPUT_AVRO) {
+  else if (output == PRINT_OUTPUT_AVRO_BIN) {
 #ifdef WITH_AVRO
     avro_value_t *obj = (avro_value_t *) vobj, avro_field, avro_branch;
     char bmp_msg_type[] = "peer_down";

@@ -406,7 +406,7 @@ void skinny_bgp_daemon_online()
 #endif
 
 #ifdef WITH_AVRO
-    if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_AVRO) {
+    if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_AVRO_BIN) {
       assert(BGP_LOG_TYPE_MAX < MAX_AVRO_SCHEMA);
 
       bgp_misc_db->msglog_avro_schema[0] = avro_schema_build_bgp(BGP_LOGDUMP_ET_LOG, "bgp_msglog");
@@ -464,7 +464,7 @@ void skinny_bgp_daemon_online()
 #endif
 
 #ifdef WITH_AVRO
-    if (config.bgp_table_dump_output == PRINT_OUTPUT_AVRO) {
+    if (config.bgp_table_dump_output == PRINT_OUTPUT_AVRO_BIN) {
       assert(BGP_LOG_TYPE_MAX < MAX_AVRO_SCHEMA);
 
       bgp_misc_db->dump_avro_schema[0] = avro_schema_build_bgp(BGP_LOGDUMP_ET_DUMP, "bgp_dump");

@@ -101,7 +101,7 @@ void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int output, void *void_o
     json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 #endif
   }
-  else if (output == PRINT_OUTPUT_AVRO) {
+  else if (output == PRINT_OUTPUT_AVRO_BIN) {
 #ifdef WITH_AVRO
     char bmp_msg_type[] = "route_monitor";
     char ip_address[INET6_ADDRSTRLEN];
@@ -292,7 +292,7 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
     }
 #endif
   }
-  else if (output == PRINT_OUTPUT_AVRO) {
+  else if (output == PRINT_OUTPUT_AVRO_BIN) {
 #ifdef WITH_AVRO
     struct bmp_chars *bmed_bmp;
     bmed_bmp = bmed->data;
