@@ -1282,6 +1282,10 @@ b) build NetFlow probe configuration, using pmacctd:
    The bgp_daemon_port can be changed from the standard BGP port (179/TCP) in order to
    co-exist with other BGP routing software which might be running on the same host.
    Furthermore, they can safely peer each other by using 127.0.0.1 as bgp_daemon_ip. 
+   NOTE: Bird Internet Routing Daemon seems to dislike peerings on 127.0.0.1; but
+   setting up a 127.0.0.2 address and binding pmacctd to it allows the BGP session to
+   come up fine in a 127.0.0.1 <-> 127.0.0.2 fashion.
+ 
    In pmacctd, bgp_agent_map does the trick of mapping 0.0.0.0 to the IP address of
    the BGP peer (ie. 127.0.0.1: 'bgp_ip=127.0.0.1 ip=0.0.0.0'); this setup, while
    generic, was tested working in conjunction with Quagga. Following a relevant
