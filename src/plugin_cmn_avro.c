@@ -1278,11 +1278,23 @@ void write_avro_json_record_to_file(FILE *fp, avro_value_t value)
   char *json_str;
 
   if (avro_value_to_json(&value, TRUE, &json_str)) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to value to JSON: %s\n", config.name, config.type, avro_strerror());
+    Log(LOG_ERR, "ERROR ( %s/%s ): write_avro_json_record_to_file() unable to value to JSON: %s\n", config.name, config.type, avro_strerror());
     exit_gracefully(1);
   }
 
   fprintf(fp, "%s\n", json_str);
   free(json_str);
+}
+
+char *write_avro_json_record_to_buf(avro_value_t value)
+{
+  char *json_str;
+
+  if (avro_value_to_json(&value, TRUE, &json_str)) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): write_avro_json_record_to_buf() unable to value to JSON: %s\n", config.name, config.type, avro_strerror());
+    exit_gracefully(1);
+  }
+
+  return json_str;
 }
 #endif
