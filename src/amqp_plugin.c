@@ -437,6 +437,35 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START (PID: %u) ***\n", config.name, config.type, writer_pid);
   start = time(NULL);
 
+  if (config.message_broker_output & PRINT_OUTPUT_JSON) {
+    if (config.sql_multi_values) {
+      json_buf = malloc(config.sql_multi_values);
+
+      if (!json_buf) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (json_buf). Exiting ..\n", config.name, config.type);
+	exit_gracefully(1);
+      }
+      else memset(json_buf, 0, config.sql_multi_values);
+    }
+  }
+  else if ((config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) ||
+           (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON)) {
+#ifdef WITH_AVRO
+    if (!config.avro_buffer_size) config.avro_buffer_size = LARGEBUFLEN;
+
+    avro_buf = malloc(config.avro_buffer_size);
+
+    if (!avro_buf) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_buf). Exiting ..\n", config.name, config.type);
+      exit_gracefully(1);
+    }
+
+    if (config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) {
+      avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
+    }
+#endif
+  }
+
   if (config.print_markers) {
     if (config.message_broker_output & PRINT_OUTPUT_JSON) {
       void *json_obj = NULL;
@@ -477,35 +506,6 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
       avro_value_iface_decref(avro_iface);
 #endif
     }
-  }
-
-  if (config.message_broker_output & PRINT_OUTPUT_JSON) {
-    if (config.sql_multi_values) {
-      json_buf = malloc(config.sql_multi_values);
-
-      if (!json_buf) {
-	Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (json_buf). Exiting ..\n", config.name, config.type);
-	exit_gracefully(1);
-      }
-      else memset(json_buf, 0, config.sql_multi_values);
-    }
-  }
-  else if ((config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) ||
-	   (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON)) {
-#ifdef WITH_AVRO
-    if (!config.avro_buffer_size) config.avro_buffer_size = LARGEBUFLEN;
-
-    avro_buf = malloc(config.avro_buffer_size);
-
-    if (!avro_buf) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_buf). Exiting ..\n", config.name, config.type);
-      exit_gracefully(1);
-    }
-
-    if (config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) {
-      avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
-    }
-#endif
   }
 
   for (j = 0; j < index; j++) {
