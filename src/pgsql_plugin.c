@@ -472,7 +472,7 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   start = time(NULL);
 
   /* re-using pending queries queue stuff from parent and saving clauses */
-  memcpy(pending_queries_queue, queue, index*sizeof(struct db_cache *));
+  memcpy(sql_pending_queries_queue, queue, index*sizeof(struct db_cache *));
   pqq_ptr = index;
 
   strlcpy(orig_copy_clause, copy_clause, LONGSRVBUFLEN);
@@ -481,8 +481,8 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   strlcpy(orig_lock_clause, lock_clause, LONGSRVBUFLEN);
 
   start:
-  memcpy(queue, pending_queries_queue, pqq_ptr*sizeof(struct db_cache *));
-  memset(pending_queries_queue, 0, pqq_ptr*sizeof(struct db_cache *));
+  memcpy(queue, sql_pending_queries_queue, pqq_ptr*sizeof(struct db_cache *));
+  memset(sql_pending_queries_queue, 0, pqq_ptr*sizeof(struct db_cache *));
   index = pqq_ptr; pqq_ptr = 0;
 
   /* We check for variable substitution in SQL table */
