@@ -198,7 +198,7 @@ shell> ./configure --enable-jansson
 IIb. Compiling pmacct with Apache Avro support
 Apache Avro encoding is supported via libavro library (http://avro.apache.org/
 and https://avro.apache.org/docs/1.9.1/api/c/index.html); Avro depends on the
-Jansson JSON parser, version 2.3 or higher so please review the previous section
+Jansson JSON parser version 2.3 or higher so please review the previous section
 "Compiling pmacct with JSON support"; then, to compile pmacct with Apache Avro
 support simply do:
 
