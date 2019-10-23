@@ -733,8 +733,10 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	}
       }
       else if (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON) {
-	ret = p_amqp_publish_string(&amqpp_amqp_host, avro_buf);
-        if (!ret) qn += mv_num;
+	if (strlen(avro_buf)) {
+	  ret = p_amqp_publish_string(&amqpp_amqp_host, avro_buf);
+          if (!ret) qn += mv_num;
+	}
       }
 #endif
     }
