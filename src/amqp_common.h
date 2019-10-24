@@ -89,6 +89,7 @@ extern int p_amqp_is_alive(struct p_amqp_host *);
 
 extern int write_and_free_json_amqp(void *, void *);
 extern int write_binary_amqp(void *, void *, size_t);
+extern int write_string_amqp(void *, char *);
 
 /* global vars */
 extern struct p_amqp_host amqpp_amqp_host;
