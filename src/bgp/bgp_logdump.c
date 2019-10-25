@@ -905,24 +905,22 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 
 #ifdef WITH_KAFKA
     if (bms->msglog_kafka_topic) {
+    if (peer->log) {
       if (bms->msglog_kafka_avro_schema_registry) {
 #ifdef WITH_SERDES
+	struct p_kafka_host *kafka_host = (struct p_kafka_host *) peer->log->kafka_host;
 
-    if (peer->log) {
-
-	  struct p_kafka_host *kafka_host = (struct p_kafka_host *) peer->log->kafka_host;
-
-	  if (serdes_schema_serialize_avro(kafka_host->sd_schema[BGP_LOG_TYPE_LOGCLOSE], &avro_obj, &avro_local_buf, &avro_len,
+	if (serdes_schema_serialize_avro(kafka_host->sd_schema[BGP_LOG_TYPE_LOGCLOSE], &avro_obj, &avro_local_buf, &avro_len,
 					 kafka_host->errstr, sizeof(kafka_host->errstr))) {
-	    Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
-	    exit_gracefully(1);
-	  }
-	} else Log(LOG_WARNING, "WARNING: Unable to get Kafka host for peer #%d\n", peer->idx);
+	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
+	  exit_gracefully(1);
+	}
 #endif
       }
 
       kafka_ret = write_binary_kafka(peer->log->kafka_host, avro_local_buf, avro_len);
       p_kafka_unset_topic(peer->log->kafka_host);
+    } else Log(LOG_WARNING, "WARNING: Unable to get Kafka host for peer #%d\n", peer->idx);
     }
 #endif
 #endif
