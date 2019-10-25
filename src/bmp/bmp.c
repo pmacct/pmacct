@@ -311,7 +311,8 @@ void skinny_bmp_daemon()
 #endif
 
 #ifdef WITH_AVRO
-    if (config.nfacctd_bmp_msglog_output == PRINT_OUTPUT_AVRO_BIN) {
+    if ((config.nfacctd_bmp_msglog_output == PRINT_OUTPUT_AVRO_BIN) ||
+	(config.nfacctd_bmp_msglog_output == PRINT_OUTPUT_AVRO_JSON)) {
       assert(BMP_MSG_TYPE_MAX < BMP_LOG_TYPE_LOGINIT);
       assert(BMP_LOG_TYPE_MAX < MAX_AVRO_SCHEMA);
 
@@ -366,6 +367,11 @@ void skinny_bmp_daemon()
 	  exit_gracefully(1);
 	}
 
+	if (config.nfacctd_bmp_msglog_output == PRINT_OUTPUT_AVRO_JSON) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): 'avro_json' output is not compatible with 'bmp_daemon_msglog_kafka_avro_schema_registry'. Exiting.\n",
+	      config.name, bmp_misc_db->log_str);
+	  exit_gracefully(1);
+        }
 	
         bmp_daemon_msglog_kafka_host.sd_schema[BMP_MSG_ROUTE_MONITOR] = compose_avro_schema_registry_name_2(config.nfacctd_bmp_msglog_kafka_topic, FALSE,
 												     bmp_misc_db->msglog_avro_schema[BMP_MSG_ROUTE_MONITOR],
@@ -420,7 +426,8 @@ void skinny_bmp_daemon()
 #endif
 
 #ifdef WITH_AVRO
-    if (config.bmp_dump_output == PRINT_OUTPUT_AVRO_BIN) {
+    if ((config.bmp_dump_output == PRINT_OUTPUT_AVRO_BIN) || 
+	(config.bmp_dump_output == PRINT_OUTPUT_AVRO_JSON)) {
       assert(BMP_MSG_TYPE_MAX < BMP_LOG_TYPE_LOGINIT);
       assert(BMP_LOG_TYPE_MAX < MAX_AVRO_SCHEMA);
 

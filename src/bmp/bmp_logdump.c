@@ -136,7 +136,8 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
     }
 #endif
   }
-  else if (output == PRINT_OUTPUT_AVRO_BIN) {
+  else if ((output == PRINT_OUTPUT_AVRO_BIN) || 
+	   (output == PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
     avro_writer_t avro_writer = {0};
     avro_value_iface_t *avro_iface = NULL;
@@ -218,12 +219,13 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
     snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, writer_pid);
     pm_avro_check(avro_value_set_string(&avro_field, wid));
 
-    if ((config.nfacctd_bmp_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
-        (config.bmp_dump_file && etype == BGP_LOGDUMP_ET_DUMP) ||
-        (config.nfacctd_bmp_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
-        (config.bmp_dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP) ||
-        (config.nfacctd_bmp_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG && !bms->msglog_kafka_avro_schema_registry) ||
-        (config.bmp_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP && !bms->dump_kafka_avro_schema_registry)) {
+    if (((config.nfacctd_bmp_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
+         (config.bmp_dump_file && etype == BGP_LOGDUMP_ET_DUMP) ||
+         (config.nfacctd_bmp_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
+         (config.bmp_dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP) ||
+         (config.nfacctd_bmp_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG && !bms->msglog_kafka_avro_schema_registry) ||
+         (config.bmp_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP && !bms->dump_kafka_avro_schema_registry)) &&
+	(output == PRINT_OUTPUT_AVRO_BIN)) {
       avro_value_sizeof(&avro_obj, &avro_obj_len);
       assert(avro_obj_len < LARGEBUFLEN);
 
@@ -238,13 +240,31 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
 
     if ((config.nfacctd_bmp_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
         (config.bmp_dump_file && etype == BGP_LOGDUMP_ET_DUMP)) {
-      write_file_binary(peer->log->fd, avro_local_buf, avro_len);
+      if (output == PRINT_OUTPUT_AVRO_BIN) {
+	write_file_binary(peer->log->fd, avro_local_buf, avro_len);
+      }
+      else if (output == PRINT_OUTPUT_AVRO_JSON) {
+	write_avro_json_record_to_file(peer->log->fd, avro_obj);
+      }
     }
 
     if ((config.nfacctd_bmp_msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
         (config.bmp_dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP)) {
 #ifdef WITH_RABBITMQ
-      amqp_ret = write_binary_amqp(peer->log->amqp_host, avro_local_buf, avro_len);
+      if (output == PRINT_OUTPUT_AVRO_BIN) {
+	amqp_ret = write_binary_amqp(peer->log->amqp_host, avro_local_buf, avro_len);
+      }
+      else if (output == PRINT_OUTPUT_AVRO_JSON) {
+	char *avro_local_str = NULL;
+
+	avro_value_to_json(&avro_obj, TRUE, &avro_local_str);
+
+	if (avro_local_str) {
+	  amqp_ret = write_string_amqp(peer->log->amqp_host, avro_local_str);
+	  free(avro_local_str);
+	}
+      }
+
       p_amqp_unset_routing_key(peer->log->amqp_host);
 #endif
     }
@@ -265,7 +285,20 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
 #endif
       }
 
-      kafka_ret = write_binary_kafka(peer->log->kafka_host, avro_local_buf, avro_len);
+      if (output == PRINT_OUTPUT_AVRO_BIN) {
+	kafka_ret = write_binary_kafka(peer->log->kafka_host, avro_local_buf, avro_len);
+      }
+      else if (output == PRINT_OUTPUT_AVRO_JSON) {
+	char *avro_local_str = NULL;
+
+	avro_value_to_json(&avro_obj, TRUE, &avro_local_str);
+
+	if (avro_local_str) {
+	  kafka_ret = write_binary_kafka(peer->log->kafka_host, avro_local_str, (strlen(avro_local_str) + 1));
+	  free(avro_local_str);
+	}
+      }
+
       p_kafka_unset_topic(peer->log->kafka_host);
 #endif
     }
@@ -325,7 +358,8 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_
     if (blstats->got_data) json_object_set_new_nocheck(obj, "counter_value", json_integer((json_int_t)blstats->cnt_data));
 #endif
   }
-  else if (output == PRINT_OUTPUT_AVRO_BIN) {
+  else if ((output == PRINT_OUTPUT_AVRO_BIN) || 
+	   (output == PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
     avro_value_t *obj = (avro_value_t *) vobj, avro_field, avro_branch;
     char bmp_msg_type[] = "stats";
@@ -454,7 +488,8 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
     }
 #endif
   }
-  else if (output == PRINT_OUTPUT_AVRO_BIN) {
+  else if ((output == PRINT_OUTPUT_AVRO_BIN) || 
+	   (output == PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
     int idx = 0, bmp_init_tlvs[BMP_INIT_INFO_MAX + 1];
     avro_value_t *obj = (avro_value_t *) vobj, avro_field, avro_branch;
@@ -539,7 +574,8 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
     }
 #endif
   }
-  else if (output == PRINT_OUTPUT_AVRO_BIN) {
+  else if ((output == PRINT_OUTPUT_AVRO_BIN) || 
+	   (output == PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
     int idx = 0, bmp_term_tlvs[BMP_TERM_INFO_MAX + 1];
     avro_value_t *obj = (avro_value_t *) vobj, avro_field, avro_branch;
@@ -648,7 +684,8 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
     }
 #endif
   }
-  else if (output == PRINT_OUTPUT_AVRO_BIN) {
+  else if ((output == PRINT_OUTPUT_AVRO_BIN) ||
+	   (output == PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
     int idx = 0, bmp_peer_up_tlvs[BMP_PEER_UP_INFO_MAX + 1];
     avro_value_t *obj = (avro_value_t *) vobj, avro_field, avro_branch;
@@ -808,7 +845,8 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
     }
 #endif
   }
-  else if (output == PRINT_OUTPUT_AVRO_BIN) {
+  else if ((output == PRINT_OUTPUT_AVRO_BIN) ||
+	   (output == PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
     avro_value_t *obj = (avro_value_t *) vobj, avro_field, avro_branch;
     char bmp_msg_type[] = "peer_down";

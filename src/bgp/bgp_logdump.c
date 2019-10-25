@@ -476,7 +476,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 	 (bms->dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP) ||
 	 (bms->msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG && !bms->msglog_kafka_avro_schema_registry) ||
          (bms->dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP && !bms->dump_kafka_avro_schema_registry)) &&
-	 (output == PRINT_OUTPUT_AVRO_BIN)) {
+	(output == PRINT_OUTPUT_AVRO_BIN)) {
       avro_value_sizeof(&avro_obj, &avro_obj_len);
       assert(avro_obj_len < LARGEBUFLEN);
 
