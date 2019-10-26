@@ -2308,9 +2308,9 @@ DESC:           The URL to a Confluent Avro Schema Registry. The value is passed
 DEFAULT:        none
 
 KEY:		[ bgp_daemon_msglog_output | bmp_daemon_msglog_output ] [GLOBAL]
-VALUES:         [ json | avro ]
+VALUES:         [ json | avro | avro_json ]
 DESC:		Defines output format for the streamed logging of BGP messages and BMP messages and
-		events. JSON and Avro formats are supported.
+		events. JSON, binary-encoded Avro and JSON-encoded Avro formats are supported.
 DEFAULT:	json
 
 KEY:		bgp_aspath_radius [GLOBAL]
@@ -2606,9 +2606,9 @@ DESC:           Enables dump of BGP tables/BMP events/Streaming Telemetry data a
 DEFAULT:	none
 
 KEY:            [ bgp_table_dump_output | bmp_dump_output ] [GLOBAL]
-VALUES:         [ json | avro ]
-DESC:           Defines output format for the dump of BGP tables and BMP events. JSON and Avro
-		formats are supported.
+VALUES:         [ json | avro | avro_json ]
+DESC:           Defines output format for the dump of BGP tables and BMP events. JSON, binary-encoded
+		Avro and JSON-encoded Avro formats are supported.
 DEFAULT:	json
 
 KEY:		[ bgp_table_dump_refresh_time | bmp_dump_refresh_time | telemetry_dump_latest_file ]
