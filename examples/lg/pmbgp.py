@@ -41,8 +41,8 @@ def main():
     # Vars for connecting to the LG
     lgHost = "127.0.0.1"
     lgPort = "17900"
-    lgUser = b"pmacct" 
-    lgPasswd = b"arealsmartpwd" 
+    lgUser = b"" 
+    lgPasswd = b"" 
     queryTypeObj = {}
     queryDataObj = {}
     queryTypeJsonObj = ""
