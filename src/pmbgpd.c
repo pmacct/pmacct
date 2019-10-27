@@ -285,7 +285,13 @@ int main(int argc,char **argv, char **envp)
 
 #if defined WITH_ZMQ
   if (config.bgp_lg) bgp_lg_wrapper();
+#else
+  if (config.bgp_lg) {
+    Log(LOG_ERR, "ERROR ( %s/core/lg ): 'bgp_daemon_lg' requires --enable-zmq. Exiting.\n", config.name);
+    exit_gracefully(1);
+  }
 #endif
+
 
   bgp_prepare_daemon();
   skinny_bgp_daemon();
