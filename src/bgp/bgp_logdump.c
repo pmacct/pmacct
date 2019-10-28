@@ -481,7 +481,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       assert(avro_obj_len < LARGEBUFLEN);
 
       if (avro_value_write(avro_writer, &avro_obj)) {
-	Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to write value: %s\n", config.name, bms->log_str, avro_strerror());
+	Log(LOG_ERR, "ERROR ( %s/%s ): bgp_peer_log_msg(): avro_value_write() failed: %s\n", config.name, bms->log_str, avro_strerror());
 	exit_gracefully(1);
       }
 
@@ -530,7 +530,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
 	if (serdes_schema_serialize_avro(kafka_host->sd_schema[0], &avro_obj, &avro_local_buf, &avro_len,
 					 kafka_host->errstr, sizeof(kafka_host->errstr))) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
+	  Log(LOG_ERR, "ERROR ( %s/%s ): bgp_peer_log_msg(): serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
 	  exit_gracefully(1);
         }
 #endif
@@ -736,7 +736,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 	assert(avro_obj_len < LARGEBUFLEN);
 
 	if (avro_value_write(avro_writer, &avro_obj)) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to write value: %s\n", config.name, bms->log_str, avro_strerror());
+	  Log(LOG_ERR, "ERROR ( %s/%s ): bgp_peer_log_init(): avro_value_write() failed: %s\n", config.name, bms->log_str, avro_strerror());
 	  exit_gracefully(1);
 	}	
 
@@ -781,7 +781,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 
 	  if (serdes_schema_serialize_avro(kafka_host->sd_schema[BGP_LOG_TYPE_LOGINIT], &avro_obj, &avro_local_buf, &avro_len,
 					   kafka_host->errstr, sizeof(kafka_host->errstr))) {
-	    Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
+	    Log(LOG_ERR, "ERROR ( %s/%s ): bgp_peer_log_init(): serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
 	    exit_gracefully(1);
 	  }
 #endif
@@ -950,7 +950,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
       assert(avro_obj_len < LARGEBUFLEN);
 
       if (avro_value_write(avro_writer, &avro_obj)) {
-	Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to write value: %s\n", config.name, bms->log_str, avro_strerror());
+	Log(LOG_ERR, "ERROR ( %s/%s ): bgp_peer_log_close(): avro_value_write() failed: %s\n", config.name, bms->log_str, avro_strerror());
 	exit_gracefully(1);
       }	
 
@@ -995,7 +995,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 
 	if (serdes_schema_serialize_avro(kafka_host->sd_schema[BGP_LOG_TYPE_LOGCLOSE], &avro_obj, &avro_local_buf, &avro_len,
 					 kafka_host->errstr, sizeof(kafka_host->errstr))) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
+	  Log(LOG_ERR, "ERROR ( %s/%s ): bgp_peer_log_close(): serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
 	  exit_gracefully(1);
 	}
 #endif
@@ -1293,7 +1293,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
       assert(avro_obj_len < LARGEBUFLEN);
 
       if (avro_value_write(avro_writer, &avro_obj)) {
-	Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to write value: %s\n", config.name, bms->log_str, avro_strerror());
+	Log(LOG_ERR, "ERROR ( %s/%s ): bgp_peer_dump_init(): avro_value_write() failed: %s\n", config.name, bms->log_str, avro_strerror());
 	exit_gracefully(1);
       }	
 
@@ -1338,7 +1338,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
 
 	if (serdes_schema_serialize_avro(kafka_host->sd_schema[BGP_LOG_TYPE_DUMPINIT], &avro_obj, &avro_local_buf, &avro_len,
 					 kafka_host->errstr, sizeof(kafka_host->errstr))) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
+	  Log(LOG_ERR, "ERROR ( %s/%s ): bgp_peer_dump_init(): serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
 	  exit_gracefully(1);
 	}
 #endif
@@ -1508,7 +1508,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
       assert(avro_obj_len < LARGEBUFLEN);
 
       if (avro_value_write(avro_writer, &avro_obj)) {
-	Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to write value: %s\n", config.name, bms->log_str, avro_strerror());
+	Log(LOG_ERR, "ERROR ( %s/%s ): bgp_peer_dump_close(): avro_value_write() failed: %s\n", config.name, bms->log_str, avro_strerror());
 	exit_gracefully(1);
       }	
 
@@ -1553,7 +1553,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
 
 	if (serdes_schema_serialize_avro(kafka_host->sd_schema[BGP_LOG_TYPE_DUMPCLOSE], &avro_obj, &avro_local_buf, &avro_len,
 					 kafka_host->errstr, sizeof(kafka_host->errstr))) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
+	  Log(LOG_ERR, "ERROR ( %s/%s ): bgp_peer_dump_close(): serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
 	  exit_gracefully(1);
 	}
 #endif
@@ -2017,7 +2017,7 @@ void avro_schema_init_bgp(avro_schema_t *schema, avro_schema_t *optlong_s, avro_
   struct bgp_misc_structs *bms = bgp_select_misc_db(type);
 
   (*schema) = avro_schema_record(schema_name, NULL);
-  Log(LOG_INFO, "INFO ( %s/%s ): AVRO: building %s schema.\n", config.name, bms->log_str, schema_name);
+  Log(LOG_INFO, "INFO ( %s/%s ): avro_schema_init_bgp(): building %s schema.\n", config.name, bms->log_str, schema_name);
 
   avro_schema_union_append((*optlong_s), avro_schema_null());
   avro_schema_union_append((*optlong_s), avro_schema_long());

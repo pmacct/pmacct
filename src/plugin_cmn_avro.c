@@ -45,7 +45,7 @@ avro_schema_t avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
   avro_schema_t optlong_s = avro_schema_union();
   avro_schema_t optstr_s = avro_schema_union();
 
-  Log(LOG_INFO, "INFO ( %s/%s ): AVRO: building acct schema.\n", config.name, config.type);
+  Log(LOG_INFO, "INFO ( %s/%s ): avro_schema_build_acct_data(): building acct schema.\n", config.name, config.type);
 
   avro_schema_union_append(optlong_s, avro_schema_null());
   avro_schema_union_append(optlong_s, avro_schema_long());
@@ -323,7 +323,7 @@ avro_schema_t avro_schema_build_acct_init()
 {
   avro_schema_t schema = avro_schema_record("acct_init", NULL);
 
-  Log(LOG_INFO, "INFO ( %s/%s ): AVRO: building acct_init schema.\n", config.name, config.type);
+  Log(LOG_INFO, "INFO ( %s/%s ): avro_schema_build_acct_init(): building acct_init schema.\n", config.name, config.type);
 
   avro_schema_record_field_append(schema, "event_type", avro_schema_string());
   avro_schema_record_field_append(schema, "writer_id", avro_schema_string());
@@ -335,7 +335,7 @@ avro_schema_t avro_schema_build_acct_close()
 {
   avro_schema_t schema = avro_schema_record("acct_close", NULL);
 
-  Log(LOG_INFO, "INFO ( %s/%s ): AVRO: building acct_close schema.\n", config.name, config.type);
+  Log(LOG_INFO, "INFO ( %s/%s ): avro_schema_build_acct_close(): building acct_close schema.\n", config.name, config.type);
 
   avro_schema_record_field_append(schema, "event_type", avro_schema_string());
   avro_schema_record_field_append(schema, "writer_id", avro_schema_string());

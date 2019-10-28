@@ -432,8 +432,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
       }
 
       if (ret) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: failed opening %s: %s\n",
-            config.name, config.type, current_table, avro_strerror());
+        Log(LOG_ERR, "ERROR ( %s/%s ): P_cache_purge(): failed opening %s: %s\n", config.name, config.type, current_table, avro_strerror());
         exit_gracefully(1);
       }
 #endif
@@ -1248,8 +1247,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (config.sql_table) {
 	  if (config.print_output & PRINT_OUTPUT_AVRO_BIN) {
 	    if (avro_file_writer_append_value(avro_writer, &avro_value)) {
-	      Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: failed writing the value: %s\n",
-		  config.name, config.type, avro_strerror());
+	      Log(LOG_ERR, "ERROR ( %s/%s ): P_cache_purge(): avro_file_writer_append_value() failed: %s\n", config.name, config.type, avro_strerror());
 	      exit_gracefully(1);
 	    }
           }

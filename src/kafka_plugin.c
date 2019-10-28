@@ -508,7 +508,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 
 	  if (serdes_schema_serialize_avro(kafkap_kafka_host.sd_schema[AVRO_ACCT_INIT_SID], &avro_value, &avro_local_buf,
 					   &avro_len, kafkap_kafka_host.errstr, sizeof(kafkap_kafka_host.errstr))) {
-	    Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, config.type, kafkap_kafka_host.errstr);
+	    Log(LOG_ERR, "ERROR ( %s/%s ): kafka_cache_purge(): serdes_schema_serialize_avro() failed: %s\n", config.name, config.type, kafkap_kafka_host.errstr);
 	    exit_gracefully(1);
 	  }
 	  else {
@@ -605,7 +605,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 	    j--;
 	  }
 	  else if (avro_value_write(avro_writer, &avro_value)) {
-	    Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to write value: %s\n", config.name, config.type, avro_strerror());
+	    Log(LOG_ERR, "ERROR ( %s/%s ): kafka_cache_purge(): avro_value_write() faiiled: %s\n", config.name, config.type, avro_strerror());
 	    exit_gracefully(1);
 	  }
 	  else {
@@ -626,7 +626,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 
 	  if (serdes_schema_serialize_avro(kafkap_kafka_host.sd_schema[AVRO_ACCT_DATA_SID], &avro_value, &avro_local_buf,
 					   &avro_len, kafkap_kafka_host.errstr, sizeof(kafkap_kafka_host.errstr))) {
-	    Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, config.type, kafkap_kafka_host.errstr);
+	    Log(LOG_ERR, "ERROR ( %s/%s ): kafka_cache_purge(): serdes_schema_serialize_avro() failed: %s\n", config.name, config.type, kafkap_kafka_host.errstr);
 	    exit_gracefully(1);
 	  }
 	  else {
@@ -834,7 +834,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 
 	  if (serdes_schema_serialize_avro(kafkap_kafka_host.sd_schema[AVRO_ACCT_CLOSE_SID], &avro_value, &avro_local_buf,
 					   &avro_len, kafkap_kafka_host.errstr, sizeof(kafkap_kafka_host.errstr))) {
-	    Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, config.type, kafkap_kafka_host.errstr);
+	    Log(LOG_ERR, "ERROR ( %s/%s ): kafka_cache_purge(): serdes_schema_serialize_avro() failed: %s\n", config.name, config.type, kafkap_kafka_host.errstr);
 	    exit_gracefully(1);
 	  }
 	  else {

@@ -230,7 +230,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
       assert(avro_obj_len < LARGEBUFLEN);
 
       if (avro_value_write(avro_writer, &avro_obj)) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to write value: %s\n", config.name, bms->log_str, avro_strerror());
+        Log(LOG_ERR, "ERROR ( %s/%s ): bmp_log_msg(): avro_value_write() failed: %s\n", config.name, bms->log_str, avro_strerror());
         exit_gracefully(1);
       }
 
@@ -279,7 +279,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
 
 	if (serdes_schema_serialize_avro(kafka_host->sd_schema[log_type], &avro_obj, &avro_local_buf, &avro_len,
 					 kafka_host->errstr, sizeof(kafka_host->errstr))) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
+	  Log(LOG_ERR, "ERROR ( %s/%s ): bmp_log_msg(): serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
 	  exit_gracefully(1);
 	}
 #endif
