@@ -389,7 +389,7 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
       if (p->cfg.ptm_global && got_tags) {
         pptrs->tag = saved_tag;
         pptrs->tag2 = saved_tag2;
-	pretag_copy_label(&pptrs->label, &saved_label);
+	    pretag_copy_label(&pptrs->label, saved_label);
 
         pptrs->have_tag = saved_have_tag;
         pptrs->have_tag2 = saved_have_tag2;
@@ -403,7 +403,7 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
 	  if (p->cfg.ptm_global) {
 	    saved_tag = pptrs->tag;
 	    saved_tag2 = pptrs->tag2;
-	    pretag_copy_label(&saved_label, &pptrs->label);
+	    pretag_copy_label(saved_label, &pptrs->label);
 
 	    saved_have_tag = pptrs->have_tag;
 	    saved_have_tag2 = pptrs->have_tag2;
@@ -563,7 +563,7 @@ reprocess:
 
   /* cleanups */
   reload_map_exec_plugins = FALSE;
-  pretag_free_label(&saved_label);
+  pretag_free_label(saved_label);
 }
 
 struct channels_list_entry *insert_pipe_channel(int plugin_type, struct configuration *cfg, int pipe)
