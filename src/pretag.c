@@ -808,13 +808,13 @@ int pretag_entry_process(struct id_entry *e, struct packet_ptrs *pptrs, pm_id_t 
 {
   int j = 0;
   pm_id_t id = 0, stop = 0, ret = 0;
-  pt_label_t label_local;
+  pt_label_t *label_local = malloc(sizeof(pt_label_t));
 
   e->last_matched = FALSE;
 
   for (j = 0, stop = 0, ret = 0; ((!ret || ret > TRUE) && (*e->func[j])); j++) {
     if (e->func_type[j] == PRETAG_SET_LABEL) {
-      ret = (*e->func[j])(pptrs, &label_local, e);
+      ret = (*e->func[j])(pptrs, label_local, e);
     }
     else {
       ret = (*e->func[j])(pptrs, &id, e);

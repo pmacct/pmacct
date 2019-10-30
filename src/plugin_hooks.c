@@ -352,14 +352,14 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
 {
   int saved_have_tag = FALSE, saved_have_tag2 = FALSE, saved_have_label = FALSE;
   pm_id_t saved_tag = 0, saved_tag2 = 0;
-  pt_label_t saved_label;
+  pt_label_t *saved_label=malloc(sizeof(pt_label_t));
 
   int num, fixed_size;
   u_int32_t savedptr;
   char *bptr;
   int index, got_tags = FALSE;
 
-  pretag_init_label(&saved_label);
+  pretag_init_label(saved_label);
 
 #if defined WITH_GEOIPV2
   if (reload_geoipv2_file && config.geoipv2_file) {
