@@ -60,7 +60,7 @@ struct bmp_common_hdr {
 #define BMP_PEER_TYPE_GLOBAL	0
 #define BMP_PEER_TYPE_L3VPN	1
 #define BMP_PEER_TYPE_LOCAL	2
-#define BMP_PEER_TYPE_LOC_RIB	3 /* draft-evens-grow-bmp-local-rib-01 */ 
+#define BMP_PEER_TYPE_LOC_RIB	3 /* draft-ietf-grow-bmp-local-rib */ 
 #define BMP_PEER_TYPE_MAX	3 /* set to the highest BMP_PEER_TYPE_* value */
 
 static const char __attribute__((unused)) *bmp_peer_types[] = {
@@ -73,10 +73,8 @@ static const char __attribute__((unused)) *bmp_peer_types[] = {
 #define BMP_PEER_FLAGS_ARI_V	0x80
 #define BMP_PEER_FLAGS_ARI_L	0x40
 #define BMP_PEER_FLAGS_ARI_A	0x20
-
-#define BMP_PEER_FLAGS_LR_F	0x80 /* draft-ietf-grow-bmp-local-rib-01 */
-
-#define BMP_PEER_FLAGS_ARO_O	0x10 /* draft-ietf-grow-bmp-adj-rib-out-01 */
+#define BMP_PEER_FLAGS_LR_F	0x80 /* draft-ietf-grow-bmp-local-rib */
+#define BMP_PEER_FLAGS_ARO_O	0x10 /* draft-ietf-grow-bmp-adj-rib-out */
 
 struct bmp_peer_hdr {
   u_char	type;
@@ -158,7 +156,7 @@ struct bmp_peer {
 #define BMP_STATS_TYPE12	12 /* (32-bit Counter) Number of prefixes subjected to treat-as-withdraw */
 #define BMP_STATS_TYPE13	13 /* (32-bit Counter) Number of duplicate update messages received */
 
-/* Types 14-17 defined in draft-evens-grow-bmp-adj-rib-out-01 */
+/* Types 14-17 defined in draft-ietf-grow-bmp-adj-rib-out */
 #define BMP_STATS_TYPE14	14 /* (64-bit Gauge) Number of routes in Adj-RIBs-Out Pre-Policy */
 #define BMP_STATS_TYPE15	15 /* (64-bit Gauge) Number of routes in Adj-RIBs-Out Post-Policy */
 #define BMP_STATS_TYPE16	16 /* (64-bit Gauge) Number of routes in per-AFI/SAFI Abj-RIB-Out */
