@@ -989,6 +989,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 
 #ifdef WITH_KAFKA
     if (bms->msglog_kafka_topic) {
+    if (peer->log) {
       if (bms->msglog_kafka_avro_schema_registry) {
 #ifdef WITH_SERDES
 	struct p_kafka_host *kafka_host = (struct p_kafka_host *) peer->log->kafka_host;
@@ -1016,6 +1017,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
       }
 
       p_kafka_unset_topic(peer->log->kafka_host);
+    } else Log(LOG_WARNING, "WARNING: Unable to get Kafka host for peer #%d\n", peer->idx);
     }
 #endif
 #endif
