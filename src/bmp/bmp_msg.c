@@ -274,7 +274,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
     bmp_peer_hdr_get_o_flag(bph, &bdata.chars.is_out);
   }
 
-  bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
+  bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, &bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
@@ -406,7 +406,7 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
     bmp_peer_hdr_get_o_flag(bph, &bdata.chars.is_out);
   }
 
-  bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
+  bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, &bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
@@ -499,7 +499,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
     bmp_peer_hdr_get_o_flag(bph, &bdata.chars.is_out);
   }
 
-  bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
+  bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, &bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
@@ -603,7 +603,7 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
     bmp_peer_hdr_get_o_flag(bph, &bdata.chars.is_out);
   }
 
-  bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, bdata.family);
+  bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, &bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
@@ -787,14 +787,19 @@ void bmp_peer_hdr_get_o_flag(struct bmp_peer_hdr *bph, u_int8_t *is_out)
   }
 }
 
-void bmp_peer_hdr_get_peer_ip(struct bmp_peer_hdr *bph, struct host_addr *a, u_int8_t family)
+void bmp_peer_hdr_get_peer_ip(struct bmp_peer_hdr *bph, struct host_addr *a, u_int8_t *family)
 {
   if (bph && a) {
-    a->family = family;
+    if ((*family) == AF_INET) a->address.ipv4.s_addr = bph->addr[3];
+    else if ((*family) == AF_INET6) memcpy(&a->address.ipv6, &bph->addr, 16);
+    else {
+      memset(a, 0, sizeof(struct host_addr));
+      if (!bph->addr[0] && !bph->addr[1] && !bph->addr[2] && !bph->addr[3]) {
+	(*family) = AF_INET; /* we just set this up to something non-zero */
+      }
+    }
 
-    if (family == AF_INET) a->address.ipv4.s_addr = bph->addr[3]; 
-    else if (family == AF_INET6) memcpy(&a->address.ipv6, &bph->addr, 16); 
-    else memset(a, 0, sizeof(struct host_addr));
+    a->family = (*family);
   }
 }
 

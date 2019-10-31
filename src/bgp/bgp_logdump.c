@@ -989,33 +989,41 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 
 #ifdef WITH_KAFKA
     if (bms->msglog_kafka_topic) {
-      if (bms->msglog_kafka_avro_schema_registry) {
+      if (peer->log) {
+	if (bms->msglog_kafka_avro_schema_registry) {
 #ifdef WITH_SERDES
-	struct p_kafka_host *kafka_host = (struct p_kafka_host *) peer->log->kafka_host;
+	  struct p_kafka_host *kafka_host = (struct p_kafka_host *) peer->log->kafka_host;
 
-	if (serdes_schema_serialize_avro(kafka_host->sd_schema[BGP_LOG_TYPE_LOGCLOSE], &avro_obj, &avro_local_buf, &avro_len,
+	  if (serdes_schema_serialize_avro(kafka_host->sd_schema[BGP_LOG_TYPE_LOGCLOSE], &avro_obj, &avro_local_buf, &avro_len,
 					 kafka_host->errstr, sizeof(kafka_host->errstr))) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): bgp_peer_log_close(): serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
-	  exit_gracefully(1);
-	}
+	    Log(LOG_ERR, "ERROR ( %s/%s ): bgp_peer_log_close(): serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
+	    exit_gracefully(1);
+	  }
 #endif
-      }
-
-      if (output == PRINT_OUTPUT_AVRO_BIN) {
-	kafka_ret = write_binary_kafka(peer->log->kafka_host, avro_local_buf, avro_len);
-      }
-      else if (output == PRINT_OUTPUT_AVRO_JSON) {
-	char *avro_local_str = NULL;
-
-	avro_value_to_json(&avro_obj, TRUE, &avro_local_str);
-
-	if (avro_local_str) {
-	  kafka_ret = write_binary_kafka(peer->log->kafka_host, avro_local_str, (strlen(avro_local_str) + 1));
-	  free(avro_local_str);
 	}
-      }
 
-      p_kafka_unset_topic(peer->log->kafka_host);
+	if (output == PRINT_OUTPUT_AVRO_BIN) {
+	  kafka_ret = write_binary_kafka(peer->log->kafka_host, avro_local_buf, avro_len);
+	}
+	else if (output == PRINT_OUTPUT_AVRO_JSON) {
+	  char *avro_local_str = NULL;
+
+	  avro_value_to_json(&avro_obj, TRUE, &avro_local_str);
+
+	  if (avro_local_str) {
+	    kafka_ret = write_binary_kafka(peer->log->kafka_host, avro_local_str, (strlen(avro_local_str) + 1));
+	    free(avro_local_str);
+	  }
+	}
+
+	p_kafka_unset_topic(peer->log->kafka_host);
+      }
+      else {
+	char peer_str[INET6_ADDRSTRLEN];
+
+	addr_to_str(peer_str, &peer->addr);
+	Log(LOG_WARNING, "WARNING ( %s/%s ): Unable to get kafka_host: %s\n", config.name, bms->log_str, peer_str);
+      }
     }
 #endif
 #endif

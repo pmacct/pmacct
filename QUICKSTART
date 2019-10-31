@@ -1288,8 +1288,9 @@ b) build NetFlow probe configuration, using pmacctd:
  
    In pmacctd, bgp_agent_map does the trick of mapping 0.0.0.0 to the IP address of
    the BGP peer (ie. 127.0.0.1: 'bgp_ip=127.0.0.1 ip=0.0.0.0'); this setup, while
-   generic, was tested working in conjunction with Quagga. Following a relevant
-   fragment of the Quagga configuration:
+   generic, was tested working in conjunction with Quagga and BIRD.
+
+   Following a relevant fragment of the Quagga configuration:
 
    router bgp Y 
     bgp router-id X.X.X.X
@@ -1297,6 +1298,41 @@ b) build NetFlow probe configuration, using pmacctd:
     neighbor 127.0.0.1 port 17917
     neighbor 127.0.0.1 update-source X.X.X.X
    !
+
+   Following a relevant fragment of the BIRD configuration:
+
+   protocol bgp pmacctd46 {
+      description "pmacctd";
+      local 127.0.0.1 as YYYYY;
+      neighbor 127.0.0.2 port 179 as YYYYY;
+      rr client;
+      hold time 90;
+      keepalive time 30;
+      graceful restart;
+
+      ipv4 {
+         next hop self;
+         import filter {
+            reject;
+         };
+
+         export filter {
+            accept;
+         };
+      };
+
+      ipv6 {
+         next hop address 127.0.0.1;
+
+         import filter {
+            reject;
+         };
+
+         export filter {
+            accept;
+         };
+      };
+   }
 
    NOTE: if configuring a BGP neighbor over localhost via Quagga CLI the following
    message is returned: "% Can not configure the local system as neighbor". This
