@@ -159,7 +159,7 @@ int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct
   if (!strchr(value, default_sep)) {
     if (pretag_malloc_label(&e->label, len + 1 /* null */)) return TRUE;
     strcpy(e->label.val, value);
-      e->label.len=len;
+    e->label.len = len;
     e->label.val[e->label.len] = '\0';
   }
   else {

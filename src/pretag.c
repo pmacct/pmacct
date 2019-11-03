@@ -781,12 +781,12 @@ int pretag_copy_label(pt_label_t *dst, pt_label_t *src)
   }
   else {
     if (src->len) {
-      pretag_malloc_label(dst, src->len+1);
+      pretag_malloc_label(dst, src->len + 1);
       if (!dst->val) {
         Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (pretag_copy_label).\n", config.name, config.type);
         return ERR;
       }
-      dst->len=src->len;
+      dst->len = src->len;
       strncpy(dst->val, src->val, src->len);
       dst->val[dst->len] = '\0';
     }
