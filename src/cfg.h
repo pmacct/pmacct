@@ -176,6 +176,7 @@ struct configuration {
   int print_markers;
   int print_output;
   int print_output_file_append;
+  int print_allow_empty_file;
   char *print_output_lock_file;
   char *print_output_separator;
   char *print_output_file;

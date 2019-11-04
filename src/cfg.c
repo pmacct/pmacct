@@ -130,6 +130,7 @@ static const struct _dictionary_line dictionary[] = {
   {"print_output_separator", cfg_key_print_output_separator},
   {"print_output_custom_lib", cfg_key_print_output_custom_lib},
   {"print_output_custom_cfg_file", cfg_key_print_output_custom_cfg_file},
+  {"print_allow_empty_file", cfg_key_print_allow_empty_file},
   {"print_latest_file", cfg_key_print_latest_file},
   {"print_num_protos", cfg_key_num_protos},
   {"print_trigger_exec", cfg_key_sql_trigger_exec},
