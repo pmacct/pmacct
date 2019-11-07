@@ -781,12 +781,12 @@ int pretag_copy_label(pt_label_t *dst, pt_label_t *src)
   }
   else {
     if (src->len) {
-      pretag_malloc_label(dst, src->len);
+      pretag_malloc_label(dst, src->len + 1);
       if (!dst->val) {
         Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (pretag_copy_label).\n", config.name, config.type);
         return ERR;
       }
-
+      dst->len = src->len;
       strncpy(dst->val, src->val, src->len);
       dst->val[dst->len] = '\0';
     }
@@ -808,13 +808,13 @@ int pretag_entry_process(struct id_entry *e, struct packet_ptrs *pptrs, pm_id_t 
 {
   int j = 0;
   pm_id_t id = 0, stop = 0, ret = 0;
-  pt_label_t label_local;
+  pt_label_t *label_local = malloc(sizeof(pt_label_t));
 
   e->last_matched = FALSE;
 
   for (j = 0, stop = 0, ret = 0; ((!ret || ret > TRUE) && (*e->func[j])); j++) {
     if (e->func_type[j] == PRETAG_SET_LABEL) {
-      ret = (*e->func[j])(pptrs, &label_local, e);
+      ret = (*e->func[j])(pptrs, label_local, e);
     }
     else {
       ret = (*e->func[j])(pptrs, &id, e);
@@ -840,14 +840,14 @@ int pretag_entry_process(struct id_entry *e, struct packet_ptrs *pptrs, pm_id_t 
       if (pptrs->label.len) {
 	char default_sep[] = ",";
 
-        if (pretag_realloc_label(&pptrs->label, label_local.len + pptrs->label.len + 1 /* sep */ + 1 /* null */)) return TRUE;
+        if (pretag_realloc_label(&pptrs->label, label_local->len + pptrs->label.len + 1 /* sep */ + 1 /* null */)) return TRUE;
 	strncat(pptrs->label.val, default_sep, 1);
-        strncat(pptrs->label.val, label_local.val, label_local.len);
+        strncat(pptrs->label.val, label_local->val, label_local->len);
         pptrs->label.val[pptrs->label.len] = '\0';
       }
       else {
-	if (pretag_malloc_label(&pptrs->label, label_local.len + 1 /* null */)) return TRUE;
-	strncpy(pptrs->label.val, label_local.val, label_local.len);
+	if (pretag_malloc_label(&pptrs->label, label_local->len + 1 /* null */)) return TRUE;
+	strncpy(pptrs->label.val, label_local->val, label_local->len);
 	pptrs->label.val[pptrs->label.len] = '\0';
       }
 
