@@ -136,6 +136,7 @@ extern int cfg_key_print_markers(char *, char *, char *);
 extern int cfg_key_print_output(char *, char *, char *);
 extern int cfg_key_print_output_file(char *, char *, char *);
 extern int cfg_key_print_output_file_append(char *, char *, char *);
+extern int cfg_key_print_write_empty_file(char *, char *, char *);
 extern int cfg_key_print_output_lock_file(char *, char *, char *);
 extern int cfg_key_print_output_separator(char *, char *, char *);
 extern int cfg_key_print_output_custom_lib(char *, char *, char *);
