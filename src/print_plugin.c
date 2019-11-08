@@ -362,7 +362,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   avro_file_writer_t avro_writer;
 #endif
 
-  if (!index && !config.print_allow_empty_file) {
+  if (!index && !config.print_write_empty_file) {
     Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START (PID: %u) ***\n", config.name, config.type, writer_pid);
     Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: 0/0, ET: X) ***\n", config.name, config.type, writer_pid);
     return;
@@ -389,18 +389,15 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   for (j = 0, stop = 0; (!stop) && P_preprocess_funcs[j]; j++)
     stop = P_preprocess_funcs[j](queue, &index, j);
 
-  if (index > 0)
-    memcpy(pending_queries_queue, queue, index*sizeof(struct db_cache *));
+  memcpy(pending_queries_queue, queue, index*sizeof(struct db_cache *));
   pqq_ptr = index;
 
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START (PID: %u) ***\n", config.name, config.type, writer_pid);
   start = time(NULL);
 
   start:
-  if (pqq_ptr > 0) {
-    memcpy(queue, pending_queries_queue, pqq_ptr*sizeof(struct db_cache *));
-    memset(pending_queries_queue, 0, pqq_ptr*sizeof(struct db_cache *));
-  }
+  memcpy(queue, pending_queries_queue, pqq_ptr*sizeof(struct db_cache *));
+  memset(pending_queries_queue, 0, pqq_ptr*sizeof(struct db_cache *));
   index = pqq_ptr; pqq_ptr = 0; file_to_be_created = FALSE;
 
   if (config.print_output & PRINT_OUTPUT_EVENT) is_event = TRUE;

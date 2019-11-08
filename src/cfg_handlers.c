@@ -1067,7 +1067,7 @@ int cfg_key_print_output_file_append(char *filename, char *name, char *value_ptr
   return changes;
 }
 
-int cfg_key_print_allow_empty_file(char *filename, char *name, char *value_ptr)
+int cfg_key_print_write_empty_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -1075,11 +1075,11 @@ int cfg_key_print_allow_empty_file(char *filename, char *name, char *value_ptr)
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  if (!name) for (; list; list = list->next, changes++) list->cfg.print_allow_empty_file = value;
+  if (!name) for (; list; list = list->next, changes++) list->cfg.print_write_empty_file = value;
   else {
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
-        list->cfg.print_allow_empty_file = value;
+        list->cfg.print_write_empty_file = value;
         changes++;
         break;
       }
