@@ -1068,6 +1068,14 @@ NOTES:		Update of the latest pointer is done evaluating files name. For correct 
 		recommended to delete existing symlinks.
 DEFAULT:	none
 
+KEY:		print_write_empty_file
+VALUES:         [ true | false ]
+DESC:		If set to true, print plugin will write an empty file (zero length) if there was no
+		data to output; this also aligns to the pre 1.5.0 behaviour, as documnted in the
+		UPGRADE document. The default behaviour is instead to only produce a log message
+		with "ET: X" as Estimated Time value. 
+DEFAULT:	false
+
 KEY:		sql_table_schema
 DESC:		Full pathname to a file containing a SQL table schema. It allows to create the SQL table
 		if it does not exist; a config example where this directive could be useful follows:
