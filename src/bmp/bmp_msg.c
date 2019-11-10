@@ -57,12 +57,13 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
     if (!(bch = (struct bmp_common_hdr *) bmp_get_and_check_length(&bmp_packet_ptr, &pkt_remaining_len, sizeof(struct bmp_common_hdr))))
       return msg_start_len;
 
-    if (bch->version != BMP_V3) {
-      Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: BMP version != %u\n",
-	  config.name, bms->log_str, peer->addr_str, BMP_V3);
+    if (bch->version != BMP_V3 && bch->version != BMP_V4) {
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: unknown BMP version: %u\n",
+	  config.name, bms->log_str, peer->addr_str, bch->version);
       return FALSE;
     }
 
+    peer->version = bch->version;
     bmp_common_hdr_get_len(bch, &msg_len);
     msg_len -= sizeof(struct bmp_common_hdr);
     orig_msg_len = msg_len;
@@ -532,6 +533,11 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
       bmd.extra.len = sizeof(bmed_bmp);
       bmd.extra.data = &bmed_bmp;
       bgp_msg_data_set_data_bmp(&bmed_bmp, &bdata);
+
+      bgp_update_len = bgp_get_packet_len((*bmp_packet));
+      if (peer->version == BMP_V4 && bgp_update_len < (*len)) {
+        /* draft-ietf-grow-bmp-tlv: we have got trailing TLV(s) */
+      }
 
       /* XXX: checks, ie. marker, message length, etc., bypassed */
       bgp_update_len = bgp_parse_update_msg(&bmd, (*bmp_packet)); 

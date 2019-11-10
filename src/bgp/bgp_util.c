@@ -1525,3 +1525,15 @@ u_int8_t bgp_str2origin(char *origin_str)
 
   return BGP_ORIGIN_UNKNOWN;
 }
+
+u_int16_t bgp_get_packet_len(char *pkt)
+{
+  struct bgp_header *bhdr = (struct bgp_header *) pkt;
+  u_int16_t blen = 0;
+
+  if (bgp_marker_check(bhdr, BGP_MARKER_SIZE) != ERR) {
+    blen = ntohs(bhdr->bgpo_len);
+  }
+
+  return blen;
+}

@@ -28,6 +28,7 @@
 #define BMP_TCP_PORT		1790
 #define BMP_MAX_PEERS_DEFAULT	4
 #define BMP_V3			3
+#define BMP_V4			4
 
 #define BMP_MISSING_PEER_UP_LOG_TOUT	60
 
