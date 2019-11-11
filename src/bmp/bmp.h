@@ -207,6 +207,8 @@ static const char __attribute__((unused)) *bmp_peer_up_info_types[] = {
 #define BMP_PEER_DOWN_DECFG		5
 #define BMP_PEER_DOWN_MAX		5 /* set to the highest BMP_PEER_DOWN_* value */
 
+#define BMP_PEER_DOWN_INFO_ENTRIES	BMP_PEER_UP_INFO_ENTRIES
+
 static const char __attribute__((unused)) *bmp_peer_down_reason_types[] = {
   "Reserved",
   "The local system closed the session",
@@ -228,6 +230,8 @@ struct bmp_peer_up_hdr {
   /* Received OPEN Message */
 } __attribute__ ((packed));
 
+#define BMP_ROUTE_MONITOR_INFO_ENTRIES	32
+
 struct bmp_chars {
   u_int8_t peer_type;
   u_int8_t is_post;
@@ -235,6 +239,7 @@ struct bmp_chars {
   u_int8_t is_filtered;
   u_int8_t is_out;
   u_int8_t is_loc;
+  void *tlv;
 }; 
 
 struct bmp_data {

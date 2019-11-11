@@ -79,9 +79,20 @@ struct bmp_log_peer_up {
   struct bmp_log_peer_up_tlv_array tlv;
 };
 
+struct bmp_log_peer_down_tlv_array {
+  int entries;
+  struct bmp_log_tlv e[BMP_PEER_DOWN_INFO_ENTRIES];
+};
+
 struct bmp_log_peer_down {
   u_char reason;
   u_int16_t loc_code;
+  struct bmp_log_peer_down_tlv_array tlv;
+};
+
+struct bmp_log_route_monitor_tlv_array {
+  int entries;
+  struct bmp_log_tlv e[BMP_ROUTE_MONITOR_INFO_ENTRIES];
 };
 
 struct bmp_dump_se {

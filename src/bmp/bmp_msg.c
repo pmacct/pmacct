@@ -419,8 +419,41 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
     {
       struct bmp_log_peer_down blpd;
 
+      /* TLV vars */
+      struct bmp_tlv_hdr *bth; 
+      u_int16_t bmp_tlv_type, bmp_tlv_len;
+      char *bmp_tlv_value;
+
+      blpd.tlv.entries = 0;
+
       bmp_peer_down_hdr_get_reason(bpdh, &blpd.reason);
       if (blpd.reason == BMP_PEER_DOWN_LOC_CODE) bmp_peer_down_hdr_get_loc_code(bmp_packet, len, &blpd.loc_code);
+
+      /* draft-ietf-grow-bmp-tlv */
+      if (peer->version == BMP_V4) {
+        while ((*len)) {
+	  if (!(bth = (struct bmp_tlv_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_tlv_hdr)))) {
+	    Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer down] packet discarded: failed bmp_get_and_check_length() BMP TLV hdr\n",
+		config.name, bms->log_str, peer->addr_str);
+	    return;
+	  }
+
+	  bmp_tlv_hdr_get_type(bth, &bmp_tlv_type);
+	  bmp_tlv_hdr_get_len(bth, &bmp_tlv_len);
+
+	  if (!(bmp_tlv_value = bmp_get_and_check_length(bmp_packet, len, bmp_tlv_len))) {
+	    Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer down] packet discarded: failed bmp_get_and_check_length() BMP TLV info\n",
+		config.name, bms->log_str, peer->addr_str);
+	    return;
+	  }
+
+	  blpd.tlv.e[blpd.tlv.entries].type = bmp_tlv_type;
+	  blpd.tlv.e[blpd.tlv.entries].len = bmp_tlv_len;
+	  blpd.tlv.e[blpd.tlv.entries].val = bmp_tlv_value;
+
+	  blpd.tlv.entries = bmp_tlv_array_increment(blpd.tlv.entries, BMP_PEER_DOWN_INFO_ENTRIES);
+	}
+      }
 
       if (bms->msglog_backend_methods) {
         char event_type[] = "log";
@@ -521,6 +554,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
       char peer_port_str[] = "peer_tcp_port", *saved_peer_port_str = bms->peer_port_str;
       struct bmp_chars bmed_bmp;
       struct bgp_msg_data bmd;
+      struct bmp_log_route_monitor_tlv_array blm_tlv;
 
       bmpp_bgp_peer = (*(struct bgp_peer **) ret);
       memset(&bmd, 0, sizeof(bmd));
@@ -533,10 +567,44 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
       bmd.extra.len = sizeof(bmed_bmp);
       bmd.extra.data = &bmed_bmp;
       bgp_msg_data_set_data_bmp(&bmed_bmp, &bdata);
+      blm_tlv.entries = 0;
 
+      /* draft-ietf-grow-bmp-tlv */
       bgp_update_len = bgp_get_packet_len((*bmp_packet));
       if (peer->version == BMP_V4 && bgp_update_len < (*len)) {
-        /* draft-ietf-grow-bmp-tlv: we have got trailing TLV(s) */
+	struct bmp_tlv_hdr *bth;
+	u_int16_t bmp_tlv_type, bmp_tlv_len;
+	char *bmp_tlv_value;
+
+	u_int32_t loc_len = (*len);
+	char *loc_ptr = (*bmp_packet);
+
+	bmp_jump_offset(&loc_ptr, &loc_len, bgp_update_len);
+
+	while (loc_len) {
+	  if (!(bth = (struct bmp_tlv_hdr *) bmp_get_and_check_length(&loc_ptr, &loc_len, sizeof(struct bmp_tlv_hdr)))) {
+	    Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: failed bmp_get_and_check_length() BMP TLV hdr\n",
+		config.name, bms->log_str, peer->addr_str);
+	    return;
+	  }
+
+	  bmp_tlv_hdr_get_type(bth, &bmp_tlv_type);
+	  bmp_tlv_hdr_get_len(bth, &bmp_tlv_len);
+
+	  if (!(bmp_tlv_value = bmp_get_and_check_length(&loc_ptr, &loc_len, bmp_tlv_len))) {
+	    Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: failed bmp_get_and_check_length() BMP TLV info\n",
+		config.name, bms->log_str, peer->addr_str);
+	    return;
+	  }
+
+	  blm_tlv.e[blm_tlv.entries].type = bmp_tlv_type;
+	  blm_tlv.e[blm_tlv.entries].len = bmp_tlv_len;
+	  blm_tlv.e[blm_tlv.entries].val = bmp_tlv_value;
+
+	  blm_tlv.entries = bmp_tlv_array_increment(blm_tlv.entries, BMP_ROUTE_MONITOR_INFO_ENTRIES);
+	}
+	
+        bmed_bmp.tlv = &blm_tlv;
       }
 
       /* XXX: checks, ie. marker, message length, etc., bypassed */
