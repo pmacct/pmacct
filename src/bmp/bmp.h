@@ -232,6 +232,10 @@ struct bmp_peer_up_hdr {
 
 #define BMP_ROUTE_MONITOR_INFO_ENTRIES	32
 
+static const char __attribute__((unused)) *bmp_rm_info_types[] = {
+  ""
+};
+
 struct bmp_chars {
   u_int8_t peer_type;
   u_int8_t is_post;

@@ -131,6 +131,7 @@ extern int bmp_log_msg_init(struct bgp_peer *, struct bmp_data *, struct bmp_log
 extern int bmp_log_msg_term(struct bgp_peer *, struct bmp_data *, struct bmp_log_term_array *, char *, int, void *);
 extern int bmp_log_msg_peer_up(struct bgp_peer *, struct bmp_data *, struct bmp_log_peer_up *, char *, int, void *);
 extern int bmp_log_msg_peer_down(struct bgp_peer *, struct bmp_data *, struct bmp_log_peer_down *, char *, int, void *);
+extern int bmp_log_msg_route_monitor_tlv(struct bmp_log_route_monitor_tlv_array *, int, void *);
 
 extern void bmp_dump_se_ll_append(struct bgp_peer *, struct bmp_data *, void *, int);
 extern void bmp_dump_se_ll_destroy(struct bmp_dump_se_ll *);

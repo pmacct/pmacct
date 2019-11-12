@@ -903,6 +903,42 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
   return ret;
 }
 
+int bmp_log_msg_route_monitor_tlv(struct bmp_log_route_monitor_tlv_array *blrm, int output, void *vobj)
+{
+  int ret = 0;
+
+  if (!vobj) return ERR;
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    int idx = 0;
+    json_t *obj = (json_t *) vobj;
+
+    if (blrm) {
+      while (idx < blrm->entries) { 
+	char *type = NULL, *value = NULL;
+
+	type = bmp_tlv_type_print(blrm->e[idx].type, "bmp_rm_info", bmp_rm_info_types, BMP_ROUTE_MONITOR_INFO_ENTRIES);
+	value = null_terminate(blrm->e[idx].val, blrm->e[idx].len);
+	json_object_set_new_nocheck(obj, type, json_string(value));
+	free(type);
+	free(value);
+
+	idx++;
+      }
+    }
+#endif
+  }
+  else if ((output == PRINT_OUTPUT_AVRO_BIN) || 
+	   (output == PRINT_OUTPUT_AVRO_JSON)) {
+#ifdef WITH_AVRO
+    /* TBD: once IANA-governed TLVs are defined or E-bit is implemented */
+#endif
+  }
+
+  return ret;
+}
+
 void bmp_dump_init_peer(struct bgp_peer *peer)
 {
   struct bgp_misc_structs *bms;

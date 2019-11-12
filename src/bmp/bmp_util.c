@@ -273,13 +273,14 @@ void bgp_extra_data_free_bmp(struct bgp_msg_extra_data *bmed)
 
 void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void *void_obj)
 {
+  struct bmp_chars *bmed_bmp;
 
   if (!bmed || !void_obj || bmed->id != BGP_MSG_EXTRA_DATA_BMP) return;
 
+  bmed_bmp = bmed->data;
+
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
-    struct bmp_chars *bmed_bmp;
-    bmed_bmp = bmed->data;
     json_t *obj = void_obj;
 
     if (bmed_bmp->is_loc) {
@@ -294,8 +295,6 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
   }
   else if (output == PRINT_OUTPUT_AVRO_BIN) {
 #ifdef WITH_AVRO
-    struct bmp_chars *bmed_bmp;
-    bmed_bmp = bmed->data;
     avro_value_t *obj = (avro_value_t *) void_obj, avro_field, avro_branch;
 
     if (bmed_bmp->is_loc) {
@@ -342,6 +341,10 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
       pm_avro_check(avro_value_set_branch(&avro_field, FALSE, &avro_branch));
     }
 #endif
+  }
+
+  if (bmed_bmp->tlv) {
+    bmp_log_msg_route_monitor_tlv(bmed_bmp->tlv, output, void_obj);
   }
 }
 
