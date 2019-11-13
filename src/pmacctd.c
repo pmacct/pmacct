@@ -1183,8 +1183,10 @@ int main(int argc,char **argv, char **envp)
   sigaddset(&cb_data.sig.set, SIGHUP);
   sigaddset(&cb_data.sig.set, SIGUSR1);
   sigaddset(&cb_data.sig.set, SIGUSR2);
-  sigaddset(&cb_data.sig.set, SIGINT);
   sigaddset(&cb_data.sig.set, SIGTERM);
+  if (config.daemon) {
+    sigaddset(&cb_data.sig.set, SIGINT);
+  }
   cb_data.sig.is_set = TRUE;
 
   /* Main loop (for the case of a single interface): if pcap_loop() exits
