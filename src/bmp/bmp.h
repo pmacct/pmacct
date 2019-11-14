@@ -97,7 +97,6 @@ struct bmp_tlv_hdr {
 #define BMP_INIT_INFO_SYSDESCR	1
 #define BMP_INIT_INFO_SYSNAME	2
 #define BMP_INIT_INFO_MAX	2
-
 #define BMP_INIT_INFO_ENTRIES	8
 
 static const char __attribute__((unused)) *bmp_init_info_types[] = {
@@ -109,7 +108,6 @@ static const char __attribute__((unused)) *bmp_init_info_types[] = {
 #define BMP_TERM_INFO_STRING    0
 #define BMP_TERM_INFO_REASON	1
 #define BMP_TERM_INFO_MAX	1
-
 #define BMP_TERM_INFO_ENTRIES	8
 
 #define BMP_TERM_REASON_ADM	0
@@ -196,7 +194,6 @@ static const char __attribute__((unused)) *bmp_peer_up_info_types[] = {
 
 #define BMP_PEER_UP_INFO_STRING		0
 #define BMP_PEER_UP_INFO_MAX		0
-
 #define BMP_PEER_UP_INFO_ENTRIES	8	
 
 #define BMP_PEER_DOWN_RESERVED		0
@@ -206,7 +203,6 @@ static const char __attribute__((unused)) *bmp_peer_up_info_types[] = {
 #define BMP_PEER_DOWN_REM_CODE		4
 #define BMP_PEER_DOWN_DECFG		5
 #define BMP_PEER_DOWN_MAX		5 /* set to the highest BMP_PEER_DOWN_* value */
-
 #define BMP_PEER_DOWN_INFO_ENTRIES	BMP_PEER_UP_INFO_ENTRIES
 
 static const char __attribute__((unused)) *bmp_peer_down_reason_types[] = {
@@ -230,6 +226,7 @@ struct bmp_peer_up_hdr {
   /* Received OPEN Message */
 } __attribute__ ((packed));
 
+#define BMP_ROUTE_MONITOR_INFO_MAX	0
 #define BMP_ROUTE_MONITOR_INFO_ENTRIES	32
 
 static const char __attribute__((unused)) *bmp_rm_info_types[] = {
