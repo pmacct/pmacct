@@ -154,8 +154,6 @@ struct bmp_peer {
 #define BMP_STATS_TYPE11	11 /* (32-bit Counter) Number of updates subjected to treat-as-withdraw */ 
 #define BMP_STATS_TYPE12	12 /* (32-bit Counter) Number of prefixes subjected to treat-as-withdraw */
 #define BMP_STATS_TYPE13	13 /* (32-bit Counter) Number of duplicate update messages received */
-
-/* Types 14-17 defined in draft-ietf-grow-bmp-adj-rib-out */
 #define BMP_STATS_TYPE14	14 /* (64-bit Gauge) Number of routes in Adj-RIBs-Out Pre-Policy */
 #define BMP_STATS_TYPE15	15 /* (64-bit Gauge) Number of routes in Adj-RIBs-Out Post-Policy */
 #define BMP_STATS_TYPE16	16 /* (64-bit Gauge) Number of routes in per-AFI/SAFI Abj-RIB-Out */
