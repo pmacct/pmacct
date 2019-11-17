@@ -811,8 +811,11 @@ void bmp_term_hdr_get_reason_type(char **bmp_packet, u_int32_t *pkt_size, u_int1
 
   if (bmp_packet && (*bmp_packet) && pkt_size && type) {
     ptr = bmp_get_and_check_length(bmp_packet, pkt_size, 2);
-    memcpy(type, ptr, 2);
-    (*type) = ntohs((*type));
+    
+    if (ptr) { 
+      memcpy(type, ptr, 2);
+      (*type) = ntohs((*type));
+    }
   }
 }
 
