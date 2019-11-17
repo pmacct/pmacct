@@ -211,7 +211,11 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
       return;
     }
 
-    if (bmp_term_type == BMP_TERM_INFO_REASON && bmp_term_len == 2) bmp_term_hdr_get_reason_type(bmp_packet, len, &reason_type);
+    if (bmp_term_type == BMP_TERM_INFO_REASON && bmp_term_len == 2) {
+      char *bmp_term_info_loc = bmp_term_info;
+
+      bmp_term_hdr_get_reason_type(&bmp_term_info_loc, len, &reason_type);
+    }
 
     blterm.e[blterm.entries].type = bmp_term_type;
     blterm.e[blterm.entries].len = bmp_term_len;
