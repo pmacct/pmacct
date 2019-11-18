@@ -319,11 +319,21 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
 
       /* XXX: checks, ie. marker, message length, etc., bypassed */
       bgp_open_len = bgp_parse_open_msg(&bmd, (*bmp_packet), FALSE, FALSE);
+      if (bgp_open_len == ERR) {
+	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: failed bgp_parse_open_msg()\n",
+		config.name, bms->log_str, peer->addr_str);
+	return;
+      }
       bmp_get_and_check_length(bmp_packet, len, bgp_open_len);
       memcpy(&bgp_peer_loc.addr, &blpu.local_ip, sizeof(struct host_addr));
 
       bmd.peer = &bgp_peer_rem;
       bgp_open_len = bgp_parse_open_msg(&bmd, (*bmp_packet), FALSE, FALSE);
+      if (bgp_open_len == ERR) {
+	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: failed bgp_parse_open_msg() (2)\n",
+		config.name, bms->log_str, peer->addr_str);
+	return;
+      }
       bmp_get_and_check_length(bmp_packet, len, bgp_open_len);
       memcpy(&bgp_peer_rem.addr, &bdata.peer_ip, sizeof(struct host_addr));
 
