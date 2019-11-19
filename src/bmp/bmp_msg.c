@@ -586,7 +586,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 
       /* draft-ietf-grow-bmp-tlv */
       bgp_update_len = bgp_get_packet_len((*bmp_packet));
-      if (peer->version == BMP_V4 && bgp_update_len < (*len)) {
+      if (peer->version == BMP_V4 && bgp_update_len && bgp_update_len < (*len)) {
 	struct bmp_tlv_hdr *bth;
 	u_int16_t bmp_tlv_type, bmp_tlv_len;
 	char *bmp_tlv_value;
@@ -624,6 +624,12 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 
       /* XXX: checks, ie. marker, message length, etc., bypassed */
       bgp_update_len = bgp_parse_update_msg(&bmd, (*bmp_packet)); 
+      if (!bgp_update_len) {
+	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route] packet discarded: bgp_parse_update_msg() failed\n",
+		config.name, bms->log_str, peer->addr_str);
+	return;
+      }
+
       bms->peer_str = saved_peer_str;
       bms->peer_port_str = saved_peer_port_str;
 
