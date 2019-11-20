@@ -2349,6 +2349,31 @@ routing-options {
 	}
 }
 
+Following is an example how a Huawei router should be configured in order to
+export BMP data to a collector:
+
+bmp
+ statistics-timer 3600
+ #
+ bmp-session 192.0.2.1
+  tcp connect port 1790
+  connect-interface GigabitEthernet0/3/6
+  #
+  monitor peer 198.51.100.19
+   route-mode ipv4-family vpnv4 adj-rib-in pre-policy
+   route-mode ipv4-family vpnv4 adj-rib-in post-policy
+   route-mode ipv4-family vpnv4 adj-rib-out pre-policy
+   route-mode ipv4-family vpnv4 adj-rib-out post-policy
+  #
+  monitor peer 198.51.100.25
+   route-mode ipv4-family vpnv4 adj-rib-in pre-policy
+   route-mode ipv4-family vpnv4 adj-rib-in post-policy
+   route-mode ipv4-family vpnv4 adj-rib-out pre-policy
+   route-mode ipv4-family vpnv4 adj-rib-out post-policy
+  #
+  monitor vpn-instance A
+   route-mode ipv4-family unicast local-rib
+
 Contribution of further configuration examples for Cisco and Juniper devices
 and/or other relevant vendors is more than welcome.
  
