@@ -158,7 +158,7 @@ int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct
   len = strlen(value);
   if (!strchr(value, default_sep)) {
     if (pretag_malloc_label(&e->label, len + 1 /* null */)) return TRUE;
-    strcpy(e->label.val, value);
+    strncpy(e->label.val, value, sizeof(e->label.val));
     e->label.len = len;
     e->label.val[e->label.len] = '\0';
   }
@@ -1306,7 +1306,7 @@ int PT_map_entry_label_handler(char *filename, struct id_entry *e, char *value, 
     strncpy(e->entry_label, value, (MAX_LABEL_LEN - 1));
     Log(LOG_WARNING, "WARN ( %s/%s ): [%s] entry label '%s' cut to '%s'.\n", config.name, config.type, filename, value, e->entry_label);
   }
-  else strcpy(e->entry_label, value);
+  else strncpy(e->entry_label, value, sizeof(e->entry_label));
 
   return FALSE;
 }
@@ -1326,7 +1326,7 @@ int PT_map_jeq_handler(char *filename, struct id_entry *e, char *value, struct p
     strncpy(e->jeq.label, value, (MAX_LABEL_LEN - 1));
     Log(LOG_WARNING, "WARN ( %s/%s ): [%s] JEQ label '%s' cut to '%s'.\n", config.name, config.type, filename, value, e->jeq.label);
   }
-  else strcpy(e->jeq.label, value);
+  else strncpy(e->jeq.label, value, sizeof(e->jeq.label));
 
   return FALSE;
 }

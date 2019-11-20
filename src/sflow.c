@@ -582,16 +582,16 @@ void readExtendedGateway(SFSample *sample)
       comm = getData32(sample);
       switch (comm) {
       case COMMUNITY_INTERNET:
-        strcpy(comm_str, "internet");
+        strncpy(comm_str, "internet", sizeof(comm_str));
         break;
       case COMMUNITY_NO_EXPORT:
-        strcpy(comm_str, "no-export");
+        strncpy(comm_str, "no-export", sizeof(comm_str));
         break;
       case COMMUNITY_NO_ADVERTISE:
-        strcpy (comm_str, "no-advertise");
+        strncpy (comm_str, "no-advertise", sizeof(comm_str));
         break;
       case COMMUNITY_LOCAL_AS:
-        strcpy (comm_str, "local-AS");
+        strncpy (comm_str, "local-AS", sizeof(comm_str));
         break;
       default:
         as = (comm >> 16) & 0xFFFF;

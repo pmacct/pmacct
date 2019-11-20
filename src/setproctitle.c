@@ -219,13 +219,13 @@ pm_setproctitle(fmt, va_alist)
   memset(prefix, 0, sizeof(prefix));
   memset(buf, 0, sizeof(buf));
 
-  if (config.uacctd_group) strcpy(prefix, uacctd_globstr); /* XXX: hack */
-  else if (config.acct_type == ACCT_PM) strcpy(prefix, pmacctd_globstr);
-  else if (config.acct_type == ACCT_NF) strcpy(prefix, nfacctd_globstr);
-  else if (config.acct_type == ACCT_SF) strcpy(prefix, sfacctd_globstr);
-  else if (config.acct_type == ACCT_PMTELE) strcpy(prefix, pmtele_globstr);
-  else if (config.acct_type == ACCT_PMBGP) strcpy(prefix, pmbgpd_globstr);
-  else if (config.acct_type == ACCT_PMBMP) strcpy(prefix, pmbmpd_globstr);
+  if (config.uacctd_group) strncpy(prefix, uacctd_globstr, sizeof(prefix)); /* XXX: hack */
+  else if (config.acct_type == ACCT_PM) strncpy(prefix, pmacctd_globstr, sizeof(prefix));
+  else if (config.acct_type == ACCT_NF) strncpy(prefix, nfacctd_globstr, sizeof(prefix));
+  else if (config.acct_type == ACCT_SF) strncpy(prefix, sfacctd_globstr, sizeof(prefix));
+  else if (config.acct_type == ACCT_PMTELE) strncpy(prefix, pmtele_globstr, sizeof(prefix));
+  else if (config.acct_type == ACCT_PMBGP) strncpy(prefix, pmbgpd_globstr, sizeof(prefix));
+  else if (config.acct_type == ACCT_PMBMP) strncpy(prefix, pmbmpd_globstr, sizeof(prefix));
 
   va_start(ap, fmt);
   vsnprintf(buf, sizeof(buf), fmt, ap);

@@ -776,7 +776,7 @@ int PG_compose_static_queries()
     char *ptr;
 
     ptr = strchr(copy_values[0].string, '(');
-    ptr++; strcpy(copy_values[0].string, ptr);
+    ptr++; strncpy(copy_values[0].string, ptr, sizeof(copy_values[0].string));
 
     for (num = 0; num < primitives; num++) {
       for (x = 0; copy_values[num].string[x] != '\0'; x++) {
@@ -852,8 +852,9 @@ void PG_DB_Connect(struct DBdesc *db, char *host)
       char errmsg[64+SRVBUFLEN];
 
       sql_db_fail(db);
-      strcpy(errmsg, "Failed connecting to ");
-      strcat(errmsg, db->conn_string);
+      /* XXX should use snprintf */
+      strncpy(errmsg, "Failed connecting to ", 64+SRVBUFLEN);
+      strncat(errmsg, db->conn_string, 64+SRVBUFLEN);
       db->errmsg = errmsg;
       sql_db_errmsg(db);
     }

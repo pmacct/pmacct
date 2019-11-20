@@ -1096,8 +1096,9 @@ void write_avro_schema_to_file(char *filename, avro_schema_t schema)
 
 void write_avro_schema_to_file_with_suffix(char *filename, char *suffix, char *buf, avro_schema_t schema)
 {
-  strcpy(buf, filename);
-  strcat(buf, suffix);
+  /* XXX should use snprintf */
+  strncpy(buf, filename, sizeof(buf));
+  strncat(buf, suffix, sizeof(buf));
   write_avro_schema_to_file(buf, schema);
 }
 
@@ -1187,7 +1188,7 @@ char *compose_avro_schema_name(char *extra1, char *extra2)
   }
   else memset(schema_name, 0, len_total);
 
-  strcpy(schema_name, "pmacct");
+  strncpy(schema_name, "pmacct", sizeof(schema_name));
   if (len_extra1 || len_extra2) {
     strcat(schema_name, "_");
 
@@ -1218,11 +1219,11 @@ serdes_schema_t *compose_avro_schema_registry_name_2(char *topic, int is_topic_d
   loc_schema_name = malloc(len);
 
   memset(loc_schema_name, 0, len);
-  strcpy(loc_schema_name, topic);
-  strcat(loc_schema_name, "-");
-  strcat(loc_schema_name, type);
-  strcat(loc_schema_name, "-");
-  strcat(loc_schema_name, name);
+  strncpy(loc_schema_name, topic, len);
+  strncat(loc_schema_name, "-", len);
+  strncat(loc_schema_name, type, len);
+  strncat(loc_schema_name, "-", len);
+  strncat(loc_schema_name, name, len);
 
   loc_schema = compose_avro_schema_registry_name(loc_schema_name, FALSE, avro_schema, NULL, NULL, schema_registry); 
   free(loc_schema_name);
@@ -1244,8 +1245,8 @@ serdes_schema_t *compose_avro_schema_registry_name(char *topic, int is_topic_dyn
   if (!is_topic_dyn) {
     avro_schema_name = malloc(strlen(topic) + strlen("-value") + 1);
 
-    strcpy(avro_schema_name, topic);
-    strcat(avro_schema_name, "-value");
+    strncpy(avro_schema_name, topic, sizeof(avro_schema_name));
+    strncat(avro_schema_name, "-value", sizeof(avro_schema_name));
   }
   else {
     avro_schema_name = compose_avro_schema_name(type, name);

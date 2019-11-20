@@ -365,11 +365,11 @@ int MY_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct insert_
       len = config.sql_multi_values-idata->mv.buffer_offset; 
       if (strlen(values_clause) < len) { 
 	if (idata->mv.buffer_elem_num) {
-	  strcpy(multi_values_buffer+idata->mv.buffer_offset, ",");
+	  strncpy(multi_values_buffer+idata->mv.buffer_offset, ",", sizeof(multi_values_buffer));
 	  idata->mv.buffer_offset++;
 	}
 	ptr_mv = multi_values_buffer+idata->mv.buffer_offset;
-        strcpy(multi_values_buffer+idata->mv.buffer_offset, values_clause+7); /* cut the initial 'VALUES' */
+        strncpy(multi_values_buffer+idata->mv.buffer_offset, values_clause+7, sizeof(multi_values_buffer)); /* cut the initial 'VALUES' */
 	idata->mv.buffer_offset += strlen(ptr_mv);
 	idata->mv.buffer_elem_num++;
       }

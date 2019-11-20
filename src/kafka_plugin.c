@@ -712,7 +712,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 
 	if (config.sql_multi_values) {
 	  json_str = tmp_str;
-	  strcpy(json_buf, json_str);
+	  strncpy(json_buf, json_str, sizeof(json_buf));
 
 	  mv_num_save = mv_num;
 	  mv_num = 1;

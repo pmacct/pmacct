@@ -730,7 +730,7 @@ int parse_configuration_file(char *filename)
 	    Log(LOG_ERR, "ERROR: [%s] malloc() failed (parse_configuration_file). Exiting.\n", filename);
 	    exit(1);
 	  }
-          strcpy(cfg[rows], localbuf);
+          strncpy(cfg[rows], localbuf, sizeof(cfg));
           cfg[rows][strlen(localbuf)+1] = '\0';
           rows++;
         } 
@@ -883,7 +883,7 @@ void sanitize_cfg(int rows, char *filename)
       }
       localbuf[lbindex] = '\0';
       trim_spaces(valueptr);
-      strcpy(cfg[rindex], localbuf);
+      strncpy(cfg[rindex], localbuf, sizeof(cfg));
     }
 
     /* checking key field: each symbol must refer to a key */
@@ -992,7 +992,7 @@ int parse_plugin_names(char *filename, int rows, int ignore_names)
       strlcpy(key, cfg[index], (end-start)+1); 
       if (!strncmp(key, "plugins", sizeof("plugins"))) {
 	start = end+1;
-	strcpy(value, start); 
+	strncpy(value, start, sizeof(value)); 
 	found = TRUE;
 	break;
       }
@@ -1060,7 +1060,7 @@ void set_default_values()
 
 void compose_default_plugin_name(char *out, int outlen, char *type)
 {
-  strcpy(out, "default");
+  strncpy(out, "default", sizeof(out));
   strcat(out, "_");
   strncat(out, type, (outlen - 10));
 }
@@ -1110,7 +1110,7 @@ int create_plugin(char *filename, char *name, char *type)
 
   memset(plugin, 0, sizeof(struct plugins_list_entry));
   
-  strcpy(plugin->name, name);
+  strncpy(plugin->name, name, sizeof(plugin->name));
   plugin->id = id;
   memcpy(&plugin->type, ptype, sizeof(struct plugin_type_entry));
   plugin->next = NULL;

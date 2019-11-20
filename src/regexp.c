@@ -1114,7 +1114,7 @@ regprop(char *op)
 	register char *p;
 	static char buf[BUFLEN];
 
-	strcpy(buf, ":");
+	strncpy(buf, ":", BUFLEN);
 
 	switch (OP(op)) {
 	case BOL:

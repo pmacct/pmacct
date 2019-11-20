@@ -945,7 +945,7 @@ void P_handle_table_dyn_rr(char *new, int newlen, char *old, struct p_table_rr *
   int oldlen;
 
   oldlen = strlen(old);
-  if (oldlen <= newlen) strcpy(new, old);
+  if (oldlen <= newlen) strncpy(new, old, sizeof(new));
   else {
     strncpy(new, old, newlen);
     return;

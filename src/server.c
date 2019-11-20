@@ -40,7 +40,7 @@ int build_query_server(char *path_ptr)
   }
 
   sAddr.sun_family = AF_UNIX;
-  strcpy(sAddr.sun_path, path_ptr); 
+  strncpy(sAddr.sun_path, path_ptr, sizeof(sAddr.sun_path)); 
   unlink(path_ptr);
   
   rc = bind(sd, (struct sockaddr *) &sAddr,sizeof(sAddr));
