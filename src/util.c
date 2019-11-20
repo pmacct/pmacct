@@ -294,8 +294,8 @@ void strip_quotes(char *buf)
   /* stripping all quote marks using a temporary buffer to avoid string corruption by strcpy() */
   while (i <= len) {
     if (ptr[i] == '\'') {
-      strncpy(tmp_buf, &ptr[i+1], sizeof(tmp_buf));
-      strncpy(&buf[i], tmp_buf, sizeof(buf[i]));
+      strcpy(tmp_buf, &ptr[i+1]);
+      strcpy(&buf[i], tmp_buf);
       len--;
     }
     else i++;
@@ -546,7 +546,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
   if (!new || !old || !prim_ptrs) return ERR;
 
   oldlen = strlen(old);
-  if (oldlen <= newlen) strncpy(new, old, sizeof(new));
+  if (oldlen <= newlen) strcpy(new, old);
   else return ERR;
 
   for (var_num = 0, ptr_substr = new, ptr_var = strchr(ptr_substr, '$'); ptr_var; var_num++) {
@@ -962,12 +962,11 @@ void write_pid_file_plugin(char *filename, char *type, char *name)
     return;
   }
   memset(fname, 0, len);
-  /* XXX should use snprintf */
-  strncpy(fname, filename, len);
-  strncat(fname, minus, len);
-  strncat(fname, type, len);
-  strncat(fname, minus, len);
-  strncat(fname, name, len);
+  strcpy(fname, filename);
+  strcat(fname, minus);
+  strcat(fname, type);
+  strcat(fname, minus);
+  strcat(fname, name);
 
   config.pidfile = fname;
   unlink(fname);
@@ -1284,7 +1283,7 @@ void insert_rfc3339_timezone(char *s, int slen, const struct tm *nowtm)
     if (!strcmp(buf, "+0000")) {
       ptr_start[0] = 'Z';
       ptr_start++;
-      strncpy(ptr_start, ptr_end, sizeof(ptr_start));
+      strcpy(ptr_start, ptr_end);
     }
     else {
       /* ie. '+0200', '-0100', etc. */
@@ -2683,8 +2682,8 @@ int delete_line_from_file(int index, char *path)
   copy_path = malloc(len);
   memset(copy_path, 0, len);
 
-  strncpy(copy_path, path, len);
-  strncat(copy_path, ".copy", len);
+  strcpy(copy_path, path);
+  strcat(copy_path, ".copy");
   file_copy = fopen(copy_path, "w");
 
   if (file == NULL) {

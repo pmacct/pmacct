@@ -348,12 +348,12 @@ int SQLI_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct inser
       len = config.sql_multi_values-idata->mv.buffer_offset;
       if (strlen(values_clause) < len) {
 	if (idata->mv.buffer_elem_num) {
-	  strncpy(multi_values_buffer+idata->mv.buffer_offset, "; ", sizeof(multi_values_buffer));
+	  strcpy(multi_values_buffer+idata->mv.buffer_offset, "; ");
 	  idata->mv.buffer_offset++;
 	  idata->mv.buffer_offset++;
 	}
 	ptr_mv = multi_values_buffer+idata->mv.buffer_offset;
-	strncpy(multi_values_buffer+idata->mv.buffer_offset, sql_data, sizeof(multi_values_buffer)); 
+	strcpy(multi_values_buffer+idata->mv.buffer_offset, sql_data); 
 	idata->mv.buffer_offset += strlen(ptr_mv);
         idata->mv.buffer_elem_num++;
       }

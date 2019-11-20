@@ -636,7 +636,7 @@ int build_query_client(char *path_ptr)
   }
 
   cAddr.sun_family = AF_UNIX;
-  strncpy(cAddr.sun_path, path_ptr, sizeof(cAddr.sun_path));
+  strcpy(cAddr.sun_path, path_ptr);
   cLen = sizeof(cAddr);
 
   rc = connect(sd, (struct sockaddr *) &cAddr, cLen);
@@ -726,7 +726,7 @@ int main(int argc,char **argv)
   memset(&pmc_custom_primitives_registry, 0, sizeof(pmc_custom_primitives_registry));
   memset(&custom_primitives_input, 0, sizeof(custom_primitives_input));
 
-  strncpy(path, "/tmp/collect.pipe", sizeof(path));
+  strcpy(path, "/tmp/collect.pipe");
   unpacked = 0; printed = 0;
   errflag = 0; buflen = 0;
   protocols_number = 0;

@@ -113,7 +113,7 @@ void update_status_table(struct xflow_status_entry *entry, u_int32_t seqno, int 
       if (config.nfacctd_ip)
 	memcpy(collector_ip_address, config.nfacctd_ip, MAX(strlen(config.nfacctd_ip), INET6_ADDRSTRLEN));
       else
-	strncpy(collector_ip_address, null_ip_address, sizeof(collector_ip_address));
+	strcpy(collector_ip_address, null_ip_address);
 
       Log(LOG_INFO, "INFO ( %s/%s ): expecting flow '%u' but received '%u' collector=%s:%u agent=%s:%u\n",
 		config.name, config.type, entry->seqno+entry->inc, seqno, collector_ip_address,
@@ -137,7 +137,7 @@ void print_status_table(time_t now, int buckets)
   Log(LOG_NOTICE, "NOTICE ( %s/%s ): +++\n", config.name, config.type);
 
   if (config.nfacctd_ip) memcpy(collector_ip_address, config.nfacctd_ip, MAX(strlen(config.nfacctd_ip), INET6_ADDRSTRLEN));
-  else strncpy(collector_ip_address, null_ip_address, INET6_ADDRSTRLEN);
+  else strcpy(collector_ip_address, null_ip_address);
   
   for (idx = 0; idx < buckets; idx++) {
     entry = xflow_status_table[idx];
