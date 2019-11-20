@@ -81,18 +81,38 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (config.message_broker_output & PRINT_OUTPUT_JSON) {
     compose_json(config.what_to_count, config.what_to_count_2);
   }
-  else if (config.message_broker_output & PRINT_OUTPUT_AVRO) {
+  else if ((config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) ||
+	   (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
-    avro_acct_schema = avro_schema_build_flow(config.what_to_count, config.what_to_count_2);
+    avro_acct_schema = avro_schema_build_acct_data(config.what_to_count, config.what_to_count_2);
     avro_schema_add_writer_id(avro_acct_schema);
 
-    if (config.avro_schema_file) write_avro_schema_to_file(config.avro_schema_file, avro_acct_schema);
+    avro_acct_init_schema = avro_schema_build_acct_init();
+    avro_acct_close_schema = avro_schema_build_acct_close();
+
+    if (config.avro_schema_file) {
+      char avro_schema_file[SRVBUFLEN];
+
+      if (strlen(config.avro_schema_file) > (SRVBUFLEN - SUPERSHORTBUFLEN)) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): 'avro_schema_file' too long. Exiting.\n", config.name, config.type);
+	exit_gracefully(1);
+      }
+
+      write_avro_schema_to_file_with_suffix(config.avro_schema_file, "-acct_data", avro_schema_file, avro_acct_schema);
+      write_avro_schema_to_file_with_suffix(config.avro_schema_file, "-acct_init", avro_schema_file, avro_acct_init_schema);
+      write_avro_schema_to_file_with_suffix(config.avro_schema_file, "-acct_close", avro_schema_file, avro_acct_close_schema);
+    }
 
     if (config.kafka_avro_schema_registry) {
 #ifdef WITH_SERDES
       if (config.sql_multi_values) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): 'kafka_avro_schema_registry' is not compatible with 'kafka_multi_values'. Exiting.\n", config.name, config.type);
-        exit_gracefully(1);
+	Log(LOG_ERR, "ERROR ( %s/%s ): 'kafka_avro_schema_registry' is not compatible with 'kafka_multi_values'. Exiting.\n", config.name, config.type);
+	exit_gracefully(1);
+      }
+
+      if (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): 'kafka_avro_schema_registry' is not compatible with 'avro_json' output. Exiting.\n", config.name, config.type);
+	exit_gracefully(1);
       }
 #else
       Log(LOG_ERR, "ERROR ( %s/%s ): 'kafka_avro_schema_registry' requires --enable-serdes. Exiting.\n", config.name, config.type);
@@ -388,7 +408,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
     p_kafka_set_key(&kafkap_kafka_host, config.kafka_partition_key, config.kafka_partition_keylen);
 
   if (config.message_broker_output & PRINT_OUTPUT_JSON) p_kafka_set_content_type(&kafkap_kafka_host, PM_KAFKA_CNT_TYPE_STR);
-  else if (config.message_broker_output & PRINT_OUTPUT_AVRO) p_kafka_set_content_type(&kafkap_kafka_host, PM_KAFKA_CNT_TYPE_BIN);
+  else if (config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) p_kafka_set_content_type(&kafkap_kafka_host, PM_KAFKA_CNT_TYPE_BIN);
+  else if (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON) p_kafka_set_content_type(&kafkap_kafka_host, PM_KAFKA_CNT_TYPE_STR);
   else {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unsupported kafka_output value specified. Exiting.\n", config.name, config.type);
     exit_gracefully(1);
@@ -400,23 +421,28 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START (PID: %u) ***\n", config.name, config.type, writer_pid);
   start = time(NULL);
 
-  if (config.print_markers) {
-    if (config.message_broker_output & PRINT_OUTPUT_JSON) {
-      void *json_obj = NULL;
-      char *json_str = NULL;
-
-      json_obj = compose_purge_init_json(config.name, writer_pid);
-
-      if (json_obj) json_str = compose_json_str(json_obj);
-      if (json_str) {
-        Log(LOG_DEBUG, "DEBUG ( %s/%s ): %s\n\n", config.name, config.type, json_str);
-        ret = p_kafka_produce_data(&kafkap_kafka_host, json_str, strlen(json_str));
-
-        free(json_str);
-        json_str = NULL;
-      }
+#ifdef WITH_AVRO
+  if (config.kafka_avro_schema_registry) {
+#ifdef WITH_SERDES
+    if (is_topic_dyn) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'kafka_topic' is not compatible with 'avro_schema_registry'. Exiting.\n", config.name, config.type);
+      exit_gracefully(1);
     }
+
+    kafkap_kafka_host.sd_schema[AVRO_ACCT_DATA_SID] = compose_avro_schema_registry_name_2(p_kafka_get_topic(&kafkap_kafka_host),
+											  FALSE, avro_acct_schema, "acct", "data",
+											  config.kafka_avro_schema_registry);
+
+    kafkap_kafka_host.sd_schema[AVRO_ACCT_INIT_SID] = compose_avro_schema_registry_name_2(p_kafka_get_topic(&kafkap_kafka_host),
+											  FALSE, avro_acct_init_schema, "acct", "init",
+											  config.kafka_avro_schema_registry);
+
+    kafkap_kafka_host.sd_schema[AVRO_ACCT_CLOSE_SID] = compose_avro_schema_registry_name_2(p_kafka_get_topic(&kafkap_kafka_host),
+											   FALSE, avro_acct_close_schema, "acct", "close",
+											   config.kafka_avro_schema_registry);
+#endif
   }
+#endif
 
   if (config.message_broker_output & PRINT_OUTPUT_JSON) {
     if (config.sql_multi_values) {
@@ -429,7 +455,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
       else memset(json_buf, 0, config.sql_multi_values);
     }
   }
-  else if (config.message_broker_output & PRINT_OUTPUT_AVRO) {
+  else if ((config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) ||
+           (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
     if (!config.avro_buffer_size) config.avro_buffer_size = LARGEBUFLEN;
 
@@ -439,18 +466,72 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
       Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (avro_buf). Exiting ..\n", config.name, config.type);
       exit_gracefully(1);
     }
-    else memset(avro_buf, 0, config.avro_buffer_size);
+    else {
+      memset(avro_buf, 0, config.avro_buffer_size);
+    }
 
-    avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
-
-    if (config.kafka_avro_schema_registry) {
-#ifdef WITH_SERDES
-      kafkap_kafka_host.sd_schema[0] = compose_avro_schema_registry_name(p_kafka_get_topic(&kafkap_kafka_host), is_topic_dyn,
-											   avro_acct_schema, config.type, config.name,
-											   config.kafka_avro_schema_registry);
-#endif
+    if (config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) {
+      avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
     }
 #endif
+  }
+
+  if (config.print_markers) {
+    if (config.message_broker_output & PRINT_OUTPUT_JSON) {
+      void *json_obj = NULL;
+      char *json_str = NULL;
+
+      json_obj = compose_purge_init_json(config.name, writer_pid);
+
+      if (json_obj) json_str = compose_json_str(json_obj);
+      if (json_str) {
+	Log(LOG_DEBUG, "DEBUG ( %s/%s ): %s\n\n", config.name, config.type, json_str);
+	ret = p_kafka_produce_data(&kafkap_kafka_host, json_str, strlen(json_str));
+
+	free(json_str);
+	json_str = NULL;
+      }
+    }
+    else if ((config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) ||
+	     (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON)) {
+#ifdef WITH_AVRO
+      avro_value_iface_t *avro_iface = avro_generic_class_from_schema(avro_acct_init_schema);
+      avro_value_t avro_value = compose_avro_acct_init(config.name, writer_pid, avro_iface);
+
+      if (config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) {
+	if (!config.kafka_avro_schema_registry) {
+	  avro_len = avro_writer_tell(avro_writer);
+	}
+#ifdef WITH_SERDES
+	else {
+	  void *avro_local_buf = NULL;
+
+	  if (serdes_schema_serialize_avro(kafkap_kafka_host.sd_schema[AVRO_ACCT_INIT_SID], &avro_value, &avro_local_buf,
+					   &avro_len, kafkap_kafka_host.errstr, sizeof(kafkap_kafka_host.errstr))) {
+	    Log(LOG_ERR, "ERROR ( %s/%s ): kafka_cache_purge(): serdes_schema_serialize_avro() failed: %s\n", config.name, config.type, kafkap_kafka_host.errstr);
+	    exit_gracefully(1);
+	  }
+	  else {
+	    avro_buf = avro_local_buf;
+	  }
+	}
+#endif
+        ret = p_kafka_produce_data(&kafkap_kafka_host, avro_buf, avro_len);
+        if (!config.kafka_avro_schema_registry) avro_writer_reset(avro_writer);
+      }
+      else if (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON) {
+	char *avro_local_buf = write_avro_json_record_to_buf(avro_value);
+
+	if (avro_local_buf) {
+	  ret = p_kafka_produce_data(&kafkap_kafka_host, avro_local_buf, strlen(avro_local_buf));
+	  free(avro_local_buf);
+	}
+      }
+
+      avro_value_decref(&avro_value);
+      avro_value_iface_decref(avro_iface);
+#endif
+    }
   }
 
   for (j = 0; j < index; j++) {
@@ -498,64 +579,90 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
       json_str = compose_json_str(json_obj);
 #endif
     }
-    else if (config.message_broker_output & PRINT_OUTPUT_AVRO) {
+    else if ((config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) ||
+	     (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
       avro_value_iface_t *avro_iface = avro_generic_class_from_schema(avro_acct_schema);
-      avro_value_t avro_value = compose_avro(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
-                           &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust, pvlen, queue[j]->bytes_counter,
-                           queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags,
-                           &queue[j]->basetime, queue[j]->stitch, avro_iface);
-      size_t avro_value_size;
-
+      avro_value_t avro_value = compose_avro_acct_data(config.what_to_count, config.what_to_count_2,
+			   queue[j]->flow_type, &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust,
+			   pvlen, queue[j]->bytes_counter, queue[j]->packet_counter,
+			   queue[j]->flow_counter, queue[j]->tcp_flags, &queue[j]->basetime,
+			   queue[j]->stitch, avro_iface);
       add_writer_name_and_pid_avro(avro_value, config.name, writer_pid);
-      avro_value_sizeof(&avro_value, &avro_value_size);
 
-      if (!config.kafka_avro_schema_registry) {
-	if (avro_value_size > config.avro_buffer_size) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: insufficient buffer size (avro_buffer_size=%u)\n",
-	      config.name, config.type, config.avro_buffer_size);
-	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: increase value or look for avro_buffer_size in CONFIG-KEYS document.\n\n",
-	      config.name, config.type);
-	  exit_gracefully(1);
-	}
-	else if (avro_value_size >= (config.avro_buffer_size - avro_writer_tell(avro_writer))) {
-	  avro_buffer_full = TRUE;
-	  j--;
-	}
-	else if (avro_value_write(avro_writer, &avro_value)) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to write value: %s\n", config.name, config.type, avro_strerror());
-	  exit_gracefully(1);
-	}
-	else mv_num++;
+      if (config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) {
+	size_t avro_value_size;
 
-	avro_len = avro_writer_tell(avro_writer);
-      }
+        avro_value_sizeof(&avro_value, &avro_value_size);
+
+	if (!config.kafka_avro_schema_registry) {
+	  if (avro_value_size > config.avro_buffer_size) {
+	    Log(LOG_ERR, "ERROR ( %s/%s ): kafka_cache_purge(): avro_buffer_size too small (%u)\n", config.name, config.type, config.avro_buffer_size);
+	    exit_gracefully(1);
+	  }
+	  else if (avro_value_size >= (config.avro_buffer_size - avro_writer_tell(avro_writer))) {
+	    avro_buffer_full = TRUE;
+	    j--;
+	  }
+	  else if (avro_value_write(avro_writer, &avro_value)) {
+	    Log(LOG_ERR, "ERROR ( %s/%s ): kafka_cache_purge(): avro_value_write() faiiled: %s\n", config.name, config.type, avro_strerror());
+	    exit_gracefully(1);
+	  }
+	  else {
+	    mv_num++;
+	  }
+
+	  avro_len = avro_writer_tell(avro_writer);
+	}
 #ifdef WITH_SERDES
-      else {
-	void *avro_local_buf = NULL;
-
-	avro_len = 0;
-	if (avro_buf) {
-	  free(avro_buf);
-	  avro_buf = NULL;
-	}
-
-	if (serdes_schema_serialize_avro(kafkap_kafka_host.sd_schema[0], &avro_value, &avro_local_buf, &avro_len,
-					 kafkap_kafka_host.errstr, sizeof(kafkap_kafka_host.errstr))) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: serdes_schema_serialize_avro() failed: %s\n", config.name, config.type, kafkap_kafka_host.errstr);
-	  exit_gracefully(1);
-	}
 	else {
-	  avro_buf = avro_local_buf;
-	  mv_num++;
+	  void *avro_local_buf = NULL;
+
+	  avro_len = 0;
+	  if (avro_buf) {
+	    free(avro_buf);
+	    avro_buf = NULL;
+	  }
+
+	  if (serdes_schema_serialize_avro(kafkap_kafka_host.sd_schema[AVRO_ACCT_DATA_SID], &avro_value, &avro_local_buf,
+					   &avro_len, kafkap_kafka_host.errstr, sizeof(kafkap_kafka_host.errstr))) {
+	    Log(LOG_ERR, "ERROR ( %s/%s ): kafka_cache_purge(): serdes_schema_serialize_avro() failed: %s\n", config.name, config.type, kafkap_kafka_host.errstr);
+	    exit_gracefully(1);
+	  }
+	  else {
+	    avro_buf = avro_local_buf;
+	    mv_num++;
+	  }
+	}
+#endif
+      }
+      else if (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON) {
+	char *avro_local_buf = write_avro_json_record_to_buf(avro_value);
+
+	if (avro_local_buf) {
+	  size_t avro_locbuf_len = strlen(avro_local_buf);
+
+	  if (avro_locbuf_len > config.avro_buffer_size) {
+	    Log(LOG_ERR, "ERROR ( %s/%s ): kafka_cache_purge(): avro_buffer_size too small (%u)\n", config.name, config.type, config.avro_buffer_size);
+	    exit_gracefully(1);
+	  }
+	  else if (avro_locbuf_len >= (config.avro_buffer_size - strlen(avro_buf))) {
+	    avro_buffer_full = TRUE;
+	    j--;
+	  }
+	  else {
+	    strcat(avro_buf, avro_local_buf);
+	    mv_num++;
+	  }
+
+	  free(avro_local_buf);
 	}
       }
-#endif
 
       avro_value_decref(&avro_value);
       avro_value_iface_decref(avro_iface);
 #else
-      if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_avro(): AVRO object not created due to missing --enable-avro\n", config.name, config.type);
+      if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_avro_acct_data(): AVRO object not created due to missing --enable-avro\n", config.name, config.type);
 #endif
     }
 
@@ -624,7 +731,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
         else break;
       }
     }
-    else if (config.message_broker_output & PRINT_OUTPUT_AVRO) {
+    else if ((config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) ||
+	     (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
       if (!config.sql_multi_values || (mv_num >= config.sql_multi_values) || avro_buffer_full) {
         if (is_topic_dyn) {
@@ -640,8 +748,14 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
           p_kafka_set_topic(&kafkap_kafka_host, dyn_kafka_topic);
         }
 
-        ret = p_kafka_produce_data(&kafkap_kafka_host, avro_buf, avro_len);
-        if (!config.kafka_avro_schema_registry) avro_writer_reset(avro_writer);
+	if (config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) { 
+	  ret = p_kafka_produce_data(&kafkap_kafka_host, avro_buf, avro_len);
+	  if (!config.kafka_avro_schema_registry) avro_writer_reset(avro_writer);
+	}
+	else if (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON) {
+	  ret = p_kafka_produce_data(&kafkap_kafka_host, avro_buf, strlen(avro_buf));
+	  memset(avro_buf, 0, config.avro_buffer_size);
+        }
 
         avro_buffer_full = FALSE;
         mv_num_save = mv_num;
@@ -664,13 +778,21 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 	if (!ret) qn += mv_num;
       }
     }
-    else if (config.message_broker_output & PRINT_OUTPUT_AVRO) {
+    else if ((config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) ||
+	     (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
-      if (avro_len) {
-        ret = p_kafka_produce_data(&kafkap_kafka_host, avro_buf, avro_len);
-        if (!config.kafka_avro_schema_registry) avro_writer_free(avro_writer);
-
-        if (!ret) qn += mv_num;
+      if (config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) {
+	if (avro_len) {
+	  ret = p_kafka_produce_data(&kafkap_kafka_host, avro_buf, avro_len);
+	  if (!config.kafka_avro_schema_registry) avro_writer_free(avro_writer);
+          if (!ret) qn += mv_num;
+	}
+      }
+      else if (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON) {
+        if (strlen(avro_buf)) {
+	  ret = p_kafka_produce_data(&kafkap_kafka_host, avro_buf, strlen(avro_buf));
+	  if (!ret) qn += mv_num;
+	}
       }
 #endif
     }
@@ -695,6 +817,46 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
         free(json_str);
         json_str = NULL;
       }
+    }
+    else if ((config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) ||
+	     (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON)) {
+#ifdef WITH_AVRO
+      avro_value_iface_t *avro_iface = avro_generic_class_from_schema(avro_acct_close_schema);
+      avro_value_t avro_value = compose_avro_acct_close(config.name, writer_pid, qn, saved_index, duration, avro_iface);
+
+      if (config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) {
+	if (!config.kafka_avro_schema_registry) {
+	  avro_len = avro_writer_tell(avro_writer);
+	}
+#ifdef WITH_SERDES
+	else {
+	  void *avro_local_buf = NULL;
+
+	  if (serdes_schema_serialize_avro(kafkap_kafka_host.sd_schema[AVRO_ACCT_CLOSE_SID], &avro_value, &avro_local_buf,
+					   &avro_len, kafkap_kafka_host.errstr, sizeof(kafkap_kafka_host.errstr))) {
+	    Log(LOG_ERR, "ERROR ( %s/%s ): kafka_cache_purge(): serdes_schema_serialize_avro() failed: %s\n", config.name, config.type, kafkap_kafka_host.errstr);
+	    exit_gracefully(1);
+	  }
+	  else {
+	    avro_buf = avro_local_buf;
+	  }
+	}
+#endif
+	ret = p_kafka_produce_data(&kafkap_kafka_host, avro_buf, avro_len);
+	if (!config.kafka_avro_schema_registry) avro_writer_reset(avro_writer);
+      }
+      else if (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON) {
+	char *avro_local_buf = write_avro_json_record_to_buf(avro_value);
+
+	if (avro_local_buf) {
+	  ret = p_kafka_produce_data(&kafkap_kafka_host, avro_local_buf, strlen(avro_local_buf));
+	  free(avro_local_buf);
+	}
+      }
+
+      avro_value_decref(&avro_value);
+      avro_value_iface_decref(avro_iface);
+#endif
     }
   }
 

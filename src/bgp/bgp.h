@@ -164,6 +164,7 @@ struct bgp_peer {
   int lock;
   int type; /* ie. BGP vs BMP */
   u_int8_t status;
+  u_int8_t version;
   as_t myas;
   as_t as;
   u_int16_t ht;

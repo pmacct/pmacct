@@ -98,4 +98,5 @@ extern int attrhash_cmp(const void *, const void *);
 extern void attrhash_init(int, struct hash **);
 
 extern int bgp_router_id_check(struct bgp_msg_data *);
+extern u_int16_t bgp_get_packet_len(char *);
 #endif 

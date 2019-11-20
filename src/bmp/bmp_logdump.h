@@ -30,6 +30,12 @@
 #define BMP_LOG_TYPE_PEER_DOWN	BMP_MSG_PEER_DOWN
 #define BMP_LOG_TYPE_ROUTE	BMP_MSG_ROUTE_MONITOR
 
+#define BMP_LOG_TYPE_LOGINIT    BGP_LOG_TYPE_LOGINIT
+#define BMP_LOG_TYPE_LOGCLOSE	BGP_LOG_TYPE_LOGCLOSE
+#define BMP_LOG_TYPE_DUMPINIT   BGP_LOG_TYPE_DUMPINIT
+#define BMP_LOG_TYPE_DUMPCLOSE	BGP_LOG_TYPE_DUMPCLOSE
+#define BMP_LOG_TYPE_MAX	BGP_LOG_TYPE_DUMPCLOSE
+
 struct bmp_log_stats {
   u_int16_t cnt_type;
   afi_t cnt_afi;
@@ -73,9 +79,20 @@ struct bmp_log_peer_up {
   struct bmp_log_peer_up_tlv_array tlv;
 };
 
+struct bmp_log_peer_down_tlv_array {
+  int entries;
+  struct bmp_log_tlv e[BMP_PEER_DOWN_INFO_ENTRIES];
+};
+
 struct bmp_log_peer_down {
   u_char reason;
   u_int16_t loc_code;
+  struct bmp_log_peer_down_tlv_array tlv;
+};
+
+struct bmp_log_route_monitor_tlv_array {
+  int entries;
+  struct bmp_log_tlv e[BMP_ROUTE_MONITOR_INFO_ENTRIES];
 };
 
 struct bmp_dump_se {
@@ -114,6 +131,7 @@ extern int bmp_log_msg_init(struct bgp_peer *, struct bmp_data *, struct bmp_log
 extern int bmp_log_msg_term(struct bgp_peer *, struct bmp_data *, struct bmp_log_term_array *, char *, int, void *);
 extern int bmp_log_msg_peer_up(struct bgp_peer *, struct bmp_data *, struct bmp_log_peer_up *, char *, int, void *);
 extern int bmp_log_msg_peer_down(struct bgp_peer *, struct bmp_data *, struct bmp_log_peer_down *, char *, int, void *);
+extern int bmp_log_msg_route_monitor_tlv(struct bmp_log_route_monitor_tlv_array *, int, void *);
 
 extern void bmp_dump_se_ll_append(struct bgp_peer *, struct bmp_data *, void *, int);
 extern void bmp_dump_se_ll_destroy(struct bmp_dump_se_ll *);
@@ -131,6 +149,10 @@ extern avro_schema_t avro_schema_build_bmp_term(char *);
 extern avro_schema_t avro_schema_build_bmp_peer_up(char *);
 extern avro_schema_t avro_schema_build_bmp_peer_down(char *);
 extern avro_schema_t avro_schema_build_bmp_stats(char *);
+
+extern avro_schema_t avro_schema_build_bmp_log_initclose(int, char *);
+extern avro_schema_t avro_schema_build_bmp_dump_init(int, char *);
+extern avro_schema_t avro_schema_build_bmp_dump_close(int, char *);
 
 extern void avro_schema_build_bmp_common(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *);
 #endif

@@ -472,7 +472,7 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   start = time(NULL);
 
   /* re-using pending queries queue stuff from parent and saving clauses */
-  memcpy(pending_queries_queue, queue, index*sizeof(struct db_cache *));
+  memcpy(sql_pending_queries_queue, queue, index*sizeof(struct db_cache *));
   pqq_ptr = index;
 
   strlcpy(orig_copy_clause, copy_clause, LONGSRVBUFLEN);
@@ -481,8 +481,8 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   strlcpy(orig_lock_clause, lock_clause, LONGSRVBUFLEN);
 
   start:
-  memcpy(queue, pending_queries_queue, pqq_ptr*sizeof(struct db_cache *));
-  memset(pending_queries_queue, 0, pqq_ptr*sizeof(struct db_cache *));
+  memcpy(queue, sql_pending_queries_queue, pqq_ptr*sizeof(struct db_cache *));
+  memset(sql_pending_queries_queue, 0, pqq_ptr*sizeof(struct db_cache *));
   index = pqq_ptr; pqq_ptr = 0;
 
   /* We check for variable substitution in SQL table */
@@ -631,7 +631,7 @@ int PG_evaluate_history(int primitive)
       strncat(where[primitive].string, " AND ", sizeof(where[primitive].string));
     }
     if (!config.timestamps_since_epoch)
-      strncat(where[primitive].string, "ABSTIME(%u)::Timestamp::Timestamp without time zone = ", SPACELEFT(where[primitive].string));
+      strncat(where[primitive].string, "to_timestamp(%u)::Timestamp without time zone = ", SPACELEFT(where[primitive].string));
     else
       strncat(where[primitive].string, "%u = ", SPACELEFT(where[primitive].string));
     strncat(where[primitive].string, "stamp_inserted", SPACELEFT(where[primitive].string));
@@ -661,7 +661,7 @@ int PG_evaluate_history(int primitive)
     }
     else {
       if (!config.timestamps_since_epoch)
-	strncat(values[primitive].string, "ABSTIME(%u)::Timestamp, ABSTIME(%u)::Timestamp", SPACELEFT(values[primitive].string));
+	strncat(values[primitive].string, "to_timestamp(%u), to_timestamp(%u)", SPACELEFT(values[primitive].string));
       else
 	strncat(values[primitive].string, "%u, %u", SPACELEFT(values[primitive].string));
       values[primitive].handler = where[primitive].handler = count_timestamp_handler;

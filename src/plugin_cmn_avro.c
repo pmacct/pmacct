@@ -36,16 +36,16 @@
 
 #ifdef WITH_AVRO
 /* global variables */
-avro_schema_t avro_acct_schema;
+avro_schema_t avro_acct_schema, avro_acct_init_schema, avro_acct_close_schema;
 
 /* functions */
-avro_schema_t avro_schema_build_flow(u_int64_t wtc, u_int64_t wtc_2)
+avro_schema_t avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
 {
-  avro_schema_t schema = avro_schema_record("acct", NULL);
+  avro_schema_t schema = avro_schema_record("acct_data", NULL);
   avro_schema_t optlong_s = avro_schema_union();
   avro_schema_t optstr_s = avro_schema_union();
 
-  Log(LOG_INFO, "INFO ( %s/%s ): AVRO: building acct schema.\n", config.name, config.type);
+  Log(LOG_INFO, "INFO ( %s/%s ): avro_schema_build_acct_data(): building acct schema.\n", config.name, config.type);
 
   avro_schema_union_append(optlong_s, avro_schema_null());
   avro_schema_union_append(optlong_s, avro_schema_long());
@@ -319,12 +319,85 @@ avro_schema_t avro_schema_build_flow(u_int64_t wtc, u_int64_t wtc_2)
   return schema;
 }
 
+avro_schema_t avro_schema_build_acct_init()
+{
+  avro_schema_t schema = avro_schema_record("acct_init", NULL);
+
+  Log(LOG_INFO, "INFO ( %s/%s ): avro_schema_build_acct_init(): building acct_init schema.\n", config.name, config.type);
+
+  avro_schema_record_field_append(schema, "event_type", avro_schema_string());
+  avro_schema_record_field_append(schema, "writer_id", avro_schema_string());
+
+  return schema;
+}
+
+avro_schema_t avro_schema_build_acct_close()
+{
+  avro_schema_t schema = avro_schema_record("acct_close", NULL);
+
+  Log(LOG_INFO, "INFO ( %s/%s ): avro_schema_build_acct_close(): building acct_close schema.\n", config.name, config.type);
+
+  avro_schema_record_field_append(schema, "event_type", avro_schema_string());
+  avro_schema_record_field_append(schema, "writer_id", avro_schema_string());
+
+  avro_schema_record_field_append(schema, "purged_entries", avro_schema_long());
+  avro_schema_record_field_append(schema, "total_entries", avro_schema_long());
+  avro_schema_record_field_append(schema, "duration", avro_schema_int());
+
+  return schema;
+}
+
 void avro_schema_add_writer_id(avro_schema_t schema)
 {
   avro_schema_record_field_append(schema, "writer_id", avro_schema_string());
 }
 
-avro_value_t compose_avro(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
+avro_value_t compose_avro_acct_init(char *writer_name, pid_t writer_pid, avro_value_iface_t *iface)
+{
+  char event_type[] = "purge_init", wid[SHORTSHORTBUFLEN];
+  avro_value_t value;
+  avro_value_t field;
+
+  pm_avro_check(avro_generic_value_new(iface, &value));
+
+  pm_avro_check(avro_value_get_by_name(&value, "event_type", &field, NULL));
+  pm_avro_check(avro_value_set_string(&field, event_type));
+
+  snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", writer_name, writer_pid);
+  pm_avro_check(avro_value_get_by_name(&value, "writer_id", &field, NULL));
+  pm_avro_check(avro_value_set_string(&field, wid));
+
+  return value;
+}
+
+avro_value_t compose_avro_acct_close(char *writer_name, pid_t writer_pid, int purged_entries, int total_entries, int duration, avro_value_iface_t *iface)
+{
+  char event_type[] = "purge_close", wid[SHORTSHORTBUFLEN];
+  avro_value_t value;
+  avro_value_t field;
+
+  pm_avro_check(avro_generic_value_new(iface, &value));
+
+  pm_avro_check(avro_value_get_by_name(&value, "event_type", &field, NULL));
+  pm_avro_check(avro_value_set_string(&field, event_type));
+
+  snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", writer_name, writer_pid);
+  pm_avro_check(avro_value_get_by_name(&value, "writer_id", &field, NULL));
+  pm_avro_check(avro_value_set_string(&field, wid));
+
+  pm_avro_check(avro_value_get_by_name(&value, "purged_entries", &field, NULL));
+  pm_avro_check(avro_value_set_long(&field, purged_entries));
+
+  pm_avro_check(avro_value_get_by_name(&value, "total_entries", &field, NULL));
+  pm_avro_check(avro_value_set_long(&field, total_entries));
+
+  pm_avro_check(avro_value_get_by_name(&value, "duration", &field, NULL));
+  pm_avro_check(avro_value_set_int(&field, total_entries));
+
+  return value;
+}
+
+avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
   struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
   struct pkt_tunnel_primitives *ptun, u_char *pcust, struct pkt_vlen_hdr_primitives *pvlen,
   pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags,
@@ -1199,4 +1272,29 @@ serdes_schema_t *compose_avro_schema_registry_name(char *topic, int is_topic_dyn
   return sd_schema;
 }
 #endif
+
+void write_avro_json_record_to_file(FILE *fp, avro_value_t value)
+{
+  char *json_str;
+
+  if (avro_value_to_json(&value, TRUE, &json_str)) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): write_avro_json_record_to_file() unable to value to JSON: %s\n", config.name, config.type, avro_strerror());
+    exit_gracefully(1);
+  }
+
+  fprintf(fp, "%s\n", json_str);
+  free(json_str);
+}
+
+char *write_avro_json_record_to_buf(avro_value_t value)
+{
+  char *json_str;
+
+  if (avro_value_to_json(&value, TRUE, &json_str)) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): write_avro_json_record_to_buf() unable to value to JSON: %s\n", config.name, config.type, avro_strerror());
+    exit_gracefully(1);
+  }
+
+  return json_str;
+}
 #endif

@@ -176,6 +176,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
       peer->ht = MAX(5, ntohs(bopen->bgpo_holdtime));
       peer->id.family = AF_INET; 
       peer->id.address.ipv4.s_addr = bopen->bgpo_id;
+      peer->version = BGP_VERSION4;
 
       /* Check: duplicate Router-IDs; BGP only, ie. no BMP */
       if (!config.bgp_disable_router_id_check && bms->bgp_msg_open_router_id_check) {

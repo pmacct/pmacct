@@ -406,7 +406,8 @@ void skinny_bgp_daemon_online()
 #endif
 
 #ifdef WITH_AVRO
-    if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_AVRO) {
+    if ((config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_AVRO_BIN) ||
+	(config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_AVRO_JSON)) {
       assert(BGP_LOG_TYPE_MAX < MAX_AVRO_SCHEMA);
 
       bgp_misc_db->msglog_avro_schema[0] = avro_schema_build_bgp(BGP_LOGDUMP_ET_LOG, "bgp_msglog");
@@ -439,6 +440,12 @@ void skinny_bgp_daemon_online()
 	  exit_gracefully(1);
         }
 
+	if (config.nfacctd_bgp_msglog_output == PRINT_OUTPUT_AVRO_JSON) {
+          Log(LOG_ERR, "ERROR ( %s/%s ): 'avro_json' output is not compatible with 'bgp_daemon_msglog_kafka_avro_schema_registry'. Exiting.\n",
+	      config.name, bgp_misc_db->log_str);
+	  exit_gracefully(1);
+	}
+
 	bgp_daemon_msglog_kafka_host.sd_schema[0] = compose_avro_schema_registry_name_2(config.nfacctd_bgp_msglog_kafka_topic, FALSE,
 										        bgp_misc_db->msglog_avro_schema[0], "bgp", "msglog",
 										        config.nfacctd_bgp_msglog_kafka_avro_schema_registry);
@@ -464,7 +471,8 @@ void skinny_bgp_daemon_online()
 #endif
 
 #ifdef WITH_AVRO
-    if (config.bgp_table_dump_output == PRINT_OUTPUT_AVRO) {
+    if ((config.bgp_table_dump_output == PRINT_OUTPUT_AVRO_BIN) ||
+	(config.bgp_table_dump_output == PRINT_OUTPUT_AVRO_JSON)) {
       assert(BGP_LOG_TYPE_MAX < MAX_AVRO_SCHEMA);
 
       bgp_misc_db->dump_avro_schema[0] = avro_schema_build_bgp(BGP_LOGDUMP_ET_DUMP, "bgp_dump");
@@ -525,12 +533,12 @@ void skinny_bgp_daemon_online()
   else memset(bgp_misc_db->avro_buf, 0, LARGEBUFLEN);
 #endif
 
-    if (config.nfacctd_bgp_msglog_kafka_avro_schema_registry || config.bgp_table_dump_kafka_avro_schema_registry) {
+  if (config.nfacctd_bgp_msglog_kafka_avro_schema_registry || config.bgp_table_dump_kafka_avro_schema_registry) {
 #ifndef WITH_SERDES
-      Log(LOG_ERR, "ERROR ( %s/%s ): 'bgp_*_kafka_avro_schema_registry' require --enable-serdes. Exiting.\n", config.name, bgp_misc_db->log_str);
-      exit_gracefully(1);
+    Log(LOG_ERR, "ERROR ( %s/%s ): 'bgp_*_kafka_avro_schema_registry' require --enable-serdes. Exiting.\n", config.name, bgp_misc_db->log_str);
+    exit_gracefully(1);
 #endif
-    }
+  }
 
   select_fd = bkp_select_fd = (config.bgp_sock + 1);
   recalc_fds = FALSE;
@@ -542,8 +550,10 @@ void skinny_bgp_daemon_online()
   sigaddset(&signal_set, SIGHUP);
   sigaddset(&signal_set, SIGUSR1);
   sigaddset(&signal_set, SIGUSR2);
-  sigaddset(&signal_set, SIGINT);
   sigaddset(&signal_set, SIGTERM);
+  if (config.daemon) {
+    sigaddset(&signal_set, SIGINT);
+  }
 
   for (;;) {
     select_again:

@@ -39,7 +39,6 @@ extern char *bmp_tlv_type_print(u_int16_t, const char *, const char **, int);
 extern char *bmp_term_reason_print(u_int16_t);
 
 extern void bgp_peer_log_msg_extras_bmp(struct bgp_peer *, int, void *);
-extern void bgp_peer_logdump_initclose_extras_bmp(struct bgp_peer *, int, void *);
 
 extern void bgp_msg_data_set_data_bmp(struct bmp_chars *, struct bmp_data *);
 extern int bgp_extra_data_cmp_bmp(struct bgp_msg_extra_data *, struct bgp_msg_extra_data *);

@@ -103,8 +103,6 @@ int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
 
 void telemetry_basic_process_json(telemetry_peer *peer)
 {
-  int idx;
-
   if (config.telemetry_decoder_id == TELEMETRY_DECODER_CISCO_V0 && config.telemetry_port_udp) {
     peer->msglen -= TELEMETRY_CISCO_HDR_LEN_V0;
     memmove(peer->buf.base, &peer->buf.base[TELEMETRY_CISCO_HDR_LEN_V0], peer->msglen);
@@ -114,14 +112,7 @@ void telemetry_basic_process_json(telemetry_peer *peer)
     memmove(peer->buf.base, &peer->buf.base[TELEMETRY_CISCO_HDR_LEN_V1], peer->msglen);
   }
 
-  for (idx = 0; idx < peer->msglen; idx++) {
-    if (!isprint(peer->buf.base[idx])) peer->buf.base[idx] = '\0';
-  }
-
-  if (peer->buf.len >= (peer->msglen + 1)) {
-    peer->buf.base[peer->msglen] = '\0';
-    peer->msglen++;
-  }
+  peer->buf.base[peer->msglen] = '\0';
 }
 
 int telemetry_recv_json(telemetry_peer *peer, u_int32_t len, int *flags)
@@ -178,7 +169,7 @@ int telemetry_recv_cisco_v0(telemetry_peer *peer, int *flags, int *data_decoder)
 int telemetry_recv_cisco_v1(telemetry_peer *peer, int *flags, int *data_decoder)
 {
   int ret = 0;
-  u_int32_t type, len;
+  u_int32_t type, len, encap;
 
   if (!flags || !data_decoder) return ret;
   *flags = FALSE;
@@ -188,11 +179,29 @@ int telemetry_recv_cisco_v1(telemetry_peer *peer, int *flags, int *data_decoder)
   if (ret == TELEMETRY_CISCO_HDR_LEN_V1) {
     type = telemetry_cisco_hdr_v1_get_type(peer);
     len = telemetry_cisco_hdr_v1_get_len(peer);
+    encap = telemetry_cisco_hdr_v1_get_encap(peer);
 
     /* Linux does not implement MSG_WAITALL on UDP */
     if (config.telemetry_port_udp) len = 0;
 
-    ret = telemetry_recv_cisco(peer, flags, data_decoder, type, len);
+    if (type == TELEMETRY_CISCO_V1_TYPE_DATA) {
+      switch (encap) {
+      case TELEMETRY_CISCO_V1_ENCAP_GPB:
+      case TELEMETRY_CISCO_V1_ENCAP_GPV_CPT:
+	encap = TELEMETRY_CISCO_GPB_COMPACT;
+	break;
+      case TELEMETRY_CISCO_V1_ENCAP_GPB_KV:
+	encap = TELEMETRY_CISCO_GPB_KV;
+	break;
+      case TELEMETRY_CISCO_V1_ENCAP_JSON:
+	encap = TELEMETRY_CISCO_JSON;
+	break;
+      default:
+	return ret;
+      }
+
+      ret = telemetry_recv_cisco(peer, flags, data_decoder, encap, len);
+    }
   }
 
   return ret;
@@ -258,7 +267,7 @@ int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf
   json_error_t json_err;
   struct p_zmq_host *zmq_host = zh;
   struct host_addr telemetry_node;
-  u_int16_t telemetry_node_port;
+  u_int16_t telemetry_node_port = 0;
   int bytes, ret = SUCCESS;
 
   if (!zmq_host || !buf || !buflen || !addr || !addr_len) return ERR;
@@ -276,8 +285,19 @@ int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf
       goto exit_lane;
     }
     else {
+      /* v1 */
       telemetry_node_json = json_object_get(json_obj, "telemetry_node");
-      if (telemetry_node_json == NULL) {
+
+      /* v2, v3 */
+      if (!telemetry_node_json) {
+	json_t *collector_json = NULL, *grpc_json = NULL;
+
+	collector_json = json_object_get(json_obj, "collector");
+	if (collector_json) grpc_json = json_object_get(collector_json, "grpc");
+	if (grpc_json) telemetry_node_json = json_object_get(grpc_json, "grpcPeer");
+      }
+
+      if (!telemetry_node_json) {
 	Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_zmq_peer(): no 'telemetry_node' element.\n", config.name, t_data->log_str);
 	ret = ERR;
 	goto exit_lane;
@@ -290,12 +310,7 @@ int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf
       }
 
       telemetry_node_port_json = json_object_get(json_obj, "telemetry_node_port");
-      if (telemetry_node_port_json == NULL) {
-	Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_zmq_peer(): no 'telemetry_node_port' element.\n", config.name, t_data->log_str);
-	ret = ERR;
-	goto exit_lane;
-      }
-      else telemetry_node_port = json_integer_value(telemetry_node_port_json);
+      if (telemetry_node_port_json) telemetry_node_port = json_integer_value(telemetry_node_port_json);
 
       (*addr_len) = addr_to_sa(addr, &telemetry_node, telemetry_node_port);
     }

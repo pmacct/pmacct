@@ -1017,8 +1017,10 @@ int main(int argc,char **argv, char **envp)
   sigaddset(&signal_set, SIGHUP);
   sigaddset(&signal_set, SIGUSR1);
   sigaddset(&signal_set, SIGUSR2);
-  sigaddset(&signal_set, SIGINT);
   sigaddset(&signal_set, SIGTERM);
+  if (config.daemon) {
+    sigaddset(&signal_set, SIGINT);
+  }
   cb_data.sig.is_set = FALSE;
 
   /* Main loop: if pcap_loop() exits maybe an error occurred; we will try closing

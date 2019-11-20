@@ -198,7 +198,7 @@ shell> ./configure --enable-jansson
 IIb. Compiling pmacct with Apache Avro support
 Apache Avro encoding is supported via libavro library (http://avro.apache.org/
 and https://avro.apache.org/docs/1.9.1/api/c/index.html); Avro depends on the
-Jansson JSON parser, version 2.3 or higher so please review the previous section
+Jansson JSON parser version 2.3 or higher so please review the previous section
 "Compiling pmacct with JSON support"; then, to compile pmacct with Apache Avro
 support simply do:
 
@@ -1282,10 +1282,18 @@ b) build NetFlow probe configuration, using pmacctd:
    The bgp_daemon_port can be changed from the standard BGP port (179/TCP) in order to
    co-exist with other BGP routing software which might be running on the same host.
    Furthermore, they can safely peer each other by using 127.0.0.1 as bgp_daemon_ip. 
+
+   NOTE: Bird Internet Routing Daemon seems to dislike peerings on the same IP address
+   it is configured on, even though the remote peer listens on a different TCP port;
+   if Bird listens on 127.0.0.1 then setting up a 127.0.0.2 address on the system and
+   binding pmacctd to it allows the BGP session to come up fine in a 127.0.0.1 <->
+   127.0.0.2 fashion.
+ 
    In pmacctd, bgp_agent_map does the trick of mapping 0.0.0.0 to the IP address of
    the BGP peer (ie. 127.0.0.1: 'bgp_ip=127.0.0.1 ip=0.0.0.0'); this setup, while
-   generic, was tested working in conjunction with Quagga. Following a relevant
-   fragment of the Quagga configuration:
+   generic, was tested working in conjunction with Quagga and BIRD.
+
+   Following a relevant fragment of the Quagga configuration:
 
    router bgp Y 
     bgp router-id X.X.X.X
@@ -1293,6 +1301,41 @@ b) build NetFlow probe configuration, using pmacctd:
     neighbor 127.0.0.1 port 17917
     neighbor 127.0.0.1 update-source X.X.X.X
    !
+
+   Following a relevant fragment of the BIRD configuration:
+
+   protocol bgp pmacctd46 {
+      description "pmacctd";
+      local 127.0.0.1 as YYYYY;
+      neighbor 127.0.0.2 port 179 as YYYYY;
+      rr client;
+      hold time 90;
+      keepalive time 30;
+      graceful restart;
+
+      ipv4 {
+         next hop self;
+         import filter {
+            reject;
+         };
+
+         export filter {
+            accept;
+         };
+      };
+
+      ipv6 {
+         next hop address 127.0.0.1;
+
+         import filter {
+            reject;
+         };
+
+         export filter {
+            accept;
+         };
+      };
+   }
 
    NOTE: if configuring a BGP neighbor over localhost via Quagga CLI the following
    message is returned: "% Can not configure the local system as neighbor". This
@@ -1413,17 +1456,17 @@ sfprobe_receiver: 192.168.1.1:6343
 
 
 XIV. Quickstart guide to setup the BGP daemon
-BGP can be run as a stand-alone collector daemon (pmbgpd, from 1.6.1) or as a
-thread within one of the traffic accounting daemons (ie. nfacctd). The stand-
-alone daemon is suitable for the Looking-Glass use-case, building BGP xconnects
-and consuming BGP data, real-time or at regular intervals; the thread solution
-is suitable for correlation of BGP with other data sources, ie. NetFlow, IPFIX,
-sFlow, etc. The thread implementation idea is to receive data-plane information,
-ie. via NetFlow, sFlow, etc., and control plane information, ie. full routing
-tables via BGP, from edge routers. Per-peer BGP RIBs are maintained to ensure
-local views of the network, a behaviour close to that of a BGP route-server.
-In case of routers with default-only or partial BGP views, the default route
-can be followed up (bgp_default_follow); also it might be desirable in certain
+BGP can be run as a stand-alone collector daemon (pmbgpd) or as a thread within
+one of the traffic accounting daemons (ie. nfacctd). The stand-alone daemon is
+suitable for the Looking-Glass use-case, building BGP xconnects and consuming
+BGP data, real-time or at regular intervals; the thread solution is suitable
+for correlation of BGP with other data sources, ie. NetFlow, IPFIX, sFlow, etc.
+The thread implementation idea is to receive data-plane information, ie. via
+NetFlow, sFlow, etc., and control plane information, ie. full routing tables
+via BGP, from edge routers. Per-peer BGP RIBs are maintained to ensure local
+views of the network, a behaviour close to that of a BGP route-server. In case
+of routers with default-only or partial BGP views, the default route can be
+followed up (bgp_default_follow); also it might be desirable in certain
 situations, for example trading-off resources to accuracy, to map one or a set
 of flow agents to a BGP peer (bgp_agent_map). 
 
@@ -1459,13 +1502,13 @@ BGP tables to disk every 300 secs with file names embedding the BGP peer info
 
 The BGP implementation, by default, reads the remote ASN upon receipt of a BGP
 OPEN message and dynamically presents itself as part of the same ASN - this is
-to ensure an iBGP relationship is established even in multi ASN scenarios. As
-of 1.6.2, it is possible to put pmacct in a specific ASN of choice by using the
-bgp_daemon_as configuration directive, for example, to establish an eBGP kind
-of relationship. Also, the daemon acts as a passive BGP neighbor and hence will
-never try to re-establish a fallen peering session. For debugging purposes
-related to the BGP feed(s), bgp_daemon_msglog_* configuration directives can be
-enabled in order to log BGP messaging.
+to ensure an iBGP relationship is established, even in multi ASN scenarios. It
+is possible to put pmacct in a specific ASN of choice by using the bgp_daemon_as
+configuration directive, for example, to establish an eBGP kind of relationship.
+Also, the daemon acts as a passive BGP neighbor and hence will never try to
+re-establish a fallen peering session. For debugging purposes related to the
+BGP feed(s), bgp_daemon_msglog_* configuration directives can be enabled in
+order to log BGP messaging.
 
 XIVa. Limiting AS-PATH and BGP community attributes length
 AS-PATH and BGP communities can get easily long when represented as strings.
@@ -2032,10 +2075,10 @@ against flow-specific primitives. For example: replicate flows from or to MAC
 address X1, X2 .. Xn to receiver Y or replicate flows in VLAN W to receiver
 Z. The feature works by inspecting the original packet and dissecting it as
 needed, one of the most popular use-cases being IXPs replicating flows back
-to the members originating and/or receiving them. From pmacct 1.6.2 the
-feature is available for sFlow; from 1.7.2 the feature is extended to NetFlow
-and IPFIX. Some of the supported primitives are: source and destination MAC
-addresses and input/output interfaces ifindex; the full list is available in
+to the members originating and/or receiving them. The feature is available
+for sFlow and, from 1.7.2, the feature has been extended to NetFlow/IPFIX.
+Some of the supported primitives are: source/destination MAC addresses and
+input/output interfaces ifindex; the full list of primitives is available in
 examples/pretag.map.example (look for "sfacctd when in 'tee' mode" or
 "nfacctd when in 'tee' mode").
 
@@ -2181,17 +2224,18 @@ router isis
 
 
 XVII. Quickstart guide to setup the BMP daemon
-BMP can be run as a stand-alone collector daemon (pmbmpd, from 1.6.1) or as a
-thread within one of the traffic accounting daemons (ie. nfacctd). The stand-
-alone daemon is suitable for consuming BMP data only, real-time or at regular
+BMP can be run as a stand-alone collector daemon (pmbmpd) or as a thread
+within one of the traffic accounting daemons (ie. nfacctd). The stand-alone
+daemon is suitable for consuming BMP data only, real-time or at regular
 intervals; the thread solution is suitable for correlation of BMP with other
 data sources, ie. NetFlow, IPFIX, sFlow, etc.. The implementation bases on
-rfc7854 and adds elements from both draft-ietf-grow-bmp-adj-rib-out and
-draft-ietf-grow-bmp-adj-loc-rib IETF documents. If unfamiliar with BMP, to
-quote rfc7854: "BMP is intended to provide a more convenient interface for
-obtaining route views for research purpose than the screen-scraping approach
-in common use today. The design goals are to keep BMP simple, useful, easily
-implemented, and minimally service-affecting.".
+rfc7854 and is in-sync with most recent RFCs and draft-ietf-grow-bmp-* IETF
+documents (ie. rfc8671, ietf-grow-bmp-local-rib, ietf-grow-bmp-tlv, etc.).
+
+If unfamiliar with BMP, to quote rfc7854: "BMP is intended to provide a more
+convenient interface for obtaining route views for research purpose than the
+screen-scraping approach in common use today. The design goals are to keep
+BMP simple, useful, easily implemented, and minimally service-affecting.".
 
 The BMP daemon currently supports BMP data, events and stats, ie. initiation,
 termination, peer up, peer down, stats and route monitoring messages (that is
@@ -2330,12 +2374,12 @@ libjansson support in the section "Compiling pmacct with JSON support" of this
 document. If writing to AMQP or Kafka brokers compiling against RabbitMQ or
 Kafka libraries is required; read more in respectively the "Running the
 RabbitMQ/AMQP plugin" or "Running the Kafka plugin" sections of this document.
+
 Data can be optionally consumed from a ZeroMQ queue, for example to have a
 pre-processor taking care of the GPB (Protobuf or Google Protocol Buffers) 
 de-marshalling and conversion to JSON; read more about (compiling) ZeroMQ in
 the "Internal buffering and queueing" section of this document; also read more
-about gRPC support and GPB de-marshalling in telemetry/README.telemetry while
-decoders are in the telemetry/decoders directory. 
+about gRPC support and GPB de-marshalling in telemetry/README.telemetry .
 
 From a configuration standpoint both the thread (ie. telemetry configured part
 of nfacctd) and the daemon (pmtelemetryd) are configured the same way except the
@@ -2356,14 +2400,14 @@ telemetry_daemon_msglog_file: /path/to/spool/telemetry-msglog-$peer_src_ip.txt
 ! telemetry_daemon_msglog_kafka_topic: telemetry-msglog
 
 Following is a config example to receive telemetry data with Cisco proprietary
-header (12 bytes), in JSON format over TCP port 1620 and dump it at 60 secs
-time intervals to flat-files:
+header, in GPB format over TCP port 1620 and dump it at 60 secs time intervals
+to flat-files:
 
 ! Telemetry thread configuration
 ! telemetry_daemon: true
 !
 telemetry_daemon_port_tcp: 1620
-telemetry_daemon_decoder: cisco_json
+telemetry_daemon_decoder: cisco_v1
 !
 telemetry_dump_file: /path/to/spool/telemetry-dump-$peer_src_ip-%Y%m%d-%H%M.txt
 telemetry_dump_latest_file: /path/to/spool/telemetry-dump-$peer_src_ip.latest

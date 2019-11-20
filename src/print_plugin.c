@@ -94,9 +94,10 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (config.print_output & PRINT_OUTPUT_JSON) {
     compose_json(config.what_to_count, config.what_to_count_2);
   }
-  else if (config.print_output & PRINT_OUTPUT_AVRO) {
+  else if ((config.print_output & PRINT_OUTPUT_AVRO_BIN) ||
+	   (config.print_output & PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
-    avro_acct_schema = avro_schema_build_flow(config.what_to_count, config.what_to_count_2);
+    avro_acct_schema = avro_schema_build_acct_data(config.what_to_count, config.what_to_count_2);
     if (config.avro_schema_file) write_avro_schema_to_file(config.avro_schema_file, avro_acct_schema);
 #endif
   }
@@ -361,7 +362,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   avro_file_writer_t avro_writer;
 #endif
 
-  if (!index) {
+  if (!index && !config.print_write_empty_file) {
     Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START (PID: %u) ***\n", config.name, config.type, writer_pid);
     Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: 0/0, ET: X) ***\n", config.name, config.type, writer_pid);
     return;
@@ -405,16 +406,22 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
     time_t stamp = 0;
 
     if (dyn_table) {
-      stamp = queue[0]->basetime.tv_sec;
-      prim_ptrs.data = &dummy_data;
-      primptrs_set_all_from_chained_cache(&prim_ptrs, queue[0]);
+      /* NOTE: on saved_index=0; queue[0] is NULL */
+      if (saved_index > 0) {
+        stamp = queue[0]->basetime.tv_sec;
+        prim_ptrs.data = &dummy_data;
+        primptrs_set_all_from_chained_cache(&prim_ptrs, queue[0]);
+      }
+      else {
+        stamp = start;
+      }
 
       handle_dynname_internal_strings(current_table, SRVBUFLEN, config.sql_table, &prim_ptrs, DYN_STR_PRINT_FILE);
       pm_strftime_same(current_table, SRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
     }
     else strlcpy(current_table, config.sql_table, SRVBUFLEN);
 
-    if (config.print_output & PRINT_OUTPUT_AVRO) {
+    if (config.print_output & PRINT_OUTPUT_AVRO_BIN) {
 #ifdef WITH_AVRO
       int file_is_empty, ret;
       f = open_output_file(current_table, "ab", TRUE);
@@ -423,20 +430,20 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
       file_is_empty = ftell(f) == 0;
       close_output_file(f);
 
-      if (config.print_output_file_append && !file_is_empty)
+      if (config.print_output_file_append && !file_is_empty) {
         ret = avro_file_writer_open(current_table, &avro_writer);
-      else
+      }
+      else {
         ret = avro_file_writer_create(current_table, avro_acct_schema, &avro_writer);
+      }
 
       if (ret) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: failed opening %s: %s\n",
-            config.name, config.type, current_table, avro_strerror());
+        Log(LOG_ERR, "ERROR ( %s/%s ): P_cache_purge(): failed opening %s: %s\n", config.name, config.type, current_table, avro_strerror());
         exit_gracefully(1);
       }
 #endif
     }
-		
-    if (config.print_output & PRINT_OUTPUT_CUSTOM) {
+    else if (config.print_output & PRINT_OUTPUT_CUSTOM) {
       if (0 != custom_print_plugin.output_init(current_table, config.print_output_file_append)) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): Custom output: failed opening %s: %s\n",
 	    config.name, config.type, current_table, custom_print_plugin.get_error_text());
@@ -454,10 +461,13 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
     }
 
     if (f) {
-      if (!(config.print_output & PRINT_OUTPUT_AVRO) && fd_buf) {
-        if (setvbuf(f, fd_buf, _IOFBF, OUTPUT_FILE_BUFSZ))
+      if (!(config.print_output & PRINT_OUTPUT_AVRO_BIN) && fd_buf) {
+        if (setvbuf(f, fd_buf, _IOFBF, OUTPUT_FILE_BUFSZ)) {
           Log(LOG_WARNING, "WARN ( %s/%s ): [%s] setvbuf() failed: %s\n", config.name, config.type, current_table, strerror(errno));
-        else memset(fd_buf, 0, OUTPUT_FILE_BUFSZ);
+	}
+        else {
+	  memset(fd_buf, 0, OUTPUT_FILE_BUFSZ);
+	}
       }
 
       if (config.print_markers) {
@@ -1229,39 +1239,36 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (json_obj) write_and_free_json(f, json_obj);
 #endif
       }
-      else if (f && config.print_output & PRINT_OUTPUT_AVRO) {
+      else if (f &&
+	       ((config.print_output & PRINT_OUTPUT_AVRO_BIN) ||
+	       (config.print_output & PRINT_OUTPUT_AVRO_JSON))) {
 #ifdef WITH_AVRO
         avro_value_iface_t *avro_iface = avro_generic_class_from_schema(avro_acct_schema);
 
-        avro_value_t avro_value = compose_avro(config.what_to_count, config.what_to_count_2, queue[j]->flow_type,
-                         &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust, pvlen, queue[j]->bytes_counter,
-                         queue[j]->packet_counter, queue[j]->flow_counter, queue[j]->tcp_flags, NULL,
-                         queue[j]->stitch, avro_iface);
+        avro_value_t avro_value = compose_avro_acct_data(config.what_to_count, config.what_to_count_2,
+			 queue[j]->flow_type, &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust,
+			 pvlen, queue[j]->bytes_counter, queue[j]->packet_counter, queue[j]->flow_counter,
+			 queue[j]->tcp_flags, NULL, queue[j]->stitch, avro_iface);
 
         if (config.sql_table) {
-          if (avro_file_writer_append_value(avro_writer, &avro_value)) {
-            Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: failed writing the value: %s\n",
-                config.name, config.type, avro_strerror());
-            exit_gracefully(1);
+	  if (config.print_output & PRINT_OUTPUT_AVRO_BIN) {
+	    if (avro_file_writer_append_value(avro_writer, &avro_value)) {
+	      Log(LOG_ERR, "ERROR ( %s/%s ): P_cache_purge(): avro_file_writer_append_value() failed: %s\n", config.name, config.type, avro_strerror());
+	      exit_gracefully(1);
+	    }
           }
+	  else if (config.print_output & PRINT_OUTPUT_AVRO_JSON) {
+	    write_avro_json_record_to_file(f, avro_value);
+	  }
         }
         else {
-          char *json_str;
-
-          if (avro_value_to_json(&avro_value, TRUE, &json_str)) {
-            Log(LOG_ERR, "ERROR ( %s/%s ): AVRO: unable to value to JSON: %s\n",
-                config.name, config.type, avro_strerror());
-            exit_gracefully(1);
-          }
-
-          fprintf(f, "%s\n", json_str);
-          free(json_str);
+	  write_avro_json_record_to_file(f, avro_value);
         }
 
         avro_value_iface_decref(avro_iface);
         avro_value_decref(&avro_value);
 #else
-        if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_avro(): AVRO object not created due to missing --enable-avro\n", config.name, config.type);
+        if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_avro_acct_data(): AVRO object not created due to missing --enable-avro\n", config.name, config.type);
 #endif
       }
 
@@ -1289,8 +1296,9 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
     
   if (config.sql_table) {
 #ifdef WITH_AVRO
-    if (config.print_output & PRINT_OUTPUT_AVRO)
+    if (config.print_output & PRINT_OUTPUT_AVRO_BIN) {
       avro_file_writer_flush(avro_writer);
+    }
 #endif
 
     if (config.print_output & PRINT_OUTPUT_CUSTOM) {
@@ -1317,7 +1325,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
     }
 
 #ifdef WITH_AVRO
-    if (config.print_output & PRINT_OUTPUT_AVRO) {
+    if (config.print_output & PRINT_OUTPUT_AVRO_BIN) {
       avro_file_writer_close(avro_writer);
     }
 #endif

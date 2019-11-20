@@ -1068,6 +1068,14 @@ NOTES:		Update of the latest pointer is done evaluating files name. For correct 
 		recommended to delete existing symlinks.
 DEFAULT:	none
 
+KEY:		print_write_empty_file
+VALUES:         [ true | false ]
+DESC:		If set to true, print plugin will write an empty file (zero length) if there was no
+		data to output; this also aligns to the pre 1.5.0 behaviour, as documnted in the
+		UPGRADE document. The default behaviour is instead to only produce a log message
+		with "ET: X" as Estimated Time value. 
+DEFAULT:	false
+
 KEY:		sql_table_schema
 DESC:		Full pathname to a file containing a SQL table schema. It allows to create the SQL table
 		if it does not exist; a config example where this directive could be useful follows:
@@ -1496,38 +1504,39 @@ KEY:		[ print_markers | amqp_markers | kafka_markers ]
 VALUES:		[ true | false ]
 DESC:		Enables the use of start/end markers each time data is purged to the backend. Both start
 		and end markers return additional information, ie. writer PID, number of entries purged,
-		elapsed time, etc. When plugin output is JSON, markers are encoded in JSON format and
-		event_type is set to purge_init and purge_close respectively; when output is Apache Avro,
-		the markers are currently suppressed. In the case of Kafka topics with multiple partitions,
-		the purge_close message can arrive out of order so other mechanisms should be used to
-		correlate messages as being part of the same batch (ie. writer_id).  
+		elapsed time, etc. In the print plugin markers are available for CSV and JSON outputs; in
+		the AMQP and Kafka plugins markers are available for JSON and Avro outputs. In the case
+		of Kafka topics with multiple partitions, the purge_close message can arrive out of order
+		so other mechanisms should be used to correlate messages as being part of the same batch
+		(ie. writer_id).  
 DEFAULT:	false
 
 KEY:		print_output
-VALUES:		[ formatted | csv | json | avro | event_formatted | event_csv | custom ]
-DESC:		Defines the print plugin output format. 'formatted' enables tabular output; 'csv' is to enable
-		comma-separated values format, suitable for injection into 3rd party tools. 'event' versions of
-		the output strips trailing bytes and packets counters. 'json' is to enable JavaScript Object
-		Notation format, also suitable for injection into 3rd party tools. Being a self-descriptive
-		format (hence not requiring a table title), JSON does not require a event-counterpart; on the
-		cons, JSON serialization introduces some lag due to the extensive string manipulation (as an
-		example: 10M lines may be written to disk in 30 secs as CSV and 150 secs as JSON). The 'json'
-		format requires compiling the package against Jansson library (downloadable at the following
-		URL: http://www.digip.org/jansson/). 'avro' enables storing the data using the Apache Avro
-		data serialization system. This format stores the data more compactly than JSON and thus is
-		more appropriate for intensive captures. The 'avro' format requires compiling the package
-		against the Apache Avro library (downloadable at the following URL: http://avro.apache.org/).
-		'custom' allows to specify own formtting, encoding and backend management (open file, close
-		file, start/end markers, etc.), see print_output_custom_lib and print_output_custom_cfg_file.
-NOTES:		* Jansson and Avro libraries don't have the concept of unsigned integers. integers up to 32
-		  bits are packed as 64 bits signed integers, working around the issue. No work around is
-		  possible for unsigned 64 bits integers instead (ie. tag, tag2, packets, bytes).
+VALUES:		[ formatted | csv | json | avro | avro_json | event_formatted | event_csv | custom ]
+DESC:		Defines the print plugin output format. 'formatted' outputs in tab-separated format;
+		'csv' outputs comma-separated values format, suitable for injection into 3rd party tools.
+		'event' variant of both formatted and cvs strips bytes and packets counters fields.
+		'json' outpus as JavaScript Object Notation format, suitable for injection in Big Data
+		systems; being a self-descriptive format, JSON does not require a event-counterpart; on
+		the cons, JSON serialization may introduce some lag due to the string manipulations (as
+		an example: 10M lines may be written to disk in 30 secs as CSV and 150 secs as JSON).
+		JSON format requires compiling the package against Jansson library (downloadable at the
+		following URL: http://www.digip.org/jansson/). 'avro' outputs data using the Apache Avro
+		data serialization format: being a binary format, it's more compact than JSON; 'avro_json'
+		outputs as JSON-encoded Avro objects, suitable to troubleshoot and/or familiarize with
+		the binary format itself. Both 'avro' and 'avro_json' formats require compiling against
+		the Apache Avro library (downloadable at the following URL: http://avro.apache.org/).
+		'custom' allows to specify own formtting, encoding and backend management (open file,
+		close file, markers, etc.), see print_output_custom_lib and print_output_custom_cfg_file.
+NOTES:		* Jansson and Avro libraries don't have the concept of unsigned integers. integers up to
+		  32 bits are packed as 64 bits signed integers, working around the issue. No work around
+		  is possible for unsigned 64 bits integers except encoding them as strings.
 		* If the output format is 'avro' and no print_output_file was specified, the Avro-based
-		  representation of the data will be converted to JSON and displayed on the standard output.
-		* If the output format is 'formatted', variable length primitives (like AS path) cannot be
-		  printed and a warning message will be output instead. This is because, intuitively, it is
-		  not possible to properly format the title line upfront with variable length fields. Please
-		  use one of the other output formats instead. 
+		  representation of the data will be converted to JSON-encoded Avro.
+		* If the output format is 'formatted', variable length primitives (like AS path) cannot
+		  be printed and a warning message will be output instead. This is because, intuitively,
+		  it is not possible to properly format the title line upfront with variable length
+		  fields. Please use one of the other output formats instead. 
 DEFAULT:	formatted
 
 KEY:            print_output_separator
@@ -1555,16 +1564,14 @@ DESC:		Full path to a file that is passed to the shared object (.so) library bot
 DEFAULT:	none
 
 KEY:		[ amqp_output | kafka_output ]
-VALUES: 	[ json | avro ]
+VALUES: 	[ json | avro | avro_json ]
 DESC:		Defines the output format for messages sent to a message broker (amqp and kafka plugins).
-		'json' is to send the messages in the JavaScript Object Notation format. The 'json' format
-		requires compiling the package against the Jansson library (downloadable at the following URL
-		: http://www.digip.org/jansson/). 'avro' is to send the messages encoded with the Apache Avro
-		serialization system. The 'avro' format requires compiling the package against the Apache Avro
-		library (downloadable at the following URL: http://avro.apache.org/).
-NOTES:		* Jansson and Avro libraries don't have the concept of unsigned integers. integers up to 32
-		  bits are packed as 64 bits signed integers, working around the issue. No work around is
-		  possible for unsigned 64 bits integers instead (ie. tag, tag2, packets, bytes).
+		'json' is to encode messages as JavaScript Object Notation format. 'json' format requires
+		compiling against the Jansson library (downloadable at: http://www.digip.org/jansson/).
+		'avro' is to binary-encode messages with the Apache Avro serialization format; 'avro_json'
+		is to JSON-encode messages with Avro. 'avro' and 'avro_json' formats require compiling
+		against the Apache Avro library (downloadable at: http://avro.apache.org/). Read more
+		on the print_output directive.
 DEFAULT:	json
 
 KEY:		avro_buffer_size
@@ -1928,13 +1935,13 @@ DEFAULT:	none
 KEY:            sampling_map [GLOBAL, NO_PMACCTD, NO_UACCTD, MAP]
 DESC:           Full pathname to a file containing traffic sampling mappings. It is mainly meant to be used
 		in conjunction with nfacctd and sfacctd for the purpose of fine-grained reporting of sampling
-		rates circumventing bugs and issues in router operating systems. Renormalization must be
-		enabled (nfacctd_renormalize or sfacctd_renormalize set to true) in order for the feature to
-		work. If a specific router is not defined in the map, the sampling rate advertised by the
-		router itself is applied. Take a look to the examples/ sub-tree 'sampling.map.example' for all
-		supported keys and detailed examples. Number of map entries (by default 384) can be modified
-		via maps_entries. Content can be reloaded at runtime by sending the daemon a SIGUSR2 signal
-		(ie. "killall -USR2 nfacctd").
+		rates ('sampling_rate' primitive) circumventing bugs and issues in router operating systems.
+		If counters renormalization is wanted, nfacctd_renormalize or sfacctd_renormalize must be
+		also set to true. If a specific router is not defined in the map, the sampling rate advertised
+		by the router itself is applied. Take a look to the examples/ sub-tree 'sampling.map.example'
+		for all supported keys and detailed examples. Number of map entries (by default 384) can be
+		modified via maps_entries. Content can be reloaded at runtime by sending the daemon a SIGUSR2
+		signal (ie. "killall -USR2 nfacctd").
 DEFAULT:	none
 
 KEY:		[ pmacctd_force_frag_handling | uacctd_force_frag_handling ] [GLOBAL, NO_NFACCTD, NO_SFACCTD]
@@ -1981,24 +1988,22 @@ DEFAULT:	60 secs if classification is disabled; 432000 secs (120 hrs) if clssifi
 
 KEY:		[ pmacctd_ext_sampling_rate | uacctd_ext_sampling_rate | nfacctd_ext_sampling_rate |
 		  sfacctd_ext_sampling_rate ] [GLOBAL]
-		Flags pmacctd that captured traffic is being sampled at the specified rate. Such rate can then
-		be renormalized by using 'pmacctd_renormalize' or otherwise is propagated by the NetFlow/sFlow
-		probe plugins, if any of them is activated. External sampling might be performed by capturing
-		frameworks the daemon is linked against (ie. PF_RING, NFLOG) or appliances (ie. sampled packet
-		mirroring).
-		In nfacctd and sfacctd daemons this directive can be used to tackle corner cases, ie. sampling
-		rate reported by the NetFlow/sFlow agent is missing or not correct.
+		Flags that captured traffic is being sampled at the specified rate. Such rate can then be
+		reported ('sampling_rate' primitive), renormalized by using ie. 'pmacctd_renormalize' or
+		propagated by the NetFlow/sFlow probe plugins. External sampling might be performed by
+		capturing frameworks the daemon is linked against (ie. PF_RING, NFLOG) or appliances (ie.
+		sampled packet mirroring). In nfacctd and sfacctd daemons this directive can be used to
+		tackle corner cases, ie. sampling rate reported by the NetFlow/sFlow agent is missing or
+		not correct.
 DEFAULT:	none
 
 KEY:		[ sfacctd_renormalize | nfacctd_renormalize | pmacctd_renormalize | uacctd_renormalize ] (-R)
 		[GLOBAL]
 VALUES:		[ true | false ]
-DESC:		Automatically renormalizes byte/packet counters value basing on information acquired from 
-		either the NetFlow data unit or sFlow packet. In particular, it allows to deal with scenarios
-		in which multiple interfaces have been configured at different sampling rates. The feature also
-		calculates an effective sampling rate (sFlow only) which could differ from the configured one -
-		expecially at high rates - because of various losses. Such estimated rate is then used for
-		renormalization purposes.
+DESC:		Automatically renormalizes bytes/packet counters value basing on available sampling info.
+		The feature also calculates an effective sampling rate (sFlow only) which could differ
+		from the configured one - expecially at high rates - because of various losses; such
+		estimated rate is then used for renormalization purposes.
 DEFAULT:        false
 
 KEY:		pmacctd_nonroot [GLOBAL]
@@ -2311,9 +2316,9 @@ DESC:           The URL to a Confluent Avro Schema Registry. The value is passed
 DEFAULT:        none
 
 KEY:		[ bgp_daemon_msglog_output | bmp_daemon_msglog_output ] [GLOBAL]
-VALUES:         [ json | avro ]
+VALUES:         [ json | avro | avro_json ]
 DESC:		Defines output format for the streamed logging of BGP messages and BMP messages and
-		events. JSON and Avro formats are supported.
+		events. JSON, binary-encoded Avro and JSON-encoded Avro formats are supported.
 DEFAULT:	json
 
 KEY:		bgp_aspath_radius [GLOBAL]
@@ -2609,9 +2614,9 @@ DESC:           Enables dump of BGP tables/BMP events/Streaming Telemetry data a
 DEFAULT:	none
 
 KEY:            [ bgp_table_dump_output | bmp_dump_output ] [GLOBAL]
-VALUES:         [ json | avro ]
-DESC:           Defines output format for the dump of BGP tables and BMP events. JSON and Avro
-		formats are supported.
+VALUES:         [ json | avro | avro_json ]
+DESC:           Defines output format for the dump of BGP tables and BMP events. JSON, binary-encoded
+		Avro and JSON-encoded Avro formats are supported.
 DEFAULT:	json
 
 KEY:		[ bgp_table_dump_refresh_time | bmp_dump_refresh_time | telemetry_dump_latest_file ]
@@ -2897,8 +2902,9 @@ DEFAULT:        0.0.0.0
 KEY:		telemetry_daemon_decoder [GLOBAL]
 VALUES:		[ json | gpb | cisco_v0 | cisco_v1 ]
 DESC:		Sets the Streaming Telemetry data decoder to the specified type (over TCP or UDP
-		transports. Cisco versions of JSON, GPB compact, GPB KV, etc. prepend either a 12
-		bytes (v0) or a 6 bytes (v1) proprietary header. GPB de-marshaling is not supported
+		transports. Cisco 32-bits OS versions tend to prepend a 12 bytes proprietary header
+		to GPB compact / GPB KV data and this can be read with the 'cisco_v1' decoder; the
+		'cisco_v0' is mostly obsoleted at this point. GPB de-marshaling is not supported
 		and will produce an output JSON object with a base64'd encoding of the original GPB
 		(see telemetry/README.telemetry for gRPC support and GPB de-marshalling). 
 DEFAULT:	none

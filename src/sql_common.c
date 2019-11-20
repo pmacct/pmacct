@@ -2633,8 +2633,8 @@ int sql_evaluate_primitives(int primitive)
 	  use_copy = TRUE;
 	}
 	else {
-          strncat(where[primitive].string, "timestamp_start=ABSTIME(%u)::Timestamp", SPACELEFT(where[primitive].string));
-          strncat(values[primitive].string, "ABSTIME(%u)::Timestamp", SPACELEFT(values[primitive].string));
+          strncat(where[primitive].string, "timestamp_start=to_timestamp(%u)", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "to_timestamp(%u)", SPACELEFT(values[primitive].string));
 	}
       }
       else if (!strcmp(config.type, "sqlite3")) {
@@ -2691,8 +2691,8 @@ int sql_evaluate_primitives(int primitive)
           use_copy = TRUE;
         }
         else {
-          strncat(where[primitive].string, "timestamp_end=ABSTIME(%u)::Timestamp", SPACELEFT(where[primitive].string));
-          strncat(values[primitive].string, "ABSTIME(%u)::Timestamp", SPACELEFT(values[primitive].string));
+          strncat(where[primitive].string, "timestamp_end=to_timestamp(%u)", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "to_timestamp(%u)", SPACELEFT(values[primitive].string));
         }
       }
       else if (!strcmp(config.type, "sqlite3")) {
@@ -2749,8 +2749,8 @@ int sql_evaluate_primitives(int primitive)
           use_copy = TRUE;
         }
         else {
-          strncat(where[primitive].string, "timestamp_arrival=ABSTIME(%u)::Timestamp", SPACELEFT(where[primitive].string));
-          strncat(values[primitive].string, "ABSTIME(%u)::Timestamp", SPACELEFT(values[primitive].string));
+          strncat(where[primitive].string, "timestamp_arrival=to_timestamp(%u)", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "to_timestamp(%u)", SPACELEFT(values[primitive].string));
         }
       }
       else if (!strcmp(config.type, "sqlite3")) {
@@ -2808,8 +2808,8 @@ int sql_evaluate_primitives(int primitive)
           use_copy = TRUE;
         }
         else {
-          strncat(where[primitive].string, "timestamp_min=ABSTIME(%u)::Timestamp", SPACELEFT(where[primitive].string));
-          strncat(values[primitive].string, "ABSTIME(%u)::Timestamp", SPACELEFT(values[primitive].string));
+          strncat(where[primitive].string, "timestamp_min=to_timestamp(%u)", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "to_timestamp(%u)", SPACELEFT(values[primitive].string));
         }
       }
       else if (!strcmp(config.type, "sqlite3")) {
@@ -2863,8 +2863,8 @@ int sql_evaluate_primitives(int primitive)
           use_copy = TRUE;
         }
         else {
-          strncat(where[primitive].string, "timestamp_max=ABSTIME(%u)::Timestamp", SPACELEFT(where[primitive].string));
-          strncat(values[primitive].string, "ABSTIME(%u)::Timestamp", SPACELEFT(values[primitive].string));
+          strncat(where[primitive].string, "timestamp_max=to_timestamp(%u)", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "to_timestamp(%u)", SPACELEFT(values[primitive].string));
         }
       }
       else if (!strcmp(config.type, "sqlite3")) {

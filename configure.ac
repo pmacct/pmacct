@@ -34,44 +34,6 @@ fi
 
 AC_CHECK_FUNCS([strlcpy strlcat])
 
-dnl set debug level
-AC_MSG_CHECKING([whether to enable debugging compiler options])
-AC_ARG_ENABLE(debug,
-	[  --enable-debug                   Enable debugging compiler options (default: no)],
-	[
-	        if test x$enableval = x"yes" ; then
-			AC_MSG_RESULT(yes)
-			tmp_CFLAGS=`echo $CFLAGS | sed 's/O2/O0/g'`
-			CFLAGS="$tmp_CFLAGS"
-			CFLAGS="$CFLAGS -g -Wall -Werror"
-		else
-			CFLAGS="$CFLAGS -Wall -Werror"
-			AC_MSG_RESULT(no)
-		fi
-	],
-	[
-		AC_MSG_RESULT(no)
-	]
-)
-
-dnl set relax level
-AC_MSG_CHECKING([whether to relax compiler optimizations])
-AC_ARG_ENABLE(relax,
-[  --enable-relax                   Relax compiler optimization (default: no)],
-	[
-		if test x$enableval = x"yes" ; then
-			AC_MSG_RESULT(yes)
-        		tmp_CFLAGS=`echo $CFLAGS | sed 's/O2/O0/g'`
-       			CFLAGS="$tmp_CFLAGS"
-		else
-			AC_MSG_RESULT(no)
-		fi
-	],
-	[
-        	AC_MSG_RESULT(no)
-	]
-)
-
 dnl: shared object handling
 AC_MSG_CHECKING([whether to disable linking against shared objects])
 AC_ARG_ENABLE(so,
@@ -1135,6 +1097,26 @@ AC_CHECK_DECL([SO_REUSEPORT],
 		  #include <sys/types.h>
 		  #include <sys/socket.h>
 		]
+)
+
+dnl set debug level
+AC_MSG_CHECKING([whether to enable debugging compiler options])
+AC_ARG_ENABLE(debug,
+	[  --enable-debug                   Enable debugging compiler options (default: no)],
+	[
+		if test x$enableval = x"yes" ; then
+			AC_MSG_RESULT(yes)
+			tmp_CFLAGS=`echo $CFLAGS | sed 's/O2/O0/g'`
+			CFLAGS="$tmp_CFLAGS"
+			CFLAGS="$CFLAGS -g -Wall -Werror"
+		else
+			CFLAGS="$CFLAGS -Wall -Werror"
+			AC_MSG_RESULT(no)
+		fi
+	],
+	[
+		AC_MSG_RESULT(no)
+	]
 )
 
 dnl final checks

@@ -1067,6 +1067,28 @@ int cfg_key_print_output_file_append(char *filename, char *name, char *value_ptr
   return changes;
 }
 
+int cfg_key_print_write_empty_file(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.print_write_empty_file = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.print_write_empty_file = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_print_output_lock_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -1709,11 +1731,19 @@ int cfg_key_message_broker_output(char *filename, char *name, char *value_ptr)
     Log(LOG_WARNING, "WARN: [%s] 'message_broker_output' set to json but will produce no output (missing --enable-jansson).\n", filename);
 #endif
   }
-  else if (!strcmp(value_ptr, "avro")) {
+  else if (!strcmp(value_ptr, "avro") || !strcmp(value_ptr, "avro_bin")) {
 #ifdef WITH_AVRO
-    value = PRINT_OUTPUT_AVRO;
+    value = PRINT_OUTPUT_AVRO_BIN;
 #else
-    value = PRINT_OUTPUT_AVRO;
+    value = PRINT_OUTPUT_AVRO_BIN;
+    Log(LOG_WARNING, "WARN: [%s] 'message_broker_output' set to avro but will produce no output (missing --enable-avro).\n", filename);
+#endif
+  }
+  else if (!strcmp(value_ptr, "avro_json")) {
+#ifdef WITH_AVRO
+    value = PRINT_OUTPUT_AVRO_JSON;
+#else
+    value = PRINT_OUTPUT_AVRO_JSON;
     Log(LOG_WARNING, "WARN: [%s] 'message_broker_output' set to avro but will produce no output (missing --enable-avro).\n", filename);
 #endif
   }
@@ -2802,11 +2832,19 @@ int cfg_key_print_output(char *filename, char *name, char *value_ptr)
     value = PRINT_OUTPUT_CSV;
     value |= PRINT_OUTPUT_EVENT;
   }
-  else if (!strcmp(value_ptr, "avro")) {
+  else if (!strcmp(value_ptr, "avro") || !strcmp(value_ptr, "avro_bin")) {
 #ifdef WITH_AVRO
-    value = PRINT_OUTPUT_AVRO;
+    value = PRINT_OUTPUT_AVRO_BIN;
 #else
-    value = PRINT_OUTPUT_AVRO;
+    value = PRINT_OUTPUT_AVRO_BIN;
+    Log(LOG_WARNING, "WARN: [%s] print_output set to avro but will produce no output (missing --enable-avro).\n", filename);
+#endif
+  }
+  else if (!strcmp(value_ptr, "avro_json")) {
+#ifdef WITH_AVRO
+    value = PRINT_OUTPUT_AVRO_JSON;
+#else
+    value = PRINT_OUTPUT_AVRO_JSON;
     Log(LOG_WARNING, "WARN: [%s] print_output set to avro but will produce no output (missing --enable-avro).\n", filename);
 #endif
   }
@@ -4171,11 +4209,19 @@ int cfg_key_nfacctd_bmp_msglog_output(char *filename, char *name, char *value_pt
     Log(LOG_WARNING, "WARN: [%s] bmp_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", filename);
 #endif
   }
-  else if (!strcmp(value_ptr, "avro")) {
+  else if (!strcmp(value_ptr, "avro") || !strcmp(value_ptr, "avro_bin")) {
 #ifdef WITH_AVRO
-    value = PRINT_OUTPUT_AVRO;
+    value = PRINT_OUTPUT_AVRO_BIN;
 #else
-    value = PRINT_OUTPUT_AVRO;
+    value = PRINT_OUTPUT_AVRO_BIN;
+    Log(LOG_WARNING, "WARN: [%s] 'bmp_daemon_msglog_output' set to avro but will produce no output (missing --enable-avro).\n", filename);
+#endif
+  }
+  else if (!strcmp(value_ptr, "avro_json")) {
+#ifdef WITH_AVRO
+    value = PRINT_OUTPUT_AVRO_JSON;
+#else
+    value = PRINT_OUTPUT_AVRO_JSON;
     Log(LOG_WARNING, "WARN: [%s] 'bmp_daemon_msglog_output' set to avro but will produce no output (missing --enable-avro).\n", filename);
 #endif
   }
@@ -4394,11 +4440,19 @@ int cfg_key_nfacctd_bmp_dump_output(char *filename, char *name, char *value_ptr)
     Log(LOG_WARNING, "WARN: [%s] bmp_dump_output set to json but will produce no output (missing --enable-jansson).\n", filename);
 #endif
   }
-  else if (!strcmp(value_ptr, "avro")) {
+  else if (!strcmp(value_ptr, "avro") || !strcmp(value_ptr, "avro_bin")) {
 #ifdef WITH_AVRO
-    value = PRINT_OUTPUT_AVRO;
+    value = PRINT_OUTPUT_AVRO_BIN;
 #else
-    value = PRINT_OUTPUT_AVRO;
+    value = PRINT_OUTPUT_AVRO_BIN;
+    Log(LOG_WARNING, "WARN: [%s] bmp_dump_output set to avro but will produce no output (missing --enable-avro).\n", filename);
+#endif
+  }
+  else if (!strcmp(value_ptr, "avro_json")) {
+#ifdef WITH_AVRO
+    value = PRINT_OUTPUT_AVRO_JSON;
+#else
+    value = PRINT_OUTPUT_AVRO_JSON;
     Log(LOG_WARNING, "WARN: [%s] bmp_dump_output set to avro but will produce no output (missing --enable-avro).\n", filename);
 #endif
   }
@@ -6152,11 +6206,19 @@ int cfg_key_nfacctd_bgp_msglog_output(char *filename, char *name, char *value_pt
     Log(LOG_WARNING, "WARN: [%s] bgp_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", filename);
 #endif
   }
-  else if (!strcmp(value_ptr, "avro")) {
+  else if (!strcmp(value_ptr, "avro") || !strcmp(value_ptr, "avro_bin")) {
 #ifdef WITH_AVRO
-    value = PRINT_OUTPUT_AVRO;
+    value = PRINT_OUTPUT_AVRO_BIN;
 #else
-    value = PRINT_OUTPUT_AVRO;
+    value = PRINT_OUTPUT_AVRO_BIN;
+    Log(LOG_WARNING, "WARN: [%s] bgp_daemon_msglog_output set to avro but will produce no output (missing --enable-avro).\n", filename);
+#endif
+  }
+  else if (!strcmp(value_ptr, "avro_json")) {
+#ifdef WITH_AVRO
+    value = PRINT_OUTPUT_AVRO_JSON;
+#else
+    value = PRINT_OUTPUT_AVRO_JSON;
     Log(LOG_WARNING, "WARN: [%s] bgp_daemon_msglog_output set to avro but will produce no output (missing --enable-avro).\n", filename);
 #endif
   }
@@ -6375,11 +6437,19 @@ int cfg_key_nfacctd_bgp_table_dump_output(char *filename, char *name, char *valu
     Log(LOG_WARNING, "WARN: [%s] bgp_table_dump_output set to json but will produce no output (missing --enable-jansson).\n", filename);
 #endif
   }
-  else if (!strcmp(value_ptr, "avro")) {
+  else if (!strcmp(value_ptr, "avro") || !strcmp(value_ptr, "avro_bin")) {
 #ifdef WITH_AVRO
-    value = PRINT_OUTPUT_AVRO;
+    value = PRINT_OUTPUT_AVRO_BIN;
 #else
-    value = PRINT_OUTPUT_AVRO;
+    value = PRINT_OUTPUT_AVRO_BIN;
+    Log(LOG_WARNING, "WARN: [%s] bgp_table_dump_output set to avro but will produce no output (missing --enable-avro).\n", filename);
+#endif
+  }
+  else if (!strcmp(value_ptr, "avro_json")) {
+#ifdef WITH_AVRO
+    value = PRINT_OUTPUT_AVRO_JSON;
+#else
+    value = PRINT_OUTPUT_AVRO_JSON;
     Log(LOG_WARNING, "WARN: [%s] bgp_table_dump_output set to avro but will produce no output (missing --enable-avro).\n", filename);
 #endif
   }
