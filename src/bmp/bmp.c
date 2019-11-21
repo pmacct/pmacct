@@ -216,14 +216,7 @@ void skinny_bmp_daemon()
       exit_gracefully(1);
     }
   }
-  {
-    int non_block = 1;
-    rc = ioctl (config.bmp_sock, FIONBIO, (char *) &non_block);
-    if (rc < 0)
-    {
-      Log(LOG_ERR, "WARN (  %s/%s ): ioctl() failed for FIONBIO (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
-    }
-  }
+  setnonblocking(config.bmp_sock);
 
   if (config.nfacctd_bmp_ipprec) {
     int opt = config.nfacctd_bmp_ipprec << 5;
