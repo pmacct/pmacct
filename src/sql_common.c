@@ -501,6 +501,11 @@ void sql_cache_handle_flush_event(struct insert_data *idata, time_t *refresh_dea
     load_ports(config.ports_file, pt);
     reload_map = FALSE;
   }
+
+  if (reload_log) {
+    reload_logs();
+    reload_log = FALSE;
+  }
 }
 
 struct db_cache *sql_cache_search(struct primitives_ptrs *prim_ptrs, time_t basetime)

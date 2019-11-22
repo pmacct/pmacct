@@ -640,6 +640,11 @@ void skinny_bgp_daemon_online()
       reload_log_bgp_thread = FALSE;
     }
 
+    if (reload_log && !bgp_misc_db->is_thread) {
+      reload_logs();
+      reload_log = FALSE;
+    }
+
     if (bgp_misc_db->msglog_backend_methods || bgp_misc_db->dump_backend_methods) {
       gettimeofday(&bgp_misc_db->log_tstamp, NULL);
       compose_timestamp(bgp_misc_db->log_tstamp_str, SRVBUFLEN, &bgp_misc_db->log_tstamp, TRUE,

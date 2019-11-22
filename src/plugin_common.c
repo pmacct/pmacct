@@ -672,6 +672,11 @@ void P_cache_handle_flush_event(struct ports_table *pt)
     load_ports(config.ports_file, pt);
     reload_map = FALSE;
   }
+
+  if (reload_log) {
+    reload_logs();
+    reload_log = FALSE;
+  }
 }
 
 void P_cache_mark_flush(struct chained_cache *queue[], int index, int exiting)

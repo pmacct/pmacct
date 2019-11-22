@@ -188,6 +188,11 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
     gettimeofday(&reload_map_tstamp, NULL);
   }
 
+  if (reload_log) {
+    reload_logs();
+    reload_log = FALSE;
+  }
+
   if (cb_data->has_tun_prims && pptrs.tun_pptrs) {
     struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs.tun_pptrs;
 

@@ -1256,6 +1256,11 @@ int main(int argc,char **argv, char **envp)
       gettimeofday(&reload_map_tstamp, NULL);
     }
 
+    if (reload_log) {
+      reload_logs();
+      reload_log = FALSE;
+    }
+
     if (reload_log_sf_cnt) {
       int nodes_idx;
 

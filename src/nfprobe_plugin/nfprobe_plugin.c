@@ -1547,6 +1547,11 @@ sort_version:
       reload_map = FALSE;
     }
 
+    if (reload_log) {
+      reload_logs();
+      reload_log = FALSE;
+    }
+
     recv_budget = 0;
     if (poll_bypass) {
       poll_bypass = FALSE;

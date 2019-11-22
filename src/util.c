@@ -3143,3 +3143,24 @@ char *null_terminate(char *str, int len)
 
   return loc;
 }
+
+void reload_logs()
+{
+  int logf;
+
+  if (config.syslog) {
+    closelog();
+    logf = parse_log_facility(config.syslog);
+    if (logf == ERR) {
+      config.syslog = NULL;
+      Log(LOG_WARNING, "WARN ( %s/%s ): specified syslog facility is not supported; logging to console.\n", config.name, config.type);
+    }
+    openlog(NULL, LOG_PID, logf);
+    Log(LOG_INFO, "INFO ( %s/%s ): Start logging ...\n", config.name, config.type);
+  }
+
+  if (config.logfile) {
+    fclose(config.logfile_fd);
+    config.logfile_fd = open_output_file(config.logfile, "a", FALSE);
+  }
+}

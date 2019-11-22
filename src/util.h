@@ -108,6 +108,7 @@ extern void parse_hostport(const char *, struct sockaddr *, socklen_t *);
 extern bool is_prime(u_int32_t);
 extern u_int32_t next_prime(u_int32_t);
 extern char *null_terminate(char *, int);
+extern void reload_logs();
 
 extern char *compose_json_str(void *);
 extern void write_and_free_json(FILE *, void *);

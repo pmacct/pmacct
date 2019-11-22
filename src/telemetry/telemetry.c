@@ -548,6 +548,11 @@ void telemetry_daemon(void *t_data_void)
       reload_log_telemetry_thread = FALSE;
     }
 
+    if (reload_log && !telemetry_misc_db->is_thread) {
+      reload_logs();
+      reload_log = FALSE;
+    }
+
     if (telemetry_misc_db->msglog_backend_methods || telemetry_misc_db->dump_backend_methods) {
       gettimeofday(&telemetry_misc_db->log_tstamp, NULL);
       compose_timestamp(telemetry_misc_db->log_tstamp_str, SRVBUFLEN, &telemetry_misc_db->log_tstamp, TRUE,

@@ -590,6 +590,11 @@ void skinny_bmp_daemon()
       reload_log_bmp_thread = FALSE;
     }
 
+    if (reload_log && !bmp_misc_db->is_thread) {
+      reload_logs();
+      reload_log = FALSE;
+    }
+
     if (bmp_misc_db->msglog_backend_methods || bmp_misc_db->dump_backend_methods) {
       gettimeofday(&bmp_misc_db->log_tstamp, NULL);
       compose_timestamp(bmp_misc_db->log_tstamp_str, SRVBUFLEN, &bmp_misc_db->log_tstamp, TRUE,

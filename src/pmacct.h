@@ -425,7 +425,7 @@ initsetproctitle(int, char**, char**);
 extern char sll_mac[2][ETH_ADDR_LEN];
 extern struct host_addr mcast_groups[MAX_MCAST_GROUPS];
 extern int reload_map, reload_map_exec_plugins, reload_geoipv2_file;
-extern int reload_map_bgp_thread, reload_log_bgp_thread;
+extern int reload_map_bgp_thread, reload_log, reload_log_bgp_thread;
 extern int reload_map_bmp_thread, reload_log_bmp_thread;
 extern int reload_map_rpki_thread, reload_log_rpki_thread;
 extern int reload_map_telemetry_thread, reload_log_telemetry_thread;
