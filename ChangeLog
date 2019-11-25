@@ -4,6 +4,49 @@ pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
+1.7.4 -- XX-12-2019
+  + Introduced support for the 'vxlan' VXLAN/VNI primitive in all traffic
+    daemons (NetFlow/IPFIX, sFlow and libpcap/ULOG). Existing inner tunnel
+    primitives (ie. tunnel_src_host, tunnel_dst_host, tunnel_proto, etc.)
+    have been wired to the VXLAN decoding and new ones (tunnel_src_mac, 
+    tunnel_dst_mac, tunnel_src_port, tunnel_dst_port) were defined.
+  + BMP daemon: added support for Peer Up message namespace for TLVs
+    (draft-ietf-grow-bmp-peer-up) and also support for Route Monitor
+    and Peer Down TLVs (draft-ietf-grow-bmp-tlv).
+  + sfprobe plugin: added support for IPv6 transport for sFlow export.
+    sfprobe_agentip is an IP address put in the header of the sFlow
+    packet. If underlying transport is IPv6, this must be configured to
+    an IPv6 address.
+  + zmq_common.[ch]: Improved modularity of the ZMQ internal API and
+    decoupled bind/connect from push/pull and pub/sub; also improved
+    support for inproc sockets. All to increase the amount of use-cases
+    covered by the API.
+  + bgp_peer_src_as_map: added 'filter' key to cover pmacctd/uacctd use
+    cases.
+  ! fix, signals.c: signals handling has been restructured in order to
+    block certain signals during critical sections of data processing.
+    Thanks to Vaibhav Phatarpekar ( @vphatarp ) for the contribution.
+  ! fix, nfacctd: wired (BGP, BMP, ISIS, etc) lookups to NetFlow (Secure)
+    Event Logging (NEL/NSEL). 
+  ! maps_index: optimized lookups, improved debugging output upon loading
+    indexes.
+  ! fix, kafka_common.c: if taking the p_kafka_close() route, ensure to
+    return and not perform any further polling in order to avoid SEGVs.
+  ! fix, BMP daemon: incorrect decoding of type was preventing correct
+    logging of init/term messages extra info.
+  ! fix, BMP daemon: improved length checks and making sure that strings
+    potentially non null-terminated are now terminated. Also TLV-related
+    code has been refactored.
+  ! fix, nfv9_template.c: correct handling of variable-length IPFIX
+    fields. Thanks to Nimrod Mesika ( @nimrody ) for the contribution.
+  ! fix, cfg_handlers: [sn]facctd_disable_checks, nfacctd_disable_opt_
+    scope_check could not be properly set to false.
+  ! fix, sql_common.c: src_host_coords and dst_host_coords primitives
+    have been correctly spaced in SQL queries. Also float values are now
+    quoted.
+  ! fix, cfg_handlers.c: reviewed handling of parsed 'zero' value for
+    several config directives.
+
 1.7.3 -- 16-05-2019
   + Introduced the RPKI daemon to build a ROA database and check prefixes
     validation status and coverages. Resource Public Key Infrastructure
