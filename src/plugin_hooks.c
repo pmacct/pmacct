@@ -352,7 +352,7 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
 {
   int saved_have_tag = FALSE, saved_have_tag2 = FALSE, saved_have_label = FALSE;
   pm_id_t saved_tag = 0, saved_tag2 = 0;
-  pt_label_t *saved_label=malloc(sizeof(pt_label_t));
+  pt_label_t *saved_label = malloc(sizeof(pt_label_t));
 
   int num, fixed_size;
   u_int32_t savedptr;
@@ -564,6 +564,7 @@ reprocess:
   /* cleanups */
   reload_map_exec_plugins = FALSE;
   pretag_free_label(saved_label);
+  if (saved_label) free(saved_label);
 }
 
 struct channels_list_entry *insert_pipe_channel(int plugin_type, struct configuration *cfg, int pipe)
