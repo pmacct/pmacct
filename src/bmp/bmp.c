@@ -216,6 +216,8 @@ void skinny_bmp_daemon()
       exit_gracefully(1);
     }
   }
+  setnonblocking(config.bmp_sock);
+
   if (config.nfacctd_bmp_ipprec) {
     int opt = config.nfacctd_bmp_ipprec << 5;
 
