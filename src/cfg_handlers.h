@@ -283,6 +283,7 @@ extern int cfg_key_nfprobe_ip_precedence(char *, char *, char *);
 extern int cfg_key_nfprobe_direction(char *, char *, char *);
 extern int cfg_key_nfprobe_ifindex(char *, char *, char *);
 extern int cfg_key_nfprobe_ifindex_override(char *, char *, char *);
+extern int cfg_key_nfprobe_tstamp_usec(char *, char *, char *);
 extern int cfg_key_nfprobe_dont_cache(char *, char *, char *);
 extern int cfg_key_sfprobe_receiver(char *, char *, char *);
 extern int cfg_key_sfprobe_agentip(char *, char *, char *);

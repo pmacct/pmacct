@@ -5773,6 +5773,28 @@ int cfg_key_nfprobe_ifindex_override(char *filename, char *name, char *value_ptr
   return changes;
 }
 
+int cfg_key_nfprobe_tstamp_usec(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.nfprobe_tstamp_usec = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.nfprobe_tstamp_usec = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_nfprobe_dont_cache(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

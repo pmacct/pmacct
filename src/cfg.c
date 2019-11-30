@@ -400,6 +400,7 @@ static const struct _dictionary_line dictionary[] = {
   {"nfprobe_ifindex", cfg_key_nfprobe_ifindex},
   {"nfprobe_dont_cache", cfg_key_nfprobe_dont_cache},
   {"nfprobe_ifindex_override", cfg_key_nfprobe_ifindex_override},
+  {"nfprobe_tstamp_usec", cfg_key_nfprobe_tstamp_usec},
   {"sfprobe_receiver", cfg_key_sfprobe_receiver},
   {"sfprobe_agentip", cfg_key_sfprobe_agentip},
   {"sfprobe_agentsubid", cfg_key_sfprobe_agentsubid},

@@ -545,6 +545,7 @@ struct configuration {
   int nfprobe_ifindex_override;
   int nfprobe_ifindex_type;
   int nfprobe_dont_cache;
+  int nfprobe_tstamp_usec;
   char *sfprobe_receiver;
   char *sfprobe_agentip;
   int sfprobe_agentsubid;
