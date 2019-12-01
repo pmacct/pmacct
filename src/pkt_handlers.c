@@ -2528,6 +2528,14 @@ void NF_time_msecs_handler(struct channels_list_entry *chptr, struct packet_ptrs
       pdata->time_start.tv_sec = pm_ntohll(t64)/1000;
       pdata->time_start.tv_usec = (pm_ntohll(t64)%1000)*1000;
     }
+    else if (tpl->tpl[NF9_FIRST_SWITCHED_USEC].len) {
+      if (tpl->tpl[NF9_FIRST_SWITCHED_USEC].len == 16) {
+	memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED_USEC].off, 8);
+        pdata->time_start.tv_sec = pm_ntohll(t64);
+	memcpy(&t64, (pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED_USEC].off+8), 8);
+        pdata->time_start.tv_usec = pm_ntohll(t64);
+      }
+    }
     else if (tpl->tpl[NF9_OBSERVATION_TIME_MSEC].len) {
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_OBSERVATION_TIME_MSEC].off, tpl->tpl[NF9_OBSERVATION_TIME_MSEC].len);
       pdata->time_start.tv_sec = pm_ntohll(t64)/1000;
@@ -2593,6 +2601,14 @@ void NF_time_msecs_handler(struct channels_list_entry *chptr, struct packet_ptrs
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED_MSEC].off, tpl->tpl[NF9_LAST_SWITCHED_MSEC].len);
       pdata->time_end.tv_sec = pm_ntohll(t64)/1000;
       pdata->time_end.tv_usec = (pm_ntohll(t64)%1000)*1000;
+    }
+    else if (tpl->tpl[NF9_LAST_SWITCHED_USEC].len) {
+      if (tpl->tpl[NF9_LAST_SWITCHED_USEC].len == 16) {
+	memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED_USEC].off, 8);
+        pdata->time_end.tv_sec = pm_ntohll(t64);
+	memcpy(&t64, (pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED_USEC].off+8), 8);
+        pdata->time_end.tv_usec = pm_ntohll(t64);
+      }
     }
     /* sec handling here: msec vs sec restricted to NetFlow v5 */
     else if (tpl->tpl[NF9_LAST_SWITCHED_SEC].len == 4) {
@@ -2985,6 +3001,14 @@ void NF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet
       pnat->timestamp_start.tv_sec = pm_ntohll(t64)/1000;
       pnat->timestamp_start.tv_usec = (pm_ntohll(t64)%1000)*1000; 
     }
+    else if (tpl->tpl[NF9_FIRST_SWITCHED_USEC].len) {
+      if (tpl->tpl[NF9_FIRST_SWITCHED_USEC].len == 16) {
+        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED_USEC].off, 8);
+        pnat->timestamp_start.tv_sec = pm_ntohll(t64);
+        memcpy(&t64, (pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED_USEC].off+8), 8);
+        pnat->timestamp_start.tv_usec = pm_ntohll(t64);
+      }
+    }
     /* sec handling here: msec vs sec restricted to NetFlow v5 */
     else if (tpl->tpl[NF9_FIRST_SWITCHED_SEC].len == 4) {
       memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED_SEC].off, tpl->tpl[NF9_FIRST_SWITCHED_SEC].len);
@@ -3070,6 +3094,14 @@ void NF_timestamp_end_handler(struct channels_list_entry *chptr, struct packet_p
       memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED_MSEC].off, tpl->tpl[NF9_LAST_SWITCHED_MSEC].len);
       pnat->timestamp_end.tv_sec = pm_ntohll(t64)/1000;
       pnat->timestamp_end.tv_usec = (pm_ntohll(t64)%1000)*1000;
+    }
+    else if (tpl->tpl[NF9_LAST_SWITCHED_USEC].len) {
+      if (tpl->tpl[NF9_LAST_SWITCHED_USEC].len == 16) {
+        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED_USEC].off, 8);
+        pnat->timestamp_end.tv_sec = pm_ntohll(t64);
+        memcpy(&t64, (pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED_USEC].off+8), 8);
+        pnat->timestamp_end.tv_usec = pm_ntohll(t64);
+      }
     }
     /* sec handling here: msec vs sec restricted to NetFlow v5 */
     else if (tpl->tpl[NF9_LAST_SWITCHED_SEC].len == 4) {
