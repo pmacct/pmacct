@@ -651,9 +651,12 @@ void skinny_bmp_daemon()
     /* New connection is coming in */
     if (FD_ISSET(config.bmp_sock, &read_descs)) {
       int peers_check_idx, peers_num;
+      int flags = 1;
 
       fd = accept(config.bmp_sock, (struct sockaddr *) &client, &clen);
       if (fd == ERR) goto read_data;
+
+      setsockopt(config.bmp_sock, SOL_SOCKET, SO_KEEPALIVE, (void *)&flags, sizeof(flags));
 
       ipv4_mapped_to_ipv4(&client);
 
