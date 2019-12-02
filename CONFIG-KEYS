@@ -2159,6 +2159,12 @@ DESC:		Disables caching and summarisation of flows. By default a NetFlow/IPFIX a
 		responsiveness. 
 DEFAULT:	false
 
+KEY:		nfprobe_tstamp_usec
+VALUES:		[ true | false |
+DESC:		Exports timestamps to the usec resolution (instead of default msec) using NetFlow v9 / IPFIX
+		IEs 154 and 155. This knob is not compatible with timestamps_secs configuration directive. 
+DEFAULT:	false
+
 KEY:		sfprobe_receiver
 DESC:		Defines the remote IP address/hostname and port to which NetFlow datagrams are to be exported.
 		If IPv4, the value is expected as 'address:port'. If IPv6, it is expected as '[address]:port'.
