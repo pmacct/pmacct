@@ -824,6 +824,7 @@ void p_zmq_router_worker(void *zh)
   int ret;
 
   assert(zmq_host);
+  memset(&sock, 0, sizeof(sock));
 
   sock.obj = zmq_socket(zmq_host->ctx, ZMQ_REP);
   if (!sock.obj) {
