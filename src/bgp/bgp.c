@@ -39,6 +39,7 @@
 #if defined WITH_AVRO
 #include "plugin_cmn_avro.h"
 #endif
+#include "bgp_lg.h"
 
 /* Global variables */
 thread_pool_t *bgp_pool;
@@ -61,6 +62,15 @@ void nfacctd_bgp_wrapper()
 {
   /* initialize variables */
   if (!config.nfacctd_bgp_port) config.nfacctd_bgp_port = BGP_TCP_PORT;
+
+#if defined WITH_ZMQ
+  if (config.bgp_lg) bgp_lg_wrapper();
+#else
+  if (config.bgp_lg) {
+    Log(LOG_ERR, "ERROR ( %s/core/lg ): 'bgp_daemon_lg' requires --enable-zmq. Exiting.\n", config.name);
+    exit_gracefully(1);
+  }
+#endif
 
   /* initialize threads pool */
   bgp_pool = allocate_thread_pool(1);
@@ -148,11 +158,6 @@ void skinny_bgp_daemon_online()
   memset(peers, 0, config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer));
 
   if (config.bgp_lg) {
-    if (config.acct_type != ACCT_PMBGP) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): bgp_daemon_lg feature not supported for this daemon. Exiting ...\n", config.name, config.type);
-      exit_gracefully(1);
-    }
-
     peers_cache = malloc(config.nfacctd_bgp_max_peers*sizeof(struct bgp_peer_cache_bucket));
     if (!peers_cache) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() BGP peers cache structure. Terminating thread.\n", config.name, bgp_misc_db->log_str);
@@ -983,7 +988,7 @@ void bgp_prepare_thread()
   memset(bgp_misc_db, 0, sizeof(struct bgp_misc_structs));
 
   bgp_misc_db->is_thread = TRUE;
-  bgp_misc_db->has_lglass = FALSE;
+  if (config.bgp_lg) bgp_misc_db->has_lglass = TRUE;
 
   if (config.rpki_roas_file || config.rpki_rtr_cache) {
     bgp_misc_db->bnv = malloc(sizeof(struct bgp_node_vector));

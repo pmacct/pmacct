@@ -22,7 +22,7 @@
 /* includes */
 #include "pmacct.h"
 #include "addr.h"
-#include "plugin_hooks.h"
+#include "zmq_common.h"
 #include "bgp.h"
 #include "bgp_lg.h"
 #include "pmacct-data.h"
