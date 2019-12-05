@@ -83,6 +83,10 @@ void skinny_bmp_daemon()
   time_t dump_refresh_deadline = {0};
   struct timeval dump_refresh_timeout, *drt_ptr;
 
+  /* flags */
+  int flags = 1;
+
+
 
   /* initial cleanups */
   reload_map_bmp_thread = FALSE;
@@ -653,7 +657,6 @@ void skinny_bmp_daemon()
     /* New connection is coming in */
     if (FD_ISSET(config.bmp_sock, &read_descs)) {
       int peers_check_idx, peers_num;
-      int flags = 1;
 
       fd = accept(config.bmp_sock, (struct sockaddr *) &client, &clen);
       if (fd == ERR) goto read_data;
