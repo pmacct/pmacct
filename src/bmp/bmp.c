@@ -217,6 +217,8 @@ void skinny_bmp_daemon()
     }
   }
   setnonblocking(config.bmp_sock);
+  setsockopt(config.bmp_sock, SOL_SOCKET, SO_KEEPALIVE, (void *)&flags, sizeof(flags));
+
 
   if (config.nfacctd_bmp_ipprec) {
     int opt = config.nfacctd_bmp_ipprec << 5;
@@ -655,8 +657,6 @@ void skinny_bmp_daemon()
 
       fd = accept(config.bmp_sock, (struct sockaddr *) &client, &clen);
       if (fd == ERR) goto read_data;
-
-      setsockopt(config.bmp_sock, SOL_SOCKET, SO_KEEPALIVE, (void *)&flags, sizeof(flags));
 
       ipv4_mapped_to_ipv4(&client);
 
