@@ -83,11 +83,6 @@ void skinny_bmp_daemon()
   time_t dump_refresh_deadline = {0};
   struct timeval dump_refresh_timeout, *drt_ptr;
 
-  /* flags */
-  int flags = 1;
-
-
-
   /* initial cleanups */
   reload_map_bmp_thread = FALSE;
   reload_log_bmp_thread = FALSE;
@@ -220,9 +215,9 @@ void skinny_bmp_daemon()
       exit_gracefully(1);
     }
   }
-  setnonblocking(config.bmp_sock);
-  setsockopt(config.bmp_sock, SOL_SOCKET, SO_KEEPALIVE, (void *)&flags, sizeof(flags));
 
+  setnonblocking(config.bmp_sock);
+  setsockopt(config.bmp_sock, SOL_SOCKET, SO_KEEPALIVE, (void *)&yes, sizeof(yes));
 
   if (config.nfacctd_bmp_ipprec) {
     int opt = config.nfacctd_bmp_ipprec << 5;
