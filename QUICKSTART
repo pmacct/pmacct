@@ -1812,14 +1812,13 @@ A sample of both the BGP msglog and dump formats are captured in the following
 document: docs/MSGLOG_DUMP_FORMATS
 
 XIVg. Example: querying the BGP daemon via the Looking Glass server.
-Starting with release 1.7.1 pmbgpd, the pmacct BGP standalone daemon, includes
-a Looking Glass server to query available BGP RIBs. The server is asyncronous
-and uses ZeroMQ as transport layer to serve incoming queries. The LG server can
-be configured as follows:
+The Looking Glass server allows to query RIBs stored in the BGP daemon. The
+server is asyncronous and uses ZeroMQ as transport layer to serve incoming
+queries. The LG server can be configured as follows:
 
 bgp_daemon_lg: true
-bgp_daemon_lg_user: pmacct
-bgp_daemon_lg_passwd: arealsmartpwd 
+! bgp_daemon_lg_user: pmacct
+! bgp_daemon_lg_passwd: arealsmartpwd 
 
 This configuration will enable plain authentication and will make the server
 listen on all interfaces on port 17900/TCP. Following an example of querying

@@ -2643,12 +2643,12 @@ DEFAULT:        none
 
 KEY:		bgp_daemon_lg [GLOBAL]
 VALUES:		[ true | false ]
-DESC:		Applies to pmbgpd, enables the BGP Looking Glass server allowing to perform queries,
-		ie. lookup IP addresses/prefixes or get the list of BGP peers, against available BGP
-		RIBs. The server is asyncronous and uses ZeroMQ as transport layer to serve incoming
-		queries. Sample C/Python LG clients are available in 'examples/lg'. Sample LG server
-		config is available in QUICKSTART. Request/Reply Looking Glass formats are documented
-		in 'docs/LOOKING_GLASS_FORMAT'.
+DESC:		Enables the BGP Looking Glass server allowing to perform queries, ie. lookup IP
+		addresses/prefixes or get the list of BGP peers, against available BGP RIBs. The
+		server is asyncronous and uses ZeroMQ as transport layer to serve incoming queries.
+		Sample C/Python LG clients are available in 'examples/lg'. Sample LG server config
+		is available in QUICKSTART. Request/Reply Looking Glass formats are documented in
+		'docs/LOOKING_GLASS_FORMAT'.
 DEFAULT:	false
 
 KEY:            bgp_daemon_lg_ip [GLOBAL]
