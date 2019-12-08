@@ -72,6 +72,8 @@ The keys used are:
     objects.
   ! maps_index: optimized lookups, improved debugging output upon loading
     indexes.
+  ! fix, tee plugin: overwriting computed IP address length with socket
+    container length was found to prevent output data on some BSDs. 
   ! fix, kafka_common.c: if taking the p_kafka_close() route, ensure to
     return and not perform any further polling in order to avoid SEGVs.
   ! fix, BMP daemon: incorrect decoding of type was preventing correct
