@@ -65,7 +65,7 @@ void (*insert_func)(struct primitives_ptrs *, struct insert_data *);
 struct DBdesc p;
 struct DBdesc b;
 struct BE_descs bed;
-struct largebuf envbuf;
+struct largebuf_s envbuf;
 time_t now; /* PostgreSQL */
 
 /* Functions */

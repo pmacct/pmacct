@@ -48,7 +48,7 @@ struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channe
 static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
                           struct nflog_data *nfa, void *p)
 {
-  static char* jumbo_container;
+  static u_char *jumbo_container;
   static ssize_t jumbo_container_sz = 0;
   struct pcap_pkthdr hdr;
   char *pkt = NULL;
@@ -193,7 +193,7 @@ int main(int argc,char **argv, char **envp)
   struct nflog_g_handle *nfgh = NULL;
   int one = 1;
   ssize_t len = 0;
-  unsigned char *nflog_buffer;
+  char *nflog_buffer;
 
   struct sockaddr_storage client;
 
@@ -956,7 +956,7 @@ int main(int argc,char **argv, char **envp)
        to keep a backup feed in memory */
     config.nfacctd_bgp_max_peers = 2;
 
-    cb_data.f_agent = (char *)&client;
+    cb_data.f_agent = (u_char *) &client;
     nfacctd_bgp_wrapper();
 
     /* Let's give the BGP thread some advantage to create its structures */

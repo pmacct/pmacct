@@ -337,16 +337,16 @@ struct _primitives_matrix_struct {
   char desc[PRIMITIVE_DESC_LEN];
 };
 
-struct smallbuf {
-  u_char base[SRVBUFLEN];
-  u_char *end;
-  u_char *ptr;
-};	
-
 struct largebuf {
   u_char base[LARGEBUFLEN];
   u_char *end;
   u_char *ptr;
+};
+
+struct largebuf_s {
+  char base[LARGEBUFLEN];
+  char *end;
+  char *ptr;
 };
 
 struct child_ctl2 {

@@ -394,7 +394,7 @@ extern void (*insert_func)(struct primitives_ptrs *, struct insert_data *);
 extern struct DBdesc p;
 extern struct DBdesc b;
 extern struct BE_descs bed;
-extern struct largebuf envbuf;
+extern struct largebuf_s envbuf;
 extern time_t now; /* PostgreSQL */
 #endif
 #endif //SQL_COMMON_H

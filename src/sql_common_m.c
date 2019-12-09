@@ -142,7 +142,7 @@ void SwapChainedElems(struct db_cache *Cursor, struct db_cache *staleElem)
 
 void SQL_SetENV()
 {
-  u_char *ptrs[16];
+  char *ptrs[16];
   int count = 0, i;
 
   INIT_BUF(envbuf);
@@ -181,7 +181,7 @@ void SQL_SetENV()
   }
 
   {
-    u_char *tmpptr;
+    char *tmpptr;
 
     strncat(envbuf.ptr, "SQL_REFRESH_TIME=", envbuf.end-envbuf.ptr);
     tmpptr = envbuf.ptr + strlen(envbuf.ptr);
@@ -192,7 +192,7 @@ void SQL_SetENV()
   }
 
   if (config.sampling_rate >= 1 || config.ext_sampling_rate >= 1) {
-    u_char *tmpptr;
+    char *tmpptr;
 
     strncat(envbuf.ptr, "SAMPLING_RATE=", envbuf.end-envbuf.ptr);
     tmpptr = envbuf.ptr + strlen(envbuf.ptr);
@@ -211,7 +211,7 @@ void SQL_SetENV()
   }
 
   {
-    u_char *tmpptr;
+    char *tmpptr;
 
     strncat(envbuf.ptr, "SQL_MAX_WRITERS=", envbuf.end-envbuf.ptr);
     tmpptr = envbuf.ptr + strlen(envbuf.ptr);
@@ -227,13 +227,13 @@ void SQL_SetENV()
 
 void SQL_SetENV_child(const struct insert_data *idata)
 {
-  u_char *ptrs[N_FUNCS];
+  char *ptrs[N_FUNCS];
   int count = 0, i;
 
   memset(ptrs, 0, sizeof(ptrs));
 
   {
-    u_char *tmpptr;
+    char *tmpptr;
 
     strncat(envbuf.ptr, "INSERT_QUERIES_NUMBER=", envbuf.end-envbuf.ptr);
     tmpptr = envbuf.ptr + strlen(envbuf.ptr);
@@ -244,7 +244,7 @@ void SQL_SetENV_child(const struct insert_data *idata)
   }
 
   {
-    u_char *tmpptr;
+    char *tmpptr;
 
     strncat(envbuf.ptr, "UPDATE_QUERIES_NUMBER=", envbuf.end-envbuf.ptr);
     tmpptr = envbuf.ptr + strlen(envbuf.ptr);
@@ -255,7 +255,7 @@ void SQL_SetENV_child(const struct insert_data *idata)
   }
 
   {
-    u_char *tmpptr;
+    char *tmpptr;
 
     strncat(envbuf.ptr, "ELAPSED_TIME=", envbuf.end-envbuf.ptr);
     tmpptr = envbuf.ptr + strlen(envbuf.ptr);
@@ -266,7 +266,7 @@ void SQL_SetENV_child(const struct insert_data *idata)
   }
 
   {
-    u_char *tmpptr;
+    char *tmpptr;
 
     strncat(envbuf.ptr, "TOTAL_ELEM_NUMBER=", envbuf.end-envbuf.ptr);
     tmpptr = envbuf.ptr + strlen(envbuf.ptr);
@@ -277,7 +277,7 @@ void SQL_SetENV_child(const struct insert_data *idata)
   }
 
   {
-    u_char *tmpptr;
+    char *tmpptr;
 
     strncat(envbuf.ptr, "EFFECTIVE_ELEM_NUMBER=", envbuf.end-envbuf.ptr);
     tmpptr = envbuf.ptr + strlen(envbuf.ptr);
@@ -288,7 +288,7 @@ void SQL_SetENV_child(const struct insert_data *idata)
   }
 
   if (idata->basetime) {
-    u_char *tmpptr;
+    char *tmpptr;
 
     strncat(envbuf.ptr, "SQL_HISTORY_BASETIME=", envbuf.end-envbuf.ptr);
     tmpptr = envbuf.ptr + strlen(envbuf.ptr);
@@ -299,7 +299,7 @@ void SQL_SetENV_child(const struct insert_data *idata)
   }
 
   if (idata->timeslot) {
-    u_char *tmpptr;
+    char *tmpptr;
 
     strncat(envbuf.ptr, "SQL_HISTORY_TIMESLOT=", envbuf.end-envbuf.ptr);
     tmpptr = envbuf.ptr + strlen(envbuf.ptr);
@@ -310,7 +310,7 @@ void SQL_SetENV_child(const struct insert_data *idata)
   }
 
   if (idata->dyn_table) {
-    u_char *tmpptr;
+    char *tmpptr;
 
     strncat(envbuf.ptr, "EFFECTIVE_SQL_TABLE=", envbuf.end-envbuf.ptr);
     tmpptr = envbuf.ptr + strlen(envbuf.ptr);
@@ -321,7 +321,7 @@ void SQL_SetENV_child(const struct insert_data *idata)
   }
 
   {
-    u_char *tmpptr;
+    char *tmpptr;
 
     strncat(envbuf.ptr, "SQL_ACTIVE_WRITERS=", envbuf.end-envbuf.ptr);
     tmpptr = envbuf.ptr + strlen(envbuf.ptr);
