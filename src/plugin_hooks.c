@@ -253,7 +253,7 @@ void load_plugins(struct plugin_requests *req)
       /* ZMQ inits, if required */
 #ifdef WITH_ZMQ
       if (list->cfg.pipe_zmq) {
-	char log_id[SHORTBUFLEN];
+	char log_id[LARGEBUFLEN];
 
 	p_zmq_plugin_pipe_init_core(&chptr->zmq_host, list->id, username, password);
 	snprintf(log_id, sizeof(log_id), "%s/%s", list->name, list->type.string);
