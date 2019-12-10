@@ -964,7 +964,7 @@ void P_zmq_pipe_init(void *zh, int *pipe_fd, u_int32_t *seq)
 #ifdef WITH_ZMQ
   if (zh) {
     struct p_zmq_host *zmq_host = zh;
-    char log_id[SHORTBUFLEN];
+    char log_id[LARGEBUFLEN];
 
     p_zmq_plugin_pipe_init_plugin(zmq_host);
 
