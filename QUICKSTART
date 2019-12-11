@@ -2787,8 +2787,9 @@ operations, the filtering happens after the raw socket (the one used by tcpdump)
 is served; you can also check with 3rd party equivalent tools or netcat, "nc -l
 -u -p <port>", that the same behaviour is obtained as with pmacct; finally, if
 running on a SELinux enabled system, consider that it could be interfering too;
-3) especially in case of copy/paste of configs or if using a config from a
-production system in lab, disable or double-check values for internal buffering:
+3) when not using ZeroMQ for internal buffering (plugin_pipe_zmq set to true)
+and especially in case of copy/paste of configs or if using a config from a
+production system in lab, disable/double-check values for internal buffering:
 if set too high they will likely retain data internally to the daemon; 4) if
 multiple interfaces are configured on a system, try to disable rp_filtering. See
 http://tldp.org/HOWTO/Adv-Routing-HOWTO/lartc.kernel.rpf.html for more info
@@ -2806,7 +2807,12 @@ protocols that are template-based, the issue may be with templates not being
 received by nfacctd (in which case by enabling debug you may see "Discarded
 NetFlow v9/IPFIX packet (R: unknown template [ .. ]" messages in your logs);
 you can confirm whether templates are being exported/replicated/received with a
-touch of "tshark -d udp.port==<NFv9/IPFIX port>,cflow -R cflow.template_id". 
+touch of "tshark -d udp.port==<NFv9/IPFIX port>,cflow -R cflow.template_id";
+it may also happen the opposite: templates are received but no data packets are
+being sent (ie. because sampling is not configured on the actual interfaces on
+the exporting device): in this case tshark would only show periodic data being
+received (ie. every 30 secs, 60 secs, etc.) rather than a more constant stream
+of data.
 
 e) In the case of inconsistent output - inconsistent defined as replaying the
 same set of data, output produced by the daemon differs - of nfacctd/sfacctd:
