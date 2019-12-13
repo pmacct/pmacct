@@ -65,6 +65,10 @@
 #define BGP_ATTR_AS_PATHLIMIT                   21
 #define BGP_ATTR_LARGE_COMMUNITIES		32 /* rfc8092 (draft-ietf-idr-large-community) */
 
+#define BGP_NLRI_UNDEFINED			0
+#define BGP_NLRI_UPDATE				1
+#define BGP_NLRI_WITHDRAW			2
+
 /* BGP Attribute flags. */
 #define BGP_ATTR_FLAG_OPTIONAL  0x80    /* Attribute is optional. */
 #define BGP_ATTR_FLAG_TRANS     0x40    /* Attribute is transitive. */
