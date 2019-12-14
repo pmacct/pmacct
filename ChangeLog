@@ -109,6 +109,9 @@ The keys used are:
     ( @rbarazzutti ) for the contribution.
   ! fix, pretag.c: JEQ labels are now correctly free() during init upon
     map reload.
+  ! fix, zmq_common.c: missing variable init in p_zmq_zap_handler() was
+    causing plugin_pipe_zmq operations to fail on certain compilers (ie.
+    gcc7). Thanks to Yuri Lachin ( @yuyutime ) for his support.
   ! fix, cfg_handlers.c: reviewed handling of parsed 'zero' value for
     several config directives.
   ! fix, countless code warnings when enabling -Wall (--enable-debug);

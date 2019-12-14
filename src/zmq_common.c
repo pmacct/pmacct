@@ -663,6 +663,8 @@ void p_zmq_zap_handler(void *zh)
   struct p_zmq_sock zmq_sock;
   int ret;
 
+  memset(&zmq_sock, 0, sizeof(zmq_sock));
+
   zmq_sock.obj = zmq_socket(zmq_host->ctx, ZMQ_REP);
   if (!zmq_sock.obj) {
     Log(LOG_ERR, "ERROR ( %s ): zmq_socket() ZAP failed (%s)\nExiting.\n",
