@@ -63,6 +63,9 @@ The keys used are:
     support resolving this.
   ! fix, pmbgpd, pmbmpd and pmtelemetryd daemons: added extra signals
     handling (SIGINT, SIGTERM, SIGCHLD) consistently to traffic daemons. 
+  ! fix, BGP daemon: withdrawals of label-unicast (support introduced in
+    1.7.3) and mpls-vpn NLRIs did fail to parse in release 1.7.3 and
+    were silently discarded. 
   ! fix, nfacctd: wired (BGP, BMP, ISIS, etc) lookups to NetFlow (Secure)
     Event Logging (NEL/NSEL). 
   ! fix, pmtelemetryd: re-implemented a decoder for so-called Cisco v1

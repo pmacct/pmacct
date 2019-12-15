@@ -660,32 +660,32 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   }
 
   /* NLRI parsing */
-  if (withdraw.length) bgp_nlri_parse(bmd, NULL, &withdraw);
-  if (update.length)  bgp_nlri_parse(bmd, &attr, &update);
+  if (withdraw.length) bgp_nlri_parse(bmd, NULL, &withdraw, BGP_NLRI_WITHDRAW);
+  if (update.length)  bgp_nlri_parse(bmd, &attr, &update, BGP_NLRI_UPDATE);
 	
   if (mp_update.length
 	  && mp_update.afi == AFI_IP
 	  && (mp_update.safi == SAFI_UNICAST || mp_update.safi == SAFI_MPLS_LABEL ||
 	      mp_update.safi == SAFI_MPLS_VPN))
-    bgp_nlri_parse(bmd, &attr, &mp_update);
+    bgp_nlri_parse(bmd, &attr, &mp_update, BGP_NLRI_UPDATE);
 
   if (mp_withdraw.length
 	  && mp_withdraw.afi == AFI_IP
 	  && (mp_withdraw.safi == SAFI_UNICAST || mp_withdraw.safi == SAFI_MPLS_LABEL ||
 	      mp_withdraw.safi == SAFI_MPLS_VPN))
-    bgp_nlri_parse (bmd, NULL, &mp_withdraw);
+    bgp_nlri_parse (bmd, NULL, &mp_withdraw, BGP_NLRI_WITHDRAW);
 
   if (mp_update.length
 	  && mp_update.afi == AFI_IP6
 	  && (mp_update.safi == SAFI_UNICAST || mp_update.safi == SAFI_MPLS_LABEL ||
 	      mp_update.safi == SAFI_MPLS_VPN))
-    bgp_nlri_parse(bmd, &attr, &mp_update);
+    bgp_nlri_parse(bmd, &attr, &mp_update, BGP_NLRI_UPDATE);
 
   if (mp_withdraw.length
 	  && mp_withdraw.afi == AFI_IP6
 	  && (mp_withdraw.safi == SAFI_UNICAST || mp_withdraw.safi == SAFI_MPLS_LABEL ||
 	      mp_withdraw.safi == SAFI_MPLS_VPN))
-    bgp_nlri_parse(bmd, NULL, &mp_withdraw);
+    bgp_nlri_parse(bmd, NULL, &mp_withdraw, BGP_NLRI_WITHDRAW);
 
   /* Receipt of End-of-RIB can be processed here; being a silent
 	 BGP receiver only, honestly it doesn't matter to us */
@@ -981,7 +981,7 @@ int bgp_attr_parse_mp_unreach(struct bgp_peer *peer, u_int16_t len, struct bgp_a
 }
 
 /* BGP UPDATE NLRI parsing */
-int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
+int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info, int type)
 {
   struct bgp_peer *peer = bmd->peer;
   u_char *pnt;
@@ -1043,9 +1043,11 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
       /* Fetch label(s) and prefix from NLRI packet */
       label_ptr = pnt;
 
-      while (((labels_size + 3) <= psize) && !check_bosbit(label_ptr)) {
-	label_ptr += 3;
-	labels_size += 3;
+      if (type == BGP_NLRI_UPDATE) {
+	while (((labels_size + 3) <= psize) && !check_bosbit(label_ptr)) {
+	  label_ptr += 3;
+	  labels_size += 3;
+	}
       }
 
       if ((labels_size + 3) <= psize) {
@@ -1070,9 +1072,11 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info)
       /* Fetch label (3), RD (8) and prefix from NLRI packet */
       label_ptr = pnt;
 
-      while (((labels_size + 3) <= psize) && !check_bosbit(label_ptr)) {
-	label_ptr += 3;
-	labels_size += 3;
+      if (type == BGP_NLRI_UPDATE) {
+	while (((labels_size + 3) <= psize) && !check_bosbit(label_ptr)) {
+	  label_ptr += 3;
+	  labels_size += 3;
+	}
       }
 
       if ((labels_size + 3) <= psize) {
