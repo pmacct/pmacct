@@ -75,7 +75,7 @@ static const char __attribute__((unused)) *bmp_peer_types[] = {
 #define BMP_PEER_FLAGS_ARI_L	0x40
 #define BMP_PEER_FLAGS_ARI_A	0x20
 #define BMP_PEER_FLAGS_LR_F	0x80 /* draft-ietf-grow-bmp-local-rib */
-#define BMP_PEER_FLAGS_ARO_O	0x10 /* draft-ietf-grow-bmp-adj-rib-out */
+#define BMP_PEER_FLAGS_ARO_O	0x10 /* rfc8671 */
 
 struct bmp_peer_hdr {
   u_char	type;

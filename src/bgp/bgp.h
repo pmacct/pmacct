@@ -63,7 +63,7 @@
 #define BGP_ATTR_AS4_PATH                       17
 #define BGP_ATTR_AS4_AGGREGATOR                 18
 #define BGP_ATTR_AS_PATHLIMIT                   21
-#define BGP_ATTR_LARGE_COMMUNITIES		32 /* rfc8092 (draft-ietf-idr-large-community) */
+#define BGP_ATTR_LARGE_COMMUNITIES		32 /* rfc8092 */
 
 #define BGP_NLRI_UNDEFINED			0
 #define BGP_NLRI_UPDATE				1
