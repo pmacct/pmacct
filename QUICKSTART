@@ -999,6 +999,10 @@ For further info on Confluent Schema Registry and libserdes:
 https://docs.confluent.io/current/schema-registry/docs/index.html
 https://github.com/confluentinc/libserdes
 
+NOTE: issues have been reported for certain cases when using libserdes on a
+system with OpenSSL 1.0.x installed due to some interactions with libcurl.
+Please upgrade to OpenSSL 1.1.x or greater. 
+
 Then "make; make install" as usual. As a proof-of-concept, when the Schema
 Registry is in use, once some data is produced in Avro format to a Kafka topic,
 it can be consumed with the kafka-avro-console-consumer tool, part of standard
