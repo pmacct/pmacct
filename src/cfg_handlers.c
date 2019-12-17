@@ -2543,7 +2543,7 @@ int cfg_key_nfacctd_account_options(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_pipe_size(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_pipe_size(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   u_int64_t value, changes = 0;
@@ -2555,7 +2555,7 @@ int cfg_key_nfacctd_bgp_pipe_size(char *filename, char *name, char *value_ptr)
     return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_pipe_size = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_pipe_size = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_pipe_size'. Globalized.\n", filename);
 
   return changes;
@@ -3129,23 +3129,23 @@ int cfg_key_nfacctd_allow_file(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_allow_file(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_allow_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_allow_file = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_allow_file = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_allow_file'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_md5_file(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_md5_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_md5_file = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_md5_file = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_md5_file'. Globalized.\n", filename);
 
   return changes;
@@ -3307,7 +3307,7 @@ int cfg_key_nfacctd_mcast_groups(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_nfacctd_bgp(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -3323,13 +3323,13 @@ int cfg_key_nfacctd_bgp(char *filename, char *name, char *value_ptr)
     return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_aspath_radius(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_aspath_radius(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -3340,62 +3340,62 @@ int cfg_key_nfacctd_bgp_aspath_radius(char *filename, char *name, char *value_pt
         return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_aspath_radius = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_aspath_radius = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_aspath_radius'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_stdcomm_pattern(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_stdcomm_pattern(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_stdcomm_pattern = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_stdcomm_pattern = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_stdcomm_pattern'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_extcomm_pattern(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_extcomm_pattern(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_extcomm_pattern = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_extcomm_pattern = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_extcomm_pattern'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_lrgcomm_pattern(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_lrgcomm_pattern(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_lrgcomm_pattern = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_lrgcomm_pattern = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_lrgcomm_pattern'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_stdcomm_pattern_to_asn(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_stdcomm_pattern_to_asn(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_stdcomm_pattern_to_asn = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_stdcomm_pattern_to_asn = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_stdcomm_pattern_to_asn'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_lrgcomm_pattern_to_asn(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_lrgcomm_pattern_to_asn(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_lrgcomm_pattern_to_asn = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_lrgcomm_pattern_to_asn = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_lrgcomm_pattern_to_asn'. Globalized.\n", filename);
 
   return changes;
@@ -3412,7 +3412,7 @@ int cfg_key_bgp_blackhole_stdcomm_list(char *filename, char *name, char *value_p
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_peer_src_as_type(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_peer_src_as_type(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value = BGP_SRC_PRIMITIVES_UNK, changes = 0;
@@ -3429,13 +3429,13 @@ int cfg_key_nfacctd_bgp_peer_src_as_type(char *filename, char *name, char *value
   }
   else Log(LOG_WARNING, "WARN: [%s] Ignoring unknown 'bgp_peer_src_as_type' value.\n", filename);
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_peer_as_src_type = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_peer_as_src_type = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_peer_src_as_type'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_src_std_comm_type(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_src_std_comm_type(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value = BGP_SRC_PRIMITIVES_UNK, changes = 0;
@@ -3444,13 +3444,13 @@ int cfg_key_nfacctd_bgp_src_std_comm_type(char *filename, char *name, char *valu
   if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
   else Log(LOG_WARNING, "WARN: [%s] Ignoring unknown 'bgp_src_std_comm_type' value.\n", filename);
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_std_comm_type = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_src_std_comm_type = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_src_std_comm_type'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_src_ext_comm_type(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_src_ext_comm_type(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value = BGP_SRC_PRIMITIVES_UNK, changes = 0;
@@ -3459,13 +3459,13 @@ int cfg_key_nfacctd_bgp_src_ext_comm_type(char *filename, char *name, char *valu
   if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
   else Log(LOG_WARNING, "WARN: [%s] Ignoring unknown 'bgp_src_ext_comm_type' value.\n", filename);
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_ext_comm_type = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_src_ext_comm_type = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_src_ext_comm_type'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_src_lrg_comm_type(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_src_lrg_comm_type(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value = BGP_SRC_PRIMITIVES_UNK, changes = 0;
@@ -3474,13 +3474,13 @@ int cfg_key_nfacctd_bgp_src_lrg_comm_type(char *filename, char *name, char *valu
   if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
   else Log(LOG_WARNING, "WARN: [%s] Ignoring unknown 'bgp_src_lrg_comm_type' value.\n", filename);
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_lrg_comm_type = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_src_lrg_comm_type = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_src_lrg_comm_type'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_src_as_path_type(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_src_as_path_type(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value = BGP_SRC_PRIMITIVES_UNK, changes = 0;
@@ -3489,13 +3489,13 @@ int cfg_key_nfacctd_bgp_src_as_path_type(char *filename, char *name, char *value
   if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
   else Log(LOG_WARNING, "WARN: [%s] Ignoring unknown 'bgp_src_as_path_type' value.\n", filename);
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_as_path_type = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_src_as_path_type = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_src_as_path_type'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_src_local_pref_type(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_src_local_pref_type(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value = BGP_SRC_PRIMITIVES_UNK, changes = 0;
@@ -3505,13 +3505,13 @@ int cfg_key_nfacctd_bgp_src_local_pref_type(char *filename, char *name, char *va
   else if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
   else Log(LOG_WARNING, "WARN: [%s] Ignoring unknown 'bgp_src_local_pref_type' value.\n", filename);
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_local_pref_type = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_src_local_pref_type = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_src_local_pref_type'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_src_med_type(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_src_med_type(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value = BGP_SRC_PRIMITIVES_UNK, changes = 0;
@@ -3521,13 +3521,13 @@ int cfg_key_nfacctd_bgp_src_med_type(char *filename, char *name, char *value_ptr
   else if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
   else Log(LOG_WARNING, "WARN: [%s] Ignoring unknown 'bgp_src_med_type' value.\n", filename);
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_med_type = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_src_med_type = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_src_med_type'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_src_roa_type(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_src_roa_type(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value = BGP_SRC_PRIMITIVES_UNK, changes = 0;
@@ -3536,13 +3536,13 @@ int cfg_key_nfacctd_bgp_src_roa_type(char *filename, char *name, char *value_ptr
   if (!strncmp(value_ptr, "bgp", strlen("bgp"))) value = BGP_SRC_PRIMITIVES_BGP;
   else Log(LOG_WARNING, "WARN: [%s] Ignoring unknown 'bgp_src_roa_type' value.\n", filename);
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_roa_type = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_src_roa_type = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_src_roa_type'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_peer_as_skip_subas(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_peer_as_skip_subas(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -3550,51 +3550,51 @@ int cfg_key_nfacctd_bgp_peer_as_skip_subas(char *filename, char *name, char *val
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_peer_as_skip_subas = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_peer_as_skip_subas = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_peer_as_skip_subas'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_src_local_pref_map(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_src_local_pref_map(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_local_pref_map = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_src_local_pref_map = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_src_local_pref_map'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_peer_src_as_map(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_peer_src_as_map(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_peer_as_src_map = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_peer_as_src_map = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_peer_src_as_map'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_src_med_map(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_src_med_map(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_src_med_map = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_src_med_map = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_src_med_map'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_to_agent_map(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_to_xflow_agent_map(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_to_agent_map = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_to_xflow_agent_map = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_to_agent_map'. Globalized.\n", filename);
 
   return changes;
@@ -3611,20 +3611,20 @@ int cfg_key_nfacctd_flow_to_rd_map(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_follow_default(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_follow_default(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
 
   value = atoi(value_ptr);
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_follow_default = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_follow_default = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_follow_default'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_follow_nexthop(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_follow_nexthop(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   char *count_token;
@@ -3634,7 +3634,7 @@ int cfg_key_nfacctd_bgp_follow_nexthop(char *filename, char *name, char *value_p
 
   while ((count_token = extract_token(&value_ptr, ',')) && idx < FOLLOW_BGP_NH_ENTRIES) {
     for (list = plugins_list; list; list = list->next) {
-      valid = str2prefix(count_token, &list->cfg.nfacctd_bgp_follow_nexthop[idx]);
+      valid = str2prefix(count_token, &list->cfg.bgp_daemon_follow_nexthop[idx]);
       if (!valid) {
 	Log(LOG_WARNING, "WARN: [%s] bgp_follow_nexthop: invalid IP prefix '%s'.\n", filename, count_token);
 	break;
@@ -3649,7 +3649,7 @@ int cfg_key_nfacctd_bgp_follow_nexthop(char *filename, char *name, char *value_p
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_follow_nexthop_external(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_follow_nexthop_external(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -3657,13 +3657,13 @@ int cfg_key_nfacctd_bgp_follow_nexthop_external(char *filename, char *name, char
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_follow_nexthop_external = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_follow_nexthop_external = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_follow_nexthop_external'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_disable_router_id_check(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_disable_router_id_check(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -3677,18 +3677,18 @@ int cfg_key_nfacctd_bgp_disable_router_id_check(char *filename, char *name, char
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_neighbors_file(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_neighbors_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_neighbors_file = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_neighbors_file = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_neighbors_file'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_max_peers(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_max_peers(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -3699,35 +3699,35 @@ int cfg_key_nfacctd_bgp_max_peers(char *filename, char *name, char *value_ptr)
         return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_max_peers = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_max_peers = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_max_peers'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_ip(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_ip(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_ip = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_ip = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_ip'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_id(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_id(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_id = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_id = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_id'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_as(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_as(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
@@ -3736,13 +3736,13 @@ int cfg_key_nfacctd_bgp_as(char *filename, char *name, char *value_ptr)
 
   value = strtoul(value_ptr, &endptr, 10);
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_as = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_as = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_as'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_port(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_port(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -3753,7 +3753,7 @@ int cfg_key_nfacctd_bgp_port(char *filename, char *name, char *value_ptr)
     return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_port = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_port = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_port'. Globalized.\n", filename);
 
   return changes;
@@ -3851,7 +3851,7 @@ int cfg_key_bgp_xconnect_map(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_ip_precedence(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_ip_precedence(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -3862,13 +3862,13 @@ int cfg_key_nfacctd_bgp_ip_precedence(char *filename, char *name, char *value_pt
     return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_ipprec = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_ipprec = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_ipprec'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_peer_buckets(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_peer_buckets(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -3885,7 +3885,7 @@ int cfg_key_nfacctd_bgp_table_peer_buckets(char *filename, char *name, char *val
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_per_peer_buckets(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_per_peer_buckets(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -3902,7 +3902,7 @@ int cfg_key_nfacctd_bgp_table_per_peer_buckets(char *filename, char *name, char 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_attr_hash_buckets(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_attr_hash_buckets(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -3919,7 +3919,7 @@ int cfg_key_nfacctd_bgp_table_attr_hash_buckets(char *filename, char *name, char
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_per_peer_hash(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_per_peer_hash(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value = BGP_ASPATH_HASH_PATHID, changes = 0;
@@ -3934,7 +3934,7 @@ int cfg_key_nfacctd_bgp_table_per_peer_hash(char *filename, char *name, char *va
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_batch_interval(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_batch_interval(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -3945,13 +3945,13 @@ int cfg_key_nfacctd_bgp_batch_interval(char *filename, char *name, char *value_p
     return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_batch_interval = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_batch_interval = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_batch_interval'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_batch(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_batch(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -3962,7 +3962,7 @@ int cfg_key_nfacctd_bgp_batch(char *filename, char *name, char *value_ptr)
     return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_batch = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_batch = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_batch'. Globalized.\n", filename);
 
   return changes;
@@ -6192,29 +6192,29 @@ void cfg_set_aggregate(char *filename, u_int64_t registry[], u_int64_t input, ch
   else registry[index] |= value;
 }
 
-int cfg_key_nfacctd_bgp_msglog_file(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_file = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_file = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_file'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_avro_schema_file(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_avro_schema_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_avro_schema_file = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_avro_schema_file = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_avro_schema_file'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_output(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_output(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -6249,90 +6249,90 @@ int cfg_key_nfacctd_bgp_msglog_output(char *filename, char *name, char *value_pt
     return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_output = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_output = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_output'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_amqp_host(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_amqp_host(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_amqp_host = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_amqp_host = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_amqp_host'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_amqp_vhost(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_amqp_vhost(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_amqp_vhost = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_amqp_vhost = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_amqp_vhost'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_amqp_user(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_amqp_user(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_amqp_user = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_amqp_user = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_amqp_user'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_amqp_passwd(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_amqp_passwd(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_amqp_passwd = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_amqp_passwd = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_amqp_passwd'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_amqp_exchange(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_amqp_exchange(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_amqp_exchange = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_amqp_exchange = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_amqp_exchange'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_amqp_exchange_type(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_amqp_exchange_type(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_amqp_exchange_type = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_amqp_exchange_type = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_amqp_exchange_type'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_amqp_routing_key(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_amqp_routing_key(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_amqp_routing_key = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_amqp_routing_key = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_amqp_routing_key'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_amqp_routing_key_rr(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_amqp_routing_key_rr(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0, value = 0;
@@ -6343,13 +6343,13 @@ int cfg_key_nfacctd_bgp_msglog_amqp_routing_key_rr(char *filename, char *name, c
     return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_amqp_routing_key_rr = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_amqp_routing_key_rr = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_amqp_routing_key_rr'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_amqp_persistent_msg(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_amqp_persistent_msg(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -6357,13 +6357,13 @@ int cfg_key_nfacctd_bgp_msglog_amqp_persistent_msg(char *filename, char *name, c
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_amqp_persistent_msg = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_amqp_persistent_msg = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_amqp_persistent_msg'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_amqp_frame_max(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_amqp_frame_max(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   u_int32_t value, changes = 0;
@@ -6375,13 +6375,13 @@ int cfg_key_nfacctd_bgp_msglog_amqp_frame_max(char *filename, char *name, char *
     return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_amqp_frame_max = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_amqp_frame_max = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_amqp_frame_max'. Globalized.\n", filename);
   
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_amqp_heartbeat_interval(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_amqp_heartbeat_interval(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   u_int32_t value, changes = 0;
@@ -6389,13 +6389,13 @@ int cfg_key_nfacctd_bgp_msglog_amqp_heartbeat_interval(char *filename, char *nam
 
   value = strtoul(value_ptr, &endptr, 10);
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_amqp_heartbeat_interval = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_amqp_heartbeat_interval = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_amqp_heartbeat_interval'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_amqp_retry(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_amqp_retry(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -6406,13 +6406,13 @@ int cfg_key_nfacctd_bgp_msglog_amqp_retry(char *filename, char *name, char *valu
     return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_amqp_retry = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_amqp_retry = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_amqp_retry'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_file(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
@@ -6423,7 +6423,7 @@ int cfg_key_nfacctd_bgp_table_dump_file(char *filename, char *name, char *value_
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_latest_file(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_latest_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
@@ -6434,7 +6434,7 @@ int cfg_key_nfacctd_bgp_table_dump_latest_file(char *filename, char *name, char 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_avro_schema_file(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_avro_schema_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
@@ -6445,7 +6445,7 @@ int cfg_key_nfacctd_bgp_table_dump_avro_schema_file(char *filename, char *name, 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_output(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_output(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -6486,7 +6486,7 @@ int cfg_key_nfacctd_bgp_table_dump_output(char *filename, char *name, char *valu
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_refresh_time(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_refresh_time(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0, i, len = strlen(value_ptr);
@@ -6510,7 +6510,7 @@ int cfg_key_nfacctd_bgp_table_dump_refresh_time(char *filename, char *name, char
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_amqp_host(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_amqp_host(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
@@ -6521,7 +6521,7 @@ int cfg_key_nfacctd_bgp_table_dump_amqp_host(char *filename, char *name, char *v
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_amqp_vhost(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_amqp_vhost(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
@@ -6532,7 +6532,7 @@ int cfg_key_nfacctd_bgp_table_dump_amqp_vhost(char *filename, char *name, char *
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_amqp_user(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_amqp_user(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
@@ -6543,7 +6543,7 @@ int cfg_key_nfacctd_bgp_table_dump_amqp_user(char *filename, char *name, char *v
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_amqp_passwd(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_amqp_passwd(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
@@ -6554,7 +6554,7 @@ int cfg_key_nfacctd_bgp_table_dump_amqp_passwd(char *filename, char *name, char 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_amqp_exchange(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_amqp_exchange(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
@@ -6565,7 +6565,7 @@ int cfg_key_nfacctd_bgp_table_dump_amqp_exchange(char *filename, char *name, cha
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_amqp_exchange_type(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_amqp_exchange_type(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
@@ -6576,7 +6576,7 @@ int cfg_key_nfacctd_bgp_table_dump_amqp_exchange_type(char *filename, char *name
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_amqp_routing_key(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_amqp_routing_key(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
@@ -6587,7 +6587,7 @@ int cfg_key_nfacctd_bgp_table_dump_amqp_routing_key(char *filename, char *name, 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_amqp_routing_key_rr(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_amqp_routing_key_rr(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0, value = 0;
@@ -6604,7 +6604,7 @@ int cfg_key_nfacctd_bgp_table_dump_amqp_routing_key_rr(char *filename, char *nam
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_amqp_persistent_msg(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_amqp_persistent_msg(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -6618,7 +6618,7 @@ int cfg_key_nfacctd_bgp_table_dump_amqp_persistent_msg(char *filename, char *nam
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_amqp_frame_max(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_amqp_frame_max(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   u_int32_t value, changes = 0;
@@ -6636,7 +6636,7 @@ int cfg_key_nfacctd_bgp_table_dump_amqp_frame_max(char *filename, char *name, ch
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_amqp_heartbeat_interval(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_amqp_heartbeat_interval(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   u_int32_t value, changes = 0;
@@ -6650,18 +6650,18 @@ int cfg_key_nfacctd_bgp_table_dump_amqp_heartbeat_interval(char *filename, char 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_kafka_broker_host(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_kafka_broker_host(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_kafka_broker_host = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_kafka_broker_host = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_kafka_broker_host'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_kafka_broker_port(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_kafka_broker_port(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -6672,24 +6672,24 @@ int cfg_key_nfacctd_bgp_msglog_kafka_broker_port(char *filename, char *name, cha
     return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_kafka_broker_port = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_kafka_broker_port = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_kafka_broker_port'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_kafka_topic(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_kafka_topic(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_kafka_topic = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_kafka_topic = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_kafka_topic'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_kafka_topic_rr(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_kafka_topic_rr(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0, value = 0;
@@ -6700,13 +6700,13 @@ int cfg_key_nfacctd_bgp_msglog_kafka_topic_rr(char *filename, char *name, char *
     return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_kafka_topic_rr = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_kafka_topic_rr = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_kafka_topic_rr'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_kafka_partition(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_kafka_partition(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -6719,13 +6719,13 @@ int cfg_key_nfacctd_bgp_msglog_kafka_partition(char *filename, char *name, char 
 
   if (!value) value = FALSE_NONZERO;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_kafka_partition = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_kafka_partition = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_kafka_partition'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_kafka_partition_key(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_kafka_partition_key(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value_len, changes = 0;
@@ -6733,15 +6733,15 @@ int cfg_key_nfacctd_bgp_msglog_kafka_partition_key(char *filename, char *name, c
   value_len = strlen(value_ptr);
 
   for (; list; list = list->next, changes++) {
-    list->cfg.nfacctd_bgp_msglog_kafka_partition_key = value_ptr;
-    list->cfg.nfacctd_bgp_msglog_kafka_partition_keylen = value_len;
+    list->cfg.bgp_daemon_msglog_kafka_partition_key = value_ptr;
+    list->cfg.bgp_daemon_msglog_kafka_partition_keylen = value_len;
   }
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_kafka_partition_key'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_kafka_retry(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_kafka_retry(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -6752,35 +6752,35 @@ int cfg_key_nfacctd_bgp_msglog_kafka_retry(char *filename, char *name, char *val
     return ERR;
   }
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_kafka_retry = value;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_kafka_retry = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_kafka_retry'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_kafka_config_file(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_kafka_config_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
   
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_kafka_config_file = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_kafka_config_file = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_kafka_config_file'. Globalized.\n", filename);
   
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_msglog_kafka_avro_schema_registry(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_msglog_kafka_avro_schema_registry(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_bgp_msglog_kafka_avro_schema_registry = value_ptr;
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_msglog_kafka_avro_schema_registry = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_msglog_kafka_avro_schema_registry'. Globalized.\n", filename);
 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_kafka_broker_host(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_kafka_broker_host(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
@@ -6791,7 +6791,7 @@ int cfg_key_nfacctd_bgp_table_dump_kafka_broker_host(char *filename, char *name,
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_kafka_broker_port(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_kafka_broker_port(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -6808,7 +6808,7 @@ int cfg_key_nfacctd_bgp_table_dump_kafka_broker_port(char *filename, char *name,
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_kafka_topic(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_kafka_topic(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
@@ -6819,7 +6819,7 @@ int cfg_key_nfacctd_bgp_table_dump_kafka_topic(char *filename, char *name, char 
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_kafka_topic_rr(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_kafka_topic_rr(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0, value = 0;
@@ -6836,7 +6836,7 @@ int cfg_key_nfacctd_bgp_table_dump_kafka_topic_rr(char *filename, char *name, ch
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_kafka_partition(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_kafka_partition(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -6855,7 +6855,7 @@ int cfg_key_nfacctd_bgp_table_dump_kafka_partition(char *filename, char *name, c
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_kafka_partition_key(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_kafka_partition_key(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value_len, changes = 0;
@@ -6871,7 +6871,7 @@ int cfg_key_nfacctd_bgp_table_dump_kafka_partition_key(char *filename, char *nam
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_kafka_config_file(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_kafka_config_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
@@ -6882,7 +6882,7 @@ int cfg_key_nfacctd_bgp_table_dump_kafka_config_file(char *filename, char *name,
   return changes;
 }
 
-int cfg_key_nfacctd_bgp_table_dump_kafka_avro_schema_registry(char *filename, char *name, char *value_ptr)
+int cfg_key_bgp_daemon_table_dump_kafka_avro_schema_registry(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;

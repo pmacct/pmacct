@@ -81,8 +81,8 @@
 #define MAX_NH_SELF_REFERENCES	1
 #define BGP_XCONNECT_STRLEN	(2 * (INET6_ADDRSTRLEN + PORT_STRLEN + 1) + 4) 
 
-/* Maximum BGP community patterns supported: nfacctd_bgp_stdcomm_pattern,
-   nfacctd_bgp_extcomm_pattern, bgp_blackhole_stdcomm_list, etc. */
+/* Maximum BGP community patterns supported: bgp_daemon_stdcomm_pattern,
+   bgp_daemon_extcomm_pattern, bgp_blackhole_stdcomm_list, etc. */
 #define MAX_BGP_COMM_PATTERNS	16
 #define MAX_BGP_COMM_ELEMS	MAX_BGP_COMM_PATTERNS
 
@@ -356,7 +356,7 @@ struct bgp_lg_rep_gp_data {
 #include "bgp_util.h"
 
 /* prototypes */
-extern void nfacctd_bgp_wrapper();
+extern void bgp_daemon_wrapper();
 extern void skinny_bgp_daemon();
 extern void skinny_bgp_daemon_online();
 extern void bgp_prepare_thread();

@@ -279,8 +279,8 @@ int main(int argc,char **argv, char **envp)
   sighandler_action.sa_handler = handle_falling_child;
   sigaction(SIGCHLD, &sighandler_action, NULL);
 
-  if (!config.nfacctd_bgp) config.nfacctd_bgp = BGP_DAEMON_ONLINE;
-  if (!config.nfacctd_bgp_port) config.nfacctd_bgp_port = BGP_TCP_PORT;
+  if (!config.bgp_daemon) config.bgp_daemon = BGP_DAEMON_ONLINE;
+  if (!config.bgp_daemon_port) config.bgp_daemon_port = BGP_TCP_PORT;
 
 #if defined WITH_ZMQ
   if (config.bgp_lg) bgp_lg_wrapper();

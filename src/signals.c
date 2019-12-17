@@ -118,10 +118,10 @@ void PM_sigint_handler(int signum)
   struct plugins_list_entry *list = plugins_list;
   char shutdown_msg[] = "pmacct received SIGINT - shutting down";
 
-  if (config.acct_type == ACCT_PMBGP || config.nfacctd_bgp == BGP_DAEMON_ONLINE) {
+  if (config.acct_type == ACCT_PMBGP || config.bgp_daemon == BGP_DAEMON_ONLINE) {
     int idx;
 
-    for (idx = 0; idx < config.nfacctd_bgp_max_peers; idx++) {
+    for (idx = 0; idx < config.bgp_daemon_max_peers; idx++) {
       if (peers[idx].fd)
 	bgp_peer_close(&peers[idx], FUNC_TYPE_BGP, TRUE, TRUE, BGP_NOTIFY_CEASE, BGP_NOTIFY_CEASE_ADMIN_SHUTDOWN, shutdown_msg);
     }
@@ -176,7 +176,7 @@ void PM_sigint_handler(int signum)
 void reload()
 {
   reload_log = TRUE;
-  if (config.nfacctd_bgp_msglog_file) reload_log_bgp_thread = TRUE;
+  if (config.bgp_daemon_msglog_file) reload_log_bgp_thread = TRUE;
   if (config.nfacctd_bmp_msglog_file) reload_log_bmp_thread = TRUE;
   if (config.sfacctd_counter_file) reload_log_sf_cnt = TRUE;
   if (config.telemetry_msglog_file) reload_log_telemetry_thread = TRUE;

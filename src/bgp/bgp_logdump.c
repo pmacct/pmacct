@@ -1677,7 +1677,7 @@ void bgp_handle_dump_event()
     }
 #endif
 
-    for (peer = NULL, saved_peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
+    for (peer = NULL, saved_peer = NULL, peers_idx = 0; peers_idx < config.bgp_daemon_max_peers; peers_idx++) {
       if (peers[peers_idx].fd) {
         peer = &peers[peers_idx];
 	peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
@@ -1813,25 +1813,25 @@ void bgp_daemon_msglog_init_amqp_host()
 {
   p_amqp_init_host(&bgp_daemon_msglog_amqp_host);
 
-  if (!config.nfacctd_bgp_msglog_amqp_user) config.nfacctd_bgp_msglog_amqp_user = rabbitmq_user;
-  if (!config.nfacctd_bgp_msglog_amqp_passwd) config.nfacctd_bgp_msglog_amqp_passwd = rabbitmq_pwd;
-  if (!config.nfacctd_bgp_msglog_amqp_exchange) config.nfacctd_bgp_msglog_amqp_exchange = default_amqp_exchange;
-  if (!config.nfacctd_bgp_msglog_amqp_exchange_type) config.nfacctd_bgp_msglog_amqp_exchange_type = default_amqp_exchange_type;
-  if (!config.nfacctd_bgp_msglog_amqp_host) config.nfacctd_bgp_msglog_amqp_host = default_amqp_host;
-  if (!config.nfacctd_bgp_msglog_amqp_vhost) config.nfacctd_bgp_msglog_amqp_vhost = default_amqp_vhost;
-  if (!config.nfacctd_bgp_msglog_amqp_retry) config.nfacctd_bgp_msglog_amqp_retry = AMQP_DEFAULT_RETRY;
+  if (!config.bgp_daemon_msglog_amqp_user) config.bgp_daemon_msglog_amqp_user = rabbitmq_user;
+  if (!config.bgp_daemon_msglog_amqp_passwd) config.bgp_daemon_msglog_amqp_passwd = rabbitmq_pwd;
+  if (!config.bgp_daemon_msglog_amqp_exchange) config.bgp_daemon_msglog_amqp_exchange = default_amqp_exchange;
+  if (!config.bgp_daemon_msglog_amqp_exchange_type) config.bgp_daemon_msglog_amqp_exchange_type = default_amqp_exchange_type;
+  if (!config.bgp_daemon_msglog_amqp_host) config.bgp_daemon_msglog_amqp_host = default_amqp_host;
+  if (!config.bgp_daemon_msglog_amqp_vhost) config.bgp_daemon_msglog_amqp_vhost = default_amqp_vhost;
+  if (!config.bgp_daemon_msglog_amqp_retry) config.bgp_daemon_msglog_amqp_retry = AMQP_DEFAULT_RETRY;
 
-  p_amqp_set_user(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_user);
-  p_amqp_set_passwd(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_passwd);
-  p_amqp_set_exchange(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_exchange);
-  p_amqp_set_exchange_type(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_exchange_type);
-  p_amqp_set_host(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_host);
-  p_amqp_set_vhost(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_vhost);
-  p_amqp_set_persistent_msg(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_persistent_msg);
-  p_amqp_set_frame_max(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_frame_max);
+  p_amqp_set_user(&bgp_daemon_msglog_amqp_host, config.bgp_daemon_msglog_amqp_user);
+  p_amqp_set_passwd(&bgp_daemon_msglog_amqp_host, config.bgp_daemon_msglog_amqp_passwd);
+  p_amqp_set_exchange(&bgp_daemon_msglog_amqp_host, config.bgp_daemon_msglog_amqp_exchange);
+  p_amqp_set_exchange_type(&bgp_daemon_msglog_amqp_host, config.bgp_daemon_msglog_amqp_exchange_type);
+  p_amqp_set_host(&bgp_daemon_msglog_amqp_host, config.bgp_daemon_msglog_amqp_host);
+  p_amqp_set_vhost(&bgp_daemon_msglog_amqp_host, config.bgp_daemon_msglog_amqp_vhost);
+  p_amqp_set_persistent_msg(&bgp_daemon_msglog_amqp_host, config.bgp_daemon_msglog_amqp_persistent_msg);
+  p_amqp_set_frame_max(&bgp_daemon_msglog_amqp_host, config.bgp_daemon_msglog_amqp_frame_max);
   p_amqp_set_content_type_json(&bgp_daemon_msglog_amqp_host);
-  p_amqp_set_heartbeat_interval(&bgp_daemon_msglog_amqp_host, config.nfacctd_bgp_msglog_amqp_heartbeat_interval);
-  P_broker_timers_set_retry_interval(&bgp_daemon_msglog_amqp_host.btimers, config.nfacctd_bgp_msglog_amqp_retry);
+  p_amqp_set_heartbeat_interval(&bgp_daemon_msglog_amqp_host, config.bgp_daemon_msglog_amqp_heartbeat_interval);
+  P_broker_timers_set_retry_interval(&bgp_daemon_msglog_amqp_host.btimers, config.bgp_daemon_msglog_amqp_retry);
 }
 #else
 void bgp_daemon_msglog_init_amqp_host()
@@ -1873,19 +1873,19 @@ int bgp_daemon_msglog_init_kafka_host()
 {
   int ret;
 
-  p_kafka_init_host(&bgp_daemon_msglog_kafka_host, config.nfacctd_bgp_msglog_kafka_config_file);
+  p_kafka_init_host(&bgp_daemon_msglog_kafka_host, config.bgp_daemon_msglog_kafka_config_file);
   ret = p_kafka_connect_to_produce(&bgp_daemon_msglog_kafka_host);
 
-  if (!config.nfacctd_bgp_msglog_kafka_broker_host) config.nfacctd_bgp_msglog_kafka_broker_host = default_kafka_broker_host;
-  if (!config.nfacctd_bgp_msglog_kafka_broker_port) config.nfacctd_bgp_msglog_kafka_broker_port = default_kafka_broker_port;
-  if (!config.nfacctd_bgp_msglog_kafka_retry) config.nfacctd_bgp_msglog_kafka_retry = PM_KAFKA_DEFAULT_RETRY;
+  if (!config.bgp_daemon_msglog_kafka_broker_host) config.bgp_daemon_msglog_kafka_broker_host = default_kafka_broker_host;
+  if (!config.bgp_daemon_msglog_kafka_broker_port) config.bgp_daemon_msglog_kafka_broker_port = default_kafka_broker_port;
+  if (!config.bgp_daemon_msglog_kafka_retry) config.bgp_daemon_msglog_kafka_retry = PM_KAFKA_DEFAULT_RETRY;
 
-  p_kafka_set_broker(&bgp_daemon_msglog_kafka_host, config.nfacctd_bgp_msglog_kafka_broker_host, config.nfacctd_bgp_msglog_kafka_broker_port);
-  p_kafka_set_topic(&bgp_daemon_msglog_kafka_host, config.nfacctd_bgp_msglog_kafka_topic);
-  p_kafka_set_partition(&bgp_daemon_msglog_kafka_host, config.nfacctd_bgp_msglog_kafka_partition);
-  p_kafka_set_key(&bgp_daemon_msglog_kafka_host, config.nfacctd_bgp_msglog_kafka_partition_key, config.nfacctd_bgp_msglog_kafka_partition_keylen);
+  p_kafka_set_broker(&bgp_daemon_msglog_kafka_host, config.bgp_daemon_msglog_kafka_broker_host, config.bgp_daemon_msglog_kafka_broker_port);
+  p_kafka_set_topic(&bgp_daemon_msglog_kafka_host, config.bgp_daemon_msglog_kafka_topic);
+  p_kafka_set_partition(&bgp_daemon_msglog_kafka_host, config.bgp_daemon_msglog_kafka_partition);
+  p_kafka_set_key(&bgp_daemon_msglog_kafka_host, config.bgp_daemon_msglog_kafka_partition_key, config.bgp_daemon_msglog_kafka_partition_keylen);
   p_kafka_set_content_type(&bgp_daemon_msglog_kafka_host, PM_KAFKA_CNT_TYPE_STR);
-  P_broker_timers_set_retry_interval(&bgp_daemon_msglog_kafka_host.btimers, config.nfacctd_bgp_msglog_kafka_retry);
+  P_broker_timers_set_retry_interval(&bgp_daemon_msglog_kafka_host.btimers, config.bgp_daemon_msglog_kafka_retry);
 
   return ret;
 }

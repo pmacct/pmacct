@@ -371,8 +371,8 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
         bgp_reply_pkt_ptr = bgp_reply_pkt;
 
         /* Replying to OPEN message */
-	if (!config.nfacctd_bgp_as) peer->myas = peer->as;
-	else peer->myas = config.nfacctd_bgp_as;
+	if (!config.bgp_daemon_as) peer->myas = peer->as;
+	else peer->myas = config.bgp_daemon_as;
 
         bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
         Log(LOG_INFO, "INFO ( %s/%s ): [%s] BGP_OPEN: Local AS: %u Remote AS: %u HoldTime: %u\n", config.name,
@@ -473,24 +473,24 @@ int bgp_write_open_msg(char *msg, char *cp_msg, int cp_msglen, struct bgp_peer *
   if (cp_msglen) bopen_reply->bgpo_optlen = cp_msglen;
   bopen_reply->bgpo_len = htons(BGP_MIN_OPEN_MSG_SIZE + bopen_reply->bgpo_optlen);
 
-  if (config.nfacctd_bgp_ip) str_to_addr(config.nfacctd_bgp_ip, &bgp_ip);
+  if (config.bgp_daemon_ip) str_to_addr(config.bgp_daemon_ip, &bgp_ip);
   else memset(&bgp_ip, 0, sizeof(bgp_ip));
 
-  if (config.nfacctd_bgp_id) str_to_addr(config.nfacctd_bgp_id, &bgp_id);
+  if (config.bgp_daemon_id) str_to_addr(config.bgp_daemon_id, &bgp_id);
   else memset(&bgp_id, 0, sizeof(bgp_id));
 
   /* set BGP router-ID trial #1 */
   memset(&my_id_addr, 0, sizeof(my_id_addr));
 
-  if (config.nfacctd_bgp_id && !is_any(&bgp_id) && !my_id_addr.family) {
-    my_id = config.nfacctd_bgp_id;
+  if (config.bgp_daemon_id && !is_any(&bgp_id) && !my_id_addr.family) {
+    my_id = config.bgp_daemon_id;
     str_to_addr(my_id, &my_id_addr);
     if (my_id_addr.family != AF_INET) memset(&my_id_addr, 0, sizeof(my_id_addr));
   }
 
   /* set BGP router-ID trial #2 */
-  if (config.nfacctd_bgp_ip && !is_any(&bgp_ip) && !my_id_addr.family) {
-    my_id = config.nfacctd_bgp_ip;
+  if (config.bgp_daemon_ip && !is_any(&bgp_ip) && !my_id_addr.family) {
+    my_id = config.bgp_daemon_ip;
     str_to_addr(my_id, &my_id_addr);
     if (my_id_addr.family != AF_INET) memset(&my_id_addr, 0, sizeof(my_id_addr));
   }

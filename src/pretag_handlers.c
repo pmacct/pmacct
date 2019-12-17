@@ -360,7 +360,7 @@ int BPAS_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value
   }
 
   for (x = 0; e->func[x]; x++);
-  if (config.nfacctd_bgp) {
+  if (config.bgp_daemon) {
     e->func[x] = BPAS_bgp_nexthop_handler;
     e->func_type[x] = PRETAG_BGP_NEXTHOP;
   }
@@ -380,7 +380,7 @@ int BPAS_map_bgp_peer_dst_as_handler(char *filename, struct id_entry *e, char *v
   e->key.peer_dst_as.n = tmp;
 
   for (x = 0; e->func[x]; x++);
-  if (config.nfacctd_bgp) {
+  if (config.bgp_daemon) {
     e->func[x] = BPAS_bgp_peer_dst_as_handler; 
     e->func_type[x] = PRETAG_BGP_NEXTHOP;
   }
@@ -1770,10 +1770,10 @@ int pretag_peer_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct bgp_info *info;
   as_t asn = 0;
 
-  if (config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
+  if (config.bgp_daemon_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
     asn = pptrs->bpas;
   }
-  else if (config.nfacctd_bgp_peer_as_src_type & BGP_SRC_PRIMITIVES_BGP) {
+  else if (config.bgp_daemon_peer_as_src_type & BGP_SRC_PRIMITIVES_BGP) {
     if (src_ret) {
       info = (struct bgp_info *) pptrs->bgp_src_info;
       if (info && info->attr) {
@@ -1815,10 +1815,10 @@ int pretag_src_local_pref_handler(struct packet_ptrs *pptrs, void *unused, void 
   struct bgp_info *info;
   u_int32_t local_pref = 0;
 
-  if (config.nfacctd_bgp_src_local_pref_type == BGP_SRC_PRIMITIVES_MAP) {
+  if (config.bgp_daemon_src_local_pref_type == BGP_SRC_PRIMITIVES_MAP) {
     local_pref = pptrs->blp;
   }
-  else if (config.nfacctd_bgp_src_local_pref_type & BGP_SRC_PRIMITIVES_BGP) {
+  else if (config.bgp_daemon_src_local_pref_type & BGP_SRC_PRIMITIVES_BGP) {
     if (src_ret) {
       info = (struct bgp_info *) pptrs->bgp_src_info;
       if (info && info->attr) {
@@ -1855,7 +1855,7 @@ int pretag_src_roa_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
   u_int8_t roa = ROA_STATUS_UNKNOWN;
 
-  if (config.nfacctd_bgp_src_roa_type & BGP_SRC_PRIMITIVES_BGP) {
+  if (config.bgp_daemon_src_roa_type & BGP_SRC_PRIMITIVES_BGP) {
     if (src_ret) roa = pptrs->src_roa;
   }
 
@@ -2265,7 +2265,7 @@ int pretag_id_handler(struct packet_ptrs *pptrs, void *id, void *e)
 	if (info->attr->aspath && info->attr->aspath->str) {
 	  *tid = evaluate_first_asn(info->attr->aspath->str);
 
-	  if (!(*tid) && config.nfacctd_bgp_stdcomm_pattern_to_asn) {
+	  if (!(*tid) && config.bgp_daemon_stdcomm_pattern_to_asn) {
 	    char tmp_stdcomms[MAX_BGP_STD_COMMS];
 
 	    if (info->attr->community && info->attr->community->str) {
@@ -2274,7 +2274,7 @@ int pretag_id_handler(struct packet_ptrs *pptrs, void *id, void *e)
 	    }
           }
 
-	  if (!(*tid) && config.nfacctd_bgp_lrgcomm_pattern_to_asn) {
+	  if (!(*tid) && config.bgp_daemon_lrgcomm_pattern_to_asn) {
 	    char tmp_lrgcomms[MAX_BGP_LRG_COMMS];
 
 	    if (info->attr->lcommunity && info->attr->lcommunity->str) {
@@ -2598,7 +2598,7 @@ int BPAS_bgp_peer_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *
       if (info->attr->aspath && info->attr->aspath->str) {
         asn = evaluate_first_asn(info->attr->aspath->str);
 
-        if (!asn && config.nfacctd_bgp_stdcomm_pattern_to_asn) {
+        if (!asn && config.bgp_daemon_stdcomm_pattern_to_asn) {
           char tmp_stdcomms[MAX_BGP_STD_COMMS];
 
           if (info->attr->community && info->attr->community->str) {
@@ -2607,7 +2607,7 @@ int BPAS_bgp_peer_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *
           }
         }
 
-        if (!asn && config.nfacctd_bgp_lrgcomm_pattern_to_asn) {
+        if (!asn && config.bgp_daemon_lrgcomm_pattern_to_asn) {
           char tmp_lrgcomms[MAX_BGP_LRG_COMMS];
 
           if (info->attr->lcommunity && info->attr->lcommunity->str) {
@@ -3474,7 +3474,7 @@ int PT_map_index_fdata_peer_src_as_handler(struct id_entry *e, pm_hash_serial_t 
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
   struct bgp_info *info;
 
-  if (config.nfacctd_bgp_peer_as_src_type & BGP_SRC_PRIMITIVES_MAP) {
+  if (config.bgp_daemon_peer_as_src_type & BGP_SRC_PRIMITIVES_MAP) {
     e->key.peer_src_as.n = pptrs->bpas;
   }
   else {

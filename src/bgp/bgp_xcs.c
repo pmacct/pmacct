@@ -69,7 +69,7 @@ int bgp_xcs_map_dst_handler(char *filename, struct id_entry *e, char *value, str
   struct bgp_xconnect *target = NULL;
 
   if (table && table->pool) {
-    if (table->num < config.nfacctd_bgp_max_peers) {
+    if (table->num < config.bgp_daemon_max_peers) {
       target = &table->pool[table->num];
       target->dst_len = sizeof(target->dst);
       if (bgp_xcs_parse_hostport(value, (struct sockaddr *)&target->dst, &target->dst_len)) { 
@@ -92,7 +92,7 @@ int bgp_xcs_map_src_handler(char *filename, struct id_entry *e, char *value, str
   struct bgp_xconnect *target = NULL;
 
   if (table && table->pool) {
-    if (table->num < config.nfacctd_bgp_max_peers) {
+    if (table->num < config.bgp_daemon_max_peers) {
       target = &table->pool[table->num];
       target->src_len = sizeof(target->src);
 

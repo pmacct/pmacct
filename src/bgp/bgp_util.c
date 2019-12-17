@@ -965,7 +965,7 @@ as_t evaluate_first_asn(char *src)
     is_space = FALSE;
   }
 
-  if (config.nfacctd_bgp_peer_as_skip_subas /* XXX */ && sub_as) {
+  if (config.bgp_daemon_peer_as_skip_subas /* XXX */ && sub_as) {
     while (idx < len && (src[idx] == ' ' || src[idx] == ')')) idx++;
 
     if (idx != len-1) { 
@@ -1091,9 +1091,9 @@ void bgp_config_checks(struct configuration *c)
 			  COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|
 			  COUNT_MPLS_VPN_RD)) {
     /* Sanitizing the aggregation method */
-      if ( (c->what_to_count & COUNT_SRC_LOCAL_PREF && !c->nfacctd_bgp_src_local_pref_type) ||
-	   (c->what_to_count & COUNT_SRC_MED && !c->nfacctd_bgp_src_med_type) ||
-	   (c->what_to_count & COUNT_PEER_SRC_AS && !c->nfacctd_bgp_peer_as_src_type &&
+      if ( (c->what_to_count & COUNT_SRC_LOCAL_PREF && !c->bgp_daemon_src_local_pref_type) ||
+	   (c->what_to_count & COUNT_SRC_MED && !c->bgp_daemon_src_med_type) ||
+	   (c->what_to_count & COUNT_PEER_SRC_AS && !c->bgp_daemon_peer_as_src_type &&
 	     (config.acct_type != ACCT_SF && config.acct_type != ACCT_NF)) ) {
       printf("ERROR: At least one of the following primitives is in use but its source type is not specified:\n");
       printf("       peer_src_as     =>  bgp_peer_src_as_type\n");
@@ -1109,10 +1109,10 @@ void bgp_config_checks(struct configuration *c)
 			  COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH)) ||
       (c->what_to_count_2 & (COUNT_LRG_COMM|COUNT_SRC_LRG_COMM))) {
     /* Sanitizing the aggregation method */
-    if ( (c->what_to_count & COUNT_SRC_AS_PATH && !c->nfacctd_bgp_src_as_path_type) ||
-         (c->what_to_count & COUNT_SRC_STD_COMM && !c->nfacctd_bgp_src_std_comm_type) ||
-	 (c->what_to_count & COUNT_SRC_EXT_COMM && !c->nfacctd_bgp_src_ext_comm_type) ||
-	 (c->what_to_count_2 & COUNT_SRC_LRG_COMM && !c->nfacctd_bgp_src_lrg_comm_type) ) {
+    if ( (c->what_to_count & COUNT_SRC_AS_PATH && !c->bgp_daemon_src_as_path_type) ||
+         (c->what_to_count & COUNT_SRC_STD_COMM && !c->bgp_daemon_src_std_comm_type) ||
+	 (c->what_to_count & COUNT_SRC_EXT_COMM && !c->bgp_daemon_src_ext_comm_type) ||
+	 (c->what_to_count_2 & COUNT_SRC_LRG_COMM && !c->bgp_daemon_src_lrg_comm_type) ) {
       printf("ERROR: At least one of the following primitives is in use but its source type is not specified:\n");
       printf("       src_as_path     =>  bgp_src_as_path_type\n");
       printf("       src_std_comm    =>  bgp_src_std_comm_type\n");
@@ -1343,25 +1343,25 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
 #if defined WITH_KAFKA
   bms->msglog_kafka_host = &bgp_daemon_msglog_kafka_host;
 #endif
-  bms->max_peers = config.nfacctd_bgp_max_peers;
+  bms->max_peers = config.bgp_daemon_max_peers;
   bms->peers = peers;
   bms->peers_cache = peers_cache;
   bms->peers_port_cache = peers_port_cache;
   bms->xconnects = &bgp_xcs_map;
-  bms->neighbors_file = config.nfacctd_bgp_neighbors_file; 
+  bms->neighbors_file = config.bgp_daemon_neighbors_file; 
   bms->dump_file = config.bgp_table_dump_file; 
   bms->dump_amqp_routing_key = config.bgp_table_dump_amqp_routing_key; 
   bms->dump_amqp_routing_key_rr = config.bgp_table_dump_amqp_routing_key_rr;
   bms->dump_kafka_topic = config.bgp_table_dump_kafka_topic;
   bms->dump_kafka_topic_rr = config.bgp_table_dump_kafka_topic_rr;
   bms->dump_kafka_avro_schema_registry = config.bgp_table_dump_kafka_avro_schema_registry;
-  bms->msglog_file = config.nfacctd_bgp_msglog_file;
-  bms->msglog_output = config.nfacctd_bgp_msglog_output;
-  bms->msglog_amqp_routing_key = config.nfacctd_bgp_msglog_amqp_routing_key;
-  bms->msglog_amqp_routing_key_rr = config.nfacctd_bgp_msglog_amqp_routing_key_rr;
-  bms->msglog_kafka_topic = config.nfacctd_bgp_msglog_kafka_topic;
-  bms->msglog_kafka_topic_rr = config.nfacctd_bgp_msglog_kafka_topic_rr;
-  bms->msglog_kafka_avro_schema_registry = config.nfacctd_bgp_msglog_kafka_avro_schema_registry;
+  bms->msglog_file = config.bgp_daemon_msglog_file;
+  bms->msglog_output = config.bgp_daemon_msglog_output;
+  bms->msglog_amqp_routing_key = config.bgp_daemon_msglog_amqp_routing_key;
+  bms->msglog_amqp_routing_key_rr = config.bgp_daemon_msglog_amqp_routing_key_rr;
+  bms->msglog_kafka_topic = config.bgp_daemon_msglog_kafka_topic;
+  bms->msglog_kafka_topic_rr = config.bgp_daemon_msglog_kafka_topic_rr;
+  bms->msglog_kafka_avro_schema_registry = config.bgp_daemon_msglog_kafka_avro_schema_registry;
   bms->peer_str = malloc(strlen("peer_ip_src") + 1);
   strcpy(bms->peer_str, "peer_ip_src");
   bms->peer_port_str = malloc(strlen("peer_tcp_port") + 1);

@@ -41,7 +41,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
   struct node_match_cmp_term2 nmct2;
   struct prefix default_prefix;
   int compare_bgp_port = config.tmp_bgp_lookup_compare_ports;
-  int follow_default = config.nfacctd_bgp_follow_default;
+  int follow_default = config.bgp_daemon_follow_default;
   struct in_addr pref4;
   struct in6_addr pref6;
   safi_t safi;
@@ -309,7 +309,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
       }
     }
 
-    if (config.nfacctd_bgp_follow_nexthop[0].family && pptrs->bgp_dst && safi != SAFI_MPLS_VPN)
+    if (config.bgp_daemon_follow_nexthop[0].family && pptrs->bgp_dst && safi != SAFI_MPLS_VPN)
       bgp_follow_nexthop_lookup(pptrs, type);
   }
 }
@@ -340,7 +340,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
 
   start_again:
 
-  if (config.nfacctd_bgp_to_agent_map && (*find_id_func)) {
+  if (config.bgp_daemon_to_xflow_agent_map && (*find_id_func)) {
     bta = 0;
     (*find_id_func)((struct id_table *)pptrs->bta_table, pptrs, &bta, NULL);
     if (bta) {
@@ -417,8 +417,8 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
 	nh.prefixlen = 32;
 	memcpy(&nh.u.prefix4, &info->attr->mp_nexthop.address.ipv4, 4);
 
-	for (nh_idx = 0; config.nfacctd_bgp_follow_nexthop[nh_idx].family && nh_idx < FOLLOW_BGP_NH_ENTRIES; nh_idx++) {
-	  matched = prefix_match(&config.nfacctd_bgp_follow_nexthop[nh_idx], &nh);
+	for (nh_idx = 0; config.bgp_daemon_follow_nexthop[nh_idx].family && nh_idx < FOLLOW_BGP_NH_ENTRIES; nh_idx++) {
+	  matched = prefix_match(&config.bgp_daemon_follow_nexthop[nh_idx], &nh);
 	  if (matched) break;
 	}
 
@@ -434,7 +434,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
           goto start_again;
         }
 	else {
-	  if (config.nfacctd_bgp_follow_nexthop_external) saved_info = (char *) info;
+	  if (config.bgp_daemon_follow_nexthop_external) saved_info = (char *) info;
 	  goto end;
 	}
       }
@@ -443,8 +443,8 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
 	nh.prefixlen = 128;
 	memcpy(&nh.u.prefix6, &info->attr->mp_nexthop.address.ipv6, 16);
 
-        for (nh_idx = 0; config.nfacctd_bgp_follow_nexthop[nh_idx].family && nh_idx < FOLLOW_BGP_NH_ENTRIES; nh_idx++) {
-          matched = prefix_match(&config.nfacctd_bgp_follow_nexthop[nh_idx], &nh);
+        for (nh_idx = 0; config.bgp_daemon_follow_nexthop[nh_idx].family && nh_idx < FOLLOW_BGP_NH_ENTRIES; nh_idx++) {
+          matched = prefix_match(&config.bgp_daemon_follow_nexthop[nh_idx], &nh);
           if (matched) break;
         }
 
@@ -460,7 +460,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
           goto start_again;
 	}
 	else {
-	  if (config.nfacctd_bgp_follow_nexthop_external) saved_info = (char *) info;
+	  if (config.bgp_daemon_follow_nexthop_external) saved_info = (char *) info;
 	  goto end;
 	}
       }
@@ -469,8 +469,8 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
 	nh.prefixlen = 32;
 	memcpy(&nh.u.prefix4, &info->attr->nexthop, 4);
 
-        for (nh_idx = 0; config.nfacctd_bgp_follow_nexthop[nh_idx].family && nh_idx < FOLLOW_BGP_NH_ENTRIES; nh_idx++) {
-          matched = prefix_match(&config.nfacctd_bgp_follow_nexthop[nh_idx], &nh);
+        for (nh_idx = 0; config.bgp_daemon_follow_nexthop[nh_idx].family && nh_idx < FOLLOW_BGP_NH_ENTRIES; nh_idx++) {
+          matched = prefix_match(&config.bgp_daemon_follow_nexthop[nh_idx], &nh);
           if (matched) break;
         }
 
@@ -486,7 +486,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
           goto start_again;
 	}
 	else {
-	  if (config.nfacctd_bgp_follow_nexthop_external) saved_info = (char *) info;
+	  if (config.bgp_daemon_follow_nexthop_external) saved_info = (char *) info;
 	  goto end;
 	}
       }
@@ -530,7 +530,7 @@ struct bgp_peer *bgp_lookup_find_bgp_peer(struct sockaddr *sa, struct xflow_stat
     }
   }
   else {
-    for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bgp_max_peers; peers_idx++) {
+    for (peer = NULL, peers_idx = 0; peers_idx < config.bgp_daemon_max_peers; peers_idx++) {
       if ((!config.bgp_disable_router_id_check && !sa_addr_cmp(sa, &peers[peers_idx].id)) ||
 	  (!sa_addr_cmp(sa, &peers[peers_idx].addr) && 
 	  (!compare_bgp_port || !sa_port_cmp(sa, peers[peer_idx].tcp_port)))) {

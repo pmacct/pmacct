@@ -745,7 +745,7 @@ void skinny_bmp_daemon()
       /* Check: multiple TCP connections per peer */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bmp_max_peers; peers_check_idx++) {
         if (peers_idx != peers_check_idx && !memcmp(&bmp_peers[peers_check_idx].self.addr, &peer->addr, sizeof(bmp_peers[peers_check_idx].self.addr))) {
-	  if (bmp_misc_db->is_thread && !config.nfacctd_bgp_to_agent_map) {
+	  if (bmp_misc_db->is_thread && !config.bgp_daemon_to_xflow_agent_map) {
             Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple connections from peer and no bgp_agent_map defined.\n",
                                 config.name, bmp_misc_db->log_str, bmp_peers[peers_check_idx].self.addr_str);
 	  }

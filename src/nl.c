@@ -151,13 +151,13 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
         if (config.nfacctd_isis) {
           isis_srcdst_lookup(&pptrs);
         }
-        if (config.nfacctd_bgp) {
+        if (config.bgp_daemon) {
           BTA_find_id((struct id_table *)pptrs.bta_table, &pptrs, &pptrs.bta, &pptrs.bta2);
           bgp_srcdst_lookup(&pptrs, FUNC_TYPE_BGP);
         }
-        if (config.nfacctd_bgp_peer_as_src_map) PM_find_id((struct id_table *)pptrs.bpas_table, &pptrs, &pptrs.bpas, NULL);
-        if (config.nfacctd_bgp_src_local_pref_map) PM_find_id((struct id_table *)pptrs.blp_table, &pptrs, &pptrs.blp, NULL);
-        if (config.nfacctd_bgp_src_med_map) PM_find_id((struct id_table *)pptrs.bmed_table, &pptrs, &pptrs.bmed, NULL);
+        if (config.bgp_daemon_peer_as_src_map) PM_find_id((struct id_table *)pptrs.bpas_table, &pptrs, &pptrs.bpas, NULL);
+        if (config.bgp_daemon_src_local_pref_map) PM_find_id((struct id_table *)pptrs.blp_table, &pptrs, &pptrs.blp, NULL);
+        if (config.bgp_daemon_src_med_map) PM_find_id((struct id_table *)pptrs.bmed_table, &pptrs, &pptrs.bmed, NULL);
         if (config.nfacctd_bmp) {
           BTA_find_id((struct id_table *)pptrs.bta_table, &pptrs, &pptrs.bta, &pptrs.bta2);
 	  bmp_srcdst_lookup(&pptrs);
@@ -175,14 +175,14 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
 
     load_networks(config.networks_file, &nt, &nc);
 
-    if (config.nfacctd_bgp && config.nfacctd_bgp_peer_as_src_map)
-      load_id_file(MAP_BGP_PEER_AS_SRC, config.nfacctd_bgp_peer_as_src_map, (struct id_table *)cb_data->bpas_table, &req, &bpas_map_allocated);
-    if (config.nfacctd_bgp && config.nfacctd_bgp_src_local_pref_map)
-      load_id_file(MAP_BGP_SRC_LOCAL_PREF, config.nfacctd_bgp_src_local_pref_map, (struct id_table *)cb_data->blp_table, &req, &blp_map_allocated);
-    if (config.nfacctd_bgp && config.nfacctd_bgp_src_med_map)
-      load_id_file(MAP_BGP_SRC_MED, config.nfacctd_bgp_src_med_map, (struct id_table *)cb_data->bmed_table, &req, &bmed_map_allocated);
-    if (config.nfacctd_bgp)
-      load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.nfacctd_bgp_to_agent_map, (struct id_table *)cb_data->bta_table, &req, &bta_map_allocated);
+    if (config.bgp_daemon && config.bgp_daemon_peer_as_src_map)
+      load_id_file(MAP_BGP_PEER_AS_SRC, config.bgp_daemon_peer_as_src_map, (struct id_table *)cb_data->bpas_table, &req, &bpas_map_allocated);
+    if (config.bgp_daemon && config.bgp_daemon_src_local_pref_map)
+      load_id_file(MAP_BGP_SRC_LOCAL_PREF, config.bgp_daemon_src_local_pref_map, (struct id_table *)cb_data->blp_table, &req, &blp_map_allocated);
+    if (config.bgp_daemon && config.bgp_daemon_src_med_map)
+      load_id_file(MAP_BGP_SRC_MED, config.bgp_daemon_src_med_map, (struct id_table *)cb_data->bmed_table, &req, &bmed_map_allocated);
+    if (config.bgp_daemon)
+      load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.bgp_daemon_to_xflow_agent_map, (struct id_table *)cb_data->bta_table, &req, &bta_map_allocated);
 
     reload_map = FALSE;
     gettimeofday(&reload_map_tstamp, NULL);
