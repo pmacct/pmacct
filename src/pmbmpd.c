@@ -266,7 +266,7 @@ int main(int argc,char **argv, char **envp)
   sighandler_action.sa_handler = handle_falling_child;
   sigaction(SIGCHLD, &sighandler_action, NULL);
 
-  if (!config.nfacctd_bmp_port) config.nfacctd_bmp_port = BMP_TCP_PORT;
+  if (!config.bmp_daemon_port) config.bmp_daemon_port = BMP_TCP_PORT;
 
   bmp_prepare_daemon();
   skinny_bmp_daemon();

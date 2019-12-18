@@ -177,7 +177,7 @@ void reload()
 {
   reload_log = TRUE;
   if (config.bgp_daemon_msglog_file) reload_log_bgp_thread = TRUE;
-  if (config.nfacctd_bmp_msglog_file) reload_log_bmp_thread = TRUE;
+  if (config.bmp_daemon_msglog_file) reload_log_bmp_thread = TRUE;
   if (config.sfacctd_counter_file) reload_log_sf_cnt = TRUE;
   if (config.telemetry_msglog_file) reload_log_telemetry_thread = TRUE;
 }

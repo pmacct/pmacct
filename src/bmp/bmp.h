@@ -257,7 +257,7 @@ struct bmp_data {
 #include "bmp_lookup.h"
 
 /* prototypes */
-extern void nfacctd_bmp_wrapper();
+extern void bmp_daemon_wrapper();
 extern void skinny_bmp_daemon();
 extern void bmp_prepare_thread();
 extern void bmp_prepare_daemon();

@@ -531,7 +531,7 @@ int main(int argc,char **argv, char **envp)
 	list->cfg.what_to_count |= COUNT_IP_TOS;
 	list->cfg.what_to_count |= COUNT_IP_PROTO;
 	if (list->cfg.networks_file ||
-	   ((list->cfg.bgp_daemon || list->cfg.nfacctd_bmp) && list->cfg.nfacctd_as == NF_AS_BGP)) {
+	   ((list->cfg.bgp_daemon || list->cfg.bmp_daemon) && list->cfg.nfacctd_as == NF_AS_BGP)) {
 	  list->cfg.what_to_count |= COUNT_SRC_AS;
 	  list->cfg.what_to_count |= COUNT_DST_AS;
 	  list->cfg.what_to_count |= COUNT_PEER_DST_IP;
@@ -600,7 +600,7 @@ int main(int argc,char **argv, char **envp)
 	if (list->cfg.ndpi_num_roots) list->cfg.what_to_count_2 |= COUNT_NDPI_CLASS;
 #endif
         if (list->cfg.networks_file ||
-	   ((list->cfg.bgp_daemon || list->cfg.nfacctd_bmp) && list->cfg.nfacctd_as == NF_AS_BGP)) {
+	   ((list->cfg.bgp_daemon || list->cfg.bmp_daemon) && list->cfg.nfacctd_as == NF_AS_BGP)) {
           list->cfg.what_to_count |= COUNT_SRC_AS;
           list->cfg.what_to_count |= COUNT_DST_AS;
           list->cfg.what_to_count |= COUNT_PEER_DST_IP;
@@ -691,7 +691,7 @@ int main(int argc,char **argv, char **envp)
           else {
             if ((list->cfg.nfacctd_net == NF_NET_NEW && !list->cfg.networks_file) ||
                 (list->cfg.nfacctd_net == NF_NET_STATIC && !list->cfg.networks_mask) ||
-                (list->cfg.nfacctd_net == NF_NET_BGP && !list->cfg.bgp_daemon && !list->cfg.nfacctd_bmp) ||
+                (list->cfg.nfacctd_net == NF_NET_BGP && !list->cfg.bgp_daemon && !list->cfg.bmp_daemon) ||
                 (list->cfg.nfacctd_net == NF_NET_IGP && !list->cfg.nfacctd_isis) ||
                 (list->cfg.nfacctd_net == NF_NET_KEEP)) {
               Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'bmp_daemon', 'isis_daemon', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
@@ -876,7 +876,7 @@ int main(int argc,char **argv, char **envp)
     exit_gracefully(1);
   }
 
-  if (config.bgp_daemon && config.nfacctd_bmp) {
+  if (config.bgp_daemon && config.bmp_daemon) {
     Log(LOG_ERR, "ERROR ( %s/core ): bgp_daemon and bmp_daemon are currently mutual exclusive. Exiting.\n", config.name);
     exit_gracefully(1);
   }
@@ -965,12 +965,12 @@ int main(int argc,char **argv, char **envp)
   }
 
   /* starting the BMP thread */
-  if (config.nfacctd_bmp) {
+  if (config.bmp_daemon) {
     int sleep_time = DEFAULT_SLOTH_SLEEP_TIME;
 
     req.bpf_filter = TRUE;
 
-    nfacctd_bmp_wrapper();
+    bmp_daemon_wrapper();
 
     /* Let's give the BMP thread some advantage to create its structures */
     if (config.rpki_roas_file || config.rpki_rtr_cache) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;

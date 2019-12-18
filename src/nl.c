@@ -158,7 +158,7 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
         if (config.bgp_daemon_peer_as_src_map) PM_find_id((struct id_table *)pptrs.bpas_table, &pptrs, &pptrs.bpas, NULL);
         if (config.bgp_daemon_src_local_pref_map) PM_find_id((struct id_table *)pptrs.blp_table, &pptrs, &pptrs.blp, NULL);
         if (config.bgp_daemon_src_med_map) PM_find_id((struct id_table *)pptrs.bmed_table, &pptrs, &pptrs.bmed, NULL);
-        if (config.nfacctd_bmp) {
+        if (config.bmp_daemon) {
           BTA_find_id((struct id_table *)pptrs.bta_table, &pptrs, &pptrs.bta, &pptrs.bta2);
 	  bmp_srcdst_lookup(&pptrs);
 	}

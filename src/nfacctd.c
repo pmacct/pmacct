@@ -506,7 +506,7 @@ int main(int argc,char **argv, char **envp)
 	    Log(LOG_ERR, "ERROR ( %s/%s ): AS aggregation selected but NO 'networks_file' specified. Exiting...\n\n", list->name, list->type.string);
 	    exit_gracefully(1);
 	  }
-          if (!list->cfg.bgp_daemon && !list->cfg.nfacctd_bmp && list->cfg.nfacctd_as == NF_AS_BGP) {
+          if (!list->cfg.bgp_daemon && !list->cfg.bmp_daemon && list->cfg.nfacctd_as == NF_AS_BGP) {
             Log(LOG_ERR, "ERROR ( %s/%s ): AS aggregation selected but 'bgp_daemon' or 'bmp_daemon' is not enabled. Exiting...\n\n", list->name, list->type.string);
             exit_gracefully(1);
 	  }
@@ -522,7 +522,7 @@ int main(int argc,char **argv, char **envp)
 	  else {
 	    if ((list->cfg.nfacctd_net == NF_NET_NEW && !list->cfg.networks_file) || 
 	        (list->cfg.nfacctd_net == NF_NET_STATIC && !list->cfg.networks_mask) || 
-	        (list->cfg.nfacctd_net == NF_NET_BGP && !list->cfg.bgp_daemon && !list->cfg.nfacctd_bmp) ||
+	        (list->cfg.nfacctd_net == NF_NET_BGP && !list->cfg.bgp_daemon && !list->cfg.bmp_daemon) ||
 	        (list->cfg.nfacctd_net == NF_NET_IGP && !list->cfg.nfacctd_isis)) {
 	      Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'bmp_daemon', 'isis_daemon', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
 	      exit_gracefully(1);
@@ -767,7 +767,7 @@ int main(int argc,char **argv, char **envp)
     list = list->next;
   }
 
-  if (config.bgp_daemon && config.nfacctd_bmp) {
+  if (config.bgp_daemon && config.bmp_daemon) {
     Log(LOG_ERR, "ERROR ( %s/core ): bgp_daemon and bmp_daemon are currently mutual exclusive. Exiting.\n", config.name);
     exit_gracefully(1);
   }
@@ -847,12 +847,12 @@ int main(int argc,char **argv, char **envp)
   }
 
   /* starting the BMP thread */
-  if (config.nfacctd_bmp) {
+  if (config.bmp_daemon) {
     int sleep_time = DEFAULT_SLOTH_SLEEP_TIME;
 
     req.bpf_filter = TRUE;
 
-    nfacctd_bmp_wrapper();
+    bmp_daemon_wrapper();
 
     /* Let's give the BMP thread some advantage to create its structures */
     if (config.rpki_roas_file || config.rpki_rtr_cache) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
@@ -1332,7 +1332,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
       if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
       if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
       if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
-      if (config.nfacctd_bmp) bmp_srcdst_lookup(pptrs);
+      if (config.bmp_daemon) bmp_srcdst_lookup(pptrs);
       exec_plugins(pptrs, req);
 
       finalize_record:
@@ -1825,7 +1825,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
 	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
 	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
-          if (config.nfacctd_bmp) bmp_srcdst_lookup(pptrs);
+          if (config.bmp_daemon) bmp_srcdst_lookup(pptrs);
           exec_plugins(pptrs, req);
 	  break;
 	case NF9_FTYPE_IPV6:
@@ -1880,7 +1880,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->v6, &pptrsv->v6.bpas, NULL);
 	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->v6, &pptrsv->v6.blp, NULL);
 	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->v6, &pptrsv->v6.bmed, NULL);
-          if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->v6);
+          if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->v6);
           exec_plugins(&pptrsv->v6, req);
 	  break;
 	case NF9_FTYPE_VLAN_IPV4:
@@ -1937,7 +1937,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan4, &pptrsv->vlan4.bpas, NULL);
 	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlan4, &pptrsv->vlan4.blp, NULL);
 	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlan4, &pptrsv->vlan4.bmed, NULL);
-          if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->vlan4);
+          if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlan4);
 	  exec_plugins(&pptrsv->vlan4, req);
 	  break;
 	case NF9_FTYPE_VLAN_IPV6:
@@ -1994,7 +1994,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan6, &pptrsv->vlan6.bpas, NULL);
 	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlan6, &pptrsv->vlan6.blp, NULL);
 	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlan6, &pptrsv->vlan6.bmed, NULL);
-          if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->vlan6);
+          if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlan6);
 	  exec_plugins(&pptrsv->vlan6, req);
 	  break;
         case NF9_FTYPE_MPLS_IPV4:
@@ -2061,7 +2061,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls4, &pptrsv->mpls4.bpas, NULL);
 	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->mpls4, &pptrsv->mpls4.blp, NULL);
 	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->mpls4, &pptrsv->mpls4.bmed, NULL);
-          if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->mpls4);
+          if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->mpls4);
           exec_plugins(&pptrsv->mpls4, req);
           break;
 	case NF9_FTYPE_MPLS_IPV6:
@@ -2127,7 +2127,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls6, &pptrsv->mpls6.bpas, NULL);
 	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->mpls6, &pptrsv->mpls6.blp, NULL);
 	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->mpls6, &pptrsv->mpls6.bmed, NULL);
-          if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->mpls6);
+          if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->mpls6);
 	  exec_plugins(&pptrsv->mpls6, req);
 	  break;
         case NF9_FTYPE_VLAN_MPLS_IPV4:
@@ -2196,7 +2196,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bpas, NULL);
 	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.blp, NULL);
 	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bmed, NULL);
-          if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->vlanmpls4);
+          if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlanmpls4);
 	  exec_plugins(&pptrsv->vlanmpls4, req);
 	  break;
         case NF9_FTYPE_VLAN_MPLS_IPV6:
@@ -2264,7 +2264,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bpas, NULL);
 	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.blp, NULL);
 	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bmed, NULL);
-          if (config.nfacctd_bmp) bmp_srcdst_lookup(&pptrsv->vlanmpls6);
+          if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlanmpls6);
 	  exec_plugins(&pptrsv->vlanmpls6, req);
 	  break;
 	case NF9_FTYPE_NAT_EVENT:
@@ -2307,7 +2307,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
 	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
 	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
-	  if (config.nfacctd_bmp) bmp_srcdst_lookup(pptrs);
+	  if (config.bmp_daemon) bmp_srcdst_lookup(pptrs);
 
           exec_plugins(pptrs, req);
 	  break;
@@ -2322,7 +2322,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
 	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
 	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
-          if (config.nfacctd_bmp) bmp_srcdst_lookup(pptrs);
+          if (config.bmp_daemon) bmp_srcdst_lookup(pptrs);
 
           exec_plugins(pptrs, req);
 	  reset_dummy_v4(pptrs, dummy_packet_ptr);

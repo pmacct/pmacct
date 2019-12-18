@@ -58,7 +58,7 @@ struct bgp_peer *bgp_lookup_find_bmp_peer(struct sockaddr *sa, struct xflow_stat
     }
   }
   else {
-    for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
+    for (peer = NULL, peers_idx = 0; peers_idx < config.bmp_daemon_max_peers; peers_idx++) {
       /* use-case #1: BMP peer being the edge router */
       if (!sa_addr_cmp(sa, &bmp_peers[peers_idx].self.addr) || !sa_addr_cmp(sa, &bmp_peers[peers_idx].self.id)) {
         peer = &bmp_peers[peers_idx].self;

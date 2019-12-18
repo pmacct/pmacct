@@ -49,14 +49,14 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
   if (!strcmp(event_type, "dump")) etype = BGP_LOGDUMP_ET_DUMP;
   else if (!strcmp(event_type, "log")) etype = BGP_LOGDUMP_ET_LOG;
 
-  if ((config.nfacctd_bmp_msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
+  if ((config.bmp_daemon_msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
       (config.bmp_dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP)) {
 #ifdef WITH_RABBITMQ
     p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
 #endif
   }
 
-  if ((config.nfacctd_bmp_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
+  if ((config.bmp_daemon_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
       (config.bmp_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
 #ifdef WITH_KAFKA
     p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
@@ -113,11 +113,11 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
       break;
     }
 
-    if ((config.nfacctd_bmp_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
+    if ((config.bmp_daemon_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
 	(config.bmp_dump_file && etype == BGP_LOGDUMP_ET_DUMP))
       write_and_free_json(peer->log->fd, obj);
 
-    if ((config.nfacctd_bmp_msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
+    if ((config.bmp_daemon_msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
 	(config.bmp_dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP)) {
       add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
 #ifdef WITH_RABBITMQ
@@ -126,7 +126,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
 #endif
     }
 
-    if ((config.nfacctd_bmp_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
+    if ((config.bmp_daemon_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
         (config.bmp_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
       add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
 #ifdef WITH_KAFKA
@@ -219,11 +219,11 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
     snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, writer_pid);
     pm_avro_check(avro_value_set_string(&avro_field, wid));
 
-    if (((config.nfacctd_bmp_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
+    if (((config.bmp_daemon_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
          (config.bmp_dump_file && etype == BGP_LOGDUMP_ET_DUMP) ||
-         (config.nfacctd_bmp_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
+         (config.bmp_daemon_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
          (config.bmp_dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP) ||
-         (config.nfacctd_bmp_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG && !bms->msglog_kafka_avro_schema_registry) ||
+         (config.bmp_daemon_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG && !bms->msglog_kafka_avro_schema_registry) ||
          (config.bmp_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP && !bms->dump_kafka_avro_schema_registry)) &&
 	(output == PRINT_OUTPUT_AVRO_BIN)) {
       avro_value_sizeof(&avro_obj, &avro_obj_len);
@@ -238,7 +238,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
       avro_local_buf = bms->avro_buf;
     }
 
-    if ((config.nfacctd_bmp_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
+    if ((config.bmp_daemon_msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
         (config.bmp_dump_file && etype == BGP_LOGDUMP_ET_DUMP)) {
       if (output == PRINT_OUTPUT_AVRO_BIN) {
 	write_file_binary(peer->log->fd, avro_local_buf, avro_len);
@@ -248,7 +248,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
       }
     }
 
-    if ((config.nfacctd_bmp_msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
+    if ((config.bmp_daemon_msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
         (config.bmp_dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP)) {
 #ifdef WITH_RABBITMQ
       if (output == PRINT_OUTPUT_AVRO_BIN) {
@@ -269,7 +269,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
 #endif
     }
 
-    if ((config.nfacctd_bmp_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
+    if ((config.bmp_daemon_msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
         (config.bmp_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
 #ifdef WITH_KAFKA
       if ((bms->msglog_kafka_avro_schema_registry && etype == BGP_LOGDUMP_ET_LOG) ||
@@ -1166,7 +1166,7 @@ void bmp_handle_dump_event()
     }
 #endif
 
-    for (peer = NULL, saved_peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
+    for (peer = NULL, saved_peer = NULL, peers_idx = 0; peers_idx < config.bmp_daemon_max_peers; peers_idx++) {
       if (bmp_peers[peers_idx].self.fd) {
         peer = &bmp_peers[peers_idx].self;
         peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
@@ -1329,7 +1329,7 @@ void bmp_handle_dump_event()
     }
 
     /* destroy bmp_se linked-list content after dump event */
-    for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
+    for (peer = NULL, peers_idx = 0; peers_idx < config.bmp_daemon_max_peers; peers_idx++) {
       if (bmp_peers[peers_idx].self.fd) {
         peer = &bmp_peers[peers_idx].self;
         bdsell = peer->bmp_se;
@@ -1347,25 +1347,25 @@ void bmp_daemon_msglog_init_amqp_host()
 {
   p_amqp_init_host(&bmp_daemon_msglog_amqp_host);
 
-  if (!config.nfacctd_bmp_msglog_amqp_user) config.nfacctd_bmp_msglog_amqp_user = rabbitmq_user;
-  if (!config.nfacctd_bmp_msglog_amqp_passwd) config.nfacctd_bmp_msglog_amqp_passwd = rabbitmq_pwd;
-  if (!config.nfacctd_bmp_msglog_amqp_exchange) config.nfacctd_bmp_msglog_amqp_exchange = default_amqp_exchange;
-  if (!config.nfacctd_bmp_msglog_amqp_exchange_type) config.nfacctd_bmp_msglog_amqp_exchange_type = default_amqp_exchange_type;
-  if (!config.nfacctd_bmp_msglog_amqp_host) config.nfacctd_bmp_msglog_amqp_host = default_amqp_host;
-  if (!config.nfacctd_bmp_msglog_amqp_vhost) config.nfacctd_bmp_msglog_amqp_vhost = default_amqp_vhost;
-  if (!config.nfacctd_bmp_msglog_amqp_retry) config.nfacctd_bmp_msglog_amqp_retry = AMQP_DEFAULT_RETRY;
+  if (!config.bmp_daemon_msglog_amqp_user) config.bmp_daemon_msglog_amqp_user = rabbitmq_user;
+  if (!config.bmp_daemon_msglog_amqp_passwd) config.bmp_daemon_msglog_amqp_passwd = rabbitmq_pwd;
+  if (!config.bmp_daemon_msglog_amqp_exchange) config.bmp_daemon_msglog_amqp_exchange = default_amqp_exchange;
+  if (!config.bmp_daemon_msglog_amqp_exchange_type) config.bmp_daemon_msglog_amqp_exchange_type = default_amqp_exchange_type;
+  if (!config.bmp_daemon_msglog_amqp_host) config.bmp_daemon_msglog_amqp_host = default_amqp_host;
+  if (!config.bmp_daemon_msglog_amqp_vhost) config.bmp_daemon_msglog_amqp_vhost = default_amqp_vhost;
+  if (!config.bmp_daemon_msglog_amqp_retry) config.bmp_daemon_msglog_amqp_retry = AMQP_DEFAULT_RETRY;
 
-  p_amqp_set_user(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_user);
-  p_amqp_set_passwd(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_passwd);
-  p_amqp_set_exchange(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_exchange);
-  p_amqp_set_exchange_type(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_exchange_type);
-  p_amqp_set_host(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_host);
-  p_amqp_set_vhost(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_vhost);
-  p_amqp_set_persistent_msg(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_persistent_msg);
-  p_amqp_set_frame_max(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_frame_max);
+  p_amqp_set_user(&bmp_daemon_msglog_amqp_host, config.bmp_daemon_msglog_amqp_user);
+  p_amqp_set_passwd(&bmp_daemon_msglog_amqp_host, config.bmp_daemon_msglog_amqp_passwd);
+  p_amqp_set_exchange(&bmp_daemon_msglog_amqp_host, config.bmp_daemon_msglog_amqp_exchange);
+  p_amqp_set_exchange_type(&bmp_daemon_msglog_amqp_host, config.bmp_daemon_msglog_amqp_exchange_type);
+  p_amqp_set_host(&bmp_daemon_msglog_amqp_host, config.bmp_daemon_msglog_amqp_host);
+  p_amqp_set_vhost(&bmp_daemon_msglog_amqp_host, config.bmp_daemon_msglog_amqp_vhost);
+  p_amqp_set_persistent_msg(&bmp_daemon_msglog_amqp_host, config.bmp_daemon_msglog_amqp_persistent_msg);
+  p_amqp_set_frame_max(&bmp_daemon_msglog_amqp_host, config.bmp_daemon_msglog_amqp_frame_max);
   p_amqp_set_content_type_json(&bmp_daemon_msglog_amqp_host);
-  p_amqp_set_heartbeat_interval(&bmp_daemon_msglog_amqp_host, config.nfacctd_bmp_msglog_amqp_heartbeat_interval);
-  P_broker_timers_set_retry_interval(&bmp_daemon_msglog_amqp_host.btimers, config.nfacctd_bmp_msglog_amqp_retry);
+  p_amqp_set_heartbeat_interval(&bmp_daemon_msglog_amqp_host, config.bmp_daemon_msglog_amqp_heartbeat_interval);
+  P_broker_timers_set_retry_interval(&bmp_daemon_msglog_amqp_host.btimers, config.bmp_daemon_msglog_amqp_retry);
 }
 #else
 void bmp_daemon_msglog_init_amqp_host()
@@ -1407,19 +1407,19 @@ int bmp_daemon_msglog_init_kafka_host()
 {
   int ret;
 
-  p_kafka_init_host(&bmp_daemon_msglog_kafka_host, config.nfacctd_bmp_msglog_kafka_config_file);
+  p_kafka_init_host(&bmp_daemon_msglog_kafka_host, config.bmp_daemon_msglog_kafka_config_file);
   ret = p_kafka_connect_to_produce(&bmp_daemon_msglog_kafka_host);
 
-  if (!config.nfacctd_bmp_msglog_kafka_broker_host) config.nfacctd_bmp_msglog_kafka_broker_host = default_kafka_broker_host;
-  if (!config.nfacctd_bmp_msglog_kafka_broker_port) config.nfacctd_bmp_msglog_kafka_broker_port = default_kafka_broker_port;
-  if (!config.nfacctd_bmp_msglog_kafka_retry) config.nfacctd_bmp_msglog_kafka_retry = PM_KAFKA_DEFAULT_RETRY;
+  if (!config.bmp_daemon_msglog_kafka_broker_host) config.bmp_daemon_msglog_kafka_broker_host = default_kafka_broker_host;
+  if (!config.bmp_daemon_msglog_kafka_broker_port) config.bmp_daemon_msglog_kafka_broker_port = default_kafka_broker_port;
+  if (!config.bmp_daemon_msglog_kafka_retry) config.bmp_daemon_msglog_kafka_retry = PM_KAFKA_DEFAULT_RETRY;
 
-  p_kafka_set_broker(&bmp_daemon_msglog_kafka_host, config.nfacctd_bmp_msglog_kafka_broker_host, config.nfacctd_bmp_msglog_kafka_broker_port);
-  p_kafka_set_topic(&bmp_daemon_msglog_kafka_host, config.nfacctd_bmp_msglog_kafka_topic);
-  p_kafka_set_partition(&bmp_daemon_msglog_kafka_host, config.nfacctd_bmp_msglog_kafka_partition);
-  p_kafka_set_key(&bmp_daemon_msglog_kafka_host, config.nfacctd_bmp_msglog_kafka_partition_key, config.nfacctd_bmp_msglog_kafka_partition_keylen);
+  p_kafka_set_broker(&bmp_daemon_msglog_kafka_host, config.bmp_daemon_msglog_kafka_broker_host, config.bmp_daemon_msglog_kafka_broker_port);
+  p_kafka_set_topic(&bmp_daemon_msglog_kafka_host, config.bmp_daemon_msglog_kafka_topic);
+  p_kafka_set_partition(&bmp_daemon_msglog_kafka_host, config.bmp_daemon_msglog_kafka_partition);
+  p_kafka_set_key(&bmp_daemon_msglog_kafka_host, config.bmp_daemon_msglog_kafka_partition_key, config.bmp_daemon_msglog_kafka_partition_keylen);
   p_kafka_set_content_type(&bmp_daemon_msglog_kafka_host, PM_KAFKA_CNT_TYPE_STR);
-  P_broker_timers_set_retry_interval(&bmp_daemon_msglog_kafka_host.btimers, config.nfacctd_bmp_msglog_kafka_retry);
+  P_broker_timers_set_retry_interval(&bmp_daemon_msglog_kafka_host.btimers, config.bmp_daemon_msglog_kafka_retry);
 
   return ret;
 }

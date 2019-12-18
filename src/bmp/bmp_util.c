@@ -128,7 +128,7 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
 #if defined WITH_KAFKA
   bms->msglog_kafka_host = &bmp_daemon_msglog_kafka_host;
 #endif
-  bms->max_peers = config.nfacctd_bmp_max_peers;
+  bms->max_peers = config.bmp_daemon_max_peers;
   bms->peers = bmp_peers;
   bms->peers_cache = NULL;
   bms->peers_port_cache = NULL;
@@ -139,13 +139,13 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->dump_kafka_topic = config.bmp_dump_kafka_topic;
   bms->dump_kafka_topic_rr = config.bmp_dump_kafka_topic_rr;
   bms->dump_kafka_avro_schema_registry = config.bmp_dump_kafka_avro_schema_registry;
-  bms->msglog_file = config.nfacctd_bmp_msglog_file;
-  bms->msglog_output = config.nfacctd_bmp_msglog_output;
-  bms->msglog_amqp_routing_key = config.nfacctd_bmp_msglog_amqp_routing_key;
-  bms->msglog_amqp_routing_key_rr = config.nfacctd_bmp_msglog_amqp_routing_key_rr;
-  bms->msglog_kafka_topic = config.nfacctd_bmp_msglog_kafka_topic;
-  bms->msglog_kafka_topic_rr = config.nfacctd_bmp_msglog_kafka_topic_rr;
-  bms->msglog_kafka_avro_schema_registry = config.nfacctd_bmp_msglog_kafka_avro_schema_registry;
+  bms->msglog_file = config.bmp_daemon_msglog_file;
+  bms->msglog_output = config.bmp_daemon_msglog_output;
+  bms->msglog_amqp_routing_key = config.bmp_daemon_msglog_amqp_routing_key;
+  bms->msglog_amqp_routing_key_rr = config.bmp_daemon_msglog_amqp_routing_key_rr;
+  bms->msglog_kafka_topic = config.bmp_daemon_msglog_kafka_topic;
+  bms->msglog_kafka_topic_rr = config.bmp_daemon_msglog_kafka_topic_rr;
+  bms->msglog_kafka_avro_schema_registry = config.bmp_daemon_msglog_kafka_avro_schema_registry;
   bms->peer_str = malloc(strlen("bmp_router") + 1);
   strcpy(bms->peer_str, "bmp_router");
   bms->peer_port_str = malloc(strlen("bmp_router_port") + 1);

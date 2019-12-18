@@ -40,10 +40,10 @@
 thread_pool_t *bmp_pool;
 
 /* Functions */
-void nfacctd_bmp_wrapper()
+void bmp_daemon_wrapper()
 {
   /* initialize variables */
-  if (!config.nfacctd_bmp_port) config.nfacctd_bmp_port = BMP_TCP_PORT;
+  if (!config.bmp_daemon_port) config.bmp_daemon_port = BMP_TCP_PORT;
 
   /* initialize threads pool */
   bmp_pool = allocate_thread_pool(1);
@@ -95,32 +95,32 @@ void skinny_bmp_daemon()
   memset(bmp_routing_db, 0, sizeof(struct bgp_rt_structs));
 
   /* socket creation for BMP server: IPv4 only */
-  if (!config.nfacctd_bmp_ip) {
+  if (!config.bmp_daemon_ip) {
     struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&server;
 
     sa6->sin6_family = AF_INET6;
-    sa6->sin6_port = htons(config.nfacctd_bmp_port);
+    sa6->sin6_port = htons(config.bmp_daemon_port);
     slen = sizeof(struct sockaddr_in6);
   }
   else {
-    trim_spaces(config.nfacctd_bmp_ip);
-    ret = str_to_addr(config.nfacctd_bmp_ip, &addr);
+    trim_spaces(config.bmp_daemon_ip);
+    ret = str_to_addr(config.bmp_daemon_ip, &addr);
     if (!ret) {
       Log(LOG_ERR, "ERROR ( %s/%s ): 'bmp_daemon_ip' value is not a valid IPv4/IPv6 address. Terminating thread.\n", config.name, bmp_misc_db->log_str);
       exit_gracefully(1);
     }
-    slen = addr_to_sa((struct sockaddr *)&server, &addr, config.nfacctd_bmp_port);
+    slen = addr_to_sa((struct sockaddr *)&server, &addr, config.bmp_daemon_port);
   }
 
-  if (!config.nfacctd_bmp_max_peers) config.nfacctd_bmp_max_peers = BMP_MAX_PEERS_DEFAULT;
-  Log(LOG_INFO, "INFO ( %s/%s ): maximum BMP peers allowed: %d\n", config.name, bmp_misc_db->log_str, config.nfacctd_bmp_max_peers);
+  if (!config.bmp_daemon_max_peers) config.bmp_daemon_max_peers = BMP_MAX_PEERS_DEFAULT;
+  Log(LOG_INFO, "INFO ( %s/%s ): maximum BMP peers allowed: %d\n", config.name, bmp_misc_db->log_str, config.bmp_daemon_max_peers);
 
-  bmp_peers = malloc(config.nfacctd_bmp_max_peers*sizeof(struct bmp_peer));
+  bmp_peers = malloc(config.bmp_daemon_max_peers*sizeof(struct bmp_peer));
   if (!bmp_peers) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() BMP peers structure. Terminating thread.\n", config.name, bmp_misc_db->log_str);
     exit_gracefully(1);
   }
-  memset(bmp_peers, 0, config.nfacctd_bmp_max_peers*sizeof(struct bmp_peer));
+  memset(bmp_peers, 0, config.bmp_daemon_max_peers*sizeof(struct bmp_peer));
 
   if (config.rpki_roas_file || config.rpki_rtr_cache) {
     rpki_daemon_wrapper();
@@ -129,10 +129,10 @@ void skinny_bmp_daemon()
     sleep(DEFAULT_SLOTH_SLEEP_TIME);
   }
 
-  if (config.nfacctd_bmp_msglog_file || config.nfacctd_bmp_msglog_amqp_routing_key || config.nfacctd_bmp_msglog_kafka_topic) {
-    if (config.nfacctd_bmp_msglog_file) bmp_misc_db->msglog_backend_methods++;
-    if (config.nfacctd_bmp_msglog_amqp_routing_key) bmp_misc_db->msglog_backend_methods++;
-    if (config.nfacctd_bmp_msglog_kafka_topic) bmp_misc_db->msglog_backend_methods++;
+  if (config.bmp_daemon_msglog_file || config.bmp_daemon_msglog_amqp_routing_key || config.bmp_daemon_msglog_kafka_topic) {
+    if (config.bmp_daemon_msglog_file) bmp_misc_db->msglog_backend_methods++;
+    if (config.bmp_daemon_msglog_amqp_routing_key) bmp_misc_db->msglog_backend_methods++;
+    if (config.bmp_daemon_msglog_kafka_topic) bmp_misc_db->msglog_backend_methods++;
 
     if (bmp_misc_db->msglog_backend_methods > 1) {
       Log(LOG_ERR, "ERROR ( %s/%s ): bmp_daemon_msglog_file, bmp_daemon_msglog_amqp_routing_key and bmp_daemon_msglog_kafka_topic are mutually exclusive. Terminating thread.\n", config.name, bmp_misc_db->log_str);
@@ -155,26 +155,26 @@ void skinny_bmp_daemon()
     bgp_peer_log_seq_init(&bmp_misc_db->log_seq);
 
   if (bmp_misc_db->msglog_backend_methods) {
-    bmp_misc_db->peers_log = malloc(config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer_log));
+    bmp_misc_db->peers_log = malloc(config.bmp_daemon_max_peers*sizeof(struct bgp_peer_log));
     if (!bmp_misc_db->peers_log) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() BMP peers log structure. Terminating thread.\n", config.name, bmp_misc_db->log_str);
       exit_gracefully(1);
     }
-    memset(bmp_misc_db->peers_log, 0, config.nfacctd_bmp_max_peers*sizeof(struct bgp_peer_log));
+    memset(bmp_misc_db->peers_log, 0, config.bmp_daemon_max_peers*sizeof(struct bgp_peer_log));
 
-    if (config.nfacctd_bmp_msglog_amqp_routing_key) {
+    if (config.bmp_daemon_msglog_amqp_routing_key) {
 #ifdef WITH_RABBITMQ
       bmp_daemon_msglog_init_amqp_host();
       p_amqp_connect_to_publish(&bmp_daemon_msglog_amqp_host);
 
-      if (!config.nfacctd_bmp_msglog_amqp_retry)
-        config.nfacctd_bmp_msglog_amqp_retry = AMQP_DEFAULT_RETRY;
+      if (!config.bmp_daemon_msglog_amqp_retry)
+        config.bmp_daemon_msglog_amqp_retry = AMQP_DEFAULT_RETRY;
 #else
       Log(LOG_WARNING, "WARN ( %s/%s ): p_amqp_connect_to_publish() not possible due to missing --enable-rabbitmq\n", config.name, bmp_misc_db->log_str);
 #endif
     }
 
-    if (config.nfacctd_bmp_msglog_kafka_topic) {
+    if (config.bmp_daemon_msglog_kafka_topic) {
 #ifdef WITH_KAFKA
       bmp_daemon_msglog_init_kafka_host();
 #else
@@ -199,12 +199,12 @@ void skinny_bmp_daemon()
   config.bmp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
   if (config.bmp_sock < 0) {
     /* retry with IPv4 */
-    if (!config.nfacctd_bmp_ip) {
+    if (!config.bmp_daemon_ip) {
       struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
 
       sa4->sin_family = AF_INET;
       sa4->sin_addr.s_addr = htonl(0);
-      sa4->sin_port = htons(config.nfacctd_bmp_port);
+      sa4->sin_port = htons(config.bmp_daemon_port);
       slen = sizeof(struct sockaddr_in);
 
       config.bmp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
@@ -219,8 +219,8 @@ void skinny_bmp_daemon()
   setnonblocking(config.bmp_sock);
   setsockopt(config.bmp_sock, SOL_SOCKET, SO_KEEPALIVE, (void *)&yes, sizeof(yes));
 
-  if (config.nfacctd_bmp_ipprec) {
-    int opt = config.nfacctd_bmp_ipprec << 5;
+  if (config.bmp_daemon_ipprec) {
+    int opt = config.bmp_daemon_ipprec << 5;
 
     rc = setsockopt(config.bmp_sock, IPPROTO_IP, IP_TOS, &opt, (socklen_t) sizeof(opt));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IP_TOS (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
@@ -243,17 +243,17 @@ void skinny_bmp_daemon()
   }
 #endif
 
-  if (config.nfacctd_bmp_pipe_size) {
-    socklen_t l = sizeof(config.nfacctd_bmp_pipe_size);
+  if (config.bmp_daemon_pipe_size) {
+    socklen_t l = sizeof(config.bmp_daemon_pipe_size);
     int saved = 0, obtained = 0;
 
     getsockopt(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &saved, &l);
-    Setsocksize(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &config.nfacctd_bmp_pipe_size, (socklen_t) sizeof(config.nfacctd_bmp_pipe_size));
+    Setsocksize(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &config.bmp_daemon_pipe_size, (socklen_t) sizeof(config.bmp_daemon_pipe_size));
     getsockopt(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
 
     Setsocksize(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
     getsockopt(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
-    Log(LOG_INFO, "INFO ( %s/%s ): bmp_daemon_pipe_size: obtained=%d target=%d.\n", config.name, bmp_misc_db->log_str, obtained, config.nfacctd_bmp_pipe_size);
+    Log(LOG_INFO, "INFO ( %s/%s ): bmp_daemon_pipe_size: obtained=%d target=%d.\n", config.name, bmp_misc_db->log_str, obtained, config.bmp_daemon_pipe_size);
   }
 
   rc = bind(config.bmp_sock, (struct sockaddr *) &server, slen);
@@ -261,8 +261,8 @@ void skinny_bmp_daemon()
     char null_ip_address[] = "0.0.0.0";
     char *ip_address;
 
-    ip_address = config.nfacctd_bmp_ip ? config.nfacctd_bmp_ip : null_ip_address;
-    Log(LOG_ERR, "ERROR ( %s/%s ): bind() to ip=%s port=%d/tcp failed (errno: %d).\n", config.name, bmp_misc_db->log_str, ip_address, config.nfacctd_bmp_port, errno);
+    ip_address = config.bmp_daemon_ip ? config.bmp_daemon_ip : null_ip_address;
+    Log(LOG_ERR, "ERROR ( %s/%s ): bind() to ip=%s port=%d/tcp failed (errno: %d).\n", config.name, bmp_misc_db->log_str, ip_address, config.bmp_daemon_port, errno);
     exit_gracefully(1);
   }
 
@@ -288,7 +288,7 @@ void skinny_bmp_daemon()
   }
 
   /* Preparing ACL, if any */
-  if (config.nfacctd_bmp_allow_file) load_allow_file(config.nfacctd_bmp_allow_file, &allow);
+  if (config.bmp_daemon_allow_file) load_allow_file(config.bmp_daemon_allow_file, &allow);
 
   /* Let's initialize clean shared RIB */
   for (afi = AFI_IP; afi < AFI_MAX; afi++) {
@@ -298,24 +298,24 @@ void skinny_bmp_daemon()
   }
 
   /* BMP peers batching checks */
-  if ((config.nfacctd_bmp_batch && !config.nfacctd_bmp_batch_interval) ||
-      (config.nfacctd_bmp_batch_interval && !config.nfacctd_bmp_batch)) {
+  if ((config.bmp_daemon_batch && !config.bmp_daemon_batch_interval) ||
+      (config.bmp_daemon_batch_interval && !config.bmp_daemon_batch)) {
     Log(LOG_WARNING, "WARN ( %s/%s ): 'bmp_daemon_batch_interval' and 'bmp_daemon_batch' both set to zero.\n", config.name, bmp_misc_db->log_str);
-    config.nfacctd_bmp_batch = 0;
-    config.nfacctd_bmp_batch_interval = 0;
+    config.bmp_daemon_batch = 0;
+    config.bmp_daemon_batch_interval = 0;
   }
-  else bgp_batch_init(&bp_batch, config.nfacctd_bmp_batch, config.nfacctd_bmp_batch_interval);
+  else bgp_batch_init(&bp_batch, config.bmp_daemon_batch, config.bmp_daemon_batch_interval);
 
   if (bmp_misc_db->msglog_backend_methods) {
 #ifdef WITH_JANSSON
-    if (!config.nfacctd_bmp_msglog_output) config.nfacctd_bmp_msglog_output = PRINT_OUTPUT_JSON;
+    if (!config.bmp_daemon_msglog_output) config.bmp_daemon_msglog_output = PRINT_OUTPUT_JSON;
 #else
     Log(LOG_WARNING, "WARN ( %s/%s ): bmp_daemon_msglog_output set to json but will produce no output (missing --enable-jansson).\n", config.name, bmp_misc_db->log_str);
 #endif
 
 #ifdef WITH_AVRO
-    if ((config.nfacctd_bmp_msglog_output == PRINT_OUTPUT_AVRO_BIN) ||
-	(config.nfacctd_bmp_msglog_output == PRINT_OUTPUT_AVRO_JSON)) {
+    if ((config.bmp_daemon_msglog_output == PRINT_OUTPUT_AVRO_BIN) ||
+	(config.bmp_daemon_msglog_output == PRINT_OUTPUT_AVRO_JSON)) {
       assert(BMP_MSG_TYPE_MAX < BMP_LOG_TYPE_LOGINIT);
       assert(BMP_LOG_TYPE_MAX < MAX_AVRO_SCHEMA);
 
@@ -329,92 +329,92 @@ void skinny_bmp_daemon()
       bmp_misc_db->msglog_avro_schema[BMP_LOG_TYPE_LOGINIT] = avro_schema_build_bmp_log_initclose(BGP_LOGDUMP_ET_LOG, "bmp_loginit");
       bmp_misc_db->msglog_avro_schema[BMP_LOG_TYPE_LOGCLOSE] = avro_schema_build_bmp_log_initclose(BGP_LOGDUMP_ET_LOG, "bmp_logclose");
 
-      if (config.nfacctd_bmp_msglog_avro_schema_file) {
+      if (config.bmp_daemon_msglog_avro_schema_file) {
 	char avro_schema_file[SRVBUFLEN];
 
-	if (strlen(config.nfacctd_bmp_msglog_avro_schema_file) > (SRVBUFLEN - SUPERSHORTBUFLEN)) {
+	if (strlen(config.bmp_daemon_msglog_avro_schema_file) > (SRVBUFLEN - SUPERSHORTBUFLEN)) {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): 'bmp_daemon_msglog_avro_schema_file' too long. Exiting.\n", config.name, bmp_misc_db->log_str);
 	  exit_gracefully(1);
 	}
 
-	write_avro_schema_to_file_with_suffix(config.nfacctd_bmp_msglog_avro_schema_file, "-bmp_msglog_rm",
+	write_avro_schema_to_file_with_suffix(config.bmp_daemon_msglog_avro_schema_file, "-bmp_msglog_rm",
 					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_ROUTE_MONITOR]);
 
-	write_avro_schema_to_file_with_suffix(config.nfacctd_bmp_msglog_avro_schema_file, "-bmp_stats",
+	write_avro_schema_to_file_with_suffix(config.bmp_daemon_msglog_avro_schema_file, "-bmp_stats",
 					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_STATS]);
 
-	write_avro_schema_to_file_with_suffix(config.nfacctd_bmp_msglog_avro_schema_file, "-bmp_peer_down",
+	write_avro_schema_to_file_with_suffix(config.bmp_daemon_msglog_avro_schema_file, "-bmp_peer_down",
 					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_DOWN]);
 
-	write_avro_schema_to_file_with_suffix(config.nfacctd_bmp_msglog_avro_schema_file, "-bmp_peer_up",
+	write_avro_schema_to_file_with_suffix(config.bmp_daemon_msglog_avro_schema_file, "-bmp_peer_up",
 					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_UP]);
 
-	write_avro_schema_to_file_with_suffix(config.nfacctd_bmp_msglog_avro_schema_file, "-bmp_init",
+	write_avro_schema_to_file_with_suffix(config.bmp_daemon_msglog_avro_schema_file, "-bmp_init",
 					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_INIT]);
 
-	write_avro_schema_to_file_with_suffix(config.nfacctd_bmp_msglog_avro_schema_file, "-bmp_term",
+	write_avro_schema_to_file_with_suffix(config.bmp_daemon_msglog_avro_schema_file, "-bmp_term",
 					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_TERM]);
 
-	write_avro_schema_to_file_with_suffix(config.nfacctd_bmp_msglog_avro_schema_file, "-bmp_loginit",
+	write_avro_schema_to_file_with_suffix(config.bmp_daemon_msglog_avro_schema_file, "-bmp_loginit",
 					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_LOG_TYPE_LOGINIT]);
 
-	write_avro_schema_to_file_with_suffix(config.nfacctd_bmp_msglog_avro_schema_file, "-bmp_logclose",
+	write_avro_schema_to_file_with_suffix(config.bmp_daemon_msglog_avro_schema_file, "-bmp_logclose",
 					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_LOG_TYPE_LOGCLOSE]);
       }
 
-      if (config.nfacctd_bmp_msglog_kafka_avro_schema_registry) {
+      if (config.bmp_daemon_msglog_kafka_avro_schema_registry) {
 #ifdef WITH_SERDES
-        if (strchr(config.nfacctd_bmp_msglog_kafka_topic, '$')) {
+        if (strchr(config.bmp_daemon_msglog_kafka_topic, '$')) {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'bmp_daemon_msglog_kafka_topic' is not compatible with 'bmp_daemon_msglog_kafka_avro_schema_registry'. Exiting.\n",
 	      config.name, bmp_misc_db->log_str);
 	  exit_gracefully(1);
 	}
 
-	if (config.nfacctd_bmp_msglog_output == PRINT_OUTPUT_AVRO_JSON) {
+	if (config.bmp_daemon_msglog_output == PRINT_OUTPUT_AVRO_JSON) {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): 'avro_json' output is not compatible with 'bmp_daemon_msglog_kafka_avro_schema_registry'. Exiting.\n",
 	      config.name, bmp_misc_db->log_str);
 	  exit_gracefully(1);
         }
 	
-        bmp_daemon_msglog_kafka_host.sd_schema[BMP_MSG_ROUTE_MONITOR] = compose_avro_schema_registry_name_2(config.nfacctd_bmp_msglog_kafka_topic, FALSE,
+        bmp_daemon_msglog_kafka_host.sd_schema[BMP_MSG_ROUTE_MONITOR] = compose_avro_schema_registry_name_2(config.bmp_daemon_msglog_kafka_topic, FALSE,
 												     bmp_misc_db->msglog_avro_schema[BMP_MSG_ROUTE_MONITOR],
 												     "bmp", "msglog_rm",
-												     config.nfacctd_bmp_msglog_kafka_avro_schema_registry);
+												     config.bmp_daemon_msglog_kafka_avro_schema_registry);
 
-        bmp_daemon_msglog_kafka_host.sd_schema[BMP_MSG_STATS] = compose_avro_schema_registry_name_2(config.nfacctd_bmp_msglog_kafka_topic, FALSE,
+        bmp_daemon_msglog_kafka_host.sd_schema[BMP_MSG_STATS] = compose_avro_schema_registry_name_2(config.bmp_daemon_msglog_kafka_topic, FALSE,
 												     bmp_misc_db->msglog_avro_schema[BMP_MSG_STATS],
 												     "bmp", "stats",
-												     config.nfacctd_bmp_msglog_kafka_avro_schema_registry);
+												     config.bmp_daemon_msglog_kafka_avro_schema_registry);
 
-        bmp_daemon_msglog_kafka_host.sd_schema[BMP_MSG_PEER_UP] = compose_avro_schema_registry_name_2(config.nfacctd_bmp_msglog_kafka_topic, FALSE,
+        bmp_daemon_msglog_kafka_host.sd_schema[BMP_MSG_PEER_UP] = compose_avro_schema_registry_name_2(config.bmp_daemon_msglog_kafka_topic, FALSE,
 												     bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_UP],
 												     "bmp", "peer_up",
-												     config.nfacctd_bmp_msglog_kafka_avro_schema_registry);
+												     config.bmp_daemon_msglog_kafka_avro_schema_registry);
 
-        bmp_daemon_msglog_kafka_host.sd_schema[BMP_MSG_PEER_DOWN] = compose_avro_schema_registry_name_2(config.nfacctd_bmp_msglog_kafka_topic, FALSE,
+        bmp_daemon_msglog_kafka_host.sd_schema[BMP_MSG_PEER_DOWN] = compose_avro_schema_registry_name_2(config.bmp_daemon_msglog_kafka_topic, FALSE,
 												     bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_DOWN],
 												     "bmp", "peer_down",
-												     config.nfacctd_bmp_msglog_kafka_avro_schema_registry);
+												     config.bmp_daemon_msglog_kafka_avro_schema_registry);
 
-        bmp_daemon_msglog_kafka_host.sd_schema[BMP_MSG_INIT] = compose_avro_schema_registry_name_2(config.nfacctd_bmp_msglog_kafka_topic, FALSE,
+        bmp_daemon_msglog_kafka_host.sd_schema[BMP_MSG_INIT] = compose_avro_schema_registry_name_2(config.bmp_daemon_msglog_kafka_topic, FALSE,
 												     bmp_misc_db->msglog_avro_schema[BMP_MSG_INIT],
 												     "bmp", "init",
-												     config.nfacctd_bmp_msglog_kafka_avro_schema_registry);
+												     config.bmp_daemon_msglog_kafka_avro_schema_registry);
 
-        bmp_daemon_msglog_kafka_host.sd_schema[BMP_MSG_TERM] = compose_avro_schema_registry_name_2(config.nfacctd_bmp_msglog_kafka_topic, FALSE,
+        bmp_daemon_msglog_kafka_host.sd_schema[BMP_MSG_TERM] = compose_avro_schema_registry_name_2(config.bmp_daemon_msglog_kafka_topic, FALSE,
 												     bmp_misc_db->msglog_avro_schema[BMP_MSG_TERM],
 												     "bmp", "term",
-												     config.nfacctd_bmp_msglog_kafka_avro_schema_registry);
+												     config.bmp_daemon_msglog_kafka_avro_schema_registry);
 
-	bmp_daemon_msglog_kafka_host.sd_schema[BMP_LOG_TYPE_LOGINIT] = compose_avro_schema_registry_name_2(config.nfacctd_bmp_msglog_kafka_topic, FALSE,
+	bmp_daemon_msglog_kafka_host.sd_schema[BMP_LOG_TYPE_LOGINIT] = compose_avro_schema_registry_name_2(config.bmp_daemon_msglog_kafka_topic, FALSE,
 												     bmp_misc_db->msglog_avro_schema[BMP_LOG_TYPE_LOGINIT],
 												     "bmp", "loginit",
-												     config.nfacctd_bmp_msglog_kafka_avro_schema_registry);
+												     config.bmp_daemon_msglog_kafka_avro_schema_registry);
 
-	bmp_daemon_msglog_kafka_host.sd_schema[BMP_LOG_TYPE_LOGCLOSE] = compose_avro_schema_registry_name_2(config.nfacctd_bmp_msglog_kafka_topic, FALSE,
+	bmp_daemon_msglog_kafka_host.sd_schema[BMP_LOG_TYPE_LOGCLOSE] = compose_avro_schema_registry_name_2(config.bmp_daemon_msglog_kafka_topic, FALSE,
 												     bmp_misc_db->msglog_avro_schema[BMP_LOG_TYPE_LOGCLOSE],
 												     "bmp", "logclose",
-												     config.nfacctd_bmp_msglog_kafka_avro_schema_registry);
+												     config.bmp_daemon_msglog_kafka_avro_schema_registry);
 #endif
       }
     }
@@ -513,7 +513,7 @@ void skinny_bmp_daemon()
   else memset(bmp_misc_db->avro_buf, 0, LARGEBUFLEN);
 #endif
 
-  if (config.nfacctd_bmp_msglog_kafka_avro_schema_registry || config.bmp_dump_kafka_avro_schema_registry) {
+  if (config.bmp_daemon_msglog_kafka_avro_schema_registry || config.bmp_dump_kafka_avro_schema_registry) {
 #ifndef WITH_SERDES
       Log(LOG_ERR, "ERROR ( %s/%s ): 'bmp_*_kafka_avro_schema_registry' require --enable-serdes. Exiting.\n", config.name, bmp_misc_db->log_str);
       exit_gracefully(1);
@@ -547,7 +547,7 @@ void skinny_bmp_daemon()
       select_fd = config.bmp_sock;
       max_peers_idx = -1; /* .. since valid indexes include 0 */
 
-      for (peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
+      for (peers_idx = 0; peers_idx < config.bmp_daemon_max_peers; peers_idx++) {
         if (select_fd < bmp_peers[peers_idx].self.fd) select_fd = bmp_peers[peers_idx].self.fd;
         if (bmp_peers[peers_idx].self.fd) max_peers_idx = peers_idx;
       }
@@ -575,13 +575,13 @@ void skinny_bmp_daemon()
     if (select_num < 0) goto select_again;
 
     if (reload_map_bmp_thread) {
-      if (config.nfacctd_bmp_allow_file) load_allow_file(config.nfacctd_bmp_allow_file, &allow);
+      if (config.bmp_daemon_allow_file) load_allow_file(config.bmp_daemon_allow_file, &allow);
 
       reload_map_bmp_thread = FALSE;
     }
 
     if (reload_log_bmp_thread) {
-      for (peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
+      for (peers_idx = 0; peers_idx < config.bmp_daemon_max_peers; peers_idx++) {
         if (bmp_misc_db->peers_log[peers_idx].fd) {
           fclose(bmp_misc_db->peers_log[peers_idx].fd);
           bmp_misc_db->peers_log[peers_idx].fd = open_output_file(bmp_misc_db->peers_log[peers_idx].filename, "a", FALSE);
@@ -627,7 +627,7 @@ void skinny_bmp_daemon()
       }
 
 #ifdef WITH_RABBITMQ
-      if (config.nfacctd_bmp_msglog_amqp_routing_key) {
+      if (config.bmp_daemon_msglog_amqp_routing_key) {
         time_t last_fail = P_broker_timers_get_last_fail(&bmp_daemon_msglog_amqp_host.btimers);
 
         if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&bmp_daemon_msglog_amqp_host.btimers)) <= bmp_misc_db->log_tstamp.tv_sec)) {
@@ -638,7 +638,7 @@ void skinny_bmp_daemon()
 #endif
 
 #ifdef WITH_KAFKA
-      if (config.nfacctd_bmp_msglog_kafka_topic) {
+      if (config.bmp_daemon_msglog_kafka_topic) {
         time_t last_fail = P_broker_timers_get_last_fail(&bmp_daemon_msglog_kafka_host.btimers);
 
         if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&bmp_daemon_msglog_kafka_host.btimers)) <= bmp_misc_db->log_tstamp.tv_sec))
@@ -672,7 +672,7 @@ void skinny_bmp_daemon()
 	goto read_data;
       }
 
-      for (peer = NULL, peers_idx = 0; peers_idx < config.nfacctd_bmp_max_peers; peers_idx++) {
+      for (peer = NULL, peers_idx = 0; peers_idx < config.bmp_daemon_max_peers; peers_idx++) {
         if (!bmp_peers[peers_idx].self.fd) {
           now = time(NULL);
 
@@ -717,7 +717,7 @@ void skinny_bmp_daemon()
       if (!peer) {
         /* We briefly accept the new connection to be able to drop it */
         Log(LOG_ERR, "ERROR ( %s/%s ): Insufficient number of BMP peers has been configured by 'bmp_daemon_max_peers' (%d).\n",
-                        config.name, bmp_misc_db->log_str, config.nfacctd_bmp_max_peers);
+                        config.name, bmp_misc_db->log_str, config.bmp_daemon_max_peers);
         close(fd);
         goto read_data;
       }
@@ -737,13 +737,13 @@ void skinny_bmp_daemon()
       memcpy(&peer->id, &peer->addr, sizeof(struct host_addr)); /* XXX: some inet_ntoa()'s could be around against peer->id */
 
       if (bmp_misc_db->msglog_backend_methods)
-        bgp_peer_log_init(peer, config.nfacctd_bmp_msglog_output, FUNC_TYPE_BMP);
+        bgp_peer_log_init(peer, config.bmp_daemon_msglog_output, FUNC_TYPE_BMP);
 
       if (bmp_misc_db->dump_backend_methods)
 	bmp_dump_init_peer(peer);
 
       /* Check: multiple TCP connections per peer */
-      for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.nfacctd_bmp_max_peers; peers_check_idx++) {
+      for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.bmp_daemon_max_peers; peers_check_idx++) {
         if (peers_idx != peers_check_idx && !memcmp(&bmp_peers[peers_check_idx].self.addr, &peer->addr, sizeof(bmp_peers[peers_check_idx].self.addr))) {
 	  if (bmp_misc_db->is_thread && !config.bgp_daemon_to_xflow_agent_map) {
             Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple connections from peer and no bgp_agent_map defined.\n",
@@ -755,7 +755,7 @@ void skinny_bmp_daemon()
         }
       }
 
-      Log(LOG_INFO, "INFO ( %s/%s ): [%s] BMP peers usage: %u/%u\n", config.name, bmp_misc_db->log_str, peer->addr_str, peers_num, config.nfacctd_bmp_max_peers);
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] BMP peers usage: %u/%u\n", config.name, bmp_misc_db->log_str, peer->addr_str, peers_num, config.bmp_daemon_max_peers);
     }
 
     read_data:

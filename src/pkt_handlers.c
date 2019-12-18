@@ -392,7 +392,7 @@ void evaluate_packet_handlers()
 					    COUNT_DST_AS|COUNT_PEER_SRC_AS) ||
 	channels_list[index].aggregation_2 & (COUNT_LRG_COMM|COUNT_SRC_LRG_COMM|COUNT_SRC_ROA|COUNT_DST_ROA)) &&
         channels_list[index].plugin->cfg.nfacctd_as & NF_AS_BGP) {
-      if (config.acct_type == ACCT_PM && (config.bgp_daemon || config.nfacctd_bmp)) {
+      if (config.acct_type == ACCT_PM && (config.bgp_daemon || config.bmp_daemon)) {
         if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) {
           channels_list[index].phandler[primitives] = sfprobe_bgp_ext_handler;
         }
@@ -404,11 +404,11 @@ void evaluate_packet_handlers()
         }
         primitives++;
       }
-      else if (config.acct_type == ACCT_NF && (config.bgp_daemon || config.nfacctd_bmp)) {
+      else if (config.acct_type == ACCT_NF && (config.bgp_daemon || config.bmp_daemon)) {
         channels_list[index].phandler[primitives] = bgp_ext_handler;
         primitives++;
       }
-      else if (config.acct_type == ACCT_SF && (config.bgp_daemon || config.nfacctd_bmp)) {
+      else if (config.acct_type == ACCT_SF && (config.bgp_daemon || config.bmp_daemon)) {
         channels_list[index].phandler[primitives] = bgp_ext_handler;
         primitives++;
       }
