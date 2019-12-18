@@ -1718,14 +1718,14 @@ NOTES:          If NetFlow sampling is enabled, it is recommended to have counte
 DEFAULT:        false
 
 KEY:		nfacctd_templates_file [NFACCTD_ONLY]
-DESC:		Full pathname to a file containing serialized templates data from previous nfacctd use.
-                Templates are loaded from this file when nfacctd is (re)started in order to reduce the
-		amount of dropped packets due to unknown templates. Be aware that this file will be
-		written to with possible new templates and updated versions of provided ones. Hence, an
-                empty file can be specified and incoming templates will be cached into it. This file
-		will be created if it does not exist. Only JSON format is currently supported and
-		requires compiling against Jansson library (--enable-jansson when configuring for
-		compiling).
+DESC:		Full pathname to a file to store JSON-serialized templates for NetFlow v9/IPFIX data.
+		At startup, nfacctd reads templates stored in this file (if any and if the file exists)
+		in order to reduce the initial amount of dropped packets due to unknown templates. In
+		steady state, templates received from the network are stored in this file. Warning: if,
+		at startup time, data records are encoded with a template structure different than the
+		one that was stored in the file, effectiveness of this feature is (intuitively) greatly
+		reduced. This file will be created if it does not exist. This feautre requires compiling
+		against Jansson library (--enable-jansson when configuring pmacct for compiling).
 DEFAULT:        none
 
 KEY:            [ nfacctd_stitching | sfacctd_stitching | pmacctd_stitching | uacctd_stitching ]
