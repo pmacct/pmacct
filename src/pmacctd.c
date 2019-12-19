@@ -236,7 +236,7 @@ int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, struct pcap
       dev_ptr->id = jhash(dev_ptr->str, strlen(dev_ptr->str), 0);
     else if (config.pcap_ifindex == PCAP_IFINDEX_MAP) {
       if (config.pcap_interfaces_map) {
-	dev_ptr->id = pcap_interfaces_map_lookup_ifname(&pcap_if_map, dev_ptr->str);
+	dev_ptr->id = pcap_interfaces_map_lookup_ifname(&pm_pcap_if_map, dev_ptr->str);
       }
       else {
 	Log(LOG_ERR, "ERROR ( %s/core ): pcap_ifindex set to 'map' but no pcap_interface_map is defined. Exiting.\n", config.name);
@@ -316,7 +316,7 @@ int main(int argc,char **argv, char **envp)
   struct id_table bta_table;
 
   struct pcap_device *dev_ptr;
-  struct pcap_callback_data cb_data;
+  struct pm_pcap_callback_data cb_data;
 
   /* select() stuff */
   fd_set read_descs, bkp_read_descs;
@@ -922,13 +922,13 @@ int main(int argc,char **argv, char **envp)
   load_networks(config.networks_file, &nt, &nc);
 
   if (config.pcap_interfaces_map) {
-    pcap_interfaces_map_initialize(&pcap_if_map);
-    pcap_interfaces_map_initialize(&bkp_pcap_if_map);
-    pcap_interfaces_map_load(&pcap_if_map);
+    pcap_interfaces_map_initialize(&pm_pcap_if_map);
+    pcap_interfaces_map_initialize(&pm_bkp_pcap_if_map);
+    pcap_interfaces_map_load(&pm_pcap_if_map);
   }
   else {
-    pcap_if_map.list = NULL;
-    pcap_if_map.num = 0;
+    pm_pcap_if_map.list = NULL;
+    pm_pcap_if_map.num = 0;
   }
 
   if (!config.pcap_direction) config.pcap_direction = PCAP_D_INOUT;
@@ -978,13 +978,13 @@ int main(int argc,char **argv, char **envp)
     int pcap_if_idx = 0;
     char *ifname;
 
-    while ((ifname = pcap_interfaces_map_getnext_ifname(&pcap_if_map, &pcap_if_idx))) {
+    while ((ifname = pcap_interfaces_map_getnext_ifname(&pm_pcap_if_map, &pcap_if_idx))) {
       if (devices.num == PCAP_MAX_INTERFACES) {
 	Log(LOG_ERR, "ERROR ( %s/core ): Maximum number of interfaces reached (%u). Exiting.\n", config.name, PCAP_MAX_INTERFACES);
 	exit_gracefully(1);
       }
 
-      pcap_if_entry = pcap_interfaces_map_getentry_by_ifname(&pcap_if_map, ifname);
+      pcap_if_entry = pcap_interfaces_map_getentry_by_ifname(&pm_pcap_if_map, ifname);
       ret = pm_pcap_add_interface(&devices.list[devices.num], ifname, pcap_if_entry, psize);
       if (!ret) {
 	if (bkp_select_fd <= devices.list[devices.num].fd) {
@@ -1204,7 +1204,7 @@ int main(int argc,char **argv, char **envp)
       }
 
       read_packet:
-      pcap_loop(devices.list[0].dev_desc, -1, pcap_cb, (u_char *) &cb_data);
+      pcap_loop(devices.list[0].dev_desc, -1, pm_pcap_cb, (u_char *) &cb_data);
       pcap_close(devices.list[0].dev_desc);
 
       if (config.pcap_savefile) {
@@ -1239,21 +1239,21 @@ int main(int argc,char **argv, char **envp)
 	int pcap_if_idx = 0;
 	char *ifname;
 
-	pcap_interfaces_map_copy(&bkp_pcap_if_map, &pcap_if_map);
-	pcap_interfaces_map_destroy(&pcap_if_map);
-	pcap_interfaces_map_load(&pcap_if_map);
+	pcap_interfaces_map_copy(&pm_bkp_pcap_if_map, &pm_pcap_if_map);
+	pcap_interfaces_map_destroy(&pm_pcap_if_map);
+	pcap_interfaces_map_load(&pm_pcap_if_map);
 
 	pm_pcap_device_copy_all(&bkp_devices, &devices);
 	pm_pcap_device_initialize(&devices);
 
 	/* Add interfaces and re-build relevant structs */
-	while ((ifname = pcap_interfaces_map_getnext_ifname(&pcap_if_map, &pcap_if_idx))) {
-	  if (!pcap_interfaces_map_lookup_ifname(&bkp_pcap_if_map, ifname)) {
+	while ((ifname = pcap_interfaces_map_getnext_ifname(&pm_pcap_if_map, &pcap_if_idx))) {
+	  if (!pcap_interfaces_map_lookup_ifname(&pm_bkp_pcap_if_map, ifname)) {
 	    if (devices.num == PCAP_MAX_INTERFACES) {
 	      Log(LOG_WARNING, "WARN ( %s/core ): Maximum number of interfaces reached (%u). Ignoring '%s'.\n", config.name, PCAP_MAX_INTERFACES, ifname);
 	    }
 	    else {
-	      pcap_if_entry = pcap_interfaces_map_getentry_by_ifname(&pcap_if_map, ifname);
+	      pcap_if_entry = pcap_interfaces_map_getentry_by_ifname(&pm_pcap_if_map, ifname);
 	      if (!pm_pcap_add_interface(&devices.list[devices.num], ifname, pcap_if_entry, psize)) {
 		if (bkp_select_fd <= devices.list[devices.num].fd) {
 		  bkp_select_fd = devices.list[devices.num].fd;
@@ -1283,8 +1283,8 @@ int main(int argc,char **argv, char **envp)
 
 	/* Remove unlisted interfaces */
 	pcap_if_idx = 0;
-	while ((ifname = pcap_interfaces_map_getnext_ifname(&bkp_pcap_if_map, &pcap_if_idx))) {
-	  if (!pcap_interfaces_map_lookup_ifname(&pcap_if_map, ifname)) {
+	while ((ifname = pcap_interfaces_map_getnext_ifname(&pm_bkp_pcap_if_map, &pcap_if_idx))) {
+	  if (!pcap_interfaces_map_lookup_ifname(&pm_pcap_if_map, ifname)) {
             int device_idx;
           
 	    device_idx = pm_pcap_device_getindex_byifname(&bkp_devices, ifname);
@@ -1314,7 +1314,7 @@ int main(int argc,char **argv, char **envp)
 	pkt_body = pcap_next(dev_ptr->dev_desc, &pkt_hdr); 
 	if (pkt_body) {
 	  cb_data.device = dev_ptr;
-	  pcap_cb((u_char *) &cb_data, &pkt_hdr, pkt_body);
+	  pm_pcap_cb((u_char *) &cb_data, &pkt_hdr, pkt_body);
 	}
       }
     }

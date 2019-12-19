@@ -296,12 +296,12 @@ struct pcap_devices {
   int num;
 };
 
-struct pcap_callback_signals {
+struct pm_pcap_callback_signals {
   int is_set;
   sigset_t set;
 };
 
-struct pcap_callback_data {
+struct pm_pcap_callback_data {
   u_char * f_agent; 
   u_char * bta_table;
   u_char * bpas_table; 
@@ -312,7 +312,7 @@ struct pcap_callback_data {
   u_int32_t ifindex_in;
   u_int32_t ifindex_out;
   u_int8_t has_tun_prims;
-  struct pcap_callback_signals sig;
+  struct pm_pcap_callback_signals sig;
 };
 
 struct _protocols_struct {
@@ -379,7 +379,6 @@ extern pcap_t *pm_pcap_open(const char *, int, int, int, int, int, char *);
 extern void pm_pcap_add_filter(struct pcap_device *);
 extern int pm_pcap_add_interface(struct pcap_device *, char *, struct pcap_interface *, int);
 
-
 extern void null_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
 extern void eth_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
 extern void fddi_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
@@ -397,7 +396,7 @@ extern int ip6_handler(register struct packet_ptrs *);
 extern int gtp_tunnel_func(register struct packet_ptrs *);
 extern int gtp_tunnel_configurator(struct tunnel_handler *, char *);
 extern void tunnel_registry_init();
-extern void pcap_cb(u_char *, const struct pcap_pkthdr *, const u_char *);
+extern void pm_pcap_cb(u_char *, const struct pcap_pkthdr *, const u_char *);
 extern int PM_find_id(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 extern void PM_print_stats(time_t);
 extern void compute_once();
@@ -442,7 +441,7 @@ extern pid_t failed_plugins[MAX_N_PLUGINS]; /* plugins failed during startup pha
 extern u_char dummy_tlhdr[16];
 extern struct pcap_device device;
 extern struct pcap_devices devices, bkp_devices;
-extern struct pcap_interfaces pcap_if_map, bkp_pcap_if_map;
+extern struct pcap_interfaces pm_pcap_if_map, pm_bkp_pcap_if_map;
 extern struct pcap_stat ps;
 extern struct sigaction sighandler_action;
 #endif /* _PMACCT_H_ */

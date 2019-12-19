@@ -54,7 +54,7 @@ static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
   char *pkt = NULL;
   ssize_t pkt_len = nflog_get_payload(nfa, &pkt);
   ssize_t mac_len = nflog_get_msg_packet_hwhdrlen(nfa);
-  struct pcap_callback_data *cb_data = p;
+  struct pm_pcap_callback_data *cb_data = p;
 
   /* Check we can handle this packet */
   switch (nfmsg->nfgen_family) {
@@ -114,9 +114,9 @@ static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
     }
   }
 
-  pcap_cb((u_char *) cb_data, &hdr, jumbo_container);
+  pm_pcap_cb((u_char *) cb_data, &hdr, jumbo_container);
 #else
-  pcap_cb((u_char *) cb_data, &hdr, pkt);
+  pm_pcap_cb((u_char *) cb_data, &hdr, pkt);
 #endif
 
   return 0;
@@ -179,7 +179,7 @@ int main(int argc,char **argv, char **envp)
   struct id_table bmed_table;
   struct id_table biss_table;
   struct id_table bta_table;
-  struct pcap_callback_data cb_data;
+  struct pm_pcap_callback_data cb_data;
 
   sigset_t signal_set;
 

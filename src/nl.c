@@ -43,10 +43,10 @@ struct tunnel_entry tunnel_handlers_list[] = {
   {"", 		NULL,			NULL},
 };
 
-void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
+void pm_pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
 {
   struct packet_ptrs pptrs;
-  struct pcap_callback_data *cb_data = (struct pcap_callback_data *) user;
+  struct pm_pcap_callback_data *cb_data = (struct pm_pcap_callback_data *) user;
   struct pcap_device *device = cb_data->device;
   struct plugin_requests req;
   u_int32_t iface32 = 0;

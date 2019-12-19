@@ -43,7 +43,7 @@ pid_t failed_plugins[MAX_N_PLUGINS]; /* plugins failed during startup phase */
 u_char dummy_tlhdr[16];
 struct pcap_device device;
 struct pcap_devices devices, bkp_devices;
-struct pcap_interfaces pcap_if_map, bkp_pcap_if_map;
+struct pcap_interfaces pm_pcap_if_map, pm_bkp_pcap_if_map;
 struct pcap_stat ps;
 struct sigaction sighandler_action;
 
