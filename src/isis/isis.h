@@ -47,8 +47,8 @@ static struct _devices_struct __attribute__((unused))  _isis_devices[] = {
   {NULL, -1},
 };
 
-struct pcap_isis_callback_data {
-  struct pcap_device *device;
+struct pm_pcap_isis_callback_data {
+  struct pm_pcap_device *device;
   struct isis_circuit *circuit;
 };
 

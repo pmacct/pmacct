@@ -41,9 +41,9 @@ struct configuration config; /* global configuration structure */
 struct plugins_list_entry *plugins_list; /* linked list of each plugin configuration */
 pid_t failed_plugins[MAX_N_PLUGINS]; /* plugins failed during startup phase */
 u_char dummy_tlhdr[16];
-struct pcap_device device;
-struct pcap_devices devices, bkp_devices;
-struct pcap_interfaces pm_pcap_if_map, pm_bkp_pcap_if_map;
+struct pm_pcap_device device;
+struct pm_pcap_devices devices, bkp_devices;
+struct pm_pcap_interfaces pm_pcap_if_map, pm_bkp_pcap_if_map;
 struct pcap_stat ps;
 struct sigaction sighandler_action;
 

@@ -268,18 +268,18 @@ typedef struct {
 #endif
 
 /* structures */
-struct pcap_interface {
+struct pm_pcap_interface {
   u_int32_t ifindex;
   char ifname[IFNAMSIZ];
   int direction;
 };
 
-struct pcap_interfaces {
-  struct pcap_interface *list;
+struct pm_pcap_interfaces {
+  struct pm_pcap_interface *list;
   int num;
 };
 
-struct pcap_device {
+struct pm_pcap_device {
   char str[IFNAMSIZ];
   u_int32_t id;
   pcap_t *dev_desc;
@@ -288,11 +288,11 @@ struct pcap_device {
   int errors; /* error count when reading from a savefile */
   int fd;
   struct _devices_struct *data; 
-  struct pcap_interface *pcap_if;
+  struct pm_pcap_interface *pcap_if;
 };
 
-struct pcap_devices {
-  struct pcap_device list[PCAP_MAX_INTERFACES];
+struct pm_pcap_devices {
+  struct pm_pcap_device list[PCAP_MAX_INTERFACES];
   int num;
 };
 
@@ -308,7 +308,7 @@ struct pm_pcap_callback_data {
   u_char * blp_table; 
   u_char * bmed_table; 
   u_char * biss_table; 
-  struct pcap_device *device;
+  struct pm_pcap_device *device;
   u_int32_t ifindex_in;
   u_int32_t ifindex_out;
   u_int8_t has_tun_prims;
@@ -371,13 +371,13 @@ void PM_sigint_handler();
 void reload();
 void push_stats();
 void reload_maps();
-extern void pm_pcap_device_initialize(struct pcap_devices *);
-extern void pm_pcap_device_copy_all(struct pcap_devices *, struct pcap_devices *);
-extern void pm_pcap_device_copy_entry(struct pcap_devices *, struct pcap_devices *, int);
-extern int pm_pcap_device_getindex_byifname(struct pcap_devices *, char *);
+extern void pm_pcap_device_initialize(struct pm_pcap_devices *);
+extern void pm_pcap_device_copy_all(struct pm_pcap_devices *, struct pm_pcap_devices *);
+extern void pm_pcap_device_copy_entry(struct pm_pcap_devices *, struct pm_pcap_devices *, int);
+extern int pm_pcap_device_getindex_byifname(struct pm_pcap_devices *, char *);
 extern pcap_t *pm_pcap_open(const char *, int, int, int, int, int, char *);
-extern void pm_pcap_add_filter(struct pcap_device *);
-extern int pm_pcap_add_interface(struct pcap_device *, char *, struct pcap_interface *, int);
+extern void pm_pcap_add_filter(struct pm_pcap_device *);
+extern int pm_pcap_add_interface(struct pm_pcap_device *, char *, struct pm_pcap_interface *, int);
 
 extern void null_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
 extern void eth_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
@@ -402,7 +402,7 @@ extern void PM_print_stats(time_t);
 extern void compute_once();
 extern void reset_index_pkt_ptrs(struct packet_ptrs *);
 extern void set_index_pkt_ptrs(struct packet_ptrs *);
-extern ssize_t recvfrom_savefile(struct pcap_device *, void **, struct sockaddr *, struct timeval **, int *, struct packet_ptrs *);
+extern ssize_t recvfrom_savefile(struct pm_pcap_device *, void **, struct sockaddr *, struct timeval **, int *, struct packet_ptrs *);
 extern ssize_t recvfrom_rawip(unsigned char *, size_t, struct sockaddr *, struct packet_ptrs *);
 
 #ifndef HAVE_STRLCPY
@@ -439,9 +439,9 @@ extern struct configuration config; /* global configuration structure */
 extern struct plugins_list_entry *plugins_list; /* linked list of each plugin configuration */
 extern pid_t failed_plugins[MAX_N_PLUGINS]; /* plugins failed during startup phase */
 extern u_char dummy_tlhdr[16];
-extern struct pcap_device device;
-extern struct pcap_devices devices, bkp_devices;
-extern struct pcap_interfaces pm_pcap_if_map, pm_bkp_pcap_if_map;
+extern struct pm_pcap_device device;
+extern struct pm_pcap_devices devices, bkp_devices;
+extern struct pm_pcap_interfaces pm_pcap_if_map, pm_bkp_pcap_if_map;
 extern struct pcap_stat ps;
 extern struct sigaction sighandler_action;
 #endif /* _PMACCT_H_ */

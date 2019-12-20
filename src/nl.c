@@ -47,7 +47,7 @@ void pm_pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *bu
 {
   struct packet_ptrs pptrs;
   struct pm_pcap_callback_data *cb_data = (struct pm_pcap_callback_data *) user;
-  struct pcap_device *device = cb_data->device;
+  struct pm_pcap_device *device = cb_data->device;
   struct plugin_requests req;
   u_int32_t iface32 = 0;
   u_int32_t ifacePresent = 0;
@@ -741,7 +741,7 @@ void set_index_pkt_ptrs(struct packet_ptrs *pptrs)
   pptrs->pkt_proto[CUSTOM_PRIMITIVE_L4_PTR] = pptrs->l4_proto;
 }
 
-ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockaddr *src_addr, struct timeval **ts, int *round, struct packet_ptrs *savefile_pptrs)
+ssize_t recvfrom_savefile(struct pm_pcap_device *device, void **buf, struct sockaddr *src_addr, struct timeval **ts, int *round, struct packet_ptrs *savefile_pptrs)
 {
   ssize_t ret = 0;
   int pcap_ret;

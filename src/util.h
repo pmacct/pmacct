@@ -82,7 +82,7 @@ extern void set_sampling_table(struct packet_ptrs_vector *, u_char *);
 extern void set_shadow_status(struct packet_ptrs *);
 extern void set_default_preferences(struct configuration *);
 extern FILE *open_output_file(char *, char *, int);
-extern void open_pcap_savefile(struct pcap_device *, char *);
+extern void open_pcap_savefile(struct pm_pcap_device *, char *);
 extern void link_latest_output_file(char *, char *);
 extern void close_output_file(FILE *);
 extern int handle_dynname_internal_strings(char *, int, char *, struct primitives_ptrs *, int);

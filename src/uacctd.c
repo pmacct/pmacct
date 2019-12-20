@@ -222,7 +222,7 @@ int main(int argc,char **argv, char **envp)
 
   memset(cfg_cmdline, 0, sizeof(cfg_cmdline));
   memset(&config, 0, sizeof(struct configuration));
-  memset(&device, 0, sizeof(struct pcap_device));
+  memset(&device, 0, sizeof(struct pm_pcap_device));
   memset(&config_file, 0, sizeof(config_file));
   memset(&failed_plugins, 0, sizeof(failed_plugins));
   memset(&req, 0, sizeof(req));

@@ -2986,7 +2986,7 @@ void generate_random_string(char *s, const int len)
   s[len] = '\0';
 }
 
-void open_pcap_savefile(struct pcap_device *dev_ptr, char *file)
+void open_pcap_savefile(struct pm_pcap_device *dev_ptr, char *file)
 {
   char errbuf[PCAP_ERRBUF_SIZE];
   int idx;

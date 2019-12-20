@@ -71,8 +71,8 @@ void nfacctd_isis_wrapper()
 void skinny_isis_daemon()
 {
   char errbuf[PCAP_ERRBUF_SIZE];
-  struct pcap_device device;
-  struct pcap_isis_callback_data cb_data;
+  struct pm_pcap_device device;
+  struct pm_pcap_isis_callback_data cb_data;
   struct host_addr addr;
   struct prefix_ipv4 *ipv4;
   struct plugin_requests req;
@@ -83,7 +83,7 @@ void skinny_isis_daemon()
   struct isis_circuit *circuit;
   struct interface interface;
 
-  memset(&device, 0, sizeof(struct pcap_device));
+  memset(&device, 0, sizeof(struct pm_pcap_device));
   memset(&cb_data, 0, sizeof(cb_data));
   memset(&interface, 0, sizeof(interface));
   memset(&isis_spf_deadline, 0, sizeof(isis_spf_deadline));
@@ -229,8 +229,8 @@ void skinny_isis_daemon()
 
 void isis_pdu_runner(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
 {
-  struct pcap_isis_callback_data *cb_data = (struct pcap_isis_callback_data *) user;
-  struct pcap_device *device = cb_data->device;
+  struct pm_pcap_isis_callback_data *cb_data = (struct pm_pcap_isis_callback_data *) user;
+  struct pm_pcap_device *device = cb_data->device;
   struct isis_circuit *circuit = cb_data->circuit;
   struct packet_ptrs pptrs;
   int ret;
