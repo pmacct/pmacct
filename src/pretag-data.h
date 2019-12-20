@@ -186,9 +186,9 @@ const struct _map_dictionary_line custom_primitives_map_dictionary[] = {
   {"", NULL}
 };
 
-const struct _map_dictionary_line pcap_interfaces_map_dictionary[] = {
-  {"ifindex", pcap_interfaces_map_ifindex_handler},
-  {"ifname", pcap_interfaces_map_ifname_handler},
-  {"direction", pcap_interfaces_map_direction_handler},
+const struct _map_dictionary_line pm_pcap_interfaces_map_dictionary[] = {
+  {"ifindex", pm_pcap_interfaces_map_ifindex_handler},
+  {"ifname", pm_pcap_interfaces_map_ifname_handler},
+  {"direction", pm_pcap_interfaces_map_direction_handler},
   {"", NULL}
 };

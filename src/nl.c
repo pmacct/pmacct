@@ -744,13 +744,13 @@ void set_index_pkt_ptrs(struct packet_ptrs *pptrs)
 ssize_t recvfrom_savefile(struct pm_pcap_device *device, void **buf, struct sockaddr *src_addr, struct timeval **ts, int *round, struct packet_ptrs *savefile_pptrs)
 {
   ssize_t ret = 0;
-  int pcap_ret;
+  int pm_pcap_ret;
 
   read_packet:
-  pcap_ret = pcap_next_ex(device->dev_desc, &savefile_pptrs->pkthdr, (const u_char **)&savefile_pptrs->packet_ptr);
+  pm_pcap_ret = pcap_next_ex(device->dev_desc, &savefile_pptrs->pkthdr, (const u_char **)&savefile_pptrs->packet_ptr);
 
-  if (pcap_ret == 1 /* all good */) device->errors = FALSE;
-  else if (pcap_ret == -1 /* failed reading next packet */) {
+  if (pm_pcap_ret == 1 /* all good */) device->errors = FALSE;
+  else if (pm_pcap_ret == -1 /* failed reading next packet */) {
     device->errors++;
     if (device->errors == PCAP_SAVEFILE_MAX_ERRORS) {
       Log(LOG_ERR, "ERROR ( %s/core ): pcap_ext_ex() max errors reached (%u). Exiting.\n", config.name, PCAP_SAVEFILE_MAX_ERRORS);
@@ -761,7 +761,7 @@ ssize_t recvfrom_savefile(struct pm_pcap_device *device, void **buf, struct sock
       return 0;
     }
   }
-  else if (pcap_ret == -2 /* last packet in a pcap_savefile */) {
+  else if (pm_pcap_ret == -2 /* last packet in a pcap_savefile */) {
     pcap_close(device->dev_desc);
 
     if (config.pcap_sf_replay < 0 ||

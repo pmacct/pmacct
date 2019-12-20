@@ -346,9 +346,9 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   key = NULL; value = NULL;
 		}
                 else if (acct_type == MAP_PCAP_INTERFACES) {
-                  for (dindex = 0; strcmp(pcap_interfaces_map_dictionary[dindex].key, ""); dindex++) {
-                    if (!strcmp(pcap_interfaces_map_dictionary[dindex].key, key)) {
-                      err = (*pcap_interfaces_map_dictionary[dindex].func)(filename, NULL, value, req, acct_type);
+                  for (dindex = 0; strcmp(pm_pcap_interfaces_map_dictionary[dindex].key, ""); dindex++) {
+                    if (!strcmp(pm_pcap_interfaces_map_dictionary[dindex].key, key)) {
+                      err = (*pm_pcap_interfaces_map_dictionary[dindex].func)(filename, NULL, value, req, acct_type);
                       break;
                     }
                     else err = E_NOTFOUND; /* key not found */
@@ -527,7 +527,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	      else if (acct_type == MAP_BGP_XCS) bgp_xcs_map_validate(filename, req); 
 	      else if (acct_type == MAP_IGP) igp_daemon_map_validate(filename, req); 
 	      else if (acct_type == MAP_CUSTOM_PRIMITIVES) custom_primitives_map_validate(filename, req); 
-	      else if (acct_type == MAP_PCAP_INTERFACES) pcap_interfaces_map_validate(filename, req); 
+	      else if (acct_type == MAP_PCAP_INTERFACES) pm_pcap_interfaces_map_validate(filename, req); 
 	    }
           }
           else Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] malformed line. Ignored.\n",

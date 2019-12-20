@@ -236,7 +236,7 @@ int pm_pcap_add_interface(struct pm_pcap_device *dev_ptr, char *ifname, struct p
       dev_ptr->id = jhash(dev_ptr->str, strlen(dev_ptr->str), 0);
     else if (config.pcap_ifindex == PCAP_IFINDEX_MAP) {
       if (config.pcap_interfaces_map) {
-	dev_ptr->id = pcap_interfaces_map_lookup_ifname(&pm_pcap_if_map, dev_ptr->str);
+	dev_ptr->id = pm_pcap_interfaces_map_lookup_ifname(&pm_pcap_if_map, dev_ptr->str);
       }
       else {
 	Log(LOG_ERR, "ERROR ( %s/core ): pcap_ifindex set to 'map' but no pcap_interface_map is defined. Exiting.\n", config.name);
@@ -299,10 +299,10 @@ int main(int argc,char **argv, char **envp)
   /* pcap library stuff */
   struct pcap_pkthdr pkt_hdr;
   const u_char *pkt_body;
-  pcap_if_t *pcap_ifs = NULL;
+  pcap_if_t *pm_pcap_ifs = NULL;
 
   int index, index_rr = 0, logf, ret;
-  int pcap_savefile_round = 0;
+  int pm_pcap_savefile_round = 0;
 
   struct plugins_list_entry *list;
   struct plugin_requests req;
@@ -922,9 +922,9 @@ int main(int argc,char **argv, char **envp)
   load_networks(config.networks_file, &nt, &nc);
 
   if (config.pcap_interfaces_map) {
-    pcap_interfaces_map_initialize(&pm_pcap_if_map);
-    pcap_interfaces_map_initialize(&pm_bkp_pcap_if_map);
-    pcap_interfaces_map_load(&pm_pcap_if_map);
+    pm_pcap_interfaces_map_initialize(&pm_pcap_if_map);
+    pm_pcap_interfaces_map_initialize(&pm_bkp_pcap_if_map);
+    pm_pcap_interfaces_map_load(&pm_pcap_if_map);
   }
   else {
     pm_pcap_if_map.list = NULL;
@@ -940,13 +940,13 @@ int main(int argc,char **argv, char **envp)
 
     Log(LOG_WARNING, "WARN ( %s/core ): Selecting a suitable devices.\n", config.name);
 
-    ret = pcap_findalldevs(&pcap_ifs, errbuf);
-    if (ret == ERR || !pcap_ifs) {
+    ret = pcap_findalldevs(&pm_pcap_ifs, errbuf);
+    if (ret == ERR || !pm_pcap_ifs) {
       Log(LOG_ERR, "ERROR ( %s/core ): Unable to get interfaces list: %s. Exiting.\n", config.name, errbuf);
       exit_gracefully(1);
     }
 
-    config.pcap_if = pcap_ifs[0].name; 
+    config.pcap_if = pm_pcap_ifs[0].name; 
     Log(LOG_DEBUG, "DEBUG ( %s/core ): device is %s\n", config.name, config.pcap_if);
   }
 
@@ -975,16 +975,16 @@ int main(int argc,char **argv, char **envp)
   }
   else if (config.pcap_interfaces_map) {
     struct pm_pcap_interface *pm_pcap_if_entry;
-    int pcap_if_idx = 0;
+    int pm_pcap_if_idx = 0;
     char *ifname;
 
-    while ((ifname = pcap_interfaces_map_getnext_ifname(&pm_pcap_if_map, &pcap_if_idx))) {
+    while ((ifname = pm_pcap_interfaces_map_getnext_ifname(&pm_pcap_if_map, &pm_pcap_if_idx))) {
       if (devices.num == PCAP_MAX_INTERFACES) {
 	Log(LOG_ERR, "ERROR ( %s/core ): Maximum number of interfaces reached (%u). Exiting.\n", config.name, PCAP_MAX_INTERFACES);
 	exit_gracefully(1);
       }
 
-      pm_pcap_if_entry = pcap_interfaces_map_getentry_by_ifname(&pm_pcap_if_map, ifname);
+      pm_pcap_if_entry = pm_pcap_interfaces_map_getentry_by_ifname(&pm_pcap_if_map, ifname);
       ret = pm_pcap_add_interface(&devices.list[devices.num], ifname, pm_pcap_if_entry, psize);
       if (!ret) {
 	if (bkp_select_fd <= devices.list[devices.num].fd) {
@@ -1002,7 +1002,7 @@ int main(int argc,char **argv, char **envp)
     pm_pcap_add_filter(&devices.list[0]);
     cb_data.device = &devices.list[0];
     devices.num = 1;
-    pcap_savefile_round = 1;
+    pm_pcap_savefile_round = 1;
   }
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
@@ -1209,8 +1209,8 @@ int main(int argc,char **argv, char **envp)
 
       if (config.pcap_savefile) {
 	if (config.pcap_sf_replay < 0 ||
-	    (config.pcap_sf_replay > 0 && pcap_savefile_round < config.pcap_sf_replay)) {
-	  pcap_savefile_round++;
+	    (config.pcap_sf_replay > 0 && pm_pcap_savefile_round < config.pcap_sf_replay)) {
+	  pm_pcap_savefile_round++;
 	  open_pcap_savefile(&devices.list[0], config.pcap_savefile);
 	  if (config.pcap_sf_delay) sleep(config.pcap_sf_delay);
 
@@ -1236,24 +1236,24 @@ int main(int argc,char **argv, char **envp)
 
       if (reload_map_pmacctd) {
 	struct pm_pcap_interface *pm_pcap_if_entry;
-	int pcap_if_idx = 0;
+	int pm_pcap_if_idx = 0;
 	char *ifname;
 
-	pcap_interfaces_map_copy(&pm_bkp_pcap_if_map, &pm_pcap_if_map);
-	pcap_interfaces_map_destroy(&pm_pcap_if_map);
-	pcap_interfaces_map_load(&pm_pcap_if_map);
+	pm_pcap_interfaces_map_copy(&pm_bkp_pcap_if_map, &pm_pcap_if_map);
+	pm_pcap_interfaces_map_destroy(&pm_pcap_if_map);
+	pm_pcap_interfaces_map_load(&pm_pcap_if_map);
 
 	pm_pcap_device_copy_all(&bkp_devices, &devices);
 	pm_pcap_device_initialize(&devices);
 
 	/* Add interfaces and re-build relevant structs */
-	while ((ifname = pcap_interfaces_map_getnext_ifname(&pm_pcap_if_map, &pcap_if_idx))) {
-	  if (!pcap_interfaces_map_lookup_ifname(&pm_bkp_pcap_if_map, ifname)) {
+	while ((ifname = pm_pcap_interfaces_map_getnext_ifname(&pm_pcap_if_map, &pm_pcap_if_idx))) {
+	  if (!pm_pcap_interfaces_map_lookup_ifname(&pm_bkp_pcap_if_map, ifname)) {
 	    if (devices.num == PCAP_MAX_INTERFACES) {
 	      Log(LOG_WARNING, "WARN ( %s/core ): Maximum number of interfaces reached (%u). Ignoring '%s'.\n", config.name, PCAP_MAX_INTERFACES, ifname);
 	    }
 	    else {
-	      pm_pcap_if_entry = pcap_interfaces_map_getentry_by_ifname(&pm_pcap_if_map, ifname);
+	      pm_pcap_if_entry = pm_pcap_interfaces_map_getentry_by_ifname(&pm_pcap_if_map, ifname);
 	      if (!pm_pcap_add_interface(&devices.list[devices.num], ifname, pm_pcap_if_entry, psize)) {
 		if (bkp_select_fd <= devices.list[devices.num].fd) {
 		  bkp_select_fd = devices.list[devices.num].fd;
@@ -1282,9 +1282,9 @@ int main(int argc,char **argv, char **envp)
 	}
 
 	/* Remove unlisted interfaces */
-	pcap_if_idx = 0;
-	while ((ifname = pcap_interfaces_map_getnext_ifname(&pm_bkp_pcap_if_map, &pcap_if_idx))) {
-	  if (!pcap_interfaces_map_lookup_ifname(&pm_pcap_if_map, ifname)) {
+	pm_pcap_if_idx = 0;
+	while ((ifname = pm_pcap_interfaces_map_getnext_ifname(&pm_bkp_pcap_if_map, &pm_pcap_if_idx))) {
+	  if (!pm_pcap_interfaces_map_lookup_ifname(&pm_pcap_if_map, ifname)) {
             int device_idx;
           
 	    device_idx = pm_pcap_device_getindex_byifname(&bkp_devices, ifname);

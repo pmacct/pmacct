@@ -3801,7 +3801,7 @@ int PT_map_index_fdata_fwdstatus_handler(struct id_entry *e, pm_hash_serial_t *h
   return FALSE;
 }
 
-void pcap_interfaces_map_validate(char *filename, struct plugin_requests *req)
+void pm_pcap_interfaces_map_validate(char *filename, struct plugin_requests *req)
 {
   struct pm_pcap_interfaces *table = (struct pm_pcap_interfaces *) req->key_value_table;
   int valid = FALSE;
@@ -3815,7 +3815,7 @@ void pcap_interfaces_map_validate(char *filename, struct plugin_requests *req)
   }
 }
 
-int pcap_interfaces_map_ifindex_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+int pm_pcap_interfaces_map_ifindex_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct pm_pcap_interfaces *table = (struct pm_pcap_interfaces *) req->key_value_table;
   char *endp;
@@ -3841,7 +3841,7 @@ int pcap_interfaces_map_ifindex_handler(char *filename, struct id_entry *e, char
   return FALSE;
 }
 
-int pcap_interfaces_map_ifname_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+int pm_pcap_interfaces_map_ifname_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct pm_pcap_interfaces *table = (struct pm_pcap_interfaces *) req->key_value_table;
 
@@ -3866,7 +3866,7 @@ int pcap_interfaces_map_ifname_handler(char *filename, struct id_entry *e, char 
   return FALSE;
 }
 
-int pcap_interfaces_map_direction_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+int pm_pcap_interfaces_map_direction_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct pm_pcap_interfaces *table = (struct pm_pcap_interfaces *) req->key_value_table;
 
@@ -3893,7 +3893,7 @@ int pcap_interfaces_map_direction_handler(char *filename, struct id_entry *e, ch
   return FALSE;
 }
 
-void pcap_interfaces_map_initialize(struct pm_pcap_interfaces *map)
+void pm_pcap_interfaces_map_initialize(struct pm_pcap_interfaces *map)
 {
   memset(map, 0, sizeof(struct pm_pcap_interfaces));
 
@@ -3906,18 +3906,18 @@ void pcap_interfaces_map_initialize(struct pm_pcap_interfaces *map)
   else memset(map->list, 0, (PCAP_MAX_INTERFACES) * sizeof(struct pm_pcap_interface));
 }
 
-void pcap_interfaces_map_load(struct pm_pcap_interfaces *map)
+void pm_pcap_interfaces_map_load(struct pm_pcap_interfaces *map)
 {
   struct plugin_requests req;
-  int pcap_interfaces_allocated = FALSE;
+  int pm_pcap_interfaces_allocated = FALSE;
 
   memset(&req, 0, sizeof(req));
 
   req.key_value_table = (void *) map;
-  load_id_file(MAP_PCAP_INTERFACES, config.pcap_interfaces_map, NULL, &req, &pcap_interfaces_allocated);
+  load_id_file(MAP_PCAP_INTERFACES, config.pcap_interfaces_map, NULL, &req, &pm_pcap_interfaces_allocated);
 }
 
-void pcap_interfaces_map_destroy(struct pm_pcap_interfaces *map)
+void pm_pcap_interfaces_map_destroy(struct pm_pcap_interfaces *map)
 {
   int idx;
 
@@ -3926,7 +3926,7 @@ void pcap_interfaces_map_destroy(struct pm_pcap_interfaces *map)
   map->num = 0;
 }
 
-void pcap_interfaces_map_copy(struct pm_pcap_interfaces *dst, struct pm_pcap_interfaces *src)
+void pm_pcap_interfaces_map_copy(struct pm_pcap_interfaces *dst, struct pm_pcap_interfaces *src)
 {
   int idx;
 
@@ -3935,7 +3935,7 @@ void pcap_interfaces_map_copy(struct pm_pcap_interfaces *dst, struct pm_pcap_int
   dst->num = src->num;
 }
 
-u_int32_t pcap_interfaces_map_lookup_ifname(struct pm_pcap_interfaces *map, char *ifname)
+u_int32_t pm_pcap_interfaces_map_lookup_ifname(struct pm_pcap_interfaces *map, char *ifname)
 {
   u_int32_t ifindex = 0;
   int idx;
@@ -3950,7 +3950,7 @@ u_int32_t pcap_interfaces_map_lookup_ifname(struct pm_pcap_interfaces *map, char
   return ifindex;
 }
 
-struct pm_pcap_interface *pcap_interfaces_map_getentry_by_ifname(struct pm_pcap_interfaces *map, char *ifname)
+struct pm_pcap_interface *pm_pcap_interfaces_map_getentry_by_ifname(struct pm_pcap_interfaces *map, char *ifname)
 {
   int idx;
 
@@ -3963,7 +3963,7 @@ struct pm_pcap_interface *pcap_interfaces_map_getentry_by_ifname(struct pm_pcap_
   return NULL;
 }
 
-char *pcap_interfaces_map_getnext_ifname(struct pm_pcap_interfaces *map, int *index)
+char *pm_pcap_interfaces_map_getnext_ifname(struct pm_pcap_interfaces *map, int *index)
 {
   char *ifname = NULL;
   int loc_idx = (*index);

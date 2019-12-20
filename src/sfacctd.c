@@ -135,7 +135,7 @@ int main(int argc,char **argv, char **envp)
   socklen_t  clen = sizeof(client), slen = 0;
   struct ip_mreq multi_req4;
 
-  int pcap_savefile_round = 0;
+  int pm_pcap_savefile_round = 0;
 
   unsigned char dummy_packet[64]; 
   unsigned char dummy_packet_vlan[64]; 
@@ -632,7 +632,7 @@ int main(int argc,char **argv, char **envp)
 
   if (config.pcap_savefile) {
     open_pcap_savefile(&device, config.pcap_savefile);
-    pcap_savefile_round = 1;
+    pm_pcap_savefile_round = 1;
 
     enable_ip_fragment_handler();
   }
@@ -1155,7 +1155,7 @@ int main(int argc,char **argv, char **envp)
     sigprocmask(SIG_BLOCK, &signal_set, NULL);
 
     if (config.pcap_savefile) {
-      ret = recvfrom_savefile(&device, (void **) &sflow_packet, (struct sockaddr *) &client, &spp.ts, &pcap_savefile_round, &recv_pptrs);
+      ret = recvfrom_savefile(&device, (void **) &sflow_packet, (struct sockaddr *) &client, &spp.ts, &pm_pcap_savefile_round, &recv_pptrs);
     }
 #ifdef WITH_KAFKA
     else if (config.nfacctd_kafka_broker_host) {
