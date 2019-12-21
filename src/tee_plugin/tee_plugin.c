@@ -251,7 +251,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	    if (!receivers.pools[pool_idx].balance.func) {
 	      for (recv_idx = 0; recv_idx < receivers.pools[pool_idx].num; recv_idx++) {
 	        target = &receivers.pools[pool_idx].receivers[recv_idx];
-	        Tee_send(msg, (struct sockaddr *) &target->dest, target->fd);
+	        Tee_send(msg, (struct sockaddr *) &target->dest, target->fd, config.tee_transparent);
 	      }
 
 #ifdef WITH_KAFKA
@@ -270,7 +270,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	    }
 	    else {
 	      target = receivers.pools[pool_idx].balance.func(&receivers.pools[pool_idx], msg);
-	      Tee_send(msg, (struct sockaddr *) &target->dest, target->fd);
+	      Tee_send(msg, (struct sockaddr *) &target->dest, target->fd, config.tee_transparent);
 	    }
 	  }
 	}
@@ -381,7 +381,7 @@ size_t Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
   return msglen;
 }
 
-void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
+void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd, int transparent)
 {
   struct host_addr r;
   char recv_addr[50];
@@ -407,7 +407,7 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd)
 			recv_addr, recv_port);
   }
 
-  if (!config.tee_transparent) {
+  if (!transparent) {
     if (send(fd, msg->payload, msg->len, 0) == -1) {
       struct host_addr a;
       char agent_addr[50];

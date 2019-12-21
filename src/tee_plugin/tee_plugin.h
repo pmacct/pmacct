@@ -83,7 +83,7 @@ extern void Tee_exit_now(int);
 extern void Tee_init_socks();
 extern void Tee_destroy_recvs();
 extern size_t Tee_craft_transparent_msg(struct pkt_msg *, struct sockaddr *);
-extern void Tee_send(struct pkt_msg *, struct sockaddr *, int);
+extern void Tee_send(struct pkt_msg *, struct sockaddr *, int, int);
 extern int Tee_prepare_sock(struct sockaddr *, socklen_t, u_int16_t, int, int);
 extern int Tee_parse_hostport(const char *, struct sockaddr *, socklen_t *, int);
 extern struct tee_receiver *Tee_rr_balance(void *, struct pkt_msg *);
