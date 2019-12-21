@@ -598,7 +598,8 @@ void Tee_init_socks()
         }
       }
 
-      target->fd = Tee_prepare_sock((struct sockaddr *) &target->dest, target->dest_len, receivers.pools[pool_idx].src_port);
+      target->fd = Tee_prepare_sock((struct sockaddr *) &target->dest, target->dest_len, receivers.pools[pool_idx].src_port,
+				    config.tee_transparent, config.tee_pipe_size);
 
       if (config.debug) {
 	struct host_addr recv_addr;
@@ -669,39 +670,25 @@ void Tee_init_zmq_host(struct p_zmq_host *zmq_host, char *zmq_address, u_int32_t
 }
 #endif
 
-int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, u_int16_t src_port)
+int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, u_int16_t src_port, int transparent, int pipe_size)
 {
   int s, ret = 0;
 
-  if (!config.tee_transparent) {
+  if (!transparent) {
     struct host_addr source_ip;
     struct sockaddr_storage ssource_ip;
 
     memset(&source_ip, 0, sizeof(source_ip));
     memset(&ssource_ip, 0, sizeof(ssource_ip));
 
-    if (config.nfprobe_source_ip) {
-      ret = str_to_addr(config.nfprobe_source_ip, &source_ip);
-      addr_to_sa((struct sockaddr *) &ssource_ip, &source_ip, src_port);
-    }
-    else {
-      if (src_port) { 
-	source_ip.family = addr->sa_family; 
-	ret = addr_to_sa((struct sockaddr *) &ssource_ip, &source_ip, src_port);
-      }
+    if (src_port) { 
+      source_ip.family = addr->sa_family; 
+      ret = addr_to_sa((struct sockaddr *) &ssource_ip, &source_ip, src_port);
     }
 
     if ((s = socket(addr->sa_family, SOCK_DGRAM, 0)) == -1) {
       Log(LOG_ERR, "ERROR ( %s/%s ): socket() error: %s\n", config.name, config.type, strerror(errno));
       exit_gracefully(1);
-    }
-
-    if (config.nfprobe_ipprec) {
-      int opt = config.nfprobe_ipprec << 5;
-      int rc;
-
-      rc = setsockopt(s, IPPROTO_IP, IP_TOS, &opt, (socklen_t) sizeof(opt));
-      if (rc < 0) Log(LOG_WARNING, "WARN ( %s/%s ): setsockopt() failed for IP_TOS: %s\n", config.name, config.type, strerror(errno));
     }
 
     if (ret && bind(s, (struct sockaddr *) &ssource_ip, sizeof(ssource_ip)) == -1)
@@ -719,19 +706,19 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, u_int16_t src_port)
 #endif
   }
 
-  if (config.tee_pipe_size) {
-    socklen_t l = sizeof(config.tee_pipe_size);
+  if (pipe_size) {
+    socklen_t l = sizeof(pipe_size);
     int saved = 0, obtained = 0;
     
     getsockopt(s, SOL_SOCKET, SO_SNDBUF, &saved, &l);
-    Setsocksize(s, SOL_SOCKET, SO_SNDBUF, &config.tee_pipe_size, (socklen_t) sizeof(config.tee_pipe_size));
+    Setsocksize(s, SOL_SOCKET, SO_SNDBUF, &pipe_size, (socklen_t) sizeof(pipe_size));
     getsockopt(s, SOL_SOCKET, SO_SNDBUF, &obtained, &l);
   
     if (obtained < saved) {
       Setsocksize(s, SOL_SOCKET, SO_SNDBUF, &saved, l);
       getsockopt(s, SOL_SOCKET, SO_SNDBUF, &obtained, &l);
     }
-    Log(LOG_INFO, "INFO ( %s/%s ): tee_pipe_size: obtained=%d target=%d.\n", config.name, config.type, obtained, config.tee_pipe_size);
+    Log(LOG_INFO, "INFO ( %s/%s ): tee_pipe_size: obtained=%d target=%d.\n", config.name, config.type, obtained, pipe_size);
   }
 
   if (connect(s, (struct sockaddr *)addr, len) == -1) {
