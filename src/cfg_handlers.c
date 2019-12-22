@@ -2507,6 +2507,17 @@ int cfg_key_nfacctd_templates_file(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_nfacctd_templates_receiver(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_templates_receiver = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'nfacctd_templates_receiver'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_stitching(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

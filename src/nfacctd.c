@@ -42,6 +42,7 @@
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #endif
+#include "tee_plugin/tee_plugin.h"
 
 /* Global variables */
 struct template_cache tpl_cache;
@@ -122,6 +123,7 @@ int main(int argc,char **argv, char **envp)
 
   struct sockaddr_storage server, client;
   struct ipv6_mreq multi_req6;
+  struct tee_receiver tee_templates;
   socklen_t clen = sizeof(client), slen = 0;
   struct ip_mreq multi_req4;
 
@@ -574,6 +576,18 @@ int main(int argc,char **argv, char **envp)
     exit_gracefully(1);
   }
 
+  if (config.nfacctd_templates_receiver) {
+    if (!config.nfacctd_port && !config.nfacctd_ip && capture_methods) {
+      Log(LOG_ERR, "ERROR ( %s/core ): nfacctd_templates_receiver only applies to live UDP collection (nfacctd_ip, nfacctd_port). Exiting...\n\n", config.name);
+      exit_gracefully(1);
+    }
+
+    if (tee_plugins) {
+      Log(LOG_ERR, "ERROR ( %s/core ): nfacctd_templates_receiver and tee plugin ae mutual exclusive. Exiting...\n\n", config.name);
+      exit_gracefully(1);
+    }
+  }
+
 #ifdef WITH_KAFKA
   if ((config.nfacctd_kafka_broker_host && !config.nfacctd_kafka_topic) || (config.nfacctd_kafka_topic && !config.nfacctd_kafka_broker_host)) {
     Log(LOG_ERR, "ERROR ( %s/core ): Kafka collection requires both nfacctd_kafka_broker_host and nfacctd_kafka_topic to be specified. Exiting...\n\n", config.name);
@@ -735,6 +749,20 @@ int main(int argc,char **argv, char **envp)
 	  exit_gracefully(1);
 	}
       }
+    }
+
+    memset(&tee_templates, 0, sizeof(struct tee_receiver));
+
+    if (config.nfacctd_templates_receiver) {
+      tee_templates.dest_len = sizeof(tee_templates.dest);
+
+      ret = Tee_parse_hostport(config.nfacctd_templates_receiver, (struct sockaddr *) &tee_templates.dest, &tee_templates.dest_len, FALSE);
+      if (ret) {
+	Log(LOG_ERR, "ERROR ( %s/core ): Invalid receiver: %s.\n", config.name, config.nfacctd_templates_receiver);
+	exit_gracefully(1);
+      }
+
+      tee_templates.fd = Tee_prepare_sock((struct sockaddr *) &tee_templates.dest, tee_templates.dest_len, FALSE, TRUE, FALSE);
     }
   }
 
@@ -1208,6 +1236,7 @@ int main(int argc,char **argv, char **envp)
     }
 
     if (data_plugins) {
+      int has_templates = 0;
       u_int16_t nfv;
 
       /* We will change byte ordering in order to avoid a bunch of ntohs() calls */
@@ -1223,7 +1252,20 @@ int main(int argc,char **argv, char **envp)
       /* NetFlow v9 + IPFIX */
       case 9:
       case 10:
-	process_v9_packet(netflow_packet, ret, &pptrs, &req, nfv, NULL);
+	process_v9_packet(netflow_packet, ret, &pptrs, &req, nfv, NULL, &has_templates);
+
+	if (has_templates) {
+	  struct pkt_msg tee_msg;
+	  struct sockaddr *sa_local = (struct sockaddr *) &client;
+
+	  memset(&tee_msg, 0, sizeof(tee_msg));
+	  memcpy(&tee_msg.agent, sa_local, sizeof(struct sockaddr));
+	  tee_msg.payload = netflow_packet;
+	  tee_msg.len = ret;
+	  
+	  Tee_send(&tee_msg, (struct sockaddr *) &tee_templates.dest, tee_templates.fd, TRUE);
+	}
+
 	break;
       default:
         if (!config.nfacctd_disable_checks) {
@@ -1348,7 +1390,8 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 } 
 
 void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vector *pptrsv,
-		struct plugin_requests *req, u_int16_t version, struct NF_dissect *tee_dissect)
+		struct plugin_requests *req, u_int16_t version, struct NF_dissect *tee_dissect,
+		int *has_templates)
 {
   struct struct_header_v9 *hdr_v9 = (struct struct_header_v9 *)pkt;
   struct struct_header_ipfix *hdr_v10 = (struct struct_header_ipfix *)pkt;
@@ -1447,6 +1490,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     unsigned char *tpl_ptr = pkt;
     u_int16_t pens = 0;
 
+    if (has_templates) (*has_templates) = TRUE;
     flowoff = 0;
     tpl_ptr += NfDataHdrV9Sz;
     flowoff += NfDataHdrV9Sz;
@@ -1490,6 +1534,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     unsigned char *tpl_ptr = pkt;
     u_int16_t pens = 0;
 
+    if (has_templates) (*has_templates) = TRUE;
     flowoff = 0;
     tpl_ptr += NfDataHdrV9Sz;
     flowoff += NfDataHdrV9Sz;
@@ -2449,7 +2494,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
     /* NetFlow v9 + IPFIX */
     case 9:
     case 10:
-      process_v9_packet(pkt, len, pptrsv, req, nfv, &tee_dissect);
+      process_v9_packet(pkt, len, pptrsv, req, nfv, &tee_dissect, NULL);
       break;
     default:
       break;

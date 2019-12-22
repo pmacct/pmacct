@@ -155,6 +155,7 @@ extern int cfg_key_nfacctd_mcast_groups(char *, char *, char *);
 extern int cfg_key_nfacctd_pipe_size(char *, char *, char *);
 extern int cfg_key_nfacctd_pro_rating(char *, char *, char *);
 extern int cfg_key_nfacctd_templates_file(char *, char *, char *);
+extern int cfg_key_nfacctd_templates_receiver(char *, char *, char *);
 extern int cfg_key_nfacctd_account_options(char *, char *, char *);
 extern int cfg_key_nfacctd_stitching(char *, char *, char *);
 extern int cfg_key_nfacctd_kafka_broker_host(char *, char *, char *);
