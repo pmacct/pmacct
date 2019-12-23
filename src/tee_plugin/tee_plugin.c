@@ -299,19 +299,20 @@ void Tee_exit_now(int signum)
 size_t Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
 {
   char *buf_ptr = tee_send_buf;
-  struct sockaddr_in *sa = (struct sockaddr_in *) &msg->agent;
+  struct sockaddr *sa = (struct sockaddr *) &msg->agent;
+  struct sockaddr_in *sa4 = (struct sockaddr_in *) &msg->agent;
   struct pm_iphdr *i4h = (struct pm_iphdr *) buf_ptr;
   struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *) &msg->agent;
   struct ip6_hdr *i6h = (struct ip6_hdr *) buf_ptr;
   struct pm_udphdr *uh;
   size_t msglen = 0;
 
-  if (msg->agent.sa_family == target->sa_family) {
+  if (sa->sa_family == target->sa_family) {
     /* UDP header first */
     if (target->sa_family == AF_INET) {
       buf_ptr += IP4HdrSz;
       uh = (struct pm_udphdr *) buf_ptr;
-      uh->uh_sport = sa->sin_port;
+      uh->uh_sport = sa4->sin_port;
       uh->uh_dport = ((struct sockaddr_in *)target)->sin_port;
     }
     else if (target->sa_family == AF_INET6) {
@@ -350,7 +351,7 @@ size_t Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
       i4h->ip_ttl = 255;
       i4h->ip_p = IPPROTO_UDP;
       i4h->ip_sum = 0;
-      i4h->ip_src.s_addr = sa->sin_addr.s_addr;
+      i4h->ip_src.s_addr = sa4->sin_addr.s_addr;
       i4h->ip_dst.s_addr = ((struct sockaddr_in *)target)->sin_addr.s_addr;
     }
     else if (target->sa_family == AF_INET6) {
@@ -451,12 +452,14 @@ void Tee_send(struct pkt_msg *msg, struct sockaddr *target, int fd, int transpar
 void Tee_kafka_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
 {
   struct p_kafka_host *kafka_host = &pool->kafka_host; 
-  struct sockaddr target;
+  struct sockaddr *sa, target;
   time_t last_fail, now;
   size_t msglen = 0;
 
   memset(&target, 0, sizeof(target));
-  target.sa_family = msg->agent.sa_family;
+  sa = (struct sockaddr *) &msg->agent;
+
+  target.sa_family = sa->sa_family;
 
   if (config.debug) {
     char *flow = NULL, netflow[] = "NetFlow/IPFIX", sflow[] = "sFlow";
@@ -500,12 +503,14 @@ void Tee_kafka_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
 void Tee_zmq_send(struct pkt_msg *msg, struct tee_receivers_pool *pool)
 {
   struct p_zmq_host *zmq_host = &pool->zmq_host; 
-  struct sockaddr target;
+  struct sockaddr *sa, target;
   size_t msglen = 0;
   int ret;
 
   memset(&target, 0, sizeof(target));
-  target.sa_family = msg->agent.sa_family;
+  sa = (struct sockaddr *) &msg->agent;
+
+  target.sa_family = sa->sa_family;
 
   if (config.debug) {
     char *flow = NULL, netflow[] = "NetFlow/IPFIX", sflow[] = "sFlow";
@@ -797,10 +802,11 @@ struct tee_receiver *Tee_hash_agent_balance(void *pool, struct pkt_msg *msg)
 {
   struct tee_receivers_pool *p = pool;
   struct tee_receiver *target = NULL;
+  struct sockaddr *sa = (struct sockaddr *) &msg->agent;
   struct sockaddr_in *sa4 = (struct sockaddr_in *) &msg->agent;
 
   if (p) {
-    if (msg->agent.sa_family == AF_INET) target = &p->receivers[sa4->sin_addr.s_addr & p->num];
+    if (sa->sa_family == AF_INET) target = &p->receivers[sa4->sin_addr.s_addr & p->num];
     /* XXX: hashing against IPv6 agents is not supported (yet) */
   }
 

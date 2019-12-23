@@ -489,7 +489,7 @@ struct pkt_extras {
 
 #define PKT_MSG_SIZE 10000
 struct pkt_msg {
-  struct sockaddr agent;
+  struct sockaddr_storage agent;
   u_int32_t seqno;
   u_int16_t len;
   u_char *payload;

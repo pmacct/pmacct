@@ -1256,10 +1256,9 @@ int main(int argc,char **argv, char **envp)
 
 	if (has_templates) {
 	  struct pkt_msg tee_msg;
-	  struct sockaddr *sa_local = (struct sockaddr *) &client;
 
 	  memset(&tee_msg, 0, sizeof(tee_msg));
-	  memcpy(&tee_msg.agent, sa_local, sizeof(struct sockaddr));
+	  memcpy(&tee_msg.agent, &client, sizeof(client));
 	  tee_msg.payload = netflow_packet;
 	  tee_msg.len = ret;
 	  
