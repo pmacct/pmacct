@@ -89,7 +89,7 @@ extern void igp_daemon_map_validate(char *, struct plugin_requests *);
 extern void igp_daemon_map_initialize(char *, struct plugin_requests *);
 extern void igp_daemon_map_finalize(char *, struct plugin_requests *);
 extern int igp_daemon_map_handle_len(int *, int, struct plugin_requests *, char *);
-extern int igp_daemon_map_handle_lsp_id(char *, struct host_addr *);
+extern int igp_daemon_map_handle_lsp_id(u_char *, struct host_addr *);
 extern void isis_srcdst_lookup(struct packet_ptrs *);
 
 /* global variables */

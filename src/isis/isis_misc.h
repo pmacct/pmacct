@@ -62,12 +62,11 @@ struct host
 };
 
 /* prototypes */
-extern int string2circuit_t (const u_char *);
 extern const char *circuit_t2string (int);
 extern const char *syst2string (int);
 extern struct in_addr newprefix2inaddr (u_char *, u_char);
-extern int dotformat2buff (u_char *, const u_char *);
-extern int sysid2buff (u_char *, const u_char *);
+extern int dotformat2buff (char *, const char *);
+extern int sysid2buff (char *, const char *);
 extern const char *isonet_print (u_char *, int);
 extern const char *sysid_print (u_char *);
 extern const char *snpa_print (u_char *);

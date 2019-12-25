@@ -48,14 +48,10 @@
 
 extern struct thread_master *master;
 
-/*
- * Prototypes.
- */
 void isis_new(unsigned long);
 struct isis_area *isis_area_create(void);
 int isis_area_get(const char *);
 int isis_area_destroy(const char *);
-int area_clear_net_title(struct isis_area *, const u_char *);
 
 void
 isis_new (unsigned long process_id)
@@ -213,13 +209,13 @@ isis_area_destroy (const char *area_tag)
 }
 
 int
-area_net_title (struct isis_area *area, const u_char *net_title)
+area_net_title (struct isis_area *area, const char *net_title)
 {
   struct area_addr *addr;
   struct area_addr *addrp;
   struct listnode *node;
 
-  u_char buff[255];
+  char buff[255];
 
   if (!area)
     {
@@ -298,11 +294,11 @@ area_net_title (struct isis_area *area, const u_char *net_title)
 }
 
 int
-area_clear_net_title (struct isis_area *area, const u_char *net_title)
+area_clear_net_title (struct isis_area *area, const char *net_title)
 {
   struct area_addr addr, *addrp = NULL;
   struct listnode *node;
-  u_char buff[255];
+  char buff[255];
 
   if (!area)
     {

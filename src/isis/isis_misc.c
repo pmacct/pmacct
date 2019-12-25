@@ -96,10 +96,10 @@ isonet_print (u_char * from, int len)
  * extract dot from the dotted str, and insert all the number in a buff 
  */
 int
-dotformat2buff (u_char * buff, const u_char * dotted)
+dotformat2buff (char * buff, const char * dotted)
 {
   int dotlen, len = 0;
-  const u_char *pos = dotted;
+  const char *pos = dotted;
   u_char number[3];
   int nextdotpos = 2;
 
@@ -154,10 +154,10 @@ dotformat2buff (u_char * buff, const u_char * dotted)
  * conversion of XXXX.XXXX.XXXX to memory
  */
 int
-sysid2buff (u_char * buff, const u_char * dotted)
+sysid2buff (char * buff, const char * dotted)
 {
   int len = 0;
-  const u_char *pos = dotted;
+  const char *pos = dotted;
   u_char number[3];
 
   number[2] = '\0';
@@ -262,28 +262,6 @@ speaks (struct nlpids *nlpids, int family)
     }
 
   return speaks;
-}
-
-/*
- * Returns 0 on error, IS-IS Circuit Type on ok
- */
-int
-string2circuit_t (const u_char * str)
-{
-
-  if (!str)
-    return 0;
-
-  if (!strcmp (str, "level-1"))
-    return IS_LEVEL_1;
-
-  if (!strcmp (str, "level-2-only") || !strcmp (str, "level-2"))
-    return IS_LEVEL_2;
-
-  if (!strcmp (str, "level-1-2"))
-    return IS_LEVEL_1_AND_2;
-
-  return 0;
 }
 
 const char *

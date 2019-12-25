@@ -824,7 +824,7 @@ add_to_paths (struct isis_spftree *spftree, struct isis_vertex *vertex,
 			   vertex->depth, vertex->Adj_N, area, level);
 
 	if (config.nfacctd_isis_msglog) {
-	  u_char prefix[BUFSIZ];
+	  char prefix[BUFSIZ];
 
 	  isis_prefix2str (&vertex->N.prefix, prefix, BUFSIZ);
 	  if (config.nfacctd_isis_msglog)
@@ -834,7 +834,7 @@ add_to_paths (struct isis_spftree *spftree, struct isis_vertex *vertex,
       }
       else {
 	if (config.nfacctd_isis_msglog) {
-	  u_char prefix[BUFSIZ];
+	  char prefix[BUFSIZ];
 
 	  isis_prefix2str (&vertex->N.prefix, prefix, BUFSIZ);
 	  if (config.nfacctd_isis_msglog)

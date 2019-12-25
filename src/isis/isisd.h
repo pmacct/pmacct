@@ -123,7 +123,8 @@ struct isis_area
 extern void isis_init (void);
 extern struct isis_area *isis_area_lookup (const char *);
 extern struct isis_area *isis_area_create ();
-extern int area_net_title(struct isis_area *, const u_char *);
+extern int area_net_title(struct isis_area *, const char *);
+extern int area_clear_net_title(struct isis_area *, const char *);
 
 #define DEBUG_ADJ_PACKETS                (1<<0)
 #define DEBUG_CHECKSUM_ERRORS            (1<<1)

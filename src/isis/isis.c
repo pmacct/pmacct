@@ -236,7 +236,7 @@ void isis_pdu_runner(u_char *user, const struct pcap_pkthdr *pkthdr, const u_cha
   int ret;
 
   struct stream stm;
-  char *ssnpa;
+  u_char *ssnpa;
 
   /* Let's export a time reference */
   memcpy(&isis_now, &pkthdr->ts, sizeof(struct timeval));
@@ -623,8 +623,8 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
 
   if (entry) {
     if (entry->node.family && entry->area_id && (entry->adj_metric_num || entry->reach_metric_num || entry->reach6_metric_num)) {
-      char isis_dgram[RECEIVE_LSP_BUFFER_SIZE+sizeof(struct chdlc_header)+sizeof(struct isis_fixed_hdr)];
-      char *isis_dgram_ptr = isis_dgram;
+      u_char isis_dgram[RECEIVE_LSP_BUFFER_SIZE+sizeof(struct chdlc_header)+sizeof(struct isis_fixed_hdr)];
+      u_char *isis_dgram_ptr = isis_dgram;
       struct chdlc_header *chdlc_hdr;
       struct isis_fixed_hdr *isis_hdr;
       struct isis_link_state_hdr *lsp_hdr;
@@ -790,7 +790,7 @@ void igp_daemon_map_validate(char *filename, struct plugin_requests *req)
       if (config.debug && config.igp_daemon_map_msglog) {
 	memset(&phdr, 0, sizeof(phdr));
 	phdr.len = phdr.caplen = sizeof(isis_dgram)-rem_len;
-	pcap_dump((char *) idmm_fd, &phdr, isis_dgram);
+	pcap_dump((u_char *) idmm_fd, &phdr, isis_dgram);
       }
     }
     else {
@@ -834,7 +834,7 @@ int igp_daemon_map_handle_len(int *rem_len, int len, struct plugin_requests *req
   return FALSE;
 }
 
-int igp_daemon_map_handle_lsp_id(char *lsp_id, struct host_addr *addr)
+int igp_daemon_map_handle_lsp_id(u_char *lsp_id, struct host_addr *addr)
 {
   u_char sysid[ISIS_SYS_ID_LEN];
   int idx;
