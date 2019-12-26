@@ -1235,7 +1235,7 @@ serdes_schema_t *compose_avro_schema_registry_name(char *topic, int is_topic_dyn
 {
   serdes_conf_t *sd_conf;
   serdes_t *sd_desc;
-  serdes_schema_t *sd_schema = NULL;
+  serdes_schema_t *loc_schema = NULL;
   char sd_errstr[LONGSRVBUFLEN];
 
   char *avro_schema_str = write_avro_schema_to_memory(avro_schema);
@@ -1259,17 +1259,17 @@ serdes_schema_t *compose_avro_schema_registry_name(char *topic, int is_topic_dyn
     exit_gracefully(1);
   }
 
-  sd_schema = serdes_schema_add(sd_desc, avro_schema_name, -1, avro_schema_str, -1, sd_errstr, sizeof(sd_errstr));
-  if (!sd_schema) {
+  loc_schema = serdes_schema_add(sd_desc, avro_schema_name, -1, avro_schema_str, -1, sd_errstr, sizeof(sd_errstr));
+  if (!loc_schema) {
     Log(LOG_ERR, "ERROR ( %s/%s ): serdes_schema_add() failed: %s. Exiting.\n", config.name, config.type, sd_errstr);
     exit_gracefully(1);
   }
   else {
     Log(LOG_DEBUG, "DEBUG ( %s/%s ): serdes_schema_add(): name=%s id=%d definition=%s\n", config.name, config.type,
-	serdes_schema_name(sd_schema), serdes_schema_id(sd_schema), serdes_schema_definition(sd_schema));
+	serdes_schema_name(loc_schema), serdes_schema_id(loc_schema), serdes_schema_definition(loc_schema));
   }
 
-  return sd_schema;
+  return loc_schema;
 }
 #endif
 
