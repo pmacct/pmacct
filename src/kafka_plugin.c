@@ -84,11 +84,11 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   else if ((config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) ||
 	   (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
-    avro_acct_schema = avro_schema_build_acct_data(config.what_to_count, config.what_to_count_2);
-    avro_schema_add_writer_id(avro_acct_schema);
+    avro_acct_schema = p_avro_schema_build_acct_data(config.what_to_count, config.what_to_count_2);
+    p_avro_schema_add_writer_id(avro_acct_schema);
 
-    avro_acct_init_schema = avro_schema_build_acct_init();
-    avro_acct_close_schema = avro_schema_build_acct_close();
+    avro_acct_init_schema = p_avro_schema_build_acct_init();
+    avro_acct_close_schema = p_avro_schema_build_acct_close();
 
     if (config.avro_schema_file) {
       char avro_schema_file[SRVBUFLEN];
