@@ -36,7 +36,7 @@
 
 #ifdef WITH_AVRO
 /* global variables */
-avro_schema_t avro_acct_schema, avro_acct_init_schema, avro_acct_close_schema;
+avro_schema_t p_avro_acct_schema, p_avro_acct_init_schema, p_avro_acct_close_schema;
 
 /* functions */
 avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
@@ -1069,15 +1069,15 @@ void add_writer_name_and_pid_avro(avro_value_t value, char *name, pid_t writer_p
 void write_avro_schema_to_file(char *filename, avro_schema_t schema)
 {
   FILE *avro_fp;
-  avro_writer_t avro_schema_writer;
+  avro_writer_t p_avro_schema_writer;
 
   avro_fp = open_output_file(filename, "w", TRUE);
 
   if (avro_fp) {
-    avro_schema_writer = avro_writer_file(avro_fp);
+    p_avro_schema_writer = avro_writer_file(avro_fp);
 
-    if (avro_schema_writer) {
-      if (avro_schema_to_json(schema, avro_schema_writer)) {
+    if (p_avro_schema_writer) {
+      if (avro_schema_to_json(schema, p_avro_schema_writer)) {
 	goto exit_lane;
       }
     }
@@ -1103,7 +1103,7 @@ void write_avro_schema_to_file_with_suffix(char *filename, char *suffix, char *b
 
 char *write_avro_schema_to_memory(avro_schema_t avro_schema)
 {
-  avro_writer_t avro_writer;
+  avro_writer_t p_avro_writer;
   char *avro_buf = NULL;
 
   if (!config.avro_buffer_size) config.avro_buffer_size = LARGEBUFLEN;
@@ -1116,21 +1116,21 @@ char *write_avro_schema_to_memory(avro_schema_t avro_schema)
   }
   else memset(avro_buf, 0, config.avro_buffer_size);
 
-  avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
+  p_avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
 
-  if (avro_schema_to_json(avro_schema, avro_writer)) {
+  if (avro_schema_to_json(avro_schema, p_avro_writer)) {
     Log(LOG_ERR, "ERROR ( %s/%s ): write_avro_schema_to_memory(): unable to dump Avro schema: %s\n", config.name, config.type, avro_strerror());
     free(avro_buf);
     avro_buf = NULL;
   }
 
-  if (!avro_writer_tell(avro_writer)) {
+  if (!avro_writer_tell(p_avro_writer)) {
     Log(LOG_ERR, "ERROR ( %s/%s ): write_avro_schema_to_memory(): unable to tell Avro schema: %s\n", config.name, config.type, avro_strerror());
     free(avro_buf);
     avro_buf = NULL;
   }
 
-  avro_writer_free(avro_writer);
+  avro_writer_free(p_avro_writer);
 
   return avro_buf;
 }
@@ -1238,17 +1238,17 @@ serdes_schema_t *compose_avro_schema_registry_name(char *topic, int is_topic_dyn
   serdes_schema_t *loc_schema = NULL;
   char sd_errstr[LONGSRVBUFLEN];
 
-  char *avro_schema_str = write_avro_schema_to_memory(avro_schema);
-  char *avro_schema_name;
+  char *p_avro_schema_str = write_avro_schema_to_memory(avro_schema);
+  char *p_avro_schema_name;
 
   if (!is_topic_dyn) {
-    avro_schema_name = malloc(strlen(topic) + strlen("-value") + 1);
+    p_avro_schema_name = malloc(strlen(topic) + strlen("-value") + 1);
 
-    strcpy(avro_schema_name, topic);
-    strcat(avro_schema_name, "-value");
+    strcpy(p_avro_schema_name, topic);
+    strcat(p_avro_schema_name, "-value");
   }
   else {
-    avro_schema_name = compose_avro_schema_name(type, name);
+    p_avro_schema_name = compose_avro_schema_name(type, name);
   }
 
   sd_conf = serdes_conf_new(NULL, 0, "schema.registry.url", schema_registry, NULL);
@@ -1259,7 +1259,7 @@ serdes_schema_t *compose_avro_schema_registry_name(char *topic, int is_topic_dyn
     exit_gracefully(1);
   }
 
-  loc_schema = serdes_schema_add(sd_desc, avro_schema_name, -1, avro_schema_str, -1, sd_errstr, sizeof(sd_errstr));
+  loc_schema = serdes_schema_add(sd_desc, p_avro_schema_name, -1, p_avro_schema_str, -1, sd_errstr, sizeof(sd_errstr));
   if (!loc_schema) {
     Log(LOG_ERR, "ERROR ( %s/%s ): serdes_schema_add() failed: %s. Exiting.\n", config.name, config.type, sd_errstr);
     exit_gracefully(1);

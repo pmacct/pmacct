@@ -84,11 +84,11 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   else if ((config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) ||
 	   (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
-    avro_acct_schema = p_avro_schema_build_acct_data(config.what_to_count, config.what_to_count_2);
-    p_avro_schema_add_writer_id(avro_acct_schema);
+    p_avro_acct_schema = p_avro_schema_build_acct_data(config.what_to_count, config.what_to_count_2);
+    p_avro_schema_add_writer_id(p_avro_acct_schema);
 
-    avro_acct_init_schema = p_avro_schema_build_acct_init();
-    avro_acct_close_schema = p_avro_schema_build_acct_close();
+    p_avro_acct_init_schema = p_avro_schema_build_acct_init();
+    p_avro_acct_close_schema = p_avro_schema_build_acct_close();
 
     if (config.avro_schema_file) {
       char avro_schema_file[SRVBUFLEN];
@@ -98,9 +98,9 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	exit_gracefully(1);
       }
 
-      write_avro_schema_to_file_with_suffix(config.avro_schema_file, "-acct_data", avro_schema_file, avro_acct_schema);
-      write_avro_schema_to_file_with_suffix(config.avro_schema_file, "-acct_init", avro_schema_file, avro_acct_init_schema);
-      write_avro_schema_to_file_with_suffix(config.avro_schema_file, "-acct_close", avro_schema_file, avro_acct_close_schema);
+      write_avro_schema_to_file_with_suffix(config.avro_schema_file, "-acct_data", avro_schema_file, p_avro_acct_schema);
+      write_avro_schema_to_file_with_suffix(config.avro_schema_file, "-acct_init", avro_schema_file, p_avro_acct_init_schema);
+      write_avro_schema_to_file_with_suffix(config.avro_schema_file, "-acct_close", avro_schema_file, p_avro_acct_close_schema);
     }
 
     if (config.kafka_avro_schema_registry) {
@@ -343,7 +343,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   int json_buf_off = 0;
 
 #ifdef WITH_AVRO
-  avro_writer_t avro_writer = {0};
+  avro_writer_t p_avro_writer = {0};
   char *avro_buf = NULL;
   int avro_buffer_full = FALSE;
   size_t avro_len = 0;
@@ -430,15 +430,15 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
     }
 
     kafkap_kafka_host.sd_schema[AVRO_ACCT_DATA_SID] = compose_avro_schema_registry_name_2(p_kafka_get_topic(&kafkap_kafka_host),
-											  FALSE, avro_acct_schema, "acct", "data",
+											  FALSE, p_avro_acct_schema, "acct", "data",
 											  config.kafka_avro_schema_registry);
 
     kafkap_kafka_host.sd_schema[AVRO_ACCT_INIT_SID] = compose_avro_schema_registry_name_2(p_kafka_get_topic(&kafkap_kafka_host),
-											  FALSE, avro_acct_init_schema, "acct", "init",
+											  FALSE, p_avro_acct_init_schema, "acct", "init",
 											  config.kafka_avro_schema_registry);
 
     kafkap_kafka_host.sd_schema[AVRO_ACCT_CLOSE_SID] = compose_avro_schema_registry_name_2(p_kafka_get_topic(&kafkap_kafka_host),
-											   FALSE, avro_acct_close_schema, "acct", "close",
+											   FALSE, p_avro_acct_close_schema, "acct", "close",
 											   config.kafka_avro_schema_registry);
 #endif
   }
@@ -471,7 +471,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
     }
 
     if (config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) {
-      avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
+      p_avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
     }
 #endif
   }
@@ -495,12 +495,12 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
     else if ((config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) ||
 	     (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
-      avro_value_iface_t *avro_iface = avro_generic_class_from_schema(avro_acct_init_schema);
-      avro_value_t avro_value = compose_avro_acct_init(config.name, writer_pid, avro_iface);
+      avro_value_iface_t *p_avro_iface = avro_generic_class_from_schema(p_avro_acct_init_schema);
+      avro_value_t avro_value = compose_avro_acct_init(config.name, writer_pid, p_avro_iface);
 
       if (config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) {
 	if (!config.kafka_avro_schema_registry) {
-	  avro_len = avro_writer_tell(avro_writer);
+	  avro_len = avro_writer_tell(p_avro_writer);
 	}
 #ifdef WITH_SERDES
 	else {
@@ -517,7 +517,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 	}
 #endif
         ret = p_kafka_produce_data(&kafkap_kafka_host, avro_buf, avro_len);
-        if (!config.kafka_avro_schema_registry) avro_writer_reset(avro_writer);
+        if (!config.kafka_avro_schema_registry) avro_writer_reset(p_avro_writer);
       }
       else if (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON) {
 	char *avro_local_buf = write_avro_json_record_to_buf(avro_value);
@@ -529,7 +529,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
       }
 
       avro_value_decref(&avro_value);
-      avro_value_iface_decref(avro_iface);
+      avro_value_iface_decref(p_avro_iface);
 #endif
     }
   }
@@ -582,12 +582,12 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
     else if ((config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) ||
 	     (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
-      avro_value_iface_t *avro_iface = avro_generic_class_from_schema(avro_acct_schema);
+      avro_value_iface_t *p_avro_iface = avro_generic_class_from_schema(p_avro_acct_schema);
       avro_value_t avro_value = compose_avro_acct_data(config.what_to_count, config.what_to_count_2,
 			   queue[j]->flow_type, &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust,
 			   pvlen, queue[j]->bytes_counter, queue[j]->packet_counter,
 			   queue[j]->flow_counter, queue[j]->tcp_flags, &queue[j]->basetime,
-			   queue[j]->stitch, avro_iface);
+			   queue[j]->stitch, p_avro_iface);
       add_writer_name_and_pid_avro(avro_value, config.name, writer_pid);
 
       if (config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) {
@@ -600,11 +600,11 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 	    Log(LOG_ERR, "ERROR ( %s/%s ): kafka_cache_purge(): avro_buffer_size too small (%u)\n", config.name, config.type, config.avro_buffer_size);
 	    exit_gracefully(1);
 	  }
-	  else if (avro_value_size >= (config.avro_buffer_size - avro_writer_tell(avro_writer))) {
+	  else if (avro_value_size >= (config.avro_buffer_size - avro_writer_tell(p_avro_writer))) {
 	    avro_buffer_full = TRUE;
 	    j--;
 	  }
-	  else if (avro_value_write(avro_writer, &avro_value)) {
+	  else if (avro_value_write(p_avro_writer, &avro_value)) {
 	    Log(LOG_ERR, "ERROR ( %s/%s ): kafka_cache_purge(): avro_value_write() faiiled: %s\n", config.name, config.type, avro_strerror());
 	    exit_gracefully(1);
 	  }
@@ -612,7 +612,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 	    mv_num++;
 	  }
 
-	  avro_len = avro_writer_tell(avro_writer);
+	  avro_len = avro_writer_tell(p_avro_writer);
 	}
 #ifdef WITH_SERDES
 	else {
@@ -660,7 +660,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
       }
 
       avro_value_decref(&avro_value);
-      avro_value_iface_decref(avro_iface);
+      avro_value_iface_decref(p_avro_iface);
 #else
       if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_avro_acct_data(): AVRO object not created due to missing --enable-avro\n", config.name, config.type);
 #endif
@@ -750,7 +750,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 
 	if (config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) { 
 	  ret = p_kafka_produce_data(&kafkap_kafka_host, avro_buf, avro_len);
-	  if (!config.kafka_avro_schema_registry) avro_writer_reset(avro_writer);
+	  if (!config.kafka_avro_schema_registry) avro_writer_reset(p_avro_writer);
 	}
 	else if (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON) {
 	  ret = p_kafka_produce_data(&kafkap_kafka_host, avro_buf, strlen(avro_buf));
@@ -784,7 +784,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
       if (config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) {
 	if (avro_len) {
 	  ret = p_kafka_produce_data(&kafkap_kafka_host, avro_buf, avro_len);
-	  if (!config.kafka_avro_schema_registry) avro_writer_free(avro_writer);
+	  if (!config.kafka_avro_schema_registry) avro_writer_free(p_avro_writer);
           if (!ret) qn += mv_num;
 	}
       }
@@ -821,12 +821,12 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
     else if ((config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) ||
 	     (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
-      avro_value_iface_t *avro_iface = avro_generic_class_from_schema(avro_acct_close_schema);
-      avro_value_t avro_value = compose_avro_acct_close(config.name, writer_pid, qn, saved_index, duration, avro_iface);
+      avro_value_iface_t *p_avro_iface = avro_generic_class_from_schema(p_avro_acct_close_schema);
+      avro_value_t avro_value = compose_avro_acct_close(config.name, writer_pid, qn, saved_index, duration, p_avro_iface);
 
       if (config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) {
 	if (!config.kafka_avro_schema_registry) {
-	  avro_len = avro_writer_tell(avro_writer);
+	  avro_len = avro_writer_tell(p_avro_writer);
 	}
 #ifdef WITH_SERDES
 	else {
@@ -843,7 +843,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 	}
 #endif
 	ret = p_kafka_produce_data(&kafkap_kafka_host, avro_buf, avro_len);
-	if (!config.kafka_avro_schema_registry) avro_writer_reset(avro_writer);
+	if (!config.kafka_avro_schema_registry) avro_writer_reset(p_avro_writer);
       }
       else if (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON) {
 	char *avro_local_buf = write_avro_json_record_to_buf(avro_value);
@@ -855,7 +855,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
       }
 
       avro_value_decref(&avro_value);
-      avro_value_iface_decref(avro_iface);
+      avro_value_iface_decref(p_avro_iface);
 #endif
     }
   }

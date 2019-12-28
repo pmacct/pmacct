@@ -76,7 +76,7 @@ extern serdes_schema_t *compose_avro_schema_registry_name_2(char *, int, avro_sc
 #endif
 
 /* global variables */
-extern avro_schema_t avro_acct_schema, avro_acct_init_schema, avro_acct_close_schema;
+extern avro_schema_t p_avro_acct_schema, p_avro_acct_init_schema, p_avro_acct_close_schema;
 #endif
 
 #endif //PLUGIN_CMN_AVRO_H
