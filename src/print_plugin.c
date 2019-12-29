@@ -1245,28 +1245,28 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 #ifdef WITH_AVRO
         avro_value_iface_t *p_avro_iface = avro_generic_class_from_schema(p_avro_acct_schema);
 
-        avro_value_t avro_value = compose_avro_acct_data(config.what_to_count, config.what_to_count_2,
+        avro_value_t p_avro_value = compose_avro_acct_data(config.what_to_count, config.what_to_count_2,
 			 queue[j]->flow_type, &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust,
 			 pvlen, queue[j]->bytes_counter, queue[j]->packet_counter, queue[j]->flow_counter,
 			 queue[j]->tcp_flags, NULL, queue[j]->stitch, p_avro_iface);
 
         if (config.sql_table) {
 	  if (config.print_output & PRINT_OUTPUT_AVRO_BIN) {
-	    if (avro_file_writer_append_value(p_avro_writer, &avro_value)) {
+	    if (avro_file_writer_append_value(p_avro_writer, &p_avro_value)) {
 	      Log(LOG_ERR, "ERROR ( %s/%s ): P_cache_purge(): avro_file_writer_append_value() failed: %s\n", config.name, config.type, avro_strerror());
 	      exit_gracefully(1);
 	    }
           }
 	  else if (config.print_output & PRINT_OUTPUT_AVRO_JSON) {
-	    write_avro_json_record_to_file(f, avro_value);
+	    write_avro_json_record_to_file(f, p_avro_value);
 	  }
         }
         else {
-	  write_avro_json_record_to_file(f, avro_value);
+	  write_avro_json_record_to_file(f, p_avro_value);
         }
 
         avro_value_iface_decref(p_avro_iface);
-        avro_value_decref(&avro_value);
+        avro_value_decref(&p_avro_value);
 #else
         if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_avro_acct_data(): AVRO object not created due to missing --enable-avro\n", config.name, config.type);
 #endif

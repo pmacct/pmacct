@@ -1104,44 +1104,44 @@ void write_avro_schema_to_file_with_suffix(char *filename, char *suffix, char *b
 char *write_avro_schema_to_memory(avro_schema_t avro_schema)
 {
   avro_writer_t p_avro_writer;
-  char *avro_buf = NULL;
+  char *p_avro_buf = NULL;
 
   if (!config.avro_buffer_size) config.avro_buffer_size = LARGEBUFLEN;
 
-  avro_buf = malloc(config.avro_buffer_size);
+  p_avro_buf = malloc(config.avro_buffer_size);
 
-  if (!avro_buf) {
+  if (!p_avro_buf) {
     Log(LOG_ERR, "ERROR ( %s/%s ): write_avro_schema_to_memory(): malloc() failed. Exiting.\n", config.name, config.type);
     exit_gracefully(1);
   }
-  else memset(avro_buf, 0, config.avro_buffer_size);
+  else memset(p_avro_buf, 0, config.avro_buffer_size);
 
-  p_avro_writer = avro_writer_memory(avro_buf, config.avro_buffer_size);
+  p_avro_writer = avro_writer_memory(p_avro_buf, config.avro_buffer_size);
 
   if (avro_schema_to_json(avro_schema, p_avro_writer)) {
     Log(LOG_ERR, "ERROR ( %s/%s ): write_avro_schema_to_memory(): unable to dump Avro schema: %s\n", config.name, config.type, avro_strerror());
-    free(avro_buf);
-    avro_buf = NULL;
+    free(p_avro_buf);
+    p_avro_buf = NULL;
   }
 
   if (!avro_writer_tell(p_avro_writer)) {
     Log(LOG_ERR, "ERROR ( %s/%s ): write_avro_schema_to_memory(): unable to tell Avro schema: %s\n", config.name, config.type, avro_strerror());
-    free(avro_buf);
-    avro_buf = NULL;
+    free(p_avro_buf);
+    p_avro_buf = NULL;
   }
 
   avro_writer_free(p_avro_writer);
 
-  return avro_buf;
+  return p_avro_buf;
 }
 
 char *compose_avro_purge_schema(avro_schema_t avro_schema, char *writer_name)
 {
-  char *avro_buf = NULL, *json_str = NULL;
+  char *p_avro_buf = NULL, *json_str = NULL;
 
-  avro_buf = write_avro_schema_to_memory(avro_schema);
+  p_avro_buf = write_avro_schema_to_memory(avro_schema);
 
-  if (avro_buf) {
+  if (p_avro_buf) {
     char event_type[] = "purge_schema", wid[SHORTSHORTBUFLEN];
     json_t *obj = json_object();
 
@@ -1150,14 +1150,14 @@ char *compose_avro_purge_schema(avro_schema_t avro_schema, char *writer_name)
     snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", writer_name, 0);
     json_object_set_new_nocheck(obj, "writer_id", json_string(wid));
 
-    json_object_set_new_nocheck(obj, "schema", json_string(avro_buf));
+    json_object_set_new_nocheck(obj, "schema", json_string(p_avro_buf));
 
-    free(avro_buf);
+    free(p_avro_buf);
 
     json_str = compose_json_str(obj);
   }
   else {
-    Log(LOG_ERR, "ERROR ( %s/%s ): compose_avro_purge_schema(): no avro_buf. Exiting.\n", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): compose_avro_purge_schema(): no p_avro_buf. Exiting.\n", config.name, config.type);
     exit_gracefully(1);
   }
 
