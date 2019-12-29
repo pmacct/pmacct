@@ -1254,14 +1254,17 @@ int main(int argc,char **argv, char **envp)
       case 10:
 	process_v9_packet(netflow_packet, ret, &pptrs, &req, nfv, NULL, &has_templates);
 
-	if (has_templates) {
+	if (config.nfacctd_templates_receiver && has_templates) {
 	  struct pkt_msg tee_msg;
 
 	  memset(&tee_msg, 0, sizeof(tee_msg));
 	  memcpy(&tee_msg.agent, &client, sizeof(client));
 	  tee_msg.payload = netflow_packet;
 	  tee_msg.len = ret;
-	  
+
+	  /* fix version before sending */
+	  ((struct struct_header_v5 *)netflow_packet)->version = ntohs(((struct struct_header_v5 *)netflow_packet)->version);
+
 	  Tee_send(&tee_msg, (struct sockaddr *) &tee_templates.dest, tee_templates.fd, TRUE);
 	}
 
