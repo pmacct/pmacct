@@ -1883,8 +1883,9 @@ of such feature:
 https://domsch.com/linux/lpc2010/Scaling_techniques_for_servers_with_high_connection%20rates.pdf
 
 To enable SO_REUSEPORT on a Linux system 'sysctl net.core.allow_reuseport=1'.
-Below an example for nfacctd with BGP thread (but indeed this is applicable
-to sfacctd, pmbgpd, pmbmpd as well):
+Also the processes must be launched by the same user. Below an example for
+nfacctd with BGP thread (but indeed this is applicable to sfacctd, pmbgpd,
+pmbmpd as well):
 
 Daemon #1:
 
