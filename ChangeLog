@@ -4,7 +4,7 @@ pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
-1.7.4 -- XX-12-2019
+1.7.4 -- 31-12-2019
   + Released pmgrpcd.py v3: a Streaming Telemetry collector and decoder
     for multi-vendor environments written in Python3. It supports gRPC
     transport along with Protobuf encoding as input and can output to
