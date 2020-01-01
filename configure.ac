@@ -923,6 +923,7 @@ AC_ARG_ENABLE(ndpi,
       CFLAGS="$_save_CFLAGS"
     ])
     PKG_CHECK_MODULES([NDPI26], [libndpi >= 2.6], [AC_DEFINE(WITH_NDPI26, 1)], [AC_DEFINE(WITH_NDPI, 1)])
+    PKG_CHECK_MODULES([NDPI30], [libndpi >= 3.0], [AC_DEFINE(WITH_NDPI30, 1)], [AC_DEFINE(WITH_NDPI, 1)])
     ;;
   no)
     AC_MSG_RESULT(no)

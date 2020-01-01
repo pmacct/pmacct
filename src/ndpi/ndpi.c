@@ -374,10 +374,14 @@ struct ndpi_proto pm_ndpi_packet_processing(struct pm_ndpi_workflow *workflow,
   if (flow->detection_completed || flow->tcp_finished) {
     if (flow->detected_protocol.app_protocol == NDPI_PROTOCOL_UNKNOWN)
 #ifdef WITH_NDPI26
+#ifdef WITH_NDPI30
+	  flow->detected_protocol = ndpi_detection_giveup(workflow->ndpi_struct, flow->ndpi_flow, 1, workflow->prefs.protocol_guess);
+#else
       flow->detected_protocol = ndpi_detection_giveup(workflow->ndpi_struct, flow->ndpi_flow, workflow->prefs.protocol_guess);
+#endif /* WITH_NDPI30 */
 #else
       flow->detected_protocol = ndpi_detection_giveup(workflow->ndpi_struct, flow->ndpi_flow);
-#endif
+#endif /* WITH_NDPI26 */
 
     if (workflow->prefs.protocol_guess) {
       if (flow->detected_protocol.app_protocol == NDPI_PROTOCOL_UNKNOWN && !flow->guess_completed) {
