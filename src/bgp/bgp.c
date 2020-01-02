@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -415,12 +415,12 @@ void skinny_bgp_daemon_online()
 	(config.bgp_daemon_msglog_output == PRINT_OUTPUT_AVRO_JSON)) {
       assert(BGP_LOG_TYPE_MAX < MAX_AVRO_SCHEMA);
 
-      bgp_misc_db->msglog_avro_schema[0] = avro_schema_build_bgp(BGP_LOGDUMP_ET_LOG, "bgp_msglog");
-      bgp_misc_db->msglog_avro_schema[BGP_LOG_TYPE_LOGINIT] = avro_schema_build_bgp_log_initclose(BGP_LOGDUMP_ET_LOG, "bgp_loginit");
-      bgp_misc_db->msglog_avro_schema[BGP_LOG_TYPE_LOGCLOSE] = avro_schema_build_bgp_log_initclose(BGP_LOGDUMP_ET_LOG, "bgp_logclose");
+      bgp_misc_db->msglog_avro_schema[0] = p_avro_schema_build_bgp(BGP_LOGDUMP_ET_LOG, "bgp_msglog");
+      bgp_misc_db->msglog_avro_schema[BGP_LOG_TYPE_LOGINIT] = p_avro_schema_build_bgp_log_initclose(BGP_LOGDUMP_ET_LOG, "bgp_loginit");
+      bgp_misc_db->msglog_avro_schema[BGP_LOG_TYPE_LOGCLOSE] = p_avro_schema_build_bgp_log_initclose(BGP_LOGDUMP_ET_LOG, "bgp_logclose");
 
       if (config.bgp_daemon_msglog_avro_schema_file) {
-	char avro_schema_file[SRVBUFLEN];
+	char p_avro_schema_file[SRVBUFLEN];
 
 	if (strlen(config.bgp_daemon_msglog_avro_schema_file) > (SRVBUFLEN - SUPERSHORTBUFLEN)) {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): 'bgp_daemon_msglog_avro_schema_file' too long. Exiting.\n", config.name, bgp_misc_db->log_str);
@@ -428,13 +428,13 @@ void skinny_bgp_daemon_online()
 	}
 
 	write_avro_schema_to_file_with_suffix(config.bgp_daemon_msglog_avro_schema_file, "-bgp_msglog",
-					      avro_schema_file, bgp_misc_db->msglog_avro_schema[0]);
+					      p_avro_schema_file, bgp_misc_db->msglog_avro_schema[0]);
 
 	write_avro_schema_to_file_with_suffix(config.bgp_daemon_msglog_avro_schema_file, "-bgp_loginit",
-					      avro_schema_file, bgp_misc_db->msglog_avro_schema[BGP_LOG_TYPE_LOGINIT]);
+					      p_avro_schema_file, bgp_misc_db->msglog_avro_schema[BGP_LOG_TYPE_LOGINIT]);
 
 	write_avro_schema_to_file_with_suffix(config.bgp_daemon_msglog_avro_schema_file, "-bgp_logclose",
-					      avro_schema_file, bgp_misc_db->msglog_avro_schema[BGP_LOG_TYPE_LOGCLOSE]);
+					      p_avro_schema_file, bgp_misc_db->msglog_avro_schema[BGP_LOG_TYPE_LOGCLOSE]);
       }
 
       if (config.bgp_daemon_msglog_kafka_avro_schema_registry) {
@@ -480,12 +480,12 @@ void skinny_bgp_daemon_online()
 	(config.bgp_table_dump_output == PRINT_OUTPUT_AVRO_JSON)) {
       assert(BGP_LOG_TYPE_MAX < MAX_AVRO_SCHEMA);
 
-      bgp_misc_db->dump_avro_schema[0] = avro_schema_build_bgp(BGP_LOGDUMP_ET_DUMP, "bgp_dump");
-      bgp_misc_db->dump_avro_schema[BGP_LOG_TYPE_DUMPINIT] = avro_schema_build_bgp_dump_init(BGP_LOGDUMP_ET_DUMP, "bgp_dumpinit");
-      bgp_misc_db->dump_avro_schema[BGP_LOG_TYPE_DUMPCLOSE] = avro_schema_build_bgp_dump_close(BGP_LOGDUMP_ET_DUMP, "bgp_dumpclose");
+      bgp_misc_db->dump_avro_schema[0] = p_avro_schema_build_bgp(BGP_LOGDUMP_ET_DUMP, "bgp_dump");
+      bgp_misc_db->dump_avro_schema[BGP_LOG_TYPE_DUMPINIT] = p_avro_schema_build_bgp_dump_init(BGP_LOGDUMP_ET_DUMP, "bgp_dumpinit");
+      bgp_misc_db->dump_avro_schema[BGP_LOG_TYPE_DUMPCLOSE] = p_avro_schema_build_bgp_dump_close(BGP_LOGDUMP_ET_DUMP, "bgp_dumpclose");
 
       if (config.bgp_table_dump_avro_schema_file) {
-	char avro_schema_file[SRVBUFLEN];
+	char p_avro_schema_file[SRVBUFLEN];
 
 	if (strlen(config.bgp_table_dump_avro_schema_file) > (SRVBUFLEN - SUPERSHORTBUFLEN)) {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): 'bgp_table_dump_avro_schema_file' too long. Exiting.\n", config.name, bgp_misc_db->log_str);
@@ -493,13 +493,13 @@ void skinny_bgp_daemon_online()
 	}
 
 	write_avro_schema_to_file_with_suffix(config.bgp_table_dump_avro_schema_file, "-bgp_dump",
-					      avro_schema_file, bgp_misc_db->dump_avro_schema[0]);
+					      p_avro_schema_file, bgp_misc_db->dump_avro_schema[0]);
 
 	write_avro_schema_to_file_with_suffix(config.bgp_table_dump_avro_schema_file, "-bgp_dumpinit",
-					      avro_schema_file, bgp_misc_db->dump_avro_schema[BGP_LOG_TYPE_DUMPINIT]);
+					      p_avro_schema_file, bgp_misc_db->dump_avro_schema[BGP_LOG_TYPE_DUMPINIT]);
 
 	write_avro_schema_to_file_with_suffix(config.bgp_table_dump_avro_schema_file, "-bgp_dumpclose",
-					      avro_schema_file, bgp_misc_db->dump_avro_schema[BGP_LOG_TYPE_DUMPCLOSE]);
+					      p_avro_schema_file, bgp_misc_db->dump_avro_schema[BGP_LOG_TYPE_DUMPCLOSE]);
       }
     }
 #endif
