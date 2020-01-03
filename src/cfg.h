@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -196,6 +196,8 @@ struct configuration {
   int nfacctd_pro_rating;
   char *nfacctd_templates_file;
   char *nfacctd_templates_receiver;
+  int nfacctd_templates_port;
+  int nfacctd_templates_sock;
   int nfacctd_account_options;
   int nfacctd_stitching;
   u_int32_t nfacctd_as;

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -121,7 +121,8 @@ int main(int argc,char **argv, char **envp)
   int ret;
   int capture_methods = 0;
 
-  struct sockaddr_storage server, client;
+  struct sockaddr_storage server, server_templates;
+  struct sockaddr_storage client;
   struct ipv6_mreq multi_req6;
   struct tee_receiver tee_templates;
   socklen_t clen = sizeof(client), slen = 0;
@@ -577,6 +578,11 @@ int main(int argc,char **argv, char **envp)
   }
 
   if (config.nfacctd_templates_receiver) {
+    if (!config.nfacctd_templates_port) {
+      Log(LOG_ERR, "ERROR ( %s/core ): nfacctd_templates_receiver requires nfacctd_templates_port. Exiting...\n\n", config.name);
+      exit_gracefully(1);
+    }
+
     if (!config.nfacctd_port && !config.nfacctd_ip && capture_methods) {
       Log(LOG_ERR, "ERROR ( %s/core ): nfacctd_templates_receiver only applies to live UDP collection (nfacctd_ip, nfacctd_port). Exiting...\n\n", config.name);
       exit_gracefully(1);
@@ -666,6 +672,13 @@ int main(int argc,char **argv, char **envp)
       sa6->sin6_family = AF_INET6;
       sa6->sin6_port = htons(config.nfacctd_port);
       slen = sizeof(struct sockaddr_in6);
+
+      if (config.nfacctd_templates_port) {
+	sa6 = (struct sockaddr_in6 *)&server_templates; 
+
+	sa6->sin6_family = AF_INET6;
+	sa6->sin6_port = htons(config.nfacctd_templates_port);
+      }
     }
     else {
       trim_spaces(config.nfacctd_ip);
@@ -675,6 +688,10 @@ int main(int argc,char **argv, char **envp)
 	exit_gracefully(1);
       }
       slen = addr_to_sa((struct sockaddr *)&server, &addr, config.nfacctd_port);
+
+      if (config.nfacctd_templates_port) {
+        addr_to_sa((struct sockaddr *)&server_templates, &addr, config.nfacctd_templates_port);
+      }
     }
 
     /* socket creation */
@@ -698,13 +715,45 @@ int main(int argc,char **argv, char **envp)
       }
     }
 
+    if (config.nfacctd_templates_port) {
+      config.nfacctd_templates_sock = socket(((struct sockaddr *)&server_templates)->sa_family, SOCK_DGRAM, 0);
+      if (config.nfacctd_templates_sock < 0) {
+	/* retry with IPv4 */
+	if (!config.nfacctd_ip) {
+	  struct sockaddr_in *sa4 = (struct sockaddr_in *)&server_templates;
+
+	  sa4->sin_family = AF_INET;
+	  sa4->sin_addr.s_addr = htonl(0);
+	  sa4->sin_port = htons(config.nfacctd_templates_port);
+	  slen = sizeof(struct sockaddr_in);
+
+	  config.nfacctd_templates_sock = socket(((struct sockaddr *)&server_templates)->sa_family, SOCK_DGRAM, 0);
+	}
+
+	if (config.nfacctd_templates_sock < 0) {
+	  Log(LOG_ERR, "ERROR ( %s/core ): socket() failed.\n", config.name);
+	  exit_gracefully(1);
+	}
+      }
+    }
+
     /* bind socket to port */
 #if (defined LINUX) && (defined HAVE_SO_REUSEPORT)
     rc = setsockopt(config.sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *) &yes, (socklen_t) sizeof(yes));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR|SO_REUSEPORT.\n", config.name);
+
+    if (config.nfacctd_templates_port) {
+      rc = setsockopt(config.nfacctd_templates_sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *) &yes, (socklen_t) sizeof(yes));
+      if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR|SO_REUSEPORT.\n", config.name);
+    }
 #else
     rc = setsockopt(config.sock, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, (socklen_t) sizeof(yes));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR.\n", config.name);
+
+    if (config.nfacctd_templates_port) {
+      rc = setsockopt(config.nfacctd_templates_sock, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, (socklen_t) sizeof(yes));
+      if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR.\n", config.name);
+    }
 #endif
 
 #if (defined IPV6_BINDV6ONLY)
@@ -913,6 +962,14 @@ int main(int argc,char **argv, char **envp)
       Log(LOG_ERR, "ERROR ( %s/core ): bind() to ip=%s port=%d/udp failed (errno: %d).\n", config.name, config.nfacctd_ip, config.nfacctd_port, errno);
       exit_gracefully(1);
     }
+
+    if (config.nfacctd_templates_port) {
+      rc = bind(config.nfacctd_templates_sock, (struct sockaddr *) &server_templates, slen);
+      if (rc < 0) {
+	Log(LOG_ERR, "ERROR ( %s/core ): bind() to ip=%s port=%d/udp failed (errno: %d).\n", config.name, config.nfacctd_ip, config.nfacctd_templates_port, errno);
+	exit_gracefully(1);
+      }
+    }
   }
 
   init_classifiers(NULL);
@@ -1104,6 +1161,12 @@ int main(int argc,char **argv, char **envp)
     addr_to_str(srv_string, &srv_addr);
     Log(LOG_INFO, "INFO ( %s/core ): waiting for NetFlow/IPFIX data on %s:%u\n", config.name, srv_string, srv_port);
     allowed = TRUE;
+
+    if (config.nfacctd_templates_port) {
+      sa_to_addr((struct sockaddr *)&server_templates, &srv_addr, &srv_port); 
+      addr_to_str(srv_string, &srv_addr);
+      Log(LOG_INFO, "INFO ( %s/core ): waiting for NetFlow/IPFIX templates on %s:%u\n", config.name, srv_string, srv_port);
+    }
   }
 
   /* fixing NetFlow v9/IPFIX template func pointers */

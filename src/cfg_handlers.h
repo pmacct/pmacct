@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -156,6 +156,7 @@ extern int cfg_key_nfacctd_pipe_size(char *, char *, char *);
 extern int cfg_key_nfacctd_pro_rating(char *, char *, char *);
 extern int cfg_key_nfacctd_templates_file(char *, char *, char *);
 extern int cfg_key_nfacctd_templates_receiver(char *, char *, char *);
+extern int cfg_key_nfacctd_templates_port(char *, char *, char *);
 extern int cfg_key_nfacctd_account_options(char *, char *, char *);
 extern int cfg_key_nfacctd_stitching(char *, char *, char *);
 extern int cfg_key_nfacctd_kafka_broker_host(char *, char *, char *);

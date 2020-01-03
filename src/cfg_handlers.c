@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -2514,6 +2514,23 @@ int cfg_key_nfacctd_templates_receiver(char *filename, char *name, char *value_p
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_templates_receiver = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'nfacctd_templates_receiver'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_templates_port(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value <= 0) || (value > 65535)) {
+    Log(LOG_ERR, "WARN: [%s] 'nfacctd_templates_port' has to be in the range 1-65535.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_templates_port = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'nfacctd_templates_port'. Globalized.\n", filename);
 
   return changes;
 }
