@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -312,7 +312,9 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
       bmp_peer_up_hdr_get_rem_port(bpuh, &blpu.rem_port);
       bmp_peer_up_hdr_get_local_ip(bpuh, &blpu.local_ip, bdata.family);
 
+      bgp_peer_loc.type = FUNC_TYPE_BMP;
       bmd.peer = &bgp_peer_loc;
+
       bmd.extra.id = BGP_MSG_EXTRA_DATA_BMP;
       bmd.extra.len = sizeof(bmed_bmp);
       bmd.extra.data = &bmed_bmp;
@@ -328,7 +330,9 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
       bmp_get_and_check_length(bmp_packet, len, bgp_open_len);
       memcpy(&bgp_peer_loc.addr, &blpu.local_ip, sizeof(struct host_addr));
 
+      bgp_peer_rem.type = FUNC_TYPE_BMP;
       bmd.peer = &bgp_peer_rem;
+
       bgp_open_len = bgp_parse_open_msg(&bmd, (*bmp_packet), FALSE, FALSE);
       if (bgp_open_len == ERR) {
 	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: failed bgp_parse_open_msg() (2)\n",
