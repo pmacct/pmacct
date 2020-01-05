@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -319,18 +319,18 @@ void skinny_bmp_daemon()
       assert(BMP_MSG_TYPE_MAX < BMP_LOG_TYPE_LOGINIT);
       assert(BMP_LOG_TYPE_MAX < MAX_AVRO_SCHEMA);
 
-      bmp_misc_db->msglog_avro_schema[BMP_MSG_ROUTE_MONITOR] = avro_schema_build_bmp_rm(BGP_LOGDUMP_ET_LOG, "bmp_msglog_rm");
-      bmp_misc_db->msglog_avro_schema[BMP_MSG_STATS] = avro_schema_build_bmp_stats("bmp_stats");
-      bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_DOWN] = avro_schema_build_bmp_peer_down("bmp_peer_down");
-      bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_UP] = avro_schema_build_bmp_peer_up("bmp_peer_up");
-      bmp_misc_db->msglog_avro_schema[BMP_MSG_INIT] = avro_schema_build_bmp_init("bmp_init");
-      bmp_misc_db->msglog_avro_schema[BMP_MSG_TERM] = avro_schema_build_bmp_term("bmp_term");
+      bmp_misc_db->msglog_avro_schema[BMP_MSG_ROUTE_MONITOR] = p_avro_schema_build_bmp_rm(BGP_LOGDUMP_ET_LOG, "bmp_msglog_rm");
+      bmp_misc_db->msglog_avro_schema[BMP_MSG_STATS] = p_avro_schema_build_bmp_stats("bmp_stats");
+      bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_DOWN] = p_avro_schema_build_bmp_peer_down("bmp_peer_down");
+      bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_UP] = p_avro_schema_build_bmp_peer_up("bmp_peer_up");
+      bmp_misc_db->msglog_avro_schema[BMP_MSG_INIT] = p_avro_schema_build_bmp_init("bmp_init");
+      bmp_misc_db->msglog_avro_schema[BMP_MSG_TERM] = p_avro_schema_build_bmp_term("bmp_term");
 
-      bmp_misc_db->msglog_avro_schema[BMP_LOG_TYPE_LOGINIT] = avro_schema_build_bmp_log_initclose(BGP_LOGDUMP_ET_LOG, "bmp_loginit");
-      bmp_misc_db->msglog_avro_schema[BMP_LOG_TYPE_LOGCLOSE] = avro_schema_build_bmp_log_initclose(BGP_LOGDUMP_ET_LOG, "bmp_logclose");
+      bmp_misc_db->msglog_avro_schema[BMP_LOG_TYPE_LOGINIT] = p_avro_schema_build_bmp_log_initclose(BGP_LOGDUMP_ET_LOG, "bmp_loginit");
+      bmp_misc_db->msglog_avro_schema[BMP_LOG_TYPE_LOGCLOSE] = p_avro_schema_build_bmp_log_initclose(BGP_LOGDUMP_ET_LOG, "bmp_logclose");
 
       if (config.bmp_daemon_msglog_avro_schema_file) {
-	char avro_schema_file[SRVBUFLEN];
+	char p_avro_schema_file[SRVBUFLEN];
 
 	if (strlen(config.bmp_daemon_msglog_avro_schema_file) > (SRVBUFLEN - SUPERSHORTBUFLEN)) {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): 'bmp_daemon_msglog_avro_schema_file' too long. Exiting.\n", config.name, bmp_misc_db->log_str);
@@ -338,28 +338,28 @@ void skinny_bmp_daemon()
 	}
 
 	write_avro_schema_to_file_with_suffix(config.bmp_daemon_msglog_avro_schema_file, "-bmp_msglog_rm",
-					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_ROUTE_MONITOR]);
+					      p_avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_ROUTE_MONITOR]);
 
 	write_avro_schema_to_file_with_suffix(config.bmp_daemon_msglog_avro_schema_file, "-bmp_stats",
-					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_STATS]);
+					      p_avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_STATS]);
 
 	write_avro_schema_to_file_with_suffix(config.bmp_daemon_msglog_avro_schema_file, "-bmp_peer_down",
-					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_DOWN]);
+					      p_avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_DOWN]);
 
 	write_avro_schema_to_file_with_suffix(config.bmp_daemon_msglog_avro_schema_file, "-bmp_peer_up",
-					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_UP]);
+					      p_avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_UP]);
 
 	write_avro_schema_to_file_with_suffix(config.bmp_daemon_msglog_avro_schema_file, "-bmp_init",
-					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_INIT]);
+					      p_avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_INIT]);
 
 	write_avro_schema_to_file_with_suffix(config.bmp_daemon_msglog_avro_schema_file, "-bmp_term",
-					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_TERM]);
+					      p_avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_TERM]);
 
 	write_avro_schema_to_file_with_suffix(config.bmp_daemon_msglog_avro_schema_file, "-bmp_loginit",
-					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_LOG_TYPE_LOGINIT]);
+					      p_avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_LOG_TYPE_LOGINIT]);
 
 	write_avro_schema_to_file_with_suffix(config.bmp_daemon_msglog_avro_schema_file, "-bmp_logclose",
-					      avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_LOG_TYPE_LOGCLOSE]);
+					      p_avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_LOG_TYPE_LOGCLOSE]);
       }
 
       if (config.bmp_daemon_msglog_kafka_avro_schema_registry) {
@@ -434,18 +434,18 @@ void skinny_bmp_daemon()
       assert(BMP_MSG_TYPE_MAX < BMP_LOG_TYPE_LOGINIT);
       assert(BMP_LOG_TYPE_MAX < MAX_AVRO_SCHEMA);
 
-      bmp_misc_db->dump_avro_schema[BMP_MSG_ROUTE_MONITOR] = avro_schema_build_bmp_rm(BGP_LOGDUMP_ET_DUMP, "bmp_dump_rm");
-      bmp_misc_db->dump_avro_schema[BMP_MSG_STATS] = avro_schema_build_bmp_stats("bmp_stats");
-      bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_DOWN] = avro_schema_build_bmp_peer_down("bmp_peer_down");
-      bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_UP] = avro_schema_build_bmp_peer_up("bmp_peer_up");
-      bmp_misc_db->dump_avro_schema[BMP_MSG_INIT] = avro_schema_build_bmp_init("bmp_init");
-      bmp_misc_db->dump_avro_schema[BMP_MSG_TERM] = avro_schema_build_bmp_term("bmp_term");
+      bmp_misc_db->dump_avro_schema[BMP_MSG_ROUTE_MONITOR] = p_avro_schema_build_bmp_rm(BGP_LOGDUMP_ET_DUMP, "bmp_dump_rm");
+      bmp_misc_db->dump_avro_schema[BMP_MSG_STATS] = p_avro_schema_build_bmp_stats("bmp_stats");
+      bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_DOWN] = p_avro_schema_build_bmp_peer_down("bmp_peer_down");
+      bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_UP] = p_avro_schema_build_bmp_peer_up("bmp_peer_up");
+      bmp_misc_db->dump_avro_schema[BMP_MSG_INIT] = p_avro_schema_build_bmp_init("bmp_init");
+      bmp_misc_db->dump_avro_schema[BMP_MSG_TERM] = p_avro_schema_build_bmp_term("bmp_term");
 
-      bmp_misc_db->dump_avro_schema[BMP_LOG_TYPE_DUMPINIT] = avro_schema_build_bmp_dump_init(BGP_LOGDUMP_ET_DUMP, "bmp_dumpinit");
-      bmp_misc_db->dump_avro_schema[BMP_LOG_TYPE_DUMPCLOSE] = avro_schema_build_bmp_dump_close(BGP_LOGDUMP_ET_DUMP, "bmp_dumpclose");
+      bmp_misc_db->dump_avro_schema[BMP_LOG_TYPE_DUMPINIT] = p_avro_schema_build_bmp_dump_init(BGP_LOGDUMP_ET_DUMP, "bmp_dumpinit");
+      bmp_misc_db->dump_avro_schema[BMP_LOG_TYPE_DUMPCLOSE] = p_avro_schema_build_bmp_dump_close(BGP_LOGDUMP_ET_DUMP, "bmp_dumpclose");
 
       if (config.bmp_dump_avro_schema_file) {
-	char avro_schema_file[SRVBUFLEN];
+	char p_avro_schema_file[SRVBUFLEN];
 
 	if (strlen(config.bmp_dump_avro_schema_file) > (SRVBUFLEN - SUPERSHORTBUFLEN)) {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): 'bmp_table_dump_avro_schema_file' too long. Exiting ..\n", config.name, bmp_misc_db->log_str);
@@ -453,28 +453,28 @@ void skinny_bmp_daemon()
 	}
 
 	write_avro_schema_to_file_with_suffix(config.bmp_dump_avro_schema_file, "-bmp_dump_rm",
-					      avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_MSG_ROUTE_MONITOR]);
+					      p_avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_MSG_ROUTE_MONITOR]);
 
 	write_avro_schema_to_file_with_suffix(config.bmp_dump_avro_schema_file, "-bmp_stats",
-					      avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_MSG_STATS]);
+					      p_avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_MSG_STATS]);
 
 	write_avro_schema_to_file_with_suffix(config.bmp_dump_avro_schema_file, "-bmp_peer_down",
-					      avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_DOWN]);
+					      p_avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_DOWN]);
 
 	write_avro_schema_to_file_with_suffix(config.bmp_dump_avro_schema_file, "-bmp_peer_up",
-					      avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_UP]);
+					      p_avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_UP]);
 
 	write_avro_schema_to_file_with_suffix(config.bmp_dump_avro_schema_file, "-bmp_init",
-					      avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_MSG_INIT]);
+					      p_avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_MSG_INIT]);
 
 	write_avro_schema_to_file_with_suffix(config.bmp_dump_avro_schema_file, "-bmp_term",
-					      avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_MSG_TERM]);
+					      p_avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_MSG_TERM]);
 
 	write_avro_schema_to_file_with_suffix(config.bmp_dump_avro_schema_file, "-bmp_dumpinit",
-					      avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_LOG_TYPE_DUMPINIT]);
+					      p_avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_LOG_TYPE_DUMPINIT]);
 
 	write_avro_schema_to_file_with_suffix(config.bmp_dump_avro_schema_file, "-bmp_dumpclose",
-					      avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_LOG_TYPE_DUMPCLOSE]);
+					      p_avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_LOG_TYPE_DUMPCLOSE]);
       }
     }
 #endif

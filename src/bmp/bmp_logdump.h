@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -143,18 +143,18 @@ extern int bmp_daemon_msglog_init_kafka_host();
 extern int bmp_dump_init_kafka_host();
 
 #if defined WITH_AVRO
-extern avro_schema_t avro_schema_build_bmp_rm(int, char *);
-extern avro_schema_t avro_schema_build_bmp_init(char *);
-extern avro_schema_t avro_schema_build_bmp_term(char *);
-extern avro_schema_t avro_schema_build_bmp_peer_up(char *);
-extern avro_schema_t avro_schema_build_bmp_peer_down(char *);
-extern avro_schema_t avro_schema_build_bmp_stats(char *);
+extern avro_schema_t p_avro_schema_build_bmp_rm(int, char *);
+extern avro_schema_t p_avro_schema_build_bmp_init(char *);
+extern avro_schema_t p_avro_schema_build_bmp_term(char *);
+extern avro_schema_t p_avro_schema_build_bmp_peer_up(char *);
+extern avro_schema_t p_avro_schema_build_bmp_peer_down(char *);
+extern avro_schema_t p_avro_schema_build_bmp_stats(char *);
 
-extern avro_schema_t avro_schema_build_bmp_log_initclose(int, char *);
-extern avro_schema_t avro_schema_build_bmp_dump_init(int, char *);
-extern avro_schema_t avro_schema_build_bmp_dump_close(int, char *);
+extern avro_schema_t p_avro_schema_build_bmp_log_initclose(int, char *);
+extern avro_schema_t p_avro_schema_build_bmp_dump_init(int, char *);
+extern avro_schema_t p_avro_schema_build_bmp_dump_close(int, char *);
 
-extern void avro_schema_build_bmp_common(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *);
+extern void p_avro_schema_build_bmp_common(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *);
 #endif
 
 #endif
