@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -488,7 +488,7 @@ struct NF_dissect {
 
 /* functions */
 extern void process_v5_packet(unsigned char *, u_int16_t, struct packet_ptrs *, struct plugin_requests *, u_int16_t, struct NF_dissect *);
-extern void process_v9_packet(unsigned char *, u_int16_t, struct packet_ptrs_vector *, struct plugin_requests *, u_int16_t, struct NF_dissect *, int *);
+extern void process_v9_packet(unsigned char *, u_int16_t, struct packet_ptrs_vector *, struct plugin_requests *, u_int16_t, struct NF_dissect *, int *, int);
 extern void process_raw_packet(unsigned char *, u_int16_t, struct packet_ptrs_vector *, struct plugin_requests *);
 extern u_int8_t NF_evaluate_flow_type(struct template_cache_entry *, struct packet_ptrs *);
 extern u_int16_t NF_evaluate_direction(struct template_cache_entry *, struct packet_ptrs *);

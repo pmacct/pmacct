@@ -127,6 +127,7 @@ int main(int argc,char **argv, char **envp)
   struct tee_receiver tee_templates;
   socklen_t clen = sizeof(client), slen = 0;
   struct ip_mreq multi_req4;
+  int templates_sock = 0;
 
   int pm_pcap_savefile_round = 0;
 
@@ -157,6 +158,10 @@ int main(int argc,char **argv, char **envp)
   extern char *optarg;
   extern int optind, opterr, optopt;
   int errflag, cp; 
+
+  /* select() stuff */
+  fd_set read_descs, bkp_read_descs;
+  int select_fd, bkp_select_fd, num_descs;
 
 #if defined HAVE_MALLOPT
   mallopt(M_CHECK_ACTION, 0);
@@ -216,6 +221,12 @@ int main(int argc,char **argv, char **envp)
 
   memset(&recv_pptrs, 0, sizeof(recv_pptrs));
   memset(&recv_pkthdr, 0, sizeof(recv_pkthdr));
+
+  select_fd = 0;
+  bkp_select_fd = 0;
+  num_descs = 0;
+  FD_ZERO(&read_descs);
+  FD_ZERO(&bkp_read_descs);
 
   /* getting commandline values */
   while (!errflag && ((cp = getopt(argc, argv, ARGS_NFACCTD)) != -1)) {
@@ -735,6 +746,11 @@ int main(int argc,char **argv, char **envp)
 	  exit_gracefully(1);
 	}
       }
+
+      FD_SET(config.sock, &bkp_read_descs);
+      FD_SET(config.nfacctd_templates_sock, &bkp_read_descs);
+      bkp_select_fd = (config.sock < config.nfacctd_templates_sock) ? config.nfacctd_templates_sock : config.sock;
+      bkp_select_fd++;
     }
 
     /* bind socket to port */
@@ -1245,7 +1261,35 @@ int main(int argc,char **argv, char **envp)
     }
 #endif
     else {
-      ret = recvfrom(config.sock, (unsigned char *)netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
+      if (!config.nfacctd_templates_port) {
+        ret = recvfrom(config.sock, (unsigned char *)netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
+      }
+      else {
+	select_func_again: 
+	select_fd = bkp_select_fd;
+	memcpy(&read_descs, &bkp_read_descs, sizeof(bkp_read_descs));
+
+	num_descs = select(select_fd, &read_descs, NULL, NULL, NULL);
+
+	select_read_again:
+	if (num_descs > 0) {
+	  if FD_ISSET(config.sock, &read_descs) {
+            ret = recvfrom(config.sock, (unsigned char *)netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
+	    FD_CLR(config.sock, &read_descs);
+	    num_descs--;
+
+	    templates_sock = FALSE;
+	  }
+	  else if FD_ISSET(config.nfacctd_templates_sock, &read_descs) {
+	    ret = recvfrom(config.nfacctd_templates_sock, (unsigned char *)netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
+	    FD_CLR(config.nfacctd_templates_sock, &read_descs);
+	    num_descs--;
+
+	    templates_sock = TRUE;
+	  }
+	}
+	else goto select_func_again;
+      }
     }
 
     /* we have no data or not not enough data to decode the version */
@@ -1315,7 +1359,7 @@ int main(int argc,char **argv, char **envp)
       /* NetFlow v9 + IPFIX */
       case 9:
       case 10:
-	process_v9_packet(netflow_packet, ret, &pptrs, &req, nfv, NULL, &has_templates);
+	process_v9_packet(netflow_packet, ret, &pptrs, &req, nfv, NULL, &has_templates, templates_sock);
 
 	if (config.nfacctd_templates_receiver && has_templates) {
 	  struct pkt_msg tee_msg;
@@ -1350,6 +1394,8 @@ int main(int argc,char **argv, char **envp)
 
       process_raw_packet(netflow_packet, ret, &pptrs, &req);
     }
+
+    if (num_descs > 0) goto select_read_again;
 
     sigprocmask(SIG_UNBLOCK, &signal_set, NULL);
   }
@@ -1456,7 +1502,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 
 void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vector *pptrsv,
 		struct plugin_requests *req, u_int16_t version, struct NF_dissect *tee_dissect,
-		int *has_templates)
+		int *has_templates, int templates_sock)
 {
   struct struct_header_v9 *hdr_v9 = (struct struct_header_v9 *)pkt;
   struct struct_header_ipfix *hdr_v10 = (struct struct_header_ipfix *)pkt;
@@ -2559,7 +2605,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
     /* NetFlow v9 + IPFIX */
     case 9:
     case 10:
-      process_v9_packet(pkt, len, pptrsv, req, nfv, &tee_dissect, NULL);
+      process_v9_packet(pkt, len, pptrsv, req, nfv, &tee_dissect, NULL, 0);
       break;
     default:
       break;
