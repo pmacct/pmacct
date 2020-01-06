@@ -1273,14 +1273,14 @@ int main(int argc,char **argv, char **envp)
 
 	select_read_again:
 	if (num_descs > 0) {
-	  if FD_ISSET(config.sock, &read_descs) {
+	  if (FD_ISSET(config.sock, &read_descs)) {
             ret = recvfrom(config.sock, (unsigned char *)netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
 	    FD_CLR(config.sock, &read_descs);
 	    num_descs--;
 
 	    templates_sock = FALSE;
 	  }
-	  else if FD_ISSET(config.nfacctd_templates_sock, &read_descs) {
+	  else if (FD_ISSET(config.nfacctd_templates_sock, &read_descs)) {
 	    ret = recvfrom(config.nfacctd_templates_sock, (unsigned char *)netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
 	    FD_CLR(config.nfacctd_templates_sock, &read_descs);
 	    num_descs--;
