@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -28,6 +28,7 @@
 #include "plugin_hooks.h"
 #include "plugin_common.h"
 #include "tee_plugin.h"
+#include "nfacctd.h"
 
 /* Global variables */
 char tee_send_buf[65535];
@@ -821,4 +822,75 @@ struct tee_receiver *Tee_hash_tag_balance(void *pool, struct pkt_msg *msg)
   if (p) target = &p->receivers[msg->tag % p->num];
 
   return target;
+}
+
+void Tee_select_templates(unsigned char *pkt, int pkt_len, int nfv, unsigned char *tpl_pkt, int *tpl_pkt_len)
+{
+  unsigned char *src_ptr = pkt, *dst_ptr = tpl_pkt;
+  u_int16_t flowsetNo = 0, flowsetCount = 0, flowsetTplCount = 0;
+  int tmp_len = 0;
+
+  if (!pkt || !pkt_len || !tpl_pkt || !tpl_pkt_len) return;
+  if (pkt_len > NETFLOW_MSG_SIZE) return;
+
+  (*tpl_pkt_len) = 0;
+
+  /* NetFlow v9 */
+  if (nfv == 9) {
+    struct struct_header_v9 *hdr_v9 = (struct struct_header_v9 *) tpl_pkt;
+    struct data_hdr_v9 *hdr_flowset = NULL;
+    int hdr_len = sizeof(struct struct_header_v9);
+
+    if (pkt_len < hdr_len) return;
+    
+    memcpy(dst_ptr, src_ptr, hdr_len);
+    src_ptr += hdr_len; 
+    dst_ptr += hdr_len;
+    pkt_len -= hdr_len;
+    tmp_len += hdr_len;
+
+    flowsetNo = htons(hdr_v9->count);
+    hdr_flowset = (struct data_hdr_v9 *) src_ptr;
+
+    while (flowsetCount < flowsetNo) {
+      int flow_id = ntohs(hdr_flowset->flow_id);
+      int flow_len = ntohs(hdr_flowset->flow_len);
+      int flow_hdr_len = sizeof(struct data_hdr_v9);
+
+      if (!flow_len || (flow_hdr_len + flow_len) > pkt_len) break;
+
+      /* if template, copy over */
+      if (flow_id == 0 || flow_id == 1) {
+	memcpy(dst_ptr, src_ptr, flow_hdr_len);
+        src_ptr += flow_hdr_len;
+        dst_ptr += flow_hdr_len;
+
+	memcpy(dst_ptr, src_ptr, flow_len);
+        src_ptr += flow_len;
+        dst_ptr += flow_len;
+
+	pkt_len -= (flow_hdr_len + flow_len);
+	tmp_len += (flow_hdr_len + flow_len);
+	flowsetTplCount++;
+      }
+      /* if data, skip */
+      else {
+	src_ptr += flow_hdr_len;
+	src_ptr += flow_len;
+	pkt_len -= (flow_hdr_len + flow_len);
+      }
+
+      flowsetCount++;
+    }
+
+    /* if we have at least one template, let's update the template packet */
+    if (flowsetTplCount) {
+      hdr_v9->count = htons(flowsetTplCount);
+      (*tpl_pkt_len) = tmp_len;
+    }
+  }
+  /* IPFIX */
+  else if (nfv == 10) {
+    // XXX
+  }
 }

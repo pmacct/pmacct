@@ -107,6 +107,7 @@ int main(int argc,char **argv, char **envp)
   struct packet_ptrs_vector pptrs;
   char config_file[SRVBUFLEN];
   unsigned char *netflow_packet;
+  unsigned char *netflow_templates_packet;
   int logf, rc = 0, yes=1, allowed;
   struct host_addr addr;
   struct hosts_table allow;
@@ -186,7 +187,9 @@ int main(int argc,char **argv, char **envp)
   sampling_map_caching = TRUE;
   find_id_func = NF_find_id;
   plugins_list = NULL;
+
   netflow_packet = malloc(NETFLOW_MSG_SIZE);
+  netflow_templates_packet = malloc(NETFLOW_MSG_SIZE);
 
   data_plugins = 0;
   tee_plugins = 0;
@@ -1359,18 +1362,25 @@ int main(int argc,char **argv, char **envp)
       /* NetFlow v9 + IPFIX */
       case 9:
       case 10:
-	process_v9_packet(netflow_packet, ret, &pptrs, &req, nfv, NULL, &has_templates, templates_sock);
+	process_v9_packet(netflow_packet, ret, &pptrs, &req, nfv, NULL, &has_templates);
 
-	if (config.nfacctd_templates_receiver && has_templates) {
+	/* Let's replicate templates only if not received on
+	   nfacctd_templates_port in order to prevent infinite
+	   looping */
+	if (config.nfacctd_templates_receiver && has_templates && !templates_sock) {
+	  int netflow_templates_len = 0;
 	  struct pkt_msg tee_msg;
 
 	  memset(&tee_msg, 0, sizeof(tee_msg));
 	  memcpy(&tee_msg.agent, &client, sizeof(client));
-	  tee_msg.payload = netflow_packet;
-	  tee_msg.len = ret;
 
 	  /* fix version before sending */
 	  ((struct struct_header_v5 *)netflow_packet)->version = ntohs(((struct struct_header_v5 *)netflow_packet)->version);
+
+	  Tee_select_templates(netflow_packet, ret, nfv, netflow_templates_packet, &netflow_templates_len); 
+
+	  tee_msg.payload = netflow_templates_packet;
+	  tee_msg.len = netflow_templates_len;
 
 	  Tee_send(&tee_msg, (struct sockaddr *) &tee_templates.dest, tee_templates.fd, TRUE);
 	}
@@ -1502,7 +1512,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 
 void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vector *pptrsv,
 		struct plugin_requests *req, u_int16_t version, struct NF_dissect *tee_dissect,
-		int *has_templates, int templates_sock)
+		int *has_templates)
 {
   struct struct_header_v9 *hdr_v9 = (struct struct_header_v9 *)pkt;
   struct struct_header_ipfix *hdr_v10 = (struct struct_header_ipfix *)pkt;
@@ -2605,7 +2615,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
     /* NetFlow v9 + IPFIX */
     case 9:
     case 10:
-      process_v9_packet(pkt, len, pptrsv, req, nfv, &tee_dissect, NULL, 0);
+      process_v9_packet(pkt, len, pptrsv, req, nfv, &tee_dissect, NULL);
       break;
     default:
       break;
