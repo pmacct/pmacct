@@ -1382,7 +1382,9 @@ int main(int argc,char **argv, char **envp)
 	  tee_msg.payload = netflow_templates_packet;
 	  tee_msg.len = netflow_templates_len;
 
-	  Tee_send(&tee_msg, (struct sockaddr *) &tee_templates.dest, tee_templates.fd, TRUE);
+	  if (tee_msg.len) {
+	    Tee_send(&tee_msg, (struct sockaddr *) &tee_templates.dest, tee_templates.fd, TRUE);
+	  }
 	}
 
 	break;
