@@ -30,6 +30,12 @@ DOCUMENTATION
   * make
   * make install *[with super-user permission]*
 
+# RELICENSE INITIATIVE
+
+The pmacct project is looking to make its code base available under a more permissive
+BSD-style license. More information about the motivation and process can be found in
+this [announcement](https://www.mail-archive.com/pmacct-discussion@pmacct.net/msg03881.html).
+
 # CONTRIBUTING
 
 - Prerequisites:
