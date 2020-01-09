@@ -861,26 +861,24 @@ void Tee_select_templates(unsigned char *pkt, int pkt_len, int nfv, unsigned cha
 
       /* if template, copy over */
       if (fset_id == 0 || fset_id == 1) {
-	memcpy(dst_ptr, src_ptr, fset_hdr_len);
-        src_ptr += fset_hdr_len;
-        dst_ptr += fset_hdr_len;
-
 	memcpy(dst_ptr, src_ptr, fset_len);
+
         src_ptr += fset_len;
         dst_ptr += fset_len;
 
-	pkt_len -= (fset_hdr_len + fset_len);
-	tmp_len += (fset_hdr_len + fset_len);
+	pkt_len -= fset_len;
+	tmp_len += fset_len;
+
 	flowsetTplCount++;
       }
       /* if data, skip */
       else {
-	src_ptr += fset_hdr_len;
 	src_ptr += fset_len;
-	pkt_len -= (fset_hdr_len + fset_len);
+	pkt_len -= fset_len;
       }
 
       flowsetCount++;
+      hdr_flowset = (struct data_hdr_v9 *) src_ptr;
     }
 
     /* if we have at least one template, let's update the template packet */
@@ -905,7 +903,7 @@ void Tee_select_templates(unsigned char *pkt, int pkt_len, int nfv, unsigned cha
 
     hdr_flowset = (struct data_hdr_v9 *) src_ptr;
 
-    while (pkt_len) {
+    while (pkt_len > 0) {
       int fset_id = ntohs(hdr_flowset->flow_id);
       int fset_len = ntohs(hdr_flowset->flow_len);
       int fset_hdr_len = sizeof(struct data_hdr_v9);
@@ -914,24 +912,23 @@ void Tee_select_templates(unsigned char *pkt, int pkt_len, int nfv, unsigned cha
 
       /* if template, copy over */
       if (fset_id == 2 || fset_id == 3) {
-	memcpy(dst_ptr, src_ptr, fset_hdr_len);
-        src_ptr += fset_hdr_len;
-        dst_ptr += fset_hdr_len;
-
 	memcpy(dst_ptr, src_ptr, fset_len);
-        src_ptr += fset_len;
-        dst_ptr += fset_len;
 
-	pkt_len -= (fset_hdr_len + fset_len);
-	tmp_len += (fset_hdr_len + fset_len);
+	src_ptr += fset_len;
+	dst_ptr += fset_len;
+
+	pkt_len -= fset_len;
+	tmp_len += fset_len;
+
 	flowsetTplCount++;
       }
       /* if data, skip */
       else {
-	src_ptr += fset_hdr_len;
 	src_ptr += fset_len;
-	pkt_len -= (fset_hdr_len + fset_len);
+	pkt_len -= fset_len;
       }
+
+      hdr_flowset = (struct data_hdr_v9 *) src_ptr;
     }
 
     /* if we have at least one template, let's update the template packet */
