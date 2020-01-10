@@ -432,6 +432,7 @@ extern int reload_map_pmacctd;
 extern int print_stats;
 extern int reload_log_sf_cnt;
 extern int data_plugins, tee_plugins;
+extern int collector_port;
 extern struct timeval reload_map_tstamp;
 extern struct child_ctl2 dump_writers;
 extern int debug;

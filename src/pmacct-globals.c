@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -34,6 +34,7 @@ int reload_map_pmacctd;
 int print_stats;
 int reload_log_sf_cnt;
 int data_plugins, tee_plugins;
+int collector_port;
 struct timeval reload_map_tstamp;
 struct child_ctl2 dump_writers;
 int debug;

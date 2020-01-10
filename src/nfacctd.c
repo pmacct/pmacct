@@ -679,6 +679,7 @@ int main(int argc,char **argv, char **envp)
     /* If no IP address is supplied, let's set our default
        behaviour: IPv4 address, INADDR_ANY, port 2100 */
     if (!config.nfacctd_port) config.nfacctd_port = DEFAULT_NFACCTD_PORT;
+    collector_port = config.nfacctd_port;
 
     if (!config.nfacctd_ip) {
       struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&server;
@@ -1282,6 +1283,7 @@ int main(int argc,char **argv, char **envp)
 	    num_descs--;
 
 	    templates_sock = FALSE;
+	    collector_port = config.nfacctd_port;
 	  }
 	  else if (FD_ISSET(config.nfacctd_templates_sock, &read_descs)) {
 	    ret = recvfrom(config.nfacctd_templates_sock, (unsigned char *)netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
@@ -1289,6 +1291,7 @@ int main(int argc,char **argv, char **envp)
 	    num_descs--;
 
 	    templates_sock = TRUE;
+	    collector_port = config.nfacctd_templates_port;
 	  }
 	}
 	else goto select_func_again;
@@ -2785,10 +2788,10 @@ void notify_malf_packet(short int severity, char *severity_str, char *ostr, stru
 
   if (seq) snprintf(errstr, SRVBUFLEN, "%s ( %s/core ): %s: nfacctd=%s:%u agent=%s:%u seq=%u\n",
 		severity_str, config.name, ostr, ((config.nfacctd_ip) ? config.nfacctd_ip : any),
-		config.nfacctd_port, agent_addr, agent_port, seq);
+		collector_port, agent_addr, agent_port, seq);
   else snprintf(errstr, SRVBUFLEN, "%s ( %s/core ): %s: nfacctd=%s:%u agent=%s:%u\n",
 		severity_str, config.name, ostr, ((config.nfacctd_ip) ? config.nfacctd_ip : any),
-		config.nfacctd_port, agent_addr, agent_port);
+		collector_port, agent_addr, agent_port);
 
   Log(severity, "%s", errstr);
 }

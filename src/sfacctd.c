@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -657,6 +657,7 @@ int main(int argc,char **argv, char **envp)
     /* If no IP address is supplied, let's set our default
        behaviour: IPv4 address, INADDR_ANY, port 2100 */
     if (!config.nfacctd_port) config.nfacctd_port = DEFAULT_SFACCTD_PORT;
+    collector_port = config.nfacctd_port;
 
     if (!config.nfacctd_ip) {
       struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&server;
@@ -1665,7 +1666,7 @@ void SF_notify_malf_packet(short int severity, char *severity_str, char *ostr, s
   sa_to_addr((struct sockaddr *)sa, &a, &agent_port);
   addr_to_str(agent_addr, &a);
   snprintf(errstr, SRVBUFLEN, "%s ( %s/core ): %s: sfacctd=%s:%u agent=%s:%u \n", severity_str,
-	config.name, ostr, ((config.nfacctd_ip) ? config.nfacctd_ip : any), config.nfacctd_port,
+	config.name, ostr, ((config.nfacctd_ip) ? config.nfacctd_ip : any), collector_port,
 	agent_addr, agent_port);
   Log(severity, "%s", errstr);
 }
