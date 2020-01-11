@@ -826,115 +826,96 @@ struct tee_receiver *Tee_hash_tag_balance(void *pool, struct pkt_msg *msg)
 
 void Tee_select_templates(unsigned char *pkt, int pkt_len, int nfv, unsigned char *tpl_pkt, int *tpl_pkt_len)
 {
+  struct struct_header_v9 *hdr_v9 = NULL;
+  struct struct_header_ipfix *hdr_v10 = NULL;
+  struct data_hdr_v9 *hdr_flowset = NULL;
+
   unsigned char *src_ptr = pkt, *dst_ptr = tpl_pkt;
   u_int16_t flowsetNo = 0, flowsetCount = 0, flowsetTplCount = 0;
-  int tmp_len = 0;
+  int tmp_len = 0, hdr_len = 0, term1 = 0, term2 = 0;
 
   if (!pkt || !pkt_len || !tpl_pkt || !tpl_pkt_len) return;
+  if (nfv != 9 && nfv != 10) return;
   if (pkt_len > NETFLOW_MSG_SIZE) return;
 
   (*tpl_pkt_len) = 0;
 
   /* NetFlow v9 */
   if (nfv == 9) {
-    struct struct_header_v9 *hdr_v9 = (struct struct_header_v9 *) tpl_pkt;
-    struct data_hdr_v9 *hdr_flowset = NULL;
-    int hdr_len = sizeof(struct struct_header_v9);
-
-    if (pkt_len < hdr_len) return;
-    
-    memcpy(dst_ptr, src_ptr, hdr_len);
-    src_ptr += hdr_len; 
-    dst_ptr += hdr_len;
-    pkt_len -= hdr_len;
-    tmp_len += hdr_len;
-
-    flowsetNo = htons(hdr_v9->count);
-    hdr_flowset = (struct data_hdr_v9 *) src_ptr;
-
-    while (flowsetCount < flowsetNo) {
-      int fset_id = ntohs(hdr_flowset->flow_id);
-      int fset_len = ntohs(hdr_flowset->flow_len);
-      int fset_hdr_len = sizeof(struct data_hdr_v9);
-
-      if (!fset_len || (fset_hdr_len + fset_len) > pkt_len) break;
-
-      /* if template, copy over */
-      if (fset_id == 0 || fset_id == 1) {
-	memcpy(dst_ptr, src_ptr, fset_len);
-
-        src_ptr += fset_len;
-        dst_ptr += fset_len;
-
-	pkt_len -= fset_len;
-	tmp_len += fset_len;
-
-	flowsetTplCount++;
-      }
-      /* if data, skip */
-      else {
-	src_ptr += fset_len;
-	pkt_len -= fset_len;
-      }
-
-      flowsetCount++;
-      hdr_flowset = (struct data_hdr_v9 *) src_ptr;
-    }
-
-    /* if we have at least one template, let's update the template packet */
-    if (flowsetTplCount) {
-      hdr_v9->count = htons(flowsetTplCount);
-      (*tpl_pkt_len) = tmp_len;
-    }
+    hdr_v9 = (struct struct_header_v9 *) tpl_pkt;
+    hdr_len = sizeof(struct struct_header_v9);
   }
-  /* IPFIX */
+  else if (nfv == 10) { 
+    hdr_v10 = (struct struct_header_ipfix *) tpl_pkt;
+    hdr_len = sizeof(struct struct_header_ipfix);
+  }
+
+  if (pkt_len < hdr_len) return;
+    
+  memcpy(dst_ptr, src_ptr, hdr_len);
+  src_ptr += hdr_len; 
+  dst_ptr += hdr_len;
+  pkt_len -= hdr_len;
+  tmp_len += hdr_len;
+
+  if (nfv == 9) {
+    flowsetNo = htons(hdr_v9->count);
+    term1 = (flowsetNo + 1); /* trick to use > operator */
+    term2 = flowsetCount;
+  }
   else if (nfv == 10) {
-    struct struct_header_ipfix *hdr_v10 = (struct struct_header_ipfix *) tpl_pkt;
-    struct data_hdr_v9 *hdr_flowset = NULL;
-    int hdr_len = sizeof(struct struct_header_ipfix);
+    term1 = pkt_len;
+    term2 = 0;
+  }
 
-    if (pkt_len < hdr_len) return;
+  hdr_flowset = (struct data_hdr_v9 *) src_ptr;
 
-    memcpy(dst_ptr, src_ptr, hdr_len);
-    src_ptr += hdr_len;
-    dst_ptr += hdr_len;
-    pkt_len -= hdr_len;
-    tmp_len += hdr_len;
+  while (term1 > term2) {
+    int fset_id = ntohs(hdr_flowset->flow_id);
+    int fset_len = ntohs(hdr_flowset->flow_len);
+    int fset_hdr_len = sizeof(struct data_hdr_v9);
+
+    if (!fset_len || (fset_hdr_len + fset_len) > pkt_len) break;
+
+    /* if template, copy over */
+    if (((nfv == 9) && (fset_id == 0 || fset_id == 1)) ||
+       ((nfv == 10) && (fset_id == 2 || fset_id == 3))) {
+      memcpy(dst_ptr, src_ptr, fset_len);
+
+      src_ptr += fset_len;
+      dst_ptr += fset_len;
+
+      pkt_len -= fset_len;
+      tmp_len += fset_len;
+
+      flowsetTplCount++;
+    }
+    /* if data, skip */
+    else {
+      src_ptr += fset_len;
+      pkt_len -= fset_len;
+    }
+
+    if (nfv == 9) {
+      flowsetCount++;
+      term2 = flowsetCount;
+    }
+    else if (nfv == 10) {
+      term1 = pkt_len;
+    }
 
     hdr_flowset = (struct data_hdr_v9 *) src_ptr;
+  }
 
-    while (pkt_len > 0) {
-      int fset_id = ntohs(hdr_flowset->flow_id);
-      int fset_len = ntohs(hdr_flowset->flow_len);
-      int fset_hdr_len = sizeof(struct data_hdr_v9);
-
-      if (!fset_len || (fset_hdr_len + fset_len) > pkt_len) break;
-
-      /* if template, copy over */
-      if (fset_id == 2 || fset_id == 3) {
-	memcpy(dst_ptr, src_ptr, fset_len);
-
-	src_ptr += fset_len;
-	dst_ptr += fset_len;
-
-	pkt_len -= fset_len;
-	tmp_len += fset_len;
-
-	flowsetTplCount++;
-      }
-      /* if data, skip */
-      else {
-	src_ptr += fset_len;
-	pkt_len -= fset_len;
-      }
-
-      hdr_flowset = (struct data_hdr_v9 *) src_ptr;
+  /* if we have at least one template, let's update the template packet */
+  if (flowsetTplCount) {
+    if (nfv == 9) {
+      hdr_v9->count = htons(flowsetTplCount);
     }
-
-    /* if we have at least one template, let's update the template packet */
-    if (flowsetTplCount) {
+    else if (nfv == 10) {
       hdr_v10->len = htons(tmp_len);
-      (*tpl_pkt_len) = tmp_len;
     }
+
+    (*tpl_pkt_len) = tmp_len;
   }
 }
