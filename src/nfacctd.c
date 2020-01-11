@@ -592,11 +592,6 @@ int main(int argc,char **argv, char **envp)
   }
 
   if (config.nfacctd_templates_receiver) {
-    if (!config.nfacctd_templates_port) {
-      Log(LOG_ERR, "ERROR ( %s/core ): nfacctd_templates_receiver requires nfacctd_templates_port. Exiting...\n\n", config.name);
-      exit_gracefully(1);
-    }
-
     if (!config.nfacctd_port && !config.nfacctd_ip && capture_methods) {
       Log(LOG_ERR, "ERROR ( %s/core ): nfacctd_templates_receiver only applies to live UDP collection (nfacctd_ip, nfacctd_port). Exiting...\n\n", config.name);
       exit_gracefully(1);
