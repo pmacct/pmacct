@@ -1639,6 +1639,12 @@ DEFAULT:        false
 
 KEY:		[ nfacctd_port | sfacctd_port ] (-l) [GLOBAL, NO_PMACCTD, NO_UACCTD]
 DESC:		Defines the UDP port where to bind nfacctd (nfacctd_port) and sfacctd (sfacctd_port) daemons.
+                SO_REUSEPORT feature can be leveraged on Linux: it allows multiple daemons to bind the same
+                local address and port in order to load-balance processing of incoming packets; if doing so
+		with incoming NetFlow v9/IPFIX template-based protocols, nfacctd_templates_receiver and
+		nfacctd_templates_port should be used. At the end of this document, reference (1) to a
+		URL to a presentation of the SO_REUSEPORT feature. To enable SO_REUSEPORT on a Linux system
+		supporting it 'sysctl net.core.allow_reuseport=1'.
 DEFAULT:	nfacctd_port: 2100; sfacctd_port: 6343 
 
 KEY:		[ nfacctd_ip | sfacctd_ip ] (-L) [GLOBAL, NO_PMACCTD, NO_UACCTD]
@@ -1727,6 +1733,19 @@ DESC:		Full pathname to a file to store JSON-serialized templates for NetFlow v9
 		reduced. This file will be created if it does not exist. This feautre requires compiling
 		against Jansson library (--enable-jansson when configuring pmacct for compiling).
 DEFAULT:        none
+
+KEY:		nfacctd_templates_receiver [NFACCTD_ONLY]
+DESC:		Defines a receiver where to export NetFlow v9/IPFIX templates, ideally a replicator. To
+		help in clustered scenarios especially when leveraging SO_REUSEPORT (multiple nfacctd
+		listening on the same IP and port). If IPv4, the value is expected as 'address:port'.
+		If IPv6, it is expected as '[address]:port'. 
+DEFAULT:	none
+
+KEY:		nfacctd_templates_port [NFACCTD_ONLY]
+DESC:		Defines the UDP port where to bind nfacctd for receiving (replicated) templates. If a
+		template is received on this port and nfacctd_templates_receiver is specified, it is
+		not replicated (in order to avoid the case of infinite loops).  
+DEFAULT:	none
 
 KEY:            [ nfacctd_stitching | sfacctd_stitching | pmacctd_stitching | uacctd_stitching ]
 VALUES:         [ true | false ]
