@@ -197,6 +197,8 @@ Similarly, BGP tables:
   are zeroed, if accounting for events, ie. using Cisco NEL; 'stamp_inserted'
   and 'stamp_updated' time references are mandatory only if temporal aggregation
   (sql_history) is enabled:
+  * flows (INT UNSIGNED NOT NULL)
+    - or (flows BIGINT UNSIGNED NOT NULL, see README.64bit)
   * packets (INT UNSIGNED NOT NULL)
     - or (packets BIGINT UNSIGNED NOT NULL, see README.64bit)
   * bytes (BIGINT UNSIGNED NOT NULL)
