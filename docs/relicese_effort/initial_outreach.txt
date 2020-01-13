@@ -1,0 +1,163 @@
+archived at https://www.mail-archive.com/pmacct-discussion@pmacct.net/msg03881.html
+
+Date: Wed, 8 Jan 2020 14:52:42 +0100
+From: Job Snijders <job@instituut.net>
+To: pmacct-news@pmacct.net, pmacct-discussion@pmacct.net
+Bcc: Job Snijders <job@instituut.net>
+Subject: effort to relicense pmacct from GPL to a BSD-style license
+Message-ID: <20200108135242.GV93721@hanna.meerval.net>
+Reply-To: pmacct-discussion@pmacct.net
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+X-Clacks-Overhead: GNU Terry Pratchett
+
+Dear all,
+
+Summary: The pmacct project is looking to relicense its code from the
+current GPL license to a more liberal BSD-style license.
+
+A few weeks ago I had the pleasure to spend some face time with Paolo,
+which allowed for in-depth discussion about pmacct's current trajectory
+and bright future. We concluded it would be in the best interest of the
+pmacct project to attempt to relicense all code under a more permissive
+BSD-style license, for mainly two reasons:
+
+1) Faced with our own mortality, it became clear that succession
+   planning is of paramount importance for this project's continued
+   success. We contemplated what happens in context of intellectual
+   property rights should one of pmacct's contributors pass away, and
+   realized potential heirs won't necessarily desire involvement in this
+   open source project, potentially hampering changes to intellectual
+   property policies in the project's future. 
+
+2) We suspect there are entities who violate the terms of pmacct's
+   current GPL license, but at the same time we don't wish to litigate.
+   Instead of getting infringers to change their behavior, relicensing
+   the project could be another way to resolve the potential for
+   conflict: we see benefits to removing rules we don't plan on
+   enforcing anyway.
+
+Going forward, the preferred license under which we encourge people to
+contribute new work is a variant of the ISC license (also used by the
+OpenBSD project). The license template (to be used in file headers) can
+be found here:
+
+    https://github.com/pmacct/pmacct/blob/master/LICENSE.template
+
+We need explicit approval from all contributors, and carefully keep
+track of those agreements. If a contributor doesn't agree or answer,
+we'll have to re-implement the contributed functionality or remove the
+contribution from the code base.
+
+REQUEST TO THE PMACCT CONTRIBUTOR COMMUNITY
+-------------------------------------------
+
+If you have contributed to the pmacct project (your name may be listed
+below), please consider a reply-all to this email expressing your
+explicit consent (or disapproval) to change the license governing your
+contributions to the pmacct project, to the following license:
+
+    """
+    Permission to use, copy, modify, and distribute this software for
+    any purpose with or without fee is hereby granted, provided that the
+    above copyright notice and this permission notice appear in all
+    copies.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+    WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+    WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+    AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+    DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA
+    OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+    TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+    PERFORMANCE OF THIS SOFTWARE.
+    """
+
+-------------------------------------------
+
+The next action in this process will be to individually follow up with
+all contributors who didn't respond to the above request.
+
+Once the relicensing effort has been completed, we'll tag the resulting
+code base as pmacct version 2.0.0 and celebrate! Pmacct has many great
+years ahead of itself; Paolo's enthusiasm to do so is evident in this
+interview video :-) https://www.youtube.com/watch?v=QqmOcMAtGDM
+
+Please feel free to raise any questions you may have on the
+pmacct-discussion@pmacct.net list, or privately with me and/or Paolo.
+
+Kind regards,
+
+Job Snijders
+
+
+DRAFT LIST OF KNOWN PMACCT AUTHORS (based on 'git shortlog -sen')
+=================================================================
+ 
+Commits  Author <email>
+   2921  Paolo Lucente <paolo@pmacct.net>
+     52  Marc Sune <marcdevel@gmail.com>
+     20  Corentin Néau <corentin.neau@codethink.co.uk>
+     17  Vincent Bernat <vincent@bernat.im>
+     14  Job Snijders <job@instituut.net>
+     12  Matthias Arnold <matthias.arnold@swisscom.com>
+      9  Raphaël P. Barazzutti <raphael@barazzutti.net>
+      9  Claudio Ortega <claudio.alberto.ortega@gmail.com>
+      8  Jonas Jensen <jonas@semmle.com>
+      8  Matthias Arnold <tbearma1@users.noreply.github.com>
+      8  Tim LaBerge <tlaberge@visi.com>
+      7  Jared Mauch <jared@puck.nether.net>
+      7  vittoriofoschi <vittorio.foschi@gmail.com>
+      7  Camilo Cardona <camilo@ntt.net>
+      5  Aaron Finney <aaron.finney@openx.com>
+      5  Vittorio Foschi <vittorio.foschi@gmail.com>
+      4  vphatarp <vaibhav.phatarpekar@gmail.com>
+      3  Alexander Brusilov <photon89@yandex.ru>
+      3  Emil Palm <emil@x86.nu>
+      3  Dusan Migra <dusan.migra@edgeintelligence.com>
+      3  Dan Berger <dberger@valvesoftware.com>
+      3  Markus Weber <fvd@uucp.de>
+      2  Tim LaBerge <tlaberge@cisco.com>
+      2  Guy Lowe <git@gunk.gen.nz>
+      2  Hidde van der Heide <hvanderheide@nexuz.net>
+      2  Jim Westfall <jwestfall@surrealistic.net>
+      2  Lee Yongjae <setup74@gmail.com>
+      2  Lennert Buytenhek <buytenh@wantstofly.org>
+      2  Matthieu Texier <matthieu@texier.tv>
+      2  Miki Takata <mikit@nttv6.jp>
+      2  Pierre Dubouilh <pldubouilh@gmail.com>
+      2  Tiago Gomes <tiago.gomes@codethink.co.uk>
+      2  Vadim Tk <gitcommit@m.vtk.one>
+      3  Thomas Graf <thomas@graf3.net>
+      1  Junpei YOSHINO <junpei.yoshino@gmail.com>
+      1  root <root@smokeping.celya.fr>
+      1  Mehul Prajapati <mehulprajapati2802@gmail.com>
+      1  Mike Jager <mike@mikej.net.nz>
+      1  rouba002 <rouba002@gmail.com>
+      1  Nimrod <nimrody@gmail.com>
+      1  Jeroen Roovers <jer@gentoo.org>
+      1  Paweł Małachowski <pawel.malachowski@atendesoftware.pl>
+      1  Pier Carlo Chiodi <pierky@pierky.com>
+      1  rsolsn <3997743+rsolsn@users.noreply.github.com>
+      1  Ivan F. Martinez <ivanfm@saisp.br>
+      1  Raymond Russell <raymond@corvil.com>
+      1  Rico29 <cedric.bassaget@gmail.com>
+      1  Robert Wuttke <robert@benocs.com>
+      1  Seth N. Hetu <shetu@akamai.com>
+      1  Arnold Matthias <tbearma1@daisy63.bblab.ch>
+      1  Guo-Wei Su <nansenat16@gmail.com>
+      1  Elisa Jasinska <elisa@jasinska.de>
+      1  Alexandros Couloumbis <alex@ozo.com>
+      1  Davíð Steinn Geirsson <dsg@sensa.is>
+      1  David Higgs <higgsd@users.noreply.github.com>
+      1  Vyron Tsingaras <vyronas@vtsingaras.me>
+      1  cozonac <radu.anghel@xindi.ro>
+      1  Александр Шалаев <ashalaev@ivi.ru>
+      1  matthewsf <matuskubis@gmail.com>
+      1  Manuel Mendez <mmendez534@gmail.com>
+      1  Marc Sune <marc@voltanet.io>
+      1  Kunshchikov Vladimir <Kunshchikov.Vla@infotecs.ru>
+      1  Marcos Marado <mindboosternoori@gmail.com>
+      1  Jonas Gröger <jonas@huntun.de>
