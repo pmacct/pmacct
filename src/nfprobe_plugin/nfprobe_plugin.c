@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -601,7 +601,6 @@ flow_update_expiry(struct FLOWTRACK *ft, struct FLOW *flow)
 {
 	EXPIRY_REMOVE(EXPIRIES, &ft->expiries, flow->expiry);
 
-#if defined HAVE_64BIT_COUNTERS
         if (config.nfprobe_version == 9 || config.nfprobe_version == 10) {
 	  if (flow->octets[0] > (1ULL << 63) || flow->octets[1] > (1ULL << 63)) { 
                 flow->expiry->expires_at = 0;
@@ -616,14 +615,6 @@ flow_update_expiry(struct FLOWTRACK *ft, struct FLOW *flow)
                 goto out;
           }
 	}
-#else
-	/* Flows over 2Gb traffic */
-	if (flow->octets[0] > (1U << 31) || flow->octets[1] > (1U << 31)) {
-		flow->expiry->expires_at = 0;
-		flow->expiry->reason = R_OVERBYTES;
-		goto out;
-	}
-#endif
 	
 	/* Flows over maximum life seconds */
 	if (ft->maximum_lifetime != 0 && 

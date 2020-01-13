@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -309,19 +309,11 @@ int PG_cache_dbop_copy(struct DBdesc *db, struct db_cache *cache_elem, struct in
     num++;
   }
 
-#if defined HAVE_64BIT_COUNTERS
   if (have_flows) snprintf(ptr_values, SPACELEFT(values_clause), "%s%" PRIu64 "%s%" PRIu64 "%s%" PRIu64 "\n", delim_buf, cache_elem->packet_counter,
 											delim_buf, cache_elem->bytes_counter,
 											delim_buf, cache_elem->flows_counter);
   else snprintf(ptr_values, SPACELEFT(values_clause), "%s%" PRIu64 "%s%" PRIu64 "\n", delim_buf, cache_elem->packet_counter,
 									delim_buf, cache_elem->bytes_counter);
-#else
-  if (have_flows) snprintf(ptr_values, SPACELEFT(values_clause), "%s%lu%s%lu%s%lu\n", delim_buf, cache_elem->packet_counter,
-											delim_buf, cache_elem->bytes_counter,
-											delim_buf, cache_elem->flows_counter);
-  else snprintf(ptr_values, SPACELEFT(values_clause), "%s%lu%s%lu\n", delim_buf, cache_elem->packet_counter,
-									delim_buf, cache_elem->bytes_counter);
-#endif
 
   strncpy(sql_data, values_clause, SPACELEFT(sql_data));
 
@@ -400,13 +392,8 @@ int PG_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct insert_
     else {
       strncpy(insert_full_clause, insert_clause, SPACELEFT(insert_full_clause));
       strncat(insert_full_clause, insert_counters_clause, SPACELEFT(insert_full_clause));
-#if defined HAVE_64BIT_COUNTERS
       if (have_flows) snprintf(ptr_values, SPACELEFT(values_clause), ", %" PRIu64 ", %" PRIu64 ", %" PRIu64 ")", cache_elem->packet_counter, cache_elem->bytes_counter, cache_elem->flows_counter);
       else snprintf(ptr_values, SPACELEFT(values_clause), ", %" PRIu64 ", %" PRIu64 ")", cache_elem->packet_counter, cache_elem->bytes_counter);
-#else
-      if (have_flows) snprintf(ptr_values, SPACELEFT(values_clause), ", %lu, %lu, %lu)", cache_elem->packet_counter, cache_elem->bytes_counter, cache_elem->flows_counter);
-      else snprintf(ptr_values, SPACELEFT(values_clause), ", %lu, %lu)", cache_elem->packet_counter, cache_elem->bytes_counter);
-#endif
     }
     strncpy(sql_data, insert_full_clause, sizeof(sql_data));
     strncat(sql_data, values_clause, SPACELEFT(sql_data));

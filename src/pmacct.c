@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -254,15 +254,9 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     }
 
     if (!is_event) {
-#if defined HAVE_64BIT_COUNTERS
       printf("PACKETS               ");
       printf("FLOWS                 ");
       printf("BYTES\n");
-#else
-      printf("PACKETS     ");
-      printf("FLOWS       ");
-      printf("BYTES\n");
-#endif
     }
     else printf("\n");
   }
@@ -374,15 +368,9 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     }
 
     if (!is_event) {
-#if defined HAVE_64BIT_COUNTERS
       printf("PACKETS               ");
       if (what_to_count & COUNT_FLOWS) printf("FLOWS                 ");
       printf("BYTES\n");
-#else
-      printf("PACKETS     ");
-      if (what_to_count & COUNT_FLOWS) printf("FLOWS       ");
-      printf("BYTES\n");
-#endif
     }
     else printf("\n");
   }
@@ -478,15 +466,9 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
       }
     }
     if (!is_event) {
-#if defined HAVE_64BIT_COUNTERS
       printf("%sPACKETS", write_sep(sep, &count));
       printf("%sFLOWS", write_sep(sep, &count));
       printf("%sBYTES\n", write_sep(sep, &count));
-#else
-      printf("%sPACKETS", write_sep(sep, &count));
-      printf("%sFLOWS", write_sep(sep, &count));
-      printf("%sBYTES\n", write_sep(sep, &count));
-#endif
     }
     else printf("\n");
   }
@@ -599,15 +581,9 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     }
 
     if (!is_event) {
-#if defined HAVE_64BIT_COUNTERS
       printf("%sPACKETS", write_sep(sep, &count));
       if (what_to_count & COUNT_FLOWS) printf("%sFLOWS", write_sep(sep, &count));
       printf("%sBYTES\n", write_sep(sep, &count));
-#else
-      printf("%sPACKETS", write_sep(sep, &count));
-      if (what_to_count & COUNT_FLOWS) printf("%sFLOWS", write_sep(sep, &count));
-      printf("%sBYTES\n", write_sep(sep, &count));
-#endif
     }
     else printf("\n");
   }
@@ -2822,7 +2798,6 @@ int main(int argc,char **argv)
         }
 
 	if (!(want_output & PRINT_OUTPUT_EVENT)) {
-#if defined HAVE_64BIT_COUNTERS
 	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-20" PRIu64 "  ", acc_elem->pkt_num);
 	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%" PRIu64 "", write_sep(sep_ptr, &count), acc_elem->pkt_num);
 
@@ -2833,18 +2808,6 @@ int main(int argc,char **argv)
 
 	  if (want_output & (PRINT_OUTPUT_FORMATTED|PRINT_OUTPUT_CSV))
 	    printf("%s%" PRIu64 "\n", write_sep(sep_ptr, &count), acc_elem->pkt_len);
-#else
-          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10lu  ", acc_elem->pkt_num); 
-          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%lu", write_sep(sep_ptr, &count), acc_elem->pkt_num); 
-
-          if (!have_wtc || (what_to_count & COUNT_FLOWS)) {
-	    if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-10lu  ", acc_elem->flo_num); 
-	    else if (want_output & PRINT_OUTPUT_CSV) printf("%s%lu", write_sep(sep_ptr, &count), acc_elem->flo_num); 
-	  }
-
-          if (want_output & (PRINT_OUTPUT_FORMATTED|PRINT_OUTPUT_CSV))
-	    printf("%s%lu\n", write_sep(sep_ptr, &count), acc_elem->pkt_len); 
-#endif
         }
 	else printf("\n");
 
@@ -2909,11 +2872,7 @@ int main(int argc,char **argv)
   }
   else if (want_counter) {
     unsigned char *base;
-#if defined HAVE_64BIT_COUNTERS
     u_int64_t bcnt = 0, pcnt = 0, fcnt = 0;
-#else
-    u_int32_t bcnt = 0, pcnt = 0, fcnt = 0; 
-#endif
     int printed;
 
     unpacked = Recv(sd, &largebuf);
@@ -2934,7 +2893,6 @@ int main(int argc,char **argv)
 	num_counters += acc_elem->time_start.tv_sec; /* XXX: this field is used here to count how much entries we are accumulating */
       }
       else {
-#if defined HAVE_64BIT_COUNTERS
 	/* print bytes */
         if (which_counter == 0) printf("%" PRIu64 "\n", acc_elem->pkt_len); 
 	/* print packets */
@@ -2943,27 +2901,14 @@ int main(int argc,char **argv)
 	else if (which_counter == 2) printf("%" PRIu64 " %" PRIu64 " %" PRIu64 " %lu\n", acc_elem->pkt_num, acc_elem->pkt_len, acc_elem->flo_num, acc_elem->time_start.tv_sec);
 	/* print flows */
 	else if (which_counter == 3) printf("%" PRIu64 "\n", acc_elem->flo_num);
-#else
-        if (which_counter == 0) printf("%u\n", acc_elem->pkt_len); 
-        else if (which_counter == 1) printf("%u\n", acc_elem->pkt_num); 
-        else if (which_counter == 2) printf("%u %u %u %lu\n", acc_elem->pkt_num, acc_elem->pkt_len, acc_elem->flo_num, acc_elem->time_start.tv_sec); 
-        else if (which_counter == 3) printf("%u\n", acc_elem->flo_num); 
-#endif
       }
     }
       
     if (sum_counters) {
-#if defined HAVE_64BIT_COUNTERS
       if (which_counter == 0) printf("%" PRIu64 "\n", bcnt); /* print bytes */
       else if (which_counter == 1) printf("%" PRIu64 "\n", pcnt); /* print packets */
       else if (which_counter == 2) printf("%" PRIu64 " %" PRIu64 " %" PRIu64 " %u\n", pcnt, bcnt, fcnt, num_counters); /* print packets+bytes+flows+num */
       else if (which_counter == 3) printf("%" PRIu64 "\n", fcnt); /* print flows */
-#else
-      if (which_counter == 0) printf("%u\n", bcnt); 
-      else if (which_counter == 1) printf("%u\n", pcnt); 
-      else if (which_counter == 2) printf("%u %u %u %u\n", pcnt, bcnt, fcnt, num_counters); 
-      else if (which_counter == 3) printf("%u\n", fcnt); 
-#endif
     }
   }
   else if (want_class_table) { 

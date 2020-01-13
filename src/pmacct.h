@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -135,11 +135,7 @@
 #define u_int64_t uint64_t
 #endif
 
-#if defined HAVE_64BIT_COUNTERS
 #define MOREBUFSZ 32
-#else
-#define MOREBUFSZ 0
-#endif
 
 #ifndef LOCK_UN
 #define LOCK_UN 8
@@ -253,19 +249,10 @@ typedef struct {
 /*
  * htonvl(): host to network (byte ordering) variable length
  * ntohvl(): network to host (byer ordering) variable length
- *
- * This is in order to handle meaningfully both 32bit and 64bit
- * counters avoiding a bunch of #if-#else statements.
  */
-#if defined HAVE_64BIT_COUNTERS
 #define htonvl(x) pm_htonll(x)
 #define ntohvl(x) pm_ntohll(x)
 #define CACHE_THRESHOLD UINT64T_THRESHOLD
-#else
-#define htonvl(x) htonl(x)
-#define ntohvl(x) ntohl(x)
-#define CACHE_THRESHOLD UINT32T_THRESHOLD
-#endif
 
 /* structures */
 struct pm_pcap_interface {

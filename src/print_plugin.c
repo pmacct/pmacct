@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -848,15 +848,9 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         }
 
         if (!is_event) {
-  #if defined HAVE_64BIT_COUNTERS
           fprintf(f, "%-20" PRIu64 "  ", queue[j]->packet_counter);
           if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%-20" PRIu64 "  ", queue[j]->flow_counter);
           fprintf(f, "%" PRIu64 "\n", queue[j]->bytes_counter);
-  #else
-          fprintf(f, "%-10lu  ", queue[j]->packet_counter);
-          if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%-10lu  ", queue[j]->flow_counter);
-          fprintf(f, "%lu\n", queue[j]->bytes_counter);
-  #endif
         }
         else fprintf(f, "\n");
       }
@@ -1218,15 +1212,9 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         }
   
         if (!is_event) {
-  #if defined HAVE_64BIT_COUNTERS
           fprintf(f, "%s%" PRIu64 "", write_sep(sep, &count), queue[j]->packet_counter);
           if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%s%" PRIu64 "", write_sep(sep, &count), queue[j]->flow_counter);
           fprintf(f, "%s%" PRIu64 "\n", write_sep(sep, &count), queue[j]->bytes_counter);
-  #else
-          fprintf(f, "%s%lu", write_sep(sep, &count), queue[j]->packet_counter);
-          if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%s%lu", write_sep(sep, &count), queue[j]->flow_counter);
-          fprintf(f, "%s%lu\n", write_sep(sep, &count), queue[j]->bytes_counter);
-  #endif
         }
         else fprintf(f, "\n");
       }
@@ -1450,15 +1438,9 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   }
 
   if (!is_event) {
-#if defined HAVE_64BIT_COUNTERS
     fprintf(f, "PACKETS               ");
     if (config.what_to_count & COUNT_FLOWS) fprintf(f, "FLOWS                 ");
     fprintf(f, "BYTES\n");
-#else
-    fprintf(f, "PACKETS     ");
-    if (config.what_to_count & COUNT_FLOWS) fprintf(f, "FLOWS       ");
-    fprintf(f, "BYTES\n");
-#endif
   }
   else fprintf(f, "\n");
 }

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -806,7 +806,6 @@ nf9_init_template(void)
 	    rcount++;
 	  }
 	}
-#if defined HAVE_64BIT_COUNTERS
         v4_template.r[rcount].type = htons(NF9_IN_BYTES);
         v4_template.r[rcount].length = htons(8);
         v4_int_template.r[rcount].length = 8;
@@ -821,26 +820,6 @@ nf9_init_template(void)
         v4_template_out.r[rcount].length = htons(8);
         v4_int_template_out.r[rcount].length = 8;
         rcount++;
-#else
-	v4_template.r[rcount].type = htons(NF9_IN_BYTES);
-	v4_template.r[rcount].length = htons(4);
-	v4_int_template.r[rcount].length = 4;
-	// Cisco doesn't appear to do that (yet?)
-        // v4_template_out.r[rcount].type = htons(NF9_OUT_BYTES);
-        v4_template_out.r[rcount].type = htons(NF9_IN_BYTES);
-        v4_template_out.r[rcount].length = htons(4);
-        v4_int_template_out.r[rcount].length = 4;
-	rcount++;
-	v4_template.r[rcount].type = htons(NF9_IN_PACKETS);
-	v4_template.r[rcount].length = htons(4);
-	v4_int_template.r[rcount].length = 4;
-	// Cisco doesn't appear to do that (yet?)
-        // v4_template_out.r[rcount].type = htons(NF9_OUT_PACKETS);
-	v4_template_out.r[rcount].type = htons(NF9_IN_PACKETS);
-        v4_template_out.r[rcount].length = htons(4);
-        v4_int_template_out.r[rcount].length = 4;
-	rcount++;
-#endif
 	v4_template.r[rcount].type = htons(NF9_IP_PROTOCOL_VERSION);
 	v4_template.r[rcount].length = htons(1);
 	v4_int_template.r[rcount].length = 1;
@@ -1240,7 +1219,6 @@ nf9_init_template(void)
 	    rcount++;
 	  }
         }
-#if defined HAVE_64BIT_COUNTERS
         v6_template.r[rcount].type = htons(NF9_IN_BYTES);
         v6_template.r[rcount].length = htons(8);
         v6_int_template.r[rcount].length = 8;
@@ -1255,26 +1233,6 @@ nf9_init_template(void)
         v6_template_out.r[rcount].length = htons(8);
         v6_int_template_out.r[rcount].length = 8;
         rcount++;
-#else
-	v6_template.r[rcount].type = htons(NF9_IN_BYTES);
-	v6_template.r[rcount].length = htons(4);
-	v6_int_template.r[rcount].length = 4;
-	// Cisco doesn't appear to do that (yet?)
-        // v6_template_out.r[rcount].type = htons(NF9_OUT_BYTES);
-        v6_template_out.r[rcount].type = htons(NF9_IN_BYTES);
-        v6_template_out.r[rcount].length = htons(4);
-        v6_int_template_out.r[rcount].length = 4;
-	rcount++;
-	v6_template.r[rcount].type = htons(NF9_IN_PACKETS);
-	v6_template.r[rcount].length = htons(4);
-	v6_int_template.r[rcount].length = 4;
-	// Cisco doesn't appear to do that (yet?)
-        // v6_template_out.r[rcount].type = htons(NF9_OUT_PACKETS);
-        v6_template_out.r[rcount].type = htons(NF9_IN_PACKETS);
-        v6_template_out.r[rcount].length = htons(4);
-        v6_int_template_out.r[rcount].length = 4;
-	rcount++;
-#endif
 	v6_template.r[rcount].type = htons(NF9_IP_PROTOCOL_VERSION);
 	v6_template.r[rcount].length = htons(1);
 	v6_int_template.r[rcount].length = 1;
@@ -1826,7 +1784,6 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
 	    }
 	  }
 
-#if defined HAVE_64BIT_COUNTERS
           rec64 = pmXXX_htonll(flow->octets[0]);
           memcpy(ftoft_ptr_0, &rec64, 8);
           ftoft_ptr_0 += 8;
@@ -1834,15 +1791,6 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
           rec64 = pmXXX_htonll(flow->packets[0]);
           memcpy(ftoft_ptr_0, &rec64, 8);
           ftoft_ptr_0 += 8;
-#else
-	  rec32 = htonl(flow->octets[0]);
-	  memcpy(ftoft_ptr_0, &rec32, 4);
-	  ftoft_ptr_0 += 4;
-
-	  rec32 = htonl(flow->packets[0]);
-  	  memcpy(ftoft_ptr_0, &rec32, 4);
-	  ftoft_ptr_0 += 4;
-#endif
 
           switch (flow->af) {
           case AF_INET:
@@ -1957,7 +1905,6 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
 	    }
           }
 
-#if defined HAVE_64BIT_COUNTERS
           rec64 = pmXXX_htonll(flow->octets[1]);
           memcpy(ftoft_ptr_1, &rec64, 8);
           ftoft_ptr_1 += 8;
@@ -1965,15 +1912,6 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
           rec64 = pmXXX_htonll(flow->packets[1]);
           memcpy(ftoft_ptr_1, &rec64, 8);
           ftoft_ptr_1 += 8;
-#else
-	  rec32 = htonl(flow->octets[1]);
-	  memcpy(ftoft_ptr_1, &rec32, 4);
-	  ftoft_ptr_1 += 4;
-
-	  rec32 = htonl(flow->packets[1]);
-	  memcpy(ftoft_ptr_1, &rec32, 4);
-	  ftoft_ptr_1 += 4;
-#endif
 
           switch (flow->af) {
           case AF_INET:

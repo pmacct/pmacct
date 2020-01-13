@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -874,15 +874,9 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
       }
   
       if (queue[j]->flow_type != NF9_FTYPE_EVENT && queue[j]->flow_type != NF9_FTYPE_OPTION) {
-  #if defined HAVE_64BIT_COUNTERS
         bson_append_long(bson_elem, "packets", queue[j]->packet_counter);
         if (config.what_to_count & COUNT_FLOWS) bson_append_long(bson_elem, "flows", queue[j]->flow_counter);
         bson_append_long(bson_elem, "bytes", queue[j]->bytes_counter);
-  #else
-        bson_append_int(bson_elem, "packets", queue[j]->packet_counter);
-        if (config.what_to_count & COUNT_FLOWS) bson_append_int(bson_elem, "flows", queue[j]->flow_counter);
-        bson_append_int(bson_elem, "bytes", queue[j]->bytes_counter);
-  #endif
       }
   
       bson_finish(bson_elem);

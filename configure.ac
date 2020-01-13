@@ -970,24 +970,6 @@ AC_CHECK_TYPE(uint32_t, [AC_DEFINE(HAVE_UINT32_T, 1)])
 AC_CHECK_TYPE(uint16_t, [AC_DEFINE(HAVE_UINT16_T, 1)])
 AC_CHECK_TYPE(uint8_t, [AC_DEFINE(HAVE_UINT8_T, 1)])
 
-AC_MSG_CHECKING([whether to enable 64bit counters])
-AC_ARG_ENABLE(64bit,
-        [  --enable-64bit                   Enable 64bit counters (default: yes)],
-	[
-          if test x$enableval = x"yes" ; then
-            AC_MSG_RESULT(yes)
-            AC_DEFINE(HAVE_64BIT_COUNTERS, 1)
-          else
-            AC_MSG_RESULT(no)
-          fi
-        ],
-	[
-          AC_MSG_RESULT(yes)
-	  AC_DEFINE(HAVE_64BIT_COUNTERS, 1)
-	  COMPILE_ARGS="${COMPILE_ARGS} '--enable-64bit'"
-	]
-)
-
 AC_MSG_CHECKING(whether to enable NFLOG support)
 AC_ARG_ENABLE(nflog,
   [  --enable-nflog                   Enable NFLOG support (default: no)],

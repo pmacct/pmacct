@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -3490,7 +3490,6 @@ int sql_compose_static_set(int have_flows)
 {
   int set_primitives=0;
 
-#if defined HAVE_64BIT_COUNTERS
   strncpy(set[set_primitives].string, "SET packets=packets+%llu, bytes=bytes+%llu", SPACELEFT(set[set_primitives].string));
   set[set_primitives].type = COUNT_INT_COUNTERS;
   set[set_primitives].handler = count_counters_setclause_handler;
@@ -3503,20 +3502,6 @@ int sql_compose_static_set(int have_flows)
     set[set_primitives].handler = count_flows_setclause_handler;
     set_primitives++;
   }
-#else
-  strncpy(set[set_primitives].string, "SET packets=packets+%u, bytes=bytes+%u", SPACELEFT(set[set_primitives].string));
-  set[set_primitives].type = COUNT_INT_COUNTERS;
-  set[set_primitives].handler = count_counters_setclause_handler;
-  set_primitives++;
-
-  if (have_flows) {
-    strncpy(set[set_primitives].string, ", ", SPACELEFT(set[set_primitives].string));
-    strncat(set[set_primitives].string, "flows=flows+%u", SPACELEFT(set[set_primitives].string));
-    set[set_primitives].type = COUNT_INT_FLOWS;
-    set[set_primitives].handler = count_flows_setclause_handler;
-    set_primitives++;
-  }
-#endif
 
   if (config.what_to_count & COUNT_TCPFLAGS) {
     strncpy(set[set_primitives].string, ", ", SPACELEFT(set[set_primitives].string));

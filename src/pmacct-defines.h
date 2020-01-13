@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -503,11 +503,7 @@ typedef struct {
   u_int16_t n;
 } s_uint16_t;
 
-#if defined HAVE_64BIT_COUNTERS
 typedef u_int64_t pm_counter_t;
-#else
-typedef u_int32_t pm_counter_t;
-#endif
 
 /* Keep common NF_AS and NF_NET values aligned, ie. NF_[NET|AS]_KEEP == 0x00000001 */
 #define NF_AS_COMPAT    0x00000000 /* Unused */
