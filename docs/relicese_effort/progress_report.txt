@@ -13,6 +13,7 @@ Commits  Author <email>
       7  Jared Mauch <jared@puck.nether.net>
       5  Aaron Finney <aaron.finney@openx.com>
       3  Markus Weber <fvd@uucp.de>
+      3  Thomas Graf <thomas@graf3.net>
       2  Lennert Buytenhek <buytenh@wantstofly.org>
       2  Hidde van der Heide <hvanderheide@nexuz.net>
       1  Pier Carlo Chiodi <pierky@pierky.com>
@@ -43,7 +44,6 @@ Commits  Author <email>
       2  Pierre Dubouilh <pldubouilh@gmail.com>
       2  Tiago Gomes <tiago.gomes@codethink.co.uk>
       2  Vadim Tk <gitcommit@m.vtk.one>
-      3  Thomas Graf <thomas@graf3.net>
       1  Junpei YOSHINO <junpei.yoshino@gmail.com>
       1  root <root@smokeping.celya.fr>
       1  Mehul Prajapati <mehulprajapati2802@gmail.com>
