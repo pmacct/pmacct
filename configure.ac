@@ -715,6 +715,38 @@ AC_ARG_ENABLE(kafka,
 )
 dnl finish: Kafka handling
 
+dnl start: Redis handling
+AC_MSG_CHECKING(whether to enable Redis support)
+AC_ARG_ENABLE(redis,
+  [  --enable-redis                   Enable Redis support (default: no)],
+  [ case "$enableval" in
+  yes)
+    AC_MSG_RESULT(yes)
+    PKG_CHECK_MODULES([REDIS], [hiredis >= 0.13.0], [
+      PLUGINS="${PLUGINS} redis"
+      USING_REDIS="yes"
+      PMACCT_CFLAGS="$PMACCT_CFLAGS $REDIS_CFLAGS"
+      AC_DEFINE(WITH_REDIS, 1)
+      _save_LIBS="$LIBS"
+      LIBS="$LIBS $REDIS_LIBS"
+      AC_CHECK_LIB([hiredis], [redisConnect])
+      LIBS="$_save_LIBS"
+      _save_CFLAGS="$CFLAGS"
+      CFLAGS="$CFLAGS $REDIS_CFLAGS"
+      AC_CHECK_HEADER([hiredis/hiredis.h])
+      CFLAGS="$_save_CFLAGS"
+    ])
+    ;;
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  esac ],
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
+dnl finish: Redis handling
+
 dnl start: geoip handling
 AC_MSG_CHECKING(whether to enable GeoIP support)
 AC_ARG_ENABLE(geoip,
@@ -1140,6 +1172,7 @@ AM_CONDITIONAL([WITH_SQLITE3], [test x"$USING_SQLITE3" = x"yes"])
 AM_CONDITIONAL([WITH_RABBITMQ], [test x"$USING_RABBITMQ" = x"yes"])
 AM_CONDITIONAL([WITH_ZMQ], [test x"$USING_ZMQ" = x"yes"])
 AM_CONDITIONAL([WITH_KAFKA], [test x"$USING_KAFKA" = x"yes"])
+AM_CONDITIONAL([WITH_REDIS], [test x"$USING_REDIS" = x"yes"])
 AM_CONDITIONAL([USING_SQL], [test x"$USING_SQL" = x"yes"])
 AM_CONDITIONAL([WITH_AVRO], [test x"$USING_AVRO" = x"yes"])
 AM_CONDITIONAL([WITH_SERDES], [test x"$USING_SERDES" = x"yes"])

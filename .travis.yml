@@ -23,10 +23,12 @@ install:
   - cd avro-c-1.9.1 && mkdir build && cd build && cmake .. && make && sudo make install && cd .. && cd ..
   - git clone https://github.com/confluentinc/libserdes
   - cd libserdes && ./configure && make && sudo make install && cd ..
+  - git clone https://github.com/redis/hiredis
+  - cd hiredis && make 
 
 env:
-  - CONFIG_FLAGS="--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes"
-  - CONFIG_FLAGS="--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes"
+  - CONFIG_FLAGS="--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
+  - CONFIG_FLAGS="--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
   - CONFIG_FLAGS="--enable-debug --enable-jansson --enable-zmq --enable-kafka"
   - CONFIG_FLAGS="--enable-jansson --enable-zmq --enable-kafka"
   - CONFIG_FLAGS="--enable-debug --enable-jansson --enable-zmq"

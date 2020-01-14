@@ -21,6 +21,8 @@
   ZMQ_LIBS			linker flags for ZMQ, overriding pkg-config
   KAFKA_CFLAGS			C compiler flags for KAFKA, overriding pkg-config
   KAFKA_LIBS			linker flags for KAFKA, overriding pkg-config
+  REDIS_CFLAGS			C compiler flags for REDIS, overriding pkg-config
+  REDIS_LIBS			linker flags for REDIS, overriding pkg-config
   GEOIP_CFLAGS			C compiler flags for GEOIP, overriding pkg-config
   GEOIP_LIBS			linker flags for GEOIP, overriding pkg-config
   GEOIPV2_CFLAGS		C compiler flags for GEOIPV2, overriding pkg-config
