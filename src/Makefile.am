@@ -94,6 +94,12 @@ libdaemons_la_SOURCES += sql_common.c sql_handlers.c sql_common_m.c
 libdaemons_la_CFLAGS += -Wno-error=pointer-sign
 libdaemons_la_LIBADD  += -lm -lz
 endif
+if WITH_REDIS
+libdaemons_la_SOURCES += redis_common.c
+libdaemons_la_LIBADD  += @REDIS_LIBS@
+libdaemons_la_CFLAGS  += @REDIS_CFLAGS@
+endif
+
 
 if USING_TRAFFIC_BINS
 sbin_PROGRAMS += pmacctd nfacctd sfacctd

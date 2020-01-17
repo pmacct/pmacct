@@ -88,6 +88,9 @@ struct configuration {
   int pmacctd_nonroot;
   char *proc_name;
   int proc_priority;
+  char *cluster_name;
+  int cluster_id;
+  char *redis_server;
   int sock;
   int bgp_sock;
   int acct_type; 

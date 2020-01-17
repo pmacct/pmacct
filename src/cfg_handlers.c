@@ -387,6 +387,41 @@ int cfg_key_proc_priority(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_cluster_name(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.cluster_name = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'cluster_name'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_cluster_id(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+
+  for (; list; list = list->next, changes++) list->cfg.cluster_id = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'cluster_id'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_redis_server(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.redis_server = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'redis_server'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_snaplen(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
