@@ -15,9 +15,9 @@ install:
   - cd libmaxminddb && ./bootstrap && ./configure && make && sudo make install && cd ..
   - git clone -b 2.8-stable https://github.com/ntop/nDPI
   - cd nDPI && ./autogen.sh && ./configure && make && sudo make install && sudo ldconfig && cd ..
-  - wget https://github.com/zeromq/libzmq/releases/download/v4.3.1/zeromq-4.3.1.tar.gz
-  - tar xfz zeromq-4.3.1.tar.gz
-  - cd zeromq-4.3.1 && ./configure && make && sudo make install && cd ..
+  - wget https://github.com/zeromq/libzmq/releases/download/v4.3.2/zeromq-4.3.2.tar.gz
+  - tar xfz zeromq-4.3.2.tar.gz
+  - cd zeromq-4.3.2 && ./configure && make && sudo make install && cd ..
   - wget http://www-us.apache.org/dist/avro/avro-1.9.1/c/avro-c-1.9.1.tar.gz
   - tar xfz avro-c-1.9.1.tar.gz
   - cd avro-c-1.9.1 && mkdir build && cd build && cmake .. && make && sudo make install && cd .. && cd ..
