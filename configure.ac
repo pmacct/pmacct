@@ -932,7 +932,7 @@ AC_ARG_ENABLE(ndpi,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([NDPI], [libndpi >= 2.4], [
+    PKG_CHECK_MODULES([NDPI], [libndpi >= 3.0], [
       SUPPORTS="${SUPPORTS} ndpi"
       USING_NDPI="yes"
 
@@ -953,9 +953,8 @@ AC_ARG_ENABLE(ndpi,
       CFLAGS="$CFLAGS $NDPI_CFLAGS"
       AC_CHECK_HEADER([libndpi/ndpi_main.h])
       CFLAGS="$_save_CFLAGS"
-    ])
-    PKG_CHECK_MODULES([NDPI26], [libndpi >= 2.6], [AC_DEFINE(WITH_NDPI26, 1)], [AC_DEFINE(WITH_NDPI, 1)])
-    PKG_CHECK_MODULES([NDPI30], [libndpi >= 3.0], [AC_DEFINE(WITH_NDPI30, 1)], [AC_DEFINE(WITH_NDPI, 1)])
+    ],
+    [AC_MSG_ERROR([Missing nDPI API. Refer to: https://github.com/ntop/nDPI/])])
     ;;
   no)
     AC_MSG_RESULT(no)
