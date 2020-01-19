@@ -33,6 +33,8 @@ env:
   - CONFIG_FLAGS="--enable-jansson --enable-zmq --enable-kafka"
   - CONFIG_FLAGS="--enable-debug --enable-jansson --enable-zmq"
   - CONFIG_FLAGS="--enable-jansson --enable-zmq"
+  - CONFIG_FLAGS="--enable-debug --enable-jansson --enable-kafka --enable-serdes"
+  - CONFIG_FLAGS="--enable-jansson --enable-kafka --enable-serdes"
   - CONFIG_FLAGS="--enable-debug --enable-jansson --enable-kafka"
   - CONFIG_FLAGS="--enable-jansson --enable-kafka"
   - CONFIG_FLAGS="--enable-debug --enable-zmq"
