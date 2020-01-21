@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -51,6 +51,8 @@ void pm_pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *bu
   struct plugin_requests req;
   u_int32_t iface32 = 0;
   u_int32_t ifacePresent = 0;
+
+  memset(&req, 0, sizeof(req));
 
   if (cb_data->sig.is_set) sigprocmask(SIG_BLOCK, &cb_data->sig.set, NULL);
 
