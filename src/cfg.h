@@ -90,7 +90,7 @@ struct configuration {
   int proc_priority;
   char *cluster_name;
   int cluster_id;
-  char *redis_server;
+  char *redis_host;
   int sock;
   int bgp_sock;
   int acct_type; 
