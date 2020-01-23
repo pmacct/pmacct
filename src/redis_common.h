@@ -19,10 +19,12 @@
 /* defines */
 #define PM_REDIS_DEFAULT_PORT		6379
 #define PM_REDIS_DEFAULT_TIMEOUT	60
+#define PM_REDIS_DEFAULT_EXP_TIME	60
 
 /* structures */
 struct p_redis_host {
   char log_id[SHORTBUFLEN];
+  int exp_time;
 
   redisContext *ctx;
   redisReply *reply;
@@ -31,6 +33,10 @@ struct p_redis_host {
 /* prototypes */
 extern void p_redis_init(struct p_redis_host *, char *, int);
 extern void p_redis_set_log_id(struct p_redis_host *, char *);
+extern void p_redis_set_exp_time(struct p_redis_host *, int);
+
+extern void p_redis_set_string(struct p_redis_host *, char *, char *, int);
+extern void p_redis_set_int(struct p_redis_host *, char *, int, int);
 
 /* global vars */
 extern struct p_redis_host nfacctd_redis_host;
