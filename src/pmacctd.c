@@ -153,16 +153,14 @@ pcap_t *pm_pcap_open(const char *dev_ptr, int snaplen, int promisc,
     Log(LOG_WARNING, "WARN ( %s/core ): pcap_protocol specified but linked against a version of libpcap that does not support pcap_set_protocol().\n", config.name);
 #endif
 
-  /* XXX: rely on external filtering for now */
-/* 
-  ret = pcap_setdirection(p, direction);
-  if (ret < 0 && direction != PCAP_D_INOUT)
-    Log(LOG_WARNING, "INFO ( %s/core ): direction specified but linked against a version of libpcap that does not support pcap_setdirection().\n", config.name);
-*/
-
   ret = pcap_activate(p);
   if (ret < 0)
     goto err;
+
+#ifdef PCAP_SET_DIRECTION
+  ret = pcap_setdirection(p, direction);
+  if (ret < 0) goto err;
+#endif
 
   return p;
 

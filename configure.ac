@@ -399,6 +399,8 @@ else
   LIBS="${LIBS} -lrt -lnuma"
 fi
 
+AC_CHECK_LIB([pcap], [pcap_setdirection], [ AC_DEFINE(PCAP_SET_DIRECTION, 1) ], [])
+
 dnl packet capture type check; taken from libpcap.
 AC_MSG_CHECKING(packet capture type)
 if test -r /dev/bpf0 ; then
