@@ -853,7 +853,7 @@ void bmp_peer_hdr_get_v_flag(struct bmp_peer_hdr *bph, u_int8_t *family)
     (*family) = FALSE;
 
     if (version == 0) (*family) = AF_INET;
-    else if (version == 1) (*family) = AF_INET6;
+    else (*family) = AF_INET6;
   }
 }
 
