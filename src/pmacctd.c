@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -129,33 +129,28 @@ pcap_t *pm_pcap_open(const char *dev_ptr, int snaplen, int promisc,
   int ret;
 
   p = pcap_create(dev_ptr, errbuf);
-  if (p == NULL)
-    return NULL;
+  if (p == NULL) return NULL;
 
   ret = pcap_set_snaplen(p, snaplen);
-  if (ret < 0)
-    goto err;
+  if (ret < 0) goto err;
 
   ret = pcap_set_promisc(p, promisc);
-  if (ret < 0)
-    goto err;
+  if (ret < 0) goto err;
 
   ret = pcap_set_timeout(p, to_ms);
-  if (ret < 0)
-    goto err;
+  if (ret < 0) goto err;
 
 #ifdef PCAP_SET_PROTOCOL
   ret = pcap_set_protocol(p, protocol);
-  if (ret < 0)
-    goto err;
+  if (ret < 0) goto err;
 #else
-  if (protocol)
+  if (protocol) {
     Log(LOG_WARNING, "WARN ( %s/core ): pcap_protocol specified but linked against a version of libpcap that does not support pcap_set_protocol().\n", config.name);
+  }
 #endif
 
   ret = pcap_activate(p);
-  if (ret < 0)
-    goto err;
+  if (ret < 0) goto err;
 
 #ifdef PCAP_SET_DIRECTION
   ret = pcap_setdirection(p, direction);
@@ -165,16 +160,17 @@ pcap_t *pm_pcap_open(const char *dev_ptr, int snaplen, int promisc,
   return p;
 
 err:
-  if (ret == PCAP_ERROR)
+  if (ret == PCAP_ERROR) {
     snprintf(errbuf, PCAP_ERRBUF_SIZE, "%s: %s", dev_ptr, pcap_geterr(p));
+  }
   else if (ret == PCAP_ERROR_NO_SUCH_DEVICE ||
 	   ret == PCAP_ERROR_PERM_DENIED ||
-	   ret == PCAP_ERROR_PROMISC_PERM_DENIED)
-    snprintf(errbuf, PCAP_ERRBUF_SIZE, "%s: %s (%s)", dev_ptr,
-	     pcap_statustostr(ret), pcap_geterr(p));
-  else
-    snprintf(errbuf, PCAP_ERRBUF_SIZE, "%s: %s", dev_ptr,
-	     pcap_statustostr(ret));
+	   ret == PCAP_ERROR_PROMISC_PERM_DENIED) {
+    snprintf(errbuf, PCAP_ERRBUF_SIZE, "%s: %s (%s)", dev_ptr, pcap_statustostr(ret), pcap_geterr(p));
+  }
+  else {
+    snprintf(errbuf, PCAP_ERRBUF_SIZE, "%s: %s", dev_ptr, pcap_statustostr(ret));
+  }
 
   pcap_close(p);
 

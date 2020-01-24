@@ -32,6 +32,8 @@ struct p_redis_host {
 
 /* prototypes */
 extern void p_redis_init(struct p_redis_host *, char *, int);
+extern void p_redis_close(struct p_redis_host *);
+
 extern void p_redis_set_log_id(struct p_redis_host *, char *);
 extern void p_redis_set_exp_time(struct p_redis_host *, int);
 

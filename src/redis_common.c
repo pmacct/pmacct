@@ -62,6 +62,11 @@ void p_redis_init(struct p_redis_host *redis_host, char *log_id, int nonblock)
   }
 }
 
+void p_redis_close(struct p_redis_host *redis_host)
+{
+  redisFree(redis_host->ctx);
+}
+
 void p_redis_set_string(struct p_redis_host *redis_host, char *resource, char *value, int expire)
 {
   if (expire > 0) {
