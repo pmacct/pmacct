@@ -16,6 +16,7 @@ Commits  Author <email>
       3  Markus Weber <fvd@uucp.de>
       3  Thomas Graf <thomas@graf3.net>
       2  Lennert Buytenhek <buytenh@wantstofly.org>
+      2  Guy Lowe <git@gunk.gen.nz>
       2  Hidde van der Heide <hvanderheide@nexuz.net>
       1  Pier Carlo Chiodi <pierky@pierky.com>
       1  Mike Jager <mike@mikej.net.nz>
@@ -36,7 +37,6 @@ Commits  Author <email>
       3  Alexander Brusilov <photon89@yandex.ru>
       3  Emil Palm <emil@x86.nu>
       3  Dan Berger <dberger@valvesoftware.com>
-      2  Guy Lowe <git@gunk.gen.nz>
       2  Jim Westfall <jwestfall@surrealistic.net>
       2  Lee Yongjae <setup74@gmail.com>
       2  Matthieu Texier <matthieu@texier.tv>
