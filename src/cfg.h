@@ -237,6 +237,10 @@ struct configuration {
   int telemetry_port_udp;
   char *telemetry_ip;
   char *telemetry_zmq_address;
+  char *telemetry_kafka_broker_host;
+  int telemetry_kafka_broker_port;
+  char *telemetry_kafka_topic;
+  char *telemetry_kafka_config_file;
   char *telemetry_decoder;
   int telemetry_decoder_id;
   int telemetry_max_peers;

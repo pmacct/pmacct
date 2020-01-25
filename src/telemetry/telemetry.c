@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -71,6 +71,7 @@ void telemetry_daemon(void *t_data_void)
   int ret, rc, peers_idx, allowed, yes=1;
   int peers_idx_rr = 0, max_peers_idx = 0, peers_num = 0;
   int data_decoder = 0, recv_flags = 0;
+  int capture_methods = 0, zmq_input = 0, kafka_input = 0;
   u_int16_t port = 0;
   char *srv_proto = NULL;
   time_t last_peers_timeout_check;
@@ -116,22 +117,40 @@ void telemetry_daemon(void *t_data_void)
   memset(telemetry_misc_db, 0, sizeof(telemetry_misc_structs));
 
   /* initialize variables */
+  if (config.telemetry_ip || config.telemetry_port_tcp || config.telemetry_port_udp) capture_methods++; 
+  if (config.telemetry_zmq_address) {
 #if defined WITH_ZMQ
-  if ((config.telemetry_ip || config.telemetry_port_tcp || config.telemetry_port_udp) &&
-      config.telemetry_zmq_address) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_ip and telemetry_daemon_zmq_address are mutually exclusive. Terminating.\n", config.name, t_data->log_str);
+    capture_methods++;
+    zmq_input = TRUE;
+#else 
+    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_zmq_* require --enable-zmq. Terminating.\n", config.name, t_data->log_str);
+    exit_gracefully(1);
+#endif
+  }
+  if (config.telemetry_kafka_broker_host || config.telemetry_kafka_topic) {
+#if defined WITH_KAFKA
+    capture_methods++;
+    kafka_input = TRUE;
+
+    if ((config.telemetry_kafka_broker_host && !config.telemetry_kafka_topic) || (config.telemetry_kafka_topic && !config.telemetry_kafka_broker_host)) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Kafka collection requires both broker host and topic to be specified. Terminating.\n\n", config.name, t_data->log_str);
+      exit_gracefully(1);
+    }
+#else
+    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_kafka_* require --enable-kafka. Terminating.\n", config.name, t_data->log_str);
+    exit_gracefully(1);
+#endif
+  }
+
+  if (capture_methods > 1) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_ip, telemetry_daemon_zmq_* and telemetry_kafka_* are mutually exclusive. Exiting...\n",
+	config.name, t_data->log_str);
     exit_gracefully(1);
   }
 
   memset(zmq_peer_msg, 0, sizeof(zmq_peer_msg));
-#else
-  if (config.telemetry_zmq_address) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_zmq_address requires --enable-zmq. Terminating.\n", config.name, t_data->log_str);
-    exit_gracefully(1);
-  }
-#endif
 
-  if (!config.telemetry_zmq_address) {
+  if (!zmq_input && !kafka_input) {
     if (config.telemetry_port_tcp && config.telemetry_port_udp) {
       Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_port_tcp and telemetry_daemon_port_udp are mutually exclusive. Terminating.\n", config.name, t_data->log_str);
       exit_gracefully(1);
@@ -189,16 +208,23 @@ void telemetry_daemon(void *t_data_void)
       exit_gracefully(1);
     }
 
-    if (config.telemetry_zmq_address && config.telemetry_decoder_id != TELEMETRY_DECODER_JSON) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): ZeroMQ collection supports only 'json' decoder (telemetry_daemon_decoder). Terminating.\n", config.name, t_data->log_str);
-      exit_gracefully(1);
+    if (config.telemetry_decoder_id != TELEMETRY_DECODER_JSON) {
+      if (zmq_input) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): ZeroMQ collection supports only 'json' decoder (telemetry_daemon_decoder). Terminating.\n", config.name, t_data->log_str);
+	exit_gracefully(1);
+      }
+
+      if (kafka_input) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): Kafka collection supports only 'json' decoder (telemetry_daemon_decoder). Terminating.\n", config.name, t_data->log_str);
+	exit_gracefully(1);
+      }
     }
   }
 
   if (!config.telemetry_max_peers) config.telemetry_max_peers = TELEMETRY_MAX_PEERS_DEFAULT;
   Log(LOG_INFO, "INFO ( %s/%s ): maximum telemetry peers allowed: %d\n", config.name, t_data->log_str, config.telemetry_max_peers);
 
-  if (config.telemetry_port_udp || config.telemetry_zmq_address) {
+  if (config.telemetry_port_udp || zmq_input || kafka_input) {
     if (!config.telemetry_peer_timeout) config.telemetry_peer_timeout = TELEMETRY_PEER_TIMEOUT_DEFAULT;
     Log(LOG_INFO, "INFO ( %s/%s ): telemetry peers timeout: %u\n", config.name, t_data->log_str, config.telemetry_peer_timeout);
   }
@@ -210,7 +236,7 @@ void telemetry_daemon(void *t_data_void)
   }
   memset(telemetry_peers, 0, config.telemetry_max_peers*sizeof(telemetry_peer));
 
-  if (config.telemetry_port_udp || config.telemetry_zmq_address) {
+  if (config.telemetry_port_udp || zmq_input || kafka_input) {
     telemetry_peers_timeout = malloc(config.telemetry_max_peers*sizeof(telemetry_peer_timeout));
     if (!telemetry_peers_timeout) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() telemetry_peers_timeout structure. Terminating.\n", config.name, t_data->log_str);
@@ -273,7 +299,7 @@ void telemetry_daemon(void *t_data_void)
     }
   }
 
-  if (!config.telemetry_zmq_address) {
+  if (!zmq_input && !kafka_input) {
     if (config.telemetry_port_tcp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
     else if (config.telemetry_port_udp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
 
@@ -355,7 +381,7 @@ void telemetry_daemon(void *t_data_void)
     }
   }
 
-  if (!config.telemetry_zmq_address) {
+  if (!zmq_input && !kafka_input) {
     char srv_string[INET6_ADDRSTRLEN];
     struct host_addr srv_addr;
     u_int16_t srv_port;
@@ -365,9 +391,16 @@ void telemetry_daemon(void *t_data_void)
     Log(LOG_INFO, "INFO ( %s/%s ): waiting for telemetry data on %s:%u/%s\n", config.name, t_data->log_str, srv_string, srv_port, srv_proto);
   }
 #if defined WITH_ZMQ
-  else {
+  else if (zmq_input) {
     telemetry_init_zmq_host(&telemetry_zmq_host, &config.telemetry_sock);
     Log(LOG_INFO, "INFO ( %s/%s ): reading telemetry data from ZeroMQ %s\n", config.name, t_data->log_str, p_zmq_get_address(&telemetry_zmq_host));
+  }
+#endif
+#if defined WITH_KAFKA
+  else if (kafka_input) {
+    telemetry_init_kafka_host(&telemetry_kafka_host);
+    Log(LOG_INFO, "INFO ( %s/%s ): reading telemetry data from Kafka %s:%s\n", config.name, t_data->log_str,
+	p_kafka_get_broker(&telemetry_kafka_host), p_kafka_get_topic(&telemetry_kafka_host));
   }
 #endif
 
