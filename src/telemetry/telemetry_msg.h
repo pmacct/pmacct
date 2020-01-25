@@ -41,6 +41,11 @@ extern int telemetry_basic_validate_json(telemetry_peer *);
 
 #if defined (WITH_ZMQ)
 extern int telemetry_recv_zmq_generic(telemetry_peer *, u_int32_t);
-extern int telemetry_decode_zmq_peer(struct telemetry_data *, void *, char *, size_t, struct sockaddr *, socklen_t *);
+extern int telemetry_decode_zmq_peer(struct telemetry_data *, void *, u_char *, size_t, struct sockaddr *, socklen_t *);
 #endif
+
+#if defined (WITH_KAFKA)
+extern int telemetry_recv_kafka_generic(telemetry_peer *, u_int32_t);
+#endif
+
 #endif//TELEMETRY_MSG_H

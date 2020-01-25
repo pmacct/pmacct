@@ -41,6 +41,7 @@ telemetry_misc_structs *telemetry_misc_db;
 telemetry_peer *telemetry_peers;
 void *telemetry_peers_cache;
 telemetry_peer_timeout *telemetry_peers_timeout;
+int zmq_input = 0, kafka_input = 0;
 
 /* Functions */
 void telemetry_wrapper()
@@ -71,7 +72,7 @@ void telemetry_daemon(void *t_data_void)
   int ret, rc, peers_idx, allowed, yes=1;
   int peers_idx_rr = 0, max_peers_idx = 0, peers_num = 0;
   int data_decoder = 0, recv_flags = 0;
-  int capture_methods = 0, zmq_input = 0, kafka_input = 0;
+  int capture_methods = 0;
   u_int16_t port = 0;
   char *srv_proto = NULL;
   time_t last_peers_timeout_check;
@@ -93,9 +94,8 @@ void telemetry_daemon(void *t_data_void)
   time_t dump_refresh_deadline = {0};
   struct timeval dump_refresh_timeout, *drt_ptr;
 
-#if defined WITH_ZMQ
-  /* ZeroMQ stuff */
-  char zmq_peer_msg[LARGEBUFLEN];
+#if defined (WITH_ZMQ) || defined (WITH_KAFKA)
+  u_char consumer_buf[LARGEBUFLEN];
 #endif
 
   if (!t_data) {
@@ -148,7 +148,7 @@ void telemetry_daemon(void *t_data_void)
     exit_gracefully(1);
   }
 
-  memset(zmq_peer_msg, 0, sizeof(zmq_peer_msg));
+  memset(consumer_buf, 0, sizeof(consumer_buf));
 
   if (!zmq_input && !kafka_input) {
     if (config.telemetry_port_tcp && config.telemetry_port_udp) {
@@ -506,14 +506,31 @@ void telemetry_daemon(void *t_data_void)
     }
     else drt_ptr = NULL;
 
-    if (!config.telemetry_zmq_address) {
+    if (!zmq_input && !kafka_input) {
       select_num = select(select_fd, &read_descs, NULL, NULL, drt_ptr);
       if (select_num < 0) goto select_again;
     }
 #if defined WITH_ZMQ
-    else {
+    else if (zmq_input) {
       select_num = p_zmq_recv_poll(&telemetry_zmq_host.sock, drt_ptr ? (drt_ptr->tv_sec * 1000) : 1000);
       if (select_num < 0) goto select_again;
+    }
+#endif
+#if defined WITH_KAFKA
+    else if (kafka_input) {
+      t_data->kafka_msg = NULL;
+
+      select_num = p_kafka_consume_poller(&telemetry_kafka_host, &t_data->kafka_msg, drt_ptr ? (drt_ptr->tv_sec * 1000) : 1000);
+
+      if (select_num < 0) {
+	/* Close */
+	p_kafka_manage_consumer(&nfacctd_kafka_host, FALSE);
+
+	/* Re-open */
+	telemetry_init_kafka_host(&telemetry_kafka_host);
+
+	goto select_again;
+      }
     }
 #endif
 
@@ -539,8 +556,8 @@ void telemetry_daemon(void *t_data_void)
       t_data->global_stats.last_check = t_data->now;
     }
 
-    /* XXX: ZeroMQ case: timeout handling (to be tested) */
-    if (config.telemetry_port_udp || config.telemetry_zmq_address) {
+    /* XXX: ZeroMQ / Kafka cases: timeout handling (to be tested) */
+    if (config.telemetry_port_udp || zmq_input || kafka_input) {
       if (t_data->now > (last_peers_timeout_check + TELEMETRY_PEER_TIMEOUT_INTERVAL)) {
 	for (peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
 	  telemetry_peer_timeout *peer_timeout;
@@ -638,7 +655,7 @@ void telemetry_daemon(void *t_data_void)
     if (!select_num) goto select_again;
 
     /* New connection is coming in */
-    if (FD_ISSET(config.telemetry_sock, &read_descs)) {
+    if (FD_ISSET(config.telemetry_sock, &read_descs) || kafka_input) {
       if (config.telemetry_port_tcp) {
         fd = accept(config.telemetry_sock, (struct sockaddr *) &client, &clen);
         if (fd == ERR) goto read_data;
@@ -651,10 +668,17 @@ void telemetry_daemon(void *t_data_void)
 	else fd = config.telemetry_sock;
       }
 #if defined WITH_ZMQ
-      else if (config.telemetry_zmq_address) {
-	ret = telemetry_decode_zmq_peer(t_data, &telemetry_zmq_host, zmq_peer_msg, sizeof(zmq_peer_msg), (struct sockaddr *) &client, &clen);
+      else if (zmq_input) {
+	ret = telemetry_decode_zmq_peer(t_data, &telemetry_zmq_host, consumer_buf, sizeof(consumer_buf), (struct sockaddr *) &client, &clen);
 	if (ret < 0) goto select_again; 
 	else fd = config.telemetry_sock;
+      }
+#endif
+#if defined WITH_KAFKA
+      else if (kafka_input) {
+	ret = p_kafka_consume_data(&telemetry_kafka_host, t_data->kafka_msg, consumer_buf, sizeof(consumer_buf));
+	if (ret < 0) goto select_again;
+        else fd = TELEMETRY_KAFKA_FD;
       }
 #endif
 
@@ -669,8 +693,8 @@ void telemetry_daemon(void *t_data_void)
         goto read_data;
       }
 
-      /* XXX: UDP and ZeroMQ cases may be optimized further */
-      if (config.telemetry_port_udp || config.telemetry_zmq_address) {
+      /* XXX: UDP, ZeroMQ and Kafka cases may be optimized further */
+      if (config.telemetry_port_udp || zmq_input || kafka_input) {
 	telemetry_peer_cache *tpc_ret;
 	u_int16_t client_port;
 
@@ -692,9 +716,9 @@ void telemetry_daemon(void *t_data_void)
 	  if (telemetry_peer_init(peer, FUNC_TYPE_TELEMETRY)) peer = NULL;
 
 	  if (peer) {
-	    recalc_fds = TRUE; // XXX: do we need this for ZeroMQ case?
+	    recalc_fds = TRUE; // XXX: do we need this for ZeroMQ / Kafka cases?
 
-	    if (config.telemetry_port_udp || config.telemetry_zmq_address) {
+	    if (config.telemetry_port_udp || zmq_input || kafka_input) {
 	      tpc.index = peers_idx;
 	      telemetry_peers_timeout[peers_idx].last_msg = t_data->now;
 
@@ -714,6 +738,13 @@ void telemetry_daemon(void *t_data_void)
         if (config.telemetry_port_tcp) close(fd);
         goto read_data;
       }
+
+#if defined WITH_KAFKA
+      if (kafka_input) {
+	peer->buf.kafka_msg = t_data->kafka_msg;
+        t_data->kafka_msg = NULL;
+      }
+#endif
 
       peer->fd = fd;
       if (config.telemetry_port_tcp) FD_SET(peer->fd, &bkp_read_descs);

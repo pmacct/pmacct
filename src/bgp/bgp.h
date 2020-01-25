@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -160,6 +160,9 @@ struct bgp_peer_buf {
   char *base;
   u_int32_t len;
   u_int32_t truncated_len;
+#if defined WITH_KAFKA
+  void *kafka_msg;
+#endif
 };
 
 struct bgp_peer {

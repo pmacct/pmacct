@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -33,6 +33,7 @@
 #define TELEMETRY_PEER_TIMEOUT_INTERVAL	60
 #define TELEMETRY_UDP_MAXMSG		65535
 #define TELEMETRY_LOG_STATS_INTERVAL	120	
+#define TELEMETRY_KAFKA_FD		INT_MAX	
 
 #define TELEMETRY_DECODER_UNKNOWN	0
 #define TELEMETRY_DECODER_JSON		1
@@ -90,6 +91,9 @@ struct telemetry_data {
 #if defined WITH_ZMQ
   void *zmq_host;
 #endif
+#if defined WITH_KAFKA
+  void *kafka_msg;
+#endif
 
   telemetry_stats global_stats;
   time_t now;
@@ -146,4 +150,5 @@ extern telemetry_misc_structs *telemetry_misc_db;
 extern telemetry_peer *telemetry_peers;
 extern void *telemetry_peers_cache;
 extern telemetry_peer_timeout *telemetry_peers_timeout; 
+extern int zmq_input, kafka_input;
 #endif //TELEMETRY_H

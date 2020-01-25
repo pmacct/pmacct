@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -81,6 +81,24 @@ int telemetry_recv_zmq_generic(telemetry_peer *peer, u_int32_t len)
 }
 #endif
 
+#if defined WITH_KAFKA
+int telemetry_recv_kafka_generic(telemetry_peer *peer, u_int32_t len)
+{
+  int ret = 0;
+
+  ret = p_kafka_consume_data(&telemetry_kafka_host, peer->buf.kafka_msg, (u_char *)peer->buf.base, peer->buf.len);
+
+  if (ret > 0) {
+    peer->stats.packet_bytes += ret;
+    peer->msglen = ret;
+  }
+
+  peer->buf.kafka_msg = NULL;
+
+  return ret;
+}
+#endif
+
 int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
 {
   int ret = 0;
@@ -122,9 +140,18 @@ int telemetry_recv_json(telemetry_peer *peer, u_int32_t len, int *flags)
 
   (*flags) = FALSE;
 
-  if (!config.telemetry_zmq_address) ret = telemetry_recv_generic(peer, len);
+  if (!zmq_input && !kafka_input) {
+    ret = telemetry_recv_generic(peer, len);
+  }
 #if defined WITH_ZMQ
-  else ret = telemetry_recv_zmq_generic(peer, len);
+  else if (zmq_input) {
+    ret = telemetry_recv_zmq_generic(peer, len);
+  }
+#endif
+#if defined WITH_KAFKA
+  else if (kafka_input) {
+    ret = telemetry_recv_kafka_generic(peer, len);
+  }
 #endif
 
   telemetry_basic_process_json(peer);
@@ -261,7 +288,7 @@ int telemetry_basic_validate_json(telemetry_peer *peer)
 
 #if defined (WITH_ZMQ)
 #if defined (WITH_JANSSON)
-int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf, size_t buflen, struct sockaddr *addr, socklen_t *addr_len)
+int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, u_char *buf, size_t buflen, struct sockaddr *addr, socklen_t *addr_len)
 {
   json_t *json_obj = NULL, *telemetry_node_json, *telemetry_node_port_json;
   json_error_t json_err;
@@ -275,7 +302,7 @@ int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf
   bytes = p_zmq_recv_bin(&zmq_host->sock, buf, buflen);
   if (bytes > 0) {
     buf[bytes] = '\0';
-    json_obj = json_loads(buf, 0, &json_err);
+    json_obj = json_loads((char *)buf, 0, &json_err);
   }
 
   if (json_obj) {
