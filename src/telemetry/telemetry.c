@@ -94,9 +94,8 @@ void telemetry_daemon(void *t_data_void)
   time_t dump_refresh_deadline = {0};
   struct timeval dump_refresh_timeout, *drt_ptr;
 
-#if defined (WITH_ZMQ) || defined (WITH_KAFKA)
+  /* ZeroMQ and Kafka stuff */
   u_char consumer_buf[LARGEBUFLEN];
-#endif
 
   if (!t_data) {
     Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon(): missing telemetry data. Terminating.\n", config.name, t_data->log_str);
@@ -669,14 +668,14 @@ void telemetry_daemon(void *t_data_void)
       }
 #if defined WITH_ZMQ
       else if (zmq_input) {
-	ret = telemetry_decode_zmq_peer(t_data, &telemetry_zmq_host, consumer_buf, sizeof(consumer_buf), (struct sockaddr *) &client, &clen);
+	ret = telemetry_decode_producer_peer(t_data, &telemetry_zmq_host, consumer_buf, sizeof(consumer_buf), (struct sockaddr *) &client, &clen);
 	if (ret < 0) goto select_again; 
 	else fd = config.telemetry_sock;
       }
 #endif
 #if defined WITH_KAFKA
       else if (kafka_input) {
-	ret = p_kafka_consume_data(&telemetry_kafka_host, t_data->kafka_msg, consumer_buf, sizeof(consumer_buf));
+	ret = telemetry_decode_producer_peer(t_data, &telemetry_kafka_host, consumer_buf, sizeof(consumer_buf), (struct sockaddr *) &client, &clen);
 	if (ret < 0) goto select_again;
         else fd = TELEMETRY_KAFKA_FD;
       }
@@ -795,7 +794,12 @@ void telemetry_daemon(void *t_data_void)
 
     switch (config.telemetry_decoder_id) {
     case TELEMETRY_DECODER_JSON:
-      ret = telemetry_recv_json(peer, 0, &recv_flags);
+      if (!zmq_input && !kafka_input) {
+	ret = telemetry_recv_json(peer, 0, &recv_flags);
+      }
+      else {
+	ret = peer->buf.len;
+      }
       data_decoder = TELEMETRY_DATA_DECODER_JSON;
       break;
     case TELEMETRY_DECODER_GPB:
