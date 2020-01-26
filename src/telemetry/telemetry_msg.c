@@ -293,7 +293,7 @@ int telemetry_decode_producer_peer(struct telemetry_data *t_data, void *h, u_cha
   json_error_t json_err;
   struct host_addr telemetry_node;
   u_int16_t telemetry_node_port = 0;
-  int bytes, ret = SUCCESS;
+  int bytes = 0, ret = SUCCESS;
 
   if (!buf || !buflen || !addr || !addr_len) return ERR;
 
