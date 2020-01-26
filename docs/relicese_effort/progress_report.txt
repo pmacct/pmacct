@@ -12,6 +12,7 @@ Commits  Author <email>
       7  Camilo Cardona <camilo@ntt.net>
       7  Jared Mauch <jared@puck.nether.net>
       5  Aaron Finney <aaron.finney@openx.com>
+      3  Alexander Brusilov <photon89@yandex.ru>
       3  Dusan Migra <dusan.migra@edgeintelligence.com>
       3  Markus Weber <fvd@uucp.de>
       3  Thomas Graf <thomas@graf3.net>
@@ -34,7 +35,6 @@ Commits  Author <email>
       9  Claudio Ortega <claudio.alberto.ortega@gmail.com>
       8  Jonas Jensen <jonas@semmle.com>
       4  vphatarp <vaibhav.phatarpekar@gmail.com>
-      3  Alexander Brusilov <photon89@yandex.ru>
       3  Emil Palm <emil@x86.nu>
       3  Dan Berger <dberger@valvesoftware.com>
       2  Jim Westfall <jwestfall@surrealistic.net>
