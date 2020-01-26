@@ -315,51 +315,54 @@ int telemetry_decode_producer_peer(struct telemetry_data *t_data, void *h, u_cha
   if (bytes > 0) {
     buf[bytes] = '\0';
     json_obj = json_loads((char *)buf, 0, &json_err);
-  }
 
-  if (json_obj) {
-    if (!json_is_object(json_obj)) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_producer_peer(): json_is_object() failed.\n", config.name, t_data->log_str);
-      ret = ERR;
-      goto exit_lane;
-    }
-    else {
-      /* v1 */
-      telemetry_node_json = json_object_get(json_obj, "telemetry_node");
-
-      /* v2, v3 */
-      if (!telemetry_node_json) {
-	json_t *collector_json = NULL, *grpc_json = NULL;
-
-	collector_json = json_object_get(json_obj, "collector");
-	if (collector_json) grpc_json = json_object_get(collector_json, "grpc");
-	if (grpc_json) telemetry_node_json = json_object_get(grpc_json, "grpcPeer");
-      }
-
-      if (!telemetry_node_json) {
-	Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_producer_peer(): no 'telemetry_node' element.\n", config.name, t_data->log_str);
+    if (json_obj) {
+      if (!json_is_object(json_obj)) {
+	Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_producer_peer(): json_is_object() failed.\n", config.name, t_data->log_str);
 	ret = ERR;
 	goto exit_lane;
       }
       else {
-	const char *telemetry_node_str;
+	/* v1 */
+	telemetry_node_json = json_object_get(json_obj, "telemetry_node");
 
-	telemetry_node_str = json_string_value(telemetry_node_json);
-	str_to_addr(telemetry_node_str, &telemetry_node);
+	/* v2, v3 */
+	if (!telemetry_node_json) {
+	  json_t *collector_json = NULL, *grpc_json = NULL;
+
+	  collector_json = json_object_get(json_obj, "collector");
+	  if (collector_json) grpc_json = json_object_get(collector_json, "grpc");
+	  if (grpc_json) telemetry_node_json = json_object_get(grpc_json, "grpcPeer");
+	}
+
+	if (!telemetry_node_json) {
+	  Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_producer_peer(): no 'telemetry_node' element.\n", config.name, t_data->log_str);
+	  ret = ERR;
+	  goto exit_lane;
+	}
+	else {
+	  const char *telemetry_node_str;
+
+	  telemetry_node_str = json_string_value(telemetry_node_json);
+	  str_to_addr(telemetry_node_str, &telemetry_node);
+	}
+
+	telemetry_node_port_json = json_object_get(json_obj, "telemetry_node_port");
+	if (telemetry_node_port_json) telemetry_node_port = json_integer_value(telemetry_node_port_json);
+
+	(*addr_len) = addr_to_sa(addr, &telemetry_node, telemetry_node_port);
       }
 
-      telemetry_node_port_json = json_object_get(json_obj, "telemetry_node_port");
-      if (telemetry_node_port_json) telemetry_node_port = json_integer_value(telemetry_node_port_json);
-
-      (*addr_len) = addr_to_sa(addr, &telemetry_node, telemetry_node_port);
+      exit_lane:
+      json_decref(json_obj);
     }
-
-    exit_lane:
-    json_decref(json_obj);
+    else {
+      Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_producer_peer(): invalid telemetry node JSON received: %s.\n", config.name, t_data->log_str, json_err.text);
+      if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): %s\n", config.name, t_data->log_str, buf);
+      ret = ERR;
+    }
   }
   else {
-    Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_producer_peer(): invalid telemetry node JSON received: %s.\n", config.name, t_data->log_str, json_err.text);
-    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): %s\n", config.name, t_data->log_str, buf);
     ret = ERR;
   }
 

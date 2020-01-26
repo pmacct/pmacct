@@ -95,6 +95,7 @@ void telemetry_daemon(void *t_data_void)
   struct timeval dump_refresh_timeout, *drt_ptr;
 
   /* ZeroMQ and Kafka stuff */
+  char *saved_peer_buf = NULL;
   u_char consumer_buf[LARGEBUFLEN];
 
   if (!t_data) {
@@ -798,7 +799,13 @@ void telemetry_daemon(void *t_data_void)
 	ret = telemetry_recv_json(peer, 0, &recv_flags);
       }
       else {
-	ret = peer->buf.len;
+	ret = (strlen((char *) consumer_buf) + 1);
+
+	if (ret > 0) {
+	  saved_peer_buf = peer->buf.base;
+	  peer->buf.base = (char *) consumer_buf;
+	  peer->msglen = peer->buf.len = ret;
+	}
       }
       data_decoder = TELEMETRY_DATA_DECODER_JSON;
       break;
@@ -830,6 +837,10 @@ void telemetry_daemon(void *t_data_void)
       if (recv_flags != ERR) {
         peer->stats.msg_bytes += ret;
         telemetry_process_data(peer, t_data, data_decoder);
+      }
+
+      if (zmq_input || kafka_input) {
+	peer->buf.base = saved_peer_buf;
       }
     }
   }
