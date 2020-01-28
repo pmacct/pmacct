@@ -150,6 +150,12 @@ flow_compare(struct FLOW *a, struct FLOW *b)
 	if (a->port[1] != b->port[1])
 		return (ntohs(a->port[1]) > ntohs(b->port[1]) ? 1 : -1);
 
+	if (a->ifindex[0] != b->ifindex[0])
+		return (a->ifindex[0] > b->ifindex[0] ? 1 : -1);
+
+	if (a->ifindex[1] != b->ifindex[1])
+		return (a->ifindex[1] > b->ifindex[1] ? 1 : -1);
+
 	return (0);
 }
 
