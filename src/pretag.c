@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -810,6 +810,8 @@ int pretag_entry_process(struct id_entry *e, struct packet_ptrs *pptrs, pm_id_t 
   pm_id_t id = 0, stop = 0, ret = 0;
   pt_label_t *label_local = malloc(sizeof(pt_label_t));
 
+  pretag_init_label(label_local);
+
   e->last_matched = FALSE;
 
   for (j = 0, stop = 0, ret = 0; ((!ret || ret > TRUE) && (*e->func[j])); j++) {
@@ -876,6 +878,9 @@ int pretag_entry_process(struct id_entry *e, struct packet_ptrs *pptrs, pm_id_t 
       stop |= PRETAG_MAP_RCODE_JEQ;
     }
   }
+
+  pretag_free_label(label_local);
+  if (label_local) free(label_local);
 
   return stop;
 }

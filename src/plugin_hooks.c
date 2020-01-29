@@ -389,7 +389,7 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
       if (p->cfg.ptm_global && got_tags) {
         pptrs->tag = saved_tag;
         pptrs->tag2 = saved_tag2;
-	    pretag_copy_label(&pptrs->label, saved_label);
+	pretag_copy_label(&pptrs->label, saved_label);
 
         pptrs->have_tag = saved_have_tag;
         pptrs->have_tag2 = saved_have_tag2;
