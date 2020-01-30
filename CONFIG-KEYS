@@ -2976,9 +2976,31 @@ DESC:           Marks self-originated Streaming Telemetry messages with the supp
 DEFAULT:        0
 
 KEY:		telemetry_daemon_zmq_address [GLOBAL]
-DESC:           Defines the ZeroMQ queue address (host and port) to connect to for consuming Streaming
-		Telemetry data from. An example of the expected value is "127.0.0.1:50000".
+DESC:           Defines the ZeroMQ queue address (host and port) to connect to for consuming
+		JSON-encoded Streaming Telemetry data from. An example of the expected value is
+		"127.0.0.1:50000".
 DEFAULT:	none
+
+KEY:		telemetry_daemon_kafka_broker_host [GLOBAL]
+DESC:		Defines one or multiple, comma-separated, Kafka brokers to consume JSON-encoded
+		Streaming Telemetry data from. See kafka_broker_host for more info.
+DEFAULT:	none
+
+KEY:		telemetry_daemon_kafka_broker_port [GLOBAL]
+DESC:		Defines the Kafka broker port to consume JSON-encoded Streaming Telemetry data
+		from. See kafka_broker_host for more info.
+DEFAULT:	9092
+
+KEY:            telemetry_daemon_kafka_config_file [GLOBAL]
+DESC:           Full pathname to a file containing directives to configure librdkafka to consume
+		JSON-encoded Streaming Telemetry data from. See kafka_config_file for more info.
+DEFAULT:        none
+
+KEY:            telemetry_daemon_kafka_topic [GLOBAL]
+DESC:           Name of the Kafka topic to consume JSON-encoded Streaming Telemetry data from. No
+		variables are supported for dynamic naming of the topic. See kafka_topic for more
+		info.
+DEFAULT:        none
 
 KEY:            telemetry_daemon_msglog_output [GLOBAL]
 VALUES:         [ json ]
