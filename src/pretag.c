@@ -786,12 +786,60 @@ int pretag_copy_label(pt_label_t *dst, pt_label_t *src)
         Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (pretag_copy_label).\n", config.name, config.type);
         return ERR;
       }
-      dst->len = src->len;
+
       strncpy(dst->val, src->val, src->len);
       dst->val[dst->len] = '\0';
     }
   }
   
+  return SUCCESS;
+}
+
+int pretag_move_label(pt_label_t *dst, pt_label_t *src)
+{
+  if (!src || !dst) return ERR;
+
+  if (dst->val) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): pretag_move_label failed: dst->val not null\n", config.name, config.type);
+    return ERR;
+  }
+  else {
+    if (src->len) {
+      dst->val = src->val;
+      dst->len = src->len;
+      
+      src->val = NULL;
+      src->len = 0;
+    }
+  }
+
+  return SUCCESS;
+}
+
+int pretag_append_label(pt_label_t *dst, pt_label_t *src)
+{
+  char default_sep[] = ",";
+
+  if (!src || !dst) return ERR;
+
+  if (!dst->val) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): pretag_append_label failed: dst->val null\n", config.name, config.type);
+    return ERR;
+  }
+  else {
+    if (src->len) {
+      pretag_realloc_label(dst, (dst->len + src->len + 1 /* sep */ + 1 /* null */));
+      if (!dst->val) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (pretag_append_label).\n", config.name, config.type);
+        return ERR;
+      }
+
+      strncat(dst->val, default_sep, 1);
+      strncat(dst->val, src->val, src->len);
+      dst->val[dst->len] = '\0';
+    }
+  }
+
   return SUCCESS;
 }
 
@@ -838,19 +886,11 @@ int pretag_entry_process(struct id_entry *e, struct packet_ptrs *pptrs, pm_id_t 
       pptrs->have_tag2 = TRUE;
     } 
     else if (stop & PRETAG_MAP_RCODE_LABEL) {
-      /* auto-stacking if value exists */
       if (pptrs->label.len) {
-	char default_sep[] = ",";
-
-        if (pretag_realloc_label(&pptrs->label, label_local->len + pptrs->label.len + 1 /* sep */ + 1 /* null */)) return TRUE;
-	strncat(pptrs->label.val, default_sep, 1);
-        strncat(pptrs->label.val, label_local->val, label_local->len);
-        pptrs->label.val[pptrs->label.len] = '\0';
+	pretag_append_label(&pptrs->label, label_local);
       }
       else {
-	if (pretag_malloc_label(&pptrs->label, label_local->len + 1 /* null */)) return TRUE;
-	strncpy(pptrs->label.val, label_local->val, label_local->len);
-	pptrs->label.val[pptrs->label.len] = '\0';
+	pretag_copy_label(&pptrs->label, label_local);
       }
 
       pptrs->have_label = TRUE;

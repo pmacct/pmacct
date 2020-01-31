@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -275,6 +275,8 @@ extern void pretag_init_label(pt_label_t *);
 extern int pretag_malloc_label(pt_label_t *, int);
 extern int pretag_realloc_label(pt_label_t *, int);
 extern int pretag_copy_label(pt_label_t *, pt_label_t *);
+extern int pretag_move_label(pt_label_t *, pt_label_t *);
+extern int pretag_append_label(pt_label_t *, pt_label_t *);
 extern void pretag_free_label(pt_label_t *);
 extern int pretag_entry_process(struct id_entry *, struct packet_ptrs *, pm_id_t *, pm_id_t *);
 extern pt_bitmap_t pretag_index_build_bitmap(struct id_entry *, int);
