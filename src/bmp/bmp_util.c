@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -229,10 +229,25 @@ void bgp_msg_data_set_data_bmp(struct bmp_chars *bmed_bmp, struct bmp_data *bdat
 
 int bgp_extra_data_cmp_bmp(struct bgp_msg_extra_data *a, struct bgp_msg_extra_data *b) 
 {
-  if (a->id == b->id && a->len == b->len && a->id == BGP_MSG_EXTRA_DATA_BMP)
-    return memcmp(a->data, b->data, a->len);
-  else
+  if (a->id == b->id && a->len == b->len && a->id == BGP_MSG_EXTRA_DATA_BMP) {
+    struct bmp_chars *bca = a->data;
+    struct bmp_chars *bcb = b->data;
+
+    if (bca->peer_type == bcb->peer_type &&
+	bca->is_post == bcb->is_post &&
+	bca->is_2b_asn == bcb->is_2b_asn &&
+	bca->is_filtered == bcb->is_filtered &&
+	bca->is_out == bcb->is_out &&
+        bca->is_loc == bcb->is_loc) {
+      return FALSE;
+    }
+    else {
+      return TRUE;
+    }
+  }
+  else {
     return ERR;
+  }
 }
 
 int bgp_extra_data_process_bmp(struct bgp_msg_extra_data *bmed, struct bgp_info *ri)

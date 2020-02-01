@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -232,12 +232,15 @@ static const char __attribute__((unused)) *bmp_rm_info_types[] = {
 };
 
 struct bmp_chars {
+  /* key */
   u_int8_t peer_type;
   u_int8_t is_post;
   u_int8_t is_2b_asn;
   u_int8_t is_filtered;
   u_int8_t is_out;
   u_int8_t is_loc;
+
+  /* non-key */
   void *tlv;
 }; 
 
