@@ -67,9 +67,14 @@ struct bgp_peer *bgp_lookup_find_bmp_peer(struct sockaddr *sa, struct xflow_stat
       }
       /* use-case #2: BMP peer being the reflector; XXX: fix caching */
       else {
-	void *ret;
+	void *ret = NULL;
 
-	ret = pm_tfind(sa, &bmp_peers[peers_idx].bgp_peers, bgp_peer_sa_addr_cmp);
+	if (sa->sa_family == AF_INET) {
+	  ret = pm_tfind(sa, &bmp_peers[peers_idx].bgp_peers_v4, bgp_peer_sa_addr_cmp);
+	}
+	else if (sa->sa_family == AF_INET6) {
+	  ret = pm_tfind(sa, &bmp_peers[peers_idx].bgp_peers_v6, bgp_peer_sa_addr_cmp);
+	}
 
 	if (ret) {
 	  peer = (*(struct bgp_peer **) ret);

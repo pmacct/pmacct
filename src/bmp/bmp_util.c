@@ -212,9 +212,11 @@ void bmp_peer_close(struct bmp_peer *bmpp, int type)
 
   if (!bms) return;
 
-  pm_twalk(bmpp->bgp_peers, bgp_peers_bintree_walk_delete, NULL);
+  pm_twalk(bmpp->bgp_peers_v4, bgp_peers_bintree_walk_delete, NULL);
+  pm_twalk(bmpp->bgp_peers_v6, bgp_peers_bintree_walk_delete, NULL);
 
-  pm_tdestroy(&bmpp->bgp_peers, bgp_peer_free);
+  pm_tdestroy(&bmpp->bgp_peers_v4, bgp_peer_free);
+  pm_tdestroy(&bmpp->bgp_peers_v6, bgp_peer_free);
 
   if (bms->dump_file || bms->dump_amqp_routing_key || bms->dump_kafka_topic)
     bmp_dump_close_peer(peer);

@@ -136,7 +136,8 @@ struct bmp_stats_hdr {
 
 struct bmp_peer {
   struct bgp_peer self;
-  void *bgp_peers;
+  void *bgp_peers_v4;
+  void *bgp_peers_v6;
   struct log_notification missing_peer_up;
 };
 
