@@ -21,7 +21,7 @@ libdaemons_la_SOURCES = signals.c util.c plugin_hooks.c		\
 	plugin_common.c preprocess.c				\
 	ll.c nl.c 						\
 	base64.c plugin_cmn_json.c 				\
-	plugin_cmn_avro.c pmsearch.c 				\
+	plugin_cmn_avro.c pmsearch.c linklist.c			\
 	thread_pool.c						\
 	plugin_cmn_custom.c network.c pmacct-globals.c
 

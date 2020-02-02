@@ -25,7 +25,6 @@
 #include "pmacct.h"
 #include "isis.h"
 
-#include "linklist.h"
 #include "dict.h"
 #include "thread.h"
 #include "prefix.h"
@@ -75,7 +74,7 @@ isis_nexthop_create (struct in_addr *ip, unsigned int ifindex)
   if (nexthop) {
     nexthop->ifindex = ifindex;
     memcpy (&nexthop->ip, ip, sizeof (struct in_addr));
-    isis_listnode_add (isis->nexthops, nexthop);
+    pm_listnode_add (isis->nexthops, nexthop);
     nexthop->lock++;
   }
 
@@ -88,7 +87,7 @@ isis_nexthop_delete (struct isis_nexthop *nexthop)
   nexthop->lock--;
   if (nexthop->lock == 0)
     {
-      isis_listnode_delete (isis->nexthops, nexthop);
+      pm_listnode_delete (isis->nexthops, nexthop);
       free(nexthop);
     }
 
@@ -159,7 +158,7 @@ isis_nexthop6_delete (struct isis_nexthop6 *nexthop6)
   nexthop6->lock--;
   if (nexthop6->lock == 0)
     {
-      isis_listnode_delete (isis->nexthops6, nexthop6);
+      pm_listnode_delete (isis->nexthops6, nexthop6);
       free(nexthop6);
     }
 
@@ -198,7 +197,7 @@ adjinfo2nexthop (struct list *nexthops, struct isis_adjacency *adj)
       if (!nexthoplookup (nexthops, ipv4_addr, adj->circuit->interface->ifindex))
 	{
 	  nh = isis_nexthop_create (ipv4_addr, adj->circuit->interface->ifindex);
-	  isis_listnode_add (nexthops, nh);
+	  pm_listnode_add (nexthops, nh);
 	}
     }
 }
@@ -220,7 +219,7 @@ adjinfo2nexthop6 (struct list *nexthops6, struct isis_adjacency *adj)
 	{
 	  nh6 = isis_nexthop6_create (ipv6_addr,
 				      adj->circuit->interface->ifindex);
-	  isis_listnode_add (nexthops6, nh6);
+	  pm_listnode_add (nexthops6, nh6);
 	}
     }
 }
@@ -242,13 +241,13 @@ isis_route_info_new (uint32_t cost, uint32_t depth, u_char family,
 
   if (family == AF_INET)
     {
-      rinfo->nexthops = isis_list_new ();
+      rinfo->nexthops = pm_list_new ();
       for (ALL_LIST_ELEMENTS_RO (adjacencies, node, adj))
         adjinfo2nexthop (rinfo->nexthops, adj);
     }
   if (family == AF_INET6)
     {
-      rinfo->nexthops6 = isis_list_new ();
+      rinfo->nexthops6 = pm_list_new ();
       for (ALL_LIST_ELEMENTS_RO (adjacencies, node, adj))
         adjinfo2nexthop6 (rinfo->nexthops6, adj);
     }
@@ -265,13 +264,13 @@ isis_route_info_delete (struct isis_route_info *route_info)
   if (route_info->nexthops)
     {
       route_info->nexthops->del = (void (*)(void *)) isis_nexthop_delete;
-      isis_list_delete (route_info->nexthops);
+      pm_list_delete (route_info->nexthops);
     }
 
   if (route_info->nexthops6)
     {
       route_info->nexthops6->del = (void (*)(void *)) isis_nexthop6_delete;
-      isis_list_delete (route_info->nexthops6);
+      pm_list_delete (route_info->nexthops6);
     }
 
   free(route_info);
@@ -337,7 +336,7 @@ isis_nexthops_merge (struct list *new, struct list *old)
     {
       if (nexthoplookup (old, &nexthop->ip, nexthop->ifindex))
 	continue;
-      isis_listnode_add (old, nexthop);
+      pm_listnode_add (old, nexthop);
       nexthop->lock++;
     }
 }
@@ -352,7 +351,7 @@ isis_nexthops6_merge (struct list *new, struct list *old)
     {
       if (nexthop6lookup (old, &nexthop6->ip6, nexthop6->ifindex))
 	continue;
-      isis_listnode_add (old, nexthop6);
+      pm_listnode_add (old, nexthop6);
       nexthop6->lock++;
     }
 }

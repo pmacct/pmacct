@@ -21,7 +21,6 @@
  */
 
 #include "pmacct.h"
-#include "linklist.h"
 #include "dict.h"
 #include "thread.h"
 #include "prefix.h"

@@ -24,7 +24,6 @@
 #include "pmacct.h"
 #include "isis.h"
 
-#include "linklist.h"
 #include "prefix.h"
 #include "hash.h"
 #include "table.h"
@@ -173,7 +172,7 @@ remove_excess_adjs (struct list *adjs)
 	}
     }
 
-  isis_list_delete_node (adjs, excess);
+  pm_list_delete_node (adjs, excess);
 
   return;
 }
@@ -190,15 +189,15 @@ isis_spftree_new ()
       return NULL;
     }
 
-  tree->tents = isis_list_new ();
-  tree->paths = isis_list_new ();
+  tree->tents = pm_list_new ();
+  tree->paths = pm_list_new ();
   return tree;
 }
 
 static void
 isis_vertex_del (struct isis_vertex *vertex)
 {
-  isis_list_delete (vertex->Adj_N);
+  pm_list_delete (vertex->Adj_N);
 
   free(vertex);
 
@@ -210,10 +209,10 @@ static void
 isis_spftree_del (struct isis_spftree *spftree)
 {
   spftree->tents->del = (void (*)(void *)) isis_vertex_del;
-  isis_list_delete (spftree->tents);
+  pm_list_delete (spftree->tents);
 
   spftree->paths->del = (void (*)(void *)) isis_vertex_del;
-  isis_list_delete (spftree->paths);
+  pm_list_delete (spftree->paths);
 
   free(spftree);
 
@@ -280,7 +279,7 @@ isis_vertex_new (void *id, enum vertextype vtype)
       Log(LOG_ERR, "ERROR ( %s/core/ISIS ): WTF!\n", config.name);
     }
 
-  vertex->Adj_N = isis_list_new ();
+  vertex->Adj_N = pm_list_new ();
 
   return vertex;
 }
@@ -311,7 +310,7 @@ isis_spf_add_self (struct isis_spftree *spftree, struct isis_area *area,
 
   vertex->lsp = lsp;
 
-  isis_listnode_add (spftree->paths, vertex);
+  pm_listnode_add (spftree->paths, vertex);
 
   return;
 }
@@ -376,17 +375,17 @@ isis_spf_add2tent (struct isis_spftree *spftree, enum vertextype vtype,
   vertex->depth = depth;
 
   if (adj)
-    isis_listnode_add (vertex->Adj_N, adj);
+    pm_listnode_add (vertex->Adj_N, adj);
 
   if (config.nfacctd_isis_msglog) 
     Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): ISIS-Spf: add to TENT  %s %s depth %d dist %d\n",
               config.name, vtype2string (vertex->type), vid2string (vertex, buff),
               vertex->depth, vertex->d_N);
 
-  isis_listnode_add (spftree->tents, vertex);
-  if (isis_list_isempty (spftree->tents))
+  pm_listnode_add (spftree->tents, vertex);
+  if (pm_list_isempty (spftree->tents))
     {
-      isis_listnode_add (spftree->tents, vertex);
+      pm_listnode_add (spftree->tents, vertex);
       return vertex;
     }
   
@@ -396,7 +395,7 @@ isis_spf_add2tent (struct isis_spftree *spftree, enum vertextype vtype,
       v = listgetdata (node);
       if (v->d_N > vertex->d_N)
 	{
-	  isis_list_add_node_prev (spftree->tents, node, vertex);
+	  pm_list_add_node_prev (spftree->tents, node, vertex);
 	  break;
 	}
       else if (v->d_N == vertex->d_N)
@@ -412,12 +411,12 @@ isis_spf_add2tent (struct isis_spftree *spftree, enum vertextype vtype,
 	      node = listnextnode (node);
 	      (node) ? (v = listgetdata (node)) : (v = NULL);
 	    }
-	  isis_list_add_node_prev (spftree->tents, node, vertex);
+	  pm_list_add_node_prev (spftree->tents, node, vertex);
 	  break;
 	}
       else if (node->next == NULL)
 	{
-	  isis_list_add_node_next (spftree->tents, node, vertex);
+	  pm_list_add_node_next (spftree->tents, node, vertex);
 	  break;
 	}
     }
@@ -439,7 +438,7 @@ isis_spf_add_local (struct isis_spftree *spftree, enum vertextype vtype,
       if (vertex->d_N == cost)
 	{
 	  if (adj)
-	    isis_listnode_add (vertex->Adj_N, adj);
+	    pm_listnode_add (vertex->Adj_N, adj);
 	  /*       d) */
 	  if (listcount (vertex->Adj_N) > ISIS_MAX_PATH_SPLITS)
 	    remove_excess_adjs (vertex->Adj_N);
@@ -447,7 +446,7 @@ isis_spf_add_local (struct isis_spftree *spftree, enum vertextype vtype,
       /*         f) */
       else if (vertex->d_N > cost)
 	{
-	  isis_listnode_delete (spftree->tents, vertex);
+	  pm_listnode_delete (spftree->tents, vertex);
 	  goto add2tent;
 	}
       /*       e) do nothing */
@@ -484,7 +483,7 @@ process_N (struct isis_spftree *spftree, enum vertextype vtype, void *id,
       if (vertex->d_N == dist)
 	{
 	  if (adj)
-	    isis_listnode_add (vertex->Adj_N, adj);
+	    pm_listnode_add (vertex->Adj_N, adj);
 	  /*      2) */
 	  if (listcount (vertex->Adj_N) > ISIS_MAX_PATH_SPLITS)
 	    remove_excess_adjs (vertex->Adj_N);
@@ -498,7 +497,7 @@ process_N (struct isis_spftree *spftree, enum vertextype vtype, void *id,
 	}
       else
 	{
-	  isis_listnode_delete (spftree->tents, vertex);
+	  pm_listnode_delete (spftree->tents, vertex);
 	}
     }
 
@@ -595,7 +594,7 @@ lspfragloop:
 
               /* Set advertising router to the first IP address */
               if (lsp->tlv_data.ipv4_addrs) {
-                memcpy(&prefix.adv_router, isis_listnode_head(lsp->tlv_data.ipv4_addrs), sizeof(struct in_addr));
+                memcpy(&prefix.adv_router, pm_listnode_head(lsp->tlv_data.ipv4_addrs), sizeof(struct in_addr));
               }
 	      prefix.u.prefix4 = ipreach->prefix;
 	      prefix.prefixlen = isis_ip_masklen (ipreach->mask);
@@ -614,7 +613,7 @@ lspfragloop:
 
 	      /* Set advertising router to the first IP address */
 	      if (lsp->tlv_data.ipv4_addrs) {
-		memcpy(&prefix.adv_router, isis_listnode_head(lsp->tlv_data.ipv4_addrs), sizeof(struct in_addr));
+		memcpy(&prefix.adv_router, pm_listnode_head(lsp->tlv_data.ipv4_addrs), sizeof(struct in_addr));
 	      }
 	      prefix.u.prefix4 = newprefix2inaddr (&te_ipv4_reach->prefix_start,
 						   te_ipv4_reach->control);
@@ -815,7 +814,7 @@ static void
 add_to_paths (struct isis_spftree *spftree, struct isis_vertex *vertex,
 	      struct isis_area *area, int level)
 {
-  isis_listnode_add (spftree->paths, vertex);
+  pm_listnode_add (spftree->paths, vertex);
 
   if (vertex->type > VTYPE_ES)
     {
@@ -851,8 +850,8 @@ static void
 init_spt (struct isis_spftree *spftree)
 {
   spftree->tents->del = spftree->paths->del = (void (*)(void *)) isis_vertex_del;
-  isis_list_delete_all_node (spftree->tents);
-  isis_list_delete_all_node (spftree->paths);
+  pm_list_delete_all_node (spftree->tents);
+  pm_list_delete_all_node (spftree->paths);
   spftree->tents->del = spftree->paths->del = NULL;
 
   return;
@@ -917,7 +916,7 @@ isis_run_spf (struct isis_area *area, int level, int family)
       vertex = listgetdata (node);
 
       /* Remove from tent list */
-      isis_list_delete_node (spftree->tents, node);
+      pm_list_delete_node (spftree->tents, node);
 
       if (isis_find_vertex (spftree->paths, vertex->N.id, vertex->type))
 	continue;

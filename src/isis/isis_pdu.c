@@ -24,7 +24,6 @@
 #include "pmacct.h"
 #include "isis.h"
 
-#include "linklist.h"
 #include "stream.h"
 #include "hash.h"
 #include "prefix.h"
@@ -169,16 +168,16 @@ tlvs_to_adj_ipv4_addrs (struct tlvs *tlvs, struct isis_adjacency *adj)
   if (adj->ipv4_addrs)
     {
       adj->ipv4_addrs->del = del_ip_addr;
-      isis_list_delete (adj->ipv4_addrs);
+      pm_list_delete (adj->ipv4_addrs);
     }
-  adj->ipv4_addrs = isis_list_new ();
+  adj->ipv4_addrs = pm_list_new ();
   if (tlvs->ipv4_addrs)
     {
       for (ALL_LIST_ELEMENTS_RO (tlvs->ipv4_addrs, node, ipv4_addr))
       {
 	malloced = calloc(1, sizeof (struct in_addr));
 	memcpy (malloced, ipv4_addr, sizeof (struct in_addr));
-	isis_listnode_add (adj->ipv4_addrs, malloced);
+	pm_listnode_add (adj->ipv4_addrs, malloced);
       }
     }
 }
@@ -192,16 +191,16 @@ tlvs_to_adj_ipv6_addrs (struct tlvs *tlvs, struct isis_adjacency *adj)
   if (adj->ipv6_addrs)
     {
       adj->ipv6_addrs->del = del_ip_addr;
-      isis_list_delete (adj->ipv6_addrs);
+      pm_list_delete (adj->ipv6_addrs);
     }
-  adj->ipv6_addrs = isis_list_new ();
+  adj->ipv6_addrs = pm_list_new ();
   if (tlvs->ipv6_addrs)
     {
       for (ALL_LIST_ELEMENTS_RO (tlvs->ipv6_addrs, node, ipv6_addr))
       {
 	malloced = calloc(1, sizeof (struct in6_addr));
 	memcpy (malloced, ipv6_addr, sizeof (struct in6_addr));
-	isis_listnode_add (adj->ipv6_addrs, malloced);
+	pm_listnode_add (adj->ipv6_addrs, malloced);
       }
     }
 
@@ -1060,7 +1059,7 @@ process_snp (int snp_type, int level, struct isis_circuit *circuit,
       /*
        * Build a list from our own LSP db bounded with start_ and stop_lsp_id
        */
-      lsp_list = isis_list_new ();
+      lsp_list = pm_list_new ();
       lsp_build_isis_list_nonzero_ht (chdr->start_lsp_id, chdr->stop_lsp_id,
 				 lsp_list, circuit->area->lspdb[level - 1]);
 
@@ -1073,7 +1072,7 @@ process_snp (int snp_type, int level, struct isis_circuit *circuit,
 	    {
 	      if (lsp_id_cmp (lsp->lsp_header->lsp_id, entry->lsp_id) == 0)
 		{
-		  isis_list_delete_node (lsp_list, node2);
+		  pm_list_delete_node (lsp_list, node2);
 		  break;
 		}
 	    }
@@ -1085,7 +1084,7 @@ process_snp (int snp_type, int level, struct isis_circuit *circuit,
 	ISIS_SET_FLAG (lsp->SRMflags, circuit);
       }
       /* lets free it */
-      isis_list_free (lsp_list);
+      pm_list_free (lsp_list);
     }
 
   free_tlvs (&tlvs);
@@ -1656,7 +1655,7 @@ int send_psnp (int level, struct isis_circuit *circuit)
       if (circuit->area->lspdb[level - 1] &&
           dict_count (circuit->area->lspdb[level - 1]) > 0)
         {
-          list = isis_list_new ();
+          list = pm_list_new ();
           lsp_build_isis_list_ssn (circuit, list, circuit->area->lspdb[level - 1]);
 
           if (listcount (list) > 0)
@@ -1689,7 +1688,7 @@ int send_psnp (int level, struct isis_circuit *circuit)
                     ISIS_CLEAR_FLAG (lsp->SSNflags, circuit);
                 }
             }
-          isis_list_delete (list);
+          pm_list_delete (list);
         }
     }
 
@@ -1772,7 +1771,7 @@ send_csnp (struct isis_circuit *circuit, int level)
   if (circuit->area->lspdb[level - 1] &&
       dict_count (circuit->area->lspdb[level - 1]) > 0)
     {
-      list = isis_list_new ();
+      list = pm_list_new ();
       lsp_build_list (start, stop, list, circuit->area->lspdb[level - 1]);
 
       if (circuit->snd_stream == NULL)
@@ -1798,7 +1797,7 @@ send_csnp (struct isis_circuit *circuit, int level)
         }
       }
 
-      isis_list_delete (list);
+      pm_list_delete (list);
 
       if (retval == ISIS_OK)
         retval = circuit->tx (circuit, level);

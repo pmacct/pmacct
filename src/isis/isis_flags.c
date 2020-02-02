@@ -24,8 +24,6 @@
 #include "pmacct.h"
 #include "isis.h"
 
-#include "linklist.h"
-
 #include "isis_constants.h"
 #include "isis_common.h"
 #include "isis_flags.h"
@@ -51,7 +49,7 @@ flags_get_index (struct flags *flags)
     {
       node = listhead (flags->free_idcs);
       index = (long int) listgetdata (node);
-      isis_listnode_delete (flags->free_idcs, (void *) index);
+      pm_listnode_delete (flags->free_idcs, (void *) index);
       index--;
     }
 
@@ -69,10 +67,10 @@ flags_free_index (struct flags *flags, long int index)
 
   if (flags->free_idcs == NULL)
     {
-      flags->free_idcs = isis_list_new ();
+      flags->free_idcs = pm_list_new ();
     }
 
-  isis_listnode_add (flags->free_idcs, (void *) (index + 1));
+  pm_listnode_add (flags->free_idcs, (void *) (index + 1));
 
   return;
 }

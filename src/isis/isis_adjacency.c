@@ -25,7 +25,6 @@
 #include "isis.h"
 
 #include "hash.h"
-#include "linklist.h"
 
 #include "dict.h"
 #include "thread.h"
@@ -112,14 +111,14 @@ isis_delete_adj (struct isis_adjacency *adj, struct list *adjdb)
     return;
   /* When we recieve a NULL list, we will know its p2p. */
   if (adjdb)
-    isis_listnode_delete (adjdb, adj);
+    pm_listnode_delete (adjdb, adj);
 
   memset(&adj->expire, 0, sizeof(struct timeval));
 
   if (adj->ipv4_addrs)
-    isis_list_delete (adj->ipv4_addrs);
+    pm_list_delete (adj->ipv4_addrs);
   if (adj->ipv6_addrs)
-    isis_list_delete (adj->ipv6_addrs);
+    pm_list_delete (adj->ipv6_addrs);
   
   free(adj);
   return;
@@ -207,7 +206,7 @@ isis_adj_build_neigh_list (struct list *adjdb, struct list *list)
 
       if ((adj->adj_state == ISIS_ADJ_UP ||
 	   adj->adj_state == ISIS_ADJ_INITIALIZING))
-	isis_listnode_add (list, adj->snpa);
+	pm_listnode_add (list, adj->snpa);
     }
   return;
 }
@@ -233,7 +232,7 @@ isis_adj_build_up_list (struct list *adjdb, struct list *list)
 	}
 
       if (adj->adj_state == ISIS_ADJ_UP)
-	isis_listnode_add (list, adj);
+	pm_listnode_add (list, adj);
     }
 
   return;

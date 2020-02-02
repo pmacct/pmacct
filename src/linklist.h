@@ -44,7 +44,7 @@ struct list
 
   /*
    * Returns -1 if val1 < val2, 0 if equal?, 1 if val1 > val2.
-   * Used as definition of sorted for isis_listnode_add_sort
+   * Used as definition of sorted for pm_listnode_add_sort
    */
   int (*cmp) (void *val1, void *val2);
 
@@ -58,24 +58,24 @@ struct list
 #define listhead(X) ((X)->head)
 #define listtail(X) ((X)->tail)
 #define listcount(X) ((X)->count)
-#define isis_list_isempty(X) ((X)->head == NULL && (X)->tail == NULL)
+#define pm_list_isempty(X) ((X)->head == NULL && (X)->tail == NULL)
 #define listgetdata(X) (assert((X)->data != NULL), (X)->data)
 
 /* Prototypes. */
-extern struct list *isis_list_new(void); /* encouraged: set list.del callback on new lists */
-extern void isis_list_free (struct list *);
-extern void isis_listnode_add (struct list *, void *);
-extern void isis_listnode_add_sort (struct list *, void *);
-extern void isis_listnode_add_after (struct list *, struct listnode *, void *);
-extern void isis_listnode_delete (struct list *, void *);
-extern struct listnode *isis_listnode_lookup (struct list *, void *);
-extern void *isis_listnode_head (struct list *);
-extern void isis_list_delete (struct list *);
-extern void isis_list_delete_all_node (struct list *);
-extern void isis_list_delete_node (struct list *, struct listnode *);
-extern void isis_list_add_node_prev (struct list *, struct listnode *, void *);
-extern void isis_list_add_node_next (struct list *, struct listnode *, void *);
-extern void isis_list_add_list (struct list *, struct list *);
+extern struct list *pm_list_new(void); /* encouraged: set list.del callback on new lists */
+extern void pm_list_free (struct list *);
+extern void pm_listnode_add (struct list *, void *);
+extern void pm_listnode_add_sort (struct list *, void *);
+extern void pm_listnode_add_after (struct list *, struct listnode *, void *);
+extern void pm_listnode_delete (struct list *, void *);
+extern struct listnode *pm_listnode_lookup (struct list *, void *);
+extern void *pm_listnode_head (struct list *);
+extern void pm_list_delete (struct list *);
+extern void pm_list_delete_all_node (struct list *);
+extern void pm_list_delete_node (struct list *, struct listnode *);
+extern void pm_list_add_node_prev (struct list *, struct listnode *, void *);
+extern void pm_list_add_node_next (struct list *, struct listnode *, void *);
+extern void pm_list_add_list (struct list *, struct list *);
 
 /* List iteration macro. 
  * Usage: for (ALL_LIST_ELEMENTS (...) { ... }

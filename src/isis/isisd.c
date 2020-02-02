@@ -24,7 +24,6 @@
 #include "isis.h"
 
 #include "hash.h"
-#include "linklist.h"
 #include "prefix.h"
 #include "table.h"
 
@@ -63,11 +62,11 @@ isis_new (unsigned long process_id)
   isis->max_area_addrs = 3;
 
   isis->process_id = process_id;
-  isis->area_list = isis_list_new ();
-  isis->init_circ_list = isis_list_new ();
+  isis->area_list = pm_list_new ();
+  isis->init_circ_list = pm_list_new ();
   isis->uptime = time (NULL);
-  isis->nexthops = isis_list_new ();
-  isis->nexthops6 = isis_list_new ();
+  isis->nexthops = pm_list_new ();
+  isis->nexthops6 = pm_list_new ();
   /*
    * uncomment the next line for full debugs
    */
@@ -106,8 +105,8 @@ isis_area_create ()
   area->route_table[1] = route_table_init ();
   area->route_table6[0] = route_table_init ();
   area->route_table6[1] = route_table_init ();
-  area->circuit_list = isis_list_new ();
-  area->area_addrs = isis_list_new ();
+  area->circuit_list = pm_list_new ();
+  area->area_addrs = pm_list_new ();
   flags_initialize (&area->flags);
   /*
    * Default values
@@ -159,7 +158,7 @@ isis_area_get (const char *area_tag)
 
   area = isis_area_create ();
   area->area_tag = strdup (area_tag);
-  isis_listnode_add (isis->area_list, area);
+  pm_listnode_add (isis->area_list, area);
 
   Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): New IS-IS area instance %s\n", config.name, area->area_tag);
 
@@ -191,9 +190,9 @@ isis_area_destroy (const char *area_tag)
 	  isis_circuit_deconfigure (circuit, area);
 	}
       
-      isis_list_delete (area->circuit_list);
+      pm_list_delete (area->circuit_list);
     }
-  isis_listnode_delete (isis->area_list, area);
+  pm_listnode_delete (isis->area_list, area);
 
   if (area->t_remove_aged)
     thread_cancel (area->t_remove_aged);
@@ -281,7 +280,7 @@ area_net_title (struct isis_area *area, const char *net_title)
    * Forget the systemID part of the address
    */
   addr->addr_len -= (ISIS_SYS_ID_LEN + 1);
-  isis_listnode_add (area->area_addrs, addr);
+  pm_listnode_add (area->area_addrs, addr);
 
   /* Only now we can safely generate our LSPs for this area */
   if (listcount (area->area_addrs) > 0)
@@ -327,7 +326,7 @@ area_clear_net_title (struct isis_area *area, const char *net_title)
       return TRUE;
     }
 
-  isis_listnode_delete (area->area_addrs, addrp);
+  pm_listnode_delete (area->area_addrs, addrp);
 
   return FALSE;
 }
