@@ -6,6 +6,7 @@ CONTEXT:
 
 Commits  Author <email>
    2921  Paolo Lucente <paolo@pmacct.net>
+     53  Marc Sune <marcdevel@gmail.com>
      17  Vincent Bernat <vincent@bernat.im>
      21  Matthias Arnold <matthias.arnold@swisscom.com>
      14  Job Snijders <job@instituut.net>
@@ -27,7 +28,6 @@ Commits  Author <email>
 
 ----- NO ANSWER YET ------
    
-     53  Marc Sune <marcdevel@gmail.com>
      20  Corentin Néau <corentin.neau@codethink.co.uk>
      12  Vittorio Foschi <vittorio.foschi@gmail.com>
      10  Tim LaBerge <tlaberge@visi.com> / tlaberge@cisco.com
