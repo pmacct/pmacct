@@ -295,7 +295,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
       struct bmp_chars bmed_bmp;
       struct bgp_msg_data bmd;
       int bgp_open_len;
-      void *ret;
+      void *ret = NULL;
 
       /* TLV vars */
       struct bmp_tlv_hdr *bth; 
@@ -400,7 +400,7 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
   struct bmp_data bdata;
   struct bmp_peer_hdr *bph;
   struct bmp_peer_down_hdr *bpdh;
-  void *ret;
+  void *ret = NULL;
 
   if (!bmpp) return;
 
@@ -540,7 +540,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
   struct bmp_peer_hdr *bph;
   char tstamp_str[SRVBUFLEN], peer_ip[INET6_ADDRSTRLEN];
   int bgp_update_len;
-  void *ret;
+  void *ret = NULL;
 
   if (!bmpp) return;
 
