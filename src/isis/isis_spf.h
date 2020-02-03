@@ -55,7 +55,7 @@ struct isis_vertex
   u_int32_t d_N;		/* d(N) Distance from this IS      */
   u_int16_t depth;		/* The depth in the imaginary tree */
 
-  struct list *Adj_N;		/* {Adj(N)}  */
+  struct pm_list *Adj_N;		/* {Adj(N)}  */
 };
 
 struct isis_spftree
@@ -63,8 +63,8 @@ struct isis_spftree
   struct thread *t_spf;		/* spf threads */
   time_t lastrun;		/* for scheduling */
   int pending;			/* already scheduled */
-  struct list *paths;		/* the SPT */
-  struct list *tents;		/* TENT */
+  struct pm_list *paths;		/* the SPT */
+  struct pm_list *tents;		/* TENT */
 
   u_int32_t timerun;		/* statistics */
 };

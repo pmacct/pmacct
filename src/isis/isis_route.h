@@ -46,11 +46,11 @@ struct isis_route_info
   u_char flag;
   u_int32_t cost;
   u_int32_t depth;
-  struct list *nexthops;
-  struct list *nexthops6;
+  struct pm_list *nexthops;
+  struct pm_list *nexthops6;
 };
 
-extern struct isis_route_info *isis_route_create (struct isis_prefix *, u_int32_t, u_int32_t, struct list *, struct isis_area *, int);
+extern struct isis_route_info *isis_route_create (struct isis_prefix *, u_int32_t, u_int32_t, struct pm_list *, struct isis_area *, int);
 extern void isis_route_validate_table (struct isis_area *, struct route_table *);
 extern void isis_route_validate_merge (struct isis_area *, int);
 

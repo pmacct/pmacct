@@ -23,38 +23,38 @@
 #include "linklist.h"
 
 /* Allocate new list. */
-struct list *
+struct pm_list *
 pm_list_new (void)
 {
-  return calloc(1, sizeof (struct list));
+  return calloc(1, sizeof (struct pm_list));
 }
 
 /* Free list. */
 void
-pm_list_free (struct list *l)
+pm_list_free (struct pm_list *l)
 {
   free(l);
 }
 
 /* Allocate new listnode.  Internal use only. */
-static struct listnode *
+static struct pm_listnode *
 pm_listnode_new (void)
 {
-  return calloc(1, sizeof (struct listnode));
+  return calloc(1, sizeof (struct pm_listnode));
 }
 
 /* Free listnode. */
 static void
-pm_listnode_free (struct listnode *node)
+pm_listnode_free (struct pm_listnode *node)
 {
   free(node);
 }
 
 /* Add new data to the list. */
 void
-pm_listnode_add (struct list *list, void *val)
+pm_listnode_add (struct pm_list *list, void *val)
 {
-  struct listnode *node;
+  struct pm_listnode *node;
   
   assert (val != NULL);
   
@@ -79,10 +79,10 @@ pm_listnode_add (struct list *list, void *val)
  * notion of omitting duplicates.
  */
 void
-pm_listnode_add_sort (struct list *list, void *val)
+pm_listnode_add_sort (struct pm_list *list, void *val)
 {
-  struct listnode *n;
-  struct listnode *new;
+  struct pm_listnode *n;
+  struct pm_listnode *new;
   
   assert (val != NULL);
   
@@ -121,9 +121,9 @@ pm_listnode_add_sort (struct list *list, void *val)
 }
 
 void
-pm_listnode_add_after (struct list *list, struct listnode *pp, void *val)
+pm_listnode_add_after (struct pm_list *list, struct pm_listnode *pp, void *val)
 {
-  struct listnode *nn;
+  struct pm_listnode *nn;
   
   assert (val != NULL);
   
@@ -160,9 +160,9 @@ pm_listnode_add_after (struct list *list, struct listnode *pp, void *val)
 
 /* Delete specific date pointer from the list. */
 void
-pm_listnode_delete (struct list *list, void *val)
+pm_listnode_delete (struct pm_list *list, void *val)
 {
-  struct listnode *node;
+  struct pm_listnode *node;
 
   assert(list);
   for (node = list->head; node; node = node->next)
@@ -188,9 +188,9 @@ pm_listnode_delete (struct list *list, void *val)
 
 /* Return first node's data if it is there.  */
 void *
-pm_listnode_head (struct list *list)
+pm_listnode_head (struct pm_list *list)
 {
-  struct listnode *node;
+  struct pm_listnode *node;
 
   assert(list);
   node = list->head;
@@ -202,10 +202,10 @@ pm_listnode_head (struct list *list)
 
 /* Delete all listnode from the list. */
 void
-pm_list_delete_all_node (struct list *list)
+pm_list_delete_all_node (struct pm_list *list)
 {
-  struct listnode *node;
-  struct listnode *next;
+  struct pm_listnode *node;
+  struct pm_listnode *next;
 
   assert(list);
   for (node = list->head; node; node = next)
@@ -221,7 +221,7 @@ pm_list_delete_all_node (struct list *list)
 
 /* Delete all listnode then free list itself. */
 void
-pm_list_delete (struct list *list)
+pm_list_delete (struct pm_list *list)
 {
   assert(list);
   pm_list_delete_all_node (list);
@@ -229,21 +229,21 @@ pm_list_delete (struct list *list)
 }
 
 /* Lookup the node which has given data. */
-struct listnode *
-pm_listnode_lookup (struct list *list, void *data)
+struct pm_listnode *
+pm_listnode_lookup (struct pm_list *list, void *data)
 {
-  struct listnode *node;
+  struct pm_listnode *node;
 
   assert(list);
-  for (node = listhead(list); node; node = listnextnode (node))
-    if (data == listgetdata (node))
+  for (node = pm_listhead(list); node; node = pm_listnextnode (node))
+    if (data == pm_listgetdata (node))
       return node;
   return NULL;
 }
 
 /* Delete the node from list.  For ospfd and ospf6d. */
 void
-pm_list_delete_node (struct list *list, struct listnode *node)
+pm_list_delete_node (struct pm_list *list, struct pm_listnode *node)
 {
   if (node->prev)
     node->prev->next = node->next;
@@ -259,9 +259,9 @@ pm_list_delete_node (struct list *list, struct listnode *node)
 
 /* ospf_spf.c */
 void
-pm_list_add_node_prev (struct list *list, struct listnode *current, void *val)
+pm_list_add_node_prev (struct pm_list *list, struct pm_listnode *current, void *val)
 {
-  struct listnode *node;
+  struct pm_listnode *node;
   
   assert (val != NULL);
   
@@ -282,9 +282,9 @@ pm_list_add_node_prev (struct list *list, struct listnode *current, void *val)
 
 /* ospf_spf.c */
 void
-pm_list_add_node_next (struct list *list, struct listnode *current, void *val)
+pm_list_add_node_next (struct pm_list *list, struct pm_listnode *current, void *val)
 {
-  struct listnode *node;
+  struct pm_listnode *node;
   
   assert (val != NULL);
   
@@ -305,10 +305,10 @@ pm_list_add_node_next (struct list *list, struct listnode *current, void *val)
 
 /* ospf_spf.c */
 void
-pm_list_add_list (struct list *l, struct list *m)
+pm_list_add_list (struct pm_list *l, struct pm_list *m)
 {
-  struct listnode *n;
+  struct pm_listnode *n;
 
-  for (n = listhead (m); n; n = listnextnode (n))
+  for (n = pm_listhead (m); n; n = pm_listnextnode (n))
     pm_listnode_add (l, n->data);
 }

@@ -34,7 +34,7 @@
 #include "isis_misc.h"
 #include "isis_constants.h"
 
-struct list *dyn_cache;
+struct pm_list *dyn_cache;
 extern struct host host;
 
 void
@@ -47,13 +47,13 @@ dyn_cache_init (void)
 int
 dyn_cache_cleanup ()
 {
-  struct listnode *node, *nnode;
+  struct pm_listnode *node, *nnode;
   struct isis_dynhn *dyn;
   time_t now = time (NULL);
 
   isis->t_dync_clean = NULL;
 
-  for (ALL_LIST_ELEMENTS (dyn_cache, node, nnode, dyn))
+  for (PM_ALL_LIST_ELEMENTS (dyn_cache, node, nnode, dyn))
     {
       if ((now - dyn->refresh) < (MAX_AGE + 120))
 	continue;
@@ -68,10 +68,10 @@ dyn_cache_cleanup ()
 struct isis_dynhn *
 dynhn_find_by_id (u_char * id)
 {
-  struct listnode *node = NULL;
+  struct pm_listnode *node = NULL;
   struct isis_dynhn *dyn = NULL;
 
-  for (ALL_LIST_ELEMENTS_RO (dyn_cache, node, dyn))
+  for (PM_ALL_LIST_ELEMENTS_RO (dyn_cache, node, dyn))
     if (memcmp (dyn->id, id, ISIS_SYS_ID_LEN) == 0)
       return dyn;
 

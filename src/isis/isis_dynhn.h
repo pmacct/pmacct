@@ -37,6 +37,6 @@ extern void isis_dynhn_insert (u_char * id, struct hostname *, int);
 extern struct isis_dynhn *dynhn_find_by_id (u_char *);
 extern int dyn_cache_cleanup ();
 
-extern struct list *dyn_cache;
+extern struct pm_list *dyn_cache;
 
 #endif /* _ISIS_DYNHN_H_ */

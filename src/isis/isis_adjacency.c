@@ -79,12 +79,12 @@ isis_new_adj (u_char * id, u_char * snpa, int level,
 }
 
 struct isis_adjacency *
-isis_adj_lookup (u_char * sysid, struct list *adjdb)
+isis_adj_lookup (u_char * sysid, struct pm_list *adjdb)
 {
   struct isis_adjacency *adj;
-  struct listnode *node;
+  struct pm_listnode *node;
 
-  for (ALL_LIST_ELEMENTS_RO (adjdb, node, adj))
+  for (PM_ALL_LIST_ELEMENTS_RO (adjdb, node, adj))
     if (memcmp (adj->sysid, sysid, ISIS_SYS_ID_LEN) == 0)
       return adj;
 
@@ -92,12 +92,12 @@ isis_adj_lookup (u_char * sysid, struct list *adjdb)
 }
 
 struct isis_adjacency *
-isis_adj_lookup_snpa (u_char * ssnpa, struct list *adjdb)
+isis_adj_lookup_snpa (u_char * ssnpa, struct pm_list *adjdb)
 {
-  struct listnode *node;
+  struct pm_listnode *node;
   struct isis_adjacency *adj;
 
-  for (ALL_LIST_ELEMENTS_RO (adjdb, node, adj))
+  for (PM_ALL_LIST_ELEMENTS_RO (adjdb, node, adj))
     if (memcmp (adj->snpa, ssnpa, ETH_ALEN) == 0)
       return adj;
 
@@ -105,7 +105,7 @@ isis_adj_lookup_snpa (u_char * ssnpa, struct list *adjdb)
 }
 
 void
-isis_delete_adj (struct isis_adjacency *adj, struct list *adjdb)
+isis_delete_adj (struct isis_adjacency *adj, struct pm_list *adjdb)
 {
   if (!adj)
     return;
@@ -174,21 +174,21 @@ isis_adj_expire (struct isis_adjacency *adj)
 }
 
 void
-isis_adjdb_iterate (struct list *adjdb, void (*func) (struct isis_adjacency *,
+isis_adjdb_iterate (struct pm_list *adjdb, void (*func) (struct isis_adjacency *,
 						      void *), void *arg)
 {
-  struct listnode *node, *nnode;
+  struct pm_listnode *node, *nnode;
   struct isis_adjacency *adj;
 
-  for (ALL_LIST_ELEMENTS (adjdb, node, nnode, adj))
+  for (PM_ALL_LIST_ELEMENTS (adjdb, node, nnode, adj))
     (*func) (adj, arg);
 }
 
 void
-isis_adj_build_neigh_list (struct list *adjdb, struct list *list)
+isis_adj_build_neigh_list (struct pm_list *adjdb, struct pm_list *list)
 {
   struct isis_adjacency *adj;
-  struct listnode *node;
+  struct pm_listnode *node;
 
   if (!list)
     {
@@ -196,7 +196,7 @@ isis_adj_build_neigh_list (struct list *adjdb, struct list *list)
       return;
     }
 
-  for (ALL_LIST_ELEMENTS_RO (adjdb, node, adj))
+  for (PM_ALL_LIST_ELEMENTS_RO (adjdb, node, adj))
     {
       if (!adj)
 	{
@@ -212,10 +212,10 @@ isis_adj_build_neigh_list (struct list *adjdb, struct list *list)
 }
 
 void
-isis_adj_build_up_list (struct list *adjdb, struct list *list)
+isis_adj_build_up_list (struct pm_list *adjdb, struct pm_list *list)
 {
   struct isis_adjacency *adj;
-  struct listnode *node;
+  struct pm_listnode *node;
 
   if (!list)
     {
@@ -223,7 +223,7 @@ isis_adj_build_up_list (struct list *adjdb, struct list *list)
       return;
     }
 
-  for (ALL_LIST_ELEMENTS_RO (adjdb, node, adj))
+  for (PM_ALL_LIST_ELEMENTS_RO (adjdb, node, adj))
     {
       if (!adj)
 	{

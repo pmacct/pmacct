@@ -39,10 +39,10 @@ struct isis
   u_long process_id;
   int sysid_set;
   u_char sysid[ISIS_SYS_ID_LEN];	/* SystemID for this IS */
-  struct list *area_list;	/* list of IS-IS areas */
-  struct list *init_circ_list;
-  struct list *nexthops;	/* IPv4 next hops from this IS */
-  struct list *nexthops6;	/* IPv6 next hops from this IS */
+  struct pm_list *area_list;	/* list of IS-IS areas */
+  struct pm_list *init_circ_list;
+  struct pm_list *nexthops;	/* IPv4 next hops from this IS */
+  struct pm_list *nexthops6;	/* IPv6 next hops from this IS */
   u_char max_area_addrs;	/* maximumAreaAdresses */
   struct area_addr *man_area_addrs;	/* manualAreaAddresses */
   u_int32_t debugs;		/* bitmap for debug */
@@ -82,7 +82,7 @@ struct isis_area
   struct isis_spftree *spftree6[ISIS_LEVELS];	  /* The v6 SPTs */
   struct route_table *route_table6[ISIS_LEVELS];  /* IPv6 routes */
   unsigned int min_bcast_mtu;
-  struct list *circuit_list;	/* IS-IS circuits */
+  struct pm_list *circuit_list;	/* IS-IS circuits */
   struct flags flags;
   struct thread *t_tick;	/* LSP walker */
   struct thread *t_remove_aged;
@@ -104,7 +104,7 @@ struct isis_area
   /* identifies the routing instance   */
   char *area_tag;
   /* area addresses for this area      */
-  struct list *area_addrs;
+  struct pm_list *area_addrs;
   u_int16_t max_lsp_lifetime[ISIS_LEVELS];
   char is_type;			/* level-1 level-1-2 or level-2-only */
   u_int16_t lsp_refresh[ISIS_LEVELS];

@@ -80,10 +80,10 @@ struct isis_adjacency
   struct isis_dis_record dis_record[DIS_RECORDS * ISIS_LEVELS];
   enum isis_adj_state adj_state;	/* adjacencyState */
   enum isis_adj_usage adj_usage;	/* adjacencyUsage */
-  struct list *area_addrs;		/* areaAdressesOfNeighbour */
+  struct pm_list *area_addrs;		/* areaAdressesOfNeighbour */
   struct nlpids nlpids;			/* protocols spoken ... */
-  struct list *ipv4_addrs;
-  struct list *ipv6_addrs;
+  struct pm_list *ipv4_addrs;
+  struct pm_list *ipv6_addrs;
   u_char prio[ISIS_LEVELS];	/* priorityOfNeighbour for DIS */
   int circuit_t;		/* from hello PDU hdr */
   int level;			/* level (1 or 2) */
@@ -96,14 +96,14 @@ struct isis_adjacency
   struct isis_circuit *circuit;	/* back pointer */
 };
 
-extern struct isis_adjacency *isis_adj_lookup (u_char *, struct list *);
-extern struct isis_adjacency *isis_adj_lookup_snpa (u_char *, struct list *);
+extern struct isis_adjacency *isis_adj_lookup (u_char *, struct pm_list *);
+extern struct isis_adjacency *isis_adj_lookup_snpa (u_char *, struct pm_list *);
 extern struct isis_adjacency *isis_new_adj (u_char *, u_char *, int, struct isis_circuit *);
-extern void isis_delete_adj (struct isis_adjacency *, struct list *);
+extern void isis_delete_adj (struct isis_adjacency *, struct pm_list *);
 extern void isis_adj_state_change (struct isis_adjacency *, enum isis_adj_state, const char *);
 extern int isis_adj_expire (struct isis_adjacency *);
-extern void isis_adj_build_neigh_list (struct list *, struct list *);
-extern void isis_adj_build_up_list (struct list *, struct list *);
-extern void isis_adjdb_iterate (struct list *, void (*func) (struct isis_adjacency *, void *), void *);
+extern void isis_adj_build_neigh_list (struct pm_list *, struct pm_list *);
+extern void isis_adj_build_up_list (struct pm_list *, struct pm_list *);
+extern void isis_adjdb_iterate (struct pm_list *, void (*func) (struct isis_adjacency *, void *), void *);
 
 #endif /* _ISIS_ADJACENCY_H_ */

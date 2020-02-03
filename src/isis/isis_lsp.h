@@ -39,7 +39,7 @@ struct isis_lsp
   struct stream *pdu;				/* full pdu lsp */
   union
   {
-    struct list *frags;
+    struct pm_list *frags;
     struct isis_lsp *zero_lsp;
   } lspu;
   u_int32_t SRMflags[ISIS_MAX_CIRCUITS];
@@ -91,11 +91,11 @@ extern struct isis_lsp *lsp_new (u_char *, u_int16_t, u_int32_t, u_int8_t, u_int
 extern struct isis_lsp *lsp_new_from_stream_ptr (struct stream *, u_int16_t, struct isis_lsp *, struct isis_area *);
 extern void lsp_insert (struct isis_lsp *, dict_t *);
 extern struct isis_lsp *lsp_search (u_char *, dict_t *);
-extern void lsp_build_list (u_char *, u_char *, struct list *, dict_t *);
-extern void lsp_build_list_nonzero_ht (u_char *, u_char *, struct list *, dict_t *);
-extern void lsp_build_list_ssn (struct isis_circuit *, struct list *, dict_t *);
-extern void lsp_build_isis_list_nonzero_ht (u_char *, u_char *, struct list *, dict_t *);
-extern void lsp_build_isis_list_ssn (struct isis_circuit *, struct list *, dict_t *);
+extern void lsp_build_list (u_char *, u_char *, struct pm_list *, dict_t *);
+extern void lsp_build_list_nonzero_ht (u_char *, u_char *, struct pm_list *, dict_t *);
+extern void lsp_build_list_ssn (struct isis_circuit *, struct pm_list *, dict_t *);
+extern void lsp_build_isis_list_nonzero_ht (u_char *, u_char *, struct pm_list *, dict_t *);
+extern void lsp_build_isis_list_ssn (struct isis_circuit *, struct pm_list *, dict_t *);
 extern void lsp_search_and_destroy (u_char *, dict_t *);
 extern void lsp_purge_dr (u_char *, struct isis_circuit *, int);
 extern void lsp_purge_non_exist (struct isis_link_state_hdr *, struct isis_area *);

@@ -38,7 +38,7 @@ flags_initialize (struct flags *flags)
 long int
 flags_get_index (struct flags *flags)
 {
-  struct listnode *node;
+  struct pm_listnode *node;
   long int index;
 
   if (flags->free_idcs == NULL || flags->free_idcs->count == 0)
@@ -47,8 +47,8 @@ flags_get_index (struct flags *flags)
     }
   else
     {
-      node = listhead (flags->free_idcs);
-      index = (long int) listgetdata (node);
+      node = pm_listhead (flags->free_idcs);
+      index = (long int) pm_listgetdata (node);
       pm_listnode_delete (flags->free_idcs, (void *) index);
       index--;
     }

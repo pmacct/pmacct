@@ -90,7 +90,7 @@ isis_area_create ()
    * The first instance is level-1-2 rest are level-1, unless otherwise
    * configured
    */
-  if (listcount (isis->area_list) > 0)
+  if (pm_listcount (isis->area_list) > 0)
     area->is_type = IS_LEVEL_1;
   else
     area->is_type = IS_LEVEL_1_AND_2;
@@ -133,9 +133,9 @@ struct isis_area *
 isis_area_lookup (const char *area_tag)
 {
   struct isis_area *area;
-  struct listnode *node;
+  struct pm_listnode *node;
 
-  for (ALL_LIST_ELEMENTS_RO (isis->area_list, node, area))
+  for (PM_ALL_LIST_ELEMENTS_RO (isis->area_list, node, area))
     if ((area->area_tag == NULL && area_tag == NULL) ||
 	(area->area_tag && area_tag
 	 && strcmp (area->area_tag, area_tag) == 0))
@@ -169,7 +169,7 @@ int
 isis_area_destroy (const char *area_tag)
 {
   struct isis_area *area;
-  struct listnode *node, *nnode;
+  struct pm_listnode *node, *nnode;
   struct isis_circuit *circuit;
 
   area = isis_area_lookup (area_tag);
@@ -182,7 +182,7 @@ isis_area_destroy (const char *area_tag)
 
   if (area->circuit_list)
     {
-      for (ALL_LIST_ELEMENTS (area->circuit_list, node, nnode, circuit))
+      for (PM_ALL_LIST_ELEMENTS (area->circuit_list, node, nnode, circuit))
 	{
 	  /* The fact that it's in circuit_list means that it was configured */
 	  isis_csm_state_change (ISIS_DISABLE, circuit, area);
@@ -212,7 +212,7 @@ area_net_title (struct isis_area *area, const char *net_title)
 {
   struct area_addr *addr;
   struct area_addr *addrp;
-  struct listnode *node;
+  struct pm_listnode *node;
 
   char buff[255];
 
@@ -223,7 +223,7 @@ area_net_title (struct isis_area *area, const char *net_title)
     }
 
   /* We check that we are not over the maximal number of addresses */
-  if (listcount (area->area_addrs) >= isis->max_area_addrs)
+  if (pm_listcount (area->area_addrs) >= isis->max_area_addrs)
     {
       Log(LOG_WARNING, "WARN ( %s/core/ISIS ): Maximum of area addresses (%d) already reached\n",
 	       config.name, isis->max_area_addrs);
@@ -264,7 +264,7 @@ area_net_title (struct isis_area *area, const char *net_title)
 	}
 
       /* now we see that we don't already have this address */
-      for (ALL_LIST_ELEMENTS_RO (area->area_addrs, node, addrp))
+      for (PM_ALL_LIST_ELEMENTS_RO (area->area_addrs, node, addrp))
 	{
 	  if ((addrp->addr_len + ISIS_SYS_ID_LEN + 1) != (addr->addr_len))
 	    continue;
@@ -283,7 +283,7 @@ area_net_title (struct isis_area *area, const char *net_title)
   pm_listnode_add (area->area_addrs, addr);
 
   /* Only now we can safely generate our LSPs for this area */
-  if (listcount (area->area_addrs) > 0)
+  if (pm_listcount (area->area_addrs) > 0)
     {
       lsp_l1_generate (area);
       lsp_l2_generate (area);
@@ -296,7 +296,7 @@ int
 area_clear_net_title (struct isis_area *area, const char *net_title)
 {
   struct area_addr addr, *addrp = NULL;
-  struct listnode *node;
+  struct pm_listnode *node;
   char buff[255];
 
   if (!area)
@@ -314,7 +314,7 @@ area_clear_net_title (struct isis_area *area, const char *net_title)
 
   memcpy (addr.area_addr, buff, (int) addr.addr_len);
 
-  for (ALL_LIST_ELEMENTS_RO (area->area_addrs, node, addrp))
+  for (PM_ALL_LIST_ELEMENTS_RO (area->area_addrs, node, addrp))
     if (addrp->addr_len == addr.addr_len &&
 	!memcmp (addrp->area_addr, addr.area_addr, addr.addr_len))
     break;
