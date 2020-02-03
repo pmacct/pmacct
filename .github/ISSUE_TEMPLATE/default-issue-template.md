@@ -1,6 +1,6 @@
 ---
 name: Default issue template
-about: Issues not opened following this simple template format will be closed
+about: Please help us help you, fill in this template
 title: ''
 labels: ''
 assignees: ''
@@ -8,10 +8,10 @@ assignees: ''
 ---
 
 **Description**
-Write a small description of what this Issue is about
+What's the issue? Did something go wrong? Would you like something new to exist?
 
 **Version**
-Provide the version in use. An output of -V is typically good, ie. 'nfacctd -V'
+Provide the version in use. An output of -V is typically good, ie. `nfacctd -V`
 
 **Appreciation**
-- [ ] I felt to Star the pmacct project on GitHub as a token of appreciation for the work done so far
+Please consider starring this project to boost our reach on github!
