@@ -398,6 +398,70 @@ char *bmp_tlv_type_print(u_int16_t in, const char *prefix, const char **registry
   return out;
 }
 
+struct pm_list *bmp_tlv_list_new(int (*cmp)(void *val1, void *val2), void (*del)(void *val))
+{
+  struct pm_list *tlvs = NULL;
+  
+  tlvs = pm_list_new();
+  if (tlvs) {
+    tlvs->cmp = cmp;
+    tlvs->del = del;
+  }
+
+  return tlvs;
+}
+
+int bmp_tlv_list_add(struct pm_list *tlvs, u_int16_t type, u_int16_t len, char *val) 
+{
+  struct bmp_log_tlv *tlv;
+
+  if (!tlvs) return ERR;
+
+  tlv = malloc(sizeof(struct bmp_log_tlv));
+  if (!tlv) return ERR;
+
+  memset(tlv, 0, sizeof(struct bmp_log_tlv));
+
+  tlv->type = type;
+  tlv->len = len;
+
+  if (len) {
+    if (!val) return ERR;
+
+    tlv->val = malloc(len);
+    if (!tlv->val) return ERR;
+
+    memcpy(tlv->val, val, len);
+  }
+  else {
+    tlv->val = NULL;
+  }
+
+  pm_listnode_add(tlvs, tlv);
+
+  return SUCCESS;
+}
+
+void bmp_tlv_list_node_del(void *node)
+{
+  struct bmp_log_tlv *tlv = NULL;
+
+  tlv = (struct bmp_log_tlv *) node;
+
+  if (tlv->val) free(tlv->val);
+
+  tlv->len = 0;
+  tlv->val = NULL;
+}
+
+void bmp_tlv_list_list_destroy(struct pm_list *tlvs)
+{
+  if (!tlvs) return;
+
+  pm_list_delete_all_node(tlvs);
+  pm_list_free(tlvs);
+}
+
 char *bmp_term_reason_print(u_int16_t in)
 {
   char *out = NULL;
