@@ -35,7 +35,7 @@
 #include "plugin_cmn_avro.h"
 #endif
 
-int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u_int64_t log_seq, char *event_type, int output, int log_type)
+int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, void *log_data, u_int64_t log_seq, char *event_type, int output, int log_type)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BMP);
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
@@ -95,19 +95,19 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
 
     switch (log_type) {
     case BMP_LOG_TYPE_STATS:
-      ret = bmp_log_msg_stats(peer, bdata, (struct bmp_log_stats *) log_data, event_type, output, obj);
+      ret = bmp_log_msg_stats(peer, bdata, tlvs, (struct bmp_log_stats *) log_data, event_type, output, obj);
       break;
     case BMP_LOG_TYPE_INIT:
-      ret = bmp_log_msg_init(peer, bdata, (struct bmp_log_init_array *) log_data, event_type, output, obj);
+      ret = bmp_log_msg_init(peer, bdata, tlvs, event_type, output, obj);
       break;
     case BMP_LOG_TYPE_TERM:
-      ret = bmp_log_msg_term(peer, bdata, (struct bmp_log_term_array *) log_data, event_type, output, obj);
+      ret = bmp_log_msg_term(peer, bdata, tlvs, (struct bmp_log_term_array *) log_data, event_type, output, obj);
       break;
     case BMP_LOG_TYPE_PEER_UP:
-      ret = bmp_log_msg_peer_up(peer, bdata, (struct bmp_log_peer_up *) log_data, event_type, output, obj);
+      ret = bmp_log_msg_peer_up(peer, bdata, tlvs, (struct bmp_log_peer_up *) log_data, event_type, output, obj);
       break;
     case BMP_LOG_TYPE_PEER_DOWN:
-      ret = bmp_log_msg_peer_down(peer, bdata, (struct bmp_log_peer_down *) log_data, event_type, output, obj);
+      ret = bmp_log_msg_peer_down(peer, bdata, tlvs, (struct bmp_log_peer_down *) log_data, event_type, output, obj);
       break;
     default:
       break;
@@ -197,19 +197,19 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
 
     switch (log_type) {
     case BMP_LOG_TYPE_STATS:
-      ret = bmp_log_msg_stats(peer, bdata, (struct bmp_log_stats *) log_data, event_type, output, &p_avro_obj);
+      ret = bmp_log_msg_stats(peer, bdata, tlvs, (struct bmp_log_stats *) log_data, event_type, output, &p_avro_obj);
       break;
     case BMP_LOG_TYPE_INIT:
-      ret = bmp_log_msg_init(peer, bdata, (struct bmp_log_init_array *) log_data, event_type, output, &p_avro_obj);
+      ret = bmp_log_msg_init(peer, bdata, tlvs, event_type, output, &p_avro_obj);
       break;
     case BMP_LOG_TYPE_TERM:
-      ret = bmp_log_msg_term(peer, bdata, (struct bmp_log_term_array *) log_data, event_type, output, &p_avro_obj);
+      ret = bmp_log_msg_term(peer, bdata, tlvs, (struct bmp_log_term_array *) log_data, event_type, output, &p_avro_obj);
       break;
     case BMP_LOG_TYPE_PEER_UP:
-      ret = bmp_log_msg_peer_up(peer, bdata, (struct bmp_log_peer_up *) log_data, event_type, output, &p_avro_obj);
+      ret = bmp_log_msg_peer_up(peer, bdata, tlvs, (struct bmp_log_peer_up *) log_data, event_type, output, &p_avro_obj);
       break;
     case BMP_LOG_TYPE_PEER_DOWN:
-      ret = bmp_log_msg_peer_down(peer, bdata, (struct bmp_log_peer_down *) log_data, event_type, output, &p_avro_obj);
+      ret = bmp_log_msg_peer_down(peer, bdata, tlvs, (struct bmp_log_peer_down *) log_data, event_type, output, &p_avro_obj);
       break;
     default:
       break;
@@ -312,7 +312,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, void *log_data, u
   return (ret | amqp_ret | kafka_ret);
 }
 
-int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_stats *blstats, char *event_type, int output, void *vobj)
+int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, struct bmp_log_stats *blstats, char *event_type, int output, void *vobj)
 {
   int ret = 0;
 
@@ -459,7 +459,7 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_
   return ret;
 }
 
-int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_init_array *blinit, char *event_type, int output, void *vobj)
+int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, char *event_type, int output, void *vobj)
 {
   int ret = 0;
 
@@ -467,23 +467,22 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
-    int idx = 0;
     char bmp_msg_type[] = "init";
     json_t *obj = (json_t *) vobj;
 
     json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 
-    if (blinit) {
-      while (idx < blinit->entries) { 
-	char *type = NULL, *value = NULL;
-
-	type = bmp_tlv_type_print(blinit->e[idx].type, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
-	value = null_terminate(blinit->e[idx].val, blinit->e[idx].len);
+    if (tlvs) {
+      char *type = NULL, *value = NULL;
+      struct pm_listnode *node = NULL;
+      struct bmp_log_tlv *tlv = NULL;
+      
+      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
+	type = bmp_tlv_type_print(tlv->type, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
+	value = null_terminate(tlv->val, tlv->len);
 	json_object_set_new_nocheck(obj, type, json_string(value));
 	free(type);
 	free(value);
-
-	idx++;
       }
     }
 #endif
@@ -500,13 +499,15 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
 
     memset(&bmp_init_tlvs, 0, sizeof(bmp_init_tlvs));
 
-    if (blinit) {
-      while (idx < blinit->entries) {
-	char *type = NULL, *value = NULL;
+    if (tlvs) {
+      char *type = NULL, *value = NULL;
+      struct pm_listnode *node = NULL;
+      struct bmp_log_tlv *tlv = NULL;
 
-	if (blinit->e[idx].type <= BMP_INIT_INFO_MAX) {
-	  type = bmp_tlv_type_print(blinit->e[idx].type, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
-	  value = null_terminate(blinit->e[idx].val, blinit->e[idx].len);
+      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
+	if (tlv->type <= BMP_INIT_INFO_MAX) {
+	  type = bmp_tlv_type_print(tlv->type, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
+	  value = null_terminate(tlv->val, tlv->len);
 
 	  pm_avro_check(avro_value_get_by_name(obj, type, &p_avro_field, NULL));
 	  pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
@@ -515,14 +516,11 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
 	  free(type);
 	  free(value);
 
-	  bmp_init_tlvs[blinit->e[idx].type] = TRUE;
+	  bmp_init_tlvs[tlv->type] = TRUE;
 	}
-
-	idx++;
       }
     }
 
-    /* mark missing tlv types */
     for (idx = 0; idx <= BMP_INIT_INFO_MAX; idx++) {
       char *type;
 
@@ -532,13 +530,14 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
 	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
     }
+    
 #endif
   }
 
   return ret;
 }
 
-int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_term_array *blterm, char *event_type, int output, void *vobj)
+int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, struct bmp_log_term_array *blterm, char *event_type, int output, void *vobj)
 {
   int ret = 0;
 
@@ -630,7 +629,7 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_l
   return ret;
 }
 
-int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_peer_up *blpu, char *event_type, int output, void *vobj)
+int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, struct bmp_log_peer_up *blpu, char *event_type, int output, void *vobj)
 {
   int ret = 0;
 
@@ -810,7 +809,7 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct bm
   return ret;
 }
 
-int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct bmp_log_peer_down *blpd, char *event_type, int output, void *vobj)
+int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, struct bmp_log_peer_down *blpd, char *event_type, int output, void *vobj)
 {
   int ret = 0;
 
@@ -974,7 +973,7 @@ void bmp_dump_close_peer(struct bgp_peer *peer)
   peer->bmp_se = NULL;
 }
 
-void bmp_dump_se_ll_append(struct bgp_peer *peer, struct bmp_data *bdata, void *extra, int log_type)
+void bmp_dump_se_ll_append(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, void *extra, int log_type)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BMP);
   struct bmp_dump_se_ll *se_ll;
@@ -998,9 +997,6 @@ void bmp_dump_se_ll_append(struct bgp_peer *peer, struct bmp_data *bdata, void *
     case BMP_LOG_TYPE_STATS:
       memcpy(&se_ll_elem->rec.se.stats, extra, sizeof(struct bmp_log_stats));
       break;
-    case BMP_LOG_TYPE_INIT:
-      memcpy(&se_ll_elem->rec.se.init, extra, sizeof(struct bmp_log_init_array));
-      break;
     case BMP_LOG_TYPE_TERM:
       memcpy(&se_ll_elem->rec.se.term, extra, sizeof(struct bmp_log_term_array));
       break;
@@ -1015,6 +1011,7 @@ void bmp_dump_se_ll_append(struct bgp_peer *peer, struct bmp_data *bdata, void *
     }
   }
 
+  se_ll_elem->rec.tlvs = tlvs;
   se_ll_elem->rec.seq = bgp_peer_log_seq_get(&bms->log_seq);
   se_ll_elem->rec.se_type = log_type;
   se_ll_elem->next = NULL; /* pedantic */
@@ -1047,6 +1044,10 @@ void bmp_dump_se_ll_destroy(struct bmp_dump_se_ll *bdsell)
 
   assert(bdsell->last);
   for (se_ll_elem = bdsell->start; se_ll_elem; se_ll_elem = se_ll_elem_next) {
+    if (se_ll_elem->rec.tlvs) {
+      bmp_tlv_list_list_destroy(se_ll_elem->rec.tlvs);
+    }
+
     se_ll_elem_next = se_ll_elem->next;
     free(se_ll_elem);
   }
@@ -1275,19 +1276,19 @@ void bmp_handle_dump_event()
 	  for (se_ll_elem = bdsell->start; se_ll_elem; se_ll_elem = se_ll_elem->next) {
 	    switch (se_ll_elem->rec.se_type) {
 	    case BMP_LOG_TYPE_STATS:
-	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, &se_ll_elem->rec.se.stats, se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_STATS);
+	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, NULL, &se_ll_elem->rec.se.stats, se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_STATS);
 	      break;
 	    case BMP_LOG_TYPE_INIT:
-	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, &se_ll_elem->rec.se.init, se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_INIT);
+	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, se_ll_elem->rec.tlvs, NULL, se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_INIT);
 	      break;
 	    case BMP_LOG_TYPE_TERM:
-	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, &se_ll_elem->rec.se.term, se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_TERM);
+	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, NULL, &se_ll_elem->rec.se.term, se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_TERM);
 	      break;
 	    case BMP_LOG_TYPE_PEER_UP:
-	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, &se_ll_elem->rec.se.peer_up, se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_PEER_UP);
+	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, NULL, &se_ll_elem->rec.se.peer_up, se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_PEER_UP);
 	      break;
 	    case BMP_LOG_TYPE_PEER_DOWN:
-	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, &se_ll_elem->rec.se.peer_down, se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_PEER_DOWN);
+	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, NULL, &se_ll_elem->rec.se.peer_down, se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_PEER_DOWN);
 	      break;
 	    default:
 	      break;

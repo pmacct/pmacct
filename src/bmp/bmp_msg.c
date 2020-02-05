@@ -124,7 +124,8 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
   u_int16_t bmp_init_type, bmp_init_len;
   char *bmp_init_info;
 
-  struct bmp_log_init_array blinit;
+  struct pm_list *tlvs = NULL;
+  int ret;
 
   if (!bmpp) return;
 
@@ -134,7 +135,9 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
   if (!bms) return;
 
   memset(&bdata, 0, sizeof(bdata));
-  blinit.entries = 0;
+
+  tlvs = bmp_tlv_list_new(NULL, bmp_tlv_list_node_del);
+  if (!tlvs) return;
 
   gettimeofday(&bdata.tstamp, NULL);
 
@@ -154,22 +157,24 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
       return;
     }
 
-    blinit.e[blinit.entries].type = bmp_init_type;
-    blinit.e[blinit.entries].len = bmp_init_len;
-    blinit.e[blinit.entries].val = bmp_init_info;
-
-    blinit.entries = bmp_tlv_array_increment(blinit.entries, BMP_INIT_INFO_ENTRIES);
+    ret = bmp_tlv_list_add(tlvs, bmp_init_type, bmp_init_len, bmp_init_info);
+    if (ret == ERR) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] [init] bmp_tlv_list_add() failed.\n", config.name, bms->log_str, peer->addr_str); 
+      exit_gracefully(1);
+    }
   }
 
   if (bms->msglog_backend_methods) {
     char event_type[] = "log";
 
-    bmp_log_msg(peer, &bdata, &blinit, bgp_peer_log_seq_get(&bms->log_seq), event_type, config.bmp_daemon_msglog_output, BMP_LOG_TYPE_INIT);
+    bmp_log_msg(peer, &bdata, tlvs, NULL, bgp_peer_log_seq_get(&bms->log_seq), event_type, config.bmp_daemon_msglog_output, BMP_LOG_TYPE_INIT);
   }
 
-  if (bms->dump_backend_methods) bmp_dump_se_ll_append(peer, &bdata, &blinit, BMP_LOG_TYPE_INIT);
+  if (bms->dump_backend_methods) bmp_dump_se_ll_append(peer, &bdata, tlvs, NULL, BMP_LOG_TYPE_INIT);
 
   if (bms->msglog_backend_methods || bms->dump_backend_methods) bgp_peer_log_seq_increment(&bms->log_seq);
+
+  if (!pm_listcount(tlvs) || !bms->dump_backend_methods) bmp_tlv_list_list_destroy(tlvs);
 }
 
 void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
@@ -229,10 +234,10 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
   if (bms->msglog_backend_methods) {
     char event_type[] = "log";
 
-    bmp_log_msg(peer, &bdata, &blterm, bgp_peer_log_seq_get(&bms->log_seq), event_type, config.bmp_daemon_msglog_output, BMP_LOG_TYPE_TERM);
+    bmp_log_msg(peer, &bdata, NULL, &blterm, bgp_peer_log_seq_get(&bms->log_seq), event_type, config.bmp_daemon_msglog_output, BMP_LOG_TYPE_TERM);
   }
 
-  if (bms->dump_backend_methods) bmp_dump_se_ll_append(peer, &bdata, &blterm, BMP_LOG_TYPE_TERM);
+  if (bms->dump_backend_methods) bmp_dump_se_ll_append(peer, &bdata, NULL, &blterm, BMP_LOG_TYPE_TERM);
 
   if (bms->msglog_backend_methods || bms->dump_backend_methods) bgp_peer_log_seq_increment(&bms->log_seq);
 
@@ -381,11 +386,11 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
       if (bms->msglog_backend_methods) {
         char event_type[] = "log";
 
-        bmp_log_msg(peer, &bdata, &blpu, bgp_peer_log_seq_get(&bms->log_seq), event_type, config.bmp_daemon_msglog_output, BMP_LOG_TYPE_PEER_UP);
+        bmp_log_msg(peer, &bdata, NULL, &blpu, bgp_peer_log_seq_get(&bms->log_seq), event_type, config.bmp_daemon_msglog_output, BMP_LOG_TYPE_PEER_UP);
       }
 
       if (bms->dump_backend_methods)
-        bmp_dump_se_ll_append(peer, &bdata, &blpu, BMP_LOG_TYPE_PEER_UP);
+        bmp_dump_se_ll_append(peer, &bdata, NULL, &blpu, BMP_LOG_TYPE_PEER_UP);
 
       if (bms->msglog_backend_methods || bms->dump_backend_methods)
         bgp_peer_log_seq_increment(&bms->log_seq);
@@ -484,11 +489,11 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
       if (bms->msglog_backend_methods) {
         char event_type[] = "log";
 
-        bmp_log_msg(peer, &bdata, &blpd, bgp_peer_log_seq_get(&bms->log_seq), event_type, config.bmp_daemon_msglog_output, BMP_LOG_TYPE_PEER_DOWN);
+        bmp_log_msg(peer, &bdata, NULL, &blpd, bgp_peer_log_seq_get(&bms->log_seq), event_type, config.bmp_daemon_msglog_output, BMP_LOG_TYPE_PEER_DOWN);
       }
 
       if (bms->dump_backend_methods)
-        bmp_dump_se_ll_append(peer, &bdata, &blpd, BMP_LOG_TYPE_PEER_DOWN);
+        bmp_dump_se_ll_append(peer, &bdata, NULL, &blpd, BMP_LOG_TYPE_PEER_DOWN);
 
       if (bms->msglog_backend_methods || bms->dump_backend_methods)
         bgp_peer_log_seq_increment(&bms->log_seq);
@@ -824,11 +829,11 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
         if (bms->msglog_backend_methods) {
           char event_type[] = "log";
 
-          bmp_log_msg(peer, &bdata, &blstats, bgp_peer_log_seq_get(&bms->log_seq), event_type, config.bmp_daemon_msglog_output, BMP_LOG_TYPE_STATS);
+          bmp_log_msg(peer, &bdata, NULL, &blstats, bgp_peer_log_seq_get(&bms->log_seq), event_type, config.bmp_daemon_msglog_output, BMP_LOG_TYPE_STATS);
         } 
 
         if (bms->dump_backend_methods)
-          bmp_dump_se_ll_append(peer, &bdata, &blstats, BMP_LOG_TYPE_STATS);
+          bmp_dump_se_ll_append(peer, &bdata, NULL, &blstats, BMP_LOG_TYPE_STATS);
 
         if (bms->msglog_backend_methods || bms->dump_backend_methods)
           bgp_peer_log_seq_increment(&bms->log_seq);

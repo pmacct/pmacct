@@ -50,11 +50,6 @@ struct bmp_log_tlv {
   char *val;
 };
 
-struct bmp_log_init_array {
-  int entries;
-  struct bmp_log_tlv e[BMP_INIT_INFO_ENTRIES];
-};
-
 struct bmp_log_term {
   u_int16_t type;
   u_int16_t len;
@@ -101,12 +96,12 @@ struct bmp_dump_se {
   int se_type;
   union {
     struct bmp_log_stats stats;
-    struct bmp_log_init_array init;
     struct bmp_log_term_array term;
     struct bmp_log_peer_up peer_up;
     struct bmp_log_peer_up_tlv_array peer_up_tlv;
     struct bmp_log_peer_down peer_down;
   } se;
+  struct pm_list *tlvs;
 };
 
 struct bmp_dump_se_ll_elem {
@@ -125,15 +120,15 @@ extern void bmp_dump_init_amqp_host();
 extern void bmp_dump_init_peer(struct bgp_peer *);
 extern void bmp_dump_close_peer(struct bgp_peer *);
 
-extern int bmp_log_msg(struct bgp_peer *, struct bmp_data *, void *, u_int64_t, char *, int, int);
-extern int bmp_log_msg_stats(struct bgp_peer *, struct bmp_data *, struct bmp_log_stats *, char *, int, void *);
-extern int bmp_log_msg_init(struct bgp_peer *, struct bmp_data *, struct bmp_log_init_array *, char *, int, void *);
-extern int bmp_log_msg_term(struct bgp_peer *, struct bmp_data *, struct bmp_log_term_array *, char *, int, void *);
-extern int bmp_log_msg_peer_up(struct bgp_peer *, struct bmp_data *, struct bmp_log_peer_up *, char *, int, void *);
-extern int bmp_log_msg_peer_down(struct bgp_peer *, struct bmp_data *, struct bmp_log_peer_down *, char *, int, void *);
+extern int bmp_log_msg(struct bgp_peer *, struct bmp_data *, struct pm_list *tlvs, void *, u_int64_t, char *, int, int);
+extern int bmp_log_msg_stats(struct bgp_peer *, struct bmp_data *, struct pm_list *, struct bmp_log_stats *, char *, int, void *);
+extern int bmp_log_msg_init(struct bgp_peer *, struct bmp_data *, struct pm_list *, char *, int, void *);
+extern int bmp_log_msg_term(struct bgp_peer *, struct bmp_data *, struct pm_list *, struct bmp_log_term_array *, char *, int, void *);
+extern int bmp_log_msg_peer_up(struct bgp_peer *, struct bmp_data *, struct pm_list *, struct bmp_log_peer_up *, char *, int, void *);
+extern int bmp_log_msg_peer_down(struct bgp_peer *, struct bmp_data *, struct pm_list *, struct bmp_log_peer_down *, char *, int, void *);
 extern int bmp_log_msg_route_monitor_tlv(struct bmp_log_route_monitor_tlv_array *, int, void *);
 
-extern void bmp_dump_se_ll_append(struct bgp_peer *, struct bmp_data *, void *, int);
+extern void bmp_dump_se_ll_append(struct bgp_peer *, struct bmp_data *, struct pm_list *tlvs, void *, int);
 extern void bmp_dump_se_ll_destroy(struct bmp_dump_se_ll *);
 
 extern void bmp_handle_dump_event();
