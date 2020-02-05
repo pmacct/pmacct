@@ -35,24 +35,6 @@ from lib_pmgrpcd import PMGRPCDLOG
 from worker_swarm import WorkerSwarmMP
 
 
-def buildCtx(self):
-    return KafkaAvroExporterContext()
-
-def processor(state, data):
-    return state.process_metric(data)
-
-
-ws = WorkerSwarmMP(4, buildCtx, processor)
-
-ws.start()
-
-class KafkaAvroExporter(Exporter):
-    def process_metric(self, datajsonstring):
-        ws.enqueue(datajsonstring)
-
-
-
-
 class KafkaAvroExporterContext:
     def __init__(self):
         self.avscmap = {}
@@ -402,9 +384,33 @@ class KafkaAvroExporterContext:
             % (lib_pmgrpcd.OPTIONS.avscid, lib_pmgrpcd.OPTIONS.jsondatafile)
         )
         avscid = int(lib_pmgrpcd.OPTIONS.avscid)
-        avsc = self.getavroschema(self.avscid)
-        avroinstance = self.getavro_schid_instance(self.avscid)
+        avsc = self.getavroschema(avscid)
+        avroinstance = self.getavro_schid_instance(avscid)
         with open(lib_pmgrpcd.OPTIONS.jsondatafile, "r") as jsondatahandler:
             jsondata = json.load(jsondatahandler)
         # serialize(json.dumps(avsc), jsondata, topic, avscid, avroinstance)
         self.serialize(jsondata, lib_pmgrpcd.OPTIONS.topic, avscid, avroinstance)
+
+
+
+
+def buildCtx():
+    return KafkaAvroExporterContext()
+
+def processor(state, data):
+    return state.process_metric(data)
+
+
+def manually_serialize():
+    ctx=buildCtx()
+    ctx.manually_serialize()
+
+ws = WorkerSwarmMP(4, buildCtx, processor)
+
+ws.start()
+
+class KafkaAvroExporter(Exporter):
+    def process_metric(self, datajsonstring):
+        ws.enqueue(datajsonstring)
+
+
