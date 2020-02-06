@@ -57,7 +57,6 @@ def prepare(t, q):
 
         def start(self):
             for thread in self.__threads:
-                thread.daemon = True
                 thread.start()
 
         def wait(self):

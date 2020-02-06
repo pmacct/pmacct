@@ -36,7 +36,6 @@ from export_pmgrpcd import Exporter
 from lib_pmgrpcd import PMGRPCDLOG
 from worker_swarm import WorkerSwarmMP
 
-
 class KafkaAvroExporterContext:
     def __init__(self):
         self.avscmap = {}
@@ -404,25 +403,22 @@ def processor(state, data):
 
 
 def manually_serialize():
-    ctx=buildCtx()
+    ctx = buildCtx()
     ctx.manually_serialize()
 
-ws = WorkerSwarmMP(4, buildCtx, processor)
-
-
-
-
-
-
-
 class KafkaAvroExporter(Exporter):
+
     def __init__(self):
+        self.ws = WorkerSwarmMP(4, buildCtx, processor)
         self.started = False
 
     def process_metric(self, datajsonstring):
         if not self.started:
             self.started = True
-            ws.start()
-        ws.enqueue(datajsonstring)
+            self.ws.start()
 
+        self.ws.enqueue(datajsonstring)
 
+    def __del__(self):
+        self.ws.stop()
+        self.ws.wait()
