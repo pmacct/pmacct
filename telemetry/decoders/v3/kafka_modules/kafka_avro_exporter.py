@@ -409,7 +409,7 @@ def manually_serialize():
 class KafkaAvroExporter(Exporter):
 
     def __init__(self):
-        self.ws = WorkerSwarmMP(4, buildCtx, processor)
+        self.ws = WorkerSwarmMP(lib_pmgrpcd.OPTIONS.ProcessPool, buildCtx, processor)
         self.started = False
 
     def process_metric(self, datajsonstring):

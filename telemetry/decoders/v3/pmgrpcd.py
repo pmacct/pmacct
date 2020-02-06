@@ -267,6 +267,15 @@ def main():
         help="change the nr of paralell working processes [default: %default]",
     )
     parser.add_option(
+        "-b",
+        "--processpool",
+        action="store",
+        type="int",
+        default=config.get("PMGRPCD", "processpool"),
+        dest="ProcessPool",
+        help="change the nr of processes within the ProcessPool of Kafka [default: %default]",
+    )
+    parser.add_option(
         "-C",
         "--cisco",
         action="store_true",
