@@ -23,6 +23,8 @@
 #   Thomas Graf <thomas.graf@swisscom.com>
 #   Paolo Lucente <paolo@pmacct.net>
 #
+from typing import Any
+
 from confluent_kafka.avro.cached_schema_registry_client import (
     CachedSchemaRegistryClient,
 )
@@ -324,7 +326,7 @@ class KafkaAvroExporterContext:
 
         return avsc
 
-    def delivery_report(err, msg):
+    def delivery_report(self, err, msg):
         """ Called once for each message produced to indicate delivery result.
             Triggered by poll() or flush(). """
         if err:
@@ -407,10 +409,20 @@ def manually_serialize():
 
 ws = WorkerSwarmMP(4, buildCtx, processor)
 
-ws.start()
+
+
+
+
+
 
 class KafkaAvroExporter(Exporter):
+    def __init__(self):
+        self.started = False
+
     def process_metric(self, datajsonstring):
+        if not self.started:
+            self.started = True
+            ws.start()
         ws.enqueue(datajsonstring)
 
 
