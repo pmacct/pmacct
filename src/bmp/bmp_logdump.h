@@ -50,39 +50,15 @@ struct bmp_log_tlv {
   char *val;
 };
 
-struct bmp_log_term {
-  u_int16_t type;
-  u_int16_t len;
-  char *val;
-  u_int16_t reas_type;
-};
-
-struct bmp_log_term_array {
-  int entries;
-  struct bmp_log_term e[BMP_TERM_INFO_ENTRIES];
-};
-
-struct bmp_log_peer_up_tlv_array {
-  int entries;
-  struct bmp_log_tlv e[BMP_PEER_UP_INFO_ENTRIES];
-};
-
 struct bmp_log_peer_up {
   struct host_addr local_ip;
   u_int16_t loc_port;
   u_int16_t rem_port;
-  struct bmp_log_peer_up_tlv_array tlv;
-};
-
-struct bmp_log_peer_down_tlv_array {
-  int entries;
-  struct bmp_log_tlv e[BMP_PEER_DOWN_INFO_ENTRIES];
 };
 
 struct bmp_log_peer_down {
   u_char reason;
   u_int16_t loc_code;
-  struct bmp_log_peer_down_tlv_array tlv;
 };
 
 struct bmp_log_route_monitor_tlv_array {
@@ -96,9 +72,7 @@ struct bmp_dump_se {
   int se_type;
   union {
     struct bmp_log_stats stats;
-    struct bmp_log_term_array term;
     struct bmp_log_peer_up peer_up;
-    struct bmp_log_peer_up_tlv_array peer_up_tlv;
     struct bmp_log_peer_down peer_down;
   } se;
   struct pm_list *tlvs;
@@ -123,7 +97,7 @@ extern void bmp_dump_close_peer(struct bgp_peer *);
 extern int bmp_log_msg(struct bgp_peer *, struct bmp_data *, struct pm_list *tlvs, void *, u_int64_t, char *, int, int);
 extern int bmp_log_msg_stats(struct bgp_peer *, struct bmp_data *, struct pm_list *, struct bmp_log_stats *, char *, int, void *);
 extern int bmp_log_msg_init(struct bgp_peer *, struct bmp_data *, struct pm_list *, char *, int, void *);
-extern int bmp_log_msg_term(struct bgp_peer *, struct bmp_data *, struct pm_list *, struct bmp_log_term_array *, char *, int, void *);
+extern int bmp_log_msg_term(struct bgp_peer *, struct bmp_data *, struct pm_list *, char *, int, void *);
 extern int bmp_log_msg_peer_up(struct bgp_peer *, struct bmp_data *, struct pm_list *, struct bmp_log_peer_up *, char *, int, void *);
 extern int bmp_log_msg_peer_down(struct bgp_peer *, struct bmp_data *, struct pm_list *, struct bmp_log_peer_down *, char *, int, void *);
 extern int bmp_log_msg_route_monitor_tlv(struct bmp_log_route_monitor_tlv_array *, int, void *);

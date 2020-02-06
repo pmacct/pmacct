@@ -448,13 +448,15 @@ void bmp_tlv_list_node_del(void *node)
 
   tlv = (struct bmp_log_tlv *) node;
 
-  if (tlv->val) free(tlv->val);
+  if (tlv) {
+    if (tlv->val) free(tlv->val);
 
-  tlv->len = 0;
-  tlv->val = NULL;
+    tlv->len = 0;
+    tlv->val = NULL;
+  }
 }
 
-void bmp_tlv_list_list_destroy(struct pm_list *tlvs)
+void bmp_tlv_list_destroy(struct pm_list *tlvs)
 {
   if (!tlvs) return;
 

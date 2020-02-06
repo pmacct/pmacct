@@ -101,7 +101,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
       ret = bmp_log_msg_init(peer, bdata, tlvs, event_type, output, obj);
       break;
     case BMP_LOG_TYPE_TERM:
-      ret = bmp_log_msg_term(peer, bdata, tlvs, (struct bmp_log_term_array *) log_data, event_type, output, obj);
+      ret = bmp_log_msg_term(peer, bdata, tlvs, event_type, output, obj);
       break;
     case BMP_LOG_TYPE_PEER_UP:
       ret = bmp_log_msg_peer_up(peer, bdata, tlvs, (struct bmp_log_peer_up *) log_data, event_type, output, obj);
@@ -203,7 +203,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
       ret = bmp_log_msg_init(peer, bdata, tlvs, event_type, output, &p_avro_obj);
       break;
     case BMP_LOG_TYPE_TERM:
-      ret = bmp_log_msg_term(peer, bdata, tlvs, (struct bmp_log_term_array *) log_data, event_type, output, &p_avro_obj);
+      ret = bmp_log_msg_term(peer, bdata, tlvs, event_type, output, &p_avro_obj);
       break;
     case BMP_LOG_TYPE_PEER_UP:
       ret = bmp_log_msg_peer_up(peer, bdata, tlvs, (struct bmp_log_peer_up *) log_data, event_type, output, &p_avro_obj);
@@ -530,14 +530,13 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
 	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
     }
-    
 #endif
   }
 
   return ret;
 }
 
-int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, struct bmp_log_term_array *blterm, char *event_type, int output, void *vobj)
+int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, char *event_type, int output, void *vobj)
 {
   int ret = 0;
 
@@ -546,29 +545,29 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     char bmp_msg_type[] = "term";
-    int idx = 0;
     json_t *obj = (json_t *) vobj;
 
     json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 
-    if (blterm) {
-      while (idx < blterm->entries) {
-	char *type = NULL, *value = NULL;
+    if (tlvs) {
+      char *type = NULL, *value = NULL;
+      struct pm_listnode *node = NULL;
+      struct bmp_log_tlv *tlv = NULL;
 
-	type = bmp_tlv_type_print(blterm->e[idx].type, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
+      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
+	type = bmp_tlv_type_print(tlv->type, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
 
-	if (blterm->e[idx].type == BMP_TERM_INFO_REASON) {
-	  value = bmp_term_reason_print(blterm->e[idx].reas_type);
+	if (tlv->type == BMP_TERM_INFO_REASON && tlv->len == 2) {
+	  u_int16_t reas_type = ntohs((*tlv->val));
+	  value = bmp_term_reason_print(reas_type);
 	}
 	else {
-	  value = null_terminate(blterm->e[idx].val, blterm->e[idx].len);
+	  value = null_terminate(tlv->val, tlv->len);
 	}
 
-        json_object_set_new_nocheck(obj, type, json_string(value));
-        free(type);
-        free(value);
-
-        idx++;
+	json_object_set_new_nocheck(obj, type, json_string(value));
+	free(type);
+	free(value);
       }
     }
 #endif
@@ -585,18 +584,21 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
 
     memset(&bmp_term_tlvs, 0, sizeof(bmp_term_tlvs));
 
-    if (blterm) {
-      while (idx < blterm->entries) {
-	char *type = NULL, *value = NULL;
+    if (tlvs) {
+      char *type = NULL, *value = NULL;
+      struct pm_listnode *node = NULL;
+      struct bmp_log_tlv *tlv = NULL;
 
-	if (blterm->e[idx].type <= BMP_TERM_INFO_MAX) {
-	  type = bmp_tlv_type_print(blterm->e[idx].type, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
+      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
+	if (tlv->type <= BMP_TERM_INFO_MAX) {
+	  type = bmp_tlv_type_print(tlv->type, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
 
-	  if (blterm->e[idx].type == BMP_TERM_INFO_REASON) {
-	    value = bmp_term_reason_print(blterm->e[idx].reas_type);
+	  if (tlv->type == BMP_TERM_INFO_REASON && tlv->len == 2) {
+	    u_int16_t reas_type = ntohs((*tlv->val));
+	    value = bmp_term_reason_print(reas_type);
 	  }
 	  else {
-	    value = null_terminate(blterm->e[idx].val, blterm->e[idx].len);
+	    value = null_terminate(tlv->val, tlv->len);
 	  }
 
 	  pm_avro_check(avro_value_get_by_name(obj, type, &p_avro_field, NULL));
@@ -606,21 +608,18 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
 	  free(type);
 	  free(value);
 
-	  bmp_term_tlvs[blterm->e[idx].type] = TRUE;
-	}
-
-	idx++;
+	  bmp_term_tlvs[tlv->type] = TRUE;
+        }
       }
     }
 
-    /* mark missing tlv types */
     for (idx = 0; idx <= BMP_TERM_INFO_MAX; idx++) {
       char *type;
 
       if (!bmp_term_tlvs[idx]) {
-        type = bmp_tlv_type_print(idx, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
-        pm_avro_check(avro_value_get_by_name(obj, type, &p_avro_field, NULL));
-        pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+	type = bmp_tlv_type_print(idx, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
+	pm_avro_check(avro_value_get_by_name(obj, type, &p_avro_field, NULL));
+	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
     }
 #endif
@@ -639,7 +638,6 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
 #ifdef WITH_JANSSON
     char bmp_msg_type[] = "peer_up";
     char ip_address[INET6_ADDRSTRLEN];
-    int idx = 0;
     json_t *obj = (json_t *) vobj;
 
     json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
@@ -670,16 +668,18 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
     addr_to_str(ip_address, &blpu->local_ip);
     json_object_set_new_nocheck(obj, "local_ip", json_string(ip_address));
 
-    while (idx < blpu->tlv.entries) {
+    if (tlvs) {
       char *type = NULL, *value = NULL;
+      struct pm_listnode *node = NULL;
+      struct bmp_log_tlv *tlv = NULL;
 
-      type = bmp_tlv_type_print(blpu->tlv.e[idx].type, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
-      value = null_terminate(blpu->tlv.e[idx].val, blpu->tlv.e[idx].len);
-      json_object_set_new_nocheck(obj, type, json_string(value));
-      free(type);
-      free(value);
-
-      idx++;
+      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
+	type = bmp_tlv_type_print(tlv->type, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
+	value = null_terminate(tlv->val, tlv->len);
+	json_object_set_new_nocheck(obj, type, json_string(value));
+	free(type);
+	free(value);
+      }
     }
 #endif
   }
@@ -773,24 +773,26 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
 
     memset(&bmp_peer_up_tlvs, 0, sizeof(bmp_peer_up_tlvs));
 
-    while (idx < blpu->tlv.entries) {
+    if (tlvs) {
       char *type = NULL, *value = NULL;
+      struct pm_listnode *node = NULL;
+      struct bmp_log_tlv *tlv = NULL;
 
-      if (blpu->tlv.e[idx].type <= BMP_PEER_UP_INFO_MAX) {
-	type = bmp_tlv_type_print(blpu->tlv.e[idx].type, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
-	value = null_terminate(blpu->tlv.e[idx].val, blpu->tlv.e[idx].len);
+      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
+	if (tlv->type <= BMP_PEER_UP_INFO_MAX) {
+	  type = bmp_tlv_type_print(tlv->type, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
+	  value = null_terminate(tlv->val, tlv->len);
 
-	pm_avro_check(avro_value_get_by_name(obj, type, &p_avro_field, NULL));
-	pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-	pm_avro_check(avro_value_set_string(&p_avro_branch, value));
+	  pm_avro_check(avro_value_get_by_name(obj, type, &p_avro_field, NULL));
+	  pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+	  pm_avro_check(avro_value_set_string(&p_avro_branch, value));
 
-	free(type);
-	free(value);
+	  free(type);
+	  free(value);
 
-	bmp_peer_up_tlvs[blpu->tlv.e[idx].type] = TRUE;
+	  bmp_peer_up_tlvs[tlv->type] = TRUE;
+        }
       }
-
-      idx++;
     }
 
     /* mark missing tlv types */
@@ -842,11 +844,26 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
     if (blpd->reason == BMP_PEER_DOWN_LOC_CODE) {
       json_object_set_new_nocheck(obj, "reason_loc_code", json_integer((json_int_t)blpd->loc_code));
     }
+
+    if (tlvs) {
+      char *type = NULL, *value = NULL;
+      struct pm_listnode *node = NULL;
+      struct bmp_log_tlv *tlv = NULL;
+
+      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
+	type = bmp_tlv_type_print(tlv->type, "bmp_peer_down_info", bmp_peer_down_info_types, BMP_PEER_DOWN_INFO_MAX);
+	value = null_terminate(tlv->val, tlv->len);
+	json_object_set_new_nocheck(obj, type, json_string(value));
+	free(type);
+	free(value);
+      }
+    }
 #endif
   }
   else if ((output == PRINT_OUTPUT_AVRO_BIN) ||
 	   (output == PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
+    int idx = 0, bmp_peer_down_tlvs[BMP_PEER_DOWN_INFO_MAX + 1];
     avro_value_t *obj = (avro_value_t *) vobj, p_avro_field, p_avro_branch;
     char bmp_msg_type[] = "peer_down";
     char ip_address[INET6_ADDRSTRLEN];
@@ -895,6 +912,43 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
     else {
       pm_avro_check(avro_value_get_by_name(obj, "reason_loc_code", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+    }
+
+    memset(&bmp_peer_down_tlvs, 0, sizeof(bmp_peer_down_tlvs));
+
+    /* No Peer Down TLVs defined, BMP_PEER_DOWN_INFO_MAX is hence set to
+       -1 and this requires converting to int to sanitize comparisons */
+    if (tlvs) {
+      char *type = NULL, *value = NULL;
+      struct pm_listnode *node = NULL;
+      struct bmp_log_tlv *tlv = NULL;
+
+      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
+	if ((int)tlv->type <= (int)BMP_PEER_DOWN_INFO_MAX) {
+	  type = bmp_tlv_type_print(tlv->type, "bmp_peer_down_info", bmp_peer_down_info_types, BMP_PEER_DOWN_INFO_MAX);
+	  value = null_terminate(tlv->val, tlv->len);
+
+	  pm_avro_check(avro_value_get_by_name(obj, type, &p_avro_field, NULL));
+	  pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+	  pm_avro_check(avro_value_set_string(&p_avro_branch, value));
+
+	  free(type);
+	  free(value);
+
+	  bmp_peer_down_tlvs[tlv->type] = TRUE;
+	}
+      }
+    }
+
+    /* mark missing tlv types */
+    for (idx = 0; idx <= BMP_PEER_DOWN_INFO_MAX; idx++) {
+      char *type;
+
+      if (!bmp_peer_down_tlvs[idx]) {
+	type = bmp_tlv_type_print(idx, "bmp_peer_down_info", bmp_peer_down_info_types, BMP_PEER_DOWN_INFO_MAX);
+	pm_avro_check(avro_value_get_by_name(obj, type, &p_avro_field, NULL));
+	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+      }
     }
 #endif
   }
@@ -992,13 +1046,11 @@ void bmp_dump_se_ll_append(struct bgp_peer *peer, struct bmp_data *bdata, struct
   memset(se_ll_elem, 0, sizeof(struct bmp_dump_se_ll_elem));
 
   if (bdata) memcpy(&se_ll_elem->rec.bdata, bdata, sizeof(struct bmp_data));
+
   if (extra && log_type) {
     switch (log_type) {
     case BMP_LOG_TYPE_STATS:
       memcpy(&se_ll_elem->rec.se.stats, extra, sizeof(struct bmp_log_stats));
-      break;
-    case BMP_LOG_TYPE_TERM:
-      memcpy(&se_ll_elem->rec.se.term, extra, sizeof(struct bmp_log_term_array));
       break;
     case BMP_LOG_TYPE_PEER_UP:
       memcpy(&se_ll_elem->rec.se.peer_up, extra, sizeof(struct bmp_log_peer_up));
@@ -1011,7 +1063,9 @@ void bmp_dump_se_ll_append(struct bgp_peer *peer, struct bmp_data *bdata, struct
     }
   }
 
-  se_ll_elem->rec.tlvs = tlvs;
+  if (tlvs && pm_listcount(tlvs)) {
+    se_ll_elem->rec.tlvs = tlvs;
+  }
   se_ll_elem->rec.seq = bgp_peer_log_seq_get(&bms->log_seq);
   se_ll_elem->rec.se_type = log_type;
   se_ll_elem->next = NULL; /* pedantic */
@@ -1045,7 +1099,7 @@ void bmp_dump_se_ll_destroy(struct bmp_dump_se_ll *bdsell)
   assert(bdsell->last);
   for (se_ll_elem = bdsell->start; se_ll_elem; se_ll_elem = se_ll_elem_next) {
     if (se_ll_elem->rec.tlvs) {
-      bmp_tlv_list_list_destroy(se_ll_elem->rec.tlvs);
+      bmp_tlv_list_destroy(se_ll_elem->rec.tlvs);
     }
 
     se_ll_elem_next = se_ll_elem->next;
@@ -1276,19 +1330,24 @@ void bmp_handle_dump_event()
 	  for (se_ll_elem = bdsell->start; se_ll_elem; se_ll_elem = se_ll_elem->next) {
 	    switch (se_ll_elem->rec.se_type) {
 	    case BMP_LOG_TYPE_STATS:
-	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, NULL, &se_ll_elem->rec.se.stats, se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_STATS);
+	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, NULL, &se_ll_elem->rec.se.stats,
+			  se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_STATS);
 	      break;
 	    case BMP_LOG_TYPE_INIT:
-	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, se_ll_elem->rec.tlvs, NULL, se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_INIT);
+	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, se_ll_elem->rec.tlvs, NULL,
+			  se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_INIT);
 	      break;
 	    case BMP_LOG_TYPE_TERM:
-	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, NULL, &se_ll_elem->rec.se.term, se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_TERM);
+	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, se_ll_elem->rec.tlvs, NULL,
+			  se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_TERM);
 	      break;
 	    case BMP_LOG_TYPE_PEER_UP:
-	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, NULL, &se_ll_elem->rec.se.peer_up, se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_PEER_UP);
+	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, se_ll_elem->rec.tlvs, &se_ll_elem->rec.se.peer_up,
+			  se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_PEER_UP);
 	      break;
 	    case BMP_LOG_TYPE_PEER_DOWN:
-	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, NULL, &se_ll_elem->rec.se.peer_down, se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_PEER_DOWN);
+	      bmp_log_msg(peer, &se_ll_elem->rec.bdata, se_ll_elem->rec.tlvs, &se_ll_elem->rec.se.peer_down,
+			  se_ll_elem->rec.seq, event_type, config.bmp_dump_output, BMP_LOG_TYPE_PEER_DOWN);
 	      break;
 	    default:
 	      break;

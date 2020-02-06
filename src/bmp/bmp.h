@@ -202,6 +202,8 @@ static const char __attribute__((unused)) *bmp_peer_up_info_types[] = {
 #define BMP_PEER_DOWN_REM_CODE		4
 #define BMP_PEER_DOWN_DECFG		5
 #define BMP_PEER_DOWN_MAX		5 /* set to the highest BMP_PEER_DOWN_* value */
+
+#define BMP_PEER_DOWN_INFO_MAX		-1
 #define BMP_PEER_DOWN_INFO_ENTRIES	BMP_PEER_UP_INFO_ENTRIES
 
 static const char __attribute__((unused)) *bmp_peer_down_reason_types[] = {
@@ -211,6 +213,10 @@ static const char __attribute__((unused)) *bmp_peer_down_reason_types[] = {
   "The remote system closed the session",
   "The remote system closed the session without a notification message",
   "Info for this peer will no longer be sent for configuration reasons"
+};
+
+static const char __attribute__((unused)) *bmp_peer_down_info_types[] = {
+  ""
 };
 
 struct bmp_peer_down_hdr {
