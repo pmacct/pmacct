@@ -549,7 +549,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
   struct bmp_data bdata;
   struct bmp_peer_hdr *bph;
   char tstamp_str[SRVBUFLEN], peer_ip[INET6_ADDRSTRLEN];
-  int bgp_update_len;
+  int bgp_update_len, ret2 = 0;
   void *ret = NULL;
 
   if (!bmpp) return;
@@ -605,7 +605,6 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
       char peer_port_str[] = "peer_tcp_port", *saved_peer_port_str = bms->peer_port_str;
       struct bmp_chars bmed_bmp;
       struct bgp_msg_data bmd;
-      struct bmp_log_route_monitor_tlv_array blm_tlv;
 
       bmpp_bgp_peer = (*(struct bgp_peer **) ret);
       memset(&bmd, 0, sizeof(bmd));
@@ -618,7 +617,6 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
       bmd.extra.len = sizeof(bmed_bmp);
       bmd.extra.data = &bmed_bmp;
       bgp_msg_data_set_data_bmp(&bmed_bmp, &bdata);
-      blm_tlv.entries = 0;
 
       /* draft-ietf-grow-bmp-tlv */
       bgp_update_len = bgp_get_packet_len((*bmp_packet));
@@ -626,6 +624,10 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 	struct bmp_tlv_hdr *bth;
 	u_int16_t bmp_tlv_type, bmp_tlv_len;
 	char *bmp_tlv_value;
+	struct pm_list *tlvs = NULL;
+
+	tlvs = bmp_tlv_list_new(NULL, bmp_tlv_list_node_del);
+	if (!tlvs) return;
 
 	u_int32_t loc_len = (*len);
 	char *loc_ptr = (*bmp_packet);
@@ -648,14 +650,14 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 	    return;
 	  }
 
-	  blm_tlv.e[blm_tlv.entries].type = bmp_tlv_type;
-	  blm_tlv.e[blm_tlv.entries].len = bmp_tlv_len;
-	  blm_tlv.e[blm_tlv.entries].val = bmp_tlv_value;
-
-	  blm_tlv.entries = bmp_tlv_array_increment(blm_tlv.entries, BMP_ROUTE_MONITOR_INFO_ENTRIES);
-	}
+	  ret2 = bmp_tlv_list_add(tlvs, bmp_tlv_type, bmp_tlv_len, bmp_tlv_value);
+	  if (ret2 == ERR) {
+	    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] [route monitor] bmp_tlv_list_add() failed.\n", config.name, bms->log_str, peer->addr_str);
+	    exit_gracefully(1);
+	  }
 	
-        bmed_bmp.tlv = &blm_tlv;
+          bmed_bmp.tlvs = tlvs;
+        }
       }
 
       /* XXX: checks, ie. marker, message length, etc., bypassed */
@@ -670,6 +672,10 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
       bms->peer_port_str = saved_peer_port_str;
 
       bmp_get_and_check_length(bmp_packet, len, bgp_update_len);
+
+      if (bmed_bmp.tlvs) {
+	if (!pm_listcount(bmed_bmp.tlvs) || bms->skip_rib) bmp_tlv_list_destroy(bmed_bmp.tlvs);
+      }
     }
     /* missing BMP peer up message, ie. case of replay/replication of BMP messages */
     else {

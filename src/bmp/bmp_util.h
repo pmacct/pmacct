@@ -35,9 +35,7 @@ extern struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *, struct bgp_pee
 extern int bmp_peer_init(struct bmp_peer *, int);
 extern void bmp_peer_close(struct bmp_peer *, int);
 
-extern int bmp_tlv_array_increment(int, int);
 extern char *bmp_tlv_type_print(u_int16_t, const char *, const char **, int);
-
 extern struct pm_list *bmp_tlv_list_new(int (*cmp)(void *val1, void *val2), void (*del)(void *val));
 extern int bmp_tlv_list_add(struct pm_list *, u_int16_t, u_int16_t, char *);
 extern void bmp_tlv_list_node_del(void *node);

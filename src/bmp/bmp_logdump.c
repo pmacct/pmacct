@@ -558,7 +558,10 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
 	type = bmp_tlv_type_print(tlv->type, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
 
 	if (tlv->type == BMP_TERM_INFO_REASON && tlv->len == 2) {
-	  u_int16_t reas_type = ntohs((*tlv->val));
+	  u_int16_t reas_type;
+
+	  memcpy(&reas_type, tlv->val, 2);
+	  reas_type = ntohs(reas_type);
 	  value = bmp_term_reason_print(reas_type);
 	}
 	else {
@@ -594,7 +597,10 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
 	  type = bmp_tlv_type_print(tlv->type, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
 
 	  if (tlv->type == BMP_TERM_INFO_REASON && tlv->len == 2) {
-	    u_int16_t reas_type = ntohs((*tlv->val));
+	    u_int16_t reas_type;
+
+	    memcpy(&reas_type, tlv->val, 2);
+	    reas_type = ntohs(reas_type);
 	    value = bmp_term_reason_print(reas_type);
 	  }
 	  else {
@@ -956,7 +962,7 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
   return ret;
 }
 
-int bmp_log_msg_route_monitor_tlv(struct bmp_log_route_monitor_tlv_array *blrm, int output, void *vobj)
+int bmp_log_msg_route_monitor_tlv(struct pm_list *tlvs, int output, void *vobj)
 {
   int ret = 0;
 
@@ -964,20 +970,19 @@ int bmp_log_msg_route_monitor_tlv(struct bmp_log_route_monitor_tlv_array *blrm, 
 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
-    int idx = 0;
     json_t *obj = (json_t *) vobj;
 
-    if (blrm) {
-      while (idx < blrm->entries) { 
-	char *type = NULL, *value = NULL;
+    if (tlvs) {
+      char *type = NULL, *value = NULL;
+      struct pm_listnode *node = NULL;
+      struct bmp_log_tlv *tlv = NULL;
 
-	type = bmp_tlv_type_print(blrm->e[idx].type, "bmp_rm_info", bmp_rm_info_types, BMP_ROUTE_MONITOR_INFO_MAX);
-	value = null_terminate(blrm->e[idx].val, blrm->e[idx].len);
+      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
+	type = bmp_tlv_type_print(tlv->type, "bmp_rm_info", bmp_rm_info_types, BMP_ROUTE_MONITOR_INFO_MAX);
+	value = null_terminate(tlv->val, tlv->len);
 	json_object_set_new_nocheck(obj, type, json_string(value));
 	free(type);
 	free(value);
-
-	idx++;
       }
     }
 #endif

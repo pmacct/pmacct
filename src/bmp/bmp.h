@@ -231,7 +231,7 @@ struct bmp_peer_up_hdr {
   /* Received OPEN Message */
 } __attribute__ ((packed));
 
-#define BMP_ROUTE_MONITOR_INFO_MAX	0
+#define BMP_ROUTE_MONITOR_INFO_MAX	-1
 #define BMP_ROUTE_MONITOR_INFO_ENTRIES	32
 
 static const char __attribute__((unused)) *bmp_rm_info_types[] = {
@@ -248,7 +248,7 @@ struct bmp_chars {
   u_int8_t is_loc;
 
   /* non-key */
-  void *tlv;
+  struct pm_list *tlvs;
 }; 
 
 struct bmp_data {

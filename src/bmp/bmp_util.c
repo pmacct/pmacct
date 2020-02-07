@@ -360,18 +360,8 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
 #endif
   }
 
-  if (bmed_bmp->tlv) {
-    bmp_log_msg_route_monitor_tlv(bmed_bmp->tlv, output, void_obj);
-  }
-}
-
-int bmp_tlv_array_increment(int current_entries, int max_entries)
-{
-  if ((current_entries + 1) == max_entries) {
-    return 0;
-  }
-  else {
-    return (current_entries + 1);
+  if (bmed_bmp->tlvs) {
+    bmp_log_msg_route_monitor_tlv(bmed_bmp->tlvs, output, void_obj);
   }
 }
 
