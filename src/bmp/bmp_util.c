@@ -282,8 +282,19 @@ int bgp_extra_data_process_bmp(struct bgp_msg_extra_data *bmed, struct bgp_info 
 
 void bgp_extra_data_free_bmp(struct bgp_msg_extra_data *bmed)
 {
+  struct bmp_chars *bmed_bmp;
+
   if (bmed && bmed->id == BGP_MSG_EXTRA_DATA_BMP) {
-    if (bmed->data) free(bmed->data);
+    if (bmed->data) {
+      bmed_bmp = (struct bmp_chars *) bmed->data;
+
+      if (bmed_bmp->tlvs) {
+	bmp_tlv_list_destroy(bmed_bmp->tlvs);
+      }
+
+      free(bmed->data);
+    }
+
     memset(bmed, 0, sizeof(struct bgp_msg_extra_data));
   }
 }
