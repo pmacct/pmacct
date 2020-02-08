@@ -548,7 +548,6 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
   struct bgp_peer *peer, *bmpp_bgp_peer;
   struct bmp_data bdata;
   struct bmp_peer_hdr *bph;
-  char tstamp_str[SRVBUFLEN], peer_ip[INET6_ADDRSTRLEN];
   int bgp_update_len, ret2 = 0;
   void *ret = NULL;
 
@@ -588,17 +587,12 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
     /* If no timestamp in BMP then let's generate one */
     if (!bdata.tstamp.tv_sec) gettimeofday(&bdata.tstamp, NULL);
 
-    compose_timestamp(tstamp_str, SRVBUFLEN, &bdata.tstamp, TRUE,
-		      config.timestamps_since_epoch, config.timestamps_rfc3339,
-		      config.timestamps_utc);
-    addr_to_str(peer_ip, &bdata.peer_ip);
-
-      if (bdata.family == AF_INET) {
-	ret = pm_tfind(&bdata.peer_ip, &bmpp->bgp_peers_v4, bgp_peer_host_addr_cmp);
-      }
-      else if (bdata.family == AF_INET6) {
-	ret = pm_tfind(&bdata.peer_ip, &bmpp->bgp_peers_v6, bgp_peer_host_addr_cmp);
-      }
+    if (bdata.family == AF_INET) {
+      ret = pm_tfind(&bdata.peer_ip, &bmpp->bgp_peers_v4, bgp_peer_host_addr_cmp);
+    }
+    else if (bdata.family == AF_INET6) {
+      ret = pm_tfind(&bdata.peer_ip, &bmpp->bgp_peers_v6, bgp_peer_host_addr_cmp);
+    }
 
     if (ret) {
       char peer_str[] = "peer_ip", *saved_peer_str = bms->peer_str;
@@ -655,16 +649,16 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 	    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] [route monitor] bmp_tlv_list_add() failed.\n", config.name, bms->log_str, peer->addr_str);
 	    exit_gracefully(1);
 	  }
-	
-          bmed_bmp.tlvs = tlvs;
         }
+
+        bmed_bmp.tlvs = tlvs;
       }
 
       /* XXX: checks, ie. marker, message length, etc., bypassed */
       bgp_update_len = bgp_parse_update_msg(&bmd, (*bmp_packet)); 
       if (!bgp_update_len) {
-	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route] packet discarded: bgp_parse_update_msg() failed\n",
-		config.name, bms->log_str, peer->addr_str);
+	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: bgp_parse_update_msg() failed\n",
+	    config.name, bms->log_str, peer->addr_str);
 	return;
       }
 
@@ -680,9 +674,13 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
     /* missing BMP peer up message, ie. case of replay/replication of BMP messages */
     else {
       if (!log_notification_isset(&bmpp->missing_peer_up, bdata.tstamp.tv_sec)) {
+	char peer_ip[INET6_ADDRSTRLEN];
+
+	addr_to_str(peer_ip, &bdata.peer_ip);
+
 	log_notification_set(&bmpp->missing_peer_up, bdata.tstamp.tv_sec, BMP_MISSING_PEER_UP_LOG_TOUT);
-	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route] packet discarded: missing peer up BMP message for peer %s\n",
-		config.name, bms->log_str, peer->addr_str, peer_ip);
+	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: missing peer up BMP message for peer %s\n",
+	    config.name, bms->log_str, peer->addr_str, peer_ip);
       }
     }
   }
