@@ -23,7 +23,6 @@
 #   Thomas Graf <thomas.graf@swisscom.com>
 #   Paolo Lucente <paolo@pmacct.net>
 #
-from typing import Any
 
 from confluent_kafka.avro.cached_schema_registry_client import (
     CachedSchemaRegistryClient,
