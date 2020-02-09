@@ -35,6 +35,7 @@ class FileNotFound(Exception):
 PMGRPCDLOG = logging.getLogger("PMGRPCDLOG")
 OPTIONS = None
 MISSGPBLIB = {}
+SERIALIZELOG = None
 
 
 def init_pmgrpcdlog():
