@@ -1,9 +1,14 @@
 pmacct [IP traffic accounting : BGP : BMP : RPKI : IGP : Streaming Telemetry]
-pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 
 The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
+1.7.4p1 -- 09-02-2020
+  ! fix, pre_tag_map: a memory leak in pretag_entry_process() has been
+    introduced in 1.7.4. Thanks to Fabien Vincent and Olivier Benghozi
+    for their support resolving the issue.
+  
 1.7.4 -- 31-12-2019
   + Released pmgrpcd.py v3: a Streaming Telemetry collector and decoder
     for multi-vendor environments written in Python3. It supports gRPC
