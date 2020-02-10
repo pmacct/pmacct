@@ -37,9 +37,11 @@ from export_pmgrpcd import Exporter
 from lib_pmgrpcd import PMGRPCDLOG
 import logging
 import logging.handlers
+import signal
+import os
 
 
-class WorkerThread:
+class WorkerProcess(multiprocessing.Process):
 
     def __init__(self, queue, context, transform_function):
         super().__init__()
@@ -65,21 +67,21 @@ class WorkerSwarm:
 
     def __init__(self, number_of_workers, state_builder, transform_function):
         self.__queue = multiprocessing.Queue()
-        self.__threads = []
+        self.__processes = []
         for i in range(0, number_of_workers):
-            t = WorkerThread(self.__queue, state_builder(), transform_function)
-            self.__threads.append(multiprocessing.Process())
+            t = WorkerProcess(self.__queue, state_builder(), transform_function)
+            self.__processes.append(t)
 
     def start(self):
-        for thread in self.__threads:
-            thread.start()
+        for process in self.__processes:
+            process.start()
 
     def wait(self):
-        for thread in self.__threads:
-            thread.join()
+        for process in self.__processes:
+            process.join()
 
     def stop(self):
-        for thread in self.__threads:
+        for process in self.__processes:
             self.__queue.put(None, block=True)
 
 class WorkerTask:
@@ -476,20 +478,25 @@ class LoggingThread(threading.Thread):
 
 lt = LoggingThread()
 lt.start()
+import sys
 
 class KafkaAvroExporter(Exporter):
 
     def __init__(self):
         self.ws = WorkerSwarm(lib_pmgrpcd.OPTIONS.ProcessPool, buildCtx, processor)
-        self.started = False
+
+        def term(sig, frame):
+            self.ws.stop()
+            self.ws.wait()
+            if self.__prev_handler != 0:
+                self.__prev_handler(sig, frame)
+            sys.exit(0)
+
+        self.ws.start()
+
+        self.__prev_handler = signal.getsignal(signal.SIGTERM)
+        signal.signal(signal.SIGTERM, term)
 
     def process_metric(self, datajsonstring):
-        if not self.started:
-            self.started = True
-            self.ws.start()
-
         self.ws.enqueue(datajsonstring)
 
-    def __del__(self):
-        self.ws.stop()
-        self.ws.wait()
