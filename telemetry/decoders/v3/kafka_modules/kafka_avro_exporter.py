@@ -46,7 +46,7 @@ class KafkaAvroExporterContext:
         self.jsonmap = {}
         # https://docs.python.org/3/howto/logging-cookbook.html#logging-to-a-single-file-from-multiple-processes
         h = logging.handlers.QueueHandler(logQueue)  # Just the one handler needed
-        root = logging.getLogger()
+        root = logging.getLogger("KAFKA-AVRO-WORKER")
         root.addHandler(h)
         # send all messages, for demo; no other level or filter logic applied.
         root.setLevel(logging.DEBUG)
