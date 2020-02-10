@@ -35,9 +35,58 @@ import lib_pmgrpcd
 import ujson as json
 from export_pmgrpcd import Exporter
 from lib_pmgrpcd import PMGRPCDLOG
-from worker_swarm import WorkerSwarmMP
-import logging, logging.handlers
+import logging
+import logging.handlers
 
+
+class WorkerThread:
+
+    def __init__(self, queue, context, transform_function):
+        super().__init__()
+        self.__queue = queue
+        self.__state = context
+        self.__transformFunction = transform_function
+
+    def run(self):
+        while True:
+            submission = self.__queue.get(block=True)
+            if submission is not None:
+                ret = self.__transformFunction(self.__state, submission.job)
+                if submission.callback is not None:
+                    submission.callback(ret)
+            else:
+                return
+
+
+class WorkerSwarm:
+
+    def enqueue(self, job, callback=None):
+        self.__queue.put(WorkerTask(job, callback))
+
+    def __init__(self, number_of_workers, state_builder, transform_function):
+        self.__queue = multiprocessing.Queue()
+        self.__threads = []
+        for i in range(0, number_of_workers):
+            t = WorkerThread(self.__queue, state_builder(), transform_function)
+            self.__threads.append(multiprocessing.Process())
+
+    def start(self):
+        for thread in self.__threads:
+            thread.start()
+
+    def wait(self):
+        for thread in self.__threads:
+            thread.join()
+
+    def stop(self):
+        for thread in self.__threads:
+            self.__queue.put(None, block=True)
+
+class WorkerTask:
+    def __init__(self, job, callback):
+        super().__init__()
+        self.job = job
+        self.callback = callback
 
 class KafkaAvroExporterContext:
     def __init__(self):
@@ -428,12 +477,10 @@ class LoggingThread(threading.Thread):
 lt = LoggingThread()
 lt.start()
 
-
-
 class KafkaAvroExporter(Exporter):
 
     def __init__(self):
-        self.ws = WorkerSwarmMP(lib_pmgrpcd.OPTIONS.ProcessPool, buildCtx, processor)
+        self.ws = WorkerSwarm(lib_pmgrpcd.OPTIONS.ProcessPool, buildCtx, processor)
         self.started = False
 
     def process_metric(self, datajsonstring):
