@@ -3190,9 +3190,9 @@ char *uint_print(void *value, int len, int flip)
       if (flip) u64h = pm_ntohll((*u64));
       else u64h = (*u64);
 
-      buflen = snprintf(NULL, 0, "%lu", u64h);
+      buflen = snprintf(NULL, 0, "%"PRIu64, u64h);
       buf = malloc(buflen + 1);
-      snprintf(buf, (buflen + 1), "%lu", u64h);
+      snprintf(buf, (buflen + 1), "%"PRIu64, u64h);
     }
     break;
   }
