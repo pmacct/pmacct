@@ -101,7 +101,7 @@ class KafkaAvroExporterContext:
         root.addHandler(h)
         # send all messages, for demo; no other level or filter logic applied.
         root.setLevel(logging.DEBUG)
-        self.__logger= root
+        self.__logger = root
 
     def process_metric(self, datajsonstring):
         jsondata = json.loads(datajsonstring)
@@ -471,14 +471,12 @@ class LoggingThread(threading.Thread):
             record = logQueue.get(block=True)
             if record is not None:
                 lib_pmgrpcd.SERIALIZELOG.handle(record)
-
             else:
                 return
 
 
-lt = LoggingThread()
-lt.start()
-import sys
+logging_thread = LoggingThread()
+logging_thread.start()
 
 class KafkaAvroExporter(Exporter):
 
@@ -488,9 +486,16 @@ class KafkaAvroExporter(Exporter):
         def term(sig, frame):
             self.ws.stop()
             self.ws.wait()
+
+            global logQueue
+            logQueue.put(None)
+            global logging_thread
+            logging_thread.join()
+
             if self.__prev_handler != 0:
                 self.__prev_handler(sig, frame)
-            sys.exit(0)
+
+            os._exit(0)
 
         self.ws.start()
 
