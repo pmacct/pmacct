@@ -479,7 +479,7 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
       
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
 	type = bmp_tlv_type_print(tlv->type, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
-	value = null_terminate(tlv->val, tlv->len);
+	value = bmp_tlv_value_print(tlv, bmp_init_info_types, BMP_INIT_INFO_MAX);
 	json_object_set_new_nocheck(obj, type, json_string(value));
 	free(type);
 	free(value);
@@ -507,7 +507,7 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
 	if (tlv->type <= BMP_INIT_INFO_MAX) {
 	  type = bmp_tlv_type_print(tlv->type, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
-	  value = null_terminate(tlv->val, tlv->len);
+	  value = bmp_tlv_value_print(tlv, bmp_init_info_types, BMP_INIT_INFO_MAX);
 
 	  pm_avro_check(avro_value_get_by_name(obj, type, &p_avro_field, NULL));
 	  pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
