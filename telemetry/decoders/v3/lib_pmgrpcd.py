@@ -16,7 +16,7 @@
 #   along with this program; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #
-#   pmgrpcd and its components are Copyright (C) 2018-2019 by:
+#   pmgrpcd and its components are Copyright (C) 2018-2020 by:
 #
 #   Matthias Arnold <matthias.arnold@swisscom.com>
 #   Juan Camilo Cardona <jccardona82@gmail.com>
