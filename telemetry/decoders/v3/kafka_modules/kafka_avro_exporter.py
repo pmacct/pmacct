@@ -42,7 +42,6 @@ import os
 
 
 class WorkerProcess(multiprocessing.Process):
-
     def __init__(self, queue, state_builder, transform_function):
         super().__init__()
         self.__queue = queue
@@ -62,7 +61,6 @@ class WorkerProcess(multiprocessing.Process):
 
 
 class WorkerSwarm:
-
     def enqueue(self, job, callback=None):
         self.__queue.put(WorkerTask(job, callback))
 
@@ -85,11 +83,13 @@ class WorkerSwarm:
         for process in self.__processes:
             self.__queue.put(None, block=True)
 
+
 class WorkerTask:
     def __init__(self, job, callback):
         super().__init__()
         self.job = job
         self.callback = callback
+
 
 class KafkaAvroExporterContext:
     def __init__(self):
@@ -122,9 +122,7 @@ class KafkaAvroExporterContext:
                 encoding_path = jsondata["collector"]["data"]["encoding_path"]
 
                 # print("IDENIFIER: %s - %s" % (grpcPeer, encoding_path))
-                self.__logger.debug(
-                    "Found encoding_path: %s" % encoding_path
-                )
+                self.__logger.debug("Found encoding_path: %s" % encoding_path)
                 avscid = self.getavroschemaid(grpcPeer, encoding_path)
                 # print("AVSCID: %s" % (avscid))
                 if avscid is not None:
@@ -134,9 +132,7 @@ class KafkaAvroExporterContext:
                     )
                     avsc = self.getavroschema(avscid)
                     avroinstance = self.getavro_schid_instance(avscid)
-                    self.__logger.debug(
-                        "avroinstance is: %s" % (avroinstance)
-                    )
+                    self.__logger.debug("avroinstance is: %s" % (avroinstance))
 
                     if "name" in avsc:
                         self.__logger.info(
@@ -178,9 +174,7 @@ class KafkaAvroExporterContext:
                             self.__logger.info("ERROR: %s" % (e))
                             pass
             else:
-                self.__logger.info(
-                    "%s -> encoding_path is missing" % grpcPeer
-                )
+                self.__logger.info("%s -> encoding_path is missing" % grpcPeer)
         else:
             self.__logger.info("grpcPeer is missing" % jsondata)
 
@@ -265,9 +259,7 @@ class KafkaAvroExporterContext:
         # global  self.avscmap
         avroinstance = None
 
-        self.__logger.info(
-            "Creating avroinstance for avro-schemaid: %s" % (avscid)
-        )
+        self.__logger.info("Creating avroinstance for avro-schemaid: %s" % (avscid))
 
         avsc = self.getavroschema(avscid)
         value_schema = avro.loads(json.dumps(avsc))
@@ -336,7 +328,8 @@ class KafkaAvroExporterContext:
                 lib_pmgrpcd.OPTIONS.calocation,
             )
             client = CachedSchemaRegistryClient(
-                url=lib_pmgrpcd.OPTIONS.urlscreg, ca_location=lib_pmgrpcd.OPTIONS.calocation
+                url=lib_pmgrpcd.OPTIONS.urlscreg,
+                ca_location=lib_pmgrpcd.OPTIONS.calocation,
             )
         except Exception as e:
             self.__logger.info(
@@ -369,12 +362,14 @@ class KafkaAvroExporterContext:
         # self.jsonmap = json.load(mapfile)
         if avscid in self.avscmap:
             self.__logger.debug(
-                "Update  self.avscmap the existing record avscid (%s) with avroschema" % avscid
+                "Update  self.avscmap the existing record avscid (%s) with avroschema"
+                % avscid
             )
             self.avscmap[avscid].update({"avsc": avsc_dict})
         else:
             self.__logger.debug(
-                "Update  self.avscmap with new record avscid (%s) with avroschema" % avscid
+                "Update  self.avscmap with new record avscid (%s) with avroschema"
+                % avscid
             )
             self.avscmap.update({avscid: {"avsc": avsc_dict}})
 
@@ -384,9 +379,9 @@ class KafkaAvroExporterContext:
         """ Called once for each message produced to indicate delivery result.
             Triggered by poll() or flush(). """
         if err:
-            sys.stderr.write('%% Message failed delivery: %s\n' % err)
+            sys.stderr.write("%% Message failed delivery: %s\n" % err)
         elif lib_pmgrpcd.OPTIONS.debug:
-            print('Message delivered to {} [{}]'.format(msg.topic(), msg.partition()))
+            print("Message delivered to {} [{}]".format(msg.topic(), msg.partition()))
 
     def serialize(self, jsondata, topic, avscid, avroinstance):
         self.__logger.debug(
@@ -418,7 +413,10 @@ class KafkaAvroExporterContext:
             )
             avroinstance.poll(10)
             result = avroinstance.produce(
-                topic=topic, value=jsondata, key={"schemaid": avscid}, callback=self.delivery_report
+                topic=topic,
+                value=jsondata,
+                key={"schemaid": avscid},
+                callback=self.delivery_report,
             )
         except NotImplementedError as e:
             print("[Exception avroinstance.produce NotImplementedError]: %s" % (str(e)))
@@ -478,8 +476,8 @@ class LoggingThread(threading.Thread):
 logging_thread = LoggingThread()
 logging_thread.start()
 
-class KafkaAvroExporter(Exporter):
 
+class KafkaAvroExporter(Exporter):
     def __init__(self):
         self.ws = WorkerSwarm(lib_pmgrpcd.OPTIONS.ProcessPool, buildCtx, processor)
 
@@ -504,4 +502,3 @@ class KafkaAvroExporter(Exporter):
 
     def process_metric(self, datajsonstring):
         self.ws.enqueue(datajsonstring)
-
