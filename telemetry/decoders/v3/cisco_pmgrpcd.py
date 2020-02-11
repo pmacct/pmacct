@@ -202,7 +202,7 @@ def cisco_processing(grpcPeer, new_msg):
         try:
             returned = FinalizeTelemetryData(message_dict)
         except Exception as e:
-            PMGRPCDLOG.error("Error finalazing  message: %s", e)
+            PMGRPCDLOG.error("Error finalizing  message: %s", e)
 
 
 

@@ -433,9 +433,9 @@ def main():
     configure()
 
 
-    PMGRPCDLOG.info("enable listening to SIGNAL USR1 with Sinalhandler")
+    PMGRPCDLOG.info("enable listening to SIGNAL USR1 with Signalhandler")
     signal.signal(signal.SIGUSR1, signalhandler)
-    PMGRPCDLOG.info("enable listening to SIGNAL USR2 with Sinalhandler")
+    PMGRPCDLOG.info("enable listening to SIGNAL USR2 with Signalhandler")
     signal.signal(signal.SIGUSR2, signalhandler)
 
     # I am going to comment the manually export of data from now, this could go into other script.
