@@ -19,6 +19,7 @@
 #   pmgrpcd and its components are Copyright (C) 2018-2020 by:
 #
 #   Matthias Arnold <matthias.arnold@swisscom.com>
+#   Raphaël P. Barazzutti <raphael@barazzutti.net>
 #   Juan Camilo Cardona <jccardona82@gmail.com>
 #   Thomas Graf <thomas.graf@swisscom.com>
 #   Paolo Lucente <paolo@pmacct.net>
