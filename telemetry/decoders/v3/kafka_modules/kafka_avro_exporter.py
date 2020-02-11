@@ -43,17 +43,18 @@ import os
 
 class WorkerProcess(multiprocessing.Process):
 
-    def __init__(self, queue, context, transform_function):
+    def __init__(self, queue, state_builder, transform_function):
         super().__init__()
         self.__queue = queue
-        self.__state = context
+        self.__state_builder = state_builder
         self.__transformFunction = transform_function
 
     def run(self):
+        state = self.__state_builder()
         while True:
             submission = self.__queue.get(block=True)
             if submission is not None:
-                ret = self.__transformFunction(self.__state, submission.job)
+                ret = self.__transformFunction(state, submission.job)
                 if submission.callback is not None:
                     submission.callback(ret)
             else:
@@ -69,7 +70,7 @@ class WorkerSwarm:
         self.__queue = multiprocessing.Queue()
         self.__processes = []
         for i in range(0, number_of_workers):
-            t = WorkerProcess(self.__queue, state_builder(), transform_function)
+            t = WorkerProcess(self.__queue, state_builder, transform_function)
             self.__processes.append(t)
 
     def start(self):
@@ -97,15 +98,14 @@ class KafkaAvroExporterContext:
         self.jsonmap = {}
         # https://docs.python.org/3/howto/logging-cookbook.html#logging-to-a-single-file-from-multiple-processes
         h = logging.handlers.QueueHandler(logQueue)  # Just the one handler needed
-        root = logging.getLogger("KAFKA-AVRO-WORKER")
+        root = logging.getLogger()
         root.addHandler(h)
         # send all messages, for demo; no other level or filter logic applied.
         root.setLevel(logging.DEBUG)
-        self.__logger = root
+        self.__logger = logging.getLogger("KAFKA-AVRO-WORKER")
 
     def process_metric(self, datajsonstring):
         jsondata = json.loads(datajsonstring)
-        # self.__logger.debug("In process_metric")
         self.__logger.debug("In process_metric")
 
         if "grpcPeer" in jsondata["collector"]["grpc"]:
