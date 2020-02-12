@@ -355,7 +355,20 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_l
       json_object_set_new_nocheck(obj, "safi", json_integer((json_int_t)blstats->cnt_safi));
     }
 
-    if (blstats->got_data) json_object_set_new_nocheck(obj, "counter_value", json_integer((json_int_t)blstats->cnt_data));
+    if (!pm_listcount(tlvs)) {
+      json_object_set_new_nocheck(obj, "counter_value", json_integer((json_int_t)blstats->cnt_data));
+    }
+    else {
+      char *value = NULL;
+      struct pm_listnode *node = NULL;
+      struct bmp_log_tlv *tlv = NULL;
+
+      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
+	value = bmp_tlv_value_print(tlv, bmp_stats_info_types, BMP_STATS_INFO_MAX);
+	json_object_set_new_nocheck(obj, "counter_value", json_string(value));
+	free(value);
+      }
+    }
 #endif
   }
   else if ((output == PRINT_OUTPUT_AVRO_BIN) || 

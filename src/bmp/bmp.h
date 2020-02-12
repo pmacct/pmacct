@@ -174,6 +174,13 @@ struct bmp_peer {
 #define BMP_STATS_TYPE17	17 /* (64-bit Gauge) Number of routes in per-AFI/SAFI Abj-RIB-Out */
 #define BMP_STATS_MAX		17 /* set to the highest BMP_STATS_* value */
 
+/* dummy */
+static const struct bmp_tlv_def __attribute__((unused)) bmp_stats_info_types[] = {
+  { "", BMP_TLV_SEM_UNKNOWN }
+};
+
+#define BMP_STATS_INFO_MAX	-1
+
 static const char __attribute__((unused)) *bmp_stats_cnt_types[] = {
   "Number of prefixes rejected by inbound policy",
   "Number of (known) duplicate prefix advertisements",
