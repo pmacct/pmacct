@@ -93,16 +93,29 @@ struct bmp_tlv_hdr {
   u_int16_t     len;
 } __attribute__ ((packed));
 
+struct bmp_tlv_def {
+  char *name;
+  int semantics;
+};
+
+#define BMP_TLV_SEM_UNKNOWN	CUSTOM_PRIMITIVE_TYPE_UNKNOWN
+#define BMP_TLV_SEM_UINT	CUSTOM_PRIMITIVE_TYPE_UINT
+#define BMP_TLV_SEM_HEX		CUSTOM_PRIMITIVE_TYPE_HEX
+#define BMP_TLV_SEM_STRING	CUSTOM_PRIMITIVE_TYPE_STRING
+#define BMP_TLV_SEM_IP		CUSTOM_PRIMITIVE_TYPE_IP
+#define BMP_TLV_SEM_MAC		CUSTOM_PRIMITIVE_TYPE_MAC
+#define BMP_TLV_SEM_RAW		CUSTOM_PRIMITIVE_TYPE_RAW
+
 #define BMP_INIT_INFO_STRING	0
 #define BMP_INIT_INFO_SYSDESCR	1
 #define BMP_INIT_INFO_SYSNAME	2
 #define BMP_INIT_INFO_MAX	2
 #define BMP_INIT_INFO_ENTRIES	8
 
-static const char __attribute__((unused)) *bmp_init_info_types[] = {
-  "string",
-  "sysdescr",
-  "sysname"  
+static const struct bmp_tlv_def __attribute__((unused)) bmp_init_info_types[] = {
+  { "string", BMP_TLV_SEM_STRING }, 
+  { "sysdescr", BMP_TLV_SEM_STRING },
+  { "sysname", BMP_TLV_SEM_STRING }
 };
 
 #define BMP_TERM_INFO_STRING    0
@@ -117,9 +130,9 @@ static const char __attribute__((unused)) *bmp_init_info_types[] = {
 #define BMP_TERM_REASON_PERM	4
 #define BMP_TERM_REASON_MAX	4 /* set to the highest BMP_TERM_* value */
 
-static const char __attribute__((unused)) *bmp_term_info_types[] = {
-  "string",
-  "reason"
+static const struct bmp_tlv_def __attribute__((unused)) bmp_term_info_types[] = {
+  { "string", BMP_TLV_SEM_STRING },
+  { "reason", BMP_TLV_SEM_UINT }
 };
 
 static const char __attribute__((unused)) *bmp_term_reason_types[] = {
@@ -161,6 +174,13 @@ struct bmp_peer {
 #define BMP_STATS_TYPE17	17 /* (64-bit Gauge) Number of routes in per-AFI/SAFI Abj-RIB-Out */
 #define BMP_STATS_MAX		17 /* set to the highest BMP_STATS_* value */
 
+/* dummy */
+static const struct bmp_tlv_def __attribute__((unused)) bmp_stats_info_types[] = {
+  { "", BMP_TLV_SEM_UNKNOWN }
+};
+
+#define BMP_STATS_INFO_MAX	-1
+
 static const char __attribute__((unused)) *bmp_stats_cnt_types[] = {
   "Number of prefixes rejected by inbound policy",
   "Number of (known) duplicate prefix advertisements",
@@ -187,8 +207,8 @@ struct bmp_stats_cnt_hdr {
   u_int16_t	len;
 } __attribute__ ((packed));
 
-static const char __attribute__((unused)) *bmp_peer_up_info_types[] = {
-  "string",
+static const struct bmp_tlv_def __attribute__((unused)) bmp_peer_up_info_types[] = {
+  { "string", BMP_TLV_SEM_STRING }
 };
 
 #define BMP_PEER_UP_INFO_STRING		0
@@ -215,8 +235,8 @@ static const char __attribute__((unused)) *bmp_peer_down_reason_types[] = {
   "Info for this peer will no longer be sent for configuration reasons"
 };
 
-static const char __attribute__((unused)) *bmp_peer_down_info_types[] = {
-  ""
+static const struct bmp_tlv_def __attribute__((unused)) bmp_peer_down_info_types[] = {
+  { "", BMP_TLV_SEM_UNKNOWN }
 };
 
 struct bmp_peer_down_hdr {
@@ -234,8 +254,8 @@ struct bmp_peer_up_hdr {
 #define BMP_ROUTE_MONITOR_INFO_MAX	-1
 #define BMP_ROUTE_MONITOR_INFO_ENTRIES	32
 
-static const char __attribute__((unused)) *bmp_rm_info_types[] = {
-  ""
+static const struct bmp_tlv_def __attribute__((unused)) bmp_rm_info_types[] = {
+  { "", BMP_TLV_SEM_UNKNOWN }
 };
 
 struct bmp_chars {

@@ -41,7 +41,6 @@ struct bmp_log_stats {
   afi_t cnt_afi;
   safi_t cnt_safi;
   u_int64_t cnt_data;
-  u_int8_t got_data;
 };
 
 struct bmp_log_tlv {

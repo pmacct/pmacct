@@ -282,8 +282,19 @@ int bgp_extra_data_process_bmp(struct bgp_msg_extra_data *bmed, struct bgp_info 
 
 void bgp_extra_data_free_bmp(struct bgp_msg_extra_data *bmed)
 {
+  struct bmp_chars *bmed_bmp;
+
   if (bmed && bmed->id == BGP_MSG_EXTRA_DATA_BMP) {
-    if (bmed->data) free(bmed->data);
+    if (bmed->data) {
+      bmed_bmp = (struct bmp_chars *) bmed->data;
+
+      if (bmed_bmp->tlvs) {
+	bmp_tlv_list_destroy(bmed_bmp->tlvs);
+      }
+
+      free(bmed->data);
+    }
+
     memset(bmed, 0, sizeof(struct bgp_msg_extra_data));
   }
 }
@@ -365,7 +376,7 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
   }
 }
 
-char *bmp_tlv_type_print(u_int16_t in, const char *prefix, const char **registry, int max_registry_entries)
+char *bmp_tlv_type_print(u_int16_t idx, const char *prefix, const struct bmp_tlv_def *registry, int max_registry_entries)
 {
   char *out = NULL;
   int prefix_len, value_len;
@@ -373,19 +384,48 @@ char *bmp_tlv_type_print(u_int16_t in, const char *prefix, const char **registry
   prefix_len = strlen(prefix);
 
   if (registry && max_registry_entries) {
-    if (in <= max_registry_entries) {
-      value_len = strlen(registry[in]);
+    if (idx <= max_registry_entries) {
+      value_len = strlen(registry[idx].name);
       out = malloc(prefix_len + value_len + 1 /* sep */ + 1 /* null */);
-      sprintf(out, "%s_%s", prefix, registry[in]);
+      sprintf(out, "%s_%s", prefix, registry[idx].name);
 
       return out;
     }
   }
 
   out = malloc(prefix_len + 5 /* value len */ + 1 /* sep */ + 1 /* null */);
-  sprintf(out, "%s_%u", prefix, in);
+  sprintf(out, "%s_%u", prefix, idx);
 
   return out;
+}
+
+char *bmp_tlv_value_print(struct bmp_log_tlv *tlv, const struct bmp_tlv_def *registry, int max_registry_entries)
+{
+  u_int16_t idx = tlv->type;
+  char *value = NULL;
+
+  if (registry && max_registry_entries) {
+    if (idx <= max_registry_entries) {
+      switch (registry[idx].semantics) {
+      case BMP_TLV_SEM_STRING:
+	value = null_terminate(tlv->val, tlv->len);
+	break;
+      case BMP_TLV_SEM_UINT:
+	value = uint_print(tlv->val, tlv->len, TRUE);
+	break;
+      default:
+	value = malloc(tlv->len * 3); /* 2 bytes hex + 1 byte '-' separator + 1 byte null */
+	serialize_hex(tlv->val, (u_char *) value, tlv->len);
+	break;
+      }
+    }
+    else {
+      value = malloc(tlv->len * 3); /* 2 bytes hex + 1 byte '-' separator + 1 byte null */
+      serialize_hex(tlv->val, (u_char *) value, tlv->len);
+    }
+  }
+
+  return value;
 }
 
 struct pm_list *bmp_tlv_list_new(int (*cmp)(void *val1, void *val2), void (*del)(void *val))

@@ -3144,6 +3144,62 @@ char *null_terminate(char *str, int len)
   return loc;
 }
 
+char *uint_print(void *value, int len, int flip)
+{
+  char *buf = NULL;
+  ssize_t buflen = 0;
+
+  switch(len) {
+  case 1:
+    {
+      u_int8_t *u8 = (u_int8_t *) value;
+
+      buflen = snprintf(NULL, 0, "%u", (*u8)); 
+      buf = malloc(buflen + 1);
+      snprintf(buf, (buflen + 1), "%u", (*u8));
+    }
+    break;
+  case 2:
+    {
+      u_int16_t u16h, *u16 = (u_int16_t *) value;
+
+      if (flip) u16h = ntohs((*u16));
+      else u16h = (*u16);
+
+      buflen = snprintf(NULL, 0, "%u", u16h);
+      buf = malloc(buflen + 1);
+      snprintf(buf, (buflen + 1), "%u", u16h);
+    }
+    break;
+  case 4:
+    {
+      u_int32_t u32h, *u32 = (u_int32_t *) value;
+
+      if (flip) u32h = ntohl((*u32));
+      else u32h = (*u32);
+
+      buflen = snprintf(NULL, 0, "%u", u32h);
+      buf = malloc(buflen + 1);
+      snprintf(buf, (buflen + 1), "%u", u32h);
+    }
+    break;
+  case 8:
+    {
+      u_int64_t u64h, *u64 = (u_int64_t *) value;
+
+      if (flip) u64h = pm_ntohll((*u64));
+      else u64h = (*u64);
+
+      buflen = snprintf(NULL, 0, "%"PRIu64, u64h);
+      buf = malloc(buflen + 1);
+      snprintf(buf, (buflen + 1), "%"PRIu64, u64h);
+    }
+    break;
+  }
+
+  return buf;
+}
+
 void reload_logs()
 {
   int logf;
