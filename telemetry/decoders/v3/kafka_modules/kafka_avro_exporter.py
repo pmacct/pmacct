@@ -80,6 +80,7 @@ class WorkerSwarm:
             process.join()
 
     def stop(self):
+        self.__queue.empty()
         for process in self.__processes:
             self.__queue.put(None, block=True)
 
