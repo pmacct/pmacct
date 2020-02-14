@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -2311,8 +2311,11 @@ int pretag_id2_handler(struct packet_ptrs *pptrs, void *id, void *e)
 int pretag_label_handler(struct packet_ptrs *pptrs, void *id, void *e)
 {
   struct id_entry *entry = e;
+  pt_label_t *out_label = (pt_label_t *) id;
 
-  if (id) memcpy(id, &entry->label, sizeof(pt_label_t));
+  if (out_label) {
+    pretag_copy_label(out_label, &entry->label);
+  }
 
   return PRETAG_MAP_RCODE_LABEL; /* cap */
 }
