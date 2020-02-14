@@ -22,6 +22,7 @@ Commits  Author <email>
       2  Hidde van der Heide <hvanderheide@nexuz.net>
       1  Pier Carlo Chiodi <pierky@pierky.com>
       1  Mike Jager <mike@mikej.net.nz>
+      1  Seth N. Hetu <shetu@akamai.com>
          Will Dowling <will@autodeist.com>
          Karl O. Pinc <kop@karlpinc.com>
          Stephen Clark <sclark46@earthlink.net>
@@ -56,7 +57,6 @@ Commits  Author <email>
       1  Raymond Russell <raymond@corvil.com>
       1  Rico29 <cedric.bassaget@gmail.com>
       1  Robert Wuttke <robert@benocs.com>
-      1  Seth N. Hetu <shetu@akamai.com>
       1  Guo-Wei Su <nansenat16@gmail.com>
       1  Elisa Jasinska <elisa@jasinska.de>
       1  Alexandros Couloumbis <alex@ozo.com>
