@@ -355,7 +355,7 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_l
       json_object_set_new_nocheck(obj, "safi", json_integer((json_int_t)blstats->cnt_safi));
     }
 
-    if (!pm_listcount(tlvs)) {
+    if (!tlvs || !pm_listcount(tlvs)) {
       json_object_set_new_nocheck(obj, "counter_value", json_integer((json_int_t)blstats->cnt_data));
     }
     else {

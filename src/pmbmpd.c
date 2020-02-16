@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -47,6 +47,7 @@ void usage_daemon(char *prog_name)
   printf("  -V  \tShow version and compile-time options and exit\n");
   printf("  -L  \tBind to the specified IP address\n");
   printf("  -l  \tListen on the specified TCP port\n");
+  printf("  -I  \tRead packets from the specified savefile\n");
   printf("  -f  \tLoad configuration from the specified file\n");
   printf("  -D  \tDaemonize\n");
   printf("  -d  \tEnable debug\n");
@@ -103,6 +104,11 @@ int main(int argc,char **argv, char **envp)
       break;
     case 'l':
       strlcpy(cfg_cmdline[rows], "bmp_daemon_port: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
+    case 'I':
+      strlcpy(cfg_cmdline[rows], "bmp_daemon_savefile: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;

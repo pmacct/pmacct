@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -83,6 +83,7 @@ extern void set_shadow_status(struct packet_ptrs *);
 extern void set_default_preferences(struct configuration *);
 extern FILE *open_output_file(char *, char *, int);
 extern void open_pcap_savefile(struct pm_pcap_device *, char *);
+extern void pm_pcap_device_initialize(struct pm_pcap_devices *);
 extern void link_latest_output_file(char *, char *);
 extern void close_output_file(FILE *);
 extern int handle_dynname_internal_strings(char *, int, char *, struct primitives_ptrs *, int);

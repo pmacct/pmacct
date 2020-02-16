@@ -796,7 +796,7 @@ ssize_t recvfrom_savefile(struct pm_pcap_device *device, void **buf, struct sock
       (*buf) = savefile_pptrs->payload_ptr;
       ret = savefile_pptrs->pkthdr->caplen - (savefile_pptrs->payload_ptr - savefile_pptrs->packet_ptr);
 
-      if (savefile_pptrs->l4_proto == IPPROTO_UDP) {
+      if (savefile_pptrs->l4_proto == IPPROTO_UDP || savefile_pptrs->l4_proto == IPPROTO_TCP) {
 	if (savefile_pptrs->l3_proto == ETHERTYPE_IP) {
 	  raw_to_sa((struct sockaddr *)src_addr, (u_char *) &((struct pm_iphdr *)savefile_pptrs->iph_ptr)->ip_src.s_addr,
 		    (u_int16_t) ((struct pm_udphdr *)savefile_pptrs->tlh_ptr)->uh_sport, AF_INET);

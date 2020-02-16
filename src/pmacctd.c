@@ -94,11 +94,6 @@ void usage_daemon(char *prog_name)
   printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);
 }
 
-void pm_pcap_device_initialize(struct pm_pcap_devices *map)
-{
-  memset(map, 0, sizeof(struct pm_pcap_devices));
-}
-
 void pm_pcap_device_copy_all(struct pm_pcap_devices *dst, struct pm_pcap_devices *src)
 {
   memcpy(dst, src, sizeof(struct pm_pcap_devices));

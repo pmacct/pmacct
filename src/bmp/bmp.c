@@ -26,6 +26,8 @@
 #include "bmp.h"
 #include "rpki/rpki.h"
 #include "thread_pool.h"
+#include "ip_flow.h"
+#include "ip_frag.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
@@ -83,6 +85,11 @@ void skinny_bmp_daemon()
   time_t dump_refresh_deadline = {0};
   struct timeval dump_refresh_timeout, *drt_ptr;
 
+  /* bmp_daemon_pcap_savefile stuff */
+  struct packet_ptrs recv_pptrs;
+  unsigned char *bmp_packet;
+  int sf_ret, bmp_daemon_savefile_round = 1;
+
   /* initial cleanups */
   reload_map_bmp_thread = FALSE;
   reload_log_bmp_thread = FALSE;
@@ -91,18 +98,22 @@ void skinny_bmp_daemon()
   memset(&allow, 0, sizeof(struct hosts_table));
   clen = sizeof(client);
 
+  memset(&recv_pptrs, 0, sizeof(recv_pptrs));
+  memset(&device, 0, sizeof(device));
+  bmp_packet = malloc(BGP_BUFFER_SIZE);
+
   bmp_routing_db = &inter_domain_routing_dbs[FUNC_TYPE_BMP];
   memset(bmp_routing_db, 0, sizeof(struct bgp_rt_structs));
 
   /* socket creation for BMP server: IPv4 only */
-  if (!config.bmp_daemon_ip) {
+  if (!config.bmp_daemon_ip && !config.bmp_daemon_savefile) {
     struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&server;
 
     sa6->sin6_family = AF_INET6;
     sa6->sin6_port = htons(config.bmp_daemon_port);
     slen = sizeof(struct sockaddr_in6);
   }
-  else {
+  else if (config.bmp_daemon_ip) {
     trim_spaces(config.bmp_daemon_ip);
     ret = str_to_addr(config.bmp_daemon_ip, &addr);
     if (!ret) {
@@ -111,6 +122,16 @@ void skinny_bmp_daemon()
     }
     slen = addr_to_sa((struct sockaddr *)&server, &addr, config.bmp_daemon_port);
   }
+
+  if (config.bmp_daemon_ip && config.bmp_daemon_savefile) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): bmp_daemon_ip and bmp_daemon_savefile directives are mutually exclusive. Exiting.\n", config.name, bmp_misc_db->log_str);
+    exit_gracefully(1);
+  }
+
+  if (config.bmp_daemon_savefile && bmp_misc_db->is_thread) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): bmp_daemon_savefile directive only applies to pmbmpd. Exiting.\n", config.name, bmp_misc_db->log_str);
+    exit_gracefully(1);
+  } 
 
   if (!config.bmp_daemon_max_peers) config.bmp_daemon_max_peers = BMP_MAX_PEERS_DEFAULT;
   Log(LOG_INFO, "INFO ( %s/%s ): maximum BMP peers allowed: %d\n", config.name, bmp_misc_db->log_str, config.bmp_daemon_max_peers);
@@ -196,99 +217,111 @@ void skinny_bmp_daemon()
     exit_gracefully(1);
   }
 
-  config.bmp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
-  if (config.bmp_sock < 0) {
-    /* retry with IPv4 */
-    if (!config.bmp_daemon_ip) {
-      struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
-
-      sa4->sin_family = AF_INET;
-      sa4->sin_addr.s_addr = htonl(0);
-      sa4->sin_port = htons(config.bmp_daemon_port);
-      slen = sizeof(struct sockaddr_in);
-
-      config.bmp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
-    }
-
+  if (!config.bmp_daemon_savefile) {
+    config.bmp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
     if (config.bmp_sock < 0) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): thread socket() failed. Terminating thread.\n", config.name, bmp_misc_db->log_str);
-      exit_gracefully(1);
+      /* retry with IPv4 */
+      if (!config.bmp_daemon_ip) {
+	struct sockaddr_in *sa4 = (struct sockaddr_in *)&server;
+
+	sa4->sin_family = AF_INET;
+	sa4->sin_addr.s_addr = htonl(0);
+	sa4->sin_port = htons(config.bmp_daemon_port);
+	slen = sizeof(struct sockaddr_in);
+
+	config.bmp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
+      }
+
+      if (config.bmp_sock < 0) {
+	Log(LOG_ERR, "ERROR ( %s/%s ): thread socket() failed. Terminating thread.\n", config.name, bmp_misc_db->log_str);
+	exit_gracefully(1);
+      }
     }
-  }
 
-  setnonblocking(config.bmp_sock);
-  setsockopt(config.bmp_sock, SOL_SOCKET, SO_KEEPALIVE, (void *)&yes, sizeof(yes));
+    setnonblocking(config.bmp_sock);
+    setsockopt(config.bmp_sock, SOL_SOCKET, SO_KEEPALIVE, (void *)&yes, sizeof(yes));
 
-  if (config.bmp_daemon_ipprec) {
-    int opt = config.bmp_daemon_ipprec << 5;
+    if (config.bmp_daemon_ipprec) {
+      int opt = config.bmp_daemon_ipprec << 5;
 
-    rc = setsockopt(config.bmp_sock, IPPROTO_IP, IP_TOS, &opt, (socklen_t) sizeof(opt));
-    if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IP_TOS (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
-  }
+      rc = setsockopt(config.bmp_sock, IPPROTO_IP, IP_TOS, &opt, (socklen_t) sizeof(opt));
+      if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IP_TOS (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
+    }
 
 #if (defined LINUX) && (defined HAVE_SO_REUSEPORT)
-  rc = setsockopt(config.bmp_sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *)&yes, (socklen_t) sizeof(yes));
-  if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR|SO_REUSEPORT (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
+    rc = setsockopt(config.bmp_sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *)&yes, (socklen_t) sizeof(yes));
+    if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR|SO_REUSEPORT (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
 #else
-  rc = setsockopt(config.bmp_sock, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, (socklen_t) sizeof(yes));
-  if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
+    rc = setsockopt(config.bmp_sock, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, (socklen_t) sizeof(yes));
+    if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
 #endif
 
 #if (defined IPV6_BINDV6ONLY)
-  {
-    int no=0;
+    {
+      int no=0;
 
-    rc = setsockopt(config.bmp_sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
-    if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IPV6_BINDV6ONLY (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
-  }
+      rc = setsockopt(config.bmp_sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
+      if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IPV6_BINDV6ONLY (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
+    }
 #endif
 
-  if (config.bmp_daemon_pipe_size) {
-    socklen_t l = sizeof(config.bmp_daemon_pipe_size);
-    int saved = 0, obtained = 0;
+    if (config.bmp_daemon_pipe_size) {
+      socklen_t l = sizeof(config.bmp_daemon_pipe_size);
+      int saved = 0, obtained = 0;
 
-    getsockopt(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &saved, &l);
-    Setsocksize(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &config.bmp_daemon_pipe_size, (socklen_t) sizeof(config.bmp_daemon_pipe_size));
-    getsockopt(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
+      getsockopt(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &saved, &l);
+      Setsocksize(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &config.bmp_daemon_pipe_size, (socklen_t) sizeof(config.bmp_daemon_pipe_size));
+      getsockopt(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
 
-    Setsocksize(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
-    getsockopt(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
-    Log(LOG_INFO, "INFO ( %s/%s ): bmp_daemon_pipe_size: obtained=%d target=%d.\n", config.name, bmp_misc_db->log_str, obtained, config.bmp_daemon_pipe_size);
+      Setsocksize(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &saved, l);
+      getsockopt(config.bmp_sock, SOL_SOCKET, SO_RCVBUF, &obtained, &l);
+      Log(LOG_INFO, "INFO ( %s/%s ): bmp_daemon_pipe_size: obtained=%d target=%d.\n", config.name, bmp_misc_db->log_str, obtained, config.bmp_daemon_pipe_size);
+    }
+
+    rc = bind(config.bmp_sock, (struct sockaddr *) &server, slen);
+    if (rc < 0) {
+      char null_ip_address[] = "0.0.0.0";
+      char *ip_address;
+
+      ip_address = config.bmp_daemon_ip ? config.bmp_daemon_ip : null_ip_address;
+      Log(LOG_ERR, "ERROR ( %s/%s ): bind() to ip=%s port=%d/tcp failed (errno: %d).\n", config.name, bmp_misc_db->log_str, ip_address, config.bmp_daemon_port, errno);
+      exit_gracefully(1);
+    }
+
+    rc = listen(config.bmp_sock, 1);
+    if (rc < 0) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): listen() failed (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
+      exit_gracefully(1);
+    }
+
+    {
+      char srv_string[INET6_ADDRSTRLEN];
+      struct host_addr srv_addr;
+      u_int16_t srv_port;
+
+      sa_to_addr((struct sockaddr *)&server, &srv_addr, &srv_port);
+      addr_to_str(srv_string, &srv_addr);
+      Log(LOG_INFO, "INFO ( %s/%s ): waiting for BMP data on %s:%u\n", config.name, bmp_misc_db->log_str, srv_string, srv_port);
+    }
+
+    /* Preparing ACL, if any */
+    if (config.bmp_daemon_allow_file) load_allow_file(config.bmp_daemon_allow_file, &allow);
   }
+  else {
+    open_pcap_savefile(&device, config.bmp_daemon_savefile);
+    config.bmp_sock = pcap_get_selectable_fd(device.dev_desc);
+    enable_ip_fragment_handler();
 
-  rc = bind(config.bmp_sock, (struct sockaddr *) &server, slen);
-  if (rc < 0) {
-    char null_ip_address[] = "0.0.0.0";
-    char *ip_address;
+    Log(LOG_INFO, "INFO ( %s/core ): reading BMP data from: %s\n", config.name, config.bmp_daemon_savefile);
+    allowed = TRUE;
 
-    ip_address = config.bmp_daemon_ip ? config.bmp_daemon_ip : null_ip_address;
-    Log(LOG_ERR, "ERROR ( %s/%s ): bind() to ip=%s port=%d/tcp failed (errno: %d).\n", config.name, bmp_misc_db->log_str, ip_address, config.bmp_daemon_port, errno);
-    exit_gracefully(1);
-  }
-
-  rc = listen(config.bmp_sock, 1);
-  if (rc < 0) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): listen() failed (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
-    exit_gracefully(1);
+    sleep(2);
   }
 
   /* Preparing for syncronous I/O multiplexing */
   select_fd = 0;
   FD_ZERO(&bkp_read_descs);
   FD_SET(config.bmp_sock, &bkp_read_descs);
-
-  {
-    char srv_string[INET6_ADDRSTRLEN];
-    struct host_addr srv_addr;
-    u_int16_t srv_port;
-
-    sa_to_addr((struct sockaddr *)&server, &srv_addr, &srv_port);
-    addr_to_str(srv_string, &srv_addr);
-    Log(LOG_INFO, "INFO ( %s/%s ): waiting for BMP data on %s:%u\n", config.name, bmp_misc_db->log_str, srv_string, srv_port);
-  }
-
-  /* Preparing ACL, if any */
-  if (config.bmp_daemon_allow_file) load_allow_file(config.bmp_daemon_allow_file, &allow);
 
   /* Let's initialize clean shared RIB */
   for (afi = AFI_IP; afi < AFI_MAX; afi++) {
@@ -515,10 +548,10 @@ void skinny_bmp_daemon()
 
   if (config.bmp_daemon_msglog_kafka_avro_schema_registry || config.bmp_dump_kafka_avro_schema_registry) {
 #ifndef WITH_SERDES
-      Log(LOG_ERR, "ERROR ( %s/%s ): 'bmp_*_kafka_avro_schema_registry' require --enable-serdes. Exiting.\n", config.name, bmp_misc_db->log_str);
-      exit_gracefully(1);
+    Log(LOG_ERR, "ERROR ( %s/%s ): 'bmp_*_kafka_avro_schema_registry' require --enable-serdes. Exiting.\n", config.name, bmp_misc_db->log_str);
+    exit_gracefully(1);
 #endif
-    }
+  }
 
   select_fd = bkp_select_fd = (config.bmp_sock + 1);
   recalc_fds = FALSE;
@@ -658,8 +691,14 @@ void skinny_bmp_daemon()
     if (FD_ISSET(config.bmp_sock, &read_descs)) {
       int peers_check_idx, peers_num;
 
-      fd = accept(config.bmp_sock, (struct sockaddr *) &client, &clen);
-      if (fd == ERR) goto read_data;
+      if (!config.bmp_daemon_savefile) {
+        fd = accept(config.bmp_sock, (struct sockaddr *) &client, &clen);
+        if (fd == ERR) goto read_data;
+      }
+      else {
+	sf_ret = recvfrom_savefile(&device, (void **) &bmp_packet, (struct sockaddr *) &client, NULL, &bmp_daemon_savefile_round, &recv_pptrs);
+	fd = config.bmp_sock;
+      }
 
       ipv4_mapped_to_ipv4(&client);
 
@@ -717,7 +756,7 @@ void skinny_bmp_daemon()
       if (!peer) {
         /* We briefly accept the new connection to be able to drop it */
         Log(LOG_ERR, "ERROR ( %s/%s ): Insufficient number of BMP peers has been configured by 'bmp_daemon_max_peers' (%d).\n",
-                        config.name, bmp_misc_db->log_str, config.bmp_daemon_max_peers);
+	    config.name, bmp_misc_db->log_str, config.bmp_daemon_max_peers);
         close(fd);
         goto read_data;
       }
@@ -778,24 +817,30 @@ void skinny_bmp_daemon()
 
     if (!peer) goto select_again;
 
-    ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
-    peer->msglen = (ret + peer->buf.truncated_len);
+    if (!config.bmp_daemon_savefile) {
+      ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
+      peer->msglen = (ret + peer->buf.truncated_len);
 
-    if (ret <= 0) {
-      Log(LOG_INFO, "INFO ( %s/%s ): [%s] BMP connection reset by peer (%d).\n", config.name, bmp_misc_db->log_str, peer->addr_str, errno);
-      FD_CLR(peer->fd, &bkp_read_descs);
-      bmp_peer_close(bmpp, FUNC_TYPE_BMP);
-      recalc_fds = TRUE;
-      goto select_again;
+      if (ret <= 0) {
+        Log(LOG_INFO, "INFO ( %s/%s ): [%s] BMP connection reset by peer (%d).\n", config.name, bmp_misc_db->log_str, peer->addr_str, errno);
+        FD_CLR(peer->fd, &bkp_read_descs);
+        bmp_peer_close(bmpp, FUNC_TYPE_BMP);
+        recalc_fds = TRUE;
+        goto select_again;
+      }
     }
     else {
-      pkt_remaining_len = bmp_process_packet(peer->buf.base, peer->msglen, bmpp);
-
-      /* handling offset for TCP segment reassembly */
-      if (pkt_remaining_len) peer->buf.truncated_len = bmp_packet_adj_offset(peer->buf.base, peer->buf.len, peer->msglen,
-									     pkt_remaining_len, peer->addr_str);
-      else peer->buf.truncated_len = 0;
+      /* recvfrom_savefile() already invoked before */
+      memcpy(&peer->buf.base[peer->buf.truncated_len], bmp_packet, MIN(sf_ret, (peer->buf.len - peer->buf.truncated_len)));
+      peer->msglen = (sf_ret + peer->buf.truncated_len);
     }
+
+    pkt_remaining_len = bmp_process_packet(peer->buf.base, peer->msglen, bmpp);
+
+    /* handling offset for TCP segment reassembly */
+    if (pkt_remaining_len) peer->buf.truncated_len = bmp_packet_adj_offset(peer->buf.base, peer->buf.len, peer->msglen,
+								           pkt_remaining_len, peer->addr_str);
+    else peer->buf.truncated_len = 0;
   }
 }
 

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -2984,6 +2984,11 @@ void generate_random_string(char *s, const int len)
   }
 
   s[len] = '\0';
+}
+
+void pm_pcap_device_initialize(struct pm_pcap_devices *map)
+{
+  memset(map, 0, sizeof(struct pm_pcap_devices));
 }
 
 void open_pcap_savefile(struct pm_pcap_device *dev_ptr, char *file)

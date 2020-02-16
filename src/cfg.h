@@ -397,6 +397,7 @@ struct configuration {
   int bmp_daemon;
   char *bmp_daemon_ip;
   int bmp_daemon_port;
+  char *bmp_daemon_savefile;
   int bmp_daemon_pipe_size;
   int bmp_daemon_max_peers;
   char *bmp_daemon_allow_file;
