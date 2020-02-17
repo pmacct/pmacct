@@ -73,7 +73,6 @@ static const struct _dictionary_line dictionary[] = {
   {"files_umask", cfg_key_files_umask},
   {"files_uid", cfg_key_files_uid},
   {"files_gid", cfg_key_files_gid},
-  {"savefile_wait", cfg_key_pcap_savefile_wait}, /* Legacy key */
   {"networks_mask", cfg_key_networks_mask},
   {"networks_file", cfg_key_networks_file},
   {"networks_file_filter", cfg_key_networks_file_filter},
