@@ -725,7 +725,7 @@ AC_ARG_ENABLE(redis,
   yes)
     AC_MSG_RESULT(yes)
     PKG_CHECK_MODULES([REDIS], [hiredis >= 0.13.0], [
-      PLUGINS="${PLUGINS} redis"
+      SUPPORTS="${SUPPORTS} redis"
       USING_REDIS="yes"
       PMACCT_CFLAGS="$PMACCT_CFLAGS $REDIS_CFLAGS"
       AC_DEFINE(WITH_REDIS, 1)
