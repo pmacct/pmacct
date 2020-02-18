@@ -30,6 +30,7 @@ Commits  Author <email>
       1  cozonac <radu.anghel@xindi.ro>
       1  Marcos Marado <mindboosternoori@gmail.com>
       1  Alexandros Couloumbis <alex@ozo.com>
+      1  Ivan F. Martinez <ivanfm@saisp.br>
          Will Dowling <will@autodeist.com>
          Karl O. Pinc <kop@karlpinc.com>
          Stephen Clark <sclark46@earthlink.net>
@@ -57,7 +58,6 @@ Commits  Author <email>
       1  Jeroen Roovers <jer@gentoo.org>
       1  Paweł Małachowski <pawel.malachowski@atendesoftware.pl>
       1  rsolsn <3997743+rsolsn@users.noreply.github.com>
-      1  Ivan F. Martinez <ivanfm@saisp.br>
       1  Raymond Russell <raymond@corvil.com>
       1  Rico29 <cedric.bassaget@gmail.com>
       1  Robert Wuttke <robert@benocs.com>
