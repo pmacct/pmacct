@@ -27,6 +27,7 @@ Commits  Author <email>
       1  Mike Jager <mike@mikej.net.nz>
       1  Seth N. Hetu <shetu@akamai.com>
       1  Elisa Jasinska <elisa@jasinska.de>
+      1  cozonac <radu.anghel@xindi.ro>
          Will Dowling <will@autodeist.com>
          Karl O. Pinc <kop@karlpinc.com>
          Stephen Clark <sclark46@earthlink.net>
@@ -63,7 +64,6 @@ Commits  Author <email>
       1  Davíð Steinn Geirsson <dsg@sensa.is>
       1  David Higgs <higgsd@users.noreply.github.com>
       1  Vyron Tsingaras <vyronas@vtsingaras.me>
-      1  cozonac <radu.anghel@xindi.ro>
       1  Александр Шалаев <ashalaev@ivi.ru>
       1  matthewsf <matuskubis@gmail.com>
       1  Manuel Mendez <mmendez534@gmail.com>
