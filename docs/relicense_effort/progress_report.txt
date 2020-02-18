@@ -33,6 +33,7 @@ Commits  Author <email>
       1  Marcos Marado <mindboosternoori@gmail.com>
       1  Alexandros Couloumbis <alex@ozo.com>
       1  Ivan F. Martinez <ivanfm@saisp.br>
+      1  Jonas Gröger <jonas@huntun.de>
          Will Dowling <will@autodeist.com>
          Karl O. Pinc <kop@karlpinc.com>
          Stephen Clark <sclark46@earthlink.net>
@@ -69,4 +70,3 @@ Commits  Author <email>
       1  matthewsf <matuskubis@gmail.com>
       1  Manuel Mendez <mmendez534@gmail.com>
       1  Kunshchikov Vladimir <Kunshchikov.Vla@infotecs.ru>
-      1  Jonas Gröger <jonas@huntun.de>
