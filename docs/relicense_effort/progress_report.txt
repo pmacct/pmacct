@@ -12,6 +12,7 @@ Commits  Author <email>
      20  Corentin Néau <corentin.neau@codethink.co.uk>
      14  Job Snijders <job@instituut.net>
       9  Claudio Ortega <claudio.alberto.ortega@gmail.com>
+      8  Jonas Jensen <jonas@semmle.com>
       7  Camilo Cardona <camilo@ntt.net>
       7  Jared Mauch <jared@puck.nether.net>
       5  Aaron Finney <aaron.finney@openx.com>
@@ -41,7 +42,6 @@ Commits  Author <email>
      12  Vittorio Foschi <vittorio.foschi@gmail.com>
      10  Tim LaBerge <tlaberge@visi.com> / tlaberge@cisco.com
       9  Raphaël P. Barazzutti <raphael@barazzutti.net>
-      8  Jonas Jensen <jonas@semmle.com>
       4  vphatarp <vaibhav.phatarpekar@gmail.com>
       3  Emil Palm <emil@x86.nu>
       3  Dan Berger <dberger@valvesoftware.com>
