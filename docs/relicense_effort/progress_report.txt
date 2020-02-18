@@ -36,6 +36,7 @@ Commits  Author <email>
       1  Alexandros Couloumbis <alex@ozo.com>
       1  Ivan F. Martinez <ivanfm@saisp.br>
       1  Jonas Gröger <jonas@huntun.de>
+      1  Nimrod <nimrody@gmail.com>
          Will Dowling <will@autodeist.com>
          Karl O. Pinc <kop@karlpinc.com>
          Stephen Clark <sclark46@earthlink.net>
@@ -55,7 +56,6 @@ Commits  Author <email>
       1  root <root@smokeping.celya.fr>
       1  Mehul Prajapati <mehulprajapati2802@gmail.com>
       1  rouba002 <rouba002@gmail.com>
-      1  Nimrod <nimrody@gmail.com>
       1  Jeroen Roovers <jer@gentoo.org>
       1  Paweł Małachowski <pawel.malachowski@atendesoftware.pl>
       1  rsolsn <3997743+rsolsn@users.noreply.github.com>
