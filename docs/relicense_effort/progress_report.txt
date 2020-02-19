@@ -38,6 +38,7 @@ Commits  Author <email>
       1  Ivan F. Martinez <ivanfm@saisp.br>
       1  Jonas Gröger <jonas@huntun.de>
       1  Nimrod <nimrody@gmail.com>
+      1  Guo-Wei Su <nansenat16@gmail.com>
          Will Dowling <will@autodeist.com>
          Karl O. Pinc <kop@karlpinc.com>
          Stephen Clark <sclark46@earthlink.net>
@@ -62,7 +63,6 @@ Commits  Author <email>
       1  Raymond Russell <raymond@corvil.com>
       1  Rico29 <cedric.bassaget@gmail.com>
       1  Robert Wuttke <robert@benocs.com>
-      1  Guo-Wei Su <nansenat16@gmail.com>
       1  Davíð Steinn Geirsson <dsg@sensa.is>
       1  David Higgs <higgsd@users.noreply.github.com>
       1  Vyron Tsingaras <vyronas@vtsingaras.me>
