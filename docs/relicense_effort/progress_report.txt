@@ -28,6 +28,7 @@ Commits  Author <email>
       2  Jim Westfall <jwestfall@surrealistic.net>
       2  Tiago Gomes <tiago.gomes@codethink.co.uk>
       2  Matthieu Texier <matthieu@texier.tv>
+      2  Lee Yongjae <setup74@gmail.com>
       1  Pier Carlo Chiodi <pierky@pierky.com>
       1  Mike Jager <mike@mikej.net.nz>
       1  Seth N. Hetu <shetu@akamai.com>
@@ -50,7 +51,6 @@ Commits  Author <email>
       4  vphatarp <vaibhav.phatarpekar@gmail.com>
       3  Emil Palm <emil@x86.nu>
       3  Dan Berger <dberger@valvesoftware.com>
-      2  Lee Yongjae <setup74@gmail.com>
       2  Miki Takata <mikit@nttv6.jp>
       2  Vadim Tk <gitcommit@m.vtk.one>
       1  Junpei YOSHINO <junpei.yoshino@gmail.com>
