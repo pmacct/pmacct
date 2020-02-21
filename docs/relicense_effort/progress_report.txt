@@ -42,6 +42,7 @@ Commits  Author <email>
       1  Guo-Wei Su <nansenat16@gmail.com>
       1  Robert Wuttke <robert@benocs.com>
       1  Paweł Małachowski <pawel.malachowski@atendesoftware.pl>
+      1  Jeroen Roovers <jer@gentoo.org>
          Will Dowling <will@autodeist.com>
          Karl O. Pinc <kop@karlpinc.com>
          Stephen Clark <sclark46@earthlink.net>
@@ -59,7 +60,6 @@ Commits  Author <email>
       1  root <root@smokeping.celya.fr>
       1  Mehul Prajapati <mehulprajapati2802@gmail.com>
       1  rouba002 <rouba002@gmail.com>
-      1  Jeroen Roovers <jer@gentoo.org>
       1  rsolsn <3997743+rsolsn@users.noreply.github.com>
       1  Raymond Russell <raymond@corvil.com>
       1  Rico29 <cedric.bassaget@gmail.com>
