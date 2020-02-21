@@ -21,6 +21,7 @@ Commits  Author <email>
       3  Dusan Migra <dusan.migra@edgeintelligence.com>
       3  Markus Weber <fvd@uucp.de>
       3  Thomas Graf <thomas@graf3.net>
+      3  Emil Palm <emil@x86.nu>
       2  Lennert Buytenhek <buytenh@wantstofly.org>
       2  Guy Lowe <git@gunk.gen.nz>
       2  Hidde van der Heide <hvanderheide@nexuz.net>
@@ -42,6 +43,7 @@ Commits  Author <email>
       1  Guo-Wei Su <nansenat16@gmail.com>
       1  Robert Wuttke <robert@benocs.com>
       1  Paweł Małachowski <pawel.malachowski@atendesoftware.pl>
+      1  Jeroen Roovers <jer@gentoo.org>
          Will Dowling <will@autodeist.com>
          Karl O. Pinc <kop@karlpinc.com>
          Stephen Clark <sclark46@earthlink.net>
@@ -51,7 +53,6 @@ Commits  Author <email>
      10  Tim LaBerge <tlaberge@visi.com> / tlaberge@cisco.com
       9  Raphaël P. Barazzutti <raphael@barazzutti.net>
       4  vphatarp <vaibhav.phatarpekar@gmail.com>
-      3  Emil Palm <emil@x86.nu>
       3  Dan Berger <dberger@valvesoftware.com>
       2  Miki Takata <mikit@nttv6.jp>
       2  Vadim Tk <gitcommit@m.vtk.one>
@@ -59,7 +60,6 @@ Commits  Author <email>
       1  root <root@smokeping.celya.fr>
       1  Mehul Prajapati <mehulprajapati2802@gmail.com>
       1  rouba002 <rouba002@gmail.com>
-      1  Jeroen Roovers <jer@gentoo.org>
       1  rsolsn <3997743+rsolsn@users.noreply.github.com>
       1  Raymond Russell <raymond@corvil.com>
       1  Rico29 <cedric.bassaget@gmail.com>
