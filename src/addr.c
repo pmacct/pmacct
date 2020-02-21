@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -268,12 +268,12 @@ int sa_port_cmp(struct sockaddr *sa, u_int16_t port)
   struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)sa;
 
   if (sa->sa_family == AF_INET) {
-    if (sa4->sin_port == port) return FALSE;
+    if (ntohs(sa4->sin_port) == port) return FALSE;
     else return TRUE;
   }
 
   if (sa->sa_family == AF_INET6) {
-    if (sa6->sin6_port == port) return FALSE;
+    if (ntohs(sa6->sin6_port) == port) return FALSE;
     else return TRUE;
   }
 

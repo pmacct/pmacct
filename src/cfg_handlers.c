@@ -4073,13 +4073,13 @@ int cfg_key_bmp_daemon_port(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_bmp_daemon_savefile(char *filename, char *name, char *value_ptr)
+int cfg_key_bmp_daemon_pcap_savefile(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int changes = 0;
 
-  for (; list; list = list->next, changes++) list->cfg.bmp_daemon_savefile = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_daemon_savefile'. Globalized.\n", filename);
+  for (; list; list = list->next, changes++) list->cfg.bmp_daemon_pcap_savefile = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_daemon_pcap_savefile'. Globalized.\n", filename);
 
   return changes;
 }
