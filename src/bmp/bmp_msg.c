@@ -48,10 +48,8 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
   if (!bms) return FALSE;
 
   if (len < sizeof(struct bmp_common_hdr)) {
-    if (!config.bmp_daemon_pcap_savefile) {
-      Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: failed bmp_get_and_check_length() BMP common hdr\n",
-	  config.name, bms->log_str, peer->addr_str);
-    }
+    Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: failed bmp_get_and_check_length() BMP common hdr\n",
+	config.name, bms->log_str, peer->addr_str);
     return FALSE;
   }
 

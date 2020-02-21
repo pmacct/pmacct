@@ -690,7 +690,10 @@ void skinny_bmp_daemon()
     if (config.bmp_daemon_pcap_savefile) {
       struct bmp_peer bmp_daemon_pcap_savefile_peer;
 
-      sf_ret = recvfrom_savefile(&device, (void **) &bmp_packet, (struct sockaddr *) &client, NULL, &bmp_daemon_pcap_savefile_round, &recv_pptrs);
+      /* Let's skip over any TCP-SYN, TCP-ACK, etc. messages */
+      for (sf_ret = 0; sf_ret == 0; ) {
+        sf_ret = recvfrom_savefile(&device, (void **) &bmp_packet, (struct sockaddr *) &client, NULL, &bmp_daemon_pcap_savefile_round, &recv_pptrs);
+      }
       fd = config.bmp_sock;
 
       memset(&bmp_daemon_pcap_savefile_peer, 0, sizeof(bmp_daemon_pcap_savefile_peer));
