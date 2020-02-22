@@ -255,6 +255,7 @@ int bgp_extra_data_cmp_bmp(struct bgp_msg_extra_data *a, struct bgp_msg_extra_da
 int bgp_extra_data_process_bmp(struct bgp_msg_extra_data *bmed, struct bgp_info *ri)
 {
   struct bgp_info_extra *rie = NULL;
+  struct bmp_chars *bmed_bmp_src = NULL, *bmed_bmp_dst = NULL;
   int ret = BGP_MSG_EXTRA_DATA_NONE;
 
   if (bmed && ri && bmed->id == BGP_MSG_EXTRA_DATA_BMP) {
@@ -271,6 +272,13 @@ int bgp_extra_data_process_bmp(struct bgp_msg_extra_data *bmed, struct bgp_info 
 	memcpy(rie->bmed.data, bmed->data, bmed->len);
 	rie->bmed.len = bmed->len; 
 	rie->bmed.id = bmed->id;
+
+	bmed_bmp_src = (struct bmp_chars *) bmed->data;
+	bmed_bmp_dst = (struct bmp_chars *) rie->bmed.data;
+
+	if (bmed_bmp_src->tlvs) {
+	  bmed_bmp_dst->tlvs = bmp_tlv_list_copy(bmed_bmp_src->tlvs);
+	}
 
 	ret = BGP_MSG_EXTRA_DATA_BMP;	
       }
@@ -484,6 +492,26 @@ void bmp_tlv_list_node_del(void *node)
     tlv->len = 0;
     tlv->val = NULL;
   }
+}
+
+struct pm_list *bmp_tlv_list_copy(struct pm_list *src)
+{
+  struct pm_listnode *node = NULL;
+  struct bmp_log_tlv *tlv = NULL;
+  struct pm_list *dst = NULL;
+  int ret;
+
+  dst = bmp_tlv_list_new(NULL, bmp_tlv_list_node_del);
+  for (PM_ALL_LIST_ELEMENTS_RO(src, node, tlv)) {
+    ret = bmp_tlv_list_add(dst, tlv->type, tlv->len, tlv->val);
+    if (ret == ERR) {
+      bmp_tlv_list_destroy(dst);
+      dst = NULL;
+      break;
+    }
+  }
+
+  return dst;
 }
 
 void bmp_tlv_list_destroy(struct pm_list *tlvs)

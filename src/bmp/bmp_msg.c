@@ -683,9 +683,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 
       bmp_get_and_check_length(bmp_packet, len, bgp_update_len);
 
-      /* not destroying previously made allocations here, ie. tlvs,
-	 because bgp_extra_data_free_bmp() will take care of that
-	 in any case, ie. skip_rib true or false */ 
+      bmp_tlv_list_destroy(bmed_bmp.tlvs);
     }
     /* missing BMP peer up message, ie. case of replay/replication of BMP messages */
     else {

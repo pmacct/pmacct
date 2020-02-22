@@ -40,6 +40,7 @@ extern char *bmp_tlv_value_print(struct bmp_log_tlv *, const struct bmp_tlv_def 
 extern struct pm_list *bmp_tlv_list_new(int (*cmp)(void *val1, void *val2), void (*del)(void *val));
 extern int bmp_tlv_list_add(struct pm_list *, u_int16_t, u_int16_t, char *);
 extern void bmp_tlv_list_node_del(void *node);
+extern struct pm_list *bmp_tlv_list_copy(struct pm_list *);
 extern void bmp_tlv_list_destroy(struct pm_list *);
 
 extern char *bmp_term_reason_print(u_int16_t);
