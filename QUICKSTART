@@ -1842,16 +1842,16 @@ shell> examples/lg/pmbgp.py -a 192.168.2.0/24 -r 192.168.1.1
 Request/Reply Looking Glass formats are documented in 'docs/LOOKING_GLASS_FORMAT'.
 
 XIVh. Example: BGP Xconnects 
-Starting with release 1.7.1, pmbgpd, the pmacct BGP standalone daemon, includes
-a new BGP xconnect feature to map BGP peers (ie. PE routers) to BGP collectors
-(ie. nfacctd, sfacctd). The aim is to facilitate operations when re-sizing/re-
-balancing the collection infrastructure without impacting (ie. re-configuring)
-BGP peers. A few caveats apply: 1) mapping works only against the IP source
-address and not the BGP Router ID, 2) only 1:1 relationships can be formed
-(ie. this is about cross-connecting, not replication) and 3) only one session
-per BGP peer is supported (ie. multiple BGP agents are running on the same IP
-address or NAT traversal scenarios are not supported [yet]). The feature can
-be configured as follows:
+pmbgpd, the pmacct BGP standalone daemon, includes a new BGP xconnect feature
+to map BGP peers (ie. PE routers) to BGP collectors (ie. nfacctd, sfacctd),
+acting essentially as a BGP proxy. The aim is to facilitate operations when
+re-sizing/re-balancing the collection infrastructure without impacting (ie.
+re-configuring) BGP peers on the network. A few caveats apply: 1) mapping
+works only against the IP source address and not the BGP Router ID, 2) only
+1:1 relationships can be formed (ie. this is about cross-connecting sessions,
+not replication) and 3) only one session per BGP peer is supported (ie.
+multiple BGP agents are running on the same IP address or NAT traversal
+scenarios are not supported [yet]). The feature can be configured as follows:
 
 bgp_daemon_xconnect_map: /path/to/bgp_xconnects.map
 
