@@ -2872,15 +2872,20 @@ any lift in the buffering must be also supported by the kernel, adjusting
 
 h) BMP, the BGP Monitoring Protocol, has got drafting traction at IETF. New
 protocol features drive the need for inter-op testing. The BMP play tool
-( https://github.com/paololucente/bmp_play ) is a key piece of software for
-reproducing issues by saving raw BMP packets and allowing to replay them.
-An example of how this can be done, here:
+( https://github.com/paololucente/bmp_play ) is a simple script to record
+and replay raw BMP packets in order to reproduce issues. An example of how
+this can be done, here:
 
 shell 1> bmp_play.py -m record -p 1790 -f bmp.dump
 
 shell 1> bmp_play.py -m play -p 1790 -f bmp.dump -d 127.0.0.1
 
 shell 2> pmbmpd -l 1790 -d -o bmp.log
+
+Alternatively, since version 1.7.5, pmbmpd supports pcap_savefile (-I) to
+replat a pcap trace that includes BMP packets (TCP ACKs are safely ignored;
+but, of course, results can be undetermined if the trace does include
+unrelevant (non BMP) packets.
  
 i) packet classification using the nDPI library is among the new features of
 pmacct 1.7. As with any major and complex feature, it is expected that not
