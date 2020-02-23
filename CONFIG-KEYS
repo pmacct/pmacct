@@ -16,14 +16,18 @@ LEGEND of flags:
 
 GLOBAL		Can't be configured on individual plugins
 NO_GLOBAL	Can't be configured globally
-NO_PMACCTD	Does not apply to 'pmacctd'
-NO_UACCTD	Does not apply to 'uacctd' 
-NO_NFACCTD	Does not apply to 'nfacctd'
-NO_SFACCTD	Does not apply to 'sfacctd' 
+NO_PMACCTD	Does not apply to pmacctd
+NO_UACCTD	Does not apply to uacctd 
+NO_NFACCTD	Does not apply to nfacctd
+NO_SFACCTD	Does not apply to sfacctd
+NO_PMBGPD	Does not apply to pmbgpd
+NO_PMBMPD	Does not apply to pmbmpd
 ONLY_PMACCTD	Applies only to pmacctd
 ONLY_UACCTD	Applies only to uacctd
 ONLY_NFACCTD	Applies only to nfacctd
 ONLY_SFACCTD	Applies only to sfacctd
+ONLY_PMBGPD	Applies only to pmbgpd
+ONLY_PMBMPD	Applies only to pmbmpd
 MAP		Indicates the input file is a map
 
 
@@ -380,13 +384,13 @@ DESC:		If set to true, this option causes 'pmacctd' to wait for the listening de
 		detected.
 DEFAULT:	false
 
-KEY:		pcap_savefile (-I) [GLOBAL, PMACCTD_ONLY]
+KEY:		pcap_savefile (-I) [GLOBAL, NO_UACCTD, NO_PMBGPD]
 DESC:		File in libpcap savefile format to read data from (as an alternative to live data
-		collection. The file has to be correctly finalized in order to be read. As soon as
-		the daemon finished processing the file, it exits (unless the 'pcap_savefile_wait'
-		config directive is specified). The directive is mutually exclusive with pcap_interface
-		(-i) for pmacctd and with [ns]facctd_ip (-L) and [ns]facctd_port (-l) for nfacctd
-		and sfacctd respectively.
+		collection). As soon as the daemon finished processing the file, it exits (unless in
+		pmacctd the 'pcap_savefile_wait' config directive is specified). The directive is
+		mutually exclusive with pcap_interface (-i) for pmacctd, with [ns]facctd_ip (-L)
+		and [ns]facctd_port (-l) for nfacctd and sfacctd respectively and bmp_daemon_ip
+		for pmbmpd.
 DEFAULT:	none
 
 KEY:            pcap_savefile_wait (-W) [GLOBAL, PMACCTD_ONLY]

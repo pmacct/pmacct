@@ -526,7 +526,6 @@ static const struct _dictionary_line dictionary[] = {
   {"bmp_daemon", cfg_key_bmp_daemon},
   {"bmp_daemon_ip", cfg_key_bmp_daemon_ip},
   {"bmp_daemon_port", cfg_key_bmp_daemon_port},
-  {"bmp_daemon_pcap_savefile", cfg_key_bmp_daemon_pcap_savefile},
   {"bmp_daemon_pipe_size", cfg_key_bmp_daemon_pipe_size},
   {"bmp_daemon_max_peers", cfg_key_bmp_daemon_max_peers},
   {"bmp_daemon_allow_file", cfg_key_bmp_daemon_allow_file},

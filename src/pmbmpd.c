@@ -108,7 +108,7 @@ int main(int argc,char **argv, char **envp)
       rows++;
       break;
     case 'I':
-      strlcpy(cfg_cmdline[rows], "bmp_daemon_pcap_savefile: ", SRVBUFLEN);
+      strlcpy(cfg_cmdline[rows], "pcap_savefile: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;

@@ -85,10 +85,10 @@ void skinny_bmp_daemon()
   time_t dump_refresh_deadline = {0};
   struct timeval dump_refresh_timeout, *drt_ptr;
 
-  /* bmp_daemon_pcap_savefile stuff */
+  /* pcap_savefile stuff */
   struct packet_ptrs recv_pptrs;
   unsigned char *bmp_packet;
-  int sf_ret, bmp_daemon_pcap_savefile_round = 1;
+  int sf_ret, pcap_savefile_round = 1;
 
   /* initial cleanups */
   reload_map_bmp_thread = FALSE;
@@ -106,7 +106,7 @@ void skinny_bmp_daemon()
   memset(bmp_routing_db, 0, sizeof(struct bgp_rt_structs));
 
   /* socket creation for BMP server: IPv4 only */
-  if (!config.bmp_daemon_ip && !config.bmp_daemon_pcap_savefile) {
+  if (!config.bmp_daemon_ip && !config.pcap_savefile) {
     struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&server;
 
     sa6->sin6_family = AF_INET6;
@@ -123,13 +123,13 @@ void skinny_bmp_daemon()
     slen = addr_to_sa((struct sockaddr *)&server, &addr, config.bmp_daemon_port);
   }
 
-  if (config.bmp_daemon_ip && config.bmp_daemon_pcap_savefile) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): bmp_daemon_ip and bmp_daemon_pcap_savefile directives are mutually exclusive. Exiting.\n", config.name, bmp_misc_db->log_str);
+  if (config.bmp_daemon_ip && config.pcap_savefile) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): bmp_daemon_ip and pcap_savefile directives are mutually exclusive. Exiting.\n", config.name, bmp_misc_db->log_str);
     exit_gracefully(1);
   }
 
-  if (config.bmp_daemon_pcap_savefile && bmp_misc_db->is_thread) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): bmp_daemon_pcap_savefile directive only applies to pmbmpd. Exiting.\n", config.name, bmp_misc_db->log_str);
+  if (config.pcap_savefile && bmp_misc_db->is_thread) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): pcap_savefile directive only applies to pmbmpd. Exiting.\n", config.name, bmp_misc_db->log_str);
     exit_gracefully(1);
   } 
 
@@ -217,7 +217,7 @@ void skinny_bmp_daemon()
     exit_gracefully(1);
   }
 
-  if (!config.bmp_daemon_pcap_savefile) {
+  if (!config.pcap_savefile) {
     config.bmp_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
     if (config.bmp_sock < 0) {
       /* retry with IPv4 */
@@ -308,11 +308,11 @@ void skinny_bmp_daemon()
     if (config.bmp_daemon_allow_file) load_allow_file(config.bmp_daemon_allow_file, &allow);
   }
   else {
-    open_pcap_savefile(&device, config.bmp_daemon_pcap_savefile);
+    open_pcap_savefile(&device, config.pcap_savefile);
     config.bmp_sock = pcap_get_selectable_fd(device.dev_desc);
     enable_ip_fragment_handler();
 
-    Log(LOG_INFO, "INFO ( %s/core ): reading BMP data from: %s\n", config.name, config.bmp_daemon_pcap_savefile);
+    Log(LOG_INFO, "INFO ( %s/core ): reading BMP data from: %s\n", config.name, config.pcap_savefile);
     allowed = TRUE;
 
     sleep(2);
@@ -687,17 +687,17 @@ void skinny_bmp_daemon()
     */
     if (!select_num) goto select_again;
 
-    if (config.bmp_daemon_pcap_savefile) {
-      struct bmp_peer bmp_daemon_pcap_savefile_peer;
+    if (config.pcap_savefile) {
+      struct bmp_peer pcap_savefile_peer;
 
       /* Let's skip over any TCP-SYN, TCP-ACK, etc. messages */
       for (sf_ret = 0; sf_ret == 0; ) {
-        sf_ret = recvfrom_savefile(&device, (void **) &bmp_packet, (struct sockaddr *) &client, NULL, &bmp_daemon_pcap_savefile_round, &recv_pptrs);
+        sf_ret = recvfrom_savefile(&device, (void **) &bmp_packet, (struct sockaddr *) &client, NULL, &pcap_savefile_round, &recv_pptrs);
       }
       fd = config.bmp_sock;
 
-      memset(&bmp_daemon_pcap_savefile_peer, 0, sizeof(bmp_daemon_pcap_savefile_peer));
-      sa_to_addr((struct sockaddr *) &client, &bmp_daemon_pcap_savefile_peer.self.addr, &bmp_daemon_pcap_savefile_peer.self.tcp_port);
+      memset(&pcap_savefile_peer, 0, sizeof(pcap_savefile_peer));
+      sa_to_addr((struct sockaddr *) &client, &pcap_savefile_peer.self.addr, &pcap_savefile_peer.self.tcp_port);
 
       for (peer = NULL, peers_idx = 0; peers_idx < config.bmp_daemon_max_peers; peers_idx++) {
 	if (!sa_addr_cmp((struct sockaddr *) &client, &bmp_peers[peers_idx].self.addr) &&
@@ -714,7 +714,7 @@ void skinny_bmp_daemon()
     if (FD_ISSET(config.bmp_sock, &read_descs)) {
       int peers_check_idx, peers_num;
 
-      if (!config.bmp_daemon_pcap_savefile) {
+      if (!config.pcap_savefile) {
         fd = accept(config.bmp_sock, (struct sockaddr *) &client, &clen);
         if (fd == ERR) goto read_data;
       }
@@ -810,7 +810,7 @@ void skinny_bmp_daemon()
 
     read_data:
 
-    if (!config.bmp_daemon_pcap_savefile) {
+    if (!config.pcap_savefile) {
       /*
 	We have something coming in: let's lookup which peer is that.
 	FvD: To avoid starvation of the "later established" peers, we
@@ -830,7 +830,7 @@ void skinny_bmp_daemon()
 
     if (!peer) goto select_again;
 
-    if (!config.bmp_daemon_pcap_savefile) {
+    if (!config.pcap_savefile) {
       ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
       peer->msglen = (ret + peer->buf.truncated_len);
 
