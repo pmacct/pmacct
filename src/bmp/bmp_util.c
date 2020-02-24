@@ -518,8 +518,7 @@ void bmp_tlv_list_destroy(struct pm_list *tlvs)
 {
   if (!tlvs) return;
 
-  pm_list_delete_all_node(tlvs);
-  pm_list_free(tlvs);
+  pm_list_delete(tlvs);
 }
 
 char *bmp_term_reason_print(u_int16_t in)
