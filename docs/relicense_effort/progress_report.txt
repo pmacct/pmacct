@@ -17,6 +17,7 @@ Commits  Author <email>
       7  Camilo Cardona <camilo@ntt.net>
       7  Jared Mauch <jared@puck.nether.net>
       5  Aaron Finney <aaron.finney@openx.com>
+      4  vphatarp <vaibhav.phatarpekar@gmail.com>
       3  Alexander Brusilov <photon89@yandex.ru>
       3  Dusan Migra <dusan.migra@edgeintelligence.com>
       3  Markus Weber <fvd@uucp.de>
@@ -52,7 +53,6 @@ Commits  Author <email>
    
      10  Tim LaBerge <tlaberge@visi.com> / tlaberge@cisco.com
       9  Raphaël P. Barazzutti <raphael@barazzutti.net>
-      4  vphatarp <vaibhav.phatarpekar@gmail.com>
       3  Dan Berger <dberger@valvesoftware.com>
       2  Miki Takata <mikit@nttv6.jp>
       2  Vadim Tk <gitcommit@m.vtk.one>
