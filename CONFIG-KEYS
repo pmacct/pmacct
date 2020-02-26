@@ -144,7 +144,7 @@ DESC:		Expects full pathname to a file containing custom-defined primitives. Onc
 		map does not support reloading at runtime. 
 DEFAULT:	none
 
-KEY:		aggregate_filter [NO_GLOBAL]
+KEY:		aggregate_filter [NO_GLOBAL, NO_UACCTD]
 DESC:		Per-plugin filtering applied against the original packet or flow. Aggregation
 		is performed slightly afterwards, upon successful match of this filter.
 		By binding a filter, in tcpdump syntax, to an active plugin, this directive
