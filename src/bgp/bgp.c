@@ -772,15 +772,7 @@ void skinny_bgp_daemon_online()
       peer->fd = fd;
       peer->idx = peers_idx; 
       FD_SET(peer->fd, &bkp_read_descs);
-      peer->addr.family = ((struct sockaddr *)&client)->sa_family;
-      if (peer->addr.family == AF_INET) {
-	peer->addr.address.ipv4.s_addr = ((struct sockaddr_in *)&client)->sin_addr.s_addr;
-	peer->tcp_port = ntohs(((struct sockaddr_in *)&client)->sin_port);
-      }
-      else if (peer->addr.family == AF_INET6) {
-	memcpy(&peer->addr.address.ipv6, &((struct sockaddr_in6 *)&client)->sin6_addr, 16);
-	peer->tcp_port = ntohs(((struct sockaddr_in6 *)&client)->sin6_port);
-      }
+      sa_to_addr((struct sockaddr *) &client, &peer->addr, &peer->tcp_port);
 
       if (peers_cache && peers_port_cache) {
 	u_int32_t bucket;
