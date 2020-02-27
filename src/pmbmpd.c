@@ -48,6 +48,8 @@ void usage_daemon(char *prog_name)
   printf("  -L  \tBind to the specified IP address\n");
   printf("  -l  \tListen on the specified TCP port\n");
   printf("  -I  \tRead packets from the specified savefile\n");
+  printf("  -Z  \tReading from a savefile, sleep the given amount of seconds at startup and between replays\n");
+  printf("  -Y  \tReading from a savefile, replay the number of times specified\n");
   printf("  -f  \tLoad configuration from the specified file\n");
   printf("  -D  \tDaemonize\n");
   printf("  -d  \tEnable debug\n");
@@ -109,6 +111,16 @@ int main(int argc,char **argv, char **envp)
       break;
     case 'I':
       strlcpy(cfg_cmdline[rows], "pcap_savefile: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
+    case 'Z':
+      strlcpy(cfg_cmdline[rows], "pcap_savefile_delay: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
+    case 'Y':
+      strlcpy(cfg_cmdline[rows], "pcap_savefile_replay: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
