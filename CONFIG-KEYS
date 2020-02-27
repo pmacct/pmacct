@@ -393,7 +393,7 @@ DESC:		File in libpcap savefile format to read data from (as an alternative to l
 		for pmbmpd.
 DEFAULT:	none
 
-KEY:            pcap_savefile_wait (-W) [GLOBAL, PMACCTD_ONLY]
+KEY:            pcap_savefile_wait (-W) [GLOBAL, NO_UACCTD]
 VALUES:         [ true | false ]
 DESC:           If set to true, this option will cause the daemon to wait indefinitely for a signal
 		(ie. CTRL-C when not daemonized or 'killall -9 pmacctd' if it is) after being finished
@@ -401,17 +401,18 @@ DESC:           If set to true, this option will cause the daemon to wait indefi
 		when inserting fixed amounts of data into memory tables.
 DEFAULT:        false
 
-KEY:		pcap_savefile_delay (-Z) [GLOBAL, PMACCTD_ONLY]
+KEY:		pcap_savefile_delay (-Z) [GLOBAL, NO_UACCTD, NO_PMBGPD]
 DESC:		When reading from a pcap_savefile, sleep for the supplied amount of seconds before
 		(re)playing the file. For example this is useful to let a BGP session be established
-		and a RIB be finalised before playing a given file.
+		and a RIB be finalised before playing a given file or buy time among replays so for
+		a dump event to trigger.
 DEFAULT:	0
 
-KEY:            pcap_savefile_replay (-Y) [GLOBAL, PMACCTD_ONLY]
+KEY:            pcap_savefile_replay (-Y) [GLOBAL, NO_UACCTD, NO_PMBGPD]
 DESC:           When reading from a pcap_savefile, replay content for the specified amount of times.
-                Other than for testing in general, ie. infinite loops, for example this is useful
-		when playing templated-based protocols, ie. NetFlow v9/IPFIX, to replay data packets 
-		that could not be parsed the first time due to the template not being sent yet.
+                Other than for testing in general, this may be useful when playing templated-based
+		protocols, ie. NetFlow v9/IPFIX, to replay data packets  that could not be parsed
+		the first time due to the template not being sent yet.
 DEFAULT:        1
 
 KEY:		[ pcap_direction | uacctd_direction ] [GLOBAL, NO_NFACCTD, NO_SFACCTD] 
