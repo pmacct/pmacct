@@ -575,6 +575,7 @@ struct configuration {
   int dump_max_writers;
   int tmp_asa_bi_flow;
   int tmp_bgp_lookup_compare_ports;
+  int tmp_bgp_daemon_route_refresh;
   size_t thread_stack;
   char *rpki_roas_file;
   char *rpki_rtr_cache;

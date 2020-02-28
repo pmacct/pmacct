@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -136,6 +136,9 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
       }
 
       break;
+    case BGP_ROUTE_REFRESH:
+      /* just ignore */
+      break;
     default:
       bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP packet (unsupported message type).\n",
@@ -206,8 +209,8 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 	  } 
 
 	  /* 
- 	   * If we stumble upon capabilities let's curse through them to find
- 	   * some we are forced to support (ie. MP-BGP or 4-bytes AS support)
+	   * If we stumble upon capabilities let's iterate through them to find
+	   * those that we do support (ie. MP-BGP, 4-bytes AS support, etc.)
  	   */
 	  if (opt_type == BGP_OPTION_CAPABILITY) {
 	    char *optcap_ptr, *bgp_open_cap_len_reply_ptr, *bgp_open_cap_base_reply_ptr;
@@ -319,6 +322,16 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 		    }
 		  }
 	        }
+	      }
+	      else if (cap_type == BGP_CAPABILITY_ROUTE_REFRESH) {
+		if (config.tmp_bgp_daemon_route_refresh) {
+		  bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+		  Log(LOG_INFO, "INFO ( %s/%s ): [%s] Capability: Route Refresh [%x]\n",
+		      config.name, bms->log_str, bgp_peer_str, cap_type);
+
+		  memcpy(bgp_open_cap_reply_ptr, optcap_ptr, cap_len+2); 
+		  bgp_open_cap_reply_ptr += cap_len+2;
+		}
 	      }
 
 	      optcap_ptr += (cap_len + 2);
