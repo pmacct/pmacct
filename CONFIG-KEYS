@@ -2889,25 +2889,6 @@ DESC:           Full pathname to a file containing directives to configure librd
 		replicated datagrams to a Kafka broker. See kafka_config_file for more info.
 DEFAULT:        none
 
-KEY:		tmp_asa_bi_flow
-VALUES:		[ true | false ]
-DESC:		Bi-flows use two counters to report counters, ie. bytes and packets, in forward and
-		reverse directions. This hack (ab)uses the packets field in order to store the extra
-		bytes counter. The patch specifically targets NetFlow v9/IPFIX field types #231 and
-		#232 and has been tested against a Cisco ASA export.
-DEFAULT:	false
-
-KEY:		tmp_bgp_lookup_compare_ports
-VALUES:		[ true | false ]
-DESC:		When looking up BGP RIBs in traffic accounting daemons (ie. nfacctd, sfacctd, etc.), 
-		if set to true, try to compare both the socket IP address and the TCP port of a BGP
-		session (that is, not only the socket IP address as when this knob is set to false).
-		This is always the case when a bgp_agent_map is defined and the 'bgp_port' keyword
-		is specified; when 'bgp_port' is not specified (or a bgp_agent_map is not defined),
-		this knob essentially forces the comparison against only the BGP Router-ID. This may
-		be wanted in NAT traversal scenarios and/or BGP xconnects (bgp_daemon_xconnect_map).
-DEFAULT:	false
-
 KEY:		thread_stack
 DESC:		Defines the stack size for threads screated by the daemon. The value is expected in
 		bytes. A value of 0, default, leaves the stack size to the system default or pmacct
@@ -3063,6 +3044,33 @@ KEY:		classifier_giveup_proto_other [GLOBAL]
 DESC:		Same as classifier_giveup_proto_tcp but for flows which IP protocol is different than
 		TCP and UDP.
 DEFAULT:	8
+
+KEY:		tmp_asa_bi_flow
+VALUES:		[ true | false ]
+DESC:		Bi-flows use two counters to report counters, ie. bytes and packets, in forward and
+		reverse directions. This hack (ab)uses the packets field in order to store the extra
+		bytes counter. The patch specifically targets NetFlow v9/IPFIX field types #231 and
+		#232 and has been tested against a Cisco ASA export.
+DEFAULT:	false
+
+KEY:		tmp_bgp_lookup_compare_ports
+VALUES:		[ true | false ]
+DESC:		When looking up BGP RIBs in traffic accounting daemons (ie. nfacctd, sfacctd, etc.), 
+		if set to true, try to compare both the socket IP address and the TCP port of a BGP
+		session (that is, not only the socket IP address as when this knob is set to false).
+		This is always the case when a bgp_agent_map is defined and the 'bgp_port' keyword
+		is specified; when 'bgp_port' is not specified (or a bgp_agent_map is not defined),
+		this knob essentially forces the comparison against only the BGP Router-ID. This may
+		be wanted in NAT traversal scenarios and/or BGP xconnects (bgp_daemon_xconnect_map).
+DEFAULT:	false
+
+KEY:		tmp_bgp_daemon_route_refresh
+VALUES:		[ true | false ]
+DESC:		If set to true, a Route Refresh capability is presented at BGP OPEN message to the
+		peers (if, indeed, it was originally set by the peer). When receiving a route refresh
+		message, that is simply ignored. This does not intend to be a feature but a hack to
+		counter certain vendor bugs.
+DEFAULT:	false
 
 REFERENCES:
 
