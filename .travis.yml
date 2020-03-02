@@ -1,6 +1,6 @@
 language: C
 compiler: gcc
-dist: trusty
+dist: bionic 
 sudo: required
 
 install:
@@ -59,7 +59,7 @@ addons:
       - libsqlite3-dev
       - libmysqlclient-dev
       - libnetfilter-log-dev
-      - mysql-client-5.6
+      - mysql-client-5.7
       - libtool
       - autoconf
       - automake
