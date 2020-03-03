@@ -891,7 +891,7 @@ int bgp_attr_parse_origin(struct bgp_peer *peer, u_int16_t len, struct bgp_attr 
 {
   if (len != 1) return ERR;
 
-  memcpy(&attr->local_pref, ptr, 1);
+  memcpy(&attr->origin, ptr, 1);
   ptr += 1;
 
   return SUCCESS;
