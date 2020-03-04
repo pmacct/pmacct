@@ -44,8 +44,8 @@ def configure(config=None):
         kafka_avro_exporter = KafkaAvroExporter()
         export_pmgrpcd.EXPORTERS["kafkaavro"] = kafka_avro_exporter
     if config.kafkasimple:
-        exporter = KafkaExporter(config.bsservers, config.topic)
-        export_pmgrpcd.EXPORTERS["kafka"] = exporter
+        kafka_exporter = KafkaExporter(config.bsservers, config.topic)
+        export_pmgrpcd.EXPORTERS["kafka"] = kafka_exporter
     if config.file_exporter_file is not None:
         exporter = FileExporter(config.file_exporter_file)
         export_pmgrpcd.EXPORTERS["file"] = exporter

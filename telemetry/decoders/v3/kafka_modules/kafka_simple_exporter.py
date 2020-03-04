@@ -23,6 +23,7 @@
 #   Thomas Graf <thomas.graf@swisscom.com>
 #   Paolo Lucente <paolo@pmacct.net>
 #
+import lib_pmgrpcd
 from export_pmgrpcd import Exporter
 import ujson as json
 import os
@@ -48,7 +49,12 @@ class KafkaExporter(Exporter):
 
     def process_metric(self, datajsonstring):
         jsondata = json.loads(datajsonstring)
-        self.flatten_pmgrpcd(jsondata)
+
+        if lib_pmgrpcd.OPTIONS.flatten:
+        	self.flatten_pmgrpcd(jsondata)
+        else:
+	        json_data = json.encode(jsondata)
+	        self.send(json_data, self.topic)
 
     def flatten_pmgrpcd(self, jsondata):
         """

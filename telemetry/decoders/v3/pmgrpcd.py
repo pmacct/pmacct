@@ -382,6 +382,14 @@ def main():
         "-v", action="store_true", dest="version", help="print version of this script"
     )
     parser.add_option(
+        "-F",
+        "--no-flatten",
+        action="store_false",
+        default=config.getboolean("PMGRPCD", "flatten"),
+        dest="flatten",
+        help="disable data flattening [default: %default]",
+    )
+    parser.add_option(
         "-s",
         "--kafkasimple",
         default=config.getboolean("PMGRPCD", "kafkasimple", fallback=False),
