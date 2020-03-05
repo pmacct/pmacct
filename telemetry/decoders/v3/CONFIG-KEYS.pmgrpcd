@@ -137,6 +137,11 @@ DESC:       Number of worker threads to process input data.
 DEFAULT:    20
 EXAMPLE:    20
 -----------------------------------------------------------------
+KEY:        processpool
+DESC:       Number of processes within the ProcessPool of Kafka
+DEFAULT:    8
+EXAMPLE:    8
+-----------------------------------------------------------------
 KEY:        cisco
 DESC:       Enable/disable processing of metrics produced by Cisco devices
 DEFAULT:    True
