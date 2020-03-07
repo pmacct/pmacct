@@ -27,7 +27,7 @@
 import logging
 from pathlib import Path
 
-SCRIPTVERSION = "1.1"
+SCRIPTVERSION = "3.2"
 
 class FileNotFound(Exception):
     pass
