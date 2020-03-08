@@ -2813,11 +2813,12 @@ are template-based, the issue may be with templates not being received by
 nfacctd (in which case by enabling debug you may see "Discarded NetFlow v9/IPFIX
 packet (R: unknown template [ .. ]" messages in your logs); you can confirm
 whether templates are being exported/replicated/received with a touch of
-"tshark -d udp.port==<NFv9/IPFIX port>,cflow -R cflow.template_id"; it may also
-happen the opposite: templates are received but no data packets are being sent
-(ie. because sampling is not configured on the actual interfaces on the exporting
-device): in this case tshark would only show periodic data being received (ie.
-every 30 secs, 60 secs, etc.) rather than a more constant stream of data.
+"tshark -d udp.port==<NFv9/IPFIX port>,cflow -R cflow.template_id -2"; it may
+also happen the opposite: templates are received but no data packets are being
+sent (ie. because sampling is not configured on the actual interfaces on the
+exporting device): in this case tshark would only show periodic data being
+received (ie. every 30 secs, 60 secs, etc.) rather than a more constant stream
+of data.
 
 e) In the case of inconsistent output - inconsistent defined as replaying the
 same set of data, output produced by the daemon differs - of nfacctd/sfacctd:
