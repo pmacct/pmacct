@@ -26,7 +26,9 @@ Output encodings:
 
 Examples of supported collection scenarios:
 * TCP/JSON -> pmtelemetryd -> Kafka/JSON
+* UDP/JSON -> pmtelemetryd -> Kafka/JSON
 * gRPC/Protobuf -> pmgrpcd.py -> Kafka/Avro
+* gRPC/Protobuf -> pmgrpcd.py -> Kafka/JSON
 * gRPC/Protobuf -> pmgrpcd.py -> pmtelemetryd -> files/JSON (-> decodeGPB.py)
 
 HISTORICAL NOTES.

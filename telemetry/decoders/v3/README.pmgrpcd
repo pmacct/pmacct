@@ -32,8 +32,9 @@ shell> protoc --version
 Python interpreter
 ------------------
 It is recommended to use Python >= 3.7 although the code would work
-with less recent Python 3 interpreters. The CL examples in this doc
-will assume the use of python3.7. 
+with less recent Python 3 interpreters (ie. 3.5 and 3.6). The Command
+Line examples in the remainder of this document will assume the use of
+python3.7. 
 
 Install Python dependencies
 ---------------------------

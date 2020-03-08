@@ -138,7 +138,8 @@ DEFAULT:    20
 EXAMPLE:    20
 -----------------------------------------------------------------
 KEY:        processpool
-DESC:       Number of processes within the ProcessPool of Kafka
+DESC:       Number of processes within the ProcessPool of Kafka Avro
+	    exporter.
 DEFAULT:    8
 EXAMPLE:    8
 -----------------------------------------------------------------
@@ -213,6 +214,19 @@ EXAMPLE:    tcp://127.0.0.1:50000
 -----------------------------------------------------------------
 KEY:        kafkaavro
 DESC:       Enable/disable forwarding to Kafka and serializing to Avro.
+DEFAULT:    True
+EXAMPLE:    True
+-----------------------------------------------------------------
+KEY:        kafkasimple
+DESC:       Enable/disable forwarding to Kafka and serializing to JSON.
+	    Also, optionally flatten output objects, see 'flatten'.
+DEFAULT:    False
+EXAMPLE:    False
+-----------------------------------------------------------------
+KEY:        flatten
+DESC:       Enable/disable flattening of complex (ie. nested) input
+	    objects into multiple simpler ones suitable to be ingested
+	    in a Big Data system.
 DEFAULT:    True
 EXAMPLE:    True
 -----------------------------------------------------------------
