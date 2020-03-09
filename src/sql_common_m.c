@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -149,7 +149,7 @@ void SQL_SetENV()
   memset(ptrs, 0, sizeof(ptrs));
 
   if (config.sql_db) {
-    strncat(envbuf.ptr, "SQL_DB=", envbuf.end-envbuf.ptr);
+    strncat(envbuf.ptr, "SQL_DB=", (envbuf.end-envbuf.ptr - 1));
     strncat(envbuf.ptr, config.sql_db, envbuf.end-envbuf.ptr);
     ptrs[count] = envbuf.ptr;
     envbuf.ptr += strlen(envbuf.ptr)+1;

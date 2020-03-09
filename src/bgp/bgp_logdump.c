@@ -1127,7 +1127,7 @@ int bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *peer
 
     len = strlen(buf);
     *ptr_start = '\0';
-    strncat(new, buf, len);
+    strncat(new, buf, newlen);
   }
 
   ptr_start = NULL;
@@ -1162,7 +1162,7 @@ int bgp_peer_log_dynname(char *new, int newlen, char *old, struct bgp_peer *peer
 
     len = strlen(buf);
     *ptr_start = '\0';
-    strncat(new, buf, len);
+    strncat(new, buf, newlen);
   }
 
   return is_dyn;

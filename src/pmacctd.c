@@ -217,7 +217,7 @@ int pm_pcap_add_interface(struct pm_pcap_device *dev_ptr, char *ifname, struct p
 
     dev_ptr->active = TRUE;
     dev_ptr->pcap_if = pm_pcap_if_entry;
-    strncpy(dev_ptr->str, ifname, strlen(ifname));
+    strncpy(dev_ptr->str, ifname, (sizeof(dev_ptr->str) - 1));
 
     if (config.pcap_ifindex == PCAP_IFINDEX_SYS)
       dev_ptr->id = if_nametoindex(dev_ptr->str);
