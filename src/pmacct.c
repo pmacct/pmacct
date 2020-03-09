@@ -2166,7 +2166,7 @@ int main(int argc,char **argv)
       if (extras.off_pkt_vlen_hdr_primitives) pvlen = (struct pkt_vlen_hdr_primitives *) ((u_char *)elem + extras.off_pkt_vlen_hdr_primitives);
       else pvlen = &empty_pvlen;
 
-      if (memcmp(&acc_elem, &empty_addr, sizeof(struct pkt_primitives)) != 0 || 
+      if (memcmp(acc_elem, &empty_addr, sizeof(struct pkt_primitives)) != 0 || 
 	  memcmp(pbgp, &empty_pbgp, sizeof(struct pkt_bgp_primitives)) != 0 ||
 	  memcmp(plbgp, &empty_plbgp, sizeof(struct pkt_legacy_bgp_primitives)) != 0 ||
 	  memcmp(pnat, &empty_pnat, sizeof(struct pkt_nat_primitives)) != 0 ||
