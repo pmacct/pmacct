@@ -1,6 +1,6 @@
 #
 #   pmacct (Promiscuous mode IP Accounting package)
-#   pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+#   pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 #
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -34,6 +34,8 @@ import base64
 import json
 import sys
 import telemetry_pb2
+# import telemetry_top_pb2 <--.
+# import logical_port_pb2  <---`- JunOS Native Telemetry
 
 def main():
     for line in sys.stdin:
@@ -56,6 +58,7 @@ def main():
 
         try:
             d = telemetry_pb2.Telemetry()
+#	    d = telemetry_top_pb2.TelemetryStream() <----- JunOS Native Telemetry
             d.ParseFromString(s)
         except Exception as e:
             print("Failed GPB parsing:", len(telemetry_data), e)
