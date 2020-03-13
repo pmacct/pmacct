@@ -21,8 +21,11 @@
 #include "pmacct-data.h"
 #include "redis_common.h"
 
+/* Global variables */
+struct p_redis_host nfacctd_redis_host;
+
 /* Functions */
-void p_redis_init(struct p_redis_host *redis_host, char *log_id, int nonblock)
+void p_redis_init(struct p_redis_host *redis_host, char *log_id, int async)
 {
   if (!redis_host || !log_id) return;
 
@@ -31,6 +34,7 @@ void p_redis_init(struct p_redis_host *redis_host, char *log_id, int nonblock)
   if (config.redis_host) {
     p_redis_set_log_id(redis_host, log_id);
     p_redis_set_exp_time(redis_host, PM_REDIS_DEFAULT_EXP_TIME);
+    p_redis_set_async(redis_host, async);
  
     if (!config.cluster_name) {
       Log(LOG_ERR, "ERROR ( %s ): redis_host requires cluster_name to be specified. Exiting...\n\n", redis_host->log_id);
@@ -42,24 +46,54 @@ void p_redis_init(struct p_redis_host *redis_host, char *log_id, int nonblock)
       exit_gracefully(1);
     }
 
-    if (nonblock) {
-      redis_host->ctx = redisConnectNonBlock(config.redis_host, PM_REDIS_DEFAULT_PORT);
-    }
-    else {
-      redis_host->ctx = redisConnect(config.redis_host, PM_REDIS_DEFAULT_PORT); 
-    }
+    p_redis_connect(redis_host, TRUE);
+  }
+}
 
-    if (redis_host->ctx == NULL || redis_host->ctx->err) {
-      if (redis_host->ctx) {
-	Log(LOG_ERR, "ERROR ( %s ): [redis] Connection error: %s\n", redis_host->log_id, redis_host->ctx->errstr);
-        exit_gracefully(1);
+int p_redis_connect(struct p_redis_host *redis_host, int fatal)
+{
+  time_t now = time(NULL);
+
+  assert(redis_host);
+
+  if (config.redis_host) {
+    if (now >= (redis_host->last_conn + PM_REDIS_DEFAULT_CONN_RETRY)) {
+      if (redis_host->last_conn && redis_host->ctx) {
+	redisReconnect(redis_host->ctx);
       }
       else {
-	Log(LOG_ERR, "ERROR ( %s ): [redis] Connection error: can't allocate redis context\n", redis_host->log_id);
-        exit_gracefully(1);
+	if (redis_host->async) {
+	  // XXX: work out async interface
+	}
+	else {
+	  redis_host->ctx = redisConnect(config.redis_host, PM_REDIS_DEFAULT_PORT); 
+	}
+      }
+
+      redis_host->last_conn = now;
+
+      if (redis_host->ctx == NULL || redis_host->ctx->err) {
+	if (redis_host->ctx) {
+	  if (fatal) {
+	    Log(LOG_ERR, "ERROR ( %s ): [redis] Connection error: %s\n", redis_host->log_id, redis_host->ctx->errstr);
+	    exit_gracefully(1);
+	  }
+	  else {
+	    return ERR;
+	  }
+	}
+	else {
+	  Log(LOG_ERR, "ERROR ( %s ): [redis] Connection error: can't allocate redis context\n", redis_host->log_id);
+          exit_gracefully(1);
+	}
+      }
+      else {
+	Log(LOG_DEBUG, "DEBUG ( %s ): [redis] Connection successful\n", redis_host->log_id);
       }
     }
   }
+
+  return SUCCESS;
 }
 
 void p_redis_close(struct p_redis_host *redis_host)
@@ -78,11 +112,7 @@ void p_redis_set_string(struct p_redis_host *redis_host, char *resource, char *v
 				     resource, value);
   }
 
-  if (redis_host->reply->type == REDIS_REPLY_ERROR) {
-    Log(LOG_WARNING, "WARN ( %s ): [redis] reply='%s'\n", redis_host->log_id, redis_host->reply->str);
-  }
-
-  freeReplyObject(redis_host->reply);
+  p_redis_process_reply(redis_host);
 }
 
 void p_redis_set_int(struct p_redis_host *redis_host, char *resource, int value, int expire)
@@ -96,11 +126,27 @@ void p_redis_set_int(struct p_redis_host *redis_host, char *resource, int value,
 				     resource, value);
   }
 
-  if (redis_host->reply->type == REDIS_REPLY_ERROR) {
-    Log(LOG_WARNING, "WARN ( %s ): [redis] reply='%s'\n", redis_host->log_id, redis_host->reply->str);
-  }
+  p_redis_process_reply(redis_host);
+}
 
-  freeReplyObject(redis_host->reply);
+void p_redis_ping(struct p_redis_host *redis_host)
+{
+  redis_host->reply = redisCommand(redis_host->ctx, "PING");
+  p_redis_process_reply(redis_host);
+}
+
+void p_redis_process_reply(struct p_redis_host *redis_host)
+{
+  if (redis_host->reply) {
+    if (redis_host->reply->type == REDIS_REPLY_ERROR) {
+      Log(LOG_WARNING, "WARN ( %s ): [redis] reply='%s'\n", redis_host->log_id, redis_host->reply->str);
+    }
+
+    freeReplyObject(redis_host->reply);
+  }
+  else {
+    p_redis_connect(redis_host, FALSE);
+  }
 }
 
 void p_redis_set_log_id(struct p_redis_host *redis_host, char *log_id)
@@ -111,4 +157,9 @@ void p_redis_set_log_id(struct p_redis_host *redis_host, char *log_id)
 void p_redis_set_exp_time(struct p_redis_host *redis_host, int exp_time)
 {
   if (redis_host) redis_host->exp_time = exp_time;
+}
+
+void p_redis_set_async(struct p_redis_host *redis_host, int async)
+{
+  if (redis_host) redis_host->async = async;
 }
