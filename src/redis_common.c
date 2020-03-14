@@ -58,37 +58,42 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
 
   if (config.redis_host) {
     if (now >= (redis_host->last_conn + PM_REDIS_DEFAULT_CONN_RETRY)) {
-      if (redis_host->last_conn && redis_host->ctx) {
-	redisReconnect(redis_host->ctx);
-      }
-      else {
-	if (redis_host->async) {
-	  // XXX: work out async interface
-	}
-	else {
-	  redis_host->ctx = redisConnect(config.redis_host, PM_REDIS_DEFAULT_PORT); 
-	}
-      }
-
       redis_host->last_conn = now;
 
-      if (redis_host->ctx == NULL || redis_host->ctx->err) {
-	if (redis_host->ctx) {
-	  if (fatal) {
-	    Log(LOG_ERR, "ERROR ( %s ): [redis] Connection error: %s\n", redis_host->log_id, redis_host->ctx->errstr);
-	    exit_gracefully(1);
+      if (!redis_host->async) {
+	redis_host->ctx = redisConnect(config.redis_host, PM_REDIS_DEFAULT_PORT); 
+
+	if (redis_host->ctx == NULL || redis_host->ctx->err) {
+	  if (redis_host->ctx) {
+	    if (fatal) {
+	      Log(LOG_ERR, "ERROR ( %s ): [redis] Connection error: %s\n", redis_host->log_id, redis_host->ctx->errstr);
+	      exit_gracefully(1);
+	    }
+	    else {
+	      return ERR;
+	    }
 	  }
 	  else {
-	    return ERR;
+	    Log(LOG_ERR, "ERROR ( %s ): [redis] Connection error: can't allocate redis context\n", redis_host->log_id);
+            exit_gracefully(1);
 	  }
-	}
-	else {
-	  Log(LOG_ERR, "ERROR ( %s ): [redis] Connection error: can't allocate redis context\n", redis_host->log_id);
-          exit_gracefully(1);
+        }
+        else {
+	  Log(LOG_DEBUG, "DEBUG ( %s ): [redis] Connection successful\n", redis_host->log_id);
 	}
       }
       else {
-	Log(LOG_DEBUG, "DEBUG ( %s ): [redis] Connection successful\n", redis_host->log_id);
+	redis_host->actx = redisAsyncConnect(config.redis_host, PM_REDIS_DEFAULT_PORT);
+
+	/* 
+	   Setting back pointer to p_redis_host data structure
+	   to be used in callback functions for logs, options,
+	   etc.
+	*/ 
+	redis_host->actx->data = redis_host;
+
+	redisAsyncSetConnectCallback(redis_host->actx, p_redis_async_connect_cb);
+	redisAsyncSetDisconnectCallback(redis_host->actx, p_redis_async_disconnect_cb);
       }
     }
   }
@@ -98,41 +103,61 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
 
 void p_redis_close(struct p_redis_host *redis_host)
 {
-  redisFree(redis_host->ctx);
+  if (!redis_host->async) {
+    redisFree(redis_host->ctx);
+  }
+  else {
+    redisAsyncFree(redis_host->actx);
+  }
 }
 
 void p_redis_set_string(struct p_redis_host *redis_host, char *resource, char *value, int expire)
 {
-  if (expire > 0) {
-    redis_host->reply = redisCommand(redis_host->ctx, "SETEX %s_%d_%s %d %s", config.cluster_name, config.cluster_id,
-				     resource, redis_host->exp_time, value);
+  if (!redis_host->async) {
+    if (expire > 0) {
+      redis_host->reply = redisCommand(redis_host->ctx, "SETEX %s_%d_%s %d %s", config.cluster_name, config.cluster_id,
+  				       resource, redis_host->exp_time, value);
+    }
+    else {
+      redis_host->reply = redisCommand(redis_host->ctx, "SET %s_%d_%s %s", config.cluster_name, config.cluster_id,
+				       resource, value);
+    }
+
+    p_redis_process_reply(redis_host);
   }
   else {
-    redis_host->reply = redisCommand(redis_host->ctx, "SET %s_%d_%s %s", config.cluster_name, config.cluster_id,
-				     resource, value);
+    // XXX: work out async part
   }
-
-  p_redis_process_reply(redis_host);
 }
 
 void p_redis_set_int(struct p_redis_host *redis_host, char *resource, int value, int expire)
 {
-  if (expire >  0) {
-    redis_host->reply = redisCommand(redis_host->ctx, "SETEX %s_%d_%s %d %d", config.cluster_name, config.cluster_id,
-				     resource, redis_host->exp_time, value);
+  if (!redis_host->async) {
+    if (expire > 0) {
+      redis_host->reply = redisCommand(redis_host->ctx, "SETEX %s_%d_%s %d %d", config.cluster_name, config.cluster_id,
+				       resource, redis_host->exp_time, value);
+    }
+    else {
+      redis_host->reply = redisCommand(redis_host->ctx, "SET %s_%d_%s %d", config.cluster_name, config.cluster_id,
+				       resource, value);
+    }
+
+    p_redis_process_reply(redis_host);
   }
   else {
-    redis_host->reply = redisCommand(redis_host->ctx, "SET %s_%d_%s %d", config.cluster_name, config.cluster_id,
-				     resource, value);
+    // XXX: work out async part
   }
-
-  p_redis_process_reply(redis_host);
 }
 
 void p_redis_ping(struct p_redis_host *redis_host)
 {
-  redis_host->reply = redisCommand(redis_host->ctx, "PING");
-  p_redis_process_reply(redis_host);
+  if (!redis_host->async) {
+    redis_host->reply = redisCommand(redis_host->ctx, "PING");
+    p_redis_process_reply(redis_host);
+  }
+  else {
+    redisAsyncCommand(redis_host->actx, p_redis_async_process_reply, NULL, "PING"); 
+  }
 }
 
 void p_redis_process_reply(struct p_redis_host *redis_host)
@@ -147,6 +172,34 @@ void p_redis_process_reply(struct p_redis_host *redis_host)
   else {
     p_redis_connect(redis_host, FALSE);
   }
+}
+
+void p_redis_async_process_reply(redisAsyncContext *actx, void *reply, void *data)
+{
+  struct p_redis_host *redis_host = actx->data;
+
+  redis_host->reply = reply;
+  p_redis_process_reply(redis_host);
+}
+
+void p_redis_async_connect_cb(const redisAsyncContext *actx, int status)
+{
+  struct p_redis_host *redis_host = actx->data;
+
+  if (status != REDIS_OK) {
+    Log(LOG_ERR, "ERROR ( %s ): [redis] Connection error: %s\n", redis_host->log_id, actx->errstr);
+    return;
+  }
+  else {
+    Log(LOG_DEBUG, "DEBUG ( %s ): [redis] Connection successful\n", redis_host->log_id);
+  }
+}
+
+void p_redis_async_disconnect_cb(const redisAsyncContext *actx, int status)
+{
+  struct p_redis_host *redis_host = actx->data;
+
+  Log(LOG_DEBUG, "DEBUG ( %s ): [redis] Disconnected.\n", redis_host->log_id);
 }
 
 void p_redis_set_log_id(struct p_redis_host *redis_host, char *log_id)

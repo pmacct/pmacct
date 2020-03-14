@@ -30,6 +30,7 @@ struct p_redis_host {
   time_t last_conn;
 
   redisContext *ctx;
+  redisAsyncContext *actx;
   redisReply *reply;
 };
 
@@ -38,6 +39,10 @@ extern void p_redis_init(struct p_redis_host *, char *, int);
 extern int p_redis_connect(struct p_redis_host *, int);
 extern void p_redis_process_reply(struct p_redis_host *);
 extern void p_redis_close(struct p_redis_host *);
+
+extern void p_redis_async_process_reply(redisAsyncContext *, void *, void *);
+extern void p_redis_async_connect_cb(const redisAsyncContext *, int);
+extern void p_redis_async_disconnect_cb(const redisAsyncContext *, int);
 
 extern void p_redis_set_log_id(struct p_redis_host *, char *);
 extern void p_redis_set_exp_time(struct p_redis_host *, int);
