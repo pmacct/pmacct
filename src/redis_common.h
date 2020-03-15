@@ -16,37 +16,41 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+/* includes */
+#include <hiredis/hiredis.h>
+
 /* defines */
 #define PM_REDIS_DEFAULT_PORT		6379
 #define PM_REDIS_DEFAULT_TIMEOUT	60
 #define PM_REDIS_DEFAULT_EXP_TIME	60
+#define PM_REDIS_DEFAULT_REFRESH_TIME	(PM_REDIS_DEFAULT_EXP_TIME / 3)
 #define PM_REDIS_DEFAULT_CONN_RETRY	(PM_REDIS_DEFAULT_EXP_TIME / 5)
+
+typedef void (*redis_thread_handler)();
 
 /* structures */
 struct p_redis_host {
   char log_id[SHORTBUFLEN];
   int exp_time;
-  int async;
   time_t last_conn;
+  redis_thread_handler th_hdlr;
 
   redisContext *ctx;
-  redisAsyncContext *actx;
   redisReply *reply;
 };
 
 /* prototypes */
-extern void p_redis_init(struct p_redis_host *, char *, int);
+extern void p_redis_thread_wrapper(struct p_redis_host *);
+extern void p_redis_master_thread(void *);
+
+extern void p_redis_init(struct p_redis_host *, char *, redis_thread_handler);
 extern int p_redis_connect(struct p_redis_host *, int);
 extern void p_redis_process_reply(struct p_redis_host *);
 extern void p_redis_close(struct p_redis_host *);
 
-extern void p_redis_async_process_reply(redisAsyncContext *, void *, void *);
-extern void p_redis_async_connect_cb(const redisAsyncContext *, int);
-extern void p_redis_async_disconnect_cb(const redisAsyncContext *, int);
-
 extern void p_redis_set_log_id(struct p_redis_host *, char *);
 extern void p_redis_set_exp_time(struct p_redis_host *, int);
-extern void p_redis_set_async(struct p_redis_host *, int);
+extern void p_redis_set_thread_handler(struct p_redis_host *, redis_thread_handler);
 
 extern void p_redis_set_string(struct p_redis_host *, char *, char *, int);
 extern void p_redis_set_int(struct p_redis_host *, char *, int, int);

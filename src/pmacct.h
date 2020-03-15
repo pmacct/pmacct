@@ -106,11 +106,6 @@
 #include <zmq.h>
 #endif
 
-#if defined (WITH_REDIS)
-#include <hiredis/hiredis.h>
-#include <hiredis/async.h>
-#endif
-
 #include "pmacct-build.h"
 
 #if !defined ETHER_ADDRSTRLEN
