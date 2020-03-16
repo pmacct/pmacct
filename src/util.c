@@ -40,6 +40,9 @@
 #ifdef WITH_KAFKA
 #include "kafka_plugin.h"
 #endif
+#ifdef WITH_REDIS
+#include "hiredis/hiredis.h"
+#endif
 #include "pmacct-data.h"
 #include "ip_flow.h"
 #include "classifier.h"
@@ -1883,6 +1886,9 @@ void version_daemon(char *header)
 #endif
 #ifdef WITH_ZMQ
   printf("ZeroMQ %u.%u.%u\n", ZMQ_VERSION_MAJOR, ZMQ_VERSION_MINOR, ZMQ_VERSION_PATCH); 
+#endif
+#ifdef WITH_REDIS
+  printf("Redis %u.%u.%u\n", HIREDIS_MAJOR, HIREDIS_MINOR, HIREDIS_PATCH);
 #endif
 #ifdef WITH_AVRO
   printf("avro-c\n");
