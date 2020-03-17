@@ -278,7 +278,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
 	struct p_kafka_host *kafka_host = (struct p_kafka_host *) peer->log->kafka_host;
 
 	if (kafka_host->sd_schema[log_type] == NULL) {
-	     Log(LOG_ERR, "ERROR ( %s/%s): Missing schema for log_type=%d", config.name, bms->log_str, log_type);
+	     Log(LOG_ERR, "ERROR ( %s/%s ): Missing schema for log_type=%d", config.name, bms->log_str, log_type);
 	}
 	else if (serdes_schema_serialize_avro(kafka_host->sd_schema[log_type], &p_avro_obj, &p_avro_local_buf, &p_avro_len,
 					 kafka_host->errstr, sizeof(kafka_host->errstr))) {
