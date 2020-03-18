@@ -26,7 +26,7 @@
 #define PM_REDIS_DEFAULT_REFRESH_TIME	(PM_REDIS_DEFAULT_EXP_TIME / 3)
 #define PM_REDIS_DEFAULT_CONN_RETRY	(PM_REDIS_DEFAULT_EXP_TIME / 5)
 
-typedef void (*redis_thread_handler)();
+typedef void (*redis_thread_handler)(void *);
 
 /* structures */
 struct p_redis_host {

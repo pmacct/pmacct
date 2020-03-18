@@ -44,12 +44,20 @@ void p_redis_thread_wrapper(struct p_redis_host *redis_host)
 void p_redis_master_thread(void *rh)
 {
   struct p_redis_host *redis_host = rh;
+  unsigned int ret = 0, period = 0;
 
   p_redis_connect(redis_host, TRUE);
 
   for (;;) {
-    (*redis_host->th_hdlr)();
-    sleep(PM_REDIS_DEFAULT_REFRESH_TIME);
+    if (!ret) {
+      (*redis_host->th_hdlr)(redis_host);
+      period = PM_REDIS_DEFAULT_REFRESH_TIME;
+    }
+    else {
+      period = ret;
+    }
+
+    ret = sleep(period);
   }
 }
 
