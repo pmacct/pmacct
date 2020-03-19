@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -37,6 +37,9 @@
 #include <netinet/ip.h>
 #include <libnfnetlink/libnfnetlink.h>
 #include <libnetfilter_log/libnetfilter_log.h>
+#ifdef WITH_REDIS
+#include "redis_common.h"
+#endif
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #endif
@@ -1011,6 +1014,15 @@ int main(int argc,char **argv, char **envp)
   sigaction(SIGCHLD, &sighandler_action, NULL);
 
   kill(getpid(), SIGCHLD);
+
+#ifdef WITH_REDIS
+  if (config.redis_host) {
+    char log_id[SHORTBUFLEN];
+
+    snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
+    p_redis_init(&uacctd_redis_host, log_id, p_redis_thread_produce_common_core_handler);
+  }
+#endif
 
   sigemptyset(&signal_set);
   sigaddset(&signal_set, SIGCHLD);

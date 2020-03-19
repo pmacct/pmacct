@@ -138,6 +138,7 @@
 #endif
 
 /* Daemon identificator */ 
+#define ACCT_UNKNOWN		0	/* Undefined / unknown daemon */
 #define ACCT_PM			1	/* promiscuous mode */
 #define ACCT_NF			2	/* NetFlow */
 #define ACCT_SF			3	/* sFlow */

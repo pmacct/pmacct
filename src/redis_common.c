@@ -24,7 +24,10 @@
 
 /* Global variables */
 thread_pool_t *redis_pool;
-struct p_redis_host nfacctd_redis_host;
+struct p_redis_host nfacctd_redis_host, sfacctd_redis_host;
+struct p_redis_host pmacctd_redis_host, uacctd_redis_host;
+struct p_redis_host pmbgpd_redis_host, pmbmpd_redis_host;
+struct p_redis_host pmtelemetryd_redis_host;
 
 /* Functions */
 void p_redis_thread_wrapper(struct p_redis_host *redis_host)
@@ -38,10 +41,10 @@ void p_redis_thread_wrapper(struct p_redis_host *redis_host)
   Log(LOG_DEBUG, "DEBUG ( %s/REDIS ): %d thread(s) initialized\n", redis_host->log_id, 1);
 
   /* giving a kick to the Redis thread */
-  send_to_pool(redis_pool, p_redis_master_thread, redis_host);
+  send_to_pool(redis_pool, p_redis_master_produce_thread, redis_host);
 }
 
-void p_redis_master_thread(void *rh)
+void p_redis_master_produce_thread(void *rh)
 {
   struct p_redis_host *redis_host = rh;
   unsigned int ret = 0, period = 0;
@@ -188,4 +191,62 @@ void p_redis_set_exp_time(struct p_redis_host *redis_host, int exp_time)
 void p_redis_set_thread_handler(struct p_redis_host *redis_host, redis_thread_handler th_hdlr)
 {
   if (redis_host) redis_host->th_hdlr = th_hdlr;
+}
+
+void p_redis_thread_produce_common_core_handler(void *rh)
+{
+  struct p_redis_host *redis_host = rh;
+  char buf[SRVBUFLEN], name_and_type[SRVBUFLEN], daemon_type[VERYSHORTBUFLEN];
+
+  switch (config.acct_type) {
+  case ACCT_NF:
+    snprintf(daemon_type, sizeof(daemon_type), "%s", "nfacctd");
+    break;
+  case ACCT_SF:
+    snprintf(daemon_type, sizeof(daemon_type), "%s", "sfacctd");
+    break;
+  case ACCT_PM:
+    snprintf(daemon_type, sizeof(daemon_type), "%s", "pmacctd");
+    break;
+  case ACCT_UL: /* XXX */
+    snprintf(daemon_type, sizeof(daemon_type), "%s", "uacctd");
+    break;
+  case ACCT_PMBGP:
+    snprintf(daemon_type, sizeof(daemon_type), "%s", "pmbgpd");
+    break;
+  case ACCT_PMBMP:
+    snprintf(daemon_type, sizeof(daemon_type), "%s", "pmbmpd");
+    break;
+  case ACCT_PMTELE:
+    snprintf(daemon_type, sizeof(daemon_type), "%s", "pmtelemetryd");
+    break;
+  default:
+    break;
+  }
+  p_redis_set_string(redis_host, "daemon_type", daemon_type, PM_REDIS_DEFAULT_EXP_TIME);
+
+  snprintf(name_and_type, sizeof(name_and_type), "process_%s_%s", config.name, config.type);
+  p_redis_set_int(redis_host, name_and_type, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
+
+  if (config.acct_type < ACCT_FWPLANE_MAX) {
+    if (config.nfacctd_isis) {
+      snprintf(buf, sizeof(buf), "%s_isis", name_and_type);
+      p_redis_set_int(redis_host, buf, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
+    }
+
+    if (config.bgp_daemon) {
+      snprintf(buf, sizeof(buf), "%s_bgp", name_and_type);
+      p_redis_set_int(redis_host, buf, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
+    }
+
+    if (config.bmp_daemon) {
+      snprintf(buf, sizeof(buf), "%s_bmp", name_and_type);
+      p_redis_set_int(redis_host, buf, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
+    }
+
+    if (config.telemetry_daemon) {
+      snprintf(buf, sizeof(buf), "%s_telemetry", name_and_type);
+      p_redis_set_int(redis_host, buf, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
+    }
+  }
 }

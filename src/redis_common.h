@@ -41,7 +41,7 @@ struct p_redis_host {
 
 /* prototypes */
 extern void p_redis_thread_wrapper(struct p_redis_host *);
-extern void p_redis_master_thread(void *);
+extern void p_redis_master_produce_thread(void *);
 
 extern void p_redis_init(struct p_redis_host *, char *, redis_thread_handler);
 extern int p_redis_connect(struct p_redis_host *, int);
@@ -56,5 +56,10 @@ extern void p_redis_set_string(struct p_redis_host *, char *, char *, int);
 extern void p_redis_set_int(struct p_redis_host *, char *, int, int);
 extern void p_redis_ping(struct p_redis_host *);
 
+extern void p_redis_thread_produce_common_core_handler(void *);
+
 /* global vars */
-extern struct p_redis_host nfacctd_redis_host;
+extern struct p_redis_host nfacctd_redis_host, sfacctd_redis_host;
+extern struct p_redis_host uacctd_redis_host, pmacctd_redis_host;
+extern struct p_redis_host pmbgpd_redis_host, pmbmpd_redis_host;
+extern struct p_redis_host pmtelemetryd_redis_host;

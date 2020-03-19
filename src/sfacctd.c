@@ -44,6 +44,9 @@
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
 #endif
+#ifdef WITH_REDIS
+#include "redis_common.h"
+#endif
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #include "ndpi/ndpi_util.h"
@@ -1135,6 +1138,15 @@ int main(int argc,char **argv, char **envp)
     Log(LOG_WARNING, "WARN ( %s/core ): p_kafka_connect_to_produce() not possible due to missing --enable-rabbitmq\n", config.name);
 #endif
   }
+
+#ifdef WITH_REDIS
+  if (config.redis_host) {
+    char log_id[SHORTBUFLEN];
+
+    snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
+    p_redis_init(&sfacctd_redis_host, log_id, p_redis_thread_produce_common_core_handler);
+  }
+#endif
 
   if (alloc_sppi) {
     spp.sppi = malloc(sizeof(SFSample));

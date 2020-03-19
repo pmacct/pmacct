@@ -34,6 +34,9 @@
 #include "classifier.h"
 #include "isis/isis.h"
 #include "bmp/bmp.h"
+#ifdef WITH_REDIS
+#include "redis_common.h"
+#endif
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #include "ndpi/ndpi_util.h"
@@ -1166,6 +1169,15 @@ int main(int argc,char **argv, char **envp)
     }
     else sleep(config.pcap_sf_delay);
   }
+
+#ifdef WITH_REDIS
+  if (config.redis_host) {
+    char log_id[SHORTBUFLEN];
+
+    snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
+    p_redis_init(&pmacctd_redis_host, log_id, p_redis_thread_produce_common_core_handler);
+  }
+#endif
 
   sigemptyset(&cb_data.sig.set);
   sigaddset(&cb_data.sig.set, SIGCHLD);

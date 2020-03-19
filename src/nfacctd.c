@@ -25,6 +25,9 @@
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
 #endif
+#ifdef WITH_REDIS
+#include "redis_common.h"
+#endif
 #include "nfacctd.h"
 #include "pretag_handlers.h"
 #include "pmacct-data.h"
@@ -1183,6 +1186,15 @@ int main(int argc,char **argv, char **envp)
       Log(LOG_INFO, "INFO ( %s/core ): waiting for NetFlow/IPFIX templates on %s:%u\n", config.name, srv_string, srv_port);
     }
   }
+
+#ifdef WITH_REDIS
+  if (config.redis_host) {
+    char log_id[SHORTBUFLEN];
+
+    snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
+    p_redis_init(&nfacctd_redis_host, log_id, p_redis_thread_produce_common_core_handler); 
+  }
+#endif
 
   /* fixing NetFlow v9/IPFIX template func pointers */
   get_ext_db_ie_by_type = &ext_db_get_ie;

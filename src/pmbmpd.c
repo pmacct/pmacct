@@ -31,6 +31,9 @@
 #include "ip_flow.h"
 #include "classifier.h"
 #include "net_aggr.h"
+#ifdef WITH_REDIS
+#include "redis_common.h"
+#endif
 
 /* global var */
 struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
@@ -285,6 +288,15 @@ int main(int argc,char **argv, char **envp)
   sigaction(SIGCHLD, &sighandler_action, NULL);
 
   if (!config.bmp_daemon_port) config.bmp_daemon_port = BMP_TCP_PORT;
+
+#ifdef WITH_REDIS
+  if (config.redis_host) {
+    char log_id[SHORTBUFLEN];
+
+    snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
+    p_redis_init(&pmbmpd_redis_host, log_id, p_redis_thread_produce_common_core_handler);
+  }
+#endif
 
   bmp_prepare_daemon();
   skinny_bmp_daemon();
