@@ -20,7 +20,6 @@
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "thread_pool.h"
-#include "redis_common.h"
 
 /* Global variables */
 thread_pool_t *redis_pool;
@@ -34,7 +33,7 @@ void p_redis_thread_wrapper(struct p_redis_host *redis_host)
   assert(redis_pool);
   assert(redis_host);
 
-  Log(LOG_DEBUG, "DEBUG ( %s/REDIS ): %d thread(s) initialized\n", redis_host->log_id, 1);
+  Log(LOG_DEBUG, "DEBUG ( %s ): %d thread(s) initialized\n", redis_host->log_id, 1);
 
   /* giving a kick to the Redis thread */
   send_to_pool(redis_pool, p_redis_master_produce_thread, redis_host);
@@ -100,7 +99,7 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
       if (redis_host->ctx == NULL || redis_host->ctx->err) {
 	if (redis_host->ctx) {
 	  if (fatal) {
-	    Log(LOG_ERR, "ERROR ( %s ): [redis] Connection error: %s\n", redis_host->log_id, redis_host->ctx->errstr);
+	    Log(LOG_ERR, "ERROR ( %s ): Connection error: %s\n", redis_host->log_id, redis_host->ctx->errstr);
 	    exit_gracefully(1);
 	  }
 	  else {
@@ -108,12 +107,12 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
 	  }
 	}
 	else {
-	  Log(LOG_ERR, "ERROR ( %s ): [redis] Connection error: can't allocate redis context\n", redis_host->log_id);
+	  Log(LOG_ERR, "ERROR ( %s ): Connection error: can't allocate redis context\n", redis_host->log_id);
           exit_gracefully(1);
 	}
       }
       else {
-	Log(LOG_DEBUG, "DEBUG ( %s ): [redis] Connection successful\n", redis_host->log_id);
+	Log(LOG_DEBUG, "DEBUG ( %s ): Connection successful\n", redis_host->log_id);
       }
     }
   }
@@ -164,7 +163,7 @@ void p_redis_process_reply(struct p_redis_host *redis_host)
 {
   if (redis_host->reply) {
     if (redis_host->reply->type == REDIS_REPLY_ERROR) {
-      Log(LOG_WARNING, "WARN ( %s ): [redis] reply='%s'\n", redis_host->log_id, redis_host->reply->str);
+      Log(LOG_WARNING, "WARN ( %s ): reply='%s'\n", redis_host->log_id, redis_host->reply->str);
     }
 
     freeReplyObject(redis_host->reply);
@@ -176,7 +175,10 @@ void p_redis_process_reply(struct p_redis_host *redis_host)
 
 void p_redis_set_log_id(struct p_redis_host *redis_host, char *log_id)
 {
-  if (redis_host) strlcpy(redis_host->log_id, log_id, sizeof(redis_host->log_id));
+  if (redis_host) {
+    strlcpy(redis_host->log_id, log_id, sizeof(redis_host->log_id));
+    strncat(redis_host->log_id, "/redis", (sizeof(redis_host->log_id) - strlen(redis_host->log_id))); 
+  }
 }
 
 void p_redis_set_exp_time(struct p_redis_host *redis_host, int exp_time)
@@ -245,4 +247,13 @@ void p_redis_thread_produce_common_core_handler(void *rh)
       p_redis_set_int(redis_host, buf, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
     }
   }
+}
+
+void p_redis_thread_produce_common_plugin_handler(void *rh)
+{
+  struct p_redis_host *redis_host = rh;
+  char name_and_type[SRVBUFLEN];
+
+  snprintf(name_and_type, sizeof(name_and_type), "process_%s_%s", config.name, config.type);
+  p_redis_set_int(redis_host, name_and_type, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
 }

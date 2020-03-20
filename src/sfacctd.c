@@ -44,9 +44,6 @@
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
 #endif
-#ifdef WITH_REDIS
-#include "redis_common.h"
-#endif
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #include "ndpi/ndpi_util.h"

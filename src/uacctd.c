@@ -37,9 +37,6 @@
 #include <netinet/ip.h>
 #include <libnfnetlink/libnfnetlink.h>
 #include <libnetfilter_log/libnetfilter_log.h>
-#ifdef WITH_REDIS
-#include "redis_common.h"
-#endif
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #endif

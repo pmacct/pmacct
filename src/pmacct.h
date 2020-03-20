@@ -83,6 +83,8 @@
 #endif
 #endif
 
+#include "pmacct-defines.h"
+
 #if defined (WITH_GEOIP)
 #include <GeoIP.h>
 #if defined (WITH_GEOIPV2)
@@ -238,7 +240,10 @@ typedef struct {
 #endif
 #endif
 
-#include "pmacct-defines.h"
+#ifdef WITH_REDIS
+#include "redis_common.h"
+#endif
+
 #include "network.h"
 #include "pretag.h"
 #include "cfg.h"

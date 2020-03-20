@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /* 
@@ -644,6 +644,10 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   void *zmq_host = NULL;
 #endif
 
+#ifdef WITH_REDIS
+  struct p_redis_host redis_host;
+#endif
+
   memset(&sp, 0, sizeof(sp));
 
   memcpy(&config, cfgptr, sizeof(struct configuration));
@@ -711,6 +715,15 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   else setnonblocking(pipe_fd);
 
   refresh_timeout = 60 * 1000; /* 1 min */
+
+#ifdef WITH_REDIS
+  if (config.redis_host) {
+    char log_id[SHORTBUFLEN];
+
+    snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
+    p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_plugin_handler);
+  }
+#endif
 
   for (;;) {
     poll_again:

@@ -34,9 +34,6 @@
 #include "classifier.h"
 #include "isis/isis.h"
 #include "bmp/bmp.h"
-#ifdef WITH_REDIS
-#include "redis_common.h"
-#endif
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #include "ndpi/ndpi_util.h"

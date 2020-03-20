@@ -25,9 +25,6 @@
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
 #endif
-#ifdef WITH_REDIS
-#include "redis_common.h"
-#endif
 #include "nfacctd.h"
 #include "pretag_handlers.h"
 #include "pmacct-data.h"

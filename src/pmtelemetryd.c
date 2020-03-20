@@ -31,9 +31,6 @@
 #include "ip_flow.h"
 #include "classifier.h"
 #include "net_aggr.h"
-#ifdef WITH_REDIS
-#include "redis_common.h"
-#endif
 
 /* global var */
 struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */

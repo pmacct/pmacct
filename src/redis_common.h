@@ -57,3 +57,4 @@ extern void p_redis_set_int(struct p_redis_host *, char *, int, int);
 extern void p_redis_ping(struct p_redis_host *);
 
 extern void p_redis_thread_produce_common_core_handler(void *);
+extern void p_redis_thread_produce_common_plugin_handler(void *);
