@@ -24,10 +24,6 @@
 
 /* Global variables */
 thread_pool_t *redis_pool;
-struct p_redis_host nfacctd_redis_host, sfacctd_redis_host;
-struct p_redis_host pmacctd_redis_host, uacctd_redis_host;
-struct p_redis_host pmbgpd_redis_host, pmbmpd_redis_host;
-struct p_redis_host pmtelemetryd_redis_host;
 
 /* Functions */
 void p_redis_thread_wrapper(struct p_redis_host *redis_host)

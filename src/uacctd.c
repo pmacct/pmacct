@@ -200,6 +200,10 @@ int main(int argc,char **argv, char **envp)
 
   struct sockaddr_storage client;
 
+#ifdef WITH_REDIS
+  struct p_redis_host redis_host;
+#endif
+
 #if defined HAVE_MALLOPT
   mallopt(M_CHECK_ACTION, 0);
 #endif
@@ -1020,7 +1024,7 @@ int main(int argc,char **argv, char **envp)
     char log_id[SHORTBUFLEN];
 
     snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
-    p_redis_init(&uacctd_redis_host, log_id, p_redis_thread_produce_common_core_handler);
+    p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_core_handler);
   }
 #endif
 

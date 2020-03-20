@@ -57,9 +57,3 @@ extern void p_redis_set_int(struct p_redis_host *, char *, int, int);
 extern void p_redis_ping(struct p_redis_host *);
 
 extern void p_redis_thread_produce_common_core_handler(void *);
-
-/* global vars */
-extern struct p_redis_host nfacctd_redis_host, sfacctd_redis_host;
-extern struct p_redis_host uacctd_redis_host, pmacctd_redis_host;
-extern struct p_redis_host pmbgpd_redis_host, pmbmpd_redis_host;
-extern struct p_redis_host pmtelemetryd_redis_host;
