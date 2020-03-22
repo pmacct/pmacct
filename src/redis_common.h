@@ -25,6 +25,7 @@
 #define PM_REDIS_DEFAULT_EXP_TIME	60
 #define PM_REDIS_DEFAULT_REFRESH_TIME	(PM_REDIS_DEFAULT_EXP_TIME / 3)
 #define PM_REDIS_DEFAULT_CONN_RETRY	(PM_REDIS_DEFAULT_EXP_TIME / 5)
+#define PM_REDIS_DEFAULT_SEP		"+"
 
 typedef void (*redis_thread_handler)(void *);
 

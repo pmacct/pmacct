@@ -23,15 +23,17 @@
 
 /* includes */
 #include "pmacct.h"
-#if defined (WITH_ZMQ) && defined (WITH_JANSSON) 
 #include "pmacct-data.h"
 #include "addr.h"
+#ifdef WITH_ZMQ
 #include "zmq_common.h"
+#endif
 #include "bgp/bgp.h"
 #include "pmbgpd.h"
 #include "pmbgp.h"
 
 /* functions */
+#if defined (WITH_ZMQ) && defined (WITH_JANSSON) 
 void usage_pmbgp(char *prog)
 {
   printf("%s %s (%s)\n", PMBGP_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);

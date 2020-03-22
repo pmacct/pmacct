@@ -128,12 +128,12 @@ void p_redis_close(struct p_redis_host *redis_host)
 void p_redis_set_string(struct p_redis_host *redis_host, char *resource, char *value, int expire)
 {
   if (expire > 0) {
-    redis_host->reply = redisCommand(redis_host->ctx, "SETEX %s_%d_%s %d %s", config.cluster_name, config.cluster_id,
-				     resource, redis_host->exp_time, value);
+    redis_host->reply = redisCommand(redis_host->ctx, "SETEX %s%s%d%s%s %d %s", config.cluster_name, PM_REDIS_DEFAULT_SEP,
+				     config.cluster_id, PM_REDIS_DEFAULT_SEP, resource, redis_host->exp_time, value);
   }
   else {
-    redis_host->reply = redisCommand(redis_host->ctx, "SET %s_%d_%s %s", config.cluster_name, config.cluster_id,
-				     resource, value);
+    redis_host->reply = redisCommand(redis_host->ctx, "SET %s%s%d%s%s %s", config.cluster_name, PM_REDIS_DEFAULT_SEP,
+				     config.cluster_id, PM_REDIS_DEFAULT_SEP, resource, value);
   }
 
   p_redis_process_reply(redis_host);
@@ -142,12 +142,12 @@ void p_redis_set_string(struct p_redis_host *redis_host, char *resource, char *v
 void p_redis_set_int(struct p_redis_host *redis_host, char *resource, int value, int expire)
 {
   if (expire > 0) {
-    redis_host->reply = redisCommand(redis_host->ctx, "SETEX %s_%d_%s %d %d", config.cluster_name, config.cluster_id,
-				     resource, redis_host->exp_time, value);
+    redis_host->reply = redisCommand(redis_host->ctx, "SETEX %s%s%d%s%s %d %d", config.cluster_name, PM_REDIS_DEFAULT_SEP,
+				     config.cluster_id, PM_REDIS_DEFAULT_SEP, resource, redis_host->exp_time, value);
   }
   else {
-    redis_host->reply = redisCommand(redis_host->ctx, "SET %s_%d_%s %d", config.cluster_name, config.cluster_id,
-				     resource, value);
+    redis_host->reply = redisCommand(redis_host->ctx, "SET %s%s%d%s%s %d", config.cluster_name, PM_REDIS_DEFAULT_SEP,
+				     config.cluster_id, PM_REDIS_DEFAULT_SEP, resource, value);
   }
 
   p_redis_process_reply(redis_host);
@@ -223,27 +223,28 @@ void p_redis_thread_produce_common_core_handler(void *rh)
   }
   p_redis_set_string(redis_host, "daemon_type", daemon_type, PM_REDIS_DEFAULT_EXP_TIME);
 
-  snprintf(name_and_type, sizeof(name_and_type), "process_%s_%s", config.name, config.type);
+  snprintf(name_and_type, sizeof(name_and_type), "process%s%s%s%s", PM_REDIS_DEFAULT_SEP,
+	   config.name, PM_REDIS_DEFAULT_SEP, config.type);
   p_redis_set_int(redis_host, name_and_type, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
 
   if (config.acct_type < ACCT_FWPLANE_MAX) {
     if (config.nfacctd_isis) {
-      snprintf(buf, sizeof(buf), "%s_isis", name_and_type);
+      snprintf(buf, sizeof(buf), "%s%sisis", name_and_type, PM_REDIS_DEFAULT_SEP);
       p_redis_set_int(redis_host, buf, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
     }
 
     if (config.bgp_daemon) {
-      snprintf(buf, sizeof(buf), "%s_bgp", name_and_type);
+      snprintf(buf, sizeof(buf), "%s%sbgp", name_and_type, PM_REDIS_DEFAULT_SEP);
       p_redis_set_int(redis_host, buf, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
     }
 
     if (config.bmp_daemon) {
-      snprintf(buf, sizeof(buf), "%s_bmp", name_and_type);
+      snprintf(buf, sizeof(buf), "%s%sbmp", name_and_type, PM_REDIS_DEFAULT_SEP);
       p_redis_set_int(redis_host, buf, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
     }
 
     if (config.telemetry_daemon) {
-      snprintf(buf, sizeof(buf), "%s_telemetry", name_and_type);
+      snprintf(buf, sizeof(buf), "%s%stelemetry", name_and_type, PM_REDIS_DEFAULT_SEP);
       p_redis_set_int(redis_host, buf, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
     }
   }
@@ -254,6 +255,7 @@ void p_redis_thread_produce_common_plugin_handler(void *rh)
   struct p_redis_host *redis_host = rh;
   char name_and_type[SRVBUFLEN];
 
-  snprintf(name_and_type, sizeof(name_and_type), "process_%s_%s", config.name, config.type);
+  snprintf(name_and_type, sizeof(name_and_type), "process%s%s%s%s", PM_REDIS_DEFAULT_SEP,
+	   config.name, PM_REDIS_DEFAULT_SEP, config.type);
   p_redis_set_int(redis_host, name_and_type, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
 }
