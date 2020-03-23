@@ -588,7 +588,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if ((type == DYN_STR_SQL_TABLE || type == DYN_STR_PRINT_FILE) &&
 	     !strncmp(ptr_var, hst_string, var_len)) {
@@ -610,7 +610,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if (!strncmp(ptr_var, psi_string, var_len)) {
       char empty_peer_src_ip[] = "null";
@@ -636,7 +636,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if (!strncmp(ptr_var, tag_string, var_len)) {
       pm_id_t zero_tag = 0;
@@ -658,7 +658,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if (!strncmp(ptr_var, tag2_string, var_len)) {
       pm_id_t zero_tag = 0;
@@ -680,7 +680,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if (!strncmp(ptr_var, post_tag_string, var_len)) {
       int len;
@@ -700,7 +700,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if (!strncmp(ptr_var, post_tag2_string, var_len)) {
       int len;
@@ -720,7 +720,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, src_host_string, var_len)) {
       char empty_src_host[] = "null";
@@ -746,7 +746,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, dst_host_string, var_len)) {
       char empty_dst_host[] = "null";
@@ -772,7 +772,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, src_port_string, var_len)) {
       u_int16_t zero_port = 0;
@@ -794,7 +794,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, dst_port_string, var_len)) {
       u_int16_t zero_port = 0;
@@ -816,7 +816,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, proto_string, var_len)) {
       int null_proto = -1;
@@ -838,7 +838,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, in_iface_string, var_len)) {
       int null_in_iface = 0;
@@ -860,7 +860,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
 
     if (sub_len) ptr_substr = ptr_var + sub_len;
@@ -2645,35 +2645,6 @@ int vlen_prims_delete(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc /*, o
   }
 
   return ret;
-}
-
-void replace_string(char *str, int string_len, char *var, char *value)
-{
-  char *ptr_start, *ptr_end;
-  char buf[string_len];
-  int ptr_len, len;
-
-  if (!str || !var || !value) return;
-
-  if (!strchr(str, '$')) return;
-
-  if (string_len < ((strlen(str) + strlen(value)) - strlen(var))) return;
-
-  ptr_start = strstr(str, var);
-  if (ptr_start) {
-    len = strlen(ptr_start);
-    ptr_end = ptr_start;
-    ptr_len = strlen(var);
-    ptr_end += ptr_len;
-    len -= ptr_len;
-
-    snprintf(buf, string_len, "%s", value);
-    strncat(buf, ptr_end, len);
-
-    len = strlen(buf);
-    *ptr_start = '\0';
-    strncat(str, buf, len);
-  }
 }
 
 int delete_line_from_file(int index, char *path)

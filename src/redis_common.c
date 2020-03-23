@@ -194,7 +194,7 @@ void p_redis_set_thread_handler(struct p_redis_host *redis_host, redis_thread_ha
 void p_redis_thread_produce_common_core_handler(void *rh)
 {
   struct p_redis_host *redis_host = rh;
-  char buf[SRVBUFLEN], name_and_type[SRVBUFLEN], daemon_type[VERYSHORTBUFLEN];
+  char buf[SRVBUFLEN], name_and_type[SHORTBUFLEN], daemon_type[VERYSHORTBUFLEN];
 
   switch (config.acct_type) {
   case ACCT_NF:

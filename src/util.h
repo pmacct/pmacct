@@ -179,7 +179,6 @@ extern int pm_alphasort(const void *, const void *);
 extern void *pm_tsearch(const void *, void **, int (*compar)(const void *, const void *), size_t);
 extern void pm_tdestroy(void **, void (*free_node)(void *));
 
-extern void replace_string(char *, int, char *, char *);
 extern int delete_line_from_file(int, char *);
 
 extern void generate_random_string(char *, const int);
