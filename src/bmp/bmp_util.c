@@ -384,6 +384,33 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
   }
 }
 
+int bmp_tlv_handle_ebit(u_int16_t *type)
+{
+  if ((*type) & BMP_TLV_EBIT) {
+    (*type) ^= BMP_TLV_EBIT;
+    return TRUE;
+  }
+  else {
+    return FALSE;
+  }
+}
+
+int bmp_tlv_get_pen(char **bmp_packet_ptr, u_int32_t *pkt_size, u_int16_t *len, u_int32_t *pen)
+{
+  char *pen_ptr = NULL;
+
+  if (((*pkt_size) < (*len)) || ((*len) < 4)) return FALSE;
+
+  pen_ptr = bmp_get_and_check_length(bmp_packet_ptr, pkt_size, 4);
+  if (pen_ptr) {
+    (*pen) = (u_int32_t)(*pen_ptr);
+    (*pen) = ntohl((*pen));
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 char *bmp_tlv_type_print(u_int16_t idx, const char *prefix, const struct bmp_tlv_def *registry, int max_registry_entries)
 {
   char *out = NULL;
@@ -449,7 +476,7 @@ struct pm_list *bmp_tlv_list_new(int (*cmp)(void *val1, void *val2), void (*del)
   return tlvs;
 }
 
-int bmp_tlv_list_add(struct pm_list *tlvs, u_int16_t type, u_int16_t len, char *val) 
+int bmp_tlv_list_add(struct pm_list *tlvs, u_int32_t pen, u_int16_t type, u_int16_t len, char *val) 
 {
   struct bmp_log_tlv *tlv;
 
@@ -460,6 +487,7 @@ int bmp_tlv_list_add(struct pm_list *tlvs, u_int16_t type, u_int16_t len, char *
 
   memset(tlv, 0, sizeof(struct bmp_log_tlv));
 
+  tlv->pen = pen;
   tlv->type = type;
   tlv->len = len;
 
@@ -503,7 +531,7 @@ struct pm_list *bmp_tlv_list_copy(struct pm_list *src)
 
   dst = bmp_tlv_list_new(NULL, bmp_tlv_list_node_del);
   for (PM_ALL_LIST_ELEMENTS_RO(src, node, tlv)) {
-    ret = bmp_tlv_list_add(dst, tlv->type, tlv->len, tlv->val);
+    ret = bmp_tlv_list_add(dst, tlv->pen, tlv->type, tlv->len, tlv->val);
     if (ret == ERR) {
       bmp_tlv_list_destroy(dst);
       dst = NULL;
@@ -525,7 +553,6 @@ char *bmp_term_reason_print(u_int16_t in)
 {
   char *out = NULL;
   int value_len;
-
 
   if (in <= BMP_TERM_REASON_MAX) {
     value_len = strlen(bmp_term_reason_types[in]);

@@ -93,6 +93,8 @@ struct bmp_tlv_hdr {
   u_int16_t     len;
 } __attribute__ ((packed));
 
+#define BMP_TLV_EBIT		0x8000 /* BMP TLV enterprise bit */
+
 struct bmp_tlv_def {
   char *name;
   int semantics;
