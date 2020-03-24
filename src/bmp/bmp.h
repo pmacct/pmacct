@@ -287,6 +287,7 @@ struct bmp_data {
 #include "bmp_msg.h"
 #include "bmp_util.h"
 #include "bmp_lookup.h"
+#include "bmp_tlv.h"
 
 /* prototypes */
 extern void bmp_daemon_wrapper();
