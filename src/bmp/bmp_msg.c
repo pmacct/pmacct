@@ -54,8 +54,9 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
   }
 
   for (msg_start_len = pkt_remaining_len = len; pkt_remaining_len; msg_start_len = pkt_remaining_len) {
-    if (!(bch = (struct bmp_common_hdr *) bmp_get_and_check_length(&bmp_packet_ptr, &pkt_remaining_len, sizeof(struct bmp_common_hdr))))
+    if (!(bch = (struct bmp_common_hdr *) bmp_get_and_check_length(&bmp_packet_ptr, &pkt_remaining_len, sizeof(struct bmp_common_hdr)))) { 
       return msg_start_len;
+    }
 
     if (bch->version != BMP_V3 && bch->version != BMP_V4) {
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: unknown BMP version: %u\n",
@@ -97,12 +98,16 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
     case BMP_MSG_ROUTE_MIRROR:
       bmp_process_msg_route_mirror(&bmp_packet_ptr, &msg_len, bmpp);
       break;
+    case BMP_MSG_TMP_RPAT:
+      bmp_process_msg_rpat(&bmp_packet_ptr, &msg_len, bmpp);
+      break;
     default:
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: unknown message type (%u)\n",
 	  config.name, bms->log_str, peer->addr_str, bch->type);
       break;
     }
 
+    printf("CI PASSO: orig_msg_len=%d msg_len=%d pkt_remaining_len=%d\n", orig_msg_len, msg_len, pkt_remaining_len);
     /* sync-up status of pkt_remaining_len to bmp_packet_ptr */
     pkt_remaining_len -= (orig_msg_len - msg_len);
  
