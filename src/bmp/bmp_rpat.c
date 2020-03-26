@@ -54,7 +54,7 @@ void bmp_process_msg_rpat(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
 
   bmp_rpat_common_hdr_get_v_flag(brch, &bdata.family);
   bmp_rpat_common_hdr_get_bgp_id(brch, &bdata.bgp_id);
-  bmp_rpat_common_hdr_get_rd(brch, &bdata.rd);
+  bmp_rpat_common_hdr_get_rd(brch, &bdata.chars.rd);
   bmp_rpat_common_hdr_get_prefix(brch, &blrpat.prefix, &bdata.family);
   bmp_rpat_common_hdr_get_prefix_len(brch, &blrpat.prefix_len);
 

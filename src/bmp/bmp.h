@@ -269,6 +269,7 @@ struct bmp_chars {
   u_int8_t is_filtered;
   u_int8_t is_out;
   u_int8_t is_loc;
+  rd_t rd;
 
   /* non-key */
   struct pm_list *tlvs;
@@ -278,7 +279,6 @@ struct bmp_data {
   u_int8_t family;
   struct host_addr peer_ip;
   struct host_addr bgp_id;
-  rd_t rd;
   u_int32_t peer_asn;
   struct bmp_chars chars;
   struct timeval tstamp;

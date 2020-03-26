@@ -344,10 +344,10 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_l
       json_object_set_new_nocheck(obj, "is_out", json_integer((json_int_t)bdata->chars.is_out));
     }
 
-    if (!is_empty_256b(&bdata->rd, sizeof(bdata->rd))) {
+    if (!is_empty_256b(&bdata->chars.rd, sizeof(bdata->chars.rd))) {
       char rd_str[SHORTSHORTBUFLEN];
 
-      bgp_rd2str(rd_str, &bdata->rd);
+      bgp_rd2str(rd_str, &bdata->chars.rd);
       json_object_set_new_nocheck(obj, "rd", json_string(rd_str));
     }
 
@@ -445,10 +445,10 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_l
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
-    if (!is_empty_256b(&bdata->rd, sizeof(bdata->rd))) {
+    if (!is_empty_256b(&bdata->chars.rd, sizeof(bdata->chars.rd))) {
       char rd_str[SHORTSHORTBUFLEN];
 
-      bgp_rd2str(rd_str, &bdata->rd);
+      bgp_rd2str(rd_str, &bdata->chars.rd);
       pm_avro_check(avro_value_get_by_name(obj, "rd", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
       pm_avro_check(avro_value_set_string(&p_avro_branch, rd_str));
@@ -715,10 +715,10 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
     addr_to_str(ip_address, &blpu->local_ip);
     json_object_set_new_nocheck(obj, "local_ip", json_string(ip_address));
 
-    if (!is_empty_256b(&bdata->rd, sizeof(bdata->rd))) {
+    if (!is_empty_256b(&bdata->chars.rd, sizeof(bdata->chars.rd))) {
       char rd_str[SHORTSHORTBUFLEN];
 
-      bgp_rd2str(rd_str, &bdata->rd);
+      bgp_rd2str(rd_str, &bdata->chars.rd);
       json_object_set_new_nocheck(obj, "rd", json_string(rd_str));
     }
 
@@ -825,10 +825,10 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
     pm_avro_check(avro_value_get_by_name(obj, "local_ip", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_string(&p_avro_field, ip_address));
 
-    if (!is_empty_256b(&bdata->rd, sizeof(bdata->rd))) {
+    if (!is_empty_256b(&bdata->chars.rd, sizeof(bdata->chars.rd))) {
       char rd_str[SHORTSHORTBUFLEN];
 
-      bgp_rd2str(rd_str, &bdata->rd);
+      bgp_rd2str(rd_str, &bdata->chars.rd);
       pm_avro_check(avro_value_get_by_name(obj, "rd", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
       pm_avro_check(avro_value_set_string(&p_avro_branch, rd_str));
