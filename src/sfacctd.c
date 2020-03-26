@@ -210,6 +210,7 @@ int main(int argc,char **argv, char **envp)
   memset(&spp, 0, sizeof(spp));
   memset(&class, 0, sizeof(class));
   memset(&xflow_status_table, 0, sizeof(xflow_status_table));
+  memset(empty_mem_area_256b, 0, sizeof(empty_mem_area_256b));
 
   memset(&bpas_table, 0, sizeof(bpas_table));
   memset(&blp_table, 0, sizeof(blp_table));

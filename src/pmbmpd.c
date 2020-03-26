@@ -90,6 +90,7 @@ int main(int argc,char **argv, char **envp)
   memset(cfg_cmdline, 0, sizeof(cfg_cmdline));
   memset(&config, 0, sizeof(struct configuration));
   memset(&config_file, 0, sizeof(config_file));
+  memset(empty_mem_area_256b, 0, sizeof(empty_mem_area_256b));
 
   log_notifications_init(&log_notifications);
   config.acct_type = ACCT_PMBMP;

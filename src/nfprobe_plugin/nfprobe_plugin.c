@@ -1415,6 +1415,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   signal(SIGCHLD, SIG_IGN);
 	    
   memset(&cb_ctxt, '\0', sizeof(cb_ctxt));
+  memset(empty_mem_area_256b, 0, sizeof(empty_mem_area_256b));
 
   init_flowtrack(&flowtrack);
 

@@ -96,6 +96,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     exit_gracefully(1);
   }
 
+  memset(empty_mem_area_256b, 0, sizeof(empty_mem_area_256b));
   memset(&receivers, 0, sizeof(receivers));
   memset(&req, 0, sizeof(req));
   reload_map = FALSE;

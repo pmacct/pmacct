@@ -150,6 +150,8 @@ void sql_init_global_buffers()
    check */ 
 void sql_init_default_values(struct extra_primitives *extras)
 {
+  memset(empty_mem_area_256b, 0, sizeof(empty_mem_area_256b));
+
   if (config.proc_priority) {
     int ret;
 

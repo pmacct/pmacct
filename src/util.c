@@ -3202,3 +3202,17 @@ void reload_logs()
     config.logfile_fd = open_output_file(config.logfile, "a", FALSE);
   }
 }
+
+int is_empty_256b(void *area, int len)
+{
+  if (len <= SRVBUFLEN) {
+    if (!memcmp(area, empty_mem_area_256b, len)) {
+      return TRUE;
+    }
+    else {
+      return FALSE;
+    } 
+  }
+
+  return ERR;
+}

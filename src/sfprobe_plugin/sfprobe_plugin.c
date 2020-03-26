@@ -649,6 +649,7 @@ void sfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 #endif
 
   memset(&sp, 0, sizeof(sp));
+  memset(empty_mem_area_256b, 0, sizeof(empty_mem_area_256b));
 
   memcpy(&config, cfgptr, sizeof(struct configuration));
   recollect_pipe_memory(ptr);

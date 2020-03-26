@@ -363,6 +363,7 @@ int main(int argc,char **argv, char **envp)
   memset(&tunnel_registry, 0, sizeof(tunnel_registry));
   memset(&reload_map_tstamp, 0, sizeof(reload_map_tstamp));
   memset(&device, 0, sizeof(device));
+  memset(empty_mem_area_256b, 0, sizeof(empty_mem_area_256b));
   pm_pcap_device_initialize(&devices);
   pm_pcap_device_initialize(&bkp_devices);
   log_notifications_init(&log_notifications);

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -119,6 +119,7 @@ void P_init_default_values()
   memset(pending_queries_queue, 0, (sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));
   memset(sa.base, 0, sa.size);
   memset(&flushtime, 0, sizeof(flushtime));
+  memset(empty_mem_area_256b, 0, sizeof(empty_mem_area_256b));
 
   /* handling purge preprocessor */
   set_preprocess_funcs(config.sql_preprocess, &prep, PREP_DICT_PRINT);

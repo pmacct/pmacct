@@ -428,7 +428,7 @@ extern int debug;
 extern struct configuration config; /* global configuration structure */
 extern struct plugins_list_entry *plugins_list; /* linked list of each plugin configuration */
 extern pid_t failed_plugins[MAX_N_PLUGINS]; /* plugins failed during startup phase */
-extern u_char dummy_tlhdr[16];
+extern u_char dummy_tlhdr[16], empty_mem_area_256b[SRVBUFLEN];
 extern struct pm_pcap_device device;
 extern struct pm_pcap_devices devices, bkp_devices;
 extern struct pm_pcap_interfaces pm_pcap_if_map, pm_bkp_pcap_if_map;

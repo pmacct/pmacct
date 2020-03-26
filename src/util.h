@@ -111,6 +111,7 @@ extern u_int32_t next_prime(u_int32_t);
 extern char *null_terminate(char *, int);
 extern char *uint_print(void *, int, int);
 extern void reload_logs();
+extern int is_empty_256b(void *, int);
 
 extern char *compose_json_str(void *);
 extern void write_and_free_json(FILE *, void *);

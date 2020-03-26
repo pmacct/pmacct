@@ -241,6 +241,7 @@ int main(int argc,char **argv, char **envp)
   memset(&cb_data, 0, sizeof(cb_data));
   memset(&tunnel_registry, 0, sizeof(tunnel_registry));
   memset(&reload_map_tstamp, 0, sizeof(reload_map_tstamp));
+  memset(empty_mem_area_256b, 0, sizeof(empty_mem_area_256b));
   log_notifications_init(&log_notifications);
   config.acct_type = ACCT_PM;
 
