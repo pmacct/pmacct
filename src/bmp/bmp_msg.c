@@ -107,7 +107,6 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
       break;
     }
 
-    printf("CI PASSO: orig_msg_len=%d msg_len=%d pkt_remaining_len=%d\n", orig_msg_len, msg_len, pkt_remaining_len);
     /* sync-up status of pkt_remaining_len to bmp_packet_ptr */
     pkt_remaining_len -= (orig_msg_len - msg_len);
  
@@ -315,6 +314,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
 
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, &bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
+  bmp_peer_hdr_get_rd(bph, &bdata.rd);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
 
@@ -635,6 +635,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, &bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
+  bmp_peer_hdr_get_rd(bph, &bdata.rd);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
 
@@ -813,6 +814,7 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
 
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, &bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
+  bmp_peer_hdr_get_rd(bph, &bdata.rd);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
   bmp_stats_hdr_get_count(bsh, &count);
@@ -1030,6 +1032,15 @@ void bmp_peer_hdr_get_bgp_id(struct bmp_peer_hdr *bph, struct host_addr *a)
   if (bph && a) {
     a->family = AF_INET;
     a->address.ipv4.s_addr = bph->bgp_id;
+  }
+}
+
+void bmp_peer_hdr_get_rd(struct bmp_peer_hdr *bph, rd_t *rd)
+{
+  if (bph && rd) {
+    if (bph->type == BMP_PEER_TYPE_L3VPN || bph->type == BMP_PEER_TYPE_LOC_RIB) {
+      memcpy(rd, bph->rd, RD_LEN);
+    }
   }
 }
 

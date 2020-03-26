@@ -278,6 +278,7 @@ struct bmp_data {
   u_int8_t family;
   struct host_addr peer_ip;
   struct host_addr bgp_id;
+  rd_t rd;
   u_int32_t peer_asn;
   struct bmp_chars chars;
   struct timeval tstamp;

@@ -58,6 +58,7 @@ extern void bmp_process_msg_rpat(char **, u_int32_t *, struct bmp_peer *);
 
 extern void bmp_rpat_common_hdr_get_v_flag(struct bmp_rpat_common_hdr *, u_int8_t *);
 extern void bmp_rpat_common_hdr_get_bgp_id(struct bmp_rpat_common_hdr *, struct host_addr *);
+extern void bmp_rpat_common_hdr_get_rd(struct bmp_rpat_common_hdr *, rd_t *);
 extern void bmp_rpat_common_hdr_get_prefix(struct bmp_rpat_common_hdr *, struct host_addr *, u_int8_t *);
 extern void bmp_rpat_common_hdr_get_prefix_len(struct bmp_rpat_common_hdr *, u_int8_t *);
 

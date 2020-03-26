@@ -54,7 +54,7 @@ void bmp_process_msg_rpat(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
 
   bmp_rpat_common_hdr_get_v_flag(brch, &bdata.family);
   bmp_rpat_common_hdr_get_bgp_id(brch, &bdata.bgp_id);
-  // XXX: collect RD info
+  bmp_rpat_common_hdr_get_rd(brch, &bdata.rd);
   bmp_rpat_common_hdr_get_prefix(brch, &blrpat.prefix, &bdata.family);
   bmp_rpat_common_hdr_get_prefix_len(brch, &blrpat.prefix_len);
 
@@ -142,6 +142,13 @@ void bmp_rpat_common_hdr_get_bgp_id(struct bmp_rpat_common_hdr *brch, struct hos
   if (brch && a) {
     a->family = AF_INET;
     a->address.ipv4.s_addr = brch->bgp_id;
+  }
+}
+
+void bmp_rpat_common_hdr_get_rd(struct bmp_rpat_common_hdr *brch, rd_t *rd)
+{
+  if (brch && rd) {
+    memcpy(rd, brch->rd, RD_LEN);
   }
 }
 
