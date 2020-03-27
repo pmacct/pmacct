@@ -109,6 +109,9 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
     case BMP_LOG_TYPE_PEER_DOWN:
       ret = bmp_log_msg_peer_down(peer, bdata, tlvs, (struct bmp_log_peer_down *) log_data, event_type, output, obj);
       break;
+    case BMP_LOG_TYPE_RPAT:
+      ret = bmp_log_msg_rpat(peer, bdata, tlvs, (struct bmp_log_rpat *) log_data, event_type, output, obj);
+      break;
     default:
       break;
     }
@@ -210,6 +213,9 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
       break;
     case BMP_LOG_TYPE_PEER_DOWN:
       ret = bmp_log_msg_peer_down(peer, bdata, tlvs, (struct bmp_log_peer_down *) log_data, event_type, output, &p_avro_obj);
+      break;
+    case BMP_LOG_TYPE_RPAT:
+      ret = bmp_log_msg_rpat(peer, bdata, tlvs, (struct bmp_log_rpat *) log_data, event_type, output, &p_avro_obj);
       break;
     default:
       break;

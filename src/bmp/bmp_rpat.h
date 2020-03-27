@@ -47,10 +47,16 @@ struct bmp_log_rpat {
   struct host_addr prefix;
   u_int8_t prefix_len;
   u_int8_t event_idx;
-  struct timeval tstamp;
   u_int32_t path_id;
   afi_t afi;
   safi_t safi;
+};
+
+#define BMP_RPAT_INFO_MAX		-1
+#define BMP_RPAT_INFO_ENTRIES		8
+
+static const struct bmp_tlv_def __attribute__((unused)) bmp_rpat_info_types[] = {
+  { "", BMP_TLV_SEM_UNKNOWN }
 };
 
 /* prototypes */
@@ -66,4 +72,6 @@ extern void bmp_rpat_event_hdr_get_index(struct bmp_rpat_event_hdr *, u_int8_t *
 extern void bmp_rpat_event_hdr_get_tstamp(struct bmp_rpat_event_hdr *, struct timeval *tv);
 extern void bmp_rpat_event_hdr_get_path_id(struct bmp_rpat_event_hdr *, u_int32_t *);
 extern void bmp_rpat_event_hdr_get_afi_safi(struct bmp_rpat_event_hdr *, afi_t *, safi_t *);
+
+extern int bmp_log_msg_rpat(struct bgp_peer *, struct bmp_data *, struct pm_list *, struct bmp_log_rpat *, char *, int, void *);
 #endif //BMP_RPAT_H

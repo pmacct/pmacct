@@ -61,6 +61,7 @@ void bmp_process_msg_rpat(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
   tecount = brch->events_count;
   telen = ntohs(brch->events_length);
 
+  /* Events parsing */
   for (idx = 0; (idx < tecount) && (telen > 0); idx++) {
     u_int32_t orig_loc_len, rmn_loc_len;
     int ret, elen;
@@ -85,10 +86,11 @@ void bmp_process_msg_rpat(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
     orig_loc_len = rmn_loc_len = (rmn_loc_len - sizeof(struct bmp_rpat_event_hdr));
     
     bmp_rpat_event_hdr_get_index(breh, &blrpat.event_idx);
-    bmp_rpat_event_hdr_get_tstamp(breh, &blrpat.tstamp);
+    bmp_rpat_event_hdr_get_tstamp(breh, &bdata.tstamp);
     bmp_rpat_event_hdr_get_path_id(breh, &blrpat.path_id);
     bmp_rpat_event_hdr_get_afi_safi(breh, &blrpat.afi, &blrpat.safi);
 
+    /* event TLVs parsing */
     while (rmn_loc_len) {
       if (!(bth = (struct bmp_tlv_hdr *) bmp_get_and_check_length(bmp_packet, &rmn_loc_len, sizeof(struct bmp_tlv_hdr)))) {
 	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [rpat] packet discarded: failed bmp_get_and_check_length() BMP TLV hdr\n",
@@ -116,8 +118,17 @@ void bmp_process_msg_rpat(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
       }
     }
 
-    // XXX: log
-    bmp_tlv_list_destroy(tlvs);
+    if (bms->msglog_backend_methods) {
+      char event_type[] = "log";
+
+      bmp_log_msg(peer, &bdata, tlvs, &blrpat, bgp_peer_log_seq_get(&bms->log_seq), event_type, config.bmp_daemon_msglog_output, BMP_LOG_TYPE_RPAT);
+    }
+
+    if (bms->dump_backend_methods) bmp_dump_se_ll_append(peer, &bdata, tlvs, &blrpat, BMP_LOG_TYPE_RPAT);
+
+    if (bms->msglog_backend_methods || bms->dump_backend_methods) bgp_peer_log_seq_increment(&bms->log_seq);
+
+    if (!pm_listcount(tlvs) || !bms->dump_backend_methods) bmp_tlv_list_destroy(tlvs);
 
     (*len) -= orig_loc_len;
     telen -= elen;
@@ -206,4 +217,62 @@ void bmp_rpat_event_hdr_get_afi_safi(struct bmp_rpat_event_hdr *breh, afi_t *afi
       (*safi) = breh->safi;
     }
   }
+}
+
+int bmp_log_msg_rpat(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, struct bmp_log_rpat *blrpat, char *event_type, int output, void *vobj)
+{
+  int ret = 0;
+
+  if (!peer || !bdata || !blrpat || !vobj) return ERR;
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    char bmp_msg_type[] = "rpat";
+    char ip_address[INET6_ADDRSTRLEN];
+    json_t *obj = (json_t *) vobj;
+
+    json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
+
+    if (!is_empty_256b(&bdata->chars.rd, sizeof(bdata->chars.rd))) {
+      char rd_str[SHORTSHORTBUFLEN];
+
+      bgp_rd2str(rd_str, &bdata->chars.rd);
+      json_object_set_new_nocheck(obj, "rd", json_string(rd_str));
+    }
+
+    addr_to_str(ip_address, &blrpat->prefix);
+    json_object_set_new_nocheck(obj, "prefix", json_string(ip_address));
+    json_object_set_new_nocheck(obj, "prefix_len", json_integer((json_int_t)blrpat->prefix_len));
+
+    json_object_set_new_nocheck(obj, "bgp_id", json_string(inet_ntoa(bdata->bgp_id.address.ipv4)));
+
+    if (blrpat->path_id) {
+      json_object_set_new_nocheck(obj, "path_id", json_integer((json_int_t)blrpat->path_id));
+    }
+    json_object_set_new_nocheck(obj, "afi", json_integer((json_int_t)blrpat->afi));
+    json_object_set_new_nocheck(obj, "safi", json_integer((json_int_t)blrpat->safi));
+
+    if (tlvs) {
+      char *type = NULL, *value = NULL;
+      struct pm_listnode *node = NULL;
+      struct bmp_log_tlv *tlv = NULL;
+
+      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
+	type = bmp_tlv_type_print(tlv->type, "bmp_rpat_info", bmp_rpat_info_types, BMP_RPAT_INFO_MAX);
+	value = bmp_tlv_value_print(tlv, bmp_rpat_info_types, BMP_RPAT_INFO_MAX);
+	json_object_set_new_nocheck(obj, type, json_string(value));
+	free(type);
+	free(value);
+      }
+    }
+#endif
+  }
+  else if ((output == PRINT_OUTPUT_AVRO_BIN) ||
+	   (output == PRINT_OUTPUT_AVRO_JSON)) {
+#ifdef WITH_AVRO
+    // XXX: to be worked out later
+#endif
+  }
+
+  return ret;
 }
