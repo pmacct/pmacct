@@ -485,6 +485,7 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
 
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, &bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
+  bmp_peer_hdr_get_rd(bph, &bdata.chars.rd);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
 
