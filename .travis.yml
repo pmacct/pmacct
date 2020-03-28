@@ -10,7 +10,7 @@ install:
   - git clone https://github.com/edenhill/librdkafka
   - cd librdkafka && ./configure && make && sudo make install && cd ..
   - git clone https://github.com/alanxz/rabbitmq-c
-  - cd rabbitmq-c && mkdir build && cd build && cmake .. && sudo cmake --build . --target install && cd .. && cd ..
+  - cd rabbitmq-c && mkdir build && cd build && cmake -DCMAKE_INSTALL_LIBDIR=lib .. && sudo cmake --build . --target install && cd .. && cd ..
   - git clone --recursive https://github.com/maxmind/libmaxminddb 
   - cd libmaxminddb && ./bootstrap && ./configure && make && sudo make install && cd ..
   - git clone -b 3.0-stable https://github.com/ntop/nDPI
