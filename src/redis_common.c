@@ -204,10 +204,12 @@ void p_redis_thread_produce_common_core_handler(void *rh)
     snprintf(daemon_type, sizeof(daemon_type), "%s", "sfacctd");
     break;
   case ACCT_PM:
-    snprintf(daemon_type, sizeof(daemon_type), "%s", "pmacctd");
-    break;
-  case ACCT_UL: /* XXX */
-    snprintf(daemon_type, sizeof(daemon_type), "%s", "uacctd");
+    if (config.uacctd_group) {
+      snprintf(daemon_type, sizeof(daemon_type), "%s", "uacctd");
+    }
+    else {
+      snprintf(daemon_type, sizeof(daemon_type), "%s", "pmacctd");
+    }
     break;
   case ACCT_PMBGP:
     snprintf(daemon_type, sizeof(daemon_type), "%s", "pmbgpd");
