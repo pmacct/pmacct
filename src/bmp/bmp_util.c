@@ -237,7 +237,6 @@ int bgp_extra_data_cmp_bmp(struct bgp_msg_extra_data *a, struct bgp_msg_extra_da
 
     if (bca->peer_type == bcb->peer_type &&
 	bca->is_post == bcb->is_post &&
-	bca->is_2b_asn == bcb->is_2b_asn &&
 	bca->is_filtered == bcb->is_filtered &&
 	bca->is_out == bcb->is_out &&
         bca->is_loc == bcb->is_loc &&
