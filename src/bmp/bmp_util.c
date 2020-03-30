@@ -240,7 +240,8 @@ int bgp_extra_data_cmp_bmp(struct bgp_msg_extra_data *a, struct bgp_msg_extra_da
 	bca->is_2b_asn == bcb->is_2b_asn &&
 	bca->is_filtered == bcb->is_filtered &&
 	bca->is_out == bcb->is_out &&
-        bca->is_loc == bcb->is_loc) {
+        bca->is_loc == bcb->is_loc &&
+	!memcmp(&bca->rd, &bcb->rd, sizeof(bca->rd))) {
       return FALSE;
     }
     else {
