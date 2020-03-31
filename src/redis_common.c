@@ -19,6 +19,7 @@
 /* includes */
 #include "pmacct.h"
 #include "pmacct-data.h"
+#include "addr.h"
 #include "thread_pool.h"
 
 /* Global variables */
@@ -86,6 +87,11 @@ void p_redis_init(struct p_redis_host *redis_host, char *log_id, redis_thread_ha
 
 int p_redis_connect(struct p_redis_host *redis_host, int fatal)
 {
+  struct sockaddr_storage dest;
+  socklen_t dest_len = sizeof(dest);
+  char dest_str[INET6_ADDRSTRLEN];
+  int dest_port = PM_REDIS_DEFAULT_PORT;
+
   time_t now = time(NULL);
 
   assert(redis_host);
@@ -94,7 +100,12 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
     if (now >= (redis_host->last_conn + PM_REDIS_DEFAULT_CONN_RETRY)) {
       redis_host->last_conn = now;
 
-      redis_host->ctx = redisConnect(config.redis_host, PM_REDIS_DEFAULT_PORT); 
+      /* round of parsing and validation */
+      parse_hostport(config.redis_host, (struct sockaddr *)&dest, &dest_len);
+      sa_to_str(dest_str, sizeof(dest_str), (struct sockaddr *)&dest);
+      sa_to_port(&dest_port, (struct sockaddr *)&dest);
+
+      redis_host->ctx = redisConnect(dest_str, dest_port);
 
       if (redis_host->ctx == NULL || redis_host->ctx->err) {
 	if (redis_host->ctx) {

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -46,6 +46,7 @@ extern int host_addr_mask_cmp(struct host_addr *, struct host_mask *, struct hos
 extern unsigned int raw_to_sa(struct sockaddr *, u_char *, u_int16_t port, u_int8_t);
 extern unsigned int raw_to_addr(struct host_addr *, u_char *, u_int8_t);
 extern unsigned int sa_to_str(char *, int, const struct sockaddr *);
+extern unsigned int sa_to_port(int *, const struct sockaddr *);
 extern void *pm_htonl6(void *);
 extern void *pm_ntohl6(void *);
 extern u_int64_t pm_htonll(u_int64_t);

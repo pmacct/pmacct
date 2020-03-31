@@ -3046,10 +3046,10 @@ DESC:		Same as classifier_giveup_proto_tcp but for flows which IP protocol is di
 DEFAULT:	8
 
 KEY:		redis_host
-DESC:		Defines the Redis server IP address, ie. "127.0.0.1". Port can't be specified and it
-		is assumed the default Redis server port 6379. This directive, in conjunction with
-		the cluster_* ones, enables forming a cluster with the other daemons pointed to the
-		same <redis_host, cluster_name>. It needs pmacct to be compiled with --enable-redis. 
+DESC:		Defines the Redis server IP address and port to connect to, ie. "127.0.0.1:6379". 
+		The port needs to be specified. This directive, in conjunction with the cluster_*
+		ones, enables forming a cluster with the other daemons pointed to the same
+		<redis_host, cluster_name>. It needs pmacct to be compiled with --enable-redis. 
 DEFAULT:	none
 
 KEY:		cluster_name

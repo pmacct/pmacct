@@ -507,6 +507,28 @@ unsigned int sa_to_str(char *str, int len, const struct sockaddr *sa)
   return FALSE;
 }
 
+unsigned int sa_to_port(int *port, const struct sockaddr *sa)
+{
+  struct sockaddr_in *sa4 = (struct sockaddr_in *)sa;
+  struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)sa;
+
+  if (!port) return FALSE;
+
+  if (sa->sa_family == AF_INET) {
+    (*port) = ntohs(sa4->sin_port);
+    return sa->sa_family;
+  }
+
+  if (sa->sa_family == AF_INET6) {
+    (*port) = ntohs(sa6->sin6_port);
+    return sa->sa_family;
+  }
+
+  (*port) = 0;
+
+  return FALSE;
+}
+
 /*
  * pm_htonl6(): same as htonl() for IPv6 addresses; no checks are done
  * on the length of the buffer.
