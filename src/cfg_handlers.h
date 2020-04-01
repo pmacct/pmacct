@@ -39,6 +39,7 @@ extern int cfg_key_proc_priority(char *, char *, char *);
 extern int cfg_key_cluster_name(char *, char *, char *);
 extern int cfg_key_cluster_id(char *, char *, char *);
 extern int cfg_key_redis_host(char *, char *, char *);
+extern int cfg_key_redis_db(char *, char *, char *);
 extern int cfg_key_aggregate(char *, char *, char *);
 extern int cfg_key_aggregate_primitives(char *, char *, char *);
 extern int cfg_key_snaplen(char *, char *, char *);

@@ -91,6 +91,7 @@ struct configuration {
   char *cluster_name;
   int cluster_id;
   char *redis_host;
+  int redis_db;
   int sock;
   int bgp_sock;
   int acct_type; 

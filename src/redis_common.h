@@ -33,6 +33,7 @@ typedef void (*redis_thread_handler)(void *);
 struct p_redis_host {
   char log_id[SHORTBUFLEN];
   int exp_time;
+  int db;
   time_t last_conn;
   redis_thread_handler th_hdlr;
 
@@ -50,12 +51,14 @@ extern void p_redis_process_reply(struct p_redis_host *);
 extern void p_redis_close(struct p_redis_host *);
 
 extern void p_redis_set_log_id(struct p_redis_host *, char *);
+extern void p_redis_set_db(struct p_redis_host *, int);
 extern void p_redis_set_exp_time(struct p_redis_host *, int);
 extern void p_redis_set_thread_handler(struct p_redis_host *, redis_thread_handler);
 
 extern void p_redis_set_string(struct p_redis_host *, char *, char *, int);
 extern void p_redis_set_int(struct p_redis_host *, char *, int, int);
 extern void p_redis_ping(struct p_redis_host *);
+extern void p_redis_select_db(struct p_redis_host *);
 
 extern void p_redis_thread_produce_common_core_handler(void *);
 extern void p_redis_thread_produce_common_plugin_handler(void *);

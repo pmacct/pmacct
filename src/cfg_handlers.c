@@ -422,6 +422,19 @@ int cfg_key_redis_host(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_redis_db(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+
+  for (; list; list = list->next, changes++) list->cfg.redis_db = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'redis_db'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_snaplen(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

@@ -68,6 +68,7 @@ void p_redis_init(struct p_redis_host *redis_host, char *log_id, redis_thread_ha
 
   if (config.redis_host) {
     p_redis_set_log_id(redis_host, log_id);
+    p_redis_set_db(redis_host, config.redis_db);
     p_redis_set_exp_time(redis_host, PM_REDIS_DEFAULT_EXP_TIME);
     p_redis_set_thread_handler(redis_host, th_hdlr);
  
@@ -170,6 +171,17 @@ void p_redis_ping(struct p_redis_host *redis_host)
   p_redis_process_reply(redis_host);
 }
 
+void p_redis_select_db(struct p_redis_host *redis_host)
+{
+  char select_cmd[VERYSHORTBUFLEN];
+  
+  if (redis_host->db) {
+    snprintf(select_cmd, sizeof(select_cmd), "SELECT %d", redis_host->db);
+    redis_host->reply = redisCommand(redis_host->ctx, select_cmd);
+    p_redis_process_reply(redis_host);
+  }
+}
+
 void p_redis_process_reply(struct p_redis_host *redis_host)
 {
   if (redis_host->reply) {
@@ -190,6 +202,11 @@ void p_redis_set_log_id(struct p_redis_host *redis_host, char *log_id)
     strlcpy(redis_host->log_id, log_id, sizeof(redis_host->log_id));
     strncat(redis_host->log_id, "/redis", (sizeof(redis_host->log_id) - strlen(redis_host->log_id))); 
   }
+}
+
+void p_redis_set_db(struct p_redis_host *redis_host, int db)
+{
+  if (redis_host) redis_host->db = db;
 }
 
 void p_redis_set_exp_time(struct p_redis_host *redis_host, int exp_time)

@@ -37,6 +37,7 @@ static const struct _dictionary_line dictionary[] = {
   {"cluster_name", cfg_key_cluster_name},
   {"cluster_id", cfg_key_cluster_id},
   {"redis_host", cfg_key_redis_host},
+  {"redis_db", cfg_key_redis_db},
   {"snaplen", cfg_key_snaplen},
   {"aggregate_filter", cfg_key_aggregate_filter},
   {"promisc", cfg_key_promisc},
