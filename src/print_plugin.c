@@ -96,7 +96,9 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   refresh_timeout = config.sql_refresh_time*1000;
 
   if (config.print_output & PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
     compose_json(config.what_to_count, config.what_to_count_2);
+#endif
   }
   else if ((config.print_output & PRINT_OUTPUT_AVRO_BIN) ||
 	   (config.print_output & PRINT_OUTPUT_AVRO_JSON)) {
@@ -487,10 +489,12 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	if ((config.print_output & PRINT_OUTPUT_CSV) || (config.print_output & PRINT_OUTPUT_FORMATTED))
 	  fprintf(f, "--START (%u)--\n", writer_pid);
 	else if (config.print_output & PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
           void *json_obj;
 
 	  json_obj = compose_purge_init_json(config.name, writer_pid);
           if (json_obj) write_and_free_json(f, json_obj);
+#endif
 	}
       }
 
@@ -515,10 +519,12 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
       if ((config.print_output & PRINT_OUTPUT_CSV) || (config.print_output & PRINT_OUTPUT_FORMATTED))
         fprintf(stdout, "--START (%u)--\n", writer_pid);
       else if (config.print_output & PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
         void *json_obj;
 
         json_obj = compose_purge_init_json(config.name, writer_pid);
         if (json_obj) write_and_free_json(stdout, json_obj);
+#endif
       }
     }
 
@@ -1288,10 +1294,12 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
     if ((config.print_output & PRINT_OUTPUT_CSV) || (config.print_output & PRINT_OUTPUT_FORMATTED))
       fprintf(f, "--END (%u)--\n", writer_pid);
     else if (config.print_output & PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
       void *json_obj;
 
       json_obj = compose_purge_close_json(config.name, writer_pid, qn, saved_index, duration);
       if (json_obj) write_and_free_json(f, json_obj);
+#endif
     }
   }
     
