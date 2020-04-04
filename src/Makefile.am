@@ -19,9 +19,8 @@ libdaemons_la_SOURCES = signals.c util.c plugin_hooks.c		\
         classifier.c regexp.c					\
         conntrack.c xflow_status.c				\
 	plugin_common.c preprocess.c				\
-	ll.c nl.c 						\
-	base64.c plugin_cmn_json.c 				\
-	plugin_cmn_avro.c pmsearch.c linklist.c			\
+	ll.c nl.c						\
+	base64.c pmsearch.c linklist.c				\
 	thread_pool.c						\
 	plugin_cmn_custom.c network.c pmacct-globals.c
 
@@ -60,7 +59,13 @@ libdaemons_la_SOURCES += sqlite3_plugin.c
 libdaemons_la_LIBADD  += @SQLITE3_LIBS@
 libdaemons_la_CFLAGS  += @SQLITE3_CFLAGS@
 endif
+if WITH_JANSSON
+libdaemons_la_SOURCES += plugin_cmn_json.c
+libdaemons_la_LIBADD  += @JANSSON_LIBS@
+libdaemons_la_CFLAGS  += @JANSSON_CFLAGS@
+endif
 if WITH_AVRO
+libdaemons_la_SOURCES += plugin_cmn_avro.c
 libdaemons_la_LIBADD  += @AVRO_LIBS@
 libdaemons_la_CFLAGS  += @AVRO_CFLAGS@
 if WITH_SERDES
