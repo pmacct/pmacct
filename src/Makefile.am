@@ -12,8 +12,7 @@ libdaemons_la_SOURCES = signals.c util.c plugin_hooks.c		\
         server.c acct.c memory.c cfg.c				\
         imt_plugin.c log.c pkt_handlers.c			\
         cfg_handlers.c net_aggr.c				\
-        bpf_filter.c print_plugin.c				\
-        pretag.c ip_frag.c					\
+        print_plugin.c pretag.c ip_frag.c			\
         ports_aggr.c pretag_handlers.c				\
         ip_flow.c setproctitle.c				\
         classifier.c regexp.c					\

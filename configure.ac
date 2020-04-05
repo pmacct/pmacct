@@ -385,7 +385,6 @@ if test x"$PFRING_LIB_FOUND" = x""; then
   ])])
 
   AC_CHECK_LIB([pcap], [pcap_set_protocol], [ AC_DEFINE(PCAP_SET_PROTOCOL, 1) ], [])
-  AC_CHECK_LIB([pcap], [bpf_filter], [ AC_DEFINE(PCAP_NOBPF, 1) ], [])
 else
   dnl Unable to test: we should check for these libs
   #AC_CHECK_LIB([numa], [numa_bind], [], [AC_MSG_ERROR([
