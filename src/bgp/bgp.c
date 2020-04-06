@@ -906,6 +906,17 @@ void skinny_bgp_daemon_online()
     ret = recv(recv_fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
     peer->msglen = (ret + peer->buf.truncated_len);
 
+    ret = recv(recv_fd, peer->buf.base, BGP_HEADER_SIZE, MSG_WAITALL);
+
+    if (ret == BGP_HEADER_SIZE) {
+      struct bgp_header *bhdr = (struct bgp_header *) peer->buf.base;
+      int blen = ntohs(bhdr->bgpo_len), ilen = ret;
+
+      ret = recv(recv_fd, &peer->buf.base[BGP_HEADER_SIZE], (blen - BGP_HEADER_SIZE), MSG_WAITALL);
+      peer->msglen = (ret + ilen);
+      ret = peer->msglen;
+    }
+
     if (ret <= 0) {
       if (!config.bgp_xconnect_map) {
 	bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
