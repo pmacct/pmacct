@@ -903,9 +903,6 @@ void skinny_bgp_daemon_online()
 
     if (!peer) goto select_again;
 
-    ret = recv(recv_fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
-    peer->msglen = (ret + peer->buf.truncated_len);
-
     ret = recv(recv_fd, peer->buf.base, BGP_HEADER_SIZE, MSG_WAITALL);
 
     if (ret == BGP_HEADER_SIZE) {
