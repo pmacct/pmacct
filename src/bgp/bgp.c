@@ -720,6 +720,11 @@ void skinny_bgp_daemon_online()
       else allowed = TRUE;
 
       if (!allowed) {
+	char disallowed_str[INET6_ADDRSTRLEN];
+
+	sa_to_str(disallowed_str, sizeof(disallowed_str), (struct sockaddr *) &client);
+	Log(LOG_INFO, "INFO ( %s/%s ): [%s] peer '%s' not allowed. close()\n", config.name, bgp_misc_db->log_str, config.bgp_daemon_allow_file, disallowed_str);
+
         close(fd);
         goto read_data;
       }
