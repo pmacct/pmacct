@@ -29,7 +29,7 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
 {
   struct bgp_misc_structs *bms;
   struct bgp_msg_data bmd;
-  char tmp_packet[BGP_BUFFER_SIZE], *bgp_packet_ptr;
+  char *bgp_packet_ptr;
   char bgp_peer_str[INET6_ADDRSTRLEN];
   struct bgp_header *bhdr;
   int ret, bgp_len = 0;
@@ -52,16 +52,6 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
 		config.name, bms->log_str, bgp_peer_str);
       return BGP_NOTIFY_HEADER_ERR;
     }
-
-    /* BGP buffer segmentation + reassembly */
-    if (peer->msglen < BGP_HEADER_SIZE || peer->msglen < (bgp_len = ntohs(bhdr->bgpo_len))) {
-      memcpy(tmp_packet, bgp_packet_ptr, peer->msglen);
-      memcpy(peer->buf.base, tmp_packet, peer->msglen);
-      peer->buf.truncated_len = peer->msglen;
-
-      break;
-    }
-    else peer->buf.truncated_len = 0;
 
     if (bgp_max_msglen_check(bgp_len) == ERR) {
       bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);

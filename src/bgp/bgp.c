@@ -963,7 +963,7 @@ void skinny_bgp_daemon_online()
 	}
       }
       else {
-	ret = send(send_fd, &peer->buf.base[peer->buf.truncated_len], peer->msglen, 0);
+	ret = send(send_fd, &peer->buf.base, peer->msglen, 0);
 	if (ret <= 0) {
 	  bgp_peer_xconnect_print(peer, bgp_xconnect_peer_str, BGP_XCONNECT_STRLEN);
 
