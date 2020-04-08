@@ -1,65 +1,8 @@
-language: C
-compiler: gcc
-dist: bionic 
-sudo: required
-
-install:
-  - sudo apt-get install pkg-config libtool autoconf automake cmake bash wget
-  - git clone https://github.com/akheron/jansson
-  - cd jansson && autoreconf -i && ./configure && make && sudo make install && cd ..
-  - git clone https://github.com/edenhill/librdkafka
-  - cd librdkafka && ./configure && make && sudo make install && cd ..
-  - git clone https://github.com/alanxz/rabbitmq-c
-  - cd rabbitmq-c && mkdir build && cd build && cmake -DCMAKE_INSTALL_LIBDIR=lib .. && sudo cmake --build . --target install && cd .. && cd ..
-  - git clone --recursive https://github.com/maxmind/libmaxminddb 
-  - cd libmaxminddb && ./bootstrap && ./configure && make && sudo make install && cd ..
-  - git clone -b 3.0-stable https://github.com/ntop/nDPI
-  - cd nDPI && ./autogen.sh && ./configure && make && sudo make install && sudo ldconfig && cd ..
-  - wget https://github.com/zeromq/libzmq/releases/download/v4.3.2/zeromq-4.3.2.tar.gz
-  - tar xfz zeromq-4.3.2.tar.gz
-  - cd zeromq-4.3.2 && ./configure && make && sudo make install && cd ..
-  - wget https://archive.apache.org/dist/avro/avro-1.9.1/c/avro-c-1.9.1.tar.gz
-  - tar xfz avro-c-1.9.1.tar.gz
-  - cd avro-c-1.9.1 && mkdir build && cd build && cmake .. && make && sudo make install && cd .. && cd ..
-  - git clone https://github.com/confluentinc/libserdes
-  - cd libserdes && ./configure && make && sudo make install && cd ..
-  - git clone https://github.com/redis/hiredis
-  - cd hiredis && make && sudo make install && cd ..
-
-env:
-  - CONFIG_FLAGS="--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
-  - CONFIG_FLAGS="--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
-  - CONFIG_FLAGS="--enable-debug --enable-jansson --enable-zmq --enable-kafka"
-  - CONFIG_FLAGS="--enable-jansson --enable-zmq --enable-kafka"
-  - CONFIG_FLAGS="--enable-debug --enable-jansson --enable-zmq"
-  - CONFIG_FLAGS="--enable-jansson --enable-zmq"
-  - CONFIG_FLAGS="--enable-debug --enable-jansson --enable-kafka --enable-avro --enable-serdes"
-  - CONFIG_FLAGS="--enable-jansson --enable-kafka --enable-avro --enable-serdes"
-  - CONFIG_FLAGS="--enable-debug --enable-jansson --enable-kafka"
-  - CONFIG_FLAGS="--enable-jansson --enable-kafka"
-  - CONFIG_FLAGS="--enable-debug --enable-zmq"
-  - CONFIG_FLAGS="--enable-zmq"
-  - CONFIG_FLAGS="--enable-debug --enable-jansson"
-  - CONFIG_FLAGS="--enable-jansson"
-  - CONFIG_FLAGS="--enable-debug"
-  - CONFIG_FLAGS=""
-
+services:
+  - docker
 
 script:
-  - ./autogen.sh
-  - ./configure $CONFIG_FLAGS
-  - make
-  - sudo make install
-
-addons:
-  apt:
-    packages:
-      - libpcap-dev
-      - libpq-dev
-      - libsqlite3-dev
-      - libmysqlclient-dev
-      - libnetfilter-log-dev
-      - mysql-client-5.7
-      - libtool
-      - autoconf
-      - automake
+  - bash -ex docker/build_outside.sh \
+    docker/Dockerfile-centos-8.1-for-pmacct \
+    centos8.1-for-pmacct \
+    master
