@@ -913,9 +913,13 @@ void skinny_bgp_daemon_online()
         ret2 = recv(recv_fd, &peer->buf.base[BGP_HEADER_SIZE], (blen - BGP_HEADER_SIZE), MSG_WAITALL);
       }
 
-      if (ret2 > 0) {
+      if (ret2 >= 0) {
         peer->msglen = (ret + ret2);
         ret = peer->msglen;
+      }
+      /* propagate error */
+      else {
+        ret = ret2;
       }
     }
 
