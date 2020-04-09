@@ -53,6 +53,8 @@ int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
       return BGP_NOTIFY_HEADER_ERR;
     }
 
+    bgp_len = ntohs(bhdr->bgpo_len);
+
     if (bgp_max_msglen_check(bgp_len) == ERR) {
       bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP packet (packet length check failed).\n",

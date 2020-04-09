@@ -907,17 +907,16 @@ void skinny_bgp_daemon_online()
 
     if (ret == BGP_HEADER_SIZE) {
       struct bgp_header *bhdr = (struct bgp_header *) peer->buf.base;
-      int blen = ntohs(bhdr->bgpo_len), ilen;
-
-      ilen = ret;
-      ret = 0;
+      int blen = ntohs(bhdr->bgpo_len), ret2 = 0;
 
       if (blen > BGP_HEADER_SIZE) {
-        ret = recv(recv_fd, &peer->buf.base[BGP_HEADER_SIZE], (blen - BGP_HEADER_SIZE), MSG_WAITALL);
+        ret2 = recv(recv_fd, &peer->buf.base[BGP_HEADER_SIZE], (blen - BGP_HEADER_SIZE), MSG_WAITALL);
       }
 
-      peer->msglen = (ret + ilen);
-      ret = peer->msglen;
+      if (ret2 > 0) {
+        peer->msglen = (ret + ret2);
+        ret = peer->msglen;
+      }
     }
 
     if (ret <= 0) {
