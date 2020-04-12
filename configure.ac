@@ -933,7 +933,7 @@ AC_ARG_ENABLE(ndpi,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([NDPI], [libndpi >= 3.0], [
+    PKG_CHECK_MODULES([NDPI], [libndpi >= 3.2], [
       SUPPORTS="${SUPPORTS} ndpi"
       USING_NDPI="yes"
 
