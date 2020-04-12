@@ -2,7 +2,12 @@ services:
   - docker
 
 script:
-  - bash -ex docker/build_outside.sh \
+  - bash -ex echo docker/build_outside.sh \
     docker/Dockerfile-centos-8.1-for-pmacct \
     centos8.1-for-pmacct \
+    master
+
+  - bash -ex docker/build_outside.sh \
+    docker/Dockerfile-ubuntu-bionic-for-pmacct \
+    ubuntu-bionic-for-pmacct \
     master
