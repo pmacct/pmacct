@@ -9,5 +9,5 @@ jobs:
     - env: LINUX_IMAGE_DISTRO=centos
 
 script:
-  - bash -ex docker/build_from_travis.sh $LINUX_IMAGE_DISTRO single
+  - bash -ex docker/build_from_travis.sh $LINUX_IMAGE_DISTRO all
 
