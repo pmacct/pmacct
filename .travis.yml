@@ -3,10 +3,9 @@ services:
 
 jobs:
   include:
-    - env: $IMAGE_X=image_1
-    - env: $IMAGE_X=image_2
-    - env: $IMAGE_X=image_3
+    - env: LINUX_IMAGE_DISTRO=ubuntu
+    - env: LINUX_IMAGE_DISTRO=centos
 
 script:
-  - bash -ex docker/build_outside_2.sh $IMAGE_X
+  - bash -ex docker/build_from_travis.sh $LINUX_IMAGE_DISTRO
 

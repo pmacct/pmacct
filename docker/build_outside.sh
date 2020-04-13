@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# execute this script with no arguments from the root dir of the git repo workspace,
 
 BUILD_DOCKER_FILE=$1
 BUILD_DOCKER_TAG=$2
