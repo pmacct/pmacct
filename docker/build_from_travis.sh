@@ -13,6 +13,6 @@ elif [[ ( ${LINUX_IMAGE_DISTRO} == "ubuntu" ) ]]; then
     ubuntu-bionic-for-pmacct \
     master
 else
-  echo "wrong parameter: ["${LINUX_IMAGE_DISTRO}"]"
+  echo "unsupported linux distribution: ["${LINUX_IMAGE_DISTRO}"]"
   exit 1
 fi
