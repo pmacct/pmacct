@@ -14,7 +14,7 @@ CONTAINER_ID=$(docker run \
     --rm -it -d \
     -v ${PWD}:${PWD} \
     -w ${PWD} \
-    centos8.1-for-pmacct:latest)
+    ${BUILD_DOCKER_TAG}:latest)
 
 echo "launched container id:" ${CONTAINER_ID}
 
