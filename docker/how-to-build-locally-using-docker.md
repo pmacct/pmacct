@@ -29,7 +29,7 @@ or
             
 # to obtain the executables for a subset of the plugin variants
 
-use the same command above, but first modify the file 
+use the same command above, but modify the file 
 
     docker/build_self.sh 
 

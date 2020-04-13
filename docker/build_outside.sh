@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-BUILD_DOCKER_FILE=$1
-BUILD_DOCKER_TAG=$2
-BUILD_BRANCH=$3
+BUILD_DOCKER_FILE=${1}
+BUILD_DOCKER_TAG=${2}
+VARIANT_SPEC=${3}
+BUILD_BRANCH=${4}
 
 docker build -f ${BUILD_DOCKER_FILE} -t ${BUILD_DOCKER_TAG} .
 
@@ -17,7 +18,7 @@ CONTAINER_ID=$(docker run \
 
 echo "launched container id:" ${CONTAINER_ID}
 
-docker exec -i ${CONTAINER_ID} bash -ex docker/build_inside.sh ${BUILD_BRANCH}
+docker exec -i ${CONTAINER_ID} bash -ex docker/build_inside.sh ${VARIANT_SPEC} ${BUILD_BRANCH}
 
 docker stop ${CONTAINER_ID}
 
