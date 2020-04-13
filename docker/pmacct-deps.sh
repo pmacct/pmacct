@@ -30,7 +30,7 @@ git clone --recursive https://github.com/maxmind/libmaxminddb
 cd libmaxminddb && rm -rf ./.git && ./bootstrap && ./configure && make && sudo make install && cd ..
 exit_on_error $?
 
-git clone -b 3.0-stable https://github.com/ntop/nDPI
+git clone -b 3.2-stable https://github.com/ntop/nDPI
 cd nDPI && rm -rf ./.git && ./autogen.sh && ./configure && make && sudo make install && sudo ldconfig && cd ..
 exit_on_error $?
 
