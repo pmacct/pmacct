@@ -2,16 +2,17 @@
 
 LINUX_IMAGE_DISTRO=${1}
 
-if [[ ( ${LINUX_IMAGE_DISTRO} == "ubuntu" ) ]]; then
+if [[ ( ${LINUX_IMAGE_DISTRO} == "centos" ) ]]; then
   echo bash -ex echo docker/build_outside.sh \
     docker/Dockerfile-centos-8.1-for-pmacct \
     centos8.1-for-pmacct \
     master
-fi
-
-if [[ ( ${1LINUX_IMAGE_DISTRO} == "centos" ) ]]; then
+elif [[ ( ${LINUX_IMAGE_DISTRO} == "ubuntu" ) ]]; then
   echo bash -ex docker/build_outside.sh \
     docker/Dockerfile-ubuntu-bionic-for-pmacct \
     ubuntu-bionic-for-pmacct \
     master
+else
+  echo "wrong parameter: ["${LINUX_IMAGE_DISTRO}"]"
+  exit 1
 fi
