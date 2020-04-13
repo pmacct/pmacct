@@ -1,5 +1,15 @@
 services:
   - docker
 
+env:
+  - IMAGE_X=blah-1
+  - IMAGE_X=blah-2
+
 script:
-  - bash -ex docker/build_outside_2.sh hello
+  - bash -ex docker/build_outside_2.sh $IMAGE_X
+
+jobs:
+  include:
+    - stage: deploy
+      env: IMAGE_X=bla-3
+      script: .bash -ex docker/build_outside_2.sh $IMAGE_X
