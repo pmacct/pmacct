@@ -1,8 +1,13 @@
+language: generic
+
 services:
   - docker
 
+jobs:
+  include:
+    - env: LINUX_IMAGE_DISTRO=ubuntu
+    - env: LINUX_IMAGE_DISTRO=centos
+
 script:
-  - bash -ex docker/build_outside.sh \
-    docker/Dockerfile-centos-8.1-for-pmacct \
-    centos8.1-for-pmacct \
-    master
+  - bash -ex docker/build_from_travis.sh $LINUX_IMAGE_DISTRO all
+
