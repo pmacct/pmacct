@@ -44,6 +44,7 @@ for config_loop_var in "${CONFIG_FLAGS[@]}"; do
     rm -rf ./.git
     ./autogen.sh
     ./configure ${config_loop_var}
+
     make
     sudo make install
 

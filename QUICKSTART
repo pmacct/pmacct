@@ -1844,16 +1844,19 @@ shell> examples/lg/pmbgp.py -a 192.168.2.0/24 -r 192.168.1.1
 Request/Reply Looking Glass formats are documented in 'docs/LOOKING_GLASS_FORMAT'.
 
 XIVh. Example: BGP Xconnects 
-pmbgpd, the pmacct BGP standalone daemon, includes a new BGP xconnect feature
-to map BGP peers (ie. PE routers) to BGP collectors (ie. nfacctd, sfacctd),
-acting essentially as a BGP proxy. The aim is to facilitate operations when
-re-sizing/re-balancing the collection infrastructure without impacting (ie.
-re-configuring) BGP peers on the network. A few caveats apply: 1) mapping
-works only against the IP source address and not the BGP Router ID, 2) only
-1:1 relationships can be formed (ie. this is about cross-connecting sessions,
-not replication) and 3) only one session per BGP peer is supported (ie.
-multiple BGP agents are running on the same IP address or NAT traversal
-scenarios are not supported [yet]). The feature can be configured as follows:
+pmbgpd, the pmacct BGP standalone daemon, includes a BGP xconnect feature
+to map BGP peers (ie. routers) to BGP collectors (ie. nfacctd, sfacctd),
+acting essentially as a BGP proxy. While the proxying is non-transparent,
+BGP peers can be still identified by rheir BGP Router-ID. The aim of this
+feature is to facilitate operations, ie. point all BGP Peers to a single
+(or a couple) IP address(es) and facilitate re-sizing/re-balancing of the
+collection infrastructure without impacting (ie. re-configuring) BGP peers.
+A few caveats apply: 1) mapping works only against the IP source address
+and not the BGP Router ID, 2) only 1:1 relationships can be formed (ie.
+this is about cross-connecting sessions, not replication) and 3) only one
+session per BGP peer is supported (ie. multiple BGP agents are running on
+the same IP address or NAT traversal scenarios are not supported [yet]).
+The feature can be configured as follows:
 
 bgp_daemon_xconnect_map: /path/to/bgp_xconnects.map
 
@@ -1874,10 +1877,14 @@ collector (please get in touch if interested). An alternative to the use of
 pmbgpd is NAT/masquerading; in this context, pmbgpd brings the advantage of
 running fully in user-space.
 
-In alternative to BGP xconnects, if supported and if enabled on the system,
-a simpler alternative may be available: the SO_REUSEPORT feature can be
-leveraged on Linux: it allows multiple daemons to bind the same local address
-and port in order to load-balance processing of incoming packets. This is
+If supported and if enabled on the system, the SO_REUSEPORT feature can be
+leveraged on Linux: it allows multiple daemons to bind to the same local
+address and port in order to load-balance processing of incoming packets.
+SO_REUSEPORT can be used in alternative to BGP xconnects, ie. to simplify
+the deployment on a single node, or in conjunction with BGP xconnects, ie.
+for massive multi-node scale-out. 
+
+Leveraging SO_REUSEPORT, when used in alternative to BGP xconnects, may be
 best combined with a list of allowed IP addresses, ie. bgp_daemon_allow_file,
 to explicitely wire peers to collectors. Below a reference to a presentation
 of such feature:
@@ -1885,9 +1892,13 @@ of such feature:
 https://domsch.com/linux/lpc2010/Scaling_techniques_for_servers_with_high_connection%20rates.pdf
 
 To enable SO_REUSEPORT on a Linux system 'sysctl net.core.allow_reuseport=1'.
-Also the processes must be launched by the same user. Below an example for
-nfacctd with BGP thread (but indeed this is applicable to sfacctd, pmbgpd,
-pmbmpd as well):
+Also the processes must be launched by the same user.
+
+When SO_REUSEPORT is used in conjunction with BGP xconnects there is virtually
+no config change to make (except perhaps the sensible decision to use different
+'logfile' per pmbgpd daemon); below instead an example for SO_REUSEPORT in
+alternative to BGP xconnects where a few nfacctd daemons are deployed each
+running the BGP thread (indeed this is applicable to sfacctd as well):
 
 Daemon #1:
 

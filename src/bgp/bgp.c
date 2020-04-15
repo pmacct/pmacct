@@ -907,11 +907,20 @@ void skinny_bgp_daemon_online()
 
     if (ret == BGP_HEADER_SIZE) {
       struct bgp_header *bhdr = (struct bgp_header *) peer->buf.base;
-      int blen = ntohs(bhdr->bgpo_len), ilen = ret;
+      int blen = ntohs(bhdr->bgpo_len), ret2 = 0;
 
-      ret = recv(recv_fd, &peer->buf.base[BGP_HEADER_SIZE], (blen - BGP_HEADER_SIZE), MSG_WAITALL);
-      peer->msglen = (ret + ilen);
-      ret = peer->msglen;
+      if (blen > BGP_HEADER_SIZE) {
+        ret2 = recv(recv_fd, &peer->buf.base[BGP_HEADER_SIZE], (blen - BGP_HEADER_SIZE), MSG_WAITALL);
+      }
+
+      if (ret2 >= 0) {
+        peer->msglen = (ret + ret2);
+        ret = peer->msglen;
+      }
+      /* propagate error */
+      else {
+        ret = ret2;
+      }
     }
 
     if (ret <= 0) {
@@ -963,7 +972,7 @@ void skinny_bgp_daemon_online()
 	}
       }
       else {
-	ret = send(send_fd, &peer->buf.base, peer->msglen, 0);
+	ret = send(send_fd, peer->buf.base, peer->msglen, 0);
 	if (ret <= 0) {
 	  bgp_peer_xconnect_print(peer, bgp_xconnect_peer_str, BGP_XCONNECT_STRLEN);
 
