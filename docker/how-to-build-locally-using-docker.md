@@ -20,11 +20,11 @@ Download the latest stable version of Docker Community Edition from the link bel
 
 execute this single command from the root of the git workspace
 
-    bash -ex docker/build_from_travis.sh ubuntu
+    bash -ex docker/build_from_travis.sh ubuntu all
        
 or
        
-    bash -ex docker/build_from_travis.sh centos
+    bash -ex docker/build_from_travis.sh centos all
             
             
 # to obtain the executables for a subset of the plugin variants
