@@ -8,8 +8,8 @@ declare -a CONFIG_FLAGS
 if [[ ( ${VARIANT_SPEC} == "single" ) ]]; then
   CONFIG_FLAGS[0]=""
 elif [[ ( ${VARIANT_SPEC} == "all" ) ]]; then
-  CONFIG_FLAGS[0]="--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
-  CONFIG_FLAGS[1]="--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
+  CONFIG_FLAGS[0]="--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
+  CONFIG_FLAGS[1]="--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
   CONFIG_FLAGS[2]="--enable-debug --enable-jansson --enable-zmq --enable-kafka"
   CONFIG_FLAGS[3]="--enable-jansson --enable-zmq --enable-kafka"
   CONFIG_FLAGS[4]="--enable-debug --enable-jansson --enable-zmq"
@@ -43,7 +43,7 @@ for config_loop_var in "${CONFIG_FLAGS[@]}"; do
     cd pmacct
     rm -rf ./.git
     ./autogen.sh
-    ./configure
+    ./configure $config_loop_var
     make
     sudo make install
 
