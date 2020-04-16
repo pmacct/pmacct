@@ -22,10 +22,8 @@
 /* includes */
 #if defined HAVE_MYSQL_H 
 #include <mysql.h>
-#include <mysql_version.h>
 #else
 #include <mysql/mysql.h>
-#include <mysql/mysql_version.h>
 #endif
 
 #include "sql_common.h"
