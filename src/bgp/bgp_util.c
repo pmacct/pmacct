@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -40,6 +40,39 @@ int bgp_afi2family (int afi)
     return AF_INET;
   else if (afi == AFI_IP6)
     return AF_INET6;
+  return SUCCESS;
+}
+
+int bgp_rd_ntoh(rd_t *rd)
+{
+  struct rd_ip  *rdi;
+  struct rd_as  *rda;
+  struct rd_as4 *rda4;
+
+  if (!rd) return ERR;
+
+  rd->type = ntohs(rd->type);
+
+  switch(rd->type) {
+  case RD_TYPE_AS:
+    rda = (struct rd_as *) rd;
+    rda->as = ntohs(rda->as);
+    rda->val = ntohl(rda->val);
+    break;
+  case RD_TYPE_IP:
+    rdi = (struct rd_ip *) rd;
+    rdi->val = ntohs(rdi->val);
+    break;
+  case RD_TYPE_AS4:
+    rda4 = (struct rd_as4 *) rd;
+    rda4->as = ntohl(rda4->as);
+    rda4->val = ntohs(rda4->val);
+    break;
+  default:
+    return ERR;
+    break;
+  }
+
   return SUCCESS;
 }
 

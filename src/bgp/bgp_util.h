@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -24,6 +24,7 @@
 
 /* prototypes */
 extern int bgp_afi2family(int);
+extern int bgp_rd_ntoh(rd_t *);
 extern int bgp_rd2str(char *, rd_t *);
 extern int bgp_str2rd(rd_t *, char *);
 extern int bgp_label2str(char *, u_char *);

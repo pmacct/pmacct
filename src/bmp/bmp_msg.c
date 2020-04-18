@@ -1041,6 +1041,7 @@ void bmp_peer_hdr_get_rd(struct bmp_peer_hdr *bph, rd_t *rd)
   if (bph && rd) {
     if (bph->type == BMP_PEER_TYPE_L3VPN || bph->type == BMP_PEER_TYPE_LOC_RIB) {
       memcpy(rd, bph->rd, RD_LEN);
+      bgp_rd_ntoh(rd);
     }
   }
 }
