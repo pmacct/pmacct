@@ -193,7 +193,7 @@ int bgp_label2str(char *str, u_char *label)
   unsigned long int tmp;
   char *endp;
 
-  snprintf(str, 8, "0x%x%x%x",
+  snprintf(str, 10, "0x%02x%02x%02x",
 	(unsigned)(unsigned char)label[0],
 	(unsigned)(unsigned char)label[1],
 	(unsigned)(unsigned char)(label[2] >> 4));
