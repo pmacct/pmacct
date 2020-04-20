@@ -80,6 +80,7 @@ void skinny_bmp_daemon()
   /* select() stuff */
   fd_set read_descs, bkp_read_descs;
   int fd, select_fd, bkp_select_fd, recalc_fds, select_num;
+  unsigned int recv_timeout;
 
   /* logdump time management */
   time_t dump_refresh_deadline = {0};
@@ -836,8 +837,34 @@ void skinny_bmp_daemon()
     if (!peer) goto select_again;
 
     if (!config.pcap_savefile) {
-      ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
-      peer->msglen = (ret + peer->buf.truncated_len);
+      calc_refresh_timeout_sec(dump_refresh_deadline, bmp_misc_db->log_tstamp.tv_sec, (int *) &recv_timeout);
+      ret = bmp_recv(peer->fd, peer->buf.base, BMP_CMN_HDRLEN, MSG_WAITALL, recv_timeout);
+
+      if (ret == BMP_CMN_HDRLEN) {
+	struct bmp_common_hdr *bhdr = (struct bmp_common_hdr *) peer->buf.base;
+	u_int32_t blen = ntohl(bhdr->len), ret2 = 0;
+
+	if (blen > BMP_CMN_HDRLEN) {
+	  if (blen < BGP_BUFFER_SIZE) {
+            calc_refresh_timeout_sec(dump_refresh_deadline, bmp_misc_db->log_tstamp.tv_sec, (int *) &recv_timeout);
+	    ret2 = bmp_recv(peer->fd, &peer->buf.base[BMP_CMN_HDRLEN], (blen - BMP_CMN_HDRLEN), MSG_WAITALL, recv_timeout);
+
+	    if (ret2 >= 0) {
+	      peer->msglen = (ret + ret2);
+	      ret = peer->msglen;
+	    }
+	    /* propagate error */
+	    else {
+	      ret = ret2;
+	    }
+	  }
+	  else {
+	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] long BMP message received: len=%u buf=%u. Discarded.\n",
+		config.name, bmp_misc_db->log_str, peer->addr_str, blen, BGP_BUFFER_SIZE);
+	    goto select_again;
+	  }
+	}
+      }
 
       if (ret <= 0) {
         Log(LOG_INFO, "INFO ( %s/%s ): [%s] BMP connection reset by peer (%d).\n", config.name, bmp_misc_db->log_str, peer->addr_str, errno);
@@ -892,4 +919,19 @@ void bmp_prepare_daemon()
 
   bmp_misc_db->log_str = malloc(strlen("core") + 1);
   strcpy(bmp_misc_db->log_str, "core");
+}
+
+ssize_t bmp_recv(int sockfd, void *buf, size_t len, int flags, unsigned int seconds)
+{
+  ssize_t ret;
+
+  if (flags == MSG_WAITALL) {
+    alarm(seconds);
+  }
+  
+  ret = recv(sockfd, buf, len, flags);
+
+  alarm(0);
+
+  return ret;
 }

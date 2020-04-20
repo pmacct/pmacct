@@ -284,6 +284,9 @@ int main(int argc,char **argv, char **envp)
   sighandler_action.sa_handler = handle_falling_child;
   sigaction(SIGCHLD, &sighandler_action, NULL);
 
+  sighandler_action.sa_handler = PM_sigalrm_noop_handler;
+  sigaction(SIGALRM, &sighandler_action, NULL);
+
   if (!config.bgp_daemon) config.bgp_daemon = BGP_DAEMON_ONLINE;
   if (!config.bgp_daemon_port) config.bgp_daemon_port = BGP_TCP_PORT;
 

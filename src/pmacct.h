@@ -356,7 +356,8 @@ struct child_ctl2 {
 void startup_handle_falling_child();
 void handle_falling_child();
 void ignore_falling_child();
-void PM_sigint_handler();
+void PM_sigint_handler(int);
+void PM_sigalrm_noop_handler(int);
 void reload();
 void push_stats();
 void reload_maps();

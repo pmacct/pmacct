@@ -651,6 +651,9 @@ int main(int argc,char **argv, char **envp)
   sighandler_action.sa_handler = SIG_IGN;
   sigaction(SIGPIPE, &sighandler_action, NULL);
 
+  sighandler_action.sa_handler = PM_sigalrm_noop_handler;
+  sigaction(SIGALRM, &sighandler_action, NULL);
+
   if (config.pcap_savefile) {
     open_pcap_savefile(&device, config.pcap_savefile);
     pm_pcap_savefile_round = 1;

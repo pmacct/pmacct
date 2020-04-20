@@ -285,6 +285,9 @@ int main(int argc,char **argv, char **envp)
   sighandler_action.sa_handler = handle_falling_child;
   sigaction(SIGCHLD, &sighandler_action, NULL);
 
+  sighandler_action.sa_handler = PM_sigalrm_noop_handler;
+  sigaction(SIGALRM, &sighandler_action, NULL);
+
 #ifdef WITH_REDIS
   if (config.redis_host) {
     char log_id[SHORTBUFLEN];

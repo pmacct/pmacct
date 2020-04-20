@@ -30,6 +30,9 @@
 #define BMP_V3			3
 #define BMP_V4			4
 
+#define BMP_CMN_HDRLEN		5
+#define BMP_PEER_HDRLEN		42
+
 #define BMP_MISSING_PEER_UP_LOG_TOUT	60
 
 /* BMP message types */
@@ -297,6 +300,7 @@ extern void bmp_daemon_wrapper();
 extern void skinny_bmp_daemon();
 extern void bmp_prepare_thread();
 extern void bmp_prepare_daemon();
+extern ssize_t bmp_recv(int, void *, size_t, int, unsigned int);
 
 /* global variables */
 extern struct bmp_peer *bmp_peers;

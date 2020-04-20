@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -171,6 +171,11 @@ void PM_sigint_handler(int signum)
 
   if (config.pidfile) remove_pid_file(config.pidfile);
   exit(0);
+}
+
+void PM_sigalrm_noop_handler(int signum)
+{
+  /* noop */
 }
 
 void reload()
