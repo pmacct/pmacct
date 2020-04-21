@@ -309,7 +309,9 @@ void skinny_bmp_daemon()
   }
   else {
     open_pcap_savefile(&device, config.pcap_savefile);
+    pm_pcap_add_filter(&device);
     config.bmp_sock = pcap_get_selectable_fd(device.dev_desc);
+
     enable_ip_fragment_handler();
 
     Log(LOG_INFO, "INFO ( %s/core ): reading BMP data from: %s\n", config.name, config.pcap_savefile);
@@ -690,23 +692,33 @@ void skinny_bmp_daemon()
     if (config.pcap_savefile) {
       struct bmp_peer pcap_savefile_peer;
 
-      /* Let's skip over any TCP-SYN, TCP-ACK, etc. messages */
-      for (sf_ret = 0; sf_ret == 0; ) {
-        sf_ret = recvfrom_savefile(&device, (void **) &bmp_packet, (struct sockaddr *) &client, NULL, &pcap_savefile_round, &recv_pptrs);
-      }
-      fd = config.bmp_sock;
+      sf_ret = recvfrom_savefile(&device, (void **) &bmp_packet, (struct sockaddr *) &client, NULL, &pcap_savefile_round, &recv_pptrs);
 
-      memset(&pcap_savefile_peer, 0, sizeof(pcap_savefile_peer));
-      sa_to_addr((struct sockaddr *) &client, &pcap_savefile_peer.self.addr, &pcap_savefile_peer.self.tcp_port);
+      if (bmp_packet && (sf_ret >= BMP_CMN_HDRLEN)) {
+	struct bmp_common_hdr *bch = (struct bmp_common_hdr *) bmp_packet;
 
-      for (peer = NULL, peers_idx = 0; peers_idx < config.bmp_daemon_max_peers; peers_idx++) {
-	if (!sa_addr_cmp((struct sockaddr *) &client, &bmp_peers[peers_idx].self.addr) &&
-	    !sa_port_cmp((struct sockaddr *) &client, bmp_peers[peers_idx].self.tcp_port)) {
-	  peer = &bmp_peers[peers_idx].self;
-	  bmpp = &bmp_peers[peers_idx];
-	  FD_CLR(config.bmp_sock, &read_descs);
-	  break;
+	if (bch->version == BMP_V3 ||  bch->version == BMP_V4) {
+          fd = config.bmp_sock;
+
+	  memset(&pcap_savefile_peer, 0, sizeof(pcap_savefile_peer));
+	  sa_to_addr((struct sockaddr *) &client, &pcap_savefile_peer.self.addr, &pcap_savefile_peer.self.tcp_port);
+
+	  for (peer = NULL, peers_idx = 0; peers_idx < config.bmp_daemon_max_peers; peers_idx++) {
+	    if (!sa_addr_cmp((struct sockaddr *) &client, &bmp_peers[peers_idx].self.addr) &&
+		!sa_port_cmp((struct sockaddr *) &client, bmp_peers[peers_idx].self.tcp_port)) {
+	      peer = &bmp_peers[peers_idx].self;
+	      bmpp = &bmp_peers[peers_idx];
+	      FD_CLR(config.bmp_sock, &read_descs);
+	      break;
+	    }
+	  }
 	}
+        else {
+	  goto select_again;
+  	}
+      }
+      else {
+	goto select_again;
       }
     }
 

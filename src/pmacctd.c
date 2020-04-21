@@ -172,23 +172,6 @@ err:
   return NULL;
 }
 
-void pm_pcap_add_filter(struct pm_pcap_device *dev_ptr)
-{
-  /* pcap library stuff */
-  struct bpf_program filter;
-
-  memset(&filter, 0, sizeof(filter));
-  if (pcap_compile(dev_ptr->dev_desc, &filter, config.clbuf, 0, PCAP_NETMASK_UNKNOWN) < 0) {
-    Log(LOG_WARNING, "WARN ( %s/core ): %s (going on without a filter)\n", config.name, pcap_geterr(dev_ptr->dev_desc));
-  }
-  else {
-    if (pcap_setfilter(dev_ptr->dev_desc, &filter) < 0) {
-      Log(LOG_WARNING, "WARN ( %s/core ): %s (going on without a filter)\n", config.name, pcap_geterr(dev_ptr->dev_desc));
-    }
-    else pcap_freecode(&filter);
-  }
-}
-
 int pm_pcap_add_interface(struct pm_pcap_device *dev_ptr, char *ifname, struct pm_pcap_interface *pm_pcap_if_entry, int psize)
 {
   /* pcap library stuff */
