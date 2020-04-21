@@ -61,7 +61,6 @@ void skinny_bmp_daemon()
 {
   int ret, rc, peers_idx, allowed, yes=1;
   int peers_idx_rr = 0, max_peers_idx = 0;
-  u_int32_t pkt_remaining_len=0;
   time_t now;
   afi_t afi;
   safi_t safi;
@@ -875,17 +874,14 @@ void skinny_bmp_daemon()
       }
     }
     else {
+      u_int32_t len = MIN(sf_ret, peer->buf.len);
+
       /* recvfrom_savefile() already invoked before */
-      memcpy(&peer->buf.base[peer->buf.truncated_len], bmp_packet, MIN(sf_ret, (peer->buf.len - peer->buf.truncated_len)));
-      peer->msglen = (sf_ret + peer->buf.truncated_len);
+      memcpy(peer->buf.base, bmp_packet, len);
+      peer->msglen = len;
     }
 
-    pkt_remaining_len = bmp_process_packet(peer->buf.base, peer->msglen, bmpp);
-
-    /* handling offset for TCP segment reassembly */
-    if (pkt_remaining_len) peer->buf.truncated_len = bmp_packet_adj_offset(peer->buf.base, peer->buf.len, peer->msglen,
-								           pkt_remaining_len, peer->addr_str);
-    else peer->buf.truncated_len = 0;
+    bmp_process_packet(peer->buf.base, peer->msglen, bmpp);
   }
 }
 
