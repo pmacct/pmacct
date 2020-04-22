@@ -53,8 +53,11 @@ static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
   struct pcap_pkthdr hdr;
   char *pkt = NULL;
   ssize_t pkt_len = nflog_get_payload(nfa, &pkt);
-  ssize_t mac_len = nflog_get_msg_packet_hwhdrlen(nfa);
+  ssize_t mac_len = 0;
   struct pm_pcap_callback_data *cb_data = p;
+
+  if (nflog_get_hwtype(nfa) == DLT_EN10MB)
+    mac_len = nflog_get_msg_packet_hwhdrlen(nfa);
 
   /* Check we can handle this packet */
   switch (nfmsg->nfgen_family) {
