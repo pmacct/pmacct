@@ -2984,7 +2984,7 @@ void open_pcap_savefile(struct pm_pcap_device *dev_ptr, char *file)
       dev_ptr->data = &_devices[idx];
   }
 
-  if (!dev_ptr->data->handler) {
+  if (!dev_ptr->data || !dev_ptr->data->handler) {
     Log(LOG_ERR, "ERROR ( %s/core ): pcap_savefile: unsupported link layer.\n", config.name);
     exit_gracefully(1);
   }
