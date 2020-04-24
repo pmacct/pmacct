@@ -167,11 +167,10 @@ DESC:		Per-plugin filtering applied against the original packet or flow. Aggrega
 		'pmacctd_force_frag_handling' directive.
 DEFAULT:	none
 
-KEY:		pcap_filter [GLOBAL, PMACCTD_ONLY]
+KEY:		pcap_filter [GLOBAL, PMACCTD_ONLY, ONLY_PMBMPD]
 DESC:		This filter is global and applied to all incoming packets. It's passed to libpcap
 		and expects libpcap/tcpdump filter syntax. Being global it doesn't offer a great
-		flexibility but it's the fastest way to drop unwanted traffic. It applies only to
-		pmacctd.
+		flexibility but it's the fastest way to drop unwanted traffic.
 DEFAULT:	none
 
 KEY:		pcap_protocol [GLOBAL, PMACCTD_ONLY]
@@ -393,7 +392,7 @@ DESC:		File in libpcap savefile format to read data from (as an alternative to l
 		for pmbmpd.
 DEFAULT:	none
 
-KEY:            pcap_savefile_wait (-W) [GLOBAL, NO_UACCTD]
+KEY:            pcap_savefile_wait (-W) [GLOBAL, NO_UACCTD, NO_PMBGPD]
 VALUES:         [ true | false ]
 DESC:           If set to true, this option will cause the daemon to wait indefinitely for a signal
 		(ie. CTRL-C when not daemonized or 'killall -9 pmacctd' if it is) after being finished
@@ -415,7 +414,7 @@ DESC:           When reading from a pcap_savefile, replay content for the specif
 		the first time due to the template not being sent yet.
 DEFAULT:        1
 
-KEY:		[ pcap_direction | uacctd_direction ] [GLOBAL, NO_NFACCTD, NO_SFACCTD] 
+KEY:		[ pcap_direction | uacctd_direction ] [GLOBAL, ONLY_PMACCTD]
 VALUES:		[ "in", "out" ]
 DESC:		Defines the traffic capturing direction with two possible values, "in" and "out". In
 		pmacctd this is used to determine which primitive to populate, whether in_iface or
