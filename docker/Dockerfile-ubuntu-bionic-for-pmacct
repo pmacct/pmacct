@@ -26,6 +26,7 @@ RUN apt-get update && \
     libsnappy-dev \
     libjansson-dev \ 
     libsqlite3-dev \
+    libnetfilter-log-dev \
     bash
 
 ENTRYPOINT ["/bin/bash"]

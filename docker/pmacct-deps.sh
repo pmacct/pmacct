@@ -53,9 +53,9 @@ tar xfz zeromq-4.3.2.tar.gz
 cd zeromq-4.3.2 && ./configure && make && sudo make install && cd ..
 exit_on_error $?
 
-wget https://archive.apache.org/dist/avro/avro-1.9.1/c/avro-c-1.9.1.tar.gz
-tar xfz avro-c-1.9.1.tar.gz
-cd avro-c-1.9.1 && mkdir build && cd build && cmake .. && make && sudo make install && cd .. && cd ..
+wget https://archive.apache.org/dist/avro/avro-1.9.2/c/avro-c-1.9.2.tar.gz
+tar xfz avro-c-1.9.2.tar.gz
+cd avro-c-1.9.2 && mkdir build && cd build && cmake .. && make && sudo make install && cd .. && cd ..
 exit_on_error $?
 
 git clone https://github.com/confluentinc/libserdes
