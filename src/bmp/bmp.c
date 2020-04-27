@@ -79,7 +79,7 @@ void skinny_bmp_daemon()
   /* select() stuff */
   fd_set read_descs, bkp_read_descs;
   int fd, select_fd, bkp_select_fd, recalc_fds, select_num;
-  unsigned int recv_timeout;
+  unsigned int recv_timeout = 0;
 
   /* logdump time management */
   time_t dump_refresh_deadline = {0};
@@ -849,7 +849,7 @@ void skinny_bmp_daemon()
 
     if (!config.pcap_savefile) {
       calc_refresh_timeout_sec(dump_refresh_deadline, bmp_misc_db->log_tstamp.tv_sec, (int *) &recv_timeout);
-      ret = bmp_recv(peer->fd, peer->buf.base, BMP_CMN_HDRLEN, MSG_WAITALL, recv_timeout);
+      ret = pm_recv(peer->fd, peer->buf.base, BMP_CMN_HDRLEN, MSG_WAITALL, recv_timeout);
 
       if (ret == BMP_CMN_HDRLEN) {
 	struct bmp_common_hdr *bhdr = (struct bmp_common_hdr *) peer->buf.base;
@@ -858,7 +858,7 @@ void skinny_bmp_daemon()
 	if (blen > BMP_CMN_HDRLEN) {
 	  if (blen < BGP_BUFFER_SIZE) {
             calc_refresh_timeout_sec(dump_refresh_deadline, bmp_misc_db->log_tstamp.tv_sec, (int *) &recv_timeout);
-	    ret2 = bmp_recv(peer->fd, &peer->buf.base[BMP_CMN_HDRLEN], (blen - BMP_CMN_HDRLEN), MSG_WAITALL, recv_timeout);
+	    ret2 = pm_recv(peer->fd, &peer->buf.base[BMP_CMN_HDRLEN], (blen - BMP_CMN_HDRLEN), MSG_WAITALL, recv_timeout);
 
 	    if (ret2 >= 0) {
 	      peer->msglen = (ret + ret2);
@@ -927,19 +927,4 @@ void bmp_prepare_daemon()
 
   bmp_misc_db->log_str = malloc(strlen("core") + 1);
   strcpy(bmp_misc_db->log_str, "core");
-}
-
-ssize_t bmp_recv(int sockfd, void *buf, size_t len, int flags, unsigned int seconds)
-{
-  ssize_t ret;
-
-  if (flags == MSG_WAITALL) {
-    alarm(seconds);
-  }
-  
-  ret = recv(sockfd, buf, len, flags);
-
-  alarm(0);
-
-  return ret;
 }

@@ -300,7 +300,6 @@ extern void bmp_daemon_wrapper();
 extern void skinny_bmp_daemon();
 extern void bmp_prepare_thread();
 extern void bmp_prepare_daemon();
-extern ssize_t bmp_recv(int, void *, size_t, int, unsigned int);
 
 /* global variables */
 extern struct bmp_peer *bmp_peers;

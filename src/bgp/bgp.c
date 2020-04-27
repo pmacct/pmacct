@@ -115,6 +115,7 @@ void skinny_bgp_daemon_online()
   fd_set read_descs, bkp_read_descs; 
   int fd, select_fd, bkp_select_fd, recalc_fds, select_num;
   int recv_fd, send_fd;
+  unsigned int recv_timeout = 0;
 
   /* initial cleanups */
   reload_map_bgp_thread = FALSE;
@@ -903,14 +904,16 @@ void skinny_bgp_daemon_online()
 
     if (!peer) goto select_again;
 
-    ret = recv(recv_fd, peer->buf.base, BGP_HEADER_SIZE, MSG_WAITALL);
+    calc_refresh_timeout_sec(dump_refresh_deadline, bgp_misc_db->log_tstamp.tv_sec, (int *) &recv_timeout);
+    ret = pm_recv(recv_fd, peer->buf.base, BGP_HEADER_SIZE, MSG_WAITALL, recv_timeout);
 
     if (ret == BGP_HEADER_SIZE) {
       struct bgp_header *bhdr = (struct bgp_header *) peer->buf.base;
       int blen = ntohs(bhdr->bgpo_len), ret2 = 0;
 
       if (blen > BGP_HEADER_SIZE) {
-        ret2 = recv(recv_fd, &peer->buf.base[BGP_HEADER_SIZE], (blen - BGP_HEADER_SIZE), MSG_WAITALL);
+	calc_refresh_timeout_sec(dump_refresh_deadline, bgp_misc_db->log_tstamp.tv_sec, (int *) &recv_timeout);
+	ret2 = pm_recv(recv_fd, &peer->buf.base[BGP_HEADER_SIZE], (blen - BGP_HEADER_SIZE), MSG_WAITALL, recv_timeout);
       }
 
       if (ret2 >= 0) {

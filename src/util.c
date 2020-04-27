@@ -3216,3 +3216,18 @@ int is_empty_256b(void *area, int len)
 
   return ERR;
 }
+
+ssize_t pm_recv(int sockfd, void *buf, size_t len, int flags, unsigned int seconds)
+{
+  ssize_t ret;
+
+  if (flags == MSG_WAITALL) {
+    alarm(seconds);
+  }
+
+  ret = recv(sockfd, buf, len, flags);
+
+  alarm(0);
+
+  return ret;
+}
