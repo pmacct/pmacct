@@ -104,16 +104,16 @@ int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
   int ret = 0;
 
   if (!len) {
-    ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
+    ret = recv(peer->fd, &peer->buf.base[peer->buf.cur_len], (peer->buf.len - peer->buf.cur_len), 0);
   }
   else {
-    if (len <= (peer->buf.len - peer->buf.truncated_len)) { 
-      ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], len, MSG_WAITALL);
+    if (len <= (peer->buf.len - peer->buf.cur_len)) { 
+      ret = recv(peer->fd, &peer->buf.base[peer->buf.cur_len], len, MSG_WAITALL);
     }
   }
   if (ret > 0) {
     peer->stats.packet_bytes += ret;
-    peer->msglen = (ret + peer->buf.truncated_len);
+    peer->msglen = (ret + peer->buf.cur_len);
   }
 
   return ret;
@@ -278,7 +278,7 @@ int telemetry_recv_jump(telemetry_peer *peer, u_int32_t len, int *flags)
 
 int telemetry_basic_validate_json(telemetry_peer *peer)
 {
-  if (peer->buf.base[peer->buf.truncated_len] != '{') {
+  if (peer->buf.base[peer->buf.cur_len] != '{') {
     peer->stats.msg_errors++;
     return ERR;
   }

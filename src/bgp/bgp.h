@@ -159,7 +159,8 @@ struct bgp_peer_stats {
 struct bgp_peer_buf {
   char *base;
   u_int32_t len;
-  u_int32_t truncated_len; /* to be deprecated */
+  u_int32_t cur_len;
+  u_int32_t exp_len;
 #if defined WITH_KAFKA
   void *kafka_msg;
 #endif

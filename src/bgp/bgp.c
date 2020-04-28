@@ -115,7 +115,6 @@ void skinny_bgp_daemon_online()
   fd_set read_descs, bkp_read_descs; 
   int fd, select_fd, bkp_select_fd, recalc_fds, select_num;
   int recv_fd, send_fd;
-  unsigned int recv_timeout = 0;
 
   /* initial cleanups */
   reload_map_bgp_thread = FALSE;
@@ -904,25 +903,57 @@ void skinny_bgp_daemon_online()
 
     if (!peer) goto select_again;
 
-    calc_refresh_timeout_sec(dump_refresh_deadline, bgp_misc_db->log_tstamp.tv_sec, (int *) &recv_timeout);
-    ret = pm_recv(recv_fd, peer->buf.base, BGP_HEADER_SIZE, MSG_WAITALL, recv_timeout);
+    if (!peer->buf.exp_len) {
+      ret = recv(recv_fd, &peer->buf.base[peer->buf.cur_len], (BGP_HEADER_SIZE - peer->buf.cur_len), 0);
 
-    if (ret == BGP_HEADER_SIZE) {
-      struct bgp_header *bhdr = (struct bgp_header *) peer->buf.base;
-      int blen = ntohs(bhdr->bgpo_len), ret2 = 0;
+      if (ret > 0) {
+	peer->buf.cur_len += ret;
 
-      if (blen > BGP_HEADER_SIZE) {
-	calc_refresh_timeout_sec(dump_refresh_deadline, bgp_misc_db->log_tstamp.tv_sec, (int *) &recv_timeout);
-	ret2 = pm_recv(recv_fd, &peer->buf.base[BGP_HEADER_SIZE], (blen - BGP_HEADER_SIZE), MSG_WAITALL, recv_timeout);
+	if (peer->buf.cur_len == BGP_HEADER_SIZE) {
+	  struct bgp_header *bhdr = (struct bgp_header *) peer->buf.base;
+
+	  if (bgp_marker_check(bhdr, BGP_MARKER_SIZE) == ERR) {
+	    bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+	    Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP packet (marker check failed).\n",
+		config.name, bgp_misc_db->log_str, bgp_peer_str);
+
+	    peer->msglen = 0;
+	    peer->buf.cur_len = 0;
+	    peer->buf.exp_len = 0;
+	    ret = ERR;
+	  }
+	  else {
+	    peer->buf.exp_len = ntohs(bhdr->bgpo_len);
+
+	    /* commit */
+	    if (peer->buf.cur_len == peer->buf.exp_len) {
+	      peer->msglen = peer->buf.exp_len;
+	      peer->buf.cur_len = 0;
+	      peer->buf.exp_len = 0;
+	    }
+	  }
+	}
+	else {
+	  goto select_again;
+	}
       }
+    }
 
-      if (ret2 >= 0) {
-        peer->msglen = (ret + ret2);
-        ret = peer->msglen;
-      }
-      /* propagate error */
-      else {
-        ret = ret2;
+    if (peer->buf.exp_len) {
+      ret = recv(recv_fd, &peer->buf.base[peer->buf.cur_len], (peer->buf.exp_len - peer->buf.cur_len), 0);
+
+      if (ret > 0) {
+	peer->buf.cur_len += ret;
+
+	/* commit */
+        if (peer->buf.cur_len == peer->buf.exp_len) {
+	  peer->msglen = peer->buf.exp_len;
+	  peer->buf.cur_len = 0;
+	  peer->buf.exp_len = 0;
+	}
+	else {
+	  goto select_again;
+	}
       }
     }
 
