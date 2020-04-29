@@ -79,7 +79,6 @@ void skinny_bmp_daemon()
   /* select() stuff */
   fd_set read_descs, bkp_read_descs;
   int fd, select_fd, bkp_select_fd, recalc_fds, select_num;
-  unsigned int recv_timeout = 0;
 
   /* logdump time management */
   time_t dump_refresh_deadline = {0};
@@ -848,32 +847,69 @@ void skinny_bmp_daemon()
     if (!peer) goto select_again;
 
     if (!config.pcap_savefile) {
-      calc_refresh_timeout_sec(dump_refresh_deadline, bmp_misc_db->log_tstamp.tv_sec, (int *) &recv_timeout);
-      ret = pm_recv(peer->fd, peer->buf.base, BMP_CMN_HDRLEN, MSG_WAITALL, recv_timeout);
+      if (!peer->buf.exp_len) {
+	ret = recv(peer->fd, &peer->buf.base[peer->buf.cur_len], (BMP_CMN_HDRLEN - peer->buf.cur_len), 0);
 
-      if (ret == BMP_CMN_HDRLEN) {
-	struct bmp_common_hdr *bhdr = (struct bmp_common_hdr *) peer->buf.base;
-	u_int32_t blen = ntohl(bhdr->len), ret2 = 0;
+	if (ret > 0) {
+	  peer->buf.cur_len += ret;
 
-	if (blen > BMP_CMN_HDRLEN) {
-	  if (blen < BGP_BUFFER_SIZE) {
-            calc_refresh_timeout_sec(dump_refresh_deadline, bmp_misc_db->log_tstamp.tv_sec, (int *) &recv_timeout);
-	    ret2 = pm_recv(peer->fd, &peer->buf.base[BMP_CMN_HDRLEN], (blen - BMP_CMN_HDRLEN), MSG_WAITALL, recv_timeout);
+	  if (peer->buf.cur_len  == BMP_CMN_HDRLEN) {
+	    struct bmp_common_hdr *bhdr = (struct bmp_common_hdr *) peer->buf.base;
 
-	    if (ret2 >= 0) {
-	      peer->msglen = (ret + ret2);
-	      ret = peer->msglen;
+	    if (bhdr->version != BMP_V3 && bhdr->version != BMP_V4) {
+	      Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: unknown BMP version: %u\n",
+		  config.name, bmp_misc_db->log_str, peer->addr_str, bhdr->version);
+
+	      peer->msglen = 0;
+	      peer->buf.cur_len = 0;
+	      peer->buf.exp_len = 0;
+	      ret = ERR;
 	    }
-	    /* propagate error */
 	    else {
-	      ret = ret2;
+	      peer->buf.exp_len = ntohl(bhdr->len);
+
+	      /* commit */
+	      if (peer->buf.cur_len == peer->buf.exp_len) {
+		peer->msglen = peer->buf.exp_len;
+		peer->buf.cur_len = 0;
+		peer->buf.exp_len = 0;
+	      }
 	    }
 	  }
 	  else {
-	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] long BMP message received: len=%u buf=%u. Discarded.\n",
-		config.name, bmp_misc_db->log_str, peer->addr_str, blen, BGP_BUFFER_SIZE);
 	    goto select_again;
 	  }
+	}
+      }
+
+      if (peer->buf.exp_len) {
+	int sink_mode = FALSE;
+
+        if (peer->buf.exp_len <= peer->buf.len) { 
+	  ret = recv(peer->fd, &peer->buf.base[peer->buf.cur_len], (peer->buf.exp_len - peer->buf.cur_len), 0);
+	}
+	/* sink mode */
+	else {
+	  ret = recv(peer->fd, peer->buf.base, MIN(peer->buf.len, (peer->buf.exp_len - peer->buf.cur_len)), 0);
+	  sink_mode = TRUE;
+	}
+
+	if (ret > 0) {
+	  peer->buf.cur_len += ret;
+
+	  /* commit */
+	  if (peer->buf.cur_len == peer->buf.exp_len) {
+	    peer->msglen = peer->buf.exp_len;
+	    peer->buf.cur_len = 0;
+	    peer->buf.exp_len = 0;
+	  }
+	  else {
+	    goto select_again;
+	  }
+	}
+
+        if (sink_mode) {
+	  goto select_again;
 	}
       }
 
