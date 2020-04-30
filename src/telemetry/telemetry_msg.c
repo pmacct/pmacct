@@ -108,7 +108,7 @@ int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
   }
   else {
     if (len <= (peer->buf.tot_len - peer->buf.cur_len)) { 
-      ret = recv(peer->fd, &peer->buf.base[peer->buf.cur_len], len, MSG_WAITALL);
+      ret = pm_recv(peer->fd, &peer->buf.base[peer->buf.cur_len], len, MSG_WAITALL, DEFAULT_SLOTH_SLEEP_TIME);
     }
   }
   if (ret > 0) {
@@ -184,7 +184,7 @@ int telemetry_recv_cisco_v0(telemetry_peer *peer, int *flags, int *data_decoder)
     type = telemetry_cisco_hdr_v0_get_type(peer);
     len = telemetry_cisco_hdr_v0_get_len(peer);
 
-    /* Linux does not implement MSG_WAITALL on UDP */
+    /* MSG_WAITALL does not apply to UDP */
     if (config.telemetry_port_udp) len = 0;
 
     ret = telemetry_recv_cisco(peer, flags, data_decoder, type, len);
@@ -208,7 +208,7 @@ int telemetry_recv_cisco_v1(telemetry_peer *peer, int *flags, int *data_decoder)
     len = telemetry_cisco_hdr_v1_get_len(peer);
     encap = telemetry_cisco_hdr_v1_get_encap(peer);
 
-    /* Linux does not implement MSG_WAITALL on UDP */
+    /* MSG_WAITALL does not apply to UDP */
     if (config.telemetry_port_udp) len = 0;
 
     if (type == TELEMETRY_CISCO_V1_TYPE_DATA) {
