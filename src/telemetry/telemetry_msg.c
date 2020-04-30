@@ -70,7 +70,7 @@ int telemetry_recv_zmq_generic(telemetry_peer *peer, u_int32_t len)
 {
   int ret = 0;
 
-  ret = p_zmq_recv_bin(&telemetry_zmq_host.sock, peer->buf.base, peer->buf.len);
+  ret = p_zmq_recv_bin(&telemetry_zmq_host.sock, peer->buf.base, peer->buf.tot_len);
 
   if (ret > 0) {
     peer->stats.packet_bytes += ret;
@@ -86,7 +86,7 @@ int telemetry_recv_kafka_generic(telemetry_peer *peer, u_int32_t len)
 {
   int ret = 0;
 
-  ret = p_kafka_consume_data(&telemetry_kafka_host, peer->buf.kafka_msg, (u_char *)peer->buf.base, peer->buf.len);
+  ret = p_kafka_consume_data(&telemetry_kafka_host, peer->buf.kafka_msg, (u_char *)peer->buf.base, peer->buf.tot_len);
 
   if (ret > 0) {
     peer->stats.packet_bytes += ret;
@@ -104,10 +104,10 @@ int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
   int ret = 0;
 
   if (!len) {
-    ret = recv(peer->fd, &peer->buf.base[peer->buf.cur_len], (peer->buf.len - peer->buf.cur_len), 0);
+    ret = recv(peer->fd, &peer->buf.base[peer->buf.cur_len], (peer->buf.tot_len - peer->buf.cur_len), 0);
   }
   else {
-    if (len <= (peer->buf.len - peer->buf.cur_len)) { 
+    if (len <= (peer->buf.tot_len - peer->buf.cur_len)) { 
       ret = recv(peer->fd, &peer->buf.base[peer->buf.cur_len], len, MSG_WAITALL);
     }
   }

@@ -804,7 +804,7 @@ void telemetry_daemon(void *t_data_void)
 	if (ret > 0) {
 	  saved_peer_buf = peer->buf.base;
 	  peer->buf.base = (char *) consumer_buf;
-	  peer->msglen = peer->buf.len = ret;
+	  peer->msglen = peer->buf.tot_len = ret;
 	}
       }
       data_decoder = TELEMETRY_DATA_DECODER_JSON;

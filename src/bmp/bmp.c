@@ -885,12 +885,12 @@ void skinny_bmp_daemon()
       if (peer->buf.exp_len) {
 	int sink_mode = FALSE;
 
-        if (peer->buf.exp_len <= peer->buf.len) { 
+        if (peer->buf.exp_len <= peer->buf.tot_len) { 
 	  ret = recv(peer->fd, &peer->buf.base[peer->buf.cur_len], (peer->buf.exp_len - peer->buf.cur_len), 0);
 	}
 	/* sink mode */
 	else {
-	  ret = recv(peer->fd, peer->buf.base, MIN(peer->buf.len, (peer->buf.exp_len - peer->buf.cur_len)), 0);
+	  ret = recv(peer->fd, peer->buf.base, MIN(peer->buf.tot_len, (peer->buf.exp_len - peer->buf.cur_len)), 0);
 	  sink_mode = TRUE;
 	}
 
@@ -922,7 +922,7 @@ void skinny_bmp_daemon()
       }
     }
     else {
-      u_int32_t len = MIN(sf_ret, peer->buf.len);
+      u_int32_t len = MIN(sf_ret, peer->buf.tot_len);
 
       /* recvfrom_savefile() already invoked before */
       memcpy(peer->buf.base, bmp_packet, len);

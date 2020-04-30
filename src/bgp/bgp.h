@@ -158,9 +158,9 @@ struct bgp_peer_stats {
 
 struct bgp_peer_buf {
   char *base;
-  u_int32_t len;
-  u_int32_t cur_len;
-  u_int32_t exp_len;
+  u_int32_t tot_len; /* total buffer length */
+  u_int32_t cur_len; /* current message consumed length (for segmented reads) */
+  u_int32_t exp_len; /* current message expected length */
 #if defined WITH_KAFKA
   void *kafka_msg;
 #endif

@@ -600,14 +600,14 @@ int bgp_peer_init(struct bgp_peer *peer, int type)
   memset(peer, 0, sizeof(struct bgp_peer));
   peer->type = type;
   peer->status = Idle;
-  peer->buf.len = BGP_BUFFER_SIZE;
-  peer->buf.base = malloc(peer->buf.len);
+  peer->buf.tot_len = BGP_BUFFER_SIZE;
+  peer->buf.base = malloc(peer->buf.tot_len);
   if (!peer->buf.base) {
     Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (bgp_peer_init). Exiting ..\n", config.name, bms->log_str);
     exit_gracefully(1);
   }
   else {
-    memset(peer->buf.base, 0, peer->buf.len);
+    memset(peer->buf.base, 0, peer->buf.tot_len);
     ret = FALSE;
   }
 
