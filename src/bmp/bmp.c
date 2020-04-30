@@ -892,6 +892,9 @@ void skinny_bmp_daemon()
 	else {
 	  ret = recv(peer->fd, peer->buf.base, MIN(peer->buf.tot_len, (peer->buf.exp_len - peer->buf.cur_len)), 0);
 	  sink_mode = TRUE;
+
+	  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] long BMP message received: len=%u buf=%u. Sinking.\n",
+	      config.name, bmp_misc_db->log_str, peer->addr_str, peer->buf.exp_len, BGP_BUFFER_SIZE);
 	}
 
 	if (ret > 0) {
