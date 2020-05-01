@@ -2962,8 +2962,7 @@ int sql_evaluate_primitives(int primitive)
       cp_entry = &config.cpptrs.primitive[cp_idx];
       strncat(insert_clause, cp_entry->name, SPACELEFT(insert_clause));
       strncat(where[primitive].string, cp_entry->name, SPACELEFT(where[primitive].string));
-      if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_UINT ||
-	  cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_HEX) {
+      if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_UINT) {
 	strncat(where[primitive].string, "=%s", SPACELEFT(where[primitive].string));
         strncat(values[primitive].string, "%s", SPACELEFT(values[primitive].string));
       }
