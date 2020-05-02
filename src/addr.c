@@ -403,7 +403,7 @@ int host_addr_mask_cmp(struct host_addr *a1, struct host_mask *m1, struct host_a
   else if (a1->family == AF_INET6) {
     memcpy(&ha_local, a2, sizeof(struct host_addr));
     for (j = 0; j < 16; j++) ha_local.address.ipv6.s6_addr[j] &= m1->mask.m6[j];
-    ret = ip6_addr_cmp(a1, &ha_local.address.ipv6);
+    ret = ip6_addr_cmp(&a1->address.ipv6, &ha_local.address.ipv6);
     if (!ret) return FALSE;
     else return TRUE;
   }
