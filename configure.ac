@@ -882,7 +882,7 @@ AC_ARG_ENABLE(serdes,
   yes)
     AC_MSG_RESULT(yes)
 
-    PKG_CHECK_MODULES([SERDES], [serdes],, [
+    PKG_CHECK_MODULES([SERDES], [serdes], [
       SUPPORTS="${SUPPORTS} serdes"
       USING_SERDES="yes"
       PMACCT_CFLAGS="$PMACCT_CFLAGS $SERDES_CFLAGS"
@@ -896,6 +896,8 @@ AC_ARG_ENABLE(serdes,
       CFLAGS="$CFLAGS $SERDES_CFLAGS"
       AC_CHECK_HEADER([libserdes/serdes.h])
       CFLAGS="$_save_CFLAGS"
+    ], [
+      AC_MSG_ERROR([Missing Confluent serdes library. Refer to: https://github.com/confluentinc/libserdes])
     ])
     ;;
   no)
