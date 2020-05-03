@@ -882,23 +882,22 @@ AC_ARG_ENABLE(serdes,
   yes)
     AC_MSG_RESULT(yes)
 
-    PKG_CHECK_MODULES([SERDES], [serdes], [
-      SUPPORTS="${SUPPORTS} serdes"
-      USING_SERDES="yes"
-      PMACCT_CFLAGS="$PMACCT_CFLAGS $SERDES_CFLAGS"
-      SERDES_LIBS="$SERDES_LIBS -lserdes"
-      AC_DEFINE(WITH_SERDES, 1)
-      _save_LIBS="$LIBS"
-      LIBS="$LIBS $SERDES_LIBS"
-      AC_CHECK_LIB([serdes], [serdes_new])
-      LIBS="$_save_LIBS"
-      _save_CFLAGS="$CFLAGS"
-      CFLAGS="$CFLAGS $SERDES_CFLAGS"
-      AC_CHECK_HEADER([libserdes/serdes.h])
-      CFLAGS="$_save_CFLAGS"
-    ], [
-      AC_MSG_ERROR([Missing Confluent serdes library. Refer to: https://github.com/confluentinc/libserdes])
-    ])
+    AC_SUBST(SERDES_CFLAGS)
+    AC_SUBST(SERDES_LIBS)
+
+    SUPPORTS="${SUPPORTS} serdes"
+    USING_SERDES="yes"
+    PMACCT_CFLAGS="$PMACCT_CFLAGS $SERDES_CFLAGS"
+    SERDES_LIBS="$SERDES_LIBS -lserdes"
+    AC_DEFINE(WITH_SERDES, 1)
+    _save_LIBS="$LIBS"
+    LIBS="$LIBS $SERDES_LIBS"
+    AC_CHECK_LIB([serdes], [serdes_new],, AC_MSG_ERROR([Missing Confluent serdes library. Refer to: https://github.com/confluentinc/libserdes]))
+    LIBS="$_save_LIBS"
+    _save_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $SERDES_CFLAGS"
+    AC_CHECK_HEADER([libserdes/serdes.h],, AC_MSG_ERROR([Missing Confluent serdes headers. Refer to: https://github.com/confluentinc/libserdes]))
+    CFLAGS="$_save_CFLAGS"
     ;;
   no)
     AC_MSG_RESULT(no)
