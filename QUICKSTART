@@ -1934,6 +1934,12 @@ bgp_daemon_allow_file: /path/to/allow-2.map
 !
 ...
 
+NOTE: when leveraging SO_REUSEPORT for TCP sessions in conjunction with
+allow files the kernel will try to naively balance the sessions over the
+listening daemons; this may take a few connection attempts before wiring
+the session to the right daemon; having an excessive numbers of daemons
+in the pool may slow down the convergence process. 
+
 For flow protocols, which are transported in UDP, a replication layer is
 needed in front, note the daemon listen on different nfacctd_port in the
 example above (read more on how to set up a replicator in the "Quickstart
