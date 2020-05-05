@@ -24,7 +24,8 @@ XVIII.	Quickstart guide to setup Streaming Telemetry collection
 XIX.	Running the print plugin to write to flat-files
 XX.	Quickstart guide to setup GeoIP lookups
 XXI.	Using pmacct as traffic/event logger
-XXII.	Miscellaneous notes and troubleshooting tips
+XXII.   Connecting pmacct to a Redis cache
+XXIII.	Miscellaneous notes and troubleshooting tips
 
 
 I. Daemons and plugins included with pmacct distribution
@@ -2099,11 +2100,10 @@ address X1, X2 .. Xn to receiver Y or replicate flows in VLAN W to receiver
 Z. The feature works by inspecting the original packet and dissecting it as
 needed, one of the most popular use-cases being IXPs replicating flows back
 to the members originating and/or receiving them. The feature is available
-for sFlow and, from 1.7.2, the feature has been extended to NetFlow/IPFIX.
-Some of the supported primitives are: source/destination MAC addresses and
-input/output interfaces ifindex; the full list of primitives is available in
-examples/pretag.map.example (look for "sfacctd when in 'tee' mode" or
-"nfacctd when in 'tee' mode").
+for sFlow and NetFlow/IPFIX. Some of the supported primitives are: source/
+destination MAC addresses and input/output interfaces ifindex; the full list
+of primitives is available in examples/pretag.map.example (look for "sfacctd
+when in 'tee' mode" or "nfacctd when in 'tee' mode").
 
 The feature is configured just like selective teeing shown in the previous
 section. Incoming packets are tagged with a pre_tag_map and then matched to a
@@ -2704,7 +2704,48 @@ set_tag=20      ip=B.B.B.B	sample_type=event
 ! ...
 
 
-XXII. Miscellaneous notes and troubleshooting tips
+XXII. Connecting pmacct to a Redis cache
+Since version 1.7.5, pmacct daemons can connect to a Redis cache. The main
+use-case currenly covered is: registering every stable daemon component (ie.
+plugins, threads, etc. but not writers for example) in a table so to have,
+when running a cluster comprising several daemons / components, an olistic
+view of what is currently running and where; shall a component stop running
+or crash it will disappear from the inventory.
+
+Over time it is expected that the amount of use-cases will increase to include
+specific features where one daemon can obtain relevant information about other
+daemons running in the cluster.
+
+Requirement to use the Redis feature plugin is the Hiredis library available
+here: https://github.com/redis/hiredis . Once this is installed, pmacct can
+be configured for compiling. pmacct makes use of pkg-config for finding
+libraries and headers location and checks some default locations, ie.
+/usr/local/lib and /usr/local/include. If this is satisfactory, all you
+should do is just:
+
+shell> ./configure --enable-redis
+
+But, for example, should you have installed Hiedis in /usr/local/redis and
+pkg-config is unable to help, you can supply this non-default location as
+follows (assuming you are running the bash shell):
+
+shell> export REDIS_LIBS="-L/usr/local/redis/lib -lhiredis"
+shell> export EDIS_CFLAGS="-I/usr/local/redis/include"
+shell> ./configure --enable-redis
+
+Following a configuration snippet showing a basic configuration for the
+Redis feature. redis_host points to the Redis cache whereas cluster_*
+directives essentially form a pmacct cluster (cluster_name, every cluster
+should have a different name string, and cluster_id, an unique id inside
+a certain cluster):
+
+cluster_name: prod 
+cluster_id: 1
+!
+redis_host: 127.0.0.1:6379
+
+
+XXIII. Miscellaneous notes and troubleshooting tips
 This chapter will hopefully build up to the point of providing a taxonomy of
 popular cases to troubleshoot by daemon and what to do. Although that is the
 plan, the current format is sparse notes.  
@@ -2903,29 +2944,24 @@ shell 1> bmp_play.py -m play -p 1790 -f bmp.dump -d 127.0.0.1
 shell 2> pmbmpd -l 1790 -d -o bmp.log
 
 Alternatively, since version 1.7.5, pmbmpd supports pcap_savefile (-I) to
-replat a pcap trace that includes BMP packets (TCP ACKs are safely ignored;
-but, of course, results can be undetermined if the trace does include
-unrelevant (non BMP) packets.
+replay a pcap trace that includes BMP packets; packets functional to the
+house-keeping of the TCP session are safely ignored and pcap_filter helps
+on replay to trash unrelevant (non BMP) packets.
  
 i) packet classification using the nDPI library is among the new features of
-pmacct 1.7. As with any major and complex feature, it is expected that not
-everything may work great and smooth at the first round of implementation.
-In this section you will find a few tips on how to help providing meaningful
+pmacct 1.7. Following are some tips on how to help by providing meaningful
 report of issues you may be experiencing in this area. 1) Please follow
 guidelines in the section "Quickstart guide to packet classification" of this
-document; 2) avoid generic reporting a-la "it doesn't work" or "there is too
-much unknown traffic" or "i know protocol X is in my traffic mix but it's not
-being classified properly"; 3) it is OK to contact the author directly given
-sensitiveness of data may be involved; 4) it is OK to compare classification
-results achieved with a 3rd party tool also using nDPI for classification; in
-case of different results, show the actual results when reporting the issue
-and please elaborate as much as possible how the comparison was done (ie.
-say how it is being ensured that the two data- sets are the same or as much
-as possible similar); 5) remember that the most effective way troubleshoot
-any issue related to packet classification is by the author being able to
-reproduce the issue or for him to verify first hand the problem: whenever
-possible please share a traffic capture in pcap format or grant remote-access
-to your testbed; 6) excluded from these guidelines are problems related to
+document; 2) please avoid generic reporting; remember that the most effective
+way troubleshoot any issue related to packet classification is by the authors
+being able to reproduce the issue or for them to verify first-hand the issue:
+whenever possible please share a traffic capture in pcap format or grant
+remote-access to your testbed; 3) it is OK to compare classification results
+achieved with a 3rd party tool also using nDPI for classification; in case
+of different results, please show the actual results when reporting the issue
+and please elaborate as much as possible how the comparison was done (ie. say
+how it is being ensured that the two data-sets are the same or as much as
+possible similar); 4) excluded from these guidelines are problems related to
 nDPI but unrelated to classification, ie. memory leaks, performance issues,
-crashes, etc. for which you can follow the other guide lines in this
-"Miscellaneous notes and troubleshooting tips" section.
+crashes, etc. for which you can follow the other guide lines in this document
+in the "Miscellaneous notes and troubleshooting tips" section.
