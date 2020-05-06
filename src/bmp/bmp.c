@@ -359,6 +359,7 @@ void skinny_bmp_daemon()
       bmp_misc_db->msglog_avro_schema[BMP_MSG_PEER_UP] = p_avro_schema_build_bmp_peer_up("bmp_peer_up");
       bmp_misc_db->msglog_avro_schema[BMP_MSG_INIT] = p_avro_schema_build_bmp_init("bmp_init");
       bmp_misc_db->msglog_avro_schema[BMP_MSG_TERM] = p_avro_schema_build_bmp_term("bmp_term");
+      bmp_misc_db->msglog_avro_schema[BMP_MSG_TMP_RPAT] = p_avro_schema_build_bmp_rpat("bmp_rpat");
 
       bmp_misc_db->msglog_avro_schema[BMP_LOG_TYPE_LOGINIT] = p_avro_schema_build_bmp_log_initclose(BGP_LOGDUMP_ET_LOG, "bmp_loginit");
       bmp_misc_db->msglog_avro_schema[BMP_LOG_TYPE_LOGCLOSE] = p_avro_schema_build_bmp_log_initclose(BGP_LOGDUMP_ET_LOG, "bmp_logclose");
@@ -388,6 +389,9 @@ void skinny_bmp_daemon()
 
 	write_avro_schema_to_file_with_suffix(config.bmp_daemon_msglog_avro_schema_file, "-bmp_term",
 					      p_avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_TERM]);
+
+	write_avro_schema_to_file_with_suffix(config.bmp_daemon_msglog_avro_schema_file, "-bmp_rpat",
+					      p_avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_MSG_TMP_RPAT]);
 
 	write_avro_schema_to_file_with_suffix(config.bmp_daemon_msglog_avro_schema_file, "-bmp_loginit",
 					      p_avro_schema_file, bmp_misc_db->msglog_avro_schema[BMP_LOG_TYPE_LOGINIT]);
@@ -440,6 +444,11 @@ void skinny_bmp_daemon()
 												     "bmp", "term",
 												     config.bmp_daemon_msglog_kafka_avro_schema_registry);
 
+        bmp_daemon_msglog_kafka_host.sd_schema[BMP_MSG_TMP_RPAT] = compose_avro_schema_registry_name_2(config.bmp_daemon_msglog_kafka_topic, FALSE,
+												     bmp_misc_db->msglog_avro_schema[BMP_MSG_TMP_RPAT],
+												     "bmp", "rpat",
+												     config.bmp_daemon_msglog_kafka_avro_schema_registry);
+
 	bmp_daemon_msglog_kafka_host.sd_schema[BMP_LOG_TYPE_LOGINIT] = compose_avro_schema_registry_name_2(config.bmp_daemon_msglog_kafka_topic, FALSE,
 												     bmp_misc_db->msglog_avro_schema[BMP_LOG_TYPE_LOGINIT],
 												     "bmp", "loginit",
@@ -474,6 +483,7 @@ void skinny_bmp_daemon()
       bmp_misc_db->dump_avro_schema[BMP_MSG_PEER_UP] = p_avro_schema_build_bmp_peer_up("bmp_peer_up");
       bmp_misc_db->dump_avro_schema[BMP_MSG_INIT] = p_avro_schema_build_bmp_init("bmp_init");
       bmp_misc_db->dump_avro_schema[BMP_MSG_TERM] = p_avro_schema_build_bmp_term("bmp_term");
+      bmp_misc_db->dump_avro_schema[BMP_MSG_TMP_RPAT] = p_avro_schema_build_bmp_rpat("bmp_rpat");
 
       bmp_misc_db->dump_avro_schema[BMP_LOG_TYPE_DUMPINIT] = p_avro_schema_build_bmp_dump_init(BGP_LOGDUMP_ET_DUMP, "bmp_dumpinit");
       bmp_misc_db->dump_avro_schema[BMP_LOG_TYPE_DUMPCLOSE] = p_avro_schema_build_bmp_dump_close(BGP_LOGDUMP_ET_DUMP, "bmp_dumpclose");
@@ -503,6 +513,9 @@ void skinny_bmp_daemon()
 
 	write_avro_schema_to_file_with_suffix(config.bmp_dump_avro_schema_file, "-bmp_term",
 					      p_avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_MSG_TERM]);
+
+	write_avro_schema_to_file_with_suffix(config.bmp_dump_avro_schema_file, "-bmp_rpat",
+					      p_avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_MSG_TMP_RPAT]);
 
 	write_avro_schema_to_file_with_suffix(config.bmp_dump_avro_schema_file, "-bmp_dumpinit",
 					      p_avro_schema_file, bmp_misc_db->dump_avro_schema[BMP_LOG_TYPE_DUMPINIT]);
