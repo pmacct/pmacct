@@ -1095,16 +1095,26 @@ For example:
 
 global, statistics.interval.ms, 60000
 
-4) The SSL support in librdkafka is completely configuration based, meaning
-it can be enabled via the kafka_config_file. More info is available at the
-page: https://github.com/edenhill/librdkafka/wiki/Using-SSL-with-librdkafka 
-For example, quoting the librdkafka page:
+4) SSL and SASL supports in librdkafka are totally configuration based, meaning
+they can be enabled via the kafka_config_file. More info is available at the
+pages: https://github.com/edenhill/librdkafka/wiki/Using-SSL-with-librdkafka
+and https://github.com/edenhill/librdkafka/wiki/Using-SASL-with-librdkafka . 
+
+For example, quoting the librdkafka page for SSL:
 
 global, security.protocol, ssl
 global, ssl.ca.location, ca-cert
 global, ssl.certificate.location, client_?????_client.pem
 global, ssl.key.location, client_?????_client.key
 global, ssl.key.password, abcdefgh
+
+Or, for example, trying to connect to Microsoft Azure via their Kafka API
+using SASL:
+
+global, security.protocol, SASL_SSL
+global, sasl.mechanism, PLAIN
+global, sasl.username, $ConnectionString
+global, sasl.password, Endpoint=sb://XXX.windows.net/;SharedAccessKeyName=YYY;SharedAccessKey=ZZZ;EntityPath=JJJ
 
 5) When integrating pmacct with the PNDA framework ( http://www.pnda.io/ ), a
 guide on how to make the two communicate has been written-up and published at
