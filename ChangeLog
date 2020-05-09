@@ -4,6 +4,107 @@ pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
+1.7.5 -- XX-0X-2020
+  + pmacct & Redis: pmacct daemons can now connect to a Redis cache.
+    The main use-case currenly covered is: registering every stable
+    daemon component in a table so to have, when running a cluster
+    comprising several daemons / components, an olistic view of what
+    is currently running and where; shall a component stop running
+    or crash it will disappear from the inventory.
+  + BMP daemon: as part of the IETF 107 vHackaton preliminar support
+    for draft-xu-grow-bmp-route-policy-attr-trace and draft-lucente-
+    grow-bmp-tlv-ebit was introduced. Also added support for Peer
+    Distinguisher field in BMP Per-Peer Header.
+  + BMP daemon: added support for reading from savefiles in libpcap
+    format (pcap_savefile, pcap_savefile_delay, pcap_savefile_replay,
+    pcap_filter) as an alternative to the use of bmp_play.py.
+  + BMP daemon: re-worked, improved and generalized support for TLVs
+    at the end of BMP messages. In this context, unknown Stats data
+    is handled as a generic TLV. 
+  + BMP daemon: added SO_KEEPALIVE TCP socket option (ie. to keep the
+    sessions alive via a firewall / NAT kind of device). Thanks to
+    Jared Mauch ( @jaredmauch ) for his patch. 
+  + nfacctd, nfprobe plugin: added usec timestamp resolution to IPFIX
+    collector and export via IEs #154, #155. For export, this can be
+    configured via the new nfprobe_tstamp_usec knob.
+  + nfacctd: nfacctd_templates_receiver and nfacctd_templates_port
+    config directives allow respectively to specify a destination
+    where to copy NetFlow v9/IPFIX templates and listen for templates
+    on a specific port. If nfacctd_templates_receiver points to a
+    replicator and the replicator exports collectors listening on
+    a nfacctd_templates_port then it is possible to share templates
+    among collectors in a cluster for the purpose of seamless scale-out.
+  + pmtelemetryd: in addition to existing TCP, UDP and ZeroMQ inputs,
+    the daemon can now read Streaming Telemetry data in JSON format
+    from a Kafka broker (telemetry_daemon_kafka_* config knobs).
+  + pmgrpcd.py: Use of multiple processes for the Kafka Avro exporter
+    to leverage the potential of multi-core/processors architectures.
+    Code is from Raphael P. Barazzutti ( @rbarazzutti ).
+  + pmgrpcd.py: added -F / --no-flatten command-line option to disable
+    object flattening (default true for backward compatibility); also
+    export to a Kafka broker was added (in addition to existing export
+    to ZeroMQ).
+  + nDPI: introduced support for nDPI 3.2 and dropped support for all
+    earlier versions of the library due to changes to the API.
+  ! fix, pmacctd: pcap_setdirection() enabled and moved to the right
+    place in code. Libpcap tested for function presence. Thanks to
+    Mikhail Sennikovsky for his patch.
+  ! fix, pmacctd: SEGV have been detected if passing messages with an
+    unsupported link layer. 
+  ! fix, uacctd: handle non-ethernet packets correctly. Use mac_len = 0
+    or non-ethernet packets. In this case zeroed ethernet header is
+    used. Thanks to @aleksandrgilfanov for his patch.
+  ! fix, BGP daemon: improved handling of withdrawals for label-unicast
+    and mpls-vpn NLRIs.
+  ! fix, BGP daemon: improved decoding of MPLS labels by passing it via
+    a "0x%02x%02x%01x" formatter. In the past some labels may have been
+    printed out incorrectly.
+  ! fix, BGP daemon: decoding origin field correctly. Thanks to Peter
+    Pothier ( @pothier-peter ) for his patch.
+  ! BGP Looking Glass: LG code was moved from pmbgpd to pmacct libbgp
+    so to be re-used in other components (ie. BGP thread of a flow
+    daemon, BMP daemon, etc.).
+  ! fix, BMP daemon: timestamps for Route Monitoring message were set
+    current time rather than timestamp in the Per-Peer Header. Thanks
+    to Peter Pothier ( @pothier-peter ) for reporting the issue.
+  ! fix, BMP daemon: V flag test to allow IPv6 prefixes/peers was not
+    correct (details in PR #362 on GitHub). Thanks @bcavns01 for his
+    patch.
+  ! fix, BGP, BMP daemons: modified approach to message segmentation
+    by reading one message at a time (instead of the previous unaligned
+    approach trying to fill up the available read buffer) and waiting
+    for all segments be available before processing (instead of the
+    previious greedy approach). 
+  ! fix, RPKI daemon: in rpki_prefix_lookup_node_match_cmp() prevent
+    invalid results to over-write a previously computed valid one.
+  ! fix, pmtelemetryd: recv() was including a MSG_WAITALL option to
+    make sure all data is available before processing a given message; 
+    now an alarm() call is introduced so to avoid stalls due to bogus /
+    incomplete data.
+  ! fix, tee plugin: Tee_init_socks() don't overwrite previously computed
+    address length: issues repoted with IPv6 IPv4-mapped addresses. 
+  ! fix, nfprobe plugin: take into account ingress/egress interfaces
+    when comparing flows. Thanks to Mikhail Sennikovsky for his patch.
+  ! fix, pretag_handlers.c: pretag_copy_label() instead of memcpy() in
+    pretag_label_handler() to not borrow reference to label value and
+    consequently lead to SEGV.
+  ! fix, zmq_common.c: missing variable init in p_zmq_zap_handler()
+    was giving troubles with gcc7 compiler optimizations. Thanks to
+    Yuri Lachin ( @yuyutime ) for his support resolving this bug.
+  ! fix, sql_common.c: print custom primitives with hex semantics among
+    quotes. Hexs require a char type defined in the SQL table schema.
+  ! fix, addr.c: passing right aligned argument to ip6_addr_cmp() in
+    host_addr_mask_cmp(). This was found to impact selective replication
+    of IPv6 flows basing on src_net and/or dst_net primitives in the
+    pre_tag_map.
+  ! fix, several code warnings catched by gcc7 and gcc8. Also several
+    functions were renamed to avoid namespace conflicts with linked
+    libraries.
+  - Obsoleted --enable-64bit knob which was already defaulting to true
+    for some releases already.
+  - Obsoleted savefile_wait config knob (pcap_savefile_wait must be
+    used instead).
+
 1.7.4p1 -- 09-02-2020
   ! fix, pre_tag_map: a memory leak in pretag_entry_process() has been
     introduced in 1.7.4. Thanks to Fabien Vincent and Olivier Benghozi
