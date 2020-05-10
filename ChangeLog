@@ -11,10 +11,10 @@ The keys used are:
     comprising several daemons / components, an olistic view of what
     is currently running and where; shall a component stop running
     or crash it will disappear from the inventory.
-  + BMP daemon: as part of the IETF 107 vHackaton preliminar support
+  + BMP daemon: as part of the IETF 107 vHackaton, preliminar support
     for draft-xu-grow-bmp-route-policy-attr-trace and draft-lucente-
     grow-bmp-tlv-ebit was introduced. Also added support for Peer
-    Distinguisher field in BMP Per-Peer Header.
+    Distinguisher field in the BMP Per-Peer Header.
   + BMP daemon: added support for reading from savefiles in libpcap
     format (pcap_savefile, pcap_savefile_delay, pcap_savefile_replay,
     pcap_filter) as an alternative to the use of bmp_play.py.
@@ -27,13 +27,14 @@ The keys used are:
   + nfacctd, nfprobe plugin: added usec timestamp resolution to IPFIX
     collector and export via IEs #154, #155. For export, this can be
     configured via the new nfprobe_tstamp_usec knob.
-  + nfacctd: nfacctd_templates_receiver and nfacctd_templates_port
+  + nfacctd: new nfacctd_templates_receiver and nfacctd_templates_port
     config directives allow respectively to specify a destination
-    where to copy NetFlow v9/IPFIX templates and listen for templates
-    on a specific port. If nfacctd_templates_receiver points to a
-    replicator and the replicator exports collectors listening on
-    a nfacctd_templates_port then it is possible to share templates
-    among collectors in a cluster for the purpose of seamless scale-out.
+    where to copy NetFlow v9/IPFIX templates to and a port where to
+    listen for templates from. If nfacctd_templates_receiver points to
+    a replicator and the replicator exports to nfacctd_templates_port
+    of a set of collectors then, for example, it gets possible to share
+    templates among collectors in a cluster for the purpose of seamless
+    scale-out.
   + pmtelemetryd: in addition to existing TCP, UDP and ZeroMQ inputs,
     the daemon can now read Streaming Telemetry data in JSON format
     from a Kafka broker (telemetry_daemon_kafka_* config knobs).
@@ -42,17 +43,21 @@ The keys used are:
     Code is from Raphael P. Barazzutti ( @rbarazzutti ).
   + pmgrpcd.py: added -F / --no-flatten command-line option to disable
     object flattening (default true for backward compatibility); also
-    export to a Kafka broker was added (in addition to existing export
-    to ZeroMQ).
+    export to a Kafka broker for (flattened) JSON objects was added (in
+    addition to existing export to ZeroMQ).
   + nDPI: introduced support for nDPI 3.2 and dropped support for all
     earlier versions of the library due to changes to the API.
+  + Docker: embraced the technology for CI purposes; added a docker/
+    directory in the file distribution where Dockerfile and scripts to
+    build pmacct and dependencies are shared. Thanks to Claudio Ortega
+    ( @claudio-ortega ) for contributing his excellent work in the area.
   ! fix, pmacctd: pcap_setdirection() enabled and moved to the right
     place in code. Libpcap tested for function presence. Thanks to
     Mikhail Sennikovsky for his patch.
-  ! fix, pmacctd: SEGV have been detected if passing messages with an
+  ! fix, pmacctd: SEGV has been detected if passing messages with an
     unsupported link layer. 
   ! fix, uacctd: handle non-ethernet packets correctly. Use mac_len = 0
-    or non-ethernet packets. In this case zeroed ethernet header is
+    for non-ethernet packets in which case a zeroed ethernet header is
     used. Thanks to @aleksandrgilfanov for his patch.
   ! fix, BGP daemon: improved handling of withdrawals for label-unicast
     and mpls-vpn NLRIs.
@@ -65,32 +70,35 @@ The keys used are:
     so to be re-used in other components (ie. BGP thread of a flow
     daemon, BMP daemon, etc.).
   ! fix, BMP daemon: timestamps for Route Monitoring message were set
-    current time rather than timestamp in the Per-Peer Header. Thanks
-    to Peter Pothier ( @pothier-peter ) for reporting the issue.
+    to the current time rather than timestamp in the Per-Peer Header.
+    Thanks to Peter Pothier ( @pothier-peter ) for reporting the issue.
   ! fix, BMP daemon: V flag test to allow IPv6 prefixes/peers was not
     correct (details in PR #362 on GitHub). Thanks @bcavns01 for his
     patch.
   ! fix, BGP, BMP daemons: modified approach to message segmentation
-    by reading one message at a time (instead of the previous unaligned
-    approach trying to fill up the available read buffer) and waiting
-    for all segments be available before processing (instead of the
-    previious greedy approach). 
+    by ensuring reading exactly one message at a time (instead of the
+    previous unaligned approach that was aiming to fill the available
+    read buffer up) and waiting for all segments be available before
+    processing a message (instead of the previous greedy approach that
+    was trying to parse also partial messages). 
   ! fix, RPKI daemon: in rpki_prefix_lookup_node_match_cmp() prevent
     invalid results to over-write a previously computed valid one.
-  ! fix, pmtelemetryd: recv() was including a MSG_WAITALL option to
-    make sure all data is available before processing a given message; 
-    now an alarm() call is introduced so to avoid stalls due to bogus /
+  ! fix, pmtelemetryd: recv() does include a MSG_WAITALL option to make
+    sure all data is available before processing a given message; now
+    n alarm() syscall is introduced so to prevent stalls due to bogus /
     incomplete data.
-  ! fix, tee plugin: Tee_init_socks() don't overwrite previously computed
-    address length: issues repoted with IPv6 IPv4-mapped addresses. 
-  ! fix, nfprobe plugin: take into account ingress/egress interfaces
-    when comparing flows. Thanks to Mikhail Sennikovsky for his patch.
+  ! fix, tee plugin: Tee_init_socks() now does not overwrite previously
+    computed address length anymore: issues were repoted with IPv6 IPv4-
+    mapped addresses. 
+  ! fix, nfprobe plugin: take into account ingress/egress interfaces,
+    if available, when comparing flows. Thanks to Mikhail Sennikovsky
+    for his patch.
   ! fix, pretag_handlers.c: pretag_copy_label() instead of memcpy() in
     pretag_label_handler() to not borrow reference to label value and
     consequently lead to SEGV.
-  ! fix, zmq_common.c: missing variable init in p_zmq_zap_handler()
-    was giving troubles with gcc7 compiler optimizations. Thanks to
-    Yuri Lachin ( @yuyutime ) for his support resolving this bug.
+  ! fix, zmq_common.c: missing variable init in p_zmq_zap_handler() was
+    giving troubles with gcc7 compiler optimizations. Thanks to Yuri
+    Lachin ( @yuyutime ) for his support resolving this bug.
   ! fix, sql_common.c: print custom primitives with hex semantics among
     quotes. Hexs require a char type defined in the SQL table schema.
   ! fix, addr.c: passing right aligned argument to ip6_addr_cmp() in
