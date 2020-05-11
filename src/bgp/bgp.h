@@ -63,6 +63,7 @@
 #define BGP_ATTR_AS4_PATH                       17
 #define BGP_ATTR_AS4_AGGREGATOR                 18
 #define BGP_ATTR_AS_PATHLIMIT                   21
+#define BGP_ATTR_AIGP				26
 #define BGP_ATTR_LARGE_COMMUNITIES		32 /* rfc8092 */
 
 #define BGP_NLRI_UNDEFINED			0
@@ -313,6 +314,7 @@ struct bgp_attr {
   u_int32_t med;
   u_int32_t local_pref;
   u_int8_t origin;
+  u_int64_t aigp;
 };
 
 struct bgp_comm_range {

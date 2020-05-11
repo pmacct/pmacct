@@ -770,6 +770,9 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, char *ptr, int 
     case BGP_ATTR_MP_UNREACH_NLRI:
       ret = bgp_attr_parse_mp_unreach(peer, attr_len, attr, ptr, mp_withdraw);
       break;
+    case BGP_ATTR_AIGP:
+      ret = bgp_attr_parse_aigp(peer, attr_len, attr, ptr, flag);
+      break;
     default:
       ret = 0;
       break;
@@ -1157,6 +1160,38 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_nlri *info, 
     }
 #endif
   }
+
+  return SUCCESS;
+}
+
+/* AIGP attribute. */
+int bgp_attr_parse_aigp(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_char flag)
+{
+  u_int32_t tmp32;
+  u_int64_t tmp64;
+
+  /* Length check. */
+  if (len < 3) return ERR;
+
+  switch (len) {
+  case 3:
+    attr->aigp = 0; 
+    break;
+  case 7:
+    memcpy(&tmp32, (ptr + 3), 4);
+    attr->aigp = ntohl(tmp32);
+    break;
+  case 11:
+    memcpy(&tmp64, (ptr + 3), 8);
+    attr->aigp = pm_ntohll(tmp64);
+    break;
+  default:
+    /* unsupported */
+    attr->aigp = 0;
+    break;
+  }
+
+  ptr += len;
 
   return SUCCESS;
 }
