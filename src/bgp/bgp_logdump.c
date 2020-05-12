@@ -163,6 +163,9 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       if (attr->aigp)
         json_object_set_new_nocheck(obj, "aigp", json_integer((json_int_t)attr->aigp));
 
+      if (attr->psid_li)
+        json_object_set_new_nocheck(obj, "psid_li", json_integer((json_int_t)attr->psid_li));
+
       if (config.rpki_roas_file || config.rpki_rtr_cache) {
 	u_int8_t roa;
 
@@ -393,6 +396,16 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "aigp", &p_avro_field, NULL));
 	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
+
+      if (attr->psid_li) {
+	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "psid_li", &p_avro_field, NULL));
+	pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+	pm_avro_check(avro_value_set_int(&p_avro_branch, attr->psid_li));
+      }
+      else {
+	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "psid_li", &p_avro_field, NULL));
+	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+      }
     }
     else {
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "bgp_nexthop", &p_avro_field, NULL));
@@ -420,6 +433,9 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
 
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "aigp", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+
+      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "psid_li", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
@@ -2085,6 +2101,7 @@ void p_avro_schema_build_bgp_route(avro_schema_t *schema, avro_schema_t *optlong
   avro_schema_record_field_append((*schema), "local_pref", (*optint_s));
   avro_schema_record_field_append((*schema), "med", (*optint_s));
   avro_schema_record_field_append((*schema), "aigp", (*optint_s));
+  avro_schema_record_field_append((*schema), "psid_li", (*optint_s));
   avro_schema_record_field_append((*schema), "label", (*optstr_s));
 
   if (config.rpki_roas_file || config.rpki_rtr_cache) {

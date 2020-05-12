@@ -773,6 +773,9 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, char *ptr, int 
     case BGP_ATTR_AIGP:
       ret = bgp_attr_parse_aigp(peer, attr_len, attr, ptr, flag);
       break;
+    case BGP_ATTR_PREFIX_SID:
+      ret = bgp_attr_parse_prefix_sid(peer, attr_len, attr, ptr, flag);
+      break;
     default:
       ret = 0;
       break;
@@ -1188,6 +1191,37 @@ int bgp_attr_parse_aigp(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *a
     attr->aigp = 0;
     break;
   }
+
+  ptr += len;
+
+  return SUCCESS;
+}
+
+/* Prefix-SID attribute */
+int bgp_attr_parse_prefix_sid(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_char flag)
+{
+  u_int8_t tlv_type;
+  u_int16_t tlv_len;
+  u_int32_t tmp;
+
+  /* Length check. */
+  if (len < 3) return ERR;
+
+  tlv_type = (u_int8_t) (*ptr);
+  memcpy(&tlv_len, (ptr + 1), 2);
+  tlv_len = ntohs(tlv_len);
+
+  if (tlv_type == BGP_PREFIX_SID_LI_TLV) {
+    if (tlv_len == 7) {
+      memcpy(&tmp, (ptr + 6), 4);
+      attr->psid_li = ntohl(tmp); 
+    }
+    else {
+      return ERR;
+    }
+  }
+
+  /* XXX: Originator SRGB TLV not decoded yet */
 
   ptr += len;
 

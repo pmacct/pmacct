@@ -65,6 +65,7 @@
 #define BGP_ATTR_AS_PATHLIMIT                   21
 #define BGP_ATTR_AIGP				26
 #define BGP_ATTR_LARGE_COMMUNITIES		32 /* rfc8092 */
+#define BGP_ATTR_PREFIX_SID			40
 
 #define BGP_NLRI_UNDEFINED			0
 #define BGP_NLRI_UPDATE				1
@@ -104,6 +105,9 @@
 #define BGP_ORIGIN_INCOMPLETE	2
 #define BGP_ORIGIN_MAX		2
 #define BGP_ORIGIN_UNKNOWN	3
+
+#define BGP_PREFIX_SID_LI_TLV		1
+#define BGP_PREFIX_SID_OSRGB_TLV	2
 
 /* structures */
 struct bgp_dump_event {
@@ -315,6 +319,7 @@ struct bgp_attr {
   u_int32_t local_pref;
   u_int8_t origin;
   u_int64_t aigp;
+  u_int32_t psid_li;
 };
 
 struct bgp_comm_range {
