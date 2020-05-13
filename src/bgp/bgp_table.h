@@ -70,6 +70,8 @@ struct bgp_info_extra
   rd_t rd;
   u_char label[3];
   path_id_t path_id;
+  u_int64_t aigp;
+  u_int32_t psid_li;
   struct bgp_msg_extra_data bmed;
 };
 

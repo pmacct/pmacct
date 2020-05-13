@@ -774,10 +774,10 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_info
       ret = bgp_attr_parse_mp_unreach(peer, attr_len, attr, ptr, mp_withdraw);
       break;
     case BGP_ATTR_AIGP:
-      ret = bgp_attr_parse_aigp(peer, attr_len, attr, ptr, flag);
+      ret = bgp_attr_parse_aigp(peer, attr_len, attr_extra, ptr, flag);
       break;
     case BGP_ATTR_PREFIX_SID:
-      ret = bgp_attr_parse_prefix_sid(peer, attr_len, attr, ptr, flag);
+      ret = bgp_attr_parse_prefix_sid(peer, attr_len, attr_extra, ptr, flag);
       break;
     default:
       ret = 0;
@@ -1167,7 +1167,7 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_info_extra *
 }
 
 /* AIGP attribute. */
-int bgp_attr_parse_aigp(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_char flag)
+int bgp_attr_parse_aigp(struct bgp_peer *peer, u_int16_t len, struct bgp_info_extra *attr_extra, char *ptr, u_char flag)
 {
   u_int64_t tmp64;
 
@@ -1178,16 +1178,16 @@ int bgp_attr_parse_aigp(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *a
 
   switch (len) {
   case 3:
-    attr->aigp = 0; 
+    attr_extra->aigp = 0; 
     break;
   /* rfc7311: [If prsent] The value field of the AIGP TLV is always 8 octets long */
   case 11:
     memcpy(&tmp64, (ptr + 3), 8);
-    attr->aigp = pm_ntohll(tmp64);
+    attr_extra->aigp = pm_ntohll(tmp64);
     break;
   default:
     /* unsupported */
-    attr->aigp = 0;
+    attr_extra->aigp = 0;
     break;
   }
 
@@ -1197,7 +1197,7 @@ int bgp_attr_parse_aigp(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *a
 }
 
 /* Prefix-SID attribute */
-int bgp_attr_parse_prefix_sid(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_char flag)
+int bgp_attr_parse_prefix_sid(struct bgp_peer *peer, u_int16_t len, struct bgp_info_extra *attr_extra, char *ptr, u_char flag)
 {
   u_int8_t tlv_type;
   u_int16_t tlv_len;
@@ -1213,7 +1213,7 @@ int bgp_attr_parse_prefix_sid(struct bgp_peer *peer, u_int16_t len, struct bgp_a
   if (tlv_type == BGP_PREFIX_SID_LI_TLV) {
     if (tlv_len == 7) {
       memcpy(&tmp, (ptr + 6), 4);
-      attr->psid_li = ntohl(tmp); 
+      attr_extra->psid_li = ntohl(tmp); 
     }
     else {
       return ERR;

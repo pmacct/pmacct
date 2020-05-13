@@ -257,18 +257,50 @@ struct bgp_info_extra *bgp_info_extra_process(struct bgp_peer *peer, struct bgp_
 
   /* Install/update MPLS stuff if required */
   if (safi == SAFI_MPLS_LABEL || safi == SAFI_MPLS_VPN) {
-    if (!rie) rie = bgp_info_extra_get(ri);
+    if (!rie) {
+      rie = bgp_info_extra_get(ri);
+    }
 
     if (rie) {
-      if (safi == SAFI_MPLS_VPN) memcpy(&rie->rd, &attr_extra->rd, sizeof(rd_t));
+      if (safi == SAFI_MPLS_VPN) {
+	memcpy(&rie->rd, &attr_extra->rd, sizeof(rd_t));
+      }
+
       memcpy(&rie->label, &attr_extra->label, 3);
     }
   }
 
   /* Install/update BGP ADD-PATHs stuff if required */
   if (peer->cap_add_paths && attr_extra->path_id) {
-    if (!rie) rie = bgp_info_extra_get(ri);
-    if (rie) memcpy(&rie->path_id, &attr_extra->path_id, sizeof(path_id_t));
+    if (!rie) {
+      rie = bgp_info_extra_get(ri);
+    }
+
+    if (rie) {
+      rie->path_id = attr_extra->path_id;
+    }
+  }
+
+  /* AIGP attribute */
+  if (attr_extra->aigp) {
+    if (!rie) {
+      rie = bgp_info_extra_get(ri);
+    }
+
+    if (rie) {
+      rie->aigp = attr_extra->aigp;
+    }
+  }
+
+  /* Prefix-SID attribute */
+  if (attr_extra->psid_li) {
+    if (!rie) {
+      rie = bgp_info_extra_get(ri);
+    }
+
+    if (rie) {
+      rie->psid_li = attr_extra->psid_li;
+    }
   }
 
   return rie;

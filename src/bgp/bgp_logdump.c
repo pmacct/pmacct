@@ -76,6 +76,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     struct bgp_attr *attr = ri->attr;
+    struct bgp_info_extra *attr_extra = ri->extra;
     char ip_address[INET6_ADDRSTRLEN], log_type_str[SUPERSHORTBUFLEN];
     json_t *obj = json_object();
 
@@ -160,11 +161,11 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       if (attr->med)
 	json_object_set_new_nocheck(obj, "med", json_integer((json_int_t)attr->med));
 
-      if (attr->aigp)
-        json_object_set_new_nocheck(obj, "aigp", json_integer((json_int_t)attr->aigp));
+      if (attr_extra->aigp)
+        json_object_set_new_nocheck(obj, "aigp", json_integer((json_int_t)attr_extra->aigp));
 
-      if (attr->psid_li)
-        json_object_set_new_nocheck(obj, "psid_li", json_integer((json_int_t)attr->psid_li));
+      if (attr_extra->psid_li)
+        json_object_set_new_nocheck(obj, "psid_li", json_integer((json_int_t)attr_extra->psid_li));
 
       if (config.rpki_roas_file || config.rpki_rtr_cache) {
 	u_int8_t roa;
@@ -236,6 +237,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     size_t p_avro_obj_len, p_avro_len;
 
     struct bgp_attr *attr = ri->attr;
+    struct bgp_info_extra *attr_extra = ri->extra;
     char ip_address[INET6_ADDRSTRLEN], log_type_str[SUPERSHORTBUFLEN];
     char prefix_str[PREFIX_STRLEN], nexthop_str[INET6_ADDRSTRLEN];
     char wid[SHORTSHORTBUFLEN], empty_string[] = "", *aspath = NULL;
@@ -387,20 +389,20 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
 
-      if (attr->aigp) {
+      if (attr_extra->aigp) {
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "aigp", &p_avro_field, NULL));
 	pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-	pm_avro_check(avro_value_set_int(&p_avro_branch, attr->aigp));
+	pm_avro_check(avro_value_set_int(&p_avro_branch, attr_extra->aigp));
       }
       else {
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "aigp", &p_avro_field, NULL));
 	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
 
-      if (attr->psid_li) {
+      if (attr_extra->psid_li) {
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "psid_li", &p_avro_field, NULL));
 	pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-	pm_avro_check(avro_value_set_int(&p_avro_branch, attr->psid_li));
+	pm_avro_check(avro_value_set_int(&p_avro_branch, attr_extra->psid_li));
       }
       else {
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "psid_li", &p_avro_field, NULL));
