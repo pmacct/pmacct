@@ -251,8 +251,7 @@ struct bgp_info_extra *bgp_info_extra_get(struct bgp_info *ri)
   return ri->extra;
 }
 
-struct bgp_info_extra *bgp_info_extra_process(struct bgp_peer *peer, struct bgp_info *ri, safi_t safi,
-		  			      path_id_t *path_id, rd_t *rd, u_char *label)
+struct bgp_info_extra *bgp_info_extra_process(struct bgp_peer *peer, struct bgp_info *ri, safi_t safi, struct bgp_info_extra *attr_extra)
 {
   struct bgp_info_extra *rie = NULL;
 
@@ -261,15 +260,15 @@ struct bgp_info_extra *bgp_info_extra_process(struct bgp_peer *peer, struct bgp_
     if (!rie) rie = bgp_info_extra_get(ri);
 
     if (rie) {
-      if (safi == SAFI_MPLS_VPN) memcpy(&rie->rd, rd, sizeof(rd_t));
-      memcpy(&rie->label, label, 3);
+      if (safi == SAFI_MPLS_VPN) memcpy(&rie->rd, &attr_extra->rd, sizeof(rd_t));
+      memcpy(&rie->label, &attr_extra->label, 3);
     }
   }
 
   /* Install/update BGP ADD-PATHs stuff if required */
-  if (peer->cap_add_paths && path_id && *path_id) {
+  if (peer->cap_add_paths && attr_extra->path_id) {
     if (!rie) rie = bgp_info_extra_get(ri);
-    if (rie) memcpy(&rie->path_id, path_id, sizeof(path_id_t));
+    if (rie) memcpy(&rie->path_id, &attr_extra->path_id, sizeof(path_id_t));
   }
 
   return rie;

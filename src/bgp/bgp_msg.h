@@ -32,7 +32,7 @@ extern int bgp_parse_notification_msg(struct bgp_msg_data *, char *, u_int8_t *,
 extern int bgp_write_keepalive_msg(char *);
 extern int bgp_write_open_msg(char *, char *, int, struct bgp_peer *);
 extern int bgp_write_notification_msg(char *, int, u_int8_t, u_int8_t, char *);
-extern int bgp_attr_parse(struct bgp_peer *, struct bgp_attr *, char *, int, struct bgp_nlri *, struct bgp_nlri *);
+extern int bgp_attr_parse(struct bgp_peer *, struct bgp_attr *, struct bgp_info_extra *, char *, int, struct bgp_nlri *, struct bgp_nlri *);
 extern int bgp_attr_parse_community(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_int8_t);
 extern int bgp_attr_parse_ecommunity(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_int8_t);
 extern int bgp_attr_parse_lcommunity(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_int8_t);
@@ -46,7 +46,7 @@ extern int bgp_attr_parse_mp_reach(struct bgp_peer *, u_int16_t, struct bgp_attr
 extern int bgp_attr_parse_mp_unreach(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, struct bgp_nlri *);
 extern int bgp_attr_parse_aigp(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_char);
 extern int bgp_attr_parse_prefix_sid(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, u_char);
-extern int bgp_nlri_parse(struct bgp_msg_data *, void *, struct bgp_nlri *, int);
-extern int bgp_process_update(struct bgp_msg_data *, struct prefix *, void *, afi_t, safi_t, rd_t *, path_id_t *, u_char *);
-extern int bgp_process_withdraw(struct bgp_msg_data *, struct prefix *, void *, afi_t, safi_t, rd_t *, path_id_t *, u_char *);
+extern int bgp_nlri_parse(struct bgp_msg_data *, void *, struct bgp_info_extra *, struct bgp_nlri *, int);
+extern int bgp_process_update(struct bgp_msg_data *, struct prefix *, void *, struct bgp_info_extra *, afi_t, safi_t);
+extern int bgp_process_withdraw(struct bgp_msg_data *, struct prefix *, void *, struct bgp_info_extra *, afi_t, safi_t);
 #endif 
