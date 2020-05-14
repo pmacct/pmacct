@@ -1170,6 +1170,7 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_info_extra *
 int bgp_attr_parse_aigp(struct bgp_peer *peer, u_int16_t len, struct bgp_info_extra *attr_extra, char *ptr, u_char flag)
 {
   u_int64_t tmp64;
+  int ret = SUCCESS;
 
   /* Length check. */
   if (len < 3) return ERR;
@@ -1180,7 +1181,7 @@ int bgp_attr_parse_aigp(struct bgp_peer *peer, u_int16_t len, struct bgp_info_ex
   case 3:
     attr_extra->aigp = 0; 
     break;
-  /* rfc7311: [If prsent] The value field of the AIGP TLV is always 8 octets long */
+  /* rfc7311: [If present] The value field of the AIGP TLV is always 8 octets long */
   case 11:
     memcpy(&tmp64, (ptr + 3), 8);
     attr_extra->aigp = pm_ntohll(tmp64);
@@ -1188,12 +1189,13 @@ int bgp_attr_parse_aigp(struct bgp_peer *peer, u_int16_t len, struct bgp_info_ex
   default:
     /* unsupported */
     attr_extra->aigp = 0;
+    ret = ERR;
     break;
   }
 
   ptr += len;
 
-  return SUCCESS;
+  return ret;
 }
 
 /* Prefix-SID attribute */
