@@ -251,7 +251,7 @@ struct bgp_info_extra *bgp_info_extra_get(struct bgp_info *ri)
   return ri->extra;
 }
 
-struct bgp_info_extra *bgp_info_extra_process(struct bgp_peer *peer, struct bgp_info *ri, safi_t safi, struct bgp_info_extra *attr_extra)
+struct bgp_info_extra *bgp_info_extra_process(struct bgp_peer *peer, struct bgp_info *ri, afi_t afi, safi_t safi, struct bgp_info_extra *attr_extra)
 {
   struct bgp_info_extra *rie = NULL;
 
@@ -271,7 +271,7 @@ struct bgp_info_extra *bgp_info_extra_process(struct bgp_peer *peer, struct bgp_
   }
 
   /* Install/update BGP ADD-PATHs stuff if required */
-  if (peer->cap_add_paths && attr_extra->path_id) {
+  if (peer->cap_add_paths[afi][safi]) {
     if (!rie) {
       rie = bgp_info_extra_get(ri);
     }

@@ -297,7 +297,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 			cap_data.sndrcv);
 		  }
 		  if ((cap_data.sndrcv == 2 /* send */) || (cap_data.sndrcv == 3 /* send and receive */)) {
-		    peer->cap_add_paths = TRUE; 
+		    peer->cap_add_paths[ntohs(cap_data.afi)][cap_data.safi] = TRUE; 
 		    if (online) {
 		      if (!cap_set) {
 			/* we need to send BGP_CAPABILITY_ADD_PATHS first */
@@ -1000,7 +1000,6 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_info_extra *
   struct bgp_peer *peer = bmd->peer;
   u_char *pnt;
   u_char *lim;
-  u_char safi;
   struct prefix p;
   int psize = 0, end;
   int ret;
@@ -1015,12 +1014,11 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_info_extra *
   pnt = info->nlri;
   lim = pnt + info->length;
   end = info->length;
-  safi = info->safi;
 
   for (; pnt < lim; pnt += psize) {
 
     /* handle path identifier */
-    if (peer->cap_add_paths) {
+    if (peer->cap_add_paths[info->afi][info->safi]) {
       memcpy(&attr_extra->path_id, pnt, 4);
       attr_extra->path_id = ntohl(attr_extra->path_id);
       pnt += 4;
@@ -1138,17 +1136,17 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_info_extra *
 
       /* let's process withdraws before withdrawing */  
       if (!attr && bmd->is_blackhole) {
-	bgp_blackhole_instrument(peer, &p, attr, info->afi, safi);
+	bgp_blackhole_instrument(peer, &p, attr, info->afi, info->safi);
       }
     }
 #endif
 
     /* Let's do our job now! */
     if (attr) {
-      ret = bgp_process_update(bmd, &p, attr, attr_extra, info->afi, safi);
+      ret = bgp_process_update(bmd, &p, attr, attr_extra, info->afi, info->safi);
     }
     else {
-      ret = bgp_process_withdraw(bmd, &p, attr, attr_extra, info->afi, safi);
+      ret = bgp_process_withdraw(bmd, &p, attr, attr_extra, info->afi, info->safi);
       (void)ret; //Treat error?
 
     }
@@ -1157,7 +1155,7 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_info_extra *
     if (config.bgp_blackhole_stdcomm_list) {
       /* let's process updates after installing */  
       if (attr && bmd->is_blackhole) {
-	bgp_blackhole_instrument(peer, &p, attr, info->afi, safi);
+	bgp_blackhole_instrument(peer, &p, attr, info->afi, info->safi);
       }
     }
 #endif
@@ -1258,15 +1256,9 @@ int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, s
 	  else continue;
         }
 
-        if (peer->cap_add_paths) {
-	  if (attr_extra->path_id) {
-	    if (ri->extra && attr_extra->path_id == ri->extra->path_id);
-	    else continue;
-	  }
-	  else {
-	    if (!ri->extra || (ri->extra && !ri->extra->path_id));
-	    else continue;
-	  }
+        if (peer->cap_add_paths[afi][safi]) {
+	  if (ri->extra && (attr_extra->path_id == ri->extra->path_id));
+	  else continue;
         }
 
 	if (ri->extra && ri->extra->bmed.id) {
@@ -1295,7 +1287,7 @@ int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, s
         /* Update to new attribute.  */
         bgp_attr_unintern(peer, ri->attr);
         ri->attr = attr_new;
-        bgp_info_extra_process(peer, ri, safi, attr_extra);
+        bgp_info_extra_process(peer, ri, afi, safi, attr_extra);
         if (bms->bgp_extra_data_process) (*bms->bgp_extra_data_process)(&bmd->extra, ri);
 
         bgp_unlock_node (peer, route);
@@ -1312,7 +1304,7 @@ int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, s
     if (new) {
       new->peer = peer;
       new->attr = attr_new;
-      bgp_info_extra_process(peer, new, safi, attr_extra);
+      bgp_info_extra_process(peer, new, afi, safi, attr_extra);
       if (bms->bgp_extra_data_process) (*bms->bgp_extra_data_process)(&bmd->extra, new);
     }
     else return ERR;
@@ -1339,7 +1331,7 @@ int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, s
 
       ri->peer = peer;
       ri->attr = bgp_attr_intern(peer, attr);
-      bgp_info_extra_process(peer, ri, safi, attr_extra);
+      bgp_info_extra_process(peer, ri, afi, safi, attr_extra);
       if (bms->bgp_extra_data_process) (*bms->bgp_extra_data_process)(&bmd->extra, ri);
 
       goto log_update;
@@ -1393,16 +1385,10 @@ int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr,
           else continue;
         }
 
-        if (peer->cap_add_paths) {
-          if (attr_extra->path_id) {
-            if (ri->extra && attr_extra->path_id == ri->extra->path_id);
-            else continue;
-          }
-          else {
-            if (!ri->extra || (ri->extra && !ri->extra->path_id));
-            else continue;
-          }
-        }
+        if (peer->cap_add_paths[afi][safi]) {
+          if (ri->extra && (attr_extra->path_id == ri->extra->path_id));
+          else continue;
+	}
 
         if (ri->extra && ri->extra->bmed.id) {
           if (bms->bgp_extra_data_cmp && !(*bms->bgp_extra_data_cmp)(&bmd->extra, &ri->extra->bmed));
@@ -1423,7 +1409,7 @@ int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr,
       memset(&ri_local, 0, sizeof(struct bgp_info));
 
       ri->peer = peer;
-      bgp_info_extra_process(peer, ri, safi, attr_extra);
+      bgp_info_extra_process(peer, ri, afi, safi, attr_extra);
       if (bms->bgp_extra_data_process) (*bms->bgp_extra_data_process)(&bmd->extra, ri);
     }
   }

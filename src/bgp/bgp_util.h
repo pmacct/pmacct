@@ -53,7 +53,7 @@ extern void bgp_blackhole_link_misc_structs(struct bgp_misc_structs *);
 extern struct bgp_info_extra *bgp_info_extra_new(struct bgp_info *);
 extern void bgp_info_extra_free(struct bgp_peer *, struct bgp_info_extra **);
 extern struct bgp_info_extra *bgp_info_extra_get(struct bgp_info *);
-extern struct bgp_info_extra *bgp_info_extra_process(struct bgp_peer *, struct bgp_info *, safi_t, struct bgp_info_extra *);
+extern struct bgp_info_extra *bgp_info_extra_process(struct bgp_peer *, struct bgp_info *, afi_t, safi_t, struct bgp_info_extra *);
 
 extern struct bgp_info *bgp_info_new(struct bgp_peer *);
 extern void bgp_info_add(struct bgp_peer *, struct bgp_node *, struct bgp_info *, u_int32_t);

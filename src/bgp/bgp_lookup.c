@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -92,7 +92,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
     struct host_addr peer_dst_ip;
 
     memset(&peer_dst_ip, 0, sizeof(peer_dst_ip));
-    if (peer->cap_add_paths && (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF)) {
+    if ((peer->cap_add_paths[AFI_IP][SAFI_UNICAST] || peer->cap_add_paths[AFI_IP6][SAFI_UNICAST]) &&
+	(config.acct_type == ACCT_NF || config.acct_type == ACCT_SF)) {
       /* administrativia */
       struct pkt_bgp_primitives pbgp, *pbgp_ptr = &pbgp;
       memset(&pbgp, 0, sizeof(struct pkt_bgp_primitives));
@@ -144,6 +145,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
       if (!pptrs->bgp_dst) {
         memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
         nmct2.peer = (struct bgp_peer *) pptrs->bgp_peer;
+	nmct2.afi = AFI_IP;
 	nmct2.safi = safi;
         nmct2.rd = &rd;
         nmct2.peer_dst_ip = &peer_dst_ip;
@@ -173,6 +175,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
       if (!pptrs->bgp_src) {
         memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
         nmct2.peer = (struct bgp_peer *) pptrs->bgp_peer;
+	nmct2.afi = AFI_IP6;
 	nmct2.safi = safi;
         nmct2.rd = &rd;
         nmct2.peer_dst_ip = NULL;
@@ -551,22 +554,19 @@ int bgp_lookup_node_match_cmp_bgp(struct bgp_info *info, struct node_match_cmp_t
   if (info->peer == nmct2->peer) {
     if (nmct2->safi == SAFI_MPLS_VPN) no_match++;
 
-    if (nmct2->peer->cap_add_paths && info->extra && info->extra->path_id &&
-	info->attr && nmct2->peer_dst_ip) no_match++;
+    if (nmct2->peer->cap_add_paths[nmct2->afi][nmct2->safi] && nmct2->peer_dst_ip) no_match++;
 
     if (nmct2->safi == SAFI_MPLS_VPN) {
       if (info->extra && !memcmp(&info->extra->rd, nmct2->rd, sizeof(rd_t))) no_match--;
     }
 
-    if (nmct2->peer->cap_add_paths) {
-      if (info->extra && info->extra->path_id) {
-        if (nmct2->peer_dst_ip && info->attr) {
-	  if (info->attr->mp_nexthop.family == nmct2->peer_dst_ip->family) {
-	    if (!memcmp(&info->attr->mp_nexthop, nmct2->peer_dst_ip, HostAddrSz)) no_match--;
-	  }
-	  else if (info->attr->nexthop.s_addr && nmct2->peer_dst_ip->family == AF_INET) {
-	    if (info->attr->nexthop.s_addr == nmct2->peer_dst_ip->address.ipv4.s_addr) no_match--;
-	  }
+    if (nmct2->peer->cap_add_paths[nmct2->afi][nmct2->safi]) {
+      if (nmct2->peer_dst_ip && info->attr) {
+	if (info->attr->mp_nexthop.family == nmct2->peer_dst_ip->family) {
+	  if (!memcmp(&info->attr->mp_nexthop, nmct2->peer_dst_ip, HostAddrSz)) no_match--;
+	}
+	else if (info->attr->nexthop.s_addr && nmct2->peer_dst_ip->family == AF_INET) {
+	  if (info->attr->nexthop.s_addr == nmct2->peer_dst_ip->address.ipv4.s_addr) no_match--;
 	}
       }
     }
@@ -599,6 +599,7 @@ int bgp_lookup_node_vector_unicast(struct prefix *p, struct bgp_peer *peer, stru
 
   memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
   nmct2.peer = peer;
+  nmct2.afi = afi;
   nmct2.safi = safi;
   nmct2.p = p;
 
@@ -829,6 +830,7 @@ int bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep *
 
     memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
     nmct2.peer = peer;
+    nmct2.afi = AFI_IP;
     nmct2.safi = safi;
     nmct2.rd = &req->rd;
 
