@@ -76,7 +76,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     struct bgp_attr *attr = ri->attr;
-    struct bgp_info_extra *attr_extra = ri->extra;
+    struct bgp_attr_extra *attr_extra = ri->attr_extra;
     char ip_address[INET6_ADDRSTRLEN], log_type_str[SUPERSHORTBUFLEN];
     json_t *obj = json_object();
 
@@ -113,8 +113,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     else if (etype == BGP_LOGDUMP_ET_DUMP)
       json_object_set_new_nocheck(obj, "timestamp", json_string(bms->dump.tstamp_str));
 
-    if (ri && ri->extra && ri->extra->bmed.id && bms->bgp_peer_logdump_extra_data)
-      bms->bgp_peer_logdump_extra_data(&ri->extra->bmed, output, obj);
+    if (ri && ri->attr_extra && ri->attr_extra->bmed.id && bms->bgp_peer_logdump_extra_data)
+      bms->bgp_peer_logdump_extra_data(&ri->attr_extra->bmed, output, obj);
 
     addr_to_str(ip_address, &peer->addr);
     json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
@@ -133,8 +133,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       json_object_set_new_nocheck(obj, "ip_prefix", json_string(prefix_str));
     }
 
-    if (peer->cap_add_paths[afi][safi] && ri && ri->extra) {
-      json_object_set_new_nocheck(obj, "as_path_id", json_integer((json_int_t)ri->extra->path_id));
+    if (peer->cap_add_paths[afi][safi] && ri && ri->attr_extra) {
+      json_object_set_new_nocheck(obj, "as_path_id", json_integer((json_int_t)ri->attr_extra->path_id));
     }
 
     if (attr) {
@@ -191,11 +191,11 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       if (safi == SAFI_MPLS_VPN) {
         char rd_str[SHORTSHORTBUFLEN];
 
-        bgp_rd2str(rd_str, &ri->extra->rd);
+        bgp_rd2str(rd_str, &ri->attr_extra->rd);
 	json_object_set_new_nocheck(obj, "rd", json_string(rd_str));
       }
 
-      bgp_label2str(label_str, ri->extra->label);
+      bgp_label2str(label_str, ri->attr_extra->label);
       json_object_set_new_nocheck(obj, "label", json_string(label_str));
     }
 
@@ -238,7 +238,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     size_t p_avro_obj_len, p_avro_len;
 
     struct bgp_attr *attr = ri->attr;
-    struct bgp_info_extra *attr_extra = ri->extra;
+    struct bgp_attr_extra *attr_extra = ri->attr_extra;
     char ip_address[INET6_ADDRSTRLEN], log_type_str[SUPERSHORTBUFLEN];
     char prefix_str[PREFIX_STRLEN], nexthop_str[INET6_ADDRSTRLEN];
     char wid[SHORTSHORTBUFLEN], empty_string[] = "", *aspath = NULL;
@@ -291,8 +291,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       pm_avro_check(avro_value_set_string(&p_avro_field, bms->dump.tstamp_str)); 
     }
 
-    if (ri && ri->extra && ri->extra->bmed.id && bms->bgp_peer_logdump_extra_data)
-      bms->bgp_peer_logdump_extra_data(&ri->extra->bmed, output, &p_avro_obj);
+    if (ri && ri->attr_extra && ri->attr_extra->bmed.id && bms->bgp_peer_logdump_extra_data)
+      bms->bgp_peer_logdump_extra_data(&ri->attr_extra->bmed, output, &p_avro_obj);
 
     addr_to_str(ip_address, &peer->addr);
     pm_avro_check(avro_value_get_by_name(&p_avro_obj, bms->peer_str, &p_avro_field, NULL));
@@ -442,10 +442,10 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
-    if (peer->cap_add_paths[afi][safi] && ri && ri->extra) {
+    if (peer->cap_add_paths[afi][safi] && ri && ri->attr_extra) {
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "as_path_id", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-      pm_avro_check(avro_value_set_int(&p_avro_branch, ri->extra->path_id));
+      pm_avro_check(avro_value_set_int(&p_avro_branch, ri->attr_extra->path_id));
     }
     else {
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "as_path_id", &p_avro_field, NULL));
@@ -458,7 +458,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       if (safi == SAFI_MPLS_VPN) {
         char rd_str[SHORTSHORTBUFLEN];
 
-        bgp_rd2str(rd_str, &ri->extra->rd);
+        bgp_rd2str(rd_str, &ri->attr_extra->rd);
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "rd", &p_avro_field, NULL));
 	pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
 	pm_avro_check(avro_value_set_string(&p_avro_branch, rd_str));
@@ -468,7 +468,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
 
-      bgp_label2str(label_str, ri->extra->label);
+      bgp_label2str(label_str, ri->attr_extra->label);
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "label", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
       pm_avro_check(avro_value_set_string(&p_avro_branch, label_str));

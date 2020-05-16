@@ -557,7 +557,7 @@ int bgp_lookup_node_match_cmp_bgp(struct bgp_info *info, struct node_match_cmp_t
     if (nmct2->peer->cap_add_paths[nmct2->afi][nmct2->safi] && nmct2->peer_dst_ip) no_match++;
 
     if (nmct2->safi == SAFI_MPLS_VPN) {
-      if (info->extra && !memcmp(&info->extra->rd, nmct2->rd, sizeof(rd_t))) no_match--;
+      if (info->attr_extra && !memcmp(&info->attr_extra->rd, nmct2->rd, sizeof(rd_t))) no_match--;
     }
 
     if (nmct2->peer->cap_add_paths[nmct2->afi][nmct2->safi]) {

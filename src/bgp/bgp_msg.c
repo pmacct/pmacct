@@ -599,7 +599,7 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   struct bgp_peer *peer = bmd->peer;
   struct bgp_header bhdr;
   struct bgp_attr attr;
-  struct bgp_info_extra attr_extra;
+  struct bgp_attr_extra attr_extra;
   u_int16_t attribute_len;
   u_int16_t update_len;
   u_int16_t withdraw_len;
@@ -614,7 +614,7 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 
   /* Set initial values. */
   memset(&attr, 0, sizeof (struct bgp_attr));
-  memset(&attr_extra, 0, sizeof (struct bgp_info_extra));
+  memset(&attr_extra, 0, sizeof (struct bgp_attr_extra));
   memset(&update, 0, sizeof (struct bgp_nlri));
   memset(&withdraw, 0, sizeof (struct bgp_nlri));
   memset(&mp_update, 0, sizeof (struct bgp_nlri));
@@ -713,7 +713,7 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 }
 
 /* BGP UPDATE Attribute parsing */
-int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_info_extra *attr_extra,
+int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr_extra *attr_extra,
 		   char *ptr, int len, struct bgp_nlri *mp_update, struct bgp_nlri *mp_withdraw)
 {
   int to_the_end = len, ret;
@@ -995,7 +995,7 @@ int bgp_attr_parse_mp_unreach(struct bgp_peer *peer, u_int16_t len, struct bgp_a
 }
 
 /* BGP UPDATE NLRI parsing */
-int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_info_extra *attr_extra, struct bgp_nlri *info, int type)
+int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *attr_extra, struct bgp_nlri *info, int type)
 {
   struct bgp_peer *peer = bmd->peer;
   u_char *pnt;
@@ -1165,7 +1165,7 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_info_extra *
 }
 
 /* AIGP attribute. */
-int bgp_attr_parse_aigp(struct bgp_peer *peer, u_int16_t len, struct bgp_info_extra *attr_extra, char *ptr, u_char flag)
+int bgp_attr_parse_aigp(struct bgp_peer *peer, u_int16_t len, struct bgp_attr_extra *attr_extra, char *ptr, u_char flag)
 {
   u_int64_t tmp64;
   int ret = SUCCESS;
@@ -1197,7 +1197,7 @@ int bgp_attr_parse_aigp(struct bgp_peer *peer, u_int16_t len, struct bgp_info_ex
 }
 
 /* Prefix-SID attribute */
-int bgp_attr_parse_prefix_sid(struct bgp_peer *peer, u_int16_t len, struct bgp_info_extra *attr_extra, char *ptr, u_char flag)
+int bgp_attr_parse_prefix_sid(struct bgp_peer *peer, u_int16_t len, struct bgp_attr_extra *attr_extra, char *ptr, u_char flag)
 {
   u_int8_t tlv_type;
   u_int16_t tlv_len;
@@ -1227,7 +1227,7 @@ int bgp_attr_parse_prefix_sid(struct bgp_peer *peer, u_int16_t len, struct bgp_i
   return SUCCESS;
 }
 
-int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, struct bgp_info_extra *attr_extra, afi_t afi, safi_t safi)
+int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, struct bgp_attr_extra *attr_extra, afi_t afi, safi_t safi)
 {
   struct bgp_peer *peer = bmd->peer;
   struct bgp_rt_structs *inter_domain_routing_db;
@@ -1252,17 +1252,17 @@ int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, s
     for (ri = route->info[modulo]; ri; ri = ri->next) {
       if (ri->peer == peer) { 
         if (safi == SAFI_MPLS_VPN) {
-	  if (ri->extra && !memcmp(&ri->extra->rd, &attr_extra->rd, sizeof(rd_t)));
+	  if (ri->attr_extra && !memcmp(&ri->attr_extra->rd, &attr_extra->rd, sizeof(rd_t)));
 	  else continue;
         }
 
         if (peer->cap_add_paths[afi][safi]) {
-	  if (ri->extra && (attr_extra->path_id == ri->extra->path_id));
+	  if (ri->attr_extra && (attr_extra->path_id == ri->attr_extra->path_id));
 	  else continue;
         }
 
-	if (ri->extra && ri->extra->bmed.id) {
-	  if (bms->bgp_extra_data_cmp && !(*bms->bgp_extra_data_cmp)(&bmd->extra, &ri->extra->bmed));
+	if (ri->attr_extra && ri->attr_extra->bmed.id) {
+	  if (bms->bgp_extra_data_cmp && !(*bms->bgp_extra_data_cmp)(&bmd->extra, &ri->attr_extra->bmed));
 	  else continue;
 	} 
 
@@ -1287,7 +1287,7 @@ int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, s
         /* Update to new attribute.  */
         bgp_attr_unintern(peer, ri->attr);
         ri->attr = attr_new;
-        bgp_info_extra_process(peer, ri, afi, safi, attr_extra);
+        bgp_attr_extra_process(peer, ri, afi, safi, attr_extra);
         if (bms->bgp_extra_data_process) (*bms->bgp_extra_data_process)(&bmd->extra, ri);
 
         bgp_unlock_node (peer, route);
@@ -1304,7 +1304,7 @@ int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, s
     if (new) {
       new->peer = peer;
       new->attr = attr_new;
-      bgp_info_extra_process(peer, new, afi, safi, attr_extra);
+      bgp_attr_extra_process(peer, new, afi, safi, attr_extra);
       if (bms->bgp_extra_data_process) (*bms->bgp_extra_data_process)(&bmd->extra, new);
     }
     else return ERR;
@@ -1331,7 +1331,7 @@ int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, s
 
       ri->peer = peer;
       ri->attr = bgp_attr_intern(peer, attr);
-      bgp_info_extra_process(peer, ri, afi, safi, attr_extra);
+      bgp_attr_extra_process(peer, ri, afi, safi, attr_extra);
       if (bms->bgp_extra_data_process) (*bms->bgp_extra_data_process)(&bmd->extra, ri);
 
       goto log_update;
@@ -1348,14 +1348,14 @@ log_update:
   }
 
   if (bms->skip_rib) {
-    if (ri->extra) bgp_info_extra_free(peer, &ri->extra);
+    if (ri->attr_extra) bgp_attr_extra_free(peer, &ri->attr_extra);
     bgp_attr_unintern(peer, ri->attr);
   }
 
   return SUCCESS;
 }
 
-int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr, struct bgp_info_extra *attr_extra, afi_t afi, safi_t safi)
+int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr, struct bgp_attr_extra *attr_extra, afi_t afi, safi_t safi)
 {
   struct bgp_peer *peer = bmd->peer;
   struct bgp_rt_structs *inter_domain_routing_db;
@@ -1381,17 +1381,17 @@ int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr,
     for (ri = route->info[modulo]; ri; ri = ri->next) {
       if (ri->peer == peer) {
         if (safi == SAFI_MPLS_VPN) {
-          if (ri->extra && !memcmp(&ri->extra->rd, &attr_extra->rd, sizeof(rd_t)));
+          if (ri->attr_extra && !memcmp(&ri->attr_extra->rd, &attr_extra->rd, sizeof(rd_t)));
           else continue;
         }
 
         if (peer->cap_add_paths[afi][safi]) {
-          if (ri->extra && (attr_extra->path_id == ri->extra->path_id));
+          if (ri->attr_extra && (attr_extra->path_id == ri->attr_extra->path_id));
           else continue;
 	}
 
-        if (ri->extra && ri->extra->bmed.id) {
-          if (bms->bgp_extra_data_cmp && !(*bms->bgp_extra_data_cmp)(&bmd->extra, &ri->extra->bmed));
+        if (ri->attr_extra && ri->attr_extra->bmed.id) {
+          if (bms->bgp_extra_data_cmp && !(*bms->bgp_extra_data_cmp)(&bmd->extra, &ri->attr_extra->bmed));
           else continue;
         }
 
@@ -1409,7 +1409,7 @@ int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr,
       memset(&ri_local, 0, sizeof(struct bgp_info));
 
       ri->peer = peer;
-      bgp_info_extra_process(peer, ri, afi, safi, attr_extra);
+      bgp_attr_extra_process(peer, ri, afi, safi, attr_extra);
       if (bms->bgp_extra_data_process) (*bms->bgp_extra_data_process)(&bmd->extra, ri);
     }
   }
@@ -1429,7 +1429,7 @@ int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr,
   }
   else {
     if (bms->msglog_backend_methods) {
-      if (ri->extra) bgp_info_extra_free(peer, &ri->extra);
+      if (ri->attr_extra) bgp_attr_extra_free(peer, &ri->attr_extra);
     }
   }
 

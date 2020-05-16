@@ -254,12 +254,12 @@ int bgp_extra_data_cmp_bmp(struct bgp_msg_extra_data *a, struct bgp_msg_extra_da
 
 int bgp_extra_data_process_bmp(struct bgp_msg_extra_data *bmed, struct bgp_info *ri)
 {
-  struct bgp_info_extra *rie = NULL;
+  struct bgp_attr_extra *rie = NULL;
   struct bmp_chars *bmed_bmp_src = NULL, *bmed_bmp_dst = NULL;
   int ret = BGP_MSG_EXTRA_DATA_NONE;
 
   if (bmed && ri && bmed->id == BGP_MSG_EXTRA_DATA_BMP) {
-    rie = bgp_info_extra_get(ri);
+    rie = bgp_attr_extra_get(ri);
     if (rie) {
       if (rie->bmed.data && (rie->bmed.len != bmed->len)) {
 	free(rie->bmed.data);

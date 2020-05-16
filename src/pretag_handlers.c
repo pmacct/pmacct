@@ -1980,8 +1980,8 @@ int pretag_mpls_vpn_rd_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   if (dst_ret) {
     info = (struct bgp_info *) pptrs->bgp_dst_info;
-    if (info && info->extra) {
-      ret = memcmp(&entry->key.mpls_vpn_rd.rd, &info->extra->rd, sizeof(rd_t)); 
+    if (info && info->attr_extra) {
+      ret = memcmp(&entry->key.mpls_vpn_rd.rd, &info->attr_extra->rd, sizeof(rd_t)); 
     }
   }
 
@@ -3581,7 +3581,7 @@ int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_entry *e, pm_hash_serial_t 
 
     if (dst_ret) {
       info = (struct bgp_info *) pptrs->bgp_dst_info;
-      if (info && info->extra) memcpy(&e->key.mpls_vpn_rd.rd, &info->extra->rd, sizeof(rd_t));
+      if (info && info->attr_extra) memcpy(&e->key.mpls_vpn_rd.rd, &info->attr_extra->rd, sizeof(rd_t));
     }
   }
 

@@ -204,11 +204,11 @@ int bgp_label2str(char *str, u_char *label)
   return TRUE;
 }
 
-/* Allocate bgp_info_extra */
-struct bgp_info_extra *bgp_info_extra_new(struct bgp_info *ri)
+/* Allocate bgp_attr_extra */
+struct bgp_attr_extra *bgp_attr_extra_new(struct bgp_info *ri)
 {
   struct bgp_misc_structs *bms;
-  struct bgp_info_extra *new;
+  struct bgp_attr_extra *new;
 
   if (!ri || !ri->peer) return NULL;
 
@@ -216,17 +216,17 @@ struct bgp_info_extra *bgp_info_extra_new(struct bgp_info *ri)
 
   if (!bms) return NULL;
 
-  new = malloc(sizeof(struct bgp_info_extra));
+  new = malloc(sizeof(struct bgp_attr_extra));
   if (!new) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (bgp_info_extra_new). Exiting ..\n", config.name, bms->log_str);
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (bgp_attr_extra_new). Exiting ..\n", config.name, bms->log_str);
     exit_gracefully(1);
   }
-  else memset(new, 0, sizeof (struct bgp_info_extra));
+  else memset(new, 0, sizeof (struct bgp_attr_extra));
 
   return new;
 }
 
-void bgp_info_extra_free(struct bgp_peer *peer, struct bgp_info_extra **extra)
+void bgp_attr_extra_free(struct bgp_peer *peer, struct bgp_attr_extra **attr_extra)
 {
   struct bgp_misc_structs *bms;
 
@@ -234,31 +234,32 @@ void bgp_info_extra_free(struct bgp_peer *peer, struct bgp_info_extra **extra)
 
   if (!bms) return;
 
-  if (extra && *extra) {
-    if ((*extra)->bmed.id && bms->bgp_extra_data_free) (*bms->bgp_extra_data_free)(&(*extra)->bmed);
+  if (attr_extra && (*attr_extra)) {
+    if ((*attr_extra)->bmed.id && bms->bgp_extra_data_free) (*bms->bgp_extra_data_free)(&(*attr_extra)->bmed);
 
-    free(*extra);
-    *extra = NULL;
+    free(*attr_extra);
+    *attr_extra = NULL;
   }
 }
 
 /* Get bgp_info extra information for the given bgp_info */
-struct bgp_info_extra *bgp_info_extra_get(struct bgp_info *ri)
+struct bgp_attr_extra *bgp_attr_extra_get(struct bgp_info *ri)
 {
-  if (!ri->extra)
-    ri->extra = bgp_info_extra_new(ri);
+  if (!ri->attr_extra) {
+    ri->attr_extra = bgp_attr_extra_new(ri);
+  }
 
-  return ri->extra;
+  return ri->attr_extra;
 }
 
-struct bgp_info_extra *bgp_info_extra_process(struct bgp_peer *peer, struct bgp_info *ri, afi_t afi, safi_t safi, struct bgp_info_extra *attr_extra)
+struct bgp_attr_extra *bgp_attr_extra_process(struct bgp_peer *peer, struct bgp_info *ri, afi_t afi, safi_t safi, struct bgp_attr_extra *attr_extra)
 {
-  struct bgp_info_extra *rie = NULL;
+  struct bgp_attr_extra *rie = NULL;
 
   /* Install/update MPLS stuff if required */
   if (safi == SAFI_MPLS_LABEL || safi == SAFI_MPLS_VPN) {
     if (!rie) {
-      rie = bgp_info_extra_get(ri);
+      rie = bgp_attr_extra_get(ri);
     }
 
     if (rie) {
@@ -273,7 +274,7 @@ struct bgp_info_extra *bgp_info_extra_process(struct bgp_peer *peer, struct bgp_
   /* Install/update BGP ADD-PATHs stuff if required */
   if (peer->cap_add_paths[afi][safi]) {
     if (!rie) {
-      rie = bgp_info_extra_get(ri);
+      rie = bgp_attr_extra_get(ri);
     }
 
     if (rie) {
@@ -284,7 +285,7 @@ struct bgp_info_extra *bgp_info_extra_process(struct bgp_peer *peer, struct bgp_
   /* AIGP attribute */
   if (attr_extra->aigp) {
     if (!rie) {
-      rie = bgp_info_extra_get(ri);
+      rie = bgp_attr_extra_get(ri);
     }
 
     if (rie) {
@@ -295,7 +296,7 @@ struct bgp_info_extra *bgp_info_extra_process(struct bgp_peer *peer, struct bgp_
   /* Prefix-SID attribute */
   if (attr_extra->psid_li) {
     if (!rie) {
-      rie = bgp_info_extra_get(ri);
+      rie = bgp_attr_extra_get(ri);
     }
 
     if (rie) {
@@ -364,7 +365,7 @@ void bgp_info_free(struct bgp_peer *peer, struct bgp_info *ri)
   if (ri->attr)
     bgp_attr_unintern(peer, ri->attr);
 
-  bgp_info_extra_free(peer, &ri->extra);
+  bgp_attr_extra_free(peer, &ri->attr_extra);
 
   ri->peer->lock--;
   free(ri);

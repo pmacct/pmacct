@@ -65,7 +65,7 @@ struct bgp_msg_extra_data {
   void *data;
 };
 
-struct bgp_info_extra
+struct bgp_attr_extra
 {
   rd_t rd;
   u_char label[3];
@@ -81,7 +81,7 @@ struct bgp_info
   struct bgp_info *prev;
   struct bgp_peer *peer;
   struct bgp_attr *attr;
-  struct bgp_info_extra *extra;
+  struct bgp_attr_extra *attr_extra;
 };
 
 struct node_match_cmp_term2 {
