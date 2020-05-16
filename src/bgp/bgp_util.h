@@ -58,7 +58,7 @@ extern struct bgp_attr_extra *bgp_attr_extra_process(struct bgp_peer *, struct b
 extern struct bgp_info *bgp_info_new(struct bgp_peer *);
 extern void bgp_info_add(struct bgp_peer *, struct bgp_node *, struct bgp_info *, u_int32_t);
 extern void bgp_info_delete(struct bgp_peer *, struct bgp_node *, struct bgp_info *, u_int32_t);
-extern void bgp_info_free(struct bgp_peer *, struct bgp_info *);
+extern void bgp_info_free(struct bgp_peer *, struct bgp_info *, void (*bgp_extra_data_free)(struct bgp_msg_extra_data *));
 extern void bgp_attr_init(int, struct bgp_rt_structs *);
 extern struct bgp_attr *bgp_attr_intern(struct bgp_peer *, struct bgp_attr *);
 extern void bgp_attr_unintern (struct bgp_peer *, struct bgp_attr *);

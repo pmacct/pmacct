@@ -113,8 +113,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     else if (etype == BGP_LOGDUMP_ET_DUMP)
       json_object_set_new_nocheck(obj, "timestamp", json_string(bms->dump.tstamp_str));
 
-    if (ri && ri->attr_extra && ri->attr_extra->bmed.id && bms->bgp_peer_logdump_extra_data)
-      bms->bgp_peer_logdump_extra_data(&ri->attr_extra->bmed, output, obj);
+    if (ri && ri->bmed.id && bms->bgp_peer_logdump_extra_data)
+      bms->bgp_peer_logdump_extra_data(&ri->bmed, output, obj);
 
     addr_to_str(ip_address, &peer->addr);
     json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
@@ -291,8 +291,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       pm_avro_check(avro_value_set_string(&p_avro_field, bms->dump.tstamp_str)); 
     }
 
-    if (ri && ri->attr_extra && ri->attr_extra->bmed.id && bms->bgp_peer_logdump_extra_data)
-      bms->bgp_peer_logdump_extra_data(&ri->attr_extra->bmed, output, &p_avro_obj);
+    if (ri && ri->bmed.id && bms->bgp_peer_logdump_extra_data)
+      bms->bgp_peer_logdump_extra_data(&ri->bmed, output, &p_avro_obj);
 
     addr_to_str(ip_address, &peer->addr);
     pm_avro_check(avro_value_get_by_name(&p_avro_obj, bms->peer_str, &p_avro_field, NULL));

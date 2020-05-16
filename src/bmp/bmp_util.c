@@ -254,34 +254,30 @@ int bgp_extra_data_cmp_bmp(struct bgp_msg_extra_data *a, struct bgp_msg_extra_da
 
 int bgp_extra_data_process_bmp(struct bgp_msg_extra_data *bmed, struct bgp_info *ri)
 {
-  struct bgp_attr_extra *rie = NULL;
   struct bmp_chars *bmed_bmp_src = NULL, *bmed_bmp_dst = NULL;
   int ret = BGP_MSG_EXTRA_DATA_NONE;
 
   if (bmed && ri && bmed->id == BGP_MSG_EXTRA_DATA_BMP) {
-    rie = bgp_attr_extra_get(ri);
-    if (rie) {
-      if (rie->bmed.data && (rie->bmed.len != bmed->len)) {
-	free(rie->bmed.data);
-	rie->bmed.data = NULL;
+    if (ri->bmed.data && (ri->bmed.len != bmed->len)) {
+      free(ri->bmed.data);
+      ri->bmed.data = NULL;
+    }
+
+    if (!ri->bmed.data) ri->bmed.data = malloc(bmed->len);
+
+    if (ri->bmed.data) {
+      memcpy(ri->bmed.data, bmed->data, bmed->len);
+      ri->bmed.len = bmed->len; 
+      ri->bmed.id = bmed->id;
+
+      bmed_bmp_src = (struct bmp_chars *) bmed->data;
+      bmed_bmp_dst = (struct bmp_chars *) ri->bmed.data;
+
+      if (bmed_bmp_src->tlvs) {
+	bmed_bmp_dst->tlvs = bmp_tlv_list_copy(bmed_bmp_src->tlvs);
       }
 
-      if (!rie->bmed.data) rie->bmed.data = malloc(bmed->len);
-
-      if (rie->bmed.data) {
-	memcpy(rie->bmed.data, bmed->data, bmed->len);
-	rie->bmed.len = bmed->len; 
-	rie->bmed.id = bmed->id;
-
-	bmed_bmp_src = (struct bmp_chars *) bmed->data;
-	bmed_bmp_dst = (struct bmp_chars *) rie->bmed.data;
-
-	if (bmed_bmp_src->tlvs) {
-	  bmed_bmp_dst->tlvs = bmp_tlv_list_copy(bmed_bmp_src->tlvs);
-	}
-
-	ret = BGP_MSG_EXTRA_DATA_BMP;	
-      }
+      ret = BGP_MSG_EXTRA_DATA_BMP;	
     }
   }
 

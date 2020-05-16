@@ -235,8 +235,6 @@ void bgp_attr_extra_free(struct bgp_peer *peer, struct bgp_attr_extra **attr_ext
   if (!bms) return;
 
   if (attr_extra && (*attr_extra)) {
-    if ((*attr_extra)->bmed.id && bms->bgp_extra_data_free) (*bms->bgp_extra_data_free)(&(*attr_extra)->bmed);
-
     free(*attr_extra);
     *attr_extra = NULL;
   }
@@ -347,25 +345,32 @@ void bgp_info_add(struct bgp_peer *peer, struct bgp_node *rn, struct bgp_info *r
 
 void bgp_info_delete(struct bgp_peer *peer, struct bgp_node *rn, struct bgp_info *ri, u_int32_t modulo)
 {
-  if (ri->next)
-    ri->next->prev = ri->prev;
-  if (ri->prev)
-    ri->prev->next = ri->next;
-  else
-    rn->info[modulo] = ri->next;
+  struct bgp_misc_structs *bms;
 
-  bgp_info_free(peer, ri);
+  bms = bgp_select_misc_db(peer->type);
+
+  if (ri->next) {
+    ri->next->prev = ri->prev;
+  }
+  if (ri->prev) {
+    ri->prev->next = ri->next;
+  }
+  else {
+    rn->info[modulo] = ri->next;
+  }
+
+  bgp_info_free(peer, ri, bms->bgp_extra_data_free);
 
   bgp_unlock_node(peer, rn);
 }
 
 /* Free bgp route information. */
-void bgp_info_free(struct bgp_peer *peer, struct bgp_info *ri)
+void bgp_info_free(struct bgp_peer *peer, struct bgp_info *ri, void (*bgp_extra_data_free)(struct bgp_msg_extra_data *))
 {
-  if (ri->attr)
-    bgp_attr_unintern(peer, ri->attr);
+  if (ri->attr) bgp_attr_unintern(peer, ri->attr);
 
   bgp_attr_extra_free(peer, &ri->attr_extra);
+  if (bgp_extra_data_free) (*bgp_extra_data_free)(&ri->bmed);
 
   ri->peer->lock--;
   free(ri);

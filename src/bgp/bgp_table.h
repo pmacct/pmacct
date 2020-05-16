@@ -72,7 +72,6 @@ struct bgp_attr_extra
   path_id_t path_id;
   u_int64_t aigp;
   u_int32_t psid_li;
-  struct bgp_msg_extra_data bmed;
 };
 
 struct bgp_info
@@ -82,6 +81,7 @@ struct bgp_info
   struct bgp_peer *peer;
   struct bgp_attr *attr;
   struct bgp_attr_extra *attr_extra;
+  struct bgp_msg_extra_data bmed;
 };
 
 struct node_match_cmp_term2 {

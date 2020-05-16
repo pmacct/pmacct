@@ -1261,8 +1261,8 @@ int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, s
 	  else continue;
         }
 
-	if (ri->attr_extra && ri->attr_extra->bmed.id) {
-	  if (bms->bgp_extra_data_cmp && !(*bms->bgp_extra_data_cmp)(&bmd->extra, &ri->attr_extra->bmed));
+	if (ri->bmed.id) {
+	  if (bms->bgp_extra_data_cmp && !(*bms->bgp_extra_data_cmp)(&bmd->extra, &ri->bmed));
 	  else continue;
 	} 
 
@@ -1349,6 +1349,7 @@ log_update:
 
   if (bms->skip_rib) {
     if (ri->attr_extra) bgp_attr_extra_free(peer, &ri->attr_extra);
+    if (bms->bgp_extra_data_free) (*bms->bgp_extra_data_free)(&ri->bmed);
     bgp_attr_unintern(peer, ri->attr);
   }
 
@@ -1390,8 +1391,8 @@ int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr,
           else continue;
 	}
 
-        if (ri->attr_extra && ri->attr_extra->bmed.id) {
-          if (bms->bgp_extra_data_cmp && !(*bms->bgp_extra_data_cmp)(&bmd->extra, &ri->attr_extra->bmed));
+        if (ri->bmed.id) {
+          if (bms->bgp_extra_data_cmp && !(*bms->bgp_extra_data_cmp)(&bmd->extra, &ri->bmed));
           else continue;
         }
 
@@ -1430,6 +1431,7 @@ int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr,
   else {
     if (bms->msglog_backend_methods) {
       if (ri->attr_extra) bgp_attr_extra_free(peer, &ri->attr_extra);
+      if (bms->bgp_extra_data_free) (*bms->bgp_extra_data_free)(&ri->bmed);
     }
   }
 
