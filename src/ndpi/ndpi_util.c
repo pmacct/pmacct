@@ -78,6 +78,10 @@ struct pm_ndpi_workflow *pm_ndpi_workflow_init()
   NDPI_BITMASK_SET_ALL(all);
   ndpi_set_protocol_detection_bitmask2(workflow->ndpi_struct, &all);
 
+#if NDPI_MAJOR >= 3 && NDPI_MINOR >= 2
+  ndpi_finalize_initalization(workflow->ndpi_struct);
+#endif
+
   return workflow;
 }
 
