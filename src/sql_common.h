@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -374,8 +374,8 @@ extern unsigned char *pipebuf;
 extern struct db_cache *sql_cache;
 extern struct db_cache **sql_queries_queue, **sql_pending_queries_queue;
 extern struct db_cache *collision_queue;
-extern int cq_ptr, qq_ptr, qq_size, pp_size, pb_size, pn_size, pm_size, pt_size;
-extern int pc_size, dbc_size, cq_size, pqq_ptr;
+extern int cq_ptr, sql_qq_ptr, qq_size, sql_pp_size, sql_pb_size, sql_pn_size, sql_pm_size, sql_pt_size;
+extern int sql_pc_size, sql_dbc_size, cq_size, sql_pqq_ptr;
 extern struct db_cache lru_head, *lru_tail;
 extern struct frags where[N_PRIMITIVES+2];
 extern struct frags values[N_PRIMITIVES+2];
@@ -390,7 +390,7 @@ extern int glob_dyn_table, glob_dyn_table_time_only; /* last resort for signal h
 extern int glob_timeslot; /* last resort for sql handlers */
 
 extern struct sqlfunc_cb_registry sqlfunc_cbr; 
-extern void (*insert_func)(struct primitives_ptrs *, struct insert_data *);
+extern void (*sql_insert_func)(struct primitives_ptrs *, struct insert_data *);
 extern struct DBdesc p;
 extern struct DBdesc b;
 extern struct BE_descs bed;

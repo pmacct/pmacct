@@ -41,9 +41,6 @@
 #include "ndpi/ndpi.h"
 #endif
 
-/* variables to be exported away */
-struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
-
 /* Functions */
 static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
                           struct nflog_data *nfa, void *p)

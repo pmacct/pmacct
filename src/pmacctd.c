@@ -40,9 +40,6 @@
 #endif
 #include "jhash.h"
 
-/* variables to be exported away */
-struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
-
 /* Functions */
 void usage_daemon(char *prog_name)
 {

@@ -178,7 +178,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     }
 
     if (idata.now > refresh_deadline) {
-      if (qq_ptr) sql_cache_flush(sql_queries_queue, qq_ptr, &idata, FALSE);
+      if (sql_qq_ptr) sql_cache_flush(sql_queries_queue, sql_qq_ptr, &idata, FALSE);
       sql_cache_handle_flush_event(&idata, &refresh_deadline, &pt);
     }
     else {
@@ -281,7 +281,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         }
 
         prim_ptrs.data = data;
-        (*insert_func)(&prim_ptrs, &idata);
+        (*sql_insert_func)(&prim_ptrs, &idata);
 
         ((struct ch_buf_hdr *)pipebuf)->num--;
         if (((struct ch_buf_hdr *)pipebuf)->num) {
@@ -473,7 +473,7 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
 
   /* re-using pending queries queue stuff from parent and saving clauses */
   memcpy(sql_pending_queries_queue, queue, index*sizeof(struct db_cache *));
-  pqq_ptr = index;
+  sql_pqq_ptr = index;
 
   strlcpy(orig_copy_clause, copy_clause, LONGSRVBUFLEN);
   strlcpy(orig_insert_clause, insert_clause, LONGSRVBUFLEN);
@@ -481,9 +481,9 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   strlcpy(orig_lock_clause, lock_clause, LONGSRVBUFLEN);
 
   start:
-  memcpy(queue, sql_pending_queries_queue, pqq_ptr*sizeof(struct db_cache *));
-  memset(sql_pending_queries_queue, 0, pqq_ptr*sizeof(struct db_cache *));
-  index = pqq_ptr; pqq_ptr = 0;
+  memcpy(queue, sql_pending_queries_queue, sql_pqq_ptr*sizeof(struct db_cache *));
+  memset(sql_pending_queries_queue, 0, sql_pqq_ptr*sizeof(struct db_cache *));
+  index = sql_pqq_ptr; sql_pqq_ptr = 0;
 
   /* We check for variable substitution in SQL table */
   if (idata->dyn_table) {
@@ -544,9 +544,9 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
       pm_strftime_same(tmptable, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
 
       if (strncmp(idata->dyn_table_name, tmptable, SRVBUFLEN)) {
-        sql_pending_queries_queue[pqq_ptr] = queue[idata->current_queue_elem];
+        sql_pending_queries_queue[sql_pqq_ptr] = queue[idata->current_queue_elem];
 
-        pqq_ptr++;
+        sql_pqq_ptr++;
         go_to_pending = TRUE;
       }
     }
@@ -608,7 +608,7 @@ void PG_cache_purge(struct db_cache *queue[], int index, struct insert_data *ida
   }
 
   /* If we have pending queries then start again */
-  if (pqq_ptr) goto start;
+  if (sql_pqq_ptr) goto start;
 
   idata->elap_time = time(NULL)-start;
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %lu) ***\n",
