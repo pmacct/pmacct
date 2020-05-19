@@ -199,6 +199,8 @@ struct data_hdr_v9 {
 
 #define NF9_FORWARDING_STATUS           89
 /* ... */
+#define NF9_LAYER2_PKT_SECTION_DATA	104
+/* ... */
 #define NF9_PEER_DST_AS			128
 #define NF9_PEER_SRC_AS			129
 #define NF9_EXPORTER_IPV4_ADDRESS	130

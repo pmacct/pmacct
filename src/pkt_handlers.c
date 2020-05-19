@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -1746,7 +1746,7 @@ void NF_src_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
       memcpy(&pdata->primitives.eth_shost, pptrs->f_data+tpl->tpl[NF9_IN_SRC_MAC].off, MIN(tpl->tpl[NF9_IN_SRC_MAC].len, 6));
     else if (tpl->tpl[NF9_OUT_SRC_MAC].len)
       memcpy(&pdata->primitives.eth_shost, pptrs->f_data+tpl->tpl[NF9_OUT_SRC_MAC].off, MIN(tpl->tpl[NF9_OUT_SRC_MAC].len, 6));
-    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len) 
+    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len)
       src_mac_handler(chptr, pptrs, data);
 
     break;
@@ -1768,7 +1768,7 @@ void NF_dst_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
       memcpy(&pdata->primitives.eth_dhost, pptrs->f_data+tpl->tpl[NF9_IN_DST_MAC].off, MIN(tpl->tpl[NF9_IN_DST_MAC].len, 6));
     else if (tpl->tpl[NF9_OUT_DST_MAC].len)
       memcpy(&pdata->primitives.eth_dhost, pptrs->f_data+tpl->tpl[NF9_OUT_DST_MAC].off, MIN(tpl->tpl[NF9_OUT_DST_MAC].len, 6));
-    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len)
+    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len)
       dst_mac_handler(chptr, pptrs, data);
 
     break;
@@ -1812,7 +1812,7 @@ void NF_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
         memcpy(&pdata->primitives.vlan_id, pptrs->f_data+tpl->tpl[NF9_DOT1QVLANID].off, MIN(tpl->tpl[NF9_DOT1QVLANID].len, 2));
       else if (tpl->tpl[NF9_POST_DOT1QVLANID].len)
         memcpy(&pdata->primitives.vlan_id, pptrs->f_data+tpl->tpl[NF9_POST_DOT1QVLANID].off, MIN(tpl->tpl[NF9_POST_DOT1QVLANID].len, 2));
-      else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len) {
+      else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len) {
         vlan_handler(chptr, pptrs, data);
 	break;
       }
@@ -1836,7 +1836,7 @@ void NF_cos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs
   case 9:
     if (tpl->tpl[NF9_DOT1QPRIORITY].len)
       memcpy(&pdata->primitives.cos, pptrs->f_data+tpl->tpl[NF9_DOT1QPRIORITY].off, MIN(tpl->tpl[NF9_DOT1QPRIORITY].len, 1));
-    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len)
+    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len)
       cos_handler(chptr, pptrs, data);
 
     break;
@@ -1858,7 +1858,7 @@ void NF_etype_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
       memcpy(&pdata->primitives.etype, pptrs->f_data+tpl->tpl[NF9_ETHERTYPE].off, MIN(tpl->tpl[NF9_ETHERTYPE].len, 2));
       pdata->primitives.etype = ntohs(pdata->primitives.etype);
     }
-    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len)
+    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len)
       etype_handler(chptr, pptrs, data);
     else
       pdata->primitives.etype = pptrs->l3_proto;
@@ -1889,7 +1889,7 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
         memcpy(&pdata->primitives.src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_PREFIX].off, MIN(tpl->tpl[NF9_IPV4_SRC_PREFIX].len, 4)); 
         pdata->primitives.src_ip.family = AF_INET;
       }
-      else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len)
+      else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len)
 	src_host_handler(chptr, pptrs, data);
     }
     if (pptrs->l3_proto == ETHERTYPE_IPV6 || pptrs->flow_type == NF9_FTYPE_NAT_EVENT /* NAT64 case */) {
@@ -1901,7 +1901,7 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
 	memcpy(&pdata->primitives.src_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_PREFIX].off, MIN(tpl->tpl[NF9_IPV6_SRC_PREFIX].len, 16));
         pdata->primitives.src_ip.family = AF_INET6;
       }
-      else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len)
+      else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len)
 	src_host_handler(chptr, pptrs, data);
     }
     break;
@@ -1932,7 +1932,7 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
         memcpy(&pdata->primitives.dst_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV4_DST_PREFIX].len, 4));
         pdata->primitives.dst_ip.family = AF_INET;
       }
-      else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len)
+      else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len)
 	dst_host_handler(chptr, pptrs, data);
     }
     if (pptrs->l3_proto == ETHERTYPE_IPV6 || pptrs->flow_type == NF9_FTYPE_NAT_EVENT /* NAT64 case */) {
@@ -1944,7 +1944,7 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
         memcpy(&pdata->primitives.dst_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV6_DST_PREFIX].len, 16));
         pdata->primitives.dst_ip.family = AF_INET6;
       }
-      else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len)
+      else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len) 
 	dst_host_handler(chptr, pptrs, data);
     }
     break;
@@ -2268,7 +2268,7 @@ void NF_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_UDP_SRC_PORT].off, MIN(tpl->tpl[NF9_UDP_SRC_PORT].len, 2));
     else if (tpl->tpl[NF9_TCP_SRC_PORT].len) 
       memcpy(&pdata->primitives.src_port, pptrs->f_data+tpl->tpl[NF9_TCP_SRC_PORT].off, MIN(tpl->tpl[NF9_TCP_SRC_PORT].len, 2));
-    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len) {
+    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len) {
       src_port_handler(chptr, pptrs, data);
       break;
     }
@@ -2306,7 +2306,7 @@ void NF_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_UDP_DST_PORT].off, MIN(tpl->tpl[NF9_UDP_DST_PORT].len, 2));
     else if (tpl->tpl[NF9_TCP_DST_PORT].len)
       memcpy(&pdata->primitives.dst_port, pptrs->f_data+tpl->tpl[NF9_TCP_DST_PORT].off, MIN(tpl->tpl[NF9_TCP_DST_PORT].len, 2));
-    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len) {
+    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len) {
       dst_port_handler(chptr, pptrs, data);
       break;
     }
@@ -2341,7 +2341,7 @@ void NF_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   case 9:
     if (tpl->tpl[NF9_SRC_TOS].len)
       memcpy(&pdata->primitives.tos, pptrs->f_data+tpl->tpl[NF9_SRC_TOS].off, MIN(tpl->tpl[NF9_SRC_TOS].len, 1));
-    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len)
+    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len)
       ip_tos_handler(chptr, pptrs, data);
 
     break;
@@ -2364,7 +2364,7 @@ void NF_ip_proto_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   case 9:
     if (tpl->tpl[NF9_L4_PROTOCOL].len)
       memcpy(&pdata->primitives.proto, pptrs->f_data+tpl->tpl[NF9_L4_PROTOCOL].off, MIN(tpl->tpl[NF9_L4_PROTOCOL].len, 1));
-    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len)
+    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len)
       ip_proto_handler(chptr, pptrs, data);
 
     break;
@@ -2390,7 +2390,7 @@ void NF_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs 
       memcpy(&tcp_flags, pptrs->f_data+tpl->tpl[NF9_TCP_FLAGS].off, MIN(tpl->tpl[NF9_TCP_FLAGS].len, 1));
       pdata->tcp_flags = tcp_flags;
     }
-    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len)
+    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len)
       tcp_flags_handler(chptr, pptrs, data);
 
     break;
@@ -2481,7 +2481,7 @@ void NF_counters_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     }
 
     if (!pdata->pkt_len && !pdata->pkt_num) {
-      if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len)
+      if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len)
 	counters_handler(chptr, pptrs, data);
     }
 
@@ -3270,7 +3270,7 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
       }
     }
 
-    if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len) custom_primitives_handler(chptr, pptrs, data);
+    if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len) custom_primitives_handler(chptr, pptrs, data);
 
     break;
   default:
@@ -3413,7 +3413,7 @@ void NF_mpls_label_top_handler(struct channels_list_entry *chptr, struct packet_
   case 9:
     if (tpl->tpl[NF9_MPLS_LABEL_1].len == 3)
       pmpls->mpls_label_top = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_1].off);
-    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len)
+    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len)
       mpls_label_top_handler(chptr, pptrs, data);
 
     break;
@@ -3440,7 +3440,7 @@ void NF_mpls_label_bottom_handler(struct channels_list_entry *chptr, struct pack
     }
 
     if (!pmpls->mpls_label_bottom) {
-      if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len)
+      if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len)
         mpls_label_bottom_handler(chptr, pptrs, data);
     }
 
@@ -3474,7 +3474,7 @@ void NF_mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packe
     if (last_label_value || bosbit_found) pmpls->mpls_stack_depth = stack_depth;
 
     if (!pmpls->mpls_stack_depth) {
-      if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len)
+      if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len)
         mpls_stack_depth_handler(chptr, pptrs, data);
     }
 

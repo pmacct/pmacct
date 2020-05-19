@@ -2697,7 +2697,7 @@ u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_p
   /* first round: event vs traffic */
   if (!tpl->tpl[NF9_IN_BYTES].len && !tpl->tpl[NF9_OUT_BYTES].len && !tpl->tpl[NF9_FLOW_BYTES].len &&
       !tpl->tpl[NF9_INITIATOR_OCTETS].len && !tpl->tpl[NF9_RESPONDER_OCTETS].len && /* packets? && */
-      !tpl->tpl[NF9_DATALINK_FRAME_SECTION].len) {
+      !tpl->tpl[NF9_DATALINK_FRAME_SECTION].len && !tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len) {
     ret = NF9_FTYPE_EVENT;
   }
   else {
@@ -2726,7 +2726,9 @@ u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_p
       }
     }
 
-    if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len) ret = NF9_FTYPE_DLFS;
+    if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len) {
+      ret = NF9_FTYPE_DLFS;
+    }
   }
 
   /* second round: overrides */
@@ -2944,7 +2946,7 @@ void nfv9_datalink_frame_section_handler(struct packet_ptrs *pptrs)
 {
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct utpl_field *utpl = NULL;
-  u_int16_t frame_type = NF9_DL_F_TYPE_UNKNOWN, t16;
+  u_int16_t frame_type = NF9_DL_F_TYPE_UNKNOWN, t16, idx;
 
   /* cleanups */
   reset_index_pkt_ptrs(pptrs);
@@ -2962,9 +2964,16 @@ void nfv9_datalink_frame_section_handler(struct packet_ptrs *pptrs)
   /* XXX: in case of no NF9_DATALINK_FRAME_TYPE, let's assume Ethernet */
   else frame_type = NF9_DL_F_TYPE_ETHERNET;
 
-  if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len) {
-    pptrs->pkthdr->caplen = tpl->tpl[NF9_DATALINK_FRAME_SECTION].len;
-    pptrs->packet_ptr = (u_char *) pptrs->f_data+tpl->tpl[NF9_DATALINK_FRAME_SECTION].off;
+  if (tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len) {
+    idx = NF9_LAYER2_PKT_SECTION_DATA;
+  }
+  else {
+    idx = NF9_DATALINK_FRAME_SECTION;
+  }
+
+  if (tpl->tpl[idx].len) {
+    pptrs->pkthdr->caplen = tpl->tpl[idx].len;
+    pptrs->packet_ptr = (u_char *) pptrs->f_data+tpl->tpl[idx].off;
 
     if (frame_type == NF9_DL_F_TYPE_ETHERNET) {
       eth_handler(pptrs->pkthdr, pptrs);
