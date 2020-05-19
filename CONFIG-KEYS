@@ -2126,8 +2126,9 @@ DESC:           Allows to define Engine ID and Engine Type fields for NetFlow v5
 		numbers, each up to maximum 8-bits length and separated by the ":" symbol; in case of NetFlow
 		v9/IPFIX it expects a single non-negative number up-to maximum 32-bits length. This comes
 		useful to allow a collector to distinguish between distinct probe instances running on the
-		same host; this is also important for letting NetFlow v9/IPFIX templates to work correctly: in
-		fact, template IDs get automatically selected only inside single daemon instances.
+		same host (collector would report missing flows due to sequencing jumps); this is also
+		important for letting NetFlow v9/IPFIX templates to work correctly: in fact, template IDs get
+		automatically selected only inside single daemon instances.
 DEFAULT:	[ 0:0, 0 ]
 
 KEY:		[ nfacctd_peer_as | sfacctd_peer_as | nfprobe_peer_as | sfprobe_peer_as ]
