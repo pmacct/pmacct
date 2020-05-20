@@ -667,7 +667,7 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   }
 
   /* NLRI parsing */
-  if (withdraw.length) bgp_nlri_parse(bmd, NULL, NULL, &withdraw, BGP_NLRI_WITHDRAW);
+  if (withdraw.length) bgp_nlri_parse(bmd, NULL, &attr_extra, &withdraw, BGP_NLRI_WITHDRAW);
   if (update.length) bgp_nlri_parse(bmd, &attr, &attr_extra, &update, BGP_NLRI_UPDATE);
 	
   if (mp_update.length
@@ -680,7 +680,7 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 	  && mp_withdraw.afi == AFI_IP
 	  && (mp_withdraw.safi == SAFI_UNICAST || mp_withdraw.safi == SAFI_MPLS_LABEL ||
 	      mp_withdraw.safi == SAFI_MPLS_VPN))
-    bgp_nlri_parse (bmd, NULL, NULL, &mp_withdraw, BGP_NLRI_WITHDRAW);
+    bgp_nlri_parse (bmd, NULL, &attr_extra, &mp_withdraw, BGP_NLRI_WITHDRAW);
 
   if (mp_update.length
 	  && mp_update.afi == AFI_IP6
@@ -692,7 +692,7 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 	  && mp_withdraw.afi == AFI_IP6
 	  && (mp_withdraw.safi == SAFI_UNICAST || mp_withdraw.safi == SAFI_MPLS_LABEL ||
 	      mp_withdraw.safi == SAFI_MPLS_VPN))
-    bgp_nlri_parse(bmd, NULL, NULL, &mp_withdraw, BGP_NLRI_WITHDRAW);
+    bgp_nlri_parse(bmd, NULL, &attr_extra, &mp_withdraw, BGP_NLRI_WITHDRAW);
 
   /* Receipt of End-of-RIB can be processed here; being a silent
 	 BGP receiver only, honestly it doesn't matter to us */
