@@ -181,6 +181,7 @@ void skinny_bgp_daemon_online()
 
   if (config.bgp_xconnect_map) {
     int bgp_xcs_allocated = FALSE;
+    int bgp_xcs_size = config.maps_entries ? config.maps_entries : MAX_PRETAG_MAP_ENTRIES;
 
     if (config.acct_type != ACCT_PMBGP) {
       Log(LOG_ERR, "ERROR ( %s/%s ): bgp_daemon_xconnect_map feature not supported for this daemon. Exiting ...\n", config.name, config.type);
@@ -191,14 +192,15 @@ void skinny_bgp_daemon_online()
     memset(&req, 0, sizeof(req));
 
     /* Setting up the pool */
-    bgp_xcs_map.pool = malloc((config.bgp_daemon_max_peers + 1) * sizeof(struct bgp_xconnect));
+    bgp_xcs_map.pool = malloc(bgp_xcs_size * sizeof(struct bgp_xconnect));
     if (!bgp_xcs_map.pool) {
       Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate BGP xconnect pool. Exiting ...\n", config.name, config.type);
       exit_gracefully(1);
     }
-    else memset(bgp_xcs_map.pool, 0, (config.bgp_daemon_max_peers + 1) * sizeof(struct bgp_xconnect));
+    else memset(bgp_xcs_map.pool, 0, bgp_xcs_size * sizeof(struct bgp_xconnect));
 
     req.key_value_table = (void *) &bgp_xcs_map;
+    req.map_entries = bgp_xcs_size;
     load_id_file(MAP_BGP_XCS, config.bgp_xconnect_map, NULL, &req, &bgp_xcs_allocated);
   }
   else {
