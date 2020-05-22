@@ -648,6 +648,19 @@ int bgp_peer_init(struct bgp_peer *peer, int type)
     ret = FALSE;
   }
 
+  if (config.bgp_xconnect_map) {
+    peer->xbuf.tot_len = BGP_BUFFER_SIZE;
+    peer->xbuf.base = malloc(peer->xbuf.tot_len);
+    if (!peer->xbuf.base) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (bgp_peer_init). Exiting ..\n", config.name, bms->log_str);
+      exit_gracefully(1);
+    }
+    else {
+      memset(peer->xbuf.base, 0, peer->xbuf.tot_len);
+      ret = FALSE;
+    }
+  }
+
   return ret;
 }
 
@@ -700,9 +713,13 @@ void bgp_peer_close(struct bgp_peer *peer, int type, int no_quiet, int send_noti
   memset(&peer->addr_str, 0, sizeof(peer->addr_str));
 
   free(peer->buf.base);
+  if (config.bgp_xconnect_map) {
+    free(peer->xbuf.base);
+  }
 
-  if (bms->neighbors_file)
+  if (bms->neighbors_file) {
     write_neighbors_file(bms->neighbors_file, peer->type);
+  }
 }
 
 int bgp_peer_xconnect_init(struct bgp_peer *peer, int type)

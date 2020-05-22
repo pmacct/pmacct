@@ -97,6 +97,7 @@ void skinny_bgp_daemon_online()
   struct plugin_requests req;
   struct host_addr addr;
   struct bgp_peer *peer;
+  struct bgp_peer_buf *peer_buf;
   char bgp_reply_pkt[BGP_BUFFER_SIZE], *bgp_reply_pkt_ptr;
   char bgp_peer_str[INET6_ADDRSTRLEN], bgp_xconnect_peer_str[BGP_XCONNECT_STRLEN];
   struct sockaddr_storage server, client;
@@ -877,12 +878,13 @@ void skinny_bgp_daemon_online()
        FvD: To avoid starvation of the "later established" peers, we
        offset the start of the search in a round-robin style.
     */
-    for (peer = NULL, peers_idx = 0; peers_idx < max_peers_idx; peers_idx++) {
+    for (peer = NULL, peer_buf = NULL, peers_idx = 0; peers_idx < max_peers_idx; peers_idx++) {
       int loc_idx = (peers_idx + peers_idx_rr) % max_peers_idx;
       recv_fd = 0; send_fd = 0;
 
       if (peers[loc_idx].fd && FD_ISSET(peers[loc_idx].fd, &read_descs)) {
         peer = &peers[loc_idx];
+	peer_buf = &peer->buf;
 	recv_fd = peer->fd;
 	if (config.bgp_xconnect_map) send_fd = peer->xconnect_fd;
         peers_idx_rr = (peers_idx_rr + 1) % max_peers_idx;
@@ -895,6 +897,7 @@ void skinny_bgp_daemon_online()
 
 	if (peers[loc_idx].xconnect_fd && FD_ISSET(peers[loc_idx].xconnect_fd, &read_descs)) {
 	  peer = &peers[loc_idx];
+	  peer_buf = &peer->xbuf;
 	  recv_fd = peer->xconnect_fd;
 	  send_fd = peer->fd;
 	  peers_xconnect_idx_rr = (peers_xconnect_idx_rr + 1) % max_peers_idx;
@@ -905,14 +908,14 @@ void skinny_bgp_daemon_online()
 
     if (!peer) goto select_again;
 
-    if (!peer->buf.exp_len) {
-      ret = recv(recv_fd, &peer->buf.base[peer->buf.cur_len], (BGP_HEADER_SIZE - peer->buf.cur_len), 0);
+    if (!peer_buf->exp_len) {
+      ret = recv(recv_fd, &peer_buf->base[peer_buf->cur_len], (BGP_HEADER_SIZE - peer_buf->cur_len), 0);
 
       if (ret > 0) {
-	peer->buf.cur_len += ret;
+	peer_buf->cur_len += ret;
 
-	if (peer->buf.cur_len == BGP_HEADER_SIZE) {
-	  struct bgp_header *bhdr = (struct bgp_header *) peer->buf.base;
+	if (peer_buf->cur_len == BGP_HEADER_SIZE) {
+	  struct bgp_header *bhdr = (struct bgp_header *) peer_buf->base;
 
 	  if (bgp_marker_check(bhdr, BGP_MARKER_SIZE) == ERR) {
 	    bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
@@ -920,18 +923,18 @@ void skinny_bgp_daemon_online()
 		config.name, bgp_misc_db->log_str, bgp_peer_str);
 
 	    peer->msglen = 0;
-	    peer->buf.cur_len = 0;
-	    peer->buf.exp_len = 0;
+	    peer_buf->cur_len = 0;
+	    peer_buf->exp_len = 0;
 	    ret = ERR;
 	  }
 	  else {
-	    peer->buf.exp_len = ntohs(bhdr->bgpo_len);
+	    peer_buf->exp_len = ntohs(bhdr->bgpo_len);
 
 	    /* commit */
-	    if (peer->buf.cur_len == peer->buf.exp_len) {
-	      peer->msglen = peer->buf.exp_len;
-	      peer->buf.cur_len = 0;
-	      peer->buf.exp_len = 0;
+	    if (peer_buf->cur_len == peer_buf->exp_len) {
+	      peer->msglen = peer_buf->exp_len;
+	      peer_buf->cur_len = 0;
+	      peer_buf->exp_len = 0;
 	    }
 	  }
 	}
@@ -941,17 +944,17 @@ void skinny_bgp_daemon_online()
       }
     }
 
-    if (peer->buf.exp_len) {
-      ret = recv(recv_fd, &peer->buf.base[peer->buf.cur_len], (peer->buf.exp_len - peer->buf.cur_len), 0);
+    if (peer_buf->exp_len) {
+      ret = recv(recv_fd, &peer_buf->base[peer_buf->cur_len], (peer_buf->exp_len - peer_buf->cur_len), 0);
 
       if (ret > 0) {
-	peer->buf.cur_len += ret;
+	peer_buf->cur_len += ret;
 
 	/* commit */
-        if (peer->buf.cur_len == peer->buf.exp_len) {
-	  peer->msglen = peer->buf.exp_len;
-	  peer->buf.cur_len = 0;
-	  peer->buf.exp_len = 0;
+        if (peer_buf->cur_len == peer_buf->exp_len) {
+	  peer->msglen = peer_buf->exp_len;
+	  peer_buf->cur_len = 0;
+	  peer_buf->exp_len = 0;
 	}
 	else {
 	  goto select_again;
@@ -1008,7 +1011,7 @@ void skinny_bgp_daemon_online()
 	}
       }
       else {
-	ret = send(send_fd, peer->buf.base, peer->msglen, 0);
+	ret = send(send_fd, peer_buf->base, peer->msglen, 0);
 	if (ret <= 0) {
 	  bgp_peer_xconnect_print(peer, bgp_xconnect_peer_str, BGP_XCONNECT_STRLEN);
 

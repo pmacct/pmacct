@@ -201,6 +201,7 @@ struct bgp_peer {
   void *bmp_se;
 
   struct bgp_xconnect xc;
+  struct bgp_peer_buf xbuf;
   int xconnect_fd;
 };
 
