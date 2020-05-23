@@ -586,7 +586,7 @@ int p_kafka_check_outq_len(struct p_kafka_host *kafka_host)
       if (outq_len == old_outq_len) {
 	if (retries < PM_KAFKA_OUTQ_LEN_RETRIES) retries++;
 	else {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to Kafka: p_kafka_check_outq_len()\n", config.name, config.type);
+	  Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to Kafka: p_kafka_check_outq_len() (%u)\n", config.name, config.type, outq_len);
           p_kafka_close(kafka_host, TRUE);
 	  return outq_len; 
 	}
