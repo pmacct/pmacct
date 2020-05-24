@@ -803,8 +803,12 @@ void skinny_bmp_daemon()
 
       if (!peer) {
         /* We briefly accept the new connection to be able to drop it */
-        Log(LOG_ERR, "ERROR ( %s/%s ): Insufficient number of BMP peers has been configured by 'bmp_daemon_max_peers' (%d).\n",
-	    config.name, bmp_misc_db->log_str, config.bmp_daemon_max_peers);
+	if (!log_notification_isset(&log_notifications.bmp_peers_limit, now)) {
+	  log_notification_set(&log_notifications.bmp_peers_limit, now, FALSE);
+          Log(LOG_ERR, "ERROR ( %s/%s ): Insufficient number of BMP peers has been configured by 'bmp_daemon_max_peers' (%d).\n",
+	      config.name, bmp_misc_db->log_str, config.bmp_daemon_max_peers);
+	}
+
         close(fd);
         goto read_data;
       }

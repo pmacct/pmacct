@@ -132,6 +132,7 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->peers = bmp_peers;
   bms->peers_cache = NULL;
   bms->peers_port_cache = NULL;
+  bms->peers_limit_log = &log_notifications.bmp_peers_limit;
   bms->xconnects = NULL;
   bms->dump_file = config.bmp_dump_file;
   bms->dump_amqp_routing_key = config.bmp_dump_amqp_routing_key;

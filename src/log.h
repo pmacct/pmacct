@@ -62,6 +62,7 @@ struct _log_notifications {
   struct log_notification bgp_peers_throttling;
   struct log_notification bgp_peers_limit;
   struct log_notification bmp_peers_throttling;
+  struct log_notification bmp_peers_limit;
   struct log_notification geoip_ipv4_file_null;
   struct log_notification geoip_ipv6_file_null;
 #if defined (WITH_NDPI)
