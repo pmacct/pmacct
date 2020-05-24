@@ -237,6 +237,7 @@ struct bgp_misc_structs {
   int max_peers;
   void *peers_cache;
   void *peers_port_cache;
+  struct log_notification *peers_limit_log;
   void *xconnects;
 
   char *neighbors_file;

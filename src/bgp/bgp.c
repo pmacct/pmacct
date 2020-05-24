@@ -770,8 +770,11 @@ void skinny_bgp_daemon_online()
 
       if (!peer) {
 	/* We briefly accept the new connection to be able to drop it */
-        Log(LOG_ERR, "ERROR ( %s/%s ): Insufficient number of BGP peers has been configured by 'bgp_daemon_max_peers' (%d).\n",
+	if (!log_notification_isset(&log_notifications.bgp_peers_limit, now)) {
+	  log_notification_set(&log_notifications.bgp_peers_limit, now, FALSE);
+          Log(LOG_ERR, "ERROR ( %s/%s ): Insufficient number of BGP peers has been configured by 'bgp_daemon_max_peers' (%d).\n",
 			config.name, bgp_misc_db->log_str, config.bgp_daemon_max_peers);
+	}
 
 	close(fd);
 	goto read_data;

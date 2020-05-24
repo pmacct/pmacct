@@ -720,6 +720,10 @@ void bgp_peer_close(struct bgp_peer *peer, int type, int no_quiet, int send_noti
   if (bms->neighbors_file) {
     write_neighbors_file(bms->neighbors_file, peer->type);
   }
+
+  if (bms->peers_limit_log) {
+    log_notification_unset(bms->peers_limit_log);
+  }
 }
 
 int bgp_peer_xconnect_init(struct bgp_peer *peer, int type)
@@ -1434,6 +1438,7 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->peers = peers;
   bms->peers_cache = peers_cache;
   bms->peers_port_cache = peers_port_cache;
+  bms->peers_limit_log = &log_notifications.bgp_peers_limit;
   bms->xconnects = &bgp_xcs_map;
   bms->neighbors_file = config.bgp_daemon_neighbors_file; 
   bms->dump_file = config.bgp_table_dump_file; 
