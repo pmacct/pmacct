@@ -47,6 +47,9 @@ Title | Description
 `local_pref` | BGP local preference
 `rd` | BGP route-distinguisher
 `label` | BGP MPLS VPN label
+`as_path_id` | BGP ADD-Path attribute (https://tools.ietf.org/html/rfc7911#section-3)
+`aigp` | BGP AIGP attribute (https://tools.ietf.org/html/rfc7311#section-3)
+`psid_li` | BGP Prefix-SID Label Index attribute (https://tools.ietf.org/html/rfc8669#section-3.1)
 `writer_id` | pmacct process name and id
 
 ### Example BGP metrics
@@ -126,27 +129,35 @@ Title | Description
 `local_pref` | BGP local preference
 `rd` | BGP route-distinguisher
 `label` | BGP MPLS VPN label
+`as_path_id` | BGP ADD-Path attribute (https://tools.ietf.org/html/rfc7911#section-3)
+`aigp` | BGP AIGP attribute (https://tools.ietf.org/html/rfc7311#section-3)
+`psid_li` | BGP Prefix-SID Label Index attribute (https://tools.ietf.org/html/rfc8669#section-3.1)
+`bmp_rm_info_0` | BMP path marking (https://tools.ietf.org/html/draft-cppy-grow-bmp-path-marking-tlv-03#section-3)
 
 ~~~~
 {
-  "seq": 5835,
+  "seq": 6399,
   "log_type": "update",
-  "timestamp": "2019-05-24 09:33:31.136734",
-  "peer_ip": "192.0.2.2",
-  "bmp_router_port": 45047,
+  "timestamp": "2020-05-24T14:34:04.000000+02:00",
+  "is_post": 0,
+  "is_out": 1,
+  "bmp_rm_info_0": "00-01-00-01-00-06-00-00-00-00-00-00",
+  "peer_ip": "198.51.100.72",
+  "peer_tcp_port": 0,
   "event_type": "log",
   "afi": 1,
   "safi": 128,
-  "ip_prefix": "198.51.100.0/24",
-  "bgp_nexthop": "203.0.113.1",
-  "as_path": "64496 64497 64498",
-  "comms": "64496:1 64497:2 64498:3",
-  "ecomms": "RT:64497:192",
+  "ip_prefix": "203.0.113.70/32",
+  "bgp_nexthop": "198.51.100.62",
+  "as_path": "65538 65000",
+  "comms": "64496:20 64496:1001 64496:1033 64497:3 64499:70 64499:100",
+  "ecomms": "RT:64497:32",
   "origin": "i",
   "local_pref": 0,
-  "rd": "0:64499:2",
-  "label": "19356",
-  "bmp_router": "192.0.2.2",
+  "rd": "0:64499:72",
+  "label": "1048575",
+  "bmp_router": "192.0.2.52",
+  "bmp_router_port": 60720,
   "bmp_msg_type": "route_monitor"
 }
 ~~~~
@@ -163,6 +174,7 @@ Title | Description
 `peer_ip` | BGP peer IP address where BGP metrics are received from
 `peer_asn` | BGP peer BGP AS number
 `peer_type` | Type of BGP peer (https://www.iana.org/assignments/bmp-parameters/bmp-parameters.xhtml#peer-types)
+`rd` | BGP peer route-distinguisher (https://tools.ietf.org/html/rfc7854#section-4.2)
 `counter_type` | Statistics type field code (https://www.iana.org/assignments/bmp-parameters/bmp-parameters.xhtml#statistics-types)
 `counter_type_str` | Statistics description
 `counter_value` | Statistics counter value
@@ -178,6 +190,7 @@ Title | Description
   "peer_ip": "203.0.113.1",
   "peer_asn": 60633,
   "peer_type": 0,
+  "rd": "0:64499:2",
   "counter_type": 0,
   "counter_type_str": "Number of prefixes rejected by inbound policy",
   "counter_value": 0
@@ -197,6 +210,7 @@ Title | Description
 `peer_asn` | BGP peer BGP AS number
 `peer_type` | Type of BGP peer (https://www.iana.org/assignments/bmp-parameters/bmp-parameters.xhtml#peer-types)
 `peer_type_str` | type of BGP peer description
+`rd` | BGP peer route-distinguisher (https://tools.ietf.org/html/rfc7854#section-4.2)
 `reason_type` | Reason type why BGP went down  (https://www.iana.org/assignments/bmp-parameters/bmp-parameters.xhtml#peer-down-reason-codes)
 `reason_str` | Reason description why BGP went down
 
@@ -212,6 +226,7 @@ Title | Description
   "peer_asn": 64496,
   "peer_type": 0,
   "peer_type_str": "Global Instance Peer",
+  "rd": "0:64499:2",
   "reason_type": 1,
   "reason_str": "The local system closed the session"
 }
@@ -230,6 +245,7 @@ Title | Description
 `peer_asn` | BGP peer BGP AS number
 `peer_type` | Type of BGP peer (https://www.iana.org/assignments/bmp-parameters/bmp-parameters.xhtml#peer-types)
 `peer_type_str` | type of BGP peer description
+`rd` | BGP peer route-distinguisher (https://tools.ietf.org/html/rfc7854#section-4.2)
 `bgp_id` | BGP router ID of remote peer from BGP open message
 `local_port` | BGP peer local TCP port
 `remote_port` | BGP peer remote TCP port
@@ -247,6 +263,7 @@ Title | Description
   "peer_asn": 64496,
   "peer_type": 0,
   "peer_type_str": "Global Instance Peer",
+  "rd": "0:64499:2",
   "bgp_id": "192.0.2.2",
   "local_port": 26354,
   "remote_port": 179,
@@ -277,6 +294,76 @@ Title | Description
   "bmp_msg_type": "init",
   "bmp_init_info_sysdescr": "6.5.2",
   "bmp_init_info_sysname": "bgprouter.example.com",
+  "writer_id": "daisy62bmp01c/9254"
+}
+~~~~
+
+### BMP message type 5, termination
+Title | Description
+:----- | :-----------
+`seq` | pmacct sequence number. Uniquely identifies each metric.
+`timestamp` | pmacct time stamp of data collection
+`bmp_router` | IP address of BMP router which peers to pmacct
+`bmp_router_port` | TCP port of BMP router which peers to pmacct
+`event_type` | pmacct event type. Can be either "log" for msglog or "dump" for table_dump.
+`bmp_msg_type` | "term" for BMP message type 5
+`bmp_term_info_reason` | BMP termination reason
+`writer_id` | pmacct process name and id
+ 
+~~~~
+{
+  "event_type": "log",
+  "seq": 6432,
+  "timestamp": "2020-05-24T14:36:19.744818+02:00",
+  "bmp_router": "192.0.2.52",
+  "bmp_router_port": 60720,
+  "bmp_msg_type": "term",
+  "bmp_term_info_reason": "Session administratively closed"
+}
+
+~~~~
+
+### BMP message type 6, Route Policy and Attribute Trace
+Title | Description
+:----- | :-----------
+`seq` | pmacct sequence number. Uniquely identifies each metric.
+`timestamp` | pmacct time stamp of data collection
+`bmp_router` | IP address of BMP router which peers to pmacct
+`bmp_router_port` | TCP port of BMP router which peers to pmacct
+`event_type` | pmacct event type. Can be either "log" for msglog or "dump" for table_dump.
+`bmp_msg_type` | "rpat" for BMP message type 6
+`rd` | BGP route-distinguisher
+`prefix` | BGP prefix
+`prefix_len` | BGP prefix mask
+`bgp_id` | BGP router-id
+`afi` | BGP Address Family Indicator (RFC 4760 -  Multiprotocol Extensions for BGP-4)
+`safi` | BGP Subsequent Address Family Identifier (RFC 4760 -  Multiprotocol Extensions for BGP-4)
+`bmp_rpat_info_0` | VRF Name and ID (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.1)
+`bmp_rpat_info_1` | Route-Policy (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.2)
+`bmp_rpat_info_2` | Pre Route-Policy (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.3)
+`bmp_rpat_info_3` | Post Route-Policy (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.4)
+`bmp_rpat_info_4` | String (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.5)
+`writer_id` | pmacct process name and id
+ 
+~~~~
+{
+  "event_type": "log",
+  "seq": 360,
+  "timestamp": "2020-03-27T12:45:59.473293+01:00",
+  "bmp_router": "192.0.2.52",
+  "bmp_router_port": 49531,
+  "bmp_msg_type": "rpat",
+  "rd": "0:64499:12",
+  "prefix": "203.0.113.30",
+  "prefix_len": 32,
+  "bgp_id": "192.0.2.82",
+  "afi": 1,
+  "safi": 128,
+  "bmp_rpat_info_0": "00-00-00-00-5F-70-75-62-6C-69-63-5F",
+  "bmp_rpat_info_1": "C0-01-01-00-00-00-00-00-00-00-00-00-00-00-00-C6-33-64-47-C0-00-02-47-00-01-00-03-00-09-56-50-4E-5F-4F-55-54-32-30-00-02-32-30-00",
+  "bmp_rpat_info_2": "40-01-01-00-40-02-0A-02-02-00-01-00-06-00-00-FD-E8-40-03-04-C6-33-64-52-C0-08-14-FB-F0-01-2B-FB-F0-03-E9-FB-F0-04-0A-FB-F1-00-01-FB-F3-00-1E-C0-10-08-00-02-FB-F1-00-00-00-0B",
+  "bmp_rpat_info_3": "",
+  "bmp_rpat_info_4": "78-6D-6C-6E-73-3A-72-74-70-3D-22-75-72-6E-3A-68-75-61-77-65-69-3A-79-61-6E-67-3A-68-75-61-77-65-69-2D-72-6F-75-74-69-6E-67-2D-70-6F-6C-69-63-79-22-20-73-65-6C-65-63-74-3D-22-2F-72-74-70-3A-72-6F-75-74-69-6E-67-2D-70-6F-6C-69-63-79-2F-72-74-70-3A-70-6F-6C-69-63-79-2D-64-65-66-69-6E-69-74-69-6F-6E-73-2F-72-74-70-3A-70-6F-6C-69-63-79-2D-64-65-66-69-6E-69-74-69-6F-6E-5B-72-74-70-3A-6E-61-6D-65-3D-27-56-50-4E-5F-4F-55-54-32-30-27-5D-2F-72-74-70-3A-6E-6F-64-65-73-2F-72-74-70-3A-6E-6F-64-65-5B-72-74-70-3A-73-65-71-75-65-6E-63-65-3D-27-32-30-27-5D-00"
   "writer_id": "daisy62bmp01c/9254"
 }
 ~~~~
