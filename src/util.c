@@ -1594,7 +1594,7 @@ void *pm_malloc(size_t size)
 
   obj = (unsigned char *) malloc(size);
   if (!obj) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to grab enough memory (requested: %lu bytes). Exiting ...\n",
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to grab enough memory (requested: %zu bytes). Exiting ...\n",
     config.name, config.type, size);
     exit_gracefully(1);
   }
