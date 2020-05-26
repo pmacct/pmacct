@@ -951,6 +951,12 @@ int main(int argc,char **argv, char **envp)
 
     req.bpf_filter = TRUE;
 
+    if (config.bgp_daemon_to_xflow_agent_map) {
+      load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.bgp_daemon_to_xflow_agent_map, &bta_table, &req, &bta_map_allocated);
+      pptrs.v4.bta_table = (u_char *) &bta_table;
+    }
+    else pptrs.v4.bta_table = NULL;
+
     bmp_daemon_wrapper();
 
     /* Let's give the BMP thread some advantage to create its structures */

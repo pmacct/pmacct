@@ -978,6 +978,20 @@ int main(int argc,char **argv, char **envp)
 
     req.bpf_filter = TRUE;
 
+    if (config.bgp_daemon_to_xflow_agent_map) {
+      load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.bgp_daemon_to_xflow_agent_map, &bta_table, &req, &bta_map_allocated);
+      cb_data.bta_table = (u_char *) &bta_table;
+    }
+    else {
+      Log(LOG_ERR, "ERROR ( %s/core ): 'bmp_daemon' configured but no 'bgp_agent_map' has been specified. Exiting.\n", config.name);
+      exit_gracefully(1);
+    }
+
+    /* Limiting BGP peers to only two: one would suffice in pmacctd
+       but in case maps are reloadable (ie. bta), it could be handy
+       to keep a backup feed in memory */
+    config.bgp_daemon_max_peers = 2;
+
     bmp_daemon_wrapper();
 
     /* Let's give the BMP thread some advantage to create its structures */
