@@ -125,9 +125,9 @@ void sql_init_global_buffers()
   memset(&lru_head, 0, sizeof(lru_head));
   lru_tail = &lru_head;
 
-  Log(LOG_INFO, "INFO ( %s/%s ): cache entries=%d base cache memory=%luu bytes\n", config.name, config.type,
-        config.sql_cache_entries, ((config.sql_cache_entries * sizeof(struct db_cache)) +
-	(2 * (qq_size * sizeof(struct db_cache *)))));
+  Log(LOG_INFO, "INFO ( %s/%s ): cache entries=%d base cache memory=%lu bytes\n", config.name, config.type,
+        config.sql_cache_entries, (unsigned long)(((config.sql_cache_entries * sizeof(struct db_cache)) +
+	(2 * (qq_size * sizeof(struct db_cache *))))));
 
   pipebuf = (unsigned char *) malloc(config.buffer_size);
   sql_cache = (struct db_cache *) malloc(config.sql_cache_entries*sizeof(struct db_cache));
