@@ -1163,7 +1163,9 @@ DESC:		Defines the username to use when connecting to the server.
 DEFAULT:	pmacct
 
 KEY:		sql_passwd
-DESC:		Defines the password to use when connecting to the server.
+DESC:		Defines the password to use when connecting to the server. Note that since this directive
+		does encompass a default value (see below), it is not possible to connect to a server
+		that performs password authentication with an empy password. 
 DEFAULT:	'arealsmartpwd'
 
 KEY:		[ sql_refresh_time | print_refresh_time | amqp_refresh_time | kafka_refresh_time ] (-r)
