@@ -1069,16 +1069,19 @@ advertised.listeners=PLAINTEXT://172.16.2.1:9092
 listener.security.protocol.map=PLAINTEXT:PLAINTEXT,SSL:SSL,SASL_PLAINTEXT:SASL_PLAINTEXT,SASL_SSL:SASL_SSL
 
 2) When the amount of data published to Kafka is substantial, ie. in the order
-of thousands of entries per second, batching is needed in order to avoid every
-single entry originating a produce call to Kafka. Two strategies are being
-available: a) pmacct batching via the kafka_multi_values feature or b) librdkafka
-batching via, as per the lib documentation, "The two most important configuration
-properties for performance tuning [are]:
+of thousands of entries per second, batching (MessageSet) is needed in order to
+avoid every single object being produced singularly to Kafka brokers. Two
+strategies are available for this a) pmacct batching via the kafka_multi_values
+feature (legacy) or b) librdkafka batching (recommended) via, as per the lib
+documentation, "The two most important configuration properties for performance
+tuning [are]:
 
 * batch.num.messages : the minimum number of messages to wait for to accumulate
   in the local queue before sending off a message set.
 * queue.buffering.max.ms : how long to wait for batch.num.messages to fill up
-  in the local queue."
+  in the local queue.". Note: up until librdkafka 0.11, the default was kept
+  very low to favour low-latency. A sensible minimum value in high-throughput
+  scenarios is 50ms.
 
 Also, intuitively, queue.buffering.max.messages, the "Maximum number of messages
 allowed on the producer queue", should be kept greater than the batch.num.messages.
@@ -1087,6 +1090,7 @@ by kafka_config_file, as global settings, ie.:
  
 global, queue.buffering.max.messages, 8000000
 global, batch.num.messages, 100000
+global, queue.buffering.max.ms, 50
 
 3) Configuring statistics.interval.ms to a positive value in kafka_config_file
 will make librdkafka log plenty of internal metrics - as documented at the
