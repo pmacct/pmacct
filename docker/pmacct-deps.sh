@@ -48,12 +48,12 @@ git clone -b 3.2-stable https://github.com/ntop/nDPI
 cd nDPI && rm -rf ./.git && ./autogen.sh && ./configure && make && sudo make install && sudo ldconfig && cd ..
 exit_on_error $?
 
-wget https://github.com/zeromq/libzmq/releases/download/v4.3.2/zeromq-4.3.2.tar.gz
+wget --no-check-certificate https://github.com/zeromq/libzmq/releases/download/v4.3.2/zeromq-4.3.2.tar.gz
 tar xfz zeromq-4.3.2.tar.gz
 cd zeromq-4.3.2 && ./configure && make && sudo make install && cd ..
 exit_on_error $?
 
-wget https://archive.apache.org/dist/avro/avro-1.9.2/c/avro-c-1.9.2.tar.gz
+wget --no-check-certificate https://archive.apache.org/dist/avro/avro-1.9.2/c/avro-c-1.9.2.tar.gz
 tar xfz avro-c-1.9.2.tar.gz
 cd avro-c-1.9.2 && mkdir build && cd build && cmake .. && make && sudo make install && cd .. && cd ..
 exit_on_error $?
