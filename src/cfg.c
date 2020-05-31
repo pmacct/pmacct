@@ -533,6 +533,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bmp_daemon_ipprec", cfg_key_bmp_daemon_ip_precedence},
   {"bmp_daemon_batch", cfg_key_bmp_daemon_batch},
   {"bmp_daemon_batch_interval", cfg_key_bmp_daemon_batch_interval},
+  {"bmp_agent_map", cfg_key_bgp_daemon_to_xflow_agent_map},
   {"bmp_daemon_msglog_output", cfg_key_bmp_daemon_msglog_output},
   {"bmp_daemon_msglog_file", cfg_key_bmp_daemon_msglog_file},
   {"bmp_daemon_msglog_avro_schema_file", cfg_key_bmp_daemon_msglog_avro_schema_file},
