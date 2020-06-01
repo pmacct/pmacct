@@ -762,6 +762,7 @@ int bgp_peer_xconnect_init(struct bgp_peer *peer, int type)
 	if (ret == ERR) {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bgp_peer_xconnect_init(): connect() failed.\n", config.name, bms->log_str, xconnect_str);
 	  memset(&peer->xc, 0, sizeof(peer->xc));
+	  close(fd);
 	  peer->xconnect_fd = 0;
 	  return ERR;
 	}
