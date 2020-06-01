@@ -29,4 +29,7 @@ RUN apt-get update && \
     libnetfilter-log-dev \
     bash
 
+COPY ./ci/deps.sh .
+RUN ./deps.sh
+
 ENTRYPOINT ["/bin/bash"]
