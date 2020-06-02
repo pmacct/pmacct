@@ -18,12 +18,15 @@
 #Do not delete
 set -e
 
+#wget Retries
+WGET_N_RETRIES=30
+WGET_WAIT_RETRIES_S=10
+
 #Don't pollute /
 mkdir -p /tmp
 cd /tmp
 
 #Dependencies (not fulfilled by Dockerfile)
-
 git clone https://github.com/akheron/jansson
 cd jansson && rm -rf ./.git && autoreconf -i && ./configure && make && sudo make install && cd ..
 
@@ -39,11 +42,11 @@ cd libmaxminddb && rm -rf ./.git && ./bootstrap && ./configure && make && sudo m
 git clone -b 3.2-stable https://github.com/ntop/nDPI
 cd nDPI && rm -rf ./.git && ./autogen.sh && ./configure && make && sudo make install && sudo ldconfig && cd ..
 
-wget --no-check-certificate https://github.com/zeromq/libzmq/releases/download/v4.3.2/zeromq-4.3.2.tar.gz
+wget -t $WGET_N_RETRIES --waitretry=$WGET_WAIT_RETRIES_S --no-check-certificate https://github.com/zeromq/libzmq/releases/download/v4.3.2/zeromq-4.3.2.tar.gz
 tar xfz zeromq-4.3.2.tar.gz
 cd zeromq-4.3.2 && ./configure && make && sudo make install && cd ..
 
-wget --no-check-certificate https://archive.apache.org/dist/avro/avro-1.9.2/c/avro-c-1.9.2.tar.gz
+wget -t $WGET_N_RETRIES --waitretry=$WGET_WAIT_RETRIES_S --no-check-certificate https://archive.apache.org/dist/avro/avro-1.9.2/c/avro-c-1.9.2.tar.gz
 tar xfz avro-c-1.9.2.tar.gz
 cd avro-c-1.9.2 && mkdir build && cd build && cmake .. && make && sudo make install && cd .. && cd ..
 
