@@ -316,6 +316,9 @@ void skinny_bgp_daemon_online()
       exit_gracefully(1);
     }
   }
+
+  setsockopt(config.bmp_sock, SOL_SOCKET, SO_KEEPALIVE, (void *)&flags, sizeof(flags));
+
   if (config.bgp_daemon_ipprec) {
     int opt = config.bgp_daemon_ipprec << 5;
 
