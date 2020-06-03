@@ -18,6 +18,10 @@
 #Do not delete
 set -e
 
+#Ugly hack for libavro; how to avoid?
+export AVRO_LIBS="-L/usr/local/avro/lib -lavro"
+export AVRO_CFLAGS="-I/usr/local/avro/include"
+
 #Build & install
 ./autogen.sh
 ./configure --disable-silent-rules $CONFIG_FLAGS || (cat config.log && /bin/false)
