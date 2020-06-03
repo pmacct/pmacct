@@ -33,4 +33,7 @@ RUN sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/CentOS-PowerTools.repo && \
     sqlite-devel \
     bash
 
+COPY ./ci/deps.sh .
+RUN ./deps.sh
+
 ENTRYPOINT ["/bin/bash"]
