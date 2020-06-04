@@ -4,30 +4,30 @@ FROM ubuntu:bionic
 
 RUN apt-get update && \
     apt-get install -y \
-    sudo \
-    wget \
-    libcurl4-openssl-dev \
-    zlib1g-dev \
-    libssl-dev \
-    make \
-    cmake \
-    git \
-    libstdc++-8-dev \
-    gcc \
-    flex \
-    bison \
-    pkg-config \
-    libtool \
     autoconf \
     automake \
+    bash \
+    bison \
+    cmake \
+    default-libmysqlclient-dev \
+    flex \
+    gcc \
+    git \
+    libcurl4-openssl-dev \
+    libjansson-dev \
+    libnetfilter-log-dev \
     libpcap-dev \
     libpq-dev \
-    default-libmysqlclient-dev \
     libsnappy-dev \
-    libjansson-dev \ 
     libsqlite3-dev \
-    libnetfilter-log-dev \
-    bash
+    libssl-dev \
+    libstdc++-8-dev \
+    libtool \
+    make \
+    pkg-config \
+    sudo \
+    wget \
+    zlib1g-dev
 
 COPY ./ci/deps.sh .
 RUN ./deps.sh
