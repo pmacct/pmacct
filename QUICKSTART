@@ -1955,6 +1955,12 @@ listening daemons; this may take a few connection attempts before wiring
 the session to the right daemon; having an excessive numbers of daemons
 in the pool may slow down the convergence process. 
 
+NOTE: each xconnect requires two file descriptors, one for the inbound
+TCP session, another for the outbound one. Popular default on Linux is
+1024 descriptor per process, effectively limiting the amunt of sessions
+that can be xconnected to approx 500. Such default can be adjusted via
+'ulimit -n'.
+
 For flow protocols, which are transported in UDP, a replication layer is
 needed in front, note the daemon listen on different nfacctd_port in the
 example above (read more on how to set up a replicator in the "Quickstart
