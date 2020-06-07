@@ -205,16 +205,21 @@ jobs:
     env: PMACCT_VERSION=$(git describe --abbrev=0 --match="v*")
     script:
       - echo "Building the base container..."
-      - docker build -f docker/base/Dockerfile -t ${DOCKER_USERNAME}/base:bleeding-edge .
+      - docker build -f docker/base/Dockerfile -t base:_build .
+      - echo "Building daemon containers..."
+      - docker build -f docker/pmacctd/Dockerfile -t pmacctd:_build .
       - echo "Uploading to dockerhub ...";
       - echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin;
 
-      #Always push bleeding-edge
+      #Always push bleeding-edge when pushed to master
       - GIT_IS_BLEEDING_EDGE=$( (git branch --contains HEAD | grep master ) || echo "")
       - |
         if [ "$GIT_IS_BLEEDING_EDGE" != "" ]; then
           echo "Uploading 'bleeding-edge' tag for `git describe`...";
+          docker tag base:_build ${DOCKER_USERNAME}/base:bleeding-edge;
           docker push ${DOCKER_USERNAME}/base:bleeding-edge;
+          docker tag pmacctd:_build ${DOCKER_USERNAME}/pmacctd:bleeding-edge;
+          docker push ${DOCKER_USERNAME}/pmacctd:bleeding-edge;
         fi
 
       #Upload vX.Y.Z only of it's a release commit
@@ -222,8 +227,10 @@ jobs:
       - |
         if [ "$GIT_RELEASE_TAG" != "" ]; then
           echo "Uploading '$PMACCT_VERSION' tag for `git describe`...";
-          docker tag ${DOCKER_USERNAME}/base:bleeding-edge ${DOCKER_USERNAME}/base:${PMACCT_VERSION};
+          docker tag base:_build ${DOCKER_USERNAME}/base:${PMACCT_VERSION};
           docker push ${DOCKER_USERNAME}/base:${PMACCT_VERSION};
+          docker tag pmacctd:_build ${DOCKER_USERNAME}/pmacctd:${PMACCT_VERSION};
+          docker push ${DOCKER_USERNAME}/pmacctd:${PMACCT_VERSION};
         fi
 
       #Upload "latest" if the release version is the highest
@@ -232,7 +239,9 @@ jobs:
           GIT_LAST_TAG=$(git tag --sort=v:refname | tail -n 1);
           if [ "$GIT_RELEASE_TAG" == "$GIT_LAST_TAG" ]; then
             echo "Uploading 'latest' tag for `git describe`...";
-            docker tag ${DOCKER_USERNAME}/base:bleeding-edge ${DOCKER_USERNAME}/base:latest;
+            docker tag base:_build ${DOCKER_USERNAME}/base:latest;
             docker push ${DOCKER_USERNAME}/base:latest;
+            docker tag pmacctd:_build ${DOCKER_USERNAME}/pmacctd:latest;
+            docker push ${DOCKER_USERNAME}/pmacctd:latest;
           fi
         fi
