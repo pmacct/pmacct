@@ -9,11 +9,9 @@
 FROM debian:buster
 MAINTAINER Marc Sune <marcdevel (at) gmail.com>
 
-#Version or git ref(commit, tag, branch...)
-ARG version=HEAD
-
 #Copy installer script
 COPY ci/deps.sh /tmp/
+COPY . /tmp/pmacct/
 
 #Create a single compressed layer, as some dependencies (deps.sh)
 #can be later removed, so try to make it as lightweight as possible
@@ -45,11 +43,10 @@ RUN apt-get update && \
     wget \
     zlib1g-dev && \
   /tmp/deps.sh && \
-  cd /tmp/ && \
-  git clone https://github.com/pmacct/pmacct.git pmacct && \
-  cd pmacct && git checkout ${version} && \
+  cd /tmp/pmacct && \
   export AVRO_LIBS="-L/usr/local/avro/lib -lavro" && \
   export AVRO_CFLAGS="-I/usr/local/avro/include" && \
+  ( make maintainer-clean || /bin/true ) && \
   sh autogen.sh && ./configure --enable-mysql --enable-pgsql     \
                                --enable-sqlite3 --enable-kafka   \
                                --enable-geoipv2 --enable-jansson \
