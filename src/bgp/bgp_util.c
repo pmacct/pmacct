@@ -774,7 +774,7 @@ int bgp_peer_xconnect_init(struct bgp_peer *peer, int type)
 
     if (!peer->xconnect_fd) {
       bgp_peer_print(peer, peer_str, INET6_ADDRSTRLEN);
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] unable to xconnect BGP peer.\n", config.name, bgp_misc_db->log_str, peer_str);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] unable to xconnect BGP peer. Missing entry in bgp_daemon_xconnect_map.\n", config.name, bgp_misc_db->log_str, peer_str);
     }
   }
 
