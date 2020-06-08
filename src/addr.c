@@ -877,3 +877,22 @@ u_int16_t sa_has_family(struct sockaddr *sa)
 {
   return sa->sa_family;
 }
+
+socklen_t sa_len(struct sockaddr_storage *ss)
+{
+  struct sockaddr *sa = (struct sockaddr *) ss;
+
+  if (sa) {
+    if (sa->sa_family == AF_INET) {
+      return sizeof(struct sockaddr_in);
+    }
+    else if (sa->sa_family == AF_INET6) {
+      return sizeof(struct sockaddr_in6);
+    }
+    else {
+      return sizeof(struct sockaddr_storage);
+    }
+  }
+
+  return 0;
+}

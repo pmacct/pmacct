@@ -65,6 +65,7 @@ extern u_int16_t af_to_etype(u_int8_t);
 extern u_int32_t addr_hash(struct host_addr *, u_int32_t);
 extern u_int32_t addr_port_hash(struct host_addr *, u_int16_t, u_int32_t);
 extern u_int16_t sa_has_family(struct sockaddr *);
+extern socklen_t sa_len(struct sockaddr_storage *);
 
 extern void ipv4_to_ipv4_mapped(struct sockaddr_storage *);
 extern void ipv4_mapped_to_ipv4(struct sockaddr_storage *);
