@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -371,6 +371,8 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
       nt->timestamp = st.st_mtime;
     }
   }
+
+  Log(LOG_INFO, "INFO ( %s/%s ): [%s] map successfully (re)loaded.\n", config.name, config.type, filename);
 
   return;
 
