@@ -897,7 +897,6 @@ void skinny_bgp_daemon_online()
 	break;
       }
       
-      // XXX: verify round-robin fairness holding up
       if (config.bgp_xconnect_map) {
         loc_idx = (peers_idx + peers_xconnect_idx_rr) % max_peers_idx;
 
