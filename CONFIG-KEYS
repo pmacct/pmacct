@@ -1354,10 +1354,11 @@ DESC:		Specifies time interval at which the executable specified by 'sql_trigger
 DEFAULT:	none
 
 KEY:		[ sql_preprocess | print_preprocess | amqp_preprocess | kafka_preprocess ]
-DESC:		Allows to process aggregates (via a comma-separated list of conditionals and checks) while
-		purging data to the backend thus resulting in a powerful selection tier; aggregates filtered
-		out may be just discarded or saved through the recovery mechanism (if enabled, if supported
-		by the backend). The set of available preprocessing directives follows:
+DESC:		Allows to process aggregates (via a comma-separated list of conditionals and checks, ie.
+		"qnum=1000000, minb=10000") while purging data to the backend thus resulting in a powerful
+		selection tier; aggregates filtered out may be just discarded or saved through the recovery
+		mechanism (if enabled, if supported by the backend). The set of available preprocessing
+		directives follows:
 		
 		KEY: qnum
 		DESC: conditional. Subsequent checks will be evaluated only if the number of queries to be
