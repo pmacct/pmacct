@@ -321,6 +321,8 @@ void telemetry_daemon(void *t_data_void)
 	Log(LOG_ERR, "ERROR ( %s/%s ): socket() failed. Terminating.\n", config.name, t_data->log_str);
 	exit_gracefully(1);
       }
+
+      if (config.telemetry_port_tcp) setsockopt(config.telemetry_sock, SOL_SOCKET, SO_KEEPALIVE, (void *)&yes, sizeof(yes));
     }
 
     if (config.telemetry_ipprec) {
