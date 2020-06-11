@@ -1,61 +1,247 @@
 language: C
-compiler: gcc
-dist: trusty
-sudo: required
+services:
+  - docker
 
-install:
-  - sudo apt-get install pkg-config libtool autoconf automake cmake bash wget
-  - git clone https://github.com/akheron/jansson
-  - cd jansson && autoreconf -i && ./configure && make && sudo make install && cd ..
-  - git clone https://github.com/edenhill/librdkafka
-  - cd librdkafka && ./configure && make && sudo make install && cd ..
-  - git clone https://github.com/alanxz/rabbitmq-c
-  - cd rabbitmq-c && mkdir build && cd build && cmake .. && sudo cmake --build . --target install && cd .. && cd ..
-  - git clone --recursive https://github.com/maxmind/libmaxminddb 
-  - cd libmaxminddb && ./bootstrap && ./configure && make && sudo make install && cd ..
-  - git clone -b 2.8-stable https://github.com/ntop/nDPI
-  - cd nDPI && ./autogen.sh && ./configure && make && sudo make install && sudo ldconfig && cd ..
-  - wget https://github.com/zeromq/libzmq/releases/download/v4.3.1/zeromq-4.3.1.tar.gz
-  - tar xfz zeromq-4.3.1.tar.gz
-  - cd zeromq-4.3.1 && ./configure && make && sudo make install && cd ..
-  - wget http://www-us.apache.org/dist/avro/avro-1.9.1/c/avro-c-1.9.1.tar.gz
-  - tar xfz avro-c-1.9.1.tar.gz
-  - cd avro-c-1.9.1 && mkdir build && cd build && cmake .. && make && sudo make install && cd .. && cd ..
-  - git clone https://github.com/confluentinc/libserdes
-  - cd libserdes && ./configure && make && sudo make install && cd ..
-
+#Global variables; note this will not trigger job replication
 env:
-  - CONFIG_FLAGS="--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes"
-  - CONFIG_FLAGS="--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes"
-  - CONFIG_FLAGS="--enable-debug --enable-jansson --enable-zmq --enable-kafka"
-  - CONFIG_FLAGS="--enable-jansson --enable-zmq --enable-kafka"
-  - CONFIG_FLAGS="--enable-debug --enable-jansson --enable-zmq"
-  - CONFIG_FLAGS="--enable-jansson --enable-zmq"
-  - CONFIG_FLAGS="--enable-debug --enable-jansson --enable-kafka"
-  - CONFIG_FLAGS="--enable-jansson --enable-kafka"
-  - CONFIG_FLAGS="--enable-debug --enable-zmq"
-  - CONFIG_FLAGS="--enable-zmq"
-  - CONFIG_FLAGS="--enable-debug --enable-jansson"
-  - CONFIG_FLAGS="--enable-jansson"
-  - CONFIG_FLAGS="--enable-debug"
-  - CONFIG_FLAGS=""
+  global:
+    - BUILD_DOCKER_FILE_UBUNTU_BIONIC=ci/Dockerfile-ubuntu-bionic-for-pmacct
+    - BUILD_DOCKER_TAG_UBUNTU_BIONIC=ci/ubuntu-bionic-for-pmacct
+    - BUILD_DOCKER_FILE_CENTOS_8_1=ci/Dockerfile-centos-8.1-for-pmacct
+    - BUILD_DOCKER_TAG_CENTOS_8_1=ci/centos8.1-for-pmacct
 
+#Matrix of jobs
+jobs:
+  include:
+  ##Build stage
+  - docker_build_ubuntu:
+    name: Build docker image for Ubuntu Bionic
+    stage: docker
+    workspaces:
+      create:
+        name: docker_ubuntu_bionic
+        paths:
+          - /tmp/docker/
+    script:
+      - docker build -f $BUILD_DOCKER_FILE_UBUNTU_BIONIC -t $BUILD_DOCKER_TAG_UBUNTU_BIONIC .
+      - mkdir -p /tmp/docker/
+      - docker save -o /tmp/docker/registry.tar $BUILD_DOCKER_TAG_UBUNTU_BIONIC
+  - docker_build_centos:
+    name: Build docker image for Centos 8.1
+    stage: docker
+    workspaces:
+      create:
+        name: docker_centos_8_1
+        paths:
+          - /tmp/docker/
+    script:
+      - docker build -f $BUILD_DOCKER_FILE_CENTOS_8_1 -t $BUILD_DOCKER_TAG_CENTOS_8_1 .
+      - mkdir -p /tmp/docker/
+      - docker save -o /tmp/docker/registry.tar $BUILD_DOCKER_TAG_CENTOS_8_1
 
-script:
-  - ./autogen.sh
-  - ./configure $CONFIG_FLAGS
-  - make
-  - sudo make install
+  #Test
 
-addons:
-  apt:
-    packages:
-      - libpcap-dev
-      - libpq-dev
-      - libsqlite3-dev
-      - libmysqlclient-dev
-      - libnetfilter-log-dev
-      - mysql-client-5.6
-      - libtool
-      - autoconf
-      - automake
+  ###Ubuntu Bionic
+
+  #Note to generate the names use this regex:
+  #%s/env: CONFIG_FLAGS="\(.*\)"/name: "docker: Ubuntu Bionic, (CONFIG_FLAGS=\1)"\r    env: CONFIG_FLAGS="\1"/gc 
+  - &build_test_ubuntu_bionic
+    stage: build_test
+    workspaces:
+      use: docker_ubuntu_bionic
+    script:
+      - docker load -i /tmp/docker/registry.tar
+      - CONTAINER_ID=$(docker run --rm -it -d -v `pwd`:`pwd` -w `pwd` -e CONFIG_FLAGS $BUILD_DOCKER_TAG_UBUNTU_BIONIC:latest)
+      - echo "Launched container id:" $CONTAINER_ID
+      - docker exec -i $CONTAINER_ID ./ci/script.sh
+      - docker stop $CONTAINER_ID
+    name: "docker: Ubuntu Bionic, CONFIG_FLAGS=--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
+    env: CONFIG_FLAGS="--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
+
+  - <<: *build_test_ubuntu_bionic
+    name: "docker: Ubuntu Bionic, CONFIG_FLAGS=--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
+    env: CONFIG_FLAGS="--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
+
+  - <<: *build_test_ubuntu_bionic
+    name: "docker: Ubuntu Bionic, CONFIG_FLAGS=--enable-debug --enable-jansson --enable-zmq --enable-kafka"
+    env: CONFIG_FLAGS="--enable-debug --enable-jansson --enable-zmq --enable-kafka"
+
+  - <<: *build_test_ubuntu_bionic
+    name: "docker: Ubuntu Bionic, CONFIG_FLAGS=--enable-jansson --enable-zmq --enable-kafka"
+    env: CONFIG_FLAGS="--enable-jansson --enable-zmq --enable-kafka"
+
+  - <<: *build_test_ubuntu_bionic
+    name: "docker: Ubuntu Bionic, CONFIG_FLAGS=--enable-debug --enable-jansson --enable-zmq"
+    env: CONFIG_FLAGS="--enable-debug --enable-jansson --enable-zmq"
+
+  - <<: *build_test_ubuntu_bionic
+    name: "docker: Ubuntu Bionic, CONFIG_FLAGS=--enable-jansson --enable-zmq"
+    env: CONFIG_FLAGS="--enable-jansson --enable-zmq"
+
+  - <<: *build_test_ubuntu_bionic
+    name: "docker: Ubuntu Bionic, CONFIG_FLAGS=--enable-debug --enable-jansson --enable-kafka --enable-avro --enable-serdes"
+    env: CONFIG_FLAGS="--enable-debug --enable-jansson --enable-kafka --enable-avro --enable-serdes"
+
+  - <<: *build_test_ubuntu_bionic
+    name: "docker: Ubuntu Bionic, CONFIG_FLAGS=--enable-jansson --enable-kafka --enable-avro --enable-serdes"
+    env: CONFIG_FLAGS="--enable-jansson --enable-kafka --enable-avro --enable-serdes"
+
+  - <<: *build_test_ubuntu_bionic
+    name: "docker: Ubuntu Bionic, CONFIG_FLAGS=--enable-debug --enable-jansson --enable-kafka"
+    env: CONFIG_FLAGS="--enable-debug --enable-jansson --enable-kafka"
+
+  - <<: *build_test_ubuntu_bionic
+    name: "docker: Ubuntu Bionic, CONFIG_FLAGS=--enable-jansson --enable-kafka"
+    env: CONFIG_FLAGS="--enable-jansson --enable-kafka"
+
+  - <<: *build_test_ubuntu_bionic
+    name: "docker: Ubuntu Bionic, CONFIG_FLAGS=--enable-debug --enable-zmq"
+    env: CONFIG_FLAGS="--enable-debug --enable-zmq"
+
+  - <<: *build_test_ubuntu_bionic
+    name: "docker: Ubuntu Bionic, CONFIG_FLAGS=--enable-zmq"
+    env: CONFIG_FLAGS="--enable-zmq"
+
+  - <<: *build_test_ubuntu_bionic
+    name: "docker: Ubuntu Bionic, CONFIG_FLAGS=--enable-debug --enable-jansson"
+    env: CONFIG_FLAGS="--enable-debug --enable-jansson"
+
+  - <<: *build_test_ubuntu_bionic
+    name: "docker: Ubuntu Bionic, CONFIG_FLAGS=--enable-jansson"
+    env: CONFIG_FLAGS="--enable-jansson"
+
+  - <<: *build_test_ubuntu_bionic
+    name: "docker: Ubuntu Bionic, CONFIG_FLAGS=--enable-debug"
+    env: CONFIG_FLAGS="--enable-debug"
+
+  - <<: *build_test_ubuntu_bionic
+    name: "docker: Ubuntu Bionic, CONFIG_FLAGS="
+    env: CONFIG_FLAGS=""
+
+  ##CENTOS 8.1
+  - &build_test_centos_8_1
+    stage: build_test
+    workspaces:
+      use: docker_centos_8_1
+    script:
+      - docker load -i /tmp/docker/registry.tar
+      - CONTAINER_ID=$(docker run --rm -it -d -v `pwd`:`pwd` -w `pwd` -e CONFIG_FLAGS $BUILD_DOCKER_TAG_CENTOS_8_1:latest)
+      - echo "Launched container id:" $CONTAINER_ID
+      - docker exec -i $CONTAINER_ID ./ci/script.sh
+      - docker stop $CONTAINER_ID
+
+###
+### Note missing libnetfilter_log in Centos8
+###
+
+    #name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
+    #env: CONFIG_FLAGS="--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
+
+  #- <<: *build_test_centos_8_1
+  #  name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
+  #  env: CONFIG_FLAGS="--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
+
+  #- <<: *build_test_centos_8_1
+
+    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-debug --enable-jansson --enable-zmq --enable-kafka"
+    env: CONFIG_FLAGS="--enable-debug --enable-jansson --enable-zmq --enable-kafka"
+
+  - <<: *build_test_centos_8_1
+    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-jansson --enable-zmq --enable-kafka"
+    env: CONFIG_FLAGS="--enable-jansson --enable-zmq --enable-kafka"
+
+  - <<: *build_test_centos_8_1
+    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-debug --enable-jansson --enable-zmq"
+    env: CONFIG_FLAGS="--enable-debug --enable-jansson --enable-zmq"
+
+  - <<: *build_test_centos_8_1
+    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-jansson --enable-zmq"
+    env: CONFIG_FLAGS="--enable-jansson --enable-zmq"
+
+  - <<: *build_test_centos_8_1
+    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-debug --enable-jansson --enable-kafka --enable-avro --enable-serdes"
+    env: CONFIG_FLAGS="--enable-debug --enable-jansson --enable-kafka --enable-avro --enable-serdes"
+
+  - <<: *build_test_centos_8_1
+    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-jansson --enable-kafka --enable-avro --enable-serdes"
+    env: CONFIG_FLAGS="--enable-jansson --enable-kafka --enable-avro --enable-serdes"
+
+  - <<: *build_test_centos_8_1
+    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-debug --enable-jansson --enable-kafka"
+    env: CONFIG_FLAGS="--enable-debug --enable-jansson --enable-kafka"
+
+  - <<: *build_test_centos_8_1
+    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-jansson --enable-kafka"
+    env: CONFIG_FLAGS="--enable-jansson --enable-kafka"
+
+  - <<: *build_test_centos_8_1
+    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-debug --enable-zmq"
+    env: CONFIG_FLAGS="--enable-debug --enable-zmq"
+
+  - <<: *build_test_centos_8_1
+    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-zmq"
+    env: CONFIG_FLAGS="--enable-zmq"
+
+  - <<: *build_test_centos_8_1
+    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-debug --enable-jansson"
+    env: CONFIG_FLAGS="--enable-debug --enable-jansson"
+
+  - <<: *build_test_centos_8_1
+    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-jansson"
+    env: CONFIG_FLAGS="--enable-jansson"
+
+  - <<: *build_test_centos_8_1
+    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-debug"
+    env: CONFIG_FLAGS="--enable-debug"
+
+  - <<: *build_test_centos_8_1
+    name: "docker: Centos 8.1, CONFIG_FLAGS="
+    env: CONFIG_FLAGS=""
+
+  ## User docker containers
+  - docker_hub_base:
+    stage: docker_hub
+    name: "docker_hub: base container"
+    env: PMACCT_VERSION=$(git describe --abbrev=0 --match="v*")
+    script:
+      - echo "Building the base container..."
+      - docker build -f docker/base/Dockerfile -t base:_build .
+      - echo "Building daemon containers..."
+      - docker build -f docker/pmacctd/Dockerfile -t pmacctd:_build .
+      - echo "Uploading to dockerhub ...";
+      - echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin;
+
+      #Always push bleeding-edge when pushed to master
+      - GIT_IS_BLEEDING_EDGE=$( (git branch --contains HEAD | grep master ) || echo "")
+      - |
+        if [ "$GIT_IS_BLEEDING_EDGE" != "" ]; then
+          echo "Uploading 'bleeding-edge' tag for `git describe`...";
+          docker tag base:_build ${DOCKER_USERNAME}/base:bleeding-edge;
+          docker push ${DOCKER_USERNAME}/base:bleeding-edge;
+          docker tag pmacctd:_build ${DOCKER_USERNAME}/pmacctd:bleeding-edge;
+          docker push ${DOCKER_USERNAME}/pmacctd:bleeding-edge;
+        fi
+
+      #Upload vX.Y.Z only of it's a release commit
+      - GIT_RELEASE_TAG=$(git describe --exact-match --match "v*" || echo "")
+      - |
+        if [ "$GIT_RELEASE_TAG" != "" ]; then
+          echo "Uploading '$PMACCT_VERSION' tag for `git describe`...";
+          docker tag base:_build ${DOCKER_USERNAME}/base:${PMACCT_VERSION};
+          docker push ${DOCKER_USERNAME}/base:${PMACCT_VERSION};
+          docker tag pmacctd:_build ${DOCKER_USERNAME}/pmacctd:${PMACCT_VERSION};
+          docker push ${DOCKER_USERNAME}/pmacctd:${PMACCT_VERSION};
+        fi
+
+      #Upload "latest" if the release version is the highest
+      - |
+        if [ "$GIT_RELEASE_TAG" != "" ]; then
+          GIT_LAST_TAG=$(git tag --sort=v:refname | tail -n 1);
+          if [ "$GIT_RELEASE_TAG" == "$GIT_LAST_TAG" ]; then
+            echo "Uploading 'latest' tag for `git describe`...";
+            docker tag base:_build ${DOCKER_USERNAME}/base:latest;
+            docker push ${DOCKER_USERNAME}/base:latest;
+            docker tag pmacctd:_build ${DOCKER_USERNAME}/pmacctd:latest;
+            docker push ${DOCKER_USERNAME}/pmacctd:latest;
+          fi
+        fi

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -151,6 +151,7 @@ const struct _map_dictionary_line bta_map_dictionary[] = {
   {"id", PT_map_id_handler},
   {"bgp_ip", PT_map_id_handler},
   {"bgp_port", BTA_map_lookup_bgp_port_handler},
+  {"bmp_ip", PT_map_id_handler},
   {"ip", PT_map_ip_handler},
   {"in", PT_map_input_handler},
   {"out", PT_map_output_handler},
@@ -186,9 +187,9 @@ const struct _map_dictionary_line custom_primitives_map_dictionary[] = {
   {"", NULL}
 };
 
-const struct _map_dictionary_line pcap_interfaces_map_dictionary[] = {
-  {"ifindex", pcap_interfaces_map_ifindex_handler},
-  {"ifname", pcap_interfaces_map_ifname_handler},
-  {"direction", pcap_interfaces_map_direction_handler},
+const struct _map_dictionary_line pm_pcap_interfaces_map_dictionary[] = {
+  {"ifindex", pm_pcap_interfaces_map_ifindex_handler},
+  {"ifname", pm_pcap_interfaces_map_ifname_handler},
+  {"direction", pm_pcap_interfaces_map_direction_handler},
   {"", NULL}
 };

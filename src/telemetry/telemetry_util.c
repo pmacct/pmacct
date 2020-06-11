@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -221,5 +221,19 @@ void telemetry_init_zmq_host(void *zh, int *pipe_fd)
   p_zmq_set_retry_timeout(zmq_host, PM_ZMQ_DEFAULT_RETRY);
 
   if (pipe_fd) (*pipe_fd) = p_zmq_get_fd(zmq_host);
+}
+#endif
+
+#ifdef WITH_KAFKA
+void telemetry_init_kafka_host(void *kh)
+{
+  struct p_kafka_host *kafka_host = kh;
+
+  p_kafka_init_host(kafka_host, config.telemetry_kafka_config_file);
+  p_kafka_connect_to_consume(kafka_host);
+  p_kafka_set_broker(kafka_host, config.telemetry_kafka_broker_host, config.telemetry_kafka_broker_port);
+  p_kafka_set_topic(kafka_host, config.telemetry_kafka_topic);
+  p_kafka_set_content_type(kafka_host, PM_KAFKA_CNT_TYPE_STR);
+  p_kafka_manage_consumer(kafka_host, TRUE);
 }
 #endif

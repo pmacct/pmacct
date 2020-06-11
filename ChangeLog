@@ -1,8 +1,248 @@
 pmacct [IP traffic accounting : BGP : BMP : RPKI : IGP : Streaming Telemetry]
-pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 
 The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
+
+1.7.5 -- XX-0X-2020
+  + pmacct & Redis: pmacct daemons can now connect to a Redis cache.
+    The main use-case currenly covered is: registering every stable
+    daemon component in a table so to have, when running a cluster
+    comprising several daemons / components, an olistic view of what
+    is currently running and where; shall a component stop running
+    or crash it will disappear from the inventory.
+  + BMP daemon: as part of the IETF 107 vHackaton, preliminar support
+    for draft-xu-grow-bmp-route-policy-attr-trace and draft-lucente-
+    grow-bmp-tlv-ebit was introduced. Also added support for Peer
+    Distinguisher field in the BMP Per-Peer Header.
+  + BMP daemon: added support for reading from savefiles in libpcap
+    format (pcap_savefile, pcap_savefile_delay, pcap_savefile_replay,
+    pcap_filter) as an alternative to the use of bmp_play.py.
+  + BMP daemon: re-worked, improved and generalized support for TLVs
+    at the end of BMP messages. In this context, unknown Stats data
+    is handled as a generic TLV. 
+  + BMP daemon: added SO_KEEPALIVE TCP socket option (ie. to keep the
+    sessions alive via a firewall / NAT kind of device). Thanks to
+    Jared Mauch ( @jaredmauch ) for his patch. 
+  + nfacctd, nfprobe plugin: added usec timestamp resolution to IPFIX
+    collector and export via IEs #154, #155. For export, this can be
+    configured via the new nfprobe_tstamp_usec knob.
+  + nfacctd: new nfacctd_templates_receiver and nfacctd_templates_port
+    config directives allow respectively to specify a destination
+    where to copy NetFlow v9/IPFIX templates to and a port where to
+    listen for templates from. If nfacctd_templates_receiver points to
+    a replicator and the replicator exports to nfacctd_templates_port
+    of a set of collectors then, for example, it gets possible to share
+    templates among collectors in a cluster for the purpose of seamless
+    scale-out.
+  + pmtelemetryd: in addition to existing TCP, UDP and ZeroMQ inputs,
+    the daemon can now read Streaming Telemetry data in JSON format
+    from a Kafka broker (telemetry_daemon_kafka_* config knobs).
+  + pmgrpcd.py: Use of multiple processes for the Kafka Avro exporter
+    to leverage the potential of multi-core/processors architectures.
+    Code is from Raphael P. Barazzutti ( @rbarazzutti ).
+  + pmgrpcd.py: added -F / --no-flatten command-line option to disable
+    object flattening (default true for backward compatibility); also
+    export to a Kafka broker for (flattened) JSON objects was added (in
+    addition to existing export to ZeroMQ).
+  + nDPI: introduced support for nDPI 3.2 and dropped support for all
+    earlier versions of the library due to changes to the API.
+  + Docker: embraced the technology for CI purposes; added a docker/
+    directory in the file distribution where Dockerfile and scripts to
+    build pmacct and dependencies are shared. Thanks to Claudio Ortega
+    ( @claudio-ortega ) for contributing his excellent work in the area.
+  ! fix, pmacctd: pcap_setdirection() enabled and moved to the right
+    place in code. Libpcap tested for function presence. Thanks to
+    Mikhail Sennikovsky for his patch.
+  ! fix, pmacctd: SEGV has been detected if passing messages with an
+    unsupported link layer. 
+  ! fix, uacctd: handle non-ethernet packets correctly. Use mac_len = 0
+    for non-ethernet packets in which case a zeroed ethernet header is
+    used. Thanks to @aleksandrgilfanov for his patch.
+  ! fix, BGP daemon: improved handling of withdrawals for label-unicast
+    and mpls-vpn NLRIs.
+  ! fix, BGP daemon: improved decoding of MPLS labels by passing it via
+    a "0x%02x%02x%01x" formatter. In the past some labels may have been
+    printed out incorrectly.
+  ! fix, BGP daemon: decoding origin field correctly. Thanks to Peter
+    Pothier ( @pothier-peter ) for his patch.
+  ! BGP Looking Glass: LG code was moved from pmbgpd to pmacct libbgp
+    so to be re-used in other components (ie. BGP thread of a flow
+    daemon, BMP daemon, etc.).
+  ! fix, BMP daemon: timestamps for Route Monitoring message were set
+    to the current time rather than timestamp in the Per-Peer Header.
+    Thanks to Peter Pothier ( @pothier-peter ) for reporting the issue.
+  ! fix, BMP daemon: V flag test to allow IPv6 prefixes/peers was not
+    correct (details in PR #362 on GitHub). Thanks @bcavns01 for his
+    patch.
+  ! fix, BGP, BMP daemons: modified approach to message segmentation
+    by ensuring reading exactly one message at a time (instead of the
+    previous unaligned approach that was aiming to fill the available
+    read buffer up) and waiting for all segments be available before
+    processing a message (instead of the previous greedy approach that
+    was trying to parse also partial messages). 
+  ! fix, RPKI daemon: in rpki_prefix_lookup_node_match_cmp() prevent
+    invalid results to over-write a previously computed valid one.
+  ! fix, pmtelemetryd: recv() does include a MSG_WAITALL option to make
+    sure all data is available before processing a given message; now
+    n alarm() syscall is introduced so to prevent stalls due to bogus /
+    incomplete data.
+  ! fix, tee plugin: Tee_init_socks() now does not overwrite previously
+    computed address length anymore: issues were repoted with IPv6 IPv4-
+    mapped addresses. 
+  ! fix, nfprobe plugin: take into account ingress/egress interfaces,
+    if available, when comparing flows. Thanks to Mikhail Sennikovsky
+    for his patch.
+  ! fix, pretag_handlers.c: pretag_copy_label() instead of memcpy() in
+    pretag_label_handler() to not borrow reference to label value and
+    consequently lead to SEGV.
+  ! fix, zmq_common.c: missing variable init in p_zmq_zap_handler() was
+    giving troubles with gcc7 compiler optimizations. Thanks to Yuri
+    Lachin ( @yuyutime ) for his support resolving this bug.
+  ! fix, sql_common.c: print custom primitives with hex semantics among
+    quotes. Hexs require a char type defined in the SQL table schema.
+  ! fix, addr.c: passing right aligned argument to ip6_addr_cmp() in
+    host_addr_mask_cmp(). This was found to impact selective replication
+    of IPv6 flows basing on src_net and/or dst_net primitives in the
+    pre_tag_map.
+  ! fix, several code warnings catched by gcc7 and gcc8. Also several
+    functions were renamed to avoid namespace conflicts with linked
+    libraries.
+  - Obsoleted --enable-64bit knob which was already defaulting to true
+    for some releases already.
+  - Obsoleted savefile_wait config knob (pcap_savefile_wait must be
+    used instead).
+
+1.7.4p1 -- 09-02-2020
+  ! fix, pre_tag_map: a memory leak in pretag_entry_process() has been
+    introduced in 1.7.4. Thanks to Fabien Vincent and Olivier Benghozi
+    for their support resolving the issue.
+
+1.7.4 -- 31-12-2019
+  + Released pmgrpcd.py v3: a Streaming Telemetry collector and decoder
+    for multi-vendor environments written in Python3. It supports gRPC
+    transport along with Protobuf encoding as input and can output to
+    Kafka with Avro encoding. Output to files and JSON encoding is
+    currently supported sending data via ZMQ to pmtelemetryd first. It
+    was tested working with data input from Cisco and Huawei routers
+    and v3 replaces v2. Thanks to the Streaming Telemetry core team:
+    Matthias Arnold ( @tbearma1 ), Camilo Cardona ( @jccardonar ),
+    Thomas Graf ( @graf3 , @graf3net ), Paolo Lucente ( @paololucente ).
+  + Introduced support for the 'vxlan' VXLAN/VNI primitive in all traffic
+    daemons (NetFlow/IPFIX, sFlow and libpcap/ULOG). Existing inner tunnel
+    primitives (ie. tunnel_src_host, tunnel_dst_host, tunnel_proto, etc.)
+    have been wired to the VXLAN decoding and new ones (tunnel_src_mac, 
+    tunnel_dst_mac, tunnel_src_port, tunnel_dst_port) were defined.
+  + BMP daemon: added support for Peer Up message namespace for TLVs
+    (draft-ietf-grow-bmp-peer-up) and also support for Route Monitor
+    and Peer Down TLVs (draft-ietf-grow-bmp-tlv).
+  + BGP, BMP daemons: in addition to existing JSON export, data can now
+    be exported in Apache Avro format. There is also support for the
+    Confluent Schema Registry.
+  + Introduced support for JSON-encoded Apache Avro encoding. While the
+    binary-encoded Apache Avro is always recommended for any production
+    scenarios (also to optionallly leverage Confluent Schema Registry
+    support), JSON-encoded is powerful for testing and troubleshooting
+    scenarios.
+  + sfprobe plugin: added support for IPv6 transport for sFlow export.
+    sfprobe_agentip is an IP address put in the header of the sFlow
+    packet. If underlying transport is IPv6, this must be configured to
+    an IPv6 address.
+  + zmq_common.[ch]: Improved modularity of the ZMQ internal API and
+    decoupled bind/connect from push/pull and pub/sub; also improved
+    support for inproc sockets. All to increase the amount of use-cases
+    covered by the API.
+  + bgp_peer_src_as_map: added 'filter' key to cover pmacctd/uacctd use
+    cases.
+  + nfprobe, sfprobe plugins: introduced [sn]fprobe_index_override to
+    override ifindexes dynamically determined (ie. by NFLOG) with values
+    computed by [sn]fprobe_ifindex.
+  + MySQL, PostgreSQL plugins: added support for SSL/TLS connections by
+    specifying a CA certificate (sql_conn_ca_file).
+  + Kafka, AMQP plugins: amqp_markers and kafka_markers have now been
+    properly re-implemented when output encoding is Avro using an own
+    Avro schema (instead of squatting pieces of JSON in the data stream
+    for the very purpose).
+  + print plugin: introduced print_write_empty_file config knob (true,
+    false) to create an empty output file when there are no cache entries
+    to purge. Such behaviour was present in versions up to 0.14 and may
+    be preferred by some to the new >= 1.5 versions behaviour. Thanks to
+    Lee Yongjae ( @setup74 ) for the contribution.
+  ! fix, signals.c: signals handling has been restructured in order to
+    block certain signals during critical sections of data processing.
+    Thanks to Vaibhav Phatarpekar ( @vphatarp ) for the contribution.
+  ! fix, signals.c: slimmed reload() signal handler code and moved it to
+    a synchronous section. The handler is to reset logging output to
+    files or syslog. Thanks to Jared Mauch ( @jaredmauch ) for his
+    support resolving this.
+  ! fix, pmbgpd, pmbmpd and pmtelemetryd daemons: added extra signals
+    handling (SIGINT, SIGTERM, SIGCHLD) consistently to traffic daemons. 
+  ! fix, BGP daemon: withdrawals of label-unicast (support introduced in
+    1.7.3) and mpls-vpn NLRIs did fail to parse in release 1.7.3 and
+    were silently discarded.
+  ! fix, nfacctd: wired (BGP, BMP, ISIS, etc) lookups to NetFlow (Secure)
+    Event Logging (NEL/NSEL). 
+  ! fix, pmtelemetryd: re-implemented a decoder for so-called Cisco v1
+    Streaming Telemetry proprietary header over UDP/TCP streams.
+  ! fix, pmtelemetryd: improved sanitization of input JSON objects by
+    also checking for isspace() other than isprint() for pretty-printed
+    objects.
+  ! maps_index: optimized lookups, improved debugging output upon loading
+    indexes.
+  ! fix, tee plugin: overwriting computed IP address length with socket
+    container length was found to prevent output data on some BSDs.
+  ! fix, kafka_common.c: if taking the p_kafka_close() route, ensure to
+    return and not perform any further polling in order to avoid SEGVs.
+  ! fix, BMP daemon: incorrect decoding of type was preventing correct
+    logging of Init and Term messages extra info. Also in Term messages
+    TLV data was incorrectly consumed twice triggering length check
+    warnings. 
+  ! fix, BMP daemon: added checks for successful BGP PDU parsing in both
+    Peer Up (BGP OPEN) and Route Monitor (BGP UPDATE) messages.
+  ! fix, BMP daemon: improved length checks and making sure that strings
+    potentially non null-terminated are now terminated. Also TLV-related
+    code has been refactored.
+  ! fix, pmbgp.py: the example client for BGP Looking Glass was migrated
+    to Python3: thanks to @brusilov for the contribution.
+  ! fix, nfacctd: if src_port or dst_port primitives are selected, enable
+    IP fragment handling. Needed to process L4 of IPFIX IE #351.
+  ! fix, nfv9_template.c: correct handling of variable-length IPFIX
+    fields. Thanks to Nimrod Mesika ( @nimrody ) for the contribution.
+  ! fix, PostgreSQL plugin: ABSTIME was replaced with to_timestamp() in
+    queries as support for ABSTIME was dropped as of PostgreSQL 12. Many
+    thanks to Manuel Mendez ( @mmlb ) for the contribution.
+  ! fix, PostgreSQL plugin: SEGVs were observed when the queue of pending
+    queries was non-empty (ie. nfacctd_time_new set to false, default);
+    thanks to Guo-Wei Su ( @nansenat16 ) for the contribution. 
+  ! fix, cfg_handlers: [sn]facctd_disable_checks, nfacctd_disable_opt_
+    scope_check could not be properly set to false.
+  ! fix, sql_common.c: src_host_coords and dst_host_coords primitives
+    have been correctly spaced in SQL queries. Also float values are now
+    quoted. Finally, sampling_direction primitive is encoded correctly. 
+  ! fix, kafka plugin: if kafka_avro_schema_registry is in use, subject
+    name is aligned to Kafka topic name (if topic is not dynamic).
+  ! fix, pretag.c: when using 'label', store the label string in the
+    heap (instead of the stack). Thanks to Raphael P. Barazzutti
+    ( @rbarazzutti ) for the contribution.
+  ! fix, pretag.c: JEQ labels are now correctly free() during init upon
+    map reload.
+  ! fix, zmq_common.c: missing variable init in p_zmq_zap_handler() was
+    causing plugin_pipe_zmq operations to fail on certain compilers (ie.
+    gcc7). Thanks to Yuri Lachin ( @yuyutime ) for his support. 
+  ! fix, cfg_handlers.c: reviewed handling of parsed 'zero' value for
+    several config directives.
+  ! fix, countless code warnings when enabling -Wall (--enable-debug);
+    also included -Wall in Continuous Integration tests. Restructured
+    globals, header inclusions, function prototypes definition, etc.  
+    Many thanks to Marc Sune ( @msune ) for all his efforts.
+  ! fix, configure.ac: evaluation of --enable-debug pushed to the end of
+    the script so to not interfere with tests (ie. alignment, endianess,
+    etc.).
+  - BMP daemon: retired support for draft-hsmit-bmp-extensible-routemon-
+    -msgs. 
+  - AMQP plugin: obsoleted amqp_avro_schema feature (which includes
+    amqp_avro_schema_routing_key and amqp_avro_schema_refresh_time keys
+    config keys). Avro schemas can now only be written to files.
 
 1.7.3 -- 16-05-2019
   + Introduced the RPKI daemon to build a ROA database and check prefixes

@@ -20,47 +20,45 @@
  */
 
 #include "pmacct.h"
-#include "isis.h"
-
 #include "linklist.h"
 
 /* Allocate new list. */
-struct list *
-isis_list_new (void)
+struct pm_list *
+pm_list_new (void)
 {
-  return calloc(1, sizeof (struct list));
+  return calloc(1, sizeof (struct pm_list));
 }
 
 /* Free list. */
 void
-isis_list_free (struct list *l)
+pm_list_free (struct pm_list *l)
 {
   free(l);
 }
 
 /* Allocate new listnode.  Internal use only. */
-static struct listnode *
-isis_listnode_new (void)
+static struct pm_listnode *
+pm_listnode_new (void)
 {
-  return calloc(1, sizeof (struct listnode));
+  return calloc(1, sizeof (struct pm_listnode));
 }
 
 /* Free listnode. */
 static void
-isis_listnode_free (struct listnode *node)
+pm_listnode_free (struct pm_listnode *node)
 {
   free(node);
 }
 
 /* Add new data to the list. */
 void
-isis_listnode_add (struct list *list, void *val)
+pm_listnode_add (struct pm_list *list, void *val)
 {
-  struct listnode *node;
+  struct pm_listnode *node;
   
   assert (val != NULL);
   
-  node = isis_listnode_new ();
+  node = pm_listnode_new ();
 
   node->prev = list->tail;
   node->data = val;
@@ -81,14 +79,14 @@ isis_listnode_add (struct list *list, void *val)
  * notion of omitting duplicates.
  */
 void
-isis_listnode_add_sort (struct list *list, void *val)
+pm_listnode_add_sort (struct pm_list *list, void *val)
 {
-  struct listnode *n;
-  struct listnode *new;
+  struct pm_listnode *n;
+  struct pm_listnode *new;
   
   assert (val != NULL);
   
-  new = isis_listnode_new ();
+  new = pm_listnode_new ();
   new->data = val;
 
   if (list->cmp)
@@ -123,13 +121,13 @@ isis_listnode_add_sort (struct list *list, void *val)
 }
 
 void
-isis_listnode_add_after (struct list *list, struct listnode *pp, void *val)
+pm_listnode_add_after (struct pm_list *list, struct pm_listnode *pp, void *val)
 {
-  struct listnode *nn;
+  struct pm_listnode *nn;
   
   assert (val != NULL);
   
-  nn = isis_listnode_new ();
+  nn = pm_listnode_new ();
   nn->data = val;
 
   if (pp == NULL)
@@ -162,9 +160,9 @@ isis_listnode_add_after (struct list *list, struct listnode *pp, void *val)
 
 /* Delete specific date pointer from the list. */
 void
-isis_listnode_delete (struct list *list, void *val)
+pm_listnode_delete (struct pm_list *list, void *val)
 {
-  struct listnode *node;
+  struct pm_listnode *node;
 
   assert(list);
   for (node = list->head; node; node = node->next)
@@ -182,7 +180,7 @@ isis_listnode_delete (struct list *list, void *val)
 	    list->tail = node->prev;
 
 	  list->count--;
-	  isis_listnode_free (node);
+	  pm_listnode_free (node);
 	  return;
 	}
     }
@@ -190,9 +188,9 @@ isis_listnode_delete (struct list *list, void *val)
 
 /* Return first node's data if it is there.  */
 void *
-isis_listnode_head (struct list *list)
+pm_listnode_head (struct pm_list *list)
 {
-  struct listnode *node;
+  struct pm_listnode *node;
 
   assert(list);
   node = list->head;
@@ -204,10 +202,10 @@ isis_listnode_head (struct list *list)
 
 /* Delete all listnode from the list. */
 void
-isis_list_delete_all_node (struct list *list)
+pm_list_delete_all_node (struct pm_list *list)
 {
-  struct listnode *node;
-  struct listnode *next;
+  struct pm_listnode *node;
+  struct pm_listnode *next;
 
   assert(list);
   for (node = list->head; node; node = next)
@@ -215,7 +213,7 @@ isis_list_delete_all_node (struct list *list)
       next = node->next;
       if (list->del)
 	(*list->del) (node->data);
-      isis_listnode_free (node);
+      pm_listnode_free (node);
     }
   list->head = list->tail = NULL;
   list->count = 0;
@@ -223,29 +221,29 @@ isis_list_delete_all_node (struct list *list)
 
 /* Delete all listnode then free list itself. */
 void
-isis_list_delete (struct list *list)
+pm_list_delete (struct pm_list *list)
 {
   assert(list);
-  isis_list_delete_all_node (list);
-  isis_list_free (list);
+  pm_list_delete_all_node (list);
+  pm_list_free (list);
 }
 
 /* Lookup the node which has given data. */
-struct listnode *
-isis_listnode_lookup (struct list *list, void *data)
+struct pm_listnode *
+pm_listnode_lookup (struct pm_list *list, void *data)
 {
-  struct listnode *node;
+  struct pm_listnode *node;
 
   assert(list);
-  for (node = listhead(list); node; node = listnextnode (node))
-    if (data == listgetdata (node))
+  for (node = pm_listhead(list); node; node = pm_listnextnode (node))
+    if (data == pm_listgetdata (node))
       return node;
   return NULL;
 }
 
 /* Delete the node from list.  For ospfd and ospf6d. */
 void
-isis_list_delete_node (struct list *list, struct listnode *node)
+pm_list_delete_node (struct pm_list *list, struct pm_listnode *node)
 {
   if (node->prev)
     node->prev->next = node->next;
@@ -256,18 +254,18 @@ isis_list_delete_node (struct list *list, struct listnode *node)
   else
     list->tail = node->prev;
   list->count--;
-  isis_listnode_free (node);
+  pm_listnode_free (node);
 }
 
 /* ospf_spf.c */
 void
-isis_list_add_node_prev (struct list *list, struct listnode *current, void *val)
+pm_list_add_node_prev (struct pm_list *list, struct pm_listnode *current, void *val)
 {
-  struct listnode *node;
+  struct pm_listnode *node;
   
   assert (val != NULL);
   
-  node = isis_listnode_new ();
+  node = pm_listnode_new ();
   node->next = current;
   node->data = val;
 
@@ -284,13 +282,13 @@ isis_list_add_node_prev (struct list *list, struct listnode *current, void *val)
 
 /* ospf_spf.c */
 void
-isis_list_add_node_next (struct list *list, struct listnode *current, void *val)
+pm_list_add_node_next (struct pm_list *list, struct pm_listnode *current, void *val)
 {
-  struct listnode *node;
+  struct pm_listnode *node;
   
   assert (val != NULL);
   
-  node = isis_listnode_new ();
+  node = pm_listnode_new ();
   node->prev = current;
   node->data = val;
 
@@ -307,10 +305,10 @@ isis_list_add_node_next (struct list *list, struct listnode *current, void *val)
 
 /* ospf_spf.c */
 void
-isis_list_add_list (struct list *l, struct list *m)
+pm_list_add_list (struct pm_list *l, struct pm_list *m)
 {
-  struct listnode *n;
+  struct pm_listnode *n;
 
-  for (n = listhead (m); n; n = listnextnode (n))
-    isis_listnode_add (l, n->data);
+  for (n = pm_listhead (m); n; n = pm_listnextnode (n))
+    pm_listnode_add (l, n->data);
 }

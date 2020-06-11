@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -26,7 +26,7 @@
 #define ARGS_UACCTD "n:NdDhP:b:f:F:c:m:p:r:s:S:o:t:O:MuRg:L:VaAE:"
 #define ARGS_PMTELEMETRYD "hVL:u:t:Z:f:dDS:F:o:O:i:"
 #define ARGS_PMBGPD "hVL:l:f:dDS:F:o:O:i:gm:"
-#define ARGS_PMBMPD "hVL:l:f:dDS:F:o:O:i:"
+#define ARGS_PMBMPD "hVL:l:f:dDS:F:o:O:i:I:Z:Y:T:"
 #define ARGS_PMACCT "hSsc:Cetm:p:P:M:arN:n:lT:O:E:uVUiI0"
 #define N_PRIMITIVES 128
 #define N_FUNCS 10 
@@ -39,7 +39,7 @@
 #define FOLLOW_BGP_NH_ENTRIES 32 
 #define MAX_PROTOCOL_LEN 32 
 #define DEFAULT_AVRO_SCHEMA_REFRESH_TIME 60
-#define MAX_AVRO_SCHEMA 16
+#define MAX_AVRO_SCHEMA 65535 
 #define DEFAULT_IMT_PLUGIN_POLL_TIMEOUT 5
 #define DEFAULT_SLOTH_SLEEP_TIME 5
 #define UINT32T_THRESHOLD 4290000000UL
@@ -95,7 +95,7 @@
 #define PRIMITIVE_LEN 		32
 #define PRIMITIVE_DESC_LEN	64
 
-#define PMACCT_VERSION "1.7.4-git"
+#define PMACCT_VERSION "1.7.6-git"
 #define MANTAINER "Paolo Lucente <paolo@pmacct.net>"
 #define GET_IN_TOUCH_MSG "If you see this message, please get in touch"
 #define PMACCTD_USAGE_HEADER "Promiscuous Mode Accounting Daemon, pmacctd"
@@ -138,6 +138,7 @@
 #endif
 
 /* Daemon identificator */ 
+#define ACCT_UNKNOWN		0	/* Undefined / unknown daemon */
 #define ACCT_PM			1	/* promiscuous mode */
 #define ACCT_NF			2	/* NetFlow */
 #define ACCT_SF			3	/* sFlow */
@@ -430,6 +431,7 @@
 #define IFINDEX_TAG		0x00000002
 #define IFINDEX_TAG2		0x00000004
 
+#define CUSTOM_PRIMITIVE_TYPE_UNKNOWN	0
 #define CUSTOM_PRIMITIVE_TYPE_UINT	1
 #define CUSTOM_PRIMITIVE_TYPE_HEX	2
 #define CUSTOM_PRIMITIVE_TYPE_STRING	3
@@ -503,11 +505,7 @@ typedef struct {
   u_int16_t n;
 } s_uint16_t;
 
-#if defined HAVE_64BIT_COUNTERS
 typedef u_int64_t pm_counter_t;
-#else
-typedef u_int32_t pm_counter_t;
-#endif
 
 /* Keep common NF_AS and NF_NET values aligned, ie. NF_[NET|AS]_KEEP == 0x00000001 */
 #define NF_AS_COMPAT    0x00000000 /* Unused */

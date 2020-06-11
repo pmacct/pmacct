@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -40,6 +40,39 @@ int bgp_afi2family (int afi)
     return AF_INET;
   else if (afi == AFI_IP6)
     return AF_INET6;
+  return SUCCESS;
+}
+
+int bgp_rd_ntoh(rd_t *rd)
+{
+  struct rd_ip  *rdi;
+  struct rd_as  *rda;
+  struct rd_as4 *rda4;
+
+  if (!rd) return ERR;
+
+  rd->type = ntohs(rd->type);
+
+  switch(rd->type) {
+  case RD_TYPE_AS:
+    rda = (struct rd_as *) rd;
+    rda->as = ntohs(rda->as);
+    rda->val = ntohl(rda->val);
+    break;
+  case RD_TYPE_IP:
+    rdi = (struct rd_ip *) rd;
+    rdi->val = ntohs(rdi->val);
+    break;
+  case RD_TYPE_AS4:
+    rda4 = (struct rd_as4 *) rd;
+    rda4->as = ntohl(rda4->as);
+    rda4->val = ntohs(rda4->val);
+    break;
+  default:
+    return ERR;
+    break;
+  }
+
   return SUCCESS;
 }
 
@@ -160,7 +193,7 @@ int bgp_label2str(char *str, u_char *label)
   unsigned long int tmp;
   char *endp;
 
-  snprintf(str, 8, "0x%x%x%x",
+  snprintf(str, 10, "0x%02x%02x%01x",
 	(unsigned)(unsigned char)label[0],
 	(unsigned)(unsigned char)label[1],
 	(unsigned)(unsigned char)(label[2] >> 4));
@@ -171,11 +204,11 @@ int bgp_label2str(char *str, u_char *label)
   return TRUE;
 }
 
-/* Allocate bgp_info_extra */
-struct bgp_info_extra *bgp_info_extra_new(struct bgp_info *ri)
+/* Allocate bgp_attr_extra */
+struct bgp_attr_extra *bgp_attr_extra_new(struct bgp_info *ri)
 {
   struct bgp_misc_structs *bms;
-  struct bgp_info_extra *new;
+  struct bgp_attr_extra *new;
 
   if (!ri || !ri->peer) return NULL;
 
@@ -183,17 +216,17 @@ struct bgp_info_extra *bgp_info_extra_new(struct bgp_info *ri)
 
   if (!bms) return NULL;
 
-  new = malloc(sizeof(struct bgp_info_extra));
+  new = malloc(sizeof(struct bgp_attr_extra));
   if (!new) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (bgp_info_extra_new). Exiting ..\n", config.name, bms->log_str);
+    Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (bgp_attr_extra_new). Exiting ..\n", config.name, bms->log_str);
     exit_gracefully(1);
   }
-  else memset(new, 0, sizeof (struct bgp_info_extra));
+  else memset(new, 0, sizeof (struct bgp_attr_extra));
 
   return new;
 }
 
-void bgp_info_extra_free(struct bgp_peer *peer, struct bgp_info_extra **extra)
+void bgp_attr_extra_free(struct bgp_peer *peer, struct bgp_attr_extra **attr_extra)
 {
   struct bgp_misc_structs *bms;
 
@@ -201,42 +234,72 @@ void bgp_info_extra_free(struct bgp_peer *peer, struct bgp_info_extra **extra)
 
   if (!bms) return;
 
-  if (extra && *extra) {
-    if ((*extra)->bmed.id && bms->bgp_extra_data_free) (*bms->bgp_extra_data_free)(&(*extra)->bmed);
-
-    free(*extra);
-    *extra = NULL;
+  if (attr_extra && (*attr_extra)) {
+    free(*attr_extra);
+    *attr_extra = NULL;
   }
 }
 
 /* Get bgp_info extra information for the given bgp_info */
-struct bgp_info_extra *bgp_info_extra_get(struct bgp_info *ri)
+struct bgp_attr_extra *bgp_attr_extra_get(struct bgp_info *ri)
 {
-  if (!ri->extra)
-    ri->extra = bgp_info_extra_new(ri);
+  if (!ri->attr_extra) {
+    ri->attr_extra = bgp_attr_extra_new(ri);
+  }
 
-  return ri->extra;
+  return ri->attr_extra;
 }
 
-struct bgp_info_extra *bgp_info_extra_process(struct bgp_peer *peer, struct bgp_info *ri, safi_t safi,
-		  			      path_id_t *path_id, rd_t *rd, u_char *label)
+struct bgp_attr_extra *bgp_attr_extra_process(struct bgp_peer *peer, struct bgp_info *ri, afi_t afi, safi_t safi, struct bgp_attr_extra *attr_extra)
 {
-  struct bgp_info_extra *rie = NULL;
+  struct bgp_attr_extra *rie = NULL;
 
   /* Install/update MPLS stuff if required */
   if (safi == SAFI_MPLS_LABEL || safi == SAFI_MPLS_VPN) {
-    if (!rie) rie = bgp_info_extra_get(ri);
+    if (!rie) {
+      rie = bgp_attr_extra_get(ri);
+    }
 
     if (rie) {
-      if (safi == SAFI_MPLS_VPN) memcpy(&rie->rd, rd, sizeof(rd_t));
-      memcpy(&rie->label, label, 3);
+      if (safi == SAFI_MPLS_VPN) {
+	memcpy(&rie->rd, &attr_extra->rd, sizeof(rd_t));
+      }
+
+      memcpy(&rie->label, &attr_extra->label, 3);
     }
   }
 
   /* Install/update BGP ADD-PATHs stuff if required */
-  if (peer->cap_add_paths && path_id && *path_id) {
-    if (!rie) rie = bgp_info_extra_get(ri);
-    if (rie) memcpy(&rie->path_id, path_id, sizeof(path_id_t));
+  if (peer->cap_add_paths[afi][safi]) {
+    if (!rie) {
+      rie = bgp_attr_extra_get(ri);
+    }
+
+    if (rie) {
+      rie->path_id = attr_extra->path_id;
+    }
+  }
+
+  /* AIGP attribute */
+  if (attr_extra->aigp) {
+    if (!rie) {
+      rie = bgp_attr_extra_get(ri);
+    }
+
+    if (rie) {
+      rie->aigp = attr_extra->aigp;
+    }
+  }
+
+  /* Prefix-SID attribute */
+  if (attr_extra->psid_li) {
+    if (!rie) {
+      rie = bgp_attr_extra_get(ri);
+    }
+
+    if (rie) {
+      rie->psid_li = attr_extra->psid_li;
+    }
   }
 
   return rie;
@@ -282,25 +345,32 @@ void bgp_info_add(struct bgp_peer *peer, struct bgp_node *rn, struct bgp_info *r
 
 void bgp_info_delete(struct bgp_peer *peer, struct bgp_node *rn, struct bgp_info *ri, u_int32_t modulo)
 {
-  if (ri->next)
-    ri->next->prev = ri->prev;
-  if (ri->prev)
-    ri->prev->next = ri->next;
-  else
-    rn->info[modulo] = ri->next;
+  struct bgp_misc_structs *bms;
 
-  bgp_info_free(peer, ri);
+  bms = bgp_select_misc_db(peer->type);
+
+  if (ri->next) {
+    ri->next->prev = ri->prev;
+  }
+  if (ri->prev) {
+    ri->prev->next = ri->next;
+  }
+  else {
+    rn->info[modulo] = ri->next;
+  }
+
+  bgp_info_free(peer, ri, bms->bgp_extra_data_free);
 
   bgp_unlock_node(peer, rn);
 }
 
 /* Free bgp route information. */
-void bgp_info_free(struct bgp_peer *peer, struct bgp_info *ri)
+void bgp_info_free(struct bgp_peer *peer, struct bgp_info *ri, void (*bgp_extra_data_free)(struct bgp_msg_extra_data *))
 {
-  if (ri->attr)
-    bgp_attr_unintern(peer, ri->attr);
+  if (ri->attr) bgp_attr_unintern(peer, ri->attr);
 
-  bgp_info_extra_free(peer, &ri->extra);
+  bgp_attr_extra_free(peer, &ri->attr_extra);
+  if (bgp_extra_data_free) (*bgp_extra_data_free)(&ri->bmed);
 
   ri->peer->lock--;
   free(ri);
@@ -567,15 +637,28 @@ int bgp_peer_init(struct bgp_peer *peer, int type)
   memset(peer, 0, sizeof(struct bgp_peer));
   peer->type = type;
   peer->status = Idle;
-  peer->buf.len = BGP_BUFFER_SIZE;
-  peer->buf.base = malloc(peer->buf.len);
+  peer->buf.tot_len = BGP_BUFFER_SIZE;
+  peer->buf.base = malloc(peer->buf.tot_len);
   if (!peer->buf.base) {
     Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (bgp_peer_init). Exiting ..\n", config.name, bms->log_str);
     exit_gracefully(1);
   }
   else {
-    memset(peer->buf.base, 0, peer->buf.len);
+    memset(peer->buf.base, 0, peer->buf.tot_len);
     ret = FALSE;
+  }
+
+  if (config.bgp_xconnect_map) {
+    peer->xbuf.tot_len = BGP_BUFFER_SIZE;
+    peer->xbuf.base = malloc(peer->xbuf.tot_len);
+    if (!peer->xbuf.base) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (bgp_peer_init). Exiting ..\n", config.name, bms->log_str);
+      exit_gracefully(1);
+    }
+    else {
+      memset(peer->xbuf.base, 0, peer->xbuf.tot_len);
+      ret = FALSE;
+    }
   }
 
   return ret;
@@ -630,9 +713,17 @@ void bgp_peer_close(struct bgp_peer *peer, int type, int no_quiet, int send_noti
   memset(&peer->addr_str, 0, sizeof(peer->addr_str));
 
   free(peer->buf.base);
+  if (config.bgp_xconnect_map) {
+    free(peer->xbuf.base);
+  }
 
-  if (bms->neighbors_file)
+  if (bms->neighbors_file) {
     write_neighbors_file(bms->neighbors_file, peer->type);
+  }
+
+  if (bms->peers_limit_log) {
+    log_notification_unset(bms->peers_limit_log);
+  }
 }
 
 int bgp_peer_xconnect_init(struct bgp_peer *peer, int type)
@@ -671,6 +762,7 @@ int bgp_peer_xconnect_init(struct bgp_peer *peer, int type)
 	if (ret == ERR) {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bgp_peer_xconnect_init(): connect() failed.\n", config.name, bms->log_str, xconnect_str);
 	  memset(&peer->xc, 0, sizeof(peer->xc));
+	  close(fd);
 	  peer->xconnect_fd = 0;
 	  return ERR;
 	}
@@ -682,7 +774,7 @@ int bgp_peer_xconnect_init(struct bgp_peer *peer, int type)
 
     if (!peer->xconnect_fd) {
       bgp_peer_print(peer, peer_str, INET6_ADDRSTRLEN);
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] unable to xconnect BGP peer.\n", config.name, bgp_misc_db->log_str, peer_str);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] unable to xconnect BGP peer. Missing entry in bgp_daemon_xconnect_map.\n", config.name, bgp_misc_db->log_str, peer_str);
     }
   }
 
@@ -965,7 +1057,7 @@ as_t evaluate_first_asn(char *src)
     is_space = FALSE;
   }
 
-  if (config.nfacctd_bgp_peer_as_skip_subas /* XXX */ && sub_as) {
+  if (config.bgp_daemon_peer_as_skip_subas /* XXX */ && sub_as) {
     while (idx < len && (src[idx] == ' ' || src[idx] == ')')) idx++;
 
     if (idx != len-1) { 
@@ -1091,9 +1183,9 @@ void bgp_config_checks(struct configuration *c)
 			  COUNT_PEER_SRC_IP|COUNT_PEER_DST_IP|COUNT_SRC_MED|COUNT_SRC_LOCAL_PREF|
 			  COUNT_MPLS_VPN_RD)) {
     /* Sanitizing the aggregation method */
-      if ( (c->what_to_count & COUNT_SRC_LOCAL_PREF && !c->nfacctd_bgp_src_local_pref_type) ||
-	   (c->what_to_count & COUNT_SRC_MED && !c->nfacctd_bgp_src_med_type) ||
-	   (c->what_to_count & COUNT_PEER_SRC_AS && !c->nfacctd_bgp_peer_as_src_type &&
+      if ( (c->what_to_count & COUNT_SRC_LOCAL_PREF && !c->bgp_daemon_src_local_pref_type) ||
+	   (c->what_to_count & COUNT_SRC_MED && !c->bgp_daemon_src_med_type) ||
+	   (c->what_to_count & COUNT_PEER_SRC_AS && !c->bgp_daemon_peer_as_src_type &&
 	     (config.acct_type != ACCT_SF && config.acct_type != ACCT_NF)) ) {
       printf("ERROR: At least one of the following primitives is in use but its source type is not specified:\n");
       printf("       peer_src_as     =>  bgp_peer_src_as_type\n");
@@ -1109,10 +1201,10 @@ void bgp_config_checks(struct configuration *c)
 			  COUNT_SRC_EXT_COMM|COUNT_SRC_AS_PATH)) ||
       (c->what_to_count_2 & (COUNT_LRG_COMM|COUNT_SRC_LRG_COMM))) {
     /* Sanitizing the aggregation method */
-    if ( (c->what_to_count & COUNT_SRC_AS_PATH && !c->nfacctd_bgp_src_as_path_type) ||
-         (c->what_to_count & COUNT_SRC_STD_COMM && !c->nfacctd_bgp_src_std_comm_type) ||
-	 (c->what_to_count & COUNT_SRC_EXT_COMM && !c->nfacctd_bgp_src_ext_comm_type) ||
-	 (c->what_to_count_2 & COUNT_SRC_LRG_COMM && !c->nfacctd_bgp_src_lrg_comm_type) ) {
+    if ( (c->what_to_count & COUNT_SRC_AS_PATH && !c->bgp_daemon_src_as_path_type) ||
+         (c->what_to_count & COUNT_SRC_STD_COMM && !c->bgp_daemon_src_std_comm_type) ||
+	 (c->what_to_count & COUNT_SRC_EXT_COMM && !c->bgp_daemon_src_ext_comm_type) ||
+	 (c->what_to_count_2 & COUNT_SRC_LRG_COMM && !c->bgp_daemon_src_lrg_comm_type) ) {
       printf("ERROR: At least one of the following primitives is in use but its source type is not specified:\n");
       printf("       src_as_path     =>  bgp_src_as_path_type\n");
       printf("       src_std_comm    =>  bgp_src_std_comm_type\n");
@@ -1343,25 +1435,26 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
 #if defined WITH_KAFKA
   bms->msglog_kafka_host = &bgp_daemon_msglog_kafka_host;
 #endif
-  bms->max_peers = config.nfacctd_bgp_max_peers;
+  bms->max_peers = config.bgp_daemon_max_peers;
   bms->peers = peers;
   bms->peers_cache = peers_cache;
   bms->peers_port_cache = peers_port_cache;
+  bms->peers_limit_log = &log_notifications.bgp_peers_limit;
   bms->xconnects = &bgp_xcs_map;
-  bms->neighbors_file = config.nfacctd_bgp_neighbors_file; 
+  bms->neighbors_file = config.bgp_daemon_neighbors_file; 
   bms->dump_file = config.bgp_table_dump_file; 
   bms->dump_amqp_routing_key = config.bgp_table_dump_amqp_routing_key; 
   bms->dump_amqp_routing_key_rr = config.bgp_table_dump_amqp_routing_key_rr;
   bms->dump_kafka_topic = config.bgp_table_dump_kafka_topic;
   bms->dump_kafka_topic_rr = config.bgp_table_dump_kafka_topic_rr;
   bms->dump_kafka_avro_schema_registry = config.bgp_table_dump_kafka_avro_schema_registry;
-  bms->msglog_file = config.nfacctd_bgp_msglog_file;
-  bms->msglog_output = config.nfacctd_bgp_msglog_output;
-  bms->msglog_amqp_routing_key = config.nfacctd_bgp_msglog_amqp_routing_key;
-  bms->msglog_amqp_routing_key_rr = config.nfacctd_bgp_msglog_amqp_routing_key_rr;
-  bms->msglog_kafka_topic = config.nfacctd_bgp_msglog_kafka_topic;
-  bms->msglog_kafka_topic_rr = config.nfacctd_bgp_msglog_kafka_topic_rr;
-  bms->msglog_kafka_avro_schema_registry = config.nfacctd_bgp_msglog_kafka_avro_schema_registry;
+  bms->msglog_file = config.bgp_daemon_msglog_file;
+  bms->msglog_output = config.bgp_daemon_msglog_output;
+  bms->msglog_amqp_routing_key = config.bgp_daemon_msglog_amqp_routing_key;
+  bms->msglog_amqp_routing_key_rr = config.bgp_daemon_msglog_amqp_routing_key_rr;
+  bms->msglog_kafka_topic = config.bgp_daemon_msglog_kafka_topic;
+  bms->msglog_kafka_topic_rr = config.bgp_daemon_msglog_kafka_topic_rr;
+  bms->msglog_kafka_avro_schema_registry = config.bgp_daemon_msglog_kafka_avro_schema_registry;
   bms->peer_str = malloc(strlen("peer_ip_src") + 1);
   strcpy(bms->peer_str, "peer_ip_src");
   bms->peer_port_str = malloc(strlen("peer_tcp_port") + 1);
@@ -1524,4 +1617,16 @@ u_int8_t bgp_str2origin(char *origin_str)
   else if (!strcmp(origin_str, "u")) return BGP_ORIGIN_INCOMPLETE;
 
   return BGP_ORIGIN_UNKNOWN;
+}
+
+u_int16_t bgp_get_packet_len(char *pkt)
+{
+  struct bgp_header *bhdr = (struct bgp_header *) pkt;
+  u_int16_t blen = 0;
+
+  if (bgp_marker_check(bhdr, BGP_MARKER_SIZE) != ERR) {
+    blen = ntohs(bhdr->bgpo_len);
+  }
+
+  return blen;
 }

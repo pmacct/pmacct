@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -346,9 +346,9 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   key = NULL; value = NULL;
 		}
                 else if (acct_type == MAP_PCAP_INTERFACES) {
-                  for (dindex = 0; strcmp(pcap_interfaces_map_dictionary[dindex].key, ""); dindex++) {
-                    if (!strcmp(pcap_interfaces_map_dictionary[dindex].key, key)) {
-                      err = (*pcap_interfaces_map_dictionary[dindex].func)(filename, NULL, value, req, acct_type);
+                  for (dindex = 0; strcmp(pm_pcap_interfaces_map_dictionary[dindex].key, ""); dindex++) {
+                    if (!strcmp(pm_pcap_interfaces_map_dictionary[dindex].key, key)) {
+                      err = (*pm_pcap_interfaces_map_dictionary[dindex].func)(filename, NULL, value, req, acct_type);
                       break;
                     }
                     else err = E_NOTFOUND; /* key not found */
@@ -527,7 +527,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	      else if (acct_type == MAP_BGP_XCS) bgp_xcs_map_validate(filename, req); 
 	      else if (acct_type == MAP_IGP) igp_daemon_map_validate(filename, req); 
 	      else if (acct_type == MAP_CUSTOM_PRIMITIVES) custom_primitives_map_validate(filename, req); 
-	      else if (acct_type == MAP_PCAP_INTERFACES) pcap_interfaces_map_validate(filename, req); 
+	      else if (acct_type == MAP_PCAP_INTERFACES) pm_pcap_interfaces_map_validate(filename, req); 
 	    }
           }
           else Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] malformed line. Ignored.\n",
@@ -781,7 +781,7 @@ int pretag_copy_label(pt_label_t *dst, pt_label_t *src)
   }
   else {
     if (src->len) {
-      pretag_malloc_label(dst, src->len);
+      pretag_malloc_label(dst, src->len + 1);
       if (!dst->val) {
         Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (pretag_copy_label).\n", config.name, config.type);
         return ERR;
@@ -792,6 +792,54 @@ int pretag_copy_label(pt_label_t *dst, pt_label_t *src)
     }
   }
   
+  return SUCCESS;
+}
+
+int pretag_move_label(pt_label_t *dst, pt_label_t *src)
+{
+  if (!src || !dst) return ERR;
+
+  if (dst->val) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): pretag_move_label failed: dst->val not null\n", config.name, config.type);
+    return ERR;
+  }
+  else {
+    if (src->len) {
+      dst->val = src->val;
+      dst->len = src->len;
+      
+      src->val = NULL;
+      src->len = 0;
+    }
+  }
+
+  return SUCCESS;
+}
+
+int pretag_append_label(pt_label_t *dst, pt_label_t *src)
+{
+  char default_sep[] = ",";
+
+  if (!src || !dst) return ERR;
+
+  if (!dst->val) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): pretag_append_label failed: dst->val null\n", config.name, config.type);
+    return ERR;
+  }
+  else {
+    if (src->len) {
+      pretag_realloc_label(dst, (dst->len + src->len + 1 /* sep */ + 1 /* null */));
+      if (!dst->val) {
+        Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (pretag_append_label).\n", config.name, config.type);
+        return ERR;
+      }
+
+      strncat(dst->val, default_sep, 1);
+      strncat(dst->val, src->val, src->len);
+      dst->val[dst->len] = '\0';
+    }
+  }
+
   return SUCCESS;
 }
 
@@ -808,13 +856,15 @@ int pretag_entry_process(struct id_entry *e, struct packet_ptrs *pptrs, pm_id_t 
 {
   int j = 0;
   pm_id_t id = 0, stop = 0, ret = 0;
-  pt_label_t label_local;
+  pt_label_t *label_local = malloc(sizeof(pt_label_t));
+
+  pretag_init_label(label_local);
 
   e->last_matched = FALSE;
 
   for (j = 0, stop = 0, ret = 0; ((!ret || ret > TRUE) && (*e->func[j])); j++) {
     if (e->func_type[j] == PRETAG_SET_LABEL) {
-      ret = (*e->func[j])(pptrs, &label_local, e);
+      ret = (*e->func[j])(pptrs, label_local, e);
     }
     else {
       ret = (*e->func[j])(pptrs, &id, e);
@@ -836,19 +886,11 @@ int pretag_entry_process(struct id_entry *e, struct packet_ptrs *pptrs, pm_id_t 
       pptrs->have_tag2 = TRUE;
     } 
     else if (stop & PRETAG_MAP_RCODE_LABEL) {
-      /* auto-stacking if value exists */
       if (pptrs->label.len) {
-	char default_sep[] = ",";
-
-        if (pretag_realloc_label(&pptrs->label, label_local.len + pptrs->label.len + 1 /* sep */ + 1 /* null */)) return TRUE;
-	strncat(pptrs->label.val, default_sep, 1);
-        strncat(pptrs->label.val, label_local.val, label_local.len);
-        pptrs->label.val[pptrs->label.len] = '\0';
+	pretag_append_label(&pptrs->label, label_local);
       }
       else {
-	if (pretag_malloc_label(&pptrs->label, label_local.len + 1 /* null */)) return TRUE;
-	strncpy(pptrs->label.val, label_local.val, label_local.len);
-	pptrs->label.val[pptrs->label.len] = '\0';
+	pretag_copy_label(&pptrs->label, label_local);
       }
 
       pptrs->have_label = TRUE;
@@ -876,6 +918,9 @@ int pretag_entry_process(struct id_entry *e, struct packet_ptrs *pptrs, pm_id_t 
       stop |= PRETAG_MAP_RCODE_JEQ;
     }
   }
+
+  pretag_free_label(label_local);
+  if (label_local) free(label_local);
 
   return stop;
 }

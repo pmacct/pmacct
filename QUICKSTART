@@ -1,5 +1,5 @@
 pmacct [IP traffic accounting : BGP : BMP : RPKI : IGP : Streaming Telemetry]
-pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 
 
 TABLE OF CONTENTS:
@@ -24,7 +24,8 @@ XVIII.	Quickstart guide to setup Streaming Telemetry collection
 XIX.	Running the print plugin to write to flat-files
 XX.	Quickstart guide to setup GeoIP lookups
 XXI.	Using pmacct as traffic/event logger
-XXII.	Miscellaneous notes and troubleshooting tips
+XXII.   Connecting pmacct to a Redis cache
+XXIII.	Miscellaneous notes and troubleshooting tips
 
 
 I. Daemons and plugins included with pmacct distribution
@@ -110,7 +111,8 @@ II. Configuring pmacct for compilation and installing
 The simplest way to configure the package for compilation is to download the
 latest stable released tarball from http://www.pmacct.net/ and let the configure
 script to probe default headers and libraries for you. The only dependency that
-pmacct brings is libpcap library and headers: libpcap-dev (or libpcap-devel) or
+pmacct brings is libpcap library and headers: libpcap-dev on Debian/Ubuntu,
+libpcap-devel on CentOS/RHEL (note: this may need enabling extra yum repos!) or
 (self-compiled) equivalent must be installed on the system. Then, a first round
 of guessing is done via pkg-config then, for some libraries, "typical" default
 locations are checked, ie. /usr/local/lib. Switches one likely wants enabled are
@@ -210,7 +212,7 @@ follows (assuming you are running the bash shell):
 
 shell> export AVRO_LIBS="-L/usr/local/avro/lib -lavro"
 shell> export AVRO_CFLAGS="-I/usr/local/avro/include"
-shell> ./configure --enable-rabbitmq --enable-avro
+shell> ./configure --enable-kafka --enable-avro
 
 IIc. Compiling pmacct against a own libpcap library
 Compiling against a downloaded libpcap library may be wanted for several
@@ -769,9 +771,10 @@ that apply exclusively to libpcap. If you've skipped examples in the "Running th
 libpcap-based daemon (pmacctd)" section, please read them before continuing. All
 configuration keys available are in the CONFIG-KEYS document.
 
-The daemon depends on the package libnetfilter-log-dev (in Debian/Ubuntu or equivalent
-in the preferred Linux distribution). The support for NFLOG is disabled by default and
-should be enabled as follows:
+The daemon depends on the package libnetfilter-log-dev in Debian/Ubuntu,
+libnetfilter_log in CentOS/RHEL (or equivalent package in the preferred Linux
+distribution). The support for NFLOG is disabled by default and should be enabled
+as follows:
 
 shell> ./configure --enable-nflog
 
@@ -999,6 +1002,10 @@ For further info on Confluent Schema Registry and libserdes:
 https://docs.confluent.io/current/schema-registry/docs/index.html
 https://github.com/confluentinc/libserdes
 
+NOTE: issues have been reported for certain cases when using libserdes on a
+system with OpenSSL 1.0.x installed due to some interactions with libcurl.
+Please upgrade to OpenSSL 1.1.x or greater. 
+
 Then "make; make install" as usual. As a proof-of-concept, when the Schema
 Registry is in use, once some data is produced in Avro format to a Kafka topic,
 it can be consumed with the kafka-avro-console-consumer tool, part of standard
@@ -1062,16 +1069,19 @@ advertised.listeners=PLAINTEXT://172.16.2.1:9092
 listener.security.protocol.map=PLAINTEXT:PLAINTEXT,SSL:SSL,SASL_PLAINTEXT:SASL_PLAINTEXT,SASL_SSL:SASL_SSL
 
 2) When the amount of data published to Kafka is substantial, ie. in the order
-of thousands of entries per second, batching is needed in order to avoid every
-single entry originating a produce call to Kafka. Two strategies are being
-available: a) pmacct batching via the kafka_multi_values feature or b) librdkafka
-batching via, as per the lib documentation, "The two most important configuration
-properties for performance tuning [are]:
+of thousands of entries per second, batching (MessageSet) is needed in order to
+avoid every single object being produced singularly to Kafka brokers. Two
+strategies are available for this a) pmacct batching via the kafka_multi_values
+feature (legacy) or b) librdkafka batching (recommended) via, as per the lib
+documentation, "The two most important configuration properties for performance
+tuning [are]:
 
 * batch.num.messages : the minimum number of messages to wait for to accumulate
   in the local queue before sending off a message set.
 * queue.buffering.max.ms : how long to wait for batch.num.messages to fill up
-  in the local queue."
+  in the local queue.". Note: up until librdkafka 0.11, the default was kept
+  very low to favour low-latency. A sensible minimum value in high-throughput
+  scenarios is 50ms.
 
 Also, intuitively, queue.buffering.max.messages, the "Maximum number of messages
 allowed on the producer queue", should be kept greater than the batch.num.messages.
@@ -1080,6 +1090,7 @@ by kafka_config_file, as global settings, ie.:
  
 global, queue.buffering.max.messages, 8000000
 global, batch.num.messages, 100000
+global, queue.buffering.max.ms, 50
 
 3) Configuring statistics.interval.ms to a positive value in kafka_config_file
 will make librdkafka log plenty of internal metrics - as documented at the
@@ -1088,16 +1099,26 @@ For example:
 
 global, statistics.interval.ms, 60000
 
-4) The SSL support in librdkafka is completely configuration based, meaning
-it can be enabled via the kafka_config_file. More info is available at the
-page: https://github.com/edenhill/librdkafka/wiki/Using-SSL-with-librdkafka 
-For example, quoting the librdkafka page:
+4) SSL and SASL supports in librdkafka are totally configuration based, meaning
+they can be enabled via the kafka_config_file. More info is available at the
+pages: https://github.com/edenhill/librdkafka/wiki/Using-SSL-with-librdkafka
+and https://github.com/edenhill/librdkafka/wiki/Using-SASL-with-librdkafka . 
+
+For example, quoting the librdkafka page for SSL:
 
 global, security.protocol, ssl
 global, ssl.ca.location, ca-cert
 global, ssl.certificate.location, client_?????_client.pem
 global, ssl.key.location, client_?????_client.key
 global, ssl.key.password, abcdefgh
+
+Or, for example, trying to connect to Microsoft Azure via their Kafka API
+using SASL:
+
+global, security.protocol, SASL_SSL
+global, sasl.mechanism, PLAIN
+global, sasl.username, $ConnectionString
+global, sasl.password, Endpoint=sb://XXX.windows.net/;SharedAccessKeyName=YYY;SharedAccessKey=ZZZ;EntityPath=JJJ
 
 5) When integrating pmacct with the PNDA framework ( http://www.pnda.io/ ), a
 guide on how to make the two communicate has been written-up and published at
@@ -1282,14 +1303,18 @@ b) build NetFlow probe configuration, using pmacctd:
    The bgp_daemon_port can be changed from the standard BGP port (179/TCP) in order to
    co-exist with other BGP routing software which might be running on the same host.
    Furthermore, they can safely peer each other by using 127.0.0.1 as bgp_daemon_ip. 
-   NOTE: Bird Internet Routing Daemon seems to dislike peerings on 127.0.0.1; but
-   setting up a 127.0.0.2 address and binding pmacctd to it allows the BGP session to
-   come up fine in a 127.0.0.1 <-> 127.0.0.2 fashion.
+
+   NOTE: Bird Internet Routing Daemon seems to dislike peerings on the same IP address
+   it is configured on, even though the remote peer listens on a different TCP port;
+   if Bird listens on 127.0.0.1 then setting up a 127.0.0.2 address on the system and
+   binding pmacctd to it allows the BGP session to come up fine in a 127.0.0.1 <->
+   127.0.0.2 fashion.
  
    In pmacctd, bgp_agent_map does the trick of mapping 0.0.0.0 to the IP address of
    the BGP peer (ie. 127.0.0.1: 'bgp_ip=127.0.0.1 ip=0.0.0.0'); this setup, while
-   generic, was tested working in conjunction with Quagga. Following a relevant
-   fragment of the Quagga configuration:
+   generic, was tested working in conjunction with Quagga and BIRD.
+
+   Following a relevant fragment of the Quagga configuration:
 
    router bgp Y 
     bgp router-id X.X.X.X
@@ -1297,6 +1322,41 @@ b) build NetFlow probe configuration, using pmacctd:
     neighbor 127.0.0.1 port 17917
     neighbor 127.0.0.1 update-source X.X.X.X
    !
+
+   Following a relevant fragment of the BIRD configuration:
+
+   protocol bgp pmacctd46 {
+      description "pmacctd";
+      local 127.0.0.1 as YYYYY;
+      neighbor 127.0.0.2 port 179 as YYYYY;
+      rr client;
+      hold time 90;
+      keepalive time 30;
+      graceful restart;
+
+      ipv4 {
+         next hop self;
+         import filter {
+            reject;
+         };
+
+         export filter {
+            accept;
+         };
+      };
+
+      ipv6 {
+         next hop address 127.0.0.1;
+
+         import filter {
+            reject;
+         };
+
+         export filter {
+            accept;
+         };
+      };
+   }
 
    NOTE: if configuring a BGP neighbor over localhost via Quagga CLI the following
    message is returned: "% Can not configure the local system as neighbor". This
@@ -1417,17 +1477,17 @@ sfprobe_receiver: 192.168.1.1:6343
 
 
 XIV. Quickstart guide to setup the BGP daemon
-BGP can be run as a stand-alone collector daemon (pmbgpd, from 1.6.1) or as a
-thread within one of the traffic accounting daemons (ie. nfacctd). The stand-
-alone daemon is suitable for the Looking-Glass use-case, building BGP xconnects
-and consuming BGP data, real-time or at regular intervals; the thread solution
-is suitable for correlation of BGP with other data sources, ie. NetFlow, IPFIX,
-sFlow, etc. The thread implementation idea is to receive data-plane information,
-ie. via NetFlow, sFlow, etc., and control plane information, ie. full routing
-tables via BGP, from edge routers. Per-peer BGP RIBs are maintained to ensure
-local views of the network, a behaviour close to that of a BGP route-server.
-In case of routers with default-only or partial BGP views, the default route
-can be followed up (bgp_default_follow); also it might be desirable in certain
+BGP can be run as a stand-alone collector daemon (pmbgpd) or as a thread within
+one of the traffic accounting daemons (ie. nfacctd). The stand-alone daemon is
+suitable for the Looking-Glass use-case, building BGP xconnects and consuming
+BGP data, real-time or at regular intervals; the thread solution is suitable
+for correlation of BGP with other data sources, ie. NetFlow, IPFIX, sFlow, etc.
+The thread implementation idea is to receive data-plane information, ie. via
+NetFlow, sFlow, etc., and control plane information, ie. full routing tables
+via BGP, from edge routers. Per-peer BGP RIBs are maintained to ensure local
+views of the network, a behaviour close to that of a BGP route-server. In case
+of routers with default-only or partial BGP views, the default route can be
+followed up (bgp_default_follow); also it might be desirable in certain
 situations, for example trading-off resources to accuracy, to map one or a set
 of flow agents to a BGP peer (bgp_agent_map). 
 
@@ -1463,13 +1523,13 @@ BGP tables to disk every 300 secs with file names embedding the BGP peer info
 
 The BGP implementation, by default, reads the remote ASN upon receipt of a BGP
 OPEN message and dynamically presents itself as part of the same ASN - this is
-to ensure an iBGP relationship is established even in multi ASN scenarios. As
-of 1.6.2, it is possible to put pmacct in a specific ASN of choice by using the
-bgp_daemon_as configuration directive, for example, to establish an eBGP kind
-of relationship. Also, the daemon acts as a passive BGP neighbor and hence will
-never try to re-establish a fallen peering session. For debugging purposes
-related to the BGP feed(s), bgp_daemon_msglog_* configuration directives can be
-enabled in order to log BGP messaging.
+to ensure an iBGP relationship is established, even in multi ASN scenarios. It
+is possible to put pmacct in a specific ASN of choice by using the bgp_daemon_as
+configuration directive, for example, to establish an eBGP kind of relationship.
+Also, the daemon acts as a passive BGP neighbor and hence will never try to
+re-establish a fallen peering session. For debugging purposes related to the
+BGP feed(s), bgp_daemon_msglog_* configuration directives can be enabled in
+order to log BGP messaging.
 
 XIVa. Limiting AS-PATH and BGP community attributes length
 AS-PATH and BGP communities can get easily long when represented as strings.
@@ -1773,14 +1833,13 @@ A sample of both the BGP msglog and dump formats are captured in the following
 document: docs/MSGLOG_DUMP_FORMATS
 
 XIVg. Example: querying the BGP daemon via the Looking Glass server.
-Starting with release 1.7.1 pmbgpd, the pmacct BGP standalone daemon, includes
-a Looking Glass server to query available BGP RIBs. The server is asyncronous
-and uses ZeroMQ as transport layer to serve incoming queries. The LG server can
-be configured as follows:
+The Looking Glass server allows to query RIBs stored in the BGP daemon. The
+server is asyncronous and uses ZeroMQ as transport layer to serve incoming
+queries. The LG server can be configured as follows:
 
 bgp_daemon_lg: true
-bgp_daemon_lg_user: pmacct
-bgp_daemon_lg_passwd: arealsmartpwd 
+! bgp_daemon_lg_user: pmacct
+! bgp_daemon_lg_passwd: arealsmartpwd 
 
 This configuration will enable plain authentication and will make the server
 listen on all interfaces on port 17900/TCP. Following an example of querying
@@ -1800,16 +1859,19 @@ shell> examples/lg/pmbgp.py -a 192.168.2.0/24 -r 192.168.1.1
 Request/Reply Looking Glass formats are documented in 'docs/LOOKING_GLASS_FORMAT'.
 
 XIVh. Example: BGP Xconnects 
-Starting with release 1.7.1, pmbgpd, the pmacct BGP standalone daemon, includes
-a new BGP xconnect feature to map BGP peers (ie. PE routers) to BGP collectors
-(ie. nfacctd, sfacctd). The aim is to facilitate operations when re-sizing/re-
-balancing the collection infrastructure without impacting (ie. re-configuring)
-BGP peers. A few caveats apply: 1) mapping works only against the IP source
-address and not the BGP Router ID, 2) only 1:1 relationships can be formed
-(ie. this is about cross-connecting, not replication) and 3) only one session
-per BGP peer is supported (ie. multiple BGP agents are running on the same IP
-address or NAT traversal scenarios are not supported [yet]). The feature can
-be configured as follows:
+pmbgpd, the pmacct BGP standalone daemon, includes a BGP xconnect feature
+to map BGP peers (ie. routers) to BGP collectors (ie. nfacctd, sfacctd),
+acting essentially as a BGP proxy. While the proxying is non-transparent,
+BGP peers can be still identified by rheir BGP Router-ID. The aim of this
+feature is to facilitate operations, ie. point all BGP Peers to a single
+(or a couple) IP address(es) and facilitate re-sizing/re-balancing of the
+collection infrastructure without impacting (ie. re-configuring) BGP peers.
+A few caveats apply: 1) mapping works only against the IP source address
+and not the BGP Router ID, 2) only 1:1 relationships can be formed (ie.
+this is about cross-connecting sessions, not replication) and 3) only one
+session per BGP peer is supported (ie. multiple BGP agents are running on
+the same IP address or NAT traversal scenarios are not supported [yet]).
+The feature can be configured as follows:
 
 bgp_daemon_xconnect_map: /path/to/bgp_xconnects.map
 
@@ -1830,10 +1892,14 @@ collector (please get in touch if interested). An alternative to the use of
 pmbgpd is NAT/masquerading; in this context, pmbgpd brings the advantage of
 running fully in user-space.
 
-In alternative to BGP xconnects, if supported and if enabled on the system,
-a simpler alternative may be available: the SO_REUSEPORT feature can be
-leveraged on Linux: it allows multiple daemons to bind the same local address
-and port in order to load-balance processing of incoming packets. This is
+If supported and if enabled on the system, the SO_REUSEPORT feature can be
+leveraged on Linux: it allows multiple daemons to bind to the same local
+address and port in order to load-balance processing of incoming packets.
+SO_REUSEPORT can be used in alternative to BGP xconnects, ie. to simplify
+the deployment on a single node, or in conjunction with BGP xconnects, ie.
+for massive multi-node scale-out. 
+
+Leveraging SO_REUSEPORT, when used in alternative to BGP xconnects, may be
 best combined with a list of allowed IP addresses, ie. bgp_daemon_allow_file,
 to explicitely wire peers to collectors. Below a reference to a presentation
 of such feature:
@@ -1841,8 +1907,13 @@ of such feature:
 https://domsch.com/linux/lpc2010/Scaling_techniques_for_servers_with_high_connection%20rates.pdf
 
 To enable SO_REUSEPORT on a Linux system 'sysctl net.core.allow_reuseport=1'.
-Below an example for nfacctd with BGP thread (but indeed this is applicable
-to sfacctd, pmbgpd, pmbmpd as well):
+Also the processes must be launched by the same user.
+
+When SO_REUSEPORT is used in conjunction with BGP xconnects there is virtually
+no config change to make (except perhaps the sensible decision to use different
+'logfile' per pmbgpd daemon); below instead an example for SO_REUSEPORT in
+alternative to BGP xconnects where a few nfacctd daemons are deployed each
+running the BGP thread (indeed this is applicable to sfacctd as well):
 
 Daemon #1:
 
@@ -1877,6 +1948,18 @@ bgp_daemon_port: 179
 bgp_daemon_allow_file: /path/to/allow-2.map
 !
 ...
+
+NOTE: when leveraging SO_REUSEPORT for TCP sessions in conjunction with
+allow files the kernel will try to naively balance the sessions over the
+listening daemons; this may take a few connection attempts before wiring
+the session to the right daemon; having an excessive numbers of daemons
+in the pool may slow down the convergence process. 
+
+NOTE: each xconnect requires two file descriptors, one for the inbound
+TCP session, another for the outbound one. Popular default on Linux is
+1024 descriptor per process, effectively limiting the amunt of sessions
+that can be xconnected to approx 500. Such default can be adjusted via
+'ulimit -n'.
 
 For flow protocols, which are transported in UDP, a replication layer is
 needed in front, note the daemon listen on different nfacctd_port in the
@@ -2036,12 +2119,11 @@ against flow-specific primitives. For example: replicate flows from or to MAC
 address X1, X2 .. Xn to receiver Y or replicate flows in VLAN W to receiver
 Z. The feature works by inspecting the original packet and dissecting it as
 needed, one of the most popular use-cases being IXPs replicating flows back
-to the members originating and/or receiving them. From pmacct 1.6.2 the
-feature is available for sFlow; from 1.7.2 the feature is extended to NetFlow
-and IPFIX. Some of the supported primitives are: source and destination MAC
-addresses and input/output interfaces ifindex; the full list is available in
-examples/pretag.map.example (look for "sfacctd when in 'tee' mode" or
-"nfacctd when in 'tee' mode").
+to the members originating and/or receiving them. The feature is available
+for sFlow and NetFlow/IPFIX. Some of the supported primitives are: source/
+destination MAC addresses and input/output interfaces ifindex; the full list
+of primitives is available in examples/pretag.map.example (look for "sfacctd
+when in 'tee' mode" or "nfacctd when in 'tee' mode").
 
 The feature is configured just like selective teeing shown in the previous
 section. Incoming packets are tagged with a pre_tag_map and then matched to a
@@ -2185,17 +2267,18 @@ router isis
 
 
 XVII. Quickstart guide to setup the BMP daemon
-BMP can be run as a stand-alone collector daemon (pmbmpd, from 1.6.1) or as a
-thread within one of the traffic accounting daemons (ie. nfacctd). The stand-
-alone daemon is suitable for consuming BMP data only, real-time or at regular
+BMP can be run as a stand-alone collector daemon (pmbmpd) or as a thread
+within one of the traffic accounting daemons (ie. nfacctd). The stand-alone
+daemon is suitable for consuming BMP data only, real-time or at regular
 intervals; the thread solution is suitable for correlation of BMP with other
 data sources, ie. NetFlow, IPFIX, sFlow, etc.. The implementation bases on
-rfc7854 and adds elements from both draft-ietf-grow-bmp-adj-rib-out and
-draft-ietf-grow-bmp-adj-loc-rib IETF documents. If unfamiliar with BMP, to
-quote rfc7854: "BMP is intended to provide a more convenient interface for
-obtaining route views for research purpose than the screen-scraping approach
-in common use today. The design goals are to keep BMP simple, useful, easily
-implemented, and minimally service-affecting.".
+rfc7854 and is in-sync with most recent RFCs and draft-ietf-grow-bmp-* IETF
+documents (ie. rfc8671, ietf-grow-bmp-local-rib, ietf-grow-bmp-tlv, etc.).
+
+If unfamiliar with BMP, to quote rfc7854: "BMP is intended to provide a more
+convenient interface for obtaining route views for research purpose than the
+screen-scraping approach in common use today. The design goals are to keep
+BMP simple, useful, easily implemented, and minimally service-affecting.".
 
 The BMP daemon currently supports BMP data, events and stats, ie. initiation,
 termination, peer up, peer down, stats and route monitoring messages (that is
@@ -2308,6 +2391,31 @@ routing-options {
 		}
 	}
 }
+
+Following is an example how a Huawei router should be configured in order to
+export BMP data to a collector:
+
+bmp
+ statistics-timer 3600
+ #
+ bmp-session 192.0.2.1
+  tcp connect port 1790
+  connect-interface GigabitEthernet0/3/6
+  #
+  monitor peer 198.51.100.19
+   route-mode ipv4-family vpnv4 adj-rib-in pre-policy
+   route-mode ipv4-family vpnv4 adj-rib-in post-policy
+   route-mode ipv4-family vpnv4 adj-rib-out pre-policy
+   route-mode ipv4-family vpnv4 adj-rib-out post-policy
+  #
+  monitor peer 198.51.100.25
+   route-mode ipv4-family vpnv4 adj-rib-in pre-policy
+   route-mode ipv4-family vpnv4 adj-rib-in post-policy
+   route-mode ipv4-family vpnv4 adj-rib-out pre-policy
+   route-mode ipv4-family vpnv4 adj-rib-out post-policy
+  #
+  monitor vpn-instance A
+   route-mode ipv4-family unicast local-rib
 
 Contribution of further configuration examples for Cisco and Juniper devices
 and/or other relevant vendors is more than welcome.
@@ -2616,7 +2724,48 @@ set_tag=20      ip=B.B.B.B	sample_type=event
 ! ...
 
 
-XXII. Miscellaneous notes and troubleshooting tips
+XXII. Connecting pmacct to a Redis cache
+Since version 1.7.5, pmacct daemons can connect to a Redis cache. The main
+use-case currenly covered is: registering every stable daemon component (ie.
+plugins, threads, etc. but not writers for example) in a table so to have,
+when running a cluster comprising several daemons / components, an olistic
+view of what is currently running and where; shall a component stop running
+or crash it will disappear from the inventory.
+
+Over time it is expected that the amount of use-cases will increase to include
+specific features where one daemon can obtain relevant information about other
+daemons running in the cluster.
+
+Requirement to use the Redis feature plugin is the Hiredis library available
+here: https://github.com/redis/hiredis . Once this is installed, pmacct can
+be configured for compiling. pmacct makes use of pkg-config for finding
+libraries and headers location and checks some default locations, ie.
+/usr/local/lib and /usr/local/include. If this is satisfactory, all you
+should do is just:
+
+shell> ./configure --enable-redis
+
+But, for example, should you have installed Hiedis in /usr/local/redis and
+pkg-config is unable to help, you can supply this non-default location as
+follows (assuming you are running the bash shell):
+
+shell> export REDIS_LIBS="-L/usr/local/redis/lib -lhiredis"
+shell> export EDIS_CFLAGS="-I/usr/local/redis/include"
+shell> ./configure --enable-redis
+
+Following a configuration snippet showing a basic configuration for the
+Redis feature. redis_host points to the Redis cache whereas cluster_*
+directives essentially form a pmacct cluster (cluster_name, every cluster
+should have a different name string, and cluster_id, an unique id inside
+a certain cluster):
+
+cluster_name: prod 
+cluster_id: 1
+!
+redis_host: 127.0.0.1:6379
+
+
+XXIII. Miscellaneous notes and troubleshooting tips
 This chapter will hopefully build up to the point of providing a taxonomy of
 popular cases to troubleshoot by daemon and what to do. Although that is the
 plan, the current format is sparse notes.  
@@ -2723,26 +2872,33 @@ operations, the filtering happens after the raw socket (the one used by tcpdump)
 is served; you can also check with 3rd party equivalent tools or netcat, "nc -l
 -u -p <port>", that the same behaviour is obtained as with pmacct; finally, if
 running on a SELinux enabled system, consider that it could be interfering too;
-3) especially in case of copy/paste of configs or if using a config from a
-production system in lab, disable or double-check values for internal buffering:
+3) when not using ZeroMQ for internal buffering (plugin_pipe_zmq set to true)
+and especially in case of copy/paste of configs or if using a config from a
+production system in lab, disable/double-check values for internal buffering:
 if set too high they will likely retain data internally to the daemon; 4) if
-multiple interfaces are configured on a system, try to disable rp_filtering. See
+multiple interfaces are configured on a system, try to disable rp_filter. See
 http://tldp.org/HOWTO/Adv-Routing-HOWTO/lartc.kernel.rpf.html for more info
-on RP filtering. The value of rp_filter files in /proc must be set to zero in
-order to disable RP filtering. Also, if working on a cloud instance, consider
-often times these are not configured by default to pass traffic through. These
-appear popular issues when replicating flow data with tee_transparent feature
-enabled (that is, packet spoofing); 5) in case aggregate_filter is in use: the
-feature expects a libpcap-style filter as value. BPF filters are sensible to
-both VLAN tags and MPLS labels: if, for example, the traffic is VLAN tagged and
-the value of aggregate_filter is 'src net X.X.X.X/Y', there will be no match
-for VLAN-tagged traffic from src net X.X.X.X/Y; the filter should be re-written
-as 'vlan and src net X.X.X.X/Y'; 6) in case of NetFlow v9/IPFIX collection, two
-protocols that are template-based, the issue may be with templates not being
-received by nfacctd (in which case by enabling debug you may see "Discarded
-NetFlow v9/IPFIX packet (R: unknown template [ .. ]" messages in your logs);
-you can confirm whether templates are being exported/replicated/received with a
-touch of "tshark -d udp.port==<NFv9/IPFIX port>,cflow -R cflow.template_id". 
+on RP filtering. The value of rp_filter files in /proc must be set to zero
+(ie. "echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter") in order to disable
+RP filtering. Also, if working on a cloud instance, consider often times these
+are not configured by default to pass traffic through. These appear popular
+issues when replicating flow data with tee_transparent feature enabled (that
+is, packet spoofing); 5) in case aggregate_filter is in use: the feature expects
+a libpcap-style filter as value. BPF filters are sensible to both VLAN tags and
+MPLS labels: if, for example, the traffic is VLAN tagged and the value of
+aggregate_filter is 'src net X.X.X.X/Y', there will be no match for VLAN-tagged
+traffic from src net X.X.X.X/Y; the filter should be re-written as 'vlan and src
+net X.X.X.X/Y'; 6) in case of NetFlow v9/IPFIX collection, two protocols that
+are template-based, the issue may be with templates not being received by
+nfacctd (in which case by enabling debug you may see "Discarded NetFlow v9/IPFIX
+packet (R: unknown template [ .. ]" messages in your logs); you can confirm
+whether templates are being exported/replicated/received with a touch of
+"tshark -d udp.port==<NFv9/IPFIX port>,cflow -R cflow.template_id -2"; it may
+also happen the opposite: templates are received but no data packets are being
+sent (ie. because sampling is not configured on the actual interfaces on the
+exporting device): in this case tshark would only show periodic data being
+received (ie. every 30 secs, 60 secs, etc.) rather than a more constant stream
+of data.
 
 e) In the case of inconsistent output - inconsistent defined as replaying the
 same set of data, output produced by the daemon differs - of nfacctd/sfacctd:
@@ -2797,35 +2953,35 @@ any lift in the buffering must be also supported by the kernel, adjusting
 
 h) BMP, the BGP Monitoring Protocol, has got drafting traction at IETF. New
 protocol features drive the need for inter-op testing. The BMP play tool
-( https://github.com/paololucente/bmp_play ) is a key piece of software for
-reproducing issues by saving raw BMP packets and allowing to replay them.
-An example of how this can be done, here:
+( https://github.com/paololucente/bmp_play ) is a simple script to record
+and replay raw BMP packets in order to reproduce issues. An example of how
+this can be done, here:
 
 shell 1> bmp_play.py -m record -p 1790 -f bmp.dump
 
 shell 1> bmp_play.py -m play -p 1790 -f bmp.dump -d 127.0.0.1
 
 shell 2> pmbmpd -l 1790 -d -o bmp.log
+
+Alternatively, since version 1.7.5, pmbmpd supports pcap_savefile (-I) to
+replay a pcap trace that includes BMP packets; packets functional to the
+house-keeping of the TCP session are safely ignored and pcap_filter helps
+on replay to trash unrelevant (non BMP) packets.
  
 i) packet classification using the nDPI library is among the new features of
-pmacct 1.7. As with any major and complex feature, it is expected that not
-everything may work great and smooth at the first round of implementation.
-In this section you will find a few tips on how to help providing meaningful
+pmacct 1.7. Following are some tips on how to help by providing meaningful
 report of issues you may be experiencing in this area. 1) Please follow
 guidelines in the section "Quickstart guide to packet classification" of this
-document; 2) avoid generic reporting a-la "it doesn't work" or "there is too
-much unknown traffic" or "i know protocol X is in my traffic mix but it's not
-being classified properly"; 3) it is OK to contact the author directly given
-sensitiveness of data may be involved; 4) it is OK to compare classification
-results achieved with a 3rd party tool also using nDPI for classification; in
-case of different results, show the actual results when reporting the issue
-and please elaborate as much as possible how the comparison was done (ie.
-say how it is being ensured that the two data- sets are the same or as much
-as possible similar); 5) remember that the most effective way troubleshoot
-any issue related to packet classification is by the author being able to
-reproduce the issue or for him to verify first hand the problem: whenever
-possible please share a traffic capture in pcap format or grant remote-access
-to your testbed; 6) excluded from these guidelines are problems related to
+document; 2) please avoid generic reporting; remember that the most effective
+way troubleshoot any issue related to packet classification is by the authors
+being able to reproduce the issue or for them to verify first-hand the issue:
+whenever possible please share a traffic capture in pcap format or grant
+remote-access to your testbed; 3) it is OK to compare classification results
+achieved with a 3rd party tool also using nDPI for classification; in case
+of different results, please show the actual results when reporting the issue
+and please elaborate as much as possible how the comparison was done (ie. say
+how it is being ensured that the two data-sets are the same or as much as
+possible similar); 4) excluded from these guidelines are problems related to
 nDPI but unrelated to classification, ie. memory leaks, performance issues,
-crashes, etc. for which you can follow the other guide lines in this
-"Miscellaneous notes and troubleshooting tips" section.
+crashes, etc. for which you can follow the other guide lines in this document
+in the "Miscellaneous notes and troubleshooting tips" section.

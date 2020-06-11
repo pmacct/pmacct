@@ -16,6 +16,17 @@ DOCUMENTATION
   * examples/: Sample configs, maps, AMQP/Kafka consumers, clients 
   * sql/: SQL documentation, default SQL schemas and customization tips
 
+# USING THE DOCKER IMAGE
+
+With docker installed, just pull the base image and you are ready to go:
+
+```bash
+
+ ~# docker pull pmacct/base:latest
+ ~# docker run -it pmacct/base
+
+```
+
 # BUILDING
 
 - Resolve dependencies, ie.:
@@ -29,6 +40,12 @@ DOCUMENTATION
   * ./configure *[check-out available configure knobs via ./configure --help]* 
   * make
   * make install *[with super-user permission]*
+
+# RELICENSE INITIATIVE
+
+The pmacct project is looking to make its code base available under a more permissive
+BSD-style license. More information about the motivation and process can be found in
+this [announcement](https://www.mail-archive.com/pmacct-discussion@pmacct.net/msg03881.html).
 
 # CONTRIBUTING
 

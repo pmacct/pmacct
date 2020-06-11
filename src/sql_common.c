@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -45,8 +45,8 @@ unsigned char *pipebuf;
 struct db_cache *sql_cache;
 struct db_cache **sql_queries_queue, **sql_pending_queries_queue;
 struct db_cache *collision_queue;
-int cq_ptr, qq_ptr, qq_size, pp_size, pb_size, pn_size, pm_size, pt_size;
-int pc_size, dbc_size, cq_size, pqq_ptr;
+int cq_ptr, sql_qq_ptr, qq_size, sql_pp_size, sql_pb_size, sql_pn_size, sql_pm_size, sql_pt_size;
+int sql_pc_size, sql_dbc_size, cq_size, sql_pqq_ptr;
 struct db_cache lru_head, *lru_tail;
 struct frags where[N_PRIMITIVES+2];
 struct frags values[N_PRIMITIVES+2];
@@ -61,11 +61,11 @@ int glob_dyn_table, glob_dyn_table_time_only; /* last resort for signal handling
 int glob_timeslot; /* last resort for sql handlers */
 
 struct sqlfunc_cb_registry sqlfunc_cbr; 
-void (*insert_func)(struct primitives_ptrs *, struct insert_data *);
+void (*sql_insert_func)(struct primitives_ptrs *, struct insert_data *);
 struct DBdesc p;
 struct DBdesc b;
 struct BE_descs bed;
-struct largebuf envbuf;
+struct largebuf_s envbuf;
 time_t now; /* PostgreSQL */
 
 /* Functions */
@@ -82,13 +82,13 @@ void sql_set_signals()
 void sql_set_insert_func()
 {
   if (config.what_to_count & (COUNT_SUM_HOST|COUNT_SUM_NET))
-    insert_func = sql_sum_host_insert;
-  else if (config.what_to_count & COUNT_SUM_PORT) insert_func = sql_sum_port_insert;
-  else if (config.what_to_count & COUNT_SUM_AS) insert_func = sql_sum_as_insert;
+    sql_insert_func = sql_sum_host_insert;
+  else if (config.what_to_count & COUNT_SUM_PORT) sql_insert_func = sql_sum_port_insert;
+  else if (config.what_to_count & COUNT_SUM_AS) sql_insert_func = sql_sum_as_insert;
 #if defined (HAVE_L2)
-  else if (config.what_to_count & COUNT_SUM_MAC) insert_func = sql_sum_mac_insert;
+  else if (config.what_to_count & COUNT_SUM_MAC) sql_insert_func = sql_sum_mac_insert;
 #endif
-  else insert_func = sql_cache_insert;
+  else sql_insert_func = sql_cache_insert;
 }
 
 void sql_init_maps(struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs,
@@ -125,9 +125,9 @@ void sql_init_global_buffers()
   memset(&lru_head, 0, sizeof(lru_head));
   lru_tail = &lru_head;
 
-  Log(LOG_INFO, "INFO ( %s/%s ): cache entries=%d base cache memory=%luu bytes\n", config.name, config.type,
-        config.sql_cache_entries, ((config.sql_cache_entries * sizeof(struct db_cache)) +
-	(2 * (qq_size * sizeof(struct db_cache *)))));
+  Log(LOG_INFO, "INFO ( %s/%s ): cache entries=%d base cache memory=%lu bytes\n", config.name, config.type,
+        config.sql_cache_entries, (unsigned long)(((config.sql_cache_entries * sizeof(struct db_cache)) +
+	(2 * (qq_size * sizeof(struct db_cache *))))));
 
   pipebuf = (unsigned char *) malloc(config.buffer_size);
   sql_cache = (struct db_cache *) malloc(config.sql_cache_entries*sizeof(struct db_cache));
@@ -150,6 +150,8 @@ void sql_init_global_buffers()
    check */ 
 void sql_init_default_values(struct extra_primitives *extras)
 {
+  memset(empty_mem_area_256b, 0, sizeof(empty_mem_area_256b));
+
   if (config.proc_priority) {
     int ret;
 
@@ -193,16 +195,16 @@ void sql_init_default_values(struct extra_primitives *extras)
     }
   }
 
-  qq_ptr = 0; 
-  pqq_ptr = 0;
+  sql_qq_ptr = 0; 
+  sql_pqq_ptr = 0;
   qq_size = config.sql_cache_entries+(config.sql_refresh_time*REASONABLE_NUMBER);
-  pp_size = sizeof(struct pkt_primitives);
-  pb_size = sizeof(struct pkt_bgp_primitives);
-  pn_size = sizeof(struct pkt_nat_primitives);
-  pm_size = sizeof(struct pkt_mpls_primitives);
-  pt_size = sizeof(struct pkt_tunnel_primitives);
-  pc_size = config.cpptrs.len;
-  dbc_size = sizeof(struct db_cache);
+  sql_pp_size = sizeof(struct pkt_primitives);
+  sql_pb_size = sizeof(struct pkt_bgp_primitives);
+  sql_pn_size = sizeof(struct pkt_nat_primitives);
+  sql_pm_size = sizeof(struct pkt_mpls_primitives);
+  sql_pt_size = sizeof(struct pkt_tunnel_primitives);
+  sql_pc_size = config.cpptrs.len;
+  sql_dbc_size = sizeof(struct db_cache);
 
   /* handling purge preprocessor */
   set_preprocess_funcs(config.sql_preprocess, &prep, PREP_DICT_SQL);
@@ -325,12 +327,12 @@ void sql_cache_modulo(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   u_char *pcust = prim_ptrs->pcust;
   struct pkt_vlen_hdr_primitives *pvlen = prim_ptrs->pvlen;
 
-  idata->hash = cache_crc32((unsigned char *)srcdst, pp_size);
-  if (pbgp) idata->hash ^= cache_crc32((unsigned char *)pbgp, pb_size);
-  if (pnat) idata->hash ^= cache_crc32((unsigned char *)pnat, pn_size);
-  if (pmpls) idata->hash ^= cache_crc32((unsigned char *)pmpls, pm_size);
-  if (ptun) idata->hash ^= cache_crc32((unsigned char *)ptun, pt_size);
-  if (pcust) idata->hash ^= cache_crc32((unsigned char *)pcust, pc_size);
+  idata->hash = cache_crc32((unsigned char *)srcdst, sql_pp_size);
+  if (pbgp) idata->hash ^= cache_crc32((unsigned char *)pbgp, sql_pb_size);
+  if (pnat) idata->hash ^= cache_crc32((unsigned char *)pnat, sql_pn_size);
+  if (pmpls) idata->hash ^= cache_crc32((unsigned char *)pmpls, sql_pm_size);
+  if (ptun) idata->hash ^= cache_crc32((unsigned char *)ptun, sql_pt_size);
+  if (pcust) idata->hash ^= cache_crc32((unsigned char *)pcust, sql_pc_size);
   if (pvlen) idata->hash ^= cache_crc32((unsigned char *)pvlen, (PvhdrSz + pvlen->tot_len));
 
   idata->modulo = idata->hash % config.sql_cache_entries;
@@ -358,14 +360,14 @@ int sql_cache_flush(struct db_cache *queue[], int index, struct insert_data *ida
   else idata->committed_basetime = idata->basetime;
 
   if (!exiting) {
-    for (j = 0, pqq_ptr = 0; j < index; j++) {
+    for (j = 0, sql_pqq_ptr = 0; j < index; j++) {
       if (new_basetime && queue[j]->basetime+delay >= idata->basetime) {
-        sql_pending_queries_queue[pqq_ptr] = queue[j];
-        pqq_ptr++;
+        sql_pending_queries_queue[sql_pqq_ptr] = queue[j];
+        sql_pqq_ptr++;
       }
       else if (!new_basetime && queue[j]->basetime+delay > idata->basetime) {
-        sql_pending_queries_queue[pqq_ptr] = queue[j];
-        pqq_ptr++;
+        sql_pending_queries_queue[sql_pqq_ptr] = queue[j];
+        sql_pqq_ptr++;
       }
       else queue[j]->valid = SQL_CACHE_COMMITTED;
     }
@@ -454,7 +456,7 @@ void sql_cache_handle_flush_event(struct insert_data *idata, time_t *refresh_dea
       pm_setproctitle("%s %s [%s]", config.type, "Plugin -- DB Writer", config.name);
       config.is_forked = TRUE;
 
-      if (qq_ptr) {
+      if (sql_qq_ptr) {
         if (dump_writers_get_flags() == CHLD_WARNING) sql_db_fail(&p);
         if (!strcmp(config.type, "mysql"))
           (*sqlfunc_cbr.connect)(&p, config.sql_host);
@@ -462,10 +464,10 @@ void sql_cache_handle_flush_event(struct insert_data *idata, time_t *refresh_dea
           (*sqlfunc_cbr.connect)(&p, NULL);
       }
 
-      /* qq_ptr check inside purge function along with a Log() call */
-      (*sqlfunc_cbr.purge)(sql_queries_queue, qq_ptr, idata);
+      /* sql_qq_ptr check inside purge function along with a Log() call */
+      (*sqlfunc_cbr.purge)(sql_queries_queue, sql_qq_ptr, idata);
 
-      if (qq_ptr) (*sqlfunc_cbr.close)(&bed);
+      if (sql_qq_ptr) (*sqlfunc_cbr.close)(&bed);
 
       if (config.sql_trigger_exec) {
         if (idata->now > idata->triggertime) sql_trigger_exec(config.sql_trigger_exec);
@@ -481,7 +483,7 @@ void sql_cache_handle_flush_event(struct insert_data *idata, time_t *refresh_dea
   }
   else Log(LOG_WARNING, "WARN ( %s/%s ): Maximum number of writer processes reached (%d).\n", config.name, config.type, dump_writers_get_active());
 
-  if (pqq_ptr) sql_cache_flush_pending(sql_pending_queries_queue, pqq_ptr, idata);
+  if (sql_pqq_ptr) sql_cache_flush_pending(sql_pending_queries_queue, sql_pqq_ptr, idata);
   gettimeofday(&idata->flushtime, NULL);
   while (idata->now > *refresh_deadline)
     *refresh_deadline += config.sql_refresh_time;
@@ -493,13 +495,18 @@ void sql_cache_handle_flush_event(struct insert_data *idata, time_t *refresh_dea
 
   idata->new_basetime = FALSE;
   glob_new_basetime = FALSE;
-  qq_ptr = pqq_ptr;
-  memcpy(sql_queries_queue, sql_pending_queries_queue, qq_ptr*sizeof(struct db_cache *));
+  sql_qq_ptr = sql_pqq_ptr;
+  memcpy(sql_queries_queue, sql_pending_queries_queue, sql_qq_ptr*sizeof(struct db_cache *));
 
   if (reload_map) {
     load_networks(config.networks_file, &nt, &nc);
     load_ports(config.ports_file, pt);
     reload_map = FALSE;
+  }
+
+  if (reload_log) {
+    reload_logs();
+    reload_log = FALSE;
   }
 }
 
@@ -766,9 +773,9 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   }
 
   if (insert_status == SQL_INSERT_INSERT) {
-    if (qq_ptr < qq_size) {
-      sql_queries_queue[qq_ptr] = Cursor;
-      qq_ptr++;
+    if (sql_qq_ptr < qq_size) {
+      sql_queries_queue[sql_qq_ptr] = Cursor;
+      sql_qq_ptr++;
     }
     else SafePtr = Cursor;
   
@@ -777,10 +784,10 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   
     if (pbgp) {
       if (!Cursor->pbgp) {
-        Cursor->pbgp = (struct pkt_bgp_primitives *) malloc(pb_size);
+        Cursor->pbgp = (struct pkt_bgp_primitives *) malloc(sql_pb_size);
         if (!Cursor->pbgp) goto safe_action;
       }
-      memcpy(Cursor->pbgp, pbgp, pb_size);
+      memcpy(Cursor->pbgp, pbgp, sql_pb_size);
     }
     else {
       if (Cursor->pbgp) free(Cursor->pbgp);
@@ -789,10 +796,10 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
 
     if (pnat) {
       if (!Cursor->pnat) {
-        Cursor->pnat = (struct pkt_nat_primitives *) malloc(pn_size);
+        Cursor->pnat = (struct pkt_nat_primitives *) malloc(sql_pn_size);
         if (!Cursor->pnat) goto safe_action;
       }
-      memcpy(Cursor->pnat, pnat, pn_size);
+      memcpy(Cursor->pnat, pnat, sql_pn_size);
     }
     else {
       if (Cursor->pnat) free(Cursor->pnat);
@@ -801,10 +808,10 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   
     if (pmpls) {
       if (!Cursor->pmpls) {
-        Cursor->pmpls = (struct pkt_mpls_primitives *) malloc(pm_size);
+        Cursor->pmpls = (struct pkt_mpls_primitives *) malloc(sql_pm_size);
         if (!Cursor->pmpls) goto safe_action;
       }
-      memcpy(Cursor->pmpls, pmpls, pm_size);
+      memcpy(Cursor->pmpls, pmpls, sql_pm_size);
     }
     else {
       if (Cursor->pmpls) free(Cursor->pmpls);
@@ -813,10 +820,10 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
 
     if (ptun) {
       if (!Cursor->ptun) {
-        Cursor->ptun = (struct pkt_tunnel_primitives *) malloc(pt_size);
+        Cursor->ptun = (struct pkt_tunnel_primitives *) malloc(sql_pt_size);
         if (!Cursor->ptun) goto safe_action;
       }
-      memcpy(Cursor->ptun, ptun, pt_size);
+      memcpy(Cursor->ptun, ptun, sql_pt_size);
     }
     else {
       if (Cursor->ptun) free(Cursor->ptun);
@@ -825,10 +832,10 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
   
     if (pcust) {
       if (!Cursor->pcust) {
-        Cursor->pcust = malloc(pc_size);
+        Cursor->pcust = malloc(sql_pc_size);
         if (!Cursor->pcust) goto safe_action;
       }
-      memcpy(Cursor->pcust, pcust, pc_size);
+      memcpy(Cursor->pcust, pcust, sql_pc_size);
     }
     else {
       if (Cursor->pcust) free(Cursor->pcust);
@@ -941,7 +948,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
 
     Log(LOG_INFO, "INFO ( %s/%s ): Finished cache entries (ie. sql_cache_entries). Purging.\n", config.name, config.type);
   
-    if (qq_ptr) sql_cache_flush(sql_queries_queue, qq_ptr, idata, FALSE); 
+    if (sql_qq_ptr) sql_cache_flush(sql_queries_queue, sql_qq_ptr, idata, FALSE); 
 
     dump_writers_count();
     if (dump_writers_get_flags() != CHLD_ALERT) {
@@ -952,10 +959,10 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
         pm_setproctitle("%s [%s]", "SQL Plugin -- DB Writer (urgent)", config.name);
 	config.is_forked = TRUE;
   
-        if (qq_ptr) {
+        if (sql_qq_ptr) {
           if (dump_writers_get_flags() == CHLD_WARNING) sql_db_fail(&p);
           (*sqlfunc_cbr.connect)(&p, config.sql_host);
-          (*sqlfunc_cbr.purge)(sql_queries_queue, qq_ptr, idata);
+          (*sqlfunc_cbr.purge)(sql_queries_queue, sql_qq_ptr, idata);
           (*sqlfunc_cbr.close)(&bed);
         }
   
@@ -969,12 +976,12 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
     }
     else Log(LOG_WARNING, "WARN ( %s/%s ): Maximum number of writer processes reached (%d).\n", config.name, config.type, dump_writers_get_active());
   
-    qq_ptr = pqq_ptr;
+    sql_qq_ptr = sql_pqq_ptr;
     memcpy(sql_queries_queue, sql_pending_queries_queue, sizeof(*sql_queries_queue));
 
     if (SafePtr) {
-      sql_queries_queue[qq_ptr] = Cursor;
-      qq_ptr++;
+      sql_queries_queue[sql_qq_ptr] = Cursor;
+      sql_qq_ptr++;
     }
     else {
       Cursor = &sql_cache[idata->modulo];
@@ -1098,13 +1105,13 @@ void sql_exit_gracefully(int signum)
   if (config.sql_backup_host) idata.recover = TRUE;
   if (config.sql_locking_style) idata.locks = sql_select_locking_style(config.sql_locking_style);
 
-  sql_cache_flush(sql_queries_queue, qq_ptr, &idata, TRUE);
+  sql_cache_flush(sql_queries_queue, sql_qq_ptr, &idata, TRUE);
 
   dump_writers_count();
   if (dump_writers_get_flags() != CHLD_ALERT) {
     if (dump_writers_get_flags() == CHLD_WARNING) sql_db_fail(&p);
     (*sqlfunc_cbr.connect)(&p, config.sql_host);
-    (*sqlfunc_cbr.purge)(sql_queries_queue, qq_ptr, &idata);
+    (*sqlfunc_cbr.purge)(sql_queries_queue, sql_qq_ptr, &idata);
     (*sqlfunc_cbr.close)(&bed);
   }
   else Log(LOG_WARNING, "WARN ( %s/%s ): Maximum number of writer processes reached (%d).\n", config.name, config.type, dump_writers_get_active());
@@ -2955,8 +2962,7 @@ int sql_evaluate_primitives(int primitive)
       cp_entry = &config.cpptrs.primitive[cp_idx];
       strncat(insert_clause, cp_entry->name, SPACELEFT(insert_clause));
       strncat(where[primitive].string, cp_entry->name, SPACELEFT(where[primitive].string));
-      if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_UINT ||
-	  cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_HEX) {
+      if (cp_entry->ptr->semantics == CUSTOM_PRIMITIVE_TYPE_UINT) {
 	strncat(where[primitive].string, "=%s", SPACELEFT(where[primitive].string));
         strncat(values[primitive].string, "%s", SPACELEFT(values[primitive].string));
       }
@@ -3485,7 +3491,6 @@ int sql_compose_static_set(int have_flows)
 {
   int set_primitives=0;
 
-#if defined HAVE_64BIT_COUNTERS
   strncpy(set[set_primitives].string, "SET packets=packets+%llu, bytes=bytes+%llu", SPACELEFT(set[set_primitives].string));
   set[set_primitives].type = COUNT_INT_COUNTERS;
   set[set_primitives].handler = count_counters_setclause_handler;
@@ -3498,20 +3503,6 @@ int sql_compose_static_set(int have_flows)
     set[set_primitives].handler = count_flows_setclause_handler;
     set_primitives++;
   }
-#else
-  strncpy(set[set_primitives].string, "SET packets=packets+%u, bytes=bytes+%u", SPACELEFT(set[set_primitives].string));
-  set[set_primitives].type = COUNT_INT_COUNTERS;
-  set[set_primitives].handler = count_counters_setclause_handler;
-  set_primitives++;
-
-  if (have_flows) {
-    strncpy(set[set_primitives].string, ", ", SPACELEFT(set[set_primitives].string));
-    strncat(set[set_primitives].string, "flows=flows+%u", SPACELEFT(set[set_primitives].string));
-    set[set_primitives].type = COUNT_INT_FLOWS;
-    set[set_primitives].handler = count_flows_setclause_handler;
-    set_primitives++;
-  }
-#endif
 
   if (config.what_to_count & COUNT_TCPFLAGS) {
     strncpy(set[set_primitives].string, ", ", SPACELEFT(set[set_primitives].string));

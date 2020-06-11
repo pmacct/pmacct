@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -199,6 +199,8 @@ struct data_hdr_v9 {
 
 #define NF9_FORWARDING_STATUS           89
 /* ... */
+#define NF9_LAYER2_PKT_SECTION_DATA	104
+/* ... */
 #define NF9_PEER_DST_AS			128
 #define NF9_PEER_SRC_AS			129
 #define NF9_EXPORTER_IPV4_ADDRESS	130
@@ -210,6 +212,8 @@ struct data_hdr_v9 {
 #define NF9_LAST_SWITCHED_SEC		151
 #define NF9_FIRST_SWITCHED_MSEC		152
 #define NF9_LAST_SWITCHED_MSEC		153
+#define NF9_FIRST_SWITCHED_USEC		154
+#define NF9_LAST_SWITCHED_USEC		155
 /* ... */
 #define NF9_FIRST_SWITCHED_DELTA_MICRO	158
 #define NF9_LAST_SWITCHED_DELTA_MICRO	159
@@ -486,7 +490,7 @@ struct NF_dissect {
 
 /* functions */
 extern void process_v5_packet(unsigned char *, u_int16_t, struct packet_ptrs *, struct plugin_requests *, u_int16_t, struct NF_dissect *);
-extern void process_v9_packet(unsigned char *, u_int16_t, struct packet_ptrs_vector *, struct plugin_requests *, u_int16_t, struct NF_dissect *);
+extern void process_v9_packet(unsigned char *, u_int16_t, struct packet_ptrs_vector *, struct plugin_requests *, u_int16_t, struct NF_dissect *, int *);
 extern void process_raw_packet(unsigned char *, u_int16_t, struct packet_ptrs_vector *, struct plugin_requests *);
 extern u_int8_t NF_evaluate_flow_type(struct template_cache_entry *, struct packet_ptrs *);
 extern u_int16_t NF_evaluate_direction(struct template_cache_entry *, struct packet_ptrs *);

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -39,6 +39,9 @@
 #endif
 #ifdef WITH_KAFKA
 #include "kafka_plugin.h"
+#endif
+#ifdef WITH_REDIS
+#include "hiredis/hiredis.h"
 #endif
 #include "pmacct-data.h"
 #include "ip_flow.h"
@@ -585,7 +588,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if ((type == DYN_STR_SQL_TABLE || type == DYN_STR_PRINT_FILE) &&
 	     !strncmp(ptr_var, hst_string, var_len)) {
@@ -607,7 +610,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if (!strncmp(ptr_var, psi_string, var_len)) {
       char empty_peer_src_ip[] = "null";
@@ -633,7 +636,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if (!strncmp(ptr_var, tag_string, var_len)) {
       pm_id_t zero_tag = 0;
@@ -655,7 +658,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if (!strncmp(ptr_var, tag2_string, var_len)) {
       pm_id_t zero_tag = 0;
@@ -677,7 +680,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if (!strncmp(ptr_var, post_tag_string, var_len)) {
       int len;
@@ -697,7 +700,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if (!strncmp(ptr_var, post_tag2_string, var_len)) {
       int len;
@@ -717,7 +720,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, src_host_string, var_len)) {
       char empty_src_host[] = "null";
@@ -743,7 +746,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, dst_host_string, var_len)) {
       char empty_dst_host[] = "null";
@@ -769,7 +772,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, src_port_string, var_len)) {
       u_int16_t zero_port = 0;
@@ -791,7 +794,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, dst_port_string, var_len)) {
       u_int16_t zero_port = 0;
@@ -813,7 +816,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, proto_string, var_len)) {
       int null_proto = -1;
@@ -835,7 +838,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
     else if ((type == DYN_STR_KAFKA_PART) && !strncmp(ptr_var, in_iface_string, var_len)) {
       int null_in_iface = 0;
@@ -857,7 +860,7 @@ int handle_dynname_internal_strings(char *new, int newlen, char *old, struct pri
       *ptr_start = '\0';
 
       if (len >= rem_len) return ERR;
-      strncat(new, buf, len);
+      strncat(new, buf, rem_len);
     }
 
     if (sub_len) ptr_substr = ptr_var + sub_len;
@@ -1558,13 +1561,13 @@ void set_default_preferences(struct configuration *cfg)
     if (!cfg->nfacctd_as) cfg->nfacctd_as = NF_AS_KEEP;
     set_truefalse_nonzero(&cfg->nfacctd_disable_checks);
   }
-  if (!cfg->nfacctd_bgp_peer_as_src_type) cfg->nfacctd_bgp_peer_as_src_type = BGP_SRC_PRIMITIVES_KEEP;
-  if (!cfg->nfacctd_bgp_src_std_comm_type) cfg->nfacctd_bgp_src_std_comm_type = BGP_SRC_PRIMITIVES_KEEP;
-  if (!cfg->nfacctd_bgp_src_ext_comm_type) cfg->nfacctd_bgp_src_ext_comm_type = BGP_SRC_PRIMITIVES_KEEP;
-  if (!cfg->nfacctd_bgp_src_lrg_comm_type) cfg->nfacctd_bgp_src_lrg_comm_type = BGP_SRC_PRIMITIVES_KEEP;
-  if (!cfg->nfacctd_bgp_src_as_path_type) cfg->nfacctd_bgp_src_as_path_type = BGP_SRC_PRIMITIVES_KEEP;
-  if (!cfg->nfacctd_bgp_src_local_pref_type) cfg->nfacctd_bgp_src_local_pref_type = BGP_SRC_PRIMITIVES_KEEP;
-  if (!cfg->nfacctd_bgp_src_med_type) cfg->nfacctd_bgp_src_med_type = BGP_SRC_PRIMITIVES_KEEP;
+  if (!cfg->bgp_daemon_peer_as_src_type) cfg->bgp_daemon_peer_as_src_type = BGP_SRC_PRIMITIVES_KEEP;
+  if (!cfg->bgp_daemon_src_std_comm_type) cfg->bgp_daemon_src_std_comm_type = BGP_SRC_PRIMITIVES_KEEP;
+  if (!cfg->bgp_daemon_src_ext_comm_type) cfg->bgp_daemon_src_ext_comm_type = BGP_SRC_PRIMITIVES_KEEP;
+  if (!cfg->bgp_daemon_src_lrg_comm_type) cfg->bgp_daemon_src_lrg_comm_type = BGP_SRC_PRIMITIVES_KEEP;
+  if (!cfg->bgp_daemon_src_as_path_type) cfg->bgp_daemon_src_as_path_type = BGP_SRC_PRIMITIVES_KEEP;
+  if (!cfg->bgp_daemon_src_local_pref_type) cfg->bgp_daemon_src_local_pref_type = BGP_SRC_PRIMITIVES_KEEP;
+  if (!cfg->bgp_daemon_src_med_type) cfg->bgp_daemon_src_med_type = BGP_SRC_PRIMITIVES_KEEP;
 }
 
 void set_shadow_status(struct packet_ptrs *pptrs)
@@ -1591,7 +1594,7 @@ void *pm_malloc(size_t size)
 
   obj = (unsigned char *) malloc(size);
   if (!obj) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to grab enough memory (requested: %lu bytes). Exiting ...\n",
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to grab enough memory (requested: %zu bytes). Exiting ...\n",
     config.name, config.type, size);
     exit_gracefully(1);
   }
@@ -1821,11 +1824,11 @@ int evaluate_tags(struct pretag_filter *filter, pm_id_t tag)
 
 int evaluate_labels(struct pretag_label_filter *filter, pt_label_t *label)
 {
-  char null_label[] = "null";
   int index;
+  char *null_label = "null";
 
   if (filter->num == 0) return FALSE; /* no entries in the filter array: tag filtering disabled */
-  if (!label->val) label->val = null_label; 
+  if (!label->val) label->val = strdup(null_label);
 
   for (index = 0; index < filter->num; index++) {
     if (!memcmp(filter->table[index].v, label->val, filter->table[index].len)) return (FALSE | filter->table[index].neg);
@@ -1883,6 +1886,9 @@ void version_daemon(char *header)
 #endif
 #ifdef WITH_ZMQ
   printf("ZeroMQ %u.%u.%u\n", ZMQ_VERSION_MAJOR, ZMQ_VERSION_MINOR, ZMQ_VERSION_PATCH); 
+#endif
+#ifdef WITH_REDIS
+  printf("Redis %u.%u.%u\n", HIREDIS_MAJOR, HIREDIS_MINOR, HIREDIS_PATCH);
 #endif
 #ifdef WITH_AVRO
   printf("avro-c\n");
@@ -2641,35 +2647,6 @@ int vlen_prims_delete(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc /*, o
   return ret;
 }
 
-void replace_string(char *str, int string_len, char *var, char *value)
-{
-  char *ptr_start, *ptr_end;
-  char buf[string_len];
-  int ptr_len, len;
-
-  if (!str || !var || !value) return;
-
-  if (!strchr(str, '$')) return;
-
-  if (string_len < ((strlen(str) + strlen(value)) - strlen(var))) return;
-
-  ptr_start = strstr(str, var);
-  if (ptr_start) {
-    len = strlen(ptr_start);
-    ptr_end = ptr_start;
-    ptr_len = strlen(var);
-    ptr_end += ptr_len;
-    len -= ptr_len;
-
-    snprintf(buf, string_len, "%s", value);
-    strncat(buf, ptr_end, len);
-
-    len = strlen(buf);
-    *ptr_start = '\0';
-    strncat(str, buf, len);
-  }
-}
-
 int delete_line_from_file(int index, char *path)
 {
   int len = strlen(path) + 5;
@@ -2986,7 +2963,12 @@ void generate_random_string(char *s, const int len)
   s[len] = '\0';
 }
 
-void open_pcap_savefile(struct pcap_device *dev_ptr, char *file)
+void pm_pcap_device_initialize(struct pm_pcap_devices *map)
+{
+  memset(map, 0, sizeof(struct pm_pcap_devices));
+}
+
+void open_pcap_savefile(struct pm_pcap_device *dev_ptr, char *file)
 {
   char errbuf[PCAP_ERRBUF_SIZE];
   int idx;
@@ -3002,7 +2984,7 @@ void open_pcap_savefile(struct pcap_device *dev_ptr, char *file)
       dev_ptr->data = &_devices[idx];
   }
 
-  if (!dev_ptr->data->handler) {
+  if (!dev_ptr->data || !dev_ptr->data->handler) {
     Log(LOG_ERR, "ERROR ( %s/core ): pcap_savefile: unsupported link layer.\n", config.name);
     exit_gracefully(1);
   }
@@ -3142,4 +3124,110 @@ char *null_terminate(char *str, int len)
   }
 
   return loc;
+}
+
+char *uint_print(void *value, int len, int flip)
+{
+  char *buf = NULL;
+  ssize_t buflen = 0;
+
+  switch(len) {
+  case 1:
+    {
+      u_int8_t *u8 = (u_int8_t *) value;
+
+      buflen = snprintf(NULL, 0, "%u", (*u8)); 
+      buf = malloc(buflen + 1);
+      snprintf(buf, (buflen + 1), "%u", (*u8));
+    }
+    break;
+  case 2:
+    {
+      u_int16_t u16h, *u16 = (u_int16_t *) value;
+
+      if (flip) u16h = ntohs((*u16));
+      else u16h = (*u16);
+
+      buflen = snprintf(NULL, 0, "%u", u16h);
+      buf = malloc(buflen + 1);
+      snprintf(buf, (buflen + 1), "%u", u16h);
+    }
+    break;
+  case 4:
+    {
+      u_int32_t u32h, *u32 = (u_int32_t *) value;
+
+      if (flip) u32h = ntohl((*u32));
+      else u32h = (*u32);
+
+      buflen = snprintf(NULL, 0, "%u", u32h);
+      buf = malloc(buflen + 1);
+      snprintf(buf, (buflen + 1), "%u", u32h);
+    }
+    break;
+  case 8:
+    {
+      u_int64_t u64h, *u64 = (u_int64_t *) value;
+
+      if (flip) u64h = pm_ntohll((*u64));
+      else u64h = (*u64);
+
+      buflen = snprintf(NULL, 0, "%"PRIu64, u64h);
+      buf = malloc(buflen + 1);
+      snprintf(buf, (buflen + 1), "%"PRIu64, u64h);
+    }
+    break;
+  }
+
+  return buf;
+}
+
+void reload_logs()
+{
+  int logf;
+
+  if (config.syslog) {
+    closelog();
+    logf = parse_log_facility(config.syslog);
+    if (logf == ERR) {
+      config.syslog = NULL;
+      Log(LOG_WARNING, "WARN ( %s/%s ): specified syslog facility is not supported; logging to console.\n", config.name, config.type);
+    }
+    openlog(NULL, LOG_PID, logf);
+    Log(LOG_INFO, "INFO ( %s/%s ): Start logging ...\n", config.name, config.type);
+  }
+
+  if (config.logfile) {
+    fclose(config.logfile_fd);
+    config.logfile_fd = open_output_file(config.logfile, "a", FALSE);
+  }
+}
+
+int is_empty_256b(void *area, int len)
+{
+  if (len <= SRVBUFLEN) {
+    if (!memcmp(area, empty_mem_area_256b, len)) {
+      return TRUE;
+    }
+    else {
+      return FALSE;
+    } 
+  }
+
+  return ERR;
+}
+
+ssize_t pm_recv(int sockfd, void *buf, size_t len, int flags, unsigned int seconds)
+{
+  ssize_t ret;
+
+  if (flags == MSG_WAITALL) {
+    alarm(seconds);
+  }
+
+  ret = recv(sockfd, buf, len, flags);
+
+  alarm(0);
+
+  return ret;
 }

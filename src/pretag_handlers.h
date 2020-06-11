@@ -191,17 +191,17 @@ extern int BTA_lookup_bgp_port_handler(struct packet_ptrs *, void *, void *);
 extern int BITR_mpls_label_bottom_handler(struct packet_ptrs *, void *, void *);
 extern int BITR_mpls_vpn_id_handler(struct packet_ptrs *, void *, void *);
 
-extern void pcap_interfaces_map_validate(char *, struct plugin_requests *);
-extern int pcap_interfaces_map_ifindex_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
-extern int pcap_interfaces_map_ifname_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
-extern int pcap_interfaces_map_direction_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+extern void pm_pcap_interfaces_map_validate(char *, struct plugin_requests *);
+extern int pm_pcap_interfaces_map_ifindex_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+extern int pm_pcap_interfaces_map_ifname_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+extern int pm_pcap_interfaces_map_direction_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 
-extern void pcap_interfaces_map_initialize(struct pcap_interfaces *);
-extern void pcap_interfaces_map_load(struct pcap_interfaces *);
-extern void pcap_interfaces_map_destroy(struct pcap_interfaces *);
-extern void pcap_interfaces_map_copy(struct pcap_interfaces *, struct pcap_interfaces *);
-extern u_int32_t pcap_interfaces_map_lookup_ifname(struct pcap_interfaces *, char *);
-extern struct pcap_interface *pcap_interfaces_map_getentry_by_ifname(struct pcap_interfaces *, char *);
-extern char *pcap_interfaces_map_getnext_ifname(struct pcap_interfaces *, int *);
+extern void pm_pcap_interfaces_map_initialize(struct pm_pcap_interfaces *);
+extern void pm_pcap_interfaces_map_load(struct pm_pcap_interfaces *);
+extern void pm_pcap_interfaces_map_destroy(struct pm_pcap_interfaces *);
+extern void pm_pcap_interfaces_map_copy(struct pm_pcap_interfaces *, struct pm_pcap_interfaces *);
+extern u_int32_t pm_pcap_interfaces_map_lookup_ifname(struct pm_pcap_interfaces *, char *);
+extern struct pm_pcap_interface *pm_pcap_interfaces_map_getentry_by_ifname(struct pm_pcap_interfaces *, char *);
+extern char *pm_pcap_interfaces_map_getnext_ifname(struct pm_pcap_interfaces *, int *);
 
 #endif //PRETAG_HANDLERS_H

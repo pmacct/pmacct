@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -31,9 +31,6 @@
 #include "ip_flow.h"
 #include "classifier.h"
 #include "net_aggr.h"
-
-/* global var */
-struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
 
 /* Functions */
 void usage_daemon(char *prog_name)
@@ -79,6 +76,10 @@ int main(int argc,char **argv, char **envp)
   extern int optind, opterr, optopt;
   int errflag, cp;
 
+#ifdef WITH_REDIS
+  struct p_redis_host redis_host;
+#endif
+
 #if defined HAVE_MALLOPT
   mallopt(M_CHECK_ACTION, 0);
 #endif
@@ -88,6 +89,7 @@ int main(int argc,char **argv, char **envp)
   memset(cfg_cmdline, 0, sizeof(cfg_cmdline));
   memset(&config, 0, sizeof(struct configuration));
   memset(&config_file, 0, sizeof(config_file));
+  memset(empty_mem_area_256b, 0, sizeof(empty_mem_area_256b));
 
   log_notifications_init(&log_notifications);
   config.acct_type = ACCT_PMTELE;
@@ -173,9 +175,6 @@ int main(int argc,char **argv, char **envp)
     }
   }
 
-  Log(LOG_INFO, "INFO ( %s/core ): %s %s (%s)\n", config.name, PMTELEMETRYD_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
-  Log(LOG_INFO, "INFO ( %s/core ): %s\n", config.name, PMACCT_COMPILE_ARGS);
-
   /* post-checks and resolving conflicts */
   if (strlen(config_file)) {
     if (parse_configuration_file(config_file) != SUCCESS)
@@ -237,6 +236,9 @@ int main(int argc,char **argv, char **envp)
     else Log(LOG_INFO, "INFO ( %s/core ): proc_priority set to %d\n", config.name, getpriority(PRIO_PROCESS, 0));
   }
 
+  Log(LOG_INFO, "INFO ( %s/core ): %s %s (%s)\n", config.name, PMTELEMETRYD_USAGE_HEADER, PMACCT_VERSION, PMACCT_BUILD);
+  Log(LOG_INFO, "INFO ( %s/core ): %s\n", config.name, PMACCT_COMPILE_ARGS);
+
   if (strlen(config_file)) {
     char canonical_path[PATH_MAX], *canonical_path_ptr;
 
@@ -279,6 +281,18 @@ int main(int argc,char **argv, char **envp)
 
   sighandler_action.sa_handler = handle_falling_child;
   sigaction(SIGCHLD, &sighandler_action, NULL);
+
+  sighandler_action.sa_handler = PM_sigalrm_noop_handler;
+  sigaction(SIGALRM, &sighandler_action, NULL);
+
+#ifdef WITH_REDIS
+  if (config.redis_host) {
+    char log_id[SHORTBUFLEN];
+
+    snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
+    p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_core_handler);
+  }
+#endif
 
   telemetry_prepare_daemon(&t_data);
   telemetry_daemon(&t_data);

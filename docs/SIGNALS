@@ -5,16 +5,17 @@ SELinux, check for SELinux interferences.
 
 
 Core process:
-SIGCHLD:	used to handle gracefully his loved child processes. This is
-		internal, ie. should not be sent by users. To end gracefully
-		the daemon, look at SIGINT;
+SIGCHLD:	used by the Core Process to handle gracefully his loved child
+		processes (plugins). This is internal, ie. should not be sent
+		by users. To end gracefully the daemon use SIGINT;
 SIGHUP:         reopens the logging infrastructure. Works with both syslog and
 		logfiles; it also works with streamed logging of BGP messages/
 		events (bgp_daemon_msglog_file), streamed logging of BMP data/
 		stats/events (bmp_daemon_msglog_file) and streamed logging of
-		sFlow counters (sfacctd_counter_file); 
+		sFlow counters (sfacctd_counter_file); this signal must be sent
+		to all running processes;
 SIGUSR1:        returns various stats via the configured log output (logfile,
-		syslog) or, if none is configured, console; the syslog level
+		syslog) or, if none is configured, to console; the syslog level
 		used is NOTICE and the facility is selected through config. The
 		feature is implemented for pmacctd, uacctd, nfacctd and sfacctd
 		daemons. Following is an example of the output emitted by flow
@@ -35,10 +36,24 @@ SIGUSR1:        returns various stats via the configured log output (logfile,
 
 		Note: stats for nfacctd and sfacctd daemons are logged at the
 		next useful flow packet being collected (only worth nothing in
-		test and lab scenarios).
+		test and lab scenarios). This signal applies to Core Process
+		only;
 SIGUSR2:	if 'maps_refresh' config directive is enabled, it causes maps
 		to be reloaded (ie. pre_tag_map, bgp_agent_map, etc.). If also
-		indexing is enabled, ie. maps_index, indexes are re-compited. 
+		indexing is enabled, ie. maps_index, indexes are re-computed;
+		depending which process loads a map (ie. Core Process, [some
+		of the active] Plugins, etc.), the signal must target the right
+		process in order to be effective; where a map is computed can
+		be derived by the logs, ie.:
+
+		INFO ( default/core ): [/path/to/primitives.lst] (re)loading map.
+		INFO ( default/core ): [/path/to/primitives.lst] map successfully (re)loaded.
+
+		primitives.lst is loaded by the core process and a signal to
+		reload such map should be sent to the Core Process. There is
+		usually no harm in sending this signal to all processes unless
+		in presence of a use-case to relad different maps at different
+		time intervals. 
 SIGINT:		the signal is used by the Core Process itself and propagated
 		to each running plugin for graceful termination (ie. send BGP
 		NOTIFICATION message to established BGP sessions, close open
@@ -54,8 +69,9 @@ Plugin (SQL, noSQL, memory, print, tee, probes, etc.) processes:
 SIGPIPE:	ignored;
 SIGCHLD:	ignored;
 SIGHUP:		reopens the logging infrastructure. Works with both syslog and
-                logfiles;	
+                logfiles;
 SIGUSR1:	ignored;
 SIGUSR2:        if 'maps_refresh' configuration directive is enabled it causes
-		Ports and Networks maps to be reloaded;
-SIGINT:		causes the process to exit gracefully;	
+		maps loaded by the Plugin to be reloaded;
+SIGINT:		causes the process to exit gracefully; if directed to a specific
+		Plugin, it will cause shut down iof only that one plugin.	

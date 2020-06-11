@@ -1,6 +1,6 @@
 #
 #   pmacct (Promiscuous mode IP Accounting package)
-#   pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+#   pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 #
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -16,9 +16,10 @@
 #   along with this program; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #
-#   pmgrpcd and its components are Copyright (C) 2018-2019 by:
+#   pmgrpcd and its components are Copyright (C) 2018-2020 by:
 #
 #   Matthias Arnold <matthias.arnold@swisscom.com>
+#   Raphaël P. Barazzutti <raphael@barazzutti.net>
 #   Juan Camilo Cardona <jccardona82@gmail.com>
 #   Thomas Graf <thomas.graf@swisscom.com>
 #   Paolo Lucente <paolo@pmacct.net>
@@ -267,6 +268,15 @@ def main():
         help="change the nr of paralell working processes [default: %default]",
     )
     parser.add_option(
+        "-b",
+        "--processpool",
+        action="store",
+        type="int",
+        default=config.get("PMGRPCD", "processpool"),
+        dest="ProcessPool",
+        help="change the nr of processes within the ProcessPool of Kafka [default: %default]",
+    )
+    parser.add_option(
         "-C",
         "--cisco",
         action="store_true",
@@ -382,6 +392,14 @@ def main():
         "-v", action="store_true", dest="version", help="print version of this script"
     )
     parser.add_option(
+        "-F",
+        "--no-flatten",
+        action="store_false",
+        default=config.getboolean("PMGRPCD", "flatten"),
+        dest="flatten",
+        help="disable data flattening [default: %default]",
+    )
+    parser.add_option(
         "-s",
         "--kafkasimple",
         default=config.getboolean("PMGRPCD", "kafkasimple", fallback=False),
@@ -433,9 +451,9 @@ def main():
     configure()
 
 
-    PMGRPCDLOG.info("enable listening to SIGNAL USR1 with Sinalhandler")
+    PMGRPCDLOG.info("enable listening to SIGNAL USR1 with Signalhandler")
     signal.signal(signal.SIGUSR1, signalhandler)
-    PMGRPCDLOG.info("enable listening to SIGNAL USR2 with Sinalhandler")
+    PMGRPCDLOG.info("enable listening to SIGNAL USR2 with Signalhandler")
     signal.signal(signal.SIGUSR2, signalhandler)
 
     # I am going to comment the manually export of data from now, this could go into other script.

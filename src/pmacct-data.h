@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -183,8 +183,8 @@ static const struct _protocols_struct _protocols[] = {
   {"gre", 47},
   {"48", 48},
   {"49", 49},
-  {"ipv6-crypt", 50}, 
-  {"ipv6-auth", 51},
+  {"esp", 50}, 
+  {"ah", 51},
   {"52", 52}, 
   {"53", 53},  
   {"54", 54}, 

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -97,6 +97,10 @@ int rpki_prefix_lookup_node_match_cmp(struct bgp_info *info, struct node_match_c
     }
   }
 
-  nmct2->ret_code = ROA_STATUS_INVALID;
+  /* If we did find a previous Valid, let's not over-write the ret_code */
+  if (nmct2->ret_code != ROA_STATUS_VALID) {
+    nmct2->ret_code = ROA_STATUS_INVALID;
+  }
+
   return TRUE;
 }

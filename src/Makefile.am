@@ -3,7 +3,14 @@ sbin_PROGRAMS =
 bin_PROGRAMS =
 EXTRA_PROGRAMS =
 
-AM_LDFLAGS = @GEOIP_LIBS@ @GEOIPV2_LIBS@ @JANSSON_LIBS@ @AVRO_LIBS@
+AM_LDFLAGS = @GEOIP_LIBS@ @GEOIPV2_LIBS@
+if WITH_JANSSON
+AM_LDFLAGS += @JANSSON_LIBS@
+endif
+if WITH_AVRO
+AM_LDFLAGS += @AVRO_LIBS@
+endif
+
 AM_CFLAGS = $(PMACCT_CFLAGS)
 
 noinst_LTLIBRARIES = libdaemons.la libcommon.la
@@ -12,16 +19,14 @@ libdaemons_la_SOURCES = signals.c util.c plugin_hooks.c		\
         server.c acct.c memory.c cfg.c				\
         imt_plugin.c log.c pkt_handlers.c			\
         cfg_handlers.c net_aggr.c				\
-        bpf_filter.c print_plugin.c				\
-        pretag.c ip_frag.c					\
+        print_plugin.c pretag.c ip_frag.c			\
         ports_aggr.c pretag_handlers.c				\
         ip_flow.c setproctitle.c				\
         classifier.c regexp.c					\
         conntrack.c xflow_status.c				\
 	plugin_common.c preprocess.c				\
-	ll.c nl.c 						\
-	base64.c plugin_cmn_json.c 				\
-	plugin_cmn_avro.c pmsearch.c 				\
+	ll.c nl.c						\
+	base64.c pmsearch.c linklist.c				\
 	thread_pool.c						\
 	plugin_cmn_custom.c network.c pmacct-globals.c
 
@@ -60,7 +65,13 @@ libdaemons_la_SOURCES += sqlite3_plugin.c
 libdaemons_la_LIBADD  += @SQLITE3_LIBS@
 libdaemons_la_CFLAGS  += @SQLITE3_CFLAGS@
 endif
+if WITH_JANSSON
+libdaemons_la_SOURCES += plugin_cmn_json.c
+libdaemons_la_LIBADD  += @JANSSON_LIBS@
+libdaemons_la_CFLAGS  += @JANSSON_CFLAGS@
+endif
 if WITH_AVRO
+libdaemons_la_SOURCES += plugin_cmn_avro.c
 libdaemons_la_LIBADD  += @AVRO_LIBS@
 libdaemons_la_CFLAGS  += @AVRO_CFLAGS@
 if WITH_SERDES
@@ -94,6 +105,12 @@ libdaemons_la_SOURCES += sql_common.c sql_handlers.c sql_common_m.c
 libdaemons_la_CFLAGS += -Wno-error=pointer-sign
 libdaemons_la_LIBADD  += -lm -lz
 endif
+if WITH_REDIS
+libdaemons_la_SOURCES += redis_common.c
+libdaemons_la_LIBADD  += @REDIS_LIBS@
+libdaemons_la_CFLAGS  += @REDIS_CFLAGS@
+endif
+
 
 if USING_TRAFFIC_BINS
 sbin_PROGRAMS += pmacctd nfacctd sfacctd

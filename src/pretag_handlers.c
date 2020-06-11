@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -159,6 +159,7 @@ int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct
   if (!strchr(value, default_sep)) {
     if (pretag_malloc_label(&e->label, len + 1 /* null */)) return TRUE;
     strcpy(e->label.val, value);
+    e->label.len = len;
     e->label.val[e->label.len] = '\0';
   }
   else {
@@ -359,7 +360,7 @@ int BPAS_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value
   }
 
   for (x = 0; e->func[x]; x++);
-  if (config.nfacctd_bgp) {
+  if (config.bgp_daemon) {
     e->func[x] = BPAS_bgp_nexthop_handler;
     e->func_type[x] = PRETAG_BGP_NEXTHOP;
   }
@@ -379,7 +380,7 @@ int BPAS_map_bgp_peer_dst_as_handler(char *filename, struct id_entry *e, char *v
   e->key.peer_dst_as.n = tmp;
 
   for (x = 0; e->func[x]; x++);
-  if (config.nfacctd_bgp) {
+  if (config.bgp_daemon) {
     e->func[x] = BPAS_bgp_peer_dst_as_handler; 
     e->func_type[x] = PRETAG_BGP_NEXTHOP;
   }
@@ -500,7 +501,7 @@ int PT_map_engine_id_handler(char *filename, struct id_entry *e, char *value, st
 
 int PT_map_filter_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
-  struct pcap_device dev;
+  struct pm_pcap_device dev;
   bpf_u_int32 localnet, netmask;  /* pcap library stuff */
   char errbuf[PCAP_ERRBUF_SIZE];
   int x;
@@ -513,7 +514,7 @@ int PT_map_filter_handler(char *filename, struct id_entry *e, char *value, struc
     }
   }
 
-  memset(&dev, 0, sizeof(struct pcap_device));
+  memset(&dev, 0, sizeof(struct pm_pcap_device));
   // XXX: fix if multiple interfaces
   if (devices.list[0].dev_desc) dev.link_type = pcap_datalink(devices.list[0].dev_desc);
   else if (config.uacctd_group) dev.link_type = DLT_RAW;
@@ -1769,10 +1770,10 @@ int pretag_peer_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct bgp_info *info;
   as_t asn = 0;
 
-  if (config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
+  if (config.bgp_daemon_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
     asn = pptrs->bpas;
   }
-  else if (config.nfacctd_bgp_peer_as_src_type & BGP_SRC_PRIMITIVES_BGP) {
+  else if (config.bgp_daemon_peer_as_src_type & BGP_SRC_PRIMITIVES_BGP) {
     if (src_ret) {
       info = (struct bgp_info *) pptrs->bgp_src_info;
       if (info && info->attr) {
@@ -1814,10 +1815,10 @@ int pretag_src_local_pref_handler(struct packet_ptrs *pptrs, void *unused, void 
   struct bgp_info *info;
   u_int32_t local_pref = 0;
 
-  if (config.nfacctd_bgp_src_local_pref_type == BGP_SRC_PRIMITIVES_MAP) {
+  if (config.bgp_daemon_src_local_pref_type == BGP_SRC_PRIMITIVES_MAP) {
     local_pref = pptrs->blp;
   }
-  else if (config.nfacctd_bgp_src_local_pref_type & BGP_SRC_PRIMITIVES_BGP) {
+  else if (config.bgp_daemon_src_local_pref_type & BGP_SRC_PRIMITIVES_BGP) {
     if (src_ret) {
       info = (struct bgp_info *) pptrs->bgp_src_info;
       if (info && info->attr) {
@@ -1854,7 +1855,7 @@ int pretag_src_roa_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
   u_int8_t roa = ROA_STATUS_UNKNOWN;
 
-  if (config.nfacctd_bgp_src_roa_type & BGP_SRC_PRIMITIVES_BGP) {
+  if (config.bgp_daemon_src_roa_type & BGP_SRC_PRIMITIVES_BGP) {
     if (src_ret) roa = pptrs->src_roa;
   }
 
@@ -1979,8 +1980,8 @@ int pretag_mpls_vpn_rd_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   if (dst_ret) {
     info = (struct bgp_info *) pptrs->bgp_dst_info;
-    if (info && info->extra) {
-      ret = memcmp(&entry->key.mpls_vpn_rd.rd, &info->extra->rd, sizeof(rd_t)); 
+    if (info && info->attr_extra) {
+      ret = memcmp(&entry->key.mpls_vpn_rd.rd, &info->attr_extra->rd, sizeof(rd_t)); 
     }
   }
 
@@ -2264,7 +2265,7 @@ int pretag_id_handler(struct packet_ptrs *pptrs, void *id, void *e)
 	if (info->attr->aspath && info->attr->aspath->str) {
 	  *tid = evaluate_first_asn(info->attr->aspath->str);
 
-	  if (!(*tid) && config.nfacctd_bgp_stdcomm_pattern_to_asn) {
+	  if (!(*tid) && config.bgp_daemon_stdcomm_pattern_to_asn) {
 	    char tmp_stdcomms[MAX_BGP_STD_COMMS];
 
 	    if (info->attr->community && info->attr->community->str) {
@@ -2273,7 +2274,7 @@ int pretag_id_handler(struct packet_ptrs *pptrs, void *id, void *e)
 	    }
           }
 
-	  if (!(*tid) && config.nfacctd_bgp_lrgcomm_pattern_to_asn) {
+	  if (!(*tid) && config.bgp_daemon_lrgcomm_pattern_to_asn) {
 	    char tmp_lrgcomms[MAX_BGP_LRG_COMMS];
 
 	    if (info->attr->lcommunity && info->attr->lcommunity->str) {
@@ -2310,8 +2311,11 @@ int pretag_id2_handler(struct packet_ptrs *pptrs, void *id, void *e)
 int pretag_label_handler(struct packet_ptrs *pptrs, void *id, void *e)
 {
   struct id_entry *entry = e;
+  pt_label_t *out_label = (pt_label_t *) id;
 
-  if (id) memcpy(id, &entry->label, sizeof(pt_label_t));
+  if (out_label) {
+    pretag_copy_label(out_label, &entry->label);
+  }
 
   return PRETAG_MAP_RCODE_LABEL; /* cap */
 }
@@ -2597,7 +2601,7 @@ int BPAS_bgp_peer_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *
       if (info->attr->aspath && info->attr->aspath->str) {
         asn = evaluate_first_asn(info->attr->aspath->str);
 
-        if (!asn && config.nfacctd_bgp_stdcomm_pattern_to_asn) {
+        if (!asn && config.bgp_daemon_stdcomm_pattern_to_asn) {
           char tmp_stdcomms[MAX_BGP_STD_COMMS];
 
           if (info->attr->community && info->attr->community->str) {
@@ -2606,7 +2610,7 @@ int BPAS_bgp_peer_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *
           }
         }
 
-        if (!asn && config.nfacctd_bgp_lrgcomm_pattern_to_asn) {
+        if (!asn && config.bgp_daemon_lrgcomm_pattern_to_asn) {
           char tmp_lrgcomms[MAX_BGP_LRG_COMMS];
 
           if (info->attr->lcommunity && info->attr->lcommunity->str) {
@@ -3473,7 +3477,7 @@ int PT_map_index_fdata_peer_src_as_handler(struct id_entry *e, pm_hash_serial_t 
   struct bgp_node *src_ret = (struct bgp_node *) pptrs->bgp_src;
   struct bgp_info *info;
 
-  if (config.nfacctd_bgp_peer_as_src_type & BGP_SRC_PRIMITIVES_MAP) {
+  if (config.bgp_daemon_peer_as_src_type & BGP_SRC_PRIMITIVES_MAP) {
     e->key.peer_src_as.n = pptrs->bpas;
   }
   else {
@@ -3577,7 +3581,7 @@ int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_entry *e, pm_hash_serial_t 
 
     if (dst_ret) {
       info = (struct bgp_info *) pptrs->bgp_dst_info;
-      if (info && info->extra) memcpy(&e->key.mpls_vpn_rd.rd, &info->extra->rd, sizeof(rd_t));
+      if (info && info->attr_extra) memcpy(&e->key.mpls_vpn_rd.rd, &info->attr_extra->rd, sizeof(rd_t));
     }
   }
 
@@ -3800,9 +3804,9 @@ int PT_map_index_fdata_fwdstatus_handler(struct id_entry *e, pm_hash_serial_t *h
   return FALSE;
 }
 
-void pcap_interfaces_map_validate(char *filename, struct plugin_requests *req)
+void pm_pcap_interfaces_map_validate(char *filename, struct plugin_requests *req)
 {
-  struct pcap_interfaces *table = (struct pcap_interfaces *) req->key_value_table;
+  struct pm_pcap_interfaces *table = (struct pm_pcap_interfaces *) req->key_value_table;
   int valid = FALSE;
 
   if (table && table->list) {
@@ -3810,13 +3814,13 @@ void pcap_interfaces_map_validate(char *filename, struct plugin_requests *req)
       valid = TRUE;
 
     if (valid) table->num++;
-    else memset(&table->list[table->num], 0, sizeof(struct pcap_interface));
+    else memset(&table->list[table->num], 0, sizeof(struct pm_pcap_interface));
   }
 }
 
-int pcap_interfaces_map_ifindex_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+int pm_pcap_interfaces_map_ifindex_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
-  struct pcap_interfaces *table = (struct pcap_interfaces *) req->key_value_table;
+  struct pm_pcap_interfaces *table = (struct pm_pcap_interfaces *) req->key_value_table;
   char *endp;
 
   if (table && table->list) {
@@ -3840,9 +3844,9 @@ int pcap_interfaces_map_ifindex_handler(char *filename, struct id_entry *e, char
   return FALSE;
 }
 
-int pcap_interfaces_map_ifname_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+int pm_pcap_interfaces_map_ifname_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
-  struct pcap_interfaces *table = (struct pcap_interfaces *) req->key_value_table;
+  struct pm_pcap_interfaces *table = (struct pm_pcap_interfaces *) req->key_value_table;
 
   if (table && table->list) {
     if (table->num < PCAP_MAX_INTERFACES) {
@@ -3865,9 +3869,9 @@ int pcap_interfaces_map_ifname_handler(char *filename, struct id_entry *e, char 
   return FALSE;
 }
 
-int pcap_interfaces_map_direction_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+int pm_pcap_interfaces_map_direction_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
-  struct pcap_interfaces *table = (struct pcap_interfaces *) req->key_value_table;
+  struct pm_pcap_interfaces *table = (struct pm_pcap_interfaces *) req->key_value_table;
 
   if (table && table->list) {
     if (table->num < PCAP_MAX_INTERFACES) {
@@ -3892,49 +3896,49 @@ int pcap_interfaces_map_direction_handler(char *filename, struct id_entry *e, ch
   return FALSE;
 }
 
-void pcap_interfaces_map_initialize(struct pcap_interfaces *map)
+void pm_pcap_interfaces_map_initialize(struct pm_pcap_interfaces *map)
 {
-  memset(map, 0, sizeof(struct pcap_interfaces));
+  memset(map, 0, sizeof(struct pm_pcap_interfaces));
 
   /* Setting up the list */
-  map->list = malloc((PCAP_MAX_INTERFACES) * sizeof(struct pcap_interface));
+  map->list = malloc((PCAP_MAX_INTERFACES) * sizeof(struct pm_pcap_interface));
   if (!map->list) {
     Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate pcap_interfaces_map. Exiting ...\n", config.name, config.type);
     exit_gracefully(1);
   }
-  else memset(map->list, 0, (PCAP_MAX_INTERFACES) * sizeof(struct pcap_interface));
+  else memset(map->list, 0, (PCAP_MAX_INTERFACES) * sizeof(struct pm_pcap_interface));
 }
 
-void pcap_interfaces_map_load(struct pcap_interfaces *map)
+void pm_pcap_interfaces_map_load(struct pm_pcap_interfaces *map)
 {
   struct plugin_requests req;
-  int pcap_interfaces_allocated = FALSE;
+  int pm_pcap_interfaces_allocated = FALSE;
 
   memset(&req, 0, sizeof(req));
 
   req.key_value_table = (void *) map;
-  load_id_file(MAP_PCAP_INTERFACES, config.pcap_interfaces_map, NULL, &req, &pcap_interfaces_allocated);
+  load_id_file(MAP_PCAP_INTERFACES, config.pcap_interfaces_map, NULL, &req, &pm_pcap_interfaces_allocated);
 }
 
-void pcap_interfaces_map_destroy(struct pcap_interfaces *map)
+void pm_pcap_interfaces_map_destroy(struct pm_pcap_interfaces *map)
 {
   int idx;
 
-  for (idx = 0; idx < map->num; idx++) memset(&map->list[idx], 0, sizeof(struct pcap_interface));
+  for (idx = 0; idx < map->num; idx++) memset(&map->list[idx], 0, sizeof(struct pm_pcap_interface));
 
   map->num = 0;
 }
 
-void pcap_interfaces_map_copy(struct pcap_interfaces *dst, struct pcap_interfaces *src)
+void pm_pcap_interfaces_map_copy(struct pm_pcap_interfaces *dst, struct pm_pcap_interfaces *src)
 {
   int idx;
 
-  for (idx = 0; idx < src->num; idx++) memcpy(&dst->list[idx], &src->list[idx], sizeof(struct pcap_interface)); 
+  for (idx = 0; idx < src->num; idx++) memcpy(&dst->list[idx], &src->list[idx], sizeof(struct pm_pcap_interface)); 
 
   dst->num = src->num;
 }
 
-u_int32_t pcap_interfaces_map_lookup_ifname(struct pcap_interfaces *map, char *ifname)
+u_int32_t pm_pcap_interfaces_map_lookup_ifname(struct pm_pcap_interfaces *map, char *ifname)
 {
   u_int32_t ifindex = 0;
   int idx;
@@ -3949,7 +3953,7 @@ u_int32_t pcap_interfaces_map_lookup_ifname(struct pcap_interfaces *map, char *i
   return ifindex;
 }
 
-struct pcap_interface *pcap_interfaces_map_getentry_by_ifname(struct pcap_interfaces *map, char *ifname)
+struct pm_pcap_interface *pm_pcap_interfaces_map_getentry_by_ifname(struct pm_pcap_interfaces *map, char *ifname)
 {
   int idx;
 
@@ -3962,7 +3966,7 @@ struct pcap_interface *pcap_interfaces_map_getentry_by_ifname(struct pcap_interf
   return NULL;
 }
 
-char *pcap_interfaces_map_getnext_ifname(struct pcap_interfaces *map, int *index)
+char *pm_pcap_interfaces_map_getnext_ifname(struct pm_pcap_interfaces *map, int *index)
 {
   char *ifname = NULL;
   int loc_idx = (*index);

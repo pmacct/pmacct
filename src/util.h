@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -82,7 +82,8 @@ extern void set_sampling_table(struct packet_ptrs_vector *, u_char *);
 extern void set_shadow_status(struct packet_ptrs *);
 extern void set_default_preferences(struct configuration *);
 extern FILE *open_output_file(char *, char *, int);
-extern void open_pcap_savefile(struct pcap_device *, char *);
+extern void open_pcap_savefile(struct pm_pcap_device *, char *);
+extern void pm_pcap_device_initialize(struct pm_pcap_devices *);
 extern void link_latest_output_file(char *, char *);
 extern void close_output_file(FILE *);
 extern int handle_dynname_internal_strings(char *, int, char *, struct primitives_ptrs *, int);
@@ -108,6 +109,10 @@ extern void parse_hostport(const char *, struct sockaddr *, socklen_t *);
 extern bool is_prime(u_int32_t);
 extern u_int32_t next_prime(u_int32_t);
 extern char *null_terminate(char *, int);
+extern char *uint_print(void *, int, int);
+extern void reload_logs();
+extern int is_empty_256b(void *, int);
+extern ssize_t pm_recv(int, void *, size_t, int, unsigned int);
 
 extern char *compose_json_str(void *);
 extern void write_and_free_json(FILE *, void *);
@@ -176,7 +181,6 @@ extern int pm_alphasort(const void *, const void *);
 extern void *pm_tsearch(const void *, void **, int (*compar)(const void *, const void *), size_t);
 extern void pm_tdestroy(void **, void (*free_node)(void *));
 
-extern void replace_string(char *, int, char *, char *);
 extern int delete_line_from_file(int, char *);
 
 extern void generate_random_string(char *, const int);

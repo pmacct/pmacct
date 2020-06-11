@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -26,7 +26,7 @@ struct utpl_field *(*get_ext_db_ie_by_type)(struct template_cache_entry *, u_int
 char sll_mac[2][ETH_ADDR_LEN];
 struct host_addr mcast_groups[MAX_MCAST_GROUPS];
 int reload_map, reload_map_exec_plugins, reload_geoipv2_file;
-int reload_map_bgp_thread, reload_log_bgp_thread;
+int reload_map_bgp_thread, reload_log, reload_log_bgp_thread;
 int reload_map_bmp_thread, reload_log_bmp_thread;
 int reload_map_rpki_thread, reload_log_rpki_thread;
 int reload_map_telemetry_thread, reload_log_telemetry_thread;
@@ -34,16 +34,17 @@ int reload_map_pmacctd;
 int print_stats;
 int reload_log_sf_cnt;
 int data_plugins, tee_plugins;
+int collector_port;
 struct timeval reload_map_tstamp;
 struct child_ctl2 dump_writers;
 int debug;
 struct configuration config; /* global configuration structure */
 struct plugins_list_entry *plugins_list; /* linked list of each plugin configuration */
 pid_t failed_plugins[MAX_N_PLUGINS]; /* plugins failed during startup phase */
-u_char dummy_tlhdr[16];
-struct pcap_device device;
-struct pcap_devices devices, bkp_devices;
-struct pcap_interfaces pcap_if_map, bkp_pcap_if_map;
+u_char dummy_tlhdr[16], empty_mem_area_256b[SRVBUFLEN];
+struct pm_pcap_device device;
+struct pm_pcap_devices devices, bkp_devices;
+struct pm_pcap_interfaces pm_pcap_if_map, pm_bkp_pcap_if_map;
 struct pcap_stat ps;
 struct sigaction sighandler_action;
 

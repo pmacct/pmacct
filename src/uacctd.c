@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -41,20 +41,20 @@
 #include "ndpi/ndpi.h"
 #endif
 
-/* variables to be exported away */
-struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
-
 /* Functions */
 static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
                           struct nflog_data *nfa, void *p)
 {
-  static char* jumbo_container;
+  static u_char *jumbo_container;
   static ssize_t jumbo_container_sz = 0;
   struct pcap_pkthdr hdr;
   char *pkt = NULL;
   ssize_t pkt_len = nflog_get_payload(nfa, &pkt);
-  ssize_t mac_len = nflog_get_msg_packet_hwhdrlen(nfa);
-  struct pcap_callback_data *cb_data = p;
+  ssize_t mac_len = 0;
+  struct pm_pcap_callback_data *cb_data = p;
+
+  if (nflog_get_hwtype(nfa) == DLT_EN10MB)
+    mac_len = nflog_get_msg_packet_hwhdrlen(nfa);
 
   /* Check we can handle this packet */
   switch (nfmsg->nfgen_family) {
@@ -114,9 +114,9 @@ static int nflog_incoming(struct nflog_g_handle *gh, struct nfgenmsg *nfmsg,
     }
   }
 
-  pcap_cb((u_char *) cb_data, &hdr, jumbo_container);
+  pm_pcap_cb((u_char *) cb_data, &hdr, jumbo_container);
 #else
-  pcap_cb((u_char *) cb_data, &hdr, pkt);
+  pm_pcap_cb((u_char *) cb_data, &hdr, pkt);
 #endif
 
   return 0;
@@ -179,7 +179,7 @@ int main(int argc,char **argv, char **envp)
   struct id_table bmed_table;
   struct id_table biss_table;
   struct id_table bta_table;
-  struct pcap_callback_data cb_data;
+  struct pm_pcap_callback_data cb_data;
 
   sigset_t signal_set;
 
@@ -193,9 +193,13 @@ int main(int argc,char **argv, char **envp)
   struct nflog_g_handle *nfgh = NULL;
   int one = 1;
   ssize_t len = 0;
-  unsigned char *nflog_buffer;
+  char *nflog_buffer;
 
   struct sockaddr_storage client;
+
+#ifdef WITH_REDIS
+  struct p_redis_host redis_host;
+#endif
 
 #if defined HAVE_MALLOPT
   mallopt(M_CHECK_ACTION, 0);
@@ -222,7 +226,7 @@ int main(int argc,char **argv, char **envp)
 
   memset(cfg_cmdline, 0, sizeof(cfg_cmdline));
   memset(&config, 0, sizeof(struct configuration));
-  memset(&device, 0, sizeof(struct pcap_device));
+  memset(&device, 0, sizeof(struct pm_pcap_device));
   memset(&config_file, 0, sizeof(config_file));
   memset(&failed_plugins, 0, sizeof(failed_plugins));
   memset(&req, 0, sizeof(req));
@@ -237,6 +241,7 @@ int main(int argc,char **argv, char **envp)
   memset(&cb_data, 0, sizeof(cb_data));
   memset(&tunnel_registry, 0, sizeof(tunnel_registry));
   memset(&reload_map_tstamp, 0, sizeof(reload_map_tstamp));
+  memset(empty_mem_area_256b, 0, sizeof(empty_mem_area_256b));
   log_notifications_init(&log_notifications);
   config.acct_type = ACCT_PM;
 
@@ -531,7 +536,7 @@ int main(int argc,char **argv, char **envp)
 	list->cfg.what_to_count |= COUNT_IP_TOS;
 	list->cfg.what_to_count |= COUNT_IP_PROTO;
 	if (list->cfg.networks_file ||
-	   ((list->cfg.nfacctd_bgp || list->cfg.nfacctd_bmp) && list->cfg.nfacctd_as == NF_AS_BGP)) {
+	   ((list->cfg.bgp_daemon || list->cfg.bmp_daemon) && list->cfg.nfacctd_as == NF_AS_BGP)) {
 	  list->cfg.what_to_count |= COUNT_SRC_AS;
 	  list->cfg.what_to_count |= COUNT_DST_AS;
 	  list->cfg.what_to_count |= COUNT_PEER_DST_IP;
@@ -600,7 +605,7 @@ int main(int argc,char **argv, char **envp)
 	if (list->cfg.ndpi_num_roots) list->cfg.what_to_count_2 |= COUNT_NDPI_CLASS;
 #endif
         if (list->cfg.networks_file ||
-	   ((list->cfg.nfacctd_bgp || list->cfg.nfacctd_bmp) && list->cfg.nfacctd_as == NF_AS_BGP)) {
+	   ((list->cfg.bgp_daemon || list->cfg.bmp_daemon) && list->cfg.nfacctd_as == NF_AS_BGP)) {
           list->cfg.what_to_count |= COUNT_SRC_AS;
           list->cfg.what_to_count |= COUNT_DST_AS;
           list->cfg.what_to_count |= COUNT_PEER_DST_IP;
@@ -691,7 +696,7 @@ int main(int argc,char **argv, char **envp)
           else {
             if ((list->cfg.nfacctd_net == NF_NET_NEW && !list->cfg.networks_file) ||
                 (list->cfg.nfacctd_net == NF_NET_STATIC && !list->cfg.networks_mask) ||
-                (list->cfg.nfacctd_net == NF_NET_BGP && !list->cfg.nfacctd_bgp && !list->cfg.nfacctd_bmp) ||
+                (list->cfg.nfacctd_net == NF_NET_BGP && !list->cfg.bgp_daemon && !list->cfg.bmp_daemon) ||
                 (list->cfg.nfacctd_net == NF_NET_IGP && !list->cfg.nfacctd_isis) ||
                 (list->cfg.nfacctd_net == NF_NET_KEEP)) {
               Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'bmp_daemon', 'isis_daemon', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
@@ -801,6 +806,9 @@ int main(int argc,char **argv, char **envp)
   sighandler_action.sa_handler = SIG_IGN;
   sigaction(SIGPIPE, &sighandler_action, NULL);
 
+  sighandler_action.sa_handler = PM_sigalrm_noop_handler;
+  sigaction(SIGALRM, &sighandler_action, NULL);
+
   nfh = nflog_open();
   if (nfh == NULL) {
     Log(LOG_ERR, "ERROR ( %s/core ): Failed to create Netlink NFLOG socket\n", config.name);
@@ -876,7 +884,7 @@ int main(int argc,char **argv, char **envp)
     exit_gracefully(1);
   }
 
-  if (config.nfacctd_bgp && config.nfacctd_bmp) {
+  if (config.bgp_daemon && config.bmp_daemon) {
     Log(LOG_ERR, "ERROR ( %s/core ): bgp_daemon and bmp_daemon are currently mutual exclusive. Exiting.\n", config.name);
     exit_gracefully(1);
   }
@@ -892,23 +900,23 @@ int main(int argc,char **argv, char **envp)
   }
 
   /* starting the BGP thread */
-  if (config.nfacctd_bgp) {
+  if (config.bgp_daemon) {
     int sleep_time = DEFAULT_SLOTH_SLEEP_TIME;
 
     req.bpf_filter = TRUE;
 
-    if (config.nfacctd_bgp_stdcomm_pattern_to_asn && config.nfacctd_bgp_lrgcomm_pattern_to_asn) {
+    if (config.bgp_daemon_stdcomm_pattern_to_asn && config.bgp_daemon_lrgcomm_pattern_to_asn) {
       Log(LOG_ERR, "ERROR ( %s/core ): bgp_stdcomm_pattern_to_asn and bgp_lrgcomm_pattern_to_asn are mutual exclusive. Exiting.\n", config.name);
       exit_gracefully(1);
     }
 
-    load_comm_patterns(&config.nfacctd_bgp_stdcomm_pattern, &config.nfacctd_bgp_extcomm_pattern,
-                        &config.nfacctd_bgp_lrgcomm_pattern, &config.nfacctd_bgp_stdcomm_pattern_to_asn,
-			&config.nfacctd_bgp_lrgcomm_pattern_to_asn);
+    load_comm_patterns(&config.bgp_daemon_stdcomm_pattern, &config.bgp_daemon_extcomm_pattern,
+                        &config.bgp_daemon_lrgcomm_pattern, &config.bgp_daemon_stdcomm_pattern_to_asn,
+			&config.bgp_daemon_lrgcomm_pattern_to_asn);
 
-    if (config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
-      if (config.nfacctd_bgp_peer_as_src_map) {
-        load_id_file(MAP_BGP_PEER_AS_SRC, config.nfacctd_bgp_peer_as_src_map, &bpas_table, &req, &bpas_map_allocated);
+    if (config.bgp_daemon_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
+      if (config.bgp_daemon_peer_as_src_map) {
+        load_id_file(MAP_BGP_PEER_AS_SRC, config.bgp_daemon_peer_as_src_map, &bpas_table, &req, &bpas_map_allocated);
 	cb_data.bpas_table = (u_char *) &bpas_table;
       }
       else {
@@ -918,9 +926,9 @@ int main(int argc,char **argv, char **envp)
     }
     else cb_data.bpas_table = NULL;
 
-    if (config.nfacctd_bgp_src_local_pref_type == BGP_SRC_PRIMITIVES_MAP) {
-      if (config.nfacctd_bgp_src_local_pref_map) {
-        load_id_file(MAP_BGP_SRC_LOCAL_PREF, config.nfacctd_bgp_src_local_pref_map, &blp_table, &req, &blp_map_allocated);
+    if (config.bgp_daemon_src_local_pref_type == BGP_SRC_PRIMITIVES_MAP) {
+      if (config.bgp_daemon_src_local_pref_map) {
+        load_id_file(MAP_BGP_SRC_LOCAL_PREF, config.bgp_daemon_src_local_pref_map, &blp_table, &req, &blp_map_allocated);
         cb_data.blp_table = (u_char *) &blp_table;
       }
       else {
@@ -930,9 +938,9 @@ int main(int argc,char **argv, char **envp)
     }
     else cb_data.bpas_table = NULL;
 
-    if (config.nfacctd_bgp_src_med_type == BGP_SRC_PRIMITIVES_MAP) {
-      if (config.nfacctd_bgp_src_med_map) {
-        load_id_file(MAP_BGP_SRC_MED, config.nfacctd_bgp_src_med_map, &bmed_table, &req, &bmed_map_allocated);
+    if (config.bgp_daemon_src_med_type == BGP_SRC_PRIMITIVES_MAP) {
+      if (config.bgp_daemon_src_med_map) {
+        load_id_file(MAP_BGP_SRC_MED, config.bgp_daemon_src_med_map, &bmed_table, &req, &bmed_map_allocated);
         cb_data.bmed_table = (u_char *) &bmed_table;
       }
       else {
@@ -942,8 +950,8 @@ int main(int argc,char **argv, char **envp)
     }
     else cb_data.bmed_table = NULL;
 
-    if (config.nfacctd_bgp_to_agent_map) {
-      load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.nfacctd_bgp_to_agent_map, &bta_table, &req, &bta_map_allocated);
+    if (config.bgp_daemon_to_xflow_agent_map) {
+      load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.bgp_daemon_to_xflow_agent_map, &bta_table, &req, &bta_map_allocated);
       cb_data.bta_table = (u_char *) &bta_table;
     }
     else {
@@ -954,10 +962,10 @@ int main(int argc,char **argv, char **envp)
     /* Limiting BGP peers to only two: one would suffice in pmacctd
        but in case maps are reloadable (ie. bta), it could be handy
        to keep a backup feed in memory */
-    config.nfacctd_bgp_max_peers = 2;
+    config.bgp_daemon_max_peers = 2;
 
-    cb_data.f_agent = (char *)&client;
-    nfacctd_bgp_wrapper();
+    cb_data.f_agent = (u_char *) &client;
+    bgp_daemon_wrapper();
 
     /* Let's give the BGP thread some advantage to create its structures */
     if (config.rpki_roas_file || config.rpki_rtr_cache) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
@@ -965,12 +973,26 @@ int main(int argc,char **argv, char **envp)
   }
 
   /* starting the BMP thread */
-  if (config.nfacctd_bmp) {
+  if (config.bmp_daemon) {
     int sleep_time = DEFAULT_SLOTH_SLEEP_TIME;
 
     req.bpf_filter = TRUE;
 
-    nfacctd_bmp_wrapper();
+    if (config.bgp_daemon_to_xflow_agent_map) {
+      load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.bgp_daemon_to_xflow_agent_map, &bta_table, &req, &bta_map_allocated);
+      cb_data.bta_table = (u_char *) &bta_table;
+    }
+    else {
+      Log(LOG_ERR, "ERROR ( %s/core ): 'bmp_daemon' configured but no 'bgp_agent_map' has been specified. Exiting.\n", config.name);
+      exit_gracefully(1);
+    }
+
+    /* Limiting BGP peers to only two: one would suffice in pmacctd
+       but in case maps are reloadable (ie. bta), it could be handy
+       to keep a backup feed in memory */
+    config.bgp_daemon_max_peers = 2;
+
+    bmp_daemon_wrapper();
 
     /* Let's give the BMP thread some advantage to create its structures */
     if (config.rpki_roas_file || config.rpki_rtr_cache) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
@@ -1012,13 +1034,24 @@ int main(int argc,char **argv, char **envp)
 
   kill(getpid(), SIGCHLD);
 
+#ifdef WITH_REDIS
+  if (config.redis_host) {
+    char log_id[SHORTBUFLEN];
+
+    snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
+    p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_core_handler);
+  }
+#endif
+
   sigemptyset(&signal_set);
   sigaddset(&signal_set, SIGCHLD);
   sigaddset(&signal_set, SIGHUP);
   sigaddset(&signal_set, SIGUSR1);
   sigaddset(&signal_set, SIGUSR2);
-  sigaddset(&signal_set, SIGINT);
   sigaddset(&signal_set, SIGTERM);
+  if (config.daemon) {
+    sigaddset(&signal_set, SIGINT);
+  }
   cb_data.sig.is_set = FALSE;
 
   /* Main loop: if pcap_loop() exits maybe an error occurred; we will try closing

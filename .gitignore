@@ -36,3 +36,6 @@ Makefile
 /src/pmbgpd
 /src/pmbmpd
 /examples/lg/pmbgp
+
+# JetBrains IDE files
+.idea/

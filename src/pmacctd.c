@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -39,9 +39,6 @@
 #include "ndpi/ndpi_util.h"
 #endif
 #include "jhash.h"
-
-/* variables to be exported away */
-struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
 
 /* Functions */
 void usage_daemon(char *prog_name)
@@ -94,23 +91,18 @@ void usage_daemon(char *prog_name)
   printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);
 }
 
-void pm_pcap_device_initialize(struct pcap_devices *map)
+void pm_pcap_device_copy_all(struct pm_pcap_devices *dst, struct pm_pcap_devices *src)
 {
-  memset(map, 0, sizeof(struct pcap_devices));
+  memcpy(dst, src, sizeof(struct pm_pcap_devices));
 }
 
-void pm_pcap_device_copy_all(struct pcap_devices *dst, struct pcap_devices *src)
+void pm_pcap_device_copy_entry(struct pm_pcap_devices *dst, struct pm_pcap_devices *src, int src_idx)
 {
-  memcpy(dst, src, sizeof(struct pcap_devices));
-}
-
-void pm_pcap_device_copy_entry(struct pcap_devices *dst, struct pcap_devices *src, int src_idx)
-{
-  memcpy(&dst->list[dst->num], &src->list[src_idx], sizeof(struct pcap_device));
+  memcpy(&dst->list[dst->num], &src->list[src_idx], sizeof(struct pm_pcap_device));
   dst->num++;
 }
 
-int pm_pcap_device_getindex_byifname(struct pcap_devices *map, char *ifname)
+int pm_pcap_device_getindex_byifname(struct pm_pcap_devices *map, char *ifname)
 {
   int loc_idx;
    for (loc_idx = 0; loc_idx < map->num; loc_idx++) {
@@ -129,78 +121,55 @@ pcap_t *pm_pcap_open(const char *dev_ptr, int snaplen, int promisc,
   int ret;
 
   p = pcap_create(dev_ptr, errbuf);
-  if (p == NULL)
-    return NULL;
+  if (p == NULL) return NULL;
 
   ret = pcap_set_snaplen(p, snaplen);
-  if (ret < 0)
-    goto err;
+  if (ret < 0) goto err;
 
   ret = pcap_set_promisc(p, promisc);
-  if (ret < 0)
-    goto err;
+  if (ret < 0) goto err;
 
   ret = pcap_set_timeout(p, to_ms);
-  if (ret < 0)
-    goto err;
+  if (ret < 0) goto err;
 
 #ifdef PCAP_SET_PROTOCOL
   ret = pcap_set_protocol(p, protocol);
-  if (ret < 0)
-    goto err;
+  if (ret < 0) goto err;
 #else
-  if (protocol)
+  if (protocol) {
     Log(LOG_WARNING, "WARN ( %s/core ): pcap_protocol specified but linked against a version of libpcap that does not support pcap_set_protocol().\n", config.name);
+  }
 #endif
 
-  /* XXX: rely on external filtering for now */
-/* 
-  ret = pcap_setdirection(p, direction);
-  if (ret < 0 && direction != PCAP_D_INOUT)
-    Log(LOG_WARNING, "INFO ( %s/core ): direction specified but linked against a version of libpcap that does not support pcap_setdirection().\n", config.name);
-*/
-
   ret = pcap_activate(p);
-  if (ret < 0)
-    goto err;
+  if (ret < 0) goto err;
+
+#ifdef PCAP_SET_DIRECTION
+  ret = pcap_setdirection(p, direction);
+  if (ret < 0) goto err;
+#endif
 
   return p;
 
 err:
-  if (ret == PCAP_ERROR)
+  if (ret == PCAP_ERROR) {
     snprintf(errbuf, PCAP_ERRBUF_SIZE, "%s: %s", dev_ptr, pcap_geterr(p));
+  }
   else if (ret == PCAP_ERROR_NO_SUCH_DEVICE ||
 	   ret == PCAP_ERROR_PERM_DENIED ||
-	   ret == PCAP_ERROR_PROMISC_PERM_DENIED)
-    snprintf(errbuf, PCAP_ERRBUF_SIZE, "%s: %s (%s)", dev_ptr,
-	     pcap_statustostr(ret), pcap_geterr(p));
-  else
-    snprintf(errbuf, PCAP_ERRBUF_SIZE, "%s: %s", dev_ptr,
-	     pcap_statustostr(ret));
+	   ret == PCAP_ERROR_PROMISC_PERM_DENIED) {
+    snprintf(errbuf, PCAP_ERRBUF_SIZE, "%s: %s (%s)", dev_ptr, pcap_statustostr(ret), pcap_geterr(p));
+  }
+  else {
+    snprintf(errbuf, PCAP_ERRBUF_SIZE, "%s: %s", dev_ptr, pcap_statustostr(ret));
+  }
 
   pcap_close(p);
 
   return NULL;
 }
 
-void pm_pcap_add_filter(struct pcap_device *dev_ptr)
-{
-  /* pcap library stuff */
-  struct bpf_program filter;
-
-  memset(&filter, 0, sizeof(filter));
-  if (pcap_compile(dev_ptr->dev_desc, &filter, config.clbuf, 0, PCAP_NETMASK_UNKNOWN) < 0) {
-    Log(LOG_WARNING, "WARN ( %s/core ): %s (going on without a filter)\n", config.name, pcap_geterr(dev_ptr->dev_desc));
-  }
-  else {
-    if (pcap_setfilter(dev_ptr->dev_desc, &filter) < 0) {
-      Log(LOG_WARNING, "WARN ( %s/core ): %s (going on without a filter)\n", config.name, pcap_geterr(dev_ptr->dev_desc));
-    }
-    else pcap_freecode(&filter);
-  }
-}
-
-int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, struct pcap_interface *pcap_if_entry, int psize)
+int pm_pcap_add_interface(struct pm_pcap_device *dev_ptr, char *ifname, struct pm_pcap_interface *pm_pcap_if_entry, int psize)
 {
   /* pcap library stuff */
   char errbuf[PCAP_ERRBUF_SIZE];
@@ -209,7 +178,7 @@ int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, struct pcap
   int ret = SUCCESS, attempts = FALSE, index;
   int direction;
 
-  if (pcap_if_entry && pcap_if_entry->direction) direction = pcap_if_entry->direction; 
+  if (pm_pcap_if_entry && pm_pcap_if_entry->direction) direction = pm_pcap_if_entry->direction; 
   else direction = config.pcap_direction;
 
   throttle_startup:
@@ -227,8 +196,8 @@ int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, struct pcap
     }
 
     dev_ptr->active = TRUE;
-    dev_ptr->pcap_if = pcap_if_entry;
-    strncpy(dev_ptr->str, ifname, strlen(ifname));
+    dev_ptr->pcap_if = pm_pcap_if_entry;
+    strncpy(dev_ptr->str, ifname, (sizeof(dev_ptr->str) - 1));
 
     if (config.pcap_ifindex == PCAP_IFINDEX_SYS)
       dev_ptr->id = if_nametoindex(dev_ptr->str);
@@ -236,7 +205,7 @@ int pm_pcap_add_interface(struct pcap_device *dev_ptr, char *ifname, struct pcap
       dev_ptr->id = jhash(dev_ptr->str, strlen(dev_ptr->str), 0);
     else if (config.pcap_ifindex == PCAP_IFINDEX_MAP) {
       if (config.pcap_interfaces_map) {
-	dev_ptr->id = pcap_interfaces_map_lookup_ifname(&pcap_if_map, dev_ptr->str);
+	dev_ptr->id = pm_pcap_interfaces_map_lookup_ifname(&pm_pcap_if_map, dev_ptr->str);
       }
       else {
 	Log(LOG_ERR, "ERROR ( %s/core ): pcap_ifindex set to 'map' but no pcap_interface_map is defined. Exiting.\n", config.name);
@@ -299,10 +268,10 @@ int main(int argc,char **argv, char **envp)
   /* pcap library stuff */
   struct pcap_pkthdr pkt_hdr;
   const u_char *pkt_body;
-  pcap_if_t *pcap_ifs = NULL;
+  pcap_if_t *pm_pcap_ifs = NULL;
 
   int index, index_rr = 0, logf, ret;
-  int pcap_savefile_round = 0;
+  int pm_pcap_savefile_round = 0;
 
   struct plugins_list_entry *list;
   struct plugin_requests req;
@@ -315,8 +284,8 @@ int main(int argc,char **argv, char **envp)
   struct id_table biss_table;
   struct id_table bta_table;
 
-  struct pcap_device *dev_ptr;
-  struct pcap_callback_data cb_data;
+  struct pm_pcap_device *dev_ptr;
+  struct pm_pcap_callback_data cb_data;
 
   /* select() stuff */
   fd_set read_descs, bkp_read_descs;
@@ -328,6 +297,10 @@ int main(int argc,char **argv, char **envp)
   int errflag, cp;
 
   struct sockaddr_storage client;
+
+#ifdef WITH_REDIS
+  struct p_redis_host redis_host;
+#endif
 
 #if defined HAVE_MALLOPT
   mallopt(M_CHECK_ACTION, 0);
@@ -370,6 +343,7 @@ int main(int argc,char **argv, char **envp)
   memset(&tunnel_registry, 0, sizeof(tunnel_registry));
   memset(&reload_map_tstamp, 0, sizeof(reload_map_tstamp));
   memset(&device, 0, sizeof(device));
+  memset(empty_mem_area_256b, 0, sizeof(empty_mem_area_256b));
   pm_pcap_device_initialize(&devices);
   pm_pcap_device_initialize(&bkp_devices);
   log_notifications_init(&log_notifications);
@@ -688,7 +662,7 @@ int main(int argc,char **argv, char **envp)
 	list->cfg.what_to_count |= COUNT_IP_TOS;
 	list->cfg.what_to_count |= COUNT_IP_PROTO;
 	if (list->cfg.networks_file ||
-	   ((list->cfg.nfacctd_bgp || list->cfg.nfacctd_bmp) && list->cfg.nfacctd_as == NF_AS_BGP)) {
+	   ((list->cfg.bgp_daemon || list->cfg.bmp_daemon) && list->cfg.nfacctd_as == NF_AS_BGP)) {
 	  list->cfg.what_to_count |= COUNT_SRC_AS;
 	  list->cfg.what_to_count |= COUNT_DST_AS;
 	  list->cfg.what_to_count |= COUNT_PEER_DST_IP;
@@ -757,7 +731,7 @@ int main(int argc,char **argv, char **envp)
 	if (list->cfg.ndpi_num_roots) list->cfg.what_to_count_2 |= COUNT_NDPI_CLASS;
 #endif
         if (list->cfg.networks_file ||
-	   ((list->cfg.nfacctd_bgp || list->cfg.nfacctd_bmp) && list->cfg.nfacctd_as == NF_AS_BGP)) {
+	   ((list->cfg.bgp_daemon || list->cfg.bmp_daemon) && list->cfg.nfacctd_as == NF_AS_BGP)) {
           list->cfg.what_to_count |= COUNT_SRC_AS;
           list->cfg.what_to_count |= COUNT_DST_AS;
           list->cfg.what_to_count |= COUNT_PEER_DST_IP;
@@ -848,7 +822,7 @@ int main(int argc,char **argv, char **envp)
           else {
             if ((list->cfg.nfacctd_net == NF_NET_NEW && !list->cfg.networks_file) ||
                 (list->cfg.nfacctd_net == NF_NET_STATIC && !list->cfg.networks_mask) ||
-                (list->cfg.nfacctd_net == NF_NET_BGP && !list->cfg.nfacctd_bgp && !list->cfg.nfacctd_bmp) ||
+                (list->cfg.nfacctd_net == NF_NET_BGP && !list->cfg.bgp_daemon && !list->cfg.bmp_daemon) ||
                 (list->cfg.nfacctd_net == NF_NET_IGP && !list->cfg.nfacctd_isis) ||
                 (list->cfg.nfacctd_net == NF_NET_KEEP)) {
               Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'bmp_daemon', 'isis_daemon', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
@@ -922,13 +896,13 @@ int main(int argc,char **argv, char **envp)
   load_networks(config.networks_file, &nt, &nc);
 
   if (config.pcap_interfaces_map) {
-    pcap_interfaces_map_initialize(&pcap_if_map);
-    pcap_interfaces_map_initialize(&bkp_pcap_if_map);
-    pcap_interfaces_map_load(&pcap_if_map);
+    pm_pcap_interfaces_map_initialize(&pm_pcap_if_map);
+    pm_pcap_interfaces_map_initialize(&pm_bkp_pcap_if_map);
+    pm_pcap_interfaces_map_load(&pm_pcap_if_map);
   }
   else {
-    pcap_if_map.list = NULL;
-    pcap_if_map.num = 0;
+    pm_pcap_if_map.list = NULL;
+    pm_pcap_if_map.num = 0;
   }
 
   if (!config.pcap_direction) config.pcap_direction = PCAP_D_INOUT;
@@ -940,13 +914,13 @@ int main(int argc,char **argv, char **envp)
 
     Log(LOG_WARNING, "WARN ( %s/core ): Selecting a suitable devices.\n", config.name);
 
-    ret = pcap_findalldevs(&pcap_ifs, errbuf);
-    if (ret == ERR || !pcap_ifs) {
+    ret = pcap_findalldevs(&pm_pcap_ifs, errbuf);
+    if (ret == ERR || !pm_pcap_ifs) {
       Log(LOG_ERR, "ERROR ( %s/core ): Unable to get interfaces list: %s. Exiting.\n", config.name, errbuf);
       exit_gracefully(1);
     }
 
-    config.pcap_if = pcap_ifs[0].name; 
+    config.pcap_if = pm_pcap_ifs[0].name; 
     Log(LOG_DEBUG, "DEBUG ( %s/core ): device is %s\n", config.name, config.pcap_if);
   }
 
@@ -974,18 +948,18 @@ int main(int argc,char **argv, char **envp)
     }
   }
   else if (config.pcap_interfaces_map) {
-    struct pcap_interface *pcap_if_entry;
-    int pcap_if_idx = 0;
+    struct pm_pcap_interface *pm_pcap_if_entry;
+    int pm_pcap_if_idx = 0;
     char *ifname;
 
-    while ((ifname = pcap_interfaces_map_getnext_ifname(&pcap_if_map, &pcap_if_idx))) {
+    while ((ifname = pm_pcap_interfaces_map_getnext_ifname(&pm_pcap_if_map, &pm_pcap_if_idx))) {
       if (devices.num == PCAP_MAX_INTERFACES) {
 	Log(LOG_ERR, "ERROR ( %s/core ): Maximum number of interfaces reached (%u). Exiting.\n", config.name, PCAP_MAX_INTERFACES);
 	exit_gracefully(1);
       }
 
-      pcap_if_entry = pcap_interfaces_map_getentry_by_ifname(&pcap_if_map, ifname);
-      ret = pm_pcap_add_interface(&devices.list[devices.num], ifname, pcap_if_entry, psize);
+      pm_pcap_if_entry = pm_pcap_interfaces_map_getentry_by_ifname(&pm_pcap_if_map, ifname);
+      ret = pm_pcap_add_interface(&devices.list[devices.num], ifname, pm_pcap_if_entry, psize);
       if (!ret) {
 	if (bkp_select_fd <= devices.list[devices.num].fd) {
 	  bkp_select_fd = devices.list[devices.num].fd;
@@ -1002,7 +976,7 @@ int main(int argc,char **argv, char **envp)
     pm_pcap_add_filter(&devices.list[0]);
     cb_data.device = &devices.list[0];
     devices.num = 1;
-    pcap_savefile_round = 1;
+    pm_pcap_savefile_round = 1;
   }
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
@@ -1029,7 +1003,10 @@ int main(int argc,char **argv, char **envp)
   sighandler_action.sa_handler = SIG_IGN;
   sigaction(SIGPIPE, &sighandler_action, NULL);
 
-  if (config.nfacctd_bgp && config.nfacctd_bmp) {
+  sighandler_action.sa_handler = PM_sigalrm_noop_handler;
+  sigaction(SIGALRM, &sighandler_action, NULL);
+
+  if (config.bgp_daemon && config.bmp_daemon) {
     Log(LOG_ERR, "ERROR ( %s/core ): bgp_daemon and bmp_daemon are currently mutual exclusive. Exiting.\n", config.name);
     exit_gracefully(1);
   }
@@ -1045,23 +1022,23 @@ int main(int argc,char **argv, char **envp)
   }
 
   /* starting the BGP thread */
-  if (config.nfacctd_bgp) {
+  if (config.bgp_daemon) {
     int sleep_time = DEFAULT_SLOTH_SLEEP_TIME;
 
     req.bpf_filter = TRUE;
 
-    if (config.nfacctd_bgp_stdcomm_pattern_to_asn && config.nfacctd_bgp_lrgcomm_pattern_to_asn) {
+    if (config.bgp_daemon_stdcomm_pattern_to_asn && config.bgp_daemon_lrgcomm_pattern_to_asn) {
       Log(LOG_ERR, "ERROR ( %s/core ): bgp_stdcomm_pattern_to_asn and bgp_lrgcomm_pattern_to_asn are mutual exclusive. Exiting.\n", config.name);
       exit_gracefully(1);
     }
 
-    load_comm_patterns(&config.nfacctd_bgp_stdcomm_pattern, &config.nfacctd_bgp_extcomm_pattern,
-                        &config.nfacctd_bgp_lrgcomm_pattern, &config.nfacctd_bgp_stdcomm_pattern_to_asn,
-			&config.nfacctd_bgp_lrgcomm_pattern_to_asn);
+    load_comm_patterns(&config.bgp_daemon_stdcomm_pattern, &config.bgp_daemon_extcomm_pattern,
+                        &config.bgp_daemon_lrgcomm_pattern, &config.bgp_daemon_stdcomm_pattern_to_asn,
+			&config.bgp_daemon_lrgcomm_pattern_to_asn);
 
-    if (config.nfacctd_bgp_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
-      if (config.nfacctd_bgp_peer_as_src_map) {
-        load_id_file(MAP_BGP_PEER_AS_SRC, config.nfacctd_bgp_peer_as_src_map, &bpas_table, &req, &bpas_map_allocated);
+    if (config.bgp_daemon_peer_as_src_type == BGP_SRC_PRIMITIVES_MAP) {
+      if (config.bgp_daemon_peer_as_src_map) {
+        load_id_file(MAP_BGP_PEER_AS_SRC, config.bgp_daemon_peer_as_src_map, &bpas_table, &req, &bpas_map_allocated);
 	cb_data.bpas_table = (u_char *) &bpas_table;
       }
       else {
@@ -1071,9 +1048,9 @@ int main(int argc,char **argv, char **envp)
     }
     else cb_data.bpas_table = NULL;
 
-    if (config.nfacctd_bgp_src_local_pref_type == BGP_SRC_PRIMITIVES_MAP) {
-      if (config.nfacctd_bgp_src_local_pref_map) {
-        load_id_file(MAP_BGP_SRC_LOCAL_PREF, config.nfacctd_bgp_src_local_pref_map, &blp_table, &req, &blp_map_allocated);
+    if (config.bgp_daemon_src_local_pref_type == BGP_SRC_PRIMITIVES_MAP) {
+      if (config.bgp_daemon_src_local_pref_map) {
+        load_id_file(MAP_BGP_SRC_LOCAL_PREF, config.bgp_daemon_src_local_pref_map, &blp_table, &req, &blp_map_allocated);
         cb_data.blp_table = (u_char *) &blp_table;
       }
       else {
@@ -1083,9 +1060,9 @@ int main(int argc,char **argv, char **envp)
     }
     else cb_data.blp_table = NULL;
 
-    if (config.nfacctd_bgp_src_med_type == BGP_SRC_PRIMITIVES_MAP) {
-      if (config.nfacctd_bgp_src_med_map) {
-        load_id_file(MAP_BGP_SRC_MED, config.nfacctd_bgp_src_med_map, &bmed_table, &req, &bmed_map_allocated);
+    if (config.bgp_daemon_src_med_type == BGP_SRC_PRIMITIVES_MAP) {
+      if (config.bgp_daemon_src_med_map) {
+        load_id_file(MAP_BGP_SRC_MED, config.bgp_daemon_src_med_map, &bmed_table, &req, &bmed_map_allocated);
         cb_data.bmed_table = (u_char *) &bmed_table;
       }
       else {
@@ -1095,8 +1072,8 @@ int main(int argc,char **argv, char **envp)
     }
     else cb_data.bmed_table = NULL;
 
-    if (config.nfacctd_bgp_to_agent_map) {
-      load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.nfacctd_bgp_to_agent_map, &bta_table, &req, &bta_map_allocated);
+    if (config.bgp_daemon_to_xflow_agent_map) {
+      load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.bgp_daemon_to_xflow_agent_map, &bta_table, &req, &bta_map_allocated);
       cb_data.bta_table = (u_char *) &bta_table;
     }
     else {
@@ -1107,10 +1084,10 @@ int main(int argc,char **argv, char **envp)
     /* Limiting BGP peers to only two: one would suffice in pmacctd
        but in case maps are reloadable (ie. bta), it could be handy
        to keep a backup feed in memory */
-    config.nfacctd_bgp_max_peers = 2;
+    config.bgp_daemon_max_peers = 2;
 
     cb_data.f_agent = (u_char *) &client;
-    nfacctd_bgp_wrapper();
+    bgp_daemon_wrapper();
 
     /* Let's give the BGP thread some advantage to create its structures */
     if (config.rpki_roas_file || config.rpki_rtr_cache) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
@@ -1118,12 +1095,26 @@ int main(int argc,char **argv, char **envp)
   }
 
   /* starting the BMP thread */
-  if (config.nfacctd_bmp) {
+  if (config.bmp_daemon) {
     int sleep_time = DEFAULT_SLOTH_SLEEP_TIME;
 
     req.bpf_filter = TRUE;
 
-    nfacctd_bmp_wrapper();
+    if (config.bgp_daemon_to_xflow_agent_map) {
+      load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.bgp_daemon_to_xflow_agent_map, &bta_table, &req, &bta_map_allocated);
+      cb_data.bta_table = (u_char *) &bta_table;
+    }
+    else {
+      Log(LOG_ERR, "ERROR ( %s/core ): 'bmp_daemon' configured but no 'bgp_agent_map' has been specified. Exiting.\n", config.name);
+      exit_gracefully(1);
+    }
+
+    /* Limiting BGP peers to only two: one would suffice in pmacctd
+       but in case maps are reloadable (ie. bta), it could be handy
+       to keep a backup feed in memory */
+    config.bgp_daemon_max_peers = 2;
+
+    bmp_daemon_wrapper();
 
     /* Let's give the BMP thread some advantage to create its structures */
     if (config.rpki_roas_file || config.rpki_rtr_cache) sleep_time += DEFAULT_SLOTH_SLEEP_TIME;
@@ -1178,13 +1169,24 @@ int main(int argc,char **argv, char **envp)
     else sleep(config.pcap_sf_delay);
   }
 
+#ifdef WITH_REDIS
+  if (config.redis_host) {
+    char log_id[SHORTBUFLEN];
+
+    snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
+    p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_core_handler);
+  }
+#endif
+
   sigemptyset(&cb_data.sig.set);
   sigaddset(&cb_data.sig.set, SIGCHLD);
   sigaddset(&cb_data.sig.set, SIGHUP);
   sigaddset(&cb_data.sig.set, SIGUSR1);
   sigaddset(&cb_data.sig.set, SIGUSR2);
-  sigaddset(&cb_data.sig.set, SIGINT);
   sigaddset(&cb_data.sig.set, SIGTERM);
+  if (config.daemon) {
+    sigaddset(&cb_data.sig.set, SIGINT);
+  }
   cb_data.sig.is_set = TRUE;
 
   /* Main loop (for the case of a single interface): if pcap_loop() exits
@@ -1202,13 +1204,13 @@ int main(int argc,char **argv, char **envp)
       }
 
       read_packet:
-      pcap_loop(devices.list[0].dev_desc, -1, pcap_cb, (u_char *) &cb_data);
+      pcap_loop(devices.list[0].dev_desc, -1, pm_pcap_cb, (u_char *) &cb_data);
       pcap_close(devices.list[0].dev_desc);
 
       if (config.pcap_savefile) {
 	if (config.pcap_sf_replay < 0 ||
-	    (config.pcap_sf_replay > 0 && pcap_savefile_round < config.pcap_sf_replay)) {
-	  pcap_savefile_round++;
+	    (config.pcap_sf_replay > 0 && pm_pcap_savefile_round < config.pcap_sf_replay)) {
+	  pm_pcap_savefile_round++;
 	  open_pcap_savefile(&devices.list[0], config.pcap_savefile);
 	  if (config.pcap_sf_delay) sleep(config.pcap_sf_delay);
 
@@ -1233,26 +1235,26 @@ int main(int argc,char **argv, char **envp)
       select(select_fd, &read_descs, NULL, NULL, NULL);
 
       if (reload_map_pmacctd) {
-	struct pcap_interface *pcap_if_entry;
-	int pcap_if_idx = 0;
+	struct pm_pcap_interface *pm_pcap_if_entry;
+	int pm_pcap_if_idx = 0;
 	char *ifname;
 
-	pcap_interfaces_map_copy(&bkp_pcap_if_map, &pcap_if_map);
-	pcap_interfaces_map_destroy(&pcap_if_map);
-	pcap_interfaces_map_load(&pcap_if_map);
+	pm_pcap_interfaces_map_copy(&pm_bkp_pcap_if_map, &pm_pcap_if_map);
+	pm_pcap_interfaces_map_destroy(&pm_pcap_if_map);
+	pm_pcap_interfaces_map_load(&pm_pcap_if_map);
 
 	pm_pcap_device_copy_all(&bkp_devices, &devices);
 	pm_pcap_device_initialize(&devices);
 
 	/* Add interfaces and re-build relevant structs */
-	while ((ifname = pcap_interfaces_map_getnext_ifname(&pcap_if_map, &pcap_if_idx))) {
-	  if (!pcap_interfaces_map_lookup_ifname(&bkp_pcap_if_map, ifname)) {
+	while ((ifname = pm_pcap_interfaces_map_getnext_ifname(&pm_pcap_if_map, &pm_pcap_if_idx))) {
+	  if (!pm_pcap_interfaces_map_lookup_ifname(&pm_bkp_pcap_if_map, ifname)) {
 	    if (devices.num == PCAP_MAX_INTERFACES) {
 	      Log(LOG_WARNING, "WARN ( %s/core ): Maximum number of interfaces reached (%u). Ignoring '%s'.\n", config.name, PCAP_MAX_INTERFACES, ifname);
 	    }
 	    else {
-	      pcap_if_entry = pcap_interfaces_map_getentry_by_ifname(&pcap_if_map, ifname);
-	      if (!pm_pcap_add_interface(&devices.list[devices.num], ifname, pcap_if_entry, psize)) {
+	      pm_pcap_if_entry = pm_pcap_interfaces_map_getentry_by_ifname(&pm_pcap_if_map, ifname);
+	      if (!pm_pcap_add_interface(&devices.list[devices.num], ifname, pm_pcap_if_entry, psize)) {
 		if (bkp_select_fd <= devices.list[devices.num].fd) {
 		  bkp_select_fd = devices.list[devices.num].fd;
 		  bkp_select_fd++;
@@ -1280,9 +1282,9 @@ int main(int argc,char **argv, char **envp)
 	}
 
 	/* Remove unlisted interfaces */
-	pcap_if_idx = 0;
-	while ((ifname = pcap_interfaces_map_getnext_ifname(&bkp_pcap_if_map, &pcap_if_idx))) {
-	  if (!pcap_interfaces_map_lookup_ifname(&pcap_if_map, ifname)) {
+	pm_pcap_if_idx = 0;
+	while ((ifname = pm_pcap_interfaces_map_getnext_ifname(&pm_bkp_pcap_if_map, &pm_pcap_if_idx))) {
+	  if (!pm_pcap_interfaces_map_lookup_ifname(&pm_pcap_if_map, ifname)) {
             int device_idx;
           
 	    device_idx = pm_pcap_device_getindex_byifname(&bkp_devices, ifname);
@@ -1312,7 +1314,7 @@ int main(int argc,char **argv, char **envp)
 	pkt_body = pcap_next(dev_ptr->dev_desc, &pkt_hdr); 
 	if (pkt_body) {
 	  cb_data.device = dev_ptr;
-	  pcap_cb((u_char *) &cb_data, &pkt_hdr, pkt_body);
+	  pm_pcap_cb((u_char *) &cb_data, &pkt_hdr, pkt_body);
 	}
       }
     }

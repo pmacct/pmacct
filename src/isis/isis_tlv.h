@@ -143,7 +143,7 @@ struct es_neigh
 
 struct partition_desig_level2_is
 {
-  struct list *isis_system_ids;
+  struct pm_list *isis_system_ids;
 };
 
 /* struct for lan neighbors */
@@ -224,23 +224,23 @@ struct ipv6_reachability
  */
 struct tlvs
 {
-  struct list *area_addrs;
-  struct list *is_neighs;
-  struct list *te_is_neighs;
-  struct list *es_neighs;
-  struct list *lsp_entries;
-  struct list *prefix_neighs;
-  struct list *lan_neighs;
+  struct pm_list *area_addrs;
+  struct pm_list *is_neighs;
+  struct pm_list *te_is_neighs;
+  struct pm_list *es_neighs;
+  struct pm_list *lsp_entries;
+  struct pm_list *prefix_neighs;
+  struct pm_list *lan_neighs;
   struct checksum *checksum;
   struct nlpids *nlpids;
-  struct list *ipv4_addrs;
-  struct list *ipv4_int_reachs;
-  struct list *ipv4_ext_reachs;
-  struct list *te_ipv4_reachs;
+  struct pm_list *ipv4_addrs;
+  struct pm_list *ipv4_int_reachs;
+  struct pm_list *ipv4_ext_reachs;
+  struct pm_list *te_ipv4_reachs;
   struct hostname *hostname;
   struct te_router_id *router_id;
-  struct list *ipv6_addrs;
-  struct list *ipv6_reachs;
+  struct pm_list *ipv6_addrs;
+  struct pm_list *ipv6_reachs;
   struct isis_passwd auth_info;
 };
 
@@ -275,21 +275,21 @@ extern void init_tlvs (struct tlvs *, uint32_t);
 extern void free_tlvs (struct tlvs *);
 extern int parse_tlvs (char *, u_char *, int, u_int32_t *, u_int32_t *, struct tlvs *);
 extern void free_tlv (void *);
-extern int tlv_add_area_addrs (struct list *, struct stream *);
-extern int tlv_add_is_neighs (struct list *, struct stream *);
-extern int tlv_add_te_is_neighs (struct list *, struct stream *);
-extern int tlv_add_lan_neighs (struct list *, struct stream *);
+extern int tlv_add_area_addrs (struct pm_list *, struct stream *);
+extern int tlv_add_is_neighs (struct pm_list *, struct stream *);
+extern int tlv_add_te_is_neighs (struct pm_list *, struct stream *);
+extern int tlv_add_lan_neighs (struct pm_list *, struct stream *);
 extern int tlv_add_nlpid (struct nlpids *, struct stream *);
 extern int tlv_add_checksum (struct checksum *, struct stream *);
 extern int tlv_add_authinfo (char, char, u_char *, struct stream *);
-extern int tlv_add_ip_addrs (struct list *, struct stream *);
+extern int tlv_add_ip_addrs (struct pm_list *, struct stream *);
 extern int tlv_add_in_addr (struct in_addr *, struct stream *, u_char);
 extern int tlv_add_dynamic_hostname (struct hostname *, struct stream *);
-extern int tlv_add_lsp_entries (struct list *, struct stream *);
-extern int tlv_add_ipv4_reachs (struct list *, struct stream *);
-extern int tlv_add_te_ipv4_reachs (struct list *, struct stream *);
-extern int tlv_add_ipv6_addrs (struct list *, struct stream *);
-extern int tlv_add_ipv6_reachs (struct list *, struct stream *);
+extern int tlv_add_lsp_entries (struct pm_list *, struct stream *);
+extern int tlv_add_ipv4_reachs (struct pm_list *, struct stream *);
+extern int tlv_add_te_ipv4_reachs (struct pm_list *, struct stream *);
+extern int tlv_add_ipv6_addrs (struct pm_list *, struct stream *);
+extern int tlv_add_ipv6_reachs (struct pm_list *, struct stream *);
 extern int tlv_add_padding (struct stream *);
 
 #endif /* _ISIS_TLV_H_ */

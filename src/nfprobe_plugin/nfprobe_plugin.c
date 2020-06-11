@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -149,6 +149,12 @@ flow_compare(struct FLOW *a, struct FLOW *b)
 
 	if (a->port[1] != b->port[1])
 		return (ntohs(a->port[1]) > ntohs(b->port[1]) ? 1 : -1);
+
+	if (a->ifindex[0] != b->ifindex[0])
+		return (a->ifindex[0] > b->ifindex[0] ? 1 : -1);
+
+	if (a->ifindex[1] != b->ifindex[1])
+		return (a->ifindex[1] > b->ifindex[1] ? 1 : -1);
 
 	return (0);
 }
@@ -601,7 +607,6 @@ flow_update_expiry(struct FLOWTRACK *ft, struct FLOW *flow)
 {
 	EXPIRY_REMOVE(EXPIRIES, &ft->expiries, flow->expiry);
 
-#if defined HAVE_64BIT_COUNTERS
         if (config.nfprobe_version == 9 || config.nfprobe_version == 10) {
 	  if (flow->octets[0] > (1ULL << 63) || flow->octets[1] > (1ULL << 63)) { 
                 flow->expiry->expires_at = 0;
@@ -616,14 +621,6 @@ flow_update_expiry(struct FLOWTRACK *ft, struct FLOW *flow)
                 goto out;
           }
 	}
-#else
-	/* Flows over 2Gb traffic */
-	if (flow->octets[0] > (1U << 31) || flow->octets[1] > (1U << 31)) {
-		flow->expiry->expires_at = 0;
-		flow->expiry->reason = R_OVERBYTES;
-		goto out;
-	}
-#endif
 	
 	/* Flows over maximum life seconds */
 	if (ft->maximum_lifetime != 0 && 
@@ -1383,6 +1380,10 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   void *zmq_host = NULL;
 #endif
 
+#ifdef WITH_REDIS
+  struct p_redis_host redis_host;
+#endif
+
   memcpy(&config, cfgptr, sizeof(struct configuration));
   memcpy(&extras, &((struct channels_list_entry *)ptr)->extras, sizeof(struct extra_primitives));
   recollect_pipe_memory(ptr);
@@ -1414,6 +1415,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   signal(SIGCHLD, SIG_IGN);
 	    
   memset(&cb_ctxt, '\0', sizeof(cb_ctxt));
+  memset(empty_mem_area_256b, 0, sizeof(empty_mem_area_256b));
 
   init_flowtrack(&flowtrack);
 
@@ -1516,6 +1518,15 @@ sort_version:
     }
   }
 
+#ifdef WITH_REDIS
+  if (config.redis_host) {
+    char log_id[SHORTBUFLEN];
+
+    snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
+    p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_plugin_handler);
+  }
+#endif
+
   for(;;) {
     status->wakeup = TRUE;
     poll_bypass = FALSE;
@@ -1545,6 +1556,11 @@ sort_version:
       load_networks(config.networks_file, &nt, &nc);
       load_ports(config.ports_file, &pt);
       reload_map = FALSE;
+    }
+
+    if (reload_log) {
+      reload_logs();
+      reload_log = FALSE;
     }
 
     recv_budget = 0;

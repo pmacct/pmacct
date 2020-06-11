@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -76,6 +76,10 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   void *zmq_host = NULL;
 #endif
 
+#ifdef WITH_REDIS
+  struct p_redis_host redis_host;
+#endif
+
   memcpy(&config, cfgptr, sizeof(struct configuration));
   memcpy(&extras, &((struct channels_list_entry *)ptr)->extras, sizeof(struct extra_primitives));
   recollect_pipe_memory(ptr);
@@ -92,13 +96,15 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   refresh_timeout = config.sql_refresh_time*1000;
 
   if (config.print_output & PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
     compose_json(config.what_to_count, config.what_to_count_2);
+#endif
   }
   else if ((config.print_output & PRINT_OUTPUT_AVRO_BIN) ||
 	   (config.print_output & PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
-    avro_acct_schema = avro_schema_build_acct_data(config.what_to_count, config.what_to_count_2);
-    if (config.avro_schema_file) write_avro_schema_to_file(config.avro_schema_file, avro_acct_schema);
+    p_avro_acct_schema = p_avro_schema_build_acct_data(config.what_to_count, config.what_to_count_2);
+    if (config.avro_schema_file) write_avro_schema_to_file(config.avro_schema_file, p_avro_acct_schema);
 #endif
   }
   else if (config.print_output & PRINT_OUTPUT_CUSTOM) {
@@ -193,6 +199,15 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       }
     }
   }
+
+#ifdef WITH_REDIS
+  if (config.redis_host) {
+    char log_id[SHORTBUFLEN];
+
+    snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
+    p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_plugin_handler);
+  }
+#endif
 
   /* plugin main loop */
   for(;;) {
@@ -359,10 +374,10 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   struct pkt_data dummy_data, elem_dummy_data;
   pid_t writer_pid = getpid();
 #ifdef WITH_AVRO
-  avro_file_writer_t avro_writer;
+  avro_file_writer_t p_avro_writer;
 #endif
 
-  if (!index) {
+  if (!index && !config.print_write_empty_file) {
     Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START (PID: %u) ***\n", config.name, config.type, writer_pid);
     Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: 0/0, ET: X) ***\n", config.name, config.type, writer_pid);
     return;
@@ -406,9 +421,15 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
     time_t stamp = 0;
 
     if (dyn_table) {
-      stamp = queue[0]->basetime.tv_sec;
-      prim_ptrs.data = &dummy_data;
-      primptrs_set_all_from_chained_cache(&prim_ptrs, queue[0]);
+      /* NOTE: on saved_index=0; queue[0] is NULL */
+      if (saved_index > 0) {
+        stamp = queue[0]->basetime.tv_sec;
+        prim_ptrs.data = &dummy_data;
+        primptrs_set_all_from_chained_cache(&prim_ptrs, queue[0]);
+      }
+      else {
+        stamp = start;
+      }
 
       handle_dynname_internal_strings(current_table, SRVBUFLEN, config.sql_table, &prim_ptrs, DYN_STR_PRINT_FILE);
       pm_strftime_same(current_table, SRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
@@ -425,10 +446,10 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
       close_output_file(f);
 
       if (config.print_output_file_append && !file_is_empty) {
-        ret = avro_file_writer_open(current_table, &avro_writer);
+        ret = avro_file_writer_open(current_table, &p_avro_writer);
       }
       else {
-        ret = avro_file_writer_create(current_table, avro_acct_schema, &avro_writer);
+        ret = avro_file_writer_create(current_table, p_avro_acct_schema, &p_avro_writer);
       }
 
       if (ret) {
@@ -468,10 +489,12 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	if ((config.print_output & PRINT_OUTPUT_CSV) || (config.print_output & PRINT_OUTPUT_FORMATTED))
 	  fprintf(f, "--START (%u)--\n", writer_pid);
 	else if (config.print_output & PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
           void *json_obj;
 
 	  json_obj = compose_purge_init_json(config.name, writer_pid);
           if (json_obj) write_and_free_json(f, json_obj);
+#endif
 	}
       }
 
@@ -496,10 +519,12 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
       if ((config.print_output & PRINT_OUTPUT_CSV) || (config.print_output & PRINT_OUTPUT_FORMATTED))
         fprintf(stdout, "--START (%u)--\n", writer_pid);
       else if (config.print_output & PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
         void *json_obj;
 
         json_obj = compose_purge_init_json(config.name, writer_pid);
         if (json_obj) write_and_free_json(stdout, json_obj);
+#endif
       }
     }
 
@@ -842,15 +867,9 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         }
 
         if (!is_event) {
-  #if defined HAVE_64BIT_COUNTERS
           fprintf(f, "%-20" PRIu64 "  ", queue[j]->packet_counter);
           if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%-20" PRIu64 "  ", queue[j]->flow_counter);
           fprintf(f, "%" PRIu64 "\n", queue[j]->bytes_counter);
-  #else
-          fprintf(f, "%-10lu  ", queue[j]->packet_counter);
-          if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%-10lu  ", queue[j]->flow_counter);
-          fprintf(f, "%lu\n", queue[j]->bytes_counter);
-  #endif
         }
         else fprintf(f, "\n");
       }
@@ -1212,15 +1231,9 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         }
   
         if (!is_event) {
-  #if defined HAVE_64BIT_COUNTERS
           fprintf(f, "%s%" PRIu64 "", write_sep(sep, &count), queue[j]->packet_counter);
           if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%s%" PRIu64 "", write_sep(sep, &count), queue[j]->flow_counter);
           fprintf(f, "%s%" PRIu64 "\n", write_sep(sep, &count), queue[j]->bytes_counter);
-  #else
-          fprintf(f, "%s%lu", write_sep(sep, &count), queue[j]->packet_counter);
-          if (config.what_to_count & COUNT_FLOWS) fprintf(f, "%s%lu", write_sep(sep, &count), queue[j]->flow_counter);
-          fprintf(f, "%s%lu\n", write_sep(sep, &count), queue[j]->bytes_counter);
-  #endif
         }
         else fprintf(f, "\n");
       }
@@ -1237,30 +1250,30 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	       ((config.print_output & PRINT_OUTPUT_AVRO_BIN) ||
 	       (config.print_output & PRINT_OUTPUT_AVRO_JSON))) {
 #ifdef WITH_AVRO
-        avro_value_iface_t *avro_iface = avro_generic_class_from_schema(avro_acct_schema);
+        avro_value_iface_t *p_avro_iface = avro_generic_class_from_schema(p_avro_acct_schema);
 
-        avro_value_t avro_value = compose_avro_acct_data(config.what_to_count, config.what_to_count_2,
+        avro_value_t p_avro_value = compose_avro_acct_data(config.what_to_count, config.what_to_count_2,
 			 queue[j]->flow_type, &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust,
 			 pvlen, queue[j]->bytes_counter, queue[j]->packet_counter, queue[j]->flow_counter,
-			 queue[j]->tcp_flags, NULL, queue[j]->stitch, avro_iface);
+			 queue[j]->tcp_flags, NULL, queue[j]->stitch, p_avro_iface);
 
         if (config.sql_table) {
 	  if (config.print_output & PRINT_OUTPUT_AVRO_BIN) {
-	    if (avro_file_writer_append_value(avro_writer, &avro_value)) {
+	    if (avro_file_writer_append_value(p_avro_writer, &p_avro_value)) {
 	      Log(LOG_ERR, "ERROR ( %s/%s ): P_cache_purge(): avro_file_writer_append_value() failed: %s\n", config.name, config.type, avro_strerror());
 	      exit_gracefully(1);
 	    }
           }
 	  else if (config.print_output & PRINT_OUTPUT_AVRO_JSON) {
-	    write_avro_json_record_to_file(f, avro_value);
+	    write_avro_json_record_to_file(f, p_avro_value);
 	  }
         }
         else {
-	  write_avro_json_record_to_file(f, avro_value);
+	  write_avro_json_record_to_file(f, p_avro_value);
         }
 
-        avro_value_iface_decref(avro_iface);
-        avro_value_decref(&avro_value);
+        avro_value_iface_decref(p_avro_iface);
+        avro_value_decref(&p_avro_value);
 #else
         if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_avro_acct_data(): AVRO object not created due to missing --enable-avro\n", config.name, config.type);
 #endif
@@ -1281,17 +1294,19 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
     if ((config.print_output & PRINT_OUTPUT_CSV) || (config.print_output & PRINT_OUTPUT_FORMATTED))
       fprintf(f, "--END (%u)--\n", writer_pid);
     else if (config.print_output & PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
       void *json_obj;
 
       json_obj = compose_purge_close_json(config.name, writer_pid, qn, saved_index, duration);
       if (json_obj) write_and_free_json(f, json_obj);
+#endif
     }
   }
     
   if (config.sql_table) {
 #ifdef WITH_AVRO
     if (config.print_output & PRINT_OUTPUT_AVRO_BIN) {
-      avro_file_writer_flush(avro_writer);
+      avro_file_writer_flush(p_avro_writer);
     }
 #endif
 
@@ -1320,7 +1335,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
 #ifdef WITH_AVRO
     if (config.print_output & PRINT_OUTPUT_AVRO_BIN) {
-      avro_file_writer_close(avro_writer);
+      avro_file_writer_close(p_avro_writer);
     }
 #endif
     else {
@@ -1444,15 +1459,9 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   }
 
   if (!is_event) {
-#if defined HAVE_64BIT_COUNTERS
     fprintf(f, "PACKETS               ");
     if (config.what_to_count & COUNT_FLOWS) fprintf(f, "FLOWS                 ");
     fprintf(f, "BYTES\n");
-#else
-    fprintf(f, "PACKETS     ");
-    if (config.what_to_count & COUNT_FLOWS) fprintf(f, "FLOWS       ");
-    fprintf(f, "BYTES\n");
-#endif
   }
   else fprintf(f, "\n");
 }

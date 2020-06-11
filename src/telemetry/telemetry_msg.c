@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -70,7 +70,7 @@ int telemetry_recv_zmq_generic(telemetry_peer *peer, u_int32_t len)
 {
   int ret = 0;
 
-  ret = p_zmq_recv_bin(&telemetry_zmq_host.sock, peer->buf.base, peer->buf.len);
+  ret = p_zmq_recv_bin(&telemetry_zmq_host.sock, peer->buf.base, peer->buf.tot_len);
 
   if (ret > 0) {
     peer->stats.packet_bytes += ret;
@@ -81,21 +81,39 @@ int telemetry_recv_zmq_generic(telemetry_peer *peer, u_int32_t len)
 }
 #endif
 
+#if defined WITH_KAFKA
+int telemetry_recv_kafka_generic(telemetry_peer *peer, u_int32_t len)
+{
+  int ret = 0;
+
+  ret = p_kafka_consume_data(&telemetry_kafka_host, peer->buf.kafka_msg, (u_char *)peer->buf.base, peer->buf.tot_len);
+
+  if (ret > 0) {
+    peer->stats.packet_bytes += ret;
+    peer->msglen = ret;
+  }
+
+  peer->buf.kafka_msg = NULL;
+
+  return ret;
+}
+#endif
+
 int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
 {
   int ret = 0;
 
   if (!len) {
-    ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], (peer->buf.len - peer->buf.truncated_len), 0);
+    ret = recv(peer->fd, &peer->buf.base[peer->buf.cur_len], (peer->buf.tot_len - peer->buf.cur_len), 0);
   }
   else {
-    if (len <= (peer->buf.len - peer->buf.truncated_len)) { 
-      ret = recv(peer->fd, &peer->buf.base[peer->buf.truncated_len], len, MSG_WAITALL);
+    if (len <= (peer->buf.tot_len - peer->buf.cur_len)) { 
+      ret = pm_recv(peer->fd, &peer->buf.base[peer->buf.cur_len], len, MSG_WAITALL, DEFAULT_SLOTH_SLEEP_TIME);
     }
   }
   if (ret > 0) {
     peer->stats.packet_bytes += ret;
-    peer->msglen = (ret + peer->buf.truncated_len);
+    peer->msglen = (ret + peer->buf.cur_len);
   }
 
   return ret;
@@ -122,9 +140,18 @@ int telemetry_recv_json(telemetry_peer *peer, u_int32_t len, int *flags)
 
   (*flags) = FALSE;
 
-  if (!config.telemetry_zmq_address) ret = telemetry_recv_generic(peer, len);
+  if (!zmq_input && !kafka_input) {
+    ret = telemetry_recv_generic(peer, len);
+  }
 #if defined WITH_ZMQ
-  else ret = telemetry_recv_zmq_generic(peer, len);
+  else if (zmq_input) {
+    ret = telemetry_recv_zmq_generic(peer, len);
+  }
+#endif
+#if defined WITH_KAFKA
+  else if (kafka_input) {
+    ret = telemetry_recv_kafka_generic(peer, len);
+  }
 #endif
 
   telemetry_basic_process_json(peer);
@@ -157,7 +184,7 @@ int telemetry_recv_cisco_v0(telemetry_peer *peer, int *flags, int *data_decoder)
     type = telemetry_cisco_hdr_v0_get_type(peer);
     len = telemetry_cisco_hdr_v0_get_len(peer);
 
-    /* Linux does not implement MSG_WAITALL on UDP */
+    /* MSG_WAITALL does not apply to UDP */
     if (config.telemetry_port_udp) len = 0;
 
     ret = telemetry_recv_cisco(peer, flags, data_decoder, type, len);
@@ -181,7 +208,7 @@ int telemetry_recv_cisco_v1(telemetry_peer *peer, int *flags, int *data_decoder)
     len = telemetry_cisco_hdr_v1_get_len(peer);
     encap = telemetry_cisco_hdr_v1_get_encap(peer);
 
-    /* Linux does not implement MSG_WAITALL on UDP */
+    /* MSG_WAITALL does not apply to UDP */
     if (config.telemetry_port_udp) len = 0;
 
     if (type == TELEMETRY_CISCO_V1_TYPE_DATA) {
@@ -251,7 +278,7 @@ int telemetry_recv_jump(telemetry_peer *peer, u_int32_t len, int *flags)
 
 int telemetry_basic_validate_json(telemetry_peer *peer)
 {
-  if (peer->buf.base[peer->buf.truncated_len] != '{') {
+  if (peer->buf.base[peer->buf.cur_len] != '{') {
     peer->stats.msg_errors++;
     return ERR;
   }
@@ -259,80 +286,94 @@ int telemetry_basic_validate_json(telemetry_peer *peer)
     return FALSE;
 }
 
-#if defined (WITH_ZMQ)
 #if defined (WITH_JANSSON)
-int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf, size_t buflen, struct sockaddr *addr, socklen_t *addr_len)
+int telemetry_decode_producer_peer(struct telemetry_data *t_data, void *h, u_char *buf, size_t buflen, struct sockaddr *addr, socklen_t *addr_len)
 {
   json_t *json_obj = NULL, *telemetry_node_json, *telemetry_node_port_json;
   json_error_t json_err;
-  struct p_zmq_host *zmq_host = zh;
   struct host_addr telemetry_node;
   u_int16_t telemetry_node_port = 0;
-  int bytes, ret = SUCCESS;
+  int bytes = 0, ret = SUCCESS;
 
-  if (!zmq_host || !buf || !buflen || !addr || !addr_len) return ERR;
+  if (!buf || !buflen || !addr || !addr_len) return ERR;
 
-  bytes = p_zmq_recv_bin(&zmq_host->sock, buf, buflen);
+#if defined WITH_ZMQ
+  if (zmq_input) {
+    struct p_zmq_host *zmq_host = h;
+
+    bytes = p_zmq_recv_bin(&zmq_host->sock, buf, buflen);
+  }
+#endif
+#if defined WITH_KAFKA
+  else if (kafka_input) {
+    struct p_kafka_host *kafka_host = h;
+
+    bytes = p_kafka_consume_data(kafka_host, t_data->kafka_msg, buf, buflen);
+  }
+#endif
+
   if (bytes > 0) {
     buf[bytes] = '\0';
-    json_obj = json_loads(buf, 0, &json_err);
-  }
+    json_obj = json_loads((char *)buf, 0, &json_err);
 
-  if (json_obj) {
-    if (!json_is_object(json_obj)) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_zmq_peer(): json_is_object() failed.\n", config.name, t_data->log_str);
-      ret = ERR;
-      goto exit_lane;
-    }
-    else {
-      /* v1 */
-      telemetry_node_json = json_object_get(json_obj, "telemetry_node");
-
-      /* v2, v3 */
-      if (!telemetry_node_json) {
-	json_t *collector_json = NULL, *grpc_json = NULL;
-
-	collector_json = json_object_get(json_obj, "collector");
-	if (collector_json) grpc_json = json_object_get(collector_json, "grpc");
-	if (grpc_json) telemetry_node_json = json_object_get(grpc_json, "grpcPeer");
-      }
-
-      if (!telemetry_node_json) {
-	Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_zmq_peer(): no 'telemetry_node' element.\n", config.name, t_data->log_str);
+    if (json_obj) {
+      if (!json_is_object(json_obj)) {
+	Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_producer_peer(): json_is_object() failed.\n", config.name, t_data->log_str);
 	ret = ERR;
 	goto exit_lane;
       }
       else {
-	const char *telemetry_node_str;
+	/* v1 */
+	telemetry_node_json = json_object_get(json_obj, "telemetry_node");
 
-	telemetry_node_str = json_string_value(telemetry_node_json);
-	str_to_addr(telemetry_node_str, &telemetry_node);
+	/* v2, v3 */
+	if (!telemetry_node_json) {
+	  json_t *collector_json = NULL, *grpc_json = NULL;
+
+	  collector_json = json_object_get(json_obj, "collector");
+	  if (collector_json) grpc_json = json_object_get(collector_json, "grpc");
+	  if (grpc_json) telemetry_node_json = json_object_get(grpc_json, "grpcPeer");
+	}
+
+	if (!telemetry_node_json) {
+	  Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_producer_peer(): no 'telemetry_node' element.\n", config.name, t_data->log_str);
+	  ret = ERR;
+	  goto exit_lane;
+	}
+	else {
+	  const char *telemetry_node_str;
+
+	  telemetry_node_str = json_string_value(telemetry_node_json);
+	  str_to_addr(telemetry_node_str, &telemetry_node);
+	}
+
+	telemetry_node_port_json = json_object_get(json_obj, "telemetry_node_port");
+	if (telemetry_node_port_json) telemetry_node_port = json_integer_value(telemetry_node_port_json);
+
+	(*addr_len) = addr_to_sa(addr, &telemetry_node, telemetry_node_port);
       }
 
-      telemetry_node_port_json = json_object_get(json_obj, "telemetry_node_port");
-      if (telemetry_node_port_json) telemetry_node_port = json_integer_value(telemetry_node_port_json);
-
-      (*addr_len) = addr_to_sa(addr, &telemetry_node, telemetry_node_port);
+      exit_lane:
+      json_decref(json_obj);
     }
-
-    exit_lane:
-    json_decref(json_obj);
+    else {
+      Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_producer_peer(): invalid telemetry node JSON received: %s.\n", config.name, t_data->log_str, json_err.text);
+      if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): %s\n", config.name, t_data->log_str, buf);
+      ret = ERR;
+    }
   }
   else {
-    Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_decode_zmq_peer(): invalid telemetry node JSON received: %s.\n", config.name, t_data->log_str, json_err.text);
-    if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): %s\n", config.name, t_data->log_str, buf);
     ret = ERR;
   }
 
   return ret;
 }
 #else
-int telemetry_decode_zmq_peer(struct telemetry_data *t_data, void *zh, char *buf, size_t buflen, struct sockaddr *addr, socklen_t *addr_len)
+int telemetry_decode_producer_peer(struct telemetry_data *t_data, void *h, u_char *buf, size_t buflen, struct sockaddr *addr, socklen_t *addr_len)
 {
-  Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_decode_zmq_peer() requires --enable-zmq. Terminating.\n", config.name, t_data->log_str);
+  Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_decode_producer_peer() requires --enable-jansson. Terminating.\n", config.name, t_data->log_str);
   exit_gracefully(1);
 
   return 0;
 }
-#endif
 #endif

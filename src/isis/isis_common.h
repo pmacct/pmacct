@@ -73,7 +73,7 @@ struct nlpids
 struct flags
 {
   int maxindex;
-  struct list *free_idcs;
+  struct pm_list *free_idcs;
 };
 
 #endif /* _ISIS_COMMON_H_ */

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -50,7 +50,7 @@ void bgp_xcs_map_validate(char *filename, struct plugin_requests *req)
         table->pool[table->num].src_mask.family))
       valid = FALSE;
 
-    if (valid) {
+    if (valid && table->num < req->map_entries) {
       table->num++;
       table->pool[table->num].id = table->num;
     }
@@ -69,7 +69,7 @@ int bgp_xcs_map_dst_handler(char *filename, struct id_entry *e, char *value, str
   struct bgp_xconnect *target = NULL;
 
   if (table && table->pool) {
-    if (table->num < config.nfacctd_bgp_max_peers) {
+    if (table->num < req->map_entries) {
       target = &table->pool[table->num];
       target->dst_len = sizeof(target->dst);
       if (bgp_xcs_parse_hostport(value, (struct sockaddr *)&target->dst, &target->dst_len)) { 
@@ -92,7 +92,7 @@ int bgp_xcs_map_src_handler(char *filename, struct id_entry *e, char *value, str
   struct bgp_xconnect *target = NULL;
 
   if (table && table->pool) {
-    if (table->num < config.nfacctd_bgp_max_peers) {
+    if (table->num < req->map_entries) {
       target = &table->pool[table->num];
       target->src_len = sizeof(target->src);
 

@@ -235,9 +235,9 @@ extern int send_hello (struct isis_circuit *, int);
 extern int authentication_check (struct isis_passwd *, struct isis_passwd *);
 extern int isis_handle_pdu (struct isis_circuit *, u_char *);
 extern int isis_send_pdu_p2p (struct isis_circuit *, int);
-extern int build_psnp (int, struct isis_circuit *, struct list *);
+extern int build_psnp (int, struct isis_circuit *, struct pm_list *);
 extern int send_psnp (int, struct isis_circuit *);
-extern int build_csnp (int, u_char *, u_char *, struct list *, struct isis_circuit *);
+extern int build_csnp (int, u_char *, u_char *, struct pm_list *, struct isis_circuit *);
 extern int send_csnp (struct isis_circuit *, int);
 
 #endif /* _ISIS_PDU_H_ */

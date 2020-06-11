@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -63,7 +63,13 @@
 #define BGP_ATTR_AS4_PATH                       17
 #define BGP_ATTR_AS4_AGGREGATOR                 18
 #define BGP_ATTR_AS_PATHLIMIT                   21
-#define BGP_ATTR_LARGE_COMMUNITIES		32 /* rfc8092 (draft-ietf-idr-large-community) */
+#define BGP_ATTR_AIGP				26
+#define BGP_ATTR_LARGE_COMMUNITIES		32 /* rfc8092 */
+#define BGP_ATTR_PREFIX_SID			40
+
+#define BGP_NLRI_UNDEFINED			0
+#define BGP_NLRI_UPDATE				1
+#define BGP_NLRI_WITHDRAW			2
 
 /* BGP Attribute flags. */
 #define BGP_ATTR_FLAG_OPTIONAL  0x80    /* Attribute is optional. */
@@ -77,8 +83,8 @@
 #define MAX_NH_SELF_REFERENCES	1
 #define BGP_XCONNECT_STRLEN	(2 * (INET6_ADDRSTRLEN + PORT_STRLEN + 1) + 4) 
 
-/* Maximum BGP community patterns supported: nfacctd_bgp_stdcomm_pattern,
-   nfacctd_bgp_extcomm_pattern, bgp_blackhole_stdcomm_list, etc. */
+/* Maximum BGP community patterns supported: bgp_daemon_stdcomm_pattern,
+   bgp_daemon_extcomm_pattern, bgp_blackhole_stdcomm_list, etc. */
 #define MAX_BGP_COMM_PATTERNS	16
 #define MAX_BGP_COMM_ELEMS	MAX_BGP_COMM_PATTERNS
 
@@ -99,6 +105,9 @@
 #define BGP_ORIGIN_INCOMPLETE	2
 #define BGP_ORIGIN_MAX		2
 #define BGP_ORIGIN_UNKNOWN	3
+
+#define BGP_PREFIX_SID_LI_TLV		1
+#define BGP_PREFIX_SID_OSRGB_TLV	2
 
 /* structures */
 struct bgp_dump_event {
@@ -154,8 +163,12 @@ struct bgp_peer_stats {
 
 struct bgp_peer_buf {
   char *base;
-  u_int32_t len;
-  u_int32_t truncated_len;
+  u_int32_t tot_len; /* total buffer length */
+  u_int32_t cur_len; /* current message consumed length (for segmented reads) */
+  u_int32_t exp_len; /* current message expected length */
+#if defined WITH_KAFKA
+  void *kafka_msg;
+#endif
 };
 
 struct bgp_peer {
@@ -164,6 +177,7 @@ struct bgp_peer {
   int lock;
   int type; /* ie. BGP vs BMP */
   u_int8_t status;
+  u_int8_t version;
   as_t myas;
   as_t as;
   u_int16_t ht;
@@ -174,7 +188,7 @@ struct bgp_peer {
   u_int16_t tcp_port;
   u_int8_t cap_mp;
   char *cap_4as;
-  u_int8_t cap_add_paths;
+  u_int8_t cap_add_paths[AFI_MAX][SAFI_MAX];
   u_int32_t msglen;
   struct bgp_peer_stats stats;
   struct bgp_peer_buf buf;
@@ -187,6 +201,7 @@ struct bgp_peer {
   void *bmp_se;
 
   struct bgp_xconnect xc;
+  struct bgp_peer_buf xbuf;
   int xconnect_fd;
 };
 
@@ -222,6 +237,7 @@ struct bgp_misc_structs {
   int max_peers;
   void *peers_cache;
   void *peers_port_cache;
+  struct log_notification *peers_limit_log;
   void *xconnects;
 
   char *neighbors_file;
@@ -351,7 +367,7 @@ struct bgp_lg_rep_gp_data {
 #include "bgp_util.h"
 
 /* prototypes */
-extern void nfacctd_bgp_wrapper();
+extern void bgp_daemon_wrapper();
 extern void skinny_bgp_daemon();
 extern void skinny_bgp_daemon_online();
 extern void bgp_prepare_thread();

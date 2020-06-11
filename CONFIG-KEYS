@@ -16,14 +16,18 @@ LEGEND of flags:
 
 GLOBAL		Can't be configured on individual plugins
 NO_GLOBAL	Can't be configured globally
-NO_PMACCTD	Does not apply to 'pmacctd'
-NO_UACCTD	Does not apply to 'uacctd' 
-NO_NFACCTD	Does not apply to 'nfacctd'
-NO_SFACCTD	Does not apply to 'sfacctd' 
+NO_PMACCTD	Does not apply to pmacctd
+NO_UACCTD	Does not apply to uacctd 
+NO_NFACCTD	Does not apply to nfacctd
+NO_SFACCTD	Does not apply to sfacctd
+NO_PMBGPD	Does not apply to pmbgpd
+NO_PMBMPD	Does not apply to pmbmpd
 ONLY_PMACCTD	Applies only to pmacctd
 ONLY_UACCTD	Applies only to uacctd
 ONLY_NFACCTD	Applies only to nfacctd
 ONLY_SFACCTD	Applies only to sfacctd
+ONLY_PMBGPD	Applies only to pmbgpd
+ONLY_PMBMPD	Applies only to pmbmpd
 MAP		Indicates the input file is a map
 
 
@@ -140,7 +144,7 @@ DESC:		Expects full pathname to a file containing custom-defined primitives. Onc
 		map does not support reloading at runtime. 
 DEFAULT:	none
 
-KEY:		aggregate_filter [NO_GLOBAL]
+KEY:		aggregate_filter [NO_GLOBAL, NO_UACCTD]
 DESC:		Per-plugin filtering applied against the original packet or flow. Aggregation
 		is performed slightly afterwards, upon successful match of this filter.
 		By binding a filter, in tcpdump syntax, to an active plugin, this directive
@@ -163,11 +167,10 @@ DESC:		Per-plugin filtering applied against the original packet or flow. Aggrega
 		'pmacctd_force_frag_handling' directive.
 DEFAULT:	none
 
-KEY:		pcap_filter [GLOBAL, PMACCTD_ONLY]
+KEY:		pcap_filter [GLOBAL, PMACCTD_ONLY, ONLY_PMBMPD]
 DESC:		This filter is global and applied to all incoming packets. It's passed to libpcap
 		and expects libpcap/tcpdump filter syntax. Being global it doesn't offer a great
-		flexibility but it's the fastest way to drop unwanted traffic. It applies only to
-		pmacctd.
+		flexibility but it's the fastest way to drop unwanted traffic.
 DEFAULT:	none
 
 KEY:		pcap_protocol [GLOBAL, PMACCTD_ONLY]
@@ -187,7 +190,7 @@ DESC:		Specifies the maximum number of bytes to capture for each packet. This di
 		protocols. Default snaplen values are ok if classification is disabled.
 DEFAULT:	128 bytes; 64 bytes if compiled with --disable-ipv6
 
-KEY:		plugins (-P)
+KEY:		plugins (-P) [GLOBAL]
 VALUES:		[ memory | print | mysql | pgsql | sqlite3 | nfprobe | sfprobe | tee | amqp | kafka ]
 DESC:		Plugins to be enabled. memory, print, nfprobe, sfprobe and tee plugins are always
 		included in pmacct executables as they do not contain dependencies on external
@@ -215,9 +218,9 @@ DESC:		Plugins to be enabled. memory, print, nfprobe, sfprobe and tee plugins ar
 		plugin as: 'directive[name]: value'.
 DEFAULT:	memory
 
-KEY:		[ nfacctd_pipe_size | sfacctd_pipe_size | pmacctd_pipe_size | tee_pipe_size ]
-DESC:		Defines the size of the kernel socket to read (ie. daemons) and write (ie. tee plugin)
-		traffic data. The socket is highlighted below with "XXXX": 
+KEY:		[ nfacctd_pipe_size | sfacctd_pipe_size | pmacctd_pipe_size ] [GLOBAL, NO_UACCTD]
+DESC:		Defines the size of the kernel socket to read  traffic data. The socket is highlighted
+		below with "XXXX": 
 
                                          XXXX 
                 [network] ----> [kernel] ----> [core process] ----> [plugin] ----> [backend]
@@ -380,16 +383,16 @@ DESC:		If set to true, this option causes 'pmacctd' to wait for the listening de
 		detected.
 DEFAULT:	false
 
-KEY:		pcap_savefile (-I) [GLOBAL, NO_UACCTD]
+KEY:		pcap_savefile (-I) [GLOBAL, NO_UACCTD, NO_PMBGPD]
 DESC:		File in libpcap savefile format to read data from (as an alternative to live data
-		collection. The file has to be correctly finalized in order to be read. As soon as
-		the daemon finished processing the file, it exits (unless the 'pcap_savefile_wait'
-		config directive is specified). The directive is mutually exclusive with pcap_interface
-		(-i) for pmacctd and with [ns]facctd_ip (-L) and [ns]facctd_port (-l) for nfacctd
-		and sfacctd respectively.
+		collection). As soon as the daemon finished processing the file, it exits (unless in
+		pmacctd the 'pcap_savefile_wait' config directive is specified). The directive is
+		mutually exclusive with pcap_interface (-i) for pmacctd, with [ns]facctd_ip (-L)
+		and [ns]facctd_port (-l) for nfacctd and sfacctd respectively and bmp_daemon_ip
+		for pmbmpd.
 DEFAULT:	none
 
-KEY:            pcap_savefile_wait (-W) [GLOBAL, NO_UACCTD]
+KEY:            pcap_savefile_wait (-W) [GLOBAL, NO_UACCTD, NO_PMBGPD]
 VALUES:         [ true | false ]
 DESC:           If set to true, this option will cause the daemon to wait indefinitely for a signal
 		(ie. CTRL-C when not daemonized or 'killall -9 pmacctd' if it is) after being finished
@@ -397,20 +400,21 @@ DESC:           If set to true, this option will cause the daemon to wait indefi
 		when inserting fixed amounts of data into memory tables.
 DEFAULT:        false
 
-KEY:		pcap_savefile_delay (-Z) [GLOBAL, NO_UACCTD]
+KEY:		pcap_savefile_delay (-Z) [GLOBAL, NO_UACCTD, NO_PMBGPD]
 DESC:		When reading from a pcap_savefile, sleep for the supplied amount of seconds before
 		(re)playing the file. For example this is useful to let a BGP session be established
-		and a RIB be finalised before playing a given file.
+		and a RIB be finalised before playing a given file or buy time among replays so for
+		a dump event to trigger.
 DEFAULT:	0
 
-KEY:            pcap_savefile_replay (-Y) [GLOBAL, NO_UACCTD]
+KEY:            pcap_savefile_replay (-Y) [GLOBAL, NO_UACCTD, NO_PMBGPD]
 DESC:           When reading from a pcap_savefile, replay content for the specified amount of times.
-                Other than for testing in general, ie. infinite loops, for example this is useful
-		when playing templated-based protocols, ie. NetFlow v9/IPFIX, to replay data packets 
-		that could not be parsed the first time due to the template not being sent yet.
+                Other than for testing in general, this may be useful when playing templated-based
+		protocols, ie. NetFlow v9/IPFIX, to replay data packets  that could not be parsed
+		the first time due to the template not being sent yet.
 DEFAULT:        1
 
-KEY:		[ pcap_direction | uacctd_direction ] [GLOBAL, NO_NFACCTD, NO_SFACCTD] 
+KEY:		[ pcap_direction | uacctd_direction ] [GLOBAL, ONLY_PMACCTD]
 VALUES:		[ "in", "out" ]
 DESC:		Defines the traffic capturing direction with two possible values, "in" and "out". In
 		pmacctd this is used to determine which primitive to populate, whether in_iface or
@@ -470,12 +474,12 @@ DESC:		Defines the size of each memory pool. For further details read INTERNALS 
 		plugin'. The number of memory pools is defined by the 'imt_mem_pools_number' directive.
 DEFAULT:	8192
 
-KEY:		syslog (-S)
+KEY:		syslog (-S) [GLOBAL]
 VALUES:		[ auth | mail | daemon | kern | user | local[0-7] ]
 DESC:		Enables syslog logging, using the specified facility.
 DEFAULT:	none (logging to stderr)
 
-KEY:		logfile 
+KEY:		logfile [GLOBAL] 
 DESC:           Enables logging to a file (bypassing syslog); expected value is a pathname. The target
 		file can be re-opened by sending a SIGHUP to the daemon so that, for example, logs can
 		be rotated. 
@@ -1068,6 +1072,14 @@ NOTES:		Update of the latest pointer is done evaluating files name. For correct 
 		recommended to delete existing symlinks.
 DEFAULT:	none
 
+KEY:		print_write_empty_file
+VALUES:         [ true | false ]
+DESC:		If set to true, print plugin will write an empty file (zero length) if there was no
+		data to output; this also aligns to the pre 1.5.0 behaviour, as documnted in the
+		UPGRADE document. The default behaviour is instead to only produce a log message
+		with "ET: X" as Estimated Time value. 
+DEFAULT:	false
+
 KEY:		sql_table_schema
 DESC:		Full pathname to a file containing a SQL table schema. It allows to create the SQL table
 		if it does not exist; a config example where this directive could be useful follows:
@@ -1151,7 +1163,9 @@ DESC:		Defines the username to use when connecting to the server.
 DEFAULT:	pmacct
 
 KEY:		sql_passwd
-DESC:		Defines the password to use when connecting to the server.
+DESC:		Defines the password to use when connecting to the server. Note that since this directive
+		does encompass a default value (see below), it is not possible to connect to a server
+		that performs password authentication with an empy password. 
 DEFAULT:	'arealsmartpwd'
 
 KEY:		[ sql_refresh_time | print_refresh_time | amqp_refresh_time | kafka_refresh_time ] (-r)
@@ -1340,10 +1354,11 @@ DESC:		Specifies time interval at which the executable specified by 'sql_trigger
 DEFAULT:	none
 
 KEY:		[ sql_preprocess | print_preprocess | amqp_preprocess | kafka_preprocess ]
-DESC:		Allows to process aggregates (via a comma-separated list of conditionals and checks) while
-		purging data to the backend thus resulting in a powerful selection tier; aggregates filtered
-		out may be just discarded or saved through the recovery mechanism (if enabled, if supported
-		by the backend). The set of available preprocessing directives follows:
+DESC:		Allows to process aggregates (via a comma-separated list of conditionals and checks, ie.
+		"qnum=1000000, minb=10000") while purging data to the backend thus resulting in a powerful
+		selection tier; aggregates filtered out may be just discarded or saved through the recovery
+		mechanism (if enabled, if supported by the backend). The set of available preprocessing
+		directives follows:
 		
 		KEY: qnum
 		DESC: conditional. Subsequent checks will be evaluated only if the number of queries to be
@@ -1631,6 +1646,12 @@ DEFAULT:        false
 
 KEY:		[ nfacctd_port | sfacctd_port ] (-l) [GLOBAL, NO_PMACCTD, NO_UACCTD]
 DESC:		Defines the UDP port where to bind nfacctd (nfacctd_port) and sfacctd (sfacctd_port) daemons.
+                SO_REUSEPORT feature can be leveraged on Linux: it allows multiple daemons to bind the same
+                local address and port in order to load-balance processing of incoming packets; if doing so
+		with incoming NetFlow v9/IPFIX template-based protocols, nfacctd_templates_receiver and
+		nfacctd_templates_port should be used. At the end of this document, reference (1) to a
+		URL to a presentation of the SO_REUSEPORT feature. To enable SO_REUSEPORT on a Linux system
+		supporting it 'sysctl net.core.allow_reuseport=1'.
 DEFAULT:	nfacctd_port: 2100; sfacctd_port: 6343 
 
 KEY:		[ nfacctd_ip | sfacctd_ip ] (-L) [GLOBAL, NO_PMACCTD, NO_UACCTD]
@@ -1663,7 +1684,7 @@ DESC:           Defines the ZeroMQ queue address (host and port) to connect to f
 		and sFlow from. An example of the expected value is "127.0.0.1:50000".
 DEFAULT:        none
 
-KEY:		core_proc_name
+KEY:		core_proc_name [GLOBAL]
 DESC:		Defines the name of the core process. This is the equivalent to instantiate named plugins but
 		for the core process.
 DEFAULT:	'default'
@@ -1709,16 +1730,29 @@ NOTES:          If NetFlow sampling is enabled, it is recommended to have counte
                 (nfacctd_renormalize set to true).
 DEFAULT:        false
 
-KEY:		nfacctd_templates_file [NFACCTD_ONLY]
-DESC:		Full pathname to a file containing serialized templates data from previous nfacctd use.
-                Templates are loaded from this file when nfacctd is (re)started in order to reduce the
-		amount of dropped packets due to unknown templates. Be aware that this file will be
-		written to with possible new templates and updated versions of provided ones. Hence, an
-                empty file can be specified and incoming templates will be cached into it. This file
-		will be created if it does not exist. Only JSON format is currently supported and
-		requires compiling against Jansson library (--enable-jansson when configuring for
-		compiling).
+KEY:		nfacctd_templates_file [GLOBAL, NFACCTD_ONLY]
+DESC:		Full pathname to a file to store JSON-serialized templates for NetFlow v9/IPFIX data.
+		At startup, nfacctd reads templates stored in this file (if any and if the file exists)
+		in order to reduce the initial amount of dropped packets due to unknown templates. In
+		steady state, templates received from the network are stored in this file. Warning: if,
+		at startup time, data records are encoded with a template structure different than the
+		one that was stored in the file, effectiveness of this feature is (intuitively) greatly
+		reduced. This file will be created if it does not exist. This feautre requires compiling
+		against Jansson library (--enable-jansson when configuring pmacct for compiling).
 DEFAULT:        none
+
+KEY:		nfacctd_templates_receiver [GLOBAL, NFACCTD_ONLY]
+DESC:		Defines a receiver where to export NetFlow v9/IPFIX templates, ideally a replicator. To
+		help in clustered scenarios especially when leveraging SO_REUSEPORT (multiple nfacctd
+		listening on the same IP and port). If IPv4, the value is expected as 'address:port'.
+		If IPv6, it is expected as '[address]:port'. 
+DEFAULT:	none
+
+KEY:		nfacctd_templates_port [GLOBAL, NFACCTD_ONLY]
+DESC:		Defines the UDP port where to bind nfacctd for receiving (replicated) templates. If a
+		template is received on this port and nfacctd_templates_receiver is specified, it is
+		not replicated (in order to avoid the case of infinite loops).  
+DEFAULT:	none
 
 KEY:            [ nfacctd_stitching | sfacctd_stitching | pmacctd_stitching | uacctd_stitching ]
 VALUES:         [ true | false ]
@@ -2095,8 +2129,9 @@ DESC:           Allows to define Engine ID and Engine Type fields for NetFlow v5
 		numbers, each up to maximum 8-bits length and separated by the ":" symbol; in case of NetFlow
 		v9/IPFIX it expects a single non-negative number up-to maximum 32-bits length. This comes
 		useful to allow a collector to distinguish between distinct probe instances running on the
-		same host; this is also important for letting NetFlow v9/IPFIX templates to work correctly: in
-		fact, template IDs get automatically selected only inside single daemon instances.
+		same host (collector would report missing flows due to sequencing jumps); this is also
+		important for letting NetFlow v9/IPFIX templates to work correctly: in fact, template IDs get
+		automatically selected only inside single daemon instances.
 DEFAULT:	[ 0:0, 0 ]
 
 KEY:		[ nfacctd_peer_as | sfacctd_peer_as | nfprobe_peer_as | sfprobe_peer_as ]
@@ -2151,6 +2186,12 @@ DESC:		Disables caching and summarisation of flows. By default a NetFlow/IPFIX a
 		responsiveness. 
 DEFAULT:	false
 
+KEY:		nfprobe_tstamp_usec
+VALUES:		[ true | false |
+DESC:		Exports timestamps to the usec resolution (instead of default msec) using NetFlow v9 / IPFIX
+		IEs 154 and 155. This knob is not compatible with timestamps_secs configuration directive. 
+DEFAULT:	false
+
 KEY:		sfprobe_receiver
 DESC:		Defines the remote IP address/hostname and port to which NetFlow datagrams are to be exported.
 		If IPv4, the value is expected as 'address:port'. If IPv6, it is expected as '[address]:port'.
@@ -2195,12 +2236,10 @@ DEFAULT:	false
 KEY:		bmp_daemon [GLOBAL]
 VALUES:         [ true | false ]
 DESC:           Enables the BMP daemon thread. BMP, BGP Monitoring Protocol, can be used to monitor BGP
-		sessions. The implementation was originally based on the draft-ietf-grow-bmp-07 IETF
-		document (whereas the current review is against draft-ietf-grow-bmp-17). The BMP daemon
-		currently supports BMP data, events and stats, ie. initiation, termination, peer up,
-		peer down, stats and route monitoring messages. The daemon enables to write BMP messages
-		to files, AMQP and Kafka brokers, real-time (msglog) or at regular time intervals (dump).
-		Also, route monitoring messages are saved in a RIB structure for IP prefix lookup.
+		sessions. The BMP daemon supports BMP data, events and stats, ie. initiation, termination,
+		peer up, peer down, stats and route monitoring messages. The daemon enables to write BMP
+		messages to files, AMQP and Kafka brokers, real-time (msglog) or at regular time intervals
+		(dump). Also, route monitoring messages are saved in a RIB structure for IP prefix lookup.
 		For further referece see examples in the QUICKSTART document and/or description of the
 		bmp_* config keys in this document. The BMP daemon is a separate thread in the NetFlow
 		(nfacctd) and sFlow (sfacctd) collectors.
@@ -2433,14 +2472,17 @@ DESC:           Full pathname to a file containing source MED (Multi Exit Discri
 		SIGUSR2 signal (ie. "killall -USR2 nfacctd").
 DEFAULT:	none
 
-KEY:		bgp_agent_map [GLOBAL, MAP]
-DESC:		Full pathname to a file to map source IP address of NetFlow agents and AgentID of sFlow
-		agents to source IP address or Router ID of BGP peers. This is to provide flexibility
-		in a number of scenarios, for example and not limited to BGP peering with RRs, hub-and-
-		spoke topologies, single-homed networks - but also BGP sessions traversing NAT. pmacctd,
-		uacctd daemons are required to use a bgp_agent_map with up to two "catch-all" entries -
-		working in a primary/backup fashion (see bgp_agent.map.example in the examples section):
-		this is because these daemons do not have a NetFlow/sFlow source address to match to.
+KEY:		[ bgp_agent_map | bmp_agent_map ] [GLOBAL, MAP]
+DESC:		Full pathname to a file to map source 1a) IP address of NetFlow/IPFIX agents or 1b)
+		AgentID of sFlow agents to 2a) session IP address or Router ID of BGP peers or 2b)
+		session IP address of BMP peers.
+		This feature is meant to provide flexibility in a number of scenarios, for example
+		BGP peering with RRs, hub-and-spoke topologies, single-homed networks - but also BGP
+		sessions traversing NAT.
+		pmacctd and uacctd daemons are required to use this map with at most two "catch-all"
+		entries working in a primary/backup fashion (see for more info bgp_agent.map.example
+		in the examples section): this is because these daemons do not have a NetFlow/sFlow
+		source address to match to.
 		Number of map entries (by default 384) can be modified via maps_entries. Content can be
 		reloaded at runtime by sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd").
 DEFAULT:	none
@@ -2629,12 +2671,12 @@ DEFAULT:        none
 
 KEY:		bgp_daemon_lg [GLOBAL]
 VALUES:		[ true | false ]
-DESC:		Applies to pmbgpd, enables the BGP Looking Glass server allowing to perform queries,
-		ie. lookup IP addresses/prefixes or get the list of BGP peers, against available BGP
-		RIBs. The server is asyncronous and uses ZeroMQ as transport layer to serve incoming
-		queries. Sample C/Python LG clients are available in 'examples/lg'. Sample LG server
-		config is available in QUICKSTART. Request/Reply Looking Glass formats are documented
-		in 'docs/LOOKING_GLASS_FORMAT'.
+DESC:		Enables the BGP Looking Glass server allowing to perform queries, ie. lookup IP
+		addresses/prefixes or get the list of BGP peers, against available BGP RIBs. The
+		server is asyncronous and uses ZeroMQ as transport layer to serve incoming queries.
+		Sample C/Python LG clients are available in 'examples/lg'. Sample LG server config
+		is available in QUICKSTART. Request/Reply Looking Glass formats are documented in
+		'docs/LOOKING_GLASS_FORMAT'.
 DEFAULT:	false
 
 KEY:            bgp_daemon_lg_ip [GLOBAL]
@@ -2661,13 +2703,14 @@ DESC:		Defines the amount of threads of the BGP Looking Glass to serve incoming 
 DEFAULT:	8
 
 KEY:		bgp_daemon_xconnect_map [MAP, GLOBAL]
-DESC:		Full pathname to a file to cross-connect BGP peers (ie. edge routers part of an
-		observed network topology) to BGP collectors (ie. nfacctd daemons correlating flow
-		and BGP data). The mapping works only against the IP address layer and not the BGP
-		Router ID, only 1:1 relationships are formed (ie. this is about cross-connecting,
-		not replication) and only one session per BGP peer is supported (ie. multiple BGP
-		agents are running on the same IP address or NAT traversal scenarios are not
-		supported [yet]). The use of TCP-MD5 may pose challenges. 
+DESC:		Enables BGP proxying. Full pathname to a file to cross-connect BGP peers (ie. edge
+		routers part of an observed network topology) to BGP collectors (ie. nfacctd daemons
+		correlating flow and BGP data). The mapping works only against the IP address layer
+		and not the BGP Router ID, only 1:1 relationships are formed (ie. this is about
+		cross-connecting, not replication) and only one session per BGP peer is supported
+		(ie. multiple BGP agents are running on the same IP address or NAT traversal
+		scenarios are not supported [yet]). TCP-MD5 is supported on inbound sessions to the
+		proxy (via bgp_daemon_md5_file) but not on outbound ones. 
 		A sample map is provided in 'examples/bgp_xconnects.map.example'. Number of map
 		entries (by default 384) can be modified via maps_entries. Content can be reloaded
 		at runtime by sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd").
@@ -2807,6 +2850,21 @@ DESC:           Defines full pathname to a list of remote IP addresses and ports
 		-USR2 nfacctd").
 DEFAULT:	none
 
+KEY:		tee_pipe_size
+DESC:           Defines the size of the kernel socket to write replicated traffic data. The socket is
+		highlighted below with "XXXX":
+
+								 XXXX
+		[kernel] ----> [core process] ----> [tee plugin] ----> [kernel] ----> [network]
+			       [_____________pmacct____________]
+
+		On Linux systems, if this configuration directive is not specified default socket size
+		awarded is defined in /proc/sys/net/core/[rw]mem_default ; the maximum configurable
+		socket size is defined in /proc/sys/net/core/[rw]mem_max instead. Still on Linux, the
+		"drops" field of /proc/net/udp or /proc/net/udp6 can be checked to ensure its value
+		is not increasing.
+DEFAULT:	Operating System default
+
 KEY:		tee_source_ip
 DESC:           Defines the local IP address from which NetFlow/sFlow datagrams are to be replicate from.
 		Only a numerical IPv4/IPv6 address is expected. The supplied IP address is required to be
@@ -2836,25 +2894,6 @@ KEY:            tee_kafka_config_file
 DESC:           Full pathname to a file containing directives to configure librdkafka when emitting
 		replicated datagrams to a Kafka broker. See kafka_config_file for more info.
 DEFAULT:        none
-
-KEY:		tmp_asa_bi_flow
-VALUES:		[ true | false ]
-DESC:		Bi-flows use two counters to report counters, ie. bytes and packets, in forward and
-		reverse directions. This hack (ab)uses the packets field in order to store the extra
-		bytes counter. The patch specifically targets NetFlow v9/IPFIX field types #231 and
-		#232 and has been tested against a Cisco ASA export.
-DEFAULT:	false
-
-KEY:		tmp_bgp_lookup_compare_ports
-VALUES:		[ true | false ]
-DESC:		When looking up BGP RIBs in traffic accounting daemons (ie. nfacctd, sfacctd, etc.), 
-		if set to true, try to compare both the socket IP address and the TCP port of a BGP
-		session (that is, not only the socket IP address as when this knob is set to false).
-		This is always the case when a bgp_agent_map is defined and the 'bgp_port' keyword
-		is specified; when 'bgp_port' is not specified (or a bgp_agent_map is not defined),
-		this knob essentially forces the comparison against only the BGP Router-ID. This may
-		be wanted in NAT traversal scenarios and/or BGP xconnects (bgp_daemon_xconnect_map).
-DEFAULT:	false
 
 KEY:		thread_stack
 DESC:		Defines the stack size for threads screated by the daemon. The value is expected in
@@ -2930,9 +2969,31 @@ DESC:           Marks self-originated Streaming Telemetry messages with the supp
 DEFAULT:        0
 
 KEY:		telemetry_daemon_zmq_address [GLOBAL]
-DESC:           Defines the ZeroMQ queue address (host and port) to connect to for consuming Streaming
-		Telemetry data from. An example of the expected value is "127.0.0.1:50000".
+DESC:           Defines the ZeroMQ queue address (host and port) to connect to for consuming
+		JSON-encoded Streaming Telemetry data from. An example of the expected value is
+		"127.0.0.1:50000".
 DEFAULT:	none
+
+KEY:		telemetry_daemon_kafka_broker_host [GLOBAL]
+DESC:		Defines one or multiple, comma-separated, Kafka brokers to consume JSON-encoded
+		Streaming Telemetry data from. See kafka_broker_host for more info.
+DEFAULT:	none
+
+KEY:		telemetry_daemon_kafka_broker_port [GLOBAL]
+DESC:		Defines the Kafka broker port to consume JSON-encoded Streaming Telemetry data
+		from. See kafka_broker_host for more info.
+DEFAULT:	9092
+
+KEY:            telemetry_daemon_kafka_config_file [GLOBAL]
+DESC:           Full pathname to a file containing directives to configure librdkafka to consume
+		JSON-encoded Streaming Telemetry data from. See kafka_config_file for more info.
+DEFAULT:        none
+
+KEY:            telemetry_daemon_kafka_topic [GLOBAL]
+DESC:           Name of the Kafka topic to consume JSON-encoded Streaming Telemetry data from. No
+		variables are supported for dynamic naming of the topic. See kafka_topic for more
+		info.
+DEFAULT:        none
 
 KEY:            telemetry_daemon_msglog_output [GLOBAL]
 VALUES:         [ json ]
@@ -2989,6 +3050,58 @@ KEY:		classifier_giveup_proto_other [GLOBAL]
 DESC:		Same as classifier_giveup_proto_tcp but for flows which IP protocol is different than
 		TCP and UDP.
 DEFAULT:	8
+
+KEY:		redis_host
+DESC:		Defines the Redis server IP address and port to connect to, ie. "127.0.0.1:6379". 
+		The port needs to be specified. This directive, in conjunction with the cluster_*
+		ones, enables forming a cluster with the other daemons pointed to the same
+		<redis_host, cluster_name>. It needs pmacct to be compiled with --enable-redis. 
+DEFAULT:	none
+
+KEY:		redis_db
+DESC:		Defines the Redis database to select. The database is a positive integer and, at
+		time of this writing, allowed numbers are in the range 0 to 15.
+DEFAULT:	0
+
+KEY:		cluster_name
+DESC:		Defines the name of the cluster; it will become the prefix of every key stored in
+		the Redis database. It enables forming a cluster with the other daemons pointed to
+		the same <redis_host, cluster_name>. Cluster name is expected to be a string, ie.
+		"test", "pmacct", etc. 
+DEFAULT:	none
+
+KEY:		cluster_id
+DESC:		Defines the ID of the node inside the <redis_host, cluster_name> cluster. Each daemon
+		must be assigned a unique ID and responsibility for respecting this property is left
+		to the user. Clsuter ID is expected to be a positive integer.
+DEFAULT:	0
+
+KEY:		tmp_asa_bi_flow
+VALUES:		[ true | false ]
+DESC:		Bi-flows use two counters to report counters, ie. bytes and packets, in forward and
+		reverse directions. This hack (ab)uses the packets field in order to store the extra
+		bytes counter. The patch specifically targets NetFlow v9/IPFIX field types #231 and
+		#232 and has been tested against a Cisco ASA export.
+DEFAULT:	false
+
+KEY:		tmp_bgp_lookup_compare_ports
+VALUES:		[ true | false ]
+DESC:		When looking up BGP RIBs in traffic accounting daemons (ie. nfacctd, sfacctd, etc.), 
+		if set to true, try to compare both the socket IP address and the TCP port of a BGP
+		session (that is, not only the socket IP address as when this knob is set to false).
+		This is always the case when a bgp_agent_map is defined and the 'bgp_port' keyword
+		is specified; when 'bgp_port' is not specified (or a bgp_agent_map is not defined),
+		this knob essentially forces the comparison against only the BGP Router-ID. This may
+		be wanted in NAT traversal scenarios and/or BGP xconnects (bgp_daemon_xconnect_map).
+DEFAULT:	false
+
+KEY:		tmp_bgp_daemon_route_refresh
+VALUES:		[ true | false ]
+DESC:		If set to true, a Route Refresh capability is presented at BGP OPEN message to the
+		peers (if, indeed, it was originally set by the peer). When receiving a route refresh
+		message, that is simply ignored. This does not intend to be a feature but a hack to
+		counter certain vendor bugs.
+DEFAULT:	false
 
 REFERENCES:
 

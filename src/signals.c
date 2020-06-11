@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -118,10 +118,10 @@ void PM_sigint_handler(int signum)
   struct plugins_list_entry *list = plugins_list;
   char shutdown_msg[] = "pmacct received SIGINT - shutting down";
 
-  if (config.acct_type == ACCT_PMBGP || config.nfacctd_bgp == BGP_DAEMON_ONLINE) {
+  if (config.acct_type == ACCT_PMBGP || config.bgp_daemon == BGP_DAEMON_ONLINE) {
     int idx;
 
-    for (idx = 0; idx < config.nfacctd_bgp_max_peers; idx++) {
+    for (idx = 0; idx < config.bgp_daemon_max_peers; idx++) {
       if (peers[idx].fd)
 	bgp_peer_close(&peers[idx], FUNC_TYPE_BGP, TRUE, TRUE, BGP_NOTIFY_CEASE, BGP_NOTIFY_CEASE_ADMIN_SHUTDOWN, shutdown_msg);
     }
@@ -173,31 +173,18 @@ void PM_sigint_handler(int signum)
   exit(0);
 }
 
+void PM_sigalrm_noop_handler(int signum)
+{
+  /* noop */
+}
+
 void reload()
 {
-  int logf;
-
-  if (config.syslog) {
-    closelog();
-    logf = parse_log_facility(config.syslog);
-    if (logf == ERR) {
-      config.syslog = NULL;
-      Log(LOG_WARNING, "WARN ( %s/%s ): specified syslog facility is not supported; logging to console.\n", config.name, config.type);
-    }
-    openlog(NULL, LOG_PID, logf);
-    Log(LOG_INFO, "INFO ( %s/%s ): Start logging ...\n", config.name, config.type);
-  }
-
-  if (config.logfile) {
-    fclose(config.logfile_fd);
-    config.logfile_fd = open_output_file(config.logfile, "a", FALSE);
-  }
-
-  if (config.nfacctd_bgp_msglog_file) reload_log_bgp_thread = TRUE;
-  if (config.nfacctd_bmp_msglog_file) reload_log_bmp_thread = TRUE;
+  reload_log = TRUE;
+  if (config.bgp_daemon_msglog_file) reload_log_bgp_thread = TRUE;
+  if (config.bmp_daemon_msglog_file) reload_log_bmp_thread = TRUE;
   if (config.sfacctd_counter_file) reload_log_sf_cnt = TRUE;
   if (config.telemetry_msglog_file) reload_log_telemetry_thread = TRUE;
-
 }
 
 void push_stats()

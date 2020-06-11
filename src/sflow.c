@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -552,7 +552,7 @@ void readExtendedGateway(SFSample *sample)
 	len_tot = strlen(sample->dst_as_path);
 
         if ((len_tot+len_asn) < LARGEBUFLEN) {
-          strncat(sample->dst_as_path, asn_str, len_asn);
+          strncat(sample->dst_as_path, asn_str, (sizeof(sample->dst_as_path) - len_tot));
         }
         else {
           sample->dst_as_path[LARGEBUFLEN-2] = '+';
@@ -603,7 +603,7 @@ void readExtendedGateway(SFSample *sample)
       len_tot = strlen(sample->comms);
 
       if ((len_tot+len_comm) < LARGEBUFLEN) {
-        strncat(sample->comms, comm_str, len_comm);
+        strncat(sample->comms, comm_str, (sizeof(sample->comms) - len_tot));
       }
       else {
         sample->comms[LARGEBUFLEN-2] = '+';

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -33,11 +33,11 @@
 #define BGP_LOG_TYPE_WITHDRAW	2
 #define BGP_LOG_TYPE_DELETE	3
 
-#define BGP_LOG_TYPE_LOGINIT	10
-#define BGP_LOG_TYPE_LOGCLOSE	11
-#define BGP_LOG_TYPE_DUMPINIT	12
-#define BGP_LOG_TYPE_DUMPCLOSE	13
-#define BGP_LOG_TYPE_MAX 	13
+#define BGP_LOG_TYPE_LOGINIT	65500
+#define BGP_LOG_TYPE_LOGCLOSE	65501
+#define BGP_LOG_TYPE_DUMPINIT	65502
+#define BGP_LOG_TYPE_DUMPCLOSE	65503
+#define BGP_LOG_TYPE_MAX 	65503
 
 #define BGP_LOGSEQ_ROLLOVER_BIT	0x8000000000000000ULL
 #define BGP_LOGSEQ_MASK		0x7FFFFFFFFFFFFFFFULL	
@@ -76,13 +76,13 @@ extern int bgp_daemon_msglog_init_kafka_host();
 extern int bgp_table_dump_init_kafka_host();
 
 #if defined WITH_AVRO
-extern avro_schema_t avro_schema_build_bgp(int, char *);
-extern avro_schema_t avro_schema_build_bgp_log_initclose(int, char *);
-extern avro_schema_t avro_schema_build_bgp_dump_init(int, char *);
-extern avro_schema_t avro_schema_build_bgp_dump_close(int, char *);
-extern void avro_schema_init_bgp(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *, int, char *);
-extern void avro_schema_build_bgp_common(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *, int);
-extern void avro_schema_build_bgp_route(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *);
+extern avro_schema_t p_avro_schema_build_bgp(int, char *);
+extern avro_schema_t p_avro_schema_build_bgp_log_initclose(int, char *);
+extern avro_schema_t p_avro_schema_build_bgp_dump_init(int, char *);
+extern avro_schema_t p_avro_schema_build_bgp_dump_close(int, char *);
+extern void p_avro_schema_init_bgp(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *, int, char *);
+extern void p_avro_schema_build_bgp_common(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *, int);
+extern void p_avro_schema_build_bgp_route(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *);
 #endif
 
 #endif 

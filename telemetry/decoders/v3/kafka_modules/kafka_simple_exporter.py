@@ -1,6 +1,6 @@
 #
 #   pmacct (Promiscuous mode IP Accounting package)
-#   pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+#   pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 #
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -16,13 +16,15 @@
 #   along with this program; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #
-#   pmgrpcd and its components are Copyright (C) 2018-2019 by:
+#   pmgrpcd and its components are Copyright (C) 2018-2020 by:
 #
 #   Matthias Arnold <matthias.arnold@swisscom.com>
+#   Raphaël P. Barazzutti <raphael@barazzutti.net>
 #   Juan Camilo Cardona <jccardona82@gmail.com>
 #   Thomas Graf <thomas.graf@swisscom.com>
 #   Paolo Lucente <paolo@pmacct.net>
 #
+import lib_pmgrpcd
 from export_pmgrpcd import Exporter
 import ujson as json
 import os
@@ -48,7 +50,12 @@ class KafkaExporter(Exporter):
 
     def process_metric(self, datajsonstring):
         jsondata = json.loads(datajsonstring)
-        self.flatten_pmgrpcd(jsondata)
+
+        if lib_pmgrpcd.OPTIONS.flatten:
+        	self.flatten_pmgrpcd(jsondata)
+        else:
+	        json_data = json.encode(jsondata)
+	        self.send(json_data, self.topic)
 
     def flatten_pmgrpcd(self, jsondata):
         """

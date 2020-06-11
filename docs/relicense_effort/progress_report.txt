@@ -1,0 +1,72 @@
+CONTEXT:
+
+    https://www.mail-archive.com/pmacct-discussion@pmacct.net/msg03881.html
+
+------- CONSENT -------
+
+Commits  Author <email>
+   2921  Paolo Lucente <paolo@pmacct.net>
+     53  Marc Sune <marcdevel@gmail.com>
+     17  Vincent Bernat <vincent@bernat.im>
+     21  Matthias Arnold <matthias.arnold@swisscom.com>
+     20  Corentin Néau <corentin.neau@codethink.co.uk>
+     14  Job Snijders <job@instituut.net>
+     12  Vittorio Foschi <vittorio.foschi@gmail.com>
+      9  Claudio Ortega <claudio.alberto.ortega@gmail.com>
+      8  Jonas Jensen <jonas@semmle.com>
+      7  Camilo Cardona <camilo@ntt.net>
+      7  Jared Mauch <jared@puck.nether.net>
+      5  Aaron Finney <aaron.finney@openx.com>
+      4  vphatarp <vaibhav.phatarpekar@gmail.com>
+      3  Alexander Brusilov <photon89@yandex.ru>
+      3  Dusan Migra <dusan.migra@edgeintelligence.com>
+      3  Markus Weber <fvd@uucp.de>
+      3  Thomas Graf <thomas@graf3.net>
+      3  Emil Palm <emil@x86.nu>
+      2  Lennert Buytenhek <buytenh@wantstofly.org>
+      2  Guy Lowe <git@gunk.gen.nz>
+      2  Hidde van der Heide <hvanderheide@nexuz.net>
+      2  Pierre Dubouilh <pldubouilh@gmail.com>
+      2  Jim Westfall <jwestfall@surrealistic.net>
+      2  Tiago Gomes <tiago.gomes@codethink.co.uk>
+      2  Matthieu Texier <matthieu@texier.tv>
+      2  Lee Yongjae <setup74@gmail.com>
+      1  Pier Carlo Chiodi <pierky@pierky.com>
+      1  Mike Jager <mike@mikej.net.nz>
+      1  Seth N. Hetu <shetu@akamai.com>
+      1  Elisa Jasinska <elisa@jasinska.de>
+      1  cozonac <radu.anghel@xindi.ro>
+      1  Marcos Marado <mindboosternoori@gmail.com>
+      1  Alexandros Couloumbis <alex@ozo.com>
+      1  Ivan F. Martinez <ivanfm@saisp.br>
+      1  Jonas Gröger <jonas@huntun.de>
+      1  Nimrod <nimrody@gmail.com>
+      1  Guo-Wei Su <nansenat16@gmail.com>
+      1  Robert Wuttke <robert@benocs.com>
+      1  Paweł Małachowski <pawel.malachowski@atendesoftware.pl>
+      1  Jeroen Roovers <jer@gentoo.org>
+      1  Junpei YOSHINO <junpei.yoshino@gmail.com>
+      1  rouba002 <rouba002@gmail.com>
+         Will Dowling <will@autodeist.com>
+         Karl O. Pinc <kop@karlpinc.com>
+         Stephen Clark <sclark46@earthlink.net>
+
+----- NO ANSWER YET ------
+   
+     10  Tim LaBerge <tlaberge@visi.com> / tlaberge@cisco.com
+      9  Raphaël P. Barazzutti <raphael@barazzutti.net>
+      3  Dan Berger <dberger@valvesoftware.com>
+      2  Miki Takata <mikit@nttv6.jp>
+      2  Vadim Tk <gitcommit@m.vtk.one>
+      1  root <root@smokeping.celya.fr>
+      1  Mehul Prajapati <mehulprajapati2802@gmail.com>
+      1  rsolsn <3997743+rsolsn@users.noreply.github.com>
+      1  Raymond Russell <raymond@corvil.com>
+      1  Rico29 <cedric.bassaget@gmail.com>
+      1  Davíð Steinn Geirsson <dsg@sensa.is>
+      1  David Higgs <higgsd@users.noreply.github.com>
+      1  Vyron Tsingaras <vyronas@vtsingaras.me>
+      1  Александр Шалаев <ashalaev@ivi.ru>
+      1  matthewsf <matuskubis@gmail.com>
+      1  Manuel Mendez <mmendez534@gmail.com>
+      1  Kunshchikov Vladimir <Kunshchikov.Vla@infotecs.ru>

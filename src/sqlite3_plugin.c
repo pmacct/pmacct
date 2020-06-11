@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -69,6 +69,10 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   void *zmq_host = NULL;
 #endif
 
+#ifdef WITH_REDIS
+  struct p_redis_host redis_host;
+#endif
+
   memcpy(&config, cfgptr, sizeof(struct configuration));
   memcpy(&extras, &((struct channels_list_entry *)ptr)->extras, sizeof(struct extra_primitives));
   recollect_pipe_memory(ptr);
@@ -114,6 +118,15 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   sql_link_backend_descriptors(&bed, &p, &b);
 
+#ifdef WITH_REDIS
+  if (config.redis_host) {
+    char log_id[SHORTBUFLEN];
+
+    snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
+    p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_plugin_handler);
+  }
+#endif
+
   /* plugin main loop */
   for(;;) {
     poll_again:
@@ -151,7 +164,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     }
 
     if (idata.now > refresh_deadline) {
-      if (qq_ptr) sql_cache_flush(sql_queries_queue, qq_ptr, &idata, FALSE);
+      if (sql_qq_ptr) sql_cache_flush(sql_queries_queue, sql_qq_ptr, &idata, FALSE);
       sql_cache_handle_flush_event(&idata, &refresh_deadline, &pt);
     }
     else {
@@ -253,7 +266,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	}
 
         prim_ptrs.data = data;
-        (*insert_func)(&prim_ptrs, &idata);
+        (*sql_insert_func)(&prim_ptrs, &idata);
 
         ((struct ch_buf_hdr *)pipebuf)->num--;
         if (((struct ch_buf_hdr *)pipebuf)->num) {
@@ -331,13 +344,8 @@ int SQLI_cache_dbop(struct DBdesc *db, struct db_cache *cache_elem, struct inser
     else {
       strncpy(insert_full_clause, insert_clause, SPACELEFT(insert_full_clause));
       strncat(insert_full_clause, insert_counters_clause, SPACELEFT(insert_full_clause));
-#if defined HAVE_64BIT_COUNTERS
       if (have_flows) snprintf(ptr_values, SPACELEFT(values_clause), ", %" PRIu64 ", %" PRIu64 ", %" PRIu64 ")", cache_elem->packet_counter, cache_elem->bytes_counter, cache_elem->flows_counter);
       else snprintf(ptr_values, SPACELEFT(values_clause), ", %" PRIu64 ", %" PRIu64 ")", cache_elem->packet_counter, cache_elem->bytes_counter);
-#else
-      if (have_flows) snprintf(ptr_values, SPACELEFT(values_clause), ", %lu, %lu, %lu)", cache_elem->packet_counter, cache_elem->bytes_counter, cache_elem->flows_counter);
-      else snprintf(ptr_values, SPACELEFT(values_clause), ", %lu, %lu)", cache_elem->packet_counter, cache_elem->bytes_counter);
-#endif
     }
     
     strncpy(sql_data, insert_full_clause, sizeof(sql_data));
@@ -441,7 +449,7 @@ void SQLI_cache_purge(struct db_cache *queue[], int index, struct insert_data *i
 
   /* re-using pending queries queue stuff from parent and saving clauses */
   memcpy(sql_pending_queries_queue, queue, index*sizeof(struct db_cache *));
-  pqq_ptr = index;
+  sql_pqq_ptr = index;
 
   strlcpy(orig_insert_clause, insert_clause, LONGSRVBUFLEN);
   strlcpy(orig_update_clause, update_clause, LONGSRVBUFLEN);
@@ -449,9 +457,9 @@ void SQLI_cache_purge(struct db_cache *queue[], int index, struct insert_data *i
 
   start:
   memset(&idata->mv, 0, sizeof(struct multi_values));
-  memcpy(queue, sql_pending_queries_queue, pqq_ptr*sizeof(struct db_cache *));
-  memset(sql_pending_queries_queue, 0, pqq_ptr*sizeof(struct db_cache *));
-  index = pqq_ptr; pqq_ptr = 0;
+  memcpy(queue, sql_pending_queries_queue, sql_pqq_ptr*sizeof(struct db_cache *));
+  memset(sql_pending_queries_queue, 0, sql_pqq_ptr*sizeof(struct db_cache *));
+  index = sql_pqq_ptr; sql_pqq_ptr = 0;
 
   /* We check for variable substitution in SQL table */
   if (idata->dyn_table) {
@@ -499,9 +507,9 @@ void SQLI_cache_purge(struct db_cache *queue[], int index, struct insert_data *i
       pm_strftime_same(tmptable, LONGSRVBUFLEN, tmpbuf, &stamp, config.timestamps_utc);
 
       if (strncmp(idata->dyn_table_name, tmptable, SRVBUFLEN)) {
-        sql_pending_queries_queue[pqq_ptr] = queue[idata->current_queue_elem];
+        sql_pending_queries_queue[sql_pqq_ptr] = queue[idata->current_queue_elem];
 
-        pqq_ptr++;
+        sql_pqq_ptr++;
         go_to_pending = TRUE;
       }
     }
@@ -526,7 +534,7 @@ void SQLI_cache_purge(struct db_cache *queue[], int index, struct insert_data *i
   if (b.fail) Log(LOG_ALERT, "ALERT ( %s/%s ): recovery for SQLite3 daemon failed.\n", config.name, config.type);
 
   /* If we have pending queries then start again */
-  if (pqq_ptr) goto start;
+  if (sql_pqq_ptr) goto start;
   
   idata->elap_time = time(NULL)-start; 
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - END (PID: %u, QN: %u/%u, ET: %lu) ***\n", 

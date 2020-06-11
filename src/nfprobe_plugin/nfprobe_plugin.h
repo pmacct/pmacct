@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
 */
 
 /*
@@ -192,15 +192,9 @@ struct FLOW {
 	struct timeval flow_last;		/* Time of last traffic */
 
 	/* Per-endpoint statistics (all in _host_ byte order) */
-#if defined HAVE_64BIT_COUNTERS
 	u_int64_t octets[2];			/* Octets so far */
 	u_int64_t packets[2];			/* Packets so far */
 	u_int64_t flows[2];			/* Flows so far */
-#else
-	u_int32_t octets[2];			/* Octets so far */
-	u_int32_t packets[2];			/* Packets so far */
-	u_int32_t flows[2];			/* Flows so far */
-#endif
 
 	u_char *pcust[2];			/* space for custom-defined primitives */
 	struct pkt_vlen_hdr_primitives *pvlen[2]; 	/* space for vlen primitives */

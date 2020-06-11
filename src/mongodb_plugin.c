@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -82,6 +82,10 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   void *zmq_host = NULL;
 #endif
 
+#ifdef WITH_REDIS
+  struct p_redis_host redis_host;
+#endif
+
   memcpy(&config, cfgptr, sizeof(struct configuration));
   memcpy(&extras, &((struct channels_list_entry *)ptr)->extras, sizeof(struct extra_primitives));
   recollect_pipe_memory(ptr);
@@ -143,6 +147,15 @@ void mongodb_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   mongo_init(&db_conn);
   mongo_set_op_timeout(&db_conn, 1000);
   bson_set_oid_fuzz(&MongoDB_oid_fuzz);
+
+#ifdef WITH_REDIS
+  if (config.redis_host) {
+    char log_id[SHORTBUFLEN];
+
+    snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
+    p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_plugin_handler);
+  }
+#endif
 
   /* plugin main loop */
   for(;;) {
@@ -288,7 +301,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
   u_char *empty_pcust = NULL;
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], tmpbuf[SRVBUFLEN], mongo_database[SRVBUFLEN];
-  char *str_ptr, *as_path, *bgp_comm, default_table[] = "test.acct", ndpi_class[SUPERSHORTBUFLEN];
+  char *str_ptr, *as_path, *bgp_comm, default_table[] = "test.acct";
   char default_user[] = "pmacct", default_passwd[] = "arealsmartpwd";
   int qn = 0, i, j, stop, db_status, batch_idx, go_to_pending, saved_index = index;
   time_t stamp, start, duration;
@@ -296,6 +309,10 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
   struct primitives_ptrs prim_ptrs;
   struct pkt_data dummy_data;
   pid_t writer_pid = getpid();
+
+#if defined (WITH_NDPI)
+  char ndpi_class[SUPERSHORTBUFLEN];
+#endif
 
   const bson **bson_batch;
   bson *bson_elem;
@@ -874,15 +891,9 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
       }
   
       if (queue[j]->flow_type != NF9_FTYPE_EVENT && queue[j]->flow_type != NF9_FTYPE_OPTION) {
-  #if defined HAVE_64BIT_COUNTERS
         bson_append_long(bson_elem, "packets", queue[j]->packet_counter);
         if (config.what_to_count & COUNT_FLOWS) bson_append_long(bson_elem, "flows", queue[j]->flow_counter);
         bson_append_long(bson_elem, "bytes", queue[j]->bytes_counter);
-  #else
-        bson_append_int(bson_elem, "packets", queue[j]->packet_counter);
-        if (config.what_to_count & COUNT_FLOWS) bson_append_int(bson_elem, "flows", queue[j]->flow_counter);
-        bson_append_int(bson_elem, "bytes", queue[j]->bytes_counter);
-  #endif
       }
   
       bson_finish(bson_elem);

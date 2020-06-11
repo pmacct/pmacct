@@ -25,26 +25,26 @@
 /* listnodes must always contain data to be valid. Adding an empty node
  * to a list is invalid
  */
-struct listnode 
+struct pm_listnode 
 {
-  struct listnode *next;
-  struct listnode *prev;
+  struct pm_listnode *next;
+  struct pm_listnode *prev;
   
   /* private member, use getdata() to retrieve, do not access directly */
   void *data;
 };
 
-struct list 
+struct pm_list 
 {
-  struct listnode *head;
-  struct listnode *tail;
+  struct pm_listnode *head;
+  struct pm_listnode *tail;
 
   /* invariant: count is the number of listnodes in the list */
   unsigned int count;
 
   /*
    * Returns -1 if val1 < val2, 0 if equal?, 1 if val1 > val2.
-   * Used as definition of sorted for isis_listnode_add_sort
+   * Used as definition of sorted for pm_listnode_add_sort
    */
   int (*cmp) (void *val1, void *val2);
 
@@ -54,37 +54,37 @@ struct list
   void (*del) (void *val);
 };
 
-#define listnextnode(X) ((X)->next)
-#define listhead(X) ((X)->head)
-#define listtail(X) ((X)->tail)
-#define listcount(X) ((X)->count)
-#define isis_list_isempty(X) ((X)->head == NULL && (X)->tail == NULL)
-#define listgetdata(X) (assert((X)->data != NULL), (X)->data)
+#define pm_listnextnode(X) ((X)->next)
+#define pm_listhead(X) ((X)->head)
+#define pm_listtail(X) ((X)->tail)
+#define pm_listcount(X) ((X)->count)
+#define pm_list_isempty(X) ((X)->head == NULL && (X)->tail == NULL)
+#define pm_listgetdata(X) (assert((X)->data != NULL), (X)->data)
 
 /* Prototypes. */
-extern struct list *isis_list_new(void); /* encouraged: set list.del callback on new lists */
-extern void isis_list_free (struct list *);
-extern void isis_listnode_add (struct list *, void *);
-extern void isis_listnode_add_sort (struct list *, void *);
-extern void isis_listnode_add_after (struct list *, struct listnode *, void *);
-extern void isis_listnode_delete (struct list *, void *);
-extern struct listnode *isis_listnode_lookup (struct list *, void *);
-extern void *isis_listnode_head (struct list *);
-extern void isis_list_delete (struct list *);
-extern void isis_list_delete_all_node (struct list *);
-extern void isis_list_delete_node (struct list *, struct listnode *);
-extern void isis_list_add_node_prev (struct list *, struct listnode *, void *);
-extern void isis_list_add_node_next (struct list *, struct listnode *, void *);
-extern void isis_list_add_list (struct list *, struct list *);
+extern struct pm_list *pm_list_new(void); /* encouraged: set list.del callback on new lists */
+extern void pm_list_free (struct pm_list *);
+extern void pm_listnode_add (struct pm_list *, void *);
+extern void pm_listnode_add_sort (struct pm_list *, void *);
+extern void pm_listnode_add_after (struct pm_list *, struct pm_listnode *, void *);
+extern void pm_listnode_delete (struct pm_list *, void *);
+extern struct pm_listnode *pm_listnode_lookup (struct pm_list *, void *);
+extern void *pm_listnode_head (struct pm_list *);
+extern void pm_list_delete (struct pm_list *);
+extern void pm_list_delete_all_node (struct pm_list *);
+extern void pm_list_delete_node (struct pm_list *, struct pm_listnode *);
+extern void pm_list_add_node_prev (struct pm_list *, struct pm_listnode *, void *);
+extern void pm_list_add_node_next (struct pm_list *, struct pm_listnode *, void *);
+extern void pm_list_add_list (struct pm_list *, struct pm_list *);
 
 /* List iteration macro. 
  * Usage: for (ALL_LIST_ELEMENTS (...) { ... }
  * It is safe to delete the listnode using this macro.
  */
-#define ALL_LIST_ELEMENTS(list,node,nextnode,data) \
-  (node) = listhead(list); \
+#define PM_ALL_LIST_ELEMENTS(list,node,nextnode,data) \
+  (node) = pm_listhead(list); \
   (node) != NULL && \
-    ((data) = listgetdata(node),(nextnode) = listnextnode(node), 1); \
+    ((data) = pm_listgetdata(node),(nextnode) = pm_listnextnode(node), 1); \
   (node) = (nextnode)
 
 /* read-only list iteration macro.
@@ -93,17 +93,17 @@ extern void isis_list_add_list (struct list *, struct list *);
  * deleted in the body of the loop. Does not have forward-reference overhead
  * of previous macro.
  */
-#define ALL_LIST_ELEMENTS_RO(list,node,data) \
-  (node) = listhead(list); \
-  (node) != NULL && ((data) = listgetdata(node), 1); \
-  (node) = listnextnode(node)
+#define PM_ALL_LIST_ELEMENTS_RO(list,node,data) \
+  (node) = pm_listhead(list); \
+  (node) != NULL && ((data) = pm_listgetdata(node), 1); \
+  (node) = pm_listnextnode(node)
 
 /* these *do not* cleanup list nodes and referenced data, as the functions
  * do - these macros simply {de,at}tach a listnode from/to a list.
  */
  
 /* List node attach macro.  */
-#define LISTNODE_ATTACH(L,N) \
+#define PM_LISTNODE_ATTACH(L,N) \
   do { \
     (N)->prev = (L)->tail; \
     if ((L)->head == NULL) \
@@ -115,7 +115,7 @@ extern void isis_list_add_list (struct list *, struct list *);
   } while (0)
 
 /* List node detach macro.  */
-#define LISTNODE_DETACH(L,N) \
+#define PM_LISTNODE_DETACH(L,N) \
   do { \
     if ((N)->prev) \
       (N)->prev->next = (N)->next; \

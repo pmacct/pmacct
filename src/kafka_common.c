@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -32,6 +32,7 @@ struct p_kafka_host bgp_table_dump_kafka_host;
 struct p_kafka_host bmp_daemon_msglog_kafka_host;
 struct p_kafka_host bmp_dump_kafka_host;
 struct p_kafka_host sfacctd_counter_kafka_host;
+struct p_kafka_host telemetry_kafka_host;
 struct p_kafka_host telemetry_daemon_msglog_kafka_host;
 struct p_kafka_host telemetry_dump_kafka_host;
 struct p_kafka_host nfacctd_kafka_host;
@@ -585,7 +586,7 @@ int p_kafka_check_outq_len(struct p_kafka_host *kafka_host)
       if (outq_len == old_outq_len) {
 	if (retries < PM_KAFKA_OUTQ_LEN_RETRIES) retries++;
 	else {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to Kafka: p_kafka_check_outq_len()\n", config.name, config.type);
+	  Log(LOG_ERR, "ERROR ( %s/%s ): Connection failed to Kafka: p_kafka_check_outq_len() (%u)\n", config.name, config.type, outq_len);
           p_kafka_close(kafka_host, TRUE);
 	  return outq_len; 
 	}

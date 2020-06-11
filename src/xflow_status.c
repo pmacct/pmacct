@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -117,7 +117,7 @@ void update_status_table(struct xflow_status_entry *entry, u_int32_t seqno, int 
 
       Log(LOG_INFO, "INFO ( %s/%s ): expecting flow '%u' but received '%u' collector=%s:%u agent=%s:%u\n",
 		config.name, config.type, entry->seqno+entry->inc, seqno, collector_ip_address,
-		config.nfacctd_port, agent_ip_address, entry->aux1);
+		collector_port, agent_ip_address, entry->aux1);
       if (seqno > entry->seqno+entry->inc) entry->counters.jumps_f++;
       else entry->counters.jumps_b++;
     }
@@ -147,7 +147,7 @@ void print_status_table(time_t now, int buckets)
       addr_to_str(agent_ip_address, &entry->agent_addr);
 
       Log(LOG_NOTICE, "NOTICE ( %s/%s ): stats [%s:%u] agent=%s:%u time=%ld packets=%" PRIu64 " bytes=%" PRIu64 " seq_good=%u seq_jmp_fwd=%u seq_jmp_bck=%u\n",
-		config.name, config.type, collector_ip_address, config.nfacctd_port,
+		config.name, config.type, collector_ip_address, collector_port,
 		agent_ip_address, entry->aux1, (long)now, entry->counters.total, entry->counters.bytes,
 		entry->counters.good, entry->counters.jumps_f, entry->counters.jumps_b);
 
@@ -159,7 +159,7 @@ void print_status_table(time_t now, int buckets)
   }
 
   Log(LOG_NOTICE, "NOTICE ( %s/%s ): stats [%s:%u] time=%ld discarded_packets=%u\n",
-		config.name, config.type, collector_ip_address, config.nfacctd_port,
+		config.name, config.type, collector_ip_address, collector_port,
 		(long)now, xflow_tot_bad_datagrams);
 
   Log(LOG_NOTICE, "NOTICE ( %s/%s ): ---\n", config.name, config.type);

@@ -24,7 +24,6 @@
 #include "pmacct.h"
 #include "isis.h"
 
-#include "linklist.h"
 #include "stream.h"
 #include "hash.h"
 #include "prefix.h"
@@ -78,16 +77,16 @@ u_char ALL_ESS[6] = { 0x09, 0x00, 0x2B, 0x00, 0x00, 0x04 };
  * Compares two sets of area addresses
  */
 static int
-area_match (struct list *left, struct list *right)
+area_match (struct pm_list *left, struct pm_list *right)
 {
   struct area_addr *addr1, *addr2;
-  struct listnode *node1, *node2;
+  struct pm_listnode *node1, *node2;
 
   if (!left || !right) return 0; /* mismatch */ 
 
-  for (ALL_LIST_ELEMENTS_RO (left, node1, addr1))
+  for (PM_ALL_LIST_ELEMENTS_RO (left, node1, addr1))
   {
-    for (ALL_LIST_ELEMENTS_RO (right, node2, addr2))
+    for (PM_ALL_LIST_ELEMENTS_RO (right, node2, addr2))
     {
       if (addr1->addr_len == addr2->addr_len &&
 	  !memcmp (addr1->area_addr, addr2->area_addr, (int) addr1->addr_len))
@@ -163,22 +162,22 @@ del_ip_addr (void *val)
 static void
 tlvs_to_adj_ipv4_addrs (struct tlvs *tlvs, struct isis_adjacency *adj)
 {
-  struct listnode *node;
+  struct pm_listnode *node;
   struct in_addr *ipv4_addr, *malloced;
 
   if (adj->ipv4_addrs)
     {
       adj->ipv4_addrs->del = del_ip_addr;
-      isis_list_delete (adj->ipv4_addrs);
+      pm_list_delete (adj->ipv4_addrs);
     }
-  adj->ipv4_addrs = isis_list_new ();
+  adj->ipv4_addrs = pm_list_new ();
   if (tlvs->ipv4_addrs)
     {
-      for (ALL_LIST_ELEMENTS_RO (tlvs->ipv4_addrs, node, ipv4_addr))
+      for (PM_ALL_LIST_ELEMENTS_RO (tlvs->ipv4_addrs, node, ipv4_addr))
       {
 	malloced = calloc(1, sizeof (struct in_addr));
 	memcpy (malloced, ipv4_addr, sizeof (struct in_addr));
-	isis_listnode_add (adj->ipv4_addrs, malloced);
+	pm_listnode_add (adj->ipv4_addrs, malloced);
       }
     }
 }
@@ -186,22 +185,22 @@ tlvs_to_adj_ipv4_addrs (struct tlvs *tlvs, struct isis_adjacency *adj)
 static void
 tlvs_to_adj_ipv6_addrs (struct tlvs *tlvs, struct isis_adjacency *adj)
 {
-  struct listnode *node;
+  struct pm_listnode *node;
   struct in6_addr *ipv6_addr, *malloced;
 
   if (adj->ipv6_addrs)
     {
       adj->ipv6_addrs->del = del_ip_addr;
-      isis_list_delete (adj->ipv6_addrs);
+      pm_list_delete (adj->ipv6_addrs);
     }
-  adj->ipv6_addrs = isis_list_new ();
+  adj->ipv6_addrs = pm_list_new ();
   if (tlvs->ipv6_addrs)
     {
-      for (ALL_LIST_ELEMENTS_RO (tlvs->ipv6_addrs, node, ipv6_addr))
+      for (PM_ALL_LIST_ELEMENTS_RO (tlvs->ipv6_addrs, node, ipv6_addr))
       {
 	malloced = calloc(1, sizeof (struct in6_addr));
 	memcpy (malloced, ipv6_addr, sizeof (struct in6_addr));
-	isis_listnode_add (adj->ipv6_addrs, malloced);
+	pm_listnode_add (adj->ipv6_addrs, malloced);
       }
     }
 
@@ -899,10 +898,10 @@ process_snp (int snp_type, int level, struct isis_circuit *circuit,
   uint32_t found = 0, expected = 0;
   struct isis_lsp *lsp;
   struct lsp_entry *entry;
-  struct listnode *node, *nnode;
-  struct listnode *node2, *nnode2;
+  struct pm_listnode *node, *nnode;
+  struct pm_listnode *node2, *nnode2;
   struct tlvs tlvs;
-  struct list *lsp_list = NULL;
+  struct pm_list *lsp_list = NULL;
   struct isis_passwd *passwd;
 
   if (snp_type == ISIS_SNP_CSNP_FLAG)
@@ -1000,7 +999,7 @@ process_snp (int snp_type, int level, struct isis_circuit *circuit,
   /* 7.3.15.2 b) Actions on LSP_ENTRIES reported */
   if (tlvs.lsp_entries)
     {
-      for (ALL_LIST_ELEMENTS_RO (tlvs.lsp_entries, node, entry))
+      for (PM_ALL_LIST_ELEMENTS_RO (tlvs.lsp_entries, node, entry))
       {
 	lsp = lsp_search (entry->lsp_id, circuit->area->lspdb[level - 1]);
 	own_lsp = !memcmp (entry->lsp_id, isis->sysid, ISIS_SYS_ID_LEN);
@@ -1060,32 +1059,32 @@ process_snp (int snp_type, int level, struct isis_circuit *circuit,
       /*
        * Build a list from our own LSP db bounded with start_ and stop_lsp_id
        */
-      lsp_list = isis_list_new ();
+      lsp_list = pm_list_new ();
       lsp_build_isis_list_nonzero_ht (chdr->start_lsp_id, chdr->stop_lsp_id,
 				 lsp_list, circuit->area->lspdb[level - 1]);
 
       /* Fixme: Find a better solution */
       if (tlvs.lsp_entries)
 	{
-	  for (ALL_LIST_ELEMENTS (tlvs.lsp_entries, node, nnode, entry))
+	  for (PM_ALL_LIST_ELEMENTS (tlvs.lsp_entries, node, nnode, entry))
 	  {
-	    for (ALL_LIST_ELEMENTS (lsp_list, node2, nnode2, lsp))
+	    for (PM_ALL_LIST_ELEMENTS (lsp_list, node2, nnode2, lsp))
 	    {
 	      if (lsp_id_cmp (lsp->lsp_header->lsp_id, entry->lsp_id) == 0)
 		{
-		  isis_list_delete_node (lsp_list, node2);
+		  pm_list_delete_node (lsp_list, node2);
 		  break;
 		}
 	    }
 	  }
 	}
       /* on remaining LSPs we set SRM (neighbor knew not of) */
-      for (ALL_LIST_ELEMENTS_RO (lsp_list, node, lsp))
+      for (PM_ALL_LIST_ELEMENTS_RO (lsp_list, node, lsp))
       {
 	ISIS_SET_FLAG (lsp->SRMflags, circuit);
       }
       /* lets free it */
-      isis_list_free (lsp_list);
+      pm_list_free (lsp_list);
     }
 
   free_tlvs (&tlvs);
@@ -1569,7 +1568,7 @@ int isis_send_pdu_p2p (struct isis_circuit *circuit, int level)
   return ISIS_OK;
 }
 
-int build_psnp (int level, struct isis_circuit *circuit, struct list *lsps)
+int build_psnp (int level, struct isis_circuit *circuit, struct pm_list *lsps)
 {
   struct isis_fixed_hdr fixed_hdr;
   unsigned long lenp;
@@ -1577,7 +1576,7 @@ int build_psnp (int level, struct isis_circuit *circuit, struct list *lsps)
   int retval = 0;
   struct isis_lsp *lsp;
   struct isis_passwd *passwd;
-  struct listnode *node;
+  struct pm_listnode *node;
 
   if (level == 1)
     fill_fixed_hdr_andstream (&fixed_hdr, L1_PARTIAL_SEQ_NUM,
@@ -1615,7 +1614,7 @@ int build_psnp (int level, struct isis_circuit *circuit, struct list *lsps)
 
   if (config.nfacctd_isis_msglog)
     {
-      for (ALL_LIST_ELEMENTS_RO (lsps, node, lsp))
+      for (PM_ALL_LIST_ELEMENTS_RO (lsps, node, lsp))
       {
 	if (config.nfacctd_isis_msglog) 
           Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): ISIS-Snp (%s): PSNP entry %s, seq 0x%08x,"
@@ -1645,8 +1644,8 @@ int send_psnp (int level, struct isis_circuit *circuit)
 {
   int retval = ISIS_OK;
   struct isis_lsp *lsp;
-  struct list *list = NULL;
-  struct listnode *node;
+  struct pm_list *list = NULL;
+  struct pm_listnode *node;
 
   if ((circuit->circ_type == CIRCUIT_T_BROADCAST &&
        !circuit->u.bc.is_dr[level - 1]) ||
@@ -1656,10 +1655,10 @@ int send_psnp (int level, struct isis_circuit *circuit)
       if (circuit->area->lspdb[level - 1] &&
           dict_count (circuit->area->lspdb[level - 1]) > 0)
         {
-          list = isis_list_new ();
+          list = pm_list_new ();
           lsp_build_isis_list_ssn (circuit, list, circuit->area->lspdb[level - 1]);
 
-          if (listcount (list) > 0)
+          if (pm_listcount (list) > 0)
             {
               if (circuit->snd_stream == NULL)
                 circuit->snd_stream = stream_new (ISO_MTU (circuit));
@@ -1685,11 +1684,11 @@ int send_psnp (int level, struct isis_circuit *circuit)
                    * sending succeeded, we can clear SSN flags of this circuit
                    * for the LSPs in list
                    */
-                  for (ALL_LIST_ELEMENTS_RO (list, node, lsp))
+                  for (PM_ALL_LIST_ELEMENTS_RO (list, node, lsp))
                     ISIS_CLEAR_FLAG (lsp->SSNflags, circuit);
                 }
             }
-          isis_list_delete (list);
+          pm_list_delete (list);
         }
     }
 
@@ -1697,7 +1696,7 @@ int send_psnp (int level, struct isis_circuit *circuit)
 }
 
 /* XXX: debugs in this function should be a-la bgp_daemon_msglog */
-int build_csnp (int level, u_char * start, u_char * stop, struct list *lsps,
+int build_csnp (int level, u_char * start, u_char * stop, struct pm_list *lsps,
             struct isis_circuit *circuit)
 {
   struct isis_fixed_hdr fixed_hdr;
@@ -1762,8 +1761,8 @@ send_csnp (struct isis_circuit *circuit, int level)
   int retval = ISIS_OK;
   u_char start[ISIS_SYS_ID_LEN + 2];
   u_char stop[ISIS_SYS_ID_LEN + 2];
-  struct list *list = NULL;
-  struct listnode *node;
+  struct pm_list *list = NULL;
+  struct pm_listnode *node;
   struct isis_lsp *lsp;
 
   memset (start, 0x00, ISIS_SYS_ID_LEN + 2);
@@ -1772,7 +1771,7 @@ send_csnp (struct isis_circuit *circuit, int level)
   if (circuit->area->lspdb[level - 1] &&
       dict_count (circuit->area->lspdb[level - 1]) > 0)
     {
-      list = isis_list_new ();
+      list = pm_list_new ();
       lsp_build_list (start, stop, list, circuit->area->lspdb[level - 1]);
 
       if (circuit->snd_stream == NULL)
@@ -1787,7 +1786,7 @@ send_csnp (struct isis_circuit *circuit, int level)
                      config.name, circuit->area->area_tag, level, circuit->interface->name,
                      /* FIXME: use %z when we stop supporting old compilers. */
                      (unsigned long) STREAM_SIZE (circuit->snd_stream));
-	for (ALL_LIST_ELEMENTS_RO (list, node, lsp)) {
+	for (PM_ALL_LIST_ELEMENTS_RO (list, node, lsp)) {
           Log(LOG_DEBUG, "DEBUG ( %s/core/ISIS ): ISIS-Snp (%s): CSNP entry %s, seq 0x%08x,"
                         " cksum 0x%04x, lifetime %us\n",
                         config.name, circuit->area->area_tag,
@@ -1798,7 +1797,7 @@ send_csnp (struct isis_circuit *circuit, int level)
         }
       }
 
-      isis_list_delete (list);
+      pm_list_delete (list);
 
       if (retval == ISIS_OK)
         retval = circuit->tx (circuit, level);

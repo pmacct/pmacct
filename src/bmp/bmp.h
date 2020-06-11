@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -28,6 +28,10 @@
 #define BMP_TCP_PORT		1790
 #define BMP_MAX_PEERS_DEFAULT	4
 #define BMP_V3			3
+#define BMP_V4			4
+
+#define BMP_CMN_HDRLEN		5
+#define BMP_PEER_HDRLEN		42
 
 #define BMP_MISSING_PEER_UP_LOG_TOUT	60
 
@@ -39,7 +43,8 @@
 #define	BMP_MSG_INIT			4
 #define BMP_MSG_TERM			5
 #define BMP_MSG_ROUTE_MIRROR		6
-#define BMP_MSG_TYPE_MAX		6 /* set to the highest BMP_MSG_* value */
+#define BMP_MSG_TMP_RPAT		100
+#define BMP_MSG_TYPE_MAX		100 /* set to the highest BMP_MSG_* value */
 
 static const char __attribute__((unused)) *bmp_msg_types[] = {
   "Route Monitoring",
@@ -60,7 +65,7 @@ struct bmp_common_hdr {
 #define BMP_PEER_TYPE_GLOBAL	0
 #define BMP_PEER_TYPE_L3VPN	1
 #define BMP_PEER_TYPE_LOCAL	2
-#define BMP_PEER_TYPE_LOC_RIB	3 /* draft-evens-grow-bmp-local-rib-01 */ 
+#define BMP_PEER_TYPE_LOC_RIB	3 /* draft-ietf-grow-bmp-local-rib */ 
 #define BMP_PEER_TYPE_MAX	3 /* set to the highest BMP_PEER_TYPE_* value */
 
 static const char __attribute__((unused)) *bmp_peer_types[] = {
@@ -73,10 +78,8 @@ static const char __attribute__((unused)) *bmp_peer_types[] = {
 #define BMP_PEER_FLAGS_ARI_V	0x80
 #define BMP_PEER_FLAGS_ARI_L	0x40
 #define BMP_PEER_FLAGS_ARI_A	0x20
-
-#define BMP_PEER_FLAGS_LR_F	0x80 /* draft-ietf-grow-bmp-local-rib-01 */
-
-#define BMP_PEER_FLAGS_ARO_O	0x10 /* draft-ietf-grow-bmp-adj-rib-out-01 */
+#define BMP_PEER_FLAGS_LR_F	0x80 /* draft-ietf-grow-bmp-local-rib */
+#define BMP_PEER_FLAGS_ARO_O	0x10 /* rfc8671 */
 
 struct bmp_peer_hdr {
   u_char	type;
@@ -94,23 +97,36 @@ struct bmp_tlv_hdr {
   u_int16_t     len;
 } __attribute__ ((packed));
 
+#define BMP_TLV_EBIT		0x8000 /* BMP TLV enterprise bit */
+
+struct bmp_tlv_def {
+  char *name;
+  int semantics;
+};
+
+#define BMP_TLV_SEM_UNKNOWN	CUSTOM_PRIMITIVE_TYPE_UNKNOWN
+#define BMP_TLV_SEM_UINT	CUSTOM_PRIMITIVE_TYPE_UINT
+#define BMP_TLV_SEM_HEX		CUSTOM_PRIMITIVE_TYPE_HEX
+#define BMP_TLV_SEM_STRING	CUSTOM_PRIMITIVE_TYPE_STRING
+#define BMP_TLV_SEM_IP		CUSTOM_PRIMITIVE_TYPE_IP
+#define BMP_TLV_SEM_MAC		CUSTOM_PRIMITIVE_TYPE_MAC
+#define BMP_TLV_SEM_RAW		CUSTOM_PRIMITIVE_TYPE_RAW
+
 #define BMP_INIT_INFO_STRING	0
 #define BMP_INIT_INFO_SYSDESCR	1
 #define BMP_INIT_INFO_SYSNAME	2
 #define BMP_INIT_INFO_MAX	2
-
 #define BMP_INIT_INFO_ENTRIES	8
 
-static const char __attribute__((unused)) *bmp_init_info_types[] = {
-  "string",
-  "sysdescr",
-  "sysname"  
+static const struct bmp_tlv_def __attribute__((unused)) bmp_init_info_types[] = {
+  { "string", BMP_TLV_SEM_STRING }, 
+  { "sysdescr", BMP_TLV_SEM_STRING },
+  { "sysname", BMP_TLV_SEM_STRING }
 };
 
 #define BMP_TERM_INFO_STRING    0
 #define BMP_TERM_INFO_REASON	1
 #define BMP_TERM_INFO_MAX	1
-
 #define BMP_TERM_INFO_ENTRIES	8
 
 #define BMP_TERM_REASON_ADM	0
@@ -120,9 +136,9 @@ static const char __attribute__((unused)) *bmp_init_info_types[] = {
 #define BMP_TERM_REASON_PERM	4
 #define BMP_TERM_REASON_MAX	4 /* set to the highest BMP_TERM_* value */
 
-static const char __attribute__((unused)) *bmp_term_info_types[] = {
-  "string",
-  "reason"
+static const struct bmp_tlv_def __attribute__((unused)) bmp_term_info_types[] = {
+  { "string", BMP_TLV_SEM_STRING },
+  { "reason", BMP_TLV_SEM_UINT }
 };
 
 static const char __attribute__((unused)) *bmp_term_reason_types[] = {
@@ -139,7 +155,8 @@ struct bmp_stats_hdr {
 
 struct bmp_peer {
   struct bgp_peer self;
-  void *bgp_peers;
+  void *bgp_peers_v4;
+  void *bgp_peers_v6;
   struct log_notification missing_peer_up;
 };
 
@@ -157,13 +174,18 @@ struct bmp_peer {
 #define BMP_STATS_TYPE11	11 /* (32-bit Counter) Number of updates subjected to treat-as-withdraw */ 
 #define BMP_STATS_TYPE12	12 /* (32-bit Counter) Number of prefixes subjected to treat-as-withdraw */
 #define BMP_STATS_TYPE13	13 /* (32-bit Counter) Number of duplicate update messages received */
-
-/* Types 14-17 defined in draft-evens-grow-bmp-adj-rib-out-01 */
 #define BMP_STATS_TYPE14	14 /* (64-bit Gauge) Number of routes in Adj-RIBs-Out Pre-Policy */
 #define BMP_STATS_TYPE15	15 /* (64-bit Gauge) Number of routes in Adj-RIBs-Out Post-Policy */
 #define BMP_STATS_TYPE16	16 /* (64-bit Gauge) Number of routes in per-AFI/SAFI Abj-RIB-Out */
 #define BMP_STATS_TYPE17	17 /* (64-bit Gauge) Number of routes in per-AFI/SAFI Abj-RIB-Out */
 #define BMP_STATS_MAX		17 /* set to the highest BMP_STATS_* value */
+
+/* dummy */
+static const struct bmp_tlv_def __attribute__((unused)) bmp_stats_info_types[] = {
+  { "", BMP_TLV_SEM_UNKNOWN }
+};
+
+#define BMP_STATS_INFO_MAX	-1
 
 static const char __attribute__((unused)) *bmp_stats_cnt_types[] = {
   "Number of prefixes rejected by inbound policy",
@@ -191,13 +213,12 @@ struct bmp_stats_cnt_hdr {
   u_int16_t	len;
 } __attribute__ ((packed));
 
-static const char __attribute__((unused)) *bmp_peer_up_info_types[] = {
-  "string",
+static const struct bmp_tlv_def __attribute__((unused)) bmp_peer_up_info_types[] = {
+  { "string", BMP_TLV_SEM_STRING }
 };
 
 #define BMP_PEER_UP_INFO_STRING		0
 #define BMP_PEER_UP_INFO_MAX		0
-
 #define BMP_PEER_UP_INFO_ENTRIES	8	
 
 #define BMP_PEER_DOWN_RESERVED		0
@@ -208,6 +229,9 @@ static const char __attribute__((unused)) *bmp_peer_up_info_types[] = {
 #define BMP_PEER_DOWN_DECFG		5
 #define BMP_PEER_DOWN_MAX		5 /* set to the highest BMP_PEER_DOWN_* value */
 
+#define BMP_PEER_DOWN_INFO_MAX		-1
+#define BMP_PEER_DOWN_INFO_ENTRIES	BMP_PEER_UP_INFO_ENTRIES
+
 static const char __attribute__((unused)) *bmp_peer_down_reason_types[] = {
   "Reserved",
   "The local system closed the session",
@@ -215,6 +239,10 @@ static const char __attribute__((unused)) *bmp_peer_down_reason_types[] = {
   "The remote system closed the session",
   "The remote system closed the session without a notification message",
   "Info for this peer will no longer be sent for configuration reasons"
+};
+
+static const struct bmp_tlv_def __attribute__((unused)) bmp_peer_down_info_types[] = {
+  { "", BMP_TLV_SEM_UNKNOWN }
 };
 
 struct bmp_peer_down_hdr {
@@ -229,13 +257,25 @@ struct bmp_peer_up_hdr {
   /* Received OPEN Message */
 } __attribute__ ((packed));
 
+#define BMP_ROUTE_MONITOR_INFO_MAX	-1
+#define BMP_ROUTE_MONITOR_INFO_ENTRIES	32
+
+static const struct bmp_tlv_def __attribute__((unused)) bmp_rm_info_types[] = {
+  { "", BMP_TLV_SEM_UNKNOWN }
+};
+
 struct bmp_chars {
+  /* key */
   u_int8_t peer_type;
   u_int8_t is_post;
   u_int8_t is_2b_asn;
   u_int8_t is_filtered;
   u_int8_t is_out;
   u_int8_t is_loc;
+  rd_t rd;
+
+  /* non-key */
+  struct pm_list *tlvs;
 }; 
 
 struct bmp_data {
@@ -252,9 +292,11 @@ struct bmp_data {
 #include "bmp_msg.h"
 #include "bmp_util.h"
 #include "bmp_lookup.h"
+#include "bmp_tlv.h"
+#include "bmp_rpat.h"
 
 /* prototypes */
-extern void nfacctd_bmp_wrapper();
+extern void bmp_daemon_wrapper();
 extern void skinny_bmp_daemon();
 extern void bmp_prepare_thread();
 extern void bmp_prepare_daemon();

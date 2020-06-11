@@ -26,7 +26,9 @@ Output encodings:
 
 Examples of supported collection scenarios:
 * TCP/JSON -> pmtelemetryd -> Kafka/JSON
+* UDP/Protobuf -> pmtelemetryd -> Kafka/JSON (-> decodeGPB.py)
 * gRPC/Protobuf -> pmgrpcd.py -> Kafka/Avro
+* gRPC/Protobuf -> pmgrpcd.py -> Kafka/JSON
 * gRPC/Protobuf -> pmgrpcd.py -> pmtelemetryd -> files/JSON (-> decodeGPB.py)
 
 HISTORICAL NOTES.
@@ -114,3 +116,25 @@ telemetry
 #
 return
 
+Juniper Native format telemetry configuration example, GPB encoding over UDP transport:
+
+services {
+    analytics {
+	streaming-server pmacct-server {
+	    remote-address X.X.X.X;
+	    remote-port 50000;
+        }
+        export-profile pmacct-server-export-params {
+	    local-address X.X.X.X;
+	    local-port 21111;           
+	    reporting-rate 30;
+	    format gpb;
+	    transport udp;
+        }
+        sensor interface-xe {
+	    server-name pmacct-server;
+	    export-name pmacct-server-export-params;
+	    resource /junos/system/linecard/interface/logical/usage/;
+        }
+    }
+}

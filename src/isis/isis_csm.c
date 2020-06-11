@@ -23,7 +23,6 @@
 #include "pmacct.h"
 #include "isis.h"
 
-#include "linklist.h"
 #include "hash.h"
 #include "prefix.h"
 
@@ -88,7 +87,7 @@ isis_csm_state_change (int event, struct isis_circuit *circuit, void *arg)
 	case IF_UP_FROM_Z:
 	  circuit = isis_circuit_new ();
 	  // isis_circuit_if_add (circuit, (struct interface *) arg);
-	  isis_listnode_add (isis->init_circ_list, circuit);
+	  pm_listnode_add (isis->init_circ_list, circuit);
 	  circuit->state = C_STATE_INIT;
 	  break;
 	case ISIS_DISABLE:
@@ -106,7 +105,7 @@ isis_csm_state_change (int event, struct isis_circuit *circuit, void *arg)
 	  isis_circuit_up (circuit);
 	  circuit->state = C_STATE_UP;
 	  isis_event_circuit_state_change (circuit, 1);
-	  isis_listnode_delete (isis->init_circ_list, circuit);
+	  pm_listnode_delete (isis->init_circ_list, circuit);
 	  break;
 	case IF_UP_FROM_Z:
 	  Log(LOG_WARNING, "WARN ( %s/core/ISIS ): circuit already connected\n", config.name);
@@ -116,7 +115,7 @@ isis_csm_state_change (int event, struct isis_circuit *circuit, void *arg)
 	  break;
 	case IF_DOWN_FROM_Z:
 	  // isis_circuit_if_del (circuit);
-	  isis_listnode_delete (isis->init_circ_list, circuit);
+	  pm_listnode_delete (isis->init_circ_list, circuit);
 	  isis_circuit_del (circuit);
 	  circuit = NULL;
 	  break;
@@ -155,7 +154,7 @@ isis_csm_state_change (int event, struct isis_circuit *circuit, void *arg)
 	  break;
 	case ISIS_DISABLE:
 	  isis_circuit_deconfigure (circuit, (struct isis_area *) arg);
-	  isis_listnode_add (isis->init_circ_list, circuit);
+	  pm_listnode_add (isis->init_circ_list, circuit);
 	  circuit->state = C_STATE_INIT;
 	  isis_event_circuit_state_change (circuit, 0);
 	  break;

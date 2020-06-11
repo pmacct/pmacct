@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -268,12 +268,12 @@ int sa_port_cmp(struct sockaddr *sa, u_int16_t port)
   struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)sa;
 
   if (sa->sa_family == AF_INET) {
-    if (sa4->sin_port == port) return FALSE;
+    if (ntohs(sa4->sin_port) == port) return FALSE;
     else return TRUE;
   }
 
   if (sa->sa_family == AF_INET6) {
-    if (sa6->sin6_port == port) return FALSE;
+    if (ntohs(sa6->sin6_port) == port) return FALSE;
     else return TRUE;
   }
 
@@ -403,7 +403,7 @@ int host_addr_mask_cmp(struct host_addr *a1, struct host_mask *m1, struct host_a
   else if (a1->family == AF_INET6) {
     memcpy(&ha_local, a2, sizeof(struct host_addr));
     for (j = 0; j < 16; j++) ha_local.address.ipv6.s6_addr[j] &= m1->mask.m6[j];
-    ret = ip6_addr_cmp(a1, &ha_local.address.ipv6);
+    ret = ip6_addr_cmp(&a1->address.ipv6, &ha_local.address.ipv6);
     if (!ret) return FALSE;
     else return TRUE;
   }
@@ -503,6 +503,28 @@ unsigned int sa_to_str(char *str, int len, const struct sockaddr *sa)
   }
 
   memset(str, 0, len);
+
+  return FALSE;
+}
+
+unsigned int sa_to_port(int *port, const struct sockaddr *sa)
+{
+  struct sockaddr_in *sa4 = (struct sockaddr_in *)sa;
+  struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)sa;
+
+  if (!port) return FALSE;
+
+  if (sa->sa_family == AF_INET) {
+    (*port) = ntohs(sa4->sin_port);
+    return sa->sa_family;
+  }
+
+  if (sa->sa_family == AF_INET6) {
+    (*port) = ntohs(sa6->sin6_port);
+    return sa->sa_family;
+  }
+
+  (*port) = 0;
 
   return FALSE;
 }
@@ -854,4 +876,23 @@ u_int32_t addr_port_hash(struct host_addr *ha, u_int16_t port, u_int32_t modulo)
 u_int16_t sa_has_family(struct sockaddr *sa)
 {
   return sa->sa_family;
+}
+
+socklen_t sa_len(struct sockaddr_storage *ss)
+{
+  struct sockaddr *sa = (struct sockaddr *) ss;
+
+  if (sa) {
+    if (sa->sa_family == AF_INET) {
+      return sizeof(struct sockaddr_in);
+    }
+    else if (sa->sa_family == AF_INET6) {
+      return sizeof(struct sockaddr_in6);
+    }
+    else {
+      return sizeof(struct sockaddr_storage);
+    }
+  }
+
+  return 0;
 }

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -80,6 +80,10 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct p_zmq_host *zmq_host = &((struct channels_list_entry *)ptr)->zmq_host;
 #else
   void *zmq_host = NULL;
+#endif
+
+#ifdef WITH_REDIS
+  struct p_redis_host redis_host;
 #endif
 
   memcpy(&config, cfgptr, sizeof(struct configuration));
@@ -197,6 +201,15 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   cLen = sizeof(cAddr);
 
   qh = (struct query_header *) srvbuf;
+
+#ifdef WITH_REDIS
+  if (config.redis_host) {
+    char log_id[SHORTBUFLEN];
+
+    snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
+    p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_plugin_handler);
+  }
+#endif
 
   /* plugin main loop */
   for(;;) {
@@ -359,6 +372,11 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       load_networks(config.networks_file, &nt, &nc);
       load_ports(config.ports_file, &pt);
       reload_map = FALSE;
+    }
+
+    if (reload_log) {
+      reload_logs();
+      reload_log = FALSE;
     }
 
     if (poll_fd[0].revents & POLLIN) {

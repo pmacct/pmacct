@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -145,6 +145,8 @@ struct NF9_DATA_FLOWSET_HEADER {
 /* ... */
 #define NF9_FIRST_SWITCHED_MSEC         152
 #define NF9_LAST_SWITCHED_MSEC          153
+#define NF9_FIRST_SWITCHED_USEC         154
+#define NF9_LAST_SWITCHED_USEC          155
 /* ... */
 
 /* CUSTOM TYPES START HERE: supported in IPFIX only with pmacct PEN */
@@ -771,22 +773,39 @@ nf9_init_template(void)
 	  rcount++;
 	}
 	else if ((config.nfprobe_version == 9 && !config.timestamps_secs) || config.nfprobe_version == 10) {
-          v4_template.r[rcount].type = htons(NF9_LAST_SWITCHED_MSEC);
-          v4_template.r[rcount].length = htons(8);
-          v4_int_template.r[rcount].length = 8;
-          v4_template_out.r[rcount].type = htons(NF9_LAST_SWITCHED_MSEC);
-          v4_template_out.r[rcount].length = htons(8);
-          v4_int_template_out.r[rcount].length = 8;
-          rcount++;
-          v4_template.r[rcount].type = htons(NF9_FIRST_SWITCHED_MSEC);
-          v4_template.r[rcount].length = htons(8);
-          v4_int_template.r[rcount].length = 8;
-          v4_template_out.r[rcount].type = htons(NF9_FIRST_SWITCHED_MSEC);
-          v4_template_out.r[rcount].length = htons(8);
-          v4_int_template_out.r[rcount].length = 8;
-          rcount++;
+	  if (!config.nfprobe_tstamp_usec) {
+	    v4_template.r[rcount].type = htons(NF9_LAST_SWITCHED_MSEC);
+	    v4_template.r[rcount].length = htons(8);
+	    v4_int_template.r[rcount].length = 8;
+	    v4_template_out.r[rcount].type = htons(NF9_LAST_SWITCHED_MSEC);
+	    v4_template_out.r[rcount].length = htons(8);
+	    v4_int_template_out.r[rcount].length = 8;
+	    rcount++;
+	    v4_template.r[rcount].type = htons(NF9_FIRST_SWITCHED_MSEC);
+	    v4_template.r[rcount].length = htons(8);
+	    v4_int_template.r[rcount].length = 8;
+	    v4_template_out.r[rcount].type = htons(NF9_FIRST_SWITCHED_MSEC);
+	    v4_template_out.r[rcount].length = htons(8);
+	    v4_int_template_out.r[rcount].length = 8;
+	    rcount++;
+	  }
+	  else {
+	    v4_template.r[rcount].type = htons(NF9_LAST_SWITCHED_USEC);
+	    v4_template.r[rcount].length = htons(16);
+	    v4_int_template.r[rcount].length = 16;
+	    v4_template_out.r[rcount].type = htons(NF9_LAST_SWITCHED_USEC);
+	    v4_template_out.r[rcount].length = htons(16);
+	    v4_int_template_out.r[rcount].length = 16;
+	    rcount++;
+	    v4_template.r[rcount].type = htons(NF9_FIRST_SWITCHED_USEC);
+	    v4_template.r[rcount].length = htons(16);
+	    v4_int_template.r[rcount].length = 16;
+	    v4_template_out.r[rcount].type = htons(NF9_FIRST_SWITCHED_USEC);
+	    v4_template_out.r[rcount].length = htons(16);
+	    v4_int_template_out.r[rcount].length = 16;
+	    rcount++;
+	  }
 	}
-#if defined HAVE_64BIT_COUNTERS
         v4_template.r[rcount].type = htons(NF9_IN_BYTES);
         v4_template.r[rcount].length = htons(8);
         v4_int_template.r[rcount].length = 8;
@@ -801,26 +820,6 @@ nf9_init_template(void)
         v4_template_out.r[rcount].length = htons(8);
         v4_int_template_out.r[rcount].length = 8;
         rcount++;
-#else
-	v4_template.r[rcount].type = htons(NF9_IN_BYTES);
-	v4_template.r[rcount].length = htons(4);
-	v4_int_template.r[rcount].length = 4;
-	// Cisco doesn't appear to do that (yet?)
-        // v4_template_out.r[rcount].type = htons(NF9_OUT_BYTES);
-        v4_template_out.r[rcount].type = htons(NF9_IN_BYTES);
-        v4_template_out.r[rcount].length = htons(4);
-        v4_int_template_out.r[rcount].length = 4;
-	rcount++;
-	v4_template.r[rcount].type = htons(NF9_IN_PACKETS);
-	v4_template.r[rcount].length = htons(4);
-	v4_int_template.r[rcount].length = 4;
-	// Cisco doesn't appear to do that (yet?)
-        // v4_template_out.r[rcount].type = htons(NF9_OUT_PACKETS);
-	v4_template_out.r[rcount].type = htons(NF9_IN_PACKETS);
-        v4_template_out.r[rcount].length = htons(4);
-        v4_int_template_out.r[rcount].length = 4;
-	rcount++;
-#endif
 	v4_template.r[rcount].type = htons(NF9_IP_PROTOCOL_VERSION);
 	v4_template.r[rcount].length = htons(1);
 	v4_int_template.r[rcount].length = 1;
@@ -1187,22 +1186,39 @@ nf9_init_template(void)
 	  rcount++;
         }
         else if ((config.nfprobe_version == 9 && !config.timestamps_secs) || config.nfprobe_version == 10) {
-          v6_template.r[rcount].type = htons(NF9_LAST_SWITCHED_MSEC);
-          v6_template.r[rcount].length = htons(8);
-          v6_int_template.r[rcount].length = 8;
-          v6_template_out.r[rcount].type = htons(NF9_LAST_SWITCHED_MSEC);
-          v6_template_out.r[rcount].length = htons(8);
-          v6_int_template_out.r[rcount].length = 8;
-          rcount++;
-          v6_template.r[rcount].type = htons(NF9_FIRST_SWITCHED_MSEC);
-          v6_template.r[rcount].length = htons(8);
-          v6_int_template.r[rcount].length = 8;
-          v6_template_out.r[rcount].type = htons(NF9_FIRST_SWITCHED_MSEC);
-          v6_template_out.r[rcount].length = htons(8);
-          v6_int_template_out.r[rcount].length = 8;
-          rcount++;
+	  if (!config.nfprobe_tstamp_usec) {
+	    v6_template.r[rcount].type = htons(NF9_LAST_SWITCHED_MSEC);
+	    v6_template.r[rcount].length = htons(8);
+	    v6_int_template.r[rcount].length = 8;
+	    v6_template_out.r[rcount].type = htons(NF9_LAST_SWITCHED_MSEC);
+	    v6_template_out.r[rcount].length = htons(8);
+	    v6_int_template_out.r[rcount].length = 8;
+	    rcount++;
+	    v6_template.r[rcount].type = htons(NF9_FIRST_SWITCHED_MSEC);
+	    v6_template.r[rcount].length = htons(8);
+	    v6_int_template.r[rcount].length = 8;
+	    v6_template_out.r[rcount].type = htons(NF9_FIRST_SWITCHED_MSEC);
+	    v6_template_out.r[rcount].length = htons(8);
+	    v6_int_template_out.r[rcount].length = 8;
+	    rcount++;
+	  }
+	  else {
+	    v6_template.r[rcount].type = htons(NF9_LAST_SWITCHED_USEC);
+	    v6_template.r[rcount].length = htons(16);
+	    v6_int_template.r[rcount].length = 16;
+	    v6_template_out.r[rcount].type = htons(NF9_LAST_SWITCHED_USEC);
+	    v6_template_out.r[rcount].length = htons(16);
+	    v6_int_template_out.r[rcount].length = 16;
+	    rcount++;
+	    v6_template.r[rcount].type = htons(NF9_FIRST_SWITCHED_USEC);
+	    v6_template.r[rcount].length = htons(16);
+	    v6_int_template.r[rcount].length = 16;
+	    v6_template_out.r[rcount].type = htons(NF9_FIRST_SWITCHED_USEC);
+	    v6_template_out.r[rcount].length = htons(16);
+	    v6_int_template_out.r[rcount].length = 16;
+	    rcount++;
+	  }
         }
-#if defined HAVE_64BIT_COUNTERS
         v6_template.r[rcount].type = htons(NF9_IN_BYTES);
         v6_template.r[rcount].length = htons(8);
         v6_int_template.r[rcount].length = 8;
@@ -1217,26 +1233,6 @@ nf9_init_template(void)
         v6_template_out.r[rcount].length = htons(8);
         v6_int_template_out.r[rcount].length = 8;
         rcount++;
-#else
-	v6_template.r[rcount].type = htons(NF9_IN_BYTES);
-	v6_template.r[rcount].length = htons(4);
-	v6_int_template.r[rcount].length = 4;
-	// Cisco doesn't appear to do that (yet?)
-        // v6_template_out.r[rcount].type = htons(NF9_OUT_BYTES);
-        v6_template_out.r[rcount].type = htons(NF9_IN_BYTES);
-        v6_template_out.r[rcount].length = htons(4);
-        v6_int_template_out.r[rcount].length = 4;
-	rcount++;
-	v6_template.r[rcount].type = htons(NF9_IN_PACKETS);
-	v6_template.r[rcount].length = htons(4);
-	v6_int_template.r[rcount].length = 4;
-	// Cisco doesn't appear to do that (yet?)
-        // v6_template_out.r[rcount].type = htons(NF9_OUT_PACKETS);
-        v6_template_out.r[rcount].type = htons(NF9_IN_PACKETS);
-        v6_template_out.r[rcount].length = htons(4);
-        v6_int_template_out.r[rcount].length = 4;
-	rcount++;
-#endif
 	v6_template.r[rcount].type = htons(NF9_IP_PROTOCOL_VERSION);
 	v6_template.r[rcount].length = htons(1);
 	v6_int_template.r[rcount].length = 1;
@@ -1754,24 +1750,40 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
 	    ftoft_ptr_0 += 4;
 	  }
 	  else if ((config.nfprobe_version == 9 && !config.timestamps_secs) || config.nfprobe_version == 10) {
-	    u_int64_t tstamp_msec;
+	    if (!config.nfprobe_tstamp_usec) {
+	      u_int64_t tstamp_msec;
 
-	    tstamp_msec = flow->flow_last.tv_sec;
-	    tstamp_msec = tstamp_msec * 1000;
-	    tstamp_msec += (flow->flow_last.tv_usec / 1000);
-            rec64 = pmXXX_htonll(tstamp_msec);
-            memcpy(ftoft_ptr_0, &rec64, 8);
-            ftoft_ptr_0 += 8;
+	      tstamp_msec = flow->flow_last.tv_sec;
+	      tstamp_msec = tstamp_msec * 1000;
+	      tstamp_msec += (flow->flow_last.tv_usec / 1000);
+              rec64 = pmXXX_htonll(tstamp_msec);
+              memcpy(ftoft_ptr_0, &rec64, 8);
+              ftoft_ptr_0 += 8;
 
-            tstamp_msec = flow->flow_start.tv_sec;
-            tstamp_msec = tstamp_msec * 1000;
-            tstamp_msec += (flow->flow_start.tv_usec / 1000);
-            rec64 = pmXXX_htonll(tstamp_msec);
-            memcpy(ftoft_ptr_0, &rec64, 8);
-            ftoft_ptr_0 += 8;
+              tstamp_msec = flow->flow_start.tv_sec;
+              tstamp_msec = tstamp_msec * 1000;
+              tstamp_msec += (flow->flow_start.tv_usec / 1000);
+              rec64 = pmXXX_htonll(tstamp_msec);
+              memcpy(ftoft_ptr_0, &rec64, 8);
+              ftoft_ptr_0 += 8;
+	    }
+	    else {
+	      rec64 = pmXXX_htonll(flow->flow_last.tv_sec);
+	      memcpy(ftoft_ptr_0, &rec64, 8);
+	      ftoft_ptr_0 += 8;
+	      rec64 = pmXXX_htonll(flow->flow_last.tv_usec);
+	      memcpy(ftoft_ptr_0, &rec64, 8);
+	      ftoft_ptr_0 += 8;
+
+	      rec64 = pmXXX_htonll(flow->flow_start.tv_sec);
+	      memcpy(ftoft_ptr_0, &rec64, 8);
+	      ftoft_ptr_0 += 8;
+	      rec64 = pmXXX_htonll(flow->flow_start.tv_usec);
+	      memcpy(ftoft_ptr_0, &rec64, 8);
+	      ftoft_ptr_0 += 8;
+	    }
 	  }
 
-#if defined HAVE_64BIT_COUNTERS
           rec64 = pmXXX_htonll(flow->octets[0]);
           memcpy(ftoft_ptr_0, &rec64, 8);
           ftoft_ptr_0 += 8;
@@ -1779,15 +1791,6 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
           rec64 = pmXXX_htonll(flow->packets[0]);
           memcpy(ftoft_ptr_0, &rec64, 8);
           ftoft_ptr_0 += 8;
-#else
-	  rec32 = htonl(flow->octets[0]);
-	  memcpy(ftoft_ptr_0, &rec32, 4);
-	  ftoft_ptr_0 += 4;
-
-	  rec32 = htonl(flow->packets[0]);
-  	  memcpy(ftoft_ptr_0, &rec32, 4);
-	  ftoft_ptr_0 += 4;
-#endif
 
           switch (flow->af) {
           case AF_INET:
@@ -1868,24 +1871,40 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
 	    ftoft_ptr_1 += 4;
 	  }
           else if ((config.nfprobe_version == 9 && !config.timestamps_secs) || config.nfprobe_version == 10) {
-            u_int64_t tstamp_msec;
+	    if (!config.nfprobe_tstamp_usec) {
+              u_int64_t tstamp_msec;
 
-            tstamp_msec = flow->flow_last.tv_sec;
-            tstamp_msec = tstamp_msec * 1000;
-            tstamp_msec += (flow->flow_last.tv_usec / 1000);
-            rec64 = pmXXX_htonll(tstamp_msec);
-            memcpy(ftoft_ptr_1, &rec64, 8);
-            ftoft_ptr_1 += 8;
+              tstamp_msec = flow->flow_last.tv_sec;
+              tstamp_msec = tstamp_msec * 1000;
+              tstamp_msec += (flow->flow_last.tv_usec / 1000);
+              rec64 = pmXXX_htonll(tstamp_msec);
+              memcpy(ftoft_ptr_1, &rec64, 8);
+              ftoft_ptr_1 += 8;
 
-            tstamp_msec = flow->flow_start.tv_sec;
-            tstamp_msec = tstamp_msec * 1000;
-            tstamp_msec += (flow->flow_start.tv_usec / 1000);
-            rec64 = pmXXX_htonll(tstamp_msec);
-            memcpy(ftoft_ptr_1, &rec64, 8);
-            ftoft_ptr_1 += 8;
+              tstamp_msec = flow->flow_start.tv_sec;
+              tstamp_msec = tstamp_msec * 1000;
+              tstamp_msec += (flow->flow_start.tv_usec / 1000);
+              rec64 = pmXXX_htonll(tstamp_msec);
+              memcpy(ftoft_ptr_1, &rec64, 8);
+              ftoft_ptr_1 += 8;
+	    }
+	    else {
+	      rec64 = pmXXX_htonll(flow->flow_last.tv_sec);
+	      memcpy(ftoft_ptr_1, &rec64, 8);
+	      ftoft_ptr_1 += 8;
+	      rec64 = pmXXX_htonll(flow->flow_last.tv_usec);
+	      memcpy(ftoft_ptr_1, &rec64, 8);
+	      ftoft_ptr_1 += 8;
+
+	      rec64 = pmXXX_htonll(flow->flow_start.tv_sec);
+	      memcpy(ftoft_ptr_1, &rec64, 8);
+	      ftoft_ptr_1 += 8;
+	      rec64 = pmXXX_htonll(flow->flow_start.tv_usec);
+	      memcpy(ftoft_ptr_1, &rec64, 8);
+	      ftoft_ptr_1 += 8;
+	    }
           }
 
-#if defined HAVE_64BIT_COUNTERS
           rec64 = pmXXX_htonll(flow->octets[1]);
           memcpy(ftoft_ptr_1, &rec64, 8);
           ftoft_ptr_1 += 8;
@@ -1893,15 +1912,6 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
           rec64 = pmXXX_htonll(flow->packets[1]);
           memcpy(ftoft_ptr_1, &rec64, 8);
           ftoft_ptr_1 += 8;
-#else
-	  rec32 = htonl(flow->octets[1]);
-	  memcpy(ftoft_ptr_1, &rec32, 4);
-	  ftoft_ptr_1 += 4;
-
-	  rec32 = htonl(flow->packets[1]);
-	  memcpy(ftoft_ptr_1, &rec32, 4);
-	  ftoft_ptr_1 += 4;
-#endif
 
           switch (flow->af) {
           case AF_INET:

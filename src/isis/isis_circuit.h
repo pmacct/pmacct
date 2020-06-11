@@ -46,8 +46,8 @@ struct isis_bcast_info
   char run_dr_elect[2];		/* Should we run dr election ? */
   struct thread *t_run_dr[2];	/* DR election thread */
   struct thread *t_send_lan_hello[2];	/* send LAN IIHs in this thread */
-  struct list *adjdb[2];	/* adjacency dbs */
-  struct list *lan_neighs[2];	/* list of lx neigh snpa */
+  struct pm_list *adjdb[2];	/* adjacency dbs */
+  struct pm_list *lan_neighs[2];	/* list of lx neigh snpa */
   char is_dr[2];		/* Are we level x DR ? */
   u_char l1_desig_is[ISIS_SYS_ID_LEN + 1];	/* level-1 DR */
   u_char l2_desig_is[ISIS_SYS_ID_LEN + 1];	/* level-2 DR */
@@ -84,7 +84,7 @@ struct isis_circuit
   struct thread *t_read;
   struct thread *t_send_csnp[2];
   struct thread *t_send_psnp[2];
-  struct list *lsp_queue;	/* LSPs to be txed (both levels) */
+  struct pm_list *lsp_queue;	/* LSPs to be txed (both levels) */
   /* there is no real point in two streams, just for programming kicker */
   int (*rx) (struct isis_circuit * circuit, u_char * ssnpa);
   struct stream *rcv_stream;	/* Stream for receiving */
@@ -120,10 +120,10 @@ struct isis_circuit
   struct password *c_rx_passwds;	/* circuitReceivePasswords */
   struct password *c_tc_passwd;	/* circuitTransmitPassword */
   int ip_router;		/* Route IP ? */
-  struct list *ip_addrs;	/* our IP addresses */
+  struct pm_list *ip_addrs;	/* our IP addresses */
   int ipv6_router;		/* Route IPv6 ? */
-  struct list *ipv6_link;	/* our link local IPv6 addresses */
-  struct list *ipv6_non_link;	/* our non-link local IPv6 addresses */
+  struct pm_list *ipv6_link;	/* our link local IPv6 addresses */
+  struct pm_list *ipv6_non_link;	/* our non-link local IPv6 addresses */
   /* 
    * RFC 2973 IS-IS Mesh Groups 
    */

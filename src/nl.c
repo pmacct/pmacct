@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -43,14 +43,16 @@ struct tunnel_entry tunnel_handlers_list[] = {
   {"", 		NULL,			NULL},
 };
 
-void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
+void pm_pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
 {
   struct packet_ptrs pptrs;
-  struct pcap_callback_data *cb_data = (struct pcap_callback_data *) user;
-  struct pcap_device *device = cb_data->device;
+  struct pm_pcap_callback_data *cb_data = (struct pm_pcap_callback_data *) user;
+  struct pm_pcap_device *device = cb_data->device;
   struct plugin_requests req;
   u_int32_t iface32 = 0;
   u_int32_t ifacePresent = 0;
+
+  memset(&req, 0, sizeof(req));
 
   if (cb_data->sig.is_set) sigprocmask(SIG_BLOCK, &cb_data->sig.set, NULL);
 
@@ -151,14 +153,14 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
         if (config.nfacctd_isis) {
           isis_srcdst_lookup(&pptrs);
         }
-        if (config.nfacctd_bgp) {
+        if (config.bgp_daemon) {
           BTA_find_id((struct id_table *)pptrs.bta_table, &pptrs, &pptrs.bta, &pptrs.bta2);
           bgp_srcdst_lookup(&pptrs, FUNC_TYPE_BGP);
         }
-        if (config.nfacctd_bgp_peer_as_src_map) PM_find_id((struct id_table *)pptrs.bpas_table, &pptrs, &pptrs.bpas, NULL);
-        if (config.nfacctd_bgp_src_local_pref_map) PM_find_id((struct id_table *)pptrs.blp_table, &pptrs, &pptrs.blp, NULL);
-        if (config.nfacctd_bgp_src_med_map) PM_find_id((struct id_table *)pptrs.bmed_table, &pptrs, &pptrs.bmed, NULL);
-        if (config.nfacctd_bmp) {
+        if (config.bgp_daemon_peer_as_src_map) PM_find_id((struct id_table *)pptrs.bpas_table, &pptrs, &pptrs.bpas, NULL);
+        if (config.bgp_daemon_src_local_pref_map) PM_find_id((struct id_table *)pptrs.blp_table, &pptrs, &pptrs.blp, NULL);
+        if (config.bgp_daemon_src_med_map) PM_find_id((struct id_table *)pptrs.bmed_table, &pptrs, &pptrs.bmed, NULL);
+        if (config.bmp_daemon) {
           BTA_find_id((struct id_table *)pptrs.bta_table, &pptrs, &pptrs.bta, &pptrs.bta2);
 	  bmp_srcdst_lookup(&pptrs);
 	}
@@ -175,17 +177,22 @@ void pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)
 
     load_networks(config.networks_file, &nt, &nc);
 
-    if (config.nfacctd_bgp && config.nfacctd_bgp_peer_as_src_map)
-      load_id_file(MAP_BGP_PEER_AS_SRC, config.nfacctd_bgp_peer_as_src_map, (struct id_table *)cb_data->bpas_table, &req, &bpas_map_allocated);
-    if (config.nfacctd_bgp && config.nfacctd_bgp_src_local_pref_map)
-      load_id_file(MAP_BGP_SRC_LOCAL_PREF, config.nfacctd_bgp_src_local_pref_map, (struct id_table *)cb_data->blp_table, &req, &blp_map_allocated);
-    if (config.nfacctd_bgp && config.nfacctd_bgp_src_med_map)
-      load_id_file(MAP_BGP_SRC_MED, config.nfacctd_bgp_src_med_map, (struct id_table *)cb_data->bmed_table, &req, &bmed_map_allocated);
-    if (config.nfacctd_bgp)
-      load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.nfacctd_bgp_to_agent_map, (struct id_table *)cb_data->bta_table, &req, &bta_map_allocated);
+    if (config.bgp_daemon && config.bgp_daemon_peer_as_src_map)
+      load_id_file(MAP_BGP_PEER_AS_SRC, config.bgp_daemon_peer_as_src_map, (struct id_table *)cb_data->bpas_table, &req, &bpas_map_allocated);
+    if (config.bgp_daemon && config.bgp_daemon_src_local_pref_map)
+      load_id_file(MAP_BGP_SRC_LOCAL_PREF, config.bgp_daemon_src_local_pref_map, (struct id_table *)cb_data->blp_table, &req, &blp_map_allocated);
+    if (config.bgp_daemon && config.bgp_daemon_src_med_map)
+      load_id_file(MAP_BGP_SRC_MED, config.bgp_daemon_src_med_map, (struct id_table *)cb_data->bmed_table, &req, &bmed_map_allocated);
+    if (config.bgp_daemon)
+      load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.bgp_daemon_to_xflow_agent_map, (struct id_table *)cb_data->bta_table, &req, &bta_map_allocated);
 
     reload_map = FALSE;
     gettimeofday(&reload_map_tstamp, NULL);
+  }
+
+  if (reload_log) {
+    reload_logs();
+    reload_log = FALSE;
   }
 
   if (cb_data->has_tun_prims && pptrs.tun_pptrs) {
@@ -736,16 +743,16 @@ void set_index_pkt_ptrs(struct packet_ptrs *pptrs)
   pptrs->pkt_proto[CUSTOM_PRIMITIVE_L4_PTR] = pptrs->l4_proto;
 }
 
-ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockaddr *src_addr, struct timeval **ts, int *round, struct packet_ptrs *savefile_pptrs)
+ssize_t recvfrom_savefile(struct pm_pcap_device *device, void **buf, struct sockaddr *src_addr, struct timeval **ts, int *round, struct packet_ptrs *savefile_pptrs)
 {
   ssize_t ret = 0;
-  int pcap_ret;
+  int pm_pcap_ret;
 
   read_packet:
-  pcap_ret = pcap_next_ex(device->dev_desc, &savefile_pptrs->pkthdr, (const u_char **)&savefile_pptrs->packet_ptr);
+  pm_pcap_ret = pcap_next_ex(device->dev_desc, &savefile_pptrs->pkthdr, (const u_char **)&savefile_pptrs->packet_ptr);
 
-  if (pcap_ret == 1 /* all good */) device->errors = FALSE;
-  else if (pcap_ret == -1 /* failed reading next packet */) {
+  if (pm_pcap_ret == 1 /* all good */) device->errors = FALSE;
+  else if (pm_pcap_ret == -1 /* failed reading next packet */) {
     device->errors++;
     if (device->errors == PCAP_SAVEFILE_MAX_ERRORS) {
       Log(LOG_ERR, "ERROR ( %s/core ): pcap_ext_ex() max errors reached (%u). Exiting.\n", config.name, PCAP_SAVEFILE_MAX_ERRORS);
@@ -756,7 +763,7 @@ ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockadd
       return 0;
     }
   }
-  else if (pcap_ret == -2 /* last packet in a pcap_savefile */) {
+  else if (pm_pcap_ret == -2 /* last packet in a pcap_savefile */) {
     pcap_close(device->dev_desc);
 
     if (config.pcap_sf_replay < 0 ||
@@ -789,7 +796,7 @@ ssize_t recvfrom_savefile(struct pcap_device *device, void **buf, struct sockadd
       (*buf) = savefile_pptrs->payload_ptr;
       ret = savefile_pptrs->pkthdr->caplen - (savefile_pptrs->payload_ptr - savefile_pptrs->packet_ptr);
 
-      if (savefile_pptrs->l4_proto == IPPROTO_UDP) {
+      if (savefile_pptrs->l4_proto == IPPROTO_UDP || savefile_pptrs->l4_proto == IPPROTO_TCP) {
 	if (savefile_pptrs->l3_proto == ETHERTYPE_IP) {
 	  raw_to_sa((struct sockaddr *)src_addr, (u_char *) &((struct pm_iphdr *)savefile_pptrs->iph_ptr)->ip_src.s_addr,
 		    (u_int16_t) ((struct pm_udphdr *)savefile_pptrs->tlh_ptr)->uh_sport, AF_INET);
@@ -836,4 +843,21 @@ ssize_t recvfrom_rawip(unsigned char *buf, size_t len, struct sockaddr *src_addr
   }
 
   return ret;
+}
+
+void pm_pcap_add_filter(struct pm_pcap_device *dev_ptr)
+{
+  /* pcap library stuff */
+  struct bpf_program filter;
+
+  memset(&filter, 0, sizeof(filter));
+  if (pcap_compile(dev_ptr->dev_desc, &filter, config.clbuf, 0, PCAP_NETMASK_UNKNOWN) < 0) {
+    Log(LOG_WARNING, "WARN ( %s/core ): %s (going on without a filter)\n", config.name, pcap_geterr(dev_ptr->dev_desc));
+  }
+  else {
+    if (pcap_setfilter(dev_ptr->dev_desc, &filter) < 0) {
+      Log(LOG_WARNING, "WARN ( %s/core ): %s (going on without a filter)\n", config.name, pcap_geterr(dev_ptr->dev_desc));
+    }
+    else pcap_freecode(&filter);
+  }
 }

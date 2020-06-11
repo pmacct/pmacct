@@ -46,10 +46,10 @@
 #define	AVRO_ACCT_CLOSE_SID	2
 
 /* prototypes */
-extern avro_schema_t avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2);
-extern avro_schema_t avro_schema_build_acct_init();
-extern avro_schema_t avro_schema_build_acct_close();
-extern void avro_schema_add_writer_id(avro_schema_t);
+extern avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2);
+extern avro_schema_t p_avro_schema_build_acct_init();
+extern avro_schema_t p_avro_schema_build_acct_close();
+extern void p_avro_schema_add_writer_id(avro_schema_t);
 extern void add_writer_name_and_pid_avro(avro_value_t, char *, pid_t);
 
 extern avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type,
@@ -76,7 +76,7 @@ extern serdes_schema_t *compose_avro_schema_registry_name_2(char *, int, avro_sc
 #endif
 
 /* global variables */
-extern avro_schema_t avro_acct_schema, avro_acct_init_schema, avro_acct_close_schema;
+extern avro_schema_t p_avro_acct_schema, p_avro_acct_init_schema, p_avro_acct_close_schema;
 #endif
 
 #endif //PLUGIN_CMN_AVRO_H

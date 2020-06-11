@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl configuration file for pmacct 
 
-AC_INIT([pmacct], [1.7.4-git], [paolo@pmacct.net])
+AC_INIT([pmacct], [1.7.6-git], [paolo@pmacct.net])
 AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_MACRO_DIR([m4])
 LT_INIT
@@ -32,7 +32,7 @@ if test "x$ac_cv_prog_gcc" = xyes ; then
   CFLAGS="-O2 ${CFLAGS}"
 fi
 
-AC_CHECK_FUNCS([strlcpy strlcat])
+AC_CHECK_FUNCS([strlcpy])
 
 dnl: shared object handling
 AC_MSG_CHECKING([whether to disable linking against shared objects])
@@ -385,7 +385,6 @@ if test x"$PFRING_LIB_FOUND" = x""; then
   ])])
 
   AC_CHECK_LIB([pcap], [pcap_set_protocol], [ AC_DEFINE(PCAP_SET_PROTOCOL, 1) ], [])
-  AC_CHECK_LIB([pcap], [bpf_filter], [ AC_DEFINE(PCAP_NOBPF, 1) ], [])
 else
   dnl Unable to test: we should check for these libs
   #AC_CHECK_LIB([numa], [numa_bind], [], [AC_MSG_ERROR([
@@ -398,6 +397,8 @@ else
 
   LIBS="${LIBS} -lrt -lnuma"
 fi
+
+AC_CHECK_LIB([pcap], [pcap_setdirection], [ AC_DEFINE(PCAP_SET_DIRECTION, 1) ], [])
 
 dnl packet capture type check; taken from libpcap.
 AC_MSG_CHECKING(packet capture type)
@@ -715,6 +716,38 @@ AC_ARG_ENABLE(kafka,
 )
 dnl finish: Kafka handling
 
+dnl start: Redis handling
+AC_MSG_CHECKING(whether to enable Redis support)
+AC_ARG_ENABLE(redis,
+  [  --enable-redis                   Enable Redis support (default: no)],
+  [ case "$enableval" in
+  yes)
+    AC_MSG_RESULT(yes)
+    PKG_CHECK_MODULES([REDIS], [hiredis >= 0.13.0], [
+      SUPPORTS="${SUPPORTS} redis"
+      USING_REDIS="yes"
+      PMACCT_CFLAGS="$PMACCT_CFLAGS $REDIS_CFLAGS"
+      AC_DEFINE(WITH_REDIS, 1)
+      _save_LIBS="$LIBS"
+      LIBS="$LIBS $REDIS_LIBS"
+      AC_CHECK_LIB([hiredis], [redisConnect])
+      LIBS="$_save_LIBS"
+      _save_CFLAGS="$CFLAGS"
+      CFLAGS="$CFLAGS $REDIS_CFLAGS"
+      AC_CHECK_HEADER([hiredis/hiredis.h])
+      CFLAGS="$_save_CFLAGS"
+    ])
+    ;;
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  esac ],
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
+dnl finish: Redis handling
+
 dnl start: geoip handling
 AC_MSG_CHECKING(whether to enable GeoIP support)
 AC_ARG_ENABLE(geoip,
@@ -849,21 +882,22 @@ AC_ARG_ENABLE(serdes,
   yes)
     AC_MSG_RESULT(yes)
 
-    PKG_CHECK_MODULES([SERDES], [serdes],, [
-      SUPPORTS="${SUPPORTS} serdes"
-      USING_SERDES="yes"
-      PMACCT_CFLAGS="$PMACCT_CFLAGS $SERDES_CFLAGS"
-      SERDES_LIBS="$SERDES_LIBS -lserdes"
-      AC_DEFINE(WITH_SERDES, 1)
-      _save_LIBS="$LIBS"
-      LIBS="$LIBS $SERDES_LIBS"
-      AC_CHECK_LIB([serdes], [serdes_new])
-      LIBS="$_save_LIBS"
-      _save_CFLAGS="$CFLAGS"
-      CFLAGS="$CFLAGS $SERDES_CFLAGS"
-      AC_CHECK_HEADER([libserdes/serdes.h])
-      CFLAGS="$_save_CFLAGS"
-    ])
+    AC_SUBST(SERDES_CFLAGS)
+    AC_SUBST(SERDES_LIBS)
+
+    SUPPORTS="${SUPPORTS} serdes"
+    USING_SERDES="yes"
+    PMACCT_CFLAGS="$PMACCT_CFLAGS $SERDES_CFLAGS"
+    SERDES_LIBS="$SERDES_LIBS -lserdes"
+    AC_DEFINE(WITH_SERDES, 1)
+    _save_LIBS="$LIBS"
+    LIBS="$LIBS $SERDES_LIBS"
+    AC_CHECK_LIB([serdes], [serdes_new],, AC_MSG_ERROR([Missing Confluent serdes library. Refer to: https://github.com/confluentinc/libserdes]))
+    LIBS="$_save_LIBS"
+    _save_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $SERDES_CFLAGS"
+    AC_CHECK_HEADER([libserdes/serdes.h],, AC_MSG_ERROR([Missing Confluent serdes headers. Refer to: https://github.com/confluentinc/libserdes]))
+    CFLAGS="$_save_CFLAGS"
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -900,7 +934,7 @@ AC_ARG_ENABLE(ndpi,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([NDPI], [libndpi >= 2.4], [
+    PKG_CHECK_MODULES([NDPI], [libndpi >= 3.2], [
       SUPPORTS="${SUPPORTS} ndpi"
       USING_NDPI="yes"
 
@@ -921,8 +955,8 @@ AC_ARG_ENABLE(ndpi,
       CFLAGS="$CFLAGS $NDPI_CFLAGS"
       AC_CHECK_HEADER([libndpi/ndpi_main.h])
       CFLAGS="$_save_CFLAGS"
-    ])
-    PKG_CHECK_MODULES([NDPI26], [libndpi >= 2.6], [AC_DEFINE(WITH_NDPI26, 1)], [AC_DEFINE(WITH_NDPI, 1)])
+    ],
+    [AC_MSG_ERROR([Missing nDPI API. Refer to: https://github.com/ntop/nDPI/])])
     ;;
   no)
     AC_MSG_RESULT(no)
@@ -968,24 +1002,6 @@ AC_CHECK_TYPE(uint64_t, [AC_DEFINE(HAVE_UINT64_T, 1)])
 AC_CHECK_TYPE(uint32_t, [AC_DEFINE(HAVE_UINT32_T, 1)])
 AC_CHECK_TYPE(uint16_t, [AC_DEFINE(HAVE_UINT16_T, 1)])
 AC_CHECK_TYPE(uint8_t, [AC_DEFINE(HAVE_UINT8_T, 1)])
-
-AC_MSG_CHECKING([whether to enable 64bit counters])
-AC_ARG_ENABLE(64bit,
-        [  --enable-64bit                   Enable 64bit counters (default: yes)],
-	[
-          if test x$enableval = x"yes" ; then
-            AC_MSG_RESULT(yes)
-            AC_DEFINE(HAVE_64BIT_COUNTERS, 1)
-          else
-            AC_MSG_RESULT(no)
-          fi
-        ],
-	[
-          AC_MSG_RESULT(yes)
-	  AC_DEFINE(HAVE_64BIT_COUNTERS, 1)
-	  COMPILE_ARGS="${COMPILE_ARGS} '--enable-64bit'"
-	]
-)
 
 AC_MSG_CHECKING(whether to enable NFLOG support)
 AC_ARG_ENABLE(nflog,
@@ -1157,7 +1173,9 @@ AM_CONDITIONAL([WITH_SQLITE3], [test x"$USING_SQLITE3" = x"yes"])
 AM_CONDITIONAL([WITH_RABBITMQ], [test x"$USING_RABBITMQ" = x"yes"])
 AM_CONDITIONAL([WITH_ZMQ], [test x"$USING_ZMQ" = x"yes"])
 AM_CONDITIONAL([WITH_KAFKA], [test x"$USING_KAFKA" = x"yes"])
+AM_CONDITIONAL([WITH_REDIS], [test x"$USING_REDIS" = x"yes"])
 AM_CONDITIONAL([USING_SQL], [test x"$USING_SQL" = x"yes"])
+AM_CONDITIONAL([WITH_JANSSON], [test x"$USING_JANSSON" = x"yes"])
 AM_CONDITIONAL([WITH_AVRO], [test x"$USING_AVRO" = x"yes"])
 AM_CONDITIONAL([WITH_SERDES], [test x"$USING_SERDES" = x"yes"])
 AM_CONDITIONAL([WITH_NDPI], [test x"$USING_NDPI" = x"yes"])
