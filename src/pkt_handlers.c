@@ -5492,7 +5492,7 @@ void src_host_country_geoipv2_handler(struct channels_list_entry *chptr, struct 
   }
   else {
     /* return O1/Other Country: https://dev.maxmind.com/geoip/legacy/codes/iso3166/ */
-    strncpy(pdata->primitives.src_ip_country.str, other_country, strlen(other_country));
+    strncpy(pdata->primitives.src_ip_country.str, other_country, strlen(pdata->primitives.src_ip_country.str));
   }
 }
 
@@ -5532,7 +5532,7 @@ void dst_host_country_geoipv2_handler(struct channels_list_entry *chptr, struct 
   }
   else {
     /* return O1/Other Country: https://dev.maxmind.com/geoip/legacy/codes/iso3166/ */
-    strncpy(pdata->primitives.dst_ip_country.str, other_country, strlen(other_country));
+    strncpy(pdata->primitives.dst_ip_country.str, other_country, strlen(pdata->primitives.dst_ip_country.str));
   }
 }
 
