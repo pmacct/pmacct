@@ -121,6 +121,11 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
     if (bms->peer_port_str) json_object_set_new_nocheck(obj, bms->peer_port_str, json_integer((json_int_t)peer->tcp_port));
 
+    if (config.tmp_bgp_lookup_compare_ports) {
+      addr_to_str(ip_address, &peer->id);
+      json_object_set_new_nocheck(obj, "peer_id", json_string(ip_address));
+    }
+
     json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
 
     json_object_set_new_nocheck(obj, "afi", json_integer((json_int_t)afi));
@@ -305,6 +310,17 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     }
     else {
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, bms->peer_port_str, &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+    }
+
+    if (config.tmp_bgp_lookup_compare_ports) {
+      addr_to_str(ip_address, &peer->id);
+      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "peer_id", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+      pm_avro_check(avro_value_set_string(&p_avro_branch, ip_address));
+    }
+    else {
+      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "peer_id", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
@@ -1976,6 +1992,7 @@ avro_schema_t p_avro_schema_build_bgp(int log_type, char *schema_name)
 
   avro_schema_record_field_append(schema, "peer_ip_src", avro_schema_string());
   avro_schema_record_field_append(schema, "peer_tcp_port", optint_s);
+  avro_schema_record_field_append(schema, "peer_id", avro_schema_string());
 
   p_avro_schema_build_bgp_route(&schema, &optlong_s, &optstr_s, &optint_s);
 
