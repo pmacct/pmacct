@@ -1992,7 +1992,7 @@ avro_schema_t p_avro_schema_build_bgp(int log_type, char *schema_name)
 
   avro_schema_record_field_append(schema, "peer_ip_src", avro_schema_string());
   avro_schema_record_field_append(schema, "peer_tcp_port", optint_s);
-  avro_schema_record_field_append(schema, "peer_id", avro_schema_string());
+  avro_schema_record_field_append(schema, "peer_id", optstr_s);
 
   p_avro_schema_build_bgp_route(&schema, &optlong_s, &optstr_s, &optint_s);
 
