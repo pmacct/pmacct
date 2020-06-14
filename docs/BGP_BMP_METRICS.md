@@ -56,17 +56,17 @@ Title | Description
 In case of table dump. Each batch of metric will start with "log_init" and end with "log_close" event_type meta data. This meta data includes the time of the data collection, the peering IP address and TCP port and which pmacct process name and id exported the metrics.
 ~~~~
 {
-  "seq": 1164,
-  "timestamp": "1558677934.255773",
+  "seq": 1161,
+  "timestamp": "2020-06-13 14:11:38.515220",
   "peer_ip_src": "192.0.2.2",
   "peer_tcp_port": 25344,
   "event_type": "log_init",
-  "writer_id": "pmacct-bgp01c/4857"
+  "writer_id": "pmacct-bgp01c/4852"
 }
 {
-  "seq": 1165,
+  "seq": 1162,
   "log_type": "update",
-  "timestamp": "1558677958.092808",
+  "timestamp": "2020-06-13 14:11:39.092808",
   "peer_ip_src": "192.0.2.2",
   "peer_tcp_port": 25344,
   "event_type": "log",
@@ -84,8 +84,8 @@ In case of table dump. Each batch of metric will start with "log_init" and end w
   "writer_id": "pmacct-bgp01c/4857"
 }
 {
-  "seq": 1166,
-  "timestamp": "1558677933.627806",
+  "seq": 1163,
+  "timestamp": "2020-06-13 14:11:39.627806",
   "peer_ip_src": "192.0.2.2",
   "peer_tcp_port": 31402,
   "event_type": "log_close",
@@ -323,7 +323,7 @@ Title | Description
 
 ~~~~
 
-### BMP message type 6, Route Policy and Attribute Trace
+### BMP message type TBD, Route Policy and Attribute Trace
 Title | Description
 :----- | :-----------
 `seq` | pmacct sequence number. Uniquely identifies each metric.
