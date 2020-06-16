@@ -203,6 +203,7 @@ jobs:
     stage: docker_hub
     name: "docker_hub: base container"
     env: PMACCT_VERSION=$(git describe --abbrev=0 --match="v*")
+    if: type NOT IN (pull_request)
     script:
       - echo "Building the base container..."
       - docker build -f docker/base/Dockerfile -t base:_build .
