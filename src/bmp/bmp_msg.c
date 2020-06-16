@@ -59,7 +59,7 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
     }
 
     if (bch->version != BMP_V3 && bch->version != BMP_V4) {
-      Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: unknown BMP version: %u\n",
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: unknown BMP version: %u (2)\n",
 	  config.name, bms->log_str, peer->addr_str, bch->version);
       return FALSE;
     }

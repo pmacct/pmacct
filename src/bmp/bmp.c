@@ -874,7 +874,7 @@ void skinny_bmp_daemon()
 	    struct bmp_common_hdr *bhdr = (struct bmp_common_hdr *) peer->buf.base;
 
 	    if (bhdr->version != BMP_V3 && bhdr->version != BMP_V4) {
-	      Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: unknown BMP version: %u\n",
+	      Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: unknown BMP version: %u (1)\n",
 		  config.name, bmp_misc_db->log_str, peer->addr_str, bhdr->version);
 
 	      peer->msglen = 0;
