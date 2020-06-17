@@ -4,7 +4,7 @@ pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
-1.7.5 -- XX-0X-2020
+1.7.5 -- 17-06-2020
   + pmacct & Redis: pmacct daemons can now connect to a Redis cache.
     The main use-case currenly covered is: registering every stable
     daemon component in a table so to have, when running a cluster
