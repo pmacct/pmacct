@@ -24,6 +24,9 @@
 #include "addr.h"
 #include "bgp/bgp.h"
 #include "bmp.h"
+#ifdef WITH_AVRO
+#include "plugin_cmn_avro.h"
+#endif
 
 /* functions */
 void bmp_process_msg_rpat(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
@@ -270,6 +273,12 @@ int bmp_log_msg_rpat(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
   else if ((output == PRINT_OUTPUT_AVRO_BIN) ||
 	   (output == PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
+    avro_value_t *obj = (avro_value_t *) vobj, p_avro_field;
+    char bmp_msg_type[] = "rpat";
+
+    pm_avro_check(avro_value_get_by_name(obj, "bmp_msg_type", &p_avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&p_avro_field, bmp_msg_type));
+
     // XXX: to be worked out later
 #endif
   }

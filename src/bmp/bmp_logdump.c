@@ -113,6 +113,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
       ret = bmp_log_msg_rpat(peer, bdata, tlvs, (struct bmp_log_rpat *) log_data, event_type, output, obj);
       break;
     default:
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] bmp_log_msg(): unknown message type (%u)\n", config.name, bms->log_str, peer->addr_str, log_type);
       break;
     }
 
@@ -195,8 +196,15 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
     pm_avro_check(avro_value_get_by_name(&p_avro_obj, "bmp_router", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_string(&p_avro_field, peer->addr_str));
 
-    pm_avro_check(avro_value_get_by_name(&p_avro_obj, "bmp_router_port", &p_avro_field, NULL));
-    pm_avro_check(avro_value_set_int(&p_avro_field, peer->tcp_port));
+    if (bms->peer_port_str) {
+      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "bmp_router_port", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+      pm_avro_check(avro_value_set_int(&p_avro_branch, peer->tcp_port));
+    }
+    else {
+      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "bmp_router_port", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+    }
 
     switch (log_type) {
     case BMP_LOG_TYPE_STATS:
@@ -218,6 +226,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
       ret = bmp_log_msg_rpat(peer, bdata, tlvs, (struct bmp_log_rpat *) log_data, event_type, output, &p_avro_obj);
       break;
     default:
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] bmp_log_msg(): unknown message type (%u)\n", config.name, bms->log_str, peer->addr_str, log_type);
       break;
     }
 
@@ -1900,7 +1909,7 @@ void p_avro_schema_build_bmp_common(avro_schema_t *schema, avro_schema_t *optlon
   avro_schema_record_field_append((*schema), "event_type", avro_schema_string());
   avro_schema_record_field_append((*schema), "event_timestamp", (*optstr_s));
   avro_schema_record_field_append((*schema), "bmp_router", avro_schema_string());
-  avro_schema_record_field_append((*schema), "bmp_router_port", avro_schema_int());
+  avro_schema_record_field_append((*schema), "bmp_router_port", (*optint_s));
   avro_schema_record_field_append((*schema), "bmp_msg_type", avro_schema_string());
   avro_schema_record_field_append((*schema), "writer_id", avro_schema_string());
 }
