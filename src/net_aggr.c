@@ -372,7 +372,11 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
     }
   }
 
-  Log(LOG_INFO, "INFO ( %s/%s ): [%s] map successfully (re)loaded.\n", config.name, config.type, filename);
+  /* filename check to not print nulls as load_networks()
+     may not be secured inside an if statement */
+  if (filename) {
+    Log(LOG_INFO, "INFO ( %s/%s ): [%s] map successfully (re)loaded.\n", config.name, config.type, filename);
+  }
 
   return;
 
