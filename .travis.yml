@@ -209,6 +209,12 @@ jobs:
       - docker build -f docker/base/Dockerfile -t base:_build .
       - echo "Building daemon containers..."
       - docker build -f docker/pmacctd/Dockerfile -t pmacctd:_build .
+      - docker build -f docker/nfacctd/Dockerfile -t nfacctd:_build .
+      - docker build -f docker/sfacctd/Dockerfile -t sfacctd:_build .
+      - docker build -f docker/uacctd/Dockerfile -t uacctd:_build .
+      - docker build -f docker/pmbgpd/Dockerfile -t pmbgpd:_build .
+      - docker build -f docker/pmbmpd/Dockerfile -t pmbmpd:_build .
+      - docker build -f docker/pmtelemetryd/Dockerfile -t pmtelemetryd:_build .
       - echo "Uploading to dockerhub ...";
       - echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin;
 
@@ -221,6 +227,18 @@ jobs:
           docker push ${DOCKER_USERNAME}/base:bleeding-edge;
           docker tag pmacctd:_build ${DOCKER_USERNAME}/pmacctd:bleeding-edge;
           docker push ${DOCKER_USERNAME}/pmacctd:bleeding-edge;
+          docker tag nfacctd:_build ${DOCKER_USERNAME}/nfacctd:bleeding-edge;
+          docker push ${DOCKER_USERNAME}/nfacctd:bleeding-edge;
+          docker tag sfacctd:_build ${DOCKER_USERNAME}/sfacctd:bleeding-edge;
+          docker push ${DOCKER_USERNAME}/sfacctd:bleeding-edge;
+          docker tag uacctd:_build ${DOCKER_USERNAME}/uacctd:bleeding-edge;
+          docker push ${DOCKER_USERNAME}/uacctd:bleeding-edge;
+          docker tag pmbgpd:_build ${DOCKER_USERNAME}/pmbgpd:bleeding-edge;
+          docker push ${DOCKER_USERNAME}/pmbgpd:bleeding-edge;
+          docker tag pmbmpd:_build ${DOCKER_USERNAME}/pmbmpd:bleeding-edge;
+          docker push ${DOCKER_USERNAME}/pmbmpd:bleeding-edge;
+          docker tag pmtelemetryd:_build ${DOCKER_USERNAME}/pmtelemetryd:bleeding-edge;
+          docker push ${DOCKER_USERNAME}/pmtelemetryd:bleeding-edge;
         fi
 
       #Upload vX.Y.Z only of it's a release commit
@@ -232,6 +250,18 @@ jobs:
           docker push ${DOCKER_USERNAME}/base:${PMACCT_VERSION};
           docker tag pmacctd:_build ${DOCKER_USERNAME}/pmacctd:${PMACCT_VERSION};
           docker push ${DOCKER_USERNAME}/pmacctd:${PMACCT_VERSION};
+          docker tag nfacctd:_build ${DOCKER_USERNAME}/nfacctd:${PMACCT_VERSION};
+          docker push ${DOCKER_USERNAME}/nfacctd:${PMACCT_VERSION};
+          docker tag sfacctd:_build ${DOCKER_USERNAME}/sfacctd:${PMACCT_VERSION};
+          docker push ${DOCKER_USERNAME}/sfacctd:${PMACCT_VERSION};
+          docker tag uacctd:_build ${DOCKER_USERNAME}/uacctd:${PMACCT_VERSION};
+          docker push ${DOCKER_USERNAME}/uacctd:${PMACCT_VERSION};
+          docker tag pmbgpd:_build ${DOCKER_USERNAME}/pmbgpd:${PMACCT_VERSION};
+          docker push ${DOCKER_USERNAME}/pmbgpd:${PMACCT_VERSION};
+          docker tag pmbmpd:_build ${DOCKER_USERNAME}/pmbmpd:${PMACCT_VERSION};
+          docker push ${DOCKER_USERNAME}/pmbmpd:${PMACCT_VERSION};
+          docker tag pmtelemetryd:_build ${DOCKER_USERNAME}/pmtelemetryd:${PMACCT_VERSION};
+          docker push ${DOCKER_USERNAME}/pmtelemetryd:${PMACCT_VERSION};
         fi
 
       #Upload "latest" if the release version is the highest
@@ -244,5 +274,17 @@ jobs:
             docker push ${DOCKER_USERNAME}/base:latest;
             docker tag pmacctd:_build ${DOCKER_USERNAME}/pmacctd:latest;
             docker push ${DOCKER_USERNAME}/pmacctd:latest;
+            docker tag nfacctd:_build ${DOCKER_USERNAME}/nfacctd:latest;
+            docker push ${DOCKER_USERNAME}/nfacctd:latest;
+            docker tag sfacctd:_build ${DOCKER_USERNAME}/sfacctd:latest;
+            docker push ${DOCKER_USERNAME}/sfacctd:latest;
+            docker tag uacctd:_build ${DOCKER_USERNAME}/uacctd:latest;
+            docker push ${DOCKER_USERNAME}/uacctd:latest;
+            docker tag pmbgpd:_build ${DOCKER_USERNAME}/pmbgpd:latest;
+            docker push ${DOCKER_USERNAME}/pmbgpd:latest;
+            docker tag pmbmpd:_build ${DOCKER_USERNAME}/pmbmpd:latest;
+            docker push ${DOCKER_USERNAME}/pmbmpd:latest;
+            docker tag pmtelemetryd:_build ${DOCKER_USERNAME}/pmtelemetryd:latest;
+            docker push ${DOCKER_USERNAME}/pmtelemetryd:latest;
           fi
         fi
