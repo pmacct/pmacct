@@ -6,7 +6,7 @@
 #This Dockerfile creates an image for pmtelemetryd 
 
 FROM base:_build
-MAINTAINER Marc Sune <marcdevel (at) gmail.com>
+MAINTAINER pmacct Docker Doctors <docker-doctors (at) pmacct.net>
 
 ENTRYPOINT ["/usr/local/sbin/pmtelemetryd"]
 CMD ["-f", "/etc/pmacct/pmtelemetryd.conf"]

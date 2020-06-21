@@ -7,7 +7,7 @@
 #tools for network telemetry and monitoring
 
 FROM debian:buster
-MAINTAINER Marc Sune <marcdevel (at) gmail.com>
+MAINTAINER pmacct Docker Doctors <docker-doctors (at) pmacct.net>
 
 #Copy installer script
 COPY ci/deps.sh /tmp/

@@ -6,7 +6,7 @@
 #This Dockerfile creates an image for sfacctd
 
 FROM base:_build
-MAINTAINER Marc Sune <marcdevel (at) gmail.com>
+MAINTAINER pmacct Docker Doctors <docker-doctors (at) pmacct.net>
 
 ENTRYPOINT ["/usr/local/sbin/sfacctd"]
 CMD ["-f", "/etc/pmacct/sfacctd.conf"]
