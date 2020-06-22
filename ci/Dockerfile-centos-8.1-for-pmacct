@@ -1,0 +1,39 @@
+# produces a docker image suitable to build pmacct
+
+FROM centos:8.1.1911
+
+RUN sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/CentOS-PowerTools.repo && \
+    yum install -y \
+    autoconf \
+    automake \
+    bash \
+    bison \
+    cmake \
+    epel-release \
+    flex \
+    gcc \
+    gcc-c++ \
+    git \
+    glibc-devel \
+    glibc-headers \
+    jansson-devel \
+    libcurl-devel \
+    libpcap-devel \
+    libpq-devel \
+    libstdc++-devel \
+    libtool \
+    make \
+    mysql-devel \
+    openssl-devel \
+    pkgconfig \
+    snappy-devel \
+    sqlite-devel \
+    sudo \
+    wget \
+    which \
+    zlib-devel
+
+COPY ./ci/deps.sh .
+RUN ./deps.sh
+
+ENTRYPOINT ["/bin/bash"]

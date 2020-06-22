@@ -1,0 +1,35 @@
+# produces a docker image suitable to build pmacct
+
+FROM ubuntu:bionic
+
+RUN apt-get update && \
+    apt-get install -y \
+    autoconf \
+    automake \
+    bash \
+    bison \
+    cmake \
+    default-libmysqlclient-dev \
+    flex \
+    gcc \
+    git \
+    libcurl4-openssl-dev \
+    libjansson-dev \
+    libnetfilter-log-dev \
+    libpcap-dev \
+    libpq-dev \
+    libsnappy-dev \
+    libsqlite3-dev \
+    libssl-dev \
+    libstdc++-8-dev \
+    libtool \
+    make \
+    pkg-config \
+    sudo \
+    wget \
+    zlib1g-dev
+
+COPY ./ci/deps.sh .
+RUN ./deps.sh
+
+ENTRYPOINT ["/bin/bash"]
