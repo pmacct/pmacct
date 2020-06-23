@@ -337,7 +337,8 @@ KEY:		plugin_pipe_zmq_hwm
 DESC:           Defines the messages high watermark, that is, "The high water mark is a hard
 		limit on the maximum number of outstanding messages ZeroMQ shall queue in
 		memory for any single peer that the specified socket is communicating with. A
-		value of zero means no limit.".
+		value of zero means no limit.". If configured, upon reaching the set watermark
+		value, exceeding data will be discaded and an error log message will be output.
 DEFAULT:        0
 
 KEY:		plugin_exit_any
