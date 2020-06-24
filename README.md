@@ -36,6 +36,8 @@ Available daemon containers:
   * [sfacctd](https://hub.docker.com/r/pmacct/sfacctd)
   * [uacctd](https://hub.docker.com/r/pmacct/uacctd)
 
+All daemons come with all plugins and supports compiled-in.
+
 Tags:
 
   * `latest`: latest stable image of that container
