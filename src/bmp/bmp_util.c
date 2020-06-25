@@ -324,6 +324,13 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
       json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bmed_bmp->is_post));
       json_object_set_new_nocheck(obj, "is_out", json_integer((json_int_t)bmed_bmp->is_out));
     }
+
+    if (!is_empty_256b(&bmed_bmp->rd, sizeof(bmed_bmp->rd))) {
+      char rd_str[SHORTSHORTBUFLEN];
+
+      bgp_rd2str(rd_str, &bmed_bmp->rd);
+      json_object_set_new_nocheck(obj, "rd", json_string(rd_str));
+    }
 #endif
   }
   else if (output == PRINT_OUTPUT_AVRO_BIN) {
@@ -371,6 +378,19 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
 
       pm_avro_check(avro_value_get_by_name(obj, "is_out", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+    }
+
+    if (!is_empty_256b(&bmed_bmp->rd, sizeof(bmed_bmp->rd))) {
+      char rd_str[SHORTSHORTBUFLEN];
+
+      bgp_rd2str(rd_str, &bmed_bmp->rd);
+      pm_avro_check(avro_value_get_by_name(obj, "rd", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+      pm_avro_check(avro_value_set_string(&p_avro_branch, rd_str));
+    }
+    else {
+      pm_avro_check(avro_value_get_by_name(obj, "rd", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 #endif
