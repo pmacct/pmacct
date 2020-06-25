@@ -111,15 +111,32 @@ int bgp_lookup_node_match_cmp_bmp(struct bgp_info *info, struct node_match_cmp_t
   struct bmp_peer *bmpp = info->peer->bmp_se;
   struct bgp_peer *peer_local = &bmpp->self;
   struct bgp_peer *peer_remote = info->peer;
-  int no_match = FALSE;
+  int no_match = FALSE, compare_rd = FALSE;
 
   /* peer_local: edge router use-case; peer_remote: replicator use-case */
   if (peer_local == nmct2->peer || peer_remote == nmct2->peer) {
-    if (nmct2->safi == SAFI_MPLS_VPN) no_match++;
+    if (nmct2->safi == SAFI_MPLS_VPN || !is_empty_256b(&nmct2->rd, sizeof(nmct2->rd))) {
+      no_match++;
+      compare_rd = TRUE;
+    }
+
     if (nmct2->peer->cap_add_paths[nmct2->afi][nmct2->safi]) no_match++;
 
-    if (nmct2->safi == SAFI_MPLS_VPN) {
-      if (info->attr_extra && !memcmp(&info->attr_extra->rd, &nmct2->rd, sizeof(rd_t))) no_match--;
+    if (compare_rd) {
+      /* RD typical location */
+      if (info->attr_extra && !memcmp(&info->attr_extra->rd, &nmct2->rd, sizeof(rd_t))) {
+	no_match--;
+      }
+      /* RD location when decoded from Peer Distinguisher */
+      else {
+	if (info->bmed.id == BGP_MSG_EXTRA_DATA_BMP) {
+	  struct bmp_chars *bmed_bmp = (struct bmp_chars *) info->bmed.data;
+
+	  if (bmed_bmp && !memcmp(&bmed_bmp->rd, &nmct2->rd, sizeof(rd_t))) {
+	    no_match--;
+	  }
+	}
+      }
     }
 
     if (nmct2->peer->cap_add_paths[nmct2->afi][nmct2->safi]) {
