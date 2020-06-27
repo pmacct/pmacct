@@ -365,6 +365,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
 	return;
       }
       bmp_get_and_check_length(bmp_packet, len, bgp_open_len);
+      memcpy(&bmpp->self.id, &bgp_peer_loc.id, sizeof(struct host_addr));
       memcpy(&bgp_peer_loc.addr, &blpu.local_ip, sizeof(struct host_addr));
 
       bgp_peer_rem.type = FUNC_TYPE_BMP;
