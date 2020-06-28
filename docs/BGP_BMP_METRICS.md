@@ -117,11 +117,8 @@ Title | Description
 `bmp_router_port` | TCP port of BMP router which peers to pmacct
 `event_type` | pmacct event type. Can be either "log" for msglog or "dump" for table_dump.
 `bmp_msg_type` | "route_monitoring" for BMP message type 0
-`is_in` | Boolean, if present and true it indicates data from Adj-Rib-In
-`is_loc` | Boolean, if present and true it indicates data from Loc-Rib
 `is_out` | Boolean, if present and true it indicates data from Adj-Rib-Out
-`is_post` | Boolean, if present and true it indicates post-policy data (in conjunction with is_in, is_post) 
-`is_filtered` | Boolean, if present and true it indicates filtered data (in conjunction with is_loc)
+`is_post` | Boolean, if present and true it indicates post-policy data (in conjunction with is_in, is_out) 
 `peer_ip` | BGP peer IP address where BGP metrics are received from
 `afi` | BGP Address Family Indicator (RFC 4760 -  Multiprotocol Extensions for BGP-4)
 `safi` | BGP Subsequent Address Family Identifier (RFC 4760 -  Multiprotocol Extensions for BGP-4)
@@ -172,6 +169,8 @@ Title | Description
 :----- | :-----------
 `seq` | pmacct sequence number. Uniquely identifies each metric.
 `timestamp` | pmacct time stamp of data collection
+`is_loc` | Boolean, if present and true it indicates data from Loc-Rib
+`is_filtered` | Boolean, if present and true it indicates filtered data (in conjunction with is_loc)
 `bmp_router` | IP address of BMP router which peers to pmacct
 `bmp_router_port` | TCP port of BMP router which peers to pmacct
 `event_type` | pmacct event type. Can be either "log" for msglog or "dump" for table_dump.
@@ -189,6 +188,8 @@ Title | Description
   "event_type": "log",
   "seq": 18271,
   "timestamp": "2019-05-24 09:41:34.543389",
+  "is_filtered": 0,
+  "is_in": 1,
   "bmp_router": "192.0.2.2",
   "bmp_router_port": 45047,
   "bmp_msg_type": "stats",
@@ -242,6 +243,8 @@ Title | Description
 :----- | :-----------
 `seq` | pmacct sequence number. Uniquely identifies each metric.
 `timestamp` | pmacct time stamp of data collection
+`is_in` | Boolean, if present and true it indicates data from Adj-Rib-In
+`is_post` | Boolean, if present and true it indicates post-policy data (in conjunction with is_in, is_out)
 `bmp_router` | IP address of BMP router which peers to pmacct
 `bmp_router_port` | TCP port of BMP router which peers to pmacct
 `event_type` | pmacct event type. Can be either "log" for msglog or "dump" for table_dump.
@@ -261,6 +264,8 @@ Title | Description
   "event_type": "log",
   "seq": 10,
   "timestamp": "2019-05-24 09:31:03.160056",
+  "is_post": 1,
+  "is_in": 1,
   "bmp_router": "192.0.2.2",
   "bmp_router_port": 45047,
   "bmp_msg_type": "peer_up",
