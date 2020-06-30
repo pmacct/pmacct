@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -329,6 +329,13 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
 
   for (i = 0; i < ecom->size; i++)
     {
+      /* Make it sure size is enough.  */
+      while (str_pnt + ECOMMUNITY_STR_DEFAULT_LEN >= str_size)
+        {
+          str_size *= 2;
+          str_buf = realloc(str_buf, str_size);
+        }
+
       /* Space between each value.  */
       if (! first)
 	str_buf[str_pnt++] = ' ';
@@ -370,13 +377,6 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
 	default:
 	  prefix = "";
 	  break;
-	}
-
-      /* Make it sure size is enough.  */
-      while (str_pnt + ECOMMUNITY_STR_DEFAULT_LEN >= str_size)
-	{
-	  str_size *= 2;
-	  str_buf = realloc(str_buf, str_size);
 	}
 
       /* Put string into buffer.  */
