@@ -1531,6 +1531,13 @@ re-establish a fallen peering session. For debugging purposes related to the
 BGP feed(s), bgp_daemon_msglog_* configuration directives can be enabled in
 order to log BGP messaging.
 
+NOTE: especially when connecting large amounts of BGP peers, say hundreds or
+more, the almost synchronized attempt to connect from all of them may lead
+the kernel into a suspicion of TCP SYN Flood. While not recommending to
+disable TCP SYN flood protection, if slugginess is observed when taking up
+the BGP sessions and kernel logs indicate a possible SYN flooding, maybe it
+is good idea to tune and customize default kernel parameters.
+
 XIVa. Limiting AS-PATH and BGP community attributes length
 AS-PATH and BGP communities can get easily long when represented as strings.
 Sometimes only a small portion of their content is of interest and hence a
