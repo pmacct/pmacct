@@ -112,6 +112,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
     }
 
     /* XXX: can be further optimized for the case of no SAFI_UNICAST rib */
+    start_again_mpls_vpn:
     start_again_mpls_label:
 
     if (pptrs->l3_proto == ETHERTYPE_IP) {
@@ -227,6 +228,13 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 	  }
         }
       }
+    }
+
+    /* XXX: tackle the case of Peer Distinguisher from BMP header
+       probably needs deeper thoughts for a cleaner approach */
+    if ((!pptrs->bgp_src || !pptrs->bgp_dst) && safi == SAFI_MPLS_VPN && type == FUNC_TYPE_BMP) {
+      safi = SAFI_UNICAST;
+      goto start_again_mpls_vpn;
     }
 
     if ((!pptrs->bgp_src || !pptrs->bgp_dst) && safi != SAFI_MPLS_LABEL) {
