@@ -2858,6 +2858,21 @@ Optionally, especially if the issue can be easily reproduced, the daemon can
 be re-configured for compiling with the --enable-debug flag so to produce
 extra info suitable for troubleshooting. 
 
+There is a whole range of cases where the crash could be caused by corrupting
+the heap and these are evidenced when a 'bt' in gdb highlights a malloc() call
+as point of crash; while these issues often times boil down to erroneous coding,
+they are subtle, hard to reproduce and platform / OS dependant. When facing
+such issues, launching the daemon with the MALLOC_CHECK_ environment variable
+set to 2, ie.:
+
+shell> MALLOC_CHECK_=2
+shell> export MALLOC_CHECK_
+
+Would return additional useful information for the troubleshooting process. At
+times this action - that elicits the use of an alternate malloc() call - may
+even work as a work-around (if falling in this condition it is recommended to
+not use this 'mask' as long-term solution, that is, please report the issue).
+
 c) In case of (suspected) memory leaks, the advice is to: 1) re-compile pmacct
 with "./configure --enable-debug <other flags already in use>"; --enable-debug
 sets as CFLAGS -O0 -g -Wall where especially -O0 is capital since it disables
