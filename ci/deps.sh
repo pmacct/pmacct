@@ -2,6 +2,8 @@
 
 #    Copyright
 #    (c) 2020 Marc Sune <marcdevel@gmail.com>
+#    (c) 2020 Claudio Ortega <claudio.alberto.ortega@gmail.com>
+#    (c) 2020 Paolo Lucente <paolo@pmacct.net>
 #
 #    Permission to use, copy, modify, and distribute this software for any
 #    purpose with or without fee is hereby granted, provided that the above
