@@ -495,7 +495,8 @@ reprocess:
 #ifdef WITH_ZMQ
           struct channels_list_entry *chptr = &channels_list[index];
 
-	  p_zmq_topic_send(&chptr->zmq_host, chptr->rg.ptr, chptr->bufsize);
+	  int ret = p_zmq_topic_send(&chptr->zmq_host, chptr->rg.ptr, chptr->bufsize);
+          (void)ret; //Check error?
 #endif
 	}
 	else {

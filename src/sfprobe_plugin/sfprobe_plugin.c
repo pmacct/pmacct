@@ -210,6 +210,7 @@ void agentCB_getCounters(void *magic, SFLPoller *poller, SFL_COUNTERS_SAMPLE_TYP
 
 static void init_agent(SflSp *sp)
 {
+  SFLReceiver *receiver;
   SFLDataSource_instance dsi;
 
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): Creating sFlow agent.\n", config.name, config.type);
@@ -237,7 +238,8 @@ static void init_agent(SflSp *sp)
   }
 
   // add a receiver
-  sfl_agent_addReceiver(sp->agent);
+  receiver = sfl_agent_addReceiver(sp->agent);
+  (void)receiver; // todo treat result?
 
   // define the data source
   SFL_DS_SET(dsi, 0, 1, 0);  // ds_class = 0, ds_index = 1, ds_instance = 0

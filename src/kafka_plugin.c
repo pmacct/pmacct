@@ -343,6 +343,15 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   struct pkt_data dummy_data;
   pid_t writer_pid = getpid();
 
+  //TODO solve these warnings correctly
+  (void)pvlen;
+  (void)pcust;
+  (void)ptun;
+  (void)pmpls;
+  (void)pnat;
+  (void)pbgp;
+  (void)data;
+
   char *json_buf = NULL;
   int json_buf_off = 0;
 

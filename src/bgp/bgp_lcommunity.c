@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
 */
 
 /*
@@ -191,6 +191,7 @@ lcommunity_unintern (struct bgp_peer *peer, struct lcommunity *lcom)
 {
   struct bgp_rt_structs *inter_domain_routing_db;
   struct lcommunity *ret = NULL;
+  (void) ret;
 
   if (!peer) return;
 

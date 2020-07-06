@@ -194,6 +194,7 @@ ecommunity_unintern (struct bgp_peer *peer, struct ecommunity *ecom)
 {
   struct bgp_rt_structs *inter_domain_routing_db;
   struct ecommunity *ret = NULL;
+  (void) ret;
 
   if (!peer) return;
 
