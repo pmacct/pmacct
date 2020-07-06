@@ -557,7 +557,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 #ifdef WITH_AVRO
       avro_value_iface_t *p_avro_iface = avro_generic_class_from_schema(p_avro_acct_schema);
       avro_value_t p_avro_value = compose_avro_acct_data(config.what_to_count, config.what_to_count_2,
-			   queue[j]->flow_type, &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust,
+			   queue[j]->flow_type, data, pbgp, pnat, pmpls, ptun, pcust,
 			   pvlen, queue[j]->bytes_counter, queue[j]->packet_counter,
 			   queue[j]->flow_counter, queue[j]->tcp_flags, &queue[j]->basetime,
 			   queue[j]->stitch, p_avro_iface);
