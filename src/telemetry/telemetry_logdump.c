@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -261,7 +261,6 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
   telemetry_misc_structs *tms = bgp_select_misc_db(FUNC_TYPE_TELEMETRY);
   char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
   char latest_filename[SRVBUFLEN], event_type[] = "dump", *fd_buf = NULL;
-  (void)event_type;
   int ret, peers_idx, duration, tables_num;
   pid_t dumper_pid;
   time_t start;
@@ -374,7 +373,6 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
 
 	if (tdsell && tdsell->start) {
           telemetry_dump_se_ll_elem *se_ll_elem;
-          char event_type[] = "dump";
 
 	  for (se_ll_elem = tdsell->start; se_ll_elem; se_ll_elem = se_ll_elem->next) {
 	    telemetry_log_msg(peer, t_data, se_ll_elem->rec.data, se_ll_elem->rec.len, se_ll_elem->rec.decoder,

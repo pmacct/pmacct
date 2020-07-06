@@ -2246,7 +2246,6 @@ int sf_cnt_log_msg(struct bgp_peer *peer, SFSample *sample, int version, u_int32
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_SFLOW_COUNTER);
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
-  (void)etype;
 
   if (!bms || !peer || !sample || !event_type) {
     skipBytes(sample, len);

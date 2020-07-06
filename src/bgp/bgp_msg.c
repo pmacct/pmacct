@@ -1002,7 +1002,6 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
   u_char *lim;
   struct prefix p;
   int psize = 0, end;
-  int ret;
   u_int32_t tmp32;
   u_int16_t tmp16;
   struct rd_ip  *rdi;
@@ -1143,12 +1142,10 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
 
     /* Let's do our job now! */
     if (attr) {
-      ret = bgp_process_update(bmd, &p, attr, attr_extra, info->afi, info->safi);
+      bgp_process_update(bmd, &p, attr, attr_extra, info->afi, info->safi);
     }
     else {
-      ret = bgp_process_withdraw(bmd, &p, attr, attr_extra, info->afi, info->safi);
-      (void)ret; //Treat error?
-
+      bgp_process_withdraw(bmd, &p, attr, attr_extra, info->afi, info->safi);
     }
 
 #if defined WITH_ZMQ
