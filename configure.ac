@@ -108,33 +108,6 @@ AC_TRY_LINK([ extern char *__progname; ],
 [AC_MSG_RESULT(yes); AC_DEFINE(PROGNAME, 1)], [AC_MSG_RESULT(no)])
 
 dnl
-dnl Some checks to understand whether we need to instruct the linker for
-dnl exporting collector symbols to dynamically loaded classifiers. 
-dnl
-dnl OS'es with ELF executables using the GNU linker (Linux and recent *BSD,
-dnl in rare cases Solaris) typically need '-Wl,-export-dynamic'; some SYSv4
-dnl systems instead need '-Wl,-Bexport'; AIX 4.x wants -Wl,-bexpall,-brtl'.
-dnl
-      
-AC_MSG_CHECKING(for extra flags needed to export symbols)
-if test "x$ac_cv_prog_gcc" = xyes ; then
-	save_ldflags="${LDFLAGS}"
-	LDFLAGS="-Wl,--export-dynamic ${save_ldflags}"
-	AC_TRY_LINK(,,
-		[ AC_MSG_RESULT(--export-dynamic) ],
-		[ LDFLAGS="-Wl,-Bexport ${save_ldflags}"
-		  AC_TRY_LINK(,,
-			[ AC_MSG_RESULT(-Bexport) ],
-		  	[ AC_MSG_RESULT(none)
-		    	  LDFLAGS="${save_ldflags}" ]
-		  )
-		]
-	)
-else
-	AC_MSG_RESULT(none)
-fi
-
-dnl
 dnl some C compilers (ex. MipsPRO) don't know how to parse the 'inline' keyword
 dnl
 AC_MSG_CHECKING(for static inline)
