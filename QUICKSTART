@@ -224,16 +224,19 @@ Once libpcap is downloaded, if static linking is wanted (ideal for example
 for distributing pmacct without external dependencies), the library can be
 configured for comipiling:
 
-shell> ./configure --disable-shared
+shell> ./configure --disable-so
 
-pmacct should be pointed to the own libpcap library when configuring for
-compiling: 
+Which passes the compiler the '-static' knob. pmacct should be pointed to
+the own libpcap library when configuring for compiling:
 
 shell> ./configure --with-pcap-libs=/path/to/libpcap-x.y.z --with-pcap-includes=/path/to/libpcap-x.y.z
 
 Once pmacct is compiled, it can be confirmed that the right library was
 picked by doing, for example, a 'pmacctd -V' and seeing the version of
-libpcap matches with the supplied version.
+libpcap matches with the supplied version. It has to be noted however
+that static compiling on GNU systems can yeld variable success; the
+recommendation is to consider containers first (look into the 'docker/'
+directory). 
 
 A use-case for a PF_RING-enabled libpcap is that by hashing and balancing
 collected traffic over multiple NIC queues (ie. if using Intel X520) it
