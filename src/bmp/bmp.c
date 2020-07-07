@@ -863,6 +863,16 @@ void skinny_bmp_daemon()
 
     if (!peer) goto select_again;
 
+    /* If first message after connect, check for proxy protocol header */
+    if (config.parse_proxy_header == TRUE && peer->parsed_proxy_header == 0) {
+      ret = parse_proxy_header(peer->fd, &peer->addr, &peer->tcp_port);
+      if (ret < 0) {
+        goto select_again; /* partial header */
+      }
+      addr_to_str(peer->addr_str, &peer->addr);
+    }
+    peer->parsed_proxy_header = 1;
+
     if (!config.pcap_savefile) {
       if (!peer->buf.exp_len) {
 	ret = recv(peer->fd, &peer->buf.base[peer->buf.cur_len], (BMP_CMN_HDRLEN - peer->buf.cur_len), 0);

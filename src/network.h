@@ -658,4 +658,40 @@ struct tunnel_entry {
 
 /* global variables */
 extern struct tunnel_handler tunnel_registry[TUNNEL_REGISTRY_STACKS][TUNNEL_REGISTRY_ENTRIES];
+
+/* http://www.haproxy.org/download/1.8/doc/proxy-protocol.txt */
+typedef struct {
+  union {
+    struct {
+        char line[108];
+    } v1;
+    struct {
+        uint8_t sig[12];
+        uint8_t ver_cmd;
+        uint8_t fam;
+        uint16_t len;
+        union {
+            struct {  /* for TCP/UDP over IPv4, len = 12 */
+                uint32_t src_addr;
+                uint32_t dst_addr;
+                uint16_t src_port;
+                uint16_t dst_port;
+            } ip4;
+            struct {  /* for TCP/UDP over IPv6, len = 36 */
+                 uint8_t  src_addr[16];
+                 uint8_t  dst_addr[16];
+                 uint16_t src_port;
+                 uint16_t dst_port;
+            } ip6;
+            struct {  /* for AF_UNIX sockets, len = 216 */
+                 uint8_t src_addr[108];
+                 uint8_t dst_addr[108];
+            } unx;
+        } addr;
+    } v2;
+  };
+} proxy_protocol_header;
+
+int parse_proxy_header(int fd, struct host_addr *addr, u_int16_t *port);
+
 #endif //PMACCT_NETWORK_H
