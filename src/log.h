@@ -58,6 +58,7 @@ struct log_notification {
 };
 
 struct _log_notifications {
+  struct log_notification snaplen_issue;
   struct log_notification max_classifiers;
   struct log_notification bgp_peers_throttling;
   struct log_notification bgp_peers_limit;

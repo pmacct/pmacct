@@ -229,10 +229,13 @@ int ip_handler(register struct packet_ptrs *pptrs)
   if (config.handle_fragments) {
     if (pptrs->l4_proto == IPPROTO_TCP || pptrs->l4_proto == IPPROTO_UDP) {
       if (off+MyTLHdrSz > caplen) {
-        Log(LOG_INFO, "INFO ( %s/core ): short IPv4 packet read (%u/%u/frags). Snaplen issue ?\n",
-			config.name, caplen, off+MyTLHdrSz);
-        return FALSE;
+	if (!log_notification_isset(&log_notifications.snaplen_issue, ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_sec)) {
+          Log(LOG_INFO, "INFO ( %s/core ): short IPv4 packet read (%u/%u/frags). Snaplen issue ?\n", config.name, caplen, off+MyTLHdrSz);
+	  log_notification_set(&log_notifications.max_classifiers, ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_sec, 180);
+          return FALSE;
+	}
       }
+
       pptrs->tlh_ptr = ptr;
 
       if (((struct pm_iphdr *)pptrs->iph_ptr)->ip_off & htons(IP_MF|IP_OFFMASK)) {
