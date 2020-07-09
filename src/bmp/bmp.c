@@ -864,7 +864,7 @@ void skinny_bmp_daemon()
     if (!peer) goto select_again;
 
     /* If first message after connect, check for proxy protocol header */
-    if (config.parse_proxy_header == TRUE && peer->parsed_proxy_header == 0) {
+    if (config.bmp_daemon_parse_proxy_header == TRUE && peer->parsed_proxy_header == 0) {
       ret = parse_proxy_header(peer->fd, &peer->addr, &peer->tcp_port);
       if (ret < 0) {
         goto select_again; /* partial header */

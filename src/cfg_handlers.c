@@ -8222,7 +8222,7 @@ int cfg_key_print_output_custom_cfg_file(char *filename, char *name, char *value
   return changes;
 }
 
-int cfg_key_parse_proxy_header(char *filename, char *name, char *value_ptr)
+int cfg_key_nfacctd_bmp_daemon_parse_proxy_header(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -8230,8 +8230,8 @@ int cfg_key_parse_proxy_header(char *filename, char *name, char *value_ptr)
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  for (; list; list = list->next, changes++) list->cfg.parse_proxy_header = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'parse_proxy_header'. Globalized.\n", filename);
+  for (; list; list = list->next, changes++) list->cfg.bmp_daemon_parse_proxy_header = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_daemon_parse_proxy_header'. Globalized.\n", filename);
 
   return changes;
 }

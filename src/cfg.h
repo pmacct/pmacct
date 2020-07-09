@@ -583,7 +583,7 @@ struct configuration {
   int rpki_rtr_cache_version;
   int rpki_rtr_cache_pipe_size;
   int rpki_rtr_cache_ipprec;
-  int parse_proxy_header;
+  int bmp_daemon_parse_proxy_header;
 };
 
 /* prototypes */ 
