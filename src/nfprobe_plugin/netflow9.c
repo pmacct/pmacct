@@ -234,27 +234,6 @@ static u_int8_t send_sampling_option = FALSE;
 static u_int8_t send_class_option = FALSE;
 static u_int8_t send_exporter_option = FALSE;
 
-/*
- * XXX: pmXXX_htonll(): similar to htonl() for 64 bits integers; no checks are done
- * on the length of the buffer.
- */
-u_int64_t pmXXX_htonll(u_int64_t addr)
-{
-#if defined IM_LITTLE_ENDIAN
-  u_int64_t buf;
-
-  u_int32_t *x = (u_int32_t *)(void *) &addr;
-  u_int32_t *y = (u_int32_t *)(void *) &buf;
-
-  y[0] = htonl(x[1]);
-  y[1] = htonl(x[0]);
-
-  return buf;
-#else
-  return addr;
-#endif
-}
-
 static int
 flow_to_flowset_input_handler(char *flowset, const struct FLOW *flow, int idx, int size)
 {
@@ -480,7 +459,7 @@ flow_to_flowset_tag_handler(char *flowset, const struct FLOW *flow, int idx, int
 {
   pm_id_t tag;
 
-  tag = pmXXX_htonll(flow->tag[idx]);
+  tag = pm_htonll(flow->tag[idx]);
   memcpy(flowset, &tag, size);
 
   return 0;
@@ -491,7 +470,7 @@ flow_to_flowset_tag2_handler(char *flowset, const struct FLOW *flow, int idx, in
 {
   pm_id_t tag;
 
-  tag = pmXXX_htonll(flow->tag2[idx]);
+  tag = pm_htonll(flow->tag2[idx]);
   memcpy(flowset, &tag, size);
 
   return 0;
@@ -1756,39 +1735,39 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
 	      tstamp_msec = flow->flow_last.tv_sec;
 	      tstamp_msec = tstamp_msec * 1000;
 	      tstamp_msec += (flow->flow_last.tv_usec / 1000);
-              rec64 = pmXXX_htonll(tstamp_msec);
+              rec64 = pm_htonll(tstamp_msec);
               memcpy(ftoft_ptr_0, &rec64, 8);
               ftoft_ptr_0 += 8;
 
               tstamp_msec = flow->flow_start.tv_sec;
               tstamp_msec = tstamp_msec * 1000;
               tstamp_msec += (flow->flow_start.tv_usec / 1000);
-              rec64 = pmXXX_htonll(tstamp_msec);
+              rec64 = pm_htonll(tstamp_msec);
               memcpy(ftoft_ptr_0, &rec64, 8);
               ftoft_ptr_0 += 8;
 	    }
 	    else {
-	      rec64 = pmXXX_htonll(flow->flow_last.tv_sec);
+	      rec64 = pm_htonll(flow->flow_last.tv_sec);
 	      memcpy(ftoft_ptr_0, &rec64, 8);
 	      ftoft_ptr_0 += 8;
-	      rec64 = pmXXX_htonll(flow->flow_last.tv_usec);
+	      rec64 = pm_htonll(flow->flow_last.tv_usec);
 	      memcpy(ftoft_ptr_0, &rec64, 8);
 	      ftoft_ptr_0 += 8;
 
-	      rec64 = pmXXX_htonll(flow->flow_start.tv_sec);
+	      rec64 = pm_htonll(flow->flow_start.tv_sec);
 	      memcpy(ftoft_ptr_0, &rec64, 8);
 	      ftoft_ptr_0 += 8;
-	      rec64 = pmXXX_htonll(flow->flow_start.tv_usec);
+	      rec64 = pm_htonll(flow->flow_start.tv_usec);
 	      memcpy(ftoft_ptr_0, &rec64, 8);
 	      ftoft_ptr_0 += 8;
 	    }
 	  }
 
-          rec64 = pmXXX_htonll(flow->octets[0]);
+          rec64 = pm_htonll(flow->octets[0]);
           memcpy(ftoft_ptr_0, &rec64, 8);
           ftoft_ptr_0 += 8;
 
-          rec64 = pmXXX_htonll(flow->packets[0]);
+          rec64 = pm_htonll(flow->packets[0]);
           memcpy(ftoft_ptr_0, &rec64, 8);
           ftoft_ptr_0 += 8;
 
@@ -1877,39 +1856,39 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
               tstamp_msec = flow->flow_last.tv_sec;
               tstamp_msec = tstamp_msec * 1000;
               tstamp_msec += (flow->flow_last.tv_usec / 1000);
-              rec64 = pmXXX_htonll(tstamp_msec);
+              rec64 = pm_htonll(tstamp_msec);
               memcpy(ftoft_ptr_1, &rec64, 8);
               ftoft_ptr_1 += 8;
 
               tstamp_msec = flow->flow_start.tv_sec;
               tstamp_msec = tstamp_msec * 1000;
               tstamp_msec += (flow->flow_start.tv_usec / 1000);
-              rec64 = pmXXX_htonll(tstamp_msec);
+              rec64 = pm_htonll(tstamp_msec);
               memcpy(ftoft_ptr_1, &rec64, 8);
               ftoft_ptr_1 += 8;
 	    }
 	    else {
-	      rec64 = pmXXX_htonll(flow->flow_last.tv_sec);
+	      rec64 = pm_htonll(flow->flow_last.tv_sec);
 	      memcpy(ftoft_ptr_1, &rec64, 8);
 	      ftoft_ptr_1 += 8;
-	      rec64 = pmXXX_htonll(flow->flow_last.tv_usec);
+	      rec64 = pm_htonll(flow->flow_last.tv_usec);
 	      memcpy(ftoft_ptr_1, &rec64, 8);
 	      ftoft_ptr_1 += 8;
 
-	      rec64 = pmXXX_htonll(flow->flow_start.tv_sec);
+	      rec64 = pm_htonll(flow->flow_start.tv_sec);
 	      memcpy(ftoft_ptr_1, &rec64, 8);
 	      ftoft_ptr_1 += 8;
-	      rec64 = pmXXX_htonll(flow->flow_start.tv_usec);
+	      rec64 = pm_htonll(flow->flow_start.tv_usec);
 	      memcpy(ftoft_ptr_1, &rec64, 8);
 	      ftoft_ptr_1 += 8;
 	    }
           }
 
-          rec64 = pmXXX_htonll(flow->octets[1]);
+          rec64 = pm_htonll(flow->octets[1]);
           memcpy(ftoft_ptr_1, &rec64, 8);
           ftoft_ptr_1 += 8;
 
-          rec64 = pmXXX_htonll(flow->packets[1]);
+          rec64 = pm_htonll(flow->packets[1]);
           memcpy(ftoft_ptr_1, &rec64, 8);
           ftoft_ptr_1 += 8;
 

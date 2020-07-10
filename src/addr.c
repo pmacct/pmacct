@@ -677,7 +677,7 @@ int string_etheraddr(const char *asc, u_char *addr)
 u_int64_t pm_htonll(u_int64_t addr)
 {
 #if defined IM_LITTLE_ENDIAN
-  u_int64_t buf;
+  u_int64_t buf = 0;
 
   u_int32_t *x = (u_int32_t *)(void *) &addr;
   u_int32_t *y = (u_int32_t *)(void *) &buf;
