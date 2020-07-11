@@ -28,6 +28,7 @@
 static const struct _dictionary_line dictionary[] = {
   {"debug", cfg_key_debug},
   {"debug_internal_msg", cfg_key_debug_internal_msg},
+  {"debug_netflow_parsing", cfg_key_debug_netflow_parsing},
   {"syslog", cfg_key_syslog},
   {"logfile", cfg_key_logfile},
   {"pidfile", cfg_key_pidfile},
