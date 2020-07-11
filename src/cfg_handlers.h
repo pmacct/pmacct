@@ -30,6 +30,7 @@ extern void cfg_key_legacy_warning(char *, char *);
 
 extern int cfg_key_debug(char *, char *, char *);
 extern int cfg_key_debug_internal_msg(char *, char *, char *);
+extern int cfg_key_debug_netflow_parsing(char *, char *, char *);
 extern int cfg_key_syslog(char *, char *, char *);
 extern int cfg_key_logfile(char *, char *, char *);
 extern int cfg_key_pidfile(char *, char *, char *);
