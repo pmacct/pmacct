@@ -1009,7 +1009,7 @@ void print_netflow_parsing(char* flow_direction, struct packet_ptrs *pptrs, stru
        * as the method to map PktSrcIp
       */
       if ((strcmp(flow_direction,"PktSrcIp") ==0) && (config.bgp_daemon_peer_as_src_type != BGP_SRC_PRIMITIVES_BGP)) return;
-      struct host_addr nf_gen_src_addr, ip_src_addr, ip_dst_addr, bgp_lookup_peer_addr, nf_bgp_nexthop_addr, empty_addr;
+      struct host_addr nf_gen_src_addr, ip_src_addr, ip_dst_addr, nf_bgp_nexthop_addr, empty_addr;
       u_int16_t nf_gen_src_port;
       char nf_gen_src[INET6_ADDRSTRLEN];          // Holds the source of Netflow Packet
       char ip_src[INET6_ADDRSTRLEN];              // Holds the SrcIp of the flow captured by Netflow
