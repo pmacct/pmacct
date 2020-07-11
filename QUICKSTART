@@ -1199,12 +1199,11 @@ steps:
 1) Download pmacct from its webpage (http://www.pmacct.net/) or from its GitHub
    repository (https://github.com/pmacct/pmacct).
 
-2) Download nDPI from its GitHub repository (https://github.com/ntop/nDPI).
-   pmacct code is currently tested working against:
-
-   * nDPI 2.4 (git clone -b 2.4-stable https://github.com/ntop/nDPI.git)
-   * nDPI 2.6 (git clone -b 2.6-stable https://github.com/ntop/nDPI.git)
-   * nDPI 2.8 (git clone -b 2.8-stable https://github.com/ntop/nDPI.git)
+2) Download nDPI from its GitHub repository (https://github.com/ntop/nDPI). The
+   nDPI API tends to change frequently in a non-backward compatible fashion.
+   This means that not every version of pmacct will work with any version of
+   nDPI. pmacct 1.7.5 works against nDPI 3.0-stable, pmacct 1.7.6 works against
+   nDPI 3.2-stable.  
 
 3) Configure for compiling, compile and install the downloaded nDPI library, ie.
    inside the nDPI directory:
