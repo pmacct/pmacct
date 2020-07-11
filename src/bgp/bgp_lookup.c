@@ -1053,7 +1053,7 @@ void print_netflow_parsing(char* flow_direction, struct packet_ptrs *pptrs, stru
           // Different Message Format to indicate NoBgpNextHop in Netflow
           if (strcmp(flow_direction,"PktDstIp") == 0){
               Log(LOG_DEBUG, "Err:NoNflowBgpNextHop,NflowPacketSrc:%s,BgpPeer:%s,FlowIpSrc:%s,FlowIpDst:%s\n",
-                  flow_direction, nf_gen_src,bgp_lookup_peer, ip_src, ip_dst);
+                        nf_gen_src,bgp_lookup_peer, ip_src, ip_dst);
           }
           if (match_bool){
             Log(LOG_DEBUG, "MatchField:%s,NflowPacketSrc:%s,Status:MatchFound,BgpPeer:%s,FlowIpSrc:%s,FlowIpDst:%s\n",
