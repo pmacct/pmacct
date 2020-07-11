@@ -526,6 +526,7 @@ struct configuration {
   char *syslog;
   int debug;
   int debug_internal_msg;
+  int debug_netflow_parsing;
   int snaplen;
   char *classifiers_path;
   int classifier_tentatives;
