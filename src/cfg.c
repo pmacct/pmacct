@@ -586,6 +586,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bmp_dump_kafka_partition_key", cfg_key_bmp_daemon_dump_kafka_partition_key},
   {"bmp_dump_kafka_config_file", cfg_key_bmp_daemon_dump_kafka_config_file},
   {"bmp_dump_kafka_avro_schema_registry", cfg_key_bmp_daemon_dump_kafka_avro_schema_registry},
+  {"bmp_daemon_parse_proxy_header", cfg_key_nfacctd_bmp_daemon_parse_proxy_header},
   {"rpki_roas_file", cfg_key_rpki_roas_file},
   {"rpki_rtr_cache", cfg_key_rpki_rtr_cache},
   {"rpki_rtr_cache_version", cfg_key_rpki_rtr_cache_version},
