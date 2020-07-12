@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -692,6 +692,7 @@ typedef struct {
   };
 } proxy_protocol_header;
 
-int parse_proxy_header(int fd, struct host_addr *addr, u_int16_t *port);
+/* prototypes */
+extern int parse_proxy_header(int fd, struct host_addr *addr, u_int16_t *port);
 
 #endif //PMACCT_NETWORK_H

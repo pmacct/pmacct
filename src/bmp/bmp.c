@@ -871,7 +871,7 @@ void skinny_bmp_daemon()
       }
       addr_to_str(peer->addr_str, &peer->addr);
     }
-    peer->parsed_proxy_header = 1;
+    peer->parsed_proxy_header = TRUE;
 
     if (!config.pcap_savefile) {
       if (!peer->buf.exp_len) {
