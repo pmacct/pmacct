@@ -203,6 +203,7 @@ struct bgp_peer {
   struct bgp_xconnect xc;
   struct bgp_peer_buf xbuf;
   int xconnect_fd;
+  int parsed_proxy_header;
 };
 
 struct bgp_msg_data {

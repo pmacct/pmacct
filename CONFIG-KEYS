@@ -2718,6 +2718,14 @@ DESC:		Enables BGP proxying. Full pathname to a file to cross-connect BGP peers 
 		at runtime by sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd").
 DEFAULT:	none
 
+KEY:            [ bmp_daemon_parse_proxy_header ]
+VALUES:         [ true | false ]
+DESC:           Defines whether to parse the first packet of a connection looking for a
+                Proxy Protocol header containing client information (IP addresses and TCP ports).
+                The source IP Address and TCP port of the header replaces the peer IP address and
+                peer TCP port obtained from the socket.
+DEFAULT:        False
+
 KEY:		rpki_roas_file [MAP, GLOBAL]
 DESC:		Full pathname to a file containing RPKI ROA data. Data encoding is JSON and format
 		is according to RIPE Validator format. ROA data can be obtained for example from

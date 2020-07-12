@@ -462,6 +462,7 @@ extern int cfg_key_bmp_daemon_dump_kafka_partition(char *, char *, char *);
 extern int cfg_key_bmp_daemon_dump_kafka_partition_key(char *, char *, char *);
 extern int cfg_key_bmp_daemon_dump_kafka_config_file(char *, char *, char *);
 extern int cfg_key_bmp_daemon_dump_kafka_avro_schema_registry(char *, char *, char *);
+extern int cfg_key_nfacctd_bmp_daemon_parse_proxy_header(char *, char *, char *);
 extern int cfg_key_nfacctd_flow_to_rd_map(char *, char *, char *);
 extern int cfg_key_nfacctd_isis(char *, char *, char *);
 extern int cfg_key_nfacctd_isis_ip(char *, char *, char *);
