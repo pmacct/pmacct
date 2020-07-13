@@ -2724,6 +2724,17 @@ DESC:           Defines whether to parse the first packet of a connection lookin
                 Proxy Protocol header containing client information (IP addresses and TCP ports).
                 The source IP Address and TCP port of the header replaces the peer IP address and
                 peer TCP port obtained from the socket.
+                The following is a simple HAProxy configuration example where an HAProxy listens on
+                TCP port 5001 for BMP packets and forwards them to a PMBMPD daemon listening on TCP
+                port 5000.  A binary version 2 Proxy Protocol header is prepended to the first packet
+                of the TCP connection.
+                    frontend bmp_ha_proxy 
+                        bind <HAProxy IP Address>:5001
+                        mode tcp
+                        default_backend bmpnodes
+                    backend bmpnodes
+                        mode tcp
+                        server bmp-dev <PMBMPD IP Address>:5000 send-proxy-v2
 DEFAULT:        False
 
 KEY:		rpki_roas_file [MAP, GLOBAL]
