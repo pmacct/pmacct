@@ -721,6 +721,38 @@ AC_ARG_ENABLE(redis,
 )
 dnl finish: Redis handling
 
+dnl start: GnuTLS handling
+AC_MSG_CHECKING(whether to enable GnuTLS support)
+AC_ARG_ENABLE(gnutls,
+  [  --enable-gnutls                  Enable GnuTLS support (default: no)],
+  [ case "$enableval" in
+  yes)
+    AC_MSG_RESULT(yes)
+    PKG_CHECK_MODULES([GNUTLS], [gnutls >= 3.6.7], [
+      SUPPORTS="${SUPPORTS} gnutls"
+      USING_GNUTLS="yes"
+      PMACCT_CFLAGS="$PMACCT_CFLAGS $GNUTLS_CFLAGS"
+      AC_DEFINE(WITH_GNUTLS, 1)
+      _save_LIBS="$LIBS"
+      LIBS="$LIBS $GNUTLS_LIBS"
+      AC_CHECK_LIB([gnutls], [gnutls_global_init])
+      LIBS="$_save_LIBS"
+      _save_CFLAGS="$CFLAGS"
+      CFLAGS="$CFLAGS $GNUTLS_CFLAGS"
+      AC_CHECK_HEADER([gnutls/gnutls.h])
+      CFLAGS="$_save_CFLAGS"
+    ])
+    ;;
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  esac ],
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
+dnl finish: GnuTLS handling
+
 dnl start: geoip handling
 AC_MSG_CHECKING(whether to enable GeoIP support)
 AC_ARG_ENABLE(geoip,
@@ -1147,6 +1179,7 @@ AM_CONDITIONAL([WITH_RABBITMQ], [test x"$USING_RABBITMQ" = x"yes"])
 AM_CONDITIONAL([WITH_ZMQ], [test x"$USING_ZMQ" = x"yes"])
 AM_CONDITIONAL([WITH_KAFKA], [test x"$USING_KAFKA" = x"yes"])
 AM_CONDITIONAL([WITH_REDIS], [test x"$USING_REDIS" = x"yes"])
+AM_CONDITIONAL([WITH_GNUTLS], [test x"$USING_GNUTLS" = x"yes"])
 AM_CONDITIONAL([USING_SQL], [test x"$USING_SQL" = x"yes"])
 AM_CONDITIONAL([WITH_JANSSON], [test x"$USING_JANSSON" = x"yes"])
 AM_CONDITIONAL([WITH_AVRO], [test x"$USING_AVRO" = x"yes"])

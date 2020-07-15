@@ -240,6 +240,16 @@ typedef struct {
 #include "redis_common.h"
 #endif
 
+#ifdef WITH_GNUTLS
+#include <gnutls/gnutls.h>
+#include <gnutls/dtls.h>
+
+#define PM_GNUTLS_KEYFILE "key.pem"
+#define PM_GNUTLS_CERTFILE "cert.pem"
+#define PM_GNUTLS_CAFILE "ca-certificates.crt"
+#define PM_GNUTLS_CRLFILE "crl.pem"
+#endif
+
 #include "network.h"
 #include "pretag.h"
 #include "cfg.h"

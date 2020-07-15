@@ -110,7 +110,10 @@ libdaemons_la_SOURCES += redis_common.c
 libdaemons_la_LIBADD  += @REDIS_LIBS@
 libdaemons_la_CFLAGS  += @REDIS_CFLAGS@
 endif
-
+if WITH_GNUTLS
+libdaemons_la_LIBADD  += @GNUTLS_LIBS@
+libdaemons_la_CFLAGS  += @GNUTLS_CFLAGS@
+endif
 
 if USING_TRAFFIC_BINS
 sbin_PROGRAMS += pmacctd nfacctd sfacctd

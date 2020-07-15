@@ -692,6 +692,19 @@ typedef struct {
   };
 } proxy_protocol_header;
 
+#ifdef WITH_GNUTLS
+typedef struct {
+  gnutls_certificate_credentials_t x509_cred;
+  gnutls_datum_t cookie_key;
+  gnutls_priority_t priority_cache;
+} pm_dtls_glob_t;
+
+typedef struct {
+  gnutls_session_t session;
+  gnutls_dtls_prestate_st prestate;
+} pm_dtls_peer_t;
+#endif
+
 /* prototypes */
 extern int parse_proxy_header(int fd, struct host_addr *addr, u_int16_t *port);
 

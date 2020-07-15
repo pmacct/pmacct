@@ -3194,6 +3194,17 @@ int cfg_key_nfacctd_zmq_address(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_nfacctd_dtls_path(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_dtls_path = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'nfacctd_dtls_path'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_allow_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
