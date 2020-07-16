@@ -48,7 +48,8 @@ int parse_proxy_header(int fd, struct host_addr *addr, u_int16_t *port)
     if (!end || end[1] != '\n')  {
       return ERR;
     }
-    end = '\0';
+
+    (*end) = '\0';
 
     /* V1 Header contains string: PROXY TCP4 <src ip> <dst ip> <src port> <dst port>\r\n */
     Log(LOG_INFO, "INFO ( %s/%s ): Replacing: %s:%u\n", config.name, config.type, ip_address, *port);
