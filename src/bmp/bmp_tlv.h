@@ -35,5 +35,6 @@ extern struct pm_list *bmp_tlv_list_new(int (*cmp)(void *val1, void *val2), void
 extern int bmp_tlv_list_add(struct pm_list *, u_int32_t, u_int16_t, u_int16_t, char *);
 extern void bmp_tlv_list_node_del(void *node);
 extern struct pm_list *bmp_tlv_list_copy(struct pm_list *);
+extern void *bmp_tlv_list_find(struct pm_list *, u_int16_t);
 extern void bmp_tlv_list_destroy(struct pm_list *);
 #endif //BMP_TLV_H

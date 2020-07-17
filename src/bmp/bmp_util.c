@@ -253,7 +253,7 @@ int bgp_extra_data_cmp_bmp(struct bgp_msg_extra_data *a, struct bgp_msg_extra_da
   }
 }
 
-int bgp_extra_data_process_bmp(struct bgp_msg_extra_data *bmed, struct bgp_info *ri)
+int bgp_extra_data_process_bmp(struct bgp_msg_extra_data *bmed, struct bgp_info *ri, int idx, int nlri_type)
 {
   struct bmp_chars *bmed_bmp_src = NULL, *bmed_bmp_dst = NULL;
   int ret = BGP_MSG_EXTRA_DATA_NONE;

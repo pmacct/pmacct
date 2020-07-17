@@ -266,7 +266,7 @@ struct bgp_misc_structs {
   void (*bgp_peer_logdump_initclose_extras)(struct bgp_peer *, int, void *);
 
   void (*bgp_peer_logdump_extra_data)(struct bgp_msg_extra_data *, int, void *);
-  int (*bgp_extra_data_process)(struct bgp_msg_extra_data *, struct bgp_info *);
+  int (*bgp_extra_data_process)(struct bgp_msg_extra_data *, struct bgp_info *, int, int);
   int (*bgp_extra_data_cmp)(struct bgp_msg_extra_data *, struct bgp_msg_extra_data *);
   void (*bgp_extra_data_free)(struct bgp_msg_extra_data *);
 

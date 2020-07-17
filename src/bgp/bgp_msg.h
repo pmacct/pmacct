@@ -47,6 +47,6 @@ extern int bgp_attr_parse_mp_unreach(struct bgp_peer *, u_int16_t, struct bgp_at
 extern int bgp_attr_parse_aigp(struct bgp_peer *, u_int16_t, struct bgp_attr_extra *, char *, u_char);
 extern int bgp_attr_parse_prefix_sid(struct bgp_peer *, u_int16_t, struct bgp_attr_extra *, char *, u_char);
 extern int bgp_nlri_parse(struct bgp_msg_data *, void *, struct bgp_attr_extra *, struct bgp_nlri *, int);
-extern int bgp_process_update(struct bgp_msg_data *, struct prefix *, void *, struct bgp_attr_extra *, afi_t, safi_t);
-extern int bgp_process_withdraw(struct bgp_msg_data *, struct prefix *, void *, struct bgp_attr_extra *, afi_t, safi_t);
+extern int bgp_process_update(struct bgp_msg_data *, struct prefix *, void *, struct bgp_attr_extra *, afi_t, safi_t, int);
+extern int bgp_process_withdraw(struct bgp_msg_data *, struct prefix *, void *, struct bgp_attr_extra *, afi_t, safi_t, int);
 #endif 
