@@ -13,6 +13,25 @@ endif
 
 AM_CFLAGS = $(PMACCT_CFLAGS)
 
+#Build string autogen
+BUILT_SOURCES = pmacct-build.h_h
+.PHONY = pmacct-build.h
+
+pmacct-build.h_h:
+	@if [[ ! -f ".pmacct-build.h" || "$(shell cat .pmacct-build.h)" != "$(shell git rev-parse HEAD)" ]]; then \
+		echo "#ifndef PMACCT_BUILD_STR" > pmacct-build.h; \
+		echo "#define PMACCT_BUILD_STR" >> pmacct-build.h; \
+		if [[ "x$(shell git rev-parse --is-inside-work-tree 2> /dev/null)" == "xtrue" ]]; then \
+			echo "$(shell git rev-parse HEAD)" > .pmacct-build.h; \
+			BUILD_DATE="$(shell git log -1 --date=short --pretty=format:%ad | tr -d "-")"; \
+			BUILD_COMMITS="$(shell git log --date=short --pretty=format:%ad | sort | uniq -c | grep `git log -1 --date=short --pretty=format:%ad` | awk '{print $$1}' | xargs -n 1 expr -1 + )"; \
+			echo "#define PMACCT_BUILD \"$$BUILD_DATE-$$BUILD_COMMITS\"" >> pmacct-build.h; \
+		else \
+			echo "#define PMACCT_BUILD \"RELEASE\"" >> pmacct-build.h; \
+		fi;\
+		echo "#endif" >> pmacct-build.h; \
+	fi
+
 noinst_LTLIBRARIES = libdaemons.la libcommon.la
 libcommon_la_SOURCES = strlcpy.c addr.c
 libdaemons_la_SOURCES = signals.c util.c plugin_hooks.c		\

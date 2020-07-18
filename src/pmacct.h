@@ -83,6 +83,7 @@
 #endif
 #endif
 
+#include "pmacct-build.h"
 #include "pmacct-defines.h"
 
 #if defined (WITH_GEOIP)
@@ -103,8 +104,6 @@
 #include <ndpi_main.h>
 #undef NDPI_LIB_COMPILATION
 #endif
-
-#include "pmacct-build.h"
 
 #if !defined ETHER_ADDRSTRLEN
 #define ETHER_ADDRSTRLEN 18
