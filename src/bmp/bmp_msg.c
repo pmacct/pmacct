@@ -31,7 +31,7 @@
 #include "kafka_common.h"
 #endif
 
-u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *bmpp)
+u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *bmpp, int *do_term)
 {
   struct bgp_misc_structs *bms;
   struct bgp_peer *peer;
@@ -40,6 +40,7 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
 
   struct bmp_common_hdr *bch = NULL;
 
+  if (do_term) (*do_term) = FALSE;
   if (!bmpp) return FALSE;
 
   peer = &bmpp->self;
@@ -94,6 +95,7 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
       break;
     case BMP_MSG_TERM:
       bmp_process_msg_term(&bmp_packet_ptr, &msg_len, bmpp); 
+      if (do_term) (*do_term) = TRUE;
       break;
     case BMP_MSG_ROUTE_MIRROR:
       bmp_process_msg_route_mirror(&bmp_packet_ptr, &msg_len, bmpp);

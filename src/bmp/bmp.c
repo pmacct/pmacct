@@ -59,7 +59,7 @@ void bmp_daemon_wrapper()
 
 void skinny_bmp_daemon()
 {
-  int ret, rc, peers_idx, allowed, yes=1;
+  int ret, rc, peers_idx, allowed, yes=1, do_term;
   int peers_idx_rr = 0, max_peers_idx = 0;
   time_t now;
   afi_t afi;
@@ -959,7 +959,15 @@ void skinny_bmp_daemon()
       peer->msglen = len;
     }
 
-    bmp_process_packet(peer->buf.base, peer->msglen, bmpp);
+    do_term = FALSE;
+    bmp_process_packet(peer->buf.base, peer->msglen, bmpp, &do_term);
+
+    if (do_term) {
+      FD_CLR(peer->fd, &bkp_read_descs);
+      bmp_peer_close(bmpp, FUNC_TYPE_BMP);
+      recalc_fds = TRUE;
+      goto select_again;
+    }
   }
 }
 
