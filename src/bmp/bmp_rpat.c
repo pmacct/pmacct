@@ -263,9 +263,16 @@ int bmp_log_msg_rpat(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
 	type = bmp_tlv_type_print(tlv->type, "bmp_rpat_info", bmp_rpat_info_types, BMP_RPAT_INFO_MAX);
 	value = bmp_tlv_value_print(tlv, bmp_rpat_info_types, BMP_RPAT_INFO_MAX);
-	json_object_set_new_nocheck(obj, type, json_string(value));
+
+	if (value) {
+	  json_object_set_new_nocheck(obj, type, json_string(value));
+	  free(value);
+	}
+	else {
+	  json_object_set_new_nocheck(obj, type, json_null());
+	}
+
 	free(type);
-	free(value);
       }
     }
 #endif

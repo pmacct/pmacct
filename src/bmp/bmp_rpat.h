@@ -52,12 +52,21 @@ struct bmp_log_rpat {
   safi_t safi;
 };
 
-#define BMP_RPAT_INFO_MAX		-1
-#define BMP_RPAT_INFO_ENTRIES		8
-
 static const struct bmp_tlv_def __attribute__((unused)) bmp_rpat_info_types[] = {
-  { "", BMP_TLV_SEM_UNKNOWN }
+  { "vrf", BMP_TLV_SEM_COMPLEX },
+  { "policy", BMP_TLV_SEM_COMPLEX },
+  { "pre_policy_attr", BMP_TLV_SEM_COMPLEX },
+  { "post_policy_attr", BMP_TLV_SEM_COMPLEX },
+  { "string", BMP_TLV_SEM_STRING }
 };
+
+#define BMP_RPAT_INFO_VRF		0
+#define BMP_RPAT_INFO_POLICY		1
+#define BMP_RPAT_INFO_PRE_POLICY_ATTR	2
+#define BMP_RPAT_INFO_POST_POLICY_ATTR	3
+#define BMP_RPAT_INFO_STRING		4
+#define BMP_RPAT_INFO_MAX		4
+#define BMP_RPAT_INFO_ENTRIES		8
 
 /* prototypes */
 extern void bmp_process_msg_rpat(char **, u_int32_t *, struct bmp_peer *);
