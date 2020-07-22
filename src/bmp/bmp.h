@@ -101,6 +101,31 @@ static const char __attribute__((unused)) *bmp_peer_types[] = {
 #define BMP_PEER_FLAGS_LR_F	0x80 /* draft-ietf-grow-bmp-local-rib */
 #define BMP_PEER_FLAGS_ARO_O	0x10 /* rfc8671 */
 
+struct bmp_chars {
+  /* key */
+  u_int8_t peer_type;
+  u_int8_t is_post;
+  u_int8_t is_2b_asn;
+  u_int8_t is_filtered;
+  u_int8_t is_out;
+  u_int8_t is_loc;
+  rd_t rd;
+
+  /* non-key */
+  struct pm_list *tlvs;
+};
+
+struct bmp_data {
+  u_int8_t family;
+  struct host_addr peer_ip;
+  struct host_addr bgp_id;
+  u_int32_t peer_asn;
+  struct bmp_chars chars;
+  struct timeval tstamp;
+};
+
+typedef int (*bmp_logdump_func)(struct bgp_peer *, struct bmp_data *, struct pm_list *tlvs, void *, u_int64_t, char *, int, int);
+
 struct bmp_peer_hdr {
   u_char	type;
   u_char	flags;
@@ -122,6 +147,7 @@ struct bmp_tlv_hdr {
 struct bmp_tlv_def {
   char *name;
   int semantics;
+  bmp_logdump_func logdump_func;
 };
 
 #define BMP_TLV_SEM_UNKNOWN	CUSTOM_PRIMITIVE_TYPE_UNKNOWN
@@ -140,9 +166,9 @@ struct bmp_tlv_def {
 #define BMP_INIT_INFO_ENTRIES	8
 
 static const struct bmp_tlv_def __attribute__((unused)) bmp_init_info_types[] = {
-  { "string", BMP_TLV_SEM_STRING }, 
-  { "sysdescr", BMP_TLV_SEM_STRING },
-  { "sysname", BMP_TLV_SEM_STRING }
+  { "string", BMP_TLV_SEM_STRING, NULL }, 
+  { "sysdescr", BMP_TLV_SEM_STRING, NULL },
+  { "sysname", BMP_TLV_SEM_STRING, NULL }
 };
 
 #define BMP_TERM_INFO_STRING    0
@@ -158,8 +184,8 @@ static const struct bmp_tlv_def __attribute__((unused)) bmp_init_info_types[] = 
 #define BMP_TERM_REASON_MAX	4 /* set to the highest BMP_TERM_* value */
 
 static const struct bmp_tlv_def __attribute__((unused)) bmp_term_info_types[] = {
-  { "string", BMP_TLV_SEM_STRING },
-  { "reason", BMP_TLV_SEM_UINT }
+  { "string", BMP_TLV_SEM_STRING, NULL },
+  { "reason", BMP_TLV_SEM_UINT, NULL }
 };
 
 static const char __attribute__((unused)) *bmp_term_reason_types[] = {
@@ -203,7 +229,7 @@ struct bmp_peer {
 
 /* dummy */
 static const struct bmp_tlv_def __attribute__((unused)) bmp_stats_info_types[] = {
-  { "", BMP_TLV_SEM_UNKNOWN }
+  { "", BMP_TLV_SEM_UNKNOWN, NULL }
 };
 
 #define BMP_STATS_INFO_MAX	-1
@@ -235,7 +261,7 @@ struct bmp_stats_cnt_hdr {
 } __attribute__ ((packed));
 
 static const struct bmp_tlv_def __attribute__((unused)) bmp_peer_up_info_types[] = {
-  { "string", BMP_TLV_SEM_STRING }
+  { "string", BMP_TLV_SEM_STRING, NULL }
 };
 
 #define BMP_PEER_UP_INFO_STRING		0
@@ -280,7 +306,7 @@ struct bmp_peer_up_hdr {
 
 /* draft-cppy-grow-bmp-path-info-tlv */
 static const struct bmp_tlv_def __attribute__((unused)) bmp_rm_info_types[] = {
-  { "path_info", BMP_TLV_SEM_COMPLEX }
+  { "path_info", BMP_TLV_SEM_COMPLEX, NULL }
 };
 
 #define BMP_ROUTE_MONITOR_INFO_PATH	0
@@ -296,7 +322,7 @@ struct bmp_rm_pi_tlv_hdr {
 
 /* draft-cppy-grow-bmp-path-marking-tlv */
 static const struct bmp_tlv_def __attribute__((unused)) bmp_rm_path_info_types[] = {
-  { "path_marking", BMP_TLV_SEM_COMPLEX }
+  { "path_marking", BMP_TLV_SEM_COMPLEX, NULL }
 };
 
 #define BMP_ROUTE_MONITOR_PATH_INFO_MARKING	0
@@ -309,29 +335,6 @@ struct bmp_rm_pi_pm_tlv_hdr {
   u_int32_t     path_status;
   u_int32_t     reason_code;
 } __attribute__ ((packed));
-
-struct bmp_chars {
-  /* key */
-  u_int8_t peer_type;
-  u_int8_t is_post;
-  u_int8_t is_2b_asn;
-  u_int8_t is_filtered;
-  u_int8_t is_out;
-  u_int8_t is_loc;
-  rd_t rd;
-
-  /* non-key */
-  struct pm_list *tlvs;
-}; 
-
-struct bmp_data {
-  u_int8_t family;
-  struct host_addr peer_ip;
-  struct host_addr bgp_id;
-  u_int32_t peer_asn;
-  struct bmp_chars chars;
-  struct timeval tstamp;
-};
 
 /* more includes */
 #include "bmp_logdump.h"

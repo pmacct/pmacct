@@ -53,11 +53,11 @@ struct bmp_log_rpat {
 };
 
 static const struct bmp_tlv_def __attribute__((unused)) bmp_rpat_info_types[] = {
-  { "vrf", BMP_TLV_SEM_COMPLEX },
-  { "policy", BMP_TLV_SEM_COMPLEX },
-  { "pre_policy_attr", BMP_TLV_SEM_COMPLEX },
-  { "post_policy_attr", BMP_TLV_SEM_COMPLEX },
-  { "string", BMP_TLV_SEM_STRING }
+  { "vrf", BMP_TLV_SEM_COMPLEX, NULL },
+  { "policy", BMP_TLV_SEM_COMPLEX, NULL },
+  { "pre_policy_attr", BMP_TLV_SEM_COMPLEX, NULL },
+  { "post_policy_attr", BMP_TLV_SEM_COMPLEX, NULL },
+  { "string", BMP_TLV_SEM_STRING, NULL }
 };
 
 #define BMP_RPAT_INFO_VRF		0
