@@ -304,19 +304,21 @@ int bmp_log_msg_rpat_vrf(struct bgp_peer *peer, struct bmp_data *bdata, void *vt
 {
   struct bmp_log_rpat *blrpat = bl;
   struct bmp_log_tlv *tlv = vtlv; 
-  struct bmp_rpat_vrf_tlv_hdr *vrf_tlv = NULL;
-  int ret = 0, vrf_name_len = 0;
+  int ret = 0;
 
   if (!peer || !bdata || !blrpat || !tlv || !vobj) return ERR;
-
-  vrf_tlv = (struct bmp_rpat_vrf_tlv_hdr *) tlv->val; 
-  vrf_tlv->name = (u_char *)(tlv->val + 4);
-  vrf_name_len = (tlv->len - 4);
 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     json_t *obj = (json_t *) vobj;
+
+    struct bmp_rpat_vrf_tlv_hdr *vrf_tlv = NULL;
     char *vrf_name = NULL;
+    int vrf_name_len = 0;
+
+    vrf_tlv = (struct bmp_rpat_vrf_tlv_hdr *) tlv->val; 
+    vrf_tlv->name = (u_char *)(tlv->val + 4);
+    vrf_name_len = (tlv->len - 4);
 
     json_object_set_new_nocheck(obj, "vrf_id", json_integer((json_int_t)ntohl(vrf_tlv->id)));
 
