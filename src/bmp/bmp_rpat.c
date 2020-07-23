@@ -261,8 +261,15 @@ int bmp_log_msg_rpat(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
       struct bmp_log_tlv *tlv = NULL;
 
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
-	type = bmp_tlv_type_print(tlv->type, "bmp_rpat_info", bmp_rpat_info_types, BMP_RPAT_INFO_MAX);
-	value = bmp_tlv_value_print(tlv, bmp_rpat_info_types, BMP_RPAT_INFO_MAX);
+	switch (tlv->type) {
+	case BMP_RPAT_INFO_VRF:
+	  (*bmp_rpat_info_types[tlv->type].logdump_func)(peer, bdata, tlv, blrpat, event_type, output, vobj);
+	  break;
+	default:
+	  type = bmp_tlv_type_print(tlv->type, "bmp_rpat_info", bmp_rpat_info_types, BMP_RPAT_INFO_MAX);
+	  value = bmp_tlv_value_print(tlv, bmp_rpat_info_types, BMP_RPAT_INFO_MAX);
+	  break;
+	}
 
 	if (value) {
 	  json_object_set_new_nocheck(obj, type, json_string(value));
@@ -286,6 +293,46 @@ int bmp_log_msg_rpat(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
     pm_avro_check(avro_value_get_by_name(obj, "bmp_msg_type", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_string(&p_avro_field, bmp_msg_type));
 
+    // XXX: to be worked out later
+#endif
+  }
+
+  return ret;
+}
+
+int bmp_log_msg_rpat_vrf(struct bgp_peer *peer, struct bmp_data *bdata, void *vtlv, void *bl, char *event_type, int output, void *vobj)
+{
+  struct bmp_log_rpat *blrpat = bl;
+  struct bmp_log_tlv *tlv = vtlv; 
+  struct bmp_rpat_vrf_tlv_hdr *vrf_tlv = NULL;
+  int ret = 0, vrf_name_len = 0;
+
+  if (!peer || !bdata || !blrpat || !tlv || !vobj) return ERR;
+
+  vrf_tlv = (struct bmp_rpat_vrf_tlv_hdr *) tlv->val; 
+  vrf_tlv->name = (u_char *)(tlv->val + 4);
+  vrf_name_len = (tlv->len - 4);
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    json_t *obj = (json_t *) vobj;
+    char *vrf_name = NULL;
+
+    json_object_set_new_nocheck(obj, "vrf_id", json_integer((json_int_t)ntohl(vrf_tlv->id)));
+
+    if (vrf_name_len) {
+      vrf_name = null_terminate((char *)vrf_tlv->name, vrf_name_len);
+      json_object_set_new_nocheck(obj, "vrf_name", json_string(vrf_name));
+      free(vrf_name);
+    }
+    else {
+      json_object_set_new_nocheck(obj, "vrf_name", json_null());
+    }
+#endif
+  }
+  else if ((output == PRINT_OUTPUT_AVRO_BIN) ||
+	   (output == PRINT_OUTPUT_AVRO_JSON)) {
+#ifdef WITH_AVRO
     // XXX: to be worked out later
 #endif
   }

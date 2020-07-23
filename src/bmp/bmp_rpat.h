@@ -43,6 +43,11 @@ struct bmp_rpat_event_hdr {
   u_int8_t	safi;
 } __attribute__ ((packed));
 
+struct bmp_rpat_vrf_tlv_hdr {
+  u_int32_t	id;
+  u_char *	name;
+} __attribute__ ((packed));
+
 struct bmp_log_rpat {
   struct host_addr prefix;
   u_int8_t prefix_len;
@@ -52,8 +57,11 @@ struct bmp_log_rpat {
   safi_t safi;
 };
 
+/* prototypes needed for bmp_tlv_def */
+extern int bmp_log_msg_rpat_vrf(struct bgp_peer *, struct bmp_data *, void *, void *, char *, int, void *);
+
 static const struct bmp_tlv_def __attribute__((unused)) bmp_rpat_info_types[] = {
-  { "vrf", BMP_TLV_SEM_COMPLEX, NULL },
+  { "vrf", BMP_TLV_SEM_COMPLEX, bmp_log_msg_rpat_vrf },
   { "policy", BMP_TLV_SEM_COMPLEX, NULL },
   { "pre_policy_attr", BMP_TLV_SEM_COMPLEX, NULL },
   { "post_policy_attr", BMP_TLV_SEM_COMPLEX, NULL },

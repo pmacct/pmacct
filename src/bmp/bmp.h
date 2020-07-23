@@ -124,8 +124,6 @@ struct bmp_data {
   struct timeval tstamp;
 };
 
-typedef int (*bmp_logdump_func)(struct bgp_peer *, struct bmp_data *, struct pm_list *tlvs, void *, u_int64_t, char *, int, int);
-
 struct bmp_peer_hdr {
   u_char	type;
   u_char	flags;
@@ -143,6 +141,8 @@ struct bmp_tlv_hdr {
 } __attribute__ ((packed));
 
 #define BMP_TLV_EBIT		0x8000 /* BMP TLV enterprise bit */
+
+typedef int (*bmp_logdump_func)(struct bgp_peer *, struct bmp_data *, void *, void *, char *, int, void *);
 
 struct bmp_tlv_def {
   char *name;
