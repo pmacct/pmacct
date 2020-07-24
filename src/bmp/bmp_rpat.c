@@ -256,11 +256,12 @@ int bmp_log_msg_rpat(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
     json_object_set_new_nocheck(obj, "safi", json_integer((json_int_t)blrpat->safi));
 
     if (tlvs) {
-      char *type = NULL, *value = NULL;
       struct pm_listnode *node = NULL;
       struct bmp_log_tlv *tlv = NULL;
 
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
+	char *type = NULL, *value = NULL;
+
 	switch (tlv->type) {
 	case BMP_RPAT_INFO_VRF:
 	  (*bmp_rpat_info_types[tlv->type].logdump_func)(peer, bdata, tlv, blrpat, event_type, output, vobj);
@@ -271,15 +272,35 @@ int bmp_log_msg_rpat(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
 	  break;
 	}
 
-	if (value) {
-	  json_object_set_new_nocheck(obj, type, json_string(value));
-	  free(value);
-	}
-	else {
-	  json_object_set_new_nocheck(obj, type, json_null());
-	}
+	if (type) {
+	  if (value) {
+	    /* Allow for multiple String TLVs */
+	    if (tlv->type == BMP_RPAT_INFO_STRING) {
+	      json_t *string_tlv_array = NULL;
 
-	free(type);
+	      string_tlv_array = json_object_get(obj, bmp_rpat_info_types[tlv->type].name);
+
+	      if (!string_tlv_array || !json_is_array(string_tlv_array)) {
+		string_tlv_array = json_array();
+	        json_array_append_new(string_tlv_array, json_string(value));
+	        json_object_set_new_nocheck(obj, type, string_tlv_array);
+	      }
+	      else {
+	        json_array_append_new(string_tlv_array, json_string(value));
+	      }
+	    }
+	    else {
+	      json_object_set_new_nocheck(obj, type, json_string(value));
+	    }
+
+	    free(value);
+	  }
+	  else {
+	    json_object_set_new_nocheck(obj, type, json_null());
+	  }
+
+	  free(type);
+	}
       }
     }
 #endif
