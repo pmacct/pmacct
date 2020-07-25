@@ -25,7 +25,8 @@ pmacct-build.h_h:
 			echo "$(shell git rev-parse HEAD)" > .pmacct-build.h; \
 			BUILD_DATE="$(shell git log -1 --date=short --pretty=format:%ad | tr -d "-")"; \
 			BUILD_COMMITS="$(shell git log --date=short --pretty=format:%ad | sort | uniq -c | grep `git log -1 --date=short --pretty=format:%ad` | awk '{print $$1}' | xargs -n 1 expr -1 + )"; \
-			echo "#define PMACCT_BUILD \"$$BUILD_DATE-$$BUILD_COMMITS\"" >> pmacct-build.h; \
+			BUILD_HASH_SHORT="$(shell git rev-parse --short HEAD)"; \
+			echo "#define PMACCT_BUILD \"$$BUILD_DATE-$$BUILD_COMMITS ($$BUILD_HASH_SHORT)\"" >> pmacct-build.h; \
 		else \
 			echo "#define PMACCT_BUILD \"RELEASE\"" >> pmacct-build.h; \
 		fi;\
