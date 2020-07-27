@@ -1855,7 +1855,7 @@ void version_daemon(char *header)
 {
   struct utsname utsbuf;
 
-  printf("%s %s (%s)\n\n", header, PMACCT_VERSION, PMACCT_BUILD);
+  printf("%s %s [%s]\n\n", header, PMACCT_VERSION, PMACCT_BUILD);
 
   printf("Arguments:\n");
   printf("%s\n", PMACCT_COMPILE_ARGS);
