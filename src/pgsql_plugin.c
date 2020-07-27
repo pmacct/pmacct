@@ -811,9 +811,23 @@ void PG_compose_conn_string(struct DBdesc *db, char *host, int port, char *ca_fi
     slen -= strlen(string);
     string += strlen(string);
 
-    if (host) snprintf(string, slen, " host=%s", host);
-    if (port) snprintf(string, slen, " port=%u", port);
-    if (ca_file) snprintf(string, slen, " sslmode=verify-full sslrootcert=%s", ca_file);
+    if (host) {
+      snprintf(string, slen, " host=%s", host);
+      slen -= strlen(string);
+      string += strlen(string);
+    }
+
+    if (port) {
+      snprintf(string, slen, " port=%u", port);
+      slen -= strlen(string);
+      string += strlen(string);
+    }
+
+    if (ca_file) {
+      snprintf(string, slen, " sslmode=verify-full sslrootcert=%s", ca_file);
+      slen -= strlen(string);
+      string += strlen(string);
+    }
   }
 }
 
