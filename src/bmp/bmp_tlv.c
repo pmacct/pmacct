@@ -80,29 +80,23 @@ char *bmp_tlv_value_print(struct bmp_log_tlv *tlv, const struct bmp_tlv_def *reg
   u_int16_t idx = tlv->type;
   char *value = NULL;
 
-  if (registry && max_registry_entries) {
-    if (idx <= max_registry_entries) {
-      switch (registry[idx].semantics) {
-      case BMP_TLV_SEM_STRING:
-	if (tlv->len) {
+  if (tlv->len) {
+    if (registry && max_registry_entries) {
+      if (idx <= max_registry_entries) {
+	switch (registry[idx].semantics) {
+	case BMP_TLV_SEM_STRING:
 	  value = null_terminate(tlv->val, tlv->len);
-	}
-	break;
-      case BMP_TLV_SEM_UINT:
-	if (tlv->len) {
+	  break;
+	case BMP_TLV_SEM_UINT:
 	  value = uint_print(tlv->val, tlv->len, TRUE);
-	}
-	break;
-      default:
-	if (tlv->len) {
+	  break;
+	default:
 	  value = malloc(tlv->len * 3); /* 2 bytes hex + 1 byte '-' separator + 1 byte null */
 	  serialize_hex(tlv->val, (u_char *) value, tlv->len);
-	}
-	break;
+	  break;
+        }
       }
-    }
-    else {
-      if (tlv->len) {
+      else {
         value = malloc(tlv->len * 3); /* 2 bytes hex + 1 byte '-' separator + 1 byte null */
         serialize_hex(tlv->val, (u_char *) value, tlv->len);
       }
