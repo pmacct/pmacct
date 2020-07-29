@@ -369,6 +369,8 @@ size_t Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
       i4h->ip_sum = 0;
       i4h->ip_src.s_addr = sa4->sin_addr.s_addr;
       i4h->ip_dst.s_addr = ((struct sockaddr_in *)target)->sin_addr.s_addr;
+
+      msglen = (IP4HdrSz + UDPHdrSz + msg->len);
     }
     else if (target->sa_family == AF_INET6) {
       i6h->ip6_vfc = 6;
@@ -378,13 +380,13 @@ size_t Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
       i6h->ip6_hlim = 255;
       memcpy(&i6h->ip6_src, &sa6->sin6_addr, IP6AddrSz);
       memcpy(&i6h->ip6_dst, &((struct sockaddr_in6 *)target)->sin6_addr, IP6AddrSz);
+
+      msglen = (IP6HdrSz + UDPHdrSz + msg->len);
     }
 
     /* Put everything together and send */
     buf_ptr += UDPHdrSz;
     memcpy(buf_ptr, msg->payload, msg->len);
-
-    msglen = (IP4HdrSz + UDPHdrSz + msg->len);
   }
   else {
     time_t now = time(NULL);
