@@ -706,6 +706,8 @@ typedef struct {
 #endif
 
 /* prototypes */
-extern int parse_proxy_header(int fd, struct host_addr *addr, u_int16_t *port);
+extern int parse_proxy_header(int, struct host_addr *, u_int16_t *);
+extern u_int16_t pm_checksum(u_int16_t *, int, u_int32_t *, int);
+extern u_int16_t pm_udp6_checksum(struct ip6_hdr *, struct pm_udphdr *, u_char *, int);
 
 #endif //PMACCT_NETWORK_H

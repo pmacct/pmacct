@@ -114,3 +114,87 @@ int parse_proxy_header(int fd, struct host_addr *addr, u_int16_t *port)
 
   return 0;
 }
+
+/* Computing the internet checksum (RFC 1071) */
+u_int16_t pm_checksum(u_int16_t *addr, int len, u_int32_t *prev_sum, int last)
+{
+  int count = len;
+  u_int32_t sum = 0;
+  u_int16_t answer = 0;
+
+  if (prev_sum) {
+    sum = (*prev_sum);
+  }
+
+  /* Sum up 2-byte values until none or only one byte left */
+  while (count > 1) {
+    sum += *(addr++);
+    count -= 2;
+  }
+
+  /* Add left-over byte, if any */
+  if (count > 0) {
+    sum += *(u_int8_t *) addr;
+  }
+
+  if (last) {
+    /* Fold 32-bit sum into 16 bits; we lose information by doing this
+       sum = (lower 16 bits) + (upper 16 bits shifted right 16 bits) */
+    while (sum >> 16) {
+      sum = (sum & 0xffff) + (sum >> 16);
+    }
+
+    /* Making one-complement of it */
+    answer = ~sum;
+  }
+
+  if (prev_sum) {
+    (*prev_sum) = sum;
+  }
+
+  return (answer);
+}
+
+/* Build IPv6 UDP pseudo-header and call checksum function (Section 8.1 of RFC 2460). */
+u_int16_t pm_udp6_checksum(struct ip6_hdr *ip6hdr, struct pm_udphdr *udphdr, u_char *payload, int payload_len)
+{
+  u_char buf[2];
+  u_int32_t sum = 0;
+  u_int16_t answer = 0;
+
+  /* Copy source IP address into buf (128 bits) */
+  pm_checksum ((u_int16_t *)&ip6hdr->ip6_src.s6_addr, sizeof (ip6hdr->ip6_src.s6_addr), &sum, FALSE);
+
+  /* Seed destination IP address (128 bits) */
+  pm_checksum ((u_int16_t *)&ip6hdr->ip6_dst.s6_addr, sizeof (ip6hdr->ip6_dst.s6_addr), &sum, FALSE);
+
+  /* Seed UDP length (32 bits) */
+  pm_checksum ((u_int16_t *)&udphdr->uh_ulen, sizeof (udphdr->uh_ulen), &sum, FALSE);
+
+  /* Seed next header field (8 + 8 bits) */
+  memset(buf, 0, sizeof(buf));
+  buf[1] = ip6hdr->ip6_nxt;
+  pm_checksum ((u_int16_t *)buf, 2, &sum, FALSE);
+
+  /* Seed CUDP source port (16 bits) */
+  pm_checksum ((u_int16_t *)&udphdr->uh_sport, sizeof (udphdr->uh_sport), &sum, FALSE);
+
+  /* Seed UDP destination port (16 bits) */
+  pm_checksum ((u_int16_t *)&udphdr->uh_dport, sizeof (udphdr->uh_dport), &sum, FALSE);
+
+  /* Seed UDP length again (16 bits) */
+  pm_checksum ((u_int16_t *)&udphdr->uh_ulen, sizeof (udphdr->uh_ulen), &sum, FALSE);
+
+  /* Seed payload */
+  answer = pm_checksum ((u_int16_t *)payload, payload_len, &sum, TRUE);
+
+  /* XXX: Pad to the next 16-bit boundary */
+
+/*
+  if (payload_len % 2) {
+    // XXX
+  }
+*/
+
+  return answer;
+}

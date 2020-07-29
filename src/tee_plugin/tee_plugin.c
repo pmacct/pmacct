@@ -387,6 +387,11 @@ size_t Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
     /* Put everything together and send */
     buf_ptr += UDPHdrSz;
     memcpy(buf_ptr, msg->payload, msg->len);
+
+    /* If IPv6: last thing last compute the checksum */
+    if (target->sa_family == AF_INET6) {
+      uh->uh_sum = pm_udp6_checksum(i6h, uh, msg->payload, msg->len);
+    }
   }
   else {
     time_t now = time(NULL);
