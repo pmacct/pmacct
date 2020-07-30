@@ -39,6 +39,7 @@
 !
 id=1	ip=192.168.1.1:2100
 id=2	ip=192.168.2.1:2100,192.168.2.2:2100
+id=3	ip=[::1]:2100
 !
 !
 ! Replicate with selective filtering. Replicate datagrams tagged as 100 and

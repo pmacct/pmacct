@@ -2062,12 +2062,12 @@ and features see the CONFIG-KEYS document.
 XV. Quickstart guide to setup a NetFlow/IPFIX/sFlow replicator
 The 'tee' plugin is meant to replicate NetFlow/sFlow data to remote collectors.
 The plugin can act transparently, by preserving the original IP address of the
-datagrams, or as a proxy. Basic configuration of up a replicator is very easy:
-all is needed is where to listen to for incoming packets, where to replicate
-them to and optionally a filtering layer, if required. Filtering bases on the
-standard pre_tag_map infrastructure; here is presented only coarse-grained
-filtering against the NetFlow/sFlow source IP address (see next section for
-finer-grained filtering). 
+datagrams, or as a proxy. The basic configuration of a replicator is very easy:
+all is needed is to define where to listen to for incoming packets, where to
+replicate them to and optionally a filtering layer, if required. Filtering
+bases on the standard pre_tag_map infrastructure; here will be presented only
+coarse-grained filtering against the NetFlow/sFlow source IP address (see next
+section for finer-grained filtering).
 
 nfacctd_port: 2100
 nfacctd_ip: X.X.X.X
@@ -2089,6 +2089,7 @@ for that pool):
 
 id=1	ip=W.W.W.W:2100
 id=2	ip=Y.Y.Y.Y:2100,Z.Z.Z.Z:2100
+id=3	ip=[::1]:2100
 ! id=1	ip=W.W.W.W:2100			tag=0
 ! id=2	ip=Y.Y.Y.Y:2100,Z.Z.Z.Z:2100	tag=100
 
