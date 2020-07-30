@@ -185,16 +185,17 @@ u_int16_t pm_udp6_checksum(struct ip6_hdr *ip6hdr, struct pm_udphdr *udphdr, u_c
   /* Seed UDP length again (16 bits) */
   pm_checksum ((u_int16_t *)&udphdr->uh_ulen, sizeof (udphdr->uh_ulen), &sum, FALSE);
 
-  /* Seed payload */
-  answer = pm_checksum ((u_int16_t *)payload, payload_len, &sum, TRUE);
-
-  /* XXX: Pad to the next 16-bit boundary */
-
-/*
+  /* Seed payload and take into account padding (16-bit boundary) */
   if (payload_len % 2) {
-    // XXX
+    pm_checksum ((u_int16_t *)payload, (payload_len - 1), &sum, FALSE);
+
+    buf[0] = payload[payload_len];
+    buf[1] = '\0';
+    answer = pm_checksum ((u_int16_t *) buf, 2, &sum, TRUE);
   }
-*/
+  else {
+    answer = pm_checksum ((u_int16_t *)payload, payload_len, &sum, TRUE);
+  }
 
   return answer;
 }
