@@ -70,6 +70,7 @@ struct _log_notifications {
   struct log_notification ndpi_cache_full;
   struct log_notification ndpi_tmp_frag_warn;
 #endif
+  struct log_notification tee_plugin_cant_bridge_af;
 };
 
 /* prototypes */

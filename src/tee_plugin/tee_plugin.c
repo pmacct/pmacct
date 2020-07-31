@@ -33,7 +33,6 @@
 /* Global variables */
 char tee_send_buf[65535];
 struct tee_receivers receivers; 
-int err_cant_bridge_af;
 
 void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 {
@@ -139,7 +138,6 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   else setnonblocking(pipe_fd);
 
   memset(pipebuf, 0, config.buffer_size);
-  err_cant_bridge_af = 0;
 
   /* Arrange send socket */
   Tee_init_socks();
@@ -396,9 +394,9 @@ size_t Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
   else {
     time_t now = time(NULL);
 
-    if (now > err_cant_bridge_af + 60) {
+    if (!log_notification_isset(&log_notifications.tee_plugin_cant_bridge_af, now)) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Can't bridge Address Families when in transparent mode\n", config.name, config.type);
-      err_cant_bridge_af = now;
+      log_notification_set(&log_notifications.tee_plugin_cant_bridge_af, now, 60);
     }
   }
 
