@@ -112,7 +112,7 @@ Title | Description
 :----- | :-----------
 `seq` | pmacct sequence number. Uniquely identifies each metric.
 `log_type` | pmacct log type. Either "update" or "delete" depending if BGP advertisement is an update or withdrawal
-`timestamp` | pmacct time stamp of data collection
+`timestamp` | time stamp of BMP data export
 `bmp_router` | IP address of BMP router which peers to pmacct
 `bmp_router_port` | TCP port of BMP router which peers to pmacct
 `event_type` | pmacct event type. Can be either "log" for msglog or "dump" for table_dump.
@@ -168,7 +168,7 @@ Title | Description
 Title | Description
 :----- | :-----------
 `seq` | pmacct sequence number. Uniquely identifies each metric.
-`timestamp` | pmacct time stamp of data collection
+`timestamp` | time stamp of BMP data export
 `is_loc` | Boolean, if present and true it indicates data from Loc-Rib
 `is_filtered` | Boolean, if present and true it indicates filtered data (in conjunction with is_loc)
 `bmp_router` | IP address of BMP router which peers to pmacct
@@ -207,7 +207,7 @@ Title | Description
 Title | Description
 :----- | :-----------
 `seq` | pmacct sequence number. Uniquely identifies each metric.
-`timestamp` | pmacct time stamp of data collection
+`timestamp` | time stamp of BMP data export
 `bmp_router` | IP address of BMP router which peers to pmacct
 `bmp_router_port` | TCP port of BMP router which peers to pmacct
 `event_type` | pmacct event type. Can be either "log" for msglog or "dump" for table_dump.
@@ -242,7 +242,7 @@ Title | Description
 Title | Description
 :----- | :-----------
 `seq` | pmacct sequence number. Uniquely identifies each metric.
-`timestamp` | pmacct time stamp of data collection
+`timestamp` | time stamp of BMP data export
 `is_in` | Boolean, if present and true it indicates data from Adj-Rib-In
 `is_post` | Boolean, if present and true it indicates post-policy data (in conjunction with is_in, is_out)
 `bmp_router` | IP address of BMP router which peers to pmacct
@@ -337,7 +337,7 @@ Title | Description
 Title | Description
 :----- | :-----------
 `seq` | pmacct sequence number. Uniquely identifies each metric.
-`timestamp` | pmacct time stamp of data collection
+`timestamp` | time stamp of BMP data export
 `bmp_router` | IP address of BMP router which peers to pmacct
 `bmp_router_port` | TCP port of BMP router which peers to pmacct
 `event_type` | pmacct event type. Can be either "log" for msglog or "dump" for table_dump.
