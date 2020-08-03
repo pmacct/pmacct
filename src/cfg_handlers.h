@@ -169,6 +169,7 @@ extern int cfg_key_nfacctd_kafka_topic(char *, char *, char *);
 extern int cfg_key_nfacctd_kafka_config_file(char *, char *, char *);
 extern int cfg_key_nfacctd_zmq_address(char *, char *, char *);
 extern int cfg_key_nfacctd_dtls_path(char *, char *, char *);
+extern int cfg_key_nfacctd_dtls_port(char *, char *, char *);
 extern int cfg_key_pmacctd_force_frag_handling(char *, char *, char *);
 extern int cfg_key_pmacctd_frag_buffer_size(char *, char *, char *);
 extern int cfg_key_pmacctd_flow_buffer_size(char *, char *, char *);

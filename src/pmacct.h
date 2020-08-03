@@ -246,7 +246,6 @@ typedef struct {
 #define PM_GNUTLS_KEYFILE "key.pem"
 #define PM_GNUTLS_CERTFILE "cert.pem"
 #define PM_GNUTLS_CAFILE "ca-certificates.crt"
-#define PM_GNUTLS_CRLFILE "crl.pem"
 #endif
 
 #include "network.h"

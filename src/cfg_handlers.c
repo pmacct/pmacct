@@ -3205,6 +3205,23 @@ int cfg_key_nfacctd_dtls_path(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_nfacctd_dtls_port(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value <= 0) || (value > 65535)) {
+    Log(LOG_ERR, "WARN: [%s] 'nfacctd_dtls_port' has to be in the range 1-65535.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_dtls_port = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'nfacctd_dtls_port'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_allow_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

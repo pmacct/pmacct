@@ -129,6 +129,12 @@ int main(int argc,char **argv, char **envp)
   struct ip_mreq multi_req4;
   int templates_sock = 0;
 
+#ifdef WITH_GNUTLS
+  unsigned char *netflow_dtls_packet;
+  struct sockaddr_storage server_dtls;
+  int dtls_sock = 0;
+#endif 
+
   int pm_pcap_savefile_round = 0;
 
   unsigned char dummy_packet[64]; 
@@ -193,6 +199,9 @@ int main(int argc,char **argv, char **envp)
 
   netflow_packet = malloc(NETFLOW_MSG_SIZE);
   netflow_templates_packet = malloc(NETFLOW_MSG_SIZE);
+#ifdef WITH_GNUTLS
+  netflow_dtls_packet = malloc(NETFLOW_MSG_SIZE);
+#endif
 
   data_plugins = 0;
   tee_plugins = 0;
@@ -653,6 +662,12 @@ int main(int argc,char **argv, char **envp)
   sighandler_action.sa_handler = PM_sigalrm_noop_handler;
   sigaction(SIGALRM, &sighandler_action, NULL);
 
+#ifdef WITH_GNUTLS
+  if (config.nfacctd_dtls_path) {
+    pm_dtls_init(&config.nfacctd_dtls_globs, config.nfacctd_dtls_path);
+  }
+#endif
+
   if (config.pcap_savefile) {
     open_pcap_savefile(&device, config.pcap_savefile);
     pm_pcap_savefile_round = 1;
@@ -696,6 +711,15 @@ int main(int argc,char **argv, char **envp)
 	sa6->sin6_family = AF_INET6;
 	sa6->sin6_port = htons(config.nfacctd_templates_port);
       }
+
+#ifdef WITH_GNUTLS
+      if (config.nfacctd_dtls_port) {
+	sa6 = (struct sockaddr_in6 *)&server_dtls; 
+
+	sa6->sin6_family = AF_INET6;
+	sa6->sin6_port = htons(config.nfacctd_dtls_port);
+      }
+#endif
     }
     else {
       trim_spaces(config.nfacctd_ip);
@@ -709,6 +733,12 @@ int main(int argc,char **argv, char **envp)
       if (config.nfacctd_templates_port) {
         addr_to_sa((struct sockaddr *)&server_templates, &addr, config.nfacctd_templates_port);
       }
+
+#ifdef WITH_GNUTLS
+      if (config.nfacctd_dtls_port) {
+        addr_to_sa((struct sockaddr *)&server_dtls, &addr, config.nfacctd_dtls_port);
+      }
+#endif
     }
 
     /* socket creation */
@@ -748,14 +778,52 @@ int main(int argc,char **argv, char **envp)
 	}
 
 	if (config.nfacctd_templates_sock < 0) {
-	  Log(LOG_ERR, "ERROR ( %s/core ): socket() failed.\n", config.name);
+	  Log(LOG_ERR, "ERROR ( %s/core ): TPLS socket() failed.\n", config.name);
 	  exit_gracefully(1);
 	}
       }
+    }
 
+#ifdef WITH_GNUTLS
+    if (config.nfacctd_dtls_port) {
+      config.nfacctd_dtls_sock = socket(((struct sockaddr *)&server_dtls)->sa_family, SOCK_DGRAM, 0);
+      if (config.nfacctd_dtls_sock < 0) {
+	/* retry with IPv4 */
+	if (!config.nfacctd_ip) {
+	  struct sockaddr_in *sa4 = (struct sockaddr_in *)&server_dtls;
+
+	  sa4->sin_family = AF_INET;
+	  sa4->sin_addr.s_addr = htonl(0);
+	  sa4->sin_port = htons(config.nfacctd_dtls_port);
+	  slen = sizeof(struct sockaddr_in);
+
+	  config.nfacctd_dtls_sock = socket(((struct sockaddr *)&server_dtls)->sa_family, SOCK_DGRAM, 0);
+	}
+
+	if (config.nfacctd_dtls_sock < 0) {
+	  Log(LOG_ERR, "ERROR ( %s/core ): DTLS socket() failed.\n", config.name);
+	  exit_gracefully(1);
+	}
+      }
+    }
+#endif
+
+    if (config.nfacctd_templates_port || config.nfacctd_dtls_port) {
       FD_SET(config.sock, &bkp_read_descs);
-      FD_SET(config.nfacctd_templates_sock, &bkp_read_descs);
-      bkp_select_fd = (config.sock < config.nfacctd_templates_sock) ? config.nfacctd_templates_sock : config.sock;
+      bkp_select_fd = config.sock;
+
+      if (config.nfacctd_templates_sock) {
+        FD_SET(config.nfacctd_templates_sock, &bkp_read_descs);
+        bkp_select_fd = (bkp_select_fd < config.nfacctd_templates_sock) ? config.nfacctd_templates_sock : bkp_select_fd;
+      }
+
+#ifdef WITH_GNUTLS
+      if (config.nfacctd_dtls_sock) {
+        FD_SET(config.nfacctd_dtls_sock, &bkp_read_descs);
+        bkp_select_fd = (bkp_select_fd < config.nfacctd_dtls_sock) ? config.nfacctd_dtls_sock : bkp_select_fd;
+      }
+#endif
+
       bkp_select_fd++;
     }
 
@@ -768,6 +836,13 @@ int main(int argc,char **argv, char **envp)
       rc = setsockopt(config.nfacctd_templates_sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *) &yes, (socklen_t) sizeof(yes));
       if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR|SO_REUSEPORT.\n", config.name);
     }
+
+#ifdef WITH_GNUTLS
+    if (config.nfacctd_dtls_port) {
+      rc = setsockopt(config.nfacctd_dtls_sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *) &yes, (socklen_t) sizeof(yes));
+      if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR|SO_REUSEPORT.\n", config.name);
+    }
+#endif
 #else
     rc = setsockopt(config.sock, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, (socklen_t) sizeof(yes));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR.\n", config.name);
@@ -776,6 +851,13 @@ int main(int argc,char **argv, char **envp)
       rc = setsockopt(config.nfacctd_templates_sock, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, (socklen_t) sizeof(yes));
       if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR.\n", config.name);
     }
+
+#ifdef WITH_GNUTLS
+    if (config.nfacctd_dtls_port) {
+      rc = setsockopt(config.nfacctd_dtls_sock, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, (socklen_t) sizeof(yes));
+      if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR.\n", config.name);
+    }
+#endif
 #endif
 
 #if (defined IPV6_BINDV6ONLY)
@@ -998,6 +1080,16 @@ int main(int argc,char **argv, char **envp)
 	exit_gracefully(1);
       }
     }
+
+#ifdef WITH_GNUTLS
+    if (config.nfacctd_dtls_port) {
+      rc = bind(config.nfacctd_dtls_sock, (struct sockaddr *) &server_dtls, slen);
+      if (rc < 0) {
+        Log(LOG_ERR, "ERROR ( %s/core ): bind() to ip=%s port=%d/udp failed (errno: %d).\n", config.name, config.nfacctd_ip, config.nfacctd_dtls_port, errno);
+        exit_gracefully(1);
+      }
+    }
+#endif
   }
 
   init_classifiers(NULL);
@@ -1195,6 +1287,14 @@ int main(int argc,char **argv, char **envp)
       addr_to_str(srv_string, &srv_addr);
       Log(LOG_INFO, "INFO ( %s/core ): waiting for NetFlow/IPFIX templates on %s:%u\n", config.name, srv_string, srv_port);
     }
+
+#if WITH_GNUTLS
+    if (config.nfacctd_dtls_port) {
+      sa_to_addr((struct sockaddr *)&server_dtls, &srv_addr, &srv_port); 
+      addr_to_str(srv_string, &srv_addr);
+      Log(LOG_INFO, "INFO ( %s/core ): waiting for DTLS NetFlow/IPFIX on %s:%u\n", config.name, srv_string, srv_port);
+    }
+#endif
   }
 
 #ifdef WITH_REDIS

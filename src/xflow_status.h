@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -88,6 +88,11 @@ struct xflow_status_entry
   struct xflow_status_entry_sampling *sampling;
   struct xflow_status_entry_class *class;
   void *sf_cnt;			/* struct (ab)used for sFlow counters logging */
+
+#ifdef WITH_GNUTLS
+  pm_dtls_peer_t dtls;
+#endif
+
   struct xflow_status_entry *next;
 };
 

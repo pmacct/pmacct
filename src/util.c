@@ -3235,7 +3235,7 @@ ssize_t pm_recv(int sockfd, void *buf, size_t len, int flags, unsigned int secon
 #ifdef WITH_GNUTLS
 void pm_dtls_init(pm_dtls_glob_t *dtls_glob, char *files_path)
 {
-  char cafile[LONGLONGSRVBUFLEN], crlfile[LONGLONGSRVBUFLEN];
+  char cafile[LONGLONGSRVBUFLEN];
   char certfile[LONGLONGSRVBUFLEN], keyfile[LONGLONGSRVBUFLEN];
   int ret;
 
@@ -3247,11 +3247,6 @@ void pm_dtls_init(pm_dtls_glob_t *dtls_glob, char *files_path)
   strcat(cafile, "/");
   strcat(cafile, PM_GNUTLS_CAFILE);
   gnutls_certificate_set_x509_trust_file(dtls_glob->x509_cred, cafile, GNUTLS_X509_FMT_PEM);
-
-  strcpy(crlfile, files_path);
-  strcat(crlfile, "/");
-  strcat(crlfile, PM_GNUTLS_CRLFILE);
-  gnutls_certificate_set_x509_crl_file(dtls_glob->x509_cred, crlfile, GNUTLS_X509_FMT_PEM);
 
   strcpy(certfile, files_path);
   strcat(certfile, "/");

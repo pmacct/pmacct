@@ -195,6 +195,11 @@ struct configuration {
   char *nfacctd_kafka_config_file;
   char *nfacctd_zmq_address;
   char *nfacctd_dtls_path;
+  int nfacctd_dtls_port;
+#ifdef WITH_GNUTLS
+  pm_dtls_glob_t nfacctd_dtls_globs;
+  int nfacctd_dtls_sock;
+#endif
   char *nfacctd_allow_file;
   int nfacctd_time;
   int nfacctd_time_new;
