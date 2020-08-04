@@ -130,9 +130,10 @@ int main(int argc,char **argv, char **envp)
   int templates_sock = 0;
 
 #ifdef WITH_GNUTLS
+  // struct xflow_status_entry *dtls_status_table[XFLOW_STATUS_TABLE_SZ];
   unsigned char *netflow_dtls_packet;
   struct sockaddr_storage server_dtls;
-  int dtls_sock = 0;
+  int dtls_sock = 0; // , dtls_status_table_entries = 0;
 #endif 
 
   int pm_pcap_savefile_round = 0;
@@ -199,9 +200,6 @@ int main(int argc,char **argv, char **envp)
 
   netflow_packet = malloc(NETFLOW_MSG_SIZE);
   netflow_templates_packet = malloc(NETFLOW_MSG_SIZE);
-#ifdef WITH_GNUTLS
-  netflow_dtls_packet = malloc(NETFLOW_MSG_SIZE);
-#endif
 
   data_plugins = 0;
   tee_plugins = 0;
@@ -229,6 +227,15 @@ int main(int argc,char **argv, char **envp)
   memset(&bitr_table, 0, sizeof(bitr_table));
   memset(&sampling_table, 0, sizeof(sampling_table));
   memset(&reload_map_tstamp, 0, sizeof(reload_map_tstamp));
+
+#ifdef WITH_GNUTLS
+  netflow_dtls_packet = malloc(NETFLOW_MSG_SIZE); 
+/*
+  dtls_status_table_entries = 0;
+  memset(&dtls_status_table, 0, sizeof(dtls_status_table));
+*/
+#endif
+
   log_notifications_init(&log_notifications);
   config.acct_type = ACCT_NF;
 
@@ -1382,7 +1389,7 @@ int main(int argc,char **argv, char **envp)
     }
 #endif
     else {
-      if (!config.nfacctd_templates_port) {
+      if (!config.nfacctd_templates_port && !config.nfacctd_dtls_port) {
         ret = recvfrom(config.sock, (unsigned char *)netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
       }
       else {
@@ -1400,6 +1407,7 @@ int main(int argc,char **argv, char **envp)
 	    num_descs--;
 
 	    templates_sock = FALSE;
+	    dtls_sock = FALSE;
 	    collector_port = config.nfacctd_port;
 	  }
 	  else if (FD_ISSET(config.nfacctd_templates_sock, &read_descs)) {
@@ -1408,7 +1416,17 @@ int main(int argc,char **argv, char **envp)
 	    num_descs--;
 
 	    templates_sock = TRUE;
+	    dtls_sock = FALSE;
 	    collector_port = config.nfacctd_templates_port;
+	  }
+	  else if (FD_ISSET(config.nfacctd_dtls_sock, &read_descs)) {
+	    ret = recvfrom(config.nfacctd_dtls_sock, (unsigned char *)netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
+	    FD_CLR(config.nfacctd_dtls_sock, &read_descs);
+	    num_descs--;
+
+	    templates_sock = FALSE;
+	    dtls_sock = TRUE;
+	    collector_port = config.nfacctd_dtls_port;
 	  }
 	}
 	else goto select_func_again;
@@ -1463,6 +1481,10 @@ int main(int argc,char **argv, char **envp)
 
       print_status_table(now, XFLOW_STATUS_TABLE_SZ);
       print_stats = FALSE;
+    }
+
+    if (dtls_sock) {
+      // XXX
     }
 
     if (data_plugins) {
