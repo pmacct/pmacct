@@ -194,8 +194,6 @@ int main(int argc,char **argv, char **envp)
 
   data_plugins = 0;
   tee_plugins = 0;
-  xflow_status_table_entries = 0;
-  xflow_tot_bad_datagrams = 0;
   errflag = 0;
   sfacctd_counter_backend_methods = 0;
 
@@ -1302,7 +1300,7 @@ int main(int argc,char **argv, char **envp)
     if (print_stats) {
       time_t now = time(NULL);
 
-      print_status_table(now, XFLOW_STATUS_TABLE_SZ);
+      print_status_table(&xflow_status_table, now, XFLOW_STATUS_TABLE_SZ);
       print_stats = FALSE;
     }
 
@@ -1384,7 +1382,7 @@ int main(int argc,char **argv, char **envp)
       default:
 	if (!config.nfacctd_disable_checks) {
 	  SF_notify_malf_packet(LOG_INFO, "INFO", "discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent);
-	  xflow_tot_bad_datagrams++;
+	  xflow_status_table.tot_bad_datagrams++;
 	}
 	break;
       }
@@ -1453,7 +1451,7 @@ void process_SFv2v4_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
       break;
     default:
       SF_notify_malf_packet(LOG_INFO, "INFO", "discarding unknown v2/v4 sample", (struct sockaddr *) pptrsv->v4.f_agent);
-      xflow_tot_bad_datagrams++;
+      xflow_status_table.tot_bad_datagrams++;
       return; /* unexpected sampleType; aborting packet */
     }
     if ((u_char *)spp->datap > spp->endp) return;
@@ -1516,7 +1514,7 @@ SFv5_read_sampleType:
       break;
     default:
       SF_notify_malf_packet(LOG_INFO, "INFO", "discarding unknown v5 sample", (struct sockaddr *) pptrsv->v4.f_agent);
-      xflow_tot_bad_datagrams++;
+      xflow_status_table.tot_bad_datagrams++;
       return; /* unexpected sampleType; aborting packet */
     }
     if ((u_char *)spp->datap > spp->endp) return; 
@@ -1544,7 +1542,7 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
   default:
     if (!config.nfacctd_disable_checks) {
       SF_notify_malf_packet(LOG_INFO, "INFO", "discarding unknown sFlow packet", (struct sockaddr *) pptrs->f_agent);
-      xflow_tot_bad_datagrams++;
+      xflow_status_table.tot_bad_datagrams++;
     }
     return;
   }
@@ -2203,7 +2201,7 @@ struct xflow_status_entry *sfv245_check_status(SFSample *spp, struct packet_ptrs
   hash = hash_status_table(aux1, &salocal, XFLOW_STATUS_TABLE_SZ);
 
   if (hash >= 0) {
-    entry = search_status_table(&salocal, aux1, 0, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
+    entry = search_status_table(&xflow_status_table, &salocal, aux1, 0, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
     if (entry) {
       update_status_table(entry, spp->sequenceNo, pptrs->f_len);
       entry->inc = 1;

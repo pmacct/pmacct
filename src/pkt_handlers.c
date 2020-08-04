@@ -4721,7 +4721,7 @@ void SF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
     }
   }
   else {
-    if (entry) sentry = create_smp_entry_status_table(entry);
+    if (entry) sentry = create_smp_entry_status_table(&xflow_status_table, entry);
     if (sentry) {
       sentry->interface = (sample->ds_class << 24 | sample->ds_index);
       sentry->sample_pool = sample->samplePool;

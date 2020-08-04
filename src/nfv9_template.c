@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -117,7 +117,7 @@ struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct
     if (count >= TPL_LIST_ENTRIES) {
       notify_malf_packet(LOG_INFO, "INFO", "insert_template(): unable to read Data Template (too long)",
 			 (struct sockaddr *) pptrs->f_agent, seq);
-      xflow_tot_bad_datagrams++;
+      xflow_status_table.tot_bad_datagrams++;
       free(ptr);
       return NULL;
     }
@@ -125,7 +125,7 @@ struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct
     if (off >= len) {
       notify_malf_packet(LOG_INFO, "INFO", "insert_template(): unable to read Data Template (malformed)",
 			 (struct sockaddr *) pptrs->f_agent, seq);
-      xflow_tot_bad_datagrams++;
+      xflow_status_table.tot_bad_datagrams++;
       free(ptr);
       return NULL;
     }
@@ -804,14 +804,14 @@ struct template_cache_entry *refresh_template(struct template_hdr_v9 *hdr, struc
     if (count >= TPL_LIST_ENTRIES) {
       notify_malf_packet(LOG_INFO, "INFO", "refresh_template(): unable to read Data Template (too long)",
 			 (struct sockaddr *) pptrs->f_agent, seq);
-      xflow_tot_bad_datagrams++;
+      xflow_status_table.tot_bad_datagrams++;
       return NULL;
     }
 
     if (off >= len) {
       notify_malf_packet(LOG_INFO, "INFO", "refresh_template(): unable to read Data Template (malformed)",
                          (struct sockaddr *) pptrs->f_agent, seq);
-      xflow_tot_bad_datagrams++;
+      xflow_status_table.tot_bad_datagrams++;
       memcpy(tpl, &backup, sizeof(struct template_cache_entry));
       return NULL;
     }
@@ -1019,7 +1019,7 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
     if (off >= len) {
       notify_malf_packet(LOG_INFO, "INFO", "insert_opt_template(): unable to read Options Template Flowset (malformed)",
 			 (struct sockaddr *) pptrs->f_agent, seq);
-      xflow_tot_bad_datagrams++;
+      xflow_status_table.tot_bad_datagrams++;
       free(ptr);
       return NULL;
     }
@@ -1058,7 +1058,7 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
       if (count >= TPL_LIST_ENTRIES) {
 	notify_malf_packet(LOG_INFO, "INFO", "insert_opt_template(): unable to read Options Template (too long)",
 			   (struct sockaddr *) pptrs->f_agent, seq);
-	xflow_tot_bad_datagrams++;
+	xflow_status_table.tot_bad_datagrams++;
 	free(ptr);
 	return NULL;
       }
@@ -1142,7 +1142,7 @@ struct template_cache_entry *refresh_opt_template(void *hdr, struct template_cac
     if (off >= len) {
       notify_malf_packet(LOG_INFO, "INFO", "refresh_opt_template(): unable to read Options Template Flowset (malformed)",
 			 (struct sockaddr *) pptrs->f_agent, seq);
-      xflow_tot_bad_datagrams++;
+      xflow_status_table.tot_bad_datagrams++;
       memcpy(tpl, &backup, sizeof(struct template_cache_entry));
       return NULL;
     }
@@ -1180,7 +1180,7 @@ struct template_cache_entry *refresh_opt_template(void *hdr, struct template_cac
       if (count >= TPL_LIST_ENTRIES) {
 	notify_malf_packet(LOG_INFO, "INFO", "refresh_opt_template: unable to read Options Template (too long)",
 			   (struct sockaddr *) pptrs->f_agent, seq);
-	xflow_tot_bad_datagrams++;
+	xflow_status_table.tot_bad_datagrams++;
 	return NULL;
       }
 

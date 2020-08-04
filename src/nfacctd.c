@@ -133,7 +133,7 @@ int main(int argc,char **argv, char **envp)
   // struct xflow_status_entry *dtls_status_table[XFLOW_STATUS_TABLE_SZ];
   unsigned char *netflow_dtls_packet;
   struct sockaddr_storage server_dtls;
-  int dtls_sock = 0; // , dtls_status_table_entries = 0;
+  int dtls_sock = 0;
 #endif 
 
   int pm_pcap_savefile_round = 0;
@@ -203,8 +203,6 @@ int main(int argc,char **argv, char **envp)
 
   data_plugins = 0;
   tee_plugins = 0;
-  xflow_status_table_entries = 0;
-  xflow_tot_bad_datagrams = 0;
   errflag = 0;
 
   memset(cfg_cmdline, 0, sizeof(cfg_cmdline));
@@ -231,7 +229,6 @@ int main(int argc,char **argv, char **envp)
 #ifdef WITH_GNUTLS
   netflow_dtls_packet = malloc(NETFLOW_MSG_SIZE); 
 /*
-  dtls_status_table_entries = 0;
   memset(&dtls_status_table, 0, sizeof(dtls_status_table));
 */
 #endif
@@ -1479,7 +1476,7 @@ int main(int argc,char **argv, char **envp)
     if (print_stats) {
       time_t now = time(NULL);
 
-      print_status_table(now, XFLOW_STATUS_TABLE_SZ);
+      print_status_table(&xflow_status_table, now, XFLOW_STATUS_TABLE_SZ);
       print_stats = FALSE;
     }
 
@@ -1533,7 +1530,7 @@ int main(int argc,char **argv, char **envp)
       default:
         if (!config.nfacctd_disable_checks) {
 	  notify_malf_packet(LOG_INFO, "INFO", "discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent, 0);
-	  xflow_tot_bad_datagrams++;
+	  xflow_status_table.tot_bad_datagrams++;
         }
 	break;
       }
@@ -1564,7 +1561,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 
   if (len < NfHdrV5Sz) {
     notify_malf_packet(LOG_INFO, "INFO", "discarding short NetFlow v5 packet", (struct sockaddr *) pptrs->f_agent, 0);
-    xflow_tot_bad_datagrams++;
+    xflow_status_table.tot_bad_datagrams++;
     return;
   }
   pptrs->f_header = pkt;
@@ -1649,7 +1646,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   }
   else {
     notify_malf_packet(LOG_INFO, "INFO", "discarding malformed NetFlow v5 packet", (struct sockaddr *) pptrs->f_agent, 0);
-    xflow_tot_bad_datagrams++;
+    xflow_status_table.tot_bad_datagrams++;
     return;
   }
 } 
@@ -1708,7 +1705,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
   if (len < HdrSz) {
     notify_malf_packet(LOG_INFO, "INFO", "discarding short NetFlow v9/IPFIX packet", (struct sockaddr *) pptrsv->v4.f_agent, 0);
-    xflow_tot_bad_datagrams++;
+    xflow_status_table.tot_bad_datagrams++;
     return;
   }
   pptrs->f_header = pkt;
@@ -1723,7 +1720,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   if (off+NfDataHdrV9Sz >= len) { 
     notify_malf_packet(LOG_INFO, "INFO", "unable to read next Flowset (incomplete NetFlow v9/IPFIX packet)",
 			(struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
-    xflow_tot_bad_datagrams++;
+    xflow_status_table.tot_bad_datagrams++;
     return;
   }
 
@@ -1732,7 +1729,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   if (data_hdr->flow_len == 0) {
     notify_malf_packet(LOG_INFO, "INFO", "unable to read next Flowset (NetFlow v9/IPFIX packet claiming flow_len 0!)",
 			(struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
-    xflow_tot_bad_datagrams++;
+    xflow_status_table.tot_bad_datagrams++;
     return;
   }
 
@@ -1741,7 +1738,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   if (flowsetlen < NfDataHdrV9Sz) {
     notify_malf_packet(LOG_INFO, "INFO", "unable to read next Flowset (NetFlow v9/IPFIX packet (flowsetlen < NfDataHdrV9Sz)",
                         (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
-    xflow_tot_bad_datagrams++;
+    xflow_status_table.tot_bad_datagrams++;
     return;
   }
 
@@ -1780,7 +1777,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       if (off+flowsetlen > len) { 
         notify_malf_packet(LOG_INFO, "INFO", "unable to read next Template Flowset (incomplete NetFlow v9/IPFIX packet)",
 		        (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
-        xflow_tot_bad_datagrams++;
+        xflow_status_table.tot_bad_datagrams++;
         return;
       }
 
@@ -1823,7 +1820,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       if (off+flowsetlen > len) {
         notify_malf_packet(LOG_INFO, "INFO", "unable to read next Options Template Flowset (incomplete NetFlow v9/IPFIX packet)",
                         (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
-        xflow_tot_bad_datagrams++;
+        xflow_status_table.tot_bad_datagrams++;
         return;
       }
 
@@ -1846,7 +1843,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     if (off+flowsetlen > len) { 
       notify_malf_packet(LOG_INFO, "INFO", "unable to read next Data Flowset (incomplete NetFlow v9/IPFIX packet)",
 		      (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
-      xflow_tot_bad_datagrams++;
+      xflow_status_table.tot_bad_datagrams++;
       return;
     }
 
@@ -1930,7 +1927,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           }
 
 	  if (entry) sentry = search_smp_id_status_table(entry->sampling, sampler_id, FALSE);
-	  if (!sentry) sentry = create_smp_entry_status_table(entry);
+	  if (!sentry) sentry = create_smp_entry_status_table(&xflow_status_table, entry);
 	  else ssaved = sentry->next;
 
 	  if (sentry) {
@@ -1989,7 +1986,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
           if (entry) centry = search_class_id_status_table(entry->class, class_id);
           if (!centry) {
-	    centry = create_class_entry_status_table(entry);
+	    centry = create_class_entry_status_table(&xflow_status_table, entry);
 	    class_int_id = pmct_find_first_free();
 	  }
           else {
@@ -2051,7 +2048,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       if (flowoff > flowsetlen) {
         notify_malf_packet(LOG_INFO, "INFO", "aborting malformed Options Data element (incomplete NetFlow v9/IPFIX packet)",
                       (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
-        xflow_tot_bad_datagrams++;
+        xflow_status_table.tot_bad_datagrams++;
         return;
       }
       
@@ -2656,7 +2653,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       if (flowoff > flowsetlen) {
         notify_malf_packet(LOG_INFO, "INFO", "aborting malformed Data element (incomplete NetFlow v9/IPFIX packet)",
                       (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
-        xflow_tot_bad_datagrams++;
+        xflow_status_table.tot_bad_datagrams++;
         return;
       }
 
@@ -2696,7 +2693,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
   /* basic length check against longest NetFlow header */
   if (len < NfHdrV5Sz) {
     notify_malf_packet(LOG_INFO, "INFO", "discarding short NetFlow packet", (struct sockaddr *) pptrs->f_agent, 0);
-    xflow_tot_bad_datagrams++;
+    xflow_status_table.tot_bad_datagrams++;
     return;
   } 
 
@@ -2706,7 +2703,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
   if (nfv != 5 && nfv != 9 && nfv != 10) {
     if (!config.nfacctd_disable_checks) {
       notify_malf_packet(LOG_INFO, "INFO", "discarding unknown NetFlow packet", (struct sockaddr *) pptrs->f_agent, 0);
-      xflow_tot_bad_datagrams++;
+      xflow_status_table.tot_bad_datagrams++;
     }
     return;
   }
@@ -3022,7 +3019,7 @@ struct xflow_status_entry *nfv5_check_status(struct packet_ptrs *pptrs)
   struct xflow_status_entry *entry = NULL;
   
   if (hash >= 0) {
-    entry = search_status_table(sa, aux1, 0, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
+    entry = search_status_table(&xflow_status_table, sa, aux1, 0, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
     if (entry) {
       update_status_table(entry, ntohl(hdr->flow_sequence), pptrs->f_len);
       entry->inc = ntohs(hdr->count);
@@ -3039,7 +3036,7 @@ struct xflow_status_entry *nfv9_check_status(struct packet_ptrs *pptrs, u_int32_
   struct xflow_status_entry *entry = NULL;
   
   if (hash >= 0) {
-    entry = search_status_table(sa, sid, flags, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
+    entry = search_status_table(&xflow_status_table, sa, sid, flags, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
     if (entry && update) {
       update_status_table(entry, seq, pptrs->f_len);
       entry->inc = 1;

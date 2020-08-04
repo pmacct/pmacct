@@ -96,23 +96,30 @@ struct xflow_status_entry
   struct xflow_status_entry *next;
 };
 
+typedef struct {
+  u_int32_t entries;
+
+  u_int32_t tot_bad_datagrams;
+  u_int8_t memerr;
+  u_int8_t smp_entry_status_table_memerr;
+  u_int8_t class_entry_status_table_memerr;
+
+  struct xflow_status_entry *t[XFLOW_STATUS_TABLE_SZ];
+} xflow_status_table_t;
+
 /* prototypes */
 extern u_int32_t hash_status_table(u_int32_t, struct sockaddr *, u_int32_t);
-extern struct xflow_status_entry *search_status_table(struct sockaddr *, u_int32_t, u_int32_t, int, int);
+extern struct xflow_status_entry *search_status_table(xflow_status_table_t *, struct sockaddr *, u_int32_t, u_int32_t, int, int);
 extern void update_good_status_table(struct xflow_status_entry *, u_int32_t);
 extern void update_bad_status_table(struct xflow_status_entry *);
-extern void print_status_table(time_t, int);
+extern void print_status_table(xflow_status_table_t *, time_t, int);
 extern struct xflow_status_entry_sampling *search_smp_if_status_table(struct xflow_status_entry_sampling *, u_int32_t);
 extern struct xflow_status_entry_sampling *search_smp_id_status_table(struct xflow_status_entry_sampling *, u_int32_t, u_int8_t);
-extern struct xflow_status_entry_sampling *create_smp_entry_status_table(struct xflow_status_entry *);
+extern struct xflow_status_entry_sampling *create_smp_entry_status_table(xflow_status_table_t *, struct xflow_status_entry *);
 extern struct xflow_status_entry_class *search_class_id_status_table(struct xflow_status_entry_class *, pm_class_t);
-extern struct xflow_status_entry_class *create_class_entry_status_table(struct xflow_status_entry *);
+extern struct xflow_status_entry_class *create_class_entry_status_table(xflow_status_table_t *, struct xflow_status_entry *);
 
-extern struct xflow_status_entry *xflow_status_table[XFLOW_STATUS_TABLE_SZ];
-extern u_int32_t xflow_status_table_entries;
-extern u_int8_t xflow_status_table_error;
-extern u_int32_t xflow_tot_bad_datagrams;
-extern u_int8_t smp_entry_status_table_memerr, class_entry_status_table_memerr;
+extern xflow_status_table_t xflow_status_table;
 extern void set_vector_f_status(struct packet_ptrs_vector *);
 extern void set_vector_f_status_g(struct packet_ptrs_vector *);
 extern void update_status_table(struct xflow_status_entry *, u_int32_t, int);
