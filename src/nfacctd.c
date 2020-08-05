@@ -130,7 +130,7 @@ int main(int argc,char **argv, char **envp)
   int templates_sock = 0;
 
 #ifdef WITH_GNUTLS
-  // struct xflow_status_entry *dtls_status_table[XFLOW_STATUS_TABLE_SZ];
+  xflow_status_table_t dtls_status_table;
   unsigned char *netflow_dtls_packet;
   struct sockaddr_storage server_dtls;
   int dtls_sock = 0;
@@ -228,9 +228,7 @@ int main(int argc,char **argv, char **envp)
 
 #ifdef WITH_GNUTLS
   netflow_dtls_packet = malloc(NETFLOW_MSG_SIZE); 
-/*
   memset(&dtls_status_table, 0, sizeof(dtls_status_table));
-*/
 #endif
 
   log_notifications_init(&log_notifications);
@@ -1404,7 +1402,9 @@ int main(int argc,char **argv, char **envp)
 	    num_descs--;
 
 	    templates_sock = FALSE;
+#ifdef WITH_GNUTLS
 	    dtls_sock = FALSE;
+#endif
 	    collector_port = config.nfacctd_port;
 	  }
 	  else if (FD_ISSET(config.nfacctd_templates_sock, &read_descs)) {
@@ -1413,11 +1413,14 @@ int main(int argc,char **argv, char **envp)
 	    num_descs--;
 
 	    templates_sock = TRUE;
+#ifdef WITH_GNUTLS
 	    dtls_sock = FALSE;
+#endif
 	    collector_port = config.nfacctd_templates_port;
 	  }
+#ifdef WITH_GNUTLS
 	  else if (FD_ISSET(config.nfacctd_dtls_sock, &read_descs)) {
-	    ret = recvfrom(config.nfacctd_dtls_sock, (unsigned char *)netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
+	    ret = recvfrom(config.nfacctd_dtls_sock, (unsigned char *)netflow_dtls_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
 	    FD_CLR(config.nfacctd_dtls_sock, &read_descs);
 	    num_descs--;
 
@@ -1425,6 +1428,7 @@ int main(int argc,char **argv, char **envp)
 	    dtls_sock = TRUE;
 	    collector_port = config.nfacctd_dtls_port;
 	  }
+#endif
 	}
 	else goto select_func_again;
       }
@@ -1480,9 +1484,22 @@ int main(int argc,char **argv, char **envp)
       print_stats = FALSE;
     }
 
+#ifdef WITH_GNUTLS
     if (dtls_sock) {
-      // XXX
+      int hash = hash_status_table(0, (struct sockaddr *) &client, XFLOW_STATUS_TABLE_SZ);
+      struct xflow_status_entry *entry = NULL;
+
+      if (hash >= 0) {
+	entry = search_status_table(&dtls_status_table, (struct sockaddr *) &client, 0, 0, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
+	if (entry) {
+          // XXX
+	}
+	else {
+	  // XXX
+	}
+      }
     }
+#endif
 
     if (data_plugins) {
       int has_templates = 0;
