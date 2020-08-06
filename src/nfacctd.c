@@ -1486,16 +1486,45 @@ int main(int argc,char **argv, char **envp)
 
 #ifdef WITH_GNUTLS
     if (dtls_sock) {
+      int dtls_ret = 0;
       int hash = hash_status_table(0, (struct sockaddr *) &client, XFLOW_STATUS_TABLE_SZ);
       struct xflow_status_entry *entry = NULL;
 
       if (hash >= 0) {
 	entry = search_status_table(&dtls_status_table, (struct sockaddr *) &client, 0, 0, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
 	if (entry) {
-          // XXX
-	}
-	else {
-	  // XXX
+	  if (entry->dtls.session) {
+	    dtls_ret = gnutls_dtls_cookie_verify(&config.nfacctd_dtls_globs.cookie_key, &client, sizeof(client),
+						 netflow_dtls_packet, ret, &entry->dtls.prestate);
+	    if (dtls_ret < 0) {
+	      Log(LOG_ERR, "ERROR ( %s/core ): [dtls] %s.\n", config.name, gnutls_strerror(dtls_ret));
+	    }
+
+	    // XXX: Handshake
+
+	    // XXX: Data
+	  }
+	  else {
+	    gnutls_init(&entry->dtls.session, GNUTLS_SERVER | GNUTLS_DATAGRAM);
+	    gnutls_dtls_set_mtu(entry->dtls.session, 1500); // XXX: PMTU?
+	    gnutls_priority_set(entry->dtls.session, config.nfacctd_dtls_globs.priority_cache);
+            gnutls_credentials_set(entry->dtls.session, GNUTLS_CRD_CERTIFICATE, config.nfacctd_dtls_globs.x509_cred);
+
+	    entry->dtls.conn.fd = config.nfacctd_dtls_sock;
+	    memcpy(&entry->dtls.conn.peer, &client, sizeof(entry->dtls.conn.peer));
+	    entry->dtls.conn.peer_len = clen;
+	    gnutls_transport_set_ptr(entry->dtls.session, &entry->dtls.conn);
+	    gnutls_transport_set_pull_function(entry->dtls.session, pm_dtls_recv);
+	    gnutls_transport_set_push_function(entry->dtls.session, pm_dtls_send);
+
+	    /* Sending Hello with cookie */
+	    dtls_ret = gnutls_dtls_cookie_send(&config.nfacctd_dtls_globs.cookie_key, &client, sizeof(client),
+					       &entry->dtls.prestate, (gnutls_transport_ptr_t) &entry->dtls.conn,
+					       pm_dtls_send);
+	    if (dtls_ret < 0) {
+	      Log(LOG_ERR, "ERROR ( %s/core ): [dtls] %s.\n", config.name, gnutls_strerror(dtls_ret));
+	    }
+	  }
 	}
       }
     }

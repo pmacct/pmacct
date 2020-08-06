@@ -700,8 +700,15 @@ typedef struct {
 } pm_dtls_glob_t;
 
 typedef struct {
+  int fd;
+  struct sockaddr_storage peer;
+  socklen_t peer_len;
+} pm_dtls_conn_t;
+
+typedef struct {
   gnutls_session_t session;
   gnutls_dtls_prestate_st prestate;
+  pm_dtls_conn_t conn;
 } pm_dtls_peer_t;
 #endif
 
@@ -709,5 +716,10 @@ typedef struct {
 extern int parse_proxy_header(int, struct host_addr *, u_int16_t *);
 extern u_int16_t pm_checksum(u_int16_t *, int, u_int32_t *, int);
 extern u_int16_t pm_udp6_checksum(struct ip6_hdr *, struct pm_udphdr *, u_char *, int);
+
+#ifdef WITH_GNUTLS
+extern ssize_t pm_dtls_recv(gnutls_transport_ptr_t, void *, size_t);
+extern ssize_t pm_dtls_send(gnutls_transport_ptr_t, const void *, size_t);
+#endif
 
 #endif //PMACCT_NETWORK_H

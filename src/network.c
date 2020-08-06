@@ -199,3 +199,33 @@ u_int16_t pm_udp6_checksum(struct ip6_hdr *ip6hdr, struct pm_udphdr *udphdr, u_c
 
   return answer;
 }
+
+
+#ifdef WITH_GNUTLS
+ssize_t pm_dtls_recv(gnutls_transport_ptr_t p, void *data, size_t len)
+{
+  pm_dtls_conn_t *conn = p;
+  struct sockaddr_storage client;
+  socklen_t clen;
+  int ret;
+
+  memset(&client, 0, sizeof(client));
+  clen = sizeof(client);
+  
+  ret = recvfrom(conn->fd, data, len, 0, (struct sockaddr *) &client, &clen);
+
+  /* validate message is received from the expected source */
+  if (clen == conn->peer_len && !memcmp(&client, &conn->peer, sizeof(client))) {
+    return ret;
+  }
+
+  return ERR;
+}
+
+ssize_t pm_dtls_send(gnutls_transport_ptr_t p, const void *data, size_t len)
+{
+  pm_dtls_conn_t *conn = p;
+
+  return sendto(conn->fd, data, len, 0, (struct sockaddr *) &conn->peer, conn->peer_len);
+}
+#endif
