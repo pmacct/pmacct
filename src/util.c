@@ -3241,6 +3241,11 @@ void pm_dtls_init(pm_dtls_glob_t *dtls_glob, char *files_path)
 
   gnutls_global_init();
 
+  if (config.debug) {
+    gnutls_global_set_log_function(pm_dtls_server_log);
+    gnutls_global_set_log_level(4711);
+  }
+
   gnutls_certificate_allocate_credentials(&dtls_glob->x509_cred);
 
   strcpy(cafile, files_path);

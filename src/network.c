@@ -228,4 +228,14 @@ ssize_t pm_dtls_send(gnutls_transport_ptr_t p, const void *data, size_t len)
 
   return sendto(conn->fd, data, len, 0, (struct sockaddr *) &conn->peer, conn->peer_len);
 }
+
+int pm_dtls_select(gnutls_transport_ptr_t p, unsigned int ms)
+{
+  // XXX
+}
+
+void pm_dtls_server_log(int level, const char *str)
+{
+  Log(LOG_DEBUG, "DEBUG ( %s/%s ): [dtls] %d | %s", config.name, config.type, level, str);
+}
 #endif

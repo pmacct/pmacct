@@ -720,6 +720,8 @@ extern u_int16_t pm_udp6_checksum(struct ip6_hdr *, struct pm_udphdr *, u_char *
 #ifdef WITH_GNUTLS
 extern ssize_t pm_dtls_recv(gnutls_transport_ptr_t, void *, size_t);
 extern ssize_t pm_dtls_send(gnutls_transport_ptr_t, const void *, size_t);
+extern int pm_dtls_select(gnutls_transport_ptr_t, unsigned int);
+extern void pm_dtls_server_log(int, const char *);
 #endif
 
 #endif //PMACCT_NETWORK_H

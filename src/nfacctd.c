@@ -1420,7 +1420,8 @@ int main(int argc,char **argv, char **envp)
 	  }
 #ifdef WITH_GNUTLS
 	  else if (FD_ISSET(config.nfacctd_dtls_sock, &read_descs)) {
-	    ret = recvfrom(config.nfacctd_dtls_sock, (unsigned char *)netflow_dtls_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
+	    /* Peek only here since gnutls wants to consume on its own */
+	    ret = recvfrom(config.nfacctd_dtls_sock, (unsigned char *)netflow_dtls_packet, NETFLOW_MSG_SIZE, MSG_PEEK, (struct sockaddr *) &client, &clen);
 	    FD_CLR(config.nfacctd_dtls_sock, &read_descs);
 	    num_descs--;
 
@@ -1497,15 +1498,32 @@ int main(int argc,char **argv, char **envp)
 	    dtls_ret = gnutls_dtls_cookie_verify(&config.nfacctd_dtls_globs.cookie_key, &client, sizeof(client),
 						 netflow_dtls_packet, ret, &entry->dtls.prestate);
 	    if (dtls_ret < 0) {
-	      Log(LOG_ERR, "ERROR ( %s/core ): [dtls] %s.\n", config.name, gnutls_strerror(dtls_ret));
+	      gnutls_deinit(entry->dtls.session);
+	      entry->dtls.session = NULL;
+
+	      Log(LOG_ERR, "ERROR ( %s/core ): [dtls] hello: %s\n", config.name, gnutls_strerror(dtls_ret));
 	    }
 
+	    gnutls_dtls_prestate_set(entry->dtls.session, &entry->dtls.prestate);
+
 	    // XXX: Handshake
+	    do {
+	      dtls_ret = gnutls_handshake(entry->dtls.session);
+	    }
+	    while (dtls_ret < 0 && !gnutls_error_is_fatal(dtls_ret));
+
+	    if (dtls_ret < 0) {
+	      gnutls_deinit(entry->dtls.session);
+	      entry->dtls.session = NULL;
+
+	      Log(LOG_ERR, "ERROR ( %s/core ): [dtls] handshake: %s\n", config.name, gnutls_strerror(dtls_ret));
+	    }
 
 	    // XXX: Data
 	  }
 	  else {
 	    gnutls_init(&entry->dtls.session, GNUTLS_SERVER | GNUTLS_DATAGRAM);
+	    gnutls_handshake_set_timeout(entry->dtls.session, 20 * 1000); // XXX
 	    gnutls_dtls_set_mtu(entry->dtls.session, 1500); // XXX: PMTU?
 	    gnutls_priority_set(entry->dtls.session, config.nfacctd_dtls_globs.priority_cache);
             gnutls_credentials_set(entry->dtls.session, GNUTLS_CRD_CERTIFICATE, config.nfacctd_dtls_globs.x509_cred);
@@ -1515,6 +1533,7 @@ int main(int argc,char **argv, char **envp)
 	    entry->dtls.conn.peer_len = clen;
 	    gnutls_transport_set_ptr(entry->dtls.session, &entry->dtls.conn);
 	    gnutls_transport_set_pull_function(entry->dtls.session, pm_dtls_recv);
+	    gnutls_transport_set_pull_timeout_function(entry->dtls.session, pm_dtls_select);
 	    gnutls_transport_set_push_function(entry->dtls.session, pm_dtls_send);
 
 	    /* Sending Hello with cookie */
@@ -1524,6 +1543,9 @@ int main(int argc,char **argv, char **envp)
 	    if (dtls_ret < 0) {
 	      Log(LOG_ERR, "ERROR ( %s/core ): [dtls] %s.\n", config.name, gnutls_strerror(dtls_ret));
 	    }
+
+	    /* discard peeked data */
+	    recv(config.nfacctd_dtls_sock, (unsigned char *)netflow_dtls_packet, NETFLOW_MSG_SIZE, 0);
 	  }
 	}
       }
