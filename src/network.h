@@ -701,6 +701,7 @@ typedef struct {
 
 typedef struct {
   int fd;
+  int stage;
   struct sockaddr_storage peer;
   socklen_t peer_len;
 } pm_dtls_conn_t;
@@ -710,6 +711,11 @@ typedef struct {
   gnutls_dtls_prestate_st prestate;
   pm_dtls_conn_t conn;
 } pm_dtls_peer_t;
+
+#define PM_DTLS_STAGE_DOWN		0
+#define PM_DTLS_STAGE_HELLO		1
+#define PM_DTLS_STAGE_HANDSHAKE		2
+#define PM_DTLS_STAGE_UP		3
 #endif
 
 /* prototypes */

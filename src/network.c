@@ -211,11 +211,13 @@ ssize_t pm_dtls_recv(gnutls_transport_ptr_t p, void *data, size_t len)
 
   memset(&client, 0, sizeof(client));
   clen = sizeof(client);
-  
+
   ret = recvfrom(conn->fd, data, len, 0, (struct sockaddr *) &client, &clen);
 
   /* validate message is received from the expected source */
-  if (clen == conn->peer_len && !memcmp(&client, &conn->peer, sizeof(client))) {
+  ipv4_mapped_to_ipv4(&client);
+
+  if (clen == conn->peer_len && !memcmp(&client, &conn->peer, clen)) {
     return ret;
   }
 
@@ -231,7 +233,7 @@ ssize_t pm_dtls_send(gnutls_transport_ptr_t p, const void *data, size_t len)
 
 int pm_dtls_select(gnutls_transport_ptr_t p, unsigned int ms)
 {
-  // XXX
+  return 1;
 }
 
 void pm_dtls_server_log(int level, const char *str)
