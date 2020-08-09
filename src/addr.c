@@ -476,7 +476,7 @@ unsigned int sa_to_str(char *str, int len, const struct sockaddr *sa)
     if (sa->sa_family == AF_INET) {
       inet_ntop(AF_INET, &sa4->sin_addr.s_addr, str, INET6_ADDRSTRLEN);
 
-      if (len >= (INET6_ADDRSTRLEN + PORT_STRLEN + 1) && sa4->sin_port) {
+      if (len >= (strlen(str) + PORT_STRLEN + 1) && sa4->sin_port) {
 	off = strlen(str);
 	snprintf(str + off, len - off, "%s", sep);
 
@@ -490,7 +490,7 @@ unsigned int sa_to_str(char *str, int len, const struct sockaddr *sa)
     if (sa->sa_family == AF_INET6) {
       inet_ntop(AF_INET6, &sa6->sin6_addr, str, INET6_ADDRSTRLEN);
 
-      if (sa6->sin6_port) {
+      if (len >= (strlen(str) + PORT_STRLEN + 1) && sa6->sin6_port) {
         off = strlen(str);
         snprintf(str + off, len - off, "%s", sep);
 
