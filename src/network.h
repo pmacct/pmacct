@@ -704,6 +704,7 @@ typedef struct {
   int stage;
   struct sockaddr_storage peer;
   socklen_t peer_len;
+  unsigned char seq[8];
 } pm_dtls_conn_t;
 
 typedef struct {

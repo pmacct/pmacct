@@ -1529,7 +1529,7 @@ int main(int argc,char **argv, char **envp)
 
 	    /* Data */
 	    if (entry->dtls.conn.stage == PM_DTLS_STAGE_UP) {
-	      dtls_ret = gnutls_record_recv(entry->dtls.session, netflow_dtls_packet, NETFLOW_MSG_SIZE);
+	      ret = gnutls_record_recv_seq(entry->dtls.session, netflow_packet, NETFLOW_MSG_SIZE, entry->dtls.conn.seq);
 
 	      if (dtls_ret < 0) {
 		if (!gnutls_error_is_fatal(ret)) {
@@ -1546,6 +1546,16 @@ int main(int argc,char **argv, char **envp)
 	      }
 
 	      /* All good */
+	      if (config.debug) {
+		u_char hexbuf[2 * LARGEBUFLEN];
+
+		serialize_hex(netflow_packet, hexbuf, ret);
+
+		Log(LOG_DEBUG, "DEBUG ( %s/core ): [dtls] data received: seq=%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x len=%d hex=%s\n",
+		    config.name, entry->dtls.conn.seq[0], entry->dtls.conn.seq[1], entry->dtls.conn.seq[2],
+		    entry->dtls.conn.seq[3], entry->dtls.conn.seq[4], entry->dtls.conn.seq[5], entry->dtls.conn.seq[6],
+		    entry->dtls.conn.seq[7], ret, hexbuf);
+	      }
 	    }
 	    else {
 	      continue;
