@@ -1501,13 +1501,14 @@ int main(int argc,char **argv, char **envp)
 						   netflow_dtls_packet, ret, &entry->dtls.prestate);
 	      if (dtls_ret < 0) {
 	        gnutls_deinit(entry->dtls.session);
-	        entry->dtls.session = NULL;
+		memset(&entry->dtls, 0, sizeof(entry->dtls)); /* PM_DTLS_STAGE_DOWN */
 
 	        Log(LOG_ERR, "ERROR ( %s/core ): [dtls] hello: %s\n", config.name, gnutls_strerror(dtls_ret));
 	      }
-
-	      gnutls_dtls_prestate_set(entry->dtls.session, &entry->dtls.prestate);
-	      entry->dtls.conn.stage = PM_DTLS_STAGE_HANDSHAKE;
+	      else {
+	        gnutls_dtls_prestate_set(entry->dtls.session, &entry->dtls.prestate);
+	        entry->dtls.conn.stage = PM_DTLS_STAGE_HANDSHAKE;
+	      }
 	    }
 
 	    /* Handshake */
@@ -1519,12 +1520,13 @@ int main(int argc,char **argv, char **envp)
 
 	      if (dtls_ret < 0) {
 	        gnutls_deinit(entry->dtls.session);
-	        entry->dtls.session = NULL;
+		memset(&entry->dtls, 0, sizeof(entry->dtls)); /* PM_DTLS_STAGE_DOWN */
 
 	        Log(LOG_ERR, "ERROR ( %s/core ): [dtls] handshake: %s\n", config.name, gnutls_strerror(dtls_ret));
 	      }
-
-	      entry->dtls.conn.stage = PM_DTLS_STAGE_UP;
+	      else {
+	        entry->dtls.conn.stage = PM_DTLS_STAGE_UP;
+	      }
 	    }
 
 	    /* Data */
@@ -1537,27 +1539,27 @@ int main(int argc,char **argv, char **envp)
 		}
 	        else {
 		  gnutls_deinit(entry->dtls.session);
-		  entry->dtls.session = NULL;
+		  memset(&entry->dtls, 0, sizeof(entry->dtls)); /* PM_DTLS_STAGE_DOWN */ 
 
 	          Log(LOG_ERR, "ERROR ( %s/core ): [dtls] data: %s\n", config.name, gnutls_strerror(dtls_ret));
 		}
-
-		continue;
 	      }
+	      else {
+		/* All good */
+		if (config.debug) {
+		  u_char hexbuf[2 * LARGEBUFLEN];
 
-	      /* All good */
-	      if (config.debug) {
-		u_char hexbuf[2 * LARGEBUFLEN];
+		  serialize_hex(netflow_packet, hexbuf, ret);
 
-		serialize_hex(netflow_packet, hexbuf, ret);
-
-		Log(LOG_DEBUG, "DEBUG ( %s/core ): [dtls] data received: seq=%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x len=%d hex=%s\n",
-		    config.name, entry->dtls.conn.seq[0], entry->dtls.conn.seq[1], entry->dtls.conn.seq[2],
-		    entry->dtls.conn.seq[3], entry->dtls.conn.seq[4], entry->dtls.conn.seq[5], entry->dtls.conn.seq[6],
-		    entry->dtls.conn.seq[7], ret, hexbuf);
+		  Log(LOG_DEBUG, "DEBUG ( %s/core ): [dtls] data received: seq=%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x len=%d hex=%s\n",
+		      config.name, entry->dtls.conn.seq[0], entry->dtls.conn.seq[1], entry->dtls.conn.seq[2],
+		      entry->dtls.conn.seq[3], entry->dtls.conn.seq[4], entry->dtls.conn.seq[5], entry->dtls.conn.seq[6],
+		      entry->dtls.conn.seq[7], ret, hexbuf);
+	        }
 	      }
 	    }
-	    else {
+
+	    if (entry->dtls.conn.stage != PM_DTLS_STAGE_UP) {
 	      continue;
 	    }
 	  }
@@ -1581,10 +1583,14 @@ int main(int argc,char **argv, char **envp)
 					       &entry->dtls.prestate, (gnutls_transport_ptr_t) &entry->dtls.conn,
 					       pm_dtls_send);
 	    if (dtls_ret < 0) {
+	      gnutls_deinit(entry->dtls.session);
+	      memset(&entry->dtls, 0, sizeof(entry->dtls)); /* PM_DTLS_STAGE_DOWN */
+
 	      Log(LOG_ERR, "ERROR ( %s/core ): [dtls] %s.\n", config.name, gnutls_strerror(dtls_ret));
 	    }
-
-	    entry->dtls.conn.stage = PM_DTLS_STAGE_HELLO;
+	    else {
+	      entry->dtls.conn.stage = PM_DTLS_STAGE_HELLO;
+	    }
 
 	    /* discard peeked data */
 	    recv(config.nfacctd_dtls_sock, (unsigned char *)netflow_dtls_packet, NETFLOW_MSG_SIZE, 0);
