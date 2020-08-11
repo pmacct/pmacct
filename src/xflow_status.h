@@ -118,10 +118,12 @@ extern struct xflow_status_entry_sampling *search_smp_id_status_table(struct xfl
 extern struct xflow_status_entry_sampling *create_smp_entry_status_table(xflow_status_table_t *, struct xflow_status_entry *);
 extern struct xflow_status_entry_class *search_class_id_status_table(struct xflow_status_entry_class *, pm_class_t);
 extern struct xflow_status_entry_class *create_class_entry_status_table(xflow_status_table_t *, struct xflow_status_entry *);
-
-extern xflow_status_table_t xflow_status_table;
 extern void set_vector_f_status(struct packet_ptrs_vector *);
 extern void set_vector_f_status_g(struct packet_ptrs_vector *);
 extern void update_status_table(struct xflow_status_entry *, u_int32_t, int);
 
+extern xflow_status_table_t xflow_status_table;
+#ifdef WITH_GNUTLS
+extern xflow_status_table_t dtls_status_table;
+#endif
 #endif // XFLOW_STATUS_H

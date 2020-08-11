@@ -23,6 +23,11 @@
 #include "addr.h"
 #include "network.h"
 
+/* Global variables */
+#ifdef WITH_GNUTLS
+xflow_status_table_t dtls_status_table;
+#endif
+
 struct tunnel_handler tunnel_registry[TUNNEL_REGISTRY_STACKS][TUNNEL_REGISTRY_ENTRIES];
 
 int parse_proxy_header(int fd, struct host_addr *addr, u_int16_t *port)
@@ -239,5 +244,27 @@ int pm_dtls_select(gnutls_transport_ptr_t p, unsigned int ms)
 void pm_dtls_server_log(int level, const char *str)
 {
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): [dtls] %d | %s", config.name, config.type, level, str);
+}
+
+void pm_dtls_server_bye()
+{
+  struct xflow_status_entry *entry;
+  int idx;
+
+  for (idx = 0; idx < XFLOW_STATUS_TABLE_SZ; idx++) {
+    entry = dtls_status_table.t[idx];
+
+    if (entry) {
+      next:
+      if (entry->dtls.conn.fd) {
+	gnutls_bye(entry->dtls.session, GNUTLS_SHUT_RDWR);
+      }
+
+      if (entry->next) {
+	entry = entry->next;
+	goto next;
+      }
+    }
+  }
 }
 #endif

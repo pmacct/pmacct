@@ -130,7 +130,6 @@ int main(int argc,char **argv, char **envp)
   int templates_sock = 0;
 
 #ifdef WITH_GNUTLS
-  xflow_status_table_t dtls_status_table;
   unsigned char *netflow_dtls_packet;
   struct sockaddr_storage server_dtls;
   int dtls_sock = 0;
