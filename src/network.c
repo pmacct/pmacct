@@ -267,4 +267,121 @@ void pm_dtls_server_bye()
     }
   }
 }
+
+int pm_dtls_server_process(int dtls_sock, struct sockaddr_storage *client, socklen_t clen, u_char *dtls_packet, int len, void *st)
+{
+  int hash = hash_status_table(0, (struct sockaddr *) client, XFLOW_STATUS_TABLE_SZ);
+  xflow_status_table_t *status_table = st;
+  struct xflow_status_entry *entry = NULL;
+  int dtls_ret = 0, ret = 0;
+
+  if (hash >= 0) {
+    entry = search_status_table(status_table, (struct sockaddr *) client, 0, 0, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
+    if (entry) {
+      if (entry->dtls.session) {
+        /* Finalizing Hello stage */
+	if (entry->dtls.conn.stage == PM_DTLS_STAGE_HELLO) {
+	  dtls_ret = gnutls_dtls_cookie_verify(&config.nfacctd_dtls_globs.cookie_key, client, sizeof(struct sockaddr_storage),
+					       dtls_packet, len, &entry->dtls.prestate);
+	  if (dtls_ret < 0) {
+	    gnutls_deinit(entry->dtls.session);
+	    memset(&entry->dtls, 0, sizeof(entry->dtls)); /* PM_DTLS_STAGE_DOWN */
+
+	    Log(LOG_ERR, "ERROR ( %s/core ): [dtls] hello: %s\n", config.name, gnutls_strerror(dtls_ret));
+	  }
+	  else {
+	    gnutls_dtls_prestate_set(entry->dtls.session, &entry->dtls.prestate);
+	    entry->dtls.conn.stage = PM_DTLS_STAGE_HANDSHAKE;
+	  }
+	}
+
+	/* Handshake */
+	if (entry->dtls.conn.stage == PM_DTLS_STAGE_HANDSHAKE) {
+	  do {
+	    dtls_ret = gnutls_handshake(entry->dtls.session);
+	  }
+	  while (dtls_ret < 0 && !gnutls_error_is_fatal(dtls_ret));
+
+	  if (dtls_ret < 0) {
+	    gnutls_deinit(entry->dtls.session);
+	    memset(&entry->dtls, 0, sizeof(entry->dtls)); /* PM_DTLS_STAGE_DOWN */
+
+	    Log(LOG_ERR, "ERROR ( %s/core ): [dtls] handshake: %s\n", config.name, gnutls_strerror(dtls_ret));
+	  }
+	  else {
+	    entry->dtls.conn.stage = PM_DTLS_STAGE_UP;
+	  }
+	}
+
+	/* Data */
+	if (entry->dtls.conn.stage == PM_DTLS_STAGE_UP) {
+	  ret = gnutls_record_recv_seq(entry->dtls.session, dtls_packet, PKT_MSG_SIZE, entry->dtls.conn.seq);
+
+	  if (ret < 0) {
+	    if (!gnutls_error_is_fatal(ret)) {
+	      Log(LOG_WARNING, "WARN ( %s/core ): [dtls] data: %s\n", config.name, gnutls_strerror(dtls_ret));
+	    }
+	    else {
+	      gnutls_deinit(entry->dtls.session);
+	      memset(&entry->dtls, 0, sizeof(entry->dtls)); /* PM_DTLS_STAGE_DOWN */
+
+	      Log(LOG_ERR, "ERROR ( %s/core ): [dtls] data: %s\n", config.name, gnutls_strerror(dtls_ret));
+	    }
+	  }
+	  else {
+	    /* All good */
+	    if (config.debug) {
+	      u_char hexbuf[2 * LARGEBUFLEN];
+
+	      serialize_hex(dtls_packet, hexbuf, ret);
+
+	      Log(LOG_DEBUG, "DEBUG ( %s/core ): [dtls] data received: seq=%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x len=%d hex=%s\n",
+		  config.name, entry->dtls.conn.seq[0], entry->dtls.conn.seq[1], entry->dtls.conn.seq[2],
+		  entry->dtls.conn.seq[3], entry->dtls.conn.seq[4], entry->dtls.conn.seq[5], entry->dtls.conn.seq[6],
+		  entry->dtls.conn.seq[7], ret, hexbuf);
+	    }
+	  }
+	}
+
+	if (entry->dtls.conn.stage == PM_DTLS_STAGE_UP) {
+	  return ret;
+	}
+      }
+      else {
+	gnutls_init(&entry->dtls.session, GNUTLS_SERVER | GNUTLS_DATAGRAM);
+	gnutls_handshake_set_timeout(entry->dtls.session, 20 * 1000); // XXX
+	gnutls_dtls_set_mtu(entry->dtls.session, 1500); // XXX: PMTU?
+	gnutls_priority_set(entry->dtls.session, config.nfacctd_dtls_globs.priority_cache);
+	gnutls_credentials_set(entry->dtls.session, GNUTLS_CRD_CERTIFICATE, config.nfacctd_dtls_globs.x509_cred);
+
+	entry->dtls.conn.fd = dtls_sock;
+	memcpy(&entry->dtls.conn.peer, client, clen);
+	entry->dtls.conn.peer_len = clen;
+	gnutls_transport_set_ptr(entry->dtls.session, &entry->dtls.conn);
+	gnutls_transport_set_pull_function(entry->dtls.session, pm_dtls_recv);
+	gnutls_transport_set_pull_timeout_function(entry->dtls.session, pm_dtls_select);
+	gnutls_transport_set_push_function(entry->dtls.session, pm_dtls_send);
+
+	/* Sending Hello with cookie */
+	dtls_ret = gnutls_dtls_cookie_send(&config.nfacctd_dtls_globs.cookie_key, client, sizeof(struct sockaddr_storage),
+					   &entry->dtls.prestate, (gnutls_transport_ptr_t) &entry->dtls.conn,
+					   pm_dtls_send);
+	if (dtls_ret < 0) {
+	  gnutls_deinit(entry->dtls.session);
+	  memset(&entry->dtls, 0, sizeof(entry->dtls)); /* PM_DTLS_STAGE_DOWN */
+
+	  Log(LOG_ERR, "ERROR ( %s/core ): [dtls] %s.\n", config.name, gnutls_strerror(dtls_ret));
+	}
+	else {
+	  entry->dtls.conn.stage = PM_DTLS_STAGE_HELLO;
+	}
+
+	/* discard peeked data */
+	recv(dtls_sock, (unsigned char *) dtls_packet, PKT_MSG_SIZE, 0);
+      }
+    }
+  }
+
+  return FALSE;
+}
 #endif

@@ -730,6 +730,7 @@ extern ssize_t pm_dtls_send(gnutls_transport_ptr_t, const void *, size_t);
 extern int pm_dtls_select(gnutls_transport_ptr_t, unsigned int);
 extern void pm_dtls_server_log(int, const char *);
 extern void pm_dtls_server_bye();
+extern int pm_dtls_server_process(int, struct sockaddr_storage *, socklen_t, u_char *, int, void *);
 #endif
 
 #endif //PMACCT_NETWORK_H

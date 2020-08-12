@@ -130,7 +130,6 @@ int main(int argc,char **argv, char **envp)
   int templates_sock = 0;
 
 #ifdef WITH_GNUTLS
-  unsigned char *netflow_dtls_packet;
   struct sockaddr_storage server_dtls;
   int dtls_sock = 0;
 #endif 
@@ -226,7 +225,6 @@ int main(int argc,char **argv, char **envp)
   memset(&reload_map_tstamp, 0, sizeof(reload_map_tstamp));
 
 #ifdef WITH_GNUTLS
-  netflow_dtls_packet = malloc(NETFLOW_MSG_SIZE); 
   memset(&dtls_status_table, 0, sizeof(dtls_status_table));
 #endif
 
@@ -1420,7 +1418,7 @@ int main(int argc,char **argv, char **envp)
 #ifdef WITH_GNUTLS
 	  else if (FD_ISSET(config.nfacctd_dtls_sock, &read_descs)) {
 	    /* Peek only here since gnutls wants to consume on its own */
-	    ret = recvfrom(config.nfacctd_dtls_sock, (unsigned char *)netflow_dtls_packet, NETFLOW_MSG_SIZE, MSG_PEEK, (struct sockaddr *) &client, &clen);
+	    ret = recvfrom(config.nfacctd_dtls_sock, (unsigned char *)netflow_packet, NETFLOW_MSG_SIZE, MSG_PEEK, (struct sockaddr *) &client, &clen);
 	    FD_CLR(config.nfacctd_dtls_sock, &read_descs);
 	    num_descs--;
 
@@ -1486,117 +1484,10 @@ int main(int argc,char **argv, char **envp)
 
 #ifdef WITH_GNUTLS
     if (dtls_sock) {
-      int dtls_ret = 0;
-      int hash = hash_status_table(0, (struct sockaddr *) &client, XFLOW_STATUS_TABLE_SZ);
-      struct xflow_status_entry *entry = NULL;
+      ret = pm_dtls_server_process(config.nfacctd_dtls_sock, &client, clen, netflow_packet, ret, &dtls_status_table);
 
-      if (hash >= 0) {
-	entry = search_status_table(&dtls_status_table, (struct sockaddr *) &client, 0, 0, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
-	if (entry) {
-	  if (entry->dtls.session) {
-	    /* Finalizing Hello stage */
-	    if (entry->dtls.conn.stage == PM_DTLS_STAGE_HELLO) {
-	      dtls_ret = gnutls_dtls_cookie_verify(&config.nfacctd_dtls_globs.cookie_key, &client, sizeof(client),
-						   netflow_dtls_packet, ret, &entry->dtls.prestate);
-	      if (dtls_ret < 0) {
-	        gnutls_deinit(entry->dtls.session);
-		memset(&entry->dtls, 0, sizeof(entry->dtls)); /* PM_DTLS_STAGE_DOWN */
-
-	        Log(LOG_ERR, "ERROR ( %s/core ): [dtls] hello: %s\n", config.name, gnutls_strerror(dtls_ret));
-	      }
-	      else {
-	        gnutls_dtls_prestate_set(entry->dtls.session, &entry->dtls.prestate);
-	        entry->dtls.conn.stage = PM_DTLS_STAGE_HANDSHAKE;
-	      }
-	    }
-
-	    /* Handshake */
-	    if (entry->dtls.conn.stage == PM_DTLS_STAGE_HANDSHAKE) {
-	      do {
-	        dtls_ret = gnutls_handshake(entry->dtls.session);
-	      }
-	      while (dtls_ret < 0 && !gnutls_error_is_fatal(dtls_ret));
-
-	      if (dtls_ret < 0) {
-	        gnutls_deinit(entry->dtls.session);
-		memset(&entry->dtls, 0, sizeof(entry->dtls)); /* PM_DTLS_STAGE_DOWN */
-
-	        Log(LOG_ERR, "ERROR ( %s/core ): [dtls] handshake: %s\n", config.name, gnutls_strerror(dtls_ret));
-	      }
-	      else {
-	        entry->dtls.conn.stage = PM_DTLS_STAGE_UP;
-	      }
-	    }
-
-	    /* Data */
-	    if (entry->dtls.conn.stage == PM_DTLS_STAGE_UP) {
-	      ret = gnutls_record_recv_seq(entry->dtls.session, netflow_packet, NETFLOW_MSG_SIZE, entry->dtls.conn.seq);
-
-	      if (dtls_ret < 0) {
-		if (!gnutls_error_is_fatal(ret)) {
-	          Log(LOG_WARNING, "WARN ( %s/core ): [dtls] data: %s\n", config.name, gnutls_strerror(dtls_ret));
-		}
-	        else {
-		  gnutls_deinit(entry->dtls.session);
-		  memset(&entry->dtls, 0, sizeof(entry->dtls)); /* PM_DTLS_STAGE_DOWN */ 
-
-	          Log(LOG_ERR, "ERROR ( %s/core ): [dtls] data: %s\n", config.name, gnutls_strerror(dtls_ret));
-		}
-	      }
-	      else {
-		/* All good */
-		if (config.debug) {
-		  u_char hexbuf[2 * LARGEBUFLEN];
-
-		  serialize_hex(netflow_packet, hexbuf, ret);
-
-		  Log(LOG_DEBUG, "DEBUG ( %s/core ): [dtls] data received: seq=%.2x%.2x%.2x%.2x%.2x%.2x%.2x%.2x len=%d hex=%s\n",
-		      config.name, entry->dtls.conn.seq[0], entry->dtls.conn.seq[1], entry->dtls.conn.seq[2],
-		      entry->dtls.conn.seq[3], entry->dtls.conn.seq[4], entry->dtls.conn.seq[5], entry->dtls.conn.seq[6],
-		      entry->dtls.conn.seq[7], ret, hexbuf);
-	        }
-	      }
-	    }
-
-	    if (entry->dtls.conn.stage != PM_DTLS_STAGE_UP) {
-	      continue;
-	    }
-	  }
-	  else {
-	    gnutls_init(&entry->dtls.session, GNUTLS_SERVER | GNUTLS_DATAGRAM);
-	    gnutls_handshake_set_timeout(entry->dtls.session, 20 * 1000); // XXX
-	    gnutls_dtls_set_mtu(entry->dtls.session, 1500); // XXX: PMTU?
-	    gnutls_priority_set(entry->dtls.session, config.nfacctd_dtls_globs.priority_cache);
-            gnutls_credentials_set(entry->dtls.session, GNUTLS_CRD_CERTIFICATE, config.nfacctd_dtls_globs.x509_cred);
-
-	    entry->dtls.conn.fd = config.nfacctd_dtls_sock;
-	    memcpy(&entry->dtls.conn.peer, &client, clen);
-	    entry->dtls.conn.peer_len = clen;
-	    gnutls_transport_set_ptr(entry->dtls.session, &entry->dtls.conn);
-	    gnutls_transport_set_pull_function(entry->dtls.session, pm_dtls_recv);
-	    gnutls_transport_set_pull_timeout_function(entry->dtls.session, pm_dtls_select);
-	    gnutls_transport_set_push_function(entry->dtls.session, pm_dtls_send);
-
-	    /* Sending Hello with cookie */
-	    dtls_ret = gnutls_dtls_cookie_send(&config.nfacctd_dtls_globs.cookie_key, &client, sizeof(client),
-					       &entry->dtls.prestate, (gnutls_transport_ptr_t) &entry->dtls.conn,
-					       pm_dtls_send);
-	    if (dtls_ret < 0) {
-	      gnutls_deinit(entry->dtls.session);
-	      memset(&entry->dtls, 0, sizeof(entry->dtls)); /* PM_DTLS_STAGE_DOWN */
-
-	      Log(LOG_ERR, "ERROR ( %s/core ): [dtls] %s.\n", config.name, gnutls_strerror(dtls_ret));
-	    }
-	    else {
-	      entry->dtls.conn.stage = PM_DTLS_STAGE_HELLO;
-	    }
-
-	    /* discard peeked data */
-	    recv(config.nfacctd_dtls_sock, (unsigned char *)netflow_dtls_packet, NETFLOW_MSG_SIZE, 0);
-
-	    continue;
-	  }
-	}
+      if (!ret) {
+	continue;
       }
     }
 #endif
