@@ -193,9 +193,4 @@ extern int P_broker_timers_get_retry_interval(struct p_broker_timers *);
 extern time_t P_broker_timers_get_last_fail(struct p_broker_timers *);
 
 extern primptrs_func primptrs_funcs[PRIMPTRS_FUNCS_N];
-
-#ifdef WITH_GNUTLS
-extern void pm_dtls_init(pm_dtls_glob_t *, char *);
-#endif
-
 #endif //UTIL_H

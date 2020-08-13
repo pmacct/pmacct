@@ -662,8 +662,13 @@ int main(int argc,char **argv, char **envp)
   sigaction(SIGALRM, &sighandler_action, NULL);
 
 #ifdef WITH_GNUTLS
-  if (config.nfacctd_dtls_path) {
-    pm_dtls_init(&config.nfacctd_dtls_globs, config.nfacctd_dtls_path);
+  if (config.nfacctd_dtls_port && !config.dtls_path) {
+    Log(LOG_ERR, "ERROR ( %s/core ): 'nfacctd_dtls_port' specified but missing 'dtls_path'. Exiting.\n", config.name);
+    exit_gracefully(1);
+  }
+
+  if (config.dtls_path) {
+    pm_dtls_init(&config.dtls_globs, config.dtls_path);
   }
 #endif
 

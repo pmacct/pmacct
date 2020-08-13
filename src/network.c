@@ -207,6 +207,45 @@ u_int16_t pm_udp6_checksum(struct ip6_hdr *ip6hdr, struct pm_udphdr *udphdr, u_c
 
 
 #ifdef WITH_GNUTLS
+void pm_dtls_init(pm_dtls_glob_t *dtls_globs, char *files_path)
+{
+  char cafile[LONGLONGSRVBUFLEN];
+  char certfile[LONGLONGSRVBUFLEN], keyfile[LONGLONGSRVBUFLEN];
+  int ret;
+
+  gnutls_global_init();
+
+  if (config.debug) {
+    gnutls_global_set_log_function(pm_dtls_server_log);
+    gnutls_global_set_log_level(4711);
+  }
+
+  gnutls_certificate_allocate_credentials(&dtls_globs->x509_cred);
+
+  strcpy(cafile, files_path);
+  strcat(cafile, "/");
+  strcat(cafile, PM_GNUTLS_CAFILE);
+  gnutls_certificate_set_x509_trust_file(dtls_globs->x509_cred, cafile, GNUTLS_X509_FMT_PEM);
+
+  strcpy(certfile, files_path);
+  strcat(certfile, "/");
+  strcat(certfile, PM_GNUTLS_CERTFILE);
+
+  strcpy(keyfile, files_path);
+  strcat(keyfile, "/");
+  strcat(keyfile, PM_GNUTLS_KEYFILE);
+
+  ret = gnutls_certificate_set_x509_key_file(dtls_globs->x509_cred, certfile, keyfile, GNUTLS_X509_FMT_PEM);
+  if (ret < 0) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): No DTLS certificate or key were found\n", config.name, config.type);
+    exit_gracefully(1);
+  }
+
+  gnutls_certificate_set_known_dh_params(dtls_globs->x509_cred, GNUTLS_SEC_PARAM_MEDIUM);
+  gnutls_priority_init2(&dtls_globs->priority_cache, "%SERVER_PRECEDENCE", NULL, GNUTLS_PRIORITY_INIT_DEF_APPEND);
+  gnutls_key_generate(&dtls_globs->cookie_key, GNUTLS_COOKIE_KEY_SIZE);
+}
+
 ssize_t pm_dtls_recv(gnutls_transport_ptr_t p, void *data, size_t len)
 {
   pm_dtls_conn_t *conn = p;
@@ -281,7 +320,7 @@ int pm_dtls_server_process(int dtls_sock, struct sockaddr_storage *client, sockl
       if (entry->dtls.session) {
         /* Finalizing Hello stage */
 	if (entry->dtls.conn.stage == PM_DTLS_STAGE_HELLO) {
-	  dtls_ret = gnutls_dtls_cookie_verify(&config.nfacctd_dtls_globs.cookie_key, client, sizeof(struct sockaddr_storage),
+	  dtls_ret = gnutls_dtls_cookie_verify(&config.dtls_globs.cookie_key, client, sizeof(struct sockaddr_storage),
 					       dtls_packet, len, &entry->dtls.prestate);
 	  if (dtls_ret < 0) {
 	    gnutls_deinit(entry->dtls.session);
@@ -351,8 +390,8 @@ int pm_dtls_server_process(int dtls_sock, struct sockaddr_storage *client, sockl
 	gnutls_init(&entry->dtls.session, GNUTLS_SERVER | GNUTLS_DATAGRAM);
 	gnutls_handshake_set_timeout(entry->dtls.session, 20 * 1000); // XXX
 	gnutls_dtls_set_mtu(entry->dtls.session, 1500); // XXX: PMTU?
-	gnutls_priority_set(entry->dtls.session, config.nfacctd_dtls_globs.priority_cache);
-	gnutls_credentials_set(entry->dtls.session, GNUTLS_CRD_CERTIFICATE, config.nfacctd_dtls_globs.x509_cred);
+	gnutls_priority_set(entry->dtls.session, config.dtls_globs.priority_cache);
+	gnutls_credentials_set(entry->dtls.session, GNUTLS_CRD_CERTIFICATE, config.dtls_globs.x509_cred);
 
 	entry->dtls.conn.fd = dtls_sock;
 	memcpy(&entry->dtls.conn.peer, client, clen);
@@ -363,14 +402,14 @@ int pm_dtls_server_process(int dtls_sock, struct sockaddr_storage *client, sockl
 	gnutls_transport_set_push_function(entry->dtls.session, pm_dtls_send);
 
 	/* Sending Hello with cookie */
-	dtls_ret = gnutls_dtls_cookie_send(&config.nfacctd_dtls_globs.cookie_key, client, sizeof(struct sockaddr_storage),
+	dtls_ret = gnutls_dtls_cookie_send(&config.dtls_globs.cookie_key, client, sizeof(struct sockaddr_storage),
 					   &entry->dtls.prestate, (gnutls_transport_ptr_t) &entry->dtls.conn,
 					   pm_dtls_send);
 	if (dtls_ret < 0) {
 	  gnutls_deinit(entry->dtls.session);
 	  memset(&entry->dtls, 0, sizeof(entry->dtls)); /* PM_DTLS_STAGE_DOWN */
 
-	  Log(LOG_ERR, "ERROR ( %s/core ): [dtls] %s.\n", config.name, gnutls_strerror(dtls_ret));
+	  Log(LOG_ERR, "ERROR ( %s/core ): [dtls] cookie: %s\n", config.name, gnutls_strerror(dtls_ret));
 	}
 	else {
 	  entry->dtls.conn.stage = PM_DTLS_STAGE_HELLO;

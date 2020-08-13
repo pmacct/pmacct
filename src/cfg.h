@@ -118,6 +118,10 @@ struct configuration {
   int flow_tcp_lifetime;
   int num_protos;
   int num_hosts;
+  char *dtls_path;
+#ifdef WITH_GNUTLS
+  pm_dtls_glob_t dtls_globs;
+#endif
   char *imt_plugin_path;
   char *imt_plugin_passwd;
   char *sql_db;
@@ -194,10 +198,8 @@ struct configuration {
   char *nfacctd_kafka_topic;
   char *nfacctd_kafka_config_file;
   char *nfacctd_zmq_address;
-  char *nfacctd_dtls_path;
   int nfacctd_dtls_port;
 #ifdef WITH_GNUTLS
-  pm_dtls_glob_t nfacctd_dtls_globs;
   int nfacctd_dtls_sock;
 #endif
   char *nfacctd_allow_file;
