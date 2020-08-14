@@ -728,7 +728,7 @@ AC_ARG_ENABLE(gnutls,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([GNUTLS], [gnutls >= 3.5], [
+    PKG_CHECK_MODULES([GNUTLS], [gnutls >= 3.6], [
       SUPPORTS="${SUPPORTS} gnutls"
       USING_GNUTLS="yes"
       PMACCT_CFLAGS="$PMACCT_CFLAGS $GNUTLS_CFLAGS"
