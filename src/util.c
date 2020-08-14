@@ -1890,6 +1890,9 @@ void version_daemon(char *header)
 #ifdef WITH_REDIS
   printf("Redis %u.%u.%u\n", HIREDIS_MAJOR, HIREDIS_MINOR, HIREDIS_PATCH);
 #endif
+#ifdef WITH_GNUTLS
+  printf("GnuTLS %u.%u.%u\n", GNUTLS_VERSION_MAJOR, GNUTLS_VERSION_MINOR, GNUTLS_VERSION_PATCH);
+#endif
 #ifdef WITH_AVRO
   printf("avro-c\n");
 #endif
