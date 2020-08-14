@@ -35,6 +35,7 @@ RUN apt-get update && \
     libsnappy-dev \
     libsqlite3-dev \
     libssl-dev \
+    libgnutls28-dev \
     libstdc++-8-dev \
     libtool \
     make \
@@ -53,7 +54,7 @@ RUN apt-get update && \
                                --enable-rabbitmq --enable-nflog  \
                                --enable-ndpi --enable-zmq        \
                                --enable-avro --enable-serdes     \
-                               --enable-redis && \
+                               --enable-redis --enable-gnutls && \
   sudo make install && \
   cd .. && \
   apt-get purge -y \

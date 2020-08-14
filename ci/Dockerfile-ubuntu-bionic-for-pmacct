@@ -21,6 +21,7 @@ RUN apt-get update && \
     libsnappy-dev \
     libsqlite3-dev \
     libssl-dev \
+    libgnutls28-dev \
     libstdc++-8-dev \
     libtool \
     make \

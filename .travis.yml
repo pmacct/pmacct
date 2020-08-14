@@ -55,12 +55,12 @@ jobs:
       - echo "Launched container id:" $CONTAINER_ID
       - docker exec -i $CONTAINER_ID ./ci/script.sh
       - docker stop $CONTAINER_ID
-    name: "docker: Ubuntu Bionic, CONFIG_FLAGS=--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
-    env: CONFIG_FLAGS="--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
+    name: "docker: Ubuntu Bionic, CONFIG_FLAGS=--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis --enable-gnutls"
+    env: CONFIG_FLAGS="--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis --enable-gnutls"
 
   - <<: *build_test_ubuntu_bionic
-    name: "docker: Ubuntu Bionic, CONFIG_FLAGS=--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
-    env: CONFIG_FLAGS="--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
+    name: "docker: Ubuntu Bionic, CONFIG_FLAGS=--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis --enable-gnutls"
+    env: CONFIG_FLAGS="--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis --enable-gnutls"
 
   - <<: *build_test_ubuntu_bionic
     name: "docker: Ubuntu Bionic, CONFIG_FLAGS=--enable-debug --enable-jansson --enable-zmq --enable-kafka"
@@ -134,15 +134,14 @@ jobs:
 ### Note missing libnetfilter_log in Centos8
 ###
 
-    #name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
-    #env: CONFIG_FLAGS="--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
+    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis --enable-gnutls"
+    env: CONFIG_FLAGS="--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis --enable-gnutls"
 
-  #- <<: *build_test_centos_8_1
-  #  name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
-  #  env: CONFIG_FLAGS="--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis"
+  - <<: *build_test_centos_8_1
+    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis --enable-gnutls"
+    env: CONFIG_FLAGS="--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis --enable-gnutls"
 
-  #- <<: *build_test_centos_8_1
-
+  - <<: *build_test_centos_8_1
     name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-debug --enable-jansson --enable-zmq --enable-kafka"
     env: CONFIG_FLAGS="--enable-debug --enable-jansson --enable-zmq --enable-kafka"
 
