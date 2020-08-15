@@ -167,6 +167,16 @@ DESC:		Per-plugin filtering applied against the original packet or flow. Aggrega
 		'pmacctd_force_frag_handling' directive.
 DEFAULT:	none
 
+KEY:		dtls_path [GLOBAL]
+DESC:		Full path to a directory containing files needed to establish a successful DTLS
+		session (key, certificate and CA file); a key.pem file can be generated with the
+		"certtool --generate-privkey --outfile key.pem" command-line; a self-signed
+		cert.pem certificate, having previously created the key, can be generated with
+		the "certtool --generate-self-signed --load-privkey key.pem --outfile cert.pem"
+		command-line; the ca-certificates.crt CA file can be copied from (ie. on Debian
+		or Ubuntu) "/etc/ssl/certs/ca-certificates.crt".
+DEFAULT:	none
+
 KEY:		pcap_filter [GLOBAL, PMACCTD_ONLY, ONLY_PMBMPD]
 DESC:		This filter is global and applied to all incoming packets. It's passed to libpcap
 		and expects libpcap/tcpdump filter syntax. Being global it doesn't offer a great
@@ -1754,6 +1764,12 @@ KEY:		nfacctd_templates_port [GLOBAL, NFACCTD_ONLY]
 DESC:		Defines the UDP port where to bind nfacctd for receiving (replicated) templates. If a
 		template is received on this port and nfacctd_templates_receiver is specified, it is
 		not replicated (in order to avoid the case of infinite loops).  
+DEFAULT:	none
+
+KEY:		nfacctd_dtls_port [GLOBAL, NFACCTD_ONLY]
+DESC:		Defines the UDP port where to bind nfacctd for receiving NetFlow/IPFIX over DTLS. The
+		required files (key, certificate, etc.) required by DTLS are to be supplied via the
+		dtls_path config directive.
 DEFAULT:	none
 
 KEY:            [ nfacctd_stitching | sfacctd_stitching | pmacctd_stitching | uacctd_stitching ]
