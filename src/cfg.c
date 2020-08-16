@@ -715,10 +715,11 @@ void evaluate_configuration(char *filename, int rows)
    plugin structures and parses supported config keys */
 int parse_configuration_file(char *filename)
 {
+  struct stat st;
   char localbuf[10240];
   char cmdline [] = "cmdline"; 
   FILE *file;
-  int num = 0, cmdlineflag = FALSE, rows_cmdline = rows, idx;
+  int num = 0, cmdlineflag = FALSE, rows_cmdline = rows, idx, ret;
   rows = 0;
 
   /* NULL filename means we don't have a configuration file; 1st stage: read from
@@ -726,11 +727,19 @@ int parse_configuration_file(char *filename)
      required, placing them at the tail - in order to override directives placed
      in the configuration file */
   if (filename) { 
-    if ((file = fopen(filename,"r")) == NULL) {
+    ret = stat(filename, &st);
+    if (ret < 0) {
       Log(LOG_ERR, "ERROR: [%s] file not found.\n", filename);
       return ERR;
     }
     else {
+      if (!S_ISREG(st.st_mode)) {
+	Log(LOG_ERR, "ERROR: [%s] path is not a regular file.\n", filename);
+	return ERR;
+      }
+    }
+
+    if ((file = fopen(filename, "r"))) {
       while (!feof(file)) {
         if (rows == LARGEBUFLEN) {
 	  Log(LOG_ERR, "ERROR: [%s] maximum number of %d lines reached.\n", filename, LARGEBUFLEN);
