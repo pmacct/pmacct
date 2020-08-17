@@ -373,9 +373,9 @@ int host_addr_mask_sa_cmp(struct host_addr *a1, struct host_mask *m1, struct soc
     else return TRUE;
   }
   else if (a1->family == AF_INET6) {
-    memcpy(&sa6_local, s1, sizeof(struct sockaddr));
+    memcpy(&sa6_local, s1, sizeof(struct sockaddr_in6));
     for (j = 0; j < 16; j++) sa6_local.sin6_addr.s6_addr[j] &= m1->mask.m6[j];
-    ret = ip6_addr_cmp(a1, &sa6_local.sin6_addr);
+    ret = ip6_addr_cmp(&a1->address.ipv6, &sa6_local.sin6_addr);
     if (!ret) return FALSE;
     else return TRUE;
   }
