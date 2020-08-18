@@ -358,7 +358,14 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
       bmd.extra.data = &bmed_bmp;
       bgp_msg_data_set_data_bmp(&bmed_bmp, &bdata);
 
-      /* XXX: checks, ie. marker, message length, etc., bypassed */
+      bgp_open_len = bgp_get_packet_len((*bmp_packet));
+      if (bgp_open_len <= 0) {
+	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: failed bgp_get_packet_len()\n",
+	    config.name, bms->log_str, peer->addr_str);
+	bmp_tlv_list_destroy(tlvs);
+	return;
+      }
+
       bgp_open_len = bgp_parse_open_msg(&bmd, (*bmp_packet), FALSE, FALSE);
       if (bgp_open_len == ERR) {
 	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: failed bgp_parse_open_msg()\n",
@@ -678,6 +685,12 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 
       /* draft-ietf-grow-bmp-tlv */
       bgp_update_len = bgp_get_packet_len((*bmp_packet));
+      if (bgp_update_len <= 0) {
+	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: bgp_get_packet_len() failed\n",
+	    config.name, bms->log_str, peer->addr_str);
+	return;
+      }
+
       if (peer->version == BMP_V4 && bgp_update_len && bgp_update_len < (*len)) {
 	struct bmp_tlv_hdr *bth;
 	u_int16_t bmp_tlv_type, bmp_tlv_len;
