@@ -730,9 +730,8 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
         bmed_bmp.tlvs = tlvs;
       }
 
-      /* XXX: checks, ie. marker, message length, etc., bypassed */
       bgp_update_len = bgp_parse_update_msg(&bmd, (*bmp_packet)); 
-      if (!bgp_update_len) {
+      if (bgp_update_len <= 0) {
 	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: bgp_parse_update_msg() failed\n",
 	    config.name, bms->log_str, peer->addr_str);
 	return;
