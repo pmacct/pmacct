@@ -774,6 +774,19 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 
 void bmp_process_msg_route_mirror(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
 {
+  struct bgp_misc_structs *bms;
+  struct bgp_peer *peer;
+
+  if (!bmpp) return;
+
+  peer = &bmpp->self;
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return;
+
+  Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route mirror] packet discarded: Unicorn! Message type currently not supported.\n",
+      config.name, bms->log_str, peer->addr_str);
+
   // XXX: maybe support route mirroring
 }
 
