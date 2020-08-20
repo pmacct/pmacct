@@ -72,6 +72,52 @@ unsigned int addr_to_str(char *str, const struct host_addr *a)
 }
 
 /*
+ * addr_to_str2() converts a supported family address into a string
+ * conversions among AFs is supported (ie. IPv6 IPv4-mapped to IPv4
+ * and vice-versa). 'str' length is not checked and assumed to be
+ * INET6_ADDRSTRLEN
+ */
+unsigned int addr_to_str2(char *str, const struct host_addr *a, int target_af)
+{
+  if (target_af != AF_INET && target_af != AF_INET6) {
+    goto exit_lane;
+  }
+
+  if (a->family == AF_INET && target_af == AF_INET) {
+    inet_ntop(AF_INET, &a->address.ipv4, str, INET6_ADDRSTRLEN);
+    return target_af;
+  }
+
+  if (a->family == AF_INET6 && target_af == AF_INET6) {
+    inet_ntop(AF_INET6, &a->address.ipv6, str, INET6_ADDRSTRLEN);
+    return target_af;
+  }
+
+  if (a->family == AF_INET6 && target_af == AF_INET) {
+    if (a->address.ipv6.s6_addr[10] == 0xff && a->address.ipv6.s6_addr[11] == 0xff) {
+      inet_ntop(target_af, &a->address.ipv6.s6_addr[12], str, INET6_ADDRSTRLEN);
+      return target_af;
+    }
+  }
+
+  if (a->family == AF_INET && target_af == AF_INET6) {
+    struct host_addr local_ha;
+
+    memset(&local_ha, 0, sizeof(local_ha));
+    memset((u_int8_t *)&local_ha.address.ipv6.s6_addr[10], 0xff, 2);
+    memcpy(&local_ha.address.ipv6.s6_addr[12], &a->address.ipv4, 4);
+
+    inet_ntop(AF_INET6, &local_ha.address.ipv6, str, INET6_ADDRSTRLEN);
+    return target_af;
+  }
+
+  exit_lane:
+  memset(str, 0, INET6_ADDRSTRLEN);
+
+  return FALSE;
+}
+
+/*
  * addr_mask_to_str() converts a supported family address into a string
  */
 unsigned int addr_mask_to_str(char *str, int len, const struct host_addr *a, const struct host_mask *m)

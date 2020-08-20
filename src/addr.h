@@ -33,6 +33,7 @@
 /* prototypes */
 extern unsigned int str_to_addr(const char *, struct host_addr *);
 extern unsigned int addr_to_str(char *, const struct host_addr *);
+extern unsigned int addr_to_str2(char *, const struct host_addr *, int);
 extern unsigned int addr_mask_to_str(char *, int, const struct host_addr *, const struct host_mask *);
 extern unsigned int str_to_addr_mask(const char *, struct host_addr *, struct host_mask *);
 extern unsigned int addr_to_sa(struct sockaddr *, struct host_addr *, u_int16_t);
