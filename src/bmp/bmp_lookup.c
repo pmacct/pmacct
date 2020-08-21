@@ -141,11 +141,15 @@ int bgp_lookup_node_match_cmp_bmp(struct bgp_info *info, struct node_match_cmp_t
 
     if (nmct2->peer->cap_add_paths[nmct2->afi][nmct2->safi]) {
       if (info->attr && nmct2->peer_dst_ip) {
-        if (info->attr->mp_nexthop.family == nmct2->peer_dst_ip->family) {
-          if (!memcmp(&info->attr->mp_nexthop, &nmct2->peer_dst_ip, HostAddrSz)) no_match--;
-        }
+	if (info->attr->mp_nexthop.family) {
+	  if (!host_addr_cmp(&info->attr->mp_nexthop, nmct2->peer_dst_ip)) {
+	    no_match--;
+	  }
+	}
         else if (info->attr->nexthop.s_addr && nmct2->peer_dst_ip->family == AF_INET) {
-          if (info->attr->nexthop.s_addr == nmct2->peer_dst_ip->address.ipv4.s_addr) no_match--;
+          if (info->attr->nexthop.s_addr == nmct2->peer_dst_ip->address.ipv4.s_addr) {
+	    no_match--;
+	  }
         }
       }
     }
