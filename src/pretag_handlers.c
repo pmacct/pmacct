@@ -616,7 +616,7 @@ int PT_map_sample_type_handler(char *filename, struct id_entry *e, char *value, 
   }
   else if (acct_type == ACCT_NF) {
     if (!strncmp(value, "flow", strlen("flow")))
-      e->key.sample_type.n = NF9_FTYPE_TRAFFIC;
+      e->key.sample_type.n = PM_FTYPE_TRAFFIC;
     else if (!strncmp(value, "event", strlen("event")))
       e->key.sample_type.n = NF9_FTYPE_EVENT;
     else if (!strncmp(value, "option", strlen("option")))
@@ -1917,8 +1917,8 @@ int pretag_sample_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   struct id_entry *entry = e;
   u_int8_t flow_type = pptrs->flow_type;
 
-  if (flow_type >= NF9_FTYPE_TRAFFIC && flow_type <= NF9_FTYPE_TRAFFIC_MAX) {
-    flow_type = NF9_FTYPE_TRAFFIC;
+  if (flow_type >= PM_FTYPE_TRAFFIC && flow_type <= PM_FTYPE_TRAFFIC_MAX) {
+    flow_type = PM_FTYPE_TRAFFIC;
   }
 
   if (entry->key.sample_type.n == flow_type) return (FALSE | entry->key.sample_type.neg); 

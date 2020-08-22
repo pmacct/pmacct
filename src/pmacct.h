@@ -400,6 +400,7 @@ extern void PM_print_stats(time_t);
 extern void compute_once();
 extern void reset_index_pkt_ptrs(struct packet_ptrs *);
 extern void set_index_pkt_ptrs(struct packet_ptrs *);
+extern void PM_evaluate_flow_type(struct packet_ptrs *);
 extern ssize_t recvfrom_savefile(struct pm_pcap_device *, void **, struct sockaddr *, struct timeval **, int *, struct packet_ptrs *);
 extern ssize_t recvfrom_rawip(unsigned char *, size_t, struct sockaddr *, struct packet_ptrs *);
 

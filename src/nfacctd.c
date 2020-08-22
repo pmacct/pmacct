@@ -1584,7 +1584,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   pptrs->f_status_g = NULL;
 
   reset_mac(pptrs);
-  pptrs->flow_type = NF9_FTYPE_TRAFFIC;
+  pptrs->flow_type = PM_FTYPE_TRAFFIC;
 
   if (tee_dissect) {
     tee_dissect->hdrVersion = version;
@@ -2098,7 +2098,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	/* we need to understand the IP protocol version in order to build the fake packet */ 
 	switch (pptrs->flow_type) {
-	case NF9_FTYPE_IPV4:
+	case PM_FTYPE_IPV4:
 	  if (req->bpf_filter) {
 	    reset_mac(pptrs);
 	    reset_ip4(pptrs);
@@ -2148,7 +2148,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.bmp_daemon) bmp_srcdst_lookup(pptrs);
           exec_plugins(pptrs, req);
 	  break;
-	case NF9_FTYPE_IPV6:
+	case PM_FTYPE_IPV6:
 	  pptrsv->v6.f_header = pptrs->f_header;
 	  pptrsv->v6.f_data = pptrs->f_data;
 	  pptrsv->v6.f_tpl = pptrs->f_tpl;
@@ -2203,7 +2203,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->v6);
           exec_plugins(&pptrsv->v6, req);
 	  break;
-	case NF9_FTYPE_VLAN_IPV4:
+	case PM_FTYPE_VLAN_IPV4:
 	  pptrsv->vlan4.f_header = pptrs->f_header;
 	  pptrsv->vlan4.f_data = pptrs->f_data;
 	  pptrsv->vlan4.f_tpl = pptrs->f_tpl;
@@ -2260,7 +2260,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlan4);
 	  exec_plugins(&pptrsv->vlan4, req);
 	  break;
-	case NF9_FTYPE_VLAN_IPV6:
+	case PM_FTYPE_VLAN_IPV6:
 	  pptrsv->vlan6.f_header = pptrs->f_header;
 	  pptrsv->vlan6.f_data = pptrs->f_data;
 	  pptrsv->vlan6.f_tpl = pptrs->f_tpl;
@@ -2317,7 +2317,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlan6);
 	  exec_plugins(&pptrsv->vlan6, req);
 	  break;
-        case NF9_FTYPE_MPLS_IPV4:
+        case PM_FTYPE_MPLS_IPV4:
           pptrsv->mpls4.f_header = pptrs->f_header;
           pptrsv->mpls4.f_data = pptrs->f_data;
           pptrsv->mpls4.f_tpl = pptrs->f_tpl;
@@ -2384,7 +2384,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->mpls4);
           exec_plugins(&pptrsv->mpls4, req);
           break;
-	case NF9_FTYPE_MPLS_IPV6:
+	case PM_FTYPE_MPLS_IPV6:
 	  pptrsv->mpls6.f_header = pptrs->f_header;
 	  pptrsv->mpls6.f_data = pptrs->f_data;
 	  pptrsv->mpls6.f_tpl = pptrs->f_tpl;
@@ -2450,7 +2450,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->mpls6);
 	  exec_plugins(&pptrsv->mpls6, req);
 	  break;
-        case NF9_FTYPE_VLAN_MPLS_IPV4:
+        case PM_FTYPE_VLAN_MPLS_IPV4:
 	  pptrsv->vlanmpls4.f_header = pptrs->f_header;
 	  pptrsv->vlanmpls4.f_data = pptrs->f_data;
 	  pptrsv->vlanmpls4.f_tpl = pptrs->f_tpl;
@@ -2519,7 +2519,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlanmpls4);
 	  exec_plugins(&pptrsv->vlanmpls4, req);
 	  break;
-        case NF9_FTYPE_VLAN_MPLS_IPV6:
+        case PM_FTYPE_VLAN_MPLS_IPV6:
 	  pptrsv->vlanmpls6.f_header = pptrs->f_header;
 	  pptrsv->vlanmpls6.f_data = pptrs->f_data;
 	  pptrsv->vlanmpls6.f_tpl = pptrs->f_tpl;
@@ -2829,7 +2829,7 @@ void NF_compute_once()
 
 u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_ptrs *pptrs)
 {
-  u_int8_t ret = NF9_FTYPE_TRAFFIC;
+  u_int8_t ret = PM_FTYPE_TRAFFIC;
   u_int8_t have_ip_proto = FALSE;
 
   /* first round: event vs traffic */
@@ -2840,8 +2840,8 @@ u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_p
   }
   else {
     if ((tpl->tpl[NF9_IN_VLAN].len && *(pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off) > 0) ||
-        (tpl->tpl[NF9_OUT_VLAN].len && *(pptrs->f_data+tpl->tpl[NF9_OUT_VLAN].off) > 0)) ret += NF9_FTYPE_VLAN; 
-    if (tpl->tpl[NF9_MPLS_LABEL_1].len /* check: value > 0 ? */) ret += NF9_FTYPE_MPLS; 
+        (tpl->tpl[NF9_OUT_VLAN].len && *(pptrs->f_data+tpl->tpl[NF9_OUT_VLAN].off) > 0)) ret += PM_FTYPE_VLAN;
+    if (tpl->tpl[NF9_MPLS_LABEL_1].len /* check: value > 0 ? */) ret += PM_FTYPE_MPLS;
 
     /* Explicit IP protocol definition first; a bit of heuristics as fallback */
     if (tpl->tpl[NF9_IP_PROTOCOL_VERSION].len) {
@@ -2849,7 +2849,7 @@ u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_p
 	have_ip_proto = TRUE;
       }
       else if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 6) {
-	ret += NF9_FTYPE_TRAFFIC_IPV6;
+	ret += PM_FTYPE_TRAFFIC_IPV6;
 	have_ip_proto = TRUE;
       }
     }
@@ -2859,7 +2859,7 @@ u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_p
 	have_ip_proto = TRUE;
       }
       else if (tpl->tpl[NF9_IPV6_SRC_ADDR].len) {
-	ret += NF9_FTYPE_TRAFFIC_IPV6;
+	ret += PM_FTYPE_TRAFFIC_IPV6;
 	have_ip_proto = TRUE;
       }
     }

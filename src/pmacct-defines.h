@@ -524,21 +524,23 @@ typedef u_int64_t pm_counter_t;
 #define NF_NET_FALLBACK	0x80000000 /* Fallback flag */
 
 /* flow type */
-#define NF9_FTYPE_TRAFFIC		1  /* temporary: re-coding needed */
-#define NF9_FTYPE_TRAFFIC_IPV6		1
-#define NF9_FTYPE_IPV4                  1
-#define NF9_FTYPE_IPV6                  2
+#define PM_FTYPE_TRAFFIC		1  /* temporary: re-coding needed */
+#define PM_FTYPE_TRAFFIC_IPV6		1
+#define PM_FTYPE_IPV4			1
+#define PM_FTYPE_IPV6			2
+#define PM_FTYPE_VLAN			5
+#define PM_FTYPE_VLAN_IPV4		6  /* PM_FTYPE_VLAN + PM_FTYPE_IPV4 */
+#define PM_FTYPE_VLAN_IPV6		7  /* PM_FTYPE_VLAN + PM_FTYPE_IPV6 */
+#define PM_FTYPE_MPLS			10
+#define PM_FTYPE_MPLS_IPV4		11 /* PM_FTYPE_MPLS + PM_FTYPE_IPV4 */
+#define PM_FTYPE_MPLS_IPV6		12 /* PM_FTYPE_MPLS + PM_FTYPE_IPV6 */
+#define PM_FTYPE_VLAN_MPLS		15
+#define PM_FTYPE_VLAN_MPLS_IPV4		16 /* PM_FTYPE_VLAN_MPLS + PM_FTYPE_IPV4 */
+#define PM_FTYPE_VLAN_MPLS_IPV6		17 /* PM_FTYPE_VLAN_MPLS + PM_FTYPE_IPV6 */
+#define PM_FTYPE_TRAFFIC_MAX		99  /* temporary: re-coding needed */
+
+/* flow type: NetFlow/IPFIX extended code-points */
 #define NF9_FTYPE_DLFS			3
-#define NF9_FTYPE_VLAN                  5
-#define NF9_FTYPE_VLAN_IPV4             6
-#define NF9_FTYPE_VLAN_IPV6             7 
-#define NF9_FTYPE_MPLS                  10
-#define NF9_FTYPE_MPLS_IPV4             11
-#define NF9_FTYPE_MPLS_IPV6             12
-#define NF9_FTYPE_VLAN_MPLS             15      
-#define NF9_FTYPE_VLAN_MPLS_IPV4        16
-#define NF9_FTYPE_VLAN_MPLS_IPV6        17
-#define NF9_FTYPE_TRAFFIC_MAX		99  /* temporary: re-coding needed */
 #define NF9_FTYPE_EVENT			100 /* temporary: re-coding needed */
 #define NF9_FTYPE_NAT_EVENT             100
 #define NF9_FTYPE_OPTION		200
