@@ -3234,3 +3234,18 @@ ssize_t pm_recv(int sockfd, void *buf, size_t len, int flags, unsigned int secon
 
   return ret;
 }
+
+/* flow type to address family */
+int ft2af(u_int8_t ft)
+{
+  if (ft == PM_FTYPE_IPV4 || ft == PM_FTYPE_VLAN_IPV4 ||
+      ft == PM_FTYPE_MPLS_IPV4 || ft == PM_FTYPE_VLAN_MPLS_IPV4) {
+    return AF_INET;
+  }
+  else if (ft == PM_FTYPE_IPV6 || ft == PM_FTYPE_VLAN_IPV6 ||
+           ft == PM_FTYPE_MPLS_IPV6 || ft == PM_FTYPE_VLAN_MPLS_IPV6) {
+    return AF_INET6;
+  }
+
+  return ERR;
+}

@@ -2438,7 +2438,7 @@ int main(int argc,char **argv)
         }
 
         if (!have_wtc || (what_to_count & COUNT_PEER_DST_IP)) {
-          addr_to_str(ip_address, &pbgp->peer_dst_ip);
+          addr_to_str2(ip_address, &pbgp->peer_dst_ip, ft2af(acc_elem->flow_type));
 
           if (strlen(ip_address)) {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45s  ", ip_address);
@@ -3396,7 +3396,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   }
 
   if (wtc & COUNT_PEER_DST_IP) {
-    addr_to_str(ip_address, &pbgp->peer_dst_ip);
+    addr_to_str2(ip_address, &pbgp->peer_dst_ip, ft2af(flow_type));
     json_object_set_new_nocheck(obj, "peer_ip_dst", json_string(ip_address));
   }
 

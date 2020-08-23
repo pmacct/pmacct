@@ -575,7 +575,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
         bson_append_string(bson_elem, "peer_ip_src", ip_address);
       }
       if (config.what_to_count & COUNT_PEER_DST_IP) {
-        addr_to_str(ip_address, &pbgp->peer_dst_ip);
+        addr_to_str2(ip_address, &pbgp->peer_dst_ip, ft2af(queue[j]->flow_type));
         bson_append_string(bson_elem, "peer_ip_dst", ip_address);
       }
 

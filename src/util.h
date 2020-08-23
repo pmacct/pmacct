@@ -113,6 +113,7 @@ extern char *uint_print(void *, int, int);
 extern void reload_logs();
 extern int is_empty_256b(void *, int);
 extern ssize_t pm_recv(int, void *, size_t, int, unsigned int);
+extern int ft2af(u_int8_t);
 
 extern char *compose_json_str(void *);
 extern void write_and_free_json(FILE *, void *);
