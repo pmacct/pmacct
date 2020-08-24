@@ -122,6 +122,7 @@ struct bmp_data {
   u_int32_t peer_asn;
   struct bmp_chars chars;
   struct timeval tstamp;
+  struct timeval tstamp_arrival;
 };
 
 struct bmp_peer_hdr {

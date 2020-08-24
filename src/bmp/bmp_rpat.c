@@ -55,6 +55,8 @@ void bmp_process_msg_rpat(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
     return;
   }
 
+  gettimeofday(&bdata.tstamp_arrival, NULL);
+
   bmp_rpat_common_hdr_get_v_flag(brch, &bdata.family);
   bmp_rpat_common_hdr_get_bgp_id(brch, &bdata.bgp_id);
   bmp_rpat_common_hdr_get_rd(brch, &bdata.chars.rd);

@@ -146,7 +146,9 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
   tlvs = bmp_tlv_list_new(NULL, bmp_tlv_list_node_del);
   if (!tlvs) return;
 
-  gettimeofday(&bdata.tstamp, NULL);
+  /* Init message does not contain a timestamp */
+  gettimeofday(&bdata.tstamp_arrival, NULL);
+  memset(&bdata.tstamp, 0, sizeof(struct timeval));
 
   while ((*len)) {
     u_int32_t pen = 0;
@@ -221,7 +223,9 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
   tlvs = bmp_tlv_list_new(NULL, bmp_tlv_list_node_del);
   if (!tlvs) return;
 
-  gettimeofday(&bdata.tstamp, NULL);
+  /* Term message does not contain a timestamp */
+  gettimeofday(&bdata.tstamp_arrival, NULL);
+  memset(&bdata.tstamp, 0, sizeof(struct timeval));
 
   while ((*len)) {
     u_int32_t pen = 0;
@@ -321,8 +325,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
 
   if (bdata.family) {
-    /* If no timestamp in BMP then let's generate one */
-    if (!bdata.tstamp.tv_sec) gettimeofday(&bdata.tstamp, NULL);
+    gettimeofday(&bdata.tstamp_arrival, NULL);
 
     {
       struct bmp_log_peer_up blpu;
@@ -500,8 +503,7 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
 
   if (bdata.family) {
-    /* If no timestamp in BMP then let's generate one */
-    if (!bdata.tstamp.tv_sec) gettimeofday(&bdata.tstamp, NULL);
+    gettimeofday(&bdata.tstamp_arrival, NULL);
 
     {
       struct bmp_log_peer_down blpd;
@@ -599,8 +601,8 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
 
       addr_to_str(peer_ip, &bdata.peer_ip);
 
-      if (!log_notification_isset(&bmpp->missing_peer_up, bdata.tstamp.tv_sec)) {
-        log_notification_set(&bmpp->missing_peer_up, bdata.tstamp.tv_sec, BMP_MISSING_PEER_UP_LOG_TOUT);
+      if (!log_notification_isset(&bmpp->missing_peer_up, bdata.tstamp_arrival.tv_sec)) {
+        log_notification_set(&bmpp->missing_peer_up, bdata.tstamp_arrival.tv_sec, BMP_MISSING_PEER_UP_LOG_TOUT);
         Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer down] packet discarded: missing peer up BMP message for peer %s\n",
 	    config.name, bms->log_str, peer->addr_str, peer_ip);
       }
@@ -651,8 +653,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
 
   if (bdata.family) {
-    /* If no timestamp in BMP then let's generate one */
-    if (!bdata.tstamp.tv_sec) gettimeofday(&bdata.tstamp, NULL);
+    gettimeofday(&bdata.tstamp_arrival, NULL);
 
     if (bdata.family == AF_INET) {
       ret = pm_tfind(&bdata.peer_ip, &bmpp->bgp_peers_v4, bgp_peer_host_addr_cmp);
@@ -679,7 +680,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
       bmd.extra.data = &bmed_bmp;
       bgp_msg_data_set_data_bmp(&bmed_bmp, &bdata);
 
-      compose_timestamp(bms->log_tstamp_str, SRVBUFLEN, &bdata.tstamp, TRUE,
+      compose_timestamp(bms->log_tstamp_str, SRVBUFLEN, &bdata.tstamp_arrival, TRUE,
 			config.timestamps_since_epoch, config.timestamps_rfc3339,
 			config.timestamps_utc);
 
@@ -759,12 +760,12 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
     }
     /* missing BMP peer up message, ie. case of replay/replication of BMP messages */
     else {
-      if (!log_notification_isset(&bmpp->missing_peer_up, bdata.tstamp.tv_sec)) {
+      if (!log_notification_isset(&bmpp->missing_peer_up, bdata.tstamp_arrival.tv_sec)) {
 	char peer_ip[INET6_ADDRSTRLEN];
 
 	addr_to_str(peer_ip, &bdata.peer_ip);
 
-	log_notification_set(&bmpp->missing_peer_up, bdata.tstamp.tv_sec, BMP_MISSING_PEER_UP_LOG_TOUT);
+	log_notification_set(&bmpp->missing_peer_up, bdata.tstamp_arrival.tv_sec, BMP_MISSING_PEER_UP_LOG_TOUT);
 	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: missing peer up BMP message for peer %s\n",
 	    config.name, bms->log_str, peer->addr_str, peer_ip);
       }
@@ -849,8 +850,7 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
   bmp_stats_hdr_get_count(bsh, &count);
 
   if (bdata.family) {
-    /* If no timestamp in BMP then let's generate one */
-    if (!bdata.tstamp.tv_sec) gettimeofday(&bdata.tstamp, NULL);
+    gettimeofday(&bdata.tstamp_arrival, NULL);
 
     for (index = 0; index < count; index++) {
       if (!(bsch = (struct bmp_stats_cnt_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_stats_cnt_hdr)))) {
