@@ -77,6 +77,11 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
 			config.timestamps_since_epoch, config.timestamps_rfc3339,
 			config.timestamps_utc);
       json_object_set_new_nocheck(obj, "timestamp", json_string(tstamp_str));
+
+      compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp_arrival, TRUE,
+			config.timestamps_since_epoch, config.timestamps_rfc3339,
+			config.timestamps_utc);
+      json_object_set_new_nocheck(obj, "timestamp_arrival", json_string(tstamp_str));
     }
     else if (etype == BGP_LOGDUMP_ET_DUMP) {
       json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq))); 
@@ -86,7 +91,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
       compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE,
 			config.timestamps_since_epoch, config.timestamps_rfc3339,
 			config.timestamps_utc);
-      json_object_set_new_nocheck(obj, "event_timestamp", json_string(tstamp_str));
+      json_object_set_new_nocheck(obj, "timestamp_event", json_string(tstamp_str));
     }
 
     json_object_set_new_nocheck(obj, "bmp_router", json_string(peer->addr_str));

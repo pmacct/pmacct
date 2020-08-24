@@ -680,9 +680,11 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
       bmd.extra.data = &bmed_bmp;
       bgp_msg_data_set_data_bmp(&bmed_bmp, &bdata);
 
-      compose_timestamp(bms->log_tstamp_str, SRVBUFLEN, &bdata.tstamp_arrival, TRUE,
+      compose_timestamp(bms->log_tstamp_str, SRVBUFLEN, &bdata.tstamp, TRUE,
 			config.timestamps_since_epoch, config.timestamps_rfc3339,
 			config.timestamps_utc);
+
+      encode_tstamp_arrival(bms->log_tstamp_str, SRVBUFLEN, &bdata.tstamp_arrival, TRUE);
 
       /* draft-ietf-grow-bmp-tlv */
       bgp_update_len = bgp_get_packet_len((*bmp_packet));

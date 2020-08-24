@@ -2021,8 +2021,14 @@ void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int 
     if (!utc) time2 = localtime(&time1);
     else time2 = gmtime(&time1);
     
-    if (!rfc3339) slen = strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", time2);
-    else slen = strftime(buf, buflen, "%Y-%m-%dT%H:%M:%S", time2);
+    if (tv->tv_sec) {
+      if (!rfc3339) slen = strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", time2);
+      else slen = strftime(buf, buflen, "%Y-%m-%dT%H:%M:%S", time2);
+    }
+    else {
+      if (!rfc3339) slen = snprintf(buf, buflen, "0000-00-00 00:00:00");
+      else slen = snprintf(buf, buflen, "0000-00-00T00:00:00");
+    }
 
     if (usec) snprintf((buf + slen), (buflen - slen), ".%.6ld", (long)tv->tv_usec);
     if (rfc3339) append_rfc3339_timezone(buf, buflen, time2);

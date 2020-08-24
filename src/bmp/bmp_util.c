@@ -76,7 +76,7 @@ u_int32_t bmp_packet_adj_offset(char *bmp_packet, u_int32_t buf_len, u_int32_t r
   return remaining_len;
 }
 
-void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int output, void *void_obj)
+void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int etype, int output, void *void_obj)
 {
   struct bgp_misc_structs *bms;
   struct bmp_peer *bmpp;
@@ -92,6 +92,10 @@ void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int output, void *void_o
     char bmp_msg_type[] = "route_monitor";
     char ip_address[INET6_ADDRSTRLEN];
     json_t *obj = void_obj;
+
+    if (etype == BGP_LOGDUMP_ET_LOG) {
+      json_object_set_new_nocheck(obj, "timestamp_arrival", json_string(decode_tstamp_arrival(bms->log_tstamp_str)));
+    }
 
     addr_to_str(ip_address, &bmpp->self.addr);
     json_object_set_new_nocheck(obj, "bmp_router", json_string(ip_address));
@@ -432,4 +436,29 @@ char *bmp_term_reason_print(u_int16_t in)
   }
 
   return out;
+}
+
+void encode_tstamp_arrival(char *buf, int buflen, struct timeval *tv, int usec)
+{
+  char *tstamp_arrival;
+  int tstamp_len;
+
+  tstamp_len = strlen(buf);
+
+  tstamp_arrival = (buf + tstamp_len);
+  (*tstamp_arrival) = '\0';
+  tstamp_arrival++;
+
+  compose_timestamp(tstamp_arrival, (buflen - tstamp_len), tv, usec,
+                    config.timestamps_since_epoch, config.timestamps_rfc3339,
+                    config.timestamps_utc);
+}
+
+char *decode_tstamp_arrival(char *buf)
+{
+  int tstamp_len;
+
+  tstamp_len = strlen(buf);
+
+  return &buf[tstamp_len + 1];
 }

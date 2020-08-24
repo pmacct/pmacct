@@ -962,7 +962,6 @@ void skinny_bmp_daemon()
     do_term = FALSE;
     bmp_process_packet(peer->buf.base, peer->msglen, bmpp, &do_term);
 
-/*
     if (do_term) {
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] BMP Term message received. Closing up.\n", config.name, bmp_misc_db->log_str, peer->addr_str);
       FD_CLR(peer->fd, &bkp_read_descs);
@@ -970,7 +969,6 @@ void skinny_bmp_daemon()
       recalc_fds = TRUE;
       goto select_again;
     }
-*/
   }
 }
 
