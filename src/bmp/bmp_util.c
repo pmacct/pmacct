@@ -109,7 +109,17 @@ void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int etype, int output, v
 #ifdef WITH_AVRO
     char bmp_msg_type[] = "route_monitor";
     char ip_address[INET6_ADDRSTRLEN];
-    avro_value_t *obj = (avro_value_t *) void_obj, p_avro_field;
+    avro_value_t *obj = (avro_value_t *) void_obj, p_avro_field, p_avro_branch;
+
+    if (etype == BGP_LOGDUMP_ET_LOG) {
+      pm_avro_check(avro_value_get_by_name(obj, "timestamp_arrival", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+      pm_avro_check(avro_value_set_string(&p_avro_branch, decode_tstamp_arrival(bms->log_tstamp_str)));
+    }
+    else if (etype == BGP_LOGDUMP_ET_DUMP) {
+      pm_avro_check(avro_value_get_by_name(obj, "timestamp_arrival", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+    }
 
     addr_to_str(ip_address, &bmpp->self.addr);
     pm_avro_check(avro_value_get_by_name(obj, "bmp_router", &p_avro_field, NULL));

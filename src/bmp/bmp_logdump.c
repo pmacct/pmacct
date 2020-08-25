@@ -180,7 +180,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "timestamp", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_string(&p_avro_field, tstamp_str));
 
-      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "event_timestamp", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "timestamp_event", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
     else if (etype == BGP_LOGDUMP_ET_DUMP) {
@@ -193,7 +193,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
       compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE,
                         config.timestamps_since_epoch, config.timestamps_rfc3339,
                         config.timestamps_utc);
-      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "event_timestamp", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "timestamp_event", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
       pm_avro_check(avro_value_set_string(&p_avro_branch, tstamp_str));
     }
@@ -2026,8 +2026,9 @@ void p_avro_schema_build_bmp_common(avro_schema_t *schema, avro_schema_t *optlon
 {
   avro_schema_record_field_append((*schema), "seq", avro_schema_long());
   avro_schema_record_field_append((*schema), "timestamp", avro_schema_string());
+  avro_schema_record_field_append((*schema), "timestamp_event", (*optstr_s));
+  avro_schema_record_field_append((*schema), "timestamp_arrival", (*optstr_s));
   avro_schema_record_field_append((*schema), "event_type", avro_schema_string());
-  avro_schema_record_field_append((*schema), "event_timestamp", (*optstr_s));
   avro_schema_record_field_append((*schema), "bmp_router", avro_schema_string());
   avro_schema_record_field_append((*schema), "bmp_router_port", (*optint_s));
   avro_schema_record_field_append((*schema), "bmp_msg_type", avro_schema_string());
