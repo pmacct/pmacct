@@ -262,7 +262,7 @@ struct bgp_misc_structs {
 #endif
   char *msglog_kafka_avro_schema_registry;
   char *avro_buf;
-  void (*bgp_peer_log_msg_extras)(struct bgp_peer *, int, int, void *);
+  void (*bgp_peer_log_msg_extras)(struct bgp_peer *, int, int, int, void *);
   void (*bgp_peer_logdump_initclose_extras)(struct bgp_peer *, int, void *);
 
   void (*bgp_peer_logdump_extra_data)(struct bgp_msg_extra_data *, int, void *);

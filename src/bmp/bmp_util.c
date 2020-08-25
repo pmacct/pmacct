@@ -76,7 +76,7 @@ u_int32_t bmp_packet_adj_offset(char *bmp_packet, u_int32_t buf_len, u_int32_t r
   return remaining_len;
 }
 
-void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int etype, int output, void *void_obj)
+void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int etype, int log_type, int output, void *void_obj)
 {
   struct bgp_misc_structs *bms;
   struct bmp_peer *bmpp;
@@ -89,7 +89,6 @@ void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int etype, int output, v
 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
-    char bmp_msg_type[] = "route_monitor";
     char ip_address[INET6_ADDRSTRLEN];
     json_t *obj = void_obj;
 
@@ -102,12 +101,16 @@ void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int etype, int output, v
 
     json_object_set_new_nocheck(obj, "bmp_router_port", json_integer((json_int_t)bmpp->self.tcp_port));
 
-    json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
+    if (log_type == BGP_LOG_TYPE_DELETE) {
+      json_object_set_new_nocheck(obj, "bmp_msg_type", json_string("internal"));
+    }
+    else {
+      json_object_set_new_nocheck(obj, "bmp_msg_type", json_string("route_monitor"));
+    }
 #endif
   }
   else if (output == PRINT_OUTPUT_AVRO_BIN) {
 #ifdef WITH_AVRO
-    char bmp_msg_type[] = "route_monitor";
     char ip_address[INET6_ADDRSTRLEN];
     avro_value_t *obj = (avro_value_t *) void_obj, p_avro_field, p_avro_branch;
 
@@ -128,8 +131,14 @@ void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int etype, int output, v
     pm_avro_check(avro_value_get_by_name(obj, "bmp_router_port", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_int(&p_avro_field, bmpp->self.tcp_port)); 
 
-    pm_avro_check(avro_value_get_by_name(obj, "bmp_msg_type", &p_avro_field, NULL));
-    pm_avro_check(avro_value_set_string(&p_avro_field, bmp_msg_type));
+    if (log_type == BGP_LOG_TYPE_DELETE) {
+      pm_avro_check(avro_value_get_by_name(obj, "bmp_msg_type", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_string(&p_avro_field, "internal"));
+    }
+    else {
+      pm_avro_check(avro_value_get_by_name(obj, "bmp_msg_type", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_string(&p_avro_field, "route_monitor"));
+    }
 #endif
   }
 }

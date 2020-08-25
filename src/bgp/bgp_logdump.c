@@ -204,7 +204,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       json_object_set_new_nocheck(obj, "label", json_string(label_str));
     }
 
-    if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, etype, output, obj);
+    if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, etype, log_type, output, obj);
 
     if ((bms->msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
 	(bms->dump_file && etype == BGP_LOGDUMP_ET_DUMP)) {
@@ -492,7 +492,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
-    if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, etype, output, &p_avro_obj);
+    if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, etype, log_type, output, &p_avro_obj);
 
     if (config.rpki_roas_file || config.rpki_rtr_cache) {
       u_int8_t roa;
