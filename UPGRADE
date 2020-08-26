@@ -6,6 +6,13 @@ the changes done or break old assumptions no longer valid; while the effort
 is to keep these cases at a low, please read this file in preparation to
 upgrading your installation.
 
+TO:	>= 1.7.6
+FROM:	<= 1.7.5
+TOPIC:	BMP dump timestamps
+DESC:	In order to align the namespace of timestamps to existing ones, ie.
+        timestamp_start timestamp_end timestamp_arrival etc., the field
+	'event_timestamp' was renamed 'timestamp_event'.
+
 TO:	>= 1.7.3
 FROM:	<= 1.7.2
 TOPIC:	BGP-related src primitives (ie. src_as_path) and JSON/Avro encoding

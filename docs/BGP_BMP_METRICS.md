@@ -113,6 +113,7 @@ Title | Description
 `seq` | pmacct sequence number. Uniquely identifies each metric.
 `log_type` | pmacct log type. Either "update" or "delete" depending if BGP advertisement is an update or withdrawal
 `timestamp` | time stamp of BMP data export
+`timestamp_arrival` | pmacct time stamp of data collection
 `bmp_router` | IP address of BMP router which peers to pmacct
 `bmp_router_port` | TCP port of BMP router which peers to pmacct
 `event_type` | pmacct event type. Can be either "log" for msglog or "dump" for table_dump.
@@ -140,7 +141,8 @@ Title | Description
 {
   "seq": 6399,
   "log_type": "update",
-  "timestamp": "2020-05-24T14:34:04.000000+02:00",
+  "timestamp": "2020-05-24T14:34:04.000000",
+  "timestamp_arrival": "2020-05-24T14:34:05.000000",
   "is_post": 0,
   "is_out": 1,
   "bmp_rm_info_0": "00-01-00-01-00-06-00-00-00-00-00-00",
@@ -169,6 +171,7 @@ Title | Description
 :----- | :-----------
 `seq` | pmacct sequence number. Uniquely identifies each metric.
 `timestamp` | time stamp of BMP data export
+`timestamp_arrival` | pmacct time stamp of data collection
 `is_loc` | Boolean, if present and true it indicates data from Loc-Rib
 `is_filtered` | Boolean, if present and true it indicates filtered data (in conjunction with is_loc)
 `bmp_router` | IP address of BMP router which peers to pmacct
@@ -188,6 +191,7 @@ Title | Description
   "event_type": "log",
   "seq": 18271,
   "timestamp": "2019-05-24 09:41:34.543389",
+  "timestamp_arrival": "2019-05-24 09:41:35.543389",
   "is_filtered": 0,
   "is_in": 1,
   "bmp_router": "192.0.2.2",
@@ -208,6 +212,7 @@ Title | Description
 :----- | :-----------
 `seq` | pmacct sequence number. Uniquely identifies each metric.
 `timestamp` | time stamp of BMP data export
+`timestamp_arrival` | pmacct time stamp of data collection
 `bmp_router` | IP address of BMP router which peers to pmacct
 `bmp_router_port` | TCP port of BMP router which peers to pmacct
 `event_type` | pmacct event type. Can be either "log" for msglog or "dump" for table_dump.
@@ -225,6 +230,7 @@ Title | Description
   "event_type": "log",
   "seq": 18696,
   "timestamp": "2019-05-24 09:49:22.437488",
+  "timestamp_arrival": "2019-05-24 09:49:23.437488",
   "bmp_router": "192.0.2.2",
   "bmp_router_port": 45047,
   "bmp_msg_type": "peer_down",
@@ -243,6 +249,7 @@ Title | Description
 :----- | :-----------
 `seq` | pmacct sequence number. Uniquely identifies each metric.
 `timestamp` | time stamp of BMP data export
+`timestamp_arrival` | pmacct time stamp of data collection
 `is_in` | Boolean, if present and true it indicates data from Adj-Rib-In
 `is_post` | Boolean, if present and true it indicates post-policy data (in conjunction with is_in, is_out)
 `bmp_router` | IP address of BMP router which peers to pmacct
@@ -264,6 +271,7 @@ Title | Description
   "event_type": "log",
   "seq": 10,
   "timestamp": "2019-05-24 09:31:03.160056",
+  "timestamp_arrival": "2019-05-24 09:31:04.160056",
   "is_post": 1,
   "is_in": 1,
   "bmp_router": "192.0.2.2",
@@ -285,7 +293,8 @@ Title | Description
 Title | Description
 :----- | :-----------
 `seq` | pmacct sequence number. Uniquely identifies each metric.
-`timestamp` | pmacct time stamp of data collection
+`timestamp` | unsupported - zeroed out
+`timestamp_arrival` | pmacct time stamp of data collection
 `bmp_router` | IP address of BMP router which peers to pmacct
 `bmp_router_port` | TCP port of BMP router which peers to pmacct
 `event_type` | pmacct event type. Can be either "log" for msglog or "dump" for table_dump.
@@ -298,7 +307,8 @@ Title | Description
 {
   "event_type": "log",
   "seq": 9,
-  "timestamp": "2019-06-01 18:29:58.515420",
+  "timestamp": "0000-00-00 00:00:00.000000",
+  "timestamp_arrival": "2019-06-01 18:29:58.515420",
   "bmp_router": "192.0.2.2",
   "bmp_router_port": 17677,
   "bmp_msg_type": "init",
@@ -312,7 +322,8 @@ Title | Description
 Title | Description
 :----- | :-----------
 `seq` | pmacct sequence number. Uniquely identifies each metric.
-`timestamp` | pmacct time stamp of data collection
+`timestamp` | unsupported - zeroed out
+`timestamp_arrival` | pmacct time stamp of data collection
 `bmp_router` | IP address of BMP router which peers to pmacct
 `bmp_router_port` | TCP port of BMP router which peers to pmacct
 `event_type` | pmacct event type. Can be either "log" for msglog or "dump" for table_dump.
@@ -324,7 +335,8 @@ Title | Description
 {
   "event_type": "log",
   "seq": 6432,
-  "timestamp": "2020-05-24T14:36:19.744818+02:00",
+  "timestamp": "0000-00-00 00:00:00.000000",
+  "timestamp_arrival": "2020-05-24T14:36:19.744818",
   "bmp_router": "192.0.2.52",
   "bmp_router_port": 60720,
   "bmp_msg_type": "term",
@@ -338,6 +350,7 @@ Title | Description
 :----- | :-----------
 `seq` | pmacct sequence number. Uniquely identifies each metric.
 `timestamp` | time stamp of BMP data export
+`timestamp_arrival` | pmacct time stamp of data collection
 `bmp_router` | IP address of BMP router which peers to pmacct
 `bmp_router_port` | TCP port of BMP router which peers to pmacct
 `event_type` | pmacct event type. Can be either "log" for msglog or "dump" for table_dump.
@@ -359,7 +372,8 @@ Title | Description
 {
   "event_type": "log",
   "seq": 360,
-  "timestamp": "2020-03-27T12:45:59.473293+01:00",
+  "timestamp": "2020-03-27T12:45:59.473293",
+  "timestamp_arrival": "2020-03-27T12:46:00.473293",
   "bmp_router": "192.0.2.52",
   "bmp_router_port": 49531,
   "bmp_msg_type": "rpat",
