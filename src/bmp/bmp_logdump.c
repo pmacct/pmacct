@@ -180,6 +180,13 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "timestamp", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_string(&p_avro_field, tstamp_str));
 
+      compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp_arrival, TRUE,
+			config.timestamps_since_epoch, config.timestamps_rfc3339,
+			config.timestamps_utc);
+      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "timestamp_arrival", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+      pm_avro_check(avro_value_set_string(&p_avro_branch, tstamp_str));
+
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "timestamp_event", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
@@ -189,6 +196,9 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
 
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "timestamp", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_string(&p_avro_field, bms->dump.tstamp_str));
+
+      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "timestamp_arrival", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
 
       compose_timestamp(tstamp_str, SRVBUFLEN, &bdata->tstamp, TRUE,
                         config.timestamps_since_epoch, config.timestamps_rfc3339,
@@ -302,7 +312,8 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
 	}
 	else if (serdes_schema_serialize_avro(kafka_host->sd_schema[log_type], &p_avro_obj, &p_avro_local_buf, &p_avro_len,
 					 kafka_host->errstr, sizeof(kafka_host->errstr))) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): bmp_log_msg(): serdes_schema_serialize_avro() failed: %s\n", config.name, bms->log_str, kafka_host->errstr);
+	  Log(LOG_ERR, "ERROR ( %s/%s ): bmp_log_msg(): serdes_schema_serialize_avro() failed for %s: %s\n",
+	      config.name, bms->log_str, bmp_msg_types[log_type], kafka_host->errstr);
 	  exit_gracefully(1);
 	}
 #endif
@@ -1751,6 +1762,7 @@ avro_schema_t p_avro_schema_build_bmp_rm(int log_type, char *schema_name)
   /* also cherry-picking from avro_schema_build_bmp_common() */ 
   avro_schema_record_field_append(schema, "peer_ip", avro_schema_string());
   avro_schema_record_field_append(schema, "peer_tcp_port", optint_s);
+  avro_schema_record_field_append(schema, "timestamp_arrival", optstr_s);
 
   avro_schema_record_field_append(schema, "bmp_router", avro_schema_string());
   avro_schema_record_field_append(schema, "bmp_router_port", avro_schema_int());
