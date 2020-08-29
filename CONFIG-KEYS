@@ -2034,11 +2034,12 @@ KEY:		[ pmacctd_ext_sampling_rate | uacctd_ext_sampling_rate | nfacctd_ext_sampl
 		  sfacctd_ext_sampling_rate ] [GLOBAL]
 		Flags that captured traffic is being sampled at the specified rate. Such rate can then be
 		reported ('sampling_rate' primitive), renormalized by using ie. 'pmacctd_renormalize' or
-		propagated by the NetFlow/sFlow probe plugins. External sampling might be performed by
-		capturing frameworks the daemon is linked against (ie. PF_RING, NFLOG) or appliances (ie.
-		sampled packet mirroring). In nfacctd and sfacctd daemons this directive can be used to
-		tackle corner cases, ie. sampling rate reported by the NetFlow/sFlow agent is missing or
-		not correct.
+		exported by the nfprobe/sfprobe plugins. External sampling might be performed by capturing
+		frameworks the daemon is linked against (ie. PF_RING, NFLOG) or appliances (ie. sampled
+		packet mirroring). In nfacctd and sfacctd daemons this directive can be used to tackle
+		corner cases, ie. sampling rate reported by the NetFlow/sFlow agent is missing or not
+		correct; in such cases sampling_map can be alternatively used to define sampling rate per
+		exporter, ie. in case the rate is not omogeneous across all exporters.
 DEFAULT:	none
 
 KEY:		[ sfacctd_renormalize | nfacctd_renormalize | pmacctd_renormalize | uacctd_renormalize ] (-R)
