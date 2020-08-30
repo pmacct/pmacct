@@ -59,13 +59,6 @@ unsigned int addr_to_str(char *str, const struct host_addr *a)
     return a->family;
   }
 
-#if defined ENABLE_PLABEL
-  if (a->family == AF_PLABEL) {
-    strlcpy(str, a->address.plabel, INET6_ADDRSTRLEN);
-    return a->family;
-  }
-#endif
-
   memset(str, 0, INET6_ADDRSTRLEN);
 
   return FALSE;
@@ -812,19 +805,6 @@ void clean_sin_addr(struct sockaddr *sa)
   if (sa->sa_family == AF_INET) sa4->sin_addr.s_addr = 0;
   if (sa->sa_family == AF_INET6) memset(&sa6->sin6_addr, 0, 16);
 }
-
-#if defined ENABLE_PLABEL
-/*
- * label_to_addr() converts a label into a supported family address
- */
-unsigned int label_to_addr(const char *label, struct host_addr *a, int len)
-{
-  strlcpy(a->address.plabel, label, len);
-  a->family = AF_PLABEL;
-
-  return FALSE;
-}
-#endif
 
 /*
  * ipv4_mapped_to_ipv4() converts a label into a supported family address

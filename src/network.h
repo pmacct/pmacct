@@ -46,10 +46,6 @@
 #define IEEE8021AH_LEN		10
 #define PPP_TAGLEN              2
 #define MAX_MCAST_GROUPS	20
-#if defined ENABLE_PLABEL
-#define PREFIX_LABEL_LEN	16
-#define AF_PLABEL		255
-#endif
 #define PRIMPTRS_FUNCS_N	16
 
 /* Ethernet header */
@@ -380,9 +376,6 @@ struct host_addr {
   union {
     struct in_addr ipv4;
     struct in6_addr ipv6;
-#if defined ENABLE_PLABEL
-    char plabel[PREFIX_LABEL_LEN];
-#endif
   } address;
 };
 

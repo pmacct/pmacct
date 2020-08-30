@@ -60,7 +60,6 @@ extern int string_etheraddr(const char *, u_char *);
 extern int is_multicast(struct host_addr *);
 extern int is_any(struct host_addr *);
 extern void clean_sin_addr(struct sockaddr *);
-extern unsigned int label_to_addr(const char *, struct host_addr *, int);
 extern u_int8_t etype_to_af(u_int16_t);
 extern u_int16_t af_to_etype(u_int8_t);
 extern u_int32_t addr_hash(struct host_addr *, u_int32_t);

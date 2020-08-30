@@ -238,21 +238,6 @@ if test x"$ac_cv_func_inet_ntop" = x"no"; then
 	AC_MSG_ERROR(ERROR: missing inet_ntop())
 fi
 
-AC_MSG_CHECKING([whether to enable IP prefix labels])
-AC_ARG_ENABLE(plabel,
-  [  --enable-plabel                  Enable IP prefix labels (default: no)],
-  [
-	if test x$enableval = x"yes" ; then
-          AC_MSG_RESULT(yes)
-          AC_DEFINE(ENABLE_PLABEL, 1)
-	else
-          AC_MSG_RESULT(no)
-	fi
-  ],
-  [
-	AC_MSG_RESULT(no)
-  ])
-
 AC_ARG_WITH(pcap-includes,
   [  --with-pcap-includes=DIR         Search the specified directory for header files],
   [
