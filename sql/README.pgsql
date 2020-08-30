@@ -52,9 +52,7 @@ Until SQL table schemas v5 a few tables are created in the 'pmacct' database:
 when in 'typed' mode (see 'sql_data' option in CONFIG-KEYS text file; default
 value is 'typed'); 'acct_uni' (or 'acct_uni_vN') is the default table where
 data will be written when in 'unified' mode. Starting with v6 unified schemas
-are no longer supplied as part of the PostgreSQL table creation script: the
-'typed' schema instead can still be customized, ie. to write IP addresses in
-CHAR fields because making use of IP prefix labels, transparently to pmacct.
+are no longer supplied as part of the PostgreSQL table creation script.
 
 - To understand difference between the various table versions:
   * Do you need any of the BGP primitives ? Then look the next section.
@@ -191,7 +189,7 @@ CHAR fields because making use of IP prefix labels, transparently to pmacct.
 - What is the difference between 'typed' and 'unified' modes ? 
 Read this section only if using a table schema v5 or below and does not apply to BGP table
 schemas. The 'unified' table has IP addresses and MAC addresses specified as standard CHAR
-strings, slower but flexible; 'typed' tables sport PostgreSQL own types (inet, mac, etc.),
+strings, slower but flexible; 'typed' tables feature PostgreSQL own types (inet, mac, etc.),
 faster but rigid. When not specifying your own 'sql_table', this switch instructs the plugin
 which tables has to use, default being 'typed'. Since v6 this is all deprecated but default
 typed schemas, the only still supplied as part of the PostgreSQL table creation script, can
