@@ -119,6 +119,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
       if (!pptrs->bgp_src) {
 	memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
 	nmct2.peer = (struct bgp_peer *) pptrs->bgp_peer;
+	nmct2.afi = AFI_IP;
+	nmct2.safi = safi;
 	nmct2.rd = &rd;
 	nmct2.peer_dst_ip = NULL;
 
@@ -205,6 +207,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
       if (!pptrs->bgp_dst) {
         memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
         nmct2.peer = (struct bgp_peer *) pptrs->bgp_peer;
+	nmct2.afi = AFI_IP6;
+	nmct2.safi = safi;
         nmct2.rd = &rd;
         nmct2.peer_dst_ip = &peer_dst_ip;
 
