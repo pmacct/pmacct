@@ -8,6 +8,15 @@ upgrading your installation.
 
 TO:	>= 1.7.6
 FROM:	<= 1.7.5
+TOPIC:	Obsoleted features
+DESC:   Following is the list of features, knobs and plugins that are being
+        discontinued with release 1.7.6:
+	* Prefix labels, enabled with --enable-plabel configure switch, has
+	  been removed as now pre_tag_map supports a 'set_label' action to
+	  achieve the same.
+
+TO:	>= 1.7.6
+FROM:	<= 1.7.5
 TOPIC:	BMP dump timestamps
 DESC:	In order to align the namespace of timestamps to existing ones, ie.
         timestamp_start timestamp_end timestamp_arrival etc., the field

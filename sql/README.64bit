@@ -6,7 +6,7 @@ larger counters. By default packets and flows counters are defined 32-bits to no
 extra space.
 
 MySQL.
-There is nothing to do. Each MySQL schema already sports counters large enough. bytes,
+There is nothing to do. Each MySQL schema already features counters large enough. bytes,
 packets and flows fields are already defined as either INT or BIGINT. Which translates
 respectively in 10 and 20 bytes fields. 
 
