@@ -97,6 +97,7 @@ extern int bmp_log_msg_term(struct bgp_peer *, struct bmp_data *, struct pm_list
 extern int bmp_log_msg_peer_up(struct bgp_peer *, struct bmp_data *, struct pm_list *, struct bmp_log_peer_up *, char *, int, void *);
 extern int bmp_log_msg_peer_down(struct bgp_peer *, struct bmp_data *, struct pm_list *, struct bmp_log_peer_down *, char *, int, void *);
 extern int bmp_log_msg_route_monitor_tlv(struct pm_list *, int, void *);
+extern int bmp_log_tlv_path_marking(struct bgp_peer *, struct bmp_data *, struct pm_list *, void *, u_int64_t, char *, int, int);
 
 extern void bmp_dump_se_ll_append(struct bgp_peer *, struct bmp_data *, struct pm_list *tlvs, void *, int);
 extern void bmp_dump_se_ll_destroy(struct bmp_dump_se_ll *);

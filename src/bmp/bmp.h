@@ -305,34 +305,20 @@ struct bmp_peer_up_hdr {
   /* Received OPEN Message */
 } __attribute__ ((packed));
 
-/* draft-cppy-grow-bmp-path-info-tlv */
+/* draft-cppy-grow-bmp-path-marking-tlv */
 static const struct bmp_tlv_def __attribute__((unused)) bmp_rm_info_types[] = {
-  { "path_info", BMP_TLV_SEM_COMPLEX, NULL }
+  { "path_marking", BMP_TLV_SEM_COMPLEX, NULL }
 };
 
-#define BMP_ROUTE_MONITOR_INFO_PATH	0
+#define BMP_ROUTE_MONITOR_INFO_MARKING	0
 /* #define BMP_ROUTE_MONITOR_INFO_MAX	0 */
 #define BMP_ROUTE_MONITOR_INFO_MAX	-1
 #define BMP_ROUTE_MONITOR_INFO_ENTRIES	4
 
-struct bmp_rm_pi_tlv_hdr {
+struct bmp_rm_pm_tlv_hdr {
   u_int16_t     type;
   u_int16_t     len;
-  u_int16_t     count;
-} __attribute__ ((packed));
-
-/* draft-cppy-grow-bmp-path-marking-tlv */
-static const struct bmp_tlv_def __attribute__((unused)) bmp_rm_path_info_types[] = {
-  { "path_marking", BMP_TLV_SEM_COMPLEX, NULL }
-};
-
-#define BMP_ROUTE_MONITOR_PATH_INFO_MARKING	0
-#define BMP_ROUTE_MONITOR_PATH_INFO_MAX		0
-#define BMP_ROUTE_MONITOR_PATH_INFO_ENTRIES	32
-
-struct bmp_rm_pi_pm_tlv_hdr {
-  u_int16_t     type;
-  u_int16_t     len;
+  u_int16_t	path_index;
   u_int32_t     path_status;
   u_int32_t     reason_code;
 } __attribute__ ((packed));
