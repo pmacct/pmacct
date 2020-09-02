@@ -1221,8 +1221,7 @@ int bmp_log_msg_route_monitor_tlv(struct pm_list *tlvs, int output, void *vobj)
   return ret;
 }
 
-int bmp_log_tlv_path_marking(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, void *log_data,
-			     u_int64_t log_seq, char *event_type, int output, int log_type)
+int bmp_log_tlv_path_marking(struct bgp_peer *peer, struct bmp_data *bdata, void *vtlv, void *bl, char *event_type, int output, void *vobj)
 {
   // XXX
 

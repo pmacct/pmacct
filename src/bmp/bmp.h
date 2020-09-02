@@ -305,6 +305,9 @@ struct bmp_peer_up_hdr {
   /* Received OPEN Message */
 } __attribute__ ((packed));
 
+/* more includes */
+#include "bmp_logdump.h"
+
 /* draft-cppy-grow-bmp-path-marking-tlv */
 static const struct bmp_tlv_def __attribute__((unused)) bmp_rm_info_types[] = {
   { "path_marking", BMP_TLV_SEM_COMPLEX, NULL }
@@ -315,16 +318,13 @@ static const struct bmp_tlv_def __attribute__((unused)) bmp_rm_info_types[] = {
 #define BMP_ROUTE_MONITOR_INFO_MAX	-1
 #define BMP_ROUTE_MONITOR_INFO_ENTRIES	4
 
-struct bmp_rm_pm_tlv_hdr {
-  u_int16_t     type;
-  u_int16_t     len;
+struct bmp_rm_pm_tlv {
   u_int16_t	path_index;
   u_int32_t     path_status;
   u_int32_t     reason_code;
 } __attribute__ ((packed));
 
 /* more includes */
-#include "bmp_logdump.h"
 #include "bmp_msg.h"
 #include "bmp_util.h"
 #include "bmp_lookup.h"

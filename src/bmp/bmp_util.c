@@ -299,9 +299,25 @@ int bgp_extra_data_process_bmp(struct bgp_msg_extra_data *bmed, struct bgp_info 
 
       if (bmed_bmp_src->tlvs) {
 	bmed_bmp_dst->tlvs = bmp_tlv_list_copy(bmed_bmp_src->tlvs);
+
+	/* post process copied TLV list */
+	{
+	  struct pm_listnode *node = NULL, *next_node = NULL;
+	  struct bmp_log_tlv *tlv = NULL;
+
+	  for (PM_ALL_LIST_ELEMENTS(bmed_bmp_dst->tlvs, node, next_node, tlv)) {
+	    if (tlv->type == BMP_ROUTE_MONITOR_INFO_MARKING) {
+	      struct bmp_rm_pm_tlv *tlv_pm = tlv->val;
+
+	      if (idx != ntohs(tlv_pm->path_index)) {
+		pm_list_delete_node(bmed_bmp_dst->tlvs, node);
+	      }
+	    }
+	  }
+	}
       }
 
-      ret = BGP_MSG_EXTRA_DATA_BMP;	
+      ret = BGP_MSG_EXTRA_DATA_BMP;
     }
   }
 

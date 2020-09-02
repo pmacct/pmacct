@@ -185,12 +185,12 @@ struct pm_list *bmp_tlv_list_copy(struct pm_list *src)
   return dst;
 }
 
-void *bmp_tlv_list_find(struct pm_list *tlvs, u_int16_t type)
+void *bmp_tlv_list_find(struct pm_list *tlvs, struct pm_listnode *next_node, u_int16_t type)
 {
   struct pm_listnode *node = NULL;
   struct bmp_log_tlv *tlv = NULL;
 
-  for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
+  for (PM_ALL_LIST_ELEMENTS(tlvs, node, next_node, tlv)) {
     if (tlv->type == type) {
       return tlv;
     }
