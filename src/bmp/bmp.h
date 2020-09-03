@@ -310,7 +310,7 @@ struct bmp_peer_up_hdr {
 
 /* draft-cppy-grow-bmp-path-marking-tlv */
 static const struct bmp_tlv_def __attribute__((unused)) bmp_rm_info_types[] = {
-  { "path_marking", BMP_TLV_SEM_COMPLEX, NULL }
+  { "path_marking", BMP_TLV_SEM_COMPLEX, bmp_log_rm_tlv_path_marking }
 };
 
 #define BMP_ROUTE_MONITOR_INFO_MARKING	0

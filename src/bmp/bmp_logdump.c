@@ -1188,13 +1188,21 @@ int bmp_log_msg_route_monitor_tlv(struct pm_list *tlvs, int output, void *vobj)
     json_t *obj = (json_t *) vobj;
 
     if (tlvs) {
-      char *type = NULL, *value = NULL;
       struct pm_listnode *node = NULL;
       struct bmp_log_tlv *tlv = NULL;
 
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
-	type = bmp_tlv_type_print(tlv->type, "bmp_rm_info", bmp_rm_info_types, BMP_ROUTE_MONITOR_INFO_MAX);
-	value = bmp_tlv_value_print(tlv, bmp_rm_info_types, BMP_ROUTE_MONITOR_INFO_MAX);
+	char *type = NULL, *value = NULL;
+
+	switch (tlv->type) {
+	case BMP_ROUTE_MONITOR_INFO_MARKING:
+	  (*bmp_rm_info_types[tlv->type].logdump_func)(NULL, NULL, tlv, NULL, FALSE, output, vobj);
+	  break;
+	default:
+	  type = bmp_tlv_type_print(tlv->type, "bmp_rm_info", bmp_rm_info_types, BMP_ROUTE_MONITOR_INFO_MAX);
+	  value = bmp_tlv_value_print(tlv, bmp_rm_info_types, BMP_ROUTE_MONITOR_INFO_MAX);
+	  break;
+	}
 
 	if (type) {
 	  if (value) {
@@ -1221,11 +1229,39 @@ int bmp_log_msg_route_monitor_tlv(struct pm_list *tlvs, int output, void *vobj)
   return ret;
 }
 
-int bmp_log_tlv_path_marking(struct bgp_peer *peer, struct bmp_data *bdata, void *vtlv, void *bl, char *event_type, int output, void *vobj)
+int bmp_log_rm_tlv_path_marking(struct bgp_peer *null1, struct bmp_data *null2, void *vtlv, void *null3, char *null4, int output, void *vobj)
 {
-  // XXX
+  struct bmp_log_tlv *tlv = vtlv;
+  int ret = 0;
 
-  return FALSE;
+  if (!tlv || !vobj) return ERR;
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    json_t *obj = (json_t *) vobj;
+    struct bmp_rm_pm_tlv *pm_tlv = NULL;
+    char value_str[SUPERSHORTBUFLEN];
+    unsigned char *value;
+
+    pm_tlv = (struct bmp_rm_pm_tlv *) tlv->val;
+
+    value = (unsigned char *) &pm_tlv->path_status;
+    snprintf(value_str, SUPERSHORTBUFLEN, "0x%02x%02x%02x%02x", value[0], value[1], value[2], value[3]);
+    json_object_set_new_nocheck(obj, "path_status", json_string(value_str));
+
+    value = (unsigned char *) &pm_tlv->reason_code;
+    snprintf(value_str, SUPERSHORTBUFLEN, "0x%02x%02x%02x%02x", value[0], value[1], value[2], value[3]);
+    json_object_set_new_nocheck(obj, "reason_code", json_string(value_str));
+#endif
+  }
+  else if ((output == PRINT_OUTPUT_AVRO_BIN) ||
+	   (output == PRINT_OUTPUT_AVRO_JSON)) {
+#ifdef WITH_AVRO
+    // XXX: to be worked out later
+#endif
+  }
+
+  return ret;
 }
 
 void bmp_dump_init_peer(struct bgp_peer *peer)
