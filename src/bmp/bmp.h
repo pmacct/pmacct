@@ -324,6 +324,16 @@ struct bmp_rm_pm_tlv {
   u_int32_t     reason_code;
 } __attribute__ ((packed));
 
+#define BMP_RM_PM_PS_UNKNOWN	0x00000000
+#define BMP_RM_PM_PS_INVALID	0x00000001
+#define BMP_RM_PM_PS_BEST	0x00000002
+#define BMP_RM_PM_PS_NO_SELECT	0x00000004
+#define BMP_RM_PM_PS_PRIMARY	0x00000008
+#define BMP_RM_PM_PS_BACKUP	0x00000010
+#define BMP_RM_PM_PS_NO_INSTALL	0x00000020
+#define BMP_RM_PM_PS_BEST_EXT	0x00000040
+#define BMP_RM_PM_PS_ADD_PATH	0x00000080
+
 /* more includes */
 #include "bmp_msg.h"
 #include "bmp_util.h"

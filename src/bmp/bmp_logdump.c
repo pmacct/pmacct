@@ -1245,9 +1245,7 @@ int bmp_log_rm_tlv_path_marking(struct bgp_peer *null1, struct bmp_data *null2, 
 
     pm_tlv = (struct bmp_rm_pm_tlv *) tlv->val;
 
-    value = (unsigned char *) &pm_tlv->path_status;
-    snprintf(value_str, SUPERSHORTBUFLEN, "0x%02x%02x%02x%02x", value[0], value[1], value[2], value[3]);
-    json_object_set_new_nocheck(obj, "path_status", json_string(value_str));
+    bmp_log_rm_tlv_pm_status(ntohl(pm_tlv->path_status), output, vobj);
 
     value = (unsigned char *) &pm_tlv->reason_code;
     snprintf(value_str, SUPERSHORTBUFLEN, "0x%02x%02x%02x%02x", value[0], value[1], value[2], value[3]);
@@ -1256,6 +1254,83 @@ int bmp_log_rm_tlv_path_marking(struct bgp_peer *null1, struct bmp_data *null2, 
   }
   else if ((output == PRINT_OUTPUT_AVRO_BIN) ||
 	   (output == PRINT_OUTPUT_AVRO_JSON)) {
+#ifdef WITH_AVRO
+    // XXX: to be worked out later
+#endif
+  }
+
+  return ret;
+}
+
+int bmp_log_rm_tlv_pm_status(u_int32_t path_status, int output, void *vobj)
+{
+  int ret = 0;
+
+  if (!vobj) return ERR;
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    json_t *obj = (json_t *) vobj;
+    json_t *ps_array = json_array();
+    char *value = NULL, value_str[SUPERSHORTBUFLEN];
+
+    if (!path_status) {
+      json_array_append_new(ps_array, json_string("Unknown"));
+    }
+    else {
+      if (path_status & BMP_RM_PM_PS_INVALID) {
+	json_array_append_new(ps_array, json_string("Invalid"));
+	path_status ^= BMP_RM_PM_PS_INVALID;
+      }
+
+      if (path_status & BMP_RM_PM_PS_BEST) {
+	json_array_append_new(ps_array, json_string("Best"));
+	path_status ^= BMP_RM_PM_PS_BEST;
+      }
+
+      if (path_status & BMP_RM_PM_PS_NO_SELECT) {
+	json_array_append_new(ps_array, json_string("Non-selected"));
+	path_status ^= BMP_RM_PM_PS_NO_SELECT;
+      }
+
+      if (path_status & BMP_RM_PM_PS_PRIMARY) {
+	json_array_append_new(ps_array, json_string("Primary"));
+	path_status ^= BMP_RM_PM_PS_PRIMARY;
+      }
+
+      if (path_status & BMP_RM_PM_PS_BACKUP) {
+	json_array_append_new(ps_array, json_string("Backup"));
+	path_status ^= BMP_RM_PM_PS_BACKUP;
+      }
+
+      if (path_status & BMP_RM_PM_PS_NO_INSTALL) {
+	json_array_append_new(ps_array, json_string("Non-installed"));
+	path_status ^= BMP_RM_PM_PS_NO_INSTALL;
+      }
+
+      if (path_status & BMP_RM_PM_PS_BEST_EXT) {
+	json_array_append_new(ps_array, json_string("Best-external"));
+	path_status ^= BMP_RM_PM_PS_BEST_EXT;
+      }
+
+      if (path_status & BMP_RM_PM_PS_ADD_PATH) {
+	json_array_append_new(ps_array, json_string("Add-Path"));
+	path_status ^= BMP_RM_PM_PS_ADD_PATH;
+      }
+
+      if (path_status) {
+	value = (char *) &path_status;
+	snprintf(value_str, SUPERSHORTBUFLEN, "0x%02x%02x%02x%02x", value[0], value[1], value[2], value[3]);
+	json_array_append_new(ps_array, json_string(value_str));
+	path_status = FALSE;
+      }
+    }
+
+    json_object_set_new_nocheck(obj, "path_status", ps_array);
+#endif
+  }
+  else if ((output == PRINT_OUTPUT_AVRO_BIN) ||
+           (output == PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
     // XXX: to be worked out later
 #endif
