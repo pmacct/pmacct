@@ -204,7 +204,7 @@ Jansson JSON parser version 2.3 or higher so please review the previous section
 "Compiling pmacct with JSON support"; then, to compile pmacct with Apache Avro
 support simply do:
 
-shell> ./configure --enable-avro
+shell> ./configure --enable-jansson --enable-avro
 
 However should you have installed libavro in the /usr/local/avro directory
 and pkg-config is unable to help, you can supply this non-default location as
@@ -212,7 +212,7 @@ follows (assuming you are running the bash shell):
 
 shell> export AVRO_LIBS="-L/usr/local/avro/lib -lavro"
 shell> export AVRO_CFLAGS="-I/usr/local/avro/include"
-shell> ./configure --enable-kafka --enable-avro
+shell> ./configure --enable-kafka --enable-jansson --enable-avro
 
 IIc. Compiling pmacct against a own libpcap library
 Compiling against a downloaded libpcap library may be wanted for several
