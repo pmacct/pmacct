@@ -314,8 +314,7 @@ static const struct bmp_tlv_def __attribute__((unused)) bmp_rm_info_types[] = {
 };
 
 #define BMP_ROUTE_MONITOR_INFO_MARKING	0
-/* #define BMP_ROUTE_MONITOR_INFO_MAX	0 */
-#define BMP_ROUTE_MONITOR_INFO_MAX	-1
+#define BMP_ROUTE_MONITOR_INFO_MAX	0
 #define BMP_ROUTE_MONITOR_INFO_ENTRIES	4
 
 struct bmp_rm_pm_tlv {
@@ -333,6 +332,50 @@ struct bmp_rm_pm_tlv {
 #define BMP_RM_PM_PS_NO_INSTALL	0x00000020
 #define BMP_RM_PM_PS_BEST_EXT	0x00000040
 #define BMP_RM_PM_PS_ADD_PATH	0x00000080
+
+static const char __attribute__((unused)) *bmp_rm_pm_reason_types[] = {
+  "invalid for unknown",
+  "invalid for super network",
+  "invalid for dampening",
+  "invalid for history",
+  "invalid for policy deny",
+  "invalid for ROA not validation",
+  "invalid for interface error",
+  "invalid for nexthop route unreachable",
+  "invalid for nexthop tunnel unreachable",
+  "invalid for nexthop restrain",
+  "invalid for relay BGP LSP",
+  "invalid for being inactive within VPN instance",
+  "invalid for prefix-sid not exist",
+  "not preferred for peer address",
+  "not preferred for router ID",
+  "not preferred for Cluster List",
+  "not preferred for IGP cost",
+  "not preferred for peer type",
+  "not preferred for MED",
+  "not preferred for origin",
+  "not preferred for AS-Path",
+  "not preferred for route type",
+  "not preferred for Local_Pref",
+  "not preferred for PreVal",
+  "not preferred for not direct route",
+  "not preferred for nexthop bit error",
+  "not preferred for received path-id",
+  "not preferred for validation",
+  "not preferred for originate IP",
+  "not preferred for route distinguisher",
+  "not preferred for route-select delay",
+  "not preferred for being imported route",
+  "not preferred for med-plus-igp",
+  "not preferred for AIGP",
+  "not preferred for nexthop-resolved aigp",
+  "not preferred for nexthop unreachable",
+  "not preferred for nexthop IP",
+  "not preferred for high-priority",
+  "not preferred for nexthop-priority",
+  "not preferred for process ID",
+  "no reason code"
+};
 
 /* more includes */
 #include "bmp_msg.h"
