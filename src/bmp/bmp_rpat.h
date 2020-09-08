@@ -91,4 +91,8 @@ extern void bmp_rpat_event_hdr_get_path_id(struct bmp_rpat_event_hdr *, u_int32_
 extern void bmp_rpat_event_hdr_get_afi_safi(struct bmp_rpat_event_hdr *, afi_t *, safi_t *);
 
 extern int bmp_log_msg_rpat(struct bgp_peer *, struct bmp_data *, struct pm_list *, struct bmp_log_rpat *, char *, int, void *);
+
+#ifdef WITH_AVRO
+extern avro_schema_t p_avro_schema_build_bmp_rpat(char *);
+#endif
 #endif //BMP_RPAT_H

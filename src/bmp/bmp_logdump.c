@@ -2060,25 +2060,6 @@ avro_schema_t p_avro_schema_build_bmp_stats(char *schema_name)
   return schema;
 }
 
-avro_schema_t p_avro_schema_build_bmp_rpat(char *schema_name)
-{
-  avro_schema_t schema = NULL;
-  avro_schema_t optlong_s = avro_schema_union();
-  avro_schema_t optstr_s = avro_schema_union();
-  avro_schema_t optint_s = avro_schema_union();
-
-  p_avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BMP, schema_name);
-  p_avro_schema_build_bmp_common(&schema, &optlong_s, &optstr_s, &optint_s);
-
-  /* XXX: incomplete, more work needed */
-
-  avro_schema_decref(optlong_s);
-  avro_schema_decref(optstr_s);
-  avro_schema_decref(optint_s);
-
-  return schema;
-}
-
 avro_schema_t p_avro_schema_build_bmp_log_initclose(int log_type, char *schema_name)
 {
   avro_schema_t schema = NULL;

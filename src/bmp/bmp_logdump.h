@@ -116,7 +116,6 @@ extern avro_schema_t p_avro_schema_build_bmp_term(char *);
 extern avro_schema_t p_avro_schema_build_bmp_peer_up(char *);
 extern avro_schema_t p_avro_schema_build_bmp_peer_down(char *);
 extern avro_schema_t p_avro_schema_build_bmp_stats(char *);
-extern avro_schema_t p_avro_schema_build_bmp_rpat(char *);
 
 extern avro_schema_t p_avro_schema_build_bmp_log_initclose(int, char *);
 extern avro_schema_t p_avro_schema_build_bmp_dump_init(int, char *);
