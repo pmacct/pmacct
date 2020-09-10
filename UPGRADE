@@ -14,6 +14,12 @@ DESC:   Following is the list of features, knobs and plugins that are being
 	* Prefix labels, enabled with --enable-plabel configure switch, has
 	  been removed as now pre_tag_map supports a 'set_label' action to
 	  achieve the same.
+	* sfacctd & timestamp_start aggregation primitive: sFlow does not
+	  include a timestamp as part of its header structure and a time is
+	  effectively created on arrival (timestamp_arrival). While this is
+	  still the case and timestamp_arrival is populated, timestamp_start
+	  will cease to be aliased over timestamp_arrival in order to avoid
+	  confusions.
 
 TO:	>= 1.7.6
 FROM:	<= 1.7.5

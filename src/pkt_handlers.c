@@ -758,7 +758,7 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation_2 & COUNT_TIMESTAMP_START) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = timestamp_start_handler; // XXX: to be removed
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_timestamp_start_handler;
-      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_timestamp_start_handler; // XXX: to be removed
+      else primitives--;
       primitives++;
     }
 
@@ -5048,14 +5048,6 @@ void SF_sampling_direction_handler(struct channels_list_entry *chptr, struct pac
   /* dummy */
   pdata->primitives.sampling_direction[0] = 'u';
   pdata->primitives.sampling_direction[1] = '\0';
-}
-
-void SF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
-
-  gettimeofday(&pnat->timestamp_start, NULL);
-  if (chptr->plugin->cfg.timestamps_secs) pnat->timestamp_start.tv_usec = 0;
 }
 
 void SF_timestamp_arrival_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
