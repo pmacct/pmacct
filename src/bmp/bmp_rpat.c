@@ -224,6 +224,46 @@ void bmp_rpat_event_hdr_get_afi_safi(struct bmp_rpat_event_hdr *breh, afi_t *afi
   }
 }
 
+void bmp_rpat_policy_tlv_get_m_flag(struct bmp_rpat_policy_tlv_hdr *brpth, u_int8_t *is_match)
+{
+  if (brpth && is_match) {
+    if (brpth->flag & BMP_RPAT_POLICY_FLAG_M) (*is_match) = TRUE;
+    else (*is_match) = FALSE;
+  }
+}
+
+void bmp_rpat_policy_tlv_get_p_flag(struct bmp_rpat_policy_tlv_hdr *brpth, u_int8_t *is_permit)
+{
+  if (brpth && is_permit) {
+    if (brpth->flag & BMP_RPAT_POLICY_FLAG_P) (*is_permit) = TRUE;
+    else (*is_permit) = FALSE;
+  }
+}
+
+void bmp_rpat_policy_tlv_get_d_flag(struct bmp_rpat_policy_tlv_hdr *brpth, u_int8_t *is_diff)
+{
+  if (brpth && is_diff) {
+    if (brpth->flag & BMP_RPAT_POLICY_FLAG_D) (*is_diff) = TRUE;
+    else (*is_diff) = FALSE;
+  }
+}
+
+void bmp_rpat_policy_tlv_np_get_c_flag(u_int8_t *np_flags, u_int8_t *is_chained)
+{
+  if (np_flags && is_chained) {
+    if ((*np_flags) & BMP_RPAT_POLICY_NP_FLAG_C) (*is_chained) = TRUE;
+    else (*is_chained) = FALSE;
+  }
+}
+
+void bmp_rpat_policy_tlv_np_get_r_flag(u_int8_t *np_flags, u_int8_t *is_recursive)
+{
+  if (np_flags && is_recursive) {
+    if ((*np_flags) & BMP_RPAT_POLICY_NP_FLAG_R) (*is_recursive) = TRUE;
+    else (*is_recursive) = FALSE;
+  }
+}
+
 int bmp_log_msg_rpat(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, struct bmp_log_rpat *blrpat, char *event_type, int output, void *vobj)
 {
   int ret = 0;

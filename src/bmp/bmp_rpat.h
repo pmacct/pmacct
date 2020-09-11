@@ -48,6 +48,39 @@ struct bmp_rpat_vrf_tlv_hdr {
   u_char *	name;
 } __attribute__ ((packed));
 
+struct bmp_rpat_policy_tlv_hdr {
+  u_int8_t	flag;
+  u_int8_t	count;
+  u_int8_t	class;
+  u_int32_t     peer_addr[4];
+  u_int32_t     peer_bgp_id;
+  u_int32_t     peer_as;
+} __attribute__ ((packed));
+
+struct bmp_rpat_policy_hdr {
+  u_int16_t	name_len;
+  u_int16_t	id_len;
+  u_char *	name;
+  u_char *	id;
+} __attribute__ ((packed));
+
+#define BMP_RPAT_POLICY_CLASS_INBOUND		0
+#define BMP_RPAT_POLICY_CLASS_OUTBOUND		1
+#define BMP_RPAT_POLICY_CLASS_MP_REDISTRIBUTE	2
+#define BMP_RPAT_POLICY_CLASS_VRF_REDISTRIBUTE	3
+#define BMP_RPAT_POLICY_CLASS_VRF_IMPORT	4
+#define BMP_RPAT_POLICY_CLASS_VRF_EXPORT	5
+#define BMP_RPAT_POLICY_CLASS_NETWORK		6
+#define BMP_RPAT_POLICY_CLASS_AGGREGATION	7
+#define BMP_RPAT_POLICY_CLASS_ROUTE_WITHDRAW	8
+
+#define BMP_RPAT_POLICY_FLAG_M		0x80
+#define BMP_RPAT_POLICY_FLAG_P		0x40
+#define BMP_RPAT_POLICY_FLAG_D		0x20
+
+#define BMP_RPAT_POLICY_NP_FLAG_C	0x80
+#define BMP_RPAT_POLICY_NP_FLAG_R	0x40
+
 struct bmp_log_rpat {
   struct host_addr prefix;
   u_int8_t prefix_len;
@@ -89,6 +122,13 @@ extern void bmp_rpat_event_hdr_get_index(struct bmp_rpat_event_hdr *, u_int8_t *
 extern void bmp_rpat_event_hdr_get_tstamp(struct bmp_rpat_event_hdr *, struct timeval *tv);
 extern void bmp_rpat_event_hdr_get_path_id(struct bmp_rpat_event_hdr *, u_int32_t *);
 extern void bmp_rpat_event_hdr_get_afi_safi(struct bmp_rpat_event_hdr *, afi_t *, safi_t *);
+
+extern void bmp_rpat_policy_tlv_get_m_flag(struct bmp_rpat_policy_tlv_hdr *, u_int8_t *);
+extern void bmp_rpat_policy_tlv_get_p_flag(struct bmp_rpat_policy_tlv_hdr *, u_int8_t *);
+extern void bmp_rpat_policy_tlv_get_d_flag(struct bmp_rpat_policy_tlv_hdr *, u_int8_t *);
+
+extern void bmp_rpat_policy_tlv_np_get_c_flag(u_int8_t *, u_int8_t *);
+extern void bmp_rpat_policy_tlv_np_get_r_flag(u_int8_t *, u_int8_t *);
 
 extern int bmp_log_msg_rpat(struct bgp_peer *, struct bmp_data *, struct pm_list *, struct bmp_log_rpat *, char *, int, void *);
 
