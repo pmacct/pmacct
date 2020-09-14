@@ -264,6 +264,30 @@ void bmp_rpat_policy_tlv_np_get_r_flag(u_int8_t *np_flags, u_int8_t *is_recursiv
   }
 }
 
+void bmp_rpat_policy_tlv_get_bgp_id(struct bmp_rpat_policy_tlv_hdr *brpth, struct host_addr *a)
+{
+  if (brpth && a) {
+    a->family = AF_INET;
+    a->address.ipv4.s_addr = brpth->peer_bgp_id;
+  }
+}
+
+void bmp_rpat_policy_tlv_get_peer_ip(struct bmp_rpat_policy_tlv_hdr *brpth, struct host_addr *a, u_int8_t *family)
+{
+  if (brpth && a) {
+    if ((*family) == AF_INET) a->address.ipv4.s_addr = brpth->peer_ip[3];
+    else if ((*family) == AF_INET6) memcpy(&a->address.ipv6, &brpth->peer_ip, 16);
+    else {
+      memset(a, 0, sizeof(struct host_addr));
+      if (!brpth->peer_ip[0] && !brpth->peer_ip[1] && !brpth->peer_ip[2] && !brpth->peer_ip[3]) {
+	(*family) = AF_INET; /* we just set this up to something non-zero */
+      }
+    }
+
+    a->family = (*family);
+  }
+}
+
 int bmp_log_msg_rpat(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, struct bmp_log_rpat *blrpat, char *event_type, int output, void *vobj)
 {
   int ret = 0;
@@ -306,6 +330,9 @@ int bmp_log_msg_rpat(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
 
 	switch (tlv->type) {
 	case BMP_RPAT_INFO_VRF:
+	  (*bmp_rpat_info_types[tlv->type].logdump_func)(peer, bdata, tlv, blrpat, event_type, output, vobj);
+	  break;
+	case BMP_RPAT_INFO_POLICY:
 	  (*bmp_rpat_info_types[tlv->type].logdump_func)(peer, bdata, tlv, blrpat, event_type, output, vobj);
 	  break;
 	default:
@@ -404,6 +431,62 @@ int bmp_log_msg_rpat_vrf(struct bgp_peer *peer, struct bmp_data *bdata, void *vt
 
   return ret;
 }
+
+int bmp_log_msg_rpat_policy(struct bgp_peer *peer, struct bmp_data *bdata, void *vtlv, void *bl, char *event_type, int output, void *vobj)
+{
+  struct bmp_log_rpat *blrpat = bl;
+  struct bmp_log_tlv *tlv = vtlv;
+  int ret = 0;
+
+  if (!peer || !bdata || !blrpat || !tlv || !vobj) return ERR;
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    json_t *obj = (json_t *) vobj;
+
+    struct bmp_rpat_policy_tlv_hdr *policy_tlv = NULL;
+    char ip_address[INET6_ADDRSTRLEN];
+    struct host_addr ha;
+    u_int8_t flag = 0, family = 0;
+
+    policy_tlv = (struct bmp_rpat_policy_tlv_hdr *) tlv->val;
+
+    bmp_rpat_policy_tlv_get_m_flag(policy_tlv, &flag);
+    json_object_set_new_nocheck(obj, "policy_is_match", json_integer((json_int_t)flag));
+
+    bmp_rpat_policy_tlv_get_p_flag(policy_tlv, &flag);
+    json_object_set_new_nocheck(obj, "policy_is_permit", json_integer((json_int_t)flag));
+
+    bmp_rpat_policy_tlv_get_d_flag(policy_tlv, &flag);
+    json_object_set_new_nocheck(obj, "policy_is_diff", json_integer((json_int_t)flag));
+
+    if (policy_tlv->class <= BMP_RPAT_POLICY_CLASS_MAX) {
+      json_object_set_new_nocheck(obj, "policy_class", json_string(bmp_rpat_class_types[policy_tlv->class]));
+    }
+    else {
+      json_object_set_new_nocheck(obj, "policy_class", json_string("Unknown"));
+    }
+
+    bmp_rpat_policy_tlv_get_bgp_id(policy_tlv, &ha);
+    json_object_set_new_nocheck(obj, "peer_bgp_id", json_string(inet_ntoa(ha.address.ipv4)));
+
+    bmp_rpat_policy_tlv_get_peer_ip(policy_tlv, &ha, &family);
+    addr_to_str(ip_address, &ha);
+    json_object_set_new_nocheck(obj, "peer_ip", json_string(ip_address));
+
+    json_object_set_new_nocheck(obj, "peer_asn", json_integer((json_int_t)ntohl(policy_tlv->peer_asn)));
+#endif
+  }
+  else if ((output == PRINT_OUTPUT_AVRO_BIN) ||
+           (output == PRINT_OUTPUT_AVRO_JSON)) {
+#ifdef WITH_AVRO
+    // XXX: to be worked out later
+#endif
+  }
+
+  return ret;
+}
+
 
 #ifdef WITH_AVRO
 avro_schema_t p_avro_schema_build_bmp_rpat(char *schema_name)

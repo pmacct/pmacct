@@ -52,9 +52,9 @@ struct bmp_rpat_policy_tlv_hdr {
   u_int8_t	flag;
   u_int8_t	count;
   u_int8_t	class;
-  u_int32_t     peer_addr[4];
+  u_int32_t     peer_ip[4];
   u_int32_t     peer_bgp_id;
-  u_int32_t     peer_as;
+  u_int32_t     peer_asn;
 } __attribute__ ((packed));
 
 struct bmp_rpat_policy_hdr {
@@ -73,6 +73,19 @@ struct bmp_rpat_policy_hdr {
 #define BMP_RPAT_POLICY_CLASS_NETWORK		6
 #define BMP_RPAT_POLICY_CLASS_AGGREGATION	7
 #define BMP_RPAT_POLICY_CLASS_ROUTE_WITHDRAW	8
+#define BMP_RPAT_POLICY_CLASS_MAX 		8
+
+static const char __attribute__((unused)) *bmp_rpat_class_types[] = {
+  "Inbound policy",
+  "Outbound policy",
+  "Multi-protocol Redistribute",
+  "Cross-VRF Redistribute",
+  "VRF import",
+  "VRF export",
+  "Network",
+  "Aggregation",
+  "Route Withdraw"
+};
 
 #define BMP_RPAT_POLICY_FLAG_M		0x80
 #define BMP_RPAT_POLICY_FLAG_P		0x40
@@ -92,10 +105,11 @@ struct bmp_log_rpat {
 
 /* prototypes needed for bmp_tlv_def */
 extern int bmp_log_msg_rpat_vrf(struct bgp_peer *, struct bmp_data *, void *, void *, char *, int, void *);
+extern int bmp_log_msg_rpat_policy(struct bgp_peer *, struct bmp_data *, void *, void *, char *, int, void *);
 
 static const struct bmp_tlv_def __attribute__((unused)) bmp_rpat_info_types[] = {
   { "vrf", BMP_TLV_SEM_COMPLEX, bmp_log_msg_rpat_vrf },
-  { "policy", BMP_TLV_SEM_COMPLEX, NULL },
+  { "policy", BMP_TLV_SEM_COMPLEX, bmp_log_msg_rpat_policy },
   { "pre_policy_attr", BMP_TLV_SEM_COMPLEX, NULL },
   { "post_policy_attr", BMP_TLV_SEM_COMPLEX, NULL },
   { "string", BMP_TLV_SEM_STRING, NULL }
@@ -126,7 +140,8 @@ extern void bmp_rpat_event_hdr_get_afi_safi(struct bmp_rpat_event_hdr *, afi_t *
 extern void bmp_rpat_policy_tlv_get_m_flag(struct bmp_rpat_policy_tlv_hdr *, u_int8_t *);
 extern void bmp_rpat_policy_tlv_get_p_flag(struct bmp_rpat_policy_tlv_hdr *, u_int8_t *);
 extern void bmp_rpat_policy_tlv_get_d_flag(struct bmp_rpat_policy_tlv_hdr *, u_int8_t *);
-
+extern void bmp_rpat_policy_tlv_get_bgp_id(struct bmp_rpat_policy_tlv_hdr *, struct host_addr *);
+extern void bmp_rpat_policy_tlv_get_peer_ip(struct bmp_rpat_policy_tlv_hdr *, struct host_addr *, u_int8_t *);
 extern void bmp_rpat_policy_tlv_np_get_c_flag(u_int8_t *, u_int8_t *);
 extern void bmp_rpat_policy_tlv_np_get_r_flag(u_int8_t *, u_int8_t *);
 
