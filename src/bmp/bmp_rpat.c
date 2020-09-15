@@ -447,7 +447,8 @@ int bmp_log_msg_rpat_policy(struct bgp_peer *peer, struct bmp_data *bdata, void 
     struct bmp_rpat_policy_tlv_hdr *policy_tlv = NULL;
     char ip_address[INET6_ADDRSTRLEN];
     struct host_addr ha;
-    u_int8_t flag = 0, family = 0;
+    u_int8_t flag = 0;
+    u_int8_t family = AF_INET; // XXX: assumption due to missing v4/v6 flag
 
     policy_tlv = (struct bmp_rpat_policy_tlv_hdr *) tlv->val;
 
