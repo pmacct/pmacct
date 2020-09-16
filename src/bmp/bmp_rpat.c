@@ -447,7 +447,7 @@ int bmp_log_msg_rpat_policy(struct bgp_peer *peer, struct bmp_data *bdata, void 
     struct bmp_rpat_policy_tlv_hdr *policy_tlv = NULL;
     char ip_address[INET6_ADDRSTRLEN];
     struct host_addr ha;
-    u_int8_t flag = 0;
+    u_int8_t flag = 0, idx = 0;
     u_int8_t family = AF_INET; // XXX: assumption due to missing v4/v6 flag
 
     policy_tlv = (struct bmp_rpat_policy_tlv_hdr *) tlv->val;
@@ -476,6 +476,51 @@ int bmp_log_msg_rpat_policy(struct bgp_peer *peer, struct bmp_data *bdata, void 
     json_object_set_new_nocheck(obj, "peer_ip", json_string(ip_address));
 
     json_object_set_new_nocheck(obj, "peer_asn", json_integer((json_int_t)ntohl(policy_tlv->peer_asn)));
+
+    if (policy_tlv->count) {
+      json_t *policy_name_array = json_array();
+      json_t *policy_id_array = json_array();
+      void *policy_ptr = tlv->val + sizeof(struct bmp_rpat_policy_tlv_hdr);
+
+      json_object_set_new_nocheck(obj, "policy_name", policy_name_array);
+      json_object_set_new_nocheck(obj, "policy_id", policy_id_array);
+
+      for (idx = 0; idx < policy_tlv->count; idx++) {
+        struct bmp_rpat_policy_hdr *brph = policy_ptr;
+	char *policy_id = NULL, *policy_name = NULL;
+	int is_last = ((idx + 1) < policy_tlv->count) ? FALSE : TRUE;
+
+	brph->name_len = ntohs(brph->name_len);
+	brph->id_len = ntohs(brph->id_len);
+
+	brph->name = (policy_ptr + 4 /* lenghts */);
+	brph->id = (policy_ptr + 4 /* lengths */ + brph->name_len);
+
+	if (brph->name_len) {
+	  policy_name = null_terminate((char *) brph->name, brph->name_len);
+	  json_array_append_new(policy_name_array, json_string(policy_name));
+	  free(policy_name);
+	}
+	else {
+	  json_array_append_new(policy_name_array, json_null());
+	}
+
+	if (brph->id_len) {
+	  policy_id = null_terminate((char *) brph->id, brph->id_len);
+	  json_array_append_new(policy_id_array, json_string(policy_id));
+	  free(policy_id);
+	}
+	else {
+	  json_array_append_new(policy_id_array, json_null());
+	}
+
+	if (!is_last) {
+	  // XXX: decode next policy flags */
+
+	  policy_ptr = (policy_ptr + 4 /* lengths */ + brph->name_len + brph->id_len + 1 /* next policy flags */);
+	}
+      }
+    }
 #endif
   }
   else if ((output == PRINT_OUTPUT_AVRO_BIN) ||
