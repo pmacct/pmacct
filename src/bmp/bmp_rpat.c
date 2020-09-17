@@ -448,7 +448,6 @@ int bmp_log_msg_rpat_policy(struct bgp_peer *peer, struct bmp_data *bdata, void 
     char ip_address[INET6_ADDRSTRLEN];
     struct host_addr ha;
     u_int8_t flag = 0, idx = 0;
-    u_int8_t family = AF_INET; // XXX: assumption due to missing v4/v6 flag
 
     policy_tlv = (struct bmp_rpat_policy_tlv_hdr *) tlv->val;
 
@@ -471,7 +470,7 @@ int bmp_log_msg_rpat_policy(struct bgp_peer *peer, struct bmp_data *bdata, void 
     bmp_rpat_policy_tlv_get_bgp_id(policy_tlv, &ha);
     json_object_set_new_nocheck(obj, "peer_bgp_id", json_string(inet_ntoa(ha.address.ipv4)));
 
-    bmp_rpat_policy_tlv_get_peer_ip(policy_tlv, &ha, &family);
+    bmp_rpat_policy_tlv_get_peer_ip(policy_tlv, &ha, &bdata->family);
     addr_to_str(ip_address, &ha);
     json_object_set_new_nocheck(obj, "peer_ip", json_string(ip_address));
 
