@@ -479,15 +479,19 @@ int bmp_log_msg_rpat_policy(struct bgp_peer *peer, struct bmp_data *bdata, void 
     if (policy_tlv->count) {
       json_t *policy_name_array = json_array();
       json_t *policy_id_array = json_array();
+      json_t *policy_nf_array = json_array();
       void *policy_ptr = tlv->val + sizeof(struct bmp_rpat_policy_tlv_hdr);
 
       json_object_set_new_nocheck(obj, "policy_name", policy_name_array);
       json_object_set_new_nocheck(obj, "policy_id", policy_id_array);
+      json_object_set_new_nocheck(obj, "policy_nf", policy_nf_array);
 
       for (idx = 0; idx < policy_tlv->count; idx++) {
         struct bmp_rpat_policy_hdr *brph = policy_ptr;
 	char *policy_id = NULL, *policy_name = NULL;
+
 	int is_last = ((idx + 1) < policy_tlv->count) ? FALSE : TRUE;
+	int is_first = (idx == 0) ? TRUE : FALSE;
 
 	brph->name_len = ntohs(brph->name_len);
 	brph->id_len = ntohs(brph->id_len);
@@ -513,8 +517,18 @@ int bmp_log_msg_rpat_policy(struct bgp_peer *peer, struct bmp_data *bdata, void 
 	  json_array_append_new(policy_id_array, json_null());
 	}
 
+	if (is_first) {
+	  json_array_append_new(policy_nf_array, json_null());
+	}
+
 	if (!is_last) {
-	  // XXX: decode next policy flags */
+	  u_int8_t *np_flags = (policy_ptr + 4 /* lengths */ + brph->name_len + brph->id_len);
+
+	  bmp_rpat_policy_tlv_np_get_c_flag(np_flags, &flag);
+	  json_object_set_new_nocheck(obj, "policy_nf_is_chained", json_integer((json_int_t)flag));
+
+	  bmp_rpat_policy_tlv_np_get_r_flag(np_flags, &flag);
+	  json_object_set_new_nocheck(obj, "policy_nf_is_recursive", json_integer((json_int_t)flag));
 
 	  policy_ptr = (policy_ptr + 4 /* lengths */ + brph->name_len + brph->id_len + 1 /* next policy flags */);
 	}
