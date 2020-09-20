@@ -488,7 +488,7 @@ int bmp_log_msg_rpat_policy(struct bgp_peer *peer, struct bmp_data *bdata, void 
 
       for (idx = 0; idx < policy_tlv->count; idx++) {
         struct bmp_rpat_policy_hdr *brph = policy_ptr;
-	char *policy_id = NULL, *policy_name = NULL;
+	char *policy_id = NULL, *policy_name = NULL, *str_ptr = NULL;
 
 	int is_last = ((idx + 1) < policy_tlv->count) ? FALSE : TRUE;
 	int is_first = (idx == 0) ? TRUE : FALSE;
@@ -496,11 +496,10 @@ int bmp_log_msg_rpat_policy(struct bgp_peer *peer, struct bmp_data *bdata, void 
 	brph->name_len = ntohs(brph->name_len);
 	brph->id_len = ntohs(brph->id_len);
 
-	brph->name = (policy_ptr + 4 /* lenghts */);
-	brph->id = (policy_ptr + 4 /* lengths */ + brph->name_len);
+	str_ptr = (policy_ptr + 4 /* lenghts */);
 
 	if (brph->name_len) {
-	  policy_name = null_terminate((char *) brph->name, brph->name_len);
+	  policy_name = null_terminate((char *) str_ptr, brph->name_len);
 	  json_array_append_new(policy_name_array, json_string(policy_name));
 	  free(policy_name);
 	}
@@ -508,8 +507,10 @@ int bmp_log_msg_rpat_policy(struct bgp_peer *peer, struct bmp_data *bdata, void 
 	  json_array_append_new(policy_name_array, json_null());
 	}
 
+	str_ptr = (policy_ptr + 4 /* lengths */ + brph->name_len);
+
 	if (brph->id_len) {
-	  policy_id = null_terminate((char *) brph->id, brph->id_len);
+	  policy_id = null_terminate((char *) str_ptr, brph->id_len);
 	  json_array_append_new(policy_id_array, json_string(policy_id));
 	  free(policy_id);
 	}

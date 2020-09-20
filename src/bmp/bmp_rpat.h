@@ -60,8 +60,6 @@ struct bmp_rpat_policy_tlv_hdr {
 struct bmp_rpat_policy_hdr {
   u_int16_t	name_len;
   u_int16_t	id_len;
-  u_char *	name;
-  u_char *	id;
 } __attribute__ ((packed));
 
 #define BMP_RPAT_POLICY_CLASS_INBOUND		0
