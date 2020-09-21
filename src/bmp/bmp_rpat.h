@@ -45,7 +45,6 @@ struct bmp_rpat_event_hdr {
 
 struct bmp_rpat_vrf_tlv_hdr {
   u_int32_t	id;
-  u_char *	name;
 } __attribute__ ((packed));
 
 struct bmp_rpat_policy_tlv_hdr {
