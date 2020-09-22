@@ -54,8 +54,8 @@ docker image.
 
 Resolve dependencies, ie.:
 
-  * `apt-get install libpcap-dev pkg-config libtool autoconf automake bash` for *[Debian/Ubuntu]*
-  * `yum install libpcap-devel pkgconfig libtool autoconf automake bash` for *[CentOS/RHEL]*
+  * `apt-get install libpcap-dev pkg-config libtool autoconf automake make bash` for *[Debian/Ubuntu]*
+  * `yum install libpcap-devel pkgconfig libtool autoconf automake make bash` for *[CentOS/RHEL]*
 
 Build GitHub code:
 
