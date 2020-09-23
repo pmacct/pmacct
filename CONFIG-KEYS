@@ -497,24 +497,24 @@ DESC:           Enables logging to a file (bypassing syslog); expected value is 
 DEFAULT:	none (logging to stderr)
 
 KEY:		amqp_host
-DESC:           Defines the AMQP/RabbitMQ broker IP. amqp_* directives refer to the broker used by an
-		AMQP plugin to purge data out.
+DESC:           Defines the AMQP/RabbitMQ broker IP. All amqp_* directives are used by the AMQP plugin
+		of flow daemons only. Check *_amqp_host out (ie. bgp_daemon_msglog_amqp_host) for the
+		equivalent directives relevant to other RabbitMQ exports.
 DEFAULT:        localhost
 
 KEY:		[ bgp_daemon_msglog_amqp_host | bgp_table_dump_amqp_host | bmp_dump_amqp_host |
 		  bmp_daemon_msglog_amqp_host | sfacctd_counter_amqp_host |
 		  telemetry_daemon_msglog_amqp_host | telemetry_dump_amqp_host ] [GLOBAL]
-DESC:		See amqp_host. bgp_daemon_msglog_amqp_* directives refer to the broker used by the BGP
-		thread to stream data out; bgp_table_dump_amqp_* directives refer to the broker used
-		by the BGP thread to dump data out at regular time intervals; bmp_daemon_msglog_amqp_*
-		directives refer to the broker used by the BMP thread to stream data out; bmp_dump_amqp_*
-		directives refer to the broker used by the BMP thread to dump data out at regular time
-		intervals; sfacctd_counter_amqp_* directives refer to the broker used by sfacctd to
-		stream sFlow counter data out; telemetry_daemon_msglog_amqp_* directives refer to the
-		broker used by the Streaming Telemetry thread/daemon to stream data out;
-		telemetry_dump_amqp_* directives refer to the broker used by the Streaming Telemetry
+DESC:		See amqp_host. bgp_daemon_msglog_amqp_* directives are used by the BGP thread/daemon
+		to stream data out; bgp_table_dump_amqp_* directives are used by the BGP thread/daemon
+		to dump data out at regular time intervals; bmp_daemon_msglog_amqp_* directives are
+		used by the BMP thread/daemon to stream data out; bmp_dump_amqp_* directives are
+		used by the BMP thread/daemon to dump data out at regular time intervals;
+		sfacctd_counter_amqp_* directives are used by sfacctd to stream sFlow counter data out;
+		telemetry_daemon_msglog_amqp_* are used by the Streaming Telemetry thread/daemon to
+		stream data out; telemetry_dump_amqp_* directives are used by the Streaming Telemetry
 		thread/daemon to dump data out at regular time intervals.
-DEFAULT:	See amqp_host	
+DEFAULT:	See amqp_host
 
 KEY:            amqp_vhost
 DESC:           Defines the AMQP/RabbitMQ server virtual host; see also amqp_host.
@@ -741,7 +741,10 @@ DESC:           Defines one or multiple, comma-separated, Kafka brokers. If only
 		value is expected as 'address:port'. If IPv6, it is expected as '[address]:port'.
 		When defining a single broker, this is not needed as the IPv6 address is detected
 		and wrapped-around '[' ']' symbols. FQDNs are also accepted. SSL connections can be
-		configured as "ssl://broker3:9000,ssl://broker2". 
+		configured as "ssl://broker3:9000,ssl://broker2".
+		All kafka_* directives are used by the Kafka plugin of flow daemons only. Check
+		*_kafka_broker_host out (ie. bgp_daemon_msglog_kafka_broker_host) for the equivalent
+		directives relevant to other Kafka exports. 
 DEFAULT:        127.0.0.1
 
 KEY:            kafka_broker_port
@@ -798,22 +801,30 @@ KEY:            [ bgp_daemon_msglog_kafka_broker_host | bgp_table_dump_kafka_bro
                   bmp_daemon_msglog_kafka_broker_host | bmp_dump_kafka_broker_host |
 		  sfacctd_counter_kafka_broker_host | telemetry_daemon_msglog_kafka_broker_host |
 		  telemetry_dump_kafka_broker_host ] [GLOBAL]
-DESC:           See kafka_broker_host
+DESC:           See kafka_broker_host. bgp_daemon_msglog_kafka_* directives are used by the BGP thread/
+		daemon to stream data out; bgp_table_dump_kafka_* directives are used by the BGP thread/
+		daemon to dump data out at regular time intervals; bmp_daemon_msglog_kafka_* directives
+		are used by the BMP thread/daemon to stream data out; bmp_dump_kafka_* directives are
+                used by the BMP thread/daemon to dump data out at regular time intervals;
+                sfacctd_counter_kafka_* directives are used by sfacctd to stream sFlow counter data
+		out; telemetry_daemon_msglog_kafka_* are used by the Streaming Telemetry thread/daemon
+		to stream data out; telemetry_dump_kafka_* directives are used by the Streaming Telemetry
+		thread/daemon to dump data out at regular time intervals.
 DEFAULT:        See kafka_broker_host
 
 KEY:            [ bgp_daemon_msglog_kafka_broker_port | bgp_table_dump_kafka_broker_port |
                   bmp_daemon_msglog_kafka_broker_port | bmp_dump_kafka_broker_port |
 		  sfacctd_counter_kafka_broker_port | telemetry_daemon_msglog_kafka_broker_port |
 		  telemetry_dump_kafka_broker_port ] [GLOBAL]
-DESC:           See kafka_broker_port
+DESC:           See kafka_broker_port; see also bgp_daemon_msglog_kafka_broker_host.
 DEFAULT:        See kafka_broker_port
 
 KEY:            [ bgp_daemon_msglog_kafka_topic | bgp_table_dump_kafka_topic |
                   bmp_daemon_msglog_kafka_topic | bmp_dump_kafka_topic |
 		  sfacctd_counter_kafka_topic | telemetry_daemon_msglog_kafka_topic |
 		  telemetry_dump_kafka_topic ] [GLOBAL]
-DESC:		See kafka_topic. Variables supported by the configuration directives described
-		in this section:
+DESC:		See kafka_topic; see also bgp_daemon_msglog_kafka_broker_host. Variables supported by
+		the configuration directives described in this section:
 
                 $peer_src_ip    	BGP peer IP address (bgp_*) or sFlow agent IP address (sfacctd_*).
 
@@ -832,14 +843,14 @@ KEY:            [ bgp_daemon_msglog_kafka_topic_rr | bgp_table_dump_kafka_topic_
                   bmp_daemon_msglog_kafka_topic_rr | bmp_dump_kafka_topic_rr |
 		  telemetry_daemon_msglog_kafka_topic_rr | telemetry_dump_kafka_topic_rr ]
 		[GLOBAL]
-DESC:           See kafka_topic_rr
+DESC:           See kafka_topic_rr; see also bgp_daemon_msglog_kafka_broker_host.
 DEFAULT:        See kafka_topic_rr
 
 KEY:            [ bgp_daemon_msglog_kafka_partition | bgp_table_dump_kafka_partition |
                   bmp_daemon_msglog_kafka_partition | bmp_dump_kafka_partition |
 		  sfacctd_counter_kafka_partition | telemetry_daemon_msglog_kafka_partition |
 		  telemetry_dump_kafka_partition ] [GLOBAL]
-DESC:           See kafka_partition
+DESC:           See kafka_partition; see also bgp_daemon_msglog_kafka_broker_host.
 DEFAULT:        See kafka_partition
 
 KEY:            [ bgp_daemon_msglog_kafka_partition_key |
@@ -848,7 +859,7 @@ KEY:            [ bgp_daemon_msglog_kafka_partition_key |
                   sfacctd_counter_kafka_partition_key |
 		  telemetry_daemon_msglog_kafka_partition_key |
                   telemetry_dump_kafka_partition_key ] [GLOBAL]
-DESC:           See kafka_partition_key
+DESC:           See kafka_partition_key; see also bgp_daemon_msglog_kafka_broker_host.
 DEFAULT:        See kafka_partition_key
 
 KEY:            [ bgp_daemon_msglog_kafka_retry | bmp_daemon_msglog_kafka_retry |
@@ -861,7 +872,7 @@ KEY:            [ bgp_daemon_msglog_kafka_config_file | bgp_table_dump_kafka_con
                   bmp_daemon_msglog_kafka_config_file | bmp_dump_kafka_config_file |
                   sfacctd_counter_kafka_config_file | telemetry_daemon_msglog_kafka_config_file |
                   telemetry_dump_kafka_config_file ] [GLOBAL]
-DESC:           See kafka_config_file
+DESC:           See kafka_config_file; see also bgp_daemon_msglog_kafka_broker_host.
 DEFAULT:        See kafka_config_file
 
 KEY:		pidfile (-F) [GLOBAL]
