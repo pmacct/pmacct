@@ -320,7 +320,7 @@ static const struct bmp_tlv_def __attribute__((unused)) bmp_rm_info_types[] = {
 struct bmp_rm_pm_tlv {
   u_int16_t	path_index;
   u_int32_t     path_status;
-  u_int32_t     reason_code;
+  u_int16_t     reason_code;
 } __attribute__ ((packed));
 
 #define BMP_RM_PM_PS_UNKNOWN	0x00000000
