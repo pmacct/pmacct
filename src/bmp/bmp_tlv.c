@@ -123,7 +123,7 @@ int bmp_tlv_list_add(struct pm_list *tlvs, u_int32_t pen, u_int16_t type, u_int1
 {
   struct bmp_log_tlv *tlv;
 
-  if (!tlvs) return ERR;
+  if (!tlvs || (len && !val)) return ERR;
 
   tlv = malloc(sizeof(struct bmp_log_tlv));
   if (!tlv) return ERR;
@@ -135,10 +135,12 @@ int bmp_tlv_list_add(struct pm_list *tlvs, u_int32_t pen, u_int16_t type, u_int1
   tlv->len = len;
 
   if (len) {
-    if (!val) return ERR;
 
     tlv->val = malloc(len);
-    if (!tlv->val) return ERR;
+    if (!tlv->val) {
+      free(tlv);
+      return ERR;
+      };
 
     memcpy(tlv->val, val, len);
   }
@@ -162,6 +164,7 @@ void bmp_tlv_list_node_del(void *node)
 
     tlv->len = 0;
     tlv->val = NULL;
+    free(tlv);
   }
 }
 
