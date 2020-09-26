@@ -7,8 +7,8 @@ env:
   global:
     - BUILD_DOCKER_FILE_UBUNTU_BIONIC=ci/Dockerfile-ubuntu-bionic-for-pmacct
     - BUILD_DOCKER_TAG_UBUNTU_BIONIC=ci/ubuntu-bionic-for-pmacct
-    - BUILD_DOCKER_FILE_CENTOS_8_1=ci/Dockerfile-centos-8.1-for-pmacct
-    - BUILD_DOCKER_TAG_CENTOS_8_1=ci/centos8.1-for-pmacct
+    - BUILD_DOCKER_FILE_CENTOS_8=ci/Dockerfile-centos-8-for-pmacct
+    - BUILD_DOCKER_TAG_CENTOS_8=ci/centos8-for-pmacct
 
 #Matrix of jobs
 jobs:
@@ -27,17 +27,17 @@ jobs:
       - mkdir -p /tmp/docker/
       - docker save -o /tmp/docker/registry.tar $BUILD_DOCKER_TAG_UBUNTU_BIONIC
   - docker_build_centos:
-    name: Build docker image for Centos 8.1
+    name: Build docker image for Centos 8
     stage: docker
     workspaces:
       create:
-        name: docker_centos_8_1
+        name: docker_centos_8
         paths:
           - /tmp/docker/
     script:
-      - docker build -f $BUILD_DOCKER_FILE_CENTOS_8_1 -t $BUILD_DOCKER_TAG_CENTOS_8_1 .
+      - docker build -f $BUILD_DOCKER_FILE_CENTOS_8 -t $BUILD_DOCKER_TAG_CENTOS_8 .
       - mkdir -p /tmp/docker/
-      - docker save -o /tmp/docker/registry.tar $BUILD_DOCKER_TAG_CENTOS_8_1
+      - docker save -o /tmp/docker/registry.tar $BUILD_DOCKER_TAG_CENTOS_8
 
   #Test
 
@@ -122,14 +122,14 @@ jobs:
     name: "docker: Ubuntu Bionic, CONFIG_FLAGS="
     env: CONFIG_FLAGS=""
 
-  ##CENTOS 8.1
-  - &build_test_centos_8_1
+  ##CENTOS 8
+  - &build_test_centos_8
     stage: build_test
     workspaces:
-      use: docker_centos_8_1
+      use: docker_centos_8
     script:
       - docker load -i /tmp/docker/registry.tar
-      - CONTAINER_ID=$(docker run --rm -it -d -v `pwd`:`pwd` -w `pwd` -e CONFIG_FLAGS $BUILD_DOCKER_TAG_CENTOS_8_1:latest)
+      - CONTAINER_ID=$(docker run --rm -it -d -v `pwd`:`pwd` -w `pwd` -e CONFIG_FLAGS $BUILD_DOCKER_TAG_CENTOS_8:latest)
       - echo "Launched container id:" $CONTAINER_ID
       - docker exec -i $CONTAINER_ID ./ci/script.sh
       - docker stop $CONTAINER_ID
@@ -138,67 +138,67 @@ jobs:
 ### Note missing libnetfilter_log in Centos8
 ###
 
-    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis --enable-gnutls"
+    name: "docker: Centos 8, CONFIG_FLAGS=--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis --enable-gnutls"
     env: CONFIG_FLAGS="--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis --enable-gnutls"
 
-  - <<: *build_test_centos_8_1
-    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis --enable-gnutls"
+  - <<: *build_test_centos_8
+    name: "docker: Centos 8, CONFIG_FLAGS=--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis --enable-gnutls"
     env: CONFIG_FLAGS="--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis --enable-gnutls"
 
-  - <<: *build_test_centos_8_1
-    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-debug --enable-jansson --enable-zmq --enable-kafka"
+  - <<: *build_test_centos_8
+    name: "docker: Centos 8, CONFIG_FLAGS=--enable-debug --enable-jansson --enable-zmq --enable-kafka"
     env: CONFIG_FLAGS="--enable-debug --enable-jansson --enable-zmq --enable-kafka"
 
-  - <<: *build_test_centos_8_1
-    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-jansson --enable-zmq --enable-kafka"
+  - <<: *build_test_centos_8
+    name: "docker: Centos 8, CONFIG_FLAGS=--enable-jansson --enable-zmq --enable-kafka"
     env: CONFIG_FLAGS="--enable-jansson --enable-zmq --enable-kafka"
 
-  - <<: *build_test_centos_8_1
-    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-debug --enable-jansson --enable-zmq"
+  - <<: *build_test_centos_8
+    name: "docker: Centos 8, CONFIG_FLAGS=--enable-debug --enable-jansson --enable-zmq"
     env: CONFIG_FLAGS="--enable-debug --enable-jansson --enable-zmq"
 
-  - <<: *build_test_centos_8_1
-    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-jansson --enable-zmq"
+  - <<: *build_test_centos_8
+    name: "docker: Centos 8, CONFIG_FLAGS=--enable-jansson --enable-zmq"
     env: CONFIG_FLAGS="--enable-jansson --enable-zmq"
 
-  - <<: *build_test_centos_8_1
-    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-debug --enable-jansson --enable-kafka --enable-avro --enable-serdes"
+  - <<: *build_test_centos_8
+    name: "docker: Centos 8, CONFIG_FLAGS=--enable-debug --enable-jansson --enable-kafka --enable-avro --enable-serdes"
     env: CONFIG_FLAGS="--enable-debug --enable-jansson --enable-kafka --enable-avro --enable-serdes"
 
-  - <<: *build_test_centos_8_1
-    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-jansson --enable-kafka --enable-avro --enable-serdes"
+  - <<: *build_test_centos_8
+    name: "docker: Centos 8, CONFIG_FLAGS=--enable-jansson --enable-kafka --enable-avro --enable-serdes"
     env: CONFIG_FLAGS="--enable-jansson --enable-kafka --enable-avro --enable-serdes"
 
-  - <<: *build_test_centos_8_1
-    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-debug --enable-jansson --enable-kafka"
+  - <<: *build_test_centos_8
+    name: "docker: Centos 8, CONFIG_FLAGS=--enable-debug --enable-jansson --enable-kafka"
     env: CONFIG_FLAGS="--enable-debug --enable-jansson --enable-kafka"
 
-  - <<: *build_test_centos_8_1
-    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-jansson --enable-kafka"
+  - <<: *build_test_centos_8
+    name: "docker: Centos 8, CONFIG_FLAGS=--enable-jansson --enable-kafka"
     env: CONFIG_FLAGS="--enable-jansson --enable-kafka"
 
-  - <<: *build_test_centos_8_1
-    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-debug --enable-zmq"
+  - <<: *build_test_centos_8
+    name: "docker: Centos 8, CONFIG_FLAGS=--enable-debug --enable-zmq"
     env: CONFIG_FLAGS="--enable-debug --enable-zmq"
 
-  - <<: *build_test_centos_8_1
-    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-zmq"
+  - <<: *build_test_centos_8
+    name: "docker: Centos 8, CONFIG_FLAGS=--enable-zmq"
     env: CONFIG_FLAGS="--enable-zmq"
 
-  - <<: *build_test_centos_8_1
-    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-debug --enable-jansson"
+  - <<: *build_test_centos_8
+    name: "docker: Centos 8, CONFIG_FLAGS=--enable-debug --enable-jansson"
     env: CONFIG_FLAGS="--enable-debug --enable-jansson"
 
-  - <<: *build_test_centos_8_1
-    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-jansson"
+  - <<: *build_test_centos_8
+    name: "docker: Centos 8, CONFIG_FLAGS=--enable-jansson"
     env: CONFIG_FLAGS="--enable-jansson"
 
-  - <<: *build_test_centos_8_1
-    name: "docker: Centos 8.1, CONFIG_FLAGS=--enable-debug"
+  - <<: *build_test_centos_8
+    name: "docker: Centos 8, CONFIG_FLAGS=--enable-debug"
     env: CONFIG_FLAGS="--enable-debug"
 
-  - <<: *build_test_centos_8_1
-    name: "docker: Centos 8.1, CONFIG_FLAGS="
+  - <<: *build_test_centos_8
+    name: "docker: Centos 8, CONFIG_FLAGS="
     env: CONFIG_FLAGS=""
 
   ## User docker containers
