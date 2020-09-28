@@ -340,6 +340,16 @@ int ip_handler(register struct packet_ptrs *pptrs)
     }
   }
 
+  pptrs->icmp_type = FALSE;
+  pptrs->icmp_code = FALSE;
+
+  if (pptrs->l4_proto == IPPROTO_ICMP || pptrs->l4_proto == IPPROTO_ICMPV6) {
+    pptrs->tlh_ptr = ptr;
+
+    pptrs->icmp_type = ((struct pm_icmphdr *)pptrs->tlh_ptr)->type;
+    pptrs->icmp_code = ((struct pm_icmphdr *)pptrs->tlh_ptr)->code;
+  }
+
   quit:
   return ret;
 }
@@ -487,6 +497,14 @@ int ip6_handler(register struct packet_ptrs *pptrs)
     pptrs->tcp_flags = FALSE;
     if (pptrs->l4_proto == IPPROTO_TCP && off_l4+TCPFlagOff+1 <= caplen)
       pptrs->tcp_flags = ((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags;
+  }
+
+  pptrs->icmp_type = FALSE;
+  pptrs->icmp_code = FALSE;
+
+  if (pptrs->l4_proto == IPPROTO_ICMP || pptrs->l4_proto == IPPROTO_ICMPV6) {
+    pptrs->icmp_type = ((struct pm_icmphdr *)pptrs->tlh_ptr)->type;
+    pptrs->icmp_code = ((struct pm_icmphdr *)pptrs->tlh_ptr)->code;
   }
 
   quit:

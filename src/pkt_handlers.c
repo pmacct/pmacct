@@ -1605,7 +1605,14 @@ void nfprobe_extras_handler(struct channels_list_entry *chptr, struct packet_ptr
 
   --pdata; /* Bringing back to original place */
 
-  if (pptrs->l4_proto == IPPROTO_TCP) pextras->tcp_flags = pptrs->tcp_flags;
+  if (pptrs->l4_proto == IPPROTO_TCP) {
+    pextras->tcp_flags = pptrs->tcp_flags;
+  }
+
+  if (pptrs->l4_proto == IPPROTO_ICMP || pptrs->l4_proto == IPPROTO_ICMPV6) {
+    pextras->icmp_type = pptrs->icmp_type;
+    pextras->icmp_code = pptrs->icmp_code;
+  }
 }
 
 void in_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
