@@ -2322,9 +2322,16 @@ void NF_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     break;
   case 5:
     if ((((struct struct_export_v5 *) pptrs->f_data)->prot == IPPROTO_UDP) ||
-        ((struct struct_export_v5 *) pptrs->f_data)->prot == IPPROTO_TCP) 
+        ((struct struct_export_v5 *) pptrs->f_data)->prot == IPPROTO_TCP) {
       pdata->primitives.dst_port = ntohs(((struct struct_export_v5 *) pptrs->f_data)->dstport);
-    else pdata->primitives.dst_port = 0;
+    }
+    else if ((((struct struct_export_v5 *) pptrs->f_data)->prot == IPPROTO_ICMP) ||
+        ((struct struct_export_v5 *) pptrs->f_data)->prot == IPPROTO_ICMPV6) {
+      pdata->primitives.dst_port = ((struct struct_export_v5 *) pptrs->f_data)->dstport;
+    }
+    else {
+      pdata->primitives.dst_port = 0;
+    }
     break;
   default:
     break;
