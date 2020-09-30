@@ -721,7 +721,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 	  bmp_tlv_hdr_get_type(bth, &bmp_tlv_type);
 	  bmp_tlv_hdr_get_len(bth, &bmp_tlv_len);
 	  if (bmp_tlv_handle_ebit(&bmp_tlv_type)) {
-	    if (!(bmp_tlv_get_pen(bmp_packet, len, &bmp_tlv_len, &pen))) {
+	    if (!(bmp_tlv_get_pen(&loc_ptr, &loc_len, &bmp_tlv_len, &pen))) {
 	      Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: failed bmp_tlv_get_pen()\n",
 		  config.name, bms->log_str, peer->addr_str);
 	      bmp_tlv_list_destroy(tlvs);
