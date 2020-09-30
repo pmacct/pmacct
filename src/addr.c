@@ -861,6 +861,38 @@ u_int16_t af_to_etype(u_int8_t af)
   return FALSE;
 }
 
+const char *af_to_version_str(u_int8_t af)
+{
+  if (af == AF_INET) return ip_version_string[0];
+  else if (af == AF_INET6) return ip_version_string[1];
+
+  return NULL;
+}
+
+u_int8_t af_to_version(u_int8_t af)
+{
+  if (af == AF_INET) return ip_version_num[0];
+  else if (af == AF_INET6) return ip_version_num[1];
+
+  return 0;
+}
+
+const char *etype_to_version_str(u_int16_t etype)
+{
+  if (etype == ETHERTYPE_IP) return ip_version_string[0];
+  else if (etype == ETHERTYPE_IPV6) return ip_version_string[1];
+
+  return NULL;
+}
+
+u_int8_t etype_to_version(u_int16_t etype)
+{
+  if (etype == ETHERTYPE_IP) return ip_version_num[0];
+  else if (etype == ETHERTYPE_IPV6) return ip_version_num[1];
+
+  return 0;
+}
+
 u_int32_t addr_hash(struct host_addr *ha, u_int32_t modulo)
 {
   u_int32_t val = 0;

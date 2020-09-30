@@ -203,6 +203,13 @@ struct pm_udphdr
   u_int16_t uh_sum;             /* udp checksum */
 };
 
+struct pm_icmphdr
+{
+  u_int8_t type;		/* message type */
+  u_int8_t code;		/* type sub-code */
+  u_int16_t checksum;
+};
+
 struct pm_tlhdr {
    u_int16_t	src_port;	/* source and destination ports */
    u_int16_t	dst_port;
@@ -335,6 +342,8 @@ struct packet_ptrs {
   u_int16_t pf; /* pending fragments or packets */
   u_int8_t new_flow; /* pmacctd flows: part of a new flow ? */
   u_int8_t tcp_flags; /* pmacctd flows: TCP packet flags; URG, PUSH filtered out */ 
+  u_int8_t icmp_type; /* pmacctd/uacctd -> nfprobe: ICMP / ICMPv6 type */
+  u_int8_t icmp_code; /* pmacctd/uacctd -> nfprobe: ICMP / ICMPv6 code */
   u_int8_t frag_first_found; /* entry found in fragments table */
   u_int16_t frag_sum_bytes; /* accumulated bytes by fragment entry, ie. due to out of order */
   u_int16_t frag_sum_pkts; /* accumulated packets by fragment entry, ie. due to out of order */
@@ -475,9 +484,10 @@ struct pkt_vlen_hdr_primitives {
   u_int16_t num;
 } __attribute__ ((packed));
 
-// XXX: eventually deprecate pkt_extras
 struct pkt_extras {
   u_int8_t tcp_flags;
+  u_int8_t icmp_type;
+  u_int8_t icmp_code;
 };
 
 #define PKT_MSG_SIZE 10000

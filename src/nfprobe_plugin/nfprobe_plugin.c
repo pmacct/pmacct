@@ -261,6 +261,7 @@ static int
 transport_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extras, int protocol, int ndx)
 {
  struct pkt_primitives *p = &data->primitives;
+ u_int8_t *icmp_ptr = NULL;
 
  /*
   * XXX to keep flow in proper canonical format, it may be necessary
@@ -280,6 +281,12 @@ transport_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras
     /* Check for runt packet, but don't error out on short frags */
     flow->port[ndx] = p->src_port;
     flow->port[ndx ^ 1] = p->dst_port;
+    break;
+  case IPPROTO_ICMP:
+  case IPPROTO_ICMPV6:
+    icmp_ptr = (u_int8_t *) &flow->port[ndx ^ 1];
+    icmp_ptr[0] = extras->icmp_type;
+    icmp_ptr[1] = extras->icmp_code;
     break;
   }
 

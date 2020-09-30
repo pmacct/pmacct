@@ -758,7 +758,7 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation_2 & COUNT_TIMESTAMP_START) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = timestamp_start_handler; // XXX: to be removed
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_timestamp_start_handler;
-      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_timestamp_start_handler; // XXX: to be removed
+      else primitives--;
       primitives++;
     }
 
@@ -1605,7 +1605,14 @@ void nfprobe_extras_handler(struct channels_list_entry *chptr, struct packet_ptr
 
   --pdata; /* Bringing back to original place */
 
-  if (pptrs->l4_proto == IPPROTO_TCP) pextras->tcp_flags = pptrs->tcp_flags;
+  if (pptrs->l4_proto == IPPROTO_TCP) {
+    pextras->tcp_flags = pptrs->tcp_flags;
+  }
+
+  if (pptrs->l4_proto == IPPROTO_ICMP || pptrs->l4_proto == IPPROTO_ICMPV6) {
+    pextras->icmp_type = pptrs->icmp_type;
+    pextras->icmp_code = pptrs->icmp_code;
+  }
 }
 
 void in_iface_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -2315,9 +2322,14 @@ void NF_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     break;
   case 5:
     if ((((struct struct_export_v5 *) pptrs->f_data)->prot == IPPROTO_UDP) ||
-        ((struct struct_export_v5 *) pptrs->f_data)->prot == IPPROTO_TCP) 
+        ((struct struct_export_v5 *) pptrs->f_data)->prot == IPPROTO_TCP ||
+	((struct struct_export_v5 *) pptrs->f_data)->prot == IPPROTO_ICMP ||
+	((struct struct_export_v5 *) pptrs->f_data)->prot == IPPROTO_ICMPV6) {
       pdata->primitives.dst_port = ntohs(((struct struct_export_v5 *) pptrs->f_data)->dstport);
-    else pdata->primitives.dst_port = 0;
+    }
+    else {
+      pdata->primitives.dst_port = 0;
+    }
     break;
   default:
     break;
@@ -5048,14 +5060,6 @@ void SF_sampling_direction_handler(struct channels_list_entry *chptr, struct pac
   /* dummy */
   pdata->primitives.sampling_direction[0] = 'u';
   pdata->primitives.sampling_direction[1] = '\0';
-}
-
-void SF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
-
-  gettimeofday(&pnat->timestamp_start, NULL);
-  if (chptr->plugin->cfg.timestamps_secs) pnat->timestamp_start.tv_usec = 0;
 }
 
 void SF_timestamp_arrival_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

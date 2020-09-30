@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -168,7 +168,6 @@ extern void SF_out_iface_handler(struct channels_list_entry *, struct packet_ptr
 extern void SF_sampling_rate_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_sampling_direction_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_sampling_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-extern void SF_timestamp_start_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_timestamp_arrival_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_sequence_number_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_version_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

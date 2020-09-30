@@ -30,6 +30,16 @@
 #endif
 #define IS_IPV6_MULTICAST(a) (((const uint8_t *) (a))[0] == 0xff)
 
+static const char __attribute__((unused)) *ip_version_string[] = {
+  "v4",
+  "v6"
+};
+
+static const u_int8_t __attribute__((unused)) ip_version_num[] = {
+  4,
+  6
+};
+
 /* prototypes */
 extern unsigned int str_to_addr(const char *, struct host_addr *);
 extern unsigned int addr_to_str(char *, const struct host_addr *);
@@ -62,6 +72,10 @@ extern int is_any(struct host_addr *);
 extern void clean_sin_addr(struct sockaddr *);
 extern u_int8_t etype_to_af(u_int16_t);
 extern u_int16_t af_to_etype(u_int8_t);
+extern const char *af_to_version_str(u_int8_t);
+extern u_int8_t af_to_version(u_int8_t);
+extern const char *etype_to_version_str(u_int16_t);
+extern u_int8_t etype_to_version(u_int16_t);
 extern u_int32_t addr_hash(struct host_addr *, u_int32_t);
 extern u_int32_t addr_port_hash(struct host_addr *, u_int16_t, u_int32_t);
 extern u_int16_t sa_has_family(struct sockaddr *);
