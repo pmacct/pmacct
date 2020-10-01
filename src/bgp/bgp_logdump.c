@@ -607,6 +607,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     avro_value_decref(&p_avro_obj);
     avro_value_iface_decref(p_avro_iface);
     avro_writer_reset(p_avro_writer);
+    avro_writer_free(p_avro_writer);
+    free(p_avro_local_buf);
 #endif
   }
 
