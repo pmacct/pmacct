@@ -45,8 +45,9 @@ int bmp_tlv_get_pen(char **bmp_packet_ptr, u_int32_t *pkt_size, u_int16_t *len, 
   pen_ptr = bmp_get_and_check_length(bmp_packet_ptr, pkt_size, 4);
   if (pen_ptr) {
     (*len) -= 4;
-    (*pen) = (u_int32_t)(*pen_ptr);
+    memcpy(pen, pen_ptr, 4);
     (*pen) = ntohl((*pen));
+
     return TRUE;
   }
 
