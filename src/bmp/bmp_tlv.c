@@ -61,7 +61,7 @@ char *bmp_tlv_type_print(u_int16_t idx, const char *prefix, const struct bmp_tlv
 
   prefix_len = strlen(prefix);
 
-  if (registry && max_registry_entries) {
+  if (registry && (max_registry_entries >= 0)) {
     if (idx <= max_registry_entries) {
       value_len = strlen(registry[idx].name);
       out = malloc(prefix_len + value_len + 1 /* sep */ + 1 /* null */);
@@ -83,7 +83,7 @@ char *bmp_tlv_value_print(struct bmp_log_tlv *tlv, const struct bmp_tlv_def *reg
   char *value = NULL;
 
   if (tlv->len) {
-    if (registry && max_registry_entries) {
+    if (registry && (max_registry_entries >= 0)) {
       if (idx <= max_registry_entries) {
 	switch (registry[idx].semantics) {
 	case BMP_TLV_SEM_STRING:
