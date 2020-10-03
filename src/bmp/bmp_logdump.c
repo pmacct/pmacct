@@ -568,7 +568,7 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
       struct bmp_log_tlv *tlv = NULL;
       
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
-	type = bmp_tlv_type_print(tlv->type, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
+	type = bmp_tlv_type_print(tlv, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
 	value = bmp_tlv_value_print(tlv, bmp_init_info_types, BMP_INIT_INFO_MAX);
 
 	if (type) {
@@ -605,7 +605,7 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
 
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
 	if (tlv->type <= BMP_INIT_INFO_MAX) {
-	  type = bmp_tlv_type_print(tlv->type, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
+	  type = bmp_tlv_type_print(tlv, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
 	  value = bmp_tlv_value_print(tlv, bmp_init_info_types, BMP_INIT_INFO_MAX);
 
 	  if (type) {
@@ -629,10 +629,14 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
     }
 
     for (idx = 0; idx <= BMP_INIT_INFO_MAX; idx++) {
+      struct bmp_log_tlv dummy_tlv;
       char *type;
 
+      memset(&dummy_tlv, 0, sizeof(dummy_tlv));
+      dummy_tlv.type = idx;
+
       if (!bmp_init_tlvs[idx]) {
-	type = bmp_tlv_type_print(idx, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
+	type = bmp_tlv_type_print(&dummy_tlv, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
 	pm_avro_check(avro_value_get_by_name(obj, type, &p_avro_field, NULL));
 	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
@@ -662,7 +666,7 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
       struct bmp_log_tlv *tlv = NULL;
 
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
-	type = bmp_tlv_type_print(tlv->type, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
+	type = bmp_tlv_type_print(tlv, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
 
 	if (tlv->type == BMP_TERM_INFO_REASON && tlv->len == 2) {
 	  char *value_tmp = NULL;
@@ -714,7 +718,7 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
 
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
 	if (tlv->type <= BMP_TERM_INFO_MAX) {
-	  type = bmp_tlv_type_print(tlv->type, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
+	  type = bmp_tlv_type_print(tlv, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
 
 	  if (tlv->type == BMP_TERM_INFO_REASON && tlv->len == 2) {
 	    u_int16_t reas_type;
@@ -748,10 +752,14 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
     }
 
     for (idx = 0; idx <= BMP_TERM_INFO_MAX; idx++) {
+      struct bmp_log_tlv dummy_tlv;
       char *type;
 
+      memset(&dummy_tlv, 0, sizeof(dummy_tlv));
+      dummy_tlv.type = idx;
+
       if (!bmp_term_tlvs[idx]) {
-	type = bmp_tlv_type_print(idx, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
+	type = bmp_tlv_type_print(&dummy_tlv, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
 	pm_avro_check(avro_value_get_by_name(obj, type, &p_avro_field, NULL));
 	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
@@ -819,7 +827,7 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
       struct bmp_log_tlv *tlv = NULL;
 
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
-	type = bmp_tlv_type_print(tlv->type, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
+	type = bmp_tlv_type_print(tlv, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
 	value = bmp_tlv_value_print(tlv, bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
 
 	if (type) {
@@ -958,7 +966,7 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
 
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
 	if (tlv->type <= BMP_PEER_UP_INFO_MAX) {
-	  type = bmp_tlv_type_print(tlv->type, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
+	  type = bmp_tlv_type_print(tlv, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
 	  value = bmp_tlv_value_print(tlv, bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
 
 	  if (type) {
@@ -983,10 +991,14 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
 
     /* mark missing tlv types */
     for (idx = 0; idx <= BMP_PEER_UP_INFO_MAX; idx++) {
+      struct bmp_log_tlv dummy_tlv;
       char *type;
 
+      memset(&dummy_tlv, 0, sizeof(dummy_tlv));
+      dummy_tlv.type = idx;
+
       if (!bmp_peer_up_tlvs[idx]) {
-        type = bmp_tlv_type_print(idx, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
+        type = bmp_tlv_type_print(&dummy_tlv, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
         pm_avro_check(avro_value_get_by_name(obj, type, &p_avro_field, NULL));
         pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
@@ -1044,7 +1056,7 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
       struct bmp_log_tlv *tlv = NULL;
 
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
-	type = bmp_tlv_type_print(tlv->type, "bmp_peer_down_info", bmp_peer_down_info_types, BMP_PEER_DOWN_INFO_MAX);
+	type = bmp_tlv_type_print(tlv, "bmp_peer_down_info", bmp_peer_down_info_types, BMP_PEER_DOWN_INFO_MAX);
 	value = bmp_tlv_value_print(tlv, bmp_peer_down_info_types, BMP_PEER_DOWN_INFO_MAX);
 
 	if (type) {
@@ -1140,7 +1152,7 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
 
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
 	if ((int)tlv->type <= (int)BMP_PEER_DOWN_INFO_MAX) {
-	  type = bmp_tlv_type_print(tlv->type, "bmp_peer_down_info", bmp_peer_down_info_types, BMP_PEER_DOWN_INFO_MAX);
+	  type = bmp_tlv_type_print(tlv, "bmp_peer_down_info", bmp_peer_down_info_types, BMP_PEER_DOWN_INFO_MAX);
 	  value = bmp_tlv_value_print(tlv, bmp_peer_down_info_types, BMP_PEER_DOWN_INFO_MAX);
 
 	  if (type) {
@@ -1165,10 +1177,14 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
 
     /* mark missing tlv types */
     for (idx = 0; idx <= BMP_PEER_DOWN_INFO_MAX; idx++) {
+      struct bmp_log_tlv dummy_tlv;
       char *type;
 
+      memset(&dummy_tlv, 0, sizeof(dummy_tlv));
+      dummy_tlv.type = idx;
+
       if (!bmp_peer_down_tlvs[idx]) {
-	type = bmp_tlv_type_print(idx, "bmp_peer_down_info", bmp_peer_down_info_types, BMP_PEER_DOWN_INFO_MAX);
+	type = bmp_tlv_type_print(&dummy_tlv, "bmp_peer_down_info", bmp_peer_down_info_types, BMP_PEER_DOWN_INFO_MAX);
 	pm_avro_check(avro_value_get_by_name(obj, type, &p_avro_field, NULL));
 	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
@@ -1196,14 +1212,22 @@ int bmp_log_msg_route_monitor_tlv(struct pm_list *tlvs, int output, void *vobj)
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
 	char *type = NULL, *value = NULL;
 
-	switch (tlv->type) {
-	case BMP_ROUTE_MONITOR_INFO_MARKING:
-	  (*bmp_rm_info_types[tlv->type].logdump_func)(NULL, NULL, tlv, NULL, FALSE, output, vobj);
+	switch (tlv->pen) {
+	case BMP_TLV_PEN_STD:
+	  switch (tlv->type) {
+	  case BMP_ROUTE_MONITOR_INFO_MARKING:
+	    (*bmp_rm_info_types[tlv->type].logdump_func)(NULL, NULL, tlv, NULL, FALSE, output, vobj);
+	    break;
+	  default:
+	    type = bmp_tlv_type_print(tlv, "bmp_rm_info", bmp_rm_info_types, BMP_ROUTE_MONITOR_INFO_MAX);
+	    value = bmp_tlv_value_print(tlv, bmp_rm_info_types, BMP_ROUTE_MONITOR_INFO_MAX);
+	    break;
+	  }
 	  break;
 	default:
-	  type = bmp_tlv_type_print(tlv->type, "bmp_rm_info", bmp_rm_info_types, BMP_ROUTE_MONITOR_INFO_MAX);
-	  value = bmp_tlv_value_print(tlv, bmp_rm_info_types, BMP_ROUTE_MONITOR_INFO_MAX);
-	  break;
+	    type = bmp_tlv_type_print(tlv, "bmp_rm_info", NULL, -1);
+	    value = bmp_tlv_value_print(tlv, NULL, -1);
+	    break;
 	}
 
 	if (type) {
@@ -1906,23 +1930,29 @@ avro_schema_t p_avro_schema_build_bmp_rm(int log_type, char *schema_name)
 avro_schema_t p_avro_schema_build_bmp_init(char *schema_name)
 {
   char *type = NULL;
+  struct bmp_log_tlv dummy_tlv;
   avro_schema_t schema = NULL;
   avro_schema_t optlong_s = avro_schema_union();
   avro_schema_t optstr_s = avro_schema_union();
   avro_schema_t optint_s = avro_schema_union();
 
+  memset(&dummy_tlv, 0, sizeof(dummy_tlv));
+
   p_avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BMP, schema_name);
   p_avro_schema_build_bmp_common(&schema, &optlong_s, &optstr_s, &optint_s);
 
-  type = bmp_tlv_type_print(BMP_INIT_INFO_STRING, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
+  dummy_tlv.type = BMP_INIT_INFO_STRING;
+  type = bmp_tlv_type_print(&dummy_tlv, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
   avro_schema_record_field_append(schema, type, optstr_s);
   free(type);
 
-  type = bmp_tlv_type_print(BMP_INIT_INFO_SYSDESCR, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
+  dummy_tlv.type = BMP_INIT_INFO_SYSDESCR;
+  type = bmp_tlv_type_print(&dummy_tlv, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
   avro_schema_record_field_append(schema, type, optstr_s);
   free(type);
 
-  type = bmp_tlv_type_print(BMP_INIT_INFO_SYSNAME, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
+  dummy_tlv.type = BMP_INIT_INFO_SYSNAME;
+  type = bmp_tlv_type_print(&dummy_tlv, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
   avro_schema_record_field_append(schema, type, optstr_s);
   free(type);
 
@@ -1936,19 +1966,24 @@ avro_schema_t p_avro_schema_build_bmp_init(char *schema_name)
 avro_schema_t p_avro_schema_build_bmp_term(char *schema_name)
 {
   char *type = NULL;
+  struct bmp_log_tlv dummy_tlv;
   avro_schema_t schema = NULL;
   avro_schema_t optlong_s = avro_schema_union();
   avro_schema_t optstr_s = avro_schema_union();
   avro_schema_t optint_s = avro_schema_union();
 
+  memset(&dummy_tlv, 0, sizeof(dummy_tlv));
+
   p_avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BMP, schema_name);
   p_avro_schema_build_bmp_common(&schema, &optlong_s, &optstr_s, &optint_s);
 
-  type = bmp_tlv_type_print(BMP_TERM_INFO_STRING, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
+  dummy_tlv.type = BMP_TERM_INFO_STRING;
+  type = bmp_tlv_type_print(&dummy_tlv, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
   avro_schema_record_field_append(schema, type, optstr_s);
   free(type);
 
-  type = bmp_tlv_type_print(BMP_TERM_INFO_REASON, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
+  dummy_tlv.type = BMP_TERM_INFO_REASON;
+  type = bmp_tlv_type_print(&dummy_tlv, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
   avro_schema_record_field_append(schema, type, optstr_s);
   free(type);
 
@@ -1962,10 +1997,13 @@ avro_schema_t p_avro_schema_build_bmp_term(char *schema_name)
 avro_schema_t p_avro_schema_build_bmp_peer_up(char *schema_name)
 {
   char *type = NULL;
+  struct bmp_log_tlv dummy_tlv;
   avro_schema_t schema = NULL;
   avro_schema_t optlong_s = avro_schema_union();
   avro_schema_t optstr_s = avro_schema_union();
   avro_schema_t optint_s = avro_schema_union();
+
+  memset(&dummy_tlv, 0, sizeof(dummy_tlv));
 
   p_avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BMP, schema_name);
   p_avro_schema_build_bmp_common(&schema, &optlong_s, &optstr_s, &optint_s);
@@ -1988,7 +2026,8 @@ avro_schema_t p_avro_schema_build_bmp_peer_up(char *schema_name)
   avro_schema_record_field_append(schema, "remote_port", avro_schema_int());
   avro_schema_record_field_append(schema, "local_ip", avro_schema_string());
 
-  type = bmp_tlv_type_print(BMP_PEER_UP_INFO_STRING, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
+  dummy_tlv.type = BMP_PEER_UP_INFO_STRING;
+  type = bmp_tlv_type_print(&dummy_tlv, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
   avro_schema_record_field_append(schema, type, optstr_s);
   free(type);
 

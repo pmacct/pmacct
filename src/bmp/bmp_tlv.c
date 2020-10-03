@@ -54,11 +54,15 @@ int bmp_tlv_get_pen(char **bmp_packet_ptr, u_int32_t *pkt_size, u_int16_t *len, 
   return FALSE;
 }
 
-char *bmp_tlv_type_print(u_int16_t idx, const char *prefix, const struct bmp_tlv_def *registry, int max_registry_entries)
+char *bmp_tlv_type_print(struct bmp_log_tlv *tlv, const char *prefix, const struct bmp_tlv_def *registry, int max_registry_entries)
 {
   char *out = NULL;
   int prefix_len, value_len;
+  u_int16_t idx;
 
+  if (!tlv) return out;
+
+  idx = tlv->type;
   prefix_len = strlen(prefix);
 
   if (registry && (max_registry_entries >= 0)) {
@@ -71,8 +75,14 @@ char *bmp_tlv_type_print(u_int16_t idx, const char *prefix, const struct bmp_tlv
     }
   }
 
-  out = malloc(prefix_len + 5 /* value len */ + 1 /* sep */ + 1 /* null */);
-  sprintf(out, "%s_%u", prefix, idx);
+  if (!tlv->pen) {
+    out = malloc(prefix_len + 5 /* value len */ + 1 /* sep */ + 1 /* null */);
+    sprintf(out, "%s_%u", prefix, idx);
+  }
+  else {
+    out = malloc(prefix_len + 10 /* PEN */ + 5 /* value len */ + 2 /* seps */ + 1 /* null */);
+    sprintf(out, "%s_%u_%u", prefix, tlv->pen, idx);
+  }
 
   return out;
 }
@@ -88,21 +98,18 @@ char *bmp_tlv_value_print(struct bmp_log_tlv *tlv, const struct bmp_tlv_def *reg
 	switch (registry[idx].semantics) {
 	case BMP_TLV_SEM_STRING:
 	  value = null_terminate(tlv->val, tlv->len);
-	  break;
+	  return value;
 	case BMP_TLV_SEM_UINT:
 	  value = uint_print(tlv->val, tlv->len, TRUE);
-	  break;
+	  return value;
 	default:
-	  value = malloc(tlv->len * 3); /* 2 bytes hex + 1 byte '-' separator + 1 byte null */
-	  serialize_hex(tlv->val, (u_char *) value, tlv->len);
 	  break;
-        }
-      }
-      else {
-        value = malloc(tlv->len * 3); /* 2 bytes hex + 1 byte '-' separator + 1 byte null */
-        serialize_hex(tlv->val, (u_char *) value, tlv->len);
+	}
       }
     }
+
+    value = malloc(tlv->len * 3); /* 2 bytes hex + 1 byte '-' separator + 1 byte null */
+    serialize_hex(tlv->val, (u_char *) value, tlv->len);
   }
 
   return value;

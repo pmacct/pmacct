@@ -337,7 +337,7 @@ int bmp_log_msg_rpat(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
 	  (*bmp_rpat_info_types[tlv->type].logdump_func)(peer, bdata, tlv, blrpat, event_type, output, vobj);
 	  break;
 	default:
-	  type = bmp_tlv_type_print(tlv->type, "bmp_rpat_info", bmp_rpat_info_types, BMP_RPAT_INFO_MAX);
+	  type = bmp_tlv_type_print(tlv, "bmp_rpat_info", bmp_rpat_info_types, BMP_RPAT_INFO_MAX);
 	  value = bmp_tlv_value_print(tlv, bmp_rpat_info_types, BMP_RPAT_INFO_MAX);
 	  break;
 	}

@@ -141,7 +141,8 @@ struct bmp_tlv_hdr {
   u_int16_t     len;
 } __attribute__ ((packed));
 
-#define BMP_TLV_EBIT		0x8000 /* BMP TLV enterprise bit */
+#define BMP_TLV_EBIT		0x8000 	/* BMP TLV enterprise bit */
+#define BMP_TLV_PEN_STD		0 	/* PEN for standardized TLVs */
 
 typedef int (*bmp_logdump_func)(struct bgp_peer *, struct bmp_data *, void *, void *, char *, int, void *);
 
