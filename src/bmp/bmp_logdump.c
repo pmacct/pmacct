@@ -563,13 +563,22 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
     json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 
     if (tlvs) {
-      char *type = NULL, *value = NULL;
       struct pm_listnode *node = NULL;
       struct bmp_log_tlv *tlv = NULL;
       
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
-	type = bmp_tlv_type_print(tlv, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
-	value = bmp_tlv_value_print(tlv, bmp_init_info_types, BMP_INIT_INFO_MAX);
+	char *type = NULL, *value = NULL;
+
+	switch (tlv->pen) {
+	case BMP_TLV_PEN_STD:
+	  type = bmp_tlv_type_print(tlv, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
+	  value = bmp_tlv_value_print(tlv, bmp_init_info_types, BMP_INIT_INFO_MAX);
+	  break;
+	default:
+	  type = bmp_tlv_type_print(tlv, "bmp_init_info", NULL, -1);
+	  value = bmp_tlv_value_print(tlv, NULL, -1);
+	  break;
+	}
 
 	if (type) {
 	  if (value) {
@@ -603,6 +612,7 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
       struct pm_listnode *node = NULL;
       struct bmp_log_tlv *tlv = NULL;
 
+      /* No PEN defined so far so we short-circuit to standard elements */
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
 	if (tlv->type <= BMP_INIT_INFO_MAX) {
 	  type = bmp_tlv_type_print(tlv, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
@@ -661,28 +671,38 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
     json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 
     if (tlvs) {
-      char *type = NULL, *value = NULL;
       struct pm_listnode *node = NULL;
       struct bmp_log_tlv *tlv = NULL;
 
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
-	type = bmp_tlv_type_print(tlv, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
+        char *type = NULL, *value = NULL;
 
-	if (tlv->type == BMP_TERM_INFO_REASON && tlv->len == 2) {
-	  char *value_tmp = NULL;
-	  u_int16_t reas_type = 0;
+	switch (tlv->pen) {
+	case BMP_TLV_PEN_STD:
+	  type = bmp_tlv_type_print(tlv, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
 
-	  value_tmp = bmp_tlv_value_print(tlv, bmp_term_info_types, BMP_TERM_INFO_MAX);
-	  if (value_tmp) {
-	    reas_type = atoi(value_tmp);
-	    free(value_tmp);
+	  if (tlv->type == BMP_TERM_INFO_REASON && tlv->len == 2) {
+	    char *value_tmp = NULL;
+	    u_int16_t reas_type = 0;
+
+	    value_tmp = bmp_tlv_value_print(tlv, bmp_term_info_types, BMP_TERM_INFO_MAX);
+	    if (value_tmp) {
+	      reas_type = atoi(value_tmp);
+	      free(value_tmp);
+	    }
+
+	    value = bmp_term_reason_print(reas_type);
+	  }
+	  else {
+	    value = bmp_tlv_value_print(tlv, bmp_term_info_types, BMP_TERM_INFO_MAX);
 	  }
 
-	  value = bmp_term_reason_print(reas_type);
-	}
-	else {
-	  value = bmp_tlv_value_print(tlv, bmp_term_info_types, BMP_TERM_INFO_MAX);
-	}
+	  break;
+	default:
+	  type = bmp_tlv_type_print(tlv, "bmp_term_info", NULL, -1);
+	  value = bmp_tlv_value_print(tlv, NULL, -1);
+	  break;
+        }
 
 	if (type) {
 	  if (value) {
@@ -716,6 +736,7 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
       struct pm_listnode *node = NULL;
       struct bmp_log_tlv *tlv = NULL;
 
+      /* No PEN defined so far so we short-circuit to standard elements */
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
 	if (tlv->type <= BMP_TERM_INFO_MAX) {
 	  type = bmp_tlv_type_print(tlv, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
@@ -822,13 +843,22 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
     }
 
     if (tlvs) {
-      char *type = NULL, *value = NULL;
       struct pm_listnode *node = NULL;
       struct bmp_log_tlv *tlv = NULL;
 
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
-	type = bmp_tlv_type_print(tlv, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
-	value = bmp_tlv_value_print(tlv, bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
+        char *type = NULL, *value = NULL;
+
+	switch (tlv->pen) {
+	case BMP_TLV_PEN_STD:
+	  type = bmp_tlv_type_print(tlv, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
+	  value = bmp_tlv_value_print(tlv, bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
+	  break;
+	default:
+	  type = bmp_tlv_type_print(tlv, "bmp_peer_up_info", NULL, -1);
+	  value = bmp_tlv_value_print(tlv, NULL, -1);
+	  break;
+	}
 
 	if (type) {
 	  if (value) {
@@ -964,6 +994,7 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
       struct pm_listnode *node = NULL;
       struct bmp_log_tlv *tlv = NULL;
 
+      /* No PEN defined so far so we short-circuit to standard elements */
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
 	if (tlv->type <= BMP_PEER_UP_INFO_MAX) {
 	  type = bmp_tlv_type_print(tlv, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
@@ -1051,13 +1082,22 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
     }
 
     if (tlvs) {
-      char *type = NULL, *value = NULL;
       struct pm_listnode *node = NULL;
       struct bmp_log_tlv *tlv = NULL;
 
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
-	type = bmp_tlv_type_print(tlv, "bmp_peer_down_info", bmp_peer_down_info_types, BMP_PEER_DOWN_INFO_MAX);
-	value = bmp_tlv_value_print(tlv, bmp_peer_down_info_types, BMP_PEER_DOWN_INFO_MAX);
+	char *type = NULL, *value = NULL;
+
+	switch (tlv->pen) {
+	case BMP_TLV_PEN_STD:
+	  type = bmp_tlv_type_print(tlv, "bmp_peer_down_info", bmp_peer_down_info_types, BMP_PEER_DOWN_INFO_MAX);
+	  value = bmp_tlv_value_print(tlv, bmp_peer_down_info_types, BMP_PEER_DOWN_INFO_MAX);
+	  break;
+	default:
+	  type = bmp_tlv_type_print(tlv, "bmp_peer_down_info", NULL, -1);
+	  value = bmp_tlv_value_print(tlv, NULL, -1);
+	  break;
+	}
 
 	if (type) {
 	  if (value) {
@@ -1150,6 +1190,7 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
       struct pm_listnode *node = NULL;
       struct bmp_log_tlv *tlv = NULL;
 
+      /* No PEN defined so far so we short-circuit to standard elements */
       for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
 	if ((int)tlv->type <= (int)BMP_PEER_DOWN_INFO_MAX) {
 	  type = bmp_tlv_type_print(tlv, "bmp_peer_down_info", bmp_peer_down_info_types, BMP_PEER_DOWN_INFO_MAX);
@@ -1225,9 +1266,9 @@ int bmp_log_msg_route_monitor_tlv(struct pm_list *tlvs, int output, void *vobj)
 	  }
 	  break;
 	default:
-	    type = bmp_tlv_type_print(tlv, "bmp_rm_info", NULL, -1);
-	    value = bmp_tlv_value_print(tlv, NULL, -1);
-	    break;
+	  type = bmp_tlv_type_print(tlv, "bmp_rm_info", NULL, -1);
+	  value = bmp_tlv_value_print(tlv, NULL, -1);
+	  break;
 	}
 
 	if (type) {
