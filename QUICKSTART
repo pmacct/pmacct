@@ -2534,7 +2534,7 @@ print_output: csv
 print_output_file: /path/to/file-%Y%m%d-%H%M.txt
 print_history_roundoff: m
  
-Which, over time, would produce a would produce a series of files as follows:
+Which, over time, would produce a series of files as follows:
 
 -rw-------  1 paolo paolo   2067 Nov 21 00:15 blabla-20111121-0000.txt
 -rw-------  1 paolo paolo   2772 Nov 21 00:30 blabla-20111121-0015.txt
