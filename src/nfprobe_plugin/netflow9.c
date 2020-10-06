@@ -1627,8 +1627,8 @@ nf9_init_options_template(void)
         class_option_int_template.r[rcount].length = 4;
         rcount++;
         class_option_template.r[rcount].type = htons(NF9_FLOW_APPLICATION_NAME);
-        class_option_template.r[rcount].length = htons(16);
-        class_option_int_template.r[rcount].length = 16;
+        class_option_template.r[rcount].length = htons(MAX_PROTOCOL_LEN);
+        class_option_int_template.r[rcount].length = MAX_PROTOCOL_LEN;
         rcount++;
         class_option_template.h.c.flowset_id = htons(flowset_id);
         class_option_template.h.c.length = htons( sizeof(struct NF9_OPTIONS_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount) );
@@ -2064,8 +2064,8 @@ nf_class_option_to_flowset(u_int idx, u_char *packet, u_int len, const struct ti
         ftoft_ptr_0 += 4;
 
         /* NF9_FLOW_APPLICATION_NAME */
-        strlcpy(ftoft_ptr_0, class[idx].protocol, 16);
-        ftoft_ptr_0 += 16;
+        strlcpy(ftoft_ptr_0, class[idx].protocol, MAX_PROTOCOL_LEN);
+        ftoft_ptr_0 += MAX_PROTOCOL_LEN;
 
         freclen = class_option_int_template.tot_rec_len;
 
