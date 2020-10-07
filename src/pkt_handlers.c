@@ -2526,6 +2526,13 @@ void NF_time_msecs_handler(struct channels_list_entry *chptr, struct packet_ptrs
       memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED].off, tpl->tpl[NF9_FIRST_SWITCHED].len);
       pdata->time_start.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
         ((ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
+
+      if (config.debug) {
+	if (ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime) < ntohl(fstime)) {
+	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%u] firstSwitched > sysUptime timestamp. Overflow detected.\n",
+	      config.name, config.type, ntohl(((struct struct_header_v9 *) pptrs->f_header)->flow_sequence));
+	}
+      }
     }
     else if (tpl->tpl[NF9_FIRST_SWITCHED].len && hdr->version == 10) {
       if (tpl->tpl[NF9_SYS_UPTIME_MSEC].len == 8) {
@@ -2600,6 +2607,13 @@ void NF_time_msecs_handler(struct channels_list_entry *chptr, struct packet_ptrs
       memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED].off, tpl->tpl[NF9_LAST_SWITCHED].len);
       pdata->time_end.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
         ((ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
+
+      if (config.debug) {
+	if (ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime) < ntohl(fstime)) {
+	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%u] lastSwitched > sysUptime timestamp. Overflow detected.\n",
+	      config.name, config.type, ntohl(((struct struct_header_v9 *) pptrs->f_header)->flow_sequence));
+	}
+      }
     }
     else if (tpl->tpl[NF9_LAST_SWITCHED].len && hdr->version == 10) {
       if (tpl->tpl[NF9_SYS_UPTIME_MSEC].len == 8) {
@@ -2683,9 +2697,24 @@ void NF_time_secs_handler(struct channels_list_entry *chptr, struct packet_ptrs 
     memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED].off, tpl->tpl[NF9_FIRST_SWITCHED].len);
     pdata->time_start.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
       (ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime));
+
+    if (config.debug) {
+      if (ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime) < ntohl(fstime)) {
+	Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%u] firstSwitched > sysUptime timestamp. Overflow detected.\n",
+	    config.name, config.type, ntohl(((struct struct_header_v9 *) pptrs->f_header)->flow_sequence));
+      }
+    }
+
     memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED].off, tpl->tpl[NF9_LAST_SWITCHED].len);
     pdata->time_end.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
       (ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime));
+
+    if (config.debug) {
+      if (ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime) < ntohl(fstime)) {
+	Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%u] lastSwitched > sysUptime timestamp. Overflow detected.\n",
+	    config.name, config.type, ntohl(((struct struct_header_v9 *) pptrs->f_header)->flow_sequence));
+      }
+    }
     break;
   case 5:
     pdata->time_start.tv_sec = ntohl(((struct struct_header_v5 *) pptrs->f_header)->unix_secs)-
