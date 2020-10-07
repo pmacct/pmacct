@@ -29,6 +29,7 @@
 #include "plugin_common.h"
 #include "tee_plugin.h"
 #include "nfacctd.h"
+#include "crc32.h"
 
 /* Global variables */
 char tee_send_buf[65535];
@@ -814,6 +815,26 @@ struct tee_receiver *Tee_rr_balance(void *pool, struct pkt_msg *msg)
     target = &p->receivers[p->balance.next % p->num];
     p->balance.next++;
     p->balance.next %= p->num;
+  }
+
+  return target;
+}
+
+struct tee_receiver *Tee_hash_agent_crc32(void *pool, struct pkt_msg *msg)
+{
+  struct tee_receivers_pool *p = pool;
+  struct tee_receiver *target = NULL;
+  struct sockaddr *sa = (struct sockaddr *) &msg->agent;
+  struct sockaddr_in *sa4 = (struct sockaddr_in *) &msg->agent;
+  unsigned int bucket = 0;
+
+  if (p) {
+    if (sa->sa_family == AF_INET) {
+		bucket = cache_crc32((const unsigned char*)&sa4->sin_addr.s_addr, 4);
+		bucket %= p->num;
+		target = &p->receivers[bucket];
+	}
+    /* XXX: hashing against IPv6 agents is not supported (yet) */
   }
 
   return target;
