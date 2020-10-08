@@ -1315,11 +1315,6 @@ parse_engine(char *s, u_int8_t *engine_type, u_int32_t *engine_id)
 {
   char *delim, *ptr;
 
-  if (config.nfprobe_version == 1) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): parse_engine(): NetFlow v1 export does not support nfprobe_engine.\n", config.name, config.type);
-    exit_gracefully(1);
-  }
-
   trim_spaces(s);
   delim = strchr(s, ':');
   
