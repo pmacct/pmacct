@@ -78,6 +78,7 @@ extern const char *etype_to_version_str(u_int16_t);
 extern u_int8_t etype_to_version(u_int16_t);
 extern u_int32_t addr_hash(struct host_addr *, u_int32_t);
 extern u_int32_t addr_port_hash(struct host_addr *, u_int16_t, u_int32_t);
+extern u_int32_t sa_hash(struct sockaddr *, u_int32_t);
 extern u_int16_t sa_has_family(struct sockaddr *);
 extern socklen_t sa_len(struct sockaddr_storage *);
 

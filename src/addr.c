@@ -912,6 +912,27 @@ u_int32_t addr_hash(struct host_addr *ha, u_int32_t modulo)
   return (val % modulo);
 }
 
+u_int32_t sa_hash(struct sockaddr *sa, u_int32_t modulo)
+{
+  struct sockaddr_in *sa4 = (struct sockaddr_in *)sa;
+  struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)sa;
+  u_int32_t val = 0;
+
+  if (sa->sa_family == AF_INET) {
+    val = jhash_1word(sa4->sin_addr.s_addr, 0);
+  }
+  else if (sa->sa_family == AF_INET6) {
+    u_int32_t a, b, c;
+
+    memcpy(&a, &sa6->sin6_addr.s6_addr[4], 4);
+    memcpy(&b, &sa6->sin6_addr.s6_addr[8], 4);
+    memcpy(&c, &sa6->sin6_addr.s6_addr[12], 4);
+    val = jhash_3words(a, b, c, 0);
+  }
+
+  return (val % modulo);
+}
+
 // XXX: basic implementation, to be improved
 u_int32_t addr_port_hash(struct host_addr *ha, u_int16_t port, u_int32_t modulo)
 {

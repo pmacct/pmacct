@@ -830,11 +830,14 @@ struct tee_receiver *Tee_hash_agent_crc32(void *pool, struct pkt_msg *msg)
 
   if (p) {
     if (sa->sa_family == AF_INET) {
-		bucket = cache_crc32((const unsigned char*)&sa4->sin_addr.s_addr, 4);
-		bucket %= p->num;
-		target = &p->receivers[bucket];
-	}
-    /* XXX: hashing against IPv6 agents is not supported (yet) */
+      bucket = cache_crc32((const unsigned char*)&sa4->sin_addr.s_addr, 4);
+      bucket %= p->num;
+      target = &p->receivers[bucket];
+    }
+    else if (sa->sa_family == AF_INET6) {
+      bucket = sa_hash(sa, p->num);
+      target = &p->receivers[bucket];
+    }
   }
 
   return target;
