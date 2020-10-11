@@ -1451,7 +1451,7 @@ sort_version:
   }
 
   if (nf[i].version == -1) {
-    config.nfprobe_version = 5; 
+    config.nfprobe_version = 10; /* default to IPFIX */
     goto sort_version;
   }
   target.dialect = &nf[i];

@@ -21,6 +21,15 @@ DESC:   Following is the list of features, knobs and plugins that are being
 	  will cease to be aliased over timestamp_arrival in order to avoid
 	  confusions.
 
+TO:     >= 1.7.6
+FROM:   <= 1.7.5
+TOPIC:  Default nfprobe plugin protocol version
+DESC:   Since its conception nfprobe plugin default export version has been
+	5. With IPFIX having been standardized back in 2013 with RFC7011 and
+	being widely adopted by both exporters and collector, it is felt it
+	is the right moment to switch the default version. On a sidenote,
+	there are no plans to retire support for verdion 5.
+
 TO:	>= 1.7.6
 FROM:	<= 1.7.5
 TOPIC:	BMP dump timestamps

@@ -2142,7 +2142,7 @@ DESC:		Version of outgoing NetFlow datagrams. NetFlow v5/v9 and IPFIX (v10) are 
 		features a fixed record structure and if not specifying an 'aggregate' directive it gets
 		populated as much as possible; NetFlow v9 and IPFIX feature a dynamic template-based structure
 		instead and by default it is populated as: 'src_host, dst_host, src_port, dst_Port, proto, tos'.
-DEFAULT:	5
+DEFAULT:	10
 
 KEY:            nfprobe_engine
 DESC:           Allows to define Engine ID and Engine Type fields for NetFlow v5 and Source ID/Obs Domain ID
