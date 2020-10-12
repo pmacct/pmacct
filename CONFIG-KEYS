@@ -1167,7 +1167,9 @@ DESC:		In MySQL and PostgreSQL plugins, this is the path name of the Certificate
 DEFAULT:	none
 
 KEY:	 	sql_host
-DESC:		Defines the backend server IP/hostname
+DESC:		Defines the backend server IP/hostname. In case of the MySQL plugin, prepending the
+		'unix:' string, ie. 'unix:/path/to/unix.socket', will cause the rest to be treated
+		as a UNIX socket (rather than an IP address/hostname).
 DEFAULT:	localhost
 
 KEY:            sql_port
