@@ -205,7 +205,6 @@ u_int16_t pm_udp6_checksum(struct ip6_hdr *ip6hdr, struct pm_udphdr *udphdr, u_c
   return answer;
 }
 
-
 #ifdef WITH_GNUTLS
 void pm_dtls_init(pm_dtls_glob_t *dtls_globs, char *files_path)
 {
@@ -244,6 +243,22 @@ void pm_dtls_init(pm_dtls_glob_t *dtls_globs, char *files_path)
   gnutls_certificate_set_known_dh_params(dtls_globs->x509_cred, GNUTLS_SEC_PARAM_MEDIUM);
   gnutls_priority_init2(&dtls_globs->priority_cache, "%SERVER_PRECEDENCE", NULL, GNUTLS_PRIORITY_INIT_DEF_APPEND);
   gnutls_key_generate(&dtls_globs->cookie_key, GNUTLS_COOKIE_KEY_SIZE);
+}
+
+void pm_dtls_client_init(pm_dtls_peer_t *peer, int fd)
+{
+  gnutls_init(&peer->session, GNUTLS_CLIENT | GNUTLS_DATAGRAM);
+  gnutls_set_default_priority(peer->session);
+  gnutls_credentials_set(peer->session, GNUTLS_CRD_CERTIFICATE, config.dtls_globs.x509_cred);
+
+  // XXX: think to something better than www.example.com
+  gnutls_server_name_set(peer->session, GNUTLS_NAME_DNS, "www.example.com", strlen("www.example.com"));
+  gnutls_session_set_verify_cert(peer->session, "www.example.com", 0);
+
+  gnutls_dtls_set_mtu(peer->session, 1500);
+  // XXX: gnutls_dtls_set_timeouts(peer->session, 1000, 60000);
+
+  gnutls_transport_set_int(peer->session, fd);
 }
 
 ssize_t pm_dtls_recv(gnutls_transport_ptr_t p, void *data, size_t len)

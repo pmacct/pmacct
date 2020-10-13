@@ -287,6 +287,7 @@ extern int cfg_key_nfprobe_timeouts(char *, char *, char *);
 extern int cfg_key_nfprobe_hoplimit(char *, char *, char *);
 extern int cfg_key_nfprobe_maxflows(char *, char *, char *);
 extern int cfg_key_nfprobe_receiver(char *, char *, char *);
+extern int cfg_key_nfprobe_dtls(char *, char *, char *);
 extern int cfg_key_nfprobe_version(char *, char *, char *);
 extern int cfg_key_nfprobe_engine(char *, char *, char *);
 extern int cfg_key_nfprobe_peer_as(char *, char *, char *);

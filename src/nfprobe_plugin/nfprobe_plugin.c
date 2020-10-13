@@ -1362,16 +1362,21 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int pollagain = TRUE;
   u_int32_t seq = 1, rg_err_count = 0;
 
-  char *capfile = NULL, dest_addr[256], dest_serv[256];
+  char *capfile = NULL;
   int linktype = 0, i, r, err, always_v6;
   int max_flows, hoplimit;
-  struct sockaddr_storage dest;
   struct FLOWTRACK flowtrack;
-  socklen_t dest_len;
   struct NETFLOW_TARGET target;
   struct CB_CTXT cb_ctxt;
   u_int8_t engine_type = 0;
   u_int32_t engine_id;
+
+  char dest_addr[256], dest_serv[256];
+  struct sockaddr_storage dest;
+  socklen_t dest_len;
+#ifdef WITH_GNUTLS
+  pm_dtls_peer_t dest_dtls;
+#endif
 
   struct extra_primitives extras;
   struct primitives_ptrs prim_ptrs;
@@ -1441,6 +1446,17 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (config.debug) verbose_flag = TRUE;
   if (config.pcap_savefile) capfile = config.pcap_savefile;
 
+#ifdef WITH_GNUTLS
+  if (config.nfprobe_dtls && !config.dtls_path) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): 'nfprobe_dtls' specified but missing 'dtls_path'. Exiting.\n", config.name, config.type);
+    exit_gracefully(1);
+  }
+
+  if (config.dtls_path) {
+    pm_dtls_init(&config.dtls_globs, config.dtls_path);
+  }
+#endif
+
   dest_len = sizeof(dest);
   if (!config.nfprobe_receiver) config.nfprobe_receiver = default_receiver;
   parse_hostport(config.nfprobe_receiver, (struct sockaddr *)&dest, &dest_len);
@@ -1474,9 +1490,15 @@ sort_version:
     }
     target.fd = connsock(&dest, dest_len, hoplimit);
 	
-    if (target.fd != -1)
-      Log(LOG_INFO, "INFO ( %s/%s ): Exporting flows to [%s]:%s\n",
-		    config.name, config.type, dest_addr, dest_serv);
+    if (target.fd != -1) {
+      Log(LOG_INFO, "INFO ( %s/%s ): Exporting flows to [%s]:%s\n", config.name, config.type, dest_addr, dest_serv);
+
+#ifdef WITH_GNUTLS
+      if (config.nfprobe_dtls) {
+	pm_dtls_client_init(&dest_dtls, target.fd);
+      }
+    }
+#endif
   }
 
   /* Main processing loop */

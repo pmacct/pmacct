@@ -553,6 +553,7 @@ struct configuration {
   int nfprobe_hoplimit;
   int nfprobe_maxflows;
   char *nfprobe_receiver;
+  int nfprobe_dtls;
   int nfprobe_version;
   char *nfprobe_engine;
   int nfprobe_peer_as;
