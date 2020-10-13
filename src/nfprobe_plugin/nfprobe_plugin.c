@@ -1497,8 +1497,8 @@ sort_version:
       if (config.nfprobe_dtls) {
 	pm_dtls_client_init(&dest_dtls, target.fd);
       }
-    }
 #endif
+    }
   }
 
   /* Main processing loop */
