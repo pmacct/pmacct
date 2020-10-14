@@ -29,19 +29,12 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SOFTFLOWD_H
-#define _SOFTFLOWD_H
+#ifndef NFPROBE_PLUGIN_H
+#define NFPROBE_PLUGIN_H
 
 #include "common.h"
 #include "sys-tree.h"
 #include "treetype.h"
-
-/* User to setuid to and directory to chroot to when we drop privs */
-#ifndef PRIVDROP_USER
-# define PRIVDROP_USER		"nobody"
-#endif
-
-#define PRIVDROP_CHROOT_DIR	"/var/empty"
 
 /*
  * Capture length for libpcap: Must fit the link layer header, plus 
@@ -230,7 +223,6 @@ struct EXPIRY {
 u_int32_t timeval_sub_ms(const struct timeval *, const struct timeval *);
 
 /* Prototypes for functions to send NetFlow packets, from netflow*.c */
-int send_netflow_v1(struct FLOW **, int, int, u_int64_t *, struct timeval *,  int, u_int8_t, u_int32_t);
 int send_netflow_v5(struct FLOW **, int, int, u_int64_t *, struct timeval *,  int, u_int8_t, u_int32_t);
 int send_netflow_v9(struct FLOW **, int, int, u_int64_t *, struct timeval *,  int, u_int8_t, u_int32_t);
-#endif /* _SOFTFLOWD_H */
+#endif /* NFPROBE_PLUGIN_H */
