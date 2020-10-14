@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -67,6 +67,7 @@
  * 8192 corresponds to just under 1Mb of flow data
  */
 #define DEFAULT_MAX_FLOWS	8192
+#define DEFAULT_BUCKETS		256
 
 /* Return values from process_packet */
 #define PP_OK           0
@@ -120,10 +121,10 @@ struct FLOWTRACK {
 	struct STATISTIC packets;		/* Packets (bidir) */
 
 	/* Per protocol statistics */
-	u_int64_t flows_pp[256];
-	u_int64_t octets_pp[256];
-	u_int64_t packets_pp[256];
-	struct STATISTIC duration_pp[256];
+	u_int64_t flows_pp[DEFAULT_BUCKETS];
+	u_int64_t octets_pp[DEFAULT_BUCKETS];
+	u_int64_t packets_pp[DEFAULT_BUCKETS];
+	struct STATISTIC duration_pp[DEFAULT_BUCKETS];
 
 	/* Timeout statistics */
 	u_int64_t expired_general;

@@ -850,7 +850,7 @@ update_statistics(struct FLOWTRACK *ft, struct FLOW *flow)
 	static double n = 1.0;
 
 	ft->flows_expired++;
-	ft->flows_pp[flow->protocol % 256]++;
+	ft->flows_pp[flow->protocol % DEFAULT_BUCKETS]++;
 
 	tmp = (double)flow->flow_last.tv_sec +
 	    ((double)flow->flow_last.tv_usec / 1000000.0);
@@ -861,15 +861,15 @@ update_statistics(struct FLOWTRACK *ft, struct FLOW *flow)
 
 	update_statistic(&ft->duration, tmp, n);
 	update_statistic(&ft->duration_pp[flow->protocol], tmp, 
-	    (double)ft->flows_pp[flow->protocol % 256]);
+	    (double)ft->flows_pp[flow->protocol % DEFAULT_BUCKETS]);
 
 	tmp = flow->octets[0] + flow->octets[1];
 	update_statistic(&ft->octets, tmp, n);
-	ft->octets_pp[flow->protocol % 256] += tmp;
+	ft->octets_pp[flow->protocol % DEFAULT_BUCKETS] += tmp;
 
 	tmp = flow->packets[0] + flow->packets[1];
 	update_statistic(&ft->packets, tmp, n);
-	ft->packets_pp[flow->protocol % 256] += tmp;
+	ft->packets_pp[flow->protocol % DEFAULT_BUCKETS] += tmp;
 
 	n++;
 }
@@ -1371,7 +1371,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   u_int8_t engine_type = 0;
   u_int32_t engine_id;
 
-  char dest_addr[256], dest_serv[256];
+  char dest_addr[SRVBUFLEN], dest_serv[SRVBUFLEN];
   struct sockaddr_storage dest;
   socklen_t dest_len;
 #ifdef WITH_GNUTLS
