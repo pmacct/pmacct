@@ -81,7 +81,7 @@ struct CB_CTXT {
 };
 
 /* Netflow send functions */
-typedef int (netflow_send_func_t)(struct FLOW **, int, int, u_int64_t *, struct timeval *, int, u_int8_t, u_int32_t);
+typedef int (netflow_send_func_t)(struct FLOW **, int, int, void *, u_int64_t *, struct timeval *, int, u_int8_t, u_int32_t);
 
 struct NETFLOW_SENDER {
 	int version;
@@ -100,6 +100,7 @@ static const struct NETFLOW_SENDER nf[] = {
 /* Describes a location where we send NetFlow packets to */
 struct NETFLOW_TARGET {
 	int fd;
+	void *dtls;
 	const struct NETFLOW_SENDER *dialect;
 };
 
@@ -1025,7 +1026,7 @@ check_expired(struct FLOWTRACK *ft, struct NETFLOW_TARGET *target, int ex, u_int
                         }
 			else {
 			  r = target->dialect->func(expired_flows, num_expired, 
-			    target->fd, &ft->flows_exported, // &ft->next_datagram_seq,
+			    target->fd, target->dtls, &ft->flows_exported, // &ft->next_datagram_seq,
 			    &ft->system_boot_time, verbose_flag, engine_type, engine_id);
 			  if (verbose_flag)
 				Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sent %d netflow packets\n", config.name, config.type, r);
@@ -1374,9 +1375,6 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   char dest_addr[SRVBUFLEN], dest_serv[SRVBUFLEN];
   struct sockaddr_storage dest;
   socklen_t dest_len;
-#ifdef WITH_GNUTLS
-  pm_dtls_peer_t dest_dtls;
-#endif
 
   struct extra_primitives extras;
   struct primitives_ptrs prim_ptrs;
@@ -1495,7 +1493,8 @@ sort_version:
 
 #ifdef WITH_GNUTLS
       if (config.nfprobe_dtls) {
-	pm_dtls_client_init(&dest_dtls, target.fd);
+	target.dtls = malloc(sizeof(pm_dtls_peer_t));
+	pm_dtls_client_init(target.dtls, target.fd);
       }
 #endif
     }
@@ -1709,9 +1708,15 @@ expiry_check:
 	  sleep(5);
 	  target.fd = connsock(&dest, dest_len, hoplimit);
 
-	  if (target.fd != -1)
-	    Log(LOG_INFO, "INFO ( %s/%s ): Exporting flows to [%s]:%s\n",
-			config.name, config.type, dest_addr, dest_serv);
+	  if (target.fd != -1) {
+	    Log(LOG_INFO, "INFO ( %s/%s ): Exporting flows to [%s]:%s\n", config.name, config.type, dest_addr, dest_serv);
+
+#ifdef WITH_GNUTLS
+	    if (config.nfprobe_dtls) {
+	      pm_dtls_client_init(target.dtls, target.fd);
+	    }
+#endif
+	  }
 	}
       }
 	

@@ -2152,7 +2152,7 @@ nf_exporter_option_to_flowset(u_char *packet, u_int len, const struct timeval *s
  * Returns number of packets sent or -1 on error
  */
 int
-send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
+send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock, void *dtls,
     u_int64_t *flows_exported, struct timeval *system_boot_time,
     int verbose_flag, u_int8_t unused, u_int32_t source_id)
 {

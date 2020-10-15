@@ -223,6 +223,6 @@ struct EXPIRY {
 u_int32_t timeval_sub_ms(const struct timeval *, const struct timeval *);
 
 /* Prototypes for functions to send NetFlow packets, from netflow*.c */
-int send_netflow_v5(struct FLOW **, int, int, u_int64_t *, struct timeval *,  int, u_int8_t, u_int32_t);
-int send_netflow_v9(struct FLOW **, int, int, u_int64_t *, struct timeval *,  int, u_int8_t, u_int32_t);
+int send_netflow_v5(struct FLOW **, int, int, void *, u_int64_t *, struct timeval *,  int, u_int8_t, u_int32_t);
+int send_netflow_v9(struct FLOW **, int, int, void *, u_int64_t *, struct timeval *,  int, u_int8_t, u_int32_t);
 #endif /* NFPROBE_PLUGIN_H */

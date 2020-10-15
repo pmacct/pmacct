@@ -69,7 +69,7 @@ struct NF5_FLOW {
  * Returns number of packets sent or -1 on error
  */
 int
-send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock,
+send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock, void *dtls,
     u_int64_t *flows_exported, struct timeval *system_boot_time,
     int verbose_flag, u_int8_t engine_type, u_int32_t engine_id)
 {
@@ -80,6 +80,10 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock,
 	struct NF5_FLOW *flw = NULL;
 	int i, j, offset, num_packets, err;
 	socklen_t errsz;
+
+#ifdef WITH_GNUTLS
+	pm_dtls_peer_t *dtls_peer = dtls;
+#endif
 	
 	gettimeofday(&now, NULL);
 	uptime_ms = timeval_sub_ms(&now, system_boot_time);
@@ -91,12 +95,21 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock,
 			  Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sending NetFlow v5 packet: len = %d\n", config.name, config.type, offset);
 			hdr->flows = htons(hdr->flows);
 			errsz = sizeof(err);
-			getsockopt(nfsock, SOL_SOCKET, SO_ERROR,
-			    &err, &errsz); /* Clear ICMP errors */
-			if (send(nfsock, packet, (size_t)offset, 0) == -1) {
-			  Log(LOG_WARNING, "WARN ( %s/%s ): send() failed: %s\n", config.name, config.type, strerror(errno));
-			  return (-1);
+			getsockopt(nfsock, SOL_SOCKET, SO_ERROR, &err, &errsz); /* Clear ICMP errors */
+
+			if (!config.nfprobe_dtls) {
+			  if (send(nfsock, packet, (size_t)offset, 0) == -1) {
+			    Log(LOG_WARNING, "WARN ( %s/%s ): send() failed: %s\n", config.name, config.type, strerror(errno));
+			    return (-1);
+			  }
 			}
+#ifdef WITH_GNUTLS
+			else {
+			  gnutls_record_send(dtls_peer->session, packet, (size_t)offset);
+			  // XXX
+			}
+#endif
+
 			*flows_exported += j;
 			j = 0;
 			num_packets++;
@@ -215,12 +228,21 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock,
 		  Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sending NetFlow v5 packet: len = %d\n", config.name, config.type, offset);
 		hdr->flows = htons(hdr->flows);
 		errsz = sizeof(err);
-		getsockopt(nfsock, SOL_SOCKET, SO_ERROR,
-		    &err, &errsz); /* Clear ICMP errors */
-		if (send(nfsock, packet, (size_t)offset, 0) == -1) {
-		  Log(LOG_WARNING, "WARN ( %s/%s ): send() failed: %s\n", config.name, config.type, strerror(errno));
-	 	  return (-1);
+		getsockopt(nfsock, SOL_SOCKET, SO_ERROR, &err, &errsz); /* Clear ICMP errors */
+
+		if (!config.nfprobe_dtls) {
+		  if (send(nfsock, packet, (size_t)offset, 0) == -1) {
+		    Log(LOG_WARNING, "WARN ( %s/%s ): send() failed: %s\n", config.name, config.type, strerror(errno));
+	 	    return (-1);
+		  }
+                }
+#ifdef WITH_GNUTLS
+		else {
+		  gnutls_record_send(dtls_peer->session, packet, (size_t)offset);
+		  // XXX
 		}
+#endif
+
 		num_packets++;
 	}
 

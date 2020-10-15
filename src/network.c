@@ -247,18 +247,40 @@ void pm_dtls_init(pm_dtls_glob_t *dtls_globs, char *files_path)
 
 void pm_dtls_client_init(pm_dtls_peer_t *peer, int fd)
 {
+  int ret;
+
   gnutls_init(&peer->session, GNUTLS_CLIENT | GNUTLS_DATAGRAM);
   gnutls_set_default_priority(peer->session);
   gnutls_credentials_set(peer->session, GNUTLS_CRD_CERTIFICATE, config.dtls_globs.x509_cred);
 
-  // XXX: think to something better than www.example.com
+  // XXX: make server certificate validation optional
+/*
   gnutls_server_name_set(peer->session, GNUTLS_NAME_DNS, "www.example.com", strlen("www.example.com"));
   gnutls_session_set_verify_cert(peer->session, "www.example.com", 0);
+*/
 
   gnutls_dtls_set_mtu(peer->session, 1500);
   // XXX: gnutls_dtls_set_timeouts(peer->session, 1000, 60000);
 
   gnutls_transport_set_int(peer->session, fd);
+
+  /* Perform the TLS handshake */
+  do {
+    ret = gnutls_handshake(peer->session);
+  }
+  while (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN);
+
+  if (ret < 0) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): [dtls] handshake: %s\n", config.name, config.type, gnutls_strerror(ret));
+    exit_gracefully(1); // XXX: maybe retry instead
+  }
+  else {
+    char *desc;
+
+    desc = gnutls_session_get_desc(peer->session);
+    Log(LOG_INFO, "INFO ( %s/%s ): [dtls] handshake: %s\n", config.name, config.type, desc);
+    gnutls_free(desc);
+  }
 }
 
 ssize_t pm_dtls_recv(gnutls_transport_ptr_t p, void *data, size_t len)
