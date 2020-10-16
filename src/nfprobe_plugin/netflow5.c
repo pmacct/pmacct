@@ -60,7 +60,13 @@ struct NF5_FLOW {
 	u_int8_t src_mask, dst_mask;
 	u_int16_t pad2;
 };
+
+#ifdef WITH_GNUTLS
+#define NF5_MAXFLOWS		20
+#else
 #define NF5_MAXFLOWS		30
+#endif
+
 #define NF5_MAXPACKET_SIZE	(sizeof(struct NF5_HEADER) + \
 				 (NF5_MAXFLOWS * sizeof(struct NF5_FLOW)))
 
@@ -78,7 +84,7 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock, void *dtls,
 	u_int8_t packet[NF5_MAXPACKET_SIZE];	/* Maximum allowed packet size (24 flows) */
 	struct NF5_HEADER *hdr = NULL;
 	struct NF5_FLOW *flw = NULL;
-	int i, j, offset, num_packets, err;
+	int i, j, offset, num_packets, err, ret;
 	socklen_t errsz;
 
 #ifdef WITH_GNUTLS
@@ -98,18 +104,32 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock, void *dtls,
 			getsockopt(nfsock, SOL_SOCKET, SO_ERROR, &err, &errsz); /* Clear ICMP errors */
 
 			if (!config.nfprobe_dtls) {
-			  if (send(nfsock, packet, (size_t)offset, 0) == -1) {
+			  ret = send(nfsock, packet, (size_t)offset, 0);
+
+			  if (ret == ERR) {
 			    Log(LOG_WARNING, "WARN ( %s/%s ): send() failed: %s\n", config.name, config.type, strerror(errno));
-			    return (-1);
+			    return ret;
 			  }
 			}
 #ifdef WITH_GNUTLS
 			else {
-			  gnutls_record_send(dtls_peer->session, packet, (size_t)offset);
-			  // XXX
+			  if (dtls_peer->conn.stage != PM_DTLS_STAGE_UP) {
+			    pm_dtls_client_init(dtls_peer, nfsock);
+			  }
+
+			  if (dtls_peer->conn.stage == PM_DTLS_STAGE_UP) {
+			    ret = gnutls_record_send(dtls_peer->session, packet, (size_t)offset);
+
+			    if (ret < 0) {
+			      Log(LOG_WARNING, "WARN ( %s/%s ): gnutls_record_send() failed: %s\n", config.name, config.type, gnutls_strerror(ret));
+			      gnutls_deinit(dtls_peer->session);
+			      gnutls_certificate_free_credentials(config.dtls_globs.x509_cred);
+			      dtls_peer->conn.stage = PM_DTLS_STAGE_DOWN;
+			      return ret;
+			    }
+			  }
 			}
 #endif
-
 			*flows_exported += j;
 			j = 0;
 			num_packets++;
@@ -231,18 +251,32 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock, void *dtls,
 		getsockopt(nfsock, SOL_SOCKET, SO_ERROR, &err, &errsz); /* Clear ICMP errors */
 
 		if (!config.nfprobe_dtls) {
-		  if (send(nfsock, packet, (size_t)offset, 0) == -1) {
+		  ret = send(nfsock, packet, (size_t)offset, 0);
+
+		  if (ret == ERR) {
 		    Log(LOG_WARNING, "WARN ( %s/%s ): send() failed: %s\n", config.name, config.type, strerror(errno));
-	 	    return (-1);
+		    return ret;
 		  }
                 }
 #ifdef WITH_GNUTLS
 		else {
-		  gnutls_record_send(dtls_peer->session, packet, (size_t)offset);
-		  // XXX
+		  if (dtls_peer->conn.stage != PM_DTLS_STAGE_UP) {
+		    pm_dtls_client_init(dtls_peer, nfsock);
+		  }
+
+		  if (dtls_peer->conn.stage == PM_DTLS_STAGE_UP) {
+		    ret = gnutls_record_send(dtls_peer->session, packet, (size_t)offset);
+
+		    if (ret < 0) {
+		      Log(LOG_WARNING, "WARN ( %s/%s ): gnutls_record_send() failed: %s\n", config.name, config.type, gnutls_strerror(ret));
+		      gnutls_deinit(dtls_peer->session);
+		      gnutls_certificate_free_credentials(config.dtls_globs.x509_cred);
+		      dtls_peer->conn.stage = PM_DTLS_STAGE_DOWN;
+		      return ret;
+		    }
+		  }
 		}
 #endif
-
 		num_packets++;
 	}
 

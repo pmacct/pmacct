@@ -249,6 +249,11 @@ void pm_dtls_client_init(pm_dtls_peer_t *peer, int fd)
 {
   int ret;
 
+  if (!peer) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): DTLS struct not found.\n", config.name, config.type);
+    exit_gracefully(1);
+  }
+
   gnutls_init(&peer->session, GNUTLS_CLIENT | GNUTLS_DATAGRAM);
   gnutls_set_default_priority(peer->session);
   gnutls_credentials_set(peer->session, GNUTLS_CRD_CERTIFICATE, config.dtls_globs.x509_cred);
@@ -263,16 +268,20 @@ void pm_dtls_client_init(pm_dtls_peer_t *peer, int fd)
   // XXX: gnutls_dtls_set_timeouts(peer->session, 1000, 60000);
 
   gnutls_transport_set_int(peer->session, fd);
+  peer->conn.fd = fd;
 
   /* Perform the TLS handshake */
   do {
     ret = gnutls_handshake(peer->session);
+    peer->conn.stage = PM_DTLS_STAGE_HANDSHAKE;
   }
   while (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN);
 
   if (ret < 0) {
     Log(LOG_ERR, "ERROR ( %s/%s ): [dtls] handshake: %s\n", config.name, config.type, gnutls_strerror(ret));
-    exit_gracefully(1); // XXX: maybe retry instead
+    gnutls_deinit(peer->session);
+    gnutls_certificate_free_credentials(config.dtls_globs.x509_cred);
+    peer->conn.stage = PM_DTLS_STAGE_DOWN;
   }
   else {
     char *desc;
@@ -280,6 +289,8 @@ void pm_dtls_client_init(pm_dtls_peer_t *peer, int fd)
     desc = gnutls_session_get_desc(peer->session);
     Log(LOG_INFO, "INFO ( %s/%s ): [dtls] handshake: %s\n", config.name, config.type, desc);
     gnutls_free(desc);
+
+    peer->conn.stage = PM_DTLS_STAGE_UP;
   }
 }
 
