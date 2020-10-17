@@ -245,7 +245,7 @@ void pm_dtls_init(pm_dtls_glob_t *dtls_globs, char *files_path)
   gnutls_key_generate(&dtls_globs->cookie_key, GNUTLS_COOKIE_KEY_SIZE);
 }
 
-void pm_dtls_client_init(pm_dtls_peer_t *peer, int fd)
+void pm_dtls_client_init(pm_dtls_peer_t *peer, int fd, char *verify_cert)
 {
   int ret;
 
@@ -258,11 +258,10 @@ void pm_dtls_client_init(pm_dtls_peer_t *peer, int fd)
   gnutls_set_default_priority(peer->session);
   gnutls_credentials_set(peer->session, GNUTLS_CRD_CERTIFICATE, config.dtls_globs.x509_cred);
 
-  // XXX: make server certificate validation optional
-/*
-  gnutls_server_name_set(peer->session, GNUTLS_NAME_DNS, "www.example.com", strlen("www.example.com"));
-  gnutls_session_set_verify_cert(peer->session, "www.example.com", 0);
-*/
+  if (verify_cert) {
+    gnutls_server_name_set(peer->session, GNUTLS_NAME_DNS, verify_cert, strlen(verify_cert));
+    gnutls_session_set_verify_cert(peer->session, verify_cert, 0);
+  }
 
   gnutls_dtls_set_mtu(peer->session, 1500);
   // XXX: gnutls_dtls_set_timeouts(peer->session, 1000, 60000);

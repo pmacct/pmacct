@@ -554,6 +554,7 @@ struct configuration {
   int nfprobe_maxflows;
   char *nfprobe_receiver;
   int nfprobe_dtls;
+  char *nfprobe_dtls_verify_cert;
   int nfprobe_version;
   char *nfprobe_engine;
   int nfprobe_peer_as;

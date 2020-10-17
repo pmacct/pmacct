@@ -729,7 +729,7 @@ extern u_int16_t pm_udp6_checksum(struct ip6_hdr *, struct pm_udphdr *, u_char *
 
 #ifdef WITH_GNUTLS
 extern void pm_dtls_init(pm_dtls_glob_t *, char *);
-extern void pm_dtls_client_init(pm_dtls_peer_t *, int);
+extern void pm_dtls_client_init(pm_dtls_peer_t *, int, char *);
 extern ssize_t pm_dtls_recv(gnutls_transport_ptr_t, void *, size_t);
 extern ssize_t pm_dtls_send(gnutls_transport_ptr_t, const void *, size_t);
 extern int pm_dtls_select(gnutls_transport_ptr_t, unsigned int);

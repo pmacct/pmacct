@@ -1494,7 +1494,7 @@ sort_version:
 #ifdef WITH_GNUTLS
       if (config.nfprobe_dtls) {
 	target.dtls = malloc(sizeof(pm_dtls_peer_t));
-	pm_dtls_client_init(target.dtls, target.fd);
+	pm_dtls_client_init(target.dtls, target.fd, config.nfprobe_dtls_verify_cert);
       }
 #endif
     }
@@ -1713,7 +1713,7 @@ expiry_check:
 
 #ifdef WITH_GNUTLS
 	    if (config.nfprobe_dtls) {
-	      pm_dtls_client_init(target.dtls, target.fd);
+	      pm_dtls_client_init(target.dtls, target.fd, config.nfprobe_dtls_verify_cert);
 	    }
 #endif
 	  }

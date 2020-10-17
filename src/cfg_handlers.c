@@ -5695,6 +5695,25 @@ int cfg_key_nfprobe_dtls(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_nfprobe_dtls_verify_cert(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.nfprobe_dtls_verify_cert = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.nfprobe_dtls_verify_cert = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_nfprobe_source_ip(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

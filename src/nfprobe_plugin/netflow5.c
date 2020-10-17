@@ -114,7 +114,7 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock, void *dtls,
 #ifdef WITH_GNUTLS
 			else {
 			  if (dtls_peer->conn.stage != PM_DTLS_STAGE_UP) {
-			    pm_dtls_client_init(dtls_peer, nfsock);
+			    pm_dtls_client_init(dtls_peer, nfsock, config.nfprobe_dtls_verify_cert);
 			  }
 
 			  if (dtls_peer->conn.stage == PM_DTLS_STAGE_UP) {
@@ -261,7 +261,7 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock, void *dtls,
 #ifdef WITH_GNUTLS
 		else {
 		  if (dtls_peer->conn.stage != PM_DTLS_STAGE_UP) {
-		    pm_dtls_client_init(dtls_peer, nfsock);
+		    pm_dtls_client_init(dtls_peer, nfsock, config.nfprobe_dtls_verify_cert);
 		  }
 
 		  if (dtls_peer->conn.stage == PM_DTLS_STAGE_UP) {

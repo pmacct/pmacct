@@ -403,6 +403,7 @@ static const struct _dictionary_line dictionary[] = {
   {"nfprobe_maxflows", cfg_key_nfprobe_maxflows},
   {"nfprobe_receiver", cfg_key_nfprobe_receiver},
   {"nfprobe_dtls", cfg_key_nfprobe_dtls},
+  {"nfprobe_dtls_verify_cert", cfg_key_nfprobe_dtls_verify_cert},
   {"nfprobe_engine", cfg_key_nfprobe_engine},
   {"nfprobe_version", cfg_key_nfprobe_version},
   {"nfprobe_peer_as", cfg_key_nfprobe_peer_as},
