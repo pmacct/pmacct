@@ -42,35 +42,35 @@ struct NF9_HEADER {
 	u_int16_t version, flows;
 	u_int32_t uptime_ms, time_sec;
 	u_int32_t package_sequence, source_id;
-} __packed;
+} __attribute__ ((packed));
 struct IPFIX_HEADER {
         u_int16_t version, len;
         u_int32_t time_sec;
         u_int32_t package_sequence, source_id;
-} __packed;
+} __attribute__ ((packed));
 struct NF9_FLOWSET_HEADER_COMMON {
 	u_int16_t flowset_id, length;
-} __packed;
+} __attribute__ ((packed));
 struct NF9_TEMPLATE_FLOWSET_HEADER {
 	struct NF9_FLOWSET_HEADER_COMMON c;
 	u_int16_t template_id, count;
-} __packed;
+} __attribute__ ((packed));
 struct NF9_OPTIONS_TEMPLATE_FLOWSET_HEADER {
         struct NF9_FLOWSET_HEADER_COMMON c;
         u_int16_t template_id, scope_len;
         u_int16_t option_len;
-} __packed;
+} __attribute__ ((packed));
 struct NF9_TEMPLATE_FLOWSET_RECORD {
 	u_int16_t type, length;
-} __packed;
+} __attribute__ ((packed));
 struct IPFIX_PEN_TEMPLATE_FLOWSET_RECORD {
         u_int16_t type;
 	u_int16_t length;
         u_int32_t pen;
-} __packed;
+} __attribute__ ((packed));
 struct NF9_DATA_FLOWSET_HEADER {
 	struct NF9_FLOWSET_HEADER_COMMON c;
-} __packed;
+} __attribute__ ((packed));
 #define NF9_TEMPLATE_FLOWSET_ID		0
 #define NF9_OPTIONS_FLOWSET_ID		1
 #define IPFIX_TEMPLATE_FLOWSET_ID	2
@@ -164,19 +164,19 @@ struct NF9_SOFTFLOWD_TEMPLATE {
 	struct NF9_TEMPLATE_FLOWSET_HEADER h;
 	struct NF9_TEMPLATE_FLOWSET_RECORD r[NF9_SOFTFLOWD_TEMPLATE_NRECORDS];
 	u_int16_t tot_len;
-} __packed;
+} __attribute__ ((packed));
 
 struct IPFIX_PEN_TEMPLATE_ADDENDUM {
         struct IPFIX_PEN_TEMPLATE_FLOWSET_RECORD r[NF9_SOFTFLOWD_TEMPLATE_NRECORDS];
         u_int16_t tot_len;
-} __packed;
+} __attribute__ ((packed));
 
 #define NF9_OPTIONS_TEMPLATE_NRECORDS 4
 struct NF9_OPTIONS_TEMPLATE {
         struct NF9_OPTIONS_TEMPLATE_FLOWSET_HEADER h;
         struct NF9_TEMPLATE_FLOWSET_RECORD r[NF9_OPTIONS_TEMPLATE_NRECORDS];
         u_int16_t tot_len;
-} __packed;
+} __attribute__ ((packed));
 
 typedef int (*flow_to_flowset_handler) (char *, const struct FLOW *, int, int);
 struct NF9_INTERNAL_TEMPLATE_RECORD {

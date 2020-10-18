@@ -35,12 +35,8 @@
 #include "treetype.h"
 #include "nfprobe_plugin.h"
 
-RCSID("$Id$");
-
 /*
  * This is the Cisco Netflow(tm) version 5 packet format
- * Based on:
- * http://www.cisco.com/univercd/cc/td/doc/product/rtrmgmt/nfc/nfc_3_0/nfc_ug/nfcform.htm
  */
 struct NF5_HEADER {
 	u_int16_t version, flows;

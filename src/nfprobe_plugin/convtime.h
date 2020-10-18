@@ -22,7 +22,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SFD_CONVTIME_H
+#ifndef NFPROBE_CONVTIME_H
 
 /*
  * Convert a time string into seconds; format is
