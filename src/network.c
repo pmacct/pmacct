@@ -322,6 +322,22 @@ ssize_t pm_dtls_send(gnutls_transport_ptr_t p, const void *data, size_t len)
   return sendto(conn->fd, data, len, 0, (struct sockaddr *) &conn->peer, conn->peer_len);
 }
 
+ssize_t pm_dtls_client_send(pm_dtls_peer_t *peer, const void *data, size_t len)
+{
+  int ret = 0;
+
+  if (peer->conn.stage == PM_DTLS_STAGE_UP) {
+    ret = gnutls_record_send(peer->session, data, len);
+
+    if (ret < 0) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): pm_dtls_client_send() failed: %s\n", config.name, config.type, gnutls_strerror(ret));
+      pm_dtls_client_bye(peer);
+    }
+  }
+
+  return ret;
+}
+
 int pm_dtls_select(gnutls_transport_ptr_t p, unsigned int ms)
 {
   return 1;
@@ -352,6 +368,14 @@ void pm_dtls_server_bye()
       }
     }
   }
+}
+
+void pm_dtls_client_bye(pm_dtls_peer_t *peer)
+{
+  gnutls_bye(peer->session, GNUTLS_SHUT_WR);
+  gnutls_deinit(peer->session);
+  gnutls_certificate_free_credentials(config.dtls_globs.x509_cred);
+  peer->conn.stage = PM_DTLS_STAGE_DOWN;
 }
 
 int pm_dtls_server_process(int dtls_sock, struct sockaddr_storage *client, socklen_t clen, u_char *dtls_packet, int len, void *st)

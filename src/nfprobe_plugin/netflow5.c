@@ -113,17 +113,8 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock, void *dtls,
 			    pm_dtls_client_init(dtls_peer, nfsock, config.nfprobe_dtls_verify_cert);
 			  }
 
-			  if (dtls_peer->conn.stage == PM_DTLS_STAGE_UP) {
-			    ret = gnutls_record_send(dtls_peer->session, packet, (size_t)offset);
-
-			    if (ret < 0) {
-			      Log(LOG_WARNING, "WARN ( %s/%s ): gnutls_record_send() failed: %s\n", config.name, config.type, gnutls_strerror(ret));
-			      gnutls_deinit(dtls_peer->session);
-			      gnutls_certificate_free_credentials(config.dtls_globs.x509_cred);
-			      dtls_peer->conn.stage = PM_DTLS_STAGE_DOWN;
-			      return ret;
-			    }
-			  }
+			  ret = pm_dtls_client_send(dtls_peer, packet, (size_t)offset);
+			  if (ret < 0) return ret;
 			}
 #endif
 			*flows_exported += j;
@@ -260,17 +251,8 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock, void *dtls,
 		    pm_dtls_client_init(dtls_peer, nfsock, config.nfprobe_dtls_verify_cert);
 		  }
 
-		  if (dtls_peer->conn.stage == PM_DTLS_STAGE_UP) {
-		    ret = gnutls_record_send(dtls_peer->session, packet, (size_t)offset);
-
-		    if (ret < 0) {
-		      Log(LOG_WARNING, "WARN ( %s/%s ): gnutls_record_send() failed: %s\n", config.name, config.type, gnutls_strerror(ret));
-		      gnutls_deinit(dtls_peer->session);
-		      gnutls_certificate_free_credentials(config.dtls_globs.x509_cred);
-		      dtls_peer->conn.stage = PM_DTLS_STAGE_DOWN;
-		      return ret;
-		    }
-		  }
+		  ret = pm_dtls_client_send(dtls_peer, packet, (size_t)offset);
+		  if (ret < 0) return ret;
 		}
 #endif
 		num_packets++;

@@ -1561,8 +1561,19 @@ sort_version:
 
     /* Flags set by signal handlers or control socket */
     if (graceful_shutdown_request) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): Shutting down on user request.\n", config.name, config.type);
+      Log(LOG_INFO, "INFO ( %s/%s ): Shutting down on user request.\n", config.name, config.type);
       check_expired(&flowtrack, &target, CE_EXPIRE_ALL, engine_type, engine_id);
+
+#ifdef WITH_GNUTLS
+      if (config.nfprobe_dtls) {
+	pm_dtls_peer_t *dtls_peer = target.dtls;
+
+	if (dtls_peer->conn.stage == PM_DTLS_STAGE_UP) {
+	  pm_dtls_client_bye(dtls_peer);
+	}
+      }
+#endif
+
       goto exit_lane;
     }
 
