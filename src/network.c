@@ -293,7 +293,7 @@ void pm_dtls_client_init(pm_dtls_peer_t *peer, int fd, char *verify_cert)
   }
 }
 
-ssize_t pm_dtls_recv(gnutls_transport_ptr_t p, void *data, size_t len)
+ssize_t pm_dtls_server_recv(gnutls_transport_ptr_t p, void *data, size_t len)
 {
   pm_dtls_conn_t *conn = p;
   struct sockaddr_storage client;
@@ -315,7 +315,7 @@ ssize_t pm_dtls_recv(gnutls_transport_ptr_t p, void *data, size_t len)
   return ERR;
 }
 
-ssize_t pm_dtls_send(gnutls_transport_ptr_t p, const void *data, size_t len)
+ssize_t pm_dtls_server_send(gnutls_transport_ptr_t p, const void *data, size_t len)
 {
   pm_dtls_conn_t *conn = p;
 
@@ -338,7 +338,7 @@ ssize_t pm_dtls_client_send(pm_dtls_peer_t *peer, const void *data, size_t len)
   return ret;
 }
 
-int pm_dtls_select(gnutls_transport_ptr_t p, unsigned int ms)
+int pm_dtls_server_select(gnutls_transport_ptr_t p, unsigned int ms)
 {
   return 1;
 }
@@ -468,14 +468,14 @@ int pm_dtls_server_process(int dtls_sock, struct sockaddr_storage *client, sockl
 	memcpy(&entry->dtls.conn.peer, client, clen);
 	entry->dtls.conn.peer_len = clen;
 	gnutls_transport_set_ptr(entry->dtls.session, &entry->dtls.conn);
-	gnutls_transport_set_pull_function(entry->dtls.session, pm_dtls_recv);
-	gnutls_transport_set_pull_timeout_function(entry->dtls.session, pm_dtls_select);
-	gnutls_transport_set_push_function(entry->dtls.session, pm_dtls_send);
+	gnutls_transport_set_pull_function(entry->dtls.session, pm_dtls_server_recv);
+	gnutls_transport_set_pull_timeout_function(entry->dtls.session, pm_dtls_server_select);
+	gnutls_transport_set_push_function(entry->dtls.session, pm_dtls_server_send);
 
 	/* Sending Hello with cookie */
 	dtls_ret = gnutls_dtls_cookie_send(&config.dtls_globs.cookie_key, client, sizeof(struct sockaddr_storage),
 					   &entry->dtls.prestate, (gnutls_transport_ptr_t) &entry->dtls.conn,
-					   pm_dtls_send);
+					   pm_dtls_server_send);
 	if (dtls_ret < 0) {
 	  gnutls_deinit(entry->dtls.session);
 	  memset(&entry->dtls, 0, sizeof(entry->dtls)); /* PM_DTLS_STAGE_DOWN */
