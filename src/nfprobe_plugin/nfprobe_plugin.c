@@ -1026,15 +1026,19 @@ check_expired(struct FLOWTRACK *ft, struct NETFLOW_TARGET *target, int ex, u_int
                         }
 			else {
 			  r = target->dialect->func(expired_flows, num_expired, 
-			    target->fd, target->dtls, &ft->flows_exported, // &ft->next_datagram_seq,
+			    target->fd, target->dtls, &ft->flows_exported,
 			    &ft->system_boot_time, verbose_flag, engine_type, engine_id);
-			  if (verbose_flag)
-				Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sent %d netflow packets\n", config.name, config.type, r);
+
+			  if (verbose_flag) {
+			    Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sent %d netflow packets\n", config.name, config.type, r);
+			  }
+
 			  if (r > 0) {
-				ft->packets_sent += r;
-				/* XXX what if r < num_expired * 2 ? */
-			  } else {
-				ft->flows_dropped += num_expired * 2;
+			    ft->packets_sent += r;
+			    /* XXX what if r < num_expired * 2 ? */
+			  }
+			  else {
+			    ft->flows_dropped += num_expired * 2;
 			  }
 			}
 		}
@@ -1494,7 +1498,7 @@ sort_version:
 #ifdef WITH_GNUTLS
       if (config.nfprobe_dtls) {
 	target.dtls = malloc(sizeof(pm_dtls_peer_t));
-	pm_dtls_client_init(target.dtls, target.fd, config.nfprobe_dtls_verify_cert);
+	pm_dtls_client_init(target.dtls, target.fd, &dest, dest_len, config.nfprobe_dtls_verify_cert);
       }
 #endif
     }
@@ -1705,6 +1709,16 @@ handle_flow_expiration:
      */
     if (flowtrack.num_flows > max_flows || next_expire(&flowtrack) == 0) {
 expiry_check:
+#ifdef WITH_GNUTLS
+      if (config.nfprobe_dtls) {
+	pm_dtls_peer_t *dtls_peer = target.dtls;
+
+	if (target.fd != ERR && dtls_peer->conn.stage != PM_DTLS_STAGE_UP) {
+          pm_dtls_client_init(target.dtls, target.fd, &dest, dest_len, config.nfprobe_dtls_verify_cert);
+	}
+      }
+#endif
+
       /*
        * If we are reading from a capture file, we never
        * expire flows based on time - instead we only 
@@ -1721,12 +1735,6 @@ expiry_check:
 
 	  if (target.fd != -1) {
 	    Log(LOG_INFO, "INFO ( %s/%s ): Exporting flows to [%s]:%s\n", config.name, config.type, dest_addr, dest_serv);
-
-#ifdef WITH_GNUTLS
-	    if (config.nfprobe_dtls) {
-	      pm_dtls_client_init(target.dtls, target.fd, config.nfprobe_dtls_verify_cert);
-	    }
-#endif
 	  }
 	}
       }

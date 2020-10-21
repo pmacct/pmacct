@@ -245,7 +245,7 @@ void pm_dtls_init(pm_dtls_glob_t *dtls_globs, char *files_path)
   gnutls_key_generate(&dtls_globs->cookie_key, GNUTLS_COOKIE_KEY_SIZE);
 }
 
-void pm_dtls_client_init(pm_dtls_peer_t *peer, int fd, char *verify_cert)
+void pm_dtls_client_init(pm_dtls_peer_t *peer, int fd, struct sockaddr_storage *sock, socklen_t sock_len, char *verify_cert)
 {
   int ret;
 
@@ -268,6 +268,9 @@ void pm_dtls_client_init(pm_dtls_peer_t *peer, int fd, char *verify_cert)
 
   gnutls_transport_set_int(peer->session, fd);
   peer->conn.fd = fd;
+
+  memcpy(&peer->conn.peer, sock, sock_len);
+  peer->conn.peer_len = sock_len;
 
   /* Perform the TLS handshake */
   do {

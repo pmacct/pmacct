@@ -109,10 +109,6 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock, void *dtls,
 			}
 #ifdef WITH_GNUTLS
 			else {
-			  if (dtls_peer->conn.stage != PM_DTLS_STAGE_UP) {
-			    pm_dtls_client_init(dtls_peer, nfsock, config.nfprobe_dtls_verify_cert);
-			  }
-
 			  ret = pm_dtls_client_send(dtls_peer, packet, (size_t)offset);
 			  if (ret < 0) return ret;
 			}
@@ -247,10 +243,6 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock, void *dtls,
                 }
 #ifdef WITH_GNUTLS
 		else {
-		  if (dtls_peer->conn.stage != PM_DTLS_STAGE_UP) {
-		    pm_dtls_client_init(dtls_peer, nfsock, config.nfprobe_dtls_verify_cert);
-		  }
-
 		  ret = pm_dtls_client_send(dtls_peer, packet, (size_t)offset);
 		  if (ret < 0) return ret;
 		}
@@ -261,4 +253,3 @@ send_netflow_v5(struct FLOW **flows, int num_flows, int nfsock, void *dtls,
 	*flows_exported += j;
 	return (num_packets);
 }
-
