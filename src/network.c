@@ -22,6 +22,7 @@
 #include "pmacct.h"
 #include "addr.h"
 #include "network.h"
+#include "thread_pool.h"
 
 /* Global variables */
 #ifdef WITH_GNUTLS
@@ -254,6 +255,8 @@ void pm_dtls_client_init(pm_dtls_peer_t *peer, int fd, struct sockaddr_storage *
     exit_gracefully(1);
   }
 
+  memset(peer, 0, sizeof(pm_dtls_peer_t));
+
   gnutls_init(&peer->session, GNUTLS_CLIENT | GNUTLS_DATAGRAM);
   gnutls_set_default_priority(peer->session);
   gnutls_credentials_set(peer->session, GNUTLS_CRD_CERTIFICATE, config.dtls_globs.x509_cred);
@@ -271,6 +274,11 @@ void pm_dtls_client_init(pm_dtls_peer_t *peer, int fd, struct sockaddr_storage *
 
   memcpy(&peer->conn.peer, sock, sock_len);
   peer->conn.peer_len = sock_len;
+
+  /* starting async rx to collect DTLS feedback messages, ie. disconnects */
+  peer->conn.async_rx = allocate_thread_pool(1);
+  assert(peer->conn.async_rx);
+  send_to_pool(peer->conn.async_rx, pm_dtls_client_recv_async, peer);
 
   /* Perform the TLS handshake */
   do {
@@ -346,6 +354,41 @@ int pm_dtls_server_select(gnutls_transport_ptr_t p, unsigned int ms)
   return 1;
 }
 
+void pm_dtls_client_recv_async(pm_dtls_peer_t *peer)
+{
+  int ret = 0, buflen = 1500;
+  char buf[buflen];
+
+  for (;;) {
+    if (peer->conn.stage == PM_DTLS_STAGE_UP) { 
+      ret = gnutls_record_recv(peer->session, buf, buflen);
+
+      if (ret == 0) {
+	/* Peer has closed the DTLS connection */
+	peer->conn.do_reconnect = TRUE;
+	Log(LOG_ERR, "ERROR ( %s/%s ): [dtls] recv_async: server closed connection.\n", config.name, config.type);
+	pthread_exit(0); // XXX: hack, should use thread_runner() instead
+      }
+      else if (ret < 0 && gnutls_error_is_fatal(ret) == 0) {
+	/* Error: fatal */
+	peer->conn.do_reconnect = TRUE;
+	Log(LOG_ERR, "ERROR ( %s/%s ): [dtls] recv_async: %s\n", config.name, config.type, gnutls_strerror(ret));
+	pthread_exit(0); // XXX: hack, should use thread_runner() instead
+      }
+      else if (ret < 0) {
+	/* Error: Noop */
+      }
+
+      if (ret > 0) {
+	/* OK */
+      }
+    }
+    else {
+      sleep(1);
+    }
+  }
+}
+
 void pm_dtls_server_log(int level, const char *str)
 {
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): [dtls] %d | %s", config.name, config.type, level, str);
@@ -378,7 +421,10 @@ void pm_dtls_client_bye(pm_dtls_peer_t *peer)
   gnutls_bye(peer->session, GNUTLS_SHUT_WR);
   gnutls_deinit(peer->session);
   gnutls_certificate_free_credentials(config.dtls_globs.x509_cred);
+
   peer->conn.stage = PM_DTLS_STAGE_DOWN;
+  if (peer->conn.async_rx) free(peer->conn.async_rx); // XXX: hack, use deallocate_thread_pool() instead
+  if (peer->conn.async_tx) free(peer->conn.async_tx); // XXX: hack, use deallocate_thread_pool() instead
 }
 
 int pm_dtls_server_process(int dtls_sock, struct sockaddr_storage *client, socklen_t clen, u_char *dtls_packet, int len, void *st)

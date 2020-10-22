@@ -1565,6 +1565,20 @@ sort_version:
 
     /* Flags set by signal handlers or control socket */
     if (graceful_shutdown_request) {
+#ifdef WITH_GNUTLS
+      if (config.nfprobe_dtls) {
+	pm_dtls_peer_t *dtls_peer = target.dtls;
+
+	if (dtls_peer->conn.do_reconnect && dtls_peer->conn.stage == PM_DTLS_STAGE_UP) {
+	  pm_dtls_client_bye(dtls_peer);
+	}
+
+	if (target.fd != ERR && dtls_peer->conn.stage != PM_DTLS_STAGE_UP) {
+	  pm_dtls_client_init(target.dtls, target.fd, &dest, dest_len, config.nfprobe_dtls_verify_cert);
+	}
+      }
+#endif
+
       Log(LOG_INFO, "INFO ( %s/%s ): Shutting down on user request.\n", config.name, config.type);
       check_expired(&flowtrack, &target, CE_EXPIRE_ALL, engine_type, engine_id);
 
@@ -1712,6 +1726,10 @@ expiry_check:
 #ifdef WITH_GNUTLS
       if (config.nfprobe_dtls) {
 	pm_dtls_peer_t *dtls_peer = target.dtls;
+
+	if (dtls_peer->conn.do_reconnect && dtls_peer->conn.stage == PM_DTLS_STAGE_UP) {
+	  pm_dtls_client_bye(dtls_peer);
+	}
 
 	if (target.fd != ERR && dtls_peer->conn.stage != PM_DTLS_STAGE_UP) {
           pm_dtls_client_init(target.dtls, target.fd, &dest, dest_len, config.nfprobe_dtls_verify_cert);
