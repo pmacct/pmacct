@@ -67,7 +67,7 @@ void nfacctd_isis_wrapper()
   send_to_pool(isis_pool, skinny_isis_daemon, NULL);
 }
 
-void skinny_isis_daemon()
+int skinny_isis_daemon()
 {
   char errbuf[PCAP_ERRBUF_SIZE];
   struct pm_pcap_device device;
@@ -123,7 +123,7 @@ void skinny_isis_daemon()
 
     if (device.data == NULL) {
       Log(LOG_ERR, "ERROR ( %s/core/ISIS ): data link not supported: %d\n", config.name, device.link_type);
-      return;
+      return ERR;
     }
     else {
       Log(LOG_INFO, "OK ( %s/core/ISIS ): link type is: %d\n", config.name, device.link_type);
@@ -224,6 +224,8 @@ void skinny_isis_daemon()
       }
     }
   }
+
+  return SUCCESS;
 }
 
 void isis_pdu_runner(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *buf)

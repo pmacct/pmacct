@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -37,7 +37,7 @@
 /* prototypes */
 #if defined WITH_ZMQ
 extern void bgp_lg_wrapper();
-extern void bgp_lg_daemon();
+extern int bgp_lg_daemon();
 
 #if defined WITH_JANSSON
 extern void bgp_lg_daemon_worker_json(void *, void *);

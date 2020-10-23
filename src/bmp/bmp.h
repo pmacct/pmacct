@@ -387,7 +387,7 @@ static const char __attribute__((unused)) *bmp_rm_pm_reason_types[] = {
 
 /* prototypes */
 extern void bmp_daemon_wrapper();
-extern void skinny_bmp_daemon();
+extern int skinny_bmp_daemon();
 extern void bmp_prepare_thread();
 extern void bmp_prepare_daemon();
 

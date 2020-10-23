@@ -369,7 +369,7 @@ struct bgp_lg_rep_gp_data {
 
 /* prototypes */
 extern void bgp_daemon_wrapper();
-extern void skinny_bgp_daemon();
+extern int skinny_bgp_daemon();
 extern void skinny_bgp_daemon_online();
 extern void bgp_prepare_thread();
 extern void bgp_prepare_daemon();

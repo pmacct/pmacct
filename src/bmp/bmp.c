@@ -57,7 +57,7 @@ void bmp_daemon_wrapper()
   send_to_pool(bmp_pool, skinny_bmp_daemon, NULL);
 }
 
-void skinny_bmp_daemon()
+int skinny_bmp_daemon()
 {
   int ret, rc, peers_idx, allowed, yes=1, do_term;
   int peers_idx_rr = 0, max_peers_idx = 0;
@@ -970,6 +970,8 @@ void skinny_bmp_daemon()
       goto select_again;
     }
   }
+
+  return SUCCESS;
 }
 
 void bmp_prepare_thread()

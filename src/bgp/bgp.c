@@ -82,9 +82,11 @@ void bgp_daemon_wrapper()
   send_to_pool(bgp_pool, skinny_bgp_daemon, NULL);
 }
 
-void skinny_bgp_daemon()
+int skinny_bgp_daemon()
 {
   skinny_bgp_daemon_online();
+
+  return SUCCESS;
 }
 
 void skinny_bgp_daemon_online()

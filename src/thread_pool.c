@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -197,6 +197,7 @@ void deallocate_thread_pool(thread_pool_t **pool)
 void *thread_runner(void *arg)
 {
   thread_pool_item_t *self = (thread_pool_item_t *) arg;
+  int ret = FALSE;
 
   pthread_mutex_lock(self->mutex);
   self->go = FALSE;
@@ -213,7 +214,9 @@ void *thread_runner(void *arg)
     if (self->quit) break;
 
     /* Doing our job */
-    (*self->function)(self->data);
+    ret = (*self->function)(self->data);
+
+    if (ret == ERR) self->quit = TRUE;
 
     self->usage++;
     self->go = FALSE;

@@ -64,7 +64,7 @@ void telemetry_wrapper()
   send_to_pool(telemetry_pool, telemetry_daemon, t_data);
 }
 
-void telemetry_daemon(void *t_data_void)
+int telemetry_daemon(void *t_data_void)
 {
   struct telemetry_data *t_data = t_data_void;
   telemetry_peer_cache tpc;
@@ -846,6 +846,8 @@ void telemetry_daemon(void *t_data_void)
       }
     }
   }
+
+  return SUCCESS;
 }
 
 void telemetry_prepare_thread(struct telemetry_data *t_data)

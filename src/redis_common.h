@@ -43,7 +43,7 @@ struct p_redis_host {
 
 /* prototypes */
 extern void p_redis_thread_wrapper(struct p_redis_host *);
-extern void p_redis_master_produce_thread(void *);
+extern int p_redis_master_produce_thread(void *);
 
 extern void p_redis_init(struct p_redis_host *, char *, redis_thread_handler);
 extern int p_redis_connect(struct p_redis_host *, int);
