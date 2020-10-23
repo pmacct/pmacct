@@ -741,7 +741,7 @@ extern void pm_dtls_server_bye();
 extern int pm_dtls_server_process(int, struct sockaddr_storage *, socklen_t, u_char *, int, void *);
 
 extern void pm_dtls_client_init(pm_dtls_peer_t *, int, struct sockaddr_storage *, socklen_t, char *);
-extern void pm_dtls_client_recv_async(pm_dtls_peer_t *);
+extern int pm_dtls_client_recv_async(pm_dtls_peer_t *);
 extern ssize_t pm_dtls_client_send(pm_dtls_peer_t *, const void *, size_t);
 extern void pm_dtls_client_bye(pm_dtls_peer_t *);
 #endif

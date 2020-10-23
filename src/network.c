@@ -354,39 +354,38 @@ int pm_dtls_server_select(gnutls_transport_ptr_t p, unsigned int ms)
   return 1;
 }
 
-void pm_dtls_client_recv_async(pm_dtls_peer_t *peer)
+int pm_dtls_client_recv_async(pm_dtls_peer_t *peer)
 {
   int ret = 0, buflen = 1500;
   char buf[buflen];
 
   for (;;) {
-    if (peer->conn.stage == PM_DTLS_STAGE_UP) { 
+    if (peer->conn.stage == PM_DTLS_STAGE_UP) {
       ret = gnutls_record_recv(peer->session, buf, buflen);
 
       if (ret == 0) {
 	/* Peer has closed the DTLS connection */
 	peer->conn.do_reconnect = TRUE;
-	Log(LOG_ERR, "ERROR ( %s/%s ): [dtls] recv_async: server closed connection.\n", config.name, config.type);
-	pthread_exit(0); // XXX: hack, should use thread_runner() instead
-      }
-      else if (ret < 0 && gnutls_error_is_fatal(ret) == 0) {
-	/* Error: fatal */
-	peer->conn.do_reconnect = TRUE;
-	Log(LOG_ERR, "ERROR ( %s/%s ): [dtls] recv_async: %s\n", config.name, config.type, gnutls_strerror(ret));
-	pthread_exit(0); // XXX: hack, should use thread_runner() instead
+	Log(LOG_INFO, "INFO ( %s/%s ): [dtls] recv_async: server closed connection.\n", config.name, config.type);
+	return ERR;
       }
       else if (ret < 0) {
-	/* Error: Noop */
+	/* Error */
+	peer->conn.do_reconnect = TRUE;
+	Log(LOG_ERR, "ERROR ( %s/%s ): [dtls] recv_async: %s\n", config.name, config.type, gnutls_strerror(ret));
+	return ERR;
       }
 
       if (ret > 0) {
-	/* OK */
+	/* OK: noop */
       }
     }
     else {
       sleep(1);
     }
   }
+
+  return SUCCESS;
 }
 
 void pm_dtls_server_log(int level, const char *str)
@@ -423,8 +422,10 @@ void pm_dtls_client_bye(pm_dtls_peer_t *peer)
   gnutls_certificate_free_credentials(config.dtls_globs.x509_cred);
 
   peer->conn.stage = PM_DTLS_STAGE_DOWN;
-  if (peer->conn.async_rx) free(peer->conn.async_rx); // XXX: hack, use deallocate_thread_pool() instead
-  if (peer->conn.async_tx) free(peer->conn.async_tx); // XXX: hack, use deallocate_thread_pool() instead
+  peer->conn.do_reconnect = FALSE;
+
+  if (peer->conn.async_rx) deallocate_thread_pool((thread_pool_t **) &peer->conn.async_rx);
+  if (peer->conn.async_tx) deallocate_thread_pool((thread_pool_t **) &peer->conn.async_tx);
 }
 
 int pm_dtls_server_process(int dtls_sock, struct sockaddr_storage *client, socklen_t clen, u_char *dtls_packet, int len, void *st)
