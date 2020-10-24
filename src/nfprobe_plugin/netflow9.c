@@ -2164,7 +2164,11 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock, void *dtls,
 	u_int num_class, class_j;
 	int direction, new_direction;
 	socklen_t errsz;
-	int err, r, flow_i, class_i;
+	int err, r, flow_i, class_i, ret;
+
+#ifdef WITH_GNUTLS
+        pm_dtls_peer_t *dtls_peer = dtls;
+#endif
 
 	memset(packet, 0, sizeof(packet));
 	gettimeofday(&now, NULL);
@@ -2414,10 +2418,22 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock, void *dtls,
 		  errsz = sizeof(err);
 		  /* Clear ICMP errors */
 		  getsockopt(nfsock, SOL_SOCKET, SO_ERROR, &err, &errsz); 
-		  if (send(nfsock, packet, (size_t)offset, 0) == -1) {
-		    Log(LOG_WARNING, "WARN ( %s/%s ): send() failed: %s\n", config.name, config.type, strerror(errno));
-		    return (-1);
+
+		  if (!config.nfprobe_dtls) {
+		    ret = send(nfsock, packet, (size_t)offset, 0);
+
+		    if (ret == ERR) {
+		      Log(LOG_WARNING, "WARN ( %s/%s ): send() failed: %s\n", config.name, config.type, strerror(errno));
+		      return ret;
+		    }
 		  }
+#ifdef WITH_GNUTLS
+		  else {
+		    ret = pm_dtls_client_send(dtls_peer, packet, (size_t)offset);
+		    if (ret < 0) return ret;
+		  }
+#endif
+
 		  num_packets++;
 		  nf9_pkts_until_template--;
 		}
