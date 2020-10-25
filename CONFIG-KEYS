@@ -1773,9 +1773,9 @@ DESC:		Defines the UDP port where to bind nfacctd for receiving (replicated) tem
 DEFAULT:	none
 
 KEY:		nfacctd_dtls_port [GLOBAL, NFACCTD_ONLY]
-DESC:		Defines the UDP port where to bind nfacctd for receiving NetFlow/IPFIX over DTLS. The
-		required files (key, certificate, etc.) required by DTLS are to be supplied via the
-		dtls_path config directive.
+DESC:		Defines the UDP port where to bind nfacctd for receiving NetFlow/IPFIX over DTLS. Needs
+		pmacct to be configured for compiling with the --enable-gnutls knob. The files (key,
+		certificate, etc.) required by DTLS are to be supplied via the dtls_path config directive.
 DEFAULT:	none
 
 KEY:            [ nfacctd_stitching | sfacctd_stitching | pmacctd_stitching | uacctd_stitching ]
@@ -2130,6 +2130,19 @@ KEY:		nfprobe_receiver
 DESC:		Defines the remote IP address/hostname and port to which NetFlow datagrams are to be exported.
 		If IPv4, the value is expected as 'address:port'. If IPv6, it is expected as '[address]:port'.
 DEFAULT:	127.0.0.1:2100
+
+KEY:		nfprobe_dtls
+VALUES:         [ true | false ]
+DESC:		Enables sending out NetFlow/IPFIX packets over DTLS. Needs pmacct to be configured for
+		compiling with the --enable-gnutls knob. The files (key, certificate, etc.) required by
+		DTLS are to be supplied via the dtls_path config directive.
+DEFAULT:	false
+
+KEY:		nfprobe_dtls_verify_cert
+DESC:		If nfprobe_dtls is set to true, this validates that the certificate received from the
+		server corresponds to the specified hostname. Sample of an expected value would be
+		"www.example.com".
+DEFAULT:	none
 
 KEY:            nfprobe_source_ip
 DESC:           Defines the local IP address from which NetFlow datagrams are exported. Only a numerical IPv4/
