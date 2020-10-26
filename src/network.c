@@ -404,7 +404,7 @@ void pm_dtls_server_bye()
     if (entry) {
       next:
       if (entry->dtls.conn.fd) {
-	gnutls_bye(entry->dtls.session, GNUTLS_SHUT_RDWR);
+	gnutls_bye(entry->dtls.session, GNUTLS_SHUT_WR);
       }
 
       if (entry->next) {
