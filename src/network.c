@@ -289,9 +289,7 @@ void pm_dtls_client_init(pm_dtls_peer_t *peer, int fd, struct sockaddr_storage *
 
   if (ret < 0) {
     Log(LOG_ERR, "ERROR ( %s/%s ): [dtls] handshake: %s\n", config.name, config.type, gnutls_strerror(ret));
-    gnutls_deinit(peer->session);
-    gnutls_certificate_free_credentials(config.dtls_globs.x509_cred);
-    peer->conn.stage = PM_DTLS_STAGE_DOWN;
+    pm_dtls_server_bye(peer);
   }
   else {
     char *desc;
@@ -393,23 +391,38 @@ void pm_dtls_server_log(int level, const char *str)
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): [dtls] %d | %s", config.name, config.type, level, str);
 }
 
-void pm_dtls_server_bye()
+void pm_dtls_server_bye(pm_dtls_peer_t *peer)
 {
   struct xflow_status_entry *entry;
   int idx;
 
-  for (idx = 0; idx < XFLOW_STATUS_TABLE_SZ; idx++) {
-    entry = dtls_status_table.t[idx];
+  if (peer) {
+    if (peer->conn.fd) {
+      gnutls_bye(peer->session, GNUTLS_SHUT_WR);
+      gnutls_deinit(peer->session);
 
-    if (entry) {
-      next:
-      if (entry->dtls.conn.fd) {
-	gnutls_bye(entry->dtls.session, GNUTLS_SHUT_WR);
-      }
+      peer->session = NULL;
+      peer->conn.stage = PM_DTLS_STAGE_DOWN;
+    }
+  }
+  else {
+    for (idx = 0; idx < XFLOW_STATUS_TABLE_SZ; idx++) {
+      entry = dtls_status_table.t[idx];
 
-      if (entry->next) {
-	entry = entry->next;
-	goto next;
+      if (entry) {
+	next:
+	if (entry->dtls.conn.fd) {
+	  gnutls_bye(entry->dtls.session, GNUTLS_SHUT_WR);
+	  gnutls_deinit(entry->dtls.session);
+
+	  entry->dtls.session = NULL;
+	  entry->dtls.conn.stage = PM_DTLS_STAGE_DOWN;
+	}
+
+	if (entry->next) {
+	  entry = entry->next;
+	  goto next;
+	}
       }
     }
   }
@@ -444,10 +457,8 @@ int pm_dtls_server_process(int dtls_sock, struct sockaddr_storage *client, sockl
 	  dtls_ret = gnutls_dtls_cookie_verify(&config.dtls_globs.cookie_key, client, sizeof(struct sockaddr_storage),
 					       dtls_packet, len, &entry->dtls.prestate);
 	  if (dtls_ret < 0) {
-	    gnutls_deinit(entry->dtls.session);
-	    memset(&entry->dtls, 0, sizeof(entry->dtls)); /* PM_DTLS_STAGE_DOWN */
-
 	    Log(LOG_ERR, "ERROR ( %s/core ): [dtls] hello: %s\n", config.name, gnutls_strerror(dtls_ret));
+	    pm_dtls_server_bye(&entry->dtls);
 	  }
 	  else {
 	    gnutls_dtls_prestate_set(entry->dtls.session, &entry->dtls.prestate);
@@ -463,10 +474,8 @@ int pm_dtls_server_process(int dtls_sock, struct sockaddr_storage *client, sockl
 	  while (dtls_ret < 0 && !gnutls_error_is_fatal(dtls_ret));
 
 	  if (dtls_ret < 0) {
-	    gnutls_deinit(entry->dtls.session);
-	    memset(&entry->dtls, 0, sizeof(entry->dtls)); /* PM_DTLS_STAGE_DOWN */
-
 	    Log(LOG_ERR, "ERROR ( %s/core ): [dtls] handshake: %s\n", config.name, gnutls_strerror(dtls_ret));
+	    pm_dtls_server_bye(&entry->dtls);
 	  }
 	  else {
 	    entry->dtls.conn.stage = PM_DTLS_STAGE_UP;
@@ -482,10 +491,8 @@ int pm_dtls_server_process(int dtls_sock, struct sockaddr_storage *client, sockl
 	      Log(LOG_WARNING, "WARN ( %s/core ): [dtls] data: %s\n", config.name, gnutls_strerror(dtls_ret));
 	    }
 	    else {
-	      gnutls_deinit(entry->dtls.session);
-	      memset(&entry->dtls, 0, sizeof(entry->dtls)); /* PM_DTLS_STAGE_DOWN */
-
 	      Log(LOG_ERR, "ERROR ( %s/core ): [dtls] data: %s\n", config.name, gnutls_strerror(dtls_ret));
+	      pm_dtls_server_bye(&entry->dtls);
 	    }
 	  }
 	  else {
@@ -499,6 +506,11 @@ int pm_dtls_server_process(int dtls_sock, struct sockaddr_storage *client, sockl
 		  config.name, entry->dtls.conn.seq[0], entry->dtls.conn.seq[1], entry->dtls.conn.seq[2],
 		  entry->dtls.conn.seq[3], entry->dtls.conn.seq[4], entry->dtls.conn.seq[5], entry->dtls.conn.seq[6],
 		  entry->dtls.conn.seq[7], ret, hexbuf);
+	    }
+
+	    /* EOF */
+	    if (ret == 0) {
+	      pm_dtls_server_bye(&entry->dtls);
 	    }
 	  }
 	}
@@ -527,10 +539,8 @@ int pm_dtls_server_process(int dtls_sock, struct sockaddr_storage *client, sockl
 					   &entry->dtls.prestate, (gnutls_transport_ptr_t) &entry->dtls.conn,
 					   pm_dtls_server_send);
 	if (dtls_ret < 0) {
-	  gnutls_deinit(entry->dtls.session);
-	  memset(&entry->dtls, 0, sizeof(entry->dtls)); /* PM_DTLS_STAGE_DOWN */
-
 	  Log(LOG_ERR, "ERROR ( %s/core ): [dtls] cookie: %s\n", config.name, gnutls_strerror(dtls_ret));
+	  pm_dtls_server_bye(&entry->dtls);
 	}
 	else {
 	  entry->dtls.conn.stage = PM_DTLS_STAGE_HELLO;

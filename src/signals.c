@@ -141,7 +141,7 @@ void PM_sigint_handler(int signum)
 
 #ifdef WITH_GNUTLS
     if (config.nfacctd_dtls_sock) {
-      pm_dtls_server_bye();
+      pm_dtls_server_bye(NULL);
       close(config.nfacctd_dtls_sock);
     }
 #endif
