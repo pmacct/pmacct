@@ -696,6 +696,12 @@ typedef struct {
 } proxy_protocol_header;
 
 #ifdef WITH_GNUTLS
+
+#define PM_DTLS_TIMEOUT_RETRANS	(1 * 1000)
+#define PM_DTLS_TIMEOUT_TOTAL	(60 * 1000)
+#define PM_DTLS_TIMEOUT_HS	(5 * 1000)
+#define PM_DTLS_MTU		1500
+
 typedef struct {
   gnutls_certificate_credentials_t x509_cred;
   gnutls_datum_t cookie_key;

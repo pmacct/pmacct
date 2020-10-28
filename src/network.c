@@ -266,8 +266,9 @@ void pm_dtls_client_init(pm_dtls_peer_t *peer, int fd, struct sockaddr_storage *
     gnutls_session_set_verify_cert(peer->session, verify_cert, 0);
   }
 
-  gnutls_dtls_set_mtu(peer->session, 1500);
-  // XXX: gnutls_dtls_set_timeouts(peer->session, 1000, 60000);
+  gnutls_handshake_set_timeout(peer->session, PM_DTLS_TIMEOUT_HS); // XXX
+  gnutls_dtls_set_timeouts(peer->session, PM_DTLS_TIMEOUT_RETRANS, PM_DTLS_TIMEOUT_TOTAL);
+  gnutls_dtls_set_mtu(peer->session, PM_DTLS_MTU); // XXX: PMTU?
 
   gnutls_transport_set_int(peer->session, fd);
   peer->conn.fd = fd;
@@ -354,7 +355,7 @@ int pm_dtls_server_select(gnutls_transport_ptr_t p, unsigned int ms)
 
 int pm_dtls_client_recv_async(pm_dtls_peer_t *peer)
 {
-  int ret = 0, buflen = 1500;
+  int ret = 0, buflen = PM_DTLS_MTU;
   char buf[buflen];
 
   for (;;) {
@@ -521,8 +522,9 @@ int pm_dtls_server_process(int dtls_sock, struct sockaddr_storage *client, sockl
       }
       else {
 	gnutls_init(&entry->dtls.session, GNUTLS_SERVER | GNUTLS_DATAGRAM);
-	gnutls_handshake_set_timeout(entry->dtls.session, 20 * 1000); // XXX
-	gnutls_dtls_set_mtu(entry->dtls.session, 1500); // XXX: PMTU?
+	gnutls_handshake_set_timeout(entry->dtls.session, PM_DTLS_TIMEOUT_HS); // XXX
+        gnutls_dtls_set_timeouts(entry->dtls.session, PM_DTLS_TIMEOUT_RETRANS, PM_DTLS_TIMEOUT_TOTAL);
+	gnutls_dtls_set_mtu(entry->dtls.session, PM_DTLS_MTU); // XXX: PMTU?
 	gnutls_priority_set(entry->dtls.session, config.dtls_globs.priority_cache);
 	gnutls_credentials_set(entry->dtls.session, GNUTLS_CRD_CERTIFICATE, config.dtls_globs.x509_cred);
 
