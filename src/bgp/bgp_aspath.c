@@ -503,7 +503,10 @@ aspath_make_str_count (struct aspath *as)
   char *str_buf;
 
   /* Empty aspath. */
-  if (!as->segments) str_buf = aspath_make_empty();
+  if (!as->segments) {
+    str_buf = aspath_make_empty();
+    return str_buf;
+  }
 
   seg = as->segments;
   
