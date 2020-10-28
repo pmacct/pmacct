@@ -402,8 +402,7 @@ void pm_dtls_server_bye(pm_dtls_peer_t *peer)
       gnutls_bye(peer->session, GNUTLS_SHUT_WR);
       gnutls_deinit(peer->session);
 
-      peer->session = NULL;
-      peer->conn.stage = PM_DTLS_STAGE_DOWN;
+      memset(peer, 0, sizeof(pm_dtls_peer_t);
     }
   }
   else {
@@ -416,8 +415,7 @@ void pm_dtls_server_bye(pm_dtls_peer_t *peer)
 	  gnutls_bye(entry->dtls.session, GNUTLS_SHUT_WR);
 	  gnutls_deinit(entry->dtls.session);
 
-	  entry->dtls.session = NULL;
-	  entry->dtls.conn.stage = PM_DTLS_STAGE_DOWN;
+	  memset(peer, 0, sizeof(pm_dtls_peer_t);
 	}
 
 	if (entry->next) {
