@@ -1498,7 +1498,6 @@ sort_version:
 #ifdef WITH_GNUTLS
       if (config.nfprobe_dtls) {
 	target.dtls = malloc(sizeof(pm_dtls_peer_t));
-	pm_dtls_client_init(target.dtls, target.fd, &dest, dest_len, config.nfprobe_dtls_verify_cert);
       }
 #endif
     }
@@ -1586,9 +1585,7 @@ sort_version:
       if (config.nfprobe_dtls) {
 	pm_dtls_peer_t *dtls_peer = target.dtls;
 
-	if (dtls_peer->conn.stage == PM_DTLS_STAGE_UP) {
-	  pm_dtls_client_bye(dtls_peer);
-	}
+	pm_dtls_client_bye(dtls_peer);
       }
 #endif
 
@@ -1756,6 +1753,14 @@ expiry_check:
 	  }
 	}
       }
+
+#ifdef WITH_GNUTLS
+      if (config.nfprobe_dtls) {
+	pm_dtls_peer_t *dtls_peer = target.dtls;
+
+	pm_dtls_client_bye(dtls_peer);
+      }
+#endif
 	
       /*
        * If we are over max_flows, force-expire the oldest 
