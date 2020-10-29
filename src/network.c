@@ -431,7 +431,6 @@ void pm_dtls_client_bye(pm_dtls_peer_t *peer)
 {
   gnutls_bye(peer->session, GNUTLS_SHUT_WR);
   gnutls_deinit(peer->session);
-  gnutls_certificate_free_credentials(config.dtls_globs.x509_cred);
 
   peer->conn.stage = PM_DTLS_STAGE_DOWN;
   peer->conn.do_reconnect = FALSE;
