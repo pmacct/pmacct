@@ -656,7 +656,46 @@ name=int_descr		field_type=83	len=64	semantics=str
 name=sampler_interval	field_type=50	len=4	semantics=u_int
 name=sampler_id		field_type=48	len=2	semantics=u_int
 
-Vb. Examples configuring NetFlow v9/IPFIX export
+Vb. Distributing NetFlow v9/IPFIX templates when clustering
+One of the possible ways to cluster multiple nfacctd daemons running on the same
+system (ie. to harness all [configured] CPU threads) is to rely on the Linux/BSD
+SO_REUSEPORT feature (read more in the "Miscellaneous notes and troubleshooting
+tips" section of this document).
+
+NetFlow v9/IPFIX protocols are template-based and templates are emitted in
+specific Options packets and are indeed needed in order to properly decode
+actual Data packets. Hence a load-balancing cluster (when not hashing but
+performing some sort of round-robin) does pose the problem of disseminating the
+templates across the clustered daemons. For this very purpose there are two
+config knobs: nfacctd_templates_receiver (to export received templates) and
+nfacctd_templates_port (to define a port to receive templates from the rest
+of the cluster). When multiple daemons are clustered a replicator (nfacctd with
+'tee' plugin configured is required). Here is an example of the configs needed:
+
+nfacctd clustered daemon config (other daemons in the same cluster would be
+listening on different nfacctd_templates_port ports, ie. 20002, 20003, etc.):
+
+!
+! [ .. existing config .. ]
+!
+nfacctd_templates_receiver: 127.0.0.1:10000
+nfacctd_templates_port: 20001
+
+The replicator piece needs two bits, a config and a tee_receivers file (in the
+example receivers.lst). Here is the config:
+
+nfacctd_port: 10000
+!
+plugins: tee[a]
+!
+tee_receivers[a]: /path/to/receivers.lst
+tee_transparent[a]: true 
+
+And here is the receivers.lst file:
+
+id=1   ip=127.0.0.1:20001,127.0.0.1:20002,127.0.0.1:20003,[..]
+
+Vc. Examples configuring NetFlow v9/IPFIX export
 
 Example to configure NetFlow v9 export on a Cisco running IOS/IOS-XE:
 
@@ -1901,22 +1940,14 @@ collector (please get in touch if interested). An alternative to the use of
 pmbgpd is NAT/masquerading; in this context, pmbgpd brings the advantage of
 running fully in user-space.
 
-If supported and if enabled on the system, the SO_REUSEPORT feature can be
-leveraged on Linux: it allows multiple daemons to bind to the same local
-address and port in order to load-balance processing of incoming packets.
-SO_REUSEPORT can be used in alternative to BGP xconnects, ie. to simplify
-the deployment on a single node, or in conjunction with BGP xconnects, ie.
-for massive multi-node scale-out. 
+SO_REUSEPORT feature (read more about it in the section "Miscellaneous notes
+and troubleshooting tips" of this document) can be used in alternative to BGP
+xconnects, ie. to simplify the deployment on a single node, or in conjunction
+with BGP xconnects, ie. for massive multi-node scale-out.
 
 Leveraging SO_REUSEPORT, when used in alternative to BGP xconnects, may be
 best combined with a list of allowed IP addresses, ie. bgp_daemon_allow_file,
-to explicitely wire peers to collectors. Below a reference to a presentation
-of such feature:
-
-https://domsch.com/linux/lpc2010/Scaling_techniques_for_servers_with_high_connection%20rates.pdf
-
-To enable SO_REUSEPORT on a Linux system 'sysctl net.core.allow_reuseport=1'.
-Also the processes must be launched by the same user.
+to explicitely wire peers to collectors. 
 
 When SO_REUSEPORT is used in conjunction with BGP xconnects there is virtually
 no config change to make (except perhaps the sensible decision to use different
@@ -3010,3 +3041,14 @@ possible similar); 4) excluded from these guidelines are problems related to
 nDPI but unrelated to classification, ie. memory leaks, performance issues,
 crashes, etc. for which you can follow the other guide lines in this document
 in the "Miscellaneous notes and troubleshooting tips" section.
+
+j) if supported and if enabled on the system, the SO_REUSEPORT feature can be
+leveraged on Linux and most BSDs where it is part of the standard kernel: it
+allows multiple daemons to bind to the same local address and port in order
+to load-balance processing of incoming packets. Here a reference to a
+presentation of this feature for Linux:
+
+https://domsch.com/linux/lpc2010/Scaling_techniques_for_servers_with_high_connection%20rates.pdf
+
+To enable SO_REUSEPORT on a Linux system 'sysctl net.core.allow_reuseport=1'.
+Also the processes must be launched by the same user.
