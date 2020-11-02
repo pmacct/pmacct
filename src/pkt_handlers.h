@@ -108,6 +108,7 @@ extern void NF_mpls_label_top_handler(struct channels_list_entry *, struct packe
 extern void NF_mpls_label_bottom_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_stack_depth_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_vpn_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void NF_mpls_vpn_rd_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_pw_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_vxlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_timestamp_start_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

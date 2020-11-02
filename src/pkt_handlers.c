@@ -423,6 +423,9 @@ void evaluate_packet_handlers()
       if (config.acct_type == ACCT_NF) {
         channels_list[index].phandler[primitives] = NF_mpls_vpn_id_handler;
         primitives++;
+
+        channels_list[index].phandler[primitives] = NF_mpls_vpn_rd_handler;
+        primitives++;
       }
     }
 
@@ -3548,6 +3551,24 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
     if (vrfid) {
       pbgp->mpls_vpn_rd.val = ntohl(pbgp->mpls_vpn_rd.val);
       if (pbgp->mpls_vpn_rd.val) pbgp->mpls_vpn_rd.type = RD_TYPE_VRFID;
+    }
+    break;
+  default:
+    break;
+  }
+}
+
+void NF_mpls_vpn_rd_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_MPLS_VPN_RD].len && !pbgp->mpls_vpn_rd.val) {
+      memcpy(&pbgp->mpls_vpn_rd, pptrs->f_data+tpl->tpl[NF9_MPLS_VPN_RD].off, MIN(tpl->tpl[NF9_MPLS_VPN_RD].len, 8));
     }
     break;
   default:

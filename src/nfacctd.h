@@ -198,6 +198,7 @@ struct data_hdr_v9 {
 #define NF9_FLOW_PACKETS		86 
 
 #define NF9_FORWARDING_STATUS           89
+#define NF9_MPLS_VPN_RD			90
 /* ... */
 #define NF9_LAYER2_PKT_SECTION_DATA	104
 /* ... */
@@ -386,6 +387,7 @@ static char __attribute__((unused)) *tpl_desc_list[] = {
   "", "", "", "",
   "", "", "",
   "forwarding status",
+  "mpls vpn rd"
 };
 
 #define MAX_OPT_TPL_DESC_LIST 100
