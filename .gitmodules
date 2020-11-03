@@ -1,0 +1,3 @@
+[submodule "src/external_libs/libcdada"]
+	path = src/external_libs/libcdada
+	url = https://github.com/msune/libcdada.git
