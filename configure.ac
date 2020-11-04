@@ -1110,11 +1110,16 @@ dnl Git submodule Dependencies buid system
 dnl --------------------------------------
 
 dnl First check whether to build git submodule deps
+WITH_EXTERNAL_DEPS_DEFAULT=yes
+if test -z `git rev-parse HEAD 2> /dev/null`; then
+	WITH_EXTERNAL_DEPS_DEFAULT=no
+fi
+
 AC_MSG_CHECKING([whether external dependencies (git submodules) should be compiled])
 AC_ARG_WITH(external-deps,
 		AS_HELP_STRING([--without-external-deps], ["Don't build external dependencies (git submodules). Specially useful for package maintainers [default=with]"]),
 			[WITH_EXTERNAL_DEPS="$withval"],
-			[WITH_EXTERNAL_DEPS="yes"]
+			[WITH_EXTERNAL_DEPS="$WITH_EXTERNAL_DEPS_DEFAULT"]
 			)
 if test x"$WITH_EXTERNAL_DEPS" = x"yes"; then
 	dnl Compiled-in dependencies
