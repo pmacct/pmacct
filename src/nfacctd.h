@@ -317,7 +317,7 @@ struct data_hdr_v9 {
 #define NF9_CUST_LABEL			3
 /* CUSTOM TYPES END HERE */
 
-#define MAX_TPL_DESC_LIST 89
+#define MAX_TPL_DESC_LIST 90
 static char __attribute__((unused)) *tpl_desc_list[] = {
   "",
   "in bytes",
