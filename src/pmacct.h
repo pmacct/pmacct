@@ -72,6 +72,7 @@
 #include "pmsearch.h"
 #include "linklist.h"
 #include "filters/bloom.h"
+#include <cdada.h>
 
 #include <sys/mman.h>
 #if !defined (MAP_ANONYMOUS)

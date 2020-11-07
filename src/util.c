@@ -1862,6 +1862,7 @@ void version_daemon(char *header)
   printf("\n");
 
   printf("Libs:\n");
+  printf("cdada %s\n", cdada_get_ver());
   printf("%s\n", pcap_lib_version());
 #ifdef WITH_MYSQL
   MY_mysql_get_version();
