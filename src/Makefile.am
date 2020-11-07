@@ -1,4 +1,10 @@
-SUBDIRS = nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp telemetry rpki filters
+SUBDIRS =
+
+if WITH_EXTERNAL_DEPS
+SUBDIRS += external_libs
+endif
+
+SUBDIRS += nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp telemetry rpki filters
 sbin_PROGRAMS =
 bin_PROGRAMS =
 EXTRA_PROGRAMS =

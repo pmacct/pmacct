@@ -1105,6 +1105,43 @@ AC_CHECK_DECL([SO_REUSEPORT],
 		]
 )
 
+dnl --------------------------------------
+dnl Git submodule Dependencies buid system
+dnl --------------------------------------
+
+dnl First check whether to build git submodule deps
+WITH_EXTERNAL_DEPS_DEFAULT=yes
+if test -z `git rev-parse HEAD 2> /dev/null`; then
+	WITH_EXTERNAL_DEPS_DEFAULT=no
+fi
+
+AC_MSG_CHECKING([whether external dependencies (git submodules) should be compiled])
+AC_ARG_WITH(external-deps,
+		AS_HELP_STRING([--without-external-deps], ["Don't build external dependencies (git submodules). Specially useful for package maintainers [default=with]"]),
+			[WITH_EXTERNAL_DEPS="$withval"],
+			[WITH_EXTERNAL_DEPS="$WITH_EXTERNAL_DEPS_DEFAULT"]
+			)
+if test x"$WITH_EXTERNAL_DEPS" = x"yes"; then
+	dnl Compiled-in dependencies
+	INCLUDES="-I${ac_pwd}/src/external_libs/rootfs/include ${INCLUDES} "
+	LDFLAGS="-L${ac_pwd}/src/external_libs/rootfs/lib ${LDFLAGS}"
+	AC_MSG_RESULT(yes)
+else
+	AC_MSG_RESULT(no)
+fi
+
+AM_CONDITIONAL([WITH_EXTERNAL_DEPS], [test "x$WITH_EXTERNAL_DEPS" = "xyes"])
+
+dnl --------------------------------------
+
+dnl libcdada requires C++ (and needs to add libstdc++ to LDFLAGS
+AC_PROG_CXX
+LDFLAGS="-lcdada -lstdc++ ${LDFLAGS}"
+AS_CASE(["$WITH_EXTERNAL_DEPS"],
+  [yes], [],
+  [no], [AC_CHECK_LIB([cdada], [cdada_get_ver], [], [AC_MSG_ERROR([Could not find libcdada])])],
+  [])
+
 dnl set debug level
 AC_MSG_CHECKING([whether to enable debugging compiler options])
 AC_ARG_ENABLE(debug,
@@ -1180,7 +1217,8 @@ AM_CONDITIONAL([USING_BGP_BINS], [test x"$USING_BGP_BINS" = x"yes"])
 AM_CONDITIONAL([USING_BMP_BINS], [test x"$USING_BMP_BINS" = x"yes"])
 AM_CONDITIONAL([USING_ST_BINS], [test x"$USING_ST_BINS" = x"yes"])
 AC_OUTPUT([ Makefile \
-	    src/Makefile src/nfprobe_plugin/Makefile \
+	    src/Makefile src/external_libs/Makefile \
+	    src/nfprobe_plugin/Makefile \
 	    src/sfprobe_plugin/Makefile src/bgp/Makefile \
 	    src/tee_plugin/Makefile src/isis/Makefile \
 	    src/bmp/Makefile src/rpki/Makefile \
