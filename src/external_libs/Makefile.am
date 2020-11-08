@@ -24,7 +24,7 @@ _libcdada:
 		cd $(abs_srcdir)/libcdada/ && \
 		./autogen.sh &&\
 		cd $(abs_builddir)/libcdada/build && \
-		$(abs_srcdir)/libcdada/configure --disable-shared --host=$(host_alias) \
+		$(abs_srcdir)/libcdada/configure --disable-shared --host=$(host_alias) @configure_silent_rules_val@ \
 		--prefix=$(abs_builddir)/rootfs && make $(MAKE_JOBS) install;\
 		if [ $$? != 0 ]; then exit 1; fi; \
 		echo "$(shell cd $(abs_srcdir)/libcdada && git rev-parse HEAD)" > $(abs_builddir)/.libcdada_mark;\

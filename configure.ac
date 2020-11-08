@@ -1131,6 +1131,10 @@ else
 fi
 
 AM_CONDITIONAL([WITH_EXTERNAL_DEPS], [test "x$WITH_EXTERNAL_DEPS" = "xyes"])
+AS_CASE(["$AM_DEFAULT_VERBOSITY"],
+  [0], [AC_SUBST([configure_silent_rules_val], [--enable-silent-rules])],
+  [1], [AC_SUBST([configure_silent_rules_val], [--disable-silent-rules])],
+  [AC_SUBST([configure_silent_rules_val], [--enable-silent-rules])])
 
 dnl --------------------------------------
 
