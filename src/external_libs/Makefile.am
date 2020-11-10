@@ -3,6 +3,9 @@ BUILT_SOURCES = submodule_deps
 CLEANFILES = .libcdada_mark
 
 #NOTE make sure Makefile targets don't have the same name of the folder
+#NOTE2 some pmacct users _love_ vintage software, and they run versions of git
+#      (like v1.8.3) which don't support initializing submodules from anywhere other
+#      than the root.... sigh
 
 ##
 ## LIBCDADA
@@ -15,8 +18,10 @@ _libcdada:
 	echo "[dep: libcdada] Checking..."; \
 	if [[ ! -f "$(abs_srcdir)/libcdada/.git" ]]; then \
 		echo "[dep: libcdada] Cloning and checking out commit..";\
-		git submodule update --init --recursive libcdada; \
+		cd $(abs_top_srcdir); \
+		git submodule update --init --recursive src/external_libs/libcdada; \
 		if [ $$? != 0 ]; then exit 1; fi;\
+		cd $(abs_builddir); \
 	fi;\
 	if [[ ( ! -f $(abs_builddir)/.libcdada_mark ) || "$(shell cat $(abs_builddir)/.libcdada_mark 2> /dev/null)" != "$(shell cd $(abs_srcdir)/libcdada && git rev-parse HEAD)" ]]; then \
 		echo "[dep: libcdada] Building...";\
