@@ -1140,6 +1140,11 @@ dnl --------------------------------------
 
 dnl libcdada requires C++ (and needs to add libstdc++ to LDFLAGS
 AC_PROG_CXX
+AC_MSG_CHECKING([for a valid C++ compiler])
+AC_LANG_PUSH([C++])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[])],[AC_MSG_RESULT(yes)],[AC_MSG_ERROR([No C++ compiler found])])
+AC_LANG_POP([C++])
+
 LIBS="-lcdada -lstdc++ ${LIBS}"
 AS_CASE(["$WITH_EXTERNAL_DEPS"],
   [yes], [],
