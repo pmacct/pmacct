@@ -95,7 +95,6 @@
 #define PRIMITIVE_LEN 		32
 #define PRIMITIVE_DESC_LEN	64
 
-#define PMACCT_VERSION "1.7.6-git"
 #define MANTAINER "Paolo Lucente <paolo@pmacct.net>"
 #define GET_IN_TOUCH_MSG "If you see this message, please get in touch"
 #define PMACCTD_USAGE_HEADER "Promiscuous Mode Accounting Daemon, pmacctd"

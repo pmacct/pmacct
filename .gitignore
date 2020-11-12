@@ -27,6 +27,7 @@ Makefile
 *.l[oa]
 .deps/
 .libs/
+/src/pmacct-version.h
 /src/pmacct-build.h
 /src/.pmacct-build.h
 /src/pmacct

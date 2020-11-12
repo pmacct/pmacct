@@ -1,12 +1,16 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl configuration file for pmacct 
 
-AC_INIT([pmacct], [1.7.6-git], [paolo@pmacct.net])
+m4_include([VERSION]) #Force reconf on VERSION change
+AC_INIT([pmacct], m4_esyscmd_s(cat VERSION), [paolo@pmacct.net])
 AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_MACRO_DIR([m4])
 LT_INIT
 AC_PREFIX_DEFAULT([/usr/local])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES(yes)])
+
+PMACCT_VERSION=`cat VERSION`
+AC_SUBST(PMACCT_VERSION)
 
 COMPILE_ARGS="${ac_configure_args}"
 
@@ -1225,6 +1229,11 @@ AM_CONDITIONAL([USING_TRAFFIC_BINS], [test x"$USING_TRAFFIC_BINS" = x"yes"])
 AM_CONDITIONAL([USING_BGP_BINS], [test x"$USING_BGP_BINS" = x"yes"])
 AM_CONDITIONAL([USING_BMP_BINS], [test x"$USING_BMP_BINS" = x"yes"])
 AM_CONDITIONAL([USING_ST_BINS], [test x"$USING_ST_BINS" = x"yes"])
+
+AC_CONFIG_FILES([
+	    src/pmacct-version.h
+])
+
 AC_OUTPUT([ Makefile \
 	    src/Makefile src/external_libs/Makefile \
 	    src/nfprobe_plugin/Makefile \

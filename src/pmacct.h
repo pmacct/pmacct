@@ -84,6 +84,7 @@
 #endif
 #endif
 
+#include "pmacct-version.h"
 #include "pmacct-build.h"
 #include "pmacct-defines.h"
 
