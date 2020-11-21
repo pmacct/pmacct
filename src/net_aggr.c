@@ -221,8 +221,8 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
       stat(filename, &st);
 
       /* We have no (valid) rows. We build a zeroed single-row table aimed to complete
-         successfully any further lookup */
-      if (!eff_rows) eff_rows++;
+         successfully any further lookup; unless we are configured to work as a filter */
+      if (!eff_rows && !config.networks_file_filter) eff_rows++;
 
       /* 3rd step: sorting table */
       merge_sort(filename, tmpt->table, 0, eff_rows);
@@ -1476,8 +1476,8 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
       stat(filename, &st);
 
       /* We have no (valid) rows. We build a zeroed single-row table aimed to complete
-         successfully any further lookup */
-      if (!eff_rows) eff_rows++;
+         successfully any further lookup; unless we are configured to work as a filter */
+      if (!eff_rows && !config.networks_file_filter) eff_rows++;
 
       /* 3rd step: sorting table */
       merge_sort6(filename, tmpt->table6, 0, eff_rows);
