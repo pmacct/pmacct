@@ -2041,6 +2041,44 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  }
 	}
 
+        if ((tpl->tpl[NF9_INGRESS_VRFID].len == 4 || tpl->tpl[NF9_INGRESS_VRFID].len == 4) && tpl->tpl[NF9_MPLS_VPN_RD].len == 8) {
+          /* Handling the global option scoping case */
+          if (!config.nfacctd_disable_opt_scope_check) {
+            if (tpl->tpl[NF9_OPT_SCOPE_SYSTEM].len) entry = (struct xflow_status_entry *) pptrs->f_status_g;
+          }
+          else entry = (struct xflow_status_entry *) pptrs->f_status_g;
+
+	  if (entry) {
+	    u_int32_t ingress_vrfid, egress_vrfid;
+	    rd_t *mpls_vpn_rd;
+
+	    if (!entry->rd_map) {
+	      entry->rd_map = cdada_map_create(u_int32_t); /* size of vrfid */
+	    }
+
+	    memcpy(&ingress_vrfid, pptrs->f_data+tpl->tpl[NF9_INGRESS_VRFID].off, tpl->tpl[NF9_INGRESS_VRFID].len);
+	    ingress_vrfid = ntohl(ingress_vrfid);
+
+	    memcpy(&egress_vrfid, pptrs->f_data+tpl->tpl[NF9_EGRESS_VRFID].off, tpl->tpl[NF9_EGRESS_VRFID].len);
+	    egress_vrfid = ntohl(egress_vrfid);
+
+	    if (ingress_vrfid || egress_vrfid) {
+	      mpls_vpn_rd = malloc(sizeof(rd_t));
+
+	      memcpy(mpls_vpn_rd, pptrs->f_data+tpl->tpl[NF9_MPLS_VPN_RD].off, tpl->tpl[NF9_MPLS_VPN_RD].len);
+	      bgp_rd_ntoh(mpls_vpn_rd);
+
+	      if (ingress_vrfid) {
+	        cdada_map_insert(entry->rd_map, &ingress_vrfid, mpls_vpn_rd);
+	      }
+
+	      if (egress_vrfid) {
+	        cdada_map_insert(entry->rd_map, &egress_vrfid, mpls_vpn_rd);
+	      }
+	    }
+	  }
+	}
+
 	if (config.nfacctd_account_options) {
 	  pptrs->f_data = pkt;
 	  pptrs->f_tpl = (u_char *) tpl;
