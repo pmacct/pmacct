@@ -378,6 +378,7 @@ extern int pm_pcap_device_getindex_byifname(struct pm_pcap_devices *, char *);
 extern pcap_t *pm_pcap_open(const char *, int, int, int, int, int, char *);
 extern void pm_pcap_add_filter(struct pm_pcap_device *);
 extern int pm_pcap_add_interface(struct pm_pcap_device *, char *, struct pm_pcap_interface *, int);
+extern void pm_pcap_check(struct pm_pcap_device *);
 
 extern void null_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
 extern void eth_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);

@@ -174,7 +174,6 @@ int pm_pcap_add_interface(struct pm_pcap_device *dev_ptr, char *ifname, struct p
   /* pcap library stuff */
   char errbuf[PCAP_ERRBUF_SIZE];
 
-  struct plugins_list_entry *list;
   int ret = SUCCESS, attempts = FALSE, index;
   int direction;
 
@@ -235,24 +234,7 @@ int pm_pcap_add_interface(struct pm_pcap_device *dev_ptr, char *ifname, struct p
 
     load_plugin_filters(dev_ptr->link_type);
 
-    /* we need to solve some link constraints */
-    if (dev_ptr->data == NULL) {
-      Log(LOG_ERR, "ERROR ( %s/core ): data link not supported: %d\n", config.name, dev_ptr->link_type);
-      exit_gracefully(1);
-    }
-    else Log(LOG_INFO, "INFO ( %s/core ): [%s,%u] link type is: %d\n", config.name, dev_ptr->str, dev_ptr->id, dev_ptr->link_type);
-
-    if (dev_ptr->link_type != DLT_EN10MB && dev_ptr->link_type != DLT_IEEE802 && dev_ptr->link_type != DLT_LINUX_SLL) {
-      list = plugins_list;
-      while (list) {
-        if ((list->cfg.what_to_count & COUNT_SRC_MAC) || (list->cfg.what_to_count & COUNT_DST_MAC)) {
-          Log(LOG_ERR, "ERROR ( %s/core ): MAC aggregation not available for link type: %d\n", config.name, dev_ptr->link_type);
-          exit_gracefully(1);
-        }
-        list = list->next;
-      }
-    }
-
+    pm_pcap_check(dev_ptr);
     pm_pcap_add_filter(dev_ptr);
   }
   else {
@@ -261,6 +243,29 @@ int pm_pcap_add_interface(struct pm_pcap_device *dev_ptr, char *ifname, struct p
   }
 
   return ret;
+}
+
+void pm_pcap_check(struct pm_pcap_device *dev_ptr)
+{
+  struct plugins_list_entry *list;
+
+  /* we need to solve some link constraints */
+  if (dev_ptr->data == NULL) {
+    Log(LOG_ERR, "ERROR ( %s/core ): data link not supported: %d\n", config.name, dev_ptr->link_type);
+    exit_gracefully(1);
+  }
+  else Log(LOG_INFO, "INFO ( %s/core ): [%s,%u] link type is: %d\n", config.name, dev_ptr->str, dev_ptr->id, dev_ptr->link_type);
+
+  if (dev_ptr->link_type != DLT_EN10MB && dev_ptr->link_type != DLT_IEEE802 && dev_ptr->link_type != DLT_LINUX_SLL) {
+    list = plugins_list;
+    while (list) {
+      if ((list->cfg.what_to_count & COUNT_SRC_MAC) || (list->cfg.what_to_count & COUNT_DST_MAC)) {
+	Log(LOG_ERR, "ERROR ( %s/core ): MAC aggregation not available for link type: %d\n", config.name, dev_ptr->link_type);
+	exit_gracefully(1);
+      }
+      list = list->next;
+    }
+  }
 }
 
 int main(int argc,char **argv, char **envp)
@@ -973,6 +978,7 @@ int main(int argc,char **argv, char **envp)
   }
   else if (config.pcap_savefile) {
     open_pcap_savefile(&devices.list[0], config.pcap_savefile);
+    pm_pcap_check(&devices.list[0]);
     pm_pcap_add_filter(&devices.list[0]);
     cb_data.device = &devices.list[0];
     devices.num = 1;
