@@ -254,15 +254,28 @@ void pm_pcap_check(struct pm_pcap_device *dev_ptr)
     Log(LOG_ERR, "ERROR ( %s/core ): data link not supported: %d\n", config.name, dev_ptr->link_type);
     exit_gracefully(1);
   }
-  else Log(LOG_INFO, "INFO ( %s/core ): [%s,%u] link type is: %d\n", config.name, dev_ptr->str, dev_ptr->id, dev_ptr->link_type);
+  else {
+    Log(LOG_INFO, "INFO ( %s/core ): [%s,%u] link type is: %d\n", config.name, dev_ptr->str, dev_ptr->id, dev_ptr->link_type);
+  }
 
   if (dev_ptr->link_type != DLT_EN10MB && dev_ptr->link_type != DLT_IEEE802 && dev_ptr->link_type != DLT_LINUX_SLL) {
     list = plugins_list;
     while (list) {
-      if ((list->cfg.what_to_count & COUNT_SRC_MAC) || (list->cfg.what_to_count & COUNT_DST_MAC)) {
-	Log(LOG_ERR, "ERROR ( %s/core ): MAC aggregation not available for link type: %d\n", config.name, dev_ptr->link_type);
-	exit_gracefully(1);
+      if (list->cfg.what_to_count & COUNT_SRC_MAC) {
+	Log(LOG_WARNING, "WARN ( %s/core ): 'src_mac' aggregation not available for link type: %d\n", config.name, dev_ptr->link_type);
+	list->cfg.what_to_count ^= COUNT_SRC_MAC;
       }
+
+      if (list->cfg.what_to_count & COUNT_DST_MAC) {
+	Log(LOG_WARNING, "WARN ( %s/core ): 'dst_mac' aggregation not available for link type: %d\n", config.name, dev_ptr->link_type);
+	list->cfg.what_to_count ^= COUNT_DST_MAC;
+      }
+
+      if (list->cfg.what_to_count & COUNT_VLAN) {
+	Log(LOG_WARNING, "WARN ( %s/core ): 'vlan' aggregation not available for link type: %d\n", config.name, dev_ptr->link_type);
+	list->cfg.what_to_count ^= COUNT_VLAN;
+      }
+
       list = list->next;
     }
   }
@@ -894,8 +907,6 @@ int main(int argc,char **argv, char **envp)
     list = list->next;
   }
 
-  load_plugins(&req);
-
   if (config.handle_fragments) init_ip_fragment_handler();
   if (config.handle_flows) init_ip_flow_handler();
   load_networks(config.networks_file, &nt, &nc);
@@ -984,6 +995,8 @@ int main(int argc,char **argv, char **envp)
     devices.num = 1;
     pm_pcap_savefile_round = 1;
   }
+
+  load_plugins(&req);
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
   memset(&sighandler_action, 0, sizeof(sighandler_action)); /* To ensure the struct holds no garbage values */
