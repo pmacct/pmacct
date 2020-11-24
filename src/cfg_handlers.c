@@ -361,7 +361,7 @@ int cfg_key_proc_name(char *filename, char *name, char *value_ptr)
   int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.proc_name = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key '[nf|pm|sf|u]acctd_proc_name'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key '%s_proc_name'. Globalized.\n", filename, config.progname);
 
   return changes;
 }
