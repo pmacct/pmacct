@@ -366,6 +366,7 @@ int main(int argc,char **argv, char **envp)
   pm_pcap_device_initialize(&bkp_devices);
   log_notifications_init(&log_notifications);
   config.acct_type = ACCT_PM;
+  config.progname = pmacctd_globstr;
 
   rows = 0;
 
@@ -549,6 +550,7 @@ int main(int argc,char **argv, char **envp)
   list = plugins_list;
   while(list) {
     list->cfg.acct_type = ACCT_PM;
+    list->cfg.progname = pmacctd_globstr;
     set_default_preferences(&list->cfg);
     if (!strcmp(list->type.string, "core")) {
       memcpy(&config, &list->cfg, sizeof(struct configuration));
@@ -573,6 +575,7 @@ int main(int argc,char **argv, char **envp)
   }
 
   initsetproctitle(argc, argv, envp);
+
   if (config.syslog) {
     logf = parse_log_facility(config.syslog);
     if (logf == ERR) {

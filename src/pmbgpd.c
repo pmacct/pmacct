@@ -92,6 +92,7 @@ int main(int argc,char **argv, char **envp)
 
   log_notifications_init(&log_notifications);
   config.acct_type = ACCT_PMBGP;
+  config.progname = pmbgpd_globstr;
 
   find_id_func = NULL;
   plugins_list = NULL;
@@ -186,6 +187,7 @@ int main(int argc,char **argv, char **envp)
   list = plugins_list;
   while (list) {
     list->cfg.acct_type = ACCT_PMBGP;
+    list->cfg.progname = pmbgpd_globstr;
     set_default_preferences(&list->cfg);
     if (!strcmp(list->type.string, "core")) {
       memcpy(&config, &list->cfg, sizeof(struct configuration));
@@ -198,6 +200,7 @@ int main(int argc,char **argv, char **envp)
   if (config.files_umask) umask(config.files_umask);
 
   initsetproctitle(argc, argv, envp);
+
   if (config.syslog) {
     logf = parse_log_facility(config.syslog);
     if (logf == ERR) {

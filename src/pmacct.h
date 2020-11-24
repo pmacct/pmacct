@@ -447,4 +447,12 @@ extern struct pm_pcap_devices devices, bkp_devices;
 extern struct pm_pcap_interfaces pm_pcap_if_map, pm_bkp_pcap_if_map;
 extern struct pcap_stat ps;
 extern struct sigaction sighandler_action;
+
+extern char pmacctd_globstr[];
+extern char nfacctd_globstr[];
+extern char sfacctd_globstr[];
+extern char uacctd_globstr[];
+extern char pmtele_globstr[];
+extern char pmbgpd_globstr[];
+extern char pmbmpd_globstr[];
 #endif /* _PMACCT_H_ */

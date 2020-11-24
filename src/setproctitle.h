@@ -45,3 +45,11 @@
 #  undef SPT_TYPE
 #  define SPT_TYPE      SPT_BUILTIN
 #endif
+
+char pmacctd_globstr[] = "pmacctd\0";
+char nfacctd_globstr[] = "nfacctd\0";
+char sfacctd_globstr[] = "sfacctd\0";
+char uacctd_globstr[] = "uacctd\0";
+char pmtele_globstr[] = "pmtelemetryd\0";
+char pmbgpd_globstr[] = "pmbgpd\0";
+char pmbmpd_globstr[] = "pmbmpd\0";

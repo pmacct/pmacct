@@ -81,6 +81,7 @@ struct configuration {
   pm_cfgreg_t nfprobe_what_to_count_2;
   char *aggregate_primitives;
   struct custom_primitives_ptrs cpptrs;
+  char *progname;
   char *name;
   char *type;
   int type_id;

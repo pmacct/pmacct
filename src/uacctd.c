@@ -244,6 +244,7 @@ int main(int argc,char **argv, char **envp)
   memset(empty_mem_area_256b, 0, sizeof(empty_mem_area_256b));
   log_notifications_init(&log_notifications);
   config.acct_type = ACCT_PM;
+  config.progname = uacctd_globstr;
 
   rows = 0;
   memset(&device, 0, sizeof(device));
@@ -397,6 +398,7 @@ int main(int argc,char **argv, char **envp)
   list = plugins_list;
   while (list) {
     list->cfg.acct_type = ACCT_PM;
+    list->cfg.progname = uacctd_globstr;
     set_default_preferences(&list->cfg);
     if (!strcmp(list->type.string, "core")) { 
       memcpy(&config, &list->cfg, sizeof(struct configuration)); 
@@ -429,6 +431,7 @@ int main(int argc,char **argv, char **envp)
   }
 
   initsetproctitle(argc, argv, envp);
+
   if (config.syslog) {
     logf = parse_log_facility(config.syslog);
     if (logf == ERR) {

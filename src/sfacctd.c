@@ -219,6 +219,7 @@ int main(int argc,char **argv, char **envp)
   memset(&reload_map_tstamp, 0, sizeof(reload_map_tstamp));
   log_notifications_init(&log_notifications);
   config.acct_type = ACCT_SF;
+  config.progname = sfacctd_globstr;
 
   rows = 0;
   memset(&device, 0, sizeof(device));
@@ -394,6 +395,7 @@ int main(int argc,char **argv, char **envp)
   list = plugins_list;
   while(list) {
     list->cfg.acct_type = ACCT_SF;
+    list->cfg.progname = sfacctd_globstr;
     set_default_preferences(&list->cfg);
     if (!strcmp(list->type.string, "core")) { 
       memcpy(&config, &list->cfg, sizeof(struct configuration)); 
@@ -406,6 +408,7 @@ int main(int argc,char **argv, char **envp)
   if (config.files_umask) umask(config.files_umask);
 
   initsetproctitle(argc, argv, envp);
+
   if (config.syslog) {
     logf = parse_log_facility(config.syslog);
     if (logf == ERR) {
