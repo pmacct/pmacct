@@ -2512,12 +2512,12 @@ int cfg_key_nfacctd_pipe_size(char *filename, char *name, char *value_ptr)
 
   value = strtoull(value_ptr, &endptr, 10);
   if (!value || value > INT_MAX) {
-    Log(LOG_WARNING, "WARN: [%s] '[nf|sf|pm]acctd_pipe_size' has to be > 0 and <= INT_MAX.\n", filename);
+    Log(LOG_WARNING, "WARN: [%s] '%s_pipe_size' has to be > 0 and <= INT_MAX.\n", filename, config.progname);
     return ERR;
   }
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_pipe_size = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key '[nf|sf|pm]acctd_pipe_size'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key '%s_pipe_size'. Globalized.\n", filename, config.progname);
 
   return changes;
 }
@@ -3403,8 +3403,8 @@ int cfg_key_nfacctd_mcast_groups(char *filename, char *name, char *value_ptr)
   }
 
   for (; list; list = list->next, changes++); /* Nothing to do because of the global array, just rolling changes counters */
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for keys '[nfacctd|sfacctd]_mcast_groups'. Globalized.\n",
-		  filename);
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for keys '%s_mcast_groups'. Globalized.\n",
+		  filename, config.progname);
   if (more) Log(LOG_WARNING, "WARN: [%s] Only the first %u (on a total of %u) multicast groups will be joined.\n",
 		  filename, MAX_MCAST_GROUPS, MAX_MCAST_GROUPS+more);
 
@@ -5319,7 +5319,7 @@ int cfg_key_nfacctd_as_new(char *filename, char *name, char *value_ptr)
   } 
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_as = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key '[nf|pm|sf|u]acctd_as_new'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key '%s_as_new'. Globalized.\n", filename, config.progname);
 
   return changes;
 }
