@@ -3530,27 +3530,60 @@ void NF_mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packe
 
 void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
+  struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives); 
-  int vrfid = FALSE;
+  int have_ingress_vrfid = FALSE, have_egress_vrfid = FALSE;
+  u_int32_t ingress_vrfid, egress_vrfid;
+  u_int8_t direction = 0;
+  rd_t *rd = NULL;
 
   switch(hdr->version) {
   case 10:
   case 9:
+    if (tpl->tpl[NF9_DIRECTION].len) {
+      memcpy(&direction, pptrs->f_data+tpl->tpl[NF9_DIRECTION].off, MIN(tpl->tpl[NF9_DIRECTION].len, 1));
+    }
+
     if (tpl->tpl[NF9_INGRESS_VRFID].len && !pbgp->mpls_vpn_rd.val) {
-      memcpy(&pbgp->mpls_vpn_rd.val, pptrs->f_data+tpl->tpl[NF9_INGRESS_VRFID].off, MIN(tpl->tpl[NF9_INGRESS_VRFID].len, 4));
-      vrfid = TRUE;
+      memcpy(&ingress_vrfid, pptrs->f_data+tpl->tpl[NF9_INGRESS_VRFID].off, MIN(tpl->tpl[NF9_INGRESS_VRFID].len, 4));
+      have_ingress_vrfid = TRUE;
     }
 
     if (tpl->tpl[NF9_EGRESS_VRFID].len && !pbgp->mpls_vpn_rd.val) {
-      memcpy(&pbgp->mpls_vpn_rd.val, pptrs->f_data+tpl->tpl[NF9_EGRESS_VRFID].off, MIN(tpl->tpl[NF9_EGRESS_VRFID].len, 4));
-      vrfid = TRUE;
+      memcpy(&egress_vrfid, pptrs->f_data+tpl->tpl[NF9_EGRESS_VRFID].off, MIN(tpl->tpl[NF9_EGRESS_VRFID].len, 4));
+      have_egress_vrfid = TRUE;
     }
 
-    if (vrfid) {
-      pbgp->mpls_vpn_rd.val = ntohl(pbgp->mpls_vpn_rd.val);
-      if (pbgp->mpls_vpn_rd.val) pbgp->mpls_vpn_rd.type = RD_TYPE_VRFID;
+    if (have_ingress_vrfid && !direction /* 0 = ingress */) {
+      if (entry->in_rd_map) {
+        cdada_map_find(entry->in_rd_map, &ingress_vrfid, (void **) &rd);
+	if (rd) {
+	  memcpy(&pbgp->mpls_vpn_rd, rd, 8);
+	}
+      }
+      else {
+        pbgp->mpls_vpn_rd.val = ntohl(ingress_vrfid);
+        if (pbgp->mpls_vpn_rd.val) {
+	  pbgp->mpls_vpn_rd.type = RD_TYPE_VRFID;
+	}
+      }
+    }
+
+    if (have_egress_vrfid && direction /* 1 = egress */) {
+      if (entry->out_rd_map) {
+        cdada_map_find(entry->out_rd_map, &egress_vrfid, (void **) &rd);
+	if (rd) {
+	  memcpy(&pbgp->mpls_vpn_rd, rd, 8);
+	}
+      }
+      else {
+        pbgp->mpls_vpn_rd.val = ntohl(egress_vrfid);
+        if (pbgp->mpls_vpn_rd.val) {
+	  pbgp->mpls_vpn_rd.type = RD_TYPE_VRFID;
+	}
+      }
     }
     break;
   default:
