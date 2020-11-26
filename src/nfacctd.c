@@ -2055,8 +2055,12 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    u_int32_t ingress_vrfid, egress_vrfid;
 	    rd_t *mpls_vpn_rd;
 
-	    if (!entry->rd_map) {
-	      entry->rd_map = cdada_map_create(u_int32_t); /* size of vrfid */
+	    if (!entry->in_rd_map) {
+	      entry->in_rd_map = cdada_map_create(u_int32_t); /* size of vrfid */
+	    }
+
+	    if (!entry->out_rd_map) {
+	      entry->out_rd_map = cdada_map_create(u_int32_t); /* size of vrfid */
 	    }
 
 	    memcpy(&ingress_vrfid, pptrs->f_data+tpl->tpl[NF9_INGRESS_VRFID].off, tpl->tpl[NF9_INGRESS_VRFID].len);
@@ -2072,11 +2076,11 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	      bgp_rd_ntoh(mpls_vpn_rd);
 
 	      if (ingress_vrfid) {
-	        cdada_map_insert(entry->rd_map, &ingress_vrfid, mpls_vpn_rd);
+	        cdada_map_insert(entry->in_rd_map, &ingress_vrfid, mpls_vpn_rd);
 	      }
 
 	      if (egress_vrfid) {
-	        cdada_map_insert(entry->rd_map, &egress_vrfid, mpls_vpn_rd);
+	        cdada_map_insert(entry->out_rd_map, &egress_vrfid, mpls_vpn_rd);
 	      }
 	    }
 	  }

@@ -87,7 +87,8 @@ struct xflow_status_entry
   struct xflow_status_entry_counters counters;
   struct xflow_status_entry_sampling *sampling;
   struct xflow_status_entry_class *class;
-  cdada_map_t *rd_map;		/* hash map for vrf id -> mpls vpn rd lookup */
+  cdada_map_t *in_rd_map;	/* hash map for ingress vrf id -> mpls vpn rd lookup */
+  cdada_map_t *out_rd_map;	/* hash map for egress vrf id -> mpls vpn rd lookup */
   void *sf_cnt;			/* struct (ab)used for sFlow counters logging */
 
 #ifdef WITH_GNUTLS
