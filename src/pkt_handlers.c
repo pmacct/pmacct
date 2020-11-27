@@ -3530,7 +3530,7 @@ void NF_mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packe
 
 void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
+  struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status_g;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives); 
@@ -3538,6 +3538,7 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
   u_int32_t ingress_vrfid, egress_vrfid;
   u_int8_t direction = 0;
   rd_t *rd = NULL;
+  int ret;
 
   switch(hdr->version) {
   case 10:
@@ -3558,8 +3559,8 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
 
     if (have_ingress_vrfid && !direction /* 0 = ingress */) {
       if (entry->in_rd_map) {
-        cdada_map_find(entry->in_rd_map, &ingress_vrfid, (void **) &rd);
-	if (rd) {
+        ret = cdada_map_find(entry->in_rd_map, &ingress_vrfid, (void **) &rd);
+	if (ret == CDADA_SUCCESS) {
 	  memcpy(&pbgp->mpls_vpn_rd, rd, 8);
 	}
       }
@@ -3573,8 +3574,8 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
 
     if (have_egress_vrfid && direction /* 1 = egress */) {
       if (entry->out_rd_map) {
-        cdada_map_find(entry->out_rd_map, &egress_vrfid, (void **) &rd);
-	if (rd) {
+        ret = cdada_map_find(entry->out_rd_map, &egress_vrfid, (void **) &rd);
+	if (ret == CDADA_SUCCESS) {
 	  memcpy(&pbgp->mpls_vpn_rd, rd, 8);
 	}
       }
