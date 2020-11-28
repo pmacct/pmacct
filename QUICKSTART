@@ -2990,22 +2990,20 @@ from tcprewrite can be supplied to tcpreplay for the actual replay to the
 pmacct daemon, ie.: "tcpreplay -x <speed multiplicator> -i <output interface>
 <input file>". 
 
-g) Buffering is often an element to tune. While buffering internal to pmacct, 
-configured with plugin_buffer_size and plugin_pipe_size, returns warning
-messages in case of data loss and brings solid queueing alterantives like
-ZeroMQ (plugin_pipe_zmq), buffering between pmacct and the kernel, configured
-with nfacctd_pipe_size and its equivalents, is more tricky and issues with it
-can only be inferred by symptoms like sequence number checks failing (and
-only for protocols like NetFlow v9/IPFIX supporting this feature). Two
-commands useful to check this kind of buffering on Linux systems are:
+g) Buffering is often an element to tune. While buffering internal to pmacct
+(configured with plugin_buffer_size / plugin_pipe_size or plugin_pipe_zmq)
+returns warning messages in case of data loss, buffering between pmacct and
+the kernel (configured with nfacctd_pipe_size and its equivalents) may be more
+tricky to detect and sometimes issues can only be inferred by symptoms (like
+sequence number checks for NetFlow v9/IPFIX). For nfacctd and sfacctd daemons,
+two commands useful to check this kind of buffering on Linux systems are:
 1) "cat /proc/net/udp" or "cat /proc/net/udp6" ensuring that "drops" value
 is not increasing and 2) "netstat -s" ensuring, under the section UDP, that
 errors are not increasing (since this command returns system-wide counters,
 the counter-check would be: stop the pmacct daemon running and, granted the
-counter was increasing, verify it does not increase anymore). As suggested
-in CONFIG-KEYS description for the nfacctd_pipe_size configuration directive,
-any lift in the buffering must be also supported by the kernel, adjusting
-/proc/sys/net/core/rmem_max.
+counter was increasing, verify it does not increase anymore). For pmacctd,
+an UNIX signal can be sent to the daemon so that the amount of dropped packets
+is reported in the log output (ie. kill -USR1 <pmacctd core PID>).
 
 h) BMP, the BGP Monitoring Protocol, has got drafting traction at IETF. New
 protocol features drive the need for inter-op testing. The BMP play tool
