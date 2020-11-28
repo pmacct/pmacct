@@ -3549,11 +3549,13 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
 
     if (tpl->tpl[NF9_INGRESS_VRFID].len && !pbgp->mpls_vpn_rd.val) {
       memcpy(&ingress_vrfid, pptrs->f_data+tpl->tpl[NF9_INGRESS_VRFID].off, MIN(tpl->tpl[NF9_INGRESS_VRFID].len, 4));
+      ingress_vrfid = ntohl(ingress_vrfid);
       have_ingress_vrfid = TRUE;
     }
 
     if (tpl->tpl[NF9_EGRESS_VRFID].len && !pbgp->mpls_vpn_rd.val) {
       memcpy(&egress_vrfid, pptrs->f_data+tpl->tpl[NF9_EGRESS_VRFID].off, MIN(tpl->tpl[NF9_EGRESS_VRFID].len, 4));
+      egress_vrfid = ntohl(egress_vrfid);
       have_egress_vrfid = TRUE;
     }
 

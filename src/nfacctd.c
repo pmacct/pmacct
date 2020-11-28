@@ -2063,16 +2063,16 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	      entry->out_rd_map = cdada_map_create(u_int32_t); /* size of vrfid */
 	    }
 
-	    memcpy(&ingress_vrfid, pptrs->f_data+tpl->tpl[NF9_INGRESS_VRFID].off, tpl->tpl[NF9_INGRESS_VRFID].len);
+	    memcpy(&ingress_vrfid, pkt+tpl->tpl[NF9_INGRESS_VRFID].off, tpl->tpl[NF9_INGRESS_VRFID].len);
 	    ingress_vrfid = ntohl(ingress_vrfid);
 
-	    memcpy(&egress_vrfid, pptrs->f_data+tpl->tpl[NF9_EGRESS_VRFID].off, tpl->tpl[NF9_EGRESS_VRFID].len);
+	    memcpy(&egress_vrfid, pkt+tpl->tpl[NF9_EGRESS_VRFID].off, tpl->tpl[NF9_EGRESS_VRFID].len);
 	    egress_vrfid = ntohl(egress_vrfid);
 
 	    if (ingress_vrfid || egress_vrfid) {
 	      mpls_vpn_rd = malloc(sizeof(rd_t));
 
-	      memcpy(mpls_vpn_rd, pptrs->f_data+tpl->tpl[NF9_MPLS_VPN_RD].off, tpl->tpl[NF9_MPLS_VPN_RD].len);
+	      memcpy(mpls_vpn_rd, pkt+tpl->tpl[NF9_MPLS_VPN_RD].off, tpl->tpl[NF9_MPLS_VPN_RD].len);
 	      bgp_rd_ntoh(mpls_vpn_rd);
 
 	      if (ingress_vrfid) {
