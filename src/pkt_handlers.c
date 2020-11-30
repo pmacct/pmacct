@@ -3576,7 +3576,7 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
       }
     }
 
-    if (have_egress_vrfid && (direction /* 1 = egress */ || !have_ingress_vrfid)) {
+    if (have_egress_vrfid && (direction /* 1 = egress */ || !pbgp->mpls_vpn_rd.val)) {
       if (entry->out_rd_map) {
         ret = cdada_map_find(entry->out_rd_map, &egress_vrfid, (void **) &rd);
 	if (ret == CDADA_SUCCESS) {
