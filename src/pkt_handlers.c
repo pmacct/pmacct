@@ -3534,8 +3534,7 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives); 
-  int have_ingress_vrfid = FALSE, have_egress_vrfid = FALSE;
-  u_int32_t ingress_vrfid, egress_vrfid;
+  u_int32_t ingress_vrfid = 0, egress_vrfid = 0;
   u_int8_t direction = 0;
   rd_t *rd = NULL;
   int ret;
@@ -3551,17 +3550,15 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
       if (tpl->tpl[NF9_INGRESS_VRFID].len) {
 	memcpy(&ingress_vrfid, pptrs->f_data+tpl->tpl[NF9_INGRESS_VRFID].off, MIN(tpl->tpl[NF9_INGRESS_VRFID].len, 4));
 	ingress_vrfid = ntohl(ingress_vrfid);
-	have_ingress_vrfid = TRUE;
       }
 
       if (tpl->tpl[NF9_EGRESS_VRFID].len) {
 	memcpy(&egress_vrfid, pptrs->f_data+tpl->tpl[NF9_EGRESS_VRFID].off, MIN(tpl->tpl[NF9_EGRESS_VRFID].len, 4));
 	egress_vrfid = ntohl(egress_vrfid);
-	have_egress_vrfid = TRUE;
       }
     }
 
-    if (have_ingress_vrfid && !direction /* 0 = ingress */) {
+    if (ingress_vrfid && (!direction /* 0 = ingress */ || !egress_vrfid)) {
       if (entry->in_rd_map) {
         ret = cdada_map_find(entry->in_rd_map, &ingress_vrfid, (void **) &rd);
 	if (ret == CDADA_SUCCESS) {
@@ -3576,7 +3573,7 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
       }
     }
 
-    if (have_egress_vrfid && (direction /* 1 = egress */ || !pbgp->mpls_vpn_rd.val)) {
+    if (egress_vrfid && (direction /* 1 = egress */ || !ingress_vrfid)) {
       if (entry->out_rd_map) {
         ret = cdada_map_find(entry->out_rd_map, &egress_vrfid, (void **) &rd);
 	if (ret == CDADA_SUCCESS) {
