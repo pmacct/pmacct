@@ -348,10 +348,6 @@ void p_kafka_apply_topic_config(struct p_kafka_host *kafka_host)
 
 void p_kafka_logger(const rd_kafka_t *rk, int level, const char *fac, const char *buf)
 {
-  struct timeval tv;
-
-  gettimeofday(&tv, NULL);
-
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): RDKAFKA-%i-%s: %s: %s\n", config.name, config.type, level, fac, rd_kafka_name(rk), buf);
 }
 
