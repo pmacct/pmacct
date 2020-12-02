@@ -114,6 +114,7 @@ extern void NF_vxlan_handler(struct channels_list_entry *, struct packet_ptrs *,
 extern void NF_timestamp_start_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_timestamp_end_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_timestamp_arrival_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void NF_timestamp_export_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_sequence_number_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_version_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_sysid_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

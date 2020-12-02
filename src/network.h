@@ -575,6 +575,7 @@ struct pkt_nat_primitives {
   struct timeval timestamp_start; /* XXX: clean-up: to be moved in a separate structure */
   struct timeval timestamp_end; /* XXX: clean-up: to be moved in a separate structure */
   struct timeval timestamp_arrival; /* XXX: clean-up: to be moved in a separate structure */
+  struct timeval timestamp_export; /* XXX: clean-up: to be moved in a separate structure */
 };
 
 struct pkt_mpls_primitives {

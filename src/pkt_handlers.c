@@ -799,6 +799,12 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    if (channels_list[index].aggregation_2 & COUNT_EXPORT_PROTO_TIME) {
+      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_timestamp_export_handler;
+      else primitives--;
+      primitives++;
+    }
+
     /* if cpptrs.num > 0 one or multiple custom primitives are defined */
     if (channels_list[index].plugin->cfg.cpptrs.num) {
       if (config.acct_type == ACCT_PM) {
@@ -3193,6 +3199,33 @@ void NF_timestamp_arrival_handler(struct channels_list_entry *chptr, struct pack
 
   gettimeofday(&pnat->timestamp_arrival, NULL);
   if (chptr->plugin->cfg.timestamps_secs) pnat->timestamp_arrival.tv_usec = 0;
+}
+
+void NF_timestamp_export_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (hdr->version == 10) {
+      struct struct_header_ipfix *hdr_ipfix = (struct struct_header_ipfix *) pptrs->f_header;
+
+      pnat->timestamp_export.tv_sec = ntohl(hdr_ipfix->unix_secs);
+    }
+    else if (hdr->version == 9) {
+      struct struct_header_v9 *hdr_v9 = (struct struct_header_v9 *) pptrs->f_header;
+
+      pnat->timestamp_export.tv_sec = ntohl(hdr_v9->unix_secs);
+    }
+    break;
+  case 5:
+    pnat->timestamp_export.tv_sec = ntohl(hdr->unix_secs);
+    break;
+  default:
+    break;
+  }
 }
 
 void NF_sequence_number_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
