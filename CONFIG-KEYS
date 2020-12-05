@@ -122,13 +122,16 @@ NOTES:		* List of the aggregation primitives available to each specific pmacct d
 		  features (see examples in QUICKSTART and review libpcap filtering syntax
 		  via pcap-filter man page). 
 		* export_proto_seqno reports about export protocol (NetFlow, sFlow, IPFIX)
-		  sequence number; due to its potential de-aggregation effect, two main use-
-		  cases are seen as use of this primitive:
-		  1) if using a log type (de-)aggregation method, ie. for security, forensics,
-		     etc., in addition to existing primitives;
-		  2) if using a reporting type aggregation method, it is recommended to split
-		     this primitive in a separate plugin instance instead for sequencing
-		     analysis.  
+		  sequence number and can be very relevant to detect packet loss. nfacctd and
+		  sfacctd do perform simple non-contextual sequencing checks but these are
+		  mainly limited to check out-of-order situations; proper contextual checking
+		  can be performed as part of post-processing. A specific plugin instance,
+		  separate from the main / accounting one, can be configured with 'aggregate:
+		  export_proto_seqno' for the task. An example of a simple check would be to
+		  find min/max sequence numbers, compute their difference and make sure it
+		  does match to the amount of entries in the interval; the check can be then
+		  windowed over time by using timestamps (ie. 'timestamp_export' primitive
+		  and/or *_history config directives).
 		* In nfacctd, undocumented aggregation primitive class_frame allows to apply
 		  nDPI clssification to NFv9/IPFIX packets with IE 315 (dataLinkFrameSection).
 		  class primitive instead allows to leverage traditional classification using
