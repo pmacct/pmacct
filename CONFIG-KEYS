@@ -107,14 +107,15 @@ NOTES:		* List of the aggregation primitives available to each specific pmacct d
 		  can be achieved by defining a custom primitive to extract the full 3 bytes,
 		  ie. 'name=mplsFullTopLabel field_type=70 len=3 semantics=raw' for NetFlow/
 		  IPFIX.
-		* timestamp_start, timestamp_end and timestamp_arrival should not be mixed
-		  with pmacct support for historical accounting, ie. breakdown of traffic in
-		  time-bins via the sql_history feature; these primitives have the effect of
-		  letting pmacct act as a logger up to the msec level (if reported by the
-		  capturing method). timestamp_start records NetFlow/IPFIX flow start time or
-		  observation; timestamp_end records NetFlow/IPFIX flow end time; finally,
-		  timestamp_arrival records libpcap packet timestamp and sFlow/NetFlow/IPFIX
-		  packet arrival time at the collector.
+		* timestamp_start, timestamp_end and timestamp_arrival let pmacct act as a
+		  traffic logger up to the msec level (if reported by the capturing method).
+		  timestamp_start records NetFlow/IPFIX flow start time or observation;
+		  timestamp_end records NetFlow/IPFIX flow end time; timestamp_arrival
+		  records libpcap packet timestamp and sFlow/NetFlow/IPFIX packet arrival
+		  time at the collector. Historical accounting (enabled by the *_history
+		  config directives, ie. kafka_history) finest granularity for time-bins
+		  is 1 minute: timestamp_start can be used for finer greater granularitiies,
+		  ie. second (timestamps_secs set to true) or sub-second.
 		* tcpflags: in pmacctd, uacctd and sfacctd daemons TCP flags are ORed until
 		  the aggregate is flushed - hence emulating the behaviour of NetFlow/IPFIX.
 		  If a flag analysis is needed, packets with different flags (combinations)
@@ -1227,14 +1228,12 @@ DEFAULT:	false
 KEY:		[ sql_history | print_history | amqp_history | kafka_history ]
 VALUES:		#[s|m|h|d|w|M]
 DESC:		Enables historical accounting by placing accounted data into configurable time-bins. It
-		will use the 'stamp_inserted' (base time of the time-bin) and 'stamp_updated' (last time
+		does use the 'stamp_inserted' (base time of the time-bin) and 'stamp_updated' (last time
 		the time-bin was touched) fields. The supplied value defines the time slot length during
-		which counters are accumulated. For a nice effect, it's adviceable to pair this directive
-		with 'sql_history_roundoff'. In nfacctd, where a flow can span across multiple time-bins,
-		flow counters can be pro-rated (seconds timestamp resolution) over involved time-bins by
-		setting nfacctd_pro_rating to true. Note that this value is fully disjoint from the
-		*_refresh_time directives which set the time intervals at which data has to be written to
-		the backend instead. The final effect is close to time slots in a RRD file. Examples of
+		which counters are accumulated. See also *_history_roundoff'. In nfacctd, where a flow
+		can span across multiple time-bins, flow counters can be pro-rated (seconds timestamp
+		resolution) over involved the time-bins by setting nfacctd_pro_rating to true.
+		The end net effect of this directive is close to time slots in a RRD file. Examples of
 		valid values are: '300s' or '5m' - five minutes, '3600s' or '1h' - one hour, '14400s' or
 		'4h' - four hours, '86400s' or '1d' - one day, '1w' - one week, '1M' - one month).
 DEFAULT:	none
