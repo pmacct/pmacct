@@ -299,6 +299,9 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc_2 & COUNT_EXPORT_PROTO_SYSID)
     avro_schema_record_field_append(schema, "export_proto_sysid", avro_schema_long());
 
+  if (wtc_2 & COUNT_EXPORT_PROTO_TIME)
+    avro_schema_record_field_append(schema, "timestamp_export", avro_schema_long());
+
   if (config.cpptrs.num > 0) {
     avro_schema_record_field_append(
         schema, "custom_primitives", avro_schema_map(avro_schema_string()));
@@ -972,6 +975,14 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
   if (wtc_2 & COUNT_EXPORT_PROTO_SYSID) {
     pm_avro_check(avro_value_get_by_name(&value, "export_proto_sysid", &field, NULL));
     pm_avro_check(avro_value_set_long(&field, pbase->export_proto_sysid));
+  }
+
+  if (wtc_2 & COUNT_EXPORT_PROTO_TIME) {
+    compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_export, TRUE,
+		      config.timestamps_since_epoch, config.timestamps_rfc3339,
+		      config.timestamps_utc);
+    pm_avro_check(avro_value_get_by_name(&value, "timestamp_export", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, tstamp_str));
   }
 
   /* all custom primitives printed here */

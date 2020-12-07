@@ -824,6 +824,16 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
           fprintf(f, "%-30s ", tstamp_str);
         }
 
+        if (config.what_to_count_2 & COUNT_EXPORT_PROTO_TIME) {
+	  char tstamp_str[VERYSHORTBUFLEN];
+
+	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &pnat->timestamp_export, TRUE,
+			    config.timestamps_since_epoch, config.timestamps_rfc3339,
+			    config.timestamps_utc);
+
+          fprintf(f, "%-30s ", tstamp_str);
+        }
+
         if (config.nfacctd_stitching && queue[j]->stitch) {
 	  char tstamp_str[VERYSHORTBUFLEN];
 
@@ -1189,6 +1199,16 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
           fprintf(f, "%s%s", write_sep(sep, &count), tstamp_str);
         }
 
+        if (config.what_to_count_2 & COUNT_EXPORT_PROTO_TIME) {
+	  char tstamp_str[VERYSHORTBUFLEN];
+
+	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &pnat->timestamp_export, TRUE,
+			    config.timestamps_since_epoch, config.timestamps_rfc3339,
+			    config.timestamps_utc);
+
+          fprintf(f, "%s%s", write_sep(sep, &count), tstamp_str);
+        }
+
         if (config.nfacctd_stitching && queue[j]->stitch) {
 	  char tstamp_str[VERYSHORTBUFLEN];
 
@@ -1439,6 +1459,7 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "TIMESTAMP_START                ");
   if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "TIMESTAMP_END                  "); 
   if (config.what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) fprintf(f, "TIMESTAMP_ARRIVAL              ");
+  if (config.what_to_count_2 & COUNT_EXPORT_PROTO_TIME) fprintf(f, "TIMESTAMP_EXPORT               ");
   if (config.nfacctd_stitching) {
     fprintf(f, "TIMESTAMP_MIN                  ");
     fprintf(f, "TIMESTAMP_MAX                  "); 
@@ -1558,6 +1579,7 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "%sTIMESTAMP_START", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "%sTIMESTAMP_END", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) fprintf(f, "%sTIMESTAMP_ARRIVAL", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_EXPORT_PROTO_TIME) fprintf(f, "%sTIMESTAMP_EXPORT", write_sep(sep, &count));
   if (config.nfacctd_stitching) {
     fprintf(f, "%sTIMESTAMP_MIN", write_sep(sep, &count));
     fprintf(f, "%sTIMESTAMP_MAX", write_sep(sep, &count));

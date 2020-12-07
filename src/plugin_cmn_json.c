@@ -453,6 +453,11 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
     idx++;
   }
 
+  if (wtc_2 & COUNT_EXPORT_PROTO_TIME) {
+    cjhandler[idx] = compose_json_timestamp_export;
+    idx++;
+  }
+
   if (config.cpptrs.num) {
     cjhandler[idx] = compose_json_custom_primitives;
     idx++;
@@ -1070,6 +1075,16 @@ void compose_json_timestamp_arrival(json_t *obj, struct chained_cache *cc)
 		    config.timestamps_since_epoch, config.timestamps_rfc3339,
 		    config.timestamps_utc);
   json_object_set_new_nocheck(obj, "timestamp_arrival", json_string(tstamp_str));
+}
+
+void compose_json_timestamp_export(json_t *obj, struct chained_cache *cc)
+{
+  char tstamp_str[VERYSHORTBUFLEN];
+
+  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &cc->pnat->timestamp_export, TRUE,
+		    config.timestamps_since_epoch, config.timestamps_rfc3339,
+		    config.timestamps_utc);
+  json_object_set_new_nocheck(obj, "timestamp_export", json_string(tstamp_str));
 }
 
 void compose_json_timestamp_stitching(json_t *obj, struct chained_cache *cc)
