@@ -2,7 +2,7 @@
 
 FROM centos:8
 
-RUN sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/CentOS-PowerTools.repo && \
+RUN yum config-manager --set-enabled PowerTools && \
     yum install -y \
     autoconf \
     automake \
