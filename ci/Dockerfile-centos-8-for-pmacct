@@ -2,7 +2,7 @@
 
 FROM centos:8
 
-RUN yum install dnf-plugins-core && \
+RUN yum install -y dnf-plugins-core && \
     yum config-manager --set-enabled PowerTools && \
     yum install -y \
     autoconf \
