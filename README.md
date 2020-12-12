@@ -54,8 +54,8 @@ docker image.
 
 Resolve dependencies, ie.:
 
-  * `apt-get install libpcap-dev pkg-config libtool autoconf automake make bash libstdc++-dev` for *[Debian/Ubuntu]*
-  * `yum install libpcap-devel pkgconfig libtool autoconf automake make bash libstdc++-devel` for *[CentOS/RHEL]*
+  * `apt-get install libpcap-dev pkg-config libtool autoconf automake make bash libstdc++-dev g++` for *[Debian/Ubuntu]*
+  * `yum install libpcap-devel pkgconfig libtool autoconf automake make bash libstdc++-devel gcc-c++` for *[CentOS/RHEL]*
 
 Build GitHub code:
 
