@@ -60,8 +60,8 @@ VALUES:		[ src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_
 		 post_nat_dst_host, post_nat_src_port, post_nat_dst_port, tunnel_src_mac,
 		 tunnel_dst_mac, tunnel_src_host, tunnel_dst_host, tunnel_proto, tunnel_tos,
 		 tunnel_src_port, tunnel_dst_port, vxlan, timestamp_start, timestamp_end,
-		 timestamp_arrival, export_proto_seqno, export_proto_version,
-		 export_proto_sysid ]
+		 timestamp_arrival, timestamp_export, export_proto_seqno,
+		 export_proto_version, export_proto_sysid ]
 FOREWORDS:	Individual IP packets are uniquely identified by their header field values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
 		they have at least enough information to discriminate where packets are coming
@@ -133,6 +133,9 @@ NOTES:		* List of the aggregation primitives available to each specific pmacct d
 		  does match to the amount of entries in the interval; the check can be then
 		  windowed over time by using timestamps (ie. 'timestamp_export' primitive
 		  and/or *_history config directives).
+		* timestamp_export is the observation time at the exporter. This is only
+		  relevant in export protocols involving caching, ie. NetFlow/IPFIX. In all
+		  other cases this would not be populated or be equal to timestamp_start.
 		* In nfacctd, undocumented aggregation primitive class_frame allows to apply
 		  nDPI clssification to NFv9/IPFIX packets with IE 315 (dataLinkFrameSection).
 		  class primitive instead allows to leverage traditional classification using
