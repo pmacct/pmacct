@@ -179,8 +179,15 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   }
 
   print_output_stdout_header = TRUE;
-  if (!config.sql_table && !config.print_output_lock_file)
+
+  if (!config.sql_table && config.daemon) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): no print_output_file defined and 'daemonize: true'. Output would be lost. Exiting ..\n", config.name, config.type);
+    exit_gracefully(1);
+  }
+
+  if (!config.sql_table && !config.print_output_lock_file) {
     Log(LOG_WARNING, "WARN ( %s/%s ): no print_output_file and no print_output_lock_file defined.\n", config.name, config.type);
+  }
 
   if (config.sql_table) {
     if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')) {
