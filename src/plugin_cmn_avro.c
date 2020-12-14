@@ -300,7 +300,7 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
     avro_schema_record_field_append(schema, "export_proto_sysid", avro_schema_long());
 
   if (wtc_2 & COUNT_EXPORT_PROTO_TIME)
-    avro_schema_record_field_append(schema, "timestamp_export", avro_schema_long());
+    avro_schema_record_field_append(schema, "timestamp_export", avro_schema_string());
 
   if (config.cpptrs.num > 0) {
     avro_schema_record_field_append(
