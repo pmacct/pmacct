@@ -788,7 +788,7 @@ int pretag_copy_label(pt_label_t *dst, pt_label_t *src)
       }
 
       strncpy(dst->val, src->val, src->len);
-      dst->val[dst->len] = '\0';
+      dst->val[dst->len - 1] = '\0';
     }
   }
   
