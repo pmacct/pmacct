@@ -10,7 +10,7 @@
 !
 ! 'id'			SET: BGP-signalled MPLS L2/L3 VPN Route Distinguisher
 !			(RD) value. Encoding types #0, #1 and #2 are supported
-!			as per rfc4364.
+!			as per rfc4364 in asplain notation as per rfc5396.
 ! 'ip'                  MATCH: in nfacctd this is compared against the source
 !                       IP address of the device originating NetFlow packets;
 !                       in sfacctd this is compared against the AgentId field
@@ -46,3 +46,9 @@ id=0:65512:1		ip=192.168.1.1
 ! to rfc4364: <IPv4 Address>:<value>
 !
 id=1:192.168.1.1:1	ip=192.168.1.1          in=100
+!
+! Maps input interface 100 of router 192.168.1.1 to RD 2:4200000000:1
+! ie. a BGP/MPLS VPN Route Distinguisher encoded as type #2 according 
+! to rfc4364: <IPv4 Address>:<value>
+!
+id=2:4200000000:1	ip=192.168.1.1          in=100
