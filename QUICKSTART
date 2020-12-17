@@ -2878,6 +2878,11 @@ following command:
 
 gdb> bt
 
+As an alternative to gdb, the valgrind tool can be used which, upon crashing,
+will simply print out the backtrace:
+
+shell> valgrind /path/to/executable <command-line options>
+
 If the dmesg command or system logs reveal a line like the following one:
 
 Jan 01 00:00:00 xxxx kernel: [4075819.569587] nfacctd[51817]: segfault at 10 ip 00007f77f448ad44 sp 00007ffc6974ed70 error 4 ..
@@ -2907,13 +2912,22 @@ times this action - that elicits the use of an alternate malloc() call - may
 even work as a work-around (if falling in this condition it is recommended to
 not use this 'mask' as long-term solution, that is, please report the issue).
 
+The use of Docker containers is getting increasingly popular. The valgrind
+tool can be used when a crash is experienced in a container. The following
+example applies to any of the official pmacct containers (running on top of
+Debian):
+
+shell> docker run -it --entrypoint bash <image_name>
+<container_id># apt-get update && apt-get install -y valgrind
+<container_id># valgrind /path/to/executable <command-line options>
+
 c) In case of (suspected) memory leaks, the advice is to: 1) re-compile pmacct
 with "./configure --enable-debug <other flags already in use>"; --enable-debug
 sets as CFLAGS -O0 -g -Wall where especially -O0 is capital since it disables
 any code optimizations the compiler may introduce; 2) run the resulting daemon
-under valgrind, ie. "valgrind --leak-check=yes <pmacct command-line>". A memory
-leak is confirmed if the amount of "definitely lost" bytes keeps increasing
-over time. 
+under valgrind, "valgrind --leak-check=yes /path/to/executable <command-line
+options>". A memory leak is confirmed if the amount of "definitely lost" bytes
+keeps increasing over time.
 
 d) In the two cases of nfacctd/sfacctd or nfprobe/sfprobe not showing signs of
 input/output data: 1) check with tcpdump, ie. "tcpdump -i <interface> -n port
