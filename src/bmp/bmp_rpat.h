@@ -43,6 +43,54 @@ struct bmp_rpat_event_hdr {
   u_int8_t	safi;
 } __attribute__ ((packed));
 
+struct bmp_rpat_vrf_tlv_hdr {
+  u_int32_t	id;
+} __attribute__ ((packed));
+
+struct bmp_rpat_policy_tlv_hdr {
+  u_int8_t	flag;
+  u_int8_t	count;
+  u_int8_t	class;
+  u_int32_t     peer_ip[4];
+  u_int32_t     peer_bgp_id;
+  u_int32_t     peer_asn;
+} __attribute__ ((packed));
+
+struct bmp_rpat_policy_hdr {
+  u_int16_t	name_len;
+  u_int16_t	id_len;
+} __attribute__ ((packed));
+
+#define BMP_RPAT_POLICY_CLASS_INBOUND		0
+#define BMP_RPAT_POLICY_CLASS_OUTBOUND		1
+#define BMP_RPAT_POLICY_CLASS_MP_REDISTRIBUTE	2
+#define BMP_RPAT_POLICY_CLASS_VRF_REDISTRIBUTE	3
+#define BMP_RPAT_POLICY_CLASS_VRF_IMPORT	4
+#define BMP_RPAT_POLICY_CLASS_VRF_EXPORT	5
+#define BMP_RPAT_POLICY_CLASS_NETWORK		6
+#define BMP_RPAT_POLICY_CLASS_AGGREGATION	7
+#define BMP_RPAT_POLICY_CLASS_ROUTE_WITHDRAW	8
+#define BMP_RPAT_POLICY_CLASS_MAX 		8
+
+static const char __attribute__((unused)) *bmp_rpat_class_types[] = {
+  "Inbound policy",
+  "Outbound policy",
+  "Multi-protocol Redistribute",
+  "Cross-VRF Redistribute",
+  "VRF import",
+  "VRF export",
+  "Network",
+  "Aggregation",
+  "Route Withdraw"
+};
+
+#define BMP_RPAT_POLICY_FLAG_M		0x80
+#define BMP_RPAT_POLICY_FLAG_P		0x40
+#define BMP_RPAT_POLICY_FLAG_D		0x20
+
+#define BMP_RPAT_POLICY_NP_FLAG_C	0x80
+#define BMP_RPAT_POLICY_NP_FLAG_R	0x40
+
 struct bmp_log_rpat {
   struct host_addr prefix;
   u_int8_t prefix_len;
@@ -52,12 +100,25 @@ struct bmp_log_rpat {
   safi_t safi;
 };
 
-#define BMP_RPAT_INFO_MAX		-1
-#define BMP_RPAT_INFO_ENTRIES		8
+/* prototypes needed for bmp_tlv_def */
+extern int bmp_log_msg_rpat_vrf(struct bgp_peer *, struct bmp_data *, void *, void *, char *, int, void *);
+extern int bmp_log_msg_rpat_policy(struct bgp_peer *, struct bmp_data *, void *, void *, char *, int, void *);
 
 static const struct bmp_tlv_def __attribute__((unused)) bmp_rpat_info_types[] = {
-  { "", BMP_TLV_SEM_UNKNOWN }
+  { "vrf", BMP_TLV_SEM_COMPLEX, bmp_log_msg_rpat_vrf },
+  { "policy", BMP_TLV_SEM_COMPLEX, bmp_log_msg_rpat_policy },
+  { "pre_policy_attr", BMP_TLV_SEM_COMPLEX, NULL },
+  { "post_policy_attr", BMP_TLV_SEM_COMPLEX, NULL },
+  { "string", BMP_TLV_SEM_STRING, NULL }
 };
+
+#define BMP_RPAT_INFO_VRF		0
+#define BMP_RPAT_INFO_POLICY		1
+#define BMP_RPAT_INFO_PRE_POLICY_ATTR	2
+#define BMP_RPAT_INFO_POST_POLICY_ATTR	3
+#define BMP_RPAT_INFO_STRING		4
+#define BMP_RPAT_INFO_MAX		4
+#define BMP_RPAT_INFO_ENTRIES		8
 
 /* prototypes */
 extern void bmp_process_msg_rpat(char **, u_int32_t *, struct bmp_peer *);
@@ -73,5 +134,17 @@ extern void bmp_rpat_event_hdr_get_tstamp(struct bmp_rpat_event_hdr *, struct ti
 extern void bmp_rpat_event_hdr_get_path_id(struct bmp_rpat_event_hdr *, u_int32_t *);
 extern void bmp_rpat_event_hdr_get_afi_safi(struct bmp_rpat_event_hdr *, afi_t *, safi_t *);
 
+extern void bmp_rpat_policy_tlv_get_m_flag(struct bmp_rpat_policy_tlv_hdr *, u_int8_t *);
+extern void bmp_rpat_policy_tlv_get_p_flag(struct bmp_rpat_policy_tlv_hdr *, u_int8_t *);
+extern void bmp_rpat_policy_tlv_get_d_flag(struct bmp_rpat_policy_tlv_hdr *, u_int8_t *);
+extern void bmp_rpat_policy_tlv_get_bgp_id(struct bmp_rpat_policy_tlv_hdr *, struct host_addr *);
+extern void bmp_rpat_policy_tlv_get_peer_ip(struct bmp_rpat_policy_tlv_hdr *, struct host_addr *, u_int8_t *);
+extern void bmp_rpat_policy_tlv_np_get_c_flag(u_int8_t *, u_int8_t *);
+extern void bmp_rpat_policy_tlv_np_get_r_flag(u_int8_t *, u_int8_t *);
+
 extern int bmp_log_msg_rpat(struct bgp_peer *, struct bmp_data *, struct pm_list *, struct bmp_log_rpat *, char *, int, void *);
+
+#ifdef WITH_AVRO
+extern avro_schema_t p_avro_schema_build_bmp_rpat(char *);
+#endif
 #endif //BMP_RPAT_H

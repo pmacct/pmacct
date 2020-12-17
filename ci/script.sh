@@ -1,8 +1,9 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 #    Copyright
-#    (c) 2019-2020 Claudio Ortega <claudio.alberto.ortega@gmail.com>
-#    (c) 2019-2020 Paolo Lucente <paolo@pmacct.net>
+#    (c) 2020 Marc Sune <marcdevel@gmail.com>
+#    (c) 2020 Claudio Ortega <claudio.alberto.ortega@gmail.com>
+#    (c) 2020 Paolo Lucente <paolo@pmacct.net>
 #
 #    Permission to use, copy, modify, and distribute this software for any
 #    purpose with or without fee is hereby granted, provided that the above
@@ -16,16 +17,19 @@
 #    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 #    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-cd $(dirname ${0})
+#Do not delete
+set -e
 
-VARIANT_SPEC=${1}
-BUILD_BRANCH=${2}
+#Ugly hack for libavro; how to avoid?
+export AVRO_LIBS="-L/usr/local/avro/lib -lavro"
+export AVRO_CFLAGS="-I/usr/local/avro/include"
 
-SENTINEL_PATH=./build_success.txt
+#Build & install
+./autogen.sh
+./configure --disable-silent-rules $CONFIG_FLAGS || (cat config.log && /bin/false)
+make
+sudo make install
 
-rm -f ${SENTINEL_PATH}
-
-bash -ex ./pmacct-deps.sh
-bash -ex ./pmacct-self.sh ${VARIANT_SPEC} ${BUILD_BRANCH}
-
-echo "build succeded on "$(date) > ${SENTINEL_PATH}
+#Test ?
+ls -l src/nfacctd
+src/nfacctd -V

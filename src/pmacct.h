@@ -72,6 +72,7 @@
 #include "pmsearch.h"
 #include "linklist.h"
 #include "filters/bloom.h"
+#include <cdada.h>
 
 #include <sys/mman.h>
 #if !defined (MAP_ANONYMOUS)
@@ -83,6 +84,8 @@
 #endif
 #endif
 
+#include "pmacct-version.h"
+#include "pmacct-build.h"
 #include "pmacct-defines.h"
 
 #if defined (WITH_GEOIP)
@@ -103,8 +106,6 @@
 #include <ndpi_main.h>
 #undef NDPI_LIB_COMPILATION
 #endif
-
-#include "pmacct-build.h"
 
 #if !defined ETHER_ADDRSTRLEN
 #define ETHER_ADDRSTRLEN 18
@@ -240,6 +241,15 @@ typedef struct {
 #include "redis_common.h"
 #endif
 
+#ifdef WITH_GNUTLS
+#include <gnutls/gnutls.h>
+#include <gnutls/dtls.h>
+
+#define PM_GNUTLS_KEYFILE "key.pem"
+#define PM_GNUTLS_CERTFILE "cert.pem"
+#define PM_GNUTLS_CAFILE "ca-certificates.crt"
+#endif
+
 #include "network.h"
 #include "pretag.h"
 #include "cfg.h"
@@ -368,6 +378,7 @@ extern int pm_pcap_device_getindex_byifname(struct pm_pcap_devices *, char *);
 extern pcap_t *pm_pcap_open(const char *, int, int, int, int, int, char *);
 extern void pm_pcap_add_filter(struct pm_pcap_device *);
 extern int pm_pcap_add_interface(struct pm_pcap_device *, char *, struct pm_pcap_interface *, int);
+extern void pm_pcap_check(struct pm_pcap_device *);
 
 extern void null_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
 extern void eth_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
@@ -392,6 +403,7 @@ extern void PM_print_stats(time_t);
 extern void compute_once();
 extern void reset_index_pkt_ptrs(struct packet_ptrs *);
 extern void set_index_pkt_ptrs(struct packet_ptrs *);
+extern void PM_evaluate_flow_type(struct packet_ptrs *);
 extern ssize_t recvfrom_savefile(struct pm_pcap_device *, void **, struct sockaddr *, struct timeval **, int *, struct packet_ptrs *);
 extern ssize_t recvfrom_rawip(unsigned char *, size_t, struct sockaddr *, struct packet_ptrs *);
 
@@ -435,4 +447,12 @@ extern struct pm_pcap_devices devices, bkp_devices;
 extern struct pm_pcap_interfaces pm_pcap_if_map, pm_bkp_pcap_if_map;
 extern struct pcap_stat ps;
 extern struct sigaction sighandler_action;
+
+extern char pmacctd_globstr[];
+extern char nfacctd_globstr[];
+extern char sfacctd_globstr[];
+extern char uacctd_globstr[];
+extern char pmtele_globstr[];
+extern char pmbgpd_globstr[];
+extern char pmbmpd_globstr[];
 #endif /* _PMACCT_H_ */

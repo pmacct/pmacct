@@ -1594,7 +1594,7 @@ void *pm_malloc(size_t size)
 
   obj = (unsigned char *) malloc(size);
   if (!obj) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to grab enough memory (requested: %lu bytes). Exiting ...\n",
+    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to grab enough memory (requested: %zu bytes). Exiting ...\n",
     config.name, config.type, size);
     exit_gracefully(1);
   }
@@ -1855,13 +1855,14 @@ void version_daemon(char *header)
 {
   struct utsname utsbuf;
 
-  printf("%s %s (%s)\n\n", header, PMACCT_VERSION, PMACCT_BUILD);
+  printf("%s %s [%s]\n\n", header, PMACCT_VERSION, PMACCT_BUILD);
 
   printf("Arguments:\n");
   printf("%s\n", PMACCT_COMPILE_ARGS);
   printf("\n");
 
   printf("Libs:\n");
+  printf("cdada %s\n", cdada_get_ver());
   printf("%s\n", pcap_lib_version());
 #ifdef WITH_MYSQL
   MY_mysql_get_version();
@@ -1889,6 +1890,9 @@ void version_daemon(char *header)
 #endif
 #ifdef WITH_REDIS
   printf("Redis %u.%u.%u\n", HIREDIS_MAJOR, HIREDIS_MINOR, HIREDIS_PATCH);
+#endif
+#ifdef WITH_GNUTLS
+  printf("GnuTLS %u.%u.%u\n", GNUTLS_VERSION_MAJOR, GNUTLS_VERSION_MINOR, GNUTLS_VERSION_PATCH);
 #endif
 #ifdef WITH_AVRO
   printf("avro-c\n");
@@ -2018,8 +2022,14 @@ void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int 
     if (!utc) time2 = localtime(&time1);
     else time2 = gmtime(&time1);
     
-    if (!rfc3339) slen = strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", time2);
-    else slen = strftime(buf, buflen, "%Y-%m-%dT%H:%M:%S", time2);
+    if (tv->tv_sec) {
+      if (!rfc3339) slen = strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", time2);
+      else slen = strftime(buf, buflen, "%Y-%m-%dT%H:%M:%S", time2);
+    }
+    else {
+      if (!rfc3339) slen = snprintf(buf, buflen, "0000-00-00 00:00:00");
+      else slen = snprintf(buf, buflen, "0000-00-00T00:00:00");
+    }
 
     if (usec) snprintf((buf + slen), (buflen - slen), ".%.6ld", (long)tv->tv_usec);
     if (rfc3339) append_rfc3339_timezone(buf, buflen, time2);
@@ -2579,6 +2589,8 @@ void vlen_prims_insert(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, int
 {
   pm_label_t *label_ptr;
   char *ptr = (char *) hdr;
+
+  if (!len || !val) return;
 
   ptr += (PvhdrSz + hdr->tot_len); 
   label_ptr = (pm_label_t *) ptr;
@@ -3230,4 +3242,19 @@ ssize_t pm_recv(int sockfd, void *buf, size_t len, int flags, unsigned int secon
   alarm(0);
 
   return ret;
+}
+
+/* flow type to address family */
+int ft2af(u_int8_t ft)
+{
+  if (ft == PM_FTYPE_IPV4 || ft == PM_FTYPE_VLAN_IPV4 ||
+      ft == PM_FTYPE_MPLS_IPV4 || ft == PM_FTYPE_VLAN_MPLS_IPV4) {
+    return AF_INET;
+  }
+  else if (ft == PM_FTYPE_IPV6 || ft == PM_FTYPE_VLAN_IPV6 ||
+           ft == PM_FTYPE_MPLS_IPV6 || ft == PM_FTYPE_VLAN_MPLS_IPV6) {
+    return AF_INET6;
+  }
+
+  return ERR;
 }

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -114,7 +114,7 @@ void bgp_blackhole_prepare_filter()
   }
 }
 
-void bgp_blackhole_daemon()
+int bgp_blackhole_daemon()
 {
   struct bgp_misc_structs *m_data = bgp_blackhole_misc_db;
   struct bgp_blackhole_itc bbitc;
@@ -171,6 +171,8 @@ void bgp_blackhole_daemon()
 
     // XXX: free not needed alloc'd structs
   }
+
+  return SUCCESS;
 }
 
 int bgp_blackhole_evaluate_comms(void *a)

@@ -112,12 +112,15 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
     }
 
     /* XXX: can be further optimized for the case of no SAFI_UNICAST rib */
+    start_again_mpls_vpn:
     start_again_mpls_label:
 
     if (pptrs->l3_proto == ETHERTYPE_IP) {
       if (!pptrs->bgp_src) {
 	memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
 	nmct2.peer = (struct bgp_peer *) pptrs->bgp_peer;
+	nmct2.afi = AFI_IP;
+	nmct2.safi = safi;
 	nmct2.rd = &rd;
 	nmct2.peer_dst_ip = NULL;
 
@@ -204,6 +207,8 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
       if (!pptrs->bgp_dst) {
         memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
         nmct2.peer = (struct bgp_peer *) pptrs->bgp_peer;
+	nmct2.afi = AFI_IP6;
+	nmct2.safi = safi;
         nmct2.rd = &rd;
         nmct2.peer_dst_ip = &peer_dst_ip;
 
@@ -227,6 +232,13 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 	  }
         }
       }
+    }
+
+    /* XXX: tackle the case of Peer Distinguisher from BMP header
+       probably needs deeper thoughts for a cleaner approach */
+    if ((!pptrs->bgp_src || !pptrs->bgp_dst) && safi == SAFI_MPLS_VPN && type == FUNC_TYPE_BMP) {
+      safi = SAFI_UNICAST;
+      goto start_again_mpls_vpn;
     }
 
     if ((!pptrs->bgp_src || !pptrs->bgp_dst) && safi != SAFI_MPLS_LABEL) {
@@ -562,11 +574,15 @@ int bgp_lookup_node_match_cmp_bgp(struct bgp_info *info, struct node_match_cmp_t
 
     if (nmct2->peer->cap_add_paths[nmct2->afi][nmct2->safi]) {
       if (nmct2->peer_dst_ip && info->attr) {
-	if (info->attr->mp_nexthop.family == nmct2->peer_dst_ip->family) {
-	  if (!memcmp(&info->attr->mp_nexthop, nmct2->peer_dst_ip, HostAddrSz)) no_match--;
+	if (info->attr->mp_nexthop.family) {
+	  if (!host_addr_cmp(&info->attr->mp_nexthop, nmct2->peer_dst_ip)) {
+	    no_match--;
+	  }
 	}
 	else if (info->attr->nexthop.s_addr && nmct2->peer_dst_ip->family == AF_INET) {
-	  if (info->attr->nexthop.s_addr == nmct2->peer_dst_ip->address.ipv4.s_addr) no_match--;
+	  if (info->attr->nexthop.s_addr == nmct2->peer_dst_ip->address.ipv4.s_addr) {
+	    no_match--;
+	  }
 	}
       }
     }

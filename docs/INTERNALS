@@ -342,7 +342,7 @@ Let's take the definition of IP flows from RFC3954, titled 'Cisco Systems NetFlo
 Version 9': an IP flow is defined as a set of IP packets passing an observation point in the network
 during a certain time interval. All packets that belong to a particular flow have a set of common
 properties derived both from the data contained in the packet and from the packet treatment at the
-observation point. Packets belonging to a specific flow also sport a very high temporal locality.
+observation point. Packets belonging to a specific flow also feature a very high temporal locality.
 While the handmade IP flows implementation in pmacctd mantains the fore-mentioned properties, it
 behaves quite differently when compared with NetFlow. In fact, the typical NetFlow implementation
 accumulates packets belonging to the same flow into a single memory object; when it comes to expire

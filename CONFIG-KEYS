@@ -60,8 +60,8 @@ VALUES:		[ src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_
 		 post_nat_dst_host, post_nat_src_port, post_nat_dst_port, tunnel_src_mac,
 		 tunnel_dst_mac, tunnel_src_host, tunnel_dst_host, tunnel_proto, tunnel_tos,
 		 tunnel_src_port, tunnel_dst_port, vxlan, timestamp_start, timestamp_end,
-		 timestamp_arrival, export_proto_seqno, export_proto_version,
-		 export_proto_sysid ]
+		 timestamp_arrival, timestamp_export, export_proto_seqno,
+		 export_proto_version, export_proto_sysid ]
 FOREWORDS:	Individual IP packets are uniquely identified by their header field values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
 		they have at least enough information to discriminate where packets are coming
@@ -107,14 +107,15 @@ NOTES:		* List of the aggregation primitives available to each specific pmacct d
 		  can be achieved by defining a custom primitive to extract the full 3 bytes,
 		  ie. 'name=mplsFullTopLabel field_type=70 len=3 semantics=raw' for NetFlow/
 		  IPFIX.
-		* timestamp_start, timestamp_end and timestamp_arrival should not be mixed
-		  with pmacct support for historical accounting, ie. breakdown of traffic in
-		  time-bins via the sql_history feature; these primitives have the effect of
-		  letting pmacct act as a logger up to the msec level (if reported by the
-		  capturing method). timestamp_start records NetFlow/IPFIX flow start time or
-		  observation; timestamp_end records NetFlow/IPFIX flow end time; finally,
-		  timestamp_arrival records libpcap packet timestamp and sFlow/NetFlow/IPFIX
-		  packet arrival time at the collector.
+		* timestamp_start, timestamp_end and timestamp_arrival let pmacct act as a
+		  traffic logger up to the msec level (if reported by the capturing method).
+		  timestamp_start records NetFlow/IPFIX flow start time or observation;
+		  timestamp_end records NetFlow/IPFIX flow end time; timestamp_arrival
+		  records libpcap packet timestamp and sFlow/NetFlow/IPFIX packet arrival
+		  time at the collector. Historical accounting (enabled by the *_history
+		  config directives, ie. kafka_history) finest granularity for time-bins
+		  is 1 minute: timestamp_start can be used for finer greater granularitiies,
+		  ie. second (timestamps_secs set to true) or sub-second.
 		* tcpflags: in pmacctd, uacctd and sfacctd daemons TCP flags are ORed until
 		  the aggregate is flushed - hence emulating the behaviour of NetFlow/IPFIX.
 		  If a flag analysis is needed, packets with different flags (combinations)
@@ -122,13 +123,19 @@ NOTES:		* List of the aggregation primitives available to each specific pmacct d
 		  features (see examples in QUICKSTART and review libpcap filtering syntax
 		  via pcap-filter man page). 
 		* export_proto_seqno reports about export protocol (NetFlow, sFlow, IPFIX)
-		  sequence number; due to its potential de-aggregation effect, two main use-
-		  cases are seen as use of this primitive:
-		  1) if using a log type (de-)aggregation method, ie. for security, forensics,
-		     etc., in addition to existing primitives;
-		  2) if using a reporting type aggregation method, it is recommended to split
-		     this primitive in a separate plugin instance instead for sequencing
-		     analysis.  
+		  sequence number and can be very relevant to detect packet loss. nfacctd and
+		  sfacctd do perform simple non-contextual sequencing checks but these are
+		  mainly limited to check out-of-order situations; proper contextual checking
+		  can be performed as part of post-processing. A specific plugin instance,
+		  separate from the main / accounting one, can be configured with 'aggregate:
+		  export_proto_seqno' for the task. An example of a simple check would be to
+		  find min/max sequence numbers, compute their difference and make sure it
+		  does match to the amount of entries in the interval; the check can be then
+		  windowed over time by using timestamps (ie. 'timestamp_export' primitive
+		  and/or *_history config directives).
+		* timestamp_export is the observation time at the exporter. This is only
+		  relevant in export protocols involving caching, ie. NetFlow/IPFIX. In all
+		  other cases this would not be populated or be equal to timestamp_start.
 		* In nfacctd, undocumented aggregation primitive class_frame allows to apply
 		  nDPI clssification to NFv9/IPFIX packets with IE 315 (dataLinkFrameSection).
 		  class primitive instead allows to leverage traditional classification using
@@ -165,6 +172,16 @@ DESC:		Per-plugin filtering applied against the original packet or flow. Aggrega
 		L4 primitives (ie. src_port, dst_port) but b) an 'aggregate_filter' runs a filter
 		which requires dealing with L4 primitives. For further information, refer to the
 		'pmacctd_force_frag_handling' directive.
+DEFAULT:	none
+
+KEY:		dtls_path [GLOBAL]
+DESC:		Full path to a directory containing files needed to establish a successful DTLS
+		session (key, certificate and CA file); a key.pem file can be generated with the
+		"certtool --generate-privkey --outfile key.pem" command-line; a self-signed
+		cert.pem certificate, having previously created the key, can be generated with
+		the "certtool --generate-self-signed --load-privkey key.pem --outfile cert.pem"
+		command-line; the ca-certificates.crt CA file can be copied from (ie. on Debian
+		or Ubuntu) "/etc/ssl/certs/ca-certificates.crt".
 DEFAULT:	none
 
 KEY:		pcap_filter [GLOBAL, PMACCTD_ONLY, ONLY_PMBMPD]
@@ -337,7 +354,8 @@ KEY:		plugin_pipe_zmq_hwm
 DESC:           Defines the messages high watermark, that is, "The high water mark is a hard
 		limit on the maximum number of outstanding messages ZeroMQ shall queue in
 		memory for any single peer that the specified socket is communicating with. A
-		value of zero means no limit.".
+		value of zero means no limit.". If configured, upon reaching the set watermark
+		value, exceeding data will be discaded and an error log message will be output.
 DEFAULT:        0
 
 KEY:		plugin_exit_any
@@ -486,24 +504,24 @@ DESC:           Enables logging to a file (bypassing syslog); expected value is 
 DEFAULT:	none (logging to stderr)
 
 KEY:		amqp_host
-DESC:           Defines the AMQP/RabbitMQ broker IP. amqp_* directives refer to the broker used by an
-		AMQP plugin to purge data out.
+DESC:           Defines the AMQP/RabbitMQ broker IP. All amqp_* directives are used by the AMQP plugin
+		of flow daemons only. Check *_amqp_host out (ie. bgp_daemon_msglog_amqp_host) for the
+		equivalent directives relevant to other RabbitMQ exports.
 DEFAULT:        localhost
 
 KEY:		[ bgp_daemon_msglog_amqp_host | bgp_table_dump_amqp_host | bmp_dump_amqp_host |
 		  bmp_daemon_msglog_amqp_host | sfacctd_counter_amqp_host |
 		  telemetry_daemon_msglog_amqp_host | telemetry_dump_amqp_host ] [GLOBAL]
-DESC:		See amqp_host. bgp_daemon_msglog_amqp_* directives refer to the broker used by the BGP
-		thread to stream data out; bgp_table_dump_amqp_* directives refer to the broker used
-		by the BGP thread to dump data out at regular time intervals; bmp_daemon_msglog_amqp_*
-		directives refer to the broker used by the BMP thread to stream data out; bmp_dump_amqp_*
-		directives refer to the broker used by the BMP thread to dump data out at regular time
-		intervals; sfacctd_counter_amqp_* directives refer to the broker used by sfacctd to
-		stream sFlow counter data out; telemetry_daemon_msglog_amqp_* directives refer to the
-		broker used by the Streaming Telemetry thread/daemon to stream data out;
-		telemetry_dump_amqp_* directives refer to the broker used by the Streaming Telemetry
+DESC:		See amqp_host. bgp_daemon_msglog_amqp_* directives are used by the BGP thread/daemon
+		to stream data out; bgp_table_dump_amqp_* directives are used by the BGP thread/daemon
+		to dump data out at regular time intervals; bmp_daemon_msglog_amqp_* directives are
+		used by the BMP thread/daemon to stream data out; bmp_dump_amqp_* directives are
+		used by the BMP thread/daemon to dump data out at regular time intervals;
+		sfacctd_counter_amqp_* directives are used by sfacctd to stream sFlow counter data out;
+		telemetry_daemon_msglog_amqp_* are used by the Streaming Telemetry thread/daemon to
+		stream data out; telemetry_dump_amqp_* directives are used by the Streaming Telemetry
 		thread/daemon to dump data out at regular time intervals.
-DEFAULT:	See amqp_host	
+DEFAULT:	See amqp_host
 
 KEY:            amqp_vhost
 DESC:           Defines the AMQP/RabbitMQ server virtual host; see also amqp_host.
@@ -722,15 +740,20 @@ DESC:		Full pathname to a file containing directives to configure librdkafka. Al
 DEFAULT:	none
 
 KEY:            kafka_broker_host
-DESC:           Defines one or multiple, comma-separated, Kafka brokers. If only a single broker
-		IP address is defined then the broker port is read via the kafka_broker_port config
-		directive (legacy syntax); if multiple brokers are defined then each broker port,
-		if not left to default 9092, is expected as part of this directive, for example:
-		"broker1:10000,broker2". When defining multiple brokers, if the host is IPv4, the
-		value is expected as 'address:port'. If IPv6, it is expected as '[address]:port'.
-		When defining a single broker, this is not needed as the IPv6 address is detected
-		and wrapped-around '[' ']' symbols. FQDNs are also accepted. SSL connections can be
-		configured as "ssl://broker3:9000,ssl://broker2". 
+DESC:           Defines one or multiple, comma-separated, Kafka brokers for the bootstrap process.
+		If only a single broker IP address is defined then the broker port is read via the
+		kafka_broker_port config directive (legacy syntax); if multiple brokers are defined
+		then each broker port, if not left to default 9092, is expected as part of this
+		directive, for example: "broker1:10000,broker2". When defining multiple brokers,
+		if the host is IPv4, the value is expected as 'address:port'. If IPv6, it is
+		expected as '[address]:port' (although when defining a single broker, this is not
+		required as the IPv6 address is detected and wrapped-around '[' ']' symbols).
+		Resolvable hostnames are also accepted, if host resolves to multiple addresses it
+		will round-robin the addresses for each connection attempt. SSL connections can be
+		configured as "ssl://broker3:9000,ssl://broker2". All kafka_* directives are used
+		by the Kafka plugin of flow daemons only. Check other *_kafka_broker_host out (ie.
+		bgp_daemon_msglog_kafka_broker_host) for the equivalent directives relevant to
+		other Kafka exports.
 DEFAULT:        127.0.0.1
 
 KEY:            kafka_broker_port
@@ -787,22 +810,30 @@ KEY:            [ bgp_daemon_msglog_kafka_broker_host | bgp_table_dump_kafka_bro
                   bmp_daemon_msglog_kafka_broker_host | bmp_dump_kafka_broker_host |
 		  sfacctd_counter_kafka_broker_host | telemetry_daemon_msglog_kafka_broker_host |
 		  telemetry_dump_kafka_broker_host ] [GLOBAL]
-DESC:           See kafka_broker_host
+DESC:           See kafka_broker_host. bgp_daemon_msglog_kafka_* directives are used by the BGP thread/
+		daemon to stream data out; bgp_table_dump_kafka_* directives are used by the BGP thread/
+		daemon to dump data out at regular time intervals; bmp_daemon_msglog_kafka_* directives
+		are used by the BMP thread/daemon to stream data out; bmp_dump_kafka_* directives are
+                used by the BMP thread/daemon to dump data out at regular time intervals;
+                sfacctd_counter_kafka_* directives are used by sfacctd to stream sFlow counter data
+		out; telemetry_daemon_msglog_kafka_* are used by the Streaming Telemetry thread/daemon
+		to stream data out; telemetry_dump_kafka_* directives are used by the Streaming Telemetry
+		thread/daemon to dump data out at regular time intervals.
 DEFAULT:        See kafka_broker_host
 
 KEY:            [ bgp_daemon_msglog_kafka_broker_port | bgp_table_dump_kafka_broker_port |
                   bmp_daemon_msglog_kafka_broker_port | bmp_dump_kafka_broker_port |
 		  sfacctd_counter_kafka_broker_port | telemetry_daemon_msglog_kafka_broker_port |
 		  telemetry_dump_kafka_broker_port ] [GLOBAL]
-DESC:           See kafka_broker_port
+DESC:           See kafka_broker_port; see also bgp_daemon_msglog_kafka_broker_host.
 DEFAULT:        See kafka_broker_port
 
 KEY:            [ bgp_daemon_msglog_kafka_topic | bgp_table_dump_kafka_topic |
                   bmp_daemon_msglog_kafka_topic | bmp_dump_kafka_topic |
 		  sfacctd_counter_kafka_topic | telemetry_daemon_msglog_kafka_topic |
 		  telemetry_dump_kafka_topic ] [GLOBAL]
-DESC:		See kafka_topic. Variables supported by the configuration directives described
-		in this section:
+DESC:		See kafka_topic; see also bgp_daemon_msglog_kafka_broker_host. Variables supported by
+		the configuration directives described in this section:
 
                 $peer_src_ip    	BGP peer IP address (bgp_*) or sFlow agent IP address (sfacctd_*).
 
@@ -821,14 +852,14 @@ KEY:            [ bgp_daemon_msglog_kafka_topic_rr | bgp_table_dump_kafka_topic_
                   bmp_daemon_msglog_kafka_topic_rr | bmp_dump_kafka_topic_rr |
 		  telemetry_daemon_msglog_kafka_topic_rr | telemetry_dump_kafka_topic_rr ]
 		[GLOBAL]
-DESC:           See kafka_topic_rr
+DESC:           See kafka_topic_rr; see also bgp_daemon_msglog_kafka_broker_host.
 DEFAULT:        See kafka_topic_rr
 
 KEY:            [ bgp_daemon_msglog_kafka_partition | bgp_table_dump_kafka_partition |
                   bmp_daemon_msglog_kafka_partition | bmp_dump_kafka_partition |
 		  sfacctd_counter_kafka_partition | telemetry_daemon_msglog_kafka_partition |
 		  telemetry_dump_kafka_partition ] [GLOBAL]
-DESC:           See kafka_partition
+DESC:           See kafka_partition; see also bgp_daemon_msglog_kafka_broker_host.
 DEFAULT:        See kafka_partition
 
 KEY:            [ bgp_daemon_msglog_kafka_partition_key |
@@ -837,7 +868,7 @@ KEY:            [ bgp_daemon_msglog_kafka_partition_key |
                   sfacctd_counter_kafka_partition_key |
 		  telemetry_daemon_msglog_kafka_partition_key |
                   telemetry_dump_kafka_partition_key ] [GLOBAL]
-DESC:           See kafka_partition_key
+DESC:           See kafka_partition_key; see also bgp_daemon_msglog_kafka_broker_host.
 DEFAULT:        See kafka_partition_key
 
 KEY:            [ bgp_daemon_msglog_kafka_retry | bmp_daemon_msglog_kafka_retry |
@@ -850,7 +881,7 @@ KEY:            [ bgp_daemon_msglog_kafka_config_file | bgp_table_dump_kafka_con
                   bmp_daemon_msglog_kafka_config_file | bmp_dump_kafka_config_file |
                   sfacctd_counter_kafka_config_file | telemetry_daemon_msglog_kafka_config_file |
                   telemetry_dump_kafka_config_file ] [GLOBAL]
-DESC:           See kafka_config_file
+DESC:           See kafka_config_file; see also bgp_daemon_msglog_kafka_broker_host.
 DEFAULT:        See kafka_config_file
 
 KEY:		pidfile (-F) [GLOBAL]
@@ -861,14 +892,11 @@ DESC:		Writes PID of Core process to the specified file. PIDs of the active plug
 DEFAULT:	none
 
 KEY:		networks_file (-n)
-DESC:		Full pathname to a file containing a list of networks - and optionally ASN information,
-		BGP next-hop (peer_dst_ip) and IP prefix labels (read more about the file syntax in
-		examples/networks.lst.example). Purpose of the feature is to act as a resolver when
+DESC:		Full pathname to a file containing a list of networks - and optionally ASN information
+		and BGP next-hop (peer_dst_ip) Purpose of the feature is to act as a resolver when
 		network, next-hop and/or peer/origin ASN information is not available through other
 		means (ie. BGP, IGP, telemetry protocol) or for the purpose of overriding such
-		information with custom/self-defined one. IP prefix labels rewrite the resolved
-		source and/or destination IP prefix into the supplied label; labels can be up to 15
-		characters long.
+		information with custom/self-defined one.
 DEFAULT:	none
 
 KEY:		networks_file_filter
@@ -1133,15 +1161,12 @@ DEFAULT:	original
 
 KEY:		sql_data
 VALUES:		[ typed | unified ]
-DESC:		This switch makes sense only when using PostgreSQL plugin and supplied default tables
-		up to v5: the pgsql scripts in the sql/ tree, up to v5, will in fact create a 'unified'
-		table along with multiple 'typed' tables. The 'unified' table has IP and MAC addresses
-		specified as standard CHAR strings, slower and not space savy but flexible; 'typed'
-		tables sport PostgreSQL own types (inet, mac, etc.), resulting in a faster but more
-		rigid structure. Since v6 unified mode is being discontinued leading to simplification.
-		The supplied 'typed' schema can still be customized, ie. to write IP addresses in CHAR
-		fields because making use of IP prefix labels, transparently to pmacct - making this
-		configuration switch deprecated.
+DESC:		This switch applies to the PostgreSQL plugin and when using default tables up to v5:
+		pgsql scripts in the sql/ tree, up to v5, will in fact create a 'unified' table along
+		with multiple 'typed' tables. The 'unified' table has IP and MAC addresses specified
+		as standard CHAR strings, slower and not space savy but flexible; 'typed' tables
+		feature PostgreSQL own types (inet, mac, etc.), resulting in a faster but more rigid
+		structure. Since v6 unified mode is being discontinued leading to simplification.
 DEFAULT:	typed
 
 KEY:		sql_conn_ca_file
@@ -1151,7 +1176,9 @@ DESC:		In MySQL and PostgreSQL plugins, this is the path name of the Certificate
 DEFAULT:	none
 
 KEY:	 	sql_host
-DESC:		Defines the backend server IP/hostname
+DESC:		Defines the backend server IP/hostname. In case of the MySQL plugin, prepending the
+		'unix:' string, ie. 'unix:/path/to/unix.socket', will cause the rest to be treated
+		as a UNIX socket (rather than an IP address/hostname).
 DEFAULT:	localhost
 
 KEY:            sql_port
@@ -1163,7 +1190,9 @@ DESC:		Defines the username to use when connecting to the server.
 DEFAULT:	pmacct
 
 KEY:		sql_passwd
-DESC:		Defines the password to use when connecting to the server.
+DESC:		Defines the password to use when connecting to the server. Note that since this directive
+		does encompass a default value (see below), it is not possible to connect to a server
+		that performs password authentication with an empy password. 
 DEFAULT:	'arealsmartpwd'
 
 KEY:		[ sql_refresh_time | print_refresh_time | amqp_refresh_time | kafka_refresh_time ] (-r)
@@ -1202,14 +1231,12 @@ DEFAULT:	false
 KEY:		[ sql_history | print_history | amqp_history | kafka_history ]
 VALUES:		#[s|m|h|d|w|M]
 DESC:		Enables historical accounting by placing accounted data into configurable time-bins. It
-		will use the 'stamp_inserted' (base time of the time-bin) and 'stamp_updated' (last time
+		does use the 'stamp_inserted' (base time of the time-bin) and 'stamp_updated' (last time
 		the time-bin was touched) fields. The supplied value defines the time slot length during
-		which counters are accumulated. For a nice effect, it's adviceable to pair this directive
-		with 'sql_history_roundoff'. In nfacctd, where a flow can span across multiple time-bins,
-		flow counters can be pro-rated (seconds timestamp resolution) over involved time-bins by
-		setting nfacctd_pro_rating to true. Note that this value is fully disjoint from the
-		*_refresh_time directives which set the time intervals at which data has to be written to
-		the backend instead. The final effect is close to time slots in a RRD file. Examples of
+		which counters are accumulated. See also *_history_roundoff'. In nfacctd, where a flow
+		can span across multiple time-bins, flow counters can be pro-rated (seconds timestamp
+		resolution) over involved the time-bins by setting nfacctd_pro_rating to true.
+		The end net effect of this directive is close to time slots in a RRD file. Examples of
 		valid values are: '300s' or '5m' - five minutes, '3600s' or '1h' - one hour, '14400s' or
 		'4h' - four hours, '86400s' or '1d' - one day, '1w' - one week, '1M' - one month).
 DEFAULT:	none
@@ -1352,10 +1379,11 @@ DESC:		Specifies time interval at which the executable specified by 'sql_trigger
 DEFAULT:	none
 
 KEY:		[ sql_preprocess | print_preprocess | amqp_preprocess | kafka_preprocess ]
-DESC:		Allows to process aggregates (via a comma-separated list of conditionals and checks) while
-		purging data to the backend thus resulting in a powerful selection tier; aggregates filtered
-		out may be just discarded or saved through the recovery mechanism (if enabled, if supported
-		by the backend). The set of available preprocessing directives follows:
+DESC:		Allows to process aggregates (via a comma-separated list of conditionals and checks, ie.
+		"qnum=1000000, minb=10000") while purging data to the backend thus resulting in a powerful
+		selection tier; aggregates filtered out may be just discarded or saved through the recovery
+		mechanism (if enabled, if supported by the backend). The set of available preprocessing
+		directives follows:
 		
 		KEY: qnum
 		DESC: conditional. Subsequent checks will be evaluated only if the number of queries to be
@@ -1630,11 +1658,10 @@ DESC:           Defines whether IP addresses should be left numerical (in networ
 		to human-readable string. Applies to MySQL and SQLite plugins only and assumes the INET_ATON()
 		and INET6_ATON() function are defined in the RDBMS. INET_ATON() is always defined in MySQL
 		whereas INET6_ATON() requires MySQL >= 5.6.3. Both functions are not defined by default in
-		SQLite instead and are to be user-defined. The feature is not compatible with making use of IP
-		prefix labels. Default setting, false, is to convert IP addresses and prefixes into strings.
-		If this feature is not available for the intended plugin - and NetFlow/IPFIX or libpcap/ULOG
-		daemons are used - a custom primitive can be defined (see aggregate_primitives configuration
-		directive), for example in the case of NetFlow/IPFIX:
+		SQLite instead and are to be user-defined. Default setting, false, is to convert IP addresses
+		and prefixes into strings. If this feature is not available for the intended plugin - and
+		NetFlow/IPFIX or libpcap/ULOG daemons are in use - a custom primitive can be defined (see
+		aggregate_primitives configuration directive), for example in the case of NetFlow/IPFIX:
 
 		name=src_host_int field_type=8  len=4 semantics=u_int
 		name=dst_host_int field_type=12 len=4 semantics=u_int
@@ -1694,9 +1721,10 @@ DEFAULT:	0
 KEY:		[ nfacctd_allow_file | sfacctd_allow_file ] [GLOBAL, MAP, NO_PMACCTD, NO_UACCTD]
 DESC:		Full pathname to a file containing the list of IPv4/IPv6 addresses/prefixes (one for each
 		line) allowed to send packets to the daemon. The allow file is intended to be small; for
-		longer ACLs, firewall rules should be preferred instead. Content can be reloaded at runtime
-		by sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd"). Sample map in
-		examples/allow.lst.example .
+		longer ACLs, firewall rules should be preferred instead. If no allow file is specified,
+		intuitively, that means 'allow all'; if an allow file is specified but its content is
+		empty, that means 'deny all'. Content can be reloaded at runtime by sending the daemon a
+		SIGUSR2 signal (ie. "killall -USR2 nfacctd"). Sample map in examples/allow.lst.example .
 DEFAULT:	none (ie. allow all)
 
 KEY:		nfacctd_time_secs [GLOBAL, NFACCTD_ONLY]
@@ -1751,6 +1779,12 @@ DESC:		Defines the UDP port where to bind nfacctd for receiving (replicated) tem
 		not replicated (in order to avoid the case of infinite loops).  
 DEFAULT:	none
 
+KEY:		nfacctd_dtls_port [GLOBAL, NFACCTD_ONLY]
+DESC:		Defines the UDP port where to bind nfacctd for receiving NetFlow/IPFIX over DTLS. Needs
+		pmacct to be configured for compiling with the --enable-gnutls knob. The files (key,
+		certificate, etc.) required by DTLS are to be supplied via the dtls_path config directive.
+DEFAULT:	none
+
 KEY:            [ nfacctd_stitching | sfacctd_stitching | pmacctd_stitching | uacctd_stitching ]
 VALUES:         [ true | false ]
 DESC:		If set to true adds two new fields, timestamp_min and timestamp_max: given an aggregation
@@ -1776,37 +1810,35 @@ DESC:		When set to 'netflow' or 'sflow' it instructs nfacctd and sfacctd to popu
 		'dst_as', 'peer_src_as' and 'peer_dst_as' primitives from information in NetFlow and sFlow
 		datagrams; when set to 'file', it instructs nfacctd and sfacctd to populate 'src_as',
 		'dst_as' and 'peer_dst_as' by looking up source and destination IP addresses against a
-		supplied networks_file. When 'bgp' is specified, source and destination IP addresses are
-		looked up against the BGP RIB of the peer from which the NetFlow (or sFlow) datagram was
-		received (see also bgp_agent_map directive for more complex mappings). 'longest' behaves
-		in a longest-prefix match wins fashion: in nfacctd and sfacctd lookup is done against a
-		networks_file (if specified), sFlow/NetFlow protocol and BGP (if the BGP thread is started)
-		with the following logics: networks_file < sFlow/NetFlow < <= BGP.
-		In pmacctd and uacctd: 'file' expects a 'networks_file' to be defined; 'bgp' just works
-		as described previously for nfacctd and sfacctd; 'longest' lookup is done against a
-		networks_file and BGP only (networks_file <= BGP) since no export protocol lookup method
-		is available. Read nfacctd_net description for an example of operation of the 'longest'
-		method. 
+		supplied networks_file. When 'bgp' or 'bmp' is specified, source and destination IP
+		addresses are looked up against the BGP RIB of the peer from which the NetFlow (or sFlow)
+		datagram was received (see also bgp_agent_map directive for more complex mappings).
+		'longest' behaves in a longest-prefix match wins fashion: in nfacctd and sfacctd lookup
+		is done against a networks_file (if specified), sFlow/NetFlow protocol and BGP/BMP (if
+		the BMP/BGP thread is started) with the following logics: networks_file < sFlow/NetFlow
+		<= BGP/BMP; in pmacctd and uacctd 'longest' logics is networks_file <= BGP/BMP.
 
-		Unless there is a specific goal do achieve, it is highly recommended that this definition,
-		ie. nfacctd_as, is kept in sync with its net equivalent, ie. nfacctd_net.
+		Read nfacctd_net description for an example of operation of the 'longest' method. Unless
+		there is a specific goal do achieve, it is highly recommended that this definition, ie.
+		nfacctd_as, is kept in sync with its net equivalent, ie. nfacctd_net.
 DEFAULT:        none
 
 KEY:            [ nfacctd_net | sfacctd_net | pmacctd_net | uacctd_net ] [GLOBAL]
 VALUES:         [ netflow | sflow | mask | file | igp | bgp | bmp | longest ]
-DESC:		Determines the method for performing IP prefix aggregation - hence directly influencing 'src_net',
-		'dst_net', 'src_mask', 'dst_mask' and 'peer_dst_ip' primitives. 'netflow' and 'sflow' get values
-		from NetFlow and sFlow protocols respectively; these keywords are only valid in nfacctd, sfacctd.
-		'mask' applies a defined networks_mask; 'file' selects a defined networks_file; 'igp' and 'bgp'
-		source values from IGP/IS-IS daemon and BGP daemon respectively. For backward compatibility, the
-		default behaviour in pmacctd and uacctd is: 'mask' and 'file' are turned on if a networks_mask and
-		a networks_file are respectively specified by configuration. If they are both defined, the outcome
-		will be the intersection of their definitions. 'longest' behaves in a longest-prefix match wins
-		fashion: in nfacctd and sfacctd lookup is done against a networks list (if networks_file is defined)
-		sFlow/NetFlow protocol, IGP (if the IGP thread started) and BGP (if the BGP thread is started) with
-		the following logics: networks_file < sFlow/NetFlow < IGP <= BGP; in pmacctd and uacctd lookup is
-		done against ia networks list, IGP and BGP only (networks_file < IGP <= BGP). For example we receive
-		the following PDU via NetFlow:
+DESC:		Determines the method for performing IP prefix aggregation - hence directly influencing
+		'src_net', 'dst_net', 'src_mask', 'dst_mask' and 'peer_dst_ip' primitives. 'netflow' and
+		'sflow' get values from NetFlow and sFlow protocols respectively; these keywords are only
+		valid in nfacctd, sfacctd. 'mask' applies a defined networks_mask; 'file' selects a defined
+		networks_file; 'igp', 'bgp' and 'bmp' source values from IGP/IS-IS, BGP and BMP daemon
+		respectively. For backward compatibility, the default behaviour in pmacctd and uacctd is:
+		'mask' and 'file' are turned on if a networks_mask and a networks_file are respectively
+		specified by configuration. If they are both defined, the outcome will be the intersection
+		of their definitions. 'longest' behaves in a longest-prefix match wins fashion: in nfacctd
+		and sfacctd lookup is done against a networks list (if networks_file is defined) sFlow/
+		NetFlow protocol, IGP (if the IGP thread started) and BGP/BMP (if the BGP/BMP thread is
+		started) with the following logics: networks_file < sFlow/NetFlow < IGP <= BGP/BMP; in
+		pmacctd and uacctd 'longest' logics is: networks_file < IGP <= BGP/BMP. For example we
+		receive the following PDU via NetFlow:
 
                 SrcAddr: 10.0.8.29 (10.0.8.29)
                 DstAddr: 192.168.5.47 (192.168.5.47)
@@ -1815,12 +1847,12 @@ DESC:		Determines the method for performing IP prefix aggregation - hence direct
                 DstMask: 27 (prefix: 192.168.5.32/27)
 
                 a BGP peering is available and BGP contains the following prefixes: 192.168.0.0/16 and 10.0.0.0/8.
-                A networks_file contains the prefixes 10.0.8.0/24 and 192.168.5.0/24. 'longest' would select as
-		outcome of the network aggregation process 10.0.8.0/24 for the src_net and src_mask respectively
-		and 192.168.5.32/27 for dst_net and dst_mask. 
+                A networks_file contains the prefixes 10.0.8.0/24 and 192.168.5.0/24. 'longest' would select
+		as outcome of the network aggregation process 10.0.8.0/24 for the src_net and src_mask
+		respectively and 192.168.5.32/27 for dst_net and dst_mask.
 
-		Unless there is a specific goal to achieve, it is highly recommended that the definition of this
-		configuration directive is kept in sync with its ASN equivalent, ie. nfacctd_as.
+		Unless there is a specific goal to achieve, it is highly recommended that the definition of
+		this configuration directive is kept in sync with its ASN equivalent, ie. nfacctd_as.
 DEFAULT:	nfacctd: 'netflow'; sfacctd: 'sflow'; pmacctd and uacctd: 'mask', 'file'
 
 KEY:		use_ip_next_hop [GLOBAL]
@@ -2013,11 +2045,12 @@ KEY:		[ pmacctd_ext_sampling_rate | uacctd_ext_sampling_rate | nfacctd_ext_sampl
 		  sfacctd_ext_sampling_rate ] [GLOBAL]
 		Flags that captured traffic is being sampled at the specified rate. Such rate can then be
 		reported ('sampling_rate' primitive), renormalized by using ie. 'pmacctd_renormalize' or
-		propagated by the NetFlow/sFlow probe plugins. External sampling might be performed by
-		capturing frameworks the daemon is linked against (ie. PF_RING, NFLOG) or appliances (ie.
-		sampled packet mirroring). In nfacctd and sfacctd daemons this directive can be used to
-		tackle corner cases, ie. sampling rate reported by the NetFlow/sFlow agent is missing or
-		not correct.
+		exported by the nfprobe/sfprobe plugins. External sampling might be performed by capturing
+		frameworks the daemon is linked against (ie. PF_RING, NFLOG) or appliances (ie. sampled
+		packet mirroring). In nfacctd and sfacctd daemons this directive can be used to tackle
+		corner cases, ie. sampling rate reported by the NetFlow/sFlow agent is missing or not
+		correct; in such cases sampling_map can be alternatively used to define sampling rate per
+		exporter, ie. in case the rate is not omogeneous across all exporters.
 DEFAULT:	none
 
 KEY:		[ sfacctd_renormalize | nfacctd_renormalize | pmacctd_renormalize | uacctd_renormalize ] (-R)
@@ -2105,6 +2138,19 @@ DESC:		Defines the remote IP address/hostname and port to which NetFlow datagram
 		If IPv4, the value is expected as 'address:port'. If IPv6, it is expected as '[address]:port'.
 DEFAULT:	127.0.0.1:2100
 
+KEY:		nfprobe_dtls
+VALUES:         [ true | false ]
+DESC:		Enables sending out NetFlow/IPFIX packets over DTLS. Needs pmacct to be configured for
+		compiling with the --enable-gnutls knob. The files (key, certificate, etc.) required by
+		DTLS are to be supplied via the dtls_path config directive.
+DEFAULT:	false
+
+KEY:		nfprobe_dtls_verify_cert
+DESC:		If nfprobe_dtls is set to true, this validates that the certificate received from the
+		server corresponds to the specified hostname. Sample of an expected value would be
+		"www.example.com".
+DEFAULT:	none
+
 KEY:            nfprobe_source_ip
 DESC:           Defines the local IP address from which NetFlow datagrams are exported. Only a numerical IPv4/
 		IPv6 address is expected. The supplied IP address is required to be already configured on
@@ -2118,7 +2164,7 @@ DESC:		Version of outgoing NetFlow datagrams. NetFlow v5/v9 and IPFIX (v10) are 
 		features a fixed record structure and if not specifying an 'aggregate' directive it gets
 		populated as much as possible; NetFlow v9 and IPFIX feature a dynamic template-based structure
 		instead and by default it is populated as: 'src_host, dst_host, src_port, dst_Port, proto, tos'.
-DEFAULT:	5
+DEFAULT:	10
 
 KEY:            nfprobe_engine
 DESC:           Allows to define Engine ID and Engine Type fields for NetFlow v5 and Source ID/Obs Domain ID
@@ -2469,14 +2515,17 @@ DESC:           Full pathname to a file containing source MED (Multi Exit Discri
 		SIGUSR2 signal (ie. "killall -USR2 nfacctd").
 DEFAULT:	none
 
-KEY:		bgp_agent_map [GLOBAL, MAP]
-DESC:		Full pathname to a file to map source IP address of NetFlow agents and AgentID of sFlow
-		agents to source IP address or Router ID of BGP peers. This is to provide flexibility
-		in a number of scenarios, for example and not limited to BGP peering with RRs, hub-and-
-		spoke topologies, single-homed networks - but also BGP sessions traversing NAT. pmacctd,
-		uacctd daemons are required to use a bgp_agent_map with up to two "catch-all" entries -
-		working in a primary/backup fashion (see bgp_agent.map.example in the examples section):
-		this is because these daemons do not have a NetFlow/sFlow source address to match to.
+KEY:		[ bgp_agent_map | bmp_agent_map ] [GLOBAL, MAP]
+DESC:		Full pathname to a file to map source 1a) IP address of NetFlow/IPFIX agents or 1b)
+		AgentID of sFlow agents to 2a) session IP address or Router ID of BGP peers or 2b)
+		session IP address of BMP peers.
+		This feature is meant to provide flexibility in a number of scenarios, for example
+		BGP peering with RRs, hub-and-spoke topologies, single-homed networks - but also BGP
+		sessions traversing NAT.
+		pmacctd and uacctd daemons are required to use this map with at most two "catch-all"
+		entries working in a primary/backup fashion (see for more info bgp_agent.map.example
+		in the examples section): this is because these daemons do not have a NetFlow/sFlow
+		source address to match to.
 		Number of map entries (by default 384) can be modified via maps_entries. Content can be
 		reloaded at runtime by sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd").
 DEFAULT:	none
@@ -2485,9 +2534,10 @@ KEY:		flow_to_rd_map [GLOBAL, MAP]
 DESC:		Full pathname to a file to map flows (typically, a) router or b) ingress router, input
 		interfaces or c) MPLS bottom label, BGP next-hop couples) to BGP/MPLS Virtual Private
 		Network (VPN) Route Distinguisher (RD), based upon rfc4364. See flow_to_rd.map file in
-		the examples section for further info. Number of map entries (by default 384) can be
-		modified via maps_entries. Content can be reloaded at runtime by sending the daemon a
-		SIGUSR2 signal (ie. "killall -USR2 nfacctd"). 
+		the examples section for further info. Definitions in this map do override same data
+		received from the export protocol if any (ie. NetFlow v9/IPFIX IE #90). Number of map
+		entries (by default 384) can be modified via maps_entries. Content can be reloaded at
+		runtime by sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd").
 DEFAULT:	none
 
 KEY:		bgp_follow_default [GLOBAL]
@@ -2557,7 +2607,7 @@ DESC:           Full pathname to a file containing the BGP peers (IP address onl
 		upwards in order to register more keys.
 DEFAULT:	none
 
-KEY:		bgp_table_peer_buckets [GLOBAL]
+KEY:		[ bgp_table_peer_buckets | bmp_table_peer_buckets ] [GLOBAL]
 VALUES:		[ 1-1000 ]
 DESC:		Routing information related to BGP prefixes is kept per-peer in order to simulate a
 		multi-RIB environment and is internally structured as an hash with conflict chains.
@@ -2569,7 +2619,7 @@ DESC:		Routing information related to BGP prefixes is kept per-peer in order to 
 		buckets means better CPU usage but also increased memory footprint - and vice-versa.
 DEFAULT:	13
 
-KEY:		bgp_table_per_peer_buckets [GLOBAL]
+KEY:		[ bgp_table_per_peer_buckets | bmp_table_per_peer_buckets ] [GLOBAL]
 VALUE:		[ 1-128 ]
 DESC:		With same background information as bgp_table_peer_buckets, this parameter sets the
 		number of buckets over which per-peer information is distributed (hence effectively
@@ -2580,14 +2630,14 @@ DESC:		With same background information as bgp_table_peer_buckets, this paramete
 		paths per prefix to be exported.
 DEFAULT:	1
 
-KEY:            bgp_table_attr_hash_buckets [GLOBAL]
+KEY:            [ bgp_table_attr_hash_buckets | bmp_table_attr_hash_buckets ] [GLOBAL]
 VALUE:          [ 1-1000000 ]
 DESC:		Sets the number of buckets of BGP attributes hashes (ie. AS-PATH, communities, etc.).
 		Default proved to work fine with BGP sessions passing best-path only and with up to
 		25 BGP sessions passing ADD-PATH.
 DEFAULT:	65535
 
-KEY:            bgp_table_per_peer_hash [GLOBAL]
+KEY:            [ bgp_table_per_peer_hash | bmp_table_per_peer_hash ] [GLOBAL]
 VALUE:          [ path_id ]
 DESC:		If bgp_table_per_peer_buckets is greater than 1, this parameter allows to set the
 		hashing to be used. By default hashing happens against the BGP ADD-PATH path_id field.
@@ -2709,6 +2759,25 @@ DESC:		Enables BGP proxying. Full pathname to a file to cross-connect BGP peers 
 		entries (by default 384) can be modified via maps_entries. Content can be reloaded
 		at runtime by sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd").
 DEFAULT:	none
+
+KEY:            [ bmp_daemon_parse_proxy_header ]
+VALUES:         [ true | false ]
+DESC:           Defines whether to parse the first packet of a connection looking for a
+                Proxy Protocol header containing client information (IP addresses and TCP ports).
+                The source IP Address and TCP port of the header replaces the peer IP address and
+                peer TCP port obtained from the socket.
+                The following is a simple HAProxy configuration example where an HAProxy listens on
+                TCP port 5001 for BMP packets and forwards them to a PMBMPD daemon listening on TCP
+                port 5000.  A binary version 2 Proxy Protocol header is prepended to the first packet
+                of the TCP connection.
+                    frontend bmp_ha_proxy 
+                        bind <HAProxy IP Address>:5001
+                        mode tcp
+                        default_backend bmpnodes
+                    backend bmpnodes
+                        mode tcp
+                        server bmp-dev <PMBMPD IP Address>:5000 send-proxy-v2
+DEFAULT:        False
 
 KEY:		rpki_roas_file [MAP, GLOBAL]
 DESC:		Full pathname to a file containing RPKI ROA data. Data encoding is JSON and format

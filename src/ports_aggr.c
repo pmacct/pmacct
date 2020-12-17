@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -68,6 +68,12 @@ void load_ports(char *filename, struct ports_table *pt)
     }
   }
 
+  /* filename check to not print nulls as load_networks()
+     may not be secured inside an if statement */ 
+  if (filename) {
+    Log(LOG_INFO, "INFO ( %s/%s ): [%s] map successfully (re)loaded.\n", config.name, config.type, filename);
+  }
+
   return;
 
   handle_error:
@@ -80,4 +86,3 @@ void load_ports(char *filename, struct ports_table *pt)
   }
   else exit_gracefully(1);
 }
-

@@ -82,9 +82,11 @@ void bgp_daemon_wrapper()
   send_to_pool(bgp_pool, skinny_bgp_daemon, NULL);
 }
 
-void skinny_bgp_daemon()
+int skinny_bgp_daemon()
 {
   skinny_bgp_daemon_online();
+
+  return SUCCESS;
 }
 
 void skinny_bgp_daemon_online()
@@ -316,6 +318,9 @@ void skinny_bgp_daemon_online()
       exit_gracefully(1);
     }
   }
+
+  setsockopt(config.bgp_sock, SOL_SOCKET, SO_KEEPALIVE, (void *)&yes, sizeof(yes));
+
   if (config.bgp_daemon_ipprec) {
     int opt = config.bgp_daemon_ipprec << 5;
 
@@ -770,8 +775,11 @@ void skinny_bgp_daemon_online()
 
       if (!peer) {
 	/* We briefly accept the new connection to be able to drop it */
-        Log(LOG_ERR, "ERROR ( %s/%s ): Insufficient number of BGP peers has been configured by 'bgp_daemon_max_peers' (%d).\n",
+	if (!log_notification_isset(&log_notifications.bgp_peers_limit, now)) {
+	  log_notification_set(&log_notifications.bgp_peers_limit, now, FALSE);
+          Log(LOG_WARNING, "WARN ( %s/%s ): Insufficient number of BGP peers has been configured by 'bgp_daemon_max_peers' (%d).\n",
 			config.name, bgp_misc_db->log_str, config.bgp_daemon_max_peers);
+	}
 
 	close(fd);
 	goto read_data;
@@ -891,7 +899,6 @@ void skinny_bgp_daemon_online()
 	break;
       }
       
-      // XXX: verify round-robin fairness holding up
       if (config.bgp_xconnect_map) {
         loc_idx = (peers_idx + peers_xconnect_idx_rr) % max_peers_idx;
 

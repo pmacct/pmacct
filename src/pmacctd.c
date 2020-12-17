@@ -174,7 +174,6 @@ int pm_pcap_add_interface(struct pm_pcap_device *dev_ptr, char *ifname, struct p
   /* pcap library stuff */
   char errbuf[PCAP_ERRBUF_SIZE];
 
-  struct plugins_list_entry *list;
   int ret = SUCCESS, attempts = FALSE, index;
   int direction;
 
@@ -235,24 +234,7 @@ int pm_pcap_add_interface(struct pm_pcap_device *dev_ptr, char *ifname, struct p
 
     load_plugin_filters(dev_ptr->link_type);
 
-    /* we need to solve some link constraints */
-    if (dev_ptr->data == NULL) {
-      Log(LOG_ERR, "ERROR ( %s/core ): data link not supported: %d\n", config.name, dev_ptr->link_type);
-      exit_gracefully(1);
-    }
-    else Log(LOG_INFO, "INFO ( %s/core ): [%s,%u] link type is: %d\n", config.name, dev_ptr->str, dev_ptr->id, dev_ptr->link_type);
-
-    if (dev_ptr->link_type != DLT_EN10MB && dev_ptr->link_type != DLT_IEEE802 && dev_ptr->link_type != DLT_LINUX_SLL) {
-      list = plugins_list;
-      while (list) {
-        if ((list->cfg.what_to_count & COUNT_SRC_MAC) || (list->cfg.what_to_count & COUNT_DST_MAC)) {
-          Log(LOG_ERR, "ERROR ( %s/core ): MAC aggregation not available for link type: %d\n", config.name, dev_ptr->link_type);
-          exit_gracefully(1);
-        }
-        list = list->next;
-      }
-    }
-
+    pm_pcap_check(dev_ptr);
     pm_pcap_add_filter(dev_ptr);
   }
   else {
@@ -261,6 +243,42 @@ int pm_pcap_add_interface(struct pm_pcap_device *dev_ptr, char *ifname, struct p
   }
 
   return ret;
+}
+
+void pm_pcap_check(struct pm_pcap_device *dev_ptr)
+{
+  struct plugins_list_entry *list;
+
+  /* we need to solve some link constraints */
+  if (dev_ptr->data == NULL) {
+    Log(LOG_ERR, "ERROR ( %s/core ): data link not supported: %d\n", config.name, dev_ptr->link_type);
+    exit_gracefully(1);
+  }
+  else {
+    Log(LOG_INFO, "INFO ( %s/core ): [%s,%u] link type is: %d\n", config.name, dev_ptr->str, dev_ptr->id, dev_ptr->link_type);
+  }
+
+  if (dev_ptr->link_type != DLT_EN10MB && dev_ptr->link_type != DLT_IEEE802 && dev_ptr->link_type != DLT_LINUX_SLL) {
+    list = plugins_list;
+    while (list) {
+      if (list->cfg.what_to_count & COUNT_SRC_MAC) {
+	Log(LOG_WARNING, "WARN ( %s/core ): 'src_mac' aggregation not available for link type: %d\n", config.name, dev_ptr->link_type);
+	list->cfg.what_to_count ^= COUNT_SRC_MAC;
+      }
+
+      if (list->cfg.what_to_count & COUNT_DST_MAC) {
+	Log(LOG_WARNING, "WARN ( %s/core ): 'dst_mac' aggregation not available for link type: %d\n", config.name, dev_ptr->link_type);
+	list->cfg.what_to_count ^= COUNT_DST_MAC;
+      }
+
+      if (list->cfg.what_to_count & COUNT_VLAN) {
+	Log(LOG_WARNING, "WARN ( %s/core ): 'vlan' aggregation not available for link type: %d\n", config.name, dev_ptr->link_type);
+	list->cfg.what_to_count ^= COUNT_VLAN;
+      }
+
+      list = list->next;
+    }
+  }
 }
 
 int main(int argc,char **argv, char **envp)
@@ -348,6 +366,7 @@ int main(int argc,char **argv, char **envp)
   pm_pcap_device_initialize(&bkp_devices);
   log_notifications_init(&log_notifications);
   config.acct_type = ACCT_PM;
+  config.progname = pmacctd_globstr;
 
   rows = 0;
 
@@ -531,6 +550,7 @@ int main(int argc,char **argv, char **envp)
   list = plugins_list;
   while(list) {
     list->cfg.acct_type = ACCT_PM;
+    list->cfg.progname = pmacctd_globstr;
     set_default_preferences(&list->cfg);
     if (!strcmp(list->type.string, "core")) {
       memcpy(&config, &list->cfg, sizeof(struct configuration));
@@ -555,6 +575,7 @@ int main(int argc,char **argv, char **envp)
   }
 
   initsetproctitle(argc, argv, envp);
+
   if (config.syslog) {
     logf = parse_log_facility(config.syslog);
     if (logf == ERR) {
@@ -769,7 +790,8 @@ int main(int argc,char **argv, char **envp)
       else {
         if (list->cfg.what_to_count_2 & (COUNT_POST_NAT_SRC_HOST|COUNT_POST_NAT_DST_HOST|
                         COUNT_POST_NAT_SRC_PORT|COUNT_POST_NAT_DST_PORT|COUNT_NAT_EVENT|
-                        COUNT_TIMESTAMP_START|COUNT_TIMESTAMP_END|COUNT_TIMESTAMP_ARRIVAL))
+                        COUNT_TIMESTAMP_START|COUNT_TIMESTAMP_END|COUNT_TIMESTAMP_ARRIVAL|
+			COUNT_EXPORT_PROTO_TIME))
           list->cfg.data_type |= PIPE_TYPE_NAT;
 
         if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_TOP|COUNT_MPLS_LABEL_BOTTOM|
@@ -889,8 +911,6 @@ int main(int argc,char **argv, char **envp)
     list = list->next;
   }
 
-  load_plugins(&req);
-
   if (config.handle_fragments) init_ip_fragment_handler();
   if (config.handle_flows) init_ip_flow_handler();
   load_networks(config.networks_file, &nt, &nc);
@@ -973,11 +993,14 @@ int main(int argc,char **argv, char **envp)
   }
   else if (config.pcap_savefile) {
     open_pcap_savefile(&devices.list[0], config.pcap_savefile);
+    pm_pcap_check(&devices.list[0]);
     pm_pcap_add_filter(&devices.list[0]);
     cb_data.device = &devices.list[0];
     devices.num = 1;
     pm_pcap_savefile_round = 1;
   }
+
+  load_plugins(&req);
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
   memset(&sighandler_action, 0, sizeof(sighandler_action)); /* To ensure the struct holds no garbage values */
@@ -1099,6 +1122,20 @@ int main(int argc,char **argv, char **envp)
     int sleep_time = DEFAULT_SLOTH_SLEEP_TIME;
 
     req.bpf_filter = TRUE;
+
+    if (config.bgp_daemon_to_xflow_agent_map) {
+      load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.bgp_daemon_to_xflow_agent_map, &bta_table, &req, &bta_map_allocated);
+      cb_data.bta_table = (u_char *) &bta_table;
+    }
+    else {
+      Log(LOG_ERR, "ERROR ( %s/core ): 'bmp_daemon' configured but no 'bgp_agent_map' has been specified. Exiting.\n", config.name);
+      exit_gracefully(1);
+    }
+
+    /* Limiting BGP peers to only two: one would suffice in pmacctd
+       but in case maps are reloadable (ie. bta), it could be handy
+       to keep a backup feed in memory */
+    config.bgp_daemon_max_peers = 2;
 
     bmp_daemon_wrapper();
 

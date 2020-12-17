@@ -95,7 +95,6 @@
 #define PRIMITIVE_LEN 		32
 #define PRIMITIVE_DESC_LEN	64
 
-#define PMACCT_VERSION "1.7.6-git"
 #define MANTAINER "Paolo Lucente <paolo@pmacct.net>"
 #define GET_IN_TOUCH_MSG "If you see this message, please get in touch"
 #define PMACCTD_USAGE_HEADER "Promiscuous Mode Accounting Daemon, pmacctd"
@@ -254,6 +253,8 @@
 #define COUNT_INT_TUNNEL_DST_MAC	0x0002000800000000ULL
 #define COUNT_INT_TUNNEL_SRC_PORT	0x0002001000000000ULL
 #define COUNT_INT_TUNNEL_DST_PORT	0x0002002000000000ULL
+#define COUNT_INT_EXPORT_PROTO_TIME	0x0002004000000000ULL
+#define COUNT_INT_TIMESTAMP_EXPORT	0x0002004000000000ULL /* alias of COUNT_EXPORT_PROTO_TIME */
 #define COUNT_INT_CUSTOM_PRIMITIVES	0x0002800000000000ULL
 
 #define COUNT_INDEX_MASK	0xFFFF
@@ -350,6 +351,8 @@
 #define COUNT_TUNNEL_DST_MAC		(COUNT_INT_TUNNEL_DST_MAC & COUNT_REGISTRY_MASK)
 #define COUNT_TUNNEL_SRC_PORT		(COUNT_INT_TUNNEL_SRC_PORT & COUNT_REGISTRY_MASK)
 #define COUNT_TUNNEL_DST_PORT		(COUNT_INT_TUNNEL_DST_PORT & COUNT_REGISTRY_MASK)
+#define COUNT_EXPORT_PROTO_TIME		(COUNT_INT_EXPORT_PROTO_TIME & COUNT_REGISTRY_MASK)
+#define COUNT_TIMESTAMP_EXPORT		(COUNT_INT_TIMESTAMP_EXPORT & COUNT_REGISTRY_MASK) /* alias of COUNT_EXPORT_PROTO_TIME */
 #define COUNT_CUSTOM_PRIMITIVES		(COUNT_INT_CUSTOM_PRIMITIVES & COUNT_REGISTRY_MASK)
 /* PRIMITIVES DEFINITION: END */
 
@@ -438,6 +441,7 @@
 #define CUSTOM_PRIMITIVE_TYPE_IP	4
 #define CUSTOM_PRIMITIVE_TYPE_MAC	5
 #define CUSTOM_PRIMITIVE_TYPE_RAW	6
+#define CUSTOM_PRIMITIVE_TYPE_COMPLEX	7
 
 #define FUNC_TYPE_NULL			0
 #define FUNC_TYPE_BGP			1
@@ -523,21 +527,23 @@ typedef u_int64_t pm_counter_t;
 #define NF_NET_FALLBACK	0x80000000 /* Fallback flag */
 
 /* flow type */
-#define NF9_FTYPE_TRAFFIC		1  /* temporary: re-coding needed */
-#define NF9_FTYPE_TRAFFIC_IPV6		1
-#define NF9_FTYPE_IPV4                  1
-#define NF9_FTYPE_IPV6                  2
+#define PM_FTYPE_TRAFFIC		1  /* temporary: re-coding needed */
+#define PM_FTYPE_TRAFFIC_IPV6		1
+#define PM_FTYPE_IPV4			1
+#define PM_FTYPE_IPV6			2
+#define PM_FTYPE_VLAN			5
+#define PM_FTYPE_VLAN_IPV4		6  /* PM_FTYPE_VLAN + PM_FTYPE_IPV4 */
+#define PM_FTYPE_VLAN_IPV6		7  /* PM_FTYPE_VLAN + PM_FTYPE_IPV6 */
+#define PM_FTYPE_MPLS			10
+#define PM_FTYPE_MPLS_IPV4		11 /* PM_FTYPE_MPLS + PM_FTYPE_IPV4 */
+#define PM_FTYPE_MPLS_IPV6		12 /* PM_FTYPE_MPLS + PM_FTYPE_IPV6 */
+#define PM_FTYPE_VLAN_MPLS		15
+#define PM_FTYPE_VLAN_MPLS_IPV4		16 /* PM_FTYPE_VLAN_MPLS + PM_FTYPE_IPV4 */
+#define PM_FTYPE_VLAN_MPLS_IPV6		17 /* PM_FTYPE_VLAN_MPLS + PM_FTYPE_IPV6 */
+#define PM_FTYPE_TRAFFIC_MAX		99  /* temporary: re-coding needed */
+
+/* flow type: NetFlow/IPFIX extended code-points */
 #define NF9_FTYPE_DLFS			3
-#define NF9_FTYPE_VLAN                  5
-#define NF9_FTYPE_VLAN_IPV4             6
-#define NF9_FTYPE_VLAN_IPV6             7 
-#define NF9_FTYPE_MPLS                  10
-#define NF9_FTYPE_MPLS_IPV4             11
-#define NF9_FTYPE_MPLS_IPV6             12
-#define NF9_FTYPE_VLAN_MPLS             15      
-#define NF9_FTYPE_VLAN_MPLS_IPV4        16
-#define NF9_FTYPE_VLAN_MPLS_IPV6        17
-#define NF9_FTYPE_TRAFFIC_MAX		99  /* temporary: re-coding needed */
 #define NF9_FTYPE_EVENT			100 /* temporary: re-coding needed */
 #define NF9_FTYPE_NAT_EVENT             100
 #define NF9_FTYPE_OPTION		200

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -45,7 +45,7 @@ extern void bgp_blackhole_prepare_thread();
 
 extern void bgp_blackhole_init_dummy_peer(struct bgp_peer *);
 extern void bgp_blackhole_prepare_filter();
-extern void bgp_blackhole_daemon();
+extern int bgp_blackhole_daemon();
 
 extern int bgp_blackhole_evaluate_comms(void *);
 extern int bgp_blackhole_instrument(struct bgp_peer *, struct prefix *, void *, afi_t, safi_t);

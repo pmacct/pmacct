@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2010 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -29,19 +29,12 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SOFTFLOWD_H
-#define _SOFTFLOWD_H
+#ifndef NFPROBE_PLUGIN_H
+#define NFPROBE_PLUGIN_H
 
 #include "common.h"
 #include "sys-tree.h"
 #include "treetype.h"
-
-/* User to setuid to and directory to chroot to when we drop privs */
-#ifndef PRIVDROP_USER
-# define PRIVDROP_USER		"nobody"
-#endif
-
-#define PRIVDROP_CHROOT_DIR	"/var/empty"
 
 /*
  * Capture length for libpcap: Must fit the link layer header, plus 
@@ -67,6 +60,7 @@
  * 8192 corresponds to just under 1Mb of flow data
  */
 #define DEFAULT_MAX_FLOWS	8192
+#define DEFAULT_BUCKETS		256
 
 /* Return values from process_packet */
 #define PP_OK           0
@@ -120,10 +114,10 @@ struct FLOWTRACK {
 	struct STATISTIC packets;		/* Packets (bidir) */
 
 	/* Per protocol statistics */
-	u_int64_t flows_pp[256];
-	u_int64_t octets_pp[256];
-	u_int64_t packets_pp[256];
-	struct STATISTIC duration_pp[256];
+	u_int64_t flows_pp[DEFAULT_BUCKETS];
+	u_int64_t octets_pp[DEFAULT_BUCKETS];
+	u_int64_t packets_pp[DEFAULT_BUCKETS];
+	struct STATISTIC duration_pp[DEFAULT_BUCKETS];
 
 	/* Timeout statistics */
 	u_int64_t expired_general;
@@ -229,7 +223,6 @@ struct EXPIRY {
 u_int32_t timeval_sub_ms(const struct timeval *, const struct timeval *);
 
 /* Prototypes for functions to send NetFlow packets, from netflow*.c */
-int send_netflow_v1(struct FLOW **, int, int, u_int64_t *, struct timeval *,  int, u_int8_t, u_int32_t);
-int send_netflow_v5(struct FLOW **, int, int, u_int64_t *, struct timeval *,  int, u_int8_t, u_int32_t);
-int send_netflow_v9(struct FLOW **, int, int, u_int64_t *, struct timeval *,  int, u_int8_t, u_int32_t);
-#endif /* _SOFTFLOWD_H */
+int send_netflow_v5(struct FLOW **, int, int, void *, u_int64_t *, struct timeval *,  int, u_int8_t, u_int32_t);
+int send_netflow_v9(struct FLOW **, int, int, void *, u_int64_t *, struct timeval *,  int, u_int8_t, u_int32_t);
+#endif /* NFPROBE_PLUGIN_H */

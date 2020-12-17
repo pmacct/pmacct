@@ -40,6 +40,7 @@ static const struct _dictionary_line dictionary[] = {
   {"redis_db", cfg_key_redis_db},
   {"snaplen", cfg_key_snaplen},
   {"aggregate_filter", cfg_key_aggregate_filter},
+  {"dtls_path", cfg_key_dtls_path},
   {"promisc", cfg_key_promisc},
   {"pcap_filter", cfg_key_pcap_filter},
   {"pcap_protocol", cfg_key_pcap_protocol},
@@ -243,6 +244,7 @@ static const struct _dictionary_line dictionary[] = {
   {"nfacctd_kafka_topic", cfg_key_nfacctd_kafka_topic},
   {"nfacctd_kafka_config_file", cfg_key_nfacctd_kafka_config_file},
   {"nfacctd_zmq_address", cfg_key_nfacctd_zmq_address},
+  {"nfacctd_dtls_port", cfg_key_nfacctd_dtls_port},
   {"pmacctd_proc_name", cfg_key_proc_name},
   {"pmacctd_force_frag_handling", cfg_key_pmacctd_force_frag_handling},
   {"pmacctd_frag_buffer_size", cfg_key_pmacctd_frag_buffer_size},
@@ -400,6 +402,8 @@ static const struct _dictionary_line dictionary[] = {
   {"nfprobe_hoplimit", cfg_key_nfprobe_hoplimit},
   {"nfprobe_maxflows", cfg_key_nfprobe_maxflows},
   {"nfprobe_receiver", cfg_key_nfprobe_receiver},
+  {"nfprobe_dtls", cfg_key_nfprobe_dtls},
+  {"nfprobe_dtls_verify_cert", cfg_key_nfprobe_dtls_verify_cert},
   {"nfprobe_engine", cfg_key_nfprobe_engine},
   {"nfprobe_version", cfg_key_nfprobe_version},
   {"nfprobe_peer_as", cfg_key_nfprobe_peer_as},
@@ -533,6 +537,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bmp_daemon_ipprec", cfg_key_bmp_daemon_ip_precedence},
   {"bmp_daemon_batch", cfg_key_bmp_daemon_batch},
   {"bmp_daemon_batch_interval", cfg_key_bmp_daemon_batch_interval},
+  {"bmp_agent_map", cfg_key_bgp_daemon_to_xflow_agent_map},
   {"bmp_daemon_msglog_output", cfg_key_bmp_daemon_msglog_output},
   {"bmp_daemon_msglog_file", cfg_key_bmp_daemon_msglog_file},
   {"bmp_daemon_msglog_avro_schema_file", cfg_key_bmp_daemon_msglog_avro_schema_file},
@@ -585,6 +590,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bmp_dump_kafka_partition_key", cfg_key_bmp_daemon_dump_kafka_partition_key},
   {"bmp_dump_kafka_config_file", cfg_key_bmp_daemon_dump_kafka_config_file},
   {"bmp_dump_kafka_avro_schema_registry", cfg_key_bmp_daemon_dump_kafka_avro_schema_registry},
+  {"bmp_daemon_parse_proxy_header", cfg_key_nfacctd_bmp_daemon_parse_proxy_header},
   {"rpki_roas_file", cfg_key_rpki_roas_file},
   {"rpki_rtr_cache", cfg_key_rpki_rtr_cache},
   {"rpki_rtr_cache_version", cfg_key_rpki_rtr_cache_version},
@@ -711,10 +717,11 @@ void evaluate_configuration(char *filename, int rows)
    plugin structures and parses supported config keys */
 int parse_configuration_file(char *filename)
 {
+  struct stat st;
   char localbuf[10240];
   char cmdline [] = "cmdline"; 
   FILE *file;
-  int num = 0, cmdlineflag = FALSE, rows_cmdline = rows, idx;
+  int num = 0, cmdlineflag = FALSE, rows_cmdline = rows, idx, ret;
   rows = 0;
 
   /* NULL filename means we don't have a configuration file; 1st stage: read from
@@ -722,11 +729,19 @@ int parse_configuration_file(char *filename)
      required, placing them at the tail - in order to override directives placed
      in the configuration file */
   if (filename) { 
-    if ((file = fopen(filename,"r")) == NULL) {
+    ret = stat(filename, &st);
+    if (ret < 0) {
       Log(LOG_ERR, "ERROR: [%s] file not found.\n", filename);
       return ERR;
     }
     else {
+      if (!S_ISREG(st.st_mode)) {
+	Log(LOG_ERR, "ERROR: [%s] path is not a regular file.\n", filename);
+	return ERR;
+      }
+    }
+
+    if ((file = fopen(filename, "r"))) {
       while (!feof(file)) {
         if (rows == LARGEBUFLEN) {
 	  Log(LOG_ERR, "ERROR: [%s] maximum number of %d lines reached.\n", filename, LARGEBUFLEN);

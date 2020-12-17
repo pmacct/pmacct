@@ -125,9 +125,9 @@ void sql_init_global_buffers()
   memset(&lru_head, 0, sizeof(lru_head));
   lru_tail = &lru_head;
 
-  Log(LOG_INFO, "INFO ( %s/%s ): cache entries=%d base cache memory=%luu bytes\n", config.name, config.type,
-        config.sql_cache_entries, ((config.sql_cache_entries * sizeof(struct db_cache)) +
-	(2 * (qq_size * sizeof(struct db_cache *)))));
+  Log(LOG_INFO, "INFO ( %s/%s ): cache entries=%d base cache memory=%lu bytes\n", config.name, config.type,
+        config.sql_cache_entries, (unsigned long)(((config.sql_cache_entries * sizeof(struct db_cache)) +
+	(2 * (qq_size * sizeof(struct db_cache *))))));
 
   pipebuf = (unsigned char *) malloc(config.buffer_size);
   sql_cache = (struct db_cache *) malloc(config.sql_cache_entries*sizeof(struct db_cache));
@@ -1285,6 +1285,7 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) what_to_count_2 |= COUNT_EXPORT_PROTO_SEQNO;
     if (config.what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) what_to_count_2 |= COUNT_EXPORT_PROTO_VERSION;
     if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SYSID) what_to_count_2 |= COUNT_EXPORT_PROTO_SYSID;
+    if (config.what_to_count_2 & COUNT_EXPORT_PROTO_TIME) what_to_count_2 |= COUNT_EXPORT_PROTO_TIME;
     if (config.what_to_count_2 & COUNT_LABEL) what_to_count_2 |= COUNT_LABEL;
 
 #if defined (WITH_NDPI)
@@ -2786,6 +2787,64 @@ int sql_evaluate_primitives(int primitive)
       strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
       values[primitive].type = where[primitive].type = COUNT_INT_TIMESTAMP_ARRIVAL;
       values[primitive].handler = where[primitive].handler = count_timestamp_arrival_residual_handler;
+      primitive++;
+    }
+  }
+
+  if (what_to_count_2 & COUNT_EXPORT_PROTO_TIME) {
+    int use_copy=0;
+
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "timestamp_export", SPACELEFT(insert_clause));
+    if (config.timestamps_since_epoch) {
+      strncat(where[primitive].string, "timestamp_export=%u", SPACELEFT(where[primitive].string));
+      strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    }
+    else {
+      if (!strcmp(config.type, "mysql")) {
+        strncat(where[primitive].string, "timestamp_export=FROM_UNIXTIME(%u)", SPACELEFT(where[primitive].string));
+        strncat(values[primitive].string, "FROM_UNIXTIME(%u)", SPACELEFT(values[primitive].string));
+      }
+      else if (!strcmp(config.type, "pgsql")) {
+        if (config.sql_use_copy) {
+          strncat(values[primitive].string, "%s", SPACELEFT(values[primitive].string));
+          use_copy = TRUE;
+        }
+        else {
+          strncat(where[primitive].string, "timestamp_export=to_timestamp(%u)", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "to_timestamp(%u)", SPACELEFT(values[primitive].string));
+        }
+      }
+      else if (!strcmp(config.type, "sqlite3")) {
+	if (!config.timestamps_utc) {
+          strncat(where[primitive].string, "timestamp_export=DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "DATETIME(%u, 'unixepoch', 'localtime')", SPACELEFT(values[primitive].string));
+	}
+	else {
+          strncat(where[primitive].string, "timestamp_export=DATETIME(%u, 'unixepoch')", SPACELEFT(where[primitive].string));
+          strncat(values[primitive].string, "DATETIME(%u, 'unixepoch')", SPACELEFT(values[primitive].string));
+	}
+      }
+    }
+    if (!use_copy) values[primitive].handler = where[primitive].handler = count_timestamp_export_handler;
+    else values[primitive].handler = where[primitive].handler = PG_copy_count_timestamp_export_handler;
+    values[primitive].type = where[primitive].type = COUNT_INT_EXPORT_PROTO_TIME;
+    primitive++;
+
+    if (!config.timestamps_secs) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+
+      strncat(insert_clause, "timestamp_export_residual", SPACELEFT(insert_clause));
+      strncat(where[primitive].string, "timestamp_export_residual=%u", SPACELEFT(where[primitive].string));
+      strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+      values[primitive].type = where[primitive].type = COUNT_INT_EXPORT_PROTO_TIME;
+      values[primitive].handler = where[primitive].handler = count_timestamp_export_residual_handler;
       primitive++;
     }
   }

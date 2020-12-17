@@ -22,10 +22,11 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SFD_COMMON_H
-#define _SFD_COMMON_H
+#ifndef NFPROBE_COMMON_H
+#define NFPROBE_COMMON_H
 
 #include "pmacct.h"
+#include "addr.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -63,92 +64,4 @@
 #include <pcap-bpf.h>
 #endif
 
-/* The name of the program */
-// #define PROGNAME		"softflowd"
-
-/* The name of the program */
-#define PROGVER			"0.9.7"
-
-/* Default pidfile */
-#define DEFAULT_PIDFILE		"/var/run/" PROGNAME ".pid"
-
-/* Default control socket */
-#define DEFAULT_CTLSOCK		"/var/run/" PROGNAME ".ctl"
-
-#define RCSID(msg) \
-	static /**/const char *const flowd_rcsid[] =		\
-	    { (const char *)flowd_rcsid, "\100(#)" msg }	\
-
-/*
-#ifndef IP_OFFMASK
-# define IP_OFFMASK		0x1fff	
-#endif
-#ifndef IPV6_VERSION
-#define IPV6_VERSION		0x60
-#endif
-#ifndef IPV6_VERSION_MASK
-#define IPV6_VERSION_MASK	0xf0
-#endif
-#ifndef IPV6_FLOWINFO_MASK
-#define IPV6_FLOWINFO_MASK	ntohl(0x0fffffff)
-#endif
-#ifndef IPV6_FLOWLABEL_MASK
-#define IPV6_FLOWLABEL_MASK	ntohl(0x000fffff)
-#endif
-*/
-
-#ifndef _PATH_DEVNULL
-# define _PATH_DEVNULL		"/dev/null"
-#endif
-
-#ifndef MIN
-# define MIN(a,b) (((a)<(b))?(a):(b))
-#endif
-#ifndef MAX
-# define MAX(a,b) (((a)>(b))?(a):(b))
-#endif
-#ifndef offsetof
-# define offsetof(type, member) ((size_t) &((type *)0)->member)
-#endif
-
-#if defined(__GNUC__)
-# ifndef __dead
-#  define __dead                __attribute__((__noreturn__))
-# endif
-# ifndef __packed
-#  define __packed              __attribute__((__packed__))
-# endif
-#endif
-
-#if !defined(HAVE_INT8_T) && defined(OUR_CFG_INT8_T)
-typedef OUR_CFG_INT8_T int8_t;
-#endif
-#if !defined(HAVE_INT16_T) && defined(OUR_CFG_INT16_T)
-typedef OUR_CFG_INT16_T int16_t;
-#endif
-#if !defined(HAVE_INT32_T) && defined(OUR_CFG_INT32_T)
-typedef OUR_CFG_INT32_T int32_t;
-#endif
-#if !defined(HAVE_INT64_T) && defined(OUR_CFG_INT64_T)
-typedef OUR_CFG_INT64_T int64_t;
-#endif
-#if !defined(HAVE_U_INT8_T) && defined(OUR_CFG_U_INT8_T)
-typedef OUR_CFG_U_INT8_T u_int8_t;
-#endif
-#if !defined(HAVE_U_INT16_T) && defined(OUR_CFG_U_INT16_T)
-typedef OUR_CFG_U_INT16_T u_int16_t;
-#endif
-#if !defined(HAVE_U_INT32_T) && defined(OUR_CFG_U_INT32_T)
-typedef OUR_CFG_U_INT32_T u_int32_t;
-#endif
-#if !defined(HAVE_U_INT64_T) && defined(OUR_CFG_U_INT64_T)
-typedef OUR_CFG_U_INT64_T u_int64_t;
-#endif
-
-/* infer strlcat() from strlcpy() without adding a further check */
-#ifndef HAVE_STRLCPY
-size_t strlcpy(char *dst, const char *src, size_t siz);
-size_t strlcat(char *dst, const char *src, size_t siz);
-#endif
-
-#endif /* _SFD_COMMON_H */
+#endif /* NFPROBE_COMMON_H */

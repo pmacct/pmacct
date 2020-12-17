@@ -136,6 +136,10 @@ int tee_recvs_map_balance_alg_handler(char *filename, struct id_entry *e, char *
       table->pools[table->num].balance.type = TEE_BALANCE_HASH_AGENT;
       table->pools[table->num].balance.func = Tee_hash_agent_balance;
     }
+	else if (!strncmp(value, "hash-crc32", 10)) {
+      table->pools[table->num].balance.type = TEE_BALANCE_HASH_AGENT;
+      table->pools[table->num].balance.func = Tee_hash_agent_crc32;
+	}
     else if (!strncmp(value, "hash-tag", 8)) {
       table->pools[table->num].balance.type = TEE_BALANCE_HASH_TAG;
       table->pools[table->num].balance.func = Tee_hash_tag_balance;

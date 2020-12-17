@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -56,7 +56,7 @@ void rpki_prepare_thread()
   strcpy(rpki_misc_db->log_str, "core/RPKI");
 }
 
-void rpki_daemon()
+int rpki_daemon()
 {
   struct bgp_misc_structs *m_data = rpki_misc_db;
   afi_t afi;
@@ -166,6 +166,8 @@ void rpki_daemon()
       else rpki_rtr_parse_msg(&rpki_cache);
     }
   }
+
+  return SUCCESS;
 }
 
 void rpki_roas_file_reload()

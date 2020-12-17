@@ -37,12 +37,14 @@ extern void bmp_peer_close(struct bmp_peer *, int);
 
 extern char *bmp_term_reason_print(u_int16_t);
 
-extern void bgp_peer_log_msg_extras_bmp(struct bgp_peer *, int, void *);
+extern void bgp_peer_log_msg_extras_bmp(struct bgp_peer *, int, int, int, void *);
 
 extern void bgp_msg_data_set_data_bmp(struct bmp_chars *, struct bmp_data *);
 extern int bgp_extra_data_cmp_bmp(struct bgp_msg_extra_data *, struct bgp_msg_extra_data *);
-extern int bgp_extra_data_process_bmp(struct bgp_msg_extra_data *, struct bgp_info *);
+extern int bgp_extra_data_process_bmp(struct bgp_msg_extra_data *, struct bgp_info *, int, int);
 extern void bgp_extra_data_free_bmp(struct bgp_msg_extra_data *);
 extern void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *, int, void *);
 
+extern void encode_tstamp_arrival(char *, int, struct timeval *, int);
+extern char *decode_tstamp_arrival(char *);
 #endif //BMP_UTIL_H

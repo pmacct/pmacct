@@ -140,7 +140,7 @@ typedef struct _telemetry_peer_timeout telemetry_peer_timeout;
 
 /* prototypes */
 extern void telemetry_wrapper();
-extern void telemetry_daemon(void *);
+extern int telemetry_daemon(void *);
 extern void telemetry_prepare_thread(struct telemetry_data *);
 extern void telemetry_prepare_daemon(struct telemetry_data *);
 

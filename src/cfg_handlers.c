@@ -296,6 +296,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "timestamp_start")) cfg_set_aggregate(filename, value, COUNT_INT_TIMESTAMP_START, count_token);
     else if (!strcmp(count_token, "timestamp_end")) cfg_set_aggregate(filename, value, COUNT_INT_TIMESTAMP_END, count_token);
     else if (!strcmp(count_token, "timestamp_arrival")) cfg_set_aggregate(filename, value, COUNT_INT_TIMESTAMP_ARRIVAL, count_token);
+    else if (!strcmp(count_token, "timestamp_export")) cfg_set_aggregate(filename, value, COUNT_INT_EXPORT_PROTO_TIME, count_token);
     else if (!strcmp(count_token, "mpls_label_top")) cfg_set_aggregate(filename, value, COUNT_INT_MPLS_LABEL_TOP, count_token);
     else if (!strcmp(count_token, "mpls_label_bottom")) cfg_set_aggregate(filename, value, COUNT_INT_MPLS_LABEL_BOTTOM, count_token);
     else if (!strcmp(count_token, "mpls_stack_depth")) cfg_set_aggregate(filename, value, COUNT_INT_MPLS_STACK_DEPTH, count_token);
@@ -361,7 +362,7 @@ int cfg_key_proc_name(char *filename, char *name, char *value_ptr)
   int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.proc_name = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key '[nf|pm|sf|u]acctd_proc_name'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key '%s_proc_name'. Globalized.\n", filename, config.progname);
 
   return changes;
 }
@@ -2512,12 +2513,12 @@ int cfg_key_nfacctd_pipe_size(char *filename, char *name, char *value_ptr)
 
   value = strtoull(value_ptr, &endptr, 10);
   if (!value || value > INT_MAX) {
-    Log(LOG_WARNING, "WARN: [%s] '[nf|sf|pm]acctd_pipe_size' has to be > 0 and <= INT_MAX.\n", filename);
+    Log(LOG_WARNING, "WARN: [%s] '%s_pipe_size' has to be > 0 and <= INT_MAX.\n", filename, config.progname);
     return ERR;
   }
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_pipe_size = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key '[nf|sf|pm]acctd_pipe_size'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key '%s_pipe_size'. Globalized.\n", filename, config.progname);
 
   return changes;
 }
@@ -3194,6 +3195,34 @@ int cfg_key_nfacctd_zmq_address(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_dtls_path(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.dtls_path = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'dtls_path'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_nfacctd_dtls_port(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if ((value <= 0) || (value > 65535)) {
+    Log(LOG_ERR, "WARN: [%s] 'nfacctd_dtls_port' has to be in the range 1-65535.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_dtls_port = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'nfacctd_dtls_port'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_allow_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -3375,8 +3404,8 @@ int cfg_key_nfacctd_mcast_groups(char *filename, char *name, char *value_ptr)
   }
 
   for (; list; list = list->next, changes++); /* Nothing to do because of the global array, just rolling changes counters */
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for keys '[nfacctd|sfacctd]_mcast_groups'. Globalized.\n",
-		  filename);
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for keys '%s_mcast_groups'. Globalized.\n",
+		  filename, config.progname);
   if (more) Log(LOG_WARNING, "WARN: [%s] Only the first %u (on a total of %u) multicast groups will be joined.\n",
 		  filename, MAX_MCAST_GROUPS, MAX_MCAST_GROUPS+more);
 
@@ -5291,7 +5320,7 @@ int cfg_key_nfacctd_as_new(char *filename, char *name, char *value_ptr)
   } 
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_as = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key '[nf|pm|sf|u]acctd_as_new'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key '%s_as_new'. Globalized.\n", filename, config.progname);
 
   return changes;
 }
@@ -5636,6 +5665,47 @@ int cfg_key_nfprobe_receiver(char *filename, char *name, char *value_ptr)
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
         list->cfg.nfprobe_receiver = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_nfprobe_dtls(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.nfprobe_dtls = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.nfprobe_dtls = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_nfprobe_dtls_verify_cert(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.nfprobe_dtls_verify_cert = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.nfprobe_dtls_verify_cert = value_ptr;
         changes++;
         break;
       }
@@ -8218,6 +8288,20 @@ int cfg_key_print_output_custom_cfg_file(char *filename, char *name, char *value
       }
     }
   }
+
+  return changes;
+}
+
+int cfg_key_nfacctd_bmp_daemon_parse_proxy_header(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.bmp_daemon_parse_proxy_header = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_daemon_parse_proxy_header'. Globalized.\n", filename);
 
   return changes;
 }

@@ -42,35 +42,35 @@ struct NF9_HEADER {
 	u_int16_t version, flows;
 	u_int32_t uptime_ms, time_sec;
 	u_int32_t package_sequence, source_id;
-} __packed;
+} __attribute__ ((packed));
 struct IPFIX_HEADER {
         u_int16_t version, len;
         u_int32_t time_sec;
         u_int32_t package_sequence, source_id;
-} __packed;
+} __attribute__ ((packed));
 struct NF9_FLOWSET_HEADER_COMMON {
 	u_int16_t flowset_id, length;
-} __packed;
+} __attribute__ ((packed));
 struct NF9_TEMPLATE_FLOWSET_HEADER {
 	struct NF9_FLOWSET_HEADER_COMMON c;
 	u_int16_t template_id, count;
-} __packed;
+} __attribute__ ((packed));
 struct NF9_OPTIONS_TEMPLATE_FLOWSET_HEADER {
         struct NF9_FLOWSET_HEADER_COMMON c;
         u_int16_t template_id, scope_len;
         u_int16_t option_len;
-} __packed;
+} __attribute__ ((packed));
 struct NF9_TEMPLATE_FLOWSET_RECORD {
 	u_int16_t type, length;
-} __packed;
+} __attribute__ ((packed));
 struct IPFIX_PEN_TEMPLATE_FLOWSET_RECORD {
         u_int16_t type;
 	u_int16_t length;
         u_int32_t pen;
-} __packed;
+} __attribute__ ((packed));
 struct NF9_DATA_FLOWSET_HEADER {
 	struct NF9_FLOWSET_HEADER_COMMON c;
-} __packed;
+} __attribute__ ((packed));
 #define NF9_TEMPLATE_FLOWSET_ID		0
 #define NF9_OPTIONS_FLOWSET_ID		1
 #define IPFIX_TEMPLATE_FLOWSET_ID	2
@@ -164,19 +164,19 @@ struct NF9_SOFTFLOWD_TEMPLATE {
 	struct NF9_TEMPLATE_FLOWSET_HEADER h;
 	struct NF9_TEMPLATE_FLOWSET_RECORD r[NF9_SOFTFLOWD_TEMPLATE_NRECORDS];
 	u_int16_t tot_len;
-} __packed;
+} __attribute__ ((packed));
 
 struct IPFIX_PEN_TEMPLATE_ADDENDUM {
         struct IPFIX_PEN_TEMPLATE_FLOWSET_RECORD r[NF9_SOFTFLOWD_TEMPLATE_NRECORDS];
         u_int16_t tot_len;
-} __packed;
+} __attribute__ ((packed));
 
 #define NF9_OPTIONS_TEMPLATE_NRECORDS 4
 struct NF9_OPTIONS_TEMPLATE {
         struct NF9_OPTIONS_TEMPLATE_FLOWSET_HEADER h;
         struct NF9_TEMPLATE_FLOWSET_RECORD r[NF9_OPTIONS_TEMPLATE_NRECORDS];
         u_int16_t tot_len;
-} __packed;
+} __attribute__ ((packed));
 
 typedef int (*flow_to_flowset_handler) (char *, const struct FLOW *, int, int);
 struct NF9_INTERNAL_TEMPLATE_RECORD {
@@ -233,27 +233,6 @@ static u_int8_t send_options = FALSE;
 static u_int8_t send_sampling_option = FALSE;
 static u_int8_t send_class_option = FALSE;
 static u_int8_t send_exporter_option = FALSE;
-
-/*
- * XXX: pmXXX_htonll(): similar to htonl() for 64 bits integers; no checks are done
- * on the length of the buffer.
- */
-u_int64_t pmXXX_htonll(u_int64_t addr)
-{
-#if defined IM_LITTLE_ENDIAN
-  u_int64_t buf;
-
-  u_int32_t *x = (u_int32_t *)(void *) &addr;
-  u_int32_t *y = (u_int32_t *)(void *) &buf;
-
-  y[0] = htonl(x[1]);
-  y[1] = htonl(x[0]);
-
-  return buf;
-#else
-  return addr;
-#endif
-}
 
 static int
 flow_to_flowset_input_handler(char *flowset, const struct FLOW *flow, int idx, int size)
@@ -480,7 +459,7 @@ flow_to_flowset_tag_handler(char *flowset, const struct FLOW *flow, int idx, int
 {
   pm_id_t tag;
 
-  tag = pmXXX_htonll(flow->tag[idx]);
+  tag = pm_htonll(flow->tag[idx]);
   memcpy(flowset, &tag, size);
 
   return 0;
@@ -491,7 +470,7 @@ flow_to_flowset_tag2_handler(char *flowset, const struct FLOW *flow, int idx, in
 {
   pm_id_t tag;
 
-  tag = pmXXX_htonll(flow->tag2[idx]);
+  tag = pm_htonll(flow->tag2[idx]);
   memcpy(flowset, &tag, size);
 
   return 0;
@@ -1648,8 +1627,8 @@ nf9_init_options_template(void)
         class_option_int_template.r[rcount].length = 4;
         rcount++;
         class_option_template.r[rcount].type = htons(NF9_FLOW_APPLICATION_NAME);
-        class_option_template.r[rcount].length = htons(16);
-        class_option_int_template.r[rcount].length = 16;
+        class_option_template.r[rcount].length = htons(MAX_PROTOCOL_LEN);
+        class_option_int_template.r[rcount].length = MAX_PROTOCOL_LEN;
         rcount++;
         class_option_template.h.c.flowset_id = htons(flowset_id);
         class_option_template.h.c.length = htons( sizeof(struct NF9_OPTIONS_TEMPLATE_FLOWSET_HEADER) + (sizeof(struct NF9_TEMPLATE_FLOWSET_RECORD) * rcount) );
@@ -1756,39 +1735,39 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
 	      tstamp_msec = flow->flow_last.tv_sec;
 	      tstamp_msec = tstamp_msec * 1000;
 	      tstamp_msec += (flow->flow_last.tv_usec / 1000);
-              rec64 = pmXXX_htonll(tstamp_msec);
+              rec64 = pm_htonll(tstamp_msec);
               memcpy(ftoft_ptr_0, &rec64, 8);
               ftoft_ptr_0 += 8;
 
               tstamp_msec = flow->flow_start.tv_sec;
               tstamp_msec = tstamp_msec * 1000;
               tstamp_msec += (flow->flow_start.tv_usec / 1000);
-              rec64 = pmXXX_htonll(tstamp_msec);
+              rec64 = pm_htonll(tstamp_msec);
               memcpy(ftoft_ptr_0, &rec64, 8);
               ftoft_ptr_0 += 8;
 	    }
 	    else {
-	      rec64 = pmXXX_htonll(flow->flow_last.tv_sec);
+	      rec64 = pm_htonll(flow->flow_last.tv_sec);
 	      memcpy(ftoft_ptr_0, &rec64, 8);
 	      ftoft_ptr_0 += 8;
-	      rec64 = pmXXX_htonll(flow->flow_last.tv_usec);
+	      rec64 = pm_htonll(flow->flow_last.tv_usec);
 	      memcpy(ftoft_ptr_0, &rec64, 8);
 	      ftoft_ptr_0 += 8;
 
-	      rec64 = pmXXX_htonll(flow->flow_start.tv_sec);
+	      rec64 = pm_htonll(flow->flow_start.tv_sec);
 	      memcpy(ftoft_ptr_0, &rec64, 8);
 	      ftoft_ptr_0 += 8;
-	      rec64 = pmXXX_htonll(flow->flow_start.tv_usec);
+	      rec64 = pm_htonll(flow->flow_start.tv_usec);
 	      memcpy(ftoft_ptr_0, &rec64, 8);
 	      ftoft_ptr_0 += 8;
 	    }
 	  }
 
-          rec64 = pmXXX_htonll(flow->octets[0]);
+          rec64 = pm_htonll(flow->octets[0]);
           memcpy(ftoft_ptr_0, &rec64, 8);
           ftoft_ptr_0 += 8;
 
-          rec64 = pmXXX_htonll(flow->packets[0]);
+          rec64 = pm_htonll(flow->packets[0]);
           memcpy(ftoft_ptr_0, &rec64, 8);
           ftoft_ptr_0 += 8;
 
@@ -1877,39 +1856,39 @@ nf_flow_to_flowset(const struct FLOW *flow, u_char *packet, u_int len,
               tstamp_msec = flow->flow_last.tv_sec;
               tstamp_msec = tstamp_msec * 1000;
               tstamp_msec += (flow->flow_last.tv_usec / 1000);
-              rec64 = pmXXX_htonll(tstamp_msec);
+              rec64 = pm_htonll(tstamp_msec);
               memcpy(ftoft_ptr_1, &rec64, 8);
               ftoft_ptr_1 += 8;
 
               tstamp_msec = flow->flow_start.tv_sec;
               tstamp_msec = tstamp_msec * 1000;
               tstamp_msec += (flow->flow_start.tv_usec / 1000);
-              rec64 = pmXXX_htonll(tstamp_msec);
+              rec64 = pm_htonll(tstamp_msec);
               memcpy(ftoft_ptr_1, &rec64, 8);
               ftoft_ptr_1 += 8;
 	    }
 	    else {
-	      rec64 = pmXXX_htonll(flow->flow_last.tv_sec);
+	      rec64 = pm_htonll(flow->flow_last.tv_sec);
 	      memcpy(ftoft_ptr_1, &rec64, 8);
 	      ftoft_ptr_1 += 8;
-	      rec64 = pmXXX_htonll(flow->flow_last.tv_usec);
+	      rec64 = pm_htonll(flow->flow_last.tv_usec);
 	      memcpy(ftoft_ptr_1, &rec64, 8);
 	      ftoft_ptr_1 += 8;
 
-	      rec64 = pmXXX_htonll(flow->flow_start.tv_sec);
+	      rec64 = pm_htonll(flow->flow_start.tv_sec);
 	      memcpy(ftoft_ptr_1, &rec64, 8);
 	      ftoft_ptr_1 += 8;
-	      rec64 = pmXXX_htonll(flow->flow_start.tv_usec);
+	      rec64 = pm_htonll(flow->flow_start.tv_usec);
 	      memcpy(ftoft_ptr_1, &rec64, 8);
 	      ftoft_ptr_1 += 8;
 	    }
           }
 
-          rec64 = pmXXX_htonll(flow->octets[1]);
+          rec64 = pm_htonll(flow->octets[1]);
           memcpy(ftoft_ptr_1, &rec64, 8);
           ftoft_ptr_1 += 8;
 
-          rec64 = pmXXX_htonll(flow->packets[1]);
+          rec64 = pm_htonll(flow->packets[1]);
           memcpy(ftoft_ptr_1, &rec64, 8);
           ftoft_ptr_1 += 8;
 
@@ -2085,8 +2064,8 @@ nf_class_option_to_flowset(u_int idx, u_char *packet, u_int len, const struct ti
         ftoft_ptr_0 += 4;
 
         /* NF9_FLOW_APPLICATION_NAME */
-        strlcpy(ftoft_ptr_0, class[idx].protocol, 16);
-        ftoft_ptr_0 += 16;
+        strlcpy(ftoft_ptr_0, class[idx].protocol, MAX_PROTOCOL_LEN);
+        ftoft_ptr_0 += MAX_PROTOCOL_LEN;
 
         freclen = class_option_int_template.tot_rec_len;
 
@@ -2173,7 +2152,7 @@ nf_exporter_option_to_flowset(u_char *packet, u_int len, const struct timeval *s
  * Returns number of packets sent or -1 on error
  */
 int
-send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
+send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock, void *dtls,
     u_int64_t *flows_exported, struct timeval *system_boot_time,
     int verbose_flag, u_int8_t unused, u_int32_t source_id)
 {
@@ -2185,7 +2164,11 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 	u_int num_class, class_j;
 	int direction, new_direction;
 	socklen_t errsz;
-	int err, r, flow_i, class_i;
+	int err, r, flow_i, class_i, ret;
+
+#ifdef WITH_GNUTLS
+        pm_dtls_peer_t *dtls_peer = dtls;
+#endif
 
 	memset(packet, 0, sizeof(packet));
 	gettimeofday(&now, NULL);
@@ -2435,10 +2418,22 @@ send_netflow_v9(struct FLOW **flows, int num_flows, int nfsock,
 		  errsz = sizeof(err);
 		  /* Clear ICMP errors */
 		  getsockopt(nfsock, SOL_SOCKET, SO_ERROR, &err, &errsz); 
-		  if (send(nfsock, packet, (size_t)offset, 0) == -1) {
-		    Log(LOG_WARNING, "WARN ( %s/%s ): send() failed: %s\n", config.name, config.type, strerror(errno));
-		    return (-1);
+
+		  if (!config.nfprobe_dtls) {
+		    ret = send(nfsock, packet, (size_t)offset, 0);
+
+		    if (ret == ERR) {
+		      Log(LOG_WARNING, "WARN ( %s/%s ): send() failed: %s\n", config.name, config.type, strerror(errno));
+		      return ret;
+		    }
 		  }
+#ifdef WITH_GNUTLS
+		  else {
+		    ret = pm_dtls_client_send(dtls_peer, packet, (size_t)offset);
+		    if (ret < 0) return ret;
+		  }
+#endif
+
 		  num_packets++;
 		  nf9_pkts_until_template--;
 		}

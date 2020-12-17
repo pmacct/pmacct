@@ -238,6 +238,7 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     printf("TIMESTAMP_START                ");
     printf("TIMESTAMP_END                  ");
     printf("TIMESTAMP_ARRIVAL              ");
+    printf("TIMESTAMP_EXPORT               ");
     printf("EXPORT_PROTO_SEQNO  ");
     printf("EXPORT_PROTO_VERSION  ");
     printf("EXPORT_PROTO_SYSID  ");
@@ -352,6 +353,7 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count_2 & COUNT_TIMESTAMP_START) printf("TIMESTAMP_START                ");
     if (what_to_count_2 & COUNT_TIMESTAMP_END) printf("TIMESTAMP_END                  "); 
     if (what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) printf("TIMESTAMP_ARRIVAL              "); 
+    if (what_to_count_2 & COUNT_EXPORT_PROTO_TIME) printf("TIMESTAMP_EXPORT               "); 
     if (what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) printf("EXPORT_PROTO_SEQNO  "); 
     if (what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) printf("EXPORT_PROTO_VERSION  "); 
     if (what_to_count_2 & COUNT_EXPORT_PROTO_SYSID) printf("EXPORT_PROTO_SYSID  "); 
@@ -452,6 +454,7 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     printf("%sTIMESTAMP_START", write_sep(sep, &count));
     printf("%sTIMESTAMP_END", write_sep(sep, &count));
     printf("%sTIMESTAMP_ARRIVAL", write_sep(sep, &count));
+    printf("%sTIMESTAMP_EXPORT", write_sep(sep, &count));
     printf("%sEXPORT_PROTO_SEQNO", write_sep(sep, &count));
     printf("%sEXPORT_PROTO_VERSION", write_sep(sep, &count));
     printf("%sEXPORT_PROTO_SYSID", write_sep(sep, &count));
@@ -565,6 +568,7 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     if (what_to_count_2 & COUNT_TIMESTAMP_START) printf("%sTIMESTAMP_START", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_TIMESTAMP_END) printf("%sTIMESTAMP_END", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) printf("%sTIMESTAMP_ARRIVAL", write_sep(sep, &count));
+    if (what_to_count_2 & COUNT_EXPORT_PROTO_TIME) printf("%sTIMESTAMP_EXPORT", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) printf("%sEXPORT_PROTO_SEQNO", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) printf("%sEXPORT_PROTO_VERSION", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_EXPORT_PROTO_SYSID) printf("%sEXPORT_PROTO_SYSID", write_sep(sep, &count));
@@ -1037,6 +1041,10 @@ int main(int argc,char **argv)
           count_token_int[count_index] = COUNT_INT_TIMESTAMP_ARRIVAL;
           what_to_count_2 |= COUNT_TIMESTAMP_ARRIVAL;
         }
+        else if (!strcmp(count_token[count_index], "timestamp_export")) {
+          count_token_int[count_index] = COUNT_INT_EXPORT_PROTO_TIME;
+          what_to_count_2 |= COUNT_EXPORT_PROTO_TIME;
+	}
         else if (!strcmp(count_token[count_index], "export_proto_seqno")) {
           count_token_int[count_index] = COUNT_INT_EXPORT_PROTO_SEQNO;
           what_to_count_2 |= COUNT_EXPORT_PROTO_SEQNO;
@@ -2438,7 +2446,7 @@ int main(int argc,char **argv)
         }
 
         if (!have_wtc || (what_to_count & COUNT_PEER_DST_IP)) {
-          addr_to_str(ip_address, &pbgp->peer_dst_ip);
+          addr_to_str2(ip_address, &pbgp->peer_dst_ip, ft2af(acc_elem->flow_type));
 
           if (strlen(ip_address)) {
             if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-45s  ", ip_address);
@@ -2765,6 +2773,14 @@ int main(int argc,char **argv)
           char tstamp_str[SRVBUFLEN];
 
           pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_arrival, TRUE, want_tstamp_since_epoch, want_tstamp_utc);
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-30s ", tstamp_str);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), tstamp_str);
+        }
+
+        if (!have_wtc || (what_to_count_2 & COUNT_EXPORT_PROTO_TIME)) {
+          char tstamp_str[SRVBUFLEN];
+
+          pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_export, TRUE, want_tstamp_since_epoch, want_tstamp_utc);
           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-30s ", tstamp_str);
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), tstamp_str);
         }
@@ -3396,7 +3412,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   }
 
   if (wtc & COUNT_PEER_DST_IP) {
-    addr_to_str(ip_address, &pbgp->peer_dst_ip);
+    addr_to_str2(ip_address, &pbgp->peer_dst_ip, ft2af(flow_type));
     json_object_set_new_nocheck(obj, "peer_ip_dst", json_string(ip_address));
   }
 
@@ -3641,6 +3657,11 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   if (wtc_2 & COUNT_TIMESTAMP_ARRIVAL) {
     pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_arrival, TRUE, tstamp_since_epoch, tstamp_utc);
     json_object_set_new_nocheck(obj, "timestamp_arrival", json_string(tstamp_str));
+  }
+
+  if (wtc_2 & COUNT_EXPORT_PROTO_TIME) {
+    pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_export, TRUE, tstamp_since_epoch, tstamp_utc);
+    json_object_set_new_nocheck(obj, "timestamp_export", json_string(tstamp_str));
   }
 
   if (wtc_2 & COUNT_EXPORT_PROTO_SEQNO) json_object_set_new_nocheck(obj, "export_proto_seqno", json_integer((json_int_t)pbase->export_proto_seqno));

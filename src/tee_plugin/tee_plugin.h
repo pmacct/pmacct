@@ -88,6 +88,7 @@ extern int Tee_prepare_sock(struct sockaddr *, socklen_t, u_int16_t, int, int);
 extern int Tee_parse_hostport(const char *, struct sockaddr *, socklen_t *, int);
 extern struct tee_receiver *Tee_rr_balance(void *, struct pkt_msg *);
 extern struct tee_receiver *Tee_hash_agent_balance(void *, struct pkt_msg *);
+extern struct tee_receiver *Tee_hash_agent_crc32(void *, struct pkt_msg *);
 extern struct tee_receiver *Tee_hash_tag_balance(void *, struct pkt_msg *);
 extern void Tee_select_templates(unsigned char *, int, int, unsigned char *, int *);
 

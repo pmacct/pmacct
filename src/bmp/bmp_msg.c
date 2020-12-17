@@ -31,7 +31,7 @@
 #include "kafka_common.h"
 #endif
 
-u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *bmpp)
+u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *bmpp, int *do_term)
 {
   struct bgp_misc_structs *bms;
   struct bgp_peer *peer;
@@ -40,6 +40,7 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
 
   struct bmp_common_hdr *bch = NULL;
 
+  if (do_term) (*do_term) = FALSE;
   if (!bmpp) return FALSE;
 
   peer = &bmpp->self;
@@ -59,7 +60,7 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
     }
 
     if (bch->version != BMP_V3 && bch->version != BMP_V4) {
-      Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: unknown BMP version: %u\n",
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: unknown BMP version: %u (2)\n",
 	  config.name, bms->log_str, peer->addr_str, bch->version);
       return FALSE;
     }
@@ -94,6 +95,7 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
       break;
     case BMP_MSG_TERM:
       bmp_process_msg_term(&bmp_packet_ptr, &msg_len, bmpp); 
+      if (do_term) (*do_term) = TRUE;
       break;
     case BMP_MSG_ROUTE_MIRROR:
       bmp_process_msg_route_mirror(&bmp_packet_ptr, &msg_len, bmpp);
@@ -144,7 +146,9 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
   tlvs = bmp_tlv_list_new(NULL, bmp_tlv_list_node_del);
   if (!tlvs) return;
 
-  gettimeofday(&bdata.tstamp, NULL);
+  /* Init message does not contain a timestamp */
+  gettimeofday(&bdata.tstamp_arrival, NULL);
+  memset(&bdata.tstamp, 0, sizeof(struct timeval));
 
   while ((*len)) {
     u_int32_t pen = 0;
@@ -160,7 +164,7 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
     bmp_tlv_hdr_get_len(bth, &bmp_tlv_len);
     if (bmp_tlv_handle_ebit(&bmp_tlv_type)) {
       if (!(bmp_tlv_get_pen(bmp_packet, len, &bmp_tlv_len, &pen))) {
-	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [term] packet discarded: failed bmp_tlv_get_pen()\n",
+	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [init] packet discarded: failed bmp_tlv_get_pen()\n",
 	    config.name, bms->log_str, peer->addr_str);
 	bmp_tlv_list_destroy(tlvs);
 	return;
@@ -219,7 +223,9 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
   tlvs = bmp_tlv_list_new(NULL, bmp_tlv_list_node_del);
   if (!tlvs) return;
 
-  gettimeofday(&bdata.tstamp, NULL);
+  /* Term message does not contain a timestamp */
+  gettimeofday(&bdata.tstamp_arrival, NULL);
+  memset(&bdata.tstamp, 0, sizeof(struct timeval));
 
   while ((*len)) {
     u_int32_t pen = 0;
@@ -319,8 +325,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
 
   if (bdata.family) {
-    /* If no timestamp in BMP then let's generate one */
-    if (!bdata.tstamp.tv_sec) gettimeofday(&bdata.tstamp, NULL);
+    gettimeofday(&bdata.tstamp_arrival, NULL);
 
     {
       struct bmp_log_peer_up blpu;
@@ -356,7 +361,14 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
       bmd.extra.data = &bmed_bmp;
       bgp_msg_data_set_data_bmp(&bmed_bmp, &bdata);
 
-      /* XXX: checks, ie. marker, message length, etc., bypassed */
+      bgp_open_len = bgp_get_packet_len((*bmp_packet));
+      if (bgp_open_len <= 0) {
+	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: failed bgp_get_packet_len()\n",
+	    config.name, bms->log_str, peer->addr_str);
+	bmp_tlv_list_destroy(tlvs);
+	return;
+      }
+
       bgp_open_len = bgp_parse_open_msg(&bmd, (*bmp_packet), FALSE, FALSE);
       if (bgp_open_len == ERR) {
 	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: failed bgp_parse_open_msg()\n",
@@ -365,6 +377,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
 	return;
       }
       bmp_get_and_check_length(bmp_packet, len, bgp_open_len);
+      memcpy(&bmpp->self.id, &bgp_peer_loc.id, sizeof(struct host_addr));
       memcpy(&bgp_peer_loc.addr, &blpu.local_ip, sizeof(struct host_addr));
 
       bgp_peer_rem.type = FUNC_TYPE_BMP;
@@ -407,7 +420,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
 	bmp_tlv_hdr_get_len(bth, &bmp_tlv_len);
 	if (bmp_tlv_handle_ebit(&bmp_tlv_type)) {
 	  if (!(bmp_tlv_get_pen(bmp_packet, len, &bmp_tlv_len, &pen))) {
-	    Log(LOG_INFO, "INFO ( %s/%s ): [%s] [term] packet discarded: failed bmp_tlv_get_pen()\n",
+	    Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: failed bmp_tlv_get_pen()\n",
 		config.name, bms->log_str, peer->addr_str);
 	    bmp_tlv_list_destroy(tlvs);
 	    return;
@@ -490,8 +503,7 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
 
   if (bdata.family) {
-    /* If no timestamp in BMP then let's generate one */
-    if (!bdata.tstamp.tv_sec) gettimeofday(&bdata.tstamp, NULL);
+    gettimeofday(&bdata.tstamp_arrival, NULL);
 
     {
       struct bmp_log_peer_down blpd;
@@ -525,7 +537,7 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
 	  bmp_tlv_hdr_get_len(bth, &bmp_tlv_len);
 	  if (bmp_tlv_handle_ebit(&bmp_tlv_type)) {
 	    if (!(bmp_tlv_get_pen(bmp_packet, len, &bmp_tlv_len, &pen))) {
-	      Log(LOG_INFO, "INFO ( %s/%s ): [%s] [term] packet discarded: failed bmp_tlv_get_pen()\n",
+	      Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer down] packet discarded: failed bmp_tlv_get_pen()\n",
 		  config.name, bms->log_str, peer->addr_str);
 	      bmp_tlv_list_destroy(tlvs);
 	      return;
@@ -589,8 +601,8 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
 
       addr_to_str(peer_ip, &bdata.peer_ip);
 
-      if (!log_notification_isset(&bmpp->missing_peer_up, bdata.tstamp.tv_sec)) {
-        log_notification_set(&bmpp->missing_peer_up, bdata.tstamp.tv_sec, BMP_MISSING_PEER_UP_LOG_TOUT);
+      if (!log_notification_isset(&bmpp->missing_peer_up, bdata.tstamp_arrival.tv_sec)) {
+        log_notification_set(&bmpp->missing_peer_up, bdata.tstamp_arrival.tv_sec, BMP_MISSING_PEER_UP_LOG_TOUT);
         Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer down] packet discarded: missing peer up BMP message for peer %s\n",
 	    config.name, bms->log_str, peer->addr_str, peer_ip);
       }
@@ -617,7 +629,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
   memset(&bdata, 0, sizeof(bdata));
 
   if (!(bph = (struct bmp_peer_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_peer_hdr)))) {
-    Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route] packet discarded: failed bmp_get_and_check_length() BMP peer hdr\n",
+    Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: failed bmp_get_and_check_length() BMP peer hdr\n",
         config.name, bms->log_str, peer->addr_str);
     return;
   }
@@ -641,8 +653,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
 
   if (bdata.family) {
-    /* If no timestamp in BMP then let's generate one */
-    if (!bdata.tstamp.tv_sec) gettimeofday(&bdata.tstamp, NULL);
+    gettimeofday(&bdata.tstamp_arrival, NULL);
 
     if (bdata.family == AF_INET) {
       ret = pm_tfind(&bdata.peer_ip, &bmpp->bgp_peers_v4, bgp_peer_host_addr_cmp);
@@ -673,8 +684,16 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 			config.timestamps_since_epoch, config.timestamps_rfc3339,
 			config.timestamps_utc);
 
+      encode_tstamp_arrival(bms->log_tstamp_str, SRVBUFLEN, &bdata.tstamp_arrival, TRUE);
+
       /* draft-ietf-grow-bmp-tlv */
       bgp_update_len = bgp_get_packet_len((*bmp_packet));
+      if (bgp_update_len <= 0) {
+	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: bgp_get_packet_len() failed\n",
+	    config.name, bms->log_str, peer->addr_str);
+	return;
+      }
+
       if (peer->version == BMP_V4 && bgp_update_len && bgp_update_len < (*len)) {
 	struct bmp_tlv_hdr *bth;
 	u_int16_t bmp_tlv_type, bmp_tlv_len;
@@ -702,8 +721,8 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 	  bmp_tlv_hdr_get_type(bth, &bmp_tlv_type);
 	  bmp_tlv_hdr_get_len(bth, &bmp_tlv_len);
 	  if (bmp_tlv_handle_ebit(&bmp_tlv_type)) {
-	    if (!(bmp_tlv_get_pen(bmp_packet, len, &bmp_tlv_len, &pen))) {
-	      Log(LOG_INFO, "INFO ( %s/%s ): [%s] [term] packet discarded: failed bmp_tlv_get_pen()\n",
+	    if (!(bmp_tlv_get_pen(&loc_ptr, &loc_len, &bmp_tlv_len, &pen))) {
+	      Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: failed bmp_tlv_get_pen()\n",
 		  config.name, bms->log_str, peer->addr_str);
 	      bmp_tlv_list_destroy(tlvs);
 	      return;
@@ -727,9 +746,8 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
         bmed_bmp.tlvs = tlvs;
       }
 
-      /* XXX: checks, ie. marker, message length, etc., bypassed */
       bgp_update_len = bgp_parse_update_msg(&bmd, (*bmp_packet)); 
-      if (!bgp_update_len) {
+      if (bgp_update_len <= 0) {
 	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: bgp_parse_update_msg() failed\n",
 	    config.name, bms->log_str, peer->addr_str);
 	return;
@@ -744,12 +762,12 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
     }
     /* missing BMP peer up message, ie. case of replay/replication of BMP messages */
     else {
-      if (!log_notification_isset(&bmpp->missing_peer_up, bdata.tstamp.tv_sec)) {
+      if (!log_notification_isset(&bmpp->missing_peer_up, bdata.tstamp_arrival.tv_sec)) {
 	char peer_ip[INET6_ADDRSTRLEN];
 
 	addr_to_str(peer_ip, &bdata.peer_ip);
 
-	log_notification_set(&bmpp->missing_peer_up, bdata.tstamp.tv_sec, BMP_MISSING_PEER_UP_LOG_TOUT);
+	log_notification_set(&bmpp->missing_peer_up, bdata.tstamp_arrival.tv_sec, BMP_MISSING_PEER_UP_LOG_TOUT);
 	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: missing peer up BMP message for peer %s\n",
 	    config.name, bms->log_str, peer->addr_str, peer_ip);
       }
@@ -759,6 +777,19 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 
 void bmp_process_msg_route_mirror(char **bmp_packet, u_int32_t *len, struct bmp_peer *bmpp)
 {
+  struct bgp_misc_structs *bms;
+  struct bgp_peer *peer;
+
+  if (!bmpp) return;
+
+  peer = &bmpp->self;
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return;
+
+  Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route mirror] packet discarded: Unicorn! Message type currently not supported.\n",
+      config.name, bms->log_str, peer->addr_str);
+
   // XXX: maybe support route mirroring
 }
 
@@ -821,8 +852,7 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
   bmp_stats_hdr_get_count(bsh, &count);
 
   if (bdata.family) {
-    /* If no timestamp in BMP then let's generate one */
-    if (!bdata.tstamp.tv_sec) gettimeofday(&bdata.tstamp, NULL);
+    gettimeofday(&bdata.tstamp_arrival, NULL);
 
     for (index = 0; index < count; index++) {
       if (!(bsch = (struct bmp_stats_cnt_hdr *) bmp_get_and_check_length(bmp_packet, len, sizeof(struct bmp_stats_cnt_hdr)))) {

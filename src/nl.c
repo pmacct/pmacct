@@ -68,7 +68,7 @@ void pm_pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *bu
     pptrs.blp_table = cb_data->blp_table;
     pptrs.bmed_table = cb_data->bmed_table;
     pptrs.bta_table = cb_data->bta_table;
-    pptrs.flow_type = NF9_FTYPE_TRAFFIC;
+    pptrs.flow_type = PM_FTYPE_TRAFFIC;
 
     assert(cb_data);
 
@@ -83,7 +83,7 @@ void pm_pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *bu
       memcpy(&tpptrs->pkthdr, &pptrs.pkthdr, sizeof(struct pcap_pkthdr));
 
       tpptrs->packet_ptr = (u_char *) buf;
-      tpptrs->flow_type = NF9_FTYPE_TRAFFIC;
+      tpptrs->flow_type = PM_FTYPE_TRAFFIC;
     }
 
     /* direction */
@@ -166,6 +166,7 @@ void pm_pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *bu
 	}
 
 	set_index_pkt_ptrs(&pptrs);
+        PM_evaluate_flow_type(&pptrs);
         exec_plugins(&pptrs, &req);
       }
     }
@@ -229,10 +230,13 @@ int ip_handler(register struct packet_ptrs *pptrs)
   if (config.handle_fragments) {
     if (pptrs->l4_proto == IPPROTO_TCP || pptrs->l4_proto == IPPROTO_UDP) {
       if (off+MyTLHdrSz > caplen) {
-        Log(LOG_INFO, "INFO ( %s/core ): short IPv4 packet read (%u/%u/frags). Snaplen issue ?\n",
-			config.name, caplen, off+MyTLHdrSz);
-        return FALSE;
+	if (!log_notification_isset(&log_notifications.snaplen_issue, ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_sec)) {
+          Log(LOG_INFO, "INFO ( %s/core ): short IPv4 packet read (%u/%u/frags). Snaplen issue ?\n", config.name, caplen, off+MyTLHdrSz);
+	  log_notification_set(&log_notifications.max_classifiers, ((struct pcap_pkthdr *)pptrs->pkthdr)->ts.tv_sec, 180);
+          return FALSE;
+	}
       }
+
       pptrs->tlh_ptr = ptr;
 
       if (((struct pm_iphdr *)pptrs->iph_ptr)->ip_off & htons(IP_MF|IP_OFFMASK)) {
@@ -289,7 +293,10 @@ int ip_handler(register struct packet_ptrs *pptrs)
       }
     }
     else {
-      pptrs->tlh_ptr = dummy_tlhdr;
+      if (pptrs->l4_proto != IPPROTO_ICMP) {
+        pptrs->tlh_ptr = dummy_tlhdr;
+      }
+
       if (off < caplen) pptrs->payload_ptr = ptr;
     }
 
@@ -334,6 +341,16 @@ int ip_handler(register struct packet_ptrs *pptrs)
         }
       }
     }
+  }
+
+  pptrs->icmp_type = FALSE;
+  pptrs->icmp_code = FALSE;
+
+  if (pptrs->l4_proto == IPPROTO_ICMP) {
+    pptrs->tlh_ptr = ptr;
+
+    pptrs->icmp_type = ((struct pm_icmphdr *)pptrs->tlh_ptr)->type;
+    pptrs->icmp_code = ((struct pm_icmphdr *)pptrs->tlh_ptr)->code;
   }
 
   quit:
@@ -457,7 +474,10 @@ int ip6_handler(register struct packet_ptrs *pptrs)
       }
     }
     else {
-      pptrs->tlh_ptr = dummy_tlhdr;
+      if (pptrs->l4_proto != IPPROTO_ICMPV6) {
+        pptrs->tlh_ptr = dummy_tlhdr;
+      }
+
       if (off < caplen) pptrs->payload_ptr = ptr;
     }
 
@@ -483,6 +503,14 @@ int ip6_handler(register struct packet_ptrs *pptrs)
     pptrs->tcp_flags = FALSE;
     if (pptrs->l4_proto == IPPROTO_TCP && off_l4+TCPFlagOff+1 <= caplen)
       pptrs->tcp_flags = ((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags;
+  }
+
+  pptrs->icmp_type = FALSE;
+  pptrs->icmp_code = FALSE;
+
+  if (pptrs->l4_proto == IPPROTO_ICMPV6) {
+    pptrs->icmp_type = ((struct pm_icmphdr *)pptrs->tlh_ptr)->type;
+    pptrs->icmp_code = ((struct pm_icmphdr *)pptrs->tlh_ptr)->code;
   }
 
   quit:
@@ -741,6 +769,16 @@ void set_index_pkt_ptrs(struct packet_ptrs *pptrs)
 
   pptrs->pkt_proto[CUSTOM_PRIMITIVE_L3_PTR] = pptrs->l3_proto;
   pptrs->pkt_proto[CUSTOM_PRIMITIVE_L4_PTR] = pptrs->l4_proto;
+}
+
+void PM_evaluate_flow_type(struct packet_ptrs *pptrs)
+{
+  if (pptrs->l3_proto == ETHERTYPE_IP) {
+    pptrs->flow_type = PM_FTYPE_IPV4;
+  }
+  else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+    pptrs->flow_type = PM_FTYPE_IPV6;
+  }
 }
 
 ssize_t recvfrom_savefile(struct pm_pcap_device *device, void **buf, struct sockaddr *src_addr, struct timeval **ts, int *round, struct packet_ptrs *savefile_pptrs)

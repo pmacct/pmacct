@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /* 
@@ -827,7 +827,7 @@ static void sendSample(SFLReceiver *receiver)
 			receiver->sampleCollector.pktlen,
 			0,
 			(struct sockaddr *)&receiver->receiver,
-			sizeof(receiver->receiver));
+			sa_len(&receiver->receiver));
     if(result == -1 && errno != EINTR) sfl_agent_sysError(receiver->agent, "receiver", "socket sendto error");
     if(result == 0) sfl_agent_error(receiver->agent, "receiver", "socket sendto returned 0");
   }

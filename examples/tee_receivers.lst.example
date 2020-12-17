@@ -22,7 +22,8 @@
 !			robin, 'hash-tag' hashing of tag (pre_tag_map)
 !			against the number of receivers in pool, 'hash-agent'
 !			hashing of the exporter/agent IP address against
-!			the number of receivers in pool.
+!			the number of receivers in pool, 'hash-crc32' same
+!			as hash-agent but uses crc32 as hash function.
 ! 'src_port'		SET: When in non-transparent replication mode, use
 !			the specified UDP port to send data to receiver(s) 
 ! 'kafka_broker'	SET: Defines the Kafka broker host to emit to. It
@@ -39,6 +40,7 @@
 !
 id=1	ip=192.168.1.1:2100
 id=2	ip=192.168.2.1:2100,192.168.2.2:2100
+id=3	ip=[::1]:2100
 !
 !
 ! Replicate with selective filtering. Replicate datagrams tagged as 100 and

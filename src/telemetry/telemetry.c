@@ -64,7 +64,7 @@ void telemetry_wrapper()
   send_to_pool(telemetry_pool, telemetry_daemon, t_data);
 }
 
-void telemetry_daemon(void *t_data_void)
+int telemetry_daemon(void *t_data_void)
 {
   struct telemetry_data *t_data = t_data_void;
   telemetry_peer_cache tpc;
@@ -321,6 +321,8 @@ void telemetry_daemon(void *t_data_void)
 	Log(LOG_ERR, "ERROR ( %s/%s ): socket() failed. Terminating.\n", config.name, t_data->log_str);
 	exit_gracefully(1);
       }
+
+      if (config.telemetry_port_tcp) setsockopt(config.telemetry_sock, SOL_SOCKET, SO_KEEPALIVE, (void *)&yes, sizeof(yes));
     }
 
     if (config.telemetry_ipprec) {
@@ -733,7 +735,7 @@ void telemetry_daemon(void *t_data_void)
 
       if (!peer) {
         /* We briefly accept the new connection to be able to drop it */
-        Log(LOG_ERR, "ERROR ( %s/%s ): Insufficient number of telemetry peers has been configured by telemetry_max_peers (%d).\n",
+        Log(LOG_WARNING, "WARN ( %s/%s ): Insufficient number of telemetry peers has been configured by telemetry_max_peers (%d).\n",
                         config.name, t_data->log_str, config.telemetry_max_peers);
         if (config.telemetry_port_tcp) close(fd);
         goto read_data;
@@ -844,6 +846,8 @@ void telemetry_daemon(void *t_data_void)
       }
     }
   }
+
+  return SUCCESS;
 }
 
 void telemetry_prepare_thread(struct telemetry_data *t_data)

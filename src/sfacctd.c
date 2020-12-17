@@ -194,8 +194,6 @@ int main(int argc,char **argv, char **envp)
 
   data_plugins = 0;
   tee_plugins = 0;
-  xflow_status_table_entries = 0;
-  xflow_tot_bad_datagrams = 0;
   errflag = 0;
   sfacctd_counter_backend_methods = 0;
 
@@ -221,6 +219,7 @@ int main(int argc,char **argv, char **envp)
   memset(&reload_map_tstamp, 0, sizeof(reload_map_tstamp));
   log_notifications_init(&log_notifications);
   config.acct_type = ACCT_SF;
+  config.progname = sfacctd_globstr;
 
   rows = 0;
   memset(&device, 0, sizeof(device));
@@ -396,6 +395,7 @@ int main(int argc,char **argv, char **envp)
   list = plugins_list;
   while(list) {
     list->cfg.acct_type = ACCT_SF;
+    list->cfg.progname = sfacctd_globstr;
     set_default_preferences(&list->cfg);
     if (!strcmp(list->type.string, "core")) { 
       memcpy(&config, &list->cfg, sizeof(struct configuration)); 
@@ -408,6 +408,7 @@ int main(int argc,char **argv, char **envp)
   if (config.files_umask) umask(config.files_umask);
 
   initsetproctitle(argc, argv, envp);
+
   if (config.syslog) {
     logf = parse_log_facility(config.syslog);
     if (logf == ERR) {
@@ -490,7 +491,8 @@ int main(int argc,char **argv, char **envp)
 
         if (list->cfg.what_to_count_2 & (COUNT_POST_NAT_SRC_HOST|COUNT_POST_NAT_DST_HOST|
                         COUNT_POST_NAT_SRC_PORT|COUNT_POST_NAT_DST_PORT|COUNT_NAT_EVENT|
-                        COUNT_TIMESTAMP_START|COUNT_TIMESTAMP_END|COUNT_TIMESTAMP_ARRIVAL))
+                        COUNT_TIMESTAMP_START|COUNT_TIMESTAMP_END|COUNT_TIMESTAMP_ARRIVAL|
+			COUNT_EXPORT_PROTO_TIME))
           list->cfg.data_type |= PIPE_TYPE_NAT;
 
         if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_TOP|COUNT_MPLS_LABEL_BOTTOM|
@@ -871,6 +873,12 @@ int main(int argc,char **argv, char **envp)
     int sleep_time = DEFAULT_SLOTH_SLEEP_TIME;
 
     req.bpf_filter = TRUE;
+
+    if (config.bgp_daemon_to_xflow_agent_map) {
+      load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.bgp_daemon_to_xflow_agent_map, &bta_table, &req, &bta_map_allocated);
+      pptrs.v4.bta_table = (u_char *) &bta_table;
+    }
+    else pptrs.v4.bta_table = NULL;
 
     bmp_daemon_wrapper();
 
@@ -1296,7 +1304,7 @@ int main(int argc,char **argv, char **envp)
     if (print_stats) {
       time_t now = time(NULL);
 
-      print_status_table(now, XFLOW_STATUS_TABLE_SZ);
+      print_status_table(&xflow_status_table, now, XFLOW_STATUS_TABLE_SZ);
       print_stats = FALSE;
     }
 
@@ -1378,7 +1386,7 @@ int main(int argc,char **argv, char **envp)
       default:
 	if (!config.nfacctd_disable_checks) {
 	  SF_notify_malf_packet(LOG_INFO, "INFO", "discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent);
-	  xflow_tot_bad_datagrams++;
+	  xflow_status_table.tot_bad_datagrams++;
 	}
 	break;
       }
@@ -1447,7 +1455,7 @@ void process_SFv2v4_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
       break;
     default:
       SF_notify_malf_packet(LOG_INFO, "INFO", "discarding unknown v2/v4 sample", (struct sockaddr *) pptrsv->v4.f_agent);
-      xflow_tot_bad_datagrams++;
+      xflow_status_table.tot_bad_datagrams++;
       return; /* unexpected sampleType; aborting packet */
     }
     if ((u_char *)spp->datap > spp->endp) return;
@@ -1510,7 +1518,7 @@ SFv5_read_sampleType:
       break;
     default:
       SF_notify_malf_packet(LOG_INFO, "INFO", "discarding unknown v5 sample", (struct sockaddr *) pptrsv->v4.f_agent);
-      xflow_tot_bad_datagrams++;
+      xflow_status_table.tot_bad_datagrams++;
       return; /* unexpected sampleType; aborting packet */
     }
     if ((u_char *)spp->datap > spp->endp) return; 
@@ -1538,7 +1546,7 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
   default:
     if (!config.nfacctd_disable_checks) {
       SF_notify_malf_packet(LOG_INFO, "INFO", "discarding unknown sFlow packet", (struct sockaddr *) pptrs->f_agent);
-      xflow_tot_bad_datagrams++;
+      xflow_status_table.tot_bad_datagrams++;
     }
     return;
   }
@@ -1711,7 +1719,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
 
     /* we need to understand the IP protocol version in order to build the fake packet */
     switch (pptrs->flow_type) {
-    case NF9_FTYPE_IPV4:
+    case PM_FTYPE_IPV4:
       if (req->bpf_filter) {
         reset_mac(pptrs);
         reset_ip4(pptrs);
@@ -1745,7 +1753,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.bmp_daemon) bmp_srcdst_lookup(pptrs);
       exec_plugins(pptrs, req);
       break;
-    case NF9_FTYPE_IPV6:
+    case PM_FTYPE_IPV6:
       pptrsv->v6.flow_type = pptrs->flow_type;
 
       if (req->bpf_filter) {
@@ -1781,7 +1789,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->v6);
       exec_plugins(&pptrsv->v6, req);
       break;
-    case NF9_FTYPE_VLAN_IPV4:
+    case PM_FTYPE_VLAN_IPV4:
       pptrsv->vlan4.flow_type = pptrs->flow_type;
 
       if (req->bpf_filter) {
@@ -1818,7 +1826,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlan4);
       exec_plugins(&pptrsv->vlan4, req);
       break;
-    case NF9_FTYPE_VLAN_IPV6:
+    case PM_FTYPE_VLAN_IPV6:
       pptrsv->vlan6.flow_type = pptrs->flow_type;
 
       if (req->bpf_filter) {
@@ -1855,7 +1863,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlan6);
       exec_plugins(&pptrsv->vlan6, req);
       break;
-    case NF9_FTYPE_MPLS_IPV4:
+    case PM_FTYPE_MPLS_IPV4:
       pptrsv->mpls4.flow_type = pptrs->flow_type;
 
       if (req->bpf_filter) {
@@ -1905,7 +1913,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->mpls4);
       exec_plugins(&pptrsv->mpls4, req);
       break;
-    case NF9_FTYPE_MPLS_IPV6:
+    case PM_FTYPE_MPLS_IPV6:
       pptrsv->mpls6.flow_type = pptrs->flow_type;
 
       if (req->bpf_filter) {
@@ -1954,7 +1962,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->mpls6);
       exec_plugins(&pptrsv->mpls6, req);
       break;
-    case NF9_FTYPE_VLAN_MPLS_IPV4:
+    case PM_FTYPE_VLAN_MPLS_IPV4:
       pptrsv->vlanmpls4.flow_type = pptrs->flow_type;
 
       if (req->bpf_filter) {
@@ -2004,7 +2012,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlanmpls4);
       exec_plugins(&pptrsv->vlanmpls4, req);
       break;
-    case NF9_FTYPE_VLAN_MPLS_IPV6:
+    case PM_FTYPE_VLAN_MPLS_IPV6:
       pptrsv->vlanmpls6.flow_type = pptrs->flow_type;
 
       if (req->bpf_filter) {
@@ -2133,12 +2141,12 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
 u_int8_t SF_evaluate_flow_type(struct packet_ptrs *pptrs)
 {
   SFSample *sample = (SFSample *)pptrs->f_data;
-  u_int8_t ret = NF9_FTYPE_TRAFFIC;
+  u_int8_t ret = PM_FTYPE_TRAFFIC;
 
-  if (sample->in_vlan || sample->out_vlan) ret += NF9_FTYPE_VLAN;
-  if (sample->lstk.depth > 0) ret += NF9_FTYPE_MPLS;
+  if (sample->in_vlan || sample->out_vlan) ret += PM_FTYPE_VLAN;
+  if (sample->lstk.depth > 0) ret += PM_FTYPE_MPLS;
   if (sample->gotIPV4); 
-  else if (sample->gotIPV6) ret += NF9_FTYPE_TRAFFIC_IPV6;
+  else if (sample->gotIPV6) ret += PM_FTYPE_TRAFFIC_IPV6;
 
   return ret;
 }
@@ -2197,7 +2205,7 @@ struct xflow_status_entry *sfv245_check_status(SFSample *spp, struct packet_ptrs
   hash = hash_status_table(aux1, &salocal, XFLOW_STATUS_TABLE_SZ);
 
   if (hash >= 0) {
-    entry = search_status_table(&salocal, aux1, 0, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
+    entry = search_status_table(&xflow_status_table, &salocal, aux1, 0, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
     if (entry) {
       update_status_table(entry, spp->sequenceNo, pptrs->f_len);
       entry->inc = 1;

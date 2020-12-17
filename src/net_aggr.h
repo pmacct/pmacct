@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -57,9 +57,6 @@ struct networks_table_entry {
   as_t peer_as;
   as_t as;
   struct host_addr nh;
-#if defined ENABLE_PLABEL
-  char plabel[PREFIX_LABEL_LEN];
-#endif
   struct networks_table childs_table;
 };
 
@@ -75,9 +72,6 @@ struct networks6_table_entry {
   as_t peer_as;
   as_t as;
   struct host_addr nh;
-#if defined ENABLE_PLABEL
-  char plabel[PREFIX_LABEL_LEN];
-#endif
   struct networks_table childs_table;
 };
 
@@ -108,10 +102,6 @@ extern void search_src_ip(struct networks_table *, struct networks_cache *, stru
 extern void search_dst_ip(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct pkt_bgp_primitives *, struct networks_file_data *); 
 extern void search_src_host(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct pkt_bgp_primitives *, struct networks_file_data *);
 extern void search_dst_host(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct pkt_bgp_primitives *, struct networks_file_data *); 
-#if defined ENABLE_PLABEL
-extern void search_src_host_label(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct pkt_bgp_primitives *, struct networks_file_data *);
-extern void search_dst_host_label(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct pkt_bgp_primitives *, struct networks_file_data *); 
-#endif
 extern void search_src_nmask(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct pkt_bgp_primitives *, struct networks_file_data *);
 extern void search_dst_nmask(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct pkt_bgp_primitives *, struct networks_file_data *);
 extern void search_src_as(struct networks_table *, struct networks_cache *, struct pkt_primitives *, struct pkt_bgp_primitives *, struct networks_file_data *); 

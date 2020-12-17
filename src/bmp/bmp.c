@@ -57,9 +57,9 @@ void bmp_daemon_wrapper()
   send_to_pool(bmp_pool, skinny_bmp_daemon, NULL);
 }
 
-void skinny_bmp_daemon()
+int skinny_bmp_daemon()
 {
-  int ret, rc, peers_idx, allowed, yes=1;
+  int ret, rc, peers_idx, allowed, yes=1, do_term;
   int peers_idx_rr = 0, max_peers_idx = 0;
   time_t now;
   afi_t afi;
@@ -803,8 +803,12 @@ void skinny_bmp_daemon()
 
       if (!peer) {
         /* We briefly accept the new connection to be able to drop it */
-        Log(LOG_ERR, "ERROR ( %s/%s ): Insufficient number of BMP peers has been configured by 'bmp_daemon_max_peers' (%d).\n",
-	    config.name, bmp_misc_db->log_str, config.bmp_daemon_max_peers);
+	if (!log_notification_isset(&log_notifications.bmp_peers_limit, now)) {
+	  log_notification_set(&log_notifications.bmp_peers_limit, now, FALSE);
+          Log(LOG_WARNING, "WARN ( %s/%s ): Insufficient number of BMP peers has been configured by 'bmp_daemon_max_peers' (%d).\n",
+	      config.name, bmp_misc_db->log_str, config.bmp_daemon_max_peers);
+	}
+
         close(fd);
         goto read_data;
       }
@@ -859,6 +863,16 @@ void skinny_bmp_daemon()
 
     if (!peer) goto select_again;
 
+    /* If first message after connect, check for proxy protocol header */
+    if (config.bmp_daemon_parse_proxy_header == TRUE && peer->parsed_proxy_header == 0) {
+      ret = parse_proxy_header(peer->fd, &peer->addr, &peer->tcp_port);
+      if (ret < 0) {
+        goto select_again; /* partial header */
+      }
+      addr_to_str(peer->addr_str, &peer->addr);
+    }
+    peer->parsed_proxy_header = TRUE;
+
     if (!config.pcap_savefile) {
       if (!peer->buf.exp_len) {
 	ret = recv(peer->fd, &peer->buf.base[peer->buf.cur_len], (BMP_CMN_HDRLEN - peer->buf.cur_len), 0);
@@ -870,7 +884,7 @@ void skinny_bmp_daemon()
 	    struct bmp_common_hdr *bhdr = (struct bmp_common_hdr *) peer->buf.base;
 
 	    if (bhdr->version != BMP_V3 && bhdr->version != BMP_V4) {
-	      Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: unknown BMP version: %u\n",
+	      Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: unknown BMP version: %u (1)\n",
 		  config.name, bmp_misc_db->log_str, peer->addr_str, bhdr->version);
 
 	      peer->msglen = 0;
@@ -945,8 +959,19 @@ void skinny_bmp_daemon()
       peer->msglen = len;
     }
 
-    bmp_process_packet(peer->buf.base, peer->msglen, bmpp);
+    do_term = FALSE;
+    bmp_process_packet(peer->buf.base, peer->msglen, bmpp, &do_term);
+
+    if (do_term) {
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] BMP Term message received. Closing up.\n", config.name, bmp_misc_db->log_str, peer->addr_str);
+      FD_CLR(peer->fd, &bkp_read_descs);
+      bmp_peer_close(bmpp, FUNC_TYPE_BMP);
+      recalc_fds = TRUE;
+      goto select_again;
+    }
   }
+
+  return SUCCESS;
 }
 
 void bmp_prepare_thread()

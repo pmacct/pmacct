@@ -97,6 +97,8 @@ extern int bmp_log_msg_term(struct bgp_peer *, struct bmp_data *, struct pm_list
 extern int bmp_log_msg_peer_up(struct bgp_peer *, struct bmp_data *, struct pm_list *, struct bmp_log_peer_up *, char *, int, void *);
 extern int bmp_log_msg_peer_down(struct bgp_peer *, struct bmp_data *, struct pm_list *, struct bmp_log_peer_down *, char *, int, void *);
 extern int bmp_log_msg_route_monitor_tlv(struct pm_list *, int, void *);
+extern int bmp_log_rm_tlv_path_marking(struct bgp_peer *, struct bmp_data *, void *, void *, char *, int , void *);
+extern int bmp_log_rm_tlv_pm_status(u_int32_t, int, void *);
 
 extern void bmp_dump_se_ll_append(struct bgp_peer *, struct bmp_data *, struct pm_list *tlvs, void *, int);
 extern void bmp_dump_se_ll_destroy(struct bmp_dump_se_ll *);
@@ -114,7 +116,6 @@ extern avro_schema_t p_avro_schema_build_bmp_term(char *);
 extern avro_schema_t p_avro_schema_build_bmp_peer_up(char *);
 extern avro_schema_t p_avro_schema_build_bmp_peer_down(char *);
 extern avro_schema_t p_avro_schema_build_bmp_stats(char *);
-extern avro_schema_t p_avro_schema_build_bmp_rpat(char *);
 
 extern avro_schema_t p_avro_schema_build_bmp_log_initclose(int, char *);
 extern avro_schema_t p_avro_schema_build_bmp_dump_init(int, char *);

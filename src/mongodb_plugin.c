@@ -575,7 +575,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
         bson_append_string(bson_elem, "peer_ip_src", ip_address);
       }
       if (config.what_to_count & COUNT_PEER_DST_IP) {
-        addr_to_str(ip_address, &pbgp->peer_dst_ip);
+        addr_to_str2(ip_address, &pbgp->peer_dst_ip, ft2af(queue[j]->flow_type));
         bson_append_string(bson_elem, "peer_ip_dst", ip_address);
       }
 
@@ -830,6 +830,25 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
           if (pnat->timestamp_arrival.tv_usec) bdate += (pnat->timestamp_arrival.tv_usec/1000);
 
           bson_append_date(bson_elem, "timestamp_arrival", bdate);
+        }
+      }
+
+      if (config.what_to_count_2 & COUNT_EXPORT_PROTO_TIME) {
+        if (config.timestamps_since_epoch) {
+          char tstamp_str[SRVBUFLEN];
+
+          compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_export, TRUE,
+			    config.timestamps_since_epoch, config.timestamps_rfc3339,
+			    config.timestamps_utc);
+          bson_append_string(bson_elem, "timestamp_export", tstamp_str);
+        }
+        else {
+          bson_date_t bdate;
+
+          bdate = 1000*pnat->timestamp_export.tv_sec;
+          if (pnat->timestamp_export.tv_usec) bdate += (pnat->timestamp_export.tv_usec/1000);
+
+          bson_append_date(bson_elem, "timestamp_export", bdate);
         }
       }
 

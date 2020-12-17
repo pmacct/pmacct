@@ -59,13 +59,52 @@ unsigned int addr_to_str(char *str, const struct host_addr *a)
     return a->family;
   }
 
-#if defined ENABLE_PLABEL
-  if (a->family == AF_PLABEL) {
-    strlcpy(str, a->address.plabel, INET6_ADDRSTRLEN);
-    return a->family;
-  }
-#endif
+  memset(str, 0, INET6_ADDRSTRLEN);
 
+  return FALSE;
+}
+
+/*
+ * addr_to_str2() converts a supported family address into a string
+ * conversions among AFs is supported (ie. IPv6 IPv4-mapped to IPv4
+ * and vice-versa). 'str' length is not checked and assumed to be
+ * INET6_ADDRSTRLEN
+ */
+unsigned int addr_to_str2(char *str, const struct host_addr *a, int target_af)
+{
+  if (target_af != AF_INET && target_af != AF_INET6) {
+    goto exit_lane;
+  }
+
+  if (a->family == AF_INET && target_af == AF_INET) {
+    inet_ntop(AF_INET, &a->address.ipv4, str, INET6_ADDRSTRLEN);
+    return target_af;
+  }
+
+  if (a->family == AF_INET6 && target_af == AF_INET6) {
+    inet_ntop(AF_INET6, &a->address.ipv6, str, INET6_ADDRSTRLEN);
+    return target_af;
+  }
+
+  if (a->family == AF_INET6 && target_af == AF_INET) {
+    if (a->address.ipv6.s6_addr[10] == 0xff && a->address.ipv6.s6_addr[11] == 0xff) {
+      inet_ntop(target_af, &a->address.ipv6.s6_addr[12], str, INET6_ADDRSTRLEN);
+      return target_af;
+    }
+  }
+
+  if (a->family == AF_INET && target_af == AF_INET6) {
+    struct host_addr local_ha;
+
+    memset(&local_ha, 0, sizeof(local_ha));
+    memset((u_int8_t *)&local_ha.address.ipv6.s6_addr[10], 0xff, 2);
+    memcpy(&local_ha.address.ipv6.s6_addr[12], &a->address.ipv4, 4);
+
+    inet_ntop(AF_INET6, &local_ha.address.ipv6, str, INET6_ADDRSTRLEN);
+    return target_af;
+  }
+
+  exit_lane:
   memset(str, 0, INET6_ADDRSTRLEN);
 
   return FALSE;
@@ -373,9 +412,9 @@ int host_addr_mask_sa_cmp(struct host_addr *a1, struct host_mask *m1, struct soc
     else return TRUE;
   }
   else if (a1->family == AF_INET6) {
-    memcpy(&sa6_local, s1, sizeof(struct sockaddr));
+    memcpy(&sa6_local, s1, sizeof(struct sockaddr_in6));
     for (j = 0; j < 16; j++) sa6_local.sin6_addr.s6_addr[j] &= m1->mask.m6[j];
-    ret = ip6_addr_cmp(a1, &sa6_local.sin6_addr);
+    ret = ip6_addr_cmp(&a1->address.ipv6, &sa6_local.sin6_addr);
     if (!ret) return FALSE;
     else return TRUE;
   }
@@ -476,7 +515,7 @@ unsigned int sa_to_str(char *str, int len, const struct sockaddr *sa)
     if (sa->sa_family == AF_INET) {
       inet_ntop(AF_INET, &sa4->sin_addr.s_addr, str, INET6_ADDRSTRLEN);
 
-      if (len >= (INET6_ADDRSTRLEN + PORT_STRLEN + 1) && sa4->sin_port) {
+      if (len >= (strlen(str) + PORT_STRLEN + 1) && sa4->sin_port) {
 	off = strlen(str);
 	snprintf(str + off, len - off, "%s", sep);
 
@@ -490,7 +529,7 @@ unsigned int sa_to_str(char *str, int len, const struct sockaddr *sa)
     if (sa->sa_family == AF_INET6) {
       inet_ntop(AF_INET6, &sa6->sin6_addr, str, INET6_ADDRSTRLEN);
 
-      if (sa6->sin6_port) {
+      if (len >= (strlen(str) + PORT_STRLEN + 1) && sa6->sin6_port) {
         off = strlen(str);
         snprintf(str + off, len - off, "%s", sep);
 
@@ -677,7 +716,7 @@ int string_etheraddr(const char *asc, u_char *addr)
 u_int64_t pm_htonll(u_int64_t addr)
 {
 #if defined IM_LITTLE_ENDIAN
-  u_int64_t buf;
+  u_int64_t buf = 0;
 
   u_int32_t *x = (u_int32_t *)(void *) &addr;
   u_int32_t *y = (u_int32_t *)(void *) &buf;
@@ -767,19 +806,6 @@ void clean_sin_addr(struct sockaddr *sa)
   if (sa->sa_family == AF_INET6) memset(&sa6->sin6_addr, 0, 16);
 }
 
-#if defined ENABLE_PLABEL
-/*
- * label_to_addr() converts a label into a supported family address
- */
-unsigned int label_to_addr(const char *label, struct host_addr *a, int len)
-{
-  strlcpy(a->address.plabel, label, len);
-  a->family = AF_PLABEL;
-
-  return FALSE;
-}
-#endif
-
 /*
  * ipv4_mapped_to_ipv4() converts a label into a supported family address
  */
@@ -835,6 +861,38 @@ u_int16_t af_to_etype(u_int8_t af)
   return FALSE;
 }
 
+const char *af_to_version_str(u_int8_t af)
+{
+  if (af == AF_INET) return ip_version_string[0];
+  else if (af == AF_INET6) return ip_version_string[1];
+
+  return NULL;
+}
+
+u_int8_t af_to_version(u_int8_t af)
+{
+  if (af == AF_INET) return ip_version_num[0];
+  else if (af == AF_INET6) return ip_version_num[1];
+
+  return 0;
+}
+
+const char *etype_to_version_str(u_int16_t etype)
+{
+  if (etype == ETHERTYPE_IP) return ip_version_string[0];
+  else if (etype == ETHERTYPE_IPV6) return ip_version_string[1];
+
+  return NULL;
+}
+
+u_int8_t etype_to_version(u_int16_t etype)
+{
+  if (etype == ETHERTYPE_IP) return ip_version_num[0];
+  else if (etype == ETHERTYPE_IPV6) return ip_version_num[1];
+
+  return 0;
+}
+
 u_int32_t addr_hash(struct host_addr *ha, u_int32_t modulo)
 {
   u_int32_t val = 0;
@@ -848,6 +906,27 @@ u_int32_t addr_hash(struct host_addr *ha, u_int32_t modulo)
     memcpy(&a, &ha->address.ipv6.s6_addr[4], 4);
     memcpy(&b, &ha->address.ipv6.s6_addr[8], 4);
     memcpy(&c, &ha->address.ipv6.s6_addr[12], 4);
+    val = jhash_3words(a, b, c, 0);
+  }
+
+  return (val % modulo);
+}
+
+u_int32_t sa_hash(struct sockaddr *sa, u_int32_t modulo)
+{
+  struct sockaddr_in *sa4 = (struct sockaddr_in *)sa;
+  struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)sa;
+  u_int32_t val = 0;
+
+  if (sa->sa_family == AF_INET) {
+    val = jhash_1word(sa4->sin_addr.s_addr, 0);
+  }
+  else if (sa->sa_family == AF_INET6) {
+    u_int32_t a, b, c;
+
+    memcpy(&a, &sa6->sin6_addr.s6_addr[4], 4);
+    memcpy(&b, &sa6->sin6_addr.s6_addr[8], 4);
+    memcpy(&c, &sa6->sin6_addr.s6_addr[12], 4);
     val = jhash_3words(a, b, c, 0);
   }
 
@@ -876,4 +955,23 @@ u_int32_t addr_port_hash(struct host_addr *ha, u_int16_t port, u_int32_t modulo)
 u_int16_t sa_has_family(struct sockaddr *sa)
 {
   return sa->sa_family;
+}
+
+socklen_t sa_len(struct sockaddr_storage *ss)
+{
+  struct sockaddr *sa = (struct sockaddr *) ss;
+
+  if (sa) {
+    if (sa->sa_family == AF_INET) {
+      return sizeof(struct sockaddr_in);
+    }
+    else if (sa->sa_family == AF_INET6) {
+      return sizeof(struct sockaddr_in6);
+    }
+    else {
+      return sizeof(struct sockaddr_storage);
+    }
+  }
+
+  return 0;
 }

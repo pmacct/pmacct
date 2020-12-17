@@ -40,7 +40,7 @@ void p_redis_thread_wrapper(struct p_redis_host *redis_host)
   send_to_pool(redis_pool, p_redis_master_produce_thread, redis_host);
 }
 
-void p_redis_master_produce_thread(void *rh)
+int p_redis_master_produce_thread(void *rh)
 {
   struct p_redis_host *redis_host = rh;
   unsigned int ret = 0, period = 0;
@@ -58,6 +58,8 @@ void p_redis_master_produce_thread(void *rh)
 
     ret = sleep(period);
   }
+
+  return SUCCESS;
 }
 
 void p_redis_init(struct p_redis_host *redis_host, char *log_id, redis_thread_handler th_hdlr)

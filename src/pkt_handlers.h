@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -108,11 +108,13 @@ extern void NF_mpls_label_top_handler(struct channels_list_entry *, struct packe
 extern void NF_mpls_label_bottom_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_stack_depth_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_vpn_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void NF_mpls_vpn_rd_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_pw_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_vxlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_timestamp_start_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_timestamp_end_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_timestamp_arrival_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void NF_timestamp_export_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_sequence_number_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_version_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_sysid_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -168,7 +170,6 @@ extern void SF_out_iface_handler(struct channels_list_entry *, struct packet_ptr
 extern void SF_sampling_rate_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_sampling_direction_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_sampling_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-extern void SF_timestamp_start_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_timestamp_arrival_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_sequence_number_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_version_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

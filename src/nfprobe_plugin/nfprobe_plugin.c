@@ -81,7 +81,7 @@ struct CB_CTXT {
 };
 
 /* Netflow send functions */
-typedef int (netflow_send_func_t)(struct FLOW **, int, int, u_int64_t *, struct timeval *, int, u_int8_t, u_int32_t);
+typedef int (netflow_send_func_t)(struct FLOW **, int, int, void *, u_int64_t *, struct timeval *, int, u_int8_t, u_int32_t);
 
 struct NETFLOW_SENDER {
 	int version;
@@ -100,6 +100,7 @@ static const struct NETFLOW_SENDER nf[] = {
 /* Describes a location where we send NetFlow packets to */
 struct NETFLOW_TARGET {
 	int fd;
+	void *dtls;
 	const struct NETFLOW_SENDER *dialect;
 };
 
@@ -261,6 +262,7 @@ static int
 transport_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras *extras, int protocol, int ndx)
 {
  struct pkt_primitives *p = &data->primitives;
+ u_int8_t *icmp_ptr = NULL;
 
  /*
   * XXX to keep flow in proper canonical format, it may be necessary
@@ -280,6 +282,12 @@ transport_to_flowrec(struct FLOW *flow, struct pkt_data *data, struct pkt_extras
     /* Check for runt packet, but don't error out on short frags */
     flow->port[ndx] = p->src_port;
     flow->port[ndx ^ 1] = p->dst_port;
+    break;
+  case IPPROTO_ICMP:
+  case IPPROTO_ICMPV6:
+    icmp_ptr = (u_int8_t *) &flow->port[ndx ^ 1];
+    icmp_ptr[0] = extras->icmp_type;
+    icmp_ptr[1] = extras->icmp_code;
     break;
   }
 
@@ -843,7 +851,7 @@ update_statistics(struct FLOWTRACK *ft, struct FLOW *flow)
 	static double n = 1.0;
 
 	ft->flows_expired++;
-	ft->flows_pp[flow->protocol % 256]++;
+	ft->flows_pp[flow->protocol % DEFAULT_BUCKETS]++;
 
 	tmp = (double)flow->flow_last.tv_sec +
 	    ((double)flow->flow_last.tv_usec / 1000000.0);
@@ -854,15 +862,15 @@ update_statistics(struct FLOWTRACK *ft, struct FLOW *flow)
 
 	update_statistic(&ft->duration, tmp, n);
 	update_statistic(&ft->duration_pp[flow->protocol], tmp, 
-	    (double)ft->flows_pp[flow->protocol % 256]);
+	    (double)ft->flows_pp[flow->protocol % DEFAULT_BUCKETS]);
 
 	tmp = flow->octets[0] + flow->octets[1];
 	update_statistic(&ft->octets, tmp, n);
-	ft->octets_pp[flow->protocol % 256] += tmp;
+	ft->octets_pp[flow->protocol % DEFAULT_BUCKETS] += tmp;
 
 	tmp = flow->packets[0] + flow->packets[1];
 	update_statistic(&ft->packets, tmp, n);
-	ft->packets_pp[flow->protocol % 256] += tmp;
+	ft->packets_pp[flow->protocol % DEFAULT_BUCKETS] += tmp;
 
 	n++;
 }
@@ -1018,15 +1026,19 @@ check_expired(struct FLOWTRACK *ft, struct NETFLOW_TARGET *target, int ex, u_int
                         }
 			else {
 			  r = target->dialect->func(expired_flows, num_expired, 
-			    target->fd, &ft->flows_exported, // &ft->next_datagram_seq,
+			    target->fd, target->dtls, &ft->flows_exported,
 			    &ft->system_boot_time, verbose_flag, engine_type, engine_id);
-			  if (verbose_flag)
-				Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sent %d netflow packets\n", config.name, config.type, r);
+
+			  if (verbose_flag) {
+			    Log(LOG_DEBUG, "DEBUG ( %s/%s ): Sent %d netflow packets\n", config.name, config.type, r);
+			  }
+
 			  if (r > 0) {
-				ft->packets_sent += r;
-				/* XXX what if r < num_expired * 2 ? */
-			  } else {
-				ft->flows_dropped += num_expired * 2;
+			    ft->packets_sent += r;
+			    /* XXX what if r < num_expired * 2 ? */
+			  }
+			  else {
+			    ft->flows_dropped += num_expired * 2;
 			  }
 			}
 		}
@@ -1308,11 +1320,6 @@ parse_engine(char *s, u_int8_t *engine_type, u_int32_t *engine_id)
 {
   char *delim, *ptr;
 
-  if (config.nfprobe_version == 1) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): parse_engine(): NetFlow v1 export does not support nfprobe_engine.\n", config.name, config.type);
-    exit_gracefully(1);
-  }
-
   trim_spaces(s);
   delim = strchr(s, ':');
   
@@ -1360,16 +1367,18 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   int pollagain = TRUE;
   u_int32_t seq = 1, rg_err_count = 0;
 
-  char *capfile = NULL, dest_addr[256], dest_serv[256];
+  char *capfile = NULL;
   int linktype = 0, i, r, err, always_v6;
   int max_flows, hoplimit;
-  struct sockaddr_storage dest;
   struct FLOWTRACK flowtrack;
-  socklen_t dest_len;
   struct NETFLOW_TARGET target;
   struct CB_CTXT cb_ctxt;
   u_int8_t engine_type = 0;
   u_int32_t engine_id;
+
+  char dest_addr[SRVBUFLEN], dest_serv[SRVBUFLEN];
+  struct sockaddr_storage dest;
+  socklen_t dest_len;
 
   struct extra_primitives extras;
   struct primitives_ptrs prim_ptrs;
@@ -1439,6 +1448,17 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (config.debug) verbose_flag = TRUE;
   if (config.pcap_savefile) capfile = config.pcap_savefile;
 
+#ifdef WITH_GNUTLS
+  if (config.nfprobe_dtls && !config.dtls_path) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): 'nfprobe_dtls' specified but missing 'dtls_path'. Exiting.\n", config.name, config.type);
+    exit_gracefully(1);
+  }
+
+  if (config.dtls_path) {
+    pm_dtls_init(&config.dtls_globs, config.dtls_path);
+  }
+#endif
+
   dest_len = sizeof(dest);
   if (!config.nfprobe_receiver) config.nfprobe_receiver = default_receiver;
   parse_hostport(config.nfprobe_receiver, (struct sockaddr *)&dest, &dest_len);
@@ -1449,7 +1469,7 @@ sort_version:
   }
 
   if (nf[i].version == -1) {
-    config.nfprobe_version = 5; 
+    config.nfprobe_version = 10; /* default to IPFIX */
     goto sort_version;
   }
   target.dialect = &nf[i];
@@ -1472,9 +1492,15 @@ sort_version:
     }
     target.fd = connsock(&dest, dest_len, hoplimit);
 	
-    if (target.fd != -1)
-      Log(LOG_INFO, "INFO ( %s/%s ): Exporting flows to [%s]:%s\n",
-		    config.name, config.type, dest_addr, dest_serv);
+    if (target.fd != -1) {
+      Log(LOG_INFO, "INFO ( %s/%s ): Exporting flows to [%s]:%s\n", config.name, config.type, dest_addr, dest_serv);
+
+#ifdef WITH_GNUTLS
+      if (config.nfprobe_dtls) {
+	target.dtls = malloc(sizeof(pm_dtls_peer_t));
+      }
+#endif
+    }
   }
 
   /* Main processing loop */
@@ -1538,8 +1564,31 @@ sort_version:
 
     /* Flags set by signal handlers or control socket */
     if (graceful_shutdown_request) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): Shutting down on user request.\n", config.name, config.type);
+#ifdef WITH_GNUTLS
+      if (config.nfprobe_dtls) {
+	pm_dtls_peer_t *dtls_peer = target.dtls;
+
+	if (dtls_peer->conn.do_reconnect && dtls_peer->conn.stage == PM_DTLS_STAGE_UP) {
+	  pm_dtls_client_bye(dtls_peer);
+	}
+
+	if (target.fd != ERR && dtls_peer->conn.stage != PM_DTLS_STAGE_UP) {
+	  pm_dtls_client_init(target.dtls, target.fd, &dest, dest_len, config.nfprobe_dtls_verify_cert);
+	}
+      }
+#endif
+
+      Log(LOG_INFO, "INFO ( %s/%s ): Shutting down on user request.\n", config.name, config.type);
       check_expired(&flowtrack, &target, CE_EXPIRE_ALL, engine_type, engine_id);
+
+#ifdef WITH_GNUTLS
+      if (config.nfprobe_dtls) {
+	pm_dtls_peer_t *dtls_peer = target.dtls;
+
+	pm_dtls_client_bye(dtls_peer);
+      }
+#endif
+
       goto exit_lane;
     }
 
@@ -1671,6 +1720,20 @@ handle_flow_expiration:
      */
     if (flowtrack.num_flows > max_flows || next_expire(&flowtrack) == 0) {
 expiry_check:
+#ifdef WITH_GNUTLS
+      if (config.nfprobe_dtls) {
+	pm_dtls_peer_t *dtls_peer = target.dtls;
+
+	if (dtls_peer->conn.do_reconnect && dtls_peer->conn.stage == PM_DTLS_STAGE_UP) {
+	  pm_dtls_client_bye(dtls_peer);
+	}
+
+	if (target.fd != ERR && dtls_peer->conn.stage != PM_DTLS_STAGE_UP) {
+          pm_dtls_client_init(target.dtls, target.fd, &dest, dest_len, config.nfprobe_dtls_verify_cert);
+	}
+      }
+#endif
+
       /*
        * If we are reading from a capture file, we never
        * expire flows based on time - instead we only 
@@ -1685,11 +1748,19 @@ expiry_check:
 	  sleep(5);
 	  target.fd = connsock(&dest, dest_len, hoplimit);
 
-	  if (target.fd != -1)
-	    Log(LOG_INFO, "INFO ( %s/%s ): Exporting flows to [%s]:%s\n",
-			config.name, config.type, dest_addr, dest_serv);
+	  if (target.fd != -1) {
+	    Log(LOG_INFO, "INFO ( %s/%s ): Exporting flows to [%s]:%s\n", config.name, config.type, dest_addr, dest_serv);
+	  }
 	}
       }
+
+#ifdef WITH_GNUTLS
+      if (config.nfprobe_dtls) {
+	pm_dtls_peer_t *dtls_peer = target.dtls;
+
+	pm_dtls_client_bye(dtls_peer);
+      }
+#endif
 	
       /*
        * If we are over max_flows, force-expire the oldest 

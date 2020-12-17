@@ -44,22 +44,28 @@ int bmp_tlv_get_pen(char **bmp_packet_ptr, u_int32_t *pkt_size, u_int16_t *len, 
 
   pen_ptr = bmp_get_and_check_length(bmp_packet_ptr, pkt_size, 4);
   if (pen_ptr) {
-    (*pen) = (u_int32_t)(*pen_ptr);
+    (*len) -= 4;
+    memcpy(pen, pen_ptr, 4);
     (*pen) = ntohl((*pen));
+
     return TRUE;
   }
 
   return FALSE;
 }
 
-char *bmp_tlv_type_print(u_int16_t idx, const char *prefix, const struct bmp_tlv_def *registry, int max_registry_entries)
+char *bmp_tlv_type_print(struct bmp_log_tlv *tlv, const char *prefix, const struct bmp_tlv_def *registry, int max_registry_entries)
 {
   char *out = NULL;
   int prefix_len, value_len;
+  u_int16_t idx;
 
+  if (!tlv) return out;
+
+  idx = tlv->type;
   prefix_len = strlen(prefix);
 
-  if (registry && max_registry_entries) {
+  if (registry && (max_registry_entries >= 0)) {
     if (idx <= max_registry_entries) {
       value_len = strlen(registry[idx].name);
       out = malloc(prefix_len + value_len + 1 /* sep */ + 1 /* null */);
@@ -69,8 +75,14 @@ char *bmp_tlv_type_print(u_int16_t idx, const char *prefix, const struct bmp_tlv
     }
   }
 
-  out = malloc(prefix_len + 5 /* value len */ + 1 /* sep */ + 1 /* null */);
-  sprintf(out, "%s_%u", prefix, idx);
+  if (!tlv->pen) {
+    out = malloc(prefix_len + 5 /* value len */ + 1 /* sep */ + 1 /* null */);
+    sprintf(out, "%s_%u", prefix, idx);
+  }
+  else {
+    out = malloc(prefix_len + 10 /* PEN */ + 5 /* value len */ + 2 /* seps */ + 1 /* null */);
+    sprintf(out, "%s_%u_%u", prefix, tlv->pen, idx);
+  }
 
   return out;
 }
@@ -80,25 +92,24 @@ char *bmp_tlv_value_print(struct bmp_log_tlv *tlv, const struct bmp_tlv_def *reg
   u_int16_t idx = tlv->type;
   char *value = NULL;
 
-  if (registry && max_registry_entries) {
-    if (idx <= max_registry_entries) {
-      switch (registry[idx].semantics) {
-      case BMP_TLV_SEM_STRING:
-	value = null_terminate(tlv->val, tlv->len);
-	break;
-      case BMP_TLV_SEM_UINT:
-	value = uint_print(tlv->val, tlv->len, TRUE);
-	break;
-      default:
-	value = malloc(tlv->len * 3); /* 2 bytes hex + 1 byte '-' separator + 1 byte null */
-	serialize_hex(tlv->val, (u_char *) value, tlv->len);
-	break;
+  if (tlv->len) {
+    if (registry && (max_registry_entries >= 0)) {
+      if (idx <= max_registry_entries) {
+	switch (registry[idx].semantics) {
+	case BMP_TLV_SEM_STRING:
+	  value = null_terminate(tlv->val, tlv->len);
+	  return value;
+	case BMP_TLV_SEM_UINT:
+	  value = uint_print(tlv->val, tlv->len, TRUE);
+	  return value;
+	default:
+	  break;
+	}
       }
     }
-    else {
-      value = malloc(tlv->len * 3); /* 2 bytes hex + 1 byte '-' separator + 1 byte null */
-      serialize_hex(tlv->val, (u_char *) value, tlv->len);
-    }
+
+    value = malloc(tlv->len * 3); /* 2 bytes hex + 1 byte '-' separator + 1 byte null */
+    serialize_hex(tlv->val, (u_char *) value, tlv->len);
   }
 
   return value;
@@ -121,7 +132,7 @@ int bmp_tlv_list_add(struct pm_list *tlvs, u_int32_t pen, u_int16_t type, u_int1
 {
   struct bmp_log_tlv *tlv;
 
-  if (!tlvs) return ERR;
+  if (!tlvs || (len && !val)) return ERR;
 
   tlv = malloc(sizeof(struct bmp_log_tlv));
   if (!tlv) return ERR;
@@ -133,10 +144,12 @@ int bmp_tlv_list_add(struct pm_list *tlvs, u_int32_t pen, u_int16_t type, u_int1
   tlv->len = len;
 
   if (len) {
-    if (!val) return ERR;
 
     tlv->val = malloc(len);
-    if (!tlv->val) return ERR;
+    if (!tlv->val) {
+      free(tlv);
+      return ERR;
+      };
 
     memcpy(tlv->val, val, len);
   }
@@ -160,6 +173,7 @@ void bmp_tlv_list_node_del(void *node)
 
     tlv->len = 0;
     tlv->val = NULL;
+    free(tlv);
   }
 }
 
@@ -181,6 +195,20 @@ struct pm_list *bmp_tlv_list_copy(struct pm_list *src)
   }
 
   return dst;
+}
+
+void *bmp_tlv_list_find(struct pm_list *tlvs, struct pm_listnode *next_node, u_int16_t type)
+{
+  struct pm_listnode *node = NULL;
+  struct bmp_log_tlv *tlv = NULL;
+
+  for (PM_ALL_LIST_ELEMENTS(tlvs, node, next_node, tlv)) {
+    if (tlv->type == type) {
+      return tlv;
+    }
+  }
+
+  return NULL;
 }
 
 void bmp_tlv_list_destroy(struct pm_list *tlvs)

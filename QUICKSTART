@@ -204,7 +204,7 @@ Jansson JSON parser version 2.3 or higher so please review the previous section
 "Compiling pmacct with JSON support"; then, to compile pmacct with Apache Avro
 support simply do:
 
-shell> ./configure --enable-avro
+shell> ./configure --enable-jansson --enable-avro
 
 However should you have installed libavro in the /usr/local/avro directory
 and pkg-config is unable to help, you can supply this non-default location as
@@ -212,7 +212,7 @@ follows (assuming you are running the bash shell):
 
 shell> export AVRO_LIBS="-L/usr/local/avro/lib -lavro"
 shell> export AVRO_CFLAGS="-I/usr/local/avro/include"
-shell> ./configure --enable-kafka --enable-avro
+shell> ./configure --enable-kafka --enable-jansson --enable-avro
 
 IIc. Compiling pmacct against a own libpcap library
 Compiling against a downloaded libpcap library may be wanted for several
@@ -224,16 +224,19 @@ Once libpcap is downloaded, if static linking is wanted (ideal for example
 for distributing pmacct without external dependencies), the library can be
 configured for comipiling:
 
-shell> ./configure --disable-shared
+shell> ./configure --disable-so
 
-pmacct should be pointed to the own libpcap library when configuring for
-compiling: 
+Which passes the compiler the '-static' knob. pmacct should be pointed to
+the own libpcap library when configuring for compiling:
 
 shell> ./configure --with-pcap-libs=/path/to/libpcap-x.y.z --with-pcap-includes=/path/to/libpcap-x.y.z
 
 Once pmacct is compiled, it can be confirmed that the right library was
 picked by doing, for example, a 'pmacctd -V' and seeing the version of
-libpcap matches with the supplied version.
+libpcap matches with the supplied version. It has to be noted however
+that static compiling on GNU systems can yeld variable success; the
+recommendation is to consider containers first (look into the 'docker/'
+directory). 
 
 A use-case for a PF_RING-enabled libpcap is that by hashing and balancing
 collected traffic over multiple NIC queues (ie. if using Intel X520) it
@@ -653,7 +656,46 @@ name=int_descr		field_type=83	len=64	semantics=str
 name=sampler_interval	field_type=50	len=4	semantics=u_int
 name=sampler_id		field_type=48	len=2	semantics=u_int
 
-Vb. Examples configuring NetFlow v9/IPFIX export
+Vb. Distributing NetFlow v9/IPFIX templates when clustering
+One of the possible ways to cluster multiple nfacctd daemons running on the same
+system (ie. to harness all [configured] CPU threads) is to rely on the Linux/BSD
+SO_REUSEPORT feature (read more in the "Miscellaneous notes and troubleshooting
+tips" section of this document).
+
+NetFlow v9/IPFIX protocols are template-based and templates are emitted in
+specific Options packets and are indeed needed in order to properly decode
+actual Data packets. Hence a load-balancing cluster (when not hashing but
+performing some sort of round-robin) does pose the problem of disseminating the
+templates across the clustered daemons. For this very purpose there are two
+config knobs: nfacctd_templates_receiver (to export received templates) and
+nfacctd_templates_port (to define a port to receive templates from the rest
+of the cluster). When multiple daemons are clustered a replicator (nfacctd with
+'tee' plugin configured is required). Here is an example of the configs needed:
+
+nfacctd clustered daemon config (other daemons in the same cluster would be
+listening on different nfacctd_templates_port ports, ie. 20002, 20003, etc.):
+
+!
+! [ .. existing config .. ]
+!
+nfacctd_templates_receiver: 127.0.0.1:10000
+nfacctd_templates_port: 20001
+
+The replicator piece needs two bits, a config and a tee_receivers file (in the
+example receivers.lst). Here is the config:
+
+nfacctd_port: 10000
+!
+plugins: tee[a]
+!
+tee_receivers[a]: /path/to/receivers.lst
+tee_transparent[a]: true 
+
+And here is the receivers.lst file:
+
+id=1   ip=127.0.0.1:20001,127.0.0.1:20002,127.0.0.1:20003,[..]
+
+Vc. Examples configuring NetFlow v9/IPFIX export
 
 Example to configure NetFlow v9 export on a Cisco running IOS/IOS-XE:
 
@@ -1069,16 +1111,19 @@ advertised.listeners=PLAINTEXT://172.16.2.1:9092
 listener.security.protocol.map=PLAINTEXT:PLAINTEXT,SSL:SSL,SASL_PLAINTEXT:SASL_PLAINTEXT,SASL_SSL:SASL_SSL
 
 2) When the amount of data published to Kafka is substantial, ie. in the order
-of thousands of entries per second, batching is needed in order to avoid every
-single entry originating a produce call to Kafka. Two strategies are being
-available: a) pmacct batching via the kafka_multi_values feature or b) librdkafka
-batching via, as per the lib documentation, "The two most important configuration
-properties for performance tuning [are]:
+of thousands of entries per second, batching (MessageSet) is needed in order to
+avoid every single object being produced singularly to Kafka brokers. Two
+strategies are available for this a) pmacct batching via the kafka_multi_values
+feature (legacy) or b) librdkafka batching (recommended) via, as per the lib
+documentation, "The two most important configuration properties for performance
+tuning [are]:
 
 * batch.num.messages : the minimum number of messages to wait for to accumulate
   in the local queue before sending off a message set.
 * queue.buffering.max.ms : how long to wait for batch.num.messages to fill up
-  in the local queue."
+  in the local queue.". Note: up until librdkafka 0.11, the default was kept
+  very low to favour low-latency. A sensible minimum value in high-throughput
+  scenarios is 50ms.
 
 Also, intuitively, queue.buffering.max.messages, the "Maximum number of messages
 allowed on the producer queue", should be kept greater than the batch.num.messages.
@@ -1087,6 +1132,7 @@ by kafka_config_file, as global settings, ie.:
  
 global, queue.buffering.max.messages, 8000000
 global, batch.num.messages, 100000
+global, queue.buffering.max.ms, 50
 
 3) Configuring statistics.interval.ms to a positive value in kafka_config_file
 will make librdkafka log plenty of internal metrics - as documented at the
@@ -1192,12 +1238,11 @@ steps:
 1) Download pmacct from its webpage (http://www.pmacct.net/) or from its GitHub
    repository (https://github.com/pmacct/pmacct).
 
-2) Download nDPI from its GitHub repository (https://github.com/ntop/nDPI).
-   pmacct code is currently tested working against:
-
-   * nDPI 2.4 (git clone -b 2.4-stable https://github.com/ntop/nDPI.git)
-   * nDPI 2.6 (git clone -b 2.6-stable https://github.com/ntop/nDPI.git)
-   * nDPI 2.8 (git clone -b 2.8-stable https://github.com/ntop/nDPI.git)
+2) Download nDPI from its GitHub repository (https://github.com/ntop/nDPI). The
+   nDPI API tends to change frequently in a non-backward compatible fashion.
+   This means that not every version of pmacct will work with any version of
+   nDPI. pmacct 1.7.5 works against nDPI 3.0-stable, pmacct 1.7.6 works against
+   nDPI 3.2-stable.  
 
 3) Configure for compiling, compile and install the downloaded nDPI library, ie.
    inside the nDPI directory:
@@ -1526,6 +1571,13 @@ Also, the daemon acts as a passive BGP neighbor and hence will never try to
 re-establish a fallen peering session. For debugging purposes related to the
 BGP feed(s), bgp_daemon_msglog_* configuration directives can be enabled in
 order to log BGP messaging.
+
+NOTE: especially when connecting large amounts of BGP peers, say hundreds or
+more, the almost synchronized attempt to connect from all of them may lead
+the kernel into a suspicion of TCP SYN Flood. While not recommending to
+disable TCP SYN flood protection, if slugginess is observed when taking up
+the BGP sessions and kernel logs indicate a possible SYN flooding, maybe it
+is good idea to tune and customize default kernel parameters.
 
 XIVa. Limiting AS-PATH and BGP community attributes length
 AS-PATH and BGP communities can get easily long when represented as strings.
@@ -1888,22 +1940,14 @@ collector (please get in touch if interested). An alternative to the use of
 pmbgpd is NAT/masquerading; in this context, pmbgpd brings the advantage of
 running fully in user-space.
 
-If supported and if enabled on the system, the SO_REUSEPORT feature can be
-leveraged on Linux: it allows multiple daemons to bind to the same local
-address and port in order to load-balance processing of incoming packets.
-SO_REUSEPORT can be used in alternative to BGP xconnects, ie. to simplify
-the deployment on a single node, or in conjunction with BGP xconnects, ie.
-for massive multi-node scale-out. 
+SO_REUSEPORT feature (read more about it in the section "Miscellaneous notes
+and troubleshooting tips" of this document) can be used in alternative to BGP
+xconnects, ie. to simplify the deployment on a single node, or in conjunction
+with BGP xconnects, ie. for massive multi-node scale-out.
 
 Leveraging SO_REUSEPORT, when used in alternative to BGP xconnects, may be
 best combined with a list of allowed IP addresses, ie. bgp_daemon_allow_file,
-to explicitely wire peers to collectors. Below a reference to a presentation
-of such feature:
-
-https://domsch.com/linux/lpc2010/Scaling_techniques_for_servers_with_high_connection%20rates.pdf
-
-To enable SO_REUSEPORT on a Linux system 'sysctl net.core.allow_reuseport=1'.
-Also the processes must be launched by the same user.
+to explicitely wire peers to collectors. 
 
 When SO_REUSEPORT is used in conjunction with BGP xconnects there is virtually
 no config change to make (except perhaps the sensible decision to use different
@@ -1950,6 +1994,12 @@ allow files the kernel will try to naively balance the sessions over the
 listening daemons; this may take a few connection attempts before wiring
 the session to the right daemon; having an excessive numbers of daemons
 in the pool may slow down the convergence process. 
+
+NOTE: each xconnect requires two file descriptors, one for the inbound
+TCP session, another for the outbound one. Popular default on Linux is
+1024 descriptor per process, effectively limiting the amunt of sessions
+that can be xconnected to approx 500. Such default can be adjusted via
+'ulimit -n'.
 
 For flow protocols, which are transported in UDP, a replication layer is
 needed in front, note the daemon listen on different nfacctd_port in the
@@ -2043,12 +2093,12 @@ and features see the CONFIG-KEYS document.
 XV. Quickstart guide to setup a NetFlow/IPFIX/sFlow replicator
 The 'tee' plugin is meant to replicate NetFlow/sFlow data to remote collectors.
 The plugin can act transparently, by preserving the original IP address of the
-datagrams, or as a proxy. Basic configuration of up a replicator is very easy:
-all is needed is where to listen to for incoming packets, where to replicate
-them to and optionally a filtering layer, if required. Filtering bases on the
-standard pre_tag_map infrastructure; here is presented only coarse-grained
-filtering against the NetFlow/sFlow source IP address (see next section for
-finer-grained filtering). 
+datagrams, or as a proxy. The basic configuration of a replicator is very easy:
+all is needed is to define where to listen to for incoming packets, where to
+replicate them to and optionally a filtering layer, if required. Filtering
+bases on the standard pre_tag_map infrastructure; here will be presented only
+coarse-grained filtering against the NetFlow/sFlow source IP address (see next
+section for finer-grained filtering).
 
 nfacctd_port: 2100
 nfacctd_ip: X.X.X.X
@@ -2070,6 +2120,7 @@ for that pool):
 
 id=1	ip=W.W.W.W:2100
 id=2	ip=Y.Y.Y.Y:2100,Z.Z.Z.Z:2100
+id=3	ip=[::1]:2100
 ! id=1	ip=W.W.W.W:2100			tag=0
 ! id=2	ip=Y.Y.Y.Y:2100,Z.Z.Z.Z:2100	tag=100
 
@@ -2514,7 +2565,7 @@ print_output: csv
 print_output_file: /path/to/file-%Y%m%d-%H%M.txt
 print_history_roundoff: m
  
-Which, over time, would produce a would produce a series of files as follows:
+Which, over time, would produce a series of files as follows:
 
 -rw-------  1 paolo paolo   2067 Nov 21 00:15 blabla-20111121-0000.txt
 -rw-------  1 paolo paolo   2772 Nov 21 00:30 blabla-20111121-0015.txt
@@ -2841,6 +2892,21 @@ Optionally, especially if the issue can be easily reproduced, the daemon can
 be re-configured for compiling with the --enable-debug flag so to produce
 extra info suitable for troubleshooting. 
 
+There is a whole range of cases where the crash could be caused by corrupting
+the heap and these are evidenced when a 'bt' in gdb highlights a malloc() call
+as point of crash; while these issues often times boil down to erroneous coding,
+they are subtle, hard to reproduce and platform / OS dependant. When facing
+such issues, launching the daemon with the MALLOC_CHECK_ environment variable
+set to 2, ie.:
+
+shell> MALLOC_CHECK_=2
+shell> export MALLOC_CHECK_
+
+Would return additional useful information for the troubleshooting process. At
+times this action - that elicits the use of an alternate malloc() call - may
+even work as a work-around (if falling in this condition it is recommended to
+not use this 'mask' as long-term solution, that is, please report the issue).
+
 c) In case of (suspected) memory leaks, the advice is to: 1) re-compile pmacct
 with "./configure --enable-debug <other flags already in use>"; --enable-debug
 sets as CFLAGS -O0 -g -Wall where especially -O0 is capital since it disables
@@ -2924,22 +2990,20 @@ from tcprewrite can be supplied to tcpreplay for the actual replay to the
 pmacct daemon, ie.: "tcpreplay -x <speed multiplicator> -i <output interface>
 <input file>". 
 
-g) Buffering is often an element to tune. While buffering internal to pmacct, 
-configured with plugin_buffer_size and plugin_pipe_size, returns warning
-messages in case of data loss and brings solid queueing alterantives like
-ZeroMQ (plugin_pipe_zmq), buffering between pmacct and the kernel, configured
-with nfacctd_pipe_size and its equivalents, is more tricky and issues with it
-can only be inferred by symptoms like sequence number checks failing (and
-only for protocols like NetFlow v9/IPFIX supporting this feature). Two
-commands useful to check this kind of buffering on Linux systems are:
+g) Buffering is often an element to tune. While buffering internal to pmacct
+(configured with plugin_buffer_size / plugin_pipe_size or plugin_pipe_zmq)
+returns warning messages in case of data loss, buffering between pmacct and
+the kernel (configured with nfacctd_pipe_size and its equivalents) may be more
+tricky to detect and sometimes issues can only be inferred by symptoms (like
+sequence number checks for NetFlow v9/IPFIX). For nfacctd and sfacctd daemons,
+two commands useful to check this kind of buffering on Linux systems are:
 1) "cat /proc/net/udp" or "cat /proc/net/udp6" ensuring that "drops" value
 is not increasing and 2) "netstat -s" ensuring, under the section UDP, that
 errors are not increasing (since this command returns system-wide counters,
 the counter-check would be: stop the pmacct daemon running and, granted the
-counter was increasing, verify it does not increase anymore). As suggested
-in CONFIG-KEYS description for the nfacctd_pipe_size configuration directive,
-any lift in the buffering must be also supported by the kernel, adjusting
-/proc/sys/net/core/rmem_max.
+counter was increasing, verify it does not increase anymore). For pmacctd,
+an UNIX signal can be sent to the daemon so that the amount of dropped packets
+is reported in the log output (ie. kill -USR1 <pmacctd core PID>).
 
 h) BMP, the BGP Monitoring Protocol, has got drafting traction at IETF. New
 protocol features drive the need for inter-op testing. The BMP play tool
@@ -2975,3 +3039,14 @@ possible similar); 4) excluded from these guidelines are problems related to
 nDPI but unrelated to classification, ie. memory leaks, performance issues,
 crashes, etc. for which you can follow the other guide lines in this document
 in the "Miscellaneous notes and troubleshooting tips" section.
+
+j) if supported and if enabled on the system, the SO_REUSEPORT feature can be
+leveraged on Linux and most BSDs where it is part of the standard kernel: it
+allows multiple daemons to bind to the same local address and port in order
+to load-balance processing of incoming packets. Here a reference to a
+presentation of this feature for Linux:
+
+https://domsch.com/linux/lpc2010/Scaling_techniques_for_servers_with_high_connection%20rates.pdf
+
+To enable SO_REUSEPORT on a Linux system 'sysctl net.core.allow_reuseport=1'.
+Also the processes must be launched by the same user.

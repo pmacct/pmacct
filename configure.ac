@@ -1,12 +1,16 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl configuration file for pmacct 
 
-AC_INIT([pmacct], [1.7.6-git], [paolo@pmacct.net])
+m4_include([VERSION]) #Force reconf on VERSION change
+AC_INIT([pmacct], m4_esyscmd_s(cat VERSION), [paolo@pmacct.net])
 AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_MACRO_DIR([m4])
 LT_INIT
 AC_PREFIX_DEFAULT([/usr/local])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES(yes)])
+
+PMACCT_VERSION=`cat $srcdir/VERSION`
+AC_SUBST(PMACCT_VERSION)
 
 COMPILE_ARGS="${ac_configure_args}"
 
@@ -106,33 +110,6 @@ AC_MSG_CHECKING(for __progname)
 AC_TRY_LINK([ extern char *__progname; ], 
 [ __progname = "test"; ],
 [AC_MSG_RESULT(yes); AC_DEFINE(PROGNAME, 1)], [AC_MSG_RESULT(no)])
-
-dnl
-dnl Some checks to understand whether we need to instruct the linker for
-dnl exporting collector symbols to dynamically loaded classifiers. 
-dnl
-dnl OS'es with ELF executables using the GNU linker (Linux and recent *BSD,
-dnl in rare cases Solaris) typically need '-Wl,-export-dynamic'; some SYSv4
-dnl systems instead need '-Wl,-Bexport'; AIX 4.x wants -Wl,-bexpall,-brtl'.
-dnl
-      
-AC_MSG_CHECKING(for extra flags needed to export symbols)
-if test "x$ac_cv_prog_gcc" = xyes ; then
-	save_ldflags="${LDFLAGS}"
-	LDFLAGS="-Wl,--export-dynamic ${save_ldflags}"
-	AC_TRY_LINK(,,
-		[ AC_MSG_RESULT(--export-dynamic) ],
-		[ LDFLAGS="-Wl,-Bexport ${save_ldflags}"
-		  AC_TRY_LINK(,,
-			[ AC_MSG_RESULT(-Bexport) ],
-		  	[ AC_MSG_RESULT(none)
-		    	  LDFLAGS="${save_ldflags}" ]
-		  )
-		]
-	)
-else
-	AC_MSG_RESULT(none)
-fi
 
 dnl
 dnl some C compilers (ex. MipsPRO) don't know how to parse the 'inline' keyword
@@ -264,21 +241,6 @@ AC_CHECK_FUNCS(inet_ntop)
 if test x"$ac_cv_func_inet_ntop" = x"no"; then
 	AC_MSG_ERROR(ERROR: missing inet_ntop())
 fi
-
-AC_MSG_CHECKING([whether to enable IP prefix labels])
-AC_ARG_ENABLE(plabel,
-  [  --enable-plabel                  Enable IP prefix labels (default: no)],
-  [
-	if test x$enableval = x"yes" ; then
-          AC_MSG_RESULT(yes)
-          AC_DEFINE(ENABLE_PLABEL, 1)
-	else
-          AC_MSG_RESULT(no)
-	fi
-  ],
-  [
-	AC_MSG_RESULT(no)
-  ])
 
 AC_ARG_WITH(pcap-includes,
   [  --with-pcap-includes=DIR         Search the specified directory for header files],
@@ -748,6 +710,38 @@ AC_ARG_ENABLE(redis,
 )
 dnl finish: Redis handling
 
+dnl start: GnuTLS handling
+AC_MSG_CHECKING(whether to enable GnuTLS support)
+AC_ARG_ENABLE(gnutls,
+  [  --enable-gnutls                  Enable GnuTLS support (default: no)],
+  [ case "$enableval" in
+  yes)
+    AC_MSG_RESULT(yes)
+    PKG_CHECK_MODULES([GNUTLS], [gnutls >= 3.6], [
+      SUPPORTS="${SUPPORTS} gnutls"
+      USING_GNUTLS="yes"
+      PMACCT_CFLAGS="$PMACCT_CFLAGS $GNUTLS_CFLAGS"
+      AC_DEFINE(WITH_GNUTLS, 1)
+      _save_LIBS="$LIBS"
+      LIBS="$LIBS $GNUTLS_LIBS"
+      AC_CHECK_LIB([gnutls], [gnutls_global_init])
+      LIBS="$_save_LIBS"
+      _save_CFLAGS="$CFLAGS"
+      CFLAGS="$CFLAGS $GNUTLS_CFLAGS"
+      AC_CHECK_HEADER([gnutls/gnutls.h])
+      CFLAGS="$_save_CFLAGS"
+    ])
+    ;;
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  esac ],
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
+dnl finish: GnuTLS handling
+
 dnl start: geoip handling
 AC_MSG_CHECKING(whether to enable GeoIP support)
 AC_ARG_ENABLE(geoip,
@@ -1115,6 +1109,52 @@ AC_CHECK_DECL([SO_REUSEPORT],
 		]
 )
 
+dnl --------------------------------------
+dnl Git submodule Dependencies buid system
+dnl --------------------------------------
+
+dnl First check whether to build git submodule deps
+WITH_EXTERNAL_DEPS_DEFAULT=yes
+if test -z `git rev-parse HEAD 2> /dev/null`; then
+	WITH_EXTERNAL_DEPS_DEFAULT=no
+fi
+
+AC_MSG_CHECKING([whether external dependencies (git submodules) should be compiled])
+AC_ARG_WITH(external-deps,
+		AS_HELP_STRING([--without-external-deps], ["Don't build external dependencies (git submodules). Specially useful for package maintainers [default=with]"]),
+			[WITH_EXTERNAL_DEPS="$withval"],
+			[WITH_EXTERNAL_DEPS="$WITH_EXTERNAL_DEPS_DEFAULT"]
+			)
+if test x"$WITH_EXTERNAL_DEPS" = x"yes"; then
+	dnl Compiled-in dependencies
+	INCLUDES="-I${ac_pwd}/src/external_libs/rootfs/include ${INCLUDES} "
+	LDFLAGS="-L${ac_pwd}/src/external_libs/rootfs/lib ${LDFLAGS}"
+	AC_MSG_RESULT(yes)
+else
+	AC_MSG_RESULT(no)
+fi
+
+AM_CONDITIONAL([WITH_EXTERNAL_DEPS], [test "x$WITH_EXTERNAL_DEPS" = "xyes"])
+AS_CASE(["$AM_DEFAULT_VERBOSITY"],
+  [0], [AC_SUBST([configure_silent_rules_val], [--enable-silent-rules])],
+  [1], [AC_SUBST([configure_silent_rules_val], [--disable-silent-rules])],
+  [AC_SUBST([configure_silent_rules_val], [--enable-silent-rules])])
+
+dnl --------------------------------------
+
+dnl libcdada requires C++ (and needs to add libstdc++ to LDFLAGS
+AC_PROG_CXX
+AC_MSG_CHECKING([for a valid C++ compiler])
+AC_LANG_PUSH([C++])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[])],[AC_MSG_RESULT(yes)],[AC_MSG_ERROR([No C++ compiler found])])
+AC_LANG_POP([C++])
+
+LIBS="-lcdada -lstdc++ ${LIBS}"
+AS_CASE(["$WITH_EXTERNAL_DEPS"],
+  [yes], [],
+  [no], [AC_CHECK_LIB([cdada], [cdada_get_ver], [], [AC_MSG_ERROR([Could not find libcdada])])],
+  [])
+
 dnl set debug level
 AC_MSG_CHECKING([whether to enable debugging compiler options])
 AC_ARG_ENABLE(debug,
@@ -1134,6 +1174,9 @@ AC_ARG_ENABLE(debug,
 		AC_MSG_RESULT(no)
 	]
 )
+
+dnl Necessary for autogenerated build string
+INCLUDES="${INCLUDES} -I$(pwd)/src"
 
 dnl final checks
 dnl trivial solution to portability issue 
@@ -1174,18 +1217,26 @@ AM_CONDITIONAL([WITH_RABBITMQ], [test x"$USING_RABBITMQ" = x"yes"])
 AM_CONDITIONAL([WITH_ZMQ], [test x"$USING_ZMQ" = x"yes"])
 AM_CONDITIONAL([WITH_KAFKA], [test x"$USING_KAFKA" = x"yes"])
 AM_CONDITIONAL([WITH_REDIS], [test x"$USING_REDIS" = x"yes"])
+AM_CONDITIONAL([WITH_GNUTLS], [test x"$USING_GNUTLS" = x"yes"])
 AM_CONDITIONAL([USING_SQL], [test x"$USING_SQL" = x"yes"])
 AM_CONDITIONAL([WITH_JANSSON], [test x"$USING_JANSSON" = x"yes"])
 AM_CONDITIONAL([WITH_AVRO], [test x"$USING_AVRO" = x"yes"])
 AM_CONDITIONAL([WITH_SERDES], [test x"$USING_SERDES" = x"yes"])
 AM_CONDITIONAL([WITH_NDPI], [test x"$USING_NDPI" = x"yes"])
 AM_CONDITIONAL([WITH_NFLOG], [test x"$USING_NFLOG" = x"yes"])
+AM_CONDITIONAL([WITH_DLOPEN], [test x"$USING_DLOPEN" = x"yes"])
 AM_CONDITIONAL([USING_TRAFFIC_BINS], [test x"$USING_TRAFFIC_BINS" = x"yes"])
 AM_CONDITIONAL([USING_BGP_BINS], [test x"$USING_BGP_BINS" = x"yes"])
 AM_CONDITIONAL([USING_BMP_BINS], [test x"$USING_BMP_BINS" = x"yes"])
 AM_CONDITIONAL([USING_ST_BINS], [test x"$USING_ST_BINS" = x"yes"])
+
+AC_CONFIG_FILES([
+	    src/pmacct-version.h
+])
+
 AC_OUTPUT([ Makefile \
-	    src/Makefile src/nfprobe_plugin/Makefile \
+	    src/Makefile src/external_libs/Makefile \
+	    src/nfprobe_plugin/Makefile \
 	    src/sfprobe_plugin/Makefile src/bgp/Makefile \
 	    src/tee_plugin/Makefile src/isis/Makefile \
 	    src/bmp/Makefile src/rpki/Makefile \

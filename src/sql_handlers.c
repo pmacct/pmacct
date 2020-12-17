@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -528,6 +528,34 @@ void count_timestamp_arrival_residual_handler(const struct db_cache *cache_elem,
   *ptr_values += strlen(*ptr_values);
 }
 
+void PG_copy_count_timestamp_export_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  static char time_str[VERYSHORTBUFLEN];
+
+  pm_strftime(time_str, VERYSHORTBUFLEN, "%Y-%m-%d %H:%M:%S", &cache_elem->pnat->timestamp_export.tv_sec, config.timestamps_utc);
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pnat->timestamp_export.tv_sec); // dummy
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, time_str);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_timestamp_export_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pnat->timestamp_export.tv_sec);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pnat->timestamp_export.tv_sec);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_timestamp_export_residual_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pnat->timestamp_export.tv_usec);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pnat->timestamp_export.tv_usec);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
 void PG_copy_count_timestamp_min_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
   static char time_str[VERYSHORTBUFLEN];
@@ -839,7 +867,7 @@ void count_peer_dst_ip_handler(const struct db_cache *cache_elem, struct insert_
 {
   char ptr[INET6_ADDRSTRLEN], *indirect_ptr = ptr;
 
-  addr_to_str(ptr, &cache_elem->pbgp->peer_dst_ip);
+  addr_to_str2(ptr, &cache_elem->pbgp->peer_dst_ip, ft2af(cache_elem->flow_type));
   if (!strlen(ptr)) indirect_ptr = (char *) fake_host;
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, indirect_ptr);
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, indirect_ptr);
@@ -1127,7 +1155,7 @@ void count_peer_dst_ip_aton_handler(const struct db_cache *cache_elem, struct in
   char aton_v6[] = "INET6_ATON", aton_null[] = " ", *aton = aton_null;
   char ptr[INET6_ADDRSTRLEN];
 
-  addr_to_str(ptr, &cache_elem->pbgp->peer_dst_ip);
+  addr_to_str2(ptr, &cache_elem->pbgp->peer_dst_ip, ft2af(cache_elem->flow_type));
   aton = aton_v6;
 
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, aton, ptr);

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -27,7 +27,7 @@
 /* defines */
 
 /* prototypes */
-extern u_int32_t bmp_process_packet(char *, u_int32_t, struct bmp_peer *);
+extern u_int32_t bmp_process_packet(char *, u_int32_t, struct bmp_peer *, int *);
 extern void bmp_process_msg_init(char **, u_int32_t *, struct bmp_peer *);
 extern void bmp_process_msg_term(char **, u_int32_t *, struct bmp_peer *);
 extern void bmp_process_msg_peer_up(char **, u_int32_t *, struct bmp_peer *);

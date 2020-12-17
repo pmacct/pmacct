@@ -8,6 +8,8 @@
 !
 ! 'bgp_ip'		SET: IPv4/IPv6 session address or Router ID of the
 !			BGP peer.
+! 'bmp_ip'		An alias for 'bgp_ip' for mapping agents to the IPv4/
+!			IPv6 session address of BMP peers.
 ! 'bgp_port'		SET: TCP port used by the BGP peer to establish the
 !			session, useful in NAT traversal scenarios. 
 ! 'ip'                  MATCH: in nfacctd this is compared against the source

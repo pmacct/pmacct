@@ -129,6 +129,11 @@ int main(int argc,char **argv, char **envp)
   struct ip_mreq multi_req4;
   int templates_sock = 0;
 
+#ifdef WITH_GNUTLS
+  struct sockaddr_storage server_dtls;
+  int dtls_sock = 0;
+#endif 
+
   int pm_pcap_savefile_round = 0;
 
   unsigned char dummy_packet[64]; 
@@ -196,8 +201,6 @@ int main(int argc,char **argv, char **envp)
 
   data_plugins = 0;
   tee_plugins = 0;
-  xflow_status_table_entries = 0;
-  xflow_tot_bad_datagrams = 0;
   errflag = 0;
 
   memset(cfg_cmdline, 0, sizeof(cfg_cmdline));
@@ -220,8 +223,14 @@ int main(int argc,char **argv, char **envp)
   memset(&bitr_table, 0, sizeof(bitr_table));
   memset(&sampling_table, 0, sizeof(sampling_table));
   memset(&reload_map_tstamp, 0, sizeof(reload_map_tstamp));
+
+#ifdef WITH_GNUTLS
+  memset(&dtls_status_table, 0, sizeof(dtls_status_table));
+#endif
+
   log_notifications_init(&log_notifications);
   config.acct_type = ACCT_NF;
+  config.progname = nfacctd_globstr;
 
   rows = 0;
   memset(&device, 0, sizeof(device));
@@ -403,6 +412,7 @@ int main(int argc,char **argv, char **envp)
   list = plugins_list;
   while (list) {
     list->cfg.acct_type = ACCT_NF;
+    list->cfg.progname = nfacctd_globstr;
     set_default_preferences(&list->cfg);
     if (!strcmp(list->type.string, "core")) { 
       memcpy(&config, &list->cfg, sizeof(struct configuration)); 
@@ -415,6 +425,7 @@ int main(int argc,char **argv, char **envp)
   if (config.files_umask) umask(config.files_umask);
 
   initsetproctitle(argc, argv, envp);
+
   if (config.syslog) {
     logf = parse_log_facility(config.syslog);
     if (logf == ERR) {
@@ -497,7 +508,8 @@ int main(int argc,char **argv, char **envp)
 
 	if (list->cfg.what_to_count_2 & (COUNT_POST_NAT_SRC_HOST|COUNT_POST_NAT_DST_HOST|
 			COUNT_POST_NAT_SRC_PORT|COUNT_POST_NAT_DST_PORT|COUNT_NAT_EVENT|
-			COUNT_TIMESTAMP_START|COUNT_TIMESTAMP_END|COUNT_TIMESTAMP_ARRIVAL))
+			COUNT_TIMESTAMP_START|COUNT_TIMESTAMP_END|COUNT_TIMESTAMP_ARRIVAL|
+			COUNT_EXPORT_PROTO_TIME))
 	  list->cfg.data_type |= PIPE_TYPE_NAT;
 
 	if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_TOP|COUNT_MPLS_LABEL_BOTTOM|
@@ -653,6 +665,17 @@ int main(int argc,char **argv, char **envp)
   sighandler_action.sa_handler = PM_sigalrm_noop_handler;
   sigaction(SIGALRM, &sighandler_action, NULL);
 
+#ifdef WITH_GNUTLS
+  if (config.nfacctd_dtls_port && !config.dtls_path) {
+    Log(LOG_ERR, "ERROR ( %s/core ): 'nfacctd_dtls_port' specified but missing 'dtls_path'. Exiting.\n", config.name);
+    exit_gracefully(1);
+  }
+
+  if (config.dtls_path) {
+    pm_dtls_init(&config.dtls_globs, config.dtls_path);
+  }
+#endif
+
   if (config.pcap_savefile) {
     open_pcap_savefile(&device, config.pcap_savefile);
     pm_pcap_savefile_round = 1;
@@ -696,6 +719,15 @@ int main(int argc,char **argv, char **envp)
 	sa6->sin6_family = AF_INET6;
 	sa6->sin6_port = htons(config.nfacctd_templates_port);
       }
+
+#ifdef WITH_GNUTLS
+      if (config.nfacctd_dtls_port) {
+	sa6 = (struct sockaddr_in6 *)&server_dtls; 
+
+	sa6->sin6_family = AF_INET6;
+	sa6->sin6_port = htons(config.nfacctd_dtls_port);
+      }
+#endif
     }
     else {
       trim_spaces(config.nfacctd_ip);
@@ -709,6 +741,12 @@ int main(int argc,char **argv, char **envp)
       if (config.nfacctd_templates_port) {
         addr_to_sa((struct sockaddr *)&server_templates, &addr, config.nfacctd_templates_port);
       }
+
+#ifdef WITH_GNUTLS
+      if (config.nfacctd_dtls_port) {
+        addr_to_sa((struct sockaddr *)&server_dtls, &addr, config.nfacctd_dtls_port);
+      }
+#endif
     }
 
     /* socket creation */
@@ -748,14 +786,52 @@ int main(int argc,char **argv, char **envp)
 	}
 
 	if (config.nfacctd_templates_sock < 0) {
-	  Log(LOG_ERR, "ERROR ( %s/core ): socket() failed.\n", config.name);
+	  Log(LOG_ERR, "ERROR ( %s/core ): TPLS socket() failed.\n", config.name);
 	  exit_gracefully(1);
 	}
       }
+    }
 
+#ifdef WITH_GNUTLS
+    if (config.nfacctd_dtls_port) {
+      config.nfacctd_dtls_sock = socket(((struct sockaddr *)&server_dtls)->sa_family, SOCK_DGRAM, 0);
+      if (config.nfacctd_dtls_sock < 0) {
+	/* retry with IPv4 */
+	if (!config.nfacctd_ip) {
+	  struct sockaddr_in *sa4 = (struct sockaddr_in *)&server_dtls;
+
+	  sa4->sin_family = AF_INET;
+	  sa4->sin_addr.s_addr = htonl(0);
+	  sa4->sin_port = htons(config.nfacctd_dtls_port);
+	  slen = sizeof(struct sockaddr_in);
+
+	  config.nfacctd_dtls_sock = socket(((struct sockaddr *)&server_dtls)->sa_family, SOCK_DGRAM, 0);
+	}
+
+	if (config.nfacctd_dtls_sock < 0) {
+	  Log(LOG_ERR, "ERROR ( %s/core ): DTLS socket() failed.\n", config.name);
+	  exit_gracefully(1);
+	}
+      }
+    }
+#endif
+
+    if (config.nfacctd_templates_port || config.nfacctd_dtls_port) {
       FD_SET(config.sock, &bkp_read_descs);
-      FD_SET(config.nfacctd_templates_sock, &bkp_read_descs);
-      bkp_select_fd = (config.sock < config.nfacctd_templates_sock) ? config.nfacctd_templates_sock : config.sock;
+      bkp_select_fd = config.sock;
+
+      if (config.nfacctd_templates_sock) {
+        FD_SET(config.nfacctd_templates_sock, &bkp_read_descs);
+        bkp_select_fd = (bkp_select_fd < config.nfacctd_templates_sock) ? config.nfacctd_templates_sock : bkp_select_fd;
+      }
+
+#ifdef WITH_GNUTLS
+      if (config.nfacctd_dtls_sock) {
+        FD_SET(config.nfacctd_dtls_sock, &bkp_read_descs);
+        bkp_select_fd = (bkp_select_fd < config.nfacctd_dtls_sock) ? config.nfacctd_dtls_sock : bkp_select_fd;
+      }
+#endif
+
       bkp_select_fd++;
     }
 
@@ -768,6 +844,13 @@ int main(int argc,char **argv, char **envp)
       rc = setsockopt(config.nfacctd_templates_sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *) &yes, (socklen_t) sizeof(yes));
       if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR|SO_REUSEPORT.\n", config.name);
     }
+
+#ifdef WITH_GNUTLS
+    if (config.nfacctd_dtls_port) {
+      rc = setsockopt(config.nfacctd_dtls_sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *) &yes, (socklen_t) sizeof(yes));
+      if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR|SO_REUSEPORT.\n", config.name);
+    }
+#endif
 #else
     rc = setsockopt(config.sock, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, (socklen_t) sizeof(yes));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR.\n", config.name);
@@ -776,6 +859,13 @@ int main(int argc,char **argv, char **envp)
       rc = setsockopt(config.nfacctd_templates_sock, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, (socklen_t) sizeof(yes));
       if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR.\n", config.name);
     }
+
+#ifdef WITH_GNUTLS
+    if (config.nfacctd_dtls_port) {
+      rc = setsockopt(config.nfacctd_dtls_sock, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, (socklen_t) sizeof(yes));
+      if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR.\n", config.name);
+    }
+#endif
 #endif
 
 #if (defined IPV6_BINDV6ONLY)
@@ -951,6 +1041,12 @@ int main(int argc,char **argv, char **envp)
 
     req.bpf_filter = TRUE;
 
+    if (config.bgp_daemon_to_xflow_agent_map) {
+      load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.bgp_daemon_to_xflow_agent_map, &bta_table, &req, &bta_map_allocated);
+      pptrs.v4.bta_table = (u_char *) &bta_table;
+    }
+    else pptrs.v4.bta_table = NULL;
+
     bmp_daemon_wrapper();
 
     /* Let's give the BMP thread some advantage to create its structures */
@@ -992,6 +1088,16 @@ int main(int argc,char **argv, char **envp)
 	exit_gracefully(1);
       }
     }
+
+#ifdef WITH_GNUTLS
+    if (config.nfacctd_dtls_port) {
+      rc = bind(config.nfacctd_dtls_sock, (struct sockaddr *) &server_dtls, slen);
+      if (rc < 0) {
+        Log(LOG_ERR, "ERROR ( %s/core ): bind() to ip=%s port=%d/udp failed (errno: %d).\n", config.name, config.nfacctd_ip, config.nfacctd_dtls_port, errno);
+        exit_gracefully(1);
+      }
+    }
+#endif
   }
 
   init_classifiers(NULL);
@@ -1189,6 +1295,14 @@ int main(int argc,char **argv, char **envp)
       addr_to_str(srv_string, &srv_addr);
       Log(LOG_INFO, "INFO ( %s/core ): waiting for NetFlow/IPFIX templates on %s:%u\n", config.name, srv_string, srv_port);
     }
+
+#if WITH_GNUTLS
+    if (config.nfacctd_dtls_port) {
+      sa_to_addr((struct sockaddr *)&server_dtls, &srv_addr, &srv_port); 
+      addr_to_str(srv_string, &srv_addr);
+      Log(LOG_INFO, "INFO ( %s/core ): waiting for DTLS NetFlow/IPFIX on %s:%u\n", config.name, srv_string, srv_port);
+    }
+#endif
   }
 
 #ifdef WITH_REDIS
@@ -1276,7 +1390,7 @@ int main(int argc,char **argv, char **envp)
     }
 #endif
     else {
-      if (!config.nfacctd_templates_port) {
+      if (!config.nfacctd_templates_port && !config.nfacctd_dtls_port) {
         ret = recvfrom(config.sock, (unsigned char *)netflow_packet, NETFLOW_MSG_SIZE, 0, (struct sockaddr *) &client, &clen);
       }
       else {
@@ -1294,6 +1408,9 @@ int main(int argc,char **argv, char **envp)
 	    num_descs--;
 
 	    templates_sock = FALSE;
+#ifdef WITH_GNUTLS
+	    dtls_sock = FALSE;
+#endif
 	    collector_port = config.nfacctd_port;
 	  }
 	  else if (FD_ISSET(config.nfacctd_templates_sock, &read_descs)) {
@@ -1302,8 +1419,23 @@ int main(int argc,char **argv, char **envp)
 	    num_descs--;
 
 	    templates_sock = TRUE;
+#ifdef WITH_GNUTLS
+	    dtls_sock = FALSE;
+#endif
 	    collector_port = config.nfacctd_templates_port;
 	  }
+#ifdef WITH_GNUTLS
+	  else if (FD_ISSET(config.nfacctd_dtls_sock, &read_descs)) {
+	    /* Peek only here since gnutls wants to consume on its own */
+	    ret = recvfrom(config.nfacctd_dtls_sock, (unsigned char *)netflow_packet, NETFLOW_MSG_SIZE, MSG_PEEK, (struct sockaddr *) &client, &clen);
+	    FD_CLR(config.nfacctd_dtls_sock, &read_descs);
+	    num_descs--;
+
+	    templates_sock = FALSE;
+	    dtls_sock = TRUE;
+	    collector_port = config.nfacctd_dtls_port;
+	  }
+#endif
 	}
 	else goto select_func_again;
       }
@@ -1355,9 +1487,19 @@ int main(int argc,char **argv, char **envp)
     if (print_stats) {
       time_t now = time(NULL);
 
-      print_status_table(now, XFLOW_STATUS_TABLE_SZ);
+      print_status_table(&xflow_status_table, now, XFLOW_STATUS_TABLE_SZ);
       print_stats = FALSE;
     }
+
+#ifdef WITH_GNUTLS
+    if (dtls_sock) {
+      ret = pm_dtls_server_process(config.nfacctd_dtls_sock, &client, clen, netflow_packet, ret, &dtls_status_table);
+
+      if (!ret) {
+	continue;
+      }
+    }
+#endif
 
     if (data_plugins) {
       int has_templates = 0;
@@ -1405,7 +1547,7 @@ int main(int argc,char **argv, char **envp)
       default:
         if (!config.nfacctd_disable_checks) {
 	  notify_malf_packet(LOG_INFO, "INFO", "discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent, 0);
-	  xflow_tot_bad_datagrams++;
+	  xflow_status_table.tot_bad_datagrams++;
         }
 	break;
       }
@@ -1436,7 +1578,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
 
   if (len < NfHdrV5Sz) {
     notify_malf_packet(LOG_INFO, "INFO", "discarding short NetFlow v5 packet", (struct sockaddr *) pptrs->f_agent, 0);
-    xflow_tot_bad_datagrams++;
+    xflow_status_table.tot_bad_datagrams++;
     return;
   }
   pptrs->f_header = pkt;
@@ -1446,7 +1588,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   pptrs->f_status_g = NULL;
 
   reset_mac(pptrs);
-  pptrs->flow_type = NF9_FTYPE_TRAFFIC;
+  pptrs->flow_type = PM_FTYPE_TRAFFIC;
 
   if (tee_dissect) {
     tee_dissect->hdrVersion = version;
@@ -1521,7 +1663,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   }
   else {
     notify_malf_packet(LOG_INFO, "INFO", "discarding malformed NetFlow v5 packet", (struct sockaddr *) pptrs->f_agent, 0);
-    xflow_tot_bad_datagrams++;
+    xflow_status_table.tot_bad_datagrams++;
     return;
   }
 } 
@@ -1580,7 +1722,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
   if (len < HdrSz) {
     notify_malf_packet(LOG_INFO, "INFO", "discarding short NetFlow v9/IPFIX packet", (struct sockaddr *) pptrsv->v4.f_agent, 0);
-    xflow_tot_bad_datagrams++;
+    xflow_status_table.tot_bad_datagrams++;
     return;
   }
   pptrs->f_header = pkt;
@@ -1595,7 +1737,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   if (off+NfDataHdrV9Sz >= len) { 
     notify_malf_packet(LOG_INFO, "INFO", "unable to read next Flowset (incomplete NetFlow v9/IPFIX packet)",
 			(struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
-    xflow_tot_bad_datagrams++;
+    xflow_status_table.tot_bad_datagrams++;
     return;
   }
 
@@ -1604,7 +1746,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   if (data_hdr->flow_len == 0) {
     notify_malf_packet(LOG_INFO, "INFO", "unable to read next Flowset (NetFlow v9/IPFIX packet claiming flow_len 0!)",
 			(struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
-    xflow_tot_bad_datagrams++;
+    xflow_status_table.tot_bad_datagrams++;
     return;
   }
 
@@ -1613,7 +1755,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   if (flowsetlen < NfDataHdrV9Sz) {
     notify_malf_packet(LOG_INFO, "INFO", "unable to read next Flowset (NetFlow v9/IPFIX packet (flowsetlen < NfDataHdrV9Sz)",
                         (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
-    xflow_tot_bad_datagrams++;
+    xflow_status_table.tot_bad_datagrams++;
     return;
   }
 
@@ -1652,7 +1794,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       if (off+flowsetlen > len) { 
         notify_malf_packet(LOG_INFO, "INFO", "unable to read next Template Flowset (incomplete NetFlow v9/IPFIX packet)",
 		        (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
-        xflow_tot_bad_datagrams++;
+        xflow_status_table.tot_bad_datagrams++;
         return;
       }
 
@@ -1695,7 +1837,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       if (off+flowsetlen > len) {
         notify_malf_packet(LOG_INFO, "INFO", "unable to read next Options Template Flowset (incomplete NetFlow v9/IPFIX packet)",
                         (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
-        xflow_tot_bad_datagrams++;
+        xflow_status_table.tot_bad_datagrams++;
         return;
       }
 
@@ -1718,7 +1860,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     if (off+flowsetlen > len) { 
       notify_malf_packet(LOG_INFO, "INFO", "unable to read next Data Flowset (incomplete NetFlow v9/IPFIX packet)",
 		      (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
-      xflow_tot_bad_datagrams++;
+      xflow_status_table.tot_bad_datagrams++;
       return;
     }
 
@@ -1802,7 +1944,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           }
 
 	  if (entry) sentry = search_smp_id_status_table(entry->sampling, sampler_id, FALSE);
-	  if (!sentry) sentry = create_smp_entry_status_table(entry);
+	  if (!sentry) sentry = create_smp_entry_status_table(&xflow_status_table, entry);
 	  else ssaved = sentry->next;
 
 	  if (sentry) {
@@ -1861,7 +2003,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
           if (entry) centry = search_class_id_status_table(entry->class, class_id);
           if (!centry) {
-	    centry = create_class_entry_status_table(entry);
+	    centry = create_class_entry_status_table(&xflow_status_table, entry);
 	    class_int_id = pmct_find_first_free();
 	  }
           else {
@@ -1903,6 +2045,48 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  }
 	}
 
+        if ((tpl->tpl[NF9_INGRESS_VRFID].len == 4 || tpl->tpl[NF9_INGRESS_VRFID].len == 4) && tpl->tpl[NF9_MPLS_VPN_RD].len == 8) {
+          /* Handling the global option scoping case */
+          if (!config.nfacctd_disable_opt_scope_check) {
+            if (tpl->tpl[NF9_OPT_SCOPE_SYSTEM].len) entry = (struct xflow_status_entry *) pptrs->f_status_g;
+          }
+          else entry = (struct xflow_status_entry *) pptrs->f_status_g;
+
+	  if (entry) {
+	    u_int32_t ingress_vrfid, egress_vrfid;
+	    rd_t *mpls_vpn_rd;
+
+	    if (!entry->in_rd_map) {
+	      entry->in_rd_map = cdada_map_create(u_int32_t); /* size of vrfid */
+	    }
+
+	    if (!entry->out_rd_map) {
+	      entry->out_rd_map = cdada_map_create(u_int32_t); /* size of vrfid */
+	    }
+
+	    memcpy(&ingress_vrfid, pkt+tpl->tpl[NF9_INGRESS_VRFID].off, tpl->tpl[NF9_INGRESS_VRFID].len);
+	    ingress_vrfid = ntohl(ingress_vrfid);
+
+	    memcpy(&egress_vrfid, pkt+tpl->tpl[NF9_EGRESS_VRFID].off, tpl->tpl[NF9_EGRESS_VRFID].len);
+	    egress_vrfid = ntohl(egress_vrfid);
+
+	    if (ingress_vrfid || egress_vrfid) {
+	      mpls_vpn_rd = malloc(sizeof(rd_t));
+
+	      memcpy(mpls_vpn_rd, pkt+tpl->tpl[NF9_MPLS_VPN_RD].off, tpl->tpl[NF9_MPLS_VPN_RD].len);
+	      bgp_rd_ntoh(mpls_vpn_rd);
+
+	      if (ingress_vrfid) {
+	        cdada_map_insert(entry->in_rd_map, &ingress_vrfid, mpls_vpn_rd);
+	      }
+
+	      if (egress_vrfid) {
+	        cdada_map_insert(entry->out_rd_map, &egress_vrfid, mpls_vpn_rd);
+	      }
+	    }
+	  }
+	}
+
 	if (config.nfacctd_account_options) {
 	  pptrs->f_data = pkt;
 	  pptrs->f_tpl = (u_char *) tpl;
@@ -1923,7 +2107,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       if (flowoff > flowsetlen) {
         notify_malf_packet(LOG_INFO, "INFO", "aborting malformed Options Data element (incomplete NetFlow v9/IPFIX packet)",
                       (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
-        xflow_tot_bad_datagrams++;
+        xflow_status_table.tot_bad_datagrams++;
         return;
       }
       
@@ -1960,7 +2144,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	/* we need to understand the IP protocol version in order to build the fake packet */ 
 	switch (pptrs->flow_type) {
-	case NF9_FTYPE_IPV4:
+	case PM_FTYPE_IPV4:
 	  if (req->bpf_filter) {
 	    reset_mac(pptrs);
 	    reset_ip4(pptrs);
@@ -2010,7 +2194,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.bmp_daemon) bmp_srcdst_lookup(pptrs);
           exec_plugins(pptrs, req);
 	  break;
-	case NF9_FTYPE_IPV6:
+	case PM_FTYPE_IPV6:
 	  pptrsv->v6.f_header = pptrs->f_header;
 	  pptrsv->v6.f_data = pptrs->f_data;
 	  pptrsv->v6.f_tpl = pptrs->f_tpl;
@@ -2065,7 +2249,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->v6);
           exec_plugins(&pptrsv->v6, req);
 	  break;
-	case NF9_FTYPE_VLAN_IPV4:
+	case PM_FTYPE_VLAN_IPV4:
 	  pptrsv->vlan4.f_header = pptrs->f_header;
 	  pptrsv->vlan4.f_data = pptrs->f_data;
 	  pptrsv->vlan4.f_tpl = pptrs->f_tpl;
@@ -2122,7 +2306,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlan4);
 	  exec_plugins(&pptrsv->vlan4, req);
 	  break;
-	case NF9_FTYPE_VLAN_IPV6:
+	case PM_FTYPE_VLAN_IPV6:
 	  pptrsv->vlan6.f_header = pptrs->f_header;
 	  pptrsv->vlan6.f_data = pptrs->f_data;
 	  pptrsv->vlan6.f_tpl = pptrs->f_tpl;
@@ -2179,7 +2363,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlan6);
 	  exec_plugins(&pptrsv->vlan6, req);
 	  break;
-        case NF9_FTYPE_MPLS_IPV4:
+        case PM_FTYPE_MPLS_IPV4:
           pptrsv->mpls4.f_header = pptrs->f_header;
           pptrsv->mpls4.f_data = pptrs->f_data;
           pptrsv->mpls4.f_tpl = pptrs->f_tpl;
@@ -2246,7 +2430,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->mpls4);
           exec_plugins(&pptrsv->mpls4, req);
           break;
-	case NF9_FTYPE_MPLS_IPV6:
+	case PM_FTYPE_MPLS_IPV6:
 	  pptrsv->mpls6.f_header = pptrs->f_header;
 	  pptrsv->mpls6.f_data = pptrs->f_data;
 	  pptrsv->mpls6.f_tpl = pptrs->f_tpl;
@@ -2312,7 +2496,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->mpls6);
 	  exec_plugins(&pptrsv->mpls6, req);
 	  break;
-        case NF9_FTYPE_VLAN_MPLS_IPV4:
+        case PM_FTYPE_VLAN_MPLS_IPV4:
 	  pptrsv->vlanmpls4.f_header = pptrs->f_header;
 	  pptrsv->vlanmpls4.f_data = pptrs->f_data;
 	  pptrsv->vlanmpls4.f_tpl = pptrs->f_tpl;
@@ -2381,7 +2565,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlanmpls4);
 	  exec_plugins(&pptrsv->vlanmpls4, req);
 	  break;
-        case NF9_FTYPE_VLAN_MPLS_IPV6:
+        case PM_FTYPE_VLAN_MPLS_IPV6:
 	  pptrsv->vlanmpls6.f_header = pptrs->f_header;
 	  pptrsv->vlanmpls6.f_data = pptrs->f_data;
 	  pptrsv->vlanmpls6.f_tpl = pptrs->f_tpl;
@@ -2528,7 +2712,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       if (flowoff > flowsetlen) {
         notify_malf_packet(LOG_INFO, "INFO", "aborting malformed Data element (incomplete NetFlow v9/IPFIX packet)",
                       (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
-        xflow_tot_bad_datagrams++;
+        xflow_status_table.tot_bad_datagrams++;
         return;
       }
 
@@ -2568,7 +2752,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
   /* basic length check against longest NetFlow header */
   if (len < NfHdrV5Sz) {
     notify_malf_packet(LOG_INFO, "INFO", "discarding short NetFlow packet", (struct sockaddr *) pptrs->f_agent, 0);
-    xflow_tot_bad_datagrams++;
+    xflow_status_table.tot_bad_datagrams++;
     return;
   } 
 
@@ -2578,7 +2762,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
   if (nfv != 5 && nfv != 9 && nfv != 10) {
     if (!config.nfacctd_disable_checks) {
       notify_malf_packet(LOG_INFO, "INFO", "discarding unknown NetFlow packet", (struct sockaddr *) pptrs->f_agent, 0);
-      xflow_tot_bad_datagrams++;
+      xflow_status_table.tot_bad_datagrams++;
     }
     return;
   }
@@ -2691,7 +2875,7 @@ void NF_compute_once()
 
 u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_ptrs *pptrs)
 {
-  u_int8_t ret = NF9_FTYPE_TRAFFIC;
+  u_int8_t ret = PM_FTYPE_TRAFFIC;
   u_int8_t have_ip_proto = FALSE;
 
   /* first round: event vs traffic */
@@ -2702,8 +2886,8 @@ u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_p
   }
   else {
     if ((tpl->tpl[NF9_IN_VLAN].len && *(pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off) > 0) ||
-        (tpl->tpl[NF9_OUT_VLAN].len && *(pptrs->f_data+tpl->tpl[NF9_OUT_VLAN].off) > 0)) ret += NF9_FTYPE_VLAN; 
-    if (tpl->tpl[NF9_MPLS_LABEL_1].len /* check: value > 0 ? */) ret += NF9_FTYPE_MPLS; 
+        (tpl->tpl[NF9_OUT_VLAN].len && *(pptrs->f_data+tpl->tpl[NF9_OUT_VLAN].off) > 0)) ret += PM_FTYPE_VLAN;
+    if (tpl->tpl[NF9_MPLS_LABEL_1].len /* check: value > 0 ? */) ret += PM_FTYPE_MPLS;
 
     /* Explicit IP protocol definition first; a bit of heuristics as fallback */
     if (tpl->tpl[NF9_IP_PROTOCOL_VERSION].len) {
@@ -2711,7 +2895,7 @@ u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_p
 	have_ip_proto = TRUE;
       }
       else if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 6) {
-	ret += NF9_FTYPE_TRAFFIC_IPV6;
+	ret += PM_FTYPE_TRAFFIC_IPV6;
 	have_ip_proto = TRUE;
       }
     }
@@ -2721,7 +2905,7 @@ u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_p
 	have_ip_proto = TRUE;
       }
       else if (tpl->tpl[NF9_IPV6_SRC_ADDR].len) {
-	ret += NF9_FTYPE_TRAFFIC_IPV6;
+	ret += PM_FTYPE_TRAFFIC_IPV6;
 	have_ip_proto = TRUE;
       }
     }
@@ -2894,7 +3078,7 @@ struct xflow_status_entry *nfv5_check_status(struct packet_ptrs *pptrs)
   struct xflow_status_entry *entry = NULL;
   
   if (hash >= 0) {
-    entry = search_status_table(sa, aux1, 0, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
+    entry = search_status_table(&xflow_status_table, sa, aux1, 0, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
     if (entry) {
       update_status_table(entry, ntohl(hdr->flow_sequence), pptrs->f_len);
       entry->inc = ntohs(hdr->count);
@@ -2911,7 +3095,7 @@ struct xflow_status_entry *nfv9_check_status(struct packet_ptrs *pptrs, u_int32_
   struct xflow_status_entry *entry = NULL;
   
   if (hash >= 0) {
-    entry = search_status_table(sa, sid, flags, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
+    entry = search_status_table(&xflow_status_table, sa, sid, flags, hash, XFLOW_STATUS_TABLE_MAX_ENTRIES);
     if (entry && update) {
       update_status_table(entry, seq, pptrs->f_len);
       entry->inc = 1;

@@ -51,7 +51,7 @@ void bgp_lg_wrapper()
   send_to_pool(bgp_lg_pool, bgp_lg_daemon, NULL);
 }
 
-void bgp_lg_daemon()
+int bgp_lg_daemon()
 {
   char inproc_str[] = "inproc://lg_host_backend", log_id[SHORTBUFLEN];
   struct p_zmq_host lg_host;
@@ -78,6 +78,8 @@ void bgp_lg_daemon()
 #endif
 
   p_zmq_router_backend_setup(&lg_host, config.bgp_lg_threads);
+
+  return SUCCESS;
 }
 
 #ifdef WITH_JANSSON

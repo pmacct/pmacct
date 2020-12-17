@@ -24,11 +24,7 @@
 #include "addr.h"
 
 /* Global variables */
-struct xflow_status_entry *xflow_status_table[XFLOW_STATUS_TABLE_SZ];
-u_int32_t xflow_status_table_entries;
-u_int8_t xflow_status_table_error;
-u_int32_t xflow_tot_bad_datagrams;
-u_int8_t smp_entry_status_table_memerr, class_entry_status_table_memerr;
+xflow_status_table_t xflow_status_table;
 
 /* functions */
 u_int32_t hash_status_table(u_int32_t data, struct sockaddr *sa, u_int32_t size)
@@ -42,15 +38,14 @@ u_int32_t hash_status_table(u_int32_t data, struct sockaddr *sa, u_int32_t size)
 
     memcpy(&tmp, ((struct sockaddr_in6 *)sa)->sin6_addr.s6_addr+12, 4);
     hash = (data ^ tmp) % size;
-    // hash = (data ^ ((struct sockaddr_in6 *)sa)->sin6_addr.s6_addr32[3]) % size;
   }
 
   return hash;
 }
 
-struct xflow_status_entry *search_status_table(struct sockaddr *sa, u_int32_t aux1, u_int32_t aux2, int hash, int num_entries)
+struct xflow_status_entry *search_status_table(xflow_status_table_t *table, struct sockaddr *sa, u_int32_t aux1, u_int32_t aux2, int hash, int num_entries)
 {
-  struct xflow_status_entry *entry = xflow_status_table[hash], *saved = NULL;
+  struct xflow_status_entry *entry = table->t[hash], *saved = NULL;
   u_int16_t port;
 
   cycle_again:
@@ -63,7 +58,7 @@ struct xflow_status_entry *search_status_table(struct sockaddr *sa, u_int32_t au
     }
   }
   else {
-    if (xflow_status_table_entries < num_entries) {
+    if (table->entries < num_entries) {
       entry = malloc(sizeof(struct xflow_status_entry));
       if (!entry) goto error;
       else {
@@ -73,17 +68,18 @@ struct xflow_status_entry *search_status_table(struct sockaddr *sa, u_int32_t au
 	entry->aux2 = aux2;
 	entry->seqno = 0;
 	entry->next = FALSE;
-        if (!saved) xflow_status_table[hash] = entry;
+        if (!saved) table->t[hash] = entry;
         else saved->next = entry;
-	xflow_status_table_error = TRUE;
-	xflow_status_table_entries++;
+
+	table->memerr = TRUE;
+	table->entries++;
       }
     }
     else {
       error:
-      if (xflow_status_table_error) {
+      if (table->memerr) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate more entries into the xFlow status table.\n", config.name, config.type);
-	xflow_status_table_error = FALSE;
+	table->memerr = FALSE;
 	return NULL;
       }
     }
@@ -118,7 +114,7 @@ void update_status_table(struct xflow_status_entry *entry, u_int32_t seqno, int 
       Log(LOG_INFO, "INFO ( %s/%s ): expecting flow '%u' but received '%u' collector=%s:%u agent=%s:%u\n",
 		config.name, config.type, entry->seqno+entry->inc, seqno, collector_ip_address,
 		collector_port, agent_ip_address, entry->aux1);
-      if (seqno > entry->seqno+entry->inc) entry->counters.jumps_f++;
+      if (seqno > (entry->seqno + entry->inc)) entry->counters.jumps_f++;
       else entry->counters.jumps_b++;
     }
   }
@@ -126,7 +122,7 @@ void update_status_table(struct xflow_status_entry *entry, u_int32_t seqno, int 
   entry->seqno = seqno;
 }
 
-void print_status_table(time_t now, int buckets)
+void print_status_table(xflow_status_table_t *table, time_t now, int buckets)
 {
   struct xflow_status_entry *entry; 
   int idx;
@@ -140,7 +136,7 @@ void print_status_table(time_t now, int buckets)
   else strcpy(collector_ip_address, null_ip_address);
   
   for (idx = 0; idx < buckets; idx++) {
-    entry = xflow_status_table[idx];
+    entry = table->t[idx];
 
     bucket_cycle:
     if (entry && entry->counters.total && entry->counters.bytes) {
@@ -160,7 +156,7 @@ void print_status_table(time_t now, int buckets)
 
   Log(LOG_NOTICE, "NOTICE ( %s/%s ): stats [%s:%u] time=%ld discarded_packets=%u\n",
 		config.name, config.type, collector_ip_address, collector_port,
-		(long)now, xflow_tot_bad_datagrams);
+		(long)now, table->tot_bad_datagrams);
 
   Log(LOG_NOTICE, "NOTICE ( %s/%s ): ---\n", config.name, config.type);
 }
@@ -190,7 +186,7 @@ search_smp_id_status_table(struct xflow_status_entry_sampling *sentry, u_int32_t
 }
 
 struct xflow_status_entry_sampling *
-create_smp_entry_status_table(struct xflow_status_entry *entry)
+create_smp_entry_status_table(xflow_status_table_t *table, struct xflow_status_entry *entry)
 {
   struct xflow_status_entry_sampling *sentry = entry->sampling, *new = NULL;  
 
@@ -198,20 +194,21 @@ create_smp_entry_status_table(struct xflow_status_entry *entry)
     while (sentry->next) sentry = sentry->next; 
   }
 
-  if (xflow_status_table_entries < XFLOW_STATUS_TABLE_MAX_ENTRIES) {
+  if (table->entries < XFLOW_STATUS_TABLE_MAX_ENTRIES) {
     new = malloc(sizeof(struct xflow_status_entry_sampling));
     if (!new) {
-      if (smp_entry_status_table_memerr) {
+      if (table->smp_entry_status_table_memerr) {
 	Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate more entries into the xflow renormalization table.\n", config.name, config.type);
-	smp_entry_status_table_memerr = FALSE;
+	table->smp_entry_status_table_memerr = FALSE;
       }
     }
     else {
       if (!entry->sampling) entry->sampling = new;
       if (sentry) sentry->next = new;
       new->next = FALSE;
-      smp_entry_status_table_memerr = TRUE;
-      xflow_status_table_entries++;
+
+      table->smp_entry_status_table_memerr = TRUE;
+      table->entries++;
     }
   }
 
@@ -236,7 +233,7 @@ search_class_id_status_table(struct xflow_status_entry_class *centry, pm_class_t
 }
 
 struct xflow_status_entry_class *
-create_class_entry_status_table(struct xflow_status_entry *entry)
+create_class_entry_status_table(xflow_status_table_t *table, struct xflow_status_entry *entry)
 {
   struct xflow_status_entry_class *centry = entry->class, *new = NULL;
 
@@ -244,20 +241,21 @@ create_class_entry_status_table(struct xflow_status_entry *entry)
     while (centry->next) centry = centry->next;
   }
 
-  if (xflow_status_table_entries < XFLOW_STATUS_TABLE_MAX_ENTRIES) {
+  if (table->entries < XFLOW_STATUS_TABLE_MAX_ENTRIES) {
     new = malloc(sizeof(struct xflow_status_entry_class));
     if (!new) {
-      if (class_entry_status_table_memerr) {
+      if (table->class_entry_status_table_memerr) {
         Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate more entries into the xflow classification table.\n", config.name, config.type);
-        class_entry_status_table_memerr = FALSE;
+        table->class_entry_status_table_memerr = FALSE;
       }
     }
     else {
       if (!entry->class) entry->class = new;
       if (centry) centry->next = new;
       new->next = FALSE;
-      class_entry_status_table_memerr = TRUE;
-      xflow_status_table_entries++;
+
+      table->class_entry_status_table_memerr = TRUE;
+      table->entries++;
     }
   }
 

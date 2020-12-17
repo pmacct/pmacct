@@ -113,6 +113,7 @@ extern char *uint_print(void *, int, int);
 extern void reload_logs();
 extern int is_empty_256b(void *, int);
 extern ssize_t pm_recv(int, void *, size_t, int, unsigned int);
+extern int ft2af(u_int8_t);
 
 extern char *compose_json_str(void *);
 extern void write_and_free_json(FILE *, void *);
@@ -193,5 +194,4 @@ extern int P_broker_timers_get_retry_interval(struct p_broker_timers *);
 extern time_t P_broker_timers_get_last_fail(struct p_broker_timers *);
 
 extern primptrs_func primptrs_funcs[PRIMPTRS_FUNCS_N];
-
 #endif //UTIL_H

@@ -203,6 +203,7 @@ struct bgp_peer {
   struct bgp_xconnect xc;
   struct bgp_peer_buf xbuf;
   int xconnect_fd;
+  int parsed_proxy_header;
 };
 
 struct bgp_msg_data {
@@ -237,6 +238,7 @@ struct bgp_misc_structs {
   int max_peers;
   void *peers_cache;
   void *peers_port_cache;
+  struct log_notification *peers_limit_log;
   void *xconnects;
 
   char *neighbors_file;
@@ -260,11 +262,11 @@ struct bgp_misc_structs {
 #endif
   char *msglog_kafka_avro_schema_registry;
   char *avro_buf;
-  void (*bgp_peer_log_msg_extras)(struct bgp_peer *, int, void *);
+  void (*bgp_peer_log_msg_extras)(struct bgp_peer *, int, int, int, void *);
   void (*bgp_peer_logdump_initclose_extras)(struct bgp_peer *, int, void *);
 
   void (*bgp_peer_logdump_extra_data)(struct bgp_msg_extra_data *, int, void *);
-  int (*bgp_extra_data_process)(struct bgp_msg_extra_data *, struct bgp_info *);
+  int (*bgp_extra_data_process)(struct bgp_msg_extra_data *, struct bgp_info *, int, int);
   int (*bgp_extra_data_cmp)(struct bgp_msg_extra_data *, struct bgp_msg_extra_data *);
   void (*bgp_extra_data_free)(struct bgp_msg_extra_data *);
 
@@ -367,7 +369,7 @@ struct bgp_lg_rep_gp_data {
 
 /* prototypes */
 extern void bgp_daemon_wrapper();
-extern void skinny_bgp_daemon();
+extern int skinny_bgp_daemon();
 extern void skinny_bgp_daemon_online();
 extern void bgp_prepare_thread();
 extern void bgp_prepare_daemon();

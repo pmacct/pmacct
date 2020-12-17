@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -46,10 +46,6 @@
 #define IEEE8021AH_LEN		10
 #define PPP_TAGLEN              2
 #define MAX_MCAST_GROUPS	20
-#if defined ENABLE_PLABEL
-#define PREFIX_LABEL_LEN	16
-#define AF_PLABEL		255
-#endif
 #define PRIMPTRS_FUNCS_N	16
 
 /* Ethernet header */
@@ -207,6 +203,13 @@ struct pm_udphdr
   u_int16_t uh_sum;             /* udp checksum */
 };
 
+struct pm_icmphdr
+{
+  u_int8_t type;		/* message type */
+  u_int8_t code;		/* type sub-code */
+  u_int16_t checksum;
+};
+
 struct pm_tlhdr {
    u_int16_t	src_port;	/* source and destination ports */
    u_int16_t	dst_port;
@@ -339,6 +342,8 @@ struct packet_ptrs {
   u_int16_t pf; /* pending fragments or packets */
   u_int8_t new_flow; /* pmacctd flows: part of a new flow ? */
   u_int8_t tcp_flags; /* pmacctd flows: TCP packet flags; URG, PUSH filtered out */ 
+  u_int8_t icmp_type; /* pmacctd/uacctd -> nfprobe: ICMP / ICMPv6 type */
+  u_int8_t icmp_code; /* pmacctd/uacctd -> nfprobe: ICMP / ICMPv6 code */
   u_int8_t frag_first_found; /* entry found in fragments table */
   u_int16_t frag_sum_bytes; /* accumulated bytes by fragment entry, ie. due to out of order */
   u_int16_t frag_sum_pkts; /* accumulated packets by fragment entry, ie. due to out of order */
@@ -380,9 +385,6 @@ struct host_addr {
   union {
     struct in_addr ipv4;
     struct in6_addr ipv6;
-#if defined ENABLE_PLABEL
-    char plabel[PREFIX_LABEL_LEN];
-#endif
   } address;
 };
 
@@ -482,9 +484,10 @@ struct pkt_vlen_hdr_primitives {
   u_int16_t num;
 } __attribute__ ((packed));
 
-// XXX: eventually deprecate pkt_extras
 struct pkt_extras {
   u_int8_t tcp_flags;
+  u_int8_t icmp_type;
+  u_int8_t icmp_code;
 };
 
 #define PKT_MSG_SIZE 10000
@@ -572,6 +575,7 @@ struct pkt_nat_primitives {
   struct timeval timestamp_start; /* XXX: clean-up: to be moved in a separate structure */
   struct timeval timestamp_end; /* XXX: clean-up: to be moved in a separate structure */
   struct timeval timestamp_arrival; /* XXX: clean-up: to be moved in a separate structure */
+  struct timeval timestamp_export; /* XXX: clean-up: to be moved in a separate structure */
 };
 
 struct pkt_mpls_primitives {
@@ -658,4 +662,95 @@ struct tunnel_entry {
 
 /* global variables */
 extern struct tunnel_handler tunnel_registry[TUNNEL_REGISTRY_STACKS][TUNNEL_REGISTRY_ENTRIES];
+
+/* http://www.haproxy.org/download/1.8/doc/proxy-protocol.txt */
+typedef struct {
+  union {
+    struct {
+        char line[108];
+    } v1;
+    struct {
+        uint8_t sig[12];
+        uint8_t ver_cmd;
+        uint8_t fam;
+        uint16_t len;
+        union {
+            struct {  /* for TCP/UDP over IPv4, len = 12 */
+                uint32_t src_addr;
+                uint32_t dst_addr;
+                uint16_t src_port;
+                uint16_t dst_port;
+            } ip4;
+            struct {  /* for TCP/UDP over IPv6, len = 36 */
+                 uint8_t  src_addr[16];
+                 uint8_t  dst_addr[16];
+                 uint16_t src_port;
+                 uint16_t dst_port;
+            } ip6;
+            struct {  /* for AF_UNIX sockets, len = 216 */
+                 uint8_t src_addr[108];
+                 uint8_t dst_addr[108];
+            } unx;
+        } addr;
+    } v2;
+  };
+} proxy_protocol_header;
+
+#ifdef WITH_GNUTLS
+
+#define PM_DTLS_TIMEOUT_RETRANS	(1 * 1000)
+#define PM_DTLS_TIMEOUT_TOTAL	(60 * 1000)
+#define PM_DTLS_TIMEOUT_HS	(5 * 1000)
+#define PM_DTLS_MTU		1500
+
+typedef struct {
+  gnutls_certificate_credentials_t x509_cred;
+  gnutls_datum_t cookie_key;
+  gnutls_priority_t priority_cache;
+} pm_dtls_glob_t;
+
+typedef struct {
+  int fd;
+  int stage;
+  int do_reconnect;
+  struct sockaddr_storage peer;
+  socklen_t peer_len;
+  unsigned char seq[8];
+  void *async_rx;
+  void *async_tx;
+} pm_dtls_conn_t;
+
+typedef struct {
+  gnutls_session_t session;
+  gnutls_dtls_prestate_st prestate;
+  pm_dtls_conn_t conn;
+} pm_dtls_peer_t;
+
+#define PM_DTLS_STAGE_DOWN		0
+#define PM_DTLS_STAGE_HELLO		1
+#define PM_DTLS_STAGE_HANDSHAKE		2
+#define PM_DTLS_STAGE_UP		3
+#endif
+
+/* prototypes */
+extern int parse_proxy_header(int, struct host_addr *, u_int16_t *);
+extern u_int16_t pm_checksum(u_int16_t *, int, u_int32_t *, int);
+extern u_int16_t pm_udp6_checksum(struct ip6_hdr *, struct pm_udphdr *, u_char *, int);
+
+#ifdef WITH_GNUTLS
+extern void pm_dtls_init(pm_dtls_glob_t *, char *);
+
+extern ssize_t pm_dtls_server_recv(gnutls_transport_ptr_t, void *, size_t);
+extern ssize_t pm_dtls_server_send(gnutls_transport_ptr_t, const void *, size_t);
+extern int pm_dtls_server_select(gnutls_transport_ptr_t, unsigned int);
+extern void pm_dtls_server_log(int, const char *);
+extern void pm_dtls_server_bye(pm_dtls_peer_t *);
+extern int pm_dtls_server_process(int, struct sockaddr_storage *, socklen_t, u_char *, int, void *);
+
+extern void pm_dtls_client_init(pm_dtls_peer_t *, int, struct sockaddr_storage *, socklen_t, char *);
+extern int pm_dtls_client_recv_async(pm_dtls_peer_t *);
+extern ssize_t pm_dtls_client_send(pm_dtls_peer_t *, const void *, size_t);
+extern void pm_dtls_client_bye(pm_dtls_peer_t *);
+#endif
+
 #endif //PMACCT_NETWORK_H

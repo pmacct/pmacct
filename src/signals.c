@@ -132,7 +132,20 @@ void PM_sigint_handler(int signum)
   /* We are about to exit, but it may take a while - because of the
      wait() call. Let's release collector's socket to improve turn-
      around times when restarting the daemon */
-  if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) close(config.sock);
+  if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) {
+    close(config.sock);
+
+    if (config.nfacctd_templates_sock) {
+      close(config.nfacctd_templates_sock);
+    }
+
+#ifdef WITH_GNUTLS
+    if (config.nfacctd_dtls_sock) {
+      pm_dtls_server_bye(NULL);
+      close(config.nfacctd_dtls_sock);
+    }
+#endif
+  }
 
   fill_pipe_buffer();
   sleep(2); /* XXX: we should really choose an adaptive value here. It should be

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -76,7 +76,7 @@ struct sysid_fragment {
 
 /* prototypes */
 extern void nfacctd_isis_wrapper();
-extern void skinny_isis_daemon();
+extern int skinny_isis_daemon();
 extern void isis_pdu_runner(u_char *, const struct pcap_pkthdr *, const u_char *);
 extern int iso_handler(register struct packet_ptrs *);
 

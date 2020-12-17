@@ -179,8 +179,15 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   }
 
   print_output_stdout_header = TRUE;
-  if (!config.sql_table && !config.print_output_lock_file)
+
+  if (!config.sql_table && config.daemon) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): no print_output_file defined and 'daemonize: true'. Output would be lost. Exiting ..\n", config.name, config.type);
+    exit_gracefully(1);
+  }
+
+  if (!config.sql_table && !config.print_output_lock_file) {
     Log(LOG_WARNING, "WARN ( %s/%s ): no print_output_file and no print_output_lock_file defined.\n", config.name, config.type);
+  }
 
   if (config.sql_table) {
     if (strchr(config.sql_table, '%') || strchr(config.sql_table, '$')) {
@@ -640,7 +647,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   	  else fprintf(f, "%-45s  ", empty_ip6);
         }
         if (config.what_to_count & COUNT_PEER_DST_IP) {
-          addr_to_str(ip_address, &pbgp->peer_dst_ip);
+          addr_to_str2(ip_address, &pbgp->peer_dst_ip, ft2af(queue[j]->flow_type));
 
           if (strlen(ip_address)) fprintf(f, "%-45s  ", ip_address);
           else fprintf(f, "%-45s  ", empty_ip6);
@@ -818,6 +825,16 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	  char tstamp_str[VERYSHORTBUFLEN];
 
 	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &pnat->timestamp_arrival, TRUE,
+			    config.timestamps_since_epoch, config.timestamps_rfc3339,
+			    config.timestamps_utc);
+
+          fprintf(f, "%-30s ", tstamp_str);
+        }
+
+        if (config.what_to_count_2 & COUNT_EXPORT_PROTO_TIME) {
+	  char tstamp_str[VERYSHORTBUFLEN];
+
+	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &pnat->timestamp_export, TRUE,
 			    config.timestamps_since_epoch, config.timestamps_rfc3339,
 			    config.timestamps_utc);
 
@@ -1043,7 +1060,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
           fprintf(f, "%s%s", write_sep(sep, &count), ip_address);
         }
         if (config.what_to_count & COUNT_PEER_DST_IP) {
-          addr_to_str(ip_address, &pbgp->peer_dst_ip);
+          addr_to_str2(ip_address, &pbgp->peer_dst_ip, ft2af(queue[j]->flow_type));
           fprintf(f, "%s%s", write_sep(sep, &count), ip_address);
         }
   
@@ -1183,6 +1200,16 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	  char tstamp_str[VERYSHORTBUFLEN];
 
 	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &pnat->timestamp_arrival, TRUE,
+			    config.timestamps_since_epoch, config.timestamps_rfc3339,
+			    config.timestamps_utc);
+
+          fprintf(f, "%s%s", write_sep(sep, &count), tstamp_str);
+        }
+
+        if (config.what_to_count_2 & COUNT_EXPORT_PROTO_TIME) {
+	  char tstamp_str[VERYSHORTBUFLEN];
+
+	  compose_timestamp(tstamp_str, VERYSHORTBUFLEN, &pnat->timestamp_export, TRUE,
 			    config.timestamps_since_epoch, config.timestamps_rfc3339,
 			    config.timestamps_utc);
 
@@ -1439,6 +1466,7 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "TIMESTAMP_START                ");
   if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "TIMESTAMP_END                  "); 
   if (config.what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) fprintf(f, "TIMESTAMP_ARRIVAL              ");
+  if (config.what_to_count_2 & COUNT_EXPORT_PROTO_TIME) fprintf(f, "TIMESTAMP_EXPORT               ");
   if (config.nfacctd_stitching) {
     fprintf(f, "TIMESTAMP_MIN                  ");
     fprintf(f, "TIMESTAMP_MAX                  "); 
@@ -1558,6 +1586,7 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "%sTIMESTAMP_START", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "%sTIMESTAMP_END", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) fprintf(f, "%sTIMESTAMP_ARRIVAL", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_EXPORT_PROTO_TIME) fprintf(f, "%sTIMESTAMP_EXPORT", write_sep(sep, &count));
   if (config.nfacctd_stitching) {
     fprintf(f, "%sTIMESTAMP_MIN", write_sep(sep, &count));
     fprintf(f, "%sTIMESTAMP_MAX", write_sep(sep, &count));

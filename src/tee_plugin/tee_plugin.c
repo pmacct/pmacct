@@ -29,11 +29,11 @@
 #include "plugin_common.h"
 #include "tee_plugin.h"
 #include "nfacctd.h"
+#include "crc32.h"
 
 /* Global variables */
 char tee_send_buf[65535];
 struct tee_receivers receivers; 
-int err_cant_bridge_af;
 
 void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 {
@@ -139,7 +139,6 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   else setnonblocking(pipe_fd);
 
   memset(pipebuf, 0, config.buffer_size);
-  err_cant_bridge_af = 0;
 
   /* Arrange send socket */
   Tee_init_socks();
@@ -369,6 +368,8 @@ size_t Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
       i4h->ip_sum = 0;
       i4h->ip_src.s_addr = sa4->sin_addr.s_addr;
       i4h->ip_dst.s_addr = ((struct sockaddr_in *)target)->sin_addr.s_addr;
+
+      msglen = (IP4HdrSz + UDPHdrSz + msg->len);
     }
     else if (target->sa_family == AF_INET6) {
       i6h->ip6_vfc = 6;
@@ -378,20 +379,25 @@ size_t Tee_craft_transparent_msg(struct pkt_msg *msg, struct sockaddr *target)
       i6h->ip6_hlim = 255;
       memcpy(&i6h->ip6_src, &sa6->sin6_addr, IP6AddrSz);
       memcpy(&i6h->ip6_dst, &((struct sockaddr_in6 *)target)->sin6_addr, IP6AddrSz);
+
+      msglen = (IP6HdrSz + UDPHdrSz + msg->len);
     }
 
     /* Put everything together and send */
     buf_ptr += UDPHdrSz;
     memcpy(buf_ptr, msg->payload, msg->len);
 
-    msglen = (IP4HdrSz + UDPHdrSz + msg->len);
+    /* If IPv6: last thing last compute the checksum */
+    if (target->sa_family == AF_INET6) {
+      uh->uh_sum = pm_udp6_checksum(i6h, uh, msg->payload, msg->len);
+    }
   }
   else {
     time_t now = time(NULL);
 
-    if (now > err_cant_bridge_af + 60) {
+    if (!log_notification_isset(&log_notifications.tee_plugin_cant_bridge_af, now)) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Can't bridge Address Families when in transparent mode\n", config.name, config.type);
-      err_cant_bridge_af = now;
+      log_notification_set(&log_notifications.tee_plugin_cant_bridge_af, now, 60);
     }
   }
 
@@ -809,6 +815,29 @@ struct tee_receiver *Tee_rr_balance(void *pool, struct pkt_msg *msg)
     target = &p->receivers[p->balance.next % p->num];
     p->balance.next++;
     p->balance.next %= p->num;
+  }
+
+  return target;
+}
+
+struct tee_receiver *Tee_hash_agent_crc32(void *pool, struct pkt_msg *msg)
+{
+  struct tee_receivers_pool *p = pool;
+  struct tee_receiver *target = NULL;
+  struct sockaddr *sa = (struct sockaddr *) &msg->agent;
+  struct sockaddr_in *sa4 = (struct sockaddr_in *) &msg->agent;
+  unsigned int bucket = 0;
+
+  if (p) {
+    if (sa->sa_family == AF_INET) {
+      bucket = cache_crc32((const unsigned char*)&sa4->sin_addr.s_addr, 4);
+      bucket %= p->num;
+      target = &p->receivers[bucket];
+    }
+    else if (sa->sa_family == AF_INET6) {
+      bucket = sa_hash(sa, p->num);
+      target = &p->receivers[bucket];
+    }
   }
 
   return target;

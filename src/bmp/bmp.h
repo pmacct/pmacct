@@ -53,7 +53,27 @@ static const char __attribute__((unused)) *bmp_msg_types[] = {
   "Peer Up Notification",
   "Initiation Message",
   "Termination Message",
-  "Route Mirroring"
+  "Route Mirroring",
+  "", "", "", "",    
+  "", "", "", "", "",
+  "", "", "", "", "",
+  "", "", "", "", "",
+  "", "", "", "", "",
+  "", "", "", "", "",
+  "", "", "", "", "",
+  "", "", "", "", "",
+  "", "", "", "", "",
+  "", "", "", "", "",
+  "", "", "", "", "",
+  "", "", "", "", "",
+  "", "", "", "", "",
+  "", "", "", "", "",
+  "", "", "", "", "",
+  "", "", "", "", "",
+  "", "", "", "", "",
+  "", "", "", "", "",
+  "", "", "", "", 
+  "RPAT"
 };
 
 struct bmp_common_hdr {
@@ -81,6 +101,30 @@ static const char __attribute__((unused)) *bmp_peer_types[] = {
 #define BMP_PEER_FLAGS_LR_F	0x80 /* draft-ietf-grow-bmp-local-rib */
 #define BMP_PEER_FLAGS_ARO_O	0x10 /* rfc8671 */
 
+struct bmp_chars {
+  /* key */
+  u_int8_t peer_type;
+  u_int8_t is_post;
+  u_int8_t is_2b_asn;
+  u_int8_t is_filtered;
+  u_int8_t is_out;
+  u_int8_t is_loc;
+  rd_t rd;
+
+  /* non-key */
+  struct pm_list *tlvs;
+};
+
+struct bmp_data {
+  u_int8_t family;
+  struct host_addr peer_ip;
+  struct host_addr bgp_id;
+  u_int32_t peer_asn;
+  struct bmp_chars chars;
+  struct timeval tstamp;
+  struct timeval tstamp_arrival;
+};
+
 struct bmp_peer_hdr {
   u_char	type;
   u_char	flags;
@@ -97,11 +141,15 @@ struct bmp_tlv_hdr {
   u_int16_t     len;
 } __attribute__ ((packed));
 
-#define BMP_TLV_EBIT		0x8000 /* BMP TLV enterprise bit */
+#define BMP_TLV_EBIT		0x8000 	/* BMP TLV enterprise bit */
+#define BMP_TLV_PEN_STD		0 	/* PEN for standardized TLVs */
+
+typedef int (*bmp_logdump_func)(struct bgp_peer *, struct bmp_data *, void *, void *, char *, int, void *);
 
 struct bmp_tlv_def {
   char *name;
   int semantics;
+  bmp_logdump_func logdump_func;
 };
 
 #define BMP_TLV_SEM_UNKNOWN	CUSTOM_PRIMITIVE_TYPE_UNKNOWN
@@ -111,6 +159,7 @@ struct bmp_tlv_def {
 #define BMP_TLV_SEM_IP		CUSTOM_PRIMITIVE_TYPE_IP
 #define BMP_TLV_SEM_MAC		CUSTOM_PRIMITIVE_TYPE_MAC
 #define BMP_TLV_SEM_RAW		CUSTOM_PRIMITIVE_TYPE_RAW
+#define BMP_TLV_SEM_COMPLEX	CUSTOM_PRIMITIVE_TYPE_COMPLEX
 
 #define BMP_INIT_INFO_STRING	0
 #define BMP_INIT_INFO_SYSDESCR	1
@@ -119,9 +168,9 @@ struct bmp_tlv_def {
 #define BMP_INIT_INFO_ENTRIES	8
 
 static const struct bmp_tlv_def __attribute__((unused)) bmp_init_info_types[] = {
-  { "string", BMP_TLV_SEM_STRING }, 
-  { "sysdescr", BMP_TLV_SEM_STRING },
-  { "sysname", BMP_TLV_SEM_STRING }
+  { "string", BMP_TLV_SEM_STRING, NULL }, 
+  { "sysdescr", BMP_TLV_SEM_STRING, NULL },
+  { "sysname", BMP_TLV_SEM_STRING, NULL }
 };
 
 #define BMP_TERM_INFO_STRING    0
@@ -137,8 +186,8 @@ static const struct bmp_tlv_def __attribute__((unused)) bmp_init_info_types[] = 
 #define BMP_TERM_REASON_MAX	4 /* set to the highest BMP_TERM_* value */
 
 static const struct bmp_tlv_def __attribute__((unused)) bmp_term_info_types[] = {
-  { "string", BMP_TLV_SEM_STRING },
-  { "reason", BMP_TLV_SEM_UINT }
+  { "string", BMP_TLV_SEM_STRING, NULL },
+  { "reason", BMP_TLV_SEM_UINT, NULL }
 };
 
 static const char __attribute__((unused)) *bmp_term_reason_types[] = {
@@ -182,7 +231,7 @@ struct bmp_peer {
 
 /* dummy */
 static const struct bmp_tlv_def __attribute__((unused)) bmp_stats_info_types[] = {
-  { "", BMP_TLV_SEM_UNKNOWN }
+  { "", BMP_TLV_SEM_UNKNOWN, NULL }
 };
 
 #define BMP_STATS_INFO_MAX	-1
@@ -214,7 +263,7 @@ struct bmp_stats_cnt_hdr {
 } __attribute__ ((packed));
 
 static const struct bmp_tlv_def __attribute__((unused)) bmp_peer_up_info_types[] = {
-  { "string", BMP_TLV_SEM_STRING }
+  { "string", BMP_TLV_SEM_STRING, NULL }
 };
 
 #define BMP_PEER_UP_INFO_STRING		0
@@ -257,38 +306,79 @@ struct bmp_peer_up_hdr {
   /* Received OPEN Message */
 } __attribute__ ((packed));
 
-#define BMP_ROUTE_MONITOR_INFO_MAX	-1
-#define BMP_ROUTE_MONITOR_INFO_ENTRIES	32
+/* more includes */
+#include "bmp_logdump.h"
 
+/* draft-cppy-grow-bmp-path-marking-tlv */
 static const struct bmp_tlv_def __attribute__((unused)) bmp_rm_info_types[] = {
-  { "", BMP_TLV_SEM_UNKNOWN }
+  { "path_marking", BMP_TLV_SEM_COMPLEX, bmp_log_rm_tlv_path_marking }
 };
 
-struct bmp_chars {
-  /* key */
-  u_int8_t peer_type;
-  u_int8_t is_post;
-  u_int8_t is_2b_asn;
-  u_int8_t is_filtered;
-  u_int8_t is_out;
-  u_int8_t is_loc;
-  rd_t rd;
+#define BMP_ROUTE_MONITOR_INFO_MARKING	0
+#define BMP_ROUTE_MONITOR_INFO_MAX	0
+#define BMP_ROUTE_MONITOR_INFO_ENTRIES	4
 
-  /* non-key */
-  struct pm_list *tlvs;
-}; 
+struct bmp_rm_pm_tlv {
+  u_int16_t	path_index;
+  u_int32_t     path_status;
+  u_int16_t     reason_code;
+} __attribute__ ((packed));
 
-struct bmp_data {
-  u_int8_t family;
-  struct host_addr peer_ip;
-  struct host_addr bgp_id;
-  u_int32_t peer_asn;
-  struct bmp_chars chars;
-  struct timeval tstamp;
+#define BMP_RM_PM_PS_UNKNOWN	0x00000000
+#define BMP_RM_PM_PS_INVALID	0x00000001
+#define BMP_RM_PM_PS_BEST	0x00000002
+#define BMP_RM_PM_PS_NO_SELECT	0x00000004
+#define BMP_RM_PM_PS_PRIMARY	0x00000008
+#define BMP_RM_PM_PS_BACKUP	0x00000010
+#define BMP_RM_PM_PS_NO_INSTALL	0x00000020
+#define BMP_RM_PM_PS_BEST_EXT	0x00000040
+#define BMP_RM_PM_PS_ADD_PATH	0x00000080
+
+static const char __attribute__((unused)) *bmp_rm_pm_reason_types[] = {
+  "invalid for unknown",
+  "invalid for super network",
+  "invalid for dampening",
+  "invalid for history",
+  "invalid for policy deny",
+  "invalid for ROA not validation",
+  "invalid for interface error",
+  "invalid for nexthop route unreachable",
+  "invalid for nexthop tunnel unreachable",
+  "invalid for nexthop restrain",
+  "invalid for relay BGP LSP",
+  "invalid for being inactive within VPN instance",
+  "invalid for prefix-sid not exist",
+  "not preferred for peer address",
+  "not preferred for router ID",
+  "not preferred for Cluster List",
+  "not preferred for IGP cost",
+  "not preferred for peer type",
+  "not preferred for MED",
+  "not preferred for origin",
+  "not preferred for AS-Path",
+  "not preferred for route type",
+  "not preferred for Local_Pref",
+  "not preferred for PreVal",
+  "not preferred for not direct route",
+  "not preferred for nexthop bit error",
+  "not preferred for received path-id",
+  "not preferred for validation",
+  "not preferred for originate IP",
+  "not preferred for route distinguisher",
+  "not preferred for route-select delay",
+  "not preferred for being imported route",
+  "not preferred for med-plus-igp",
+  "not preferred for AIGP",
+  "not preferred for nexthop-resolved aigp",
+  "not preferred for nexthop unreachable",
+  "not preferred for nexthop IP",
+  "not preferred for high-priority",
+  "not preferred for nexthop-priority",
+  "not preferred for process ID",
+  "no reason code"
 };
 
 /* more includes */
-#include "bmp_logdump.h"
 #include "bmp_msg.h"
 #include "bmp_util.h"
 #include "bmp_lookup.h"
@@ -297,7 +387,7 @@ struct bmp_data {
 
 /* prototypes */
 extern void bmp_daemon_wrapper();
-extern void skinny_bmp_daemon();
+extern int skinny_bmp_daemon();
 extern void bmp_prepare_thread();
 extern void bmp_prepare_daemon();
 

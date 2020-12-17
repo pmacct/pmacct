@@ -244,6 +244,7 @@ int main(int argc,char **argv, char **envp)
   memset(empty_mem_area_256b, 0, sizeof(empty_mem_area_256b));
   log_notifications_init(&log_notifications);
   config.acct_type = ACCT_PM;
+  config.progname = uacctd_globstr;
 
   rows = 0;
   memset(&device, 0, sizeof(device));
@@ -397,6 +398,7 @@ int main(int argc,char **argv, char **envp)
   list = plugins_list;
   while (list) {
     list->cfg.acct_type = ACCT_PM;
+    list->cfg.progname = uacctd_globstr;
     set_default_preferences(&list->cfg);
     if (!strcmp(list->type.string, "core")) { 
       memcpy(&config, &list->cfg, sizeof(struct configuration)); 
@@ -429,6 +431,7 @@ int main(int argc,char **argv, char **envp)
   }
 
   initsetproctitle(argc, argv, envp);
+
   if (config.syslog) {
     logf = parse_log_facility(config.syslog);
     if (logf == ERR) {
@@ -643,7 +646,8 @@ int main(int argc,char **argv, char **envp)
       else {
         if (list->cfg.what_to_count_2 & (COUNT_POST_NAT_SRC_HOST|COUNT_POST_NAT_DST_HOST|
                         COUNT_POST_NAT_SRC_PORT|COUNT_POST_NAT_DST_PORT|COUNT_NAT_EVENT|
-                        COUNT_TIMESTAMP_START|COUNT_TIMESTAMP_END|COUNT_TIMESTAMP_ARRIVAL))
+                        COUNT_TIMESTAMP_START|COUNT_TIMESTAMP_END|COUNT_TIMESTAMP_ARRIVAL|
+			COUNT_EXPORT_PROTO_TIME))
           list->cfg.data_type |= PIPE_TYPE_NAT;
 
         if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_TOP|COUNT_MPLS_LABEL_BOTTOM|
@@ -977,6 +981,20 @@ int main(int argc,char **argv, char **envp)
     int sleep_time = DEFAULT_SLOTH_SLEEP_TIME;
 
     req.bpf_filter = TRUE;
+
+    if (config.bgp_daemon_to_xflow_agent_map) {
+      load_id_file(MAP_BGP_TO_XFLOW_AGENT, config.bgp_daemon_to_xflow_agent_map, &bta_table, &req, &bta_map_allocated);
+      cb_data.bta_table = (u_char *) &bta_table;
+    }
+    else {
+      Log(LOG_ERR, "ERROR ( %s/core ): 'bmp_daemon' configured but no 'bgp_agent_map' has been specified. Exiting.\n", config.name);
+      exit_gracefully(1);
+    }
+
+    /* Limiting BGP peers to only two: one would suffice in pmacctd
+       but in case maps are reloadable (ie. bta), it could be handy
+       to keep a backup feed in memory */
+    config.bgp_daemon_max_peers = 2;
 
     bmp_daemon_wrapper();
 

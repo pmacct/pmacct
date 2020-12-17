@@ -29,6 +29,7 @@ struct pm_custom_output custom_print_plugin;
 /* Functions */
 void custom_output_setup(char *custom_lib, char *custom_cfg_file, struct pm_custom_output *custom_output)
 {
+#ifdef WITH_DLOPEN
   const char *error;
 
   Log(LOG_INFO, "INFO ( %s/%s ): Loading custom output from: %s\n", config.name, config.type, custom_lib);
@@ -95,4 +96,5 @@ void custom_output_setup(char *custom_lib, char *custom_cfg_file, struct pm_cust
     Log(LOG_ERR, "ERROR ( %s/%s ): Initialisation of custom output failed: %s\n", config.name, config.type, custom_output->get_error_text());
     exit_gracefully(1);
   }
+#endif
 }

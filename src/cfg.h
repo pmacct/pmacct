@@ -81,6 +81,7 @@ struct configuration {
   pm_cfgreg_t nfprobe_what_to_count_2;
   char *aggregate_primitives;
   struct custom_primitives_ptrs cpptrs;
+  char *progname;
   char *name;
   char *type;
   int type_id;
@@ -118,6 +119,10 @@ struct configuration {
   int flow_tcp_lifetime;
   int num_protos;
   int num_hosts;
+  char *dtls_path;
+#ifdef WITH_GNUTLS
+  pm_dtls_glob_t dtls_globs;
+#endif
   char *imt_plugin_path;
   char *imt_plugin_passwd;
   char *sql_db;
@@ -194,6 +199,10 @@ struct configuration {
   char *nfacctd_kafka_topic;
   char *nfacctd_kafka_config_file;
   char *nfacctd_zmq_address;
+  int nfacctd_dtls_port;
+#ifdef WITH_GNUTLS
+  int nfacctd_dtls_sock;
+#endif
   char *nfacctd_allow_file;
   int nfacctd_time;
   int nfacctd_time_new;
@@ -545,6 +554,8 @@ struct configuration {
   int nfprobe_hoplimit;
   int nfprobe_maxflows;
   char *nfprobe_receiver;
+  int nfprobe_dtls;
+  char *nfprobe_dtls_verify_cert;
   int nfprobe_version;
   char *nfprobe_engine;
   int nfprobe_peer_as;
@@ -583,6 +594,7 @@ struct configuration {
   int rpki_rtr_cache_version;
   int rpki_rtr_cache_pipe_size;
   int rpki_rtr_cache_ipprec;
+  int bmp_daemon_parse_proxy_header;
 };
 
 /* prototypes */ 

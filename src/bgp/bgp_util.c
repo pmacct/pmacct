@@ -720,6 +720,10 @@ void bgp_peer_close(struct bgp_peer *peer, int type, int no_quiet, int send_noti
   if (bms->neighbors_file) {
     write_neighbors_file(bms->neighbors_file, peer->type);
   }
+
+  if (bms->peers_limit_log) {
+    log_notification_unset(bms->peers_limit_log);
+  }
 }
 
 int bgp_peer_xconnect_init(struct bgp_peer *peer, int type)
@@ -758,6 +762,7 @@ int bgp_peer_xconnect_init(struct bgp_peer *peer, int type)
 	if (ret == ERR) {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] bgp_peer_xconnect_init(): connect() failed.\n", config.name, bms->log_str, xconnect_str);
 	  memset(&peer->xc, 0, sizeof(peer->xc));
+	  close(fd);
 	  peer->xconnect_fd = 0;
 	  return ERR;
 	}
@@ -769,7 +774,7 @@ int bgp_peer_xconnect_init(struct bgp_peer *peer, int type)
 
     if (!peer->xconnect_fd) {
       bgp_peer_print(peer, peer_str, INET6_ADDRSTRLEN);
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] unable to xconnect BGP peer.\n", config.name, bgp_misc_db->log_str, peer_str);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] unable to xconnect BGP peer. Missing entry in bgp_daemon_xconnect_map.\n", config.name, bgp_misc_db->log_str, peer_str);
     }
   }
 
@@ -1434,6 +1439,7 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->peers = peers;
   bms->peers_cache = peers_cache;
   bms->peers_port_cache = peers_port_cache;
+  bms->peers_limit_log = &log_notifications.bgp_peers_limit;
   bms->xconnects = &bgp_xcs_map;
   bms->neighbors_file = config.bgp_daemon_neighbors_file; 
   bms->dump_file = config.bgp_table_dump_file; 

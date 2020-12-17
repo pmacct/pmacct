@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -134,35 +134,11 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
 
 	  bufptr = buf;
 
-#if defined ENABLE_PLABEL
-          if (fields >= 3) {
-            char *plabel;
-
-	    memset(tmpt->table[eff_rows].plabel, 0, PREFIX_LABEL_LEN);
-
-	    /* If the specific plugin does not support IP prefix labels (yet?)
-	       then just skip the field */ 
-	    if (config.type_id != PLUGIN_ID_CORE && config.type_id != PLUGIN_ID_NFPROBE &&
-		config.type_id != PLUGIN_ID_SFPROBE && config.type_id != PLUGIN_ID_TEE) {
-              delim = strchr(bufptr, ',');
-              plabel = bufptr;
-              *delim = '\0';
-              bufptr = delim+1;
-              strlcpy(tmpt->table[eff_rows].plabel, plabel, PREFIX_LABEL_LEN);
-	    }
-	    else {
-              delim = strchr(bufptr, ',');
-              *delim = '\0';
-              bufptr = delim+1;
-	    }
-          }
-#else
           if (fields >= 3) {
             delim = strchr(bufptr, ',');
             *delim = '\0';
             bufptr = delim+1;
 	  }
-#endif
 
 	  if (fields >= 2) {
             delim = strchr(bufptr, ',');
@@ -245,8 +221,8 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
       stat(filename, &st);
 
       /* We have no (valid) rows. We build a zeroed single-row table aimed to complete
-         successfully any further lookup */
-      if (!eff_rows) eff_rows++;
+         successfully any further lookup; unless we are configured to work as a filter */
+      if (!eff_rows && !config.networks_file_filter) eff_rows++;
 
       /* 3rd step: sorting table */
       merge_sort(filename, tmpt->table, 0, eff_rows);
@@ -370,6 +346,12 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
       /* 8th step: setting timestamp */
       nt->timestamp = st.st_mtime;
     }
+  }
+
+  /* filename check to not print nulls as load_networks()
+     may not be secured inside an if statement */
+  if (filename) {
+    Log(LOG_INFO, "INFO ( %s/%s ): [%s] map successfully (re)loaded.\n", config.name, config.type, filename);
   }
 
   return;
@@ -602,12 +584,6 @@ void set_net_funcs(struct networks_table *nt)
     net_funcs[count] = clear_src_host;
     count++;
   }
-  else {
-#if defined ENABLE_PLABEL
-    net_funcs[count] = search_src_host_label;
-    count++;
-#endif
-  }
 
   if (!(config.what_to_count & COUNT_SRC_NMASK)) {
     net_funcs[count] = clear_src_nmask;
@@ -660,12 +636,6 @@ void set_net_funcs(struct networks_table *nt)
   if (!(config.what_to_count & (COUNT_DST_HOST|COUNT_SUM_HOST))) {
     net_funcs[count] = clear_dst_host;
     count++;
-  }
-  else {
-#if defined ENABLE_PLABEL
-    net_funcs[count] = search_dst_host_label;
-    count++;
-#endif
   }
 
   if (!(config.what_to_count & COUNT_DST_NMASK)) {
@@ -948,40 +918,6 @@ void search_dst_host(struct networks_table *nt, struct networks_cache *nc, struc
     }
   }
 }
-
-#if defined ENABLE_PLABEL
-void search_src_host_label(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p,
-                        struct pkt_bgp_primitives *pbgp, struct networks_file_data *nfd)
-{
-  struct networks_table_entry *res;
-  struct networks6_table_entry *res6;
-
-  if (nfd->family == AF_INET) {
-    res = (struct networks_table_entry *) nfd->entry;
-    if (res && res->plabel[0] != '\0') label_to_addr(res->plabel, &p->src_ip, PREFIX_LABEL_LEN);
-  }
-  else if (nfd->family == AF_INET6) {
-    res6 = (struct networks6_table_entry *) nfd->entry;
-    if (res6 && res6->plabel[0] != '\0') label_to_addr(res6->plabel, &p->src_ip, PREFIX_LABEL_LEN);
-  }
-}
-
-void search_dst_host_label(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p,
-                        struct pkt_bgp_primitives *pbgp, struct networks_file_data *nfd)
-{
-  struct networks_table_entry *res;
-  struct networks6_table_entry *res6;
-
-  if (nfd->family == AF_INET) {
-    res = (struct networks_table_entry *) nfd->entry;
-    if (res && res->plabel[0] != '\0') label_to_addr(res->plabel, &p->dst_ip, PREFIX_LABEL_LEN);
-  }
-  else if (nfd->family == AF_INET6) {
-    res6 = (struct networks6_table_entry *) nfd->entry;
-    if (res6 && res6->plabel[0] != '\0') label_to_addr(res6->plabel, &p->dst_ip, PREFIX_LABEL_LEN);
-  }
-}
-#endif
 
 void search_src_nmask(struct networks_table *nt, struct networks_cache *nc, struct pkt_primitives *p,
 			struct pkt_bgp_primitives *pbgp, struct networks_file_data *nfd)
@@ -1446,24 +1382,11 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
 
 	  bufptr = buf;
 
-#if defined ENABLE_PLABEL
-          if (fields >= 3) {
-            char *plabel;
-
-            delim = strchr(bufptr, ',');
-            plabel = bufptr;
-            *delim = '\0';
-            bufptr = delim+1;
-            strlcpy(tmpt->table6[eff_rows].plabel, plabel, PREFIX_LABEL_LEN);
-          }
-          else memset(tmpt->table6[eff_rows].plabel, 0, PREFIX_LABEL_LEN);
-#else
           if (fields >= 3) {
             delim = strchr(bufptr, ',');
             *delim = '\0';
             bufptr = delim+1;
           }
-#endif
 
           if (fields >= 2) {
             delim = strchr(bufptr, ',');
@@ -1553,8 +1476,8 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
       stat(filename, &st);
 
       /* We have no (valid) rows. We build a zeroed single-row table aimed to complete
-         successfully any further lookup */
-      if (!eff_rows) eff_rows++;
+         successfully any further lookup; unless we are configured to work as a filter */
+      if (!eff_rows && !config.networks_file_filter) eff_rows++;
 
       /* 3rd step: sorting table */
       merge_sort6(filename, tmpt->table6, 0, eff_rows);

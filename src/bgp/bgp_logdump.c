@@ -121,6 +121,11 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
     if (bms->peer_port_str) json_object_set_new_nocheck(obj, bms->peer_port_str, json_integer((json_int_t)peer->tcp_port));
 
+    if (config.tmp_bgp_lookup_compare_ports) {
+      addr_to_str(ip_address, &peer->id);
+      json_object_set_new_nocheck(obj, "peer_id", json_string(ip_address));
+    }
+
     json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
 
     json_object_set_new_nocheck(obj, "afi", json_integer((json_int_t)afi));
@@ -139,7 +144,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
     if (attr) {
       memset(nexthop_str, 0, INET6_ADDRSTRLEN);
-      if (attr->mp_nexthop.family) addr_to_str(nexthop_str, &attr->mp_nexthop);
+      if (attr->mp_nexthop.family) addr_to_str2(nexthop_str, &attr->mp_nexthop, bgp_afi2family(afi));
       else inet_ntop(AF_INET, &attr->nexthop, nexthop_str, INET6_ADDRSTRLEN);
       json_object_set_new_nocheck(obj, "bgp_nexthop", json_string(nexthop_str));
 
@@ -199,7 +204,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       json_object_set_new_nocheck(obj, "label", json_string(label_str));
     }
 
-    if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, output, obj);
+    if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, etype, log_type, output, obj);
 
     if ((bms->msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
 	(bms->dump_file && etype == BGP_LOGDUMP_ET_DUMP)) {
@@ -308,6 +313,12 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
+    if (config.tmp_bgp_lookup_compare_ports) {
+      addr_to_str(ip_address, &peer->id);
+      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "peer_id", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_string(&p_avro_field, ip_address));
+    }
+
     pm_avro_check(avro_value_get_by_name(&p_avro_obj, "event_type", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_string(&p_avro_field, event_type));
 
@@ -331,7 +342,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
     if (attr) {
       memset(nexthop_str, 0, INET6_ADDRSTRLEN);
-      if (attr->mp_nexthop.family) addr_to_str(nexthop_str, &attr->mp_nexthop);
+      if (attr->mp_nexthop.family) addr_to_str2(nexthop_str, &attr->mp_nexthop, bgp_afi2family(afi));
       else inet_ntop(AF_INET, &attr->nexthop, nexthop_str, INET6_ADDRSTRLEN);
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "bgp_nexthop", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
@@ -481,7 +492,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
-    if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, output, &p_avro_obj);
+    if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, etype, log_type, output, &p_avro_obj);
 
     if (config.rpki_roas_file || config.rpki_rtr_cache) {
       u_int8_t roa;
@@ -596,6 +607,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     avro_value_decref(&p_avro_obj);
     avro_value_iface_decref(p_avro_iface);
     avro_writer_reset(p_avro_writer);
+    avro_writer_free(p_avro_writer);
+    free(p_avro_local_buf);
 #endif
   }
 
@@ -1976,6 +1989,10 @@ avro_schema_t p_avro_schema_build_bgp(int log_type, char *schema_name)
 
   avro_schema_record_field_append(schema, "peer_ip_src", avro_schema_string());
   avro_schema_record_field_append(schema, "peer_tcp_port", optint_s);
+
+  if (config.tmp_bgp_lookup_compare_ports) {
+    avro_schema_record_field_append(schema, "peer_id", avro_schema_string());
+  }
 
   p_avro_schema_build_bgp_route(&schema, &optlong_s, &optstr_s, &optint_s);
 
