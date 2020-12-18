@@ -112,12 +112,15 @@ Title | Description
 :----- | :-----------
 `seq` | pmacct sequence number. Uniquely identifies each metric.
 `log_type` | pmacct log type. Either "update" or "delete" depending if BGP advertisement is an update or withdrawal
+`timestamp` | time stamp when data was generated on router
 `timestamp` | time stamp of BMP data export
-`timestamp_arrival` | pmacct time stamp of data collection
 `bmp_router` | IP address of BMP router which peers to pmacct
 `bmp_router_port` | TCP port of BMP router which peers to pmacct
 `event_type` | pmacct event type. Can be either "log" for msglog or "dump" for table_dump.
 `bmp_msg_type` | "route_monitoring" for BMP message type 0
+`path_status` | BMP path-marking status https://tools.ietf.org/html/draft-cppy-grow-bmp-path-marking-tlv#section-2.1
+`reason_code` | BMP path-marking reason_code https://tools.ietf.org/html/draft-cppy-grow-bmp-path-marking-tlv#section-2.1
+`is_in' | Boolean, if present and true it indicates data from Local-RIB
 `is_out` | Boolean, if present and true it indicates data from Adj-Rib-Out
 `is_post` | Boolean, if present and true it indicates post-policy data (in conjunction with is_in, is_out) 
 `peer_ip` | BGP peer IP address where BGP metrics are received from
@@ -135,34 +138,41 @@ Title | Description
 `as_path_id` | BGP ADD-Path attribute (https://tools.ietf.org/html/rfc7911#section-3)
 `aigp` | BGP AIGP attribute (https://tools.ietf.org/html/rfc7311#section-3)
 `psid_li` | BGP Prefix-SID Label Index attribute (https://tools.ietf.org/html/rfc8669#section-3.1)
-`bmp_rm_info_0` | BMP path marking (https://tools.ietf.org/html/draft-cppy-grow-bmp-path-marking-tlv-03#section-3)
 
 ~~~~
 {
-  "seq": 6399,
+  "seq": 67938379,
   "log_type": "update",
-  "timestamp": "2020-05-24T14:34:04.000000",
-  "timestamp_arrival": "2020-05-24T14:34:05.000000",
+  "timestamp": "2020-12-17T11:54:54.000000+01:00",
+  "timestamp_arrival": "2020-12-17T11:54:55.000000",
+  "is_post": 1,
+  "is_in": 1,
+  "rd": "0:64499:82",
+  "path_status": [
+    "Non-selected",
+    "Backup"
+  ],
+  "reason_code": "0x0014",
+  "peer_ip": "192.0.32.154",
   "is_post": 0,
   "is_out": 1,
-  "bmp_rm_info_0": "00-01-00-01-00-06-00-00-00-00-00-00",
   "peer_ip": "198.51.100.72",
   "peer_tcp_port": 0,
   "event_type": "log",
   "afi": 1,
-  "safi": 128,
-  "ip_prefix": "203.0.113.70/32",
-  "bgp_nexthop": "198.51.100.62",
-  "as_path": "65538 65000",
-  "comms": "64496:20 64496:1001 64496:1033 64497:3 64499:70 64499:100",
-  "ecomms": "RT:64497:32",
+  "safi": 1,
+  "ip_prefix": "203.0.113.82/32",
+  "bgp_nexthop": "192.0.32.154",
+  "as_path": "65000 65539",
+  "comms": "64496:299 64496:1001 64496:1033 64497:3 64499:81",
+  "ecomms": "SoO:64497:63",
   "origin": "i",
   "local_pref": 0,
-  "rd": "0:64499:72",
-  "label": "1048575",
-  "bmp_router": "192.0.2.52",
-  "bmp_router_port": 60720,
-  "bmp_msg_type": "route_monitor"
+  "timestamp_arrival": "2020-12-17T11:54:56.005522+01:00",
+  "bmp_router": "192.0.2.72",
+  "bmp_router_port": 52306,
+  "bmp_msg_type": "route_monitor",
+  "writer_id": "ietfint_nfacctd-bmp01_c/1958020"
 }
 ~~~~
 
@@ -190,8 +200,8 @@ Title | Description
 {
   "event_type": "log",
   "seq": 18271,
-  "timestamp": "2019-05-24 09:41:34.543389",
-  "timestamp_arrival": "2019-05-24 09:41:35.543389",
+  "timestamp": "2020-12-17T11:53:37.539446+01:00",
+  "timestamp_arrival": "2020-12-17T11:53:37.669796+01:00",
   "is_filtered": 0,
   "is_in": 1,
   "bmp_router": "192.0.2.2",
@@ -229,8 +239,8 @@ Title | Description
 {
   "event_type": "log",
   "seq": 18696,
-  "timestamp": "2019-05-24 09:49:22.437488",
-  "timestamp_arrival": "2019-05-24 09:49:23.437488",
+  "timestamp": "2020-12-17T11:53:37.539446+01:00",
+  "timestamp_arrival": "2020-12-17T11:53:37.669796+01:00",
   "bmp_router": "192.0.2.2",
   "bmp_router_port": 45047,
   "bmp_msg_type": "peer_down",
@@ -270,8 +280,8 @@ Title | Description
 {
   "event_type": "log",
   "seq": 10,
-  "timestamp": "2019-05-24 09:31:03.160056",
-  "timestamp_arrival": "2019-05-24 09:31:04.160056",
+  "timestamp": "2020-12-17T11:53:37.539446+01:00",
+  "timestamp_arrival": "2020-12-17T11:53:37.669796+01:00",
   "is_post": 1,
   "is_in": 1,
   "bmp_router": "192.0.2.2",
@@ -308,7 +318,7 @@ Title | Description
   "event_type": "log",
   "seq": 9,
   "timestamp": "0000-00-00 00:00:00.000000",
-  "timestamp_arrival": "2019-06-01 18:29:58.515420",
+  "timestamp_arrival": "2020-12-17T11:53:37.669796+01:00",
   "bmp_router": "192.0.2.2",
   "bmp_router_port": 17677,
   "bmp_msg_type": "init",
@@ -336,7 +346,7 @@ Title | Description
   "event_type": "log",
   "seq": 6432,
   "timestamp": "0000-00-00 00:00:00.000000",
-  "timestamp_arrival": "2020-05-24T14:36:19.744818",
+  "timestamp_arrival": "2020-12-17T11:53:37.669796+01:00",
   "bmp_router": "192.0.2.52",
   "bmp_router_port": 60720,
   "bmp_msg_type": "term",
@@ -361,33 +371,61 @@ Title | Description
 `bgp_id` | BGP router-id
 `afi` | BGP Address Family Indicator (RFC 4760 -  Multiprotocol Extensions for BGP-4)
 `safi` | BGP Subsequent Address Family Identifier (RFC 4760 -  Multiprotocol Extensions for BGP-4)
-`bmp_rpat_info_0` | VRF Name and ID (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.1)
-`bmp_rpat_info_1` | Route-Policy (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.2)
-`bmp_rpat_info_2` | Pre Route-Policy (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.3)
-`bmp_rpat_info_3` | Post Route-Policy (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.4)
-`bmp_rpat_info_4` | String (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.5)
+`vrf_id` | VRF identifier (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.1)
+`vrf_name` | VRF name string (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.1)
+`policy_is_match` | route-policy matched (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.2)
+`policy_is_permit` | route-policy permitted (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.2)
+`policy_is_diff` | route-policy modified (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.2)
+`policy_is_class` | route-policy type (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.2)
+`policy_name` | route-policy name (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.2)
+`policy_id` | route-policy sequence id (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.2)
+`policy_nf` | next route-policy is chained (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.2)
+`bmp_rpat_info_pre_policy_attr` | Pre Route-Policy (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.3)
+`bmp_rpat_info_post_policy_attr` | Post Route-Policy (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.4)
+`bmp_rpat_info_strin` | String (https://tools.ietf.org/html/draft-xu-grow-bmp-route-policy-attr-trace#section-2.3.5)
 `writer_id` | pmacct process name and id
  
 ~~~~
 {
   "event_type": "log",
+  "seq": 68222721,
+  "timestamp": "2020-12-17T12:09:42.275678+01:00",
+  "timestamp_arrival": "2020-12-17T12:09:44.285191+01:00",
+  "bmp_router": "192.0.2.72",
+  "bmp_router_port": 52306,
   "seq": 360,
-  "timestamp": "2020-03-27T12:45:59.473293",
-  "timestamp_arrival": "2020-03-27T12:46:00.473293",
   "bmp_router": "192.0.2.52",
   "bmp_router_port": 49531,
   "bmp_msg_type": "rpat",
-  "rd": "0:64499:12",
-  "prefix": "203.0.113.30",
+  "rd": "0:64499:82",
+  "prefix": "203.0.113.72",
   "prefix_len": 32,
-  "bgp_id": "192.0.2.82",
+  "bgp_id": "192.0.32.155",
   "afi": 1,
-  "safi": 128,
-  "bmp_rpat_info_0": "00-00-00-00-5F-70-75-62-6C-69-63-5F",
-  "bmp_rpat_info_1": "C0-01-01-00-00-00-00-00-00-00-00-00-00-00-00-C6-33-64-47-C0-00-02-47-00-01-00-03-00-09-56-50-4E-5F-4F-55-54-32-30-00-02-32-30-00",
-  "bmp_rpat_info_2": "40-01-01-00-40-02-0A-02-02-00-01-00-06-00-00-FD-E8-40-03-04-C6-33-64-52-C0-08-14-FB-F0-01-2B-FB-F0-03-E9-FB-F0-04-0A-FB-F1-00-01-FB-F3-00-1E-C0-10-08-00-02-FB-F1-00-00-00-0B",
-  "bmp_rpat_info_3": "",
-  "bmp_rpat_info_4": "78-6D-6C-6E-73-3A-72-74-70-3D-22-75-72-6E-3A-68-75-61-77-65-69-3A-79-61-6E-67-3A-68-75-61-77-65-69-2D-72-6F-75-74-69-6E-67-2D-70-6F-6C-69-63-79-22-20-73-65-6C-65-63-74-3D-22-2F-72-74-70-3A-72-6F-75-74-69-6E-67-2D-70-6F-6C-69-63-79-2F-72-74-70-3A-70-6F-6C-69-63-79-2D-64-65-66-69-6E-69-74-69-6F-6E-73-2F-72-74-70-3A-70-6F-6C-69-63-79-2D-64-65-66-69-6E-69-74-69-6F-6E-5B-72-74-70-3A-6E-61-6D-65-3D-27-56-50-4E-5F-4F-55-54-32-30-27-5D-2F-72-74-70-3A-6E-6F-64-65-73-2F-72-74-70-3A-6E-6F-64-65-5B-72-74-70-3A-73-65-71-75-65-6E-63-65-3D-27-32-30-27-5D-00"
-  "writer_id": "daisy62bmp01c/9254"
+  "safi": 1,
+  "vrf_id": 3,
+  "vrf_name": "C20",
+  "policy_is_match": 1,
+  "policy_is_permit": 1,
+  "policy_is_diff": 0,
+  "policy_class": "Inbound policy",
+  "peer_bgp_id": "198.51.100.55",
+  "peer_ip": "192.0.32.155",
+  "peer_asn": 65000,
+  "policy_name": [
+    "RP-C20-IP-IN"
+  ],
+  "policy_id": [
+    "10"
+  ],
+  "policy_nf": [
+    null
+  ],
+  "bmp_rpat_info_pre_policy_attr": "40-01-01-00-40-02-12-02-04-00-00-FD-E8-00-01-00-03-00-01-00-00-00-01-00-01-40-03-04-C0-00-20-9B-C0-08-18-FB-F0-00-14-FB-F0-03-E9-FB-F0-04-09-FB-F1-00-03-FB-F3-00-47-FB-F3-00-65-C0-10-08-00-03-FB-F1-00-00-00-40",
+  "bmp_rpat_info_post_policy_attr": null,
+  "bmp_rpat_info_string": [
+    "xmlns:rtp=\"urn:huawei:yang:huawei-routing-policy\" select=\"/rtp:routing-policy/rtp:policy-definitions/rtp:policy-definition[rtp:name='RP-C20-IP-IN']/rtp:nodes/rtp:node[rtp:sequence='10']"
+  ],
+  "writer_id": "ietfint_nfacctd-bmp01_c/1958020"
 }
 ~~~~
