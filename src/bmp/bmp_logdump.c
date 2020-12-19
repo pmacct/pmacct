@@ -1952,7 +1952,7 @@ avro_schema_t p_avro_schema_build_bmp_rm(int log_type, char *schema_name)
   avro_schema_record_field_append(schema, "timestamp_arrival", optstr_s);
 
   avro_schema_record_field_append(schema, "bmp_router", avro_schema_string());
-  avro_schema_record_field_append(schema, "bmp_router_port", avro_schema_int());
+  avro_schema_record_field_append(schema, "bmp_router_port", optint_s);
   avro_schema_record_field_append(schema, "bmp_msg_type", avro_schema_string());
 
   avro_schema_record_field_append(schema, "is_in", optint_s);

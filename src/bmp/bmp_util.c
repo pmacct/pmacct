@@ -129,7 +129,8 @@ void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int etype, int log_type,
     pm_avro_check(avro_value_set_string(&p_avro_field, ip_address));
 
     pm_avro_check(avro_value_get_by_name(obj, "bmp_router_port", &p_avro_field, NULL));
-    pm_avro_check(avro_value_set_int(&p_avro_field, bmpp->self.tcp_port)); 
+    pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+    pm_avro_check(avro_value_set_int(&p_avro_branch, bmpp->self.tcp_port));
 
     if (log_type == BGP_LOG_TYPE_DELETE) {
       pm_avro_check(avro_value_get_by_name(obj, "bmp_msg_type", &p_avro_field, NULL));
