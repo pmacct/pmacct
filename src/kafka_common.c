@@ -362,11 +362,11 @@ void p_kafka_msg_delivered(rd_kafka_t *rk, void *payload, size_t len, int error_
     if (config.debug) {
       if (p_kafka_get_content_type(kafka_host) == PM_KAFKA_CNT_TYPE_STR) {
         char *payload_str = (char *) payload;
-	char saved = payload_str[len];
+	char saved = payload_str[len - 1];
 
-	payload_str[len] = '\0';
+	payload_str[len - 1] = '\0';
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): Kafka message delivery successful (%zd bytes): %p\n", config.name, config.type, len, payload);
-	payload_str[len] = saved;
+	payload_str[len - 1] = saved;
       }
       else {
 	size_t base64_data_len = 0;
