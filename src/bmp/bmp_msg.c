@@ -581,12 +581,17 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
 
     if (ret) {
       char peer_str[] = "peer_ip", *saved_peer_str = bms->peer_str;
+      char peer_port_str[] = "peer_tcp_port", *saved_peer_port_str = bms->peer_port_str;
 
       bmpp_bgp_peer = (*(struct bgp_peer **) ret);
     
       bms->peer_str = peer_str;
+      bms->peer_port_str = peer_port_str;
+
       bgp_peer_info_delete(bmpp_bgp_peer);
+
       bms->peer_str = saved_peer_str;
+      bms->peer_str = saved_peer_port_str;
 
       if (bdata.family == AF_INET) {
 	pm_tdelete(&bdata.peer_ip, &bmpp->bgp_peers_v4, bgp_peer_host_addr_cmp);
