@@ -4,6 +4,65 @@ pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
+1.7.6 -- XX-01-2021
+  + BGP daemon: added suppport for Accumulated IGP Metric Attribute
+    (AIGP) and Label-Index TLV of Prefix-SID Attribute.
+  + BGP daemon: added SO_KEEPALIVE TCP socket option (ie. to keep the
+    sessions alive via a firewall / NAT kind of device). Thanks to
+    Jared Mauch ( @jaredmauch ) for his patch.
+  + BGP daemon: if comparing ports feature is being enabled (config
+    directive tmp_bgp_lookup_compare_ports) print also BGP Router-ID
+    as part of log/dump output.
+  + BMP daemon: added 'bgp_agent_map' equivalent feature for BMP.
+  + nfacctd: added support for deprecated NetFlow v9 IE #104
+    (layer2packetSectionData) as it is implemented for NetFlow-lite
+    on Cisco devices. Reused code from IPFIX IE #315.
+  ! fix, BGP daemon: re-worked internal structuring of 'modern' BGP
+    attributes: for the sake of large-scale space optimization
+    certain attributes are confined in a separate bgp_info_extra
+    structure.
+  ! fix, BGP daemon: improved support for BGP ADD-PATH (ie. made per
+    Address-Family rather than global and normalized comparisons).
+  ! fix, BGP daemon: use split buffers for recv and send functions
+    of the BGP x-connects feature. Also improved validation when
+    processing a bgp_daemon_xconnect_map.
+  ! fix, BGP daemon: when using BGP x-connects, close unused file
+    descriptors in bgp_peer_xconnect_init() in order to avoid
+    quickly reaching the maximum amount of allowed open descriptors
+    in case of BGP flaps.
+  ! fix, BGP daemon: trigger a log message for a missing entry while
+    processing bgp_daemon_xconnect_map in bgp_peer_xconnect_init().
+  ! fix, BGP daemon: enabled log notifications (that is, log anti-
+    spam measure) upon reaching limit of allowed BGP peers.
+  ! fix, BGP daemon: ecommunity_ecom2str(), first thing making sure
+    that the destination size is enough. This did cause some SEGVs
+    due to heap corruption. Thanks to Chris Danis ( @cdanis ) for
+    his help resolving the issue.
+  ! fix, BMP daemon: improved ADD-PATH compparisons upon performing
+    route lookup.
+  ! fix, BMP daemon: several encoding issues when using Apache Avro,
+    ie. conditional branching 'bmp_router_port', wrong field names,
+    etc.
+  ! fix, BMP daemon: correctly print Peer Distinguisher for Route
+    Monitoring messages. Also improved BMP lookup comparisons in
+    order to factor in Peer Distinguisher if any.
+  ! fix, BMP daemon: print 'is_in' boolean for Adj-Rib-In data
+    instead of having it implicit. Also print 'is_post' for Post-
+    Policy Adj-Rib-In data.
+  ! fix, nDPI: newer versions of the library (ie. >= 3.2) require
+    calling ndpi_finalize_initialization() somewhere after the
+    detection module init finished. Contribution is from Toni Uhlig
+    ( @lnslbrty ).
+  ! fix, sfprobe plugin: FreeBSD complaining of errno 22 (Invalid
+    argument) upon sendto().
+  ! fix, kafka_common.c: improved p_kafka_check_outq_len() error log
+    message to report the amount of elements have been successfully
+    processed in order to better assess impact of the problem when
+    inspecting logs.
+  ! fix, compiling against gcc10: renamed some variables and unified
+    declaration of others in order to be more friendly to the new
+    version of gcc. Also fixed several code warnings catched gcc8.
+
 1.7.5 -- 17-06-2020
   + pmacct & Redis: pmacct daemons can now connect to a Redis cache.
     The main use-case currenly covered is: registering every stable
