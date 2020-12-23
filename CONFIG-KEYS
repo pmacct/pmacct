@@ -2777,7 +2777,7 @@ DESC:           Defines whether to parse the first packet of a connection lookin
                     backend bmpnodes
                         mode tcp
                         server bmp-dev <PMBMPD IP Address>:5000 send-proxy-v2
-DEFAULT:        False
+DEFAULT:        false
 
 KEY:		rpki_roas_file [MAP, GLOBAL]
 DESC:		Full pathname to a file containing RPKI ROA data. Data encoding is JSON and format

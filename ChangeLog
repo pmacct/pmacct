@@ -13,10 +13,28 @@ The keys used are:
   + BGP daemon: if comparing ports feature is being enabled (config
     directive tmp_bgp_lookup_compare_ports) print also BGP Router-ID
     as part of log/dump output.
+  + BMP daemon:  added support for HAProxy Proxy Protocol Header in
+    the first BMP message in order to determine the original sender
+    IP address and port. The new bmp_daemon_parse_proxy_header config
+    directive enables the feature. Contribution is by Peter Pothier
+    ( @pothier-peter ).
+  + BMP daemon: improved support and brought implementation on par
+    with the latest drafting efforts at IETF wrt draft-cppy-grow-bmp-
+    path-marking-tlv, draft-xu-grow-bmp-route-policy-attr-trace,
+    draft-ietf-grow-bmp-tlv and draft-lucente-grow-bmp-tlv-ebit.
   + BMP daemon: added 'bgp_agent_map' equivalent feature for BMP.
+  + nfacctd, nfprobe plugin: added support for collection and export
+    of NetFlow/IPFIX data over Datagram Transport Layer Security (in
+    short DTLS). The feature depends on the GnuTLS library.
   + nfacctd: added support for deprecated NetFlow v9 IE #104
     (layer2packetSectionData) as it is implemented for NetFlow-lite
     on Cisco devices. Reused code from IPFIX IE #315.
+  + nfprobe plugin: added support for ICMP/ICMPv6 information as part
+    of the NetFlow/IPFIX export. The piece of info is encoded in the
+    destination port field as per the current common understandings
+    across vendors. As a result of that, the 'dst_port' primitive is
+    to be part of the aggregation method in order to leverage this
+    feature.
   ! fix, BGP daemon: re-worked internal structuring of 'modern' BGP
     attributes: for the sake of large-scale space optimization
     certain attributes are confined in a separate bgp_info_extra
@@ -38,30 +56,49 @@ The keys used are:
     that the destination size is enough. This did cause some SEGVs
     due to heap corruption. Thanks to Chris Danis ( @cdanis ) for
     his help resolving the issue.
-  ! fix, BMP daemon: improved ADD-PATH compparisons upon performing
+  ! fix, BMP daemon: improved ADD-PATH comparisons upon performing
     route lookup.
   ! fix, BMP daemon: several encoding issues when using Apache Avro,
     ie. conditional branching 'bmp_router_port', wrong field names,
-    etc.
+    etc. Thanks also to Raphael Barazzutti ( @rbarazzutti ) several
+    of those fixes.
+  ! fix, BMP daemon: throw an error for any issues (error or zero
+    length) related to the BGP Update PDU parsing; also added marker
+    and length checks for BGP Open PDU in Peer Up messages.
+  ! fix, BMP daemon: both timestamp of the event itself and its
+    arrival at the collector are now recorded and printed out
+    separately; before they were wrongly muxed on one single field
+    making it uncertain for the user what was the time reference.
   ! fix, BMP daemon: correctly print Peer Distinguisher for Route
     Monitoring messages. Also improved BMP lookup comparisons in
     order to factor in Peer Distinguisher if any.
   ! fix, BMP daemon: print 'is_in' boolean for Adj-Rib-In data
     instead of having it implicit. Also print 'is_post' for Post-
     Policy Adj-Rib-In data.
+  ! fix, BMP daemon: upon receipt of a Termination message, do
+    proactively close the TCP session.
   ! fix, nDPI: newer versions of the library (ie. >= 3.2) require
     calling ndpi_finalize_initialization() somewhere after the
     detection module init finished. Contribution is from Toni Uhlig
     ( @lnslbrty ).
+  ! fix, PostgreSQL plugin: in PG_compose_conn_string() allow any
+    intersection of host, port and cafile options.
   ! fix, sfprobe plugin: FreeBSD complaining of errno 22 (Invalid
     argument) upon sendto().
+  ! fix, tee plugin: replication of IPv6 packets has been no tested
+    working. Previously the output message size was obviously encoded
+    wrongly and the checksum (mandatory piece of info in IPv6,
+    contrary to IPv4 where it is optional) was not being computed.
   ! fix, kafka_common.c: improved p_kafka_check_outq_len() error log
     message to report the amount of elements have been successfully
     processed in order to better assess impact of the problem when
     inspecting logs.
+  ! fix, cfg.c: throw error if config file is not a regular file.
   ! fix, compiling against gcc10: renamed some variables and unified
     declaration of others in order to be more friendly to the new
     version of gcc. Also fixed several code warnings catched gcc8.
+  - Removed the IP prefix label feature that was enabled via the
+    --enable-plabel configure script switch.
 
 1.7.5 -- 17-06-2020
   + pmacct & Redis: pmacct daemons can now connect to a Redis cache.
