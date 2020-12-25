@@ -5,15 +5,23 @@ The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
 1.7.6 -- XX-01-2021
+  + Added dependency to libcdada in an effort to streamline basic
+    data structures needed for everyday coding. All new structures
+    will make use of libcdada, old ones will be ported over time.
+    Libcdada offers basic data structures in C: ie. list, set, map/
+    hash table, queue and is a libstdc++ wrapper. Many thanks to
+    Marc Sune ( @msune ) for his work with libcdada and his enormous
+    help facilitating the integration.
   + BGP daemon: added suppport for Accumulated IGP Metric Attribute
     (AIGP) and Label-Index TLV of Prefix-SID Attribute.
   + BGP daemon: added SO_KEEPALIVE TCP socket option (ie. to keep the
     sessions alive via a firewall / NAT kind of device). Thanks to
     Jared Mauch ( @jaredmauch ) for his patch.
-  + BGP daemon: if comparing ports feature is being enabled (config
-    directive tmp_bgp_lookup_compare_ports) print also BGP Router-ID
-    as part of log/dump output.
-  + BMP daemon:  added support for HAProxy Proxy Protocol Header in
+  + BGP daemon: if comparing source TCP ports among BGP peers is
+    being enabled (config directive tmp_bgp_lookup_compare_ports),
+    print also BGP Router-ID as distinguisher as part of log/dump
+    output.
+  + BMP daemon: added support for HAProxy Proxy Protocol Header in
     the first BMP message in order to determine the original sender
     IP address and port. The new bmp_daemon_parse_proxy_header config
     directive enables the feature. Contribution is by Peter Pothier
@@ -30,9 +38,9 @@ The keys used are:
     (layer2packetSectionData) as it is implemented for NetFlow-lite
     on Cisco devices. Reused code from IPFIX IE #315.
   + nfacctd: added support for MPLS VPN RD IE #90. This comes in two
-    flavours both found across implementations: 1) IE present in flow
-    data and 2) IE present in Options data as a lookup from IE #234
-    (ingressVRFID) and #235 (egressVRFID).
+    flavours both found across vendor implementations: 1) IE present
+    in flow data and 2) IE present in Options data as a lookup from
+    IE #234 (ingressVRFID) and #235 (egressVRFID).
   + nfacctd: added a new timestamp_export aggregation primitive to
     record the timestamp being carried in the header of NetFlow/IPFIX
     messates (that is, the time at which the export was performed).
@@ -48,13 +56,6 @@ The keys used are:
     for nodes in the receiving pool. It hashes original exporter IP
     address against a crc32 function. Thanks to @edge-intelligence
     for the contribution.
-  + Added dependency to libcdada in an effort to streamline basic
-    data structures needed for everyday coding. All new structures
-    will make use of libcdada, old ones will be ported over time.
-    Libcdada offers basic data structures in C: ie. list, set, map/
-    hash table, queue and is a libstdc++ wrapper. Many thanks to
-    Marc Sune ( @msune ) for his work with libcdada and his enormous
-    help facilitating the integration.
   + Massive improvements carried out on the Continuous Integration
     (CI) side, ie. to ensure better quality of the code, and on the
     containerization side by offering official stable / bleeding edge
@@ -62,10 +63,11 @@ The keys used are:
     this possible.
   ! fix, BGP daemon: re-worked internal structuring of 'modern' BGP
     attributes: for the sake of large-scale space optimization
-    certain attributes are confined in a separate bgp_info_extra
-    structure.
-  ! fix, BGP daemon: improved support for BGP ADD-PATH (ie. made per
-    Address-Family rather than global and normalized comparisons).
+    certain attributes are confined in a separate (less used)
+    bgp_info_extra structure.
+  ! fix, BGP daemon: improved support for BGP ADD-PATH, ie. made it
+    per Address-Family rather than global. Also comparisons upon
+    doing route looup were improved and normalized. 
   ! fix, BGP daemon: use split buffers for recv and send functions
     of the BGP x-connects feature. Also improved validation when
     processing a bgp_daemon_xconnect_map.
@@ -77,23 +79,21 @@ The keys used are:
     processing bgp_daemon_xconnect_map in bgp_peer_xconnect_init().
   ! fix, BGP daemon: enabled log notifications (that is, log anti-
     spam measure) upon reaching limit of allowed BGP peers.
-  ! fix, BGP daemon: ecommunity_ecom2str(), first thing making sure
-    that the destination size is enough. This did cause some SEGVs
-    due to heap corruption. Thanks to Chris Danis ( @cdanis ) for
-    his help resolving the issue.
+  ! fix, BGP daemon: ecommunity_ecom2str(), first thing make sure
+    that the destination size is enough! Missing this did cause some
+    SEGVs due to heap corruption. Thanks to Chris Danis ( @cdanis )
+    for his help resolving the issue.
   ! fix, BGP daemon: solved a memory leak in aspath_make_str_count()
     by returning result from aspath_make_empty(), if any. Thanks very
     much to Peter Pothier ( @pothier-peter ) for his contribution.
-  ! fix, BMP daemon: improved ADD-PATH comparisons upon performing
-    route lookup.
   ! fix, BMP daemon: several encoding issues when using Apache Avro
-    ie. missing conditional branching, wrong field names, etc.
-    Thanks also to Raphael Barazzutti ( @rbarazzutti ) for several
-    of those fixes.
+    ie. missing conditional branching, wrong field names, etc. Thanks
+    also to Raphael Barazzutti ( @rbarazzutti ) for several of those
+    fixes.
   ! fix, BMP daemon: throw an error for any issues (error or zero
     length) related to the BGP Update PDU parsing; also added marker
     and length checks for BGP Open PDU in Peer Up messages.
-  ! fix, BMP daemon: both timestamp of the event itself and its
+  ! fix, BMP daemon: both timestamp of the BMP event and its
     arrival at the collector are now recorded and printed out
     separately; before they were wrongly muxed on one single field
     making it uncertain for the user what was the time reference.
@@ -120,16 +120,16 @@ The keys used are:
     intersection of host, port and cafile options.
   ! fix, nfprobe plugin: changed default export version from NetFlow
     v5 to IPFIX.
-  ! fix, sfprobe plugin: FreeBSD complaining of errno 22 (Invalid
+  ! fix, sfprobe plugin: FreeBSD was complaining of errno 22 (Invalid
     argument) upon sendto().
-  ! fix, tee plugin: replication of IPv6 packets has been no tested
+  ! fix, tee plugin: replication of IPv6 packets has been now tested
     working. Previously the output message size was obviously encoded
-    wrongly and the checksum (mandatory piece of info in IPv6,
+    wrongly and the checksum (mandatory piece of info to fill in IPv6,
     contrary to IPv4 where it is optional) was not being computed.
   ! fix, kafka_common.c: improved p_kafka_check_outq_len() error log
     message to report the amount of elements have been successfully
-    processed in order to better assess impact of the problem when
-    inspecting logs.
+    processed in order to better assess impact and dynamics of the
+    problem when inspecting logs.
   ! fix, net_aggr.c: if networks_file_filter is set to true, don't
     add a default route to the table.
   ! fix, cfg.c: throw error if config file is not a regular file.
