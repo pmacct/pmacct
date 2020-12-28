@@ -596,7 +596,9 @@ int bgp_parse_notification_msg(struct bgp_msg_data *bmd, char *pkt, u_int8_t *re
 
 int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 {
+  struct bgp_misc_structs *bms;
   struct bgp_peer *peer = bmd->peer;
+  char bgp_peer_str[INET6_ADDRSTRLEN];
   struct bgp_header bhdr;
   struct bgp_attr attr;
   struct bgp_attr_extra attr_extra;
@@ -608,9 +610,13 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   struct bgp_nlri withdraw;
   struct bgp_nlri mp_update;
   struct bgp_nlri mp_withdraw;
-  int ret;
+  int ret, parsed = FALSE;
 
   if (!peer || !pkt) return ERR;
+
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return ERR;
 
   /* Set initial values. */
   memset(&attr, 0, sizeof (struct bgp_attr));
@@ -667,35 +673,58 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   }
 
   /* NLRI parsing */
-  if (withdraw.length) bgp_nlri_parse(bmd, NULL, &attr_extra, &withdraw, BGP_NLRI_WITHDRAW);
-  if (update.length) bgp_nlri_parse(bmd, &attr, &attr_extra, &update, BGP_NLRI_UPDATE);
+  if (withdraw.length) {
+    bgp_nlri_parse(bmd, NULL, &attr_extra, &withdraw, BGP_NLRI_WITHDRAW);
+    parsed = TRUE;
+  }
+
+  if (update.length) {
+    bgp_nlri_parse(bmd, &attr, &attr_extra, &update, BGP_NLRI_UPDATE);
+    parsed = TRUE;
+  }
 	
   if (mp_update.length
 	  && mp_update.afi == AFI_IP
 	  && (mp_update.safi == SAFI_UNICAST || mp_update.safi == SAFI_MPLS_LABEL ||
-	      mp_update.safi == SAFI_MPLS_VPN))
+	      mp_update.safi == SAFI_MPLS_VPN)) {
     bgp_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_UPDATE);
+    parsed = TRUE;
+  }
 
   if (mp_withdraw.length
 	  && mp_withdraw.afi == AFI_IP
 	  && (mp_withdraw.safi == SAFI_UNICAST || mp_withdraw.safi == SAFI_MPLS_LABEL ||
-	      mp_withdraw.safi == SAFI_MPLS_VPN))
+	      mp_withdraw.safi == SAFI_MPLS_VPN)) {
     bgp_nlri_parse (bmd, NULL, &attr_extra, &mp_withdraw, BGP_NLRI_WITHDRAW);
+    parsed = TRUE;
+  }
 
   if (mp_update.length
 	  && mp_update.afi == AFI_IP6
 	  && (mp_update.safi == SAFI_UNICAST || mp_update.safi == SAFI_MPLS_LABEL ||
-	      mp_update.safi == SAFI_MPLS_VPN))
+	      mp_update.safi == SAFI_MPLS_VPN)) {
     bgp_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_UPDATE);
+    parsed = TRUE;
+  }
 
   if (mp_withdraw.length
 	  && mp_withdraw.afi == AFI_IP6
 	  && (mp_withdraw.safi == SAFI_UNICAST || mp_withdraw.safi == SAFI_MPLS_LABEL ||
-	      mp_withdraw.safi == SAFI_MPLS_VPN))
+	      mp_withdraw.safi == SAFI_MPLS_VPN)) {
     bgp_nlri_parse(bmd, NULL, &attr_extra, &mp_withdraw, BGP_NLRI_WITHDRAW);
+    parsed = TRUE;
+  }
 
   /* Receipt of End-of-RIB can be processed here; being a silent
 	 BGP receiver only, honestly it doesn't matter to us */
+
+  if ((mp_update.length || mp_withdraw.length) && !parsed) {
+    bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] Received unsupported NLRI afi=%u safi=%u\n",
+        config.name, bms->log_str, bgp_peer_str,
+	mp_update.length ? mp_update.afi : mp_withdraw.afi,
+	mp_update.length ? mp_update.safi : mp_withdraw.safi);
+  }
 
   /* Everything is done.  We unintern temporary structures which
 	 interned in bgp_attr_parse(). */
@@ -709,6 +738,7 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
     lcommunity_unintern(peer, attr.lcommunity);
 
   ret = ntohs(bhdr.bgpo_len);
+
   return ret;
 }
 

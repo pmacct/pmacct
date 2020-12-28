@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /* 
@@ -54,16 +54,19 @@
 #define BGP_CAPABILITY		6
 #define BGP_ROUTE_REFRESH_CISCO 0x80
 
-/* Address family numbers from RFC1700. */
+/* Address family numbers */
 #define AFI_IP                    1
 #define AFI_IP6                   2
-#define AFI_MAX                   3
+#define AFI_BGP_LS		  16388
+#define AFI_MAX                   16388
 
 /* Subsequent Address Family Identifier. */
 #define SAFI_UNICAST              1
 #define SAFI_MULTICAST            2
 #define SAFI_UNICAST_MULTICAST    3
 #define SAFI_MPLS_LABEL           4
+#define SAFI_LS_GLOBAL		  71
+#define SAFI_LS_VPN		  72
 #define SAFI_MPLS_VPN             128
 #define SAFI_MAX                  129
 
