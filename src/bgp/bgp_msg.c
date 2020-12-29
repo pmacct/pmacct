@@ -715,12 +715,26 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
     parsed = TRUE;
   }
 
+  if (mp_update.length
+	  && mp_update.afi == AFI_BGP_LS
+	  && (mp_update.safi == SAFI_LS_GLOBAL || mp_update.safi == SAFI_LS_VPN)) {
+    bgp_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_UPDATE);
+    parsed = TRUE;
+  }
+
+  if (mp_withdraw.length
+	  && mp_withdraw.afi == AFI_BGP_LS
+	  && (mp_withdraw.safi == SAFI_LS_GLOBAL || mp_withdraw.safi == SAFI_LS_VPN)) {
+    bgp_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_WITHDRAW);
+    parsed = TRUE;
+  }
+
   /* Receipt of End-of-RIB can be processed here; being a silent
 	 BGP receiver only, honestly it doesn't matter to us */
 
-  if ((mp_update.length || mp_withdraw.length) && !parsed) {
+  if ((update_len || withdraw_len ||  mp_update.length || mp_withdraw.length) && !parsed) {
     bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
-    Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] Received unsupported NLRI afi=%u safi=%u\n",
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_parse_update_msg() Received unsupported NLRI afi=%u safi=%u\n",
         config.name, bms->log_str, bgp_peer_str,
 	mp_update.length ? mp_update.afi : mp_withdraw.afi,
 	mp_update.length ? mp_update.safi : mp_withdraw.safi);
@@ -1027,7 +1041,9 @@ int bgp_attr_parse_mp_unreach(struct bgp_peer *peer, u_int16_t len, struct bgp_a
 /* BGP UPDATE NLRI parsing */
 int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *attr_extra, struct bgp_nlri *info, int type)
 {
+  struct bgp_misc_structs *bms;
   struct bgp_peer *peer = bmd->peer;
+  char bgp_peer_str[INET6_ADDRSTRLEN];
   u_char *pnt;
   u_char *lim;
   struct prefix p;
@@ -1038,6 +1054,12 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
   struct rd_ip  *rdi;
   struct rd_as  *rda;
   struct rd_as4 *rda4;
+
+  if (!peer) return ERR;
+
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return ERR;
   
   memset(&p, 0, sizeof(struct prefix));
 
@@ -1046,7 +1068,6 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
   end = info->length;
 
   for (idx = 0; pnt < lim; pnt += psize, idx++) {
-
     /* handle path identifier */
     if (peer->cap_add_paths[info->afi][info->safi]) {
       memcpy(&attr_extra->path_id, pnt, 4);
@@ -1157,6 +1178,12 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
       memcpy(&p.u.prefix, (pnt + labels_size + 8 /* RD */), (psize - (labels_size + 8 /* RD */)));
       p.prefixlen -= (8 * (labels_size + 8 /* RD */));
     }
+    else {
+      bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_nlri_parse() Received unsupported NLRI afi=%u safi=%u\n",
+        config.name, bms->log_str, bgp_peer_str, info->afi, info->safi);
+      continue;
+    }
 
     // XXX: check prefix correctnesss now that we have it?
 
@@ -1178,7 +1205,6 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
     else {
       ret = bgp_process_withdraw(bmd, &p, attr, attr_extra, info->afi, info->safi, idx);
       (void)ret; //Treat error?
-
     }
 
 #if defined WITH_ZMQ
