@@ -1851,7 +1851,7 @@ char *write_sep(char *sep, int *count)
   }
 }
 
-void version_daemon(char *header)
+void version_daemon(int acct_type, char *header)
 {
   struct utsname utsbuf;
 
@@ -1906,6 +1906,33 @@ void version_daemon(char *header)
 #ifdef WITH_NFLOG
   printf("netfilter_log\n");
 #endif
+
+  if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM) {
+    printf("\n");
+
+    printf("Plugins:\n");
+    printf("memory\n");
+    printf("print\n");
+    printf("nfprobe\n");
+    printf("sfprobe\n");
+    printf("tee\n");
+#ifdef WITH_MYSQL
+    printf("mysql\n");
+#endif
+#ifdef WITH_PGSQL
+    printf("postgresql\n");
+#endif
+#ifdef WITH_SQLITE3
+    printf("sqlite\n");
+#endif
+#ifdef WITH_RABBITMQ
+    printf("amqp\n");
+#endif
+#ifdef WITH_KAFKA
+    printf("kafka\n");
+#endif
+  }
+
   printf("\n");
 
   if (!uname(&utsbuf)) {

@@ -166,7 +166,7 @@ int main(int argc,char **argv, char **envp)
       exit(0);
       break;
     case 'V':
-      version_daemon(PMTELEMETRYD_USAGE_HEADER);
+      version_daemon(config.acct_type, PMTELEMETRYD_USAGE_HEADER);
       exit(0);
       break;
     default:

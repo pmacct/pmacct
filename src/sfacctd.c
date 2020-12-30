@@ -366,7 +366,7 @@ int main(int argc,char **argv, char **envp)
       exit(0);
       break;
     case 'V':
-      version_daemon(SFACCTD_USAGE_HEADER);
+      version_daemon(config.acct_type, SFACCTD_USAGE_HEADER);
       exit(0);
       break;
     case 'a':

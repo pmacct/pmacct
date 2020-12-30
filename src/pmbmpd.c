@@ -175,7 +175,7 @@ int main(int argc,char **argv, char **envp)
       exit(0);
       break;
     case 'V':
-      version_daemon(PMBMPD_USAGE_HEADER);
+      version_daemon(config.acct_type, PMBMPD_USAGE_HEADER);
       exit(0);
       break;
     default:

@@ -521,7 +521,7 @@ int main(int argc,char **argv, char **envp)
       exit(0);
       break;
     case 'V':
-      version_daemon(PMACCTD_USAGE_HEADER);
+      version_daemon(config.acct_type, PMACCTD_USAGE_HEADER);
       exit(0);
       break;
     case 'a':
