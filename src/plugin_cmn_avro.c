@@ -1216,6 +1216,11 @@ char *compose_avro_schema_name(char *extra1, char *extra2)
 }
 
 #ifdef WITH_SERDES
+void p_avro_serdes_logger(serdes_t *sd_desc, int level, const char *fac, const char *buf, void *opaque)
+{
+  Log(LOG_DEBUG, "DEBUG ( %s/%s ): SERDES-%i-%s: %s\n", config.name, config.type, level, fac, buf);
+}
+
 serdes_schema_t *compose_avro_schema_registry_name_2(char *topic, int is_topic_dyn,
 		avro_schema_t avro_schema, char *type, char *name, char *schema_registry)
 {
@@ -1263,6 +1268,12 @@ serdes_schema_t *compose_avro_schema_registry_name(char *topic, int is_topic_dyn
   }
 
   sd_conf = serdes_conf_new(NULL, 0, "schema.registry.url", schema_registry, NULL);
+  if (!sd_conf) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): serdes_conf_new() failed: %s. Exiting.\n", config.name, config.type, sd_errstr);
+    exit_gracefully(1);
+  }
+
+  serdes_conf_set_log_cb(sd_conf, p_avro_serdes_logger);
 
   sd_desc = serdes_new(sd_conf, sd_errstr, sizeof(sd_errstr));
   if (!sd_desc) {

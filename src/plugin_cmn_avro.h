@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
 */
 
 /*
@@ -71,6 +71,7 @@ extern void write_avro_json_record_to_file(FILE *, avro_value_t);
 extern char *write_avro_json_record_to_buf(avro_value_t);
 
 #ifdef WITH_SERDES
+extern void p_avro_serdes_logger(serdes_t *, int, const char *, const char *, void *);
 extern serdes_schema_t *compose_avro_schema_registry_name(char *, int, avro_schema_t, char *, char *, char *);
 extern serdes_schema_t *compose_avro_schema_registry_name_2(char *, int, avro_schema_t, char *, char *, char *);
 #endif
