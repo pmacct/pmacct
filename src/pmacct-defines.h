@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -537,7 +537,7 @@ typedef u_int64_t pm_counter_t;
 #define PM_FTYPE_MPLS			10
 #define PM_FTYPE_MPLS_IPV4		11 /* PM_FTYPE_MPLS + PM_FTYPE_IPV4 */
 #define PM_FTYPE_MPLS_IPV6		12 /* PM_FTYPE_MPLS + PM_FTYPE_IPV6 */
-#define PM_FTYPE_VLAN_MPLS		15
+#define PM_FTYPE_VLAN_MPLS		15 /* PM_FTYPE_MPLS + PM_FTYPE_VLAN */
 #define PM_FTYPE_VLAN_MPLS_IPV4		16 /* PM_FTYPE_VLAN_MPLS + PM_FTYPE_IPV4 */
 #define PM_FTYPE_VLAN_MPLS_IPV6		17 /* PM_FTYPE_VLAN_MPLS + PM_FTYPE_IPV6 */
 #define PM_FTYPE_TRAFFIC_MAX		99  /* temporary: re-coding needed */

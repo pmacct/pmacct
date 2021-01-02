@@ -96,10 +96,13 @@
 ! 'sample_type'         MATCH: in sFlow v2/v4/v5 this is compared against the
 !			sample type field. Expected in <Enterprise>:<Format>
 !			notation. In NetFlow/IPIX three keywords are supported:
-!			"flow" to denote templates suitable to transport flow
-!			traffic data, "event" to denote templates suitable to
-!			flag events and "option" to denote NetFlow/IPFIX option
-!			records data.
+!			"flow" to match any flow traffic data, "flow-ipv4" and
+!			"flow-ipv6" to match respectively only IPv4 and IPv6 flow
+!			traffic data, "flow-mpls-ipv4" and "flow-mpls-ipv6" to
+!			match respectively only MPLS-labelled IPv4 and IPv6 flow
+!			traffic data, "event" to match templates suitable to flag
+!			events and "option" to denote NetFlow/IPFIX option records
+!			data.
 ! 'direction'		MATCH: expected values are 0 (ingress direction) or 1
 !			(egress direction). In NFv9/IPFIX this is compared
 !			against the direction (61) field; in sFlow v2/v4/v5 this

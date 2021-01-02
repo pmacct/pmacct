@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -615,12 +615,28 @@ int PT_map_sample_type_handler(char *filename, struct id_entry *e, char *value, 
     }
   }
   else if (acct_type == ACCT_NF) {
-    if (!strncmp(value, "flow", strlen("flow")))
+    if (!strncmp(value, "flow-ipv4", strlen("flow-ipv4"))) {
+      e->key.sample_type.n = PM_FTYPE_IPV4;
+    }
+    else if (!strncmp(value, "flow-ipv6", strlen("flow-ipv6"))) {
+      e->key.sample_type.n = PM_FTYPE_IPV6;
+    }
+    else if (!strncmp(value, "flow", strlen("flow"))) {
       e->key.sample_type.n = PM_FTYPE_TRAFFIC;
-    else if (!strncmp(value, "event", strlen("event")))
+      e->key.sample_type.n |= 1 << 31;
+    }
+    else if (!strncmp(value, "flow-mpls-ipv4", strlen("flow-mpls-ipv4"))) {
+      e->key.sample_type.n = PM_FTYPE_MPLS_IPV4;
+    }
+    else if (!strncmp(value, "flow-mpls-ipv6", strlen("flow-mpls-ipv6"))) {
+      e->key.sample_type.n = PM_FTYPE_MPLS_IPV6;
+    }
+    else if (!strncmp(value, "event", strlen("event"))) {
       e->key.sample_type.n = NF9_FTYPE_EVENT;
-    else if (!strncmp(value, "option", strlen("option")))
+    }
+    else if (!strncmp(value, "option", strlen("option"))) {
       e->key.sample_type.n = NF9_FTYPE_OPTION;
+    }
     else {
       Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid 'sample_type' value.\n", config.name, config.type, filename);
       return TRUE;
@@ -1925,13 +1941,20 @@ int pretag_comms_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_sample_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  u_int8_t flow_type = pptrs->flow_type;
+  u_int32_t entry_flow_type = entry->key.sample_type.n;
+  u_int8_t flow_type = pptrs->flow_type, remap = FALSE;
 
-  if (flow_type >= PM_FTYPE_TRAFFIC && flow_type <= PM_FTYPE_TRAFFIC_MAX) {
-    flow_type = PM_FTYPE_TRAFFIC;
+  remap = (entry_flow_type >> 31) & TRUE;
+
+  if (remap) {
+    entry_flow_type ^= 1 << 31;
+
+    if (flow_type >= PM_FTYPE_TRAFFIC && flow_type <= PM_FTYPE_TRAFFIC_MAX) {
+      flow_type = PM_FTYPE_TRAFFIC;
+    }
   }
 
-  if (entry->key.sample_type.n == flow_type) return (FALSE | entry->key.sample_type.neg); 
+  if (entry_flow_type == flow_type) return (FALSE | entry->key.sample_type.neg);
   else return (TRUE ^ entry->key.sample_type.neg);
 }
 
