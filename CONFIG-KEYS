@@ -673,7 +673,9 @@ DEFAULT:	See amqp_persistent_msg
 
 KEY:		amqp_frame_max
 DESC:		Defines the maximum size, in bytes, of an AMQP frame on the wire to request of the broker
-		for the connection. 4096 is the minimum size, 2^31-1 is the maximum; see also amqp_host.
+		for the connection. 4096 is the minimum size, 2^31-1 is the maximum; it may be needed to
+		up the value from its default especially when making use of amqp_multi_values which will
+		produce larger batched messages. See also amqp_host.
 DEFAULT:	131072
 
 KEY:		[ bgp_daemon_msglog_amqp_frame_max | bgp_table_dump_amqp_frame_max |
