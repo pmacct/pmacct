@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -2141,12 +2141,13 @@ int SF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
 u_int8_t SF_evaluate_flow_type(struct packet_ptrs *pptrs)
 {
   SFSample *sample = (SFSample *)pptrs->f_data;
-  u_int8_t ret = PM_FTYPE_TRAFFIC;
+  u_int8_t ret = FALSE;
 
   if (sample->in_vlan || sample->out_vlan) ret += PM_FTYPE_VLAN;
   if (sample->lstk.depth > 0) ret += PM_FTYPE_MPLS;
-  if (sample->gotIPV4); 
-  else if (sample->gotIPV6) ret += PM_FTYPE_TRAFFIC_IPV6;
+
+  if (sample->gotIPV4) ret += PM_FTYPE_IPV4;
+  else if (sample->gotIPV6) ret += PM_FTYPE_IPV6;
 
   return ret;
 }

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -354,6 +354,11 @@ int ip_handler(register struct packet_ptrs *pptrs)
   }
 
   quit:
+
+  if (ret) {
+    pptrs->flow_type = PM_FTYPE_IPV4;
+  }
+ 
   return ret;
 }
 
@@ -514,7 +519,12 @@ int ip6_handler(register struct packet_ptrs *pptrs)
   }
 
   quit:
-  return TRUE;
+
+  if (ret) {
+    pptrs->flow_type = PM_FTYPE_IPV6;
+  }
+
+  return ret;
 }
 
 int PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)

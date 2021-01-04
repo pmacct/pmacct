@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -2875,7 +2875,7 @@ void NF_compute_once()
 
 u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_ptrs *pptrs)
 {
-  u_int8_t ret = PM_FTYPE_TRAFFIC;
+  u_int8_t ret = FALSE;
   u_int8_t have_ip_proto = FALSE;
 
   /* first round: event vs traffic */
@@ -2886,26 +2886,36 @@ u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_p
   }
   else {
     if ((tpl->tpl[NF9_IN_VLAN].len && *(pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off) > 0) ||
-        (tpl->tpl[NF9_OUT_VLAN].len && *(pptrs->f_data+tpl->tpl[NF9_OUT_VLAN].off) > 0)) ret += PM_FTYPE_VLAN;
-    if (tpl->tpl[NF9_MPLS_LABEL_1].len /* check: value > 0 ? */) ret += PM_FTYPE_MPLS;
+        (tpl->tpl[NF9_OUT_VLAN].len && *(pptrs->f_data+tpl->tpl[NF9_OUT_VLAN].off) > 0)) {
+      ret += PM_FTYPE_VLAN;
+    }
+
+    if (tpl->tpl[NF9_MPLS_LABEL_1].len /* check: value > 0 ? */) {
+      ret += PM_FTYPE_MPLS;
+    }
 
     /* Explicit IP protocol definition first; a bit of heuristics as fallback */
     if (tpl->tpl[NF9_IP_PROTOCOL_VERSION].len) {
       if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 4) {
+	ret += PM_FTYPE_IPV4;
 	have_ip_proto = TRUE;
       }
       else if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 6) {
-	ret += PM_FTYPE_TRAFFIC_IPV6;
+	ret += PM_FTYPE_IPV6;
 	have_ip_proto = TRUE;
       }
+    }
+    else {
+      ret += PM_FTYPE_IPV4;
     }
 
     if (!have_ip_proto) {
       if (tpl->tpl[NF9_IPV4_SRC_ADDR].len) {
+        ret += PM_FTYPE_IPV4;
 	have_ip_proto = TRUE;
       }
       else if (tpl->tpl[NF9_IPV6_SRC_ADDR].len) {
-	ret += PM_FTYPE_TRAFFIC_IPV6;
+	ret += PM_FTYPE_IPV6;
 	have_ip_proto = TRUE;
       }
     }
