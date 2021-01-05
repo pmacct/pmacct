@@ -592,7 +592,7 @@ int PT_map_sample_type_handler(char *filename, struct id_entry *e, char *value, 
       case 0:
         tmp = atoi(token);
         if (tmp > 1048575) { // 2^20-1: 20 bit Enterprise value
-          Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid 'sample_type' value.\n", config.name, config.type, filename);
+          Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid sFlow 'sample_type' value.\n", config.name, config.type, filename);
           return TRUE;
         }
         e->key.sample_type.n = tmp;
@@ -601,13 +601,13 @@ int PT_map_sample_type_handler(char *filename, struct id_entry *e, char *value, 
       case 1:
         tmp = atoi(token);
         if (tmp > 4095) { // 2^12-1: 12 bit Format value
-          Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid 'sample_type' value.\n", config.name, config.type, filename);
+          Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid sFlow 'sample_type' value.\n", config.name, config.type, filename);
           return TRUE;
         }
         e->key.sample_type.n |= tmp;
         break;
       default:
-        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid 'sample_type' value.\n", config.name, config.type, filename);
+        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid sFlow 'sample_type' value.\n", config.name, config.type, filename);
         return TRUE;
       }
 
@@ -623,7 +623,6 @@ int PT_map_sample_type_handler(char *filename, struct id_entry *e, char *value, 
     }
     else if (!strncmp(value, "flow", strlen("flow"))) {
       e->key.sample_type.n = PM_FTYPE_TRAFFIC;
-      e->key.sample_type.n |= 1 << 31;
     }
     else if (!strncmp(value, "flow-mpls-ipv4", strlen("flow-mpls-ipv4"))) {
       e->key.sample_type.n = PM_FTYPE_MPLS_IPV4;
@@ -638,11 +637,14 @@ int PT_map_sample_type_handler(char *filename, struct id_entry *e, char *value, 
       e->key.sample_type.n = NF9_FTYPE_OPTION;
     }
     else {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid 'sample_type' value.\n", config.name, config.type, filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid NetFlow/IPFIX 'sample_type' value.\n", config.name, config.type, filename);
       return TRUE;
     }
   }
-  else return FALSE; /* silently ignore */
+  else {
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid 'sample_type' value.\n", config.name, config.type, filename);
+    return TRUE;
+  }
 
   for (x = 0; e->func[x]; x++) {
     if (e->func_type[x] == PRETAG_SAMPLE_TYPE) {
@@ -1941,20 +1943,15 @@ int pretag_comms_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_sample_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  u_int32_t entry_flow_type = entry->key.sample_type.n;
-  u_int8_t flow_type = pptrs->flow_type, remap = FALSE;
+  u_int8_t flow_type = pptrs->flow_type;
 
-  remap = (entry_flow_type >> 31) & TRUE;
-
-  if (remap) {
-    entry_flow_type ^= 1 << 31;
-
+  if (entry->key.sample_type.n == PM_FTYPE_TRAFFIC) {
     if (flow_type >= PM_FTYPE_TRAFFIC && flow_type <= PM_FTYPE_TRAFFIC_MAX) {
       flow_type = PM_FTYPE_TRAFFIC;
     }
   }
 
-  if (entry_flow_type == flow_type) return (FALSE | entry->key.sample_type.neg);
+  if (entry->key.sample_type.n == flow_type) return (FALSE | entry->key.sample_type.neg);
   else return (TRUE ^ entry->key.sample_type.neg);
 }
 
