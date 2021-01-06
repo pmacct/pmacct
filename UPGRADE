@@ -6,6 +6,19 @@ the changes done or break old assumptions no longer valid; while the effort
 is to keep these cases at a low, please read this file in preparation to
 upgrading your installation.
 
+TO:	>= 1.7.7
+FROM:	<= 1.7.6
+TOPIC:  Obsoleted features
+DESC:   Following is the list of features, knobs and plugins that are being
+        discontinued with release 1.7.7:
+	* sql_history_since_epoch was removed from docs for a while; it is
+	  replaced by timestamps_since_epoch so that all timestamps-related
+	  config keys have the 'timestamps' suffix;
+	* refresh_maps and pre_tag_map_entries were removed from docs for a
+	  while; they are replaced respectively by maps_refresh and
+	  maps_entries so that all maps-related config keys have the 'maps'
+	  suffix.
+
 TO:	>= 1.7.6
 FROM:	<= 1.7.5
 TOPIC:	Obsoleted features

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -108,8 +108,7 @@ static const struct _dictionary_line dictionary[] = {
   {"sql_history", cfg_key_sql_history},
   {"sql_history_offset", cfg_key_sql_history_offset},
   {"sql_history_roundoff", cfg_key_sql_history_roundoff},
-  {"sql_history_since_epoch", cfg_key_timestamps_since_epoch}, /* Legacy key */
-  {"sql_backup_host", cfg_key_sql_recovery_backup_host}, /* Legacy feature; to be obsoleted */
+  {"sql_backup_host", cfg_key_sql_recovery_backup_host}, /* Legacy feature */
   {"sql_recovery_backup_host", cfg_key_sql_recovery_backup_host},
   {"sql_delimiter", cfg_key_sql_delimiter},
   {"sql_max_writers", cfg_key_dump_max_writers},
@@ -191,8 +190,8 @@ static const struct _dictionary_line dictionary[] = {
   {"amqp_vhost", cfg_key_amqp_vhost},
   {"amqp_markers", cfg_key_print_markers},
   {"amqp_output", cfg_key_message_broker_output},
-  {"amqp_avro_schema_routing_key", cfg_key_amqp_avro_schema_routing_key}, /* XXX: Legacy key */
-  {"amqp_avro_schema_refresh_time", cfg_key_amqp_avro_schema_refresh_time}, /* XXX: Legacy key */
+  {"amqp_avro_schema_routing_key", cfg_key_amqp_avro_schema_routing_key}, /* Legacy feature */
+  {"amqp_avro_schema_refresh_time", cfg_key_amqp_avro_schema_refresh_time}, /* Legacy feature */
   {"amqp_trigger_exec", cfg_key_sql_trigger_exec},
   {"kafka_refresh_time", cfg_key_sql_refresh_time},
   {"kafka_history", cfg_key_sql_history},
@@ -330,13 +329,11 @@ static const struct _dictionary_line dictionary[] = {
   {"telemetry_dump_kafka_partition", cfg_key_telemetry_dump_kafka_partition},
   {"telemetry_dump_kafka_partition_key", cfg_key_telemetry_dump_kafka_partition_key},
   {"telemetry_dump_kafka_config_file", cfg_key_telemetry_dump_kafka_config_file},
-  {"refresh_maps", cfg_key_maps_refresh}, /* Legacy key */
   {"maps_refresh", cfg_key_maps_refresh},
   {"maps_index", cfg_key_maps_index},
   {"maps_entries", cfg_key_maps_entries},
   {"maps_row_len", cfg_key_maps_row_len},
   {"pre_tag_map", cfg_key_pre_tag_map},	
-  {"pre_tag_map_entries", cfg_key_maps_entries}, /* Legacy key */
   {"pre_tag_filter", cfg_key_pre_tag_filter},
   {"pre_tag2_filter", cfg_key_pre_tag2_filter},
   {"pre_tag_label_filter", cfg_key_pre_tag_label_filter},
@@ -639,8 +636,8 @@ static struct plugin_type_entry plugin_types_list[] = {
   {PLUGIN_ID_SQLITE3,	"sqlite3",	sqlite3_plugin},
 #endif
 #ifdef WITH_MONGODB
-  {PLUGIN_ID_UNKNOWN,	"mongodb",		mongodb_legacy_warning},
-  {PLUGIN_ID_MONGODB,  	"mongodb_legacy",	mongodb_plugin},
+  {PLUGIN_ID_UNKNOWN,	"mongodb",		mongodb_legacy_warning}, /* Legacy plugin */
+  {PLUGIN_ID_MONGODB,  	"mongodb_legacy",	mongodb_plugin}, /* Legacy plugin */
 #endif
 #ifdef WITH_RABBITMQ
   {PLUGIN_ID_AMQP,	"amqp",		amqp_plugin},
