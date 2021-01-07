@@ -18,6 +18,10 @@ DESC:   Following is the list of features, knobs and plugins that are being
 	  while; they are replaced respectively by maps_refresh and
 	  maps_entries so that all maps-related config keys have the 'maps'
 	  suffix.
+	* interface_wait and interface were removed from docs for a while;
+	  they are replaced respectively by pcap_interface_wait and
+	  pcap_interface so that all pmacctd / libpcap-related config keys
+	  have the 'pcap' suffix.
 
 TO:	>= 1.7.6
 FROM:	<= 1.7.5
