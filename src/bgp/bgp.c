@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -337,8 +337,8 @@ void skinny_bgp_daemon_online()
 #endif
 
 #if (defined IPV6_BINDV6ONLY)
-  rc = setsockopt(config.bgp_sock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *) &no, (socklen_t) sizeof(no));
-  if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IPV6_BINDV6ONLY (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
+  rc = setsockopt(config.bgp_sock, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &no, (socklen_t) sizeof(no));
+  if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IPV6_V6ONLY (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
 #endif
 
   if (config.bgp_daemon_pipe_size) {
