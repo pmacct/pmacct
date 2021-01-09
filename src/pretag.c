@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -403,7 +403,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 		  recirculate = FALSE;
 		  recirculate_ipv6:
 
-		  if (!tmp.e[tmp.num].key.agent_ip.a.family) {
+		  if (!tmp.e[tmp.num].key.agent_ip.a.family || !tmp.e[tmp.num].key.agent_mask.len) {
 		    if (!recirculate) {
 		      memset(&tmp.e[tmp.num].key.agent_ip, 0, sizeof(pt_hostaddr_t));
 		      memset(&tmp.e[tmp.num].key.agent_mask, 0, sizeof(pt_hostmask_t));
