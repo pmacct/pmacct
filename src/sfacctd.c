@@ -715,14 +715,12 @@ int main(int argc,char **argv, char **envp)
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR.\n", config.name);
 #endif
 
-#if (defined IPV6_BINDV6ONLY)
-    {
-      int no=0;
+    if (config.nfacctd_ipv6_only) {
+      int yes=1;
 
-      rc = setsockopt(config.sock, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &no, (socklen_t) sizeof(no));
+      rc = setsockopt(config.sock, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &yes, (socklen_t) sizeof(yes));
       if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for IPV6_V6ONLY.\n", config.name);
     }
-#endif
 
     if (config.nfacctd_pipe_size) {
       socklen_t l = sizeof(config.nfacctd_pipe_size);

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -149,6 +149,7 @@ extern int cfg_key_print_output_custom_cfg_file(char *, char *, char *);
 extern int cfg_key_print_latest_file(char *, char *, char *);
 extern int cfg_key_nfacctd_port(char *, char *, char *);
 extern int cfg_key_nfacctd_ip(char *, char *, char *);
+extern int cfg_key_nfacctd_ipv6_only(char *, char *, char *);
 extern int cfg_key_nfacctd_allow_file(char *, char *, char *);
 extern int cfg_key_nfacctd_time_secs(char *, char *, char *);
 extern int cfg_key_nfacctd_time_new(char *, char *, char *);
@@ -204,6 +205,7 @@ extern int cfg_key_telemetry_daemon(char *, char *, char *);
 extern int cfg_key_telemetry_port_tcp(char *, char *, char *);
 extern int cfg_key_telemetry_port_udp(char *, char *, char *);
 extern int cfg_key_telemetry_ip(char *, char *, char *);
+extern int cfg_key_telemetry_ipv6_only(char *, char *, char *);
 extern int cfg_key_telemetry_zmq_address(char *, char *, char *);
 extern int cfg_key_telemetry_kafka_broker_host(char *, char *, char *);
 extern int cfg_key_telemetry_kafka_broker_port(char *, char *, char *);
@@ -336,6 +338,7 @@ extern int cfg_key_bgp_daemon_msglog_kafka_config_file(char *, char *, char *);
 extern int cfg_key_bgp_daemon_msglog_kafka_avro_schema_registry(char *, char *, char *);
 extern int cfg_key_bgp_daemon_max_peers(char *, char *, char *);
 extern int cfg_key_bgp_daemon_ip(char *, char *, char *);
+extern int cfg_key_bgp_daemon_ipv6_only(char *, char *, char *);
 extern int cfg_key_bgp_daemon_id(char *, char *, char *);
 extern int cfg_key_bgp_daemon_as(char *, char *, char *);
 extern int cfg_key_bgp_daemon_port(char *, char *, char *);
@@ -407,6 +410,7 @@ extern int cfg_key_bgp_lg_passwd(char *, char *, char *);
 extern int cfg_key_bgp_xconnect_map(char *, char *, char *);
 extern int cfg_key_bmp_daemon(char *, char *, char *);
 extern int cfg_key_bmp_daemon_ip(char *, char *, char *);
+extern int cfg_key_bmp_daemon_ipv6_only(char *, char *, char *);
 extern int cfg_key_bmp_daemon_port(char *, char *, char *);
 extern int cfg_key_bmp_daemon_pipe_size(char *, char *, char *);
 extern int cfg_key_bmp_daemon_max_peers(char *, char *, char *);

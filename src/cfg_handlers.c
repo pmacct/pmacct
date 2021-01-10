@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -3134,6 +3134,20 @@ int cfg_key_nfacctd_ip(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_nfacctd_ipv6_only(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_ipv6_only = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key '%s_ipv6_only'. Globalized.\n", filename, config.progname);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_kafka_broker_host(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -3821,6 +3835,20 @@ int cfg_key_bgp_daemon_ip(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_bgp_daemon_ipv6_only(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_ipv6_only = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_ipv6_only'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_bgp_daemon_id(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -4094,6 +4122,20 @@ int cfg_key_bmp_daemon_ip(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) list->cfg.bmp_daemon_ip = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_daemon_ip'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_bmp_daemon_ipv6_only(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.bmp_daemon_ipv6_only = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_daemon_ipv6_only'. Globalized.\n", filename);
 
   return changes;
 }
@@ -7404,6 +7446,20 @@ int cfg_key_telemetry_ip(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) list->cfg.telemetry_ip = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_ip'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_ipv6_only(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_ipv6_only = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_ipv6_only'. Globalized.\n", filename);
 
   return changes;
 }

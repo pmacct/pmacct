@@ -255,14 +255,12 @@ int skinny_bmp_daemon()
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
 #endif
 
-#if (defined IPV6_BINDV6ONLY)
-    {
-      int no=0;
+    if (config.bmp_daemon_ipv6_only) {
+      int yes=1;
 
-      rc = setsockopt(config.bmp_sock, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &no, (socklen_t) sizeof(no));
+      rc = setsockopt(config.bmp_sock, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &yes, (socklen_t) sizeof(yes));
       if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IPV6_V6ONLY (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
     }
-#endif
 
     if (config.bmp_daemon_pipe_size) {
       socklen_t l = sizeof(config.bmp_daemon_pipe_size);

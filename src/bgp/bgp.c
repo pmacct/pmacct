@@ -92,9 +92,6 @@ int skinny_bgp_daemon()
 void skinny_bgp_daemon_online()
 {
   int ret, rc, peers_idx, allowed, yes=1;
-#if (defined IPV6_BINDV6ONLY)
-  int no=0;
-#endif
   int peers_idx_rr = 0, peers_xconnect_idx_rr = 0, max_peers_idx = 0;
   struct plugin_requests req;
   struct host_addr addr;
@@ -336,10 +333,12 @@ void skinny_bgp_daemon_online()
   if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
 #endif
 
-#if (defined IPV6_BINDV6ONLY)
-  rc = setsockopt(config.bgp_sock, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &no, (socklen_t) sizeof(no));
-  if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IPV6_V6ONLY (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
-#endif
+  if (config.bgp_daemon_ipv6_only) {
+    int yes=1;
+
+    rc = setsockopt(config.bgp_sock, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &yes, (socklen_t) sizeof(yes));
+    if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IPV6_V6ONLY (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
+  }
 
   if (config.bgp_daemon_pipe_size) {
     socklen_t l = sizeof(config.bgp_daemon_pipe_size);

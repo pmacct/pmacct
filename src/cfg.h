@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -194,6 +194,7 @@ struct configuration {
   char *print_latest_file;
   int nfacctd_port;
   char *nfacctd_ip;
+  int nfacctd_ipv6_only;
   char *nfacctd_kafka_broker_host;
   int nfacctd_kafka_broker_port;
   char *nfacctd_kafka_topic;
@@ -246,6 +247,7 @@ struct configuration {
   int telemetry_port_tcp;
   int telemetry_port_udp;
   char *telemetry_ip;
+  int telemetry_ipv6_only;
   char *telemetry_zmq_address;
   char *telemetry_kafka_broker_host;
   int telemetry_kafka_broker_port;
@@ -332,6 +334,7 @@ struct configuration {
   char *bgp_daemon_msglog_kafka_avro_schema_registry;
   char *bgp_daemon_id;
   char *bgp_daemon_ip;
+  int bgp_daemon_ipv6_only;
   as_t bgp_daemon_as;
   int bgp_daemon_port;
   int bgp_daemon_pipe_size;
@@ -406,6 +409,7 @@ struct configuration {
   int bmp_sock;
   int bmp_daemon;
   char *bmp_daemon_ip;
+  int bmp_daemon_ipv6_only;
   int bmp_daemon_port;
   int bmp_daemon_pipe_size;
   int bmp_daemon_max_peers;
