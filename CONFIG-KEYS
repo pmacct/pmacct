@@ -1690,6 +1690,13 @@ DESC:		Defines the IPv4/IPv6 address where to bind the nfacctd (nfacctd_ip) and 
 		daemons.
 DEFAULT:	all interfaces
 
+KEY:		[ nfacctd_ipv6_only | sfacctd_ipv6_only ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
+VALUES:         [ true | false ]
+DESC:		When listening on all interfaces (default setting for nfacctd_ip and sfacctd_ip) and IPv6 is
+		enabled, it is possible to connect with both IPv4 (IPv6 IPv4-mapped) and IPv6. Setting this
+		knob to true disables the IPv4 (IPv6 IPv4-mapped) part.
+DEFAULT:	false
+
 KEY:		[ nfacctd_kafka_broker_host | sfacctd_kafka_broker_host ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
 DESC:		Defines one or multiple, comma-separated, Kafka brokers to receive NetFlow/IPFIX and sFlow
 		from. See kafka_broker_host for more info.
@@ -2301,6 +2308,13 @@ DESC:		Binds the BGP/BMP daemon to a specific interface. Expects as value an IP 
 		selection process at the bgp_daemon_id config directive description). Setting this directive
 		is highly adviced.
 DEFAULT:	0.0.0.0
+
+KEY:            [ bgp_daemon_ipv6_only | bmp_daemon_ipv6_only ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
+VALUES:         [ true | false ]
+DESC:           When listening on all interfaces (default setting for nfacctd_ip and sfacctd_ip) and IPv6 is
+                enabled, it is possible to connect with both IPv4 (IPv6 IPv4-mapped) and IPv6. Setting this
+                knob to true disables the IPv4 (IPv6 IPv4-mapped) part.
+DEFAULT:        false
 
 KEY:            bgp_daemon_id [GLOBAL]
 DESC:		Defines the BGP Router-ID to the supplied value. Expected value is an IPv4 address. If this
@@ -2999,6 +3013,13 @@ KEY:		telemetry_daemon_ip [GLOBAL]
 DESC:		Binds the Streaming Telemetry daemon to a specific interface. Expects as value an IPv4/
 		IPv6 address.
 DEFAULT:        0.0.0.0
+
+KEY:		telemetry_daemon_ipv6_only [GLOBAL]
+VALUES:		[ true | false ]
+DESC:           When listening on all interfaces (default setting for nfacctd_ip and sfacctd_ip) and
+		IPv6 is enabled, it is possible to connect with both IPv4 (IPv6 IPv4-mapped) and IPv6.
+		Setting this knob to true disables the IPv4 (IPv6 IPv4-mapped) part.
+DEFAULT:	false
 
 KEY:		telemetry_daemon_decoder [GLOBAL]
 VALUES:		[ json | gpb | cisco_v0 | cisco_v1 ]
