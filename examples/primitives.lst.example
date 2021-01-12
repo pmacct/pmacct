@@ -71,12 +71,12 @@ name=mtlpl	field_type=91	len=1	semantics=u_int
 !
 name=alu_91	field_type=637:91	len=2	semantics=hex
 !
-! Defines a primitive called 'ttl': if reading an IPv4 header (l3:0x800) the
-! base pointer is offset by 8 bytes, if reading an IPv6 header (l3:0x86dd) it
-! is offset by 7 bytes; it reads for 1 byte and will present it as unsigned
+! Defines a primitive called 'ttl_pm': if reading an IPv4 header (l3:0x800)
+! the base pointer is offset by 8 bytes, if reading an IPv6 header (l3:0x86dd)
+! it is offset by 7 bytes; it reads for 1 byte and will present it as unsigned
 ! int.
 !
-name=ttl	packet_ptr=l3:0x800+8   packet_ptr=l3:0x86dd+7	len=1   semantics=u_int
+name=ttl_pm	packet_ptr=l3:0x800+8   packet_ptr=l3:0x86dd+7	len=1   semantics=u_int
 !
 ! Defines a primitive called 'udp_len': base pointer is set to the UDP header
 ! (l4:17) plus 4 bytes offset, reads for 2 byte and will present it as unsigned
@@ -90,9 +90,10 @@ name=udp_len	packet_ptr=l4:17+4      len=2   semantics=u_int
 !
 name=tcp_win	packet_ptr=l4:6+14      len=2   semantics=u_int
 !
-! nfprobe example: defines a primitive called 'ttl': if reading an IPv4 header
-! (l3:0x800) the base pointer is offset by 8 bytes, if reading an IPv6 header
-! (l3:0x86dd) it is offset by 7 bytes; it reads for 1 byte and will present it
-! as unsigned int. The info is carried via NetFlow/IPFIX in field type #192.
+! nfprobe example: defines a primitive called 'ttl_nf': if reading an IPv4
+! header (l3:0x800) the base pointer is offset by 8 bytes, if reading an IPv6
+! header (l3:0x86dd) it is offset by 7 bytes; it reads for 1 byte and will
+! present it as unsigned int. The info is carried via NetFlow/IPFIX in field
+! type #192.
 !
-name=ttl	packet_ptr=l3:0x800+8   packet_ptr=l3:0x86dd+7  len=1   semantics=u_int	field_type=192
+name=ttl_nf	packet_ptr=l3:0x800+8   packet_ptr=l3:0x86dd+7  len=1   semantics=u_int	field_type=192
