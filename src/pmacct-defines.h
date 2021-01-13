@@ -556,3 +556,10 @@ typedef u_int64_t pm_counter_t;
 #define CUSTOM_PRIMITIVE_L4_PTR		5
 #define CUSTOM_PRIMITIVE_PAYLOAD_PTR	6
 #define CUSTOM_PRIMITIVE_MAX_PPTRS_IDX	7
+
+/* libpcap supports pkg-config only since recently,
+   so fixing this little >= 1.1.0 definition here for
+   OS's coming with vintage versions installed */
+#ifndef PCAP_NETMASK_UNKNOWN
+#define PCAP_NETMASK_UNKNOWN		0xffffffff
+#endif
