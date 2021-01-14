@@ -11,7 +11,7 @@ CLEANFILES = .libcdada_mark
 ## LIBCDADA
 ##
 _libcdada:
-	if [ -z "`git rev-parse HEAD 2> /dev/null`" ]; then \
+	@if [ -z "`git rev-parse HEAD 2> /dev/null`" ]; then \
 		echo "[dep: libcdada] Skipping, not a git repository!"; \
 		exit 0;\
 	fi;\
@@ -23,7 +23,19 @@ _libcdada:
 		if [ $$? != 0 ]; then exit 1; fi;\
 		cd $(abs_builddir); \
 	fi;\
-	if [ ! -f $(abs_builddir)/.libcdada_mark ] || [ "`cat $(abs_builddir)/.libcdada_mark 2> /dev/null`" != "`cd $(abs_srcdir)/libcdada && git rev-parse HEAD`" ]; then \
+	if [ ! -f $(abs_builddir)/.libcdada_mark ] || \
+		[ "`cat $(abs_builddir)/.libcdada_mark 2> /dev/null`" != "`git ls-tree HEAD $(abs_srcdir)/libcdada/ | awk '{print $$3}'`" ] || \
+		[ "`cat $(abs_builddir)/.libcdada_mark 2> /dev/null`" != "`cd $(abs_srcdir)/libcdada && git rev-parse HEAD`" ]; then \
+		\
+		if [ -z "$$PMACCT_EXT_LIBS_DONT_SYNC" ]; then \
+			echo "[dep: libcdada] Syncing commit...";\
+			cd $(abs_top_srcdir); \
+			git submodule update --init --recursive src/external_libs/libcdada; \
+			if [ $$? != 0 ]; then exit 1; fi;\
+			cd $(abs_builddir); \
+		else\
+			echo "[dep: libcdada] Skipping commit sync..";\
+		fi;\
 		echo "[dep: libcdada] Building...";\
 		mkdir -p $(abs_builddir)/libcdada/build || true; \
 		cd $(abs_srcdir)/libcdada/ && \

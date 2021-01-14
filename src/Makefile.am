@@ -31,7 +31,8 @@ pmacct-build.h_h:
 			echo "`git rev-parse HEAD`" > .pmacct-build.h; \
 			BUILD_DATE="`git log -1 --date=short --pretty=format:%ad | tr -d "-"`"; \
 			BUILD_AUX="`git log -1 --date=short --pretty=format:%ad`";\
-			BUILD_COMMITS="`git log --date=short --pretty=format:%ad | sort | uniq -c | grep $$BUILD_AUX | awk '{print $$1}' | xargs -n 1 expr -1 + `"; \
+			BUILD_COMMITS="`git log --date=short --pretty=format:%ad | sort | uniq -c | grep $$BUILD_AUX | awk '{print $$1}'`"; \
+			BUILD_COMMITS="$$(($$BUILD_COMMITS - 1))"; \
 			BUILD_HASH_SHORT="`git rev-parse --short HEAD`"; \
 			echo "#define PMACCT_BUILD \"$$BUILD_DATE-$$BUILD_COMMITS ($$BUILD_HASH_SHORT)\"" >> pmacct-build.h; \
 		else \
