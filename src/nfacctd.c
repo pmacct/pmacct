@@ -2903,16 +2903,13 @@ u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_p
 	have_ip_proto = TRUE;
       }
     }
-    else {
-      ret += PM_FTYPE_IPV4;
-    }
 
     if (!have_ip_proto) {
-      if (tpl->tpl[NF9_IPV4_SRC_ADDR].len) {
+      if (tpl->tpl[NF9_IPV4_SRC_ADDR].len || tpl->tpl[NF9_IPV4_DST_ADDR].len) {
         ret += PM_FTYPE_IPV4;
 	have_ip_proto = TRUE;
       }
-      else if (tpl->tpl[NF9_IPV6_SRC_ADDR].len) {
+      else if (tpl->tpl[NF9_IPV6_SRC_ADDR].len || tpl->tpl[NF9_IPV6_DST_ADDR].len) {
 	ret += PM_FTYPE_IPV6;
 	have_ip_proto = TRUE;
       }
