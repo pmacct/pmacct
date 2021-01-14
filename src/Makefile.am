@@ -24,14 +24,15 @@ BUILT_SOURCES = pmacct-build.h_h
 .PHONY = pmacct-build.h
 
 pmacct-build.h_h:
-	@if [[ ! -f ".pmacct-build.h" || "$(shell cat .pmacct-build.h)" != "$(shell git rev-parse HEAD)" ]]; then \
+	@if [ ! -f ".pmacct-build.h" ] || [ "`cat .pmacct-build.h`" != "`git rev-parse HEAD`" ]; then \
 		echo "#ifndef PMACCT_BUILD_STR" > pmacct-build.h; \
 		echo "#define PMACCT_BUILD_STR" >> pmacct-build.h; \
-		if [[ "x$(shell git rev-parse --is-inside-work-tree 2> /dev/null)" == "xtrue" ]]; then \
-			echo "$(shell git rev-parse HEAD)" > .pmacct-build.h; \
-			BUILD_DATE="$(shell git log -1 --date=short --pretty=format:%ad | tr -d "-")"; \
-			BUILD_COMMITS="$(shell git log --date=short --pretty=format:%ad | sort | uniq -c | grep `git log -1 --date=short --pretty=format:%ad` | awk '{print $$1}' | xargs -n 1 expr -1 + )"; \
-			BUILD_HASH_SHORT="$(shell git rev-parse --short HEAD)"; \
+		if [ "x`git rev-parse --is-inside-work-tree 2> /dev/null`" == "xtrue" ]; then \
+			echo "`git rev-parse HEAD`" > .pmacct-build.h; \
+			BUILD_DATE="`git log -1 --date=short --pretty=format:%ad | tr -d "-"`"; \
+			BUILD_AUX="`git log -1 --date=short --pretty=format:%ad`";\
+			BUILD_COMMITS="`git log --date=short --pretty=format:%ad | sort | uniq -c | grep $$BUILD_AUX | awk '{print $$1}' | xargs -n 1 expr -1 + `"; \
+			BUILD_HASH_SHORT="`git rev-parse --short HEAD`"; \
 			echo "#define PMACCT_BUILD \"$$BUILD_DATE-$$BUILD_COMMITS ($$BUILD_HASH_SHORT)\"" >> pmacct-build.h; \
 		else \
 			echo "#define PMACCT_BUILD \"RELEASE\"" >> pmacct-build.h; \
