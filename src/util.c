@@ -2617,8 +2617,6 @@ void vlen_prims_insert(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, int
   pm_label_t *label_ptr;
   char *ptr = (char *) hdr;
 
-  if (!len || !val) return;
-
   ptr += (PvhdrSz + hdr->tot_len); 
   label_ptr = (pm_label_t *) ptr;
   label_ptr->type = wtc;
