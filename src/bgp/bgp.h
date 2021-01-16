@@ -20,6 +20,7 @@
 */
 
 /* includes */
+#include <pthread.h>
 #include <sys/poll.h>
 #include "bgp_prefix.h"
 #include "bgp_packet.h"

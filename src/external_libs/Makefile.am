@@ -11,19 +11,31 @@ CLEANFILES = .libcdada_mark
 ## LIBCDADA
 ##
 _libcdada:
-	@if [[ -z "$(shell git rev-parse HEAD 2> /dev/null)" ]]; then \
+	@if [ -z "`git rev-parse HEAD 2> /dev/null`" ]; then \
 		echo "[dep: libcdada] Skipping, not a git repository!"; \
 		exit 0;\
 	fi;\
 	echo "[dep: libcdada] Checking..."; \
-	if [[ ! -f "$(abs_srcdir)/libcdada/.git" ]]; then \
+	if [ ! -f "$(abs_srcdir)/libcdada/.git" ]; then \
 		echo "[dep: libcdada] Cloning and checking out commit..";\
 		cd $(abs_top_srcdir); \
 		git submodule update --init --recursive src/external_libs/libcdada; \
 		if [ $$? != 0 ]; then exit 1; fi;\
 		cd $(abs_builddir); \
 	fi;\
-	if [[ ( ! -f $(abs_builddir)/.libcdada_mark ) || "$(shell cat $(abs_builddir)/.libcdada_mark 2> /dev/null)" != "$(shell cd $(abs_srcdir)/libcdada && git rev-parse HEAD)" ]]; then \
+	if [ ! -f $(abs_builddir)/.libcdada_mark ] || \
+		[ "`cat $(abs_builddir)/.libcdada_mark 2> /dev/null`" != "`git ls-tree HEAD $(abs_srcdir)/libcdada/ | awk '{print $$3}'`" ] || \
+		[ "`cat $(abs_builddir)/.libcdada_mark 2> /dev/null`" != "`cd $(abs_srcdir)/libcdada && git rev-parse HEAD`" ]; then \
+		\
+		if [ -z "$$PMACCT_EXT_LIBS_DONT_SYNC" ]; then \
+			echo "[dep: libcdada] Syncing commit...";\
+			cd $(abs_top_srcdir); \
+			git submodule update --init --recursive src/external_libs/libcdada; \
+			if [ $$? != 0 ]; then exit 1; fi;\
+			cd $(abs_builddir); \
+		else\
+			echo "[dep: libcdada] Skipping commit sync..";\
+		fi;\
 		echo "[dep: libcdada] Building...";\
 		mkdir -p $(abs_builddir)/libcdada/build || true; \
 		cd $(abs_srcdir)/libcdada/ && \
@@ -32,7 +44,7 @@ _libcdada:
 		$(abs_srcdir)/libcdada/configure --disable-shared --host=$(host_alias) @configure_silent_rules_val@ \
 		--prefix=$(abs_builddir)/rootfs && make $(MAKE_JOBS) install;\
 		if [ $$? != 0 ]; then exit 1; fi; \
-		echo "$(shell cd $(abs_srcdir)/libcdada && git rev-parse HEAD)" > $(abs_builddir)/.libcdada_mark;\
+		echo "`cd $(abs_srcdir)/libcdada && git rev-parse HEAD`" > $(abs_builddir)/.libcdada_mark;\
 		if [ $$? != 0 ]; then exit 1; fi; \
 		echo "[dep: libcdada] Done!";\
 	else\
@@ -53,4 +65,4 @@ maintainer-clean-local: _libcdada_maintainer_clean
 	rm -rf $(abs_builddir)/rootfs
 
 #Placed abnormally here, just because vim syntax highlighter has a bug
-MAKE_JOBS := $(shell ps T | sed -n 's/.*$(MAKE_PID).*$(MAKE).* \(-j\|--jobs=\) *\([0-9][0-9]*\).*/-j \2/p')
+MAKE_JOBS := `ps T | sed -n 's/.*$(MAKE_PID).*$(MAKE).* \(-j\|--jobs=\) *\([0-9][0-9]*\).*/-j \2/p'`
