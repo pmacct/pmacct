@@ -256,9 +256,23 @@ if test x"$PCAPINCLS" != x""; then
   if test -r $PCAPINCLS/pcap.h; then 
     AC_MSG_RESULT(ok)
     AC_DEFINE(HAVE_PCAP_H, 1)
+    PCAPINCLUDESFOUND=1
   else
     AC_MSG_RESULT(no)
     AC_MSG_ERROR(ERROR: missing pcap.h in $PCAPINCLS) 
+  fi
+fi
+
+AC_CHECK_PROG([PCAP_CONFIG], [pcap-config], [pcap-config], [no])
+
+if test x"$PCAPINCLUDESFOUND" = x""; then
+  if test ${PCAP_CONFIG} = "pcap-config"; then
+    AC_MSG_CHECKING([using pcap-config for pcap.h])
+    PCAP_CONFIG_INCLUDES=`${PCAP_CONFIG} --cflags`
+    INCLUDES="${INCLUDES} ${PCAP_CONFIG_INCLUDES}"
+    AC_DEFINE(HAVE_PCAP_PCAP_H, 1)
+    AC_MSG_RESULT([${PCAP_CONFIG_INCLUDES}])
+    PCAPINCLUDESFOUND=1
   fi
 fi
 
@@ -335,6 +349,16 @@ if test x"$PCAPLIBFOUND" = x""; then
     fi
   else
     AC_MSG_RESULT(no)
+  fi
+fi
+
+if test x"$PCAPLIBFOUND" = x""; then
+  if test ${PCAP_CONFIG} = "pcap-config"; then
+    AC_MSG_CHECKING([using pcap-config for libpcap])
+    PCAP_CONFIG_LIBS=`${PCAP_CONFIG} --libs`
+    INCLUDES="${INCLUDES} ${PCAP_CONFIG_LIBS}"
+    AC_MSG_RESULT([${PCAP_CONFIG_LIBS}])
+    PCAPLIBFOUND=1
   fi
 fi
 
