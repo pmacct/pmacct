@@ -386,43 +386,6 @@ fi
 
 AC_CHECK_LIB([pcap], [pcap_setdirection], [ AC_DEFINE(PCAP_SET_DIRECTION, 1) ], [])
 
-dnl packet capture type check; taken from libpcap.
-AC_MSG_CHECKING(packet capture type)
-if test -r /dev/bpf0 ; then
-        V_PCAP=bpf
-elif test -r /usr/include/net/pfilt.h ; then
-        V_PCAP=pf
-elif test -r /dev/enet ; then
-        V_PCAP=enet
-elif test -r /dev/nit ; then
-        V_PCAP=snit
-elif test -r /usr/include/sys/net/nit.h ; then
-        V_PCAP=nit
-elif test -r /usr/include/linux/socket.h ; then
-        V_PCAP=linux
-elif test -r /usr/include/net/raw.h ; then
-        V_PCAP=snoop
-elif test -r /usr/include/odmi.h ; then
-        #
-        # On AIX, the BPF devices might not yet be present - they're
-        # created the first time libpcap runs after booting.
-        # We check for odmi.h instead.
-        #
-        V_PCAP=bpf
-elif test -r /usr/include/sys/dlpi.h ; then
-        V_PCAP=dlpi
-elif test -c /dev/bpf0 ; then           # check again in case not readable
-        V_PCAP=bpf
-elif test -c /dev/enet ; then           # check again in case not readable
-        V_PCAP=enet
-elif test -c /dev/nit ; then            # check again in case not readable
-        V_PCAP=snit
-else
-        V_PCAP=null
-fi
-AC_MSG_RESULT($V_PCAP)
-AC_DEFINE_UNQUOTED(PCAP_TYPE_$V_PCAP, 1)
-
 dnl start: mysql handling
 AC_MSG_CHECKING(whether to enable MySQL support)
 AC_ARG_ENABLE(mysql,
