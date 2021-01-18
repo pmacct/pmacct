@@ -394,16 +394,15 @@ AC_ARG_ENABLE(mysql,
   yes)
     AC_MSG_RESULT(yes)
 
-dnl Unfortunately, no pkg-config support for MySQL
+    dnl no pkg-config support for MySQL
     AC_CHECK_PROG([MYSQL_CONFIG], [mysql_config], [mysql_config], [no])
     if test "x${MYSQL_CONFIG}" = "xno"; then
       AC_MSG_ERROR([ERROR: missing mysql_config program])
     fi
-    AC_CHECK_LIB([mysqlclient], [mysql_init],
-                 [MYSQL_CFLAGS=`$MYSQL_CONFIG --cflags`
-                  MYSQL_LIBS=`$MYSQL_CONFIG --libs`],
-                 [AC_MSG_ERROR([ERROR: missing MySQL client library])],
-                 [`$MYSQL_CONFIG --libs`])
+
+    MYSQL_CFLAGS=`$MYSQL_CONFIG --cflags`
+    MYSQL_LIBS=`$MYSQL_CONFIG --libs`
+
     dnl version check not enforced with a AC_MSG_ERROR for now
     AX_LIB_MYSQL(5.6.3)
 
