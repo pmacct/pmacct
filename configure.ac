@@ -372,10 +372,9 @@ if test x"$PFRING_LIB_FOUND" = x""; then
 
   AC_CHECK_LIB([pcap], [pcap_set_protocol], [ AC_DEFINE(PCAP_SET_PROTOCOL, 1) ], [])
 else
-  dnl Unable to test: we should check for these libs
-  #AC_CHECK_LIB([numa], [numa_bind], [], [AC_MSG_ERROR([
-  #  ERROR: missing libnuma devel. Requirement for building PF_RING.
-  #])])
+  AC_CHECK_LIB([numa], [numa_bind], [], [AC_MSG_ERROR([
+    ERROR: missing libnuma. Requirement for building PF_RING.
+  ])])
 
   #AC_CHECK_LIB([rt], [clock_gettime], [], [AC_MSG_ERROR([
   #  ERROR: missing librt devel. Requirement for building PF_RING.
@@ -422,6 +421,10 @@ AC_ARG_ENABLE(mysql,
     CFLAGS="$CFLAGS $MYSQL_CFLAGS"
     AC_CHECK_HEADERS([mysql.h mysql/mysql.h])
     CFLAGS="$_save_CFLAGS"
+
+    AC_CHECK_LIB([numa], [numa_bind], [], [AC_MSG_ERROR([
+      ERROR: missing libnuma. Requirement for building MySQL.
+    ])])
     ;;
   no)
     AC_MSG_RESULT(no)
