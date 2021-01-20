@@ -1359,10 +1359,11 @@ DESC:		In SQL plugin, sql_multi_values enables the use of multi-values INSERT st
 		of the directive is intended to be the size (in bytes) of the multi-values buffer. The directive
 		applies only to MySQL and SQLite 3.x plugins. Inserting many rows at the same time is much
 		faster (many times faster in some cases) than using separate single-row INSERT statements.
-		It's adviceable to check the size of this pmacct buffer against the size of the corresponding
+		It is adviceable to check the size of this pmacct buffer against the size of the corresponding
 		MySQL buffer (max_allowed_packet). In AMQP and Kafka plugins, [amqp|kafka]_multi_values allow
 		the same with JSON serialization (for Apache Avro see avro_buffer_size); in this case data is
-		encoded in JSON objects newline-separated (preferred to JSON arrays for performance).  
+		encoded in JSON objects newline-separated (preferred to JSON arrays for performance); in AMQP,
+		make sure to set amqp_frame_max to a size that can accomodate the collection of JSON objects.
 DEFAULT:        0
 
 KEY:		[ sql_trigger_exec | print_trigger_exec | amqp_trigger_exec | kafka_trigger_exec ]
