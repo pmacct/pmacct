@@ -1504,6 +1504,7 @@ int bgp_peer_sa_addr_cmp(const void *a, const void *b)
 
 void bgp_peer_free(void *a)
 {
+  free((char *)a);
 }
 
 int bgp_peers_bintree_walk_print(const void *nodep, const pm_VISIT which, const int depth, void *extra)
