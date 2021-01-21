@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -143,12 +143,6 @@
 
 #ifndef LOCK_EX
 #define LOCK_EX 2
-#endif
-
-#ifdef NOINLINE
-#define Inline
-#else
-#define Inline static inline
 #endif
 
 /* Let work the unaligned copy macros the hard way: byte-per byte copy via

@@ -112,21 +112,6 @@ AC_TRY_LINK([ extern char *__progname; ],
 [AC_MSG_RESULT(yes); AC_DEFINE(PROGNAME, 1)], [AC_MSG_RESULT(no)])
 
 dnl
-dnl some C compilers (ex. MipsPRO) don't know how to parse the 'inline' keyword
-dnl
-AC_MSG_CHECKING(for static inline)
-AC_TRY_COMPILE([#include <stdio.h>]
-
-static inline func()
-{
-}
-,
-[
-  func();
-],
-[AC_MSG_RESULT(yes)], [AC_MSG_RESULT(no); AC_DEFINE(NOINLINE, 1)])
-
-dnl
 dnl Check for architecture endianess: big | little 
 dnl
 dnl XXX: switch to manually define this feature 
@@ -966,15 +951,14 @@ LIBS="${LIBS} -lm -lpthread"
 
 dnl Checks for header files.
 AC_HEADER_STDC
-AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([getopt.h sys/select.h sys/time.h])
 
 dnl Extra checks for header files
-AC_CHECK_HEADERS([arpa/inet.h assert.h ctype.h dirent.h dlfcn.h errno.h fcntl.h grp.h inttypes.h])
-AC_CHECK_HEADERS([limits.h malloc.h netdb.h net/if.h netinet/in.h netinet/in_systm.h netinet/ip.h])
+AC_CHECK_HEADERS([arpa/inet.h assert.h ctype.h dirent.h dlfcn.h errno.h fcntl.h getopt.h grp.h inttypes.h])
+AC_CHECK_HEADERS([limits.h malloc.h math.h netdb.h net/if.h netinet/in.h netinet/in_systm.h netinet/ip.h])
 AC_CHECK_HEADERS([netinet/udp.h pthread.h pwd.h signal.h string.h sys/ansi.h sys/errno.h sys/file.h])
 AC_CHECK_HEADERS([sys/ioctl.h syslog.h sys/mbuf.h sys/mman.h sys/param.h sys/poll.h sys/resource.h])
-AC_CHECK_HEADERS([sys/socket.h sys/stat.h sys/types.h sys/un.h sys/utsname.h time.h math.h])
+AC_CHECK_HEADERS([sys/select.h sys/socket.h sys/stat.h sys/time.h sys/types.h sys/un.h sys/utsname.h])
+AC_CHECK_HEADERS([sys/wait.h time.h unistd.h])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_TYPE(u_int64_t, [AC_DEFINE(HAVE_U_INT64_T, 1)])
