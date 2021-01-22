@@ -25,6 +25,7 @@ RUN yum install -y dnf-plugins-core && \
     libtool \
     make \
     mysql-devel \
+    numactl-devel \
     openssl-devel \
     pkgconfig \
     snappy-devel \
