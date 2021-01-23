@@ -23,6 +23,7 @@ RUN apt-get update && \
     bison \
     cmake \
     default-libmysqlclient-dev \
+    libnuma-dev \
     flex \
     gcc \
     g++ \
