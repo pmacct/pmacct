@@ -1073,9 +1073,25 @@ AC_TYPE_SIGNAL
 
 AC_CHECK_FUNCS([setproctitle mallopt tdestroy])
 
-dnl Check for SO_REUSEPORT
+dnl Check for SO_REUSEPORT & friends
 AC_CHECK_DECL([SO_REUSEPORT],
 	AC_DEFINE(HAVE_SO_REUSEPORT, 1, [Check if kernel supports SO_REUSEPORT]),,
+		[
+		  #include <sys/types.h>
+		  #include <sys/socket.h>
+		]
+)
+
+AC_CHECK_DECL([SO_ATTACH_REUSEPORT_CBPF],
+	AC_DEFINE(HAVE_SO_ATTACH_REUSEPORT_CBPF, 1, [Check if kernel supports SO_ATTACH_REUSEPORT_CBPF]),,
+		[
+		  #include <sys/types.h>
+		  #include <sys/socket.h>
+		]
+)
+
+AC_CHECK_DECL([SO_ATTACH_REUSEPORT_EBPF],
+	AC_DEFINE(HAVE_SO_ATTACH_REUSEPORT_EBPF, 1, [Check if kernel supports SO_ATTACH_REUSEPORT_EBPF]),,
 		[
 		  #include <sys/types.h>
 		  #include <sys/socket.h>
