@@ -13,7 +13,7 @@ VII.	Running the pmacct IMT client (pmacct)
 VIII.	Running the RabbitMQ/AMQP plugin
 IX.	Running the Kafka plugin
 X.	Internal buffering and queueing
-XI.	Quickstart guide to packet classification
+XI.	Quickstart guide to packet/flow classification
 XII.	Quickstart guide to setup a NetFlow/IPFIX agent/probe 
 XIII.	Quickstart guide to setup a sFlow agent/probe 
 XIV.	Quickstart guide to setup the BGP daemon
@@ -1228,12 +1228,12 @@ Q21 of FAQS describes how to estimate the amount of flows/samples per second of 
 deployment.
 
 
-XI. Quickstart guide to packet classification
+XI. Quickstart guide to packet/flow classification
 Packet classification is a feature available for pmacctd (libpcap-based daemon),
-uacctd (NFLOG-based daemon), NetFlow v9/IPFIX IE 315 (dataLinkFrameSection) and
-the sFlow v5 raw header sample. The current approach is to leverage the popular
-free, open-source nDPI library. To enable the feature please follow these
-steps:
+uacctd (NFLOG-based daemon), nfacctd (NetFlow daemon) via NetFlow v9/IPFIX IE #315
+(dataLinkFrameSection) and sfacctd (sFlow daemon) via sFlow v5 raw header sample
+and the current approach is to leverage the popular free, open-source nDPI library.
+To enable the feature please follow these steps:
 
 1) Download pmacct from its webpage (http://www.pmacct.net/) or from its GitHub
    repository (https://github.com/pmacct/pmacct).
@@ -1300,6 +1300,14 @@ steps:
 6) Execute pmacct as:
 
    shell> pmacctd -f /path/to/pmacctd.conf
+
+Flow classification is a feature available for nfacctd (NetFlow daemon) and relies
+on NetFlow v9/IPFIX IEs #94, #95 and #96. Where IE #95 (applicationId) is part of
+flow data and can be looked up against Options data where IE #96 (applicationName) 
+and IE #94 (applicationDescription) are supplied - specifically applicationName is
+the one used for the 'class' primitive value. To enable the feature, if the NetFlow/
+IPFIX exporter does follow NBAR implementation (and pmacct nfprobe plugin does!),
+simply add the 'class' primitive to the existing 'aggregate' aggregation method.
 
 
 XII. Quickstart guide to setup a NetFlow/IPFIX agent/probe
