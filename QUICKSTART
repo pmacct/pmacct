@@ -2989,28 +2989,28 @@ about buffering provided slightly later in this document.
 
 f) Replay packets can be needed, for example, to troubleshoot the behaviour
 of one of the pmacct daemons. A capture in libpcap format, suitable for
-replay, can be produced with tcpdump, ie. for NetFlow/IPFIX/sFlow via the
-"tcpdump -i <interface> -n -s 0 -w <output file> port <sfacctd/nfacctd
-listening port>" (for uacctd use -i nflog:<nflog group>) command-line; for
-traces over extended periods of time, ie. to troubleshoot specific bogus
-packets triggering crashes, the -G tcpdump option can be specified to rotate
--w output_file each specified seconds interval and, as tcpdump man page, does
-mention "savefiles will have the name specified by -w which should include a
-time format as defined by strftime(3). If no time format is specified, each
-new file will overwrite the previous.". Output file(s) can be replayed by
-using the pcap_savefile (-I) and, optionally, the pcap_savefile_wait (-W)
-directives, ie.: "nfacctd -I <pcap savefile> <..>". For more advanced use-
-cases, ie. loop indefinitely through the pcap file and run it with a speed
-multiplicator in order to stress test the daemon, the tcpreplay tool can be
-used for the purpose. In this case, before replaying NetFlow/IPFIX/sFlow,
-L2/L3 of captured packets must be adjusted to reflect the lab environment;
-this can be done with the tcprewrite tool of the tcpreplay package, ie.:
-"tcprewrite --enet-smac=<src MAC address> --enet-dmac= <dst MAC address> -S
-<src IP address rewrite> -D <dst IP address rewrite> --fixcsum --infile=<input
-file, ie. output from tcpdump> --outfile=<output file>". Then the output file
-from tcprewrite can be supplied to tcpreplay for the actual replay to the
-pmacct daemon, ie.: "tcpreplay -x <speed multiplicator> -i <output interface>
-<input file>". 
+replay, can be produced with tcpdump. For example to produce a trace for
+NetFlow/IPFIX/sFlow this is the command-line: "tcpdump -i <interface> -n -s 0
+-w <output file> port <sfacctd/nfacctd listening port>"; for ULOG/NFLOG on
+Linux the interface should be in the format "-i nflog:<nflog group>" instead.
+For traces over extended periods of time, ie. to troubleshoot specific bogus
+packets triggering crashes or capture NetFlow v9/IPFIX templates, optionally
+the -G tcpdump option can be specified to rotate the -w output_file each
+specified seconds interval (read more on tcpdump man page). Once the trace
+has been created, trace file(s) can be replayed by pmacct daemons using the
+pcap_savefile (-I) and, optionally, the pcap_savefile_wait (-W) directives,
+ie.: "nfacctd -I <pcap savefile> <..>".
+For more advanced use-cases, ie. loop indefinitely through the pcap file and
+run it with a speed multiplicator in order to stress test the daemon, the
+tcpreplay tool can be used. In this case, before replaying NetFlow/IPFIX/sFlow,
+L2/L3 of captured packets may need to be adjusted in order to reflect the lab/
+replay environment; this can be done with the tcprewrite tool of the tcpreplay
+package, ie.: "tcprewrite --enet-smac=<src MAC address> --enet-dmac= <dst MAC
+address> -S <src IP address rewrite> -D <dst IP address rewrite> --fixcsum
+--infile=<input file, ie. output from tcpdump> --outfile=<output file>". Then
+the output file from tcprewrite can be supplied to tcpreplay for the actual
+replay to the pmacct daemon, ie.: "tcpreplay -x <speed multiplicator>
+-i <output interface> <input file>".
 
 g) Buffering is often an element to tune. While buffering internal to pmacct
 (configured with plugin_buffer_size / plugin_pipe_size or plugin_pipe_zmq)
