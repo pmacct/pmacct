@@ -16,7 +16,10 @@
 !                       IP address of the device originating NetFlow packets;
 !                       in sfacctd this is compared against the AgentId field
 !                       of received sFlow samples. Expected argument are an IP
-!                       address or prefix (ie. XXX.XXX.XXX.XXX/NN)
+!                       address or prefix (ie. XXX.XXX.XXX.XXX/NN).0.0.0.0/0
+!			would match all IPv4 addresses; ::/0 would match all
+!			IPv6 addresses; not specifying an 'ip' clause at all
+!			would match both all IPv4 and IPv6 addresses.
 ! 'in'                  MATCH: Input interface. In NFv9/IPFIX this is compared
 !                       against IE #10 and, if not existing, against IE #252.
 ! 'out'                 MATCH: Output interface. In NFv9/IPFIX this is compared

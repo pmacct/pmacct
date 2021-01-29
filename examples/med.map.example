@@ -12,10 +12,14 @@
 !			than hard-coded MED values this field accepts also the
 !			'bgp' keyword which triggers a BGP lookup and returns
 !			its result: useful to handle exceptions.
-! 'ip'                  In nfacctd it's compared against the source IP address
-!                       of the device which is originating NetFlow packets; in
-!                       sfacctd this is compared against the AgentId field of
-!                       received sFlow samples.
+! 'ip'			MATCH: in nfacctd this is compared against the source
+!			IP address of the device originating NetFlow packets;
+!			in sfacctd this is compared against the AgentId field
+!			of received sFlow samples. Expected argument are an IP
+!			address or prefix (ie. XXX.XXX.XXX.XXX/NN). 0.0.0.0/0
+!			would match all IPv4 addresses; ::/0 would match all
+!			IPv6 addresses; not specifying an 'ip' clause at all
+!			would match both all IPv4 and IPv6 addresses.
 ! 'in'                  Input interface.
 ! 'bgp_nexthop'         BGP next-hop of the flow source IP address (RPF-like).
 !                       This value is compared against the corresponding BGP
