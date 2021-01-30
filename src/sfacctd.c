@@ -707,7 +707,7 @@ int main(int argc,char **argv, char **envp)
     }
 
     /* bind socket to port */
-#if (defined LINUX) && (defined HAVE_SO_REUSEPORT)
+#if (defined HAVE_SO_REUSEPORT)
     rc = setsockopt(config.sock, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (char *) &yes, (socklen_t) sizeof(yes));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR|SO_REUSEPORT.\n", config.name);
 #else

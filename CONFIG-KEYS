@@ -1678,9 +1678,9 @@ DEFAULT:        false
 
 KEY:		[ nfacctd_port | sfacctd_port ] (-l) [GLOBAL, NO_PMACCTD, NO_UACCTD]
 DESC:		Defines the UDP port where to bind nfacctd (nfacctd_port) and sfacctd (sfacctd_port) daemons.
-                SO_REUSEPORT feature can be leveraged on Linux: it allows multiple daemons to bind the same
-                local address and port in order to load-balance processing of incoming packets; if doing so
-		with incoming NetFlow v9/IPFIX template-based protocols, nfacctd_templates_receiver and
+                On systems where SO_REUSEPORT feature is available: it allows multiple daemons to bind the
+		same local address and port in order to load-balance processing of incoming packets; if doing
+		so with incoming NetFlow v9/IPFIX template-based protocols, nfacctd_templates_receiver and
 		nfacctd_templates_port should be used. At the end of this document, reference (1) to a
 		URL to a presentation of the SO_REUSEPORT feature. To enable SO_REUSEPORT on a Linux system
 		supporting it 'sysctl net.core.allow_reuseport=1'.
@@ -2333,13 +2333,12 @@ DEFAULT:        none
 
 KEY:		[ bgp_daemon_port | bmp_daemon_port ] [GLOBAL] 
 DESC:		Makes the BGP/BMP daemon listen to a port different from the standard port. Default port for
-		BGP is 179/tcp; default port for BMP is 1790. If supported and if enabled on the system, the
-		SO_REUSEPORT feature can be leveraged on Linux: it allows multiple daemons to bind the same
-		local address and port in order to load-balance processing of incoming packets. This is best
-		combined with a list of allowed IP addresses, ie. bgp_daemon_allow_file, to explicitely wire
-		peers to collectors. At the end of this document, reference (1) to a URL to a presentation
-		of the SO_REUSEPORT feature. To enable SO_REUSEPORT on a Linux system supporting it 'sysctl
-		net.core.allow_reuseport=1'.
+		BGP is 179/tcp; default port for BMP is 1790. On systems where SO_REUSEPORT feature is
+		available: it allows multiple daemons to bind the same local address and port in order to
+		load-balance processing of incoming packets. This is best combined with a list of allowed
+		IP addresses, ie. bgp_daemon_allow_file, to explicitely wire peers to collectors. At the
+		end of this document, reference (1) to a URL to a presentation of the SO_REUSEPORT feature.
+		To enable SO_REUSEPORT on a Linux system supporting it 'sysctl net.core.allow_reuseport=1'.
 DEFAULT:	bgp_daemon_port: 179; bmp_daemon_port: 1790
 
 KEY:		[ bgp_daemon_ipprec | bmp_daemon_ipprec ] [GLOBAL]

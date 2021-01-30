@@ -343,7 +343,7 @@ sockopt_reuseaddr (int sock)
   return 0;
 }
 
-#ifdef SO_REUSEPORT
+#if defined (HAVE_SO_REUSEPORT)
 int
 sockopt_reuseport (int sock)
 {
