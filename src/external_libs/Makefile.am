@@ -11,12 +11,18 @@ CLEANFILES = .libcdada_mark
 ## LIBCDADA
 ##
 _libcdada:
-	@if [ -z "`git rev-parse HEAD 2> /dev/null`" ]; then \
-		echo "[dep: libcdada] Skipping, not a git repository!"; \
-		exit 0;\
+	@not_git=0; \
+	if [[ -z "$(shell git rev-parse HEAD 2> /dev/null)" ]]; then \
+		if [[ -f "$(abs_srcdir)/libcdada/include/cdada.h" ]]; then \
+			not_git=1; \
+			cd $(abs_builddir); \
+		else \
+			echo "[dep: libcdada] Skipping, not a git repository!"; \
+			exit 0;\
+		fi;\
 	fi;\
 	echo "[dep: libcdada] Checking..."; \
-	if [ ! -f "$(abs_srcdir)/libcdada/.git" ]; then \
+	if [[ $$not_git -eq 0 && ! -f "$(abs_srcdir)/libcdada/.git" ]]; then \
 		echo "[dep: libcdada] Cloning and checking out commit..";\
 		cd $(abs_top_srcdir); \
 		git submodule update --init --recursive src/external_libs/libcdada; \
