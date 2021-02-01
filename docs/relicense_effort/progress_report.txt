@@ -31,6 +31,7 @@ Commits  Author <email>
       2  Tiago Gomes <tiago.gomes@codethink.co.uk>
       2  Matthieu Texier <matthieu@texier.tv>
       2  Lee Yongjae <setup74@gmail.com>
+      2  Miki Takata <mikit@nttv6.jp>
       1  Pier Carlo Chiodi <pierky@pierky.com>
       1  Mike Jager <mike@mikej.net.nz>
       1  Seth N. Hetu <shetu@akamai.com>
@@ -56,7 +57,6 @@ Commits  Author <email>
      10  Tim LaBerge <tlaberge@visi.com> / tlaberge@cisco.com
       9  Raphaël P. Barazzutti <raphael@barazzutti.net>
       3  Dan Berger <dberger@valvesoftware.com>
-      2  Miki Takata <mikit@nttv6.jp>
       2  Vadim Tk <gitcommit@m.vtk.one>
       1  root <root@smokeping.celya.fr>
       1  Mehul Prajapati <mehulprajapati2802@gmail.com>
