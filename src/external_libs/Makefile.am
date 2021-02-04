@@ -30,13 +30,13 @@ _libcdada:
 		cd $(abs_builddir); \
 	fi;\
 	if [ ! -f $(abs_builddir)/.libcdada_mark ] || \
-		[ "`cat $(abs_builddir)/.libcdada_mark 2> /dev/null`" != "`git ls-tree HEAD $(abs_srcdir)/libcdada/ | awk '{print $$3}'`" ] || \
-		[ "`cat $(abs_builddir)/.libcdada_mark 2> /dev/null`" != "`cd $(abs_srcdir)/libcdada && git rev-parse HEAD`" ]; then \
+		[ "`cat $(abs_builddir)/.libcdada_mark 2> /dev/null`" != "`git ls-tree HEAD $(abs_srcdir)/libcdada/ | awk '{print $$3}' 2> /dev/null`" ] || \
+		[ "`cat $(abs_builddir)/.libcdada_mark 2> /dev/null`" != "`cd $(abs_srcdir)/libcdada && git rev-parse HEAD 2> /dev/null`" ]; then \
 		\
 		if [ -z "$$PMACCT_EXT_LIBS_DONT_SYNC" ]; then \
 			echo "[dep: libcdada] Syncing commit...";\
 			cd $(abs_top_srcdir); \
-			git submodule update --init --recursive src/external_libs/libcdada; \
+			git submodule update --init --recursive src/external_libs/libcdada 2> /dev/null; \
 			if [ $$? != 0 ]; then exit 1; fi;\
 			cd $(abs_builddir); \
 		else\
@@ -50,7 +50,7 @@ _libcdada:
 		$(abs_srcdir)/libcdada/configure --disable-shared --host=$(host_alias) @configure_silent_rules_val@ \
 		--prefix=$(abs_builddir)/rootfs && make $(MAKE_JOBS) install;\
 		if [ $$? != 0 ]; then exit 1; fi; \
-		echo "`cd $(abs_srcdir)/libcdada && git rev-parse HEAD`" > $(abs_builddir)/.libcdada_mark;\
+		echo "`cd $(abs_srcdir)/libcdada && git rev-parse HEAD 2> /dev/null`" > $(abs_builddir)/.libcdada_mark;\
 		if [ $$? != 0 ]; then exit 1; fi; \
 		echo "[dep: libcdada] Done!";\
 	else\

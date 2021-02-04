@@ -24,7 +24,7 @@ BUILT_SOURCES = pmacct-build.h_h
 .PHONY = pmacct-build.h
 
 pmacct-build.h_h:
-	@if [ ! -f ".pmacct-build.h" ] || [ "`cat .pmacct-build.h`" != "`git rev-parse HEAD`" ]; then \
+	@if [ ! -f ".pmacct-build.h" ] || [ "`cat .pmacct-build.h`" != "`git rev-parse HEAD 2> /dev/null`" ]; then \
 		echo "#ifndef PMACCT_BUILD_STR" > pmacct-build.h; \
 		echo "#define PMACCT_BUILD_STR" >> pmacct-build.h; \
 		if [ "x`git rev-parse --is-inside-work-tree 2> /dev/null`" == "xtrue" ]; then \
