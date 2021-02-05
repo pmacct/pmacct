@@ -12,7 +12,7 @@ CLEANFILES = .libcdada_mark
 ##
 _libcdada:
 	@not_git=0; \
-	if [ -z "$(shell git rev-parse HEAD 2> /dev/null)" ]; then \
+	if [ -z "`git rev-parse HEAD 2> /dev/null)`" ]; then \
 		if [ -f "$(abs_srcdir)/libcdada/include/cdada.h" ]; then \
 			not_git=1; \
 			cd $(abs_builddir); \
