@@ -1104,7 +1104,7 @@ dnl --------------------------------------
 
 dnl First check whether to build git submodule deps
 WITH_EXTERNAL_DEPS_DEFAULT=yes
-if test -z `git rev-parse HEAD 2> /dev/null`; then
+if [ test ! -f "$srcdir/src/external_libs/libcdada/include/cdada.h" ] && [ test -z `git rev-parse HEAD 2> /dev/null` ]; then
 	WITH_EXTERNAL_DEPS_DEFAULT=no
 fi
 

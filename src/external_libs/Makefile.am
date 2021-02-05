@@ -11,12 +11,18 @@ CLEANFILES = .libcdada_mark
 ## LIBCDADA
 ##
 _libcdada:
-	@if [ -z "`git rev-parse HEAD 2> /dev/null`" ]; then \
-		echo "[dep: libcdada] Skipping, not a git repository!"; \
-		exit 0;\
+	@not_git=0; \
+	if [ -z "`git rev-parse HEAD 2> /dev/null)`" ]; then \
+		if [ -f "$(abs_srcdir)/libcdada/include/cdada.h" ]; then \
+			not_git=1; \
+			cd $(abs_builddir); \
+		else \
+			echo "[dep: libcdada] Skipping, not a git repository and code not in tree!"; \
+			exit 0;\
+		fi;\
 	fi;\
 	echo "[dep: libcdada] Checking..."; \
-	if [ ! -f "$(abs_srcdir)/libcdada/.git" ]; then \
+	if [ $$not_git -eq 0 ] && [ ! -f "$(abs_srcdir)/libcdada/.git" ]; then \
 		echo "[dep: libcdada] Cloning and checking out commit..";\
 		cd $(abs_top_srcdir); \
 		git submodule update --init --recursive src/external_libs/libcdada; \
@@ -24,13 +30,13 @@ _libcdada:
 		cd $(abs_builddir); \
 	fi;\
 	if [ ! -f $(abs_builddir)/.libcdada_mark ] || \
-		[ "`cat $(abs_builddir)/.libcdada_mark 2> /dev/null`" != "`git ls-tree HEAD $(abs_srcdir)/libcdada/ | awk '{print $$3}'`" ] || \
-		[ "`cat $(abs_builddir)/.libcdada_mark 2> /dev/null`" != "`cd $(abs_srcdir)/libcdada && git rev-parse HEAD`" ]; then \
+		[ "`cat $(abs_builddir)/.libcdada_mark 2> /dev/null`" != "`git ls-tree HEAD $(abs_srcdir)/libcdada/ | awk '{print $$3}' 2> /dev/null`" ] || \
+		[ "`cat $(abs_builddir)/.libcdada_mark 2> /dev/null`" != "`cd $(abs_srcdir)/libcdada && git rev-parse HEAD 2> /dev/null`" ]; then \
 		\
 		if [ -z "$$PMACCT_EXT_LIBS_DONT_SYNC" ]; then \
 			echo "[dep: libcdada] Syncing commit...";\
 			cd $(abs_top_srcdir); \
-			git submodule update --init --recursive src/external_libs/libcdada; \
+			git submodule update --init --recursive src/external_libs/libcdada 2> /dev/null; \
 			if [ $$? != 0 ]; then exit 1; fi;\
 			cd $(abs_builddir); \
 		else\
@@ -44,7 +50,7 @@ _libcdada:
 		$(abs_srcdir)/libcdada/configure --disable-shared --host=$(host_alias) @configure_silent_rules_val@ \
 		--prefix=$(abs_builddir)/rootfs && make $(MAKE_JOBS) install;\
 		if [ $$? != 0 ]; then exit 1; fi; \
-		echo "`cd $(abs_srcdir)/libcdada && git rev-parse HEAD`" > $(abs_builddir)/.libcdada_mark;\
+		echo "`cd $(abs_srcdir)/libcdada && git rev-parse HEAD 2> /dev/null`" > $(abs_builddir)/.libcdada_mark;\
 		if [ $$? != 0 ]; then exit 1; fi; \
 		echo "[dep: libcdada] Done!";\
 	else\
