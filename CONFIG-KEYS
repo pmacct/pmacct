@@ -210,29 +210,30 @@ DEFAULT:	128 bytes; 64 bytes if compiled with --disable-ipv6
 KEY:		plugins (-P) [GLOBAL]
 VALUES:		[ memory | print | mysql | pgsql | sqlite3 | nfprobe | sfprobe | tee | amqp | kafka ]
 DESC:		Plugins to be enabled. memory, print, nfprobe, sfprobe and tee plugins are always
-		included in pmacct executables as they do not contain dependencies on external
-		libraries. Database (ie. RDBMS, noSQL) and messaging ones (ie. amqp, kafka) do have
-		external dependencies and hence are available only if explicitely configured and
-		compiled.
-		memory plugin uses a memory table as backend; then, a client tool, 'pmacct', can fetch
-		the memory table content; the memory plugin is good for prototype solutions and/or
-		small environments. mysql, pgsql and sqlite3 plugins output respectively to MySQL (or
-		MariaDB with the MySQL-compatible C API), PostgreSQL and SQLite 3.x (or BerkeleyDB 5.x
-		with the SQLite API compiled-in) tables to store data. print plugin prints output data
-		to flat-files or stdout in JSON, CSV or tab-spaced formats, or encodes it using the
-		Apache Avro serialization system. amqp and kafka plugins allow to output data to
-		RabbitMQ and Kafka brokers respectively. All these plugins, SQL, no-SQL and messaging
-		are good for production solutions and/or larger scenarios.
-		nfprobe acts as a NetFlow/IPFIX agent and exports collected data via NetFlow v5/
-		v9 and IPFIX datagrams to a remote collector. sfprobe acts as a sFlow agent and 
-		exports collected data via sFlow v5 datagrams to a remote collector. Both nfprobe
-		and sfprobe plugins apply only to pmacctd and uacctd daemons. tee acts as a replicator
-		for NetFlow/IPFIX/sFlow data (also transparent); it applies to nfacctd and sfacctd
-		daemons only. Plugins can be either anonymous or named; configuration directives can
-		be either global or bound to a specific plugins, if named. An anonymous plugin is
-		declared as 'plugins: mysql' in the config whereas a named plugin is declared as
-		'plugins: mysql[name]'. Then, directives can be bound specifically to such named
-		plugin as: 'directive[name]: value'.
+		compiled in pmacct executables as they do not have external dependencies. Database
+		(ie. RDBMS, noSQL) and messaging ones (ie. amqp, kafka) do have external dependencies
+		and hence are available only if explicitely configured and compiled (see QUICKSTART).
+		'memory' plugin uses a memory table as backend and a client tool, 'pmacct', can fetch
+		the memory table content; the memory plugin is only good to prototype solutions, lab
+		environment without mass traffic generation and small/home production environments.
+		mysql, pgsql and sqlite3 plugins do output respectively to MySQL (or MariaDB via the
+		MySQL-compatible C API), PostgreSQL and SQLite 3.x (or BerkeleyDB 5.x via the SQLite
+		API compiled-in) databases to store data. 'print' plugin prints output data to flat-
+		files or stdout in JSON, Apache Avro, CSV or tab-spaced encodings. 'amqp' and 'kafka'
+		plugins allow to output data to RabbitMQ and Kafka brokers respectively. All these
+		plugins - to output to stdout, files, RDBMS and messaging brokers - are suitable for
+		production solutions and/or larger scenarios.
+		'nfprobe' plugin is a NetFlow/IPFIX agent and exports collected data via NetFlow v5/
+		v9 and IPFIX datagrams to a remote collector. 'sfprobe' plugin is a sFlow agent and
+		exports collected data via sFlow v5 datagrams to a remote collector. Both 'nfprobe'
+		and 'sfprobe' plugins can be run only via pmacctd and uacctd daemons (in other words
+		no collect NetFlow v5 / re-export IPFIX and similar trans-codings are supported).
+		The 'tee' plugin is a replicator of NetFlow/IPFIX/sFlow data (also transparent); it
+		can be run only via nfacctd and sfacctd.
+		Plugins can be either anonymous or named; configuration directives can be global or
+		bound to a specific plugins when named. An anonymous plugin is declared as 'plugins:
+		mysql' in the config whereas a named plugin is declared as 'plugins: mysql[name]'.
+		Then directives can be bound to a specific named plugin as: 'directive[name]: value'.
 DEFAULT:	memory
 
 KEY:		[ nfacctd_pipe_size | sfacctd_pipe_size | pmacctd_pipe_size ] [GLOBAL, NO_UACCTD]

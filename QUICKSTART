@@ -76,8 +76,10 @@ pmacct distribution:
 memory		data is stored in a memory table and can be fetched via the
 		pmacct command-line client tool, 'pmacct'. This plugin also
 		implements a push model and allows easily to inject data into
-		3rd party tools. The plugin is recommended for prototyping and
-		smaller-scale environments and is compiled in by default.
+		3rd party tools. The plugin is recommended for prototyping
+		and proof-of-concept (without mass traffic generation) and
+		smaller-scale / home production environments and is compiled
+		in by default.
 mysql		a working MySQL/MariaDB installation can be used for data
 		storage. This plugin can be compiled using the --enable-mysql
 		switch. 
