@@ -4,7 +4,7 @@ pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
-1.7.6 -- 31-01-2021
+1.7.6 -- 07-02-2021
   + Added dependency to libcdada in an effort to streamline basic
     data structures needed for everyday coding. All new structures
     will make use of libcdada, old ones will be ported over time.
