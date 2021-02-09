@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -487,13 +487,15 @@ void link_latest_output_file(char *link_filename, char *filename_to_link)
 
   if (!link_filename || !filename_to_link) return;
 
+  buf[0] = '\0';
+
   if (config.files_uid) owner = config.files_uid;
   if (config.files_gid) group = config.files_gid;
 
   /* create dir structure to get to file, if needed */
   ret = mkdir_multilevel(link_filename, TRUE, owner, group);
   if (ret) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] link_latest_output_file(): mkdir_multilevel() failed.\n", config.name, config.type, buf);
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] link_latest_output_file(): mkdir_multilevel() failed.\n", config.name, config.type, link_filename);
     return;
   }
 
@@ -505,7 +507,7 @@ void link_latest_output_file(char *link_filename, char *filename_to_link)
 
     memset(&s1, 0, sizeof(struct stat));
     memset(&s2, 0, sizeof(struct stat));
-    readlink(link_filename, buf, SRVBUFLEN);
+    ret = readlink(link_filename, buf, SRVBUFLEN);
 
     /* filename_to_link is newer than buf or buf is un-existing */
     stat(buf, &s1);
@@ -516,10 +518,13 @@ void link_latest_output_file(char *link_filename, char *filename_to_link)
 
   if (rewrite_latest) {
     unlink(link_filename);
-    symlink(filename_to_link, link_filename);
+    ret = symlink(filename_to_link, link_filename);
 
-    if (lchown(link_filename, owner, group) == -1)
-      Log(LOG_WARNING, "WARN ( %s/%s ): link_latest_output_file(): unable to chown() '%s'.\n", config.name, config.type, link_filename);
+    if (!ret) {
+      if (lchown(link_filename, owner, group) == -1) {
+	Log(LOG_WARNING, "WARN ( %s/%s ): [%s] link_latest_output_file(): unable to chown().\n", config.name, config.type, link_filename);
+      }
+    }
   }
 }
 
