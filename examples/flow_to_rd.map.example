@@ -17,8 +17,7 @@
 !                       of received sFlow samples. Expected argument are an IP
 !                       address or prefix (ie. XXX.XXX.XXX.XXX/NN). 0.0.0.0/0
 !			would match all IPv4 addresses; ::/0 would match all
-!			IPv6 addresses; not specifying an 'ip' clause at all
-!			would match both all IPv4 and IPv6 addresses.
+!			IPv6 addresses.
 ! 'in'                  MATCH: Input interface.
 ! 'out'                 MATCH: Output interface.
 ! 'bgp_nexthop'         MATCH: IPv4/IPv6 address of the next-hop BGP router. In
