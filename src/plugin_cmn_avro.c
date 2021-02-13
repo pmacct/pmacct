@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -1102,7 +1102,7 @@ void write_avro_schema_to_file(char *filename, avro_schema_t schema)
 
   exit_lane:
   Log(LOG_ERR, "ERROR ( %s/%s ): write_avro_schema_to_file(): unable to dump Avro schema: %s\n", config.name, config.type, avro_strerror());
-  exit_gracefully(1);
+  pm_avro_exit_gracefully(1);
 }
 
 void write_avro_schema_to_file_with_suffix(char *filename, char *suffix, char *buf, avro_schema_t schema)
@@ -1123,7 +1123,7 @@ char *write_avro_schema_to_memory(avro_schema_t avro_schema)
 
   if (!p_avro_buf) {
     Log(LOG_ERR, "ERROR ( %s/%s ): write_avro_schema_to_memory(): malloc() failed. Exiting.\n", config.name, config.type);
-    exit_gracefully(1);
+    pm_avro_exit_gracefully(1);
   }
   else memset(p_avro_buf, 0, config.avro_buffer_size);
 
@@ -1169,7 +1169,7 @@ char *compose_avro_purge_schema(avro_schema_t avro_schema, char *writer_name)
   }
   else {
     Log(LOG_ERR, "ERROR ( %s/%s ): compose_avro_purge_schema(): no p_avro_buf. Exiting.\n", config.name, config.type);
-    exit_gracefully(1);
+    pm_avro_exit_gracefully(1);
   }
 
   return json_str;
@@ -1194,7 +1194,7 @@ char *compose_avro_schema_name(char *extra1, char *extra2)
   schema_name = malloc(len_total);  
   if (!schema_name) {
     Log(LOG_ERR, "ERROR ( %s/%s ): compose_avro_schema_name(): malloc() failed. Exiting.\n", config.name, config.type);
-    exit_gracefully(1);
+    pm_avro_exit_gracefully(1);
   }
   else memset(schema_name, 0, len_total);
 
@@ -1270,7 +1270,7 @@ serdes_schema_t *compose_avro_schema_registry_name(char *topic, int is_topic_dyn
   sd_conf = serdes_conf_new(NULL, 0, "schema.registry.url", schema_registry, NULL);
   if (!sd_conf) {
     Log(LOG_ERR, "ERROR ( %s/%s ): serdes_conf_new() failed: %s. Exiting.\n", config.name, config.type, sd_errstr);
-    exit_gracefully(1);
+    pm_avro_exit_gracefully(1);
   }
 
   serdes_conf_set_log_cb(sd_conf, p_avro_serdes_logger);
@@ -1278,13 +1278,13 @@ serdes_schema_t *compose_avro_schema_registry_name(char *topic, int is_topic_dyn
   sd_desc = serdes_new(sd_conf, sd_errstr, sizeof(sd_errstr));
   if (!sd_desc) {
     Log(LOG_ERR, "ERROR ( %s/%s ): serdes_new() failed: %s. Exiting.\n", config.name, config.type, sd_errstr);
-    exit_gracefully(1);
+    pm_avro_exit_gracefully(1);
   }
 
   loc_schema = serdes_schema_add(sd_desc, p_avro_schema_name, -1, p_avro_schema_str, -1, sd_errstr, sizeof(sd_errstr));
   if (!loc_schema) {
     Log(LOG_ERR, "ERROR ( %s/%s ): serdes_schema_add() failed: %s. Exiting.\n", config.name, config.type, sd_errstr);
-    exit_gracefully(1);
+    pm_avro_exit_gracefully(1);
   }
   else {
     Log(LOG_DEBUG, "DEBUG ( %s/%s ): serdes_schema_add(): name=%s id=%d definition=%s\n", config.name, config.type,
@@ -1301,7 +1301,7 @@ void write_avro_json_record_to_file(FILE *fp, avro_value_t value)
 
   if (avro_value_to_json(&value, TRUE, &json_str)) {
     Log(LOG_ERR, "ERROR ( %s/%s ): write_avro_json_record_to_file() unable to value to JSON: %s\n", config.name, config.type, avro_strerror());
-    exit_gracefully(1);
+    pm_avro_exit_gracefully(1);
   }
 
   fprintf(fp, "%s\n", json_str);
@@ -1314,9 +1314,20 @@ char *write_avro_json_record_to_buf(avro_value_t value)
 
   if (avro_value_to_json(&value, TRUE, &json_str)) {
     Log(LOG_ERR, "ERROR ( %s/%s ): write_avro_json_record_to_buf() unable to value to JSON: %s\n", config.name, config.type, avro_strerror());
-    exit_gracefully(1);
+    pm_avro_exit_gracefully(1);
   }
 
   return json_str;
 }
 #endif
+
+void pm_avro_exit_gracefully(int status)
+{
+  if (!config.debug) {
+    exit_gracefully(status);
+  }
+  else {
+    /* gather additional info on exit */
+    assert(1 == 0);
+  }
+}
