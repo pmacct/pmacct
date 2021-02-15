@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -109,7 +109,8 @@ void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int etype, int log_type,
     }
 #endif
   }
-  else if (output == PRINT_OUTPUT_AVRO_BIN) {
+  else if ((output == PRINT_OUTPUT_AVRO_BIN) ||
+	   (output == PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
     char ip_address[INET6_ADDRSTRLEN];
     avro_value_t *obj = (avro_value_t *) void_obj, p_avro_field, p_avro_branch;
@@ -388,7 +389,8 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
     }
 #endif
   }
-  else if (output == PRINT_OUTPUT_AVRO_BIN) {
+  else if ((output == PRINT_OUTPUT_AVRO_BIN) ||
+	   (output == PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
     avro_value_t *obj = (avro_value_t *) void_obj, p_avro_field, p_avro_branch;
 
