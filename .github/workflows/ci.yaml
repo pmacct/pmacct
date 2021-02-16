@@ -1,0 +1,227 @@
+name: ci
+
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 0 * * *'  # every day at midnight
+
+#Global vars
+env:
+  BUILD_DOCKER_FILE_UBUNTU_BIONIC: ci/Dockerfile-ubuntu-bionic-for-pmacct
+  BUILD_DOCKER_TAG_UBUNTU_BIONIC: ci/ubuntu-bionic-for-pmacct
+  BUILD_DOCKER_FILE_CENTOS_8: ci/Dockerfile-centos-8-for-pmacct
+  BUILD_DOCKER_TAG_CENTOS_8: ci/centos8-for-pmacct
+
+jobs:
+
+  ### Step 1: build container images
+  builder-ubuntu-docker:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout pmacct
+        uses: actions/checkout@v2
+        with:
+          path: pmacct
+
+      - name: Build docker image for Ubuntu Bionic
+        run: |
+          cd pmacct
+          docker build -f $BUILD_DOCKER_FILE_UBUNTU_BIONIC -t $BUILD_DOCKER_TAG_UBUNTU_BIONIC .
+          mkdir -p /tmp/docker/
+          docker save -o /tmp/docker/builder_ubuntu.tar $BUILD_DOCKER_TAG_UBUNTU_BIONIC
+
+      - name: Artifact docker image
+        uses: actions/upload-artifact@v2.2.2
+        with:
+          name: builder_ubuntu
+          retention-days: 1
+          path: |
+            /tmp/docker
+
+  builder-centos-docker:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout pmacct
+        uses: actions/checkout@v2
+        with:
+          path: pmacct
+
+      - name: Build docker image for Centos 8
+        run: |
+          cd pmacct
+          docker build -f $BUILD_DOCKER_FILE_UBUNTU_BIONIC -t $BUILD_DOCKER_TAG_UBUNTU_BIONIC .
+          mkdir -p /tmp/docker/
+          docker save -o /tmp/docker/builder_centos.tar $BUILD_DOCKER_TAG_UBUNTU_BIONIC
+
+      - name: Artifact docker image
+        uses: actions/upload-artifact@v2.2.2
+        with:
+          name: builder_centos
+          retention-days: 1
+          path: |
+            /tmp/docker
+
+  ### Step 2: permutations
+  build-and-test:
+    needs: [builder-ubuntu-docker, builder-centos-docker]
+    runs-on: ubuntu-18.04
+    strategy:
+      fail-fast: false
+      matrix:
+        builder-name: [builder_ubuntu, builder_centos]
+        CONFIG_FLAGS: [
+                "",
+                "--enable-debug",
+                "--enable-debug --enable-jansson",
+                "--enable-debug --enable-jansson --enable-kafka",
+                "--enable-debug --enable-jansson --enable-kafka --enable-avro --enable-serdes",
+                "--enable-debug --enable-jansson --enable-zmq",
+                "--enable-debug --enable-jansson --enable-zmq --enable-kafka",
+                "--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis",
+                "--enable-debug --enable-zmq",
+                "--enable-jansson",
+                "--enable-jansson --enable-kafka",
+                "--enable-jansson --enable-kafka --enable-avro --enable-serdes",
+                "--enable-jansson --enable-zmq",
+                "--enable-jansson --enable-zmq --enable-kafka",
+                "--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis",
+                "--enable-zmq"]
+    env:
+      CONFIG_FLAGS: ${{ matrix.CONFIG_FLAGS }}
+    steps:
+      - name: Info
+        run: |
+          echo "Builder: ${{ matrix.builder-name }}"
+          echo "CONFIG_FLAGS: ${{ matrix.CONFIG_FLAGS }}"
+
+      - name: Create /tmp/docker folder to copy the docker registry (artifact)
+        run: |
+          mkdir -p /tmp/docker
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.builder-name }}
+          path: /tmp/docker
+
+      - name: List contents of /tmp/docker
+        run: |
+          ls -la /tmp/docker
+
+      - name: Checkout pmacct
+        uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+          path: pmacct
+
+      - name: Build in '${{ matrix.builder-name }}' with '${{ matrix.CONFIG_FLAGS }}'
+        run: |
+          cd pmacct
+          docker load -i /tmp/docker/${{ matrix.builder-name }}.tar
+          CONTAINER_ID=$(docker run --rm -it -d -v `pwd`:`pwd` -w `pwd` -e CONFIG_FLAGS $BUILD_DOCKER_TAG_UBUNTU_BIONIC:latest)
+          echo "Launched container id:" $CONTAINER_ID
+          docker exec -i $CONTAINER_ID ./ci/script.sh
+          docker stop $CONTAINER_ID
+
+  ### Step 3: official dockerhub images (bleeding-edge, latest and releases)
+  docker-hub:
+    needs: build-and-test
+    runs-on: ubuntu-18.04
+    if: github.event != 'pull_request'
+    env:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+    steps:
+      - name: Checkout pmacct
+        uses: actions/checkout@v1 #Don't use v2 messes everything
+        with:
+          path: pmacct
+
+      - name: Build and upload containers
+        run: |
+          echo "Fix mess with tags in actions/checkout..."
+          git fetch -f && git fetch -f --tags
+          echo "Deducing PMACCT_VERSION..."
+          PMACCT_VERSION=$(git describe --abbrev=0 --match="v*")
+          echo "PMACCT_VERSION=$PMACCT_VERSION"
+          echo "Building the base container..."
+          docker build -f docker/base/Dockerfile -t base:_build .
+          echo "Building daemon containers..."
+          docker build -f docker/pmacctd/Dockerfile -t pmacctd:_build .
+          docker build -f docker/nfacctd/Dockerfile -t nfacctd:_build .
+          docker build -f docker/sfacctd/Dockerfile -t sfacctd:_build .
+          docker build -f docker/uacctd/Dockerfile -t uacctd:_build .
+          docker build -f docker/pmbgpd/Dockerfile -t pmbgpd:_build .
+          docker build -f docker/pmbmpd/Dockerfile -t pmbmpd:_build .
+          docker build -f docker/pmtelemetryd/Dockerfile -t pmtelemetryd:_build .
+          echo "Uploading to dockerhub ...";
+          echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin;
+          #Always push bleeding-edge when pushed to master
+          GIT_IS_BLEEDING_EDGE=$( (git branch --all --contains HEAD | grep master ) || echo "")
+          echo "GIT_IS_BLEEDING_EDGE=$GIT_IS_BLEEDING_EDGE"
+          if [ "$GIT_IS_BLEEDING_EDGE" != "" ]; then
+            echo "Uploading 'bleeding-edge' tag for `git describe`...";
+            docker tag base:_build ${DOCKER_USERNAME}/base:bleeding-edge;
+            docker push ${DOCKER_USERNAME}/base:bleeding-edge;
+            docker tag pmacctd:_build ${DOCKER_USERNAME}/pmacctd:bleeding-edge;
+            docker push ${DOCKER_USERNAME}/pmacctd:bleeding-edge;
+            docker tag nfacctd:_build ${DOCKER_USERNAME}/nfacctd:bleeding-edge;
+            docker push ${DOCKER_USERNAME}/nfacctd:bleeding-edge;
+            docker tag sfacctd:_build ${DOCKER_USERNAME}/sfacctd:bleeding-edge;
+            docker push ${DOCKER_USERNAME}/sfacctd:bleeding-edge;
+            docker tag uacctd:_build ${DOCKER_USERNAME}/uacctd:bleeding-edge;
+            docker push ${DOCKER_USERNAME}/uacctd:bleeding-edge;
+            docker tag pmbgpd:_build ${DOCKER_USERNAME}/pmbgpd:bleeding-edge;
+            docker push ${DOCKER_USERNAME}/pmbgpd:bleeding-edge;
+            docker tag pmbmpd:_build ${DOCKER_USERNAME}/pmbmpd:bleeding-edge;
+            docker push ${DOCKER_USERNAME}/pmbmpd:bleeding-edge;
+            docker tag pmtelemetryd:_build ${DOCKER_USERNAME}/pmtelemetryd:bleeding-edge;
+            docker push ${DOCKER_USERNAME}/pmtelemetryd:bleeding-edge;
+          fi
+          #Upload vX.Y.Z only of it's a release commit
+          GIT_RELEASE_TAG=$(git describe --exact-match --match "v*" || echo "")
+          echo "GIT_RELEASE_TAG=$GIT_RELEASE_TAG"
+          if [ "$GIT_RELEASE_TAG" != "" ]; then
+            echo "Uploading '$PMACCT_VERSION' tag for `git describe`...";
+            docker tag base:_build ${DOCKER_USERNAME}/base:${PMACCT_VERSION};
+            docker push ${DOCKER_USERNAME}/base:${PMACCT_VERSION};
+            docker tag pmacctd:_build ${DOCKER_USERNAME}/pmacctd:${PMACCT_VERSION};
+            docker push ${DOCKER_USERNAME}/pmacctd:${PMACCT_VERSION};
+            docker tag nfacctd:_build ${DOCKER_USERNAME}/nfacctd:${PMACCT_VERSION};
+            docker push ${DOCKER_USERNAME}/nfacctd:${PMACCT_VERSION};
+            docker tag sfacctd:_build ${DOCKER_USERNAME}/sfacctd:${PMACCT_VERSION};
+            docker push ${DOCKER_USERNAME}/sfacctd:${PMACCT_VERSION};
+            docker tag uacctd:_build ${DOCKER_USERNAME}/uacctd:${PMACCT_VERSION};
+            docker push ${DOCKER_USERNAME}/uacctd:${PMACCT_VERSION};
+            docker tag pmbgpd:_build ${DOCKER_USERNAME}/pmbgpd:${PMACCT_VERSION};
+            docker push ${DOCKER_USERNAME}/pmbgpd:${PMACCT_VERSION};
+            docker tag pmbmpd:_build ${DOCKER_USERNAME}/pmbmpd:${PMACCT_VERSION};
+            docker push ${DOCKER_USERNAME}/pmbmpd:${PMACCT_VERSION};
+            docker tag pmtelemetryd:_build ${DOCKER_USERNAME}/pmtelemetryd:${PMACCT_VERSION};
+            docker push ${DOCKER_USERNAME}/pmtelemetryd:${PMACCT_VERSION};
+          fi
+          #Upload "latest" if the release version is the highest
+          if [ "$GIT_RELEASE_TAG" != "" ]; then
+            GIT_LAST_TAG=$(git tag --sort=v:refname | tail -n 1);
+            echo "GIT_LAST_TAG=$GIT_LAST_TAG"
+            if [ "$GIT_RELEASE_TAG" == "$GIT_LAST_TAG" ]; then
+              echo "Uploading 'latest' tag for `git describe`...";
+              docker tag base:_build ${DOCKER_USERNAME}/base:latest;
+              docker push ${DOCKER_USERNAME}/base:latest;
+              docker tag pmacctd:_build ${DOCKER_USERNAME}/pmacctd:latest;
+              docker push ${DOCKER_USERNAME}/pmacctd:latest;
+              docker tag nfacctd:_build ${DOCKER_USERNAME}/nfacctd:latest;
+              docker push ${DOCKER_USERNAME}/nfacctd:latest;
+              docker tag sfacctd:_build ${DOCKER_USERNAME}/sfacctd:latest;
+              docker push ${DOCKER_USERNAME}/sfacctd:latest;
+              docker tag uacctd:_build ${DOCKER_USERNAME}/uacctd:latest;
+              docker push ${DOCKER_USERNAME}/uacctd:latest;
+              docker tag pmbgpd:_build ${DOCKER_USERNAME}/pmbgpd:latest;
+              docker push ${DOCKER_USERNAME}/pmbgpd:latest;
+              docker tag pmbmpd:_build ${DOCKER_USERNAME}/pmbmpd:latest;
+              docker push ${DOCKER_USERNAME}/pmbmpd:latest;
+              docker tag pmtelemetryd:_build ${DOCKER_USERNAME}/pmtelemetryd:latest;
+              docker push ${DOCKER_USERNAME}/pmtelemetryd:latest;
+            fi
+          fi
