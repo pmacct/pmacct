@@ -485,8 +485,14 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       pm_avro_check(avro_value_set_string(&p_avro_branch, label_str));
     }
     else {
+      int disc = FALSE;
+
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "rd", &p_avro_field, NULL));
-      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+      avro_value_get_discriminant(&p_avro_field, &disc);
+
+      if (disc != TRUE) {
+	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+      }
 
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "label", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
