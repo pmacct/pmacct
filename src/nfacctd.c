@@ -2905,7 +2905,20 @@ u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_p
     }
 
     if (!have_ip_proto) {
-      if (tpl->tpl[NF9_IPV4_SRC_ADDR].len || tpl->tpl[NF9_IPV4_DST_ADDR].len) {
+      /* If we have both v4 and v6 as part of the same flow, let's run the
+	 cheapest check possible to try to determine which one is non-zero */
+      if ((tpl->tpl[NF9_IPV4_SRC_ADDR].len || tpl->tpl[NF9_IPV4_DST_ADDR].len) &&
+	  (tpl->tpl[NF9_IPV6_SRC_ADDR].len || tpl->tpl[NF9_IPV6_DST_ADDR].len)) {
+	if (*(pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_ADDR].off) != 0) {
+          ret += PM_FTYPE_IPV4;
+	  have_ip_proto = TRUE;
+	}
+	else {
+	  ret += PM_FTYPE_IPV6;
+	  have_ip_proto = TRUE;
+	}
+      }
+      else if (tpl->tpl[NF9_IPV4_SRC_ADDR].len || tpl->tpl[NF9_IPV4_DST_ADDR].len) {
         ret += PM_FTYPE_IPV4;
 	have_ip_proto = TRUE;
       }
