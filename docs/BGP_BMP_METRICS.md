@@ -120,7 +120,7 @@ Title | Description
 `bmp_msg_type` | "route_monitoring" for BMP message type 0
 `path_status` | BMP path-marking status https://tools.ietf.org/html/draft-cppy-grow-bmp-path-marking-tlv#section-2.1
 `reason_code` | BMP path-marking reason_code https://tools.ietf.org/html/draft-cppy-grow-bmp-path-marking-tlv#section-2.1
-`is_in' | Boolean, if present and true it indicates data from Local-RIB
+`is_in` | Boolean, if present and true it indicates data from Local-RIB
 `is_out` | Boolean, if present and true it indicates data from Adj-Rib-Out
 `is_post` | Boolean, if present and true it indicates post-policy data (in conjunction with is_in, is_out) 
 `peer_ip` | BGP peer IP address where BGP metrics are received from
