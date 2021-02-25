@@ -82,7 +82,7 @@ struct pm_ndpi_workflow *pm_ndpi_workflow_init()
   ndpi_finalize_initialization(workflow->ndpi_struct);
 #endif
 
-#if NDPI_MAJOR >= 3 && NDPI_MINOR >= 2
+#if NDPI_MAJOR >= 3 && NDPI_MINOR <= 4
   ndpi_finalize_initalization(workflow->ndpi_struct);
 #endif
 
