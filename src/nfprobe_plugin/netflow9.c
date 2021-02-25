@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -446,9 +446,13 @@ flow_to_flowset_class_handler(char *flowset, const struct FLOW *flow, int idx, i
 static int
 flow_to_flowset_ndpi_class_handler(char *flowset, const struct FLOW *flow, int idx, int size)
 {
-  u_int32_t tmp32 = flow->ndpi_class.app_protocol;
+  u_int8_t ie95_classId = 0x16; /* nDPI */
+  u_int32_t ie95_selectId = htonl(flow->ndpi_class.app_protocol);
 
-  memcpy(flowset, &tmp32, size);
+  if (size == 5) {
+    memcpy(flowset, &ie95_classId, 1);
+    memcpy((flowset + 1), &ie95_selectId, 4);
+  }
 
   return 0;
 }
@@ -1088,13 +1092,13 @@ nf9_init_template(void)
 #if defined (WITH_NDPI)
 	if (config.nfprobe_what_to_count_2 & COUNT_NDPI_CLASS) { 
 	  v4_template.r[rcount].type = htons(NF9_FLOW_APPLICATION_ID);
-	  v4_template.r[rcount].length = htons(4);
+	  v4_template.r[rcount].length = htons(5);
 	  v4_int_template.r[rcount].handler = flow_to_flowset_ndpi_class_handler;
-	  v4_int_template.r[rcount].length = 4;
+	  v4_int_template.r[rcount].length = 5;
 	  v4_template_out.r[rcount].type = htons(NF9_FLOW_APPLICATION_ID);
-	  v4_template_out.r[rcount].length = htons(4);
+	  v4_template_out.r[rcount].length = htons(5);
 	  v4_int_template_out.r[rcount].handler = flow_to_flowset_ndpi_class_handler;
-	  v4_int_template_out.r[rcount].length = 4;
+	  v4_int_template_out.r[rcount].length = 5;
 	  rcount++;
 	}
 #endif
@@ -1501,13 +1505,13 @@ nf9_init_template(void)
 #if defined (WITH_NDPI)
 	if (config.nfprobe_what_to_count_2 & COUNT_NDPI_CLASS) { 
 	  v6_template.r[rcount].type = htons(NF9_FLOW_APPLICATION_ID);
-	  v6_template.r[rcount].length = htons(4);
+	  v6_template.r[rcount].length = htons(5);
 	  v6_int_template.r[rcount].handler = flow_to_flowset_ndpi_class_handler;
-	  v6_int_template.r[rcount].length = 4;
+	  v6_int_template.r[rcount].length = 5;
 	  v6_template_out.r[rcount].type = htons(NF9_FLOW_APPLICATION_ID);
-	  v6_template_out.r[rcount].length = htons(4);
+	  v6_template_out.r[rcount].length = htons(5);
 	  v6_int_template_out.r[rcount].handler = flow_to_flowset_ndpi_class_handler;
-	  v6_int_template_out.r[rcount].length = 4;
+	  v6_int_template_out.r[rcount].length = 5;
 	  rcount++;
 	}
 #endif
@@ -1623,8 +1627,8 @@ nf9_init_options_template(void)
         class_option_int_template.r[rcount].length = 4;
         rcount++;
         class_option_template.r[rcount].type = htons(NF9_FLOW_APPLICATION_ID);
-        class_option_template.r[rcount].length = htons(4);
-        class_option_int_template.r[rcount].length = 4;
+        class_option_template.r[rcount].length = htons(5);
+        class_option_int_template.r[rcount].length = 5;
         rcount++;
         class_option_template.r[rcount].type = htons(NF9_FLOW_APPLICATION_NAME);
         class_option_template.r[rcount].length = htons(MAX_PROTOCOL_LEN);
@@ -1635,7 +1639,7 @@ nf9_init_options_template(void)
         class_option_template.h.template_id = htons(NF9_OPTIONS_TEMPLATE_ID + 1 + config.nfprobe_id );
 	if (config.nfprobe_version == 9) {
           class_option_template.h.scope_len = htons(4); /* NF9_OPT_SCOPE_SYSTEM */
-          class_option_template.h.option_len = htons(8); /* NF9_FLOW_APPLICATION_ID + NF9_FLOW_APPLICATION_NAME */
+          class_option_template.h.option_len = htons(9); /* NF9_FLOW_APPLICATION_ID + NF9_FLOW_APPLICATION_NAME */
 	}
 	else if (config.nfprobe_version == 10) {
           class_option_template.h.scope_len = htons(2+1); /* IPFIX twist: NF9_FLOW_APPLICATION_ID + NF9_FLOW_APPLICATION_NAME + NF9_OPT_SCOPE_SYSTEM */
@@ -2059,9 +2063,21 @@ nf_class_option_to_flowset(u_int idx, u_char *packet, u_int len, const struct ti
           break;
         }
 
-        /* NF9_FLOW_APPLICATION_ID */
-        memcpy(ftoft_ptr_0, &class[idx].id, 4);
-        ftoft_ptr_0 += 4;
+        /* NF9_FLOW_APPLICATION_ID (ClassID) */
+        {
+	  u_int8_t ie95_classId = 0x16; /* nDPI */
+
+          memcpy(ftoft_ptr_0, &ie95_classId, 1);
+          ftoft_ptr_0 += 1;
+        }
+
+        /* NF9_FLOW_APPLICATION_ID (SelectID) */
+        {
+	  u_int32_t ie95_selectId = htonl(class[idx].id);
+
+	  memcpy(ftoft_ptr_0, &ie95_selectId, 4);
+          ftoft_ptr_0 += 4;
+	}
 
         /* NF9_FLOW_APPLICATION_NAME */
         strlcpy(ftoft_ptr_0, class[idx].protocol, MAX_PROTOCOL_LEN);
