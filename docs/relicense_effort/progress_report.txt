@@ -48,6 +48,7 @@ Commits  Author <email>
       1  Jeroen Roovers <jer@gentoo.org>
       1  Junpei YOSHINO <junpei.yoshino@gmail.com>
       1  rouba002 <rouba002@gmail.com>
+      1  David Higgs <higgsd@users.noreply.github.com> / higgsd@gmail.com
          Will Dowling <will@autodeist.com>
          Karl O. Pinc <kop@karlpinc.com>
          Stephen Clark <sclark46@earthlink.net>
@@ -64,7 +65,6 @@ Commits  Author <email>
       1  Raymond Russell <raymond@corvil.com>
       1  Rico29 <cedric.bassaget@gmail.com>
       1  Davíð Steinn Geirsson <dsg@sensa.is>
-      1  David Higgs <higgsd@users.noreply.github.com>
       1  Vyron Tsingaras <vyronas@vtsingaras.me>
       1  Александр Шалаев <ashalaev@ivi.ru>
       1  matthewsf <matuskubis@gmail.com>
