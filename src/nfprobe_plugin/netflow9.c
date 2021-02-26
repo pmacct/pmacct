@@ -1639,7 +1639,7 @@ nf9_init_options_template(void)
         class_option_template.h.template_id = htons(NF9_OPTIONS_TEMPLATE_ID + 1 + config.nfprobe_id );
 	if (config.nfprobe_version == 9) {
           class_option_template.h.scope_len = htons(4); /* NF9_OPT_SCOPE_SYSTEM */
-          class_option_template.h.option_len = htons(9); /* NF9_FLOW_APPLICATION_ID + NF9_FLOW_APPLICATION_NAME */
+          class_option_template.h.option_len = htons(8); /* NF9_FLOW_APPLICATION_ID + NF9_FLOW_APPLICATION_NAME */
 	}
 	else if (config.nfprobe_version == 10) {
           class_option_template.h.scope_len = htons(2+1); /* IPFIX twist: NF9_FLOW_APPLICATION_ID + NF9_FLOW_APPLICATION_NAME + NF9_OPT_SCOPE_SYSTEM */
