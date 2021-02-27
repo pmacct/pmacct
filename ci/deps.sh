@@ -41,7 +41,7 @@ cd rabbitmq-c && rm -rf ./.git && mkdir build && cd build && cmake -DCMAKE_INSTA
 git clone --recursive https://github.com/maxmind/libmaxminddb 
 cd libmaxminddb && rm -rf ./.git && ./bootstrap && ./configure && make && sudo make install && cd ..
 
-git clone -b 3.2-stable https://github.com/ntop/nDPI
+git clone -b 3.4-stable https://github.com/ntop/nDPI
 cd nDPI && rm -rf ./.git && ./autogen.sh && ./configure && make && sudo make install && sudo ldconfig && cd ..
 
 wget -t $WGET_N_RETRIES --waitretry=$WGET_WAIT_RETRIES_S --no-check-certificate https://github.com/zeromq/libzmq/releases/download/v4.3.2/zeromq-4.3.2.tar.gz
