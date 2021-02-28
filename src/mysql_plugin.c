@@ -695,7 +695,10 @@ void MY_DB_Connect(struct DBdesc *db, char *host)
     mysql_options(db->desc, MYSQL_OPT_RECONNECT, &reconnect);
     if (config.sql_conn_ca_file) mysql_ssl_set(db->desc, NULL, NULL, config.sql_conn_ca_file, NULL, NULL);
     
-    usp = strstr(host, "unix:");
+    if (host) {
+      usp = strstr(host, "unix:");
+    }
+
     if (usp && usp == host) {
       usp += 5; /* go right past the 'unix:' string */
       mysql_ret = mysql_real_connect(db->desc, NULL, config.sql_user, config.sql_passwd, config.sql_db, FALSE, usp, 0);
