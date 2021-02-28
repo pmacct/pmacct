@@ -128,7 +128,7 @@ jobs:
   docker-hub:
     needs: build-and-test
     runs-on: ubuntu-18.04
-    if: github.event != 'pull_request'
+    if: github.event_name != 'pull_request'
     env:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
