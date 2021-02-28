@@ -1110,7 +1110,7 @@ fi
 
 AC_MSG_CHECKING([whether external dependencies (git submodules) should be compiled])
 AC_ARG_WITH(external-deps,
-		AS_HELP_STRING([--without-external-deps], ["Don't build external dependencies (git submodules). Specially useful for package maintainers [default=with]"]),
+		AS_HELP_STRING([--without-external-deps], [Do not build external dependencies (git submodules), specially useful for package maintainers [default=with]]),
 			[WITH_EXTERNAL_DEPS="$withval"],
 			[WITH_EXTERNAL_DEPS="$WITH_EXTERNAL_DEPS_DEFAULT"]
 			)
