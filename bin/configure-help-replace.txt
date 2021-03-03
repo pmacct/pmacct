@@ -39,4 +39,6 @@
   NFLOG_LIBS			linker flags for NFLOG, overriding pkg-config
   NDPI_CFLAGS			C compiler flags for dynamic nDPI, overriding pkg-config
   NDPI_LIBS			linker flags for dynamic nDPI, overriding pkg-config
+  UNYTE_UDP_NOTIF_CFLAGS	C compiler flags for dynamic Unyte UDP Notif, overriding pkg-config
+  UNYTE_UDP_NOTIF_LIBS		linker flags for dynamic Unyte UDP Notif, overriding pkg-config
 
