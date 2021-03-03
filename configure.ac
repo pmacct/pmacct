@@ -936,6 +936,43 @@ AC_ARG_ENABLE(ndpi,
 )
 dnl finish: nDPI handling
 
+dnl start: unyte udp notif handling
+AC_MSG_CHECKING(whether to enable Unyte UDP-Notif support)
+AC_ARG_ENABLE(unyte-udp-notif,
+  [  --enable-unyte-udp-notif         Enable Unyte UDP Notif support (default: no)],
+  [ case "$enableval" in
+  yes)
+    AC_MSG_RESULT(yes)
+
+    AC_SUBST(UNYTE_UDP_NOTIF_CFLAGS)
+    AC_SUBST(UNYTE_UDP_NOTIF_LIBS)
+
+    SUPPORTS="${SUPPORTS} unyte-udp-notif"
+    USING_UNYTE_UDP_NOTIF="yes"
+    PMACCT_CFLAGS="$PMACCT_CFLAGS $UNYTE_UDP_NOTIF_CFLAGS"
+    UNYTE_UDP_NOTIF_LIBS="$UNYTE_UDP_NOTIF_LIBS -lunyte"
+    AC_DEFINE(WITH_UNYTE_UDP_NOTIF, 1)
+    _save_LIBS="$LIBS"
+    LIBS="$LIBS $UNYTE_UDP_NOTIF_LIBS -lpthread"
+    AC_CHECK_LIB([unyte], [unyte_start_collector], [], [AC_MSG_ERROR([
+	ERROR: missing unyte-udp-notif library. Refer to: XXX
+    ])])
+    LIBS="$_save_LIBS"
+    _save_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $UNYTE_UDP_NOTIF_CFLAGS"
+    AC_CHECK_HEADER([unyte/unyte_collector.h], [], [AC_MSG_ERROR(ERROR: missing unyte-udp-notif headers)])
+    CFLAGS="$_save_CFLAGS"
+    ;;
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  esac ],
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
+dnl finish: unyte udp notif handling
+
 if test x"$USING_DLOPEN" = x"yes"; then
 	AC_DEFINE(HAVE_DLOPEN, 1)
 else
@@ -1212,6 +1249,7 @@ AM_CONDITIONAL([WITH_JANSSON], [test x"$USING_JANSSON" = x"yes"])
 AM_CONDITIONAL([WITH_AVRO], [test x"$USING_AVRO" = x"yes"])
 AM_CONDITIONAL([WITH_SERDES], [test x"$USING_SERDES" = x"yes"])
 AM_CONDITIONAL([WITH_NDPI], [test x"$USING_NDPI" = x"yes"])
+AM_CONDITIONAL([WITH_UNYTE_UDP_NOTIF], [test x"$USING_UNYTE_UDP_NOTIF" = x"yes"])
 AM_CONDITIONAL([WITH_NFLOG], [test x"$USING_NFLOG" = x"yes"])
 AM_CONDITIONAL([WITH_DLOPEN], [test x"$USING_DLOPEN" = x"yes"])
 AM_CONDITIONAL([USING_TRAFFIC_BINS], [test x"$USING_TRAFFIC_BINS" = x"yes"])

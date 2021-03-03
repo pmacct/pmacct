@@ -142,6 +142,10 @@ if WITH_GNUTLS
 libdaemons_la_LIBADD  += @GNUTLS_LIBS@
 libdaemons_la_CFLAGS  += @GNUTLS_CFLAGS@
 endif
+if WITH_UNYTE_UDP_NOTIF
+libdaemons_la_LIBADD  += @UNYTE_UDP_NOTIF_LIBS@
+libdaemons_la_CFLAGS  += @UNYTE_UDP_NOTIF_CFLAGS@
+endif
 
 if USING_TRAFFIC_BINS
 sbin_PROGRAMS += pmacctd nfacctd sfacctd
