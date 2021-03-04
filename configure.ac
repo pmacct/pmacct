@@ -950,17 +950,17 @@ AC_ARG_ENABLE(unyte-udp-notif,
     SUPPORTS="${SUPPORTS} unyte-udp-notif"
     USING_UNYTE_UDP_NOTIF="yes"
     PMACCT_CFLAGS="$PMACCT_CFLAGS $UNYTE_UDP_NOTIF_CFLAGS"
-    UNYTE_UDP_NOTIF_LIBS="$UNYTE_UDP_NOTIF_LIBS -lunyte"
+    UNYTE_UDP_NOTIF_LIBS="$UNYTE_UDP_NOTIF_LIBS -lunyte-udp-notif"
     AC_DEFINE(WITH_UNYTE_UDP_NOTIF, 1)
     _save_LIBS="$LIBS"
     LIBS="$LIBS $UNYTE_UDP_NOTIF_LIBS -lpthread"
-    AC_CHECK_LIB([unyte], [unyte_start_collector], [], [AC_MSG_ERROR([
+    AC_CHECK_LIB([unyte-udp-notif], [unyte_start_collector], [], [AC_MSG_ERROR([
 	ERROR: missing unyte-udp-notif library. Refer to: XXX
     ])])
     LIBS="$_save_LIBS"
     _save_CFLAGS="$CFLAGS"
     CFLAGS="$CFLAGS $UNYTE_UDP_NOTIF_CFLAGS"
-    AC_CHECK_HEADER([unyte/unyte_collector.h], [], [AC_MSG_ERROR(ERROR: missing unyte-udp-notif headers)])
+    AC_CHECK_HEADER([unyte-udp-notif/unyte_collector.h], [], [AC_MSG_ERROR(ERROR: missing unyte-udp-notif headers)])
     CFLAGS="$_save_CFLAGS"
     ;;
   no)
