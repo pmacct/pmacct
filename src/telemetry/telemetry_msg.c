@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -140,7 +140,7 @@ int telemetry_recv_json(telemetry_peer *peer, u_int32_t len, int *flags)
 
   (*flags) = FALSE;
 
-  if (!zmq_input && !kafka_input) {
+  if (!zmq_input && !kafka_input && !unyte_udp_notif_input) {
     ret = telemetry_recv_generic(peer, len);
   }
 #if defined WITH_ZMQ

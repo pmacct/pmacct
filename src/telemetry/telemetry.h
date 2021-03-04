@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -24,6 +24,11 @@
 
 /* includes */
 #include "base64.h"
+#ifdef WITH_UNYTE_UDP_NOTIF
+#include <unyte/unyte_collector.h>
+#include <unyte/unyte_utils.h>
+#include <unyte/queue.h>
+#endif
 
 /* defines */
 #define TELEMETRY_TCP_PORT		1620
@@ -150,5 +155,5 @@ extern telemetry_misc_structs *telemetry_misc_db;
 extern telemetry_peer *telemetry_peers;
 extern void *telemetry_peers_cache;
 extern telemetry_peer_timeout *telemetry_peers_timeout; 
-extern int zmq_input, kafka_input;
+extern int zmq_input, kafka_input, unyte_udp_notif_input;
 #endif //TELEMETRY_H
