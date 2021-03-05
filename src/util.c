@@ -1905,6 +1905,9 @@ void version_daemon(int acct_type, char *header)
 #ifdef WITH_SERDES
   printf("serdes\n");
 #endif
+#ifdef WITH_UNYTE_UDP_NOTIF
+  printf("unyte-udp-notif\n");
+#endif
 #ifdef WITH_NDPI
   printf("nDPI %s\n", ndpi_revision());
 #endif

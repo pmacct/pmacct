@@ -74,6 +74,8 @@
 #define TELEMETRY_LOGDUMP_ET_LOG	BGP_LOGDUMP_ET_LOG
 #define TELEMETRY_LOGDUMP_ET_DUMP	BGP_LOGDUMP_ET_DUMP
 
+#define TELEMETRY_DEFAULT_UDP_NOTIF_NMSGS	1
+
 struct telemetry_cisco_hdr_v0 {
   u_int32_t type;
   u_int32_t flags;

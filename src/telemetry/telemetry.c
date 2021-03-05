@@ -446,10 +446,13 @@ int telemetry_daemon(void *t_data_void)
     if (config.telemetry_udp_notif_nmsgs) {
       options.recvmmsg_vlen = config.telemetry_udp_notif_nmsgs;
     }
+    else {
+      options.recvmmsg_vlen = TELEMETRY_DEFAULT_UDP_NOTIF_NMSGS;
+    }
 
     uun_collector = unyte_start_collector(&options);
 
-    Log(LOG_INFO, "INFO ( %s/%s ): reading telemetry data from Unyte UDP Notif %s:%d\n",
+    Log(LOG_INFO, "INFO ( %s/%s ): reading telemetry data from Unyte UDP Notif on %s:%d\n",
 	config.name, t_data->log_str, options.address, options.port);
   }
 #endif
@@ -749,7 +752,7 @@ int telemetry_daemon(void *t_data_void)
 	  payload_len = strlen(seg->payload);
 	  if (payload_len < sizeof(consumer_buf)) {
 	    // XXX: improve checks that this is a JSON string
-	    strlcpy((char *)consumer_buf, seg->payload, payload_len);
+	    strlcpy((char *)consumer_buf, seg->payload, sizeof(consumer_buf));
 	  }
 	  else {
 	    goto select_again;
