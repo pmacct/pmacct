@@ -447,7 +447,7 @@ int telemetry_daemon(void *t_data_void)
       options.recvmmsg_vlen = config.telemetry_udp_notif_nmsgs;
     }
     else {
-      options.recvmmsg_vlen = TELEMETRY_DEFAULT_UDP_NOTIF_NMSGS;
+      options.recvmmsg_vlen = TELEMETRY_DEFAULT_UNYTE_UDP_NOTIF_NMSGS;
     }
 
     uun_collector = unyte_start_collector(&options);
@@ -747,12 +747,17 @@ int telemetry_daemon(void *t_data_void)
           int payload_len = 0;
 
 	  seg = (unyte_seg_met_t *)seg_ptr;
-	  raw_to_sa((struct sockaddr *)&client, (u_char *)&seg->metadata->src_addr, seg->metadata->src_port, AF_INET);
 
-	  payload_len = strlen(seg->payload);
-	  if (payload_len < sizeof(consumer_buf)) {
-	    // XXX: improve checks that this is a JSON string
-	    strlcpy((char *)consumer_buf, seg->payload, sizeof(consumer_buf));
+	  if (seg->header->encoding_type == TELEMETRY_UDP_NOTIF_ENC_JSON && config.telemetry_decoder_id == TELEMETRY_DECODER_JSON) {
+	    raw_to_sa((struct sockaddr *)&client, (u_char *)&seg->metadata->src_addr, seg->metadata->src_port, AF_INET);
+
+	    payload_len = strlen(seg->payload);
+	    if (payload_len < sizeof(consumer_buf)) {
+	      strlcpy((char *)consumer_buf, seg->payload, sizeof(consumer_buf));
+	    }
+	    else {
+	      goto select_again;
+	    }
 	  }
 	  else {
 	    goto select_again;
