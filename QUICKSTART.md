@@ -40,74 +40,73 @@ natively supported by pmacct). BGP, BMP and Streaming Telemetry daemons can
 publish control and infrastructure planes to AMQP and Kafka brokers. This is
 a list of the daemons included in the pmacct distribution: 
 
-## pmacctd 
+### pmacctd
 
 libpcap-based accounting daemon: it captures packets from one or multiple interfaces it is bound to. Other than acting as a collector, this daemon can also export statistics via NetFlow, IPFIX and sFlow protocols.
  
-## nfacctd
+### nfacctd
 
 NetFlow/IPFIX accounting daemon: it listens for NetFlow v5/v9 and IPFIX packets on one or more interfaces (IPv4 and IPv6). Other than acting as a collector, this daemon can also replicate to 3rd party collectors.
 
-## sfacctd
+### sfacctd
 
 sFlow accounting daemon; it listens for sFlow packets v2, v4 and v5 on one or more interfaces (both IPv4 and IPv6). Other than acting as a collector, this daemon can also replicate to 3rd party collectors.
 
-## uacctd
+### uacctd
 
 Linux Netlink NFLOG accounting daemon; it captures packets by leveraging a NFLOG multicast group - and works only on Linux. Other than acting as a collector, this daemon can also export statistics via NetFlow, IPFIX and sFlow protocols.
 
-## pmtelemetryd
+### pmtelemetryd
 
 Standalone Streaming Telemetry collector daemon; listens for telemetry data binding to a TCP or UDP port and logs real-time and/or dumps at regular time-intervals to configured backends.
 
-## pmbgpd
+### pmbgpd
 
 Standalone BGP collector daemon; acts as a passive iBGP or eBGP neighbor and maintains per-peer RIBs; can log real-time and/or dump at regular time-intervals BGP data to configured backends.
 
-## pmbmpd
+### pmbmpd
 
 Standalone BMP collector daemon; can log real-time and/or dump at regular time-intervals BMP/BGP data to configured backends.
 
-## pmacct
+### pmacct
 
 Commandline pmacct client; it allows to retrieve data from a memory table plugin; it can perform queries over data or do bulk data retrieval. Output is formatted, CSV or JSON format.  Suitable for data injection in 3rd party tools like RRDtool, Gnuplot or SNMP server among the others.
 
 Given its open and pluggable architecture, pmacct is easily extensible with new plugins. Here is a list of traffic accounting plugins included in the official pmacct distribution:
 
-## memory
+### memory
 Data is stored in a memory table and can be fetched via the pmacct command-line client tool, 'pmacct'. This plugin also implements a push model and allows easily to inject data into 3rd party tools. The plugin is recommended for prototyping and proof-of-concept (without mass traffic generation) and smaller-scale / home production environments and is compiled in by default.
 
-## mysql
+### mysql
 
 A working MySQL/MariaDB installation can be used for data storage. This plugin can be compiled using the *--enable-mysql* switch. 
 
-## pgsql
+### pgsql
 
 A working PostgreSQL installation can be used for data storage. This plugin can be compiled using the *--enable-pgsql* switch.
 
-## sqlite3
+### sqlite3
 
 A working SQLite 3.x or BerkeleyDB 5.x (compiled in with the SQLite API) installation can be used for data storage. This plugin can be compiled using the *--enable-sqlite3* switch.
 
-## print
+### print
 
 Data is printed at regular intervals to flat-files or standard output in tab-spaced, CSV and JSON formats. This plugin is compiled in by default.
 
-## amqp
+### amqp
 
 Data is sent to a RabbitMQ broker, running AMQP protocol, for delivery to consumer applications or tools. Popular consumers are ElasticSearch, InfluxDB, Druid and ClickHouse. This plugin can be compiled using the *--enable-rabbitmq* switch.
 
-## kafka
+### kafka
 Data is sent to a Kafka broker for delivery to consumer applications or tools. Popular consumers are ElasticSearch, InfluxDB, Druid and ClickHouse. This plugin can be compiled using the *--enable-kafka* switch.
 
-## tee
+### tee
 Applies to nfacctd and sfacctd daemons only. It's a featureful packet replicator for NetFlow/IPFIX/sFlow data. This plugin is compiled in by default.
 
-
-## nfprobe
+### nfprobe
 Applies to pmacctd and uacctd daemons only. Exports collected data via NetFlow v5/v9 or IPFIX. This plugin is compiled in by default.
 
-## sfprobe
+### sfprobe
 applies to pmacctd and uacctd daemons only. Exports collected data via sFlow v5. This plugin is compiled in by default.
 
 
@@ -2299,7 +2298,7 @@ acquired in one of the two following ways:
 1. it can be imported using the rpki_roas_file config directive from a
    file in the RIPE Validator format, ie.:
 
-   ```
+```
 {
   "roas" : [ {
     "asn" : "AS2914",
@@ -2318,7 +2317,7 @@ acquired in one of the two following ways:
     "ta" : "ARIN"
   } ]
 }
-   ```
+```
 
   RPKI data in such format can be obtained for example at the following URL: [https://rpki.gin.ntt.net/api/export.json]().
 
@@ -2422,7 +2421,8 @@ tag 100 to packets exported from agents A.A.A.A, B.B.B.B and C.C.C.C; in case
 there was also an agent D.D.D.D exporting towards the replicator, its packets
 would intuitively remain untagged. Tags are matched by a tee_receivers map, see
 above the two pool definitions commented out containing the 'tag' keyword: the
-definition would cause untagged packets (tag=0) to be replicated only to pool #1 whereas packets tagged as 100 (tag=100) to be replicated only to pool #2.
+definition would cause untagged packets (tag=0) to be replicated only to pool #1
+whereas packets tagged as 100 (tag=100) to be replicated only to pool #2.
 More examples in the pretag.map.example and tee_receivers.lst.example files in
 the *examples/* sub-tree:
 
