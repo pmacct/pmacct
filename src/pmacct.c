@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -112,7 +112,7 @@ void usage_client(char *prog)
   printf("  -0\tAlways set timestamps to UTC (even if the timezone configured on the system is different)\n"); 
   printf("  -V\tPrint version and exit\n");
   printf("\n");
-  printf("  See QUICKSTART file in the distribution for examples\n");
+  printf("  See QUICKSTART.md file in the distribution for examples\n");
   printf("\n");
   printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);
 }

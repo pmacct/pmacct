@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -85,7 +85,7 @@ void usage_daemon(char *prog_name)
   printf("  -E  \tCSV format separator (applies to -O csv, DEFAULT: ',')\n");
   printf("\n");
   printf("For examples, see:\n");
-  printf("  https://github.com/pmacct/pmacct/blob/master/QUICKSTART or\n");
+  printf("  https://github.com/pmacct/pmacct/blob/master/QUICKSTART.md or\n");
   printf("  https://github.com/pmacct/pmacct/wiki\n");
   printf("\n");
   printf("For suggestions, critics, bugs, contact me: %s.\n", MANTAINER);

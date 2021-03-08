@@ -2,7 +2,7 @@ INTRODUCTION.
 pmacct strategy towards Streaming Telemetry is currently in transition
 and encompasses two daemons: 1) pmtelemetryd, the original effort written
 in C, and documented in "Quickstart guide to setup Streaming Telemetry
-collection" in QUICKSTART; 2) pmgrpcd.py, written in Python and evolving,
+collection" in QUICKSTART.md; 2) pmgrpcd.py, written in Python and evolving,
 and documented in telemetry/decoders/v3/README.pmgrpcd. Following is the
 support matrix for Streaming Telemetry collection:
 

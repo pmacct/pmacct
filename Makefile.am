@@ -3,7 +3,7 @@ if USING_BGP_BINS
 SUBDIRS += examples/lg
 endif
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = include sql examples docs CONFIG-KEYS FAQS QUICKSTART UPGRADE
+EXTRA_DIST = include sql examples docs CONFIG-KEYS FAQS QUICKSTART.md UPGRADE
 if USING_SQL
 EXTRA_DIST += src/sql_common_m.c
 endif
@@ -25,7 +25,7 @@ if USING_SQL
 pmacct_sql_dir = $(pmacct_data_dir)/sql
 endif
 
-pmacct_data__DATA = CONFIG-KEYS FAQS QUICKSTART UPGRADE
+pmacct_data__DATA = CONFIG-KEYS FAQS QUICKSTART.md UPGRADE
 pmacct_docs__DATA = docs/IPFIX docs/LOOKING_GLASS_FORMAT docs/SIGNALS \
 	docs/MSGLOG_DUMP_FORMATS docs/TRIGGER_VARS
 pmacct_examples__DATA = examples/allow.lst.example examples/bgp_agent.map.example \

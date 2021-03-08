@@ -57,7 +57,7 @@ QUICKSTART.
 * Start exporting Streaming Telemetry data from routers.
 
 * Compose a configuration file for pmtelemetryd (you can check for
-  more configuration knobs in QUICKSTART and CONFIG-KEYS docs):
+  more configuration knobs in QUICKSTART.md and CONFIG-KEYS docs):
 
   ! telemetry_daemon_zmq_address: 127.0.0.1:50000
   telemetry_daemon_zmq_address: 127.0.0.1:50001
