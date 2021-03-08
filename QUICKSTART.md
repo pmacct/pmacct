@@ -37,8 +37,11 @@ Sqlite 3) or to noSQL databates (ie. BerkeleyDB) and to flat-files, and
 publish to AMQP and Kafka brokers (typically to insert in ElasticSearch,
 InfluxDB, Druid, ClickHouse and, more in general, all backends which are not
 natively supported by pmacct). BGP, BMP and Streaming Telemetry daemons can
-publish control and infrastructure planes to AMQP and Kafka brokers. This is
-a list of the daemons included in the pmacct distribution: 
+publish control and infrastructure planes to AMQP and Kafka brokers.
+
+## Ia. Daemons
+
+This is a list of the daemons included in the pmacct distribution:
 
 ### pmacctd
 
@@ -71,6 +74,8 @@ Standalone BMP collector daemon; can log real-time and/or dump at regular time-i
 ### pmacct
 
 Commandline pmacct client; it allows to retrieve data from a memory table plugin; it can perform queries over data or do bulk data retrieval. Output is formatted, CSV or JSON format.  Suitable for data injection in 3rd party tools like RRDtool, Gnuplot or SNMP server among the others.
+
+## Ib. Plugins
 
 Given its open and pluggable architecture, pmacct is easily extensible with new plugins. Here is a list of traffic accounting plugins included in the official pmacct distribution:
 
