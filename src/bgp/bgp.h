@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -67,6 +67,12 @@
 #define BGP_ATTR_AIGP				26
 #define BGP_ATTR_LARGE_COMMUNITIES		32 /* rfc8092 */
 #define BGP_ATTR_PREFIX_SID			40
+
+/* BGP4 internal bitmap type codes.  */
+#define BGP_BMAP_ATTR_MULTI_EXIT_DISC		0x01
+#define BGP_BMAP_ATTR_LOCAL_PREF		0x02
+#define BGP_BMAP_ATTR_AIGP			0x04
+#define BGP_BMAP_ATTR_PREFIX_SID		0x08
 
 #define BGP_NLRI_UNDEFINED			0
 #define BGP_NLRI_UPDATE				1

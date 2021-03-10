@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -1239,6 +1239,7 @@ int bgp_attr_parse_aigp(struct bgp_peer *peer, u_int16_t len, struct bgp_attr_ex
   case 11:
     memcpy(&tmp64, (ptr + 3), 8);
     attr_extra->aigp = pm_ntohll(tmp64);
+    attr_extra->bitmap |= BGP_BMAP_ATTR_AIGP;
     break;
   default:
     /* unsupported */
@@ -1270,6 +1271,7 @@ int bgp_attr_parse_prefix_sid(struct bgp_peer *peer, u_int16_t len, struct bgp_a
     if (tlv_len == 7) {
       memcpy(&tmp, (ptr + 6), 4);
       attr_extra->psid_li = ntohl(tmp); 
+      attr_extra->bitmap |= BGP_BMAP_ATTR_PREFIX_SID;
     }
     else {
       return ERR;

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /* 
@@ -67,6 +67,7 @@ struct bgp_msg_extra_data {
 
 struct bgp_attr_extra
 {
+  u_int8_t bitmap;
   rd_t rd;
   u_char label[3];
   path_id_t path_id;

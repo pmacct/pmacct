@@ -167,10 +167,10 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       if (attr->med)
 	json_object_set_new_nocheck(obj, "med", json_integer((json_int_t)attr->med));
 
-      if (attr_extra && attr_extra->aigp)
+      if (attr_extra && (attr_extra->bitmap & BGP_BMAP_ATTR_AIGP))
         json_object_set_new_nocheck(obj, "aigp", json_integer((json_int_t)attr_extra->aigp));
 
-      if (attr_extra && attr_extra->psid_li)
+      if (attr_extra && (attr_extra->bitmap & BGP_BMAP_ATTR_PREFIX_SID))
         json_object_set_new_nocheck(obj, "psid_li", json_integer((json_int_t)attr_extra->psid_li));
 
       if (config.rpki_roas_file || config.rpki_rtr_cache) {
@@ -401,7 +401,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
 
-      if (attr_extra && attr_extra->aigp) {
+      if (attr_extra && (attr_extra->bitmap & BGP_BMAP_ATTR_AIGP)) {
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "aigp", &p_avro_field, NULL));
 	pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
 	pm_avro_check(avro_value_set_int(&p_avro_branch, attr_extra->aigp));
@@ -411,7 +411,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
 
-      if (attr_extra && attr_extra->psid_li) {
+      if (attr_extra && (attr_extra->bitmap & BGP_BMAP_ATTR_PREFIX_SID)) {
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "psid_li", &p_avro_field, NULL));
 	pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
 	pm_avro_check(avro_value_set_int(&p_avro_branch, attr_extra->psid_li));
