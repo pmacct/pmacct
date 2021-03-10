@@ -1271,7 +1271,6 @@ int bgp_attr_parse_prefix_sid(struct bgp_peer *peer, u_int16_t len, struct bgp_a
     if (tlv_len == 7) {
       memcpy(&tmp, (ptr + 6), 4);
       attr_extra->psid_li = ntohl(tmp); 
-      attr_extra->bitmap |= BGP_BMAP_ATTR_PREFIX_SID;
     }
     else {
       return ERR;

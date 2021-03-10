@@ -292,20 +292,18 @@ struct bgp_attr_extra *bgp_attr_extra_process(struct bgp_peer *peer, struct bgp_
     }
   }
 
-  /* Prefix-SID attribute */
-  if (attr_extra->bitmap & BGP_BMAP_ATTR_PREFIX_SID) {
+  /* Prefix-SID attribute: either > 0 or absent */
+  if (attr_extra->psid_li) {
     if (!rie) {
       rie = bgp_attr_extra_get(ri);
     }
 
     if (rie) {
       rie->psid_li = attr_extra->psid_li;
-      rie->bitmap |= BGP_BMAP_ATTR_PREFIX_SID;
     }
   }
 
   if (!rie || !(attr_extra->bitmap & BGP_BMAP_ATTR_AIGP)) rie->bitmap &= ~BGP_BMAP_ATTR_AIGP;
-  if (!rie || !(attr_extra->bitmap & BGP_BMAP_ATTR_PREFIX_SID)) rie->bitmap &= ~BGP_BMAP_ATTR_PREFIX_SID;
 
   return rie;
 }
