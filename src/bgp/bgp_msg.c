@@ -912,6 +912,7 @@ int bgp_attr_parse_med(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *at
 
   memcpy(&tmp, ptr, 4);
   attr->med = ntohl(tmp);
+  attr->bitmap |= BGP_BMAP_ATTR_MULTI_EXIT_DISC;
   ptr += 4;
 
   return SUCCESS;
@@ -926,6 +927,7 @@ int bgp_attr_parse_local_pref(struct bgp_peer *peer, u_int16_t len, struct bgp_a
 
   memcpy(&tmp, ptr, 4);
   attr->local_pref = ntohl(tmp);
+  attr->bitmap |= BGP_BMAP_ATTR_LOCAL_PREF;
   ptr += 4;
 
   return SUCCESS;

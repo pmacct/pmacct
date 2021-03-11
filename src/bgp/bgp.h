@@ -327,6 +327,7 @@ struct bgp_attr {
   u_int32_t med;
   u_int32_t local_pref;
   u_int8_t origin;
+  u_int8_t bitmap;
 };
 
 struct bgp_comm_range {

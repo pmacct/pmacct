@@ -398,6 +398,7 @@ unsigned int attrhash_key_make(void *p)
   key += attr->nexthop.s_addr;
   key += attr->med;
   key += attr->local_pref;
+  key += attr->bitmap;
 
   if (attr->aspath)
     key += aspath_key_make(attr->aspath);
@@ -419,6 +420,7 @@ int attrhash_cmp(const void *p1, const void *p2)
   const struct bgp_attr *attr2 = (const struct bgp_attr *)p2;
 
   if (attr1->flag == attr2->flag
+      && attr1->bitmap == attr2->bitmap
       && attr1->origin == attr2->origin
       && attr1->nexthop.s_addr == attr2->nexthop.s_addr
       && attr1->aspath == attr2->aspath

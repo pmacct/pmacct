@@ -162,9 +162,10 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
       json_object_set_new_nocheck(obj, "origin", json_string(bgp_origin_print(attr->origin)));
 
-      json_object_set_new_nocheck(obj, "local_pref", json_integer((json_int_t)attr->local_pref));
+      if (attr->bitmap & BGP_BMAP_ATTR_LOCAL_PREF)
+        json_object_set_new_nocheck(obj, "local_pref", json_integer((json_int_t)attr->local_pref));
 
-      if (attr->med)
+      if (attr->bitmap & BGP_BMAP_ATTR_MULTI_EXIT_DISC)
 	json_object_set_new_nocheck(obj, "med", json_integer((json_int_t)attr->med));
 
       if (attr_extra && (attr_extra->bitmap & BGP_BMAP_ATTR_AIGP))
@@ -357,9 +358,11 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
       pm_avro_check(avro_value_set_string(&p_avro_branch, bgp_origin_print(attr->origin)));
 
-      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "local_pref", &p_avro_field, NULL));
-      pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-      pm_avro_check(avro_value_set_int(&p_avro_branch, attr->local_pref));
+      if (attr->bitmap & BGP_BMAP_ATTR_LOCAL_PREF) {
+        pm_avro_check(avro_value_get_by_name(&p_avro_obj, "local_pref", &p_avro_field, NULL));
+        pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+        pm_avro_check(avro_value_set_int(&p_avro_branch, attr->local_pref));
+      }
 
       if (attr->community) {
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "comms", &p_avro_field, NULL));
@@ -391,7 +394,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
 
-      if (attr->med) {
+      if (attr->bitmap & BGP_BMAP_ATTR_MULTI_EXIT_DISC) {
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "med", &p_avro_field, NULL));
 	pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
 	pm_avro_check(avro_value_set_int(&p_avro_branch, attr->med));
