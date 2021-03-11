@@ -363,6 +363,10 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
         pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
         pm_avro_check(avro_value_set_int(&p_avro_branch, attr->local_pref));
       }
+      else {
+	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "local_pref", &p_avro_field, NULL));
+	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+      }
 
       if (attr->community) {
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "comms", &p_avro_field, NULL));
