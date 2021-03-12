@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -89,8 +89,10 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void 
     json_object_set_new_nocheck(obj, "telemetry_port", json_integer((json_int_t)peer->tcp_port));
 
     if (data_decoder == TELEMETRY_DATA_DECODER_JSON) {
-      json_object_set_new_nocheck(obj, "telemetry_data", json_string(log_data));
+      json_error_t json_err;
+      json_t *log_data_obj = json_loads(log_data, 0, &json_err);
 
+      json_object_set_new_nocheck(obj, "telemetry_data", log_data_obj);
       json_object_set_new_nocheck(obj, "serialization", json_string("json"));
     }
     else if (data_decoder == TELEMETRY_DATA_DECODER_GPB) {
