@@ -1328,8 +1328,8 @@ Some notes:
   global,sasl.password,Endpoint=sb://.XXX.windows.net/;SharedAccessKeyName=YYY;SharedAccessKey=ZZZ;EntityPath=JJJ
   ```
 
-1. When integrating pmacct with the PNDA framework ( [http://www.pnda.io/]() ), a guide on how to make the two communicate has been written-up and published at
-this URL: [https://github.com/jbotello7381/pmacct_to_pnda.io]() . 
+1. When integrating pmacct with the PNDA framework ( [http://www.pnda.io/](http://www.pnda.io/) ), a guide on how to make the two communicate has been written-up and published at
+this URL: [https://github.com/jbotello7381/pmacct_to_pnda.io](https://github.com/jbotello7381/pmacct_to_pnda.io) . 
 
 
 1. Internal buffering and queueing
@@ -1407,10 +1407,10 @@ uacctd (NFLOG-based daemon), nfacctd (NetFlow daemon) via NetFlow v9/IPFIX IE #3
 and the current approach is to leverage the popular free, open-source nDPI library.
 To enable the feature please follow these steps:
 
-1. Download pmacct from its webpage ([http://www.pmacct.net/]()) or from its GitHub
+1. Download pmacct from its webpage ([http://www.pmacct.net/](http://www.pmacct.net/)) or from its GitHub
    repository (https://github.com/pmacct/pmacct).
 
-1. Download nDPI from its GitHub repository ([https://github.com/ntop/nDPI]()). The
+1. Download nDPI from its GitHub repository ([https://github.com/ntop/nDPI](https://github.com/ntop/nDPI)). The
    nDPI API tends to change frequently in a non-backward compatible fashion.
    This means that not every version of pmacct will work with any version of
    nDPI. pmacct 1.7.5 works against nDPI 3.0-stable, pmacct 1.7.6 works against
@@ -1427,14 +1427,14 @@ To enable the feature please follow these steps:
 1. Configure for compiling pmacct with the *--enable-ndpi* switch. Then compile and
    install, ie.:
 
-   If downloading a release from [http://www.pmacct.net](), from inside the pmacct
+   If downloading a release from [http://www.pmacct.net](http://www.pmacct.net), from inside the pmacct
    directory:
    
    ```shell
    shell> ./configure --enable-ndpi; make; make install
    ```
    
-   If downloading code from [https://github.com/pmacct/pmacct]() , from inside the
+   If downloading code from [https://github.com/pmacct/pmacct](https://github.com/pmacct/pmacct) , from inside the
    pmacct directory:
    
    ```shell
@@ -2326,7 +2326,7 @@ acquired in one of the two following ways:
 }
 ```
 
-  RPKI data in such format can be obtained for example at the following URL: [https://rpki.gin.ntt.net/api/export.json]().
+  RPKI data in such format can be obtained for example at the following URL: [https://rpki.gin.ntt.net/api/export.json](https://rpki.gin.ntt.net/api/export.json).
 
 1. Connecting to a RPKI RTR Cache for live ROA updates. Its IP address
    and port being defined by the rpki_rtr_cache config directive (a few
@@ -3327,7 +3327,7 @@ input/output data:
       
 	   that the same behaviour is obtained as with pmacct; finally, if running on a SELinux enabled system, consider that it could be interfering too;
    3. when not using ZeroMQ for internal buffering (plugin_pipe_zmq set to true) and especially in case of copy/paste of configs or if using a config from a production system in lab, disable/double-check values for internal buffering: if set too high they will likely retain data internally to the daemon;
-   4. If multiple interfaces are configured on a system, try to disable rp_filter. See [http://tldp.org/HOWTO/Adv-Routing-HOWTO/lartc.kernel.rpf.html]() for more info on RP filtering. The value of rp_filter files in /proc must be set to zero (ie. "echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter") in order to disable RP filtering. Also, if working on a cloud instance, consider often times these are not configured by default to pass traffic through. These appear popular issues when replicating flow data with tee_transparent feature enabled (that is, packet spoofing);
+   4. If multiple interfaces are configured on a system, try to disable rp_filter. See [http://tldp.org/HOWTO/Adv-Routing-HOWTO/lartc.kernel.rpf.html](http://tldp.org/HOWTO/Adv-Routing-HOWTO/lartc.kernel.rpf.html) for more info on RP filtering. The value of rp_filter files in /proc must be set to zero (ie. "echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter") in order to disable RP filtering. Also, if working on a cloud instance, consider often times these are not configured by default to pass traffic through. These appear popular issues when replicating flow data with tee_transparent feature enabled (that is, packet spoofing);
    5. In case aggregate_filter is in use: the feature expects a libpcap-style filter as value. BPF filters are sensible to both VLAN tags and MPLS labels: if, for example, the traffic is VLAN tagged and the value of aggregate_filter is 'src net X.X.X.X/Y', there will be no match for VLAN-tagged traffic from src net X.X.X.X/Y; the filter should be re-written as 'vlan and src net X.X.X.X/Y'; 6) in case of NetFlow v9/IPFIX collection, two protocols that are template-based, the issue may be with templates not being received by nfacctd (in which case by enabling debug you may see "Discarded NetFlow v9/IPFIX packet (R: unknown template [ .. ]" messages in your logs); you can confirm whether templates are being exported/replicated/received with a touch of "tshark -d udp.port==<NFv9/IPFIX port>,cflow -R cflow.template_id -2"; it may also happen the opposite: templates are received but no data packets are being sent (ie. because sampling is not configured on the actual interfaces on the exporting device): in this case tshark would only show periodic data being received (ie. every 30 secs, 60 secs, etc.) rather than a more constant stream of data.
 
 1. In the case of inconsistent output - inconsistent defined as replaying the same set of data, output produced by the daemon differs - of nfacctd/sfacctd:
@@ -3404,6 +3404,6 @@ allows multiple daemons to bind to the same local address and port in order
 to load-balance processing of incoming packets. Here a reference to a
 presentation of this feature for Linux:
 
-  [https://domsch.com/linux/lpc2010/Scaling_techniques_for_servers_with_high_connection%20rates.pdf]()
+  [https://domsch.com/linux/lpc2010/Scaling_techniques_for_servers_with_high_connection%20rates.pdf](https://domsch.com/linux/lpc2010/Scaling_techniques_for_servers_with_high_connection%20rates.pdf)
 
   To enable SO_REUSEPORT on a Linux system 'sysctl net.core.allow_reuseport=1'. Also, the processes must be launched by the same user.
