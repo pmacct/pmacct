@@ -1244,7 +1244,7 @@ To enable the feature please follow these steps:
    nDPI API tends to change frequently in a non-backward compatible fashion.
    This means that not every version of pmacct will work with any version of
    nDPI. pmacct 1.7.5 works against nDPI 3.0-stable, pmacct 1.7.6 works against
-   nDPI 3.2-stable.  
+   nDPI 3.2-stable. pmacct 1.7.7 works against nDPI 3.4-stable.
 
 3) Configure for compiling, compile and install the downloaded nDPI library, ie.
    inside the nDPI directory:
@@ -1308,8 +1308,9 @@ on NetFlow v9/IPFIX IEs #94, #95 and #96. Where IE #95 (applicationId) is part o
 flow data and can be looked up against Options data where IE #96 (applicationName) 
 and IE #94 (applicationDescription) are supplied - specifically applicationName is
 the one used for the 'class' primitive value. To enable the feature, if the NetFlow/
-IPFIX exporter does follow NBAR implementation (and pmacct nfprobe plugin does!),
-simply add the 'class' primitive to the existing 'aggregate' aggregation method.
+IPFIX exporter does follow Cisco NBAR2 / RFC6759 implementation (and pmacct nfprobe
+plugin does!), simply add the 'class' primitive to the existing 'aggregate'
+aggregation method.
 
 
 XII. Quickstart guide to setup a NetFlow/IPFIX agent/probe
@@ -1414,9 +1415,10 @@ b) build NetFlow probe configuration, using pmacctd:
    is not returned when configuring the neighborship directly in the bgpd config
    file.
 
-   2) encode flow classification information in NetFlow v9 like Cisco does with its
-   NBAR/NetFlow v9 integration. This can be done by introducing the 'class' primitive
-   to the afore mentioned 'aggregate' and add the extra configuration directive:
+   2) encode flow classification information in NetFlow v9 / IPFIX like Cisco does
+   with its NBAR2 implementation / RFC6759. This can be done by introducing the
+   'class' primitive to the afore mentioned 'aggregate' and add the extra config
+   directive:
 
    aggregate: class, src_host, dst_host, src_port, dst_port, proto, tos
    snaplen: 700
