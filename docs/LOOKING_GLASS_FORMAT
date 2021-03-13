@@ -2,7 +2,7 @@ Following are documented the up-to-date BGP Looking Glass server request/reply
 formats. When upgrading from an earlier version, you may want to check out the
 UPGRADE document to verify if any impacting changes to the message formats were
 introduced. See CONFIG-KEYS and the 'Example: querying the BGP daemon via the
-Looking Glass server' section in QUICKSTART.md for more info.
+Looking Glass server' section in QUICKSTART for more info.
 
 Query Type 1: IP address/prefix lookup
 

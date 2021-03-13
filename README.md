@@ -10,7 +10,7 @@ DOCUMENTATION
 - Distribution tarball:
   * ChangeLog: History of features version by version
   * CONFIG-KEYS: Available configuration directives explained
-  * QUICKSTART.md: Examples, command-lines, quickstart guides
+  * QUICKSTART: Examples, command-lines, quickstart guides
   * FAQS: FAQ document
   * docs/: Miscellaneous internals, UNIX signals, SQL triggers documents
   * examples/: Sample configs, maps, AMQP/Kafka consumers, clients

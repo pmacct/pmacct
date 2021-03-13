@@ -52,7 +52,7 @@ A: Yes. Each micro-flow (NetFlow, IPFIX and sFlow) or packet (libpcap, NFLOG) ca
    of the traffic and this be achieved leveraging data reduction tecniques and
    correlation tools to process network traffic data on the fly. pmacct writes to
    files in text-format (JSON, Avro, CSV or formatted via 'print' plugin, and JSON
-   or Avro via Kafka and AMQP plugins, see QUICKSTART.md doc for further information)
+   or Avro via Kafka and AMQP plugins, see QUICKSTART doc for further information)
    so to maximize integration with 3rd party tools while keeping low the effort of
    customization.
 
@@ -98,7 +98,7 @@ A: CPU cycles are proportional to the amount of traffic (packets, flows, samples
    to all daemons. Buffering is enabled with the plugin_buffer_size directive; buffers
    can then be queued and distributed with a choice of an home-grown circolar queue
    implementation (plugin_pipe_size) or a ZeroMQ queue (plugin_pipe_zmq). Check both
-   CONFIG-KEYS and QUICKSTART.md for more information.
+   CONFIG-KEYS and QUICKSTART for more information.
 
 
 Q8: I want to to account both inbound and outbound traffic of my network, with an host

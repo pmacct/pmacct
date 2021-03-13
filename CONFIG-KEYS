@@ -2,7 +2,7 @@ SUPPORTED CONFIGURATION KEYS
 Both configuration directives and commandline switches are listed below. 
 A configuration consists of key/value pairs, separated by the ':' char.
 Starting a line with the '!' symbol, makes the whole line to be ignored
-by the interpreter, making it a comment. Please also refer to QUICKSTART.md
+by the interpreter, making it a comment. Please also refer to QUICKSTART
 document and the 'examples/' sub-tree for some examples.
 
 Directives are sometimes grouped, like sql_table and print_output_file:
@@ -120,7 +120,7 @@ NOTES:		* List of the aggregation primitives available to each specific pmacct d
 		  the aggregate is flushed - hence emulating the behaviour of NetFlow/IPFIX.
 		  If a flag analysis is needed, packets with different flags (combinations)
 		  should be isolated using a pre_tag_map/pre_tag_filter or aggregate_filter
-		  features (see examples in QUICKSTART.md and review libpcap filtering syntax
+		  features (see examples in QUICKSTART and review libpcap filtering syntax
 		  via pcap-filter man page). 
 		* export_proto_seqno reports about export protocol (NetFlow, sFlow, IPFIX)
 		  sequence number and can be very relevant to detect packet loss. nfacctd and
@@ -212,7 +212,7 @@ VALUES:		[ memory | print | mysql | pgsql | sqlite3 | nfprobe | sfprobe | tee | 
 DESC:		Plugins to be enabled. memory, print, nfprobe, sfprobe and tee plugins are always
 		compiled in pmacct executables as they do not have external dependencies. Database
 		(ie. RDBMS, noSQL) and messaging ones (ie. amqp, kafka) do have external dependencies
-		and hence are available only if explicitely configured and compiled (see QUICKSTART.md).
+		and hence are available only if explicitely configured and compiled (see QUICKSTART).
 		'memory' plugin uses a memory table as backend and a client tool, 'pmacct', can fetch
 		the memory table content; the memory plugin is only good to prototype solutions, lab
 		environment without mass traffic generation and small/home production environments.
@@ -321,7 +321,7 @@ DESC:		By defining this directive to 'true', a ZeroMQ queue is used for queueing
 		plugins are instantiated, that some make use of home-grown queueing, while others
 		use ZeroMQ based queueing). For a quick comparison: while relying on a ZeroMQ queue
                 introduces an external dependency, ie. libzmq, it reduces the bare minimum the need
-		of settings of the home-grown circular queue implementation. See QUICKSTART.md for
+		of settings of the home-grown circular queue implementation. See QUICKSTART for
 		some examples.
 DEFAULT:        false
 
@@ -2299,7 +2299,7 @@ DESC:           Enables the BMP daemon thread. BMP, BGP Monitoring Protocol, can
 		peer up, peer down, stats and route monitoring messages. The daemon enables to write BMP
 		messages to files, AMQP and Kafka brokers, real-time (msglog) or at regular time intervals
 		(dump). Also, route monitoring messages are saved in a RIB structure for IP prefix lookup.
-		For further referece see examples in the QUICKSTART.md document and/or description of the
+		For further referece see examples in the QUICKSTART document and/or description of the
 		bmp_* config keys in this document. The BMP daemon is a separate thread in the NetFlow
 		(nfacctd) and sFlow (sfacctd) collectors.
 DEFAULT:        false
@@ -2741,7 +2741,7 @@ DESC:		Enables the BGP Looking Glass server allowing to perform queries, ie. loo
 		addresses/prefixes or get the list of BGP peers, against available BGP RIBs. The
 		server is asyncronous and uses ZeroMQ as transport layer to serve incoming queries.
 		Sample C/Python LG clients are available in 'examples/lg'. Sample LG server config
-		is available in QUICKSTART.md . Request/Reply Looking Glass formats are documented
+		is available in QUICKSTART . Request/Reply Looking Glass formats are documented
 		in 'docs/LOOKING_GLASS_FORMAT'.
 DEFAULT:	false
 
@@ -2862,7 +2862,7 @@ DESC:		Defines the Network entity title (NET) of the IS-IS daemon. In turn a NET
 		addresses for the IS-IS area and the system ID of the router. No default value is set and
 		a non-zero value is mandatory. Extensive IS-IS and ISO literature cover the topic, example
 		of the NET value format can be found as part of the "Quickstart guide to setup the IS-IS
-		daemon" in the QUICKSTART.md document.
+		daemon" in the QUICKSTART document.
 DEFAULT:	none
 
 KEY:		isis_daemon_iface [GLOBAL]

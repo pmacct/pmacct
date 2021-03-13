@@ -1,5 +1,5 @@
 See how to configure and compile pmacct for MySQL/MariaDB use in the
-"Configuring pmacct for compilation and installing" chapter of QUICKSTART.md
+"Configuring pmacct for compilation and installing" chapter of QUICKSTART.
 
 To create the database and grant default permission to pmacctd you have to execute
 the two scripts below, in the same order (assuming mysql command is in the path):
