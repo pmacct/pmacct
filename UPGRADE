@@ -8,6 +8,18 @@ upgrading your installation.
 
 TO:	>= 1.7.7
 FROM:	<= 1.7.6
+TOPIC:	pmtelemetryd, JSON telemetry input and JSON daemon output
+DESC:	Until version 1.7.6, JSON telemetry input data would be embedded as
+	a 'telemetry_data' string part of the JSON daemon output along with
+	some other meta-data. While this was useful, it was slightly not
+	convenient as extracting actual content from 'telemetry_data' does
+	require some (simple) scriptware in the middle; starting version
+	1.7.7, 'telemetry_data' is a JSON object (hence making the whole
+	JSON daemon output nested) making it easier for consumers to parse
+	the content.
+
+TO:	>= 1.7.7
+FROM:	<= 1.7.6
 TOPIC:  Obsoleted features
 DESC:   Following is the list of features, knobs and plugins that are being
         discontinued with release 1.7.7:
