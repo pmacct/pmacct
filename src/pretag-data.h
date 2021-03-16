@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -105,6 +105,26 @@ const struct _map_index_dictionary_line tag_map_index_fdata_dictionary[] = {
   {PRETAG_CVLAN_ID, PT_map_index_fdata_cvlan_id_handler},
   {PRETAG_FWDSTATUS_ID, PT_map_index_fdata_fwdstatus_handler},
   {0, NULL}
+};
+
+const struct _map_index_size_dictionary_line tag_map_index_entries_size_dictionary[] = {
+  {PRETAG_IP, sizeof(struct host_addr)},
+  {PRETAG_IN_IFACE, sizeof(u_int32_t)},
+  {PRETAG_OUT_IFACE, sizeof(u_int32_t)},
+  {PRETAG_BGP_NEXTHOP, sizeof(struct host_addr)},
+  {PRETAG_SRC_AS, sizeof(u_int32_t)},
+  {PRETAG_DST_AS, sizeof(u_int32_t)},
+  {PRETAG_PEER_SRC_AS, sizeof(u_int32_t)},
+  {PRETAG_PEER_DST_AS, sizeof(u_int32_t)},
+  {PRETAG_MPLS_LABEL_BOTTOM, sizeof(u_int32_t)},
+  {PRETAG_MPLS_VPN_ID, sizeof(u_int32_t)},
+  {PRETAG_MPLS_VPN_RD, sizeof(rd_t)},
+  {PRETAG_SRC_MAC, ETH_ADDR_LEN},
+  {PRETAG_DST_MAC, ETH_ADDR_LEN},
+  {PRETAG_VLAN_ID, sizeof(u_int16_t)},
+  {PRETAG_CVLAN_ID, sizeof(u_int16_t)},
+  {PRETAG_FWDSTATUS_ID, sizeof(u_int8_t)},
+  {0, 0}
 };
 
 const struct _map_dictionary_line tag_map_tee_dictionary[] = {

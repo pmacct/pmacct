@@ -1007,16 +1007,19 @@ int pretag_index_set_handlers(struct id_table *t)
 int pretag_index_allocate(struct id_table *t)
 {
   pt_bitmap_t idx_t_size = 0;
-  u_int32_t iterator = 0, j = 0;
+  u_int32_t iterator = 0, i = 0, j = 0, z = 0;
   int ret, destroy = FALSE;
 
   if (!t) return TRUE;
 
   for (iterator = 0; iterator < t->index_num; iterator++) {
     if (t->index[iterator].entries) {
+      u_int32_t idx_entry_size = 0;
+
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] maps_index: created index %llx (%u entries).\n", config.name,
     		config.type, t->filename, (unsigned long long)t->index[iterator].bitmap, t->index[iterator].entries);
 
+      /* old implementation */
       assert(!t->index[iterator].idx_t);
       
       t->index[iterator].modulo = next_prime(t->index[iterator].entries * 2);
@@ -1048,6 +1051,29 @@ int pretag_index_allocate(struct id_table *t)
 	  break;
 	}
       }
+
+      /* new implementation */
+      assert(!t->index[iterator].idx_map);
+
+      for (idx_entry_size = 0, i = 0; i < MAX_BITMAP_ENTRIES; i++) {
+	if (!t->index[iterator].idt_handler[i]) {
+	  break;
+	}
+
+	for (j = 0; tag_map_index_entries_dictionary[j].key; j++) {
+	  if (t->index[iterator].idt_handler[i] == tag_map_index_entries_dictionary[j].func) {
+	    for (z = 0; tag_map_index_entries_size_dictionary[z].key; z++) {
+	      if (tag_map_index_entries_size_dictionary[z].key == tag_map_index_entries_dictionary[j].key) {
+		idx_entry_size += tag_map_index_entries_size_dictionary[z].size;
+		break;
+	      }
+	    }
+	    break;
+	  }
+	}
+      }
+
+      t->index[iterator].idx_map = cdada_map_create(idx_entry_size);
     }
   }
 
@@ -1085,6 +1111,8 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
       for (handler_index = 0; t->index[iterator].idt_handler[handler_index]; handler_index++) {
 	(*t->index[iterator].idt_handler[handler_index])(&e, hash_serializer, ptr);
       }
+
+      /* old implementation */
       modulo = cache_crc32(hash_key_get_val(hash_key), hash_key_get_len(hash_key)) % buckets;
       idie = &t->index[iterator].idx_t[modulo];
 
@@ -1121,6 +1149,11 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
 	pretag_index_destroy(t);
 	break;
       }
+
+      /* new implementation */
+      cdada_map_insert(t->index[iterator].idx_map, hash_key_get_val(hash_key), ptr);
+
+      break;
     }
   }
 
@@ -1165,6 +1198,7 @@ void pretag_index_destroy(struct id_table *t)
   if (!t) return;
 
   for (iterator = 0; iterator < t->index_num; iterator++) {
+    /* old implementation */
     if (t->index[iterator].idx_t) {
       buckets = t->index[iterator].modulo;
 
@@ -1177,6 +1211,12 @@ void pretag_index_destroy(struct id_table *t)
       free(t->index[iterator].idx_t);
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] maps_index: destroyed index %llx.\n",
                 config.name, config.type, t->filename, (unsigned long long)t->index[iterator].bitmap);
+    }
+
+    /* new implementation */
+    if (t->index[iterator].idx_map) {
+      cdada_map_destroy(t->index[iterator].idx_map);
+      t->index[iterator].idx_map = NULL;
     }
 
     hash_serializer = &t->index[iterator].hash_serializer;

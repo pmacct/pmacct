@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -228,6 +228,7 @@ struct id_table_index {
   pretag_copier fdata_handler[MAX_BITMAP_ENTRIES];
   pm_hash_serial_t hash_serializer;
   struct id_index_entry *idx_t;
+  cdada_map_t *idx_map;
 };
 
 struct id_table {
@@ -253,6 +254,11 @@ struct _map_dictionary_line {
 struct _map_index_dictionary_line {
   pt_bitmap_t key;
   pretag_copier func;
+};
+
+struct _map_index_size_dictionary_line {
+  pt_bitmap_t key;
+  ssize_t size;
 };
 
 struct pretag_filter {
