@@ -290,6 +290,7 @@ extern int pretag_index_insert_bitmap(struct id_table *, pt_bitmap_t);
 extern int pretag_index_set_handlers(struct id_table *);
 extern int pretag_index_allocate(struct id_table *);
 extern int pretag_index_fill(struct id_table *, pt_bitmap_t, struct id_entry *);
+extern void pretag_index_print_key(const cdada_map_t *, const void *, void *, void *);
 extern void pretag_index_report(struct id_table *);
 extern void pretag_index_destroy(struct id_table *);
 extern u_int32_t pretag_index_lookup(struct id_table *, struct packet_ptrs *, struct id_entry **, int);

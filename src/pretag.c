@@ -1073,7 +1073,11 @@ int pretag_index_allocate(struct id_table *t)
 	}
       }
 
-      t->index[iterator].idx_map = cdada_map_create(idx_entry_size);
+      {
+	char pm_cdada_map_container[idx_entry_size];
+
+        t->index[iterator].idx_map = cdada_map_create(pm_cdada_map_container);
+      }
     }
   }
 
@@ -1160,6 +1164,26 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
   return SUCCESS;
 }
 
+void pretag_index_print_key(const cdada_map_t *map, const void *key, void *value, void *opaque)
+{
+  struct id_table_index *index = opaque;
+  pm_hash_serial_t *hash_serializer;
+  pm_hash_key_t *hash_key;
+  u_int16_t hash_keylen;
+
+  hash_serializer = &index->hash_serializer;
+  hash_key = hash_serial_get_key(hash_serializer);
+  hash_keylen = hash_key_get_len(hash_key);
+
+  {
+    u_char key_hexdump[hash_keylen * 2];
+    serialize_hex(key, key_hexdump, hash_keylen);
+
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): pretag_index_print_key(): index=%llx key=%s\n",
+	config.name, config.type, (unsigned long long)index->bitmap, key_hexdump);
+  }
+}
+
 void pretag_index_report(struct id_table *t)
 {
   u_int32_t iterator = 0, buckets = 0, index = 0;
@@ -1170,6 +1194,7 @@ void pretag_index_report(struct id_table *t)
     if (t->index[iterator].entries) {
       u_int32_t bucket_depths[ID_TABLE_INDEX_DEPTH];
 
+      /* old implementation */
       buckets = t->index[iterator].modulo;
       memset(&bucket_depths, 0, sizeof(bucket_depths));
 
@@ -1185,7 +1210,16 @@ void pretag_index_report(struct id_table *t)
 	  buckets, bucket_depths[0], bucket_depths[1], bucket_depths[2], bucket_depths[3],
 	  bucket_depths[4], bucket_depths[5], bucket_depths[6], bucket_depths[7],
 	  (unsigned long)(buckets * sizeof(struct id_index_entry)));
-    } 
+
+      /* new implementation */
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] pretag_index_report(): index=%llx entries=%u\n",
+	  config.name, config.type, t->filename, (unsigned long long)t->index[iterator].bitmap,
+	  cdada_map_size(t->index[iterator].idx_map));
+
+      if (config.debug) {
+	cdada_map_traverse(t->index[iterator].idx_map, &pretag_index_print_key, &t->index[iterator]);
+      }
+    }
   }
 }
 
