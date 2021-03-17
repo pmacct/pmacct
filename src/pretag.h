@@ -295,7 +295,6 @@ extern void pretag_index_report(struct id_table *);
 extern void pretag_index_destroy(struct id_table *);
 extern u_int32_t pretag_index_lookup(struct id_table *, struct packet_ptrs *, struct id_entry **, int);
 extern void pretag_index_results_sort(struct id_entry **, int);
-extern void pretag_index_results_compress(struct id_entry **, int);
 extern void pretag_index_results_compress_jeqs(struct id_entry **, int);
 extern int pretag_index_have_one(struct id_table *);
 

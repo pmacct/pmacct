@@ -1308,7 +1308,6 @@ u_int32_t pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, str
     else break;
   }
 
-  // pretag_index_results_compress(index_results, iterator_ir);
   pretag_index_results_sort(index_results, iterator_ir);
   pretag_index_results_compress_jeqs(index_results, iterator_ir);
 
@@ -1329,26 +1328,6 @@ void pretag_index_results_sort(struct id_entry **index_results, int ir_entries)
 	index_results[j] = index_results[i];
 	index_results[i] = ptr;
       }
-    }
-  }
-}
-
-void pretag_index_results_compress(struct id_entry **index_results, int ir_entries)
-{
-  u_int32_t j, valid;
-  int i;
-
-  if (!index_results) return;
-
-  for (i = 0; i < ir_entries; i++) {
-    valid = 0;
-    if (!index_results[i]) {
-      for (j = i + 1; j < ir_entries; j++) {
-	if (index_results[j]) valid++;
-        index_results[j-1] = index_results[j];
-      }
-      index_results[ir_entries-1] = NULL;
-      if (!index_results[i] && valid) i--;
     }
   }
 }
