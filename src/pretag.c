@@ -1008,8 +1008,6 @@ int pretag_index_allocate(struct id_table *t)
 {
   u_int32_t iterator = 0, i = 0, j = 0, z = 0;
   int destroy = FALSE;
-//  pt_bitmap_t idx_t_size = 0;
-//  int ret;
 
   if (!t) return TRUE;
 
@@ -1067,24 +1065,20 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
   u_int32_t iterator = 0, handler_index = 0;
   void *idx_value;
   int ret;
-  // u_int32_t index = 0;
 
   if (!t) return ERR;
 
   for (iterator = 0; iterator < t->index_num; iterator++) {
     if (t->index[iterator].entries && t->index[iterator].bitmap == idx_bmap) {
       struct id_entry e;
-      // struct id_index_entry *idie;
       pm_hash_serial_t *hash_serializer;
       pm_hash_key_t *hash_key;
-      // int modulo, buckets;
 
-      /* fill serializer in and compute modulo */
+      /* fill serializer in */
       memset(&e, 0, sizeof(struct id_entry));
       hash_serializer = &t->index[iterator].hash_serializer;
       hash_serial_set_off(hash_serializer, 0);
       hash_key = hash_serial_get_key(hash_serializer);
-      // buckets = t->index[iterator].modulo;
 
       if (!hash_key) return ERR;
 
@@ -1133,7 +1127,7 @@ void pretag_index_print_key(const cdada_map_t *map, const void *key, void *value
 
 void pretag_index_report(struct id_table *t)
 {
-  u_int32_t iterator = 0; // , buckets = 0, index = 0;
+  u_int32_t iterator = 0;
 
   if (!t) return;
 
@@ -1154,19 +1148,32 @@ void pretag_index_destroy(struct id_table *t)
 {
   pm_hash_serial_t *hash_serializer;
   pm_hash_key_t *hash_key;
-  u_int32_t iterator = 0; // , buckets = 0, bucket_idx = 0, depth_idx = 0;
+  u_int32_t iterator = 0;
 
   if (!t) return;
 
   for (iterator = 0; iterator < t->index_num; iterator++) {
+    hash_serializer = &t->index[iterator].hash_serializer;
+    hash_key = hash_serial_get_key(hash_serializer);
+
+    /* destroy the hash */
     if (t->index[iterator].idx_map) {
+      char pm_cdada_map_container[hash_key_get_len(hash_key)];
+      void *idx_map_val;
+
+      while (cdada_map_first(t->index[iterator].idx_map, pm_cdada_map_container, &idx_map_val) == CDADA_SUCCESS) {
+	free(idx_map_val);
+	cdada_map_erase(t->index[iterator].idx_map, pm_cdada_map_container);
+      }
+
       cdada_map_destroy(t->index[iterator].idx_map);
       t->index[iterator].idx_map = NULL;
     }
 
-    hash_serializer = &t->index[iterator].hash_serializer;
-    hash_key = hash_serial_get_key(hash_serializer);
+    /* destroy the serializer */
     hash_destroy_key(hash_key);
+
+    /* cleanup */
     memset(&t->index[iterator], 0, sizeof(struct id_table_index));
   }
 
@@ -1176,11 +1183,10 @@ void pretag_index_destroy(struct id_table *t)
 u_int32_t pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, struct id_entry **index_results, int ir_entries)
 {
   struct id_entry res_fdata;
-  // struct id_index_entry *idie;
   pm_hash_serial_t *hash_serializer;
   pm_hash_key_t *hash_key;
-  u_int32_t iterator, index_hdlr; // index_cc;
-  int iterator_ir; // modulo, buckets;
+  u_int32_t iterator, index_hdlr;
+  int iterator_ir;
   void *idx_value;
 
   if (!t || !pptrs || !index_results) return 0;
@@ -1194,7 +1200,6 @@ u_int32_t pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, str
       hash_serializer = &t->index[iterator].hash_serializer;
       hash_serial_set_off(hash_serializer, 0);
       hash_key = hash_serial_get_key(hash_serializer);
-      // buckets = t->index[iterator].modulo;
 
       for (index_hdlr = 0; (*t->index[iterator].fdata_handler[index_hdlr]); index_hdlr++) {
         (*t->index[iterator].fdata_handler[index_hdlr])(&res_fdata, &t->index[iterator].hash_serializer, pptrs);

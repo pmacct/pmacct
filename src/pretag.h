@@ -29,7 +29,6 @@
 #define MAX_PRETAG_MAP_ENTRIES 384 
 
 #define MAX_ID_TABLE_INDEXES 8
-#define ID_TABLE_INDEX_DEPTH 8
 #define ID_TABLE_INDEX_RESULTS (MAX_ID_TABLE_INDEXES * 8)
 
 #define PRETAG_IN_IFACE			0x0000000000000001ULL
@@ -213,21 +212,12 @@ struct id_entry {
 
 typedef int (*pretag_copier)(struct id_entry *, pm_hash_serial_t *, void *);
 
-struct id_index_entry {
-  u_int16_t depth;
-  pm_hash_key_t hash_key[ID_TABLE_INDEX_DEPTH];
-  struct id_entry_key key[ID_TABLE_INDEX_DEPTH]; /* XXX: to be removed */
-  struct id_entry *result[ID_TABLE_INDEX_DEPTH];
-};
-
 struct id_table_index {
   pt_bitmap_t bitmap; 
   u_int32_t entries;
-  u_int32_t modulo;
   pretag_copier idt_handler[MAX_BITMAP_ENTRIES];
   pretag_copier fdata_handler[MAX_BITMAP_ENTRIES];
   pm_hash_serial_t hash_serializer;
-  struct id_index_entry *idx_t;
   cdada_map_t *idx_map;
 };
 
