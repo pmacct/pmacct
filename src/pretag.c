@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -1020,42 +1020,6 @@ int pretag_index_allocate(struct id_table *t)
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] maps_index: creating index %llx (%u entries).\n", config.name,
     		config.type, t->filename, (unsigned long long)t->index[iterator].bitmap, t->index[iterator].entries);
 
-      /* old implementation */
-/*
-      assert(!t->index[iterator].idx_t);
-      
-      t->index[iterator].modulo = next_prime(t->index[iterator].entries * 2);
-      if (!t->index[iterator].modulo) t->index[iterator].modulo = (t->index[iterator].entries * 2);
-
-      idx_t_size = t->index[iterator].modulo * sizeof(struct id_index_entry);
-      t->index[iterator].idx_t = malloc(idx_t_size);
-
-      if (!t->index[iterator].idx_t) {
-        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] maps_index: unable to allocate index %llx.\n", config.name,
-		config.type, t->filename, (unsigned long long)t->index[iterator].bitmap);
-	t->index[iterator].bitmap = 0;
-	t->index[iterator].entries = 0;
-	destroy = TRUE;
-	break;
-      }
-      else {
-	memset(t->index[iterator].idx_t, 0, idx_t_size); 
-
-	for (j = 0; j < t->index[iterator].modulo; j++) {
-	  t->index[iterator].idx_t[j].depth = ID_TABLE_INDEX_DEPTH;
-	}
-
-	ret = hash_init_serial(&t->index[iterator].hash_serializer, 16); // dummy len for init sake
-	if (ret == ERR) {
-	  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] maps_index: unable to allocate hash serializer for index %llx.\n", config.name,
-		config.type, t->filename, (unsigned long long)t->index[iterator].bitmap);
-	  destroy = TRUE;
-	  break;
-	}
-      }
-*/
-
-      /* new implementation */
       assert(!t->index[iterator].idx_map);
 
       for (idx_entry_size = 0, i = 0; i < MAX_BITMAP_ENTRIES; i++) {
@@ -1128,47 +1092,6 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
 	(*t->index[iterator].idt_handler[handler_index])(&e, hash_serializer, ptr);
       }
 
-      /* old implementation */
-/*
-      modulo = cache_crc32(hash_key_get_val(hash_key), hash_key_get_len(hash_key)) % buckets;
-      idie = &t->index[iterator].idx_t[modulo];
-
-      for (index = 0; index < idie->depth; index++) {
-        if (!idie->result[index]) {
-	  hash_dup_key(&idie->hash_key[index], hash_key);
-          idie->result[index] = ptr;
-          break;
-        }
-        // removing duplicates
-        else {
-	  pm_id_t saved_pos_idie, saved_pos_ptr;
-	  int match = FALSE;
-
-	  saved_pos_idie = idie->result[index]->pos; idie->result[index]->pos = 0;
-	  saved_pos_ptr = ptr->pos; ptr->pos = 0;
-
-          if (!memcmp(idie->result[index], ptr, sizeof(struct id_entry))) match = TRUE;
-
-          idie->result[index]->pos = saved_pos_idie;
-          ptr->pos = saved_pos_ptr;
-
-	  if (match) {
-	    hash_destroy_key(hash_key);
-	    break;
-	  }
-        }
-      }
-
-      if (index == idie->depth) {
-        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] maps_index: out of index space %llx. Indexing disabled.\n",
-		config.name, config.type, t->filename, (unsigned long long)idx_bmap);
-	pretag_index_report(t);
-	pretag_index_destroy(t);
-	break;
-      }
-*/
-
-      /* new implementation */
       idx_value = malloc(sizeof(struct id_entry));
       memcpy(idx_value, ptr, sizeof(struct id_entry));
 
@@ -1216,28 +1139,6 @@ void pretag_index_report(struct id_table *t)
 
   for (iterator = 0; iterator < t->index_num; iterator++) {
     if (t->index[iterator].entries) {
-      /* old implementation */
-/*
-      u_int32_t bucket_depths[ID_TABLE_INDEX_DEPTH];
-
-      buckets = t->index[iterator].modulo;
-      memset(&bucket_depths, 0, sizeof(bucket_depths));
-
-      for (index = 0; index < buckets; index++) {
-	struct id_index_entry *idie = &t->index[iterator].idx_t[index]; 
-	u_int32_t depth = 0;
-
-	for (depth = 0; idie->result[depth] && depth < idie->depth; depth++) bucket_depths[depth]++;
-      }
-
-      Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] pretag_index_report(): index=%llx buckets=%u depths=[0:%u 1:%u 2:%u 3:%u 4:%u 5:%u 6:%u 7:%u] size=%lu\n",
-	  config.name, config.type, t->filename, (unsigned long long)t->index[iterator].bitmap,
-	  buckets, bucket_depths[0], bucket_depths[1], bucket_depths[2], bucket_depths[3],
-	  bucket_depths[4], bucket_depths[5], bucket_depths[6], bucket_depths[7],
-	  (unsigned long)(buckets * sizeof(struct id_index_entry)));
-*/
-
-      /* new implementation */
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] pretag_index_report(): index=%llx entries=%u\n",
 	  config.name, config.type, t->filename, (unsigned long long)t->index[iterator].bitmap,
 	  cdada_map_size(t->index[iterator].idx_map));
@@ -1258,24 +1159,6 @@ void pretag_index_destroy(struct id_table *t)
   if (!t) return;
 
   for (iterator = 0; iterator < t->index_num; iterator++) {
-    /* old implementation */
-/*
-    if (t->index[iterator].idx_t) {
-      buckets = t->index[iterator].modulo;
-
-      for (bucket_idx = 0; bucket_idx < buckets; bucket_idx++) {
-        for (depth_idx = 0; depth_idx < ID_TABLE_INDEX_DEPTH; depth_idx++) {
-          hash_destroy_key(&t->index[iterator].idx_t[bucket_idx].hash_key[depth_idx]);
-        }
-      }
-
-      free(t->index[iterator].idx_t);
-      Log(LOG_INFO, "INFO ( %s/%s ): [%s] maps_index: destroyed index %llx.\n",
-                config.name, config.type, t->filename, (unsigned long long)t->index[iterator].bitmap);
-    }
-*/
-
-    /* new implementation */
     if (t->index[iterator].idx_map) {
       cdada_map_destroy(t->index[iterator].idx_map);
       t->index[iterator].idx_map = NULL;
@@ -1317,27 +1200,6 @@ u_int32_t pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, str
         (*t->index[iterator].fdata_handler[index_hdlr])(&res_fdata, &t->index[iterator].hash_serializer, pptrs);
       }
 
-      /* old implementation */
-/*
-      modulo = cache_crc32(hash_key_get_val(hash_key), hash_key_get_len(hash_key)) % buckets;
-      idie = &t->index[iterator].idx_t[modulo];
-
-      for (index_cc = 0; idie->result[index_cc] && index_cc < idie->depth; index_cc++) {
-	if (!hash_key_cmp(&idie->hash_key[index_cc], hash_key)) {
-          index_results[iterator_ir] = idie->result[index_cc];
-	  if (iterator_ir < ir_entries) iterator_ir++;
-	  else {
-	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] maps_index: out of index results space. Indexing disabled.\n",
-                config.name, config.type, t->filename);
-	    pretag_index_destroy(t);
-	    memset(index_results, 0, (sizeof(struct id_entry *) * ir_entries));
-	    return 0;
-	  }
-	}
-      }
-*/
-
-      /* new implementation */
       cdada_map_find(t->index[iterator].idx_map, hash_key_get_val(hash_key), &idx_value);
       index_results[iterator_ir] = idx_value;
       if (iterator_ir < ir_entries) iterator_ir++;
