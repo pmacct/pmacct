@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -82,6 +82,8 @@ extern int PT_map_index_entries_src_mac_handler(struct id_entry *, pm_hash_seria
 extern int PT_map_index_entries_dst_mac_handler(struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_entries_vlan_id_handler(struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_entries_cvlan_id_handler(struct id_entry *, pm_hash_serial_t *, void *); 
+extern int PT_map_index_entries_src_net_handler(struct id_entry *, pm_hash_serial_t *, void *);
+extern int PT_map_index_entries_dst_net_handler(struct id_entry *, pm_hash_serial_t *, void *);
 extern int PT_map_index_entries_fwdstatus_handler(struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_fdata_ip_handler(struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_fdata_input_handler(struct id_entry *, pm_hash_serial_t *, void *); 
@@ -99,6 +101,8 @@ extern int PT_map_index_fdata_src_mac_handler(struct id_entry *, pm_hash_serial_
 extern int PT_map_index_fdata_dst_mac_handler(struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_fdata_vlan_id_handler(struct id_entry *, pm_hash_serial_t *, void *);
 extern int PT_map_index_fdata_cvlan_id_handler(struct id_entry *, pm_hash_serial_t *, void *);
+extern int PT_map_index_fdata_src_net_handler(struct id_entry *, pm_hash_serial_t *, void *);
+extern int PT_map_index_fdata_dst_net_handler(struct id_entry *, pm_hash_serial_t *, void *);
 extern int PT_map_index_fdata_fwdstatus_handler(struct id_entry *, pm_hash_serial_t *, void *);
 
 /* BPAS_*: bgp_peer_as_src map specific handlers */

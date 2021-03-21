@@ -3184,6 +3184,38 @@ int PT_map_index_entries_cvlan_id_handler(struct id_entry *e, pm_hash_serial_t *
   return FALSE;
 }
 
+int PT_map_index_entries_src_net_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !hash_serializer || !src_e) return TRUE;
+
+  if ((src_e->key.src_net.a.family == AF_INET && src_e->key.src_net.m.len == 32) ||
+      (src_e->key.src_net.a.family == AF_INET6 && src_e->key.src_net.m.len == 128)) {
+    memcpy(&e->key.src_net, &src_e->key.src_net, sizeof(pt_netaddr_t));
+    hash_serial_append(hash_serializer, (char *)&src_e->key.src_net.a, sizeof(struct host_addr), TRUE);
+  }
+  else return TRUE;
+
+  return FALSE;
+}
+
+int PT_map_index_entries_dst_net_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !hash_serializer || !src_e) return TRUE;
+
+  if ((src_e->key.dst_net.a.family == AF_INET && src_e->key.dst_net.m.len == 32) ||
+      (src_e->key.dst_net.a.family == AF_INET6 && src_e->key.dst_net.m.len == 128)) {
+    memcpy(&e->key.dst_net, &src_e->key.dst_net, sizeof(pt_netaddr_t));
+    hash_serial_append(hash_serializer, (char *)&src_e->key.dst_net.a, sizeof(struct host_addr), TRUE);
+  }
+  else return TRUE;
+
+  return FALSE;
+}
+
 int PT_map_index_entries_fwdstatus_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct id_entry *src_e = (struct id_entry *) src;
@@ -3806,6 +3838,110 @@ int PT_map_index_fdata_cvlan_id_handler(struct id_entry *e, pm_hash_serial_t *ha
   else return TRUE;
 
   hash_serial_append(hash_serializer, (char *)&e->key.cvlan_id.n, sizeof(u_int16_t), FALSE);
+
+  return FALSE;
+}
+
+int PT_map_index_fdata_src_net_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+  SFLAddress *sf_addr = &sample->ipsrc;
+
+  if (config.acct_type == ACCT_NF) {
+    switch(hdr->version) {
+    case 10:
+    case 9:
+      if (tpl->tpl[NF9_IPV4_SRC_ADDR].len) {
+	memcpy(&e->key.src_net.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV4_SRC_ADDR].len, 4));
+	e->key.src_net.a.family = AF_INET;
+      }
+      else if (tpl->tpl[NF9_IPV4_SRC_PREFIX].len) {
+	memcpy(&e->key.src_net.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_PREFIX].off, MIN(tpl->tpl[NF9_IPV4_SRC_PREFIX].len, 4));
+	e->key.src_net.a.family = AF_INET;
+      }
+      if (tpl->tpl[NF9_IPV6_SRC_ADDR].len) {
+	memcpy(&e->key.src_net.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV6_SRC_ADDR].len, 16));
+	e->key.src_net.a.family = AF_INET6;
+      }
+      else if (tpl->tpl[NF9_IPV6_SRC_PREFIX].len) {
+	memcpy(&e->key.src_net.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_PREFIX].off, MIN(tpl->tpl[NF9_IPV6_SRC_PREFIX].len, 16));
+	e->key.src_net.a.family = AF_INET6;
+      }
+      break;
+    case 5:
+      e->key.src_net.a.address.ipv4.s_addr = ((struct struct_export_v5 *) pptrs->f_data)->srcaddr.s_addr;
+      e->key.src_net.a.family = AF_INET;
+      break;
+    }
+  }
+  else if (config.acct_type == ACCT_SF) {
+    if (sample->gotIPV4) {
+      e->key.src_net.a.address.ipv4.s_addr = sample->dcd_srcIP.s_addr;
+      e->key.src_net.a.family = AF_INET;
+    }
+    else if (sample->gotIPV6) {
+      memcpy(&e->key.src_net.a.address.ipv6, &sf_addr->address.ip_v6, IP6AddrSz);
+      e->key.src_net.a.family = AF_INET6;
+    }
+  }
+  else return TRUE;
+
+  hash_serial_append(hash_serializer, (char *)&e->key.src_net.a, sizeof(struct host_addr), FALSE);
+
+  return FALSE;
+}
+
+int PT_map_index_fdata_dst_net_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+  SFLAddress *sf_addr = &sample->ipdst;
+
+  if (config.acct_type == ACCT_NF) {
+    switch(hdr->version) {
+    case 10:
+    case 9:
+      if (tpl->tpl[NF9_IPV4_DST_ADDR].len) {
+	memcpy(&e->key.dst_net.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV4_DST_ADDR].len, 4));
+	e->key.dst_net.a.family = AF_INET;
+      }
+      else if (tpl->tpl[NF9_IPV4_DST_PREFIX].len) {
+	memcpy(&e->key.dst_net.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV4_DST_PREFIX].len, 4));
+	e->key.dst_net.a.family = AF_INET;
+      }
+      if (tpl->tpl[NF9_IPV6_DST_ADDR].len) {
+	memcpy(&e->key.dst_net.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV6_DST_ADDR].len, 16));
+	e->key.dst_net.a.family = AF_INET6;
+      }
+      else if (tpl->tpl[NF9_IPV6_DST_PREFIX].len) {
+	memcpy(&e->key.dst_net.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV6_DST_PREFIX].len, 16));
+	e->key.dst_net.a.family = AF_INET6;
+      }
+      break;
+    case 5:
+      e->key.dst_net.a.address.ipv4.s_addr = ((struct struct_export_v5 *) pptrs->f_data)->dstaddr.s_addr;
+      e->key.dst_net.a.family = AF_INET;
+      break;
+    }
+  }
+  else if (config.acct_type == ACCT_SF) {
+    if (sample->gotIPV4) {
+      e->key.dst_net.a.address.ipv4.s_addr = sample->dcd_dstIP.s_addr;
+      e->key.dst_net.a.family = AF_INET;
+    }
+    else if (sample->gotIPV6) {
+      memcpy(&e->key.dst_net.a.address.ipv6, &sf_addr->address.ip_v6, IP6AddrSz);
+      e->key.dst_net.a.family = AF_INET6;
+    }
+  }
+  else return TRUE;
+
+  hash_serial_append(hash_serializer, (char *)&e->key.dst_net.a, sizeof(struct host_addr), FALSE);
 
   return FALSE;
 }
