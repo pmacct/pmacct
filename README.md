@@ -23,7 +23,7 @@ in [docker hub](https://hub.docker.com) (e.g. for `pmacctd` daemon):
 
 ```bash
  ~# docker pull pmacct/pmacctd:latest
- ~# docker run -v pmacctd.conf:/etc/pmacct/pmacctd.conf pmacct/pmacctd
+ ~# docker run -v /path/to/pmacctd.conf:/etc/pmacct/pmacctd.conf pmacct/pmacctd
 ```
 
 Available daemon containers:
