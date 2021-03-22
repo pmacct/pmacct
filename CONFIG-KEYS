@@ -1953,12 +1953,11 @@ DESC:		Enables indexing of maps (ie. pre_tag_map and all directives with the 'MA
 		are automatically defined basing on structure and content of the map, up to a maximum of
 		8. Indexing of pre_tag_map, bgp_peer_src_as_map, flow_to_rd_map is supported. Only a sub-
 		set of pre_tag_map fields are supported, including: ip, bgp_nexthop, vlan, cvlan, src_mac,
-		mpls_vpn_rd, mpls_pw_id, src_as, dst_as, peer_src_as, peer_dst_as, input, output. Only IP
-		addresses, ie. no IP prefixes, are supported as part of the 'ip' field. Also, negations
-		are not supported (ie. 'in=-216' match all but input interface 216). bgp_agent_map and
-		sampling_map implement a separate caching mechanism and hence do not leverage this
-		feature. Duplicates in the key part of the map entry, key being defined as all fields
-		except set_* ones, are not supported and may result in a "out of index space" message.
+		dst_mac, src_net, dst_net, mpls_vpn_rd, mpls_pw_id, src_as, dst_as, peer_src_as,
+		peer_dst_as, input, output. Only specific IP addresses, ie. no IP prefixes, are supported
+		as part of ip, src_net and dst_net fields. Also, negations are not supported (ie. 'in=-216'
+		match all but input interface 216). bgp_agent_map and sampling_map implement a separate
+		caching mechanism and hence do not leverage this feature.
 DEFAULT:        false
 
 KEY:            pre_tag_filter, pre_tag2_filter [NO_GLOBAL]
