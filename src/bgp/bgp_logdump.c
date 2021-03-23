@@ -411,7 +411,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       if (attr_extra && (attr_extra->bitmap & BGP_BMAP_ATTR_AIGP)) {
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "aigp", &p_avro_field, NULL));
 	pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-	pm_avro_check(avro_value_set_int(&p_avro_branch, attr_extra->aigp));
+	pm_avro_check(avro_value_set_long(&p_avro_branch, attr_extra->aigp));
       }
       else {
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "aigp", &p_avro_field, NULL));
@@ -1556,7 +1556,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
     if (bds) {
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "entries", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-      pm_avro_check(avro_value_set_int(&p_avro_branch, bds->entries)); 
+      pm_avro_check(avro_value_set_long(&p_avro_branch, bds->entries));
 
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "tables", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
@@ -2081,7 +2081,7 @@ avro_schema_t p_avro_schema_build_bgp_dump_close(int log_type, char *schema_name
 
   avro_schema_record_field_append(schema, "peer_ip_src", avro_schema_string());
   avro_schema_record_field_append(schema, "peer_tcp_port", optint_s);
-  avro_schema_record_field_append(schema, "entries", optint_s);
+  avro_schema_record_field_append(schema, "entries", optlong_s);
   avro_schema_record_field_append(schema, "tables", optint_s);
 
   avro_schema_decref(optlong_s);
@@ -2135,7 +2135,7 @@ void p_avro_schema_build_bgp_route(avro_schema_t *schema, avro_schema_t *optlong
   avro_schema_record_field_append((*schema), "origin", (*optstr_s));
   avro_schema_record_field_append((*schema), "local_pref", (*optint_s));
   avro_schema_record_field_append((*schema), "med", (*optint_s));
-  avro_schema_record_field_append((*schema), "aigp", (*optint_s));
+  avro_schema_record_field_append((*schema), "aigp", (*optlong_s));
   avro_schema_record_field_append((*schema), "psid_li", (*optint_s));
   avro_schema_record_field_append((*schema), "label", (*optstr_s));
 

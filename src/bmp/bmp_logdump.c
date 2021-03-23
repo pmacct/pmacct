@@ -2209,7 +2209,7 @@ avro_schema_t p_avro_schema_build_bmp_dump_close(int log_type, char *schema_name
 
   avro_schema_record_field_append(schema, "bmp_router", avro_schema_string());
   avro_schema_record_field_append(schema, "bmp_router_port", optint_s);
-  avro_schema_record_field_append(schema, "entries", optint_s);
+  avro_schema_record_field_append(schema, "entries", optlong_s);
   avro_schema_record_field_append(schema, "tables", optint_s);
 
   avro_schema_decref(optlong_s);
