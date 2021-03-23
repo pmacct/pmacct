@@ -361,7 +361,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       if (attr->bitmap & BGP_BMAP_ATTR_LOCAL_PREF) {
         pm_avro_check(avro_value_get_by_name(&p_avro_obj, "local_pref", &p_avro_field, NULL));
         pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-        pm_avro_check(avro_value_set_int(&p_avro_branch, attr->local_pref));
+        pm_avro_check(avro_value_set_long(&p_avro_branch, attr->local_pref));
       }
       else {
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "local_pref", &p_avro_field, NULL));
@@ -401,7 +401,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       if (attr->bitmap & BGP_BMAP_ATTR_MULTI_EXIT_DISC) {
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "med", &p_avro_field, NULL));
 	pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-	pm_avro_check(avro_value_set_int(&p_avro_branch, attr->med));
+	pm_avro_check(avro_value_set_long(&p_avro_branch, attr->med));
       }
       else {
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "med", &p_avro_field, NULL));
@@ -421,7 +421,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       if (attr_extra && attr_extra->psid_li) {
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "psid_li", &p_avro_field, NULL));
 	pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-	pm_avro_check(avro_value_set_int(&p_avro_branch, attr_extra->psid_li));
+	pm_avro_check(avro_value_set_long(&p_avro_branch, attr_extra->psid_li));
       }
       else {
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "psid_li", &p_avro_field, NULL));
@@ -463,7 +463,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     if (peer->cap_add_paths[afi][safi] && ri && ri->attr_extra) {
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "as_path_id", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-      pm_avro_check(avro_value_set_int(&p_avro_branch, ri->attr_extra->path_id));
+      pm_avro_check(avro_value_set_long(&p_avro_branch, ri->attr_extra->path_id));
     }
     else {
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "as_path_id", &p_avro_field, NULL));
@@ -2128,15 +2128,15 @@ void p_avro_schema_build_bgp_route(avro_schema_t *schema, avro_schema_t *optlong
 
   avro_schema_record_field_append((*schema), "bgp_nexthop", (*optstr_s));
   avro_schema_record_field_append((*schema), "as_path", (*optstr_s));
-  avro_schema_record_field_append((*schema), "as_path_id", (*optint_s));
+  avro_schema_record_field_append((*schema), "as_path_id", (*optlong_s));
   avro_schema_record_field_append((*schema), "comms", (*optstr_s));
   avro_schema_record_field_append((*schema), "ecomms", (*optstr_s));
   avro_schema_record_field_append((*schema), "lcomms", (*optstr_s));
   avro_schema_record_field_append((*schema), "origin", (*optstr_s));
-  avro_schema_record_field_append((*schema), "local_pref", (*optint_s));
-  avro_schema_record_field_append((*schema), "med", (*optint_s));
+  avro_schema_record_field_append((*schema), "local_pref", (*optlong_s));
+  avro_schema_record_field_append((*schema), "med", (*optlong_s));
   avro_schema_record_field_append((*schema), "aigp", (*optlong_s));
-  avro_schema_record_field_append((*schema), "psid_li", (*optint_s));
+  avro_schema_record_field_append((*schema), "psid_li", (*optlong_s));
   avro_schema_record_field_append((*schema), "label", (*optstr_s));
 
   if (config.rpki_roas_file || config.rpki_rtr_cache) {
