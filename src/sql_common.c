@@ -3091,7 +3091,7 @@ int sql_evaluate_primitives(int primitive)
     }
     strncat(insert_clause, "label", SPACELEFT(insert_clause));
     strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
-    strncat(where[primitive].string, "label=%\'%s\'", SPACELEFT(where[primitive].string));
+    strncat(where[primitive].string, "label=\'%s\'", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_INT_LABEL;
     values[primitive].handler = where[primitive].handler = count_label_handler;
     primitive++;
