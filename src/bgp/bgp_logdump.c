@@ -1353,7 +1353,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
     pm_avro_check(avro_value_set_string(&p_avro_field, event_type));
 
     pm_avro_check(avro_value_get_by_name(&p_avro_obj, "dump_period", &p_avro_field, NULL));
-    pm_avro_check(avro_value_set_int(&p_avro_field, bms->dump.period)); 
+    pm_avro_check(avro_value_set_long(&p_avro_field, bms->dump.period)); 
 
     pm_avro_check(avro_value_get_by_name(&p_avro_obj, "writer_id", &p_avro_field, NULL));
     snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, writer_pid);
@@ -2058,7 +2058,7 @@ avro_schema_t p_avro_schema_build_bgp_dump_init(int log_type, char *schema_name)
 
   avro_schema_record_field_append(schema, "peer_ip_src", avro_schema_string());
   avro_schema_record_field_append(schema, "peer_tcp_port", optint_s);
-  avro_schema_record_field_append(schema, "dump_period", avro_schema_int());
+  avro_schema_record_field_append(schema, "dump_period", avro_schema_long());
 
   avro_schema_decref(optlong_s);
   avro_schema_decref(optstr_s);

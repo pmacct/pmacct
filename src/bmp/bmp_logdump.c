@@ -2186,7 +2186,7 @@ avro_schema_t p_avro_schema_build_bmp_dump_init(int log_type, char *schema_name)
 
   avro_schema_record_field_append(schema, "bmp_router", avro_schema_string());
   avro_schema_record_field_append(schema, "bmp_router_port", optint_s);
-  avro_schema_record_field_append(schema, "dump_period", avro_schema_int());
+  avro_schema_record_field_append(schema, "dump_period", avro_schema_long());
 
   avro_schema_decref(optlong_s);
   avro_schema_decref(optstr_s);

@@ -119,7 +119,7 @@
 struct bgp_dump_event {
   struct timeval tstamp;
   char tstamp_str[SRVBUFLEN];
-  int period;
+  u_int32_t period;
 };
 
 struct bgp_rt_structs {
