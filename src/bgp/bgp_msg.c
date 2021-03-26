@@ -186,6 +186,14 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 	u_int8_t len, opt_type, opt_len;
 	char *ptr;
 
+	/* pre-flight check */
+	if (ntohs(bopen->bgpo_len) < (BGP_MIN_OPEN_MSG_SIZE + bopen->bgpo_optlen)) {
+          bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+	  Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP Open packet (too long option length).\n",
+	      config.name, bms->log_str, bgp_peer_str);
+	  return ERR;
+	}
+
 	ptr = bgp_packet_ptr + BGP_MIN_OPEN_MSG_SIZE;
 	if (online) memset(bgp_open_cap_reply, 0, sizeof(bgp_open_cap_reply));
 
@@ -195,7 +203,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 
 	  if (opt_len > len) {
             bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
-	    Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP packet (option length).\n",
+	    Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP Open packet (option length overrun).\n",
 		config.name, bms->log_str, bgp_peer_str);
 	    return ERR;
 	  } 
@@ -225,7 +233,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 
 	      if (cap_len > optcap_len) {
                 bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
-		Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP packet (malformed capability: %x).\n",
+		Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP Open packet (malformed capability: %x).\n",
 			config.name, bms->log_str, bgp_peer_str, cap_type);
 		return ERR;
    	      }
@@ -274,7 +282,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 		}
 		else {
                   bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
-		  Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP packet (malformed AS4 option).\n",
+		  Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP Open packet (malformed AS4 option).\n",
 			config.name, bms->log_str, bgp_peer_str);
 		  return ERR;
 		}
@@ -354,7 +362,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
  	   present an ASN == 0 or ASN == 23456 in the 4AS capability */
 	else {
           bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
-	  Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP packet (invalid AS4 option).\n",
+	  Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP Open packet (invalid AS4 option).\n",
 		config.name, bms->log_str, bgp_peer_str);
 	  return ERR;
 	}
@@ -366,7 +374,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 	   present an ASN != remote_as in the 4AS capability */
 	else {
           bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
-	  Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP packet (mismatching AS4 option).\n",
+	  Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP Open packet (mismatching AS4 option).\n",
 		config.name, bms->log_str, bgp_peer_str);
 	  return ERR;
 	}
@@ -400,7 +408,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
     }
     else {
       bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
-      Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP packet (unsupported version).\n",
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP Open packet (unsupported version).\n",
 		config.name, bms->log_str, bgp_peer_str);
       return ERR;
     }
