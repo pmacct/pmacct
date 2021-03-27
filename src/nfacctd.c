@@ -536,11 +536,11 @@ int main(int argc,char **argv, char **envp)
 	}
 	if (list->cfg.what_to_count & (COUNT_SRC_AS|COUNT_DST_AS|COUNT_SUM_AS)) {
 	  if (!list->cfg.networks_file && list->cfg.nfacctd_as & NF_AS_NEW) {
-	    Log(LOG_ERR, "ERROR ( %s/%s ): AS aggregation selected but NO 'networks_file' specified. Exiting...\n\n", list->name, list->type.string);
+	    Log(LOG_ERR, "ERROR ( %s/%s ): AS aggregation selected but NO 'networks_file' specified. Exiting.\n\n", list->name, list->type.string);
 	    exit_gracefully(1);
 	  }
           if (!list->cfg.bgp_daemon && !list->cfg.bmp_daemon && list->cfg.nfacctd_as == NF_AS_BGP) {
-            Log(LOG_ERR, "ERROR ( %s/%s ): AS aggregation selected but 'bgp_daemon' or 'bmp_daemon' is not enabled. Exiting...\n\n", list->name, list->type.string);
+            Log(LOG_ERR, "ERROR ( %s/%s ): AS aggregation selected but 'bgp_daemon' or 'bmp_daemon' is not enabled. Exiting.\n\n", list->name, list->type.string);
             exit_gracefully(1);
 	  }
           if (list->cfg.nfacctd_as & NF_AS_FALLBACK && list->cfg.networks_file)
@@ -557,7 +557,7 @@ int main(int argc,char **argv, char **envp)
 	        (list->cfg.nfacctd_net == NF_NET_STATIC && !list->cfg.networks_mask) || 
 	        (list->cfg.nfacctd_net == NF_NET_BGP && !list->cfg.bgp_daemon && !list->cfg.bmp_daemon) ||
 	        (list->cfg.nfacctd_net == NF_NET_IGP && !list->cfg.nfacctd_isis)) {
-	      Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'bmp_daemon', 'isis_daemon', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
+	      Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'bmp_daemon', 'isis_daemon', 'networks_file', 'networks_mask' is specified. Exiting.\n\n", list->name, list->type.string);
 	      exit_gracefully(1);
 	    }
             if (list->cfg.nfacctd_net & NF_NET_FALLBACK && list->cfg.networks_file)
@@ -572,7 +572,7 @@ int main(int argc,char **argv, char **envp)
         }
 
         if ((list->cfg.what_to_count & COUNT_CLASS) && (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS)) {
-          Log(LOG_ERR, "ERROR ( %s/%s ): 'class_legacy' and 'class' primitives are mutual exclusive. Exiting...\n\n", list->name, list->type.string);
+          Log(LOG_ERR, "ERROR ( %s/%s ): 'class_legacy' and 'class' primitives are mutual exclusive. Exiting.\n\n", list->name, list->type.string);
           exit_gracefully(1);
         }
 #endif
@@ -589,7 +589,7 @@ int main(int argc,char **argv, char **envp)
   }
 
   if (tee_plugins && data_plugins) {
-    Log(LOG_ERR, "ERROR ( %s/core ): 'tee' plugins are not compatible with data (memory/mysql/pgsql/etc.) plugins. Exiting...\n\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core ): 'tee' plugins are not compatible with data (memory/mysql/pgsql/etc.) plugins. Exiting.\n\n", config.name);
     exit_gracefully(1);
   }
 
@@ -603,37 +603,37 @@ int main(int argc,char **argv, char **envp)
 #endif
 
   if (capture_methods > 1) {
-    Log(LOG_ERR, "ERROR ( %s/core ): pcap_savefile, nfacctd_ip, nfacctd_kafka_* and nfacctd_zmq_* are mutual exclusive. Exiting...\n\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core ): pcap_savefile, nfacctd_ip, nfacctd_kafka_* and nfacctd_zmq_* are mutual exclusive. Exiting.\n\n", config.name);
     exit_gracefully(1);
   }
 
   if (config.nfacctd_templates_receiver) {
     if (!config.nfacctd_port && !config.nfacctd_ip && capture_methods) {
-      Log(LOG_ERR, "ERROR ( %s/core ): nfacctd_templates_receiver only applies to live UDP collection (nfacctd_ip, nfacctd_port). Exiting...\n\n", config.name);
+      Log(LOG_ERR, "ERROR ( %s/core ): nfacctd_templates_receiver only applies to live UDP collection (nfacctd_ip, nfacctd_port). Exiting.\n\n", config.name);
       exit_gracefully(1);
     }
 
     if (tee_plugins) {
-      Log(LOG_ERR, "ERROR ( %s/core ): nfacctd_templates_receiver and tee plugin ae mutual exclusive. Exiting...\n\n", config.name);
+      Log(LOG_ERR, "ERROR ( %s/core ): nfacctd_templates_receiver and tee plugin ae mutual exclusive. Exiting.\n\n", config.name);
       exit_gracefully(1);
     }
   }
 
 #ifdef WITH_KAFKA
   if ((config.nfacctd_kafka_broker_host && !config.nfacctd_kafka_topic) || (config.nfacctd_kafka_topic && !config.nfacctd_kafka_broker_host)) {
-    Log(LOG_ERR, "ERROR ( %s/core ): Kafka collection requires both nfacctd_kafka_broker_host and nfacctd_kafka_topic to be specified. Exiting...\n\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core ): Kafka collection requires both nfacctd_kafka_broker_host and nfacctd_kafka_topic to be specified. Exiting.\n\n", config.name);
     exit_gracefully(1);
   }
 
   if (config.nfacctd_kafka_broker_host && tee_plugins) {
-    Log(LOG_ERR, "ERROR ( %s/core ): Kafka collection is mutual exclusive with 'tee' plugins. Exiting...\n\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core ): Kafka collection is mutual exclusive with 'tee' plugins. Exiting.\n\n", config.name);
     exit_gracefully(1);
   }
 #endif
 
 #ifdef WITH_ZMQ
   if (config.nfacctd_zmq_address && tee_plugins) {
-    Log(LOG_ERR, "ERROR ( %s/core ): ZeroMQ collection is mutual exclusive with 'tee' plugins. Exiting...\n\n", config.name);
+    Log(LOG_ERR, "ERROR ( %s/core ): ZeroMQ collection is mutual exclusive with 'tee' plugins. Exiting.\n\n", config.name);
     exit_gracefully(1);
   }
 #endif
@@ -1681,6 +1681,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   u_int16_t flowsetCount = 0, direction = 0, FlowSeqInc = 0; 
   u_int32_t HdrSz = 0, SourceId = 0, FlowSeq = 0;
   u_char *dummy_packet_ptr = NULL;
+  int ret;
 
   if (version == 9) {
     HdrSz = NfHdrV9Sz; 
@@ -2057,10 +2058,18 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	    if (!entry->in_rd_map) {
 	      entry->in_rd_map = cdada_map_create(u_int32_t); /* size of vrfid */
+	      if (!entry->in_rd_map) {
+		Log(LOG_ERR, "ERROR ( %s/core ): Unable to allocate entry->in_rd_map. Exiting.\n", config.name);
+		exit_gracefully(1);
+	      }
 	    }
 
 	    if (!entry->out_rd_map) {
 	      entry->out_rd_map = cdada_map_create(u_int32_t); /* size of vrfid */
+	      if (!entry->out_rd_map) {
+		Log(LOG_ERR, "ERROR ( %s/core ): Unable to allocate entry->out_rd_map. Exiting.\n", config.name);
+		exit_gracefully(1);
+	      }
 	    }
 
 	    memcpy(&ingress_vrfid, pkt+tpl->tpl[NF9_INGRESS_VRFID].off, tpl->tpl[NF9_INGRESS_VRFID].len);
@@ -2076,11 +2085,19 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	      bgp_rd_ntoh(mpls_vpn_rd);
 
 	      if (ingress_vrfid) {
-	        cdada_map_insert(entry->in_rd_map, &ingress_vrfid, mpls_vpn_rd);
+	        ret = cdada_map_insert(entry->in_rd_map, &ingress_vrfid, mpls_vpn_rd);
+		if (ret != CDADA_SUCCESS && ret != CDADA_E_EXISTS){
+		  Log(LOG_ERR, "ERROR ( %s/core ): Unable to insert in entry->in_rd_map. Exiting.\n", config.name);
+		  exit_gracefully(1);
+		}
 	      }
 
 	      if (egress_vrfid) {
-	        cdada_map_insert(entry->out_rd_map, &egress_vrfid, mpls_vpn_rd);
+	        ret = cdada_map_insert(entry->out_rd_map, &egress_vrfid, mpls_vpn_rd);
+		if (ret != CDADA_SUCCESS && ret != CDADA_E_EXISTS){
+		  Log(LOG_ERR, "ERROR ( %s/core ): Unable to insert in entry->out_rd_map. Exiting.\n", config.name);
+		  exit_gracefully(1);
+		}
 	      }
 	    }
 	  }
