@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -591,7 +591,7 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
       bgp_peer_info_delete(bmpp_bgp_peer);
 
       bms->peer_str = saved_peer_str;
-      bms->peer_str = saved_peer_port_str;
+      bms->peer_port_str = saved_peer_port_str;
 
       if (bdata.family == AF_INET) {
 	pm_tdelete(&bdata.peer_ip, &bmpp->bgp_peers_v4, bgp_peer_host_addr_cmp);
