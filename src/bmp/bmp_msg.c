@@ -361,12 +361,21 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
       bmd.extra.data = &bmed_bmp;
       bgp_msg_data_set_data_bmp(&bmed_bmp, &bdata);
 
-      bgp_open_len = bgp_get_packet_len((*bmp_packet));
-      if (bgp_open_len <= 0) {
-	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: failed bgp_get_packet_len()\n",
-	    config.name, bms->log_str, peer->addr_str);
+      /* length checks */
+      if ((*len) >= sizeof(struct bgp_header)) {
+	bgp_open_len = bgp_get_packet_len((*bmp_packet));
+	if (bgp_open_len <= 0 || bgp_open_len > (*len)) {
+	  Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: failed bgp_get_packet_len()\n",
+	      config.name, bms->log_str, peer->addr_str);
+	  bmp_tlv_list_destroy(tlvs);
+	  return;
+	}
+      }
+      else {
+        Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer_up] packet discarded: incomplete BGP header\n",
+            config.name, bms->log_str, peer->addr_str);
 	bmp_tlv_list_destroy(tlvs);
-	return;
+        return;
       }
 
       bgp_open_len = bgp_parse_open_msg(&bmd, (*bmp_packet), FALSE, FALSE);
@@ -382,6 +391,23 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
 
       bgp_peer_rem.type = FUNC_TYPE_BMP;
       bmd.peer = &bgp_peer_rem;
+
+      /* length checks */
+      if ((*len) >= sizeof(struct bgp_header)) {
+	bgp_open_len = bgp_get_packet_len((*bmp_packet));
+	if (bgp_open_len <= 0 || bgp_open_len > (*len)) {
+	  Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: failed bgp_get_packet_len() (2)\n",
+	      config.name, bms->log_str, peer->addr_str);
+	  bmp_tlv_list_destroy(tlvs);
+	  return;
+        }
+      }
+      else {
+	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer_up] packet discarded: incomplete BGP header (2)\n",
+	    config.name, bms->log_str, peer->addr_str);
+	bmp_tlv_list_destroy(tlvs);
+	return;
+      }
 
       bgp_open_len = bgp_parse_open_msg(&bmd, (*bmp_packet), FALSE, FALSE);
       if (bgp_open_len == ERR) {
@@ -691,10 +717,17 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 
       encode_tstamp_arrival(bms->log_tstamp_str, SRVBUFLEN, &bdata.tstamp_arrival, TRUE);
 
-      /* draft-ietf-grow-bmp-tlv */
-      bgp_update_len = bgp_get_packet_len((*bmp_packet));
-      if (bgp_update_len <= 0) {
-	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: bgp_get_packet_len() failed\n",
+      /* length checks & draft-ietf-grow-bmp-tlv preps */
+      if ((*len) >= sizeof(struct bgp_header)) {
+        bgp_update_len = bgp_get_packet_len((*bmp_packet));
+        if (bgp_update_len <= 0 || bgp_update_len > (*len)) {
+	  Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: bgp_get_packet_len() failed\n",
+	      config.name, bms->log_str, peer->addr_str);
+	  return;
+	}
+      }
+      else {
+	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: incomplete BGP header\n",
 	    config.name, bms->log_str, peer->addr_str);
 	return;
       }
