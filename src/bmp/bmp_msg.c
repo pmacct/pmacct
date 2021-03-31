@@ -549,6 +549,30 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
 
       /* draft-ietf-grow-bmp-tlv */
       if (peer->version == BMP_V4) {
+	/* let's skip intermediate data in order to get to TLVs */
+	if (blpd.reason == BMP_PEER_DOWN_LOC_NOT_MSG || blpd.reason == BMP_PEER_DOWN_REM_NOT_MSG) {
+	  int bgp_notification_len = 0;
+
+	  bgp_notification_len = bgp_get_packet_len((*bmp_packet));
+	  if (bgp_notification_len <= 0 || bgp_notification_len > (*len)) {
+	    Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer down] packet discarded: failed bgp_get_packet_len() reason=%u\n",
+		config.name, bms->log_str, peer->addr_str, blpd.reason);
+	    bmp_tlv_list_destroy(tlvs);
+	    return;
+	  }
+
+	  bmp_jump_offset(bmp_packet, len, bgp_notification_len);
+	}
+	else if (blpd.reason == BMP_PEER_DOWN_LOC_CODE) {
+	  ret2 = bmp_jump_offset(bmp_packet, len, 2);
+	  if (ret2 == ERR) {
+	    Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer down] packet discarded: failed bmp_jump_offset() reason=%u\n",
+		config.name, bms->log_str, peer->addr_str, blpd.reason);
+	    bmp_tlv_list_destroy(tlvs);
+	    return;
+	  }
+	}
+
         while ((*len)) {
 	  u_int32_t pen = 0;
 

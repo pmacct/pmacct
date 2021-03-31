@@ -49,14 +49,19 @@ char *bmp_get_and_check_length(char **bmp_packet_ptr, u_int32_t *pkt_size, u_int
   return current_ptr;
 }
 
-void bmp_jump_offset(char **bmp_packet_ptr, u_int32_t *len, u_int32_t offset)
+int bmp_jump_offset(char **bmp_packet_ptr, u_int32_t *len, u_int32_t offset)
 {
+  int ret = ERR;
+
   if (bmp_packet_ptr && (*bmp_packet_ptr) && len) {
     if (offset <= (*len)) {
       (*bmp_packet_ptr) += offset;
       (*len) -= offset;
+      ret = offset;
     }
   }
+
+  return ret;
 }
 
 u_int32_t bmp_packet_adj_offset(char *bmp_packet, u_int32_t buf_len, u_int32_t recv_len, u_int32_t remaining_len, char *addr_str)
