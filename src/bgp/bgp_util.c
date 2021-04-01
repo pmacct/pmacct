@@ -1636,3 +1636,15 @@ u_int16_t bgp_get_packet_len(char *pkt)
 
   return blen;
 }
+
+u_int8_t bgp_get_packet_type(char *pkt)
+{
+  struct bgp_header *bhdr = (struct bgp_header *) pkt;
+  u_int8_t btype = 0;
+
+  if (bgp_marker_check(bhdr, BGP_MARKER_SIZE) != ERR) {
+    btype = bhdr->bgpo_type;
+  }
+
+  return btype;
+}

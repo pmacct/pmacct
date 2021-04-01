@@ -672,6 +672,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
   struct bmp_data bdata;
   struct bmp_peer_hdr *bph;
   int bgp_update_len, ret2 = 0;
+  u_int8_t bgp_msg_type = 0;
   void *ret = NULL;
 
   if (!bmpp) return;
@@ -808,12 +809,18 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
         bmed_bmp.tlvs = tlvs;
       }
 
-      bgp_update_len = bgp_parse_update_msg(&bmd, (*bmp_packet)); 
-      if (bgp_update_len <= 0) {
-	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: bgp_parse_update_msg() failed\n",
-	    config.name, bms->log_str, peer->addr_str);
-        bmp_tlv_list_destroy(bmed_bmp.tlvs);
-	return;
+      if ((bgp_msg_type = bgp_get_packet_type((*bmp_packet))) == BGP_UPDATE) {
+	bgp_update_len = bgp_parse_update_msg(&bmd, (*bmp_packet));
+	if (bgp_update_len <= 0) {
+	  Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: bgp_parse_update_msg() failed\n",
+	      config.name, bms->log_str, peer->addr_str);
+	  bmp_tlv_list_destroy(bmed_bmp.tlvs);
+	  return;
+	}
+      }
+      else {
+	Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] [route monitor] packet discarded: unsupported BGP message type: %u\n",
+	    config.name, bms->log_str, peer->addr_str, bgp_msg_type);
       }
 
       bms->peer_str = saved_peer_str;
