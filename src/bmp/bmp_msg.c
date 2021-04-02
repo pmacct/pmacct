@@ -333,6 +333,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
       struct bmp_chars bmed_bmp;
       struct bgp_msg_data bmd;
       int bgp_open_len, ret2 = 0;
+      u_int8_t bgp_msg_type = 0;
       void *ret = NULL;
 
       /* TLV vars */
@@ -378,13 +379,22 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
         return;
       }
 
-      bgp_open_len = bgp_parse_open_msg(&bmd, (*bmp_packet), FALSE, FALSE);
-      if (bgp_open_len == ERR) {
-	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: failed bgp_parse_open_msg()\n",
-	    config.name, bms->log_str, peer->addr_str);
+      if ((bgp_msg_type = bgp_get_packet_type((*bmp_packet))) == BGP_OPEN) {
+	bgp_open_len = bgp_parse_open_msg(&bmd, (*bmp_packet), FALSE, FALSE);
+	if (bgp_open_len == ERR) {
+	  Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: failed bgp_parse_open_msg()\n",
+	      config.name, bms->log_str, peer->addr_str);
+	  bmp_tlv_list_destroy(tlvs);
+	  return;
+        }
+      }
+      else {
+	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: wrong BGP message type: %u\n",
+	    config.name, bms->log_str, peer->addr_str, bgp_msg_type);
 	bmp_tlv_list_destroy(tlvs);
 	return;
       }
+
       bmp_get_and_check_length(bmp_packet, len, bgp_open_len);
       memcpy(&bmpp->self.id, &bgp_peer_loc.id, sizeof(struct host_addr));
       memcpy(&bgp_peer_loc.addr, &blpu.local_ip, sizeof(struct host_addr));
@@ -409,13 +419,22 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
 	return;
       }
 
-      bgp_open_len = bgp_parse_open_msg(&bmd, (*bmp_packet), FALSE, FALSE);
-      if (bgp_open_len == ERR) {
-	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: failed bgp_parse_open_msg() (2)\n",
-	    config.name, bms->log_str, peer->addr_str);
+      if ((bgp_msg_type = bgp_get_packet_type((*bmp_packet))) == BGP_OPEN) {
+	bgp_open_len = bgp_parse_open_msg(&bmd, (*bmp_packet), FALSE, FALSE);
+	if (bgp_open_len == ERR) {
+	  Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: failed bgp_parse_open_msg() (2)\n",
+	      config.name, bms->log_str, peer->addr_str);
+	  bmp_tlv_list_destroy(tlvs);
+	  return;
+	}
+      }
+      else {
+	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: wrong BGP message type: %u (2)\n",
+	    config.name, bms->log_str, peer->addr_str, bgp_msg_type);
 	bmp_tlv_list_destroy(tlvs);
 	return;
       }
+
       bmp_get_and_check_length(bmp_packet, len, bgp_open_len);
       memcpy(&bgp_peer_rem.addr, &bdata.peer_ip, sizeof(struct host_addr));
 
