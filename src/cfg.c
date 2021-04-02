@@ -61,6 +61,7 @@ static const struct _dictionary_line dictionary[] = {
   {"uacctd_net", cfg_key_nfacctd_net},
   {"use_ip_next_hop", cfg_key_use_ip_next_hop},
   {"decode_arista_trailer", cfg_key_decode_arista_trailer},
+  {"arista_trailer_offset", cfg_key_arista_trailer_offset},
   {"thread_stack", cfg_key_thread_stack},
   {"plugins", NULL},
   {"plugin_pipe_size", cfg_key_plugin_pipe_size},
