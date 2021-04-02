@@ -389,8 +389,10 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
         }
       }
       else {
-	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: wrong BGP message type: %u\n",
-	    config.name, bms->log_str, peer->addr_str, bgp_msg_type);
+	Log(LOG_INFO, "INFO ( %s/%s ): [%s] [peer up] packet discarded: wrong BGP message type: %s (%u)\n",
+	    config.name, bms->log_str, peer->addr_str,
+	    (bgp_msg_type <= BGP_MSG_TYPE_MAX ? bgp_msg_types[bgp_msg_type] : bgp_msg_types[0]),
+	    bgp_msg_type);
 	bmp_tlv_list_destroy(tlvs);
 	return;
       }
@@ -838,8 +840,10 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 	}
       }
       else {
-	Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] [route monitor] packet discarded: unsupported BGP message type: %u\n",
-	    config.name, bms->log_str, peer->addr_str, bgp_msg_type);
+	Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] [route monitor] packet discarded: unsupported BGP message type: %s (%u)\n",
+	    config.name, bms->log_str, peer->addr_str,
+	    (bgp_msg_type <= BGP_MSG_TYPE_MAX ? bgp_msg_types[bgp_msg_type] : bgp_msg_types[0]),
+	    bgp_msg_type);
       }
 
       bms->peer_str = saved_peer_str;

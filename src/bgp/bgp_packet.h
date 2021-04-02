@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /* 
@@ -53,6 +53,17 @@
 #define BGP_ROUTE_REFRESH       5
 #define BGP_CAPABILITY		6
 #define BGP_ROUTE_REFRESH_CISCO 0x80
+
+static const char __attribute__((unused)) *bgp_msg_types[] = {
+  "Unknown",
+  "Open",
+  "Update",
+  "Notification",
+  "Keepalive",
+  "Route Refresh"
+};
+
+#define BGP_MSG_TYPE_MAX	5
 
 /* Address family numbers */
 #define AFI_IP                    1
