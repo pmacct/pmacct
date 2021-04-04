@@ -591,6 +591,7 @@ struct configuration {
   char *tunnel0;
   int use_ip_next_hop;
   int decode_arista_trailer;
+  int arista_trailer_offset;
   int dump_max_writers;
   int tmp_asa_bi_flow;
   int tmp_bgp_lookup_compare_ports;
