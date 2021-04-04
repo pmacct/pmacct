@@ -132,12 +132,12 @@ void pm_pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *bu
     }
     else pptrs.ifindex_out = 0;
 
-    if (config.decode_arista_trailer && config.arista_trailer_offset) {
-      memcpy(&ifacePresent, buf + pkthdr->len - config.arista_trailer_offset, 4);
-        if (ifacePresent == 1) {
-          memcpy(&iface32, buf + pkthdr->len - (config.arista_trailer_offset - 4), 4);
-          pptrs.ifindex_out = iface32;
-        }
+    if (config.pcap_arista_trailer_offset) {
+      memcpy(&ifacePresent, buf + pkthdr->len - config.pcap_arista_trailer_offset, 4);
+      if (ifacePresent == 1) {
+        memcpy(&iface32, buf + pkthdr->len - (config.pcap_arista_trailer_offset - 4), 4);
+        pptrs.ifindex_out = iface32;
+      }
     }
 
     (*device->data->handler)(pkthdr, &pptrs);

@@ -196,6 +196,12 @@ DESC:		If set, specifies a specific packet socket protocol value to limit packet
 		against a version of libpcap that supports pcap_set_protocol().
 DEFAULT:	none
 
+KEY:		pcap_arista_trailer_offset [GLOBAL, PMACCTD_ONLY]
+DESC:		Arista does set a trailer structure to convey extra info (ie. output interface, etc.) when
+		mirroring packets. This knob sets the byte offset from the end of the packet to indicate
+		where the trailer starts.
+DEFAULT:	none
+
 KEY:		snaplen (-L) [GLOBAL, NO_NFACCTD, NO_SFACCTD]
 DESC:		Specifies the maximum number of bytes to capture for each packet. This directive has
 		key importance to both classification and connection tracking engines. In fact, some
@@ -1877,15 +1883,6 @@ DESC:		When IP prefix aggregation (ie. nfacctd_net) is set to 'netflow', 'sflow'
 		which case longest winning match is via 'netflow' or 'sflow') populate 'peer_dst_ip' field
 		from NetFlow/sFlow IP next hop field if BGP next-hop is not available.
 DEFAULT:        false
-
-KEY:            decode_arista_trailer [GLOBAL, PMACCTD_ONLY]
-VALUES:         [ true | false ]
-DESC:           Decode output interfaces data present on trailer of libpcap packets passed by Arista.
-DEFAULT:        false
-
-KEY:            arista_trailer_offset [GLOBAL, PMACCTD_ONLY]
-DESC:           When 'decode_arista_trailer' is enabled, set the byte offset from the end of the packet to indicate where the trailer starts.
-DEFAULT:        8
 
 KEY:		[ nfacctd_mcast_groups | sfacctd_mcast_groups ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
 DESC:		Defines one or more IPv4/IPv6 multicast groups to be joined by the daemon. If more groups are

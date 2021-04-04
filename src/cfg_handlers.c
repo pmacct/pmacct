@@ -164,6 +164,23 @@ int cfg_key_daemonize(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_pcap_arista_trailer_offset(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value < 8) {
+    Log(LOG_ERR, "WARN: [%s] 'pcap_arista_trailer_offset' has to be >= 8.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.pcap_arista_trailer_offset = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'pcap_arista_trailer_offset'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_use_ip_next_hop(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -174,37 +191,6 @@ int cfg_key_use_ip_next_hop(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) list->cfg.use_ip_next_hop = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'use_ip_next_hop'. Globalized.\n", filename);
-
-  return changes;
-}
-
-int cfg_key_decode_arista_trailer(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
-
-  value = parse_truefalse(value_ptr);
-  if (value < 0) return ERR;
-
-  for (; list; list = list->next, changes++) list->cfg.decode_arista_trailer = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'decode_arista_trailer'. Globalized.\n", filename);
-
-  return changes;
-}
-
-int cfg_key_arista_trailer_offset(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
-
-  value = atoi(value_ptr);
-  if (value < 8) {
-    Log(LOG_ERR, "WARN: [%s] 'arista_trailer_offset' has to be >= 8.\n", filename);
-    return ERR;
-  }
-
-  for (; list; list = list->next, changes++) list->cfg.arista_trailer_offset = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'arista_trailer_offset'. Globalized.\n", filename);
 
   return changes;
 }
