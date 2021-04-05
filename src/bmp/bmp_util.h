@@ -29,7 +29,6 @@
 /* prototypes */
 extern char *bmp_get_and_check_length(char **, u_int32_t *, u_int32_t);
 extern int bmp_jump_offset(char **, u_int32_t *, u_int32_t);
-extern u_int32_t bmp_packet_adj_offset(char *, u_int32_t, u_int32_t, u_int32_t, char *);
 extern void bmp_link_misc_structs(struct bgp_misc_structs *);
 extern struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *, struct bgp_peer *);
 extern int bmp_peer_init(struct bmp_peer *, int);

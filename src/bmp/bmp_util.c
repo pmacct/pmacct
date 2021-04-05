@@ -64,23 +64,6 @@ int bmp_jump_offset(char **bmp_packet_ptr, u_int32_t *len, u_int32_t offset)
   return ret;
 }
 
-u_int32_t bmp_packet_adj_offset(char *bmp_packet, u_int32_t buf_len, u_int32_t recv_len, u_int32_t remaining_len, char *addr_str)
-{
-  char tmp_packet[BGP_BUFFER_SIZE];
-  
-  if (!bmp_packet || recv_len > buf_len || remaining_len >= buf_len || remaining_len > recv_len) {
-    if (addr_str)
-      Log(LOG_INFO, "INFO ( %s/core/BMP ): [%s] packet discarded: failed bmp_packet_adj_offset()\n", config.name, addr_str);
-
-    return FALSE;
-  }
-
-  memcpy(tmp_packet, &bmp_packet[recv_len - remaining_len], remaining_len);
-  memcpy(bmp_packet, tmp_packet, remaining_len);
-
-  return remaining_len;
-}
-
 void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int etype, int log_type, int output, void *void_obj)
 {
   struct bgp_misc_structs *bms;
