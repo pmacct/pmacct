@@ -1528,7 +1528,7 @@ void bmp_dump_se_ll_destroy(struct bmp_dump_se_ll *bdsell)
   bdsell->last = NULL;
 }
 
-void bmp_handle_dump_event()
+void bmp_handle_dump_event(int max_peers_idx)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BMP);
   char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
@@ -1546,6 +1546,14 @@ void bmp_handle_dump_event()
   struct bgp_peer *peer, *saved_peer;
   struct bmp_dump_se_ll *bdsell;
   struct bgp_peer_log peer_log;      
+
+#ifdef WITH_RABBITMQ
+  struct p_amqp_host bmp_dump_amqp_host;
+#endif
+
+#ifdef WITH_KAFKA
+  struct p_kafka_host bmp_dump_kafka_host;
+#endif
 
   /* pre-flight check */
   if (!bms->dump_backend_methods || !config.bmp_dump_refresh_time)
@@ -1571,7 +1579,7 @@ void bmp_handle_dump_event()
 
 #ifdef WITH_RABBITMQ
     if (config.bmp_dump_amqp_routing_key) {
-      bmp_dump_init_amqp_host();
+      bmp_dump_init_amqp_host(&bmp_dump_amqp_host);
       ret = p_amqp_connect_to_publish(&bmp_dump_amqp_host);
       if (ret) exit_gracefully(ret);
     }
@@ -1579,7 +1587,7 @@ void bmp_handle_dump_event()
 
 #ifdef WITH_KAFKA
     if (config.bmp_dump_kafka_topic) {
-      ret = bmp_dump_init_kafka_host();
+      ret = bmp_dump_init_kafka_host(&bmp_dump_kafka_host);
       if (ret) exit_gracefully(ret);
     }
 #endif
@@ -1852,9 +1860,11 @@ void bmp_daemon_msglog_init_amqp_host()
 #endif
 
 #if defined WITH_RABBITMQ
-void bmp_dump_init_amqp_host()
+void bmp_dump_init_amqp_host(void *bdah)
 {
-  p_amqp_init_host(&bmp_dump_amqp_host);
+  struct p_amqp_host *bmp_dump_amqp_host = bdah;
+
+  p_amqp_init_host(bmp_dump_amqp_host);
 
   if (!config.bmp_dump_amqp_user) config.bmp_dump_amqp_user = rabbitmq_user;
   if (!config.bmp_dump_amqp_passwd) config.bmp_dump_amqp_passwd = rabbitmq_pwd;
@@ -1863,19 +1873,19 @@ void bmp_dump_init_amqp_host()
   if (!config.bmp_dump_amqp_host) config.bmp_dump_amqp_host = default_amqp_host;
   if (!config.bmp_dump_amqp_vhost) config.bmp_dump_amqp_vhost = default_amqp_vhost;
 
-  p_amqp_set_user(&bmp_dump_amqp_host, config.bmp_dump_amqp_user);
-  p_amqp_set_passwd(&bmp_dump_amqp_host, config.bmp_dump_amqp_passwd);
-  p_amqp_set_exchange(&bmp_dump_amqp_host, config.bmp_dump_amqp_exchange);
-  p_amqp_set_exchange_type(&bmp_dump_amqp_host, config.bmp_dump_amqp_exchange_type);
-  p_amqp_set_host(&bmp_dump_amqp_host, config.bmp_dump_amqp_host);
-  p_amqp_set_vhost(&bmp_dump_amqp_host, config.bmp_dump_amqp_vhost);
-  p_amqp_set_persistent_msg(&bmp_dump_amqp_host, config.bmp_dump_amqp_persistent_msg);
-  p_amqp_set_frame_max(&bmp_dump_amqp_host, config.bmp_dump_amqp_frame_max);
-  p_amqp_set_content_type_json(&bmp_dump_amqp_host);
-  p_amqp_set_heartbeat_interval(&bmp_dump_amqp_host, config.bmp_dump_amqp_heartbeat_interval);
+  p_amqp_set_user(bmp_dump_amqp_host, config.bmp_dump_amqp_user);
+  p_amqp_set_passwd(bmp_dump_amqp_host, config.bmp_dump_amqp_passwd);
+  p_amqp_set_exchange(bmp_dump_amqp_host, config.bmp_dump_amqp_exchange);
+  p_amqp_set_exchange_type(bmp_dump_amqp_host, config.bmp_dump_amqp_exchange_type);
+  p_amqp_set_host(bmp_dump_amqp_host, config.bmp_dump_amqp_host);
+  p_amqp_set_vhost(bmp_dump_amqp_host, config.bmp_dump_amqp_vhost);
+  p_amqp_set_persistent_msg(bmp_dump_amqp_host, config.bmp_dump_amqp_persistent_msg);
+  p_amqp_set_frame_max(bmp_dump_amqp_host, config.bmp_dump_amqp_frame_max);
+  p_amqp_set_content_type_json(bmp_dump_amqp_host);
+  p_amqp_set_heartbeat_interval(bmp_dump_amqp_host, config.bmp_dump_amqp_heartbeat_interval);
 }
 #else
-void bmp_dump_init_amqp_host()
+void bmp_dump_init_amqp_host(void *)
 {
 }
 #endif
@@ -1909,26 +1919,27 @@ int bmp_daemon_msglog_init_kafka_host()
 #endif
 
 #if defined WITH_KAFKA
-int bmp_dump_init_kafka_host()
+int bmp_dump_init_kafka_host(void *bmkh)
 {
+  struct p_kafka_host *bmp_dump_kafka_host = bmkh;
   int ret;
 
-  p_kafka_init_host(&bmp_dump_kafka_host, config.bmp_dump_kafka_config_file);
-  ret = p_kafka_connect_to_produce(&bmp_dump_kafka_host);
+  p_kafka_init_host(bmp_dump_kafka_host, config.bmp_dump_kafka_config_file);
+  ret = p_kafka_connect_to_produce(bmp_dump_kafka_host);
 
   if (!config.bmp_dump_kafka_broker_host) config.bmp_dump_kafka_broker_host = default_kafka_broker_host;
   if (!config.bmp_dump_kafka_broker_port) config.bmp_dump_kafka_broker_port = default_kafka_broker_port;
 
-  p_kafka_set_broker(&bmp_dump_kafka_host, config.bmp_dump_kafka_broker_host, config.bmp_dump_kafka_broker_port);
-  p_kafka_set_topic(&bmp_dump_kafka_host, config.bmp_dump_kafka_topic);
-  p_kafka_set_partition(&bmp_dump_kafka_host, config.bmp_dump_kafka_partition);
-  p_kafka_set_key(&bmp_dump_kafka_host, config.bmp_dump_kafka_partition_key, config.bmp_dump_kafka_partition_keylen);
-  p_kafka_set_content_type(&bmp_dump_kafka_host, PM_KAFKA_CNT_TYPE_STR);
+  p_kafka_set_broker(bmp_dump_kafka_host, config.bmp_dump_kafka_broker_host, config.bmp_dump_kafka_broker_port);
+  p_kafka_set_topic(bmp_dump_kafka_host, config.bmp_dump_kafka_topic);
+  p_kafka_set_partition(bmp_dump_kafka_host, config.bmp_dump_kafka_partition);
+  p_kafka_set_key(bmp_dump_kafka_host, config.bmp_dump_kafka_partition_key, config.bmp_dump_kafka_partition_keylen);
+  p_kafka_set_content_type(bmp_dump_kafka_host, PM_KAFKA_CNT_TYPE_STR);
 
   return ret;
 }
 #else
-int bmp_dump_init_kafka_host()
+int bmp_dump_init_kafka_host(void *bmkh)
 {
   return ERR;
 }

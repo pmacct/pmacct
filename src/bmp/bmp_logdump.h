@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -86,7 +86,6 @@ struct bmp_dump_se_ll {
 
 /* prototypes */
 extern void bmp_daemon_msglog_init_amqp_host();
-extern void bmp_dump_init_amqp_host();
 extern void bmp_dump_init_peer(struct bgp_peer *);
 extern void bmp_dump_close_peer(struct bgp_peer *);
 
@@ -103,11 +102,11 @@ extern int bmp_log_rm_tlv_pm_status(u_int32_t, int, void *);
 extern void bmp_dump_se_ll_append(struct bgp_peer *, struct bmp_data *, struct pm_list *tlvs, void *, int);
 extern void bmp_dump_se_ll_destroy(struct bmp_dump_se_ll *);
 
-extern void bmp_handle_dump_event();
+extern void bmp_handle_dump_event(int);
 extern void bmp_daemon_msglog_init_amqp_host();
-extern void bmp_dump_init_amqp_host();
+extern void bmp_dump_init_amqp_host(void *);
 extern int bmp_daemon_msglog_init_kafka_host();
-extern int bmp_dump_init_kafka_host();
+extern int bmp_dump_init_kafka_host(void *);
 
 #if defined WITH_AVRO
 extern avro_schema_t p_avro_schema_build_bmp_rm(int, char *);

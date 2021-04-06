@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -96,7 +96,6 @@ extern struct p_amqp_host amqpp_amqp_host;
 extern struct p_amqp_host bgp_daemon_msglog_amqp_host;
 extern struct p_amqp_host bgp_table_dump_amqp_host;
 extern struct p_amqp_host bmp_daemon_msglog_amqp_host;
-extern struct p_amqp_host bmp_dump_amqp_host;
 extern struct p_amqp_host sfacctd_counter_amqp_host;
 extern struct p_amqp_host telemetry_daemon_msglog_amqp_host;
 extern struct p_amqp_host telemetry_dump_amqp_host;

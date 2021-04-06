@@ -544,9 +544,6 @@ int skinny_bmp_daemon()
       bmp_misc_db->dump_backend_methods = FALSE;
       Log(LOG_WARNING, "WARN ( %s/%s ): Invalid 'bmp_dump_refresh_time'.\n", config.name, bmp_misc_db->log_str);
     }
-
-    if (config.bmp_dump_amqp_routing_key) bmp_dump_init_amqp_host();
-    if (config.bmp_dump_kafka_topic) bmp_dump_init_kafka_host();
   }
 
 #ifdef WITH_AVRO
@@ -665,7 +662,7 @@ int skinny_bmp_daemon()
 	  if (bgp_peer_log_seq_has_ro_bit(&bmp_misc_db->log_seq))
 	    bgp_peer_log_seq_init(&bmp_misc_db->log_seq);
 
-          bmp_handle_dump_event();
+          bmp_handle_dump_event(max_peers_idx);
 
           dump_refresh_deadline += config.bmp_dump_refresh_time;
         }
