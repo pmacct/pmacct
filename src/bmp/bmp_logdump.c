@@ -1885,7 +1885,7 @@ void bmp_dump_init_amqp_host(void *bdah)
   p_amqp_set_heartbeat_interval(bmp_dump_amqp_host, config.bmp_dump_amqp_heartbeat_interval);
 }
 #else
-void bmp_dump_init_amqp_host(void *)
+void bmp_dump_init_amqp_host(void *bdah)
 {
 }
 #endif
