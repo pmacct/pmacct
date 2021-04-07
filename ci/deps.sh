@@ -35,8 +35,10 @@ cd jansson && rm -rf ./.git && autoreconf -i && ./configure && make && sudo make
 git clone https://github.com/edenhill/librdkafka
 cd librdkafka && rm -rf ./.git && ./configure && make && sudo make install && cd ..
 
-git clone https://github.com/alanxz/rabbitmq-c
-cd rabbitmq-c && rm -rf ./.git && mkdir build && cd build && cmake -DCMAKE_INSTALL_LIBDIR=lib .. && sudo cmake --build . --target install && cd .. && cd ..
+wget -t $WGET_N_RETRIES --waitretry=$WGET_WAIT_RETRIES_S --no-check-certificate https://github.com/alanxz/rabbitmq-c/archive/refs/tags/v0.11.0.tar.gz
+mv v0.11.0.tar.gz rabbitmq-c-0.11.0.tar.gz
+tar xfz rabbitmq-c-0.11.0.tar.gz
+cd rabbitmq-c-0.11.0 && rm -rf ./.git && mkdir build && cd build && cmake -DCMAKE_INSTALL_LIBDIR=lib .. && sudo cmake --build . --target install && cd .. && cd ..
 
 git clone --recursive https://github.com/maxmind/libmaxminddb 
 cd libmaxminddb && rm -rf ./.git && ./bootstrap && ./configure && make && sudo make install && cd ..
