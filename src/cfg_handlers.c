@@ -187,7 +187,7 @@ int cfg_key_pcap_arista_trailer_flag_value(char *filename, char *name, char *val
   int value, changes = 0;
 
   value = atoi(value_ptr);
-  if (value < 128) {
+  if (value > 128) {
     Log(LOG_ERR, "WARN: [%s] 'pcap_arista_trailer_flag_value' has to be < 128.\n", filename);
     return ERR;
   }
