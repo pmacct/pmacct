@@ -202,6 +202,11 @@ DESC:		Arista does set a trailer structure to convey extra info (ie. output inte
 		where the trailer starts.
 DEFAULT:	none
 
+KEY:            pcap_arista_trailer_flag_value [GLOBAL, PMACCTD_ONLY]
+DESC:           When 'pcap_arista_trailer_offset' is set, specify the expected value in the arista trailer
+                flag field that indicates the output interface is present (this varies by chipset).
+DEFAULT:        1
+
 KEY:		snaplen (-L) [GLOBAL, NO_NFACCTD, NO_SFACCTD]
 DESC:		Specifies the maximum number of bytes to capture for each packet. This directive has
 		key importance to both classification and connection tracking engines. In fact, some

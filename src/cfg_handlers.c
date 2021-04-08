@@ -181,6 +181,23 @@ int cfg_key_pcap_arista_trailer_offset(char *filename, char *name, char *value_p
   return changes;
 }
 
+int cfg_key_pcap_arista_trailer_flag_value(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value < 128) {
+    Log(LOG_ERR, "WARN: [%s] 'pcap_arista_trailer_flag_value' has to be < 128.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.pcap_arista_trailer_flag_value = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'pcap_arista_trailer_flag_value'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_use_ip_next_hop(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

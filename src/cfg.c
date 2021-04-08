@@ -54,6 +54,7 @@ static const struct _dictionary_line dictionary[] = {
   {"pcap_ifindex", cfg_key_pcap_ifindex},
   {"pcap_interfaces_map", cfg_key_pcap_interfaces_map},
   {"pcap_arista_trailer_offset", cfg_key_pcap_arista_trailer_offset},
+  {"pcap_arista_trailer_flag_value", cfg_key_pcap_arista_trailer_flag_value},
   {"core_proc_name", cfg_key_proc_name},
   {"proc_priority", cfg_key_proc_priority},
   {"pmacctd_as", cfg_key_nfacctd_as_new},
