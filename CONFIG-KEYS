@@ -350,11 +350,14 @@ DESC:		Allows to select some standard buffering profiles. Following are the reco
 			large   : from 100-125K to 250K (1MB)
 			xlarge  : from 250K (10MB)
 
-		A symptom the selected profile is undersized is missing data warnings appear in
-		the logs; a symptom it is oversized instead is latency in data being purged out.
-		The amount of flows/samples per second can be estimated as described in Q21 in
-		the FAQS document. Should no profile fit the sizing, the buffering value can be
-		customised using the plugin_buffer_size directive. 
+		A symptom that the selected profile may be undersized is the missing data warnings
+		appearing in the logs; a symptom it is oversized instead is the latency in data
+		being purged out: in fact the buffer has to fill up in order to be released to the
+		plugin. The amount of flows/samples per second can be estimated as described in Q21
+		in the FAQS document; 'large' and 'xlarge' (and possibly also 'medium') profiles
+		may be counter-productive in case of a 'tee' plugin: excessive burstiness may cause
+		UDP drops due to small default kernel buffers. Should no profile fit the sizing,
+		the buffering value can be customised using the plugin_buffer_size directive. 
 DEFAULT:	micro 
 
 KEY:		plugin_pipe_zmq_hwm
