@@ -305,7 +305,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 			cap_data.sndrcv);
 		  }
 		  if ((cap_data.sndrcv == 2 /* send */) || (cap_data.sndrcv == 3 /* send and receive */)) {
-		    peer->cap_add_paths[ntohs(cap_data.afi)][cap_data.safi] = TRUE; 
+		    peer->cap_add_paths[ntohs(cap_data.afi)][cap_data.safi] = online;
 		    if (online) {
 		      if (!cap_set) {
 			/* we need to send BGP_CAPABILITY_ADD_PATHS first */
