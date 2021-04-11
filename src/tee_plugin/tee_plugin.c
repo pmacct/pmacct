@@ -708,9 +708,14 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, u_int16_t src_port, i
     memset(&source_ip, 0, sizeof(source_ip));
     memset(&ssource_ip, 0, sizeof(ssource_ip));
 
-    if (src_port) { 
-      source_ip.family = addr->sa_family; 
-      ret = addr_to_sa((struct sockaddr *) &ssource_ip, &source_ip, src_port);
+    if (config.nfprobe_source_ip) {
+      ret = str_to_addr(config.nfprobe_source_ip, &source_ip);
+      addr_to_sa((struct sockaddr *) &ssource_ip, &source_ip, src_port);
+    } else {
+      if (src_port) {
+        source_ip.family = addr->sa_family;
+        ret = addr_to_sa((struct sockaddr *) &ssource_ip, &source_ip, src_port);
+      }
     }
 
     if ((s = socket(addr->sa_family, SOCK_DGRAM, 0)) == -1) {
