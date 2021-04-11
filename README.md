@@ -16,39 +16,16 @@ DOCUMENTATION
   * examples/: Sample configs, maps, AMQP/Kafka consumers, clients
   * sql/: SQL documentation, default SQL schemas and customization tips
 
-# USING THE DOCKER IMAGES
+# DOCKER IMAGES
 
-With docker installed, you can just pull from the official pmacct repository
-in [docker hub](https://hub.docker.com) (e.g. for `pmacctd` daemon):
+Official pmacct docker images can be found in [docker hub](https://hub.docker.com/r/pmacct/). To use them, simply (e.g. `sfacctd`):
 
 ```bash
- ~# docker pull pmacct/pmacctd:latest
- ~# docker run -v /path/to/pmacctd.conf:/etc/pmacct/pmacctd.conf pmacct/pmacctd
+ ~# docker pull pmacct/sfacctd:latest
+ ~# docker run -v /path/to/sfacctd.conf:/etc/pmacct/sfacctd.conf pmacct/sfacctd
 ```
 
-Available daemon containers:
-
-  * [nfacctd](https://hub.docker.com/r/pmacct/nfacctd)
-  * [pmacctd](https://hub.docker.com/r/pmacct/pmacctd)
-  * [pmbgpd](https://hub.docker.com/r/pmacct/pmbgpd)
-  * [pmbmpd](https://hub.docker.com/r/pmacct/pmbmpd)
-  * [pmtelemetryd](https://hub.docker.com/r/pmacct/pmtelemetryd)
-  * [sfacctd](https://hub.docker.com/r/pmacct/sfacctd)
-  * [uacctd](https://hub.docker.com/r/pmacct/uacctd)
-
-All daemons come with all plugins and supports compiled-in.
-
-Tags:
-
-  * `latest`: latest stable image of that container
-  * `vX.Y.Z`: version specific tag. This container will always exist, once released.
-  * `bleeding-edge`: only for the brave. Latest commit on `master`. This container
-                     is not recommended to be used in production.
-
-A special container, [base](https://hub.docker.com/r/pmacct/base) container,
-that is the base of the rest of containers with all pmacct daemons installed and
-`bash` as an entry point. It can be useful to debug and to create your customized
-docker image.
+For more details, options and troubleshooting please read the [Docker documentation section](docs/DOCKER.md)
 
 # BUILDING
 
