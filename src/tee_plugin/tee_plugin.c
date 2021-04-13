@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -625,8 +625,8 @@ void Tee_init_socks()
         }
       }
 
-      target->fd = Tee_prepare_sock((struct sockaddr *) &target->dest, target->dest_len, receivers.pools[pool_idx].src_port,
-				    config.tee_transparent, config.tee_pipe_size);
+      target->fd = Tee_prepare_sock((struct sockaddr *) &target->dest, target->dest_len, config.nfprobe_source_ip,
+				    receivers.pools[pool_idx].src_port, config.tee_transparent, config.tee_pipe_size);
 
       if (config.debug) {
 	struct host_addr recv_addr;
@@ -697,7 +697,7 @@ void Tee_init_zmq_host(struct p_zmq_host *zmq_host, char *zmq_address, u_int32_t
 }
 #endif
 
-int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, u_int16_t src_port, int transparent, int pipe_size)
+int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, char *src_ip, u_int16_t src_port, int transparent, int pipe_size)
 {
   int s, ret = 0;
 
@@ -708,8 +708,14 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, u_int16_t src_port, i
     memset(&source_ip, 0, sizeof(source_ip));
     memset(&ssource_ip, 0, sizeof(ssource_ip));
 
-    if (src_port) { 
-      source_ip.family = addr->sa_family; 
+    if (src_ip || src_port) {
+      if (src_ip) {
+	str_to_addr(src_ip, &source_ip);
+      }
+      else {
+	source_ip.family = addr->sa_family;
+      }
+
       ret = addr_to_sa((struct sockaddr *) &ssource_ip, &source_ip, src_port);
     }
 
@@ -718,8 +724,9 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, u_int16_t src_port, i
       exit_gracefully(1);
     }
 
-    if (ret && bind(s, (struct sockaddr *) &ssource_ip, sizeof(ssource_ip)) == -1)
+    if (ret && bind(s, (struct sockaddr *) &ssource_ip, sizeof(ssource_ip)) == -1) {
       Log(LOG_WARNING, "WARN ( %s/%s ): bind() error: %s\n", config.name, config.type, strerror(errno));
+    }
   }
   else {
     if ((s = socket(addr->sa_family, SOCK_RAW, IPPROTO_RAW)) == -1) {

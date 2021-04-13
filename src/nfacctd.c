@@ -921,7 +921,7 @@ int main(int argc,char **argv, char **envp)
 	exit_gracefully(1);
       }
 
-      tee_templates.fd = Tee_prepare_sock((struct sockaddr *) &tee_templates.dest, tee_templates.dest_len, FALSE, TRUE, FALSE);
+      tee_templates.fd = Tee_prepare_sock((struct sockaddr *) &tee_templates.dest, tee_templates.dest_len, NULL, FALSE, TRUE, FALSE);
     }
   }
 
