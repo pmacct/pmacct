@@ -2,6 +2,10 @@
 #
 # If missing 'avro' read how to download it at: 
 # https://avro.apache.org/docs/1.8.1/gettingstartedpython.html
+#
+# 'avro' package is deemed slow. For production scenarios, do consider
+# implementing this script using the 'fastavro' Python package that is
+# documented here: https://fastavro.readthedocs.io/en/latest/
 
 import sys, os, getopt, io
 from avro.datafile import DataFileReader
