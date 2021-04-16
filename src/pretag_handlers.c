@@ -39,7 +39,7 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
   struct host_addr a;
   char *endptr = NULL, *incptr;
   pm_id_t j = 0, z = 0;
-  int x, inc = 0;
+  int x, inc = 0, len = 0;
 
   e->id = 0;
   e->flags = FALSE;
@@ -88,11 +88,19 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
       *incptr = '\0';
     }
 
+    len = strlen(value);
+    for (x = 0; x < len; x++) {
+      if (!isdigit(value[x])) {
+	Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid set_tag/id specified (non-digit chars).\n", config.name, config.type, filename);
+	return TRUE;
+      }
+    }
+
     j = strtoull(value, &endptr, 10);
     if (j > UINT64_MAX) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid set_tag/id specified.\n", config.name, config.type, filename);
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid set_tag/id specified (too big).\n", config.name, config.type, filename);
       return TRUE;
-    } 
+    }
   }
 
   e->id = j; 
@@ -118,16 +126,24 @@ int PT_map_id2_handler(char *filename, struct id_entry *e, char *value, struct p
 {
   char *endptr = NULL, *incptr;
   pm_id_t j;
-  int x, inc = 0;
+  int x, inc = 0, len = 0;
 
   if ((incptr = strstr(value, "++"))) {
     inc = TRUE;
     *incptr = '\0';
   }
 
+  len = strlen(value);
+  for (x = 0; x < len; x++) {
+    if (!isdigit(value[x])) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid set_tag2/id2 specified (non-digit chars).\n", config.name, config.type, filename);
+      return TRUE;
+    }
+  }
+
   j = strtoull(value, &endptr, 10);
   if (j > UINT64_MAX) {
-    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid set_tag2/id2 specified.\n", config.name, config.type, filename);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid set_tag2/id2 specified (too big).\n", config.name, config.type, filename);
     return TRUE;
   }
   e->id2 = j;
