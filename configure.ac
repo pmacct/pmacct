@@ -984,6 +984,10 @@ else
 	fi
 fi
 
+if test x"$USING_SQL" = x"yes"; then
+	AC_CHECK_LIB([z], [zlibVersion], [], [AC_MSG_ERROR([ERROR: missing zlib. Requirement for building SQL plugins.])])
+fi
+
 LIBS="${LIBS} -lm -lpthread"
 
 dnl Checks for header files.
