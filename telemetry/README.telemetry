@@ -56,11 +56,6 @@ configuration in order to export Streaming Telemetry data. Quickstart
 guides for collection are in telemetry/decoders/v1/README.grpc_dialout
 and telemetry/decoders/v3/README.pmgrpcd
 
-Further reading and more information, including a reference architecture
-diagram, is available on the pmacct GitHub wiki at the following page:
-
-https://github.com/pmacct/pmacct/wiki/Streaming-Telemetry 
- 
 ROUTER CONFIGS.
 IOS XR configuration example, gRPC JSON encoding suitable (at time of
 this writing) for Openconfig YANG models, ie. openconfig-interface and
