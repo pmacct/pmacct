@@ -115,6 +115,25 @@ telemetry
 #
 return
 
+Huawei VRP configuration example, JSON over UDP-notif (draft-ietf-netconf-udp-notif) transport:
+
+telemetry
+ udp-model udp-notif
+ #
+ sensor-group SENSOR
+  sensor-path huawei-ifm:ifm/interfaces/interface/ifStatistics
+ #
+ destination-group COLLECTOR
+  ipv4-address X.X.X.X port 10000 vpn-instance MANAGEMENT_VRF
+ #
+ subscription SUBSCRIPTION
+  protocol udp
+  encoding json
+  sensor-group SENSOR
+  destination-group COLLECTOR
+#
+return
+
 Juniper Native format telemetry configuration example, GPB encoding over UDP transport:
 
 services {
