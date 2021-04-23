@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -70,6 +70,7 @@ extern int check_bosbit(u_char *);
 extern u_int32_t decode_mpls_label(u_char *);
 extern void encode_mpls_label(char *, u_int32_t);
 extern int timeval_cmp(struct timeval *, struct timeval *);
+extern void signal_kittens(int, int);
 extern void exit_all(int);
 extern void exit_plugin(int);
 extern void exit_gracefully(int);

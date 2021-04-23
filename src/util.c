@@ -1423,24 +1423,48 @@ int timeval_cmp(struct timeval *a, struct timeval *b)
   return INT_MIN; /* silence compiler warning */
 }
 
+void signal_kittens(int sig, int amicore_check)
+{
+  struct plugins_list_entry *list = plugins_list;
+
+  /* round #1: safety check, am i the core process? */
+  if (amicore_check) {
+    while (list) {
+      if (!memcmp(list->type.string, "core", sizeof("core"))) {
+	if (list->pid != getpid()) {
+	  return;
+	}
+      }
+    }
+
+    list = list->next;
+  }
+
+  /* round #2: do it */
+  list = plugins_list;
+
+  while (list) {
+    if (memcmp(list->type.string, "core", sizeof("core"))) {
+      kill(list->pid, sig);
+    }
+
+    list = list->next;
+  }
+}
+
 /*
  * exit_all(): Core Process exit lane. Not meant to be a nice shutdown method: it is
  * an exit() replacement that sends kill signals to the plugins.
  */
 void exit_all(int status)
 {
-  struct plugins_list_entry *list = plugins_list;
-
 #if defined (SOLARIS)
   signal(SIGCHLD, SIG_IGN);
 #else
   signal(SIGCHLD, ignore_falling_child);
 #endif
 
-  while (list) {
-    if (memcmp(list->type.string, "core", sizeof("core"))) kill(list->pid, SIGKILL);
-    list = list->next;
-  }
+  signal_kittens(SIGKILL, TRUE);
 
   wait(NULL);
   if (config.pidfile) remove_pid_file(config.pidfile);

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -39,7 +39,7 @@ struct timeval reload_map_tstamp;
 struct child_ctl2 dump_writers;
 int debug;
 struct configuration config; /* global configuration structure */
-struct plugins_list_entry *plugins_list; /* linked list of each plugin configuration */
+struct plugins_list_entry *plugins_list = NULL; /* linked list of each plugin configuration */
 pid_t failed_plugins[MAX_N_PLUGINS]; /* plugins failed during startup phase */
 u_char dummy_tlhdr[16], empty_mem_area_256b[SRVBUFLEN];
 struct pm_pcap_device device;
