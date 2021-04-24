@@ -34,6 +34,7 @@ extern int cfg_key_syslog(char *, char *, char *);
 extern int cfg_key_logfile(char *, char *, char *);
 extern int cfg_key_pidfile(char *, char *, char *);
 extern int cfg_key_daemonize(char *, char *, char *);
+extern int cfg_key_propagate_signals(char *, char *, char *);
 extern int cfg_key_proc_name(char *, char *, char *);
 extern int cfg_key_proc_priority(char *, char *, char *);
 extern int cfg_key_cluster_name(char *, char *, char *);

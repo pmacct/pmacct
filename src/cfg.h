@@ -86,6 +86,7 @@ struct configuration {
   char *type;
   int type_id;
   int is_forked;
+  int propagate_signals;
   int pmacctd_nonroot;
   char *proc_name;
   int proc_priority;

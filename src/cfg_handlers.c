@@ -164,6 +164,20 @@ int cfg_key_daemonize(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_propagate_signals(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.propagate_signals = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'propagate_signals'. Globalized.\n", filename); 
+
+  return changes;
+}
+
 int cfg_key_pcap_arista_trailer_offset(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
