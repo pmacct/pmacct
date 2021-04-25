@@ -381,6 +381,11 @@ DESC:		Daemons gracefully shut down (core process and all plugins) if either the
 		and regardless there may be more plugins still active.
 DEFAULT:	false
 
+KEY:		propagate_signals [GLOBAL]
+VALUES:		[ true | false ]
+DESC:		When a signal is sent to the Core Process, propagate it to all active plugins;
+		this may come handy in scenarios where pmacct is run inside a (Docker) container.
+DEFAULT:	false
 
 KEY:		files_umask 
 DESC:		Defines the mask for newly created files (log, pid, etc.) and their related directory
