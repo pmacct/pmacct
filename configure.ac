@@ -88,13 +88,6 @@ case "$host_os" in
     ;;
 esac
 
-dnl cpu specific flags
-case "$host_cpu" in
-  sun*)
-  AC_DEFINE(CPU_sparc, 1)
-  ;;
-esac
-
 AC_CHECK_PROG(MAKE, gmake, gmake)
 if test x"$MAKE" = x""; then
   AC_CHECK_PROG(MAKE, make, make)

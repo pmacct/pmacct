@@ -117,7 +117,9 @@
 #define INET6_ADDRSTRLEN 46
 #endif
 
-#if (defined SOLARIS) && (defined CPU_sparc)
+#if defined IM_BIG_ENDIAN
+#define ntohs(x) (x)
+#define ntohl(x) (x)
 #define htons(x) (x)
 #define htonl(x) (x)
 #endif
