@@ -3100,6 +3100,25 @@ DESC:           Name of the Kafka topic to consume JSON-encoded Streaming Teleme
 		info.
 DEFAULT:        none
 
+KEY:		telemetry_daemon_udp_notif_ip [GLOBAL]
+DESC:		Defines the IP address to listen to for UDP-Notif, a proposed standard at IETF
+		for UDP-based Transport for Configured Subscriptions. Expects as value an IPv4/
+                IPv6 address. UDP-Notif collection relies on the Unyte UDP-Notif C collector
+		library developed by INSA Lyon and publicly available on GitHub at this URL:
+		https://github.com/insa-unyte/udp-notif-c-collector
+DEFAULT:	none
+
+KEY:		telemetry_daemon_udp_notif_port [GLOBAL]
+DESC:		Defines the UDP port to bind to for UDP-Notif.
+DEFAULT:	none
+
+KEY:		telemetry_daemon_udp_notif_nmsgs [GLOBAL]
+DESC:		Defines the buffer of messages to receive at once for UDP-Notif. The default, 1,
+		is excellent for lab environments, PoC scenarios and no-latency processing. The
+		Unyte UDP-Notif C collector recommended default is 10: for production scenarios
+		this number may need to be raised for increased processing efficiency.
+DEFAULT:	1
+
 KEY:            telemetry_daemon_msglog_output [GLOBAL]
 VALUES:         [ json ]
 DESC:           Defines output format for Streaming Telemetry data (pmtelemetryd). Only JSON format

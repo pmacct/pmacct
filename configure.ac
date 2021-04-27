@@ -948,7 +948,7 @@ AC_ARG_ENABLE(unyte-udp-notif,
     _save_LIBS="$LIBS"
     LIBS="$LIBS $UNYTE_UDP_NOTIF_LIBS -lpthread"
     AC_CHECK_LIB([unyte-udp-notif], [unyte_start_collector], [], [AC_MSG_ERROR([
-	ERROR: missing unyte-udp-notif library. Refer to: XXX
+	ERROR: missing unyte-udp-notif library. Refer to: https://github.com/insa-unyte/udp-notif-c-collector
     ])])
     LIBS="$_save_LIBS"
     _save_CFLAGS="$CFLAGS"
