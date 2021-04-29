@@ -111,16 +111,20 @@ dnl XXX: switch to manually define this feature
 ac_cv_endianess="unknown"
 if test x"$ac_cv_endianess" = x"unknown"; then
   AC_MSG_CHECKING(endianess)
-  AC_TRY_RUN([main () {
+  AC_TRY_RUN([
+  #include <stdlib.h>
 
-  union
-  {
-    long l;
-    char c[sizeof (long)];
-  } u;
-  u.l = 1;
-  exit (u.c[sizeof (long) - 1] == 1);
-  }], ac_cv_endianess="little", ac_cv_endianess="big", ac_cv_endianess="little")
+  int main () {
+    union {
+      long l;
+      char c[sizeof (long)];
+    } u;
+
+    u.l = 1;
+
+    exit (u.c[sizeof (long) - 1] == 1);
+  }
+  ], ac_cv_endianess="little", ac_cv_endianess="big", ac_cv_endianess="little")
   AC_MSG_RESULT($ac_cv_endianess)
 fi
 
