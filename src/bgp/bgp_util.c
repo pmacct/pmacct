@@ -43,6 +43,32 @@ int bgp_afi2family (int afi)
   return SUCCESS;
 }
 
+u_int16_t bgp_rd_type_get(u_int16_t type)
+{
+  return (type & RD_TYPE_MASK);
+}
+
+u_int16_t bgp_rd_source_get(u_int16_t type)
+{
+  return (type & RD_SOURCE_MASK);
+}
+
+const char *bgp_rd_source_print(u_int16_t type)
+{
+  switch(type) {
+  case RD_SOURCE_BGP:
+    return bgp_rd_source[1];
+  case RD_SOURCE_BMP:
+    return bgp_rd_source[2];
+  case RD_SOURCE_FLOW:
+    return bgp_rd_source[3];
+  default:
+    return bgp_rd_source[0];
+  };
+
+  return NULL;
+}
+
 int bgp_rd_ntoh(rd_t *rd)
 {
   struct rd_ip  *rdi;

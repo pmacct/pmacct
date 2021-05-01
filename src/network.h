@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -246,11 +246,20 @@ typedef u_int16_t as16_t;
 typedef u_int16_t afi_t;
 typedef u_int8_t safi_t;
 
+/* RD: standard */
 #define RD_LEN		8
 #define RD_TYPE_AS      0
 #define RD_TYPE_IP      1
 #define RD_TYPE_AS4     2
-#define RD_TYPE_VRFID	65535
+
+/* RD: squat squat */
+#define RD_TYPE_VRFID	0x1000
+#define RD_TYPE_MASK	0x1FFF
+
+#define RD_SOURCE_FLOW	0x2000
+#define RD_SOURCE_BGP	0x4000
+#define RD_SOURCE_BMP	0x8000
+#define RD_SOURCE_MASK	0xE000
 
 struct rd_as
 {

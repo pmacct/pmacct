@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -298,6 +298,14 @@ static const char __attribute__((unused)) *bgp_origin[] = {
   "i",
   "e",
   "u",
+  ""
+};
+
+static const char __attribute__((unused)) *bgp_rd_source[] = {
+  "unknown",
+  "bgp",
+  "bmp",
+  "flow",
   ""
 };
 
