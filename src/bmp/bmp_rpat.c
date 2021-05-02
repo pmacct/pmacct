@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -166,6 +166,7 @@ void bmp_rpat_common_hdr_get_rd(struct bmp_rpat_common_hdr *brch, rd_t *rd)
   if (brch && rd) {
     memcpy(rd, brch->rd, RD_LEN);
     bgp_rd_ntoh(rd);
+    bgp_rd_source_set(&rd->type, RD_SOURCE_BMP);
   }
 }
 

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -1661,7 +1661,10 @@ void mpls_vpn_rd_frommap_handler(struct channels_list_entry *chptr, struct packe
 {
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
-  if (pbgp && pptrs->bitr) memcpy(&pbgp->mpls_vpn_rd, &pptrs->bitr, sizeof(rd_t));
+  if (pbgp && pptrs->bitr) {
+    memcpy(&pbgp->mpls_vpn_rd, &pptrs->bitr, sizeof(rd_t));
+    bgp_rd_source_set(&pbgp->mpls_vpn_rd.type, RD_SOURCE_FLOW);
+  }
 }
 
 void timestamp_start_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -3602,6 +3605,7 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
         pbgp->mpls_vpn_rd.val = ntohl(ingress_vrfid);
         if (pbgp->mpls_vpn_rd.val) {
 	  pbgp->mpls_vpn_rd.type = RD_TYPE_VRFID;
+	  bgp_rd_source_set(&pbgp->mpls_vpn_rd.type, RD_SOURCE_FLOW);
 	}
       }
     }
@@ -3617,6 +3621,7 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
         pbgp->mpls_vpn_rd.val = ntohl(egress_vrfid);
         if (pbgp->mpls_vpn_rd.val) {
 	  pbgp->mpls_vpn_rd.type = RD_TYPE_VRFID;
+	  bgp_rd_source_set(&pbgp->mpls_vpn_rd.type, RD_SOURCE_FLOW);
 	}
       }
     }
@@ -3638,6 +3643,7 @@ void NF_mpls_vpn_rd_handler(struct channels_list_entry *chptr, struct packet_ptr
     if (tpl->tpl[NF9_MPLS_VPN_RD].len && !pbgp->mpls_vpn_rd.val) {
       memcpy(&pbgp->mpls_vpn_rd, pptrs->f_data+tpl->tpl[NF9_MPLS_VPN_RD].off, MIN(tpl->tpl[NF9_MPLS_VPN_RD].len, 8));
       bgp_rd_ntoh(&pbgp->mpls_vpn_rd);
+      bgp_rd_source_set(&pbgp->mpls_vpn_rd.type, RD_SOURCE_FLOW);
     }
     break;
   default:

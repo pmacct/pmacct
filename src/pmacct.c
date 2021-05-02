@@ -47,6 +47,7 @@ void client_counters_merge(void *, int, int, int, int, int);
 int pmc_sanitize_buf(char *);
 void pmc_trim_all_spaces(char *);
 char *pmc_extract_token(char **, int);
+u_int16_t pmc_bgp_rd_type_get(u_int16_t);
 int pmc_bgp_rd2str(char *, rd_t *);
 int pmc_bgp_str2rd(rd_t *, char *);
 char *pmc_compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
@@ -3170,6 +3171,11 @@ void client_counters_merge(void *table, int start, int middle, int end, int size
   free(v2);
 }
 
+u_int16_t pmc_bgp_rd_type_get(u_int16_t type)
+{
+  return (type & RD_TYPE_MASK);
+}
+
 int pmc_bgp_rd2str(char *str, rd_t *rd)
 {
   struct rd_ip  *rdi;
@@ -3178,7 +3184,7 @@ int pmc_bgp_rd2str(char *str, rd_t *rd)
   struct host_addr a;
   char ip_address[INET6_ADDRSTRLEN];
 
-  switch (rd->type) {
+  switch (pmc_bgp_rd_type_get(rd->type)) {
   case RD_TYPE_AS:
     rda = (struct rd_as *) rd;
     sprintf(str, "%u:%u:%u", rda->type, rda->as, rda->val);

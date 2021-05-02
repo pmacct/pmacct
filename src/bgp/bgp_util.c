@@ -53,9 +53,23 @@ u_int16_t bgp_rd_source_get(u_int16_t type)
   return (type & RD_SOURCE_MASK);
 }
 
+void bgp_rd_source_set(u_int16_t *rd_type, u_int16_t source)
+{
+  u_int16_t type;
+
+  if (!rd_type) return;
+
+  /* saving the type info, if any yet */
+  type = bgp_rd_type_get((*rd_type));
+
+  /* setting the source info, re-applying type */
+  (*rd_type) = source;
+  (*rd_type) &= type;
+}
+
 const char *bgp_rd_source_print(u_int16_t type)
 {
-  switch(type) {
+  switch(bgp_rd_source_get(type)) {
   case RD_SOURCE_BGP:
     return bgp_rd_source[1];
   case RD_SOURCE_BMP:
@@ -110,7 +124,7 @@ int bgp_rd2str(char *str, rd_t *rd)
   struct host_addr a;
   char ip_address[INET6_ADDRSTRLEN];
 
-  switch (rd->type) {
+  switch (bgp_rd_type_get(rd->type)) {
   case RD_TYPE_AS:
     rda = (struct rd_as *) rd;
     sprintf(str, "%u:%u:%u", rda->type, rda->as, rda->val); 
