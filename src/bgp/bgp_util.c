@@ -123,22 +123,23 @@ int bgp_rd2str(char *str, rd_t *rd)
   struct rd_as4 *rda4;
   struct host_addr a;
   char ip_address[INET6_ADDRSTRLEN];
+  u_int16_t type = bgp_rd_type_get(rd->type);
 
-  switch (bgp_rd_type_get(rd->type)) {
+  switch (type) {
   case RD_TYPE_AS:
     rda = (struct rd_as *) rd;
-    sprintf(str, "%u:%u:%u", rda->type, rda->as, rda->val); 
+    sprintf(str, "%u:%u:%u", type, rda->as, rda->val);
     break;
   case RD_TYPE_IP:
     rdi = (struct rd_ip *) rd;
     a.family = AF_INET;
     a.address.ipv4.s_addr = rdi->ip.s_addr;
     addr_to_str(ip_address, &a);
-    sprintf(str, "%u:%s:%u", rdi->type, ip_address, rdi->val); 
+    sprintf(str, "%u:%s:%u", type, ip_address, rdi->val);
     break;
   case RD_TYPE_AS4:
     rda4 = (struct rd_as4 *) rd;
-    sprintf(str, "%u:%u:%u", rda4->type, rda4->as, rda4->val); 
+    sprintf(str, "%u:%u:%u", type, rda4->as, rda4->val);
     break;
   case RD_TYPE_VRFID:
     rda = (struct rd_as *) rd; 

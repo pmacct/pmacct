@@ -199,8 +199,6 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
         bgp_rd2str(rd_str, &ri->attr_extra->rd);
 	json_object_set_new_nocheck(obj, "rd", json_string(rd_str));
-
-        bgp_rd2str(rd_str, &ri->attr_extra->rd);
 	json_object_set_new_nocheck(obj, "rd_origin", json_string(bgp_rd_origin_print(ri->attr_extra->rd.type)));
       }
 

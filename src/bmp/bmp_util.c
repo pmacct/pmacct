@@ -374,6 +374,7 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
 
       bgp_rd2str(rd_str, &bmed_bmp->rd);
       json_object_set_new_nocheck(obj, "rd", json_string(rd_str));
+      json_object_set_new_nocheck(obj, "rd_origin", json_string(bgp_rd_origin_print(bmed_bmp->rd.type)));
     }
 #endif
   }
@@ -444,9 +445,16 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
       pm_avro_check(avro_value_get_by_name(obj, "rd", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
       pm_avro_check(avro_value_set_string(&p_avro_branch, rd_str));
+
+      pm_avro_check(avro_value_get_by_name(obj, "rd_origin", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+      pm_avro_check(avro_value_set_string(&p_avro_branch, bgp_rd_origin_print(bmed_bmp->rd.type)));
     }
     else {
       pm_avro_check(avro_value_get_by_name(obj, "rd", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+
+      pm_avro_check(avro_value_get_by_name(obj, "rd_origin", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 #endif

@@ -309,6 +309,7 @@ int bmp_log_msg_rpat(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
 
       bgp_rd2str(rd_str, &bdata->chars.rd);
       json_object_set_new_nocheck(obj, "rd", json_string(rd_str));
+      json_object_set_new_nocheck(obj, "rd_origin", json_string(bgp_rd_origin_print(bdata->chars.rd.type)));
     }
 
     addr_to_str(ip_address, &blrpat->prefix);
