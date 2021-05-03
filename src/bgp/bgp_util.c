@@ -64,7 +64,7 @@ void bgp_rd_origin_set(u_int16_t *rd_type, u_int16_t source)
 
   /* setting the source info, re-applying type */
   (*rd_type) = source;
-  (*rd_type) &= type;
+  (*rd_type) |= type;
 }
 
 const char *bgp_rd_origin_print(u_int16_t type)
