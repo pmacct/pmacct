@@ -256,10 +256,10 @@ typedef u_int8_t safi_t;
 #define RD_TYPE_VRFID	0x1000
 #define RD_TYPE_MASK	0x1FFF
 
-#define RD_SOURCE_FLOW	0x2000
-#define RD_SOURCE_BGP	0x4000
-#define RD_SOURCE_BMP	0x8000
-#define RD_SOURCE_MASK	0xE000
+#define RD_ORIGIN_FLOW	0x2000
+#define RD_ORIGIN_BGP	0x4000
+#define RD_ORIGIN_BMP	0x8000
+#define RD_ORIGIN_MASK	0xE000
 
 struct rd_as
 {

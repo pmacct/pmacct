@@ -1184,7 +1184,7 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
 	return ERR;
 	break;
       }
-      bgp_rd_source_set(&attr_extra->rd.type, RD_SOURCE_BGP);
+      bgp_rd_origin_set(&attr_extra->rd.type, RD_ORIGIN_BGP);
     
       memcpy(&p.u.prefix, (pnt + labels_size + 8 /* RD */), (psize - (labels_size + 8 /* RD */)));
       p.prefixlen -= (8 * (labels_size + 8 /* RD */));

@@ -301,7 +301,7 @@ static const char __attribute__((unused)) *bgp_origin[] = {
   ""
 };
 
-static const char __attribute__((unused)) *bgp_rd_source[] = {
+static const char __attribute__((unused)) *bgp_rd_origin[] = {
   "unknown",
   "bgp",
   "bmp",

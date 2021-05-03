@@ -48,12 +48,12 @@ u_int16_t bgp_rd_type_get(u_int16_t type)
   return (type & RD_TYPE_MASK);
 }
 
-u_int16_t bgp_rd_source_get(u_int16_t type)
+u_int16_t bgp_rd_origin_get(u_int16_t type)
 {
-  return (type & RD_SOURCE_MASK);
+  return (type & RD_ORIGIN_MASK);
 }
 
-void bgp_rd_source_set(u_int16_t *rd_type, u_int16_t source)
+void bgp_rd_origin_set(u_int16_t *rd_type, u_int16_t source)
 {
   u_int16_t type;
 
@@ -67,17 +67,17 @@ void bgp_rd_source_set(u_int16_t *rd_type, u_int16_t source)
   (*rd_type) &= type;
 }
 
-const char *bgp_rd_source_print(u_int16_t type)
+const char *bgp_rd_origin_print(u_int16_t type)
 {
-  switch(bgp_rd_source_get(type)) {
-  case RD_SOURCE_BGP:
-    return bgp_rd_source[1];
-  case RD_SOURCE_BMP:
-    return bgp_rd_source[2];
-  case RD_SOURCE_FLOW:
-    return bgp_rd_source[3];
+  switch(bgp_rd_origin_get(type)) {
+  case RD_ORIGIN_BGP:
+    return bgp_rd_origin[1];
+  case RD_ORIGIN_BMP:
+    return bgp_rd_origin[2];
+  case RD_ORIGIN_FLOW:
+    return bgp_rd_origin[3];
   default:
-    return bgp_rd_source[0];
+    return bgp_rd_origin[0];
   };
 
   return NULL;

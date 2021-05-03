@@ -1663,7 +1663,7 @@ void mpls_vpn_rd_frommap_handler(struct channels_list_entry *chptr, struct packe
 
   if (pbgp && pptrs->bitr) {
     memcpy(&pbgp->mpls_vpn_rd, &pptrs->bitr, sizeof(rd_t));
-    bgp_rd_source_set(&pbgp->mpls_vpn_rd.type, RD_SOURCE_FLOW);
+    bgp_rd_origin_set(&pbgp->mpls_vpn_rd.type, RD_ORIGIN_FLOW);
   }
 }
 
@@ -3605,7 +3605,7 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
         pbgp->mpls_vpn_rd.val = ntohl(ingress_vrfid);
         if (pbgp->mpls_vpn_rd.val) {
 	  pbgp->mpls_vpn_rd.type = RD_TYPE_VRFID;
-	  bgp_rd_source_set(&pbgp->mpls_vpn_rd.type, RD_SOURCE_FLOW);
+	  bgp_rd_origin_set(&pbgp->mpls_vpn_rd.type, RD_ORIGIN_FLOW);
 	}
       }
     }
@@ -3621,7 +3621,7 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
         pbgp->mpls_vpn_rd.val = ntohl(egress_vrfid);
         if (pbgp->mpls_vpn_rd.val) {
 	  pbgp->mpls_vpn_rd.type = RD_TYPE_VRFID;
-	  bgp_rd_source_set(&pbgp->mpls_vpn_rd.type, RD_SOURCE_FLOW);
+	  bgp_rd_origin_set(&pbgp->mpls_vpn_rd.type, RD_ORIGIN_FLOW);
 	}
       }
     }
@@ -3643,7 +3643,7 @@ void NF_mpls_vpn_rd_handler(struct channels_list_entry *chptr, struct packet_ptr
     if (tpl->tpl[NF9_MPLS_VPN_RD].len && !pbgp->mpls_vpn_rd.val) {
       memcpy(&pbgp->mpls_vpn_rd, pptrs->f_data+tpl->tpl[NF9_MPLS_VPN_RD].off, MIN(tpl->tpl[NF9_MPLS_VPN_RD].len, 8));
       bgp_rd_ntoh(&pbgp->mpls_vpn_rd);
-      bgp_rd_source_set(&pbgp->mpls_vpn_rd.type, RD_SOURCE_FLOW);
+      bgp_rd_origin_set(&pbgp->mpls_vpn_rd.type, RD_ORIGIN_FLOW);
     }
     break;
   default:

@@ -166,7 +166,7 @@ void bmp_rpat_common_hdr_get_rd(struct bmp_rpat_common_hdr *brch, rd_t *rd)
   if (brch && rd) {
     memcpy(rd, brch->rd, RD_LEN);
     bgp_rd_ntoh(rd);
-    bgp_rd_source_set(&rd->type, RD_SOURCE_BMP);
+    bgp_rd_origin_set(&rd->type, RD_ORIGIN_BMP);
   }
 }
 

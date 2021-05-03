@@ -321,7 +321,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, &bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
   bmp_peer_hdr_get_rd(bph, &bdata.chars.rd);
-  bgp_rd_source_set(&bdata.chars.rd.type, RD_SOURCE_BMP);
+  bgp_rd_origin_set(&bdata.chars.rd.type, RD_ORIGIN_BMP);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
 
@@ -1166,7 +1166,7 @@ void bmp_peer_hdr_get_rd(struct bmp_peer_hdr *bph, rd_t *rd)
     if (bph->type == BMP_PEER_TYPE_L3VPN || bph->type == BMP_PEER_TYPE_LOC_RIB) {
       memcpy(rd, bph->rd, RD_LEN);
       bgp_rd_ntoh(rd);
-      bgp_rd_source_set(&rd->type, RD_SOURCE_BMP);
+      bgp_rd_origin_set(&rd->type, RD_ORIGIN_BMP);
     }
   }
 }

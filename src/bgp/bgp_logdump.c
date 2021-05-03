@@ -199,6 +199,9 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
         bgp_rd2str(rd_str, &ri->attr_extra->rd);
 	json_object_set_new_nocheck(obj, "rd", json_string(rd_str));
+
+        bgp_rd2str(rd_str, &ri->attr_extra->rd);
+	json_object_set_new_nocheck(obj, "rd_origin", json_string(bgp_rd_origin_print(ri->attr_extra->rd.type)));
       }
 
       bgp_label2str(label_str, ri->attr_extra->label);
@@ -480,9 +483,16 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "rd", &p_avro_field, NULL));
 	pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
 	pm_avro_check(avro_value_set_string(&p_avro_branch, rd_str));
+
+	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "rd_origin", &p_avro_field, NULL));
+	pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+	pm_avro_check(avro_value_set_string(&p_avro_branch, bgp_rd_origin_print(ri->attr_extra->rd.type)));
       }
       else {
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "rd", &p_avro_field, NULL));
+	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+
+	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "rd_origin", &p_avro_field, NULL));
 	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
 
@@ -498,6 +508,9 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       avro_value_get_discriminant(&p_avro_field, &disc);
 
       if (disc != TRUE) {
+	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+
+        pm_avro_check(avro_value_get_by_name(&p_avro_obj, "rd_origin", &p_avro_field, NULL));
 	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
 
@@ -2125,6 +2138,7 @@ void p_avro_schema_build_bgp_route(avro_schema_t *schema, avro_schema_t *optlong
   avro_schema_record_field_append((*schema), "safi", avro_schema_int());
   avro_schema_record_field_append((*schema), "ip_prefix", (*optstr_s));
   avro_schema_record_field_append((*schema), "rd", (*optstr_s));
+  avro_schema_record_field_append((*schema), "rd_origin", (*optstr_s));
 
   avro_schema_record_field_append((*schema), "bgp_nexthop", (*optstr_s));
   avro_schema_record_field_append((*schema), "as_path", (*optstr_s));
