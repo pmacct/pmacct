@@ -2472,6 +2472,12 @@ void NF_counters_handler(struct channels_list_entry *chptr, struct packet_ptrs *
         pdata->pkt_len = ntohl(t32);
       }
     }
+    else if (tpl->tpl[NF9_INITIATOR_OCTETS].len == 8) {
+      if (chptr->plugin->cfg.tmp_asa_bi_flow) {
+        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_INITIATOR_OCTETS].off, 8);
+        pdata->pkt_len = pm_ntohll(t64);
+      }
+    }
 
     if (tpl->tpl[NF9_IN_PACKETS].len == 4) {
       memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 4);
@@ -2501,6 +2507,12 @@ void NF_counters_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       if (chptr->plugin->cfg.tmp_asa_bi_flow) {
         memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_RESPONDER_OCTETS].off, 4);
         pdata->pkt_num = ntohl(t32);
+      }
+    }
+    else if (tpl->tpl[NF9_RESPONDER_OCTETS].len == 8) {
+      if (chptr->plugin->cfg.tmp_asa_bi_flow) {
+        memcpy(&t64, pptrs->f_data+tpl->tpl[NF9_RESPONDER_OCTETS].off, 8);
+        pdata->pkt_num = pm_ntohll(t64);
       }
     }
 
