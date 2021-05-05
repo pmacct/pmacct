@@ -3202,10 +3202,13 @@ DEFAULT:	0
 
 KEY:		tmp_asa_bi_flow
 VALUES:		[ true | false ]
-DESC:		Bi-flows use two counters to report counters, ie. bytes and packets, in forward and
-		reverse directions. This hack (ab)uses the packets field in order to store the extra
-		bytes counter. The patch specifically targets NetFlow v9/IPFIX field types #231 and
-		#232 and has been tested against a Cisco ASA export.
+DESC:		Bi-flows use two sets of counters to report bytes and packets, in initiator and
+		responder directions. This makes a total of four counters (2 for packets, 2 for
+		bytes) whereas pmacct does support two only (1 for packets, 1 for bytes). This
+		hack (ab)uses the packets field in order to store the extra bytes counter, more
+		specifically the bytes counter is used for the Initiator bytes and the packets
+		counter is used for the Responder bytes. The patch specifically targets NetFlow
+		v9/IPFIX field types #231 and #232 and has been tested against Cisco ASA exports.
 DEFAULT:	false
 
 KEY:		tmp_bgp_lookup_compare_ports
