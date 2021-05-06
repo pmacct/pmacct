@@ -289,11 +289,16 @@ typedef u_int32_t path_id_t;
 
 /* class status */
 struct class_st {
-   u_int8_t tentatives;	
-   struct timeval stamp;	/* accumulator timestamp */
-   u_int32_t ba;		/* bytes accumulator */
-   u_int16_t pa;		/* packet accumulator */
-   u_int8_t fa;			/* flow accumulator */
+  u_int8_t tentatives;
+  struct timeval stamp;	/* accumulator timestamp */
+  u_int32_t ba;		/* bytes accumulator */
+  u_int16_t pa;		/* packet accumulator */
+  u_int8_t fa;		/* flow accumulator */
+};
+
+struct flow_chars {
+  u_int8_t traffic_type;
+  u_int8_t is_bi;
 };
 
 struct packet_ptrs {
@@ -315,7 +320,7 @@ struct packet_ptrs {
   u_int16_t l3_proto; /* layer-3 protocol: IPv4, IPv6 */
   int (*l3_handler)(register struct packet_ptrs *); /* layer-3 protocol handler */
   u_int16_t l4_proto; /* layer-4 protocol */
-  u_int8_t flow_type; /* Flow, NAT event, etc. */
+  struct flow_chars flow_type; /* Flow, NAT event, etc. */
   pm_id_t tag; /* pre tag id */
   u_int8_t have_tag; /* have tag? */
   pm_id_t tag2; /* pre tag id2 */

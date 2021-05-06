@@ -1959,7 +1959,7 @@ int pretag_comms_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_sample_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
-  u_int8_t flow_type = pptrs->flow_type;
+  u_int8_t flow_type = pptrs->flow_type.traffic_type;
 
   if (entry->key.sample_type.n == PM_FTYPE_TRAFFIC) {
     if (flow_type >= PM_FTYPE_TRAFFIC && flow_type <= PM_FTYPE_TRAFFIC_MAX) {

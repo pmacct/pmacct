@@ -68,7 +68,7 @@ void pm_pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *bu
     pptrs.blp_table = cb_data->blp_table;
     pptrs.bmed_table = cb_data->bmed_table;
     pptrs.bta_table = cb_data->bta_table;
-    pptrs.flow_type = PM_FTYPE_TRAFFIC;
+    pptrs.flow_type.traffic_type = PM_FTYPE_TRAFFIC;
 
     assert(cb_data);
 
@@ -83,7 +83,7 @@ void pm_pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *bu
       memcpy(&tpptrs->pkthdr, &pptrs.pkthdr, sizeof(struct pcap_pkthdr));
 
       tpptrs->packet_ptr = (u_char *) buf;
-      tpptrs->flow_type = PM_FTYPE_TRAFFIC;
+      tpptrs->flow_type.traffic_type = PM_FTYPE_TRAFFIC;
     }
 
     /* direction */
@@ -356,7 +356,7 @@ int ip_handler(register struct packet_ptrs *pptrs)
   quit:
 
   if (ret) {
-    pptrs->flow_type = PM_FTYPE_IPV4;
+    pptrs->flow_type.traffic_type = PM_FTYPE_IPV4;
   }
  
   return ret;
@@ -521,7 +521,7 @@ int ip6_handler(register struct packet_ptrs *pptrs)
   quit:
 
   if (ret) {
-    pptrs->flow_type = PM_FTYPE_IPV6;
+    pptrs->flow_type.traffic_type = PM_FTYPE_IPV6;
   }
 
   return ret;
@@ -784,10 +784,10 @@ void set_index_pkt_ptrs(struct packet_ptrs *pptrs)
 void PM_evaluate_flow_type(struct packet_ptrs *pptrs)
 {
   if (pptrs->l3_proto == ETHERTYPE_IP) {
-    pptrs->flow_type = PM_FTYPE_IPV4;
+    pptrs->flow_type.traffic_type = PM_FTYPE_IPV4;
   }
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
-    pptrs->flow_type = PM_FTYPE_IPV6;
+    pptrs->flow_type.traffic_type = PM_FTYPE_IPV6;
   }
 }
 

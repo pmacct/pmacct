@@ -494,7 +494,7 @@ struct NF_dissect {
 extern void process_v5_packet(unsigned char *, u_int16_t, struct packet_ptrs *, struct plugin_requests *, u_int16_t, struct NF_dissect *);
 extern void process_v9_packet(unsigned char *, u_int16_t, struct packet_ptrs_vector *, struct plugin_requests *, u_int16_t, struct NF_dissect *, int *);
 extern void process_raw_packet(unsigned char *, u_int16_t, struct packet_ptrs_vector *, struct plugin_requests *);
-extern u_int8_t NF_evaluate_flow_type(struct template_cache_entry *, struct packet_ptrs *);
+extern void NF_evaluate_flow_type(struct flow_chars *, struct template_cache_entry *, struct packet_ptrs *);
 extern u_int16_t NF_evaluate_direction(struct template_cache_entry *, struct packet_ptrs *);
 extern void NF_process_classifiers(struct packet_ptrs *, struct packet_ptrs *, unsigned char *, struct template_cache_entry *);
 extern pm_class_t NF_evaluate_classifiers(struct xflow_status_entry_class *, pm_class_t *, struct xflow_status_entry *);

@@ -1586,7 +1586,7 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
   pptrs->f_status_g = NULL;
 
   reset_mac(pptrs);
-  pptrs->flow_type = PM_FTYPE_TRAFFIC;
+  pptrs->flow_type.traffic_type = PM_FTYPE_TRAFFIC;
 
   if (tee_dissect) {
     tee_dissect->hdrVersion = version;
@@ -2107,7 +2107,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  pptrs->f_data = pkt;
 	  pptrs->f_tpl = (u_char *) tpl;
 	  reset_net_status_v(pptrsv);
-	  pptrs->flow_type = NF_evaluate_flow_type(tpl, pptrs);
+	  NF_evaluate_flow_type(&pptrs->flow_type, tpl, pptrs);
 
 	  exec_plugins(pptrs, req);
 	}
@@ -2155,11 +2155,11 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  goto finalize_record;
 	}
 
-	pptrs->flow_type = NF_evaluate_flow_type(tpl, pptrs);
+	NF_evaluate_flow_type(&pptrs->flow_type, tpl, pptrs);
 	direction = NF_evaluate_direction(tpl, pptrs);
 
 	/* we need to understand the IP protocol version in order to build the fake packet */ 
-	switch (pptrs->flow_type) {
+	switch (pptrs->flow_type.traffic_type) {
 	case PM_FTYPE_IPV4:
 	  if (req->bpf_filter) {
 	    reset_mac(pptrs);
@@ -2207,7 +2207,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  pptrsv->v6.f_header = pptrs->f_header;
 	  pptrsv->v6.f_data = pptrs->f_data;
 	  pptrsv->v6.f_tpl = pptrs->f_tpl;
-	  pptrsv->v6.flow_type = pptrs->flow_type;
+	  memcpy(&pptrsv->v6.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
 
 	  if (req->bpf_filter) {
 	    reset_mac(&pptrsv->v6);
@@ -2255,7 +2255,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  pptrsv->vlan4.f_header = pptrs->f_header;
 	  pptrsv->vlan4.f_data = pptrs->f_data;
 	  pptrsv->vlan4.f_tpl = pptrs->f_tpl;
-	  pptrsv->vlan4.flow_type = pptrs->flow_type;
+	  memcpy(&pptrsv->vlan4.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
 
 	  if (req->bpf_filter) {
 	    reset_mac_vlan(&pptrsv->vlan4); 
@@ -2305,7 +2305,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  pptrsv->vlan6.f_header = pptrs->f_header;
 	  pptrsv->vlan6.f_data = pptrs->f_data;
 	  pptrsv->vlan6.f_tpl = pptrs->f_tpl;
-	  pptrsv->vlan6.flow_type = pptrs->flow_type;
+	  memcpy(&pptrsv->vlan6.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
 
 	  if (req->bpf_filter) {
 	    reset_mac_vlan(&pptrsv->vlan6);
@@ -2355,7 +2355,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           pptrsv->mpls4.f_header = pptrs->f_header;
           pptrsv->mpls4.f_data = pptrs->f_data;
           pptrsv->mpls4.f_tpl = pptrs->f_tpl;
-	  pptrsv->mpls4.flow_type = pptrs->flow_type;
+	  memcpy(&pptrsv->mpls4.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
 
           if (req->bpf_filter) {
 	    u_char *ptr = pptrsv->mpls4.mpls_ptr;
@@ -2415,7 +2415,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  pptrsv->mpls6.f_header = pptrs->f_header;
 	  pptrsv->mpls6.f_data = pptrs->f_data;
 	  pptrsv->mpls6.f_tpl = pptrs->f_tpl;
-	  pptrsv->mpls6.flow_type = pptrs->flow_type;
+	  memcpy(&pptrsv->mpls6.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
 
 	  if (req->bpf_filter) {
 	    u_char *ptr = pptrsv->mpls6.mpls_ptr;
@@ -2474,7 +2474,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  pptrsv->vlanmpls4.f_header = pptrs->f_header;
 	  pptrsv->vlanmpls4.f_data = pptrs->f_data;
 	  pptrsv->vlanmpls4.f_tpl = pptrs->f_tpl;
-	  pptrsv->vlanmpls4.flow_type = pptrs->flow_type;
+	  memcpy(&pptrsv->vlanmpls4.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
 
           if (req->bpf_filter) {
             u_char *ptr = pptrsv->vlanmpls4.mpls_ptr;
@@ -2536,7 +2536,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  pptrsv->vlanmpls6.f_header = pptrs->f_header;
 	  pptrsv->vlanmpls6.f_data = pptrs->f_data;
 	  pptrsv->vlanmpls6.f_tpl = pptrs->f_tpl;
-	  pptrsv->vlanmpls6.flow_type = pptrs->flow_type;
+	  memcpy(&pptrsv->vlanmpls6.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
 
           if (req->bpf_filter) {
             u_char *ptr = pptrsv->vlanmpls6.mpls_ptr;
@@ -2833,10 +2833,12 @@ void NF_compute_once()
   IP6TlSz = sizeof(struct ip6_hdr)+sizeof(struct pm_tlhdr);
 }
 
-u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_ptrs *pptrs)
+void NF_evaluate_flow_type(struct flow_chars *flow_type, struct template_cache_entry *tpl, struct packet_ptrs *pptrs)
 {
   u_int8_t ret = FALSE;
   u_int8_t have_ip_proto = FALSE;
+
+  memset(flow_type, 0, sizeof(struct flow_chars));
 
   /* first round: event vs traffic */
   if (!tpl->tpl[NF9_IN_BYTES].len && !tpl->tpl[NF9_OUT_BYTES].len && !tpl->tpl[NF9_FLOW_BYTES].len &&
@@ -2904,7 +2906,7 @@ u_int8_t NF_evaluate_flow_type(struct template_cache_entry *tpl, struct packet_p
   /* NetFlow/IPFIX option final override */
   if (tpl->template_type == 1) ret = NF9_FTYPE_OPTION;
 
-  return ret;
+  flow_type->traffic_type = ret;
 }
 
 u_int16_t NF_evaluate_direction(struct template_cache_entry *tpl, struct packet_ptrs *pptrs)

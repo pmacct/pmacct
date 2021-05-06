@@ -1711,12 +1711,12 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
   */
   if (sample->gotIPV4 || sample->gotIPV6 || !sample->eth_type) {
     reset_net_status_v(pptrsv);
-    pptrs->flow_type = SF_evaluate_flow_type(pptrs);
+    pptrs->flow_type.traffic_type = SF_evaluate_flow_type(pptrs);
 
     if (config.classifier_ndpi || config.aggregate_primitives) sf_flow_sample_hdr_decode(sample);
 
     /* we need to understand the IP protocol version in order to build the fake packet */
-    switch (pptrs->flow_type) {
+    switch (pptrs->flow_type.traffic_type) {
     case PM_FTYPE_IPV4:
       if (req->bpf_filter) {
         reset_mac(pptrs);
@@ -1752,7 +1752,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       exec_plugins(pptrs, req);
       break;
     case PM_FTYPE_IPV6:
-      pptrsv->v6.flow_type = pptrs->flow_type;
+      memcpy(&pptrsv->v6.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
 
       if (req->bpf_filter) {
         reset_mac(&pptrsv->v6);
@@ -1788,7 +1788,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       exec_plugins(&pptrsv->v6, req);
       break;
     case PM_FTYPE_VLAN_IPV4:
-      pptrsv->vlan4.flow_type = pptrs->flow_type;
+      memcpy(&pptrsv->vlan4.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
 
       if (req->bpf_filter) {
         reset_mac_vlan(&pptrsv->vlan4);
@@ -1825,7 +1825,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       exec_plugins(&pptrsv->vlan4, req);
       break;
     case PM_FTYPE_VLAN_IPV6:
-      pptrsv->vlan6.flow_type = pptrs->flow_type;
+      memcpy(&pptrsv->vlan6.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
 
       if (req->bpf_filter) {
         reset_mac_vlan(&pptrsv->vlan6);
@@ -1862,7 +1862,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       exec_plugins(&pptrsv->vlan6, req);
       break;
     case PM_FTYPE_MPLS_IPV4:
-      pptrsv->mpls4.flow_type = pptrs->flow_type;
+      memcpy(&pptrsv->mpls4.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
 
       if (req->bpf_filter) {
         u_char *ptr = pptrsv->mpls4.mpls_ptr;
@@ -1912,7 +1912,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       exec_plugins(&pptrsv->mpls4, req);
       break;
     case PM_FTYPE_MPLS_IPV6:
-      pptrsv->mpls6.flow_type = pptrs->flow_type;
+      memcpy(&pptrsv->mpls6.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
 
       if (req->bpf_filter) {
         u_char *ptr = pptrsv->mpls6.mpls_ptr;
@@ -1961,7 +1961,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       exec_plugins(&pptrsv->mpls6, req);
       break;
     case PM_FTYPE_VLAN_MPLS_IPV4:
-      pptrsv->vlanmpls4.flow_type = pptrs->flow_type;
+      memcpy(&pptrsv->vlanmpls4.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
 
       if (req->bpf_filter) {
         u_char *ptr = pptrsv->vlanmpls4.mpls_ptr;
@@ -2011,7 +2011,7 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       exec_plugins(&pptrsv->vlanmpls4, req);
       break;
     case PM_FTYPE_VLAN_MPLS_IPV6:
-      pptrsv->vlanmpls6.flow_type = pptrs->flow_type;
+      memcpy(&pptrsv->vlanmpls6.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
 
       if (req->bpf_filter) {
         u_char *ptr = pptrsv->vlanmpls6.mpls_ptr;
