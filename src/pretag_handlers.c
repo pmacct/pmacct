@@ -676,6 +676,31 @@ int PT_map_sample_type_handler(char *filename, struct id_entry *e, char *value, 
   return FALSE;
 }
 
+int PT_map_is_bi_flow_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int value_tf, x = 0;
+
+  e->key.sample_type.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+
+  value_tf = parse_truefalse(value);
+  if (value_tf < 0) {
+    return ERR;
+  }
+
+  e->key.is_bi_flow.n = value_tf;
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_IS_BI_FLOW) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'is_bi_flow' clauses part of the same statement.\n", config.name, config.type, filename);
+      return TRUE;
+    }
+  }
+
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_is_bi_flow_handler;
+
+  return FALSE;
+}
+
 int PT_map_direction_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0;
@@ -1969,6 +1994,14 @@ int pretag_sample_type_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   if (entry->key.sample_type.n == flow_type) return (FALSE | entry->key.sample_type.neg);
   else return (TRUE ^ entry->key.sample_type.neg);
+}
+
+int pretag_is_bi_flow_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+
+  if (entry->key.is_bi_flow.n == pptrs->flow_type.is_bi) return (FALSE | entry->key.is_bi_flow.neg);
+  else return (TRUE ^ entry->key.is_bi_flow.neg);
 }
 
 int pretag_direction_handler(struct packet_ptrs *pptrs, void *unused, void *e)

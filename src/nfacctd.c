@@ -2896,6 +2896,10 @@ void NF_evaluate_flow_type(struct flow_chars *flow_type, struct template_cache_e
     if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len) {
       ret = NF9_FTYPE_DLFS;
     }
+
+    if (tpl->tpl[NF9_INITIATOR_OCTETS].len && tpl->tpl[NF9_RESPONDER_OCTETS].len) {
+      flow_type->is_bi = TRUE;
+    }
   }
 
   /* second round: overrides */

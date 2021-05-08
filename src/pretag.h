@@ -71,6 +71,7 @@
 #define PRETAG_MPLS_PW_ID		0x0000002000000000ULL
 #define PRETAG_SRC_ROA			0x0000004000000000ULL
 #define PRETAG_DST_ROA			0x0000008000000000ULL
+#define PRETAG_IS_BI_FLOW		0x0000010000000000ULL
 
 #define PRETAG_MAP_RCODE_ID		0x00000100
 #define PRETAG_MAP_RCODE_ID2		0x00000200
@@ -161,7 +162,8 @@ struct id_entry_key {
   pt_uint16_t flowset_id; /* applies to NetFlow v9/IPFIX flowset ID */
   pt_uint32_t agent_id; /* applies to sFlow agentSubId */
   pt_uint32_t sampling_rate; /* applies to sFlow sampling rate */
-  pt_uint32_t sample_type; /* applies to sFlow sample type */
+  pt_uint32_t sample_type; /* applies to NetFlow/IPFIX (inferred) & sFlow sample type */
+  pt_uint8_t is_bi_flow;
   pt_uint8_t direction;
   pt_uint8_t nat_event;
   pt_uint32_t src_as;
