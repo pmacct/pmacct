@@ -680,7 +680,7 @@ int PT_map_is_bi_flow_handler(char *filename, struct id_entry *e, char *value, s
 {
   int value_tf, x = 0;
 
-  e->key.sample_type.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+  e->key.is_bi_flow.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
 
   value_tf = parse_truefalse(value);
   if (value_tf < 0) {

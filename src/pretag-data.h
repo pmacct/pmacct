@@ -63,6 +63,7 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"return", PT_map_return_handler},
   {"stack", PT_map_stack_handler},
   {"fwdstatus", PT_map_fwdstatus_handler},
+  {"is_bi_flow", PT_map_is_bi_flow_handler},
   {"", NULL}
 };
 
