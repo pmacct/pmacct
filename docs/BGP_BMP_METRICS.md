@@ -45,7 +45,8 @@ Title | Description
 `ecomms` | BGP extended community string
 `origin` | BGP origin attribute
 `local_pref` | BGP local preference
-`rd` | BGP route-distinguisher
+`rd` | BGP Route Distinguisher
+`rd_origin` | BGP Route Distinguisher origin. It can be either of "bgp" or "flow".
 `label` | BGP MPLS VPN label
 `as_path_id` | BGP ADD-Path attribute (https://tools.ietf.org/html/rfc7911#section-3)
 `aigp` | BGP AIGP attribute (https://tools.ietf.org/html/rfc7311#section-3)
@@ -80,6 +81,7 @@ In case of table dump. Each batch of metric will start with "log_init" and end w
   "origin": "i",
   "local_pref": 0,
   "rd": "0:64499:1",
+  "rd_origin": "bgp",
   "label": "25",
   "writer_id": "pmacct-bgp01c/4857"
 }
@@ -133,7 +135,8 @@ Title | Description
 `ecomms` | BGP extended community string
 `origin` | BGP origin attribute
 `local_pref` | BGP local preference
-`rd` | BGP route-distinguisher
+`rd` | BGP Route Distinguisher
+`rd_origin` | BGP Route Distinguisher origin. It can be either of "bgp", "bmp" or "flow".
 `label` | BGP MPLS VPN label
 `as_path_id` | BGP ADD-Path attribute (https://tools.ietf.org/html/rfc7911#section-3)
 `aigp` | BGP AIGP attribute (https://tools.ietf.org/html/rfc7311#section-3)
@@ -148,6 +151,7 @@ Title | Description
   "is_post": 1,
   "is_in": 1,
   "rd": "0:64499:82",
+  "rd_origin": "bmp",
   "path_status": [
     "Non-selected",
     "Backup"
@@ -191,7 +195,8 @@ Title | Description
 `peer_ip` | BGP peer IP address where BGP metrics are received from
 `peer_asn` | BGP peer BGP AS number
 `peer_type` | Type of BGP peer (https://www.iana.org/assignments/bmp-parameters/bmp-parameters.xhtml#peer-types)
-`rd` | BGP peer route-distinguisher (https://tools.ietf.org/html/rfc7854#section-4.2)
+`rd` | BGP peer Route Distinguisher (https://tools.ietf.org/html/rfc7854#section-4.2)
+`rd_origin` | BGP peer Route Distinguisher origin. It will be set to "bmp".
 `counter_type` | Statistics type field code (https://www.iana.org/assignments/bmp-parameters/bmp-parameters.xhtml#statistics-types)
 `counter_type_str` | Statistics description
 `counter_value` | Statistics counter value
@@ -211,6 +216,7 @@ Title | Description
   "peer_asn": 60633,
   "peer_type": 0,
   "rd": "0:64499:2",
+  "rd_origin": "bmp",
   "counter_type": 0,
   "counter_type_str": "Number of prefixes rejected by inbound policy",
   "counter_value": 0
@@ -231,7 +237,8 @@ Title | Description
 `peer_asn` | BGP peer BGP AS number
 `peer_type` | Type of BGP peer (https://www.iana.org/assignments/bmp-parameters/bmp-parameters.xhtml#peer-types)
 `peer_type_str` | type of BGP peer description
-`rd` | BGP peer route-distinguisher (https://tools.ietf.org/html/rfc7854#section-4.2)
+`rd` | BGP peer Route Distinguisher (https://tools.ietf.org/html/rfc7854#section-4.2)
+`rd_origin` | BGP peer Route Distinguisher origin. It will be set to "bmp".
 `reason_type` | Reason type why BGP went down  (https://www.iana.org/assignments/bmp-parameters/bmp-parameters.xhtml#peer-down-reason-codes)
 `reason_str` | Reason description why BGP went down
 
@@ -249,6 +256,7 @@ Title | Description
   "peer_type": 0,
   "peer_type_str": "Global Instance Peer",
   "rd": "0:64499:2",
+  "rd_origin": "bmp",
   "reason_type": 1,
   "reason_str": "The local system closed the session"
 }
@@ -270,7 +278,8 @@ Title | Description
 `peer_asn` | BGP peer BGP AS number
 `peer_type` | Type of BGP peer (https://www.iana.org/assignments/bmp-parameters/bmp-parameters.xhtml#peer-types)
 `peer_type_str` | type of BGP peer description
-`rd` | BGP peer route-distinguisher (https://tools.ietf.org/html/rfc7854#section-4.2)
+`rd` | BGP peer Route Distinguisher (https://tools.ietf.org/html/rfc7854#section-4.2)
+`rd_origin` | BGP peer Route Distinguisher origin. It will be set to "bmp".
 `bgp_id` | BGP router ID of remote peer from BGP open message
 `local_port` | BGP peer local TCP port
 `remote_port` | BGP peer remote TCP port
@@ -292,6 +301,7 @@ Title | Description
   "peer_type": 0,
   "peer_type_str": "Global Instance Peer",
   "rd": "0:64499:2",
+  "rd_origin": "bmp",
   "bgp_id": "192.0.2.2",
   "local_port": 26354,
   "remote_port": 179,
@@ -365,7 +375,8 @@ Title | Description
 `bmp_router_port` | TCP port of BMP router which peers to pmacct
 `event_type` | pmacct event type. Can be either "log" for msglog or "dump" for table_dump.
 `bmp_msg_type` | "rpat" for BMP message type 6
-`rd` | BGP route-distinguisher
+`rd` | BGP peer Route Distinguisher
+`rd_origin` | BGP peer Route Distinguisher origin. It will be set to "bmp".
 `prefix` | BGP prefix
 `prefix_len` | BGP prefix mask
 `bgp_id` | BGP router-id
@@ -398,6 +409,7 @@ Title | Description
   "bmp_router_port": 49531,
   "bmp_msg_type": "rpat",
   "rd": "0:64499:82",
+  "rd_origin": "bmp",
   "prefix": "203.0.113.72",
   "prefix_len": 32,
   "bgp_id": "192.0.32.155",
