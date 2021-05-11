@@ -1922,28 +1922,27 @@ DEFAULT:	false
 
 KEY:		pre_tag_map [MAP]
 DESC:		Full pathname to a file containing tag mappings. Tags can be internal-only (ie. for filtering
-		purposes, see pre_tag_filter configuration directive) or exposed to users (ie. if 'tag', 'tag2'
+		purposes, see pre_tag_filter configuration directive) or exposed in data (ie. if 'tag', 'tag2'
 		and/or 'label' primitives are part of the aggregation method). Take a look to the examples/
 		sub-tree for all supported keys and detailed examples (pretag.map.example). Pre-Tagging is
 		evaluated in the Core Process and each plugin can be defined a local pre_tag_map. Result of
 		evaluation of pre_tag_map overrides any tags passed via NetFlow/sFlow by a pmacct nfprobe/
-		sfprobe plugin. Number of map entries (by default 384) can be modified via maps_entries.
+		sfprobe plugin. Maximum number of entries (by default 384) can be modified via maps_entries.
 		Content can be reloaded at runtime by sending the daemon a SIGUSR2 signal (ie. "killall -USR2
-		nfacctd").  
+		nfacctd").
 DEFAULT:	none
 
 KEY:		maps_entries
-DESC:		Defines the maximum number of entries a map (ie. pre_tag_map and all directives with the
-		'MAP' flag in this document) can contain. The default value is suitable for most scenarios,
-		though tuning it could be required either to save on memory or to allow for more entries.
-		Refer to the specific map directives documentation in this file to see which are affected by
-		this setting.
+DESC:		Defines the maximum number of entries a map can contain (ie. pre_tag_map and all directives
+		with the 'MAP' flag in this document). The default value is suitable for most scenarios,
+		although tuning it could be required either to save on memory or to allow for more entries.
 DEFAULT:	384
 
 KEY:            maps_row_len
-DESC:		Defines the maximum length of map (ie. pre_tag_map and all directives with the 'MAP' flag in
-		this document) rows. The default value is suitable for most scenario, though tuning it could
-		be required either to save on memory or to allow for more entries.
+DESC:		Defines the maximum length of map entries (ie. pre_tag_map and all directives with the 'MAP'
+		flag in this document). The default value is suitable for most scenarios, although tuning it
+		could be wanted either to save on memory or to allow for longer entries (ie. for complex bpf
+		filters).
 DEFAULT:	256
 
 KEY:		maps_refresh [GLOBAL]
@@ -1953,11 +1952,10 @@ DESC:		When enabled, this directive allows to reload map files (ie. pre_tag_map 
 		it may result particularly useful to reload pre_tag_map or networks_file entries in order
 		to reflect some change in the network. After having modified the map files, a SIGUSR2 has
 		to be sent (e.g.: in the simplest case "killall -USR2 pmacctd") to the daemon to notify the
-		change. If such signal is sent to the daemon and this directive is not enabled, the signal
-		is silently discarded. The Core Process is in charge of processing the Pre-Tagging map;
-		plugins are devoted to Networks and Ports maps instead. Then, because signals can be sent
-		either to the whole daemon (killall) or to just a specific process (kill), this mechanism
-		also offers the advantage to elicit local reloads.
+		change. If a signal is sent to the daemon and this directive is set to 'false', the signal
+		is silently discarded. Since signals can be sent either to the whole daemon (killall) or to
+		just a specific process (kill), this mechanism also offers the advantage to elicit local
+		reloads.
 DEFAULT:        true
 
 KEY:		maps_index [GLOBAL]
@@ -1976,12 +1974,12 @@ DEFAULT:        false
 
 KEY:            pre_tag_filter, pre_tag2_filter [NO_GLOBAL]
 VALUES:         [ 0-2^64-1 ]
-DESC:		Expects one or more tags (when multiple tags are supplied, they need to be comma separated
-		and a logical OR is used in the evaluation phase) as value and allows to filter aggregates
-		basing upon their tag (or tag2) value: in case of a match, the aggregate is filtered in, ie.
-		it is delivered to the plugin it is attached to. This directive has to be attached to a
-		plugin (that is, it cannot be global) and is suitable, for example, to split tagged data
-		among the active plugins. This directive also allows to specify a value '0' to match untagged
+DESC:		Expects one or more tags as value (when multiple tags are supplied, they need to be comma
+		separated and a logical OR is used in the evaluation phase) and allows to filter aggregates
+		basing upon their tag (or tag2) value: in case of a match, data is allwoed in, ie. it is
+		delivered to the plugin the filter is attached to. This directive has to be attached to a
+		plugin (that is, it cannot be global) and is suitable, for example, to split data among the
+		active plugins. This directive also allows to specify a value '0' to match untagged
 		data, thus allowing to split tagged traffic from untagged one. It also allows negations by
 		pre-pending a minus sign to the tag value (ie. '-6' would send everything but traffic tagged
 		as '6' to the plugin it is attached to, hence achieving a filter out behaviour) and ranges
@@ -1990,20 +1988,21 @@ DESC:		Expects one or more tags (when multiple tags are supplied, they need to b
 DEFAULT:	none
 
 KEY:            pre_tag_label_filter [NO_GLOBAL]
-DESC:		Expects one or more labels (when multiple labels are supplied, they need to be comma
-		separated and a logical OR is used in the evaluation phase) as value and allows to filter in
-		aggregates basing upon their label value(s): only in case of match data is delivered to the
-		plugin. This directive has to be attached to a plugin (that is, it cannot be global). Null
-		label values (ie. unlabelled data) can be matched using the 'null' keyword. Negations are
-		allowed by pre-pending a minus sign to the label value. The use of this directive makes
-		sense if coupled with 'pre_tag_map'.
+DESC:		Expects one or more labels as value (when multiple labels are supplied, they need to be
+		comma separated and a logical OR is used in the evaluation phase) and allows to filter in
+		data basing upon its label value(s): in case of match, data is delivered to the plugin the
+		filter is attached to. This directive has to be attached to a plugin (that is, it cannot be
+		global). Null label values (ie. unlabelled data) can be matched using the special 'null'
+		keyword. Negations are allowed by pre-pending a minus sign to the label value. The use of
+		this directive makes sense if coupled with 'pre_tag_map'.
 DEFAULT:	none
 
 KEY:            [ post_tag | post_tag2 ] 
 VALUES:         [ 1-2^64-1 ]
 DESC:           Expects a tag as value. Post-Tagging is evaluated in the plugins. The tag is used as 'tag'
 		(post_tag) or 'tag2' (post_tag2) primitive value. Use of these directives hence makes sense
-		if tag and/or tag2 primitives are part of the plugin aggregation method.
+		if tag and/or tag2 primitives are part of the plugin aggregation method. post_tag does
+		override any value computed by pre_tag_map.
 DEFAULT:	none
 
 KEY:		sampling_rate

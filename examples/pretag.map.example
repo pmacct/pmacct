@@ -3,10 +3,11 @@
 !
 ! File syntax is key-based. Position of keys inside the same row (rule) is not
 ! relevant; Spaces are not allowed (ie. 'id = 1' is not valid). The first full
-! match wins (like in firewall rules). Negative values mean negations (ie. match
-! data NOT entering interface 2: 'in=-2'); 'set_tag', 'set_tag2', 'set_label',
-! 'filter' and 'ip' keys don't support negative values. 'label', 'jeq' and
-! 'stack' keys can be used to alter the standard rule evaluation flow.
+! match wins (like in firewall rules). MATCH keys support negations via a
+! negative valuee (ie. 'in=-2' for data not entering via interface with ifindex
+! 2); negations are intuitively not supported on SET keys (ie. 'set_tag', etc.);
+! also 'filter' and 'ip' keys do not support negative values. 'label', 'jeq' and
+! 'stack' keys can be used to alter the standard flow of rules evaluation.
 !
 ! nfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
 ! engine_type, engine_id, source_id, flowset_id, nexthop, bgp_nexthop, filter,
