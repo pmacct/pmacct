@@ -96,7 +96,7 @@ some meaningful way aggregated data (struct pkt_data), ie. writing them to a RDB
 memory table, etc. A diagram follows:
 
 					   |===> [ pmacctd/plugin ]
-libpcap			           pipe/shm|
+libpcap			        shared mem | ZeroMQ
 ===========> [ pmacctd/core ]==============|===> [ pmacctd/plugin ]
 socket
 
@@ -111,8 +111,10 @@ V. Communications between core process and plugins
 A single running Core Process, which gathers packets or flows from the network, is able to
 feed aggregated data to multiple plugins; plugins are distinguished by their name. Names,
 for this purpose, need to be unique. Data is pushed to active plugins via either a home-
-grown circular queue or a RabbitMQ broker. Rest of this chapter focuses only on the home-
-grown circular queue. Each plugin has a private control channel with the Core Process.
+grown circular queue or a ZeroMQ queue. Rest of this chapter focuses only on the home-
+grown circular queue; also, although the home-grown queue is still the default pick (as
+it does not bring any external library dependencies), the ZeroMQ queue is currently the
+recommended way to go. Each plugin has a private control channel with the Core Process.
 Circular queues are encapsulated into a more complex channel structure which also includes:
 copy of the aggregation method, an OOB (Out-of-Band) signalling channel, buffers, one or
 more filters and a pointer to the next free queue element. The Core Process simply loops
@@ -156,13 +158,12 @@ ss = 'plugin_pipe_size' value
 	   signalling queue size = (ss / bs) * as
 	
 If 'plugin_buffer_size' is not defined, it is set to the minimum size possible in order
-to contain one element worth of data for the selected aggregation method. Also, from
-release 1.5.0rc2, a simple and reasonable default value for plugin_pipe_size is picked.
-The signalling queue must be able to address the full circular buffer: should that not
-be possible due to OS restrictions, ie. on Linux systems /proc/sys/net/core/[rw]mem_max
-and /proc/sys/net/core/[rw]mem_default, a log message is printed (along the lines of
-"ctrl channel: obtained=<X> bytes target=<Y> bytes", where Y is what is needed in order
-to address the circular queue and X is what the underlying OS conceded).
+to contain one element worth of data for the selected aggregation method. The signalling
+queue must be able to address the full circular buffer: should that not be possible due
+to OS restrictions, ie. on Linux systems /proc/sys/net/core/[rw]mem_max and
+/proc/sys/net/core/[rw]mem_default, a log message is printed (along the lines of "ctrl
+channel: obtained=<X> bytes target=<Y> bytes", where Y is what is needed in order to
+address the circular queue and X is what the underlying OS conceded).
 
 Few final remarks: a) buffer size of 10KB and pipe size of 10MB are well-tailored for most
 common environments; b) by enabling buffering, attaching the collector to a mute interface 
@@ -255,12 +256,12 @@ timeout expires (1s).
 
 VII. SQL issues and *SQL plugins
 Storing aggregates into a persistent backend leaves chances for advanced operations and
-so these plugins are intended to give a wider range of features (eg. fallback mechanisms
-and backup storage methods if DB fails, counters breakdown, etc.) not available in other
-plugins. Let's firstly give a whole picture of how these SQL plugins work. As packets
-received from core process via communication channel get unpacked, they are inserted in a
-direct-mapped cache; then, at fixed time intervals (configurable via 'sql_refresh_time'
-key) the cache scanner kicks in and purges content to the database; optionally triggers
+so these plugins are intended to give a wider range of features (eg. write to a backup
+DB if the primary DB fails, counters breakdown, etc.) not available in other plugins.
+Let's firstly give a whole picture of how these SQL plugins work. As packets received
+from core process via communication channel get unpacked, they are inserted in a direct-
+mapped cache; then, at fixed time intervals (configurable via 'sql_refresh_time' key)
+the cache scanner kicks in and purges content to the database; optionally triggers
 may be executed (sql_trigger_exec, sql_trigger_time). Data to cache bucket mapping is
 computed via a modulo function. If the selected bucket already contains valid data then
 a conflict chain is built (or traversed if it already exists); the first free node
@@ -308,11 +309,10 @@ flows. A picture follows:
 
 				    |====> [ cache ] ===|
 pipe				    |			|
-======> [ pmacctd/SQL plugin ] =====|====> [ cache ] ===|=============================| DB |======>
-			|	    |			|
-			|	    |====> [ cache ] ===|
-			|
-			|=======> [ fallback mechanisms ]
+======> [ pmacctd/SQL plugin ] =====|====> [ cache ] ===|=============+=====| primary DB |=====>
+				    |			|             | 
+				    |====> [ cache ] ===|             `-----| secondary DB |===>
+
 
 Now, let's keep an eye on how aggregates are structured on the DB side. Data is simply organized
 in flat tuples, without any external references. After being not full convinced about better
