@@ -227,6 +227,12 @@ typedef struct {
 #include <avro.h>
 #endif
 
+#if (defined WITH_AVRO)
+#if (!defined WITH_JANSSON)
+#error "--enable-avro requires --enable-jansson"
+#endif
+#endif
+
 #if (defined WITH_SERDES)
 #if (!defined WITH_AVRO)
 #error "--enable-serdes requires --enable-avro"
