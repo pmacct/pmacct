@@ -6,7 +6,7 @@
 #This Dockerfile creates a base docker image with pmacct and other useful
 #tools for network telemetry and monitoring
 
-FROM debian:buster-slim
+FROM debian:buster-slim as build-stage
 LABEL maintainer "pmacct Docker Doctors <docker-doctors (at) pmacct.net>"
 
 # We don't want man pages
@@ -73,6 +73,7 @@ RUN apt-get update && \
     make \
     pkg-config && \
   apt-get autoremove -y && \
-  rm -rf /tmp/*
+  apt-get -y clean && \
+  rm -rf /var/lib/apt/lists/* /tmp/*
 
 ENTRYPOINT ["/bin/bash"]
