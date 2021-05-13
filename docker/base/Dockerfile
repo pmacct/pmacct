@@ -7,8 +7,6 @@
 #tools for network telemetry and monitoring
 
 FROM debian:buster-slim as build-stage
-LABEL maintainer "pmacct Docker Doctors <docker-doctors (at) pmacct.net>"
-
 # We don't want man pages
 COPY ci/dpkg.cfg.d/excludes /etc/dpkg/dpkg.cfg.d/excludes
 
@@ -21,8 +19,9 @@ ARG NUM_WORKERS=2
 #Do not check certificates in wget for external deps
 ARG DEPS_DONT_CHECK_CERTIFICATE
 
-#Create a single compressed layer, as some dependencies (deps.sh)
-#can be later removed, so try to make it as lightweight as possible
+# This is not the runtime/final image:
+#   * we keep some installation steps in different layers to improve cachability
+#   * this only covers build deps
 RUN apt-get update && \
   apt-get install -y \
     autoconf \
@@ -51,35 +50,41 @@ RUN apt-get update && \
     pkg-config \
     sudo \
     wget \
-    zlib1g-dev && \
-  cd /tmp/pmacct && \
-  DEPS_DONT_CHECK_CERTIFICATE=${DEPS_DONT_CHECK_CERTIFICATE} ./ci/deps.sh && \
-  export AVRO_LIBS="-L/usr/local/avro/lib -lavro" && \
+    zlib1g-dev
+WORKDIR /tmp/pmacct/
+# Deps
+COPY ci/deps.sh ci/
+RUN ./ci/deps.sh
+# Actual build
+COPY . .
+RUN export AVRO_LIBS="-L/usr/local/avro/lib -lavro" && \
   export AVRO_CFLAGS="-I/usr/local/avro/include" && \
-  ( make maintainer-clean || /bin/true ) && \
   ./autogen.sh && ./configure --enable-mysql --enable-pgsql     \
-                               --enable-sqlite3 --enable-kafka   \
-                               --enable-geoipv2 --enable-jansson \
-                               --enable-rabbitmq --enable-nflog  \
-                               --enable-ndpi --enable-zmq        \
-                               --enable-avro --enable-serdes     \
-                               --enable-redis --enable-gnutls && \
-  sudo make -j${NUM_WORKERS} install && \
-  cd .. && \
-  apt-get purge -y \
-    autoconf \
-    automake \
-    bison \
-    cmake \
-    gcc \
-    g++ \
-    flex \
-    git \
-    libtool \
-    make \
-    pkg-config && \
-  apt-get autoremove -y && \
-  apt-get -y clean && \
-  rm -rf /var/lib/apt/lists/* /tmp/*
+                              --enable-sqlite3 --enable-kafka   \
+                              --enable-geoipv2 --enable-jansson \
+                              --enable-rabbitmq --enable-nflog  \
+                              --enable-ndpi --enable-zmq        \
+                              --enable-avro --enable-serdes     \
+                              --enable-redis --enable-gnutls && \
+  make -j${NUM_WORKERS} install
 
+FROM debian:buster-slim as base
+LABEL maintainer "pmacct Docker Doctors <docker-doctors (at) pmacct.net>"
+# We don't want man pages
+COPY ci/dpkg.cfg.d/excludes /etc/dpkg/dpkg.cfg.d/excludes
+COPY --from=build-stage /usr/local/ /usr/local
+# Runtime deps
+RUN apt-get update && \
+  apt-get install -y \
+    libmariadb3 \
+    libnuma1 \
+    libcurl4 \
+    libpcap0.8 \
+    libpq5 \
+    libsnappy1v5 \
+    libsqlite3-0 \
+    libssl1.1 && \
+  apt-get -y clean && \
+  rm -rf /var/lib/apt/lists/* && \
+  ldconfig
 ENTRYPOINT ["/bin/bash"]
