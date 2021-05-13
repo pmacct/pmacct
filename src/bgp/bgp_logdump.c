@@ -647,7 +647,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
   int peer_idx, have_it, ret = 0, amqp_ret = 0, kafka_ret = 0;
   char log_filename[SRVBUFLEN];
 
-#if defined(WITH_KAFKA) || defined(WITH_RABBITMQ)
+#if defined (WITH_JANSSON) || defined (WITH_AVRO)
   pid_t writer_pid = getpid();
 #endif
 
@@ -902,7 +902,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
   void *kafka_log_ptr = NULL;
 #endif
 
-#if defined(WITH_KAFKA) || defined(WITH_RABBITMQ)
+#if defined (WITH_JANSSON) || defined (WITH_AVRO)
   pid_t writer_pid = getpid();
 #endif
 
@@ -1251,7 +1251,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
   struct bgp_misc_structs *bms = bgp_select_misc_db(type);
   int ret = 0, amqp_ret = 0, kafka_ret = 0;
 
-#if defined(WITH_KAFKA) || defined(WITH_RABBITMQ)
+#if defined (WITH_JANSSON) || defined (WITH_AVRO)
   pid_t writer_pid = getpid();
 #endif
 
@@ -1458,7 +1458,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
   struct bgp_misc_structs *bms = bgp_select_misc_db(type);
   int ret = 0, amqp_ret = 0, kafka_ret = 0;
 
-#if defined(WITH_KAFKA) || defined(WITH_RABBITMQ)
+#if defined (WITH_JANSSON) || defined (WITH_AVRO)
   pid_t writer_pid = getpid();
 #endif
 
