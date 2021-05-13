@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 #    Copyright
 #    (c) 2020 Marc Sune <marcdevel@gmail.com>
@@ -17,8 +17,8 @@
 #    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 #    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#Do not delete
-set -e
+# Do not delete
+set -euo pipefail
 
 #wget options
 WGET_N_RETRIES=30
@@ -29,41 +29,44 @@ if [ "${DEPS_DONT_CHECK_CERTIFICATE}" ]; then
 fi
 echo "WGET_FLAGS: ${WGET_FLAGS}"
 
-#Don't pollute /
+# Don't pollute /
 mkdir -p /tmp
 cd /tmp
 
-#Dependencies (not fulfilled by Dockerfile)
+# Most of the software installation will probably honor this, which will improve perf
+export MAKEFLAGS="-j$(nproc)"
+
+# Dependencies (not fulfilled by Dockerfile)
 git clone https://github.com/akheron/jansson
-cd jansson && rm -rf ./.git && autoreconf -i && ./configure && make && sudo make install && cd ..
+cd jansson ; rm -rf ./.git ; autoreconf -i ; ./configure ; make ; sudo make install ; cd ..
 
 git clone https://github.com/edenhill/librdkafka
-cd librdkafka && rm -rf ./.git && ./configure && make && sudo make install && cd ..
+cd librdkafka ; rm -rf ./.git ; ./configure ; make ; sudo make install ; cd ..
 
 wget ${WGET_FLAGS} https://github.com/alanxz/rabbitmq-c/archive/refs/tags/v0.11.0.tar.gz
 mv v0.11.0.tar.gz rabbitmq-c-0.11.0.tar.gz
 tar xfz rabbitmq-c-0.11.0.tar.gz
-cd rabbitmq-c-0.11.0 && rm -rf ./.git && mkdir build && cd build && cmake -DCMAKE_INSTALL_LIBDIR=lib .. && sudo cmake --build . --target install && cd .. && cd ..
+cd rabbitmq-c-0.11.0 ; rm -rf ./.git ; mkdir build ; cd build ; cmake -DCMAKE_INSTALL_LIBDIR=lib .. ; sudo cmake --build . --target install ; cd .. ; cd ..
 
 git clone --recursive https://github.com/maxmind/libmaxminddb
-cd libmaxminddb && rm -rf ./.git && ./bootstrap && ./configure && make && sudo make install && cd ..
+cd libmaxminddb ; rm -rf ./.git ; ./bootstrap ; ./configure ; make ; sudo make install ; cd ..
 
 git clone -b 3.4-stable https://github.com/ntop/nDPI
-cd nDPI && rm -rf ./.git && ./autogen.sh && ./configure && make && sudo make install && sudo ldconfig && cd ..
+cd nDPI ; rm -rf ./.git ; ./autogen.sh ; ./configure ; make ; sudo make install ; sudo ldconfig ; cd ..
 
 wget ${WGET_FLAGS} https://github.com/zeromq/libzmq/releases/download/v4.3.2/zeromq-4.3.2.tar.gz
 tar xfz zeromq-4.3.2.tar.gz
-cd zeromq-4.3.2 && ./configure && make && sudo make install && cd ..
+cd zeromq-4.3.2 ; ./configure ; make ; sudo make install ; cd ..
 
 wget ${WGET_FLAGS} https://archive.apache.org/dist/avro/avro-1.9.2/c/avro-c-1.9.2.tar.gz
 tar xfz avro-c-1.9.2.tar.gz
-cd avro-c-1.9.2 && mkdir build && cd build && cmake .. && make && sudo make install && cd .. && cd ..
+cd avro-c-1.9.2 ; mkdir build ; cd build ; cmake .. ; make ; sudo make install ; cd .. ; cd ..
 
 git clone https://github.com/confluentinc/libserdes
-cd libserdes && rm -rf ./.git && ./configure && make && sudo make install && cd ..
+cd libserdes ; rm -rf ./.git ; ./configure ; make ; sudo make install ; cd ..
 
 git clone https://github.com/redis/hiredis
-cd hiredis && rm -rf ./.git && make && sudo make install && cd ..
+cd hiredis ; rm -rf ./.git ; make ; sudo make install ; cd ..
 
-#Make sure dynamic linker is up-to-date
+# Make sure dynamic linker is up-to-date
 ldconfig
