@@ -649,6 +649,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 
 #if defined (WITH_JANSSON) || defined (WITH_AVRO)
   pid_t writer_pid = getpid();
+  memset(&writer_pid, 0, sizeof(writer_pid));
 #endif
 
   if (!bms || !peer) return ERR;
@@ -904,6 +905,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 
 #if defined (WITH_JANSSON) || defined (WITH_AVRO)
   pid_t writer_pid = getpid();
+  memset(&writer_pid, 0, sizeof(writer_pid));
 #endif
 
   if (!bms || !peer || !peer->log) return ERR;
@@ -1253,6 +1255,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
 
 #if defined (WITH_JANSSON) || defined (WITH_AVRO)
   pid_t writer_pid = getpid();
+  memset(&writer_pid, 0, sizeof(writer_pid));
 #endif
 
   if (!bms || !peer || !peer->log) return ERR;
@@ -1460,6 +1463,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
 
 #if defined (WITH_JANSSON) || defined (WITH_AVRO)
   pid_t writer_pid = getpid();
+  memset(&writer_pid, 0, sizeof(writer_pid));
 #endif
 
   if (!bms || !peer || !peer->log) return ERR;
