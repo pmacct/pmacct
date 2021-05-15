@@ -2989,7 +2989,10 @@ DEFAULT:	32
 
 KEY:            tee_kafka_config_file
 DESC:           Full pathname to a file containing directives to configure librdkafka when emitting
-		replicated datagrams to a Kafka broker. See kafka_config_file for more info.
+		replicated datagrams to a Kafka broker. See kafka_config_file for more info. Other
+		aspects like the Kafka broker IP address / port and topic name are to be configured
+		via an entry in the tee_receivers map (see examples/tee_receivers.lst) using the
+		kafka_broker and kafka_topic keys.
 DEFAULT:        none
 
 KEY:		thread_stack
