@@ -43,10 +43,6 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
   struct bgp_peer *peer;
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
 
-#if defined (WITH_JANSSON) || defined (WITH_AVRO)
-  pid_t writer_pid = getpid();
-#endif
-
   if (!ri || !ri->peer || !event_type) return ERR; /* missing required parameters */
   if (!ri->peer->log && !output_data) return ERR; /* missing any output method */
 
@@ -219,7 +215,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
     if ((bms->msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
 	(bms->dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP)) {
-      add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
+      add_writer_name_and_pid_json(obj, config.proc_name, getpid());
 #ifdef WITH_RABBITMQ
       amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
       p_amqp_unset_routing_key(peer->log->amqp_host);
@@ -228,7 +224,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
     if ((bms->msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
 	(bms->dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
-      add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
+      add_writer_name_and_pid_json(obj, config.proc_name, getpid());
 #ifdef WITH_KAFKA
       kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
       p_kafka_unset_topic(peer->log->kafka_host);
@@ -537,7 +533,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     }
 
     pm_avro_check(avro_value_get_by_name(&p_avro_obj, "writer_id", &p_avro_field, NULL));
-    snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, writer_pid);
+    snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, getpid());
     pm_avro_check(avro_value_set_string(&p_avro_field, wid));
 
     if (((bms->msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
@@ -647,11 +643,6 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
   int peer_idx, have_it, ret = 0, amqp_ret = 0, kafka_ret = 0;
   char log_filename[SRVBUFLEN];
 
-#if defined (WITH_JANSSON) || defined (WITH_AVRO)
-  pid_t writer_pid = getpid();
-  memset(&writer_pid, 0, sizeof(writer_pid));
-#endif
-
   if (!bms || !peer) return ERR;
 
   if (bms->msglog_file) {
@@ -747,7 +738,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 
 #ifdef WITH_RABBITMQ
       if (bms->msglog_amqp_routing_key) {
-	add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
+	add_writer_name_and_pid_json(obj, config.proc_name, getpid());
 	amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj); 
 	p_amqp_unset_routing_key(peer->log->amqp_host);
       }
@@ -755,7 +746,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 
 #ifdef WITH_KAFKA
       if (bms->msglog_kafka_topic) {
-	add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
+	add_writer_name_and_pid_json(obj, config.proc_name, getpid());
         kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
         p_kafka_unset_topic(peer->log->kafka_host);
       }
@@ -803,7 +794,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
       pm_avro_check(avro_value_set_string(&p_avro_field, event_type));
 
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "writer_id", &p_avro_field, NULL));
-      snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, writer_pid);
+      snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, getpid());
       pm_avro_check(avro_value_set_string(&p_avro_field, wid));
 
       if (bms->bgp_peer_logdump_initclose_extras) {
@@ -903,11 +894,6 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
   void *kafka_log_ptr = NULL;
 #endif
 
-#if defined (WITH_JANSSON) || defined (WITH_AVRO)
-  pid_t writer_pid = getpid();
-  memset(&writer_pid, 0, sizeof(writer_pid));
-#endif
-
   if (!bms || !peer || !peer->log) return ERR;
 
 #ifdef WITH_RABBITMQ
@@ -962,7 +948,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 
 #ifdef WITH_RABBITMQ
     if (bms->msglog_amqp_routing_key) {
-      add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
+      add_writer_name_and_pid_json(obj, config.proc_name, getpid());
       amqp_ret = write_and_free_json_amqp(amqp_log_ptr, obj);
       p_amqp_unset_routing_key(amqp_log_ptr);
     }
@@ -970,7 +956,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 
 #ifdef WITH_KAFKA
     if (bms->msglog_kafka_topic) {
-      add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
+      add_writer_name_and_pid_json(obj, config.proc_name, getpid());
       kafka_ret = write_and_free_json_kafka(kafka_log_ptr, obj);
       p_kafka_unset_topic(kafka_log_ptr);
     }
@@ -1018,7 +1004,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
     pm_avro_check(avro_value_set_string(&p_avro_field, event_type));
 
     pm_avro_check(avro_value_get_by_name(&p_avro_obj, "writer_id", &p_avro_field, NULL));
-    snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, writer_pid);
+    snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, getpid());
     pm_avro_check(avro_value_set_string(&p_avro_field, wid));
 
     if (bms->bgp_peer_logdump_initclose_extras) {
@@ -1253,11 +1239,6 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
   struct bgp_misc_structs *bms = bgp_select_misc_db(type);
   int ret = 0, amqp_ret = 0, kafka_ret = 0;
 
-#if defined (WITH_JANSSON) || defined (WITH_AVRO)
-  pid_t writer_pid = getpid();
-  memset(&writer_pid, 0, sizeof(writer_pid));
-#endif
-
   if (!bms || !peer || !peer->log) return ERR;
 
 #ifdef WITH_RABBITMQ
@@ -1311,7 +1292,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
 
 #ifdef WITH_RABBITMQ
     if (bms->dump_amqp_routing_key) {
-      add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
+      add_writer_name_and_pid_json(obj, config.proc_name, getpid());
       amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
       p_amqp_unset_routing_key(peer->log->amqp_host);
     }
@@ -1319,7 +1300,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
 
 #ifdef WITH_KAFKA
     if (bms->dump_kafka_topic) {
-      add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
+      add_writer_name_and_pid_json(obj, config.proc_name, getpid());
       kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
       p_kafka_unset_topic(peer->log->kafka_host);
     }
@@ -1370,7 +1351,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, int output, int type)
     pm_avro_check(avro_value_set_long(&p_avro_field, bms->dump.period)); 
 
     pm_avro_check(avro_value_get_by_name(&p_avro_obj, "writer_id", &p_avro_field, NULL));
-    snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, writer_pid);
+    snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, getpid());
     pm_avro_check(avro_value_set_string(&p_avro_field, wid));
 
     if (bms->bgp_peer_logdump_initclose_extras) {
@@ -1461,11 +1442,6 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
   struct bgp_misc_structs *bms = bgp_select_misc_db(type);
   int ret = 0, amqp_ret = 0, kafka_ret = 0;
 
-#if defined (WITH_JANSSON) || defined (WITH_AVRO)
-  pid_t writer_pid = getpid();
-  memset(&writer_pid, 0, sizeof(writer_pid));
-#endif
-
   if (!bms || !peer || !peer->log) return ERR;
 
 #ifdef WITH_RABBITMQ
@@ -1513,7 +1489,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
 
 #ifdef WITH_RABBITMQ
     if (bms->dump_amqp_routing_key) {
-      add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
+      add_writer_name_and_pid_json(obj, config.proc_name, getpid());
       amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
       p_amqp_unset_routing_key(peer->log->amqp_host);
     }
@@ -1521,7 +1497,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
 
 #ifdef WITH_KAFKA
     if (bms->dump_kafka_topic) {
-      add_writer_name_and_pid_json(obj, config.proc_name, writer_pid);
+      add_writer_name_and_pid_json(obj, config.proc_name, getpid());
       kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
       p_kafka_unset_topic(peer->log->kafka_host);
     }
@@ -1586,7 +1562,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
     }
 
     pm_avro_check(avro_value_get_by_name(&p_avro_obj, "writer_id", &p_avro_field, NULL));
-    snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, writer_pid);
+    snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, getpid());
     pm_avro_check(avro_value_set_string(&p_avro_field, wid));
 
     if (bms->bgp_peer_logdump_initclose_extras) {
