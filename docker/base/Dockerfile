@@ -15,6 +15,9 @@ COPY ci/dpkg.cfg.d/excludes /etc/dpkg/dpkg.cfg.d/excludes
 #Copy installer script
 COPY . /tmp/pmacct/
 
+#Parallelism: 2 looks a reasonable default, and bear in mind CI specs
+ARG NUM_WORKERS=2
+
 #Create a single compressed layer, as some dependencies (deps.sh)
 #can be later removed, so try to make it as lightweight as possible
 RUN apt-get update && \
@@ -58,7 +61,7 @@ RUN apt-get update && \
                                --enable-ndpi --enable-zmq        \
                                --enable-avro --enable-serdes     \
                                --enable-redis --enable-gnutls && \
-  sudo make -j$(nproc) install && \
+  sudo make -j${NUM_WORKERS} install && \
   cd .. && \
   apt-get purge -y \
     autoconf \
