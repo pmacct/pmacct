@@ -316,6 +316,13 @@ struct pm_pcap_callback_data {
   struct pm_pcap_callback_signals sig;
 };
 
+struct pm_dump_runner {
+  u_int16_t id;
+  u_int64_t seq;
+  u_int64_t first;
+  u_int64_t last;
+};
+
 struct _protocols_struct {
   char name[PROTO_LEN];
   int number;

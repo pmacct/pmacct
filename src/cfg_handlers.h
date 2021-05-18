@@ -452,6 +452,7 @@ extern int cfg_key_bmp_daemon_table_per_peer_buckets(char *, char *, char *);
 extern int cfg_key_bmp_daemon_table_attr_hash_buckets(char *, char *, char *);
 extern int cfg_key_bmp_daemon_table_per_peer_hash(char *, char *, char *);
 extern int cfg_key_bmp_daemon_dump_output(char *, char *, char *);
+extern int cfg_key_bmp_daemon_dump_workers(char *, char *, char *);
 extern int cfg_key_bmp_daemon_dump_file(char *, char *, char *);
 extern int cfg_key_bmp_daemon_dump_avro_schema_file(char *, char *, char *);
 extern int cfg_key_bmp_daemon_dump_latest_file(char *, char *, char *);

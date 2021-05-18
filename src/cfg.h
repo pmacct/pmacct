@@ -451,6 +451,7 @@ struct configuration {
   int bmp_table_attr_hash_buckets;
   int bmp_table_per_peer_hash;
   int bmp_dump_output;
+  int bmp_dump_workers;
   char *bmp_dump_file;
   char *bmp_dump_latest_file;
   char *bmp_dump_avro_schema_file;

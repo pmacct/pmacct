@@ -463,8 +463,15 @@ int skinny_bmp_daemon()
   }
 
   if (bmp_misc_db->dump_backend_methods) {
+    /* XXX: logics currently locked to 1 worker */
+    // if (!config.bmp_dump_workers) {
+      config.bmp_dump_workers = 1;
+    // }
+
 #ifdef WITH_JANSSON
-    if (!config.bmp_dump_output) config.bmp_dump_output = PRINT_OUTPUT_JSON;
+    if (!config.bmp_dump_output) {
+      config.bmp_dump_output = PRINT_OUTPUT_JSON;
+    }
 #else
     Log(LOG_WARNING, "WARN ( %s/%s ): bmp_table_dump_output set to json but will produce no output (missing --enable-jansson).\n", config.name, bmp_misc_db->log_str);
 #endif
