@@ -27,6 +27,7 @@ WGET_FLAGS="-t $WGET_N_RETRIES --waitretry=$WGET_WAIT_RETRIES_S"
 if [ "${DEPS_DONT_CHECK_CERTIFICATE}" ]; then
     WGET_FLAGS="${WGET_FLAGS} --no-check-certificate"
 fi
+echo "WGET_FLAGS: ${WGET_FLAGS}"
 
 #Don't pollute /
 mkdir -p /tmp

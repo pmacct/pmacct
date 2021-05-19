@@ -18,6 +18,9 @@ COPY . /tmp/pmacct/
 #Parallelism: 2 looks a reasonable default, and bear in mind CI specs
 ARG NUM_WORKERS=2
 
+#Do not check certificates in wget for external deps
+ARG DEPS_DONT_CHECK_CERTIFICATE
+
 #Create a single compressed layer, as some dependencies (deps.sh)
 #can be later removed, so try to make it as lightweight as possible
 RUN apt-get update && \
@@ -50,7 +53,7 @@ RUN apt-get update && \
     wget \
     zlib1g-dev && \
   cd /tmp/pmacct && \
-  ./ci/deps.sh && \
+  DEPS_DONT_CHECK_CERTIFICATE=${DEPS_DONT_CHECK_CERTIFICATE} ./ci/deps.sh && \
   export AVRO_LIBS="-L/usr/local/avro/lib -lavro" && \
   export AVRO_CFLAGS="-I/usr/local/avro/include" && \
   ( make maintainer-clean || /bin/true ) && \
