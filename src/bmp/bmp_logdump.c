@@ -25,6 +25,7 @@
 #include "addr.h"
 #include "bgp/bgp.h"
 #include "bmp.h"
+#include "thread_pool.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
@@ -1555,6 +1556,7 @@ void bmp_dump_se_ll_destroy(struct bmp_dump_se_ll *bdsell)
 void bmp_handle_dump_event(int max_peers_idx)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BMP);
+  thread_pool_t *bmp_dump_workers_pool;
   struct pm_dump_runner pdr[config.bmp_dump_workers];
   u_int64_t dump_seqno;
   int id, idx, ret;
@@ -1590,8 +1592,16 @@ void bmp_handle_dump_event(int max_peers_idx)
     pm_setproctitle("%s %s [%s]", config.type, "Core Process -- BMP Dump Writer", config.name);
     config.is_forked = TRUE;
 
-    bmp_dump_event_runner(&pdr[0] /* XXX */);
-    break;
+    /* creating the thread pool */
+    bmp_dump_workers_pool = allocate_thread_pool(config.bmp_dump_workers);
+    assert(bmp_dump_workers_pool);
+
+    for (idx = 0; idx < config.bmp_dump_workers; idx++) {
+      send_to_pool(bmp_dump_workers_pool, bmp_dump_event_runner, &pdr[idx]);
+    }
+
+    deallocate_thread_pool(&bmp_dump_workers_pool);
+    exit_gracefully(0);
   default: /* Parent */
     if (ret == -1) { /* Something went wrong */
       Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork BMP table dump writer: %s\n",
@@ -1611,7 +1621,7 @@ void bmp_handle_dump_event(int max_peers_idx)
   }
 }
 
-void bmp_dump_event_runner(struct pm_dump_runner *pdr)
+int bmp_dump_event_runner(struct pm_dump_runner *pdr)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BMP);
   char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
@@ -1660,7 +1670,8 @@ void bmp_dump_event_runner(struct pm_dump_runner *pdr)
 #endif
 
   dumper_pid = getpid();
-  Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BMP tables - START (PID: %u) ***\n", config.name, bms->log_str, dumper_pid);
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BMP tables - START (PID: %u RID: %u) ***\n",
+      config.name, bms->log_str, dumper_pid, pdr->id);
   start = time(NULL);
   tables_num = 0;
 
@@ -1785,7 +1796,7 @@ void bmp_dump_event_runner(struct pm_dump_runner *pdr)
       inter_domain_routing_db = bgp_select_routing_db(FUNC_TYPE_BMP);
       dump_elems = 0;
 
-      if (!inter_domain_routing_db) return;
+      if (!inter_domain_routing_db) return ERR;
 
       for (afi = AFI_IP; afi < AFI_MAX; afi++) {
         for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
@@ -1872,16 +1883,20 @@ void bmp_dump_event_runner(struct pm_dump_runner *pdr)
   }
 #endif
 
+  if (config.bmp_dump_file && peer) {
+    close_output_file(peer->log->fd);
+  }
+
   if (config.bmp_dump_latest_file && peer) {
     bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bmp_dump_latest_file, peer);
     link_latest_output_file(latest_filename, last_filename);
   }
 
   duration = time(NULL)-start;
-  Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BMP tables - END (PID: %u TABLES: %u ENTRIES: %" PRIu64 " ET: %u) ***\n",
-      config.name, bms->log_str, dumper_pid, tables_num, dump_elems, duration);
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BMP tables - END (PID: %u RID: %u TABLES: %u ENTRIES: %" PRIu64 " ET: %u) ***\n",
+      config.name, bms->log_str, dumper_pid, pdr->id, tables_num, dump_elems, duration);
 
-  exit_gracefully(0);
+  return FALSE;
 }
 
 #if defined WITH_RABBITMQ
