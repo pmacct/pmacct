@@ -1,0 +1,11 @@
+# Drop all man pages
+path-exclude=/usr/share/man/*
+
+# Drop all documentation ...
+path-exclude=/usr/share/doc/*
+
+# ... except copyright files ...
+path-include=/usr/share/doc/*/copyright
+
+# ... and Debian changelogs
+path-include=/usr/share/doc/*/changelog.Debian.*

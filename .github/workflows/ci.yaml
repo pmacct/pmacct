@@ -146,7 +146,7 @@ jobs:
           PMACCT_VERSION=$(git describe --abbrev=0 --match="v*")
           echo "PMACCT_VERSION=$PMACCT_VERSION"
           echo "Building the base container..."
-          docker build -f docker/base/Dockerfile -t base:_build .
+          docker build --build-arg NUM_WORKERS=$CI_NUM_WORKERS --build-arg DEPS_DONT_CHECK_CERTIFICATE=$CI_DEPS_DONT_CHECK_CERTIFICATE -f docker/base/Dockerfile -t base:_build .
           echo "Building daemon containers..."
           docker build -f docker/pmacctd/Dockerfile -t pmacctd:_build .
           docker build -f docker/nfacctd/Dockerfile -t nfacctd:_build .
