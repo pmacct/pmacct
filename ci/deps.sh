@@ -20,9 +20,14 @@
 #Do not delete
 set -e
 
-#wget Retries
+#wget options
 WGET_N_RETRIES=30
 WGET_WAIT_RETRIES_S=10
+WGET_FLAGS="-t $WGET_N_RETRIES --waitretry=$WGET_WAIT_RETRIES_S"
+if [ "${DEPS_DONT_CHECK_CERTIFICATE}" ]; then
+    WGET_FLAGS="${WGET_FLAGS} --no-check-certificate"
+fi
+echo "WGET_FLAGS: ${WGET_FLAGS}"
 
 #Don't pollute /
 mkdir -p /tmp
@@ -35,22 +40,22 @@ cd jansson && rm -rf ./.git && autoreconf -i && ./configure && make && sudo make
 git clone https://github.com/edenhill/librdkafka
 cd librdkafka && rm -rf ./.git && ./configure && make && sudo make install && cd ..
 
-wget -t $WGET_N_RETRIES --waitretry=$WGET_WAIT_RETRIES_S --no-check-certificate https://github.com/alanxz/rabbitmq-c/archive/refs/tags/v0.11.0.tar.gz
+wget ${WGET_FLAGS} https://github.com/alanxz/rabbitmq-c/archive/refs/tags/v0.11.0.tar.gz
 mv v0.11.0.tar.gz rabbitmq-c-0.11.0.tar.gz
 tar xfz rabbitmq-c-0.11.0.tar.gz
 cd rabbitmq-c-0.11.0 && rm -rf ./.git && mkdir build && cd build && cmake -DCMAKE_INSTALL_LIBDIR=lib .. && sudo cmake --build . --target install && cd .. && cd ..
 
-git clone --recursive https://github.com/maxmind/libmaxminddb 
+git clone --recursive https://github.com/maxmind/libmaxminddb
 cd libmaxminddb && rm -rf ./.git && ./bootstrap && ./configure && make && sudo make install && cd ..
 
 git clone -b 3.4-stable https://github.com/ntop/nDPI
 cd nDPI && rm -rf ./.git && ./autogen.sh && ./configure && make && sudo make install && sudo ldconfig && cd ..
 
-wget -t $WGET_N_RETRIES --waitretry=$WGET_WAIT_RETRIES_S --no-check-certificate https://github.com/zeromq/libzmq/releases/download/v4.3.2/zeromq-4.3.2.tar.gz
+wget ${WGET_FLAGS} https://github.com/zeromq/libzmq/releases/download/v4.3.2/zeromq-4.3.2.tar.gz
 tar xfz zeromq-4.3.2.tar.gz
 cd zeromq-4.3.2 && ./configure && make && sudo make install && cd ..
 
-wget -t $WGET_N_RETRIES --waitretry=$WGET_WAIT_RETRIES_S --no-check-certificate https://archive.apache.org/dist/avro/avro-1.9.2/c/avro-c-1.9.2.tar.gz
+wget ${WGET_FLAGS} https://archive.apache.org/dist/avro/avro-1.9.2/c/avro-c-1.9.2.tar.gz
 tar xfz avro-c-1.9.2.tar.gz
 cd avro-c-1.9.2 && mkdir build && cd build && cmake .. && make && sudo make install && cd .. && cd ..
 
