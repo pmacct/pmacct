@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -56,6 +56,7 @@ typedef struct thread_pool_item {
 typedef struct thread_pool {
   int			count;
 
+  thread_pool_item_t	**list;
   thread_pool_item_t	*free_list;
 
   pthread_cond_t	*cond;

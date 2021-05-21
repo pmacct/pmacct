@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -59,13 +59,15 @@ thread_pool_t *allocate_thread_pool(int count)
   pool->count = count;
 
   /* Threads lists */
+  pool->list = malloc(count * sizeof(struct thread_pool_item_t *));
+  memset(pool->list, 0, count * sizeof(struct thread_pool_item_t *));
   pool->free_list = NULL;
 
   for (i = 0; i < pool->count; i++) {
     worker = malloc(sizeof(thread_pool_item_t));
     assert(worker);
 
-    worker->id = i;
+    worker->id = (i + 1);
     worker->owner = pool;
 
     worker->mutex = malloc(sizeof(pthread_mutex_t));
@@ -141,28 +143,31 @@ thread_pool_t *allocate_thread_pool(int count)
     while (worker->go != 0) pthread_cond_wait(worker->cond, worker->mutex);
     pthread_mutex_unlock(worker->mutex);
 
-    // Add to free list
+    // Add to lists
     worker->next = pool->free_list;
     pool->free_list = worker;
+    pool->list[i] = worker;
   }
 
   return pool;
 }
 
-/* XXX: case not supported: thread running and not in pool->free_list
-   at time of deallocate_thread_pool() execution; potential future need
-   for a worker_list in thread_pool_t */
 void deallocate_thread_pool(thread_pool_t **pool)
 {
   thread_pool_t *pool_ptr = NULL;
-  thread_pool_item_t *worker = NULL, *aux = NULL;
+  thread_pool_item_t *worker = NULL;
+  int i = 0;
 
   if (!pool || !(*pool)) return;
 
   pool_ptr = (*pool); 
-  worker = pool_ptr->free_list;
 
-  while (worker) {
+  /* Let's give send_to_pool() some advantage in case it was just called */
+  sleep(1);
+
+  for (i = 0; i < pool_ptr->count; i++) {
+    worker = pool_ptr->list[i];
+
     /* Let him finish */
     pthread_mutex_lock(worker->mutex);
     worker->go = TRUE;
@@ -181,10 +186,7 @@ void deallocate_thread_pool(thread_pool_t **pool)
  
     free(worker->thread);
 
-    aux = worker->next;
     free(worker);
-
-    worker = aux;
   }
 
   if (pool_ptr->mutex) free(pool_ptr->mutex);
@@ -205,10 +207,12 @@ void *thread_runner(void *arg)
   pthread_mutex_unlock(self->mutex);
 
   while (!self->quit) {
-
     /* Wait for some work */
     pthread_mutex_lock(self->mutex);
-    while (!self->go) pthread_cond_wait(self->cond, self->mutex);
+
+    while (!self->go) {
+      pthread_cond_wait(self->cond, self->mutex);
+    }
 
     /* Pre-flight check in case we were unlocked by deallocate_thread_pool() */
     if (self->quit) break;
@@ -237,8 +241,10 @@ void send_to_pool(thread_pool_t *pool, void *function, void *data)
   thread_pool_item_t *worker;
 
   pthread_mutex_lock(pool->mutex);
-  while (pool->free_list == NULL)
+
+  while (pool->free_list == NULL) {
     pthread_cond_wait(pool->cond, pool->mutex);
+  }
 
   /* Get a free thread */
   worker = pool->free_list;
