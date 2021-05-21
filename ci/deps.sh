@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 #    Copyright
 #    (c) 2020 Marc Sune <marcdevel@gmail.com>
@@ -18,7 +18,7 @@
 #    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 # Do not delete
-set -euo pipefail
+set -e
 
 #wget options
 WGET_N_RETRIES=30
@@ -28,13 +28,11 @@ if [ "${DEPS_DONT_CHECK_CERTIFICATE}" ]; then
     WGET_FLAGS="${WGET_FLAGS} --no-check-certificate"
 fi
 echo "WGET_FLAGS: ${WGET_FLAGS}"
+echo "MAKEFLAGS: ${MAKEFLAGS}"
 
 # Don't pollute /
 mkdir -p /tmp
 cd /tmp
-
-# Most of the software installation will probably honor this, which will improve perf
-export MAKEFLAGS="-j$(nproc)"
 
 # Dependencies (not fulfilled by Dockerfile)
 git clone https://github.com/akheron/jansson

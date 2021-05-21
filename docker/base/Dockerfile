@@ -9,16 +9,6 @@
 FROM debian:buster-slim as build-stage
 # We don't want man pages
 COPY ci/dpkg.cfg.d/excludes /etc/dpkg/dpkg.cfg.d/excludes
-
-#Copy installer script
-COPY . /tmp/pmacct/
-
-#Parallelism: 2 looks a reasonable default, and bear in mind CI specs
-ARG NUM_WORKERS=2
-
-#Do not check certificates in wget for external deps
-ARG DEPS_DONT_CHECK_CERTIFICATE
-
 # This is not the runtime/final image:
 #   * we keep some installation steps in different layers to improve cachability
 #   * this only covers build deps
@@ -52,8 +42,13 @@ RUN apt-get update && \
     wget \
     zlib1g-dev
 WORKDIR /tmp/pmacct/
-# Deps
+# About to deal with deps installation
 COPY ci/deps.sh ci/
+# Parallelism: 2 looks a reasonable default, and bear in mind CI specs
+ARG NUM_WORKERS=2
+ENV MAKEFLAGS="-j${NUM_WORKERS}"
+# Do not check certificates in wget for external deps
+ARG DEPS_DONT_CHECK_CERTIFICATE
 RUN ./ci/deps.sh
 # Actual build
 COPY . .
@@ -66,7 +61,7 @@ RUN export AVRO_LIBS="-L/usr/local/avro/lib -lavro" && \
                               --enable-ndpi --enable-zmq        \
                               --enable-avro --enable-serdes     \
                               --enable-redis --enable-gnutls && \
-  make -j${NUM_WORKERS} install
+  make install
 
 FROM debian:buster-slim as base
 LABEL maintainer "pmacct Docker Doctors <docker-doctors (at) pmacct.net>"
