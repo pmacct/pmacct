@@ -321,6 +321,7 @@ struct pm_dump_runner {
   u_int64_t seq;
   u_int64_t first;
   u_int64_t last;
+  int noop;
 };
 
 struct _protocols_struct {

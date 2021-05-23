@@ -573,6 +573,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bmp_dump_output", cfg_key_bmp_daemon_dump_output},
   {"bmp_dump_file", cfg_key_bmp_daemon_dump_file},
   {"bmp_dump_latest_file", cfg_key_bmp_daemon_dump_latest_file},
+  {"bmp_dump_workers", cfg_key_bmp_daemon_dump_workers},
   {"bmp_dump_avro_schema_file", cfg_key_bmp_daemon_dump_avro_schema_file},
   {"bmp_dump_refresh_time", cfg_key_bmp_daemon_dump_refresh_time},
   {"bmp_dump_amqp_host", cfg_key_bmp_daemon_dump_amqp_host},

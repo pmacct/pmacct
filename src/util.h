@@ -195,4 +195,6 @@ extern int P_broker_timers_get_retry_interval(struct p_broker_timers *);
 extern time_t P_broker_timers_get_last_fail(struct p_broker_timers *);
 
 extern primptrs_func primptrs_funcs[PRIMPTRS_FUNCS_N];
+
+extern void distribute_work(struct pm_dump_runner *, u_int64_t, int, u_int64_t);
 #endif //UTIL_H

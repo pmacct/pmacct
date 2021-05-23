@@ -3315,3 +3315,44 @@ int ft2af(u_int8_t ft)
 
   return ERR;
 }
+
+void distribute_work(struct pm_dump_runner *pdr, u_int64_t seqno, int workers, u_int64_t last_elem) 
+{
+  int id, idx;
+
+  if (!pdr) return;
+
+  memset(pdr, 0, (workers * sizeof(struct pm_dump_runner)));
+
+  for (idx = 0, id = 1; idx < workers; idx++, id++) {
+    struct pm_dump_runner *worker = &pdr[idx];
+
+    worker->id = id;
+    worker->seq = seqno;
+    worker->noop = FALSE;
+
+    if (workers <= last_elem) {
+      int ratio = last_elem / workers;
+
+      if (idx < (workers - 1)) {
+	worker->first = idx * ratio;
+	worker->last = (((idx * ratio) + ratio) - 1);
+      }
+      else {
+	worker->first = idx * ratio;
+	worker->last = (last_elem - 1);
+      }
+    }
+    else {
+      if (idx < last_elem) {
+	worker->first = idx;
+	worker->last = idx;
+      }
+      else {
+	worker->noop = TRUE;
+	worker->first = FALSE;
+	worker->last = FALSE;
+      }
+    }
+  }
+}

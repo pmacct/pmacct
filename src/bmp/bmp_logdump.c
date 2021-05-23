@@ -1559,7 +1559,7 @@ void bmp_handle_dump_event(int max_peers_idx)
   thread_pool_t *bmp_dump_workers_pool;
   struct pm_dump_runner pdr[config.bmp_dump_workers];
   u_int64_t dump_seqno;
-  int id, idx, ret;
+  int idx, ret;
 
   struct bgp_peer *peer;
   struct bmp_dump_se_ll *bdsell;
@@ -1573,17 +1573,6 @@ void bmp_handle_dump_event(int max_peers_idx)
   dump_seqno = bgp_peer_log_seq_get(&bms->log_seq);
   bgp_peer_log_seq_increment(&bms->log_seq);
 
-  /* Arranging workers data */
-  memset(&pdr, 0, sizeof(pdr));
-  for (idx = 0, id = 1; idx < config.bmp_dump_workers; idx++, id++) {
-    pdr[idx].id = id;
-    pdr[idx].seq = dump_seqno;
-
-    /* XXX: logics currently locked to 1 worker */
-    pdr[idx].first = 0;
-    pdr[idx].last = max_peers_idx;
-  }
-
   switch (ret = fork()) {
   case 0: /* Child */
     /* we have to ignore signals to avoid loops: because we are already forked */
@@ -1592,12 +1581,17 @@ void bmp_handle_dump_event(int max_peers_idx)
     pm_setproctitle("%s %s [%s]", config.type, "Core Process -- BMP Dump Writer", config.name);
     config.is_forked = TRUE;
 
+    /* Arranging workers data */
+    distribute_work(pdr, dump_seqno, config.bmp_dump_workers, max_peers_idx);
+
     /* creating the thread pool */
     bmp_dump_workers_pool = allocate_thread_pool(config.bmp_dump_workers);
     assert(bmp_dump_workers_pool);
 
     for (idx = 0; idx < config.bmp_dump_workers; idx++) {
-      send_to_pool(bmp_dump_workers_pool, bmp_dump_event_runner, &pdr[idx]);
+      if (!pdr[idx].noop) {
+        send_to_pool(bmp_dump_workers_pool, bmp_dump_event_runner, &pdr[idx]);
+      }
     }
 
     deallocate_thread_pool(&bmp_dump_workers_pool);
@@ -1725,7 +1719,7 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
   }
 #endif
 
-  for (peer = NULL, saved_peer = NULL, peers_idx = pdr->first; peers_idx < pdr->last; peers_idx++) {
+  for (peer = NULL, saved_peer = NULL, peers_idx = pdr->first; peers_idx <= pdr->last; peers_idx++) {
     if (bmp_peers[peers_idx].self.fd) {
       peer = &bmp_peers[peers_idx].self;
       peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */

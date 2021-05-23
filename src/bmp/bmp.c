@@ -463,10 +463,9 @@ int skinny_bmp_daemon()
   }
 
   if (bmp_misc_db->dump_backend_methods) {
-    /* XXX: logics currently locked to 1 worker */
-    // if (!config.bmp_dump_workers) {
+    if (!config.bmp_dump_workers) {
       config.bmp_dump_workers = 1;
-    // }
+    }
 
 #ifdef WITH_JANSSON
     if (!config.bmp_dump_output) {
