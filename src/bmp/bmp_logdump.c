@@ -1620,7 +1620,7 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
   struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BMP);
   char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
   char latest_filename[SRVBUFLEN], event_type[] = "dump", *fd_buf = NULL;
-  int ret, peers_idx, duration, tables_num;
+  int peers_idx, duration, tables_num;
   struct bgp_rt_structs *inter_domain_routing_db;
   struct bgp_table *table;
   struct bgp_node *node;
@@ -1650,6 +1650,8 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
 
 #ifdef WITH_RABBITMQ
   if (config.bmp_dump_amqp_routing_key) {
+    int ret;
+
     bmp_dump_init_amqp_host(&bmp_dump_amqp_host);
     ret = p_amqp_connect_to_publish(&bmp_dump_amqp_host);
     if (ret) exit_gracefully(ret);
@@ -1658,6 +1660,8 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
 
 #ifdef WITH_KAFKA
   if (config.bmp_dump_kafka_topic) {
+    int ret;
+
     ret = bmp_dump_init_kafka_host(&bmp_dump_kafka_host);
     if (ret) exit_gracefully(ret);
   }
