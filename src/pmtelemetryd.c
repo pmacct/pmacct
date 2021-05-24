@@ -257,9 +257,6 @@ int main(int argc,char **argv, char **envp)
   sigemptyset(&sighandler_action.sa_mask);  /* Within a signal handler all the signals are enabled */
   sighandler_action.sa_flags = SA_RESTART;  /* To enable re-entering a system call afer done with signal handling */
 
-  sighandler_action.sa_handler = startup_handle_falling_child;
-  sigaction(SIGCHLD, &sighandler_action, NULL);
-
   /* handles reopening of syslog channel */
   sighandler_action.sa_handler = reload;
   sigaction(SIGHUP, &sighandler_action, NULL);
