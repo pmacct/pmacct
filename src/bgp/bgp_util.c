@@ -1576,7 +1576,6 @@ int bgp_peers_bintree_walk_print(const void *nodep, const pm_VISIT which, const 
 int bgp_peers_bintree_walk_delete(const void *nodep, const pm_VISIT which, const int depth, void *extra)
 {
   struct bgp_misc_structs *bms;
-  char peer_str[] = "peer_ip", *saved_peer_str;
   struct bgp_peer *peer;
 
   peer = (*(struct bgp_peer **) nodep);
@@ -1587,10 +1586,7 @@ int bgp_peers_bintree_walk_delete(const void *nodep, const pm_VISIT which, const
 
   if (!bms) return FALSE;
 
-  saved_peer_str = bms->peer_str;
-  bms->peer_str = peer_str;
   bgp_peer_info_delete(peer);
-  bms->peer_str = saved_peer_str;
 
   // XXX: count tree elements to index and free() later
 

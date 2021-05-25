@@ -89,6 +89,11 @@ void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int etype, int log_type,
 
     json_object_set_new_nocheck(obj, "bmp_router_port", json_integer((json_int_t)bmpp->self.tcp_port));
 
+    addr_to_str(ip_address, &peer->addr);
+    json_object_set_new_nocheck(obj, "peer_ip", json_string(ip_address));
+
+    json_object_set_new_nocheck(obj, "peer_tcp_port", json_integer((json_int_t)peer->tcp_port));
+
     if (log_type == BGP_LOG_TYPE_DELETE) {
       json_object_set_new_nocheck(obj, "bmp_msg_type", json_string("internal"));
     }
@@ -120,6 +125,14 @@ void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int etype, int log_type,
     pm_avro_check(avro_value_get_by_name(obj, "bmp_router_port", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
     pm_avro_check(avro_value_set_int(&p_avro_branch, bmpp->self.tcp_port));
+
+    addr_to_str(ip_address, &peer->addr);
+    pm_avro_check(avro_value_get_by_name(obj, "peer_ip", &p_avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&p_avro_field, ip_address));
+
+    pm_avro_check(avro_value_get_by_name(obj, "peer_tcp_port", &p_avro_field, NULL));
+    pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+    pm_avro_check(avro_value_set_int(&p_avro_branch, peer->tcp_port));
 
     if (log_type == BGP_LOG_TYPE_DELETE) {
       pm_avro_check(avro_value_get_by_name(obj, "bmp_msg_type", &p_avro_field, NULL));
@@ -216,8 +229,6 @@ int bmp_peer_init(struct bmp_peer *bmpp, int type)
 
 void bmp_peer_close(struct bmp_peer *bmpp, int type)
 {
-  char peer_str[] = "peer_ip", *saved_peer_str;
-  char peer_port_str[] = "peer_tcp_port", *saved_peer_port_str;
   struct bgp_misc_structs *bms;
   struct bgp_peer *peer;
 
@@ -228,19 +239,11 @@ void bmp_peer_close(struct bmp_peer *bmpp, int type)
 
   if (!bms) return;
 
-  saved_peer_str = bms->peer_str;
-  saved_peer_port_str = bms->peer_port_str;
-  bms->peer_str = peer_str;
-  bms->peer_port_str = peer_port_str;
-
   pm_twalk(bmpp->bgp_peers_v4, bgp_peers_bintree_walk_delete, NULL);
   pm_twalk(bmpp->bgp_peers_v6, bgp_peers_bintree_walk_delete, NULL);
 
   pm_tdestroy(&bmpp->bgp_peers_v4, bgp_peer_free);
   pm_tdestroy(&bmpp->bgp_peers_v6, bgp_peer_free);
-
-  bms->peer_str = saved_peer_str;
-  bms->peer_port_str = saved_peer_port_str;
 
   if (bms->dump_file || bms->dump_amqp_routing_key || bms->dump_kafka_topic) {
     bmp_dump_close_peer(peer);

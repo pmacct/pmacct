@@ -1811,15 +1811,8 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
 		struct bmp_peer *local_bmpp = ri->peer->bmp_se;
 
                 if (local_bmpp && (&local_bmpp->self == peer)) {
-		  char peer_str[] = "peer_ip", *saved_peer_str = bms->peer_str;
-		  char peer_port_str[] = "peer_tcp_port", *saved_peer_port_str = bms->peer_port_str;
-
 		  ri->peer->log = peer->log;
-		  bms->peer_str = peer_str;
-		  bms->peer_port_str = peer_port_str;
                   bgp_peer_log_msg(node, ri, afi, safi, event_type, config.bmp_dump_output, NULL, BGP_LOG_TYPE_MISC);
-		  bms->peer_str = saved_peer_str;
-		  bms->peer_port_str = saved_peer_port_str;
                   dump_elems++;
                 }
               }
