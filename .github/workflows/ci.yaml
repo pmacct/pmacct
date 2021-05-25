@@ -124,21 +124,17 @@ jobs:
           docker exec -i $CONTAINER_ID ./ci/script.sh
           docker stop $CONTAINER_ID
 
-  ### Step 3: official dockerhub images (bleeding-edge, latest and releases)
-  docker-hub:
+  ### Step 3: official docker image generation
+  pmacct-docker:
     needs: build-and-test
     runs-on: ubuntu-18.04
-    if: github.event_name != 'pull_request'
-    env:
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
     steps:
       - name: Checkout pmacct
         uses: actions/checkout@v1 #Don't use v2 messes everything
         with:
           path: pmacct
 
-      - name: Build and upload containers
+      - name: Build containers
         run: |
           echo "Fix mess with tags in actions/checkout..."
           git fetch -f && git fetch -f --tags
@@ -155,6 +151,48 @@ jobs:
           docker build -f docker/pmbgpd/Dockerfile -t pmbgpd:_build .
           docker build -f docker/pmbmpd/Dockerfile -t pmbmpd:_build .
           docker build -f docker/pmtelemetryd/Dockerfile -t pmtelemetryd:_build .
+          echo "Saving images as artifacts..."
+          mkdir -p /tmp/docker/
+          docker save -o /tmp/docker/pmacct_docker_images.tar base:_build pmacctd:_build nfacctd:_build sfacctd:_build uacctd:_build pmbgpd:_build pmbmpd:_build pmtelemetryd:_build
+
+      - name: Export pmacct docker images as an artifact
+        uses: actions/upload-artifact@v2.2.2
+        with:
+          name: pmacct_docker_images
+          retention-days: 1
+          path: |
+            /tmp/docker
+
+  ### Step 4: Upload images to dockerhub (bleeding-edge, latest and releases)
+  publish-dockerhub:
+    needs: pmacct-docker
+    runs-on: ubuntu-18.04
+    if: github.event_name != 'pull_request'
+    env:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: pmacct_docker_images
+          path: /tmp/docker
+
+      - name: Import pmacct docker images in the local registry
+        run: |
+          docker load -i /tmp/docker/pmacct_docker_images.tar
+
+      - name: Checkout pmacct
+        uses: actions/checkout@v1 #Don't use v2 messes everything
+        with:
+          path: pmacct
+
+      - name: Build and upload containers
+        run: |
+          echo "Fix mess with tags in actions/checkout..."
+          git fetch -f && git fetch -f --tags
+          echo "Deducing PMACCT_VERSION..."
+          PMACCT_VERSION=$(git describe --abbrev=0 --match="v*")
+          echo "PMACCT_VERSION=$PMACCT_VERSION"
           echo "Uploading to dockerhub ...";
           echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin;
           #Always push bleeding-edge when pushed to master
