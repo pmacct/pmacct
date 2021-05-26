@@ -126,7 +126,6 @@ jobs:
 
   ### Step 3: official docker image generation
   pmacct-docker:
-    needs: build-and-test
     runs-on: ubuntu-18.04
     steps:
       - name: Checkout pmacct
@@ -165,7 +164,7 @@ jobs:
 
   ### Step 4: Upload images to dockerhub (bleeding-edge, latest and releases)
   publish-dockerhub:
-    needs: pmacct-docker
+    needs: [pmacct-docker, build-and-test]
     runs-on: ubuntu-18.04
     if: github.event_name != 'pull_request'
     env:
