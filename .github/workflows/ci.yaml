@@ -13,7 +13,6 @@ env:
   BUILD_DOCKER_TAG_UBUNTU_BIONIC: ci/ubuntu-bionic-for-pmacct
   BUILD_DOCKER_FILE_CENTOS_8: ci/Dockerfile-centos-8-for-pmacct
   BUILD_DOCKER_TAG_CENTOS_8: ci/centos8-for-pmacct
-  BUILD_DOCKER_FILE_BASE_FOR_DOCKERHUB: docker/base/Dockerfile
 
 jobs:
 
@@ -63,21 +62,6 @@ jobs:
           retention-days: 1
           path: |
             /tmp/docker
-
-  builder-base-docker:
-    runs-on: ubuntu-18.04
-    steps:
-      - name: Checkout pmacct
-        uses: actions/checkout@v2
-
-      - name: Build same base docker image we use for dockerhub
-        run: |
-          echo "Building the base container..."
-          docker build \
-            --build-arg NUM_WORKERS=$CI_NUM_WORKERS \
-            --build-arg DEPS_DONT_CHECK_CERTIFICATE=$CI_DEPS_DONT_CHECK_CERTIFICATE \
-            -f $BUILD_DOCKER_FILE_BASE_FOR_DOCKERHUB \
-            -t base:_build .
 
   ### Step 2: permutations
   build-and-test:
@@ -162,7 +146,7 @@ jobs:
           PMACCT_VERSION=$(git describe --abbrev=0 --match="v*")
           echo "PMACCT_VERSION=$PMACCT_VERSION"
           echo "Building the base container..."
-          docker build --build-arg NUM_WORKERS=$CI_NUM_WORKERS --build-arg DEPS_DONT_CHECK_CERTIFICATE=$CI_DEPS_DONT_CHECK_CERTIFICATE -f $BUILD_DOCKER_FILE_BASE_FOR_DOCKERHUB -t base:_build .
+          docker build --build-arg NUM_WORKERS=$CI_NUM_WORKERS --build-arg DEPS_DONT_CHECK_CERTIFICATE=$CI_DEPS_DONT_CHECK_CERTIFICATE -f docker/base/Dockerfile -t base:_build .
           echo "Building daemon containers..."
           docker build -f docker/pmacctd/Dockerfile -t pmacctd:_build .
           docker build -f docker/nfacctd/Dockerfile -t nfacctd:_build .
