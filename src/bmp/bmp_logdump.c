@@ -1581,6 +1581,9 @@ void bmp_handle_dump_event(int max_peers_idx)
     pm_setproctitle("%s %s [%s]", config.type, "Core Process -- BMP Dump Writer", config.name);
     config.is_forked = TRUE;
 
+    /* setting ourselves as read-only */
+    bms->is_readonly = TRUE;
+
     /* Arranging workers data */
     distribute_work(pdr, dump_seqno, config.bmp_dump_workers, max_peers_idx);
 
@@ -1792,7 +1795,6 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
 
       bgp_peer_dump_init(peer, config.bmp_dump_output, FUNC_TYPE_BMP);
       inter_domain_routing_db = bgp_select_routing_db(FUNC_TYPE_BMP);
-      dump_elems = 0;
 
       if (!inter_domain_routing_db) return ERR;
 
@@ -1823,7 +1825,7 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
 	}
       }
 
-      if (bdsell && bdsell->start) {
+      if (bdsell && bdsell->start && (pdr->id == 1)) {
 	struct bmp_dump_se_ll_elem *se_ll_elem;
 	char event_type[] = "dump";
 

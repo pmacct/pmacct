@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /* 
@@ -195,7 +195,14 @@ set_link (struct bgp_node *node, struct bgp_node *new)
 struct bgp_node *
 bgp_lock_node (struct bgp_peer *peer, struct bgp_node *node)
 {
-  node->lock++;
+  struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
+
+  assert(bms);
+
+  if (!bms->is_readonly) {
+    node->lock++;
+  }
+
   return node;
 }
 
@@ -203,10 +210,17 @@ bgp_lock_node (struct bgp_peer *peer, struct bgp_node *node)
 void
 bgp_unlock_node (struct bgp_peer *peer, struct bgp_node *node)
 {
-  node->lock--;
+  struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
 
-  if (node->lock == 0)
-    bgp_node_delete (peer, node);
+  assert(bms);
+
+  if (!bms->is_readonly) {
+    node->lock--;
+
+    if (node->lock == 0) {
+      bgp_node_delete (peer, node);
+    }
+  }
 }
 
 void bgp_node_vector_debug(struct bgp_node_vector *bnv, struct prefix *p)
