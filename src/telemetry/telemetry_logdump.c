@@ -372,7 +372,6 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
 #endif
 
         telemetry_peer_dump_init(peer, config.telemetry_dump_output, FUNC_TYPE_TELEMETRY);
-        dump_elems = 0;
 
 	if (tdsell && tdsell->start) {
           telemetry_dump_se_ll_elem *se_ll_elem;

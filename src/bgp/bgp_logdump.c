@@ -1803,7 +1803,8 @@ void bgp_handle_dump_event()
 
 	bgp_peer_dump_init(peer, config.bgp_table_dump_output, FUNC_TYPE_BGP);
         inter_domain_routing_db = bgp_select_routing_db(FUNC_TYPE_BGP);
-	dump_elems = 0;
+	bds.entries = 0;
+	bds.tables = 0;
 
 	if (!inter_domain_routing_db) return;
 
@@ -1822,6 +1823,7 @@ void bgp_handle_dump_event()
 		  if (ri->peer == peer) {
 	            bgp_peer_log_msg(node, ri, afi, safi, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC);
 	            dump_elems++;
+	            bds.entries++;
 		  }
 		}
 	      }
@@ -1833,10 +1835,9 @@ void bgp_handle_dump_event()
 
         saved_peer = peer;
 	tables_num++;
+	bds.tables++;
 
         strlcpy(last_filename, current_filename, SRVBUFLEN);
-	bds.entries = dump_elems;
-	bds.tables = tables_num;
         bgp_peer_dump_close(peer, &bds, config.bgp_table_dump_output, FUNC_TYPE_BGP);
       }
     }
