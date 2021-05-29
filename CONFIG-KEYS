@@ -2814,6 +2814,13 @@ DESC:           Defines whether to parse the first packet of a connection lookin
                         server bmp-dev <PMBMPD IP Address>:5000 send-proxy-v2
 DEFAULT:        false
 
+KEY:		bmp_dump_workers
+DESC:		Sets the amount of parallel worker threads to set up for dump events. By default 1,
+		that is no parallelization, it may be set to a fraction of the available CPU threads.
+		The unit of parallelization is the BMP exporter, ie. 4 workers and 4 BMP exporters
+		each worker is assigned one BMP exporter data to dump.
+DEFAULT:	1
+
 KEY:		rpki_roas_file [MAP, GLOBAL]
 DESC:		Full pathname to a file containing RPKI ROA data. Data encoding is JSON and format
 		is according to RIPE Validator format. ROA data can be obtained for example from
