@@ -1825,7 +1825,7 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
 	}
       }
 
-      if (bdsell && bdsell->start && (pdr->id == 1)) {
+      if (bdsell && bdsell->start) {
 	struct bmp_dump_se_ll_elem *se_ll_elem;
 	char event_type[] = "dump";
 
