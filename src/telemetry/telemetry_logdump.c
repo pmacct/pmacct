@@ -380,6 +380,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
 	  for (se_ll_elem = tdsell->start; se_ll_elem; se_ll_elem = se_ll_elem->next) {
 	    telemetry_log_msg(peer, t_data, se_ll_elem->rec.data, se_ll_elem->rec.len, se_ll_elem->rec.decoder,
 				se_ll_elem->rec.seq, event_type, config.telemetry_dump_output);
+	    dump_elems++;
 	  }
 	}
 
