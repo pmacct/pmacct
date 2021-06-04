@@ -786,8 +786,10 @@ int telemetry_daemon(void *t_data_void)
 	tpc_ret = pm_tfind(&tpc, &telemetry_peers_cache, telemetry_tpc_addr_cmp);
 
 	if (tpc_ret) {
-	  peer = &telemetry_peers[tpc_ret->index];
-	  telemetry_peers_timeout[tpc_ret->index].last_msg = t_data->now;
+	  telemetry_peer_cache *tpc_peer = (*(telemetry_peer_cache **) tpc_ret);
+
+	  peer = &telemetry_peers[tpc_peer->index];
+	  telemetry_peers_timeout[tpc_peer->index].last_msg = t_data->now;
 
 	  goto read_data;
 	}
