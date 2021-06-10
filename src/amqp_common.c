@@ -32,7 +32,6 @@ struct p_amqp_host bgp_table_dump_amqp_host;
 struct p_amqp_host bmp_daemon_msglog_amqp_host;
 struct p_amqp_host sfacctd_counter_amqp_host;
 struct p_amqp_host telemetry_daemon_msglog_amqp_host;
-struct p_amqp_host telemetry_dump_amqp_host;
 
 char rabbitmq_user[] = "guest";
 char rabbitmq_pwd[] = "guest";

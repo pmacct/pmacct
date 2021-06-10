@@ -98,7 +98,6 @@ extern struct p_amqp_host bgp_table_dump_amqp_host;
 extern struct p_amqp_host bmp_daemon_msglog_amqp_host;
 extern struct p_amqp_host sfacctd_counter_amqp_host;
 extern struct p_amqp_host telemetry_daemon_msglog_amqp_host;
-extern struct p_amqp_host telemetry_dump_amqp_host;
 
 extern char rabbitmq_user[];
 extern char rabbitmq_pwd[];

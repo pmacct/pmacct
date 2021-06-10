@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -42,11 +42,11 @@ extern int telemetry_peer_dump_close(telemetry_peer *, int, int);
 extern void telemetry_dump_init_peer(telemetry_peer *);
 extern void telemetry_dump_se_ll_destroy(telemetry_dump_se_ll *);
 extern void telemetry_dump_se_ll_append(telemetry_peer *, struct telemetry_data *, int);
-extern void telemetry_handle_dump_event(struct telemetry_data *);
+extern void telemetry_handle_dump_event(struct telemetry_data *, int);
 
 extern void telemetry_daemon_msglog_init_amqp_host();
-extern void telemetry_dump_init_amqp_host();
+extern void telemetry_dump_init_amqp_host(void *);
 extern int telemetry_daemon_msglog_init_kafka_host();
-extern int telemetry_dump_init_kafka_host();
+extern int telemetry_dump_init_kafka_host(void *);
 
 #endif //TELEMETRY_LOGDUMP_H

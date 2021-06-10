@@ -258,7 +258,7 @@ void telemetry_dump_se_ll_destroy(telemetry_dump_se_ll *tdsell)
   tdsell->last = NULL;
 }
 
-void telemetry_handle_dump_event(struct telemetry_data *t_data)
+void telemetry_handle_dump_event(struct telemetry_data *t_data, int max_peers_idx)
 {
   telemetry_misc_structs *tms = bgp_select_misc_db(FUNC_TYPE_TELEMETRY);
   char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
@@ -272,6 +272,14 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
   telemetry_peer *peer, *saved_peer;
   telemetry_dump_se_ll *tdsell;
   telemetry_peer_log peer_log;
+
+#ifdef WITH_RABBITMQ
+  struct p_amqp_host telemetry_dump_amqp_host;
+#endif
+
+#ifdef WITH_KAFKA
+  struct p_kafka_host telemetry_dump_kafka_host;
+#endif
 
   if (!tms) return;
 
@@ -299,7 +307,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
 
 #ifdef WITH_RABBITMQ
     if (config.telemetry_dump_amqp_routing_key) {
-      telemetry_dump_init_amqp_host();
+      telemetry_dump_init_amqp_host(&telemetry_dump_amqp_host);
       ret = p_amqp_connect_to_publish(&telemetry_dump_amqp_host);
       if (ret) exit_gracefully(ret);
     }
@@ -307,7 +315,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data)
 
 #ifdef WITH_KAFKA
     if (config.telemetry_dump_kafka_topic) {
-      ret = telemetry_dump_init_kafka_host();
+      ret = telemetry_dump_init_kafka_host(&telemetry_dump_kafka_host);
       if (ret) exit_gracefully(ret);
     }
 #endif
@@ -463,9 +471,11 @@ void telemetry_daemon_msglog_init_amqp_host()
 #endif
 
 #if defined WITH_RABBITMQ
-void telemetry_dump_init_amqp_host()
+void telemetry_dump_init_amqp_host(void *tdah)
 {
-  p_amqp_init_host(&telemetry_dump_amqp_host);
+  struct p_amqp_host *telemetry_dump_amqp_host = tdah;
+
+  p_amqp_init_host(telemetry_dump_amqp_host);
 
   if (!config.telemetry_dump_amqp_user) config.telemetry_dump_amqp_user = rabbitmq_user;
   if (!config.telemetry_dump_amqp_passwd) config.telemetry_dump_amqp_passwd = rabbitmq_pwd;
@@ -474,19 +484,19 @@ void telemetry_dump_init_amqp_host()
   if (!config.telemetry_dump_amqp_host) config.telemetry_dump_amqp_host = default_amqp_host;
   if (!config.telemetry_dump_amqp_vhost) config.telemetry_dump_amqp_vhost = default_amqp_vhost;
 
-  p_amqp_set_user(&telemetry_dump_amqp_host, config.telemetry_dump_amqp_user);
-  p_amqp_set_passwd(&telemetry_dump_amqp_host, config.telemetry_dump_amqp_passwd);
-  p_amqp_set_exchange(&telemetry_dump_amqp_host, config.telemetry_dump_amqp_exchange);
-  p_amqp_set_exchange_type(&telemetry_dump_amqp_host, config.telemetry_dump_amqp_exchange_type);
-  p_amqp_set_host(&telemetry_dump_amqp_host, config.telemetry_dump_amqp_host);
-  p_amqp_set_vhost(&telemetry_dump_amqp_host, config.telemetry_dump_amqp_vhost);
-  p_amqp_set_persistent_msg(&telemetry_dump_amqp_host, config.telemetry_dump_amqp_persistent_msg);
-  p_amqp_set_frame_max(&telemetry_dump_amqp_host, config.telemetry_dump_amqp_frame_max);
-  p_amqp_set_content_type_json(&telemetry_dump_amqp_host);
-  p_amqp_set_heartbeat_interval(&telemetry_dump_amqp_host, config.telemetry_dump_amqp_heartbeat_interval);
+  p_amqp_set_user(telemetry_dump_amqp_host, config.telemetry_dump_amqp_user);
+  p_amqp_set_passwd(telemetry_dump_amqp_host, config.telemetry_dump_amqp_passwd);
+  p_amqp_set_exchange(telemetry_dump_amqp_host, config.telemetry_dump_amqp_exchange);
+  p_amqp_set_exchange_type(telemetry_dump_amqp_host, config.telemetry_dump_amqp_exchange_type);
+  p_amqp_set_host(telemetry_dump_amqp_host, config.telemetry_dump_amqp_host);
+  p_amqp_set_vhost(telemetry_dump_amqp_host, config.telemetry_dump_amqp_vhost);
+  p_amqp_set_persistent_msg(telemetry_dump_amqp_host, config.telemetry_dump_amqp_persistent_msg);
+  p_amqp_set_frame_max(telemetry_dump_amqp_host, config.telemetry_dump_amqp_frame_max);
+  p_amqp_set_content_type_json(telemetry_dump_amqp_host);
+  p_amqp_set_heartbeat_interval(telemetry_dump_amqp_host, config.telemetry_dump_amqp_heartbeat_interval);
 }
 #else
-void telemetry_dump_init_amqp_host()
+void telemetry_dump_init_amqp_host(void *tdkh)
 {
 }
 #endif
@@ -520,26 +530,27 @@ int telemetry_daemon_msglog_init_kafka_host()
 #endif
 
 #if defined WITH_KAFKA
-int telemetry_dump_init_kafka_host()
+int telemetry_dump_init_kafka_host(void *tdkh)
 {
+  struct p_kafka_host *telemetry_dump_kafka_host = tdkh;
   int ret;
 
-  p_kafka_init_host(&telemetry_dump_kafka_host, config.telemetry_dump_kafka_config_file);
-  ret = p_kafka_connect_to_produce(&telemetry_dump_kafka_host);
+  p_kafka_init_host(telemetry_dump_kafka_host, config.telemetry_dump_kafka_config_file);
+  ret = p_kafka_connect_to_produce(telemetry_dump_kafka_host);
 
   if (!config.telemetry_dump_kafka_broker_host) config.telemetry_dump_kafka_broker_host = default_kafka_broker_host;
   if (!config.telemetry_dump_kafka_broker_port) config.telemetry_dump_kafka_broker_port = default_kafka_broker_port;
 
-  p_kafka_set_broker(&telemetry_dump_kafka_host, config.telemetry_dump_kafka_broker_host, config.telemetry_dump_kafka_broker_port);
-  p_kafka_set_topic(&telemetry_dump_kafka_host, config.telemetry_dump_kafka_topic);
-  p_kafka_set_partition(&telemetry_dump_kafka_host, config.telemetry_dump_kafka_partition);
-  p_kafka_set_key(&telemetry_dump_kafka_host, config.telemetry_dump_kafka_partition_key, config.telemetry_dump_kafka_partition_keylen);
-  p_kafka_set_content_type(&telemetry_dump_kafka_host, PM_KAFKA_CNT_TYPE_STR);
+  p_kafka_set_broker(telemetry_dump_kafka_host, config.telemetry_dump_kafka_broker_host, config.telemetry_dump_kafka_broker_port);
+  p_kafka_set_topic(telemetry_dump_kafka_host, config.telemetry_dump_kafka_topic);
+  p_kafka_set_partition(telemetry_dump_kafka_host, config.telemetry_dump_kafka_partition);
+  p_kafka_set_key(telemetry_dump_kafka_host, config.telemetry_dump_kafka_partition_key, config.telemetry_dump_kafka_partition_keylen);
+  p_kafka_set_content_type(telemetry_dump_kafka_host, PM_KAFKA_CNT_TYPE_STR);
 
   return ret;
 }
 #else
-int telemetry_dump_init_kafka_host()
+int telemetry_dump_init_kafka_host(void *tdkh)
 {
   return ERR;
 }

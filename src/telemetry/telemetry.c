@@ -500,9 +500,6 @@ int telemetry_daemon(void *t_data_void)
       telemetry_misc_db->dump_backend_methods = FALSE;
       Log(LOG_WARNING, "WARN ( %s/%s ): Invalid 'telemetry_dump_refresh_time'.\n", config.name, t_data->log_str);
     }
-
-    if (config.telemetry_dump_amqp_routing_key) telemetry_dump_init_amqp_host();
-    if (config.telemetry_dump_kafka_topic) telemetry_dump_init_kafka_host();
   }
 
   select_fd = bkp_select_fd = (config.telemetry_sock + 1);
@@ -679,7 +676,7 @@ int telemetry_daemon(void *t_data_void)
 			    config.timestamps_since_epoch, config.timestamps_rfc3339, config.timestamps_utc);
 	  telemetry_misc_db->dump.period = config.telemetry_dump_refresh_time;
 
-          telemetry_handle_dump_event(t_data);
+          telemetry_handle_dump_event(t_data, max_peers_idx);
 
           dump_refresh_deadline += config.telemetry_dump_refresh_time;
         }
