@@ -474,10 +474,9 @@ int telemetry_daemon(void *t_data_void)
   }
 
   if (telemetry_misc_db->dump_backend_methods) {
-    /* XXX: logics currently locked to 1 worker */
-    // if (!config.telemetry_dump_workers) {
+    if (!config.telemetry_dump_workers) {
       config.telemetry_dump_workers = 1;
-    // }
+    }
 
 #ifdef WITH_JANSSON
     if (!config.telemetry_dump_output) {

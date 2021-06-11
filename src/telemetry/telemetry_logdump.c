@@ -331,7 +331,7 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data, int max_peers_id
 int telemetry_dump_event_runner(struct pm_dump_runner *pdr)
 {
   telemetry_misc_structs *tms = bgp_select_misc_db(FUNC_TYPE_TELEMETRY);
-  struct telemetry_data *t_data = pdr->extra;
+  struct telemetry_data *t_data;
   char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
   char latest_filename[SRVBUFLEN], *fd_buf = NULL;
   int peers_idx, duration, tables_num;
@@ -342,6 +342,10 @@ int telemetry_dump_event_runner(struct pm_dump_runner *pdr)
   telemetry_peer *peer, *saved_peer;
   telemetry_dump_se_ll *tdsell;
   telemetry_peer_log peer_log;
+
+  assert(pdr);
+  assert(pdr->extra);
+  t_data = pdr->extra;
 
 #ifdef WITH_RABBITMQ
   struct p_amqp_host telemetry_dump_amqp_host;
@@ -377,7 +381,8 @@ int telemetry_dump_event_runner(struct pm_dump_runner *pdr)
 #endif
 
   dumper_pid = getpid();
-  Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping telemetry data - START (PID: %u) ***\n", config.name, t_data->log_str, dumper_pid);
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping telemetry data - START (PID: %u RID: %u) ***\n",
+      config.name, t_data->log_str, dumper_pid, pdr->id);
   start = time(NULL);
   tables_num = 0;
 
@@ -468,6 +473,10 @@ int telemetry_dump_event_runner(struct pm_dump_runner *pdr)
   }
 #endif
 
+  if (config.telemetry_dump_file && peer) {
+    close_output_file(peer->log->fd);
+  }
+
   if (config.telemetry_dump_latest_file && peer) {
     telemetry_peer_log_dynname(latest_filename, SRVBUFLEN, config.telemetry_dump_latest_file, peer);
     link_latest_output_file(latest_filename, last_filename);
@@ -475,8 +484,8 @@ int telemetry_dump_event_runner(struct pm_dump_runner *pdr)
 
   duration = time(NULL)-start;
 
-  Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping telemetry data - END (PID: %u, PEERS: %u ENTRIES: %" PRIu64 " ET: %u) ***\n",
-      config.name, t_data->log_str, dumper_pid, tables_num, dump_elems, duration);
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping telemetry data - END (PID: %u RID: %u PEERS: %u ENTRIES: %" PRIu64 " ET: %u) ***\n",
+      config.name, t_data->log_str, dumper_pid, pdr->id, tables_num, dump_elems, duration);
 
   return FALSE;
 }
