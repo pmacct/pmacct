@@ -266,6 +266,7 @@ extern int cfg_key_telemetry_dump_kafka_topic_rr(char *, char *, char *);
 extern int cfg_key_telemetry_dump_kafka_partition(char *, char *, char *);
 extern int cfg_key_telemetry_dump_kafka_partition_key(char *, char *, char *);
 extern int cfg_key_telemetry_dump_kafka_config_file(char *, char *, char *);
+extern int cfg_key_telemetry_dump_workers(char *, char *, char *);
 extern int cfg_key_maps_refresh(char *, char *, char *);
 extern int cfg_key_maps_index(char *, char *, char *);
 extern int cfg_key_maps_entries(char *, char *, char *);

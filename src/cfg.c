@@ -334,6 +334,7 @@ static const struct _dictionary_line dictionary[] = {
   {"telemetry_dump_kafka_partition", cfg_key_telemetry_dump_kafka_partition},
   {"telemetry_dump_kafka_partition_key", cfg_key_telemetry_dump_kafka_partition_key},
   {"telemetry_dump_kafka_config_file", cfg_key_telemetry_dump_kafka_config_file},
+  {"telemetry_dump_workers", cfg_key_telemetry_dump_workers},
   {"maps_refresh", cfg_key_maps_refresh},
   {"maps_index", cfg_key_maps_index},
   {"maps_entries", cfg_key_maps_entries},

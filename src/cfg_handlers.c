@@ -8111,6 +8111,23 @@ int cfg_key_telemetry_dump_amqp_heartbeat_interval(char *filename, char *name, c
   return changes;
 }
 
+int cfg_key_telemetry_dump_workers(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value < 1) {
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_dump_workers' value has to be >= 1.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_workers = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_workers'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_telemetry_msglog_kafka_broker_host(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

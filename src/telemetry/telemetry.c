@@ -474,8 +474,15 @@ int telemetry_daemon(void *t_data_void)
   }
 
   if (telemetry_misc_db->dump_backend_methods) {
+    /* XXX: logics currently locked to 1 worker */
+    // if (!config.telemetry_dump_workers) {
+      config.telemetry_dump_workers = 1;
+    // }
+
 #ifdef WITH_JANSSON
-    if (!config.telemetry_dump_output) config.telemetry_dump_output = PRINT_OUTPUT_JSON;
+    if (!config.telemetry_dump_output) {
+      config.telemetry_dump_output = PRINT_OUTPUT_JSON;
+    }
 #else
     Log(LOG_WARNING, "WARN ( %s/%s ): telemetry_table_dump_output set to json but will produce no output (missing --enable-jansson).\n", config.name, t_data->log_str);
 #endif

@@ -24,6 +24,7 @@
 #include "bgp/bgp.h"
 #include "bmp/bmp.h"
 #include "telemetry.h"
+#include "thread_pool.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
@@ -261,31 +262,20 @@ void telemetry_dump_se_ll_destroy(telemetry_dump_se_ll *tdsell)
 void telemetry_handle_dump_event(struct telemetry_data *t_data, int max_peers_idx)
 {
   telemetry_misc_structs *tms = bgp_select_misc_db(FUNC_TYPE_TELEMETRY);
-  char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
-  char latest_filename[SRVBUFLEN], event_type[] = "dump", *fd_buf = NULL;
-  (void)event_type;
-  int ret, peers_idx, duration, tables_num;
-  pid_t dumper_pid;
-  time_t start;
-  u_int64_t dump_elems = 0, dump_seqno;
+  thread_pool_t *telemetry_dump_workers_pool;
+  struct pm_dump_runner pdr[config.telemetry_dump_workers];
+  u_int64_t dump_seqno;
+  int idx, ret;
 
-  telemetry_peer *peer, *saved_peer;
+  telemetry_peer *peer;
   telemetry_dump_se_ll *tdsell;
-  telemetry_peer_log peer_log;
-
-#ifdef WITH_RABBITMQ
-  struct p_amqp_host telemetry_dump_amqp_host;
-#endif
-
-#ifdef WITH_KAFKA
-  struct p_kafka_host telemetry_dump_kafka_host;
-#endif
 
   if (!tms) return;
 
   /* pre-flight check */
-  if (!tms->dump_backend_methods || !config.telemetry_dump_refresh_time)
+  if (!tms->dump_backend_methods || !config.telemetry_dump_refresh_time) {
     return;
+  }
 
   /* Sequencing the dump event */
   dump_seqno = telemetry_log_seq_get(&tms->log_seq);
@@ -299,136 +289,35 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data, int max_peers_id
     pm_setproctitle("%s %s [%s]", config.type, "Core Process -- Telemetry Dump Writer", config.name);
     config.is_forked = TRUE;
 
-    memset(last_filename, 0, sizeof(last_filename));
-    memset(current_filename, 0, sizeof(current_filename));
+    /* setting ourselves as read-only */
+    tms->is_readonly = TRUE;
 
-    fd_buf = malloc(OUTPUT_FILE_BUFSZ);
-    telemetry_log_seq_set(&tms->log_seq, dump_seqno);
+    /* Arranging workers data */
+    distribute_work(pdr, dump_seqno, config.telemetry_dump_workers, max_peers_idx);
 
-#ifdef WITH_RABBITMQ
-    if (config.telemetry_dump_amqp_routing_key) {
-      telemetry_dump_init_amqp_host(&telemetry_dump_amqp_host);
-      ret = p_amqp_connect_to_publish(&telemetry_dump_amqp_host);
-      if (ret) exit_gracefully(ret);
-    }
-#endif
+    /* creating the thread pool */
+    telemetry_dump_workers_pool = allocate_thread_pool(config.telemetry_dump_workers);
+    assert(telemetry_dump_workers_pool);
 
-#ifdef WITH_KAFKA
-    if (config.telemetry_dump_kafka_topic) {
-      ret = telemetry_dump_init_kafka_host(&telemetry_dump_kafka_host);
-      if (ret) exit_gracefully(ret);
-    }
-#endif
-
-    dumper_pid = getpid();
-    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping telemetry data - START (PID: %u) ***\n", config.name, t_data->log_str, dumper_pid);
-    start = time(NULL);
-    tables_num = 0;
-
-    for (peer = NULL, saved_peer = NULL, peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
-      if (telemetry_peers[peers_idx].fd) {
-        peer = &telemetry_peers[peers_idx];
-        peer->log = &peer_log; /* abusing telemetry_peer a bit, but we are in a child */
-        tdsell = peer->bmp_se;
-
-        if (config.telemetry_dump_file) telemetry_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_file, peer);
-        if (config.telemetry_dump_amqp_routing_key) telemetry_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_amqp_routing_key, peer);
-        if (config.telemetry_dump_kafka_topic) telemetry_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_kafka_topic, peer);
-
-        pm_strftime_same(current_filename, SRVBUFLEN, tmpbuf, &tms->dump.tstamp.tv_sec, config.timestamps_utc);
-
-        /*
-	   we close last_filename and open current_filename in case they differ;
-	   we are safe with this approach until time and Streaming Telemetry node
-	   (IP, port) are the only variables supported as part of telemetry_dump_file.
-        */
-        if (config.telemetry_dump_file) {
-          if (strcmp(last_filename, current_filename)) {
-            if (saved_peer && saved_peer->log && strlen(last_filename)) {
-              close_output_file(saved_peer->log->fd);
-
-              if (config.telemetry_dump_latest_file) {
-                telemetry_peer_log_dynname(latest_filename, SRVBUFLEN, config.telemetry_dump_latest_file, saved_peer);
-                link_latest_output_file(latest_filename, last_filename);
-              }
-            }
-            peer->log->fd = open_output_file(current_filename, "w", TRUE);
-            if (fd_buf) {
-              if (setvbuf(peer->log->fd, fd_buf, _IOFBF, OUTPUT_FILE_BUFSZ))
-                Log(LOG_WARNING, "WARN ( %s/%s ): [%s] setvbuf() failed: %s\n", config.name, t_data->log_str, current_filename, strerror(errno));
-              else memset(fd_buf, 0, OUTPUT_FILE_BUFSZ);
-            }
-          }
-        }
-
-        /*
-          a bit pedantic maybe but should come at little cost and emulating
-          telemetry_dump_file behaviour will work
-        */
-#ifdef WITH_RABBITMQ
-        if (config.telemetry_dump_amqp_routing_key) {
-          peer->log->amqp_host = &telemetry_dump_amqp_host;
-          strcpy(peer->log->filename, current_filename);
-        }
-#endif
-
-#ifdef WITH_KAFKA
-        if (config.telemetry_dump_kafka_topic) {
-          peer->log->kafka_host = &telemetry_dump_kafka_host;
-          strcpy(peer->log->filename, current_filename);
-        }
-#endif
-
-        telemetry_peer_dump_init(peer, config.telemetry_dump_output, FUNC_TYPE_TELEMETRY);
-
-	if (tdsell && tdsell->start) {
-          telemetry_dump_se_ll_elem *se_ll_elem;
-          char event_type[] = "dump";
-
-	  for (se_ll_elem = tdsell->start; se_ll_elem; se_ll_elem = se_ll_elem->next) {
-	    telemetry_log_msg(peer, t_data, se_ll_elem->rec.data, se_ll_elem->rec.len, se_ll_elem->rec.decoder,
-				se_ll_elem->rec.seq, event_type, config.telemetry_dump_output);
-	    dump_elems++;
-	  }
-	}
-
-        saved_peer = peer;
-        strlcpy(last_filename, current_filename, SRVBUFLEN);
-        telemetry_peer_dump_close(peer, config.telemetry_dump_output, FUNC_TYPE_TELEMETRY);
-        tables_num++;
+    for (idx = 0; idx < config.telemetry_dump_workers; idx++) {
+      if (!pdr[idx].noop) {
+	pdr[idx].extra = t_data;
+        send_to_pool(telemetry_dump_workers_pool, telemetry_dump_event_runner, &pdr[idx]);
       }
     }
 
-#ifdef WITH_RABBITMQ
-    if (config.telemetry_dump_amqp_routing_key)
-      p_amqp_close(&telemetry_dump_amqp_host, FALSE);
-#endif
-
-#ifdef WITH_KAFKA
-    if (config.telemetry_dump_kafka_topic)
-      p_kafka_close(&telemetry_dump_kafka_host, FALSE);
-#endif
-
-    if (config.telemetry_dump_latest_file && peer) {
-      telemetry_peer_log_dynname(latest_filename, SRVBUFLEN, config.telemetry_dump_latest_file, peer);
-      link_latest_output_file(latest_filename, last_filename);
-    }
-
-    duration = time(NULL)-start;
-
-    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping telemetry data - END (PID: %u, PEERS: %u ENTRIES: %" PRIu64 " ET: %u) ***\n",
-                config.name, t_data->log_str, dumper_pid, tables_num, dump_elems, duration);
-
+    deallocate_thread_pool(&telemetry_dump_workers_pool);
     exit_gracefully(0);
   default: /* Parent */
     if (ret == -1) { /* Something went wrong */
-      Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork telemetry dump writer: %s\n", config.name, t_data->log_str, strerror(errno));
+      Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork telemetry dump writer: %s\n",
+	  config.name, t_data->log_str, strerror(errno));
     }
 
     /* destroy bmp_se linked-list content after dump event */
-    for (peer = NULL, peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
-      if (telemetry_peers[peers_idx].fd) {
-        peer = &telemetry_peers[peers_idx];
+    for (peer = NULL, idx = 0; idx < max_peers_idx; idx++) {
+      if (telemetry_peers[idx].fd) {
+        peer = &telemetry_peers[idx];
         tdsell = peer->bmp_se;
 
         if (tdsell && tdsell->start) telemetry_dump_se_ll_destroy(tdsell);
@@ -437,6 +326,159 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data, int max_peers_id
 
     break;
   }
+}
+
+int telemetry_dump_event_runner(struct pm_dump_runner *pdr)
+{
+  telemetry_misc_structs *tms = bgp_select_misc_db(FUNC_TYPE_TELEMETRY);
+  struct telemetry_data *t_data = pdr->extra;
+  char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
+  char latest_filename[SRVBUFLEN], *fd_buf = NULL;
+  int peers_idx, duration, tables_num;
+  pid_t dumper_pid;
+  time_t start;
+  u_int64_t dump_elems = 0, dump_seqno = pdr->seq;
+
+  telemetry_peer *peer, *saved_peer;
+  telemetry_dump_se_ll *tdsell;
+  telemetry_peer_log peer_log;
+
+#ifdef WITH_RABBITMQ
+  struct p_amqp_host telemetry_dump_amqp_host;
+#endif
+
+#ifdef WITH_KAFKA
+  struct p_kafka_host telemetry_dump_kafka_host;
+#endif
+
+  memset(last_filename, 0, sizeof(last_filename));
+  memset(current_filename, 0, sizeof(current_filename));
+
+  fd_buf = malloc(OUTPUT_FILE_BUFSZ);
+  telemetry_log_seq_set(&tms->log_seq, dump_seqno);
+
+#ifdef WITH_RABBITMQ
+  if (config.telemetry_dump_amqp_routing_key) {
+    int ret;
+
+    telemetry_dump_init_amqp_host(&telemetry_dump_amqp_host);
+    ret = p_amqp_connect_to_publish(&telemetry_dump_amqp_host);
+    if (ret) exit_gracefully(ret);
+  }
+#endif
+
+#ifdef WITH_KAFKA
+  if (config.telemetry_dump_kafka_topic) {
+    int ret;
+
+    ret = telemetry_dump_init_kafka_host(&telemetry_dump_kafka_host);
+    if (ret) exit_gracefully(ret);
+  }
+#endif
+
+  dumper_pid = getpid();
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping telemetry data - START (PID: %u) ***\n", config.name, t_data->log_str, dumper_pid);
+  start = time(NULL);
+  tables_num = 0;
+
+  for (peer = NULL, saved_peer = NULL, peers_idx = pdr->first; peers_idx <= pdr->last; peers_idx++) {
+    if (telemetry_peers[peers_idx].fd) {
+      peer = &telemetry_peers[peers_idx];
+      peer->log = &peer_log; /* abusing telemetry_peer a bit, but we are in a child */
+      tdsell = peer->bmp_se;
+
+      if (config.telemetry_dump_file) telemetry_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_file, peer);
+      if (config.telemetry_dump_amqp_routing_key) telemetry_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_amqp_routing_key, peer);
+      if (config.telemetry_dump_kafka_topic) telemetry_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_kafka_topic, peer);
+
+      pm_strftime_same(current_filename, SRVBUFLEN, tmpbuf, &tms->dump.tstamp.tv_sec, config.timestamps_utc);
+
+      /*
+	we close last_filename and open current_filename in case they differ;
+	we are safe with this approach until time and Streaming Telemetry node
+	(IP, port) are the only variables supported as part of telemetry_dump_file.
+      */
+      if (config.telemetry_dump_file) {
+        if (strcmp(last_filename, current_filename)) {
+          if (saved_peer && saved_peer->log && strlen(last_filename)) {
+            close_output_file(saved_peer->log->fd);
+
+            if (config.telemetry_dump_latest_file) {
+              telemetry_peer_log_dynname(latest_filename, SRVBUFLEN, config.telemetry_dump_latest_file, saved_peer);
+              link_latest_output_file(latest_filename, last_filename);
+            }
+          }
+          peer->log->fd = open_output_file(current_filename, "w", TRUE);
+          if (fd_buf) {
+            if (setvbuf(peer->log->fd, fd_buf, _IOFBF, OUTPUT_FILE_BUFSZ)) {
+              Log(LOG_WARNING, "WARN ( %s/%s ): [%s] setvbuf() failed: %s\n", config.name, t_data->log_str, current_filename, strerror(errno));
+	    }
+            else memset(fd_buf, 0, OUTPUT_FILE_BUFSZ);
+          }
+        }
+      }
+
+      /*
+        a bit pedantic maybe but should come at little cost and emulating
+        telemetry_dump_file behaviour will work
+      */
+#ifdef WITH_RABBITMQ
+      if (config.telemetry_dump_amqp_routing_key) {
+        peer->log->amqp_host = &telemetry_dump_amqp_host;
+        strcpy(peer->log->filename, current_filename);
+      }
+#endif
+
+#ifdef WITH_KAFKA
+      if (config.telemetry_dump_kafka_topic) {
+        peer->log->kafka_host = &telemetry_dump_kafka_host;
+        strcpy(peer->log->filename, current_filename);
+      }
+#endif
+
+      telemetry_peer_dump_init(peer, config.telemetry_dump_output, FUNC_TYPE_TELEMETRY);
+
+      if (tdsell && tdsell->start) {
+        telemetry_dump_se_ll_elem *se_ll_elem;
+        char event_type[] = "dump";
+
+	for (se_ll_elem = tdsell->start; se_ll_elem; se_ll_elem = se_ll_elem->next) {
+	  telemetry_log_msg(peer, t_data, se_ll_elem->rec.data, se_ll_elem->rec.len, se_ll_elem->rec.decoder,
+			    se_ll_elem->rec.seq, event_type, config.telemetry_dump_output);
+	  dump_elems++;
+	}
+      }
+
+      saved_peer = peer;
+      strlcpy(last_filename, current_filename, SRVBUFLEN);
+      telemetry_peer_dump_close(peer, config.telemetry_dump_output, FUNC_TYPE_TELEMETRY);
+      tables_num++;
+    }
+  }
+
+#ifdef WITH_RABBITMQ
+  if (config.telemetry_dump_amqp_routing_key) {
+    p_amqp_close(&telemetry_dump_amqp_host, FALSE);
+  }
+#endif
+
+#ifdef WITH_KAFKA
+  if (config.telemetry_dump_kafka_topic) {
+    p_kafka_close(&telemetry_dump_kafka_host, FALSE);
+  }
+#endif
+
+  if (config.telemetry_dump_latest_file && peer) {
+    telemetry_peer_log_dynname(latest_filename, SRVBUFLEN, config.telemetry_dump_latest_file, peer);
+    link_latest_output_file(latest_filename, last_filename);
+  }
+
+  duration = time(NULL)-start;
+
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping telemetry data - END (PID: %u, PEERS: %u ENTRIES: %" PRIu64 " ET: %u) ***\n",
+      config.name, t_data->log_str, dumper_pid, tables_num, dump_elems, duration);
+
+  return FALSE;
 }
 
 #if defined WITH_RABBITMQ

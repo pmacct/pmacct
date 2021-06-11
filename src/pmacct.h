@@ -322,6 +322,7 @@ struct pm_dump_runner {
   u_int64_t first;
   u_int64_t last;
   int noop;
+  void *extra; /* extra data to pass to the runner thread */
 };
 
 struct _protocols_struct {

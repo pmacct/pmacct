@@ -293,6 +293,7 @@ struct configuration {
   int telemetry_dump_amqp_persistent_msg;
   u_int32_t telemetry_dump_amqp_frame_max;
   u_int32_t telemetry_dump_amqp_heartbeat_interval;
+  int telemetry_dump_workers;
   char *telemetry_msglog_kafka_broker_host;
   int telemetry_msglog_kafka_broker_port;
   char *telemetry_msglog_kafka_topic;
