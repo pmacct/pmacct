@@ -53,18 +53,18 @@ u_int16_t bgp_rd_origin_get(u_int16_t type)
   return (type & RD_ORIGIN_MASK);
 }
 
-void bgp_rd_origin_set(u_int16_t *rd_type, u_int16_t source)
+void bgp_rd_origin_set(rd_t *rd, u_int16_t source)
 {
   u_int16_t type;
 
-  if (!rd_type) return;
+  if (!rd) return;
 
   /* saving the type info, if any yet */
-  type = bgp_rd_type_get((*rd_type));
+  type = bgp_rd_type_get(rd->type);
 
   /* setting the source info, re-applying type */
-  (*rd_type) = source;
-  (*rd_type) |= type;
+  rd->type = source;
+  rd->type |= type;
 }
 
 const char *bgp_rd_origin_print(u_int16_t type)

@@ -168,7 +168,7 @@ void bmp_rpat_common_hdr_get_rd(struct bmp_rpat_common_hdr *brch, rd_t *rd)
     bgp_rd_ntoh(rd);
 
     if (!is_empty_256b(rd, RD_LEN)) {
-      bgp_rd_origin_set(&rd->type, RD_ORIGIN_BMP);
+      bgp_rd_origin_set(rd, RD_ORIGIN_BMP);
     }
   }
 }

@@ -26,7 +26,7 @@
 extern int bgp_afi2family(int);
 extern u_int16_t bgp_rd_type_get(u_int16_t);
 extern u_int16_t bgp_rd_origin_get(u_int16_t);
-extern void bgp_rd_origin_set(u_int16_t *, u_int16_t);
+extern void bgp_rd_origin_set(rd_t *, u_int16_t);
 extern const char *bgp_rd_origin_print(u_int16_t);
 extern int bgp_rd_ntoh(rd_t *);
 extern int bgp_rd2str(char *, rd_t *);
