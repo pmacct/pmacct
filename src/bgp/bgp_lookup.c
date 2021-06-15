@@ -109,7 +109,10 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
     if (pptrs->bitr) {
       safi = SAFI_MPLS_VPN;
       memcpy(&rd, &pptrs->bitr, sizeof(rd));
-      bgp_rd_origin_set(&rd, RD_ORIGIN_BGP);
+
+      if (type <= RD_ORIGIN_FUNC_TYPE_MAX) {
+	bgp_rd_origin_set(&rd, lookup_type_to_bgp_rd_origin[type]);
+      }
     }
 
     /* XXX: can be further optimized for the case of no SAFI_UNICAST rib */

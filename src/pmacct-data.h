@@ -309,6 +309,12 @@ static const char __attribute__((unused)) *bgp_rd_origin[] = {
   ""
 };
 
+static const u_int16_t __attribute__((unused)) lookup_type_to_bgp_rd_origin[] = {
+  RD_ORIGIN_UNKNOWN,
+  RD_ORIGIN_BGP,
+  RD_ORIGIN_BMP
+};
+
 static const char __attribute__((unused)) *rpki_roa[] = {
   "u",
   "i",
