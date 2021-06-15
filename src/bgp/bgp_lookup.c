@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -109,6 +109,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
     if (pptrs->bitr) {
       safi = SAFI_MPLS_VPN;
       memcpy(&rd, &pptrs->bitr, sizeof(rd));
+      bgp_rd_origin_set(&rd, RD_ORIGIN_BGP);
     }
 
     /* XXX: can be further optimized for the case of no SAFI_UNICAST rib */
