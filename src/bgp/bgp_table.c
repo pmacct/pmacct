@@ -299,7 +299,7 @@ bgp_node_match (const struct bgp_table *table, struct prefix *p, struct bgp_peer
   if (matched_node) {
     (*result_node) = matched_node;
     (*result_info) = matched_info;
-    bgp_lock_node (NULL /* XXX */, matched_node);
+    bgp_lock_node (peer, matched_node);
   }
   else {
     (*result_node) = NULL;
