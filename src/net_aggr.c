@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -51,7 +51,7 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
   struct networks_table bkt;
   struct networks_table_metadata *mdt = NULL;
   char buf[SRVBUFLEN], *bufptr, *delim, *peer_as, *as, *net, *mask, *nh;
-  int rows, eff_rows = 0, j, buflen, fields, prev[128], current, next;
+  int rows, eff_rows = 0, j, buflen, fields, prev[NETWORKS_CACHE_DEPTH], current, next;
   unsigned int index, fake_row = 0;
   struct stat st;
 
@@ -224,9 +224,11 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
          successfully any further lookup; unless we are configured to work as a filter */
       if (!eff_rows && !config.networks_file_filter) eff_rows++;
 
-      /* 3rd step: sorting table */
+      /* 3rd step: sorting table and removing dupes */
       merge_sort(filename, tmpt->table, 0, eff_rows);
       tmpt->num = eff_rows;
+
+      remove_dupes(filename, tmpt, FALSE);
 
       /* 4th step: collecting informations in the sorted table;
          we wish to handle networks-in-networks hierarchically */
@@ -285,6 +287,12 @@ void load_networks4(char *filename, struct networks_table *nt, struct networks_c
 	else {
 	  if (mdt[index].level == mdt[index-1].level) current++; /* do nothing: we have only to copy our element */ 
 	  else if (mdt[index].level > mdt[index-1].level) { /* we encountered a child */ 
+	    if (mdt[index].level > NETWORKS_CACHE_DEPTH) {
+	      Log(LOG_ERR, "ERROR ( %s/%s ): Networks Cache exceeds maximum depth (%d).\n",
+		  config.name, config.type, NETWORKS_CACHE_DEPTH);
+	      goto handle_error;
+	    }
+
 	    nt->table[current].childs_table.table = &nt->table[next];
 	    nt->table[current].childs_table.num = mdt[index-1].childs;
 	    prev[mdt[index-1].level] = current;
@@ -488,6 +496,39 @@ struct networks_table_entry *binsearch(struct networks_table *nt, struct network
 
   networks_cache_insert(nc, &addr, &dummy_entry);
   return NULL;
+}
+
+void remove_dupes(char *filename, struct networks_table *nt, int want_v6)
+{
+  int i, j;
+
+  if (!want_v6) {
+    for (i = 0, j = 0; i < nt->num; i++) {
+      if (i < (nt->num - 1) && nt->table[i].net == nt->table[i + 1].net && nt->table[i].mask == nt->table[i + 1].mask) {
+	continue;
+      }
+
+      nt->table[j].net = nt->table[i].net;
+      nt->table[j].mask = nt->table[i].mask;
+      j++;
+    }
+
+    nt->num = j;
+  }
+  else {
+    for (i = 0, j = 0; i < nt->num6; i++) {
+      if (i < (nt->num6 - 1) &&
+	  !memcmp(nt->table6[i].net, nt->table6[i + 1].net, sizeof(nt->table6[i].net)) &&
+	  !memcmp(nt->table6[i].mask, nt->table6[i + 1].mask, sizeof(nt->table6[i].mask))) {
+	continue;
+      }
+    }
+
+    memcpy(nt->table6[j].net, nt->table6[i].net, sizeof(nt->table6[i].net));
+    memcpy(nt->table6[j].mask, nt->table6[i].mask, sizeof(nt->table6[i].mask));
+    j++;
+  }
+  nt->num6 = j;
 }
 
 void networks_cache_insert(struct networks_cache *nc, u_int32_t *key, struct networks_table_entry *result)
@@ -1298,7 +1339,7 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
   struct networks_table bkt;
   struct networks_table_metadata *mdt = 0;
   char buf[SRVBUFLEN], *bufptr, *delim, *peer_as, *as, *net, *mask, *nh;
-  int rows, eff_rows = 0, j, buflen, fields, prev[128], current, next;
+  int rows, eff_rows = 0, j, buflen, fields, prev[NETWORKS_CACHE_DEPTH], current, next;
   unsigned int index, fake_row = 0;
   u_int32_t tmpmask[4], tmpnet[4];
   struct stat st;
@@ -1479,9 +1520,11 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
          successfully any further lookup; unless we are configured to work as a filter */
       if (!eff_rows && !config.networks_file_filter) eff_rows++;
 
-      /* 3rd step: sorting table */
+      /* 3rd step: sorting table and removing dupes */
       merge_sort6(filename, tmpt->table6, 0, eff_rows);
       tmpt->num6 = eff_rows;
+
+      remove_dupes(filename, tmpt, TRUE);
 
       /* 4th step: collecting informations in the sorted table;
          we wish to handle networks-in-networks hierarchically */
@@ -1544,6 +1587,11 @@ void load_networks6(char *filename, struct networks_table *nt, struct networks_c
         else {
           if (mdt[index].level == mdt[index-1].level) current++; /* do nothing: we have only to copy our element */
           else if (mdt[index].level > mdt[index-1].level) { /* we encountered a child */
+	    if (mdt[index].level > NETWORKS_CACHE_DEPTH) {
+	      Log(LOG_ERR, "ERROR ( %s/%s ): IPv6 Networks Cache exceeds maximum depth (%d).\n",
+		  config.name, config.type, NETWORKS_CACHE_DEPTH);
+	      goto handle_error;
+	    }
             nt->table6[current].childs_table.table6 = &nt->table6[next];
             nt->table6[current].childs_table.num6 = mdt[index-1].childs;
             prev[mdt[index-1].level] = current;

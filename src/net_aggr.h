@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -24,6 +24,7 @@
 /* defines */
 #define NETWORKS_CACHE_ENTRIES 99991 
 #define NETWORKS6_CACHE_ENTRIES 32771 
+#define NETWORKS_CACHE_DEPTH 128
 #define RETURN_NET 0
 #define RETURN_AS 1
 #define NET_FUNCS_N 32
@@ -123,6 +124,7 @@ extern void load_networks4(char *, struct networks_table *, struct networks_cach
 extern void merge_sort(char *, struct networks_table_entry *, int, int);
 extern void merge(char *, struct networks_table_entry *, int, int, int);
 extern struct networks_table_entry *binsearch(struct networks_table *, struct networks_cache *, struct host_addr *);
+extern void remove_dupes(char *, struct networks_table *, int);
 extern void networks_cache_insert(struct networks_cache *, u_int32_t *, struct networks_table_entry *);
 extern struct networks_table_entry *networks_cache_search(struct networks_cache *, u_int32_t *);
 
