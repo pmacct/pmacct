@@ -234,5 +234,7 @@ void reload_maps(int signum)
     if (config.acct_type == ACCT_PM) reload_map_pmacctd = TRUE;
   }
   
-  if (config.propagate_signals) signal_kittens(signum, TRUE);
+  if (config.propagate_signals) {
+    signal_kittens(signum, TRUE);
+  }
 }

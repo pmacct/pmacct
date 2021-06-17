@@ -47,6 +47,7 @@
 #include "ip_flow.h"
 #include "classifier.h"
 #include "plugin_hooks.h"
+#include "pkt_handlers.h"
 #include <netdb.h>
 #include <sys/file.h>
 #include <sys/utsname.h>
@@ -1426,18 +1427,13 @@ int timeval_cmp(struct timeval *a, struct timeval *b)
 void signal_kittens(int sig, int amicore_check)
 {
   struct plugins_list_entry *list = plugins_list;
+  struct channels_list_entry *chptr = channels_list;
 
   /* round #1: safety check, am i the core process? */
   if (amicore_check) {
-    while (list) {
-      if (!memcmp(list->type.string, "core", sizeof("core"))) {
-	if (list->pid != getpid()) {
-	  return;
-	}
-      }
+    if (!chptr || chptr->core_pid != getpid()) {
+      return;
     }
-
-    list = list->next;
   }
 
   /* round #2: do it */
