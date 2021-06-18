@@ -72,6 +72,7 @@
 #define PRETAG_SRC_ROA			0x0000004000000000ULL
 #define PRETAG_DST_ROA			0x0000008000000000ULL
 #define PRETAG_IS_BI_FLOW		0x0000010000000000ULL
+#define PRETAG_IS_MULTICAST		0x0000020000000000ULL
 
 #define PRETAG_MAP_RCODE_ID		0x00000100
 #define PRETAG_MAP_RCODE_ID2		0x00000200
@@ -181,6 +182,7 @@ struct id_entry_key {
   pt_uint16_t cvlan_id;
   pt_netaddr_t src_net;
   pt_netaddr_t dst_net;
+  pt_uint8_t is_multicast;
   s_uint16_t lookup_bgp_port;
   char *src_comms[16]; /* XXX: MAX_BGP_COMM_PATTERNS = 16 */
   char *comms[16]; /* XXX: MAX_BGP_COMM_PATTERNS = 16 */

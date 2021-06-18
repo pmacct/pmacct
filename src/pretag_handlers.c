@@ -1301,6 +1301,33 @@ int PT_map_dst_net_handler(char *filename, struct id_entry *e, char *value, stru
   return FALSE;
 }
 
+int PT_map_is_multicast_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int value_tf, x = 0;
+
+  e->key.is_multicast.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+
+  value_tf = parse_truefalse(value);
+  if (value_tf < 0) {
+    return ERR;
+  }
+
+  e->key.is_multicast.n = value_tf;
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_IS_MULTICAST) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'is_multicast' clauses part of the same statement.\n", config.name, config.type, filename);
+      return TRUE;
+    }
+  }
+
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_dst_net_handler;
+  else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_dst_net_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_IS_MULTICAST;
+
+  return FALSE;
+}
+
 int PT_map_set_tos_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0, len;
@@ -2244,6 +2271,51 @@ int pretag_dst_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     return (TRUE ^ entry->key.dst_net.neg);
 }
 
+int pretag_is_multicast_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct host_addr addr;
+
+  if (!pptrs->f_data) return TRUE;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_IPV4_DST_ADDR].len) {
+      memcpy(&addr.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV4_DST_ADDR].len, 4));
+      addr.family = AF_INET;
+    }
+    else if (tpl->tpl[NF9_IPV4_DST_PREFIX].len) {
+      memcpy(&addr.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV4_DST_PREFIX].len, 4));
+      addr.family = AF_INET;
+    }
+    if (tpl->tpl[NF9_IPV6_DST_ADDR].len) {
+      memcpy(&addr.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV6_DST_ADDR].len, 16));
+      addr.family = AF_INET6;
+    }
+    else if (tpl->tpl[NF9_IPV6_DST_PREFIX].len) {
+      memcpy(&addr.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV6_DST_PREFIX].len, 16));
+      addr.family = AF_INET6;
+    }
+    break;
+  case 5:
+    addr.address.ipv4.s_addr = ((struct struct_export_v5 *) pptrs->f_data)->dstaddr.s_addr;
+    addr.family = AF_INET;
+    break;
+  default:
+    return TRUE;
+  }
+
+  if ((entry->key.is_multicast.n && is_multicast(&addr)) || (!entry->key.is_multicast.n && !is_multicast(&addr))) {
+    return (FALSE | entry->key.is_multicast.neg);
+  }
+  else {
+    return (TRUE ^ entry->key.is_multicast.neg);
+  }
+}
+
 int pretag_forwarding_status_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
@@ -2584,6 +2656,30 @@ int SF_pretag_dst_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     return (FALSE | entry->key.dst_net.neg);
   else
     return (TRUE ^ entry->key.dst_net.neg);
+}
+
+int SF_pretag_is_multicast_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+  SFLAddress *sf_addr = &sample->ipdst;
+  struct host_addr addr;
+
+  if (sample->gotIPV4) {
+    addr.address.ipv4.s_addr = sample->dcd_dstIP.s_addr;
+    addr.family = AF_INET;
+  }
+  else if (sample->gotIPV6) {
+    memcpy(&addr.address.ipv6, &sf_addr->address.ip_v6, IP6AddrSz);
+    addr.family = AF_INET6;
+  }
+
+  if ((entry->key.is_multicast.n && is_multicast(&addr)) || (!entry->key.is_multicast.n && !is_multicast(&addr))) {
+    return (FALSE | entry->key.is_multicast.neg);
+  }
+  else {
+    return (TRUE ^ entry->key.is_multicast.neg);
+  }
 }
 
 int PM_pretag_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
@@ -3261,6 +3357,18 @@ int PT_map_index_entries_dst_net_handler(struct id_entry *e, pm_hash_serial_t *h
     hash_serial_append(hash_serializer, (char *)&src_e->key.dst_net.a, sizeof(struct host_addr), TRUE);
   }
   else return TRUE;
+
+  return FALSE;
+}
+
+int PT_map_index_entries_is_multicast_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !hash_serializer || !src_e) return TRUE;
+
+  memcpy(&e->key.is_multicast, &src_e->key.is_multicast, sizeof(u_int8_t));
+  hash_serial_append(hash_serializer, (char *)&src_e->key.is_multicast.n, sizeof(u_int8_t), TRUE);
 
   return FALSE;
 }
@@ -3991,6 +4099,66 @@ int PT_map_index_fdata_dst_net_handler(struct id_entry *e, pm_hash_serial_t *has
   else return TRUE;
 
   hash_serial_append(hash_serializer, (char *)&e->key.dst_net.a, sizeof(struct host_addr), FALSE);
+
+  return FALSE;
+}
+
+int PT_map_index_fdata_is_multicast_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+  SFLAddress *sf_addr = &sample->ipdst;
+  struct host_addr addr;
+
+  if (config.acct_type == ACCT_NF) {
+    switch(hdr->version) {
+    case 10:
+    case 9:
+      if (tpl->tpl[NF9_IPV4_DST_ADDR].len) {
+	memcpy(&addr.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV4_DST_ADDR].len, 4));
+	addr.family = AF_INET;
+      }
+      else if (tpl->tpl[NF9_IPV4_DST_PREFIX].len) {
+	memcpy(&addr.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV4_DST_PREFIX].len, 4));
+	addr.family = AF_INET;
+      }
+      if (tpl->tpl[NF9_IPV6_DST_ADDR].len) {
+	memcpy(&addr.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV6_DST_ADDR].len, 16));
+	addr.family = AF_INET6;
+      }
+      else if (tpl->tpl[NF9_IPV6_DST_PREFIX].len) {
+	memcpy(&addr.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV6_DST_PREFIX].len, 16));
+	addr.family = AF_INET6;
+      }
+      break;
+    case 5:
+      addr.address.ipv4.s_addr = ((struct struct_export_v5 *) pptrs->f_data)->dstaddr.s_addr;
+      addr.family = AF_INET;
+      break;
+    }
+  }
+  else if (config.acct_type == ACCT_SF) {
+    if (sample->gotIPV4) {
+      addr.address.ipv4.s_addr = sample->dcd_dstIP.s_addr;
+      addr.family = AF_INET;
+    }
+    else if (sample->gotIPV6) {
+      memcpy(&addr.address.ipv6, &sf_addr->address.ip_v6, IP6AddrSz);
+      addr.family = AF_INET6;
+    }
+  }
+  else return TRUE;
+
+  if (is_multicast(&addr)) {
+    e->key.is_multicast.n = TRUE;
+  }
+  else {
+    e->key.is_multicast.n = FALSE;
+  }
+
+  hash_serial_append(hash_serializer, (char *)&e->key.is_multicast, sizeof(u_int8_t), FALSE);
 
   return FALSE;
 }
