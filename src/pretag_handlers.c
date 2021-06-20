@@ -1321,8 +1321,8 @@ int PT_map_is_multicast_handler(char *filename, struct id_entry *e, char *value,
     }
   }
 
-  if (config.acct_type == ACCT_NF) e->func[x] = pretag_dst_net_handler;
-  else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_dst_net_handler;
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_is_multicast_handler;
+  else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_is_multicast_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_IS_MULTICAST;
 
   return FALSE;

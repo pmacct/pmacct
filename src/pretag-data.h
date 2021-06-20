@@ -54,6 +54,7 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"cvlan", PT_map_cvlan_id_handler},
   {"src_net", PT_map_src_net_handler},
   {"dst_net", PT_map_dst_net_handler},
+  {"is_multicast", PT_map_is_multicast_handler},
   {"set_tag", PT_map_id_handler},
   {"set_tag2", PT_map_id2_handler},
   {"set_label", PT_map_label_handler},
@@ -86,6 +87,7 @@ const struct _map_index_dictionary_line tag_map_index_entries_dictionary[] = {
   {PRETAG_CVLAN_ID, PT_map_index_entries_cvlan_id_handler},
   {PRETAG_SRC_NET, PT_map_index_entries_src_net_handler},
   {PRETAG_DST_NET, PT_map_index_entries_dst_net_handler},
+  {PRETAG_IS_MULTICAST, PT_map_index_entries_is_multicast_handler},
   {PRETAG_FWDSTATUS_ID, PT_map_index_entries_fwdstatus_handler},
   {0, NULL}
 };
@@ -109,6 +111,7 @@ const struct _map_index_dictionary_line tag_map_index_fdata_dictionary[] = {
   {PRETAG_CVLAN_ID, PT_map_index_fdata_cvlan_id_handler},
   {PRETAG_SRC_NET, PT_map_index_fdata_src_net_handler},
   {PRETAG_DST_NET, PT_map_index_fdata_dst_net_handler},
+  {PRETAG_IS_MULTICAST, PT_map_index_fdata_is_multicast_handler},
   {PRETAG_FWDSTATUS_ID, PT_map_index_fdata_fwdstatus_handler},
   {0, NULL}
 };
