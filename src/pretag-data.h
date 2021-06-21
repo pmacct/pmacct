@@ -134,6 +134,7 @@ const struct _map_index_size_dictionary_line tag_map_index_entries_size_dictiona
   {PRETAG_CVLAN_ID, sizeof(u_int16_t)},
   {PRETAG_SRC_NET, sizeof(struct host_addr)},
   {PRETAG_DST_NET, sizeof(struct host_addr)},
+  {PRETAG_IS_MULTICAST, sizeof(u_int8_t)},
   {PRETAG_FWDSTATUS_ID, sizeof(u_int8_t)},
   {0, 0}
 };
