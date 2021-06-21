@@ -180,10 +180,12 @@
 ! 'dst_net'             MATCH: Destination IP address field in NetFlow v5 and
 !			sFlow. In NFv9/IPFIX this is compared against IE #28 or
 !			IE #45.
-! 'is_multicast'	MATCH: Destination IP address field in NetFlow v5 and
-!			sFlow. In NFv9/IPFIX this is compared against IE #28 or
-!			IE #45. If set to 'true' this does match multicast IPv4/
-!			IPv6 addresses, if set to 'false' it won't match them.
+! 'is_multicast'	MATCH: in NFv9/IPFIX this is compared against IE #57,
+!                       in sFlow against destination MAC address field part of
+!                       the Extended Switch object. If set to 'true' this does
+!			match MAC multicast addresses, if set to 'false' it won't
+!			match them. To match or exclude IPv4/IPv6 multicast
+!			addresses please use 'dst_net'.
 ! 'fwdstatus'		MATCH: In NFv9/IPFIX this is compared against IE #89; see
 !			https://www.iana.org/assignments/ipfix/ipfix.xhtml for
 !			the specific semantics of the field and some examples.

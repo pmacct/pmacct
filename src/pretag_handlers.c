@@ -2276,39 +2276,22 @@ int pretag_is_multicast_handler(struct packet_ptrs *pptrs, void *unused, void *e
   struct id_entry *entry = e;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  struct host_addr addr;
+  u_int8_t multicast = FALSE;
 
   if (!pptrs->f_data) return TRUE;
 
-  switch(hdr->version) {
+  switch (hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_IPV4_DST_ADDR].len) {
-      memcpy(&addr.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV4_DST_ADDR].len, 4));
-      addr.family = AF_INET;
+    if (tpl->tpl[NF9_IN_DST_MAC].len) {
+      multicast = IS_MAC_MULTICAST(pptrs->f_data+tpl->tpl[NF9_IN_DST_MAC].off);
     }
-    else if (tpl->tpl[NF9_IPV4_DST_PREFIX].len) {
-      memcpy(&addr.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV4_DST_PREFIX].len, 4));
-      addr.family = AF_INET;
-    }
-    if (tpl->tpl[NF9_IPV6_DST_ADDR].len) {
-      memcpy(&addr.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV6_DST_ADDR].len, 16));
-      addr.family = AF_INET6;
-    }
-    else if (tpl->tpl[NF9_IPV6_DST_PREFIX].len) {
-      memcpy(&addr.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV6_DST_PREFIX].len, 16));
-      addr.family = AF_INET6;
-    }
-    break;
-  case 5:
-    addr.address.ipv4.s_addr = ((struct struct_export_v5 *) pptrs->f_data)->dstaddr.s_addr;
-    addr.family = AF_INET;
     break;
   default:
-    return TRUE;
+    break; /* this field does not exist */
   }
 
-  if ((entry->key.is_multicast.n && is_multicast(&addr)) || (!entry->key.is_multicast.n && !is_multicast(&addr))) {
+  if ((entry->key.is_multicast.n && multicast) || (!entry->key.is_multicast.n && !multicast)) {
     return (FALSE | entry->key.is_multicast.neg);
   }
   else {
@@ -2662,19 +2645,11 @@ int SF_pretag_is_multicast_handler(struct packet_ptrs *pptrs, void *unused, void
 {
   struct id_entry *entry = e;
   SFSample *sample = (SFSample *) pptrs->f_data;
-  SFLAddress *sf_addr = &sample->ipdst;
-  struct host_addr addr;
+  u_int8_t multicast;
 
-  if (sample->gotIPV4) {
-    addr.address.ipv4.s_addr = sample->dcd_dstIP.s_addr;
-    addr.family = AF_INET;
-  }
-  else if (sample->gotIPV6) {
-    memcpy(&addr.address.ipv6, &sf_addr->address.ip_v6, IP6AddrSz);
-    addr.family = AF_INET6;
-  }
+  multicast = IS_MAC_MULTICAST(sample->eth_dst);
 
-  if ((entry->key.is_multicast.n && is_multicast(&addr)) || (!entry->key.is_multicast.n && !is_multicast(&addr))) {
+  if ((entry->key.is_multicast.n && multicast) || (!entry->key.is_multicast.n && !multicast)) {
     return (FALSE | entry->key.is_multicast.neg);
   }
   else {
@@ -4109,53 +4084,21 @@ int PT_map_index_fdata_is_multicast_handler(struct id_entry *e, pm_hash_serial_t
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   SFSample *sample = (SFSample *) pptrs->f_data;
-  SFLAddress *sf_addr = &sample->ipdst;
-  struct host_addr addr;
 
   if (config.acct_type == ACCT_NF) {
-    switch(hdr->version) {
+    switch (hdr->version) {
     case 10:
     case 9:
-      if (tpl->tpl[NF9_IPV4_DST_ADDR].len) {
-	memcpy(&addr.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV4_DST_ADDR].len, 4));
-	addr.family = AF_INET;
-      }
-      else if (tpl->tpl[NF9_IPV4_DST_PREFIX].len) {
-	memcpy(&addr.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV4_DST_PREFIX].len, 4));
-	addr.family = AF_INET;
-      }
-      if (tpl->tpl[NF9_IPV6_DST_ADDR].len) {
-	memcpy(&addr.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV6_DST_ADDR].len, 16));
-	addr.family = AF_INET6;
-      }
-      else if (tpl->tpl[NF9_IPV6_DST_PREFIX].len) {
-	memcpy(&addr.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV6_DST_PREFIX].len, 16));
-	addr.family = AF_INET6;
+      if (tpl->tpl[NF9_IN_DST_MAC].len) {
+	e->key.is_multicast.n = IS_MAC_MULTICAST(pptrs->f_data+tpl->tpl[NF9_IN_DST_MAC].off);
       }
       break;
-    case 5:
-      addr.address.ipv4.s_addr = ((struct struct_export_v5 *) pptrs->f_data)->dstaddr.s_addr;
-      addr.family = AF_INET;
-      break;
+    default:
+      break; /* this field does not exist */
     }
   }
   else if (config.acct_type == ACCT_SF) {
-    if (sample->gotIPV4) {
-      addr.address.ipv4.s_addr = sample->dcd_dstIP.s_addr;
-      addr.family = AF_INET;
-    }
-    else if (sample->gotIPV6) {
-      memcpy(&addr.address.ipv6, &sf_addr->address.ip_v6, IP6AddrSz);
-      addr.family = AF_INET6;
-    }
-  }
-  else return TRUE;
-
-  if (is_multicast(&addr)) {
-    e->key.is_multicast.n = TRUE;
-  }
-  else {
-    e->key.is_multicast.n = FALSE;
+    e->key.is_multicast.n = IS_MAC_MULTICAST(sample->eth_dst);
   }
 
   hash_serial_append(hash_serializer, (char *)&e->key.is_multicast, sizeof(u_int8_t), FALSE);

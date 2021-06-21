@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -29,6 +29,7 @@
 #define IS_IPV4_MULTICAST(a) ((((u_int32_t)(a)) & 0xf0000000) == 0xe0000000)
 #endif
 #define IS_IPV6_MULTICAST(a) (((const uint8_t *) (a))[0] == 0xff)
+#define IS_MAC_MULTICAST(a) (((const uint8_t *) (a))[0] == 0x01)
 
 static const char __attribute__((unused)) *ip_version_string[] = {
   "v4",
