@@ -1063,7 +1063,6 @@ int pretag_index_allocate(struct id_table *t)
 int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry *ptr)
 {
   u_int32_t iterator = 0, handler_index = 0;
-  void *idx_value;
   int ret;
 
   if (!t) return ERR;
@@ -1086,10 +1085,7 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
 	(*t->index[iterator].idt_handler[handler_index])(&e, hash_serializer, ptr);
       }
 
-      idx_value = malloc(sizeof(struct id_entry));
-      memcpy(idx_value, ptr, sizeof(struct id_entry));
-
-      ret = cdada_map_insert(t->index[iterator].idx_map, hash_key_get_val(hash_key), idx_value);
+      ret = cdada_map_insert(t->index[iterator].idx_map, hash_key_get_val(hash_key), ptr);
       if (ret == CDADA_E_EXISTS) {
 	u_char key_hexdump[hash_key_get_len(hash_key) * 2];
 	serialize_hex(hash_key_get_val(hash_key), key_hexdump, hash_key_get_len(hash_key));
@@ -1162,7 +1158,6 @@ void pretag_index_destroy(struct id_table *t)
       void *idx_map_val;
 
       while (cdada_map_first(t->index[iterator].idx_map, pm_cdada_map_container, &idx_map_val) == CDADA_SUCCESS) {
-	free(idx_map_val);
 	cdada_map_erase(t->index[iterator].idx_map, pm_cdada_map_container);
       }
 
