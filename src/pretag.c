@@ -1157,6 +1157,9 @@ void pretag_index_destroy(struct id_table *t)
       char pm_cdada_map_container[hash_key_get_len(hash_key)];
       void *idx_map_val;
 
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] maps_index: destroying index %llx.\n", config.name,
+	  config.type, t->filename, (unsigned long long)t->index[iterator].bitmap);
+
       while (cdada_map_first(t->index[iterator].idx_map, pm_cdada_map_container, &idx_map_val) == CDADA_SUCCESS) {
 	cdada_map_erase(t->index[iterator].idx_map, pm_cdada_map_container);
       }
