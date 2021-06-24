@@ -1087,7 +1087,7 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
 
       ret = cdada_map_insert(t->index[iterator].idx_map, hash_key_get_val(hash_key), ptr);
       if (ret == CDADA_E_EXISTS) {
-	u_char key_hexdump[hash_key_get_len(hash_key) * 2];
+	u_char key_hexdump[hash_key_get_len(hash_key) * 3];
 	serialize_hex(hash_key_get_val(hash_key), key_hexdump, hash_key_get_len(hash_key));
 
 	Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] pretag_index_fill(): index=%llx key=%s (dup!)\n",
@@ -1113,7 +1113,7 @@ void pretag_index_print_key(const cdada_map_t *map, const void *key, void *value
   hash_keylen = hash_key_get_len(hash_key);
 
   {
-    u_char key_hexdump[hash_keylen * 2];
+    u_char key_hexdump[hash_keylen * 3];
     serialize_hex(key, key_hexdump, hash_keylen);
 
     Log(LOG_DEBUG, "DEBUG ( %s/%s ): pretag_index_print_key(): index=%llx key=%s\n",
