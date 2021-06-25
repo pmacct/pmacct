@@ -3611,10 +3611,11 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
         ret = cdada_map_find(entry->in_rd_map, &ingress_vrfid, (void **) &rd);
 	if (ret == CDADA_SUCCESS) {
 	  memcpy(&pbgp->mpls_vpn_rd, rd, 8);
+	  bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
 	}
       }
       else {
-        pbgp->mpls_vpn_rd.val = ntohl(ingress_vrfid);
+        pbgp->mpls_vpn_rd.val = ingress_vrfid;
         if (pbgp->mpls_vpn_rd.val) {
 	  pbgp->mpls_vpn_rd.type = RD_TYPE_VRFID;
 	  bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
@@ -3627,10 +3628,11 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
         ret = cdada_map_find(entry->out_rd_map, &egress_vrfid, (void **) &rd);
 	if (ret == CDADA_SUCCESS) {
 	  memcpy(&pbgp->mpls_vpn_rd, rd, 8);
+	  bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
 	}
       }
       else {
-        pbgp->mpls_vpn_rd.val = ntohl(egress_vrfid);
+        pbgp->mpls_vpn_rd.val = egress_vrfid;
         if (pbgp->mpls_vpn_rd.val) {
 	  pbgp->mpls_vpn_rd.type = RD_TYPE_VRFID;
 	  bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
