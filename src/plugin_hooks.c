@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -331,6 +331,27 @@ void load_plugins(struct plugin_requests *req)
 	if (list->cfg.type_id == PLUGIN_ID_TEE) {
 	  list->cfg.ptm_complex = req->ptm_c.load_ptm_res;
 	  if (req->ptm_c.load_ptm_res) req->ptm_c.exec_ptm_dissect = TRUE;
+	}
+      }
+
+      if (list->cfg.type_id != PLUGIN_ID_TEE) {
+	if (list->cfg.acct_type == ACCT_NF && list->cfg.nfacctd_account_options) {
+	  int have_sample_type = FALSE;
+
+	  if (list->cfg.ptm.index_num) {
+	    int idx;
+
+	    for (idx = 0; idx < list->cfg.ptm.index_num; idx++) {
+	      if (list->cfg.ptm.index[idx].bitmap & PRETAG_SAMPLE_TYPE) {
+		have_sample_type = TRUE;
+	      }
+	    }
+	  }
+
+	  if ((!have_sample_type && !list->cfg.ptm.num) || (!have_sample_type && list->cfg.ptm.index_num)) {
+	    Log(LOG_WARNING, "WARN ( %s/%s ): nfacctd_account_options is enabled but pre_tag_map does not contain a sample_type rule.\n",
+		list->name, list->type.string);
+	  }
 	}
       }
 
