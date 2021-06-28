@@ -2045,7 +2045,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  }
 	}
 
-        if ((tpl->tpl[NF9_INGRESS_VRFID].len == 4 || tpl->tpl[NF9_INGRESS_VRFID].len == 4) && tpl->tpl[NF9_MPLS_VPN_RD].len == 8) {
+        if (tpl->tpl[NF9_INGRESS_VRFID].len == 4 && tpl->tpl[NF9_MPLS_VPN_RD].len == 8) {
           /* Handling the global option scoping case */
           if (!config.nfacctd_disable_opt_scope_check) {
             if (tpl->tpl[NF9_OPT_SCOPE_SYSTEM].len) entry = (struct xflow_status_entry *) pptrs->f_status_g;
