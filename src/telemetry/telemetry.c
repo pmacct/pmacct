@@ -99,7 +99,7 @@ int telemetry_daemon(void *t_data_void)
   u_char consumer_buf[LARGEBUFLEN];
 
 #if defined WITH_UNYTE_UDP_NOTIF
-  unyte_collector_t *uun_collector = NULL;
+  unyte_udp_collector_t *uun_collector = NULL;
   void *seg_ptr = NULL;
 #endif
 
@@ -426,7 +426,7 @@ int telemetry_daemon(void *t_data_void)
 #if defined WITH_UNYTE_UDP_NOTIF
   else if (unyte_udp_notif_input) {
     char null_ip_address[] = "0.0.0.0";
-    unyte_options_t options = {0};
+    unyte_udp_options_t options = {0};
 
     if (config.telemetry_udp_notif_ip) {
       options.address = config.telemetry_udp_notif_ip;
@@ -450,7 +450,7 @@ int telemetry_daemon(void *t_data_void)
       options.recvmmsg_vlen = TELEMETRY_DEFAULT_UNYTE_UDP_NOTIF_NMSGS;
     }
 
-    uun_collector = unyte_start_collector(&options);
+    uun_collector = unyte_udp_start_collector(&options);
 
     Log(LOG_INFO, "INFO ( %s/%s ): reading telemetry data from Unyte UDP Notif on %s:%d\n",
 	config.name, t_data->log_str, options.address, options.port);
@@ -591,7 +591,7 @@ int telemetry_daemon(void *t_data_void)
 #endif
 #if defined WITH_UNYTE_UDP_NOTIF
     else if (unyte_udp_notif_input) {
-      seg_ptr = unyte_queue_read(uun_collector->queue);
+      seg_ptr = unyte_udp_queue_read(uun_collector->queue);
       select_num = TRUE; /* anything but zero or negative */
     }
 #endif
