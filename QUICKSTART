@@ -2942,7 +2942,7 @@ options>". A memory leak is confirmed if the amount of "definitely lost" bytes
 keeps increasing over time.
 
 d) In the two cases of nfacctd/sfacctd or nfprobe/sfprobe not showing signs of
-input/output data: 1) check with tcpdump, ie. "tcpdump -i <interface> -n port
+input/output data: 1) check with tcpdump, ie. "tcpdump -i <interface> -n
 <sfacctd/nfacctd listening port>" (for uacctd use -i nflog:<nflog group>), that
 packets are emitted/received. Optionally Wireshark (or its cli tool tshark) can
 be used, in conjunction with decoders ('cflow' for NetFlow/IPFIX and 'sflow' for

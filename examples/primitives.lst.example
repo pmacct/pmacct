@@ -32,7 +32,12 @@
 !			select. Optionally, a PEN value can be supplied as well
 !			via the <PEN>:<value> format. As a reference the IPFIX
 !			standard IEs definition table can be used:
-!			http://www.iana.org/assignments/ipfix/ipfix.xhtml
+!			http://www.iana.org/assignments/ipfix/ipfix.xhtml ; for
+!			non-standard IEs, vendor tend to supply equivalent docs:
+!			should this result unavailable, make a trace of the data,
+!			ie. "tcpdump -i any -n -w <file> <daemon listening port>",
+!			then analyse it, ie. with Wireshark, isolating templates
+!			in order to find relevant information.
 ! 'len'			MATCH: Length of the primitive, in bytes. 'vlen' word
 !			defines a primitive to be variable length. In pmacctd
 !			and  uacctd only strings can be defined vlen; in nfacctd
