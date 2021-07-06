@@ -757,6 +757,7 @@ int telemetry_daemon(void *t_data_void)
 	    payload_len = strlen(seg->payload);
 	    if (payload_len < sizeof(consumer_buf)) {
 	      strlcpy((char *)consumer_buf, seg->payload, sizeof(consumer_buf));
+	      fd = TELEMETRY_UDP_NOTIF_FD;
 	    }
 	    else {
 	      goto select_again;
