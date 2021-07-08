@@ -957,7 +957,7 @@ AC_ARG_ENABLE(unyte-udp-notif,
     LIBS="$_save_LIBS"
     _save_CFLAGS="$CFLAGS"
     CFLAGS="$CFLAGS $UNYTE_UDP_NOTIF_CFLAGS"
-    AC_CHECK_HEADER([unyte-udp-notif/unyte_collector.h], [], [AC_MSG_ERROR(ERROR: missing unyte-udp-notif headers)])
+    AC_CHECK_HEADER([unyte-udp-notif/unyte_udp_collector.h], [], [AC_MSG_ERROR(ERROR: missing unyte-udp-notif headers)])
     CFLAGS="$_save_CFLAGS"
     ;;
   no)
