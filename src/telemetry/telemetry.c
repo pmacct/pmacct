@@ -904,6 +904,10 @@ int telemetry_daemon(void *t_data_void)
 	  saved_peer_buf = peer->buf.base;
 	  peer->buf.base = (char *) consumer_buf;
 	  peer->msglen = peer->buf.tot_len = ret;
+
+	  if (unyte_udp_notif_input) {
+	    peer->stats.packet_bytes += ret;
+	  }
 	}
       }
       data_decoder = TELEMETRY_DATA_DECODER_JSON;
