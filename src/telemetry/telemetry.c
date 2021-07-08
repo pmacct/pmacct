@@ -591,8 +591,17 @@ int telemetry_daemon(void *t_data_void)
 #endif
 #if defined WITH_UNYTE_UDP_NOTIF
     else if (unyte_udp_notif_input) {
+      unyte_seg_met_t *seg = NULL;
+
       seg_ptr = unyte_udp_queue_read(uun_collector->queue);
       select_num = TRUE; /* anything but zero or negative */
+
+      /* the library does pass src_addr / src_port that went through a ntoh*() func;
+	 to align the workflow to the rest of collection methods, let's temporarily
+	 revert this */
+      seg = (unyte_seg_met_t *)seg_ptr;
+      seg->metadata->src_addr = htonl(seg->metadata->src_addr);
+      seg->metadata->src_port = htons(seg->metadata->src_port);
     }
 #endif
 
