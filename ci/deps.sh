@@ -66,5 +66,8 @@ cd libserdes ; rm -rf ./.git ; ./configure ; make ; sudo make install ; cd ..
 git clone https://github.com/redis/hiredis
 cd hiredis ; rm -rf ./.git ; make ; sudo make install ; cd ..
 
+git clone https://github.com/insa-unyte/udp-notif-c-collector
+cd udp-notif-c-collector ; rm -rf ./.git ; make ; sudo make install ; cd ..
+
 # Make sure dynamic linker is up-to-date
 ldconfig
