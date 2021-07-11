@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -390,6 +390,7 @@ extern void bmp_daemon_wrapper();
 extern int skinny_bmp_daemon();
 extern void bmp_prepare_thread();
 extern void bmp_prepare_daemon();
+extern void bmp_daemon_msglog_prepare_sd_schemas();
 
 /* global variables */
 extern struct bmp_peer *bmp_peers;
