@@ -1714,6 +1714,11 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
 											     "bmp", "term",
 											     config.bmp_dump_kafka_avro_schema_registry);
 
+    bmp_dump_kafka_host.sd_schema[BMP_MSG_TMP_RPAT] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, FALSE,
+											     bmp_misc_db->dump_avro_schema[BMP_MSG_TMP_RPAT],
+											     "bmp", "rpat",
+											     config.bmp_dump_kafka_avro_schema_registry);
+
     bmp_dump_kafka_host.sd_schema[BMP_LOG_TYPE_DUMPINIT] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, FALSE,
 											     bmp_misc_db->dump_avro_schema[BMP_LOG_TYPE_DUMPINIT],
 											     "bmp", "dumpinit",
