@@ -1977,6 +1977,9 @@ int bmp_daemon_msglog_init_kafka_host()
   p_kafka_set_key(&bmp_daemon_msglog_kafka_host, config.bmp_daemon_msglog_kafka_partition_key, config.bmp_daemon_msglog_kafka_partition_keylen);
   p_kafka_set_content_type(&bmp_daemon_msglog_kafka_host, PM_KAFKA_CNT_TYPE_STR);
   P_broker_timers_set_retry_interval(&bmp_daemon_msglog_kafka_host.btimers, config.bmp_daemon_msglog_kafka_retry);
+#ifdef WITH_SERDES
+  P_broker_timers_set_retry_interval(&bmp_daemon_msglog_kafka_host.sd_schema_timers, config.bmp_daemon_msglog_kafka_retry);
+#endif
 
   return ret;
 }

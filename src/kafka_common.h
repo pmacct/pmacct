@@ -57,6 +57,7 @@ struct p_kafka_host {
 
 #ifdef WITH_SERDES
   serdes_schema_t *sd_schema[MAX_AVRO_SCHEMA];
+  struct p_broker_timers sd_schema_timers;
 #endif
 
   struct p_broker_timers btimers;
