@@ -311,9 +311,10 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
 	if (kafka_host->sd_schema[log_type]) {
 	  if (serdes_schema_serialize_avro(kafka_host->sd_schema[log_type], &p_avro_obj, &p_avro_local_buf, &p_avro_len,
 					 kafka_host->errstr, sizeof(kafka_host->errstr))) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): bmp_log_msg(): serdes_schema_serialize_avro() failed for %s: %s\n",
-	      config.name, bms->log_str, bmp_msg_types[log_type], kafka_host->errstr);
-	  exit_gracefully(1);
+	    Log(LOG_ERR, "ERROR ( %s/%s ): bmp_log_msg(): serdes_schema_serialize_avro() failed for %s: %s\n",
+	        config.name, bms->log_str, bmp_msg_types[log_type], kafka_host->errstr);
+	    exit_gracefully(1);
+	  }
 	}
 #endif
       }
