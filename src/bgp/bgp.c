@@ -458,17 +458,7 @@ void skinny_bgp_daemon_online()
 	  exit_gracefully(1);
 	}
 
-	bgp_daemon_msglog_kafka_host.sd_schema[0] = compose_avro_schema_registry_name_2(config.bgp_daemon_msglog_kafka_topic, FALSE,
-										        bgp_misc_db->msglog_avro_schema[0], "bgp", "msglog",
-										        config.bgp_daemon_msglog_kafka_avro_schema_registry);
-
-	bgp_daemon_msglog_kafka_host.sd_schema[BGP_LOG_TYPE_LOGINIT] = compose_avro_schema_registry_name_2(config.bgp_daemon_msglog_kafka_topic, FALSE,
-										        bgp_misc_db->msglog_avro_schema[BGP_LOG_TYPE_LOGINIT], "bgp", "loginit",
-										        config.bgp_daemon_msglog_kafka_avro_schema_registry);
-
-	bgp_daemon_msglog_kafka_host.sd_schema[BGP_LOG_TYPE_LOGCLOSE] = compose_avro_schema_registry_name_2(config.bgp_daemon_msglog_kafka_topic, FALSE,
-										        bgp_misc_db->msglog_avro_schema[BGP_LOG_TYPE_LOGCLOSE], "bgp", "logclose",
-										        config.bgp_daemon_msglog_kafka_avro_schema_registry);
+	bgp_daemon_msglog_prepare_sd_schemas();
 #endif
       }
     }
@@ -702,6 +692,12 @@ void skinny_bgp_daemon_online()
 
         if (last_fail && ((last_fail + P_broker_timers_get_retry_interval(&bgp_daemon_msglog_kafka_host.btimers)) <= bgp_misc_db->log_tstamp.tv_sec))
           bgp_daemon_msglog_init_kafka_host();
+
+	if (config.bgp_daemon_msglog_kafka_avro_schema_registry) {
+#ifdef WITH_SERDES
+	  bgp_daemon_msglog_prepare_sd_schemas();
+#endif
+	}
       }
 #endif
     }
@@ -1077,4 +1073,42 @@ void bgp_prepare_daemon()
 
   bgp_misc_db->log_str = malloc(strlen("core") + 1);
   strcpy(bgp_misc_db->log_str, "core");
+}
+
+void bgp_daemon_msglog_prepare_sd_schemas()
+{
+#ifdef WITH_SERDES
+  time_t last_fail = P_broker_timers_get_last_fail(&bgp_daemon_msglog_kafka_host.sd_schema_timers);
+
+  if ((last_fail + P_broker_timers_get_retry_interval(&bgp_daemon_msglog_kafka_host.sd_schema_timers)) <= bgp_misc_db->log_tstamp.tv_sec) {
+    if (!bgp_daemon_msglog_kafka_host.sd_schema[0]) {
+      bgp_daemon_msglog_kafka_host.sd_schema[0] = compose_avro_schema_registry_name_2(config.bgp_daemon_msglog_kafka_topic, FALSE,
+												     bgp_misc_db->msglog_avro_schema[0],
+												     "bgp", "msglog",
+												     config.bgp_daemon_msglog_kafka_avro_schema_registry);
+      if (!bgp_daemon_msglog_kafka_host.sd_schema[0]) goto exit_lane;
+    }
+
+    if (!bgp_daemon_msglog_kafka_host.sd_schema[BGP_LOG_TYPE_LOGINIT]) {
+      bgp_daemon_msglog_kafka_host.sd_schema[BGP_LOG_TYPE_LOGINIT] = compose_avro_schema_registry_name_2(config.bgp_daemon_msglog_kafka_topic, FALSE,
+												     bgp_misc_db->msglog_avro_schema[BGP_LOG_TYPE_LOGINIT],
+												     "bgp", "loginit",
+												     config.bgp_daemon_msglog_kafka_avro_schema_registry);
+      if (!bgp_daemon_msglog_kafka_host.sd_schema[BGP_LOG_TYPE_LOGINIT]) goto exit_lane;
+    }
+
+    if (!bgp_daemon_msglog_kafka_host.sd_schema[BGP_LOG_TYPE_LOGCLOSE]) {
+      bgp_daemon_msglog_kafka_host.sd_schema[BGP_LOG_TYPE_LOGCLOSE] = compose_avro_schema_registry_name_2(config.bgp_daemon_msglog_kafka_topic, FALSE,
+												     bgp_misc_db->msglog_avro_schema[BGP_LOG_TYPE_LOGCLOSE],
+												     "bgp", "logclose",
+												     config.bgp_daemon_msglog_kafka_avro_schema_registry);
+      if (!bgp_daemon_msglog_kafka_host.sd_schema[BGP_LOG_TYPE_LOGCLOSE]) goto exit_lane;
+    }
+  }
+
+  return;
+
+  exit_lane:
+  P_broker_timers_set_last_fail(&bgp_daemon_msglog_kafka_host.sd_schema_timers, time(NULL));
+#endif
 }

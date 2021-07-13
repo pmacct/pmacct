@@ -381,6 +381,7 @@ extern int skinny_bgp_daemon();
 extern void skinny_bgp_daemon_online();
 extern void bgp_prepare_thread();
 extern void bgp_prepare_daemon();
+extern void bgp_daemon_msglog_prepare_sd_schemas();
 
 /* global variables */
 extern struct bgp_peer *peers;
