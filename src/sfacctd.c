@@ -1062,7 +1062,7 @@ int main(int argc,char **argv, char **envp)
   // pptrs.vlanmpls6.pkthdr->caplen = 104; /* eth_header + vlan + upto 10 MPLS labels + ip6_hdr + pm_tlhdr */
   pptrs.vlanmpls6.pkthdr->caplen = 121;
   pptrs.vlanmpls6.pkthdr->len = 128; /* fake len */
-  pptrs.vlanmpls6.l3_proto = ETHERTYPE_IP;
+  pptrs.vlanmpls6.l3_proto = ETHERTYPE_IPV6;
 
   if (config.pcap_savefile) {
     Log(LOG_INFO, "INFO ( %s/core ): reading sFlow data from: %s\n", config.name, config.pcap_savefile);
