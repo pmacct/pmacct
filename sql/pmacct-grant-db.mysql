@@ -1,1 +1,2 @@
-grant all privileges on pmacct.* to pmacct@localhost identified by 'arealsmartpwd' with grant option;
+CREATE USER 'pmacct'@'localhost' IDENTIFIED BY 'arealsmartpwd';
+GRANT ALL PRIVILEGES ON pmacct.* TO pmacct@localhost;
