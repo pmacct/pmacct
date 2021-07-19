@@ -457,13 +457,14 @@ DESC:           When reading from a pcap_savefile, replay content for the specif
 		the first time due to the template not being sent yet.
 DEFAULT:        1
 
-KEY:		[ pcap_direction | uacctd_direction ] [GLOBAL, ONLY_PMACCTD]
+KEY:		[ pcap_direction | uacctd_direction ] [GLOBAL, ONLY_PMACCTD, ONLY_UACCTD]
 VALUES:		[ "in", "out" ]
 DESC:		Defines the traffic capturing direction with two possible values, "in" and "out". In
-		pmacctd this is used to determine which primitive to populate, whether in_iface or
-		out_iface with the pcap_ifindex value. In addition, this allows to tag data basing
-		on direction in pre_tag_map. In uacctd the only functionality is the latter of the
-		two. 
+		pmacctd this is used to 1) determine which primitive to populate, whether in_iface or
+		out_iface with the pcap_ifindex value and 2) tag / filter data basing on direction in
+		pre_tag_map. Not all platforms do support pcap_set_direction() and a quick test is to
+		check if tcpdump, ie. 'tcpdump -i <interface> -Q in', does work as intended. In uacctd
+		the only functionality is the latter of the two use-cases.
 DEFAULT:	none
 
 KEY:		pcap_ifindex [GLOBAL, PMACCTD_ONLY]
