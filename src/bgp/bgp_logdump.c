@@ -643,7 +643,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(type);
   int peer_idx, have_it, ret = 0, amqp_ret = 0, kafka_ret = 0;
-  char log_filename[SRVBUFLEN];
+  char log_filename[SRVBUFLEN], log_partname[SRVBUFLEN];
 
   if (!bms || !peer) return ERR;
 
@@ -657,6 +657,10 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 
   if (bms->msglog_kafka_topic) {
     bgp_peer_log_dynname(log_filename, SRVBUFLEN, bms->msglog_kafka_topic, peer); 
+  }
+
+  if (bms->msglog_kafka_partition_key) {
+    bgp_peer_log_dynname(log_partname, SRVBUFLEN, bms->msglog_kafka_partition_key, peer);
   }
 
   for (peer_idx = 0, have_it = 0; peer_idx < bms->max_peers; peer_idx++) {
@@ -709,6 +713,10 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
     if (bms->msglog_kafka_topic_rr && !p_kafka_get_topic_rr(peer->log->kafka_host)) {
       p_kafka_init_topic_rr(peer->log->kafka_host);
       p_kafka_set_topic_rr(peer->log->kafka_host, bms->msglog_kafka_topic_rr);
+    }
+
+    if (bms->msglog_kafka_partition_key && !p_kafka_get_key(peer->log->kafka_host)) {
+      p_kafka_set_key(peer->log->kafka_host, log_partname, strlen(log_partname));
     }
 #endif
 

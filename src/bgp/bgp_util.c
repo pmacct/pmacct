@@ -1500,6 +1500,7 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->msglog_amqp_routing_key_rr = config.bgp_daemon_msglog_amqp_routing_key_rr;
   bms->msglog_kafka_topic = config.bgp_daemon_msglog_kafka_topic;
   bms->msglog_kafka_topic_rr = config.bgp_daemon_msglog_kafka_topic_rr;
+  bms->msglog_kafka_partition_key = config.bgp_daemon_msglog_kafka_partition_key;
   bms->msglog_kafka_avro_schema_registry = config.bgp_daemon_msglog_kafka_avro_schema_registry;
   bms->peer_str = malloc(strlen("peer_ip_src") + 1);
   strcpy(bms->peer_str, "peer_ip_src");

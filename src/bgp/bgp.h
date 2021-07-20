@@ -264,6 +264,7 @@ struct bgp_misc_structs {
   int msglog_amqp_routing_key_rr;
   char *msglog_kafka_topic;
   int msglog_kafka_topic_rr;
+  char *msglog_kafka_partition_key;
 #if defined WITH_AVRO
   avro_schema_t msglog_avro_schema[MAX_AVRO_SCHEMA];
 #endif
