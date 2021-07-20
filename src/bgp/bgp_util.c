@@ -1493,6 +1493,7 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->dump_amqp_routing_key_rr = config.bgp_table_dump_amqp_routing_key_rr;
   bms->dump_kafka_topic = config.bgp_table_dump_kafka_topic;
   bms->dump_kafka_topic_rr = config.bgp_table_dump_kafka_topic_rr;
+  bms->dump_kafka_partition_key = config.bgp_table_dump_kafka_partition_key;
   bms->dump_kafka_avro_schema_registry = config.bgp_table_dump_kafka_avro_schema_registry;
   bms->msglog_file = config.bgp_daemon_msglog_file;
   bms->msglog_output = config.bgp_daemon_msglog_output;

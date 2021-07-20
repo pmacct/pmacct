@@ -254,6 +254,7 @@ struct bgp_misc_structs {
   int dump_amqp_routing_key_rr;
   char *dump_kafka_topic;
   int dump_kafka_topic_rr;
+  char *dump_kafka_partition_key;
 #if defined WITH_AVRO
   avro_schema_t dump_avro_schema[MAX_AVRO_SCHEMA];
 #endif
