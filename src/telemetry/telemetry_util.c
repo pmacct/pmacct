@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -145,12 +145,14 @@ void telemetry_link_misc_structs(telemetry_misc_structs *tms)
   tms->dump_amqp_routing_key_rr = config.telemetry_dump_amqp_routing_key_rr;
   tms->dump_kafka_topic = config.telemetry_dump_kafka_topic;
   tms->dump_kafka_topic_rr = config.telemetry_dump_kafka_topic_rr;
+  tms->dump_kafka_partition_key = config.telemetry_dump_kafka_partition_key;
   tms->msglog_file = config.telemetry_msglog_file;
   tms->msglog_output = config.telemetry_msglog_output;
   tms->msglog_amqp_routing_key = config.telemetry_msglog_amqp_routing_key;
   tms->msglog_amqp_routing_key_rr = config.telemetry_msglog_amqp_routing_key_rr;
   tms->msglog_kafka_topic = config.telemetry_msglog_kafka_topic;
   tms->msglog_kafka_topic_rr = config.telemetry_msglog_kafka_topic_rr;
+  tms->msglog_kafka_partition_key = config.telemetry_msglog_kafka_partition_key;
   tms->peer_str = malloc(strlen("telemetry_node") + 1);
   strcpy(tms->peer_str, "telemetry_node");
   tms->peer_port_str = malloc(strlen("telemetry_node_port") + 1);
