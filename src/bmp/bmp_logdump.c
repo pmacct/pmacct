@@ -1621,7 +1621,8 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BMP);
   char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
-  char latest_filename[SRVBUFLEN], event_type[] = "dump", *fd_buf = NULL;
+  char latest_filename[SRVBUFLEN], dump_partition_key[SRVBUFLEN];
+  char event_type[] = "dump", *fd_buf = NULL;
   int peers_idx, duration, tables_num;
   struct bgp_rt_structs *inter_domain_routing_db;
   struct bgp_table *table;
@@ -1748,6 +1749,10 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
 	bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bmp_dump_kafka_topic, peer);
       }
 
+      if (config.bmp_dump_kafka_partition_key) {
+	bgp_peer_log_dynname(dump_partition_key, SRVBUFLEN, config.bmp_dump_kafka_partition_key, peer);
+      }
+
       pm_strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bms->dump.tstamp.tv_sec, config.timestamps_utc);
 
       /*
@@ -1794,6 +1799,10 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
       if (config.bmp_dump_kafka_topic) {
         peer->log->kafka_host = &bmp_dump_kafka_host;
         strcpy(peer->log->filename, current_filename);
+
+	if (config.bmp_dump_kafka_partition_key) {
+	  p_kafka_set_key(peer->log->kafka_host, dump_partition_key, strlen(dump_partition_key));
+	}
       }
 #endif
 
