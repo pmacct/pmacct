@@ -333,7 +333,7 @@ int telemetry_dump_event_runner(struct pm_dump_runner *pdr)
   telemetry_misc_structs *tms = bgp_select_misc_db(FUNC_TYPE_TELEMETRY);
   struct telemetry_data *t_data;
   char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
-  char latest_filename[SRVBUFLEN], *fd_buf = NULL;
+  char latest_filename[SRVBUFLEN], dump_partition_key[SRVBUFLEN], *fd_buf = NULL;
   int peers_idx, duration, tables_num;
   pid_t dumper_pid;
   time_t start;
@@ -395,6 +395,7 @@ int telemetry_dump_event_runner(struct pm_dump_runner *pdr)
       if (config.telemetry_dump_file) telemetry_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_file, peer);
       if (config.telemetry_dump_amqp_routing_key) telemetry_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_amqp_routing_key, peer);
       if (config.telemetry_dump_kafka_topic) telemetry_peer_log_dynname(current_filename, SRVBUFLEN, config.telemetry_dump_kafka_topic, peer);
+      if (config.telemetry_dump_kafka_partition_key) telemetry_peer_log_dynname(dump_partition_key, SRVBUFLEN, config.telemetry_dump_kafka_partition_key, peer);
 
       pm_strftime_same(current_filename, SRVBUFLEN, tmpbuf, &tms->dump.tstamp.tv_sec, config.timestamps_utc);
 
@@ -438,6 +439,10 @@ int telemetry_dump_event_runner(struct pm_dump_runner *pdr)
       if (config.telemetry_dump_kafka_topic) {
         peer->log->kafka_host = &telemetry_dump_kafka_host;
         strcpy(peer->log->filename, current_filename);
+
+	if (config.telemetry_dump_kafka_partition_key) {
+	  p_kafka_set_key(peer->log->kafka_host, dump_partition_key, strlen(dump_partition_key));
+	}
       }
 #endif
 
