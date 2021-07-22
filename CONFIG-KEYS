@@ -891,13 +891,37 @@ DESC:           See kafka_partition; see also bgp_daemon_msglog_kafka_broker_hos
 DEFAULT:        See kafka_partition
 
 KEY:            [ bgp_daemon_msglog_kafka_partition_key |
-		  bgp_table_dump_kafka_partition_key |
-                  bmp_daemon_msglog_kafka_partition_key | bmp_dump_kafka_partition_key |
-                  sfacctd_counter_kafka_partition_key |
-		  telemetry_daemon_msglog_kafka_partition_key |
-                  telemetry_dump_kafka_partition_key ] [GLOBAL]
-DESC:           See kafka_partition_key; see also bgp_daemon_msglog_kafka_broker_host.
-DEFAULT:        See kafka_partition_key
+		  bgp_table_dump_kafka_partition_key ] [GLOBAL]
+DESC:           Defines the Kafka broker topic partition key. A string of printable characters
+		is expected as value. Dynamic names are supported through the use of variables,
+		listed below:
+
+		$peer_src_ip	The IP address of the BGP peer exporting data
+
+		$peer_tcp_port	The TCP port of the BGP session. Useful in case of BGP x-connects
+DEFAULT:	none
+
+KEY:		[ bmp_daemon_msglog_kafka_partition_key |
+		  bmp_dump_kafka_partition_key ] [GLOBAL]
+DESC:           Defines the Kafka broker topic partition key. A string of printable characters
+		is expected as value. Dynamic names are supported through the use of variables,
+		listed below:
+
+		$bmp_router		The IP address of the router exporting data via BMP
+
+		$bmp_router_port	The TCP port of the BMP session
+DEFAULT:	none
+
+KEY:		[ telemetry_daemon_msglog_kafka_partition_key |
+		  telemetry_dump_kafka_partition_key ] [GLOBAL]
+DESC:           Defines the Kafka broker topic partition key. A string of printable characters
+		is expected as value. Dynamic names are supported through the use of variables,
+		listed below:
+
+		$telemetry_node		The IP address of the node exporting Streaming Telemetry
+
+		$telemetry_node_port	The TCP/UDP port of the Streaming Telemetry session
+DEFAULT:        none
 
 KEY:            [ bgp_daemon_msglog_kafka_retry | bmp_daemon_msglog_kafka_retry |
 		  sfacctd_counter_kafka_retry | telemetry_daemon_msglog_kafka_retry ] [GLOBAL]
