@@ -715,7 +715,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
       p_kafka_set_topic_rr(peer->log->kafka_host, bms->msglog_kafka_topic_rr);
     }
 
-    if (bms->msglog_kafka_partition_key && !p_kafka_get_key(peer->log->kafka_host)) {
+    if (bms->msglog_kafka_partition_key) {
       p_kafka_set_key(peer->log->kafka_host, log_partname, strlen(log_partname));
     }
 #endif
