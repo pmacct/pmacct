@@ -61,6 +61,10 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
       (config.bmp_dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
 #ifdef WITH_KAFKA
     p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
+
+    if (config.bmp_daemon_msglog_kafka_partition_key && etype == BGP_LOGDUMP_ET_LOG) {
+      p_kafka_set_key(peer->log->kafka_host, peer->log->partition_key, strlen(peer->log->partition_key));
+    }
 #endif
   }
 
