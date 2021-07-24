@@ -66,6 +66,10 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       (bms->dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
 #ifdef WITH_KAFKA
     p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
+
+    if (bms->msglog_kafka_partition_key && etype == BGP_LOGDUMP_ET_LOG) {
+      p_kafka_set_key(peer->log->kafka_host, peer->log->partition_key, strlen(peer->log->partition_key));
+    }
 #endif
   }
 
@@ -680,6 +684,10 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
       if (bms->msglog_kafka_topic) {
         bms->peers_log[peer_idx].kafka_host = bms->msglog_kafka_host;
       }
+
+      if (bms->msglog_kafka_partition_key) {
+        strcpy(bms->peers_log[peer_idx].partition_key, log_partname);
+      }
 #endif
       
       strcpy(bms->peers_log[peer_idx].filename, log_filename);
@@ -687,8 +695,16 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
       break;
     }
     else if (!strcmp(log_filename, bms->peers_log[peer_idx].filename)) {
-      have_it = TRUE;
-      break;
+      if (bms->msglog_kafka_partition_key) {
+	if (!strcmp(log_partname, bms->peers_log[peer_idx].partition_key)) {
+	  have_it = TRUE;
+	}
+      }
+      else {
+        have_it = TRUE;
+      }
+
+      if (have_it) break;
     }
   }
 
@@ -707,8 +723,9 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
 #endif
 
 #ifdef WITH_KAFKA
-    if (bms->msglog_kafka_topic)
+    if (bms->msglog_kafka_topic) {
       p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
+    }
 
     if (bms->msglog_kafka_topic_rr && !p_kafka_get_topic_rr(peer->log->kafka_host)) {
       p_kafka_init_topic_rr(peer->log->kafka_host);
@@ -716,7 +733,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, int output, int type)
     }
 
     if (bms->msglog_kafka_partition_key) {
-      p_kafka_set_key(peer->log->kafka_host, log_partname, strlen(log_partname));
+      p_kafka_set_key(peer->log->kafka_host, peer->log->partition_key, strlen(peer->log->partition_key));
     }
 #endif
 
@@ -917,6 +934,10 @@ int bgp_peer_log_close(struct bgp_peer *peer, int output, int type)
 #ifdef WITH_KAFKA
   if (bms->msglog_kafka_topic) {
     p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
+  }
+
+  if (bms->msglog_kafka_partition_key) {
+    p_kafka_set_key(peer->log->kafka_host, peer->log->partition_key, strlen(peer->log->partition_key));
   }
 #endif
 
