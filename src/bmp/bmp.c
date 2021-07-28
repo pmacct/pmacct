@@ -783,11 +783,15 @@ int skinny_bmp_daemon()
       addr_to_str(peer->addr_str, &peer->addr);
       memcpy(&peer->id, &peer->addr, sizeof(struct host_addr)); /* XXX: some inet_ntoa()'s could be around against peer->id */
 
-      if (bmp_misc_db->msglog_backend_methods)
-        bgp_peer_log_init(peer, config.bmp_daemon_msglog_output, FUNC_TYPE_BMP);
+      if (!config.bmp_daemon_parse_proxy_header) {
+        if (bmp_misc_db->msglog_backend_methods) {
+          bgp_peer_log_init(peer, config.bmp_daemon_msglog_output, FUNC_TYPE_BMP);
+	}
 
-      if (bmp_misc_db->dump_backend_methods)
-	bmp_dump_init_peer(peer);
+        if (bmp_misc_db->dump_backend_methods) {
+	  bmp_dump_init_peer(peer);
+	}
+      }
 
       /* Check: multiple TCP connections per peer */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.bmp_daemon_max_peers; peers_check_idx++) {
@@ -828,12 +832,20 @@ int skinny_bmp_daemon()
     if (!peer) goto select_again;
 
     /* If first message after connect, check for proxy protocol header */
-    if (config.bmp_daemon_parse_proxy_header == TRUE && peer->parsed_proxy_header == 0) {
+    if (config.bmp_daemon_parse_proxy_header && !peer->parsed_proxy_header) {
       ret = parse_proxy_header(peer->fd, &peer->addr, &peer->tcp_port);
       if (ret < 0) {
         goto select_again; /* partial header */
       }
       addr_to_str(peer->addr_str, &peer->addr);
+
+      if (bmp_misc_db->msglog_backend_methods) {
+        bgp_peer_log_init(peer, config.bmp_daemon_msglog_output, FUNC_TYPE_BMP);
+      }
+
+      if (bmp_misc_db->dump_backend_methods) {
+        bmp_dump_init_peer(peer);
+      }
     }
     peer->parsed_proxy_header = TRUE;
 
