@@ -94,7 +94,6 @@ extern int write_string_amqp(void *, char *);
 /* global vars */
 extern struct p_amqp_host amqpp_amqp_host;
 extern struct p_amqp_host bgp_daemon_msglog_amqp_host;
-extern struct p_amqp_host bgp_table_dump_amqp_host;
 extern struct p_amqp_host bmp_daemon_msglog_amqp_host;
 extern struct p_amqp_host sfacctd_counter_amqp_host;
 extern struct p_amqp_host telemetry_daemon_msglog_amqp_host;

@@ -1687,7 +1687,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
   return (ret | amqp_ret | kafka_ret);
 }
 
-void bgp_handle_dump_event()
+void bgp_handle_dump_event(int max_peers_idx)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BGP);
   char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
@@ -1705,6 +1705,14 @@ void bgp_handle_dump_event()
   pid_t dumper_pid;
   time_t start;
   u_int64_t dump_elems = 0, dump_seqno;
+
+#ifdef WITH_RABBITMQ
+  struct p_amqp_host bgp_table_dump_amqp_host;
+#endif
+
+#ifdef WITH_KAFKA
+  struct p_kafka_host bgp_table_dump_kafka_host;
+#endif
 
   /* pre-flight check */
   if (!bms->dump_backend_methods || !config.bgp_table_dump_refresh_time)
@@ -1732,7 +1740,7 @@ void bgp_handle_dump_event()
 
 #ifdef WITH_RABBITMQ
     if (config.bgp_table_dump_amqp_routing_key) {
-      bgp_table_dump_init_amqp_host();
+      bgp_table_dump_init_amqp_host(&bgp_table_dump_amqp_host);
       ret = p_amqp_connect_to_publish(&bgp_table_dump_amqp_host);
       if (ret) exit_gracefully(ret);
     }
@@ -1740,7 +1748,7 @@ void bgp_handle_dump_event()
 
 #ifdef WITH_KAFKA
     if (config.bgp_table_dump_kafka_topic) {
-      ret = bgp_table_dump_init_kafka_host();
+      ret = bgp_table_dump_init_kafka_host(&bgp_table_dump_kafka_host);
       if (ret) exit_gracefully(ret);
     }
 #endif
@@ -1948,9 +1956,11 @@ void bgp_daemon_msglog_init_amqp_host()
 #endif
 
 #if defined WITH_RABBITMQ
-void bgp_table_dump_init_amqp_host()
+void bgp_table_dump_init_amqp_host(void *btdah)
 {
-  p_amqp_init_host(&bgp_table_dump_amqp_host);
+  struct p_amqp_host *bgp_table_dump_amqp_host = btdah;
+
+  p_amqp_init_host(bgp_table_dump_amqp_host);
 
   if (!config.bgp_table_dump_amqp_user) config.bgp_table_dump_amqp_user = rabbitmq_user;
   if (!config.bgp_table_dump_amqp_passwd) config.bgp_table_dump_amqp_passwd = rabbitmq_pwd;
@@ -1959,19 +1969,19 @@ void bgp_table_dump_init_amqp_host()
   if (!config.bgp_table_dump_amqp_host) config.bgp_table_dump_amqp_host = default_amqp_host;
   if (!config.bgp_table_dump_amqp_vhost) config.bgp_table_dump_amqp_vhost = default_amqp_vhost;
 
-  p_amqp_set_user(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_user);
-  p_amqp_set_passwd(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_passwd);
-  p_amqp_set_exchange(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_exchange);
-  p_amqp_set_exchange_type(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_exchange_type);
-  p_amqp_set_host(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_host);
-  p_amqp_set_vhost(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_vhost);
-  p_amqp_set_persistent_msg(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_persistent_msg);
-  p_amqp_set_frame_max(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_frame_max);
-  p_amqp_set_content_type_json(&bgp_table_dump_amqp_host);
-  p_amqp_set_heartbeat_interval(&bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_heartbeat_interval);
+  p_amqp_set_user(bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_user);
+  p_amqp_set_passwd(bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_passwd);
+  p_amqp_set_exchange(bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_exchange);
+  p_amqp_set_exchange_type(bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_exchange_type);
+  p_amqp_set_host(bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_host);
+  p_amqp_set_vhost(bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_vhost);
+  p_amqp_set_persistent_msg(bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_persistent_msg);
+  p_amqp_set_frame_max(bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_frame_max);
+  p_amqp_set_content_type_json(bgp_table_dump_amqp_host);
+  p_amqp_set_heartbeat_interval(bgp_table_dump_amqp_host, config.bgp_table_dump_amqp_heartbeat_interval);
 }
 #else
-void bgp_table_dump_init_amqp_host()
+void bgp_table_dump_init_amqp_host(void *btdah)
 {
 }
 #endif
@@ -2008,26 +2018,27 @@ int bgp_daemon_msglog_init_kafka_host()
 #endif
 
 #if defined WITH_KAFKA
-int bgp_table_dump_init_kafka_host()
+int bgp_table_dump_init_kafka_host(void *btdkh)
 {
+  struct p_kafka_host *bgp_table_dump_kafka_host = btdkh;
   int ret;
 
-  p_kafka_init_host(&bgp_table_dump_kafka_host, config.bgp_table_dump_kafka_config_file);
-  ret = p_kafka_connect_to_produce(&bgp_table_dump_kafka_host);
+  p_kafka_init_host(bgp_table_dump_kafka_host, config.bgp_table_dump_kafka_config_file);
+  ret = p_kafka_connect_to_produce(bgp_table_dump_kafka_host);
 
   if (!config.bgp_table_dump_kafka_broker_host) config.bgp_table_dump_kafka_broker_host = default_kafka_broker_host;
   if (!config.bgp_table_dump_kafka_broker_port) config.bgp_table_dump_kafka_broker_port = default_kafka_broker_port;
 
-  p_kafka_set_broker(&bgp_table_dump_kafka_host, config.bgp_table_dump_kafka_broker_host, config.bgp_table_dump_kafka_broker_port);
-  p_kafka_set_topic(&bgp_table_dump_kafka_host, config.bgp_table_dump_kafka_topic);
-  p_kafka_set_partition(&bgp_table_dump_kafka_host, config.bgp_table_dump_kafka_partition);
-  p_kafka_set_key(&bgp_table_dump_kafka_host, config.bgp_table_dump_kafka_partition_key, config.bgp_table_dump_kafka_partition_keylen);
-  p_kafka_set_content_type(&bgp_table_dump_kafka_host, PM_KAFKA_CNT_TYPE_STR);
+  p_kafka_set_broker(bgp_table_dump_kafka_host, config.bgp_table_dump_kafka_broker_host, config.bgp_table_dump_kafka_broker_port);
+  p_kafka_set_topic(bgp_table_dump_kafka_host, config.bgp_table_dump_kafka_topic);
+  p_kafka_set_partition(bgp_table_dump_kafka_host, config.bgp_table_dump_kafka_partition);
+  p_kafka_set_key(bgp_table_dump_kafka_host, config.bgp_table_dump_kafka_partition_key, config.bgp_table_dump_kafka_partition_keylen);
+  p_kafka_set_content_type(bgp_table_dump_kafka_host, PM_KAFKA_CNT_TYPE_STR);
 
   return ret;
 }
 #else
-int bgp_table_dump_init_kafka_host()
+int bgp_table_dump_init_kafka_host(void *btdkh)
 {
   return ERR;
 }

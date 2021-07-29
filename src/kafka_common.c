@@ -28,7 +28,6 @@
 
 struct p_kafka_host kafkap_kafka_host;
 struct p_kafka_host bgp_daemon_msglog_kafka_host;
-struct p_kafka_host bgp_table_dump_kafka_host;
 struct p_kafka_host bmp_daemon_msglog_kafka_host;
 struct p_kafka_host sfacctd_counter_kafka_host;
 struct p_kafka_host telemetry_kafka_host;

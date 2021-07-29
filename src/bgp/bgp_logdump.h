@@ -70,11 +70,11 @@ extern int bgp_peer_log_seq_has_ro_bit(u_int64_t *);
 
 extern int bgp_peer_dump_init(struct bgp_peer *, int, int);
 extern int bgp_peer_dump_close(struct bgp_peer *, struct bgp_dump_stats *, int, int);
-extern void bgp_handle_dump_event();
+extern void bgp_handle_dump_event(int);
 extern void bgp_daemon_msglog_init_amqp_host();
-extern void bgp_table_dump_init_amqp_host();
+extern void bgp_table_dump_init_amqp_host(void *);
 extern int bgp_daemon_msglog_init_kafka_host();
-extern int bgp_table_dump_init_kafka_host();
+extern int bgp_table_dump_init_kafka_host(void *);
 
 #if defined WITH_AVRO
 extern avro_schema_t p_avro_schema_build_bgp(int, char *);
