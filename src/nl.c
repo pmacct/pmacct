@@ -375,7 +375,7 @@ int ip6_handler(register struct packet_ptrs *pptrs)
 
   /* length checks */
   if (off+IP6HdrSz > caplen) return FALSE; /* IP packet truncated */
-  if (plen == 0 && ((struct ip6_hdr *)pptrs->iph_ptr)->ip6_nxt != IPPROTO_NONE) {
+  if (plen == 0 && ((struct ip6_hdr *)pptrs->iph_ptr)->ip6_nxt == IPPROTO_HOPOPTS) {
     Log(LOG_INFO, "INFO ( %s/core ): NULL IPv6 payload length. Jumbo packets are currently not supported.\n", config.name);
     return FALSE;
   }
