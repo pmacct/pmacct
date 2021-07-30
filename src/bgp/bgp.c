@@ -466,7 +466,7 @@ void skinny_bgp_daemon_online()
   }
 
   if (bgp_misc_db->dump_backend_methods) {
-    if (!config.telemetry_dump_workers) {
+    if (!config.bgp_table_dump_workers) {
       config.bgp_table_dump_workers = 1;
     }
 
