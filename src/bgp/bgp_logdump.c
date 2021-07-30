@@ -25,6 +25,7 @@
 #include "addr.h"
 #include "bgp.h"
 #include "rpki/rpki.h"
+#include "thread_pool.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
@@ -1690,33 +1691,15 @@ int bgp_peer_dump_close(struct bgp_peer *peer, struct bgp_dump_stats *bds, int o
 void bgp_handle_dump_event(int max_peers_idx)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BGP);
-  char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
-  char latest_filename[SRVBUFLEN], dump_partition_key[SRVBUFLEN];
-  char event_type[] = "dump", *fd_buf = NULL;
-  int ret, peers_idx, duration, tables_num; 
-  struct bgp_rt_structs *inter_domain_routing_db;
-  struct bgp_peer *peer, *saved_peer;
-  struct bgp_table *table;
-  struct bgp_node *node;
-  struct bgp_peer_log peer_log;
-  struct bgp_dump_stats bds;
-  afi_t afi;
-  safi_t safi;
-  pid_t dumper_pid;
-  time_t start;
-  u_int64_t dump_elems = 0, dump_seqno;
-
-#ifdef WITH_RABBITMQ
-  struct p_amqp_host bgp_table_dump_amqp_host;
-#endif
-
-#ifdef WITH_KAFKA
-  struct p_kafka_host bgp_table_dump_kafka_host;
-#endif
+  thread_pool_t *bgp_table_dump_workers_pool;
+  struct pm_dump_runner pdr[config.bgp_table_dump_workers];
+  u_int64_t dump_seqno;
+  int idx, ret;
 
   /* pre-flight check */
-  if (!bms->dump_backend_methods || !config.bgp_table_dump_refresh_time)
+  if (!bms->dump_backend_methods || !config.bgp_table_dump_refresh_time) {
     return;
+  }
 
   /* Sequencing the dump event */
   dump_seqno = bgp_peer_log_seq_get(&bms->log_seq);
@@ -1730,199 +1713,258 @@ void bgp_handle_dump_event(int max_peers_idx)
     pm_setproctitle("%s %s [%s]", config.type, "Core Process -- BGP Dump Writer", config.name, bms->log_str);
     config.is_forked = TRUE;
 
-    memset(last_filename, 0, sizeof(last_filename));
-    memset(current_filename, 0, sizeof(current_filename));
-    memset(&peer_log, 0, sizeof(struct bgp_peer_log));
-    memset(&bds, 0, sizeof(struct bgp_dump_stats));
+    /* setting ourselves as read-only */
+    bms->is_readonly = TRUE;
 
-    fd_buf = malloc(OUTPUT_FILE_BUFSZ);
-    bgp_peer_log_seq_set(&bms->log_seq, dump_seqno);
+    /* Arranging workers data */
+    distribute_work(pdr, dump_seqno, config.bgp_table_dump_workers, max_peers_idx);
 
-#ifdef WITH_RABBITMQ
-    if (config.bgp_table_dump_amqp_routing_key) {
-      bgp_table_dump_init_amqp_host(&bgp_table_dump_amqp_host);
-      ret = p_amqp_connect_to_publish(&bgp_table_dump_amqp_host);
-      if (ret) exit_gracefully(ret);
-    }
-#endif
+    /* creating the thread pool */
+    bgp_table_dump_workers_pool = allocate_thread_pool(config.bgp_table_dump_workers);
+    assert(bgp_table_dump_workers_pool);
 
-#ifdef WITH_KAFKA
-    if (config.bgp_table_dump_kafka_topic) {
-      ret = bgp_table_dump_init_kafka_host(&bgp_table_dump_kafka_host);
-      if (ret) exit_gracefully(ret);
-    }
-#endif
-
-    dumper_pid = getpid();
-    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BGP tables - START (PID: %u) ***\n", config.name, bms->log_str, dumper_pid);
-    start = time(NULL);
-    tables_num = 0;
-
-#ifdef WITH_SERDES
-    if (config.bgp_table_dump_kafka_avro_schema_registry) { 
-      if (strchr(config.bgp_table_dump_kafka_topic, '$')) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'bgp_table_dump_kafka_topic' is not compatible with 'bgp_table_dump_kafka_avro_schema_registry'. Exiting.\n",
-	    config.name, bms->log_str);
-	exit_gracefully(1);
-      }
-
-      bgp_table_dump_kafka_host.sd_schema[0] = compose_avro_schema_registry_name_2(config.bgp_table_dump_kafka_topic, FALSE,
-										   bms->dump_avro_schema[0],
-										   "bgp", "dump",
-										   config.bgp_table_dump_kafka_avro_schema_registry);
-
-      bgp_table_dump_kafka_host.sd_schema[BGP_LOG_TYPE_DUMPINIT] = compose_avro_schema_registry_name_2(config.bgp_table_dump_kafka_topic, FALSE,
-										   bms->dump_avro_schema[BGP_LOG_TYPE_DUMPINIT],
-										   "bgp", "dumpinit",
-										   config.bgp_table_dump_kafka_avro_schema_registry);
-
-      bgp_table_dump_kafka_host.sd_schema[BGP_LOG_TYPE_DUMPCLOSE] = compose_avro_schema_registry_name_2(config.bgp_table_dump_kafka_topic, FALSE,
-										   bms->dump_avro_schema[BGP_LOG_TYPE_DUMPCLOSE],
-										   "bgp", "dumpclose",
-										   config.bgp_table_dump_kafka_avro_schema_registry);
-    }
-#endif
-
-    for (peer = NULL, saved_peer = NULL, peers_idx = 0; peers_idx < config.bgp_daemon_max_peers; peers_idx++) {
-      if (peers[peers_idx].fd) {
-        peer = &peers[peers_idx];
-	peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
-
-	if (config.bgp_table_dump_file) {
-	  bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_file, peer);
-	}
-
-	if (config.bgp_table_dump_amqp_routing_key) {
-	  bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_amqp_routing_key, peer);
-	}
-
-	if (config.bgp_table_dump_kafka_topic) {
-	  bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_kafka_topic, peer);
-	}
-
-	if (config.bgp_table_dump_kafka_partition_key) {
-	  memset(dump_partition_key, 0, SRVBUFLEN);
-	  bgp_peer_log_dynname(dump_partition_key, SRVBUFLEN, config.bgp_table_dump_kafka_partition_key, peer);
-	}
-
-	pm_strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bms->dump.tstamp.tv_sec, config.timestamps_utc);
-
-	/*
-	   we close last_filename and open current_filename in case they differ;
-	   we are safe with this approach until time and BGP peer (IP, port) are
-	   the only variables supported as part of bgp_table_dump_file.
-        */
-	if (config.bgp_table_dump_file) {
-	  if (strcmp(last_filename, current_filename)) {
-	    if (saved_peer && saved_peer->log && strlen(last_filename)) {
-	      close_output_file(saved_peer->log->fd);
-
-	      if (config.bgp_table_dump_latest_file) {
-		bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bgp_table_dump_latest_file, saved_peer);
-		link_latest_output_file(latest_filename, last_filename);
-	      }
-	    }
-	    peer->log->fd = open_output_file(current_filename, "w", TRUE);
-	    if (fd_buf) {
-	      if (setvbuf(peer->log->fd, fd_buf, _IOFBF, OUTPUT_FILE_BUFSZ))
-		Log(LOG_WARNING, "WARN ( %s/%s ): [%s] setvbuf() failed: %s\n",
-		    config.name, bms->log_str, current_filename, strerror(errno));
-	      else memset(fd_buf, 0, OUTPUT_FILE_BUFSZ); 
-	    }
-	  }
-	}
-
-	/*
-	   a bit pedantic maybe but should come at little cost and emulating
-	   bgp_table_dump_file behaviour will work
-	*/ 
-#ifdef WITH_RABBITMQ
-	if (config.bgp_table_dump_amqp_routing_key) {
-	  peer->log->amqp_host = &bgp_table_dump_amqp_host;
-	  strcpy(peer->log->filename, current_filename);
-	}
-#endif
-
-#ifdef WITH_KAFKA
-	if (config.bgp_table_dump_kafka_topic) {
-	  peer->log->kafka_host = &bgp_table_dump_kafka_host;
-	  strcpy(peer->log->filename, current_filename);
-
-	  if (config.bgp_table_dump_kafka_partition_key) {
-	    p_kafka_set_key(peer->log->kafka_host, dump_partition_key, strlen(dump_partition_key));
-	  }
-	}
-#endif
-
-	bgp_peer_dump_init(peer, config.bgp_table_dump_output, FUNC_TYPE_BGP);
-        inter_domain_routing_db = bgp_select_routing_db(FUNC_TYPE_BGP);
-	bds.entries = 0;
-	bds.tables = 0;
-
-	if (!inter_domain_routing_db) return;
-
-	for (afi = AFI_IP; afi < AFI_MAX; afi++) {
-	  for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
-	    table = inter_domain_routing_db->rib[afi][safi];
-	    node = bgp_table_top(peer, table);
-
-	    while (node) {
-	      u_int32_t modulo = bgp_route_info_modulo(peer, NULL, bms->table_per_peer_buckets);
-	      u_int32_t peer_buckets;
-	      struct bgp_info *ri;
-
-	      for (peer_buckets = 0; peer_buckets < config.bgp_table_per_peer_buckets; peer_buckets++) {
-	        for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
-		  if (ri->peer == peer) {
-	            bgp_peer_log_msg(node, ri, afi, safi, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC);
-	            dump_elems++;
-	            bds.entries++;
-		  }
-		}
-	      }
-
-	      node = bgp_route_next(peer, node);
-	    }
-	  }
-	}
-
-        saved_peer = peer;
-	tables_num++;
-	bds.tables++;
-
-        strlcpy(last_filename, current_filename, SRVBUFLEN);
-        bgp_peer_dump_close(peer, &bds, config.bgp_table_dump_output, FUNC_TYPE_BGP);
+    for (idx = 0; idx < config.bgp_table_dump_workers; idx++) {
+      if (!pdr[idx].noop) {
+        send_to_pool(bgp_table_dump_workers_pool, bgp_table_dump_event_runner, &pdr[idx]);
       }
     }
 
-#ifdef WITH_RABBITMQ
-    if (config.bgp_table_dump_amqp_routing_key)
-      p_amqp_close(&bgp_table_dump_amqp_host, FALSE);
-#endif
-
-#ifdef WITH_KAFKA
-    if (config.bgp_table_dump_kafka_topic)
-      p_kafka_close(&bgp_table_dump_kafka_host, FALSE);
-#endif
-
-    if (config.bgp_table_dump_latest_file && peer) {
-      bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bgp_table_dump_latest_file, peer);
-      link_latest_output_file(latest_filename, last_filename);
-    }
-
-    duration = time(NULL)-start;
-    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BGP tables - END (PID: %u TABLES: %u ENTRIES: %" PRIu64 " ET: %u) ***\n",
-		config.name, bms->log_str, dumper_pid, tables_num, dump_elems, duration);
-
+    deallocate_thread_pool(&bgp_table_dump_workers_pool);
     exit_gracefully(0);
   default: /* Parent */
     if (ret == -1) { /* Something went wrong */
-      Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork BGP table dump writer: %s\n", config.name, bms->log_str, strerror(errno));
+      Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork BGP table dump writer: %s\n",
+	  config.name, bms->log_str, strerror(errno));
     }
 
     break;
   }
 }
+
+int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
+{
+  struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BGP);
+  char current_filename[SRVBUFLEN], last_filename[SRVBUFLEN], tmpbuf[SRVBUFLEN];
+  char latest_filename[SRVBUFLEN], dump_partition_key[SRVBUFLEN];
+  char event_type[] = "dump", *fd_buf = NULL;
+  int ret, peers_idx, duration, tables_num;
+  struct bgp_rt_structs *inter_domain_routing_db;
+  struct bgp_peer *peer, *saved_peer;
+  struct bgp_table *table;
+  struct bgp_node *node;
+  struct bgp_peer_log peer_log;
+  struct bgp_dump_stats bds;
+  afi_t afi;
+  safi_t safi;
+  pid_t dumper_pid;
+  time_t start;
+  u_int64_t dump_elems = 0, dump_seqno = pdr->seq;
+
+#ifdef WITH_RABBITMQ
+  struct p_amqp_host bgp_table_dump_amqp_host;
+#endif
+
+#ifdef WITH_KAFKA
+  struct p_kafka_host bgp_table_dump_kafka_host;
+#endif
+
+  memset(last_filename, 0, sizeof(last_filename));
+  memset(current_filename, 0, sizeof(current_filename));
+  memset(&peer_log, 0, sizeof(struct bgp_peer_log));
+  memset(&bds, 0, sizeof(struct bgp_dump_stats));
+
+  fd_buf = malloc(OUTPUT_FILE_BUFSZ);
+  bgp_peer_log_seq_set(&bms->log_seq, dump_seqno);
+
+#ifdef WITH_RABBITMQ
+  if (config.bgp_table_dump_amqp_routing_key) {
+    bgp_table_dump_init_amqp_host(&bgp_table_dump_amqp_host);
+    ret = p_amqp_connect_to_publish(&bgp_table_dump_amqp_host);
+    if (ret) exit_gracefully(ret);
+  }
+#endif
+
+#ifdef WITH_KAFKA
+  if (config.bgp_table_dump_kafka_topic) {
+    ret = bgp_table_dump_init_kafka_host(&bgp_table_dump_kafka_host);
+    if (ret) exit_gracefully(ret);
+  }
+#endif
+
+  dumper_pid = getpid();
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BGP tables - START (PID: %u RID: %u) ***\n",
+      config.name, bms->log_str, dumper_pid, pdr->id);
+  start = time(NULL);
+  tables_num = 0;
+
+#ifdef WITH_SERDES
+  if (config.bgp_table_dump_kafka_avro_schema_registry) { 
+    if (strchr(config.bgp_table_dump_kafka_topic, '$')) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'bgp_table_dump_kafka_topic' is not compatible with 'bgp_table_dump_kafka_avro_schema_registry'. Exiting.\n",
+	  config.name, bms->log_str);
+      exit_gracefully(1);
+    }
+
+    bgp_table_dump_kafka_host.sd_schema[0] = compose_avro_schema_registry_name_2(config.bgp_table_dump_kafka_topic, FALSE,
+										 bms->dump_avro_schema[0],
+										 "bgp", "dump",
+										 config.bgp_table_dump_kafka_avro_schema_registry);
+
+    bgp_table_dump_kafka_host.sd_schema[BGP_LOG_TYPE_DUMPINIT] = compose_avro_schema_registry_name_2(config.bgp_table_dump_kafka_topic, FALSE,
+										 bms->dump_avro_schema[BGP_LOG_TYPE_DUMPINIT],
+										 "bgp", "dumpinit",
+										 config.bgp_table_dump_kafka_avro_schema_registry);
+
+    bgp_table_dump_kafka_host.sd_schema[BGP_LOG_TYPE_DUMPCLOSE] = compose_avro_schema_registry_name_2(config.bgp_table_dump_kafka_topic, FALSE,
+										 bms->dump_avro_schema[BGP_LOG_TYPE_DUMPCLOSE],
+										 "bgp", "dumpclose",
+										 config.bgp_table_dump_kafka_avro_schema_registry);
+  }
+#endif
+
+  for (peer = NULL, saved_peer = NULL, peers_idx = pdr->first; peers_idx <= pdr->last; peers_idx++) {
+    if (peers[peers_idx].fd) {
+      peer = &peers[peers_idx];
+      peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
+
+      if (config.bgp_table_dump_file) {
+	bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_file, peer);
+      }
+
+      if (config.bgp_table_dump_amqp_routing_key) {
+	bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_amqp_routing_key, peer);
+      }
+
+      if (config.bgp_table_dump_kafka_topic) {
+	bgp_peer_log_dynname(current_filename, SRVBUFLEN, config.bgp_table_dump_kafka_topic, peer);
+      }
+
+      if (config.bgp_table_dump_kafka_partition_key) {
+	memset(dump_partition_key, 0, SRVBUFLEN);
+	bgp_peer_log_dynname(dump_partition_key, SRVBUFLEN, config.bgp_table_dump_kafka_partition_key, peer);
+      }
+
+      pm_strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bms->dump.tstamp.tv_sec, config.timestamps_utc);
+
+      /*
+	we close last_filename and open current_filename in case they differ;
+	we are safe with this approach until time and BGP peer (IP, port) are
+	the only variables supported as part of bgp_table_dump_file.
+      */
+      if (config.bgp_table_dump_file) {
+	if (strcmp(last_filename, current_filename)) {
+	  if (saved_peer && saved_peer->log && strlen(last_filename)) {
+	    close_output_file(saved_peer->log->fd);
+
+	    if (config.bgp_table_dump_latest_file) {
+	      bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bgp_table_dump_latest_file, saved_peer);
+	      link_latest_output_file(latest_filename, last_filename);
+	    }
+	  }
+	  peer->log->fd = open_output_file(current_filename, "w", TRUE);
+	  if (fd_buf) {
+	    if (setvbuf(peer->log->fd, fd_buf, _IOFBF, OUTPUT_FILE_BUFSZ))
+	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] setvbuf() failed: %s\n",
+		  config.name, bms->log_str, current_filename, strerror(errno));
+	    else memset(fd_buf, 0, OUTPUT_FILE_BUFSZ); 
+	  }
+	}
+      }
+
+      /*
+	a bit pedantic maybe but should come at little cost and emulating
+	bgp_table_dump_file behaviour will work
+      */ 
+#ifdef WITH_RABBITMQ
+      if (config.bgp_table_dump_amqp_routing_key) {
+	peer->log->amqp_host = &bgp_table_dump_amqp_host;
+	strcpy(peer->log->filename, current_filename);
+      }
+#endif
+
+#ifdef WITH_KAFKA
+      if (config.bgp_table_dump_kafka_topic) {
+	peer->log->kafka_host = &bgp_table_dump_kafka_host;
+	strcpy(peer->log->filename, current_filename);
+
+	if (config.bgp_table_dump_kafka_partition_key) {
+	  p_kafka_set_key(peer->log->kafka_host, dump_partition_key, strlen(dump_partition_key));
+	}
+      }
+#endif
+
+      bgp_peer_dump_init(peer, config.bgp_table_dump_output, FUNC_TYPE_BGP);
+      inter_domain_routing_db = bgp_select_routing_db(FUNC_TYPE_BGP);
+      bds.entries = 0;
+      bds.tables = 0;
+
+      if (!inter_domain_routing_db) return ERR;
+
+      for (afi = AFI_IP; afi < AFI_MAX; afi++) {
+	for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
+	  table = inter_domain_routing_db->rib[afi][safi];
+	  node = bgp_table_top(peer, table);
+
+	  while (node) {
+	    u_int32_t modulo = bgp_route_info_modulo(peer, NULL, bms->table_per_peer_buckets);
+	    u_int32_t peer_buckets;
+	    struct bgp_info *ri;
+
+	    for (peer_buckets = 0; peer_buckets < config.bgp_table_per_peer_buckets; peer_buckets++) {
+	      for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
+		if (ri->peer == peer) {
+	          bgp_peer_log_msg(node, ri, afi, safi, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC);
+	          dump_elems++;
+	          bds.entries++;
+		}
+	      }
+	    }
+
+	    node = bgp_route_next(peer, node);
+	  }
+	}
+      }
+
+      saved_peer = peer;
+      tables_num++;
+      bds.tables++;
+
+      strlcpy(last_filename, current_filename, SRVBUFLEN);
+      bgp_peer_dump_close(peer, &bds, config.bgp_table_dump_output, FUNC_TYPE_BGP);
+    }
+  }
+
+#ifdef WITH_RABBITMQ
+  if (config.bgp_table_dump_amqp_routing_key) {
+    p_amqp_close(&bgp_table_dump_amqp_host, FALSE);
+  }
+#endif
+
+#ifdef WITH_KAFKA
+  if (config.bgp_table_dump_kafka_topic) {
+    p_kafka_close(&bgp_table_dump_kafka_host, FALSE);
+  }
+#endif
+
+  if (config.bgp_table_dump_latest_file && peer) {
+    bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bgp_table_dump_latest_file, peer);
+    link_latest_output_file(latest_filename, last_filename);
+  }
+
+  duration = time(NULL)-start;
+  Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BGP tables - END (PID: %u RID: %u TABLES: %u ENTRIES: %" PRIu64 " ET: %u) ***\n",
+      config.name, bms->log_str, dumper_pid, pdr->id, tables_num, dump_elems, duration);
+
+  return FALSE;
+}
+
+#ifdef WITH_RABBITMQ
+  struct p_amqp_host bgp_table_dump_amqp_host;
+#endif
+
+#ifdef WITH_KAFKA
+  struct p_kafka_host bgp_table_dump_kafka_host;
+#endif
 
 #if defined WITH_RABBITMQ
 void bgp_daemon_msglog_init_amqp_host()

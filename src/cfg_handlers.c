@@ -3926,6 +3926,23 @@ int cfg_key_bgp_daemon_port(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_bgp_daemon_table_dump_workers(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+  if (value < 1) {
+    Log(LOG_ERR, "WARN: [%s] 'bgp_table_dump_workers' value has to be >= 1.\n", filename);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_table_dump_workers = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_table_dump_workers'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_bgp_lg(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

@@ -404,6 +404,7 @@ extern int cfg_key_bgp_daemon_table_dump_kafka_partition(char *, char *, char *)
 extern int cfg_key_bgp_daemon_table_dump_kafka_partition_key(char *, char *, char *);
 extern int cfg_key_bgp_daemon_table_dump_kafka_config_file(char *, char *, char *);
 extern int cfg_key_bgp_daemon_table_dump_kafka_avro_schema_registry(char *, char *, char *);
+extern int cfg_key_bgp_daemon_table_dump_workers(char *, char *, char *);
 extern int cfg_key_bgp_daemon_batch(char *, char *, char *);
 extern int cfg_key_bgp_daemon_batch_interval(char *, char *, char *);
 extern int cfg_key_bgp_daemon_pipe_size(char *, char *, char *);

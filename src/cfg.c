@@ -525,6 +525,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_table_dump_kafka_partition_key", cfg_key_bgp_daemon_table_dump_kafka_partition_key},
   {"bgp_table_dump_kafka_config_file", cfg_key_bgp_daemon_table_dump_kafka_config_file},
   {"bgp_table_dump_kafka_avro_schema_registry", cfg_key_bgp_daemon_table_dump_kafka_avro_schema_registry},
+  {"bmp_table_dump_workers", cfg_key_bgp_daemon_table_dump_workers},
   {"bgp_daemon_lg", cfg_key_bgp_lg},
   {"bgp_daemon_lg_ip", cfg_key_bgp_lg_ip},
   {"bgp_daemon_lg_port", cfg_key_bgp_lg_port},

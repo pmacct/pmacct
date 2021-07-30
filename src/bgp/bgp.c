@@ -466,8 +466,14 @@ void skinny_bgp_daemon_online()
   }
 
   if (bgp_misc_db->dump_backend_methods) {
+    if (!config.telemetry_dump_workers) {
+      config.bgp_table_dump_workers = 1;
+    }
+
 #ifdef WITH_JANSSON
-    if (!config.bgp_table_dump_output) config.bgp_table_dump_output = PRINT_OUTPUT_JSON;
+    if (!config.bgp_table_dump_output) {
+      config.bgp_table_dump_output = PRINT_OUTPUT_JSON;
+    }
 #else
     Log(LOG_WARNING, "WARN ( %s/%s ): bgp_table_dump_output set to json but will produce no output (missing --enable-jansson).\n", config.name, bgp_misc_db->log_str);
 #endif
