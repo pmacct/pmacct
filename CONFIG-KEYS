@@ -2839,11 +2839,11 @@ DESC:           Defines whether to parse the first packet of a connection lookin
                         server bmp-dev <PMBMPD IP Address>:5000 send-proxy-v2
 DEFAULT:        false
 
-KEY:		[ bmp_dump_workers | telemetry_dump_workers ]
-DESC:		Sets the amount of parallel worker threads to set up for dump events. By default 1,
-		that is no parallelization, it may be set to a fraction of the available CPU threads.
-		The unit of parallelization is the BMP exporter (or telemetry exporter in case of
-		telemetry_dump_workers), ie. 4 workers and 4 exporters each worker is assigned one
+KEY:		[ bgp_table_dump_workers | bmp_dump_workers | telemetry_dump_workers ]
+DESC:		Sets the amount of parallel worker threads to set up for dump events. By default 1
+		(no parallelization), it may be set to a fraction of the available CPU threads.
+		The unit of parallelization is the exporter (BGP, BMP or telemetry exporter), ie.
+		in a scenario where there are 4 workers and 4 exporters each worker is assigned one
 		exporter data to dump.
 DEFAULT:	1
 
