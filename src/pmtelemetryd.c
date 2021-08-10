@@ -251,6 +251,7 @@ int main(int argc,char **argv, char **envp)
   else Log(LOG_INFO, "INFO ( %s/core ): Reading configuration from cmdline.\n", config.name);
 
   pm_setproctitle("%s [%s]", "Core Process", config.proc_name);
+  if (config.pidfile) write_pid_file(config.pidfile);
 
   /* signal handling we want to inherit to plugins (when not re-defined elsewhere) */
   memset(&sighandler_action, 0, sizeof(sighandler_action)); /* To ensure the struct holds no garbage values */
