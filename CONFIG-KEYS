@@ -1822,8 +1822,9 @@ DESC:		Full pathname to a file to store JSON-serialized templates for NetFlow v9
 		steady state, templates received from the network are stored in this file. Warning: if,
 		at startup time, data records are encoded with a template structure different than the
 		one that was stored in the file, effectiveness of this feature is (intuitively) greatly
-		reduced. This file will be created if it does not exist. This feautre requires compiling
-		against Jansson library (--enable-jansson when configuring pmacct for compiling).
+		reduced. This file will be created if it does not exist. Certain numeric values may be
+		encoded in network byte order. This feature requires compiling against Jansson library
+		(--enable-jansson when configuring pmacct for compiling).
 DEFAULT:        none
 
 KEY:		nfacctd_templates_receiver [GLOBAL, NFACCTD_ONLY]
