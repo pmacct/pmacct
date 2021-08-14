@@ -4,6 +4,32 @@ pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
+1.7.7 -- XX-09-2021
+  + pre_tag_map: added ability to tag over new sample_type types
+    for NetFlow/IPFIX and sFlow in addition to existing "flow" and
+    "event": "flow-ipv4", "flow-ipv6", "flow-mpls-ipv4" and
+    "flow-mpls-ipv6".
+  + Added <daemon_name>_ipv6_only config directives to optionally
+    enable the IPV6_V6ONLY socket option. Also changed the wrong
+    setsockopt() IPV6_BINDV6ONLY id to IPV6_V6ONLY.
+  + Added log function to libserdes to debug transactions with the
+    Schema Registry when kafka_avro_schema_registry is set.
+  ! build system: several improvements carried out in this area,
+    ie. improved MySQL checks, introduced pcap-config tool for
+    libpcap, compiling on BSD/old compilers, etc. Monumental thanks
+    to Marc Sune ( @msune ) for his continued help.
+  ! fix, SO_REUSEPORT feature was being restricted to Linux only in
+    previous releases: now it has been unlocked to all other OS that
+    do support the feature.
+  ! fix, BMP daemon: resolved a memory leak in bgp_peers_free().
+    Thanks to Pether Pothier ( @pothier-peter ) for his patch.
+  ! fix, BMP daemon: correctly setting peer_ip and peer_tcp_port
+    JSON fields for Term messages.
+  ! fix, pmacct-defines.h: if PCAP_NETMASK_UNKNOWN is not defined,
+    ie. in libpcap < 1.1.0, let's define it.
+  - Obsoleted sql_history_since_epoch, pre_tag_map_entries and
+    refresh_maps configuration directives.
+
 1.7.6 -- 07-02-2021
   + Added dependency to libcdada in an effort to streamline basic
     data structures needed for everyday coding. All new structures
