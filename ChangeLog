@@ -5,6 +5,11 @@ The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
 1.7.7 -- XX-09-2021
+  + BGP, BMP, Streaming Telemetry daemons: introduced parallelization
+    of dump events via a configurable amount of workers where the unit
+    of parallelization is the exporter (BGP, BMP, telemetry exporter),
+    ie. in a scenario where there are 4 workers and 4 exporters each
+    worker is assigned one exporter data to dump.
   + pmtelemetryd: added support for draft-ietf-netconf-udp-notif:
     a UDP-based notification mechanism to collect data from networking
     devices. A shim header is proposed to facilitate the data streaming
@@ -30,6 +35,10 @@ The keys used are:
     Schema Registry when kafka_avro_schema_registry is set.
   + nDPI: newer versions of the library (ie. >= 3.5) bring changes
     to the API. pmacct is now aligned to compile against these.
+  + pmacctd: added pcap_arista_trailer_offset config directive since
+    Arista has changed the structure of the trailer format in recent
+    releases of EOS. Thanks to Jeremiah Millay  ( @floatingstatic )
+    for his patch.
   + More improvements carried out on the Continuous Integration
     (CI) side by migrating from Travis CI to GitHub Actions. Huge
     thanks to Marc Sune ( @msune ) to make all of this possible.
@@ -42,14 +51,26 @@ The keys used are:
     do support the feature.
   ! fix, nfacctd: improved euristics to support the case of flows
     with both IPv4 and IPv6 source / destination addresses (either
-    or populated).
+    or populated). Also improved euristics to distinguish event data
+    vs traffic data in NetFlow v9/IPFIX from Cisco 9300/9500, ASA
+    firewalls and Cisco 4500X.
+  ! fix, BGP, BMP daemons: parsing improvements: added a check for
+    BGP Open message length BGP Open Options length. Strengthened
+    parsing of Peer Up, Route Monitoring and Peer Down v4 messages.
   ! fix, BGP daemon: distinguish among null and zero value AIGP
     and Prefix SID attributes. Same applies for Local Preference
     and MED attributes.
   ! fix, BMP daemon: resolved a memory leak in bgp_peers_free().
-    Thanks to Pether Pothier ( @pothier-peter ) for his patch.
+    Thanks to Pether Pothier ( @pothier-peter ) for his patch. Also
+    resolved a leak caused by an invalid BGP message contained in a
+    BMP Route Message v4.
   ! fix, BMP daemon: correctly setting peer_ip and peer_tcp_port
     JSON fields for Term messages.
+  ! fix, BMP daemon: several encoding issues when using Apache Avro
+    ie. u_int64_t now correctly encoded with avro_value_set_long(),
+    certain u_int32_t fields switched to avro_value_set_long() due
+    to lack of unsignedness in Avro encoding, improved various
+    aspectes of Avro-JSON format output, etc.
   ! fix, SQL plugins: amended the crafting of SQL queries including
     latitude and longitude.
   ! fix, MySQL plugin: check for 'unix:' prefix string only when
@@ -58,6 +79,9 @@ The keys used are:
     the previous release pmacct was adhering to aging NBAR model
     whereas now NBAR2 has been implemented. Thanks to Rob Cowart
     ( @robcowart ) for helping out resolving this issue.
+  ! fix, tee plugin: restored usefulness of tee_source_ip which was
+    broken in 1.7.6. Thanks to Jeremiah Millay ( @floatingstatic )
+    for reporting the issue.
   ! fix, maps_index: indexing of mpls_pw_id was broken.
   ! fix, pmacct-defines.h: if PCAP_NETMASK_UNKNOWN is not defined,
     ie. in libpcap < 1.1.0, let's define it.
