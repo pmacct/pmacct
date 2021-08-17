@@ -17,11 +17,15 @@ The keys used are:
     cards to receivers. The objective is a lightweight approach to
     enable higher frequency and less performance impact on publisher
     and receiver process compared to already established notification
-    mechanisms.
-  + pre_tag_map: added ability to tag over new sample_type types
-    for NetFlow/IPFIX and sFlow in addition to existing "flow" and
-    "event": "flow-ipv4", "flow-ipv6", "flow-mpls-ipv4" and
-    "flow-mpls-ipv6".
+    mechanisms. Many thanks to Alex Huang Feng ( @ahuangfeng ) and the
+    whole Unyte team.
+  + BGP, BMP daemons: a new "rd_origin" field is added to output log/
+    dump to specify the source of Route Distinguisher information (ie.
+    flow vs BGP vs BMP).
+  + pre_tag_map: added ability to tag new NetFlow/IPFIX and sFlow
+    sample_type types: "flow-ipv4", "flow-ipv6", "flow-mpls-ipv4" and
+    "flow-mpls-ipv6". Also added a new "is_bi_flow" true/false key to
+    tag (or exclude) NSEL bidirectional flows.
   + maps_index: re-implementing using stream-lined structures from
     libcdada. This is a major work that helps preventing all of the
     unpredictable behaviours caused by the homegrown map indexing
@@ -42,6 +46,10 @@ The keys used are:
   + More improvements carried out on the Continuous Integration
     (CI) side by migrating from Travis CI to GitHub Actions. Huge
     thanks to Marc Sune ( @msune ) to make all of this possible.
+  + More improvements also carried out in the space of the Docker
+    images being created: optimized image size and a well layered
+    pipeline. Thanks to Marc Sune ( @msune ) and Daniel Caballero
+    ( @dcaba ) to make all of this possible.
   ! build system: several improvements carried out in this area,
     ie. improved MySQL checks, introduced pcap-config tool for
     libpcap, compiling on BSD/old compilers, etc. Monumental thanks
@@ -54,9 +62,14 @@ The keys used are:
     or populated). Also improved euristics to distinguish event data
     vs traffic data in NetFlow v9/IPFIX from Cisco 9300/9500, ASA
     firewalls and Cisco 4500X.
+  ! fix, nfacctd: improved support for initiatorOctets (IE #231) and
+    responderOctets (IE #232). Thanks to Esben Laursen ( @hyberdk )
+    for reporting the issue.
   ! fix, BGP, BMP daemons: parsing improvements: added a check for
     BGP Open message length BGP Open Options length. Strengthened
     parsing of Peer Up, Route Monitoring and Peer Down v4 messages.
+  ! fix, BGP, Streaming Telemetry daemons: in daemon logs, summary
+    counters for amount of tables / entries dumped were wrong.
   ! fix, BGP daemon: distinguish among null and zero value AIGP
     and Prefix SID attributes. Same applies for Local Preference
     and MED attributes.
