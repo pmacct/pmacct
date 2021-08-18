@@ -19,13 +19,17 @@ The keys used are:
     and receiver process compared to already established notification
     mechanisms. Many thanks to Alex Huang Feng ( @ahuangfeng ) and the
     whole Unyte team.
+  + BGP, BMP, Streaming Telemetry daemons: now honouring the supplied
+    Kafka partition key gor BGP, BMP and ST logs and dump events.
   + BGP, BMP daemons: a new "rd_origin" field is added to output log/
     dump to specify the source of Route Distinguisher information (ie.
     flow vs BGP vs BMP).
   + pre_tag_map: added ability to tag new NetFlow/IPFIX and sFlow
     sample_type types: "flow-ipv4", "flow-ipv6", "flow-mpls-ipv4" and
     "flow-mpls-ipv6". Also added a new "is_bi_flow" true/false key to
-    tag (or exclude) NSEL bidirectional flows.
+    tag (or exclude) NSEL bidirectional flows. Addes as well a new
+    "is_multicast" true/false config key to tag (or exclude) IPv4/IPv6
+    multicast destinations.
   + maps_index: re-implementing using stream-lined structures from
     libcdada. This is a major work that helps preventing all of the
     unpredictable behaviours caused by the homegrown map indexing
@@ -65,9 +69,20 @@ The keys used are:
   ! fix, nfacctd: improved support for initiatorOctets (IE #231) and
     responderOctets (IE #232). Thanks to Esben Laursen ( @hyberdk )
     for reporting the issue.
+  ! fix, nfacctd: in NF_mpls_vpn_id_handler() double ntohl() calls
+    were applied for the case of 'vrfid'-encoded mpls_vpn_rd field.
+  ! fix, sfacctd: wrong ethertype set for VLAN-tagged, MPLS-labelled
+    IPv6 traffic. Impacting BGP resolution among others. Thanks to
+    Jeremiah Millay ( @floatingstatic ) for his help resolving the
+    problem.
   ! fix, BGP, BMP daemons: parsing improvements: added a check for
     BGP Open message length BGP Open Options length. Strengthened
     parsing of Peer Up, Route Monitoring and Peer Down v4 messages.
+  ! fix, BGP, BMP daemon: when using Avro encoding and Avro Schema
+    Registry, attempt to reconnect if serdes schemas are voided.
+    Also now checking for serdes schema definitions before doing a
+    serdes_schema_serialize_avro() hence triggering a SEGV. Finally
+    improved serdes logging.
   ! fix, BGP, Streaming Telemetry daemons: in daemon logs, summary
     counters for amount of tables / entries dumped were wrong.
   ! fix, BGP daemon: distinguish among null and zero value AIGP
@@ -78,12 +93,21 @@ The keys used are:
     resolved a leak caused by an invalid BGP message contained in a
     BMP Route Message v4.
   ! fix, BMP daemon: correctly setting peer_ip and peer_tcp_port
-    JSON fields for Term messages.
+    JSON fields for Term messages. Also the correct bmp_router
+    value when bmp_daemon_parse_proxy_header feature is enabled.
   ! fix, BMP daemon: several encoding issues when using Apache Avro
     ie. u_int64_t now correctly encoded with avro_value_set_long(),
     certain u_int32_t fields switched to avro_value_set_long() due
     to lack of unsignedness in Avro encoding, improved various
     aspectes of Avro-JSON format output, etc.
+  ! fix, pmtelemetryd: wrong parsing of pm_tfind() output was
+    leading to mistaken data attribution of UDP-based peers (always
+    first peer to connect was being picked).
+  ! fix, pmtelemetryd: when set, the pidfile config directive was
+    not being correctly honoured.
+  ! fix, RPKI: the RTR PDU element for maxLength is uint8, therefore
+    it might have been possible to transmit incorrect RTR data.
+    Thanks to Job Snijders ( @job ) for his patch. 
   ! fix, SQL plugins: amended the crafting of SQL queries including
     latitude and longitude.
   ! fix, MySQL plugin: check for 'unix:' prefix string only when
@@ -95,10 +119,22 @@ The keys used are:
   ! fix, tee plugin: restored usefulness of tee_source_ip which was
     broken in 1.7.6. Thanks to Jeremiah Millay ( @floatingstatic )
     for reporting the issue.
-  ! fix, maps_index: indexing of mpls_pw_id was broken.
+  ! fix, maps_index: indexing of mpls_pw_id was broken. Also when
+    the feature is enabled then actual data referenced in the index
+    instead of being copied over hence resolving a memory leak:
+    thanks to Sander van Delden ( @SanderDelden ) for reporting the
+    issue.
+  ! fix, kafka_common.c: solved memory leak in p_kafka_set_topic()
+    when Kafka session was getting in down state. Many thanks to
+    Peter Pothier ( @pothier-peter ) for nailing the issue.
+  ! fix, net_aggr.[ch]: when a networks_file is specified in the
+    config, gracefully handle max memory structure depth; added
+    also de-duplication of entries.
   ! fix, pmacct-defines.h: if PCAP_NETMASK_UNKNOWN is not defined,
     ie. in libpcap < 1.1.0, let's define it.
-  ! fix, several code warnings catched gcc9.
+  ! fix, split SO_REUSEPORT and SO_REUSEADDR setsockopt() calls.
+    Thanks to @eduarrrd for reporting and resolving the issue.
+  ! fix, several code warnings catched gcc9 and clang.
   - Obsoleted sql_history_since_epoch, pre_tag_map_entries and
     refresh_maps configuration directives.
 
