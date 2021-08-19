@@ -19,23 +19,26 @@ The keys used are:
     and receiver process compared to already established notification
     mechanisms. Many thanks to Alex Huang Feng ( @ahuangfeng ) and the
     whole Unyte team.
-  + BGP, BMP, Streaming Telemetry daemons: now honouring the supplied
-    Kafka partition key gor BGP, BMP and ST logs and dump events.
+  + BGP, BMP, Streaming Telemetry daemons: now correctly honouring the
+    supplied Kafka partition key for BGP, BMP and Telemetry msg logs
+    and dump events.
   + BGP, BMP daemons: a new "rd_origin" field is added to output log/
     dump to specify the source of Route Distinguisher information (ie.
     flow vs BGP vs BMP).
   + pre_tag_map: added ability to tag new NetFlow/IPFIX and sFlow
     sample_type types: "flow-ipv4", "flow-ipv6", "flow-mpls-ipv4" and
     "flow-mpls-ipv6". Also added a new "is_bi_flow" true/false key to
-    tag (or exclude) NSEL bidirectional flows. Addes as well a new
+    tag (or exclude) NSEL bidirectional flows. Added as well a new
     "is_multicast" true/false config key to tag (or exclude) IPv4/IPv6
     multicast destinations.
-  + maps_index: re-implementing using stream-lined structures from
-    libcdada. This is a major work that helps preventing all of the
-    unpredictable behaviours caused by the homegrown map indexing
-    mechanism. Kudos to Marc Sune ( @msune ).
-  + maps_index: support for src_net and dst_net keywords has been
-    added.
+  + maps_index: enables indexing of maps to increase lookup speeds on
+    large maps and/or sustained lookup rates. The feature has been
+    remplemented using stream-lined structures from libcdada. This is
+    a major work that helps preventing the unpredictable behaviours
+    caused by the homegrown map indexing mechanism. Many thanks to
+    Marc Sune ( @msune ).
+  + maps_index: support for indexing src_net and dst_net keywords has
+    been added.
   + Added <daemon_name>_ipv6_only config directives to optionally
     enable the IPV6_V6ONLY socket option. Also changed the wrong
     setsockopt() IPV6_BINDV6ONLY id to IPV6_V6ONLY.
@@ -45,22 +48,21 @@ The keys used are:
     to the API. pmacct is now aligned to compile against these.
   + pmacctd: added pcap_arista_trailer_offset config directive since
     Arista has changed the structure of the trailer format in recent
-    releases of EOS. Thanks to Jeremiah Millay  ( @floatingstatic )
+    releases of EOS. Thanks to Jeremiah Millay ( @floatingstatic )
     for his patch.
   + More improvements carried out on the Continuous Integration
     (CI) side by migrating from Travis CI to GitHub Actions. Huge
     thanks to Marc Sune ( @msune ) to make all of this possible.
   + More improvements also carried out in the space of the Docker
-    images being created: optimized image size and a well layered
+    images being created: optimized image size and a better layered
     pipeline. Thanks to Marc Sune ( @msune ) and Daniel Caballero
     ( @dcaba ) to make all of this possible.
+  + libcdada shipped with pmacct was upgraded to version 0.3.5. Many
+    thanks Marc Sune ( @msune ) for his work with libcdada.
   ! build system: several improvements carried out in this area,
     ie. improved MySQL checks, introduced pcap-config tool for
     libpcap, compiling on BSD/old compilers, etc. Monumental thanks
     to Marc Sune ( @msune ) for his continued help.
-  ! fix, SO_REUSEPORT feature was being restricted to Linux only in
-    previous releases: now it has been unlocked to all other OS that
-    do support the feature.
   ! fix, nfacctd: improved euristics to support the case of flows
     with both IPv4 and IPv6 source / destination addresses (either
     or populated). Also improved euristics to distinguish event data
@@ -76,13 +78,13 @@ The keys used are:
     Jeremiah Millay ( @floatingstatic ) for his help resolving the
     problem.
   ! fix, BGP, BMP daemons: parsing improvements: added a check for
-    BGP Open message length BGP Open Options length. Strengthened
+    BGP Open message and BGP Open Options lengths. Strengthened
     parsing of Peer Up, Route Monitoring and Peer Down v4 messages.
   ! fix, BGP, BMP daemon: when using Avro encoding and Avro Schema
     Registry, attempt to reconnect if serdes schemas are voided.
     Also now checking for serdes schema definitions before doing a
-    serdes_schema_serialize_avro() hence triggering a SEGV. Finally
-    improved serdes logging.
+    serdes_schema_serialize_avro() to avoid triggering a SEGV.
+    Finally improved serdes logging.
   ! fix, BGP, Streaming Telemetry daemons: in daemon logs, summary
     counters for amount of tables / entries dumped were wrong.
   ! fix, BGP daemon: distinguish among null and zero value AIGP
@@ -108,9 +110,9 @@ The keys used are:
   ! fix, RPKI: the RTR PDU element for maxLength is uint8, therefore
     it might have been possible to transmit incorrect RTR data.
     Thanks to Job Snijders ( @job ) for his patch. 
-  ! fix, SQL plugins: amended the crafting of SQL queries including
-    latitude and longitude.
-  ! fix, MySQL plugin: check for 'unix:' prefix string only when
+  ! fix, SQL plugins: amended the text composition of SQL queries
+    that are involving latitude and longitude keys.
+  ! fix, MySQL plugin: check for 'unix:' prefix string only when a
     sql_host configuration directive is specified.
   ! fix, nfprobe: modernized Application Information export. Until
     the previous release pmacct was adhering to aging NBAR model
@@ -119,11 +121,11 @@ The keys used are:
   ! fix, tee plugin: restored usefulness of tee_source_ip which was
     broken in 1.7.6. Thanks to Jeremiah Millay ( @floatingstatic )
     for reporting the issue.
-  ! fix, maps_index: indexing of mpls_pw_id was broken. Also when
-    the feature is enabled then actual data referenced in the index
-    instead of being copied over hence resolving a memory leak:
-    thanks to Sander van Delden ( @SanderDelden ) for reporting the
-    issue.
+  ! fix, maps_index: indexing of mpls_pw_id was broken. Also now,
+    when the feature is enabled, actual data is being referenced in
+    the index structure instead of creating a copy of it; thanks to
+    Sander van Delden ( @SanderDelden ) for reporting the memory
+    leak that was resulting from the copy.
   ! fix, kafka_common.c: solved memory leak in p_kafka_set_topic()
     when Kafka session was getting in down state. Many thanks to
     Peter Pothier ( @pothier-peter ) for nailing the issue.
@@ -132,6 +134,9 @@ The keys used are:
     also de-duplication of entries.
   ! fix, pmacct-defines.h: if PCAP_NETMASK_UNKNOWN is not defined,
     ie. in libpcap < 1.1.0, let's define it.
+  ! fix, SO_REUSEPORT feature was being restricted to Linux only in
+    previous releases: now it has been unlocked to all other OS that
+    do support the feature.
   ! fix, split SO_REUSEPORT and SO_REUSEADDR setsockopt() calls.
     Thanks to @eduarrrd for reporting and resolving the issue.
   ! fix, several code warnings catched gcc9 and clang.
