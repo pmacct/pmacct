@@ -436,7 +436,7 @@ int telemetry_daemon(void *t_data_void)
     }
 
     if (config.telemetry_udp_notif_port) {
-      options.port = config.telemetry_udp_notif_port;
+      options.port = (char *) &config.telemetry_udp_notif_port;
     }
     else {
       Log(LOG_ERR, "ERROR ( %s/core/TELE ): Unyte UDP Notif specified but no telemetry_daemon_udp_notif_port supplied. Terminating.\n", config.name);
@@ -452,8 +452,7 @@ int telemetry_daemon(void *t_data_void)
 
     uun_collector = unyte_udp_start_collector(&options);
 
-    Log(LOG_INFO, "INFO ( %s/%s ): reading telemetry data from Unyte UDP Notif on %s:%d\n",
-	config.name, t_data->log_str, options.address, options.port);
+    Log(LOG_INFO, "INFO ( %s/%s ): reading telemetry data from Unyte UDP Notif on %s:%d\n", config.name, t_data->log_str, options.address, (int)(*options.port));
   }
 #endif
 
@@ -591,17 +590,19 @@ int telemetry_daemon(void *t_data_void)
 #endif
 #if defined WITH_UNYTE_UDP_NOTIF
     else if (unyte_udp_notif_input) {
-      unyte_seg_met_t *seg = NULL;
+      // unyte_seg_met_t *seg = NULL;
 
       seg_ptr = unyte_udp_queue_read(uun_collector->queue);
       select_num = TRUE; /* anything but zero or negative */
 
-      /* the library does pass src_addr / src_port that went through a ntoh*() func;
-	 to align the workflow to the rest of collection methods, let's temporarily
-	 revert this */
+      // XXX: the library does pass src_addr / src_port that went through a ntoh*()
+      // func; to align the workflow to the rest of collection methods, let's temp
+      // revert this
+/*
       seg = (unyte_seg_met_t *)seg_ptr;
       seg->metadata->src_addr = htonl(seg->metadata->src_addr);
       seg->metadata->src_port = htons(seg->metadata->src_port);
+*/
     }
 #endif
 
@@ -761,7 +762,10 @@ int telemetry_daemon(void *t_data_void)
 	  seg = (unyte_seg_met_t *)seg_ptr;
 
 	  if (seg->header->encoding_type == TELEMETRY_UDP_NOTIF_ENC_JSON && config.telemetry_decoder_id == TELEMETRY_DECODER_JSON) {
-	    raw_to_sa((struct sockaddr *)&client, (u_char *)&seg->metadata->src_addr, seg->metadata->src_port, AF_INET);
+	    struct sockaddr_storage *unsa = NULL;
+
+	    unsa = unyte_udp_get_src(seg);
+	    memcpy(&client, unsa, sizeof(struct sockaddr_storage));
 
 	    payload_len = strlen(seg->payload);
 	    if (payload_len < sizeof(consumer_buf)) {
