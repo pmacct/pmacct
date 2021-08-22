@@ -2093,13 +2093,16 @@ Message and Large BGP Communities among the others; IPv4, IPv6 transports for
 BGP sessions are supported. When storing data via SQL, BGP primitives can be
 freely mix-and-matched with other primitives (ie. L2/L3/L4) when customizing
 the SQL table (sql_optimize_clauses: true). Environments making use of BGP
-Multi-Path should make use of ADD-PATH to advertise known paths in which case
-the correct BGP info is linked to traffic data using BGP next-hop (or IP next-
-hop if use_ip_next_hop is set to true) as selector among the paths available
-(on the assumption that ADD-PATH is used for route diversity; all checked
-implementations seem to tend to not advertise paths with the same next-hop).
-TCP MD5 signature for BGP messages is also supported. For a review of all knobs
-and features see the CONFIG-KEYS document. 
+Multi-Path should leverage ADD-PATH to advertise the multiple known paths;
+when correlating traffic flows to BGP, the correct BGP info is picked among
+the ones available using BGP next-hop (or for certain cases where traffic is
+sampled egress, IP next-hop if use_ip_next_hop is set to true) as selector;
+this does imply that BGP next-hop must be available in traffic data (ie.
+ADD-PATH selection is not compatible with NetFlow v5 which does not carry it)
+and BGP next-hop-self should not be set (otherwise all or multiple next-hops
+will just look like the same, hindering the decision process). TCP MD5
+signature for BGP messages is also supported. For a review of all knobs and
+features see the CONFIG-KEYS document.
 
 
 XV. Quickstart guide to setup a NetFlow/IPFIX/sFlow replicator
