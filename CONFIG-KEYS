@@ -2325,10 +2325,8 @@ DESC:		Enables the BGP daemon thread. Neighbors are not defined explicitely but 
 		OPEN message the local daemon presents itself as belonging to the same AS number as the
 		remote peer, unless bgp_daemon_as is set, and supporting the same (or a subset of the) BGP
 		capabilities; capabilities currently supported are MP-BGP, 4-bytes ASNs, ADD-PATH.
-		Per-peer RIBs are maintained. In case of ADD-PATH capability, the correct BGP info is
-		linked to traffic data using BGP next-hop (or IP next-hop if use_ip_next_hop is set to
-		true) as selector among the paths available: as such the BGP next-hop-self feature is
-		arch-enemy of ADD-PATH in the context of network monitoring / observability.
+		Per-peer RIBs are maintained. For some ADD-PATH capability notes, please check the
+		"BGP daemon implementation concluding notes" section of the QUICKSTART document.
 DEFAULT:	false
 
 KEY:		bmp_daemon [GLOBAL]
