@@ -427,6 +427,7 @@ int telemetry_daemon(void *t_data_void)
   else if (unyte_udp_notif_input) {
     char null_ip_address[] = "0.0.0.0";
     unyte_udp_options_t options = {0};
+    unyte_udp_sk_options_t options_sk = {0};
 
     if (config.telemetry_udp_notif_ip) {
       options.address = config.telemetry_udp_notif_ip;
@@ -443,14 +444,28 @@ int telemetry_daemon(void *t_data_void)
       exit_gracefully(1);
     }
 
+    if (config.telemetry_udp_notif_create_sock) {
+      int sockfd;
+
+      sockfd = create_socket_unyte_udp_notif(t_data, options.address, options.port);
+      options_sk.socket_fd = sockfd;
+    }
+
     if (config.telemetry_udp_notif_nmsgs) {
       options.recvmmsg_vlen = config.telemetry_udp_notif_nmsgs;
+      options_sk.recvmmsg_vlen = config.telemetry_udp_notif_nmsgs;
     }
     else {
       options.recvmmsg_vlen = TELEMETRY_DEFAULT_UNYTE_UDP_NOTIF_NMSGS;
+      options_sk.recvmmsg_vlen = TELEMETRY_DEFAULT_UNYTE_UDP_NOTIF_NMSGS;
     }
 
-    uun_collector = unyte_udp_start_collector(&options);
+    if (config.telemetry_udp_notif_create_sock) {
+      uun_collector = unyte_udp_start_collector_sk(&options_sk);
+    }
+    else {
+      uun_collector = unyte_udp_start_collector(&options);
+    }
 
     Log(LOG_INFO, "INFO ( %s/%s ): reading telemetry data from Unyte UDP Notif on %s:%d\n", config.name, t_data->log_str, options.address, (int)(*options.port));
   }

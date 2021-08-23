@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -46,6 +46,10 @@ extern void telemetry_init_zmq_host(void *, int *);
 
 #ifdef WITH_KAFKA
 extern void telemetry_init_kafka_host(void *);
+#endif
+
+#ifdef WITH_UNYTE_UDP_NOTIF
+extern int create_socket_unyte_udp_notif(struct telemetry_data *, char *, char *);
 #endif
 
 #endif //TELEMETRY_UTIL_H
