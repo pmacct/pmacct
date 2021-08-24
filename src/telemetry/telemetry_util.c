@@ -245,6 +245,7 @@ int create_socket_unyte_udp_notif(struct telemetry_data *t_data, char *address, 
 {
   struct addrinfo *addr_info;
   struct addrinfo hints;
+  int rc;
 
   memset(&hints, 0, sizeof(hints));
 
@@ -253,7 +254,7 @@ int create_socket_unyte_udp_notif(struct telemetry_data *t_data, char *address, 
   hints.ai_flags = AI_PASSIVE | AI_NUMERICSERV;
 
   /* Using getaddrinfo to support both IPv4 and IPv6 */
-  int rc = getaddrinfo(address, port, &hints, &addr_info);
+  rc = getaddrinfo(address, port, &hints, &addr_info);
 
   if (rc != 0) {
     Log(LOG_ERR, "ERROR ( %s/%s ): create_socket_unyte_udp_notif(): getaddrinfo error: %s\n", config.name, t_data->log_str, gai_strerror(rc));

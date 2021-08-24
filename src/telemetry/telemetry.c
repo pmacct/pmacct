@@ -96,11 +96,12 @@ int telemetry_daemon(void *t_data_void)
 
   /* ZeroMQ and Kafka stuff */
   char *saved_peer_buf = NULL;
-  u_char consumer_buf[LARGEBUFLEN];
+  u_char consumer_buf[PKT_MSG_SIZE];
 
 #if defined WITH_UNYTE_UDP_NOTIF
   unyte_udp_collector_t *uun_collector = NULL;
   void *seg_ptr = NULL;
+  char udp_notif_port[6];
 #endif
 
   if (!t_data) {
@@ -429,6 +430,8 @@ int telemetry_daemon(void *t_data_void)
     unyte_udp_options_t options = {0};
     unyte_udp_sk_options_t options_sk = {0};
 
+    memset(udp_notif_port, 0, sizeof(udp_notif_port));
+
     if (config.telemetry_udp_notif_ip) {
       options.address = config.telemetry_udp_notif_ip;
     }
@@ -437,7 +440,8 @@ int telemetry_daemon(void *t_data_void)
     }
 
     if (config.telemetry_udp_notif_port) {
-      options.port = (char *) &config.telemetry_udp_notif_port;
+      sprintf(udp_notif_port, "%d", config.telemetry_udp_notif_port);
+      options.port = udp_notif_port;
     }
     else {
       Log(LOG_ERR, "ERROR ( %s/core/TELE ): Unyte UDP Notif specified but no telemetry_daemon_udp_notif_port supplied. Terminating.\n", config.name);
@@ -467,7 +471,7 @@ int telemetry_daemon(void *t_data_void)
       uun_collector = unyte_udp_start_collector(&options);
     }
 
-    Log(LOG_INFO, "INFO ( %s/%s ): reading telemetry data from Unyte UDP Notif on %s:%d\n", config.name, t_data->log_str, options.address, (int)(*options.port));
+    Log(LOG_INFO, "INFO ( %s/%s ): reading telemetry data from Unyte UDP Notif on %s:%s\n", config.name, t_data->log_str, options.address, options.port);
   }
 #endif
 
@@ -605,19 +609,8 @@ int telemetry_daemon(void *t_data_void)
 #endif
 #if defined WITH_UNYTE_UDP_NOTIF
     else if (unyte_udp_notif_input) {
-      // unyte_seg_met_t *seg = NULL;
-
       seg_ptr = unyte_udp_queue_read(uun_collector->queue);
       select_num = TRUE; /* anything but zero or negative */
-
-      // XXX: the library does pass src_addr / src_port that went through a ntoh*()
-      // func; to align the workflow to the rest of collection methods, let's temp
-      // revert this
-/*
-      seg = (unyte_seg_met_t *)seg_ptr;
-      seg->metadata->src_addr = htonl(seg->metadata->src_addr);
-      seg->metadata->src_port = htons(seg->metadata->src_port);
-*/
     }
 #endif
 
