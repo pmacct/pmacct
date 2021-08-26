@@ -940,25 +940,27 @@ AC_ARG_ENABLE(unyte-udp-notif,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
+    PKG_CHECK_MODULES([UNYTE_UDP_NOTIF], [unyte-udp-notif >= 0.5.0], [
+      AC_SUBST(UNYTE_UDP_NOTIF_CFLAGS)
+      AC_SUBST(UNYTE_UDP_NOTIF_LIBS)
 
-    AC_SUBST(UNYTE_UDP_NOTIF_CFLAGS)
-    AC_SUBST(UNYTE_UDP_NOTIF_LIBS)
-
-    SUPPORTS="${SUPPORTS} unyte-udp-notif"
-    USING_UNYTE_UDP_NOTIF="yes"
-    PMACCT_CFLAGS="$PMACCT_CFLAGS $UNYTE_UDP_NOTIF_CFLAGS"
-    UNYTE_UDP_NOTIF_LIBS="$UNYTE_UDP_NOTIF_LIBS -lunyte-udp-notif"
-    AC_DEFINE(WITH_UNYTE_UDP_NOTIF, 1)
-    _save_LIBS="$LIBS"
-    LIBS="$LIBS $UNYTE_UDP_NOTIF_LIBS -lpthread"
-    AC_CHECK_LIB([unyte-udp-notif], [unyte_udp_start_collector], [], [AC_MSG_ERROR([
+      SUPPORTS="${SUPPORTS} unyte-udp-notif"
+      USING_UNYTE_UDP_NOTIF="yes"
+      PMACCT_CFLAGS="$PMACCT_CFLAGS $UNYTE_UDP_NOTIF_CFLAGS"
+      UNYTE_UDP_NOTIF_LIBS="$UNYTE_UDP_NOTIF_LIBS -lunyte-udp-notif"
+      AC_DEFINE(WITH_UNYTE_UDP_NOTIF, 1)
+      _save_LIBS="$LIBS"
+      LIBS="$LIBS $UNYTE_UDP_NOTIF_LIBS -lpthread"
+      AC_CHECK_LIB([unyte-udp-notif], [unyte_udp_start_collector], [], [AC_MSG_ERROR([
 	ERROR: missing unyte-udp-notif library. Refer to: https://github.com/insa-unyte/udp-notif-c-collector
-    ])])
-    LIBS="$_save_LIBS"
-    _save_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $UNYTE_UDP_NOTIF_CFLAGS"
-    AC_CHECK_HEADER([unyte-udp-notif/unyte_udp_collector.h], [], [AC_MSG_ERROR(ERROR: missing unyte-udp-notif headers)])
-    CFLAGS="$_save_CFLAGS"
+      ])])
+      LIBS="$_save_LIBS"
+      _save_CFLAGS="$CFLAGS"
+      CFLAGS="$CFLAGS $UNYTE_UDP_NOTIF_CFLAGS"
+      AC_CHECK_HEADER([unyte-udp-notif/unyte_udp_collector.h], [], [AC_MSG_ERROR(ERROR: missing unyte-udp-notif headers)])
+      CFLAGS="$_save_CFLAGS"
+    ],
+    [AC_MSG_ERROR([ERROR: missing unyte-udp-notif pkg-config. Refer to: https://github.com/insa-unyte/udp-notif-c-collector])])
     ;;
   no)
     AC_MSG_RESULT(no)
