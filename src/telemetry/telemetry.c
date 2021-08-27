@@ -448,7 +448,7 @@ int telemetry_daemon(void *t_data_void)
       exit_gracefully(1);
     }
 
-    if (config.telemetry_udp_notif_create_sock) {
+    {
       int sockfd;
 
       sockfd = create_socket_unyte_udp_notif(t_data, options.address, options.port);
@@ -464,12 +464,7 @@ int telemetry_daemon(void *t_data_void)
       options_sk.recvmmsg_vlen = TELEMETRY_DEFAULT_UNYTE_UDP_NOTIF_NMSGS;
     }
 
-    if (config.telemetry_udp_notif_create_sock) {
-      uun_collector = unyte_udp_start_collector_sk(&options_sk);
-    }
-    else {
-      uun_collector = unyte_udp_start_collector(&options);
-    }
+    uun_collector = unyte_udp_start_collector_sk(&options_sk);
 
     Log(LOG_INFO, "INFO ( %s/%s ): reading telemetry data from Unyte UDP Notif on %s:%s\n", config.name, t_data->log_str, options.address, options.port);
   }

@@ -7559,20 +7559,6 @@ int cfg_key_telemetry_udp_notif_nmsgs(char *filename, char *name, char *value_pt
   return changes;
 }
 
-int cfg_key_telemetry_udp_notif_create_sock(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
-
-  value = parse_truefalse(value_ptr);
-  if (value < 0) return ERR;
-
-  for (; list; list = list->next, changes++) list->cfg.telemetry_udp_notif_create_sock = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_udp_notif_create_sock'. Globalized.\n", filename);
-
-  return changes;
-}
-
 int cfg_key_telemetry_ipv6_only(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
