@@ -972,6 +972,42 @@ AC_ARG_ENABLE(unyte-udp-notif,
 )
 dnl finish: unyte udp notif handling
 
+dnl start: eBPF handling
+AC_MSG_CHECKING(whether to enable eBPF support)
+AC_ARG_ENABLE(ebpf,
+  [  --enable-ebpf                    Enable eBPF support (default: no)],
+  [ case "$enableval" in
+  yes)
+    AC_MSG_RESULT(yes)
+    AC_SUBST(EBPF_CFLAGS)
+    AC_SUBST(EBPF_LIBS)
+
+    SUPPORTS="${SUPPORTS} ebpf"
+    USING_EBPF="yes"
+    PMACCT_CFLAGS="$PMACCT_CFLAGS $EBPF_CFLAGS"
+    EBPF_LIBS="$EBPF_LIBS -lbpf"
+    AC_DEFINE(WITH_EBPF, 1)
+    _save_LIBS="$LIBS"
+    LIBS="$LIBS $EBPF_LIBS"
+    AC_CHECK_LIB([bpf], [bpf_object__open_file], [], [AC_MSG_ERROR([
+      ERROR: missing libbpf library. Refer to: https://github.com/libbpf/libbpf 
+    ])])
+    LIBS="$_save_LIBS"
+    _save_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $EBPF_CFLAGS"
+    AC_CHECK_HEADER([bpf/libbpf.h], [], [AC_MSG_ERROR(ERROR: missing libbpf headers)])
+    CFLAGS="$_save_CFLAGS"
+    ;;
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  esac ],
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
+dnl finish: ebpf handling
+
 if test x"$USING_DLOPEN" = x"yes"; then
 	AC_DEFINE(HAVE_DLOPEN, 1)
 else
@@ -1116,14 +1152,6 @@ AC_CHECK_FUNCS([setproctitle mallopt tdestroy])
 dnl Check for SO_REUSEPORT & friends
 AC_CHECK_DECL([SO_REUSEPORT],
 	AC_DEFINE(HAVE_SO_REUSEPORT, 1, [Check if kernel supports SO_REUSEPORT]),,
-		[
-		  #include <sys/types.h>
-		  #include <sys/socket.h>
-		]
-)
-
-AC_CHECK_DECL([SO_ATTACH_REUSEPORT_CBPF],
-	AC_DEFINE(HAVE_SO_ATTACH_REUSEPORT_CBPF, 1, [Check if kernel supports SO_ATTACH_REUSEPORT_CBPF]),,
 		[
 		  #include <sys/types.h>
 		  #include <sys/socket.h>
