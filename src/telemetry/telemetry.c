@@ -102,6 +102,7 @@ int telemetry_daemon(void *t_data_void)
   unyte_udp_collector_t *uun_collector = NULL;
   void *seg_ptr = NULL;
   char udp_notif_port[6];
+  char udp_notif_null_ip_address[] = "0.0.0.0";
 #endif
 
   if (!t_data) {
@@ -426,47 +427,36 @@ int telemetry_daemon(void *t_data_void)
 #endif
 #if defined WITH_UNYTE_UDP_NOTIF
   else if (unyte_udp_notif_input) {
-    char null_ip_address[] = "0.0.0.0";
     unyte_udp_options_t options = {0};
-    unyte_udp_sk_options_t options_sk = {0};
+    int sockfd;
 
     memset(udp_notif_port, 0, sizeof(udp_notif_port));
 
-    if (config.telemetry_udp_notif_ip) {
-      options.address = config.telemetry_udp_notif_ip;
-    }
-    else {
-      options.address = null_ip_address;
+    if (!config.telemetry_udp_notif_ip) {
+      config.telemetry_udp_notif_ip = udp_notif_null_ip_address;
     }
 
     if (config.telemetry_udp_notif_port) {
       sprintf(udp_notif_port, "%d", config.telemetry_udp_notif_port);
-      options.port = udp_notif_port;
     }
     else {
       Log(LOG_ERR, "ERROR ( %s/core/TELE ): Unyte UDP Notif specified but no telemetry_daemon_udp_notif_port supplied. Terminating.\n", config.name);
       exit_gracefully(1);
     }
 
-    {
-      int sockfd;
-
-      sockfd = create_socket_unyte_udp_notif(t_data, options.address, options.port);
-      options_sk.socket_fd = sockfd;
-    }
+    sockfd = create_socket_unyte_udp_notif(t_data, config.telemetry_udp_notif_ip, udp_notif_port);
+    options.socket_fd = sockfd;
 
     if (config.telemetry_udp_notif_nmsgs) {
       options.recvmmsg_vlen = config.telemetry_udp_notif_nmsgs;
-      options_sk.recvmmsg_vlen = config.telemetry_udp_notif_nmsgs;
     }
     else {
       options.recvmmsg_vlen = TELEMETRY_DEFAULT_UNYTE_UDP_NOTIF_NMSGS;
-      options_sk.recvmmsg_vlen = TELEMETRY_DEFAULT_UNYTE_UDP_NOTIF_NMSGS;
     }
 
-    uun_collector = unyte_udp_start_collector_sk(&options_sk);
+    uun_collector = unyte_udp_start_collector(&options);
 
-    Log(LOG_INFO, "INFO ( %s/%s ): reading telemetry data from Unyte UDP Notif on %s:%s\n", config.name, t_data->log_str, options.address, options.port);
+    Log(LOG_INFO, "INFO ( %s/%s ): reading telemetry data from Unyte UDP Notif on %s:%s\n", config.name, t_data->log_str, config.telemetry_udp_notif_ip, udp_notif_port);
   }
 #endif
 

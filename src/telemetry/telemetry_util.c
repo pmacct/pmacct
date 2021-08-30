@@ -243,6 +243,7 @@ void telemetry_init_kafka_host(void *kh)
 #ifdef WITH_UNYTE_UDP_NOTIF
 int create_socket_unyte_udp_notif(struct telemetry_data *t_data, char *address, char *port)
 {
+  uint64_t receive_buf_size;
   struct addrinfo *addr_info;
   struct addrinfo hints;
   int rc;
@@ -282,7 +283,13 @@ int create_socket_unyte_udp_notif(struct telemetry_data *t_data, char *address, 
   }
 
   /* Setting socket buffer to default 20 MB */
-  uint64_t receive_buf_size = DEFAULT_SK_BUFF_SIZE;
+  if (!config.telemetry_pipe_size) {
+    receive_buf_size = DEFAULT_SK_BUFF_SIZE;
+  }
+  else {
+    receive_buf_size = config.telemetry_pipe_size;
+  }
+
   if (setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &receive_buf_size, sizeof(receive_buf_size)) < 0) {
     Log(LOG_ERR, "ERROR ( %s/%s ): create_socket_unyte_udp_notif(): cannot set buffer size\n", config.name, t_data->log_str);
     exit_gracefully(1);
