@@ -26,7 +26,6 @@
 #define NFPROBE_COMMON_H
 
 #include "pmacct.h"
-#include "addr.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>

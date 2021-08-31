@@ -21,7 +21,6 @@
 
 /* includes */
 #include "pmacct.h"
-#include "addr.h"
 #include "nfacctd.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"

@@ -21,9 +21,7 @@
 
 /* includes */
 #include "pmacct.h"
-#include "addr.h"
 #include "pmacct-data.h"
-#include "addr.h"
 #include "bgp.h"
 #include "thread_pool.h"
 #if defined WITH_RABBITMQ

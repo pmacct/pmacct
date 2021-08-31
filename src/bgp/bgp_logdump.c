@@ -22,7 +22,6 @@
 /* includes */
 #include "pmacct.h"
 #include "pmacct-data.h"
-#include "addr.h"
 #include "bgp.h"
 #include "rpki/rpki.h"
 #include "thread_pool.h"

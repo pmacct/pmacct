@@ -21,7 +21,6 @@
 
 /* includes */
 #include "pmacct.h"
-#include "addr.h"
 #include "bgp.h"
 #include "bgp_xcs.h"
 #include "rpki/rpki.h"

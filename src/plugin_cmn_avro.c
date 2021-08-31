@@ -21,7 +21,6 @@
 
 /* includes */
 #include "pmacct.h"
-#include "addr.h"
 #include "pmacct-data.h"
 #include "plugin_common.h"
 #include "plugin_cmn_json.h"

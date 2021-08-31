@@ -29,7 +29,6 @@
 #include "sfacctd.h"
 #include "plugin_hooks.h"
 #include "pkt_handlers.h"
-#include "addr.h"
 #include "bgp/bgp.h"
 #include "isis/prefix.h"
 #include "isis/table.h"

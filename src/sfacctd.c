@@ -21,7 +21,6 @@
 
 /* includes */
 #include "pmacct.h"
-#include "addr.h"
 #include "sflow.h"
 #include "bgp/bgp_packet.h"
 #include "bgp/bgp.h"

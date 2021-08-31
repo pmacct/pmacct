@@ -31,6 +31,25 @@
 #define IS_IPV6_MULTICAST(a) (((const uint8_t *) (a))[0] == 0xff)
 #define IS_MAC_MULTICAST(a) (((const uint8_t *) (a))[0] == 0x01)
 
+/* structs */
+struct host_addr {
+  u_int8_t family;
+  union {
+    struct in_addr ipv4;
+    struct in6_addr ipv6;
+  } address;
+};
+
+struct host_mask {
+  u_int8_t family;
+  u_int8_t len;
+  union {
+    u_int32_t m4;
+    u_int8_t m6[16];
+  } mask;
+};
+
+/* vars */
 static const char __attribute__((unused)) *ip_version_string[] = {
   "v4",
   "v6"

@@ -24,7 +24,6 @@
 /* include */
 #include "pmacct.h"
 #include "pmacct-data.h"
-#include "addr.h"
 #include "imt_plugin.h"
 #include "bgp/bgp_packet.h"
 #include "bgp/bgp.h"

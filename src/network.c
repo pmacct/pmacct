@@ -20,7 +20,6 @@
 */
 
 #include "pmacct.h"
-#include "addr.h"
 #include "network.h"
 #include "thread_pool.h"
 

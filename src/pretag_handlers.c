@@ -20,7 +20,6 @@
 */
 
 #include "pmacct.h"
-#include "addr.h"
 #include "bgp/bgp_packet.h"
 #include "bgp/bgp.h"
 #include "nfacctd.h"

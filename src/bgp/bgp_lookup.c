@@ -24,7 +24,6 @@
 #include "plugin_hooks.h"
 #include "pmacct-data.h"
 #include "pkt_handlers.h"
-#include "addr.h"
 #include "bgp.h"
 #include "pmbgpd.h"
 #include "rpki/rpki.h"

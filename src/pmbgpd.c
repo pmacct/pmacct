@@ -21,7 +21,6 @@
 
 /* includes */
 #include "pmacct.h"
-#include "addr.h"
 #include "plugin_hooks.h"
 #include "bgp/bgp.h"
 #include "bgp/bgp_lg.h"

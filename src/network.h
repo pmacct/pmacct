@@ -397,6 +397,7 @@ struct packet_ptrs {
 #endif
 };
 
+/* XXX:
 struct host_addr {
   u_int8_t family;
   union {
@@ -413,6 +414,7 @@ struct host_mask {
     u_int8_t m6[16];
   } mask;
 };
+*/
 
 struct pkt_primitives {
 #if defined (HAVE_L2)

@@ -21,7 +21,6 @@
 
 /* includes */
 #include "pmacct.h"
-#include "addr.h"
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
 #endif

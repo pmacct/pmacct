@@ -252,6 +252,7 @@ typedef struct {
 #define PM_GNUTLS_CAFILE "ca-certificates.crt"
 #endif
 
+#include "addr.h"
 #include "network.h"
 #include "pretag.h"
 #include "cfg.h"
