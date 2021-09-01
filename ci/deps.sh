@@ -26,6 +26,7 @@ WGET_WAIT_RETRIES_S=10
 WGET_FLAGS="-t $WGET_N_RETRIES --waitretry=$WGET_WAIT_RETRIES_S"
 if [ "${DEPS_DONT_CHECK_CERTIFICATE}" ]; then
     WGET_FLAGS="${WGET_FLAGS} --no-check-certificate"
+    GIT_SSL_NO_VERIFY=true
 fi
 echo "WGET_FLAGS: ${WGET_FLAGS}"
 echo "MAKEFLAGS: ${MAKEFLAGS}"
@@ -34,40 +35,37 @@ echo "MAKEFLAGS: ${MAKEFLAGS}"
 mkdir -p /tmp
 cd /tmp
 
+gh_retrieve(){
+    ORG=$1
+    REPO=$2
+    TAG=$3
+
+    echo "Downloading $ORG $REPO $TAG"
+    git clone --branch $TAG --recursive https://www.github.com/$ORG/$REPO
+}
+
+
+
 # Dependencies (not fulfilled by Dockerfile)
-git clone https://github.com/akheron/jansson
-cd jansson ; rm -rf ./.git ; autoreconf -i ; ./configure ; make ; sudo make install ; cd ..
+gh_retrieve "akheron" "jansson" "v2.13.1" && cd jansson ; autoreconf -i ; ./configure ; make ; sudo make install ; cd ..
 
-git clone https://github.com/edenhill/librdkafka
-cd librdkafka ; rm -rf ./.git ; ./configure ; make ; sudo make install ; cd ..
+gh_retrieve "edenhill" "librdkafka" "v1.7.0" && cd librdkafka ; ./configure ; make ; sudo make install ; cd ..
 
-wget ${WGET_FLAGS} https://github.com/alanxz/rabbitmq-c/archive/refs/tags/v0.11.0.tar.gz
-mv v0.11.0.tar.gz rabbitmq-c-0.11.0.tar.gz
-tar xfz rabbitmq-c-0.11.0.tar.gz
-cd rabbitmq-c-0.11.0 ; rm -rf ./.git ; mkdir build ; cd build ; cmake -DCMAKE_INSTALL_LIBDIR=lib .. ; sudo cmake --build . --target install ; cd .. ; cd ..
+gh_retrieve "alanxz" "rabbitmq-c" "v0.11.0" && cd rabbitmq-c ; mkdir build ; cd build ; cmake -DCMAKE_INSTALL_LIBDIR=lib .. ; sudo cmake --build . --target install ; cd .. ; cd ..
 
-git clone --recursive https://github.com/maxmind/libmaxminddb
-cd libmaxminddb ; rm -rf ./.git ; ./bootstrap ; ./configure ; make ; sudo make install ; cd ..
+gh_retrieve "maxmind" "libmaxminddb" "1.6.0" && cd libmaxminddb ; ./bootstrap ; ./configure ; make ; sudo make install ; cd ..
 
-git clone -b 3.4-stable https://github.com/ntop/nDPI
-cd nDPI ; rm -rf ./.git ; ./autogen.sh ; ./configure ; make ; sudo make install ; sudo ldconfig ; cd ..
+gh_retrieve "ntop" "nDPI" "3.4-stable" && cd nDPI ; ./autogen.sh ; ./configure ; make ; sudo make install ; sudo ldconfig ; cd ..
 
-wget ${WGET_FLAGS} https://github.com/zeromq/libzmq/releases/download/v4.3.2/zeromq-4.3.2.tar.gz
-tar xfz zeromq-4.3.2.tar.gz
-cd zeromq-4.3.2 ; ./configure ; make ; sudo make install ; cd ..
+gh_retrieve "zeromq" "libzmq" "v4.3.2" && cd libzmq ; ./autogen.sh ; ./configure ; make ; sudo make install ; cd ..
 
-wget ${WGET_FLAGS} https://archive.apache.org/dist/avro/avro-1.9.2/c/avro-c-1.9.2.tar.gz
-tar xfz avro-c-1.9.2.tar.gz
-cd avro-c-1.9.2 ; mkdir build ; cd build ; cmake .. ; make ; sudo make install ; cd .. ; cd ..
+gh_retrieve "apache" "avro" "release-1.9.2" && cd avro/lang/c ; mkdir build ; cd build ; cmake .. ; make ; sudo make install ; cd .. ; cd ..
 
-git clone https://github.com/confluentinc/libserdes
-cd libserdes ; rm -rf ./.git ; ./configure ; make ; sudo make install ; cd ..
+gh_retrieve "confluentinc" "libserdes" "v7.0.0" && cd libserdes ; rm -rf ./.git ; ./configure ; make ; sudo make install ; cd ..
 
-git clone https://github.com/redis/hiredis
-cd hiredis ; rm -rf ./.git ; make ; sudo make install ; cd ..
+gh_retrieve "redis" "hiredis" "v1.0.0" && cd hiredis ; rm -rf ./.git ; make ; sudo make install ; cd ..
 
-git clone https://github.com/insa-unyte/udp-notif-c-collector
-cd udp-notif-c-collector ; git checkout v0.5.1 ; rm -rf ./.git ; ./bootstrap ; ./configure ; make ; sudo make install ; cd ..
+gh_retrieve "insa-unyte" "udp-notif-c-collector" "v0.5.1" && cd udp-notif-c-collector && ./bootstrap ; ./configure ; make ; sudo make install ; cd ..
 
 # Make sure dynamic linker is up-to-date
 ldconfig
