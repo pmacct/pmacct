@@ -7558,6 +7558,17 @@ int cfg_key_telemetry_udp_notif_nmsgs(char *filename, char *name, char *value_pt
   return changes;
 }
 
+int cfg_key_telemetry_udp_notif_ebpf_prog(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_udp_notif_ebpf_prog = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_udp_notif_ebpf_prog'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_telemetry_ipv6_only(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

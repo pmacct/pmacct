@@ -28,13 +28,9 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
-#include <ctype.h>
-#include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#include <sys/un.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #include <sys/types.h>
 #include <signal.h>
 #include <syslog.h>
@@ -72,7 +68,7 @@ int attach_ebpf_unyte_udp_notif(int fd, char *filename, u_int32_t key)
 
   err = libbpf_get_error(obj);
   if (err) {
-    Log(LOG_ERR, "ERROR: Failed to open BPF elf file\n");
+    Log(LOG_ERR, "ERROR ( %s ): Failed to open BPF elf file\n", filename);
     return -1;
   }
 
@@ -81,13 +77,13 @@ int attach_ebpf_unyte_udp_notif(int fd, char *filename, u_int32_t key)
 
   // Load BPF program to the kernel
   if (bpf_object__load(obj) != 0) {
-    Log(LOG_ERR, "ERROR: Failed loading BPF object into kernel\n");
+    Log(LOG_ERR, "ERROR ( %s ): Failed loading BPF object into kernel\n", filename);
     return -1;
   }
 
   struct bpf_program *prog = bpf_object__find_program_by_name(obj, "_selector");
   if (!prog) {
-    Log(LOG_ERR, "ERROR: Could not find BPF program in BPF object\n");
+    Log(LOG_ERR, "ERROR ( %s ): Could not find BPF program in BPF object\n", filename);
     return -1;
   }
 
@@ -98,12 +94,12 @@ int attach_ebpf_unyte_udp_notif(int fd, char *filename, u_int32_t key)
   assert(umap_fd);
 
   if (setsockopt(fd, SOL_SOCKET, SO_ATTACH_REUSEPORT_EBPF, &prog_fd, sizeof(prog_fd)) != 0) {
-    Log(LOG_ERR, "ERROR: Could not attach BPF prog\n");
+    Log(LOG_ERR, "ERROR ( %s ): Could not attach BPF prog\n", filename);
     return -1;
   }
 
   if (bpf_map_update_elem(umap_fd, &key, &local_fd, BPF_ANY) != 0) {
-    Log(LOG_ERR, "ERROR: Could not update reuseport array\n");
+    Log(LOG_ERR, "ERROR ( %s ): Could not update reuseport array\n", filename);
     return -1;
   }
 
@@ -119,10 +115,12 @@ int attach_ebpf_unyte_udp_notif(int fd, char *filename, u_int32_t key)
   bpf_map_lookup_elem(size_map_fd, &key, &balancer_count);
   if (balancer_count == 0) {
     /* BPF program hasn't run yet to initalize this: exit */
+    Log(LOG_ERR, "ERROR ( %s ): BPF program hasn't run yet to initalize map\n", filename);
+    return -1;
   }
   else {
     if (bpf_map_update_elem(size_map_fd, &index, &balancer_count, BPF_ANY) != 0) {
-      Log(LOG_ERR, "ERROR: Could not update balancer count\n");
+      Log(LOG_ERR, "ERROR ( %s ): Could not update balancer count\n", filename);
       return -1;
     }
   }

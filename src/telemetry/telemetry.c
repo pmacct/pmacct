@@ -24,6 +24,7 @@
 #include "thread_pool.h"
 #include "bgp/bgp.h"
 #include "telemetry.h"
+#include "telemetry_ebpf.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
@@ -444,6 +445,9 @@ int telemetry_daemon(void *t_data_void)
     }
 
     sockfd = create_socket_unyte_udp_notif(t_data, config.telemetry_udp_notif_ip, udp_notif_port);
+    if (config.telemetry_udp_notif_ebpf_prog) {
+      attach_ebpf_unyte_udp_notif(sockfd, config.telemetry_udp_notif_ebpf_prog, config.cluster_id);
+    }
     options.socket_fd = sockfd;
 
     if (config.telemetry_udp_notif_nmsgs) {

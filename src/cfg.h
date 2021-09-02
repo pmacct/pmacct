@@ -251,6 +251,7 @@ struct configuration {
   int telemetry_udp_notif_port;
   char *telemetry_udp_notif_ip;
   int telemetry_udp_notif_nmsgs;
+  char *telemetry_udp_notif_ebpf_prog;
   int telemetry_ipv6_only;
   char *telemetry_zmq_address;
   char *telemetry_kafka_broker_host;
