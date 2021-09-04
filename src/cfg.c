@@ -278,6 +278,7 @@ static const struct _dictionary_line dictionary[] = {
   {"telemetry_daemon_udp_notif_port", cfg_key_telemetry_udp_notif_port},
   {"telemetry_daemon_udp_notif_ip", cfg_key_telemetry_udp_notif_ip},
   {"telemetry_daemon_udp_notif_nmsgs", cfg_key_telemetry_udp_notif_nmsgs},
+  {"telemetry_daemon_udp_notif_ebpf_prog", cfg_key_telemetry_udp_notif_ebpf_prog},
   {"telemetry_daemon_ipv6_only", cfg_key_telemetry_ipv6_only},
   {"telemetry_daemon_zmq_address", cfg_key_telemetry_zmq_address},
   {"telemetry_daemon_kafka_broker_host", cfg_key_telemetry_kafka_broker_host},
