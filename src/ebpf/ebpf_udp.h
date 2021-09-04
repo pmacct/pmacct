@@ -19,18 +19,16 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
-#ifndef TELEMETRY_EBPF_H
-#define TELEMETRY_EBPF_H
+#ifndef EBPF_UDP_H
+#define EBPF_UDP_H
 
 /* includes */
 
 /* defines */
 
 /* prototypes */
-#ifdef WITH_UNYTE_UDP_NOTIF
 #ifdef WITH_EBPF
-extern int attach_ebpf_unyte_udp_notif(int, char *, u_int32_t);
-#endif
+extern int attach_ebpf_udp(int, char *, u_int32_t);
 #endif
 
-#endif //TELEMETRY_EBPF_H
+#endif //EBPF_UDP_H

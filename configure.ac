@@ -1301,4 +1301,4 @@ AC_OUTPUT([ Makefile \
 	    src/bmp/Makefile src/rpki/Makefile \
 	    src/telemetry/Makefile src/ndpi/Makefile \
 	    src/filters/Makefile examples/lg/Makefile \
-	    examples/custom/Makefile	])
+	    src/ebpf/Makefile examples/custom/Makefile ])

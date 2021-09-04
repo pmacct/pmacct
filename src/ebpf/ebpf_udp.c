@@ -37,7 +37,7 @@
 
 #include "addr.h"
 #include "log.h"
-#include "telemetry_ebpf.h"
+#include "ebpf_udp.h"
 
 #ifdef WITH_EBPF
 #include <bpf/bpf.h>
@@ -45,13 +45,12 @@
 #endif
 
 /* Functions */
-#ifdef WITH_UNYTE_UDP_NOTIF
 #ifdef WITH_EBPF
-static int libbpf_print_fn_unyte_udp_notif(enum libbpf_print_level level, const char *format, va_list args) {
+static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va_list args) {
   return level <= LIBBPF_DEBUG ? vfprintf(stderr, format, args) : 0;
 }
 
-int attach_ebpf_unyte_udp_notif(int fd, char *filename, u_int32_t key)
+int attach_ebpf_udp(int fd, char *filename, u_int32_t key)
 {
   int umap_fd, size_map_fd, prog_fd, local_fd = fd;
   u_int32_t balancer_count = 0;
@@ -60,7 +59,7 @@ int attach_ebpf_unyte_udp_notif(int fd, char *filename, u_int32_t key)
   assert(fd >= 0);
 
   // set log
-  libbpf_set_print(libbpf_print_fn_unyte_udp_notif);
+  libbpf_set_print(libbpf_print_fn);
 
   struct bpf_object_open_opts opts = {.sz = sizeof(struct bpf_object_open_opts),
                                       .pin_root_path = "/sys/fs/bpf/reuseport"};
@@ -127,5 +126,4 @@ int attach_ebpf_unyte_udp_notif(int fd, char *filename, u_int32_t key)
 
   return local_fd;
 }
-#endif
 #endif
