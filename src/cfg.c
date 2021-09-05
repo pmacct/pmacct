@@ -220,6 +220,7 @@ static const struct _dictionary_line dictionary[] = {
   {"nfacctd_port", cfg_key_nfacctd_port},
   {"nfacctd_ip", cfg_key_nfacctd_ip},
   {"nfacctd_ipv6_only", cfg_key_nfacctd_ipv6_only},
+  {"nfacctd_ebpf_prog", cfg_key_nfacctd_ebpf_prog},
   {"nfacctd_allow_file", cfg_key_nfacctd_allow_file},
   {"nfacctd_time_secs", cfg_key_nfacctd_time_secs},
   {"nfacctd_time_new", cfg_key_nfacctd_time_new},

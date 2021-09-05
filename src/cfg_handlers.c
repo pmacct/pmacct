@@ -3181,6 +3181,17 @@ int cfg_key_nfacctd_ipv6_only(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_nfacctd_ebpf_prog(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_ebpf_prog = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'nfacctd_ebpf_prog'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_kafka_broker_host(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

@@ -152,6 +152,7 @@ extern int cfg_key_print_latest_file(char *, char *, char *);
 extern int cfg_key_nfacctd_port(char *, char *, char *);
 extern int cfg_key_nfacctd_ip(char *, char *, char *);
 extern int cfg_key_nfacctd_ipv6_only(char *, char *, char *);
+extern int cfg_key_nfacctd_ebpf_prog(char *, char *, char *);
 extern int cfg_key_nfacctd_allow_file(char *, char *, char *);
 extern int cfg_key_nfacctd_time_secs(char *, char *, char *);
 extern int cfg_key_nfacctd_time_new(char *, char *, char *);
