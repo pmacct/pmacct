@@ -44,28 +44,43 @@ gh_retrieve(){
     git clone --branch $TAG --recursive https://www.github.com/$ORG/$REPO
 }
 
+gh_build(){
+    ORG=$1
+    REPO=$2
+    TAG=$3
+
+    BUILD_CMD=$4
+
+    gh_retrieve $ORG $REPO $TAG && \
+    cd $REPO && \
+
+    sh -c "$BUILD_CMD" && \
+    cd .. && \
+    
+    rm -rf $REPO    
+}
 
 
 # Dependencies (not fulfilled by Dockerfile)
-gh_retrieve "akheron" "jansson" "v2.13.1" && cd jansson ; autoreconf -i ; ./configure ; make ; sudo make install ; cd ..
+gh_build "akheron" "jansson" "v2.13.1" "autoreconf -i && ./configure && make && sudo make install" && \
 
-gh_retrieve "edenhill" "librdkafka" "v1.7.0" && cd librdkafka ; ./configure ; make ; sudo make install ; cd ..
+gh_build "edenhill" "librdkafka" "v1.7.0" "./configure && make && sudo make install" && \
 
-gh_retrieve "alanxz" "rabbitmq-c" "v0.11.0" && cd rabbitmq-c ; mkdir build ; cd build ; cmake -DCMAKE_INSTALL_LIBDIR=lib .. ; sudo cmake --build . --target install ; cd .. ; cd ..
+gh_build "alanxz" "rabbitmq-c" "v0.11.0" "mkdir build && cd build && cmake -DCMAKE_INSTALL_LIBDIR=lib .. && sudo cmake --build . --target install && cd .." && \
 
-gh_retrieve "maxmind" "libmaxminddb" "1.6.0" && cd libmaxminddb ; ./bootstrap ; ./configure ; make ; sudo make install ; cd ..
+gh_build "maxmind" "libmaxminddb" "1.6.0" "./bootstrap && ./configure && make && sudo make install" && \
 
-gh_retrieve "ntop" "nDPI" "3.4-stable" && cd nDPI ; ./autogen.sh ; ./configure ; make ; sudo make install ; sudo ldconfig ; cd ..
+gh_build "ntop" "nDPI" "3.4-stable" "./autogen.sh && ./configure && make && sudo make install && sudo ldconfig" && \
 
-gh_retrieve "zeromq" "libzmq" "v4.3.2" && cd libzmq ; ./autogen.sh ; ./configure ; make ; sudo make install ; cd ..
+gh_build "zeromq" "libzmq" "v4.3.2" "./autogen.sh && ./configure && make && sudo make install" && \
 
-gh_retrieve "apache" "avro" "release-1.9.2" && cd avro/lang/c ; mkdir build ; cd build ; cmake .. ; make ; sudo make install ; cd .. ; cd ..
+gh_build "apache" "avro" "release-1.9.2" "cd lang/c && mkdir build && cd build && cmake .. && make && sudo make install && cd ../.." && \
 
-gh_retrieve "confluentinc" "libserdes" "v7.0.0" && cd libserdes ; rm -rf ./.git ; ./configure ; make ; sudo make install ; cd ..
+gh_build "confluentinc" "libserdes" "v7.0.0" "rm -rf ./.git && ./configure ; make && sudo make install" && \
 
-gh_retrieve "redis" "hiredis" "v1.0.0" && cd hiredis ; rm -rf ./.git ; make ; sudo make install ; cd ..
+gh_build "redis" "hiredis" "v1.0.0" "rm -rf ./.git && make && sudo make install" && \
 
-gh_retrieve "insa-unyte" "udp-notif-c-collector" "v0.5.1" && cd udp-notif-c-collector && ./bootstrap ; ./configure ; make ; sudo make install ; cd ..
+gh_build "insa-unyte" "udp-notif-c-collector" "v0.5.1" "./bootstrap && ./configure && make && sudo make install" && \
 
 # Make sure dynamic linker is up-to-date
 ldconfig

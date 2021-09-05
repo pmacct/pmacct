@@ -80,6 +80,6 @@ RUN apt-get update && \
     libsqlite3-0 \
     libssl1.1 && \
   apt-get -y clean && \
-  rm -rf /var/lib/apt/lists/* && \
+  rm -rf /var/lib/apt/lists && \
   ldconfig
 ENTRYPOINT ["/bin/bash"]
