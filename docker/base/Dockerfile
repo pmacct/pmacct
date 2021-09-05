@@ -67,7 +67,6 @@ FROM debian:buster-slim as base
 LABEL maintainer "pmacct Docker Doctors <docker-doctors (at) pmacct.net>"
 # We don't want man pages
 COPY ci/dpkg.cfg.d/excludes /etc/dpkg/dpkg.cfg.d/excludes
-COPY --from=build-stage /usr/local/ /usr/local
 # Runtime deps
 RUN apt-get update && \
   apt-get install -y \
@@ -82,4 +81,5 @@ RUN apt-get update && \
   apt-get -y clean && \
   rm -rf /var/lib/apt/lists && \
   ldconfig
+COPY --from=build-stage /usr/local/ /usr/local
 ENTRYPOINT ["/bin/bash"]
