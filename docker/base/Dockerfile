@@ -79,7 +79,7 @@ RUN apt-get update && \
     libsqlite3-0 \
     libssl1.1 && \
   apt-get -y clean && \
-  rm -rf /var/lib/apt/lists && \
-  ldconfig
+  rm -rf /var/lib/apt/lists  
 COPY --from=build-stage /usr/local/ /usr/local
+RUN ldconfig
 ENTRYPOINT ["/bin/bash"]
