@@ -35,7 +35,22 @@ echo "MAKEFLAGS: ${MAKEFLAGS}"
 mkdir -p /tmp
 cd /tmp
 
-gh_retrieve(){
+gh_retrieve_wget(){
+    ORG=$1
+    REPO=$2
+    TAG=$3
+
+    echo "Downloading $ORG $REPO $TAG"
+    
+
+
+    wget $WGET_FLAGS https://github.com/$ORG/$REPO/archive/refs/tags/$TAG.tar.gz && \
+    mkdir $REPO && \
+    tar xzfv $TAG.tar.gz --strip-components=1 -C $REPO && \
+    rm $TAG.tar.gz
+}
+
+gh_retrieve_git(){
     ORG=$1
     REPO=$2
     TAG=$3
@@ -51,7 +66,12 @@ gh_build(){
 
     BUILD_CMD=$4
 
-    gh_retrieve $ORG $REPO $TAG && \
+    if [ "${GIT}" ]; then
+        gh_retrieve_git $ORG $REPO $TAG || exit -1
+    else
+        gh_retrieve_wget $ORG $REPO $TAG  || exit -1 
+    fi
+
     cd $REPO && \
 
     sh -c "$BUILD_CMD" && \
@@ -68,9 +88,9 @@ gh_build "edenhill" "librdkafka" "v1.7.0" "./configure && make && sudo make inst
 
 gh_build "alanxz" "rabbitmq-c" "v0.11.0" "mkdir build && cd build && cmake -DCMAKE_INSTALL_LIBDIR=lib .. && sudo cmake --build . --target install && cd .." && \
 
-gh_build "maxmind" "libmaxminddb" "1.6.0" "./bootstrap && ./configure && make && sudo make install" && \
+GIT=1 gh_build "maxmind" "libmaxminddb" "1.6.0" "./bootstrap && ./configure && make && sudo make install" && \
 
-gh_build "ntop" "nDPI" "3.4-stable" "./autogen.sh && ./configure && make && sudo make install && sudo ldconfig" && \
+GIT=1 gh_build "ntop" "nDPI" "3.4-stable" "./autogen.sh && ./configure && make && sudo make install && sudo ldconfig" && \
 
 gh_build "zeromq" "libzmq" "v4.3.2" "./autogen.sh && ./configure && make && sudo make install" && \
 
