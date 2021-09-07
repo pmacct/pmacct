@@ -37,6 +37,9 @@
 #include "crc32.h"
 #include "isis/isis.h"
 #include "bmp/bmp.h"
+#if defined WITH_EBPF
+#include "ebpf/ebpf_udp.h"
+#endif
 #ifdef WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
@@ -709,6 +712,12 @@ int main(int argc,char **argv, char **envp)
 #if (defined HAVE_SO_REUSEPORT)
     rc = setsockopt(config.sock, SOL_SOCKET, SO_REUSEPORT, (char *) &yes, (socklen_t) sizeof(yes));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEPORT.\n", config.name);
+
+#if defined WITH_EBPF
+    if (config.nfacctd_ebpf_prog) {
+      attach_ebpf_udp(config.sock, config.nfacctd_ebpf_prog, config.cluster_id);
+    }
+#endif
 #endif
 
     rc = setsockopt(config.sock, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, (socklen_t) sizeof(yes));

@@ -352,6 +352,7 @@ static const struct _dictionary_line dictionary[] = {
   {"sfacctd_proc_name", cfg_key_proc_name},
   {"sfacctd_port", cfg_key_nfacctd_port},
   {"sfacctd_ip", cfg_key_nfacctd_ip},
+  {"sfacctd_ebpf_prog", cfg_key_nfacctd_ebpf_prog},
   {"sfacctd_allow_file", cfg_key_nfacctd_allow_file},
   {"sfacctd_as_new", cfg_key_nfacctd_as_new},
   {"sfacctd_as", cfg_key_nfacctd_as_new},
