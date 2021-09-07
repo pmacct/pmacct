@@ -28,7 +28,7 @@
 
 /* prototypes */
 #ifdef WITH_EBPF
-extern int attach_ebpf_udp(int, char *, u_int32_t);
+extern int attach_ebpf_reuseport_balancer(int, char *, u_int32_t, int);
 #endif
 
 #endif //EBPF_UDP_H

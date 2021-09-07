@@ -37,7 +37,7 @@
 
 #include "addr.h"
 #include "log.h"
-#include "ebpf_udp.h"
+#include "ebpf_rp_balancer.h"
 
 #ifdef WITH_EBPF
 #include <bpf/bpf.h>
@@ -50,7 +50,7 @@ static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va
   return level <= LIBBPF_DEBUG ? vfprintf(stderr, format, args) : 0;
 }
 
-int attach_ebpf_udp(int fd, char *filename, u_int32_t key)
+int attach_ebpf_reuseport_balancer(int fd, char *filename, u_int32_t key, int is_tcp)
 {
   int umap_fd, size_map_fd, prog_fd, local_fd = fd;
   u_int32_t balancer_count = 0;

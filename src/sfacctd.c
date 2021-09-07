@@ -38,7 +38,7 @@
 #include "isis/isis.h"
 #include "bmp/bmp.h"
 #if defined WITH_EBPF
-#include "ebpf/ebpf_udp.h"
+#include "ebpf/ebpf_rp_balancer.h"
 #endif
 #ifdef WITH_RABBITMQ
 #include "amqp_common.h"
@@ -715,7 +715,7 @@ int main(int argc,char **argv, char **envp)
 
 #if defined WITH_EBPF
     if (config.nfacctd_ebpf_prog) {
-      attach_ebpf_udp(config.sock, config.nfacctd_ebpf_prog, config.cluster_id);
+      attach_ebpf_reuseport_balancer(config.sock, config.nfacctd_ebpf_prog, config.cluster_id, FALSE);
     }
 #endif
 #endif

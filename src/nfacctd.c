@@ -39,7 +39,7 @@
 #include "bmp/bmp.h"
 #include "telemetry/telemetry.h"
 #if defined WITH_EBPF
-#include "ebpf/ebpf_udp.h"
+#include "ebpf/ebpf_rp_balancer.h"
 #endif
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
@@ -844,7 +844,7 @@ int main(int argc,char **argv, char **envp)
 
 #if defined WITH_EBPF
     if (config.nfacctd_ebpf_prog) {
-      attach_ebpf_udp(config.sock, config.nfacctd_ebpf_prog, config.cluster_id);
+      attach_ebpf_reuseport_balancer(config.sock, config.nfacctd_ebpf_prog, config.cluster_id, FALSE);
     }
 #endif
 #endif
@@ -859,7 +859,7 @@ int main(int argc,char **argv, char **envp)
 
 #if defined WITH_EBPF
     if (config.nfacctd_ebpf_prog) {
-      attach_ebpf_udp(config.nfacctd_templates_sock, config.nfacctd_ebpf_prog, config.cluster_id);
+      attach_ebpf_reuseport_balancer(config.nfacctd_templates_sock, config.nfacctd_ebpf_prog, config.cluster_id, FALSE);
     }
 #endif
 #endif
