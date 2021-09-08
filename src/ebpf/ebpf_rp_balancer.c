@@ -52,9 +52,10 @@ static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va
 
 int attach_ebpf_reuseport_balancer(int fd, char *filename, u_int32_t key, int is_tcp)
 {
-  int umap_fd, size_map_fd, prog_fd, local_fd = fd;
+  int map_fd, size_map_fd, prog_fd, local_fd = fd;
   u_int32_t balancer_count = 0;
   long err = 0;
+  struct bpf_map *map;
 
   assert(fd >= 0);
 
@@ -71,8 +72,13 @@ int attach_ebpf_reuseport_balancer(int fd, char *filename, u_int32_t key, int is
     return -1;
   }
 
-  struct bpf_map *udpmap = bpf_object__find_map_by_name(obj, "udp_balancing_targets");
-  assert(udpmap);
+  if (!is_tcp) {
+    map = bpf_object__find_map_by_name(obj, "udp_balancing_targets");
+  }
+  else {
+    map = bpf_object__find_map_by_name(obj, "tcp_balancing_targets");
+  }
+  assert(map);
 
   // Load BPF program to the kernel
   if (bpf_object__load(obj) != 0) {
@@ -89,15 +95,15 @@ int attach_ebpf_reuseport_balancer(int fd, char *filename, u_int32_t key, int is
   prog_fd = bpf_program__fd(prog);
   assert(prog_fd);
 
-  umap_fd = bpf_map__fd(udpmap);
-  assert(umap_fd);
+  map_fd = bpf_map__fd(map);
+  assert(map_fd);
 
   if (setsockopt(fd, SOL_SOCKET, SO_ATTACH_REUSEPORT_EBPF, &prog_fd, sizeof(prog_fd)) != 0) {
     Log(LOG_ERR, "ERROR ( %s ): Could not attach BPF prog\n", filename);
     return -1;
   }
 
-  if (bpf_map_update_elem(umap_fd, &key, &local_fd, BPF_ANY) != 0) {
+  if (bpf_map_update_elem(map_fd, &key, &local_fd, BPF_ANY) != 0) {
     Log(LOG_ERR, "ERROR ( %s ): Could not update reuseport array\n", filename);
     return -1;
   }
