@@ -419,6 +419,7 @@ struct configuration {
   char *bmp_daemon_ip;
   int bmp_daemon_ipv6_only;
   int bmp_daemon_port;
+  char *bmp_daemon_rp_ebpf_prog;
   int bmp_daemon_pipe_size;
   int bmp_daemon_max_peers;
   char *bmp_daemon_allow_file;

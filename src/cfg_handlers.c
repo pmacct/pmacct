@@ -4218,6 +4218,17 @@ int cfg_key_bmp_daemon_port(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_bmp_daemon_rp_ebpf_prog(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.bmp_daemon_rp_ebpf_prog = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_daemon_rp_ebpf_prog'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_bmp_daemon_pipe_size(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

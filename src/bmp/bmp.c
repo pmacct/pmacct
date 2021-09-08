@@ -27,6 +27,9 @@
 #include "thread_pool.h"
 #include "ip_flow.h"
 #include "ip_frag.h"
+#if defined WITH_EBPF
+#include "ebpf/ebpf_rp_balancer.h"
+#endif
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
@@ -249,6 +252,10 @@ int skinny_bmp_daemon()
 #if (defined HAVE_SO_REUSEPORT)
     rc = setsockopt(config.bmp_sock, SOL_SOCKET, SO_REUSEPORT, (char *)&yes, (socklen_t) sizeof(yes));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEPORT (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
+
+    if (config.bmp_daemon_rp_ebpf_prog) {
+      attach_ebpf_reuseport_balancer(config.bmp_sock, config.bmp_daemon_rp_ebpf_prog, config.cluster_id, TRUE);
+    }
 #endif
 
     rc = setsockopt(config.bmp_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, (socklen_t) sizeof(yes));
