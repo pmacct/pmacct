@@ -196,7 +196,7 @@ struct configuration {
   int nfacctd_port;
   char *nfacctd_ip;
   int nfacctd_ipv6_only;
-  char *nfacctd_ebpf_prog;
+  char *nfacctd_rp_ebpf_prog;
   char *nfacctd_kafka_broker_host;
   int nfacctd_kafka_broker_port;
   char *nfacctd_kafka_topic;
@@ -252,7 +252,7 @@ struct configuration {
   int telemetry_udp_notif_port;
   char *telemetry_udp_notif_ip;
   int telemetry_udp_notif_nmsgs;
-  char *telemetry_udp_notif_ebpf_prog;
+  char *telemetry_udp_notif_rp_ebpf_prog;
   int telemetry_ipv6_only;
   char *telemetry_zmq_address;
   char *telemetry_kafka_broker_host;

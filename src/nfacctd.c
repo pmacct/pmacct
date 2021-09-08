@@ -843,8 +843,8 @@ int main(int argc,char **argv, char **envp)
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEPORT.\n", config.name);
 
 #if defined WITH_EBPF
-    if (config.nfacctd_ebpf_prog) {
-      attach_ebpf_reuseport_balancer(config.sock, config.nfacctd_ebpf_prog, config.cluster_id, FALSE);
+    if (config.nfacctd_rp_ebpf_prog) {
+      attach_ebpf_reuseport_balancer(config.sock, config.nfacctd_rp_ebpf_prog, config.cluster_id, FALSE);
     }
 #endif
 #endif
@@ -858,8 +858,8 @@ int main(int argc,char **argv, char **envp)
       if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEPORT.\n", config.name);
 
 #if defined WITH_EBPF
-    if (config.nfacctd_ebpf_prog) {
-      attach_ebpf_reuseport_balancer(config.nfacctd_templates_sock, config.nfacctd_ebpf_prog, config.cluster_id, FALSE);
+    if (config.nfacctd_rp_ebpf_prog) {
+      attach_ebpf_reuseport_balancer(config.nfacctd_templates_sock, config.nfacctd_rp_ebpf_prog, config.cluster_id, FALSE);
     }
 #endif
 #endif
