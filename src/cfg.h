@@ -344,6 +344,7 @@ struct configuration {
   int bgp_daemon_ipv6_only;
   as_t bgp_daemon_as;
   int bgp_daemon_port;
+  char *bgp_daemon_rp_ebpf_prog;
   int bgp_daemon_pipe_size;
   int bgp_daemon_ipprec;
   char *bgp_daemon_allow_file;

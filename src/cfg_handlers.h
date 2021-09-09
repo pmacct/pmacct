@@ -350,6 +350,7 @@ extern int cfg_key_bgp_daemon_ipv6_only(char *, char *, char *);
 extern int cfg_key_bgp_daemon_id(char *, char *, char *);
 extern int cfg_key_bgp_daemon_as(char *, char *, char *);
 extern int cfg_key_bgp_daemon_port(char *, char *, char *);
+extern int cfg_key_bgp_daemon_rp_ebpf_prog(char *, char *, char *);
 extern int cfg_key_bgp_daemon_ip_precedence(char *, char *, char *);
 extern int cfg_key_bgp_daemon_allow_file(char *, char *, char *);
 extern int cfg_key_bgp_daemon_aspath_radius(char *, char *, char *);

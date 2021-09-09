@@ -26,6 +26,9 @@
 #include "rpki/rpki.h"
 #include "bgp_blackhole.h"
 #include "thread_pool.h"
+#if defined WITH_EBPF
+#include "ebpf/ebpf_rp_balancer.h"
+#endif
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
@@ -327,6 +330,12 @@ void skinny_bgp_daemon_online()
 #if (defined HAVE_SO_REUSEPORT)
   rc = setsockopt(config.bgp_sock, SOL_SOCKET, SO_REUSEPORT, (char *)&yes, (socklen_t) sizeof(yes));
   if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEPORT (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
+
+#if defined WITH_EBPF
+    if (config.bgp_daemon_rp_ebpf_prog) {
+      attach_ebpf_reuseport_balancer(config.bgp_sock, config.bgp_daemon_rp_ebpf_prog, config.cluster_id, TRUE);
+    }
+#endif
 #endif
 
   rc = setsockopt(config.bgp_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, (socklen_t) sizeof(yes));
