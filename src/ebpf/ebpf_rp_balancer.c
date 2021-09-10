@@ -52,8 +52,7 @@ static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va
 
 int attach_ebpf_reuseport_balancer(int fd, char *filename, u_int32_t key, int is_tcp)
 {
-  int map_fd, size_map_fd, prog_fd, local_fd = fd;
-  u_int32_t balancer_count = 0;
+  int map_fd, prog_fd, local_fd = fd, ret;
   long err = 0;
   struct bpf_map *map;
 
@@ -103,31 +102,10 @@ int attach_ebpf_reuseport_balancer(int fd, char *filename, u_int32_t key, int is
     return -1;
   }
 
-  if (bpf_map_update_elem(map_fd, &key, &local_fd, BPF_ANY) != 0) {
-    Log(LOG_ERR, "ERROR ( %s ): Could not update reuseport array\n", filename);
+  ret = bpf_map_update_elem(map_fd, &key, &local_fd, BPF_ANY);
+  if (ret) {
+    Log(LOG_ERR, "ERROR ( %s ): Could not update reuseport array (map=%d key=%d fd=%d ret=%d\n", filename, map_fd, key, local_fd, ret);
     return -1;
-  }
-
-  /*
-     Determine intended number of hash buckets
-     Assumption: static during lifetime of this process
-  */
-  struct bpf_map *size_map = bpf_object__find_map_by_name(obj, "size");
-  assert(size_map);
-  size_map_fd = bpf_map__fd(size_map);
-  assert(size_map_fd);
-
-  bpf_map_lookup_elem(size_map_fd, &key, &balancer_count);
-  if (balancer_count == 0) {
-    /* BPF program hasn't run yet to initalize this: exit */
-    Log(LOG_ERR, "ERROR ( %s ): BPF program hasn't run yet to initalize map\n", filename);
-    return -1;
-  }
-  else {
-    if (bpf_map_update_elem(size_map_fd, &index, &balancer_count, BPF_ANY) != 0) {
-      Log(LOG_ERR, "ERROR ( %s ): Could not update balancer count\n", filename);
-      return -1;
-    }
   }
 
   return local_fd;
