@@ -52,7 +52,8 @@ static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va
 
 int attach_ebpf_reuseport_balancer(int fd, char *filename, u_int32_t key, int is_tcp)
 {
-  int map_fd, prog_fd, local_fd = fd, ret;
+  int map_fd, prog_fd, ret;
+  int64_t local_fd = fd;
   long err = 0;
   struct bpf_map *map;
 
@@ -104,7 +105,7 @@ int attach_ebpf_reuseport_balancer(int fd, char *filename, u_int32_t key, int is
 
   ret = bpf_map_update_elem(map_fd, &key, &local_fd, BPF_ANY);
   if (ret) {
-    Log(LOG_ERR, "ERROR ( %s ): Could not update reuseport array (map=%d key=%d fd=%d ret=%d\n", filename, map_fd, key, local_fd, ret);
+    Log(LOG_ERR, "ERROR ( %s ): Could not update reuseport array (map=%d key=%d fd=%ld errno=%d\n", filename, map_fd, key, local_fd, errno);
     return -1;
   }
 
