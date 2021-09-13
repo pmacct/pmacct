@@ -841,12 +841,6 @@ int main(int argc,char **argv, char **envp)
 #if (defined HAVE_SO_REUSEPORT)
     rc = setsockopt(config.sock, SOL_SOCKET, SO_REUSEPORT, (char *) &yes, (socklen_t) sizeof(yes));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEPORT.\n", config.name);
-
-#if defined WITH_EBPF
-    if (config.nfacctd_rp_ebpf_prog) {
-      attach_ebpf_reuseport_balancer(config.sock, config.nfacctd_rp_ebpf_prog, config.cluster_id, FALSE);
-    }
-#endif
 #endif
 
     rc = setsockopt(config.sock, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, (socklen_t) sizeof(yes));
@@ -856,12 +850,6 @@ int main(int argc,char **argv, char **envp)
 #if (defined HAVE_SO_REUSEPORT)
       rc = setsockopt(config.nfacctd_templates_sock, SOL_SOCKET, SO_REUSEPORT, (char *) &yes, (socklen_t) sizeof(yes));
       if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEPORT.\n", config.name);
-
-#if defined WITH_EBPF
-    if (config.nfacctd_rp_ebpf_prog) {
-      attach_ebpf_reuseport_balancer(config.nfacctd_templates_sock, config.nfacctd_rp_ebpf_prog, config.cluster_id, FALSE);
-    }
-#endif
 #endif
 
       rc = setsockopt(config.nfacctd_templates_sock, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, (socklen_t) sizeof(yes));
@@ -1091,12 +1079,24 @@ int main(int argc,char **argv, char **envp)
       exit_gracefully(1);
     }
 
+#if defined WITH_EBPF
+    if (config.nfacctd_rp_ebpf_prog) {
+      attach_ebpf_reuseport_balancer(config.sock, config.nfacctd_rp_ebpf_prog, config.cluster_id, FALSE);
+    }
+#endif
+
     if (config.nfacctd_templates_port) {
       rc = bind(config.nfacctd_templates_sock, (struct sockaddr *) &server_templates, slen);
       if (rc < 0) {
 	Log(LOG_ERR, "ERROR ( %s/core ): bind() to ip=%s port=%d/udp failed (errno: %d).\n", config.name, config.nfacctd_ip, config.nfacctd_templates_port, errno);
 	exit_gracefully(1);
       }
+
+#if defined WITH_EBPF
+      if (config.nfacctd_rp_ebpf_prog) {
+        attach_ebpf_reuseport_balancer(config.nfacctd_templates_sock, config.nfacctd_rp_ebpf_prog, config.cluster_id, FALSE);
+      }
+#endif
     }
 
 #ifdef WITH_GNUTLS
