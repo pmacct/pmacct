@@ -330,12 +330,6 @@ void skinny_bgp_daemon_online()
 #if (defined HAVE_SO_REUSEPORT)
   rc = setsockopt(config.bgp_sock, SOL_SOCKET, SO_REUSEPORT, (char *)&yes, (socklen_t) sizeof(yes));
   if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEPORT (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
-
-#if defined WITH_EBPF
-    if (config.bgp_daemon_rp_ebpf_prog) {
-      attach_ebpf_reuseport_balancer(config.bgp_sock, config.bgp_daemon_rp_ebpf_prog, config.cluster_id, TRUE);
-    }
-#endif
 #endif
 
   rc = setsockopt(config.bgp_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, (socklen_t) sizeof(yes));
@@ -376,6 +370,12 @@ void skinny_bgp_daemon_online()
     Log(LOG_ERR, "ERROR ( %s/%s ): listen() failed (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
     exit_gracefully(1);
   }
+
+#if defined WITH_EBPF
+    if (config.bgp_daemon_rp_ebpf_prog) {
+      attach_ebpf_reuseport_balancer(config.bgp_sock, config.bgp_daemon_rp_ebpf_prog, config.cluster_id, TRUE);
+    }
+#endif
 
   /* Preparing for syncronous I/O multiplexing */
   select_fd = 0;
