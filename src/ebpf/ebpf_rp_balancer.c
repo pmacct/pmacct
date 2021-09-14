@@ -108,6 +108,9 @@ int attach_ebpf_reuseport_balancer(int fd, char *filename, u_int32_t key, int is
     Log(LOG_ERR, "ERROR ( %s ): Could not update reuseport array (map=%d key=%d fd=%ld errno=%d\n", filename, map_fd, key, local_fd, errno);
     return -1;
   }
+  else {
+    Log(LOG_DEBUG, "DEBUG ( %s ): Updated reuseport array (map=%d key=%d fd=%ld\n", filename, map_fd, key, local_fd);
+  }
 
   return local_fd;
 }
