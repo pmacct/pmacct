@@ -526,6 +526,12 @@ int ip6_handler(register struct packet_ptrs *pptrs)
   return ret;
 }
 
+int unknown_etype_handler(register struct packet_ptrs *pptrs)
+{
+  /* NO-OP - just return TRUE so packet is counted */
+  return TRUE;
+}
+
 int PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
 {
   int x;

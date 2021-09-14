@@ -45,6 +45,7 @@ extern int cfg_key_aggregate(char *, char *, char *);
 extern int cfg_key_aggregate_primitives(char *, char *, char *);
 extern int cfg_key_snaplen(char *, char *, char *);
 extern int cfg_key_aggregate_filter(char *, char *, char *);
+extern int cfg_key_aggregate_unknown_etype(char *, char *, char *);
 extern int cfg_key_dtls_path(char *, char *, char *);
 extern int cfg_key_pcap_filter(char *, char *, char *);
 extern int cfg_key_pcap_protocol(char *, char *, char *);
