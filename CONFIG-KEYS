@@ -1743,6 +1743,13 @@ DESC:		When listening on all interfaces (default setting for nfacctd_ip and sfac
 		knob to true disables the IPv4 (IPv6 IPv4-mapped) part.
 DEFAULT:	false
 
+KEY:		[ nfacctd_rp_ebpf_prog | sfacctd_rp_ebpf_prog ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
+DESC:		If SO_REUSEPORT is supported by the Operating System (read more about this feature at the
+		config key [ns]facctd_port) and eBPF support is configured when compiling (--enable-ebpf),
+		this allows to load a custom load-balancer. An example of such eBPF program is available
+		here: https://github.com/eduarrrd/reuseport 
+DEFAULT:	none
+
 KEY:		[ nfacctd_kafka_broker_host | sfacctd_kafka_broker_host ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
 DESC:		Defines one or multiple, comma-separated, Kafka brokers to receive NetFlow/IPFIX and sFlow
 		from. See kafka_broker_host for more info.
@@ -2378,6 +2385,13 @@ DESC:		Makes the BGP/BMP daemon listen to a port different from the standard por
 		end of this document, reference (1) to a URL to a presentation of the SO_REUSEPORT feature.
 		To enable SO_REUSEPORT on a Linux system supporting it 'sysctl net.core.allow_reuseport=1'.
 DEFAULT:	bgp_daemon_port: 179; bmp_daemon_port: 1790
+
+KEY:		[ bgp_daemon_rp_ebpf_prog | bmp_daemon_rp_ebpf_prog ] [GLOBAL]
+DESC:		If SO_REUSEPORT is supported by the Operating System (read more about this feature at the
+		config key b[mg]p_daemon_port) and eBPF support is configured when compiling (--enable-ebpf),
+		this allows to load a custom load-balancer. An example of such eBPF program is available
+		here: https://github.com/eduarrrd/reuseport 
+DEFAULT:	none
 
 KEY:		[ bgp_daemon_ipprec | bmp_daemon_ipprec ] [GLOBAL]
 DESC:		Marks self-originated BGP/BMP messages with the supplied IP precedence value.
@@ -3051,11 +3065,18 @@ DEFAULT:        false
 KEY:		telemetry_daemon_port_tcp [GLOBAL]
 DESC:		Makes the Streaming Telemetry daemon, pmtelemetryd, or the Streaming Telemetry thread
 		listen on the specified TCP port. (see telemetry/README.telemetry for gRPC support).
+		If SO_REUSEPORT is supported by the Operating System, you can read more about it at
+		the config key telemetry_daemon_port_udp.
 DEFAULT:	none
 
 KEY:            telemetry_daemon_port_udp [GLOBAL]
 DESC:           Makes the Streaming Telemetry daemon, pmtelemetryd, or the Streaming Telemetry thread
-		listen on the specified UDP port. 
+		listen on the specified UDP port. On systems where SO_REUSEPORT feature is available:
+		it allows multiple daemons to bind the same local address and port in order to load-
+		balance processing of incoming packets. This is best combined with a list of allowed
+		IP addresses, ie. bgp_daemon_allow_file, to explicitely wire peers to collectors. At the
+		end of this document, reference (1) to a URL to a presentation of the SO_REUSEPORT feature.
+		To enable SO_REUSEPORT on a Linux system supporting it 'sysctl net.core.allow_reuseport=1'. 
 DEFAULT:        none
 
 KEY:		telemetry_daemon_ip [GLOBAL]
@@ -3069,6 +3090,13 @@ DESC:           When listening on all interfaces (default setting for nfacctd_ip
 		IPv6 is enabled, it is possible to connect with both IPv4 (IPv6 IPv4-mapped) and IPv6.
 		Setting this knob to true disables the IPv4 (IPv6 IPv4-mapped) part.
 DEFAULT:	false
+
+KEY:		[ telemetry_daemon_rp_ebpf_prog ] [GLOBAL]
+DESC:		If SO_REUSEPORT is supported by the Operating System (read more about this feature at the
+		config key telemetry_daemon_port_udp) and eBPF support is configured when compiling
+		(--enable-ebpf), this allows to load a custom load-balancer. An example of such eBPF
+		program is available here: https://github.com/eduarrrd/reuseport 
+DEFAULT:	none
 
 KEY:		telemetry_daemon_decoder [GLOBAL]
 VALUES:		[ json | gpb | cisco_v0 | cisco_v1 ]
