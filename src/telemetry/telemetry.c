@@ -449,7 +449,7 @@ int telemetry_daemon(void *t_data_void)
     sockfd = create_socket_unyte_udp_notif(t_data, config.telemetry_udp_notif_ip, udp_notif_port);
 #if defined WITH_EBPF && defined HAVE_SO_REUSEPORT
     if (config.telemetry_udp_notif_rp_ebpf_prog) {
-      attach_ebpf_reuseport_balancer(sockfd, config.telemetry_udp_notif_rp_ebpf_prog, config.cluster_id, FALSE);
+      attach_ebpf_reuseport_balancer(sockfd, config.telemetry_udp_notif_rp_ebpf_prog, config.cluster_name, config.cluster_id, FALSE);
     }
 #endif
     options.socket_fd = sockfd;

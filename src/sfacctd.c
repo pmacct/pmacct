@@ -908,7 +908,7 @@ int main(int argc,char **argv, char **envp)
 
 #if defined WITH_EBPF
     if (config.nfacctd_rp_ebpf_prog) {
-      attach_ebpf_reuseport_balancer(config.sock, config.nfacctd_rp_ebpf_prog, config.cluster_id, FALSE);
+      attach_ebpf_reuseport_balancer(config.sock, config.nfacctd_rp_ebpf_prog, config.cluster_name, config.cluster_id, FALSE);
     }
 #endif
   }

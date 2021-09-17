@@ -50,8 +50,9 @@ static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va
   return level <= LIBBPF_DEBUG ? vfprintf(stderr, format, args) : 0;
 }
 
-int attach_ebpf_reuseport_balancer(int fd, char *filename, u_int32_t key, int is_tcp)
+int attach_ebpf_reuseport_balancer(int fd, char *filename, char *cluster_name, u_int32_t key, int is_tcp)
 {
+  char default_cluster_name[] = "default", path[256];
   int map_fd, prog_fd, ret;
   int64_t local_fd = fd;
   long err = 0;
@@ -62,8 +63,14 @@ int attach_ebpf_reuseport_balancer(int fd, char *filename, u_int32_t key, int is
   // set log
   libbpf_set_print(libbpf_print_fn);
 
-  struct bpf_object_open_opts opts = {.sz = sizeof(struct bpf_object_open_opts),
-                                      .pin_root_path = "/sys/fs/bpf/reuseport"};
+  if (cluster_name) {
+    snprintf(path, sizeof(path), "/pmacct/%s", cluster_name);
+  }
+  else {
+    snprintf(path, sizeof(path), "/pmacct/%s", default_cluster_name);
+  }
+
+  struct bpf_object_open_opts opts = {.sz = sizeof(struct bpf_object_open_opts), .pin_root_path = path};
   struct bpf_object *obj = bpf_object__open_file(filename, &opts);
 
   err = libbpf_get_error(obj);
