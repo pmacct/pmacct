@@ -50,7 +50,7 @@ static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va
   return level <= LIBBPF_DEBUG ? vfprintf(stderr, format, args) : 0;
 }
 
-int attach_ebpf_reuseport_balancer(int fd, char *filename, char *cluster_name, u_int32_t key, int is_tcp)
+int attach_ebpf_reuseport_balancer(int fd, char *filename, char *cluster_name, char *aux, u_int32_t key, int is_tcp)
 {
   char default_cluster_name[] = "default", path[256];
   int map_fd, prog_fd, ret;
@@ -58,16 +58,29 @@ int attach_ebpf_reuseport_balancer(int fd, char *filename, char *cluster_name, u
   long err = 0;
   struct bpf_map *map;
 
-  assert(fd >= 0);
+  if (!filename) {
+    Log(LOG_ERR, "ERROR: attach_ebpf_reuseport_balancer(): Invalid 'filename' supplied.\n");
+    return -1;
+  }
+
+  if (fd < 0) {
+    Log(LOG_ERR, "ERROR ( %s ): attach_ebpf_reuseport_balancer(): Invalid 'fd' supplied.\n", filename);
+    return -1;
+  }
+
+  if (!filename) {
+    Log(LOG_ERR, "ERROR ( %s ): attach_ebpf_reuseport_balancer(): No 'aux' string supplied.\n", filename);
+    return -1;
+  }
 
   // set log
   libbpf_set_print(libbpf_print_fn);
 
   if (cluster_name) {
-    snprintf(path, sizeof(path), "/pmacct/%s", cluster_name);
+    snprintf(path, sizeof(path), "/pmacct/%s/%s", cluster_name, aux);
   }
   else {
-    snprintf(path, sizeof(path), "/pmacct/%s", default_cluster_name);
+    snprintf(path, sizeof(path), "/pmacct/%s/%s", default_cluster_name, aux);
   }
 
   struct bpf_object_open_opts opts = {.sz = sizeof(struct bpf_object_open_opts), .pin_root_path = path};

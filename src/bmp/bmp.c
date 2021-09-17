@@ -305,7 +305,7 @@ int skinny_bmp_daemon()
 
 #if defined WITH_EBPF
     if (config.bmp_daemon_rp_ebpf_prog) {
-      attach_ebpf_reuseport_balancer(config.bmp_sock, config.bmp_daemon_rp_ebpf_prog, config.cluster_name, config.cluster_id, TRUE);
+      attach_ebpf_reuseport_balancer(config.bmp_sock, config.bmp_daemon_rp_ebpf_prog, config.cluster_name, "bmp", config.cluster_id, TRUE);
     }
 #endif
 

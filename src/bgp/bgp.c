@@ -373,7 +373,7 @@ void skinny_bgp_daemon_online()
 
 #if defined WITH_EBPF
     if (config.bgp_daemon_rp_ebpf_prog) {
-      attach_ebpf_reuseport_balancer(config.bgp_sock, config.bgp_daemon_rp_ebpf_prog, config.cluster_name, config.cluster_id, TRUE);
+      attach_ebpf_reuseport_balancer(config.bgp_sock, config.bgp_daemon_rp_ebpf_prog, config.cluster_name, "bgp", config.cluster_id, TRUE);
     }
 #endif
 
