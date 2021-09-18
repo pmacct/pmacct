@@ -1746,8 +1746,9 @@ DEFAULT:	false
 KEY:		[ nfacctd_rp_ebpf_prog | sfacctd_rp_ebpf_prog ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
 DESC:		If SO_REUSEPORT is supported by the Operating System (read more about this feature at the
 		config key [ns]facctd_port) and eBPF support is configured when compiling (--enable-ebpf),
-		this allows to load a custom load-balancer. An example of such eBPF program is available
-		here: https://github.com/eduarrrd/reuseport 
+		this allows to load a custom load-balancer. To load-share, daemons have to be part of the
+		same cluster_name and each be configured with a distinct cluster_id. An example of such
+		eBPF program is available here: https://github.com/eduarrrd/reuseport 
 DEFAULT:	none
 
 KEY:		[ nfacctd_kafka_broker_host | sfacctd_kafka_broker_host ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
@@ -2389,8 +2390,9 @@ DEFAULT:	bgp_daemon_port: 179; bmp_daemon_port: 1790
 KEY:		[ bgp_daemon_rp_ebpf_prog | bmp_daemon_rp_ebpf_prog ] [GLOBAL]
 DESC:		If SO_REUSEPORT is supported by the Operating System (read more about this feature at the
 		config key b[mg]p_daemon_port) and eBPF support is configured when compiling (--enable-ebpf),
-		this allows to load a custom load-balancer. An example of such eBPF program is available
-		here: https://github.com/eduarrrd/reuseport 
+		this allows to load a custom load-balancer. To load-share, daemons have to be part of the
+		same cluster_name and each be configured with a distinct cluster_id. An example of such
+		eBPF program is available here: https://github.com/eduarrrd/reuseport
 DEFAULT:	none
 
 KEY:		[ bgp_daemon_ipprec | bmp_daemon_ipprec ] [GLOBAL]
@@ -3094,8 +3096,10 @@ DEFAULT:	false
 KEY:		[ telemetry_daemon_rp_ebpf_prog ] [GLOBAL]
 DESC:		If SO_REUSEPORT is supported by the Operating System (read more about this feature at the
 		config key telemetry_daemon_port_udp) and eBPF support is configured when compiling
-		(--enable-ebpf), this allows to load a custom load-balancer. An example of such eBPF
-		program is available here: https://github.com/eduarrrd/reuseport 
+		(--enable-ebpf), this allows to load a custom load-balancer. To load-share, daemons
+		have to be part of the same cluster_name and each be configured with a distinct
+		cluster_id. An example of such eBPF program is available here:
+		https://github.com/eduarrrd/reuseport
 DEFAULT:	none
 
 KEY:		telemetry_daemon_decoder [GLOBAL]
@@ -3251,16 +3255,17 @@ DESC:		Defines the Redis database to select. The database is a positive integer 
 DEFAULT:	0
 
 KEY:		cluster_name
-DESC:		Defines the name of the cluster; it will become the prefix of every key stored in
-		the Redis database. It enables forming a cluster with the other daemons pointed to
-		the same <redis_host, cluster_name>. Cluster name is expected to be a string, ie.
-		"test", "pmacct", etc. 
+DESC:		Defines the name of the cluster and is expected to be a string, ie. "test", "pmacct",
+		etc.; this is relevant in two contexts: 1) it enables forming a cluster with other
+		daemons pointed to the same <redis_host, cluster_name>; 2) it makes daemons binding
+		to the same TCP/UDP port to be part of the same load-sharing SO_REUSEPORT group (see
+		*_rp_ebpf_prog config keys for more info).
 DEFAULT:	none
 
 KEY:		cluster_id
-DESC:		Defines the ID of the node inside the <redis_host, cluster_name> cluster. Each daemon
-		must be assigned a unique ID and responsibility for respecting this property is left
-		to the user. Clsuter ID is expected to be a positive integer.
+DESC:		Defines the ID of the node inside the <redis_host, cluster_name> cluster and is
+		expected to be a positive integer. Each daemon must be assigned a unique ID and
+		responsibility for respecting this property is left to the user.
 DEFAULT:	0
 
 KEY:		tmp_asa_bi_flow
