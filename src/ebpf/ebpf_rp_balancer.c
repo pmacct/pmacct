@@ -45,6 +45,8 @@
 #endif
 
 /* Functions */
+extern int mkdir_multilevel(const char *, int, uid_t, gid_t);
+
 #ifdef WITH_EBPF
 static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va_list args) {
   return level <= LIBBPF_DEBUG ? vfprintf(stderr, format, args) : 0;
@@ -57,6 +59,8 @@ int attach_ebpf_reuseport_balancer(int fd, char *filename, char *cluster_name, c
   int64_t local_fd = fd;
   long err = 0;
   struct bpf_map *map;
+  uid_t owner = -1;
+  gid_t group = -1;
 
   if (!filename) {
     Log(LOG_ERR, "ERROR: attach_ebpf_reuseport_balancer(): Invalid 'filename' supplied.\n");
@@ -81,6 +85,12 @@ int attach_ebpf_reuseport_balancer(int fd, char *filename, char *cluster_name, c
   }
   else {
     snprintf(path, sizeof(path), "/sys/fs/bpf/pmacct/%s/%s", default_cluster_name, aux);
+  }
+
+  ret = mkdir_multilevel(path, 0, owner, group);
+  if (ret) {
+    Log(LOG_ERR, "ERROR ( %s ): attach_ebpf_reuseport_balancer(): mkdir_multilevel() failed.\n", filename);
+    return -1;
   }
 
   struct bpf_object_open_opts opts = {.sz = sizeof(struct bpf_object_open_opts), .pin_root_path = path};
