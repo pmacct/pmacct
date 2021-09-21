@@ -77,10 +77,10 @@ int attach_ebpf_reuseport_balancer(int fd, char *filename, char *cluster_name, c
   libbpf_set_print(libbpf_print_fn);
 
   if (cluster_name) {
-    snprintf(path, sizeof(path), "/pmacct/%s/%s", cluster_name, aux);
+    snprintf(path, sizeof(path), "/sys/fs/bpf/pmacct/%s/%s", cluster_name, aux);
   }
   else {
-    snprintf(path, sizeof(path), "/pmacct/%s/%s", default_cluster_name, aux);
+    snprintf(path, sizeof(path), "/sys/fs/bpf/pmacct/%s/%s", default_cluster_name, aux);
   }
 
   struct bpf_object_open_opts opts = {.sz = sizeof(struct bpf_object_open_opts), .pin_root_path = path};
