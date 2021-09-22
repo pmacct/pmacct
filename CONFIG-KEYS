@@ -1748,7 +1748,7 @@ DESC:		If SO_REUSEPORT is supported by the Operating System (read more about thi
 		config key [ns]facctd_port) and eBPF support is configured when compiling (--enable-ebpf),
 		this allows to load a custom load-balancer. To load-share, daemons have to be part of the
 		same cluster_name and each be configured with a distinct cluster_id. An example of such
-		eBPF program is available here: https://github.com/eduarrrd/reuseport 
+		eBPF program is available here: https://github.com/insa-unyte/ebpf-loadbalancer
 DEFAULT:	none
 
 KEY:		[ nfacctd_kafka_broker_host | sfacctd_kafka_broker_host ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
@@ -2392,7 +2392,7 @@ DESC:		If SO_REUSEPORT is supported by the Operating System (read more about thi
 		config key b[mg]p_daemon_port) and eBPF support is configured when compiling (--enable-ebpf),
 		this allows to load a custom load-balancer. To load-share, daemons have to be part of the
 		same cluster_name and each be configured with a distinct cluster_id. An example of such
-		eBPF program is available here: https://github.com/eduarrrd/reuseport
+		eBPF program is available here: https://github.com/insa-unyte/ebpf-loadbalancer
 DEFAULT:	none
 
 KEY:		[ bgp_daemon_ipprec | bmp_daemon_ipprec ] [GLOBAL]
@@ -3099,7 +3099,7 @@ DESC:		If SO_REUSEPORT is supported by the Operating System (read more about thi
 		(--enable-ebpf), this allows to load a custom load-balancer. To load-share, daemons
 		have to be part of the same cluster_name and each be configured with a distinct
 		cluster_id. An example of such eBPF program is available here:
-		https://github.com/eduarrrd/reuseport
+		https://github.com/insa-unyte/ebpf-loadbalancer
 DEFAULT:	none
 
 KEY:		telemetry_daemon_decoder [GLOBAL]
