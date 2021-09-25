@@ -55,7 +55,8 @@ static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va
 int attach_ebpf_reuseport_balancer(int fd, char *filename, char *cluster_name, char *aux, u_int32_t key, int is_tcp)
 {
   char default_cluster_name[] = "default", path[256];
-  int map_fd, prog_fd, ret;
+  u_int32_t nonce_key = 0, nonce_value = 12345;
+  int map_fd, prog_fd, nonce_fd, ret;
   int64_t local_fd = fd;
   long err = 0;
   struct bpf_map *map;
@@ -102,6 +103,20 @@ int attach_ebpf_reuseport_balancer(int fd, char *filename, char *cluster_name, c
     return -1;
   }
 
+  // nonce map
+  map = bpf_object__find_map_by_name(obj, "nonce");
+  assert(map);
+
+  nonce_fd = bpf_map__fd(map);
+  assert(nonce_fd);
+
+  ret = bpf_map_update_elem(nonce_fd, &nonce_key, &nonce_value, BPF_ANY);
+  if (ret) {
+    Log(LOG_ERR, "ERROR ( %s ): Could not update nonce array (map=%d key=%d fd=%d errno=%d\n", filename, nonce_fd, nonce_key, nonce_value, errno);
+    return -1;
+  }
+
+  // balancing targets map
   if (!is_tcp) {
     map = bpf_object__find_map_by_name(obj, "udp_balancing_targets");
   }
@@ -109,6 +124,9 @@ int attach_ebpf_reuseport_balancer(int fd, char *filename, char *cluster_name, c
     map = bpf_object__find_map_by_name(obj, "tcp_balancing_targets");
   }
   assert(map);
+
+  map_fd = bpf_map__fd(map);
+  assert(map_fd);
 
   // Load BPF program to the kernel
   if (bpf_object__load(obj) != 0) {
@@ -124,9 +142,6 @@ int attach_ebpf_reuseport_balancer(int fd, char *filename, char *cluster_name, c
 
   prog_fd = bpf_program__fd(prog);
   assert(prog_fd);
-
-  map_fd = bpf_map__fd(map);
-  assert(map_fd);
 
   if (setsockopt(fd, SOL_SOCKET, SO_ATTACH_REUSEPORT_EBPF, &prog_fd, sizeof(prog_fd)) != 0) {
     Log(LOG_ERR, "ERROR ( %s ): Could not attach BPF prog\n", filename);
