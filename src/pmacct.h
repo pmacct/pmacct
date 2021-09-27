@@ -386,7 +386,7 @@ void reload_maps(int);
 extern void pm_pcap_device_initialize(struct pm_pcap_devices *);
 extern void pm_pcap_device_copy_all(struct pm_pcap_devices *, struct pm_pcap_devices *);
 extern void pm_pcap_device_copy_entry(struct pm_pcap_devices *, struct pm_pcap_devices *, int);
-extern int pm_pcap_device_getindex_byifname(struct pm_pcap_devices *, char *);
+extern int pm_pcap_device_getindex_by_ifname_direction(struct pm_pcap_devices *, char *, int);
 extern pcap_t *pm_pcap_open(const char *, int, int, int, int, int, char *);
 extern void pm_pcap_add_filter(struct pm_pcap_device *);
 extern int pm_pcap_add_interface(struct pm_pcap_device *, char *, struct pm_pcap_interface *, int);

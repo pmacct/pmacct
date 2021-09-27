@@ -215,5 +215,7 @@ extern u_int32_t pm_pcap_interfaces_map_lookup_ifname(struct pm_pcap_interfaces 
 extern struct pm_pcap_interface *pm_pcap_interfaces_map_getentry_by_ifname(struct pm_pcap_interfaces *, char *);
 extern struct pm_pcap_interface *pm_pcap_interfaces_map_getentry_by_idx(struct pm_pcap_interfaces *, int);
 extern char *pm_pcap_interfaces_map_getnext_ifname(struct pm_pcap_interfaces *, int *);
+extern char *pm_pcap_interfaces_map_get_ifname(struct pm_pcap_interfaces *, int);
+extern int pm_pcap_interfaces_map_get_direction(struct pm_pcap_interfaces *, int);
 
 #endif //PRETAG_HANDLERS_H

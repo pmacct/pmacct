@@ -102,7 +102,7 @@ void pm_pcap_device_copy_entry(struct pm_pcap_devices *dst, struct pm_pcap_devic
   dst->num++;
 }
 
-int pm_pcap_device_getindex_byifname(struct pm_pcap_devices *map, char *ifname)
+int pm_pcap_device_getindex_by_ifname_direction(struct pm_pcap_devices *map, char *ifname, int direction)
 {
   int loc_idx;
    for (loc_idx = 0; loc_idx < map->num; loc_idx++) {
@@ -1292,9 +1292,10 @@ int main(int argc,char **argv, char **envp)
 	    }
 	  }
           else {
-	    int device_idx;
+	    int device_idx, direction;
 
-	    device_idx = pm_pcap_device_getindex_byifname(&bkp_devices, ifname);
+	    direction = pm_pcap_interfaces_map_get_direction(&pm_pcap_if_map, pm_pcap_if_idx);
+	    device_idx = pm_pcap_device_getindex_by_ifname_direction(&bkp_devices, ifname, direction);
 	    if (device_idx >= 0) {
 	      Log(LOG_INFO, "INFO ( %s/core ): [%s,%u] link type is: %d\n", config.name, bkp_devices.list[device_idx].str,
 		  bkp_devices.list[device_idx].id, bkp_devices.list[device_idx].link_type);
@@ -1308,9 +1309,10 @@ int main(int argc,char **argv, char **envp)
 	pm_pcap_if_idx = 0;
 	while ((ifname = pm_pcap_interfaces_map_getnext_ifname(&pm_bkp_pcap_if_map, &pm_pcap_if_idx))) {
 	  if (!pm_pcap_interfaces_map_lookup_ifname(&pm_pcap_if_map, ifname)) {
-            int device_idx;
-          
-	    device_idx = pm_pcap_device_getindex_byifname(&bkp_devices, ifname);
+            int device_idx, direction;
+
+	    direction = pm_pcap_interfaces_map_get_direction(&pm_pcap_if_map, pm_pcap_if_idx);
+	    device_idx = pm_pcap_device_getindex_by_ifname_direction(&bkp_devices, ifname, direction);
 	    if (device_idx >= 0) {
 	      Log(LOG_INFO, "INFO ( %s/core ): [%s,%u] removed.\n", config.name, bkp_devices.list[device_idx].str, bkp_devices.list[device_idx].id);
 	      FD_CLR(bkp_devices.list[device_idx].fd, &bkp_read_descs);

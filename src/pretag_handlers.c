@@ -4312,3 +4312,25 @@ char *pm_pcap_interfaces_map_getnext_ifname(struct pm_pcap_interfaces *map, int 
 
   return ifname;
 }
+
+char *pm_pcap_interfaces_map_get_ifname(struct pm_pcap_interfaces *map, int index)
+{
+  char *ifname = NULL;
+
+  if (index < map->num) {
+    ifname = map->list[index].ifname;
+  }
+
+  return ifname;
+}
+
+int pm_pcap_interfaces_map_get_direction(struct pm_pcap_interfaces *map, int index)
+{
+  int direction = 0;
+
+  if (index < map->num) {
+    direction = map->list[index].direction;
+  }
+
+  return direction;
+}
