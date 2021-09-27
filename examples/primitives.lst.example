@@ -85,13 +85,15 @@ name=ttl_pm	packet_ptr=l3:0x800+8   packet_ptr=l3:0x86dd+7	len=1   semantics=u_i
 !
 ! Defines a primitive called 'udp_len': base pointer is set to the UDP header
 ! (l4:17) plus 4 bytes offset, reads for 2 byte and will present it as unsigned
-! int.
+! int. Correct working of "l4" offset does require setting the configuration key
+! [pm|u]acctd_force_frag_handling to true.
 !
 name=udp_len	packet_ptr=l4:17+4      len=2   semantics=u_int
 !
 ! Defines a primitive called 'tcp_win': base pointer is set to the TCP header
 ! (l4:6) plus 14 bytes offset, reads for 2 byte and will present it as unsigned
-! int.
+! int. Correct working of "l4" offset does require setting the configuration key
+! [pm|u]acctd_force_frag_handling to true.
 !
 name=tcp_win	packet_ptr=l4:6+14      len=2   semantics=u_int
 !

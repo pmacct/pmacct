@@ -26,6 +26,9 @@
 #include "rpki/rpki.h"
 #include "bgp_blackhole.h"
 #include "thread_pool.h"
+#if defined WITH_EBPF
+#include "ebpf/ebpf_rp_balancer.h"
+#endif
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
@@ -367,6 +370,12 @@ void skinny_bgp_daemon_online()
     Log(LOG_ERR, "ERROR ( %s/%s ): listen() failed (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
     exit_gracefully(1);
   }
+
+#if defined WITH_EBPF
+    if (config.bgp_daemon_rp_ebpf_prog) {
+      attach_ebpf_reuseport_balancer(config.bgp_sock, config.bgp_daemon_rp_ebpf_prog, config.cluster_name, "bgp", config.cluster_id, TRUE);
+    }
+#endif
 
   /* Preparing for syncronous I/O multiplexing */
   select_fd = 0;

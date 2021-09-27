@@ -1281,6 +1281,7 @@ AM_CONDITIONAL([WITH_AVRO], [test x"$USING_AVRO" = x"yes"])
 AM_CONDITIONAL([WITH_SERDES], [test x"$USING_SERDES" = x"yes"])
 AM_CONDITIONAL([WITH_NDPI], [test x"$USING_NDPI" = x"yes"])
 AM_CONDITIONAL([WITH_UNYTE_UDP_NOTIF], [test x"$USING_UNYTE_UDP_NOTIF" = x"yes"])
+AM_CONDITIONAL([WITH_EBPF], [test x"$USING_EBPF" = x"yes"])
 AM_CONDITIONAL([WITH_NFLOG], [test x"$USING_NFLOG" = x"yes"])
 AM_CONDITIONAL([WITH_DLOPEN], [test x"$USING_DLOPEN" = x"yes"])
 AM_CONDITIONAL([USING_TRAFFIC_BINS], [test x"$USING_TRAFFIC_BINS" = x"yes"])
@@ -1300,4 +1301,4 @@ AC_OUTPUT([ Makefile \
 	    src/bmp/Makefile src/rpki/Makefile \
 	    src/telemetry/Makefile src/ndpi/Makefile \
 	    src/filters/Makefile examples/lg/Makefile \
-	    examples/custom/Makefile	])
+	    src/ebpf/Makefile examples/custom/Makefile ])

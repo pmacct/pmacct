@@ -3181,6 +3181,17 @@ int cfg_key_nfacctd_ipv6_only(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_nfacctd_rp_ebpf_prog(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_rp_ebpf_prog = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'nfacctd_rp_ebpf_prog'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_kafka_broker_host(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -3925,6 +3936,17 @@ int cfg_key_bgp_daemon_port(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_bgp_daemon_rp_ebpf_prog(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_rp_ebpf_prog = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_rp_ebpf_prog'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_bgp_daemon_table_dump_workers(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -4203,6 +4225,17 @@ int cfg_key_bmp_daemon_port(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) list->cfg.bmp_daemon_port = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_daemon_port'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_bmp_daemon_rp_ebpf_prog(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.bmp_daemon_rp_ebpf_prog = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_daemon_rp_ebpf_prog'. Globalized.\n", filename);
 
   return changes;
 }
@@ -7554,6 +7587,17 @@ int cfg_key_telemetry_udp_notif_nmsgs(char *filename, char *name, char *value_pt
 
   for (; list; list = list->next, changes++) list->cfg.telemetry_udp_notif_nmsgs = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_udp_notif_nmsgs'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_udp_notif_rp_ebpf_prog(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_udp_notif_rp_ebpf_prog = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_udp_notif_rp_ebpf_prog'. Globalized.\n", filename);
 
   return changes;
 }

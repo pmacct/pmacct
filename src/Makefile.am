@@ -4,7 +4,7 @@ if WITH_EXTERNAL_DEPS
 SUBDIRS += external_libs
 endif
 
-SUBDIRS += nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp telemetry rpki filters
+SUBDIRS += nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp telemetry rpki filters ebpf
 sbin_PROGRAMS =
 bin_PROGRAMS =
 EXTRA_PROGRAMS =
@@ -71,6 +71,7 @@ libdaemons_la_LIBADD += filters/libpmfilters.la
 libdaemons_la_LIBADD += tee_plugin/libtee_plugin.la
 libdaemons_la_LIBADD += isis/libpmisis.la
 libdaemons_la_LIBADD += telemetry/libpmtelemetry.la
+libdaemons_la_LIBADD += ebpf/libpmebpf.la
 libdaemons_la_LIBADD += libcommon.la
 libdaemons_la_CFLAGS  = $(AM_CFLAGS)
 if WITH_MYSQL
@@ -145,6 +146,10 @@ endif
 if WITH_UNYTE_UDP_NOTIF
 libdaemons_la_LIBADD  += @UNYTE_UDP_NOTIF_LIBS@
 libdaemons_la_CFLAGS  += @UNYTE_UDP_NOTIF_CFLAGS@
+endif
+if WITH_EBPF
+libdaemons_la_LIBADD  += @EBPF_LIBS@
+libdaemons_la_CFLAGS  += @EBPF_CFLAGS@
 endif
 
 if USING_TRAFFIC_BINS

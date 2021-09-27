@@ -27,6 +27,9 @@
 #include "thread_pool.h"
 #include "ip_flow.h"
 #include "ip_frag.h"
+#if defined WITH_EBPF
+#include "ebpf/ebpf_rp_balancer.h"
+#endif
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
@@ -299,6 +302,12 @@ int skinny_bmp_daemon()
       addr_to_str(srv_string, &srv_addr);
       Log(LOG_INFO, "INFO ( %s/%s ): waiting for BMP data on %s:%u\n", config.name, bmp_misc_db->log_str, srv_string, srv_port);
     }
+
+#if defined WITH_EBPF
+    if (config.bmp_daemon_rp_ebpf_prog) {
+      attach_ebpf_reuseport_balancer(config.bmp_sock, config.bmp_daemon_rp_ebpf_prog, config.cluster_name, "bmp", config.cluster_id, TRUE);
+    }
+#endif
 
     /* Preparing ACL, if any */
     if (config.bmp_daemon_allow_file) load_allow_file(config.bmp_daemon_allow_file, &allow);

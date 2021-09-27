@@ -37,6 +37,9 @@
 #include "crc32.h"
 #include "isis/isis.h"
 #include "bmp/bmp.h"
+#if defined WITH_EBPF
+#include "ebpf/ebpf_rp_balancer.h"
+#endif
 #ifdef WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
@@ -902,6 +905,12 @@ int main(int argc,char **argv, char **envp)
       Log(LOG_ERR, "ERROR ( %s/core ): bind() to ip=%s port=%d/udp failed (errno: %d).\n", config.name, config.nfacctd_ip, config.nfacctd_port, errno);
       exit_gracefully(1);
     }
+
+#if defined WITH_EBPF
+    if (config.nfacctd_rp_ebpf_prog) {
+      attach_ebpf_reuseport_balancer(config.sock, config.nfacctd_rp_ebpf_prog, config.cluster_name, "sfacctd", config.cluster_id, FALSE);
+    }
+#endif
   }
 
   if (config.classifiers_path) init_classifiers(config.classifiers_path);

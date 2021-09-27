@@ -978,7 +978,7 @@ int main(int argc,char **argv, char **envp)
 	exit_gracefully(1);
       }
 
-      pm_pcap_if_entry = pm_pcap_interfaces_map_getentry_by_ifname(&pm_pcap_if_map, ifname);
+      pm_pcap_if_entry = pm_pcap_interfaces_map_getentry_by_idx(&pm_pcap_if_map, (pm_pcap_if_idx - 1));
       ret = pm_pcap_add_interface(&devices.list[devices.num], ifname, pm_pcap_if_entry, psize);
       if (!ret) {
 	if (bkp_select_fd <= devices.list[devices.num].fd) {
@@ -1276,7 +1276,7 @@ int main(int argc,char **argv, char **envp)
 	      Log(LOG_WARNING, "WARN ( %s/core ): Maximum number of interfaces reached (%u). Ignoring '%s'.\n", config.name, PCAP_MAX_INTERFACES, ifname);
 	    }
 	    else {
-	      pm_pcap_if_entry = pm_pcap_interfaces_map_getentry_by_ifname(&pm_pcap_if_map, ifname);
+	      pm_pcap_if_entry = pm_pcap_interfaces_map_getentry_by_idx(&pm_pcap_if_map, (pm_pcap_if_idx - 1));
 	      if (!pm_pcap_add_interface(&devices.list[devices.num], ifname, pm_pcap_if_entry, psize)) {
 		if (bkp_select_fd <= devices.list[devices.num].fd) {
 		  bkp_select_fd = devices.list[devices.num].fd;

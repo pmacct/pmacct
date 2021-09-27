@@ -275,11 +275,13 @@ int create_socket_unyte_udp_notif(struct telemetry_data *t_data, char *address, 
   }
 
   /* Use SO_REUSEPORT to be able to launch multiple collector on the same address */
+#if (defined HAVE_SO_REUSEPORT)
   int optval = 1;
   if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(int)) < 0) {
     Log(LOG_ERR, "ERROR ( %s/%s ): create_socket_unyte_udp_notif(): cannot set SO_REUSEPORT option on socket\n", config.name, t_data->log_str);
     exit_gracefully(1);
   }
+#endif
 
   /* Setting socket buffer to default 20 MB */
   if (!config.telemetry_pipe_size) {

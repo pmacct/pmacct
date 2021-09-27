@@ -4291,6 +4291,15 @@ struct pm_pcap_interface *pm_pcap_interfaces_map_getentry_by_ifname(struct pm_pc
   return NULL;
 }
 
+struct pm_pcap_interface *pm_pcap_interfaces_map_getentry_by_idx(struct pm_pcap_interfaces *map, int idx)
+{
+  if (idx < map->num) {
+    return &map->list[idx];
+  }
+
+  return NULL;
+}
+
 char *pm_pcap_interfaces_map_getnext_ifname(struct pm_pcap_interfaces *map, int *index)
 {
   char *ifname = NULL;

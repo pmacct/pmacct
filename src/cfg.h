@@ -196,6 +196,7 @@ struct configuration {
   int nfacctd_port;
   char *nfacctd_ip;
   int nfacctd_ipv6_only;
+  char *nfacctd_rp_ebpf_prog;
   char *nfacctd_kafka_broker_host;
   int nfacctd_kafka_broker_port;
   char *nfacctd_kafka_topic;
@@ -251,6 +252,7 @@ struct configuration {
   int telemetry_udp_notif_port;
   char *telemetry_udp_notif_ip;
   int telemetry_udp_notif_nmsgs;
+  char *telemetry_udp_notif_rp_ebpf_prog;
   int telemetry_ipv6_only;
   char *telemetry_zmq_address;
   char *telemetry_kafka_broker_host;
@@ -342,6 +344,7 @@ struct configuration {
   int bgp_daemon_ipv6_only;
   as_t bgp_daemon_as;
   int bgp_daemon_port;
+  char *bgp_daemon_rp_ebpf_prog;
   int bgp_daemon_pipe_size;
   int bgp_daemon_ipprec;
   char *bgp_daemon_allow_file;
@@ -417,6 +420,7 @@ struct configuration {
   char *bmp_daemon_ip;
   int bmp_daemon_ipv6_only;
   int bmp_daemon_port;
+  char *bmp_daemon_rp_ebpf_prog;
   int bmp_daemon_pipe_size;
   int bmp_daemon_max_peers;
   char *bmp_daemon_allow_file;

@@ -12,8 +12,12 @@
 ! 'ifindex'		SET: interface index. A positive 32-bit integer value
 !			is expected.
 ! 'direction'		SET: packet sampling direction. Possible values are
-'			'in' and 'out'. It influences whether ifindex should
-!			be used to populate in_iface or out_iface.
+!			'in' and 'out'. It influences whether ifindex should
+!			be used to populate in_iface or out_iface. Omitting the
+!			direction enables both ingress and egress collection:
+!			in this case populating in_iface or out_iface with the
+!			supplied ifindex does stops (as it would not be possible
+!			anymore to clearly determine direction).
 !
 ! Examples:
 !

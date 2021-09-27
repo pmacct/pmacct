@@ -24,6 +24,9 @@
 #include "thread_pool.h"
 #include "bgp/bgp.h"
 #include "telemetry.h"
+#if defined WITH_EBPF
+#include "ebpf/ebpf_rp_balancer.h"
+#endif
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
@@ -444,6 +447,11 @@ int telemetry_daemon(void *t_data_void)
     }
 
     sockfd = create_socket_unyte_udp_notif(t_data, config.telemetry_udp_notif_ip, udp_notif_port);
+#if defined WITH_EBPF && defined HAVE_SO_REUSEPORT
+    if (config.telemetry_udp_notif_rp_ebpf_prog) {
+      attach_ebpf_reuseport_balancer(sockfd, config.telemetry_udp_notif_rp_ebpf_prog, config.cluster_name, "telemetry", config.cluster_id, FALSE);
+    }
+#endif
     options.socket_fd = sockfd;
 
     if (config.telemetry_udp_notif_nmsgs) {
