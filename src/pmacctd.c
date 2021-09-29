@@ -990,6 +990,11 @@ int main(int argc,char **argv, char **envp)
 	devices.num++;
       }
     }
+
+    if (!pm_pcap_if_idx) {
+      Log(LOG_ERR, "ERROR ( %s/core ): No interfaces selected. Exiting.\n", config.name);
+      exit_gracefully(1);
+    }
   }
   else if (config.pcap_savefile) {
     open_pcap_savefile(&devices.list[0], config.pcap_savefile);
