@@ -106,7 +106,8 @@ int pm_pcap_device_getindex_by_ifname_direction(struct pm_pcap_devices *map, cha
 {
   int loc_idx;
    for (loc_idx = 0; loc_idx < map->num; loc_idx++) {
-    if (strlen(map->list[loc_idx].str) == strlen(ifname) && !strncmp(map->list[loc_idx].str, ifname, strlen(ifname))) {
+    if (strlen(map->list[loc_idx].str) == strlen(ifname) && !strncmp(map->list[loc_idx].str, ifname, strlen(ifname)) &&
+        direction == map->list[loc_idx].pcap_if->direction) {
       return loc_idx;
     }
   }
