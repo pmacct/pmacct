@@ -632,6 +632,7 @@ static const struct _dictionary_line dictionary[] = {
   {"tmp_asa_bi_flow", cfg_key_tmp_asa_bi_flow},
   {"tmp_bgp_lookup_compare_ports", cfg_key_tmp_bgp_lookup_compare_ports},
   {"tmp_bgp_daemon_route_refresh", cfg_key_tmp_bgp_daemon_route_refresh},
+  {"tmp_bgp_daemon_origin_type_int", cfg_key_tmp_bgp_daemon_origin_type_int},
   {"", NULL}
 };
 

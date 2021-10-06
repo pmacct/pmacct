@@ -508,6 +508,7 @@ extern int cfg_key_dump_max_writers(char *, char *, char *);
 extern int cfg_key_tmp_asa_bi_flow(char *, char *, char *);
 extern int cfg_key_tmp_bgp_lookup_compare_ports(char *, char *, char *);
 extern int cfg_key_tmp_bgp_daemon_route_refresh(char *, char *, char *);
+extern int cfg_key_tmp_bgp_daemon_origin_type_int(char *, char *, char *);
 
 extern void parse_time(char *, char *, int *, int *);
 extern void cfg_set_aggregate(char *, u_int64_t [], u_int64_t, char *);

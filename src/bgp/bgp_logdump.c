@@ -162,7 +162,12 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       if (attr->lcommunity)
 	json_object_set_new_nocheck(obj, "lcomms", json_string(attr->lcommunity->str));
 
-      json_object_set_new_nocheck(obj, "origin", json_string(bgp_origin_print(attr->origin)));
+      if (!config.tmp_bgp_daemon_origin_type_int) {
+        json_object_set_new_nocheck(obj, "origin", json_string(bgp_origin_print(attr->origin)));
+      }
+      else {
+	json_object_set_new_nocheck(obj, "origin", json_integer((json_int_t)attr->origin));
+      }
 
       if (attr->bitmap & BGP_BMAP_ATTR_LOCAL_PREF)
         json_object_set_new_nocheck(obj, "local_pref", json_integer((json_int_t)attr->local_pref));
@@ -361,7 +366,12 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "origin", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-      pm_avro_check(avro_value_set_string(&p_avro_branch, bgp_origin_print(attr->origin)));
+      if (!config.tmp_bgp_daemon_origin_type_int) {
+        pm_avro_check(avro_value_set_string(&p_avro_branch, bgp_origin_print(attr->origin)));
+      }
+      else {
+        pm_avro_check(avro_value_set_long(&p_avro_branch, attr->origin));
+      }
 
       if (attr->bitmap & BGP_BMAP_ATTR_LOCAL_PREF) {
         pm_avro_check(avro_value_get_by_name(&p_avro_obj, "local_pref", &p_avro_field, NULL));
@@ -2233,7 +2243,12 @@ void p_avro_schema_build_bgp_route(avro_schema_t *schema, avro_schema_t *optlong
   avro_schema_record_field_append((*schema), "comms", (*optstr_s));
   avro_schema_record_field_append((*schema), "ecomms", (*optstr_s));
   avro_schema_record_field_append((*schema), "lcomms", (*optstr_s));
-  avro_schema_record_field_append((*schema), "origin", (*optstr_s));
+  if (!config.tmp_bgp_daemon_origin_type_int) {
+    avro_schema_record_field_append((*schema), "origin", (*optstr_s));
+  }
+  else {
+    avro_schema_record_field_append((*schema), "origin", (*optlong_s));
+  }
   avro_schema_record_field_append((*schema), "local_pref", (*optlong_s));
   avro_schema_record_field_append((*schema), "med", (*optlong_s));
   avro_schema_record_field_append((*schema), "aigp", (*optlong_s));
