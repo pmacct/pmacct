@@ -78,6 +78,17 @@ DESC:	Majority of these primitives were written in a 'src_' field, ie.
 	and src_local_pref; changed in: comms_src, ecomms_src, lcomms_src,
 	med_src, as_path_src and local_pref_src respectively. 
 
+TO:	>= 1.7.3
+FROM:	<= 1.7.2
+TOPIC:	BGP attribute "origin" encoding change
+DESC:	The "origin" attribute was encded as an integer, until 1.7.2. To
+	make output more human-friendly, the encoding has been changed to
+	string in 1.7.3, where three single-letter values are defined:
+	IGP (i), EGP (e) and Incomplete (u). Only release 1.7 releases
+	starting with 1.7.7 do feature a tmp_bgp_daemon_origin_type_int
+	true/false configuration knob to revert to the old encoding in
+	order to allow for smoother pre-1.7.3 upgrades.
+
 TO:	>= 1.7.2
 FROM:	<= 1.7.1
 TOPIC:  Obsoleted features

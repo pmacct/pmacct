@@ -3267,6 +3267,13 @@ DESC:		If set to true, a Route Refresh capability is presented at BGP OPEN messa
 		counter certain vendor bugs.
 DEFAULT:	false
 
+KEY:		tmp_bgp_daemon_origin_type_int
+VALUES:		[ true | false ]
+DESC:		If set to true, the BGP attribute "origin" is encoded on output as an integer value;
+		this was the legacy behaviour now replaced by a string encoding since version 1.7.3.
+		This may help existing deployments <= 1.7.3 to upgrade smoothly.
+DEFAULT:	false
+
 REFERENCES:
 
 (1) https://domsch.com/linux/lpc2010/Scaling_techniques_for_servers_with_high_connection%20rates.pdf
