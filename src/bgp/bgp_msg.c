@@ -953,9 +953,14 @@ int bgp_attr_parse_origin(struct bgp_peer *peer, u_int16_t len, struct bgp_attr 
 
 int bgp_attr_parse_mp_reach(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, struct bgp_nlri *mp_update)
 {
+  struct bgp_misc_structs *bms;
   u_int16_t afi, tmp16, mpreachlen, mpnhoplen;
   u_int16_t nlri_len;
   u_char safi;
+
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return ERR;
 
   /* length check */
 #define BGP_MP_REACH_MIN_SIZE 5
@@ -1005,7 +1010,13 @@ int bgp_attr_parse_mp_reach(struct bgp_peer *peer, u_int16_t len, struct bgp_att
     }
     else return ERR;
   }
-  else return ERR;
+  else {
+    char bgp_peer_str[INET6_ADDRSTRLEN];
+
+    bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_attr_parse_mp_reach(): Received malformed or unsupported afi=%u safi=%u\n", config.name, bms->log_str, bgp_peer_str, afi, safi);
+    return ERR;
+  }
 
   nlri_len = mpreachlen;
 
