@@ -232,7 +232,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 
 	      if (cap_len > optcap_len) {
                 bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
-		Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP Open packet (malformed capability: %x).\n",
+		Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP Open packet (malformed capability: %u).\n",
 			config.name, bms->log_str, bgp_peer_str, cap_type);
 		return ERR;
    	      }
@@ -245,7 +245,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 					  
 		if (online) {
                   bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
-	  	  Log(LOG_INFO, "INFO ( %s/%s ): [%s] Capability: MultiProtocol [%x] AFI [%x] SAFI [%x]\n",
+	  	  Log(LOG_INFO, "INFO ( %s/%s ): [%s] Capability: MultiProtocol [%u] AFI [%u] SAFI [%u]\n",
 			config.name, bms->log_str, bgp_peer_str, cap_type, ntohs(cap_data.afi), cap_data.safi);
 		}
 		peer->cap_mp = TRUE;
@@ -266,7 +266,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 
 		  if (online) {
                     bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
-		    Log(LOG_INFO, "INFO ( %s/%s ): [%s] Capability: 4-bytes AS [%x] ASN [%u]\n",
+		    Log(LOG_INFO, "INFO ( %s/%s ): [%s] Capability: 4-bytes AS [%u] ASN [%u]\n",
 	    		config.name, bms->log_str, bgp_peer_str, cap_type, ntohl(cap_data.as4));
 		  }
 		  memcpy(&as4_ptr, cap_ptr, 4);
@@ -299,7 +299,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 		  memcpy(&cap_data, cap_ptr+cap_idx, sizeof(cap_data));
 		  if (online) {
 		    bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
-		    Log(LOG_INFO, "INFO ( %s/%s ): [%s] Capability: ADD-PATHs [%x] AFI [%x] SAFI [%x] SEND_RECEIVE [%x]\n",
+		    Log(LOG_INFO, "INFO ( %s/%s ): [%s] Capability: ADD-PATHs [%u] AFI [%u] SAFI [%u] SEND_RECEIVE [%u]\n",
 		  	config.name, bms->log_str, bgp_peer_str, cap_type, ntohs(cap_data.afi), cap_data.safi,
 			cap_data.sndrcv);
 		  }
@@ -325,7 +325,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 	      else if (cap_type == BGP_CAPABILITY_ROUTE_REFRESH) {
 		if (config.tmp_bgp_daemon_route_refresh) {
 		  bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
-		  Log(LOG_INFO, "INFO ( %s/%s ): [%s] Capability: Route Refresh [%x]\n",
+		  Log(LOG_INFO, "INFO ( %s/%s ): [%s] Capability: Route Refresh [%u]\n",
 		      config.name, bms->log_str, bgp_peer_str, cap_type);
 
 		  memcpy(bgp_open_cap_reply_ptr, optcap_ptr, cap_len+2); 
