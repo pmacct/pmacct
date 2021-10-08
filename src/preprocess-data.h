@@ -43,6 +43,8 @@ static const struct _preprocess_dictionary_line print_prep_dict[] = {
   {"minp"},
   {"minf"},
   {"minb"},
+  {"maxp"},
+  {"maxb"},
   {"minbpp"},
   {"minppf"},
   {""}

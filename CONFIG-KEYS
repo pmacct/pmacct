@@ -1466,7 +1466,7 @@ DESC:		Allows to process aggregates (via a comma-separated list of conditionals 
 
 		KEY: maxp
 		DESC: check. Aggregates on the queue are evaluated one-by-one; each object is marked valid
-		      only if the number of packets is '<' maxp value. SQL plugins only.
+		      only if the number of packets is '<' maxp value. All plugins.
 
 		KEY: maxf
 		DESC: check. Aggregates on the queue are evaluated one-by-one; each object is marked valid
@@ -1474,7 +1474,7 @@ DESC:		Allows to process aggregates (via a comma-separated list of conditionals 
 
 		KEY: maxb
 		DESC: check. Aggregates on the queue are evaluated one-by-one; each object is marked valid
-		      only if the bytes counter is '<' maxb value. SQL plugins only. 
+		      only if the bytes counter is '<' maxb value. All plugins. 
 
 		KEY: maxbpp
 		DESC: check. Aggregates on the queue are evaluated one-by-one; each object is marked valid

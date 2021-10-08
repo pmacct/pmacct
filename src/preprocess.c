@@ -241,6 +241,12 @@ void set_preprocess_funcs(char *string, struct preprocess *prep, int dictionary)
       sql_idx++;
       prep->checkno++;
     }
+    else if (dictionary == PREP_DICT_PRINT) {
+      P_preprocess_funcs[p_idx] = P_check_maxp;
+      prep->num++;
+      p_idx++;
+      prep->checkno++;
+    }
   }
 
   if (prep->maxf) {
@@ -257,6 +263,12 @@ void set_preprocess_funcs(char *string, struct preprocess *prep, int dictionary)
       sql_preprocess_funcs[sql_idx] = check_maxb;
       prep->num++;
       sql_idx++;
+      prep->checkno++;
+    }
+    else if (dictionary == PREP_DICT_PRINT) {
+      P_preprocess_funcs[p_idx] = P_check_maxb;
+      prep->num++;
+      p_idx++;
       prep->checkno++;
     }
   }
@@ -778,6 +790,36 @@ int P_check_minf(struct chained_cache *queue[], int *num, int seq)
   for (x = 0; x < *num; x++) {
     if (queue[x]->valid == PRINT_CACHE_INVALID || queue[x]->valid == PRINT_CACHE_COMMITTED) {
       if (queue[x]->flow_counter >= prep.minf) queue[x]->prep_valid++;
+
+      P_check_validity(queue[x], seq);
+    }
+  }
+
+  return FALSE;
+}
+
+int P_check_maxp(struct chained_cache *queue[], int *num, int seq)
+{
+  int x;
+
+  for (x = 0; x < *num; x++) {
+    if (queue[x]->valid == PRINT_CACHE_INVALID || queue[x]->valid == PRINT_CACHE_COMMITTED) {
+      if (queue[x]->packet_counter < prep.maxp) queue[x]->prep_valid++;
+
+      P_check_validity(queue[x], seq);
+    }
+  }
+
+  return FALSE;
+}
+
+int P_check_maxb(struct chained_cache *queue[], int *num, int seq)
+{
+  int x;
+
+  for (x = 0; x < *num; x++) {
+    if (queue[x]->valid == PRINT_CACHE_INVALID || queue[x]->valid == PRINT_CACHE_COMMITTED) {
+      if (queue[x]->bytes_counter < prep.maxb) queue[x]->prep_valid++;
 
       P_check_validity(queue[x], seq);
     }
