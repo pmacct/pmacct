@@ -206,19 +206,23 @@ root@dca4471bf893:/#
 
 ## FAQ
 
-##### `ERROR: [/etc/pmacct/<daemon_name>.conf] path is not a regular file.`
+1. Problem:
+
+```
+ERROR: [/etc/pmacct/<daemon_name>.conf] path is not a regular file.
+```
 
 This happens when the container can't find `/etc/pmacct/<daemon_name>.conf`, and
 typically happens when either:
 
-* HOST file path is not an absolute path:
+  * HOST file path is not an absolute path:
 
 ```
 marc@pmacct:~/tmp$ docker run -v pmacctd.conf:/etc/pmacct/pmacctd.conf pmacct/pmacctd:latest
 ERROR: [/etc/pmacct/pmacctd.conf] path is not a regular file.
 ```
 
-* There is typo in the TARGET file path. E.g: missing a `d` in the configuration file name in the TARGET:
+  * There is typo in the TARGET file path. E.g: missing a `d` in the configuration file name in the TARGET:
 
 ```
 marc@pmacct:~/tmp$ docker run -v /home/marc/tmp/pmacctd.conf:/etc/pmacct/pmacct.conf pmacct/pmacctd:latest
@@ -230,6 +234,23 @@ Solution:
 
 ```
 docker run -v /home/marc/tmp/pmacctd.conf:/etc/pmacct/pmacctd.conf pmacct/pmacctd:latest
+```
+
+2. Question: 
+
+```
+If i want to daemonize pmacct running inside a Docker container, should i use either the
+"daemonize: true" config knob or the -d pmacct command-line flag?   
+```
+
+Answer:
+
+No. That would cause the container to end. pmacct should never be daemonized when running
+inside a container. Instead, depending on the environment, if one wants to daemonize the
+container, the option may be to run docker with the -d command-line flag, ie.:
+
+```
+docker run -d --name pmacctd --privileged --network host -v /etc/pmacct/pmacctd.conf:/etc/pmacct/pmacctd.conf pmacct/pmacctd:latest
 ```
 
 ## Advanced
