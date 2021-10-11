@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -116,6 +116,8 @@ extern void P_init_refresh_deadline(time_t *, int, int, char *);
 extern void P_eval_historical_acct(struct timeval *, struct timeval *, time_t);
 extern int P_cmp_historical_acct(struct timeval *, struct timeval *);
 extern void P_update_time_reference(struct insert_data *);
+extern void P_set_stitch(struct chained_cache *, struct pkt_data *, struct insert_data *);
+extern void P_update_stitch(struct chained_cache *, struct pkt_data *, struct insert_data *);
 
 /* global vars */
 extern void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
