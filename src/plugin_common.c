@@ -954,6 +954,14 @@ void P_update_time_reference(struct insert_data *idata)
 {
   idata->now = time(NULL);
 
+  if (config.nfacctd_stitching) {
+    gettimeofday(&idata->nowtv, NULL);
+
+    if (config.timestamps_secs) {
+      idata->nowtv.tv_usec = 0;
+    }
+  }
+
   if (config.sql_history) {
     while (idata->now > (basetime.tv_sec + timeslot)) {
       new_basetime.tv_sec = basetime.tv_sec;
@@ -970,16 +978,14 @@ void P_set_stitch(struct chained_cache *cache_ptr, struct pkt_data *data, struct
     memcpy(&cache_ptr->stitch->timestamp_min, &data->time_start, sizeof(struct timeval));
   }
   else {
-    cache_ptr->stitch->timestamp_min.tv_sec = idata->now;
-    cache_ptr->stitch->timestamp_min.tv_usec = 0;
+    memcpy(&cache_ptr->stitch->timestamp_min, &idata->nowtv, sizeof(struct timeval));
   }
 
   if (data->time_end.tv_sec) {
     memcpy(&cache_ptr->stitch->timestamp_max, &data->time_end, sizeof(struct timeval));
   }
   else {
-    cache_ptr->stitch->timestamp_max.tv_sec = idata->now;
-    cache_ptr->stitch->timestamp_max.tv_usec = 0;
+    memcpy(&cache_ptr->stitch->timestamp_max, &idata->nowtv, sizeof(struct timeval));
   }
 }
 
@@ -992,7 +998,6 @@ void P_update_stitch(struct chained_cache *cache_ptr, struct pkt_data *data, str
     }
   }
   else {
-    cache_ptr->stitch->timestamp_max.tv_sec = idata->now;
-    cache_ptr->stitch->timestamp_max.tv_usec = 0;
+    memcpy(&cache_ptr->stitch->timestamp_max, &idata->nowtv, sizeof(struct timeval));
   }
 }
