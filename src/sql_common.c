@@ -868,23 +868,12 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
     }
 
     if (config.nfacctd_stitching) {
-      if (!Cursor->stitch) Cursor->stitch = (struct pkt_stitching *) malloc(sizeof(struct pkt_stitching));
-      if (Cursor->stitch) {
-        if (data->time_start.tv_sec) {
-          memcpy(&Cursor->stitch->timestamp_min, &data->time_start, sizeof(struct timeval));
-        }
-        else {
-          Cursor->stitch->timestamp_min.tv_sec = idata->now;
-          Cursor->stitch->timestamp_min.tv_usec = 0;
-        }
+      if (!Cursor->stitch) {
+	Cursor->stitch = (struct pkt_stitching *) malloc(sizeof(struct pkt_stitching));
+      }
 
-        if (data->time_end.tv_sec) {
-          memcpy(&Cursor->stitch->timestamp_max, &data->time_end, sizeof(struct timeval));
-        }
-        else {
-          Cursor->stitch->timestamp_max.tv_sec = idata->now;
-          Cursor->stitch->timestamp_max.tv_usec = 0;
-        }
+      if (Cursor->stitch) {
+        sql_set_stitch(Cursor, data, idata);
       }
       else Log(LOG_WARNING, "WARN ( %s/%s ): Finished memory for flow stitching.\n", config.name, config.type);
     }
@@ -919,15 +908,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
 
     if (config.nfacctd_stitching) {
       if (Cursor->stitch) {
-        if (data->time_end.tv_sec) {
-          if (data->time_end.tv_sec > Cursor->stitch->timestamp_max.tv_sec && 
-              data->time_end.tv_usec > Cursor->stitch->timestamp_max.tv_usec)
-            memcpy(&Cursor->stitch->timestamp_max, &data->time_end, sizeof(struct timeval));
-        }
-        else {
-          Cursor->stitch->timestamp_max.tv_sec = idata->now;
-          Cursor->stitch->timestamp_max.tv_usec = 0;
-        }
+	sql_update_stitch(Cursor, data, idata);
       }
     }
 
@@ -3587,5 +3568,35 @@ void primptrs_set_all_from_db_cache(struct primitives_ptrs *prim_ptrs, struct db
     prim_ptrs->ptun = entry->ptun;
     prim_ptrs->pcust = entry->pcust;
     prim_ptrs->pvlen = entry->pvlen;
+  }
+}
+
+void sql_set_stitch(struct db_cache *cache_ptr, struct pkt_data *data, struct insert_data *idata)
+{
+  if (data->time_start.tv_sec) {
+    memcpy(&cache_ptr->stitch->timestamp_min, &data->time_start, sizeof(struct timeval));
+  }
+  else {
+    memcpy(&cache_ptr->stitch->timestamp_min, &idata->nowtv, sizeof(struct timeval));
+  }
+
+  if (data->time_end.tv_sec) {
+    memcpy(&cache_ptr->stitch->timestamp_max, &data->time_end, sizeof(struct timeval));
+  }
+  else {
+    memcpy(&cache_ptr->stitch->timestamp_max, &idata->nowtv, sizeof(struct timeval));
+  }
+}
+
+void sql_update_stitch(struct db_cache *cache_ptr, struct pkt_data *data, struct insert_data *idata)
+{
+  if (data->time_end.tv_sec) {
+    if (data->time_end.tv_sec > cache_ptr->stitch->timestamp_max.tv_sec &&
+        data->time_end.tv_usec > cache_ptr->stitch->timestamp_max.tv_usec) {
+      memcpy(&cache_ptr->stitch->timestamp_max, &data->time_end, sizeof(struct timeval));
+    }
+  }
+  else {
+    memcpy(&cache_ptr->stitch->timestamp_max, &idata->nowtv, sizeof(struct timeval));
   }
 }
