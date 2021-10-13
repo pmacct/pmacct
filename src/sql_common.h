@@ -351,6 +351,7 @@ extern int sql_compose_static_set_event();
 extern void primptrs_set_all_from_db_cache(struct primitives_ptrs *, struct db_cache *);
 extern void sql_set_stitch(struct db_cache *, struct pkt_data *, struct insert_data *);
 extern void sql_update_stitch(struct db_cache *, struct pkt_data *, struct insert_data *);
+extern void sql_update_time_reference(struct insert_data *);
 
 extern void sql_sum_host_insert(struct primitives_ptrs *, struct insert_data *);
 extern void sql_sum_port_insert(struct primitives_ptrs *, struct insert_data *);

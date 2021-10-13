@@ -3600,3 +3600,29 @@ void sql_update_stitch(struct db_cache *cache_ptr, struct pkt_data *data, struct
     memcpy(&cache_ptr->stitch->timestamp_max, &idata->nowtv, sizeof(struct timeval));
   }
 }
+
+void sql_update_time_reference(struct insert_data *idata)
+{
+  idata->now = time(NULL);
+
+  if (config.nfacctd_stitching) {
+    gettimeofday(&idata->nowtv, NULL);
+
+    if (config.timestamps_secs) {
+      idata->nowtv.tv_usec = 0;
+    }
+  }
+
+  if (config.sql_history) {
+    while (idata->now > (idata->basetime + idata->timeslot)) {
+      time_t saved_basetime = idata->basetime;
+
+      idata->basetime += idata->timeslot;
+      if (config.sql_history == COUNT_MONTHLY)
+	idata->timeslot = calc_monthly_timeslot(idata->basetime, config.sql_history_howmany, ADD);
+      glob_basetime = idata->basetime;
+      idata->new_basetime = saved_basetime;
+      glob_new_basetime = saved_basetime;
+    }
+  }
+}

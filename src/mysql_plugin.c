@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -153,20 +153,7 @@ void mysql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     }
 
     poll_ops:
-    idata.now = time(NULL);
-
-    if (config.sql_history) {
-      while (idata.now > (idata.basetime + idata.timeslot)) {
-        time_t saved_basetime = idata.basetime;
-
-        idata.basetime += idata.timeslot;
-        if (config.sql_history == COUNT_MONTHLY)
-          idata.timeslot = calc_monthly_timeslot(idata.basetime, config.sql_history_howmany, ADD);
-        glob_basetime = idata.basetime;
-        idata.new_basetime = saved_basetime;
-        glob_new_basetime = saved_basetime;
-      }
-    }
+    sql_update_time_reference(&idata);
 
     /* lazy sql refresh handling */
     if (idata.now > refresh_deadline) {
