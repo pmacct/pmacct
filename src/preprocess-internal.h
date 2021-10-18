@@ -45,6 +45,7 @@ extern int P_check_minb(struct chained_cache *[], int *, int);
 extern int P_check_minf(struct chained_cache *[], int *, int);
 extern int P_check_maxp(struct chained_cache *[], int *, int);
 extern int P_check_maxb(struct chained_cache *[], int *, int);
+extern int P_check_maxf(struct chained_cache *[], int *, int);
 extern int P_check_minbpp(struct chained_cache *[], int *, int);
 extern int P_check_minppf(struct chained_cache *[], int *, int);
 

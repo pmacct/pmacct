@@ -1470,7 +1470,7 @@ DESC:		Allows to process aggregates (via a comma-separated list of conditionals 
 
 		KEY: maxf
 		DESC: check. Aggregates on the queue are evaluated one-by-one; each object is marked valid
-		      only if the number of flows is '<' maxf value. SQL plugins only.
+		      only if the number of flows is '<' maxf value. All plugins.
 
 		KEY: maxb
 		DESC: check. Aggregates on the queue are evaluated one-by-one; each object is marked valid
