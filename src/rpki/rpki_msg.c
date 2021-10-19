@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -76,12 +76,18 @@ int rpki_roas_file_load(char *file, struct bgp_table *rib_v4, struct bgp_table *
 	  }
 
 	  asn_json = json_object_get(roa_json, "asn");
-	  if (asn_json == NULL || !json_is_string(asn_json)) {
+	  if (asn_json == NULL || (!json_is_string(asn_json) && !json_is_integer(asn_json))) {
 	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] no 'asn' element in ROA #%u.\n", config.name, m_data->log_str, file, (roas_idx + 1));
 	    goto exit_lane;
 	  }
 	  else {
-	    ret = bgp_str2asn((char *)json_string_value(asn_json), &asn);
+	    if (json_is_string(asn_json)) {
+	      ret = bgp_str2asn((char *)json_string_value(asn_json), &asn);
+	    }
+	    else {
+	      ret = FALSE;
+	      asn = json_integer_value(asn_json);
+	    }
 
 	    if (ret) {
 	      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] invalid 'asn' element in ROA #%u.\n", config.name, m_data->log_str, file, (roas_idx + 1));
