@@ -2030,7 +2030,7 @@ Origination Authorizations (ROAs). ROA information can be currently
 acquired in one of the two following ways:
 
 1) it can be imported using the rpki_roas_file config directive from a
-   file in the RIPE Validator format, ie.:
+   file in the RIPE Validator or OpenBSD Validator formats, ie.:
 
 {
   "roas" : [ {

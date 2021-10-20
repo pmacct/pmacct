@@ -2868,8 +2868,8 @@ DEFAULT:	1
 
 KEY:		rpki_roas_file [MAP, GLOBAL]
 DESC:		Full pathname to a file containing RPKI ROA data. Data encoding is JSON and format
-		is according to RIPE Validator format. ROA data can be obtained for example from
-		https://rpki.gin.ntt.net/api/export.json . An example of the format:
+		supported are RIPE Validator OpenBSD Validator ones. ROA data can be obtained for
+		example from https://rpki.gin.ntt.net/api/export.json . An example of the format:
 
 		{
 		  "roas" : [ {
