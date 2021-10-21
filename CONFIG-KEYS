@@ -2161,9 +2161,9 @@ DESC:		Defines the locking style for the SQL table. MySQL supports "table" and "
 		ie. no risk for deadlocks and transaction-friendly; "row", the plugin will lock only the rows
 		it needs to UPDATE/DELETE. It results in better overral performances but has some noticeable
 		drawbacks in dealing with transactions and making the UPDATE-then-INSERT mechanism work
-		smoothly; "none" disables locking: while this method can help in some cases, ie. when grants
-		over the whole database (requirement for "table" locking in MySQL) is not available, it is not
-		recommended since serialization allows to contain database load.
+		smoothly; "none" disables locking: while generally not recommended, this may suit some
+		advanced use-cases or be needed when a locking mechanism is not available (ie. Infinidb/
+		Columnstore in MariaDB).
 DEFAULT:        table
 
 KEY:		nfprobe_timeouts
