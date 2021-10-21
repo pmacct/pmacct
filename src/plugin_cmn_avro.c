@@ -33,9 +33,19 @@
 #include "ndpi/ndpi.h"
 #endif
 
+/* L36 - avro_new_label */
+#include <cdada/list.h>
+#include <cdada/str.h>
+#include "ptm_label.h"
+
+CDADA_LIST_CUSTOM_TYPE_DECL(ptm_label);
+
 #ifdef WITH_AVRO
 /* global variables */
 avro_schema_t p_avro_acct_schema, p_avro_acct_init_schema, p_avro_acct_close_schema;
+
+/* L47 - avro_new_label */
+avro_schema_t sc_type_map, sc_type_string;
 
 /* functions */
 avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
@@ -59,7 +69,9 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
     avro_schema_record_field_append(schema, "tag2", avro_schema_long());
 
   if (wtc_2 & COUNT_LABEL)
-    avro_schema_record_field_append(schema, "label", avro_schema_string());
+    /* L72 - avro_new_label */
+    compose_label_avro_schema(schema);
+    //avro_schema_record_field_append(schema, "label", avro_schema_string());
 
   if (wtc & COUNT_CLASS)
     avro_schema_record_field_append(schema, "class_legacy", avro_schema_string());
@@ -426,10 +438,35 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
 
   if (wtc_2 & COUNT_LABEL) {
     vlen_prims_get(pvlen, COUNT_INT_LABEL, &str_ptr);
-    if (!str_ptr) str_ptr = empty_string;
+    /* L441 - avro_new_label */
+    printf("0.str_ptr_here_out: %s\n", str_ptr);	     
+    if (str_ptr) //NULL = FALSE
+    {
+      printf("1.str_ptr_not_null: %s\n", str_ptr);
+      /* labels normalization */
+      cdada_str_t *lbls_cdada = cdada_str_create(str_ptr);
+      cdada_str_replace_all(lbls_cdada, "-", ",");
+      char *lbls_norm = cdada_str(lbls_cdada);
 
-    pm_avro_check(avro_value_get_by_name(&value, "label", &field, NULL));
-    pm_avro_check(avro_value_set_string(&field, str_ptr));
+      /* linked-list creation */
+      ptm_label lbl;
+      cdada_list_t *ptm_ll = ptm_labels_to_linked_list(lbls_norm);
+      int ll_size = cdada_list_size(ptm_ll);
+
+      compose_label_avro_data(ptm_ll, ll_size, value);
+  
+      /* free-up memory */ 
+      cdada_list_destroy(ptm_ll);
+    }
+    if (!str_ptr) //NULL = TRUE
+    {
+      printf("1.str_ptr_null: %s\n", str_ptr);
+      str_ptr = empty_string;
+    }
+    //if (!str_ptr) str_ptr = empty_string;
+
+    //pm_avro_check(avro_value_get_by_name(&value, "label", &field, NULL));
+    //pm_avro_check(avro_value_set_string(&field, str_ptr));
   }
 
   if (wtc & COUNT_CLASS) {
@@ -1334,4 +1371,103 @@ void pm_avro_exit_gracefully(int status)
     /* gather additional info on exit */
     assert(1 == 0);
   }
+}
+
+
+/* L1377 - avro_new_label */
+cdada_list_t *
+ptm_labels_to_linked_list(char *ptm_labels)
+{
+  const int MAX_TOCKENS = 256; //Max amount of tokens per string: 128 Labels
+  const char *DELIM = ",";
+  
+  cdada_list_t *ptm_linked_list = cdada_list_create_custom(ptm_label);
+  ptm_label lbl;
+
+  char *token = NULL;
+  char *tokens[MAX_TOCKENS];
+
+  int tokens_counter = 0;
+  for (token = strtok(ptm_labels, DELIM); token != NULL; token = strtok(NULL, DELIM))
+  {
+    tokens[tokens_counter] = token;
+    tokens_counter++;
+  }
+
+  int list_counter;
+  for (list_counter = 0; list_counter < tokens_counter; list_counter+=2)
+  {
+    memset(&lbl, 0, sizeof(lbl));
+    lbl.key = tokens[list_counter];
+    lbl.value = tokens[list_counter + 1];
+    cdada_list_push_back(ptm_linked_list, &lbl);
+  }
+
+  return ptm_linked_list;
+}
+
+void
+compose_label_avro_schema(avro_schema_t sc_type_record)
+{
+  sc_type_string = avro_schema_string();
+  sc_type_map = avro_schema_map(sc_type_string);
+  avro_schema_record_field_append(sc_type_record, "label", sc_type_map);
+
+  /* free-up memory */
+  avro_schema_decref(sc_type_map);
+  avro_schema_decref(sc_type_string);
+}
+
+int
+compose_label_avro_data(cdada_list_t *ll, int ll_size, avro_value_t v_type_record)
+{
+  ptm_label lbl;
+
+  printf("5.start -> linked-list:\n");
+  int idx_0;
+  for (idx_0 = 0; idx_0 < ll_size; idx_0++)
+  {
+    cdada_list_get(ll, idx_0, &lbl);
+    printf("key: %s\n", lbl.key);
+    printf("value: %s\n", lbl.value);
+  }
+
+  avro_value_t v_type_string, v_type_map;
+  avro_value_iface_t *if_type_map, *if_type_string;
+
+  if_type_map = avro_generic_class_from_schema(sc_type_map);
+  if_type_string = avro_generic_class_from_schema(sc_type_string);
+
+  avro_generic_value_new(if_type_map, &v_type_map);
+  avro_generic_value_new(if_type_string, &v_type_string);
+  
+  size_t  map_size;
+  avro_value_get_size(&v_type_map, &map_size);
+  printf("6.before: %u\n", map_size);
+
+  int idx_1;
+  for (idx_1 = 0; idx_1 < ll_size; idx_1++)
+  {
+    cdada_list_get(ll, idx_1, &lbl);
+    if (avro_value_get_by_name(&v_type_record, "label", &v_type_map, NULL) == 0)
+    {
+      if (avro_value_add(&v_type_map, lbl.key, &v_type_string, NULL, NULL) == 0)
+      {
+        printf("7.ptr->key: %s\n", lbl.key);
+        avro_value_set_string(&v_type_string, lbl.value);
+        printf("8.ptr->value: %s\n", lbl.value);
+      }
+    }
+  }
+
+  avro_value_get_size(&v_type_map, &map_size);
+  printf("9.after: %u\n", map_size);
+
+  /* free-up memory */
+  avro_value_iface_decref(if_type_map);
+  avro_value_iface_decref(if_type_string);
+  //avro_value_decref(&v_type_map);
+  //avro_value_decref(&v_type_string);
+  
+  return 0;
 }
