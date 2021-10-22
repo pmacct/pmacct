@@ -3040,16 +3040,23 @@ protocol features drive the need for inter-op testing. The BMP play tool
 and replay raw BMP packets in order to reproduce issues. An example of how
 this can be done, here:
 
-shell 1> bmp_play.py -m record -p 1790 -f bmp.dump
+Step 1: export BMP data from an exporter to a host/port where a bmp_play
+script is listening to. bmp_play will then save raw BMP data to a file:
 
+shell> bmp_play.py -m record -p 1791 -f bmp.dump
+
+Step 2: the file containing raw BMP data can be replayed at will with the
+same bmp_play script to a pmbmpd daemon:
+ 
 shell 1> bmp_play.py -m play -p 1790 -f bmp.dump -d 127.0.0.1
 
 shell 2> pmbmpd -l 1790 -d -o bmp.log
 
-Alternatively, since version 1.7.5, pmbmpd supports pcap_savefile (-I) to
+Additionally, since version 1.7.5, pmbmpd supports pcap_savefile (-I) to
 replay a pcap trace that includes BMP packets; packets functional to the
 house-keeping of the TCP session are safely ignored and pcap_filter helps
-on replay to trash unrelevant (non BMP) packets.
+on replay to trash unrelevant (non BMP) packets; yet this method is less
+preferred to the capture of raw data via bmp_play.
  
 i) packet classification using the nDPI library is among the new features of
 pmacct 1.7. Following are some tips on how to help by providing meaningful
