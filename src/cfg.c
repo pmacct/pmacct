@@ -440,6 +440,7 @@ static const struct _dictionary_line dictionary[] = {
   {"tee_kafka_config_file", cfg_key_tee_kafka_config_file},
   {"bgp_daemon", cfg_key_bgp_daemon},
   {"bgp_daemon_ip", cfg_key_bgp_daemon_ip},
+  {"bgp_daemon_interface", cfg_key_bgp_daemon_interface},
   {"bgp_daemon_ipv6_only", cfg_key_bgp_daemon_ipv6_only},
   {"bgp_daemon_id", cfg_key_bgp_daemon_id},
   {"bgp_daemon_as", cfg_key_bgp_daemon_as},

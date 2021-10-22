@@ -335,6 +335,13 @@ void skinny_bgp_daemon_online()
   rc = setsockopt(config.bgp_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, (socklen_t) sizeof(yes));
   if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
 
+#if (defined HAVE_SO_BINDTODEVICE)
+  if (config.bgp_daemon_interface)  {
+    rc = setsockopt(config.bgp_sock, SOL_SOCKET, SO_BINDTODEVICE, config.bgp_daemon_interface, (socklen_t) strlen(config.bgp_daemon_interface));
+    if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_BINDTODEVICE (errno: %d).\n", config.name, bgp_misc_db->log_str, errno);
+  }
+#endif
+
   if (config.bgp_daemon_ipv6_only) {
     int yes=1;
 
