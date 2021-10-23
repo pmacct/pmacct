@@ -1149,6 +1149,14 @@ AC_TYPE_SIGNAL
 
 AC_CHECK_FUNCS([setproctitle mallopt tdestroy])
 
+dnl Check for SO_BINDTODEVICE
+AC_CHECK_DECL([SO_BINDTODEVICE],
+	AC_DEFINE(HAVE_SO_BINDTODEVICE, 1, [Check if kernel supports SO_BINDTODEVICE]),,
+		[
+		  #include <sys/socket.h>
+		]
+)
+
 dnl Check for SO_REUSEPORT & friends
 AC_CHECK_DECL([SO_REUSEPORT],
 	AC_DEFINE(HAVE_SO_REUSEPORT, 1, [Check if kernel supports SO_REUSEPORT]),,

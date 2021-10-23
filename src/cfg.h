@@ -341,6 +341,7 @@ struct configuration {
   char *bgp_daemon_msglog_kafka_avro_schema_registry;
   char *bgp_daemon_id;
   char *bgp_daemon_ip;
+  char *bgp_daemon_interface;
   int bgp_daemon_ipv6_only;
   as_t bgp_daemon_as;
   int bgp_daemon_port;

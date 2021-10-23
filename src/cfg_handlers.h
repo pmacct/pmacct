@@ -346,6 +346,7 @@ extern int cfg_key_bgp_daemon_msglog_kafka_config_file(char *, char *, char *);
 extern int cfg_key_bgp_daemon_msglog_kafka_avro_schema_registry(char *, char *, char *);
 extern int cfg_key_bgp_daemon_max_peers(char *, char *, char *);
 extern int cfg_key_bgp_daemon_ip(char *, char *, char *);
+extern int cfg_key_bgp_daemon_interface(char *, char *, char *);
 extern int cfg_key_bgp_daemon_ipv6_only(char *, char *, char *);
 extern int cfg_key_bgp_daemon_id(char *, char *, char *);
 extern int cfg_key_bgp_daemon_as(char *, char *, char *);

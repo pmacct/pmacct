@@ -2365,6 +2365,11 @@ DESC:           When listening on all interfaces (default setting for nfacctd_ip
                 knob to true disables the IPv4 (IPv6 IPv4-mapped) part.
 DEFAULT:        false
 
+KEY:            bgp_daemon_interface [GLOBAL]
+DESC:           Defines the interface for the BGP daemon to listen on. This makes it possible to have the BGP
+                communication happen entirely in one VRF by specifying the VRF device name here.
+DEFAULT:        none
+
 KEY:            bgp_daemon_id [GLOBAL]
 DESC:		Defines the BGP Router-ID to the supplied value. Expected value is an IPv4 address. If this
 		feature is not used or an invalid IP address is supplied, ie. IPv6, the bgp_daemon_ip value
