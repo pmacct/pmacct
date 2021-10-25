@@ -439,14 +439,16 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
   if (wtc_2 & COUNT_LABEL) {
     vlen_prims_get(pvlen, COUNT_INT_LABEL, &str_ptr);
     /* L441 - avro_new_label */
-    printf("0.str_ptr_here_out: %s\n", str_ptr);	     
+    printf("1.str_ptr_here_out: %s\n", str_ptr);	     
     if (str_ptr) //NULL = FALSE
     {
-      printf("1.str_ptr_not_null: %s\n", str_ptr);
+      printf("2.str_ptr_not_null: %s\n", str_ptr);
       /* labels normalization */
+      printf("3.labels: %s\n", str_ptr);
       cdada_str_t *lbls_cdada = cdada_str_create(str_ptr);
       cdada_str_replace_all(lbls_cdada, "-", ",");
       char *lbls_norm = cdada_str(lbls_cdada);
+      printf("4.labels normalized: %s\n", lbls_norm);
 
       /* linked-list creation */
       ptm_label lbl;
@@ -454,13 +456,15 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
       int ll_size = cdada_list_size(ptm_ll);
 
       compose_label_avro_data(ptm_ll, ll_size, value);
+      printf("\n\n---\n");
   
       /* free-up memory */ 
       cdada_list_destroy(ptm_ll);
     }
     if (!str_ptr) //NULL = TRUE
     {
-      printf("1.str_ptr_null: %s\n", str_ptr);
+      printf("2.str_ptr_null: %s\n", str_ptr);
+      printf("\n\n---\n");
       str_ptr = empty_string;
     }
     //if (!str_ptr) str_ptr = empty_string;
@@ -1374,7 +1378,7 @@ void pm_avro_exit_gracefully(int status)
 }
 
 
-/* L1377 - avro_new_label */
+/* L1381 - avro_new_label */
 cdada_list_t *
 ptm_labels_to_linked_list(char *ptm_labels)
 {
@@ -1425,11 +1429,13 @@ compose_label_avro_data(cdada_list_t *ll, int ll_size, avro_value_t v_type_recor
 
   printf("5.start -> linked-list:\n");
   int idx_0;
+  int counter = 6;
   for (idx_0 = 0; idx_0 < ll_size; idx_0++)
   {
     cdada_list_get(ll, idx_0, &lbl);
-    printf("key: %s\n", lbl.key);
-    printf("value: %s\n", lbl.value);
+    printf("%u.key: %s\n", counter, lbl.key);
+    printf("%u.value: %s\n", counter, lbl.value);
+    counter++;
   }
 
   avro_value_t v_type_string, v_type_map;
@@ -1443,9 +1449,10 @@ compose_label_avro_data(cdada_list_t *ll, int ll_size, avro_value_t v_type_recor
   
   size_t  map_size;
   avro_value_get_size(&v_type_map, &map_size);
-  printf("6.before: %u\n", map_size);
+  printf("8.before: %u\n", map_size);
 
   int idx_1;
+  counter = 9;
   for (idx_1 = 0; idx_1 < ll_size; idx_1++)
   {
     cdada_list_get(ll, idx_1, &lbl);
@@ -1453,15 +1460,17 @@ compose_label_avro_data(cdada_list_t *ll, int ll_size, avro_value_t v_type_recor
     {
       if (avro_value_add(&v_type_map, lbl.key, &v_type_string, NULL, NULL) == 0)
       {
-        printf("7.ptr->key: %s\n", lbl.key);
+        printf("%u.ptr->key: %s\n", counter, lbl.key);
+        counter++;
         avro_value_set_string(&v_type_string, lbl.value);
-        printf("8.ptr->value: %s\n", lbl.value);
+        printf("%u.ptr->value: %s\n", counter, lbl.value);
       }
     }
+    counter++;
   }
 
   avro_value_get_size(&v_type_map, &map_size);
-  printf("9.after: %u\n", map_size);
+  printf("13.after: %u\n", map_size);
 
   /* free-up memory */
   avro_value_iface_decref(if_type_map);
