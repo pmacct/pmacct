@@ -38,7 +38,7 @@
 #include <cdada/str.h>
 #include "ptm_label.h"
 
-CDADA_LIST_CUSTOM_TYPE_DECL(ptm_label);
+//CDADA_LIST_CUSTOM_TYPE_DECL(ptm_label);
 
 #ifdef WITH_AVRO
 /* global variables */
