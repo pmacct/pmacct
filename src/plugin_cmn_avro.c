@@ -39,6 +39,7 @@
 //#include "ptm_label.h"
 
 CDADA_LIST_CUSTOM_TYPE_DECL(ptm_label);
+CDADA_LIST_CUSTOM_GEN();
 
 #ifdef WITH_AVRO
 /* global variables */
