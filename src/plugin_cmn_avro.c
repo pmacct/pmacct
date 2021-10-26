@@ -36,7 +36,7 @@
 /* L36 - avro_new_label */
 #include <cdada/list.h>
 #include <cdada/str.h>
-#include "ptm_label.h"
+//#include "ptm_label.h"
 
 CDADA_LIST_CUSTOM_TYPE_DECL(ptm_label);
 
