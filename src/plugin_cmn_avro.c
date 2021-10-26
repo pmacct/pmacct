@@ -1385,7 +1385,8 @@ ptm_labels_to_linked_list(char *ptm_labels)
   const int MAX_TOCKENS = 256; //Max amount of tokens per string: 128 Labels
   const char *DELIM = ",";
   
-  //cdada_list_t *ptm_linked_list = cdada_list_create_custom(ptm_label);
+  cdada_list_t *ptm_linked_list;
+  // = cdada_list_create_custom(ptm_label);
   ptm_label lbl;
 
   char *token = NULL;
