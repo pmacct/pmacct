@@ -219,12 +219,6 @@ typedef struct {
   u_int16_t off;
 } pm_hash_serial_t;
 
-/* Data structures */
-typedef struct {
-  char *key;
-  char *value;
-} __attribute__((packed)) ptm_label;
-
 #if (defined WITH_JANSSON)
 #include <jansson.h>
 #endif
