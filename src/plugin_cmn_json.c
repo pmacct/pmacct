@@ -60,7 +60,7 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
   }
 
   if (wtc_2 & COUNT_LABEL) {
-    cjhandler[idx] = compose_json_label;
+    cjhandler[idx] = compose_json_map_label;
     idx++;
   }
 
@@ -500,6 +500,33 @@ void compose_json_label(json_t *obj, struct chained_cache *cc)
   if (!str_ptr) str_ptr = empty_string;
 
   json_object_set_new_nocheck(obj, "label", json_string(str_ptr));
+}
+
+void compose_json_map_label(json_t *obj, struct chained_cache *cc)
+{
+  char empty_string[] = "", *str_ptr;
+
+  vlen_prims_get(cc->pvlen, COUNT_INT_LABEL, &str_ptr);
+  if (!str_ptr) str_ptr = empty_string;
+
+  /* labels normalization */
+  cdada_str_t *lbls_cdada = cdada_str_create(str_ptr);
+  cdada_str_replace_all(lbls_cdada, "-", ",");
+  char *lbls_norm = cdada_str(lbls_cdada);
+
+  /* linked-list creation */
+  ptm_label lbl;
+  cdada_list_t *ptm_ll = ptm_labels_to_linked_list(lbls_norm);
+  int ll_size = cdada_list_size(ptm_ll);
+
+  json_t *root_l0 = json_object();
+  json_t *root_l1 = compose_label_json_data(ptm_ll, ll_size);
+  json_t *j_str_tmp = NULL;
+
+  json_object_set_new_nocheck(root_l0, "label", root_l1);
+
+  json_decref(root_l0);
+  cdada_list_destroy(ptm_ll);
 }
 
 void compose_json_class(json_t *obj, struct chained_cache *cc)
@@ -1223,3 +1250,30 @@ void *compose_purge_close_json(char *writer_name, pid_t writer_pid, int purged_e
   return NULL;
 }
 #endif
+
+
+/* L1228 - json_new_label */
+json_t *
+compose_label_json_data(cdada_list_t *ll, int ll_size)
+{
+  ptm_label lbl;
+
+  int idx_0;
+  for (idx_0 = 0; idx_0 < ll_size; idx_0++)
+  {
+    cdada_list_get(ll, idx_0, &lbl);
+  }
+
+  json_t *root = json_object();
+  json_t *j_str_tmp = NULL;
+
+  int idx_1;
+  for (idx_1 = 0; idx_1 < ll_size; idx_1++)
+  {
+    cdada_list_get(ll, idx_1, &lbl);
+    j_str_tmp = json_string(lbl.value);
+    json_object_set_new(root, lbl.key, j_str_tmp);
+  }
+
+  return root;
+}
