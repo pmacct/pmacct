@@ -1368,38 +1368,6 @@ void pm_avro_exit_gracefully(int status)
 
 
 /* L1372 - avro_new_label */
-cdada_list_t *
-ptm_labels_to_linked_list(char *ptm_labels)
-{
-  const int MAX_TOCKENS = 256; //Max amount of tokens per string: 128 Labels
-  const char *DELIM = ",";
-  
-  //cdada_list_t *ptm_linked_list = cdada_list_create_custom(ptm_label);
-  cdada_list_t *ptm_linked_list = cdada_list_create(ptm_label);
-  ptm_label lbl;
-
-  char *token = NULL;
-  char *tokens[MAX_TOCKENS];
-
-  int tokens_counter = 0;
-  for (token = strtok(ptm_labels, DELIM); token != NULL; token = strtok(NULL, DELIM))
-  {
-    tokens[tokens_counter] = token;
-    tokens_counter++;
-  }
-
-  int list_counter;
-  for (list_counter = 0; list_counter < tokens_counter; list_counter+=2)
-  {
-    memset(&lbl, 0, sizeof(lbl));
-    lbl.key = tokens[list_counter];
-    lbl.value = tokens[list_counter + 1];
-    cdada_list_push_back(ptm_linked_list, &lbl);
-  }
-
-  return ptm_linked_list;
-}
-
 void
 compose_label_avro_schema(avro_schema_t sc_type_record)
 {

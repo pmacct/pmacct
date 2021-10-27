@@ -73,8 +73,6 @@ extern void write_avro_json_record_to_file(FILE *, avro_value_t);
 extern char *write_avro_json_record_to_buf(avro_value_t);
 
 /* L75 - avro_new_label */
-extern cdada_list_t *ptm_labels_to_linked_list(char *);
-
 extern void compose_label_avro_schema(avro_schema_t);
 extern int compose_label_avro_data(cdada_list_t *, int, avro_value_t);
 

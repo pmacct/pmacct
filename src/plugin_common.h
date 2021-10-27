@@ -87,6 +87,15 @@ struct p_table_rr {
 };
 #endif
 
+/* L90 - avro_new_label */
+#ifndef PTM_LABEL
+#define PTM_LABEL
+typedef struct {
+  char *key;
+  char *value;
+} __attribute__((packed)) ptm_label;
+#endif
+
 
 /* prototypes */
 extern void P_set_signals();
@@ -118,6 +127,9 @@ extern int P_cmp_historical_acct(struct timeval *, struct timeval *);
 extern void P_update_time_reference(struct insert_data *);
 extern void P_set_stitch(struct chained_cache *, struct pkt_data *, struct insert_data *);
 extern void P_update_stitch(struct chained_cache *, struct pkt_data *, struct insert_data *);
+
+/* L131 - avro_new_label */
+extern cdada_list_t *ptm_labels_to_linked_list(char *);
 
 /* global vars */
 extern void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
