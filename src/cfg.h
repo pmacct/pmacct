@@ -249,6 +249,7 @@ struct configuration {
   int telemetry_port_tcp;
   int telemetry_port_udp;
   char *telemetry_ip;
+  char *telemetry_interface;
   int telemetry_udp_notif_port;
   char *telemetry_udp_notif_ip;
   int telemetry_udp_notif_nmsgs;
@@ -419,6 +420,7 @@ struct configuration {
   int bmp_sock;
   int bmp_daemon;
   char *bmp_daemon_ip;
+  char *bmp_daemon_interface;
   int bmp_daemon_ipv6_only;
   int bmp_daemon_port;
   char *bmp_daemon_rp_ebpf_prog;

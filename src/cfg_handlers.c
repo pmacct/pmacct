@@ -4209,6 +4209,17 @@ int cfg_key_bmp_daemon_ip(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_bmp_daemon_interface(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.bmp_daemon_interface = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_daemon_interface'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_bmp_daemon_ipv6_only(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -7571,6 +7582,17 @@ int cfg_key_telemetry_ip(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) list->cfg.telemetry_ip = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_ip'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_interface(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_interface = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_interface'. Globalized.\n", filename);
 
   return changes;
 }

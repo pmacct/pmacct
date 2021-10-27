@@ -2046,11 +2046,18 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           else entry = (struct xflow_status_entry *) pptrs->f_status_g;
 
 	  if (entry) {
+	    int got_v4 = FALSE;
+
 	    if (tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].len) {
 	      raw_to_addr(&entry->exp_addr, pkt+tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].off, AF_INET);
 	      raw_to_sa(&entry->exp_sa, pkt+tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].off, 0, AF_INET);
+
+	      if (!is_any(&entry->exp_addr)) {
+		got_v4 = TRUE;
+	      }
 	    }
-	    else if (tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].len) {
+
+	    if (!got_v4 && tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].len) {
 	      raw_to_addr(&entry->exp_addr, pkt+tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].off, AF_INET6);
 	      raw_to_sa(&entry->exp_sa, pkt+tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].off, 0, AF_INET6);
 	    }

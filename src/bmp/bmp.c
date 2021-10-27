@@ -254,6 +254,13 @@ int skinny_bmp_daemon()
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEPORT (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
 #endif
 
+#if (defined HAVE_SO_BINDTODEVICE)
+  if (config.bmp_daemon_interface)  {
+    rc = setsockopt(config.bmp_sock, SOL_SOCKET, SO_BINDTODEVICE, config.bmp_daemon_interface, (socklen_t) strlen(config.bmp_daemon_interface));
+    if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_BINDTODEVICE (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
+  }
+#endif
+
     rc = setsockopt(config.bmp_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&yes, (socklen_t) sizeof(yes));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, bmp_misc_db->log_str, errno);
 

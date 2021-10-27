@@ -361,6 +361,13 @@ int telemetry_daemon(void *t_data_void)
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEPORT (errno: %d).\n", config.name, t_data->log_str, errno);
 #endif
 
+#if (defined HAVE_SO_BINDTODEVICE)
+    if (config.telemetry_interface)  {
+      rc = setsockopt(config.telemetry_sock, SOL_SOCKET, SO_BINDTODEVICE, config.telemetry_interface, (socklen_t) strlen(config.telemetry_interface));
+      if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_BINDTODEVICE (errno: %d).\n", config.name, t_data->log_str, errno);
+    }
+#endif
+
     rc = setsockopt(config.telemetry_sock, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, (socklen_t) sizeof(yes));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_REUSEADDR (errno: %d).\n", config.name, t_data->log_str, errno);
 
