@@ -33,9 +33,6 @@
 #include "ndpi/ndpi.h"
 #endif
 
-/* L36 - avro_new_label */
-#include "ptm_label.h"
-
 #ifdef WITH_AVRO
 /* global variables */
 avro_schema_t p_avro_acct_schema, p_avro_acct_init_schema, p_avro_acct_close_schema;
