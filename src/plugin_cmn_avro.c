@@ -34,12 +34,11 @@
 #endif
 
 /* L36 - avro_new_label */
-#include <cdada/list.h>
-#include <cdada/str.h>
+//#include <cdada/list.h>
+//#include <cdada/str.h>
 #include "ptm_label.h"
 
-CDADA_LIST_CUSTOM_TYPE_DECL(ptm_label);
-CDADA_LIST_CUSTOM_GEN();
+//CDADA_LIST_CUSTOM_TYPE_DECL(ptm_label);
 
 #ifdef WITH_AVRO
 /* global variables */
@@ -1386,7 +1385,8 @@ ptm_labels_to_linked_list(char *ptm_labels)
   const int MAX_TOCKENS = 256; //Max amount of tokens per string: 128 Labels
   const char *DELIM = ",";
   
-  cdada_list_t *ptm_linked_list = cdada_list_create_custom(ptm_label);
+  //cdada_list_t *ptm_linked_list = cdada_list_create_custom(ptm_label);
+  cdada_list_t *ptm_linked_list = cdada_list_create(ptm_label);
   ptm_label lbl;
 
   char *token = NULL;
