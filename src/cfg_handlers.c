@@ -3167,6 +3167,17 @@ int cfg_key_nfacctd_ip(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_nfacctd_interface(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_interface = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'nfacctd_interface'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_nfacctd_ipv6_only(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -7592,7 +7603,7 @@ int cfg_key_telemetry_interface(char *filename, char *name, char *value_ptr)
   int changes = 0;
 
   for (; list; list = list->next, changes++) list->cfg.telemetry_interface = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_interface'. Globalized.\n", filename);
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_interface'. Globalized.\n", filename);
 
   return changes;
 }

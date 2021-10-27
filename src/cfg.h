@@ -195,6 +195,7 @@ struct configuration {
   char *print_latest_file;
   int nfacctd_port;
   char *nfacctd_ip;
+  char *nfacctd_interface;
   int nfacctd_ipv6_only;
   char *nfacctd_rp_ebpf_prog;
   char *nfacctd_kafka_broker_host;

@@ -717,6 +717,13 @@ int main(int argc,char **argv, char **envp)
     rc = setsockopt(config.sock, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, (socklen_t) sizeof(yes));
     if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_REUSEADDR.\n", config.name);
 
+#if (defined HAVE_SO_BINDTODEVICE)
+    if (config.nfacctd_interface)  {
+      rc = setsockopt(config.sock, SOL_SOCKET, SO_BINDTODEVICE, config.nfacctd_interface, (socklen_t) strlen(config.nfacctd_interface));
+      if (rc < 0) Log(LOG_ERR, "WARN ( %s/core ): setsockopt() failed for SO_BINDTODEVICE (errno: %d).\n", config.name, errno);
+    }
+#endif
+
     if (config.nfacctd_ipv6_only) {
       int yes=1;
 

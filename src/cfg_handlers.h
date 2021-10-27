@@ -151,6 +151,7 @@ extern int cfg_key_print_output_custom_cfg_file(char *, char *, char *);
 extern int cfg_key_print_latest_file(char *, char *, char *);
 extern int cfg_key_nfacctd_port(char *, char *, char *);
 extern int cfg_key_nfacctd_ip(char *, char *, char *);
+extern int cfg_key_nfacctd_interface(char *, char *, char *);
 extern int cfg_key_nfacctd_ipv6_only(char *, char *, char *);
 extern int cfg_key_nfacctd_rp_ebpf_prog(char *, char *, char *);
 extern int cfg_key_nfacctd_allow_file(char *, char *, char *);
