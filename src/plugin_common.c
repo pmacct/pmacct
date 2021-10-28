@@ -1026,8 +1026,6 @@ ptm_labels_to_linked_list(const char *ptm_labels)
     tokens_counter++;
   }
 
-  free(no_const_ptm_labels);
-
   int list_counter;
   for (list_counter = 0; list_counter < tokens_counter; list_counter+=2)
   {
