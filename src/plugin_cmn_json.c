@@ -1248,7 +1248,7 @@ void compose_json_map_label(json_t *obj, struct chained_cache *cc)
   obj = json_object();
   json_t *root_l1 = compose_label_json_data(ptm_ll, ll_size);
 
-  json_object_set_new(obj, "label", root_l1);
+  json_object_set_new_nocheck(obj, "label", root_l1);
 
   char *j_dump_final  = json_dumps(obj, JSON_INDENT(2));
   printf("%s\n", j_dump_final);
@@ -1277,7 +1277,7 @@ compose_label_json_data(cdada_list_t *ll, int ll_size)
   {
     cdada_list_get(ll, idx_1, &lbl);
     j_str_tmp = json_string(lbl.value);
-    json_object_set_new(root, lbl.key, j_str_tmp);
+    json_object_set_new_nocjeck(root, lbl.key, j_str_tmp);
   }
 
   return root;
