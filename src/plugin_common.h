@@ -128,10 +128,11 @@ extern void P_update_time_reference(struct insert_data *);
 extern void P_set_stitch(struct chained_cache *, struct pkt_data *, struct insert_data *);
 extern void P_update_stitch(struct chained_cache *, struct pkt_data *, struct insert_data *);
 
-/* L131 - avro_new_label */
+/* L131 - new_label */
 extern cdada_list_t *ptm_labels_to_linked_list(const char *);
 
 /* global vars */
+/* L135 - new_label */
 /* based on the default ptm delimiter: pretag.c/default_sep[] */
 extern const char *PTM_LBL_DELIM;
 /* new delimiter to seprate labels' key/value pairs */
