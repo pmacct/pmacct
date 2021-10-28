@@ -62,7 +62,7 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
     avro_schema_record_field_append(schema, "tag2", avro_schema_long());
 
   if (wtc_2 & COUNT_LABEL)
-    /* L72 - avro_new_label */
+    /* L65 - avro_new_label */
     compose_label_avro_schema(schema);
     //avro_schema_record_field_append(schema, "label", avro_schema_string());
 
@@ -432,9 +432,8 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
   if (wtc_2 & COUNT_LABEL) {
     vlen_prims_get(pvlen, COUNT_INT_LABEL, &str_ptr);
     if (!str_ptr) str_ptr = empty_string;
-    /* L439 - avro_new_label */
+    /* L435 - avro_new_label */
     compose_label_avro_data(str_ptr, value);
-
     //pm_avro_check(avro_value_get_by_name(&value, "label", &field, NULL));
     //pm_avro_check(avro_value_set_string(&field, str_ptr));
   }
@@ -1344,7 +1343,7 @@ void pm_avro_exit_gracefully(int status)
 }
 
 
-/* L1372 - avro_new_label */
+/* L1346 - avro_new_label */
 void
 compose_label_avro_schema(avro_schema_t sc_type_record)
 {
