@@ -1011,6 +1011,7 @@ ptm_labels_to_linked_list(const char *ptm_labels)
   const int MAX_TOCKENS = 256; //
   const char *DELIM = ",";
   
+  /* strtok doesn't like const string */
   char *no_const_ptm_labels = strdup(ptm_labels);
 
   cdada_list_t *ptm_linked_list = cdada_list_create(ptm_label);
