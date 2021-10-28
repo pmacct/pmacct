@@ -87,7 +87,7 @@ struct p_table_rr {
 };
 #endif
 
-/* L90 - avro_new_label */
+/* L90 - general_new_label */
 #ifndef PTM_LABEL
 #define PTM_LABEL
 typedef struct {
