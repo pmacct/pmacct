@@ -1245,11 +1245,10 @@ void compose_json_map_label(json_t *obj, struct chained_cache *cc)
   cdada_list_t *ptm_ll = ptm_labels_to_linked_list(lbls_norm);
   int ll_size = cdada_list_size(ptm_ll);
 
-  json_t *root_l0 = json_object();
+  obj = json_object();
   json_t *root_l1 = compose_label_json_data(ptm_ll, ll_size);
-  json_t *j_str_tmp = NULL;
 
-  json_object_set_new_nocheck(root_l0, "label", root_l1);
+  json_object_set_new(root_l0, "label", root_l1);
 
   json_decref(root_l0);
   cdada_list_destroy(ptm_ll);
