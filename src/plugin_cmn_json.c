@@ -1248,9 +1248,13 @@ void compose_json_map_label(json_t *obj, struct chained_cache *cc)
   obj = json_object();
   json_t *root_l1 = compose_label_json_data(ptm_ll, ll_size);
 
-  json_object_set_new_nocheck(obj, "label", root_l1);
+  json_object_set_new(obj, "label", root_l1);
 
-  //json_decref(obj);
+  char *j_dump_final  = json_dumps(obj, JSON_INDENT(2));
+  printf("%s\n", j_dump_final);
+  free(j_dump_final);
+
+  json_decref(obj);
   cdada_list_destroy(ptm_ll);
 }
 
