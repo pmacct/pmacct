@@ -61,8 +61,8 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
 
   if (wtc_2 & COUNT_LABEL) {
     /* L63 - json_new_label */
-    cjhandler[idx] = compose_json_label;
-    //cjhandler[idx] = compose_json_map_label;
+    //cjhandler[idx] = compose_json_label;
+    cjhandler[idx] = compose_json_map_label;
     idx++;
   }
 
@@ -1250,7 +1250,7 @@ void compose_json_map_label(json_t *obj, struct chained_cache *cc)
 
   json_object_set_new(obj, "label", root_l1);
 
-  //json_decref(obj);
+  json_decref(obj);
   cdada_list_destroy(ptm_ll);
 }
 
