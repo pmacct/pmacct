@@ -132,12 +132,6 @@ extern void P_update_stitch(struct chained_cache *, struct pkt_data *, struct in
 extern cdada_list_t *ptm_labels_to_linked_list(const char *);
 
 /* global vars */
-/* L135 - new_label */
-/* based on the default ptm delimiter: pretag.c/default_sep[] */
-extern const char *PTM_LBL_DELIM;
-/* new delimiter to seprate labels' key/value pairs */
-extern const char *PTM_KV_DELIM;
-
 extern void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
 extern void (*purge_func)(struct chained_cache *[], int, int); /* pointer to purge function */ 
 extern struct scratch_area sa;
