@@ -1009,6 +1009,8 @@ ptm_labels_to_linked_list(const char *ptm_labels)
 {
   /* Max amount of tokens per string: 128 Labels */
   const int MAX_TOCKENS = 256; //
+  
+  /* default delimiter between the labels configured using ptagmap */
   const char *DELIM = ",";
   
   /* strtok doesn't like const string */

@@ -431,29 +431,9 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
 
   if (wtc_2 & COUNT_LABEL) {
     vlen_prims_get(pvlen, COUNT_INT_LABEL, &str_ptr);
-    /* L439 - avro_new_label */	     
-    if (str_ptr) //NULL = FALSE
-    {
-      /* labels normalization */
-      cdada_str_t *lbls_cdada = cdada_str_create(str_ptr);
-      cdada_str_replace_all(lbls_cdada, "-", ",");
-      const char *lbls_norm = cdada_str(lbls_cdada);
-
-      /* linked-list creation */
-      ptm_label lbl;
-      cdada_list_t *ptm_ll = ptm_labels_to_linked_list(lbls_norm);
-      int ll_size = cdada_list_size(ptm_ll);
-
-      compose_label_avro_data(ptm_ll, ll_size, value);
-  
-      /* free-up memory */ 
-      cdada_list_destroy(ptm_ll);
-    }
-    if (!str_ptr) //NULL = TRUE
-    {
-      str_ptr = empty_string;
-    }
-    //if (!str_ptr) str_ptr = empty_string;
+    if (!str_ptr) str_ptr = empty_string;
+    /* L439 - avro_new_label */
+    compose_label_avro_data(str_ptr, value);
 
     //pm_avro_check(avro_value_get_by_name(&value, "label", &field, NULL));
     //pm_avro_check(avro_value_set_string(&field, str_ptr));
@@ -1378,9 +1358,16 @@ compose_label_avro_schema(avro_schema_t sc_type_record)
 }
 
 int
-compose_label_avro_data(cdada_list_t *ll, int ll_size, avro_value_t v_type_record)
+compose_label_avro_data(char *str_ptr, avro_value_t v_type_record)
 {
-  ptm_label lbl;
+  /* labels normalization */
+  cdada_str_t *lbls_cdada = cdada_str_create(str_ptr);
+  cdada_str_replace_all(lbls_cdada, "-", ",");
+  const char *lbls_norm = cdada_str(lbls_cdada);
+
+  /* linked-list creation */
+  cdada_list_t *ll = ptm_labels_to_linked_list(lbls_norm);
+  int ll_size = cdada_list_size(ll);
 
   int idx_0;
   for (idx_0 = 0; idx_0 < ll_size; idx_0++)
@@ -1416,10 +1403,9 @@ compose_label_avro_data(cdada_list_t *ll, int ll_size, avro_value_t v_type_recor
   avro_value_get_size(&v_type_map, &map_size);
 
   /* free-up memory */
+  cdada_list_destroy(ptm_ll);
   avro_value_iface_decref(if_type_map);
   avro_value_iface_decref(if_type_string);
-  //avro_value_decref(&v_type_map);
-  //avro_value_decref(&v_type_string);
   
   return 0;
 }
