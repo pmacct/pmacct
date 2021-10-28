@@ -1009,6 +1009,7 @@ ptm_labels_to_linked_list(const char *ptm_labels)
 {
   /* Max amount of tokens per string: 128 Labels */
   const int MAX_TOCKENS = 256; //
+  PTM_KV_DELIM = ","
   
   /* strtok doesn't like const string */
   char *no_const_ptm_labels = strdup(ptm_labels);
