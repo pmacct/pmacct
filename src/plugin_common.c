@@ -1003,7 +1003,7 @@ void P_update_stitch(struct chained_cache *cache_ptr, struct pkt_data *data, str
 }
 
 
-/* L1006 - new_label */
+/* L1006 - general_new_label */
 char *
 labels_delim_normalization(const char *)
 {
