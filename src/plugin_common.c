@@ -1010,9 +1010,6 @@ ptm_labels_to_linked_list(const char *ptm_labels)
   /* Max amount of tokens per string: 128 Labels */
   const int MAX_TOCKENS = 256; //
   
-  /* default delimiter between the labels configured using ptagmap */
-  const char *DELIM = ",";
-  
   /* strtok doesn't like const string */
   char *no_const_ptm_labels = strdup(ptm_labels);
 
@@ -1023,7 +1020,7 @@ ptm_labels_to_linked_list(const char *ptm_labels)
   char *tokens[MAX_TOCKENS];
 
   int tokens_counter = 0;
-  for (token = strtok(no_const_ptm_labels, DELIM); token != NULL; token = strtok(NULL, DELIM))
+  for (token = strtok(no_const_ptm_labels, PTM_LBL_DELIM); token != NULL; token = strtok(NULL, PTM_LBL_DELIM))
   {
     tokens[tokens_counter] = token;
     tokens_counter++;
