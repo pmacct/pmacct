@@ -1254,8 +1254,8 @@ void compose_json_map_label(json_t *obj, struct chained_cache *cc)
   printf("%s\n", j_dump_final);
   free(j_dump_final);
 
-  json_decref(obj);
-  cdada_list_destroy(ptm_ll);
+  //json_decref(obj);
+  //cdada_list_destroy(ptm_ll);
 }
 
 json_t *
