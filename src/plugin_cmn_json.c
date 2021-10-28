@@ -1235,9 +1235,13 @@ void compose_json_map_label(json_t *obj, struct chained_cache *cc)
   vlen_prims_get(cc->pvlen, COUNT_INT_LABEL, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;
 
+  /* based on the default ptm delimiter: pretag.c/default_sep[] */
+  const char *PTM_LBL_DELIM = ",";
+  /* new delimiter to seprate labels' key/value pairs */
+  const char *PTM_KV_DELIM = "-";
   /* labels normalization */
   cdada_str_t *lbls_cdada = cdada_str_create(str_ptr);
-  cdada_str_replace_all(lbls_cdada, "-", ",");
+  cdada_str_replace_all(lbls_cdada, PTM_KV_DELIM, PTM_LBL_DELIM);
   const char *lbls_norm = cdada_str(lbls_cdada);
 
   /* linked-list creation */

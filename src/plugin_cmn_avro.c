@@ -1359,9 +1359,14 @@ compose_label_avro_schema(avro_schema_t sc_type_record)
 int
 compose_label_avro_data(char *str_ptr, avro_value_t v_type_record)
 {
-  /* labels normalization */
+  /* based on the default ptm delimiter: pretag.c/default_sep[] */
+  const char *PTM_LBL_DELIM = ",";
+  /* new delimiter to seprate labels' key/value pairs */
+  const char *PTM_KV_DELIM = "-";
+
+  /* labels delimiter normalization */
   cdada_str_t *lbls_cdada = cdada_str_create(str_ptr);
-  cdada_str_replace_all(lbls_cdada, "-", ",");
+  cdada_str_replace_all(lbls_cdada, PTM_KV_DELIM, PTM_LBL_DELIM);
   const char *lbls_norm = cdada_str(lbls_cdada);
 
   /* linked-list creation */
