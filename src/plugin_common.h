@@ -131,9 +131,9 @@ extern void P_update_stitch(struct chained_cache *, struct pkt_data *, struct in
 /* L131 - avro_new_label */
 extern cdada_list_t *ptm_labels_to_linked_list(const char *);
 /* based on the default ptm delimiter: pretag.c/default_sep[] */
-extern const char *PTM_LBL_DELIM = ",";
+const char *PTM_LBL_DELIM = ",";
 /* new delimiter to seprate labels' key/value pairs */
-extern const char *PTM_KV_DELIM = "-";
+//extern const char *PTM_KV_DELIM = "-";
 
 /* global vars */
 extern void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
