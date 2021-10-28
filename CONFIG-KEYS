@@ -1736,6 +1736,11 @@ DESC:		Defines the IPv4/IPv6 address where to bind the nfacctd (nfacctd_ip) and 
 		daemons.
 DEFAULT:	all interfaces
 
+KEY:            [ nfacctd_interface | sfacctd_interface ] [GLOBAL]
+DESC:           Defines the interface for the nfacctd / sfacctd daemon to listen on. This makes it possible
+		to receive flow packets entirely in one VRF by specifying the VRF device name here.
+DEFAULT:        none
+
 KEY:		[ nfacctd_ipv6_only | sfacctd_ipv6_only ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
 VALUES:         [ true | false ]
 DESC:		When listening on all interfaces (default setting for nfacctd_ip and sfacctd_ip) and IPv6 is
@@ -2365,9 +2370,9 @@ DESC:           When listening on all interfaces (default setting for nfacctd_ip
                 knob to true disables the IPv4 (IPv6 IPv4-mapped) part.
 DEFAULT:        false
 
-KEY:            bgp_daemon_interface [GLOBAL]
-DESC:           Defines the interface for the BGP daemon to listen on. This makes it possible to have the BGP
-                communication happen entirely in one VRF by specifying the VRF device name here.
+KEY:            [ bgp_daemon_interface | bmp_daemon_interface ] [GLOBAL]
+DESC:           Defines the interface for the BGP / BMP daemon to listen on. This makes it possible to have
+		the session happen entirely in one VRF by specifying the VRF device name here.
 DEFAULT:        none
 
 KEY:            bgp_daemon_id [GLOBAL]
@@ -3094,6 +3099,12 @@ KEY:		telemetry_daemon_ip [GLOBAL]
 DESC:		Binds the Streaming Telemetry daemon to a specific interface. Expects as value an IPv4/
 		IPv6 address.
 DEFAULT:        0.0.0.0
+
+KEY:            telemetry_daemon_interface [GLOBAL]
+DESC:           Defines the interface for the Streaming Telemetry daemon to listen on. This makes it
+		possible to have the session happen entirely in one VRF by specifying the VRF device
+		name here.
+DEFAULT:        none
 
 KEY:		telemetry_daemon_ipv6_only [GLOBAL]
 VALUES:		[ true | false ]
