@@ -437,7 +437,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
       /* labels normalization */
       cdada_str_t *lbls_cdada = cdada_str_create(str_ptr);
       cdada_str_replace_all(lbls_cdada, "-", ",");
-      char *lbls_norm = cdada_str(lbls_cdada);
+      const char *lbls_norm = cdada_str(lbls_cdada);
 
       /* linked-list creation */
       ptm_label lbl;
