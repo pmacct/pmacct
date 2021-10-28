@@ -1249,7 +1249,6 @@ void compose_json_map_label(json_t *obj, struct chained_cache *cc)
 
   json_object_set_new_nocheck(obj, "label", root_l1);
 
-  //json_decref(root_l1);
   cdada_list_destroy(ptm_ll);
 }
 
