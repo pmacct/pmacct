@@ -1248,7 +1248,7 @@ void compose_json_map_label(json_t *obj, struct chained_cache *cc)
   obj = json_object();
   json_t *root_l1 = compose_label_json_data(ptm_ll, ll_size);
 
-  json_object_set_new(root_l0, "label", root_l1);
+  json_object_set_new(obj, "label", root_l1);
 
   json_decref(root_l0);
   cdada_list_destroy(ptm_ll);
