@@ -1004,8 +1004,8 @@ void P_update_stitch(struct chained_cache *cache_ptr, struct pkt_data *data, str
 
 
 /* L1006 - general_new_label */
-char *
-labels_delim_normalization(const char *)
+const char *
+labels_delim_normalization(char *str_ptr)
 {
   /* based on the default ptm delimiter: pretag.c/default_sep[] */
   const char *PTM_LBL_DELIM = ",";

@@ -130,7 +130,7 @@ extern void P_update_stitch(struct chained_cache *, struct pkt_data *, struct in
 
 /* L131 - general_new_label */
 extern cdada_list_t *ptm_labels_to_linked_list(const char *);
-extern char *labels_delim_normalization(const char *);
+extern const char *labels_delim_normalization(char *);
 
 /* global vars */
 extern void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
