@@ -1005,12 +1005,12 @@ void P_update_stitch(struct chained_cache *cache_ptr, struct pkt_data *data, str
 
 /* L1006 - avro_new_label */
 cdada_list_t *
-ptm_labels_to_linked_list(char *ptm_labels)
+ptm_labels_to_linked_list(const char *ptm_labels)
 {
-  const int MAX_TOCKENS = 256; //Max amount of tokens per string: 128 Labels
+  /* Max amount of tokens per string: 128 Labels */
+  const int MAX_TOCKENS = 256; //
   const char *DELIM = ",";
   
-  //cdada_list_t *ptm_linked_list = cdada_list_create_custom(ptm_label);
   cdada_list_t *ptm_linked_list = cdada_list_create(ptm_label);
   ptm_label lbl;
 
