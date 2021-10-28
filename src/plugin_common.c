@@ -30,8 +30,6 @@
 #include "preprocess-internal.h"
 
 /* Global variables */
-/* L33 - new_label*/
-PTM_LBL_DELIM = ",";
 void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
 void (*purge_func)(struct chained_cache *[], int, int); /* pointer to purge function */ 
 struct scratch_area sa;
@@ -1005,12 +1003,12 @@ void P_update_stitch(struct chained_cache *cache_ptr, struct pkt_data *data, str
 }
 
 
-/* L1008 - new_label */
+/* L1006 - avro_new_label */
 cdada_list_t *
 ptm_labels_to_linked_list(const char *ptm_labels)
 {
   /* Max amount of tokens per string: 128 Labels */
-  const int MAX_TOCKENS = 256; //
+  const int MAX_TOCKENS = 256;
   
   /* strtok doesn't like const string */
   char *no_const_ptm_labels = strdup(ptm_labels);
