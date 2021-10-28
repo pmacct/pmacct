@@ -1366,6 +1366,7 @@ compose_label_avro_data(char *str_ptr, avro_value_t v_type_record)
   const char *lbls_norm = cdada_str(lbls_cdada);
 
   /* linked-list creation */
+  ptm_label lbl;
   cdada_list_t *ll = ptm_labels_to_linked_list(lbls_norm);
   int ll_size = cdada_list_size(ll);
 
@@ -1403,7 +1404,7 @@ compose_label_avro_data(char *str_ptr, avro_value_t v_type_record)
   avro_value_get_size(&v_type_map, &map_size);
 
   /* free-up memory */
-  cdada_list_destroy(ptm_ll);
+  cdada_list_destroy(ll);
   avro_value_iface_decref(if_type_map);
   avro_value_iface_decref(if_type_string);
   
