@@ -30,6 +30,8 @@
 #include "preprocess-internal.h"
 
 /* Global variables */
+/* L33 - new_label */
+PTM_LBL_DELIM = ",";
 void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
 void (*purge_func)(struct chained_cache *[], int, int); /* pointer to purge function */ 
 struct scratch_area sa;
