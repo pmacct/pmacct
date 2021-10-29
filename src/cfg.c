@@ -41,6 +41,7 @@ static const struct _dictionary_line dictionary[] = {
   {"snaplen", cfg_key_snaplen},
   {"propagate_signals", cfg_key_propagate_signals},
   {"aggregate_filter", cfg_key_aggregate_filter},
+  {"aggregate_unknown_etype", cfg_key_aggregate_unknown_etype},
   {"dtls_path", cfg_key_dtls_path},
   {"promisc", cfg_key_promisc},
   {"pcap_filter", cfg_key_pcap_filter},

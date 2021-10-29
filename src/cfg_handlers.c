@@ -508,6 +508,20 @@ int cfg_key_aggregate_filter(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_aggregate_unknown_etype(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.aggregate_unknown_etype = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'aggregate_unknown_etype'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_pre_tag_filter(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

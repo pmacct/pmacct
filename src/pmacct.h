@@ -406,6 +406,7 @@ extern void chdlc_handler(const struct pcap_pkthdr *, register struct packet_ptr
 
 extern int ip_handler(register struct packet_ptrs *);
 extern int ip6_handler(register struct packet_ptrs *);
+extern int unknown_etype_handler(register struct packet_ptrs *);
 extern int gtp_tunnel_func(register struct packet_ptrs *);
 extern int gtp_tunnel_configurator(struct tunnel_handler *, char *);
 extern void tunnel_registry_init();

@@ -1347,6 +1347,7 @@ void counters_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
 
   if (pptrs->l3_proto == ETHERTYPE_IP) pdata->pkt_len = ntohs(((struct pm_iphdr *) pptrs->iph_ptr)->ip_len);
   else if (pptrs->l3_proto == ETHERTYPE_IPV6) pdata->pkt_len = ntohs(((struct ip6_hdr *) pptrs->iph_ptr)->ip6_plen)+IP6HdrSz;
+  else if (config.aggregate_unknown_etype) pdata->pkt_len = pptrs->pkthdr->len-ETHER_HDRLEN;
 
   if (pptrs->frag_sum_bytes) {
     pdata->pkt_len += pptrs->frag_sum_bytes;
