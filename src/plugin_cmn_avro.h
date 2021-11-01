@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -46,8 +46,6 @@
 #define	AVRO_ACCT_CLOSE_SID	2
 
 /* prototypes */
-
-/* L50 - avro_new_label */
 extern void compose_label_avro_schema(avro_schema_t);
 extern int compose_label_avro_data(char *, avro_value_t);
 

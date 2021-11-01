@@ -36,8 +36,6 @@
 #ifdef WITH_AVRO
 /* global variables */
 avro_schema_t p_avro_acct_schema, p_avro_acct_init_schema, p_avro_acct_close_schema;
-
-/* L47 - avro_new_label */
 avro_schema_t sc_type_map, sc_type_string;
 
 /* functions */
@@ -61,10 +59,10 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc & COUNT_TAG2)
     avro_schema_record_field_append(schema, "tag2", avro_schema_long());
 
-  if (wtc_2 & COUNT_LABEL)
-    /* L65 - avro_new_label */
+  if (wtc_2 & COUNT_LABEL) {
     compose_label_avro_schema(schema);
     //avro_schema_record_field_append(schema, "label", avro_schema_string());
+  }
 
   if (wtc & COUNT_CLASS)
     avro_schema_record_field_append(schema, "class_legacy", avro_schema_string());
@@ -432,7 +430,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
   if (wtc_2 & COUNT_LABEL) {
     vlen_prims_get(pvlen, COUNT_INT_LABEL, &str_ptr);
     if (!str_ptr) str_ptr = empty_string;
-    /* L435 - avro_new_label */
+
     compose_label_avro_data(str_ptr, value);
     //pm_avro_check(avro_value_get_by_name(&value, "label", &field, NULL));
     //pm_avro_check(avro_value_set_string(&field, str_ptr));
@@ -1343,9 +1341,7 @@ void pm_avro_exit_gracefully(int status)
 }
 
 
-/* L1346 - avro_new_label */
-void
-compose_label_avro_schema(avro_schema_t sc_type_record)
+void compose_label_avro_schema(avro_schema_t sc_type_record)
 {
   sc_type_string = avro_schema_string();
   sc_type_map = avro_schema_map(sc_type_string);
@@ -1356,8 +1352,7 @@ compose_label_avro_schema(avro_schema_t sc_type_record)
   avro_schema_decref(sc_type_string);
 }
 
-int
-compose_label_avro_data(char *str_ptr, avro_value_t v_type_record)
+int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record)
 {
   /* labels normalization */
   const char *lbls_norm = labels_delim_normalization(str_ptr);
@@ -1368,8 +1363,7 @@ compose_label_avro_data(char *str_ptr, avro_value_t v_type_record)
   int ll_size = cdada_list_size(ll);
 
   int idx_0;
-  for (idx_0 = 0; idx_0 < ll_size; idx_0++)
-  {
+  for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
     cdada_list_get(ll, idx_0, &lbl);
   }
 
@@ -1386,13 +1380,10 @@ compose_label_avro_data(char *str_ptr, avro_value_t v_type_record)
   avro_value_get_size(&v_type_map, &map_size);
 
   int idx_1;
-  for (idx_1 = 0; idx_1 < ll_size; idx_1++)
-  {
+  for (idx_1 = 0; idx_1 < ll_size; idx_1++) {
     cdada_list_get(ll, idx_1, &lbl);
-    if (avro_value_get_by_name(&v_type_record, "label", &v_type_map, NULL) == 0)
-    {
-      if (avro_value_add(&v_type_map, lbl.key, &v_type_string, NULL, NULL) == 0)
-      {
+    if (avro_value_get_by_name(&v_type_record, "label", &v_type_map, NULL) == 0) {
+      if (avro_value_add(&v_type_map, lbl.key, &v_type_string, NULL, NULL) == 0) {
         avro_value_set_string(&v_type_string, lbl.value);
       }
     }

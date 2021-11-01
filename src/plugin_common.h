@@ -87,15 +87,10 @@ struct p_table_rr {
 };
 #endif
 
-/* L90 - general_new_label */
-#ifndef PTM_LABEL
-#define PTM_LABEL
 typedef struct {
   char *key;
   char *value;
 } __attribute__((packed)) ptm_label;
-#endif
-
 
 /* prototypes */
 extern void P_set_signals();
@@ -128,7 +123,6 @@ extern void P_update_time_reference(struct insert_data *);
 extern void P_set_stitch(struct chained_cache *, struct pkt_data *, struct insert_data *);
 extern void P_update_stitch(struct chained_cache *, struct pkt_data *, struct insert_data *);
 
-/* L131 - general_new_label */
 extern cdada_list_t *ptm_labels_to_linked_list(const char *);
 extern const char *labels_delim_normalization(char *);
 

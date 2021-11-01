@@ -1002,10 +1002,7 @@ void P_update_stitch(struct chained_cache *cache_ptr, struct pkt_data *data, str
   }
 }
 
-
-/* L1006 - general_new_label */
-const char *
-labels_delim_normalization(char *str_ptr)
+const char * labels_delim_normalization(char *str_ptr)
 {
   /* based on the default ptm delimiter: pretag.c/default_sep[] */
   const char *PTM_LBL_DELIM = ",";
@@ -1019,8 +1016,7 @@ labels_delim_normalization(char *str_ptr)
   return lbls_norm;
 }
 
-cdada_list_t *
-ptm_labels_to_linked_list(const char *ptm_labels)
+cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
 {
   /* Max amount of tokens per string: 128 Labels */
   const int MAX_TOCKENS = 256;
@@ -1037,15 +1033,13 @@ ptm_labels_to_linked_list(const char *ptm_labels)
   char *tokens[MAX_TOCKENS];
 
   int tokens_counter = 0;
-  for (token = strtok(no_const_ptm_labels, PTM_LBL_DELIM); token != NULL; token = strtok(NULL, PTM_LBL_DELIM))
-  {
+  for (token = strtok(no_const_ptm_labels, PTM_LBL_DELIM); token != NULL; token = strtok(NULL, PTM_LBL_DELIM)) {
     tokens[tokens_counter] = token;
     tokens_counter++;
   }
 
   int list_counter;
-  for (list_counter = 0; list_counter < tokens_counter; list_counter+=2)
-  {
+  for (list_counter = 0; list_counter < tokens_counter; list_counter += 2) {
     memset(&lbl, 0, sizeof(lbl));
     lbl.key = tokens[list_counter];
     lbl.value = tokens[list_counter + 1];

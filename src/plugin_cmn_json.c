@@ -60,7 +60,6 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
   }
 
   if (wtc_2 & COUNT_LABEL) {
-    /* L63 - json_new_label */
     cjhandler[idx] = compose_json_map_label;
     //cjhandler[idx] = compose_json_label;
     idx++;
@@ -1226,8 +1225,6 @@ void *compose_purge_close_json(char *writer_name, pid_t writer_pid, int purged_e
 }
 #endif
 
-
-/* L1230 - json_new_label */
 void compose_json_map_label(json_t *obj, struct chained_cache *cc)
 {
   char empty_string[] = "", *str_ptr;
@@ -1249,14 +1246,12 @@ void compose_json_map_label(json_t *obj, struct chained_cache *cc)
   cdada_list_destroy(ptm_ll);
 }
 
-json_t *
-compose_label_json_data(cdada_list_t *ll, int ll_size)
+json_t * compose_label_json_data(cdada_list_t *ll, int ll_size)
 {
   ptm_label lbl;
 
   int idx_0;
-  for (idx_0 = 0; idx_0 < ll_size; idx_0++)
-  {
+  for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
     cdada_list_get(ll, idx_0, &lbl);
   }
 
@@ -1264,8 +1259,7 @@ compose_label_json_data(cdada_list_t *ll, int ll_size)
   json_t *j_str_tmp = NULL;
 
   int idx_1;
-  for (idx_1 = 0; idx_1 < ll_size; idx_1++)
-  {
+  for (idx_1 = 0; idx_1 < ll_size; idx_1++) {
     cdada_list_get(ll, idx_1, &lbl);
     j_str_tmp = json_string(lbl.value);
     json_object_set_new_nocheck(root, lbl.key, j_str_tmp);

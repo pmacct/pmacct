@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
 
 /*
@@ -32,8 +32,6 @@ typedef void (*compose_json_handler)(json_t *, struct chained_cache *);
 extern compose_json_handler cjhandler[N_PRIMITIVES];
 
 /* prototypes */
-
-/* L36 - json_new_label */
 extern json_t *compose_label_json_data(cdada_list_t *ll, int ll_size);
 extern void compose_json_map_label(json_t *, struct chained_cache *);
 
