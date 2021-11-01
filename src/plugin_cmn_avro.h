@@ -46,6 +46,11 @@
 #define	AVRO_ACCT_CLOSE_SID	2
 
 /* prototypes */
+
+/* L50 - avro_new_label */
+extern void compose_label_avro_schema(avro_schema_t);
+extern int compose_label_avro_data(char *, avro_value_t);
+
 extern void pm_avro_exit_gracefully(int);
 
 extern avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2);
