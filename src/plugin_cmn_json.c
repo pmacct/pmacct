@@ -1239,7 +1239,6 @@ void compose_json_map_label(json_t *obj, struct chained_cache *cc)
   const char *lbls_norm = labels_delim_normalization(str_ptr);
 
   /* linked-list creation */
-  ptm_label lbl;
   cdada_list_t *ptm_ll = ptm_labels_to_linked_list(lbls_norm);
   int ll_size = cdada_list_size(ptm_ll);
 
