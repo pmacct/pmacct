@@ -60,8 +60,13 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
   }
 
   if (wtc_2 & COUNT_LABEL) {
-    cjhandler[idx] = compose_json_map_label;
-    //cjhandler[idx] = compose_json_label;
+    if (config.pretag_label_encode_as_map) {
+      cjhandler[idx] = compose_json_map_label;
+    }
+    else {
+      cjhandler[idx] = compose_json_label;
+    }
+
     idx++;
   }
 

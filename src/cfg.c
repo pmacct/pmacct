@@ -348,6 +348,7 @@ static const struct _dictionary_line dictionary[] = {
   {"pre_tag_filter", cfg_key_pre_tag_filter},
   {"pre_tag2_filter", cfg_key_pre_tag2_filter},
   {"pre_tag_label_filter", cfg_key_pre_tag_label_filter},
+  {"pre_tag_label_encode_as_map", cfg_key_pre_tag_label_encode_as_map},
   {"post_tag", cfg_key_post_tag},
   {"post_tag2", cfg_key_post_tag2},
   {"sampling_rate", cfg_key_sampling_rate},

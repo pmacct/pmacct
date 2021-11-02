@@ -538,6 +538,7 @@ struct configuration {
   struct pretag_filter ptf;
   struct pretag_filter pt2f;
   struct pretag_label_filter ptlf;
+  int pretag_label_encode_as_map;
   int maps_refresh;
   int maps_index;
   int maps_entries;
