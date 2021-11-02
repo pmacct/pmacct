@@ -665,7 +665,7 @@ int main(int argc,char **argv)
   char *as_path, empty_aspath[] = "^$", empty_string[] = "", *bgp_comm;
   int sd, buflen, unpacked, printed;
   int counter=0, sep_len=0, is_event;
-  char *sep_ptr = NULL, sep[10], default_sep[] = ",", spacing_sep[2];
+  char *sep_ptr = NULL, sep[10], spacing_sep[2];
   struct imt_custom_primitives custom_primitives_input;
 
   /* mrtg stuff */
@@ -1321,7 +1321,7 @@ int main(int argc,char **argv)
   }
 
   sep_len = strlen(sep);
-  if (!sep_len) sep_ptr = default_sep;
+  if (!sep_len) sep_ptr = DEFAULT_SEP;
   else if (sep_len == 1) sep_ptr = sep;
   else {
     if (!strcmp(sep, "\\t")) {

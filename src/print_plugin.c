@@ -59,7 +59,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   u_int32_t bufsz = ((struct channels_list_entry *)ptr)->bufsize;
   pid_t core_pid = ((struct channels_list_entry *)ptr)->core_pid;
   struct networks_file_data nfd;
-  char default_sep[] = ",", spacing_sep[2];
+  char spacing_sep[2];
 
   unsigned char *rgptr;
   int pollagain = TRUE;
@@ -156,7 +156,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   /* setting number of entries in _protocols structure */
   while (_protocols[protocols_number].number != -1) protocols_number++;
 
-  if (!config.print_output_separator) config.print_output_separator = default_sep;
+  if (!config.print_output_separator) config.print_output_separator = DEFAULT_SEP;
   else {
     if (!strcmp(config.print_output_separator, "\\s")) {
       spacing_sep[0] = ' ';

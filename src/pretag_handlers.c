@@ -165,13 +165,12 @@ int PT_map_id2_handler(char *filename, struct id_entry *e, char *value, struct p
 
 int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
-  char default_sep = ',';
   int x, len;
 
   // XXX: isprint check?
 
   len = strlen(value);
-  if (!strchr(value, default_sep)) {
+  if (!strchr(value, DEFAULT_SEP_INT)) {
     if (pretag_malloc_label(&e->label, len + 1 /* null */)) return TRUE;
     strcpy(e->label.val, value);
     e->label.len = len;

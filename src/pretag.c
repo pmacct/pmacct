@@ -817,8 +817,6 @@ int pretag_move_label(pt_label_t *dst, pt_label_t *src)
 
 int pretag_append_label(pt_label_t *dst, pt_label_t *src)
 {
-  char default_sep[] = ",";
-
   if (!src || !dst) return ERR;
 
   if (!dst->val) {
@@ -833,7 +831,7 @@ int pretag_append_label(pt_label_t *dst, pt_label_t *src)
         return ERR;
       }
 
-      strncat(dst->val, default_sep, 1);
+      strcat(dst->val, DEFAULT_SEP);
       strncat(dst->val, src->val, src->len);
       dst->val[dst->len] = '\0';
     }

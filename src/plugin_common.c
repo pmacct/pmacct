@@ -1004,13 +1004,11 @@ void P_update_stitch(struct chained_cache *cache_ptr, struct pkt_data *data, str
 
 const char * labels_delim_normalization(char *str_ptr)
 {
-  /* based on the default ptm delimiter: pretag.c/default_sep[] */
-  const char *PTM_LBL_DELIM = ",";
   /* new delimiter to seprate labels' key/value pairs */
   const char *PTM_KV_DELIM = "-";
 
   cdada_str_t *lbls_cdada = cdada_str_create(str_ptr);
-  cdada_str_replace_all(lbls_cdada, PTM_KV_DELIM, PTM_LBL_DELIM);
+  cdada_str_replace_all(lbls_cdada, PTM_KV_DELIM, DEFAULT_SEP);
   const char *lbls_norm = cdada_str(lbls_cdada);
 
   return lbls_norm;
@@ -1020,8 +1018,6 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
 {
   /* Max amount of tokens per string: 128 Labels */
   const int MAX_TOCKENS = 256;
-  /* based on the default ptm delimiter: pretag.c/default_sep[] */
-  const char *PTM_LBL_DELIM = ",";
   
   /* strtok doesn't like const string */
   char *no_const_ptm_labels = strdup(ptm_labels);
@@ -1033,7 +1029,7 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
   char *tokens[MAX_TOCKENS];
 
   int tokens_counter = 0;
-  for (token = strtok(no_const_ptm_labels, PTM_LBL_DELIM); token != NULL; token = strtok(NULL, PTM_LBL_DELIM)) {
+  for (token = strtok(no_const_ptm_labels, DEFAULT_SEP); token != NULL; token = strtok(NULL, DEFAULT_SEP)) {
     tokens[tokens_counter] = token;
     tokens_counter++;
   }
