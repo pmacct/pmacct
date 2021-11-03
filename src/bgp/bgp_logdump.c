@@ -140,7 +140,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       json_object_set_new_nocheck(obj, "ip_prefix", json_string(prefix_str));
     }
 
-    if (peer->cap_add_paths[afi][safi] && ri && ri->attr_extra) {
+    if (peer->cap_add_paths.cap[afi][safi] && ri && ri->attr_extra) {
       json_object_set_new_nocheck(obj, "as_path_id", json_integer((json_int_t)ri->attr_extra->path_id));
     }
 
@@ -475,7 +475,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
-    if (peer->cap_add_paths[afi][safi] && ri && ri->attr_extra) {
+    if (peer->cap_add_paths.cap[afi][safi] && ri && ri->attr_extra) {
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "as_path_id", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
       pm_avro_check(avro_value_set_long(&p_avro_branch, ri->attr_extra->path_id));

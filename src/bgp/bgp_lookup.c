@@ -91,7 +91,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
     struct host_addr peer_dst_ip;
 
     memset(&peer_dst_ip, 0, sizeof(peer_dst_ip));
-    if ((peer->cap_add_paths[AFI_IP][SAFI_UNICAST] || peer->cap_add_paths[AFI_IP6][SAFI_UNICAST]) &&
+    if ((peer->cap_add_paths.cap[AFI_IP][SAFI_UNICAST] || peer->cap_add_paths.cap[AFI_IP6][SAFI_UNICAST]) &&
 	(config.acct_type == ACCT_NF || config.acct_type == ACCT_SF)) {
       /* administrativia */
       struct pkt_bgp_primitives pbgp, *pbgp_ptr = &pbgp;
@@ -569,13 +569,13 @@ int bgp_lookup_node_match_cmp_bgp(struct bgp_info *info, struct node_match_cmp_t
   if (info->peer == nmct2->peer) {
     if (nmct2->safi == SAFI_MPLS_VPN) no_match++;
 
-    if (nmct2->peer->cap_add_paths[nmct2->afi][nmct2->safi] && nmct2->peer_dst_ip) no_match++;
+    if (nmct2->peer->cap_add_paths.cap[nmct2->afi][nmct2->safi] && nmct2->peer_dst_ip) no_match++;
 
     if (nmct2->safi == SAFI_MPLS_VPN) {
       if (info->attr_extra && !memcmp(&info->attr_extra->rd, nmct2->rd, sizeof(rd_t))) no_match--;
     }
 
-    if (nmct2->peer->cap_add_paths[nmct2->afi][nmct2->safi]) {
+    if (nmct2->peer->cap_add_paths.cap[nmct2->afi][nmct2->safi]) {
       if (nmct2->peer_dst_ip && info->attr) {
 	if (info->attr->mp_nexthop.family) {
 	  if (!host_addr_cmp(&info->attr->mp_nexthop, nmct2->peer_dst_ip)) {

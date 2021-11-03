@@ -119,7 +119,7 @@ int bgp_lookup_node_match_cmp_bmp(struct bgp_info *info, struct node_match_cmp_t
       compare_rd = TRUE;
     }
 
-    if (nmct2->peer->cap_add_paths[nmct2->afi][nmct2->safi]) no_match++;
+    if (nmct2->peer->cap_add_paths.cap[nmct2->afi][nmct2->safi]) no_match++;
 
     if (compare_rd) {
       /* RD typical location */
@@ -138,7 +138,7 @@ int bgp_lookup_node_match_cmp_bmp(struct bgp_info *info, struct node_match_cmp_t
       }
     }
 
-    if (nmct2->peer->cap_add_paths[nmct2->afi][nmct2->safi]) {
+    if (nmct2->peer->cap_add_paths.cap[nmct2->afi][nmct2->safi]) {
       if (info->attr && nmct2->peer_dst_ip) {
 	if (info->attr->mp_nexthop.family) {
 	  if (!host_addr_cmp(&info->attr->mp_nexthop, nmct2->peer_dst_ip)) {

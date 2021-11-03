@@ -309,7 +309,7 @@ struct bgp_attr_extra *bgp_attr_extra_process(struct bgp_peer *peer, struct bgp_
   }
 
   /* Install/update BGP ADD-PATHs stuff if required */
-  if (peer->cap_add_paths[afi][safi]) {
+  if (peer->cap_add_paths.cap[afi][safi]) {
     if (!rie) {
       rie = bgp_attr_extra_get(ri);
     }

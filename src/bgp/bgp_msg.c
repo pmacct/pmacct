@@ -304,7 +304,16 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 			cap_data.sndrcv);
 		  }
 		  if ((cap_data.sndrcv == 2 /* send */) || (cap_data.sndrcv == 3 /* send and receive */)) {
-		    peer->cap_add_paths[ntohs(cap_data.afi)][cap_data.safi] = TRUE; 
+		    peer->cap_add_paths.cap[ntohs(cap_data.afi)][cap_data.safi] = TRUE; 
+
+		    if (cap_data.afi > peer->cap_add_paths.afi_max) {
+		      peer->cap_add_paths.afi_max = cap_data.afi;
+		    }
+
+		    if (cap_data.safi > peer->cap_add_paths.safi_max) {
+		      peer->cap_add_paths.safi_max = cap_data.safi;
+		    }
+
 		    if (online) {
 		      if (!cap_set) {
 			/* we need to send BGP_CAPABILITY_ADD_PATHS first */
@@ -1089,7 +1098,7 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
 
   for (idx = 0; pnt < lim; pnt += psize, idx++) {
     /* handle path identifier */
-    if (peer->cap_add_paths[info->afi][info->safi]) {
+    if (peer->cap_add_paths.cap[info->afi][info->safi]) {
       memcpy(&attr_extra->path_id, pnt, 4);
       attr_extra->path_id = ntohl(attr_extra->path_id);
       pnt += 4;
@@ -1334,7 +1343,7 @@ int bgp_process_update(struct bgp_msg_data *bmd, struct prefix *p, void *attr, s
 	  else continue;
         }
 
-        if (peer->cap_add_paths[afi][safi]) {
+        if (peer->cap_add_paths.cap[afi][safi]) {
 	  if (ri->attr_extra && (attr_extra->path_id == ri->attr_extra->path_id));
 	  else continue;
         }
@@ -1464,7 +1473,7 @@ int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr,
           else continue;
         }
 
-        if (peer->cap_add_paths[afi][safi]) {
+        if (peer->cap_add_paths.cap[afi][safi]) {
           if (ri->attr_extra && (attr_extra->path_id == ri->attr_extra->path_id));
           else continue;
 	}

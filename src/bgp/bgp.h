@@ -177,6 +177,12 @@ struct bgp_peer_buf {
 #endif
 };
 
+struct cap_per_af {
+  u_int8_t cap[AFI_MAX][SAFI_MAX];
+  afi_t afi_max;
+  safi_t safi_max;
+};
+
 struct bgp_peer {
   int idx;
   int fd;
@@ -194,7 +200,7 @@ struct bgp_peer {
   u_int16_t tcp_port;
   u_int8_t cap_mp;
   char *cap_4as;
-  u_int8_t cap_add_paths[AFI_MAX][SAFI_MAX];
+  struct cap_per_af cap_add_paths;
   u_int32_t msglen;
   struct bgp_peer_stats stats;
   struct bgp_peer_buf buf;
