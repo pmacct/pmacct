@@ -756,16 +756,24 @@ int pretag_malloc_label(pt_label_t *label, int len)
   return SUCCESS;
 }
 
-int pretag_realloc_label(pt_label_t *label, int len)
+int pretag_realloc_label(pt_label_t *label, int old_len, int add_len)
 {
+  char *local_val = NULL;
+
   if (!label) return ERR;
 
-  label->val = realloc(label->val, len);
-  if (!label->val) {
+  local_val = malloc((old_len + add_len));
+  if (!local_val) {
     Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (pretag_realloc_label).\n", config.name, config.type);
     return ERR;
   }
-  label->len = len;
+
+  memset(local_val, 0, (old_len + add_len));
+  strcpy(local_val, label->val);
+
+  free(label->val);
+  label->val = local_val;
+  label->len = (old_len + add_len);
 
   return SUCCESS;
 }
@@ -825,7 +833,7 @@ int pretag_append_label(pt_label_t *dst, pt_label_t *src)
   }
   else {
     if (src->len) {
-      pretag_realloc_label(dst, (dst->len + src->len + 1 /* sep */ + 1 /* null */));
+      pretag_realloc_label(dst, dst->len, (src->len + 1 /* sep */ + 1 /* null */));
       if (!dst->val) {
         Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (pretag_append_label).\n", config.name, config.type);
         return ERR;

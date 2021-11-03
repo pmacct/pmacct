@@ -494,7 +494,7 @@ typedef struct {
 typedef struct {
   u_int32_t len;
   char *val;
-} pt_label_t;
+} __attribute__ ((packed))pt_label_t;
 
 typedef struct {
   u_int8_t set;

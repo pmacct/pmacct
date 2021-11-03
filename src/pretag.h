@@ -273,7 +273,7 @@ extern char * pt_check_range(char *);
 extern void pretag_init_vars(struct packet_ptrs *, struct id_table *);
 extern void pretag_init_label(pt_label_t *);
 extern int pretag_malloc_label(pt_label_t *, int);
-extern int pretag_realloc_label(pt_label_t *, int);
+extern int pretag_realloc_label(pt_label_t *, int, int);
 extern int pretag_copy_label(pt_label_t *, pt_label_t *);
 extern int pretag_move_label(pt_label_t *, pt_label_t *);
 extern int pretag_append_label(pt_label_t *, pt_label_t *);
