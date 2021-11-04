@@ -208,7 +208,38 @@ struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bg
   /* XXX: since BGP OPENs are fabricated, we assume that if remote
      peer is marked as able to send ADD-PATH capability, the local
      pper will be able to receive it just fine */
-  /* if (!bgp_peer_loc->cap_add_paths || !bgp_peer_rem->cap_add_paths) bgp_peer_rem->cap_add_paths = FALSE; */
+
+  /* Checking peers do agree on add-path capability; above comment
+     left for historical reference in case checks below have to be
+     further fine tuned */
+  {
+    afi_t afi, afi_max;
+    safi_t safi, safi_max;
+
+    if (bgp_peer_loc->cap_add_paths.afi_max > bgp_peer_rem->cap_add_paths.afi_max) {
+     afi_max = bgp_peer_loc->cap_add_paths.afi_max;
+    }
+    else {
+     afi_max = bgp_peer_rem->cap_add_paths.afi_max;
+    }
+
+    if (bgp_peer_loc->cap_add_paths.safi_max > bgp_peer_rem->cap_add_paths.safi_max) {
+     safi_max = bgp_peer_loc->cap_add_paths.safi_max;
+    }
+    else {
+     safi_max = bgp_peer_rem->cap_add_paths.safi_max;
+    }
+
+    for (afi = 0; afi <= afi_max; afi++) {
+      for (safi = 0; safi <= safi_max; safi++) {
+        if ((bgp_peer_loc->cap_add_paths.cap[afi][safi] && !bgp_peer_rem->cap_add_paths.cap[afi][safi]) ||
+	    (!bgp_peer_loc->cap_add_paths.cap[afi][safi] && bgp_peer_rem->cap_add_paths.cap[afi][safi])) {
+	  bgp_peer_loc->cap_add_paths.cap[afi][safi] = FALSE;
+	  bgp_peer_rem->cap_add_paths.cap[afi][safi] = FALSE;
+        }
+      }
+    }
+  }
 
   bgp_peer_rem->type = FUNC_TYPE_BMP;
   memcpy(&bgp_peer_rem->id, &bgp_peer_rem->addr, sizeof(struct host_addr));
