@@ -805,8 +805,9 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
 #endif
 
   if (wtc & COUNT_TCPFLAGS) {
+    printf("\n\n TCP-FLAGs: %s\n\n", tcp_flags);
     sprintf(misc_str, "%u", tcp_flags);
-    printf("\n\n TCP-FLAGs: %s\n\n", misc_str);
+    //printf("\n\n TCP-FLAGs: %s\n\n", misc_str);
     pm_avro_check(avro_value_get_by_name(&value, "tcp_flags", &field, NULL));
     pm_avro_check(avro_value_set_string(&field, misc_str));
   }
