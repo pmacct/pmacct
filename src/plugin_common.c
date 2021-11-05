@@ -1004,11 +1004,8 @@ void P_update_stitch(struct chained_cache *cache_ptr, struct pkt_data *data, str
 
 const char * labels_delim_normalization(char *str_ptr)
 {
-  /* new delimiter to seprate labels' key/value pairs */
-  const char *PTM_KV_DELIM = "-";
-
   cdada_str_t *lbls_cdada = cdada_str_create(str_ptr);
-  cdada_str_replace_all(lbls_cdada, PTM_KV_DELIM, DEFAULT_SEP);
+  cdada_str_replace_all(lbls_cdada, PRETAG_LABEL_KV_SEP, DEFAULT_SEP);
   const char *lbls_norm = cdada_str(lbls_cdada);
 
   return lbls_norm;
