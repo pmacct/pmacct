@@ -4,7 +4,7 @@ pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
-1.7.7 -- XX-09-2021
+1.7.7 -- 07-11-2021
   + BGP, BMP, Streaming Telemetry daemons: introduced parallelization
     of dump events via a configurable amount of workers where the unit
     of parallelization is the exporter (BGP, BMP, telemetry exporter),
