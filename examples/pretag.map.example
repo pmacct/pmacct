@@ -55,7 +55,9 @@
 ! 'set_label'		SET: string label assigned to a matching packet, flow
 !			or sample; its use is mutually exclusive to tags within
 !			the same rule. The resulting value is written to the
-!			'label' field.
+!			'label' field. If pre_tag_label_encode_as_map is set to
+!			true in the config, the '%' character is used to delimit
+!			key and value, ie. "set_label=key%value".
 ! 'set_tos'             SET: Matching packets are set their 'tos' primitive to
 !			the specified value. Currently valid only in nfacctd. If
 !			collecting ingress NetFlow at both trusted and untrusted
