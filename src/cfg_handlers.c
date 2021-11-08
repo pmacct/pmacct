@@ -593,8 +593,16 @@ int cfg_key_pre_tag_label_encode_as_map(char *filename, char *name, char *value_
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  for (; list; list = list->next, changes++) list->cfg.pretag_label_encode_as_map = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'pre_tag_label_encode_as_map'. Globalized.\n", filename);
+  if (!name) for (; list; list = list->next, changes++) list->cfg.pretag_label_encode_as_map = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.pretag_label_encode_as_map = value;
+        changes++;
+        break;
+      }
+    }
+  }
 
   return changes;
 }
