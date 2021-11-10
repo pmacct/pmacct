@@ -164,6 +164,14 @@ const struct _map_dictionary_line tag_map_tee_dictionary[] = {
   {"", NULL}
 };
 
+const struct _map_dictionary_line tag_map_nonflow_dictionary[] = {
+  {"set_tag", PT_map_id_handler},
+  {"set_tag2", PT_map_id2_handler},
+  {"ip", PT_map_ip_handler},
+  {"set_label", PT_map_label_handler},
+  {"", NULL}
+};
+
 const struct _map_dictionary_line bpas_map_dictionary[] = {
   {"id", PT_map_id_handler},
   {"ip", PT_map_ip_handler},

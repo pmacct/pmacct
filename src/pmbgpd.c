@@ -304,6 +304,15 @@ int main(int argc,char **argv, char **envp)
   }
 #endif
 
+  /* XXX */
+  {
+    struct plugin_requests req;
+
+    memset(&req, 0, sizeof(req));
+    load_pre_tag_map(config.acct_type, config.pre_tag_map, &config.ptm, &req, &config.ptm_alloc,
+		     config.maps_entries, config.maps_row_len);
+  }
+
   bgp_prepare_daemon();
   skinny_bgp_daemon();
 
