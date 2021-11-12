@@ -57,6 +57,8 @@ struct bgp_comm_range peer_src_as_asrange;
 u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, path_id_t *, int);
 struct bgp_rt_structs inter_domain_routing_dbs[FUNC_TYPE_MAX], *bgp_routing_db;
 struct bgp_misc_structs inter_domain_misc_dbs[FUNC_TYPE_MAX], *bgp_misc_db;
+struct packet_ptrs bgp_logdump_tag;
+struct sockaddr_storage bgp_logdump_tag_peer;
 struct bgp_xconnects bgp_xcs_map;
 
 /* Functions */
@@ -110,6 +112,9 @@ void skinny_bgp_daemon_online()
   struct timeval dump_refresh_timeout, *drt_ptr;
   struct bgp_peer_batch bp_batch;
   socklen_t slen, clen = sizeof(client);
+
+  struct id_table bgp_logdump_tag_table;
+  int bgp_logdump_tag_map_allocated;
 
   sigset_t signal_set;
 
@@ -564,6 +569,19 @@ void skinny_bgp_daemon_online()
   recalc_fds = FALSE;
 
   bgp_link_misc_structs(bgp_misc_db);
+
+  if (config.pre_tag_map) {
+    memset(&bgp_logdump_tag, 0, sizeof(bgp_logdump_tag));
+    memset(&bgp_logdump_tag_table, 0, sizeof(bgp_logdump_tag_table));
+    memset(&req, 0, sizeof(req));
+    bgp_logdump_tag_map_allocated = FALSE;
+
+    load_pre_tag_map(config.acct_type, config.pre_tag_map, &bgp_logdump_tag_table, &req,
+		     &bgp_logdump_tag_map_allocated, config.maps_entries, config.maps_row_len);
+
+    /* making some bindings */
+    bgp_logdump_tag.tag_table = (unsigned char *) &bgp_logdump_tag_table;
+  }
 
   sigemptyset(&signal_set);
   sigaddset(&signal_set, SIGCHLD);
@@ -1129,4 +1147,63 @@ void bgp_daemon_msglog_prepare_sd_schemas()
   exit_lane:
   P_broker_timers_set_last_fail(&bgp_daemon_msglog_kafka_host.sd_schema_timers, time(NULL));
 #endif
+}
+
+void bgp_init_find_tag(struct bgp_peer *peer, struct sockaddr *sa, struct packet_ptrs *pptrs)
+{
+  addr_to_sa(sa, &peer->addr, peer->tcp_port);
+  pptrs->f_agent = (u_char *) sa;
+
+  // XXX
+}
+
+int bgp_find_tag(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
+{
+  struct sockaddr *sa = NULL;
+  int x, begin = 0, end = 0;
+  pm_id_t ret = 0;
+
+  if (!t) return 0;
+
+  sa = (struct sockaddr *) pptrs->f_agent;
+
+  /* The id_table is shared between by IPv4 and IPv6 NetFlow agents.
+     IPv4 ones are in the lower part (0..x), IPv6 ones are in the upper
+     part (x+1..end)
+  */
+
+  pretag_init_vars(pptrs, t);
+  if (tag) *tag = 0;
+  if (tag2) *tag2 = 0;
+  if (pptrs) {
+    pptrs->have_tag = FALSE;
+    pptrs->have_tag2 = FALSE;
+  }
+
+  /* XXX: tackle indexing */
+
+  if (sa->sa_family == AF_INET) {
+    begin = 0;
+    end = t->ipv4_num;
+  }
+  else if (sa->sa_family == AF_INET6) {
+    begin = t->num-t->ipv6_num;
+    end = t->num;
+  }
+
+  for (x = begin; x < end; x++) {
+    if (host_addr_mask_sa_cmp(&t->e[x].key.agent_ip.a, &t->e[x].key.agent_mask, sa) == 0) {
+      ret = pretag_entry_process(&t->e[x], pptrs, tag, tag2);
+
+      if (!ret || ret > TRUE) {
+        if (ret & PRETAG_MAP_RCODE_JEQ) {
+          x = t->e[x].jeq.ptr->pos;
+          x--; // yes, it will be automagically incremented by the for() cycle
+        }
+        else break;
+      }
+    }
+  }
+
+  return ret;
 }
