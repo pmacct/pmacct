@@ -662,6 +662,11 @@ void skinny_bgp_daemon_online()
 	load_id_file(MAP_BGP_XCS, config.bgp_xconnect_map, NULL, &req, &bgp_xcs_allocated);
       }
 
+      if (config.pre_tag_map) {
+	load_pre_tag_map(config.acct_type, config.pre_tag_map, &bgp_logdump_tag_table, &req,
+			 &bgp_logdump_tag_map_allocated, config.maps_entries, config.maps_row_len);
+      }
+
       reload_map_bgp_thread = FALSE;
     }
 
