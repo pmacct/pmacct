@@ -37,7 +37,8 @@
 
 /* functions */
 int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, safi_t safi,
-		     char *event_type, int output, char **output_data, int log_type)
+		     bgp_tag_t *tag, char *event_type, int output, char **output_data,
+		     int log_type)
 {
   struct bgp_misc_structs *bms;
   struct bgp_peer *peer;
@@ -1913,6 +1914,14 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 
       if (!inter_domain_routing_db) return ERR;
 
+      /* Being pre_tag_map limited to 'ip' key lookups, this is finely
+	 placed here. Should further lookups be possible, this may be
+	 very possibly moved inside the loop */
+      if (config.pre_tag_map) {
+	bgp_init_find_tag(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag);
+	bgp_find_tag((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
+      }
+
       for (afi = AFI_IP; afi < AFI_MAX; afi++) {
 	for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
 	  table = inter_domain_routing_db->rib[afi][safi];
@@ -1926,7 +1935,7 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 	    for (peer_buckets = 0; peer_buckets < config.bgp_table_per_peer_buckets; peer_buckets++) {
 	      for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
 		if (ri->peer == peer) {
-	          bgp_peer_log_msg(node, ri, afi, safi, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC);
+	          bgp_peer_log_msg(node, ri, afi, safi, &bgp_logdump_tag, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC);
 	          dump_elems++;
 	          bds.entries++;
 		}

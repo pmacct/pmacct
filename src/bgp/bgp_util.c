@@ -886,6 +886,14 @@ void bgp_table_info_delete(struct bgp_peer *peer, struct bgp_table *table, afi_t
 
   node = bgp_table_top(peer, table);
 
+  /* Being pre_tag_map limited to 'ip' key lookups, this is finely
+     placed here. Should further lookups be possible, this may be
+     very possibly moved inside the loop */
+  if (config.pre_tag_map) {
+    bgp_init_find_tag(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag);
+    bgp_find_tag((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
+  }
+
   while (node) {
     u_int32_t modulo;
     u_int32_t peer_buckets;
@@ -901,7 +909,7 @@ void bgp_table_info_delete(struct bgp_peer *peer, struct bgp_table *table, afi_t
 	  if (bms->msglog_backend_methods) {
 	    char event_type[] = "log";
 
-	    bgp_peer_log_msg(node, ri, afi, safi, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_DELETE);
+	    bgp_peer_log_msg(node, ri, afi, safi, &bgp_logdump_tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_DELETE);
 	  }
 
 	  ri_next = ri->next; /* let's save pointer to next before free up */

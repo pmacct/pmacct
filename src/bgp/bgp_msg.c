@@ -1436,7 +1436,7 @@ log_update:
       bgp_find_tag((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
     }
 
-    bgp_peer_log_msg(route, ri, afi, safi, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_UPDATE);
+    bgp_peer_log_msg(route, ri, afi, safi, &bgp_logdump_tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_UPDATE);
   }
 
   if (bms->skip_rib) {
@@ -1515,7 +1515,7 @@ int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr,
       bgp_find_tag((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
     }
 
-    bgp_peer_log_msg(route, ri, afi, safi, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_WITHDRAW);
+    bgp_peer_log_msg(route, ri, afi, safi, &bgp_logdump_tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_WITHDRAW);
   }
 
   if (!bms->skip_rib) {

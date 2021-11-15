@@ -57,7 +57,7 @@ struct bgp_comm_range peer_src_as_asrange;
 u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, path_id_t *, int);
 struct bgp_rt_structs inter_domain_routing_dbs[FUNC_TYPE_MAX], *bgp_routing_db;
 struct bgp_misc_structs inter_domain_misc_dbs[FUNC_TYPE_MAX], *bgp_misc_db;
-struct packet_ptrs bgp_logdump_tag;
+bgp_tag_t bgp_logdump_tag;
 struct sockaddr_storage bgp_logdump_tag_peer;
 struct bgp_xconnects bgp_xcs_map;
 
@@ -1154,15 +1154,13 @@ void bgp_daemon_msglog_prepare_sd_schemas()
 #endif
 }
 
-void bgp_init_find_tag(struct bgp_peer *peer, struct sockaddr *sa, struct packet_ptrs *pptrs)
+void bgp_init_find_tag(struct bgp_peer *peer, struct sockaddr *sa, bgp_tag_t *pptrs)
 {
   addr_to_sa(sa, &peer->addr, peer->tcp_port);
   pptrs->f_agent = (u_char *) sa;
-
-  // XXX
 }
 
-int bgp_find_tag(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
+int bgp_find_tag(struct id_table *t, bgp_tag_t *pptrs, pm_id_t *tag, pm_id_t *tag2)
 {
   struct sockaddr *sa = NULL;
   int x, begin = 0, end = 0;
