@@ -302,6 +302,7 @@ struct bgp_misc_structs {
 };
 
 typedef struct packet_ptrs bgp_tag_t;
+typedef struct chained_cache bgp_tag_cache_t;
 
 /* these includes require definition of bgp_rt_structs and bgp_peer */
 #include "bgp_logdump.h"
