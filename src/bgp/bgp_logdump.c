@@ -25,6 +25,7 @@
 #include "bgp.h"
 #include "rpki/rpki.h"
 #include "thread_pool.h"
+#include "plugin_common.h"
 #include "plugin_cmn_json.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
@@ -353,7 +354,12 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 	pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
 	pm_avro_check(avro_value_set_long(&p_avro_branch, tag->tag));
       }
-      else if (tag->have_label) {
+      else {
+	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "tag", &p_avro_field, NULL));
+	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+      }
+
+      if (tag->have_label) {
 	if (config.pretag_label_encode_as_map) {
 	  compose_label_avro_data(tag->label.val, p_avro_obj, TRUE);
 	}
@@ -362,6 +368,10 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 	  pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
 	  pm_avro_check(avro_value_set_string(&p_avro_branch, tag->label.val));
 	}
+      }
+      else {
+	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "label", &p_avro_field, NULL));
+	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
     }
 

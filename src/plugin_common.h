@@ -87,10 +87,13 @@ struct p_table_rr {
 };
 #endif
 
+#ifndef STRUCT_PTM_LABEL
+#define STRUCT_PTM_LABEL
 typedef struct {
   char *key;
   char *value;
 } __attribute__((packed)) ptm_label;
+#endif
 
 /* prototypes */
 extern void P_set_signals();
