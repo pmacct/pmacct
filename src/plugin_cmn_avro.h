@@ -47,7 +47,7 @@
 
 /* prototypes */
 extern void compose_label_avro_schema(avro_schema_t);
-extern int compose_label_avro_data(char *, avro_value_t);
+extern int compose_label_avro_data(char *, avro_value_t, int);
 
 extern void pm_avro_exit_gracefully(int);
 

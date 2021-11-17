@@ -351,16 +351,16 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       if (tag->have_tag) {
 	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "tag", &p_avro_field, NULL));
 	pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-	pm_avro_check(avro_value_set_long(&p_avro_field, tag->tag));
+	pm_avro_check(avro_value_set_long(&p_avro_branch, tag->tag));
       }
       else if (tag->have_label) {
 	if (config.pretag_label_encode_as_map) {
-	  compose_label_avro_data(tag->label.val, p_avro_obj);
+	  compose_label_avro_data(tag->label.val, p_avro_obj, TRUE);
 	}
 	else {
 	  pm_avro_check(avro_value_get_by_name(&p_avro_obj, "label", &p_avro_field, NULL));
 	  pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-	  pm_avro_check(avro_value_set_string(&p_avro_field, tag->label.val));
+	  pm_avro_check(avro_value_set_string(&p_avro_branch, tag->label.val));
 	}
       }
     }
