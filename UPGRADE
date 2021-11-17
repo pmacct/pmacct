@@ -6,6 +6,17 @@ the changes done or break old assumptions no longer valid; while the effort
 is to keep these cases at a low, please read this file in preparation to
 upgrading your installation.
 
+TO:	>= 1.7.8
+FROM:	<= 1.7.7
+TOPIC:	BGP, BMP message log / dumps & "label" field
+DESC:	Until version 1.7.7, the output of BGP message logs / dumps would
+	include MPLS labels, ie. as a result of a NLRI being part of a VPN,
+	in the "label" field for both JSON and Avro encodings. In order to
+	align naming convention with flow data plugins and to facilitate
+	introduction of pre_tag_map support in BGP / BMP daemons (which
+	output can be a "tag" or a "label" field), MPLS labels will now be
+	encoded in the "mpls_label" field.  
+
 TO:	>= 1.7.7
 FROM:	<= 1.7.6
 TOPIC:	pmtelemetryd, JSON telemetry input and JSON daemon output

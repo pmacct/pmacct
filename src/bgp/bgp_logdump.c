@@ -233,7 +233,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       }
 
       bgp_label2str(label_str, ri->attr_extra->label);
-      json_object_set_new_nocheck(obj, "label", json_string(label_str));
+      json_object_set_new_nocheck(obj, "mpls_label", json_string(label_str));
     }
 
     if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, etype, log_type, output, obj);
@@ -550,7 +550,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       }
 
       bgp_label2str(label_str, ri->attr_extra->label);
-      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "label", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "mpls_label", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
       pm_avro_check(avro_value_set_string(&p_avro_branch, label_str));
     }
@@ -567,7 +567,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
 
-      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "label", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "mpls_label", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
@@ -2302,7 +2302,7 @@ void p_avro_schema_build_bgp_route(avro_schema_t *schema, avro_schema_t *optlong
   avro_schema_record_field_append((*schema), "med", (*optlong_s));
   avro_schema_record_field_append((*schema), "aigp", (*optlong_s));
   avro_schema_record_field_append((*schema), "psid_li", (*optlong_s));
-  avro_schema_record_field_append((*schema), "label", (*optstr_s));
+  avro_schema_record_field_append((*schema), "mpls_label", (*optstr_s));
 
   if (config.rpki_roas_file || config.rpki_rtr_cache) {
     avro_schema_record_field_append((*schema), "roa", avro_schema_string());
