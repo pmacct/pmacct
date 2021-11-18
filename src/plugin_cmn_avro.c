@@ -222,10 +222,9 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
       compose_tcpflags_avro_schema(schema);
     }
     else {
-      avro_schema_record_field_append(schema, "label", avro_schema_string());
+      avro_schema_record_field_append(schema, "tcp_flags", avro_schema_string());
     }
   }
-    avro_schema_record_field_append(schema, "tcp_flags", avro_schema_string());
 
   if (wtc & COUNT_IP_PROTO)
     avro_schema_record_field_append(schema, "ip_proto", avro_schema_string());
@@ -815,8 +814,8 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
   if (wtc & COUNT_TCPFLAGS) {
     sprintf(misc_str, "%u", tcp_flags);
 
-    if (config.pretag_label_encode_as_map) {
-      compose_tcpflag_avro_data(str_ptr, value, FALSE);
+    if (1) {
+      compose_tcpflag_avro_data(misc_str, value, FALSE);
     }
     else {
       pm_avro_check(avro_value_get_by_name(&value, "tcp_flags", &field, NULL));
@@ -1410,7 +1409,7 @@ int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
 
   avro_generic_value_new(if_type_map, &v_type_map);
   avro_generic_value_new(if_type_string, &v_type_string);
-  
+
   /* XXX: tackle opt TRUE/FALSE most probably here */
 
   int idx_1;
@@ -1429,29 +1428,28 @@ int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
   //avro_value_decref(&v_type_string);
   avro_value_iface_decref(if_type_map);
   avro_value_iface_decref(if_type_string);
-  
+
   return 0;
 }
 
 
-int
-compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_record, int opt)
+int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_record, int opt)
 {
   tcpflag tcpstate;
-  
+
   /* linked-list creation */
   cdada_list_t *ll = tcpflags_to_linked_list(tcpflags_decimal);
   int ll_size = cdada_list_size(ll);
 
   avro_value_t v_type_array, v_type_string;
   avro_value_iface_t *if_type_array, *if_type_string;
-  
+
   if_type_array = avro_generic_class_from_schema(sc_type_array);
   if_type_string = avro_generic_class_from_schema(sc_type_string);
 
   avro_generic_value_new(if_type_array, &v_type_array);
   avro_generic_value_new(if_type_string, &v_type_string);
-  
+
   /* XXX: tackle opt TRUE/FALSE most probably here */
 
   size_t idx_0;
