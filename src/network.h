@@ -312,6 +312,7 @@ struct packet_ptrs {
   u_char *f_tpl; /* ptr to NetFlow V9 template */
   u_char *f_status; /* ptr to status table entry */
   u_char *f_status_g; /* ptr to status table entry. global per f_agent */
+  u_char *tag_table; /* ptr to a tag table map */
   u_char *bpas_table; /* ptr to bgp_peer_as_src table map */
   u_char *blp_table; /* ptr to bgp_src_local_pref table map */
   u_char *bmed_table; /* ptr to bgp_src_med table map */

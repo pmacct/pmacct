@@ -1830,7 +1830,7 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
 
                 if (local_bmpp && (&local_bmpp->self == peer)) {
 		  ri->peer->log = peer->log;
-                  bgp_peer_log_msg(node, ri, afi, safi, event_type, config.bmp_dump_output, NULL, BGP_LOG_TYPE_MISC);
+                  bgp_peer_log_msg(node, ri, afi, safi, NULL /* XXX */, event_type, config.bmp_dump_output, NULL, BGP_LOG_TYPE_MISC);
                   dump_elems++;
                 }
               }

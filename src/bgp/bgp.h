@@ -25,7 +25,6 @@
 #include "bgp_prefix.h"
 #include "bgp_packet.h"
 #include "bgp_table.h"
-#include "bgp_logdump.h"
 
 #ifndef _BGP_H_
 #define _BGP_H_
@@ -302,7 +301,11 @@ struct bgp_misc_structs {
   void *bgp_blackhole_zmq_host;
 };
 
+typedef struct packet_ptrs bgp_tag_t;
+typedef struct chained_cache bgp_tag_cache_t;
+
 /* these includes require definition of bgp_rt_structs and bgp_peer */
+#include "bgp_logdump.h"
 #include "bgp_aspath.h"
 #include "bgp_community.h"
 #include "bgp_ecommunity.h"
@@ -390,6 +393,8 @@ extern void skinny_bgp_daemon_online();
 extern void bgp_prepare_thread();
 extern void bgp_prepare_daemon();
 extern void bgp_daemon_msglog_prepare_sd_schemas();
+extern void bgp_init_find_tag(struct bgp_peer *, struct sockaddr *, bgp_tag_t *);
+extern int bgp_find_tag(struct id_table *, bgp_tag_t *, pm_id_t *, pm_id_t *);
 
 /* global variables */
 extern struct bgp_peer *peers;
@@ -405,6 +410,8 @@ extern u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, path_id_t *, int);
 
 extern struct bgp_rt_structs inter_domain_routing_dbs[FUNC_TYPE_MAX], *bgp_routing_db;
 extern struct bgp_misc_structs inter_domain_misc_dbs[FUNC_TYPE_MAX], *bgp_misc_db;
+extern bgp_tag_t bgp_logdump_tag;
+extern struct sockaddr_storage bgp_logdump_tag_peer;
 
 extern struct bgp_xconnects bgp_xcs_map;
 #endif 
