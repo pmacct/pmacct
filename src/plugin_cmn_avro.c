@@ -1457,9 +1457,9 @@ int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_reco
     if (avro_value_get_by_name(&v_type_record, "tcp_flags", &v_type_array, NULL) == 0)
     {
       /* Serialize only flags set to 1 */
-      if (avro_value_append(&v_type_array, &v_type_string, NULL) == 0)
+      if (strcmp(tcpstate.flag, "NULL") != 0)
       {
-        if (strcmp(tcpstate.flag, "NULL") != 0)
+        if (avro_value_append(&v_type_array, &v_type_string, NULL) == 0)
         {
           avro_value_set_string(&v_type_string, tcpstate.flag);
         }
