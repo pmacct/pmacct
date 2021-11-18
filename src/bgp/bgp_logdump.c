@@ -141,7 +141,10 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 	compose_json_tag(obj, &tag_cache);
       }
       else if (tag->have_label) {
-	vlen_prims_insert(tag_cache.pvlen, COUNT_INT_LABEL, tag->label.len, (u_char *) tag->label.val, PM_MSG_STR_COPY);
+	tag_cache.pvlen = malloc(sizeof(struct pkt_vlen_hdr_primitives) + PmLabelTSz + tag->label.len + 1);
+        vlen_prims_init(tag_cache.pvlen, 0);
+
+	vlen_prims_insert(tag_cache.pvlen, COUNT_INT_LABEL, tag->label.len, (u_char *) tag->label.val, PM_MSG_STR_COPY_ZERO);
 
 	if (config.pretag_label_encode_as_map) {
 	  compose_json_map_label(obj, &tag_cache);
@@ -149,6 +152,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 	else {
 	  compose_json_label(obj, &tag_cache);
 	}
+
+	vlen_prims_free(tag_cache.pvlen);
       }
     }
 
