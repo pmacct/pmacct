@@ -2571,6 +2571,7 @@ void vlen_prims_init(struct pkt_vlen_hdr_primitives *hdr, int add_len)
 {
   if (!hdr) return;
 
+  assert(PvhdrSz);
   memset(hdr, 0, PvhdrSz + add_len);
 }
 
