@@ -1440,7 +1440,7 @@ compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_record, 
   tcpflag tcpstate;
   
   /* linked-list creation */
-  cdada_list_t *ll = tcpflags_to_linked_list(rnd);
+  cdada_list_t *ll = tcpflags_to_linked_list(tcpflags_decimal);
   int ll_size = cdada_list_size(ll);
 
   avro_value_t v_type_array, v_type_string;
