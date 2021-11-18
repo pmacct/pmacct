@@ -1061,7 +1061,7 @@ cdada_list_t *tcpflags_to_linked_list(size_t tcpflags_decimal)
   }
 
   /* Generate the tcpflags' linked-list */
-  cdada_list_t *tcpflag_linked_list = cdada_list_create_custom(tcpflag);
+  cdada_list_t *tcpflag_linked_list = cdada_list_create(tcpflag);
   tcpflag tcpstate;
 
   size_t idx_1;
