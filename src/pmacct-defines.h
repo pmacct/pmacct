@@ -153,17 +153,17 @@
 
 /* map type */
 #define MAP_TAG 		0	/* pre_tag_map */
-#define MAP_BGP_PEER_AS_SRC	100	/* bgp_peer_src_as_map */
-#define MAP_BGP_TO_XFLOW_AGENT	101	/* bgp_to_agent_map */
-#define MAP_BGP_SRC_LOCAL_PREF	102	/* bgp_src_local_pref_map */
-#define MAP_BGP_SRC_MED		103	/* bgp_src_med_map */
-#define MAP_FLOW_TO_RD		104	/* flow_to_rd_map */
-#define MAP_SAMPLING		105	/* sampling_map */
-#define MAP_TEE_RECVS		106	/* tee_receivers */
-#define MAP_IGP			107	/* igp_daemon_map */
-#define MAP_CUSTOM_PRIMITIVES	108	/* aggregate_primitives */
-#define MAP_BGP_XCS		109	/* bgp_xconnect_map */
-#define MAP_PCAP_INTERFACES	110	/* pcap_interfaces_map */
+#define MAP_BGP_PEER_AS_SRC	1000	/* bgp_peer_src_as_map */
+#define MAP_BGP_TO_XFLOW_AGENT	1001	/* bgp_to_agent_map */
+#define MAP_BGP_SRC_LOCAL_PREF	1002	/* bgp_src_local_pref_map */
+#define MAP_BGP_SRC_MED		1003	/* bgp_src_med_map */
+#define MAP_FLOW_TO_RD		1004	/* flow_to_rd_map */
+#define MAP_SAMPLING		1005	/* sampling_map */
+#define MAP_TEE_RECVS		1006	/* tee_receivers */
+#define MAP_IGP			1007	/* igp_daemon_map */
+#define MAP_CUSTOM_PRIMITIVES	1008	/* aggregate_primitives */
+#define MAP_BGP_XCS		1009	/* bgp_xconnect_map */
+#define MAP_PCAP_INTERFACES	1010	/* pcap_interfaces_map */
 
 /* PRIMITIVES DEFINITION: START */
 /* internal: first registry, ie. what_to_count, aggregation, etc. */

@@ -70,7 +70,8 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
   if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM ||
       acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_BGP_TO_XFLOW_AGENT ||
       acct_type == MAP_BGP_SRC_LOCAL_PREF || acct_type == MAP_BGP_SRC_MED ||
-      acct_type == MAP_FLOW_TO_RD || acct_type == MAP_SAMPLING) {
+      acct_type == MAP_FLOW_TO_RD || acct_type == MAP_SAMPLING ||
+      acct_type == ACCT_PMBGP) {
     req->key_value_table = (void *) &tmp;
   }
 
@@ -360,7 +361,24 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   }
                   key = NULL; value = NULL;
                 }
+		else if (acct_type == ACCT_PMBGP) {
+                  for (dindex = 0; strcmp(tag_map_nonflow_dictionary[dindex].key, ""); dindex++) {
+                    if (!strcmp(tag_map_nonflow_dictionary[dindex].key, key)) {
+                      err = (*tag_map_nonflow_dictionary[dindex].func)(filename, &tmp.e[tmp.num], value, req, acct_type);
+                      break;
+                    }
+                    else err = E_NOTFOUND; /* key not found */
+		  }
+                  if (err) {
+                    if (err == E_NOTFOUND) Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] unknown key '%s'. Ignored.\n", 
+						config.name, config.type, filename, tot_lines, key);
+                    else Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
+                    break;
+                  }
+                  key = NULL; value = NULL;
+		}
 		else {
+		  /* ACCT_NF, ACCT_SF, ACCT_PM, etc. */
 		  if (tee_plugins) {
                     for (dindex = 0; strcmp(tag_map_tee_dictionary[dindex].key, ""); dindex++) {
                       if (!strcmp(tag_map_tee_dictionary[dindex].key, key)) {
@@ -391,7 +409,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
             }
 	    if (!ignoring) {
               /* verifying errors and required fields */
-	      if (acct_type == ACCT_NF || acct_type == ACCT_SF) {
+	      if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PMBGP) {
 	        if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2 && tmp.e[tmp.num].label.len) 
 		   Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] set_tag (id), set_tag2 (id2) and set_label are mutual exclusive. Line ignored.\n", 
 			config.name, config.type, filename, tot_lines);
@@ -621,7 +639,8 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       /* pre_tag_map indexing here */
       if (config.maps_index &&
 	  (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM ||
-	   acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_FLOW_TO_RD)) {
+	   acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_FLOW_TO_RD ||
+	   acct_type == ACCT_PMBGP)) {
 	pt_bitmap_t idx_bmap;
 	
 	t->index_num = MAX_ID_TABLE_INDEXES;

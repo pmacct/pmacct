@@ -25,6 +25,8 @@
 #include "bgp.h"
 #include "rpki/rpki.h"
 #include "thread_pool.h"
+#include "plugin_common.h"
+#include "plugin_cmn_json.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
@@ -37,7 +39,8 @@
 
 /* functions */
 int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, safi_t safi,
-		     char *event_type, int output, char **output_data, int log_type)
+		     bgp_tag_t *tag, char *event_type, int output, char **output_data,
+		     int log_type)
 {
   struct bgp_misc_structs *bms;
   struct bgp_peer *peer;
@@ -128,6 +131,27 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       json_object_set_new_nocheck(obj, "peer_id", json_string(ip_address));
     }
 
+    if (config.pre_tag_map && tag) {
+      bgp_tag_cache_t tag_cache;
+
+      memset(&tag_cache, 0, sizeof(tag_cache));
+
+      if (tag->have_tag) {
+	tag_cache.primitives.tag = tag->tag;
+	compose_json_tag(obj, &tag_cache);
+      }
+      else if (tag->have_label) {
+	vlen_prims_insert(tag_cache.pvlen, COUNT_INT_LABEL, tag->label.len, (u_char *) tag->label.val, PM_MSG_STR_COPY);
+
+	if (config.pretag_label_encode_as_map) {
+	  compose_json_map_label(obj, &tag_cache);
+	}
+	else {
+	  compose_json_label(obj, &tag_cache);
+	}
+      }
+    }
+
     json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
 
     json_object_set_new_nocheck(obj, "afi", json_integer((json_int_t)afi));
@@ -210,7 +234,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       }
 
       bgp_label2str(label_str, ri->attr_extra->label);
-      json_object_set_new_nocheck(obj, "label", json_string(label_str));
+      json_object_set_new_nocheck(obj, "mpls_label", json_string(label_str));
     }
 
     if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, etype, log_type, output, obj);
@@ -321,6 +345,33 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       else {
         pm_avro_check(avro_value_get_by_name(&p_avro_obj, bms->peer_port_str, &p_avro_field, NULL));
         pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+      }
+    }
+
+    if (config.pre_tag_map && tag) {
+      if (tag->have_tag) {
+	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "tag", &p_avro_field, NULL));
+	pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+	pm_avro_check(avro_value_set_long(&p_avro_branch, tag->tag));
+      }
+      else {
+	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "tag", &p_avro_field, NULL));
+	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+      }
+
+      if (tag->have_label) {
+	if (config.pretag_label_encode_as_map) {
+	  compose_label_avro_data(tag->label.val, p_avro_obj, TRUE);
+	}
+	else {
+	  pm_avro_check(avro_value_get_by_name(&p_avro_obj, "label", &p_avro_field, NULL));
+	  pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+	  pm_avro_check(avro_value_set_string(&p_avro_branch, tag->label.val));
+	}
+      }
+      else {
+	pm_avro_check(avro_value_get_by_name(&p_avro_obj, "label", &p_avro_field, NULL));
+	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
     }
 
@@ -509,7 +560,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       }
 
       bgp_label2str(label_str, ri->attr_extra->label);
-      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "label", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "mpls_label", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
       pm_avro_check(avro_value_set_string(&p_avro_branch, label_str));
     }
@@ -526,7 +577,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
 
-      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "label", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "mpls_label", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
@@ -1913,6 +1964,14 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 
       if (!inter_domain_routing_db) return ERR;
 
+      /* Being pre_tag_map limited to 'ip' key lookups, this is finely
+	 placed here. Should further lookups be possible, this may be
+	 very possibly moved inside the loop */
+      if (config.pre_tag_map) {
+	bgp_init_find_tag(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag);
+	bgp_find_tag((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
+      }
+
       for (afi = AFI_IP; afi < AFI_MAX; afi++) {
 	for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
 	  table = inter_domain_routing_db->rib[afi][safi];
@@ -1926,7 +1985,7 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 	    for (peer_buckets = 0; peer_buckets < config.bgp_table_per_peer_buckets; peer_buckets++) {
 	      for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
 		if (ri->peer == peer) {
-	          bgp_peer_log_msg(node, ri, afi, safi, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC);
+	          bgp_peer_log_msg(node, ri, afi, safi, &bgp_logdump_tag, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC);
 	          dump_elems++;
 	          bds.entries++;
 		}
@@ -2253,10 +2312,15 @@ void p_avro_schema_build_bgp_route(avro_schema_t *schema, avro_schema_t *optlong
   avro_schema_record_field_append((*schema), "med", (*optlong_s));
   avro_schema_record_field_append((*schema), "aigp", (*optlong_s));
   avro_schema_record_field_append((*schema), "psid_li", (*optlong_s));
-  avro_schema_record_field_append((*schema), "label", (*optstr_s));
+  avro_schema_record_field_append((*schema), "mpls_label", (*optstr_s));
 
   if (config.rpki_roas_file || config.rpki_rtr_cache) {
     avro_schema_record_field_append((*schema), "roa", avro_schema_string());
+  }
+
+  if (config.pre_tag_map) {
+    avro_schema_record_field_append((*schema), "tag", (*optlong_s));
+    avro_schema_record_field_append((*schema), "label", (*optstr_s));
   }
 }
 #endif

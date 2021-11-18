@@ -2046,6 +2046,15 @@ DESC:		Expects one or more labels as value (when multiple labels are supplied, t
 		this directive makes sense if coupled with 'pre_tag_map'.
 DEFAULT:	none
 
+KEY:		pre_tag_label_encode_as_map
+VALUES:		[ true | false ]
+DESC:		The 'label' field had tradionally been encoded as an unique comma-separated string, ie. in
+		JSON "label": "value1,value2,value3". Setting this knob to true, makes it being encoded as
+		a map for JSON and Apache Avro encodings, ie. in JSON "label": { "key1": "value1", "key2":
+		"value2" }. For keys and values to be correctly mapped, the '%' delimiter is used when
+		composing a pre_tag_map, ie. "set_label=key1%value1 ip=0.0.0.0/0".
+DEFAULT:	false
+
 KEY:            [ post_tag | post_tag2 ] 
 VALUES:         [ 1-2^64-1 ]
 DESC:           Expects a tag as value. Post-Tagging is evaluated in the plugins. The tag is used as 'tag'

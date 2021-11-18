@@ -5580,6 +5580,9 @@ void src_host_geoipv2_lookup_handler(struct channels_list_entry *chptr, struct p
       Log(LOG_WARNING, "WARN ( %s/%s ): src_host_geoipv2_lookup_handler(): %s\n", config.name, config.type, MMDB_strerror(mmdb_error));
     }
   }
+  else {
+    pptrs->geoipv2_src.found_entry = NULL;
+  }
 }
 
 void dst_host_geoipv2_lookup_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -5603,6 +5606,9 @@ void dst_host_geoipv2_lookup_handler(struct channels_list_entry *chptr, struct p
     if (mmdb_error != MMDB_SUCCESS) {
       Log(LOG_WARNING, "WARN ( %s/%s ): dst_host_geoipv2_lookup_handler(): %s\n", config.name, config.type, MMDB_strerror(mmdb_error));
     }
+  }
+  else {
+    pptrs->geoipv2_dst.found_entry = NULL;
   }
 }
 
