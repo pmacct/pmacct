@@ -36,7 +36,7 @@
 #ifdef WITH_AVRO
 /* global variables */
 avro_schema_t p_avro_acct_schema, p_avro_acct_init_schema, p_avro_acct_close_schema;
-avro_schema_t sc_type_map, sc_type_string;
+avro_schema_t sc_type_array, sc_type_map, sc_type_string;
 
 /* functions */
 avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
@@ -216,7 +216,15 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
     
 #endif
 
-  if (wtc & COUNT_TCPFLAGS)
+  if (wtc & COUNT_TCPFLAGS) {
+    /* TODO - we might want to include an additional cfg option to keep up with backward compatibility */
+    if (1) {
+      compose_tcpflags_avro_schema(schema);
+    }
+    else {
+      avro_schema_record_field_append(schema, "label", avro_schema_string());
+    }
+  }
     avro_schema_record_field_append(schema, "tcp_flags", avro_schema_string());
 
   if (wtc & COUNT_IP_PROTO)
@@ -805,11 +813,15 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
 #endif
 
   if (wtc & COUNT_TCPFLAGS) {
-    printf("\n\n TCP-FLAGs: %u\n\n", tcp_flags);
     sprintf(misc_str, "%u", tcp_flags);
-    //printf("\n\n TCP-FLAGs: %s\n\n", misc_str);
-    pm_avro_check(avro_value_get_by_name(&value, "tcp_flags", &field, NULL));
-    pm_avro_check(avro_value_set_string(&field, misc_str));
+
+    if (config.pretag_label_encode_as_map) {
+      compose_tcpflag_avro_data(str_ptr, value, FALSE);
+    }
+    else {
+      pm_avro_check(avro_value_get_by_name(&value, "tcp_flags", &field, NULL));
+      pm_avro_check(avro_value_set_string(&field, misc_str));
+    }
   }
 
   if (wtc & COUNT_IP_PROTO) {
@@ -1362,6 +1374,19 @@ void compose_label_avro_schema(avro_schema_t sc_type_record)
   avro_schema_decref(sc_type_string);
 }
 
+
+void compose_tcpflags_avro_schema(avro_schema_t sc_type_record)
+{
+  sc_type_string = avro_schema_string();
+  sc_type_array = avro_schema_array(sc_type_string);
+  avro_schema_record_field_append(sc_type_record, "tcp_flags", sc_type_array);
+
+  /* free-up memory */
+  avro_schema_decref(sc_type_array);
+  avro_schema_decref(sc_type_string);
+}
+
+
 int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
 {
   /* labels normalization */
@@ -1377,7 +1402,7 @@ int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
     cdada_list_get(ll, idx_0, &lbl);
   }
 
-  avro_value_t v_type_string, v_type_map;
+  avro_value_t v_type_map, v_type_string;
   avro_value_iface_t *if_type_map, *if_type_string;
 
   if_type_map = avro_generic_class_from_schema(sc_type_map);
@@ -1386,9 +1411,6 @@ int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
   avro_generic_value_new(if_type_map, &v_type_map);
   avro_generic_value_new(if_type_string, &v_type_string);
   
-  size_t  map_size;
-  avro_value_get_size(&v_type_map, &map_size);
-
   /* XXX: tackle opt TRUE/FALSE most probably here */
 
   int idx_1;
@@ -1401,12 +1423,57 @@ int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
     }
   }
 
-  avro_value_get_size(&v_type_map, &map_size);
-
   /* free-up memory */
   cdada_list_destroy(ll);
+  //avro_value_decref(&v_type_map);
+  //avro_value_decref(&v_type_string);
   avro_value_iface_decref(if_type_map);
   avro_value_iface_decref(if_type_string);
   
+  return 0;
+}
+
+
+int
+compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_record, int opt)
+{
+  tcpflag tcpstate;
+  
+  /* linked-list creation */
+  cdada_list_t *ll = tcpflags_to_linked_list(rnd);
+  int ll_size = cdada_list_size(ll);
+
+  avro_value_t v_type_array, v_type_string;
+  avro_value_iface_t *if_type_array, *if_type_string;
+  
+  if_type_array = avro_generic_class_from_schema(sc_type_array);
+  if_type_string = avro_generic_class_from_schema(sc_type_string);
+
+  avro_generic_value_new(if_type_array, &v_type_array);
+  avro_generic_value_new(if_type_string, &v_type_string);
+  
+  /* XXX: tackle opt TRUE/FALSE most probably here */
+
+  size_t idx_0;
+  for (idx_0 = 0; idx_0 < ll_size; idx_0++)
+  {
+    cdada_list_get(ll, idx_0, &tcpstate);
+    if (avro_value_get_by_name(&v_type_record, "tcp_flags", &v_type_array, NULL) == 0)
+    {
+      /* Serialize only flags set to 1 */
+      if ((avro_value_append(&v_type_array, &v_type_string, NULL) == 0) && (strcmp(tcpstate.flag, "NULL") != 0))
+      {
+        avro_value_set_string(&v_type_string, tcpstate.flag);
+      }
+    }
+  }
+
+  /* free-up memory */
+  cdada_list_destroy(ll);
+  avro_value_decref(&v_type_array);
+  avro_value_decref(&v_type_string);
+  avro_value_iface_decref(if_type_array);
+  avro_value_iface_decref(if_type_string);
+
   return 0;
 }
