@@ -815,7 +815,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
     sprintf(misc_str, "%u", tcp_flags);
 
     if (1) {
-      compose_tcpflag_avro_data(misc_str, value, FALSE);
+      compose_tcpflags_avro_data(misc_str, value, FALSE);
     }
     else {
       pm_avro_check(avro_value_get_by_name(&value, "tcp_flags", &field, NULL));
