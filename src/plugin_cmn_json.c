@@ -66,7 +66,6 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
     else {
       cjhandler[idx] = compose_json_label;
     }
-
     idx++;
   }
 
@@ -314,16 +313,13 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
 #endif
 
   if (wtc & COUNT_TCPFLAGS) {
-    if (1)
-    {
-      printf("\n\n\ncippa\n\n\n");
+    if (1) {
       cjhandler[idx] = compose_json_array_tcpflags;
     }
-    else 
-    {
+    else {
       cjhandler[idx] = compose_json_tcp_flags;
-      idx++;
     }
+    idx++;
   }
 
   if (wtc & COUNT_IP_PROTO) {
@@ -1266,7 +1262,6 @@ void compose_json_array_tcpflags(json_t *obj, struct chained_cache *cc)
   char misc_str[VERYSHORTBUFLEN];
 
   sprintf(misc_str, "%u", cc->tcp_flags);
-  printf("\n\n\n%u\n\n\n", misc_str);
 
   /* linked-list creation */
   cdada_list_t *ll = tcpflags_to_linked_list(cc->tcp_flags);
