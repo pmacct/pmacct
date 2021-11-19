@@ -1280,11 +1280,11 @@ json_t * compose_label_json_data(cdada_list_t *ll, int ll_size)
 {
   ptm_label lbl;
 
-  int idx_0;
-  for (idx_0 = 0; idx_0 < ll_size; idx_0++) 
-  {
-    cdada_list_get(ll, idx_0, &lbl);
-  }
+  //int idx_0;
+  //for (idx_0 = 0; idx_0 < ll_size; idx_0++) 
+  //{
+  //  cdada_list_get(ll, idx_0, &lbl);
+  //}
 
   json_t *root = json_object();
   json_t *j_str_tmp = NULL;
