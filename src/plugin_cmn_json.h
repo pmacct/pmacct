@@ -32,8 +32,9 @@ typedef void (*compose_json_handler)(json_t *, struct chained_cache *);
 extern compose_json_handler cjhandler[N_PRIMITIVES];
 
 /* prototypes */
-extern json_t *compose_label_json_data(cdada_list_t *ll, int ll_size);
 extern void compose_json_map_label(json_t *, struct chained_cache *);
+extern void compose_json_array_tcpflags(json_t *, struct chained_cache *);
+extern json_t *compose_tcpflags_json_data(cdada_list_t *ll, int ll_size);
 
 extern void compose_json_event_type(json_t *, struct chained_cache *);
 extern void compose_json_tag(json_t *, struct chained_cache *);
