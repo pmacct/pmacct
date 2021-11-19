@@ -1286,7 +1286,7 @@ json_t * compose_label_json_data(cdada_list_t *ll, int ll_size)
   int idx_0;
   for (idx_0 = 0; idx_0 < ll_size; idx_0++) 
   {
-    cdada_list_get(ll, idx_1, &lbl);
+    cdada_list_get(ll, idx_0, &lbl);
     j_str_tmp = json_string(lbl.value);
     json_object_set_new_nocheck(root, lbl.key, j_str_tmp);
   }
