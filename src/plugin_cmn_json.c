@@ -1263,7 +1263,7 @@ void compose_json_array_tcpflags(json_t *obj, struct chained_cache *cc)
   char misc_str[VERYSHORTBUFLEN];
 
   sprintf(misc_str, "%u", cc->tcp_flags);
-  printf("%u", cc->tcp_flags);
+  printf("\n\n\n%u\n\n\n", cc->tcp_flags);
 
   /* linked-list creation */
   cdada_list_t *ll = tcpflags_to_linked_list(cc->tcp_flags);
