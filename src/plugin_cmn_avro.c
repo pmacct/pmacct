@@ -217,8 +217,7 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
 #endif
 
   if (wtc & COUNT_TCPFLAGS) {
-    /* TODO - we might want to include an additional cfg option to keep up with backward compatibility */
-    if (1) {
+    if (config.tcpflags_encode_as_array) {
       compose_tcpflags_avro_schema(schema);
     }
     else {
@@ -814,7 +813,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
   if (wtc & COUNT_TCPFLAGS) {
     sprintf(misc_str, "%u", tcp_flags);
 
-    if (1) {
+    if (config.tcpflags_encode_as_array) {
       compose_tcpflags_avro_data(tcp_flags, value, FALSE);
     }
     else {
@@ -1451,16 +1450,12 @@ int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_reco
   /* XXX: tackle opt TRUE/FALSE most probably here */
 
   size_t idx_0;
-  for (idx_0 = 0; idx_0 < ll_size; idx_0++)
-  {
+  for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
     cdada_list_get(ll, idx_0, &tcpstate);
-    if (avro_value_get_by_name(&v_type_record, "tcp_flags", &v_type_array, NULL) == 0)
-    {
+    if (avro_value_get_by_name(&v_type_record, "tcp_flags", &v_type_array, NULL) == 0) {
       /* Serialize only flags set to 1 */
-      if (strcmp(tcpstate.flag, "NULL") != 0)
-      {
-        if (avro_value_append(&v_type_array, &v_type_string, NULL) == 0)
-        {
+      if (strcmp(tcpstate.flag, "NULL") != 0) {
+        if (avro_value_append(&v_type_array, &v_type_string, NULL) == 0) {
           avro_value_set_string(&v_type_string, tcpstate.flag);
         }
       }

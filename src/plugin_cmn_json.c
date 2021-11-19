@@ -313,7 +313,7 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
 #endif
 
   if (wtc & COUNT_TCPFLAGS) {
-    if (1) {
+    if (config.tcpflags_encode_as_array) {
       cjhandler[idx] = compose_json_array_tcpflags;
     }
     else {
@@ -1283,8 +1283,7 @@ json_t * compose_label_json_data(cdada_list_t *ll, int ll_size)
   json_t *j_str_tmp = NULL;
 
   int idx_0;
-  for (idx_0 = 0; idx_0 < ll_size; idx_0++)
-  {
+  for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
     cdada_list_get(ll, idx_0, &lbl);
     j_str_tmp = json_string(lbl.value);
     json_object_set_new_nocheck(root, lbl.key, j_str_tmp);
@@ -1302,11 +1301,9 @@ json_t * compose_tcpflags_json_data(cdada_list_t *ll, int ll_size)
   json_t *j_str_tmp = NULL;
 
   int idx_0;
-  for (idx_0 = 0; idx_0 < ll_size; idx_0++)
-  {
+  for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
     cdada_list_get(ll, idx_0, &tcpstate);
-    if (strcmp(tcpstate.flag, "NULL") != 0)
-    {
+    if (strcmp(tcpstate.flag, "NULL") != 0) {
       j_str_tmp = json_string(tcpstate.flag);
       json_array_append(root, j_str_tmp);
     }

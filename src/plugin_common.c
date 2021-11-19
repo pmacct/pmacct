@@ -1051,10 +1051,8 @@ cdada_list_t *tcpflags_to_linked_list(size_t tcpflags_decimal)
 
   /* tcpflags binary format (valid decimals between 0 & 63) */
   size_t idx_0;
-  if ((tcpflags_decimal > 0) && (tcpflags_decimal) < 64)
-  {
-    for (idx_0 = 5; tcpflags_decimal > 0 && idx_0 >= 0; idx_0--)
-    {
+  if ((tcpflags_decimal > 0) && (tcpflags_decimal) < 64) {
+    for (idx_0 = 5; tcpflags_decimal > 0 && idx_0 >= 0; idx_0--) {
       tcpflags_binary[idx_0] = (tcpflags_decimal % 2);
       tcpflags_decimal /= 2;
     }
@@ -1065,15 +1063,12 @@ cdada_list_t *tcpflags_to_linked_list(size_t tcpflags_decimal)
   tcpflag tcpstate;
 
   size_t idx_1;
-  for (idx_1 = 0; idx_1 < 6; idx_1++)
-  {
+  for (idx_1 = 0; idx_1 < 6; idx_1++) {
     memset(&tcpstate, 0, sizeof(tcpstate));
-    if (!tcpflags_binary[idx_1])
-    {
+    if (!tcpflags_binary[idx_1]) {
       strcpy(tcpstate.flag, "NULL");
     }
-    else
-    {
+    else {
       strcpy(tcpstate.flag, tcpflags_mask[idx_1]);
     }
     cdada_list_push_back(tcpflag_linked_list, &tcpstate);
