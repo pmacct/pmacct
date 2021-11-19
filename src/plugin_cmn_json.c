@@ -1268,7 +1268,7 @@ void compose_json_array_tcpflags(json_t *obj, struct chained_cache *cc)
   cdada_list_t *ll = tcpflags_to_linked_list(cc->tcp_flags);
   int ll_size = cdada_list_size(ll);
 
-  json_t *root_l1 = compose_tcpflag_json_data(ll, ll_size);
+  json_t *root_l1 = compose_tcpflags_json_data(ll, ll_size);
 
   json_object_set_new_nocheck(obj, "tcp_flags", root_l1);
 
