@@ -314,10 +314,13 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
 #endif
 
   if (wtc & COUNT_TCPFLAGS) {
-    if (1) {
+    if (1)
+    {
+      printf("\n\n\ncippa\n\n\n");
       cjhandler[idx] = compose_json_array_tcpflags;
     }
-    else {
+    else 
+    {
       cjhandler[idx] = compose_json_tcp_flags;
       idx++;
     }
