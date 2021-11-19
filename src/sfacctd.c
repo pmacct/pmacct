@@ -2253,7 +2253,7 @@ void sfv245_check_counter_log_init(struct packet_ptrs *pptrs)
     if (!peer->log) { 
       memcpy(&peer->addr, &entry->agent_addr, sizeof(struct host_addr));
       addr_to_str(peer->addr_str, &peer->addr);
-      bgp_peer_log_init(peer, config.sfacctd_counter_output, FUNC_TYPE_SFLOW_COUNTER);
+      bgp_peer_log_init(peer, NULL, config.sfacctd_counter_output, FUNC_TYPE_SFLOW_COUNTER);
     }
   }
 }

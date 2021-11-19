@@ -731,7 +731,7 @@ void bgp_peer_close(struct bgp_peer *peer, int type, int no_quiet, int send_noti
     if (!no_quiet) bgp_peer_info_delete(peer);
 
     if (bms->msglog_file || bms->msglog_amqp_routing_key || bms->msglog_kafka_topic)
-      bgp_peer_log_close(peer, bms->msglog_output, peer->type);
+      bgp_peer_log_close(peer, &bgp_logdump_tag, bms->msglog_output, peer->type);
 
     if (bms->peers_cache && bms->peers_port_cache) {
       u_int32_t bucket;
@@ -885,14 +885,6 @@ void bgp_table_info_delete(struct bgp_peer *peer, struct bgp_table *table, afi_t
   struct bgp_node *node;
 
   node = bgp_table_top(peer, table);
-
-  /* Being pre_tag_map limited to 'ip' key lookups, this is finely
-     placed here. Should further lookups be possible, this may be
-     very possibly moved inside the loop */
-  if (config.pre_tag_map) {
-    bgp_init_find_tag(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag);
-    bgp_find_tag((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
-  }
 
   while (node) {
     u_int32_t modulo;

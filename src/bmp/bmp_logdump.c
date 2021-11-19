@@ -1809,7 +1809,7 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
       }
 #endif
 
-      bgp_peer_dump_init(peer, config.bmp_dump_output, FUNC_TYPE_BMP);
+      bgp_peer_dump_init(peer, NULL, config.bmp_dump_output, FUNC_TYPE_BMP);
       inter_domain_routing_db = bgp_select_routing_db(FUNC_TYPE_BMP);
 
       if (!inter_domain_routing_db) return ERR;
@@ -1875,7 +1875,7 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
  
       saved_peer = peer;
       strlcpy(last_filename, current_filename, SRVBUFLEN);
-      bgp_peer_dump_close(peer, NULL, config.bmp_dump_output, FUNC_TYPE_BMP);
+      bgp_peer_dump_close(peer, NULL, NULL, config.bmp_dump_output, FUNC_TYPE_BMP);
       tables_num++;
     }
   }

@@ -800,7 +800,7 @@ int skinny_bmp_daemon()
 
       if (!config.bmp_daemon_parse_proxy_header) {
         if (bmp_misc_db->msglog_backend_methods) {
-          bgp_peer_log_init(peer, config.bmp_daemon_msglog_output, FUNC_TYPE_BMP);
+          bgp_peer_log_init(peer, NULL, config.bmp_daemon_msglog_output, FUNC_TYPE_BMP);
 	}
 
         if (bmp_misc_db->dump_backend_methods) {
@@ -855,7 +855,7 @@ int skinny_bmp_daemon()
       addr_to_str(peer->addr_str, &peer->addr);
 
       if (bmp_misc_db->msglog_backend_methods) {
-        bgp_peer_log_init(peer, config.bmp_daemon_msglog_output, FUNC_TYPE_BMP);
+        bgp_peer_log_init(peer, NULL, config.bmp_daemon_msglog_output, FUNC_TYPE_BMP);
       }
 
       if (bmp_misc_db->dump_backend_methods) {

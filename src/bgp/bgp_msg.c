@@ -1431,11 +1431,6 @@ log_update:
   {
     char event_type[] = "log";
 
-    if (config.pre_tag_map) {
-      bgp_init_find_tag(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag);
-      bgp_find_tag((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
-    }
-
     bgp_peer_log_msg(route, ri, afi, safi, &bgp_logdump_tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_UPDATE);
   }
 
@@ -1509,11 +1504,6 @@ int bgp_process_withdraw(struct bgp_msg_data *bmd, struct prefix *p, void *attr,
 
   if (ri && bms->msglog_backend_methods) {
     char event_type[] = "log";
-
-    if (config.pre_tag_map) {
-      bgp_init_find_tag(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag);
-      bgp_find_tag((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
-    }
 
     bgp_peer_log_msg(route, ri, afi, safi, &bgp_logdump_tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_WITHDRAW);
   }

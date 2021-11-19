@@ -221,7 +221,7 @@ int telemetry_log_seq_has_ro_bit(u_int64_t *seq)
 
 int telemetry_peer_log_init(telemetry_peer *peer, int output, int type)
 {
-  return bgp_peer_log_init(peer, output, type);
+  return bgp_peer_log_init(peer, NULL, output, type);
 }
 
 void telemetry_peer_log_dynname(char *new, int newlen, char *old, telemetry_peer *peer)
@@ -231,12 +231,12 @@ void telemetry_peer_log_dynname(char *new, int newlen, char *old, telemetry_peer
 
 int telemetry_peer_dump_init(telemetry_peer *peer, int output, int type)
 {
-  return bgp_peer_dump_init(peer, output, type);
+  return bgp_peer_dump_init(peer, NULL, output, type);
 }
 
 int telemetry_peer_dump_close(telemetry_peer *peer, int output, int type)
 {
-  return bgp_peer_dump_close(peer, NULL, output, type);
+  return bgp_peer_dump_close(peer, NULL, NULL, output, type);
 }
 
 void telemetry_dump_init_peer(telemetry_peer *peer)
