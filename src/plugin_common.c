@@ -1049,7 +1049,7 @@ cdada_list_t *tcpflags_to_linked_list(size_t tcpflags_decimal)
   const char tcpflags_mask[6][5] = {"URG", "ACK", "PSH", "RST", "SYN", "FIN"};
   size_t tcpflags_binary[6] = {0};
 
-  /* tcpflags binary format (valid decimals between 0 & 63) */
+  /* tcpflags binary format (valid decimals between 1 & 63) */
   size_t idx_0;
   if ((tcpflags_decimal > 0) && (tcpflags_decimal) < 64) {
     for (idx_0 = 5; tcpflags_decimal > 0 && idx_0 >= 0; idx_0--) {
