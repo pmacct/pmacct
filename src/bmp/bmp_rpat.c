@@ -125,7 +125,7 @@ void bmp_process_msg_rpat(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
     if (bms->msglog_backend_methods) {
       char event_type[] = "log";
 
-      bmp_log_msg(peer, &bdata, tlvs, &blrpat, bgp_peer_log_seq_get(&bms->log_seq), event_type, config.bmp_daemon_msglog_output, BMP_LOG_TYPE_RPAT);
+      bmp_log_msg(peer, &bdata, tlvs, &bmp_logdump_tag, &blrpat, bgp_peer_log_seq_get(&bms->log_seq), event_type, config.bmp_daemon_msglog_output, BMP_LOG_TYPE_RPAT);
     }
 
     if (bms->dump_backend_methods) bmp_dump_se_ll_append(peer, &bdata, tlvs, &blrpat, BMP_LOG_TYPE_RPAT);
