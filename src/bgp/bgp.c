@@ -1050,6 +1050,11 @@ void skinny_bgp_daemon_online()
 	  peer->last_keepalive = now;
 	} 
 
+	if (config.pre_tag_map) {
+	  bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag);
+	  bgp_tag_find((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
+	}
+
 	ret = bgp_parse_msg(peer, now, TRUE);
 	if (ret) {
 	  FD_CLR(recv_fd, &bkp_read_descs);
