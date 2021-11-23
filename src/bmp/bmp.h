@@ -397,7 +397,5 @@ extern struct bmp_peer *bmp_peers;
 extern u_int32_t (*bmp_route_info_modulo)(struct bgp_peer *, path_id_t *, int);
 extern struct bgp_rt_structs *bmp_routing_db;
 extern struct bgp_misc_structs *bmp_misc_db;
-extern bgp_tag_t bmp_logdump_tag;
-extern struct sockaddr_storage bmp_logdump_tag_peer;
 
 #endif //BMP_H

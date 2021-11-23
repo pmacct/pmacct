@@ -197,8 +197,6 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->bgp_msg_open_router_id_check = NULL;
 
   if (!bms->is_thread && !bms->dump_backend_methods) bms->skip_rib = TRUE;
-
-  bms->tag = &bmp_logdump_tag;
 }
 
 struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bgp_peer *bgp_peer_rem)

@@ -99,11 +99,6 @@ int main(int argc,char **argv, char **envp)
   errflag = 0;
   rows = 0;
 
-  /* needed for pre_tag_map support */
-  PvhdrSz = sizeof(struct pkt_vlen_hdr_primitives);
-  PmLabelTSz = sizeof(pm_label_t);
-  PtLabelTSz = sizeof(pt_label_t);
-
   /* getting commandline values */
   while (!errflag && ((cp = getopt(argc, argv, ARGS_PMBMPD)) != -1)) {
     cfg_cmdline[rows] = malloc(SRVBUFLEN);

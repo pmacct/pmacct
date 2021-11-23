@@ -836,16 +836,8 @@ void skinny_bgp_daemon_online()
 	bgp_peer_cache_insert(peers_port_cache, bucket, peer);
       }
 
-      /* Being pre_tag_map limited to 'ip' key lookups, this is finely
-	 placed here. Should further lookups be possible, this may be
-	 very possibly moved inside the loop */
-      if (config.pre_tag_map) {
-	bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag);
-	bgp_tag_find((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
-      }
-
       if (bgp_misc_db->msglog_backend_methods)
-	bgp_peer_log_init(peer, &bgp_logdump_tag, config.bgp_daemon_msglog_output, FUNC_TYPE_BGP);
+	bgp_peer_log_init(peer, config.bgp_daemon_msglog_output, FUNC_TYPE_BGP);
 
       /* Check: more than one TCP connection from a peer (IP address) */
       for (peers_check_idx = 0, peers_num = 0; peers_check_idx < config.bgp_daemon_max_peers; peers_check_idx++) { 
@@ -1050,11 +1042,6 @@ void skinny_bgp_daemon_online()
 	  peer->last_keepalive = now;
 	} 
 
-	if (config.pre_tag_map) {
-	  bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag);
-	  bgp_tag_find((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
-	}
-
 	ret = bgp_parse_msg(peer, now, TRUE);
 	if (ret) {
 	  FD_CLR(recv_fd, &bkp_read_descs);
@@ -1167,13 +1154,13 @@ void bgp_daemon_msglog_prepare_sd_schemas()
 #endif
 }
 
-void bgp_tag_init_find(struct bgp_peer *peer, struct sockaddr *sa, bgp_tag_t *pptrs)
+void bgp_init_find_tag(struct bgp_peer *peer, struct sockaddr *sa, bgp_tag_t *pptrs)
 {
   addr_to_sa(sa, &peer->addr, peer->tcp_port);
   pptrs->f_agent = (u_char *) sa;
 }
 
-int bgp_tag_find(struct id_table *t, bgp_tag_t *pptrs, pm_id_t *tag, pm_id_t *tag2)
+int bgp_find_tag(struct id_table *t, bgp_tag_t *pptrs, pm_id_t *tag, pm_id_t *tag2)
 {
   struct sockaddr *sa = NULL;
   int x, begin = 0, end = 0;

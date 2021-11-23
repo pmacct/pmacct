@@ -731,7 +731,7 @@ void bgp_peer_close(struct bgp_peer *peer, int type, int no_quiet, int send_noti
     if (!no_quiet) bgp_peer_info_delete(peer);
 
     if (bms->msglog_file || bms->msglog_amqp_routing_key || bms->msglog_kafka_topic)
-      bgp_peer_log_close(peer, bms->tag, bms->msglog_output, peer->type);
+      bgp_peer_log_close(peer, bms->msglog_output, peer->type);
 
     if (bms->peers_cache && bms->peers_port_cache) {
       u_int32_t bucket;
@@ -886,6 +886,14 @@ void bgp_table_info_delete(struct bgp_peer *peer, struct bgp_table *table, afi_t
 
   node = bgp_table_top(peer, table);
 
+  /* Being pre_tag_map limited to 'ip' key lookups, this is finely
+     placed here. Should further lookups be possible, this may be
+     very possibly moved inside the loop */
+  if (config.pre_tag_map) {
+    bgp_init_find_tag(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag);
+    bgp_find_tag((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
+  }
+
   while (node) {
     u_int32_t modulo;
     u_int32_t peer_buckets;
@@ -901,7 +909,7 @@ void bgp_table_info_delete(struct bgp_peer *peer, struct bgp_table *table, afi_t
 	  if (bms->msglog_backend_methods) {
 	    char event_type[] = "log";
 
-	    bgp_peer_log_msg(node, ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_DELETE);
+	    bgp_peer_log_msg(node, ri, afi, safi, &bgp_logdump_tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_DELETE);
 	  }
 
 	  ri_next = ri->next; /* let's save pointer to next before free up */
@@ -1521,8 +1529,6 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   if (!bms->is_thread && !bms->dump_backend_methods && !bms->has_lglass && !bms->has_blackhole) {
     bms->skip_rib = TRUE;
   }
-
-  bms->tag = &bgp_logdump_tag;
 }
 
 void bgp_blackhole_link_misc_structs(struct bgp_misc_structs *m_data)

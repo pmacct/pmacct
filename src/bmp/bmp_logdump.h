@@ -89,7 +89,7 @@ extern void bmp_daemon_msglog_init_amqp_host();
 extern void bmp_dump_init_peer(struct bgp_peer *);
 extern void bmp_dump_close_peer(struct bgp_peer *);
 
-extern int bmp_log_msg(struct bgp_peer *, struct bmp_data *, struct pm_list *tlvs, bgp_tag_t *, void *, u_int64_t, char *, int, int);
+extern int bmp_log_msg(struct bgp_peer *, struct bmp_data *, struct pm_list *tlvs, void *, u_int64_t, char *, int, int);
 extern int bmp_log_msg_stats(struct bgp_peer *, struct bmp_data *, struct pm_list *, struct bmp_log_stats *, char *, int, void *);
 extern int bmp_log_msg_init(struct bgp_peer *, struct bmp_data *, struct pm_list *, char *, int, void *);
 extern int bmp_log_msg_term(struct bgp_peer *, struct bmp_data *, struct pm_list *, char *, int, void *);
