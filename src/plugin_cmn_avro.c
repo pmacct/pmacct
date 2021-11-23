@@ -814,7 +814,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
     sprintf(misc_str, "%u", tcp_flags);
 
     if (config.tcpflags_encode_as_array) {
-      compose_tcpflags_avro_data(tcp_flags, value, FALSE);
+      compose_tcpflags_avro_data(tcp_flags, value);
     }
     else {
       pm_avro_check(avro_value_get_by_name(&value, "tcp_flags", &field, NULL));
@@ -1409,8 +1409,6 @@ int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
   avro_generic_value_new(if_type_map, &v_type_map);
   avro_generic_value_new(if_type_string, &v_type_string);
 
-  /* XXX: tackle opt TRUE/FALSE most probably here */
-
   int idx_1;
   for (idx_1 = 0; idx_1 < ll_size; idx_1++) {
     cdada_list_get(ll, idx_1, &lbl);
@@ -1430,7 +1428,7 @@ int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
 }
 
 
-int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_record, int opt)
+int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_record)
 {
   tcpflag tcpstate;
 
@@ -1446,8 +1444,6 @@ int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_reco
 
   avro_generic_value_new(if_type_array, &v_type_array);
   avro_generic_value_new(if_type_string, &v_type_string);
-
-  /* XXX: tackle opt TRUE/FALSE most probably here */
 
   size_t idx_0;
   for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
