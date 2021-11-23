@@ -1412,10 +1412,9 @@ int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
   int idx_1;
   for (idx_1 = 0; idx_1 < ll_size; idx_1++) {
     cdada_list_get(ll, idx_1, &lbl);
-      if (avro_value_get_by_name(&v_type_record, "label", &v_type_map, NULL) == 0) {
-        if (avro_value_add(&v_type_map, lbl.key, &v_type_string, NULL, NULL) == 0) {
-          avro_value_set_string(&v_type_string, lbl.value);
-        }
+    if (avro_value_get_by_name(&v_type_record, "label", &v_type_map, NULL) == 0) {
+      if (avro_value_add(&v_type_map, lbl.key, &v_type_string, NULL, NULL) == 0) {
+        avro_value_set_string(&v_type_string, lbl.value);
       }
     }
   }
