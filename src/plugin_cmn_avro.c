@@ -442,7 +442,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
     if (!str_ptr) str_ptr = empty_string;
 
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_data(str_ptr, value, FALSE);
+      compose_label_avro_data(str_ptr, value);
     }
     else {
       pm_avro_check(avro_value_get_by_name(&value, "label", &field, NULL));
@@ -1385,7 +1385,7 @@ void compose_tcpflags_avro_schema(avro_schema_t sc_type_record)
 }
 
 
-int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
+int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record)
 {
   /* labels normalization */
   const char *lbls_norm = labels_delim_normalization(str_ptr);
@@ -1412,12 +1412,6 @@ int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
   int idx_1;
   for (idx_1 = 0; idx_1 < ll_size; idx_1++) {
     cdada_list_get(ll, idx_1, &lbl);
-    if(opt) {
-      if (avro_value_get_by_name(&v_type_record, "label", &v_type_map, NULL) == 0) {
-        avro_value_set_branch(&v_type_map, TRUE, &v_type_branch);
-        avro_value_set_null(&v_type_branch);
-      }
-    } else {
       if (avro_value_get_by_name(&v_type_record, "label", &v_type_map, NULL) == 0) {
         if (avro_value_add(&v_type_map, lbl.key, &v_type_string, NULL, NULL) == 0) {
           avro_value_set_string(&v_type_string, lbl.value);
