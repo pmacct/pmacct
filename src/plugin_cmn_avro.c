@@ -1400,7 +1400,7 @@ int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
     cdada_list_get(ll, idx_0, &lbl);
   }
 
-  avro_value_t v_type_map, v_type_string;
+  avro_value_t v_type_map, v_type_string, v_type_branch;
   avro_value_iface_t *if_type_map, *if_type_string;
 
   if_type_map = avro_generic_class_from_schema(sc_type_map);
@@ -1409,14 +1409,18 @@ int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
   avro_generic_value_new(if_type_map, &v_type_map);
   avro_generic_value_new(if_type_string, &v_type_string);
 
-  /* XXX: tackle opt TRUE/FALSE most probably here */
-
   int idx_1;
   for (idx_1 = 0; idx_1 < ll_size; idx_1++) {
     cdada_list_get(ll, idx_1, &lbl);
-    if (avro_value_get_by_name(&v_type_record, "label", &v_type_map, NULL) == 0) {
-      if (avro_value_add(&v_type_map, lbl.key, &v_type_string, NULL, NULL) == 0) {
-        avro_value_set_string(&v_type_string, lbl.value);
+    if(opt) {
+      if (avro_value_get_by_name(&v_type_record, "label", &v_type_map, NULL) == 0) {
+        avro_value_set_branch(&v_type_map, FALSE, &p_avro_branch)
+      }
+    } else {
+      if (avro_value_get_by_name(&v_type_record, "label", &v_type_map, NULL) == 0) {
+        if (avro_value_add(&v_type_map, lbl.key, &v_type_string, NULL, NULL) == 0) {
+          avro_value_set_string(&v_type_string, lbl.value);
+        }
       }
     }
   }
@@ -1430,7 +1434,7 @@ int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
 }
 
 
-int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_record, int opt)
+int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_record)
 {
   tcpflag tcpstate;
 
