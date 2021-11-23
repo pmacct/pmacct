@@ -1414,7 +1414,7 @@ int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
     cdada_list_get(ll, idx_1, &lbl);
     if(opt) {
       if (avro_value_get_by_name(&v_type_record, "label", &v_type_map, NULL) == 0) {
-        avro_value_set_branch(&v_type_map, FALSE, &v_type_branch);
+        avro_value_set_branch(&v_type_map, TRUE, &v_type_branch);
       }
     } else {
       if (avro_value_get_by_name(&v_type_record, "label", &v_type_map, NULL) == 0) {
@@ -1450,8 +1450,6 @@ int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_reco
 
   avro_generic_value_new(if_type_array, &v_type_array);
   avro_generic_value_new(if_type_string, &v_type_string);
-
-  /* XXX: tackle opt TRUE/FALSE most probably here */
 
   size_t idx_0;
   for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
