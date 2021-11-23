@@ -985,6 +985,11 @@ int skinny_bmp_daemon()
       peer->msglen = len;
     }
 
+    if (config.pre_tag_map) {
+      bgp_tag_init_find(peer, (struct sockaddr *) &bmp_logdump_tag_peer, &bmp_logdump_tag);
+      bgp_tag_find((struct id_table *)bmp_logdump_tag.tag_table, &bmp_logdump_tag, &bmp_logdump_tag.tag, NULL);
+    }
+
     do_term = FALSE;
     bmp_process_packet(peer->buf.base, peer->msglen, bmpp, &do_term);
 
