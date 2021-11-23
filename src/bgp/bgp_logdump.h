@@ -57,8 +57,8 @@ struct bgp_dump_stats {
 };
 
 /* prototypes */
-extern int bgp_peer_log_init(struct bgp_peer *, int, int);
-extern int bgp_peer_log_close(struct bgp_peer *, int, int);
+extern int bgp_peer_log_init(struct bgp_peer *, bgp_tag_t *, int, int);
+extern int bgp_peer_log_close(struct bgp_peer *, bgp_tag_t *, int, int);
 extern int bgp_peer_log_dynname(char *, int, char *, struct bgp_peer *);
 extern int bgp_peer_log_msg(struct bgp_node *, struct bgp_info *, afi_t, safi_t, bgp_tag_t *, char *, int, char **, int);
 
@@ -68,14 +68,18 @@ extern u_int64_t bgp_peer_log_seq_get(u_int64_t *);
 extern void bgp_peer_log_seq_set(u_int64_t *, u_int64_t);
 extern int bgp_peer_log_seq_has_ro_bit(u_int64_t *);
 
-extern int bgp_peer_dump_init(struct bgp_peer *, int, int);
-extern int bgp_peer_dump_close(struct bgp_peer *, struct bgp_dump_stats *, int, int);
+extern int bgp_peer_dump_init(struct bgp_peer *, bgp_tag_t *tag, int, int);
+extern int bgp_peer_dump_close(struct bgp_peer *, bgp_tag_t *tag, struct bgp_dump_stats *, int, int);
 extern void bgp_handle_dump_event(int);
 extern int bgp_table_dump_event_runner(struct pm_dump_runner *);
 extern void bgp_daemon_msglog_init_amqp_host();
 extern void bgp_table_dump_init_amqp_host(void *);
 extern int bgp_daemon_msglog_init_kafka_host();
 extern int bgp_table_dump_init_kafka_host(void *);
+
+#if defined WITH_JANSSON
+void bgp_tag_print_json(json_t *, bgp_tag_t *);
+#endif
 
 #if defined WITH_AVRO
 extern avro_schema_t p_avro_schema_build_bgp(int, char *);
@@ -85,6 +89,7 @@ extern avro_schema_t p_avro_schema_build_bgp_dump_close(int, char *);
 extern void p_avro_schema_init_bgp(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *, int, char *);
 extern void p_avro_schema_build_bgp_common(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *, int);
 extern void p_avro_schema_build_bgp_route(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *);
+extern void bgp_tag_print_avro(avro_value_t, bgp_tag_t *);
 #endif
 
 #endif 

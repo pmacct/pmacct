@@ -71,7 +71,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_BGP_TO_XFLOW_AGENT ||
       acct_type == MAP_BGP_SRC_LOCAL_PREF || acct_type == MAP_BGP_SRC_MED ||
       acct_type == MAP_FLOW_TO_RD || acct_type == MAP_SAMPLING ||
-      acct_type == ACCT_PMBGP) {
+      acct_type == ACCT_PMBGP || acct_type == ACCT_PMBMP) {
     req->key_value_table = (void *) &tmp;
   }
 
@@ -361,7 +361,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   }
                   key = NULL; value = NULL;
                 }
-		else if (acct_type == ACCT_PMBGP) {
+		else if (acct_type == ACCT_PMBGP || acct_type == ACCT_PMBMP) {
                   for (dindex = 0; strcmp(tag_map_nonflow_dictionary[dindex].key, ""); dindex++) {
                     if (!strcmp(tag_map_nonflow_dictionary[dindex].key, key)) {
                       err = (*tag_map_nonflow_dictionary[dindex].func)(filename, &tmp.e[tmp.num], value, req, acct_type);
@@ -409,7 +409,8 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
             }
 	    if (!ignoring) {
               /* verifying errors and required fields */
-	      if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PMBGP) {
+	      if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PMBGP ||
+		  acct_type == ACCT_PMBMP) {
 	        if (tmp.e[tmp.num].id && tmp.e[tmp.num].id2 && tmp.e[tmp.num].label.len) 
 		   Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] set_tag (id), set_tag2 (id2) and set_label are mutual exclusive. Line ignored.\n", 
 			config.name, config.type, filename, tot_lines);
@@ -640,7 +641,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       if (config.maps_index &&
 	  (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM ||
 	   acct_type == MAP_BGP_PEER_AS_SRC || acct_type == MAP_FLOW_TO_RD ||
-	   acct_type == ACCT_PMBGP)) {
+	   acct_type == ACCT_PMBGP || acct_type == ACCT_PMBMP)) {
 	pt_bitmap_t idx_bmap;
 	
 	t->index_num = MAX_ID_TABLE_INDEXES;

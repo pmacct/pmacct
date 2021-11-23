@@ -106,7 +106,7 @@ int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct pl
   if (z) e->id2 = z;
   if (inc) e->id_inc = TRUE;
 
-  if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM) {
+  if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM || acct_type == ACCT_PMBGP || acct_type == ACCT_PMBMP) {
     for (x = 0; e->set_func[x]; x++) {
       if (e->set_func_type[x] == PRETAG_SET_TAG) {
         Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'set_tag' (id) clauses part of the same statement.\n", config.name, config.type, filename);
@@ -184,7 +184,7 @@ int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct
     return TRUE;
   }
 
-  if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM) {
+  if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM || acct_type == ACCT_PMBGP || acct_type == ACCT_PMBMP) {
     for (x = 0; e->set_func[x]; x++) {
       if (e->set_func_type[x] == PRETAG_SET_LABEL) {
         Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'set_label' clauses part of the same statement.\n", config.name, config.type, filename);

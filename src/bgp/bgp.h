@@ -223,6 +223,9 @@ struct bgp_msg_data {
   int is_blackhole;
 };
 
+typedef struct packet_ptrs bgp_tag_t;
+typedef struct chained_cache bgp_tag_cache_t;
+
 struct bgp_misc_structs {
   struct bgp_peer_log *peers_log;
   u_int64_t log_seq;
@@ -299,10 +302,9 @@ struct bgp_misc_structs {
   int (*bgp_msg_open_router_id_check)(struct bgp_msg_data *);
 
   void *bgp_blackhole_zmq_host;
-};
 
-typedef struct packet_ptrs bgp_tag_t;
-typedef struct chained_cache bgp_tag_cache_t;
+  bgp_tag_t *tag;
+};
 
 /* these includes require definition of bgp_rt_structs and bgp_peer */
 #include "bgp_logdump.h"
@@ -393,8 +395,8 @@ extern void skinny_bgp_daemon_online();
 extern void bgp_prepare_thread();
 extern void bgp_prepare_daemon();
 extern void bgp_daemon_msglog_prepare_sd_schemas();
-extern void bgp_init_find_tag(struct bgp_peer *, struct sockaddr *, bgp_tag_t *);
-extern int bgp_find_tag(struct id_table *, bgp_tag_t *, pm_id_t *, pm_id_t *);
+extern void bgp_tag_init_find(struct bgp_peer *, struct sockaddr *, bgp_tag_t *);
+extern int bgp_tag_find(struct id_table *, bgp_tag_t *, pm_id_t *, pm_id_t *);
 
 /* global variables */
 extern struct bgp_peer *peers;
