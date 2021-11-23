@@ -1414,7 +1414,7 @@ int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
     cdada_list_get(ll, idx_1, &lbl);
     if(opt) {
       if (avro_value_get_by_name(&v_type_record, "label", &v_type_map, NULL) == 0) {
-        avro_value_set_branch(&v_type_map, FALSE, &p_avro_branch)
+        avro_value_set_branch(&v_type_map, FALSE, &v_type_branch);
       }
     } else {
       if (avro_value_get_by_name(&v_type_record, "label", &v_type_map, NULL) == 0) {
