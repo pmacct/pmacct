@@ -61,7 +61,7 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
 
   if (wtc_2 & COUNT_LABEL) {
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_schema(schema);
+      compose_label_avro_schema(schema, FALSE);
     }
     else {
       avro_schema_record_field_append(schema, "label", avro_schema_string());
@@ -1349,7 +1349,7 @@ void pm_avro_exit_gracefully(int status)
 }
 
 
-void compose_label_avro_schema(avro_schema_t sc_type_record)
+void compose_label_avro_schema(avro_schema_t sc_type_record, int opt)
 {
   sc_type_string = avro_schema_string();
   sc_type_map = avro_schema_map(sc_type_string);
