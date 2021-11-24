@@ -2346,5 +2346,16 @@ void p_avro_schema_build_bmp_common(avro_schema_t *schema, avro_schema_t *optlon
   avro_schema_record_field_append((*schema), "bmp_router_port", (*optint_s));
   avro_schema_record_field_append((*schema), "bmp_msg_type", avro_schema_string());
   avro_schema_record_field_append((*schema), "writer_id", avro_schema_string());
+
+  if (config.pre_tag_map) {
+    avro_schema_record_field_append((*schema), "tag", (*optlong_s));
+
+    if (config.pretag_label_encode_as_map) {
+      compose_label_avro_schema((*schema), TRUE);
+    }
+    else {
+      avro_schema_record_field_append((*schema), "label", (*optstr_s));
+    }
+  }
 }
 #endif
