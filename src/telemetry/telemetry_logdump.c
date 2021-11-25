@@ -450,6 +450,14 @@ int telemetry_dump_event_runner(struct pm_dump_runner *pdr)
       }
 #endif
 
+      /* Being pre_tag_map limited to 'ip' key lookups, this is finely
+	 placed here. Should further lookups be possible, this may be
+	 very possibly moved inside the loop */
+      if (config.pre_tag_map) {
+	telemetry_tag_init_find(peer, (struct sockaddr *) &telemetry_logdump_tag_peer, &telemetry_logdump_tag);
+	telemetry_tag_find((struct id_table *)telemetry_logdump_tag.tag_table, &telemetry_logdump_tag, &telemetry_logdump_tag.tag, NULL);
+      }
+
       telemetry_peer_dump_init(peer, config.telemetry_dump_output, FUNC_TYPE_TELEMETRY);
 
       if (tdsell && tdsell->start) {

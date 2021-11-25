@@ -44,6 +44,8 @@ telemetry_peer *telemetry_peers;
 void *telemetry_peers_cache;
 telemetry_peer_timeout *telemetry_peers_timeout;
 int zmq_input = 0, kafka_input = 0, unyte_udp_notif_input = 0;
+telemetry_tag_t telemetry_logdump_tag;
+struct sockaddr_storage telemetry_logdump_tag_peer;
 
 /* Functions */
 void telemetry_wrapper()
@@ -99,6 +101,11 @@ int telemetry_daemon(void *t_data_void)
   /* ZeroMQ and Kafka stuff */
   char *saved_peer_buf = NULL;
   u_char consumer_buf[PKT_MSG_SIZE];
+
+  /* pre_tag_map stuff */
+  struct plugin_requests req;
+  struct id_table telemetry_logdump_tag_table;
+  int telemetry_logdump_tag_map_allocated;
 
 #if defined WITH_UNYTE_UDP_NOTIF
   unyte_udp_collector_t *uun_collector = NULL;
@@ -530,6 +537,19 @@ int telemetry_daemon(void *t_data_void)
 
   telemetry_link_misc_structs(telemetry_misc_db);
 
+  if (config.pre_tag_map) {
+    memset(&telemetry_logdump_tag, 0, sizeof(telemetry_logdump_tag));
+    memset(&telemetry_logdump_tag_table, 0, sizeof(telemetry_logdump_tag_table));
+    memset(&req, 0, sizeof(req));
+    telemetry_logdump_tag_map_allocated = FALSE;
+
+    load_pre_tag_map(config.acct_type, config.pre_tag_map, &telemetry_logdump_tag_table, &req,
+                     &telemetry_logdump_tag_map_allocated, config.maps_entries, config.maps_row_len);
+
+    /* making some bindings */
+    telemetry_logdump_tag.tag_table = (unsigned char *) &telemetry_logdump_tag_table;
+  }
+
   sigemptyset(&signal_set);
   sigaddset(&signal_set, SIGCHLD);
   sigaddset(&signal_set, SIGHUP);
@@ -660,6 +680,11 @@ int telemetry_daemon(void *t_data_void)
 
     if (reload_map_telemetry_thread) {
       if (config.telemetry_allow_file) load_allow_file(config.telemetry_allow_file, &allow);
+
+      if (config.pre_tag_map) {
+	load_pre_tag_map(config.acct_type, config.pre_tag_map, &telemetry_logdump_tag_table, &req,
+			 &telemetry_logdump_tag_map_allocated, config.maps_entries, config.maps_row_len);
+      }
 
       reload_map_telemetry_thread = FALSE;
     }
@@ -869,6 +894,11 @@ int telemetry_daemon(void *t_data_void)
       }
       addr_to_str(peer->addr_str, &peer->addr);
 
+      if (config.pre_tag_map) {
+	telemetry_tag_init_find(peer, (struct sockaddr *) &telemetry_logdump_tag_peer, &telemetry_logdump_tag);
+	telemetry_tag_find((struct id_table *)telemetry_logdump_tag.tag_table, &telemetry_logdump_tag, &telemetry_logdump_tag.tag, NULL);
+      }
+
       if (telemetry_misc_db->msglog_backend_methods)
         telemetry_peer_log_init(peer, config.telemetry_msglog_output, FUNC_TYPE_TELEMETRY);
 
@@ -949,6 +979,11 @@ int telemetry_daemon(void *t_data_void)
     else {
       peer->stats.packets++;
       if (recv_flags != ERR) {
+	if (config.pre_tag_map) {
+	  telemetry_tag_init_find(peer, (struct sockaddr *) &telemetry_logdump_tag_peer, &telemetry_logdump_tag);
+	  telemetry_tag_find((struct id_table *)telemetry_logdump_tag.tag_table, &telemetry_logdump_tag, &telemetry_logdump_tag.tag, NULL);
+	}
+
         peer->stats.msg_bytes += ret;
         telemetry_process_data(peer, t_data, data_decoder);
       }
@@ -980,4 +1015,14 @@ void telemetry_prepare_daemon(struct telemetry_data *t_data)
   t_data->is_thread = FALSE;
   t_data->log_str = malloc(strlen("core") + 1);
   strcpy(t_data->log_str, "core");
+}
+
+void telemetry_tag_init_find(telemetry_peer *peer, struct sockaddr *sa, telemetry_tag_t *pptrs)
+{
+  bgp_tag_init_find(peer, sa, pptrs);
+}
+
+int telemetry_tag_find(struct id_table *t, telemetry_tag_t *pptrs, pm_id_t *tag, pm_id_t *tag2)
+{
+  return bgp_tag_find(t, pptrs, tag, tag2);
 }
