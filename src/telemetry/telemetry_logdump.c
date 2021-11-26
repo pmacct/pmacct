@@ -33,8 +33,8 @@
 #endif
 
 /* Functions */
-int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, void *log_data, u_int32_t log_data_len,
-			int data_decoder, u_int64_t log_seq, char *event_type, int output)
+int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telemetry_tag_t *tag, void *log_data,
+			u_int32_t log_data_len, int data_decoder, u_int64_t log_seq, char *event_type, int output)
 {
   telemetry_misc_structs *tms;
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = TELEMETRY_LOGDUMP_ET_NONE;
@@ -219,9 +219,9 @@ int telemetry_log_seq_has_ro_bit(u_int64_t *seq)
   return bgp_peer_log_seq_has_ro_bit(seq);
 }
 
-int telemetry_peer_log_init(telemetry_peer *peer, int output, int type)
+int telemetry_peer_log_init(telemetry_peer *peer, telemetry_tag_t *tag, int output, int type)
 {
-  return bgp_peer_log_init(peer, NULL, output, type);
+  return bgp_peer_log_init(peer, tag, output, type);
 }
 
 void telemetry_peer_log_dynname(char *new, int newlen, char *old, telemetry_peer *peer)
@@ -229,14 +229,14 @@ void telemetry_peer_log_dynname(char *new, int newlen, char *old, telemetry_peer
   bgp_peer_log_dynname(new, newlen, old, peer);
 }
 
-int telemetry_peer_dump_init(telemetry_peer *peer, int output, int type)
+int telemetry_peer_dump_init(telemetry_peer *peer, telemetry_tag_t *tag, int output, int type)
 {
-  return bgp_peer_dump_init(peer, NULL, output, type);
+  return bgp_peer_dump_init(peer, tag, output, type);
 }
 
-int telemetry_peer_dump_close(telemetry_peer *peer, int output, int type)
+int telemetry_peer_dump_close(telemetry_peer *peer, telemetry_tag_t *tag, int output, int type)
 {
-  return bgp_peer_dump_close(peer, NULL, NULL, output, type);
+  return bgp_peer_dump_close(peer, tag, NULL, output, type);
 }
 
 void telemetry_dump_init_peer(telemetry_peer *peer)
@@ -458,22 +458,22 @@ int telemetry_dump_event_runner(struct pm_dump_runner *pdr)
 	telemetry_tag_find((struct id_table *)telemetry_logdump_tag.tag_table, &telemetry_logdump_tag, &telemetry_logdump_tag.tag, NULL);
       }
 
-      telemetry_peer_dump_init(peer, config.telemetry_dump_output, FUNC_TYPE_TELEMETRY);
+      telemetry_peer_dump_init(peer, &telemetry_logdump_tag, config.telemetry_dump_output, FUNC_TYPE_TELEMETRY);
 
       if (tdsell && tdsell->start) {
         telemetry_dump_se_ll_elem *se_ll_elem;
         char event_type[] = "dump";
 
 	for (se_ll_elem = tdsell->start; se_ll_elem; se_ll_elem = se_ll_elem->next) {
-	  telemetry_log_msg(peer, t_data, se_ll_elem->rec.data, se_ll_elem->rec.len, se_ll_elem->rec.decoder,
-			    se_ll_elem->rec.seq, event_type, config.telemetry_dump_output);
+	  telemetry_log_msg(peer, t_data, &telemetry_logdump_tag, se_ll_elem->rec.data, se_ll_elem->rec.len,
+			    se_ll_elem->rec.decoder, se_ll_elem->rec.seq, event_type, config.telemetry_dump_output);
 	  dump_elems++;
 	}
       }
 
       saved_peer = peer;
       strlcpy(last_filename, current_filename, SRVBUFLEN);
-      telemetry_peer_dump_close(peer, config.telemetry_dump_output, FUNC_TYPE_TELEMETRY);
+      telemetry_peer_dump_close(peer, &telemetry_logdump_tag, config.telemetry_dump_output, FUNC_TYPE_TELEMETRY);
       tables_num++;
     }
   }
@@ -621,5 +621,19 @@ int telemetry_dump_init_kafka_host(void *tdkh)
 int telemetry_dump_init_kafka_host(void *tdkh)
 {
   return ERR;
+}
+#endif
+
+#ifdef WITH_JANSSON
+void telemetry_tag_print_json(json_t *obj, telemetry_tag_t *tag)
+{
+  bgp_tag_print_json(obj, tag);
+}
+#endif
+
+#ifdef WITH_AVRO
+void telemetry_tag_print_avro(avro_value_t obj, telemetry_tag_t *tag)
+{
+  bgp_tag_print_avro(obj, tag);
 }
 #endif

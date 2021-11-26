@@ -156,6 +156,7 @@ void telemetry_link_misc_structs(telemetry_misc_structs *tms)
   strcpy(tms->peer_str, "telemetry_node");
   tms->peer_port_str = malloc(strlen("telemetry_node_port") + 1);
   strcpy(tms->peer_port_str, "telemetry_node_port");
+  tms->tag = &telemetry_logdump_tag;
 }
 
 int telemetry_validate_input_output_decoders(int input, int output)

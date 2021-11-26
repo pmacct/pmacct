@@ -48,8 +48,8 @@ void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data,
     char event_type[] = "log";
 
     if (!telemetry_validate_input_output_decoders(data_decoder, config.telemetry_msglog_output)) {
-      telemetry_log_msg(peer, t_data, peer->buf.base, peer->msglen, data_decoder,
-			telemetry_log_seq_get(&tms->log_seq), event_type,
+      telemetry_log_msg(peer, t_data, &telemetry_logdump_tag, peer->buf.base, peer->msglen,
+			data_decoder, telemetry_log_seq_get(&tms->log_seq), event_type,
 			config.telemetry_msglog_output);
     }
   }

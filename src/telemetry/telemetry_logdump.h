@@ -33,12 +33,12 @@ extern u_int64_t telemetry_log_seq_get(u_int64_t *);
 extern void telemetry_log_seq_set(u_int64_t *, u_int64_t);
 extern int telemetry_log_seq_has_ro_bit(u_int64_t *);
 
-extern int telemetry_peer_log_init(telemetry_peer *, int, int);
+extern int telemetry_peer_log_init(telemetry_peer *, telemetry_tag_t *, int, int);
 extern void telemetry_peer_log_dynname(char *, int, char *, telemetry_peer *);
-extern int telemetry_log_msg(telemetry_peer *, struct telemetry_data *, void *, u_int32_t, int, u_int64_t, char *, int);
+extern int telemetry_log_msg(telemetry_peer *, struct telemetry_data *, telemetry_tag_t *, void *, u_int32_t, int, u_int64_t, char *, int);
 
-extern int telemetry_peer_dump_init(telemetry_peer *, int, int);
-extern int telemetry_peer_dump_close(telemetry_peer *, int, int);
+extern int telemetry_peer_dump_init(telemetry_peer *, telemetry_tag_t *, int, int);
+extern int telemetry_peer_dump_close(telemetry_peer *, telemetry_tag_t *, int, int);
 extern void telemetry_dump_init_peer(telemetry_peer *);
 extern void telemetry_dump_se_ll_destroy(telemetry_dump_se_ll *);
 extern void telemetry_dump_se_ll_append(telemetry_peer *, struct telemetry_data *, int);
@@ -49,5 +49,13 @@ extern void telemetry_daemon_msglog_init_amqp_host();
 extern void telemetry_dump_init_amqp_host(void *);
 extern int telemetry_daemon_msglog_init_kafka_host();
 extern int telemetry_dump_init_kafka_host(void *);
+
+#if defined WITH_JANSSON
+extern void telemetry_tag_print_json(json_t *, telemetry_tag_t *);
+#endif
+
+#if defined WITH_AVRO
+extern void telemetry_tag_print_avro(avro_value_t, telemetry_tag_t *);
+#endif
 
 #endif //TELEMETRY_LOGDUMP_H

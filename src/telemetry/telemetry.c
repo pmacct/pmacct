@@ -900,7 +900,7 @@ int telemetry_daemon(void *t_data_void)
       }
 
       if (telemetry_misc_db->msglog_backend_methods)
-        telemetry_peer_log_init(peer, config.telemetry_msglog_output, FUNC_TYPE_TELEMETRY);
+        telemetry_peer_log_init(peer, &telemetry_logdump_tag, config.telemetry_msglog_output, FUNC_TYPE_TELEMETRY);
 
       if (telemetry_misc_db->dump_backend_methods)
         telemetry_dump_init_peer(peer);
