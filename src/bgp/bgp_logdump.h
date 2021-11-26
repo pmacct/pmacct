@@ -78,7 +78,7 @@ extern int bgp_daemon_msglog_init_kafka_host();
 extern int bgp_table_dump_init_kafka_host(void *);
 
 #if defined WITH_JANSSON
-void bgp_tag_print_json(json_t *, bgp_tag_t *);
+extern void bgp_tag_print_json(json_t *, bgp_tag_t *);
 #endif
 
 #if defined WITH_AVRO
