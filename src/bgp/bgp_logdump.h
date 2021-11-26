@@ -68,8 +68,8 @@ extern u_int64_t bgp_peer_log_seq_get(u_int64_t *);
 extern void bgp_peer_log_seq_set(u_int64_t *, u_int64_t);
 extern int bgp_peer_log_seq_has_ro_bit(u_int64_t *);
 
-extern int bgp_peer_dump_init(struct bgp_peer *, bgp_tag_t *tag, int, int);
-extern int bgp_peer_dump_close(struct bgp_peer *, bgp_tag_t *tag, struct bgp_dump_stats *, int, int);
+extern int bgp_peer_dump_init(struct bgp_peer *, bgp_tag_t *, int, int);
+extern int bgp_peer_dump_close(struct bgp_peer *, bgp_tag_t *, struct bgp_dump_stats *, int, int);
 extern void bgp_handle_dump_event(int);
 extern int bgp_table_dump_event_runner(struct pm_dump_runner *);
 extern void bgp_daemon_msglog_init_amqp_host();
