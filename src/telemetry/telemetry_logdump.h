@@ -54,8 +54,4 @@ extern int telemetry_dump_init_kafka_host(void *);
 extern void telemetry_tag_print_json(json_t *, telemetry_tag_t *);
 #endif
 
-#if defined WITH_AVRO
-extern void telemetry_tag_print_avro(avro_value_t, telemetry_tag_t *);
-#endif
-
 #endif //TELEMETRY_LOGDUMP_H

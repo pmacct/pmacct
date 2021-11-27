@@ -93,6 +93,10 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telem
 
     json_object_set_new_nocheck(obj, "telemetry_port", json_integer((json_int_t)peer->tcp_port));
 
+    if (config.pre_tag_map && tag) {
+      telemetry_tag_print_json(obj, tag);
+    }
+
     if (data_decoder == TELEMETRY_DATA_DECODER_JSON) {
       json_error_t json_err;
       json_t *log_data_obj = json_loads(log_data, 0, &json_err);
@@ -628,12 +632,5 @@ int telemetry_dump_init_kafka_host(void *tdkh)
 void telemetry_tag_print_json(json_t *obj, telemetry_tag_t *tag)
 {
   bgp_tag_print_json(obj, tag);
-}
-#endif
-
-#ifdef WITH_AVRO
-void telemetry_tag_print_avro(avro_value_t obj, telemetry_tag_t *tag)
-{
-  bgp_tag_print_avro(obj, tag);
 }
 #endif
