@@ -1970,15 +1970,17 @@ DESC:		Mainly a workaround to implementations not encoding NetFlow v9/IPIFX opti
 DEFAULT:	false
 
 KEY:		pre_tag_map [MAP]
-DESC:		Full pathname to a file containing tag mappings. Tags can be internal-only (ie. for filtering
-		purposes, see pre_tag_filter configuration directive) or exposed in data (ie. if 'tag', 'tag2'
-		and/or 'label' primitives are part of the aggregation method). Take a look to the examples/
-		sub-tree for all supported keys and detailed examples (pretag.map.example). Pre-Tagging is
-		evaluated in the Core Process and each plugin can be defined a local pre_tag_map. Result of
-		evaluation of pre_tag_map overrides any tags passed via NetFlow/sFlow by a pmacct nfprobe/
-		sfprobe plugin. Maximum number of entries (by default 384) can be modified via maps_entries.
-		Content can be reloaded at runtime by sending the daemon a SIGUSR2 signal (ie. "killall -USR2
-		nfacctd").
+DESC:		Full pathname to a file containing specific tags for data. For all daemons, tags (be that
+		numerical 'tag' or stringy 'label') can be exposed in output data; traffic daemons (ie.
+		pmacctd, nfacctd, sfacctd, etc.) need 'tag', 'tag2' or 'label' primitives to be included
+		in the 'aggregate' aggregation method. Again (only) in traffic daemons, all of which do
+		feature a plugin-based architecture, tags can be used for filtering purposes (see the
+		pre_tag_filter, pre_tag_label_filter config directives). Take a look to the examples/
+		sub-tree for all supported keys and detailed examples (pretag.map.example). In traffic
+		daemons the evaluation of a pre_tag_map does override any tags passed via NetFlow/sFlow
+		by a pmacct nfprobe/sfprobe plugin. The maximum number of entries (by default 384) can
+		be modified via maps_entries. Content can be reloaded at runtime by sending the daemon
+		a SIGUSR2 signal (ie. "killall -USR2 nfacctd").
 DEFAULT:	none
 
 KEY:		maps_entries
