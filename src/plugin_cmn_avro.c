@@ -1361,7 +1361,7 @@ void pm_avro_exit_gracefully(int status)
 }
 
 
-void compose_label_avro_schema(avro_schema_t sc_type_record)
+void compose_label_avro_schema(avro_schema_t sc_type_record, int opt)
 {
   sc_type_string = avro_schema_string();
   sc_type_map = avro_schema_map(sc_type_string);
