@@ -61,7 +61,7 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
 
   if (wtc_2 & COUNT_LABEL) {
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_schema(schema);
+      compose_label_avro_schema(schema, FALSE);
     }
     else {
       avro_schema_record_field_append(schema, "label", avro_schema_string());
@@ -218,7 +218,7 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
 
   if (wtc & COUNT_TCPFLAGS) {
     if (config.tcpflags_encode_as_array) {
-      compose_tcpflags_avro_schema(schema, FALSE);
+      compose_tcpflags_avro_schema(schema);
     }
     else {
       avro_schema_record_field_append(schema, "tcp_flags", avro_schema_string());
