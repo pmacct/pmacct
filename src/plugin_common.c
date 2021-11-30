@@ -1015,7 +1015,7 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
 {
   /* Max amount of tokens per string: 128 Labels */
   const int MAX_TOCKENS = 256;
-  
+
   /* strtok doesn't like const string */
   char *no_const_ptm_labels = strdup(ptm_labels);
 
@@ -1040,4 +1040,39 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
   }
 
   return ptm_linked_list;
+}
+
+
+cdada_list_t *tcpflags_to_linked_list(size_t tcpflags_decimal)
+{
+  /* Generate the tcpflag's binary array */
+  const char tcpflags_mask[6][5] = {"URG", "ACK", "PSH", "RST", "SYN", "FIN"};
+  size_t tcpflags_binary[6] = {0};
+
+  /* tcpflags binary format (valid decimals between 1 & 63) */
+  size_t idx_0;
+  if ((tcpflags_decimal > 0) && (tcpflags_decimal) < 64) {
+    for (idx_0 = 5; tcpflags_decimal > 0 && idx_0 >= 0; idx_0--) {
+      tcpflags_binary[idx_0] = (tcpflags_decimal % 2);
+      tcpflags_decimal /= 2;
+    }
+  }
+
+  /* Generate the tcpflags' linked-list */
+  cdada_list_t *tcpflag_linked_list = cdada_list_create(tcpflag);
+  tcpflag tcpstate;
+
+  size_t idx_1;
+  for (idx_1 = 0; idx_1 < 6; idx_1++) {
+    memset(&tcpstate, 0, sizeof(tcpstate));
+    if (!tcpflags_binary[idx_1]) {
+      strcpy(tcpstate.flag, "NULL");
+    }
+    else {
+      strcpy(tcpstate.flag, tcpflags_mask[idx_1]);
+    }
+    cdada_list_push_back(tcpflag_linked_list, &tcpstate);
+  }
+
+  return tcpflag_linked_list;
 }

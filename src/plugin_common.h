@@ -95,6 +95,13 @@ typedef struct {
 } __attribute__((packed)) ptm_label;
 #endif
 
+#ifndef STRUCT_TCPFLAGS
+#define STRUCT_TCPFLAGS
+typedef struct {
+  char flag[5];
+} __attribute__((packed)) tcpflag;
+#endif
+
 /* prototypes */
 extern void P_set_signals();
 extern void P_init_default_values();
@@ -126,8 +133,9 @@ extern void P_update_time_reference(struct insert_data *);
 extern void P_set_stitch(struct chained_cache *, struct pkt_data *, struct insert_data *);
 extern void P_update_stitch(struct chained_cache *, struct pkt_data *, struct insert_data *);
 
-extern cdada_list_t *ptm_labels_to_linked_list(const char *);
 extern const char *labels_delim_normalization(char *);
+extern cdada_list_t *ptm_labels_to_linked_list(const char *);
+extern cdada_list_t *tcpflags_to_linked_list(size_t);
 
 /* global vars */
 extern void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
