@@ -607,6 +607,28 @@ int cfg_key_pre_tag_label_encode_as_map(char *filename, char *name, char *value_
   return changes;
 }
 
+int cfg_key_tcpflags_encode_as_array(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.tcpflags_encode_as_array = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.tcpflags_encode_as_array = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 int cfg_key_pcap_filter(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
