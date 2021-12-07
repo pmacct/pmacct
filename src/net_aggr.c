@@ -507,8 +507,8 @@ void remove_dupes(char *filename, struct networks_table *nt, int want_v6)
 	continue;
       }
 
-      nt->table[j].net = nt->table[i].net;
-      nt->table[j].mask = nt->table[i].mask;
+      memcpy(&nt->table[j], &nt->table[i], sizeof(struct networks_table_entry));
+
       j++;
     }
 
@@ -523,8 +523,8 @@ void remove_dupes(char *filename, struct networks_table *nt, int want_v6)
       }
     }
 
-    memcpy(nt->table6[j].net, nt->table6[i].net, sizeof(nt->table6[i].net));
-    memcpy(nt->table6[j].mask, nt->table6[i].mask, sizeof(nt->table6[i].mask));
+    memcpy(&nt->table6[j], &nt->table6[i], sizeof(struct networks6_table_entry));
+
     j++;
   }
   nt->num6 = j;
