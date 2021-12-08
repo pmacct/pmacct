@@ -884,6 +884,14 @@ void bgp_table_info_delete(struct bgp_peer *peer, struct bgp_table *table, afi_t
   struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
   struct bgp_node *node;
 
+  /* Being pre_tag_map limited to 'ip' key lookups, this is finely
+     placed here. Should further lookups be possible, this may be
+     very possibly moved inside the loop */
+  if (config.pre_tag_map) {
+    bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag);
+    bgp_tag_find((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
+  }
+
   node = bgp_table_top(peer, table);
 
   while (node) {
