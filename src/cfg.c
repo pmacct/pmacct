@@ -641,6 +641,7 @@ static const struct _dictionary_line dictionary[] = {
   {"tmp_bgp_lookup_compare_ports", cfg_key_tmp_bgp_lookup_compare_ports},
   {"tmp_bgp_daemon_route_refresh", cfg_key_tmp_bgp_daemon_route_refresh},
   {"tmp_bgp_daemon_origin_type_int", cfg_key_tmp_bgp_daemon_origin_type_int},
+  {"tmp_telemetry_daemon_udp_notif_legacy", cfg_key_tmp_telemetry_daemon_udp_notif_legacy},
   {"", NULL}
 };
 

@@ -475,6 +475,10 @@ int telemetry_daemon(void *t_data_void)
       options.recvmmsg_vlen = TELEMETRY_DEFAULT_UNYTE_UDP_NOTIF_NMSGS;
     }
 
+    if (config.tmp_telemetry_udp_notif_legacy) {
+      options.legacy = TRUE;
+    }
+
     uun_collector = unyte_udp_start_collector(&options);
 
     Log(LOG_INFO, "INFO ( %s/%s ): reading telemetry data from Unyte UDP Notif on %s:%s\n", config.name, t_data->log_str, config.telemetry_udp_notif_ip, udp_notif_port);
