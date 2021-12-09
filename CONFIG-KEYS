@@ -3356,6 +3356,12 @@ DESC:		If set to true, the BGP attribute "origin" is encoded on output as an int
 		This may help existing deployments <= 1.7.3 to upgrade smoothly.
 DEFAULT:	false
 
+KEY:		tmp_telemetry_daemon_udp_notif_legacy
+VALUES:		[ true | false ]
+DESC:		If set to true, make use of the legacy UDP publish channel protocol as described in
+		draft-ietf-netconf-udp-pub-channel-05.
+DEFAULT:	false
+
 REFERENCES:
 
 (1) https://domsch.com/linux/lpc2010/Scaling_techniques_for_servers_with_high_connection%20rates.pdf
