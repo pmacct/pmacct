@@ -2446,9 +2446,9 @@ KEY:		[ bgp_daemon_max_peers | bmp_daemon_max_peers ] [GLOBAL]
 DESC:		Sets the maximum number of neighbors the BGP/BMP daemon can peer to. Upon reaching of the
 		limit, no more BGP/BMP sessions can be established. BGP/BMP neighbors don't need to be
 		defined explicitely one-by-one rather an upper boundary to the number of neighbors applies.
-		pmacctd, uacctd daemons are limited to only two BGP peers (in a primary/backup fashion, see
-		bgp_agent_map); such hardcoded limit is imposed as the only scenarios supported in conjunction
-		with the BGP daemon are as NetFlow/sFlow probes on-board software routers and firewalls.
+		pmacctd, uacctd daemons are limited to only two BGP peers: such hardcoded limit is imposed
+		as the only scenarios supported in conjunction with the BGP daemon are as NetFlow/sFlow
+		probes on-board software routers and firewalls.
 DEFAULT:	10
 
 KEY:		[ bgp_daemon_batch_interval | bmp_daemon_batch_interval ] [GLOBAL]
@@ -2641,9 +2641,8 @@ DESC:		Full pathname to a file to map source 1a) IP address of NetFlow/IPFIX age
 		BGP peering with RRs, hub-and-spoke topologies, single-homed networks - but also BGP
 		sessions traversing NAT.
 		pmacctd and uacctd daemons are required to use this map with at most two "catch-all"
-		entries working in a primary/backup fashion (see for more info bgp_agent.map.example
-		in the examples section): this is because these daemons do not have a NetFlow/sFlow
-		source address to match to.
+		entries: this is because these daemons do not have a NetFlow/sFlow source address to
+		match to.
 		Number of map entries (by default 384) can be modified via maps_entries. Content can be
 		reloaded at runtime by sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd").
 DEFAULT:	none
