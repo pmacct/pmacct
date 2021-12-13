@@ -469,6 +469,7 @@ struct pkt_data {
   pm_counter_t flo_num;
   u_int8_t flow_type;
   u_int32_t tcp_flags; /* XXX */
+  u_int32_t forwarding_status;
   struct timeval time_start;
   struct timeval time_end;
   struct class_st cst;

@@ -224,6 +224,12 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
       avro_schema_record_field_append(schema, "tcp_flags", avro_schema_string());
     }
   }
+  
+  if (wtc & COUNT_FORWARDING_STATUS) {
+    if (TRUE) {
+      avro_schema_record_field_append(schema, "forwarding_status", avro_schema_string());
+    }
+  }
 
   if (wtc & COUNT_IP_PROTO)
     avro_schema_record_field_append(schema, "ip_proto", avro_schema_string());
@@ -415,7 +421,7 @@ avro_value_t compose_avro_acct_close(char *writer_name, pid_t writer_pid, int pu
 avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
   struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
   struct pkt_tunnel_primitives *ptun, u_char *pcust, struct pkt_vlen_hdr_primitives *pvlen,
-  pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags,
+  pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags, u_int32_t forwarding_status,
   struct timeval *basetime, struct pkt_stitching *stitch, avro_value_iface_t *iface)
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
@@ -818,6 +824,15 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
     }
     else {
       pm_avro_check(avro_value_get_by_name(&value, "tcp_flags", &field, NULL));
+      pm_avro_check(avro_value_set_string(&field, misc_str));
+    }
+  }
+  
+  if (wtc & COUNT_FORWARDING_STATUS) {
+    sprintf(misc_str, "%u", forwarding_status);
+
+    if (TRUE) {
+      pm_avro_check(avro_value_get_by_name(&value, "forwarding_status", &field, NULL));
       pm_avro_check(avro_value_set_string(&field, misc_str));
     }
   }
