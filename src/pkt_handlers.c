@@ -535,8 +535,10 @@ void evaluate_packet_handlers()
     
     /* ACCT_PM & ACCT_SF atm not handled */
     if (channels_list[index].aggregation & COUNT_FORWARDING_STATUS) {
-      //if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_forwarding_status_handler;
-      channels_list[index].phandler[primitives] = NF_forwarding_status_handler;
+      if (config.acct_type == ACCT_NF) {
+        channels_list[index].phandler[primitives] = NF_forwarding_status_handler;
+        printf("ACCT_NT");
+      }
       primitives++;
     }
 
@@ -2453,7 +2455,7 @@ void NF_forwarding_status_handler(struct channels_list_entry *chptr, struct pack
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_FORWARDING_STATUS].len) {
+    if (tpl->tpl[NF9_FORWARDING_STATUS].len == 1) {
       memcpy(&forwarding_status, pptrs->f_data+tpl->tpl[NF9_FORWARDING_STATUS].off, MIN(tpl->tpl[NF9_FORWARDING_STATUS].len, 1));
       printf("before - pdata->forwarding_status: %u\n", pnat->forwarding_status);
       pnat->forwarding_status = forwarding_status;
