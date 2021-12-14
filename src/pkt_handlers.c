@@ -2453,7 +2453,7 @@ void NF_forwarding_status_handler(struct channels_list_entry *chptr, struct pack
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_FORWARDING_STATUS].len == 1) {
+    if (tpl->tpl[NF9_FORWARDING_STATUS].len) {
       memcpy(&forwarding_status, pptrs->f_data+tpl->tpl[NF9_FORWARDING_STATUS].off, MIN(tpl->tpl[NF9_FORWARDING_STATUS].len, 1));
       printf("before - pdata->forwarding_status: %u\n", pnat->forwarding_status);
       pnat->forwarding_status = forwarding_status;
