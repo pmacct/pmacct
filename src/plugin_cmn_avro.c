@@ -225,7 +225,7 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
     }
   }
   
-  if (wtc & COUNT_FORWARDING_STATUS) {
+  if (wtc_2 & COUNT_FORWARDING_STATUS) {
     if (TRUE) {
       avro_schema_record_field_append(schema, "forwarding_status", avro_schema_string());
     }
@@ -828,7 +828,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
     }
   }
   
-  if (wtc & COUNT_FORWARDING_STATUS) {
+  if (wtc_2 & COUNT_FORWARDING_STATUS) {
     sprintf(misc_str, "%u", forwarding_status);
     printf("fwdstatus from avro: %s\n", misc_str);
 
