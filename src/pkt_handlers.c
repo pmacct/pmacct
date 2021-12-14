@@ -537,7 +537,7 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation & COUNT_FORWARDING_STATUS) {
       if (config.acct_type == ACCT_NF) {
         channels_list[index].phandler[primitives] = NF_forwarding_status_handler;
-        printf("ACCT_NT");
+        printf("\n\n\nACCT_NT\n\n\n");
       }
       primitives++;
     }
