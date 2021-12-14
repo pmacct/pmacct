@@ -2442,7 +2442,8 @@ void NF_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 
 void NF_forwarding_status_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_data *pdata = (struct pkt_data *) *data;
+  //struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int32_t forwarding_status = 0;
@@ -2454,7 +2455,7 @@ void NF_forwarding_status_handler(struct channels_list_entry *chptr, struct pack
     if (tpl->tpl[NF9_FORWARDING_STATUS].len == 1) {
       memcpy(&forwarding_status, pptrs->f_data+tpl->tpl[NF9_FORWARDING_STATUS].off, MIN(tpl->tpl[NF9_FORWARDING_STATUS].len, 1));
       printf("before - pdata->forwarding_status: %u\n", pdata->forwarding_status);
-      pdata->forwarding_status = forwarding_status;
+      pnat->forwarding_status = forwarding_status;
       printf("after - pdata->forwarding_status: %u\n", pdata->forwarding_status);
     }
     break;

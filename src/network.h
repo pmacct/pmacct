@@ -469,7 +469,6 @@ struct pkt_data {
   pm_counter_t flo_num;
   u_int8_t flow_type;
   u_int32_t tcp_flags; /* XXX */
-  u_int32_t forwarding_status;
   struct timeval time_start;
   struct timeval time_end;
   struct class_st cst;
@@ -593,6 +592,7 @@ struct pkt_nat_primitives {
   u_int16_t post_nat_src_port;
   u_int16_t post_nat_dst_port;
   u_int8_t nat_event;
+  u_int32_t forwarding_status;
   struct timeval timestamp_start; /* XXX: clean-up: to be moved in a separate structure */
   struct timeval timestamp_end; /* XXX: clean-up: to be moved in a separate structure */
   struct timeval timestamp_arrival; /* XXX: clean-up: to be moved in a separate structure */
