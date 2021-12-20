@@ -568,7 +568,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
       avro_value_t p_avro_value = compose_avro_acct_data(config.what_to_count, config.what_to_count_2,
 			   queue[j]->flow_type, &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust,
 			   pvlen, queue[j]->bytes_counter, queue[j]->packet_counter,
-			   queue[j]->flow_counter, queue[j]->tcp_flags, 0, &queue[j]->basetime,
+			   queue[j]->flow_counter, queue[j]->tcp_flags, &queue[j]->basetime,
 			   queue[j]->stitch, p_avro_iface);
       add_writer_name_and_pid_avro(p_avro_value, config.name, writer_pid);
 
