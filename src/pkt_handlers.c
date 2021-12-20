@@ -2446,7 +2446,7 @@ void NF_forwarding_status_handler(struct channels_list_entry *chptr, struct pack
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int32_t forwarding_status = 10;
+  u_int32_t forwarding_status = 0;
 
   printf("hdr->version: %u\n", hdr->version );
   switch(hdr->version) {
