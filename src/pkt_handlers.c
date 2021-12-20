@@ -4587,8 +4587,6 @@ void nfprobe_bgp_ext_handler(struct channels_list_entry *chptr, struct packet_pt
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
   struct bgp_info *info = NULL;
 
-  --pdata; /* Bringing back to original place */
-
   if (src_ret && evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_as, NF_AS_BGP)) {
     info = (struct bgp_info *) pptrs->bgp_src_info;
     if (info && info->attr) {
