@@ -573,7 +573,7 @@ struct pkt_nat_primitives {
   u_int16_t post_nat_src_port;
   u_int16_t post_nat_dst_port;
   u_int8_t nat_event;
-  u_int32_t forwarding_status;
+  u_int32_t forwarding_status; /* XXX: clean-up: to be moved in a separate structure */
   struct timeval timestamp_start; /* XXX: clean-up: to be moved in a separate structure */
   struct timeval timestamp_end; /* XXX: clean-up: to be moved in a separate structure */
   struct timeval timestamp_arrival; /* XXX: clean-up: to be moved in a separate structure */

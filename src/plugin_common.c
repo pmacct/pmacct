@@ -1081,7 +1081,7 @@ cdada_list_t *tcpflags_to_linked_list(size_t tcpflags_decimal)
 cdada_list_t *nf9_fwdstatus_to_linked_list()
 {
   const unsigned int nf9_fwdstatus_decimal[23] = {
-    64, 65, 66,
+    0, 64, 65, 66,
     128, 129, 130,
     131, 132, 133,
     134, 135, 136,
@@ -1092,6 +1092,7 @@ cdada_list_t *nf9_fwdstatus_to_linked_list()
   };
 
   const char nf9_fwdstatus_description[23][50] = {
+    "Unknown",
     "FWD Unknown",
 	  "FWD Fragmented",
 	  "FWD Not Fragmented",
