@@ -398,25 +398,6 @@ struct packet_ptrs {
 #endif
 };
 
-/* XXX:
-struct host_addr {
-  u_int8_t family;
-  union {
-    struct in_addr ipv4;
-    struct in6_addr ipv6;
-  } address;
-};
-
-struct host_mask {
-  u_int8_t family;
-  u_int8_t len;
-  union {
-    u_int32_t m4;
-    u_int8_t m6[16];
-  } mask;
-};
-*/
-
 struct pkt_primitives {
 #if defined (HAVE_L2)
   u_int8_t eth_dhost[ETH_ADDR_LEN];
