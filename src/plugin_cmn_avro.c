@@ -227,7 +227,7 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
   
   if (wtc_2 & COUNT_FORWARDING_STATUS) {
     if (config.nf9_fwdstatus_encode_as_string) {
-      compose_nf9_fwdstatus_avro_schema(schema)
+      compose_nf9_fwdstatus_avro_schema(schema);
     }
     else {
       avro_schema_record_field_append(schema, "forwarding_status", avro_schema_string());
