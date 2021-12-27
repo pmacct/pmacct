@@ -3118,8 +3118,15 @@ int PT_map_index_entries_ip_handler(struct id_entry *e, pm_hash_serial_t *hash_s
 
   if (!e || !hash_serializer || !src_e) return TRUE; 
 
-  memcpy(&e->key.agent_ip, &src_e->key.agent_ip, sizeof(pt_hostaddr_t));
-  hash_serial_append(hash_serializer, (char *)&src_e->key.agent_ip.a, sizeof(struct host_addr), TRUE);
+  if ((src_e->key.agent_mask.family == AF_INET && src_e->key.agent_mask.len == 32) ||
+      (src_e->key.agent_mask.family == AF_INET6 && src_e->key.agent_mask.len == 128)) {
+    memcpy(&e->key.agent_ip, &src_e->key.agent_ip, sizeof(pt_hostaddr_t));
+    hash_serial_append(hash_serializer, (char *)&src_e->key.agent_ip.a, sizeof(struct host_addr), TRUE);
+  }
+  else {
+    Log(LOG_WARNING, "WARN ( %s/%s ): pretag_index_fill(): unsupported 'ip' mask\n", config.name, config.type);
+    return TRUE;
+  }
 
   return FALSE;
 }
@@ -3315,7 +3322,10 @@ int PT_map_index_entries_src_net_handler(struct id_entry *e, pm_hash_serial_t *h
     memcpy(&e->key.src_net, &src_e->key.src_net, sizeof(pt_netaddr_t));
     hash_serial_append(hash_serializer, (char *)&src_e->key.src_net.a, sizeof(struct host_addr), TRUE);
   }
-  else return TRUE;
+  else {
+    Log(LOG_WARNING, "WARN ( %s/%s ): pretag_index_fill(): unsupported 'src_net' mask\n", config.name, config.type);
+    return TRUE;
+  }
 
   return FALSE;
 }
@@ -3331,7 +3341,10 @@ int PT_map_index_entries_dst_net_handler(struct id_entry *e, pm_hash_serial_t *h
     memcpy(&e->key.dst_net, &src_e->key.dst_net, sizeof(pt_netaddr_t));
     hash_serial_append(hash_serializer, (char *)&src_e->key.dst_net.a, sizeof(struct host_addr), TRUE);
   }
-  else return TRUE;
+  else {
+    Log(LOG_WARNING, "WARN ( %s/%s ): pretag_index_fill(): unsupported 'dst_net' mask\n", config.name, config.type);
+    return TRUE;
+  }
 
   return FALSE;
 }

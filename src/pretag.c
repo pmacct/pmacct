@@ -669,7 +669,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
           idx_bmap = pretag_index_build_bitmap(ptr, acct_type);
 
 	  /* fill indexes */
-	  pretag_index_fill(t, idx_bmap, ptr);
+	  pretag_index_fill(t, idx_bmap, ptr, x);
 	}
       }
 
@@ -1086,7 +1086,7 @@ int pretag_index_allocate(struct id_table *t)
   return SUCCESS;
 }
 
-int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry *ptr)
+int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry *ptr, int lineno)
 {
   u_int32_t iterator = 0, handler_index = 0;
   int ret;
@@ -1108,16 +1108,23 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
       if (!hash_key) return ERR;
 
       for (handler_index = 0; t->index[iterator].idt_handler[handler_index]; handler_index++) {
-	(*t->index[iterator].idt_handler[handler_index])(&e, hash_serializer, ptr);
+	ret = (*t->index[iterator].idt_handler[handler_index])(&e, hash_serializer, ptr);
+        if (ret) {
+	  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] pretag_index_fill(): index=%llx line=%d (err!)\n",
+	      config.name, config.type, t->filename, (unsigned long long)idx_bmap, (lineno + 1));
+	  break;
+        }
       }
 
-      ret = cdada_map_insert(t->index[iterator].idx_map, hash_key_get_val(hash_key), ptr);
-      if (ret == CDADA_E_EXISTS) {
-	u_char key_hexdump[hash_key_get_len(hash_key) * 3];
-	serialize_hex(hash_key_get_val(hash_key), key_hexdump, hash_key_get_len(hash_key));
+      if (!ret) {
+        ret = cdada_map_insert(t->index[iterator].idx_map, hash_key_get_val(hash_key), ptr);
+        if (ret == CDADA_E_EXISTS) {
+	  u_char key_hexdump[hash_key_get_len(hash_key) * 3];
+	  serialize_hex(hash_key_get_val(hash_key), key_hexdump, hash_key_get_len(hash_key));
 
-	Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] pretag_index_fill(): index=%llx key=%s (dup!)\n",
-	    config.name, config.type, t->filename, (unsigned long long)idx_bmap, key_hexdump);
+	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] pretag_index_fill(): index=%llx key=%s (dup!)\n",
+	      config.name, config.type, t->filename, (unsigned long long)idx_bmap, key_hexdump);
+	}
       }
 
       break;
