@@ -1559,7 +1559,7 @@ int compose_nf9_fwdstatus_avro_data(size_t fwdstatus_decimal, avro_value_t v_typ
   }
 
   size_t idx_0;
-  for (idx_0 = 0; idx_0 < ll_size; idx_1++) {
+  for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
     cdada_list_get(ll, idx_0, &fwdstate);
     if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
       if (fwdstate.decimal == fwdstatus_decimal) {
