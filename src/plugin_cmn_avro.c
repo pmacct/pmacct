@@ -226,7 +226,10 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
   }
   
   if (wtc_2 & COUNT_FORWARDING_STATUS) {
-    if (TRUE) {
+    if (config.nf9_fwdstatus_encode_as_string) {
+      compose_nf9_fwdstatus_avro_schema(schema)
+    }
+    else {
       avro_schema_record_field_append(schema, "forwarding_status", avro_schema_string());
     }
   }
@@ -830,9 +833,11 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
   
   if (wtc_2 & COUNT_FORWARDING_STATUS) {
     sprintf(misc_str, "%u", pnat->forwarding_status);
-    printf("fwdstatus from avro: %s\n", misc_str);
 
-    if (TRUE) {
+    if (config.nf9_fwdstatus_encode_as_string) {
+      compose_nf9_fwdstatus_avro_data(pnat->forwarding_status, value);
+    }
+    else { 
       pm_avro_check(avro_value_get_by_name(&value, "forwarding_status", &field, NULL));
       pm_avro_check(avro_value_set_string(&field, misc_str));
     }
@@ -1415,6 +1420,15 @@ void compose_tcpflags_avro_schema(avro_schema_t sc_type_record)
   avro_schema_decref(sc_type_string);
 }
 
+void compose_nf9_fwdstatus_avro_schema(avro_schema_t sc_type_record)
+{
+  sc_type_string = avro_schema_string();
+  avro_schema_record_field_append(sc_type_record, "forwarding_status", sc_type_string);
+
+  /* free-up memory */
+  avro_schema_decref(sc_type_string);
+}
+
 
 int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
 {
@@ -1518,6 +1532,44 @@ int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_reco
   /* free-up memory */
   cdada_list_destroy(ll);
   avro_value_iface_decref(if_type_array);
+  avro_value_iface_decref(if_type_string);
+
+  return 0;
+}
+
+
+int compose_nf9_fwdstatus_avro_data(size_t fwdstatus_decimal, avro_value_t v_type_record)
+{
+  nf9_fwdstatus fwdstate;
+  
+  /* linked-list creation */
+  cdada_list_t *ll = nf9_fwdstatus_to_linked_list();
+  int ll_size = cdada_list_size(ll);
+
+  avro_value_t v_type_string;
+  avro_value_iface_t *if_type_string;
+
+  if_type_string = avro_generic_class_from_schema(sc_type_string);
+
+  avro_generic_value_new(if_type_string, &v_type_string);
+  
+  /* default fwdstatus */
+  if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
+    avro_value_set_string(&v_type_string, "unrecognized");
+  }
+
+  size_t idx_0;
+  for (idx_0 = 0; idx_0 < ll_size; idx_1++) {
+    cdada_list_get(ll, idx_0, &fwdstate);
+    if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
+      if (fwdstate.decimal == fwdstatus_decimal) {
+        avro_value_set_string(&v_type_string, fwdstate.description);
+      }
+    }
+  }
+  
+  /* free-up memory */
+  cdada_list_destroy(ll);
   avro_value_iface_decref(if_type_string);
 
   return 0;

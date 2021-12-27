@@ -103,6 +103,14 @@ typedef struct {
 } __attribute__((packed)) tcpflag;
 #endif
 
+#ifndef NF9_FWDSTATUS
+#define NF9_FWDSTATUS
+typedef struct {
+  unsigned int decimal;
+  char description[50];
+} __attribute__((packed)) nf9_fwdstatus;
+#endif
+
 /* prototypes */
 extern void P_set_signals();
 extern void P_init_default_values();
@@ -137,6 +145,7 @@ extern void P_update_stitch(struct chained_cache *, struct pkt_data *, struct in
 extern const char *labels_delim_normalization(char *);
 extern cdada_list_t *ptm_labels_to_linked_list(const char *);
 extern cdada_list_t *tcpflags_to_linked_list(size_t);
+extern cdada_list_t *nf9_fwdstatus_to_linked_list();
 
 /* global vars */
 extern void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */

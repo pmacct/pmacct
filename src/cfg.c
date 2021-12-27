@@ -88,6 +88,7 @@ static const struct _dictionary_line dictionary[] = {
   {"timestamps_secs", cfg_key_timestamps_secs},
   {"timestamps_since_epoch", cfg_key_timestamps_since_epoch},
   {"tcpflags_encode_as_array", cfg_key_tcpflags_encode_as_array},
+  {"nf9_fwdstatus_encode_as_string", cfg_key_nf9_fwdstatus_encode_as_string},
   {"imt_path", cfg_key_imt_path},
   {"imt_passwd", cfg_key_imt_passwd},
   {"imt_buckets", cfg_key_imt_buckets},

@@ -1076,3 +1076,59 @@ cdada_list_t *tcpflags_to_linked_list(size_t tcpflags_decimal)
 
   return tcpflag_linked_list;
 }
+
+
+cdada_list_t *nf9_fwdstatus_to_linked_list()
+{
+  const unsigned int nf9_fwdstatus_decimal[23] = {
+    64, 65, 66,
+    128, 129, 130,
+    131, 132, 133,
+    134, 135, 136,
+    137, 138, 139,
+    140, 141, 142,
+    143, 192, 193,
+    194, 195
+  };
+
+  const char nf9_fwdstatus_description[23][50] = {
+    "FWD Unknown",
+	  "FWD Fragmented",
+	  "FWD Not Fragmented",
+	  "DROP Unknown",
+	  "DROP ACL deny",
+	  "DROP ACL drop",
+	  "DROP Unroutable",
+	  "DROP Adjacency",
+	  "DROP Fragmentation and DF set",
+	  "DROP Bad header checksum",
+	  "DROP Bad total Length",
+	  "DROP Bad header length",
+	  "DROP bad TTL",
+	  "DROP Policer",
+	  "DROP WRED",
+	  "DROP RPF",
+	  "DROP For us",
+	  "DROP Bad output interface",
+	  "DROP Hardware",
+	  "CONSUMED Unknown",
+	  "CONSUMED Punt Adjacency",
+	  "CONSUMED Incomplete Adjacency",
+	  "CONSUMED For us",
+  };
+
+  /* Generate the forwarding_status' linked-list */
+  cdada_list_t *nf9_fwdstatus_linked_list = cdada_list_create(nf9_fwdstatus);
+  nf9_fwdstatus fwdstate;
+
+  size_t idx_0;
+  for (idx_0 = 0; idx_0 < 23; idx_0++) {
+    memset(&fwdstate, 0, sizeof(fwdstate));
+    fwdstate.decimal = nf9_fwdstatus_decimal[idx_0];
+    strcpy(fwdstate.description, nf9_fwdstatus_description[idx_0]);
+
+    cdada_list_push_back(nf9_fwdstatus_linked_list, &fwdstate);
+  }
+
+  return nf9_fwdstatus_linked_list;
+}
