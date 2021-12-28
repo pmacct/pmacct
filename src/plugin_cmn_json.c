@@ -1345,7 +1345,6 @@ json_t *compose_nf9_fwdstatus_json_data(size_t fwdstate_decimal, cdada_list_t *l
 {
   nf9_fwdstatus fwdstate;
 
-  printf("\nfwdstate_decimal: %u\n", fwdstate_decimal);
   json_t *root = json_string("unrecognized");
 
   int idx_0;
@@ -1355,8 +1354,6 @@ json_t *compose_nf9_fwdstatus_json_data(size_t fwdstate_decimal, cdada_list_t *l
       json_string_set(root, fwdstate.description);
     }
   }
-
-  printf("\njson str value: %s\n", json_string_value(root));
 
   return root;
 }
