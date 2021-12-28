@@ -37,7 +37,7 @@ extern void compose_json_array_tcpflags(json_t *, struct chained_cache *);
 extern void compose_json_string_nf9_fwdstatus(json_t *);
 extern json_t *compose_label_json_data(cdada_list_t *, int);
 extern json_t *compose_tcpflags_json_data(cdada_list_t *, int);
-extern json_t *compose_nf9_fwdstatus_json_data(size_t, cdada_list_t *, int)
+extern json_t *compose_nf9_fwdstatus_json_data(size_t, cdada_list_t *, int);
 
 extern void compose_json_event_type(json_t *, struct chained_cache *);
 extern void compose_json_tag(json_t *, struct chained_cache *);
