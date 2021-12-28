@@ -1296,7 +1296,7 @@ void compose_json_string_nf9_fwdstatus(json_t *obj, struct chained_cache *cc)
   int ll_size = cdada_list_size(nf9_fwdstatus_ll);
 
   json_t *root_l0 = json_object();
-  json_t *root_l1 = compose_nf9_fwdstatus_json_data(pnat->forwarding_status, nf9_fwdstatus_ll, ll_size);
+  json_t *root_l1 = compose_nf9_fwdstatus_json_data(cc->forwarding_status, nf9_fwdstatus_ll, ll_size);
 
   json_object_set_new(root_l0, "forwarding_status", root_l1);
 
