@@ -943,7 +943,7 @@ void compose_json_nf9_fwdstatus(json_t *obj, struct chained_cache *cc)
 {
   char misc_str[VERYSHORTBUFLEN];
 
-  sprintf(misc_str, "%u", cc->forwarding_status);
+  sprintf(misc_str, "%u", cc->pnat->forwarding_status);
   json_object_set_new_nocheck(obj, "forwarding_status", json_string(misc_str));
 }
 
@@ -1296,7 +1296,7 @@ void compose_json_string_nf9_fwdstatus(json_t *obj, struct chained_cache *cc)
   int ll_size = cdada_list_size(nf9_fwdstatus_ll);
 
   json_t *root_l0 = json_object();
-  json_t *root_l1 = compose_nf9_fwdstatus_json_data(cc->forwarding_status, nf9_fwdstatus_ll, ll_size);
+  json_t *root_l1 = compose_nf9_fwdstatus_json_data(cc->pnat->forwarding_status, nf9_fwdstatus_ll, ll_size);
 
   json_object_set_new(root_l0, "forwarding_status", root_l1);
 
@@ -1346,7 +1346,7 @@ json_t *compose_nf9_fwdstatus_json_data(size_t fwdstate_decimal, cdada_list_t *l
 {
   nf9_fwdstatus fwdstate;
 
-  printf("fwdstate_decimal: %u", fwdstate_decimal);
+  printf("\nfwdstate_decimal: %u\n", fwdstate_decimal);
   json_t *root = json_string("unrecognized");
 
   int idx_0;
@@ -1357,7 +1357,7 @@ json_t *compose_nf9_fwdstatus_json_data(size_t fwdstate_decimal, cdada_list_t *l
     }
   }
 
-  printf("json str value: %s", json_string_value(root));
+  printf("\njson str value: %s\n", json_string_value(root));
 
   return root;
 }
