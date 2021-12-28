@@ -939,11 +939,11 @@ void compose_json_tcp_flags(json_t *obj, struct chained_cache *cc)
   json_object_set_new_nocheck(obj, "tcp_flags", json_string(misc_str));
 }
 
-void compose_json_nf9_fwdstatus(json_t *obj)
+void compose_json_nf9_fwdstatus(json_t *obj, struct chained_cache *cc)
 {
   char misc_str[VERYSHORTBUFLEN];
 
-  sprintf(misc_str, "%u", pnat->forwarding_status);
+  sprintf(misc_str, "%u", cc->forwarding_status);
   json_object_set_new_nocheck(obj, "forwarding_status", json_string(misc_str));
 }
 

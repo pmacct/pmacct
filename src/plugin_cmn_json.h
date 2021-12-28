@@ -97,7 +97,7 @@ extern void compose_json_src_host_coords(json_t *, struct chained_cache *);
 extern void compose_json_dst_host_coords(json_t *, struct chained_cache *);
 #endif
 extern void compose_json_tcp_flags(json_t *, struct chained_cache *);
-extern void compose_json_nf9_fwdstatus(json_t *);
+extern void compose_json_nf9_fwdstatus(json_t *, struct chained_cache *);
 extern void compose_json_proto(json_t *, struct chained_cache *);
 extern void compose_json_tos(json_t *, struct chained_cache *);
 extern void compose_json_sampling_rate(json_t *, struct chained_cache *);
