@@ -85,6 +85,11 @@
 #define PRETAG_MAP_RCODE_LABEL		0x00008000
 
 #define PRETAG_FLAG_NEG			0x00000001
+#define PRETAG_FLAG_JEQ			0x00000002
+
+#define PRETAG_IDX_ERR_NONE		0x00000000
+#define PRETAG_IDX_ERR_FATAL		0x00000001
+#define PRETAG_IDX_ERR_WARN		0x00000002
 
 typedef int (*pretag_handler) (struct packet_ptrs *, void *, void *);
 typedef pm_id_t (*pretag_stack_handler) (pm_id_t, pm_id_t);
@@ -270,6 +275,7 @@ struct pretag_label_filter {
 extern void load_id_file(int, char *, struct id_table *, struct plugin_requests *, int *);
 extern void load_pre_tag_map(int, char *, struct id_table *, struct plugin_requests *, int *, int, int);
 extern u_int8_t pt_check_neg(char **, u_int32_t *);
+extern void pt_set_jeq(u_int32_t *);
 extern char * pt_check_range(char *);
 extern void pretag_init_vars(struct packet_ptrs *, struct id_table *);
 extern void pretag_init_label(pt_label_t *);

@@ -1424,6 +1424,8 @@ int PT_map_jeq_handler(char *filename, struct id_entry *e, char *value, struct p
   }
   else strcpy(e->jeq.label, value);
 
+  pt_set_jeq(&((struct id_table *) req->key_value_table)->flags);
+
   return FALSE;
 }
 
@@ -3125,7 +3127,7 @@ int PT_map_index_entries_ip_handler(struct id_entry *e, pm_hash_serial_t *hash_s
   }
   else {
     Log(LOG_WARNING, "WARN ( %s/%s ): pretag_index_fill(): unsupported 'ip' mask\n", config.name, config.type);
-    return TRUE;
+    return PRETAG_IDX_ERR_WARN;
   }
 
   return FALSE;
@@ -3324,7 +3326,7 @@ int PT_map_index_entries_src_net_handler(struct id_entry *e, pm_hash_serial_t *h
   }
   else {
     Log(LOG_WARNING, "WARN ( %s/%s ): pretag_index_fill(): unsupported 'src_net' mask\n", config.name, config.type);
-    return TRUE;
+    return PRETAG_IDX_ERR_WARN;
   }
 
   return FALSE;
@@ -3343,7 +3345,7 @@ int PT_map_index_entries_dst_net_handler(struct id_entry *e, pm_hash_serial_t *h
   }
   else {
     Log(LOG_WARNING, "WARN ( %s/%s ): pretag_index_fill(): unsupported 'dst_net' mask\n", config.name, config.type);
-    return TRUE;
+    return PRETAG_IDX_ERR_WARN;
   }
 
   return FALSE;
