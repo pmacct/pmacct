@@ -1295,10 +1295,9 @@ void compose_json_string_nf9_fwdstatus(json_t *obj, struct chained_cache *cc)
   cdada_list_t *nf9_fwdstatus_ll = nf9_fwdstatus_to_linked_list();
   int ll_size = cdada_list_size(nf9_fwdstatus_ll);
 
-  json_t *root_l0 = json_object();
   json_t *root_l1 = compose_nf9_fwdstatus_json_data(cc->pnat->forwarding_status, nf9_fwdstatus_ll, ll_size);
 
-  json_object_set_new_nocheck(root_l0, "forwarding_status", json_string(json_string_value(root_l1)));
+  json_object_set_new_nocheck(obj, "forwarding_status", root_l1);
 
   cdada_list_destroy(nf9_fwdstatus_ll);
 }
