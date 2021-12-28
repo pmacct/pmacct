@@ -1356,7 +1356,7 @@ json_t *compose_nf9_fwdstatus_json_data(size_t fwdstate_decimal, cdada_list_t *l
     }
   }
 
-  printf("\n\n\nhere: %s\n\n\n", root);
+  printf("\n\n\nhere: %s\n\n\n", json_string_value(root));
 
   return root;
 }
