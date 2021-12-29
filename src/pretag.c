@@ -1100,7 +1100,7 @@ int pretag_index_allocate(struct id_table *t)
 	}
       }
 
-      {
+      if (idx_entry_size) {
 	char pm_cdada_map_container[idx_entry_size];
 
         t->index[iterator].idx_map = cdada_map_create(pm_cdada_map_container);
@@ -1110,6 +1110,12 @@ int pretag_index_allocate(struct id_table *t)
 	  destroy = TRUE;
 	  break;
 	}
+      }
+      else {
+	Log(LOG_WARNING, "WARN ( %s/%s ): [%s] maps_index: null key for index %llx. Destroying.\n", config.name,
+	    config.type, t->filename, (unsigned long long)t->index[iterator].bitmap);
+	destroy = TRUE;
+	break;
       }
     }
   }
