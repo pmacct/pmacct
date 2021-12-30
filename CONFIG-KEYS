@@ -2020,16 +2020,17 @@ DEFAULT:        true
 
 KEY:		maps_index [GLOBAL]
 VALUES:		[ true | false ]
-DESC:		Enables indexing of maps (ie. pre_tag_map and all directives with the 'MAP' flag in this
-		document) to increase lookup speeds on large maps and/or sustained lookup rates. Indexes
-		are automatically defined basing on structure and content of the map, up to a maximum of
-		8. Indexing of pre_tag_map, bgp_peer_src_as_map, flow_to_rd_map is supported. Only a sub-
-		set of pre_tag_map fields are supported, including: ip, bgp_nexthop, vlan, cvlan, src_mac,
-		dst_mac, src_net, dst_net, mpls_vpn_rd, mpls_pw_id, src_as, dst_as, peer_src_as,
-		peer_dst_as, input, output. Only specific IP addresses, ie. no IP prefixes, are supported
-		as part of ip, src_net and dst_net fields. Also, negations are not supported (ie. 'in=-216'
-		match all but input interface 216). bgp_agent_map and sampling_map implement a separate
-		caching mechanism and hence do not leverage this feature.
+DESC:		Enables indexing of maps (ie. pre_tag_map) to increase lookup speeds on large maps and/or
+		sustained lookup rates. Indexes are automatically defined basing on structure and content
+		of the map, up to a maximum of 8 (one index is required per each combination of lookup
+		keys in the map). Indexing of pre_tag_map, bgp_peer_src_as_map, flow_to_rd_map is
+		supported. Only a sub-set of pre_tag_map keys are supported, including: ip, bgp_nexthop,
+		vlan, cvlan, src_mac, dst_mac, src_net, dst_net, mpls_vpn_rd, mpls_pw_id, src_as, dst_as,
+		peer_src_as, peer_dst_as, input, output. For keys accepting IP addresses as value (ie. ip,
+		src_net and dst_net), only specific IP addresses, ie. /32 for v4 and /128 for v6, are
+		supported. Also, negations are not supported (ie. 'in=-216' match all but input interface
+		216). bgp_agent_map and sampling_map implement a separate caching mechanism and hence do
+		not leverage this feature.
 DEFAULT:        false
 
 KEY:            pre_tag_filter, pre_tag2_filter [NO_GLOBAL]
