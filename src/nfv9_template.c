@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -1326,4 +1326,70 @@ struct utpl_field *ext_db_get_next_ie(struct template_cache_entry *ptr, u_int16_
   }
 
   return ext_db_ptr;
+}
+
+u_int16_t calc_template_keylen()
+{
+  return (sizeof(u_int16_t /* template id */) +
+	  sizeof(u_int32_t /* source id */) +
+	  sizeof(struct sockaddr_storage /* sender IP */)); 
+}
+ 
+struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type,
+						u_int32_t sid, u_int16_t *pens, u_int16_t len, u_int32_t seq)
+{
+  struct template_cache_entry *tpl = NULL;
+  // u_int8_t version = 0;
+
+  pm_hash_serial_t hash_serializer;
+  pm_hash_key_t *hash_key;
+  u_int16_t hash_keylen;
+  int ret;
+
+  if (pens) {
+    *pens = FALSE;
+  }
+
+/* XXX:
+  if (tpl_type == 0 || tpl_type == 1) {
+    version = 9;
+  }
+  else if (tpl_type == 2 || tpl_type == 3) {
+    version = 10;
+  }
+*/
+
+  /* creating hash key */
+  hash_keylen = calc_template_keylen();
+  hash_init_serial(&hash_serializer, hash_keylen);
+  hash_serial_append(&hash_serializer, (char *)&hdr->template_id, sizeof(hdr->template_id), FALSE);
+  hash_serial_append(&hash_serializer, (char *)&sid, sizeof(sid), TRUE);
+  hash_serial_append(&hash_serializer, (char *)pptrs->f_agent, sizeof(struct sockaddr_storage), TRUE);
+  hash_key = hash_serial_get_key(&hash_serializer);
+
+  /* 0 NetFlow v9, 2 IPFIX */
+  if (tpl_type == 0 || tpl_type == 2) {
+    ret = cdada_map_insert(tpl_data_map, hash_key_get_val(hash_key), NULL /* XXX: template cache entry */);
+    if (ret == CDADA_E_EXISTS) {
+      /* XXX: refresh */
+    }
+    else {
+      /* XXX: insert */
+    }
+  }
+  /* 1 NetFlow v9, 3 IPFIX */
+  else if (tpl_type == 1 || tpl_type == 3) {
+    ret = cdada_map_insert(tpl_opt_map, hash_key_get_val(hash_key), NULL /* XXX: template cache entry */);
+    if (ret == CDADA_E_EXISTS) {
+      /* XXX: refresh */
+    }
+    else {
+      /* XXX: insert */
+    }
+  }
+
+  /* freeing hash key */
+  hash_destroy_serial(&hash_serializer);
+
+  return tpl;
 }

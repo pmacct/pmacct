@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -51,6 +51,7 @@ struct template_cache tpl_cache;
 struct host_addr debug_a;
 char debug_agent_addr[50];
 u_int16_t debug_agent_port;
+cdada_map_t *tpl_data_map, *tpl_opt_map;
 
 /* Functions */
 void usage_daemon(char *prog_name)
@@ -245,6 +246,23 @@ int main(int argc,char **argv, char **envp)
   num_descs = 0;
   FD_ZERO(&read_descs);
   FD_ZERO(&bkp_read_descs);
+
+  {
+    u_int16_t tpl_hash_keylen = calc_template_keylen();
+    char pm_cdada_map_container[tpl_hash_keylen];
+
+    tpl_data_map = cdada_map_create(pm_cdada_map_container);
+    if (!tpl_data_map) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to allocate tpl_data_map. Exiting.\n", config.name, config.type);
+      exit_gracefully(1);
+    }
+
+    tpl_opt_map = cdada_map_create(pm_cdada_map_container);
+    if (!tpl_opt_map) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to allocate tpl_opt_map. Exiting.\n", config.name, config.type);
+      exit_gracefully(1);
+    }
+  }
 
   /* getting commandline values */
   while (!errflag && ((cp = getopt(argc, argv, ARGS_NFACCTD)) != -1)) {
