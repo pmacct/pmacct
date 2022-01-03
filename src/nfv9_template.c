@@ -1334,12 +1334,267 @@ u_int16_t calc_template_keylen()
 	  sizeof(u_int32_t /* source id */) +
 	  sizeof(struct sockaddr_storage /* sender IP */)); 
 }
+
+struct template_cache_entry *compose_template(struct template_hdr_v9 *hdr,
+					      struct packet_ptrs *pptrs, u_int16_t tpl_type,
+					      u_int32_t sid, u_int16_t *pens, u_int8_t version,
+					      u_int16_t len, u_int32_t seq)
+{
+  struct template_cache_entry *tpl;
+  struct template_field_v9 *field;
+  u_int16_t num = ntohs(hdr->num), type, port, off, count;
+  u_int32_t *pen;
+  u_int8_t ipfix_ebit;
+  u_char *tpl_ptr;
+
+  tpl = malloc(sizeof(struct template_cache_entry));
+  if (!tpl) {
+    Log(LOG_ERR, "ERROR ( %s/core ): compose_template(): unable to allocate new Data Template Cache Entry.\n", config.name);
+    return NULL;
+  }
+
+  memset(tpl, 0, sizeof(struct template_cache_entry));
+  sa_to_addr((struct sockaddr *)pptrs->f_agent, &tpl->agent, &port);
+  tpl->source_id = sid;
+  tpl->template_id = hdr->template_id;
+  tpl->template_type = 0;
+  tpl->num = num;
+
+  log_template_header(tpl, pptrs, tpl_type, sid, version);
+
+  count = off = 0;
+  tpl_ptr = (u_char *) hdr;
+  tpl_ptr += NfTplHdrV9Sz;
+  off += NfTplHdrV9Sz;
+  field = (struct template_field_v9 *)tpl_ptr;
+
+  while (count < num) {
+    if (count >= TPL_LIST_ENTRIES) {
+      notify_malf_packet(LOG_INFO, "INFO", "compose_template(): unable to read Data Template (too long)",
+			 (struct sockaddr *) pptrs->f_agent, seq);
+      xflow_status_table.tot_bad_datagrams++;
+      free(tpl);
+      return NULL;
+    }
+
+    if (off >= len) {
+      notify_malf_packet(LOG_INFO, "INFO", "compose_template(): unable to read Data Template (malformed)",
+			 (struct sockaddr *) pptrs->f_agent, seq);
+      xflow_status_table.tot_bad_datagrams++;
+      free(tpl);
+      return NULL;
+    }
+
+    pen = NULL; 
+    ipfix_ebit = FALSE;
+    type = ntohs(field->type);
+
+    if (type & IPFIX_TPL_EBIT && version == 10) {
+      ipfix_ebit = TRUE;
+      type ^= IPFIX_TPL_EBIT;
+      if (pens) (*pens)++;
+      pen = (u_int32_t *) field;
+      pen++;
+    }
+
+    log_template_field(tpl->vlen, pen, type, tpl->len, ntohs(field->len), version);
+
+    /* Let's determine if we use legacy template registry or the
+       new template database (ie. if we have a PEN or high field
+       value, >= 384) */
+    if (type < NF9_MAX_DEFINED_FIELD && !pen) {
+      tpl->tpl[type].off = tpl->len; 
+      tpl->tpl[type].tpl_len = ntohs(field->len);
+
+      if (tpl->vlen) tpl->tpl[type].off = 0;
+
+      if (tpl->tpl[type].tpl_len == IPFIX_VARIABLE_LENGTH) {
+        tpl->tpl[type].len = 0;
+        tpl->vlen = TRUE;
+        tpl->len = 0;
+      }
+      else {
+        tpl->tpl[type].len = tpl->tpl[type].tpl_len;
+        if (!tpl->vlen) tpl->len += tpl->tpl[type].len;
+      }
+      tpl->list[count].ptr = (char *) &tpl->tpl[type];
+      tpl->list[count].type = TPL_TYPE_LEGACY;
+    }
+    else {
+      u_int8_t repeat_id = 0;
+      struct utpl_field *ext_db_tpl = ext_db_get_next_ie(tpl, type, &repeat_id);
+
+      if (ext_db_tpl) {
+	if (pen) ext_db_tpl->pen = ntohl(*pen);
+	ext_db_tpl->type = type;
+	ext_db_tpl->off = tpl->len;
+	ext_db_tpl->tpl_len = ntohs(field->len);
+	ext_db_tpl->repeat_id = repeat_id;
+
+        if (tpl->vlen) ext_db_tpl->off = 0;
+
+	if (ext_db_tpl->tpl_len == IPFIX_VARIABLE_LENGTH) {
+	  ext_db_tpl->len = 0;
+	  tpl->vlen = TRUE;
+	  tpl->len = 0;
+	}
+	else {
+	  ext_db_tpl->len = ext_db_tpl->tpl_len;
+	  if (!tpl->vlen) tpl->len += ext_db_tpl->len;
+	}
+      }
+      tpl->list[count].ptr = (char *) ext_db_tpl;
+      tpl->list[count].type = TPL_TYPE_EXT_DB;
+    }
+
+    count++;
+    off += NfTplFieldV9Sz;
+    if (ipfix_ebit) {
+      field++; /* skip 32-bits ahead */ 
+      off += sizeof(u_int32_t);
+    }
+    field++;
+  }
+
+  log_template_footer(tpl, tpl->len, version);
+
+#ifdef WITH_JANSSON
+  if (config.nfacctd_templates_file)
+    save_template(tpl, config.nfacctd_templates_file);
+#endif
+
+  return tpl;
+}
  
+struct template_cache_entry *compose_opt_template(void *hdr, struct packet_ptrs *pptrs,
+						  u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens,
+						  u_int8_t version, u_int16_t len, u_int32_t seq)
+{
+  struct options_template_hdr_v9 *hdr_v9 = (struct options_template_hdr_v9 *) hdr;
+  struct options_template_hdr_ipfix *hdr_v10 = (struct options_template_hdr_ipfix *) hdr;
+  struct template_cache_entry *tpl;
+  struct template_field_v9 *field;
+  u_int16_t count, slen, olen, type, port, tid, off;
+  u_int32_t *pen;
+  u_int8_t ipfix_ebit;
+  u_char *tpl_ptr;
+
+  /* NetFlow v9 */
+  if (tpl_type == 1) {
+    tid = hdr_v9->template_id;
+    slen = ntohs(hdr_v9->scope_len)/sizeof(struct template_field_v9);
+    olen = ntohs(hdr_v9->option_len)/sizeof(struct template_field_v9);
+  }
+  /* IPFIX */
+  else if (tpl_type == 3) {
+    tid = hdr_v10->template_id;
+    slen = ntohs(hdr_v10->scope_count);
+    olen = ntohs(hdr_v10->option_count)-slen;
+  }
+  else {
+    Log(LOG_ERR, "ERROR ( %s/core ): Unknown template type (%u).\n", config.name, tpl_type);
+    return NULL;
+  }
+
+  tpl = malloc(sizeof(struct template_cache_entry));
+  if (!tpl) {
+    Log(LOG_ERR, "ERROR ( %s/core ): insert_opt_template(): unable to allocate new Options Template Cache Entry.\n", config.name);
+    return NULL;
+  }
+
+  memset(tpl, 0, sizeof(struct template_cache_entry));
+  sa_to_addr((struct sockaddr *)pptrs->f_agent, &tpl->agent, &port);
+  tpl->source_id = sid; 
+  tpl->template_id = tid;
+  tpl->template_type = 1;
+  tpl->num = olen+slen;
+
+  log_template_header(tpl, pptrs, tpl_type, sid, version);
+
+  off = 0;
+  count = tpl->num;
+  tpl_ptr = (u_char *) hdr;
+  tpl_ptr += NfOptTplHdrV9Sz;
+  off += NfOptTplHdrV9Sz;
+  field = (struct template_field_v9 *)tpl_ptr;
+
+  while (count) {
+    if (off >= len) {
+      notify_malf_packet(LOG_INFO, "INFO", "insert_opt_template(): unable to read Options Template Flowset (malformed)",
+			 (struct sockaddr *) pptrs->f_agent, seq);
+      xflow_status_table.tot_bad_datagrams++;
+      free(tpl);
+      return NULL;
+    }
+
+    pen = NULL;
+    ipfix_ebit = FALSE;
+    type = ntohs(field->type);
+
+    if (type & IPFIX_TPL_EBIT && version == 10) {
+      ipfix_ebit = TRUE;
+      type ^= IPFIX_TPL_EBIT;
+      if (pens) (*pens)++;
+      pen = (u_int32_t *) field;
+      pen++;
+    }
+
+    log_opt_template_field(FALSE, pen, type, tpl->len, ntohs(field->len), version);
+    if (type < NF9_MAX_DEFINED_FIELD && !pen) { 
+      tpl->tpl[type].off = tpl->len;
+      tpl->tpl[type].len = ntohs(field->len);
+      tpl->len += tpl->tpl[type].len;
+    }
+    else {
+      u_int8_t repeat_id = 0;
+      struct utpl_field *ext_db_tpl = ext_db_get_next_ie(tpl, type, &repeat_id);
+
+      if (ext_db_tpl) {
+        if (pen) ext_db_tpl->pen = ntohl(*pen);
+        ext_db_tpl->type = type;
+        ext_db_tpl->off = tpl->len;
+        ext_db_tpl->tpl_len = ntohs(field->len);
+        ext_db_tpl->repeat_id = repeat_id;
+        ext_db_tpl->len = ext_db_tpl->tpl_len;
+      }
+
+      if (count >= TPL_LIST_ENTRIES) {
+	notify_malf_packet(LOG_INFO, "INFO", "insert_opt_template(): unable to read Options Template (too long)",
+			   (struct sockaddr *) pptrs->f_agent, seq);
+	xflow_status_table.tot_bad_datagrams++;
+	free(tpl);
+	return NULL;
+      }
+
+      tpl->list[count].ptr = (char *) ext_db_tpl;
+      tpl->list[count].type = TPL_TYPE_EXT_DB;
+      tpl->len += ext_db_tpl->len;
+    }
+
+    count--;
+    off += NfTplFieldV9Sz;
+    if (ipfix_ebit) {
+      field++; /* skip 32-bits ahead */
+      off += sizeof(u_int32_t);
+    }
+    field++;
+  }
+
+  log_template_footer(tpl, tpl->len, version);
+
+#ifdef WITH_JANSSON
+  if (config.nfacctd_templates_file)
+    save_template(tpl, config.nfacctd_templates_file);
+#endif
+
+  return tpl;
+}
+
 struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type,
 						u_int32_t sid, u_int16_t *pens, u_int16_t len, u_int32_t seq)
 {
   struct template_cache_entry *tpl = NULL;
-  // u_int8_t version = 0;
+  u_int8_t version = 0;
 
   pm_hash_serial_t hash_serializer;
   pm_hash_key_t *hash_key;
@@ -1350,14 +1605,12 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
     *pens = FALSE;
   }
 
-/* XXX:
   if (tpl_type == 0 || tpl_type == 1) {
     version = 9;
   }
   else if (tpl_type == 2 || tpl_type == 3) {
     version = 10;
   }
-*/
 
   /* creating hash key */
   hash_keylen = calc_template_keylen();
@@ -1369,24 +1622,38 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
 
   /* 0 NetFlow v9, 2 IPFIX */
   if (tpl_type == 0 || tpl_type == 2) {
-    ret = cdada_map_insert(tpl_data_map, hash_key_get_val(hash_key), NULL /* XXX: template cache entry */);
+    tpl = compose_template(hdr, pptrs, tpl_type, sid, pens, version, len, seq);
+
+    ret = cdada_map_insert(tpl_data_map, hash_key_get_val(hash_key), tpl);
     if (ret == CDADA_E_EXISTS) {
       /* XXX: refresh */
     }
-    else {
+    else if (ret == CDADA_SUCCESS) {
       /* XXX: insert */
+    }
+    else {
+      Log(LOG_WARNING, "WARN ( %s/core ): Unable to insert in tpl_data_map\n", config.name);
+      goto exit_lane;
     }
   }
   /* 1 NetFlow v9, 3 IPFIX */
   else if (tpl_type == 1 || tpl_type == 3) {
-    ret = cdada_map_insert(tpl_opt_map, hash_key_get_val(hash_key), NULL /* XXX: template cache entry */);
+    tpl = compose_opt_template(hdr, pptrs, tpl_type, sid, pens, version, len, seq);
+
+    ret = cdada_map_insert(tpl_opt_map, hash_key_get_val(hash_key), tpl);
     if (ret == CDADA_E_EXISTS) {
       /* XXX: refresh */
     }
-    else {
+    else if (ret == CDADA_SUCCESS) {
       /* XXX: insert */
     }
+    else {
+      Log(LOG_WARNING, "WARN ( %s/core ): Unable to insert in tpl_data_map\n", config.name);
+      goto exit_lane;
+    }
   }
+
+  exit_lane:
 
   /* freeing hash key */
   hash_destroy_serial(&hash_serializer);
