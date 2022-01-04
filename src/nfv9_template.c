@@ -1594,12 +1594,14 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
 						u_int32_t sid, u_int16_t *pens, u_int16_t len, u_int32_t seq)
 {
   struct template_cache_entry *tpl = NULL;
+  void *tpl_ptr;
   u_int8_t version = 0;
+  int ret;
 
   pm_hash_serial_t hash_serializer;
   pm_hash_key_t *hash_key;
+  u_char *hash_keyval;
   u_int16_t hash_keylen;
-  int ret;
 
   if (pens) {
     *pens = FALSE;
@@ -1623,15 +1625,20 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
   /* 0 NetFlow v9, 2 IPFIX */
   if (tpl_type == 0 || tpl_type == 2) {
     tpl = compose_template(hdr, pptrs, tpl_type, sid, pens, version, len, seq);
+    hash_keyval = hash_key_get_val(hash_key);
 
-    ret = cdada_map_insert(tpl_data_map, hash_key_get_val(hash_key), tpl);
-    if (ret == CDADA_E_EXISTS) {
-      /* XXX: refresh */
+    ret = cdada_map_find(tpl_data_map, hash_keyval, &tpl_ptr);
+    if (ret == CDADA_SUCCESS) {
+      cdada_map_erase(tpl_data_map, hash_keyval);
+      free(tpl_ptr);
     }
-    else if (ret == CDADA_SUCCESS) {
-      /* XXX: insert */
+    else if (ret != CDADA_E_NOT_FOUND) {
+      Log(LOG_WARNING, "WARN ( %s/core ): Unable to find in tpl_data_map\n", config.name);
+      goto exit_lane;
     }
-    else {
+    
+    ret = cdada_map_insert(tpl_data_map, hash_keyval, tpl);
+    if (ret != CDADA_SUCCESS) {
       Log(LOG_WARNING, "WARN ( %s/core ): Unable to insert in tpl_data_map\n", config.name);
       goto exit_lane;
     }
@@ -1639,16 +1646,21 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
   /* 1 NetFlow v9, 3 IPFIX */
   else if (tpl_type == 1 || tpl_type == 3) {
     tpl = compose_opt_template(hdr, pptrs, tpl_type, sid, pens, version, len, seq);
+    hash_keyval = hash_key_get_val(hash_key);
 
-    ret = cdada_map_insert(tpl_opt_map, hash_key_get_val(hash_key), tpl);
-    if (ret == CDADA_E_EXISTS) {
-      /* XXX: refresh */
+    ret = cdada_map_find(tpl_opt_map, hash_keyval, &tpl_ptr);
+    if (ret == CDADA_SUCCESS) {
+      cdada_map_erase(tpl_opt_map, hash_keyval);
+      free(tpl_ptr);
     }
-    else if (ret == CDADA_SUCCESS) {
-      /* XXX: insert */
+    else if (ret != CDADA_E_NOT_FOUND) {
+      Log(LOG_WARNING, "WARN ( %s/core ): Unable to find in tpl_opt_map\n", config.name);
+      goto exit_lane;
     }
-    else {
-      Log(LOG_WARNING, "WARN ( %s/core ): Unable to insert in tpl_data_map\n", config.name);
+    
+    ret = cdada_map_insert(tpl_data_map, hash_keyval, tpl);
+    if (ret != CDADA_SUCCESS) {
+      Log(LOG_WARNING, "WARN ( %s/core ): Unable to insert in tpl_opt_map\n", config.name);
       goto exit_lane;
     }
   }
