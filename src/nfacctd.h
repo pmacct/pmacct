@@ -522,7 +522,7 @@ extern struct template_cache_entry *handle_template(struct template_hdr_v9 *, st
 extern struct template_cache_entry *find_template(u_int16_t, struct sockaddr *, u_int16_t, u_int32_t);
 extern struct template_cache_entry *insert_template(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int8_t, u_int16_t, u_int32_t);
 extern struct template_cache_entry *refresh_template(struct template_hdr_v9 *, struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int8_t, u_int16_t, u_int32_t);
-extern void log_template_header(struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int8_t);
+extern void log_template_header(struct template_cache_entry *, struct sockaddr *, u_int16_t, u_int32_t, u_int8_t);
 extern void log_opt_template_field(u_int8_t, u_int32_t *, u_int16_t, u_int16_t, u_int16_t, u_int8_t);
 extern void log_template_field(u_int8_t, u_int32_t *, u_int16_t, u_int16_t, u_int16_t, u_int8_t);
 extern void log_template_footer(struct template_cache_entry *, u_int16_t, u_int8_t);
@@ -539,10 +539,10 @@ extern void load_templates_from_file(char *);
 extern void save_template(struct template_cache_entry *, char *);
 
 extern u_int16_t calc_template_keylen();
-extern u_char *compose_template_key(pm_hash_serial_t *, struct template_hdr_v9 *, struct packet_ptrs *, u_int32_t);
+extern u_char *compose_template_key(pm_hash_serial_t *, struct template_hdr_v9 *, struct sockaddr *, u_int32_t);
 extern struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int16_t, u_int32_t);
-extern struct template_cache_entry *compose_template(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int8_t, u_int16_t, u_int32_t);
-extern struct template_cache_entry *compose_opt_template(void *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int8_t, u_int16_t, u_int32_t);
+extern struct template_cache_entry *compose_template(struct template_hdr_v9 *, struct sockaddr *, u_int16_t, u_int32_t, u_int16_t *, u_int8_t, u_int16_t, u_int32_t);
+extern struct template_cache_entry *compose_opt_template(void *, struct sockaddr *, u_int16_t, u_int32_t, u_int16_t *, u_int8_t, u_int16_t, u_int32_t);
 
 #ifdef WITH_KAFKA
 extern void NF_init_kafka_host(void *);

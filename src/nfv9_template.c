@@ -104,7 +104,7 @@ struct template_cache_entry *insert_template(struct template_hdr_v9 *hdr, struct
   ptr->template_type = 0;
   ptr->num = num;
 
-  log_template_header(ptr, pptrs, tpl_type, sid, version);
+  log_template_header(ptr, (struct sockaddr *)pptrs->f_agent, tpl_type, sid, version);
 
   count = off = 0;
   tpl = (u_char *) hdr;
@@ -791,7 +791,7 @@ struct template_cache_entry *refresh_template(struct template_hdr_v9 *hdr, struc
   tpl->num = num;
   tpl->next = next;
 
-  log_template_header(tpl, pptrs, tpl_type, sid, version);
+  log_template_header(tpl, (struct sockaddr *)pptrs->f_agent, tpl_type, sid, version);
 
   count = off = 0;
   ptr = (u_char *) hdr;
@@ -891,13 +891,13 @@ struct template_cache_entry *refresh_template(struct template_hdr_v9 *hdr, struc
   return tpl;
 }
 
-void log_template_header(struct template_cache_entry *tpl, struct packet_ptrs *pptrs, u_int16_t tpl_type, u_int32_t sid, u_int8_t version)
+void log_template_header(struct template_cache_entry *tpl, struct sockaddr *agent, u_int16_t tpl_type, u_int32_t sid, u_int8_t version)
 {
   struct host_addr a;
   char agent_addr[50];
   u_int16_t agent_port;
 
-  sa_to_addr((struct sockaddr *)pptrs->f_agent, &a, &agent_port);
+  sa_to_addr(agent, &a, &agent_port);
   addr_to_str(agent_addr, &a);
 
   Log(LOG_DEBUG, "DEBUG ( %s/core ): NfV%u agent         : %s:%u\n", config.name, version, agent_addr, sid);
@@ -1005,7 +1005,7 @@ struct template_cache_entry *insert_opt_template(void *hdr, struct packet_ptrs *
   ptr->template_type = 1;
   ptr->num = olen+slen;
 
-  log_template_header(ptr, pptrs, tpl_type, sid, version);
+  log_template_header(ptr, (struct sockaddr *)pptrs->f_agent, tpl_type, sid, version);
 
   off = 0;
   count = ptr->num;
@@ -1128,7 +1128,7 @@ struct template_cache_entry *refresh_opt_template(void *hdr, struct template_cac
   tpl->num = olen+slen;
   tpl->next = next;
 
-  log_template_header(tpl, pptrs, tpl_type, sid, version);  
+  log_template_header(tpl, (struct sockaddr *)pptrs->f_agent, tpl_type, sid, version);  
 
   off = 0;
   count = tpl->num;
@@ -1336,7 +1336,7 @@ u_int16_t calc_template_keylen()
 }
 
 struct template_cache_entry *compose_template(struct template_hdr_v9 *hdr,
-					      struct packet_ptrs *pptrs, u_int16_t tpl_type,
+					      struct sockaddr *agent, u_int16_t tpl_type,
 					      u_int32_t sid, u_int16_t *pens, u_int8_t version,
 					      u_int16_t len, u_int32_t seq)
 {
@@ -1354,13 +1354,13 @@ struct template_cache_entry *compose_template(struct template_hdr_v9 *hdr,
   }
 
   memset(tpl, 0, sizeof(struct template_cache_entry));
-  sa_to_addr((struct sockaddr *)pptrs->f_agent, &tpl->agent, &port);
+  sa_to_addr(agent, &tpl->agent, &port);
   tpl->source_id = sid;
   tpl->template_id = hdr->template_id;
   tpl->template_type = 0;
   tpl->num = num;
 
-  log_template_header(tpl, pptrs, tpl_type, sid, version);
+  log_template_header(tpl, agent, tpl_type, sid, version);
 
   count = off = 0;
   tpl_ptr = (u_char *) hdr;
@@ -1370,16 +1370,14 @@ struct template_cache_entry *compose_template(struct template_hdr_v9 *hdr,
 
   while (count < num) {
     if (count >= TPL_LIST_ENTRIES) {
-      notify_malf_packet(LOG_INFO, "INFO", "compose_template(): unable to read Data Template (too long)",
-			 (struct sockaddr *) pptrs->f_agent, seq);
+      notify_malf_packet(LOG_INFO, "INFO", "compose_template(): unable to read Data Template (too long)", agent, seq);
       xflow_status_table.tot_bad_datagrams++;
       free(tpl);
       return NULL;
     }
 
     if (off >= len) {
-      notify_malf_packet(LOG_INFO, "INFO", "compose_template(): unable to read Data Template (malformed)",
-			 (struct sockaddr *) pptrs->f_agent, seq);
+      notify_malf_packet(LOG_INFO, "INFO", "compose_template(): unable to read Data Template (malformed)", agent, seq);
       xflow_status_table.tot_bad_datagrams++;
       free(tpl);
       return NULL;
@@ -1466,7 +1464,7 @@ struct template_cache_entry *compose_template(struct template_hdr_v9 *hdr,
   return tpl;
 }
  
-struct template_cache_entry *compose_opt_template(void *hdr, struct packet_ptrs *pptrs,
+struct template_cache_entry *compose_opt_template(void *hdr, struct sockaddr *agent,
 						  u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens,
 						  u_int8_t version, u_int16_t len, u_int32_t seq)
 {
@@ -1503,13 +1501,13 @@ struct template_cache_entry *compose_opt_template(void *hdr, struct packet_ptrs 
   }
 
   memset(tpl, 0, sizeof(struct template_cache_entry));
-  sa_to_addr((struct sockaddr *)pptrs->f_agent, &tpl->agent, &port);
+  sa_to_addr(agent, &tpl->agent, &port);
   tpl->source_id = sid; 
   tpl->template_id = tid;
   tpl->template_type = 1;
   tpl->num = olen+slen;
 
-  log_template_header(tpl, pptrs, tpl_type, sid, version);
+  log_template_header(tpl, agent, tpl_type, sid, version);
 
   off = 0;
   count = tpl->num;
@@ -1520,8 +1518,7 @@ struct template_cache_entry *compose_opt_template(void *hdr, struct packet_ptrs 
 
   while (count) {
     if (off >= len) {
-      notify_malf_packet(LOG_INFO, "INFO", "insert_opt_template(): unable to read Options Template Flowset (malformed)",
-			 (struct sockaddr *) pptrs->f_agent, seq);
+      notify_malf_packet(LOG_INFO, "INFO", "insert_opt_template(): unable to read Options Template Flowset (malformed)", agent, seq);
       xflow_status_table.tot_bad_datagrams++;
       free(tpl);
       return NULL;
@@ -1559,8 +1556,7 @@ struct template_cache_entry *compose_opt_template(void *hdr, struct packet_ptrs 
       }
 
       if (count >= TPL_LIST_ENTRIES) {
-	notify_malf_packet(LOG_INFO, "INFO", "insert_opt_template(): unable to read Options Template (too long)",
-			   (struct sockaddr *) pptrs->f_agent, seq);
+	notify_malf_packet(LOG_INFO, "INFO", "insert_opt_template(): unable to read Options Template (too long)", agent, seq);
 	xflow_status_table.tot_bad_datagrams++;
 	free(tpl);
 	return NULL;
@@ -1590,7 +1586,7 @@ struct template_cache_entry *compose_opt_template(void *hdr, struct packet_ptrs 
   return tpl;
 }
 
-u_char *compose_template_key(pm_hash_serial_t *ser, struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int32_t sid)
+u_char *compose_template_key(pm_hash_serial_t *ser, struct template_hdr_v9 *hdr, struct sockaddr *agent, u_int32_t sid)
 {
   pm_hash_key_t *hash_key;
   u_int16_t hash_keylen;
@@ -1599,7 +1595,7 @@ u_char *compose_template_key(pm_hash_serial_t *ser, struct template_hdr_v9 *hdr,
   hash_init_serial(ser, hash_keylen);
   hash_serial_append(ser, (char *)&hdr->template_id, sizeof(hdr->template_id), FALSE);
   hash_serial_append(ser, (char *)&sid, sizeof(sid), TRUE);
-  hash_serial_append(ser, (char *)pptrs->f_agent, sizeof(struct sockaddr_storage), TRUE);
+  hash_serial_append(ser, (char *)agent, sizeof(struct sockaddr_storage), TRUE);
   hash_key = hash_serial_get_key(ser);
 
   return hash_key_get_val(hash_key);
@@ -1627,11 +1623,11 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
     version = 10;
   }
 
-  hash_keyval = compose_template_key(&hash_serializer, hdr, pptrs, sid);
+  hash_keyval = compose_template_key(&hash_serializer, hdr, (struct sockaddr *)pptrs->f_agent, sid);
 
   /* 0 NetFlow v9, 2 IPFIX */
   if (tpl_type == 0 || tpl_type == 2) {
-    tpl = compose_template(hdr, pptrs, tpl_type, sid, pens, version, len, seq);
+    tpl = compose_template(hdr, (struct sockaddr *)pptrs->f_agent, tpl_type, sid, pens, version, len, seq);
 
     ret = cdada_map_find(tpl_data_map, hash_keyval, &tpl_ptr);
     if (ret == CDADA_SUCCESS) {
@@ -1651,7 +1647,7 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
   }
   /* 1 NetFlow v9, 3 IPFIX */
   else if (tpl_type == 1 || tpl_type == 3) {
-    tpl = compose_opt_template(hdr, pptrs, tpl_type, sid, pens, version, len, seq);
+    tpl = compose_opt_template(hdr, (struct sockaddr *)pptrs->f_agent, tpl_type, sid, pens, version, len, seq);
 
     ret = cdada_map_find(tpl_opt_map, hash_keyval, &tpl_ptr);
     if (ret == CDADA_SUCCESS) {
