@@ -539,6 +539,7 @@ extern void load_templates_from_file(char *);
 extern void save_template(struct template_cache_entry *, char *);
 
 extern u_int16_t calc_template_keylen();
+extern u_char *compose_template_key(pm_hash_serial_t *, struct template_hdr_v9 *, struct packet_ptrs *, u_int32_t);
 extern struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int16_t, u_int32_t);
 extern struct template_cache_entry *compose_template(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int8_t, u_int16_t, u_int32_t);
 extern struct template_cache_entry *compose_opt_template(void *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int8_t, u_int16_t, u_int32_t);

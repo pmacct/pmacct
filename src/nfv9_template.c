@@ -1590,6 +1590,21 @@ struct template_cache_entry *compose_opt_template(void *hdr, struct packet_ptrs 
   return tpl;
 }
 
+u_char *compose_template_key(pm_hash_serial_t *ser, struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int32_t sid)
+{
+  pm_hash_key_t *hash_key;
+  u_int16_t hash_keylen;
+
+  hash_keylen = calc_template_keylen();
+  hash_init_serial(ser, hash_keylen);
+  hash_serial_append(ser, (char *)&hdr->template_id, sizeof(hdr->template_id), FALSE);
+  hash_serial_append(ser, (char *)&sid, sizeof(sid), TRUE);
+  hash_serial_append(ser, (char *)pptrs->f_agent, sizeof(struct sockaddr_storage), TRUE);
+  hash_key = hash_serial_get_key(ser);
+
+  return hash_key_get_val(hash_key);
+}
+
 struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs, u_int16_t tpl_type,
 						u_int32_t sid, u_int16_t *pens, u_int16_t len, u_int32_t seq)
 {
@@ -1599,9 +1614,7 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
   int ret;
 
   pm_hash_serial_t hash_serializer;
-  pm_hash_key_t *hash_key;
   u_char *hash_keyval;
-  u_int16_t hash_keylen;
 
   if (pens) {
     *pens = FALSE;
@@ -1614,18 +1627,11 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
     version = 10;
   }
 
-  /* creating hash key */
-  hash_keylen = calc_template_keylen();
-  hash_init_serial(&hash_serializer, hash_keylen);
-  hash_serial_append(&hash_serializer, (char *)&hdr->template_id, sizeof(hdr->template_id), FALSE);
-  hash_serial_append(&hash_serializer, (char *)&sid, sizeof(sid), TRUE);
-  hash_serial_append(&hash_serializer, (char *)pptrs->f_agent, sizeof(struct sockaddr_storage), TRUE);
-  hash_key = hash_serial_get_key(&hash_serializer);
+  hash_keyval = compose_template_key(&hash_serializer, hdr, pptrs, sid);
 
   /* 0 NetFlow v9, 2 IPFIX */
   if (tpl_type == 0 || tpl_type == 2) {
     tpl = compose_template(hdr, pptrs, tpl_type, sid, pens, version, len, seq);
-    hash_keyval = hash_key_get_val(hash_key);
 
     ret = cdada_map_find(tpl_data_map, hash_keyval, &tpl_ptr);
     if (ret == CDADA_SUCCESS) {
@@ -1646,7 +1652,6 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
   /* 1 NetFlow v9, 3 IPFIX */
   else if (tpl_type == 1 || tpl_type == 3) {
     tpl = compose_opt_template(hdr, pptrs, tpl_type, sid, pens, version, len, seq);
-    hash_keyval = hash_key_get_val(hash_key);
 
     ret = cdada_map_find(tpl_opt_map, hash_keyval, &tpl_ptr);
     if (ret == CDADA_SUCCESS) {
