@@ -1341,25 +1341,26 @@ json_t *compose_tcpflags_json_data(cdada_list_t *ll, int ll_size)
 }
 
 
-json_t *compose_nf9_fwdstatus_json_data(size_t fwdstate_decimal, cdada_list_t *ll, int ll_size)
+json_t *compose_nf9_fwdstatus_json_data(size_t fwdstatus_decimal, cdada_list_t *ll, int ll_size)
 {
   nf9_fwdstatus fwdstate;
+  json_t *root = NULL;
 
   /* default fwdstatus */
   if (0 <= fwdstatus_decimal <= 63) {
-    json_t *root = json_string("UNKNOWN Unclassified");
+    root = json_string("UNKNOWN Unclassified");
   }
   else if (64 <= fwdstatus_decimal <= 127) {
-    json_t *root = json_string("FORWARDED Unclassified");
+    root = json_string("FORWARDED Unclassified");
   }
   else if (128 <= fwdstatus_decimal <= 191) {
-    json_t *root = json_string("DROPPED Unclassified");
+    root = json_string("DROPPED Unclassified");
   }
   else if (192 <= fwdstatus_decimal <= 255) {
-    json_t *root = json_string("CONSUMED Unclassified");
+    root = json_string("CONSUMED Unclassified");
   }
   else {
-    json_t *root = json_string("RFC-7270 Misinterpreted");
+    root = json_string("RFC-7270 Misinterpreted");
   }
 
   int idx_0;
