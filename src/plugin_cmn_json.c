@@ -1366,7 +1366,7 @@ json_t *compose_nf9_fwdstatus_json_data(size_t fwdstatus_decimal, cdada_list_t *
   int idx_0;
   for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
     cdada_list_get(ll, idx_0, &fwdstate);
-    if (fwdstate.decimal == fwdstate_decimal) {
+    if (fwdstate.decimal == fwdstatus_decimal) {
       json_string_set(root, fwdstate.description);
     }
   }

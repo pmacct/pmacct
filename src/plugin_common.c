@@ -1122,7 +1122,7 @@ cdada_list_t *nf9_fwdstatus_to_linked_list()
   nf9_fwdstatus fwdstate;
 
   size_t idx_0;
-  for (idx_0 = 0; idx_0 < 24; idx_0++) {
+  for (idx_0 = 0; idx_0 < 23; idx_0++) {
     memset(&fwdstate, 0, sizeof(fwdstate));
     fwdstate.decimal = nf9_fwdstatus_decimal[idx_0];
     strcpy(fwdstate.description, nf9_fwdstatus_description[idx_0]);
