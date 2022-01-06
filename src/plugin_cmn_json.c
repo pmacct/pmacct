@@ -1346,7 +1346,21 @@ json_t *compose_nf9_fwdstatus_json_data(size_t fwdstate_decimal, cdada_list_t *l
   nf9_fwdstatus fwdstate;
 
   /* default fwdstatus */
-  json_t *root = json_string("unrecognized");
+  if (0 =< fwdstatus_decimal =< 63) {
+    json_t *root = json_string("UNKNOWN Unclassified");
+  }
+  else if (64 =< fwdstatus_decimal =< 127) {
+    json_t *root = json_string("FORWARDED Unclassified");
+  }
+  else if (128 =< fwdstatus_decimal =< 191) {
+    json_t *root = json_string("DROPPED Unclassified");
+  }
+  else if (192 =< fwdstatus_decimal =< 255) {
+    json_t *root = json_string("CONSUMED Unclassified");
+  }
+  else {
+    json_t *root = json_string("RFC-7270 Misinterpreted");
+  }
 
   int idx_0;
   for (idx_0 = 0; idx_0 < ll_size; idx_0++) {

@@ -1080,8 +1080,8 @@ cdada_list_t *tcpflags_to_linked_list(size_t tcpflags_decimal)
 
 cdada_list_t *nf9_fwdstatus_to_linked_list()
 {
-  const unsigned int nf9_fwdstatus_decimal[24] = {
-    0, 64, 65, 66,
+  const unsigned int nf9_fwdstatus_decimal[23] = {
+    64, 65, 66,
     128, 129, 130,
     131, 132, 133,
     134, 135, 136,
@@ -1091,27 +1091,26 @@ cdada_list_t *nf9_fwdstatus_to_linked_list()
     194, 195
   };
 
-  const char nf9_fwdstatus_description[24][50] = {
-    "Unknown",
-    "FWD Unknown",
-	  "FWD Fragmented",
-	  "FWD Not Fragmented",
-	  "DROP Unknown",
-	  "DROP ACL deny",
-	  "DROP ACL drop",
-	  "DROP Unroutable",
-	  "DROP Adjacency",
-	  "DROP Fragmentation and DF set",
-	  "DROP Bad header checksum",
-	  "DROP Bad total Length",
-	  "DROP Bad header length",
-	  "DROP bad TTL",
-	  "DROP Policer",
-	  "DROP WRED",
-	  "DROP RPF",
-	  "DROP For us",
-	  "DROP Bad output interface",
-	  "DROP Hardware",
+  const char nf9_fwdstatus_description[23][50] = {
+    "FORWARDED Unknown",
+	  "FORWARDED Fragmented",
+	  "FORWARDED Not Fragmented",
+	  "DROPPED Unknown",
+	  "DROPPED ACL deny",
+	  "DROPPED ACL drop",
+	  "DROPPED Unroutable",
+	  "DROPPED Adjacency",
+	  "DROPPED Fragmentation and DF set",
+	  "DROPPED Bad header checksum",
+	  "DROPPED Bad total Length",
+	  "DROPPED Bad header length",
+	  "DROPPED bad TTL",
+	  "DROPPED Policer",
+	  "DROPPED WRED",
+	  "DROPPED RPF",
+	  "DROPPED For us",
+	  "DROPPED Bad output interface",
+	  "DROPPED Hardware",
 	  "CONSUMED Unknown",
 	  "CONSUMED Punt Adjacency",
 	  "CONSUMED Incomplete Adjacency",

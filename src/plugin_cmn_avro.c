@@ -1541,10 +1541,7 @@ int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_reco
 int compose_nf9_fwdstatus_avro_data(size_t fwdstatus_decimal, avro_value_t v_type_record)
 {
   nf9_fwdstatus fwdstate;
-  char unrecognized_str[SRVBUFLEN];
 
-  sprintf(unrecognized_str, "%zu", fwdstatus_decimal);
-  
   /* linked-list creation */
   cdada_list_t *ll = nf9_fwdstatus_to_linked_list();
   int ll_size = cdada_list_size(ll);
@@ -1557,8 +1554,30 @@ int compose_nf9_fwdstatus_avro_data(size_t fwdstatus_decimal, avro_value_t v_typ
   avro_generic_value_new(if_type_string, &v_type_string);
   
   /* default fwdstatus */
-  if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
-    avro_value_set_string(&v_type_string, unrecognized_str);
+  if (0 =< fwdstatus_decimal =< 63) {
+    if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
+      avro_value_set_string(&v_type_string, "UNKNOWN Unclassified");
+    }
+  }
+  else if (64 =< fwdstatus_decimal =< 127) {
+    if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
+      avro_value_set_string(&v_type_string, "FORWARDED Unclassified");
+    }
+  }
+  else if (128 =< fwdstatus_decimal =< 191) {
+    if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
+      avro_value_set_string(&v_type_string, "DROPPED Unclassified");
+    }
+  }
+  else if (192 =< fwdstatus_decimal =< 255) {
+    if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
+      avro_value_set_string(&v_type_string, "CONSUMED Unclassified");
+    }
+  }
+  else {
+    if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
+      avro_value_set_string(&v_type_string, "RFC-7270 Misinterpreted");
+    }
   }
 
   size_t idx_0;
