@@ -1080,6 +1080,7 @@ cdada_list_t *tcpflags_to_linked_list(size_t tcpflags_decimal)
 
 cdada_list_t *nf9_fwdstatus_to_linked_list()
 {
+  /* RFC-7270: forwardingStatus with a compliant reason code */
   const unsigned int nf9_fwdstatus_decimal[23] = {
     64, 65, 66,
     128, 129, 130,
