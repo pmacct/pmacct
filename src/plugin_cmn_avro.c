@@ -1554,22 +1554,22 @@ int compose_nf9_fwdstatus_avro_data(size_t fwdstatus_decimal, avro_value_t v_typ
   avro_generic_value_new(if_type_string, &v_type_string);
   
   /* default fwdstatus */
-  if (0 =< fwdstatus_decimal =< 63) {
+  if (0 <= fwdstatus_decimal <= 63) {
     if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
       avro_value_set_string(&v_type_string, "UNKNOWN Unclassified");
     }
   }
-  else if (64 =< fwdstatus_decimal =< 127) {
+  else if (64 <= fwdstatus_decimal <= 127) {
     if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
       avro_value_set_string(&v_type_string, "FORWARDED Unclassified");
     }
   }
-  else if (128 =< fwdstatus_decimal =< 191) {
+  else if (128 <= fwdstatus_decimal <= 191) {
     if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
       avro_value_set_string(&v_type_string, "DROPPED Unclassified");
     }
   }
-  else if (192 =< fwdstatus_decimal =< 255) {
+  else if (192 <= fwdstatus_decimal <= 255) {
     if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
       avro_value_set_string(&v_type_string, "CONSUMED Unclassified");
     }
