@@ -1586,15 +1586,15 @@ struct template_cache_entry *compose_opt_template(void *hdr, struct sockaddr *ag
   return tpl;
 }
 
-u_char *compose_template_key(pm_hash_serial_t *ser, struct template_hdr_v9 *hdr, struct sockaddr *agent, u_int32_t sid)
+u_char *compose_template_key(pm_hash_serial_t *ser, u_int16_t template_id, struct sockaddr *agent, u_int32_t source_id)
 {
   pm_hash_key_t *hash_key;
   u_int16_t hash_keylen;
 
   hash_keylen = calc_template_keylen();
   hash_init_serial(ser, hash_keylen);
-  hash_serial_append(ser, (char *)&hdr->template_id, sizeof(hdr->template_id), FALSE);
-  hash_serial_append(ser, (char *)&sid, sizeof(sid), TRUE);
+  hash_serial_append(ser, (char *)&template_id, sizeof(template_id), FALSE);
+  hash_serial_append(ser, (char *)&source_id, sizeof(source_id), TRUE);
   hash_serial_append(ser, (char *)agent, sizeof(struct sockaddr_storage), TRUE);
   hash_key = hash_serial_get_key(ser);
 
@@ -1623,7 +1623,7 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
     version = 10;
   }
 
-  hash_keyval = compose_template_key(&hash_serializer, hdr, (struct sockaddr *)pptrs->f_agent, sid);
+  hash_keyval = compose_template_key(&hash_serializer, hdr->template_id, (struct sockaddr *)pptrs->f_agent, sid);
 
   /* 0 NetFlow v9, 2 IPFIX */
   if (tpl_type == 0 || tpl_type == 2) {
