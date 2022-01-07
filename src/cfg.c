@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -452,6 +452,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_daemon_as", cfg_key_bgp_daemon_as},
   {"bgp_daemon_port", cfg_key_bgp_daemon_port},
   {"bgp_daemon_rp_ebpf_prog", cfg_key_bgp_daemon_rp_ebpf_prog},
+  {"bgp_daemon_add_path_ignore", cfg_key_bgp_daemon_add_path_ignore},
   {"bgp_daemon_pipe_size", cfg_key_bgp_daemon_pipe_size},
   {"bgp_daemon_max_peers", cfg_key_bgp_daemon_max_peers},
   {"bgp_daemon_msglog_output", cfg_key_bgp_daemon_msglog_output},

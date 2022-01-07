@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -1529,6 +1529,8 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   if (!bms->is_thread && !bms->dump_backend_methods && !bms->has_lglass && !bms->has_blackhole) {
     bms->skip_rib = TRUE;
   }
+
+  bms->cap_add_path_ignore = config.bgp_daemon_add_path_ignore;
 
   bms->tag = &bgp_logdump_tag;
 }
