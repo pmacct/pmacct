@@ -2514,6 +2514,14 @@ DESC:		Defines output format for the streamed logging of BGP messages and BMP me
 		events. JSON, binary-encoded Avro and JSON-encoded Avro formats are supported.
 DEFAULT:	json
 
+KEY:		bgp_daemon_add_path_ignore [GLOBAL]
+VALUES:		[ true | false ]
+DESC:		By default pmacct does reply to the BGP Open of the peers enabling all shared supported
+		capabilities. There are cases where BGP ADD-PATH may want to be ignored, ie. because in
+		traffic flows BGP next-hop is not available (NetFlow v5, sFlow from switches, etc.) and
+		hence the BGP next-hop guided ADD-PATH path-id selection gets not possible.
+DEFAULT:	false
+
 KEY:		bgp_aspath_radius [GLOBAL]
 DESC:		Cuts down AS-PATHs to the specified number of ASN hops. If the same ASN is repeated multiple
 		times (ie. as effect of prepending), each of them is regarded as one hop. By default AS-PATHs
