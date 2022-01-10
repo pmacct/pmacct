@@ -1347,16 +1347,16 @@ json_t *compose_nf9_fwdstatus_json_data(size_t fwdstatus_decimal, cdada_list_t *
   json_t *root = NULL;
 
   /* default fwdstatus */
-  if (0 <= fwdstatus_decimal <= 63) {
+  if ((fwdstatus_decimal => 0) && (fwdstatus_decimal <= 63)) {
     root = json_string("UNKNOWN Unclassified");
   }
-  else if (64 <= fwdstatus_decimal <= 127) {
+  else if ((fwdstatus_decimal => 64) && (fwdstatus_decimal <= 127)) {
     root = json_string("FORWARDED Unclassified");
   }
-  else if (128 <= fwdstatus_decimal <= 191) {
+  else if ((fwdstatus_decimal => 128) && (fwdstatus_decimal <= 191)) {
     root = json_string("DROPPED Unclassified");
   }
-  else if (192 <= fwdstatus_decimal <= 255) {
+  else if ((fwdstatus_decimal => 192) && (fwdstatus_decimal <= 255)) {
     root = json_string("CONSUMED Unclassified");
   }
   else {
