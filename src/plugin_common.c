@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -1014,7 +1014,7 @@ const char * labels_delim_normalization(char *str_ptr)
 cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
 {
   /* Max amount of tokens per string: 128 Labels */
-  const int MAX_TOCKENS = 256;
+  const int MAX_TOKENS = 256;
 
   /* strtok doesn't like const string */
   char *no_const_ptm_labels = strdup(ptm_labels);
@@ -1023,7 +1023,7 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
   ptm_label lbl;
 
   char *token = NULL;
-  char *tokens[MAX_TOCKENS];
+  char *tokens[MAX_TOKENS];
 
   int tokens_counter = 0;
   for (token = strtok(no_const_ptm_labels, DEFAULT_SEP); token != NULL; token = strtok(NULL, DEFAULT_SEP)) {
