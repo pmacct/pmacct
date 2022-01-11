@@ -1034,10 +1034,12 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
   int list_counter;
   for (list_counter = 0; list_counter < tokens_counter; list_counter += 2) {
     memset(&lbl, 0, sizeof(lbl));
-    lbl.key = tokens[list_counter];
-    lbl.value = tokens[list_counter + 1];
+    lbl.key = strdup(tokens[list_counter]);
+    lbl.value = strdup(tokens[list_counter + 1]);
     cdada_list_push_back(ptm_linked_list, &lbl);
   }
+
+  free(no_const_ptm_labels);
 
   return ptm_linked_list;
 }
