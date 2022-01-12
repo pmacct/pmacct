@@ -1417,7 +1417,7 @@ int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
   if_type_string = avro_generic_class_from_schema(sc_type_string);
   avro_generic_value_new(if_type_string, &v_type_string);
 
-  /* handling union data-type used by BMP/BGP */
+  /* handling union data-type, ie. as used by BMP/BGP */
   if (opt) {
     if_type_union = avro_generic_class_from_schema(sc_type_union);
     avro_generic_value_new(if_type_union, &v_type_union);
@@ -1425,7 +1425,7 @@ int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
     int idx_0;
     for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
       cdada_list_get(ll, idx_0, &lbl);
-      /* handling BMP/BGP label with value */
+      /* handling label with value */
       if (lbl.value) {
         if (avro_value_get_by_name(&v_type_record, "label", &v_type_union, NULL) == 0) {
           avro_value_set_branch(&v_type_union, TRUE, &v_type_branch);
@@ -1433,18 +1433,25 @@ int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
             avro_value_set_string(&v_type_string, lbl.value);
           }
         }
+
+	/* one-time use */
+	free(lbl.value);
       }
-      /* handling BMP/BGP label without value */
+      /* handling label without value */
       else {
         if (avro_value_get_by_name(&v_type_record, "label", &v_type_union, NULL) == 0) {
           avro_value_set_branch(&v_type_union, FALSE, &v_type_branch);
         }
       }
+
+      /* one-time use */
+      free(lbl.key);
     }
     /* free-up memory */
     avro_value_iface_decref(if_type_union);
-  } else {
-  /* handling map only data-type used by IPFIX */
+  }
+  else {
+  /* handling map only data-type, ie. as used by IPFIX */
     if_type_map = avro_generic_class_from_schema(sc_type_map);
     avro_generic_value_new(if_type_map, &v_type_map);
 
@@ -1457,6 +1464,11 @@ int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
         }
       }
     }
+
+    /* one-time use */
+    free(lbl.key);
+    free(lbl.value);
+
     /* free-up memory */
     avro_value_iface_decref(if_type_map);
   }
@@ -1467,7 +1479,6 @@ int compose_label_avro_data(char *str_ptr, avro_value_t v_type_record, int opt)
 
   return 0;
 }
-
 
 int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_record)
 {
