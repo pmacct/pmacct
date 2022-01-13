@@ -22,7 +22,7 @@ create table acct_v8 (
     packets INT UNSIGNED NOT NULL,
     bytes BIGINT UNSIGNED NOT NULL,
     flows INT UNSIGNED NOT NULL,
-    stamp_inserted DATETIME NOT NULL,
-    stamp_updated DATETIME,
+    stamp_inserted BIGINT UNSIGNED NOT NULL,
+    stamp_updated BIGINT UNSIGNED,
     PRIMARY KEY (agent_id, class_id, mac_src, mac_dst, vlan, as_src, as_dst, ip_src, ip_dst, port_src, port_dst, ip_proto, tos, stamp_inserted)
 );
