@@ -201,7 +201,9 @@ Similarly, BGP tables:
   * packets (INT(8) NOT NULL DEFAULT 0)
   * bytes (INT(8) NOT NULL DEFAULT 0)
   * stamp_inserted (DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00')
+    - or (stamp_inserted INT(8) NOT NULL DEFAULT 0, if timestamps_since_epoch: true)
   * stamp_updated (DATETIME)
+    - or (stamp_updated INT(8) DEFAULT 0, if timestamps_since_epoch: true)
 
 - For custom-defined primitives refer to the README.custom_primitives doc.
 

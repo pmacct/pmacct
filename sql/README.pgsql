@@ -182,7 +182,9 @@ are no longer supplied as part of the PostgreSQL table creation script.
     - or (flows BIGINT NOT NULL, see README.64bit)
   * bytes (BIGINT NOT NULL)
   * stamp_inserted (timestamp without time zone NOT NULL DEFAULT '0000-01-01 00:00:00')
+    or (stamp_inserted bigint NOT NULL DEFAULT 0, if timestamps_since_epoch: true)
   * stamp_updated (timestamp without time zone)
+    or (stamp_updated bigint DEFAULT 0, if timestamps_since_epoch: true)
 
 - For custom-defined primitives refer to the README.custom_primitives doc.
 

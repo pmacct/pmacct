@@ -203,7 +203,9 @@ Similarly, BGP tables:
     - or (packets BIGINT UNSIGNED NOT NULL, see README.64bit)
   * bytes (BIGINT UNSIGNED NOT NULL)
   * stamp_inserted (DATETIME NOT NULL)
+    - or (stamp_inserted BIGINT UNSIGNED NOT NULL, if timestamps_since_epoch: true)
   * stamp_updated (DATETIME)
+    - or (stamp_updated BIGINT UNSIGNED, if timestamps_since_epoch: true)
 
 - For custom-defined primitives refer to the README.custom_primitives doc.
 
