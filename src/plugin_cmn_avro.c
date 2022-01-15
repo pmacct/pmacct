@@ -1442,86 +1442,55 @@ int compose_label_avro_data_ipfix(char *str_ptr, avro_value_t v_type_record)
 }
 
 
-int compose_label_avro_data_bxp(char *str_ptr, avro_value_t v_type_record, int opt)
+int compose_label_avro_data_bxp(char *str_ptr, avro_value_t v_type_record)
 {
   /* labels normalization */
   cdada_str_t *lbls_cdada = cdada_str_create(str_ptr);
   cdada_str_replace_all(lbls_cdada, PRETAG_LABEL_KV_SEP, DEFAULT_SEP);
   const char *lbls_norm = cdada_str(lbls_cdada);
-  //const char *lbls_norm = labels_delim_normalization(str_ptr);
 
   /* linked-list creation */
   ptm_label lbl;
   cdada_list_t *ll = ptm_labels_to_linked_list(lbls_norm);
   int ll_size = cdada_list_size(ll);
 
-  avro_value_t v_type_branch, v_type_string, v_type_map, v_type_union;
-  avro_value_iface_t *if_type_union, *if_type_map, *if_type_string;
-
-  /* init string data-type used by both unions & map */
-  if_type_string = avro_generic_class_from_schema(sc_type_string);
-  avro_generic_value_new(if_type_string, &v_type_string);
+  avro_value_t v_type_branch, v_type_string, v_type_union;
+  avro_value_iface_t *if_type_union;
 
   /* handling union data-type, ie. as used by BMP/BGP */
-  if (opt) {
-    if_type_union = avro_generic_class_from_schema(sc_type_union);
-    avro_generic_value_new(if_type_union, &v_type_union);
+  if_type_union = avro_generic_class_from_schema(sc_type_union);
+  avro_generic_value_new(if_type_union, &v_type_union);
 
-    int idx_0;
-    for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
-      cdada_list_get(ll, idx_0, &lbl);
-      /* handling label with value */
-      if (lbl.value) {
-        if (avro_value_get_by_name(&v_type_record, "label", &v_type_union, NULL) == 0) {
-          avro_value_set_branch(&v_type_union, TRUE, &v_type_branch);
-          if (avro_value_add(&v_type_branch, lbl.key, &v_type_string, NULL, NULL) == 0) {
-            avro_value_set_string(&v_type_string, lbl.value);
-          }
-        }
-
-	      /* one-time use */
-	      free(lbl.value);
-      }
-      /* handling label without value */
-      else {
-        if (avro_value_get_by_name(&v_type_record, "label", &v_type_union, NULL) == 0) {
-          avro_value_set_branch(&v_type_union, FALSE, &v_type_branch);
-        }
-      }
-
-      /* one-time use */
-      free(lbl.key);
-    }
-    /* free-up memory */
-    avro_value_iface_decref(if_type_union);
-  }
-  else {
-  /* handling map only data-type, ie. as used by IPFIX */
-    if_type_map = avro_generic_class_from_schema(sc_type_map);
-    avro_generic_value_new(if_type_map, &v_type_map);
-
-    int idx_1;
-    for (idx_1 = 0; idx_1 < ll_size; idx_1++) {
-      cdada_list_get(ll, idx_1, &lbl);
-      if (avro_value_get_by_name(&v_type_record, "label", &v_type_map, NULL) == 0) {
-        if (avro_value_add(&v_type_map, lbl.key, &v_type_string, NULL, NULL) == 0) {
+  int idx_0;
+  for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
+    cdada_list_get(ll, idx_0, &lbl);
+    /* handling label with value */
+    if (lbl.value) {
+      if (avro_value_get_by_name(&v_type_record, "label", &v_type_union, NULL) == 0) {
+        avro_value_set_branch(&v_type_union, TRUE, &v_type_branch);
+        if (avro_value_add(&v_type_branch, lbl.key, &v_type_string, NULL, NULL) == 0) {
           avro_value_set_string(&v_type_string, lbl.value);
         }
+      }
+
+	    /* one-time use */
+	    free(lbl.value);
+    }
+    /* handling label without value */
+    else {
+      if (avro_value_get_by_name(&v_type_record, "label", &v_type_union, NULL) == 0) {
+        avro_value_set_branch(&v_type_union, FALSE, &v_type_branch);
       }
     }
 
     /* one-time use */
     free(lbl.key);
-    free(lbl.value);
-
-    /* free-up memory */
-    avro_value_iface_decref(if_type_map);
   }
 
   /* free-up memory */
   cdada_str_destroy(lbls_cdada);
   cdada_list_destroy(ll);
-  avro_value_iface_decref(if_type_string);
+  avro_value_iface_decref(if_type_union);
 
   return 0;
 }

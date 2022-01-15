@@ -2369,7 +2369,7 @@ void bgp_tag_print_avro(avro_value_t obj, bgp_tag_t *tag)
 
   if (tag->have_label) {
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_data_bxp(tag->label.val, obj, TRUE);
+      compose_label_avro_data_bxp(tag->label.val, obj);
     }
     else {
       pm_avro_check(avro_value_get_by_name(&obj, "label", &p_avro_field, NULL));
