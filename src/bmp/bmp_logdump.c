@@ -35,6 +35,9 @@
 #include "plugin_cmn_avro.h"
 #endif
 
+avro_value_iface_t *if_type_union;
+avro_value_t v_type_union;
+
 int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, bgp_tag_t *tag,
 		void *log_data, u_int64_t log_seq, char *event_type, int output, int log_type)
 {
@@ -231,7 +234,8 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
     }
 
     if (config.pre_tag_map && tag) {
-      bgp_tag_print_avro(p_avro_obj, tag);
+      bgp_tag_print_avro_decref(if_type_union, v_type_union, p_avro_obj, tag);
+      //bgp_tag_print_avro(p_avro_obj, tag);
     }
 
     switch (log_type) {
@@ -353,6 +357,8 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
     avro_value_iface_decref(p_avro_iface);
     avro_writer_reset(p_avro_writer);
     avro_writer_free(p_avro_writer);
+    avro_value_decref(&v_type_union);
+    avro_value_iface_decref(if_type_union);
     if (bms->dump_kafka_avro_schema_registry) {
       free(p_avro_local_buf);
     }
