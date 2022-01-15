@@ -2413,7 +2413,7 @@ void bgp_tag_print_avro_decref(avro_value_iface_t *if_type_union, avro_value_t v
 
   if (tag->have_label) {
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_data_bxp(tag->label.val, if_type_union, v_type_union, obgp_tag_print_avro_decref(if_type_union, v_type_union, p_avro_obj, tag);bj);
+      compose_label_avro_data_bxp(tag->label.val, if_type_union, v_type_union, obj);
     }
     else {
       pm_avro_check(avro_value_get_by_name(&obj, "label", &p_avro_field, NULL));
