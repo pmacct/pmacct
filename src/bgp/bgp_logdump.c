@@ -37,6 +37,8 @@
 #include "plugin_cmn_avro.h"
 #endif
 
+avro_value_iface_t *if_type_union;
+avro_value_t v_type_union;
 
 /* functions */
 int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, safi_t safi,
@@ -257,8 +259,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     avro_writer_t p_avro_writer = {0};
     avro_value_iface_t *p_avro_iface = NULL;
     avro_value_t p_avro_obj, p_avro_field, p_avro_branch;
-    avro_value_iface_t *if_type_union;
-    avro_value_t v_type_union;
+    //avro_value_iface_t *if_type_union;
+    //avro_value_t v_type_union;
     size_t p_avro_obj_len, p_avro_len;
 
     struct bgp_attr *attr = ri->attr;
@@ -820,8 +822,8 @@ int bgp_peer_log_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int typ
       avro_writer_t p_avro_writer = {0};
       avro_value_iface_t *p_avro_iface = NULL;
       avro_value_t p_avro_obj, p_avro_field, p_avro_branch;
-      avro_value_iface_t *if_type_union;
-      avro_value_t v_type_union;
+      //avro_value_iface_t *if_type_union;
+      //avro_value_t v_type_union;
       size_t p_avro_obj_len, p_avro_len;
       void *p_avro_local_buf = NULL;
 
@@ -1047,8 +1049,8 @@ int bgp_peer_log_close(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
     avro_writer_t p_avro_writer = {0};
     avro_value_iface_t *p_avro_iface = NULL;
     avro_value_t p_avro_obj, p_avro_field, p_avro_branch;
-    avro_value_iface_t *if_type_union;
-    avro_value_t v_type_union;
+    //avro_value_iface_t *if_type_union;
+    //avro_value_t v_type_union;
     size_t p_avro_obj_len, p_avro_len;
     void *p_avro_local_buf = NULL;
 
@@ -1404,8 +1406,8 @@ int bgp_peer_dump_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
     avro_writer_t p_avro_writer = {0};
     avro_value_iface_t *p_avro_iface = NULL;
     avro_value_t p_avro_obj, p_avro_field, p_avro_branch;
-    avro_value_iface_t *if_type_union;
-    avro_value_t v_type_union;
+    //avro_value_iface_t *if_type_union;
+    //avro_value_t v_type_union;
     size_t p_avro_obj_len, p_avro_len;
     void *p_avro_local_buf = NULL;
 
@@ -1614,8 +1616,8 @@ int bgp_peer_dump_close(struct bgp_peer *peer, bgp_tag_t *tag, struct bgp_dump_s
     avro_writer_t p_avro_writer = {0};
     avro_value_iface_t *p_avro_iface = NULL;
     avro_value_t p_avro_obj, p_avro_field, p_avro_branch;
-    avro_value_iface_t *if_type_union;
-    avro_value_t v_type_union;
+    //avro_value_iface_t *if_type_union;
+    //avro_value_t v_type_union;
     size_t p_avro_obj_len, p_avro_len;
     void *p_avro_local_buf = NULL;
 
@@ -2032,6 +2034,9 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
     bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bgp_table_dump_latest_file, peer);
     link_latest_output_file(latest_filename, last_filename);
   }
+  
+  avro_value_decref(&v_type_union);
+  avro_value_iface_decref(if_type_union);
 
   duration = time(NULL)-start;
   Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BGP tables - END (PID: %u RID: %u TABLES: %u ENTRIES: %" PRIu64 " ET: %u) ***\n",
