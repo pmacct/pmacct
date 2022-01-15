@@ -90,6 +90,7 @@ extern void p_avro_schema_init_bgp(avro_schema_t *, avro_schema_t *, avro_schema
 extern void p_avro_schema_build_bgp_common(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *, int);
 extern void p_avro_schema_build_bgp_route(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *);
 extern void bgp_tag_print_avro(avro_value_t, bgp_tag_t *);
+extern void bgp_tag_print_avro_decref(avro_value_iface_t *, avro_value_t, avro_value_t, bgp_tag_t *);
 #endif
 
 #endif 

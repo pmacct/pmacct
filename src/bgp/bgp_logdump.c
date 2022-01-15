@@ -255,7 +255,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 #ifdef WITH_AVRO
     avro_writer_t p_avro_writer = {0};
     avro_value_iface_t *p_avro_iface = NULL;
-    avro_value_t p_avro_obj, p_avro_field, p_avro_branch;
+    avro_value_iface_t *if_type_union;
+    avro_value_t p_avro_obj, p_avro_field, p_avro_branch, v_type_union;
     size_t p_avro_obj_len, p_avro_len;
 
     struct bgp_attr *attr = ri->attr;
@@ -332,7 +333,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     }
 
     if (config.pre_tag_map && tag) {
-      bgp_tag_print_avro(p_avro_obj, tag);
+      bgp_tag_print_avro_decref(if_type_union, v_type_union, p_avro_obj, tag);
     }
 
     if (config.tmp_bgp_lookup_compare_ports) {
@@ -655,6 +656,9 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     avro_value_iface_decref(p_avro_iface);
     avro_writer_reset(p_avro_writer);
     avro_writer_free(p_avro_writer);
+    avro_value_decref(&v_type_union);
+    avro_value_iface_decref(if_type_union);
+    
     if (bms->dump_kafka_avro_schema_registry) {
       free(p_avro_local_buf);
     }
@@ -2355,8 +2359,38 @@ void bgp_tag_print_json(json_t *obj, bgp_tag_t *tag)
 #ifdef WITH_AVRO
 void bgp_tag_print_avro(avro_value_t obj, bgp_tag_t *tag)
 {
-  avro_value_t p_avro_field, p_avro_branch, v_type_union;
-  avro_value_iface_t *if_type_union;
+  avro_value_t p_avro_field, p_avro_branch;
+
+  if (tag->have_tag) {
+    pm_avro_check(avro_value_get_by_name(&obj, "tag", &p_avro_field, NULL));
+    pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+    pm_avro_check(avro_value_set_long(&p_avro_branch, tag->tag));
+  }
+  else {
+    pm_avro_check(avro_value_get_by_name(&obj, "tag", &p_avro_field, NULL));
+    pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+  }
+
+  if (tag->have_label) {
+    if (config.pretag_label_encode_as_map) {
+      compose_label_avro_data_bxp(tag->label.val, obj);
+    }
+    else {
+      pm_avro_check(avro_value_get_by_name(&obj, "label", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+      pm_avro_check(avro_value_set_string(&p_avro_branch, tag->label.val));
+    }
+  }
+  else {
+    pm_avro_check(avro_value_get_by_name(&obj, "label", &p_avro_field, NULL));
+    pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+  }
+}
+
+
+void bgp_tag_print_avro_decref(avro_value_iface_t *if_type_union, avro_value_t v_type_union, avro_value_t obj, bgp_tag_t *tag)
+{
+  avro_value_t p_avro_field, p_avro_branch;
 
   if (tag->have_tag) {
     pm_avro_check(avro_value_get_by_name(&obj, "tag", &p_avro_field, NULL));
@@ -2371,8 +2405,6 @@ void bgp_tag_print_avro(avro_value_t obj, bgp_tag_t *tag)
   if (tag->have_label) {
     if (config.pretag_label_encode_as_map) {
       compose_label_avro_data_bxp(tag->label.val, if_type_union, v_type_union, obj);
-      avro_value_decref(&v_type_union);
-      avro_value_iface_decref(if_type_union);
     }
     else {
       pm_avro_check(avro_value_get_by_name(&obj, "label", &p_avro_field, NULL));
