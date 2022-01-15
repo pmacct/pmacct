@@ -2363,7 +2363,6 @@ void bgp_tag_print_json(json_t *obj, bgp_tag_t *tag)
 #endif
 
 #ifdef WITH_AVRO
-/*
 void bgp_tag_print_avro(avro_value_t obj, bgp_tag_t *tag)
 {
   avro_value_t p_avro_field, p_avro_branch;
@@ -2393,7 +2392,7 @@ void bgp_tag_print_avro(avro_value_t obj, bgp_tag_t *tag)
     pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
   }
 }
-*/
+
 
 void bgp_tag_print_avro_decref(avro_value_iface_t *if_type_union, avro_value_t v_type_union, avro_value_t obj, bgp_tag_t *tag)
 {
