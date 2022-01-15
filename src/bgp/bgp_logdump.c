@@ -2355,7 +2355,7 @@ void bgp_tag_print_json(json_t *obj, bgp_tag_t *tag)
 #ifdef WITH_AVRO
 void bgp_tag_print_avro(avro_value_t obj, bgp_tag_t *tag)
 {
-  avro_value_t p_avro_field, p_avro_branch; v_type_union;
+  avro_value_t p_avro_field, p_avro_branch, v_type_union;
   avro_value_iface_t *if_type_union;
 
   if (tag->have_tag) {
