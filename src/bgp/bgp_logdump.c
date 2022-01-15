@@ -2027,6 +2027,8 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 #ifdef WITH_KAFKA
   if (config.bgp_table_dump_kafka_topic) {
     p_kafka_close(&bgp_table_dump_kafka_host, FALSE);
+    avro_value_decref(&v_type_union);
+    avro_value_iface_decref(if_type_union);
   }
 #endif
 
@@ -2035,9 +2037,6 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
     link_latest_output_file(latest_filename, last_filename);
   }
   
-  avro_value_decref(&v_type_union);
-  avro_value_iface_decref(if_type_union);
-
   duration = time(NULL)-start;
   Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BGP tables - END (PID: %u RID: %u TABLES: %u ENTRIES: %" PRIu64 " ET: %u) ***\n",
       config.name, bms->log_str, dumper_pid, pdr->id, tables_num, dump_elems, duration);
