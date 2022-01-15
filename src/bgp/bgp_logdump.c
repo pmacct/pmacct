@@ -336,8 +336,6 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
     if (config.pre_tag_map && tag) {
       bgp_tag_print_avro_decref(if_type_union, v_type_union, p_avro_obj, tag);
-      avro_value_decref(&v_type_union);
-      avro_value_iface_decref(if_type_union);
     }
 
     if (config.tmp_bgp_lookup_compare_ports) {
@@ -656,6 +654,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 #endif
     }
 
+    avro_value_decref(&v_type_union);
+    avro_value_iface_decref(if_type_union);
     avro_value_decref(&p_avro_obj);
     avro_value_iface_decref(p_avro_iface);
     avro_writer_reset(p_avro_writer);
