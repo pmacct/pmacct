@@ -1442,7 +1442,7 @@ int compose_label_avro_data_ipfix(char *str_ptr, avro_value_t v_type_record)
 }
 
 
-int compose_label_avro_data_bxp(char *str_ptr, avro_value_t v_type_record)
+int compose_label_avro_data_bxp(char *str_ptr, avro_value_iface_t *if_type_union, avro_value_t v_type_union, avro_value_t v_type_record)
 {
   /* labels normalization */
   cdada_str_t *lbls_cdada = cdada_str_create(str_ptr);
@@ -1454,8 +1454,7 @@ int compose_label_avro_data_bxp(char *str_ptr, avro_value_t v_type_record)
   cdada_list_t *ll = ptm_labels_to_linked_list(lbls_norm);
   int ll_size = cdada_list_size(ll);
 
-  avro_value_t v_type_branch, v_type_string, v_type_union;
-  avro_value_iface_t *if_type_union;
+  avro_value_t v_type_branch, v_type_string;
 
   /* handling union data-type, ie. as used by BMP/BGP */
   if_type_union = avro_generic_class_from_schema(sc_type_union);
@@ -1490,7 +1489,6 @@ int compose_label_avro_data_bxp(char *str_ptr, avro_value_t v_type_record)
   /* free-up memory */
   cdada_str_destroy(lbls_cdada);
   cdada_list_destroy(ll);
-  avro_value_iface_decref(if_type_union);
 
   return 0;
 }

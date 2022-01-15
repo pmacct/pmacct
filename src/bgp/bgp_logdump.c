@@ -2355,7 +2355,8 @@ void bgp_tag_print_json(json_t *obj, bgp_tag_t *tag)
 #ifdef WITH_AVRO
 void bgp_tag_print_avro(avro_value_t obj, bgp_tag_t *tag)
 {
-  avro_value_t p_avro_field, p_avro_branch;
+  avro_value_t p_avro_field, p_avro_branch; v_type_union;
+  avro_value_iface_t *if_type_union;
 
   if (tag->have_tag) {
     pm_avro_check(avro_value_get_by_name(&obj, "tag", &p_avro_field, NULL));
@@ -2369,7 +2370,9 @@ void bgp_tag_print_avro(avro_value_t obj, bgp_tag_t *tag)
 
   if (tag->have_label) {
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_data_bxp(tag->label.val, obj);
+      compose_label_avro_data_bxp(tag->label.val, if_type_union, v_type_union, obj);
+      avro_value_decref(&v_type_union);
+      avro_value_iface_decref(if_type_union);
     }
     else {
       pm_avro_check(avro_value_get_by_name(&obj, "label", &p_avro_field, NULL));

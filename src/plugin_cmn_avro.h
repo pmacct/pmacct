@@ -49,7 +49,7 @@
 extern void compose_label_avro_schema(avro_schema_t, int);
 extern void compose_tcpflags_avro_schema(avro_schema_t);
 extern int compose_label_avro_data_ipfix(char *, avro_value_t);
-extern int compose_label_avro_data_bxp(char *, avro_value_t);
+extern int compose_label_avro_data_bxp(char *, avro_value_iface_t *, avro_value_t, avro_value_t);
 extern int compose_tcpflags_avro_data(size_t, avro_value_t);
 
 extern void pm_avro_exit_gracefully(int);
