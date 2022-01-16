@@ -1374,17 +1374,17 @@ void compose_label_avro_schema(avro_schema_t sc_type_record, int opt)
     avro_schema_record_field_append(sc_type_record, "label", sc_type_union);
 
     /* free-up memory - avro union*/
-    avro_schema_decref(sc_type_union);
+    //avro_schema_decref(sc_type_union);
   } else {
     sc_type_map = avro_schema_map(sc_type_string);
     avro_schema_record_field_append(sc_type_record, "label", sc_type_map);
 
     /* free-up memory - avro map only*/
-    avro_schema_decref(sc_type_map);
+    //avro_schema_decref(sc_type_map);
   }
 
   /* free-up memory - avro string*/
-  avro_schema_decref(sc_type_string);
+  //avro_schema_decref(sc_type_string);
 }
 
 
