@@ -1430,8 +1430,8 @@ int compose_label_avro_data_ipfix(char *str_ptr, avro_value_t v_type_record)
   }
 
   /* one-time use */
-  free(lbl.key);
-  free(lbl.value);
+  //free(lbl.key);
+  //free(lbl.value);
 
   /* free-up memory - to be review: the scope of the decref should be reviewd */
   cdada_str_destroy(lbls_cdada);
@@ -1473,7 +1473,7 @@ int compose_label_avro_data_bxp(char *str_ptr, avro_value_iface_t *if_type_union
       }
 
 	    /* one-time use */
-	    free(lbl.value);
+	    //free(lbl.value);
     }
     /* handling label without value */
     else {
@@ -1483,7 +1483,7 @@ int compose_label_avro_data_bxp(char *str_ptr, avro_value_iface_t *if_type_union
     }
 
     /* one-time use */
-    free(lbl.key);
+    //free(lbl.key);
   }
 
   /* free-up memory */
