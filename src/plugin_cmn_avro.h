@@ -48,7 +48,7 @@
 /* prototypes */
 extern void compose_label_avro_schema(avro_schema_t, int);
 extern void compose_tcpflags_avro_schema(avro_schema_t);
-extern int compose_label_avro_data_ipfix(char *, avro_value_t);
+extern int compose_label_avro_data_ipfix(char *, avro_value_iface_t *, avro_value_t, avro_value_t);
 extern int compose_label_avro_data_bxp(char *, avro_value_iface_t *, avro_value_t, avro_value_t);
 extern int compose_tcpflags_avro_data(size_t, avro_value_t);
 
@@ -86,6 +86,8 @@ extern serdes_schema_t *compose_avro_schema_registry_name_2(char *, int, avro_sc
 
 /* global variables */
 extern avro_schema_t p_avro_acct_schema, p_avro_acct_init_schema, p_avro_acct_close_schema;
+extern avro_value_iface_t *if_type_map;
+extern avro_value_t v_type_map;
 #endif
 
 #endif //PLUGIN_CMN_AVRO_H

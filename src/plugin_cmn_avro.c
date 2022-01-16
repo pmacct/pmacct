@@ -442,7 +442,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
     if (!str_ptr) str_ptr = empty_string;
 
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_data_ipfix(str_ptr, value);
+      compose_label_avro_data_ipfix(str_ptr, if_type_map, v_type_map, value);
     }
     else {
       pm_avro_check(avro_value_get_by_name(&value, "label", &field, NULL));
@@ -1400,7 +1400,7 @@ void compose_tcpflags_avro_schema(avro_schema_t sc_type_record)
 }
 
 
-int compose_label_avro_data_ipfix(char *str_ptr, avro_value_t v_type_record)
+int compose_label_avro_data_ipfix(char *str_ptr, avro_value_iface_t *if_type_map, avro_value_t v_type_map, avro_value_t v_type_record)
 {
   /* labels normalization */
   cdada_str_t *lbls_cdada = cdada_str_create(str_ptr);
@@ -1412,8 +1412,7 @@ int compose_label_avro_data_ipfix(char *str_ptr, avro_value_t v_type_record)
   cdada_list_t *ll = ptm_labels_to_linked_list(lbls_norm);
   int ll_size = cdada_list_size(ll);
 
-  avro_value_t v_type_string, v_type_map;
-  avro_value_iface_t *if_type_map;
+  avro_value_t v_type_string;
 
   /* handling map only data-type, ie. as used by IPFIX */
   if_type_map = avro_generic_class_from_schema(sc_type_map);
@@ -1436,7 +1435,6 @@ int compose_label_avro_data_ipfix(char *str_ptr, avro_value_t v_type_record)
   /* free-up memory - to be review: the scope of the decref should be reviewd */
   cdada_str_destroy(lbls_cdada);
   cdada_list_destroy(ll);
-  avro_value_iface_decref(if_type_map);
 
   return 0;
 }

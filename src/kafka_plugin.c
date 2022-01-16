@@ -540,7 +540,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 	  free(p_avro_local_buf);
 	}
       }
-
+      avro_value_decref(&v_type_map);
+      avro_value_iface_decref(if_type_map);
       avro_value_decref(&p_avro_value);
       avro_value_iface_decref(p_avro_iface);
 #endif
@@ -672,6 +673,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 	}
       }
 
+      avro_value_decref(&v_type_map);
+      avro_value_iface_decref(if_type_map);
       avro_value_decref(&p_avro_value);
       avro_value_iface_decref(p_avro_iface);
 #else
@@ -867,6 +870,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 	}
       }
 
+      avro_value_decref(&v_type_map);
+      avro_value_iface_decref(if_type_map);
       avro_value_decref(&p_avro_value);
       avro_value_iface_decref(p_avro_iface);
 #endif
