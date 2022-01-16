@@ -32,6 +32,8 @@
 #error "--enable-kafka requires --enable-jansson"
 #endif
 
+avro_value_t v_type_map;
+
 /* Functions */
 void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 {
@@ -541,7 +543,6 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 	}
       }
       avro_value_decref(&v_type_map);
-      avro_value_iface_decref(if_type_map);
       avro_value_decref(&p_avro_value);
       avro_value_iface_decref(p_avro_iface);
 #endif
@@ -601,7 +602,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 			   queue[j]->flow_type, &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust,
 			   pvlen, queue[j]->bytes_counter, queue[j]->packet_counter,
 			   queue[j]->flow_counter, queue[j]->tcp_flags, &queue[j]->basetime,
-			   queue[j]->stitch, p_avro_iface);
+			   queue[j]->stitch, p_avro_iface, v_type_map);
       add_writer_name_and_pid_avro(p_avro_value, config.name, writer_pid);
 
       if (config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) {
@@ -674,7 +675,6 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
       }
 
       avro_value_decref(&v_type_map);
-      avro_value_iface_decref(if_type_map);
       avro_value_decref(&p_avro_value);
       avro_value_iface_decref(p_avro_iface);
 #else
@@ -871,7 +871,6 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
       }
 
       avro_value_decref(&v_type_map);
-      avro_value_iface_decref(if_type_map);
       avro_value_decref(&p_avro_value);
       avro_value_iface_decref(p_avro_iface);
 #endif

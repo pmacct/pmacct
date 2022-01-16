@@ -569,7 +569,7 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 			   queue[j]->flow_type, &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust,
 			   pvlen, queue[j]->bytes_counter, queue[j]->packet_counter,
 			   queue[j]->flow_counter, queue[j]->tcp_flags, &queue[j]->basetime,
-			   queue[j]->stitch, p_avro_iface);
+			   queue[j]->stitch, p_avro_iface, NULL);
       add_writer_name_and_pid_avro(p_avro_value, config.name, writer_pid);
 
       if (config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) {

@@ -37,8 +37,6 @@
 /* global variables */
 avro_schema_t p_avro_acct_schema, p_avro_acct_init_schema, p_avro_acct_close_schema;
 avro_schema_t sc_type_array, sc_type_map, sc_type_string, sc_type_union;
-avro_value_iface_t *if_type_map;
-avro_value_t v_type_map;
 
 /* functions */
 avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
@@ -418,7 +416,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
   struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
   struct pkt_tunnel_primitives *ptun, u_char *pcust, struct pkt_vlen_hdr_primitives *pvlen,
   pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags,
-  struct timeval *basetime, struct pkt_stitching *stitch, avro_value_iface_t *iface)
+  struct timeval *basetime, struct pkt_stitching *stitch, avro_value_iface_t *iface, avro_value_t v_type_map)
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *str_ptr;
@@ -444,7 +442,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
     if (!str_ptr) str_ptr = empty_string;
 
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_data_ipfix(str_ptr, if_type_map, v_type_map, value);
+      compose_label_avro_data_ipfix(str_ptr, iface, v_type_map, value);
     }
     else {
       pm_avro_check(avro_value_get_by_name(&value, "label", &field, NULL));
