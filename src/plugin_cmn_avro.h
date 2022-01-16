@@ -48,7 +48,7 @@
 /* prototypes */
 extern void compose_label_avro_schema(avro_schema_t, int);
 extern void compose_tcpflags_avro_schema(avro_schema_t);
-extern int compose_label_avro_data_ipfix(char *, avro_value_iface_t *, avro_value_t, avro_value_t);
+extern int compose_label_avro_data_ipfix(char *, avro_value_t);
 extern int compose_label_avro_data_bxp(char *, avro_value_iface_t *, avro_value_t, avro_value_t);
 extern int compose_tcpflags_avro_data(size_t, avro_value_t);
 
@@ -67,7 +67,7 @@ extern avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int
   struct pkt_vlen_hdr_primitives *pvlen, pm_counter_t bytes_counter,
   pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags,
   struct timeval *basetime, struct pkt_stitching *stitch,
-  avro_value_iface_t *iface, avro_value_iface_t *, avro_value_t);
+  avro_value_iface_t *iface);
 extern avro_value_t compose_avro_acct_init(char *, pid_t, avro_value_iface_t *);
 extern avro_value_t compose_avro_acct_close(char *, pid_t, int, int, int, avro_value_iface_t *);
 extern void write_avro_schema_to_file(char *, avro_schema_t);

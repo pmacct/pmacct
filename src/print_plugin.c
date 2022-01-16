@@ -43,8 +43,6 @@
 
 /* Global variables */
 int print_output_stdout_header;
-avro_value_t v_type_map;
-avro_value_iface_t *if_type_map;
 
 /* Functions */
 void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 
@@ -1283,7 +1281,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         avro_value_t p_avro_value = compose_avro_acct_data(config.what_to_count, config.what_to_count_2,
 			 queue[j]->flow_type, &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust,
 			 pvlen, queue[j]->bytes_counter, queue[j]->packet_counter, queue[j]->flow_counter,
-			 queue[j]->tcp_flags, NULL, queue[j]->stitch, p_avro_iface, if_type_map, v_type_map);
+			 queue[j]->tcp_flags, NULL, queue[j]->stitch, p_avro_iface);
 
         if (config.sql_table) {
 	  if (config.print_output & PRINT_OUTPUT_AVRO_BIN) {

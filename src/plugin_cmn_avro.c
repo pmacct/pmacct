@@ -416,7 +416,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
   struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
   struct pkt_tunnel_primitives *ptun, u_char *pcust, struct pkt_vlen_hdr_primitives *pvlen,
   pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags,
-  struct timeval *basetime, struct pkt_stitching *stitch, avro_value_iface_t *iface, avro_value_iface_t *if_type_map, avro_value_t v_type_map)
+  struct timeval *basetime, struct pkt_stitching *stitch, avro_value_iface_t *iface)
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *str_ptr;
@@ -442,7 +442,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
     if (!str_ptr) str_ptr = empty_string;
 
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_data_ipfix(str_ptr, if_type_map, v_type_map, value);
+      compose_label_avro_data_ipfix(str_ptr, value);
     }
     else {
       pm_avro_check(avro_value_get_by_name(&value, "label", &field, NULL));
@@ -1374,17 +1374,17 @@ void compose_label_avro_schema(avro_schema_t sc_type_record, int opt)
     avro_schema_record_field_append(sc_type_record, "label", sc_type_union);
 
     /* free-up memory - avro union*/
-    //avro_schema_decref(sc_type_union);
+    avro_schema_decref(sc_type_union);
   } else {
     sc_type_map = avro_schema_map(sc_type_string);
     avro_schema_record_field_append(sc_type_record, "label", sc_type_map);
 
     /* free-up memory - avro map only*/
-    //avro_schema_decref(sc_type_map);
+    avro_schema_decref(sc_type_map);
   }
 
   /* free-up memory - avro string*/
-  //avro_schema_decref(sc_type_string);
+  avro_schema_decref(sc_type_string);
 }
 
 
@@ -1400,7 +1400,7 @@ void compose_tcpflags_avro_schema(avro_schema_t sc_type_record)
 }
 
 
-int compose_label_avro_data_ipfix(char *str_ptr, avro_value_iface_t *if_type_map, avro_value_t v_type_map, avro_value_t v_type_record)
+int compose_label_avro_data_ipfix(char *str_ptr, avro_value_t v_type_record)
 {
   /* labels normalization */
   cdada_str_t *lbls_cdada = cdada_str_create(str_ptr);
@@ -1412,7 +1412,8 @@ int compose_label_avro_data_ipfix(char *str_ptr, avro_value_iface_t *if_type_map
   cdada_list_t *ll = ptm_labels_to_linked_list(lbls_norm);
   int ll_size = cdada_list_size(ll);
 
-  avro_value_t v_type_string;
+  avro_value_t v_type_string, v_type_map;
+  avro_value_iface_t *if_type_map;
 
   /* handling map only data-type, ie. as used by IPFIX */
   if_type_map = avro_generic_class_from_schema(sc_type_map);
@@ -1435,6 +1436,7 @@ int compose_label_avro_data_ipfix(char *str_ptr, avro_value_iface_t *if_type_map
   /* free-up memory - to be review: the scope of the decref should be reviewd */
   cdada_str_destroy(lbls_cdada);
   cdada_list_destroy(ll);
+  avro_value_iface_decref(if_type_map);
 
   return 0;
 }
