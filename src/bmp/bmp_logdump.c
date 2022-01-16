@@ -357,8 +357,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
     avro_value_iface_decref(p_avro_iface);
     avro_writer_reset(p_avro_writer);
     avro_writer_free(p_avro_writer);
-    //avro_value_decref(&v_type_union);
-    //avro_value_iface_decref(if_type_union);
+    
     if (bms->dump_kafka_avro_schema_registry) {
       free(p_avro_local_buf);
     }
@@ -1914,6 +1913,8 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
 #ifdef WITH_KAFKA
   if (config.bmp_dump_kafka_topic) {
     p_kafka_close(&bmp_dump_kafka_host, FALSE);
+    avro_value_decref(&v_type_union);
+    avro_value_iface_decref(if_type_union);
   }
 #endif
 
