@@ -33,6 +33,7 @@
 #endif
 
 avro_value_t v_type_map;
+avro_value_iface_t *if_type_map;
 
 /* Functions */
 void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
@@ -542,8 +543,9 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 	  free(p_avro_local_buf);
 	}
       }
-      //avro_value_decref(&v_type_map);
+      avro_value_decref(&v_type_map);
       avro_value_decref(&p_avro_value);
+      avro_value_iface_decref(if_type_map);
       avro_value_iface_decref(p_avro_iface);
 #endif
     }
@@ -602,7 +604,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 			   queue[j]->flow_type, &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust,
 			   pvlen, queue[j]->bytes_counter, queue[j]->packet_counter,
 			   queue[j]->flow_counter, queue[j]->tcp_flags, &queue[j]->basetime,
-			   queue[j]->stitch, p_avro_iface, v_type_map);
+			   queue[j]->stitch, p_avro_iface, if_type_map, v_type_map);
       add_writer_name_and_pid_avro(p_avro_value, config.name, writer_pid);
 
       if (config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) {
@@ -676,6 +678,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 
       avro_value_decref(&v_type_map);
       avro_value_decref(&p_avro_value);
+      avro_value_iface_decref(if_type_map);
       avro_value_iface_decref(p_avro_iface);
 #else
       if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): compose_avro_acct_data(): AVRO object not created due to missing --enable-avro\n", config.name, config.type);
@@ -872,6 +875,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 
       avro_value_decref(&v_type_map);
       avro_value_decref(&p_avro_value);
+      avro_value_iface_decref(if_type_map);
       avro_value_iface_decref(p_avro_iface);
 #endif
     }
