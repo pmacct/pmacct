@@ -37,6 +37,8 @@
 /* global variables */
 avro_schema_t p_avro_acct_schema, p_avro_acct_init_schema, p_avro_acct_close_schema;
 avro_schema_t sc_type_array, sc_type_map, sc_type_string, sc_type_union;
+avro_value_iface_t *if_type_map;
+avro_value_t v_type_map;
 
 /* functions */
 avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
