@@ -1008,12 +1008,8 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
   /* Max amount of tokens per string: 128 Labels */
   const int MAX_TOKENS = 256;
 
-  /* len of the incoming/normalized string */
-  size_t PTM_LABELS_LEN = strlen(ptm_labels);
-
-  /* incoming/normalized str to array */
-  char ptm_array_labels[PTM_LABELS_LEN + 1];
-  strcpy(ptm_array_labels, ptm_labels);
+  /* strtok doesn't like const string */
+  char *no_const_ptm_labels = strdup(ptm_labels);
 
   cdada_list_t *ptm_linked_list = cdada_list_create(ptm_label);
   ptm_label lbl;
@@ -1021,25 +1017,21 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
   char *token = NULL;
   char *tokens[MAX_TOKENS];
 
-  /* init pointers to NULL */                                                                                                                                                                                                                        
-  int idx_0;                                                                                                                                                                                                                                                  
-  for (idx_0 = 0; idx_0 < MAX_TOKENS; idx_0++) {                                                                                                                                                                                                              
-    tokens[idx_0] = NULL;                                                                                                                                                                                                                                     
-  }        
-
   int tokens_counter = 0;
-  for (token = strtok(ptm_array_labels, DEFAULT_SEP); token != NULL; token = strtok(NULL, DEFAULT_SEP)) {
+  for (token = strtok(no_const_ptm_labels, DEFAULT_SEP); token != NULL; token = strtok(NULL, DEFAULT_SEP)) {
     tokens[tokens_counter] = token;
     tokens_counter++;
   }
 
   int list_counter;
-  for (list_counter = 0; (list_counter < tokens_counter) && (tokens[list_counter] != NULL); list_counter += 2) {
+  for (list_counter = 0; list_counter < tokens_counter; list_counter += 2) {
     memset(&lbl, 0, sizeof(lbl));
-    strcpy(lbl.key, tokens[list_counter]);                                                                                                                                                                                                                    
-    strcpy(lbl.value, tokens[list_counter + 1]);
+    lbl.key = strdup(tokens[list_counter]);
+    lbl.value = strdup(tokens[list_counter + 1]);
     cdada_list_push_back(ptm_linked_list, &lbl);
   }
+
+  free(no_const_ptm_labels);
 
   return ptm_linked_list;
 }

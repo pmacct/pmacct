@@ -1326,7 +1326,34 @@ serdes_schema_t *compose_avro_schema_registry_name(char *topic, int is_topic_dyn
 void write_avro_json_record_to_file(FILE *fp, avro_value_t value)
 {
   char *json_str;
+me(&v_type_record, "label", &v_type_map, NULL) == 0) {
+      if (avro_value_add(&v_type_map, lbl.key, &v_type_string, NULL, NULL) == 0) {
+        avro_value_set_string(&v_type_string, lbl.value);
+      }
+    }
+  }
 
+  /* one-time use */
+  free(lbl.key);
+  free(lbl.value);
+
+  /* free-up memory - to be review: the scope of the decref should be reviewd */
+  cdada_str_destroy(lbls_cdada);
+  cdada_list_destroy(ll);
+  avro_value_iface_decref(if_type_map);
+
+  return 0;
+}
+
+
+int compose_label_avro_data_bxp(char *str_ptr, avro_value_iface_t *if_type_union, avro_value_t v_type_union, avro_value_t v_type_record)
+{
+  /* labels normalization */
+  cdada_str_t *lbls_cdada = cdada_str_create(str_ptr);
+  cdada_str_replace_all(lbls_cdada, PRETAG_LABEL_KV_SEP, DEFAULT_SEP);
+  const char *lbls_norm = cdada_str(lbls_cdada);
+
+  /* linked-list creation */
   if (avro_value_to_json(&value, TRUE, &json_str)) {
     Log(LOG_ERR, "ERROR ( %s/%s ): write_avro_json_record_to_file() unable to value to JSON: %s\n", config.name, config.type, avro_strerror());
     pm_avro_exit_gracefully(1);
@@ -1361,30 +1388,29 @@ void pm_avro_exit_gracefully(int status)
 }
 
 
-void compose_label_avro_schema_ipfix(avro_schema_t sc_type_record)
+void compose_label_avro_schema(avro_schema_t sc_type_record, int opt)
 {
   sc_type_string = avro_schema_string();
-  sc_type_map = avro_schema_map(sc_type_string);
-  
-  avro_schema_record_field_append(sc_type_record, "label", sc_type_map);
 
-  /* free-up memory - avro map only*/
-  avro_schema_decref(sc_type_map);
-  avro_schema_decref(sc_type_string);
-}
+  /* handling BGP/BMP with avro unions */
+  if (opt) {
+    sc_type_union = avro_schema_union();
 
+    avro_schema_union_append(sc_type_union, avro_schema_null());
+    avro_schema_union_append(sc_type_union, avro_schema_map(sc_type_string));
+    avro_schema_record_field_append(sc_type_record, "label", sc_type_union);
 
-void compose_label_avro_schemai_bxp(avro_schema_t sc_type_record)
-{
-  sc_type_string = avro_schema_string();
-  sc_type_union = avro_schema_union();
+    /* free-up memory - avro union*/
+    avro_schema_decref(sc_type_union);
+  } else {
+    sc_type_map = avro_schema_map(sc_type_string);
+    avro_schema_record_field_append(sc_type_record, "label", sc_type_map);
 
-  avro_schema_union_append(sc_type_union, avro_schema_null());
-  avro_schema_union_append(sc_type_union, avro_schema_map(sc_type_string));
-  avro_schema_record_field_append(sc_type_record, "label", sc_type_union);
+    /* free-up memory - avro map only*/
+    avro_schema_decref(sc_type_map);
+  }
 
-  /* free-up memory - avro union*/
-  avro_schema_decref(sc_type_union);
+  /* free-up memory - avro string*/
   avro_schema_decref(sc_type_string);
 }
 
@@ -1430,6 +1456,10 @@ int compose_label_avro_data_ipfix(char *str_ptr, avro_value_t v_type_record)
     }
   }
 
+  /* one-time use */
+  free(lbl.key);
+  free(lbl.value);
+
   /* free-up memory - to be review: the scope of the decref should be reviewd */
   cdada_str_destroy(lbls_cdada);
   cdada_list_destroy(ll);
@@ -1468,6 +1498,9 @@ int compose_label_avro_data_bxp(char *str_ptr, avro_value_iface_t *if_type_union
           avro_value_set_string(&v_type_string, lbl.value);
         }
       }
+
+	    /* one-time use */
+	    free(lbl.value);
     }
     /* handling label without value */
     else {
@@ -1475,6 +1508,9 @@ int compose_label_avro_data_bxp(char *str_ptr, avro_value_iface_t *if_type_union
         avro_value_set_branch(&v_type_union, FALSE, &v_type_branch);
       }
     }
+
+    /* one-time use */
+    free(lbl.key);
   }
 
   /* free-up memory */
