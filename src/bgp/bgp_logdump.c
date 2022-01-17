@@ -658,8 +658,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 #endif
     }
 
-    //avro_value_decref(&v_type_union);
-    //avro_value_iface_decref(if_type_union);
+    avro_value_decref(&v_type_union);
+    avro_value_iface_decref(if_type_union);
     avro_value_decref(&p_avro_obj);
     avro_value_iface_decref(p_avro_iface);
     avro_writer_reset(p_avro_writer);
@@ -2000,12 +2000,6 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 	      for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
 		if (ri->peer == peer) {
 	          bgp_peer_log_msg(node, ri, afi, safi, &bgp_logdump_tag, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC);
-#ifdef WITH_AVRO
-          if ((config.bgp_table_dump_output == PRINT_OUTPUT_AVRO_BIN) || (config.bgp_table_dump_output == PRINT_OUTPUT_AVRO_JSON)) {
-            avro_value_decref(&v_type_union);
-            avro_value_iface_decref(if_type_union);
-          }
-#endif
 	          dump_elems++;
 	          bds.entries++;
 		}
