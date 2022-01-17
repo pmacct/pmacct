@@ -25,8 +25,8 @@
 #include "bgp_blackhole.h"
 
 #ifdef WITH_AVRO
-avro_value_iface_t *if_type_union;
-avro_value_t v_type_union;
+extern avro_value_iface_t *if_type_union;
+extern avro_value_t v_type_union;
 #endif
 
 int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
