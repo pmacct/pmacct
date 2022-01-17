@@ -656,8 +656,8 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 #endif
     }
 
-    //avro_value_decref(&v_type_union);
-    //avro_value_iface_decref(if_type_union);
+    avro_value_decref(&v_type_union);
+    avro_value_iface_decref(if_type_union);
     avro_value_decref(&p_avro_obj);
     avro_value_iface_decref(p_avro_iface);
     avro_writer_reset(p_avro_writer);
