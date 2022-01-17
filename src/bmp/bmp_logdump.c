@@ -35,7 +35,7 @@
 #include "plugin_cmn_avro.h"
 #endif
 
-#ifdef #WITH_AVRO
+#ifdef WITH_AVRO
 avro_value_iface_t *if_type_union;
 avro_value_t v_type_union;
 #endif
