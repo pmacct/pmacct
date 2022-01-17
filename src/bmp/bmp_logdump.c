@@ -35,8 +35,10 @@
 #include "plugin_cmn_avro.h"
 #endif
 
+#ifdef WITH_AVRO
 avro_value_iface_t *if_type_union;
 avro_value_t v_type_union;
+#endif
 
 int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, bgp_tag_t *tag,
 		void *log_data, u_int64_t log_seq, char *event_type, int output, int log_type)
@@ -1854,6 +1856,12 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
 		  ri->peer->log = peer->log;
                   bgp_peer_log_msg(node, ri, afi, safi, &bmp_logdump_tag, event_type, config.bmp_dump_output, NULL, BGP_LOG_TYPE_MISC);
                   dump_elems++;
+#ifdef WITH_AVRO
+                  if ((config.bmp_dump_output == PRINT_OUTPUT_AVRO_BIN) || (config.bmp_dump_output == PRINT_OUTPUT_AVRO_JSON)) {
+                    avro_value_decref(&v_type_union);
+                    avro_value_iface_decref(if_type_union);
+                  }
+#endif
                 }
               }
             }
@@ -1913,8 +1921,6 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
 #ifdef WITH_KAFKA
   if (config.bmp_dump_kafka_topic) {
     p_kafka_close(&bmp_dump_kafka_host, FALSE);
-    avro_value_decref(&v_type_union);
-    avro_value_iface_decref(if_type_union);
   }
 #endif
 

@@ -37,8 +37,10 @@
 #include "plugin_cmn_avro.h"
 #endif
 
+#ifdef WITH_AVRO
 avro_value_iface_t *if_type_union;
 avro_value_t v_type_union;
+#endif
 
 /* functions */
 int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, safi_t safi,
@@ -1998,6 +2000,12 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 	      for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
 		if (ri->peer == peer) {
 	          bgp_peer_log_msg(node, ri, afi, safi, &bgp_logdump_tag, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC);
+#ifdef WITH_AVRO
+          if ((config.bgp_table_dump_output == PRINT_OUTPUT_AVRO_BIN) || (config.bgp_table_dump_output == PRINT_OUTPUT_AVRO_JSON)) {
+            avro_value_decref(&v_type_union);
+            avro_value_iface_decref(if_type_union);
+          }
+#endif
 	          dump_elems++;
 	          bds.entries++;
 		}
@@ -2027,8 +2035,6 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 #ifdef WITH_KAFKA
   if (config.bgp_table_dump_kafka_topic) {
     p_kafka_close(&bgp_table_dump_kafka_host, FALSE);
-    avro_value_decref(&v_type_union);
-    avro_value_iface_decref(if_type_union);
   }
 #endif
 

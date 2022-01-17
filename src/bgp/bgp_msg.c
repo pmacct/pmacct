@@ -1434,6 +1434,12 @@ log_update:
     char event_type[] = "log";
 
     bgp_peer_log_msg(route, ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_UPDATE);
+#ifdef WITH_AVRO
+    if ((bms->msglog_output == PRINT_OUTPUT_AVRO_BIN) || (bms->msglog_output == PRINT_OUTPUT_AVRO_JSON)) {
+      avro_value_decref(&v_type_union);
+      avro_value_iface_decref(if_type_union);
+    }
+#endif
   }
 
   if (bms->skip_rib) {
