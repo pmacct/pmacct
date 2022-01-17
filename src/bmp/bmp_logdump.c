@@ -236,8 +236,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
     }
 
     if (config.pre_tag_map && tag) {
-      bgp_tag_print_avro_decref(if_type_union, v_type_union, p_avro_obj, tag);
-      //bgp_tag_print_avro(p_avro_obj, tag);
+      bgp_tag_print_avro(if_type_union, v_type_union, p_avro_obj, tag);
     }
 
     switch (log_type) {
@@ -355,6 +354,8 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
 #endif
     }
 
+    avro_value_decref(&v_type_union);
+    avro_value_iface_decref(if_type_union);
     avro_value_decref(&p_avro_obj);
     avro_value_iface_decref(p_avro_iface);
     avro_writer_reset(p_avro_writer);
