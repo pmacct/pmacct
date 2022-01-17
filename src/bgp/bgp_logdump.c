@@ -829,6 +829,9 @@ int bgp_peer_log_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int typ
       size_t p_avro_obj_len, p_avro_len;
       void *p_avro_local_buf = NULL;
 
+      if_type_union = avro_generic_class_from_schema(sc_type_union);
+      avro_generic_value_new(if_type_union, &v_type_union);
+
       p_avro_writer = avro_writer_memory(bms->avro_buf, LARGEBUFLEN);
       p_avro_iface = avro_generic_class_from_schema(bms->msglog_avro_schema[BGP_LOG_TYPE_LOGINIT]);
       pm_avro_check(avro_generic_value_new(p_avro_iface, &p_avro_obj));
