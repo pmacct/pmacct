@@ -46,7 +46,8 @@
 #define	AVRO_ACCT_CLOSE_SID	2
 
 /* prototypes */
-extern void compose_label_avro_schema(avro_schema_t, int);
+extern void compose_label_avro_schema_ipfix(avro_schema_t);
+extern void compose_label_avro_schema_bxp(avro_schema_t;
 extern void compose_tcpflags_avro_schema(avro_schema_t);
 extern int compose_label_avro_data_ipfix(char *, avro_value_t);
 extern int compose_label_avro_data_bxp(char *, avro_value_iface_t *, avro_value_t, avro_value_t);
