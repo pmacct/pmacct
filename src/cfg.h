@@ -391,6 +391,7 @@ struct configuration {
   char *bgp_table_dump_latest_file;
   char *bgp_table_dump_avro_schema_file;
   int bgp_table_dump_refresh_time;
+  int bgp_table_dump_time_slots;
   char *bgp_table_dump_amqp_host;
   char *bgp_table_dump_amqp_vhost;
   char *bgp_table_dump_amqp_user;
@@ -468,6 +469,7 @@ struct configuration {
   char *bmp_dump_latest_file;
   char *bmp_dump_avro_schema_file;
   int bmp_dump_refresh_time;
+  int bmp_dump_time_slots;
   char *bmp_dump_amqp_host;
   char *bmp_dump_amqp_vhost;
   char *bmp_dump_amqp_user;
