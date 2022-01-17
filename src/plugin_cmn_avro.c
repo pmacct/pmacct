@@ -1384,8 +1384,8 @@ void compose_label_avro_schema_bxp(avro_schema_t sc_type_record)
   avro_schema_record_field_append(sc_type_record, "label", sc_type_map);
 
   /* free-up memory - avro map only*/
-  avro_schema_decref(sc_type_map);
-  avro_schema_decref(sc_type_string);
+  //avro_schema_decref(sc_type_map);
+  //avro_schema_decref(sc_type_string);
 }
 
 
