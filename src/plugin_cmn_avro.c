@@ -1364,7 +1364,6 @@ void pm_avro_exit_gracefully(int status)
 void compose_label_avro_schema_ipfix(avro_schema_t sc_type_record)
 {
   sc_type_string = avro_schema_string();
-
   sc_type_union = avro_schema_union();
 
   avro_schema_union_append(sc_type_union, avro_schema_null());
@@ -1380,7 +1379,6 @@ void compose_label_avro_schema_ipfix(avro_schema_t sc_type_record)
 void compose_label_avro_schema_bxp(avro_schema_t sc_type_record)
 {
   sc_type_string = avro_schema_string();
-
   sc_type_map = avro_schema_map(sc_type_string);
     
   avro_schema_record_field_append(sc_type_record, "label", sc_type_map);
