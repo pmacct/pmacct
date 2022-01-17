@@ -35,8 +35,10 @@
 #include "plugin_cmn_avro.h"
 #endif
 
+#ifdef #WITH_AVRO
 avro_value_iface_t *if_type_union;
 avro_value_t v_type_union;
+#endif
 
 int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, bgp_tag_t *tag,
 		void *log_data, u_int64_t log_seq, char *event_type, int output, int log_type)
@@ -1913,8 +1915,6 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
 #ifdef WITH_KAFKA
   if (config.bmp_dump_kafka_topic) {
     p_kafka_close(&bmp_dump_kafka_host, FALSE);
-    avro_value_decref(&v_type_union);
-    avro_value_iface_decref(if_type_union);
   }
 #endif
 
@@ -2358,7 +2358,7 @@ void p_avro_schema_build_bmp_common(avro_schema_t *schema, avro_schema_t *optlon
     avro_schema_record_field_append((*schema), "tag", (*optlong_s));
 
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_schema((*schema), TRUE);
+      compose_label_avro_schema_bxp((*schema));
     }
     else {
       avro_schema_record_field_append((*schema), "label", (*optstr_s));

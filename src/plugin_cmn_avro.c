@@ -61,7 +61,7 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
 
   if (wtc_2 & COUNT_LABEL) {
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_schema(schema, FALSE);
+      compose_label_avro_schema_ipfix(schema);
     }
     else {
       avro_schema_record_field_append(schema, "label", avro_schema_string());
@@ -1361,29 +1361,32 @@ void pm_avro_exit_gracefully(int status)
 }
 
 
-void compose_label_avro_schema(avro_schema_t sc_type_record, int opt)
+void compose_label_avro_schema_ipfix(avro_schema_t sc_type_record)
 {
   sc_type_string = avro_schema_string();
 
-  /* handling BGP/BMP with avro unions */
-  if (opt) {
-    sc_type_union = avro_schema_union();
+  sc_type_union = avro_schema_union();
 
-    avro_schema_union_append(sc_type_union, avro_schema_null());
-    avro_schema_union_append(sc_type_union, avro_schema_map(sc_type_string));
-    avro_schema_record_field_append(sc_type_record, "label", sc_type_union);
+  avro_schema_union_append(sc_type_union, avro_schema_null());
+  avro_schema_union_append(sc_type_union, avro_schema_map(sc_type_string));
+  avro_schema_record_field_append(sc_type_record, "label", sc_type_union);
 
-    /* free-up memory - avro union*/
-    avro_schema_decref(sc_type_union);
-  } else {
-    sc_type_map = avro_schema_map(sc_type_string);
-    avro_schema_record_field_append(sc_type_record, "label", sc_type_map);
+  /* free-up memory - avro union*/
+  avro_schema_decref(sc_type_union);
+  avro_schema_decref(sc_type_string);
+}
 
-    /* free-up memory - avro map only*/
-    avro_schema_decref(sc_type_map);
-  }
 
-  /* free-up memory - avro string*/
+void compose_label_avro_schema_bxp(avro_schema_t sc_type_record)
+{
+  sc_type_string = avro_schema_string();
+
+  sc_type_map = avro_schema_map(sc_type_string);
+    
+  avro_schema_record_field_append(sc_type_record, "label", sc_type_map);
+
+  /* free-up memory - avro map only*/
+  avro_schema_decref(sc_type_map);
   avro_schema_decref(sc_type_string);
 }
 
