@@ -90,8 +90,8 @@ struct p_table_rr {
 #ifndef STRUCT_PTM_LABEL
 #define STRUCT_PTM_LABEL
 typedef struct {
-  char *key;
-  char *value;
+  char key[128];
+  char value[128];
 } __attribute__((packed)) ptm_label;
 #endif
 
