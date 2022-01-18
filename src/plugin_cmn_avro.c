@@ -224,6 +224,15 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
       avro_schema_record_field_append(schema, "tcp_flags", avro_schema_string());
     }
   }
+  
+  if (wtc_2 & COUNT_FORWARDING_STATUS) {
+    if (config.nf9_fwdstatus_encode_as_string) {
+      compose_nf9_fwdstatus_avro_schema(schema);
+    }
+    else {
+      avro_schema_record_field_append(schema, "forwarding_status", avro_schema_string());
+    }
+  }
 
   if (wtc & COUNT_IP_PROTO)
     avro_schema_record_field_append(schema, "ip_proto", avro_schema_string());
@@ -821,6 +830,18 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
       pm_avro_check(avro_value_set_string(&field, misc_str));
     }
   }
+  
+  if (wtc_2 & COUNT_FORWARDING_STATUS) {
+    sprintf(misc_str, "%u", pnat->forwarding_status);
+
+    if (config.nf9_fwdstatus_encode_as_string) {
+      compose_nf9_fwdstatus_avro_data(pnat->forwarding_status, value);
+    }
+    else { 
+      pm_avro_check(avro_value_get_by_name(&value, "forwarding_status", &field, NULL));
+      pm_avro_check(avro_value_set_string(&field, misc_str));
+    }
+  }
 
   if (wtc & COUNT_IP_PROTO) {
     char proto[PROTO_NUM_STRLEN];
@@ -1400,6 +1421,15 @@ void compose_tcpflags_avro_schema(avro_schema_t sc_type_record)
   avro_schema_decref(sc_type_string);
 }
 
+void compose_nf9_fwdstatus_avro_schema(avro_schema_t sc_type_record)
+{
+  sc_type_string = avro_schema_string();
+  avro_schema_record_field_append(sc_type_record, "forwarding_status", sc_type_string);
+
+  /* free-up memory */
+  avro_schema_decref(sc_type_string);
+}
+
 
 int compose_label_avro_data_ipfix(char *str_ptr, avro_value_t v_type_record)
 {
@@ -1500,6 +1530,66 @@ int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_reco
 
   /* free-up memory */
   cdada_list_destroy(ll);
+
+  return 0;
+}
+
+
+int compose_nf9_fwdstatus_avro_data(size_t fwdstatus_decimal, avro_value_t v_type_record)
+{
+  nf9_fwdstatus fwdstate;
+
+  /* linked-list creation */
+  cdada_list_t *ll = nf9_fwdstatus_to_linked_list();
+  int ll_size = cdada_list_size(ll);
+
+  avro_value_t v_type_string;
+  avro_value_iface_t *if_type_string;
+
+  if_type_string = avro_generic_class_from_schema(sc_type_string);
+
+  avro_generic_value_new(if_type_string, &v_type_string);
+  
+  /* default fwdstatus */
+  if ((fwdstatus_decimal >= 0) && (fwdstatus_decimal <= 63)) {
+    if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
+      avro_value_set_string(&v_type_string, "UNKNOWN Unclassified");
+    }
+  }
+  else if ((fwdstatus_decimal >= 64) && (fwdstatus_decimal <= 127)) {
+    if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
+      avro_value_set_string(&v_type_string, "FORWARDED Unclassified");
+    }
+  }
+  else if ((fwdstatus_decimal >= 128) && (fwdstatus_decimal <= 191)) {
+    if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
+      avro_value_set_string(&v_type_string, "DROPPED Unclassified");
+    }
+  }
+  else if ((fwdstatus_decimal >= 192) && (fwdstatus_decimal <= 255)) {
+    if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
+      avro_value_set_string(&v_type_string, "CONSUMED Unclassified");
+    }
+  }
+  else {
+    if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
+      avro_value_set_string(&v_type_string, "RFC-7270 Misinterpreted");
+    }
+  }
+
+  size_t idx_0;
+  for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
+    cdada_list_get(ll, idx_0, &fwdstate);
+    if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
+      if (fwdstate.decimal == fwdstatus_decimal) {
+        avro_value_set_string(&v_type_string, fwdstate.description);
+      }
+    }
+  }
+  
+  /* free-up memory */
+  cdada_list_destroy(ll);
+  avro_value_iface_decref(if_type_string);
 
   return 0;
 }

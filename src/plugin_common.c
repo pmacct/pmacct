@@ -1086,3 +1086,60 @@ cdada_list_t *tcpflags_to_linked_list(size_t tcpflags_decimal)
 
   return tcpflag_linked_list;
 }
+
+
+cdada_list_t *nf9_fwdstatus_to_linked_list()
+{
+  /* RFC-7270: forwardingStatus with a compliant reason code */
+  const unsigned int nf9_fwdstatus_decimal[23] = {
+    64, 65, 66,
+    128, 129, 130,
+    131, 132, 133,
+    134, 135, 136,
+    137, 138, 139,
+    140, 141, 142,
+    143, 192, 193,
+    194, 195
+  };
+
+  const char nf9_fwdstatus_description[23][50] = {
+    "FORWARDED Unknown",
+    "FORWARDED Fragmented",
+    "FORWARDED Not Fragmented",
+    "DROPPED Unknown",
+    "DROPPED ACL deny",
+    "DROPPED ACL drop",
+    "DROPPED Unroutable",
+    "DROPPED Adjacency",
+    "DROPPED Fragmentation and DF set",
+    "DROPPED Bad header checksum",
+    "DROPPED Bad total Length",
+    "DROPPED Bad header length",
+    "DROPPED bad TTL",
+    "DROPPED Policer",
+    "DROPPED WRED",
+    "DROPPED RPF",
+    "DROPPED For us",
+    "DROPPED Bad output interface",
+    "DROPPED Hardware",
+    "CONSUMED Unknown",
+    "CONSUMED Punt Adjacency",
+    "CONSUMED Incomplete Adjacency",
+    "CONSUMED For us",
+  };
+
+  /* Generate the forwarding_status' linked-list */
+  cdada_list_t *nf9_fwdstatus_linked_list = cdada_list_create(nf9_fwdstatus);
+  nf9_fwdstatus fwdstate;
+
+  size_t idx_0;
+  for (idx_0 = 0; idx_0 < 23; idx_0++) {
+    memset(&fwdstate, 0, sizeof(fwdstate));
+    fwdstate.decimal = nf9_fwdstatus_decimal[idx_0];
+    strcpy(fwdstate.description, nf9_fwdstatus_description[idx_0]);
+
+    cdada_list_push_back(nf9_fwdstatus_linked_list, &fwdstate);
+  }
+
+  return nf9_fwdstatus_linked_list;
+}

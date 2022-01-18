@@ -321,6 +321,16 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
     }
     idx++;
   }
+  
+  if (wtc_2 & COUNT_FORWARDING_STATUS) {
+    if (config.nf9_fwdstatus_encode_as_string) {
+      cjhandler[idx] = compose_json_string_nf9_fwdstatus;
+    }
+    else {
+      cjhandler[idx] = compose_json_nf9_fwdstatus;
+    }
+    idx++;
+  }
 
   if (wtc & COUNT_IP_PROTO) {
     cjhandler[idx] = compose_json_proto;
@@ -929,6 +939,14 @@ void compose_json_tcp_flags(json_t *obj, struct chained_cache *cc)
   json_object_set_new_nocheck(obj, "tcp_flags", json_string(misc_str));
 }
 
+void compose_json_nf9_fwdstatus(json_t *obj, struct chained_cache *cc)
+{
+  char misc_str[VERYSHORTBUFLEN];
+
+  sprintf(misc_str, "%u", cc->pnat->forwarding_status);
+  json_object_set_new_nocheck(obj, "forwarding_status", json_string(misc_str));
+}
+
 void compose_json_proto(json_t *obj, struct chained_cache *cc)
 {
   char proto[PROTO_NUM_STRLEN];
@@ -1262,10 +1280,6 @@ void compose_json_map_label(json_t *obj, struct chained_cache *cc)
 
 void compose_json_array_tcpflags(json_t *obj, struct chained_cache *cc)
 {
-  char misc_str[VERYSHORTBUFLEN];
-
-  sprintf(misc_str, "%u", cc->tcp_flags);
-
   /* linked-list creation */
   cdada_list_t *ll = tcpflags_to_linked_list(cc->tcp_flags);
   int ll_size = cdada_list_size(ll);
@@ -1278,7 +1292,21 @@ void compose_json_array_tcpflags(json_t *obj, struct chained_cache *cc)
 }
 
 
-json_t * compose_label_json_data(cdada_list_t *ll, int ll_size)
+void compose_json_string_nf9_fwdstatus(json_t *obj, struct chained_cache *cc)
+{
+  /* linked-list creation */
+  cdada_list_t *nf9_fwdstatus_ll = nf9_fwdstatus_to_linked_list();
+  int ll_size = cdada_list_size(nf9_fwdstatus_ll);
+
+  json_t *root_l1 = compose_nf9_fwdstatus_json_data(cc->pnat->forwarding_status, nf9_fwdstatus_ll, ll_size);
+
+  json_object_set_new_nocheck(obj, "forwarding_status", root_l1);
+
+  cdada_list_destroy(nf9_fwdstatus_ll);
+}
+
+
+json_t *compose_label_json_data(cdada_list_t *ll, int ll_size)
 {
   ptm_label lbl;
 
@@ -1296,7 +1324,7 @@ json_t * compose_label_json_data(cdada_list_t *ll, int ll_size)
 }
 
 
-json_t * compose_tcpflags_json_data(cdada_list_t *ll, int ll_size)
+json_t *compose_tcpflags_json_data(cdada_list_t *ll, int ll_size)
 {
   tcpflag tcpstate;
 
@@ -1309,6 +1337,40 @@ json_t * compose_tcpflags_json_data(cdada_list_t *ll, int ll_size)
     if (strcmp(tcpstate.flag, "NULL") != 0) {
       j_str_tmp = json_string(tcpstate.flag);
       json_array_append(root, j_str_tmp);
+    }
+  }
+
+  return root;
+}
+
+
+json_t *compose_nf9_fwdstatus_json_data(size_t fwdstatus_decimal, cdada_list_t *ll, int ll_size)
+{
+  nf9_fwdstatus fwdstate;
+  json_t *root = NULL;
+
+  /* default fwdstatus */
+  if ((fwdstatus_decimal >= 0) && (fwdstatus_decimal <= 63)) {
+    root = json_string("UNKNOWN Unclassified");
+  }
+  else if ((fwdstatus_decimal >= 64) && (fwdstatus_decimal <= 127)) {
+    root = json_string("FORWARDED Unclassified");
+  }
+  else if ((fwdstatus_decimal >= 128) && (fwdstatus_decimal <= 191)) {
+    root = json_string("DROPPED Unclassified");
+  }
+  else if ((fwdstatus_decimal >= 192) && (fwdstatus_decimal <= 255)) {
+    root = json_string("CONSUMED Unclassified");
+  }
+  else {
+    root = json_string("RFC-7270 Misinterpreted");
+  }
+
+  int idx_0;
+  for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
+    cdada_list_get(ll, idx_0, &fwdstate);
+    if (fwdstate.decimal == fwdstatus_decimal) {
+      json_string_set(root, fwdstate.description);
     }
   }
 
