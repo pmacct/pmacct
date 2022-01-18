@@ -1041,7 +1041,8 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
     memset(&lbl, 0, sizeof(lbl));
     if ((strlen(tokens[list_counter]) > MAX_TOKEN_LEN - 1) || (strlen(tokens[list_counter + 1]) > MAX_TOKEN_LEN - 1)) {
       exit(-1);
-    } else {
+    } 
+    else {
       strcpy(lbl.key, tokens[list_counter]);                                                                                                                                                                                                                    
       strcpy(lbl.value, tokens[list_counter + 1]);
       cdada_list_push_back(ptm_linked_list, &lbl);
