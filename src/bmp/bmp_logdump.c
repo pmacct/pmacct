@@ -35,6 +35,8 @@
 #include "plugin_cmn_avro.h"
 #endif
 
+int current_bmp_slot = 0;
+
 int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, bgp_tag_t *tag,
 		void *log_data, u_int64_t log_seq, char *event_type, int output, int log_type)
 {
@@ -1627,6 +1629,7 @@ void bmp_handle_dump_event(int max_peers_idx)
     }
     break;
   }
+  current_bmp_slot = (current_bmp_slot + 1) % config.bmp_dump_time_slots;
 }
 
 int bmp_dump_event_runner(struct pm_dump_runner *pdr)
@@ -1689,6 +1692,7 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
   tables_num = 0;
 
 #ifdef WITH_SERDES
+  Log(LOG_INFO, "RB-HERE 1692 WITH SERDES\n");
   if (config.bmp_dump_kafka_avro_schema_registry) {
     if (strchr(config.bmp_dump_kafka_topic, '$')) {
       Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'bmp_dump_kafka_topic' is not compatible with 'bmp_dump_kafka_avro_schema_registry'. Exiting.\n",
@@ -1742,10 +1746,13 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
 											     config.bmp_dump_kafka_avro_schema_registry);
   }
 #endif
-
+  
+  if(config.bmp_dump_time_slots > 1)
+    Log(LOG_INFO, "INFO Dumping BMP tables, slot %d of %d\n", current_bmp_slot + 1, config.bmp_dump_time_slots);
   for (peer = NULL, saved_peer = NULL, peers_idx = pdr->first; peers_idx <= pdr->last; peers_idx++) {
-    if (bmp_peers[peers_idx].self.fd) {
-      peer = &bmp_peers[peers_idx].self;
+    peer = &bmp_peers[peers_idx].self;
+    int bmp_router_slot = abs(string_hash_make(peer->addr_str)) % config.bmp_dump_time_slots;
+    if (bmp_peers[peers_idx].self.fd && bmp_router_slot == current_bmp_slot) {          
       peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
       bdsell = peer->bmp_se;
 
@@ -1898,6 +1905,7 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
       tables_num++;
     }
   }
+
 
 #ifdef WITH_RABBITMQ
   if (config.bmp_dump_amqp_routing_key) {
