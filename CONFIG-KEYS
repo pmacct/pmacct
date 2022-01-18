@@ -2830,10 +2830,10 @@ DESC:		Time interval, in seconds, between two consecutive executions of the dump
 		tables/BMP events/Streaming Telemetry data to files.
 DEFAULT:	0
 
-KEY:		[ bmp_dump_time_slots ] [GLOBAL]
+KEY:		[ bgp_table_dump_time_slots | bmp_dump_time_slots ] [GLOBAL]
 VALUES:		[ 1 .. 1200 ]
-DESC:		The number of smaller dumps done in each bmp_refresh_time. By default the number of set to one,
-        then all the content of the dumps is sent once per time interval.
+DESC:		The number of smaller dumps done in each bgp_table_dump_time_slots respectively bmp_refresh_time. 
+        By default the number of set to one, then all the content of the dumps is sent once per time interval.
 DEFAULT:	1
 
 KEY:            [ bgp_table_dump_latest_file | bmp_dump_latest_file | telemetry_dump_refresh_time ]
