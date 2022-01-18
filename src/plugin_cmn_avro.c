@@ -1414,11 +1414,6 @@ int compose_label_avro_data_ipfix(char *str_ptr, avro_value_t v_type_record)
   int ll_size = cdada_list_size(ll);
 
   avro_value_t v_type_string, v_type_map;
-  //avro_value_iface_t *if_type_map;
-
-  /* handling map only data-type, ie. as used by IPFIX */
-  //if_type_map = avro_generic_class_from_schema(sc_type_map);
-  //avro_generic_value_new(if_type_map, &v_type_map);
 
   int idx_0;
   for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
@@ -1433,7 +1428,6 @@ int compose_label_avro_data_ipfix(char *str_ptr, avro_value_t v_type_record)
   /* free-up memory - to be review: the scope of the decref should be reviewd */
   cdada_str_destroy(lbls_cdada);
   cdada_list_destroy(ll);
-  //avro_value_iface_decref(if_type_map);
 
   return 0;
 }
@@ -1490,13 +1484,6 @@ int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_reco
   int ll_size = cdada_list_size(ll);
 
   avro_value_t v_type_array, v_type_string;
-  //avro_value_iface_t *if_type_array, *if_type_string;
-
-  //if_type_array = avro_generic_class_from_schema(sc_type_array);
-  //if_type_string = avro_generic_class_from_schema(sc_type_string);
-
-  //avro_generic_value_new(if_type_array, &v_type_array);
-  //avro_generic_value_new(if_type_string, &v_type_string);
 
   size_t idx_0;
   for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
@@ -1513,8 +1500,6 @@ int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_reco
 
   /* free-up memory */
   cdada_list_destroy(ll);
-  //avro_value_iface_decref(if_type_array);
-  //avro_value_iface_decref(if_type_string);
 
   return 0;
 }
