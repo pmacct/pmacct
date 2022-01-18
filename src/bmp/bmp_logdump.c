@@ -355,6 +355,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
     avro_value_iface_decref(p_avro_iface);
     avro_writer_reset(p_avro_writer);
     avro_writer_free(p_avro_writer);
+    
     if (bms->dump_kafka_avro_schema_registry) {
       free(p_avro_local_buf);
     }
@@ -2358,7 +2359,7 @@ void p_avro_schema_build_bmp_common(avro_schema_t *schema, avro_schema_t *optlon
     avro_schema_record_field_append((*schema), "tag", (*optlong_s));
 
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_schema((*schema), TRUE);
+      compose_label_avro_schema_bxp((*schema));
     }
     else {
       avro_schema_record_field_append((*schema), "label", (*optstr_s));

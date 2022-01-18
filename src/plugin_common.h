@@ -90,8 +90,8 @@ struct p_table_rr {
 #ifndef STRUCT_PTM_LABEL
 #define STRUCT_PTM_LABEL
 typedef struct {
-  char *key;
-  char *value;
+  char key[128];
+  char value[128];
 } __attribute__((packed)) ptm_label;
 #endif
 
@@ -133,7 +133,6 @@ extern void P_update_time_reference(struct insert_data *);
 extern void P_set_stitch(struct chained_cache *, struct pkt_data *, struct insert_data *);
 extern void P_update_stitch(struct chained_cache *, struct pkt_data *, struct insert_data *);
 
-extern const char *labels_delim_normalization(char *);
 extern cdada_list_t *ptm_labels_to_linked_list(const char *);
 extern cdada_list_t *tcpflags_to_linked_list(size_t);
 

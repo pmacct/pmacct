@@ -1243,7 +1243,9 @@ void compose_json_map_label(json_t *obj, struct chained_cache *cc)
   if (!str_ptr) str_ptr = empty_string;
 
   /* labels normalization */
-  const char *lbls_norm = labels_delim_normalization(str_ptr);
+  cdada_str_t *lbls_cdada = cdada_str_create(str_ptr);
+  cdada_str_replace_all(lbls_cdada, PRETAG_LABEL_KV_SEP, DEFAULT_SEP);
+  const char *lbls_norm = cdada_str(lbls_cdada);
 
   /* linked-list creation */
   cdada_list_t *ptm_ll = ptm_labels_to_linked_list(lbls_norm);
@@ -1252,7 +1254,8 @@ void compose_json_map_label(json_t *obj, struct chained_cache *cc)
   json_t *root_l1 = compose_label_json_data(ptm_ll, ll_size);
 
   json_object_set_new_nocheck(obj, "label", root_l1);
-
+  
+  cdada_str_destroy(lbls_cdada);
   cdada_list_destroy(ptm_ll);
 }
 
@@ -1287,10 +1290,6 @@ json_t * compose_label_json_data(cdada_list_t *ll, int ll_size)
     cdada_list_get(ll, idx_0, &lbl);
     j_str_tmp = json_string(lbl.value);
     json_object_set_new_nocheck(root, lbl.key, j_str_tmp);
-
-    /* one-time use */
-    free(lbl.key);
-    free(lbl.value);
   }
 
   return root;
