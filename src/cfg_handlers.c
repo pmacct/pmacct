@@ -4855,7 +4855,7 @@ int cfg_key_bmp_daemon_dump_time_slots(char *filename, char *name, char *value_p
   }
 
   value = atoi(value_ptr);
-  if (value < 60 || value > 86400) {
+  if (value < 1 || value > 86400) {
     Log(LOG_ERR, "WARN: [%s] 'bmp_dump_time_slots' value has to be >= 1 and <= 86400 secs.\n", filename);
     return ERR;
   }
