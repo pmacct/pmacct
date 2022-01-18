@@ -1692,7 +1692,6 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
   tables_num = 0;
 
 #ifdef WITH_SERDES
-  Log(LOG_INFO, "RB-HERE 1692 WITH SERDES\n");
   if (config.bmp_dump_kafka_avro_schema_registry) {
     if (strchr(config.bmp_dump_kafka_topic, '$')) {
       Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'bmp_dump_kafka_topic' is not compatible with 'bmp_dump_kafka_avro_schema_registry'. Exiting.\n",
