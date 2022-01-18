@@ -35,10 +35,6 @@
 #include "plugin_cmn_avro.h"
 #endif
 
-#ifdef WITH_AVRO
-avro_value_iface_t *if_type_union;
-avro_value_t v_type_union;
-#endif
 
 int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, bgp_tag_t *tag,
 		void *log_data, u_int64_t log_seq, char *event_type, int output, int log_type)
@@ -236,7 +232,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
     }
 
     if (config.pre_tag_map && tag) {
-      bgp_tag_print_avro(if_type_union, v_type_union, p_avro_obj, tag);
+      bgp_tag_print_avro(p_avro_obj, tag);
     }
 
     switch (log_type) {

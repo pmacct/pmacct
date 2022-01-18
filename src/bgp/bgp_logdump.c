@@ -37,10 +37,6 @@
 #include "plugin_cmn_avro.h"
 #endif
 
-#ifdef WITH_AVRO
-avro_value_iface_t *if_type_union;
-avro_value_t v_type_union;
-#endif
 
 /* functions */
 int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, safi_t safi,
@@ -337,7 +333,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     }
 
     if (config.pre_tag_map && tag) {
-      bgp_tag_print_avro(if_type_union, v_type_union, p_avro_obj, tag);
+      bgp_tag_print_avro(p_avro_obj, tag);
     }
 
     if (config.tmp_bgp_lookup_compare_ports) {
@@ -851,7 +847,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int typ
       }
 
       if (config.pre_tag_map && tag) {
-        bgp_tag_print_avro(if_type_union, v_type_union, p_avro_obj, tag);
+        bgp_tag_print_avro(p_avro_obj, tag);
       }
 
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "event_type", &p_avro_field, NULL));
@@ -1075,7 +1071,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
     }
 
     if (config.pre_tag_map && tag) {
-      bgp_tag_print_avro(if_type_union, v_type_union, p_avro_obj, tag);
+      bgp_tag_print_avro(p_avro_obj, tag);
     }
 
     pm_avro_check(avro_value_get_by_name(&p_avro_obj, "event_type", &p_avro_field, NULL));
@@ -1429,7 +1425,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
     }
 
     if (config.pre_tag_map && tag) {
-      bgp_tag_print_avro(if_type_union, v_type_union, p_avro_obj, tag);
+      bgp_tag_print_avro(p_avro_obj, tag);
     }
 
     pm_avro_check(avro_value_get_by_name(&p_avro_obj, "event_type", &p_avro_field, NULL));
@@ -1636,7 +1632,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, bgp_tag_t *tag, struct bgp_dump_s
     }
 
     if (config.pre_tag_map && tag) {
-      bgp_tag_print_avro(if_type_union, v_type_union, p_avro_obj, tag);
+      bgp_tag_print_avro(p_avro_obj, tag);
     }
 
     pm_avro_check(avro_value_get_by_name(&p_avro_obj, "event_type", &p_avro_field, NULL));
@@ -2361,7 +2357,7 @@ void bgp_tag_print_json(json_t *obj, bgp_tag_t *tag)
 #endif
 
 #ifdef WITH_AVRO
-void bgp_tag_print_avro(avro_value_iface_t *if_type_union, avro_value_t v_type_union, avro_value_t obj, bgp_tag_t *tag)
+void bgp_tag_print_avro(avro_value_t obj, bgp_tag_t *tag)
 {
   avro_value_t p_avro_field, p_avro_branch;
 
@@ -2377,7 +2373,7 @@ void bgp_tag_print_avro(avro_value_iface_t *if_type_union, avro_value_t v_type_u
 
   if (tag->have_label) {
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_data_bxp(tag->label.val, if_type_union, v_type_union, obj);
+      compose_label_avro_data_bxp(tag->label.val, obj);
     }
     else {
       pm_avro_check(avro_value_get_by_name(&obj, "label", &p_avro_field, NULL));
