@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -241,6 +241,7 @@ struct bgp_misc_structs {
   int has_lglass;
   int has_blackhole;
   int skip_rib;
+  int cap_add_path_ignore;
 
 #if defined WITH_RABBITMQ
   struct p_amqp_host *msglog_amqp_host;

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -360,6 +360,7 @@ extern int cfg_key_bgp_daemon_port(char *, char *, char *);
 extern int cfg_key_bgp_daemon_rp_ebpf_prog(char *, char *, char *);
 extern int cfg_key_bgp_daemon_ip_precedence(char *, char *, char *);
 extern int cfg_key_bgp_daemon_allow_file(char *, char *, char *);
+extern int cfg_key_bgp_daemon_add_path_ignore(char *, char *, char *);
 extern int cfg_key_bgp_daemon_aspath_radius(char *, char *, char *);
 extern int cfg_key_bgp_daemon_stdcomm_pattern(char *, char *, char *);
 extern int cfg_key_bgp_daemon_extcomm_pattern(char *, char *, char *);

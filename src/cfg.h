@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -353,6 +353,7 @@ struct configuration {
   int bgp_daemon_ipprec;
   char *bgp_daemon_allow_file;
   int bgp_daemon_max_peers;
+  int bgp_daemon_add_path_ignore;
   int bgp_daemon_aspath_radius;
   char *bgp_daemon_stdcomm_pattern;
   char *bgp_daemon_extcomm_pattern;

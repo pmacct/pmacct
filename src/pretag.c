@@ -60,8 +60,8 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
   struct id_entry *ptr, *ptr2;
   FILE *file;
   char *buf = NULL;
-  int v4_num = 0, x, tot_lines = 0, err, index, label_solved, sz;
-  int ignoring, map_entries, map_row_len;
+  int v4_num = 0, x, tot_lines = 0, err, errs = 0, index, label_solved, sz;
+  int ignoring, report = TRUE, map_entries, map_row_len;
   struct stat st;
   int v6_num = 0;
 
@@ -669,16 +669,43 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
           idx_bmap = pretag_index_build_bitmap(ptr, acct_type);
 
 	  /* fill indexes */
-	  pretag_index_fill(t, idx_bmap, ptr);
+	  err = pretag_index_fill(t, idx_bmap, ptr, x);
+	  if (err == PRETAG_IDX_ERR_FATAL) {
+	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Fatal error. Indexing disabled.\n", config.name, config.type, filename);
+	    pretag_index_destroy(t);
+
+	    errs++;
+	    report = FALSE;
+
+	    break;
+	  }
+	  else if (err) {
+	    errs++;
+	  }
 	}
+      }
+
+      if (errs && t->flags & PRETAG_FLAG_JEQ) {
+	/* in case of fatal error, index was already destroyed */
+	if (err != PRETAG_IDX_ERR_FATAL) {
+          Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'jeq' not supported if error count is non-zero when loading. Indexing disabled.\n",
+	      config.name, config.type, filename);
+          pretag_index_destroy(t);
+	}
+
+        report = FALSE;
       }
 
       if (t->flags & PRETAG_FLAG_NEG) {
         Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Negations not supported. Indexing disabled.\n",
-                config.name, config.type, filename);
+	    config.name, config.type, filename);
         pretag_index_destroy(t);
+        report = FALSE;
       }
-      else pretag_index_report(t);
+
+      if (report) {
+	pretag_index_report(t);
+      }
     }
   }
 
@@ -708,11 +735,20 @@ u_int8_t pt_check_neg(char **value, u_int32_t *flags)
   if (**value == '-') {
     (*value)++;
 
-    if (flags) *flags |= PRETAG_FLAG_NEG;
+    if (flags) {
+      *flags |= PRETAG_FLAG_NEG;
+    }
 
     return TRUE;
   }
   else return FALSE;
+}
+
+void pt_set_jeq(u_int32_t *flags)
+{
+  if (flags) {
+    *flags |= PRETAG_FLAG_JEQ;
+  }
 }
 
 char *pt_check_range(char *str)
@@ -1064,7 +1100,7 @@ int pretag_index_allocate(struct id_table *t)
 	}
       }
 
-      {
+      if (idx_entry_size) {
 	char pm_cdada_map_container[idx_entry_size];
 
         t->index[iterator].idx_map = cdada_map_create(pm_cdada_map_container);
@@ -1074,6 +1110,12 @@ int pretag_index_allocate(struct id_table *t)
 	  destroy = TRUE;
 	  break;
 	}
+      }
+      else {
+	Log(LOG_WARNING, "WARN ( %s/%s ): [%s] maps_index: null key for index %llx. Destroying.\n", config.name,
+	    config.type, t->filename, (unsigned long long)t->index[iterator].bitmap);
+	destroy = TRUE;
+	break;
       }
     }
   }
@@ -1086,12 +1128,12 @@ int pretag_index_allocate(struct id_table *t)
   return SUCCESS;
 }
 
-int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry *ptr)
+int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry *ptr, int lineno)
 {
   u_int32_t iterator = 0, handler_index = 0;
-  int ret;
+  int ret = SUCCESS;
 
-  if (!t) return ERR;
+  if (!t) return PRETAG_IDX_ERR_FATAL;
 
   for (iterator = 0; iterator < t->index_num; iterator++) {
     if (t->index[iterator].entries && t->index[iterator].bitmap == idx_bmap) {
@@ -1105,26 +1147,35 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
       hash_serial_set_off(hash_serializer, 0);
       hash_key = hash_serial_get_key(hash_serializer);
 
-      if (!hash_key) return ERR;
+      if (!hash_key) return PRETAG_IDX_ERR_FATAL;
 
       for (handler_index = 0; t->index[iterator].idt_handler[handler_index]; handler_index++) {
-	(*t->index[iterator].idt_handler[handler_index])(&e, hash_serializer, ptr);
+	ret = (*t->index[iterator].idt_handler[handler_index])(&e, hash_serializer, ptr);
+        if (ret) {
+	  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] pretag_index_fill(): index=%llx line=%d (err!)\n",
+	      config.name, config.type, t->filename, (unsigned long long)idx_bmap, (lineno + 1));
+	  break;
+        }
       }
 
-      ret = cdada_map_insert(t->index[iterator].idx_map, hash_key_get_val(hash_key), ptr);
-      if (ret == CDADA_E_EXISTS) {
-	u_char key_hexdump[hash_key_get_len(hash_key) * 3];
-	serialize_hex(hash_key_get_val(hash_key), key_hexdump, hash_key_get_len(hash_key));
+      if (!ret) {
+        ret = cdada_map_insert(t->index[iterator].idx_map, hash_key_get_val(hash_key), ptr);
+        if (ret == CDADA_E_EXISTS) {
+	  u_char key_hexdump[hash_key_get_len(hash_key) * 3];
+	  serialize_hex(hash_key_get_val(hash_key), key_hexdump, hash_key_get_len(hash_key));
 
-	Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] pretag_index_fill(): index=%llx key=%s (dup!)\n",
-	    config.name, config.type, t->filename, (unsigned long long)idx_bmap, key_hexdump);
+	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] pretag_index_fill(): index=%llx key=%s (dup!)\n",
+	      config.name, config.type, t->filename, (unsigned long long)idx_bmap, key_hexdump);
+
+	  ret = PRETAG_IDX_ERR_NONE; /* alias SUCCESS */
+	}
       }
 
       break;
     }
   }
 
-  return SUCCESS;
+  return ret;
 }
 
 void pretag_index_print_key(const cdada_map_t *map, const void *key, void *value, void *opaque)

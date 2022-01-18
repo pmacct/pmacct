@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -3579,6 +3579,20 @@ int cfg_key_bgp_daemon(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) list->cfg.bgp_daemon = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_bgp_daemon_add_path_ignore(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_add_path_ignore = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_add_path_ignore'. Globalized.\n", filename);
 
   return changes;
 }

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -512,6 +512,7 @@ extern struct xflow_status_entry *nfv9_check_status(struct packet_ptrs *, u_int3
 extern void nfv9_datalink_frame_section_handler(struct packet_ptrs *);
 
 extern struct template_cache tpl_cache;
+extern cdada_map_t *tpl_data_map, *tpl_opt_map;
 extern struct host_addr debug_a;
 extern char debug_agent_addr[50];
 extern u_int16_t debug_agent_port;
@@ -521,7 +522,7 @@ extern struct template_cache_entry *handle_template(struct template_hdr_v9 *, st
 extern struct template_cache_entry *find_template(u_int16_t, struct sockaddr *, u_int16_t, u_int32_t);
 extern struct template_cache_entry *insert_template(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int8_t, u_int16_t, u_int32_t);
 extern struct template_cache_entry *refresh_template(struct template_hdr_v9 *, struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int8_t, u_int16_t, u_int32_t);
-extern void log_template_header(struct template_cache_entry *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int8_t);
+extern void log_template_header(struct template_cache_entry *, struct sockaddr *, u_int16_t, u_int32_t, u_int8_t);
 extern void log_opt_template_field(u_int8_t, u_int32_t *, u_int16_t, u_int16_t, u_int16_t, u_int8_t);
 extern void log_template_field(u_int8_t, u_int32_t *, u_int16_t, u_int16_t, u_int16_t, u_int8_t);
 extern void log_template_footer(struct template_cache_entry *, u_int16_t, u_int8_t);
@@ -536,6 +537,12 @@ extern int get_ipfix_vlen(u_char *, u_int16_t, u_int16_t *);
 extern struct template_cache_entry *nfacctd_offline_read_json_template(char *, char *, int);
 extern void load_templates_from_file(char *);
 extern void save_template(struct template_cache_entry *, char *);
+
+extern u_int16_t calc_template_keylen();
+extern u_char *compose_template_key(pm_hash_serial_t *, u_int16_t, struct sockaddr *, u_int32_t);
+extern struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int16_t, u_int32_t);
+extern struct template_cache_entry *compose_template(struct template_hdr_v9 *, struct sockaddr *, u_int16_t, u_int32_t, u_int16_t *, u_int8_t, u_int16_t, u_int32_t);
+extern struct template_cache_entry *compose_opt_template(void *, struct sockaddr *, u_int16_t, u_int32_t, u_int16_t *, u_int8_t, u_int16_t, u_int32_t);
 
 #ifdef WITH_KAFKA
 extern void NF_init_kafka_host(void *);
