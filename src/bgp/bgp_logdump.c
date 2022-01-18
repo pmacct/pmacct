@@ -27,6 +27,7 @@
 #include "thread_pool.h"
 #include "plugin_common.h"
 #include "plugin_cmn_json.h"
+#include "util.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
@@ -1984,7 +1985,7 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 
 	    for (peer_buckets = 0; peer_buckets < config.bgp_table_per_peer_buckets; peer_buckets++) {
 	      for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
-	        int bgp_router_slot = abs(string_hash_make(peer->addr_str)) % config.bgp_table_dump_time_slots;
+	        int bgp_router_slot = abs(djb2_string_hash(peer->addr_str)) % config.bgp_table_dump_time_slots;
 
 		if (ri->peer == peer && bgp_router_slot == current_bgp_slot) {
             
