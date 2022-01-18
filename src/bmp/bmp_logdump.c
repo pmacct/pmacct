@@ -350,8 +350,6 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
 #endif
     }
 
-    //avro_value_decref(&v_type_union);
-    //avro_value_iface_decref(if_type_union);
     avro_value_decref(&p_avro_obj);
     avro_value_iface_decref(p_avro_iface);
     avro_writer_reset(p_avro_writer);
