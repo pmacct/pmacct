@@ -1967,6 +1967,10 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 
       if (!inter_domain_routing_db) return ERR;
 
+  if(config.bgp_table_dump_time_slots > 1)
+    Log(LOG_INFO, "INFO Dumping BGP tables, slot %d of %d\n", current_bgp_slot + 1, config.bgp_table_dump_time_slots);
+
+
       for (afi = AFI_IP; afi < AFI_MAX; afi++) {
 	for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
 	  table = inter_domain_routing_db->rib[afi][safi];
@@ -1979,7 +1983,10 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 
 	    for (peer_buckets = 0; peer_buckets < config.bgp_table_per_peer_buckets; peer_buckets++) {
 	      for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
-		if (ri->peer == peer) {
+	        int bgp_router_slot = abs(string_hash_make(peer->addr_str)) % config.bgp_table_dump_time_slots;
+
+		if (ri->peer == peer && bgp_router_slot == current_bgp_slot) {
+            
 	          bgp_peer_log_msg(node, ri, afi, safi, &bgp_logdump_tag, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC);
 	          dump_elems++;
 	          bds.entries++;
