@@ -25,6 +25,7 @@
 #include "bgp/bgp.h"
 #include "bmp.h"
 #include "thread_pool.h"
+#include "util.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
@@ -1751,7 +1752,7 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
     Log(LOG_INFO, "INFO Dumping BMP tables, slot %d of %d\n", current_bmp_slot + 1, config.bmp_dump_time_slots);
   for (peer = NULL, saved_peer = NULL, peers_idx = pdr->first; peers_idx <= pdr->last; peers_idx++) {
     peer = &bmp_peers[peers_idx].self;
-    int bmp_router_slot = abs(string_hash_make(peer->addr_str)) % config.bmp_dump_time_slots;
+    int bmp_router_slot = abs(djb2_string_hash(peer->addr_str)) % config.bmp_dump_time_slots;
     if (bmp_peers[peers_idx].self.fd && bmp_router_slot == current_bmp_slot) {          
       peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
       bdsell = peer->bmp_se;
