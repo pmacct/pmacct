@@ -4847,6 +4847,9 @@ int cfg_key_bmp_daemon_dump_time_slots(char *filename, char *name, char *value_p
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0, i, len = strlen(value_ptr);
 
+
+
+
   for (i = 0; i < len; i++) {
     if (!isdigit(value_ptr[i]) && !isspace(value_ptr[i])) {
       Log(LOG_ERR, "WARN: [%s] 'bmp_dump_time_slots' is expected to be an integer value: '%c'\n", filename, value_ptr[i]);
@@ -4855,8 +4858,9 @@ int cfg_key_bmp_daemon_dump_time_slots(char *filename, char *name, char *value_p
   }
 
   value = atoi(value_ptr);
-  if (value < 1 || value > 86400) {
-    Log(LOG_ERR, "WARN: [%s] 'bmp_dump_time_slots' value has to be >= 1 and <= 86400 secs.\n", filename);
+
+  if (value < 1 || value > 1200) {
+    Log(LOG_ERR, "WARN: [%s] 'bmp_dump_time_slots' value has to be >= 1 and <= 1200.\n", filename);
     return ERR;
   }
 
