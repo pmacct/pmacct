@@ -25,6 +25,7 @@
 #include "bgp/bgp.h"
 #include "bmp.h"
 #include "thread_pool.h"
+#include "util.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
@@ -355,6 +356,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
     avro_value_iface_decref(p_avro_iface);
     avro_writer_reset(p_avro_writer);
     avro_writer_free(p_avro_writer);
+    
     if (bms->dump_kafka_avro_schema_registry) {
       free(p_avro_local_buf);
     }
@@ -1750,7 +1752,7 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
     Log(LOG_INFO, "INFO Dumping BMP tables, slot %d of %d\n", current_bmp_slot + 1, config.bmp_dump_time_slots);
   for (peer = NULL, saved_peer = NULL, peers_idx = pdr->first; peers_idx <= pdr->last; peers_idx++) {
     peer = &bmp_peers[peers_idx].self;
-    int bmp_router_slot = abs(string_hash_make(peer->addr_str)) % config.bmp_dump_time_slots;
+    int bmp_router_slot = abs(djb2_string_hash(peer->addr_str)) % config.bmp_dump_time_slots;
     if (bmp_peers[peers_idx].self.fd && bmp_router_slot == current_bmp_slot) {          
       peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
       bdsell = peer->bmp_se;
@@ -2358,7 +2360,7 @@ void p_avro_schema_build_bmp_common(avro_schema_t *schema, avro_schema_t *optlon
     avro_schema_record_field_append((*schema), "tag", (*optlong_s));
 
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_schema((*schema), TRUE);
+      compose_label_avro_schema_bxp((*schema));
     }
     else {
       avro_schema_record_field_append((*schema), "label", (*optstr_s));
