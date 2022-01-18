@@ -37,6 +37,8 @@
 #include "plugin_cmn_avro.h"
 #endif
 
+int current_bgp_slot = 0;
+
 /* functions */
 int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, safi_t safi,
 		     bgp_tag_t *tag, char *event_type, int output, char **output_data,
@@ -1791,6 +1793,7 @@ void bgp_handle_dump_event(int max_peers_idx)
 
     break;
   }
+    current_bgp_slot = (current_bgp_slot + 1) % config.bgp_table_dump_time_slots;
 }
 
 int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
