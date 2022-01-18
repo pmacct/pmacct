@@ -37,6 +37,7 @@
 #include "plugin_cmn_avro.h"
 #endif
 
+
 /* functions */
 int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, safi_t safi,
 		     bgp_tag_t *tag, char *event_type, int output, char **output_data,
@@ -655,6 +656,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     avro_value_iface_decref(p_avro_iface);
     avro_writer_reset(p_avro_writer);
     avro_writer_free(p_avro_writer);
+    
     if (bms->dump_kafka_avro_schema_registry) {
       free(p_avro_local_buf);
     }
@@ -843,7 +845,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int typ
       }
 
       if (config.pre_tag_map && tag) {
-	bgp_tag_print_avro(p_avro_obj, tag);
+        bgp_tag_print_avro(p_avro_obj, tag);
       }
 
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "event_type", &p_avro_field, NULL));
@@ -2014,7 +2016,7 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
     bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bgp_table_dump_latest_file, peer);
     link_latest_output_file(latest_filename, last_filename);
   }
-
+  
   duration = time(NULL)-start;
   Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BGP tables - END (PID: %u RID: %u TABLES: %u ENTRIES: %" PRIu64 " ET: %u) ***\n",
       config.name, bms->log_str, dumper_pid, pdr->id, tables_num, dump_elems, duration);
@@ -2283,7 +2285,7 @@ void p_avro_schema_build_bgp_common(avro_schema_t *schema, avro_schema_t *optlon
     avro_schema_record_field_append((*schema), "tag", (*optlong_s));
 
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_schema((*schema), TRUE);
+      compose_label_avro_schema_bxp((*schema));
     }
     else {
       avro_schema_record_field_append((*schema), "label", (*optstr_s));
@@ -2369,7 +2371,7 @@ void bgp_tag_print_avro(avro_value_t obj, bgp_tag_t *tag)
 
   if (tag->have_label) {
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_data(tag->label.val, obj, TRUE);
+      compose_label_avro_data_bxp(tag->label.val, obj);
     }
     else {
       pm_avro_check(avro_value_get_by_name(&obj, "label", &p_avro_field, NULL));
