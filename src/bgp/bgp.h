@@ -307,6 +307,7 @@ struct bgp_misc_structs {
   bgp_tag_t *tag;
 
   int current_bgp_slot;
+  int current_bmp_slot;
 };
 
 /* these includes require definition of bgp_rt_structs and bgp_peer */
