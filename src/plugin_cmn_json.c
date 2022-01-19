@@ -323,11 +323,11 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
   }
   
   if (wtc_2 & COUNT_FORWARDING_STATUS) {
-    if (config.nf9_fwdstatus_encode_as_string) {
-      cjhandler[idx] = compose_json_string_nf9_fwdstatus;
+    if (config.nfacctd_fwdstatus_encode_as_string) {
+      cjhandler[idx] = compose_json_string_nfacctd_fwdstatus;
     }
     else {
-      cjhandler[idx] = compose_json_nf9_fwdstatus;
+      cjhandler[idx] = compose_json_nfacctd_fwdstatus;
     }
     idx++;
   }
@@ -939,7 +939,7 @@ void compose_json_tcp_flags(json_t *obj, struct chained_cache *cc)
   json_object_set_new_nocheck(obj, "tcp_flags", json_string(misc_str));
 }
 
-void compose_json_nf9_fwdstatus(json_t *obj, struct chained_cache *cc)
+void compose_json_nfacctd_fwdstatus(json_t *obj, struct chained_cache *cc)
 {
   char misc_str[VERYSHORTBUFLEN];
 
@@ -1292,17 +1292,17 @@ void compose_json_array_tcpflags(json_t *obj, struct chained_cache *cc)
 }
 
 
-void compose_json_string_nf9_fwdstatus(json_t *obj, struct chained_cache *cc)
+void compose_json_string_nfacctd_fwdstatus(json_t *obj, struct chained_cache *cc)
 {
   /* linked-list creation */
-  cdada_list_t *nf9_fwdstatus_ll = nf9_fwdstatus_to_linked_list();
-  int ll_size = cdada_list_size(nf9_fwdstatus_ll);
+  cdada_list_t *nfacctd_fwdstatus_ll = nfacctd_fwdstatus_to_linked_list();
+  int ll_size = cdada_list_size(nfacctd_fwdstatus_ll);
 
-  json_t *root_l1 = compose_nf9_fwdstatus_json_data(cc->pnat->forwarding_status, nf9_fwdstatus_ll, ll_size);
+  json_t *root_l1 = compose_nfacctd_fwdstatus_json_data(cc->pnat->forwarding_status, nfacctd_fwdstatus_ll, ll_size);
 
   json_object_set_new_nocheck(obj, "forwarding_status", root_l1);
 
-  cdada_list_destroy(nf9_fwdstatus_ll);
+  cdada_list_destroy(nfacctd_fwdstatus_ll);
 }
 
 
@@ -1344,9 +1344,9 @@ json_t *compose_tcpflags_json_data(cdada_list_t *ll, int ll_size)
 }
 
 
-json_t *compose_nf9_fwdstatus_json_data(size_t fwdstatus_decimal, cdada_list_t *ll, int ll_size)
+json_t *compose_nfacctd_fwdstatus_json_data(size_t fwdstatus_decimal, cdada_list_t *ll, int ll_size)
 {
-  nf9_fwdstatus fwdstate;
+  nfacctd_fwdstatus fwdstate;
   json_t *root = NULL;
 
   /* default fwdstatus */

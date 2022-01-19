@@ -1088,10 +1088,10 @@ cdada_list_t *tcpflags_to_linked_list(size_t tcpflags_decimal)
 }
 
 
-cdada_list_t *nf9_fwdstatus_to_linked_list()
+cdada_list_t *nfacctd_fwdstatus_to_linked_list()
 {
   /* RFC-7270: forwardingStatus with a compliant reason code */
-  const unsigned int nf9_fwdstatus_decimal[23] = {
+  const unsigned int nfacctd_fwdstatus_decimal[23] = {
     64, 65, 66,
     128, 129, 130,
     131, 132, 133,
@@ -1102,7 +1102,7 @@ cdada_list_t *nf9_fwdstatus_to_linked_list()
     194, 195
   };
 
-  const char nf9_fwdstatus_description[23][50] = {
+  const char nfacctd_fwdstatus_description[23][50] = {
     "FORWARDED Unknown",
     "FORWARDED Fragmented",
     "FORWARDED Not Fragmented",
@@ -1129,17 +1129,17 @@ cdada_list_t *nf9_fwdstatus_to_linked_list()
   };
 
   /* Generate the forwarding_status' linked-list */
-  cdada_list_t *nf9_fwdstatus_linked_list = cdada_list_create(nf9_fwdstatus);
-  nf9_fwdstatus fwdstate;
+  cdada_list_t *nfacctd_fwdstatus_linked_list = cdada_list_create(nfacctd_fwdstatus);
+  nfacctd_fwdstatus fwdstate;
 
   size_t idx_0;
   for (idx_0 = 0; idx_0 < 23; idx_0++) {
     memset(&fwdstate, 0, sizeof(fwdstate));
-    fwdstate.decimal = nf9_fwdstatus_decimal[idx_0];
-    strcpy(fwdstate.description, nf9_fwdstatus_description[idx_0]);
+    fwdstate.decimal = nfacctd_fwdstatus_decimal[idx_0];
+    strcpy(fwdstate.description, nfacctd_fwdstatus_description[idx_0]);
 
-    cdada_list_push_back(nf9_fwdstatus_linked_list, &fwdstate);
+    cdada_list_push_back(nfacctd_fwdstatus_linked_list, &fwdstate);
   }
 
-  return nf9_fwdstatus_linked_list;
+  return nfacctd_fwdstatus_linked_list;
 }

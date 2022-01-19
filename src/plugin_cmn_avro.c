@@ -226,8 +226,8 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
   }
   
   if (wtc_2 & COUNT_FORWARDING_STATUS) {
-    if (config.nf9_fwdstatus_encode_as_string) {
-      compose_nf9_fwdstatus_avro_schema(schema);
+    if (config.nfacctd_fwdstatus_encode_as_string) {
+      compose_nfacctd_fwdstatus_avro_schema(schema);
     }
     else {
       avro_schema_record_field_append(schema, "forwarding_status", avro_schema_string());
@@ -834,8 +834,8 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
   if (wtc_2 & COUNT_FORWARDING_STATUS) {
     sprintf(misc_str, "%u", pnat->forwarding_status);
 
-    if (config.nf9_fwdstatus_encode_as_string) {
-      compose_nf9_fwdstatus_avro_data(pnat->forwarding_status, value);
+    if (config.nfacctd_fwdstatus_encode_as_string) {
+      compose_nfacctd_fwdstatus_avro_data(pnat->forwarding_status, value);
     }
     else { 
       pm_avro_check(avro_value_get_by_name(&value, "forwarding_status", &field, NULL));
@@ -1421,7 +1421,7 @@ void compose_tcpflags_avro_schema(avro_schema_t sc_type_record)
   avro_schema_decref(sc_type_string);
 }
 
-void compose_nf9_fwdstatus_avro_schema(avro_schema_t sc_type_record)
+void compose_nfacctd_fwdstatus_avro_schema(avro_schema_t sc_type_record)
 {
   sc_type_string = avro_schema_string();
   avro_schema_record_field_append(sc_type_record, "forwarding_status", sc_type_string);
@@ -1535,12 +1535,12 @@ int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_reco
 }
 
 
-int compose_nf9_fwdstatus_avro_data(size_t fwdstatus_decimal, avro_value_t v_type_record)
+int compose_nfacctd_fwdstatus_avro_data(size_t fwdstatus_decimal, avro_value_t v_type_record)
 {
-  nf9_fwdstatus fwdstate;
+  nfacctd_fwdstatus fwdstate;
 
   /* linked-list creation */
-  cdada_list_t *ll = nf9_fwdstatus_to_linked_list();
+  cdada_list_t *ll = nfacctd_fwdstatus_to_linked_list();
   int ll_size = cdada_list_size(ll);
 
   avro_value_t v_type_string;

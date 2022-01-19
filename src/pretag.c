@@ -1262,7 +1262,7 @@ u_int32_t pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, str
   pm_hash_key_t *hash_key;
   u_int32_t iterator, index_hdlr;
   int iterator_ir;
-  void *idx_value;
+  void *idx_value = NULL;
 
   if (!t || !pptrs || !index_results) return 0;
 
