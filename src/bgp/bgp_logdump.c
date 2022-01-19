@@ -38,8 +38,6 @@
 #include "plugin_cmn_avro.h"
 #endif
 
-int current_bgp_slot = 0;
-
 /* functions */
 int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, safi_t safi,
 		     bgp_tag_t *tag, char *event_type, int output, char **output_data,
@@ -1795,7 +1793,7 @@ void bgp_handle_dump_event(int max_peers_idx)
 
     break;
   }
-    current_bgp_slot = (current_bgp_slot + 1) % config.bgp_table_dump_time_slots;
+    bgp_misc_db->current_bgp_slot = (bgp_misc_db->current_bgp_slot + 1) % config.bgp_table_dump_time_slots;
 }
 
 int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
@@ -1970,7 +1968,7 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
       if (!inter_domain_routing_db) return ERR;
 
   if(config.bgp_table_dump_time_slots > 1)
-    Log(LOG_INFO, "INFO Dumping BGP tables, slot %d of %d\n", current_bgp_slot + 1, config.bgp_table_dump_time_slots);
+    Log(LOG_INFO, "INFO Dumping BGP tables, slot %d of %d\n", bgp_misc_db->current_bgp_slot + 1, config.bgp_table_dump_time_slots);
 
 
       for (afi = AFI_IP; afi < AFI_MAX; afi++) {
@@ -1987,7 +1985,7 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 	      for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
 	        int bgp_router_slot = abs(djb2_string_hash(peer->addr_str)) % config.bgp_table_dump_time_slots;
 
-		if (ri->peer == peer && bgp_router_slot == current_bgp_slot) {
+		if (ri->peer == peer && bgp_router_slot == bgp_misc_db->current_bgp_slot) {
             
 	          bgp_peer_log_msg(node, ri, afi, safi, &bgp_logdump_tag, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC);
 	          dump_elems++;

@@ -305,6 +305,8 @@ struct bgp_misc_structs {
   void *bgp_blackhole_zmq_host;
 
   bgp_tag_t *tag;
+
+  int current_bgp_slot;
 };
 
 /* these includes require definition of bgp_rt_structs and bgp_peer */

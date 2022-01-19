@@ -535,6 +535,8 @@ void skinny_bgp_daemon_online()
     if(!config.bgp_table_dump_time_slots)
       config.bmp_dump_time_slots = 1;
     
+    bgp_misc_db->current_bgp_slot = 0;
+
     if(config.bgp_table_dump_refresh_time % config.bgp_table_dump_time_slots != 0){
       Log(LOG_WARNING, "WARN: 'bgp_table_dump_time_slots' is not a divisor of 'bgp_table_dump_refresh_time', please adapt them in order to have the wished refresh time.\n");
     }
