@@ -36,8 +36,6 @@
 #include "plugin_cmn_avro.h"
 #endif
 
-int current_bmp_slot = 0;
-
 int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, bgp_tag_t *tag,
 		void *log_data, u_int64_t log_seq, char *event_type, int output, int log_type)
 {
@@ -1631,7 +1629,7 @@ void bmp_handle_dump_event(int max_peers_idx)
     }
     break;
   }
-  current_bmp_slot = (current_bmp_slot + 1) % config.bmp_dump_time_slots;
+  bms->current_bmp_slot = (bms->current_bmp_slot + 1) % config.bmp_dump_time_slots;
 }
 
 int bmp_dump_event_runner(struct pm_dump_runner *pdr)
@@ -1749,11 +1747,11 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
 #endif
   
   if(config.bmp_dump_time_slots > 1)
-    Log(LOG_INFO, "INFO Dumping BMP tables, slot %d of %d\n", current_bmp_slot + 1, config.bmp_dump_time_slots);
+    Log(LOG_INFO, "INFO Dumping BMP tables, slot %d of %d\n", bms->current_bmp_slot + 1, config.bmp_dump_time_slots);
   for (peer = NULL, saved_peer = NULL, peers_idx = pdr->first; peers_idx <= pdr->last; peers_idx++) {
     peer = &bmp_peers[peers_idx].self;
     int bmp_router_slot = abs(djb2_string_hash(peer->addr_str)) % config.bmp_dump_time_slots;
-    if (bmp_peers[peers_idx].self.fd && bmp_router_slot == current_bmp_slot) {          
+    if (bmp_peers[peers_idx].self.fd && bmp_router_slot == bms->current_bmp_slot) {          
       peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
       bdsell = peer->bmp_se;
 
