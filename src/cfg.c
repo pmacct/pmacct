@@ -249,6 +249,7 @@ static const struct _dictionary_line dictionary[] = {
   {"nfacctd_kafka_config_file", cfg_key_nfacctd_kafka_config_file},
   {"nfacctd_zmq_address", cfg_key_nfacctd_zmq_address},
   {"nfacctd_dtls_port", cfg_key_nfacctd_dtls_port},
+  {"nfacctd_fwdstatus_encode_as_string", cfg_key_nfacctd_fwdstatus_encode_as_string},
   {"pmacctd_proc_name", cfg_key_proc_name},
   {"pmacctd_force_frag_handling", cfg_key_pmacctd_force_frag_handling},
   {"pmacctd_frag_buffer_size", cfg_key_pmacctd_frag_buffer_size},
