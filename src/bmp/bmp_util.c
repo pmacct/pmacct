@@ -199,6 +199,7 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   if (!bms->is_thread && !bms->dump_backend_methods) bms->skip_rib = TRUE;
 
   bms->tag = &bmp_logdump_tag;
+  bms->tag_map = config.bgp_daemon_tag_map;
 }
 
 struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bgp_peer *bgp_peer_rem)

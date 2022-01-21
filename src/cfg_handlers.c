@@ -3597,6 +3597,17 @@ int cfg_key_bgp_daemon_add_path_ignore(char *filename, char *name, char *value_p
   return changes;
 }
 
+int cfg_key_bgp_daemon_tag_map(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_daemon_tag_map = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_daemon_tag_map'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_bgp_daemon_aspath_radius(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
@@ -4363,6 +4374,17 @@ int cfg_key_bmp_daemon_rp_ebpf_prog(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) list->cfg.bmp_daemon_rp_ebpf_prog = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_daemon_rp_ebpf_prog'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_bmp_daemon_tag_map(char *filename, char *name, char *value_ptr)
+{ 
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+  
+  for (; list; list = list->next, changes++) list->cfg.bmp_daemon_tag_map = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_daemon_tag_map'. Globalized.\n", filename);
 
   return changes;
 }

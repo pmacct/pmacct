@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -104,7 +104,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
 
     json_object_set_new_nocheck(obj, "bmp_router_port", json_integer((json_int_t)peer->tcp_port));
 
-    if (config.pre_tag_map && tag) {
+    if (config.bmp_daemon_tag_map && tag) {
       bgp_tag_print_json(obj, tag);
     }
 
@@ -231,7 +231,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
-    if (config.pre_tag_map && tag) {
+    if (config.bmp_daemon_tag_map && tag) {
       bgp_tag_print_avro(p_avro_obj, tag);
     }
 
@@ -1820,10 +1820,10 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
       }
 #endif
 
-      /* Being pre_tag_map limited to 'ip' key lookups, this is finely
-	 placed here. Should further lookups be possible, this may be
-	 very possibly moved inside the loop */
-      if (config.pre_tag_map) {
+      /* Being bmp_daemon_tag_map limited to 'ip' key lookups, this is
+	 finely placed here. Should further lookups be possible, this
+	 may be very possibly moved inside the loop */
+      if (config.bmp_daemon_tag_map) {
 	bgp_tag_init_find(peer, (struct sockaddr *) &bmp_logdump_tag_peer, &bmp_logdump_tag);
 	bgp_tag_find((struct id_table *)bmp_logdump_tag.tag_table, &bmp_logdump_tag, &bmp_logdump_tag.tag, NULL);
       }
@@ -2060,7 +2060,7 @@ avro_schema_t p_avro_schema_build_bmp_rm(int log_type, char *schema_name)
   if (log_type != BGP_LOGDUMP_ET_LOG && log_type != BGP_LOGDUMP_ET_DUMP) return NULL;
 
   p_avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BMP, schema_name);
-  p_avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type);
+  p_avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type, FUNC_TYPE_BMP);
   p_avro_schema_build_bgp_route(&schema, &optlong_s, &optstr_s, &optint_s);
 
   /* also cherry-picking from avro_schema_build_bmp_common() */ 
@@ -2277,7 +2277,7 @@ avro_schema_t p_avro_schema_build_bmp_log_initclose(int log_type, char *schema_n
 
   /* prevent log_type from being added to Avro schema */
   log_type = BGP_LOGDUMP_ET_NONE;
-  p_avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type);
+  p_avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type, FUNC_TYPE_BMP);
   log_type = BGP_LOGDUMP_ET_LOG;
 
   avro_schema_record_field_append(schema, "bmp_router", avro_schema_string());
@@ -2300,7 +2300,7 @@ avro_schema_t p_avro_schema_build_bmp_dump_init(int log_type, char *schema_name)
   if (log_type != BGP_LOGDUMP_ET_DUMP) return NULL;
 
   p_avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BMP, schema_name);
-  p_avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type);
+  p_avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type, FUNC_TYPE_BMP);
 
   avro_schema_record_field_append(schema, "bmp_router", avro_schema_string());
   avro_schema_record_field_append(schema, "bmp_router_port", optint_s);
@@ -2323,7 +2323,7 @@ avro_schema_t p_avro_schema_build_bmp_dump_close(int log_type, char *schema_name
   if (log_type != BGP_LOGDUMP_ET_DUMP) return NULL;
 
   p_avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BMP, schema_name);
-  p_avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type);
+  p_avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type, FUNC_TYPE_BMP);
 
   avro_schema_record_field_append(schema, "bmp_router", avro_schema_string());
   avro_schema_record_field_append(schema, "bmp_router_port", optint_s);
@@ -2349,7 +2349,7 @@ void p_avro_schema_build_bmp_common(avro_schema_t *schema, avro_schema_t *optlon
   avro_schema_record_field_append((*schema), "bmp_msg_type", avro_schema_string());
   avro_schema_record_field_append((*schema), "writer_id", avro_schema_string());
 
-  if (config.pre_tag_map) {
+  if (config.bmp_daemon_tag_map) {
     avro_schema_record_field_append((*schema), "tag", (*optlong_s));
 
     if (config.pretag_label_encode_as_map) {

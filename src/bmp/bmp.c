@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -93,7 +93,7 @@ int skinny_bmp_daemon()
   unsigned char *bmp_packet;
   int sf_ret, pcap_savefile_round = 1;
 
-  /* pre_tag_map stuff */
+  /* bmp_daemon_tag_map stuff */
   struct plugin_requests req;
   struct id_table bmp_logdump_tag_table;
   int bmp_logdump_tag_map_allocated;
@@ -552,13 +552,13 @@ int skinny_bmp_daemon()
 
   bmp_link_misc_structs(bmp_misc_db);
 
-  if (config.pre_tag_map) {
+  if (config.bmp_daemon_tag_map) {
     memset(&bmp_logdump_tag, 0, sizeof(bmp_logdump_tag));
     memset(&bmp_logdump_tag_table, 0, sizeof(bmp_logdump_tag_table));
     memset(&req, 0, sizeof(req));
     bmp_logdump_tag_map_allocated = FALSE;
 
-    load_pre_tag_map(config.acct_type, config.pre_tag_map, &bmp_logdump_tag_table, &req,
+    load_pre_tag_map(config.acct_type, config.bmp_daemon_tag_map, &bmp_logdump_tag_table, &req,
                      &bmp_logdump_tag_map_allocated, config.maps_entries, config.maps_row_len);
 
     /* making some bindings */
@@ -617,8 +617,8 @@ int skinny_bmp_daemon()
     if (reload_map_bmp_thread) {
       if (config.bmp_daemon_allow_file) load_allow_file(config.bmp_daemon_allow_file, &allow);
 
-      if (config.pre_tag_map) {
-	load_pre_tag_map(config.acct_type, config.pre_tag_map, &bmp_logdump_tag_table, &req,
+      if (config.bmp_daemon_tag_map) {
+	load_pre_tag_map(config.acct_type, config.bmp_daemon_tag_map, &bmp_logdump_tag_table, &req,
 			 &bmp_logdump_tag_map_allocated, config.maps_entries, config.maps_row_len);
       }
 
@@ -824,7 +824,7 @@ int skinny_bmp_daemon()
       memcpy(&peer->id, &peer->addr, sizeof(struct host_addr)); /* XXX: some inet_ntoa()'s could be around against peer->id */
 
       if (!config.bmp_daemon_parse_proxy_header) {
-	if (config.pre_tag_map) {
+	if (config.bmp_daemon_tag_map) {
 	  bgp_tag_init_find(peer, (struct sockaddr *) &bmp_logdump_tag_peer, &bmp_logdump_tag);
 	  bgp_tag_find((struct id_table *)bmp_logdump_tag.tag_table, &bmp_logdump_tag, &bmp_logdump_tag.tag, NULL);
 	}
@@ -884,7 +884,7 @@ int skinny_bmp_daemon()
       }
       addr_to_str(peer->addr_str, &peer->addr);
 
-      if (config.pre_tag_map) {
+      if (config.bmp_daemon_tag_map) {
 	bgp_tag_init_find(peer, (struct sockaddr *) &bmp_logdump_tag_peer, &bmp_logdump_tag);
 	bgp_tag_find((struct id_table *)bmp_logdump_tag.tag_table, &bmp_logdump_tag, &bmp_logdump_tag.tag, NULL);
       }
@@ -985,7 +985,7 @@ int skinny_bmp_daemon()
       peer->msglen = len;
     }
 
-    if (config.pre_tag_map) {
+    if (config.bmp_daemon_tag_map) {
       bgp_tag_init_find(peer, (struct sockaddr *) &bmp_logdump_tag_peer, &bmp_logdump_tag);
       bgp_tag_find((struct id_table *)bmp_logdump_tag.tag_table, &bmp_logdump_tag, &bmp_logdump_tag.tag, NULL);
     }

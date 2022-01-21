@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -570,13 +570,13 @@ void skinny_bgp_daemon_online()
 
   bgp_link_misc_structs(bgp_misc_db);
 
-  if (config.pre_tag_map) {
+  if (config.bgp_daemon_tag_map) {
     memset(&bgp_logdump_tag, 0, sizeof(bgp_logdump_tag));
     memset(&bgp_logdump_tag_table, 0, sizeof(bgp_logdump_tag_table));
     memset(&req, 0, sizeof(req));
     bgp_logdump_tag_map_allocated = FALSE;
 
-    load_pre_tag_map(config.acct_type, config.pre_tag_map, &bgp_logdump_tag_table, &req,
+    load_pre_tag_map(config.acct_type, config.bgp_daemon_tag_map, &bgp_logdump_tag_table, &req,
 		     &bgp_logdump_tag_map_allocated, config.maps_entries, config.maps_row_len);
 
     /* making some bindings */
@@ -662,8 +662,8 @@ void skinny_bgp_daemon_online()
 	load_id_file(MAP_BGP_XCS, config.bgp_xconnect_map, NULL, &req, &bgp_xcs_allocated);
       }
 
-      if (config.pre_tag_map) {
-	load_pre_tag_map(config.acct_type, config.pre_tag_map, &bgp_logdump_tag_table, &req,
+      if (config.bgp_daemon_tag_map) {
+	load_pre_tag_map(config.acct_type, config.bgp_daemon_tag_map, &bgp_logdump_tag_table, &req,
 			 &bgp_logdump_tag_map_allocated, config.maps_entries, config.maps_row_len);
       }
 
@@ -836,10 +836,10 @@ void skinny_bgp_daemon_online()
 	bgp_peer_cache_insert(peers_port_cache, bucket, peer);
       }
 
-      /* Being pre_tag_map limited to 'ip' key lookups, this is finely
-	 placed here. Should further lookups be possible, this may be
-	 very possibly moved inside the loop */
-      if (config.pre_tag_map) {
+      /* Being bgp_daemon_tag_map limited to 'ip' key lookups, this is
+	 finely placed here. Should further lookups be possible, this
+	 may be very possibly moved inside the loop */
+      if (config.bgp_daemon_tag_map) {
 	bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag);
 	bgp_tag_find((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
       }
@@ -1050,7 +1050,7 @@ void skinny_bgp_daemon_online()
 	  peer->last_keepalive = now;
 	} 
 
-	if (config.pre_tag_map) {
+	if (config.bgp_daemon_tag_map) {
 	  bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag);
 	  bgp_tag_find((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
 	}

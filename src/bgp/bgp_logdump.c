@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -132,7 +132,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       json_object_set_new_nocheck(obj, "peer_id", json_string(ip_address));
     }
 
-    if (config.pre_tag_map && tag) {
+    if (bms->tag_map && tag) {
       bgp_tag_print_json(obj, tag);
     }
 
@@ -332,7 +332,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       }
     }
 
-    if (config.pre_tag_map && tag) {
+    if (bms->tag_map && tag) {
       bgp_tag_print_avro(p_avro_obj, tag);
     }
 
@@ -774,7 +774,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int typ
       addr_to_str(ip_address, &peer->addr);
       json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
 
-      if (config.pre_tag_map && tag) {
+      if (bms->tag_map && tag) {
 	bgp_tag_print_json(obj, tag);
       }
 
@@ -844,7 +844,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int typ
 	pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
       }
 
-      if (config.pre_tag_map && tag) {
+      if (bms->tag_map && tag) {
         bgp_tag_print_avro(p_avro_obj, tag);
       }
 
@@ -998,7 +998,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
     addr_to_str(ip_address, &peer->addr);
     json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
 
-    if (config.pre_tag_map && tag) {
+    if (bms->tag_map && tag) {
       bgp_tag_print_json(obj, tag);
     }
 
@@ -1068,7 +1068,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
-    if (config.pre_tag_map && tag) {
+    if (bms->tag_map && tag) {
       bgp_tag_print_avro(p_avro_obj, tag);
     }
 
@@ -1350,7 +1350,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
 
     if (bms->peer_port_str) json_object_set_new_nocheck(obj, bms->peer_port_str, json_integer((json_int_t)peer->tcp_port));
 
-    if (config.pre_tag_map && tag) {
+    if (bms->tag_map && tag) {
       bgp_tag_print_json(obj, tag);
     }
 
@@ -1422,7 +1422,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
-    if (config.pre_tag_map && tag) {
+    if (bms->tag_map && tag) {
       bgp_tag_print_avro(p_avro_obj, tag);
     }
 
@@ -1553,7 +1553,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, bgp_tag_t *tag, struct bgp_dump_s
 
     if (bms->peer_port_str) json_object_set_new_nocheck(obj, bms->peer_port_str, json_integer((json_int_t)peer->tcp_port));
 
-    if (config.pre_tag_map && tag) {
+    if (bms->tag_map && tag) {
       bgp_tag_print_json(obj, tag);
     }
 
@@ -1629,7 +1629,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, bgp_tag_t *tag, struct bgp_dump_s
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
-    if (config.pre_tag_map && tag) {
+    if (bms->tag_map && tag) {
       bgp_tag_print_avro(p_avro_obj, tag);
     }
 
@@ -1951,10 +1951,10 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
       }
 #endif
 
-      /* Being pre_tag_map limited to 'ip' key lookups, this is finely
-         placed here. Should further lookups be possible, this may be
-         very possibly moved inside the loop */
-      if (config.pre_tag_map) {
+      /* Being bgp_daemon_tag_map limited to 'ip' key lookups, this is
+	 finely placed here. Should further lookups be possible, this
+	 may be very possibly moved inside the loop */
+      if (config.bgp_daemon_tag_map) {
 	bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag);
 	bgp_tag_find((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
       }
@@ -2163,7 +2163,7 @@ avro_schema_t p_avro_schema_build_bgp(int log_type, char *schema_name)
   if (log_type != BGP_LOGDUMP_ET_LOG && log_type != BGP_LOGDUMP_ET_DUMP) return NULL;
 
   p_avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BGP, schema_name);
-  p_avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type); 
+  p_avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type, FUNC_TYPE_BGP); 
 
   avro_schema_record_field_append(schema, "peer_ip_src", avro_schema_string());
   avro_schema_record_field_append(schema, "peer_tcp_port", optint_s);
@@ -2194,7 +2194,7 @@ avro_schema_t p_avro_schema_build_bgp_log_initclose(int log_type, char *schema_n
 
   /* prevent log_type from being added to Avro schema */
   log_type = BGP_LOGDUMP_ET_NONE;
-  p_avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type); 
+  p_avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type, FUNC_TYPE_BGP); 
   log_type = BGP_LOGDUMP_ET_LOG;
 
   avro_schema_record_field_append(schema, "peer_ip_src", avro_schema_string());
@@ -2217,7 +2217,7 @@ avro_schema_t p_avro_schema_build_bgp_dump_init(int log_type, char *schema_name)
   if (log_type != BGP_LOGDUMP_ET_DUMP) return NULL;
 
   p_avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BGP, schema_name);
-  p_avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type);
+  p_avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type, FUNC_TYPE_BGP);
 
   avro_schema_record_field_append(schema, "peer_ip_src", avro_schema_string());
   avro_schema_record_field_append(schema, "peer_tcp_port", optint_s);
@@ -2240,7 +2240,7 @@ avro_schema_t p_avro_schema_build_bgp_dump_close(int log_type, char *schema_name
   if (log_type != BGP_LOGDUMP_ET_DUMP) return NULL;
 
   p_avro_schema_init_bgp(&schema, &optlong_s, &optstr_s, &optint_s, FUNC_TYPE_BGP, schema_name);
-  p_avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type);
+  p_avro_schema_build_bgp_common(&schema, &optlong_s, &optstr_s, &optint_s, log_type, FUNC_TYPE_BGP);
 
   avro_schema_record_field_append(schema, "peer_ip_src", avro_schema_string());
   avro_schema_record_field_append(schema, "peer_tcp_port", optint_s);
@@ -2271,8 +2271,10 @@ void p_avro_schema_init_bgp(avro_schema_t *schema, avro_schema_t *optlong_s, avr
   avro_schema_union_append((*optint_s), avro_schema_int());
 }
 
-void p_avro_schema_build_bgp_common(avro_schema_t *schema, avro_schema_t *optlong_s, avro_schema_t *optstr_s, avro_schema_t *optint_s, int log_type)
+void p_avro_schema_build_bgp_common(avro_schema_t *schema, avro_schema_t *optlong_s, avro_schema_t *optstr_s, avro_schema_t *optint_s, int log_type, int type)
 {
+  struct bgp_misc_structs *bms = bgp_select_misc_db(type);
+
   if (log_type == BGP_LOGDUMP_ET_LOG) {
     avro_schema_record_field_append((*schema), "log_type", avro_schema_string());
   }
@@ -2281,7 +2283,7 @@ void p_avro_schema_build_bgp_common(avro_schema_t *schema, avro_schema_t *optlon
   avro_schema_record_field_append((*schema), "event_type", avro_schema_string());
   avro_schema_record_field_append((*schema), "writer_id", avro_schema_string());
 
-  if (config.pre_tag_map) {
+  if (bms->tag_map) {
     avro_schema_record_field_append((*schema), "tag", (*optlong_s));
 
     if (config.pretag_label_encode_as_map) {

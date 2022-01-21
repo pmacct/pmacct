@@ -349,6 +349,7 @@ struct configuration {
   as_t bgp_daemon_as;
   int bgp_daemon_port;
   char *bgp_daemon_rp_ebpf_prog;
+  char *bgp_daemon_tag_map;
   int bgp_daemon_pipe_size;
   int bgp_daemon_ipprec;
   char *bgp_daemon_allow_file;
@@ -427,6 +428,7 @@ struct configuration {
   int bmp_daemon_ipv6_only;
   int bmp_daemon_port;
   char *bmp_daemon_rp_ebpf_prog;
+  char *bmp_daemon_tag_map;
   int bmp_daemon_pipe_size;
   int bmp_daemon_max_peers;
   char *bmp_daemon_allow_file;

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -87,7 +87,7 @@ extern avro_schema_t p_avro_schema_build_bgp_log_initclose(int, char *);
 extern avro_schema_t p_avro_schema_build_bgp_dump_init(int, char *);
 extern avro_schema_t p_avro_schema_build_bgp_dump_close(int, char *);
 extern void p_avro_schema_init_bgp(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *, int, char *);
-extern void p_avro_schema_build_bgp_common(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *, int);
+extern void p_avro_schema_build_bgp_common(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *, int, int);
 extern void p_avro_schema_build_bgp_route(avro_schema_t *, avro_schema_t *, avro_schema_t *, avro_schema_t *);
 extern void bgp_tag_print_avro(avro_value_t, bgp_tag_t *);
 #endif
