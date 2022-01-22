@@ -29,10 +29,10 @@
 ! sfacctd when in 'tee' mode: valid keys: set_tag, set_tag2, set_label, ip,
 ! in, out, src_mac, dst_mac, vlan, src_net, dst_net, bgp_nexthop, agent_id.
 !
-! BGP-related keys are independent of the collection method in use, hence apply
-! to all daemons (BGP daemon must be enabled): src_as, dst_as, src_comms, comms,
-! peer_src_as, peer_dst_as, src_local_pref, local_pref, src_roa, dst_roa,
-! mpls_vpn_rd.
+! BGP-related keys supported by pre_tag_map are independent of the collection
+! method in use, hence apply to all traffic daemons (when BGP thread is
+! enabled): src_as, dst_as, src_comms, comms, peer_src_as, peer_dst_as,
+! src_local_pref, local_pref, src_roa, dst_roa, mpls_vpn_rd.
 !
 ! Non-traffic daemons, ie. pmbgpd, pmbmpd, pmtelemetryd, valid keys: set_tag,
 ! set_label, ip.

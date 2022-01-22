@@ -2439,6 +2439,15 @@ DESC:		If SO_REUSEPORT is supported by the Operating System (read more about thi
 		started with a short time gap to avoid race conditions.
 DEFAULT:	none
 
+KEY:		[ bgp_daemon_tag_map | bmp_daemon_tag_map ] [GLOBAL] [MAP]
+DESC:		Full pathname to a file containing specific tags for data. Equivalent to pre_tag_map but
+		for BGP and BMP threads / daemons. Take a look to the examples/pretag.map.example for
+		syntax. Currently only 'ip' is supported as MATCH and set_tag, set_label as SET. The
+		maximum number of entries (by default 384) can be modified via maps_entries. Content
+		can be reloaded at runtime by sending the daemon a SIGUSR2 signal (ie. "killall -USR2
+		pmbgpd").
+DEFAULT:	none
+
 KEY:		[ bgp_daemon_ipprec | bmp_daemon_ipprec ] [GLOBAL]
 DESC:		Marks self-originated BGP/BMP messages with the supplied IP precedence value.
 DEFAULT:	0
