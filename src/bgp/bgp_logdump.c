@@ -934,6 +934,15 @@ int bgp_peer_log_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int typ
 	p_kafka_unset_topic(peer->log->kafka_host);
       }
 #endif
+
+      avro_value_decref(&p_avro_obj);
+      avro_value_iface_decref(p_avro_iface);
+      avro_writer_reset(p_avro_writer);
+      avro_writer_free(p_avro_writer);
+
+      if (bms->dump_kafka_avro_schema_registry) {
+        free(p_avro_local_buf);
+      }
 #endif
     }
   }
@@ -1166,6 +1175,15 @@ int bgp_peer_log_close(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
       }
     }
 #endif
+
+    avro_value_decref(&p_avro_obj);
+    avro_value_iface_decref(p_avro_iface);
+    avro_writer_reset(p_avro_writer);
+    avro_writer_free(p_avro_writer);
+
+    if (bms->dump_kafka_avro_schema_registry) {
+      free(p_avro_local_buf);
+    }
 #endif
   }
 
@@ -1515,6 +1533,15 @@ int bgp_peer_dump_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
       p_kafka_unset_topic(peer->log->kafka_host);
     }
 #endif
+
+    avro_value_decref(&p_avro_obj);
+    avro_value_iface_decref(p_avro_iface);
+    avro_writer_reset(p_avro_writer);
+    avro_writer_free(p_avro_writer);
+
+    if (bms->dump_kafka_avro_schema_registry) {
+      free(p_avro_local_buf);
+    }
 #endif
   }
 
@@ -1736,6 +1763,15 @@ int bgp_peer_dump_close(struct bgp_peer *peer, bgp_tag_t *tag, struct bgp_dump_s
       p_kafka_unset_topic(peer->log->kafka_host);
     }
 #endif
+
+    avro_value_decref(&p_avro_obj);
+    avro_value_iface_decref(p_avro_iface);
+    avro_writer_reset(p_avro_writer);
+    avro_writer_free(p_avro_writer);
+
+    if (bms->dump_kafka_avro_schema_registry) {
+      free(p_avro_local_buf);
+    }
 #endif
   }
 
