@@ -360,6 +360,10 @@ int skinny_bmp_daemon()
   }
   else bgp_batch_init(&bp_batch, config.bmp_daemon_batch, config.bmp_daemon_batch_interval);
 
+  /* bmp_link_misc_structs() will re-apply. But we need to anticipate
+     this definition in order to build the Avro schemas correctly */
+  bmp_misc_db->tag_map = config.bmp_daemon_tag_map;
+
   if (bmp_misc_db->msglog_backend_methods) {
 #ifdef WITH_JANSSON
     if (!config.bmp_daemon_msglog_output) config.bmp_daemon_msglog_output = PRINT_OUTPUT_JSON;

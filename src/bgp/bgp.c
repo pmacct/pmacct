@@ -430,6 +430,10 @@ void skinny_bgp_daemon_online()
   }
   else bgp_batch_init(&bp_batch, config.bgp_daemon_batch, config.bgp_daemon_batch_interval);
 
+  /* bgp_link_misc_structs() will re-apply. But we need to anticipate
+     this definition in order to build the Avro schemas correctly */
+  bgp_misc_db->tag_map = config.bgp_daemon_tag_map;
+
   if (bgp_misc_db->msglog_backend_methods) {
 #ifdef WITH_JANSSON
     if (!config.bgp_daemon_msglog_output) config.bgp_daemon_msglog_output = PRINT_OUTPUT_JSON;
