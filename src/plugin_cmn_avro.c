@@ -1544,11 +1544,6 @@ int compose_nfacctd_fwdstatus_avro_data(size_t fwdstatus_decimal, avro_value_t v
   int ll_size = cdada_list_size(ll);
 
   avro_value_t v_type_string;
-  avro_value_iface_t *if_type_string;
-
-  if_type_string = avro_generic_class_from_schema(sc_type_string);
-
-  avro_generic_value_new(if_type_string, &v_type_string);
   
   /* default fwdstatus */
   if ((fwdstatus_decimal >= 0) && (fwdstatus_decimal <= 63)) {
@@ -1589,7 +1584,6 @@ int compose_nfacctd_fwdstatus_avro_data(size_t fwdstatus_decimal, avro_value_t v
   
   /* free-up memory */
   cdada_list_destroy(ll);
-  avro_value_iface_decref(if_type_string);
 
   return 0;
 }
