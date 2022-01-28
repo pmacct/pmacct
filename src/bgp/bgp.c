@@ -580,7 +580,7 @@ void skinny_bgp_daemon_online()
     memset(&req, 0, sizeof(req));
     bgp_logdump_tag_map_allocated = FALSE;
 
-    load_pre_tag_map(config.acct_type, config.bgp_daemon_tag_map, &bgp_logdump_tag_table, &req,
+    load_pre_tag_map(ACCT_PMBGP, config.bgp_daemon_tag_map, &bgp_logdump_tag_table, &req,
 		     &bgp_logdump_tag_map_allocated, config.maps_entries, config.maps_row_len);
 
     /* making some bindings */
@@ -667,7 +667,7 @@ void skinny_bgp_daemon_online()
       }
 
       if (config.bgp_daemon_tag_map) {
-	load_pre_tag_map(config.acct_type, config.bgp_daemon_tag_map, &bgp_logdump_tag_table, &req,
+	load_pre_tag_map(ACCT_PMBGP, config.bgp_daemon_tag_map, &bgp_logdump_tag_table, &req,
 			 &bgp_logdump_tag_map_allocated, config.maps_entries, config.maps_row_len);
       }
 
