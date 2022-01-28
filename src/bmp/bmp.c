@@ -562,7 +562,7 @@ int skinny_bmp_daemon()
     memset(&req, 0, sizeof(req));
     bmp_logdump_tag_map_allocated = FALSE;
 
-    load_pre_tag_map(config.acct_type, config.bmp_daemon_tag_map, &bmp_logdump_tag_table, &req,
+    load_pre_tag_map(ACCT_PMBMP, config.bmp_daemon_tag_map, &bmp_logdump_tag_table, &req,
                      &bmp_logdump_tag_map_allocated, config.maps_entries, config.maps_row_len);
 
     /* making some bindings */
@@ -622,7 +622,7 @@ int skinny_bmp_daemon()
       if (config.bmp_daemon_allow_file) load_allow_file(config.bmp_daemon_allow_file, &allow);
 
       if (config.bmp_daemon_tag_map) {
-	load_pre_tag_map(config.acct_type, config.bmp_daemon_tag_map, &bmp_logdump_tag_table, &req,
+	load_pre_tag_map(ACCT_PMBMP, config.bmp_daemon_tag_map, &bmp_logdump_tag_table, &req,
 			 &bmp_logdump_tag_map_allocated, config.maps_entries, config.maps_row_len);
       }
 
