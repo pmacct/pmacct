@@ -225,6 +225,7 @@ extern int cfg_key_telemetry_kafka_config_file(char *, char *, char *);
 extern int cfg_key_telemetry_decoder(char *, char *, char *);
 extern int cfg_key_telemetry_max_peers(char *, char *, char *);
 extern int cfg_key_telemetry_peer_timeout(char *, char *, char *);
+extern int cfg_key_telemetry_tag_map(char *, char *, char *);
 extern int cfg_key_telemetry_allow_file(char *, char *, char *);
 extern int cfg_key_telemetry_pipe_size(char *, char *, char *);
 extern int cfg_key_telemetry_ip_precedence(char *, char *, char *);

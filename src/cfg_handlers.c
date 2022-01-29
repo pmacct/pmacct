@@ -7955,6 +7955,17 @@ int cfg_key_telemetry_peer_timeout(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_telemetry_tag_map(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_tag_map = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_tag_map'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_telemetry_msglog_file(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

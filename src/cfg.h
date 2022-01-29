@@ -266,6 +266,7 @@ struct configuration {
   int telemetry_decoder_id;
   int telemetry_max_peers;
   int telemetry_peer_timeout;
+  char *telemetry_tag_map;
   char *telemetry_allow_file;
   int telemetry_pipe_size;
   int telemetry_ipprec;
