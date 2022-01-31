@@ -2324,8 +2324,8 @@ VALUES:		[ true | false ]
 DESC:		Disables caching and summarisation of flows. By default a NetFlow/IPFIX agent would attempt
 		to build uni-directional flows by caching individual packets and waiting for an expiration
 		condition (see nfprobe_timeouts). This knob prevents that to happen and, if paired with a
-		(external) packet sampling strategy, it makes a NetFlow/IPFIX agent to match sFlow export
-		responsiveness. 
+		packet sampling strategy (external or ie. pmacctd_ext_sampling_rate), it makes a NetFlow/
+		IPFIX agent to match sFlow export responsiveness. 
 DEFAULT:	false
 
 KEY:		nfprobe_tstamp_usec
