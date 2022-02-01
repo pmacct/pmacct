@@ -353,8 +353,7 @@ time_t roundoff_time(time_t t, char *value)
   struct tm *rounded;
   int len, j;
 
-  if (!config.timestamps_utc) rounded = localtime(&t);
-  else rounded = gmtime(&t);
+  rounded = localtime(&t);
 
   rounded->tm_sec = 0; /* default round off */
 
