@@ -398,9 +398,6 @@ static const struct _dictionary_line dictionary[] = {
   {"sfacctd_kafka_topic", cfg_key_nfacctd_kafka_topic},
   {"sfacctd_kafka_config_file", cfg_key_nfacctd_kafka_config_file},
   {"sfacctd_zmq_address", cfg_key_nfacctd_zmq_address},
-  {"classifiers", cfg_key_classifiers},
-  {"classifier_tentatives", cfg_key_classifier_tentatives},
-  {"classifier_table_num", cfg_key_classifier_table_num},
 #if defined (WITH_NDPI)
   {"classifier_num_roots", cfg_key_classifier_ndpi_num_roots},
   {"classifier_max_flows", cfg_key_classifier_ndpi_max_flows},

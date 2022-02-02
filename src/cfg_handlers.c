@@ -269,7 +269,6 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "tag")) cfg_set_aggregate(filename, value, COUNT_INT_TAG, count_token);
     else if (!strcmp(count_token, "tag2")) cfg_set_aggregate(filename, value, COUNT_INT_TAG2, count_token);
     else if (!strcmp(count_token, "flows")) cfg_set_aggregate(filename, value, COUNT_INT_FLOWS, count_token);
-    else if (!strcmp(count_token, "class_legacy")) cfg_set_aggregate(filename, value, COUNT_INT_CLASS, count_token); // XXX: to deprecate 
     else if (!strcmp(count_token, "class_frame")) { // XXX: to deprecate
       if (config.acct_type == ACCT_NF) {
 #if defined (WITH_NDPI)
@@ -279,7 +278,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
 #endif
       }
     }
-    else if (!strcmp(count_token, "class")) { // XXX: to conciliate and merge with 'class_legacy' and 'class_frame'
+    else if (!strcmp(count_token, "class")) { // XXX: to conciliate and merge with 'class_frame'
       if (config.acct_type == ACCT_NF) {
 	cfg_set_aggregate(filename, value, COUNT_INT_CLASS, count_token);
       }
@@ -5693,51 +5692,6 @@ int cfg_key_nfacctd_disable_opt_scope_check(char *filename, char *name, char *va
 
   for (; list; list = list->next, changes++) list->cfg.nfacctd_disable_opt_scope_check = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'nfacctd_disable_opt_scope_check'. Globalized.\n", filename);
-
-  return changes;
-}
-
-int cfg_key_classifiers(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int changes = 0;
-
-  for (; list; list = list->next, changes++) list->cfg.classifiers_path = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifiers'. Globalized.\n", filename);
-
-  return changes;
-}
-
-int cfg_key_classifier_tentatives(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
-
-  value = atoi(value_ptr);
-  if (value <= 0) {
-    Log(LOG_INFO, "INFO: [%s] 'classifier_tentatives' has to be >= 1.\n", filename);  
-    return ERR;
-  }
-
-  for (; list; list = list->next, changes++) list->cfg.classifier_tentatives = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_tentatives'. Globalized.\n", filename);
-
-  return changes;
-}
-
-int cfg_key_classifier_table_num(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
-
-  value = atoi(value_ptr);
-  if (value <= 0) {
-    Log(LOG_INFO, "INFO: [%s] 'classifier_table_num' has to be >= 1.\n", filename);  
-    return ERR;
-  }
-
-  for (; list; list = list->next, changes++) list->cfg.classifier_table_num = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'classifier_table_num'. Globalized.\n", filename);
 
   return changes;
 }
