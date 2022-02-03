@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -32,7 +32,6 @@
 #include "pkt_handlers.h"
 #include "ip_flow.h"
 #include "ip_frag.h"
-#include "classifier.h"
 #include "net_aggr.h"
 #include "crc32.h"
 #include "isis/isis.h"
@@ -207,7 +206,6 @@ int main(int argc,char **argv, char **envp)
   memset(&pptrs, 0, sizeof(pptrs));
   memset(&req, 0, sizeof(req));
   memset(&spp, 0, sizeof(spp));
-  memset(&class, 0, sizeof(class));
   memset(&xflow_status_table, 0, sizeof(xflow_status_table));
   memset(empty_mem_area_256b, 0, sizeof(empty_mem_area_256b));
 
@@ -547,11 +545,6 @@ int main(int argc,char **argv, char **envp)
               list->cfg.nfacctd_net |= NF_NET_NEW;
           }
         }
-
-	if (list->cfg.what_to_count & COUNT_CLASS && !list->cfg.classifiers_path) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): 'class' aggregation selected but NO 'classifiers' key specified. Exiting...\n\n", list->name, list->type.string);
-	  exit_gracefully(1);
-	}
 
 #if defined (WITH_NDPI)
 	if (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS) {
@@ -919,8 +912,6 @@ int main(int argc,char **argv, char **envp)
     }
 #endif
   }
-
-  if (config.classifiers_path) init_classifiers(config.classifiers_path);
 
 #if defined (WITH_NDPI)
   if (config.classifier_ndpi) {

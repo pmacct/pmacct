@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -32,7 +32,6 @@
 #include "sfv5_module.h"
 #include "ip_flow.h"
 #include "ip_frag.h"
-#include "classifier.h"
 #include "pmacct-data.h"
 #include "crc32.h"
 
@@ -793,30 +792,6 @@ void readExtendedProcess(SFSample *sample)
   for (i = 0; i < num_processes; i++) skipBytes(sample, 4);
 }
 
-void readExtendedClass(SFSample *sample)
-{
-  u_int32_t ret;
-  char buf[MAX_PROTOCOL_LEN+1], *bufptr = buf;
-
-  if (config.classifiers_path) {
-    ret = getData32_nobswap(sample);
-    memcpy(bufptr, &ret, 4);
-    bufptr += 4;
-    ret = getData32_nobswap(sample);
-    memcpy(bufptr, &ret, 4);
-    bufptr += 4;
-    ret = getData32_nobswap(sample);
-    memcpy(bufptr, &ret, 4);
-    bufptr += 4;
-    ret = getData32_nobswap(sample);
-    memcpy(bufptr, &ret, 4);
-    bufptr += 4;
-
-    sample->class = SF_evaluate_classifiers(buf);
-  }
-  else skipBytes(sample, MAX_PROTOCOL_LEN);
-}
-
 void readExtendedClass2(SFSample *sample)
 {
   if (config.classifier_ndpi) {
@@ -1156,7 +1131,6 @@ void readv5FlowSample(SFSample *sample, int expanded, struct packet_ptrs_vector 
       case SFLFLOW_EX_MPLS_LDP_FEC: readExtendedMplsLDP_FEC(sample); break;
       case SFLFLOW_EX_VLAN_TUNNEL:  readExtendedVlanTunnel(sample); break;
       case SFLFLOW_EX_PROCESS:      readExtendedProcess(sample); break;
-      case SFLFLOW_EX_CLASS:	    readExtendedClass(sample); break;
       case SFLFLOW_EX_CLASS2:	    readExtendedClass2(sample); break;
       case SFLFLOW_EX_TAG:	    readExtendedTag(sample); break;
       default:

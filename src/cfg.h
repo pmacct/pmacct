@@ -563,7 +563,6 @@ struct configuration {
   int debug;
   int debug_internal_msg;
   int snaplen;
-  char *classifiers_path;
   int classifier_tentatives;
   int classifier_table_num;
   int classifier_ndpi;
