@@ -551,11 +551,6 @@ int main(int argc,char **argv, char **envp)
           enable_ip_fragment_handler();
           config.classifier_ndpi = TRUE;
 	}
-
-	if ((list->cfg.what_to_count & COUNT_CLASS) && (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS)) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): 'class_legacy' and 'class' primitives are mutual exclusive. Exiting...\n\n", list->name, list->type.string);
-	  exit_gracefully(1);
-	}
 #endif
 
 	list->cfg.type_id = list->type.id;

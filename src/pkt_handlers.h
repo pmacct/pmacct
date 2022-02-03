@@ -57,7 +57,6 @@ extern void time_pcap_handler(struct channels_list_entry *, struct packet_ptrs *
 extern void post_tag_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void post_tag2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void flows_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-extern void class_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void in_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void out_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void sampling_rate_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -165,7 +164,6 @@ extern void SF_counters_renormalize_handler(struct channels_list_entry *, struct
 extern void SF_counters_map_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_tag_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_tag2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-extern void SF_class_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_in_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_out_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_sampling_rate_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

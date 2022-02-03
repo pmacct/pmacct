@@ -656,10 +656,6 @@ int main(int argc,char **argv, char **envp)
 	  config.handle_fragments = TRUE;
 	  config.handle_flows = TRUE;
 	}
-	if (list->cfg.what_to_count & COUNT_CLASS) {
-	  config.handle_fragments = TRUE;
-	  config.handle_flows = TRUE;
-	}
 	if (!list->cfg.what_to_count && !list->cfg.what_to_count_2 && !list->cfg.cpptrs.num) {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): defaulting to SRC HOST aggregation.\n", list->name, list->type.string);
 	  list->cfg.what_to_count |= COUNT_SRC_HOST;
@@ -708,11 +704,6 @@ int main(int argc,char **argv, char **envp)
 	config.handle_fragments = TRUE;
 	config.classifier_ndpi = TRUE;
       } 
-
-      if ((list->cfg.what_to_count & COUNT_CLASS) && (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS)) { 
-	Log(LOG_ERR, "ERROR ( %s/%s ): 'class_legacy' and 'class' primitives are mutual exclusive. Exiting...\n\n", list->name, list->type.string);
-	exit_gracefully(1);
-      }
     }
     list = list->next;
   }

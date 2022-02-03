@@ -547,9 +547,8 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation & COUNT_CLASS) {
-      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = class_handler;
-      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_class_handler;
-      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_class_handler; 
+      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_class_handler;
+      else primitives--;
       primitives++;
     }
 
@@ -1420,20 +1419,6 @@ void flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs,
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
   if (pptrs->new_flow) pdata->flo_num = 1;
-}
-
-void class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_data *pdata = (struct pkt_data *) *data;
-
-  pdata->primitives.class = pptrs->class;
-  pdata->cst.ba = pptrs->cst.ba;
-  pdata->cst.pa = pptrs->cst.pa;
-  if (chptr->aggregation & COUNT_FLOWS)
-    pdata->cst.fa = pptrs->cst.fa;
-  pdata->cst.stamp.tv_sec = pptrs->cst.stamp.tv_sec;
-  pdata->cst.stamp.tv_usec = pptrs->cst.stamp.tv_usec;
-  pdata->cst.tentatives = pptrs->cst.tentatives;
 }
 
 #if defined (WITH_NDPI)
@@ -5264,20 +5249,6 @@ void SF_sysid_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   pdata->primitives.export_proto_sysid = sample->agentSubId;
-}
-
-void SF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_data *pdata = (struct pkt_data *) *data;
-  SFSample *sample = (SFSample *) pptrs->f_data;
-
-  pdata->primitives.class = sample->class;
-  pdata->cst.ba = 0;
-  pdata->cst.pa = 0;
-  pdata->cst.fa = 0;
-
-  pdata->cst.stamp.tv_sec = time(NULL); /* XXX */
-  pdata->cst.stamp.tv_usec = 0;
 }
 
 #if defined (WITH_NDPI)
