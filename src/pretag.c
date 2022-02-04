@@ -1262,7 +1262,7 @@ u_int32_t pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, str
   pm_hash_key_t *hash_key;
   u_int32_t iterator, index_hdlr;
   int iterator_ir;
-  void *idx_value = NULL;
+  void *idx_value;
 
   if (!t || !pptrs || !index_results) return 0;
 
@@ -1280,15 +1280,18 @@ u_int32_t pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, str
         (*t->index[iterator].fdata_handler[index_hdlr])(&res_fdata, &t->index[iterator].hash_serializer, pptrs);
       }
 
+      idx_value = NULL;
       cdada_map_find(t->index[iterator].idx_map, hash_key_get_val(hash_key), &idx_value);
-      index_results[iterator_ir] = idx_value;
-      if (iterator_ir < ir_entries) iterator_ir++;
-      else {
-	Log(LOG_WARNING, "WARN ( %s/%s ): [%s] maps_index: out of index results space. Indexing disabled.\n",
-	    config.name, config.type, t->filename);
-	pretag_index_destroy(t);
-	memset(index_results, 0, (sizeof(struct id_entry *) * ir_entries));
-	return 0;
+      if (idx_value) {
+	index_results[iterator_ir] = idx_value;
+	if (iterator_ir < ir_entries) iterator_ir++;
+	else {
+	  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] maps_index: out of index results space. Indexing disabled.\n",
+	      config.name, config.type, t->filename);
+	  pretag_index_destroy(t);
+	  memset(index_results, 0, (sizeof(struct id_entry *) * ir_entries));
+	  return 0;
+	}
       }
     }
     else break;
