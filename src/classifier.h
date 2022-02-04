@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -60,22 +60,7 @@ struct pkt_classifier {
    and sfacctd */
 
 /* prototypes */
-extern void init_classifiers(char *);
-extern void evaluate_classifiers(struct packet_ptrs *, struct ip_flow_common *, unsigned int);
-extern pm_class_t SF_evaluate_classifiers(char *);
-extern int parse_pattern_file(char *, struct pkt_classifier *);
-extern int parse_shared_object(char *, struct pkt_classifier *);
-extern int dot_pat(char *);
-extern int dot_so(char *);
-extern void init_class_accumulators(struct packet_ptrs *, struct ip_flow_common *, unsigned int);
-extern void handle_class_accumulators(struct packet_ptrs *, struct ip_flow_common *, unsigned int);
-extern void link_conntrack_helper(struct pkt_classifier *);
-
-extern void *search_context_chain(struct ip_flow_common *, unsigned int, char *);
-extern void insert_context_chain(struct ip_flow_common *, unsigned int, char *, void *);
-extern void clear_context_chain(struct ip_flow_common *, unsigned int);
-extern void prepare_classifier_data(struct pkt_classifier_data *, struct ip_flow_common *, unsigned int, struct packet_ptrs *);
-
+extern void init_classifiers();
 extern pm_class_t pmct_register(struct pkt_classifier *);
 extern pm_class_t pmct_ndpi_register(struct pkt_classifier *);
 extern void pmct_unregister(pm_class_t);

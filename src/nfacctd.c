@@ -1144,7 +1144,7 @@ int main(int argc,char **argv, char **envp)
 #endif
   }
 
-  init_classifiers(NULL);
+  init_classifiers();
 
 #if defined (WITH_NDPI)
   if (config.classifier_ndpi) {
