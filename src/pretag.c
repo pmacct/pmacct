@@ -1261,8 +1261,8 @@ u_int32_t pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, str
   pm_hash_serial_t *hash_serializer;
   pm_hash_key_t *hash_key;
   u_int32_t iterator, index_hdlr;
-  int iterator_ir;
-  void *idx_value;
+  int iterator_ir, ret;
+  void *idx_value = NULL;
 
   if (!t || !pptrs || !index_results) return 0;
 
@@ -1281,8 +1281,8 @@ u_int32_t pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, str
       }
 
       idx_value = NULL;
-      cdada_map_find(t->index[iterator].idx_map, hash_key_get_val(hash_key), &idx_value);
-      if (idx_value) {
+      ret = cdada_map_find(t->index[iterator].idx_map, hash_key_get_val(hash_key), &idx_value);
+      if (ret == CDADA_SUCCESS) {
 	index_results[iterator_ir] = idx_value;
 	if (iterator_ir < ir_entries) iterator_ir++;
 	else {
