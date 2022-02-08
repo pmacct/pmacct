@@ -61,7 +61,7 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
 
   if (wtc_2 & COUNT_LABEL) {
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_schema_ipfix(schema);
+      compose_label_avro_schema_nonopt(schema);
     }
     else {
       avro_schema_record_field_append(schema, "label", avro_schema_string());
@@ -451,7 +451,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
     if (!str_ptr) str_ptr = empty_string;
 
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_data_ipfix(str_ptr, value);
+      compose_label_avro_data_nonopt(str_ptr, value);
     }
     else {
       pm_avro_check(avro_value_get_by_name(&value, "label", &field, NULL));
@@ -1381,8 +1381,8 @@ void pm_avro_exit_gracefully(int status)
   }
 }
 
-
-void compose_label_avro_schema_bxp(avro_schema_t sc_type_record)
+/* Compose optional label schema, ie. in BGP, BMP */
+void compose_label_avro_schema_opt(avro_schema_t sc_type_record)
 {
   sc_type_string = avro_schema_string();
   sc_type_union = avro_schema_union();
@@ -1396,8 +1396,8 @@ void compose_label_avro_schema_bxp(avro_schema_t sc_type_record)
   avro_schema_decref(sc_type_string);
 }
 
-
-void compose_label_avro_schema_ipfix(avro_schema_t sc_type_record)
+/* Compose mandatory / non-optional label schema, ie. in IPFIX */
+void compose_label_avro_schema_nonopt(avro_schema_t sc_type_record)
 {
   sc_type_string = avro_schema_string();
   sc_type_map = avro_schema_map(sc_type_string);
@@ -1430,8 +1430,8 @@ void compose_nfacctd_fwdstatus_avro_schema(avro_schema_t sc_type_record)
   avro_schema_decref(sc_type_string);
 }
 
-
-int compose_label_avro_data_ipfix(char *str_ptr, avro_value_t v_type_record)
+/* Insert mandatory / non-optional label data, ie. in IPFIX */
+int compose_label_avro_data_nonopt(char *str_ptr, avro_value_t v_type_record)
 {
   /* labels normalization */
   cdada_str_t *lbls_cdada = cdada_str_create(str_ptr);
@@ -1462,8 +1462,8 @@ int compose_label_avro_data_ipfix(char *str_ptr, avro_value_t v_type_record)
   return 0;
 }
 
-
-int compose_label_avro_data_bxp(char *str_ptr, avro_value_t v_type_record)
+/* Insert optional label data, ie. in BGP, BMP */
+int compose_label_avro_data_opt(char *str_ptr, avro_value_t v_type_record)
 {
   /* labels normalization */
   cdada_str_t *lbls_cdada = cdada_str_create(str_ptr);
@@ -1503,7 +1503,6 @@ int compose_label_avro_data_bxp(char *str_ptr, avro_value_t v_type_record)
 
   return 0;
 }
-
 
 int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_record)
 {

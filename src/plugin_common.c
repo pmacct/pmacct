@@ -1008,9 +1008,6 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
   /* Max amount of tokens per string: 128 Labels */
   const int MAX_TOKENS = 256;
 
-  /* single token max len - based on ptm_label struct */
-  const int MAX_TOKEN_LEN = 128;
-
   /* len of the incoming/normalized string */
   size_t PTM_LABELS_LEN = strlen(ptm_labels);
 
@@ -1024,11 +1021,12 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
   char *token = NULL;
   char *tokens[MAX_TOKENS];
 
-  /* init pointers to NULL */                                                                                                                                                                                                                        
-  int idx_0;                                                                                                                                                                                                                                                  
-  for (idx_0 = 0; idx_0 < MAX_TOKENS; idx_0++) {                                                                                                                                                                                                              
-    tokens[idx_0] = NULL;                                                                                                                                                                                                                                     
-  }        
+  /* init pointers to NULL */
+  int idx_0;
+
+  for (idx_0 = 0; idx_0 < MAX_TOKENS; idx_0++) {
+    tokens[idx_0] = NULL;
+  }
 
   int tokens_counter = 0;
   for (token = strtok(ptm_array_labels, DEFAULT_SEP); token != NULL; token = strtok(NULL, DEFAULT_SEP)) {
@@ -1039,7 +1037,7 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
   int list_counter;
   for (list_counter = 0; (list_counter < tokens_counter) && (tokens[list_counter] != NULL); list_counter += 2) {
     memset(&lbl, 0, sizeof(lbl));
-    if ((strlen(tokens[list_counter]) > MAX_TOKEN_LEN - 1) || (strlen(tokens[list_counter + 1]) > MAX_TOKEN_LEN - 1)) {
+    if ((strlen(tokens[list_counter]) > MAX_PTM_LABEL_TOKEN_LEN - 1) || (strlen(tokens[list_counter + 1]) > MAX_PTM_LABEL_TOKEN_LEN - 1)) {
       exit(-1);
     } 
     else {
@@ -1051,7 +1049,6 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
 
   return ptm_linked_list;
 }
-
 
 cdada_list_t *tcpflags_to_linked_list(size_t tcpflags_decimal)
 {

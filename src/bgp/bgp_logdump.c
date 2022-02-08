@@ -2323,7 +2323,7 @@ void p_avro_schema_build_bgp_common(avro_schema_t *schema, avro_schema_t *optlon
     avro_schema_record_field_append((*schema), "tag", (*optlong_s));
 
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_schema_bxp((*schema));
+      compose_label_avro_schema_opt((*schema));
     }
     else {
       avro_schema_record_field_append((*schema), "label", (*optstr_s));
@@ -2409,7 +2409,7 @@ void bgp_tag_print_avro(avro_value_t obj, bgp_tag_t *tag)
 
   if (tag->have_label) {
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_data_bxp(tag->label.val, obj);
+      compose_label_avro_data_opt(tag->label.val, obj);
     }
     else {
       pm_avro_check(avro_value_get_by_name(&obj, "label", &p_avro_field, NULL));

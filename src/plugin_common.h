@@ -35,6 +35,7 @@
 
 #define AVERAGE_CHAIN_LEN 10
 #define PRINT_CACHE_ENTRIES 16411
+#define MAX_PTM_LABEL_TOKEN_LEN	128
 
 /* cache element states */
 #define PRINT_CACHE_FREE	0
@@ -91,8 +92,8 @@ struct p_table_rr {
 #ifndef STRUCT_PTM_LABEL
 #define STRUCT_PTM_LABEL
 typedef struct {
-  char key[128];
-  char value[128];
+  char key[MAX_PTM_LABEL_TOKEN_LEN];
+  char value[MAX_PTM_LABEL_TOKEN_LEN];
 } __attribute__((packed)) ptm_label;
 #endif
 
