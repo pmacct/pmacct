@@ -291,7 +291,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
       }
     }
     else if (!strcmp(count_token, "tcpflags")) cfg_set_aggregate(filename, value, COUNT_INT_TCPFLAGS, count_token);
-    else if (!strcmp(count_token, "forwarding_status")) cfg_set_aggregate(filename, value, COUNT_INT_FORWARDING_STATUS, count_token);
+    else if (!strcmp(count_token, "fwd_status")) cfg_set_aggregate(filename, value, COUNT_INT_FORWARDING_STATUS, count_token);
     else if (!strcmp(count_token, "std_comm")) cfg_set_aggregate(filename, value, COUNT_INT_STD_COMM, count_token);
     else if (!strcmp(count_token, "ext_comm")) cfg_set_aggregate(filename, value, COUNT_INT_EXT_COMM, count_token);
     else if (!strcmp(count_token, "lrg_comm")) cfg_set_aggregate(filename, value, COUNT_INT_LRG_COMM, count_token);
