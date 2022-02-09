@@ -968,7 +968,7 @@ void compose_json_nfacctd_mpls_label_stack(json_t *obj, struct chained_cache *cc
   int idx_0;
   for(idx_0 = 0; idx_0 < MAX_MPLS_LABELS; idx_0++) {
     memset(&label_buf, 0, sizeof(label_buf));
-    snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%zu", cc->pmpls->labels_cycle[idx_0]);
+    snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", cc->pmpls->labels_cycle[idx_0]);
     strncat(mpls_label_stack, label_buf, (MAX_MPLS_LABEL_LEN - strlen(label_buf) - 1));
     strncat(mpls_label_stack, ",", (MAX_MPLS_LABEL_LEN - strlen(label_buf) - 1));
   }
@@ -1419,10 +1419,10 @@ json_t *compose_nfacctd_mpls_label_stack_json_data(u_int32_t *labels_cycle)
   size_t idx_0;
   for (idx_0 = 0; idx_0 < MAX_MPLS_LABELS; idx_0++) {
     memset(&label_buf, 0, sizeof(label_buf));
-    snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%zu", *(labels_cycle + idx_0));
+    snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", *(labels_cycle + idx_0));
     if (strncmp("0", label_buf, 1)) {
       memset(&idx_buf, 0, sizeof(idx_buf));
-      snprintf(idx_buf, MAX_IDX_LEN, "%zu", idx_0);
+      snprintf(idx_buf, MAX_IDX_LEN, "%u", idx_0);
       strncat(label_buf, "-", (MAX_MPLS_LABEL_LEN - strlen(label_buf) - 1));
       strncat(label_buf, idx_buf, (MAX_MPLS_LABEL_LEN - strlen(label_buf) - 1));
       j_str_tmp = json_string(label_buf);
