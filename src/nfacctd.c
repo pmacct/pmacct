@@ -532,7 +532,7 @@ int main(int argc,char **argv, char **envp)
 			COUNT_EXPORT_PROTO_TIME|COUNT_FORWARDING_STATUS))
 	  list->cfg.data_type |= PIPE_TYPE_NAT;
 
-	if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_TOP|COUNT_MPLS_LABEL_BOTTOM|
+	if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_STACK|COUNT_MPLS_LABEL_TOP|COUNT_MPLS_LABEL_BOTTOM|
 			COUNT_MPLS_STACK_DEPTH))
 	  list->cfg.data_type |= PIPE_TYPE_MPLS;
 

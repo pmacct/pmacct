@@ -545,6 +545,7 @@ struct configuration {
   int pretag_label_encode_as_map;
   int tcpflags_encode_as_array;
   int nfacctd_fwdstatus_encode_as_string;
+  int nfacctd_mpls_label_stack_encode_as_array;
   int maps_refresh;
   int maps_index;
   int maps_entries;
