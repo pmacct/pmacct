@@ -534,8 +534,8 @@ void evaluate_packet_handlers()
     }
     
     /* ACCT_PM & ACCT_SF atm not handled */
-    if (channels_list[index].aggregation_2 & COUNT_FORWARDING_STATUS) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_forwarding_status_handler;
+    if (channels_list[index].aggregation_2 & COUNT_FWD_STATUS) {
+      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_fwd_status_handler;
       primitives++;
     }
 
@@ -2425,19 +2425,19 @@ void NF_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   }
 }
 
-void NF_forwarding_status_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void NF_fwd_status_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int32_t forwarding_status = 0;
+  u_int32_t fwd_status = 0;
 
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_FORWARDING_STATUS].len == 1) {
-      memcpy(&forwarding_status, pptrs->f_data+tpl->tpl[NF9_FORWARDING_STATUS].off, MIN(tpl->tpl[NF9_FORWARDING_STATUS].len, 1));
-      pnat->forwarding_status = forwarding_status;
+    if (tpl->tpl[NF9_FWD_STATUS].len == 1) {
+      memcpy(&fwd_status, pptrs->f_data+tpl->tpl[NF9_FWD_STATUS].off, MIN(tpl->tpl[NF9_FWD_STATUS].len, 1));
+      pnat->fwd_status = fwd_status;
     }
     break;
   case 5:
