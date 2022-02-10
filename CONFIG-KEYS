@@ -1599,7 +1599,8 @@ DESC:		The 'tcpflags' field had tradionally been encoded as a short integer wher
 		to individual TCP flags are activated. Setting this knob to true, makes it being encoded as
                 an array for JSON and Apache Avro encodings, ie. in JSON "tcp_flags": [ "URG", "ACK", "PSH",
 		"RST", "SYN", "FIN" ] and in Avro "name": "tcp_flags", "type": { "type": "array", "items": {
-		"type": "string" } }. This knob has no effects for other encodings (ie. CSV, formatted).
+		"type": "string" } }. This knob has no effects for other encodings (ie. CSV, formatted) and
+		backends not supporting complex types (ie. SQL plugins).
 DEFAULT:        false
 
 KEY:		[ print_markers | amqp_markers | kafka_markers ]
@@ -2065,7 +2066,8 @@ DESC:		The 'label' field had tradionally been encoded as an unique comma-separat
 		a map for JSON and Apache Avro encodings, ie. in JSON "label": { "key1": "value1", "key2":
 		"value2" }. For keys and values to be correctly mapped, the '%' delimiter is used when
 		composing a pre_tag_map, ie. "set_label=key1%value1 ip=0.0.0.0/0". This knob has no effects
-		for other encodings (ie. CSV, formatted).
+		for other encodings (ie. CSV, formatted) and backends not supporting complex types (ie. SQL
+		plugins).
 DEFAULT:	false
 
 KEY:            [ post_tag | post_tag2 ] 
