@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -221,6 +221,7 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     printf("POST_NAT_SRC_PORT  ");
     printf("POST_NAT_DST_PORT  ");
     printf("NAT_EVENT ");
+    printf("FWD_STATUS ");
 
     printf("MPLS_LABEL_TOP  ");
     printf("MPLS_LABEL_BOTTOM  ");
@@ -335,6 +336,7 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count_2 & COUNT_POST_NAT_SRC_PORT) printf("POST_NAT_SRC_PORT  ");
     if (what_to_count_2 & COUNT_POST_NAT_DST_PORT) printf("POST_NAT_DST_PORT  ");
     if (what_to_count_2 & COUNT_NAT_EVENT) printf("NAT_EVENT ");
+    if (what_to_count_2 & COUNT_FWD_STATUS) printf("FWD_STATUS ");
 
     if (what_to_count_2 & COUNT_MPLS_LABEL_TOP) printf("MPLS_LABEL_TOP  ");
     if (what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) printf("MPLS_LABEL_BOTTOM  ");
@@ -440,6 +442,7 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     printf("%sPOST_NAT_SRC_PORT", write_sep(sep, &count));
     printf("%sPOST_NAT_DST_PORT", write_sep(sep, &count));
     printf("%sNAT_EVENT", write_sep(sep, &count));
+    printf("%sFWD_STATUS", write_sep(sep, &count));
     printf("%sMPLS_LABEL_TOP", write_sep(sep, &count));
     printf("%sMPLS_LABEL_BOTTOM", write_sep(sep, &count));
     printf("%sMPLS_STACK_DEPTH", write_sep(sep, &count));
@@ -550,6 +553,7 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     if (what_to_count_2 & COUNT_POST_NAT_SRC_PORT) printf("%sPOST_NAT_SRC_PORT", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_POST_NAT_DST_PORT) printf("%sPOST_NAT_DST_PORT", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_NAT_EVENT) printf("%sNAT_EVENT", write_sep(sep, &count));
+    if (what_to_count_2 & COUNT_FWD_STATUS) printf("%sFWD_STATUS", write_sep(sep, &count));
 
     if (what_to_count_2 & COUNT_MPLS_LABEL_TOP) printf("%sMPLS_LABEL_TOP", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) printf("%sMPLS_LABEL_BOTTOM", write_sep(sep, &count));
@@ -1016,6 +1020,10 @@ int main(int argc,char **argv)
         else if (!strcmp(count_token[count_index], "nat_event")) {
           count_token_int[count_index] = COUNT_INT_NAT_EVENT;
           what_to_count_2 |= COUNT_NAT_EVENT;
+        }
+        else if (!strcmp(count_token[count_index], "fwd_status")) {
+          count_token_int[count_index] = COUNT_INT_FWD_STATUS;
+          what_to_count_2 |= COUNT_FWD_STATUS;
         }
         else if (!strcmp(count_token[count_index], "mpls_label_top")) {
           count_token_int[count_index] = COUNT_INT_MPLS_LABEL_TOP;
@@ -2669,6 +2677,11 @@ int main(int argc,char **argv)
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), pnat->nat_event);
         }
 
+        if (!have_wtc || (what_to_count_2 & COUNT_FWD_STATUS)) {
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-3u        ", pnat->fwd_status);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), pnat->fwd_status);
+	}
+
         if (!have_wtc || (what_to_count_2 & COUNT_MPLS_LABEL_TOP)) {
           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-7u         ", pmpls->mpls_label_top);
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), pmpls->mpls_label_top);
@@ -3608,6 +3621,8 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   if (wtc_2 & COUNT_POST_NAT_DST_PORT) json_object_set_new_nocheck(obj, "post_nat_port_dst", json_integer((json_int_t)pnat->post_nat_dst_port));
 
   if (wtc_2 & COUNT_NAT_EVENT) json_object_set_new_nocheck(obj, "nat_event", json_integer((json_int_t)pnat->nat_event));
+
+  if (wtc_2 & COUNT_FWD_STATUS) json_object_set_new_nocheck(obj, "fwd_status", json_integer((json_int_t)pnat->fwd_status));
 
   if (wtc_2 & COUNT_MPLS_LABEL_TOP) json_object_set_new_nocheck(obj, "mpls_label_top", json_integer((json_int_t)pmpls->mpls_label_top));
 
