@@ -27,6 +27,10 @@ add such primitives to the SQL schema:
   - "nat_event INT(1) UNSIGNED NOT NULL," to declare the field itself
   - "PRIMARY KEY (..., nat_event, ...)" to put it in the primary key
 
+* fwd_status field:
+  - "fwd_status INT(1) UNSIGNED NOT NULL," to declare the field itself
+  - "PRIMARY KEY (..., fwd_status, ...)" to put it in the primary key
+
 The primitive is not declared as part of any default table version; yet will not fail
 version checks which are enabled when 'sql_optimize_clauses' feature is disabled.
 

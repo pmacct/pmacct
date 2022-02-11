@@ -139,6 +139,7 @@ are no longer supplied as part of the PostgreSQL table creation script.
   * post_nat_src_port => post_nat_port_src (INT NOT NULL DEFAULT 0)
   * post_nat_dst_port => post_nat_port_dst (INT NOT NULL DEFAULT 0)
   * nat_event => nat_event (INT NOT NULL DEFAULT 0)
+  * fwd_status => fwd_status (INT NOT NULL DEFAULT 0)
   * mpls_label_top => mpls_label_top (INT NOT NULL DEFAULT 0)
   * mpls_label_bottom => mpls_label_bottom (INT NOT NULL DEFAULT 0)
   * mpls_stack_depth => mpls_stack_depth (INT NOT NULL DEFAULT 0)
