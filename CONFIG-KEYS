@@ -1595,13 +1595,21 @@ DEFAULT:        false
 
 KEY:		tcpflags_encode_as_array
 VALUES:		[ true | false ]
-DESC:		The 'tcpflags' field had tradionally been encoded as a short integer where the bits related
-		to individual TCP flags are activated. Setting this knob to true, makes it being encoded as
-                an array for JSON and Apache Avro encodings, ie. in JSON "tcp_flags": [ "URG", "ACK", "PSH",
+DESC:		The 'tcpflags' field is encoded by default as a short integer where the bits related to
+		individual TCP flags are activated. Setting this knob to true, makes it being encoded as an
+		array for JSON and Apache Avro encodings, ie. in JSON "tcp_flags": [ "URG", "ACK", "PSH",
 		"RST", "SYN", "FIN" ] and in Avro "name": "tcp_flags", "type": { "type": "array", "items": {
 		"type": "string" } }. This knob has no effects for other encodings (ie. CSV, formatted) and
 		backends not supporting complex types (ie. SQL plugins).
 DEFAULT:        false
+
+KEY:		fwd_status_encode_as_string
+VALUES:		[ true | false ]
+DESC:		The 'fwd_status' is encoded by default as a short integer. Setting this knob to true, makes
+		it being encoded in human-readable format like described by RFC-7270 Section 4.12 when JSON
+		or Avro formats are selected for output. This knob has no effects for other encodings (ie.
+		CSV, formatted) and backends not supporting complex types (ie. SQL plugins).
+DEFAULT:	false
 
 KEY:		[ print_markers | amqp_markers | kafka_markers ]
 VALUES:		[ true | false ]
@@ -2061,9 +2069,9 @@ DEFAULT:	none
 
 KEY:		pre_tag_label_encode_as_map
 VALUES:		[ true | false ]
-DESC:		The 'label' field had tradionally been encoded as an unique comma-separated string, ie. in
-		JSON "label": "value1,value2,value3". Setting this knob to true, makes it being encoded as
-		a map for JSON and Apache Avro encodings, ie. in JSON "label": { "key1": "value1", "key2":
+DESC:		The 'label' field is encoded by default as an unique comma-separated string, ie. in JSON
+		"label": "value1,value2,value3". Setting this knob to true, makes it being encoded as a
+		map for JSON and Apache Avro encodings, ie. in JSON "label": { "key1": "value1", "key2":
 		"value2" }. For keys and values to be correctly mapped, the '%' delimiter is used when
 		composing a pre_tag_map, ie. "set_label=key1%value1 ip=0.0.0.0/0". This knob has no effects
 		for other encodings (ie. CSV, formatted) and backends not supporting complex types (ie. SQL
