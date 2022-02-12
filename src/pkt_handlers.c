@@ -2409,7 +2409,12 @@ void NF_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   case 10:
   case 9:
     if (tpl->tpl[NF9_TCP_FLAGS].len == 1) {
-      memcpy(&tcp_flags, pptrs->f_data+tpl->tpl[NF9_TCP_FLAGS].off, MIN(tpl->tpl[NF9_TCP_FLAGS].len, 1));
+      memcpy(&tcp_flags, pptrs->f_data+tpl->tpl[NF9_TCP_FLAGS].off, 1);
+      pdata->tcp_flags = tcp_flags;
+    }
+    else if (tpl->tpl[NF9_TCP_FLAGS].len == 2) {
+      /* trash the first octet and copy over the second one */
+      memcpy(&tcp_flags, (pptrs->f_data + tpl->tpl[NF9_TCP_FLAGS].off + 1), 1);
       pdata->tcp_flags = tcp_flags;
     }
     else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len)
