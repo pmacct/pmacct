@@ -815,7 +815,11 @@ int P_trigger_exec(char *filename)
   char *args[2] = { filename, NULL };
   int pid;
 
+#ifdef HAVE_VFORK
   switch (pid = vfork()) {
+#else
+  switch (pid = fork()) {
+#endif
   case -1:
     return -1;
   case 0:
