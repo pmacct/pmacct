@@ -235,8 +235,8 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
   }
 
   if (wtc_2 & COUNT_MPLS_LABEL_STACK) {
-    if (config.nfacctd_mpls_label_stack_encode_as_array) {
-      compose_nfacctd_mpls_label_stack_schema(schema);
+    if (config.mpls_label_stack_encode_as_array) {
+      compose_mpls_label_stack_schema(schema);
     }
     else {
       avro_schema_record_field_append(schema, "mpls_label_stack", avro_schema_string());
@@ -853,8 +853,8 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
   }
 
   if (wtc_2 & COUNT_MPLS_LABEL_STACK) {
-    if (config.nfacctd_mpls_label_stack_encode_as_array) {
-      compose_nfacctd_mpls_label_stack_data(pmpls->labels_cycle, value);
+    if (config.mpls_label_stack_encode_as_array) {
+      compose_mpls_label_stack_data(pmpls->labels_cycle, value);
     } 
     else {
       const int MAX_MPLS_LABEL_STACK = 128;
@@ -1462,7 +1462,7 @@ void compose_fwd_status_avro_schema(avro_schema_t sc_type_record)
   avro_schema_decref(sc_type_string);
 }
 
-void compose_nfacctd_mpls_label_stack_schema(avro_schema_t sc_type_record)
+void compose_mpls_label_stack_schema(avro_schema_t sc_type_record)
 {
   sc_type_string = avro_schema_string();
   sc_type_array = avro_schema_array(sc_type_string);
@@ -1629,7 +1629,7 @@ int compose_fwd_status_avro_data(size_t fwdstatus_decimal, avro_value_t v_type_r
   return 0;
 }
 
-int compose_nfacctd_mpls_label_stack_data(u_int32_t *labels_cycle, avro_value_t v_type_record)
+int compose_mpls_label_stack_data(u_int32_t *labels_cycle, avro_value_t v_type_record)
 {
   const int MAX_IDX_LEN = 4;
   char label_buf[MAX_MPLS_LABEL_LEN];
