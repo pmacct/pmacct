@@ -62,7 +62,6 @@ static const struct _primitives_matrix_struct _primitives_matrix[] = {
   {"src_port", 1, 1, 1, 1, 0, 0, 0, "Source TCP/UDP port"},
   {"dst_port", 1, 1, 1, 1, 0, 0, 0, "Destination TCP/UDP port"},
   {"tcpflags", 1, 1, 1, 1, 0, 0, 0, "TCP flags"},
-  /*{"forwarding_status", 0, 0, 1, 0, 0, 0, 0, "NFv9 Forwarding Status"},*/
   {"BGP", 1, 1, 1, 1, 0, 0, 0, ""}, 
   {"src_as", 1, 1, 1, 1, 0, 0, 0, "Source ASN"},
   {"dst_as", 1, 1, 1, 1, 0, 0, 0, "Destination ASN"},
@@ -126,6 +125,7 @@ static const struct _primitives_matrix_struct _primitives_matrix[] = {
   {"export_proto_sysid", 0, 0, 1, 1, 0, 0, 0, "Export protocol ID (ie. sFlow subAgentID, IPFIX Obs Domain ID)"},
   {"src_roa", 1, 1, 1, 1, 0, 0, 0, "RPKI validation status for source IP prefix"},
   {"dst_roa", 1, 1, 1, 1, 0, 0, 0, "RPKI validation status for destination IP prefix"},
+  {"fwd_status", 0, 0, 1, 0, 0, 0, 0, "Forwarding Status"},
   {"TIME", 1, 1, 1, 1, 0, 0, 0, ""}, 
   {"timestamp_start", 0, 0, 1, 0, 0, 0, 0, "Flow start time or observation time at the exporter"},
   {"timestamp_end", 0, 0, 1, 0, 0, 0, 0, "Flow end time"},

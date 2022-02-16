@@ -322,12 +322,12 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
     idx++;
   }
   
-  if (wtc_2 & COUNT_FORWARDING_STATUS) {
-    if (config.nfacctd_fwdstatus_encode_as_string) {
-      cjhandler[idx] = compose_json_string_nfacctd_fwdstatus;
+  if (wtc_2 & COUNT_FWD_STATUS) {
+    if (config.fwd_status_encode_as_string) {
+      cjhandler[idx] = compose_json_string_fwd_status;
     }
     else {
-      cjhandler[idx] = compose_json_nfacctd_fwdstatus;
+      cjhandler[idx] = compose_json_fwd_status;
     }
     idx++;
   }
@@ -949,12 +949,12 @@ void compose_json_tcp_flags(json_t *obj, struct chained_cache *cc)
   json_object_set_new_nocheck(obj, "tcp_flags", json_string(misc_str));
 }
 
-void compose_json_nfacctd_fwdstatus(json_t *obj, struct chained_cache *cc)
+void compose_json_fwd_status(json_t *obj, struct chained_cache *cc)
 {
   char misc_str[VERYSHORTBUFLEN];
 
-  sprintf(misc_str, "%u", cc->pnat->forwarding_status);
-  json_object_set_new_nocheck(obj, "forwarding_status", json_string(misc_str));
+  sprintf(misc_str, "%u", cc->pnat->fwd_status);
+  json_object_set_new_nocheck(obj, "fwd_status", json_string(misc_str));
 }
 
 void compose_json_nfacctd_mpls_label_stack(json_t *obj, struct chained_cache *cc)
@@ -1318,17 +1318,17 @@ void compose_json_array_tcpflags(json_t *obj, struct chained_cache *cc)
   cdada_list_destroy(ll);
 }
 
-void compose_json_string_nfacctd_fwdstatus(json_t *obj, struct chained_cache *cc)
+void compose_json_string_fwd_status(json_t *obj, struct chained_cache *cc)
 {
   /* linked-list creation */
-  cdada_list_t *nfacctd_fwdstatus_ll = nfacctd_fwdstatus_to_linked_list();
-  int ll_size = cdada_list_size(nfacctd_fwdstatus_ll);
+  cdada_list_t *fwd_status_ll = fwd_status_to_linked_list();
+  int ll_size = cdada_list_size(fwd_status_ll);
 
-  json_t *root_l1 = compose_nfacctd_fwdstatus_json_data(cc->pnat->forwarding_status, nfacctd_fwdstatus_ll, ll_size);
+  json_t *root_l1 = compose_fwd_status_json_data(cc->pnat->fwd_status, fwd_status_ll, ll_size);
 
-  json_object_set_new_nocheck(obj, "forwarding_status", root_l1);
+  json_object_set_new_nocheck(obj, "fwd_status", root_l1);
 
-  cdada_list_destroy(nfacctd_fwdstatus_ll);
+  cdada_list_destroy(fwd_status_ll);
 }
 
 void compose_json_array_nfacctd_mpls_label_stack(json_t *obj, struct chained_cache *cc)
@@ -1374,9 +1374,9 @@ json_t *compose_tcpflags_json_data(cdada_list_t *ll, int ll_size)
   return root;
 }
 
-json_t *compose_nfacctd_fwdstatus_json_data(size_t fwdstatus_decimal, cdada_list_t *ll, int ll_size)
+json_t *compose_fwd_status_json_data(size_t fwdstatus_decimal, cdada_list_t *ll, int ll_size)
 {
-  nfacctd_fwdstatus fwdstate;
+  fwd_status fwdstate;
   json_t *root = NULL;
 
   /* default fwdstatus */

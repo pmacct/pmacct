@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -156,7 +156,9 @@ void telemetry_link_misc_structs(telemetry_misc_structs *tms)
   strcpy(tms->peer_str, "telemetry_node");
   tms->peer_port_str = malloc(strlen("telemetry_node_port") + 1);
   strcpy(tms->peer_port_str, "telemetry_node_port");
+
   tms->tag = &telemetry_logdump_tag;
+  tms->tag_map = config.telemetry_tag_map;
 }
 
 int telemetry_validate_input_output_decoders(int input, int output)

@@ -88,6 +88,7 @@ static const struct _dictionary_line dictionary[] = {
   {"timestamps_secs", cfg_key_timestamps_secs},
   {"timestamps_since_epoch", cfg_key_timestamps_since_epoch},
   {"tcpflags_encode_as_array", cfg_key_tcpflags_encode_as_array},
+  {"fwd_status_encode_as_string", cfg_key_fwd_status_encode_as_string},
   {"imt_path", cfg_key_imt_path},
   {"imt_passwd", cfg_key_imt_passwd},
   {"imt_buckets", cfg_key_imt_buckets},
@@ -248,8 +249,7 @@ static const struct _dictionary_line dictionary[] = {
   {"nfacctd_kafka_topic", cfg_key_nfacctd_kafka_topic},
   {"nfacctd_kafka_config_file", cfg_key_nfacctd_kafka_config_file},
   {"nfacctd_zmq_address", cfg_key_nfacctd_zmq_address},
-  {"nfacctd_dtls_port", cfg_key_nfacctd_dtls_port},
-  {"nfacctd_fwdstatus_encode_as_string", cfg_key_nfacctd_fwdstatus_encode_as_string},
+  {"nfacctd_dtls_port", cfg_key_nfacctd_dtls_port}
   {"nfacctd_mpls_label_stack_encode_as_array", cfg_key_nfacctd_mpls_label_stack_encode_as_array},
   {"pmacctd_proc_name", cfg_key_proc_name},
   {"pmacctd_force_frag_handling", cfg_key_pmacctd_force_frag_handling},

@@ -11,8 +11,8 @@
 !
 ! nfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
 ! engine_type, engine_id, source_id, flowset_id, nexthop, bgp_nexthop, filter,
-! sample_type, is_bi_flow, direction, nat_event, src_mac, dst_mac, vlan, cvlan,
-! src_net, dst_net, is_multicast, mpls_pw_id.
+! sample_type, is_bi_flow, direction, nat_event, fwd_status, src_mac, dst_mac,
+! vlan, cvlan, src_net, dst_net, is_multicast, mpls_pw_id.
 !
 ! sfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
 ! nexthop, bgp_nexthop, filter, agent_id, sample_type, direction, src_mac,
@@ -192,7 +192,7 @@
 !			match MAC multicast addresses, if set to 'false' it won't
 !			match them. To match or exclude IPv4/IPv6 multicast
 !			addresses please use 'dst_net'.
-! 'fwdstatus'		MATCH: In NFv9/IPFIX this is compared against IE #89; see
+! 'fwd_status'		MATCH: In NFv9/IPFIX this is compared against IE #89; see
 !			https://www.iana.org/assignments/ipfix/ipfix.xhtml for
 !			the specific semantics of the field and some examples.
 ! 'label'		SET: Mark the rule with label's value. Labels don't need

@@ -36,8 +36,6 @@ if test "x$ac_cv_prog_gcc" = xyes ; then
   CFLAGS="-O2 ${CFLAGS}"
 fi
 
-AC_CHECK_FUNCS([strlcpy])
-
 dnl: shared object handling
 AC_MSG_CHECKING([whether to disable linking against shared objects])
 AC_ARG_ENABLE(so,
@@ -1147,7 +1145,7 @@ AC_ARG_ENABLE(st-bins,
 dnl Checks for library functions.
 AC_TYPE_SIGNAL
 
-AC_CHECK_FUNCS([setproctitle mallopt tdestroy])
+AC_CHECK_FUNCS([setproctitle mallopt tdestroy strlcpy vfork])
 
 dnl Check for SO_BINDTODEVICE
 AC_CHECK_DECL([SO_BINDTODEVICE],

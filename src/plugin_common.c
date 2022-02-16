@@ -815,7 +815,11 @@ int P_trigger_exec(char *filename)
   char *args[2] = { filename, NULL };
   int pid;
 
+#ifdef HAVE_VFORK
   switch (pid = vfork()) {
+#else
+  switch (pid = fork()) {
+#endif
   case -1:
     return -1;
   case 0:
@@ -1085,10 +1089,10 @@ cdada_list_t *tcpflags_to_linked_list(size_t tcpflags_decimal)
 }
 
 
-cdada_list_t *nfacctd_fwdstatus_to_linked_list()
+cdada_list_t *fwd_status_to_linked_list()
 {
   /* RFC-7270: forwardingStatus with a compliant reason code */
-  const unsigned int nfacctd_fwdstatus_decimal[23] = {
+  const unsigned int fwd_status_decimal[23] = {
     64, 65, 66,
     128, 129, 130,
     131, 132, 133,
@@ -1099,7 +1103,7 @@ cdada_list_t *nfacctd_fwdstatus_to_linked_list()
     194, 195
   };
 
-  const char nfacctd_fwdstatus_description[23][50] = {
+  const char fwd_status_description[23][50] = {
     "FORWARDED Unknown",
     "FORWARDED Fragmented",
     "FORWARDED Not Fragmented",
@@ -1125,18 +1129,18 @@ cdada_list_t *nfacctd_fwdstatus_to_linked_list()
     "CONSUMED For us",
   };
 
-  /* Generate the forwarding_status' linked-list */
-  cdada_list_t *nfacctd_fwdstatus_linked_list = cdada_list_create(nfacctd_fwdstatus);
-  nfacctd_fwdstatus fwdstate;
+  /* Generate the fwd_status' linked-list */
+  cdada_list_t *fwd_status_linked_list = cdada_list_create(fwd_status);
+  fwd_status fwdstate;
 
   size_t idx_0;
   for (idx_0 = 0; idx_0 < 23; idx_0++) {
     memset(&fwdstate, 0, sizeof(fwdstate));
-    fwdstate.decimal = nfacctd_fwdstatus_decimal[idx_0];
-    strcpy(fwdstate.description, nfacctd_fwdstatus_description[idx_0]);
+    fwdstate.decimal = fwd_status_decimal[idx_0];
+    strcpy(fwdstate.description, fwd_status_description[idx_0]);
 
-    cdada_list_push_back(nfacctd_fwdstatus_linked_list, &fwdstate);
+    cdada_list_push_back(fwd_status_linked_list, &fwdstate);
   }
 
-  return nfacctd_fwdstatus_linked_list;
+  return fwd_status_linked_list;
 }
