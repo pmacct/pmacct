@@ -1429,7 +1429,7 @@ json_t *compose_mpls_label_stack_json_data(u_int32_t *labels_cycle)
       strncat(label_idx_buf, idx_buf, (MAX_MPLS_LABEL_IDX_LEN - 1));
       strncat(label_idx_buf, "-", (MAX_MPLS_LABEL_IDX_LEN - strlen(idx_buf) - 1));
       strncat(label_idx_buf, label_buf, (MAX_MPLS_LABEL_IDX_LEN - strlen(idx_buf) - strlen("-") - 1));
-      j_str_tmp = json_string(label_buf);
+      j_str_tmp = json_string(label_idx_buf);
       json_array_append(root, j_str_tmp); 
     }
   }
