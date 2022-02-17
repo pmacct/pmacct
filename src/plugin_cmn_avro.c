@@ -1648,9 +1648,9 @@ int compose_mpls_label_stack_data(u_int32_t *labels_cycle, avro_value_t v_type_r
         memset(&idx_buf, 0, sizeof(idx_buf));
         memset(&label_idx_buf, 0, sizeof(label_idx_buf));
         snprintf(idx_buf, MAX_IDX_LEN, "%zu", idx_0);
-        strncat(label_idx_buf, idx_buf, (MAX_MPLS_LABEL_IDX_LEN - strlen(label_idx_buf) - 1));
-        strncat(label_idx_buf, "-", (MAX_MPLS_LABEL_IDX_LEN - strlen(label_idx_buf) - 1));
-        strncat(label_idx_buf, label_buf, (MAX_MPLS_LABEL_IDX_LEN - strlen(label_idx_buf) - 1));
+        strncat(label_idx_buf, idx_buf, (MAX_MPLS_LABEL_IDX_LEN - 1));
+        strncat(label_idx_buf, "-", (MAX_MPLS_LABEL_IDX_LEN - strlen(idx_buf) - 1));
+        strncat(label_idx_buf, label_buf, (MAX_MPLS_LABEL_IDX_LEN - strlen(idx_buf) - strlen("-") - 1));
         if (avro_value_append(&v_type_array, &v_type_string, NULL) == 0) {
           avro_value_set_string(&v_type_string, label_idx_buf);
         }
