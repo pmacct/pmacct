@@ -234,6 +234,15 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
     }
   }
 
+  if (wtc_2 & COUNT_MPLS_LABEL_STACK) {
+    if (config.mpls_label_stack_encode_as_array) {
+      compose_mpls_label_stack_schema(schema);
+    }
+    else {
+      avro_schema_record_field_append(schema, "mpls_label_stack", avro_schema_string());
+    }
+  }
+
   if (wtc & COUNT_IP_PROTO)
     avro_schema_record_field_append(schema, "ip_proto", avro_schema_string());
 
@@ -843,6 +852,30 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
     }
   }
 
+  if (wtc_2 & COUNT_MPLS_LABEL_STACK) {
+    if (config.mpls_label_stack_encode_as_array) {
+      compose_mpls_label_stack_data(pmpls->labels_cycle, value);
+    } 
+    else {
+      const int MAX_MPLS_LABEL_STACK = 128;
+      char mpls_label_stack[MAX_MPLS_LABEL_STACK];
+      char label_buf[MAX_MPLS_LABEL_LEN];
+  
+      memset(&mpls_label_stack, 0, sizeof(mpls_label_stack));
+
+      int idx_0;
+      for(idx_0 = 0; idx_0 < MAX_MPLS_LABELS; idx_0++) {
+        memset(&label_buf, 0, sizeof(label_buf));
+        snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", pmpls->labels_cycle[idx_0]);
+        strncat(mpls_label_stack, label_buf, (MAX_MPLS_LABEL_LEN - strlen(label_buf) - 1));
+        strncat(mpls_label_stack, ",", (MAX_MPLS_LABEL_LEN - strlen(label_buf) - 1));
+      }
+
+      pm_avro_check(avro_value_get_by_name(&value, "mpls_label_stack", &field, NULL));
+      pm_avro_check(avro_value_set_string(&field, mpls_label_stack));
+    }
+  }
+
   if (wtc & COUNT_IP_PROTO) {
     char proto[PROTO_NUM_STRLEN];
 
@@ -1409,7 +1442,6 @@ void compose_label_avro_schema_nonopt(avro_schema_t sc_type_record)
   avro_schema_decref(sc_type_string);
 }
 
-
 void compose_tcpflags_avro_schema(avro_schema_t sc_type_record)
 {
   sc_type_string = avro_schema_string();
@@ -1427,6 +1459,17 @@ void compose_fwd_status_avro_schema(avro_schema_t sc_type_record)
   avro_schema_record_field_append(sc_type_record, "fwd_status", sc_type_string);
 
   /* free-up memory */
+  avro_schema_decref(sc_type_string);
+}
+
+void compose_mpls_label_stack_schema(avro_schema_t sc_type_record)
+{
+  sc_type_string = avro_schema_string();
+  sc_type_array = avro_schema_array(sc_type_string);
+  avro_schema_record_field_append(sc_type_record, "mpls_label_stack", sc_type_array);
+
+  /* free-up memory */
+  avro_schema_decref(sc_type_array);
   avro_schema_decref(sc_type_string);
 }
 
@@ -1533,7 +1576,6 @@ int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_reco
   return 0;
 }
 
-
 int compose_fwd_status_avro_data(size_t fwdstatus_decimal, avro_value_t v_type_record)
 {
   fwd_status fwdstate;
@@ -1583,6 +1625,38 @@ int compose_fwd_status_avro_data(size_t fwdstatus_decimal, avro_value_t v_type_r
   
   /* free-up memory */
   cdada_list_destroy(ll);
+
+  return 0;
+}
+
+int compose_mpls_label_stack_data(u_int32_t *labels_cycle, avro_value_t v_type_record)
+{
+  const int MAX_IDX_LEN = 4;
+  const int MAX_MPLS_LABEL_IDX_LEN = (MAX_IDX_LEN + MAX_MPLS_LABEL_LEN); 
+  char label_buf[MAX_MPLS_LABEL_LEN];
+  char label_idx_buf[MAX_MPLS_LABEL_IDX_LEN];
+  char idx_buf[MAX_IDX_LEN];
+
+  avro_value_t v_type_array, v_type_string;
+
+  size_t idx_0;
+  for (idx_0 = 0; idx_0 < MAX_MPLS_LABELS; idx_0++) {
+    memset(&label_buf, 0, sizeof(label_buf));
+    snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", *(labels_cycle + idx_0));
+    if (avro_value_get_by_name(&v_type_record, "mpls_label_stack", &v_type_array, NULL) == 0) {
+      if (strncmp("0", label_buf, 1)) {
+        memset(&idx_buf, 0, sizeof(idx_buf));
+        memset(&label_idx_buf, 0, sizeof(label_idx_buf));
+        snprintf(idx_buf, MAX_IDX_LEN, "%zu", idx_0);
+        strncat(label_idx_buf, idx_buf, (MAX_MPLS_LABEL_IDX_LEN - 1));
+        strncat(label_idx_buf, "-", (MAX_MPLS_LABEL_IDX_LEN - strlen(idx_buf) - 1));
+        strncat(label_idx_buf, label_buf, (MAX_MPLS_LABEL_IDX_LEN - strlen(idx_buf) - strlen("-") - 1));
+        if (avro_value_append(&v_type_array, &v_type_string, NULL) == 0) {
+          avro_value_set_string(&v_type_string, label_idx_buf);
+        }
+      }
+    }
+  }
 
   return 0;
 }

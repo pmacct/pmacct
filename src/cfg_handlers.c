@@ -330,6 +330,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "timestamp_end")) cfg_set_aggregate(filename, value, COUNT_INT_TIMESTAMP_END, count_token);
     else if (!strcmp(count_token, "timestamp_arrival")) cfg_set_aggregate(filename, value, COUNT_INT_TIMESTAMP_ARRIVAL, count_token);
     else if (!strcmp(count_token, "timestamp_export")) cfg_set_aggregate(filename, value, COUNT_INT_EXPORT_PROTO_TIME, count_token);
+    else if (!strcmp(count_token, "mpls_label_stack")) cfg_set_aggregate(filename, value, COUNT_INT_MPLS_LABEL_STACK, count_token);
     else if (!strcmp(count_token, "mpls_label_top")) cfg_set_aggregate(filename, value, COUNT_INT_MPLS_LABEL_TOP, count_token);
     else if (!strcmp(count_token, "mpls_label_bottom")) cfg_set_aggregate(filename, value, COUNT_INT_MPLS_LABEL_BOTTOM, count_token);
     else if (!strcmp(count_token, "mpls_stack_depth")) cfg_set_aggregate(filename, value, COUNT_INT_MPLS_STACK_DEPTH, count_token);
@@ -642,6 +643,28 @@ int cfg_key_fwd_status_encode_as_string(char *filename, char *name, char *value_
     for (; list; list = list->next) {
       if (!strcmp(name, list->name)) {
         list->cfg.fwd_status_encode_as_string = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_mpls_label_stack_encode_as_array(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.mpls_label_stack_encode_as_array = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.mpls_label_stack_encode_as_array = value;
         changes++;
         break;
       }

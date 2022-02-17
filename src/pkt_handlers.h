@@ -104,6 +104,7 @@ extern void NF_post_nat_dst_host_handler(struct channels_list_entry *, struct pa
 extern void NF_post_nat_src_port_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_post_nat_dst_port_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_nat_event_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void NF_mpls_label_stack(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_label_top_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_label_bottom_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_stack_depth_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

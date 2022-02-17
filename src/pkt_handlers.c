@@ -739,6 +739,11 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    if (channels_list[index].aggregation_2 & COUNT_MPLS_LABEL_STACK) {
+      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_label_stack;
+      primitives++;
+    }
+
     if (channels_list[index].aggregation_2 & COUNT_MPLS_LABEL_TOP) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = mpls_label_top_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_label_top_handler;
@@ -3513,6 +3518,51 @@ void NF_nat_event_handler(struct channels_list_entry *chptr, struct packet_ptrs 
       memcpy(&pnat->nat_event, pptrs->f_data+tpl->tpl[NF9_NAT_EVENT].off, MIN(tpl->tpl[NF9_NAT_EVENT].len, 1));
     else if ((utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_EVENT, FALSE)))
       memcpy(&pnat->nat_event, pptrs->f_data+utpl->off, MIN(utpl->len, 1));
+    break;
+  default:
+    break;
+  }
+}
+
+void NF_mpls_label_stack(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
+  memset(&pmpls->labels_cycle, 0, sizeof(pmpls->labels_cycle));
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_MPLS_LABEL_1].len == 3) {
+      pmpls->mpls_top_label_stack_section = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_1].off);
+      pmpls->labels_cycle[0] = pmpls->mpls_top_label_stack_section;
+    } 
+
+    if (tpl->tpl[NF9_MPLS_LABEL_2].len == 3) {
+      pmpls->mpls_label_stack_section2 = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_2].off);
+      pmpls->labels_cycle[1] = pmpls->mpls_label_stack_section2;
+    }
+
+    if (tpl->tpl[NF9_MPLS_LABEL_3].len == 3) {
+      pmpls->mpls_label_stack_section3 = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_3].off);
+      pmpls->labels_cycle[2] = pmpls->mpls_label_stack_section3;
+    } 
+    
+    if (tpl->tpl[NF9_MPLS_LABEL_4].len == 3) {
+      pmpls->mpls_label_stack_section4 = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_4].off);
+      pmpls->labels_cycle[3] = pmpls->mpls_label_stack_section4;
+    } 
+    
+    if (tpl->tpl[NF9_MPLS_LABEL_5].len == 3) {
+      pmpls->mpls_label_stack_section5 = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_5].off);
+      pmpls->labels_cycle[4] = pmpls->mpls_label_stack_section5;
+    } 
+    
+    if (tpl->tpl[NF9_MPLS_LABEL_6].len == 3) {
+      pmpls->mpls_label_stack_section6 = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_6].off);
+      pmpls->labels_cycle[5] = pmpls->mpls_label_stack_section6;
+    }
     break;
   default:
     break;
