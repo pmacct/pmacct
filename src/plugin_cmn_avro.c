@@ -1441,12 +1441,13 @@ int compose_label_avro_data_nonopt(char *str_ptr, avro_value_t v_type_record)
   /* linked-list creation */
   ptm_label lbl;
   cdada_list_t *ll = ptm_labels_to_linked_list(lbls_norm);
-  int ll_size = cdada_list_size(ll);
+  size_t ll_size = cdada_list_size(ll);
 
   avro_value_t v_type_string, v_type_map;
 
-  int idx_0;
+  size_t idx_0;
   for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
+    memset(&lbl, 0, sizeof(lbl));
     cdada_list_get(ll, idx_0, &lbl);
     if (avro_value_get_by_name(&v_type_record, "label", &v_type_map, NULL) == 0) {
       if (avro_value_add(&v_type_map, lbl.key, &v_type_string, NULL, NULL) == 0) {
@@ -1473,12 +1474,13 @@ int compose_label_avro_data_opt(char *str_ptr, avro_value_t v_type_record)
   /* linked-list creation */
   ptm_label lbl;
   cdada_list_t *ll = ptm_labels_to_linked_list(lbls_norm);
-  int ll_size = cdada_list_size(ll);
+  size_t ll_size = cdada_list_size(ll);
 
   avro_value_t v_type_union, v_type_branch, v_type_string;
 
-  int idx_0;
+  size_t idx_0;
   for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
+    memset(&lbl, 0, sizeof(lbl));
     cdada_list_get(ll, idx_0, &lbl);
     /* handling label with value */
     if (lbl.value) {
@@ -1510,12 +1512,13 @@ int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_reco
 
   /* linked-list creation */
   cdada_list_t *ll = tcpflags_to_linked_list(tcpflags_decimal);
-  int ll_size = cdada_list_size(ll);
+  size_t ll_size = cdada_list_size(ll);
 
   avro_value_t v_type_array, v_type_string;
 
   size_t idx_0;
   for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
+    memset(&tcpstate, 0, sizeof(tcpstate));
     cdada_list_get(ll, idx_0, &tcpstate);
     if (avro_value_get_by_name(&v_type_record, "tcp_flags", &v_type_array, NULL) == 0) {
       /* Serialize only flags set to 1 */
@@ -1540,7 +1543,7 @@ int compose_fwd_status_avro_data(size_t fwdstatus_decimal, avro_value_t v_type_r
 
   /* linked-list creation */
   cdada_list_t *ll = fwd_status_to_linked_list();
-  int ll_size = cdada_list_size(ll);
+  size_t ll_size = cdada_list_size(ll);
 
   avro_value_t v_type_string;
   
@@ -1573,6 +1576,7 @@ int compose_fwd_status_avro_data(size_t fwdstatus_decimal, avro_value_t v_type_r
 
   size_t idx_0;
   for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
+    memset(&fwdstate, 0, sizeof(fwdstate));
     cdada_list_get(ll, idx_0, &fwdstate);
     if (avro_value_get_by_name(&v_type_record, "fwd_status", &v_type_string, NULL) == 0) {
       if (fwdstate.decimal == fwdstatus_decimal) {

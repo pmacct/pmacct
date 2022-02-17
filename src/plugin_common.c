@@ -1006,7 +1006,6 @@ void P_update_stitch(struct chained_cache *cache_ptr, struct pkt_data *data, str
   }
 }
 
-
 cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
 {
   /* Max amount of tokens per string: 128 Labels */
@@ -1017,7 +1016,8 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
 
   /* incoming/normalized str to array */
   char ptm_array_labels[PTM_LABELS_LEN + 1];
-  strcpy(ptm_array_labels, ptm_labels);
+  memset(&ptm_array_labels, 0, sizeof(ptm_array_labels));
+  strncpy(ptm_array_labels, ptm_labels, (PTM_LABELS_LEN - 1));
 
   cdada_list_t *ptm_linked_list = cdada_list_create(ptm_label);
   ptm_label lbl;
@@ -1026,27 +1026,26 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
   char *tokens[MAX_TOKENS];
 
   /* init pointers to NULL */
-  int idx_0;
-
+  size_t idx_0;
   for (idx_0 = 0; idx_0 < MAX_TOKENS; idx_0++) {
     tokens[idx_0] = NULL;
   }
 
-  int tokens_counter = 0;
+  size_t tokens_counter = 0;
   for (token = strtok(ptm_array_labels, DEFAULT_SEP); token != NULL; token = strtok(NULL, DEFAULT_SEP)) {
     tokens[tokens_counter] = token;
     tokens_counter++;
   }
 
-  int list_counter;
+  size_t list_counter;
   for (list_counter = 0; (list_counter < tokens_counter) && (tokens[list_counter] != NULL); list_counter += 2) {
     memset(&lbl, 0, sizeof(lbl));
     if ((strlen(tokens[list_counter]) > MAX_PTM_LABEL_TOKEN_LEN - 1) || (strlen(tokens[list_counter + 1]) > MAX_PTM_LABEL_TOKEN_LEN - 1)) {
-      exit(-1);
+      exit(EXIT_FAILURE);
     } 
     else {
-      strcpy(lbl.key, tokens[list_counter]);                                                                                                                                                                                                                    
-      strcpy(lbl.value, tokens[list_counter + 1]);
+      strncpy(lbl.key, tokens[list_counter], (MAX_PTM_LABEL_TOKEN_LEN - 1));
+      strncpy(lbl.value, tokens[list_counter + 1], (MAX_PTM_LABEL_TOKEN_LEN - 1));
       cdada_list_push_back(ptm_linked_list, &lbl);
     }
   }
@@ -1056,14 +1055,17 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
 
 cdada_list_t *tcpflags_to_linked_list(size_t tcpflags_decimal)
 {
+  const int TCP_FLAGS = 6;
+
   /* Generate the tcpflag's binary array */
-  const char tcpflags_mask[6][5] = {"URG", "ACK", "PSH", "RST", "SYN", "FIN"};
-  size_t tcpflags_binary[6] = {0};
+  const char tcpflags_mask[][TCP_FLAG_LEN] = {"URG", "ACK", "PSH", "RST", "SYN", "FIN"};
+  size_t tcpflags_binary[TCP_FLAGS];
+  memset(&tcpflags_binary, 0, sizeof(tcpflags_binary));
 
   /* tcpflags binary format (valid decimals between 1 & 63) */
   size_t idx_0;
   if ((tcpflags_decimal > 0) && (tcpflags_decimal) < 64) {
-    for (idx_0 = 5; tcpflags_decimal > 0 && idx_0 >= 0; idx_0--) {
+    for (idx_0 = (TCP_FLAGS -1); tcpflags_decimal > 0 && idx_0 >= 0; idx_0--) {
       tcpflags_binary[idx_0] = (tcpflags_decimal % 2);
       tcpflags_decimal /= 2;
     }
@@ -1074,13 +1076,13 @@ cdada_list_t *tcpflags_to_linked_list(size_t tcpflags_decimal)
   tcpflag tcpstate;
 
   size_t idx_1;
-  for (idx_1 = 0; idx_1 < 6; idx_1++) {
+  for (idx_1 = 0; idx_1 < TCP_FLAGS; idx_1++) {
     memset(&tcpstate, 0, sizeof(tcpstate));
     if (!tcpflags_binary[idx_1]) {
-      strcpy(tcpstate.flag, "NULL");
+      strncpy(tcpstate.flag, "NULL", (TCP_FLAG_LEN - 1));
     }
     else {
-      strcpy(tcpstate.flag, tcpflags_mask[idx_1]);
+      strncpy(tcpstate.flag, tcpflags_mask[idx_1], (TCP_FLAG_LEN - 1));
     }
     cdada_list_push_back(tcpflag_linked_list, &tcpstate);
   }
@@ -1088,11 +1090,12 @@ cdada_list_t *tcpflags_to_linked_list(size_t tcpflags_decimal)
   return tcpflag_linked_list;
 }
 
-
 cdada_list_t *fwd_status_to_linked_list()
 {
+  const int FWD_STATUS_REASON_CODES = 23;
+
   /* RFC-7270: forwardingStatus with a compliant reason code */
-  const unsigned int fwd_status_decimal[23] = {
+  const unsigned int fwd_status_decimal[FWD_STATUS_REASON_CODES] = {
     64, 65, 66,
     128, 129, 130,
     131, 132, 133,
@@ -1103,7 +1106,7 @@ cdada_list_t *fwd_status_to_linked_list()
     194, 195
   };
 
-  const char fwd_status_description[23][50] = {
+  const char fwd_status_description[][FWD_TYPES_STR_LEN] = {
     "FORWARDED Unknown",
     "FORWARDED Fragmented",
     "FORWARDED Not Fragmented",
@@ -1134,10 +1137,10 @@ cdada_list_t *fwd_status_to_linked_list()
   fwd_status fwdstate;
 
   size_t idx_0;
-  for (idx_0 = 0; idx_0 < 23; idx_0++) {
+  for (idx_0 = 0; idx_0 < FWD_STATUS_REASON_CODES; idx_0++) {
     memset(&fwdstate, 0, sizeof(fwdstate));
     fwdstate.decimal = fwd_status_decimal[idx_0];
-    strcpy(fwdstate.description, fwd_status_description[idx_0]);
+    strncpy(fwdstate.description, fwd_status_description[idx_0], (FWD_TYPES_STR_LEN - 1));
 
     cdada_list_push_back(fwd_status_linked_list, &fwdstate);
   }

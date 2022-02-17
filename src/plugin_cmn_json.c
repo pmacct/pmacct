@@ -1252,7 +1252,6 @@ void *compose_purge_close_json(char *writer_name, pid_t writer_pid, int purged_e
 }
 #endif
 
-
 void compose_json_map_label(json_t *obj, struct chained_cache *cc)
 {
   char empty_string[] = "", *str_ptr;
@@ -1267,7 +1266,7 @@ void compose_json_map_label(json_t *obj, struct chained_cache *cc)
 
   /* linked-list creation */
   cdada_list_t *ptm_ll = ptm_labels_to_linked_list(lbls_norm);
-  int ll_size = cdada_list_size(ptm_ll);
+  size_t ll_size = cdada_list_size(ptm_ll);
 
   json_t *root_l1 = compose_label_json_data(ptm_ll, ll_size);
 
@@ -1277,12 +1276,11 @@ void compose_json_map_label(json_t *obj, struct chained_cache *cc)
   cdada_list_destroy(ptm_ll);
 }
 
-
 void compose_json_array_tcpflags(json_t *obj, struct chained_cache *cc)
 {
   /* linked-list creation */
   cdada_list_t *ll = tcpflags_to_linked_list(cc->tcp_flags);
-  int ll_size = cdada_list_size(ll);
+  size_t ll_size = cdada_list_size(ll);
 
   json_t *root_l1 = compose_tcpflags_json_data(ll, ll_size);
 
@@ -1291,12 +1289,11 @@ void compose_json_array_tcpflags(json_t *obj, struct chained_cache *cc)
   cdada_list_destroy(ll);
 }
 
-
 void compose_json_string_fwd_status(json_t *obj, struct chained_cache *cc)
 {
   /* linked-list creation */
   cdada_list_t *fwd_status_ll = fwd_status_to_linked_list();
-  int ll_size = cdada_list_size(fwd_status_ll);
+  size_t ll_size = cdada_list_size(fwd_status_ll);
 
   json_t *root_l1 = compose_fwd_status_json_data(cc->pnat->fwd_status, fwd_status_ll, ll_size);
 
@@ -1305,7 +1302,6 @@ void compose_json_string_fwd_status(json_t *obj, struct chained_cache *cc)
   cdada_list_destroy(fwd_status_ll);
 }
 
-
 json_t *compose_label_json_data(cdada_list_t *ll, int ll_size)
 {
   ptm_label lbl;
@@ -1313,8 +1309,9 @@ json_t *compose_label_json_data(cdada_list_t *ll, int ll_size)
   json_t *root = json_object();
   json_t *j_str_tmp = NULL;
 
-  int idx_0;
+  size_t idx_0;
   for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
+    memset(&lbl, 0, sizeof(lbl));
     cdada_list_get(ll, idx_0, &lbl);
     j_str_tmp = json_string(lbl.value);
     json_object_set_new_nocheck(root, lbl.key, j_str_tmp);
@@ -1323,7 +1320,6 @@ json_t *compose_label_json_data(cdada_list_t *ll, int ll_size)
   return root;
 }
 
-
 json_t *compose_tcpflags_json_data(cdada_list_t *ll, int ll_size)
 {
   tcpflag tcpstate;
@@ -1331,10 +1327,11 @@ json_t *compose_tcpflags_json_data(cdada_list_t *ll, int ll_size)
   json_t *root = json_array();
   json_t *j_str_tmp = NULL;
 
-  int idx_0;
+  size_t idx_0;
   for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
+    memset(&tcpstate, 0, sizeof(tcpstate));
     cdada_list_get(ll, idx_0, &tcpstate);
-    if (strcmp(tcpstate.flag, "NULL") != 0) {
+    if (strncmp(tcpstate.flag, "NULL", (TCP_FLAG_LEN - 1)) != 0) {
       j_str_tmp = json_string(tcpstate.flag);
       json_array_append(root, j_str_tmp);
     }
@@ -1342,7 +1339,6 @@ json_t *compose_tcpflags_json_data(cdada_list_t *ll, int ll_size)
 
   return root;
 }
-
 
 json_t *compose_fwd_status_json_data(size_t fwdstatus_decimal, cdada_list_t *ll, int ll_size)
 {
@@ -1366,8 +1362,9 @@ json_t *compose_fwd_status_json_data(size_t fwdstatus_decimal, cdada_list_t *ll,
     root = json_string("RFC-7270 Misinterpreted");
   }
 
-  int idx_0;
+  size_t idx_0;
   for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
+    memset(&fwdstate, 0, sizeof(fwdstate));
     cdada_list_get(ll, idx_0, &fwdstate);
     if (fwdstate.decimal == fwdstatus_decimal) {
       json_string_set(root, fwdstate.description);
