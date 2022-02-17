@@ -35,9 +35,11 @@ extern compose_json_handler cjhandler[N_PRIMITIVES];
 extern void compose_json_map_label(json_t *, struct chained_cache *);
 extern void compose_json_array_tcpflags(json_t *, struct chained_cache *);
 extern void compose_json_string_fwd_status(json_t *, struct chained_cache *);
+extern void compose_json_array_mpls_label_stack(json_t *, struct chained_cache *);
 extern json_t *compose_label_json_data(cdada_list_t *, int);
 extern json_t *compose_tcpflags_json_data(cdada_list_t *, int);
 extern json_t *compose_fwd_status_json_data(size_t, cdada_list_t *, int);
+extern json_t *compose_mpls_label_stack_json_data(u_int32_t *);
 
 extern void compose_json_event_type(json_t *, struct chained_cache *);
 extern void compose_json_tag(json_t *, struct chained_cache *);
@@ -98,6 +100,7 @@ extern void compose_json_dst_host_coords(json_t *, struct chained_cache *);
 #endif
 extern void compose_json_tcp_flags(json_t *, struct chained_cache *);
 extern void compose_json_fwd_status(json_t *, struct chained_cache *);
+extern void compose_json_mpls_label_stack(json_t *, struct chained_cache *);
 extern void compose_json_proto(json_t *, struct chained_cache *);
 extern void compose_json_tos(json_t *, struct chained_cache *);
 extern void compose_json_sampling_rate(json_t *, struct chained_cache *);
