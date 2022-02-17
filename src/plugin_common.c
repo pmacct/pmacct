@@ -1095,7 +1095,7 @@ cdada_list_t *fwd_status_to_linked_list()
   const int FWD_STATUS_REASON_CODES = 23;
 
   /* RFC-7270: forwardingStatus with a compliant reason code */
-  const unsigned int fwd_status_decimal[FWD_STATUS_REASON_CODES] = {
+  const unsigned int fwd_status_decimal[] = {
     64, 65, 66,
     128, 129, 130,
     131, 132, 133,
