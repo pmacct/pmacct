@@ -36,7 +36,7 @@
 #define AVERAGE_CHAIN_LEN 10
 #define PRINT_CACHE_ENTRIES 16411
 #define MAX_PTM_LABEL_TOKEN_LEN	128
-#define TCP_FLAG_LEN 5
+#define TCP_FLAG_LEN 6
 #define FWD_TYPES_STR_LEN 50
 
 /* cache element states */
