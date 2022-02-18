@@ -1605,7 +1605,7 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
 						u_int32_t sid, u_int16_t *pens, u_int16_t len, u_int32_t seq)
 {
   struct template_cache_entry *tpl = NULL;
-  void *tpl_ptr;
+  void *tpl_ptr = NULL;
   u_int8_t version = 0;
   int ret;
 

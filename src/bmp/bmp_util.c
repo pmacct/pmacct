@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -199,6 +199,7 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   if (!bms->is_thread && !bms->dump_backend_methods) bms->skip_rib = TRUE;
 
   bms->tag = &bmp_logdump_tag;
+  bms->tag_map = config.bmp_daemon_tag_map;
 }
 
 struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bgp_peer *bgp_peer_rem)

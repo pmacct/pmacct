@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -746,6 +746,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
       if (config.what_to_count_2 & COUNT_POST_NAT_SRC_PORT) bson_append_int(bson_elem, "post_nat_port_src", pnat->post_nat_src_port);
       if (config.what_to_count_2 & COUNT_POST_NAT_DST_PORT) bson_append_int(bson_elem, "post_nat_port_dst", pnat->post_nat_dst_port);
       if (config.what_to_count_2 & COUNT_NAT_EVENT) bson_append_int(bson_elem, "nat_event", pnat->nat_event);
+      if (config.what_to_count_2 & COUNT_FWD_STATUS) bson_append_int(bson_elem, "fwd_status", pnat->fwd_status);
+
       if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) bson_append_int(bson_elem, "mpls_label_top", pmpls->mpls_label_top);
       if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) bson_append_int(bson_elem, "mpls_label_bottom", pmpls->mpls_label_bottom);
       if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) bson_append_int(bson_elem, "mpls_stack_depth", pmpls->mpls_stack_depth);

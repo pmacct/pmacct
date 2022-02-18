@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -322,12 +322,22 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
     idx++;
   }
   
-  if (wtc_2 & COUNT_FORWARDING_STATUS) {
-    if (config.nfacctd_fwdstatus_encode_as_string) {
-      cjhandler[idx] = compose_json_string_nfacctd_fwdstatus;
+  if (wtc_2 & COUNT_FWD_STATUS) {
+    if (config.fwd_status_encode_as_string) {
+      cjhandler[idx] = compose_json_string_fwd_status;
     }
     else {
-      cjhandler[idx] = compose_json_nfacctd_fwdstatus;
+      cjhandler[idx] = compose_json_fwd_status;
+    }
+    idx++;
+  }
+
+  if (wtc_2 & COUNT_MPLS_LABEL_STACK) {
+    if (config.mpls_label_stack_encode_as_array) {
+      cjhandler[idx] = compose_json_array_mpls_label_stack;
+    }
+    else {
+      cjhandler[idx] = compose_json_mpls_label_stack;
     }
     idx++;
   }
@@ -939,12 +949,31 @@ void compose_json_tcp_flags(json_t *obj, struct chained_cache *cc)
   json_object_set_new_nocheck(obj, "tcp_flags", json_string(misc_str));
 }
 
-void compose_json_nfacctd_fwdstatus(json_t *obj, struct chained_cache *cc)
+void compose_json_fwd_status(json_t *obj, struct chained_cache *cc)
 {
   char misc_str[VERYSHORTBUFLEN];
 
-  sprintf(misc_str, "%u", cc->pnat->forwarding_status);
-  json_object_set_new_nocheck(obj, "forwarding_status", json_string(misc_str));
+  sprintf(misc_str, "%u", cc->pnat->fwd_status);
+  json_object_set_new_nocheck(obj, "fwd_status", json_string(misc_str));
+}
+
+void compose_json_mpls_label_stack(json_t *obj, struct chained_cache *cc)
+{
+  const int MAX_MPLS_LABEL_STACK = 128;
+  char mpls_label_stack[MAX_MPLS_LABEL_STACK];
+  char label_buf[MAX_MPLS_LABEL_LEN];
+    
+  memset(&mpls_label_stack, 0, sizeof(mpls_label_stack));
+
+  int idx_0;
+  for(idx_0 = 0; idx_0 < MAX_MPLS_LABELS; idx_0++) {
+    memset(&label_buf, 0, sizeof(label_buf));
+    snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", cc->pmpls->labels_cycle[idx_0]);
+    strncat(mpls_label_stack, label_buf, (MAX_MPLS_LABEL_LEN - strlen(label_buf) - 1));
+    strncat(mpls_label_stack, ",", (MAX_MPLS_LABEL_LEN - strlen(label_buf) - 1));
+  }
+
+  json_object_set_new_nocheck(obj, "mpls_label_stack", json_string(mpls_label_stack));
 }
 
 void compose_json_proto(json_t *obj, struct chained_cache *cc)
@@ -1252,7 +1281,6 @@ void *compose_purge_close_json(char *writer_name, pid_t writer_pid, int purged_e
 }
 #endif
 
-
 void compose_json_map_label(json_t *obj, struct chained_cache *cc)
 {
   char empty_string[] = "", *str_ptr;
@@ -1277,7 +1305,6 @@ void compose_json_map_label(json_t *obj, struct chained_cache *cc)
   cdada_list_destroy(ptm_ll);
 }
 
-
 void compose_json_array_tcpflags(json_t *obj, struct chained_cache *cc)
 {
   /* linked-list creation */
@@ -1291,20 +1318,25 @@ void compose_json_array_tcpflags(json_t *obj, struct chained_cache *cc)
   cdada_list_destroy(ll);
 }
 
-
-void compose_json_string_nfacctd_fwdstatus(json_t *obj, struct chained_cache *cc)
+void compose_json_string_fwd_status(json_t *obj, struct chained_cache *cc)
 {
   /* linked-list creation */
-  cdada_list_t *nfacctd_fwdstatus_ll = nfacctd_fwdstatus_to_linked_list();
-  int ll_size = cdada_list_size(nfacctd_fwdstatus_ll);
+  cdada_list_t *fwd_status_ll = fwd_status_to_linked_list();
+  int ll_size = cdada_list_size(fwd_status_ll);
 
-  json_t *root_l1 = compose_nfacctd_fwdstatus_json_data(cc->pnat->forwarding_status, nfacctd_fwdstatus_ll, ll_size);
+  json_t *root_l1 = compose_fwd_status_json_data(cc->pnat->fwd_status, fwd_status_ll, ll_size);
 
-  json_object_set_new_nocheck(obj, "forwarding_status", root_l1);
+  json_object_set_new_nocheck(obj, "fwd_status", root_l1);
 
-  cdada_list_destroy(nfacctd_fwdstatus_ll);
+  cdada_list_destroy(fwd_status_ll);
 }
 
+void compose_json_array_mpls_label_stack(json_t *obj, struct chained_cache *cc)
+{
+  json_t *root_l1 = compose_mpls_label_stack_json_data(cc->pmpls->labels_cycle);
+
+  json_object_set_new_nocheck(obj, "mpls_label_stack", root_l1);
+}
 
 json_t *compose_label_json_data(cdada_list_t *ll, int ll_size)
 {
@@ -1322,7 +1354,6 @@ json_t *compose_label_json_data(cdada_list_t *ll, int ll_size)
 
   return root;
 }
-
 
 json_t *compose_tcpflags_json_data(cdada_list_t *ll, int ll_size)
 {
@@ -1343,10 +1374,9 @@ json_t *compose_tcpflags_json_data(cdada_list_t *ll, int ll_size)
   return root;
 }
 
-
-json_t *compose_nfacctd_fwdstatus_json_data(size_t fwdstatus_decimal, cdada_list_t *ll, int ll_size)
+json_t *compose_fwd_status_json_data(size_t fwdstatus_decimal, cdada_list_t *ll, int ll_size)
 {
-  nfacctd_fwdstatus fwdstate;
+  fwd_status fwdstate;
   json_t *root = NULL;
 
   /* default fwdstatus */
@@ -1371,6 +1401,36 @@ json_t *compose_nfacctd_fwdstatus_json_data(size_t fwdstatus_decimal, cdada_list
     cdada_list_get(ll, idx_0, &fwdstate);
     if (fwdstate.decimal == fwdstatus_decimal) {
       json_string_set(root, fwdstate.description);
+    }
+  }
+
+  return root;
+}
+
+json_t *compose_mpls_label_stack_json_data(u_int32_t *labels_cycle)
+{
+  const int MAX_IDX_LEN = 4;
+  const int MAX_MPLS_LABEL_IDX_LEN = (MAX_IDX_LEN + MAX_MPLS_LABEL_LEN);
+  char label_buf[MAX_MPLS_LABEL_LEN];
+  char label_idx_buf[MAX_MPLS_LABEL_IDX_LEN];
+  char idx_buf[MAX_IDX_LEN];
+
+  json_t *root = json_array();
+  json_t *j_str_tmp = NULL;
+
+  size_t idx_0;
+  for (idx_0 = 0; idx_0 < MAX_MPLS_LABELS; idx_0++) {
+    memset(&label_buf, 0, sizeof(label_buf));
+    snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", *(labels_cycle + idx_0));
+    if (strncmp("0", label_buf, 1)) {
+      memset(&idx_buf, 0, sizeof(idx_buf));
+      memset(&label_idx_buf, 0, sizeof(label_idx_buf));
+      snprintf(idx_buf, MAX_IDX_LEN, "%zu", idx_0);
+      strncat(label_idx_buf, idx_buf, (MAX_MPLS_LABEL_IDX_LEN - 1));
+      strncat(label_idx_buf, "-", (MAX_MPLS_LABEL_IDX_LEN - strlen(idx_buf) - 1));
+      strncat(label_idx_buf, label_buf, (MAX_MPLS_LABEL_IDX_LEN - strlen(idx_buf) - strlen("-") - 1));
+      j_str_tmp = json_string(label_idx_buf);
+      json_array_append(root, j_str_tmp); 
     }
   }
 

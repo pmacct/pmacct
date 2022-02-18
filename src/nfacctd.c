@@ -529,10 +529,10 @@ int main(int argc,char **argv, char **envp)
 	if (list->cfg.what_to_count_2 & (COUNT_POST_NAT_SRC_HOST|COUNT_POST_NAT_DST_HOST|
 			COUNT_POST_NAT_SRC_PORT|COUNT_POST_NAT_DST_PORT|COUNT_NAT_EVENT|
 			COUNT_TIMESTAMP_START|COUNT_TIMESTAMP_END|COUNT_TIMESTAMP_ARRIVAL|
-			COUNT_EXPORT_PROTO_TIME|COUNT_FORWARDING_STATUS))
+			COUNT_EXPORT_PROTO_TIME|COUNT_FWD_STATUS))
 	  list->cfg.data_type |= PIPE_TYPE_NAT;
 
-	if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_TOP|COUNT_MPLS_LABEL_BOTTOM|
+	if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_STACK|COUNT_MPLS_LABEL_TOP|COUNT_MPLS_LABEL_BOTTOM|
 			COUNT_MPLS_STACK_DEPTH))
 	  list->cfg.data_type |= PIPE_TYPE_MPLS;
 
@@ -589,11 +589,6 @@ int main(int argc,char **argv, char **envp)
         if (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS) {
 	  enable_ip_fragment_handler();
           config.classifier_ndpi = TRUE;
-        }
-
-        if ((list->cfg.what_to_count & COUNT_CLASS) && (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS)) {
-          Log(LOG_ERR, "ERROR ( %s/%s ): 'class_legacy' and 'class' primitives are mutual exclusive. Exiting.\n\n", list->name, list->type.string);
-          exit_gracefully(1);
         }
 #endif
 
@@ -1149,7 +1144,7 @@ int main(int argc,char **argv, char **envp)
 #endif
   }
 
-  init_classifiers(NULL);
+  init_classifiers();
 
 #if defined (WITH_NDPI)
   if (config.classifier_ndpi) {

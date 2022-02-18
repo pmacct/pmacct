@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -31,7 +31,6 @@
 #include "net_aggr.h"
 #include "thread_pool.h"
 #include "bgp/bgp.h"
-#include "classifier.h"
 #include "isis/isis.h"
 #include "bmp/bmp.h"
 #if defined (WITH_NDPI)
@@ -232,8 +231,6 @@ int pm_pcap_add_interface(struct pm_pcap_device *dev_ptr, char *ifname, struct p
       if (dev_ptr->link_type == _devices[index].link_type)
         dev_ptr->data = &_devices[index];
     }
-
-    load_plugin_filters(dev_ptr->link_type);
 
     pm_pcap_check(dev_ptr);
     pm_pcap_add_filter(dev_ptr);
@@ -639,11 +636,6 @@ int main(int argc,char **argv, char **envp)
       /* applies to all plugins */
       plugin_pipe_check(&list->cfg);
 
-      if (config.classifiers_path && (list->cfg.sampling_rate || config.ext_sampling_rate)) {
-        Log(LOG_ERR, "ERROR ( %s/core ): Packet sampling and classification are mutual exclusive.\n", config.name);
-        exit_gracefully(1);
-      }
-
       if (list->cfg.sampling_rate && config.ext_sampling_rate) {
         Log(LOG_ERR, "ERROR ( %s/core ): Internal packet sampling and external packet sampling are mutual exclusive.\n", config.name);
         exit_gracefully(1);
@@ -690,11 +682,6 @@ int main(int argc,char **argv, char **envp)
 	  list->cfg.what_to_count |= COUNT_PEER_DST_IP;
 	}
 	if (list->cfg.nfprobe_version == 9 || list->cfg.nfprobe_version == 10) {
-	  if (list->cfg.classifiers_path) {
-	    list->cfg.what_to_count |= COUNT_CLASS;
-	    config.handle_flows = TRUE;
-	  }
-
 	  if (list->cfg.nfprobe_what_to_count_2 & COUNT_NDPI_CLASS)
 	    list->cfg.what_to_count_2 |= COUNT_NDPI_CLASS;
 
@@ -744,11 +731,6 @@ int main(int argc,char **argv, char **envp)
 	if (psize < 128) psize = config.snaplen = 128; /* SFL_DEFAULT_HEADER_SIZE */
 	list->cfg.what_to_count = COUNT_PAYLOAD;
 	list->cfg.what_to_count_2 = 0;
-	if (list->cfg.classifiers_path) {
-	  list->cfg.what_to_count |= COUNT_CLASS;
-	  config.handle_fragments = TRUE;
-	  config.handle_flows = TRUE;
-	}
 #if defined (WITH_NDPI)
 	if (list->cfg.ndpi_num_roots) list->cfg.what_to_count_2 |= COUNT_NDPI_CLASS;
 #endif
@@ -817,10 +799,6 @@ int main(int argc,char **argv, char **envp)
 	  config.handle_fragments = TRUE;
 	  config.handle_flows = TRUE;
 	}
-	if (list->cfg.what_to_count & COUNT_CLASS) {
-	  config.handle_fragments = TRUE;
-	  config.handle_flows = TRUE;
-	}
 	if (!list->cfg.what_to_count && !list->cfg.what_to_count_2 && !list->cfg.cpptrs.num) {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): defaulting to SRC HOST aggregation.\n", list->name, list->type.string);
 	  list->cfg.what_to_count |= COUNT_SRC_HOST;
@@ -856,11 +834,6 @@ int main(int argc,char **argv, char **envp)
           }
         }
 
-	if (list->cfg.what_to_count & COUNT_CLASS && !list->cfg.classifiers_path) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): 'class' aggregation selected but NO 'classifiers' key specified. Exiting...\n\n", list->name, list->type.string);
-	  exit_gracefully(1);
-	}
-
 	list->cfg.type_id = list->type.id;
 	bgp_config_checks(&list->cfg);
 
@@ -874,21 +847,11 @@ int main(int argc,char **argv, char **envp)
 	config.handle_fragments = TRUE;
 	config.classifier_ndpi = TRUE;
       }
-
-      if ((list->cfg.what_to_count & COUNT_CLASS) && (list->cfg.what_to_count_2 & COUNT_NDPI_CLASS)) {
-	Log(LOG_ERR, "ERROR ( %s/%s ): 'class_legacy' and 'class' primitives are mutual exclusive. Exiting...\n\n", list->name, list->type.string);
-	exit_gracefully(1);
-      }
     }
     list = list->next;
   }
 
   /* plugins glue: creation (since 094) */
-  if (config.classifiers_path) {
-    init_classifiers(config.classifiers_path);
-    init_conntrack_table();
-  }
-
 #if defined (WITH_NDPI)
   if (config.classifier_ndpi) {
     config.handle_fragments = TRUE;
@@ -966,6 +929,7 @@ int main(int argc,char **argv, char **envp)
     if (!ret) {
       cb_data.device = &devices.list[0];
       devices.num = 1;
+      load_plugin_filters(devices.list[0].link_type);
     }
   }
   else if (config.pcap_interfaces_map) {
@@ -990,6 +954,10 @@ int main(int argc,char **argv, char **envp)
 	if (devices.list[devices.num].fd) FD_SET(devices.list[devices.num].fd, &bkp_read_descs);
 	devices.num++;
       }
+    }
+
+    if (devices.num) {
+      load_plugin_filters(devices.list[0].link_type);
     }
 
     if (!pm_pcap_if_idx) {
@@ -1229,6 +1197,7 @@ int main(int argc,char **argv, char **envp)
 	if (!ret) {
 	  cb_data.device = &devices.list[0];
 	  devices.num = 1;
+	  load_plugin_filters(devices.list[0].link_type);
 	}
       }
 
@@ -1326,6 +1295,10 @@ int main(int argc,char **argv, char **envp)
             }
 	    else Log(LOG_WARNING, "WARN ( %s/core ): Mayday. Interface '%s' went lost (2).\n", config.name, ifname);
 	  }
+	}
+
+	if (devices.num) {
+	  load_plugin_filters(devices.list[0].link_type);
 	}
 
 	reload_map_pmacctd = FALSE;

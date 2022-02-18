@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -93,7 +93,7 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telem
 
     json_object_set_new_nocheck(obj, "telemetry_port", json_integer((json_int_t)peer->tcp_port));
 
-    if (config.pre_tag_map && tag) {
+    if (config.telemetry_tag_map && tag) {
       telemetry_tag_print_json(obj, tag);
     }
 
@@ -454,10 +454,10 @@ int telemetry_dump_event_runner(struct pm_dump_runner *pdr)
       }
 #endif
 
-      /* Being pre_tag_map limited to 'ip' key lookups, this is finely
-	 placed here. Should further lookups be possible, this may be
-	 very possibly moved inside the loop */
-      if (config.pre_tag_map) {
+      /* Being telemetry_tag_map limited to 'ip' key lookups, this is
+	 finely placed here. Should further lookups be possible, this
+	 may be very possibly moved inside the loop */
+      if (config.telemetry_tag_map) {
 	telemetry_tag_init_find(peer, (struct sockaddr *) &telemetry_logdump_tag_peer, &telemetry_logdump_tag);
 	telemetry_tag_find((struct id_table *)telemetry_logdump_tag.tag_table, &telemetry_logdump_tag, &telemetry_logdump_tag.tag, NULL);
       }

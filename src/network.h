@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -514,6 +514,10 @@ struct pkt_stitching {
 #define MAX_BGP_LRG_COMMS       96
 #define MAX_BGP_ASPATH          128
 
+/* MPLS */
+#define MAX_MPLS_LABELS         6
+#define MAX_MPLS_LABEL_LEN      16
+
 struct extra_primitives {
   u_int16_t off_pkt_bgp_primitives;
   u_int16_t off_pkt_lbgp_primitives;
@@ -573,7 +577,7 @@ struct pkt_nat_primitives {
   u_int16_t post_nat_src_port;
   u_int16_t post_nat_dst_port;
   u_int8_t nat_event;
-  u_int32_t forwarding_status; /* XXX: clean-up: to be moved in a separate structure */
+  u_int8_t fwd_status;
   struct timeval timestamp_start; /* XXX: clean-up: to be moved in a separate structure */
   struct timeval timestamp_end; /* XXX: clean-up: to be moved in a separate structure */
   struct timeval timestamp_arrival; /* XXX: clean-up: to be moved in a separate structure */
@@ -584,6 +588,15 @@ struct pkt_mpls_primitives {
   u_int32_t mpls_label_top;
   u_int32_t mpls_label_bottom;
   u_int8_t mpls_stack_depth;
+
+  /* MPLS stack - fields 70-75 */
+  u_int32_t labels_cycle[MAX_MPLS_LABELS];
+  u_int32_t mpls_top_label_stack_section;
+  u_int32_t mpls_label_stack_section2;
+  u_int32_t mpls_label_stack_section3;
+  u_int32_t mpls_label_stack_section4;
+  u_int32_t mpls_label_stack_section5;
+  u_int32_t mpls_label_stack_section6;
 };
 
 struct pkt_tunnel_primitives {

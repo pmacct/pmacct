@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -61,7 +61,7 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
 
   if (wtc_2 & COUNT_LABEL) {
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_schema_ipfix(schema);
+      compose_label_avro_schema_nonopt(schema);
     }
     else {
       avro_schema_record_field_append(schema, "label", avro_schema_string());
@@ -225,12 +225,21 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
     }
   }
   
-  if (wtc_2 & COUNT_FORWARDING_STATUS) {
-    if (config.nfacctd_fwdstatus_encode_as_string) {
-      compose_nfacctd_fwdstatus_avro_schema(schema);
+  if (wtc_2 & COUNT_FWD_STATUS) {
+    if (config.fwd_status_encode_as_string) {
+      compose_fwd_status_avro_schema(schema);
     }
     else {
-      avro_schema_record_field_append(schema, "forwarding_status", avro_schema_string());
+      avro_schema_record_field_append(schema, "fwd_status", avro_schema_string());
+    }
+  }
+
+  if (wtc_2 & COUNT_MPLS_LABEL_STACK) {
+    if (config.mpls_label_stack_encode_as_array) {
+      compose_mpls_label_stack_schema(schema);
+    }
+    else {
+      avro_schema_record_field_append(schema, "mpls_label_stack", avro_schema_string());
     }
   }
 
@@ -451,7 +460,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
     if (!str_ptr) str_ptr = empty_string;
 
     if (config.pretag_label_encode_as_map) {
-      compose_label_avro_data_ipfix(str_ptr, value);
+      compose_label_avro_data_nonopt(str_ptr, value);
     }
     else {
       pm_avro_check(avro_value_get_by_name(&value, "label", &field, NULL));
@@ -831,15 +840,39 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
     }
   }
   
-  if (wtc_2 & COUNT_FORWARDING_STATUS) {
-    sprintf(misc_str, "%u", pnat->forwarding_status);
+  if (wtc_2 & COUNT_FWD_STATUS) {
+    sprintf(misc_str, "%u", pnat->fwd_status);
 
-    if (config.nfacctd_fwdstatus_encode_as_string) {
-      compose_nfacctd_fwdstatus_avro_data(pnat->forwarding_status, value);
+    if (config.fwd_status_encode_as_string) {
+      compose_fwd_status_avro_data(pnat->fwd_status, value);
     }
     else { 
-      pm_avro_check(avro_value_get_by_name(&value, "forwarding_status", &field, NULL));
+      pm_avro_check(avro_value_get_by_name(&value, "fwd_status", &field, NULL));
       pm_avro_check(avro_value_set_string(&field, misc_str));
+    }
+  }
+
+  if (wtc_2 & COUNT_MPLS_LABEL_STACK) {
+    if (config.mpls_label_stack_encode_as_array) {
+      compose_mpls_label_stack_data(pmpls->labels_cycle, value);
+    } 
+    else {
+      const int MAX_MPLS_LABEL_STACK = 128;
+      char mpls_label_stack[MAX_MPLS_LABEL_STACK];
+      char label_buf[MAX_MPLS_LABEL_LEN];
+  
+      memset(&mpls_label_stack, 0, sizeof(mpls_label_stack));
+
+      int idx_0;
+      for(idx_0 = 0; idx_0 < MAX_MPLS_LABELS; idx_0++) {
+        memset(&label_buf, 0, sizeof(label_buf));
+        snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", pmpls->labels_cycle[idx_0]);
+        strncat(mpls_label_stack, label_buf, (MAX_MPLS_LABEL_LEN - strlen(label_buf) - 1));
+        strncat(mpls_label_stack, ",", (MAX_MPLS_LABEL_LEN - strlen(label_buf) - 1));
+      }
+
+      pm_avro_check(avro_value_get_by_name(&value, "mpls_label_stack", &field, NULL));
+      pm_avro_check(avro_value_set_string(&field, mpls_label_stack));
     }
   }
 
@@ -1381,8 +1414,8 @@ void pm_avro_exit_gracefully(int status)
   }
 }
 
-
-void compose_label_avro_schema_bxp(avro_schema_t sc_type_record)
+/* Compose optional label schema, ie. in BGP, BMP */
+void compose_label_avro_schema_opt(avro_schema_t sc_type_record)
 {
   sc_type_string = avro_schema_string();
   sc_type_union = avro_schema_union();
@@ -1396,8 +1429,8 @@ void compose_label_avro_schema_bxp(avro_schema_t sc_type_record)
   avro_schema_decref(sc_type_string);
 }
 
-
-void compose_label_avro_schema_ipfix(avro_schema_t sc_type_record)
+/* Compose mandatory / non-optional label schema, ie. in IPFIX */
+void compose_label_avro_schema_nonopt(avro_schema_t sc_type_record)
 {
   sc_type_string = avro_schema_string();
   sc_type_map = avro_schema_map(sc_type_string);
@@ -1408,7 +1441,6 @@ void compose_label_avro_schema_ipfix(avro_schema_t sc_type_record)
   avro_schema_decref(sc_type_map);
   avro_schema_decref(sc_type_string);
 }
-
 
 void compose_tcpflags_avro_schema(avro_schema_t sc_type_record)
 {
@@ -1421,17 +1453,28 @@ void compose_tcpflags_avro_schema(avro_schema_t sc_type_record)
   avro_schema_decref(sc_type_string);
 }
 
-void compose_nfacctd_fwdstatus_avro_schema(avro_schema_t sc_type_record)
+void compose_fwd_status_avro_schema(avro_schema_t sc_type_record)
 {
   sc_type_string = avro_schema_string();
-  avro_schema_record_field_append(sc_type_record, "forwarding_status", sc_type_string);
+  avro_schema_record_field_append(sc_type_record, "fwd_status", sc_type_string);
 
   /* free-up memory */
   avro_schema_decref(sc_type_string);
 }
 
+void compose_mpls_label_stack_schema(avro_schema_t sc_type_record)
+{
+  sc_type_string = avro_schema_string();
+  sc_type_array = avro_schema_array(sc_type_string);
+  avro_schema_record_field_append(sc_type_record, "mpls_label_stack", sc_type_array);
 
-int compose_label_avro_data_ipfix(char *str_ptr, avro_value_t v_type_record)
+  /* free-up memory */
+  avro_schema_decref(sc_type_array);
+  avro_schema_decref(sc_type_string);
+}
+
+/* Insert mandatory / non-optional label data, ie. in IPFIX */
+int compose_label_avro_data_nonopt(char *str_ptr, avro_value_t v_type_record)
 {
   /* labels normalization */
   cdada_str_t *lbls_cdada = cdada_str_create(str_ptr);
@@ -1462,8 +1505,8 @@ int compose_label_avro_data_ipfix(char *str_ptr, avro_value_t v_type_record)
   return 0;
 }
 
-
-int compose_label_avro_data_bxp(char *str_ptr, avro_value_t v_type_record)
+/* Insert optional label data, ie. in BGP, BMP */
+int compose_label_avro_data_opt(char *str_ptr, avro_value_t v_type_record)
 {
   /* labels normalization */
   cdada_str_t *lbls_cdada = cdada_str_create(str_ptr);
@@ -1504,7 +1547,6 @@ int compose_label_avro_data_bxp(char *str_ptr, avro_value_t v_type_record)
   return 0;
 }
 
-
 int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_record)
 {
   tcpflag tcpstate;
@@ -1534,45 +1576,39 @@ int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_reco
   return 0;
 }
 
-
-int compose_nfacctd_fwdstatus_avro_data(size_t fwdstatus_decimal, avro_value_t v_type_record)
+int compose_fwd_status_avro_data(size_t fwdstatus_decimal, avro_value_t v_type_record)
 {
-  nfacctd_fwdstatus fwdstate;
+  fwd_status fwdstate;
 
   /* linked-list creation */
-  cdada_list_t *ll = nfacctd_fwdstatus_to_linked_list();
+  cdada_list_t *ll = fwd_status_to_linked_list();
   int ll_size = cdada_list_size(ll);
 
   avro_value_t v_type_string;
-  avro_value_iface_t *if_type_string;
-
-  if_type_string = avro_generic_class_from_schema(sc_type_string);
-
-  avro_generic_value_new(if_type_string, &v_type_string);
   
   /* default fwdstatus */
   if ((fwdstatus_decimal >= 0) && (fwdstatus_decimal <= 63)) {
-    if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
+    if (avro_value_get_by_name(&v_type_record, "fwd_status", &v_type_string, NULL) == 0) {
       avro_value_set_string(&v_type_string, "UNKNOWN Unclassified");
     }
   }
   else if ((fwdstatus_decimal >= 64) && (fwdstatus_decimal <= 127)) {
-    if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
+    if (avro_value_get_by_name(&v_type_record, "fwd_status", &v_type_string, NULL) == 0) {
       avro_value_set_string(&v_type_string, "FORWARDED Unclassified");
     }
   }
   else if ((fwdstatus_decimal >= 128) && (fwdstatus_decimal <= 191)) {
-    if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
+    if (avro_value_get_by_name(&v_type_record, "fwd_status", &v_type_string, NULL) == 0) {
       avro_value_set_string(&v_type_string, "DROPPED Unclassified");
     }
   }
   else if ((fwdstatus_decimal >= 192) && (fwdstatus_decimal <= 255)) {
-    if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
+    if (avro_value_get_by_name(&v_type_record, "fwd_status", &v_type_string, NULL) == 0) {
       avro_value_set_string(&v_type_string, "CONSUMED Unclassified");
     }
   }
   else {
-    if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
+    if (avro_value_get_by_name(&v_type_record, "fwd_status", &v_type_string, NULL) == 0) {
       avro_value_set_string(&v_type_string, "RFC-7270 Misinterpreted");
     }
   }
@@ -1580,7 +1616,7 @@ int compose_nfacctd_fwdstatus_avro_data(size_t fwdstatus_decimal, avro_value_t v
   size_t idx_0;
   for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
     cdada_list_get(ll, idx_0, &fwdstate);
-    if (avro_value_get_by_name(&v_type_record, "forwarding_status", &v_type_string, NULL) == 0) {
+    if (avro_value_get_by_name(&v_type_record, "fwd_status", &v_type_string, NULL) == 0) {
       if (fwdstate.decimal == fwdstatus_decimal) {
         avro_value_set_string(&v_type_string, fwdstate.description);
       }
@@ -1589,7 +1625,38 @@ int compose_nfacctd_fwdstatus_avro_data(size_t fwdstatus_decimal, avro_value_t v
   
   /* free-up memory */
   cdada_list_destroy(ll);
-  avro_value_iface_decref(if_type_string);
+
+  return 0;
+}
+
+int compose_mpls_label_stack_data(u_int32_t *labels_cycle, avro_value_t v_type_record)
+{
+  const int MAX_IDX_LEN = 4;
+  const int MAX_MPLS_LABEL_IDX_LEN = (MAX_IDX_LEN + MAX_MPLS_LABEL_LEN); 
+  char label_buf[MAX_MPLS_LABEL_LEN];
+  char label_idx_buf[MAX_MPLS_LABEL_IDX_LEN];
+  char idx_buf[MAX_IDX_LEN];
+
+  avro_value_t v_type_array, v_type_string;
+
+  size_t idx_0;
+  for (idx_0 = 0; idx_0 < MAX_MPLS_LABELS; idx_0++) {
+    memset(&label_buf, 0, sizeof(label_buf));
+    snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", *(labels_cycle + idx_0));
+    if (avro_value_get_by_name(&v_type_record, "mpls_label_stack", &v_type_array, NULL) == 0) {
+      if (strncmp("0", label_buf, 1)) {
+        memset(&idx_buf, 0, sizeof(idx_buf));
+        memset(&label_idx_buf, 0, sizeof(label_idx_buf));
+        snprintf(idx_buf, MAX_IDX_LEN, "%zu", idx_0);
+        strncat(label_idx_buf, idx_buf, (MAX_MPLS_LABEL_IDX_LEN - 1));
+        strncat(label_idx_buf, "-", (MAX_MPLS_LABEL_IDX_LEN - strlen(idx_buf) - 1));
+        strncat(label_idx_buf, label_buf, (MAX_MPLS_LABEL_IDX_LEN - strlen(idx_buf) - strlen("-") - 1));
+        if (avro_value_append(&v_type_array, &v_type_string, NULL) == 0) {
+          avro_value_set_string(&v_type_string, label_idx_buf);
+        }
+      }
+    }
+  }
 
   return 0;
 }

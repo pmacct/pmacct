@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -534,8 +534,8 @@ void evaluate_packet_handlers()
     }
     
     /* ACCT_PM & ACCT_SF atm not handled */
-    if (channels_list[index].aggregation_2 & COUNT_FORWARDING_STATUS) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_forwarding_status_handler;
+    if (channels_list[index].aggregation_2 & COUNT_FWD_STATUS) {
+      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_fwd_status_handler;
       primitives++;
     }
 
@@ -547,9 +547,8 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation & COUNT_CLASS) {
-      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = class_handler;
-      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_class_handler;
-      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_class_handler; 
+      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_class_handler;
+      else primitives--;
       primitives++;
     }
 
@@ -737,6 +736,11 @@ void evaluate_packet_handlers()
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_vxlan_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_vxlan_handler;
       else primitives--;
+      primitives++;
+    }
+
+    if (channels_list[index].aggregation_2 & COUNT_MPLS_LABEL_STACK) {
+      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_label_stack;
       primitives++;
     }
 
@@ -1420,20 +1424,6 @@ void flows_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs,
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
   if (pptrs->new_flow) pdata->flo_num = 1;
-}
-
-void class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_data *pdata = (struct pkt_data *) *data;
-
-  pdata->primitives.class = pptrs->class;
-  pdata->cst.ba = pptrs->cst.ba;
-  pdata->cst.pa = pptrs->cst.pa;
-  if (chptr->aggregation & COUNT_FLOWS)
-    pdata->cst.fa = pptrs->cst.fa;
-  pdata->cst.stamp.tv_sec = pptrs->cst.stamp.tv_sec;
-  pdata->cst.stamp.tv_usec = pptrs->cst.stamp.tv_usec;
-  pdata->cst.tentatives = pptrs->cst.tentatives;
 }
 
 #if defined (WITH_NDPI)
@@ -2424,7 +2414,12 @@ void NF_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   case 10:
   case 9:
     if (tpl->tpl[NF9_TCP_FLAGS].len == 1) {
-      memcpy(&tcp_flags, pptrs->f_data+tpl->tpl[NF9_TCP_FLAGS].off, MIN(tpl->tpl[NF9_TCP_FLAGS].len, 1));
+      memcpy(&tcp_flags, pptrs->f_data+tpl->tpl[NF9_TCP_FLAGS].off, 1);
+      pdata->tcp_flags = tcp_flags;
+    }
+    else if (tpl->tpl[NF9_TCP_FLAGS].len == 2) {
+      /* trash the first octet and copy over the second one */
+      memcpy(&tcp_flags, (pptrs->f_data + tpl->tpl[NF9_TCP_FLAGS].off + 1), 1);
       pdata->tcp_flags = tcp_flags;
     }
     else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len)
@@ -2440,19 +2435,19 @@ void NF_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   }
 }
 
-void NF_forwarding_status_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void NF_fwd_status_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int32_t forwarding_status = 0;
+  u_int32_t fwd_status = 0;
 
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_FORWARDING_STATUS].len == 1) {
-      memcpy(&forwarding_status, pptrs->f_data+tpl->tpl[NF9_FORWARDING_STATUS].off, MIN(tpl->tpl[NF9_FORWARDING_STATUS].len, 1));
-      pnat->forwarding_status = forwarding_status;
+    if (tpl->tpl[NF9_FWD_STATUS].len == 1) {
+      memcpy(&fwd_status, pptrs->f_data+tpl->tpl[NF9_FWD_STATUS].off, MIN(tpl->tpl[NF9_FWD_STATUS].len, 1));
+      pnat->fwd_status = fwd_status;
     }
     break;
   case 5:
@@ -3523,6 +3518,51 @@ void NF_nat_event_handler(struct channels_list_entry *chptr, struct packet_ptrs 
       memcpy(&pnat->nat_event, pptrs->f_data+tpl->tpl[NF9_NAT_EVENT].off, MIN(tpl->tpl[NF9_NAT_EVENT].len, 1));
     else if ((utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_EVENT, FALSE)))
       memcpy(&pnat->nat_event, pptrs->f_data+utpl->off, MIN(utpl->len, 1));
+    break;
+  default:
+    break;
+  }
+}
+
+void NF_mpls_label_stack(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
+  memset(&pmpls->labels_cycle, 0, sizeof(pmpls->labels_cycle));
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_MPLS_LABEL_1].len == 3) {
+      pmpls->mpls_top_label_stack_section = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_1].off);
+      pmpls->labels_cycle[0] = pmpls->mpls_top_label_stack_section;
+    } 
+
+    if (tpl->tpl[NF9_MPLS_LABEL_2].len == 3) {
+      pmpls->mpls_label_stack_section2 = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_2].off);
+      pmpls->labels_cycle[1] = pmpls->mpls_label_stack_section2;
+    }
+
+    if (tpl->tpl[NF9_MPLS_LABEL_3].len == 3) {
+      pmpls->mpls_label_stack_section3 = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_3].off);
+      pmpls->labels_cycle[2] = pmpls->mpls_label_stack_section3;
+    } 
+    
+    if (tpl->tpl[NF9_MPLS_LABEL_4].len == 3) {
+      pmpls->mpls_label_stack_section4 = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_4].off);
+      pmpls->labels_cycle[3] = pmpls->mpls_label_stack_section4;
+    } 
+    
+    if (tpl->tpl[NF9_MPLS_LABEL_5].len == 3) {
+      pmpls->mpls_label_stack_section5 = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_5].off);
+      pmpls->labels_cycle[4] = pmpls->mpls_label_stack_section5;
+    } 
+    
+    if (tpl->tpl[NF9_MPLS_LABEL_6].len == 3) {
+      pmpls->mpls_label_stack_section6 = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_6].off);
+      pmpls->labels_cycle[5] = pmpls->mpls_label_stack_section6;
+    }
     break;
   default:
     break;
@@ -5264,20 +5304,6 @@ void SF_sysid_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   pdata->primitives.export_proto_sysid = sample->agentSubId;
-}
-
-void SF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_data *pdata = (struct pkt_data *) *data;
-  SFSample *sample = (SFSample *) pptrs->f_data;
-
-  pdata->primitives.class = sample->class;
-  pdata->cst.ba = 0;
-  pdata->cst.pa = 0;
-  pdata->cst.fa = 0;
-
-  pdata->cst.stamp.tv_sec = time(NULL); /* XXX */
-  pdata->cst.stamp.tv_usec = 0;
 }
 
 #if defined (WITH_NDPI)

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -46,14 +46,19 @@
 #define	AVRO_ACCT_CLOSE_SID	2
 
 /* prototypes */
-extern void compose_label_avro_schema_ipfix(avro_schema_t);
-extern void compose_label_avro_schema_bxp(avro_schema_t);
+extern void compose_label_avro_schema_opt(avro_schema_t);
+extern void compose_label_avro_schema_nonopt(avro_schema_t);
 extern void compose_tcpflags_avro_schema(avro_schema_t);
-extern void compose_nfacctd_fwdstatus_avro_schema(avro_schema_t);
-extern int compose_label_avro_data_ipfix(char *, avro_value_t);
-extern int compose_label_avro_data_bxp(char *, avro_value_t);
+extern void compose_fwd_status_avro_schema(avro_schema_t);
+extern void compose_mpls_label_stack_schema(avro_schema_t);
+extern int compose_label_avro_data_opt(char *, avro_value_t);
+extern int compose_label_avro_data_nonopt(char *, avro_value_t);
 extern int compose_tcpflags_avro_data(size_t, avro_value_t);
-extern int compose_nfacctd_fwdstatus_avro_data(size_t, avro_value_t);
+extern int compose_mpls_label_stack_data(u_int32_t *, avro_value_t);
+extern int compose_label_avro_data_opt(char *, avro_value_t);
+extern int compose_label_avro_data_nonopt(char *, avro_value_t);
+extern int compose_tcpflags_avro_data(size_t, avro_value_t);
+extern int compose_fwd_status_avro_data(size_t, avro_value_t);
 
 extern void pm_avro_exit_gracefully(int);
 

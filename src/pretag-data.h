@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -63,7 +63,8 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"jeq", PT_map_jeq_handler},
   {"return", PT_map_return_handler},
   {"stack", PT_map_stack_handler},
-  {"fwdstatus", PT_map_fwdstatus_handler},
+  {"fwdstatus", PT_map_fwd_status_handler}, /* XXX: to be deprecated */
+  {"fwd_status", PT_map_fwd_status_handler},
   {"is_bi_flow", PT_map_is_bi_flow_handler},
   {"", NULL}
 };
@@ -88,7 +89,7 @@ const struct _map_index_dictionary_line tag_map_index_entries_dictionary[] = {
   {PRETAG_SRC_NET, PT_map_index_entries_src_net_handler},
   {PRETAG_DST_NET, PT_map_index_entries_dst_net_handler},
   {PRETAG_IS_MULTICAST, PT_map_index_entries_is_multicast_handler},
-  {PRETAG_FWDSTATUS_ID, PT_map_index_entries_fwdstatus_handler},
+  {PRETAG_FWDSTATUS_ID, PT_map_index_entries_fwd_status_handler},
   {0, NULL}
 };
 
@@ -112,7 +113,7 @@ const struct _map_index_dictionary_line tag_map_index_fdata_dictionary[] = {
   {PRETAG_SRC_NET, PT_map_index_fdata_src_net_handler},
   {PRETAG_DST_NET, PT_map_index_fdata_dst_net_handler},
   {PRETAG_IS_MULTICAST, PT_map_index_fdata_is_multicast_handler},
-  {PRETAG_FWDSTATUS_ID, PT_map_index_fdata_fwdstatus_handler},
+  {PRETAG_FWDSTATUS_ID, PT_map_index_fdata_fwd_status_handler},
   {0, NULL}
 };
 

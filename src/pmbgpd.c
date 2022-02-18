@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -29,7 +29,6 @@
 #include "pmacct-data.h"
 #include "pkt_handlers.h"
 #include "ip_flow.h"
-#include "classifier.h"
 #include "net_aggr.h"
 #include "thread_pool.h"
 

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -195,7 +195,7 @@ struct id_entry_key {
   pt_uint32_t mpls_vpn_id;
   pt_rd_t mpls_vpn_rd;
   pt_uint32_t mpls_pw_id;
-  pt_uint32_t fwdstatus;
+  pt_uint32_t fwd_status;
   struct bpf_program filter;
 };
 

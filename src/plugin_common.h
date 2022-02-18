@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -35,6 +35,7 @@
 
 #define AVERAGE_CHAIN_LEN 10
 #define PRINT_CACHE_ENTRIES 16411
+#define MAX_PTM_LABEL_TOKEN_LEN	128
 
 /* cache element states */
 #define PRINT_CACHE_FREE	0
@@ -64,7 +65,6 @@ struct chained_cache {
   pm_counter_t flow_counter;
   u_int8_t flow_type;
   u_int32_t tcp_flags;
-  u_int32_t forwarding_status;
   struct pkt_bgp_primitives *pbgp;
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;
@@ -91,8 +91,8 @@ struct p_table_rr {
 #ifndef STRUCT_PTM_LABEL
 #define STRUCT_PTM_LABEL
 typedef struct {
-  char key[128];
-  char value[128];
+  char key[MAX_PTM_LABEL_TOKEN_LEN];
+  char value[MAX_PTM_LABEL_TOKEN_LEN];
 } __attribute__((packed)) ptm_label;
 #endif
 
@@ -108,7 +108,7 @@ typedef struct {
 typedef struct {
   unsigned int decimal;
   char description[50];
-} __attribute__((packed)) nfacctd_fwdstatus;
+} __attribute__((packed)) fwd_status;
 #endif
 
 /* prototypes */
@@ -144,7 +144,7 @@ extern void P_update_stitch(struct chained_cache *, struct pkt_data *, struct in
 
 extern cdada_list_t *ptm_labels_to_linked_list(const char *);
 extern cdada_list_t *tcpflags_to_linked_list(size_t);
-extern cdada_list_t *nfacctd_fwdstatus_to_linked_list();
+extern cdada_list_t *fwd_status_to_linked_list();
 
 /* global vars */
 extern void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */

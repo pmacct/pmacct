@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -1026,7 +1026,11 @@ int sql_trigger_exec(char *filename)
   char *args[2] = { filename, NULL };
   int pid;
 
+#ifdef HAVE_VFORK
   switch (pid = vfork()) {
+#else
+  switch (pid = fork()) {
+#endif
   case -1:
     return -1;
   case 0:
@@ -1245,6 +1249,7 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count_2 & COUNT_POST_NAT_SRC_PORT) what_to_count_2 |= COUNT_POST_NAT_SRC_PORT;
     if (config.what_to_count_2 & COUNT_POST_NAT_DST_PORT) what_to_count_2 |= COUNT_POST_NAT_DST_PORT;
     if (config.what_to_count_2 & COUNT_NAT_EVENT) what_to_count_2 |= COUNT_NAT_EVENT;
+    if (config.what_to_count_2 & COUNT_FWD_STATUS) what_to_count_2 |= COUNT_FWD_STATUS;
 
     if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) what_to_count_2 |= COUNT_MPLS_LABEL_TOP;
     if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) what_to_count_2 |= COUNT_MPLS_LABEL_BOTTOM;
@@ -2400,6 +2405,20 @@ int sql_evaluate_primitives(int primitive)
     strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_INT_NAT_EVENT;
     values[primitive].handler = where[primitive].handler = count_nat_event_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_FWD_STATUS) {
+    if (primitive) { 
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    } 
+    strncat(insert_clause, "fwd_status", SPACELEFT(insert_clause));
+    strncat(where[primitive].string, "fwd_status=%u", SPACELEFT(where[primitive].string));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_FWD_STATUS;
+    values[primitive].handler = where[primitive].handler = count_fwd_status_handler;
     primitive++;
   }
 

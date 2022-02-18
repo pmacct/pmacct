@@ -242,6 +242,7 @@ struct bgp_misc_structs {
   int has_blackhole;
   int skip_rib;
   int cap_add_path_ignore;
+  char *tag_map;
 
 #if defined WITH_RABBITMQ
   struct p_amqp_host *msglog_amqp_host;

@@ -266,6 +266,7 @@ struct configuration {
   int telemetry_decoder_id;
   int telemetry_max_peers;
   int telemetry_peer_timeout;
+  char *telemetry_tag_map;
   char *telemetry_allow_file;
   int telemetry_pipe_size;
   int telemetry_ipprec;
@@ -349,6 +350,7 @@ struct configuration {
   as_t bgp_daemon_as;
   int bgp_daemon_port;
   char *bgp_daemon_rp_ebpf_prog;
+  char *bgp_daemon_tag_map;
   int bgp_daemon_pipe_size;
   int bgp_daemon_ipprec;
   char *bgp_daemon_allow_file;
@@ -428,6 +430,7 @@ struct configuration {
   int bmp_daemon_ipv6_only;
   int bmp_daemon_port;
   char *bmp_daemon_rp_ebpf_prog;
+  char *bmp_daemon_tag_map;
   int bmp_daemon_pipe_size;
   int bmp_daemon_max_peers;
   char *bmp_daemon_allow_file;
@@ -543,7 +546,8 @@ struct configuration {
   struct pretag_label_filter ptlf;
   int pretag_label_encode_as_map;
   int tcpflags_encode_as_array;
-  int nfacctd_fwdstatus_encode_as_string;
+  int mpls_label_stack_encode_as_array;
+  int fwd_status_encode_as_string;
   int maps_refresh;
   int maps_index;
   int maps_entries;
@@ -562,7 +566,6 @@ struct configuration {
   int debug;
   int debug_internal_msg;
   int snaplen;
-  char *classifiers_path;
   int classifier_tentatives;
   int classifier_table_num;
   int classifier_ndpi;

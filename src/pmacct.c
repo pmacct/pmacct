@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -95,7 +95,7 @@ void usage_client(char *prog)
   printf("  -n\t<bytes | packets | flows | all> \n\tSelect the counters to print (applies to -N)\n");
   printf("  -S\tSum counters instead of returning a single counter for each request (applies to -N)\n");
   printf("  -a\tDisplay all table fields (even those currently unused)\n");
-  printf("  -c\t< src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | lrg_comm | \n\t med | local_pref | as_path | dst_roa | peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | \n\t src_as_path | src_std_comm | src_ext_comm | src_lrg_comm | src_med | src_local_pref | src_roa | \n\t mpls_vpn_rd | mpls_pw_id | etype | sampling_rate | sampling_direction | post_nat_src_host | \n\t post_nat_dst_host | post_nat_src_port | post_nat_dst_port | nat_event | tunnel_src_mac | \n\t tunnel_dst_mac | tunnel_src_host | tunnel_dst_host | tunnel_protocol | tunnel_tos | \n\t tunnel_src_port | tunnel_dst_port | vxlan | timestamp_start | timestamp_end | timestamp_arrival | \n\t mpls_label_top | mpls_label_bottom |  mpls_stack_depth | label | src_host_country | \n\t dst_host_country | export_proto_seqno | export_proto_version | export_proto_sysid | \n\t src_host_pocode | dst_host_pocode | src_host_coords | dst_host_coords > \n\tSelect primitives to match (required by -N and -M)\n");
+  printf("  -c\t< src_mac | dst_mac | vlan | cos | src_host | dst_host | src_net | dst_net | src_mask | dst_mask | \n\t src_port | dst_port | tos | proto | src_as | dst_as | sum_mac | sum_host | sum_net | sum_as | \n\t sum_port | in_iface | out_iface | tag | tag2 | flows | class | std_comm | ext_comm | lrg_comm | \n\t med | local_pref | as_path | dst_roa | peer_src_ip | peer_dst_ip | peer_src_as | peer_dst_as | \n\t src_as_path | src_std_comm | src_ext_comm | src_lrg_comm | src_med | src_local_pref | src_roa | \n\t mpls_vpn_rd | mpls_pw_id | etype | sampling_rate | sampling_direction | post_nat_src_host | \n\t post_nat_dst_host | post_nat_src_port | post_nat_dst_port | nat_event | fwd_status | \n\t tunnel_src_mac | tunnel_dst_mac | tunnel_src_host | tunnel_dst_host | tunnel_protocol | \n\t tunnel_tos | tunnel_src_port | tunnel_dst_port | vxlan | timestamp_start | timestamp_end | \n\t timestamp_arrival | mpls_label_top | mpls_label_bottom |  mpls_stack_depth | label | \n\t src_host_country | dst_host_country | export_proto_seqno | export_proto_version | \n\t export_proto_sysid | src_host_pocode | dst_host_pocode | src_host_coords | dst_host_coords > \n\tSelect primitives to match (required by -N and -M)\n");
   printf("  -T\t<bytes | packets | flows>,[<# how many>] \n\tOutput top N statistics (applies to -M and -s)\n");
   printf("  -e\tClear statistics\n");
   printf("  -i\tShow time (in seconds) since statistics were last cleared (ie. pmacct -e)\n");
@@ -221,6 +221,7 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     printf("POST_NAT_SRC_PORT  ");
     printf("POST_NAT_DST_PORT  ");
     printf("NAT_EVENT ");
+    printf("FWD_STATUS ");
 
     printf("MPLS_LABEL_TOP  ");
     printf("MPLS_LABEL_BOTTOM  ");
@@ -335,6 +336,7 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count_2 & COUNT_POST_NAT_SRC_PORT) printf("POST_NAT_SRC_PORT  ");
     if (what_to_count_2 & COUNT_POST_NAT_DST_PORT) printf("POST_NAT_DST_PORT  ");
     if (what_to_count_2 & COUNT_NAT_EVENT) printf("NAT_EVENT ");
+    if (what_to_count_2 & COUNT_FWD_STATUS) printf("FWD_STATUS ");
 
     if (what_to_count_2 & COUNT_MPLS_LABEL_TOP) printf("MPLS_LABEL_TOP  ");
     if (what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) printf("MPLS_LABEL_BOTTOM  ");
@@ -440,6 +442,7 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     printf("%sPOST_NAT_SRC_PORT", write_sep(sep, &count));
     printf("%sPOST_NAT_DST_PORT", write_sep(sep, &count));
     printf("%sNAT_EVENT", write_sep(sep, &count));
+    printf("%sFWD_STATUS", write_sep(sep, &count));
     printf("%sMPLS_LABEL_TOP", write_sep(sep, &count));
     printf("%sMPLS_LABEL_BOTTOM", write_sep(sep, &count));
     printf("%sMPLS_STACK_DEPTH", write_sep(sep, &count));
@@ -550,6 +553,7 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     if (what_to_count_2 & COUNT_POST_NAT_SRC_PORT) printf("%sPOST_NAT_SRC_PORT", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_POST_NAT_DST_PORT) printf("%sPOST_NAT_DST_PORT", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_NAT_EVENT) printf("%sNAT_EVENT", write_sep(sep, &count));
+    if (what_to_count_2 & COUNT_FWD_STATUS) printf("%sFWD_STATUS", write_sep(sep, &count));
 
     if (what_to_count_2 & COUNT_MPLS_LABEL_TOP) printf("%sMPLS_LABEL_TOP", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) printf("%sMPLS_LABEL_BOTTOM", write_sep(sep, &count));
@@ -1016,6 +1020,10 @@ int main(int argc,char **argv)
         else if (!strcmp(count_token[count_index], "nat_event")) {
           count_token_int[count_index] = COUNT_INT_NAT_EVENT;
           what_to_count_2 |= COUNT_NAT_EVENT;
+        }
+        else if (!strcmp(count_token[count_index], "fwd_status")) {
+          count_token_int[count_index] = COUNT_INT_FWD_STATUS;
+          what_to_count_2 |= COUNT_FWD_STATUS;
         }
         else if (!strcmp(count_token[count_index], "mpls_label_top")) {
           count_token_int[count_index] = COUNT_INT_MPLS_LABEL_TOP;
@@ -2669,6 +2677,11 @@ int main(int argc,char **argv)
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), pnat->nat_event);
         }
 
+        if (!have_wtc || (what_to_count_2 & COUNT_FWD_STATUS)) {
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-3u        ", pnat->fwd_status);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), pnat->fwd_status);
+	}
+
         if (!have_wtc || (what_to_count_2 & COUNT_MPLS_LABEL_TOP)) {
           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-7u         ", pmpls->mpls_label_top);
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), pmpls->mpls_label_top);
@@ -3608,6 +3621,8 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   if (wtc_2 & COUNT_POST_NAT_DST_PORT) json_object_set_new_nocheck(obj, "post_nat_port_dst", json_integer((json_int_t)pnat->post_nat_dst_port));
 
   if (wtc_2 & COUNT_NAT_EVENT) json_object_set_new_nocheck(obj, "nat_event", json_integer((json_int_t)pnat->nat_event));
+
+  if (wtc_2 & COUNT_FWD_STATUS) json_object_set_new_nocheck(obj, "fwd_status", json_integer((json_int_t)pnat->fwd_status));
 
   if (wtc_2 & COUNT_MPLS_LABEL_TOP) json_object_set_new_nocheck(obj, "mpls_label_top", json_integer((json_int_t)pmpls->mpls_label_top));
 

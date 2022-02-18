@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -57,7 +57,6 @@ extern void time_pcap_handler(struct channels_list_entry *, struct packet_ptrs *
 extern void post_tag_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void post_tag2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void flows_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-extern void class_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void in_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void out_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void sampling_rate_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -89,7 +88,7 @@ extern void NF_peer_dst_ip_handler(struct channels_list_entry *, struct packet_p
 extern void NF_ip_tos_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_ip_proto_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_tcp_flags_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-extern void NF_forwarding_status_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void NF_fwd_status_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_counters_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_time_msecs_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_time_secs_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -105,6 +104,7 @@ extern void NF_post_nat_dst_host_handler(struct channels_list_entry *, struct pa
 extern void NF_post_nat_src_port_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_post_nat_dst_port_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_nat_event_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void NF_mpls_label_stack(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_label_top_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_label_bottom_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_stack_depth_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -165,7 +165,6 @@ extern void SF_counters_renormalize_handler(struct channels_list_entry *, struct
 extern void SF_counters_map_renormalize_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_tag_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_tag2_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-extern void SF_class_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_in_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_out_iface_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_sampling_rate_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

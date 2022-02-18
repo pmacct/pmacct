@@ -59,8 +59,8 @@ VALUES:		[ src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_
 		 src_host_coords, dst_host_coords, nat_event, fw_event, post_nat_src_host,
 		 post_nat_dst_host, post_nat_src_port, post_nat_dst_port, tunnel_src_mac,
 		 tunnel_dst_mac, tunnel_src_host, tunnel_dst_host, tunnel_proto, tunnel_tos,
-		 tunnel_src_port, tunnel_dst_port, vxlan, timestamp_start, timestamp_end,
-		 timestamp_arrival, timestamp_export, export_proto_seqno,
+		 tunnel_src_port, tunnel_dst_port, fwd_status, vxlan, timestamp_start,
+		 timestamp_end, timestamp_arrival, timestamp_export, export_proto_seqno,
 		 export_proto_version, export_proto_sysid ]
 FOREWORDS:	Individual IP packets are uniquely identified by their header field values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
@@ -1595,12 +1595,21 @@ DEFAULT:        false
 
 KEY:		tcpflags_encode_as_array
 VALUES:		[ true | false ]
-DESC:		The 'tcpflags' field had tradionally been encoded as a short integer where the bits related
-		to individual TCP flags are activated. Setting this knob to true, makes it being encoded as
-                an array for JSON and Apache Avro encodings, ie. in JSON "tcp_flags": [ "URG", "ACK", "PSH",
+DESC:		The 'tcpflags' field is encoded by default as a short integer where the bits related to
+		individual TCP flags are activated. Setting this knob to true, makes it being encoded as an
+		array for JSON and Apache Avro encodings, ie. in JSON "tcp_flags": [ "URG", "ACK", "PSH",
 		"RST", "SYN", "FIN" ] and in Avro "name": "tcp_flags", "type": { "type": "array", "items": {
-		"type": "string" } }. This knob has no effects for other encodings (ie. CSV, formatted).
+		"type": "string" } }. This knob has no effects for other encodings (ie. CSV, formatted) and
+		backends not supporting complex types (ie. SQL plugins).
 DEFAULT:        false
+
+KEY:		fwd_status_encode_as_string
+VALUES:		[ true | false ]
+DESC:		The 'fwd_status' is encoded by default as a short integer. Setting this knob to true, makes
+		it being encoded in human-readable format like described by RFC-7270 Section 4.12 when JSON
+		or Avro formats are selected for output. This knob has no effects for other encodings (ie.
+		CSV, formatted) and backends not supporting complex types (ie. SQL plugins).
+DEFAULT:	false
 
 KEY:		[ print_markers | amqp_markers | kafka_markers ]
 VALUES:		[ true | false ]
@@ -2060,12 +2069,13 @@ DEFAULT:	none
 
 KEY:		pre_tag_label_encode_as_map
 VALUES:		[ true | false ]
-DESC:		The 'label' field had tradionally been encoded as an unique comma-separated string, ie. in
-		JSON "label": "value1,value2,value3". Setting this knob to true, makes it being encoded as
-		a map for JSON and Apache Avro encodings, ie. in JSON "label": { "key1": "value1", "key2":
+DESC:		The 'label' field is encoded by default as an unique comma-separated string, ie. in JSON
+		"label": "value1,value2,value3". Setting this knob to true, makes it being encoded as a
+		map for JSON and Apache Avro encodings, ie. in JSON "label": { "key1": "value1", "key2":
 		"value2" }. For keys and values to be correctly mapped, the '%' delimiter is used when
 		composing a pre_tag_map, ie. "set_label=key1%value1 ip=0.0.0.0/0". This knob has no effects
-		for other encodings (ie. CSV, formatted).
+		for other encodings (ie. CSV, formatted) and backends not supporting complex types (ie. SQL
+		plugins).
 DEFAULT:	false
 
 KEY:            [ post_tag | post_tag2 ] 
@@ -2324,8 +2334,8 @@ VALUES:		[ true | false ]
 DESC:		Disables caching and summarisation of flows. By default a NetFlow/IPFIX agent would attempt
 		to build uni-directional flows by caching individual packets and waiting for an expiration
 		condition (see nfprobe_timeouts). This knob prevents that to happen and, if paired with a
-		(external) packet sampling strategy, it makes a NetFlow/IPFIX agent to match sFlow export
-		responsiveness. 
+		packet sampling strategy (external or ie. pmacctd_ext_sampling_rate), it makes a NetFlow/
+		IPFIX agent to match sFlow export responsiveness. 
 DEFAULT:	false
 
 KEY:		nfprobe_tstamp_usec
@@ -2437,6 +2447,15 @@ DESC:		If SO_REUSEPORT is supported by the Operating System (read more about thi
 		eBPF program is available here: https://github.com/insa-unyte/ebpf-loadbalancer . Note:
 		Linux kernel 4.x does not yet support eBPF locking so daemons have currently to be (re-)
 		started with a short time gap to avoid race conditions.
+DEFAULT:	none
+
+KEY:		[ bgp_daemon_tag_map | bmp_daemon_tag_map | telemetry_daemon_tag_map ] [GLOBAL] [MAP]
+DESC:		Full pathname to a file containing specific tags for data. Equivalent to pre_tag_map but
+		for BGP, BMP and Streaming Telemetry threads / daemons.
+		Take a look to the examples/pretag.map.example for syntax. Currently only 'ip' is
+		supported as MATCH and set_tag, set_label as SET. The maximum number of entries (by
+		default 384) can be modified via maps_entries. Content can be reloaded at runtime by
+		sending the daemon a SIGUSR2 signal (ie. "killall -USR2 pmbgpd").
 DEFAULT:	none
 
 KEY:		[ bgp_daemon_ipprec | bmp_daemon_ipprec ] [GLOBAL]

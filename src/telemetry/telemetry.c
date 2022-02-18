@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -102,7 +102,7 @@ int telemetry_daemon(void *t_data_void)
   char *saved_peer_buf = NULL;
   u_char consumer_buf[PKT_MSG_SIZE];
 
-  /* pre_tag_map stuff */
+  /* telemetry_tag_map stuff */
   struct plugin_requests req;
   struct id_table telemetry_logdump_tag_table;
   int telemetry_logdump_tag_map_allocated;
@@ -541,13 +541,13 @@ int telemetry_daemon(void *t_data_void)
 
   telemetry_link_misc_structs(telemetry_misc_db);
 
-  if (config.pre_tag_map) {
+  if (config.telemetry_tag_map) {
     memset(&telemetry_logdump_tag, 0, sizeof(telemetry_logdump_tag));
     memset(&telemetry_logdump_tag_table, 0, sizeof(telemetry_logdump_tag_table));
     memset(&req, 0, sizeof(req));
     telemetry_logdump_tag_map_allocated = FALSE;
 
-    load_pre_tag_map(config.acct_type, config.pre_tag_map, &telemetry_logdump_tag_table, &req,
+    load_pre_tag_map(ACCT_PMTELE, config.telemetry_tag_map, &telemetry_logdump_tag_table, &req,
                      &telemetry_logdump_tag_map_allocated, config.maps_entries, config.maps_row_len);
 
     /* making some bindings */
@@ -685,8 +685,8 @@ int telemetry_daemon(void *t_data_void)
     if (reload_map_telemetry_thread) {
       if (config.telemetry_allow_file) load_allow_file(config.telemetry_allow_file, &allow);
 
-      if (config.pre_tag_map) {
-	load_pre_tag_map(config.acct_type, config.pre_tag_map, &telemetry_logdump_tag_table, &req,
+      if (config.telemetry_tag_map) {
+	load_pre_tag_map(ACCT_PMTELE, config.telemetry_tag_map, &telemetry_logdump_tag_table, &req,
 			 &telemetry_logdump_tag_map_allocated, config.maps_entries, config.maps_row_len);
       }
 
@@ -898,7 +898,7 @@ int telemetry_daemon(void *t_data_void)
       }
       addr_to_str(peer->addr_str, &peer->addr);
 
-      if (config.pre_tag_map) {
+      if (config.telemetry_tag_map) {
 	telemetry_tag_init_find(peer, (struct sockaddr *) &telemetry_logdump_tag_peer, &telemetry_logdump_tag);
 	telemetry_tag_find((struct id_table *)telemetry_logdump_tag.tag_table, &telemetry_logdump_tag, &telemetry_logdump_tag.tag, NULL);
       }
@@ -983,7 +983,7 @@ int telemetry_daemon(void *t_data_void)
     else {
       peer->stats.packets++;
       if (recv_flags != ERR) {
-	if (config.pre_tag_map) {
+	if (config.telemetry_tag_map) {
 	  telemetry_tag_init_find(peer, (struct sockaddr *) &telemetry_logdump_tag_peer, &telemetry_logdump_tag);
 	  telemetry_tag_find((struct id_table *)telemetry_logdump_tag.tag_table, &telemetry_logdump_tag, &telemetry_logdump_tag.tag, NULL);
 	}
