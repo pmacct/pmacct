@@ -537,7 +537,7 @@ void skinny_bgp_daemon_online()
     time_t tmp_time;
 
     if(!config.bgp_table_dump_time_slots)
-      config.bmp_dump_time_slots = 1;
+      config.bgp_table_dump_time_slots = 1;
     
     bgp_misc_db->current_bgp_slot = 0;
 
