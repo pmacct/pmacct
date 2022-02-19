@@ -858,17 +858,20 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
     } 
     else {
       const int MAX_MPLS_LABEL_STACK = 128;
+      int MAX_MPLS_LABEL_STACK_INC = 0;
       char mpls_label_stack[MAX_MPLS_LABEL_STACK];
       char label_buf[MAX_MPLS_LABEL_LEN];
   
       memset(&mpls_label_stack, 0, sizeof(mpls_label_stack));
 
-      int idx_0;
+      size_t idx_0;
       for(idx_0 = 0; idx_0 < MAX_MPLS_LABELS; idx_0++) {
         memset(&label_buf, 0, sizeof(label_buf));
         snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", pmpls->labels_cycle[idx_0]);
-        strncat(mpls_label_stack, label_buf, (MAX_MPLS_LABEL_LEN - strlen(label_buf) - 1));
-        strncat(mpls_label_stack, ",", (MAX_MPLS_LABEL_LEN - strlen(label_buf) - 1));
+        strncat(mpls_label_stack, label_buf, (MAX_MPLS_LABEL_LEN - MAX_MPLS_LABEL_STACK_INC));
+        strncat(mpls_label_stack, ",", (MAX_MPLS_LABEL_LEN - MAX_MPLS_LABEL_STACK_INC));
+        MAX_MPLS_LABEL_STACK_DELTA = (strlen(label_buf) + strlen(",") + 2);
+        printf("MAX_MPLS_LABEL_STACK_DELTA: %d", (MAX_MPLS_LABEL_STACK - MAX_MPLS_LABEL_STACK_INC));
       }
 
       pm_avro_check(avro_value_get_by_name(&value, "mpls_label_stack", &field, NULL));
