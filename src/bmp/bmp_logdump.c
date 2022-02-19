@@ -1623,8 +1623,8 @@ void bmp_handle_dump_event(int max_peers_idx)
       if (bmp_peers[idx].self.fd) {
 	peer = &bmp_peers[idx].self;
 	bdsell = peer->bmp_se;
-
-	if (bdsell && bdsell->start) bmp_dump_se_ll_destroy(bdsell);
+  
+	if (bdsell && bdsell->start && abs(djb2_string_hash(peer->addr_str)) % config.bmp_dump_time_slots == bms->current_bmp_slot) bmp_dump_se_ll_destroy(bdsell);
       }
     }
     break;
