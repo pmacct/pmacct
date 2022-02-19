@@ -870,7 +870,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
         snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", pmpls->labels_cycle[idx_0]);
         strncat(mpls_label_stack, label_buf, (MAX_MPLS_LABEL_LEN - MAX_MPLS_LABEL_STACK_INC));
         strncat(mpls_label_stack, ",", (MAX_MPLS_LABEL_LEN - MAX_MPLS_LABEL_STACK_INC));
-        MAX_MPLS_LABEL_STACK_DELTA = (strlen(label_buf) + strlen(",") + 2);
+        MAX_MPLS_LABEL_STACK_INC = (strlen(label_buf) + strlen(",") + 2);
         printf("MAX_MPLS_LABEL_STACK_DELTA: %d", (MAX_MPLS_LABEL_STACK - MAX_MPLS_LABEL_STACK_INC));
       }
 
