@@ -1017,7 +1017,8 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
   /* incoming/normalized str to array */
   char ptm_array_labels[PTM_LABELS_LEN + 1];
   memset(&ptm_array_labels, 0, sizeof(ptm_array_labels));
-  strncpy(ptm_array_labels, ptm_labels, (PTM_LABELS_LEN - 1));
+  /* no overflow risk */
+  strcpy(ptm_array_labels, ptm_labels);
 
   cdada_list_t *ptm_linked_list = cdada_list_create(ptm_label);
   ptm_label lbl;
