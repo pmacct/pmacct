@@ -960,6 +960,7 @@ void compose_json_fwd_status(json_t *obj, struct chained_cache *cc)
 void compose_json_mpls_label_stack(json_t *obj, struct chained_cache *cc)
 {
   const int MAX_MPLS_LABEL_STACK = 128;
+  int MAX_MPLS_LABEL_STACK_DEC = 0;
   char mpls_label_stack[MAX_MPLS_LABEL_STACK];
   char label_buf[MAX_MPLS_LABEL_LEN];
     
@@ -969,8 +970,9 @@ void compose_json_mpls_label_stack(json_t *obj, struct chained_cache *cc)
   for(idx_0 = 0; idx_0 < MAX_MPLS_LABELS; idx_0++) {
     memset(&label_buf, 0, sizeof(label_buf));
     snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", cc->pmpls->labels_cycle[idx_0]);
-    strncat(mpls_label_stack, label_buf, (MAX_MPLS_LABEL_LEN - strlen(label_buf) - 1));
-    strncat(mpls_label_stack, ",", (MAX_MPLS_LABEL_LEN - strlen(label_buf) - 1));
+    strncat(mpls_label_stack, label_buf, (MAX_MPLS_LABEL_STACK - MAX_MPLS_LABEL_STACK_DEC));
+    strncat(mpls_label_stack, ",", (MAX_MPLS_LABEL_STACK - MAX_MPLS_LABEL_STACK_DEC));
+    MAX_MPLS_LABEL_STACK_DEC = (strlen(label_buf) + strlen(",") + 2);
   }
 
   json_object_set_new_nocheck(obj, "mpls_label_stack", json_string(mpls_label_stack));
