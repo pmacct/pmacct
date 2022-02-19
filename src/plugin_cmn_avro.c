@@ -871,7 +871,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
         strncat(mpls_label_stack, label_buf, (MAX_MPLS_LABEL_LEN - MAX_MPLS_LABEL_STACK_INC));
         strncat(mpls_label_stack, ",", (MAX_MPLS_LABEL_LEN - MAX_MPLS_LABEL_STACK_INC));
         MAX_MPLS_LABEL_STACK_INC = (strlen(label_buf) + strlen(",") + 2);
-        printf("MAX_MPLS_LABEL_STACK_DELTA: %d", (MAX_MPLS_LABEL_STACK - MAX_MPLS_LABEL_STACK_INC));
+        printf("MAX_MPLS_LABEL_STACK_DELTA: %d\n", (MAX_MPLS_LABEL_STACK - MAX_MPLS_LABEL_STACK_INC));
       }
 
       pm_avro_check(avro_value_get_by_name(&value, "mpls_label_stack", &field, NULL));
