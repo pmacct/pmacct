@@ -960,6 +960,7 @@ void compose_json_fwd_status(json_t *obj, struct chained_cache *cc)
 void compose_json_mpls_label_stack(json_t *obj, struct chained_cache *cc)
 {
   const int MAX_MPLS_LABEL_STACK = 128;
+  int MAX_MPLS_LABEL_STACK_DEC = 0;
   char mpls_label_stack[MAX_MPLS_LABEL_STACK];
   char label_buf[MAX_MPLS_LABEL_LEN];
     
@@ -969,8 +970,9 @@ void compose_json_mpls_label_stack(json_t *obj, struct chained_cache *cc)
   for(idx_0 = 0; idx_0 < MAX_MPLS_LABELS; idx_0++) {
     memset(&label_buf, 0, sizeof(label_buf));
     snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", cc->pmpls->labels_cycle[idx_0]);
-    strncat(mpls_label_stack, label_buf, (MAX_MPLS_LABEL_LEN - strlen(label_buf) - 1));
-    strncat(mpls_label_stack, ",", (MAX_MPLS_LABEL_LEN - strlen(label_buf) - 1));
+    strncat(mpls_label_stack, label_buf, (MAX_MPLS_LABEL_STACK - MAX_MPLS_LABEL_STACK_DEC));
+    strncat(mpls_label_stack, ",", (MAX_MPLS_LABEL_STACK - MAX_MPLS_LABEL_STACK_DEC));
+    MAX_MPLS_LABEL_STACK_DEC = (strlen(label_buf) + strlen(",") + 2);
   }
 
   json_object_set_new_nocheck(obj, "mpls_label_stack", json_string(mpls_label_stack));
@@ -1414,6 +1416,7 @@ json_t *compose_mpls_label_stack_json_data(u_int32_t *labels_cycle)
 {
   const int MAX_IDX_LEN = 4;
   const int MAX_MPLS_LABEL_IDX_LEN = (MAX_IDX_LEN + MAX_MPLS_LABEL_LEN);
+  int max_mpls_label_idx_len_dec = 0;
   char label_buf[MAX_MPLS_LABEL_LEN];
   char label_idx_buf[MAX_MPLS_LABEL_IDX_LEN];
   char idx_buf[MAX_IDX_LEN];
@@ -1429,9 +1432,10 @@ json_t *compose_mpls_label_stack_json_data(u_int32_t *labels_cycle)
       memset(&idx_buf, 0, sizeof(idx_buf));
       memset(&label_idx_buf, 0, sizeof(label_idx_buf));
       snprintf(idx_buf, MAX_IDX_LEN, "%zu", idx_0);
-      strncat(label_idx_buf, idx_buf, (MAX_MPLS_LABEL_IDX_LEN - 1));
-      strncat(label_idx_buf, "-", (MAX_MPLS_LABEL_IDX_LEN - strlen(idx_buf) - 1));
-      strncat(label_idx_buf, label_buf, (MAX_MPLS_LABEL_IDX_LEN - strlen(idx_buf) - strlen("-") - 1));
+      strncat(label_idx_buf, idx_buf, (MAX_MPLS_LABEL_IDX_LEN - max_mpls_label_idx_len_dec));
+      strncat(label_idx_buf, "-", (MAX_MPLS_LABEL_IDX_LEN - max_mpls_label_idx_len_dec));
+      strncat(label_idx_buf, label_buf, (MAX_MPLS_LABEL_IDX_LEN - max_mpls_label_idx_len_dec));
+      max_mpls_label_idx_len_dec = (strlen(idx_buf) + strlen("-") + strlen(label_buf) + 3);
       j_str_tmp = json_string(label_idx_buf);
       json_array_append(root, j_str_tmp); 
     }
