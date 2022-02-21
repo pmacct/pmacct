@@ -1747,7 +1747,7 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
 #endif
   
   if(config.bmp_dump_time_slots > 1)
-    Log(LOG_INFO, "INFO Dumping BMP tables, slot %d of %d\n", bms->current_bmp_slot + 1, config.bmp_dump_time_slots);
+    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BMP tables, slot %d of %d\n", config.name, bms->log_str, bms->current_bmp_slot + 1, config.bmp_dump_time_slots);
   for (peer = NULL, saved_peer = NULL, peers_idx = pdr->first; peers_idx <= pdr->last; peers_idx++) {
     peer = &bmp_peers[peers_idx].self;
     int bmp_router_slot = abs(djb2_string_hash(peer->addr_str)) % config.bmp_dump_time_slots;
