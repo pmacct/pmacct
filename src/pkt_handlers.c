@@ -3551,7 +3551,7 @@ void NF_mpls_label_stack(struct channels_list_entry *chptr, struct packet_ptrs *
     } 
     
     if (tpl->tpl[NF9_MPLS_LABEL_5].len == 3) {
-      pmpls->labels_cycle[4] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_5.off);
+      pmpls->labels_cycle[4] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_5].off);
     } 
     
     if (tpl->tpl[NF9_MPLS_LABEL_6].len == 3) {
