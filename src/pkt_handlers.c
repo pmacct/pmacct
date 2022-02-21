@@ -3535,33 +3535,27 @@ void NF_mpls_label_stack(struct channels_list_entry *chptr, struct packet_ptrs *
   case 10:
   case 9:
     if (tpl->tpl[NF9_MPLS_LABEL_1].len == 3) {
-      pmpls->mpls_top_label_stack_section = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_1].off);
-      pmpls->labels_cycle[0] = pmpls->mpls_top_label_stack_section;
+      pmpls->labels_cycle[0] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_1].off);
     } 
 
     if (tpl->tpl[NF9_MPLS_LABEL_2].len == 3) {
-      pmpls->mpls_label_stack_section2 = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_2].off);
-      pmpls->labels_cycle[1] = pmpls->mpls_label_stack_section2;
+      pmpls->labels_cycle[1] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_2].off);
     }
 
     if (tpl->tpl[NF9_MPLS_LABEL_3].len == 3) {
-      pmpls->mpls_label_stack_section3 = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_3].off);
-      pmpls->labels_cycle[2] = pmpls->mpls_label_stack_section3;
+      pmpls->labels_cycle[2] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_3].off);
     } 
     
     if (tpl->tpl[NF9_MPLS_LABEL_4].len == 3) {
-      pmpls->mpls_label_stack_section4 = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_4].off);
-      pmpls->labels_cycle[3] = pmpls->mpls_label_stack_section4;
+      pmpls->labels_cycle[3] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_4].off);
     } 
     
     if (tpl->tpl[NF9_MPLS_LABEL_5].len == 3) {
-      pmpls->mpls_label_stack_section5 = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_5].off);
-      pmpls->labels_cycle[4] = pmpls->mpls_label_stack_section5;
+      pmpls->labels_cycle[4] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_5.off);
     } 
     
     if (tpl->tpl[NF9_MPLS_LABEL_6].len == 3) {
-      pmpls->mpls_label_stack_section6 = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_6].off);
-      pmpls->labels_cycle[5] = pmpls->mpls_label_stack_section6;
+      pmpls->labels_cycle[5] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_6].off);
     }
     break;
   default:
