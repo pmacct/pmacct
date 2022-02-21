@@ -1148,3 +1148,19 @@ cdada_list_t *fwd_status_to_linked_list()
 
   return fwd_status_linked_list;
 }
+
+void mpls_label_stack_to_str(char *mpls_label_stack, int mls_len, u_int32_t *labels_cycle)
+{
+  int max_mpls_label_stack_dec = 0, idx_0;
+  char label_buf[MAX_MPLS_LABEL_LEN];
+
+  memset(mpls_label_stack, 0, mls_len);
+
+  for(idx_0 = 0; idx_0 < MAX_MPLS_LABELS; idx_0++) {
+    memset(&label_buf, 0, sizeof(label_buf));
+    snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", labels_cycle[idx_0]);
+    strncat(mpls_label_stack, label_buf, (mls_len - max_mpls_label_stack_dec));
+    strncat(mpls_label_stack, ",", (mls_len - max_mpls_label_stack_dec));
+    max_mpls_label_stack_dec = (strlen(label_buf) + strlen(",") + 2);
+  }
+}

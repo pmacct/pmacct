@@ -38,6 +38,7 @@
 #define MAX_PTM_LABEL_TOKEN_LEN	128
 #define TCP_FLAG_LEN 6
 #define FWD_TYPES_STR_LEN 50
+#define MAX_MPLS_LABEL_STACK 128
 
 /* cache element states */
 #define PRINT_CACHE_FREE	0
@@ -147,6 +148,8 @@ extern void P_update_stitch(struct chained_cache *, struct pkt_data *, struct in
 extern cdada_list_t *ptm_labels_to_linked_list(const char *);
 extern cdada_list_t *tcpflags_to_linked_list(size_t);
 extern cdada_list_t *fwd_status_to_linked_list();
+
+extern void mpls_label_stack_to_str(char *, int, u_int32_t *);
 
 /* global vars */
 extern void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */

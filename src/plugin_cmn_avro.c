@@ -857,22 +857,9 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
       compose_mpls_label_stack_data(pmpls->labels_cycle, value);
     } 
     else {
-      const int MAX_MPLS_LABEL_STACK = 128;
-      int MAX_MPLS_LABEL_STACK_DEC = 0;
       char mpls_label_stack[MAX_MPLS_LABEL_STACK];
-      char label_buf[MAX_MPLS_LABEL_LEN];
-  
-      memset(&mpls_label_stack, 0, sizeof(mpls_label_stack));
 
-      size_t idx_0;
-      for(idx_0 = 0; idx_0 < MAX_MPLS_LABELS; idx_0++) {
-        memset(&label_buf, 0, sizeof(label_buf));
-        snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", pmpls->labels_cycle[idx_0]);
-        strncat(mpls_label_stack, label_buf, (MAX_MPLS_LABEL_LEN - MAX_MPLS_LABEL_STACK_DEC));
-        strncat(mpls_label_stack, ",", (MAX_MPLS_LABEL_LEN - MAX_MPLS_LABEL_STACK_DEC));
-        MAX_MPLS_LABEL_STACK_DEC = (strlen(label_buf) + strlen(",") + 2);
-      }
-
+      mpls_label_stack_to_str(mpls_label_stack, MAX_MPLS_LABEL_STACK, pmpls->labels_cycle);
       pm_avro_check(avro_value_get_by_name(&value, "mpls_label_stack", &field, NULL));
       pm_avro_check(avro_value_set_string(&field, mpls_label_stack));
     }
