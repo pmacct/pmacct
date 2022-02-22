@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -103,7 +103,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     config.logfile_fd = open_output_file(config.logfile, "a", FALSE);
   }
 
-  if (extras.off_pkt_vlen_hdr_primitives) {
+  if (extras.off_pkt_vlen_hdr_primitives || config.what_to_count_2 & COUNT_MPLS_LABEL_STACK) {
     Log(LOG_ERR, "ERROR ( %s/%s ): variable-length primitives, ie. label, are not supported in IMT plugin. Exiting ..\n", config.name, config.type);
     exit_gracefully(1);
   }

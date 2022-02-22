@@ -171,7 +171,8 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     }
   }
 
-  if (extras.off_pkt_vlen_hdr_primitives && config.print_output & PRINT_OUTPUT_FORMATTED) {
+  if ((extras.off_pkt_vlen_hdr_primitives || config.what_to_count_2 & COUNT_MPLS_LABEL_STACK) &&
+      config.print_output & PRINT_OUTPUT_FORMATTED) {
     Log(LOG_ERR, "ERROR ( %s/%s ): variable-length primitives, ie. label as_path std_comm etc., are not supported in print plugin with formatted output.\n", config.name, config.type);
     Log(LOG_ERR, "ERROR ( %s/%s ): Please switch to one of the other supported output formats (ie. csv, json, avro). Exiting ..\n", config.name, config.type);
     exit_gracefully(1);
@@ -1144,6 +1145,12 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   
         if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) fprintf(f, "%s%u", write_sep(sep, &count), pmpls->mpls_label_top);
         if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) fprintf(f, "%s%u", write_sep(sep, &count), pmpls->mpls_label_bottom);
+        if (config.what_to_count_2 & COUNT_MPLS_LABEL_STACK) {
+	  char mpls_label_stack[MAX_MPLS_LABEL_STACK];
+
+	  mpls_label_stack_to_str(mpls_label_stack, MAX_MPLS_LABEL_STACK, pmpls->labels_cycle);
+	  fprintf(f, "%s%s", write_sep(sep, &count), mpls_label_stack);
+	}
         if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) fprintf(f, "%s%u", write_sep(sep, &count), pmpls->mpls_stack_depth);
 
         if (config.what_to_count_2 & COUNT_TUNNEL_SRC_MAC) {
@@ -1576,6 +1583,7 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_FWD_STATUS) fprintf(f, "%sFWD_STATUS", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) fprintf(f, "%sMPLS_LABEL_TOP", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) fprintf(f, "%sMPLS_LABEL_BOTTOM", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_MPLS_LABEL_STACK) fprintf(f, "%sMPLS_LABEL_STACK", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) fprintf(f, "%sMPLS_STACK_DEPTH", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TUNNEL_SRC_MAC) fprintf(f, "%sTUNNEL_SRC_MAC", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TUNNEL_DST_MAC) fprintf(f, "%sTUNNEL_DST_MAC", write_sep(sep, &count));

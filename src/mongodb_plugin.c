@@ -750,6 +750,12 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
 
       if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) bson_append_int(bson_elem, "mpls_label_top", pmpls->mpls_label_top);
       if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) bson_append_int(bson_elem, "mpls_label_bottom", pmpls->mpls_label_bottom);
+      if (config.what_to_count_2 & COUNT_MPLS_LABEL_STACK) {
+	char mpls_label_stack[MAX_MPLS_LABEL_STACK];
+
+	mpls_label_stack_to_str(mpls_label_stack, MAX_MPLS_LABEL_STACK, pmpls->labels_cycle);
+	bson_append_int(bson_elem, "mpls_label_stack", mpls_label_stack);
+      }
       if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) bson_append_int(bson_elem, "mpls_stack_depth", pmpls->mpls_stack_depth);
 
       if (config.what_to_count_2 & COUNT_TUNNEL_SRC_MAC) {

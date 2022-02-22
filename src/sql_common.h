@@ -247,6 +247,7 @@ extern void count_nat_event_handler(const struct db_cache *, struct insert_data 
 extern void count_fwd_status_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_mpls_label_top_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_mpls_label_bottom_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_mpls_label_stack_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_mpls_stack_depth_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_tunnel_src_mac_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_tunnel_dst_mac_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
