@@ -1253,6 +1253,7 @@ int sql_evaluate_primitives(int primitive)
 
     if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) what_to_count_2 |= COUNT_MPLS_LABEL_TOP;
     if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) what_to_count_2 |= COUNT_MPLS_LABEL_BOTTOM;
+    if (config.what_to_count_2 & COUNT_MPLS_LABEL_STACK) what_to_count_2 |= COUNT_MPLS_LABEL_STACK;
     if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) what_to_count_2 |= COUNT_MPLS_STACK_DEPTH;
 
     if (config.what_to_count_2 & COUNT_TUNNEL_SRC_MAC) what_to_count_2 |= COUNT_TUNNEL_SRC_MAC;
@@ -2447,6 +2448,20 @@ int sql_evaluate_primitives(int primitive)
     strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_INT_MPLS_LABEL_BOTTOM;
     values[primitive].handler = where[primitive].handler = count_mpls_label_bottom_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_MPLS_LABEL_STACK) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "mpls_label_stack", SPACELEFT(insert_clause));
+    strncat(where[primitive].string, "mpls_label_stack=%s", SPACELEFT(where[primitive].string));
+    strncat(values[primitive].string, "%s", SPACELEFT(values[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_MPLS_LABEL_STACK;
+    values[primitive].handler = where[primitive].handler = count_mpls_label_stack_handler;
     primitive++;
   }
 

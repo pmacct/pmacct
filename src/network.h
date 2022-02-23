@@ -588,15 +588,7 @@ struct pkt_mpls_primitives {
   u_int32_t mpls_label_top;
   u_int32_t mpls_label_bottom;
   u_int8_t mpls_stack_depth;
-
-  /* MPLS stack - fields 70-75 */
-  u_int32_t labels_cycle[MAX_MPLS_LABELS];
-  u_int32_t mpls_top_label_stack_section;
-  u_int32_t mpls_label_stack_section2;
-  u_int32_t mpls_label_stack_section3;
-  u_int32_t mpls_label_stack_section4;
-  u_int32_t mpls_label_stack_section5;
-  u_int32_t mpls_label_stack_section6;
+  u_int32_t labels_cycle[MAX_MPLS_LABELS]; /* XXX: can be optimized using variable-length primitives */
 };
 
 struct pkt_tunnel_primitives {

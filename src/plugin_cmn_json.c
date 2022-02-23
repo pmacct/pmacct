@@ -959,20 +959,9 @@ void compose_json_fwd_status(json_t *obj, struct chained_cache *cc)
 
 void compose_json_mpls_label_stack(json_t *obj, struct chained_cache *cc)
 {
-  const int MAX_MPLS_LABEL_STACK = 128;
   char mpls_label_stack[MAX_MPLS_LABEL_STACK];
-  char label_buf[MAX_MPLS_LABEL_LEN];
-    
-  memset(&mpls_label_stack, 0, sizeof(mpls_label_stack));
 
-  int idx_0;
-  for(idx_0 = 0; idx_0 < MAX_MPLS_LABELS; idx_0++) {
-    memset(&label_buf, 0, sizeof(label_buf));
-    snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", cc->pmpls->labels_cycle[idx_0]);
-    strncat(mpls_label_stack, label_buf, (MAX_MPLS_LABEL_LEN - strlen(label_buf) - 1));
-    strncat(mpls_label_stack, ",", (MAX_MPLS_LABEL_LEN - strlen(label_buf) - 1));
-  }
-
+  mpls_label_stack_to_str(mpls_label_stack, MAX_MPLS_LABEL_STACK, cc->pmpls->labels_cycle);
   json_object_set_new_nocheck(obj, "mpls_label_stack", json_string(mpls_label_stack));
 }
 
@@ -1295,7 +1284,7 @@ void compose_json_map_label(json_t *obj, struct chained_cache *cc)
 
   /* linked-list creation */
   cdada_list_t *ptm_ll = ptm_labels_to_linked_list(lbls_norm);
-  int ll_size = cdada_list_size(ptm_ll);
+  size_t ll_size = cdada_list_size(ptm_ll);
 
   json_t *root_l1 = compose_label_json_data(ptm_ll, ll_size);
 
@@ -1309,7 +1298,7 @@ void compose_json_array_tcpflags(json_t *obj, struct chained_cache *cc)
 {
   /* linked-list creation */
   cdada_list_t *ll = tcpflags_to_linked_list(cc->tcp_flags);
-  int ll_size = cdada_list_size(ll);
+  size_t ll_size = cdada_list_size(ll);
 
   json_t *root_l1 = compose_tcpflags_json_data(ll, ll_size);
 
@@ -1322,7 +1311,7 @@ void compose_json_string_fwd_status(json_t *obj, struct chained_cache *cc)
 {
   /* linked-list creation */
   cdada_list_t *fwd_status_ll = fwd_status_to_linked_list();
-  int ll_size = cdada_list_size(fwd_status_ll);
+  size_t ll_size = cdada_list_size(fwd_status_ll);
 
   json_t *root_l1 = compose_fwd_status_json_data(cc->pnat->fwd_status, fwd_status_ll, ll_size);
 
@@ -1345,8 +1334,9 @@ json_t *compose_label_json_data(cdada_list_t *ll, int ll_size)
   json_t *root = json_object();
   json_t *j_str_tmp = NULL;
 
-  int idx_0;
+  size_t idx_0;
   for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
+    memset(&lbl, 0, sizeof(lbl));
     cdada_list_get(ll, idx_0, &lbl);
     j_str_tmp = json_string(lbl.value);
     json_object_set_new_nocheck(root, lbl.key, j_str_tmp);
@@ -1362,10 +1352,11 @@ json_t *compose_tcpflags_json_data(cdada_list_t *ll, int ll_size)
   json_t *root = json_array();
   json_t *j_str_tmp = NULL;
 
-  int idx_0;
+  size_t idx_0;
   for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
+    memset(&tcpstate, 0, sizeof(tcpstate));
     cdada_list_get(ll, idx_0, &tcpstate);
-    if (strcmp(tcpstate.flag, "NULL") != 0) {
+    if (strncmp(tcpstate.flag, "NULL", (TCP_FLAG_LEN - 1)) != 0) {
       j_str_tmp = json_string(tcpstate.flag);
       json_array_append(root, j_str_tmp);
     }
@@ -1396,8 +1387,9 @@ json_t *compose_fwd_status_json_data(size_t fwdstatus_decimal, cdada_list_t *ll,
     root = json_string("RFC-7270 Misinterpreted");
   }
 
-  int idx_0;
+  size_t idx_0;
   for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
+    memset(&fwdstate, 0, sizeof(fwdstate));
     cdada_list_get(ll, idx_0, &fwdstate);
     if (fwdstate.decimal == fwdstatus_decimal) {
       json_string_set(root, fwdstate.description);
@@ -1411,6 +1403,7 @@ json_t *compose_mpls_label_stack_json_data(u_int32_t *labels_cycle)
 {
   const int MAX_IDX_LEN = 4;
   const int MAX_MPLS_LABEL_IDX_LEN = (MAX_IDX_LEN + MAX_MPLS_LABEL_LEN);
+  int max_mpls_label_idx_len_dec = 0;
   char label_buf[MAX_MPLS_LABEL_LEN];
   char label_idx_buf[MAX_MPLS_LABEL_IDX_LEN];
   char idx_buf[MAX_IDX_LEN];
@@ -1426,9 +1419,10 @@ json_t *compose_mpls_label_stack_json_data(u_int32_t *labels_cycle)
       memset(&idx_buf, 0, sizeof(idx_buf));
       memset(&label_idx_buf, 0, sizeof(label_idx_buf));
       snprintf(idx_buf, MAX_IDX_LEN, "%zu", idx_0);
-      strncat(label_idx_buf, idx_buf, (MAX_MPLS_LABEL_IDX_LEN - 1));
-      strncat(label_idx_buf, "-", (MAX_MPLS_LABEL_IDX_LEN - strlen(idx_buf) - 1));
-      strncat(label_idx_buf, label_buf, (MAX_MPLS_LABEL_IDX_LEN - strlen(idx_buf) - strlen("-") - 1));
+      strncat(label_idx_buf, idx_buf, (MAX_MPLS_LABEL_IDX_LEN - max_mpls_label_idx_len_dec));
+      strncat(label_idx_buf, "-", (MAX_MPLS_LABEL_IDX_LEN - max_mpls_label_idx_len_dec));
+      strncat(label_idx_buf, label_buf, (MAX_MPLS_LABEL_IDX_LEN - max_mpls_label_idx_len_dec));
+      max_mpls_label_idx_len_dec = (strlen(idx_buf) + strlen("-") + strlen(label_buf) + 3);
       j_str_tmp = json_string(label_idx_buf);
       json_array_append(root, j_str_tmp); 
     }
