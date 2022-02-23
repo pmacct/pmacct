@@ -142,6 +142,7 @@ are no longer supplied as part of the PostgreSQL table creation script.
   * fwd_status => fwd_status (INT NOT NULL DEFAULT 0)
   * mpls_label_top => mpls_label_top (INT NOT NULL DEFAULT 0)
   * mpls_label_bottom => mpls_label_bottom (INT NOT NULL DEFAULT 0)
+  * mpls_label_stack => mpls_label_stack (VARCHAR(255) NOT NULL DEFAULT ' ')
   * mpls_stack_depth => mpls_stack_depth (INT NOT NULL DEFAULT 0)
   * tunnel_src_mac => tunnel_mac_src (macaddr NOT NULL DEFAULT '0:0:0:0:0:0')
   * tunnel_dst_mac => tunnel_mac_dst (macaddr NOT NULL DEFAULT '0:0:0:0:0:0')
