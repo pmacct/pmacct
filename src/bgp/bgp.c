@@ -714,7 +714,7 @@ void skinny_bgp_daemon_online()
       }
 
 
-      int refreshTimePerSlot = config.bmp_dump_refresh_time / config.bmp_dump_time_slots;
+      int refreshTimePerSlot = config.bgp_table_dump_refresh_time / config.bgp_table_dump_time_slots;
       if (bgp_misc_db->dump_backend_methods) {
 	while (bgp_misc_db->log_tstamp.tv_sec > dump_refresh_deadline) {
 	  bgp_misc_db->dump.tstamp.tv_sec = dump_refresh_deadline;
