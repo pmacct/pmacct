@@ -28,6 +28,10 @@ are to add such primitives to the SQL schema:
   - "mpls_label_bottom INT(4) UNSIGNED NOT NULL, " to declare the field itself
   - "PRIMARY KEY (..., mpls_label_bottom, ...)" to put it in the primary key
 
+* mpls_label_stack field:
+  - "mpls_label_stack VARCHAR(255) NOT NULL," to declare the field itself
+  - "PRIMARY KEY (..., mpls_label_stack, ...)" to put it in the primary key
+
 * mpls_stack_depth field:
   - "mpls_stack_depth INT(1) UNSIGNED NOT NULL, " to declare the field itself
   - "PRIMARY KEY (..., mpls_stack_depth, ...)" to put it in the primary key
