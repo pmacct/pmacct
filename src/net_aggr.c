@@ -521,13 +521,14 @@ void remove_dupes(char *filename, struct networks_table *nt, int want_v6)
 	  !memcmp(nt->table6[i].mask, nt->table6[i + 1].mask, sizeof(nt->table6[i].mask))) {
 	continue;
       }
+
+      memcpy(&nt->table6[j], &nt->table6[i], sizeof(struct networks6_table_entry));
+
+      j++;
     }
 
-    memcpy(&nt->table6[j], &nt->table6[i], sizeof(struct networks6_table_entry));
-
-    j++;
+    nt->num6 = j;
   }
-  nt->num6 = j;
 }
 
 void networks_cache_insert(struct networks_cache *nc, u_int32_t *key, struct networks_table_entry *result)
