@@ -740,7 +740,8 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation_2 & COUNT_MPLS_LABEL_STACK) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_label_stack;
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = mpls_label_stack_handler;
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_label_stack_handler;
       primitives++;
     }
 
@@ -1050,6 +1051,25 @@ void mpls_label_bottom_handler(struct channels_list_entry *chptr, struct packet_
     } while (!MPLS_STACK(lvalue));
 
     pmpls->mpls_label_bottom = MPLS_LABEL(lvalue);
+  }
+}
+
+void mpls_label_stack_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
+  u_int32_t lvalue = 0, *label = (u_int32_t *) pptrs->mpls_ptr, idx = 0;
+
+  if (label) {
+    do {
+      lvalue = ntohl(*label);
+      
+      if (idx < MAX_MPLS_LABELS) {
+	pmpls->labels_cycle[idx] = MPLS_LABEL(lvalue);
+	idx++;
+      }
+
+      label += 4;
+    } while (!MPLS_STACK(lvalue));
   }
 }
 
@@ -3524,7 +3544,7 @@ void NF_nat_event_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   }
 }
 
-void NF_mpls_label_stack(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void NF_mpls_label_stack_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
