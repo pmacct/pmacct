@@ -2013,9 +2013,6 @@ Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BGP tables, %d workers\n",config.name
 
       if (!inter_domain_routing_db) return ERR;
 
-  if(config.bgp_table_dump_time_slots > 1)
-    Log(LOG_INFO, "INFO Dumping BGP tables, slot %d of %d\n", bgp_misc_db->current_bgp_slot + 1, config.bgp_table_dump_time_slots);
-
 
       for (afi = AFI_IP; afi < AFI_MAX; afi++) {
 	for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
