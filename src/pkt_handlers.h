@@ -194,6 +194,7 @@ extern void SF_vxlan_handler(struct channels_list_entry *, struct packet_ptrs *,
 extern void SF_tee_payload_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_mpls_label_top_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_mpls_label_bottom_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void SF_mpls_label_stack_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_mpls_stack_depth_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_mpls_pw_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_custom_primitives_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

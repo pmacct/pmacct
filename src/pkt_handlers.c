@@ -742,6 +742,7 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation_2 & COUNT_MPLS_LABEL_STACK) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = mpls_label_stack_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_label_stack_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_mpls_label_stack_handler;
       primitives++;
     }
 
@@ -5515,6 +5516,26 @@ void SF_mpls_label_bottom_handler(struct channels_list_entry *chptr, struct pack
     } while (!MPLS_STACK(lvalue));
 
     pmpls->mpls_label_bottom = MPLS_LABEL(lvalue);
+  }
+}
+
+void SF_mpls_label_stack_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
+  SFSample *sample = (SFSample *) pptrs->f_data;
+  u_int32_t lvalue = 0, *label = (u_int32_t *) sample->lstk.stack, idx = 0;
+
+  if (label) {
+    do {
+      lvalue = ntohl(*label);
+
+      if (idx < MAX_MPLS_LABELS) {
+	pmpls->labels_cycle[idx] = MPLS_LABEL(lvalue);
+	idx++;
+      }
+
+      label += 4;
+    } while (!MPLS_STACK(lvalue));
   }
 }
 
