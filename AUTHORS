@@ -1,5 +1,5 @@
 pmacct [IP traffic accounting : BGP : BMP : RPKI : IGP : Streaming Telemetry]
-pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 
 Founder:
 
@@ -34,6 +34,7 @@ Thanks to the following people for their strong support along the time:
 	Juan Camilo Cardona
 	Pier Carlo Chiodi
 	Codethink.co.uk
+	Salvatore Cuzzilla
 	Arnaud De-Bermingham
 	Francois Deppierraz 
 	Pierre Francois
@@ -67,6 +68,7 @@ Thanks to the following people for their strong support along the time:
 	Thomas Telkamp
 	Matthieu Texier
 	Stig Thormodsrud
+	Marco Tollini
 	Luca Tosolini
 	Brent Van Dussen
 	Markus Weber
