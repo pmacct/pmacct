@@ -27,6 +27,7 @@ RUN apt-get update && \
     git \
     libcurl4-openssl-dev \
     libjansson-dev \
+    libjson-c-dev \
     libnetfilter-log-dev \
     libpcap-dev \
     libpq-dev \
