@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -78,11 +78,9 @@ struct pm_ndpi_workflow *pm_ndpi_workflow_init()
   NDPI_BITMASK_SET_ALL(all);
   ndpi_set_protocol_detection_bitmask2(workflow->ndpi_struct, &all);
 
-#if NDPI_MAJOR >= 3 && NDPI_MINOR >= 5
+#if (NDPI_MAJOR == 3 && NDPI_MINOR == 5) || NDPI_MAJOR >= 3
   ndpi_finalize_initialization(workflow->ndpi_struct);
-#endif
-
-#if NDPI_MAJOR >= 3 && NDPI_MINOR <= 4
+#else
   ndpi_finalize_initalization(workflow->ndpi_struct);
 #endif
 

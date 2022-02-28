@@ -103,7 +103,8 @@
 #ifndef NDPI_LIB_COMPILATION
 #define NDPI_LIB_COMPILATION
 #endif
-#include <ndpi_main.h>
+// #include <ndpi_config.h>
+#include <ndpi_api.h>
 #undef NDPI_LIB_COMPILATION
 #endif
 
