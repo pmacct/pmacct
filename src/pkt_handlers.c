@@ -1065,7 +1065,7 @@ void mpls_label_stack_handler(struct channels_list_entry *chptr, struct packet_p
       lvalue = ntohl(*label);
       
       if (idx < MAX_MPLS_LABELS) {
-	pmpls->labels_cycle[idx] = MPLS_LABEL(lvalue);
+	pmpls->label_stack[idx] = MPLS_LABEL(lvalue);
 	idx++;
       }
 
@@ -3550,33 +3550,33 @@ void NF_mpls_label_stack_handler(struct channels_list_entry *chptr, struct packe
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
-  memset(&pmpls->labels_cycle, 0, sizeof(pmpls->labels_cycle));
+  memset(&pmpls->label_stack, 0, sizeof(pmpls->label_stack));
 
   switch(hdr->version) {
   case 10:
   case 9:
     if (tpl->tpl[NF9_MPLS_LABEL_1].len == 3) {
-      pmpls->labels_cycle[0] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_1].off);
+      pmpls->label_stack[0] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_1].off);
     } 
 
     if (tpl->tpl[NF9_MPLS_LABEL_2].len == 3) {
-      pmpls->labels_cycle[1] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_2].off);
+      pmpls->label_stack[1] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_2].off);
     }
 
     if (tpl->tpl[NF9_MPLS_LABEL_3].len == 3) {
-      pmpls->labels_cycle[2] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_3].off);
+      pmpls->label_stack[2] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_3].off);
     } 
     
     if (tpl->tpl[NF9_MPLS_LABEL_4].len == 3) {
-      pmpls->labels_cycle[3] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_4].off);
+      pmpls->label_stack[3] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_4].off);
     } 
     
     if (tpl->tpl[NF9_MPLS_LABEL_5].len == 3) {
-      pmpls->labels_cycle[4] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_5].off);
+      pmpls->label_stack[4] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_5].off);
     } 
     
     if (tpl->tpl[NF9_MPLS_LABEL_6].len == 3) {
-      pmpls->labels_cycle[5] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_6].off);
+      pmpls->label_stack[5] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_6].off);
     }
     break;
   default:
@@ -5530,7 +5530,7 @@ void SF_mpls_label_stack_handler(struct channels_list_entry *chptr, struct packe
       lvalue = ntohl(*label);
 
       if (idx < MAX_MPLS_LABELS) {
-	pmpls->labels_cycle[idx] = MPLS_LABEL(lvalue);
+	pmpls->label_stack[idx] = MPLS_LABEL(lvalue);
 	idx++;
       }
 

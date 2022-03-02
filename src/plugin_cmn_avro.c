@@ -854,12 +854,12 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
 
   if (wtc_2 & COUNT_MPLS_LABEL_STACK) {
     if (config.mpls_label_stack_encode_as_array) {
-      compose_mpls_label_stack_data(pmpls->labels_cycle, value);
+      compose_mpls_label_stack_data(pmpls->label_stack, value);
     } 
     else {
       char mpls_label_stack[MAX_MPLS_LABEL_STACK];
 
-      mpls_label_stack_to_str(mpls_label_stack, MAX_MPLS_LABEL_STACK, pmpls->labels_cycle);
+      mpls_label_stack_to_str(mpls_label_stack, MAX_MPLS_LABEL_STACK, pmpls->label_stack);
       pm_avro_check(avro_value_get_by_name(&value, "mpls_label_stack", &field, NULL));
       pm_avro_check(avro_value_set_string(&field, mpls_label_stack));
     }
@@ -1622,7 +1622,7 @@ int compose_fwd_status_avro_data(size_t fwdstatus_decimal, avro_value_t v_type_r
   return 0;
 }
 
-int compose_mpls_label_stack_data(u_int32_t *labels_cycle, avro_value_t v_type_record)
+int compose_mpls_label_stack_data(u_int32_t *label_stack, avro_value_t v_type_record)
 {
   const int MAX_IDX_LEN = 4;
   const int MAX_MPLS_LABEL_IDX_LEN = (MAX_IDX_LEN + MAX_MPLS_LABEL_LEN);
@@ -1636,7 +1636,7 @@ int compose_mpls_label_stack_data(u_int32_t *labels_cycle, avro_value_t v_type_r
   size_t idx_0;
   for (idx_0 = 0; idx_0 < MAX_MPLS_LABELS; idx_0++) {
     memset(&label_buf, 0, sizeof(label_buf));
-    snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", *(labels_cycle + idx_0));
+    snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", *(label_stack + idx_0));
     if (avro_value_get_by_name(&v_type_record, "mpls_label_stack", &v_type_array, NULL) == 0) {
       if (strncmp("0", label_buf, 1)) {
         memset(&idx_buf, 0, sizeof(idx_buf));
