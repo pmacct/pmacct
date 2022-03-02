@@ -19,10 +19,12 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+#define NDPI_LIB_COMPILATION
 #include "../pmacct.h"
 #include "../ip_flow.h"
 #include "../classifier.h"
 #include "ndpi.h"
+#undef NDPI_LIB_COMPILATION
 
 struct pm_ndpi_workflow *pm_ndpi_workflow_init()
 {
