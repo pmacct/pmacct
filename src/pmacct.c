@@ -3980,8 +3980,14 @@ void pmc_lower_string(char *string)
 
 char *pmc_ndpi_get_proto_name(u_int16_t proto_id)
 {
-  if (!proto_id || proto_id > ct_idx || !class_table[proto_id].id) return class_table[0].protocol;
-  else return class_table[proto_id].protocol;
+  static char unknown[] = "unknown";
+
+  if (!proto_id || proto_id > ct_idx || !class_table[proto_id].id) {
+    return unknown;
+  }
+  else {
+    return class_table[proto_id - 1].protocol;
+  }
 }
 
 const char *pmc_rpki_roa_print(u_int8_t roa)
