@@ -961,7 +961,7 @@ void compose_json_mpls_label_stack(json_t *obj, struct chained_cache *cc)
 {
   char mpls_label_stack[MAX_MPLS_LABEL_STACK];
 
-  mpls_label_stack_to_str(mpls_label_stack, MAX_MPLS_LABEL_STACK, cc->pmpls->labels_cycle);
+  mpls_label_stack_to_str(mpls_label_stack, MAX_MPLS_LABEL_STACK, cc->pmpls->label_stack);
   json_object_set_new_nocheck(obj, "mpls_label_stack", json_string(mpls_label_stack));
 }
 
@@ -1322,7 +1322,7 @@ void compose_json_string_fwd_status(json_t *obj, struct chained_cache *cc)
 
 void compose_json_array_mpls_label_stack(json_t *obj, struct chained_cache *cc)
 {
-  json_t *root_l1 = compose_mpls_label_stack_json_data(cc->pmpls->labels_cycle);
+  json_t *root_l1 = compose_mpls_label_stack_json_data(cc->pmpls->label_stack);
 
   json_object_set_new_nocheck(obj, "mpls_label_stack", root_l1);
 }
@@ -1399,7 +1399,7 @@ json_t *compose_fwd_status_json_data(size_t fwdstatus_decimal, cdada_list_t *ll,
   return root;
 }
 
-json_t *compose_mpls_label_stack_json_data(u_int32_t *labels_cycle)
+json_t *compose_mpls_label_stack_json_data(u_int32_t *label_stack)
 {
   const int MAX_IDX_LEN = 4;
   const int MAX_MPLS_LABEL_IDX_LEN = (MAX_IDX_LEN + MAX_MPLS_LABEL_LEN);
@@ -1414,7 +1414,7 @@ json_t *compose_mpls_label_stack_json_data(u_int32_t *labels_cycle)
   size_t idx_0;
   for (idx_0 = 0; idx_0 < MAX_MPLS_LABELS; idx_0++) {
     memset(&label_buf, 0, sizeof(label_buf));
-    snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", *(labels_cycle + idx_0));
+    snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", *(label_stack + idx_0));
     if (strncmp("0", label_buf, 1)) {
       memset(&idx_buf, 0, sizeof(idx_buf));
       memset(&label_idx_buf, 0, sizeof(label_idx_buf));

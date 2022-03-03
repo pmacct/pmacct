@@ -347,7 +347,7 @@ void count_mpls_label_stack_handler(const struct db_cache *cache_elem, struct in
 {
   char mpls_label_stack[MAX_MPLS_LABEL_STACK];
 
-  mpls_label_stack_to_str(mpls_label_stack, MAX_MPLS_LABEL_STACK, cache_elem->pmpls->labels_cycle);
+  mpls_label_stack_to_str(mpls_label_stack, MAX_MPLS_LABEL_STACK, cache_elem->pmpls->label_stack);
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, mpls_label_stack);
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, mpls_label_stack);
   *ptr_where += strlen(*ptr_where);
