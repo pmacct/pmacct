@@ -1659,10 +1659,21 @@ void sampling_rate_handler(struct channels_list_entry *chptr, struct packet_ptrs
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
-  pdata->primitives.sampling_rate = config.ext_sampling_rate ? config.ext_sampling_rate : 1;
+  if (config.ext_sampling_rate || config.sampling_rate) {
+    if (config.ext_sampling_rate) {
+      pdata->primitives.sampling_rate = config.ext_sampling_rate;
+    }
+    else {
+      pdata->primitives.sampling_rate = config.sampling_rate;
+    }
+  }
+  else {
+    pdata->primitives.sampling_rate = 1;
+  }
 
-  if (config.sfacctd_renormalize)
+  if (config.sfacctd_renormalize) {
     pdata->primitives.sampling_rate = 1; /* already renormalized */
+  }
 }
 
 void sampling_direction_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
