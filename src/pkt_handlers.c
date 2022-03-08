@@ -840,7 +840,17 @@ void evaluate_packet_handlers()
 	if (config.nfacctd_time == NF_TIME_NEW) channels_list[index].phandler[primitives] = time_new_handler;
 	else channels_list[index].phandler[primitives] = time_pcap_handler; /* default */
 
-	if (config.sfacctd_renormalize && config.ext_sampling_rate) {
+	if (channels_list[index].s.rate) {
+          primitives++;
+	  if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) {
+	    channels_list[index].phandler[primitives] = sfprobe_sampling_handler;
+	  }
+	  else {
+	    channels_list[index].phandler[primitives] = sampling_handler;
+	  }
+	}
+
+	if (config.sfacctd_renormalize && (config.ext_sampling_rate || channels_list[index].s.rate)) {
 	  primitives++;
 	  channels_list[index].phandler[primitives] = counters_renormalize_handler;
 	}
@@ -855,7 +865,9 @@ void evaluate_packet_handlers()
 
 	if (config.sfacctd_renormalize) {
 	  primitives++;
-	  if (config.ext_sampling_rate) channels_list[index].phandler[primitives] = counters_renormalize_handler;
+	  if (config.ext_sampling_rate) {
+	    channels_list[index].phandler[primitives] = counters_renormalize_handler;
+	  }
 	  else if (config.sampling_map) {
 	    channels_list[index].phandler[primitives] = NF_counters_map_renormalize_handler;
 
@@ -863,14 +875,18 @@ void evaluate_packet_handlers()
 	    primitives++;
 	    channels_list[index].phandler[primitives] = NF_counters_renormalize_handler;
 	  }
-	  else channels_list[index].phandler[primitives] = NF_counters_renormalize_handler;
+	  else {
+	    channels_list[index].phandler[primitives] = NF_counters_renormalize_handler;
+	  }
 	}
       }
       else if (config.acct_type == ACCT_SF) {
 	channels_list[index].phandler[primitives] = SF_counters_handler;
 	if (config.sfacctd_renormalize) {
 	  primitives++;
-	  if (config.ext_sampling_rate) channels_list[index].phandler[primitives] = counters_renormalize_handler;
+	  if (config.ext_sampling_rate) {
+	    channels_list[index].phandler[primitives] = counters_renormalize_handler;
+	  }
 	  else if (config.sampling_map) {
 	    channels_list[index].phandler[primitives] = SF_counters_map_renormalize_handler;
 
@@ -878,7 +894,9 @@ void evaluate_packet_handlers()
             primitives++;
             channels_list[index].phandler[primitives] = SF_counters_renormalize_handler;
 	  }
-	  else channels_list[index].phandler[primitives] = SF_counters_renormalize_handler;
+	  else {
+	    channels_list[index].phandler[primitives] = SF_counters_renormalize_handler;
+	  }
 	}
       }
       primitives++;
@@ -959,13 +977,6 @@ void evaluate_packet_handlers()
         if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = sfprobe_payload_handler;
         else primitives--; /* This case is filtered out at startup: getting out silently */
       }
-      primitives++;
-    }
-
-    if (channels_list[index].s.rate) {
-      if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE)
-        channels_list[index].phandler[primitives] = sfprobe_sampling_handler;
-      else channels_list[index].phandler[primitives] = sampling_handler;
       primitives++;
     }
 
@@ -1400,8 +1411,14 @@ void counters_renormalize_handler(struct channels_list_entry *chptr, struct pack
 
   if (pptrs->renormalized) return;
 
-  pdata->pkt_len = pdata->pkt_len*config.ext_sampling_rate;
-  pdata->pkt_num = pdata->pkt_num*config.ext_sampling_rate; 
+  if (config.ext_sampling_rate) {
+    pdata->pkt_len = pdata->pkt_len * config.ext_sampling_rate;
+    pdata->pkt_num = pdata->pkt_num * config.ext_sampling_rate; 
+  }
+  else {
+    pdata->pkt_len = pdata->pkt_len * chptr->s.rate;
+    pdata->pkt_num = pdata->pkt_num * chptr->s.rate;
+  }
 
   pptrs->renormalized = TRUE;
 }
@@ -3053,8 +3070,9 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
     }
   }
 
-  if (config.sfacctd_renormalize && pdata->primitives.sampling_rate)
+  if (config.sfacctd_renormalize && pdata->primitives.sampling_rate) {
     pdata->primitives.sampling_rate = 1; /* already renormalized */
+  }
 }
 
 void NF_sampling_direction_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -5287,8 +5305,9 @@ void SF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
     pdata->primitives.sampling_rate = sample->meanSkipCount;
   }
 
-  if (config.sfacctd_renormalize && pdata->primitives.sampling_rate) 
+  if (config.sfacctd_renormalize && pdata->primitives.sampling_rate) { 
     pdata->primitives.sampling_rate = 1; /* already renormalized */
+  }
 }
 
 void SF_sampling_direction_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

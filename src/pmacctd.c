@@ -649,7 +649,10 @@ int main(int argc,char **argv, char **envp)
       else if (list->type.id == PLUGIN_ID_NFPROBE) {
 	/* If we already renormalizing an external sampling rate,
 	   we cancel the sampling information from the probe plugin */
-	if (config.sfacctd_renormalize && list->cfg.ext_sampling_rate) list->cfg.ext_sampling_rate = 0;
+	if (config.sfacctd_renormalize && (list->cfg.ext_sampling_rate || list->cfg.sampling_rate)) {
+	  list->cfg.ext_sampling_rate = 0;
+	  list->cfg.sampling_rate = 0;
+	}
 
 	config.handle_fragments = TRUE;
 	list->cfg.nfprobe_what_to_count = list->cfg.what_to_count;
@@ -726,7 +729,10 @@ int main(int argc,char **argv, char **envp)
       else if (list->type.id == PLUGIN_ID_SFPROBE) {
         /* If we already renormalizing an external sampling rate,
            we cancel the sampling information from the probe plugin */
-        if (config.sfacctd_renormalize && list->cfg.ext_sampling_rate) list->cfg.ext_sampling_rate = 0;
+        if (config.sfacctd_renormalize && (list->cfg.ext_sampling_rate || list->cfg.sampling_rate)) {
+	  list->cfg.ext_sampling_rate = 0;
+	  list->cfg.sampling_rate = 0;
+	}
 
 	if (psize < 128) psize = config.snaplen = 128; /* SFL_DEFAULT_HEADER_SIZE */
 	list->cfg.what_to_count = COUNT_PAYLOAD;
