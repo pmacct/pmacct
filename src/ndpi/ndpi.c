@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -78,8 +78,8 @@ struct pm_ndpi_flow_info *pm_ndpi_get_flow_info(struct pm_ndpi_workflow *workflo
 						 struct ndpi_tcphdr **tcph,
 						 struct ndpi_udphdr **udph,
 						 u_int16_t *sport, u_int16_t *dport,
-						 struct ndpi_id_struct **src,
-						 struct ndpi_id_struct **dst,
+						 ndpi_id_struct_t **src,
+						 ndpi_id_struct_t **dst,
 						 u_int8_t *proto,
 						 u_int8_t **payload,
 						 u_int16_t *payload_len,
@@ -268,8 +268,8 @@ struct pm_ndpi_flow_info *pm_ndpi_get_flow_info6(struct pm_ndpi_workflow *workfl
 						  struct ndpi_tcphdr **tcph,
 						  struct ndpi_udphdr **udph,
 						  u_int16_t *sport, u_int16_t *dport,
-						  struct ndpi_id_struct **src,
-						  struct ndpi_id_struct **dst,
+						  ndpi_id_struct_t **src,
+						  ndpi_id_struct_t **dst,
 						  u_int8_t *proto,
 						  u_int8_t **payload,
 						  u_int16_t *payload_len,
@@ -312,7 +312,7 @@ struct ndpi_proto pm_ndpi_packet_processing(struct pm_ndpi_workflow *workflow,
 					   u_int16_t ip_offset,
 					   u_int16_t ipsize, u_int16_t rawsize)
 {
-  struct ndpi_id_struct *src, *dst;
+  ndpi_id_struct_t *src, *dst;
   struct pm_ndpi_flow_info *flow = NULL;
   struct ndpi_flow_struct *ndpi_flow = NULL;
   u_int8_t proto;
@@ -354,9 +354,15 @@ struct ndpi_proto pm_ndpi_packet_processing(struct pm_ndpi_workflow *workflow,
   /* Protocol already detected */
   if (flow->detection_completed) return(flow->detected_protocol);
 
+#if (NDPI_MAJOR == 4 && NDPI_MINOR >= 2) || NDPI_MAJOR > 4
+  flow->detected_protocol = ndpi_detection_process_packet(workflow->ndpi_struct, ndpi_flow,
+							  iph ? (uint8_t *)iph : (uint8_t *)iph6,
+							  ipsize, time);
+#else
   flow->detected_protocol = ndpi_detection_process_packet(workflow->ndpi_struct, ndpi_flow,
 							  iph ? (uint8_t *)iph : (uint8_t *)iph6,
 							  ipsize, time, src, dst);
+#endif
 
   if ((flow->detected_protocol.app_protocol != NDPI_PROTOCOL_UNKNOWN)
      || ((proto == IPPROTO_UDP) && (flow->packets > workflow->prefs.giveup_proto_tcp))
