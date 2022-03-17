@@ -1836,11 +1836,16 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       u_int32_t tpl_len = 0;
 
       template_hdr = (struct template_hdr_v9 *) tpl_ptr;
-      if (off+flowsetlen > len) { 
+      if ((off + flowsetlen) > len) {
         notify_malf_packet(LOG_INFO, "INFO", "unable to read next Template Flowset (incomplete NetFlow v9/IPFIX packet)",
 		        (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
         xflow_status_table.tot_bad_datagrams++;
         return;
+      }
+
+      if ((flowsetlen - flowoff) < sizeof(struct template_hdr_v9)) {
+	/* skip padding */
+	break;
       }
 
       tpl = handle_template(template_hdr, pptrs, fid, SourceId, &pens, flowsetlen-flowoff, FlowSeq);
@@ -1879,11 +1884,16 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       u_int32_t tpl_len = 0;
 
       opt_template_hdr = (struct options_template_hdr_v9 *) tpl_ptr;
-      if (off+flowsetlen > len) {
+      if ((off + flowsetlen) > len) {
         notify_malf_packet(LOG_INFO, "INFO", "unable to read next Options Template Flowset (incomplete NetFlow v9/IPFIX packet)",
                         (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
         xflow_status_table.tot_bad_datagrams++;
         return;
+      }
+
+      if ((flowsetlen - flowoff) < sizeof(struct options_template_hdr_v9)) {
+	/* skip padding */
+	break;
       }
 
       tpl = handle_template((struct template_hdr_v9 *)opt_template_hdr, pptrs, fid, SourceId, &pens, flowsetlen-flowoff, FlowSeq);
