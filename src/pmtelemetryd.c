@@ -284,7 +284,7 @@ int main(int argc,char **argv, char **envp)
   sighandler_action.sa_handler = PM_sigint_handler;
   sigaction(SIGTERM, &sighandler_action, NULL);
 
-  sighandler_action.sa_handler = handle_falling_child;
+  sighandler_action.sa_handler = ignore_falling_child;
   sigaction(SIGCHLD, &sighandler_action, NULL);
 
   sighandler_action.sa_handler = PM_sigalrm_noop_handler;
