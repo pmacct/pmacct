@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -85,7 +85,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   signal(SIGPIPE, SIG_IGN);
   signal(SIGCHLD, SIG_IGN);
 
-  if (config.tee_transparent && getuid() != 0) {
+  if (config.tee_transparent && getuid() != 0 && !config.pmacctd_nonroot) {
     Log(LOG_ERR, "ERROR ( %s/%s ): Transparent mode requires super-user permissions. Exiting ...\n", config.name, config.type);
     exit_gracefully(1);
   }
