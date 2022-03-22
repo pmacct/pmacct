@@ -701,6 +701,31 @@ int PT_map_is_bi_flow_handler(char *filename, struct id_entry *e, char *value, s
   return FALSE;
 }
 
+int PT_map_is_nsel_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int value_tf, x = 0;
+
+  e->key.is_nsel.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+
+  value_tf = parse_truefalse(value);
+  if (value_tf < 0) {
+    return ERR;
+  }
+
+  e->key.is_nsel.n = value_tf;
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_IS_NSEL) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'is_nsel' clauses part of the same statement.\n", config.name, config.type, filename);
+      return TRUE;
+    }
+  }
+
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_is_nsel_handler;
+
+  return FALSE;
+}
+
 int PT_map_direction_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0;
@@ -2031,6 +2056,34 @@ int pretag_is_bi_flow_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   if (entry->key.is_bi_flow.n == pptrs->flow_type.is_bi) return (FALSE | entry->key.is_bi_flow.neg);
   else return (TRUE ^ entry->key.is_bi_flow.neg);
+}
+
+int pretag_is_nsel_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int8_t nsel = FALSE;
+
+  if (!pptrs->f_data) return TRUE;
+
+  switch (hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_FW_EVENT].len) {
+      nsel = TRUE;
+    }
+    break;
+  default:
+    break; /* this field does not exist */
+  }
+
+  if ((entry->key.is_nsel.n && nsel) || (!entry->key.is_nsel.n && !nsel)) {
+    return (FALSE | entry->key.is_nsel.neg);
+  }
+  else {
+    return (TRUE ^ entry->key.is_nsel.neg);
+  }
 }
 
 int pretag_direction_handler(struct packet_ptrs *pptrs, void *unused, void *e)

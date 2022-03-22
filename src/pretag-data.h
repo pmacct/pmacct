@@ -66,6 +66,7 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"fwdstatus", PT_map_fwd_status_handler}, /* XXX: to be deprecated */
   {"fwd_status", PT_map_fwd_status_handler},
   {"is_bi_flow", PT_map_is_bi_flow_handler},
+  {"is_nsel", PT_map_is_nsel_handler},
   {"", NULL}
 };
 
