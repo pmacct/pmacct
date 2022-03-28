@@ -11,7 +11,7 @@
 !
 ! nfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
 ! engine_type, engine_id, source_id, flowset_id, nexthop, bgp_nexthop, filter,
-! sample_type, is_bi_flow, is_nsel, direction, nat_event, fwd_status, src_mac,
+! sample_type, is_bi_flow, is_nel, is_nsel, direction, fwd_status, src_mac,
 ! dst_mac, vlan, cvlan, src_net, dst_net, is_multicast, mpls_pw_id.
 !
 ! sfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
@@ -118,6 +118,10 @@
 !			that it is a bi-directional flow. If set to 'true' this
 !			does match bi-flows, if set to 'false' it does match non
 !			bi-flows.
+! 'is_nel'		MATCH: in NetFlow/IPFIX this checks the presence of the
+!			natEvent field (230) to infer that this is NEL kind data.
+!			If set to 'true' this does match NSEL, if set to 'false'
+!			it does match non NEL.
 ! 'is_nsel'		MATCH: in NetFlow/IPFIX this checks the presence of the
 !			firewallEvent field (233) to infer that this is NSEL kind
 !			of data. If set to 'true' this does match NSEL, if set to
@@ -129,8 +133,6 @@
 !			interface and this 'direction' key is set to '0' or 2)
 !			source_id equals to output interface and this 'direction'
 !			key is set to '1'.
-! 'nat_event'		MATCH: in Nfv9/IPFIX this is compared against the
-!			natEvent (230) field. 
 ! 'src_as'		MATCH: source Autonomous System Number. In pmacctd, if
 !			the BGP daemon is not enabled it works only against a
 !			Networks map (see 'networks_file' directive); in nfacctd
