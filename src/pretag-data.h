@@ -35,7 +35,7 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"flowset_id", PT_map_flowset_id_handler},
   {"sample_type", PT_map_sample_type_handler},
   {"direction", PT_map_direction_handler},
-  {"nat_event", PT_map_nat_event_handler},
+  {"nat_event", PT_map_nat_event_handler}, /* XXX: to be deprecated */
   {"src_as", PT_map_src_as_handler},
   {"dst_as", PT_map_dst_as_handler},
   {"peer_src_as", PT_map_peer_src_as_handler},
@@ -67,6 +67,7 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"fwd_status", PT_map_fwd_status_handler},
   {"is_bi_flow", PT_map_is_bi_flow_handler},
   {"is_nsel", PT_map_is_nsel_handler},
+  {"is_nel", PT_map_is_nel_handler},
   {"", NULL}
 };
 

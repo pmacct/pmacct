@@ -726,6 +726,31 @@ int PT_map_is_nsel_handler(char *filename, struct id_entry *e, char *value, stru
   return FALSE;
 }
 
+int PT_map_is_nel_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int value_tf, x = 0;
+
+  e->key.is_nel.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+
+  value_tf = parse_truefalse(value);
+  if (value_tf < 0) {
+    return ERR;
+  }
+
+  e->key.is_nel.n = value_tf;
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_IS_NEL) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'is_nel' clauses part of the same statement.\n", config.name, config.type, filename);
+      return TRUE;
+    }
+  }
+
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_is_nel_handler;
+
+  return FALSE;
+}
+
 int PT_map_direction_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0;
@@ -2083,6 +2108,34 @@ int pretag_is_nsel_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   }
   else {
     return (TRUE ^ entry->key.is_nsel.neg);
+  }
+}
+
+int pretag_is_nel_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int8_t nel = FALSE;
+
+  if (!pptrs->f_data) return TRUE;
+
+  switch (hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_NAT_EVENT].len) {
+      nel = TRUE;
+    }
+    break;
+  default:
+    break; /* this field does not exist */
+  }
+
+  if ((entry->key.is_nel.n && nel) || (!entry->key.is_nel.n && !nel)) {
+    return (FALSE | entry->key.is_nel.neg);
+  }
+  else {
+    return (TRUE ^ entry->key.is_nel.neg);
   }
 }
 
