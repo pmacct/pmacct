@@ -657,7 +657,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     avro_writer_reset(p_avro_writer);
     avro_writer_free(p_avro_writer);
     
-    if (bms->dump_kafka_avro_schema_registry) {
+    if (bms->msglog_kafka_avro_schema_registry || bms->dump_kafka_avro_schema_registry) {
       free(p_avro_local_buf);
     }
 #endif
@@ -940,7 +940,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int typ
       avro_writer_reset(p_avro_writer);
       avro_writer_free(p_avro_writer);
 
-      if (bms->dump_kafka_avro_schema_registry) {
+      if (bms->msglog_kafka_avro_schema_registry || bms->dump_kafka_avro_schema_registry) {
         free(p_avro_local_buf);
       }
 #endif
@@ -1181,7 +1181,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
     avro_writer_reset(p_avro_writer);
     avro_writer_free(p_avro_writer);
 
-    if (bms->dump_kafka_avro_schema_registry) {
+    if (bms->msglog_kafka_avro_schema_registry || bms->dump_kafka_avro_schema_registry) {
       free(p_avro_local_buf);
     }
 #endif
@@ -1539,7 +1539,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
     avro_writer_reset(p_avro_writer);
     avro_writer_free(p_avro_writer);
 
-    if (bms->dump_kafka_avro_schema_registry) {
+    if (bms->msglog_kafka_avro_schema_registry || bms->dump_kafka_avro_schema_registry) {
       free(p_avro_local_buf);
     }
 #endif
@@ -1769,7 +1769,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, bgp_tag_t *tag, struct bgp_dump_s
     avro_writer_reset(p_avro_writer);
     avro_writer_free(p_avro_writer);
 
-    if (bms->dump_kafka_avro_schema_registry) {
+    if (bms->msglog_kafka_avro_schema_registry || bms->dump_kafka_avro_schema_registry) {
       free(p_avro_local_buf);
     }
 #endif

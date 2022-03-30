@@ -355,7 +355,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
     avro_writer_reset(p_avro_writer);
     avro_writer_free(p_avro_writer);
     
-    if (bms->dump_kafka_avro_schema_registry) {
+    if (bms->msglog_kafka_avro_schema_registry || bms->dump_kafka_avro_schema_registry) {
       free(p_avro_local_buf);
     }
 #endif
