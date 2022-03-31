@@ -416,15 +416,20 @@ int p_kafka_connect_to_produce(struct p_kafka_host *kafka_host)
   return SUCCESS;
 }
 
-int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, size_t data_len, int part)
+int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, size_t data_len, int part, int do_free)
 {
   int ret = SUCCESS;
+  int flag = RD_KAFKA_MSG_F_COPY;
 
   kafkap_ret_err_cb = FALSE;
 
+  if (do_free) {
+    flag = RD_KAFKA_MSG_F_FREE;
+  }
+
   if (kafka_host && kafka_host->rk && kafka_host->topic) {
-    ret = rd_kafka_produce(kafka_host->topic, part, RD_KAFKA_MSG_F_COPY,
-			   data, data_len, kafka_host->key, kafka_host->key_len, NULL);
+    ret = rd_kafka_produce(kafka_host->topic, part, flag, data, data_len,
+			   kafka_host->key, kafka_host->key_len, NULL);
 
     if (ret == ERR) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Failed to produce to topic %s partition %i: %s\n", config.name, config.type,
@@ -442,7 +447,12 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, si
 
 int p_kafka_produce_data(struct p_kafka_host *kafka_host, void *data, size_t data_len)
 {
-  return p_kafka_produce_data_to_part(kafka_host, data, data_len, kafka_host->partition);
+  return p_kafka_produce_data_to_part(kafka_host, data, data_len, kafka_host->partition, FALSE);
+}
+
+int p_kafka_produce_data_and_free(struct p_kafka_host *kafka_host, void *data, size_t data_len)
+{
+  return p_kafka_produce_data_to_part(kafka_host, data, data_len, kafka_host->partition, TRUE);
 }
 
 int p_kafka_connect_to_consume(struct p_kafka_host *kafka_host)
@@ -616,8 +626,7 @@ int write_and_free_json_kafka(void *kafka_log, void *obj)
       p_kafka_set_topic(alog, dyn_kafka_topic);
     }
 
-    ret = p_kafka_produce_data(alog, tmpbuf, strlen(tmpbuf));
-    free(tmpbuf);
+    ret = p_kafka_produce_data_and_free(alog, tmpbuf, strlen(tmpbuf));
 
     if (alog->topic_rr.max) p_kafka_set_topic(alog, orig_kafka_topic);
   }

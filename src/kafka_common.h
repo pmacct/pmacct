@@ -98,7 +98,8 @@ extern int p_kafka_stats(rd_kafka_t *, char *, size_t, void *);
 
 extern int p_kafka_connect_to_produce(struct p_kafka_host *);
 extern int p_kafka_produce_data(struct p_kafka_host *, void *, size_t);
-extern int p_kafka_produce_data_to_part(struct p_kafka_host *, void *, size_t, int);
+extern int p_kafka_produce_data_and_free(struct p_kafka_host *, void *, size_t);
+extern int p_kafka_produce_data_to_part(struct p_kafka_host *, void *, size_t, int, int);
 
 extern int p_kafka_connect_to_consume(struct p_kafka_host *);
 extern int p_kafka_manage_consumer(struct p_kafka_host *, int);
