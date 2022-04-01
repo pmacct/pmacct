@@ -110,6 +110,7 @@ extern void compose_json_post_nat_dst_host(json_t *, struct chained_cache *);
 extern void compose_json_post_nat_src_port(json_t *, struct chained_cache *);
 extern void compose_json_post_nat_dst_port(json_t *, struct chained_cache *);
 extern void compose_json_nat_event(json_t *, struct chained_cache *);
+extern void compose_json_fw_event(json_t *, struct chained_cache *);
 extern void compose_json_mpls_label_top(json_t *, struct chained_cache *);
 extern void compose_json_mpls_label_bottom(json_t *, struct chained_cache *);
 extern void compose_json_mpls_stack_depth(json_t *, struct chained_cache *);

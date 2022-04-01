@@ -748,6 +748,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (config.what_to_count_2 & COUNT_POST_NAT_SRC_PORT) fprintf(f, "%-5u              ", pnat->post_nat_src_port);
         if (config.what_to_count_2 & COUNT_POST_NAT_DST_PORT) fprintf(f, "%-5u              ", pnat->post_nat_dst_port);
         if (config.what_to_count_2 & COUNT_NAT_EVENT) fprintf(f, "%-3u       ", pnat->nat_event);
+        if (config.what_to_count_2 & COUNT_FW_EVENT) fprintf(f, "%-3u      ", pnat->fw_event);
         if (config.what_to_count_2 & COUNT_FWD_STATUS) fprintf(f, "%-3u        ", pnat->fwd_status);
   
         if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) {
@@ -1141,6 +1142,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (config.what_to_count_2 & COUNT_POST_NAT_SRC_PORT) fprintf(f, "%s%u", write_sep(sep, &count), pnat->post_nat_src_port);
         if (config.what_to_count_2 & COUNT_POST_NAT_DST_PORT) fprintf(f, "%s%u", write_sep(sep, &count), pnat->post_nat_dst_port);
         if (config.what_to_count_2 & COUNT_NAT_EVENT) fprintf(f, "%s%u", write_sep(sep, &count), pnat->nat_event);
+        if (config.what_to_count_2 & COUNT_FW_EVENT) fprintf(f, "%s%u", write_sep(sep, &count), pnat->fw_event);
         if (config.what_to_count_2 & COUNT_FWD_STATUS) fprintf(f, "%s%u", write_sep(sep, &count), pnat->fwd_status);
   
         if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) fprintf(f, "%s%u", write_sep(sep, &count), pmpls->mpls_label_top);
@@ -1459,6 +1461,7 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_POST_NAT_SRC_PORT) fprintf(f, "POST_NAT_SRC_PORT  ");
   if (config.what_to_count_2 & COUNT_POST_NAT_DST_PORT) fprintf(f, "POST_NAT_DST_PORT  ");
   if (config.what_to_count_2 & COUNT_NAT_EVENT) fprintf(f, "NAT_EVENT ");
+  if (config.what_to_count_2 & COUNT_FW_EVENT) fprintf(f, "FW_EVENT ");
   if (config.what_to_count_2 & COUNT_FWD_STATUS) fprintf(f, "FWD_STATUS ");
   if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) fprintf(f, "MPLS_LABEL_TOP  ");
   if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) fprintf(f, "MPLS_LABEL_BOTTOM  ");
@@ -1580,6 +1583,7 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_POST_NAT_SRC_PORT) fprintf(f, "%sPOST_NAT_SRC_PORT", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_POST_NAT_DST_PORT) fprintf(f, "%sPOST_NAT_DST_PORT", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_NAT_EVENT) fprintf(f, "%sNAT_EVENT", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_FW_EVENT) fprintf(f, "%sFW_EVENT", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_FWD_STATUS) fprintf(f, "%sFWD_STATUS", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) fprintf(f, "%sMPLS_LABEL_TOP", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) fprintf(f, "%sMPLS_LABEL_BOTTOM", write_sep(sep, &count));

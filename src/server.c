@@ -588,6 +588,7 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
     if (w2 & COUNT_POST_NAT_SRC_PORT) d3->post_nat_src_port = s3->post_nat_src_port;
     if (w2 & COUNT_POST_NAT_DST_PORT) d3->post_nat_dst_port = s3->post_nat_dst_port;
     if (w2 & COUNT_NAT_EVENT) d3->nat_event = s3->nat_event;
+    if (w2 & COUNT_FW_EVENT) d3->fw_event = s3->fw_event;
     if (w2 & COUNT_FWD_STATUS) d3->fwd_status = s3->fwd_status;
     if (w2 & COUNT_TIMESTAMP_START) memcpy(&d3->timestamp_start, &s3->timestamp_start, sizeof(struct timeval));
     if (w2 & COUNT_TIMESTAMP_END) memcpy(&d3->timestamp_end, &s3->timestamp_end, sizeof(struct timeval));
@@ -644,19 +645,6 @@ void Accumulate_Counters(struct pkt_data *abuf, struct acc *elem)
 int test_zero_elem(struct acc *elem)
 {
   if (elem && elem->flow_type && !elem->reset_flag) return FALSE;
-
-/*
-  if (elem) {
-    if (elem->flow_type == NF9_FTYPE_NAT_EVENT) {
-      if (elem->pnat && elem->pnat->nat_event) return FALSE;
-      else return TRUE;
-    }
-    else {
-      if (elem->bytes_counter && !elem->reset_flag) return FALSE;
-      else return TRUE;
-    }
-  }
-*/
 
   return TRUE;
 }
