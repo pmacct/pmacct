@@ -675,6 +675,12 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    if (channels_list[index].aggregation_2 & COUNT_FW_EVENT) {
+      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_fw_event_handler;
+      else primitives--;
+      primitives++;
+    }
+
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_SRC_MAC) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_src_mac_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_src_mac_handler;
@@ -3564,10 +3570,30 @@ void NF_nat_event_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_NAT_EVENT].len)
+    if (tpl->tpl[NF9_NAT_EVENT].len) {
       memcpy(&pnat->nat_event, pptrs->f_data+tpl->tpl[NF9_NAT_EVENT].off, MIN(tpl->tpl[NF9_NAT_EVENT].len, 1));
-    else if ((utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_EVENT, FALSE)))
+    }
+    else if ((utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_ASA_XLATE_EVENT, FALSE))) {
       memcpy(&pnat->nat_event, pptrs->f_data+utpl->off, MIN(utpl->len, 1));
+    }
+    break;
+  default:
+    break;
+  }
+}
+
+void NF_fw_event_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_FW_EVENT].len) {
+      memcpy(&pnat->fw_event, pptrs->f_data+tpl->tpl[NF9_FW_EVENT].off, MIN(tpl->tpl[NF9_FW_EVENT].len, 1));
+    }
     break;
   default:
     break;
