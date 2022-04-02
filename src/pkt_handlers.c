@@ -742,7 +742,6 @@ void evaluate_packet_handlers()
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = vxlan_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_vxlan_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_vxlan_handler;
-      else primitives--;
       primitives++;
     }
 
@@ -764,7 +763,6 @@ void evaluate_packet_handlers()
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = mpls_label_bottom_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_label_bottom_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_mpls_label_bottom_handler;
-      else primitives--;
       primitives++;
     }
 
@@ -772,7 +770,6 @@ void evaluate_packet_handlers()
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = mpls_stack_depth_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_stack_depth_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_mpls_stack_depth_handler;
-      else primitives--;
       primitives++;
     }
 
