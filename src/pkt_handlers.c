@@ -536,6 +536,7 @@ void evaluate_packet_handlers()
     /* ACCT_PM & ACCT_SF atm not handled */
     if (channels_list[index].aggregation_2 & COUNT_FWD_STATUS) {
       if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_fwd_status_handler;
+      else primitives--;
       primitives++;
     }
 
