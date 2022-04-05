@@ -90,6 +90,7 @@ extern int PT_map_index_entries_src_net_handler(struct id_entry *, pm_hash_seria
 extern int PT_map_index_entries_dst_net_handler(struct id_entry *, pm_hash_serial_t *, void *);
 extern int PT_map_index_entries_is_multicast_handler(struct id_entry *, pm_hash_serial_t *, void *);
 extern int PT_map_index_entries_fwd_status_handler(struct id_entry *, pm_hash_serial_t *, void *); 
+extern int PT_map_index_entries_null_handler(struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_fdata_ip_handler(struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_fdata_input_handler(struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_fdata_output_handler(struct id_entry *, pm_hash_serial_t *, void *); 
@@ -110,6 +111,7 @@ extern int PT_map_index_fdata_src_net_handler(struct id_entry *, pm_hash_serial_
 extern int PT_map_index_fdata_dst_net_handler(struct id_entry *, pm_hash_serial_t *, void *);
 extern int PT_map_index_fdata_is_multicast_handler(struct id_entry *, pm_hash_serial_t *, void *);
 extern int PT_map_index_fdata_fwd_status_handler(struct id_entry *, pm_hash_serial_t *, void *);
+extern int PT_map_index_fdata_null_handler(struct id_entry *, pm_hash_serial_t *, void *);
 
 /* BPAS_*: bgp_peer_as_src map specific handlers */
 extern int BPAS_map_bgp_nexthop_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
