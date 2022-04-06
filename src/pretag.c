@@ -651,7 +651,6 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	  idx_bmap = pretag_index_build_bitmap(ptr, acct_type);
 
 	  /* insert bitmap to index list and determine entries per index */ 
-	  printf("CI PASSO: idx=%d bitmap=%lx\n", x, idx_bmap); 
 	  if (pretag_index_insert_bitmap(t, idx_bmap)) {
 	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Out of indexes. Indexing disabled.\n",
 		config.name, config.type, filename);

@@ -1524,7 +1524,7 @@ int main(int argc,char **argv, char **envp)
     }
 
     if (reload_log) {
-      reload_logs();
+      reload_logs(NFACCTD_USAGE_HEADER);
       reload_log = FALSE;
     }
 

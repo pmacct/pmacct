@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -111,7 +111,7 @@ extern bool is_prime(u_int32_t);
 extern u_int32_t next_prime(u_int32_t);
 extern char *null_terminate(char *, int);
 extern char *uint_print(void *, int, int);
-extern void reload_logs();
+extern void reload_logs(char *);
 extern int is_empty_256b(void *, int);
 extern ssize_t pm_recv(int, void *, size_t, int, unsigned int);
 extern int ft2af(u_int8_t);

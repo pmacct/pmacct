@@ -505,7 +505,7 @@ void sql_cache_handle_flush_event(struct insert_data *idata, time_t *refresh_dea
   }
 
   if (reload_log) {
-    reload_logs();
+    reload_logs(NULL);
     reload_log = FALSE;
   }
 }

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -3246,7 +3246,7 @@ char *uint_print(void *value, int len, int flip)
   return buf;
 }
 
-void reload_logs()
+void reload_logs(char *header)
 {
   int logf;
 
@@ -3264,6 +3264,11 @@ void reload_logs()
   if (config.logfile) {
     fclose(config.logfile_fd);
     config.logfile_fd = open_output_file(config.logfile, "a", FALSE);
+  }
+
+  if (config.type_id == PLUGIN_ID_CORE) {
+    Log(LOG_INFO, "INFO ( %s/core ): %s %s (%s)\n", config.name, header, PMACCT_VERSION, PMACCT_BUILD);
+    Log(LOG_INFO, "INFO ( %s/core ): %s\n", config.name, PMACCT_COMPILE_ARGS);
   }
 }
 

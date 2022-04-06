@@ -660,7 +660,7 @@ void P_cache_handle_flush_event(struct ports_table *pt)
   }
 
   if (reload_log) {
-    reload_logs();
+    reload_logs(NULL);
     reload_log = FALSE;
   }
 }
