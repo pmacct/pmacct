@@ -353,11 +353,19 @@ void count_mpls_label_bottom_handler(const struct db_cache *cache_elem, struct i
 
 void count_mpls_label_stack_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  char mpls_label_stack[MAX_MPLS_LABEL_STACK];
+  char label_stack[MAX_MPLS_LABEL_STACK];
+  char *label_stack_ptr = NULL;
+  int label_stack_len = 0;
 
-  mpls_label_stack_to_str(mpls_label_stack, MAX_MPLS_LABEL_STACK, cache_elem->pmpls->label_stack);
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, mpls_label_stack);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, mpls_label_stack);
+  memset(label_stack, 0, MAX_MPLS_LABEL_STACK);
+
+  label_stack_len = vlen_prims_get(cache_elem->pvlen, COUNT_INT_MPLS_LABEL_STACK, &label_stack_ptr);
+  if (label_stack_ptr) {
+    mpls_label_stack_to_str(label_stack, sizeof(label_stack), (u_int32_t *)label_stack_ptr, label_stack_len);
+  }
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, label_stack);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, label_stack);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }

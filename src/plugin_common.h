@@ -149,7 +149,7 @@ extern cdada_list_t *ptm_labels_to_linked_list(const char *);
 extern cdada_list_t *tcpflags_to_linked_list(size_t);
 extern cdada_list_t *fwd_status_to_linked_list();
 
-extern void mpls_label_stack_to_str(char *, int, u_int32_t *);
+extern void mpls_label_stack_to_str(char *, int, u_int32_t *, int);
 
 /* global vars */
 extern void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */

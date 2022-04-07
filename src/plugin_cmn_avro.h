@@ -54,7 +54,7 @@ extern void compose_mpls_label_stack_schema(avro_schema_t);
 extern int compose_label_avro_data_opt(char *, avro_value_t);
 extern int compose_label_avro_data_nonopt(char *, avro_value_t);
 extern int compose_tcpflags_avro_data(size_t, avro_value_t);
-extern int compose_mpls_label_stack_data(u_int32_t *, avro_value_t);
+extern int compose_mpls_label_stack_data(u_int32_t *, int, avro_value_t);
 extern int compose_label_avro_data_opt(char *, avro_value_t);
 extern int compose_label_avro_data_nonopt(char *, avro_value_t);
 extern int compose_tcpflags_avro_data(size_t, avro_value_t);

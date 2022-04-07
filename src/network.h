@@ -515,7 +515,7 @@ struct pkt_stitching {
 #define MAX_BGP_ASPATH          128
 
 /* MPLS */
-#define MAX_MPLS_LABELS         6
+#define MAX_MPLS_LABELS         10
 #define MAX_MPLS_LABEL_LEN      16
 
 struct extra_primitives {
@@ -589,7 +589,6 @@ struct pkt_mpls_primitives {
   u_int32_t mpls_label_top;
   u_int32_t mpls_label_bottom;
   u_int8_t mpls_stack_depth;
-  u_int32_t label_stack[MAX_MPLS_LABELS]; /* XXX: can be optimized using variable-length primitives */
 };
 
 struct pkt_tunnel_primitives {

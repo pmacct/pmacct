@@ -752,10 +752,18 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
       if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) bson_append_int(bson_elem, "mpls_label_top", pmpls->mpls_label_top);
       if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) bson_append_int(bson_elem, "mpls_label_bottom", pmpls->mpls_label_bottom);
       if (config.what_to_count_2 & COUNT_MPLS_LABEL_STACK) {
-	char mpls_label_stack[MAX_MPLS_LABEL_STACK];
+	char label_stack[MAX_MPLS_LABEL_STACK];
+	char *label_stack_ptr = NULL;
+	int label_stack_len = 0;
 
-	mpls_label_stack_to_str(mpls_label_stack, MAX_MPLS_LABEL_STACK, pmpls->label_stack);
-	bson_append_int(bson_elem, "mpls_label_stack", mpls_label_stack);
+	memset(label_stack, 0, MAX_MPLS_LABEL_STACK);
+
+	label_stack_len = vlen_prims_get(pvlen, COUNT_INT_MPLS_LABEL_STACK, &label_stack_ptr);
+	if (label_stack_ptr) {
+	  mpls_label_stack_to_str(label_stack, sizeof(label_stack), (u_int32_t *)label_stack_ptr, label_stack_len);
+	}
+
+	bson_append_int(bson_elem, "mpls_label_stack", label_stack);
       }
       if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) bson_append_int(bson_elem, "mpls_stack_depth", pmpls->mpls_stack_depth);
 

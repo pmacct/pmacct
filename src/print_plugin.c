@@ -1148,10 +1148,18 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) fprintf(f, "%s%u", write_sep(sep, &count), pmpls->mpls_label_top);
         if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) fprintf(f, "%s%u", write_sep(sep, &count), pmpls->mpls_label_bottom);
         if (config.what_to_count_2 & COUNT_MPLS_LABEL_STACK) {
-	  char mpls_label_stack[MAX_MPLS_LABEL_STACK];
+	  char label_stack[MAX_MPLS_LABEL_STACK];
+          char *label_stack_ptr = NULL;
+	  int label_stack_len = 0; 
 
-	  mpls_label_stack_to_str(mpls_label_stack, MAX_MPLS_LABEL_STACK, pmpls->label_stack);
-	  fprintf(f, "%s%s", write_sep(sep, &count), mpls_label_stack);
+	  memset(label_stack, 0, MAX_MPLS_LABEL_STACK);
+
+          label_stack_len = vlen_prims_get(pvlen, COUNT_INT_MPLS_LABEL_STACK, &label_stack_ptr);
+          if (label_stack_ptr) {
+            mpls_label_stack_to_str(label_stack, sizeof(label_stack), (u_int32_t *)label_stack_ptr, label_stack_len);
+          }
+
+	  fprintf(f, "%s%s", write_sep(sep, &count), label_stack);
 	}
         if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) fprintf(f, "%s%u", write_sep(sep, &count), pmpls->mpls_stack_depth);
 
