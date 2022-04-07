@@ -2590,7 +2590,7 @@ int vlen_prims_cmp(struct pkt_vlen_hdr_primitives *src, struct pkt_vlen_hdr_prim
   return memcmp(src, dst, (src->tot_len + PvhdrSz));
 }
 
-void vlen_prims_get(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, char **res)
+int vlen_prims_get(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, char **res)
 {
   pm_label_t *label_ptr;
   char *ptr = (char *) hdr;
@@ -2598,7 +2598,7 @@ void vlen_prims_get(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, char *
 
   if (res) *res = NULL;
 
-  if (!hdr || !wtc || !res) return;
+  if (!hdr || !wtc || !res) return ERR;
 
   ptr += PvhdrSz; 
   label_ptr = (pm_label_t *) ptr; 
@@ -2610,14 +2610,16 @@ void vlen_prims_get(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, char *
         *res = ptr;
       }
 
-      return; 
+      return label_ptr->len;
     }
     else {
       ptr += (PmLabelTSz + label_ptr->len);
       rlen += (PmLabelTSz + label_ptr->len);
       label_ptr = (pm_label_t *) ptr;
     }
-  }  
+  }
+
+  return FALSE;
 }
 
 void vlen_prims_debug(struct pkt_vlen_hdr_primitives *hdr)
