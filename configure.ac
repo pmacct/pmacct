@@ -402,9 +402,14 @@ AC_ARG_ENABLE(mysql,
     AC_CHECK_HEADERS([mysql.h mysql/mysql.h])
     CFLAGS="$_save_CFLAGS"
 
-    AC_CHECK_LIB([numa], [numa_bind], [], [AC_MSG_ERROR([
-      ERROR: missing libnuma. Requirement for building MySQL.
-    ])])
+    case "$host_os" in
+    linux*)
+      AC_CHECK_LIB([numa], [numa_bind], [], [AC_MSG_ERROR([
+        ERROR: missing libnuma. Requirement for building MySQL.
+      ])])
+    ;;
+    esac
+
     ;;
   no)
     AC_MSG_RESULT(no)
