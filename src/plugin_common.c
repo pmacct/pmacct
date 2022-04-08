@@ -1168,7 +1168,14 @@ void mpls_label_stack_to_str(char *str_label_stack, int sls_len, u_int32_t *labe
     memset(&label_buf, 0, sizeof(label_buf));
     snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", label_stack[idx_0]);
     strncat(str_label_stack, label_buf, (sls_len - max_mpls_label_stack_dec));
-    strncat(str_label_stack, "_", (sls_len - max_mpls_label_stack_dec));
-    max_mpls_label_stack_dec = (strlen(label_buf) + strlen("_") + 2);
+
+    /* Avoiding separator to last label */
+    if (idx_0 != (ls_depth - 1)) {
+      strncat(str_label_stack, "_", (sls_len - max_mpls_label_stack_dec));
+      max_mpls_label_stack_dec = (strlen(label_buf) + strlen("_") + 2);
+    }
+    else {
+      max_mpls_label_stack_dec = (strlen(label_buf) + 2);
+    }
   }
 }
