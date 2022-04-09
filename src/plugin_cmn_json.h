@@ -113,7 +113,6 @@ extern void compose_json_nat_event(json_t *, struct chained_cache *);
 extern void compose_json_fw_event(json_t *, struct chained_cache *);
 extern void compose_json_mpls_label_top(json_t *, struct chained_cache *);
 extern void compose_json_mpls_label_bottom(json_t *, struct chained_cache *);
-extern void compose_json_mpls_stack_depth(json_t *, struct chained_cache *);
 extern void compose_json_tunnel_src_mac(json_t *, struct chained_cache *);
 extern void compose_json_tunnel_dst_mac(json_t *, struct chained_cache *);
 extern void compose_json_tunnel_src_host(json_t *, struct chained_cache *);

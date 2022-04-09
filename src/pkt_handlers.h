@@ -34,7 +34,6 @@ extern void etype_handler(struct channels_list_entry *, struct packet_ptrs *, ch
 extern void mpls_label_top_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void mpls_label_bottom_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void mpls_label_stack_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-extern void mpls_stack_depth_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void src_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void dst_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void src_port_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -109,7 +108,6 @@ extern void NF_fw_event_handler(struct channels_list_entry *, struct packet_ptrs
 extern void NF_mpls_label_stack_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_label_top_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_label_bottom_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-extern void NF_mpls_stack_depth_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_vpn_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_vpn_rd_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_pw_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -196,7 +194,6 @@ extern void SF_tee_payload_handler(struct channels_list_entry *, struct packet_p
 extern void SF_mpls_label_top_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_mpls_label_bottom_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_mpls_label_stack_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-extern void SF_mpls_stack_depth_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_mpls_pw_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_custom_primitives_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 

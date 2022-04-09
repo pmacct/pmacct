@@ -765,7 +765,6 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
 
 	bson_append_int(bson_elem, "mpls_label_stack", label_stack);
       }
-      if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) bson_append_int(bson_elem, "mpls_stack_depth", pmpls->mpls_stack_depth);
 
       if (config.what_to_count_2 & COUNT_TUNNEL_SRC_MAC) {
         etheraddr_string(ptun->tunnel_eth_shost, src_mac);

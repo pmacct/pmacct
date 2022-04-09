@@ -279,9 +279,6 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc_2 & COUNT_MPLS_LABEL_BOTTOM)
     avro_schema_record_field_append(schema, "mpls_label_bottom", avro_schema_long());
 
-  if (wtc_2 & COUNT_MPLS_STACK_DEPTH)
-    avro_schema_record_field_append(schema, "mpls_stack_depth", avro_schema_long());
-
   if (wtc_2 & COUNT_TUNNEL_SRC_MAC)
     avro_schema_record_field_append(schema, "tunnel_mac_src", avro_schema_string());
 
@@ -937,11 +934,6 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
   if (wtc_2 & COUNT_MPLS_LABEL_BOTTOM) {
     pm_avro_check(avro_value_get_by_name(&value, "mpls_label_bottom", &field, NULL));
     pm_avro_check(avro_value_set_long(&field, pmpls->mpls_label_bottom));
-  }
-
-  if (wtc_2 & COUNT_MPLS_STACK_DEPTH) {
-    pm_avro_check(avro_value_get_by_name(&value, "mpls_stack_depth", &field, NULL));
-    pm_avro_check(avro_value_set_long(&field, pmpls->mpls_stack_depth));
   }
 
   if (wtc_2 & COUNT_TUNNEL_SRC_MAC) {

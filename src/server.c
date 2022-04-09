@@ -599,7 +599,6 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
   if (extras->off_pkt_mpls_primitives && s4) {
     if (w2 & COUNT_MPLS_LABEL_TOP) d4->mpls_label_top = s4->mpls_label_top;
     if (w2 & COUNT_MPLS_LABEL_BOTTOM) d4->mpls_label_bottom = s4->mpls_label_bottom;
-    if (w2 & COUNT_MPLS_STACK_DEPTH) d4->mpls_stack_depth = s4->mpls_stack_depth;
   }
 
   if (extras->off_pkt_tun_primitives && s6) {

@@ -370,14 +370,6 @@ void count_mpls_label_stack_handler(const struct db_cache *cache_elem, struct in
   *ptr_values += strlen(*ptr_values);
 }
 
-void count_mpls_stack_depth_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
-{
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pmpls->mpls_stack_depth);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pmpls->mpls_stack_depth);
-  *ptr_where += strlen(*ptr_where);
-  *ptr_values += strlen(*ptr_values);
-}
-
 void count_tunnel_src_mac_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
   char sbuf[18];

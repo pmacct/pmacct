@@ -588,7 +588,6 @@ struct pkt_nat_primitives {
 struct pkt_mpls_primitives {
   u_int32_t mpls_label_top;
   u_int32_t mpls_label_bottom;
-  u_int8_t mpls_stack_depth;
 };
 
 struct pkt_tunnel_primitives {

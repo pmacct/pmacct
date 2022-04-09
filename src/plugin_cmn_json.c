@@ -402,11 +402,6 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
     idx++;
   }
 
-  if (wtc_2 & COUNT_MPLS_STACK_DEPTH) {
-    cjhandler[idx] = compose_json_mpls_stack_depth;
-    idx++;
-  }
-
   if (wtc_2 & COUNT_TUNNEL_SRC_MAC) {
     cjhandler[idx] = compose_json_tunnel_src_mac;
     idx++;
@@ -1044,11 +1039,6 @@ void compose_json_mpls_label_top(json_t *obj, struct chained_cache *cc)
 void compose_json_mpls_label_bottom(json_t *obj, struct chained_cache *cc)
 {
   json_object_set_new_nocheck(obj, "mpls_label_bottom", json_integer((json_int_t)cc->pmpls->mpls_label_bottom));
-}
-
-void compose_json_mpls_stack_depth(json_t *obj, struct chained_cache *cc)
-{
-  json_object_set_new_nocheck(obj, "mpls_stack_depth", json_integer((json_int_t)cc->pmpls->mpls_stack_depth));
 }
 
 void compose_json_tunnel_src_mac(json_t *obj, struct chained_cache *cc)

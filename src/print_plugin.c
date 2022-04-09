@@ -757,9 +757,6 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) {
   	fprintf(f, "%-7u            ", pmpls->mpls_label_bottom);
         }
-        if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) {
-  	fprintf(f, "%-2u                ", pmpls->mpls_stack_depth);
-        }
 
         if (config.what_to_count_2 & COUNT_TUNNEL_SRC_MAC) {
           etheraddr_string(ptun->tunnel_eth_shost, src_mac);
@@ -1161,7 +1158,6 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
 	  fprintf(f, "%s%s", write_sep(sep, &count), label_stack);
 	}
-        if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) fprintf(f, "%s%u", write_sep(sep, &count), pmpls->mpls_stack_depth);
 
         if (config.what_to_count_2 & COUNT_TUNNEL_SRC_MAC) {
           etheraddr_string(ptun->tunnel_eth_shost, src_mac);
@@ -1473,7 +1469,6 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_FWD_STATUS) fprintf(f, "FWD_STATUS ");
   if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) fprintf(f, "MPLS_LABEL_TOP  ");
   if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) fprintf(f, "MPLS_LABEL_BOTTOM  ");
-  if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) fprintf(f, "MPLS_STACK_DEPTH  ");
   if (config.what_to_count_2 & COUNT_TUNNEL_SRC_MAC) fprintf(f, "TUNNEL_SRC_MAC     ");
   if (config.what_to_count_2 & COUNT_TUNNEL_DST_MAC) fprintf(f, "TUNNEL_DST_MAC     "); 
   if (config.what_to_count_2 & COUNT_TUNNEL_SRC_HOST) fprintf(f, "TUNNEL_SRC_IP                                  ");
@@ -1596,7 +1591,6 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) fprintf(f, "%sMPLS_LABEL_TOP", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) fprintf(f, "%sMPLS_LABEL_BOTTOM", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_MPLS_LABEL_STACK) fprintf(f, "%sMPLS_LABEL_STACK", write_sep(sep, &count));
-  if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) fprintf(f, "%sMPLS_STACK_DEPTH", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TUNNEL_SRC_MAC) fprintf(f, "%sTUNNEL_SRC_MAC", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TUNNEL_DST_MAC) fprintf(f, "%sTUNNEL_DST_MAC", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TUNNEL_SRC_HOST) fprintf(f, "%sTUNNEL_SRC_IP", write_sep(sep, &count));
