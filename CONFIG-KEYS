@@ -54,14 +54,14 @@ VALUES:		[ src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_
 		 as_path, peer_src_ip, peer_dst_ip, peer_src_as, peer_dst_as, local_pref,
 		 med, dst_roa, src_std_comm, src_ext_comm, src_lrg_comm, src_as_path,
 		 src_local_pref, src_med, src_roa, mpls_vpn_rd, mpls_pw_id, mpls_label_top,
-		 mpls_label_bottom, mpls_label_stack, mpls_stack_depth, sampling_rate,
-		 sampling_direction, src_host_country, dst_host_country, src_host_pocode,
-		 dst_host_pocode, src_host_coords, dst_host_coords, nat_event, fw_event,
-		 post_nat_src_host, post_nat_dst_host, post_nat_src_port, post_nat_dst_port,
-		 tunnel_src_mac, tunnel_dst_mac, tunnel_src_host, tunnel_dst_host,
-		 tunnel_proto, tunnel_tos, tunnel_src_port, tunnel_dst_port, fwd_status,
-		 vxlan, timestamp_start, timestamp_end, timestamp_arrival, timestamp_export,
-		 export_proto_seqno, export_proto_version, export_proto_sysid ]
+		 mpls_label_bottom, mpls_label_stack, sampling_rate, sampling_direction,
+		 src_host_country, dst_host_country, src_host_pocode, dst_host_pocode,
+		 src_host_coords, dst_host_coords, nat_event, fw_event, post_nat_src_host,
+		 post_nat_dst_host, post_nat_src_port, post_nat_dst_port, tunnel_src_mac,
+		 tunnel_dst_mac, tunnel_src_host, tunnel_dst_host, tunnel_proto, tunnel_tos,
+		 tunnel_src_port, tunnel_dst_port, fwd_status, vxlan, timestamp_start,
+		 timestamp_end, timestamp_arrival, timestamp_export, export_proto_seqno,
+		 export_proto_version, export_proto_sysid ]
 FOREWORDS:	Individual IP packets are uniquely identified by their header field values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
 		they have at least enough information to discriminate where packets are coming
