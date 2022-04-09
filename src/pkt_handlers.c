@@ -3629,6 +3629,10 @@ void NF_mpls_label_stack_handler(struct channels_list_entry *chptr, struct packe
 	if (label_stack[label_stack_depth]) {
 	  label_stack_len += 4;
 	  label_stack_depth++;
+
+	  if (check_bosbit(pptrs->f_data+tpl->tpl[label_idx].off)) {
+	    break;
+	  }
 	}
 	else {
 	  break;
