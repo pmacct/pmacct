@@ -3639,6 +3639,12 @@ void NF_mpls_label_stack_handler(struct channels_list_entry *chptr, struct packe
 	}
       }
     }
+
+    if (!label_stack_depth) {
+      if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len) {
+        mpls_label_stack_handler(chptr, pptrs, data);
+      }
+    }
     break;
   default:
     break;
