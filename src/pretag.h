@@ -201,7 +201,7 @@ struct id_entry_key {
   pt_uint32_t mpls_vpn_id;
   pt_rd_t mpls_vpn_rd;
   pt_uint32_t mpls_pw_id;
-  pt_uint32_t fwd_status;
+  pt_uint8_t fwd_status;
   struct bpf_program filter;
   pt_uint8_t null;
 };
