@@ -1,7 +1,7 @@
 /*  
  * pmacct (Promiscuous mode IP Accounting package)
  *
- * Copyright (c) 2003-2021 Paolo Lucente <paolo@pmacct.net>
+ * Copyright (c) 2003-2022 Paolo Lucente <paolo@pmacct.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -92,7 +92,7 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
   struct sockaddr_storage dest;
   socklen_t dest_len = sizeof(dest);
   char dest_str[INET6_ADDRSTRLEN];
-  int dest_port = PM_REDIS_DEFAULT_PORT;
+  int dest_port;
 
   time_t now = time(NULL);
 
@@ -104,8 +104,12 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
 
       /* round of parsing and validation */
       parse_hostport(config.redis_host, (struct sockaddr *)&dest, &dest_len);
-      sa_to_str(dest_str, sizeof(dest_str), (struct sockaddr *)&dest);
+      sa_to_str(dest_str, sizeof(dest_str), (struct sockaddr *)&dest, FALSE);
+
       sa_to_port(&dest_port, (struct sockaddr *)&dest);
+      if (!dest_port) {
+	dest_port = PM_REDIS_DEFAULT_PORT;
+      }
 
       redis_host->ctx = redisConnect(dest_str, dest_port);
 
