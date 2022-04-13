@@ -78,11 +78,6 @@ void p_redis_init(struct p_redis_host *redis_host, char *log_id, redis_thread_ha
       exit_gracefully(1);
     }
 
-    if (!config.cluster_id) {
-      Log(LOG_ERR, "ERROR ( %s ): redis_host requires cluster_id to be specified. Exiting...\n\n", redis_host->log_id);
-      exit_gracefully(1);
-    }
-
     p_redis_thread_wrapper(redis_host);
   }
 }
