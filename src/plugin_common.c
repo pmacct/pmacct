@@ -1039,7 +1039,10 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
   }
 
   size_t list_counter;
-  for (list_counter = 0; (list_counter < tokens_counter) && (tokens[list_counter] != NULL); list_counter += 2) {
+  for (list_counter = 0;
+	(list_counter < tokens_counter) && (tokens[list_counter] != NULL) &&
+	((list_counter + 1) < tokens_counter) && (tokens[list_counter + 1] != NULL);
+	list_counter += 2) {
     memset(&lbl, 0, sizeof(lbl));
     if ((strlen(tokens[list_counter]) > MAX_PTM_LABEL_TOKEN_LEN - 1) || (strlen(tokens[list_counter + 1]) > MAX_PTM_LABEL_TOKEN_LEN - 1)) {
       exit(EXIT_FAILURE);
