@@ -140,6 +140,7 @@ are no longer supplied as part of the PostgreSQL table creation script.
   * post_nat_dst_port => post_nat_port_dst (INT NOT NULL DEFAULT 0)
   * nat_event => nat_event (INT NOT NULL DEFAULT 0)
   * fwd_status => fwd_status (INT NOT NULL DEFAULT 0)
+    - or (VARCHAR(50) NOT NULL DEFAULT ' ', if fwd_status_encode_as_string: true)
   * mpls_label_top => mpls_label_top (INT NOT NULL DEFAULT 0)
   * mpls_label_bottom => mpls_label_bottom (INT NOT NULL DEFAULT 0)
   * mpls_label_stack => mpls_label_stack (VARCHAR(255) NOT NULL DEFAULT ' ')
