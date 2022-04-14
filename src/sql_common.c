@@ -208,6 +208,12 @@ void sql_init_default_values(struct extra_primitives *extras)
 
   /* handling purge preprocessor */
   set_preprocess_funcs(config.sql_preprocess, &prep, PREP_DICT_SQL);
+
+  if (config.tcpflags_encode_as_array ||
+      config.mpls_label_stack_encode_as_array ||
+      config.pretag_label_encode_as_map) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): Complex data types (ie. pre_tag_label_encode_as_map) not supported by SQL plugins. Ignored.\n", config.name, config.type);
+  }
 }
 
 void sql_init_historical_acct(time_t now, struct insert_data *idata)

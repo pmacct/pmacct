@@ -94,6 +94,16 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   refresh_timeout = config.sql_refresh_time*1000;
 
+  if (config.print_output != PRINT_OUTPUT_JSON &&
+      config.print_output != PRINT_OUTPUT_AVRO_BIN &&
+      config.print_output != PRINT_OUTPUT_AVRO_JSON) {
+    if (config.tcpflags_encode_as_array ||
+	config.mpls_label_stack_encode_as_array ||
+	config.pretag_label_encode_as_map) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): Complex data types (ie. pre_tag_label_encode_as_map) not supported by the selected print_output. Ignored.\n", config.name, config.type);
+    }
+  }
+
   if (config.print_output & PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     compose_json(config.what_to_count, config.what_to_count_2);
