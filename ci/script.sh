@@ -24,6 +24,11 @@ set -e
 export AVRO_LIBS="-L/usr/local/avro/lib -lavro"
 export AVRO_CFLAGS="-I/usr/local/avro/include"
 
+#New versions of git complain with "unsafe directory "otherwise due to patches
+#for CVE-2022-24765, CVE-2022-24767
+git config --global --add safe.directory `pwd`
+git config --global --add safe.directory `pwd`/src/external_libs/libcdada
+
 #Build & install
 ./autogen.sh
 ./configure --disable-silent-rules $CONFIG_FLAGS || (cat config.log && /bin/false)
