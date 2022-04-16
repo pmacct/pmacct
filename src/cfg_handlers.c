@@ -7742,6 +7742,31 @@ int cfg_key_telemetry_udp_notif_ip(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_telemetry_udp_notif_interface(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_udp_notif_interface = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_udp_notif_interface'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_telemetry_udp_notif_ipv6_only(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_udp_notif_ipv6_only = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_udp_notif_ipv6_only'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_telemetry_udp_notif_nmsgs(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

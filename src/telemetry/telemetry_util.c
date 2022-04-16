@@ -286,6 +286,20 @@ int create_socket_unyte_udp_notif(struct telemetry_data *t_data, char *address, 
   }
 #endif
 
+#if (defined HAVE_SO_BINDTODEVICE)
+  if (config.telemetry_udp_notif_interface)  {
+    rc = setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE, config.telemetry_udp_notif_interface, (socklen_t) strlen(config.telemetry_udp_notif_interface));
+    if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for SO_BINDTODEVICE (errno: %d).\n", config.name, t_data->log_str, errno);
+  }
+#endif
+
+  if (config.telemetry_udp_notif_ipv6_only) {
+    int yes=1;
+
+    rc = setsockopt(sockfd, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &yes, (socklen_t) sizeof(yes));
+    if (rc < 0) Log(LOG_ERR, "WARN ( %s/%s ): setsockopt() failed for IPV6_V6ONLY (errno: %d).\n", config.name, t_data->log_str, errno);
+  }
+
   /* Setting socket buffer to default 20 MB */
   if (!config.telemetry_pipe_size) {
     receive_buf_size = DEFAULT_SK_BUFF_SIZE;
