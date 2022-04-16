@@ -3178,12 +3178,12 @@ DEFAULT:        none
 
 KEY:		telemetry_daemon_ipv6_only [GLOBAL]
 VALUES:		[ true | false ]
-DESC:           When listening on all interfaces (default setting for nfacctd_ip and sfacctd_ip) and
-		IPv6 is enabled, it is possible to connect with both IPv4 (IPv6 IPv4-mapped) and IPv6.
+DESC:           When listening on all interfaces (default setting for telemetry_daemon_ip) and IPv6 
+		is enabled, it is possible to connect with both IPv4 (IPv6 IPv4-mapped) and IPv6.
 		Setting this knob to true disables the IPv4 (IPv6 IPv4-mapped) part.
 DEFAULT:	false
 
-KEY:		[ telemetry_daemon_rp_ebpf_prog ] [GLOBAL]
+KEY:		telemetry_daemon_rp_ebpf_prog [GLOBAL]
 DESC:		If SO_REUSEPORT is supported by the Operating System (read more about this feature at the
 		config key telemetry_daemon_port_udp) and eBPF support is configured when compiling
 		(--enable-ebpf), this allows to load a custom load-balancer. To load-share, daemons
@@ -3270,6 +3270,19 @@ DEFAULT:	none
 KEY:		telemetry_daemon_udp_notif_port [GLOBAL]
 DESC:		Defines the UDP port to bind to for UDP-Notif.
 DEFAULT:	none
+
+KEY:		telemetry_daemon_udp_notif_interface [GLOBAL]
+DESC:		Defines the interface for the Streaming Telemetry daemon to listen on for UDP-Notif.
+		This makes it possible to have the session happen entirely in one VRF by specifying
+		the VRF device name here.
+DEFAULT:	none
+
+KEY:		telemetry_daemon_udp_notif_ipv6_only [GLOBAL]
+VALUES:		[ true | false ]
+DESC:		When listening on all interfaces (default setting for telemetry_daemon_udp_notif_ip)
+		and IPv6 is enabled, it is possible to connect with both IPv4 (IPv6 IPv4-mapped) and
+		IPv6. Setting this knob to true disables the IPv4 (IPv6 IPv4-mapped) part.
+DEFAULT:	false
 
 KEY:		telemetry_daemon_udp_notif_nmsgs [GLOBAL]
 DESC:		Defines the buffer of messages to receive at once for UDP-Notif. The default, 1,
