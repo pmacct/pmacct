@@ -1714,8 +1714,12 @@ int main(int argc,char **argv)
   	      }
 	      else {
 		request.data.ndpi_class.master_protocol = FALSE;
-		request.data.ndpi_class.app_protocol = value;
+		request.data.ndpi_class.app_protocol = class_table[ct_idx].id;
+		request.data.ndpi_class.category = class_table[ct_idx].category;
 	      }
+
+	      /* in case we did hit the break */
+	      ct_idx = (ct_num - 1);
             }
 	    else {
 	      printf("ERROR: missing EOF from server (2)\n");

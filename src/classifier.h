@@ -49,10 +49,10 @@ struct pkt_classifier_data {
 struct pkt_classifier {
   pm_class_t id;
   char protocol[MAX_PROTOCOL_LEN];
-  regexp *pattern;
-  pm_class_t (*func)(struct pkt_classifier_data *, int, void **, void **, void **);
+#if defined (WITH_NDPI)
+  ndpi_protocol_category_t category;
+#endif
   conntrack_helper ct_helper;
-  void *extra;
 };
 
 /* All but __CLASSIFIER_C are dummy entries. They are required to export locally

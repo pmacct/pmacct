@@ -550,10 +550,7 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
 #endif
 
 #if defined (WITH_NDPI)
-  if (w2 & COUNT_NDPI_CLASS) {
-    d1->ndpi_class.master_protocol = s1->ndpi_class.master_protocol;
-    d1->ndpi_class.app_protocol = s1->ndpi_class.app_protocol;
-  }
+  if (w2 & COUNT_NDPI_CLASS) memcpy(&d1->ndpi_class, &s1->ndpi_class, sizeof(d1->ndpi_class));
 #endif
 
   if (w2 & COUNT_SAMPLING_RATE) d1->sampling_rate = s1->sampling_rate; 
