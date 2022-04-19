@@ -1713,9 +1713,11 @@ int main(int argc,char **argv)
   	        exit(1); 
   	      }
 	      else {
+#if defined (WITH_NDPI)
 		request.data.ndpi_class.master_protocol = FALSE;
 		request.data.ndpi_class.app_protocol = class_table[ct_idx].id;
 		request.data.ndpi_class.category = class_table[ct_idx].category;
+#endif
 	      }
 
 	      /* in case we did hit the break */

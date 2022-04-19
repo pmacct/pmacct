@@ -2083,7 +2083,9 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	    css.id = centry->class_int_id;
 	    strlcpy(css.protocol, centry->class_name, MAX_PROTOCOL_LEN);
+#if defined (WITH_NDPI)
 	    css.category = FALSE; /* unused */
+#endif
 	    pmct_register(&css);
           }
 	}
