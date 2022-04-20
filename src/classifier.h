@@ -22,7 +22,6 @@
 #ifndef CLASSIFIER_H
 #define CLASSIFIER_H
 
-#include "regexp.h"
 #include "conntrack.h"
 
 /* defines */
@@ -33,19 +32,6 @@
 #define DEFAULT_TENTATIVES 5 
 
 /* data structures */
-struct pkt_classifier_data {
-  struct timeval stamp;
-  u_char *packet_ptr;
-  u_char *l3_ptr;
-  u_char *l4_ptr;
-  u_char *payload_ptr;
-  u_int16_t l3_proto;
-  u_int16_t l4_proto;
-  u_int16_t plen;
-  u_int8_t tentatives;
-  u_int16_t sampling_rate;
-};
-
 struct pkt_classifier {
   pm_class_t id;
   char protocol[MAX_PROTOCOL_LEN];
