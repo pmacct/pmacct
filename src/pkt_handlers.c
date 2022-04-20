@@ -3833,24 +3833,12 @@ void NF_class_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
   struct pkt_data *pdata = (struct pkt_data *) *data;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  time_t fstime;
 
   switch(hdr->version) {
   case 10:
   case 9:
     if (tpl->tpl[NF9_APPLICATION_ID].len) { 
       pdata->primitives.class = pptrs->class; 
-      pdata->cst.ba = 0; 
-      pdata->cst.pa = 0; 
-      pdata->cst.fa = 0; 
-
-      if (tpl->tpl[NF9_FIRST_SWITCHED].len && hdr->version == 9) {
-        memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED].off, tpl->tpl[NF9_FIRST_SWITCHED].len);
-        pdata->cst.stamp.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
-           ((ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
-      }
-      else pdata->cst.stamp.tv_sec = time(NULL);
-      pdata->cst.stamp.tv_usec = 0; 
     }
     break;
   default:

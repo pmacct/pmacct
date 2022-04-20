@@ -620,7 +620,6 @@ void compute_once()
   MyTCPHdrSz = TCPFlagOff+1;
   PptrsSz = sizeof(struct packet_ptrs);
   UDPHdrSz = 8;
-  CSSz = sizeof(struct class_st);
   IpFlowCmnSz = sizeof(struct ip_flow_common);
   HostAddrSz = sizeof(struct host_addr);
   IP6HdrSz = sizeof(struct ip6_hdr);

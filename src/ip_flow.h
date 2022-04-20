@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -50,10 +50,8 @@ struct ip_flow_common {
   u_int32_t last_tcp_seq;
   u_int8_t tcp_flags[2];
   u_int8_t proto;
-  /* classifier hooks */
+  /* XXX: classifier hooks, move to pm_class2_t */
   pm_class_t class[2]; 
-  struct class_st cst[2]; 
-  struct context_chain *cc[2];
   /* conntrack hooks */
   void (*conntrack_helper)(time_t, struct packet_ptrs *);
 };

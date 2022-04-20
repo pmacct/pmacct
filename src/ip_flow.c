@@ -131,7 +131,6 @@ void clear_tcp_flow_cmn(struct ip_flow_common *fp, unsigned int idx)
   fp->last[idx].tv_usec = 0;
   fp->tcp_flags[idx] = 0;
   fp->class[idx] = 0;
-  memset(&fp->cst[idx], 0, CSSz);
 } 
 
 void find_flow(struct timeval *now, struct packet_ptrs *pptrs)

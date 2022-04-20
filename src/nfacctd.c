@@ -2894,7 +2894,6 @@ void NF_compute_once()
   IP4HdrSz = sizeof(struct pm_iphdr);
   IP4TlSz = sizeof(struct pm_iphdr)+sizeof(struct pm_tlhdr);
   PptrsSz = sizeof(struct packet_ptrs);
-  CSSz = sizeof(struct class_st);
   HostAddrSz = sizeof(struct host_addr);
   UDPHdrSz = sizeof(struct pm_udphdr);
   IpFixHdrSz = sizeof(struct struct_header_ipfix); 
