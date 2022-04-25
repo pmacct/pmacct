@@ -40,6 +40,8 @@
 #define FWD_TYPES_STR_LEN 50
 #define MAX_MPLS_LABEL_STACK 128
 
+#define PROTOS_TABLE_ENTRIES 256
+
 /* cache element states */
 #define PRINT_CACHE_FREE	0
 #define PRINT_CACHE_COMMITTED	1
@@ -114,6 +116,11 @@ typedef struct {
 } __attribute__((packed)) fwd_status;
 #endif
 
+struct protos_table {
+  u_int8_t table[PROTOS_TABLE_ENTRIES];
+  time_t timestamp;
+};
+
 /* prototypes */
 extern void P_set_signals();
 extern void P_init_default_values();
@@ -150,6 +157,8 @@ extern cdada_list_t *tcpflags_to_linked_list(size_t);
 extern cdada_list_t *fwd_status_to_linked_list();
 
 extern void mpls_label_stack_to_str(char *, int, u_int32_t *, int);
+
+extern void load_protos(char *, struct protos_table *);
 
 /* global vars */
 extern void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */

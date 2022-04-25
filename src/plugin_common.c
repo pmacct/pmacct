@@ -1137,3 +1137,87 @@ void mpls_label_stack_to_str(char *str_label_stack, int sls_len, u_int32_t *labe
     }
   }
 }
+
+void load_protos(char *filename, struct protos_table *pt)
+{
+  FILE *file;
+  char buf[SUPERSHORTBUFLEN];
+  int ret, rows = 0, newline = TRUE, buf_eff_len, idx;
+  struct stat st;
+
+  memset(&st, 0, sizeof(st));
+
+  if (filename) {
+    if ((file = fopen(filename,"r")) == NULL) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] file not found.\n", config.name, config.type, filename);
+      goto handle_error;
+    }
+    else {
+      memset(pt, 0, sizeof(struct protos_table));
+
+      while (!feof(file)) {
+        if (fgets(buf, sizeof(buf), file)) { 
+	  if (strchr(buf, '\n')) { 
+            if (!newline) {
+	      newline = TRUE; 
+	      continue;
+	    }
+	  }
+	  else {
+            if (!newline) continue;
+	    newline = FALSE;
+	  }
+	  trim_spaces(buf);
+	  buf_eff_len = strlen(buf);
+	  if (!buf_eff_len || (buf[0] == '!')) {
+	    continue;
+	  }
+
+	  for (idx = 0, ret = 0; idx < buf_eff_len; idx++) {
+	    ret = isdigit(buf[idx]);
+	    if (!ret) {
+	      break;
+	    }
+	  }
+
+	  if (!ret) {
+	    for (idx = 0; _protocols[idx].number != -1; idx++) {
+	      if (!strcmp(buf, _protocols[idx].name)) {
+		ret = _protocols[idx].number;
+		break;
+	      }
+	    }
+	  }
+	  else {
+	    ret = atoi(buf); 
+	  }
+
+	  if ((ret > 0) && (ret < PROTOS_TABLE_ENTRIES)) pt->table[ret] = TRUE;
+	  else Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] invalid protocol specified.\n", config.name, config.type, filename, rows); 
+	}
+      }
+      fclose(file);
+
+      stat(filename, &st);
+      pt->timestamp = st.st_mtime;
+    }
+  }
+
+  /* filename check to not print nulls as load_networks()
+     may not be secured inside an if statement */ 
+  if (filename) {
+    Log(LOG_INFO, "INFO ( %s/%s ): [%s] map successfully (re)loaded.\n", config.name, config.type, filename);
+  }
+
+  return;
+
+  handle_error:
+  if (pt->timestamp) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Rolling back the old Ports Table.\n", config.name, config.type, filename);
+
+    /* we update the timestamp to avoid loops */
+    stat(filename, &st);
+    pt->timestamp = st.st_mtime;
+  }
+  else exit_gracefully(1);
+}
