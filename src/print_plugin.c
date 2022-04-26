@@ -347,6 +347,10 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           if (!pt.table[data->primitives.dst_port]) data->primitives.dst_port = 0;
         }
 
+	if (config.protos_file) {
+          if (!prt.table[data->primitives.proto]) data->primitives.proto = 0;
+        }
+
         prim_ptrs.data = data;
         (*insert_func)(&prim_ptrs, &idata);
 

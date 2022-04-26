@@ -1700,6 +1700,10 @@ sort_version:
 	  if (!pt.table[data->primitives.dst_port]) data->primitives.dst_port = 0;
 	}
 
+	if (config.protos_file) {
+	  if (!prt.table[data->primitives.proto]) data->primitives.proto = 0;
+	}
+
 	prim_ptrs.data = data;
 	handle_hostbyteorder_packet(data);
 	flow_cb((void *)&cb_ctxt, &prim_ptrs);
