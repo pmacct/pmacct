@@ -571,7 +571,7 @@ void P_cache_insert_pending(struct chained_cache *queue[], int index, struct cha
   free(container);
 }
 
-void P_cache_handle_flush_event(struct ports_table *pt)
+void P_cache_handle_flush_event(struct ports_table *pt, struct protos_table *prt)
 {
   pid_t ret;
 
@@ -611,6 +611,8 @@ void P_cache_handle_flush_event(struct ports_table *pt)
   if (reload_map) {
     load_networks(config.networks_file, &nt, &nc);
     load_ports(config.ports_file, pt);
+    load_protos(config.protos_file, prt);
+
     reload_map = FALSE;
   }
 
@@ -1142,7 +1144,7 @@ void load_protos(char *filename, struct protos_table *pt)
 {
   FILE *file;
   char buf[SUPERSHORTBUFLEN];
-  int ret, rows = 0, newline = TRUE, buf_eff_len, idx;
+  int ret, rows = 1, newline = TRUE, buf_eff_len, idx;
   struct stat st;
 
   memset(&st, 0, sizeof(st));
@@ -1192,8 +1194,14 @@ void load_protos(char *filename, struct protos_table *pt)
 	    ret = atoi(buf); 
 	  }
 
-	  if ((ret > 0) && (ret < PROTOS_TABLE_ENTRIES)) pt->table[ret] = TRUE;
-	  else Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] invalid protocol specified.\n", config.name, config.type, filename, rows); 
+	  if ((ret > 0) && (ret < PROTOS_TABLE_ENTRIES)) {
+	    pt->table[ret] = TRUE;
+	  }
+	  else {
+	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] invalid protocol specified.\n", config.name, config.type, filename, rows); 
+	  }
+
+	  rows++;
 	}
       }
       fclose(file);
@@ -1213,7 +1221,7 @@ void load_protos(char *filename, struct protos_table *pt)
 
   handle_error:
   if (pt->timestamp) {
-    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Rolling back the old Ports Table.\n", config.name, config.type, filename);
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Rolling back the old Protocols Table.\n", config.name, config.type, filename);
 
     /* we update the timestamp to avoid loops */
     stat(filename, &st);

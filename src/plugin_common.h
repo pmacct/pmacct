@@ -25,7 +25,6 @@
 /* includes */
 #include "net_aggr.h"
 #include "ports_aggr.h"
-#include "sql_common.h"
 #include "preprocess.h"
 
 /* defines */
@@ -116,10 +115,15 @@ typedef struct {
 } __attribute__((packed)) fwd_status;
 #endif
 
+#ifndef STRUCT_PROTOS_TABLE
+#define STRUCT_PROTOS_TABLE 
 struct protos_table {
   u_int8_t table[PROTOS_TABLE_ENTRIES];
   time_t timestamp;
 };
+#endif
+
+#include "sql_common.h"
 
 /* prototypes */
 extern void P_set_signals();
@@ -138,7 +142,7 @@ extern void P_cache_insert(struct primitives_ptrs *, struct insert_data *);
 extern void P_cache_insert_pending(struct chained_cache *[], int, struct chained_cache *);
 extern void P_cache_mark_flush(struct chained_cache *[], int, int);
 extern void P_cache_flush(struct chained_cache *[], int);
-extern void P_cache_handle_flush_event(struct ports_table *);
+extern void P_cache_handle_flush_event(struct ports_table *, struct protos_table *);
 extern void P_exit_now(int);
 extern int P_trigger_exec(char *);
 extern void primptrs_set_all_from_chained_cache(struct primitives_ptrs *, struct chained_cache *);

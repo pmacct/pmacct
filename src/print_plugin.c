@@ -49,6 +49,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 {
   struct pkt_data *data;
   struct ports_table pt;
+  struct protos_table prt;
   unsigned char *pipebuf;
   struct pollfd pfd;
   struct insert_data idata;
@@ -136,11 +137,13 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(&nt, 0, sizeof(nt));
   memset(&nc, 0, sizeof(nc));
   memset(&pt, 0, sizeof(pt));
+  memset(&prt, 0, sizeof(prt));
 
   load_networks(config.networks_file, &nt, &nc);
   set_net_funcs(&nt);
 
   if (config.ports_file) load_ports(config.ports_file, &pt);
+  if (config.protos_file) load_protos(config.protos_file, &prt);
 
   memset(&idata, 0, sizeof(idata));
   memset(&prim_ptrs, 0, sizeof(prim_ptrs));
@@ -254,7 +257,7 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       int saved_qq_ptr;
 
       saved_qq_ptr = qq_ptr;
-      P_cache_handle_flush_event(&pt);
+      P_cache_handle_flush_event(&pt, &prt);
       if (saved_qq_ptr) print_output_stdout_header = FALSE;
     }
 

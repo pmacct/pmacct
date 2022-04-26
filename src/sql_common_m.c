@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -20,6 +20,7 @@
 */
 
 #include "pmacct.h"
+#include "plugin_common.h"
 #include "sql_common.h"
 
 void AddToLRUTail(struct db_cache *Cursor)
