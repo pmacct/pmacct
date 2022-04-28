@@ -200,6 +200,7 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
 
   bms->tag = &bmp_logdump_tag;
   bms->tag_map = config.bmp_daemon_tag_map;
+  bms->tag_peer = &bmp_logdump_tag_peer;
 }
 
 struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bgp_peer *bgp_peer_rem)
