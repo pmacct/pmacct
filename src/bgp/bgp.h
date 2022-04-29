@@ -307,6 +307,7 @@ struct bgp_misc_structs {
   char *tag_map;
   bgp_tag_t *tag;
   struct sockaddr_storage *tag_peer;
+  void (*bgp_table_info_delete_tag_find)(struct bgp_peer *);
 };
 
 /* these includes require definition of bgp_rt_structs and bgp_peer */

@@ -887,9 +887,8 @@ void bgp_table_info_delete(struct bgp_peer *peer, struct bgp_table *table, afi_t
   /* Being tag_map limited to 'ip' key lookups, this is finely
      placed here. Should further lookups be possible, this may be
      very possibly moved inside the loop */
-  if (bms->tag_map) {
-    bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag);
-    bgp_tag_find((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
+  if (bms->tag_map && bms->bgp_table_info_delete_tag_find) {
+    bms->bgp_table_info_delete_tag_find(peer);
   }
 
   node = bgp_table_top(peer, table);
@@ -1698,4 +1697,12 @@ u_int8_t bgp_get_packet_type(char *pkt)
   }
 
   return btype;
+}
+
+void bgp_table_info_delete_tag_find_bgp(struct bgp_peer *peer)
+{
+  struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
+
+  bgp_tag_init_find(peer, (struct sockaddr *) bms->tag_peer, bms->tag);
+  bgp_tag_find((struct id_table *)bms->tag->tag_table, bms->tag, &bms->tag->tag, NULL);
 }
