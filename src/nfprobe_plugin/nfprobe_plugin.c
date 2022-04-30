@@ -57,7 +57,6 @@
 
 #include "pmacct-data.h"
 #include "net_aggr.h"
-#include "ports_aggr.h"
 #include "plugin_hooks.h"
 #include "plugin_common.h"
 

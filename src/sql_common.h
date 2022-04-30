@@ -25,7 +25,6 @@
 /* includes */
 #include <sys/poll.h>
 #include "net_aggr.h"
-#include "ports_aggr.h"
 
 /* defines */
 #define DEFAULT_DB_REFRESH_TIME 60

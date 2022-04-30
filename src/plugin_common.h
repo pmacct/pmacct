@@ -24,7 +24,6 @@
 
 /* includes */
 #include "net_aggr.h"
-#include "ports_aggr.h"
 #include "preprocess.h"
 
 /* defines */
@@ -39,6 +38,7 @@
 #define FWD_TYPES_STR_LEN 50
 #define MAX_MPLS_LABEL_STACK 128
 
+#define PORTS_TABLE_ENTRIES  65536
 #define PROTOS_TABLE_ENTRIES 256
 
 /* cache element states */
@@ -115,6 +115,14 @@ typedef struct {
 } __attribute__((packed)) fwd_status;
 #endif
 
+#ifndef STRUCT_PORTS_TABLE
+#define STRUCT_PORTS_TABLE 
+struct ports_table {
+  u_int8_t table[PORTS_TABLE_ENTRIES];
+  time_t timestamp;
+};
+#endif
+
 #ifndef STRUCT_PROTOS_TABLE
 #define STRUCT_PROTOS_TABLE 
 struct protos_table {
@@ -162,6 +170,7 @@ extern cdada_list_t *fwd_status_to_linked_list();
 
 extern void mpls_label_stack_to_str(char *, int, u_int32_t *, int);
 
+extern void load_ports(char *, struct ports_table *);
 extern void load_protos(char *, struct protos_table *);
 
 /* global vars */

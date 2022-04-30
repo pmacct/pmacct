@@ -32,7 +32,6 @@
 #error "--enable-rabbitmq requires --enable-jansson"
 #endif
 #include "net_aggr.h"
-#include "ports_aggr.h"
 
 /* Functions */
 void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr) 

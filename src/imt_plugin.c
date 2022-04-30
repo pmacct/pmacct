@@ -26,7 +26,6 @@
 #include "imt_plugin.h"
 #include "bgp/bgp.h"
 #include "net_aggr.h"
-#include "ports_aggr.h"
 
 //Global variables
 void (*imt_insert_func)(struct primitives_ptrs *);

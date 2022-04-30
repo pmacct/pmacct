@@ -1140,6 +1140,8 @@ void mpls_label_stack_to_str(char *str_label_stack, int sls_len, u_int32_t *labe
   }
 }
 
+/* XXX, merge load_protos() and load_ports() */
+
 void load_protos(char *filename, struct protos_table *pt)
 {
   FILE *file;
@@ -1222,6 +1224,68 @@ void load_protos(char *filename, struct protos_table *pt)
   handle_error:
   if (pt->timestamp) {
     Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Rolling back the old Protocols Table.\n", config.name, config.type, filename);
+
+    /* we update the timestamp to avoid loops */
+    stat(filename, &st);
+    pt->timestamp = st.st_mtime;
+  }
+  else exit_gracefully(1);
+}
+
+void load_ports(char *filename, struct ports_table *pt)
+{
+  FILE *file;
+  char buf[8];
+  int ret, rows = 0, newline = TRUE;
+  struct stat st;
+
+  memset(&st, 0, sizeof(st));
+
+  if (filename) {
+    if ((file = fopen(filename,"r")) == NULL) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): [%s] file not found.\n", config.name, config.type, filename);
+      goto handle_error;
+    }
+    else {
+      memset(pt, 0, sizeof(struct ports_table));
+
+      while (!feof(file)) {
+        if (fgets(buf, 8, file)) { 
+	  if (strchr(buf, '\n')) { 
+            if (!newline) {
+	      newline = TRUE; 
+	      continue;
+	    }
+	  }
+	  else {
+            if (!newline) continue;
+	    newline = FALSE;
+	  }
+	  trim_spaces(buf);
+	  if (!strlen(buf) || (buf[0] == '!')) continue;
+	  ret = atoi(buf); 
+	  if ((ret > 0) && (ret < PORTS_TABLE_ENTRIES)) pt->table[ret] = TRUE;
+	  else Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] invalid port specified.\n", config.name, config.type, filename, rows); 
+	}
+      }
+      fclose(file);
+
+      stat(filename, &st);
+      pt->timestamp = st.st_mtime;
+    }
+  }
+
+  /* filename check to not print nulls as load_networks()
+     may not be secured inside an if statement */ 
+  if (filename) {
+    Log(LOG_INFO, "INFO ( %s/%s ): [%s] map successfully (re)loaded.\n", config.name, config.type, filename);
+  }
+
+  return;
+
+  handle_error:
+  if (pt->timestamp) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Rolling back the old Ports Table.\n", config.name, config.type, filename);
 
     /* we update the timestamp to avoid loops */
     stat(filename, &st);

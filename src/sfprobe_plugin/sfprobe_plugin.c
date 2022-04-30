@@ -32,7 +32,6 @@
 #include "plugin_hooks.h"
 #include "plugin_common.h"
 #include "net_aggr.h"
-#include "ports_aggr.h"
 
 #define SFL_DIRECTION_IN 0
 #define SFL_DIRECTION_OUT 1

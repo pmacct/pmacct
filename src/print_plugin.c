@@ -38,7 +38,6 @@
 #include "ndpi/ndpi.h"
 #endif
 #include "net_aggr.h"
-#include "ports_aggr.h"
 #include "preprocess-internal.h"
 
 /* Global variables */
