@@ -83,8 +83,8 @@ struct chained_cache {
 };
 #endif
 
-#ifndef P_TABLE_RR
-#define P_TABLE_RR
+#ifndef STRUCT_P_TABLE_RR
+#define STRUCT_P_TABLE_RR
 struct p_table_rr {
   int min; /* unused */
   int max;
@@ -107,8 +107,8 @@ typedef struct {
 } __attribute__((packed)) tcpflag;
 #endif
 
-#ifndef NFACCTD_FWDSTATUS
-#define NFACCTD_FWDSTATUS
+#ifndef STRUCT_NFACCTD_FWDSTATUS
+#define STRUCT_NFACCTD_FWDSTATUS
 typedef struct {
   unsigned int decimal;
   char description[FWD_TYPES_STR_LEN];
