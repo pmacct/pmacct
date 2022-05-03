@@ -1028,10 +1028,10 @@ DEFAULT:	none
 
 KEY:		protos_file
 DESC:		Full pathname to a file containing a list of (known/interesting/meaningful) IP protocols
-		(one per lineee). Both protocol names, ie. "tcp", and protocol numbers, ie. 1 (for icmp),
-		are accepted. The directive zeroes protocols not matching those defined in the list. Not
-		being a filter but an aggregator, this directive makes sense only if aggregating on the
-		'proto' primitive.
+		(one per line). Both protocol names, ie. "tcp", and protocol numbers, ie. 1 (for icmp),
+		are accepted. The directive uses IANA reserved protocol value 255 to bucket as 'others'
+		those IP protocols not matching the ones defined in the list. Not being a filter but an
+		aggregator, this directive makes sense only if aggregating on the 'proto' primitive.
 DEFAULT:	none
 
 KEY:		sql_db
