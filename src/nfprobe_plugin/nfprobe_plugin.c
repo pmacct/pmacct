@@ -1700,7 +1700,7 @@ sort_version:
 	}
 
 	if (config.protos_file) {
-	  if (!prt.table[data->primitives.proto]) data->primitives.proto = 0;
+	  if (!prt.table[data->primitives.proto]) data->primitives.proto = PM_IP_PROTO_OTHERS;
 	}
 
 	prim_ptrs.data = data;

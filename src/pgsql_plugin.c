@@ -269,7 +269,7 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
         }
 
 	if (config.protos_file) {
-	  if (!prt.table[data->primitives.proto]) data->primitives.proto = 0;
+	  if (!prt.table[data->primitives.proto]) data->primitives.proto = PM_IP_PROTO_OTHERS;
 	}
 
         prim_ptrs.data = data;

@@ -40,6 +40,7 @@
 
 #define PORTS_TABLE_ENTRIES  65536
 #define PROTOS_TABLE_ENTRIES 256
+#define PM_IP_PROTO_OTHERS 255
 
 /* cache element states */
 #define PRINT_CACHE_FREE	0
