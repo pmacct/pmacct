@@ -24,6 +24,7 @@
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "bgp/bgp.h"
+#include "redis_common.h"
 
 /* extern */
 extern struct plugins_list_entry *plugin_list;
@@ -240,4 +241,8 @@ void reload_maps(int signum)
   if (config.propagate_signals) {
     signal_kittens(signum, TRUE);
   }
+}
+
+void re_generate_timestamp(){
+
 }

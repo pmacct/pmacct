@@ -378,6 +378,7 @@ void PM_sigalrm_noop_handler(int);
 void reload(int);
 void push_stats(int);
 void reload_maps(int);
+void re_generate_timestamp();
 extern void pm_pcap_device_initialize(struct pm_pcap_devices *);
 extern void pm_pcap_device_copy_all(struct pm_pcap_devices *, struct pm_pcap_devices *);
 extern void pm_pcap_device_copy_entry(struct pm_pcap_devices *, struct pm_pcap_devices *, int);

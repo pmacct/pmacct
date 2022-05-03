@@ -48,3 +48,7 @@ src/external_libs/.*mark
 
 # Submodule deps tmp install directory
 src/external_libs/rootfs
+
+.vs/pmacct/v16/
+
+.vs/

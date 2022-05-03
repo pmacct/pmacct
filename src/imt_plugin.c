@@ -190,6 +190,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   signal(SIGUSR2, reload_maps);
   signal(SIGPIPE, SIG_IGN);
   signal(SIGCHLD, SIG_IGN); 
+    signal(SIGRTMIN, re_generate_timestamp);
 
   memset(&empty_pbgp, 0, sizeof(empty_pbgp));
   memset(&empty_plbgp, 0, sizeof(empty_plbgp));
