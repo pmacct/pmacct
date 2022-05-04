@@ -301,8 +301,8 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  (*net_funcs[num])(&nt, &nc, &data->primitives, prim_ptrs.pbgp, &nfd);
 
 	if (config.ports_file) {
-          if (!pt.table[data->primitives.src_port]) data->primitives.src_port = 0;
-          if (!pt.table[data->primitives.dst_port]) data->primitives.dst_port = 0;
+          if (!pt.table[data->primitives.src_port]) data->primitives.src_port = PM_L4_PORT_OTHERS;
+          if (!pt.table[data->primitives.dst_port]) data->primitives.dst_port = PM_L4_PORT_OTHERS;
         }
 
 	if (config.protos_file) {
