@@ -1239,6 +1239,10 @@ void ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs
     tos = ((tos & 0x0ff00000) >> 20);
     pdata->primitives.tos = tos; 
   }
+
+  if (config.tos_encode_as_dscp) {
+    pdata->primitives.tos = pdata->primitives.tos >> 2;
+  }
 }
 
 void ip_proto_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -2420,6 +2424,10 @@ void NF_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
     break;
   default:
     break;
+  }
+
+  if (config.tos_encode_as_dscp) {
+    pdata->primitives.tos = pdata->primitives.tos >> 2;
   }
 }
 
@@ -4882,6 +4890,10 @@ void SF_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   pdata->primitives.tos = sample->dcd_ipTos;
+
+  if (config.tos_encode_as_dscp) {
+    pdata->primitives.tos = pdata->primitives.tos >> 2;
+  }
 }
 
 void SF_ip_proto_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

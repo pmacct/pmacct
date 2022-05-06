@@ -549,6 +549,7 @@ struct configuration {
   int tcpflags_encode_as_array;
   int mpls_label_stack_encode_as_array;
   int fwd_status_encode_as_string;
+  int tos_encode_as_dscp;
   int maps_refresh;
   int maps_index;
   int maps_entries;
