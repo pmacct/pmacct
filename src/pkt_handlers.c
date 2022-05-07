@@ -1240,7 +1240,7 @@ void ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs
     pdata->primitives.tos = tos; 
   }
 
-  if (config.tos_encode_as_dscp) {
+  if (chptr->plugin->cfg.tos_encode_as_dscp) {
     pdata->primitives.tos = pdata->primitives.tos >> 2;
   }
 }
@@ -1335,6 +1335,10 @@ void tunnel_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs
       tos = ntohl(((struct ip6_hdr *) tpptrs->iph_ptr)->ip6_flow);
       tos = ((tos & 0x0ff00000) >> 20);
       ptun->tunnel_tos = tos;
+    }
+
+    if (chptr->plugin->cfg.tos_encode_as_dscp) {
+      ptun->tunnel_tos = ptun->tunnel_tos >> 2;
     }
   }
 }
@@ -2426,7 +2430,7 @@ void NF_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
     break;
   }
 
-  if (config.tos_encode_as_dscp) {
+  if (chptr->plugin->cfg.tos_encode_as_dscp) {
     pdata->primitives.tos = pdata->primitives.tos >> 2;
   }
 }
@@ -4891,7 +4895,7 @@ void SF_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
 
   pdata->primitives.tos = sample->dcd_ipTos;
 
-  if (config.tos_encode_as_dscp) {
+  if (chptr->plugin->cfg.tos_encode_as_dscp) {
     pdata->primitives.tos = pdata->primitives.tos >> 2;
   }
 }
@@ -5466,7 +5470,13 @@ void SF_tunnel_ip_tos_handler(struct channels_list_entry *chptr, struct packet_p
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
 
-  if (sppi) ptun->tunnel_tos = sppi->dcd_ipTos;
+  if (sppi) {
+    ptun->tunnel_tos = sppi->dcd_ipTos;
+
+    if (chptr->plugin->cfg.tos_encode_as_dscp) {
+      ptun->tunnel_tos = ptun->tunnel_tos >> 2;
+    }
+  }
 }
 
 void SF_tunnel_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

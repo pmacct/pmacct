@@ -659,8 +659,16 @@ int cfg_key_tos_encode_as_dscp(char *filename, char *name, char *value_ptr)
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  for (; list; list = list->next, changes++) list->cfg.tos_encode_as_dscp = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'tos_encode_as_dscp'. Globalized.\n", filename);
+  if (!name) for (; list; list = list->next, changes++) list->cfg.tos_encode_as_dscp = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.tos_encode_as_dscp = value;
+        changes++;
+        break;
+      }
+    }
+  }
 
   return changes;
 }
