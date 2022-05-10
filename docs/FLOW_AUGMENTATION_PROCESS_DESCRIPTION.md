@@ -9,7 +9,7 @@ The next are the particular fields that we aim to describe here:
 * NET fields: 'dst_net', 'src_mask', 'dst_mask', 'src_net'
 * OTHER fields: 'peer_src_ip'
 
-Most of these fields are self-descriptive. The only two that require further explanation are peer_src_ip, which is the device exporting flows, and peer_dst_ip, which is the BGP next-hop. Both fields are valuable when one wants to find node-to-node, interface-to-interface, or peer-to-peer traffic matrices, especially when collecting flow in ingress direction. In this case, peer_src_ip represents the entry point into the observed network.
+Most of these fields are self-descriptive. The only two that require further explanation are peer_src_ip, which is the device exporting flows (aka the netflow exporter IP), and peer_dst_ip, which is the BGP next-hop. Both fields are valuable when one wants to find node-to-node, interface-to-interface, or peer-to-peer traffic matrices, especially when collecting flow in ingress direction. In this case, peer_src_ip represents the entry point into the observed network.
 
 # Sources of data
 The aforementioned BGP and NET fields can be populated using any of the flow protocols (netflow, ipfix, sflow), but they can also be populated using BGP, BMP, IGP, files, etc. The configuration parameters used to select the data to populate the fields is controlled using nfacctd_as and nfacctd_net (sfacctd_as and sfacctd_net if using sflow). Next, we describe how the fields are extracted from each of these protocols. Although the application offers the flexibility to model different scenarios, it makes sense that the two configuration knobs are set aligned and hence **we assume that they both are configured to the same value**.
