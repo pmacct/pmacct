@@ -4278,11 +4278,25 @@ void pm_pcap_interfaces_map_validate(char *filename, struct plugin_requests *req
   int valid = FALSE;
 
   if (table && table->list) {
-    if (table->list[table->num].ifindex && strlen(table->list[table->num].ifname))
-      valid = TRUE;
+    if (strlen(table->list[table->num].ifname)) {
+      if (config.pcap_ifindex == PCAP_IFINDEX_MAP) {
+	if (table->list[table->num].ifindex) {
+	  valid = TRUE;
+	}
+      }
+      else {
+	valid = TRUE;
+      }
+    }
 
-    if (valid) table->num++;
-    else memset(&table->list[table->num], 0, sizeof(struct pm_pcap_interface));
+    if (valid) {
+      table->num++;
+    }
+    else {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid entry: ifname=%s\n",
+	  config.name, config.type, filename, table->list[table->num].ifname);
+      memset(&table->list[table->num], 0, sizeof(struct pm_pcap_interface));
+    }
   }
 }
 
