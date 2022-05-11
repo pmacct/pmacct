@@ -3382,6 +3382,7 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
 {
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct otpl_field *otpl = NULL;
   struct utpl_field *utpl = NULL;
   u_char *pcust = (u_char *)((*data) + chptr->extras.off_custom_primitives);
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
@@ -3407,7 +3408,16 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
 	    if (tpl->tpl[cpe->field_type].len == cpe->len) {
 	      memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+tpl->tpl[cpe->field_type].off, cpe->len);
 	    }
-	    /* else this is a configuration mistake: do nothing */
+	    else {
+	      if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_STRING && cpe->len == PM_VARIABLE_LENGTH) {
+		otpl = &tpl->tpl[cpe->field_type];
+		if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + otpl->len + 1 /* terminating zero */)) {
+		  vlen_prims_init(pvlen, 0);
+		  return;
+		}
+		else vlen_prims_insert(pvlen, cpe->type, otpl->len, pptrs->f_data+otpl->off, PM_MSG_STR_COPY_ZERO);
+	      }
+	    }
 	  }
 	}
 	else {
