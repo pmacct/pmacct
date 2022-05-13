@@ -1609,7 +1609,7 @@ sort_version:
       load_networks(config.networks_file, &nt, &nc);
       load_ports(config.ports_file, &pt);
       load_protos(config.protos_file, &prt);
-      load_tos(config.protos_file, &tost);
+      load_tos(config.tos_file, &tost);
 
       reload_map = FALSE;
     }
@@ -1704,6 +1704,10 @@ sort_version:
 
 	if (config.protos_file) {
 	  if (!prt.table[data->primitives.proto]) data->primitives.proto = PM_IP_PROTO_OTHERS;
+	}
+
+	if (config.tos_file) {
+	  if (!tost.table[data->primitives.tos]) data->primitives.tos = PM_IP_TOS_OTHERS;
 	}
 
 	prim_ptrs.data = data;

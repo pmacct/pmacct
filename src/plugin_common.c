@@ -612,7 +612,7 @@ void P_cache_handle_flush_event(struct ports_table *pt, struct protos_table *prt
     load_networks(config.networks_file, &nt, &nc);
     load_ports(config.ports_file, pt);
     load_protos(config.protos_file, prt);
-    load_tos(config.protos_file, tost);
+    load_tos(config.tos_file, tost);
 
     reload_map = FALSE;
   }

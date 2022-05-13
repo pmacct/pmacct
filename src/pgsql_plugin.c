@@ -272,6 +272,10 @@ void pgsql_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  if (!prt.table[data->primitives.proto]) data->primitives.proto = PM_IP_PROTO_OTHERS;
 	}
 
+	if (config.tos_file) {
+	  if (!tost.table[data->primitives.tos]) data->primitives.tos = PM_IP_TOS_OTHERS;
+	}
+
         prim_ptrs.data = data;
         (*sql_insert_func)(&prim_ptrs, &idata);
 
