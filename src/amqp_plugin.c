@@ -38,7 +38,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 {
   struct pkt_data *data;
   struct ports_table pt;
-  struct protos_table prt;
+  struct protos_table prt, tost;
   unsigned char *pipebuf;
   struct pollfd pfd;
   struct insert_data idata;
@@ -170,12 +170,14 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(&nc, 0, sizeof(nc));
   memset(&pt, 0, sizeof(pt));
   memset(&prt, 0, sizeof(prt));
+  memset(&tost, 0, sizeof(tost));
 
   load_networks(config.networks_file, &nt, &nc);
   set_net_funcs(&nt);
 
   if (config.ports_file) load_ports(config.ports_file, &pt);
   if (config.protos_file) load_protos(config.protos_file, &prt);
+  if (config.tos_file) load_tos(config.tos_file, &tost);
   
   memset(&idata, 0, sizeof(idata));
   memset(&prim_ptrs, 0, sizeof(prim_ptrs));
@@ -236,7 +238,7 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     poll_ops:
     P_update_time_reference(&idata);
 
-    if (idata.now > refresh_deadline) P_cache_handle_flush_event(&pt, &prt);
+    if (idata.now > refresh_deadline) P_cache_handle_flush_event(&pt, &prt, &tost);
 
 #ifdef WITH_AVRO
     if (idata.now > avro_schema_deadline) {

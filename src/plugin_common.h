@@ -42,6 +42,7 @@
 #define PROTOS_TABLE_ENTRIES 256
 #define PM_L4_PORT_OTHERS 0
 #define PM_IP_PROTO_OTHERS 255
+#define PM_IP_TOS_OTHERS 255
 
 /* cache element states */
 #define PRINT_CACHE_FREE	0
@@ -152,7 +153,7 @@ extern void P_cache_insert(struct primitives_ptrs *, struct insert_data *);
 extern void P_cache_insert_pending(struct chained_cache *[], int, struct chained_cache *);
 extern void P_cache_mark_flush(struct chained_cache *[], int, int);
 extern void P_cache_flush(struct chained_cache *[], int);
-extern void P_cache_handle_flush_event(struct ports_table *, struct protos_table *);
+extern void P_cache_handle_flush_event(struct ports_table *, struct protos_table *, struct protos_table *);
 extern void P_exit_now(int);
 extern int P_trigger_exec(char *);
 extern void primptrs_set_all_from_chained_cache(struct primitives_ptrs *, struct chained_cache *);
@@ -174,6 +175,7 @@ extern void mpls_label_stack_to_str(char *, int, u_int32_t *, int);
 
 extern void load_ports(char *, struct ports_table *);
 extern void load_protos(char *, struct protos_table *);
+extern void load_tos(char *, struct protos_table *);
 
 /* global vars */
 extern void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */

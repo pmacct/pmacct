@@ -43,7 +43,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 {
   struct pkt_data *data;
   struct ports_table pt;
-  struct protos_table prt;
+  struct protos_table prt, tost;
   struct pollfd pfd;
   struct insert_data idata;
   time_t refresh_deadline;
@@ -98,7 +98,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   refresh_deadline = idata.now;
   idata.cfg = &config;
 
-  sql_init_maps(&extras, &prim_ptrs, &nt, &nc, &pt, &prt);
+  sql_init_maps(&extras, &prim_ptrs, &nt, &nc, &pt, &prt, &tost);
   sql_init_global_buffers();
   sql_init_historical_acct(idata.now, &idata);
   sql_init_triggers(idata.now, &idata);
@@ -153,7 +153,7 @@ void sqlite3_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
     if (idata.now > refresh_deadline) {
       if (sql_qq_ptr) sql_cache_flush(sql_queries_queue, sql_qq_ptr, &idata, FALSE);
-      sql_cache_handle_flush_event(&idata, &refresh_deadline, &pt, &prt);
+      sql_cache_handle_flush_event(&idata, &refresh_deadline, &pt, &prt, &tost);
     }
     else {
       if (config.sql_trigger_exec) {

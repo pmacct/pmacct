@@ -140,6 +140,7 @@ extern int cfg_key_networks_no_mask_if_zero(char *, char *, char *);
 extern int cfg_key_networks_cache_entries(char *, char *, char *);
 extern int cfg_key_ports_file(char *, char *, char *);
 extern int cfg_key_protos_file(char *, char *, char *);
+extern int cfg_key_tos_file(char *, char *, char *);
 extern int cfg_key_print_cache_entries(char *, char *, char *);
 extern int cfg_key_print_markers(char *, char *, char *);
 extern int cfg_key_print_output(char *, char *, char *);

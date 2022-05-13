@@ -84,6 +84,7 @@ static const struct _dictionary_line dictionary[] = {
   {"networks_cache_entries", cfg_key_networks_cache_entries},
   {"ports_file", cfg_key_ports_file},
   {"protos_file", cfg_key_protos_file},
+  {"tos_file", cfg_key_tos_file},
   {"timestamps_rfc3339", cfg_key_timestamps_rfc3339},
   {"timestamps_utc", cfg_key_timestamps_utc},
   {"timestamps_secs", cfg_key_timestamps_secs},
