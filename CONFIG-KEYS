@@ -1034,6 +1034,14 @@ DESC:		Full pathname to a file containing a list of (known/interesting/meaningfu
 		aggregator, this directive makes sense only if aggregating on the 'proto' primitive.
 DEFAULT:	none
 
+KEY:		tos_file
+DESC:		Full pathname to a file containing a list of (meaningful) IP ToS values (one per line);
+		if tos_encode_as_dscp is set to true then DSCP values are expected as part of the file.
+		The directive uses value 255 to bucket as 'others' those ToS/DSCP values not matching
+		the ones defined in the list. Not being a filter but an aggregator, this directive makes
+		sense only if aggregating on the 'tos' primitive.
+DEFAULT:	none
+
 KEY:		sql_db
 DESC:		Defines the SQL database to use. When using the SQLite3 plugin, this directive refers
 		to the full path to the database file; if multiple sqlite3 plugins are in use, it is
