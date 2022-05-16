@@ -1605,7 +1605,6 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
 						u_int32_t sid, u_int16_t *pens, u_int16_t len, u_int32_t seq)
 {
   struct template_cache_entry *tpl = NULL;
-  void *tpl_ptr = NULL;
   u_int8_t version = 0;
   int ret;
 
@@ -1629,19 +1628,9 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
   if (tpl_type == 0 || tpl_type == 2) {
     tpl = compose_template(hdr, (struct sockaddr *)pptrs->f_agent, tpl_type, sid, pens, version, len, seq);
 
-    ret = cdada_map_find(tpl_data_map, hash_keyval, &tpl_ptr);
-    if (ret == CDADA_SUCCESS) {
-      cdada_map_erase(tpl_data_map, hash_keyval);
-      free(tpl_ptr);
-    }
-    else if (ret != CDADA_E_NOT_FOUND) {
-      Log(LOG_WARNING, "WARN ( %s/core ): Unable to find in tpl_data_map\n", config.name);
-      goto exit_lane;
-    }
-    
-    ret = cdada_map_insert(tpl_data_map, hash_keyval, tpl);
+    ret = cdada_map_insert_replace(tpl_data_map, hash_keyval, tpl);
     if (ret != CDADA_SUCCESS) {
-      Log(LOG_WARNING, "WARN ( %s/core ): Unable to insert in tpl_data_map\n", config.name);
+      Log(LOG_WARNING, "WARN ( %s/core ): Unable to insert / refresh template in tpl_data_map\n", config.name);
       goto exit_lane;
     }
   }
@@ -1649,19 +1638,9 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
   else if (tpl_type == 1 || tpl_type == 3) {
     tpl = compose_opt_template(hdr, (struct sockaddr *)pptrs->f_agent, tpl_type, sid, pens, version, len, seq);
 
-    ret = cdada_map_find(tpl_opt_map, hash_keyval, &tpl_ptr);
-    if (ret == CDADA_SUCCESS) {
-      cdada_map_erase(tpl_opt_map, hash_keyval);
-      free(tpl_ptr);
-    }
-    else if (ret != CDADA_E_NOT_FOUND) {
-      Log(LOG_WARNING, "WARN ( %s/core ): Unable to find in tpl_opt_map\n", config.name);
-      goto exit_lane;
-    }
-    
-    ret = cdada_map_insert(tpl_data_map, hash_keyval, tpl);
+    ret = cdada_map_insert_replace(tpl_data_map, hash_keyval, tpl);
     if (ret != CDADA_SUCCESS) {
-      Log(LOG_WARNING, "WARN ( %s/core ): Unable to insert in tpl_opt_map\n", config.name);
+      Log(LOG_WARNING, "WARN ( %s/core ): Unable to insert / refresh template in tpl_opt_map\n", config.name);
       goto exit_lane;
     }
   }

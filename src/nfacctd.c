@@ -529,11 +529,11 @@ int main(int argc,char **argv, char **envp)
 	if (list->cfg.what_to_count_2 & (COUNT_POST_NAT_SRC_HOST|COUNT_POST_NAT_DST_HOST|
 			COUNT_POST_NAT_SRC_PORT|COUNT_POST_NAT_DST_PORT|COUNT_NAT_EVENT|
 			COUNT_TIMESTAMP_START|COUNT_TIMESTAMP_END|COUNT_TIMESTAMP_ARRIVAL|
-			COUNT_EXPORT_PROTO_TIME|COUNT_FWD_STATUS))
+			COUNT_EXPORT_PROTO_TIME|COUNT_FWD_STATUS|COUNT_FW_EVENT))
 	  list->cfg.data_type |= PIPE_TYPE_NAT;
 
-	if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_STACK|COUNT_MPLS_LABEL_TOP|COUNT_MPLS_LABEL_BOTTOM|
-			COUNT_MPLS_STACK_DEPTH))
+	if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_STACK|COUNT_MPLS_LABEL_TOP|
+			COUNT_MPLS_LABEL_BOTTOM|COUNT_MPLS_STACK_DEPTH))
 	  list->cfg.data_type |= PIPE_TYPE_MPLS;
 
 	if (list->cfg.what_to_count_2 & (COUNT_TUNNEL_SRC_MAC|COUNT_TUNNEL_DST_MAC|
@@ -1836,11 +1836,16 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       u_int32_t tpl_len = 0;
 
       template_hdr = (struct template_hdr_v9 *) tpl_ptr;
-      if (off+flowsetlen > len) { 
+      if ((off + flowsetlen) > len) {
         notify_malf_packet(LOG_INFO, "INFO", "unable to read next Template Flowset (incomplete NetFlow v9/IPFIX packet)",
 		        (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
         xflow_status_table.tot_bad_datagrams++;
         return;
+      }
+
+      if ((flowsetlen - flowoff) < sizeof(struct template_hdr_v9)) {
+	/* skip padding */
+	break;
       }
 
       tpl = handle_template(template_hdr, pptrs, fid, SourceId, &pens, flowsetlen-flowoff, FlowSeq);
@@ -1879,11 +1884,16 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       u_int32_t tpl_len = 0;
 
       opt_template_hdr = (struct options_template_hdr_v9 *) tpl_ptr;
-      if (off+flowsetlen > len) {
+      if ((off + flowsetlen) > len) {
         notify_malf_packet(LOG_INFO, "INFO", "unable to read next Options Template Flowset (incomplete NetFlow v9/IPFIX packet)",
                         (struct sockaddr *) pptrsv->v4.f_agent, FlowSeq);
         xflow_status_table.tot_bad_datagrams++;
         return;
+      }
+
+      if ((flowsetlen - flowoff) < sizeof(struct options_template_hdr_v9)) {
+	/* skip padding */
+	break;
       }
 
       tpl = handle_template((struct template_hdr_v9 *)opt_template_hdr, pptrs, fid, SourceId, &pens, flowsetlen-flowoff, FlowSeq);

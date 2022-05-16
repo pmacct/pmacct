@@ -305,14 +305,18 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 			  cap_data.sndrcv);
 		    }
 		    if ((cap_data.sndrcv == 2 /* send */) || (cap_data.sndrcv == 3 /* send and receive */)) {
-		      peer->cap_add_paths.cap[ntohs(cap_data.afi)][cap_data.safi] = TRUE; 
+		      afi_t cap_add_paths_afi = ntohs(cap_data.afi);
 
-		      if (cap_data.afi > peer->cap_add_paths.afi_max) {
-		        peer->cap_add_paths.afi_max = cap_data.afi;
-		      }
+		      if (cap_add_paths_afi < AFI_MAX && cap_data.safi < SAFI_MAX) {
+		        peer->cap_add_paths.cap[cap_add_paths_afi][cap_data.safi] = TRUE;
 
-		      if (cap_data.safi > peer->cap_add_paths.safi_max) {
-		        peer->cap_add_paths.safi_max = cap_data.safi;
+		        if (cap_add_paths_afi > peer->cap_add_paths.afi_max) {
+		          peer->cap_add_paths.afi_max = cap_add_paths_afi;
+		        }
+
+		        if (cap_data.safi > peer->cap_add_paths.safi_max) {
+		          peer->cap_add_paths.safi_max = cap_data.safi;
+		        }
 		      }
 
 		      if (online) {

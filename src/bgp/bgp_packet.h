@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /* 
@@ -69,7 +69,7 @@ static const char __attribute__((unused)) *bgp_msg_types[] = {
 #define AFI_IP                    1
 #define AFI_IP6                   2
 #define AFI_BGP_LS		  16388
-#define AFI_MAX                   16388
+#define AFI_MAX                   3 /* XXX: hotfix */
 
 /* Subsequent Address Family Identifier. */
 #define SAFI_UNICAST              1

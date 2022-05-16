@@ -387,6 +387,11 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
     idx++;
   }
 
+  if (wtc_2 & COUNT_FW_EVENT) {
+    cjhandler[idx] = compose_json_fw_event;
+    idx++;
+  }
+
   if (wtc_2 & COUNT_MPLS_LABEL_TOP) {
     cjhandler[idx] = compose_json_mpls_label_top;
     idx++;
@@ -1016,6 +1021,11 @@ void compose_json_post_nat_dst_port(json_t *obj, struct chained_cache *cc)
 void compose_json_nat_event(json_t *obj, struct chained_cache *cc)
 {
   json_object_set_new_nocheck(obj, "nat_event", json_integer((json_int_t)cc->pnat->nat_event));
+}
+
+void compose_json_fw_event(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "fw_event", json_integer((json_int_t)cc->pnat->fw_event));
 }
 
 void compose_json_mpls_label_top(json_t *obj, struct chained_cache *cc)

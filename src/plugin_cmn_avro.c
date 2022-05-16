@@ -270,6 +270,9 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc_2 & COUNT_NAT_EVENT)
     avro_schema_record_field_append(schema, "nat_event", avro_schema_long());
 
+  if (wtc_2 & COUNT_FW_EVENT)
+    avro_schema_record_field_append(schema, "fw_event", avro_schema_long());
+
   if (wtc_2 & COUNT_MPLS_LABEL_TOP)
     avro_schema_record_field_append(schema, "mpls_label_top", avro_schema_long());
 
@@ -912,6 +915,11 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
   if (wtc_2 & COUNT_NAT_EVENT) {
     pm_avro_check(avro_value_get_by_name(&value, "nat_event", &field, NULL));
     pm_avro_check(avro_value_set_long(&field, pnat->nat_event));
+  }
+
+  if (wtc_2 & COUNT_FW_EVENT) {
+    pm_avro_check(avro_value_get_by_name(&value, "fw_event", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pnat->fw_event));
   }
 
   if (wtc_2 & COUNT_MPLS_LABEL_TOP) {

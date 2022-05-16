@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -52,7 +52,7 @@ void p_kafka_init_host(struct p_kafka_host *kafka_host, char *config_file)
     if (kafka_host->cfg) {
       rd_kafka_conf_set_log_cb(kafka_host->cfg, p_kafka_logger);
       rd_kafka_conf_set_error_cb(kafka_host->cfg, p_kafka_msg_error);
-      rd_kafka_conf_set_dr_cb(kafka_host->cfg, p_kafka_msg_delivered);
+      rd_kafka_conf_set_dr_msg_cb(kafka_host->cfg, p_kafka_msg_delivered);
       rd_kafka_conf_set_stats_cb(kafka_host->cfg, p_kafka_stats);
       rd_kafka_conf_set_opaque(kafka_host->cfg, kafka_host);
       p_kafka_apply_global_config(kafka_host);
@@ -348,30 +348,31 @@ void p_kafka_logger(const rd_kafka_t *rk, int level, const char *fac, const char
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): RDKAFKA-%i-%s: %s: %s\n", config.name, config.type, level, fac, rd_kafka_name(rk), buf);
 }
 
-void p_kafka_msg_delivered(rd_kafka_t *rk, void *payload, size_t len, int error_code, void *opaque, void *msg_opaque)
+void p_kafka_msg_delivered(rd_kafka_t *rk, const rd_kafka_message_t *rk_msg, void *opaque)
 {
-  struct p_kafka_host *kafka_host = (struct p_kafka_host *) opaque; 
+  struct p_kafka_host *kafka_host = (struct p_kafka_host *) opaque;
 
-  if (error_code) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Kafka message delivery failed: %s\n", config.name, config.type, rd_kafka_err2str(error_code));
+  if (rk_msg->err) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): Kafka message delivery failed: %s\n", config.name, config.type, rd_kafka_err2str(rk_msg->err));
   }
   else {
     if (config.debug) {
       if (p_kafka_get_content_type(kafka_host) == PM_KAFKA_CNT_TYPE_STR) {
-        char *payload_str = (char *) payload;
-	char saved = payload_str[len - 1];
+        char *payload_str = (char *) rk_msg->payload;
+        char saved = payload_str[rk_msg->len - 1];
 
-	payload_str[len - 1] = '\0';
-        Log(LOG_DEBUG, "DEBUG ( %s/%s ): Kafka message delivery successful (%zd bytes): %p\n", config.name, config.type, len, payload);
-	payload_str[len - 1] = saved;
+        payload_str[rk_msg->len - 1] = '\0';
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): Kafka message delivery successful (%zd bytes): %p\n",
+            config.name, config.type, rk_msg->len, rk_msg->payload);
+        payload_str[rk_msg->len - 1] = saved;
       }
       else {
-	size_t base64_data_len = 0;
-	u_char *base64_data = base64_encode(payload, len, &base64_data_len);
+        size_t base64_data_len = 0;
+        u_char *base64_data = base64_encode(rk_msg->payload, rk_msg->len, &base64_data_len);
 
-	Log(LOG_DEBUG, "DEBUG ( %s/%s ): Kafka message delivery successful (%zd bytes): %s\n", config.name, config.type, len, base64_data);
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): Kafka message delivery successful (%zd bytes): %s\n", config.name, config.type, rk_msg->len, base64_data);
 
-	if (base64_data) base64_freebuf(base64_data);
+        if (base64_data) base64_freebuf(base64_data);
       }
     }
   }
@@ -415,15 +416,20 @@ int p_kafka_connect_to_produce(struct p_kafka_host *kafka_host)
   return SUCCESS;
 }
 
-int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, size_t data_len, int part)
+int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, size_t data_len, int part, int do_free)
 {
   int ret = SUCCESS;
+  int flag = RD_KAFKA_MSG_F_COPY;
 
   kafkap_ret_err_cb = FALSE;
 
+  if (do_free) {
+    flag = RD_KAFKA_MSG_F_FREE;
+  }
+
   if (kafka_host && kafka_host->rk && kafka_host->topic) {
-    ret = rd_kafka_produce(kafka_host->topic, part, RD_KAFKA_MSG_F_COPY,
-			   data, data_len, kafka_host->key, kafka_host->key_len, NULL);
+    ret = rd_kafka_produce(kafka_host->topic, part, flag, data, data_len,
+			   kafka_host->key, kafka_host->key_len, NULL);
 
     if (ret == ERR) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Failed to produce to topic %s partition %i: %s\n", config.name, config.type,
@@ -441,7 +447,12 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, si
 
 int p_kafka_produce_data(struct p_kafka_host *kafka_host, void *data, size_t data_len)
 {
-  return p_kafka_produce_data_to_part(kafka_host, data, data_len, kafka_host->partition);
+  return p_kafka_produce_data_to_part(kafka_host, data, data_len, kafka_host->partition, FALSE);
+}
+
+int p_kafka_produce_data_and_free(struct p_kafka_host *kafka_host, void *data, size_t data_len)
+{
+  return p_kafka_produce_data_to_part(kafka_host, data, data_len, kafka_host->partition, TRUE);
 }
 
 int p_kafka_connect_to_consume(struct p_kafka_host *kafka_host)
@@ -615,8 +626,7 @@ int write_and_free_json_kafka(void *kafka_log, void *obj)
       p_kafka_set_topic(alog, dyn_kafka_topic);
     }
 
-    ret = p_kafka_produce_data(alog, tmpbuf, strlen(tmpbuf));
-    free(tmpbuf);
+    ret = p_kafka_produce_data_and_free(alog, tmpbuf, strlen(tmpbuf));
 
     if (alog->topic_rr.max) p_kafka_set_topic(alog, orig_kafka_topic);
   }

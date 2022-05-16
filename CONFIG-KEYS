@@ -2182,11 +2182,14 @@ DESC:		Automatically renormalizes bytes/packet counters value basing on availabl
 		estimated rate is then used for renormalization purposes.
 DEFAULT:        false
 
-KEY:		pmacctd_nonroot [GLOBAL]
+KEY:		[ sfacctd_nonroot | nfacctd_nonroot | pmacctd_nonroot ] [GLOBAL]
 VALUES:		[ true | false ]
-DESC:		Allow to run pmacctd from a user with non root privileges. This can be desirable on systems
-		supporting a tool like setcap, ie. 'setcap "cap_net_raw,cap_net_admin=ep" /path/to/pmacctd',
-		to assign specific system capabilities to unprivileged users.
+DESC:		Allow to run daemons from a user with non root privileges. This can be desirable on systems
+		supporting a tool like setcap to assign specific system capabilities to unprivileged users.
+		A couple of examples: allow nfacctd to bind to BGP port: "setcap 'cap_net_bind_service=+ep'
+		/path/to/nfacctd ; allow a sfacctd replicator to forward packets transparently (spoofing):
+		"setcap 'cap_net_raw=+ep' /path/to/nfacctd ; allow pmacctd to bind and use libpcap:
+		"setcap 'cap_net_raw,cap_net_admin=+ep' /path/to/pmacctd".
 DEFAULT:	false
 
 KEY:            sfacctd_counter_file [GLOBAL, SFACCTD_ONLY]

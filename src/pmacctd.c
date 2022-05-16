@@ -780,11 +780,11 @@ int main(int argc,char **argv, char **envp)
         if (list->cfg.what_to_count_2 & (COUNT_POST_NAT_SRC_HOST|COUNT_POST_NAT_DST_HOST|
                         COUNT_POST_NAT_SRC_PORT|COUNT_POST_NAT_DST_PORT|COUNT_NAT_EVENT|
                         COUNT_TIMESTAMP_START|COUNT_TIMESTAMP_END|COUNT_TIMESTAMP_ARRIVAL|
-			COUNT_EXPORT_PROTO_TIME))
+			COUNT_EXPORT_PROTO_TIME|COUNT_FWD_STATUS|COUNT_FW_EVENT))
           list->cfg.data_type |= PIPE_TYPE_NAT;
 
-        if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_TOP|COUNT_MPLS_LABEL_BOTTOM|
-                        COUNT_MPLS_STACK_DEPTH))
+        if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_STACK|COUNT_MPLS_LABEL_TOP|
+			COUNT_MPLS_LABEL_BOTTOM|COUNT_MPLS_STACK_DEPTH))
           list->cfg.data_type |= PIPE_TYPE_MPLS;
 
 	if (list->cfg.what_to_count_2 & (COUNT_TUNNEL_SRC_MAC|COUNT_TUNNEL_DST_MAC|

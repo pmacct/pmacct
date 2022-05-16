@@ -1249,6 +1249,7 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count_2 & COUNT_POST_NAT_SRC_PORT) what_to_count_2 |= COUNT_POST_NAT_SRC_PORT;
     if (config.what_to_count_2 & COUNT_POST_NAT_DST_PORT) what_to_count_2 |= COUNT_POST_NAT_DST_PORT;
     if (config.what_to_count_2 & COUNT_NAT_EVENT) what_to_count_2 |= COUNT_NAT_EVENT;
+    if (config.what_to_count_2 & COUNT_FW_EVENT) what_to_count_2 |= COUNT_FW_EVENT;
     if (config.what_to_count_2 & COUNT_FWD_STATUS) what_to_count_2 |= COUNT_FWD_STATUS;
 
     if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) what_to_count_2 |= COUNT_MPLS_LABEL_TOP;
@@ -2406,6 +2407,20 @@ int sql_evaluate_primitives(int primitive)
     strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_INT_NAT_EVENT;
     values[primitive].handler = where[primitive].handler = count_nat_event_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_FW_EVENT) {
+    if (primitive) { 
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    } 
+    strncat(insert_clause, "fw_event", SPACELEFT(insert_clause));
+    strncat(where[primitive].string, "fw_event=%u", SPACELEFT(where[primitive].string));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_FW_EVENT;
+    values[primitive].handler = where[primitive].handler = count_fw_event_handler;
     primitive++;
   }
 
