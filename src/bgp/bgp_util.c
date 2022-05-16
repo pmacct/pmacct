@@ -853,10 +853,10 @@ void bgp_peer_xconnect_print(struct bgp_peer *peer, char *buf, int len)
     sa_src = (struct sockaddr *) &peer->xc.src;
     sa_dst = (struct sockaddr *) &peer->xc.dst;
 
-    if (sa_src->sa_family) sa_to_str(src, sizeof(src), sa_src);
+    if (sa_src->sa_family) sa_to_str(src, sizeof(src), sa_src, TRUE);
     else addr_mask_to_str(src, sizeof(src), &peer->xc.src_addr, &peer->xc.src_mask);
 
-    sa_to_str(dst, sizeof(dst), sa_dst);
+    sa_to_str(dst, sizeof(dst), sa_dst, TRUE);
 
     snprintf(buf, len, "%s x %s", src, dst);
   }
@@ -1374,7 +1374,7 @@ void bgp_md5_file_process(int sock, struct bgp_md5_table *bgp_md5)
       memcpy(md5sig.tcpm_key, &bgp_md5->table[idx].key, keylen);
     }
 
-    sa_to_str(peer_str, sizeof(peer_str), sa_md5sig);
+    sa_to_str(peer_str, sizeof(peer_str), sa_md5sig, TRUE);
 
     rc = setsockopt(sock, IPPROTO_TCP, TCP_MD5SIG, &md5sig, (socklen_t) sizeof(md5sig));
     if (rc < 0) {

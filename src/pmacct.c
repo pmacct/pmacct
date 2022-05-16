@@ -918,8 +918,8 @@ int main(int argc,char **argv)
           what_to_count |= COUNT_TAG2;
         }
         else if (!strcmp(count_token[count_index], "class")) {
-          count_token_int[count_index] = COUNT_INT_CLASS;
-          what_to_count |= COUNT_CLASS;
+          count_token_int[count_index] = COUNT_INT_NDPI_CLASS;
+          what_to_count_2 |= COUNT_NDPI_CLASS;
         }
         else if (!strcmp(count_token[count_index], "std_comm")) {
           count_token_int[count_index] = COUNT_INT_STD_COMM;
@@ -1701,7 +1701,7 @@ int main(int argc,char **argv)
   	      ct_idx = 0;
   	      while (ct_idx < ct_num) {
   	        class_table[ct_idx].protocol[MAX_PROTOCOL_LEN-1] = '\0';
-  	        if (!strcmp(class_table[ct_idx].protocol, sclass)) {
+		if (!strcasecmp(class_table[ct_idx].protocol, sclass)) {
   	          value = class_table[ct_idx].id;
   		  break;
   	        }
@@ -1712,7 +1712,16 @@ int main(int argc,char **argv)
   	        printf("ERROR: Server has not loaded any classifier for '%s'.\n", sclass);
   	        exit(1); 
   	      }
-  	      else request.data.class = value;
+	      else {
+#if defined (WITH_NDPI)
+		request.data.ndpi_class.master_protocol = FALSE;
+		request.data.ndpi_class.app_protocol = class_table[ct_idx].id;
+		request.data.ndpi_class.category = class_table[ct_idx].category;
+#endif
+	      }
+
+	      /* in case we did hit the break */
+	      ct_idx = (ct_num - 1);
             }
 	    else {
 	      printf("ERROR: missing EOF from server (2)\n");

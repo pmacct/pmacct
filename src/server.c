@@ -245,7 +245,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
     for (j = 0; j < uq->num; j++, bufptr += sizeof(struct query_entry)) {
       memcpy(&request, bufptr, sizeof(struct query_entry));
       Log(LOG_DEBUG, "DEBUG ( %s/%s ): Searching into accounting structure ...\n", config.name, config.type); 
-      if (request.what_to_count == config.what_to_count && request.what_to_count_2 == config.what_to_count_2) { 
+      if (request.what_to_count == config.what_to_count && request.what_to_count_2 == config.what_to_count_2) {
         struct pkt_data pd_dummy;
 	struct primitives_ptrs prim_ptrs;
 
@@ -550,7 +550,7 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
 #endif
 
 #if defined (WITH_NDPI)
-  if (w2 & COUNT_NDPI_CLASS) memcpy(&d1->ndpi_class, &s1->class, sizeof(d1->ndpi_class)); 
+  if (w2 & COUNT_NDPI_CLASS) memcpy(&d1->ndpi_class, &s1->ndpi_class, sizeof(d1->ndpi_class));
 #endif
 
   if (w2 & COUNT_SAMPLING_RATE) d1->sampling_rate = s1->sampling_rate; 

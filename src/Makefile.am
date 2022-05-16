@@ -50,8 +50,7 @@ libdaemons_la_SOURCES = signals.c util.c plugin_hooks.c		\
         print_plugin.c pretag.c ip_frag.c			\
         ports_aggr.c pretag_handlers.c				\
         ip_flow.c setproctitle.c				\
-        classifier.c regexp.c					\
-        conntrack.c xflow_status.c				\
+        classifier.c conntrack.c xflow_status.c			\
 	plugin_common.c preprocess.c				\
 	ll.c nl.c						\
 	base64.c pmsearch.c linklist.c				\

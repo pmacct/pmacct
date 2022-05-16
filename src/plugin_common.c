@@ -270,34 +270,6 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
     }
   }
 
-  /* We are classifing packets. We have a non-zero bytes accumulator (ba)
-     and a non-zero class. Before accounting ba to this class, we have to
-     remove ba from class zero. */
-  if (config.what_to_count & COUNT_CLASS && data->cst.ba && data->primitives.class) {
-    struct chained_cache *Cursor;
-    pm_class_t lclass = data->primitives.class;
-
-    data->primitives.class = 0;
-    Cursor = P_cache_search(prim_ptrs);
-    data->primitives.class = lclass;
-
-    /* We can assign the flow to a new class only if we are able to subtract
-       the accumulator from the zero-class. If this is not the case, we will
-       discard the accumulators. The assumption is that accumulators are not
-       retroactive */
-
-    if (Cursor) {
-      if (timeval_cmp(&data->cst.stamp, &flushtime) >= 0) {
-	/* MIN(): ToS issue */
-        Cursor->bytes_counter -= MIN(Cursor->bytes_counter, data->cst.ba);
-        Cursor->packet_counter -= MIN(Cursor->packet_counter, data->cst.pa);
-        Cursor->flow_counter -= MIN(Cursor->flow_counter, data->cst.fa);
-      }
-      else memset(&data->cst, 0, CSSz);
-    }
-    else memset(&data->cst, 0, CSSz);
-  }
-
   start:
   res_data = res_bgp = res_nat = res_mpls = res_tun = res_time = res_cust = res_vlen = TRUE;
 
@@ -429,12 +401,6 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
     cache_ptr->flow_type = data->flow_type;
     cache_ptr->tcp_flags = data->tcp_flags;
 
-    if (config.what_to_count & COUNT_CLASS) {
-      cache_ptr->bytes_counter += data->cst.ba;
-      cache_ptr->packet_counter += data->cst.pa;
-      cache_ptr->flow_counter += data->cst.fa;
-    }
-
     if (config.nfacctd_stitching) {
       if (!cache_ptr->stitch) {
 	cache_ptr->stitch = (struct pkt_stitching *) malloc(sizeof(struct pkt_stitching));
@@ -460,12 +426,6 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
       cache_ptr->flow_type = data->flow_type;
       cache_ptr->tcp_flags |= data->tcp_flags;
 
-      if (config.what_to_count & COUNT_CLASS) {
-        cache_ptr->bytes_counter += data->cst.ba;
-        cache_ptr->packet_counter += data->cst.pa;
-        cache_ptr->flow_counter += data->cst.fa;
-      }
-
       if (config.nfacctd_stitching) {
 	if (cache_ptr->stitch) {
 	  P_update_stitch(cache_ptr, data, idata);
@@ -479,11 +439,6 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
       cache_ptr->bytes_counter = data->pkt_len;
       cache_ptr->flow_type = data->flow_type;
       cache_ptr->tcp_flags = data->tcp_flags;
-      if (config.what_to_count & COUNT_CLASS) {
-        cache_ptr->bytes_counter += data->cst.ba;
-        cache_ptr->packet_counter += data->cst.pa;
-        cache_ptr->flow_counter += data->cst.fa;
-      }
 
       if (config.nfacctd_stitching) {
 	P_set_stitch(cache_ptr, data, idata);
@@ -1039,7 +994,10 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
   }
 
   size_t list_counter;
-  for (list_counter = 0; (list_counter < tokens_counter) && (tokens[list_counter] != NULL); list_counter += 2) {
+  for (list_counter = 0;
+	(list_counter < tokens_counter) && (tokens[list_counter] != NULL) &&
+	((list_counter + 1) < tokens_counter) && (tokens[list_counter + 1] != NULL);
+	list_counter += 2) {
     memset(&lbl, 0, sizeof(lbl));
     if ((strlen(tokens[list_counter]) > MAX_PTM_LABEL_TOKEN_LEN - 1) || (strlen(tokens[list_counter + 1]) > MAX_PTM_LABEL_TOKEN_LEN - 1)) {
       exit(EXIT_FAILURE);

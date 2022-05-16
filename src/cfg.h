@@ -254,6 +254,8 @@ struct configuration {
   char *telemetry_interface;
   int telemetry_udp_notif_port;
   char *telemetry_udp_notif_ip;
+  char *telemetry_udp_notif_interface;
+  int telemetry_udp_notif_ipv6_only;
   int telemetry_udp_notif_nmsgs;
   char *telemetry_udp_notif_rp_ebpf_prog;
   int telemetry_ipv6_only;

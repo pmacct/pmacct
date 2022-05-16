@@ -290,15 +290,6 @@ typedef struct rd_as rd_t;
 
 typedef u_int32_t path_id_t;
 
-/* class status */
-struct class_st {
-  u_int8_t tentatives;
-  struct timeval stamp;	/* accumulator timestamp */
-  u_int32_t ba;		/* bytes accumulator */
-  u_int16_t pa;		/* packet accumulator */
-  u_int8_t fa;		/* flow accumulator */
-};
-
 struct flow_chars {
   u_int8_t traffic_type;
   u_int8_t is_bi;
@@ -372,7 +363,6 @@ struct packet_ptrs {
   u_char *vxlan_ptr; /* ptr to VXLAN VNI */
   u_char *payload_ptr; /* classifiers: ptr to packet payload */
   pm_class_t class; /* classifiers: class id */
-  struct class_st cst; /* classifiers: class status */
   u_int8_t shadow; /* 0=the packet is being distributed for the 1st time
 		      1=the packet is being distributed for the 2nd+ time */
   u_int32_t ifindex_in;  /* input ifindex; used by pmacctd/uacctd */
@@ -452,7 +442,6 @@ struct pkt_data {
   u_int32_t tcp_flags; /* XXX */
   struct timeval time_start;
   struct timeval time_end;
-  struct class_st cst;
 };
 
 struct pkt_payload {

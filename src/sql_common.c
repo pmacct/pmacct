@@ -208,6 +208,12 @@ void sql_init_default_values(struct extra_primitives *extras)
 
   /* handling purge preprocessor */
   set_preprocess_funcs(config.sql_preprocess, &prep, PREP_DICT_SQL);
+
+  if (config.tcpflags_encode_as_array ||
+      config.mpls_label_stack_encode_as_array ||
+      config.pretag_label_encode_as_map) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): Complex data types (ie. pre_tag_label_encode_as_map) not supported by SQL plugins. Ignored.\n", config.name, config.type);
+  }
 }
 
 void sql_init_historical_acct(time_t now, struct insert_data *idata)
@@ -657,32 +663,6 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
     }
   }
 
-  /* We are classifing packets. We have a non-zero bytes accumulator (ba)
-     and a non-zero class. Before accounting ba to this class, we have to
-     remove ba from class zero. */
-  if (config.what_to_count & COUNT_CLASS && data->cst.ba && data->primitives.class) {
-    pm_class_t lclass = data->primitives.class;
-
-    data->primitives.class = 0;
-    Cursor = sql_cache_search(prim_ptrs, basetime);
-    data->primitives.class = lclass;
-
-    /* We can assign the flow to a new class only if we are able to subtract
-       the accumulator from the zero-class. If this is not the case, we will
-       discard the accumulators. The assumption is that accumulators are not
-       retroactive */
-
-    if (Cursor) {
-      if (timeval_cmp(&data->cst.stamp, &idata->flushtime) >= 0) { 
-        Cursor->bytes_counter -= MIN(Cursor->bytes_counter, data->cst.ba);
-        Cursor->packet_counter -= MIN(Cursor->packet_counter, data->cst.pa);
-        Cursor->flows_counter -= MIN(Cursor->flows_counter, data->cst.fa);
-      }
-      else memset(&data->cst, 0, CSSz);
-    }
-    else memset(&data->cst, 0, CSSz); 
-  }
-
   sql_cache_modulo(prim_ptrs, idata);
   Cursor = &sql_cache[idata->modulo];
 
@@ -860,13 +840,6 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
     Cursor->flow_type = data->flow_type;
     Cursor->tcp_flags = data->tcp_flags;
 
-    if (config.what_to_count & COUNT_CLASS) {
-      Cursor->bytes_counter += data->cst.ba;
-      Cursor->packet_counter += data->cst.pa;
-      Cursor->flows_counter += data->cst.fa;
-      Cursor->tentatives = data->cst.tentatives;
-    }
-
     if (config.nfacctd_stitching) {
       if (!Cursor->stitch) {
 	Cursor->stitch = (struct pkt_stitching *) malloc(sizeof(struct pkt_stitching));
@@ -898,13 +871,6 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
     Cursor->bytes_counter += data->pkt_len;
     Cursor->flow_type = data->flow_type;
     Cursor->tcp_flags |= data->tcp_flags;
-
-    if (config.what_to_count & COUNT_CLASS) {
-      Cursor->bytes_counter += data->cst.ba;
-      Cursor->packet_counter += data->cst.pa;
-      Cursor->flows_counter += data->cst.fa;
-      Cursor->tentatives = data->cst.tentatives;
-    }
 
     if (config.nfacctd_stitching) {
       if (Cursor->stitch) {

@@ -134,6 +134,7 @@ void pm_ndpi_export_proto_to_class(struct pm_ndpi_workflow *workflow)
       memset(&css, 0, sizeof(css));
       css.id = workflow->ndpi_struct->proto_defaults[idx].protoId;
       strncpy(css.protocol, workflow->ndpi_struct->proto_defaults[idx].protoName, MAX_PROTOCOL_LEN);
+      css.category = workflow->ndpi_struct->proto_defaults[idx].protoCategory;
       ret = pmct_ndpi_register(&css);
       if (!ret) Log(LOG_WARNING, "WARN ( %s/core ): unable to register nDPI class ID %u.\n", config.name, css.id);
     }

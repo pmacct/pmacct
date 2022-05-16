@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -143,33 +143,6 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
   unsigned int pc_size = config.cpptrs.len;
   unsigned int clb_size = sizeof(struct cache_legacy_bgp_primitives);
 
-  /* We are classifing packets. We have a non-zero bytes accumulator (ba)
-     and a non-zero class. Before accounting ba to this class, we have to
-     remove ba from class zero. */ 
-  if (config.what_to_count & COUNT_CLASS && data->cst.ba && data->primitives.class) {
-    pm_class_t lclass = data->primitives.class;
-
-    data->primitives.class = 0;
-    elem_acc = search_accounting_structure(prim_ptrs);
-    data->primitives.class = lclass;
-
-    /* We can assign the flow to a new class only if we are able to subtract
-       the accumulator from the zero-class. If this is not the case, we will
-       discard the accumulators. The assumption is that accumulators are not
-       retroactive */
-    if (elem_acc) {
-      if (timeval_cmp(&data->cst.stamp, &elem_acc->rstamp) >= 0 && 
-	  timeval_cmp(&data->cst.stamp, &table_reset_stamp) >= 0) {
-	/* MIN(): ToS issue */
-        elem_acc->bytes_counter -= MIN(elem_acc->bytes_counter, data->cst.ba);
-        elem_acc->packet_counter -= MIN(elem_acc->packet_counter, data->cst.pa);
-        elem_acc->flow_counter -= MIN(elem_acc->flow_counter, data->cst.fa);
-      } 
-      else memset(&data->cst, 0, CSSz);
-    }
-    else memset(&data->cst, 0, CSSz);
-  } 
-
   elem = a;
 
   hash = cache_crc32((unsigned char *)addr, pp_size);
@@ -197,11 +170,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         elem_acc->bytes_counter += data->pkt_len;
 	elem_acc->tcp_flags |= data->tcp_flags;
         elem_acc->flow_type = data->flow_type; 
-        if (config.what_to_count & COUNT_CLASS) {
-          elem_acc->packet_counter += data->cst.pa;
-          elem_acc->bytes_counter += data->cst.ba;
-          elem_acc->flow_counter += data->cst.fa;
-        }
+
         return;
       }
     }
@@ -219,12 +188,8 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         elem_acc->bytes_counter += data->pkt_len;
 	elem_acc->tcp_flags |= data->tcp_flags;
         elem_acc->flow_type = data->flow_type;
-	if (config.what_to_count & COUNT_CLASS) {
-	  elem_acc->packet_counter += data->cst.pa;
-	  elem_acc->bytes_counter += data->cst.ba;
-          elem_acc->flow_counter += data->cst.fa;
-	}
         lru_elem_ptr[pos] = elem_acc;
+
         return;
       }
     }
@@ -343,12 +308,8 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
       elem_acc->tcp_flags |= data->tcp_flags;
       elem_acc->flow_type = data->flow_type;
       elem_acc->signature = hash;
-      if (config.what_to_count & COUNT_CLASS) {
-        elem_acc->packet_counter += data->cst.pa;
-        elem_acc->bytes_counter += data->cst.ba;
-        elem_acc->flow_counter += data->cst.fa;
-      }
       lru_elem_ptr[pos] = elem_acc;
+
       return;
     }
 
@@ -472,13 +433,9 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
       elem_acc->tcp_flags = data->tcp_flags;
       elem_acc->flow_type = data->flow_type;
       elem_acc->signature = hash; 
-      if (config.what_to_count & COUNT_CLASS) {
-        elem_acc->packet_counter += data->cst.pa;
-        elem_acc->bytes_counter += data->cst.ba;
-        elem_acc->flow_counter += data->cst.fa;
-      }
       elem_acc->next = NULL;
       lru_elem_ptr[pos] = elem_acc;
+
       return;
     }
   }
