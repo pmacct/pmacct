@@ -3481,6 +3481,18 @@ int PT_map_index_entries_fwd_status_handler(struct id_entry *e, pm_hash_serial_t
   return FALSE;
 }
 
+int PT_map_index_entries_null_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!e || !hash_serializer || !src_e) return TRUE;
+
+  memcpy(&e->key.null, &src_e->key.null, sizeof(u_int8_t));
+  hash_serial_append(hash_serializer, (char *)&src_e->key.null.n, sizeof(u_int8_t), TRUE);
+
+  return FALSE;
+}
+
 int PT_map_index_fdata_ip_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
@@ -4247,6 +4259,15 @@ int PT_map_index_fdata_fwd_status_handler(struct id_entry *e, pm_hash_serial_t *
   else return TRUE;
 
   hash_serial_append(hash_serializer, (char *)&e->key.fwd_status.n, sizeof(u_int8_t), FALSE);
+
+  return FALSE;
+}
+
+int PT_map_index_fdata_null_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{
+  e->key.null.n = 0;
+
+  hash_serial_append(hash_serializer, (char *)&e->key.null.n, sizeof(u_int8_t), FALSE);
 
   return FALSE;
 }

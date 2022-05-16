@@ -179,7 +179,7 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     }
 
     if (reload_log) {
-      reload_logs();
+      reload_logs(NULL);
       reload_log = FALSE;
     }
 

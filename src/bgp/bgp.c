@@ -698,7 +698,7 @@ void skinny_bgp_daemon_online()
     }
 
     if (reload_log && !bgp_misc_db->is_thread) {
-      reload_logs();
+      reload_logs(PMBGPD_USAGE_HEADER);
       reload_log = FALSE;
     }
 

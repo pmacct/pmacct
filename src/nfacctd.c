@@ -532,8 +532,7 @@ int main(int argc,char **argv, char **envp)
 			COUNT_EXPORT_PROTO_TIME|COUNT_FWD_STATUS|COUNT_FW_EVENT))
 	  list->cfg.data_type |= PIPE_TYPE_NAT;
 
-	if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_STACK|COUNT_MPLS_LABEL_TOP|
-			COUNT_MPLS_LABEL_BOTTOM|COUNT_MPLS_STACK_DEPTH))
+	if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_TOP| COUNT_MPLS_LABEL_BOTTOM))
 	  list->cfg.data_type |= PIPE_TYPE_MPLS;
 
 	if (list->cfg.what_to_count_2 & (COUNT_TUNNEL_SRC_MAC|COUNT_TUNNEL_DST_MAC|
@@ -542,7 +541,7 @@ int main(int argc,char **argv, char **envp)
 			COUNT_VXLAN))
 	  list->cfg.data_type |= PIPE_TYPE_TUN;
 
-	if (list->cfg.what_to_count_2 & (COUNT_LABEL))
+	if (list->cfg.what_to_count_2 & (COUNT_LABEL|COUNT_MPLS_LABEL_STACK))
 	  list->cfg.data_type |= PIPE_TYPE_VLEN;
 
         if (list->cfg.what_to_count & (COUNT_SRC_PORT|COUNT_DST_PORT|COUNT_SUM_PORT|COUNT_TCPFLAGS)) {
@@ -1524,7 +1523,7 @@ int main(int argc,char **argv, char **envp)
     }
 
     if (reload_log) {
-      reload_logs();
+      reload_logs(NFACCTD_USAGE_HEADER);
       reload_log = FALSE;
     }
 

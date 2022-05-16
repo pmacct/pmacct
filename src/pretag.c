@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -1003,6 +1003,9 @@ pt_bitmap_t pretag_index_build_bitmap(struct id_entry *ptr, int acct_type)
   if (idx_bmap & PRETAG_SET_TAG2) idx_bmap ^= PRETAG_SET_TAG2;
   if (idx_bmap & PRETAG_SET_LABEL) idx_bmap ^= PRETAG_SET_LABEL;
 
+  /* 3) handle the case of catch-all rule */
+  if (!idx_bmap) idx_bmap = PRETAG_NULL;
+
   return idx_bmap;
 }
 
@@ -1029,7 +1032,7 @@ int pretag_index_set_handlers(struct id_table *t)
   u_int32_t index = 0, iterator = 0, handler_index = 0;
 
   if (!t) return TRUE;
-  
+
   for (iterator = 0; iterator < t->index_num; iterator++) {
     residual_idx_bmap = t->index[iterator].bitmap;
 

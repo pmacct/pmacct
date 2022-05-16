@@ -742,7 +742,6 @@ void evaluate_packet_handlers()
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = vxlan_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_vxlan_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_vxlan_handler;
-      else primitives--;
       primitives++;
     }
 
@@ -764,15 +763,6 @@ void evaluate_packet_handlers()
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = mpls_label_bottom_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_label_bottom_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_mpls_label_bottom_handler;
-      else primitives--;
-      primitives++;
-    }
-
-    if (channels_list[index].aggregation_2 & COUNT_MPLS_STACK_DEPTH) {
-      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = mpls_stack_depth_handler;
-      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_stack_depth_handler;
-      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_mpls_stack_depth_handler;
-      else primitives--;
       primitives++;
     }
 
@@ -1075,35 +1065,32 @@ void mpls_label_bottom_handler(struct channels_list_entry *chptr, struct packet_
 
 void mpls_label_stack_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
+  struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
   u_int32_t lvalue = 0, *label = (u_int32_t *) pptrs->mpls_ptr, idx = 0;
+  u_int32_t label_stack[MAX_MPLS_LABELS];
+  u_int8_t label_stack_len = 0;
+
+  memset(&label_stack, 0, sizeof(label_stack));
 
   if (label) {
     do {
       lvalue = ntohl(*label);
       
       if (idx < MAX_MPLS_LABELS) {
-	pmpls->label_stack[idx] = MPLS_LABEL(lvalue);
+	label_stack[idx] = MPLS_LABEL(lvalue);
+	label_stack_len += 4;
 	idx++;
       }
 
       label += 4;
     } while (!MPLS_STACK(lvalue));
   }
-}
 
-void mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
-  u_int32_t lvalue = 0, *label = (u_int32_t *) pptrs->mpls_ptr;
-
-  if (label) {
-    do {
-      lvalue = ntohl(*label);
-      label += 4;
-      pmpls->mpls_stack_depth++;
-    } while (!MPLS_STACK(lvalue));
+  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + label_stack_len)) {
+    vlen_prims_init(pvlen, 0);
+    return;
   }
+  else vlen_prims_insert(pvlen, COUNT_INT_MPLS_LABEL_STACK, label_stack_len, (u_char *) label_stack, PM_MSG_BIN_COPY);
 }
 
 void bgp_src_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -3605,39 +3592,48 @@ void NF_mpls_label_stack_handler(struct channels_list_entry *chptr, struct packe
 {
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
-  memset(&pmpls->label_stack, 0, sizeof(pmpls->label_stack));
+  struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
+  u_int32_t label_stack[MAX_MPLS_LABELS];
+  u_int8_t label_stack_depth = 0, label_stack_len = 0, label_idx;
+
+  memset(&label_stack, 0, sizeof(label_stack));
 
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_MPLS_LABEL_1].len == 3) {
-      pmpls->label_stack[0] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_1].off);
-    } 
+    for (label_idx = NF9_MPLS_LABEL_1; label_idx <= NF9_MPLS_LABEL_10; label_idx++) {
+      if (tpl->tpl[label_idx].len == 3) {
+        label_stack[label_stack_depth] = decode_mpls_label(pptrs->f_data+tpl->tpl[label_idx].off);
 
-    if (tpl->tpl[NF9_MPLS_LABEL_2].len == 3) {
-      pmpls->label_stack[1] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_2].off);
+	if (label_stack[label_stack_depth]) {
+	  label_stack_len += 4;
+	  label_stack_depth++;
+
+	  if (check_bosbit(pptrs->f_data+tpl->tpl[label_idx].off)) {
+	    break;
+	  }
+	}
+	else {
+	  break;
+	}
+      }
     }
 
-    if (tpl->tpl[NF9_MPLS_LABEL_3].len == 3) {
-      pmpls->label_stack[2] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_3].off);
-    } 
-    
-    if (tpl->tpl[NF9_MPLS_LABEL_4].len == 3) {
-      pmpls->label_stack[3] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_4].off);
-    } 
-    
-    if (tpl->tpl[NF9_MPLS_LABEL_5].len == 3) {
-      pmpls->label_stack[4] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_5].off);
-    } 
-    
-    if (tpl->tpl[NF9_MPLS_LABEL_6].len == 3) {
-      pmpls->label_stack[5] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_6].off);
+    if (!label_stack_depth) {
+      if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len) {
+        mpls_label_stack_handler(chptr, pptrs, data);
+      }
     }
     break;
   default:
     break;
   }
+
+  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + label_stack_len)) {
+    vlen_prims_init(pvlen, 0);
+    return;
+  }
+  else vlen_prims_insert(pvlen, COUNT_INT_MPLS_LABEL_STACK, label_stack_len, (u_char *) label_stack, PM_MSG_BIN_COPY);
 }
 
 void NF_mpls_label_top_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -3680,40 +3676,6 @@ void NF_mpls_label_bottom_handler(struct channels_list_entry *chptr, struct pack
     if (!pmpls->mpls_label_bottom) {
       if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len)
         mpls_label_bottom_handler(chptr, pptrs, data);
-    }
-
-    break;
-  default:
-    break;
-  }
-}
-
-void NF_mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
-  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
-  int label_idx, last_label_value = 0, stack_depth, bosbit_found = FALSE;
-
-  switch(hdr->version) {
-  case 10:
-  case 9:
-    for (label_idx = NF9_MPLS_LABEL_1, stack_depth = 0; label_idx <= NF9_MPLS_LABEL_9; label_idx++) {
-      if (tpl->tpl[label_idx].len == 3) {
-	stack_depth++;
-	last_label_value = decode_mpls_label(pptrs->f_data+tpl->tpl[label_idx].off); 
-	if (check_bosbit(pptrs->f_data+tpl->tpl[label_idx].off)) {
-	  bosbit_found = TRUE;
-	  break;
-	}
-      }
-    }
-
-    if (last_label_value || bosbit_found) pmpls->mpls_stack_depth = stack_depth;
-
-    if (!pmpls->mpls_stack_depth) {
-      if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len)
-        mpls_stack_depth_handler(chptr, pptrs, data);
     }
 
     break;
@@ -5578,39 +5540,33 @@ void SF_mpls_label_bottom_handler(struct channels_list_entry *chptr, struct pack
 
 void SF_mpls_label_stack_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
+  struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data;
   u_int32_t lvalue = 0, *label = (u_int32_t *) sample->lstk.stack, idx = 0;
+  u_int32_t label_stack[MAX_MPLS_LABELS];
+  u_int8_t label_stack_len = 0;
+
+  memset(&label_stack, 0, sizeof(label_stack));
 
   if (label) {
     do {
       lvalue = ntohl(*label);
 
       if (idx < MAX_MPLS_LABELS) {
-	pmpls->label_stack[idx] = MPLS_LABEL(lvalue);
+	label_stack[idx] = MPLS_LABEL(lvalue);
+        label_stack_len += 4;
 	idx++;
       }
 
       label += 4;
     } while (!MPLS_STACK(lvalue));
   }
-}
 
-void SF_mpls_stack_depth_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
-  SFSample *sample = (SFSample *) pptrs->f_data;
-  u_int32_t lvalue = 0, *label = (u_int32_t *) sample->lstk.stack;
-
-  pmpls->mpls_stack_depth = 0;
-
-  if (label) {
-    do {
-      lvalue = ntohl(*label);
-      label += 4;
-      pmpls->mpls_stack_depth++;
-    } while (!MPLS_STACK(lvalue));
+  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + label_stack_len)) {
+    vlen_prims_init(pvlen, 0);
+    return;
   }
+  else vlen_prims_insert(pvlen, COUNT_INT_MPLS_LABEL_STACK, label_stack_len, (u_char *) label_stack, PM_MSG_BIN_COPY);
 }
 
 void SF_custom_primitives_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

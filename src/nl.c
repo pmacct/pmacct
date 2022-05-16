@@ -191,7 +191,7 @@ void pm_pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *bu
   }
 
   if (reload_log) {
-    reload_logs();
+    reload_logs(PMACCTD_USAGE_HEADER);
     reload_log = FALSE;
   }
 

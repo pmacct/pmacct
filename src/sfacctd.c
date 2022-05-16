@@ -495,8 +495,7 @@ int main(int argc,char **argv, char **envp)
 			COUNT_EXPORT_PROTO_TIME|COUNT_FWD_STATUS|COUNT_FW_EVENT))
           list->cfg.data_type |= PIPE_TYPE_NAT;
 
-        if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_STACK|COUNT_MPLS_LABEL_TOP|
-			COUNT_MPLS_LABEL_BOTTOM|COUNT_MPLS_STACK_DEPTH))
+        if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_TOP|COUNT_MPLS_LABEL_BOTTOM))
           list->cfg.data_type |= PIPE_TYPE_MPLS;
 
 	if (list->cfg.what_to_count_2 & (COUNT_TUNNEL_SRC_MAC|COUNT_TUNNEL_DST_MAC|
@@ -507,7 +506,7 @@ int main(int argc,char **argv, char **envp)
 	  alloc_sppi = TRUE;
 	}
 
-        if (list->cfg.what_to_count_2 & (COUNT_LABEL))
+        if (list->cfg.what_to_count_2 & (COUNT_LABEL|COUNT_MPLS_LABEL_STACK))
           list->cfg.data_type |= PIPE_TYPE_VLEN;
 
 	evaluate_sums(&list->cfg.what_to_count, &list->cfg.what_to_count_2, list->name, list->type.string);
@@ -1281,7 +1280,7 @@ int main(int argc,char **argv, char **envp)
     }
 
     if (reload_log) {
-      reload_logs();
+      reload_logs(SFACCTD_USAGE_HEADER);
       reload_log = FALSE;
     }
 

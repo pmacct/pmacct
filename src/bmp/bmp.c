@@ -650,7 +650,7 @@ int skinny_bmp_daemon()
     }
 
     if (reload_log && !bmp_misc_db->is_thread) {
-      reload_logs();
+      reload_logs(PMBMPD_USAGE_HEADER);
       reload_log = FALSE;
     }
 

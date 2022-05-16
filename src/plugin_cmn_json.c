@@ -402,11 +402,6 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
     idx++;
   }
 
-  if (wtc_2 & COUNT_MPLS_STACK_DEPTH) {
-    cjhandler[idx] = compose_json_mpls_stack_depth;
-    idx++;
-  }
-
   if (wtc_2 & COUNT_TUNNEL_SRC_MAC) {
     cjhandler[idx] = compose_json_tunnel_src_mac;
     idx++;
@@ -964,10 +959,18 @@ void compose_json_fwd_status(json_t *obj, struct chained_cache *cc)
 
 void compose_json_mpls_label_stack(json_t *obj, struct chained_cache *cc)
 {
-  char mpls_label_stack[MAX_MPLS_LABEL_STACK];
+  char label_stack[MAX_MPLS_LABEL_STACK];
+  char *label_stack_ptr = NULL;
+  int label_stack_len = 0;
 
-  mpls_label_stack_to_str(mpls_label_stack, MAX_MPLS_LABEL_STACK, cc->pmpls->label_stack);
-  json_object_set_new_nocheck(obj, "mpls_label_stack", json_string(mpls_label_stack));
+  memset(label_stack, 0, MAX_MPLS_LABEL_STACK);
+
+  label_stack_len = vlen_prims_get(cc->pvlen, COUNT_INT_MPLS_LABEL_STACK, &label_stack_ptr);
+  if (label_stack_ptr) {
+    mpls_label_stack_to_str(label_stack, sizeof(label_stack), (u_int32_t *)label_stack_ptr, label_stack_len);
+  }
+
+  json_object_set_new_nocheck(obj, "mpls_label_stack", json_string(label_stack));
 }
 
 void compose_json_proto(json_t *obj, struct chained_cache *cc)
@@ -1036,11 +1039,6 @@ void compose_json_mpls_label_top(json_t *obj, struct chained_cache *cc)
 void compose_json_mpls_label_bottom(json_t *obj, struct chained_cache *cc)
 {
   json_object_set_new_nocheck(obj, "mpls_label_bottom", json_integer((json_int_t)cc->pmpls->mpls_label_bottom));
-}
-
-void compose_json_mpls_stack_depth(json_t *obj, struct chained_cache *cc)
-{
-  json_object_set_new_nocheck(obj, "mpls_stack_depth", json_integer((json_int_t)cc->pmpls->mpls_stack_depth));
 }
 
 void compose_json_tunnel_src_mac(json_t *obj, struct chained_cache *cc)
@@ -1332,7 +1330,11 @@ void compose_json_string_fwd_status(json_t *obj, struct chained_cache *cc)
 
 void compose_json_array_mpls_label_stack(json_t *obj, struct chained_cache *cc)
 {
-  json_t *root_l1 = compose_mpls_label_stack_json_data(cc->pmpls->label_stack);
+  char *label_stack_ptr = NULL;
+  int label_stack_len = 0;
+
+  label_stack_len = vlen_prims_get(cc->pvlen, COUNT_INT_MPLS_LABEL_STACK, &label_stack_ptr);
+  json_t *root_l1 = compose_mpls_label_stack_json_data((u_int32_t *)label_stack_ptr, label_stack_len);
 
   json_object_set_new_nocheck(obj, "mpls_label_stack", root_l1);
 }
@@ -1409,7 +1411,7 @@ json_t *compose_fwd_status_json_data(size_t fwdstatus_decimal, cdada_list_t *ll,
   return root;
 }
 
-json_t *compose_mpls_label_stack_json_data(u_int32_t *label_stack)
+json_t *compose_mpls_label_stack_json_data(u_int32_t *label_stack, int ls_len)
 {
   const int MAX_IDX_LEN = 4;
   const int MAX_MPLS_LABEL_IDX_LEN = (MAX_IDX_LEN + MAX_MPLS_LABEL_LEN);
@@ -1417,12 +1419,20 @@ json_t *compose_mpls_label_stack_json_data(u_int32_t *label_stack)
   char label_buf[MAX_MPLS_LABEL_LEN];
   char label_idx_buf[MAX_MPLS_LABEL_IDX_LEN];
   char idx_buf[MAX_IDX_LEN];
+  u_int8_t ls_depth = 0;
+
+  if (!(ls_len % 4)) {
+    ls_depth = (ls_len / 4);
+  }
+  else {
+    return NULL;
+  }
 
   json_t *root = json_array();
   json_t *j_str_tmp = NULL;
 
   size_t idx_0;
-  for (idx_0 = 0; idx_0 < MAX_MPLS_LABELS; idx_0++) {
+  for (idx_0 = 0; idx_0 < ls_depth; idx_0++) {
     memset(&label_buf, 0, sizeof(label_buf));
     snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", *(label_stack + idx_0));
     if (strncmp("0", label_buf, 1)) {

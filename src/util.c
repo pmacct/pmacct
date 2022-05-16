@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -2590,7 +2590,7 @@ int vlen_prims_cmp(struct pkt_vlen_hdr_primitives *src, struct pkt_vlen_hdr_prim
   return memcmp(src, dst, (src->tot_len + PvhdrSz));
 }
 
-void vlen_prims_get(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, char **res)
+int vlen_prims_get(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, char **res)
 {
   pm_label_t *label_ptr;
   char *ptr = (char *) hdr;
@@ -2598,7 +2598,7 @@ void vlen_prims_get(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, char *
 
   if (res) *res = NULL;
 
-  if (!hdr || !wtc || !res) return;
+  if (!hdr || !wtc || !res) return ERR;
 
   ptr += PvhdrSz; 
   label_ptr = (pm_label_t *) ptr; 
@@ -2610,14 +2610,16 @@ void vlen_prims_get(struct pkt_vlen_hdr_primitives *hdr, pm_cfgreg_t wtc, char *
         *res = ptr;
       }
 
-      return; 
+      return label_ptr->len;
     }
     else {
       ptr += (PmLabelTSz + label_ptr->len);
       rlen += (PmLabelTSz + label_ptr->len);
       label_ptr = (pm_label_t *) ptr;
     }
-  }  
+  }
+
+  return FALSE;
 }
 
 void vlen_prims_debug(struct pkt_vlen_hdr_primitives *hdr)
@@ -3246,7 +3248,7 @@ char *uint_print(void *value, int len, int flip)
   return buf;
 }
 
-void reload_logs()
+void reload_logs(char *header)
 {
   int logf;
 
@@ -3264,6 +3266,11 @@ void reload_logs()
   if (config.logfile) {
     fclose(config.logfile_fd);
     config.logfile_fd = open_output_file(config.logfile, "a", FALSE);
+  }
+
+  if (config.type_id == PLUGIN_ID_CORE) {
+    Log(LOG_INFO, "INFO ( %s/core ): %s %s (%s)\n", config.name, header, PMACCT_VERSION, PMACCT_BUILD);
+    Log(LOG_INFO, "INFO ( %s/core ): %s\n", config.name, PMACCT_COMPILE_ARGS);
   }
 }
 

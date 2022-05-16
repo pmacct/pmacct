@@ -505,7 +505,7 @@ void sql_cache_handle_flush_event(struct insert_data *idata, time_t *refresh_dea
   }
 
   if (reload_log) {
-    reload_logs();
+    reload_logs(NULL);
     reload_log = FALSE;
   }
 }
@@ -1255,7 +1255,6 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) what_to_count_2 |= COUNT_MPLS_LABEL_TOP;
     if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) what_to_count_2 |= COUNT_MPLS_LABEL_BOTTOM;
     if (config.what_to_count_2 & COUNT_MPLS_LABEL_STACK) what_to_count_2 |= COUNT_MPLS_LABEL_STACK;
-    if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) what_to_count_2 |= COUNT_MPLS_STACK_DEPTH;
 
     if (config.what_to_count_2 & COUNT_TUNNEL_SRC_MAC) what_to_count_2 |= COUNT_TUNNEL_SRC_MAC;
     if (config.what_to_count_2 & COUNT_TUNNEL_DST_MAC) what_to_count_2 |= COUNT_TUNNEL_DST_MAC;
@@ -2477,20 +2476,6 @@ int sql_evaluate_primitives(int primitive)
     strncat(values[primitive].string, "%s", SPACELEFT(values[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_INT_MPLS_LABEL_STACK;
     values[primitive].handler = where[primitive].handler = count_mpls_label_stack_handler;
-    primitive++;
-  }
-
-  if (what_to_count_2 & COUNT_MPLS_STACK_DEPTH) {
-    if (primitive) {
-      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
-      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
-      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
-    }
-    strncat(insert_clause, "mpls_stack_depth", SPACELEFT(insert_clause));
-    strncat(where[primitive].string, "mpls_stack_depth=%u", SPACELEFT(where[primitive].string));
-    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
-    values[primitive].type = where[primitive].type = COUNT_INT_MPLS_STACK_DEPTH;
-    values[primitive].handler = where[primitive].handler = count_mpls_stack_depth_handler;
     primitive++;
   }
 

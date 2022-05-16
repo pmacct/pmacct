@@ -101,7 +101,6 @@ static const struct _primitives_matrix_struct _primitives_matrix[] = {
   {"mpls_label_bottom", 1, 1, 1, 0, 0, 0, 0, "Bottom MPLS label"},
   {"mpls_label_top", 1, 1, 1, 0, 0, 0, 0, "Top MPLS label"},
   {"mpls_label_stack", 1, 1, 1, 0, 0, 0, 0, "MPLS label stack"},
-  {"mpls_stack_depth", 1, 1, 1, 0, 0, 0, 0, "MPLS stack depth"},
   {"mpls_vpn_rd", 0, 0, 1, 1, 0, 0, 0, "MPLS L3 VPN Route Distinguisher"},
   {"mpls_pw_id", 0, 0, 1, 1, 0, 0, 0, "MPLS L2 VPN Pseudowire ID"},
   {"MISC", 1, 1, 1, 1, 0, 0, 0, ""}, 

@@ -707,7 +707,7 @@ int telemetry_daemon(void *t_data_void)
     }
 
     if (reload_log && !telemetry_misc_db->is_thread) {
-      reload_logs();
+      reload_logs(PMTELEMETRYD_USAGE_HEADER);
       reload_log = FALSE;
     }
 

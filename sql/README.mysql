@@ -143,7 +143,6 @@ Similarly, BGP tables:
   * mpls_label_top => mpls_label_top (INT(4) UNSIGNED NOT NULL)
   * mpls_label_bottom => mpls_label_bottom (INT(4) UNSIGNED NOT NULL)
   * mpls_label_stack => mpls_label_stack (VARCHAR(255) NOT NULL)
-  * mpls_stack_depth => mpls_stack_depth (INT(1) UNSIGNED NOT NULL)
   * tunnel_src_mac => tunnel_mac_src (CHAR(17) NOT NULL)
   * tunnel_dst_mac => tunnel_mac_dst (CHAR(17) NOT NULL)
   * tunnel_src_host => tunnel_ip_src (CHAR(45) NOT NULL)
