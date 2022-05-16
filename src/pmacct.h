@@ -99,12 +99,7 @@
 #endif
 
 #if defined (WITH_NDPI)
-/* NDPI_LIB_COMPILATION definition appears to be new in 2.5 */
-#ifndef NDPI_LIB_COMPILATION
-#define NDPI_LIB_COMPILATION
-#endif
 #include <ndpi_main.h>
-#undef NDPI_LIB_COMPILATION
 #endif
 
 #if !defined ETHER_ADDRSTRLEN

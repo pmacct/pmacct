@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -40,6 +40,13 @@
 #define NDPI_GIVEUP_PROTO_TCP		10
 #define NDPI_GIVEUP_PROTO_UDP		8
 #define NDPI_GIVEUP_PROTO_OTHER		8	
+
+#if (NDPI_MAJOR == 4 && NDPI_MINOR >= 2) || NDPI_MAJOR > 4
+typedef void ndpi_id_struct_t;
+#define SIZEOF_ID_STRUCT sizeof(ndpi_id_struct_t)
+#else
+typedef struct ndpi_id_struct ndpi_id_struct_t;
+#endif
 
 /* flow tracking */
 typedef struct pm_ndpi_flow_info {
@@ -130,11 +137,11 @@ extern int pm_ndpi_workflow_node_cmp(const void *, const void *);
 
 extern struct pm_ndpi_flow_info *pm_ndpi_get_flow_info(struct pm_ndpi_workflow *, struct packet_ptrs *, u_int16_t, const struct ndpi_iphdr *,
 						const struct ndpi_ipv6hdr *, u_int16_t, u_int16_t, u_int16_t, struct ndpi_tcphdr **,
-						struct ndpi_udphdr **, u_int16_t *, u_int16_t *, struct ndpi_id_struct **,
-						struct ndpi_id_struct **, u_int8_t *, u_int8_t **, u_int16_t *, u_int8_t *);
+						struct ndpi_udphdr **, u_int16_t *, u_int16_t *, ndpi_id_struct_t **,
+						ndpi_id_struct_t **, u_int8_t *, u_int8_t **, u_int16_t *, u_int8_t *);
 extern struct pm_ndpi_flow_info *pm_ndpi_get_flow_info6(struct pm_ndpi_workflow *, struct packet_ptrs *, u_int16_t, const struct ndpi_ipv6hdr *,
 						u_int16_t, struct ndpi_tcphdr **, struct ndpi_udphdr **, u_int16_t *, u_int16_t *,
-						struct ndpi_id_struct **, struct ndpi_id_struct **, u_int8_t *, u_int8_t **,
+						ndpi_id_struct_t **, ndpi_id_struct_t **, u_int8_t *, u_int8_t **,
 						u_int16_t *, u_int8_t *);
 extern struct ndpi_proto pm_ndpi_packet_processing(struct pm_ndpi_workflow *, struct packet_ptrs *, const u_int64_t, u_int16_t,
 						const struct ndpi_iphdr *, struct ndpi_ipv6hdr *, u_int16_t, u_int16_t, u_int16_t); 

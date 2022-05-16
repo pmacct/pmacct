@@ -840,7 +840,17 @@ void evaluate_packet_handlers()
 	if (config.nfacctd_time == NF_TIME_NEW) channels_list[index].phandler[primitives] = time_new_handler;
 	else channels_list[index].phandler[primitives] = time_pcap_handler; /* default */
 
-	if (config.sfacctd_renormalize && config.ext_sampling_rate) {
+	if (channels_list[index].s.rate) {
+          primitives++;
+	  if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE) {
+	    channels_list[index].phandler[primitives] = sfprobe_sampling_handler;
+	  }
+	  else {
+	    channels_list[index].phandler[primitives] = sampling_handler;
+	  }
+	}
+
+	if (config.sfacctd_renormalize && (config.ext_sampling_rate || channels_list[index].s.rate)) {
 	  primitives++;
 	  channels_list[index].phandler[primitives] = counters_renormalize_handler;
 	}
@@ -855,7 +865,9 @@ void evaluate_packet_handlers()
 
 	if (config.sfacctd_renormalize) {
 	  primitives++;
-	  if (config.ext_sampling_rate) channels_list[index].phandler[primitives] = counters_renormalize_handler;
+	  if (config.ext_sampling_rate) {
+	    channels_list[index].phandler[primitives] = counters_renormalize_handler;
+	  }
 	  else if (config.sampling_map) {
 	    channels_list[index].phandler[primitives] = NF_counters_map_renormalize_handler;
 
@@ -863,14 +875,18 @@ void evaluate_packet_handlers()
 	    primitives++;
 	    channels_list[index].phandler[primitives] = NF_counters_renormalize_handler;
 	  }
-	  else channels_list[index].phandler[primitives] = NF_counters_renormalize_handler;
+	  else {
+	    channels_list[index].phandler[primitives] = NF_counters_renormalize_handler;
+	  }
 	}
       }
       else if (config.acct_type == ACCT_SF) {
 	channels_list[index].phandler[primitives] = SF_counters_handler;
 	if (config.sfacctd_renormalize) {
 	  primitives++;
-	  if (config.ext_sampling_rate) channels_list[index].phandler[primitives] = counters_renormalize_handler;
+	  if (config.ext_sampling_rate) {
+	    channels_list[index].phandler[primitives] = counters_renormalize_handler;
+	  }
 	  else if (config.sampling_map) {
 	    channels_list[index].phandler[primitives] = SF_counters_map_renormalize_handler;
 
@@ -878,7 +894,9 @@ void evaluate_packet_handlers()
             primitives++;
             channels_list[index].phandler[primitives] = SF_counters_renormalize_handler;
 	  }
-	  else channels_list[index].phandler[primitives] = SF_counters_renormalize_handler;
+	  else {
+	    channels_list[index].phandler[primitives] = SF_counters_renormalize_handler;
+	  }
 	}
       }
       primitives++;
@@ -959,13 +977,6 @@ void evaluate_packet_handlers()
         if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = sfprobe_payload_handler;
         else primitives--; /* This case is filtered out at startup: getting out silently */
       }
-      primitives++;
-    }
-
-    if (channels_list[index].s.rate) {
-      if (channels_list[index].plugin->type.id == PLUGIN_ID_SFPROBE)
-        channels_list[index].phandler[primitives] = sfprobe_sampling_handler;
-      else channels_list[index].phandler[primitives] = sampling_handler;
       primitives++;
     }
 
@@ -1065,7 +1076,7 @@ void mpls_label_stack_handler(struct channels_list_entry *chptr, struct packet_p
       lvalue = ntohl(*label);
       
       if (idx < MAX_MPLS_LABELS) {
-	pmpls->labels_cycle[idx] = MPLS_LABEL(lvalue);
+	pmpls->label_stack[idx] = MPLS_LABEL(lvalue);
 	idx++;
       }
 
@@ -1400,8 +1411,14 @@ void counters_renormalize_handler(struct channels_list_entry *chptr, struct pack
 
   if (pptrs->renormalized) return;
 
-  pdata->pkt_len = pdata->pkt_len*config.ext_sampling_rate;
-  pdata->pkt_num = pdata->pkt_num*config.ext_sampling_rate; 
+  if (config.ext_sampling_rate) {
+    pdata->pkt_len = pdata->pkt_len * config.ext_sampling_rate;
+    pdata->pkt_num = pdata->pkt_num * config.ext_sampling_rate; 
+  }
+  else {
+    pdata->pkt_len = pdata->pkt_len * chptr->s.rate;
+    pdata->pkt_num = pdata->pkt_num * chptr->s.rate;
+  }
 
   pptrs->renormalized = TRUE;
 }
@@ -1659,10 +1676,21 @@ void sampling_rate_handler(struct channels_list_entry *chptr, struct packet_ptrs
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
-  pdata->primitives.sampling_rate = config.ext_sampling_rate ? config.ext_sampling_rate : 1;
+  if (config.ext_sampling_rate || config.sampling_rate) {
+    if (config.ext_sampling_rate) {
+      pdata->primitives.sampling_rate = config.ext_sampling_rate;
+    }
+    else {
+      pdata->primitives.sampling_rate = config.sampling_rate;
+    }
+  }
+  else {
+    pdata->primitives.sampling_rate = 1;
+  }
 
-  if (config.sfacctd_renormalize)
+  if (config.sfacctd_renormalize) {
     pdata->primitives.sampling_rate = 1; /* already renormalized */
+  }
 }
 
 void sampling_direction_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -3042,8 +3070,9 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
     }
   }
 
-  if (config.sfacctd_renormalize && pdata->primitives.sampling_rate)
+  if (config.sfacctd_renormalize && pdata->primitives.sampling_rate) {
     pdata->primitives.sampling_rate = 1; /* already renormalized */
+  }
 }
 
 void NF_sampling_direction_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -3550,33 +3579,33 @@ void NF_mpls_label_stack_handler(struct channels_list_entry *chptr, struct packe
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
-  memset(&pmpls->labels_cycle, 0, sizeof(pmpls->labels_cycle));
+  memset(&pmpls->label_stack, 0, sizeof(pmpls->label_stack));
 
   switch(hdr->version) {
   case 10:
   case 9:
     if (tpl->tpl[NF9_MPLS_LABEL_1].len == 3) {
-      pmpls->labels_cycle[0] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_1].off);
+      pmpls->label_stack[0] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_1].off);
     } 
 
     if (tpl->tpl[NF9_MPLS_LABEL_2].len == 3) {
-      pmpls->labels_cycle[1] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_2].off);
+      pmpls->label_stack[1] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_2].off);
     }
 
     if (tpl->tpl[NF9_MPLS_LABEL_3].len == 3) {
-      pmpls->labels_cycle[2] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_3].off);
+      pmpls->label_stack[2] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_3].off);
     } 
     
     if (tpl->tpl[NF9_MPLS_LABEL_4].len == 3) {
-      pmpls->labels_cycle[3] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_4].off);
+      pmpls->label_stack[3] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_4].off);
     } 
     
     if (tpl->tpl[NF9_MPLS_LABEL_5].len == 3) {
-      pmpls->labels_cycle[4] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_5].off);
+      pmpls->label_stack[4] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_5].off);
     } 
     
     if (tpl->tpl[NF9_MPLS_LABEL_6].len == 3) {
-      pmpls->labels_cycle[5] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_6].off);
+      pmpls->label_stack[5] = decode_mpls_label(pptrs->f_data+tpl->tpl[NF9_MPLS_LABEL_6].off);
     }
     break;
   default:
@@ -5276,8 +5305,9 @@ void SF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
     pdata->primitives.sampling_rate = sample->meanSkipCount;
   }
 
-  if (config.sfacctd_renormalize && pdata->primitives.sampling_rate) 
+  if (config.sfacctd_renormalize && pdata->primitives.sampling_rate) { 
     pdata->primitives.sampling_rate = 1; /* already renormalized */
+  }
 }
 
 void SF_sampling_direction_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -5530,7 +5560,7 @@ void SF_mpls_label_stack_handler(struct channels_list_entry *chptr, struct packe
       lvalue = ntohl(*label);
 
       if (idx < MAX_MPLS_LABELS) {
-	pmpls->labels_cycle[idx] = MPLS_LABEL(lvalue);
+	pmpls->label_stack[idx] = MPLS_LABEL(lvalue);
 	idx++;
       }
 

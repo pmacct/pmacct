@@ -28,7 +28,7 @@
 /* defines */
 #define MAX_FN_LEN 256
 #define MAX_SUBDIRS 128
-#define MAX_CLASSIFIERS 256
+#define MAX_CLASSIFIERS 512
 #define MAX_PATTERN_LEN 2048
 #define DEFAULT_TENTATIVES 5 
 

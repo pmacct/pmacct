@@ -1148,7 +1148,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (config.what_to_count_2 & COUNT_MPLS_LABEL_STACK) {
 	  char mpls_label_stack[MAX_MPLS_LABEL_STACK];
 
-	  mpls_label_stack_to_str(mpls_label_stack, MAX_MPLS_LABEL_STACK, pmpls->labels_cycle);
+	  mpls_label_stack_to_str(mpls_label_stack, MAX_MPLS_LABEL_STACK, pmpls->label_stack);
 	  fprintf(f, "%s%s", write_sep(sep, &count), mpls_label_stack);
 	}
         if (config.what_to_count_2 & COUNT_MPLS_STACK_DEPTH) fprintf(f, "%s%u", write_sep(sep, &count), pmpls->mpls_stack_depth);

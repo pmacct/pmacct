@@ -2103,8 +2103,8 @@ DESC:		Enables packet sampling. It expects a number which is the mean ratio of p
 		(1 out of N). The currently implemented sampling algorithm is a simple randomic one. If using 
 		any SQL plugin, look also to the powerful 'sql_preprocess' layer and the more advanced sampling
 		choices it offers: they will allow to deal with advanced sampling scenarios (e.g. probabilistic
-		methods). Finally, note that this 'sampling_rate' directive can be renormalized by using the 
-		'usrf' action of the 'sql_preprocess' layer.
+		methods). Finally, this 'sampling_rate' directive can be renormalized by renormalize feature,
+		ie. pmacctd_renormalize, or by using the 'usrf' action of the 'sql_preprocess' layer.
 DEFAULT:	none
 
 KEY:            sampling_map [GLOBAL, NO_PMACCTD, NO_UACCTD, MAP]

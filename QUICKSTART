@@ -1243,8 +1243,8 @@ To enable the feature please follow these steps:
 2) Download nDPI from its GitHub repository (https://github.com/ntop/nDPI). The
    nDPI API tends to change frequently in a non-backward compatible fashion.
    This means that not every version of pmacct will work with any version of
-   nDPI. pmacct 1.7.5 works against nDPI 3.0-stable, pmacct 1.7.6 works against
-   nDPI 3.2-stable. pmacct 1.7.7 works against nDPI 3.4-stable.
+   nDPI. pmacct 1.7.6 works against nDPI 3.2-stable. pmacct 1.7.7 works against
+   nDPI 3.4-stable. pmacct 1.7.8 works against nDPI 4.0-stable and 4.2-stable.
 
 3) Configure for compiling, compile and install the downloaded nDPI library, ie.
    inside the nDPI directory:
@@ -1354,28 +1354,63 @@ b) build NetFlow probe configuration, using pmacctd:
 
    The bgp_daemon_port can be changed from the standard BGP port (179/TCP) in order to
    co-exist with other BGP routing software which might be running on the same host.
-   Furthermore, they can safely peer each other by using 127.0.0.1 as bgp_daemon_ip. 
+   Depending on the BGP implementation used, it is possible to peer each other this way
+   using 127.0.0.1 as bgp_daemon_ip. It may however be necessary to use a different
+   listening IP address for pmacctd BGP and the other BGP software (see below).
 
-   NOTE: Bird Internet Routing Daemon seems to dislike peerings on the same IP address
-   it is configured on, even though the remote peer listens on a different TCP port;
-   if Bird listens on 127.0.0.1 then setting up a 127.0.0.2 address on the system and
-   binding pmacctd to it allows the BGP session to come up fine in a 127.0.0.1 <->
-   127.0.0.2 fashion.
- 
    In pmacctd, bgp_agent_map does the trick of mapping 0.0.0.0 to the IP address of
    the BGP peer (ie. 127.0.0.1: 'bgp_ip=127.0.0.1 ip=0.0.0.0'); this setup, while
-   generic, was tested working in conjunction with Quagga and BIRD.
+   generic, was tested working in conjunction with Quagga, FRR and BIRD.
 
-   Following a relevant fragment of the Quagga configuration:
+   Example fragment of the Quagga configuration:
+
+   router bgp Y
+    bgp router-id X.X.X.X
+    neighbor 127.0.0.1 remote-as Y
+    neighbor 127.0.0.1 port 17917
+    neighbor 127.0.0.1 update-source 127.0.0.1
+   !
+
+   NOTE: if configuring a BGP neighbor over localhost via Quagga CLI the following
+   message is returned: "% Can not configure the local system as neighbor". This
+   is not returned when configuring the neighborship directly in the bgpd config
+   file.
+
+   Example fragment of the FRR configuration:
 
    router bgp Y 
     bgp router-id X.X.X.X
-    neighbor 127.0.0.1 remote-as Y 
+    bgp ebgp-requires-policy
+    bgp log-neighbor-changes
+    neighbor 127.0.0.1 remote-as Y
     neighbor 127.0.0.1 port 17917
-    neighbor 127.0.0.1 update-source X.X.X.X
+    neighbor 127.0.0.1 update-source 127.0.0.2
+   !
+    address-family ipv4 unicast
+     neighbor 127.0.0.1 activate
+     neighbor 127.0.0.1 route-map IMPORT-pmacct-4 in
+     neighbor 127.0.0.1 route-map EXPORT-pmacct-4 out
+   !
+    address-family ipv6 unicast
+     neighbor 127.0.0.1 activate
+     neighbor 127.0.0.1 route-map IMPORT-pmacct-6 in
+     neighbor 127.0.0.1 route-map EXPORT-pmacct-6 out
+   !
+   route-map IMPORT-pmacct-4 deny 10
+   route-map EXPORT-pmacct-4 permit 10
+   route-map IMPORT-pmacct-6 deny 10
+   route-map EXPORT-pmacct-6 permit 10
    !
 
-   Following a relevant fragment of the BIRD configuration:
+   NOTE: FRR supports peering with a different implementation on the same system as
+   of February 2022 (> 8.1.0), with the following caveats:
+   * FRR's 'bgpd_options' directive must be configured to listen on a different IP
+     address than pmacctd's bgp_daemon_ip.
+   * FRR cannot initiate BGP sessions with update-source 127.0.0.1 or ::1. Setting
+     up a 127.0.0.2 address on the system and binding FRR's bgpd to it allows the
+     BGP session to come up fine.
+
+   Example fragment of the BIRD configuration:
 
    protocol bgp pmacctd46 {
       description "pmacctd";
@@ -1410,10 +1445,11 @@ b) build NetFlow probe configuration, using pmacctd:
       };
    }
 
-   NOTE: if configuring a BGP neighbor over localhost via Quagga CLI the following
-   message is returned: "% Can not configure the local system as neighbor". This
-   is not returned when configuring the neighborship directly in the bgpd config
-   file.
+   NOTE: Bird Internet Routing Daemon seems to dislike peerings on the same IP address
+   it is configured on, even though the remote peer listens on a different TCP port;
+   if Bird listens on 127.0.0.1 then setting up a 127.0.0.2 address on the system and
+   binding pmacctd to it allows the BGP session to come up fine in a 127.0.0.1 <->
+   127.0.0.2 fashion.
 
    2) encode flow classification information in NetFlow v9 / IPFIX like Cisco does
    with its NBAR2 implementation / RFC6759. This can be done by introducing the

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -292,10 +292,7 @@ int ip_handler(register struct packet_ptrs *pptrs)
       }
     }
     else {
-      if (pptrs->l4_proto != IPPROTO_ICMP) {
-        pptrs->tlh_ptr = dummy_tlhdr;
-      }
-
+      pptrs->tlh_ptr = dummy_tlhdr;
       if (off < caplen) pptrs->payload_ptr = ptr;
     }
 
@@ -478,10 +475,7 @@ int ip6_handler(register struct packet_ptrs *pptrs)
       }
     }
     else {
-      if (pptrs->l4_proto != IPPROTO_ICMPV6) {
-        pptrs->tlh_ptr = dummy_tlhdr;
-      }
-
+      pptrs->tlh_ptr = dummy_tlhdr;
       if (off < caplen) pptrs->payload_ptr = ptr;
     }
 

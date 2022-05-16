@@ -436,8 +436,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
     struct stripped_class dummy;
     u_int32_t idx = 0, max = 0;
 
-    /* XXX: we should try using pmct_get_max_entries() */
-    max = q->num = config.classifier_table_num;
+    max = q->num = pmct_find_first_free();
     if (!q->num && class) max = q->num = MAX_CLASSIFIERS;
 
     while (idx < max) {

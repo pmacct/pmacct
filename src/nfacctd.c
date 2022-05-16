@@ -1889,10 +1889,16 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       tpl = handle_template((struct template_hdr_v9 *)opt_template_hdr, pptrs, fid, SourceId, &pens, flowsetlen-flowoff, FlowSeq);
       if (!tpl) return;
 
-      /* Increment is not precise for NetFlow v9 but will work */
-      tpl_len = sizeof(struct options_template_hdr_v9) +
-		(((ntohs(opt_template_hdr->scope_len) + ntohs(opt_template_hdr->option_len)) * sizeof(struct template_field_v9)) +
-		(pens * sizeof(u_int32_t)));
+      if (fid == 3 /* IPFIX */) {
+	tpl_len = sizeof(struct options_template_hdr_v9) +
+		  (((ntohs(opt_template_hdr->scope_len) + ntohs(opt_template_hdr->option_len)) * sizeof(struct template_field_v9)) +
+		  (pens * sizeof(u_int32_t)));
+      }
+      else if (fid == 1 /* NetFlow v9 */) {
+	tpl_len = sizeof(struct options_template_hdr_v9) +
+		  ((ntohs(opt_template_hdr->scope_len) + ntohs(opt_template_hdr->option_len)) +
+		  (pens * sizeof(u_int32_t)));
+      }
 
       tpl_ptr += tpl_len;
       flowoff += tpl_len;
