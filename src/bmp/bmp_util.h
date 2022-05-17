@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -46,4 +46,6 @@ extern void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *, int, void *);
 
 extern void encode_tstamp_arrival(char *, int, struct timeval *, int);
 extern char *decode_tstamp_arrival(char *);
+
+extern void bgp_table_info_delete_tag_find_bmp(struct bgp_peer *);
 #endif //BMP_UTIL_H

@@ -540,6 +540,7 @@ struct configuration {
   int networks_no_mask_if_zero;
   int networks_cache_entries;
   char *ports_file;
+  char *protos_file;
   char *a_filter;
   int bpfp_a_num;
   struct bpf_program *bpfp_a_table[AGG_FILTER_ENTRIES];

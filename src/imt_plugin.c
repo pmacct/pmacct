@@ -26,7 +26,6 @@
 #include "imt_plugin.h"
 #include "bgp/bgp.h"
 #include "net_aggr.h"
-#include "ports_aggr.h"
 
 //Global variables
 void (*imt_insert_func)(struct primitives_ptrs *);
@@ -45,6 +44,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct sockaddr cAddr;
   struct pkt_data *data;
   struct ports_table pt;
+  struct protos_table prt;
   unsigned char srvbuf[maxqsize];
   unsigned char *srvbufptr;
   struct query_header *qh;
@@ -136,11 +136,13 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(&nt, 0, sizeof(nt));
   memset(&nc, 0, sizeof(nc));
   memset(&pt, 0, sizeof(pt));
+  memset(&prt, 0, sizeof(prt));
 
   load_networks(config.networks_file, &nt, &nc);
   set_net_funcs(&nt);
 
   if (config.ports_file) load_ports(config.ports_file, &pt);
+  if (config.protos_file) load_protos(config.protos_file, &prt);
 
   if (!config.num_memory_pools) config.num_memory_pools = NUM_MEMORY_POOLS;
   if (!config.memory_pool_size) config.memory_pool_size = MEMORY_POOL_SIZE;  
@@ -371,6 +373,8 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     if (reload_map) {
       load_networks(config.networks_file, &nt, &nc);
       load_ports(config.ports_file, &pt);
+      load_protos(config.protos_file, &prt);
+
       reload_map = FALSE;
     }
 
@@ -464,6 +468,10 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 	  if (config.ports_file) {
 	    if (!pt.table[data->primitives.src_port]) data->primitives.src_port = 0;
 	    if (!pt.table[data->primitives.dst_port]) data->primitives.dst_port = 0;
+	  }
+
+	  if (config.protos_file) {
+	    if (!prt.table[data->primitives.proto]) data->primitives.proto = PM_IP_PROTO_OTHERS;
 	  }
 
 	  prim_ptrs.data = data; 

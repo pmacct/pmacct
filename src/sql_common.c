@@ -92,7 +92,8 @@ void sql_set_insert_func()
 }
 
 void sql_init_maps(struct extra_primitives *extras, struct primitives_ptrs *prim_ptrs,
-		   struct networks_table *nt, struct networks_cache *nc, struct ports_table *pt)
+		   struct networks_table *nt, struct networks_cache *nc, struct ports_table *pt,
+		   struct protos_table *prt)
 {
   memset(prim_ptrs, 0, sizeof(struct primitives_ptrs));
   set_primptrs_funcs(extras);
@@ -100,11 +101,13 @@ void sql_init_maps(struct extra_primitives *extras, struct primitives_ptrs *prim
   memset(nt, 0, sizeof(struct networks_table));
   memset(nc, 0, sizeof(struct networks_cache));
   memset(pt, 0, sizeof(struct ports_table));
+  memset(prt, 0, sizeof(struct protos_table));
 
   load_networks(config.networks_file, nt, nc);
   set_net_funcs(nt);
 
   if (config.ports_file) load_ports(config.ports_file, pt);
+  if (config.protos_file) load_protos(config.protos_file, prt);
 }
 
 void sql_init_global_buffers()
@@ -448,7 +451,7 @@ void sql_cache_flush_pending(struct db_cache *queue[], int index, struct insert_
   }
 }
 
-void sql_cache_handle_flush_event(struct insert_data *idata, time_t *refresh_deadline, struct ports_table *pt)
+void sql_cache_handle_flush_event(struct insert_data *idata, time_t *refresh_deadline, struct ports_table *pt, struct protos_table *prt)
 {
   int ret;
 
@@ -507,6 +510,8 @@ void sql_cache_handle_flush_event(struct insert_data *idata, time_t *refresh_dea
   if (reload_map) {
     load_networks(config.networks_file, &nt, &nc);
     load_ports(config.ports_file, pt);
+    load_protos(config.protos_file, prt);
+
     reload_map = FALSE;
   }
 

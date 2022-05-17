@@ -24,8 +24,6 @@
 
 /* includes */
 #include "net_aggr.h"
-#include "ports_aggr.h"
-#include "sql_common.h"
 #include "preprocess.h"
 
 /* defines */
@@ -39,6 +37,10 @@
 #define TCP_FLAG_LEN 6
 #define FWD_TYPES_STR_LEN 50
 #define MAX_MPLS_LABEL_STACK 128
+
+#define PORTS_TABLE_ENTRIES  65536
+#define PROTOS_TABLE_ENTRIES 256
+#define PM_IP_PROTO_OTHERS 255
 
 /* cache element states */
 #define PRINT_CACHE_FREE	0
@@ -82,8 +84,8 @@ struct chained_cache {
 };
 #endif
 
-#ifndef P_TABLE_RR
-#define P_TABLE_RR
+#ifndef STRUCT_P_TABLE_RR
+#define STRUCT_P_TABLE_RR
 struct p_table_rr {
   int min; /* unused */
   int max;
@@ -106,13 +108,31 @@ typedef struct {
 } __attribute__((packed)) tcpflag;
 #endif
 
-#ifndef NFACCTD_FWDSTATUS
-#define NFACCTD_FWDSTATUS
+#ifndef STRUCT_NFACCTD_FWDSTATUS
+#define STRUCT_NFACCTD_FWDSTATUS
 typedef struct {
   unsigned int decimal;
   char description[FWD_TYPES_STR_LEN];
 } __attribute__((packed)) fwd_status;
 #endif
+
+#ifndef STRUCT_PORTS_TABLE
+#define STRUCT_PORTS_TABLE 
+struct ports_table {
+  u_int8_t table[PORTS_TABLE_ENTRIES];
+  time_t timestamp;
+};
+#endif
+
+#ifndef STRUCT_PROTOS_TABLE
+#define STRUCT_PROTOS_TABLE 
+struct protos_table {
+  u_int8_t table[PROTOS_TABLE_ENTRIES];
+  time_t timestamp;
+};
+#endif
+
+#include "sql_common.h"
 
 /* prototypes */
 extern void P_set_signals();
@@ -131,7 +151,7 @@ extern void P_cache_insert(struct primitives_ptrs *, struct insert_data *);
 extern void P_cache_insert_pending(struct chained_cache *[], int, struct chained_cache *);
 extern void P_cache_mark_flush(struct chained_cache *[], int, int);
 extern void P_cache_flush(struct chained_cache *[], int);
-extern void P_cache_handle_flush_event(struct ports_table *);
+extern void P_cache_handle_flush_event(struct ports_table *, struct protos_table *);
 extern void P_exit_now(int);
 extern int P_trigger_exec(char *);
 extern void primptrs_set_all_from_chained_cache(struct primitives_ptrs *, struct chained_cache *);
@@ -150,6 +170,9 @@ extern cdada_list_t *tcpflags_to_linked_list(size_t);
 extern cdada_list_t *fwd_status_to_linked_list();
 
 extern void mpls_label_stack_to_str(char *, int, u_int32_t *, int);
+
+extern void load_ports(char *, struct ports_table *);
+extern void load_protos(char *, struct protos_table *);
 
 /* global vars */
 extern void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */

@@ -57,7 +57,6 @@
 
 #include "pmacct-data.h"
 #include "net_aggr.h"
-#include "ports_aggr.h"
 #include "plugin_hooks.h"
 #include "plugin_common.h"
 
@@ -1352,6 +1351,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct pkt_data *data, dummy;
   struct pkt_bgp_primitives dummy_pbgp;
   struct ports_table pt;
+  struct protos_table prt;
   struct pollfd pfd;
   unsigned char *pipebuf;
   int refresh_timeout, ret, num, recv_budget, poll_bypass;
@@ -1512,6 +1512,7 @@ sort_version:
   memset(&nt, 0, sizeof(nt));
   memset(&nc, 0, sizeof(nc));
   memset(&pt, 0, sizeof(pt));
+  memset(&prt, 0, sizeof(prt));
   memset(&dummy, 0, sizeof(dummy));
   memset(&dummy_pbgp, 0, sizeof(dummy_pbgp));
 
@@ -1519,6 +1520,7 @@ sort_version:
   set_net_funcs(&nt);
 
   if (config.ports_file) load_ports(config.ports_file, &pt);
+  if (config.protos_file) load_protos(config.protos_file, &prt);
 
   pipebuf = (unsigned char *) pm_malloc(config.buffer_size);
   memset(pipebuf, 0, config.buffer_size);
@@ -1604,6 +1606,8 @@ sort_version:
     if (reload_map) {
       load_networks(config.networks_file, &nt, &nc);
       load_ports(config.ports_file, &pt);
+      load_protos(config.protos_file, &prt);
+
       reload_map = FALSE;
     }
 
@@ -1693,6 +1697,10 @@ sort_version:
 	if (config.ports_file) {
 	  if (!pt.table[data->primitives.src_port]) data->primitives.src_port = 0;
 	  if (!pt.table[data->primitives.dst_port]) data->primitives.dst_port = 0;
+	}
+
+	if (config.protos_file) {
+	  if (!prt.table[data->primitives.proto]) data->primitives.proto = PM_IP_PROTO_OTHERS;
 	}
 
 	prim_ptrs.data = data;

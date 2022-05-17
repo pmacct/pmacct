@@ -25,7 +25,6 @@
 /* includes */
 #include <sys/poll.h>
 #include "net_aggr.h"
-#include "ports_aggr.h"
 
 /* defines */
 #define DEFAULT_DB_REFRESH_TIME 60
@@ -324,7 +323,9 @@ extern void count_noop_setclause_event_handler(const struct db_cache *, struct i
 /* Toward a common SQL layer */
 extern void sql_set_signals();
 extern void sql_set_insert_func();
-extern void sql_init_maps(struct extra_primitives *, struct primitives_ptrs *, struct networks_table *, struct networks_cache *, struct ports_table *);
+extern void sql_init_maps(struct extra_primitives *, struct primitives_ptrs *,
+			  struct networks_table *, struct networks_cache *,
+			  struct ports_table *, struct protos_table *);
 extern void sql_init_global_buffers();
 extern void sql_init_default_values(struct extra_primitives *);
 extern void sql_init_historical_acct(time_t, struct insert_data *);
@@ -334,7 +335,7 @@ extern void sql_link_backend_descriptors(struct BE_descs *, struct DBdesc *, str
 extern void sql_cache_modulo(struct primitives_ptrs *, struct insert_data *);
 extern int sql_cache_flush(struct db_cache *[], int, struct insert_data *, int);
 extern void sql_cache_flush_pending(struct db_cache *[], int, struct insert_data *);
-extern void sql_cache_handle_flush_event(struct insert_data *, time_t *, struct ports_table *);
+extern void sql_cache_handle_flush_event(struct insert_data *, time_t *, struct ports_table *, struct protos_table *);
 extern void sql_cache_insert(struct primitives_ptrs *, struct insert_data *);
 extern struct db_cache *sql_cache_search(struct primitives_ptrs *, time_t);
 extern int sql_trigger_exec(char *);

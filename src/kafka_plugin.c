@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -37,6 +37,7 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 {
   struct pkt_data *data;
   struct ports_table pt;
+  struct protos_table prt;
   unsigned char *pipebuf;
   struct pollfd pfd;
   struct insert_data idata;
@@ -150,11 +151,13 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   memset(&nt, 0, sizeof(nt));
   memset(&nc, 0, sizeof(nc));
   memset(&pt, 0, sizeof(pt));
+  memset(&prt, 0, sizeof(prt));
 
   load_networks(config.networks_file, &nt, &nc);
   set_net_funcs(&nt);
 
   if (config.ports_file) load_ports(config.ports_file, &pt);
+  if (config.protos_file) load_protos(config.protos_file, &prt);
   
   memset(&idata, 0, sizeof(idata));
   memset(&prim_ptrs, 0, sizeof(prim_ptrs));
@@ -214,7 +217,7 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     poll_ops:
     P_update_time_reference(&idata);
 
-    if (idata.now > refresh_deadline) P_cache_handle_flush_event(&pt);
+    if (idata.now > refresh_deadline) P_cache_handle_flush_event(&pt, &prt);
 
     recv_budget = 0;
     if (poll_bypass) {
@@ -301,6 +304,10 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
           if (!pt.table[data->primitives.src_port]) data->primitives.src_port = 0;
           if (!pt.table[data->primitives.dst_port]) data->primitives.dst_port = 0;
         }
+
+	if (config.protos_file) {
+	  if (!prt.table[data->primitives.proto]) data->primitives.proto = PM_IP_PROTO_OTHERS;
+	}
 
         prim_ptrs.data = data;
         (*insert_func)(&prim_ptrs, &idata);

@@ -953,7 +953,7 @@ DEFAULT:	none
 
 KEY:		networks_file (-n)
 DESC:		Full pathname to a file containing a list of networks - and optionally ASN information
-		and BGP next-hop (peer_dst_ip) Purpose of the feature is to act as a resolver when
+		and BGP next-hop (peer_dst_ip). Purpose of the directive is to act as a resolver when
 		network, next-hop and/or peer/origin ASN information is not available through other
 		means (ie. BGP, IGP, telemetry protocol) or for the purpose of overriding such
 		information with custom/self-defined one.
@@ -1020,10 +1020,18 @@ DESC:		Networks Lookup Table (which is the memory structure where the 'networks_
 DEFAULT:	IPv4: 99991; IPv6: 32771	
 
 KEY:		ports_file
-DESC:		Full pathname to a file containing a list of (known/interesting/meaningful) ports (one
-		for each line, read more about the file syntax into examples/ tree). The directive allows
-		to rewrite as zero port numbers not matching any port defined in the list. Indeed, this
-		makes sense only if aggregating on either 'src_port' or 'dst_port' primitives.
+DESC:		Full pathname to a file containing a list of (known/interesting/meaningful) TCP/UDP ports
+		(one per line, read more about the file syntax into examples/ tree). The directive zeroes
+		port numbers not matching those defined in the list. Not being a filter but an aggregator,
+		this directive makes sense only if aggregating on 'src_port' and/or 'dst_port' primitives.
+DEFAULT:	none
+
+KEY:		protos_file
+DESC:		Full pathname to a file containing a list of (known/interesting/meaningful) IP protocols
+		(one per line). Both protocol names, ie. "tcp", and protocol numbers, ie. 1 (for icmp),
+		are accepted. The directive uses IANA reserved protocol value 255 to bucket as 'others'
+		those IP protocols not matching the ones defined in the list. Not being a filter but an
+		aggregator, this directive makes sense only if aggregating on the 'proto' primitive.
 DEFAULT:	none
 
 KEY:		sql_db
