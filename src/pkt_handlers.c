@@ -1239,6 +1239,10 @@ void ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs
     tos = ((tos & 0x0ff00000) >> 20);
     pdata->primitives.tos = tos; 
   }
+
+  if (chptr->plugin->cfg.tos_encode_as_dscp) {
+    pdata->primitives.tos = pdata->primitives.tos >> 2;
+  }
 }
 
 void ip_proto_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -1331,6 +1335,10 @@ void tunnel_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs
       tos = ntohl(((struct ip6_hdr *) tpptrs->iph_ptr)->ip6_flow);
       tos = ((tos & 0x0ff00000) >> 20);
       ptun->tunnel_tos = tos;
+    }
+
+    if (chptr->plugin->cfg.tos_encode_as_dscp) {
+      ptun->tunnel_tos = ptun->tunnel_tos >> 2;
     }
   }
 }
@@ -2421,6 +2429,10 @@ void NF_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   default:
     break;
   }
+
+  if (chptr->plugin->cfg.tos_encode_as_dscp) {
+    pdata->primitives.tos = pdata->primitives.tos >> 2;
+  }
 }
 
 void NF_ip_proto_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -3370,6 +3382,7 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
 {
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct otpl_field *otpl = NULL;
   struct utpl_field *utpl = NULL;
   u_char *pcust = (u_char *)((*data) + chptr->extras.off_custom_primitives);
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
@@ -3395,7 +3408,16 @@ void NF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
 	    if (tpl->tpl[cpe->field_type].len == cpe->len) {
 	      memcpy(pcust+chptr->plugin->cfg.cpptrs.primitive[cpptrs_idx].off, pptrs->f_data+tpl->tpl[cpe->field_type].off, cpe->len);
 	    }
-	    /* else this is a configuration mistake: do nothing */
+	    else {
+	      if (cpe->semantics == CUSTOM_PRIMITIVE_TYPE_STRING && cpe->len == PM_VARIABLE_LENGTH) {
+		otpl = &tpl->tpl[cpe->field_type];
+		if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + otpl->len + 1 /* terminating zero */)) {
+		  vlen_prims_init(pvlen, 0);
+		  return;
+		}
+		else vlen_prims_insert(pvlen, cpe->type, otpl->len, pptrs->f_data+otpl->off, PM_MSG_STR_COPY_ZERO);
+	      }
+	    }
 	  }
 	}
 	else {
@@ -4882,6 +4904,10 @@ void SF_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pp
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   pdata->primitives.tos = sample->dcd_ipTos;
+
+  if (chptr->plugin->cfg.tos_encode_as_dscp) {
+    pdata->primitives.tos = pdata->primitives.tos >> 2;
+  }
 }
 
 void SF_ip_proto_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -5454,7 +5480,13 @@ void SF_tunnel_ip_tos_handler(struct channels_list_entry *chptr, struct packet_p
   struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
 
-  if (sppi) ptun->tunnel_tos = sppi->dcd_ipTos;
+  if (sppi) {
+    ptun->tunnel_tos = sppi->dcd_ipTos;
+
+    if (chptr->plugin->cfg.tos_encode_as_dscp) {
+      ptun->tunnel_tos = ptun->tunnel_tos >> 2;
+    }
+  }
 }
 
 void SF_tunnel_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

@@ -541,6 +541,7 @@ struct configuration {
   int networks_cache_entries;
   char *ports_file;
   char *protos_file;
+  char *tos_file;
   char *a_filter;
   int bpfp_a_num;
   struct bpf_program *bpfp_a_table[AGG_FILTER_ENTRIES];
@@ -551,6 +552,7 @@ struct configuration {
   int tcpflags_encode_as_array;
   int mpls_label_stack_encode_as_array;
   int fwd_status_encode_as_string;
+  int tos_encode_as_dscp;
   int maps_refresh;
   int maps_index;
   int maps_entries;

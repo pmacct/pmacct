@@ -1034,6 +1034,14 @@ DESC:		Full pathname to a file containing a list of (known/interesting/meaningfu
 		aggregator, this directive makes sense only if aggregating on the 'proto' primitive.
 DEFAULT:	none
 
+KEY:		tos_file
+DESC:		Full pathname to a file containing a list of (meaningful) IP ToS values (one per line);
+		if tos_encode_as_dscp is set to true then DSCP values are expected as part of the file.
+		The directive uses value 255 to bucket as 'others' those ToS/DSCP values not matching
+		the ones defined in the list. Not being a filter but an aggregator, this directive makes
+		sense only if aggregating on the 'tos' primitive.
+DEFAULT:	none
+
 KEY:		sql_db
 DESC:		Defines the SQL database to use. When using the SQLite3 plugin, this directive refers
 		to the full path to the database file; if multiple sqlite3 plugins are in use, it is
@@ -1628,6 +1636,12 @@ DESC:		The 'mpls_label_stack' is encoded by default as a string, including a com
 		"type": { "type": "array", "items": { "type": "string" } }. This knob has no effects for
 		other encodings (ie. CSV, formatted) and backends not supporting complex types (ie. SQL
 		plugins).
+DEFAULT:	false
+
+KEY:		tos_encode_as_dscp
+VALUES:		[ true | false ]
+		The 'tos' field does honour the full 8 bits. This knob conveniently allows to honour only
+		the 6 bits used by DSCP.
 DEFAULT:	false
 
 KEY:		[ print_markers | amqp_markers | kafka_markers ]

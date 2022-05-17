@@ -1351,7 +1351,7 @@ void nfprobe_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   struct pkt_data *data, dummy;
   struct pkt_bgp_primitives dummy_pbgp;
   struct ports_table pt;
-  struct protos_table prt;
+  struct protos_table prt, tost;
   struct pollfd pfd;
   unsigned char *pipebuf;
   int refresh_timeout, ret, num, recv_budget, poll_bypass;
@@ -1513,6 +1513,7 @@ sort_version:
   memset(&nc, 0, sizeof(nc));
   memset(&pt, 0, sizeof(pt));
   memset(&prt, 0, sizeof(prt));
+  memset(&tost, 0, sizeof(tost));
   memset(&dummy, 0, sizeof(dummy));
   memset(&dummy_pbgp, 0, sizeof(dummy_pbgp));
 
@@ -1521,6 +1522,7 @@ sort_version:
 
   if (config.ports_file) load_ports(config.ports_file, &pt);
   if (config.protos_file) load_protos(config.protos_file, &prt);
+  if (config.tos_file) load_tos(config.tos_file, &tost);
 
   pipebuf = (unsigned char *) pm_malloc(config.buffer_size);
   memset(pipebuf, 0, config.buffer_size);
@@ -1607,6 +1609,7 @@ sort_version:
       load_networks(config.networks_file, &nt, &nc);
       load_ports(config.ports_file, &pt);
       load_protos(config.protos_file, &prt);
+      load_tos(config.tos_file, &tost);
 
       reload_map = FALSE;
     }
@@ -1695,12 +1698,16 @@ sort_version:
 	  (*net_funcs[num])(&nt, &nc, &data->primitives, prim_ptrs.pbgp, &nfd);
 
 	if (config.ports_file) {
-	  if (!pt.table[data->primitives.src_port]) data->primitives.src_port = 0;
-	  if (!pt.table[data->primitives.dst_port]) data->primitives.dst_port = 0;
+	  if (!pt.table[data->primitives.src_port]) data->primitives.src_port = PM_L4_PORT_OTHERS;
+	  if (!pt.table[data->primitives.dst_port]) data->primitives.dst_port = PM_L4_PORT_OTHERS;
 	}
 
 	if (config.protos_file) {
 	  if (!prt.table[data->primitives.proto]) data->primitives.proto = PM_IP_PROTO_OTHERS;
+	}
+
+	if (config.tos_file) {
+	  if (!tost.table[data->primitives.tos]) data->primitives.tos = PM_IP_TOS_OTHERS;
 	}
 
 	prim_ptrs.data = data;
