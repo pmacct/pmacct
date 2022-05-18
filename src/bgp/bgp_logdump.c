@@ -1926,7 +1926,7 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
       char peer_addr[INET6_ADDRSTRLEN];
       addr_to_str(peer_addr, &(peer->addr));
 
-      int bgp_router_slot = abs(djb2_string_hash(peer_addr)) % config.bgp_table_dump_time_slots;
+      int bgp_router_slot = abs((int) djb2_string_hash((unsigned char*) peer_addr)) % config.bgp_table_dump_time_slots;
       if(bgp_router_slot == bms->current_bgp_slot){
       peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
 
@@ -2024,7 +2024,6 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 
 	    for (peer_buckets = 0; peer_buckets < config.bgp_table_per_peer_buckets; peer_buckets++) {
 	      for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
-	        int bgp_router_slot = abs(djb2_string_hash(peer->addr_str)) % config.bgp_table_dump_time_slots;
 
 		if (ri->peer == peer) {
             
