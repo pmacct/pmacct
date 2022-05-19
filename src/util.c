@@ -3358,3 +3358,17 @@ void distribute_work(struct pm_dump_runner *pdr, u_int64_t seqno, int workers, u
     }
   }
 }
+
+// Dan Bernstein's hash variant 2 (XOR)
+unsigned long djb2_string_hash(unsigned char *str)
+{
+  unsigned long hash = 5381;
+
+  while (*str){
+    hash = hash * 33 ^ ((int) *str);
+    str++;
+  }
+
+  return hash;
+}
+

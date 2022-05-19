@@ -27,6 +27,7 @@
 #include "thread_pool.h"
 #include "plugin_common.h"
 #include "plugin_cmn_json.h"
+#include "util.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
@@ -36,7 +37,6 @@
 #ifdef WITH_AVRO
 #include "plugin_cmn_avro.h"
 #endif
-
 
 /* functions */
 int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, safi_t safi,
@@ -1780,6 +1780,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, bgp_tag_t *tag, struct bgp_dump_s
 
 void bgp_handle_dump_event(int max_peers_idx)
 {
+  Log(LOG_INFO, "INFO (): *** Dumping bgp_handle_dump_event\n");
   struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BGP);
   thread_pool_t *bgp_table_dump_workers_pool;
   struct pm_dump_runner pdr[config.bgp_table_dump_workers];
@@ -1829,6 +1830,7 @@ void bgp_handle_dump_event(int max_peers_idx)
 
     break;
   }
+    bgp_misc_db->current_bgp_slot = (bgp_misc_db->current_bgp_slot + 1) % config.bgp_table_dump_time_slots;
 }
 
 int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
@@ -1916,9 +1918,16 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
   }
 #endif
 
+  if(config.bgp_table_dump_time_slots > 1)
+    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BGP tables, slot %d of %d\n", config.name, bms->log_str, bms->current_bgp_slot + 1, config.bgp_table_dump_time_slots);
   for (peer = NULL, saved_peer = NULL, peers_idx = pdr->first; peers_idx <= pdr->last; peers_idx++) {
     if (peers[peers_idx].fd) {
       peer = &peers[peers_idx];
+      char peer_addr[INET6_ADDRSTRLEN];
+      addr_to_str(peer_addr, &(peer->addr));
+
+      int bgp_router_slot = abs((int) djb2_string_hash((unsigned char*) peer_addr)) % config.bgp_table_dump_time_slots;
+      if(bgp_router_slot == bms->current_bgp_slot){
       peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
 
       if (config.bgp_table_dump_file) {
@@ -2002,6 +2011,7 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 
       if (!inter_domain_routing_db) return ERR;
 
+
       for (afi = AFI_IP; afi < AFI_MAX; afi++) {
 	for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
 	  table = inter_domain_routing_db->rib[afi][safi];
@@ -2014,7 +2024,9 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 
 	    for (peer_buckets = 0; peer_buckets < config.bgp_table_per_peer_buckets; peer_buckets++) {
 	      for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
+
 		if (ri->peer == peer) {
+            
 	          bgp_peer_log_msg(node, ri, afi, safi, &bgp_logdump_tag, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC);
 	          dump_elems++;
 	          bds.entries++;
@@ -2035,6 +2047,7 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
       bgp_peer_dump_close(peer, &bgp_logdump_tag, &bds, config.bgp_table_dump_output, FUNC_TYPE_BGP);
     }
   }
+}
 
 #ifdef WITH_RABBITMQ
   if (config.bgp_table_dump_amqp_routing_key) {
