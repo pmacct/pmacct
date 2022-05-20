@@ -1780,7 +1780,6 @@ int bgp_peer_dump_close(struct bgp_peer *peer, bgp_tag_t *tag, struct bgp_dump_s
 
 void bgp_handle_dump_event(int max_peers_idx)
 {
-  Log(LOG_INFO, "INFO (): *** Dumping bgp_handle_dump_event\n");
   struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BGP);
   thread_pool_t *bgp_table_dump_workers_pool;
   struct pm_dump_runner pdr[config.bgp_table_dump_workers];
@@ -1918,15 +1917,18 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
   }
 #endif
 
-  if(config.bgp_table_dump_time_slots > 1)
-    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BGP tables, slot %d of %d\n", config.name, bms->log_str, bms->current_bgp_slot + 1, config.bgp_table_dump_time_slots);
+  if (config.bgp_table_dump_time_slots > 1) {
+    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BGP tables - SLOT %d / %d ***\n",
+	config.name, bms->log_str, bms->current_bgp_slot + 1, config.bgp_table_dump_time_slots);
+  }
+
   for (peer = NULL, saved_peer = NULL, peers_idx = pdr->first; peers_idx <= pdr->last; peers_idx++) {
     if (peers[peers_idx].fd) {
       peer = &peers[peers_idx];
       char peer_addr[INET6_ADDRSTRLEN];
       addr_to_str(peer_addr, &(peer->addr));
 
-      int bgp_router_slot = abs((int) djb2_string_hash((unsigned char*) peer_addr)) % config.bgp_table_dump_time_slots;
+      int bgp_router_slot = abs((int) pm_djb2_string_hash((unsigned char*) peer_addr)) % config.bgp_table_dump_time_slots;
       if(bgp_router_slot == bms->current_bgp_slot){
       peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
 

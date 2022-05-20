@@ -198,5 +198,5 @@ extern primptrs_func primptrs_funcs[PRIMPTRS_FUNCS_N];
 
 extern void distribute_work(struct pm_dump_runner *, u_int64_t, int, u_int64_t);
 
-extern unsigned long djb2_string_hash(unsigned char *str);
+extern unsigned long pm_djb2_string_hash(unsigned char *str);
 #endif //UTIL_H
