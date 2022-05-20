@@ -2887,11 +2887,12 @@ DEFAULT:	0
 
 KEY:		[ bgp_table_dump_time_slots | bmp_dump_time_slots ] [GLOBAL]
 VALUES:		[ 1 .. 86400 ]
-DESC:		The number of smaller dumps done in each bgp_table_dump_refresh_time respectively 
-        bmp_dump_refresh_time. By default the number of set to 1, then all the content of the dumps 
-		is sent once per time interval. The slot times are defined according to the router address. 
-		This feature aims to address the peaks caused by the dumps by spreading the dumps of each 
-		router at different times. The number of slot should be a divisor of its respective refresh time.
+DESC:		Enables spreading the load deriving by BGP / BMP dumps over bgp_table_dump_refresh_time
+		and bmp_dump_refresh_time time intervals. Refresh time interval is divided into time
+		slots and BGP / BMP nodes are assigned to these slots. By default this knob is set
+		to 1, then all the content of the dumps is sent at once. The slot for each node is
+		determined using its IP address. The number of slots must be a divisor of the refresh
+		time.
 DEFAULT:	1
 
 KEY:            [ bgp_table_dump_latest_file | bmp_dump_latest_file | telemetry_dump_refresh_time ]
