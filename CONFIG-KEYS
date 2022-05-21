@@ -2878,7 +2878,7 @@ DESC:           Defines output format for the dump of BGP tables and BMP events.
 		Avro and JSON-encoded Avro formats are supported.
 DEFAULT:	json
 
-KEY:		[ bgp_table_dump_refresh_time | bmp_dump_refresh_time | telemetry_dump_latest_file ]
+KEY:		[ bgp_table_dump_refresh_time | bmp_dump_refresh_time | telemetry_dump_refresh_time ]
 		[GLOBAL]
 VALUES:		[ 60 .. 86400 ]
 DESC:		Time interval, in seconds, between two consecutive executions of the dump of BGP
@@ -2895,7 +2895,7 @@ DESC:		Enables spreading the load deriving by BGP / BMP dumps over bgp_table_dum
 		time.
 DEFAULT:	1
 
-KEY:            [ bgp_table_dump_latest_file | bmp_dump_latest_file | telemetry_dump_refresh_time ]
+KEY:            [ bgp_table_dump_latest_file | bmp_dump_latest_file | telemetry_dump_latest_file ]
 		[GLOBAL]
 DESC:           Defines the full pathname to pointer(s) to latest file(s). Dynamic names are supported
                 through the use of variables, which are computed at the moment when data is purged to the

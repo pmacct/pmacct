@@ -4957,8 +4957,8 @@ int cfg_key_bmp_daemon_dump_refresh_time(char *filename, char *name, char *value
   }
 
   value = atoi(value_ptr);
-  if (value < 60 || value > 86400) {
-    Log(LOG_ERR, "WARN: [%s] 'bmp_dump_refresh_time' value has to be >= 60 and <= 86400 secs.\n", filename);
+  if (value < MIN_REFRESH_TIME || value > MAX_REFRESH_TIME) {
+    Log(LOG_ERR, "WARN: [%s] 'bmp_dump_refresh_time' value has to be >= %d and <= %d secs.\n", filename, MIN_REFRESH_TIME, MAX_REFRESH_TIME);
     return ERR;
   }
 
@@ -4985,8 +4985,8 @@ int cfg_key_bmp_daemon_dump_time_slots(char *filename, char *name, char *value_p
 
   value = atoi(value_ptr);
 
-  if (value < 1 || value > 86400) {
-    Log(LOG_ERR, "WARN: [%s] 'bmp_dump_time_slots' value has to be >= 1 and <= 86400.\n", filename);
+  if (value < 1 || value > MAX_REFRESH_TIME) {
+    Log(LOG_ERR, "WARN: [%s] 'bmp_dump_time_slots' value has to be >= 1 and <= %d.\n", filename, MAX_REFRESH_TIME);
     return ERR;
   }
 
@@ -7000,8 +7000,8 @@ int cfg_key_bgp_daemon_table_dump_refresh_time(char *filename, char *name, char 
   }
 
   value = atoi(value_ptr);
-  if (value < 60 || value > 86400) {
-    Log(LOG_ERR, "WARN: [%s] 'bgp_table_dump_refresh_time' value has to be >= 60 and <= 86400 secs.\n", filename);
+  if (value < MIN_REFRESH_TIME || value > MAX_REFRESH_TIME) {
+    Log(LOG_ERR, "WARN: [%s] 'bgp_table_dump_refresh_time' value has to be >= %d and <= %d secs.\n", filename, MIN_REFRESH_TIME, MAX_REFRESH_TIME);
     return ERR;
   }
 
@@ -7024,8 +7024,8 @@ int cfg_key_bgp_daemon_table_dump_time_slots(char *filename, char *name, char *v
   }
 
   value = atoi(value_ptr);
-  if (value < 1 || value > 86400) {
-    Log(LOG_ERR, "WARN: [%s] 'bgp_table_dump_time_slots' value has to be >= 1 and <= 86400.\n", filename);
+  if (value < 1 || value > MAX_REFRESH_TIME) {
+    Log(LOG_ERR, "WARN: [%s] 'bgp_table_dump_time_slots' value has to be >= 1 and <= %d.\n", filename, MAX_REFRESH_TIME);
     return ERR;
   }
 
@@ -8332,8 +8332,8 @@ int cfg_key_telemetry_dump_refresh_time(char *filename, char *name, char *value_
   }
 
   value = atoi(value_ptr);
-  if (value < 10 || value > 86400) {
-    Log(LOG_ERR, "WARN: [%s] 'telemetry_dump_refresh_time' value has to be >= 10 and <= 86400 secs.\n", filename);
+  if (value < MIN_REFRESH_TIME || value > MAX_REFRESH_TIME) {
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_dump_refresh_time' value has to be >= %d and <= %d secs.\n", filename, MIN_REFRESH_TIME, MAX_REFRESH_TIME);
     return ERR;
   }
 
