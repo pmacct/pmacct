@@ -259,6 +259,7 @@ extern int cfg_key_telemetry_dump_output(char *, char *, char *);
 extern int cfg_key_telemetry_dump_file(char *, char *, char *);
 extern int cfg_key_telemetry_dump_latest_file(char *, char *, char *);
 extern int cfg_key_telemetry_dump_refresh_time(char *, char *, char *);
+extern int cfg_key_telemetry_dump_time_slots(char *, char *, char *);
 extern int cfg_key_telemetry_dump_amqp_host(char *, char *, char *);
 extern int cfg_key_telemetry_dump_amqp_vhost(char *, char *, char *);
 extern int cfg_key_telemetry_dump_amqp_user(char *, char *, char *);

@@ -309,6 +309,7 @@ struct bgp_misc_structs {
 
   int current_bgp_slot;
   int current_bmp_slot;
+  int current_slot;
   struct sockaddr_storage *tag_peer;
   void (*bgp_table_info_delete_tag_find)(struct bgp_peer *);
 };

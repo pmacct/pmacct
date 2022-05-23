@@ -290,6 +290,7 @@ struct configuration {
   char *telemetry_dump_latest_file;
   int telemetry_dump_output;
   int telemetry_dump_refresh_time;
+  int telemetry_dump_time_slots;
   char *telemetry_dump_amqp_host;
   char *telemetry_dump_amqp_vhost;
   char *telemetry_dump_amqp_user;

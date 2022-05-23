@@ -25,6 +25,7 @@
 #include "bmp/bmp.h"
 #include "telemetry.h"
 #include "thread_pool.h"
+#include "util.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
 #endif
@@ -328,12 +329,18 @@ void telemetry_handle_dump_event(struct telemetry_data *t_data, int max_peers_id
         peer = &telemetry_peers[idx];
         tdsell = peer->bmp_se;
 
-        if (tdsell && tdsell->start) telemetry_dump_se_ll_destroy(tdsell);
+ 	if (tdsell &&
+	    tdsell->start &&
+	    abs((int) pm_djb2_string_hash((unsigned char *) peer->addr_str)) % config.telemetry_dump_time_slots == tms->current_slot) {
+	  telemetry_dump_se_ll_destroy(tdsell);
+	}
       }
     }
 
     break;
   }
+
+  tms->current_slot = (tms->current_slot + 1) % config.telemetry_dump_time_slots;
 }
 
 int telemetry_dump_event_runner(struct pm_dump_runner *pdr)
@@ -394,9 +401,20 @@ int telemetry_dump_event_runner(struct pm_dump_runner *pdr)
   start = time(NULL);
   tables_num = 0;
 
+  if (config.telemetry_dump_time_slots > 1) {
+    Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping telemetry data - SLOT %d / %d ***\n",
+	config.name, tms->log_str, tms->current_slot + 1, config.telemetry_dump_time_slots);
+  }
+
   for (peer = NULL, saved_peer = NULL, peers_idx = pdr->first; peers_idx <= pdr->last; peers_idx++) {
     if (telemetry_peers[peers_idx].fd) {
+      char peer_addr[INET6_ADDRSTRLEN];
+
       peer = &telemetry_peers[peers_idx];
+      addr_to_str(peer_addr, &(peer->addr));
+
+      int telemetry_slot = abs((int) pm_djb2_string_hash((unsigned char *) peer_addr)) % config.telemetry_dump_time_slots;
+      if (telemetry_slot == tms->current_bgp_slot) {
       peer->log = &peer_log; /* abusing telemetry_peer a bit, but we are in a child */
       tdsell = peer->bmp_se;
 
@@ -479,6 +497,7 @@ int telemetry_dump_event_runner(struct pm_dump_runner *pdr)
       strlcpy(last_filename, current_filename, SRVBUFLEN);
       telemetry_peer_dump_close(peer, &telemetry_logdump_tag, config.telemetry_dump_output, FUNC_TYPE_TELEMETRY);
       tables_num++;
+    }
     }
   }
 

@@ -331,6 +331,7 @@ static const struct _dictionary_line dictionary[] = {
   {"telemetry_dump_file", cfg_key_telemetry_dump_file},
   {"telemetry_dump_latest_file", cfg_key_telemetry_dump_latest_file},
   {"telemetry_dump_refresh_time", cfg_key_telemetry_dump_refresh_time},
+  {"telemetry_dump_time_slots", cfg_key_telemetry_dump_time_slots},
   {"telemetry_dump_amqp_host", cfg_key_telemetry_dump_amqp_host},
   {"telemetry_dump_amqp_vhost", cfg_key_telemetry_dump_amqp_vhost},
   {"telemetry_dump_amqp_user", cfg_key_telemetry_dump_amqp_user},

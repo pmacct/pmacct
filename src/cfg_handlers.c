@@ -8343,6 +8343,31 @@ int cfg_key_telemetry_dump_refresh_time(char *filename, char *name, char *value_
   return changes;
 }
 
+int cfg_key_telemetry_dump_time_slots(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0, i, len = strlen(value_ptr);
+
+  for (i = 0; i < len; i++) {
+    if (!isdigit(value_ptr[i]) && !isspace(value_ptr[i])) {
+      Log(LOG_ERR, "WARN: [%s] 'telemetry_dump_time_slots' is expected to be an integer value: '%c'\n", filename, value_ptr[i]);
+      return ERR;
+    }
+  }
+
+  value = atoi(value_ptr);
+
+  if (value < 1 || value > MAX_REFRESH_TIME) {
+    Log(LOG_ERR, "WARN: [%s] 'telemetry_dump_time_slots' value has to be >= 1 and <= %d.\n", filename, MAX_REFRESH_TIME);
+    return ERR;
+  }
+
+  for (; list; list = list->next, changes++) list->cfg.telemetry_dump_time_slots = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_dump_time_slots'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_telemetry_dump_amqp_host(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
