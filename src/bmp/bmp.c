@@ -518,11 +518,14 @@ int skinny_bmp_daemon()
     char dump_roundoff[] = "m";
     time_t tmp_time;
 
-    if(!config.bmp_dump_time_slots)
+    if (!config.bmp_dump_time_slots) {
       config.bmp_dump_time_slots = 1;
+    }
+
+    bmp_misc_db->current_slot = 0;
     
-    if(config.bmp_dump_refresh_time % config.bmp_dump_time_slots != 0){
-      Log(LOG_WARNING, "WARN ( %s/%s ): 'bmp_dump_time_slots' is not a divisor of 'bmp_dump_refresh_time', please adapt them in order to have the wished refresh time.\n", config.name, bmp_misc_db->log_str);
+    if (config.bmp_dump_refresh_time % config.bmp_dump_time_slots != 0) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): 'bmp_dump_time_slots' is not a divisor of 'bmp_dump_refresh_time', please fix.\n", config.name, bmp_misc_db->log_str);
     }
 
     if (config.bmp_dump_refresh_time) {

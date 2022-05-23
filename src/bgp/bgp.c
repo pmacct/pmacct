@@ -536,15 +536,15 @@ void skinny_bgp_daemon_online()
     char dump_roundoff[] = "m";
     time_t tmp_time;
 
-    if(!config.bgp_table_dump_time_slots)
+    if (!config.bgp_table_dump_time_slots) {
       config.bgp_table_dump_time_slots = 1;
-    
-    bgp_misc_db->current_bgp_slot = 0;
-
-    if(config.bgp_table_dump_refresh_time % config.bgp_table_dump_time_slots != 0){
-      Log(LOG_WARNING, "WARN ( %s/%s ): 'bgp_table_dump_time_slots' is not a divisor of 'bgp_table_dump_refresh_time', please adapt them in order to have the wished refresh time.\n", config.name, bgp_misc_db->log_str);
     }
+    
+    bgp_misc_db->current_slot = 0;
 
+    if (config.bgp_table_dump_refresh_time % config.bgp_table_dump_time_slots != 0) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): 'bgp_table_dump_time_slots' is not a divisor of 'bgp_table_dump_refresh_time', please fix.\n", config.name, bgp_misc_db->log_str);
+    }
 
     if (config.bgp_table_dump_refresh_time) {
       gettimeofday(&bgp_misc_db->log_tstamp, NULL);

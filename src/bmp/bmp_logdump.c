@@ -1624,7 +1624,7 @@ void bmp_handle_dump_event(int max_peers_idx)
 	peer = &bmp_peers[idx].self;
 	bdsell = peer->bmp_se;
   
-	if (bdsell && bdsell->start && abs((int) pm_djb2_string_hash((unsigned char*) peer->addr_str)) % config.bmp_dump_time_slots == bms->current_bmp_slot)
+	if (bdsell && bdsell->start && abs((int) pm_djb2_string_hash((unsigned char*) peer->addr_str)) % config.bmp_dump_time_slots == bms->current_slot)
 	{
 	  bmp_dump_se_ll_destroy(bdsell);
 	}
@@ -1632,7 +1632,7 @@ void bmp_handle_dump_event(int max_peers_idx)
     }
     break;
   }
-  bms->current_bmp_slot = (bms->current_bmp_slot + 1) % config.bmp_dump_time_slots;
+  bms->current_slot = (bms->current_slot + 1) % config.bmp_dump_time_slots;
 }
 
 int bmp_dump_event_runner(struct pm_dump_runner *pdr)
@@ -1751,13 +1751,14 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
   
   if (config.bmp_dump_time_slots > 1) {
     Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BMP tables - SLOT %d / %d ***\n",
-	config.name, bms->log_str, bms->current_bmp_slot + 1, config.bmp_dump_time_slots);
+	config.name, bms->log_str, bms->current_slot + 1, config.bmp_dump_time_slots);
   }
 
   for (peer = NULL, saved_peer = NULL, peers_idx = pdr->first; peers_idx <= pdr->last; peers_idx++) {
     peer = &bmp_peers[peers_idx].self;
+
     int bmp_router_slot = abs((int) pm_djb2_string_hash((unsigned char*) peer->addr_str)) % config.bmp_dump_time_slots;
-    if (bmp_peers[peers_idx].self.fd && bmp_router_slot == bms->current_bmp_slot) {          
+    if (bmp_peers[peers_idx].self.fd && bmp_router_slot == bms->current_slot) {
       peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
       bdsell = peer->bmp_se;
 

@@ -1829,7 +1829,7 @@ void bgp_handle_dump_event(int max_peers_idx)
 
     break;
   }
-    bgp_misc_db->current_bgp_slot = (bgp_misc_db->current_bgp_slot + 1) % config.bgp_table_dump_time_slots;
+    bgp_misc_db->current_slot = (bgp_misc_db->current_slot + 1) % config.bgp_table_dump_time_slots;
 }
 
 int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
@@ -1919,7 +1919,7 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 
   if (config.bgp_table_dump_time_slots > 1) {
     Log(LOG_INFO, "INFO ( %s/%s ): *** Dumping BGP tables - SLOT %d / %d ***\n",
-	config.name, bms->log_str, bms->current_bgp_slot + 1, config.bgp_table_dump_time_slots);
+	config.name, bms->log_str, bms->current_slot + 1, config.bgp_table_dump_time_slots);
   }
 
   for (peer = NULL, saved_peer = NULL, peers_idx = pdr->first; peers_idx <= pdr->last; peers_idx++) {
@@ -1929,7 +1929,7 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
       addr_to_str(peer_addr, &(peer->addr));
 
       int bgp_router_slot = abs((int) pm_djb2_string_hash((unsigned char*) peer_addr)) % config.bgp_table_dump_time_slots;
-      if(bgp_router_slot == bms->current_bgp_slot){
+      if (bgp_router_slot == bms->current_slot) {
       peer->log = &peer_log; /* abusing struct bgp_peer a bit, but we are in a child */
 
       if (config.bgp_table_dump_file) {
@@ -2048,8 +2048,8 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
       strlcpy(last_filename, current_filename, SRVBUFLEN);
       bgp_peer_dump_close(peer, &bgp_logdump_tag, &bds, config.bgp_table_dump_output, FUNC_TYPE_BGP);
     }
+    }
   }
-}
 
 #ifdef WITH_RABBITMQ
   if (config.bgp_table_dump_amqp_routing_key) {

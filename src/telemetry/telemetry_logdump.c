@@ -414,7 +414,7 @@ int telemetry_dump_event_runner(struct pm_dump_runner *pdr)
       addr_to_str(peer_addr, &(peer->addr));
 
       int telemetry_slot = abs((int) pm_djb2_string_hash((unsigned char *) peer_addr)) % config.telemetry_dump_time_slots;
-      if (telemetry_slot == tms->current_bgp_slot) {
+      if (telemetry_slot == tms->current_slot) {
       peer->log = &peer_log; /* abusing telemetry_peer a bit, but we are in a child */
       tdsell = peer->bmp_se;
 
