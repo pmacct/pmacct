@@ -2882,16 +2882,18 @@ KEY:		[ bgp_table_dump_refresh_time | bmp_dump_refresh_time | telemetry_dump_ref
 		[GLOBAL]
 VALUES:		[ 60 .. 86400 ]
 DESC:		Time interval, in seconds, between two consecutive executions of the dump of BGP
-		tables/BMP events/Streaming Telemetry data to files.
+		tables / BMP events / Streaming Telemetry data to files.
 DEFAULT:	0
 
-KEY:		[ bgp_table_dump_time_slots | bmp_dump_time_slots ] [GLOBAL]
+KEY:		[ bgp_table_dump_time_slots | bmp_dump_time_slots | telemetry_dump_time_slots ]
+		[GLOBAL]
 VALUES:		[ 1 .. 86400 ]
-DESC:		Enables spreading the load deriving by BGP / BMP dumps over bgp_table_dump_refresh_time
-		and bmp_dump_refresh_time time intervals. Refresh time interval is divided into time
-		slots and BGP / BMP nodes are assigned to these slots. By default this knob is set
-		to 1, then all the content of the dumps is sent at once. The slot for each node is
-		determined using its IP address. The number of slots must be a divisor of the refresh
+DESC:		Enables spreading the load deriving by BGP, BMP and Streaming Telemetry dumps over
+		bgp_table_dump_refresh_time / bmp_dump_refresh_time time / telemetry_dump_refresh_time
+		intervals. Refresh time interval is divided into time slots and BGP / BMP / telemetry
+		nodes are assigned to these slots. By default this knob is set to 1, then all the
+		content of the dumps is sent at once. The slot for each node is determined using
+		its IP address. The number of slots must be a divisor of the refresh
 		time.
 DEFAULT:	1
 
