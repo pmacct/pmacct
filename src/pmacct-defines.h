@@ -471,6 +471,7 @@
 #define DYN_STR_MONGODB_TABLE		4
 #define DYN_STR_SQL_TABLE		5
 #define DYN_STR_PRINT_FILE		6
+#define DYN_STR_WRITER_ID		7
 
 typedef u_int32_t pm_class_t;
 typedef u_int64_t pm_id_t;

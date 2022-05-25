@@ -532,6 +532,149 @@ void close_output_file(FILE *f)
   if (f) fclose(f);
 }
 
+void dynname_tokens_prepare(char *s, struct dynname_tokens *tokens, int type)
+{
+  char *ptr_str = NULL, *ptr_var = NULL, *ptr_text = NULL;
+  int var_mode = FALSE, var_close = FALSE, text_mode = FALSE, text_close = FALSE;
+  int token_idx = 0, rlen = 0, slen, var_len = 0, text_len = 0, dollar = FALSE;
+  char var_buf[VERYSHORTBUFLEN], text_buf[VERYSHORTBUFLEN];
+
+  slen = strlen(s);
+
+  for (ptr_str = s; rlen < slen; rlen++) {
+
+    process_dollar:
+    /* Let's reckon and handle '$' signs */
+    if (ptr_str[rlen] == '\x24') {
+      dollar = TRUE;
+
+      /* if we are processing a variable, let's close it to process the upcoming one */
+      if (var_mode && var_len) {
+        var_close = TRUE;
+      }
+
+      /* if we are processing text, let's close it to process the upcoming variable */
+      if (text_mode && text_len) {
+        text_close = TRUE;
+      }
+
+      /* variable parsing */
+      if (!var_mode) {
+        var_mode = TRUE;
+        ptr_var = &ptr_str[rlen];
+      }
+    }
+    else {
+      /* Collecting text */
+      if (!var_mode && !text_mode) {
+	text_mode = TRUE;
+        ptr_text = &ptr_str[rlen];
+      }
+    }
+
+    process_closing:
+    /*
+       Let's close the current variable parsing, two cases:
+       * we were parsing a variable and found a new one starting up;
+       * separator character hit, time to switch to text mode;
+    */
+    if (var_close) {
+      if (var_len > 1 && var_len < sizeof(var_buf)) {
+	memset(var_buf, 0, sizeof(var_buf));
+        strncpy(var_buf, ptr_var, var_len);
+
+	// XXX: dict lookup, set func
+
+	token_idx++;
+      }
+      else {
+	ptr_var[var_len] = '\0';
+        Log(LOG_ERR, "ERROR ( %s/%s ): dynname_tokens_prepare(): invalid variable '%s' in '%s'.\n", config.name, config.type, ptr_var, s);
+	exit_gracefully(1);
+      }
+
+      ptr_var = NULL;
+      var_mode = FALSE;
+      var_close = FALSE;
+      var_len = 0;
+
+      goto process_dollar;
+    }
+
+    /* We were collecting text and found a new variable starting up:
+       Let's close text and open variable */
+    if (text_close) {
+      if (text_len && text_len < sizeof(text_buf)) {
+	memset(text_buf, 0, sizeof(text_buf));
+        strncpy(text_buf, ptr_text, text_len);
+
+	// XXX: dict lookup, set func, set arg
+
+	token_idx++;
+      }
+      else {
+	ptr_text[text_len] = '\0';
+	Log(LOG_ERR, "ERROR ( %s/%s ): dynname_tokens_prepare(): invalid text '%s' in '%s'.\n", config.name, config.type, ptr_text, s);
+	exit_gracefully(1);
+      }
+
+      ptr_text = NULL;
+      text_mode = FALSE;
+      text_close = FALSE;
+      text_len = 0;
+
+      goto process_dollar;
+    }
+
+    if (var_mode) {
+      if (dollar) {
+	dollar = FALSE;
+	var_len++;
+	continue;
+      }
+
+      /* valid charset for a variable: a-z, A-Z, 0-9 */
+      if ((ptr_str[rlen] >= '\x30' && ptr_str[rlen] <= '\x39') ||
+          (ptr_str[rlen] >= '\x41' && ptr_str[rlen] <= '\x5a') ||
+          (ptr_str[rlen] >= '\x61' && ptr_str[rlen] <= '\x7a')) {
+	var_len++;
+      }
+      else {
+	var_close = TRUE;
+	goto process_closing;
+      }
+    }
+
+    if (text_mode) {
+      text_len++;
+    }
+  }
+
+  if (var_mode && var_len > 1 && var_len < sizeof(var_buf)) {
+    memset(var_buf, 0, sizeof(var_buf));
+    strncpy(var_buf, ptr_var, var_len);
+
+    // XXX: dict lookup, set func
+  }
+  else {
+    ptr_var[var_len] = '\0';
+    Log(LOG_ERR, "ERROR ( %s/%s ): dynname_tokens_prepare(): invalid variable '%s' in '%s'.\n", config.name, config.type, ptr_var, s);
+    exit_gracefully(1);
+  }
+
+  if (text_mode && text_len && text_len < sizeof(text_buf)) {
+    memset(text_buf, 0, sizeof(text_buf));
+    strncpy(text_buf, ptr_text, text_len);
+
+    // XXX: dict lookup, set func, set arg
+  }
+  else {
+    ptr_text[text_len] = '\0';
+    Log(LOG_ERR, "ERROR ( %s/%s ): dynname_tokens_prepare(): invalid text '%s' in '%s'.\n", config.name, config.type, ptr_text, s);
+    exit_gracefully(1);
+  }
+}
+
 /* Future: tokenization part to be moved away from runtime */
 int handle_dynname_internal_strings(char *new, int newlen, char *old, struct primitives_ptrs *prim_ptrs, int type)
 {
