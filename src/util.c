@@ -21,6 +21,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "util-data.h"
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
 #endif
@@ -539,6 +540,8 @@ void dynname_tokens_prepare(char *s, struct dynname_tokens *tokens, int type)
   int token_idx = 0, rlen = 0, slen, var_len = 0, text_len = 0, dollar = FALSE;
   char var_buf[VERYSHORTBUFLEN], text_buf[VERYSHORTBUFLEN];
 
+  assert(type < DYN_STR_MAX);
+
   slen = strlen(s);
 
   for (ptr_str = s; rlen < slen; rlen++) {
@@ -579,11 +582,25 @@ void dynname_tokens_prepare(char *s, struct dynname_tokens *tokens, int type)
        * separator character hit, time to switch to text mode;
     */
     if (var_close) {
-      if (var_len > 1 && var_len < sizeof(var_buf)) {
-	memset(var_buf, 0, sizeof(var_buf));
-        strncpy(var_buf, ptr_var, var_len);
+      if (var_len > 1 /* dollar plus at least one valid char */ && var_len < sizeof(var_buf)) {
+        int reg_idx, reg_match = FALSE;
 
-	// XXX: dict lookup, set func
+	memset(var_buf, 0, sizeof(var_buf));
+        strncpy(var_buf, ptr_var + 1, var_len - 1);
+
+	for (reg_idx = 0; dynname_token_dict_registry[reg_idx].id; reg_idx++) {
+	  if (dynname_token_dict_registry[reg_idx].id == type) {
+	    dynname_token_dict_registry[reg_idx].func(tokens, var_buf, token_idx);
+	    reg_match = TRUE;
+	    break;
+	  }
+	}
+
+	if (!reg_match) {
+	  assert(dynname_token_dict_registry[reg_idx].id == DYN_STR_UNKNOWN);
+	  dynname_token_dict_registry[reg_idx].func(tokens, var_buf, token_idx);
+	  /* exit */
+	}
 
 	token_idx++;
       }
@@ -608,7 +625,8 @@ void dynname_tokens_prepare(char *s, struct dynname_tokens *tokens, int type)
 	memset(text_buf, 0, sizeof(text_buf));
         strncpy(text_buf, ptr_text, text_len);
 
-	// XXX: dict lookup, set func, set arg
+	tokens->func[token_idx] = dynname_text_token_handler;
+        tokens->static_arg[token_idx] = strdup(text_buf);
 
 	token_idx++;
       }
@@ -648,13 +666,33 @@ void dynname_tokens_prepare(char *s, struct dynname_tokens *tokens, int type)
     if (text_mode) {
       text_len++;
     }
+
+    if (token_idx == DYNNAME_TOKENS_MAX) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): dynname_tokens_prepare(): too many tokens (text / variable combination) defined in '%s'.\n",
+	  config.name, config.type, s);
+      exit_gracefully(1);
+    }
   }
 
-  if (var_mode && var_len > 1 && var_len < sizeof(var_buf)) {
-    memset(var_buf, 0, sizeof(var_buf));
-    strncpy(var_buf, ptr_var, var_len);
+  if (var_mode && var_len > 1 /* dollar plus at least one valid char */ && var_len < sizeof(var_buf)) {
+    int reg_idx, reg_match = FALSE;
 
-    // XXX: dict lookup, set func
+    memset(var_buf, 0, sizeof(var_buf));
+    strncpy(var_buf + 1, ptr_var, var_len);
+
+    for (reg_idx = 0; dynname_token_dict_registry[reg_idx].id; reg_idx++) {
+      if (dynname_token_dict_registry[reg_idx].id == type) {
+	dynname_token_dict_registry[reg_idx].func(tokens, var_buf, token_idx);
+	reg_match = TRUE;
+	break;
+      }
+    }
+
+    if (!reg_match) {
+      assert(dynname_token_dict_registry[reg_idx].id == DYN_STR_UNKNOWN);
+      dynname_token_dict_registry[reg_idx].func(tokens, var_buf, token_idx);
+      /* exit */
+    }
   }
   else {
     ptr_var[var_len] = '\0';
@@ -666,13 +704,30 @@ void dynname_tokens_prepare(char *s, struct dynname_tokens *tokens, int type)
     memset(text_buf, 0, sizeof(text_buf));
     strncpy(text_buf, ptr_text, text_len);
 
-    // XXX: dict lookup, set func, set arg
+    tokens->func[token_idx] = dynname_text_token_handler;
+    tokens->static_arg[token_idx] = strdup(text_buf);
   }
   else {
     ptr_text[text_len] = '\0';
     Log(LOG_ERR, "ERROR ( %s/%s ): dynname_tokens_prepare(): invalid text '%s' in '%s'.\n", config.name, config.type, ptr_text, s);
     exit_gracefully(1);
   }
+}
+
+void dynname_text_token_handler(char *s, int slen, char *static_arg, void *dyn_arg)
+{
+  // XXX
+}
+
+void dtdr_writer_id(void *tkns, char *var_name, int var_idx)
+{
+  // XXX
+}
+
+void dtdr_unknown(void *tkns, char *var_name, int var_idx)
+{
+  Log(LOG_ERR, "ERROR ( %s/%s ): dtdr_unknown(): unknown dynname_tokens_prepare() type.\n", config.name, config.type);
+  exit_gracefully(1);
 }
 
 /* Future: tokenization part to be moved away from runtime */

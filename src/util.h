@@ -26,16 +26,26 @@
 #define ADD 0
 #define SUB 1
 
-typedef void (*dynname_token_handler) (char *, int, void *);
+#define DYNNAME_TOKENS_MAX 32
 
+/* typedefs */
+typedef void (*dynname_token_handler) (char *, int, char *, void *);
+typedef void (*dynname_token_dict_registry_handler) (void *, char *, int);
+
+/* structs */
 struct p_broker_timers {
   time_t last_fail;
   int retry_interval;
 };
 
 struct dynname_tokens {
-  dynname_token_handler token_handler[N_FUNCS];
-  void *token_static_arg[N_FUNCS];
+  dynname_token_handler func[DYNNAME_TOKENS_MAX];
+  void *static_arg[DYNNAME_TOKENS_MAX];
+};
+
+struct dynname_token_dict_registry_line {
+  int id;
+  dynname_token_dict_registry_handler func;
 };
 
 /* prototypes */
@@ -94,7 +104,6 @@ extern void open_pcap_savefile(struct pm_pcap_device *, char *);
 extern void pm_pcap_device_initialize(struct pm_pcap_devices *);
 extern void link_latest_output_file(char *, char *);
 extern void close_output_file(FILE *);
-extern void dynname_tokens_prepare(char *, struct dynname_tokens *, int);
 extern int handle_dynname_internal_strings(char *, int, char *, struct primitives_ptrs *, int);
 extern int handle_dynname_internal_strings_same(char *, int, char *, struct primitives_ptrs *, int);
 extern int have_dynname_nontime(char *);
@@ -207,4 +216,9 @@ extern primptrs_func primptrs_funcs[PRIMPTRS_FUNCS_N];
 extern void distribute_work(struct pm_dump_runner *, u_int64_t, int, u_int64_t);
 
 extern unsigned long pm_djb2_string_hash(unsigned char *str);
+
+extern void dynname_tokens_prepare(char *, struct dynname_tokens *, int);
+extern void dynname_text_token_handler(char *, int , char *, void *);
+extern void dtdr_writer_id(void *, char *, int);
+extern void dtdr_unknown(void *, char *, int);
 #endif //UTIL_H
