@@ -537,7 +537,7 @@ void dynname_tokens_prepare(char *s, struct dynname_tokens *tokens, int type)
 {
   char *ptr_str = NULL, *ptr_var = NULL, *ptr_text = NULL;
   int var_mode = FALSE, var_close = FALSE, text_mode = FALSE, text_close = FALSE;
-  int token_idx = 0, rlen = 0, slen, var_len = 0, text_len = 0, dollar = FALSE;
+  int token_idx = 0, rlen = 0, slen, var_len = 0, text_len = 0, dollar = FALSE, ret;
   char var_buf[VERYSHORTBUFLEN], text_buf[VERYSHORTBUFLEN];
 
   assert(type < DYN_STR_MAX);
@@ -590,8 +590,15 @@ void dynname_tokens_prepare(char *s, struct dynname_tokens *tokens, int type)
 
 	for (reg_idx = 0; dynname_token_dict_registry[reg_idx].id; reg_idx++) {
 	  if (dynname_token_dict_registry[reg_idx].id == type) {
-	    dynname_token_dict_registry[reg_idx].func(tokens, var_buf, token_idx);
+	    ret = dynname_token_dict_registry[reg_idx].func(tokens, var_buf, token_idx);
+	    if (ret == E_NOTFOUND) {
+	      Log(LOG_ERR, "ERROR ( %s/%s ): dynname_tokens_prepare(): unknown variable '%s' in dictionary '%s'.\n",
+		  config.name, config.type, ptr_var, dynname_token_dict_registry[reg_idx].desc);
+	      exit_gracefully(1);
+	    }
+
 	    reg_match = TRUE;
+
 	    break;
 	  }
 	}
@@ -682,8 +689,15 @@ void dynname_tokens_prepare(char *s, struct dynname_tokens *tokens, int type)
 
     for (reg_idx = 0; dynname_token_dict_registry[reg_idx].id; reg_idx++) {
       if (dynname_token_dict_registry[reg_idx].id == type) {
-	dynname_token_dict_registry[reg_idx].func(tokens, var_buf, token_idx);
+	ret = dynname_token_dict_registry[reg_idx].func(tokens, var_buf, token_idx);
+	if (ret == E_NOTFOUND) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): dynname_tokens_prepare(): unknown variable '%s' in dictionary '%s'.\n",
+	      config.name, config.type, ptr_var, dynname_token_dict_registry[reg_idx].desc);
+	  exit_gracefully(1);
+	}
+
 	reg_match = TRUE;
+
 	break;
       }
     }
@@ -714,20 +728,59 @@ void dynname_tokens_prepare(char *s, struct dynname_tokens *tokens, int type)
   }
 }
 
-void dynname_text_token_handler(char *s, int slen, char *static_arg, void *dyn_arg)
+int dynname_text_token_handler(char *s, int slen, char *static_arg, void *dyn_arg)
 {
-  // XXX
+  int st_len = strlen(s);
+  int sa_len = strlen(static_arg);
+  int ret = FALSE;
+
+  if ((st_len + sa_len) < slen) {
+    strcat(s, static_arg);
+  }
+  else {
+    ret = ERR;
+  }
+
+  return ret;
 }
 
-void dtdr_writer_id(void *tkns, char *var_name, int var_idx)
+int dwi_core_proc_name_handler(char *s, int slen, char *static_arg, void *dyn_arg)
 {
   // XXX
+
+  return FALSE;
 }
 
-void dtdr_unknown(void *tkns, char *var_name, int var_idx)
+int dwi_writer_id_handler(char *s, int slen, char *static_arg, void *dyn_arg)
+{
+  // XXX
+
+  return FALSE;
+}
+
+int dtdr_writer_id(void *tkns, char *var_name, int var_idx)
+{
+  struct dynname_tokens *tokens = tkns;
+  int dindex = 0, ret = E_NOTFOUND;
+
+  for (dindex = 0; strcmp(dynname_writer_id_dictionary[dindex].key, ""); dindex++) {
+    if (!strcmp(dynname_writer_id_dictionary[dindex].key, var_name)) {
+      tokens->func[var_idx] = dynname_writer_id_dictionary[dindex].func;
+      tokens->static_arg[var_idx] = FALSE;
+      ret = FALSE;
+      break;
+    }
+  }
+
+  return ret;
+}
+
+int dtdr_unknown(void *tkns, char *var_name, int var_idx)
 {
   Log(LOG_ERR, "ERROR ( %s/%s ): dtdr_unknown(): unknown dynname_tokens_prepare() type.\n", config.name, config.type);
   exit_gracefully(1);
+
+  return FALSE;
 }
 
 /* Future: tokenization part to be moved away from runtime */

@@ -29,8 +29,8 @@
 #define DYNNAME_TOKENS_MAX 32
 
 /* typedefs */
-typedef void (*dynname_token_handler) (char *, int, char *, void *);
-typedef void (*dynname_token_dict_registry_handler) (void *, char *, int);
+typedef int (*dynname_token_handler) (char *, int, char *, void *);
+typedef int (*dynname_token_dict_registry_handler) (void *, char *, int);
 
 /* structs */
 struct p_broker_timers {
@@ -45,7 +45,13 @@ struct dynname_tokens {
 
 struct dynname_token_dict_registry_line {
   int id;
+  char *desc;
   dynname_token_dict_registry_handler func;
+};
+
+struct dynname_type_dictionary_line {
+  char key[SRVBUFLEN];
+  dynname_token_handler func;
 };
 
 /* prototypes */
@@ -218,7 +224,10 @@ extern void distribute_work(struct pm_dump_runner *, u_int64_t, int, u_int64_t);
 extern unsigned long pm_djb2_string_hash(unsigned char *str);
 
 extern void dynname_tokens_prepare(char *, struct dynname_tokens *, int);
-extern void dynname_text_token_handler(char *, int , char *, void *);
-extern void dtdr_writer_id(void *, char *, int);
-extern void dtdr_unknown(void *, char *, int);
+extern int dynname_text_token_handler(char *, int, char *, void *);
+extern int dwi_core_proc_name_handler(char *, int, char *, void *);
+extern int dwi_writer_id_handler(char *, int, char *, void *);
+
+extern int dtdr_writer_id(void *, char *, int);
+extern int dtdr_unknown(void *, char *, int);
 #endif //UTIL_H

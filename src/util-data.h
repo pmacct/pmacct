@@ -20,12 +20,18 @@
 */
 
 const struct dynname_token_dict_registry_line dynname_token_dict_registry[] = {
-  {DYN_STR_KAFKA_TOPIC, NULL},
-  {DYN_STR_KAFKA_PART, NULL},
-  {DYN_STR_RABBITMQ_RK, NULL},
-  {DYN_STR_MONGODB_TABLE, NULL},
-  {DYN_STR_SQL_TABLE, NULL},
-  {DYN_STR_PRINT_FILE, NULL},
-  {DYN_STR_WRITER_ID, dtdr_writer_id},
-  {DYN_STR_UNKNOWN, dtdr_unknown}
+  {DYN_STR_KAFKA_TOPIC, "kafka_topic", NULL},
+  {DYN_STR_KAFKA_PART, "kafka_parttion", NULL},
+  {DYN_STR_RABBITMQ_RK, "amqp_routing_key", NULL},
+  {DYN_STR_MONGODB_TABLE, "mongodb_table", NULL},
+  {DYN_STR_SQL_TABLE, "sql_table", NULL},
+  {DYN_STR_PRINT_FILE, "print_output_file", NULL},
+  {DYN_STR_WRITER_ID, "writer_id", dtdr_writer_id},
+  {DYN_STR_UNKNOWN, "unknown", dtdr_unknown}
+};
+
+const struct dynname_type_dictionary_line dynname_writer_id_dictionary[] = {
+  {"core_proc_name", dwi_core_proc_name_handler},
+  {"writer_pid", dwi_writer_id_handler},
+  {"", NULL}
 };
