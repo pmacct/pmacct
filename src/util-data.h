@@ -32,6 +32,7 @@ const struct dynname_token_dict_registry_line dynname_token_dict_registry[] = {
 
 const struct dynname_type_dictionary_line dynname_writer_id_dictionary[] = {
   {"core_proc_name", dwi_core_proc_name_handler},
-  {"writer_pid", dwi_writer_id_handler},
+  {"writer_pid", dwi_writer_pid_handler},
+  {"pmacct_build", dwi_pmacct_build_handler},
   {"", NULL}
 };

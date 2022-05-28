@@ -226,7 +226,8 @@ extern unsigned long pm_djb2_string_hash(unsigned char *str);
 extern void dynname_tokens_prepare(char *, struct dynname_tokens *, int);
 extern int dynname_text_token_handler(char *, int, char *, void *);
 extern int dwi_core_proc_name_handler(char *, int, char *, void *);
-extern int dwi_writer_id_handler(char *, int, char *, void *);
+extern int dwi_writer_pid_handler(char *, int, char *, void *);
+extern int dwi_pmacct_build_handler(char *, int, char *, void *);
 
 extern int dtdr_writer_id(void *, char *, int);
 extern int dtdr_unknown(void *, char *, int);

@@ -746,16 +746,50 @@ int dynname_text_token_handler(char *s, int slen, char *static_arg, void *dyn_ar
 
 int dwi_core_proc_name_handler(char *s, int slen, char *static_arg, void *dyn_arg)
 {
-  // XXX
+  int st_len = strlen(s);
+  int ret = FALSE;
 
-  return FALSE;
+  if (strlen(config.proc_name) + st_len < slen) {
+    strcat(s, config.proc_name);
+  }
+  else {
+    ret = ERR;
+  }
+
+  return ret;
 }
 
-int dwi_writer_id_handler(char *s, int slen, char *static_arg, void *dyn_arg)
+int dwi_writer_pid_handler(char *s, int slen, char *static_arg, void *dyn_arg)
 {
-  // XXX
+  int st_len = strlen(s);
+  int ret = FALSE;
+  char pid[SUPERSHORTBUFLEN];
 
-  return FALSE;
+  snprintf(pid, sizeof(pid), "%d", getpid());
+  if (strlen(pid) + st_len < slen) {
+    strcat(s, pid);
+  }
+  else {
+    ret = ERR;
+  }
+
+  return ret;
+}
+
+int dwi_pmacct_build_handler(char *s, int slen, char *static_arg, void *dyn_arg)
+{
+  int st_len = strlen(s);
+  int pb_len = strlen(PMACCT_BUILD);
+  int ret = FALSE;
+
+  if (pb_len + st_len < slen) {
+    strcat(s, PMACCT_BUILD);
+  }
+  else {
+    ret = ERR;
+  }
+
+  return ret;
 }
 
 int dtdr_writer_id(void *tkns, char *var_name, int var_idx)
