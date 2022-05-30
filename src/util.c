@@ -544,6 +544,8 @@ void dynname_tokens_prepare(char *s, struct dynname_tokens *tokens, int type)
 
   slen = strlen(s);
 
+  memset(tokens, 0, sizeof(struct dynname_tokens));
+
   for (ptr_str = s; rlen < slen; rlen++) {
 
     process_dollar:
@@ -689,6 +691,7 @@ void dynname_tokens_prepare(char *s, struct dynname_tokens *tokens, int type)
 
     for (reg_idx = 0; dynname_token_dict_registry[reg_idx].id; reg_idx++) {
       if (dynname_token_dict_registry[reg_idx].id == type) {
+	tokens->type = &dynname_token_dict_registry[reg_idx];
 	ret = dynname_token_dict_registry[reg_idx].func(tokens, var_buf, token_idx);
 	if (ret == E_NOTFOUND) {
 	  Log(LOG_ERR, "ERROR ( %s/%s ): dynname_tokens_prepare(): unknown variable '%s' in dictionary '%s'.\n",
@@ -728,6 +731,35 @@ void dynname_tokens_prepare(char *s, struct dynname_tokens *tokens, int type)
   }
 }
 
+void dynname_tokens_free(struct dynname_tokens *tokens)
+{
+  int idx;
+
+  for (idx = 0; idx < DYNNAME_TOKENS_MAX; idx++) {
+    tokens->func[idx] = NULL;
+
+    if (tokens->static_arg[idx]) {
+      free(tokens->static_arg[idx]);
+      tokens->static_arg[idx] = NULL;
+    }
+  }
+}
+
+int dynname_tokens_compose(char *s, int slen, struct dynname_tokens *tokens, void *dyn_arg)
+{
+  int ret = FALSE, idx;
+
+  for (idx = 0; (idx < DYNNAME_TOKENS_MAX) && tokens->func[idx]; idx++) { 
+    ret = (*tokens->func)(s, slen, tokens->static_arg[idx], dyn_arg);
+    if (ret != FALSE) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): dynname_tokens_compose(): string too short when dynamic composing %s.\n", config.name, config.type, tokens->type->desc);
+      break;
+    } 
+  }
+
+  return ret;
+}
+
 int dynname_text_token_handler(char *s, int slen, char *static_arg, void *dyn_arg)
 {
   int st_len = strlen(s);
@@ -744,13 +776,21 @@ int dynname_text_token_handler(char *s, int slen, char *static_arg, void *dyn_ar
   return ret;
 }
 
-int dwi_core_proc_name_handler(char *s, int slen, char *static_arg, void *dyn_arg)
+int dwi_proc_name_handler(char *s, int slen, char *static_arg, void *dyn_arg)
 {
   int st_len = strlen(s);
   int ret = FALSE;
+  char *name = NULL;
 
-  if (strlen(config.proc_name) + st_len < slen) {
-    strcat(s, config.proc_name);
+  if (config.type_id == PLUGIN_ID_CORE) {
+    name = config.proc_name;
+  }
+  else {
+    name = config.name;
+  }
+
+  if (strlen(name) + st_len < slen) {
+    strcat(s, name);
   }
   else {
     ret = ERR;
@@ -798,7 +838,7 @@ int dtdr_writer_id(void *tkns, char *var_name, int var_idx)
   int dindex = 0, ret = E_NOTFOUND;
 
   for (dindex = 0; strcmp(dynname_writer_id_dictionary[dindex].key, ""); dindex++) {
-    if (!strcmp(dynname_writer_id_dictionary[dindex].key, var_name)) {
+    if (!strcasecmp(dynname_writer_id_dictionary[dindex].key, var_name)) {
       tokens->func[var_idx] = dynname_writer_id_dictionary[dindex].func;
       tokens->static_arg[var_idx] = FALSE;
       ret = FALSE;
@@ -2317,6 +2357,15 @@ void add_writer_name_and_pid_json(void *obj, char *name, pid_t writer_pid)
   snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", name, writer_pid);
   json_object_set_new_nocheck(json_obj, "writer_id", json_string(wid));
 }
+
+void add_writer_name_and_pid_json_v2(void *obj, struct dynname_tokens *tokens)
+{
+  char wid[SHORTSHORTBUFLEN];
+  json_t *json_obj = (json_t *) obj;
+
+  dynname_tokens_compose(wid, sizeof(wid), tokens, NULL);
+  json_object_set_new_nocheck(json_obj, "writer_id", json_string(wid));
+}
 #else
 char *compose_json_str(void *obj)
 {
@@ -2333,6 +2382,11 @@ void write_and_free_json(FILE *f, void *obj)
 void add_writer_name_and_pid_json(void *obj, char *name, pid_t writer_pid)
 {
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): add_writer_name_and_pid_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
+}
+
+void add_writer_name_and_pid_json_v2(void *obj, char *name, pid_t writer_pid)
+{
+  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): add_writer_name_and_pid_json_v2(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
 }
 #endif
 

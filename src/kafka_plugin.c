@@ -355,6 +355,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   struct primitives_ptrs prim_ptrs;
   struct pkt_data dummy_data;
   pid_t writer_pid = getpid();
+  // struct dynname_tokens writer_id_tokens; XXX: test
 
   //TODO solve these warnings correctly
   (void)pvlen;
@@ -440,6 +441,9 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
     Log(LOG_ERR, "ERROR ( %s/%s ): Unsupported kafka_output value specified. Exiting.\n", config.name, config.type);
     exit_gracefully(1);
   }
+
+  // XXX: allow customization
+  // dynname_tokens_prepare(DYNNAME_DEFAULT_WRITER_ID, &writer_id_tokens, DYN_STR_WRITER_ID);
 
   for (j = 0, stop = 0; (!stop) && P_preprocess_funcs[j]; j++)
     stop = P_preprocess_funcs[j](queue, &index, j);
@@ -601,6 +605,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 
       for (idx = 0; idx < N_PRIMITIVES && cjhandler[idx]; idx++) cjhandler[idx](json_obj, queue[j]);
       add_writer_name_and_pid_json(json_obj, config.name, writer_pid);
+      // add_writer_name_and_pid_json_v2(json_obj, &writer_id_tokens); // XXX: temp func name
 
       json_str = compose_json_str(json_obj);
 #endif

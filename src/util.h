@@ -27,6 +27,7 @@
 #define SUB 1
 
 #define DYNNAME_TOKENS_MAX 32
+#define DYNNAME_DEFAULT_WRITER_ID "$coreProcName/$writerPid"
 
 /* typedefs */
 typedef int (*dynname_token_handler) (char *, int, char *, void *);
@@ -38,11 +39,6 @@ struct p_broker_timers {
   int retry_interval;
 };
 
-struct dynname_tokens {
-  dynname_token_handler func[DYNNAME_TOKENS_MAX];
-  void *static_arg[DYNNAME_TOKENS_MAX];
-};
-
 struct dynname_token_dict_registry_line {
   int id;
   char *desc;
@@ -52,6 +48,12 @@ struct dynname_token_dict_registry_line {
 struct dynname_type_dictionary_line {
   char key[SRVBUFLEN];
   dynname_token_handler func;
+};
+
+struct dynname_tokens {
+  const struct dynname_token_dict_registry_line *type;
+  dynname_token_handler func[DYNNAME_TOKENS_MAX];
+  void *static_arg[DYNNAME_TOKENS_MAX];
 };
 
 /* prototypes */
@@ -142,6 +144,7 @@ extern int ft2af(u_int8_t);
 extern char *compose_json_str(void *);
 extern void write_and_free_json(FILE *, void *);
 extern void add_writer_name_and_pid_json(void *, char *, pid_t);
+extern void add_writer_name_and_pid_json_v2(void *, struct dynname_tokens *);
 extern void write_file_binary(FILE *, void *, size_t);
 
 extern void compose_timestamp(char *, int, struct timeval *, int, int, int, int);
@@ -224,8 +227,10 @@ extern void distribute_work(struct pm_dump_runner *, u_int64_t, int, u_int64_t);
 extern unsigned long pm_djb2_string_hash(unsigned char *str);
 
 extern void dynname_tokens_prepare(char *, struct dynname_tokens *, int);
+extern void dynname_tokens_free(struct dynname_tokens *);
+extern int dynname_tokens_compose(char *, int, struct dynname_tokens *, void *);
 extern int dynname_text_token_handler(char *, int, char *, void *);
-extern int dwi_core_proc_name_handler(char *, int, char *, void *);
+extern int dwi_proc_name_handler(char *, int, char *, void *);
 extern int dwi_writer_pid_handler(char *, int, char *, void *);
 extern int dwi_pmacct_build_handler(char *, int, char *, void *);
 
