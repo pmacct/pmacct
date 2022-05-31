@@ -1435,17 +1435,15 @@ json_t *compose_mpls_label_stack_json_data(u_int32_t *label_stack, int ls_len)
   for (idx_0 = 0; idx_0 < ls_depth; idx_0++) {
     memset(&label_buf, 0, sizeof(label_buf));
     snprintf(label_buf, MAX_MPLS_LABEL_LEN, "%u", *(label_stack + idx_0));
-    if (strncmp("0", label_buf, 1)) {
-      memset(&idx_buf, 0, sizeof(idx_buf));
-      memset(&label_idx_buf, 0, sizeof(label_idx_buf));
-      snprintf(idx_buf, MAX_IDX_LEN, "%zu", idx_0);
-      strncat(label_idx_buf, idx_buf, (MAX_MPLS_LABEL_IDX_LEN - max_mpls_label_idx_len_dec));
-      strncat(label_idx_buf, "-", (MAX_MPLS_LABEL_IDX_LEN - max_mpls_label_idx_len_dec));
-      strncat(label_idx_buf, label_buf, (MAX_MPLS_LABEL_IDX_LEN - max_mpls_label_idx_len_dec));
-      max_mpls_label_idx_len_dec = (strlen(idx_buf) + strlen("-") + strlen(label_buf) + 3);
-      j_str_tmp = json_string(label_idx_buf);
-      json_array_append(root, j_str_tmp); 
-    }
+    memset(&idx_buf, 0, sizeof(idx_buf));
+    memset(&label_idx_buf, 0, sizeof(label_idx_buf));
+    snprintf(idx_buf, MAX_IDX_LEN, "%zu", idx_0);
+    strncat(label_idx_buf, idx_buf, (MAX_MPLS_LABEL_IDX_LEN - max_mpls_label_idx_len_dec));
+    strncat(label_idx_buf, "-", (MAX_MPLS_LABEL_IDX_LEN - max_mpls_label_idx_len_dec));
+    strncat(label_idx_buf, label_buf, (MAX_MPLS_LABEL_IDX_LEN - max_mpls_label_idx_len_dec));
+    max_mpls_label_idx_len_dec = (strlen(idx_buf) + strlen("-") + strlen(label_buf) + 3);
+    j_str_tmp = json_string(label_idx_buf);
+    json_array_append(root, j_str_tmp); 
   }
 
   return root;

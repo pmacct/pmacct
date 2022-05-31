@@ -3615,7 +3615,7 @@ void NF_mpls_label_stack_handler(struct channels_list_entry *chptr, struct packe
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
-  u_int32_t label_stack[MAX_MPLS_LABELS];
+  u_int32_t label_stack[MAX_MPLS_LABELS], label_lookahead = 0;
   u_int8_t label_stack_depth = 0, label_stack_len = 0, label_idx;
 
   memset(&label_stack, 0, sizeof(label_stack));
@@ -3636,7 +3636,28 @@ void NF_mpls_label_stack_handler(struct channels_list_entry *chptr, struct packe
 	  }
 	}
 	else {
-	  break;
+	  /* handling case of Explicit Null */
+	  if (label_idx == NF9_MPLS_LABEL_1) {
+	    if (check_bosbit(pptrs->f_data+tpl->tpl[label_idx].off)) {
+	      label_stack_len += 4;
+	      label_stack_depth++;
+
+	      break;
+	    }
+	    /* looking ahead */
+	    else {
+	      if (tpl->tpl[label_idx + 1].len == 3) {
+		label_lookahead = decode_mpls_label(pptrs->f_data+tpl->tpl[label_idx + 1].off);
+		if (label_lookahead) {
+		  label_stack_len += 4;
+		  label_stack_depth++;
+		}
+	      }
+	    }
+	  }
+	  else {
+	    break;
+	  }
 	}
       }
     }
