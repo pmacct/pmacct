@@ -540,7 +540,7 @@ void dynname_tokens_prepare(char *s, struct dynname_tokens *tokens, int type)
   int token_idx = 0, rlen = 0, slen, var_len = 0, text_len = 0, dollar = FALSE, ret;
   char var_buf[VERYSHORTBUFLEN], text_buf[VERYSHORTBUFLEN];
 
-  assert(type < DYN_STR_MAX);
+  assert(type <= DYN_STR_MAX);
 
   slen = strlen(s);
 
@@ -595,7 +595,7 @@ void dynname_tokens_prepare(char *s, struct dynname_tokens *tokens, int type)
 	    ret = dynname_token_dict_registry[reg_idx].func(tokens, var_buf, token_idx);
 	    if (ret == E_NOTFOUND) {
 	      Log(LOG_ERR, "ERROR ( %s/%s ): dynname_tokens_prepare(): unknown variable '%s' in dictionary '%s'.\n",
-		  config.name, config.type, ptr_var, dynname_token_dict_registry[reg_idx].desc);
+		  config.name, config.type, var_buf, dynname_token_dict_registry[reg_idx].desc);
 	      exit_gracefully(1);
 	    }
 
@@ -683,51 +683,55 @@ void dynname_tokens_prepare(char *s, struct dynname_tokens *tokens, int type)
     }
   }
 
-  if (var_mode && var_len > 1 /* dollar plus at least one valid char */ && var_len < sizeof(var_buf)) {
-    int reg_idx, reg_match = FALSE;
+  if (var_mode) {
+    if (var_len > 1 /* dollar plus at least one valid char */ && var_len < sizeof(var_buf)) {
+      int reg_idx, reg_match = FALSE;
 
-    memset(var_buf, 0, sizeof(var_buf));
-    strncpy(var_buf + 1, ptr_var, var_len);
+      memset(var_buf, 0, sizeof(var_buf));
+      strncpy(var_buf, ptr_var + 1, var_len - 1);
 
-    for (reg_idx = 0; dynname_token_dict_registry[reg_idx].id; reg_idx++) {
-      if (dynname_token_dict_registry[reg_idx].id == type) {
-	tokens->type = &dynname_token_dict_registry[reg_idx];
-	ret = dynname_token_dict_registry[reg_idx].func(tokens, var_buf, token_idx);
-	if (ret == E_NOTFOUND) {
-	  Log(LOG_ERR, "ERROR ( %s/%s ): dynname_tokens_prepare(): unknown variable '%s' in dictionary '%s'.\n",
-	      config.name, config.type, ptr_var, dynname_token_dict_registry[reg_idx].desc);
-	  exit_gracefully(1);
+      for (reg_idx = 0; dynname_token_dict_registry[reg_idx].id; reg_idx++) {
+	if (dynname_token_dict_registry[reg_idx].id == type) {
+	  tokens->type = &dynname_token_dict_registry[reg_idx];
+	  ret = dynname_token_dict_registry[reg_idx].func(tokens, var_buf, token_idx);
+	  if (ret == E_NOTFOUND) {
+	    Log(LOG_ERR, "ERROR ( %s/%s ): dynname_tokens_prepare(): unknown variable '%s' in dictionary '%s'.\n",
+	        config.name, config.type, var_buf, dynname_token_dict_registry[reg_idx].desc);
+	    exit_gracefully(1);
+	  }
+
+	  reg_match = TRUE;
+
+	  break;
 	}
+      }
 
-	reg_match = TRUE;
-
-	break;
+      if (!reg_match) {
+	assert(dynname_token_dict_registry[reg_idx].id == DYN_STR_UNKNOWN);
+	dynname_token_dict_registry[reg_idx].func(tokens, var_buf, token_idx);
+	/* exit */
       }
     }
-
-    if (!reg_match) {
-      assert(dynname_token_dict_registry[reg_idx].id == DYN_STR_UNKNOWN);
-      dynname_token_dict_registry[reg_idx].func(tokens, var_buf, token_idx);
-      /* exit */
+    else {
+      ptr_var[var_len] = '\0';
+      Log(LOG_ERR, "ERROR ( %s/%s ): dynname_tokens_prepare(): invalid variable '%s' in '%s'.\n", config.name, config.type, ptr_var, s);
+      exit_gracefully(1);
     }
   }
-  else {
-    ptr_var[var_len] = '\0';
-    Log(LOG_ERR, "ERROR ( %s/%s ): dynname_tokens_prepare(): invalid variable '%s' in '%s'.\n", config.name, config.type, ptr_var, s);
-    exit_gracefully(1);
-  }
 
-  if (text_mode && text_len && text_len < sizeof(text_buf)) {
-    memset(text_buf, 0, sizeof(text_buf));
-    strncpy(text_buf, ptr_text, text_len);
+  if (text_mode) {
+    if (text_len && text_len < sizeof(text_buf)) {
+      memset(text_buf, 0, sizeof(text_buf));
+      strncpy(text_buf, ptr_text, text_len);
 
-    tokens->func[token_idx] = dynname_text_token_handler;
-    tokens->static_arg[token_idx] = strdup(text_buf);
-  }
-  else {
-    ptr_text[text_len] = '\0';
-    Log(LOG_ERR, "ERROR ( %s/%s ): dynname_tokens_prepare(): invalid text '%s' in '%s'.\n", config.name, config.type, ptr_text, s);
-    exit_gracefully(1);
+      tokens->func[token_idx] = dynname_text_token_handler;
+      tokens->static_arg[token_idx] = strdup(text_buf);
+    }
+    else {
+      ptr_text[text_len] = '\0';
+      Log(LOG_ERR, "ERROR ( %s/%s ): dynname_tokens_prepare(): invalid text '%s' in '%s'.\n", config.name, config.type, ptr_text, s);
+      exit_gracefully(1);
+    }
   }
 }
 
@@ -750,7 +754,7 @@ int dynname_tokens_compose(char *s, int slen, struct dynname_tokens *tokens, voi
   int ret = FALSE, idx;
 
   for (idx = 0; (idx < DYNNAME_TOKENS_MAX) && tokens->func[idx]; idx++) { 
-    ret = (*tokens->func)(s, slen, tokens->static_arg[idx], dyn_arg);
+    ret = (*tokens->func[idx])(s, slen, tokens->static_arg[idx], dyn_arg);
     if (ret != FALSE) {
       Log(LOG_WARNING, "WARN ( %s/%s ): dynname_tokens_compose(): string too short when dynamic composing %s.\n", config.name, config.type, tokens->type->desc);
       break;
@@ -2363,6 +2367,7 @@ void add_writer_name_and_pid_json_v2(void *obj, struct dynname_tokens *tokens)
   char wid[SHORTSHORTBUFLEN];
   json_t *json_obj = (json_t *) obj;
 
+  memset(wid, 0, sizeof(wid));
   dynname_tokens_compose(wid, sizeof(wid), tokens, NULL);
   json_object_set_new_nocheck(json_obj, "writer_id", json_string(wid));
 }
@@ -2384,7 +2389,7 @@ void add_writer_name_and_pid_json(void *obj, char *name, pid_t writer_pid)
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): add_writer_name_and_pid_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
 }
 
-void add_writer_name_and_pid_json_v2(void *obj, char *name, pid_t writer_pid)
+void add_writer_name_and_pid_json_v2(void *obj, struct dynname_tokens *tokens)
 {
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): add_writer_name_and_pid_json_v2(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
 }
