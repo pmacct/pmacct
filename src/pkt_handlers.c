@@ -3855,7 +3855,7 @@ void NF_vxlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
 
       type = (u_int8_t *) &tmp64[0];
       if ((*type) == NF9_L2_SID_VXLAN) {
-	vni_ptr = &tmp64[6];
+	vni_ptr = &tmp64[5];
 
 	ptun->tunnel_id = *vni_ptr++;
 	ptun->tunnel_id <<= 8;
