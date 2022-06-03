@@ -1933,7 +1933,7 @@ int cfg_key_message_broker_output(char *filename, char *name, char *value_ptr)
     value = PRINT_OUTPUT_JSON;
 #else
     value = PRINT_OUTPUT_JSON;
-    Log(LOG_WARNING, "WARN: [%s] 'message_broker_output' set to json but will produce no output (missing --enable-jansson).\n", filename);
+    Log(LOG_WARNING, "WARN: [%s] '[amqp|kafka]_output' set to json but will produce no output (missing --enable-jansson).\n", filename);
 #endif
   }
   else if (!strcmp(value_ptr, "avro") || !strcmp(value_ptr, "avro_bin")) {
@@ -1941,7 +1941,7 @@ int cfg_key_message_broker_output(char *filename, char *name, char *value_ptr)
     value = PRINT_OUTPUT_AVRO_BIN;
 #else
     value = PRINT_OUTPUT_AVRO_BIN;
-    Log(LOG_WARNING, "WARN: [%s] 'message_broker_output' set to avro but will produce no output (missing --enable-avro).\n", filename);
+    Log(LOG_WARNING, "WARN: [%s] '[amqp|kafka]_output' set to avro but will produce no output (missing --enable-avro).\n", filename);
 #endif
   }
   else if (!strcmp(value_ptr, "avro_json")) {
@@ -1949,14 +1949,14 @@ int cfg_key_message_broker_output(char *filename, char *name, char *value_ptr)
     value = PRINT_OUTPUT_AVRO_JSON;
 #else
     value = PRINT_OUTPUT_AVRO_JSON;
-    Log(LOG_WARNING, "WARN: [%s] 'message_broker_output' set to avro but will produce no output (missing --enable-avro).\n", filename);
+    Log(LOG_WARNING, "WARN: [%s] '[amqp|kafka]_output' set to avro but will produce no output (missing --enable-avro).\n", filename);
 #endif
   }
   else if (!strcmp(value_ptr, "custom")) {
     value = PRINT_OUTPUT_CUSTOM;
   }
   else {
-    Log(LOG_WARNING, "WARN: [%s] Invalid 'message_broker_output' value '%s'\n", filename, value_ptr);
+    Log(LOG_WARNING, "WARN: [%s] Invalid '[amqp|kafka]_output' value '%s'\n", filename, value_ptr);
     return ERR;
   }
 
