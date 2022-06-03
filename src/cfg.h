@@ -183,6 +183,7 @@ struct configuration {
   int kafka_avro_schema_refresh_time;
   char *kafka_avro_schema_registry;
   char *kafka_config_file;
+  char *kafka_writer_id;
   int print_cache_entries;
   int print_markers;
   int print_output;
@@ -208,6 +209,7 @@ struct configuration {
 #ifdef WITH_GNUTLS
   int nfacctd_dtls_sock;
 #endif
+  char *writer_id_string;
   char *nfacctd_allow_file;
   int nfacctd_time;
   int nfacctd_time_new;

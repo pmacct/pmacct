@@ -1150,6 +1150,17 @@ void add_writer_name_and_pid_avro(avro_value_t value, char *name, pid_t writer_p
   pm_avro_check(avro_value_set_string(&field, wid));
 }
 
+void add_writer_name_and_pid_avro_v2(avro_value_t value, struct dynname_tokens *tokens)
+{
+  char wid[SHORTSHORTBUFLEN];
+  avro_value_t field;
+
+  memset(wid, 0, sizeof(wid));
+  dynname_tokens_compose(wid, sizeof(wid), tokens, NULL);
+  pm_avro_check(avro_value_get_by_name(&value, "writer_id", &field, NULL));
+  pm_avro_check(avro_value_set_string(&field, wid));
+}
+
 void write_avro_schema_to_file(char *filename, avro_schema_t schema)
 {
   FILE *avro_fp;

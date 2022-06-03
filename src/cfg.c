@@ -43,6 +43,7 @@ static const struct _dictionary_line dictionary[] = {
   {"aggregate_filter", cfg_key_aggregate_filter},
   {"aggregate_unknown_etype", cfg_key_aggregate_unknown_etype},
   {"dtls_path", cfg_key_dtls_path},
+  {"writer_id_string", cfg_key_writer_id_string},
   {"promisc", cfg_key_promisc},
   {"pcap_filter", cfg_key_pcap_filter},
   {"pcap_protocol", cfg_key_pcap_protocol},

@@ -355,7 +355,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   struct primitives_ptrs prim_ptrs;
   struct pkt_data dummy_data;
   pid_t writer_pid = getpid();
-  // struct dynname_tokens writer_id_tokens; XXX: test
+  struct dynname_tokens writer_id_tokens;
 
   //TODO solve these warnings correctly
   (void)pvlen;
@@ -442,8 +442,11 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
     exit_gracefully(1);
   }
 
-  // XXX: allow customization
-  // dynname_tokens_prepare(DYNNAME_DEFAULT_WRITER_ID, &writer_id_tokens, DYN_STR_WRITER_ID);
+  if (!config.writer_id_string) {
+    config.writer_id_string = DYNNAME_DEFAULT_WRITER_ID;
+  }
+
+  dynname_tokens_prepare(config.writer_id_string, &writer_id_tokens, DYN_STR_WRITER_ID);
 
   for (j = 0, stop = 0; (!stop) && P_preprocess_funcs[j]; j++)
     stop = P_preprocess_funcs[j](queue, &index, j);
@@ -604,8 +607,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
       int idx;
 
       for (idx = 0; idx < N_PRIMITIVES && cjhandler[idx]; idx++) cjhandler[idx](json_obj, queue[j]);
-      add_writer_name_and_pid_json(json_obj, config.name, writer_pid);
-      // add_writer_name_and_pid_json_v2(json_obj, &writer_id_tokens); // XXX: temp func name
+      // add_writer_name_and_pid_json(json_obj, config.name, writer_pid);
+      add_writer_name_and_pid_json_v2(json_obj, &writer_id_tokens); // XXX: temp
 
       json_str = compose_json_str(json_obj);
 #endif
@@ -619,7 +622,8 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
 			   pvlen, queue[j]->bytes_counter, queue[j]->packet_counter,
 			   queue[j]->flow_counter, queue[j]->tcp_flags, &queue[j]->basetime,
 			   queue[j]->stitch, p_avro_iface);
-      add_writer_name_and_pid_avro(p_avro_value, config.name, writer_pid);
+      // add_writer_name_and_pid_avro(p_avro_value, config.name, writer_pid);
+      add_writer_name_and_pid_avro_v2(p_avro_value, &writer_id_tokens); // XXX: temp
 
       if (config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) {
 	size_t p_avro_value_size;

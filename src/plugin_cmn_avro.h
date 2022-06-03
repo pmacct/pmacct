@@ -67,6 +67,7 @@ extern avro_schema_t p_avro_schema_build_acct_init();
 extern avro_schema_t p_avro_schema_build_acct_close();
 extern void p_avro_schema_add_writer_id(avro_schema_t);
 extern void add_writer_name_and_pid_avro(avro_value_t, char *, pid_t);
+extern void add_writer_name_and_pid_avro_v2(avro_value_t, struct dynname_tokens *);
 
 extern avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type,
   struct pkt_primitives *pbase, struct pkt_bgp_primitives *pbgp,
