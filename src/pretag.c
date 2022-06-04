@@ -60,10 +60,11 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
   struct id_entry *ptr, *ptr2;
   FILE *file;
   char *buf = NULL;
-  int v4_num = 0, x, tot_lines = 0, err, errs = 0, index, label_solved, sz;
+  int v4_num = 0, x, tot_lines = 0, err, errs = 0, index, label_solved;
   int ignoring, report = TRUE, map_entries, map_row_len;
   struct stat st;
   int v6_num = 0;
+  u_int64_t sz;
 
   if (!filename || !map_allocated) return;
 
