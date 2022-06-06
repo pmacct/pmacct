@@ -27,7 +27,7 @@
 #define SUB 1
 
 #define DYNNAME_TOKENS_MAX 32
-#define DYNNAME_DEFAULT_WRITER_ID "$procName/$writerPid"
+#define DYNNAME_DEFAULT_WRITER_ID "$proc_name/$writer_pid"
 
 /* typedefs */
 typedef int (*dynname_token_handler) (char *, int, char *, void *);

@@ -660,10 +660,11 @@ void dynname_tokens_prepare(char *s, struct dynname_tokens *tokens, int type)
 	continue;
       }
 
-      /* valid charset for a variable: a-z, A-Z, 0-9 */
+      /* valid charset for a variable: a-z, A-Z, 0-9, _ */
       if ((ptr_str[rlen] >= '\x30' && ptr_str[rlen] <= '\x39') ||
           (ptr_str[rlen] >= '\x41' && ptr_str[rlen] <= '\x5a') ||
-          (ptr_str[rlen] >= '\x61' && ptr_str[rlen] <= '\x7a')) {
+          (ptr_str[rlen] >= '\x61' && ptr_str[rlen] <= '\x7a') ||
+	  (ptr_str[rlen] == '\x5f')) {
 	var_len++;
       }
       else {
