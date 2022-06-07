@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /* 
@@ -681,7 +681,7 @@ aspath_hash_alloc (void *arg)
 
 /* parse as-segment in struct assegment */
 static struct assegment *
-assegments_parse(char *s, size_t length, int use32bit)
+assegments_parse(struct bgp_peer *peer, char *s, size_t length, int use32bit)
 {
   struct assegment_header segh;
   struct assegment *seg, *prev = NULL, *head = NULL;
@@ -705,6 +705,17 @@ assegments_parse(char *s, size_t length, int use32bit)
       /* softly softly, get the header first on its own */
       tmp8 = (u_char *) s; segh.type = *tmp8; s++;
       tmp8 = (u_char *) s; segh.length = *tmp8; s++;
+
+      /* small BMP heuristics: since BGP OPENs are fabricated, they may
+	 not always reflect the reality of what is encoded in BGP UPDATE
+	 msgs */
+      if (peer->type == FUNC_TYPE_BMP && aspathlen > 2 && segh.length) {
+	if ((aspathlen - 2) / segh.length == AS_VALUE_SIZE) {
+	  if (!use32bit) {
+	    use32bit = TRUE;
+	  }
+	}
+      }
       
       seg_size = ASSEGMENT_SIZE(segh.length, use32bit);
 
@@ -768,7 +779,7 @@ struct aspath *aspath_parse(struct bgp_peer *peer, char *s, size_t length, int u
   if (length % AS16_VALUE_SIZE ) return NULL;
 
   memset (&as, 0, sizeof (struct aspath));
-  as.segments = assegments_parse(s, length, use32bit);
+  as.segments = assegments_parse(peer, s, length, use32bit);
   
   /* If already same aspath exist then return it. */
   find = hash_get (peer, inter_domain_routing_db->ashash, &as, aspath_hash_alloc);
