@@ -110,7 +110,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       goto handle_error;
     }
 
-    sz = sizeof(struct id_entry)*map_entries;
+    sz = sizeof(struct id_entry) * map_entries;
 
     if (t) {
       if (*map_allocated == 0) {
@@ -133,6 +133,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	  pcap_freecode(&t->e[index].key.filter);
 	  pretag_free_label(&t->e[index].label);
 	  if (t->e[index].jeq.label) free(t->e[index].jeq.label); 
+	  if (t->e[index].entry_label) free(t->e[index].entry_label);
 	}
 
         memset(t, 0, sizeof(struct id_table));
@@ -604,10 +605,12 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	  }
 	  else {
 	    for (ptr2 = ptr+1, index = x+1; index < t->ipv4_num; ptr2++, index++) {
-	      if (!strcmp(ptr->jeq.label, ptr2->entry_label)) {
-	        ptr->jeq.ptr = ptr2;
-	        label_solved = TRUE;
-		break;
+	      if (ptr2->entry_label) {
+		if (!strcmp(ptr->jeq.label, ptr2->entry_label)) {
+		  ptr->jeq.ptr = ptr2;
+		  label_solved = TRUE;
+		  break;
+		}
 	      }
 	    }
 	  }

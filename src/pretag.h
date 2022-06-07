@@ -23,7 +23,8 @@
 #define PRETAG_H
 
 /* Pre-Tag map stuff */
-#define N_MAP_HANDLERS N_PRIMITIVES
+#define N_MAP_HANDLERS 8
+#define N_MAP_SET_HANDLERS 4
 #define MAX_LABEL_LEN 32
 #define MAX_BITMAP_ENTRIES 64 /* pt_bitmap_t -> u_int64_t */
 #define MAX_PRETAG_MAP_ENTRIES 384 
@@ -216,9 +217,9 @@ struct id_entry {
   struct id_entry_key key;
   pretag_handler func[N_MAP_HANDLERS];
   pt_bitmap_t func_type[N_MAP_HANDLERS];
-  pretag_handler set_func[N_MAP_HANDLERS];
-  pt_bitmap_t set_func_type[N_MAP_HANDLERS];
-  char entry_label[MAX_LABEL_LEN];
+  pretag_handler set_func[N_MAP_SET_HANDLERS];
+  pt_bitmap_t set_func_type[N_MAP_SET_HANDLERS];
+  char *entry_label;
   pt_jeq_t jeq;
   u_int8_t ret;
   pt_stack_t stack;

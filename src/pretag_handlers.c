@@ -1444,11 +1444,18 @@ int BTA_map_lookup_bgp_port_handler(char *filename, struct id_entry *e, char *va
 
 int PT_map_entry_label_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
-  int len = strlen(value);
+  int len;
 
-  memset(e->entry_label, 0, MAX_LABEL_LEN);
+  len = MIN((strlen(value) + 1), MAX_LABEL_LEN);
 
-  if (len >= MAX_LABEL_LEN) {
+  e->entry_label = malloc(len);
+  if (!e->entry_label) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] malloc() failed (PT_map_entry_label_handler). Exiting.\n", config.name, config.type, filename);
+    exit_gracefully(1);
+  }
+  else memset(e->entry_label, 0, len);
+
+  if (strlen(value) >= MAX_LABEL_LEN) {
     strncpy(e->entry_label, value, (MAX_LABEL_LEN - 1));
     Log(LOG_WARNING, "WARN ( %s/%s ): [%s] entry label '%s' cut to '%s'.\n", config.name, config.type, filename, value, e->entry_label);
   }
@@ -1459,16 +1466,18 @@ int PT_map_entry_label_handler(char *filename, struct id_entry *e, char *value, 
 
 int PT_map_jeq_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
-  int len = strlen(value);
+  int len;
 
-  e->jeq.label = malloc(MAX_LABEL_LEN);
+  len = MIN((strlen(value) + 1), MAX_LABEL_LEN);
+
+  e->jeq.label = malloc(len);
   if (!e->jeq.label) {
     Log(LOG_ERR, "ERROR ( %s/%s ): [%s] malloc() failed (PT_map_jeq_handler). Exiting.\n", config.name, config.type, filename);
     exit_gracefully(1);
   }
-  else memset(e->jeq.label, 0, MAX_LABEL_LEN);
+  else memset(e->jeq.label, 0, len);
 
-  if (len >= MAX_LABEL_LEN) {
+  if (strlen(value) >= MAX_LABEL_LEN) {
     strncpy(e->jeq.label, value, (MAX_LABEL_LEN - 1));
     Log(LOG_WARNING, "WARN ( %s/%s ): [%s] JEQ label '%s' cut to '%s'.\n", config.name, config.type, filename, value, e->jeq.label);
   }
