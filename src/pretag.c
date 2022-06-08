@@ -57,7 +57,7 @@ int (*find_id_func)(struct id_table *, struct packet_ptrs *, pm_id_t *, pm_id_t 
 void load_id_file(int acct_type, char *filename, struct id_table *t, struct plugin_requests *req, int *map_allocated)
 {
   struct id_table tmp;
-  struct id_entry *ptr, *ptr2;
+  struct id_entry *ptr;
   FILE *file;
   char *buf = NULL;
   int v4_num = 0, x, tot_lines = 0, err, errs = 0, index, label_solved;
@@ -129,12 +129,16 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
         if (config.maps_index && pretag_index_have_one(t)) {
 	  pretag_index_destroy(t);
 	}
+
 	for (index = 0; index < t->num; index++) {
 	  pcap_freecode(&t->e[index].key.filter);
 	  pretag_free_label(&t->e[index].label);
 	  if (t->e[index].jeq.label) free(t->e[index].jeq.label); 
 	  if (t->e[index].entry_label) free(t->e[index].entry_label);
 	}
+
+	cdada_map_destroy(t->label_map_v4);
+	cdada_map_destroy(t->label_map_v6);
 
         memset(t, 0, sizeof(struct id_table));
         t->e = ptr ;
@@ -573,10 +577,36 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       t->ipv4_num = v4_num; 
       t->ipv4_base = &t->e[x];
       t->flags = tmp.flags;
+      {
+	pm_id_t pm_cdada_map_container;
+
+        t->label_map_v4 = cdada_map_create(pm_cdada_map_container);
+        t->label_map_v6 = cdada_map_create(pm_cdada_map_container);
+	if (!t->label_map_v4 || !t->label_map_v6) {
+	  Log(LOG_ERR, "ERROR ( %s/%s ): [%s] unable to allocate Label Map. Exiting.\n", config.name, config.type, t->filename);
+	  exit_gracefully(1);
+	}
+      }
+
       for (index = 0; index < tmp.num; index++) {
-        if (tmp.e[index].key.agent_ip.a.family == AF_INET) { 
+        if (tmp.e[index].key.agent_ip.a.family == AF_INET) {
           memcpy(&t->e[x], &tmp.e[index], sizeof(struct id_entry));
 	  t->e[x].pos = x;
+
+	  if (t->e[x].entry_label) {
+	    int ret;
+	    pm_id_t *idx_value;
+
+	    ret = cdada_map_find(t->label_map_v4, t->e[x].entry_label, (void **) &idx_value);
+	    if (ret == CDADA_E_NOT_FOUND) {
+	      ret = cdada_map_insert(t->label_map_v4, t->e[x].entry_label, &t->e[x].pos);
+	      if (ret != CDADA_SUCCESS) {
+		Log(LOG_ERR, "ERROR ( %s/%s ): [%s] unable to insert in Label Map v4. Exiting.\n", config.name, config.type, t->filename);
+		exit_gracefully(1);
+	      }
+	    }
+	  }
+
 	  x++;
         }
       }
@@ -587,6 +617,21 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
         if (tmp.e[index].key.agent_ip.a.family == AF_INET6) {
           memcpy(&t->e[x], &tmp.e[index], sizeof(struct id_entry));
 	  t->e[x].pos = x;
+
+	  if (t->e[x].entry_label) {
+	    int ret;
+	    pm_id_t *idx_value;
+
+	    ret = cdada_map_find(t->label_map_v6, t->e[x].entry_label, (void **) &idx_value);
+	    if (ret == CDADA_E_NOT_FOUND) {
+	      ret = cdada_map_insert(t->label_map_v6, t->e[x].entry_label, &t->e[x].pos);
+	      if (ret != CDADA_SUCCESS) {
+		Log(LOG_ERR, "ERROR ( %s/%s ): [%s] unable to insert in Label Map v6. Exiting.\n", config.name, config.type, t->filename);
+		exit_gracefully(1);
+	      }
+	    }
+	  }
+
           x++;
         }
       }
@@ -604,13 +649,14 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	    label_solved = TRUE;
 	  }
 	  else {
-	    for (ptr2 = ptr+1, index = x+1; index < t->ipv4_num; ptr2++, index++) {
-	      if (ptr2->entry_label) {
-		if (!strcmp(ptr->jeq.label, ptr2->entry_label)) {
-		  ptr->jeq.ptr = ptr2;
-		  label_solved = TRUE;
-		  break;
-		}
+            int ret;
+            pm_id_t *idx_value;
+
+            ret = cdada_map_find(t->label_map_v4, ptr->jeq.label, (void **) &idx_value);
+	    if (ret == CDADA_SUCCESS) {
+	      if ((*idx_value) > ptr->pos) {
+		ptr->jeq.ptr = &t->e[(*idx_value)];
+		label_solved = TRUE;
 	      }
 	    }
 	  }
@@ -624,19 +670,24 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 
       for (ptr = t->ipv6_base, x = 0; x < t->ipv6_num; ptr++, x++) {
         if (ptr->jeq.label) {
+          int ret;
+          pm_id_t *idx_value;
+
           label_solved = FALSE;
-          for (ptr2 = ptr+1, index = x+1; index < t->ipv6_num; ptr2++, index++) {
-            if (!strcmp(ptr->jeq.label, ptr2->entry_label)) {
-              ptr->jeq.ptr = ptr2;
-              label_solved = TRUE;
-	      break;
-            }
-          }
-          if (!label_solved) {
-            ptr->jeq.ptr = NULL;
-            Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unresolved label '%s'. Ignoring it.\n",
+
+          ret = cdada_map_find(t->label_map_v6, ptr->jeq.label, (void **) &idx_value);
+	  if (ret == CDADA_SUCCESS) {
+	    if ((*idx_value) > ptr->pos) {
+	      ptr->jeq.ptr = &t->e[(*idx_value)];
+	      label_solved = TRUE;
+	    }
+	  }
+
+	  if (!label_solved) {
+	    ptr->jeq.ptr = NULL;
+	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unresolved label '%s'. Ignoring it.\n",
 			config.name, config.type, filename, ptr->jeq.label);
-          }
+	  }
         }
       }
 

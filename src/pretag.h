@@ -252,6 +252,8 @@ struct id_table {
   unsigned int index_num;
   time_t timestamp;
   u_int32_t flags;
+  cdada_map_t *label_map_v4;
+  cdada_map_t *label_map_v6;
 };
 
 struct _map_dictionary_line {
