@@ -310,6 +310,8 @@ struct bgp_misc_structs {
   int current_slot;
   struct sockaddr_storage *tag_peer;
   void (*bgp_table_info_delete_tag_find)(struct bgp_peer *);
+
+  struct dynname_tokens writer_id_tokens;
 };
 
 /* these includes require definition of bgp_rt_structs and bgp_peer */

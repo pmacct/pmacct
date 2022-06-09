@@ -579,6 +579,12 @@ void skinny_bgp_daemon_online()
 #endif
   }
 
+  if (!config.writer_id_string) {
+    config.writer_id_string = DYNNAME_DEFAULT_WRITER_ID;
+  }
+
+  dynname_tokens_prepare(config.writer_id_string, &bgp_misc_db->writer_id_tokens, DYN_STR_WRITER_ID);
+
   select_fd = bkp_select_fd = (config.bgp_sock + 1);
   recalc_fds = FALSE;
 

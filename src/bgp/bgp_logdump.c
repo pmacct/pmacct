@@ -234,7 +234,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
     if ((bms->msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
 	(bms->dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP)) {
-      add_writer_name_and_pid_json(obj, config.proc_name, getpid());
+      add_writer_name_and_pid_json_v2(obj, &bms->writer_id_tokens);
 #ifdef WITH_RABBITMQ
       amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
       p_amqp_unset_routing_key(peer->log->amqp_host);
@@ -243,7 +243,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
     if ((bms->msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
 	(bms->dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
-      add_writer_name_and_pid_json(obj, config.proc_name, getpid());
+      add_writer_name_and_pid_json_v2(obj, &bms->writer_id_tokens);
 #ifdef WITH_KAFKA
       kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
       p_kafka_unset_topic(peer->log->kafka_host);
@@ -263,7 +263,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
     struct bgp_attr_extra *attr_extra = ri->attr_extra;
     char ip_address[INET6_ADDRSTRLEN], log_type_str[SUPERSHORTBUFLEN];
     char prefix_str[PREFIX_STRLEN], nexthop_str[INET6_ADDRSTRLEN];
-    char wid[SHORTSHORTBUFLEN], empty_string[] = "", *aspath = NULL;
+    char empty_string[] = "", *aspath = NULL;
     void *p_avro_local_buf = NULL; 
 
     p_avro_writer = avro_writer_memory(bms->avro_buf, LARGEBUFLEN);
@@ -562,9 +562,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       pm_avro_check(avro_value_set_string(&p_avro_field, rpki_roa_print(roa)));
     }
 
-    pm_avro_check(avro_value_get_by_name(&p_avro_obj, "writer_id", &p_avro_field, NULL));
-    snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, getpid());
-    pm_avro_check(avro_value_set_string(&p_avro_field, wid));
+    add_writer_name_and_pid_avro_v2(p_avro_obj, &bms->writer_id_tokens);
 
     if (((bms->msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
 	 (bms->dump_file && etype == BGP_LOGDUMP_ET_DUMP) ||
@@ -792,7 +790,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int typ
 
 #ifdef WITH_RABBITMQ
       if (bms->msglog_amqp_routing_key) {
-	add_writer_name_and_pid_json(obj, config.proc_name, getpid());
+	add_writer_name_and_pid_json_v2(obj, &bms->writer_id_tokens);
 	amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj); 
 	p_amqp_unset_routing_key(peer->log->amqp_host);
       }
@@ -800,7 +798,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int typ
 
 #ifdef WITH_KAFKA
       if (bms->msglog_kafka_topic) {
-	add_writer_name_and_pid_json(obj, config.proc_name, getpid());
+	add_writer_name_and_pid_json_v2(obj, &bms->writer_id_tokens);
         kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
         p_kafka_unset_topic(peer->log->kafka_host);
       }
@@ -811,7 +809,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int typ
 	     (output == PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
       char event_type[] = "log_init";
-      char ip_address[INET6_ADDRSTRLEN], wid[SHORTSHORTBUFLEN];
+      char ip_address[INET6_ADDRSTRLEN];
 
       avro_writer_t p_avro_writer = {0};
       avro_value_iface_t *p_avro_iface = NULL;
@@ -851,9 +849,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int typ
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "event_type", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_string(&p_avro_field, event_type));
 
-      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "writer_id", &p_avro_field, NULL));
-      snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, getpid());
-      pm_avro_check(avro_value_set_string(&p_avro_field, wid));
+      add_writer_name_and_pid_avro_v2(p_avro_obj, &bms->writer_id_tokens);
 
       if (bms->bgp_peer_logdump_initclose_extras) {
 	bms->bgp_peer_logdump_initclose_extras(peer, output, &p_avro_obj);
@@ -1025,7 +1021,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
 
 #ifdef WITH_RABBITMQ
     if (bms->msglog_amqp_routing_key) {
-      add_writer_name_and_pid_json(obj, config.proc_name, getpid());
+      add_writer_name_and_pid_json_v2(obj, &bms->writer_id_tokens);
       amqp_ret = write_and_free_json_amqp(amqp_log_ptr, obj);
       p_amqp_unset_routing_key(amqp_log_ptr);
     }
@@ -1033,7 +1029,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
 
 #ifdef WITH_KAFKA
     if (bms->msglog_kafka_topic) {
-      add_writer_name_and_pid_json(obj, config.proc_name, getpid());
+      add_writer_name_and_pid_json_v2(obj, &bms->writer_id_tokens);
       kafka_ret = write_and_free_json_kafka(kafka_log_ptr, obj);
       p_kafka_unset_topic(kafka_log_ptr);
     }
@@ -1044,7 +1040,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
 	   (output == PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
     char event_type[] = "log_close";
-    char ip_address[INET6_ADDRSTRLEN], wid[SHORTSHORTBUFLEN];
+    char ip_address[INET6_ADDRSTRLEN];
 
     avro_writer_t p_avro_writer = {0};
     avro_value_iface_t *p_avro_iface = NULL;
@@ -1084,9 +1080,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
     pm_avro_check(avro_value_get_by_name(&p_avro_obj, "event_type", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_string(&p_avro_field, event_type));
 
-    pm_avro_check(avro_value_get_by_name(&p_avro_obj, "writer_id", &p_avro_field, NULL));
-    snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, getpid());
-    pm_avro_check(avro_value_set_string(&p_avro_field, wid));
+    add_writer_name_and_pid_avro_v2(p_avro_obj, &bms->writer_id_tokens);
 
     if (bms->bgp_peer_logdump_initclose_extras) {
       bms->bgp_peer_logdump_initclose_extras(peer, output, &p_avro_obj);
@@ -1388,7 +1382,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
 
 #ifdef WITH_RABBITMQ
     if (bms->dump_amqp_routing_key) {
-      add_writer_name_and_pid_json(obj, config.proc_name, getpid());
+      add_writer_name_and_pid_json_v2(obj, &bms->writer_id_tokens);
       amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
       p_amqp_unset_routing_key(peer->log->amqp_host);
     }
@@ -1396,7 +1390,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
 
 #ifdef WITH_KAFKA
     if (bms->dump_kafka_topic) {
-      add_writer_name_and_pid_json(obj, config.proc_name, getpid());
+      add_writer_name_and_pid_json_v2(obj, &bms->writer_id_tokens);
       kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
       p_kafka_unset_topic(peer->log->kafka_host);
     }
@@ -1407,7 +1401,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
 	   (output == PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
     char event_type[] = "dump_init";
-    char ip_address[INET6_ADDRSTRLEN], wid[SHORTSHORTBUFLEN];
+    char ip_address[INET6_ADDRSTRLEN];
 
     avro_writer_t p_avro_writer = {0};
     avro_value_iface_t *p_avro_iface = NULL;
@@ -1450,9 +1444,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
     pm_avro_check(avro_value_get_by_name(&p_avro_obj, "dump_period", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_long(&p_avro_field, bms->dump.period)); 
 
-    pm_avro_check(avro_value_get_by_name(&p_avro_obj, "writer_id", &p_avro_field, NULL));
-    snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, getpid());
-    pm_avro_check(avro_value_set_string(&p_avro_field, wid));
+    add_writer_name_and_pid_avro_v2(p_avro_obj, &bms->writer_id_tokens);
 
     if (bms->bgp_peer_logdump_initclose_extras) {
       bms->bgp_peer_logdump_initclose_extras(peer, output, &p_avro_obj);
@@ -1604,7 +1596,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, bgp_tag_t *tag, struct bgp_dump_s
 
 #ifdef WITH_RABBITMQ
     if (bms->dump_amqp_routing_key) {
-      add_writer_name_and_pid_json(obj, config.proc_name, getpid());
+      add_writer_name_and_pid_json_v2(obj, &bms->writer_id_tokens);
       amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
       p_amqp_unset_routing_key(peer->log->amqp_host);
     }
@@ -1612,7 +1604,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, bgp_tag_t *tag, struct bgp_dump_s
 
 #ifdef WITH_KAFKA
     if (bms->dump_kafka_topic) {
-      add_writer_name_and_pid_json(obj, config.proc_name, getpid());
+      add_writer_name_and_pid_json_v2(obj, &bms->writer_id_tokens);
       kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
       p_kafka_unset_topic(peer->log->kafka_host);
     }
@@ -1623,7 +1615,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, bgp_tag_t *tag, struct bgp_dump_s
 	   (output == PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
     char event_type[] = "dump_close";
-    char ip_address[INET6_ADDRSTRLEN], wid[SHORTSHORTBUFLEN];
+    char ip_address[INET6_ADDRSTRLEN];
 
     avro_writer_t p_avro_writer = {0};
     avro_value_iface_t *p_avro_iface = NULL;
@@ -1680,9 +1672,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, bgp_tag_t *tag, struct bgp_dump_s
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
-    pm_avro_check(avro_value_get_by_name(&p_avro_obj, "writer_id", &p_avro_field, NULL));
-    snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", config.proc_name, getpid());
-    pm_avro_check(avro_value_set_string(&p_avro_field, wid));
+    add_writer_name_and_pid_avro_v2(p_avro_obj, &bms->writer_id_tokens);
 
     if (bms->bgp_peer_logdump_initclose_extras) {
       bms->bgp_peer_logdump_initclose_extras(peer, output, &p_avro_obj);

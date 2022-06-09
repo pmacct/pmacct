@@ -544,6 +544,12 @@ int telemetry_daemon(void *t_data_void)
     }
   }
 
+  if (!config.writer_id_string) {
+    config.writer_id_string = DYNNAME_DEFAULT_WRITER_ID;
+  }
+
+  dynname_tokens_prepare(config.writer_id_string, &telemetry_misc_db->writer_id_tokens, DYN_STR_WRITER_ID);
+
   select_fd = bkp_select_fd = (config.telemetry_sock + 1);
   recalc_fds = FALSE;
 
