@@ -73,8 +73,11 @@
 !                       of received sFlow samples. Expected argument are an IP
 !			address or prefix (ie. XXX.XXX.XXX.XXX/NN). 0.0.0.0/0
 !			would match all IPv4 addresses; ::/0 would match all
-!			IPv6 addresses; not specifying an 'ip' clause at all
-!			would match both all IPv4 and IPv6 addresses.
+!			IPv6 addresses; not specifying an 'ip' clause would
+!			match both all IPv4 and IPv6 addresses, in which case
+!			two objects per map entry will be allocated (corollary:
+!			maps_entries should be set to at least twice the amount
+!			of entries in the map).
 ! 'in'  		MATCH: Input interface. In NFv9/IPFIX this is compared
 !			against IE #10 and, if not existing, against IE #252.  
 ! 'out' 		MATCH: Output interface. In NFv9/IPFIX this is compared
