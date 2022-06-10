@@ -192,6 +192,28 @@ DESC:		Full path to a directory containing files needed to establish a successfu
 		or Ubuntu) "/etc/ssl/certs/ca-certificates.crt".
 DEFAULT:	none
 
+KEY:		writer_id_string
+DESC:		A "writer_id" field is added when sending data onto a Kafka or RabbitMQ broker,
+		this is meant to add contextual information about the collector producing data
+		(ie. $proc_name) or the specific batch of data (ie. PID of the writer process,
+		$writer_pid). Additional static information and separators can be supplied as
+		part of the string. Some variables are supported:
+
+		$proc_name	The name of the process producing data. This maps to the plugin
+				name in case of 'kafka' and 'amqp' plugins and core_proc_name
+				when the write is made from the Core Process, ie. BGP, BMP and
+				Streaming Telemetry cases
+
+		$writer_pid	The PID of the process producing data
+
+		$pmacct_build	The build version of the collector producing data
+
+		Note: The '_' character is part of the variables alphabet not hence it isn't a
+		valid separator between any two variables and between any variable and static
+		text. It can only used as part of variables, like the ones defined above, or
+		static text. 
+DEFAULT:	$proc_name/$writer_pid
+
 KEY:		pcap_filter [GLOBAL, PMACCTD_ONLY, ONLY_PMBMPD]
 DESC:		This filter is global and applied to all incoming packets. It's passed to libpcap
 		and expects libpcap/tcpdump filter syntax. Being global it doesn't offer a great
