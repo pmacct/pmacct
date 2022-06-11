@@ -2354,16 +2354,7 @@ void write_and_free_json(FILE *f, void *obj)
   }
 }
 
-void add_writer_name_and_pid_json(void *obj, char *name, pid_t writer_pid)
-{
-  char wid[SHORTSHORTBUFLEN]; 
-  json_t *json_obj = (json_t *) obj;
-
-  snprintf(wid, SHORTSHORTBUFLEN, "%s/%u", name, writer_pid);
-  json_object_set_new_nocheck(json_obj, "writer_id", json_string(wid));
-}
-
-void add_writer_name_and_pid_json_v2(void *obj, struct dynname_tokens *tokens)
+void add_writer_name_and_pid_json(void *obj, struct dynname_tokens *tokens)
 {
   char wid[SHORTSHORTBUFLEN];
   json_t *json_obj = (json_t *) obj;
@@ -2385,14 +2376,9 @@ void write_and_free_json(FILE *f, void *obj)
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): write_and_free_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
 }
 
-void add_writer_name_and_pid_json(void *obj, char *name, pid_t writer_pid)
+void add_writer_name_and_pid_json(void *obj, struct dynname_tokens *tokens)
 {
   if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): add_writer_name_and_pid_json(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
-}
-
-void add_writer_name_and_pid_json_v2(void *obj, struct dynname_tokens *tokens)
-{
-  if (config.debug) Log(LOG_DEBUG, "DEBUG ( %s/%s ): add_writer_name_and_pid_json_v2(): JSON object not created due to missing --enable-jansson\n", config.name, config.type);
 }
 #endif
 

@@ -234,7 +234,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
     if ((bms->msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
 	(bms->dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP)) {
-      add_writer_name_and_pid_json_v2(obj, &bms->writer_id_tokens);
+      add_writer_name_and_pid_json(obj, &bms->writer_id_tokens);
 #ifdef WITH_RABBITMQ
       amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
       p_amqp_unset_routing_key(peer->log->amqp_host);
@@ -243,7 +243,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
     if ((bms->msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
 	(bms->dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
-      add_writer_name_and_pid_json_v2(obj, &bms->writer_id_tokens);
+      add_writer_name_and_pid_json(obj, &bms->writer_id_tokens);
 #ifdef WITH_KAFKA
       kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
       p_kafka_unset_topic(peer->log->kafka_host);
@@ -790,7 +790,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int typ
 
 #ifdef WITH_RABBITMQ
       if (bms->msglog_amqp_routing_key) {
-	add_writer_name_and_pid_json_v2(obj, &bms->writer_id_tokens);
+	add_writer_name_and_pid_json(obj, &bms->writer_id_tokens);
 	amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj); 
 	p_amqp_unset_routing_key(peer->log->amqp_host);
       }
@@ -798,7 +798,7 @@ int bgp_peer_log_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int typ
 
 #ifdef WITH_KAFKA
       if (bms->msglog_kafka_topic) {
-	add_writer_name_and_pid_json_v2(obj, &bms->writer_id_tokens);
+	add_writer_name_and_pid_json(obj, &bms->writer_id_tokens);
         kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
         p_kafka_unset_topic(peer->log->kafka_host);
       }
@@ -1021,7 +1021,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
 
 #ifdef WITH_RABBITMQ
     if (bms->msglog_amqp_routing_key) {
-      add_writer_name_and_pid_json_v2(obj, &bms->writer_id_tokens);
+      add_writer_name_and_pid_json(obj, &bms->writer_id_tokens);
       amqp_ret = write_and_free_json_amqp(amqp_log_ptr, obj);
       p_amqp_unset_routing_key(amqp_log_ptr);
     }
@@ -1029,7 +1029,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
 
 #ifdef WITH_KAFKA
     if (bms->msglog_kafka_topic) {
-      add_writer_name_and_pid_json_v2(obj, &bms->writer_id_tokens);
+      add_writer_name_and_pid_json(obj, &bms->writer_id_tokens);
       kafka_ret = write_and_free_json_kafka(kafka_log_ptr, obj);
       p_kafka_unset_topic(kafka_log_ptr);
     }
@@ -1382,7 +1382,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
 
 #ifdef WITH_RABBITMQ
     if (bms->dump_amqp_routing_key) {
-      add_writer_name_and_pid_json_v2(obj, &bms->writer_id_tokens);
+      add_writer_name_and_pid_json(obj, &bms->writer_id_tokens);
       amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
       p_amqp_unset_routing_key(peer->log->amqp_host);
     }
@@ -1390,7 +1390,7 @@ int bgp_peer_dump_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
 
 #ifdef WITH_KAFKA
     if (bms->dump_kafka_topic) {
-      add_writer_name_and_pid_json_v2(obj, &bms->writer_id_tokens);
+      add_writer_name_and_pid_json(obj, &bms->writer_id_tokens);
       kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
       p_kafka_unset_topic(peer->log->kafka_host);
     }
@@ -1596,7 +1596,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, bgp_tag_t *tag, struct bgp_dump_s
 
 #ifdef WITH_RABBITMQ
     if (bms->dump_amqp_routing_key) {
-      add_writer_name_and_pid_json_v2(obj, &bms->writer_id_tokens);
+      add_writer_name_and_pid_json(obj, &bms->writer_id_tokens);
       amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
       p_amqp_unset_routing_key(peer->log->amqp_host);
     }
@@ -1604,7 +1604,7 @@ int bgp_peer_dump_close(struct bgp_peer *peer, bgp_tag_t *tag, struct bgp_dump_s
 
 #ifdef WITH_KAFKA
     if (bms->dump_kafka_topic) {
-      add_writer_name_and_pid_json_v2(obj, &bms->writer_id_tokens);
+      add_writer_name_and_pid_json(obj, &bms->writer_id_tokens);
       kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
       p_kafka_unset_topic(peer->log->kafka_host);
     }

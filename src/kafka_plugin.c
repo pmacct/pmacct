@@ -607,7 +607,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
       int idx;
 
       for (idx = 0; idx < N_PRIMITIVES && cjhandler[idx]; idx++) cjhandler[idx](json_obj, queue[j]);
-      add_writer_name_and_pid_json_v2(json_obj, &writer_id_tokens);
+      add_writer_name_and_pid_json(json_obj, &writer_id_tokens);
 
       json_str = compose_json_str(json_obj);
 #endif
