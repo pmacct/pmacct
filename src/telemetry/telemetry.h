@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -25,6 +25,7 @@
 /* includes */
 #include "base64.h"
 #ifdef WITH_UNYTE_UDP_NOTIF
+#include <unyte-udp-notif/unyte_udp_constants.h>
 #include <unyte-udp-notif/unyte_udp_collector.h>
 #include <unyte-udp-notif/unyte_udp_defaults.h>
 #endif

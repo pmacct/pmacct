@@ -813,7 +813,7 @@ int telemetry_daemon(void *t_data_void)
 
 	  seg = (unyte_seg_met_t *)seg_ptr;
 
-	  if (seg->header->encoding_type == TELEMETRY_UDP_NOTIF_ENC_JSON && config.telemetry_decoder_id == TELEMETRY_DECODER_JSON) {
+	  if (unyte_udp_get_media_type(seg) == UNYTE_MEDIATYPE_YANG_JSON && config.telemetry_decoder_id == TELEMETRY_DECODER_JSON) {
 	    struct sockaddr_storage *unsa = NULL;
 
 	    unsa = unyte_udp_get_src(seg);
