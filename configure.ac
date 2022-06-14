@@ -943,7 +943,7 @@ AC_ARG_ENABLE(unyte-udp-notif,
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
-    PKG_CHECK_MODULES([UNYTE_UDP_NOTIF], [unyte-udp-notif >= 0.5.0], [
+    PKG_CHECK_MODULES([UNYTE_UDP_NOTIF], [unyte-udp-notif >= 0.6.0], [
       AC_SUBST(UNYTE_UDP_NOTIF_CFLAGS)
       AC_SUBST(UNYTE_UDP_NOTIF_LIBS)
 
