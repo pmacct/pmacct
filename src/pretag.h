@@ -228,12 +228,14 @@ struct id_entry {
   u_int8_t id2_inc;
 };
 
+struct id_table_index; /* just to make the compiler swallow the next typedef */
+typedef int (*pretag_prep)(struct id_table_index *, pm_hash_serial_t *, void *);
 typedef int (*pretag_copier)(struct id_entry *, pm_hash_serial_t *, void *);
 
 struct id_table_index {
   pt_bitmap_t bitmap; 
   u_int32_t entries;
-  pretag_copier idt_handler[MAX_BITMAP_ENTRIES];
+  pretag_prep idt_handler[MAX_BITMAP_ENTRIES];
   pretag_copier fdata_handler[MAX_BITMAP_ENTRIES];
   pm_hash_serial_t hash_serializer;
   cdada_map_t *idx_map;
@@ -259,6 +261,11 @@ struct id_table {
 struct _map_dictionary_line {
   char key[SRVBUFLEN];
   int (*func)(char *, struct id_entry *, char *, struct plugin_requests *, int);
+};
+
+struct _map_index_internal_dictionary_line {
+  pt_bitmap_t key;
+  pretag_prep func;
 };
 
 struct _map_index_dictionary_line {

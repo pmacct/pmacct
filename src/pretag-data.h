@@ -71,7 +71,7 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"", NULL}
 };
 
-const struct _map_index_dictionary_line tag_map_index_entries_dictionary[] = {
+const struct _map_index_internal_dictionary_line tag_map_index_entries_dictionary[] = {
   {PRETAG_IP, PT_map_index_entries_ip_handler},
   {PRETAG_IN_IFACE, PT_map_index_entries_input_handler},
   {PRETAG_OUT_IFACE, PT_map_index_entries_output_handler},

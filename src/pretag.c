@@ -1195,12 +1195,10 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
 
   for (iterator = 0; iterator < t->index_num; iterator++) {
     if (t->index[iterator].entries && t->index[iterator].bitmap == idx_bmap) {
-      struct id_entry e;
       pm_hash_serial_t *hash_serializer;
       pm_hash_key_t *hash_key;
 
       /* fill serializer in */
-      memset(&e, 0, sizeof(struct id_entry));
       hash_serializer = &t->index[iterator].hash_serializer;
       hash_serial_set_off(hash_serializer, 0);
       hash_key = hash_serial_get_key(hash_serializer);
@@ -1208,7 +1206,7 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
       if (!hash_key) return PRETAG_IDX_ERR_FATAL;
 
       for (handler_index = 0; t->index[iterator].idt_handler[handler_index]; handler_index++) {
-	ret = (*t->index[iterator].idt_handler[handler_index])(&e, hash_serializer, ptr);
+	ret = (*t->index[iterator].idt_handler[handler_index])(&t->index[iterator], hash_serializer, ptr);
         if (ret) {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] pretag_index_fill(): index=%llx line=%d (err!)\n",
 	      config.name, config.type, t->filename, (unsigned long long)idx_bmap, (lineno + 1));
