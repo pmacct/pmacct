@@ -1206,7 +1206,7 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
       if (!hash_key) return PRETAG_IDX_ERR_FATAL;
 
       for (handler_index = 0; t->index[iterator].idt_handler[handler_index]; handler_index++) {
-	ret = (*t->index[iterator].idt_handler[handler_index])(&t->index[iterator], hash_serializer, ptr);
+	ret = (*t->index[iterator].idt_handler[handler_index])(&t->index[iterator], handler_index, hash_serializer, ptr);
         if (ret) {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] pretag_index_fill(): index=%llx line=%d (err!)\n",
 	      config.name, config.type, t->filename, (unsigned long long)idx_bmap, (lineno + 1));
