@@ -758,6 +758,8 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
         report = FALSE;
       }
 
+      pretag_index_dedup_netmask_lists(t);
+
       if (report) {
 	pretag_index_report(t);
       }
@@ -1234,6 +1236,29 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
   return ret;
 }
 
+int pretag_index_dedup_netmask_lists(struct id_table *t)
+{
+  u_int32_t iterator = 0, i = 0, j = 0, z = 0;
+
+  if (!t) return TRUE;
+
+  for (iterator = 0; iterator < t->index_num; iterator++) {
+    for (i = 0; t->index[iterator].idt_handler[i]; i++) {
+      if (t->index[iterator].netmask_v4_lst[i]) {
+	cdada_list_sort(t->index[iterator].netmask_v4_lst[i]);
+	cdada_list_unique(t->index[iterator].netmask_v4_lst[i]);
+      }
+
+      if (t->index[iterator].netmask_v6_lst[i]) {
+	cdada_list_sort(t->index[iterator].netmask_v6_lst[i]);
+	cdada_list_unique(t->index[iterator].netmask_v6_lst[i]);
+      }
+    }
+  }
+
+  return SUCCESS;
+}
+
 void pretag_index_print_key(const cdada_map_t *map, const void *key, void *value, void *opaque)
 {
   struct id_table_index *index = opaque;
@@ -1256,7 +1281,7 @@ void pretag_index_print_key(const cdada_map_t *map, const void *key, void *value
 
 void pretag_index_report(struct id_table *t)
 {
-  u_int32_t iterator = 0;
+  u_int32_t iterator = 0, i = 0;
 
   if (!t) return;
 
@@ -1265,6 +1290,20 @@ void pretag_index_report(struct id_table *t)
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] pretag_index_report(): index=%llx entries=%u\n",
 	  config.name, config.type, t->filename, (unsigned long long)t->index[iterator].bitmap,
 	  cdada_map_size(t->index[iterator].idx_map));
+
+      for (i = 0; t->index[iterator].idt_handler[i]; i++) {
+	if (t->index[iterator].netmask_v4_lst[i]) {
+          Log(LOG_INFO, "INFO ( %s/%s ): [%s] pretag_index_report(): index=%llx handler=%u netmask_v4_list_entries=%u\n",
+	      config.name, config.type, t->filename, (unsigned long long)t->index[iterator].bitmap, i,
+	      cdada_list_size(t->index[iterator].netmask_v4_lst[i]));
+	}
+
+	if (t->index[iterator].netmask_v6_lst[i]) {
+          Log(LOG_INFO, "INFO ( %s/%s ): [%s] pretag_index_report(): index=%llx handler=%u netmask_v6_list_entries=%u\n",
+	      config.name, config.type, t->filename, (unsigned long long)t->index[iterator].bitmap, i,
+	      cdada_list_size(t->index[iterator].netmask_v6_lst[i]));
+	}
+      }
 
       if (config.debug) {
 	cdada_map_traverse(t->index[iterator].idx_map, &pretag_index_print_key, &t->index[iterator]);
