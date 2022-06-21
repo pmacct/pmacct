@@ -1238,7 +1238,7 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
 
 int pretag_index_dedup_netmask_lists(struct id_table *t)
 {
-  u_int32_t iterator = 0, i = 0, j = 0, z = 0;
+  u_int32_t iterator = 0, i = 0;
 
   if (!t) return TRUE;
 
