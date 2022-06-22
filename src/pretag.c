@@ -1372,7 +1372,8 @@ u_int32_t pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, str
       hash_key = hash_serial_get_key(hash_serializer);
 
       for (index_hdlr = 0; (*t->index[iterator].fdata_handler[index_hdlr]); index_hdlr++) {
-        (*t->index[iterator].fdata_handler[index_hdlr])(&res_fdata, &t->index[iterator].hash_serializer, pptrs);
+        (*t->index[iterator].fdata_handler[index_hdlr])(&t->index[iterator], index_hdlr, 0 /* XXX: netmask list index */,
+							&res_fdata, &t->index[iterator].hash_serializer, pptrs);
       }
 
       idx_value = NULL;

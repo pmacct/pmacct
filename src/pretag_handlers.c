@@ -3505,7 +3505,7 @@ int PT_map_index_entries_null_handler(struct id_table_index *idx, int idx_hdlr_n
   return FALSE;
 }
 
-int PT_map_index_fdata_ip_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_ip_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
@@ -3532,7 +3532,7 @@ int PT_map_index_fdata_ip_handler(struct id_entry *e, pm_hash_serial_t *hash_ser
   return FALSE;
 }
 
-int PT_map_index_fdata_input_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_input_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
@@ -3579,7 +3579,7 @@ int PT_map_index_fdata_input_handler(struct id_entry *e, pm_hash_serial_t *hash_
   return FALSE;
 }
 
-int PT_map_index_fdata_output_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_output_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
@@ -3626,7 +3626,7 @@ int PT_map_index_fdata_output_handler(struct id_entry *e, pm_hash_serial_t *hash
   return FALSE;
 }
 
-int PT_map_index_fdata_bgp_nexthop_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_bgp_nexthop_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
@@ -3704,7 +3704,7 @@ int PT_map_index_fdata_bgp_nexthop_handler(struct id_entry *e, pm_hash_serial_t 
   return FALSE;
 }
 
-int PT_map_index_fdata_src_as_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_src_as_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
@@ -3755,7 +3755,7 @@ int PT_map_index_fdata_src_as_handler(struct id_entry *e, pm_hash_serial_t *hash
   return FALSE;
 }
 
-int PT_map_index_fdata_dst_as_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_dst_as_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
@@ -3806,7 +3806,7 @@ int PT_map_index_fdata_dst_as_handler(struct id_entry *e, pm_hash_serial_t *hash
   return FALSE;
 }
 
-int PT_map_index_fdata_peer_src_as_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_peer_src_as_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
@@ -3859,7 +3859,7 @@ int PT_map_index_fdata_peer_src_as_handler(struct id_entry *e, pm_hash_serial_t 
   return FALSE;
 }
 
-int PT_map_index_fdata_peer_dst_as_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_peer_dst_as_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
@@ -3907,7 +3907,7 @@ int PT_map_index_fdata_peer_dst_as_handler(struct id_entry *e, pm_hash_serial_t 
   return FALSE;
 }
 
-int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
@@ -3929,7 +3929,7 @@ int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_entry *e, pm_hash_serial_t 
   return FALSE;
 }
 
-int PT_map_index_fdata_mpls_pw_id_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_mpls_pw_id_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
@@ -3956,7 +3956,7 @@ int PT_map_index_fdata_mpls_pw_id_handler(struct id_entry *e, pm_hash_serial_t *
   return FALSE;
 }
 
-int PT_map_index_fdata_mpls_vpn_id_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_mpls_vpn_id_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
@@ -3984,7 +3984,7 @@ int PT_map_index_fdata_mpls_vpn_id_handler(struct id_entry *e, pm_hash_serial_t 
   return FALSE;
 }
 
-int PT_map_index_fdata_mpls_label_bottom_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_mpls_label_bottom_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
@@ -4011,7 +4011,7 @@ int PT_map_index_fdata_mpls_label_bottom_handler(struct id_entry *e, pm_hash_ser
   return FALSE;
 }
 
-int PT_map_index_fdata_src_mac_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_src_mac_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
@@ -4037,7 +4037,7 @@ int PT_map_index_fdata_src_mac_handler(struct id_entry *e, pm_hash_serial_t *has
   return FALSE;
 }
 
-int PT_map_index_fdata_dst_mac_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_dst_mac_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
@@ -4063,7 +4063,7 @@ int PT_map_index_fdata_dst_mac_handler(struct id_entry *e, pm_hash_serial_t *has
   return FALSE;
 }
 
-int PT_map_index_fdata_vlan_id_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_vlan_id_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
@@ -4095,7 +4095,7 @@ int PT_map_index_fdata_vlan_id_handler(struct id_entry *e, pm_hash_serial_t *has
   return FALSE;
 }
 
-int PT_map_index_fdata_cvlan_id_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_cvlan_id_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
@@ -4119,7 +4119,7 @@ int PT_map_index_fdata_cvlan_id_handler(struct id_entry *e, pm_hash_serial_t *ha
   return FALSE;
 }
 
-int PT_map_index_fdata_src_net_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_src_net_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
@@ -4171,7 +4171,7 @@ int PT_map_index_fdata_src_net_handler(struct id_entry *e, pm_hash_serial_t *has
   return FALSE;
 }
 
-int PT_map_index_fdata_dst_net_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_dst_net_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
@@ -4223,7 +4223,7 @@ int PT_map_index_fdata_dst_net_handler(struct id_entry *e, pm_hash_serial_t *has
   return FALSE;
 }
 
-int PT_map_index_fdata_is_multicast_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_is_multicast_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
@@ -4251,7 +4251,7 @@ int PT_map_index_fdata_is_multicast_handler(struct id_entry *e, pm_hash_serial_t
   return FALSE;
 }
 
-int PT_map_index_fdata_fwd_status_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_fwd_status_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
@@ -4275,7 +4275,7 @@ int PT_map_index_fdata_fwd_status_handler(struct id_entry *e, pm_hash_serial_t *
   return FALSE;
 }
 
-int PT_map_index_fdata_null_handler(struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+int PT_map_index_fdata_null_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
 {
   e->key.null.n = 0;
 

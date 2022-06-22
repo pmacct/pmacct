@@ -230,7 +230,7 @@ struct id_entry {
 
 struct id_table_index; /* just to make the compiler swallow the next typedef */
 typedef int (*pretag_prep)(struct id_table_index *, int, pm_hash_serial_t *, void *);
-typedef int (*pretag_copier)(struct id_entry *, pm_hash_serial_t *, void *);
+typedef int (*pretag_copier)(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *);
 
 struct id_table_index {
   pt_bitmap_t bitmap; 
