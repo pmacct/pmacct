@@ -3057,11 +3057,13 @@ the output file from tcprewrite can be supplied to tcpreplay for the actual
 replay to the pmacct daemon, ie.: "tcpreplay -x <speed multiplicator>
 -i <output interface> <input file>".
 
-g) Buffering is often an element to tune. While buffering internal to pmacct
-(configured with plugin_buffer_size / plugin_pipe_size or plugin_pipe_zmq)
-returns warning messages in case of data loss, buffering between pmacct and
-the kernel (configured with nfacctd_pipe_size and its equivalents) may be more
-tricky to detect and sometimes issues can only be inferred by symptoms (like
+g) Buffering is often an element to tune in order to make sure that output
+is complete (packet loss may lead to incomplete results but also configuring
+too large buffers). While buffering internal to pmacct (configured with
+plugin_buffer_size / plugin_pipe_size or plugin_pipe_zmq) returns warning
+messages in case of data loss, buffering between pmacct and the kernel
+(configured with nfacctd_pipe_size and its equivalents) may be more tricky
+to detect and sometimes issues can only be inferred by symptoms (like
 sequence number checks for NetFlow v9/IPFIX). For nfacctd and sfacctd daemons,
 two commands useful to check this kind of buffering on Linux systems are:
 1) "cat /proc/net/udp" or "cat /proc/net/udp6" ensuring that "drops" value
@@ -3070,7 +3072,9 @@ errors are not increasing (since this command returns system-wide counters,
 the counter-check would be: stop the pmacct daemon running and, granted the
 counter was increasing, verify it does not increase anymore). For pmacctd,
 an UNIX signal can be sent to the daemon so that the amount of dropped packets
-is reported in the log output (ie. kill -USR1 <pmacctd core PID>).
+is reported in the log output (ie. kill -USR1 <pmacctd core PID>). Finally,
+if troubleshooting incomplete output, please review tips about inconsistent
+output slightly earlier in this document.
 
 h) BMP, the BGP Monitoring Protocol, has got drafting traction at IETF. New
 protocol features drive the need for inter-op testing. The BMP play tool
