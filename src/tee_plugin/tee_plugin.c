@@ -923,9 +923,8 @@ void Tee_select_templates(unsigned char *pkt, int pkt_len, int nfv, unsigned cha
   while (term1 > term2) {
     int fset_id = ntohs(hdr_flowset->flow_id);
     int fset_len = ntohs(hdr_flowset->flow_len);
-    int fset_hdr_len = sizeof(struct data_hdr_v9);
 
-    if (!fset_len || (fset_hdr_len + fset_len) > pkt_len) break;
+    if (!fset_len || fset_len > pkt_len) break;
 
     /* if template, copy over */
     if (((nfv == 9) && (fset_id == 0 || fset_id == 1)) ||
