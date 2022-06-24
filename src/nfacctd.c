@@ -621,12 +621,14 @@ int main(int argc,char **argv, char **envp)
     exit_gracefully(1);
   }
 
-  if (config.nfacctd_templates_receiver) {
+  if (config.nfacctd_templates_port) {
     if (!config.nfacctd_port && !config.nfacctd_ip && capture_methods) {
-      Log(LOG_ERR, "ERROR ( %s/core ): nfacctd_templates_receiver only applies to live UDP collection (nfacctd_ip, nfacctd_port). Exiting.\n\n", config.name);
+      Log(LOG_ERR, "ERROR ( %s/core ): nfacctd_templates_port only applies to live UDP collection (nfacctd_ip, nfacctd_port). Exiting.\n\n", config.name);
       exit_gracefully(1);
     }
+  }
 
+  if (config.nfacctd_templates_receiver) {
     if (tee_plugins) {
       Log(LOG_ERR, "ERROR ( %s/core ): nfacctd_templates_receiver and tee plugin ae mutual exclusive. Exiting.\n\n", config.name);
       exit_gracefully(1);
@@ -944,18 +946,18 @@ int main(int argc,char **argv, char **envp)
     }
 
     memset(&tee_templates, 0, sizeof(struct tee_receiver));
+  }
 
-    if (config.nfacctd_templates_receiver) {
-      tee_templates.dest_len = sizeof(tee_templates.dest);
+  if (config.nfacctd_templates_receiver) {
+    tee_templates.dest_len = sizeof(tee_templates.dest);
 
-      ret = Tee_parse_hostport(config.nfacctd_templates_receiver, (struct sockaddr *) &tee_templates.dest, &tee_templates.dest_len, FALSE);
-      if (ret) {
-	Log(LOG_ERR, "ERROR ( %s/core ): Invalid receiver: %s.\n", config.name, config.nfacctd_templates_receiver);
-	exit_gracefully(1);
-      }
-
-      tee_templates.fd = Tee_prepare_sock((struct sockaddr *) &tee_templates.dest, tee_templates.dest_len, NULL, FALSE, TRUE, FALSE);
+    ret = Tee_parse_hostport(config.nfacctd_templates_receiver, (struct sockaddr *) &tee_templates.dest, &tee_templates.dest_len, FALSE);
+    if (ret) {
+      Log(LOG_ERR, "ERROR ( %s/core ): Invalid nfacctd_templates_receiver: %s.\n", config.name, config.nfacctd_templates_receiver);
+      exit_gracefully(1);
     }
+
+    tee_templates.fd = Tee_prepare_sock((struct sockaddr *) &tee_templates.dest, tee_templates.dest_len, NULL, FALSE, TRUE, FALSE);
   }
 
   if (config.nfacctd_allow_file) load_allow_file(config.nfacctd_allow_file, &allow);
