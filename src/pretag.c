@@ -758,7 +758,12 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
         report = FALSE;
       }
 
-      pretag_index_dedup_netmask_lists(t);
+      if (pretag_index_validate_dedup_netmask_lists(t) == ERR) {
+        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Network masks count exceeded. Indexing disabled.\n",
+	    config.name, config.type, filename);
+        pretag_index_destroy(t);
+        report = FALSE;
+      }
 
       if (report) {
 	pretag_index_report(t);
@@ -1236,12 +1241,26 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
   return ret;
 }
 
-int pretag_index_dedup_netmask_lists(struct id_table *t)
+int pretag_index_validate_dedup_netmask_lists(struct id_table *t)
 {
-  u_int32_t iterator = 0, i = 0;
+  u_int32_t iterator = 0, i = 0, count = 0;
 
-  if (!t) return TRUE;
+  if (!t) return ERR;
 
+  /* validate */
+  for (iterator = 0; iterator < t->index_num; iterator++) {
+    for (i = 0, count = 0; t->index[iterator].idt_handler[i]; i++) {
+      if (t->index[iterator].netmask_v4_lst[i] || t->index[iterator].netmask_v6_lst[i]) {
+	count++;
+      }
+    }
+  }
+
+  if (count > 1) {
+    return ERR;
+  }
+
+  /* dedup */
   for (iterator = 0; iterator < t->index_num; iterator++) {
     for (i = 0; t->index[iterator].idt_handler[i]; i++) {
       if (t->index[iterator].netmask_v4_lst[i]) {

@@ -3237,19 +3237,13 @@ int PT_map_index_entries_ip_handler(struct id_table_index *idx, int idx_hdlr_no,
 
   hash_serial_append(hash_serializer, (char *)&src_e->key.agent_ip.a, sizeof(struct host_addr), TRUE);
 
-  if (src_e->key.agent_ip.a.family == AF_INET) {
-    if (!idx->netmask_v4_lst[idx_hdlr_no]) {
-      idx->netmask_v4_lst[idx_hdlr_no] = cdada_list_create(u_int8_t);
-    }
-
-    cdada_list_push_back(idx->netmask_v4_lst[idx_hdlr_no], &src_e->key.agent_mask.len);
+  if ((src_e->key.agent_mask.family == AF_INET && src_e->key.agent_mask.len == 32) ||
+      (src_e->key.agent_mask.family == AF_INET6 && src_e->key.agent_mask.len == 128)) {
+    hash_serial_append(hash_serializer, (char *)&src_e->key.agent_ip.a, sizeof(struct host_addr), TRUE);
   }
-  else if (src_e->key.agent_ip.a.family == AF_INET6) {
-    if (!idx->netmask_v6_lst[idx_hdlr_no]) {
-      idx->netmask_v6_lst[idx_hdlr_no] = cdada_list_create(u_int8_t);
-    }
-
-    cdada_list_push_back(idx->netmask_v6_lst[idx_hdlr_no], &src_e->key.agent_mask.len);
+  else {
+    Log(LOG_WARNING, "WARN ( %s/%s ): pretag_index_fill(): unsupported 'ip' mask\n", config.name, config.type);
+    return PRETAG_IDX_ERR_WARN;
   }
 
   return FALSE;
