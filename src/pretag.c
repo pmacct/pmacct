@@ -1243,29 +1243,22 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
 
 int pretag_index_validate_dedup_netmask_lists(struct id_table *t)
 {
-  u_int32_t iterator = 0, i = 0, count = 0;
+  u_int32_t iterator = 0;
 
   if (!t) return ERR;
 
-  /* validate */
-  for (iterator = 0; iterator < t->index_num; iterator++) {
-    if (t->index[iterator].netmask_v4.count > 1 || t->index[iterator].netmask_v6.count > 1) {
-      return ERR;
-    }
-  }
-
   /* dedup */
   for (iterator = 0; iterator < t->index_num; iterator++) {
-    for (i = 0; t->index[iterator].idt_handler[i]; i++) {
-      if (t->index[iterator].netmask_v4.list[i]) {
-	cdada_list_sort(t->index[iterator].netmask_v4.list[i]);
-	cdada_list_unique(t->index[iterator].netmask_v4.list[i]);
-      }
+    if (t->index[iterator].netmask.v4.list) {
+      cdada_list_sort(t->index[iterator].netmask.v4.list);
+      cdada_list_unique(t->index[iterator].netmask.v4.list);
+      t->index[iterator].netmask.v4.size = cdada_list_size(t->index[iterator].netmask.v4.list);
+    }
 
-      if (t->index[iterator].netmask_v6.list[i]) {
-	cdada_list_sort(t->index[iterator].netmask_v6.list[i]);
-	cdada_list_unique(t->index[iterator].netmask_v6.list[i]);
-      }
+    if (t->index[iterator].netmask.v6.list) {
+      cdada_list_sort(t->index[iterator].netmask.v6.list);
+      cdada_list_unique(t->index[iterator].netmask.v6.list);
+      t->index[iterator].netmask.v6.size = cdada_list_size(t->index[iterator].netmask.v6.list);
     }
   }
 
@@ -1294,7 +1287,7 @@ void pretag_index_print_key(const cdada_map_t *map, const void *key, void *value
 
 void pretag_index_report(struct id_table *t)
 {
-  u_int32_t iterator = 0, i = 0;
+  u_int32_t iterator = 0;
 
   if (!t) return;
 
@@ -1304,18 +1297,16 @@ void pretag_index_report(struct id_table *t)
 	  config.name, config.type, t->filename, (unsigned long long)t->index[iterator].bitmap,
 	  cdada_map_size(t->index[iterator].idx_map));
 
-      for (i = 0; t->index[iterator].idt_handler[i]; i++) {
-	if (t->index[iterator].netmask_v4.list[i]) {
-          Log(LOG_INFO, "INFO ( %s/%s ): [%s] pretag_index_report(): index=%llx handler=%u netmask_v4_list_entries=%u\n",
-	      config.name, config.type, t->filename, (unsigned long long)t->index[iterator].bitmap, i,
-	      cdada_list_size(t->index[iterator].netmask_v4.list[i]));
-	}
+      if (t->index[iterator].netmask.v4.list) {
+        Log(LOG_INFO, "INFO ( %s/%s ): [%s] pretag_index_report(): index=%llx handler=%u netmask.v4.list_entries=%u\n",
+	    config.name, config.type, t->filename, (unsigned long long)t->index[iterator].bitmap,
+	    t->index[iterator].netmask.hdlr_no, cdada_list_size(t->index[iterator].netmask.v4.list));
+      }
 
-	if (t->index[iterator].netmask_v6.list[i]) {
-          Log(LOG_INFO, "INFO ( %s/%s ): [%s] pretag_index_report(): index=%llx handler=%u netmask_v6_list_entries=%u\n",
-	      config.name, config.type, t->filename, (unsigned long long)t->index[iterator].bitmap, i,
-	      cdada_list_size(t->index[iterator].netmask_v6.list[i]));
-	}
+      if (t->index[iterator].netmask.v6.list) {
+        Log(LOG_INFO, "INFO ( %s/%s ): [%s] pretag_index_report(): index=%llx handler=%u netmask.v6.list_entries=%u\n",
+	    config.name, config.type, t->filename, (unsigned long long)t->index[iterator].bitmap,
+	    t->index[iterator].netmask.hdlr_no, cdada_list_size(t->index[iterator].netmask.v6.list));
       }
 
       if (config.debug) {
@@ -1329,7 +1320,7 @@ void pretag_index_destroy(struct id_table *t)
 {
   pm_hash_serial_t *hash_serializer;
   pm_hash_key_t *hash_key;
-  u_int32_t iterator = 0, hdlr_no;
+  u_int32_t iterator = 0;
 
   if (!t) return;
 
@@ -1357,20 +1348,12 @@ void pretag_index_destroy(struct id_table *t)
     hash_destroy_key(hash_key);
 
     /* destroy the lists */
-    if (t->index[iterator].netmask_v4.count) {
-      for (hdlr_no = 0; hdlr_no < MAX_BITMAP_ENTRIES; hdlr_no++) {
-	if (t->index[iterator].netmask_v4.list[hdlr_no]) {
-	  cdada_list_destroy(t->index[iterator].netmask_v4.list[hdlr_no]);
-	}
-      }
+    if (t->index[iterator].netmask.v4.list) {
+      cdada_list_destroy(t->index[iterator].netmask.v4.list);
     }
 
-    if (t->index[iterator].netmask_v6.count) {
-      for (hdlr_no = 0; hdlr_no < MAX_BITMAP_ENTRIES; hdlr_no++) {
-	if (t->index[iterator].netmask_v6.list[hdlr_no]) {
-	  cdada_list_destroy(t->index[iterator].netmask_v6.list[hdlr_no]);
-	}
-      }
+    if (t->index[iterator].netmask.v6.list) {
+      cdada_list_destroy(t->index[iterator].netmask.v6.list);
     }
 
     /* cleanup */
@@ -1386,7 +1369,7 @@ u_int32_t pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, str
   pm_hash_serial_t *hash_serializer;
   pm_hash_key_t *hash_key;
   u_int32_t iterator, index_hdlr;
-  int iterator_ir, ret;
+  int iterator_ir, netmask_idx, netmask_max, ret;
   void *idx_value = NULL;
 
   if (!t || !pptrs || !index_results) return 0;
@@ -1394,16 +1377,32 @@ u_int32_t pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, str
   memset(&res_fdata, 0, sizeof(res_fdata));
   memset(index_results, 0, (sizeof(struct id_entry *) * ir_entries));
   iterator_ir = 0;
+  netmask_idx = netmask_max = ERR;
 
   for (iterator = 0; iterator < t->index_num; iterator++) {
     if (t->index[iterator].entries) {
+      if (pptrs->l3_proto == ETHERTYPE_IP && t->index[iterator].netmask.v4.size) {
+	netmask_idx = 0;
+	netmask_max = t->index[iterator].netmask.v4.size;
+      }
+      else if (pptrs->l3_proto == ETHERTYPE_IPV6 && t->index[iterator].netmask.v6.size) {
+	netmask_idx = 0;
+	netmask_max = t->index[iterator].netmask.v6.size;
+      }
+
+      netmask_recirc:
+
       hash_serializer = &t->index[iterator].hash_serializer;
       hash_serial_set_off(hash_serializer, 0);
       hash_key = hash_serial_get_key(hash_serializer);
 
       for (index_hdlr = 0; (*t->index[iterator].fdata_handler[index_hdlr]); index_hdlr++) {
-        (*t->index[iterator].fdata_handler[index_hdlr])(&t->index[iterator], index_hdlr, 0 /* XXX: netmask list index */,
+        (*t->index[iterator].fdata_handler[index_hdlr])(&t->index[iterator], index_hdlr, netmask_idx,
 							&res_fdata, &t->index[iterator].hash_serializer, pptrs);
+      }
+
+      if (netmask_idx >= 0) {
+	netmask_idx++;
       }
 
       idx_value = NULL;
@@ -1418,6 +1417,10 @@ u_int32_t pretag_index_lookup(struct id_table *t, struct packet_ptrs *pptrs, str
 	  memset(index_results, 0, (sizeof(struct id_entry *) * ir_entries));
 	  return 0;
 	}
+      }
+
+      if (netmask_idx < netmask_max) {
+        goto netmask_recirc;
       }
     }
     else break;

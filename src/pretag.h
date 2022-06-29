@@ -232,9 +232,15 @@ struct id_table_index; /* just to make the compiler swallow the next typedef */
 typedef int (*pretag_prep)(struct id_table_index *, int, pm_hash_serial_t *, void *);
 typedef int (*pretag_copier)(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *);
 
+struct id_table_index_netmask_list {
+  cdada_list_t *list;
+  int size;
+};
+
 struct id_table_index_netmask {
-  cdada_list_t *list[MAX_BITMAP_ENTRIES];
-  int count;
+  struct id_table_index_netmask_list v4;
+  struct id_table_index_netmask_list v6;
+  int hdlr_no;
 };
 
 struct id_table_index {
@@ -242,8 +248,7 @@ struct id_table_index {
   u_int32_t entries;
   pretag_prep idt_handler[MAX_BITMAP_ENTRIES];
   pretag_copier fdata_handler[MAX_BITMAP_ENTRIES];
-  struct id_table_index_netmask netmask_v4;
-  struct id_table_index_netmask netmask_v6;
+  struct id_table_index_netmask netmask;
   pm_hash_serial_t hash_serializer;
   cdada_map_t *idx_map;
 };
