@@ -3423,18 +3423,22 @@ int PT_map_index_entries_src_net_handler(struct id_table_index *idx, int idx_hdl
   hash_serial_append(hash_serializer, (char *)&src_e->key.src_net.a, sizeof(struct host_addr), TRUE);
 
   if (src_e->key.src_net.a.family == AF_INET) {
-    if (!idx->netmask_v4_lst[idx_hdlr_no]) {
-      idx->netmask_v4_lst[idx_hdlr_no] = cdada_list_create(u_int8_t);
+    if (!idx->netmask_v4.list[idx_hdlr_no]) {
+      idx->netmask_v4.list[idx_hdlr_no] = cdada_list_create(u_int8_t);
+      idx->netmask_v4.count = 0;
     }
 
-    cdada_list_push_back(idx->netmask_v4_lst[idx_hdlr_no], &src_e->key.src_net.m.len);
+    cdada_list_push_back(idx->netmask_v4.list[idx_hdlr_no], &src_e->key.src_net.m.len);
+    idx->netmask_v4.count++;
   }
   else if (src_e->key.src_net.a.family == AF_INET6) {
-    if (!idx->netmask_v6_lst[idx_hdlr_no]) {
-      idx->netmask_v6_lst[idx_hdlr_no] = cdada_list_create(u_int8_t);
+    if (!idx->netmask_v6.list[idx_hdlr_no]) {
+      idx->netmask_v6.list[idx_hdlr_no] = cdada_list_create(u_int8_t);
+      idx->netmask_v6.count = 0;
     }
 
-    cdada_list_push_back(idx->netmask_v6_lst[idx_hdlr_no], &src_e->key.src_net.m.len);
+    cdada_list_push_back(idx->netmask_v6.list[idx_hdlr_no], &src_e->key.src_net.m.len);
+    idx->netmask_v6.count++;
   }
 
   return FALSE;
@@ -3449,18 +3453,22 @@ int PT_map_index_entries_dst_net_handler(struct id_table_index *idx, int idx_hdl
   hash_serial_append(hash_serializer, (char *)&src_e->key.dst_net.a, sizeof(struct host_addr), TRUE);
 
   if (src_e->key.dst_net.a.family == AF_INET) {
-    if (!idx->netmask_v4_lst[idx_hdlr_no]) {
-      idx->netmask_v4_lst[idx_hdlr_no] = cdada_list_create(u_int8_t);
+    if (!idx->netmask_v4.list[idx_hdlr_no]) {
+      idx->netmask_v4.list[idx_hdlr_no] = cdada_list_create(u_int8_t);
+      idx->netmask_v4.count = 0;
     }
 
-    cdada_list_push_back(idx->netmask_v4_lst[idx_hdlr_no], &src_e->key.dst_net.m.len);
+    cdada_list_push_back(idx->netmask_v4.list[idx_hdlr_no], &src_e->key.dst_net.m.len);
+    idx->netmask_v4.count++;
   }
   else if (src_e->key.dst_net.a.family == AF_INET6) {
-    if (!idx->netmask_v6_lst[idx_hdlr_no]) {
-      idx->netmask_v6_lst[idx_hdlr_no] = cdada_list_create(u_int8_t);
+    if (!idx->netmask_v6.list[idx_hdlr_no]) {
+      idx->netmask_v6.list[idx_hdlr_no] = cdada_list_create(u_int8_t);
+      idx->netmask_v6.count = 0;
     }
 
-    cdada_list_push_back(idx->netmask_v6_lst[idx_hdlr_no], &src_e->key.dst_net.m.len);
+    cdada_list_push_back(idx->netmask_v6.list[idx_hdlr_no], &src_e->key.dst_net.m.len);
+    idx->netmask_v6.count++;
   }
 
   return FALSE;

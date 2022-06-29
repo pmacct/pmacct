@@ -1249,28 +1249,22 @@ int pretag_index_validate_dedup_netmask_lists(struct id_table *t)
 
   /* validate */
   for (iterator = 0; iterator < t->index_num; iterator++) {
-    for (i = 0, count = 0; t->index[iterator].idt_handler[i]; i++) {
-      if (t->index[iterator].netmask_v4_lst[i] || t->index[iterator].netmask_v6_lst[i]) {
-	count++;
-      }
+    if (t->index[iterator].netmask_v4.count > 1 || t->index[iterator].netmask_v6.count > 1) {
+      return ERR;
     }
-  }
-
-  if (count > 1) {
-    return ERR;
   }
 
   /* dedup */
   for (iterator = 0; iterator < t->index_num; iterator++) {
     for (i = 0; t->index[iterator].idt_handler[i]; i++) {
-      if (t->index[iterator].netmask_v4_lst[i]) {
-	cdada_list_sort(t->index[iterator].netmask_v4_lst[i]);
-	cdada_list_unique(t->index[iterator].netmask_v4_lst[i]);
+      if (t->index[iterator].netmask_v4.list[i]) {
+	cdada_list_sort(t->index[iterator].netmask_v4.list[i]);
+	cdada_list_unique(t->index[iterator].netmask_v4.list[i]);
       }
 
-      if (t->index[iterator].netmask_v6_lst[i]) {
-	cdada_list_sort(t->index[iterator].netmask_v6_lst[i]);
-	cdada_list_unique(t->index[iterator].netmask_v6_lst[i]);
+      if (t->index[iterator].netmask_v6.list[i]) {
+	cdada_list_sort(t->index[iterator].netmask_v6.list[i]);
+	cdada_list_unique(t->index[iterator].netmask_v6.list[i]);
       }
     }
   }
@@ -1311,16 +1305,16 @@ void pretag_index_report(struct id_table *t)
 	  cdada_map_size(t->index[iterator].idx_map));
 
       for (i = 0; t->index[iterator].idt_handler[i]; i++) {
-	if (t->index[iterator].netmask_v4_lst[i]) {
+	if (t->index[iterator].netmask_v4.list[i]) {
           Log(LOG_INFO, "INFO ( %s/%s ): [%s] pretag_index_report(): index=%llx handler=%u netmask_v4_list_entries=%u\n",
 	      config.name, config.type, t->filename, (unsigned long long)t->index[iterator].bitmap, i,
-	      cdada_list_size(t->index[iterator].netmask_v4_lst[i]));
+	      cdada_list_size(t->index[iterator].netmask_v4.list[i]));
 	}
 
-	if (t->index[iterator].netmask_v6_lst[i]) {
+	if (t->index[iterator].netmask_v6.list[i]) {
           Log(LOG_INFO, "INFO ( %s/%s ): [%s] pretag_index_report(): index=%llx handler=%u netmask_v6_list_entries=%u\n",
 	      config.name, config.type, t->filename, (unsigned long long)t->index[iterator].bitmap, i,
-	      cdada_list_size(t->index[iterator].netmask_v6_lst[i]));
+	      cdada_list_size(t->index[iterator].netmask_v6.list[i]));
 	}
       }
 
@@ -1335,7 +1329,7 @@ void pretag_index_destroy(struct id_table *t)
 {
   pm_hash_serial_t *hash_serializer;
   pm_hash_key_t *hash_key;
-  u_int32_t iterator = 0;
+  u_int32_t iterator = 0, hdlr_no;
 
   if (!t) return;
 
@@ -1361,6 +1355,23 @@ void pretag_index_destroy(struct id_table *t)
 
     /* destroy the serializer */
     hash_destroy_key(hash_key);
+
+    /* destroy the lists */
+    if (t->index[iterator].netmask_v4.count) {
+      for (hdlr_no = 0; hdlr_no < MAX_BITMAP_ENTRIES; hdlr_no++) {
+	if (t->index[iterator].netmask_v4.list[hdlr_no]) {
+	  cdada_list_destroy(t->index[iterator].netmask_v4.list[hdlr_no]);
+	}
+      }
+    }
+
+    if (t->index[iterator].netmask_v6.count) {
+      for (hdlr_no = 0; hdlr_no < MAX_BITMAP_ENTRIES; hdlr_no++) {
+	if (t->index[iterator].netmask_v6.list[hdlr_no]) {
+	  cdada_list_destroy(t->index[iterator].netmask_v6.list[hdlr_no]);
+	}
+      }
+    }
 
     /* cleanup */
     memset(&t->index[iterator], 0, sizeof(struct id_table_index));
