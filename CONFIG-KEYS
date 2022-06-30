@@ -3472,6 +3472,13 @@ DESC:		If set to true, make use of the legacy UDP publish channel protocol as de
 		draft-ietf-netconf-udp-pub-channel-05.
 DEFAULT:	false
 
+KEY:		tmp_telemetry_decode_cisco_v1_json_string
+VALUES:		[ true | false ]
+DESC:		Only relevant when telemetry_daemon_decoder=cisco_v1, If set to true, the 
+		"telemetry_data" received from the router will not be parsed by by the json library,
+		and will be passed as a string.
+DEFAULT:	false
+
 REFERENCES:
 
 (1) https://domsch.com/linux/lpc2010/Scaling_techniques_for_servers_with_high_connection%20rates.pdf

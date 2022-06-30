@@ -114,6 +114,10 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telem
 
       json_object_set_new_nocheck(obj, "serialization", json_string("gpb"));
     }
+    else if (data_decoder == TELEMETRY_DATA_DECODER_JSON_STRING) {
+      json_object_set_new_nocheck(obj, "telemetry_data", json_string((char *) log_data));
+      json_object_set_new_nocheck(obj, "serialization", json_string("json_string"));
+    }
     else if (data_decoder == TELEMETRY_DATA_DECODER_UNKNOWN) {
       json_object_set_new_nocheck(obj, "serialization", json_string("unknown"));
     }

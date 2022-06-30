@@ -7755,6 +7755,20 @@ int cfg_key_tmp_telemetry_daemon_udp_notif_legacy(char *filename, char *name, ch
   return changes;
 }
 
+int cfg_key_tmp_telemetry_decode_cisco_v1_json_string(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.tmp_telemetry_decode_cisco_v1_json_string = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'tmp_telemetry_decode_cisco_v1_json_string'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_thread_stack(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

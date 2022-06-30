@@ -244,7 +244,11 @@ int telemetry_recv_cisco(telemetry_peer *peer, int *flags, int *data_decoder, u_
     break;
   case TELEMETRY_CISCO_JSON:
     ret = telemetry_recv_json(peer, len, flags);
-    (*data_decoder) = TELEMETRY_DATA_DECODER_JSON;
+    if (config.tmp_telemetry_decode_cisco_v1_json_string) {
+      (*data_decoder) = TELEMETRY_DATA_DECODER_JSON_STRING;
+    } else {
+      (*data_decoder) = TELEMETRY_DATA_DECODER_JSON;
+    }
     break;
   case TELEMETRY_CISCO_GPB_COMPACT:
     ret = telemetry_recv_generic(peer, len);
