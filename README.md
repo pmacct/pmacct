@@ -3,66 +3,28 @@
 DOCUMENTATION
 =============
 
-- Online:
-  * GitHub Wiki Pages: https://github.com/pmacct/pmacct/wiki
-  * GitHub master code: https://github.com/pmacct/pmacct/
+- Introduction:
+This is an extension of pmacct which enables two collectors establishing BMP session with BGP router, which only one will dump to Kafka.
+This is conducted under the project "Highly Availibility of BMP".
 
-- Distribution tarball:
-  * ChangeLog: History of features version by version
-  * CONFIG-KEYS: Available configuration directives explained
-  * QUICKSTART: Examples, command-lines, quickstart guides
-  * FAQS: FAQ document
-  * docs/: Miscellaneous internals, UNIX signals, SQL triggers documents
-  * examples/: Sample configs, maps, AMQP/Kafka consumers, clients
-  * sql/: SQL documentation, default SQL schemas and customization tips
+In order to avoid the impact of link failure/device failure, there should be redundancy in the data collection. In this project it's done by adding another collector and both esatablishing the same BMP session.
+However, having two collectors dumping the messages to Kafka will bring replication, which make the data analyst more difficult. Thus only one collector should dump to KAFKA.
+The logic behind choosing the dumping collector is based on the stability and continuity. The dumping collector will not be switched to another when it's working normally in order to ensure continuity. However, it will be switched in un stable conditions, which include:
+· Collector breaks
+· Link failure
+The dumping collector can also be specified by sending SIGRTMIN(34) signal.
 
-# DOCKER IMAGES
+- Details:
+1.The dumping collector desicion is realized by comparing the timestamp of each collector. The timestamp is set at the establishment of BMP session(or at the lanuching of core process in the code level) and be written to Redis cache. After setting the timestamp, if no link failure or device break happends, the timestamp will not be modified.
+In the redis thread, the timestamp will be sent to redis with a timeout of one second. But the timestamp will also be sent per second, in order that the redis keep record of the current timestamp.
+Besides, the thread is also getting the timestamps from redis per second, and make comparison between timestamps. If it has a larger timestamp, it's the standby one, vice versa. The active/standby is recorded in the global variable "ingest_flag".
+![alt text](http://url/to/img.png)
 
-Official pmacct docker images can be found in [docker hub](https://hub.docker.com/r/pmacct/). To use them, simply (e.g. `sfacctd`):
+2.Kafka dumping
+Before dumping message to kafka, the program always check whether it has an ingest_flag of value 1. If yes, it dumps, vice versa.
 
-```bash
- ~# docker pull pmacct/sfacctd:latest
- ~# docker run -v /path/to/sfacctd.conf:/etc/pmacct/sfacctd.conf pmacct/sfacctd
-```
+3. SIGRTMIN
+SIGRTMIN is set for the core process. Once the core process receives this signal, it will call a self-defined function. In this function it set the regenerate_timestamp_flag which is a global variable. Once the redis thread is aware of this flag it will refresh the timestamp and make it points to now. With that we can set the collector as either active/standby.
 
-For more details, options and troubleshooting please read the [Docker documentation section](docs/DOCKER.md)
-
-# BUILDING
-
-Resolve dependencies, ie.:
-
-  * `apt-get install libpcap-dev pkg-config libtool autoconf automake make bash libstdc++-dev g++` for *[Debian/Ubuntu]*
-  * `yum install libpcap-devel pkgconfig libtool autoconf automake make bash libstdc++-devel gcc-c++` for *[CentOS/RHEL]*
-
-Build GitHub code:
-
-```bash
- ~# git clone https://github.com/pmacct/pmacct.git
- ~# cd pmacct
- ~#  ./autogen.sh
- ~# ./configure #check-out available configure knobs via ./configure --help
- ~#  make
- ~#  make install #with super-user permission
-```
-
-# RELICENSE INITIATIVE
-
-The pmacct project is looking to make its code base available under a more permissive
-BSD-style license. More information about the motivation and process can be found in
-this [announcement](https://www.mail-archive.com/pmacct-discussion@pmacct.net/msg03881.html).
-
-# CONTRIBUTING
-
-- Prerequisites:
-  * Set up git: https://help.github.com/articles/set-up-git/
-  * *[Specify username, a commit email address matching the GitHub profile one, and a SSH key]*
-
-- Code:
-  * Fork the pmacct repo: https://help.github.com/articles/fork-a-repo/
-  * *[Jot down your code in the local clone of your fork, commit and push code changes to your fork]*
-  * Generate a Pull Request: https://help.github.com/articles/about-pull-requests/
-
-- Wiki (documentation and diagrams):
-  * Ask by unicast email to be added to the project collaborators
-  * *[Edit wiki content online or clone it locally and commit and push changes]* 
-  * If having to add a diagram: https://gist.github.com/subfuzion/0d3f19c4f780a7d75ba2
+4.Temporary Data queue
+When we refresh the timestamp either by shutting down collector or sending signal and reset the collector status, the maximun time for status transition could be 2 seconds. It means that there might be data loss during this 2 second, if the collector was initially dumping. Thus we alwasy need to maintain the message for 2 second in case there is a status transition. When there is a status transition, we firstly dump the message i the queue, then although we might have some duplication, we avoid lossing data. 
