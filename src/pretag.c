@@ -759,8 +759,6 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       }
 
       if (pretag_index_validate_dedup_netmask_lists(t) == ERR) {
-        Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Network masks count exceeded. Indexing disabled.\n",
-	    config.name, config.type, filename);
         pretag_index_destroy(t);
         report = FALSE;
       }

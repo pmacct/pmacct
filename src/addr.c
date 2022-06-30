@@ -135,6 +135,45 @@ unsigned int addr_mask_to_str(char *str, int len, const struct host_addr *a, con
   return FALSE;
 }
 
+unsigned int apply_addr_mask(struct host_addr *a, struct host_mask *m)
+{
+  int j, ret = FALSE;
+
+  if (a->family != m->family) {
+    return FALSE;
+  }
+
+  if (a->family == AF_INET) {
+    if (m->len > 32) {
+      return FALSE;
+    }
+
+    m->mask.m4 = htonl((m->len == 32) ? 0xffffffffUL : ~(0xffffffffUL >> m->len));
+    a->address.ipv4.s_addr &= m->mask.m4;
+
+    ret = a->family;
+  }
+  else if (a->family == AF_INET6) {
+    if (m->len > 128) {
+      return FALSE;
+    }
+
+    for (j = 0; j < 16 && m->len >= 8; j++, m->len -= 8) {
+      m->mask.m6[j] = 0xffU;
+    }
+
+    if (j < 16 && m->len) {
+      m->mask.m6[j] = htonl(~(0xffU >> m->len));
+    }
+
+    for (j = 0; j < 16; j++) a->address.ipv6.s6_addr[j] &= m->mask.m6[j];
+
+    ret = a->family;
+  }
+
+  return ret;
+}
+
 /*
  * str_to_addr_mask() converts a string into a supported family address
  */

@@ -3424,7 +3424,7 @@ int PT_map_index_entries_src_net_handler(struct id_table_index *idx, int idx_hdl
 
   if (idx->netmask.hdlr_no) {
     if (idx->netmask.hdlr_no != (idx_hdlr_no + 1)) {
-      // XXX: log error
+      Log(LOG_WARNING, "WARN ( %s/%s ): Index network masks count exceeded. Indexing disabled.\n", config.name, config.type);
       return TRUE; 
     }
   }
@@ -3439,7 +3439,7 @@ int PT_map_index_entries_src_net_handler(struct id_table_index *idx, int idx_hdl
       cdada_list_push_back(idx->netmask.v4.list, &src_e->key.src_net.m.len);
     }
     else {
-      // XXX: log error
+      Log(LOG_WARNING, "WARN ( %s/%s ): Unable to create Index network masks list. Indexing disabled.\n", config.name, config.type);
       return TRUE;
     }
   }
@@ -3453,7 +3453,7 @@ int PT_map_index_entries_src_net_handler(struct id_table_index *idx, int idx_hdl
       cdada_list_push_back(idx->netmask.v6.list, &src_e->key.src_net.m.len);
     }
     else {
-      // XXX: log error
+      Log(LOG_WARNING, "WARN ( %s/%s ): Unable to create Index network masks list. Indexing disabled.\n", config.name, config.type);
       return TRUE;
     }
   }
@@ -3471,7 +3471,7 @@ int PT_map_index_entries_dst_net_handler(struct id_table_index *idx, int idx_hdl
 
   if (idx->netmask.hdlr_no) {
     if (idx->netmask.hdlr_no != (idx_hdlr_no + 1)) {
-      // XXX: log error
+      Log(LOG_WARNING, "WARN ( %s/%s ): Index network masks count exceeded. Indexing disabled.\n", config.name, config.type);
       return TRUE;
     }
   }
@@ -3486,7 +3486,7 @@ int PT_map_index_entries_dst_net_handler(struct id_table_index *idx, int idx_hdl
       cdada_list_push_back(idx->netmask.v4.list, &src_e->key.dst_net.m.len);
     }
     else {
-      // XXX: log error
+      Log(LOG_WARNING, "WARN ( %s/%s ): Unable to create Index network masks list. Indexing disabled.\n", config.name, config.type);
       return TRUE;
     }
   }
@@ -3500,7 +3500,7 @@ int PT_map_index_entries_dst_net_handler(struct id_table_index *idx, int idx_hdl
       cdada_list_push_back(idx->netmask.v6.list, &src_e->key.dst_net.m.len);
     }
     else {
-      // XXX: log error
+      Log(LOG_WARNING, "WARN ( %s/%s ): Unable to create Index network masks list. Indexing disabled.\n", config.name, config.type);
       return TRUE;
     }
   }
@@ -4162,6 +4162,8 @@ int PT_map_index_fdata_src_net_handler(struct id_table_index *idx, int idx_hdlr,
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   SFSample *sample = (SFSample *) pptrs->f_data;
   SFLAddress *sf_addr = &sample->ipsrc;
+  u_int8_t netmask;
+  int ret;
 
   if (config.acct_type == ACCT_NF) {
     switch(hdr->version) {
@@ -4202,6 +4204,21 @@ int PT_map_index_fdata_src_net_handler(struct id_table_index *idx, int idx_hdlr,
   }
   else return TRUE;
 
+  if (idx_netmask >= 0 && idx->netmask.hdlr_no == idx_hdlr) {
+    if (e->key.src_net.a.family == AF_INET) {
+      ret = cdada_list_get(idx->netmask.v4.list, idx_netmask, &netmask);
+    }
+    else if (e->key.src_net.a.family == AF_INET6) {
+      ret = cdada_list_get(idx->netmask.v6.list, idx_netmask, &netmask);
+    }
+
+    if (ret == CDADA_SUCCESS) {
+      e->key.src_net.m.family = e->key.src_net.a.family;
+      e->key.src_net.m.len = netmask;
+      apply_addr_mask(&e->key.src_net.a, &e->key.src_net.m); 
+    }
+  }
+
   hash_serial_append(hash_serializer, (char *)&e->key.src_net.a, sizeof(struct host_addr), FALSE);
 
   return FALSE;
@@ -4214,6 +4231,8 @@ int PT_map_index_fdata_dst_net_handler(struct id_table_index *idx, int idx_hdlr,
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   SFSample *sample = (SFSample *) pptrs->f_data;
   SFLAddress *sf_addr = &sample->ipdst;
+  u_int8_t netmask;
+  int ret;
 
   if (config.acct_type == ACCT_NF) {
     switch(hdr->version) {
@@ -4253,6 +4272,21 @@ int PT_map_index_fdata_dst_net_handler(struct id_table_index *idx, int idx_hdlr,
     }
   }
   else return TRUE;
+
+  if (idx_netmask >= 0 && idx->netmask.hdlr_no == idx_hdlr) {
+    if (e->key.dst_net.a.family == AF_INET) {
+      ret = cdada_list_get(idx->netmask.v4.list, idx_netmask, &netmask);
+    }
+    else if (e->key.dst_net.a.family == AF_INET6) {
+      ret = cdada_list_get(idx->netmask.v6.list, idx_netmask, &netmask);
+    }
+
+    if (ret == CDADA_SUCCESS) {
+      e->key.dst_net.m.family = e->key.dst_net.a.family;
+      e->key.dst_net.m.len = netmask;
+      apply_addr_mask(&e->key.dst_net.a, &e->key.dst_net.m);
+    }
+  }
 
   hash_serial_append(hash_serializer, (char *)&e->key.dst_net.a, sizeof(struct host_addr), FALSE);
 
