@@ -18,7 +18,7 @@ The dumping collector can also be specified by sending SIGRTMIN(34) signal.
 1.The dumping collector desicion is realized by comparing the timestamp of each collector. The timestamp is set at the establishment of BMP session(or at the lanuching of core process in the code level) and be written to Redis cache. After setting the timestamp, if no link failure or device break happends, the timestamp will not be modified.
 In the redis thread, the timestamp will be sent to redis with a timeout of one second. But the timestamp will also be sent per second, in order that the redis keep record of the current timestamp.
 Besides, the thread is also getting the timestamps from redis per second, and make comparison between timestamps. If it has a larger timestamp, it's the standby one, vice versa. The active/standby is recorded in the global variable "ingest_flag".
-![alt text](http://url/to/img.png)
+![alt text](https://github.com/Zephyre777/pmacct/blob/master/redis_thread.png)
 
 2.Kafka dumping
 Before dumping message to kafka, the program always check whether it has an ingest_flag of value 1. If yes, it dumps, vice versa.
