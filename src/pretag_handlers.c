@@ -3235,8 +3235,6 @@ int PT_map_index_entries_ip_handler(struct id_table_index *idx, int idx_hdlr_no,
 
   if (!idx || !hash_serializer || !src_e) return TRUE; 
 
-  hash_serial_append(hash_serializer, (char *)&src_e->key.agent_ip.a, sizeof(struct host_addr), TRUE);
-
   if ((src_e->key.agent_mask.family == AF_INET && src_e->key.agent_mask.len == 32) ||
       (src_e->key.agent_mask.family == AF_INET6 && src_e->key.agent_mask.len == 128)) {
     hash_serial_append(hash_serializer, (char *)&src_e->key.agent_ip.a, sizeof(struct host_addr), TRUE);
