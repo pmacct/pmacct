@@ -166,6 +166,18 @@ jobs:
           mkdir -p /tmp/docker/
           docker save -o /tmp/docker/pmacct_docker_images.tar base:_build pmacctd:_build nfacctd:_build sfacctd:_build uacctd:_build pmbgpd:_build pmbmpd:_build pmtelemetryd:_build
 
+      - name: Docker (compose) smoke test
+        run: |
+          echo "Running smoke test using docker-compose..."
+          TAG=_build docker-compose -f ci/smoke-test/docker-compose.yml up -d
+          sleep 10
+          echo "Check that all containers are up and running, without restarts ..."
+          if [[ "$(docker inspect `docker ps -aq` | grep RestartCount | grep -v '\"RestartCount\": 0')" != "" ]]; then
+            echo "Some containers restarted!" && docker inspect `docker ps -aq` && /bin/false
+          fi
+          echo "Stopping containers..."
+          TAG=_build docker-compose -f ci/smoke-test/docker-compose.yml down
+
       - name: Export pmacct docker images as an artifact
         uses: actions/upload-artifact@v2.2.2
         with:
