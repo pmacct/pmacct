@@ -3474,9 +3474,10 @@ DEFAULT:	false
 
 KEY:		tmp_telemetry_decode_cisco_v1_json_string
 VALUES:		[ true | false ]
-DESC:		Only relevant when telemetry_daemon_decoder=cisco_v1, If set to true, the 
-		"telemetry_data" received from the router will not be parsed by by the json library,
-		and will be passed as a string.
+DESC:		If set to true, the "telemetry_data" received from the router will not be parsed by
+		the JSON library and will be passed as a string for post-processing. Only relevant
+		when telemetry_daemon_decoder is set to 'cisco_v1' and meant as a short-term remedy
+		for 64-bit integer values that cannot be properly parsed by Jansson JSON library.
 DEFAULT:	false
 
 REFERENCES:
