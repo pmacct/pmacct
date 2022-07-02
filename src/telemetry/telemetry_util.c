@@ -174,6 +174,9 @@ int telemetry_validate_input_output_decoders(int input, int output)
   else if (input == TELEMETRY_DATA_DECODER_UNKNOWN) {
     if (output == PRINT_OUTPUT_JSON) return FALSE;
   }
+  else if (input == TELEMETRY_DATA_DECODER_JSON_STRING) {
+    if (output == PRINT_OUTPUT_JSON) return FALSE;
+  }
 
   return ERR;
 }

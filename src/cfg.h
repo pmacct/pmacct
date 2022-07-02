@@ -628,6 +628,7 @@ struct configuration {
   int tmp_bgp_daemon_route_refresh;
   int tmp_bgp_daemon_origin_type_int;
   int tmp_telemetry_udp_notif_legacy;
+  int tmp_telemetry_decode_cisco_v1_json_string;
   size_t thread_stack;
   char *rpki_roas_file;
   char *rpki_rtr_cache;
