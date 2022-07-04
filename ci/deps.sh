@@ -36,38 +36,38 @@ cd /tmp
 
 # Dependencies (not fulfilled by Dockerfile)
 git clone https://github.com/akheron/jansson
-cd jansson ; rm -rf ./.git ; autoreconf -i ; ./configure ; make ; sudo make install ; cd ..
+cd jansson ; rm -rf ./.git ; autoreconf -i ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
 git clone https://github.com/edenhill/librdkafka
-cd librdkafka ; rm -rf ./.git ; ./configure ; make ; sudo make install ; cd ..
+cd librdkafka ; rm -rf ./.git ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
 wget ${WGET_FLAGS} https://github.com/alanxz/rabbitmq-c/archive/refs/tags/v0.11.0.tar.gz
 mv v0.11.0.tar.gz rabbitmq-c-0.11.0.tar.gz
 tar xfz rabbitmq-c-0.11.0.tar.gz
-cd rabbitmq-c-0.11.0 ; rm -rf ./.git ; mkdir build ; cd build ; cmake -DCMAKE_INSTALL_LIBDIR=lib .. ; sudo cmake --build . --target install ; cd .. ; cd ..
+cd rabbitmq-c-0.11.0 ; rm -rf ./.git ; mkdir build ; cd build ; cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_INSTALL_LIBDIR=lib .. ; sudo cmake --build . --target install ; cd .. ; cd ..
 
 git clone --recursive https://github.com/maxmind/libmaxminddb
-cd libmaxminddb ; rm -rf ./.git ; ./bootstrap ; ./configure ; make ; sudo make install ; cd ..
+cd libmaxminddb ; rm -rf ./.git ; ./bootstrap ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
 git clone -b 4.2-stable https://github.com/ntop/nDPI
-cd nDPI ; rm -rf ./.git ; ./autogen.sh ; ./configure ; make ; sudo make install ; sudo ldconfig ; cd ..
+cd nDPI ; rm -rf ./.git ; ./autogen.sh ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; sudo ldconfig ; cd ..
 
 wget ${WGET_FLAGS} https://github.com/zeromq/libzmq/releases/download/v4.3.2/zeromq-4.3.2.tar.gz
 tar xfz zeromq-4.3.2.tar.gz
-cd zeromq-4.3.2 ; ./configure ; make ; sudo make install ; cd ..
+cd zeromq-4.3.2 ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
 wget ${WGET_FLAGS} https://archive.apache.org/dist/avro/avro-1.9.2/c/avro-c-1.9.2.tar.gz
 tar xfz avro-c-1.9.2.tar.gz
-cd avro-c-1.9.2 ; mkdir build ; cd build ; cmake .. ; make ; sudo make install ; cd .. ; cd ..
+cd avro-c-1.9.2 ; mkdir build ; cd build ; cmake -DCMAKE_INSTALL_PREFIX=/usr/local .. ; make ; sudo make install ; cd .. ; cd ..
 
 git clone -b v6.2.0-cp3-rc220119192525 https://github.com/confluentinc/libserdes
-cd libserdes ; rm -rf ./.git ; ./configure ; make ; sudo make install ; cd ..
+cd libserdes ; rm -rf ./.git ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
 git clone https://github.com/redis/hiredis
 cd hiredis ; rm -rf ./.git ; make ; sudo make install ; cd ..
 
 git clone https://github.com/insa-unyte/udp-notif-c-collector
-cd udp-notif-c-collector ; git checkout v0.6.1 ; rm -rf ./.git ; ./bootstrap ; ./configure ; make ; sudo make install ; cd ..
+cd udp-notif-c-collector ; git checkout v0.6.1 ; rm -rf ./.git ; ./bootstrap ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
 # Make sure dynamic linker is up-to-date
 ldconfig

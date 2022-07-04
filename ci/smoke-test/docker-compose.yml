@@ -1,0 +1,45 @@
+version: "3"
+
+services:
+  nfacctd:
+    image: nfacctd:${TAG}
+    volumes:
+      - ./etc/pmacct:/etc/pmacct
+    restart: on-failure
+
+  pmacctd:
+    image: pmacctd:${TAG}
+    volumes:
+      - ./etc/pmacct:/etc/pmacct
+    restart: on-failure
+
+  pmbgpd:
+    image: pmbgpd:${TAG}
+    volumes:
+      - ./etc/pmacct:/etc/pmacct
+    restart: on-failure
+
+  pmbmpd:
+    image: pmbmpd:${TAG}
+    volumes:
+      - ./etc/pmacct:/etc/pmacct
+    restart: on-failure
+
+  pmtelemetryd:
+    image: pmtelemetryd:${TAG}
+    volumes:
+      - ./etc/pmacct:/etc/pmacct
+    restart: on-failure
+
+  sfacctd:
+    image: sfacctd:${TAG}
+    volumes:
+      - ./etc/pmacct:/etc/pmacct
+    restart: on-failure
+
+  uacctd:
+    image: uacctd:${TAG}
+    volumes:
+      - ./etc/pmacct:/etc/pmacct
+    restart: on-failure
+    privileged: true
