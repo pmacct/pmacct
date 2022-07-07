@@ -529,11 +529,18 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
 	gatewayHdrElem.tag = SFLFLOW_EX_GATEWAY;
 	// gatewayHdrElem.flowType.gateway.src_as = htonl(hdr->src_ip.address.ipv4.s_addr);
 	gatewayHdrElem.flowType.gateway.src_as = hdr->src_as;
-	gatewayHdrElem.flowType.gateway.dst_as_path_segments = 1;
-	gatewayHdrElem.flowType.gateway.dst_as_path = &as_path_segment;
-	as_path_segment.type = SFLEXTENDED_AS_SET;
-	as_path_segment.length = 1;
-	as_path_segment.as.set = &hdr->dst_as;
+
+        if (hdr->dst_as == 0) {
+          gatewayHdrElem.flowType.gateway.dst_as_path_segments = 0;
+        }
+        else {
+          gatewayHdrElem.flowType.gateway.dst_as_path_segments = 1;
+          gatewayHdrElem.flowType.gateway.dst_as_path = &as_path_segment;
+          as_path_segment.type = SFLEXTENDED_AS_SET;
+          as_path_segment.length = 1;
+          as_path_segment.as.set = &hdr->dst_as;
+        }
+
 	if (config.what_to_count & COUNT_PEER_DST_IP) {
           switch (hdr->bgp_next_hop.family) {
           case AF_INET:
