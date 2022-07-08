@@ -123,10 +123,18 @@ static void setDefaults(SflSp *sp)
   sp->ifType = 6; // ethernet_csmacd 
   sp->ifSpeed = 100000000L;  // assume 100 MBit
   sp->ifDirection = 1; // assume full duplex 
-  // if (config.acct_type != ACCT_SF) sp->samplingRate = SFL_DEFAULT_SAMPLING_RATE;
-  sp->samplingRate = SFL_DEFAULT_SFACCTD_SAMPLING_RATE;
-  sp->counterSamplingInterval = 20;
-  sp->snaplen = 128;
+
+  sp->samplingRate = SFL_DEFAULT_FLOW_SAMPLING_RATE;
+  sp->counterSamplingInterval = SFL_DEFAULT_COUNTER_INTERVAL_RATE;
+
+  if (config.snaplen && config.snaplen <= SFL_DEFAULT_HEADER_SIZE) {
+    sp->snaplen = config.snaplen;
+  }
+  else {
+    sp->snaplen = SFL_DEFAULT_HEADER_SIZE;
+    Log(LOG_WARNING, "WARN ( %s/%s ): Max Flow Sample packet headers length set to %u (wanted: %u)\n",
+	config.name, config.type, sp->snaplen, config.snaplen);
+  }
 
   sp->collectorIP.family = AF_INET;
   sp->collectorIP.address.ipv4.s_addr = Name_to_IP("localhost");

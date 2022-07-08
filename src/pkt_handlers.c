@@ -1537,8 +1537,10 @@ void sfprobe_payload_handler(struct channels_list_entry *chptr, struct packet_pt
     payload->pkt_len += ethHdrLen;
   }
 
-  /* We could be capturing the entire packet; DEFAULT_PLOAD_SIZE is our cut-off point */
-  if (payload->cap_len > DEFAULT_PLOAD_SIZE) payload->cap_len = DEFAULT_PLOAD_SIZE;
+  /* We could be capturing the entire packet; DEFAULT_SFPROBE_PLOAD_SIZE is our cut-off point */
+  if (payload->cap_len > DEFAULT_SFPROBE_PLOAD_SIZE) {
+    payload->cap_len = DEFAULT_SFPROBE_PLOAD_SIZE;
+  }
 
   if (space >= payload->cap_len) {
     buf += PpayloadSz;

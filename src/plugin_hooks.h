@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -25,7 +25,7 @@
 
 #define DEFAULT_CHBUFLEN 4096
 #define DEFAULT_PIPE_SIZE 65535
-#define DEFAULT_PLOAD_SIZE 256 
+#define DEFAULT_SFPROBE_PLOAD_SIZE DEFAULT_SNAPLEN
 #define WARNING_PIPE_SIZE 16384000 /* 16 Mb */
 #define MAX_FAILS 5 
 #define MAX_SEQNUM 65536 

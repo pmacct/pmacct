@@ -70,8 +70,12 @@ void load_plugins(struct plugin_requests *req)
       list->cfg.buffer_immediate = FALSE;
       if (list->cfg.data_type & PIPE_TYPE_METADATA) min_sz += PdataSz; 
       if (list->cfg.data_type & PIPE_TYPE_PAYLOAD) {
-	if (list->cfg.acct_type == ACCT_PM && list->cfg.snaplen) min_sz += (PpayloadSz+list->cfg.snaplen); 
-	else min_sz += (PpayloadSz+DEFAULT_PLOAD_SIZE); 
+	if (list->cfg.acct_type == ACCT_PM && list->cfg.snaplen && list->cfg.snaplen < DEFAULT_SFPROBE_PLOAD_SIZE) {
+	  min_sz += (PpayloadSz + list->cfg.snaplen); 
+	}
+	else {
+	  min_sz += (PpayloadSz + DEFAULT_SFPROBE_PLOAD_SIZE);
+	}
       }
       if (list->cfg.data_type & PIPE_TYPE_EXTRAS) min_sz += PextrasSz; 
       if (list->cfg.data_type & PIPE_TYPE_MSG) {

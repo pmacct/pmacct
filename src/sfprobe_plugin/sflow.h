@@ -29,10 +29,10 @@ typedef struct _SFLAddress {
 
 /* Packet header data */
 
-#define SFL_DEFAULT_HEADER_SIZE 128
+#define SFL_DEFAULT_HEADER_SIZE DEFAULT_SNAPLEN
 #define SFL_DEFAULT_COLLECTOR_PORT 6343
-#define SFL_DEFAULT_SAMPLING_RATE 20
-#define SFL_DEFAULT_SFACCTD_SAMPLING_RATE 1 
+#define SFL_DEFAULT_COUNTER_INTERVAL_RATE 20
+#define SFL_DEFAULT_FLOW_SAMPLING_RATE 1
 
 /* The header protocol describes the format of the sampled header */
 enum SFLHeader_protocol {

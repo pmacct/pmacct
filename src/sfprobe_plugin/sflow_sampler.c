@@ -30,7 +30,7 @@ void sfl_sampler_init(SFLSampler *sampler, SFLAgent *agent, SFLDataSource_instan
   
   /* set defaults */
   sampler->sFlowFsMaximumHeaderSize = SFL_DEFAULT_HEADER_SIZE;
-  sampler->sFlowFsPacketSamplingRate = SFL_DEFAULT_SAMPLING_RATE;
+  sampler->sFlowFsPacketSamplingRate = SFL_DEFAULT_FLOW_SAMPLING_RATE;
 }
 
 /*_________________--------------------------__________________
