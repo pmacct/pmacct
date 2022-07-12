@@ -1,13 +1,16 @@
-/* Copyright (C) InMon Corporation 2002-2003 ALL RIGHTS RESERVED */
-
-#ifndef SFLOW_H
-#define SFLOW_H
-
-/* $Header$ */
+/* Copyright (c) 2002-2006 InMon Corp. Licensed under the terms of the InMon sFlow licence: */
+/* http://www.inmon.com/technology/sflowlicense.txt */
 
 /////////////////////////////////////////////////////////////////////////////////
 /////////////////////// sFlow Sampling Packet Data Types ////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
+
+#ifndef SFLOW_H
+#define SFLOW_H 1
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 enum SFLAddress_type {
   SFLADDRESSTYPE_IP_V4 = 1,
@@ -26,9 +29,10 @@ typedef struct _SFLAddress {
 
 /* Packet header data */
 
-#define SFL_DEFAULT_HEADER_SIZE 128
+#define SFL_DEFAULT_HEADER_SIZE DEFAULT_SNAPLEN
 #define SFL_DEFAULT_COLLECTOR_PORT 6343
-#define SFL_DEFAULT_SAMPLING_RATE 400
+#define SFL_DEFAULT_COUNTER_INTERVAL_RATE 20
+#define SFL_DEFAULT_FLOW_SAMPLING_RATE 1
 
 /* The header protocol describes the format of the sampled header */
 enum SFLHeader_protocol {
@@ -252,21 +256,22 @@ typedef struct _SFLExtended_vlan_tunnel {
 			  innermost. */ 
 } SFLExtended_vlan_tunnel;
 
+typedef struct _SFLExtended_classification {
+  pm_class_t class;
+} SFLExtended_classification;
 
-  ////////////////// InMon Extension structs //////////////////////////
+typedef struct _SFLExtended_classification2 {
+#if defined (WITH_NDPI)
+  pm_class2_t id;
+#else
+  u_int64_t id;
+#endif
+} SFLExtended_classification2;
 
-typedef struct _SFLProcess {
-  u_int32_t pid;
-  SFLString command;
-} SFLProcess;
-
-#define SFL_MAX_PROCESSES 10
-typedef struct _SFLExtended_process {
-  u_int32_t num_processes;
-  SFLProcess processes[SFL_MAX_PROCESSES];
-} SFLExtended_process;
-
-  //////////////////////////////////////////////////////////////////////
+typedef struct _SFLExtended_tag {
+  pm_id_t tag;
+  pm_id_t tag2;
+} SFLExtended_tag;
 
 enum SFLFlow_type_tag {
   /* enterprise = 0, format = ... */
@@ -287,11 +292,9 @@ enum SFLFlow_type_tag {
   SFLFLOW_EX_MPLS_LDP_FEC = 1011,
   SFLFLOW_EX_VLAN_TUNNEL  = 1012,   /* VLAN stack */
   /* enterprise = 43874 pmacct */
-  SFLFLOW_EX_CLASS	= (43874 << 12) + 1,
-  SFLFLOW_EX_TAG	= (43874 << 12) + 2,
-  SFLFLOW_EX_CLASS2	= (43874 << 12) + 3,
-  /* enterprise = 4300 (inmon)...*/
-  SFLFLOW_EX_PROCESS   = (4300 << 12) + 3, /* =17612803 Extended Process information */
+  SFLFLOW_EX_CLASS        = (43874 << 12) + 1,
+  SFLFLOW_EX_TAG	  = (43874 << 12) + 2,
+  SFLFLOW_EX_CLASS2       = (43874 << 12) + 3,
 };
 
 typedef union _SFLFlow_type {
@@ -311,8 +314,9 @@ typedef union _SFLFlow_type {
   SFLExtended_mpls_FTN mpls_ftn;
   SFLExtended_mpls_LDP_FEC mpls_ldp_fec;
   SFLExtended_vlan_tunnel vlan_tunnel;
-  // extensions
-  SFLExtended_process process;
+  SFLExtended_classification class;
+  SFLExtended_classification2 ndpi_class;
+  SFLExtended_tag tag;
 } SFLFlow_type;
 
 typedef struct _SFLFlow_sample_element {
@@ -322,11 +326,13 @@ typedef struct _SFLFlow_sample_element {
   SFLFlow_type flowType;
 } SFLFlow_sample_element;
 
-#define SFLFLOW_SAMPLE 1               /* enterprise = 0 : format = 1 */
-#define SFLCOUNTERS_SAMPLE 2           /* enterprise = 0 : format = 2 */
-#define SFLFLOW_SAMPLE_EXPANDED 3      /* enterprise = 0 : format = 3 */
-#define SFLCOUNTERS_SAMPLE_EXPANDED 4  /* enterprise = 0 : format = 4 */
-#define SFLACL_BROCADE_SAMPLE 8155137  /* enterprise = 1991 : format = 1 */
+enum SFL_sample_tag {
+  SFLFLOW_SAMPLE = 1,              /* enterprise = 0 : format = 1 */
+  SFLCOUNTERS_SAMPLE = 2,          /* enterprise = 0 : format = 2 */
+  SFLFLOW_SAMPLE_EXPANDED = 3,     /* enterprise = 0 : format = 3 */
+  SFLCOUNTERS_SAMPLE_EXPANDED = 4, /* enterprise = 0 : format = 4 */
+  SFLACL_BROCADE_SAMPLE = 8155137  /* enterprise = 1991 : format = 1 */
+};
   
 /* Format of a single flow sample */
 
@@ -486,17 +492,6 @@ typedef struct _SFLVlan_counters {
   u_int32_t discards;
 } SFLVlan_counters;
 
-/* Processor Information */
-/* opaque = counter_data; enterprise = 0; format = 1001 */
-
-typedef struct _SFLProcessor_counters {
-   u_int32_t five_sec_cpu;  /* 5 second average CPU utilization */
-   u_int32_t one_min_cpu;   /* 1 minute average CPU utilization */
-   u_int32_t five_min_cpu;  /* 5 minute average CPU utilization */
-   u_int64_t total_memory;  /* total memory (in bytes) */
-   u_int64_t free_memory;   /* free memory (in bytes) */
-} SFLProcessor_counters;
-
 /* Counters data */
 
 enum SFLCounters_type_tag {
@@ -505,8 +500,7 @@ enum SFLCounters_type_tag {
   SFLCOUNTERS_ETHERNET     = 2,
   SFLCOUNTERS_TOKENRING    = 3,
   SFLCOUNTERS_VG           = 4,
-  SFLCOUNTERS_VLAN         = 5,
-  SFLCOUNTERS_PROCESSOR    = 1001
+  SFLCOUNTERS_VLAN         = 5
 };
 
 typedef union _SFLCounters_type {
@@ -515,7 +509,6 @@ typedef union _SFLCounters_type {
   SFLTokenring_counters tokenring;
   SFLVg_counters vg;
   SFLVlan_counters vlan;
-  SFLProcessor_counters processor;
 } SFLCounters_type;
 
 typedef struct _SFLCounters_sample_element {
@@ -577,4 +570,8 @@ typedef struct _SFLSample_datagram_hdr {
 
 #define SFL_DATA_PAD 400
 
-#endif //SFLOW_H
+#if defined(__cplusplus)
+}  /* extern "C" */
+#endif
+
+#endif /* SFLOW_H */

@@ -1130,7 +1130,7 @@ void readv5FlowSample(SFSample *sample, int expanded, struct packet_ptrs_vector 
       case SFLFLOW_EX_MPLS_FTN:     readExtendedMplsFTN(sample); break;
       case SFLFLOW_EX_MPLS_LDP_FEC: readExtendedMplsLDP_FEC(sample); break;
       case SFLFLOW_EX_VLAN_TUNNEL:  readExtendedVlanTunnel(sample); break;
-      case SFLFLOW_EX_PROCESS:      readExtendedProcess(sample); break;
+/*    case SFLFLOW_EX_PROCESS:      readExtendedProcess(sample); break; */
       case SFLFLOW_EX_CLASS2:	    readExtendedClass2(sample); break;
       case SFLFLOW_EX_TAG:	    readExtendedTag(sample); break;
       default:
