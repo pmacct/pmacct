@@ -738,6 +738,13 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    if (channels_list[index].aggregation_2 & COUNT_TUNNEL_TCP_FLAGS) {
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_tcp_flags_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_tcp_flags_handler;
+      else primitives--;
+      primitives++;
+    }
+
     if (channels_list[index].aggregation_2 & COUNT_VXLAN) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = vxlan_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_vxlan_handler;
@@ -1365,6 +1372,18 @@ void tunnel_dst_port_handler(struct channels_list_entry *chptr, struct packet_pt
   if (tpptrs) {
     if (tpptrs->l4_proto == IPPROTO_UDP || tpptrs->l4_proto == IPPROTO_TCP) {
       ptun->tunnel_dst_port = ntohs(((struct pm_tlhdr *) tpptrs->tlh_ptr)->dst_port);
+    }
+  }
+}
+
+void tunnel_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
+
+  if (tpptrs) {
+    if (pptrs->l4_proto == IPPROTO_TCP) {
+      ptun->tunnel_tcp_flags = tpptrs->tcp_flags;
     }
   }
 }
@@ -5536,6 +5555,18 @@ void SF_tunnel_dst_port_handler(struct channels_list_entry *chptr, struct packet
   if (sppi) {
     if (sppi->dcd_ipProtocol == IPPROTO_UDP || sppi->dcd_ipProtocol == IPPROTO_TCP) {
       ptun->tunnel_dst_port = sppi->dcd_dport;
+    }
+  }
+}
+
+void SF_tunnel_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
+
+  if (sppi) {
+    if (sppi->dcd_ipProtocol == IPPROTO_TCP) {
+      ptun->tunnel_tcp_flags = sppi->dcd_tcpFlags;
     }
   }
 }
