@@ -1378,12 +1378,12 @@ void tunnel_dst_port_handler(struct channels_list_entry *chptr, struct packet_pt
 
 void tunnel_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  struct pkt_data *pdata = (struct pkt_data *) *data;
   struct packet_ptrs *tpptrs = (struct packet_ptrs *) pptrs->tun_pptrs;
 
   if (tpptrs) {
     if (pptrs->l4_proto == IPPROTO_TCP) {
-      ptun->tunnel_tcp_flags = tpptrs->tcp_flags;
+      pdata->tunnel_tcp_flags = tpptrs->tcp_flags;
     }
   }
 }
@@ -5561,12 +5561,12 @@ void SF_tunnel_dst_port_handler(struct channels_list_entry *chptr, struct packet
 
 void SF_tunnel_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data, *sppi = (SFSample *) sample->sppi;
 
   if (sppi) {
     if (sppi->dcd_ipProtocol == IPPROTO_TCP) {
-      ptun->tunnel_tcp_flags = sppi->dcd_tcpFlags;
+      pdata->tunnel_tcp_flags = sppi->dcd_tcpFlags;
     }
   }
 }

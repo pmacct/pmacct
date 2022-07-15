@@ -440,6 +440,7 @@ struct pkt_data {
   pm_counter_t flo_num;
   u_int8_t flow_type;
   u_int8_t tcp_flags;
+  u_int8_t tunnel_tcp_flags;
   struct timeval time_start;
   struct timeval time_end;
 };
