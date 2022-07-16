@@ -738,7 +738,7 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
-    if (channels_list[index].aggregation_2 & COUNT_TUNNEL_TCP_FLAGS) {
+    if (channels_list[index].aggregation_2 & COUNT_TUNNEL_TCPFLAGS) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_tcp_flags_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_tcp_flags_handler;
       else primitives--;

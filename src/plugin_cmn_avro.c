@@ -303,6 +303,15 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc_2 & COUNT_TUNNEL_DST_PORT)
     avro_schema_record_field_append(schema, "tunnel_port_dst", avro_schema_long());
 
+  if (wtc & COUNT_TUNNEL_TCPFLAGS) {
+    if (config.tcpflags_encode_as_array) {
+      compose_tunnel_tcpflags_avro_schema(schema);
+    }
+    else {
+      avro_schema_record_field_append(schema, "tunnel_tcp_flags", avro_schema_string());
+    }
+  }
+
   if (wtc_2 & COUNT_VXLAN)
     avro_schema_record_field_append(schema, "vxlan", avro_schema_long());
 
@@ -433,8 +442,8 @@ avro_value_t compose_avro_acct_close(char *writer_name, pid_t writer_pid, int pu
 avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
   struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
   struct pkt_tunnel_primitives *ptun, u_char *pcust, struct pkt_vlen_hdr_primitives *pvlen,
-  pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter, u_int32_t tcp_flags,
-  struct timeval *basetime, struct pkt_stitching *stitch, avro_value_iface_t *iface)
+  pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter, u_int8_t tcp_flags,
+  u_int8_t tunnel_tcp_flags, struct timeval *basetime, struct pkt_stitching *stitch, avro_value_iface_t *iface)
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *str_ptr;
@@ -977,9 +986,16 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
     pm_avro_check(avro_value_set_long(&field, ptun->tunnel_src_port));
   }
 
-  if (wtc_2 & COUNT_TUNNEL_DST_PORT) {
-    pm_avro_check(avro_value_get_by_name(&value, "tunnel_port_dst", &field, NULL));
-    pm_avro_check(avro_value_set_long(&field, ptun->tunnel_dst_port));
+  if (wtc & COUNT_TUNNEL_TCPFLAGS) {
+    sprintf(misc_str, "%u", tunnel_tcp_flags);
+
+    if (config.tcpflags_encode_as_array) {
+      compose_tunnel_tcpflags_avro_data(tunnel_tcp_flags, value);
+    }
+    else {
+      pm_avro_check(avro_value_get_by_name(&value, "tunnel_tcp_flags", &field, NULL));
+      pm_avro_check(avro_value_set_string(&field, misc_str));
+    }
   }
 
   if (wtc_2 & COUNT_VXLAN) {
@@ -1460,6 +1476,17 @@ void compose_tcpflags_avro_schema(avro_schema_t sc_type_record)
   avro_schema_decref(sc_type_string);
 }
 
+void compose_tunnel_tcpflags_avro_schema(avro_schema_t sc_type_record)
+{
+  sc_type_string = avro_schema_string();
+  sc_type_array = avro_schema_array(sc_type_string);
+  avro_schema_record_field_append(sc_type_record, "tunnel_tcp_flags", sc_type_array);
+
+  /* free-up memory */
+  avro_schema_decref(sc_type_array);
+  avro_schema_decref(sc_type_string);
+}
+
 void compose_fwd_status_avro_schema(avro_schema_t sc_type_record)
 {
   sc_type_string = avro_schema_string();
@@ -1571,6 +1598,36 @@ int compose_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_reco
     memset(&tcpstate, 0, sizeof(tcpstate));
     cdada_list_get(ll, idx_0, &tcpstate);
     if (avro_value_get_by_name(&v_type_record, "tcp_flags", &v_type_array, NULL) == 0) {
+      /* Serialize only flags set to 1 */
+      if (strcmp(tcpstate.flag, "NULL") != 0) {
+        if (avro_value_append(&v_type_array, &v_type_string, NULL) == 0) {
+          avro_value_set_string(&v_type_string, tcpstate.flag);
+        }
+      }
+    }
+  }
+
+  /* free-up memory */
+  cdada_list_destroy(ll);
+
+  return 0;
+}
+
+int compose_tunnel_tcpflags_avro_data(size_t tcpflags_decimal, avro_value_t v_type_record)
+{
+  tcpflag tcpstate;
+
+  /* linked-list creation */
+  cdada_list_t *ll = tcpflags_to_linked_list(tcpflags_decimal);
+  size_t ll_size = cdada_list_size(ll);
+
+  avro_value_t v_type_array, v_type_string;
+
+  size_t idx_0;
+  for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
+    memset(&tcpstate, 0, sizeof(tcpstate));
+    cdada_list_get(ll, idx_0, &tcpstate);
+    if (avro_value_get_by_name(&v_type_record, "tunnel_tcp_flags", &v_type_array, NULL) == 0) {
       /* Serialize only flags set to 1 */
       if (strcmp(tcpstate.flag, "NULL") != 0) {
         if (avro_value_append(&v_type_array, &v_type_string, NULL) == 0) {

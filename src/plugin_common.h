@@ -71,7 +71,8 @@ struct chained_cache {
   pm_counter_t packet_counter;
   pm_counter_t flow_counter;
   u_int8_t flow_type;
-  u_int32_t tcp_flags;
+  u_int8_t tcp_flags;
+  u_int8_t tunnel_tcp_flags;
   struct pkt_bgp_primitives *pbgp;
   struct pkt_nat_primitives *pnat;
   struct pkt_mpls_primitives *pmpls;

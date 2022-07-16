@@ -442,6 +442,16 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
     idx++;
   }
 
+  if (wtc_2 & COUNT_TUNNEL_TCPFLAGS) {
+    if (config.tcpflags_encode_as_array) {
+      cjhandler[idx] = compose_json_array_tunnel_tcp_flags;
+    }
+    else {
+      cjhandler[idx] = compose_json_tunnel_tcp_flags;
+    }
+    idx++;
+  }
+
   if (wtc_2 & COUNT_VXLAN) {
     cjhandler[idx] = compose_json_vxlan;
     idx++;
@@ -1093,6 +1103,27 @@ void compose_json_tunnel_src_port(json_t *obj, struct chained_cache *cc)
 void compose_json_tunnel_dst_port(json_t *obj, struct chained_cache *cc)
 {
   json_object_set_new_nocheck(obj, "tunnel_port_dst", json_integer((json_int_t)cc->ptun->tunnel_dst_port));
+}
+
+void compose_json_tunnel_tcp_flags(json_t *obj, struct chained_cache *cc)
+{
+  char misc_str[VERYSHORTBUFLEN];
+
+  sprintf(misc_str, "%u", cc->tunnel_tcp_flags);
+  json_object_set_new_nocheck(obj, "tunnel_tcp_flags", json_string(misc_str));
+}
+
+void compose_json_array_tunnel_tcp_flags(json_t *obj, struct chained_cache *cc)
+{
+  /* linked-list creation */
+  cdada_list_t *ll = tcpflags_to_linked_list(cc->tunnel_tcp_flags);
+  size_t ll_size = cdada_list_size(ll);
+
+  json_t *root_l1 = compose_tcpflags_json_data(ll, ll_size);
+
+  json_object_set_new_nocheck(obj, "tunnel_tcp_flags", root_l1);
+
+  cdada_list_destroy(ll);
 }
 
 void compose_json_vxlan(json_t *obj, struct chained_cache *cc)

@@ -349,7 +349,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "tunnel_tos")) cfg_set_aggregate(filename, value, COUNT_INT_TUNNEL_IP_TOS, count_token);
     else if (!strcmp(count_token, "tunnel_src_port")) cfg_set_aggregate(filename, value, COUNT_INT_TUNNEL_SRC_PORT, count_token);
     else if (!strcmp(count_token, "tunnel_dst_port")) cfg_set_aggregate(filename, value, COUNT_INT_TUNNEL_DST_PORT, count_token);
-    else if (!strcmp(count_token, "tunnel_tcp_flags")) cfg_set_aggregate(filename, value, COUNT_INT_TUNNEL_TCP_FLAGS, count_token);
+    else if (!strcmp(count_token, "tunnel_tcp_flags")) cfg_set_aggregate(filename, value, COUNT_INT_TUNNEL_TCPFLAGS, count_token);
     else if (!strcmp(count_token, "src_roa")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_ROA, count_token);
     else if (!strcmp(count_token, "dst_roa")) cfg_set_aggregate(filename, value, COUNT_INT_DST_ROA, count_token);
     else if (!strcmp(count_token, "vxlan")) cfg_set_aggregate(filename, value, COUNT_INT_VXLAN, count_token);

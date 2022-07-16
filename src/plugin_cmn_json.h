@@ -36,6 +36,8 @@ extern void compose_json_map_label(json_t *, struct chained_cache *);
 extern void compose_json_array_tcpflags(json_t *, struct chained_cache *);
 extern void compose_json_string_fwd_status(json_t *, struct chained_cache *);
 extern void compose_json_array_mpls_label_stack(json_t *, struct chained_cache *);
+extern void compose_json_array_tunnel_tcp_flags(json_t *, struct chained_cache *);
+
 extern json_t *compose_label_json_data(cdada_list_t *, int);
 extern json_t *compose_tcpflags_json_data(cdada_list_t *, int);
 extern json_t *compose_fwd_status_json_data(size_t, cdada_list_t *, int);
@@ -121,6 +123,7 @@ extern void compose_json_tunnel_proto(json_t *, struct chained_cache *);
 extern void compose_json_tunnel_tos(json_t *, struct chained_cache *);
 extern void compose_json_tunnel_src_port(json_t *, struct chained_cache *);
 extern void compose_json_tunnel_dst_port(json_t *, struct chained_cache *);
+extern void compose_json_tunnel_tcp_flags(json_t *, struct chained_cache *);
 extern void compose_json_vxlan(json_t *, struct chained_cache *);
 extern void compose_json_timestamp_start(json_t *, struct chained_cache *);
 extern void compose_json_timestamp_end(json_t *, struct chained_cache *);
