@@ -319,6 +319,7 @@ extern void count_ndpi_class_handler(const struct db_cache *, struct insert_data
 extern void count_counters_setclause_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_flows_setclause_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_tcpflags_setclause_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_tunnel_tcpflags_setclause_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_noop_setclause_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_noop_setclause_event_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 

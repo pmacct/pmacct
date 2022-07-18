@@ -848,6 +848,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
     Cursor->bytes_counter = data->pkt_len;
     Cursor->flow_type = data->flow_type;
     Cursor->tcp_flags = data->tcp_flags;
+    Cursor->tunnel_tcp_flags = data->tunnel_tcp_flags;
 
     if (config.nfacctd_stitching) {
       if (!Cursor->stitch) {
@@ -880,6 +881,7 @@ void sql_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *ida
     Cursor->bytes_counter += data->pkt_len;
     Cursor->flow_type = data->flow_type;
     Cursor->tcp_flags |= data->tcp_flags;
+    Cursor->tunnel_tcp_flags |= data->tunnel_tcp_flags;
 
     if (config.nfacctd_stitching) {
       if (Cursor->stitch) {
@@ -3546,6 +3548,13 @@ int sql_compose_static_set_event()
     set_primitives++;
   }
 
+  if (config.what_to_count_2 & COUNT_TUNNEL_TCPFLAGS) {
+    strncat(set_event[set_primitives].string, "SET tunnel_tcp_flags=tunnel_tcp_flags|%u", SPACELEFT(set_event[set_primitives].string));
+    set_event[set_primitives].type = COUNT_INT_TUNNEL_TCPFLAGS;
+    set_event[set_primitives].handler = count_tunnel_tcpflags_setclause_handler;
+    set_primitives++;
+  }
+
   return set_primitives;
 }
 
@@ -3571,6 +3580,14 @@ int sql_compose_static_set(int have_flows)
     strncat(set[set_primitives].string, "tcp_flags=tcp_flags|%u", SPACELEFT(set[set_primitives].string));
     set[set_primitives].type = COUNT_INT_TCPFLAGS;
     set[set_primitives].handler = count_tcpflags_setclause_handler;
+    set_primitives++;
+  }
+
+  if (config.what_to_count_2 & COUNT_TUNNEL_TCPFLAGS) {
+    strncpy(set[set_primitives].string, ", ", SPACELEFT(set[set_primitives].string));
+    strncat(set[set_primitives].string, "tunnel_tcp_flags=tunnel_tcp_flags|%u", SPACELEFT(set[set_primitives].string));
+    set[set_primitives].type = COUNT_INT_TUNNEL_TCPFLAGS;
+    set[set_primitives].handler = count_tunnel_tcpflags_setclause_handler;
     set_primitives++;
   }
 

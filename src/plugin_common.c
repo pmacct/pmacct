@@ -400,6 +400,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
     cache_ptr->bytes_counter = data->pkt_len;
     cache_ptr->flow_type = data->flow_type;
     cache_ptr->tcp_flags = data->tcp_flags;
+    cache_ptr->tunnel_tcp_flags = data->tunnel_tcp_flags;
 
     if (config.nfacctd_stitching) {
       if (!cache_ptr->stitch) {
@@ -425,6 +426,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
       cache_ptr->bytes_counter += data->pkt_len;
       cache_ptr->flow_type = data->flow_type;
       cache_ptr->tcp_flags |= data->tcp_flags;
+      cache_ptr->tunnel_tcp_flags |= data->tunnel_tcp_flags;
 
       if (config.nfacctd_stitching) {
 	if (cache_ptr->stitch) {
@@ -439,6 +441,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
       cache_ptr->bytes_counter = data->pkt_len;
       cache_ptr->flow_type = data->flow_type;
       cache_ptr->tcp_flags = data->tcp_flags;
+      cache_ptr->tunnel_tcp_flags = data->tunnel_tcp_flags;
 
       if (config.nfacctd_stitching) {
 	P_set_stitch(cache_ptr, data, idata);

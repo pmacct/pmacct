@@ -1059,6 +1059,12 @@ void count_tcpflags_setclause_handler(const struct db_cache *cache_elem, struct 
   *ptr_set  += strlen(*ptr_set);
 }
 
+void count_tunnel_tcpflags_setclause_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_set, char **ptr_none)
+{
+  snprintf(*ptr_set, SPACELEFT(set_clause), set[num].string, cache_elem->tunnel_tcp_flags);
+  *ptr_set  += strlen(*ptr_set);
+}
+
 void count_noop_setclause_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_set, char **ptr_none)
 {
   strncpy(*ptr_set, set[num].string, SPACELEFT(set_clause));
