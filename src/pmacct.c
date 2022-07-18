@@ -54,7 +54,7 @@ char *pmc_compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
 			struct pkt_nat_primitives *, struct pkt_mpls_primitives *,
 			struct pkt_tunnel_primitives *, u_char *,
 			struct pkt_vlen_hdr_primitives *, pm_counter_t, pm_counter_t,
-			pm_counter_t, u_int32_t, struct timeval *, int, int);
+			pm_counter_t, u_int8_t, u_int8_t, struct timeval *, int, int);
 void pmc_append_rfc3339_timezone(char *, int, const struct tm *);
 void pmc_compose_timestamp(char *, int, struct timeval *, int, int, int);
 void pmc_custom_primitive_header_print(char *, int, struct imt_custom_primitive_entry *, int);
@@ -350,6 +350,7 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count_2 & COUNT_TUNNEL_IP_TOS) printf("TUNNEL_TOS  ");
     if (what_to_count_2 & COUNT_TUNNEL_SRC_PORT) printf("TUNNEL_SRC_PORT  ");
     if (what_to_count_2 & COUNT_TUNNEL_DST_PORT) printf("TUNNEL_DST_PORT  ");
+    if (what_to_count_2 & COUNT_TUNNEL_TCPFLAGS) printf("TUNNEL_TCP_FLAGS  ");
     if (what_to_count_2 & COUNT_VXLAN) printf("VXLAN     ");
 
     if (what_to_count_2 & COUNT_TIMESTAMP_START) printf("TIMESTAMP_START                ");
@@ -567,6 +568,7 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     if (what_to_count_2 & COUNT_TUNNEL_IP_TOS) printf("%sTUNNEL_TOS", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_TUNNEL_SRC_PORT) printf("%sTUNNEL_SRC_PORT", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_TUNNEL_DST_PORT) printf("%sTUNNEL_DST_PORT", write_sep(sep, &count));
+    if (what_to_count_2 & COUNT_TUNNEL_TCPFLAGS) printf("%sTUNNEL_TCP_FLAGS", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_VXLAN) printf("%sVXLAN", write_sep(sep, &count));
 
     if (what_to_count_2 & COUNT_TIMESTAMP_START) printf("%sTIMESTAMP_START", write_sep(sep, &count));
@@ -2770,6 +2772,11 @@ int main(int argc,char **argv)
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), ptun->tunnel_dst_port);
         }
 
+        if (!have_wtc || (what_to_count_2 & COUNT_TUNNEL_TCPFLAGS)) {
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-3u              ", acc_elem->tunnel_tcp_flags);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), acc_elem->tunnel_tcp_flags);
+        }
+
 	if (!have_wtc || (what_to_count_2 & COUNT_VXLAN)) {
 	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-8u  ", ptun->tunnel_id);
 	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), ptun->tunnel_id);
@@ -2855,7 +2862,8 @@ int main(int argc,char **argv)
 	  json_str = pmc_compose_json(what_to_count, what_to_count_2, acc_elem->flow_type,
 				      &acc_elem->primitives, pbgp, plbgp, pnat, pmpls, ptun, pcust, pvlen,
 				      acc_elem->pkt_len, acc_elem->pkt_num, acc_elem->flo_num,
-				      acc_elem->tcp_flags, NULL, want_tstamp_since_epoch, want_tstamp_utc);
+				      acc_elem->tcp_flags, acc_elem->tunnel_tcp_flags, NULL,
+				      want_tstamp_since_epoch, want_tstamp_utc);
 
 	  if (json_str) {
 	    printf("%s\n", json_str);
@@ -3316,7 +3324,8 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 		  struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
 		  struct pkt_tunnel_primitives *ptun, u_char *pcust, struct pkt_vlen_hdr_primitives *pvlen,
 		  pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter,
-		  u_int32_t tcp_flags, struct timeval *basetime, int tstamp_since_epoch, int tstamp_utc)
+		  u_int8_t tcp_flags, u_int8_t tunnel_tcp_flags, struct timeval *basetime,
+		  int tstamp_since_epoch, int tstamp_utc)
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *tmpbuf;
@@ -3672,6 +3681,11 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   if (wtc_2 & COUNT_TUNNEL_IP_TOS) json_object_set_new_nocheck(obj, "tunnel_tos", json_integer((json_int_t)ptun->tunnel_tos));
   if (wtc_2 & COUNT_TUNNEL_SRC_PORT) json_object_set_new_nocheck(obj, "tunnel_port_src", json_integer((json_int_t)ptun->tunnel_src_port));
   if (wtc_2 & COUNT_TUNNEL_DST_PORT) json_object_set_new_nocheck(obj, "tunnel_port_dst", json_integer((json_int_t)ptun->tunnel_dst_port));
+  if (wtc_2 & COUNT_TUNNEL_TCPFLAGS) {
+    sprintf(misc_str, "%u", tunnel_tcp_flags);
+    json_object_set_new_nocheck(obj, "tunnel_tcp_flags", json_string(misc_str));
+  }
+
   if (wtc_2 & COUNT_VXLAN) json_object_set_new_nocheck(obj, "vxlan", json_integer((json_int_t)ptun->tunnel_id));
 
   if (wtc_2 & COUNT_TIMESTAMP_START) {
@@ -3740,7 +3754,8 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 		  struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
 		  struct pkt_tunnel_primitives *ptun, u_char *pcust, struct pkt_vlen_hdr_primitives *pvlen,
 		  pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter,
-		  u_int32_t tcp_flags, struct timeval *basetime, int tstamp_since_epoch, int tstamp_utc)
+		  u_int8_t tcp_flags, u_int8_t tunnel_tcp_flags, struct timeval *basetime,
+		  int tstamp_since_epoch, int tstamp_utc)
 {
   return NULL;
 }

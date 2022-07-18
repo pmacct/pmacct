@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -42,7 +42,8 @@ struct pm_custom_output {
 				 pm_counter_t,
 				 pm_counter_t,
 				 pm_counter_t,
-				 u_int32_t,
+				 u_int8_t,
+				 u_int8_t,
 				 struct timeval *,
 				 struct pkt_stitching *);
 	int (*output_flush)();

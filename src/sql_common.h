@@ -118,7 +118,8 @@ struct db_cache {
   pm_counter_t packet_counter;
   pm_counter_t flows_counter;
   u_int8_t flow_type;
-  u_int32_t tcp_flags;
+  u_int8_t tcp_flags;
+  u_int8_t tunnel_tcp_flags;
   u_int8_t tentatives;	/* support to classifiers: tentatives remaining */
   time_t basetime;
   struct pkt_bgp_primitives *pbgp;
@@ -257,6 +258,7 @@ extern void PG_count_tunnel_ip_proto_handler(const struct db_cache *, struct ins
 extern void count_tunnel_ip_tos_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_tunnel_src_port_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_tunnel_dst_port_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_tunnel_tcpflags_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_vxlan_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_timestamp_start_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void PG_copy_count_timestamp_start_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
