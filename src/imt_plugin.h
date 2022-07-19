@@ -37,7 +37,8 @@ struct acc {
   pm_counter_t packet_counter;
   pm_counter_t flow_counter;
   u_int8_t flow_type; 
-  u_int32_t tcp_flags; 
+  u_int8_t tcp_flags;
+  u_int8_t tunnel_tcp_flags;
   unsigned int signature;
   u_int8_t reset_flag;
   struct timeval rstamp;	/* classifiers: reset timestamp */

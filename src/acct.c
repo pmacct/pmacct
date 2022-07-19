@@ -169,6 +169,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         elem_acc->flow_counter += data->flo_num;
         elem_acc->bytes_counter += data->pkt_len;
 	elem_acc->tcp_flags |= data->tcp_flags;
+	elem_acc->tunnel_tcp_flags |= data->tunnel_tcp_flags;
         elem_acc->flow_type = data->flow_type; 
 
         return;
@@ -187,6 +188,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
         elem_acc->flow_counter += data->flo_num;
         elem_acc->bytes_counter += data->pkt_len;
 	elem_acc->tcp_flags |= data->tcp_flags;
+	elem_acc->tunnel_tcp_flags |= data->tunnel_tcp_flags;
         elem_acc->flow_type = data->flow_type;
         lru_elem_ptr[pos] = elem_acc;
 
@@ -306,6 +308,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
       elem_acc->flow_counter += data->flo_num;
       elem_acc->bytes_counter += data->pkt_len;
       elem_acc->tcp_flags |= data->tcp_flags;
+      elem_acc->tunnel_tcp_flags |= data->tunnel_tcp_flags;
       elem_acc->flow_type = data->flow_type;
       elem_acc->signature = hash;
       lru_elem_ptr[pos] = elem_acc;
@@ -431,6 +434,7 @@ void insert_accounting_structure(struct primitives_ptrs *prim_ptrs)
       elem_acc->flow_counter += data->flo_num;
       elem_acc->bytes_counter += data->pkt_len;
       elem_acc->tcp_flags = data->tcp_flags;
+      elem_acc->tunnel_tcp_flags = data->tunnel_tcp_flags;
       elem_acc->flow_type = data->flow_type;
       elem_acc->signature = hash; 
       elem_acc->next = NULL;
@@ -452,6 +456,7 @@ void reset_counters(struct acc *elem)
   elem->packet_counter = 0;
   elem->bytes_counter = 0;
   elem->tcp_flags = 0;
+  elem->tunnel_tcp_flags = 0;
   elem->flow_type = 0;
   memcpy(&elem->rstamp, &cycle_stamp, sizeof(struct timeval));
 }
