@@ -1201,7 +1201,7 @@ void load_protos(char *filename, struct protos_table *pt)
 	  }
 
 	  /* 255 / 'others' excluded from valid IP protocols */
-	  if ((ret > 0) && (ret < (PROTOS_TABLE_ENTRIES - 1))) {
+	  if ((ret >= 0) && (ret < (PROTOS_TABLE_ENTRIES - 1))) {
 	    pt->table[ret] = TRUE;
 	  }
 	  else {
