@@ -97,6 +97,7 @@ static const struct _primitives_matrix_struct _primitives_matrix[] = {
   {"tunnel_tos", 1, 1, 0, 1, 0, 0, 0, "Tunnel inner IP ToS"},
   {"tunnel_src_port", 1, 1, 0, 1, 0, 0, 0, "Tunnel inner Source TCP/UDP port"},
   {"tunnel_dst_port", 1, 1, 0, 1, 0, 0, 0, "Tunnel inner Destination TCP/UDP port"},
+  {"tunnel_tcpflags", 1, 1, 0, 1, 0, 0, 0, "Tunnel inner TCP flags"},
   {"MPLS", 1, 1, 1, 1, 0, 0, 0, ""}, 
   {"mpls_label_bottom", 1, 1, 1, 0, 0, 0, 0, "Bottom MPLS label"},
   {"mpls_label_top", 1, 1, 1, 0, 0, 0, 0, "Top MPLS label"},

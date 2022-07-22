@@ -128,7 +128,7 @@ Similarly, BGP tables:
     - or src_port => port_src (INT(2) UNSIGNED NOT NULL, if sql_table_version >= 8)
   * dst_port => dst_port (INT(2) UNSIGNED NOT NULL)
     - or dst_port => port_dst (INT(2) UNSIGNED NOT NULL, if sql_table_version >= 8)
-  * tcpflags => tcp_flags (INT(4) UNSIGNED NOT NULL)
+  * tcpflags => tcp_flags (INT(2) UNSIGNED NOT NULL)
   * proto => ip_proto (CHAR(6) NOT NULL)
     - or (INT(1) UNSIGNED NOT NULL, if sql_num_protos: true)
   * tos => tos (INT(4) UNSIGNED NOT NULL)
@@ -155,6 +155,7 @@ Similarly, BGP tables:
   * tunnel_tos => tunnel_tos (INT(4) UNSIGNED NOT NULL)
   * tunnel_src_port => tunnel_port_src (INT(2) UNSIGNED NOT NULL)
   * tunnel_dst_port => tunnel_port_dst (INT(2) UNSIGNED NOT NULL)
+  * tunnel_tcpflags => tunnel_tcp_flags (INT(2) UNSIGNED NOT NULL)
   * timestamp_start => timestamp_start, timestamp_start_residual:
     - timestamp_start DATETIME NOT NULL, see README.timestamp)
     - timestamp_start_residual INT NOT NULL, see README.timestamp)

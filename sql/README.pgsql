@@ -152,6 +152,7 @@ are no longer supplied as part of the PostgreSQL table creation script.
   * tunnel_tos => tunnel_tos (INT NOT NULL DEFAULT 0)
   * tunnel_src_port => tunnel_port_src (INT NOT NULL DEFAULT 0)
   * tunnel_dst_port => tunnel_port_dst (INT NOT NULL DEFAULT 0)
+  * tunnel_tcpflags => tunnel_tcp_flags (SMALLINT NOT NULL DEFAULT 0)
   * timestamp_start => timestamp_start, timestamp_start_residual:
     - timestamp_start timestamp without time zone NOT NULL DEFAULT '0000-01-01 00:00:00', see README.timestamp)
     - timestamp_start_residual INT NOT NULL DEFAULT 0, see README.timestamp)
