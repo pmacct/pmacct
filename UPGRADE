@@ -6,6 +6,13 @@ the changes done or break old assumptions no longer valid; while the effort
 is to keep these cases at a low, please read this file in preparation to
 upgrading your installation.
 
+TO:	>= 1.7.8
+FROM:	<= 1.7.7
+TOPIC:	kafka_avro_schema_registry
+DESC:	Until version 1.7.7 a custom "-value" string was forcingly appended 
+	to the schema name. This was non-standard practice and hence such
+	practice has been terminated. 
+
 TO:     >= 1.7.8
 FROM:   <= 1.7.7
 TOPIC:	mpls_stack_depth primitive
