@@ -1337,7 +1337,7 @@ serdes_schema_t *compose_avro_schema_registry_name_2(char *topic, int is_topic_d
   strcpy(loc_schema_name, topic);
   strcat(loc_schema_name, "-");
   strcat(loc_schema_name, type);
-  strcat(loc_schema_name, "-");
+  strcat(loc_schema_name, "_");
   strcat(loc_schema_name, name);
 
   loc_schema = compose_avro_schema_registry_name(loc_schema_name, FALSE, avro_schema, NULL, NULL, schema_registry); 
@@ -1358,10 +1358,8 @@ serdes_schema_t *compose_avro_schema_registry_name(char *topic, int is_topic_dyn
   char *p_avro_schema_name;
 
   if (!is_topic_dyn) {
-    p_avro_schema_name = malloc(strlen(topic) + strlen("-value") + 1);
-
+    p_avro_schema_name = malloc(strlen(topic) + 1);
     strcpy(p_avro_schema_name, topic);
-    strcat(p_avro_schema_name, "-value");
   }
   else {
     p_avro_schema_name = compose_avro_schema_name(type, name);
