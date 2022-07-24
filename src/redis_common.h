@@ -27,7 +27,13 @@
 #define PM_REDIS_DEFAULT_CONN_RETRY	(PM_REDIS_DEFAULT_EXP_TIME / 5)
 #define PM_REDIS_DEFAULT_SEP		"+"
 
+/* Global variables */
 typedef void (*redis_thread_handler)(void *);
+bool dump_flag;
+bool queue_dump_flag;
+bool regenerate_timestamp_flag;
+pthread_mutex_t mutex_rd;
+pthread_cond_t sig_rd;
 
 /* structures */
 struct p_redis_host {
@@ -54,6 +60,7 @@ extern void p_redis_set_log_id(struct p_redis_host *, char *);
 extern void p_redis_set_db(struct p_redis_host *, int);
 extern void p_redis_set_exp_time(struct p_redis_host *, int);
 extern void p_redis_set_thread_handler(struct p_redis_host *, redis_thread_handler);
+// extern void p_redis_set_signal();
 
 extern void p_redis_set_string(struct p_redis_host *, char *, char *, int);
 extern void p_redis_set_int(struct p_redis_host *, char *, int, int);
@@ -63,5 +70,7 @@ extern void p_redis_select_db(struct p_redis_host *);
 extern void p_redis_thread_produce_common_core_handler(void *);
 extern void p_redis_thread_produce_common_plugin_handler(void *);
 
-extern void p_redis_subscribe(void *rh);
-extern void p_redis_publish(struct p_redis_host *);
+// extern void refresh_timestamp();
+extern bool p_redis_get_time(struct p_redis_host *);
+// extern int p_redis_connect_once(struct p_redis_host *, int);
+

@@ -234,6 +234,7 @@ typedef struct {
 #endif
 #endif
 
+#include "temp_data_queue.h"
 #ifdef WITH_REDIS
 #include "redis_common.h"
 #endif
@@ -378,7 +379,10 @@ void PM_sigalrm_noop_handler(int);
 void reload(int);
 void push_stats(int);
 void reload_maps(int);
-void re_generate_timestamp();
+void re_generate_timestamp(int);
+void setto_aa(int);
+void setto_pp(int);
+void setto_normal(int);
 extern void pm_pcap_device_initialize(struct pm_pcap_devices *);
 extern void pm_pcap_device_copy_all(struct pm_pcap_devices *, struct pm_pcap_devices *);
 extern void pm_pcap_device_copy_entry(struct pm_pcap_devices *, struct pm_pcap_devices *, int);
@@ -416,6 +420,8 @@ extern void PM_evaluate_flow_type(struct packet_ptrs *);
 extern ssize_t recvfrom_savefile(struct pm_pcap_device *, void **, struct sockaddr *, struct timeval **, int *, struct packet_ptrs *);
 extern ssize_t recvfrom_rawip(unsigned char *, size_t, struct sockaddr *, struct packet_ptrs *);
 
+// extern void refresh_timestamp();
+
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *, const char *, size_t);
 #endif
@@ -433,8 +439,10 @@ initsetproctitle(int, char**, char**);
 
 /* global variables */
 extern char sll_mac[2][ETH_ADDR_LEN];
+// extern char timestampp[SHORTBUFLEN];
 extern struct host_addr mcast_groups[MAX_MCAST_GROUPS];
 extern int reload_map, reload_map_exec_plugins, reload_geoipv2_file;
+extern int aa_flag, pp_flag, normal_flag;
 extern int reload_map_bgp_thread, reload_log, reload_log_bgp_thread;
 extern int reload_map_bmp_thread, reload_log_bmp_thread;
 extern int reload_map_rpki_thread, reload_log_rpki_thread;

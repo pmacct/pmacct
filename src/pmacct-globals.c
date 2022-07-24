@@ -50,6 +50,8 @@ struct sigaction sighandler_action;
 
 int protocols_number;
 
+int aa_flag, pp_flag;
+
 u_int32_t PdataSz, ChBufHdrSz, CharPtrSz, CounterSz, HostAddrSz;
 u_int32_t PpayloadSz, PextrasSz, PmsgSz, PvhdrSz, PtLabelTSz;
 u_int32_t PmLabelTSz;
