@@ -2354,6 +2354,14 @@ process_flowset:
               if (pkt_interval)
                 sentry->sample_pool = ((pkt_interval + pkt_space) / pkt_interval);
             }
+            else if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 4)
+            {
+              memcpy(&t32, pkt + tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 4);
+              sentry->sample_pool = ntohl(t32);
+            }
+            else if (tpl->tpl[NF9_SAMPLING_PKT_INTERVAL].len == 4 && tpl->tpl[NF9_SAMPLING_PKT_SPACE].len == 4)
+            {
+              u_int32_t pkt_interval = 0, pkt_space = 0;
 
             sentry->sampler_id = sampler_id;
             if (ssaved)
