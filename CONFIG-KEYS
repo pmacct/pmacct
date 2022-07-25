@@ -1767,7 +1767,7 @@ DESC:		The URL to a Confluent Avro Schema Registry. The value is passed to libse
 		The schema name is auto generated: if the topic is static, the schema name is createad as
 		<kafka_topic> (ie. if kafka_topic is set to 'foobar' then the schema name will be "foobar");
 		if the topic is dynamic instead, the schema name is created as "pmacct_<plugin type>_<plugin
-		name>" (ie. if plugin name is 'foobar' then the schema name will be "pmacct_kafka_foobar").
+		name>" (ie. if plugin name is 'foobar' then the schema name will be "pmacct-kafka_foobar").
 		To confirm that the schema is registered, the following CL can be used: "curl -X GET
 		https://<Schema Registry host>/subjects | jq . | grep <schema name>". Until reaching a
 		stable 'aggregate' aggregation method, it is recommended to set Schema Registry
@@ -2580,7 +2580,7 @@ DESC:           The URL to a Confluent Avro Schema Registry. The value is passed
                 a pointer to the REST API https://docs.confluent.io/current/schema-registry/docs/api.html
                 The schema name is auto generated: if the topic is static, the schema name is createad as
                 "<kafka_topic>-<bgp/bmp suffix>" (ie. if Kafka topic is set to 'foobar' then the schema
-		name will be "foobar-bgp-msglog", "foobar-bmp-msglog-rm", etc.). Dynamic topics are not
+		name will be "foobar-bgp_msglog", "foobar-bmp_msglog_rm", etc.). Dynamic topics are not
 		supported. To confirm that the schema is registered, the following CL can be used: "curl
 		-X GET https://<Schema Registry host>/subjects | jq . | grep <schema name>".
 DEFAULT:        none
