@@ -2,15 +2,16 @@
 BUILT_SOURCES = submodule_deps
 CLEANFILES = .libcdada_mark
 
-#NOTE make sure Makefile targets don't have the same name of the folder
-#NOTE2 some pmacct users _love_ vintage software, and they run versions of git
+#NOTE some pmacct users _love_ vintage software, and they run versions of git
 #      (like v1.8.3) which don't support initializing submodules from anywhere other
 #      than the root.... sigh
+
+.PHONY: libcdada libcdada_maintainer_clean
 
 ##
 ## LIBCDADA
 ##
-_libcdada:
+libcdada:
 	@not_git=0; \
 	if [ -z "`git rev-parse HEAD 2> /dev/null`" ]; then \
 		if [ -f "$(abs_srcdir)/libcdada/include/cdada.h" ]; then \
@@ -58,17 +59,17 @@ _libcdada:
 		echo "[dep: libcdada] Up-to-date!";\
 	fi
 
-_libcdada_maintainer_clean:
+libcdada_maintainer_clean:
 	@rm -rf $(builddir)/libcdada/build/*
 
 submodule_prep:
 	@mkdir -p $(builddir)/rootfs
 
 #List all of them here
-submodule_deps: submodule_prep _libcdada
+submodule_deps: submodule_prep libcdada
 
 #Deep cleanup
-maintainer-clean-local: _libcdada_maintainer_clean
+maintainer-clean-local: libcdada_maintainer_clean
 	rm -rf $(abs_builddir)/rootfs
 
 #Placed abnormally here, just because vim syntax highlighter has a bug
