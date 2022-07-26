@@ -574,7 +574,6 @@ struct configuration {
   int debug;
   int debug_internal_msg;
   int snaplen;
-  int classifier_tentatives;
   int classifier_table_num;
   int classifier_ndpi;
   u_int32_t ndpi_num_roots;
