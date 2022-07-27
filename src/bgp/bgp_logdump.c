@@ -664,6 +664,13 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
   return (ret | amqp_ret | kafka_ret);
 }
 
+int bgp_peer_log_eor(struct bgp_peer *peer, afi_t afi, safi_t safi, bgp_tag_t *tag, char *event_type, int output)
+{
+  // XXX
+
+  return SUCCESS;
+}
+
 int bgp_peer_log_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int type)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(type);

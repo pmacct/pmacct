@@ -32,6 +32,7 @@
 #define BGP_LOG_TYPE_UPDATE	1
 #define BGP_LOG_TYPE_WITHDRAW	2
 #define BGP_LOG_TYPE_DELETE	3
+#define BGP_LOG_TYPE_EOR	4
 
 #define BGP_LOG_TYPE_LOGINIT	65500
 #define BGP_LOG_TYPE_LOGCLOSE	65501
@@ -61,6 +62,7 @@ extern int bgp_peer_log_init(struct bgp_peer *, bgp_tag_t *, int, int);
 extern int bgp_peer_log_close(struct bgp_peer *, bgp_tag_t *, int, int);
 extern int bgp_peer_log_dynname(char *, int, char *, struct bgp_peer *);
 extern int bgp_peer_log_msg(struct bgp_node *, struct bgp_info *, afi_t, safi_t, bgp_tag_t *, char *, int, char **, int);
+extern int bgp_peer_log_eor(struct bgp_peer *, afi_t, safi_t, bgp_tag_t *, char *, int);
 
 extern void bgp_peer_log_seq_init(u_int64_t *);
 extern void bgp_peer_log_seq_increment(u_int64_t *);
