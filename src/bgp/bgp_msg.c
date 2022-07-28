@@ -772,12 +772,15 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 
     if (eor) {
       char event_type[] = "log";
+      struct bgp_info ri;
 
       bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
       Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_parse_update_msg() Received unsupported NLRI afi=%u safi=%u\n",
 	  config.name, bms->log_str, bgp_peer_str, afi, safi);
 
-      bgp_peer_log_eor(peer, afi, safi, bms->tag, event_type, bms->msglog_output);
+      memset(&ri, 0, sizeof(ri));
+      ri.peer = peer;
+      bgp_peer_log_msg(NULL, &ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_EOR);
     }
   }
 

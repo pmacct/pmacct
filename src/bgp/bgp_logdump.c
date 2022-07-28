@@ -102,6 +102,9 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       case BGP_LOG_TYPE_DELETE:
 	json_object_set_new_nocheck(obj, "log_type", json_string("delete"));
 	break;
+      case BGP_LOG_TYPE_EOR:
+	json_object_set_new_nocheck(obj, "log_type", json_string("end-of-rib"));
+	break;
       default:
 	snprintf(log_type_str, SUPERSHORTBUFLEN, "%d", log_type); 
         json_object_set_new_nocheck(obj, "log_type", json_string(log_type_str));
@@ -292,6 +295,9 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
         break;
       case BGP_LOG_TYPE_DELETE:
 	pm_avro_check(avro_value_set_string(&p_avro_field, "delete"));
+        break;
+      case BGP_LOG_TYPE_EOR:
+	pm_avro_check(avro_value_set_string(&p_avro_field, "end-of-rib"));
         break;
       default:
 	sprintf(log_type_str, "%u", log_type);
@@ -662,13 +668,6 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
   }
 
   return (ret | amqp_ret | kafka_ret);
-}
-
-int bgp_peer_log_eor(struct bgp_peer *peer, afi_t afi, safi_t safi, bgp_tag_t *tag, char *event_type, int output)
-{
-  // XXX
-
-  return SUCCESS;
 }
 
 int bgp_peer_log_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int type)
