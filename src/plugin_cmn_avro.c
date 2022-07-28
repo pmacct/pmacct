@@ -520,13 +520,13 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
   }
 
   if (wtc_2 & COUNT_IN_VLAN) {
-    check_i(avro_value_get_by_name(&value, "vlan_in", &field, NULL));
-    check_i(avro_value_set_long(&field, pbase->in_vlan_id));
+    pm_avro_check(avro_value_get_by_name(&value, "vlan_in", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->in_vlan_id));
   }
 
   if (wtc_2 & COUNT_OUT_VLAN) {
-    check_i(avro_value_get_by_name(&value, "vlan_out", &field, NULL));
-    check_i(avro_value_set_long(&field, pbase->out_vlan_id));
+    pm_avro_check(avro_value_get_by_name(&value, "vlan_out", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->out_vlan_id));
   }
 
   if (wtc & COUNT_COS) {
