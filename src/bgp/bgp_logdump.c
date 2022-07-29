@@ -192,7 +192,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       if (attr_extra && attr_extra->psid_li)
         json_object_set_new_nocheck(obj, "psid_li", json_integer((json_int_t)attr_extra->psid_li));
 
-      if (config.rpki_roas_file || config.rpki_rtr_cache) {
+      if ((config.rpki_roas_file || config.rpki_rtr_cache) && route) {
 	u_int8_t roa;
 
 	if (etype == BGP_LOGDUMP_ET_LOG) {
@@ -209,7 +209,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       }
     }
 
-    if (safi == SAFI_MPLS_LABEL || safi == SAFI_MPLS_VPN) {
+    if ((safi == SAFI_MPLS_LABEL || safi == SAFI_MPLS_VPN) && ri && ri->attr_extra) {
       char label_str[SHORTSHORTBUFLEN];
 
       if (safi == SAFI_MPLS_VPN) {
@@ -503,7 +503,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
-    if (safi == SAFI_MPLS_LABEL || safi == SAFI_MPLS_VPN) {
+    if ((safi == SAFI_MPLS_LABEL || safi == SAFI_MPLS_VPN) && ri && ri->attr_extra) {
       char label_str[SHORTSHORTBUFLEN];
 
       if (safi == SAFI_MPLS_VPN) {
@@ -550,7 +550,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
     if (bms->bgp_peer_log_msg_extras) bms->bgp_peer_log_msg_extras(peer, etype, log_type, output, &p_avro_obj);
 
-    if (config.rpki_roas_file || config.rpki_rtr_cache) {
+    if ((config.rpki_roas_file || config.rpki_rtr_cache) && route) {
       u_int8_t roa;
 
       if (etype == BGP_LOGDUMP_ET_LOG) {
