@@ -5,10 +5,7 @@
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "thread_pool.h"
-
-// #include "temp_data_queue.h"
-
-// #include <threads.h>
+#include "cdada/queue.h"
 
 thread_pool_t *dq_pool;
 // A utility function to create a new linked list node.
@@ -25,48 +22,30 @@ struct QNode *newNode(void *k, size_t k_len)
 }
 
 // The function to add a key k to q
-void enQueue(struct pm_list *q, void *k, size_t k_len)
+void enQueue(cdada_queue_t *q, void *k, size_t k_len)
 {
   // Store key,key length and its timestamp in a struct
   struct QNode *temp = newNode(k, k_len);
-  pm_listnode_add(q, temp);
-}
-
-// Function to remove a key from given queue q
-void deQueue(struct pm_list *q)
-{
-  struct QNode *temp = pm_listnode_head(q);
-  pm_listnode_delete(q, temp);
-}
-
-void set_thrd(struct Queue *q_hd, queue_thread_handler th_hdlr)
-{
-  q_hd->th_hdlr = th_hdlr;
+  cdada_queue_push(q, temp);
 }
 
 void queue_thread_wrapper()
 {
-  struct Queue *temp1;
-  struct pm_list *temp = pm_list_new();
-
+  cdada_queue_t *temp = cdada_queue_create(nodestruct);
   pthread_mutex_lock(&mutex_thr);
-  q = calloc(1, sizeof(struct pm_list));
+  q = calloc(1, sizeof(cdada_queue_t));
   q = temp;
   pthread_mutex_unlock(&mutex_thr);
 
-  temp1->th_hdlr = &countdown_delete;
-  q_handler = temp1;
-  Log(LOG_INFO, "Created queue\n");
+  queue_thread_handler th_hdlr = &countdown_delete;
 
   dq_pool = allocate_thread_pool(1);
-  send_to_pool(dq_pool, queue_produce_thread, q_handler);
+  send_to_pool(dq_pool, queue_produce_thread, th_hdlr);
   return;
 }
 
 int queue_produce_thread(void *qh)
 {
-
-  struct Queue *q_hd = qh;
   for (;;)
   {
     countdown_delete();
@@ -79,28 +58,27 @@ void countdown_delete()
   sleep(2); // per two second
   long long timestamp;
   struct timeval current_time;
+  nodestruct nodes;
   gettimeofday(&current_time, NULL);                                // Get time in micro second
   timestamp = current_time.tv_sec * 1000000 + current_time.tv_usec; // Setting the time when redis connects as timestamp for this bmp session
-
   pthread_mutex_lock(&mutex_thr);
-  int flag = (q->tail == NULL && q->count) ? 0 : 1;
+  int flag = cdada_queue_empty(q) ? 0 : 1;
   pthread_mutex_unlock(&mutex_thr);
-
   if (flag)
   {
     pthread_mutex_lock(&mutex_thr);
     pthread_cond_wait(&sig, &mutex_thr);
-    struct QNode *d_ptr = (struct QNode *)q->head->data;
-    //while the data in the queue is expired by 2s
-    while ((q->tail != NULL) && (timestamp - (d_ptr->timestamp) > 199999) && !queue_dump_flag)
+    cdada_queue_front(q, &nodes);
+    Log(LOG_INFO, "enter queue5: %ld\n", nodes.timestamp);
+    // while the data in the queue is expired by 2s
+    while (!cdada_queue_empty(q) && (timestamp - nodes.timestamp > 199999) && !queue_dump_flag)
     {
-      // Check if data is expired
-      deQueue(q); // delete if the 1 second countdown is over
+      cdada_queue_pop(q);
       Log(LOG_INFO, "Delete one from queue\n");
-      d_ptr = (struct QNode *)q->head->data;
+      cdada_queue_front(q, &nodes);
     }
     pthread_mutex_unlock(&mutex_thr);
   }
-  
+
   return;
 }

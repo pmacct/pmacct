@@ -501,6 +501,7 @@ int p_kafka_connect_to_produce(struct p_kafka_host *kafka_host)
 
 int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, size_t data_len, int part, int do_free)
 {
+  int count;
   int ret = SUCCESS;
   int flag = RD_KAFKA_MSG_F_COPY;
   kafkap_ret_err_cb = FALSE;
@@ -545,10 +546,11 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, si
 
     pthread_mutex_lock(&mutex_thr);
     enQueue(q, data_cpy, data_len);
+    count = cdada_queue_size(q);
     pthread_mutex_unlock(&mutex_thr);
     pthread_cond_signal(&sig);
 
-    Log(LOG_INFO, "INFO (  ): put data into queue:%d\n", q->count);
+    Log(LOG_INFO, "INFO (  ): put data into queue:%d\n", count);
     ret = SUCCESS;
   }
   else
@@ -562,18 +564,18 @@ int dump_the_queue(struct p_kafka_host *kafka_host, int part, int do_free, int d
 {
   int flag = RD_KAFKA_MSG_F_COPY;
   int ret = SUCCESS;
+  nodestruct nodes;
   if (kafka_host && kafka_host->rk && kafka_host->topic && dump_queue)
   {
     pthread_mutex_lock(&mutex_thr);
-    struct pm_listnode *n_ptr = (struct pm_listnode *)q->head;
-    int queue_node_num = q->count;
+    cdada_queue_front(q, &nodes);
+    uint32_t queue_node_num = cdada_queue_size(q);
     pthread_mutex_unlock(&mutex_thr);
 
     while (queue_node_num)
     {
       pthread_mutex_lock(&mutex_thr);
-      struct QNode *d_ptr = (struct QNode *)n_ptr->data;
-      ret = rd_kafka_produce(kafka_host->topic, part, flag, (void *)d_ptr->key, (size_t)d_ptr->key_len,
+      ret = rd_kafka_produce(kafka_host->topic, part, flag, nodes.key, nodes.key_len,
                              kafka_host->key, kafka_host->key_len, NULL);
       if (ret == ERR)
       {
@@ -583,11 +585,11 @@ int dump_the_queue(struct p_kafka_host *kafka_host, int part, int do_free, int d
         return ERR;
       }
       rd_kafka_poll(kafka_host->rk, 0);
-      deQueue(q); // Dequeue the dumped node
-      Log(LOG_INFO, "INFO (  ): Dump the message in the queue:%d  %d\n", q->count, ret);
-      if (q->head != NULL)
-        n_ptr = (struct pm_listnode *)q->head;
-      queue_node_num = q->count;
+      cdada_queue_pop(q);// Dequeue the dumped node
+      if (!cdada_queue_empty(q))
+        cdada_queue_front(q, &nodes);
+      queue_node_num = cdada_queue_size(q);
+      Log(LOG_INFO, "INFO (  ): Dump the message in the queue:%d  %d\n", queue_node_num, ret);
       pthread_mutex_unlock(&mutex_thr);
     }
     queue_dump_flag = false;
