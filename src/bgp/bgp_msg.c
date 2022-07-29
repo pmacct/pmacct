@@ -780,6 +780,7 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 
       memset(&ri, 0, sizeof(ri));
       ri.peer = peer;
+      ri.bmed = bmd->extra;
       bgp_peer_log_msg(NULL, &ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_EOR);
     }
   }
