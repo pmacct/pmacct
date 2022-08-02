@@ -79,6 +79,7 @@ struct chdlc_header {
 #define ETHERTYPE_8021Q		0x8100          /* 802.1Q */
 #define ETHERTYPE_MPLS          0x8847		/* MPLS */
 #define ETHERTYPE_MPLS_MULTI    0x8848		/* MPLS */
+#define ETHERTYPE_8021AD	0x88A8		/* 802.1AD */
 #define ETHERTYPE_ISO		0xFEFE		/* OSI */
 #define ETHERTYPE_GRE_ISO	0x00FE		/* OSI over GRE */
 #define ETHERTYPE_CFP		0x8903		/* Cisco FabricPath */

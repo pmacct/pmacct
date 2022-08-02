@@ -84,7 +84,7 @@ void decodeLinkLayer(SFSample *sample)
   sample->eth_type = (ptr[0] << 8) + ptr[1];
   ptr += 2;
 
-  if (sample->eth_type == ETHERTYPE_8021Q) {
+  if (sample->eth_type == ETHERTYPE_8021Q || sample->eth_type == ETHERTYPE_8021AD) {
     /* VLAN  - next two bytes */
     u_int32_t vlanData = (ptr[0] << 8) + ptr[1];
     u_int32_t vlan = vlanData & 0x0fff;
@@ -103,6 +103,16 @@ void decodeLinkLayer(SFSample *sample)
 
     ptr += 2;
     caplen -= 2;
+
+    /* 802.1AD: we keep the S-TAG and ignore the C-TAG */
+    if (sample->eth_type == ETHERTYPE_8021AD) {
+      if (caplen < 4) {
+	return;
+      }
+
+      ptr += 4;
+      caplen -= 4;
+    }
   }
 
   if (sample->eth_type <= NFT_MAX_8023_LEN) {
