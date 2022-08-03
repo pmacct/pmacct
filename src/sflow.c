@@ -81,6 +81,7 @@ void decodeLinkLayer(SFSample *sample)
 
   memcpy(sample->eth_src, ptr, 6);
   ptr += 6;
+
   sample->eth_type = (ptr[0] << 8) + ptr[1];
   ptr += 2;
 
@@ -106,11 +107,20 @@ void decodeLinkLayer(SFSample *sample)
 
     /* 802.1AD: we keep the S-TAG and ignore the C-TAG */
     if (sample->eth_type == ETHERTYPE_8021AD) {
+      u_int32_t cvlanData, cvlan;
+
       if (caplen < 4) {
 	return;
       }
 
-      ptr += 4;
+      cvlanData = (ptr[0] << 8) + ptr[1];
+      cvlan = cvlanData & 0x0fff;
+      sample->cvlan = cvlan;
+
+      ptr += 2;
+      sample->eth_type = (ptr[0] << 8) + ptr[1];
+
+      ptr += 2;
       caplen -= 4;
     }
   }
