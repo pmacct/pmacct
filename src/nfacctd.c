@@ -2076,6 +2076,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
               if (pkt_interval) sentry->sample_pool = ((pkt_interval + pkt_space) / pkt_interval);
             }
 <<<<<<< HEAD
+<<<<<<< HEAD
             if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4)
             {
               memcpy(&t32, pkt + tpl->tpl[NF9_SAMPLING_INTERVAL].off, 4);
@@ -2130,6 +2131,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           pm_class_t class_id = 0, class_int_id = 0;
 =======
 >>>>>>> a343ab09 (Merge with the newest pmacct version )
+=======
+>>>>>>> a343ab09 (Merge with the newest pmacct version )
 
 	    sentry->sampler_id = sampler_id;
 	    if (ssaved) sentry->next = ssaved;
@@ -2167,6 +2170,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
             centry->class_id = class_id;
 	    centry->class_int_id = class_int_id;
             if (csaved) centry->next = csaved;
+<<<<<<< HEAD
 
 	    css.id = centry->class_int_id;
 	    strlcpy(css.protocol, centry->class_name, MAX_PROTOCOL_LEN);
@@ -2204,6 +2208,19 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	}
 
         if (tpl->tpl[NF9_INGRESS_VRFID].len == 4 && tpl->tpl[NF9_MPLS_VPN_RD].len == 8) {
+=======
+
+	    css.id = centry->class_int_id;
+	    strlcpy(css.protocol, centry->class_name, MAX_PROTOCOL_LEN);
+#if defined (WITH_NDPI)
+	    css.category = FALSE; /* unused */
+#endif
+	    pmct_register(&css);
+          }
+	}
+
+	if (tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].len == 4 || tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].len == 16) {
+>>>>>>> a343ab09 (Merge with the newest pmacct version )
           /* Handling the global option scoping case */
           if (!config.nfacctd_disable_opt_scope_check) {
             if (tpl->tpl[NF9_OPT_SCOPE_SYSTEM].len) entry = (struct xflow_status_entry *) pptrs->f_status_g;
@@ -2211,6 +2228,35 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           else entry = (struct xflow_status_entry *) pptrs->f_status_g;
 
 	  if (entry) {
+<<<<<<< HEAD
+=======
+	    int got_v4 = FALSE;
+
+	    if (tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].len) {
+	      raw_to_addr(&entry->exp_addr, pkt+tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].off, AF_INET);
+	      raw_to_sa(&entry->exp_sa, pkt+tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].off, 0, AF_INET);
+
+	      if (!is_any(&entry->exp_addr)) {
+		got_v4 = TRUE;
+	      }
+	    }
+
+	    if (!got_v4 && tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].len) {
+	      raw_to_addr(&entry->exp_addr, pkt+tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].off, AF_INET6);
+	      raw_to_sa(&entry->exp_sa, pkt+tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].off, 0, AF_INET6);
+	    }
+	  }
+	}
+
+        if (tpl->tpl[NF9_INGRESS_VRFID].len == 4 && tpl->tpl[NF9_MPLS_VPN_RD].len == 8) {
+          /* Handling the global option scoping case */
+          if (!config.nfacctd_disable_opt_scope_check) {
+            if (tpl->tpl[NF9_OPT_SCOPE_SYSTEM].len) entry = (struct xflow_status_entry *) pptrs->f_status_g;
+          }
+          else entry = (struct xflow_status_entry *) pptrs->f_status_g;
+
+	  if (entry) {
+>>>>>>> a343ab09 (Merge with the newest pmacct version )
 	    u_int32_t ingress_vrfid, egress_vrfid;
 	    rd_t *mpls_vpn_rd;
 
@@ -2300,6 +2346,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
         pptrs->f_data = pkt;
 <<<<<<< HEAD
+<<<<<<< HEAD
         pptrs->f_tpl = (u_char *)tpl;
         reset_net_status_v(pptrsv);
 
@@ -2374,6 +2421,17 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  tee_dissect->elemLen = tpl->len;
           pptrs->tee_dissect_bcast = FALSE;
 
+=======
+	pptrs->f_tpl = (u_char *) tpl;
+	reset_net_status_v(pptrsv);
+
+	if (tee_dissect) {
+	  tee_dissect->elemBasePtr = pkt;
+	  tee_dissect->elemEndPtr = (u_char *) (pkt + tpl->len);
+	  tee_dissect->elemLen = tpl->len;
+          pptrs->tee_dissect_bcast = FALSE;
+
+>>>>>>> a343ab09 (Merge with the newest pmacct version )
 	  exec_plugins(pptrs, req);
 
 	  goto finalize_record;
