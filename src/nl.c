@@ -854,14 +854,14 @@ ssize_t recvfrom_savefile(struct pm_pcap_device *device, void **buf, struct sock
       }
     }
   }
-  Log(LOG_INFO, "INFO ( %s ): Received packet: %s\n", ret);
+
   return ret;
 }
 
 ssize_t recvfrom_rawip(unsigned char *buf, size_t len, struct sockaddr *src_addr, struct packet_ptrs *local_pptrs)
 {
   ssize_t ret = 0;
-  Log(LOG_INFO, "INFO ( %s ): Received packet: %s\n", ret);
+
   local_pptrs->packet_ptr = buf;
   local_pptrs->pkthdr->caplen = len;
 

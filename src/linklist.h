@@ -53,6 +53,7 @@ struct pm_list
    */
   void (*del) (void *val);
 };
+
 #define pm_listnextnode(X) ((X)->next)
 #define pm_listhead(X) ((X)->head)
 #define pm_listtail(X) ((X)->tail)

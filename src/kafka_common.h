@@ -22,26 +22,25 @@
 #ifndef KAFKA_COMMON_H
 #define KAFKA_COMMON_H
 
+
 /* includes */
 #include <librdkafka/rdkafka.h>
 #include "plugin_common.h"
-// #include "redis_common.h"
 #ifdef WITH_SERDES
 #include <libserdes/serdes-avro.h>
 #endif
 
 /* defines */
-#define PM_KAFKA_ERRSTR_LEN 512
-#define PM_KAFKA_DEFAULT_RETRY 60
-#define PM_KAFKA_LONGLONG_RETRY INT_MAX
-#define PM_KAFKA_OUTQ_LEN_RETRIES 3
+#define PM_KAFKA_ERRSTR_LEN		512
+#define PM_KAFKA_DEFAULT_RETRY		60
+#define PM_KAFKA_LONGLONG_RETRY		INT_MAX
+#define PM_KAFKA_OUTQ_LEN_RETRIES	3
 
-#define PM_KAFKA_CNT_TYPE_STR 1
-#define PM_KAFKA_CNT_TYPE_BIN 2
+#define PM_KAFKA_CNT_TYPE_STR		1
+#define PM_KAFKA_CNT_TYPE_BIN		2
 
 /* structures */
-struct p_kafka_host
-{
+struct p_kafka_host {
   char broker[SRVBUFLEN];
   char errstr[PM_KAFKA_ERRSTR_LEN];
   u_int8_t content_type;
@@ -64,12 +63,6 @@ struct p_kafka_host
   struct p_broker_timers btimers;
 };
 
-struct temp
-{
-  void *kafka_host;
-  int part;
-  int flag;
-};
 /* prototypes */
 extern void p_kafka_init_host(struct p_kafka_host *, char *);
 extern void p_kafka_init_host_struct(struct p_kafka_host *);
@@ -137,4 +130,4 @@ extern int dyn_partition_key;
 extern char default_kafka_broker_host[];
 extern int default_kafka_broker_port;
 extern char default_kafka_topic[];
-#endif // KAFKA_COMMON_H
+#endif //KAFKA_COMMON_H

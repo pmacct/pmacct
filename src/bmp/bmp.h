@@ -2,7 +2,7 @@
     pmacct (Promiscuous mode IP Accounting package)
     pmacct is Copyright (C) 2003-2021 by Paolo Lucente
 */
- 
+
 /*
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

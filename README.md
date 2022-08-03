@@ -2,110 +2,67 @@
 
 DOCUMENTATION
 =============
-# Functionality
 
-  * `Collector will be working on active/standby mode for BMP session(IPFIX won't be affected). This active/standby status is determined by the timestamp of the collector, which is set at the establishment of nfacctd core process. We consider that having a smaller timestamp means that a collector has worked for a longer time, and thus can be considered as a stable one, while the others, having a larger timestamp due to either just establishing bmp session a bit later, or carshing while running, will be considered as less stable ones. (Please note that there can be more than three collectors, more than one collector can be standby but only one will be active.)
-  The timestamp is written to redis with key:
-  
-  ```bash
-  config.name+config.cluster_id+attachment_time
-  e.g. nfacctd-bmp-locB+0+locBbmp-locB01c+0+attachment_time
-  ```
- 
-  In redis_common.c, I wrote a function called p_redis_get_time(). In this function it queried with command
-  
-  ```bash
-  KEYS *(cluster id)+attachment_time
-  ```
-  It can get a reply with information such as: a two dimensional array containing all keys that fit the condition(session_name), and the number of keys that fit the condition(session_num). In order to get timestamp, do another GET with the key.
-  See code below:
-  
-  ```bash
- for (int i = 0; i < session_num; i++) 
-  {
-    redis_host->reply = redisCommand(redis_host->ctx, "GET %s", session_name[i]);
-    session_value[i] = strtoll(redis_host->reply->str, &eptr, 0); //eptr is the endpointer, stands for NULL 
-    // If there is a timestamp larger than its timestamp, return 0
-    if (strtoll(timestamp, &eptr, 0) > session_value[i])
-    {
-      p_redis_process_reply(redis_host);
-      return false;
-    }
-    // Continue if it's its timestamp
-    else if (strtoll(timestamp, &eptr, 0) == session_value[i])
-    {
-      continue;
-    }
-  }
-```
-  
-  * `Redis is used by each collector to exchange timesamp information. Initially, nfacctd is publishing to redis once per minute. I speed it up to once per second in order to get information faster. 
-  In addition, nfacctd is also consuming timestamp information from redis with the same rate as that for publishing. And the active/standby will be calculated each time and be written to the log.
-  Then the active/standby status will by notified by a global variable "dump_flag", which will be used by kafka thread afterwards.
-  
-  * `nfacctd is calling the p_kafka_produce_data_to_part() function to dump message to kafka. Each time before dumping, I make the program check with the dump_flag, and pulish only if it's true.
-  If it's false, it stores the data pointer, the data lenth as well as when the data is intended to be dumped in as struct and enqueue it in a shared linked list.
-  See code below:
-  
-  ```bash
-struct QNode *newNode(void *k, size_t k_len)
-{
-  struct QNode *temp = (struct QNode *)malloc(sizeof(struct QNode));
-  temp->key = k;
-  temp->key_len = k_len;
-  struct timeval current_time;
-  gettimeofday(&current_time, NULL);                                      // Get time in micro second
-  temp->timestamp = current_time.tv_sec * 1000000 + current_time.tv_usec; // Setting the time when redis connects as timestamp for this bmp session
-  // temp->next = NULL;
-  return temp;
-}
-  ```
-  I created a global linked list and a thread that is iteratively dequeuing nodes in the queue whose timestamp is 2s earlier than current time. I set it as 2s because theoratically the failover does for maximum 2s. In this case it can store data for the past two seconds and dump it ot avoid data loss if the failover happends during dumping.
-  
-  For dumping data in the list, I created another queue_dump_flag, which will be set when there is a change with the value of dump_flag while it's not the first time getting the dump_flag.
-  With the queue_dump_flag, it goes through all the data in the list and dump them before the next new BMP message will be dumped.
+- Online:
+  * GitHub Wiki Pages: https://github.com/pmacct/pmacct/wiki
+  * GitHub master code: https://github.com/pmacct/pmacct/
 
-# Sending Signals Commands
+- Distribution tarball:
+  * ChangeLog: History of features version by version
+  * CONFIG-KEYS: Available configuration directives explained
+  * QUICKSTART: Examples, command-lines, quickstart guides
+  * FAQS: FAQ document
+  * docs/: Miscellaneous internals, UNIX signals, SQL triggers documents
+  * examples/: Sample configs, maps, AMQP/Kafka consumers, clients
+  * sql/: SQL documentation, default SQL schemas and customization tips
 
-The main actions that need to be triggered by commands, are sending the siganls to refresh the timestamp and to force to change collector status. To use them, firstly start the collector:
+# DOCKER IMAGES
+
+Official pmacct docker images can be found in [docker hub](https://hub.docker.com/r/pmacct/). To use them, simply (e.g. `sfacctd`):
 
 ```bash
- ~# sudo systemctl nfacctd-bmp-locA01.service
- ~# sudo systemctl nfacctd-bmp-locB01.service
+ ~# docker pull pmacct/sfacctd:latest
+ ~# docker run -v /path/to/sfacctd.conf:/etc/pmacct/sfacctd.conf pmacct/sfacctd
 ```
 
-In order to send the signal, we need to search for the process ID of targeted process. Let's assume that now A is active and B is passive. To search for the process ID, type:
+For more details, options and troubleshooting please read the [Docker documentation section](docs/DOCKER.md)
+
+# BUILDING
+
+Resolve dependencies, ie.:
+
+  * `apt-get install libpcap-dev pkg-config libtool autoconf automake make bash libstdc++-dev g++` for *[Debian/Ubuntu]*
+  * `yum install libpcap-devel pkgconfig libtool autoconf automake make bash libstdc++-devel gcc-c++` for *[CentOS/RHEL]*
+
+Build GitHub code:
 
 ```bash
- ~# sudo ps -ef | grep "nfacctd: Core Process"
+ ~# git clone https://github.com/pmacct/pmacct.git
+ ~# cd pmacct
+ ~#  ./autogen.sh
+ ~# ./configure #check-out available configure knobs via ./configure --help
+ ~#  make
+ ~#  make install #with super-user permission
 ```
 
-If you want to now set B as the active one, you need to refresh A's timestamp. Simply type:
+# RELICENSE INITIATIVE
 
-```bash
- ~# sudo kill -34 collectorA-nfacctd-core-processID
-```
+The pmacct project is looking to make its code base available under a more permissive
+BSD-style license. More information about the motivation and process can be found in
+this [announcement](https://www.mail-archive.com/pmacct-discussion@pmacct.net/msg03881.html).
 
-Now A is queuing messages while B is dumping. If you want to now force A to dump as well, type:
+# CONTRIBUTING
 
-```bash
- ~# sudo kill -35 collectorA-nfacctd-core-processID
-```
+- Prerequisites:
+  * Set up git: https://help.github.com/articles/set-up-git/
+  * *[Specify username, a commit email address matching the GitHub profile one, and a SSH key]*
 
-Now both A&B are dumping. If you now want B, which is initially dumping, to stop and queue messages, simply type:
+- Code:
+  * Fork the pmacct repo: https://help.github.com/articles/fork-a-repo/
+  * *[Jot down your code in the local clone of your fork, commit and push code changes to your fork]*
+  * Generate a Pull Request: https://help.github.com/articles/about-pull-requests/
 
-```bash
- ~# sudo kill -36 collectorB-nfacctd-core-processID
-```
-
-Now A is dumping and B is queuing messages. However, A has a lower priority and B has a higher priority due to the timestamp. If you want to set all them back to their normal status, simply type:
-
-```bash
- ~# sudo kill -37 collectorA-nfacctd-core-processID
- ~# sudo kill -37 collectorB-nfacctd-core-processID
-```
-
-Then A will be queuing messaging while B will be dumping, just like what is indicated by their timestamps.
-
-
-
+- Wiki (documentation and diagrams):
+  * Ask by unicast email to be added to the project collaborators
+  * *[Edit wiki content online or clone it locally and commit and push changes]* 
+  * If having to add a diagram: https://gist.github.com/subfuzion/0d3f19c4f780a7d75ba2

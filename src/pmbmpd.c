@@ -306,7 +306,6 @@ int main(int argc,char **argv, char **envp)
     char log_id[SHORTBUFLEN];
 
     snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
-    Log(LOG_INFO, "INFO (  ): the log_id is: %s\n", log_id);
     p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_core_handler);
   }
 #endif

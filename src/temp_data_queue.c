@@ -17,7 +17,6 @@ struct QNode *newNode(void *k, size_t k_len)
   struct timeval current_time;
   gettimeofday(&current_time, NULL);                                      // Get time in micro second
   temp->timestamp = current_time.tv_sec * 1000000 + current_time.tv_usec; // Setting the time when redis connects as timestamp for this bmp session
-  // temp->next = NULL;
   return temp;
 }
 
@@ -31,6 +30,11 @@ void enQueue(cdada_queue_t *q, void *k, size_t k_len)
 
 void queue_thread_wrapper()
 {
+  if (pthread_mutex_init(&mutex_thr, NULL) || pthread_cond_init(&sig, NULL))
+  {
+    Log(LOG_ERR, "ERROR ( %s/%s ): mutex_init failed\n", config.name, config.type);
+    return;
+  }
   cdada_queue_t *temp = cdada_queue_create(nodestruct);
   pthread_mutex_lock(&mutex_thr);
   q = calloc(1, sizeof(cdada_queue_t));
@@ -69,12 +73,12 @@ void countdown_delete()
     pthread_mutex_lock(&mutex_thr);
     pthread_cond_wait(&sig, &mutex_thr);
     cdada_queue_front(q, &nodes);
-    Log(LOG_INFO, "enter queue5: %ld\n", nodes.timestamp);
+    Log(LOG_DEBUG, "enter queue5: %ld\n", nodes.timestamp);
     // while the data in the queue is expired by 2s
     while (!cdada_queue_empty(q) && (timestamp - nodes.timestamp > 199999) && !queue_dump_flag)
     {
       cdada_queue_pop(q);
-      Log(LOG_INFO, "Delete one from queue\n");
+      Log(LOG_DEBUG, "Delete one from queue\n");
       cdada_queue_front(q, &nodes);
     }
     pthread_mutex_unlock(&mutex_thr);

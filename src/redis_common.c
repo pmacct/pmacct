@@ -1,4 +1,4 @@
-/*
+/*  
  * pmacct (Promiscuous mode IP Accounting package)
  *
  * Copyright (c) 2003-2022 Paolo Lucente <paolo@pmacct.net>
@@ -24,7 +24,6 @@
 
 /* Global variables */
 thread_pool_t *redis_pool;
-// thread_pool_t *queue_pool;
 char timestamp[SHORTBUFLEN];
 int count;
 int ingest_flag;
@@ -50,18 +49,15 @@ int p_redis_master_produce_thread(void *rh)
   struct p_redis_host *redis_host = rh;
   unsigned int ret = 0, period = 0;
   count = 1;
-
+  
   p_redis_connect(redis_host, TRUE);
-  Log(LOG_INFO, "INFO ( %s ): %s\n", redis_host->log_id, config.type);
-  for (;;)
-  {
-    if (!ret)
-    {
+
+  for (;;) {
+    if (!ret) {
       (*redis_host->th_hdlr)(redis_host);
       period = PM_REDIS_DEFAULT_REFRESH_TIME;
     }
-    else
-    {
+    else {
       period = ret;
     }
 
@@ -73,20 +69,17 @@ int p_redis_master_produce_thread(void *rh)
 
 void p_redis_init(struct p_redis_host *redis_host, char *log_id, redis_thread_handler th_hdlr)
 {
-  if (!redis_host || !log_id || !th_hdlr)
-    return;
+  if (!redis_host || !log_id || !th_hdlr) return;
 
   memset(redis_host, 0, sizeof(struct p_redis_host));
 
-  if (config.redis_host)
-  {
+  if (config.redis_host) {
     p_redis_set_log_id(redis_host, log_id);
     p_redis_set_db(redis_host, config.redis_db);
     p_redis_set_exp_time(redis_host, PM_REDIS_DEFAULT_EXP_TIME);
     p_redis_set_thread_handler(redis_host, th_hdlr);
-
-    if (!config.cluster_name)
-    {
+ 
+    if (!config.cluster_name) {
       Log(LOG_ERR, "ERROR ( %s ): redis_host requires cluster_name to be specified. Exiting...\n\n", redis_host->log_id);
       exit_gracefully(1);
     }
@@ -101,17 +94,18 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
   socklen_t dest_len = sizeof(dest);
   char dest_str[INET6_ADDRSTRLEN];
   int dest_port;
+
+  time_t now = time(NULL);
+
   pthread_mutex_lock(&mutex_rd);
   dump_flag = true;
   pthread_mutex_unlock(&mutex_rd);
-  time_t now = time(NULL);
 
   assert(redis_host);
-connect:
-  if (config.redis_host)
-  {
-    if (now >= (redis_host->last_conn + PM_REDIS_DEFAULT_CONN_RETRY))
-    {
+
+connect://re-connect
+  if (config.redis_host) {
+    if (now >= (redis_host->last_conn + PM_REDIS_DEFAULT_CONN_RETRY)) {
       redis_host->last_conn = now;
 
       /* round of parsing and validation */
@@ -119,52 +113,46 @@ connect:
       sa_to_str(dest_str, sizeof(dest_str), (struct sockaddr *)&dest, FALSE);
 
       sa_to_port(&dest_port, (struct sockaddr *)&dest);
-      if (!dest_port)
-      {
-        dest_port = PM_REDIS_DEFAULT_PORT;
+      if (!dest_port) {
+	dest_port = PM_REDIS_DEFAULT_PORT;
       }
 
       redis_host->ctx = redisConnect(dest_str, dest_port);
 
-      if (redis_host->ctx == NULL || redis_host->ctx->err)
-      {
-        if (redis_host->ctx)
-        {
-          if (fatal)
-          {
-            Log(LOG_ERR, "ERROR ( %s ): Connection error: %s\n", redis_host->log_id, redis_host->ctx->errstr);
-            pthread_mutex_lock(&mutex_rd);
-            dump_flag = true;
-            pthread_mutex_unlock(&mutex_rd);
-            // Retry connection instead of exiting
-            goto connect;
-            // exit_gracefully(1);
-          }
-          else
-          {
-            return ERR;
-          }
-        }
-        else
-        {
-          Log(LOG_ERR, "ERROR ( %s ): Connection error: can't allocate redis context\n", redis_host->log_id);
+      if (redis_host->ctx == NULL || redis_host->ctx->err) {
+	if (redis_host->ctx) {
+	  if (fatal) {
+	    Log(LOG_ERR, "ERROR ( %s ): Connection error: %s\n", redis_host->log_id, redis_host->ctx->errstr);
+	    pthread_mutex_lock(&mutex_rd);
+      dump_flag = true;
+      pthread_mutex_unlock(&mutex_rd);
+      // Retry connection instead of exiting
+      goto connect;
+	  }
+	  else {
+	    return ERR;
+	  }
+	}
+	else {
+	  Log(LOG_ERR, "ERROR ( %s ): Connection error: can't allocate redis context\n", redis_host->log_id);
           exit_gracefully(1);
-        }
+	}
       }
-      else
-      {
-        Log(LOG_DEBUG, "DEBUG ( %s ): Connection successful\n", redis_host->log_id);
+      else {
+	Log(LOG_DEBUG, "DEBUG ( %s ): Connection successful\n", redis_host->log_id);
       }
     }
   }
+
   // Set the timestamp
   if (strcmp(config.type, "core") == 0)
   {
-    Log(LOG_INFO, "INFO ( %s ): Redis connection reset\n", redis_host->log_id);
+    Log(LOG_DEBUG, "DEBUG ( %s ): Redis connection reset\n", redis_host->log_id);
     struct timeval current_time;
     gettimeofday(&current_time, NULL);                                                                   // Get time in micro second
     snprintf(timestamp, sizeof(timestamp), "%ld", current_time.tv_sec * 1000000 + current_time.tv_usec); // Setting the time when redis connects as timestamp for this bmp session
   }
+
   return SUCCESS;
 }
 
@@ -227,31 +215,29 @@ void p_redis_close(struct p_redis_host *redis_host)
 
 void p_redis_set_string(struct p_redis_host *redis_host, char *resource, char *value, int expire)
 {
-  if (expire > 0)
-  {
+  if (expire > 0) {
     redis_host->reply = redisCommand(redis_host->ctx, "SETEX %s%s%d%s%s %d %s", config.cluster_name, PM_REDIS_DEFAULT_SEP,
-                                     config.cluster_id, PM_REDIS_DEFAULT_SEP, resource, redis_host->exp_time, value);
+				     config.cluster_id, PM_REDIS_DEFAULT_SEP, resource, redis_host->exp_time, value);
   }
-  else
-  {
+  else {
     redis_host->reply = redisCommand(redis_host->ctx, "SET %s%s%d%s%s %s", config.cluster_name, PM_REDIS_DEFAULT_SEP,
-                                     config.cluster_id, PM_REDIS_DEFAULT_SEP, resource, value);
+				     config.cluster_id, PM_REDIS_DEFAULT_SEP, resource, value);
   }
+
   p_redis_process_reply(redis_host);
 }
 
 void p_redis_set_int(struct p_redis_host *redis_host, char *resource, int value, int expire)
 {
-  if (expire > 0)
-  {
+  if (expire > 0) {
     redis_host->reply = redisCommand(redis_host->ctx, "SETEX %s%s%d%s%s %d %d", config.cluster_name, PM_REDIS_DEFAULT_SEP,
-                                     config.cluster_id, PM_REDIS_DEFAULT_SEP, resource, redis_host->exp_time, value);
+				     config.cluster_id, PM_REDIS_DEFAULT_SEP, resource, redis_host->exp_time, value);
   }
-  else
-  {
+  else {
     redis_host->reply = redisCommand(redis_host->ctx, "SET %s%s%d%s%s %d", config.cluster_name, PM_REDIS_DEFAULT_SEP,
-                                     config.cluster_id, PM_REDIS_DEFAULT_SEP, resource, value);
+				     config.cluster_id, PM_REDIS_DEFAULT_SEP, resource, value);
   }
+
   p_redis_process_reply(redis_host);
 }
 
@@ -264,9 +250,8 @@ void p_redis_ping(struct p_redis_host *redis_host)
 void p_redis_select_db(struct p_redis_host *redis_host)
 {
   char select_cmd[VERYSHORTBUFLEN];
-
-  if (redis_host->db)
-  {
+  
+  if (redis_host->db) {
     snprintf(select_cmd, sizeof(select_cmd), "SELECT %d", redis_host->db);
     redis_host->reply = redisCommand(redis_host->ctx, select_cmd);
     p_redis_process_reply(redis_host);
@@ -275,55 +260,47 @@ void p_redis_select_db(struct p_redis_host *redis_host)
 
 void p_redis_process_reply(struct p_redis_host *redis_host)
 {
-  if (redis_host->reply)
-  {
-    if (redis_host->reply->type == REDIS_REPLY_ERROR)
-    {
+  if (redis_host->reply) {
+    if (redis_host->reply->type == REDIS_REPLY_ERROR) {
       Log(LOG_WARNING, "WARN ( %s ): reply='%s'\n", redis_host->log_id, redis_host->reply->str);
     }
+
     freeReplyObject(redis_host->reply);
   }
-  else
-  {
+  else {
     p_redis_connect(redis_host, FALSE);
   }
 }
 
 void p_redis_set_log_id(struct p_redis_host *redis_host, char *log_id)
 {
-  if (redis_host)
-  {
+  if (redis_host) {
     strlcpy(redis_host->log_id, log_id, sizeof(redis_host->log_id));
-    strncat(redis_host->log_id, "/redis", (sizeof(redis_host->log_id) - strlen(redis_host->log_id)));
+    strncat(redis_host->log_id, "/redis", (sizeof(redis_host->log_id) - strlen(redis_host->log_id))); 
   }
 }
 
 void p_redis_set_db(struct p_redis_host *redis_host, int db)
 {
-  if (redis_host)
-    redis_host->db = db;
+  if (redis_host) redis_host->db = db;
 }
 
 void p_redis_set_exp_time(struct p_redis_host *redis_host, int exp_time)
 {
-  if (redis_host)
-    redis_host->exp_time = exp_time;
+  if (redis_host) redis_host->exp_time = exp_time;
 }
 
 void p_redis_set_thread_handler(struct p_redis_host *redis_host, redis_thread_handler th_hdlr)
 {
-  if (redis_host)
-    redis_host->th_hdlr = th_hdlr;
+  if (redis_host) redis_host->th_hdlr = th_hdlr;
 }
 
 void p_redis_thread_produce_common_core_handler(void *rh)
 {
   struct p_redis_host *redis_host = rh;
-
   char buf[SRVBUFLEN], name_and_type[SHORTBUFLEN], daemon_type[VERYSHORTBUFLEN], name_and_time[SHORTBUFLEN];
 
-  switch (config.acct_type)
-  {
+  switch (config.acct_type) {
   case ACCT_NF:
     snprintf(daemon_type, sizeof(daemon_type), "%s", "nfacctd");
     break;
@@ -331,12 +308,10 @@ void p_redis_thread_produce_common_core_handler(void *rh)
     snprintf(daemon_type, sizeof(daemon_type), "%s", "sfacctd");
     break;
   case ACCT_PM:
-    if (config.uacctd_group)
-    {
+    if (config.uacctd_group) {
       snprintf(daemon_type, sizeof(daemon_type), "%s", "uacctd");
     }
-    else
-    {
+    else {
       snprintf(daemon_type, sizeof(daemon_type), "%s", "pmacctd");
     }
     break;
@@ -352,17 +327,16 @@ void p_redis_thread_produce_common_core_handler(void *rh)
   default:
     break;
   }
-
   p_redis_set_string(redis_host, "daemon_type", daemon_type, PM_REDIS_DEFAULT_EXP_TIME);
 
   snprintf(name_and_type, sizeof(name_and_type), "process%s%s%s%s", PM_REDIS_DEFAULT_SEP,
-           config.name, PM_REDIS_DEFAULT_SEP, config.type);
+	   config.name, PM_REDIS_DEFAULT_SEP, config.type);
   p_redis_set_int(redis_host, name_and_type, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
 
   // Refresh the timestamp if the regenerate_timestamp_flag is set
   if (regenerate_timestamp_flag)
   {
-    Log(LOG_INFO, "INFO ( %s ): Redis timestamp reset\n", redis_host->log_id);
+    Log(LOG_DEBUG, "DEBUG ( %s ): Redis timestamp reset\n", redis_host->log_id);
     struct timeval current_time;
     gettimeofday(&current_time, NULL);                                                                   // Get time in micro second
     snprintf(timestamp, sizeof(timestamp), "%ld", current_time.tv_sec * 1000000 + current_time.tv_usec); // Setting the time when redis connects as timestamp for this bmp session
@@ -375,7 +349,6 @@ void p_redis_thread_produce_common_core_handler(void *rh)
     snprintf(name_and_time, sizeof(name_and_time), "%s%s%d%sattachment_time",
              config.name, PM_REDIS_DEFAULT_SEP, config.cluster_id, PM_REDIS_DEFAULT_SEP);
     p_redis_set_string(redis_host, name_and_time, timestamp, PM_REDIS_DEFAULT_EXP_TIME);
-    Log(LOG_INFO, "INFO ( %s ): process type:%s\n", redis_host->log_id, config.type);
   }
   // Doing a "get timestamp" per second
   ingest_flag = p_redis_get_time(redis_host);
@@ -398,34 +371,29 @@ void p_redis_thread_produce_common_core_handler(void *rh)
   pthread_mutex_unlock(&mutex_rd);
 
   // In case the count goes too large
-  count = ++count % 50 + 2;
+  count = ++count % 62 + 2;
 
   // Write the current collector status to Log
-  Log(LOG_INFO, "INFO ( %s ): I am the %s one\n", redis_host->log_id, (ingest_flag||aa_flag)&&!pp_flag?"ACTIVE":"STANDBY");
+  Log(LOG_INFO, "INFO ( %s ): Daemon status: %s\n", redis_host->log_id, (ingest_flag||aa_flag)&&!pp_flag?"ACTIVE":"STANDBY");
   old_ingest_flag = ingest_flag;
 
-  if (config.acct_type < ACCT_FWPLANE_MAX)
-  {
-    if (config.nfacctd_isis)
-    {
+  if (config.acct_type < ACCT_FWPLANE_MAX) {
+    if (config.nfacctd_isis) {
       snprintf(buf, sizeof(buf), "%s%sisis", name_and_type, PM_REDIS_DEFAULT_SEP);
       p_redis_set_int(redis_host, buf, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
     }
 
-    if (config.bgp_daemon)
-    {
+    if (config.bgp_daemon) {
       snprintf(buf, sizeof(buf), "%s%sbgp", name_and_type, PM_REDIS_DEFAULT_SEP);
       p_redis_set_int(redis_host, buf, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
     }
 
-    if (config.bmp_daemon)
-    {
+    if (config.bmp_daemon) {
       snprintf(buf, sizeof(buf), "%s%sbmp", name_and_type, PM_REDIS_DEFAULT_SEP);
       p_redis_set_int(redis_host, buf, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
     }
 
-    if (config.telemetry_daemon)
-    {
+    if (config.telemetry_daemon) {
       snprintf(buf, sizeof(buf), "%s%stelemetry", name_and_type, PM_REDIS_DEFAULT_SEP);
       p_redis_set_int(redis_host, buf, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
     }
@@ -436,7 +404,8 @@ void p_redis_thread_produce_common_plugin_handler(void *rh)
 {
   struct p_redis_host *redis_host = rh;
   char name_and_type[SRVBUFLEN];
+
   snprintf(name_and_type, sizeof(name_and_type), "process%s%s%s%s", PM_REDIS_DEFAULT_SEP,
-           config.name, PM_REDIS_DEFAULT_SEP, config.type);
-  p_redis_set_int(redis_host, name_and_type, TRUE, PM_REDIS_DEFAULT_EXP_TIME * 60);
+	   config.name, PM_REDIS_DEFAULT_SEP, config.type);
+  p_redis_set_int(redis_host, name_and_type, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
 }

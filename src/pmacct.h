@@ -420,8 +420,6 @@ extern void PM_evaluate_flow_type(struct packet_ptrs *);
 extern ssize_t recvfrom_savefile(struct pm_pcap_device *, void **, struct sockaddr *, struct timeval **, int *, struct packet_ptrs *);
 extern ssize_t recvfrom_rawip(unsigned char *, size_t, struct sockaddr *, struct packet_ptrs *);
 
-// extern void refresh_timestamp();
-
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *, const char *, size_t);
 #endif
@@ -439,10 +437,9 @@ initsetproctitle(int, char**, char**);
 
 /* global variables */
 extern char sll_mac[2][ETH_ADDR_LEN];
-// extern char timestampp[SHORTBUFLEN];
 extern struct host_addr mcast_groups[MAX_MCAST_GROUPS];
 extern int reload_map, reload_map_exec_plugins, reload_geoipv2_file;
-extern int aa_flag, pp_flag, normal_flag;
+extern int aa_flag, pp_flag;
 extern int reload_map_bgp_thread, reload_log, reload_log_bgp_thread;
 extern int reload_map_bmp_thread, reload_log_bmp_thread;
 extern int reload_map_rpki_thread, reload_log_rpki_thread;

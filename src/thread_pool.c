@@ -108,7 +108,6 @@ thread_pool_t *allocate_thread_pool(int count)
 	 apply MIN_TH_STACK_SIZE;
        * if nothing of the above works bail out.
     */
-   
     pthread_attr_getstacksize(&attr, &default_stack_size); 
     if (config.thread_stack) {                        
       rc = pthread_attr_setstacksize(&attr, config.thread_stack);
@@ -233,6 +232,7 @@ void *thread_runner(void *arg)
     pthread_cond_signal(self->owner->cond);
     pthread_mutex_unlock(self->owner->mutex);
   }
+
   pthread_exit(NULL);
 }
 
