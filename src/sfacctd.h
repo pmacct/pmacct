@@ -129,6 +129,7 @@ typedef struct _SFSample {
   u_int32_t out_vlan;
   u_int32_t out_priority;
   u_int32_t cvlan;
+  u_int32_t cvlan_priority;
 
   /* MPLS hack */
   SFLLabelStack lstk;
