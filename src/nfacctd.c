@@ -2075,64 +2075,6 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
               if (pkt_interval) sentry->sample_pool = ((pkt_interval + pkt_space) / pkt_interval);
             }
-<<<<<<< HEAD
-<<<<<<< HEAD
-            if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4)
-            {
-              memcpy(&t32, pkt + tpl->tpl[NF9_SAMPLING_INTERVAL].off, 4);
-              sentry->sample_pool = ntohl(t32);
-            }
-            if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 1)
-            {
-              memcpy(&t8, pkt + tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 1);
-              sentry->sample_pool = t8;
-            }
-            else if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 2)
-            {
-              memcpy(&t16, pkt + tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 2);
-              sentry->sample_pool = ntohs(t16);
-            }
-            else if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 4)
-            {
-              memcpy(&t32, pkt + tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 4);
-              sentry->sample_pool = ntohl(t32);
-            }
-            else if (tpl->tpl[NF9_SAMPLING_PKT_INTERVAL].len == 4 && tpl->tpl[NF9_SAMPLING_PKT_SPACE].len == 4)
-            {
-              u_int32_t pkt_interval = 0, pkt_space = 0;
-
-              memcpy(&t32, pkt + tpl->tpl[NF9_SAMPLING_PKT_INTERVAL].off, 4);
-              memcpy(&t32_2, pkt + tpl->tpl[NF9_SAMPLING_PKT_SPACE].off, 4);
-              pkt_interval = ntohl(t32);
-              pkt_space = ntohl(t32_2);
-
-              if (pkt_interval)
-                sentry->sample_pool = ((pkt_interval + pkt_space) / pkt_interval);
-            }
-            else if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 4)
-            {
-              memcpy(&t32, pkt + tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 4);
-              sentry->sample_pool = ntohl(t32);
-            }
-            else if (tpl->tpl[NF9_SAMPLING_PKT_INTERVAL].len == 4 && tpl->tpl[NF9_SAMPLING_PKT_SPACE].len == 4)
-            {
-              u_int32_t pkt_interval = 0, pkt_space = 0;
-
-            sentry->sampler_id = sampler_id;
-            if (ssaved)
-              sentry->next = ssaved;
-          }
-        }
-
-        if ((tpl->tpl[NF9_APPLICATION_ID].len == 2 || tpl->tpl[NF9_APPLICATION_ID].len == 3 || tpl->tpl[NF9_APPLICATION_ID].len == 5) &&
-            tpl->tpl[NF9_APPLICATION_NAME].len > 0)
-        {
-          struct pkt_classifier css;
-          pm_class_t class_id = 0, class_int_id = 0;
-=======
->>>>>>> a343ab09 (Merge with the newest pmacct version )
-=======
->>>>>>> a343ab09 (Merge with the newest pmacct version )
 
 	    sentry->sampler_id = sampler_id;
 	    if (ssaved) sentry->next = ssaved;
@@ -2170,7 +2112,6 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
             centry->class_id = class_id;
 	    centry->class_int_id = class_int_id;
             if (csaved) centry->next = csaved;
-<<<<<<< HEAD
 
 	    css.id = centry->class_int_id;
 	    strlcpy(css.protocol, centry->class_name, MAX_PROTOCOL_LEN);
@@ -2208,19 +2149,6 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	}
 
         if (tpl->tpl[NF9_INGRESS_VRFID].len == 4 && tpl->tpl[NF9_MPLS_VPN_RD].len == 8) {
-=======
-
-	    css.id = centry->class_int_id;
-	    strlcpy(css.protocol, centry->class_name, MAX_PROTOCOL_LEN);
-#if defined (WITH_NDPI)
-	    css.category = FALSE; /* unused */
-#endif
-	    pmct_register(&css);
-          }
-	}
-
-	if (tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].len == 4 || tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].len == 16) {
->>>>>>> a343ab09 (Merge with the newest pmacct version )
           /* Handling the global option scoping case */
           if (!config.nfacctd_disable_opt_scope_check) {
             if (tpl->tpl[NF9_OPT_SCOPE_SYSTEM].len) entry = (struct xflow_status_entry *) pptrs->f_status_g;
@@ -2228,35 +2156,6 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           else entry = (struct xflow_status_entry *) pptrs->f_status_g;
 
 	  if (entry) {
-<<<<<<< HEAD
-=======
-	    int got_v4 = FALSE;
-
-	    if (tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].len) {
-	      raw_to_addr(&entry->exp_addr, pkt+tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].off, AF_INET);
-	      raw_to_sa(&entry->exp_sa, pkt+tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].off, 0, AF_INET);
-
-	      if (!is_any(&entry->exp_addr)) {
-		got_v4 = TRUE;
-	      }
-	    }
-
-	    if (!got_v4 && tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].len) {
-	      raw_to_addr(&entry->exp_addr, pkt+tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].off, AF_INET6);
-	      raw_to_sa(&entry->exp_sa, pkt+tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].off, 0, AF_INET6);
-	    }
-	  }
-	}
-
-        if (tpl->tpl[NF9_INGRESS_VRFID].len == 4 && tpl->tpl[NF9_MPLS_VPN_RD].len == 8) {
-          /* Handling the global option scoping case */
-          if (!config.nfacctd_disable_opt_scope_check) {
-            if (tpl->tpl[NF9_OPT_SCOPE_SYSTEM].len) entry = (struct xflow_status_entry *) pptrs->f_status_g;
-          }
-          else entry = (struct xflow_status_entry *) pptrs->f_status_g;
-
-	  if (entry) {
->>>>>>> a343ab09 (Merge with the newest pmacct version )
 	    u_int32_t ingress_vrfid, egress_vrfid;
 	    rd_t *mpls_vpn_rd;
 
@@ -2345,83 +2244,6 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	}
 
         pptrs->f_data = pkt;
-<<<<<<< HEAD
-<<<<<<< HEAD
-        pptrs->f_tpl = (u_char *)tpl;
-        reset_net_status_v(pptrsv);
-
-        if (tee_dissect)
-        {
-          tee_dissect->elemBasePtr = pkt;
-          tee_dissect->elemEndPtr = (u_char *)(pkt + tpl->len);
-          tee_dissect->elemLen = tpl->len;
-          pptrs->tee_dissect_bcast = FALSE;
-
-	  exec_plugins(pptrs, req);
-
-	  goto finalize_record;
-	}
-
-	NF_evaluate_flow_type(&pptrs->flow_type, tpl, pptrs);
-	direction = NF_evaluate_direction(tpl, pptrs);
-
-	/* we need to understand the IP protocol version in order to build the fake packet */ 
-	switch (pptrs->flow_type.traffic_type) {
-	case PM_FTYPE_IPV4:
-	  if (req->bpf_filter) {
-	    reset_mac(pptrs);
-	    reset_ip4(pptrs);
-
-	    if (direction == DIRECTION_IN) {
-              memcpy(pptrs->mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_IN_SRC_MAC].off, tpl->tpl[NF9_IN_SRC_MAC].len);
-              memcpy(pptrs->mac_ptr, pkt+tpl->tpl[NF9_IN_DST_MAC].off, tpl->tpl[NF9_IN_DST_MAC].len);
-	    }
-	    else if (direction == DIRECTION_OUT) {
-              memcpy(pptrs->mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_OUT_SRC_MAC].off, tpl->tpl[NF9_OUT_SRC_MAC].len);
-              memcpy(pptrs->mac_ptr, pkt+tpl->tpl[NF9_OUT_DST_MAC].off, tpl->tpl[NF9_OUT_DST_MAC].len);
-	    }
-	    ((struct pm_iphdr *)pptrs->iph_ptr)->ip_vhl = 0x45;
-            memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_src, pkt+tpl->tpl[NF9_IPV4_SRC_ADDR].off, tpl->tpl[NF9_IPV4_SRC_ADDR].len);
-            memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst, pkt+tpl->tpl[NF9_IPV4_DST_ADDR].off, tpl->tpl[NF9_IPV4_DST_ADDR].len);
-            memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_p, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
-            memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_tos, pkt+tpl->tpl[NF9_SRC_TOS].off, tpl->tpl[NF9_SRC_TOS].len);
-            memcpy(&((struct pm_tlhdr *)pptrs->tlh_ptr)->src_port, pkt+tpl->tpl[NF9_L4_SRC_PORT].off, tpl->tpl[NF9_L4_SRC_PORT].len);
-            memcpy(&((struct pm_tlhdr *)pptrs->tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
-            memcpy(&((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
-	  }
-
-	  memcpy(&pptrs->lm_mask_src, pkt+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len);
-	  memcpy(&pptrs->lm_mask_dst, pkt+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
-	  pptrs->lm_method_src = NF_NET_KEEP;
-	  pptrs->lm_method_dst = NF_NET_KEEP;
-
-	  /* Let's copy some relevant field */
-	  pptrs->l4_proto = 0;
-	  memcpy(&pptrs->l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
-
-	  NF_process_classifiers(pptrs, pptrs, pkt, tpl);
-	  NF_mpls_vpn_rd_fromie90(pptrs);
-	  if (config.nfacctd_isis) isis_srcdst_lookup(pptrs);
-	  if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, &pptrs->bta2);
-	  if (config.nfacctd_flow_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, pptrs, &pptrs->bitr, NULL);
-	  if (config.bgp_daemon) bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP);
-	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
-	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
-	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
-          if (config.bmp_daemon) bmp_srcdst_lookup(pptrs);
-          exec_plugins(pptrs, req);
-=======
-	pptrs->f_tpl = (u_char *) tpl;
-	reset_net_status_v(pptrsv);
->>>>>>> a343ab09 (Merge with the newest pmacct version )
-
-	if (tee_dissect) {
-	  tee_dissect->elemBasePtr = pkt;
-	  tee_dissect->elemEndPtr = (u_char *) (pkt + tpl->len);
-	  tee_dissect->elemLen = tpl->len;
-          pptrs->tee_dissect_bcast = FALSE;
-
-=======
 	pptrs->f_tpl = (u_char *) tpl;
 	reset_net_status_v(pptrsv);
 
@@ -2431,7 +2253,6 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  tee_dissect->elemLen = tpl->len;
           pptrs->tee_dissect_bcast = FALSE;
 
->>>>>>> a343ab09 (Merge with the newest pmacct version )
 	  exec_plugins(pptrs, req);
 
 	  goto finalize_record;

@@ -1946,7 +1946,6 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
       }
 
       pm_strftime_same(current_filename, SRVBUFLEN, tmpbuf, &bms->dump.tstamp.tv_sec, config.timestamps_utc);
-<<<<<<< HEAD
 
       /*
 	we close last_filename and open current_filename in case they differ;
@@ -1958,19 +1957,6 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 	  if (saved_peer && saved_peer->log && strlen(last_filename)) {
 	    close_output_file(saved_peer->log->fd);
 
-=======
-
-      /*
-	we close last_filename and open current_filename in case they differ;
-	we are safe with this approach until time and BGP peer (IP, port) are
-	the only variables supported as part of bgp_table_dump_file.
-      */
-      if (config.bgp_table_dump_file) {
-	if (strcmp(last_filename, current_filename)) {
-	  if (saved_peer && saved_peer->log && strlen(last_filename)) {
-	    close_output_file(saved_peer->log->fd);
-
->>>>>>> a343ab09 (Merge with the newest pmacct version )
 	    if (config.bgp_table_dump_latest_file) {
 	      bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bgp_table_dump_latest_file, saved_peer);
 	      link_latest_output_file(latest_filename, last_filename);
