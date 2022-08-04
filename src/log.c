@@ -59,7 +59,10 @@ void Log(short int level, char *msg, ...)
       strftime(timebuf, SRVBUFLEN, "%Y-%m-%dT%H:%M:%S", tmnow);
       append_rfc3339_timezone(timebuf, SRVBUFLEN, tmnow);
 
-      fprintf(config.logfile_fd, "%s %s", timebuf, syslog_string);
+      fprintf(config.logfile_fd, "%s ", timebuf);
+      va_start(ap, msg);
+      vfprintf(config.logfile_fd, msg, ap);
+      va_end(ap);
       fflush(config.logfile_fd);
     }
   }
