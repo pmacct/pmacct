@@ -30,8 +30,7 @@ struct _log_notifications log_notifications;
 void Log(short int level, char *msg, ...)
 {
   va_list ap;
-  char syslog_string[LOGSTRLEN];
-  
+
   if ((level == LOG_DEBUG) && (!config.debug && !debug)) return;
 
   if (!config.syslog && !config.logfile_fd) {
@@ -41,11 +40,11 @@ void Log(short int level, char *msg, ...)
     fflush(stderr);
   }
   else {
-    va_start(ap, msg);
-    vsnprintf(syslog_string, LOGSTRLEN, msg, ap);
-    va_end(ap);
-
-    if (config.syslog) syslog(level, "%s", syslog_string);
+    if (config.syslog) {
+      va_start(ap, msg);
+      vsyslog(level, msg, ap);
+      va_end(ap);
+    }
 
     if (config.logfile_fd) {
       char timebuf[SRVBUFLEN];
