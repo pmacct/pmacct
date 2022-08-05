@@ -371,7 +371,8 @@ void p_redis_thread_produce_common_core_handler(void *rh)
   pthread_mutex_unlock(&mutex_rd);
 
   // In case the count goes too large
-  count = ++count % 62 + 2;
+  count++;
+  count = count % 62 + 2;
 
   // Write the current collector status to Log
   Log(LOG_INFO, "INFO ( %s ): Daemon status: %s\n", redis_host->log_id, (ingest_flag||aa_flag)&&!pp_flag?"ACTIVE":"STANDBY");
