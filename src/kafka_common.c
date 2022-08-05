@@ -445,17 +445,21 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, si
   }
 
   // If this is a BMP message
+#ifdef WITH_REDIS
   if (config.acct_type == ACCT_NF && !strcmp(config.type, "core"))
   {
     pthread_mutex_lock(&mutex_rd);
     dump_queue = queue_dump_flag;
     dump_msg = (dump_flag || aa_flag) && !pp_flag;
     pthread_mutex_unlock(&mutex_rd);
-    dump_the_queue(kafka_host, part, do_free, dump_queue);
+    if(dump_queue)
+      dump_the_queue(kafka_host, part, do_free);
   }
   else // If this is not BMP message, dump the message regardless of the dump_flag
     dump_msg = true;
-
+#else
+  dump_msg = true;
+#endif
   if (kafka_host && kafka_host->rk && kafka_host->topic && dump_msg) {
     ret = rd_kafka_produce(kafka_host->topic, part, flag, data, data_len,
 			   kafka_host->key, kafka_host->key_len, NULL);
@@ -490,12 +494,12 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, si
   return ret; 
 }
 
-int dump_the_queue(struct p_kafka_host *kafka_host, int part, int do_free, int dump_queue)
+int dump_the_queue(struct p_kafka_host *kafka_host, int part, int do_free)
 {
   int flag = RD_KAFKA_MSG_F_COPY;
   int ret = SUCCESS;
   nodestruct nodes;
-  if (kafka_host && kafka_host->rk && kafka_host->topic && dump_queue)
+  if (kafka_host && kafka_host->rk && kafka_host->topic)
   {
     pthread_mutex_lock(&mutex_thr);
     cdada_queue_front(q, &nodes);

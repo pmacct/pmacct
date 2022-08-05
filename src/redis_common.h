@@ -30,11 +30,6 @@
 typedef void (*redis_thread_handler)(void *);
 
 /* Global variables */
-bool dump_flag;
-bool queue_dump_flag;
-bool regenerate_timestamp_flag;
-pthread_mutex_t mutex_rd;
-pthread_cond_t sig_rd;
 
 /* structures */
 struct p_redis_host {

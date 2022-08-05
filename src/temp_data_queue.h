@@ -1,9 +1,6 @@
 #include "cdada/queue.h"
 
 /*Global variables*/
-cdada_queue_t* q;
-pthread_mutex_t mutex_thr;
-pthread_cond_t sig;
 typedef void (*queue_thread_handler)();
 
 // A linked list (LL) node to store a queue entry

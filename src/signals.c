@@ -242,6 +242,7 @@ void reload_maps(int signum)
   }
 }
 
+#ifdef WITH_REDIS
 void re_generate_timestamp(int signum)
 {
 #ifdef WITH_REDIS
@@ -274,3 +275,4 @@ void setto_normal(int signum)
   aa_flag = false;
   Log(LOG_DEBUG, "DEBUG(%s/signal) : Setting back to normal status\n", config.name);
 }
+#endif

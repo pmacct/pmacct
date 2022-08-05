@@ -198,15 +198,15 @@ int main(int argc,char **argv, char **envp)
   sampling_map_caching = TRUE;
   find_id_func = NF_find_id;
   plugins_list = NULL;
-  aa_flag = FALSE;
-  pp_flag = FALSE;
-
+ 
   netflow_packet = malloc(NETFLOW_MSG_SIZE);
   netflow_templates_packet = malloc(NETFLOW_MSG_SIZE);
 
   data_plugins = 0;
   tee_plugins = 0;
   errflag = 0;
+
+  dump_flag = true;
 
   memset(cfg_cmdline, 0, sizeof(cfg_cmdline));
   memset(&server, 0, sizeof(server));
@@ -683,6 +683,7 @@ int main(int argc,char **argv, char **envp)
   sighandler_action.sa_handler = PM_sigalrm_noop_handler;
   sigaction(SIGALRM, &sighandler_action, NULL);
 
+#ifdef WITH_REDIS
   /* reset the timestamp of collector as the newest */
   sighandler_action.sa_handler = re_generate_timestamp;
   sigaction(SIGRTMIN, &sighandler_action, NULL);
@@ -698,6 +699,7 @@ int main(int argc,char **argv, char **envp)
   /* set all back to normal */
   sighandler_action.sa_handler = setto_normal;
   sigaction(SIGRTMIN + 3, &sighandler_action, NULL);
+#endif
 
 #ifdef WITH_GNUTLS
   if (config.nfacctd_dtls_port && !config.dtls_path) {
@@ -1391,10 +1393,13 @@ int main(int argc,char **argv, char **envp)
   sigaddset(&signal_set, SIGUSR1);
   sigaddset(&signal_set, SIGUSR2);
   sigaddset(&signal_set, SIGTERM);
+
+#ifdef WITH_REDIS
   sigaddset(&signal_set, SIGRTMIN);
   sigaddset(&signal_set, SIGRTMIN + 1);
   sigaddset(&signal_set, SIGRTMIN + 2);
   sigaddset(&signal_set, SIGRTMIN + 3);
+#endif
 
   if (config.daemon) {
     sigaddset(&signal_set, SIGINT);
