@@ -438,7 +438,6 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, si
   kafkap_ret_err_cb = FALSE;
   
   int dump_msg;
-  int dump_queue;
 
   if (do_free) {
     flag = RD_KAFKA_MSG_F_FREE;
@@ -446,6 +445,7 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, si
 
   // If this is a BMP message
 #ifdef WITH_REDIS
+  int dump_queue;
   if (config.acct_type == ACCT_NF && !strcmp(config.type, "core"))
   {
     pthread_mutex_lock(&mutex_rd);
@@ -453,7 +453,9 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, si
     dump_msg = (dump_flag || aa_flag) && !pp_flag;
     pthread_mutex_unlock(&mutex_rd);
     if(dump_queue)
-      dump_the_queue(kafka_host, part, do_free);
+      ret = dump_the_queue(kafka_host, part, do_free);
+    if(ret == ERR)
+      return ERR;
   }
   else // If this is not BMP message, dump the message regardless of the dump_flag
     dump_msg = true;
@@ -531,6 +533,7 @@ int dump_the_queue(struct p_kafka_host *kafka_host, int part, int do_free)
   }
   else if (!(kafka_host && kafka_host->rk && kafka_host->topic))
     return ERR;
+  return SUCCESS;
 }
 
 int p_kafka_produce_data(struct p_kafka_host *kafka_host, void *data, size_t data_len)
