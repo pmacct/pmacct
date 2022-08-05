@@ -73,7 +73,6 @@ void countdown_delete()
     pthread_mutex_lock(&mutex_thr);
     pthread_cond_wait(&sig, &mutex_thr);
     cdada_queue_front(q, &nodes);
-    Log(LOG_DEBUG, "enter queue5: %ld\n", nodes.timestamp);
     // while the data in the queue is expired by 2s
     while (!cdada_queue_empty(q) && (timestamp - nodes.timestamp > 199999) && !queue_dump_flag)
     {
