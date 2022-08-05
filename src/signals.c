@@ -245,9 +245,6 @@ void reload_maps(int signum)
 #ifdef WITH_REDIS
 void re_generate_timestamp(int signum)
 {
-#ifdef WITH_REDIS
-  struct p_redis_host redis_host;
-#endif
   if (config.redis_host)
   {
     regenerate_timestamp_flag = true;
