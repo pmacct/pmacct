@@ -357,7 +357,8 @@ struct packet_ptrs {
   u_int8_t frag_first_found; /* entry found in fragments table */
   u_int16_t frag_sum_bytes; /* accumulated bytes by fragment entry, ie. due to out of order */
   u_int16_t frag_sum_pkts; /* accumulated packets by fragment entry, ie. due to out of order */
-  u_char *vlan_ptr; /* ptr to vlan id */
+  u_char *vlan_ptr; /* ptr to (outer) vlan id */
+  u_char *cvlan_ptr; /* ptr to inner vlan id */
   u_char *mpls_ptr; /* ptr to base MPLS label */
   u_char *iph_ptr; /* ptr to ip header */
   u_char *tlh_ptr; /* ptr to transport level protocol header */
