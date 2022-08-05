@@ -225,6 +225,14 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
       compose_avro_schema_registry_name_2(config.sql_table, FALSE,
                                           p_avro_acct_close_schema, "acct", "close",
                                           config.kafka_avro_schema_registry);
+
+    if (!kafkap_kafka_host.sd_schema[AVRO_ACCT_DATA_SID] ||
+        !kafkap_kafka_host.sd_schema[AVRO_ACCT_INIT_SID] ||
+        !kafkap_kafka_host.sd_schema[AVRO_ACCT_CLOSE_SID]) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Failed to register schema information. Exiting.\n",
+          config.name, config.type);
+      exit_gracefully(1);
+    }
   }
 #endif
 
