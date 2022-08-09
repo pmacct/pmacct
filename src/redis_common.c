@@ -127,6 +127,7 @@ connect://re-connect
       dump_flag = true;
       pthread_mutex_unlock(&mutex_rd);
       // Retry connection instead of exiting
+      sleep(5);
       goto connect;
 	  }
 	  else {
