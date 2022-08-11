@@ -194,6 +194,48 @@ void kafka_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   }
 #endif
 
+  /* setting some defaults */
+  if (!config.sql_host)
+    config.sql_host = default_kafka_broker_host;
+  if (!config.kafka_broker_port)
+    config.kafka_broker_port = default_kafka_broker_port;
+
+  if (!config.sql_table)
+    config.sql_table = default_kafka_topic;
+
+  p_kafka_init_host_struct(&kafkap_kafka_host);
+
+#if defined(WITH_AVRO) && defined(WITH_SERDES)
+  if (config.kafka_avro_schema_registry) {
+    if (strchr(config.sql_table, '$')) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'kafka_topic' is not compatible with 'avro_schema_registry'. Exiting.\n",
+          config.name, config.type);
+      exit_gracefully(1);
+    }
+
+    kafkap_kafka_host.sd_schema[AVRO_ACCT_DATA_SID] =
+      compose_avro_schema_registry_name_2(config.sql_table, FALSE,
+                                          p_avro_acct_schema, "acct", "data",
+                                          config.kafka_avro_schema_registry);
+    kafkap_kafka_host.sd_schema[AVRO_ACCT_INIT_SID] =
+      compose_avro_schema_registry_name_2(config.sql_table, FALSE,
+                                          p_avro_acct_init_schema, "acct", "init",
+                                          config.kafka_avro_schema_registry);
+    kafkap_kafka_host.sd_schema[AVRO_ACCT_CLOSE_SID] =
+      compose_avro_schema_registry_name_2(config.sql_table, FALSE,
+                                          p_avro_acct_close_schema, "acct", "close",
+                                          config.kafka_avro_schema_registry);
+
+    if (!kafkap_kafka_host.sd_schema[AVRO_ACCT_DATA_SID] ||
+        !kafkap_kafka_host.sd_schema[AVRO_ACCT_INIT_SID] ||
+        !kafkap_kafka_host.sd_schema[AVRO_ACCT_CLOSE_SID]) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): Failed to register schema information. Exiting.\n",
+          config.name, config.type);
+      exit_gracefully(1);
+    }
+  }
+#endif
+
   /* plugin main loop */
   for(;;) {
     poll_again:
@@ -376,18 +418,11 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   size_t p_avro_len = 0;
 #endif
 
-  p_kafka_init_host(&kafkap_kafka_host, config.kafka_config_file);
+  p_kafka_init_host_conf(&kafkap_kafka_host, config.kafka_config_file);
 
-  /* setting some defaults */
-  if (!config.sql_host) config.sql_host = default_kafka_broker_host;
-  if (!config.kafka_broker_port) config.kafka_broker_port = default_kafka_broker_port;
-
-  if (!config.sql_table) config.sql_table = default_kafka_topic;
-  else {
-    if (strchr(config.sql_table, '$')) {
-      is_topic_dyn = TRUE;
-      orig_kafka_topic = config.sql_table;
-    }
+  if (strchr(config.sql_table, '$')) {
+    is_topic_dyn = TRUE;
+    orig_kafka_topic = config.sql_table;
   }
 
   if (config.amqp_routing_key_rr) orig_kafka_topic = config.sql_table;
@@ -454,26 +489,12 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
   Log(LOG_INFO, "INFO ( %s/%s ): *** Purging cache - START (PID: %u) ***\n", config.name, config.type, writer_pid);
   start = time(NULL);
 
-#ifdef WITH_AVRO
+#if defined(WITH_AVRO) && defined(WITH_SERDES)
   if (config.kafka_avro_schema_registry) {
-#ifdef WITH_SERDES
     if (is_topic_dyn) {
       Log(LOG_ERR, "ERROR ( %s/%s ): dynamic 'kafka_topic' is not compatible with 'avro_schema_registry'. Exiting.\n", config.name, config.type);
       exit_gracefully(1);
     }
-
-    kafkap_kafka_host.sd_schema[AVRO_ACCT_DATA_SID] = compose_avro_schema_registry_name_2(p_kafka_get_topic(&kafkap_kafka_host),
-											  FALSE, p_avro_acct_schema, "acct", "data",
-											  config.kafka_avro_schema_registry);
-
-    kafkap_kafka_host.sd_schema[AVRO_ACCT_INIT_SID] = compose_avro_schema_registry_name_2(p_kafka_get_topic(&kafkap_kafka_host),
-											  FALSE, p_avro_acct_init_schema, "acct", "init",
-											  config.kafka_avro_schema_registry);
-
-    kafkap_kafka_host.sd_schema[AVRO_ACCT_CLOSE_SID] = compose_avro_schema_registry_name_2(p_kafka_get_topic(&kafkap_kafka_host),
-											   FALSE, p_avro_acct_close_schema, "acct", "close",
-											   config.kafka_avro_schema_registry);
-#endif
   }
 #endif
 

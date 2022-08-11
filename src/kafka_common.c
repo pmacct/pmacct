@@ -41,11 +41,17 @@ int default_kafka_broker_port = 9092;
 char default_kafka_topic[] = "pmacct.acct";
 
 /* Functions */
-void p_kafka_init_host(struct p_kafka_host *kafka_host, char *config_file)
+void p_kafka_init_host_struct(struct p_kafka_host *kafka_host)
 {
   if (kafka_host) {
     memset(kafka_host, 0, sizeof(struct p_kafka_host));
     P_broker_timers_set_retry_interval(&kafka_host->btimers, PM_KAFKA_DEFAULT_RETRY);
+  }
+}
+
+void p_kafka_init_host_conf(struct p_kafka_host *kafka_host, char *config_file)
+{
+  if (kafka_host) {
     p_kafka_set_config_file(kafka_host, config_file);
 
     kafka_host->cfg = rd_kafka_conf_new();
@@ -69,6 +75,12 @@ void p_kafka_init_host(struct p_kafka_host *kafka_host, char *config_file)
       }
     }
   }
+}
+
+void p_kafka_init_host(struct p_kafka_host *kafka_host, char *config_file)
+{
+  p_kafka_init_host_struct(kafka_host);
+  p_kafka_init_host_conf(kafka_host, config_file);
 }
 
 void p_kafka_unset_topic(struct p_kafka_host *kafka_host)
