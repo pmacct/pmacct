@@ -47,10 +47,10 @@ VALUES:		[ true | false ]
 DESC:		Daemonizes the process (default: false).
 
 KEY:		aggregate (-c)
-VALUES:		[ src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_net,
-		 src_mask, dst_mask, src_as, dst_as, src_port, dst_port, tos, proto, none,
-		 sum_mac, sum_host, sum_net, sum_as, sum_port, flows, tag, tag2, label,
-		 class, tcpflags, in_iface, out_iface, std_comm, ext_comm, lrg_comm,
+VALUES:		[ src_mac, dst_mac, vlan, in_vlan, out_vlan, cos, etype, src_host, dst_host,
+		 src_net, dst_net, src_mask, dst_mask, src_as, dst_as, src_port, dst_port,
+		 tos, proto, none, sum_mac, sum_host, sum_net, sum_as, sum_port, flows, tag,
+		 tag2, label, class, tcpflags, in_iface, out_iface, std_comm, ext_comm, lrg_comm,
 		 as_path, peer_src_ip, peer_dst_ip, peer_src_as, peer_dst_as, local_pref,
 		 med, dst_roa, src_std_comm, src_ext_comm, src_lrg_comm, src_as_path,
 		 src_local_pref, src_med, src_roa, mpls_vpn_rd, mpls_pw_id, mpls_label_top,
