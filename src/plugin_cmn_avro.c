@@ -86,6 +86,12 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc & COUNT_VLAN)
     avro_schema_record_field_append(schema, "vlan", avro_schema_long());
 
+  if (wtc_2 & COUNT_IN_VLAN)
+    avro_schema_record_field_append(schema, "vlan_in", avro_schema_long());
+
+  if (wtc_2 & COUNT_OUT_VLAN)
+    avro_schema_record_field_append(schema, "vlan_out", avro_schema_long());
+
   if (wtc & COUNT_COS)
     avro_schema_record_field_append(schema, "cos", avro_schema_long());
 
@@ -511,6 +517,16 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
   if (wtc & COUNT_VLAN) {
     pm_avro_check(avro_value_get_by_name(&value, "vlan", &field, NULL));
     pm_avro_check(avro_value_set_long(&field, pbase->vlan_id));
+  }
+
+  if (wtc_2 & COUNT_IN_VLAN) {
+    pm_avro_check(avro_value_get_by_name(&value, "vlan_in", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->in_vlan_id));
+  }
+
+  if (wtc_2 & COUNT_OUT_VLAN) {
+    pm_avro_check(avro_value_get_by_name(&value, "vlan_out", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->out_vlan_id));
   }
 
   if (wtc & COUNT_COS) {
