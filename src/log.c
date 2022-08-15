@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -30,8 +30,7 @@ struct _log_notifications log_notifications;
 void Log(short int level, char *msg, ...)
 {
   va_list ap;
-  char syslog_string[LOGSTRLEN];
-  
+
   if ((level == LOG_DEBUG) && (!config.debug && !debug)) return;
 
   if (!config.syslog && !config.logfile_fd) {
@@ -41,11 +40,11 @@ void Log(short int level, char *msg, ...)
     fflush(stderr);
   }
   else {
-    va_start(ap, msg);
-    vsnprintf(syslog_string, LOGSTRLEN, msg, ap);
-    va_end(ap);
-
-    if (config.syslog) syslog(level, "%s", syslog_string);
+    if (config.syslog) {
+      va_start(ap, msg);
+      vsyslog(level, msg, ap);
+      va_end(ap);
+    }
 
     if (config.logfile_fd) {
       char timebuf[SRVBUFLEN];
@@ -59,7 +58,10 @@ void Log(short int level, char *msg, ...)
       strftime(timebuf, SRVBUFLEN, "%Y-%m-%dT%H:%M:%S", tmnow);
       append_rfc3339_timezone(timebuf, SRVBUFLEN, tmnow);
 
-      fprintf(config.logfile_fd, "%s %s", timebuf, syslog_string);
+      fprintf(config.logfile_fd, "%s ", timebuf);
+      va_start(ap, msg);
+      vfprintf(config.logfile_fd, msg, ap);
+      va_end(ap);
       fflush(config.logfile_fd);
     }
   }

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -128,6 +128,8 @@ typedef struct _SFSample {
   u_int32_t internalPriority;
   u_int32_t out_vlan;
   u_int32_t out_priority;
+  u_int32_t cvlan;
+  u_int32_t cvlan_priority;
 
   /* MPLS hack */
   SFLLabelStack lstk;

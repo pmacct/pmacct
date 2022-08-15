@@ -81,10 +81,11 @@ void decodeLinkLayer(SFSample *sample)
 
   memcpy(sample->eth_src, ptr, 6);
   ptr += 6;
+
   sample->eth_type = (ptr[0] << 8) + ptr[1];
   ptr += 2;
 
-  if (sample->eth_type == ETHERTYPE_8021Q) {
+  if (sample->eth_type == ETHERTYPE_8021Q || sample->eth_type == ETHERTYPE_8021AD) {
     /* VLAN  - next two bytes */
     u_int32_t vlanData = (ptr[0] << 8) + ptr[1];
     u_int32_t vlan = vlanData & 0x0fff;
@@ -103,6 +104,27 @@ void decodeLinkLayer(SFSample *sample)
 
     ptr += 2;
     caplen -= 2;
+
+    /* QinQ / 802.1AD */
+    if (sample->eth_type == ETHERTYPE_8021Q) {
+      u_int32_t cvlanData, cvlan, cpriority;
+
+      if (caplen < 4) {
+	return;
+      }
+
+      cvlanData = (ptr[0] << 8) + ptr[1];
+      cvlan = cvlanData & 0x0fff;
+      cpriority = cvlanData >> 13;
+      sample->cvlan = cvlan;
+      sample->cvlan_priority = cpriority;
+
+      ptr += 2;
+      sample->eth_type = (ptr[0] << 8) + ptr[1];
+
+      ptr += 2;
+      caplen -= 4;
+    }
   }
 
   if (sample->eth_type <= NFT_MAX_8023_LEN) {

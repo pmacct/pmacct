@@ -751,8 +751,39 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
     parsed = TRUE;
   }
 
-  /* Receipt of End-of-RIB can be processed here; being a silent
-	 BGP receiver only, honestly it doesn't matter to us */
+  /* Checking receipt of End-of-RIB */
+  if (!update_len && !withdraw_len) {
+    int eor = FALSE;
+    afi_t afi = FALSE;
+    safi_t safi = FALSE;
+
+    if (!attribute_len) {
+      eor = TRUE;
+
+      afi = AFI_IP;
+      safi = SAFI_UNICAST;
+    }
+    else if (!mp_withdraw.length && mp_withdraw.afi && mp_withdraw.safi && !parsed) {
+      eor = TRUE;
+
+      afi = mp_withdraw.afi;
+      safi = mp_withdraw.safi;
+    }
+
+    if (eor) {
+      char event_type[] = "log";
+      struct bgp_info ri;
+
+      bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_parse_update_msg() Received unsupported NLRI afi=%u safi=%u\n",
+	  config.name, bms->log_str, bgp_peer_str, afi, safi);
+
+      memset(&ri, 0, sizeof(ri));
+      ri.peer = peer;
+      ri.bmed = bmd->extra;
+      bgp_peer_log_msg(NULL, &ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_EOR);
+    }
+  }
 
   if ((update_len || withdraw_len ||  mp_update.length || mp_withdraw.length) && !parsed) {
     bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);

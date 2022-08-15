@@ -120,7 +120,6 @@ struct db_cache {
   u_int8_t flow_type;
   u_int8_t tcp_flags;
   u_int8_t tunnel_tcp_flags;
-  u_int8_t tentatives;	/* support to classifiers: tentatives remaining */
   time_t basetime;
   struct pkt_bgp_primitives *pbgp;
   struct pkt_nat_primitives *pnat;

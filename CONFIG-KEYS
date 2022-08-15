@@ -462,7 +462,9 @@ DESC:		File in libpcap savefile format to read data from (as an alternative to l
 		be supplied (that is, only a single pcap_savefile can be specified in the config):
 		if having multiple files, ie. one with traffic data and one with BMP data, these
 		can be merged using, for example, Wireshark which offers options to prepend, merge
-		chronologically and append data.
+		chronologically and append data. Note: reading libpcap savefiles does use the
+		cap_next_ex() call which seems not to be highly portable, ie. a capture produced on
+		a Linux does not always read on a MacOS.  
 DEFAULT:	none
 
 KEY:            pcap_savefile_wait (-W) [GLOBAL, NO_UACCTD, NO_PMBGPD]

@@ -65,6 +65,8 @@ struct p_kafka_host {
 
 /* prototypes */
 extern void p_kafka_init_host(struct p_kafka_host *, char *);
+extern void p_kafka_init_host_struct(struct p_kafka_host *);
+extern void p_kafka_init_host_conf(struct p_kafka_host *, char *);
 extern void p_kafka_init_topic_rr(struct p_kafka_host *);
 
 extern void p_kafka_set_broker(struct p_kafka_host *, char *, int);

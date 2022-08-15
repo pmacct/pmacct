@@ -79,6 +79,7 @@ struct chdlc_header {
 #define ETHERTYPE_8021Q		0x8100          /* 802.1Q */
 #define ETHERTYPE_MPLS          0x8847		/* MPLS */
 #define ETHERTYPE_MPLS_MULTI    0x8848		/* MPLS */
+#define ETHERTYPE_8021AD	0x88A8		/* 802.1AD */
 #define ETHERTYPE_ISO		0xFEFE		/* OSI */
 #define ETHERTYPE_GRE_ISO	0x00FE		/* OSI over GRE */
 #define ETHERTYPE_CFP		0x8903		/* Cisco FabricPath */
@@ -356,7 +357,8 @@ struct packet_ptrs {
   u_int8_t frag_first_found; /* entry found in fragments table */
   u_int16_t frag_sum_bytes; /* accumulated bytes by fragment entry, ie. due to out of order */
   u_int16_t frag_sum_pkts; /* accumulated packets by fragment entry, ie. due to out of order */
-  u_char *vlan_ptr; /* ptr to vlan id */
+  u_char *vlan_ptr; /* ptr to (outer) vlan id */
+  u_char *cvlan_ptr; /* ptr to inner vlan id */
   u_char *mpls_ptr; /* ptr to base MPLS label */
   u_char *iph_ptr; /* ptr to ip header */
   u_char *tlh_ptr; /* ptr to transport level protocol header */
