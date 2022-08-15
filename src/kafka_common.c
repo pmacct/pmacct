@@ -40,6 +40,7 @@ int dyn_partition_key;
 char default_kafka_broker_host[] = "127.0.0.1";
 int default_kafka_broker_port = 9092;
 char default_kafka_topic[] = "pmacct.acct";
+int p_kafka_dump_data_queue(struct p_kafka_host *, int, int);
 
 /* Functions */
 void p_kafka_init_host_struct(struct p_kafka_host *kafka_host)
@@ -453,7 +454,7 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, si
     dump_msg = (dump_flag || aa_flag) && !pp_flag;
     pthread_mutex_unlock(&mutex_rd);
     if(dump_queue)
-      ret = dump_the_queue(kafka_host, part, do_free);
+      ret = p_kafka_dump_data_queue(kafka_host, part, do_free);
     if(ret == ERR)
       return ERR;
   }
@@ -496,7 +497,7 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, si
   return ret; 
 }
 
-int dump_the_queue(struct p_kafka_host *kafka_host, int part, int do_free)
+int p_kafka_dump_data_queue(struct p_kafka_host *kafka_host, int part, int do_free)
 {
   int flag = RD_KAFKA_MSG_F_COPY;
   int ret = SUCCESS;

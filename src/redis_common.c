@@ -165,7 +165,7 @@ bool p_redis_get_time(struct p_redis_host *redis_host)
   int session_num;              // the number of keys in Redis
   char *eptr;
 
-  redis_host->reply = redisCommand(redis_host->ctx, "KEYS *%d+attachment_time", config.cluster_id);
+  redis_host->reply = redisCommand(redis_host->ctx, "KEYS *%s%s%d+attachment_time",config.cluster_name, PM_REDIS_DEFAULT_SEP, config.cluster_id);
   // Check if the Redis has replied as expected without freeing the object
   if (redis_host->reply)
   {
@@ -347,8 +347,8 @@ void p_redis_thread_produce_common_core_handler(void *rh)
   // If this thread belongs to the core process, write the current attachment time to redis
   if (strcmp(config.type, "core") == 0)
   {
-    snprintf(name_and_time, sizeof(name_and_time), "%s%s%d%sattachment_time",
-             config.name, PM_REDIS_DEFAULT_SEP, config.cluster_id, PM_REDIS_DEFAULT_SEP);
+    snprintf(name_and_time, sizeof(name_and_time), "%s%s%s%s%d%sattachment_time",
+             config.name, PM_REDIS_DEFAULT_SEP, config.cluster_name, PM_REDIS_DEFAULT_SEP, config.cluster_id, PM_REDIS_DEFAULT_SEP);
     p_redis_set_string(redis_host, name_and_time, timestamp, PM_REDIS_DEFAULT_EXP_TIME);
   }
   // Doing a "get timestamp" per second
@@ -411,3 +411,4 @@ void p_redis_thread_produce_common_plugin_handler(void *rh)
 	   config.name, PM_REDIS_DEFAULT_SEP, config.type);
   p_redis_set_int(redis_host, name_and_type, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
 }
+
