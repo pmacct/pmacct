@@ -75,23 +75,15 @@ void evaluate_packet_handlers()
       }
       else {
         if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = vlan_handler;
-	else primitives--; /* Just in case */
+        else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_in_vlan_handler;
+        else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_in_vlan_handler;
         primitives++;
-
-	// XXX
       }
     }
 
-    if (channels_list[index].aggregation_2 & COUNT_IN_VLAN) {
-      if (config.acct_type == ACCT_PM) primitives--; /* in/out VLAN support for sFlow only */
-      else if (config.acct_type == ACCT_NF) primitives--; /* in/out VLAN support for sFlow only */
-      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_in_vlan_handler;
-      primitives++;
-    }
-
     if (channels_list[index].aggregation_2 & COUNT_OUT_VLAN) {
-      if (config.acct_type == ACCT_PM) primitives--; /* in/out VLAN support for sFlow only */
-      else if (config.acct_type == ACCT_NF) primitives--; /* in/out VLAN support for sFlow only */
+      if (config.acct_type == ACCT_PM) primitives--; /* in/out VLAN support not supported */
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_out_vlan_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_out_vlan_handler;
       primitives++;
     }
@@ -1929,6 +1921,56 @@ void NF_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
     }
 
     pdata->primitives.vlan_id = ntohs(pdata->primitives.vlan_id);
+    break;
+  default:
+    break;
+  }
+}
+
+void NF_in_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_IN_VLAN].len) {
+      memcpy(&pdata->primitives.vlan_id, pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off, MIN(tpl->tpl[NF9_IN_VLAN].len, 2));
+    }
+    else if (tpl->tpl[NF9_DOT1QVLANID].len) {
+      memcpy(&pdata->primitives.vlan_id, pptrs->f_data+tpl->tpl[NF9_DOT1QVLANID].off, MIN(tpl->tpl[NF9_DOT1QVLANID].len, 2));
+    }
+    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len) {
+      vlan_handler(chptr, pptrs, data);
+      break;
+    }
+
+    pdata->primitives.vlan_id = ntohs(pdata->primitives.vlan_id);
+    break;
+  default:
+    break;
+  }
+}
+
+void NF_out_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_OUT_VLAN].len) {
+      memcpy(&pdata->primitives.out_vlan_id, pptrs->f_data+tpl->tpl[NF9_OUT_VLAN].off, MIN(tpl->tpl[NF9_OUT_VLAN].len, 2));
+    }
+    else if (tpl->tpl[NF9_POST_DOT1QVLANID].len) {
+      memcpy(&pdata->primitives.out_vlan_id, pptrs->f_data+tpl->tpl[NF9_POST_DOT1QVLANID].off, MIN(tpl->tpl[NF9_POST_DOT1QVLANID].len, 2));
+    }
+
+    pdata->primitives.out_vlan_id = ntohs(pdata->primitives.out_vlan_id);
     break;
   default:
     break;
@@ -4874,7 +4916,7 @@ void SF_in_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
   struct pkt_data *pdata = (struct pkt_data *) *data;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
-  pdata->primitives.in_vlan_id = sample->in_vlan;
+  pdata->primitives.vlan_id = sample->in_vlan;
 }
 
 void SF_out_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
