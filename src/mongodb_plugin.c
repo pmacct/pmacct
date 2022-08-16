@@ -513,7 +513,19 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
         bson_append_string(bson_elem, "mac_dst", dst_mac);
       }
   
-      if (config.what_to_count & COUNT_VLAN) bson_append_int(bson_elem, "vlan_id", data->vlan_id);
+      if (config.what_to_count & COUNT_VLAN) {
+	if (config.tmp_vlan_legacy) {
+	  bson_append_int(bson_elem, "vlan", data->vlan_id);
+	}
+	else {
+	  bson_append_int(bson_elem, "vlan_in", data->vlan_id);
+	}
+      }
+
+      if (config.what_to_count_2 & COUNT_OUT_VLAN) {
+	  bson_append_int(bson_elem, "vlan_out", data->out_vlan_id);
+      }
+
       if (config.what_to_count & COUNT_COS) bson_append_int(bson_elem, "cos", data->cos);
       if (config.what_to_count & COUNT_ETHERTYPE) {
         sprintf(misc_str, "%x", data->etype); 
