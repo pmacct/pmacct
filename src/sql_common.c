@@ -1316,7 +1316,7 @@ int sql_evaluate_primitives(int primitive)
     }
   }
 
-  if (what_to_count & COUNT_VLAN) {
+  if ((what_to_count & COUNT_VLAN) && config.tmp_vlan_legacy) {
     int count_it = FALSE;
 
     if ((config.sql_table_version < 2 || config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
@@ -1341,6 +1341,34 @@ int sql_evaluate_primitives(int primitive)
       values[primitive].handler = where[primitive].handler = count_vlan_handler;
       primitive++;
     }
+  }
+
+  if ((what_to_count & COUNT_VLAN) && !config.tmp_vlan_legacy) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "vlan_in", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "vlan_in=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_VLAN;
+    values[primitive].handler = where[primitive].handler = count_vlan_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_OUT_VLAN) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "vlan_out", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "vlan_out=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_OUT_VLAN;
+    values[primitive].handler = where[primitive].handler = count_out_vlan_handler;
+    primitive++;
   }
 
   if (what_to_count & COUNT_COS) {
