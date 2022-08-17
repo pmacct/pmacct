@@ -123,6 +123,8 @@ are no longer supplied as part of the PostgreSQL table creation script.
   * src_mac => mac_src (macaddr NOT NULL DEFAULT '0:0:0:0:0:0')
   * dst_mac => mac_dst (macaddr NOT NULL DEFAULT '0:0:0:0:0:0')
   * vlan => vlan (INT NOT NULL DEFAULT 0)
+  * in_vlan => vlan_in (INT NOT NULL DEFAULT 0)
+  * out_vlan => vlan_out (INT NOT NULL DEFAULT 0)
   * src_as => as_src (BIGINT NOT NULL DEFAULT 0)
   * dst_as => as_dst (BIGINT NOT NULL DEFAULT 0)
   * src_host => ip_src (inet NOT NULL DEFAULT '0.0.0.0', see README.IPv6)

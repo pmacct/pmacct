@@ -114,6 +114,8 @@ Similarly, BGP tables:
   * src_mac => mac_src (CHAR(17) NOT NULL)
   * dst_mac => mac_dst (CHAR(17) NOT NULL)
   * vlan => vlan (INT(2) UNSIGNED NOT NULL)
+  * in_vlan => vlan_in (INT(2) UNSIGNED NOT NULL)
+  * out_vlan => vlan_out (INT(2) UNSIGNED NOT NULL)
   * src_as => as_src (INT(4) UNSIGNED NOT NULL)
   * dst_as => as_dst (INT(4) UNSIGNED NOT NULL)
   * src_host => ip_src (CHAR(45) NOT NULL)

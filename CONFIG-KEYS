@@ -141,6 +141,12 @@ NOTES:		* List of the aggregation primitives available to each specific pmacct d
 		  class primitive instead allows to leverage traditional classification using
 		  NetFlow v9/IPFIX IE 94, 95 and 96 (applicationDescription, applicationId
 		  and applicationName).
+		* vlan / in_vlan / out_vlan: in NetFlow / IPFIX and sFlow, where there is
+		  indication (explicit or implicit, ie. expressing sample direction) of
+		  ingress / egress sampling, 'vlan' checks both cases reporting the VLAN ID
+		  of the first case checked reporting a non-zero ID (ingress > egress); more
+		  intuitively, in_vlan reports ingress VLAN ID if any and out_vlan reports
+		  egress VLAN ID if any.
 DEFAULT:	src_host
 
 KEY:		aggregate_primitives [GLOBAL, MAP]
