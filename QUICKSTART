@@ -1,5 +1,5 @@
 pmacct [IP traffic accounting : BGP : BMP : RPKI : IGP : Streaming Telemetry]
-pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 
 
 TABLE OF CONTENTS:
@@ -1361,20 +1361,6 @@ b) build NetFlow probe configuration, using pmacctd:
    In pmacctd, bgp_agent_map does the trick of mapping 0.0.0.0 to the IP address of
    the BGP peer (ie. 127.0.0.1: 'bgp_ip=127.0.0.1 ip=0.0.0.0'); this setup, while
    generic, was tested working in conjunction with Quagga, FRR and BIRD.
-
-   Example fragment of the Quagga configuration:
-
-   router bgp Y
-    bgp router-id X.X.X.X
-    neighbor 127.0.0.1 remote-as Y
-    neighbor 127.0.0.1 port 17917
-    neighbor 127.0.0.1 update-source 127.0.0.1
-   !
-
-   NOTE: if configuring a BGP neighbor over localhost via Quagga CLI the following
-   message is returned: "% Can not configure the local system as neighbor". This
-   is not returned when configuring the neighborship directly in the bgpd config
-   file.
 
    Example fragment of the FRR configuration:
 
