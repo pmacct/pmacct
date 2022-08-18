@@ -28,6 +28,7 @@ char timestamp[SHORTBUFLEN];
 int count;
 int ingest_flag;
 int old_ingest_flag;
+char temp_cluster_name[SHORTBUFLEN]; 
 
 /* Functions */
 void p_redis_thread_wrapper(struct p_redis_host *redis_host)
@@ -144,6 +145,9 @@ connect://re-connect
       }
     }
   }
+
+  if(strcmp("nfacctd-sbmp-left"), config.cluster_name || strcmp("nfacctd-sbmp-right"), config.cluster_name)
+    snprintf(temp_cluster_name, sizeof(temp_cluster_name), "%s", "nfacctd-sbmp");
 
   // Set the timestamp
   if (strcmp(config.type, "core") == 0)
@@ -376,7 +380,7 @@ void p_redis_thread_produce_common_core_handler(void *rh)
   count = count % 62 + 2;
 
   // Write the current collector status to Log
-  if(ingest_flag != old_ingest_flag)
+  if(ingest_flag != (old_ingest_flag||aa_flag)&&!pp_flag)
     Log(LOG_INFO, "INFO ( %s ): Daemon state: %s\n", redis_host->log_id, (ingest_flag||aa_flag)&&!pp_flag?"ACTIVE":"STANDBY");
   old_ingest_flag = ingest_flag;
 
