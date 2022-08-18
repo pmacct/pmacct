@@ -146,7 +146,7 @@ connect://re-connect
     }
   }
 
-  if(strcmp("nfacctd-sbmp-left"), config.cluster_name || strcmp("nfacctd-sbmp-right"), config.cluster_name)
+  if(!strcmp("nfacctd-sbmp-left", config.cluster_name) || !strcmp("nfacctd-sbmp-right", config.cluster_name))
     snprintf(temp_cluster_name, sizeof(temp_cluster_name), "%s", "nfacctd-sbmp");
 
   // Set the timestamp
