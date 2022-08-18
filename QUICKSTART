@@ -1613,6 +1613,18 @@ disable TCP SYN flood protection, if slugginess is observed when taking up
 the BGP sessions and kernel logs indicate a possible SYN flooding, maybe it
 is good idea to tune and customize default kernel parameters.
 
+NOTE: currently if a BGP session is abruptly terminated by the remote peer,
+pmacct does rely on the underlying operating system to detect the condition
+(TCP keepalives) and close the socket. While this is going to change by
+detecting the condition inside the BGP daemon as a workaround TCP keepalive
+timers can be tuned to react in a reasonable amount of time. The example
+below is based on Linux and will disconnect a hung session in about two
+minutes:
+ 
+shell> sysctl -w net.ipv4.tcp_keepalive_time=60
+shell> sysctl -w net.ipv4.tcp_keepalive_intvl=10
+shell> sysctl -w net.ipv4.tcp_keepalive_probes=2
+
 XIVa. Limiting AS-PATH and BGP community attributes length
 AS-PATH and BGP communities can get easily long when represented as strings.
 Sometimes only a small portion of their content is of interest and hence a
