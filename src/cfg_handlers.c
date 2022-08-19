@@ -6704,10 +6704,26 @@ int cfg_key_geoipv2_file(char *filename, char *name, char *value_ptr)
 }
 #endif
 
+void cfg_get_primitive_index_value(u_int64_t input, u_int64_t *index, u_int64_t *value)
+{
+  if (index && value) {
+    (*index) = (input >> COUNT_REGISTRY_BITS) & COUNT_INDEX_MASK;
+    (*value) = (input & COUNT_REGISTRY_MASK);
+  }
+}
+
+void cfg_set_primitive_index_value(u_int64_t index, u_int64_t value, u_int64_t *output)
+{
+  if (output) {
+    (*output) = ((index << COUNT_REGISTRY_BITS) | (value & COUNT_REGISTRY_MASK));
+  }
+}
+
 void cfg_set_aggregate(char *filename, u_int64_t registry[], u_int64_t input, char *token)
 {
-  u_int64_t index = (input >> COUNT_REGISTRY_BITS) & COUNT_INDEX_MASK;
-  u_int64_t value = (input & COUNT_REGISTRY_MASK);
+  u_int64_t index, value;
+
+  cfg_get_primitive_index_value(input, &index, &value); 
 
   if (registry[index] & value) {
     Log(LOG_ERR, "ERROR: [%s] '%s' repeated in 'aggregate' or invalid 0x%llx bit code.\n", filename, token, (unsigned long long)input);

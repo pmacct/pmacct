@@ -40,9 +40,32 @@
 struct channels_list_entry channels_list[MAX_N_PLUGINS];
 pkt_handler phandler[N_PRIMITIVES];
 
-
-
 /* functions */
+void warn_unsupported_packet_handler(u_int64_t primitive, u_int64_t tool)
+{
+  char *primitive_str = NULL, *tool_str = NULL;
+
+  primitive_str = lookup_id_to_string_struct(_primitives_map, primitive);
+  tool_str = lookup_id_to_string_struct(_tools_map, tool);
+
+  if (primitive_str) {
+    if (tool_str) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): primitive '%s' is not supported by '%s'.\n", config.name, config.type, primitive_str, tool_str);
+    }
+    else {
+      Log(LOG_WARNING, "WARN ( %s/%s ): primitive '%s' is not supported by the tool in use.\n", config.name, config.type, primitive_str);
+    }
+  }
+  else {
+    if (tool_str) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): primitive %lu is not supported by '%s'.\n", config.name, config.type, primitive, tool_str);
+    }
+    else {
+      Log(LOG_WARNING, "WARN ( %s/%s ): primitive %lu is not supported by the tool in use.\n", config.name, config.type, primitive);
+    }
+  }
+}
+
 void evaluate_packet_handlers()
 {
   int primitives = 0, index = 0;
@@ -82,7 +105,10 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation_2 & COUNT_OUT_VLAN) {
-      if (config.acct_type == ACCT_PM) primitives--; /* in/out VLAN support not supported */
+      if (config.acct_type == ACCT_PM) {
+        warn_unsupported_packet_handler(COUNT_INT_OUT_VLAN, ACCT_PM);
+	primitives--;
+      }
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_out_vlan_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_out_vlan_handler;
       primitives++;

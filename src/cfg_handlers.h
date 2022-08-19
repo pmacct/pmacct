@@ -532,6 +532,8 @@ extern int cfg_key_tmp_telemetry_daemon_udp_notif_legacy(char *, char *, char *)
 extern int cfg_key_tmp_telemetry_decode_cisco_v1_json_string(char *, char *, char *);
 
 extern void parse_time(char *, char *, int *, int *);
+extern void cfg_get_primitive_index_value(u_int64_t, u_int64_t *, u_int64_t *);
+extern void cfg_set_primitive_index_value(u_int64_t, u_int64_t , u_int64_t *);
 extern void cfg_set_aggregate(char *, u_int64_t [], u_int64_t, char *);
 
 #endif //CFG_HANDLER_H

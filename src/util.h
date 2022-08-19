@@ -235,4 +235,6 @@ extern int dwi_pmacct_build_handler(char *, int, char *, void *);
 
 extern int dtdr_writer_id(void *, char *, int);
 extern int dtdr_unknown(void *, char *, int);
+
+extern char *lookup_id_to_string_struct(const struct _id_to_string_struct *, u_int64_t);
 #endif //UTIL_H

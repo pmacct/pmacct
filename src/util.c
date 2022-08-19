@@ -3703,3 +3703,15 @@ unsigned long pm_djb2_string_hash(unsigned char *str)
   return hash;
 }
 
+char *lookup_id_to_string_struct(const struct _id_to_string_struct *table, u_int64_t value)
+{
+  int index;
+
+  for (index = 0; table[index].id; index++) {
+    if (table[index].id == value) {
+      return (char * const) table[index].str;
+    }
+  }
+
+  return NULL;
+}

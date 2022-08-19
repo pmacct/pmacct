@@ -25,6 +25,7 @@
 extern struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
 extern pkt_handler phandler[N_PRIMITIVES];
 
+extern void warn_unsupported_packet_handler(u_int64_t, u_int64_t);
 extern void evaluate_packet_handlers(); 
 extern void src_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void dst_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
