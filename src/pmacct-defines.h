@@ -146,7 +146,7 @@
 #define ACCT_NF			2	/* NetFlow */
 #define ACCT_SF			3	/* sFlow */
 #define ACCT_UL			4	/* Linux NetFilter NFLOG */
-#define ACCT_FWPLANE_MAX	100	/* Max ID for forwarding-plane daemons */ 
+#define ACCT_FWDPLANE_MAX	100	/* Max ID for forwarding-plane daemons */ 
 #define ACCT_PMBGP		101	/* standalone BGP daemon */
 #define ACCT_PMBMP		102	/* standalone BMP daemon */
 #define ACCT_CTLPLANE_MAX	200	/* Max ID for control-plane daemons */ 

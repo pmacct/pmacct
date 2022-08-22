@@ -257,7 +257,7 @@ void p_redis_thread_produce_common_core_handler(void *rh)
 	   config.name, PM_REDIS_DEFAULT_SEP, config.type);
   p_redis_set_int(redis_host, name_and_type, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
 
-  if (config.acct_type < ACCT_FWPLANE_MAX) {
+  if (config.acct_type < ACCT_FWDPLANE_MAX) {
     if (config.nfacctd_isis) {
       snprintf(buf, sizeof(buf), "%s%sisis", name_and_type, PM_REDIS_DEFAULT_SEP);
       p_redis_set_int(redis_host, buf, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
