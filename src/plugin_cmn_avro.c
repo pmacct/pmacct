@@ -262,7 +262,7 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
     avro_schema_record_field_append(schema, "sampling_rate", avro_schema_long());
 
   if (wtc_2 & COUNT_SAMPLING_DIRECTION)
-    avro_schema_record_field_append(schema, "sampling_direction", avro_schema_long());
+    avro_schema_record_field_append(schema, "sampling_direction", avro_schema_string());
 
   if (wtc_2 & COUNT_POST_NAT_SRC_HOST)
     avro_schema_record_field_append(schema, "post_nat_ip_src", avro_schema_string());
@@ -920,7 +920,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
 
   if (wtc_2 & COUNT_SAMPLING_DIRECTION) {
     pm_avro_check(avro_value_get_by_name(&value, "sampling_direction", &field, NULL));
-    pm_avro_check(avro_value_set_string(&field, pbase->sampling_direction));
+    pm_avro_check(avro_value_set_string(&field, sampling_direction_print(pbase->sampling_direction)));
   }
 
   if (wtc_2 & COUNT_POST_NAT_SRC_HOST) {

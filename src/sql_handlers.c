@@ -275,8 +275,8 @@ void count_sampling_rate_handler(const struct db_cache *cache_elem, struct inser
 
 void count_sampling_direction_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
-  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->primitives.sampling_direction);
-  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->primitives.sampling_direction);
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, sampling_direction_print(cache_elem->primitives.sampling_direction));
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, sampling_direction_print(cache_elem->primitives.sampling_direction));
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }

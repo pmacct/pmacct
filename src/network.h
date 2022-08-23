@@ -430,7 +430,7 @@ struct pkt_primitives {
   pm_id_t tag2;
   pm_class_t class;
   u_int32_t sampling_rate;
-  char sampling_direction[2]; /* 'i' = ingress, 'e' = egress, 'u' = unknown */
+  u_int8_t sampling_direction;
   u_int32_t export_proto_seqno;
   u_int8_t export_proto_version;
   u_int32_t export_proto_sysid;

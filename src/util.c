@@ -3715,3 +3715,18 @@ char *lookup_id_to_string_struct(const struct _id_to_string_struct *table, u_int
 
   return NULL;
 }
+
+const char *sampling_direction_print(u_int8_t sd_id)
+{
+  if (sd_id <= SAMPLING_DIRECTION_MAX) return sampling_direction[sd_id];
+  else return sampling_direction[SAMPLING_DIRECTION_UNKNOWN];
+}
+
+u_int8_t sampling_direction_str2id(char *sd_str)
+{
+  if (!strcmp(sd_str, "u")) return SAMPLING_DIRECTION_UNKNOWN;
+  else if (!strcmp(sd_str, "i")) return SAMPLING_DIRECTION_INGRESS;
+  else if (!strcmp(sd_str, "e")) return SAMPLING_DIRECTION_EGRESS;
+
+  return SAMPLING_DIRECTION_UNKNOWN;
+}

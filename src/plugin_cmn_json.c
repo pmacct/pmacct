@@ -1017,7 +1017,7 @@ void compose_json_sampling_rate(json_t *obj, struct chained_cache *cc)
 
 void compose_json_sampling_direction(json_t *obj, struct chained_cache *cc)
 {
-  json_object_set_new_nocheck(obj, "sampling_direction", json_string(cc->primitives.sampling_direction));
+  json_object_set_new_nocheck(obj, "sampling_direction", json_string(sampling_direction_print(cc->primitives.sampling_direction)));
 }
 
 void compose_json_post_nat_src_host(json_t *obj, struct chained_cache *cc)

@@ -449,6 +449,12 @@ static const char __attribute__((unused)) *rpki_roa[] = {
   "U"
 };
 
+static const char __attribute__((unused)) *sampling_direction[] = {
+  "u",
+  "i",
+  "e"
+};
+
 static const struct _id_to_string_struct _tools_map[] = {
   {ACCT_PM, "pmacctd"},
   {ACCT_NF, "nfacctd"},

@@ -65,6 +65,8 @@ void pmc_lower_string(char *);
 char *pmc_ndpi_get_proto_name(u_int16_t);
 const char *pmc_rpki_roa_print(u_int8_t);
 u_int8_t pmc_rpki_str2roa(char *);
+const char *pmc_sampling_direction_print(u_int8_t);
+u_int8_t pmc_sampling_direction_str2id(char *);
 
 /* vars */
 struct imt_custom_primitives pmc_custom_primitives_registry;
@@ -1627,7 +1629,7 @@ int main(int argc,char **argv)
 	  request.data.sampling_rate = atoi(match_string_token);
 	}
 	else if (!strcmp(count_token[match_string_index], "sampling_direction")) {
-	  strlcpy(request.data.sampling_direction, match_string_token, sizeof(request.data.sampling_direction));
+	  request.data.sampling_direction = sampling_direction_str2id(match_string_token);
 	}
         else if (!strcmp(count_token[match_string_index], "proto")) {
 	  int proto = 0;
@@ -2659,8 +2661,10 @@ int main(int argc,char **argv)
 	}
 
 	if (!have_wtc || (what_to_count_2 & COUNT_SAMPLING_DIRECTION)) {
-	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-1s                  ", acc_elem->primitives.sampling_direction); 
-	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), acc_elem->primitives.sampling_direction); 
+	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-1s                  ",
+	      						   pmc_sampling_direction_print(acc_elem->primitives.sampling_direction)); 
+	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count),
+							  sampling_direction_print(acc_elem->primitives.sampling_direction)); 
 	}
 
         if (!have_wtc || (what_to_count_2 & COUNT_POST_NAT_SRC_HOST)) {
@@ -3640,7 +3644,8 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   if (wtc & COUNT_IP_TOS) json_object_set_new_nocheck(obj, "tos", json_integer((json_int_t)pbase->tos));
 
   if (wtc_2 & COUNT_SAMPLING_RATE) json_object_set_new_nocheck(obj, "sampling_rate", json_integer((json_int_t)pbase->sampling_rate));
-  if (wtc_2 & COUNT_SAMPLING_DIRECTION) json_object_set_new_nocheck(obj, "sampling_direction", json_string(pbase->sampling_direction));
+  if (wtc_2 & COUNT_SAMPLING_DIRECTION) json_object_set_new_nocheck(obj, "sampling_direction",
+								    json_string(sampling_direction_print(pbase->sampling_direction)));
 
   if (wtc_2 & COUNT_POST_NAT_SRC_HOST) {
     addr_to_str(src_host, &pnat->post_nat_src_ip);
@@ -4045,4 +4050,19 @@ u_int8_t pmc_rpki_str2roa(char *roa_str)
   else if (!strcmp(roa_str, "v")) return ROA_STATUS_VALID;
 
   return ROA_STATUS_UNKNOWN;
+}
+
+const char *pmc_sampling_direction_print(u_int8_t sd_id)
+{
+  if (sd_id <= SAMPLING_DIRECTION_MAX) return sampling_direction[sd_id];
+  else return sampling_direction[SAMPLING_DIRECTION_UNKNOWN];
+}
+
+u_int8_t pmc_sampling_direction_str2id(char *sd_str)
+{
+  if (!strcmp(sd_str, "u")) return SAMPLING_DIRECTION_UNKNOWN;
+  else if (!strcmp(sd_str, "i")) return SAMPLING_DIRECTION_INGRESS;
+  else if (!strcmp(sd_str, "e")) return SAMPLING_DIRECTION_EGRESS;
+
+  return SAMPLING_DIRECTION_UNKNOWN;
 }

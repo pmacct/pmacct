@@ -752,7 +752,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   #endif
   
         if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "%-7u       ", data->sampling_rate);
-        if (config.what_to_count_2 & COUNT_SAMPLING_DIRECTION) fprintf(f, "%-1s                   ", data->sampling_direction);
+        if (config.what_to_count_2 & COUNT_SAMPLING_DIRECTION) fprintf(f, "%-1s                   ", sampling_direction_print(data->sampling_direction));
   
         if (config.what_to_count_2 & COUNT_POST_NAT_SRC_HOST) {
           addr_to_str(ip_address, &pnat->post_nat_src_ip);
@@ -1151,7 +1151,8 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   #endif
   
         if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "%s%u", write_sep(sep, &count), data->sampling_rate);
-        if (config.what_to_count_2 & COUNT_SAMPLING_DIRECTION) fprintf(f, "%s%s", write_sep(sep, &count), data->sampling_direction);
+        if (config.what_to_count_2 & COUNT_SAMPLING_DIRECTION) fprintf(f, "%s%s", write_sep(sep, &count),
+								       sampling_direction_print(data->sampling_direction));
   
         if (config.what_to_count_2 & COUNT_POST_NAT_SRC_HOST) {
           addr_to_str(src_host, &pnat->post_nat_src_ip);

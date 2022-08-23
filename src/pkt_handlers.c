@@ -1869,8 +1869,7 @@ void sampling_direction_handler(struct channels_list_entry *chptr, struct packet
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
   /* dummy */
-  pdata->primitives.sampling_direction[0] = 'u';
-  pdata->primitives.sampling_direction[1] = '\0';
+  pdata->primitives.sampling_direction = SAMPLING_DIRECTION_UNKNOWN;
 }
 
 void mpls_vpn_rd_frommap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -3322,17 +3321,15 @@ void NF_sampling_direction_handler(struct channels_list_entry *chptr, struct pac
 
   switch(direction) {
   case 0:
-    pdata->primitives.sampling_direction[0] = 'i';
+    pdata->primitives.sampling_direction = SAMPLING_DIRECTION_INGRESS;
     break;
   case 1:
-    pdata->primitives.sampling_direction[0] = 'e';
+    pdata->primitives.sampling_direction = SAMPLING_DIRECTION_EGRESS;
     break;
   default:
-    pdata->primitives.sampling_direction[0] = 'u';
+    pdata->primitives.sampling_direction = SAMPLING_DIRECTION_UNKNOWN;
     break;
   }
-
-  pdata->primitives.sampling_direction[1] = '\0';
 }
 
 void NF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -5574,8 +5571,7 @@ void SF_sampling_direction_handler(struct channels_list_entry *chptr, struct pac
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
   /* dummy */
-  pdata->primitives.sampling_direction[0] = 'u';
-  pdata->primitives.sampling_direction[1] = '\0';
+  pdata->primitives.sampling_direction = SAMPLING_DIRECTION_UNKNOWN;
 }
 
 void SF_timestamp_arrival_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
