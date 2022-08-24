@@ -462,7 +462,7 @@ void kafka_cache_purge(struct chained_cache *queue[], int index, int safe_action
     exit_gracefully(1);
   }
 
-  if (!config.kafka_partition_dynamic) config.kafka_partition = RD_KAFKA_PARTITION_UA;
+  if (!config.kafka_partition_dynamic && !config.kafka_partition) config.kafka_partition = RD_KAFKA_PARTITION_UA;
 
   p_kafka_set_partition(&kafkap_kafka_host, config.kafka_partition);
 
