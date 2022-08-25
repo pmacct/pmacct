@@ -1225,8 +1225,8 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
 	  u_char key_hexdump[hash_key_get_len(hash_key) * 3];
 	  serialize_hex(hash_key_get_val(hash_key), key_hexdump, hash_key_get_len(hash_key));
 
-	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] pretag_index_fill(): index=%llx key=%s (dup!)\n",
-	      config.name, config.type, t->filename, (unsigned long long)idx_bmap, key_hexdump);
+	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] pretag_index_fill(): index=%llx line=%d key=%s (dup!)\n",
+	      config.name, config.type, t->filename, (unsigned long long)idx_bmap, (lineno + 1), key_hexdump);
 
 	  ret = PRETAG_IDX_ERR_NONE; /* alias SUCCESS */
 	}
