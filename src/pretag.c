@@ -1166,6 +1166,7 @@ int pretag_index_allocate(struct id_table *t)
       if (idx_entry_size) {
 	char pm_cdada_map_container[idx_entry_size];
 
+	hash_init_serial(&t->index[iterator].hash_serializer, idx_entry_size);
         t->index[iterator].idx_map = cdada_map_create(pm_cdada_map_container);
         if (!t->index[iterator].idx_map) {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] maps_index: unable to allocate index %llx. Destroying.\n", config.name,
