@@ -3419,6 +3419,7 @@ int PT_map_index_entries_src_net_handler(struct id_table_index *idx, int idx_hdl
   if (!idx || !hash_serializer || !src_e) return TRUE;
 
   hash_serial_append(hash_serializer, (char *)&src_e->key.src_net.a, sizeof(struct host_addr), TRUE);
+  hash_serial_append(hash_serializer, (char *)&src_e->key.src_net.m.len, sizeof(src_e->key.src_net.m.len), TRUE);
 
   if (idx->netmask.hdlr_no) {
     if (idx->netmask.hdlr_no != (idx_hdlr_no + 1)) {
@@ -3466,6 +3467,7 @@ int PT_map_index_entries_dst_net_handler(struct id_table_index *idx, int idx_hdl
   if (!idx || !hash_serializer || !src_e) return TRUE;
 
   hash_serial_append(hash_serializer, (char *)&src_e->key.dst_net.a, sizeof(struct host_addr), TRUE);
+  hash_serial_append(hash_serializer, (char *)&src_e->key.dst_net.m.len, sizeof(src_e->key.dst_net.m.len), TRUE);
 
   if (idx->netmask.hdlr_no) {
     if (idx->netmask.hdlr_no != (idx_hdlr_no + 1)) {
@@ -4202,7 +4204,7 @@ int PT_map_index_fdata_src_net_handler(struct id_table_index *idx, int idx_hdlr,
   }
   else return TRUE;
 
-  if (idx_netmask >= 0 && idx->netmask.hdlr_no == idx_hdlr) {
+  if (idx_netmask >= 0 && idx->netmask.hdlr_no == (idx_hdlr + 1)) {
     if (e->key.src_net.a.family == AF_INET) {
       ret = cdada_list_get(idx->netmask.v4.list, idx_netmask, &netmask);
     }
@@ -4218,6 +4220,7 @@ int PT_map_index_fdata_src_net_handler(struct id_table_index *idx, int idx_hdlr,
   }
 
   hash_serial_append(hash_serializer, (char *)&e->key.src_net.a, sizeof(struct host_addr), FALSE);
+  hash_serial_append(hash_serializer, (char *)&e->key.src_net.m.len, sizeof(e->key.src_net.m.len), FALSE);
 
   return FALSE;
 }
@@ -4271,7 +4274,7 @@ int PT_map_index_fdata_dst_net_handler(struct id_table_index *idx, int idx_hdlr,
   }
   else return TRUE;
 
-  if (idx_netmask >= 0 && idx->netmask.hdlr_no == idx_hdlr) {
+  if (idx_netmask >= 0 && idx->netmask.hdlr_no == (idx_hdlr + 1)) {
     if (e->key.dst_net.a.family == AF_INET) {
       ret = cdada_list_get(idx->netmask.v4.list, idx_netmask, &netmask);
     }
@@ -4287,6 +4290,7 @@ int PT_map_index_fdata_dst_net_handler(struct id_table_index *idx, int idx_hdlr,
   }
 
   hash_serial_append(hash_serializer, (char *)&e->key.dst_net.a, sizeof(struct host_addr), FALSE);
+  hash_serial_append(hash_serializer, (char *)&e->key.dst_net.m.len, sizeof(e->key.dst_net.m.len), FALSE);
 
   return FALSE;
 }
