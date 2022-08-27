@@ -958,7 +958,7 @@ int pretag_append_label(pt_label_t *dst, pt_label_t *src)
 
       strcat(dst->val, DEFAULT_SEP);
       strncat(dst->val, src->val, src->len);
-      dst->val[dst->len] = '\0';
+      dst->val[dst->len - 1] = '\0';
     }
   }
 
