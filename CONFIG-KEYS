@@ -2099,11 +2099,22 @@ DESC:		Enables indexing of maps (ie. pre_tag_map) to increase lookup speeds on l
 		supported. Only a sub-set of pre_tag_map keys are supported, including: ip, bgp_nexthop,
 		vlan, cvlan, src_mac, dst_mac, src_net, dst_net, mpls_vpn_rd, mpls_pw_id, src_as, dst_as,
 		peer_src_as, peer_dst_as, input, output. For keys accepting IP addresses as value (ie. ip,
-		src_net and dst_net), only specific IP addresses, ie. /32 for v4 and /128 for v6, are
-		supported. Also, negations are not supported (ie. 'in=-216' match all but input interface
+		src_net and dst_net) specific IP addresses, ie. /32 for v4 and /128 for v6, are supported
+		throughout. Also, negations are not supported (ie. 'in=-216' match all but input interface
 		216). bgp_agent_map and sampling_map implement a separate caching mechanism and hence do
 		not leverage this feature.
 DEFAULT:        false
+NOTES:		* Initial support for networks has been introduced for src_net and dst_net keys: in any
+		  entry, only one key can include a network because matrixing of networks would degrade
+		  performances of the current implementation. A construction like the following would
+		  be perfectly valid, ie.:
+
+		  label=src_A	src_net=X/24	jeq=dst_net
+		  label=src_B	src_net=Y/25	jeq=dst_net
+		  label=src_C	src_net=Z/26	jeq=dst_net
+		  label=dst_A	dst_net=X/24	label=dst_net
+		  label=dst_B	dst_net=Y/25
+		  label=dst_C	dst_net=Z/26
 
 KEY:            pre_tag_filter, pre_tag2_filter [NO_GLOBAL]
 VALUES:         [ 0-2^64-1 ]
