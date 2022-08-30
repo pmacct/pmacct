@@ -2177,22 +2177,46 @@ int evaluate_tags(struct pretag_filter *filter, pm_id_t tag)
 
 int evaluate_labels(struct pretag_label_filter *filter, pt_label_t *label)
 {
-  int index;
+  int index, ret;
+  int null_label_len = 4; /* 'null' excluding terminating zero */
   char *null_label = "null";
 
   if (filter->num == 0) return FALSE; /* no entries in the filter array: tag filtering disabled */
-  if (!label->val) label->val = strdup(null_label);
+  if (!label->val) {
+    label->val = null_label;
+    label->len = null_label_len;
+  }
 
   for (index = 0; index < filter->num; index++) {
-    if (!memcmp(filter->table[index].v, label->val, filter->table[index].len)) return (FALSE | filter->table[index].neg);
+    if (filter->table[index].len != label->len) {
+      ret = TRUE;
+    }
     else {
-      if (filter->table[index].neg) return FALSE;
+      ret = FALSE;
+    }
+
+    if (!ret) {
+      ret = memcmp(filter->table[index].v, label->val, filter->table[index].len);
+    }
+
+    /* cleanup */
+    if (label->val == null_label) {
+      label->val = NULL;
+      label->len = 0;
+    }
+
+    if (!ret) {
+      return (FALSE | filter->table[index].neg);
+    }
+    else {
+      if (filter->table[index].neg) {
+	return FALSE;
+      }
     }
   }
 
   return TRUE;
 }
-
 char *write_sep(char *sep, int *count)
 {
   static char empty_sep[] = "";
