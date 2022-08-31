@@ -436,7 +436,15 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 		      tmp.e[tmp.num].key.agent_mask.family = AF_INET;
 
 		      memcpy(&recirc_e, &tmp.e[tmp.num], sizeof(struct id_entry));
-		      recirculate = TRUE;
+
+		      /*
+			If indexing is enabled and no address family is specified for 'ip'
+			(ie. 'ip' is likely not specified), we will not include it as part
+			of the index hash serializer anyway; we can skip recirculation.
+		      */
+		      if (!config.maps_index) {
+			recirculate = TRUE;
+		      }
 		    }
 		    else {
 		      memcpy(&tmp.e[tmp.num], &recirc_e, sizeof(struct id_entry));
