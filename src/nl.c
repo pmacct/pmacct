@@ -541,7 +541,7 @@ int PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
     pptrs->have_tag2 = FALSE;
   }
 
-  /* Giving a first try with index(es) */
+  /* If we have any index defined, let's use it */
   if (config.maps_index && pretag_index_have_one(t)) {
     struct id_entry *index_results[ID_TABLE_INDEX_RESULTS];
     u_int32_t iterator;
@@ -554,7 +554,7 @@ int PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
       if (!(ret & PRETAG_MAP_RCODE_JEQ)) return ret;
     }
 
-    /* if we have at least one index we trust we did a good job */
+    /* done */
     return ret;
   }
 
