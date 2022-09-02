@@ -2133,12 +2133,14 @@ DEFAULT:	none
 
 KEY:            pre_tag_label_filter [NO_GLOBAL]
 DESC:		Expects one or more labels as value (when multiple labels are supplied, they need to be
-		comma separated and a logical OR is used in the evaluation phase) and allows to filter in
-		data basing upon its label value(s): in case of match, data is delivered to the plugin the
-		filter is attached to. This directive has to be attached to a plugin (that is, it cannot be
-		global). Null label values (ie. unlabelled data) can be matched using the special 'null'
-		keyword. Negations are allowed by pre-pending a minus sign to the label value. The use of
-		this directive makes sense if coupled with 'pre_tag_map'.
+		comma separated and a logical OR is performed when evaluating at runtime) and allows to
+		filter in data basing upon label value(s): in case of match, data is delivered to the
+		plugin. This directive has to be attached to a plugin (that is, it cannot be global).
+		Null label values (ie. unlabelled data) can be matched using the special 'null' keyword.
+		Negations are allowed by pre-pending a minus sign to the label value. The use of this
+		directive is meant coupled with a 'pre_tag_map'; it is also currenly not compatible
+		with the use of pre_tag_label_encode_as_map except for the basic use-case of filtering
+		null vs non-null labels.
 DEFAULT:	none
 
 KEY:		pre_tag_label_encode_as_map
