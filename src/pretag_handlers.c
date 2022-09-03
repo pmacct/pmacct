@@ -171,19 +171,11 @@ int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct
   // XXX: isprint check?
 
   len = strlen(value);
-  if (!strchr(value, DEFAULT_SEP_INT)) {
-    if (pretag_malloc_label(&e->label, len + 1 /* null */)) return TRUE;
-    strcpy(e->label.val, value);
-    e->label.len = len;
-    e->label.val[e->label.len] = '\0';
-  }
-  else {
-    e->label.val = NULL;
-    e->label.len = 0;
 
-    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid set_label specified.\n", config.name, config.type, filename);
-    return TRUE;
-  }
+  if (pretag_malloc_label(&e->label, len + 1 /* null */)) return TRUE;
+  strcpy(e->label.val, value);
+  e->label.len = len;
+  e->label.val[e->label.len] = '\0';
 
   if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM || acct_type == ACCT_PMBGP ||
       acct_type == ACCT_PMBMP || acct_type == ACCT_PMTELE) {
