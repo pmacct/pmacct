@@ -29,6 +29,7 @@
 #define MAX_BITMAP_ENTRIES 64 /* pt_bitmap_t -> u_int64_t */
 #define MAX_PRETAG_MAP_ENTRIES 384 
 #define PRETAG_LABEL_KV_SEP "%"
+#define PRETAG_LABEL_KV_SEP_INT '%'
 
 #define MAX_ID_TABLE_INDEXES 8
 #define ID_TABLE_INDEX_RESULTS (MAX_ID_TABLE_INDEXES * 8)

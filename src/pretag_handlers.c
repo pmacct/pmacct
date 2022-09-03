@@ -172,6 +172,40 @@ int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct
 
   len = strlen(value);
 
+  /* light validation for this case */
+  if (config.pretag_label_encode_as_map) {
+    char *value_copy, *token;
+    char *map_key, *map_value;
+
+    value_copy = strdup(value);
+    if (value_copy) {
+      for (token = strtok(value_copy, DEFAULT_SEP); token; token = strtok(NULL, DEFAULT_SEP)) {
+	map_key = token;
+	map_value = strchr(token, PRETAG_LABEL_KV_SEP_INT);
+	if (map_value) {
+	  (*map_value) = '\0';
+	  map_value++;
+
+	  if (!strlen(map_key) || !strlen(map_value)) {
+	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Missing pretag_label_encode_as_map key or value.\n", config.name, config.type, filename);
+	    free(value_copy);
+	    return TRUE;
+	  }
+	}
+	else {
+	  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Missing pretag_label_encode_as_map separator.\n", config.name, config.type, filename);
+	  free(value_copy);
+	  return TRUE;
+	}
+      }
+      free(value_copy);
+    }
+    else {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] PT_map_label_handler() failed strdup()\n", config.name, config.type, filename);
+      return TRUE;
+    }
+  }
+
   if (pretag_malloc_label(&e->label, len + 1 /* null */)) return TRUE;
   strcpy(e->label.val, value);
   e->label.len = len;
