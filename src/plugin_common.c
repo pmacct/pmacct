@@ -1016,9 +1016,9 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
       tokens[list_counter + 1][MAX_PTM_LABEL_TOKEN_LEN - 1] = '\0';
     }
 
-    cstrncpy(lbl.key, tokens[list_counter], (MAX_PTM_LABEL_TOKEN_LEN - 1));
-    cstrncpy(lbl.value, tokens[list_counter + 1], (MAX_PTM_LABEL_TOKEN_LEN - 1));
-    ccdada_list_push_back(ptm_linked_list, &lbl);
+    strncpy(lbl.key, tokens[list_counter], (MAX_PTM_LABEL_TOKEN_LEN - 1));
+    strncpy(lbl.value, tokens[list_counter + 1], (MAX_PTM_LABEL_TOKEN_LEN - 1));
+    cdada_list_push_back(ptm_linked_list, &lbl);
   }
 
   return ptm_linked_list;
