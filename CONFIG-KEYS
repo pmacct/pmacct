@@ -2149,9 +2149,9 @@ DESC:		The 'label' field is encoded by default as an unique comma-separated stri
 		"label": "value1,value2,value3". Setting this knob to true, makes it being encoded as a
 		map for JSON and Apache Avro encodings, ie. in JSON "label": { "key1": "value1", "key2":
 		"value2" }. For keys and values to be correctly mapped, the '%' delimiter is used when
-		composing a pre_tag_map, ie. "set_label=key1%value1 ip=0.0.0.0/0". This knob has no effects
-		for other encodings (ie. CSV, formatted) and backends not supporting complex types (ie. SQL
-		plugins).
+		composing a pre_tag_map, ie. "set_label=key1%value1,key2%value2 ip=0.0.0.0/0". This knob
+		has no effects for other encodings (ie. CSV, formatted) and backends not supporting
+		complex types (ie. SQL plugins).
 DEFAULT:	false
 
 KEY:            [ post_tag | post_tag2 ] 
