@@ -28,7 +28,7 @@ char timestamp[SHORTBUFLEN];
 int count;
 int ingest_flag;
 int old_ingest_flag;
-char temp_cluster_name[SHORTBUFLEN]; 
+int write_log_flag, old_write_log_flag;
 
 /* Functions */
 void p_redis_thread_wrapper(struct p_redis_host *redis_host)
@@ -146,9 +146,6 @@ connect://re-connect
     }
   }
 
-  if(!strcmp("nfacctd-sbmp-left", config.cluster_name) || !strcmp("nfacctd-sbmp-right", config.cluster_name))
-    snprintf(temp_cluster_name, sizeof(temp_cluster_name), "%s", "nfacctd-sbmp");
-
   // Set the timestamp
   if (strcmp(config.type, "core") == 0)
   {
@@ -169,7 +166,7 @@ bool p_redis_get_time(struct p_redis_host *redis_host)
   int session_num;              // the number of keys in Redis
   char *eptr;
 
-  redis_host->reply = redisCommand(redis_host->ctx, "KEYS *%s%s%d+attachment_time",config.cluster_name, PM_REDIS_DEFAULT_SEP, config.cluster_id);
+  redis_host->reply = redisCommand(redis_host->ctx, "KEYS %s%s%d*attachment_time",config.cluster_name, PM_REDIS_DEFAULT_SEP, config.cluster_id);
   // Check if the Redis has replied as expected without freeing the object
   if (redis_host->reply)
   {
@@ -351,12 +348,13 @@ void p_redis_thread_produce_common_core_handler(void *rh)
   // If this thread belongs to the core process, write the current attachment time to redis
   if (strcmp(config.type, "core") == 0)
   {
-    snprintf(name_and_time, sizeof(name_and_time), "%s%s%s%s%d%sattachment_time",
-             config.name, PM_REDIS_DEFAULT_SEP, config.cluster_name, PM_REDIS_DEFAULT_SEP, config.cluster_id, PM_REDIS_DEFAULT_SEP);
+    snprintf(name_and_time, sizeof(name_and_time), "%s%sattachment_time",
+             config.name, PM_REDIS_DEFAULT_SEP);
     p_redis_set_string(redis_host, name_and_time, timestamp, PM_REDIS_DEFAULT_EXP_TIME);
   }
   // Doing a "get timestamp" per second
   ingest_flag = p_redis_get_time(redis_host);
+  write_log_flag = (ingest_flag||aa_flag)&&!pp_flag;
 
   // Dump the queue when there is a status change and this is not the first connection
   if (ingest_flag && !old_ingest_flag && count != 1)
@@ -375,14 +373,14 @@ void p_redis_thread_produce_common_core_handler(void *rh)
     dump_flag = ingest_flag;
   pthread_mutex_unlock(&mutex_rd);
 
+  // Write the current collector status to Log
+  if((write_log_flag != old_write_log_flag) || count ==1)
+    Log(LOG_INFO, "INFO ( %s ): Daemon state: %s %d %d\n", redis_host->log_id, (ingest_flag||aa_flag)&&!pp_flag?"ACTIVE":"STANDBY", write_log_flag, old_write_log_flag);
+  old_ingest_flag = ingest_flag;
+  old_write_log_flag = write_log_flag;
   // In case the count goes too large
   count++;
   count = count % 62 + 2;
-
-  // Write the current collector status to Log
-  if(ingest_flag != (old_ingest_flag||aa_flag)&&!pp_flag)
-    Log(LOG_INFO, "INFO ( %s ): Daemon state: %s\n", redis_host->log_id, (ingest_flag||aa_flag)&&!pp_flag?"ACTIVE":"STANDBY");
-  old_ingest_flag = ingest_flag;
 
   if (config.acct_type < ACCT_FWPLANE_MAX) {
     if (config.nfacctd_isis) {
