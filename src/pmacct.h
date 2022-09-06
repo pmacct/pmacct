@@ -234,7 +234,7 @@ typedef struct {
 #endif
 #endif
 
-#include "temp_data_queue.h"
+#include "ha.h"
 #ifdef WITH_REDIS
 #include "redis_common.h"
 #endif
@@ -363,6 +363,18 @@ struct child_ctl2 {
   u_int32_t flags;
 };
 
+struct bmp_ha{
+int set_to_active_flag, set_to_standby_flag, regenerate_timestamp_flag;
+bool dump_flag;
+bool queue_dump_flag;
+cdada_queue_t *bmp_ha_data_queue;
+pthread_mutex_t mutex_thr;
+pthread_cond_t sig;
+pthread_mutex_t mutex_rd;
+pthread_cond_t sig_rd;
+};
+struct bmp_ha bmp_ha_struct;
+
 #define INIT_BUF(x) \
 	memset(x.base, 0, sizeof(x.base)); \
 	x.end = x.base+sizeof(x.base); \
@@ -471,14 +483,5 @@ extern char uacctd_globstr[];
 extern char pmtele_globstr[];
 extern char pmbgpd_globstr[];
 extern char pmbmpd_globstr[];
-
-extern int aa_flag, pp_flag, regenerate_timestamp_flag;
-extern bool dump_flag;
-extern bool queue_dump_flag;
-extern cdada_queue_t* q;
-extern pthread_mutex_t mutex_thr;
-extern pthread_cond_t sig;
-extern pthread_mutex_t mutex_rd;
-extern pthread_cond_t sig_rd;
 
 #endif /* _PMACCT_H_ */

@@ -49,7 +49,6 @@ int p_redis_master_produce_thread(void *rh)
 {
   struct p_redis_host *redis_host = rh;
   unsigned int ret = 0, period = 0;
-  count = 1;
   
   p_redis_connect(redis_host, TRUE);
 
@@ -98,9 +97,9 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
 
   time_t now = time(NULL);
 
-  pthread_mutex_lock(&mutex_rd);
-  dump_flag = true;
-  pthread_mutex_unlock(&mutex_rd);
+  pthread_mutex_lock(&bmp_ha_struct.mutex_rd);
+  bmp_ha_struct.dump_flag = true;
+  pthread_mutex_unlock(&bmp_ha_struct.mutex_rd);
 
   assert(redis_host);
 
@@ -124,9 +123,9 @@ connect://re-connect
 	if (redis_host->ctx) {
 	  if (fatal) {
 	    Log(LOG_ERR, "ERROR ( %s ): Connection error: %s\n", redis_host->log_id, redis_host->ctx->errstr);
-	    pthread_mutex_lock(&mutex_rd);
-      dump_flag = true;
-      pthread_mutex_unlock(&mutex_rd);
+	    pthread_mutex_lock(&bmp_ha_struct.mutex_rd);
+      bmp_ha_struct.dump_flag = true;
+      pthread_mutex_unlock(&bmp_ha_struct.mutex_rd);
       // Retry connection instead of exiting
       sleep(5);
       goto connect;
@@ -145,7 +144,8 @@ connect://re-connect
       }
     }
   }
-
+  
+  count = 1;
   // Set the timestamp
   if (strcmp(config.type, "core") == 0)
   {
@@ -336,13 +336,13 @@ void p_redis_thread_produce_common_core_handler(void *rh)
   p_redis_set_int(redis_host, name_and_type, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
 
   // Refresh the timestamp if the regenerate_timestamp_flag is set
-  if (regenerate_timestamp_flag)
+  if (bmp_ha_struct.regenerate_timestamp_flag)
   {
     Log(LOG_DEBUG, "DEBUG ( %s ): Redis timestamp reset\n", redis_host->log_id);
     struct timeval current_time;
     gettimeofday(&current_time, NULL);                                                                   // Get time in micro second
     snprintf(timestamp, sizeof(timestamp), "%ld", current_time.tv_sec * 1000000 + current_time.tv_usec); // Setting the time when redis connects as timestamp for this bmp session
-    regenerate_timestamp_flag = false;
+    bmp_ha_struct.regenerate_timestamp_flag = false;
   }
 
   // If this thread belongs to the core process, write the current attachment time to redis
@@ -354,28 +354,28 @@ void p_redis_thread_produce_common_core_handler(void *rh)
   }
   // Doing a "get timestamp" per second
   ingest_flag = p_redis_get_time(redis_host);
-  write_log_flag = (ingest_flag||aa_flag)&&!pp_flag;
+  write_log_flag = (ingest_flag||bmp_ha_struct.set_to_active_flag)&&!bmp_ha_struct.set_to_standby_flag;
 
   // Dump the queue when there is a status change and this is not the first connection
   if (ingest_flag && !old_ingest_flag && count != 1)
   {
-    pthread_mutex_lock(&mutex_rd);
-    queue_dump_flag = true;
-    pthread_mutex_unlock(&mutex_rd);
+    pthread_mutex_lock(&bmp_ha_struct.mutex_rd);
+    bmp_ha_struct.queue_dump_flag = true;
+    pthread_mutex_unlock(&bmp_ha_struct.mutex_rd);
   }
 
-  pthread_mutex_lock(&mutex_rd);
-  if (aa_flag)
-    dump_flag = true;
-  else if (pp_flag)
-    dump_flag = false;
+  pthread_mutex_lock(&bmp_ha_struct.mutex_rd);
+  if (bmp_ha_struct.set_to_active_flag)
+    bmp_ha_struct.dump_flag = true;
+  else if (bmp_ha_struct.set_to_standby_flag)
+    bmp_ha_struct.dump_flag = false;
   else
-    dump_flag = ingest_flag;
-  pthread_mutex_unlock(&mutex_rd);
+    bmp_ha_struct.dump_flag = ingest_flag;
+  pthread_mutex_unlock(&bmp_ha_struct.mutex_rd);
 
   // Write the current collector status to Log
   if((write_log_flag != old_write_log_flag) || count ==1)
-    Log(LOG_INFO, "INFO ( %s ): Daemon state: %s %d %d\n", redis_host->log_id, (ingest_flag||aa_flag)&&!pp_flag?"ACTIVE":"STANDBY", write_log_flag, old_write_log_flag);
+    Log(LOG_INFO, "INFO ( %s ): Daemon state: %s\n", redis_host->log_id, (ingest_flag||bmp_ha_struct.set_to_active_flag)&&!bmp_ha_struct.set_to_standby_flag?"ACTIVE":"STANDBY");
   old_ingest_flag = ingest_flag;
   old_write_log_flag = write_log_flag;
   // In case the count goes too large

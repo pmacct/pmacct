@@ -49,14 +49,8 @@ struct pcap_stat ps;
 struct sigaction sighandler_action;
 
 int protocols_number;
-int aa_flag, pp_flag, regenerate_timestamp_flag;
-bool dump_flag;
-bool queue_dump_flag;
-cdada_queue_t* q;
-pthread_mutex_t mutex_thr;
-pthread_cond_t sig;
-pthread_mutex_t mutex_rd;
-pthread_cond_t sig_rd;
+
+struct bmp_ha bmp_ha_struct;
 
 u_int32_t PdataSz, ChBufHdrSz, CharPtrSz, CounterSz, HostAddrSz;
 u_int32_t PpayloadSz, PextrasSz, PmsgSz, PvhdrSz, PtLabelTSz;

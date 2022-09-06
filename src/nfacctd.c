@@ -206,7 +206,7 @@ int main(int argc,char **argv, char **envp)
   tee_plugins = 0;
   errflag = 0;
 
-  dump_flag = true;
+  bmp_ha_struct.dump_flag = true;
 
   memset(cfg_cmdline, 0, sizeof(cfg_cmdline));
   memset(&server, 0, sizeof(server));
@@ -1372,10 +1372,10 @@ int main(int argc,char **argv, char **envp)
 
 #ifdef WITH_REDIS
   if (config.redis_host) {
-    dump_flag = true; //Setting the flag as true by default in case connection to Redis fails
+    bmp_ha_struct.dump_flag = true; //Setting the flag as true by default in case connection to Redis fails
     char log_id[SHORTBUFLEN];
     snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
-    if (pthread_mutex_init(&mutex_rd, NULL) || pthread_cond_init(&sig_rd, NULL))
+    if (pthread_mutex_init(&bmp_ha_struct.mutex_rd, NULL) || pthread_cond_init(&bmp_ha_struct.sig_rd, NULL))
     {
       Log(LOG_ERR, "ERROR ( %s ): mutex_init failed\n", log_id);
       return 1;
@@ -1406,7 +1406,7 @@ int main(int argc,char **argv, char **envp)
   }
 
   // lanuch the data queue countdown delete thread
-  queue_thread_wrapper();
+  pm_ha_queue_thread_wrapper();
   /* Main loop */
   for (;;) {
     sigprocmask(SIG_BLOCK, &signal_set, NULL);

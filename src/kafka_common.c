@@ -449,10 +449,10 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, si
   int dump_queue;
   if (config.acct_type == ACCT_NF && !strcmp(config.type, "core"))
   {
-    pthread_mutex_lock(&mutex_rd);
-    dump_queue = queue_dump_flag;
-    dump_msg = (dump_flag || aa_flag) && !pp_flag;
-    pthread_mutex_unlock(&mutex_rd);
+    pthread_mutex_lock(&bmp_ha_struct.mutex_rd);
+    dump_queue = bmp_ha_struct.queue_dump_flag;
+    dump_msg = (bmp_ha_struct.dump_flag || bmp_ha_struct.set_to_active_flag) && !bmp_ha_struct.set_to_standby_flag;
+    pthread_mutex_unlock(&bmp_ha_struct.mutex_rd);
     if(dump_queue)
       ret = p_kafka_dump_data_queue(kafka_host, part, do_free);
     if(ret == ERR)
@@ -481,11 +481,11 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, si
     void *data_cpy = (void *)malloc(data_len);
     memcpy(data_cpy, data, data_len);
 
-    pthread_mutex_lock(&mutex_thr);
-    enQueue(q, data_cpy, data_len);
-    count = cdada_queue_size(q);
-    pthread_mutex_unlock(&mutex_thr);
-    pthread_cond_signal(&sig);
+    pthread_mutex_lock(&bmp_ha_struct.mutex_thr);
+    enQueue(bmp_ha_struct.bmp_ha_data_queue, data_cpy, data_len);
+    count = cdada_queue_size(bmp_ha_struct.bmp_ha_data_queue);
+    pthread_mutex_unlock(&bmp_ha_struct.mutex_thr);
+    pthread_cond_signal(&bmp_ha_struct.sig);
 
     Log(LOG_DEBUG, "DEBUG ( %s/%s ): put data into queue:%d\n", config.name, config.type, count);
     ret = SUCCESS;
@@ -504,14 +504,14 @@ int p_kafka_dump_data_queue(struct p_kafka_host *kafka_host, int part, int do_fr
   nodestruct nodes;
   if (kafka_host && kafka_host->rk && kafka_host->topic)
   {
-    pthread_mutex_lock(&mutex_thr);
-    cdada_queue_front(q, &nodes);
-    uint32_t queue_node_num = cdada_queue_size(q);
-    pthread_mutex_unlock(&mutex_thr);
+    pthread_mutex_lock(&bmp_ha_struct.mutex_thr);
+    cdada_queue_front(bmp_ha_struct.bmp_ha_data_queue, &nodes);
+    uint32_t queue_node_num = cdada_queue_size(bmp_ha_struct.bmp_ha_data_queue);
+    pthread_mutex_unlock(&bmp_ha_struct.mutex_thr);
 
     while (queue_node_num)
     {
-      pthread_mutex_lock(&mutex_thr);
+      pthread_mutex_lock(&bmp_ha_struct.mutex_thr);
       ret = rd_kafka_produce(kafka_host->topic, part, flag, nodes.key, nodes.key_len,
                              kafka_host->key, kafka_host->key_len, NULL);
       if (ret == ERR)
@@ -522,14 +522,14 @@ int p_kafka_dump_data_queue(struct p_kafka_host *kafka_host, int part, int do_fr
         return ERR;
       }
       rd_kafka_poll(kafka_host->rk, 0);
-      cdada_queue_pop(q);// Dequeue the dumped node
-      if (!cdada_queue_empty(q))
-        cdada_queue_front(q, &nodes);
-      queue_node_num = cdada_queue_size(q);
+      cdada_queue_pop(bmp_ha_struct.bmp_ha_data_queue);// Dequeue the dumped node
+      if (!cdada_queue_empty(bmp_ha_struct.bmp_ha_data_queue))
+        cdada_queue_front(bmp_ha_struct.bmp_ha_data_queue, &nodes);
+      queue_node_num = cdada_queue_size(bmp_ha_struct.bmp_ha_data_queue);
       Log(LOG_DEBUG, "DEBUG ( %s/%s ): Dump the message in the queue:%d  %d\n", config.name, config.type, queue_node_num, ret);
-      pthread_mutex_unlock(&mutex_thr);
+      pthread_mutex_unlock(&bmp_ha_struct.mutex_thr);
     }
-    queue_dump_flag = false;
+    bmp_ha_struct.queue_dump_flag = false;
     Log(LOG_DEBUG, "DEBUG ( %s/%s ): Finish dumping message in the queue:%s\n", config.name, config.type, config.type);
   }
   else if (!(kafka_host && kafka_host->rk && kafka_host->topic))

@@ -247,29 +247,29 @@ void re_generate_timestamp(int signum)
 {
   if (config.redis_host)
   {
-    regenerate_timestamp_flag = true;
+    bmp_ha_struct.regenerate_timestamp_flag = true;
     Log(LOG_DEBUG, "DEBUG(%s/signal) : Timestamp reset\n", config.name);
   }
 }
 
 void setto_aa(int signum)
 {
-  pp_flag = false;
-  aa_flag = true;
+  bmp_ha_struct.set_to_standby_flag = false;
+  bmp_ha_struct.set_to_active_flag = true;
   Log(LOG_DEBUG, "DEBUG(%s/%s) : Setting all collectors as active\n", config.name, config.type);
 }
 
 void setto_pp(int signum)
 {
-  pp_flag = true;
-  aa_flag = false;
+  bmp_ha_struct.set_to_standby_flag = true;
+  bmp_ha_struct.set_to_active_flag = false;
   Log(LOG_DEBUG, "DEBUG(%s/%s) : Setting all collectors as passive\n", config.name, config.type);
 }
 
 void setto_normal(int signum)
 {
-  pp_flag = false;
-  aa_flag = false;
+  bmp_ha_struct.set_to_standby_flag = false;
+  bmp_ha_struct.set_to_active_flag = false;
   Log(LOG_DEBUG, "DEBUG(%s/%s) : Setting back to normal status\n", config.name, config.type);
 }
 #endif
