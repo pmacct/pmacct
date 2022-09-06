@@ -1006,6 +1006,11 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
     pm_avro_check(avro_value_set_long(&field, ptun->tunnel_src_port));
   }
 
+  if (wtc_2 & COUNT_TUNNEL_DST_PORT) {
+    pm_avro_check(avro_value_get_by_name(&value, "tunnel_port_dst", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, ptun->tunnel_dst_port));
+  }
+
   if (wtc & COUNT_TUNNEL_TCPFLAGS) {
     sprintf(misc_str, "%u", tunnel_tcp_flags);
 
