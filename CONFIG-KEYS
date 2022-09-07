@@ -1826,8 +1826,10 @@ DESC:		Defines the IPv4/IPv6 address where to bind the nfacctd (nfacctd_ip) and 
 DEFAULT:	all interfaces
 
 KEY:            [ nfacctd_interface | sfacctd_interface ] [GLOBAL]
-DESC:           Defines the interface for the nfacctd / sfacctd daemon to listen on. This makes it possible
-		to receive flow packets entirely in one VRF by specifying the VRF device name here.
+DESC:           Defines the interface for the nfacctd / sfacctd daemon to listen on making it possible to
+		receive data in VRFs on Linux. If having to listen on an IPv6 address inside the VRF, this
+		has to be specified via the relevant config directive, ie. nfacctd_ip / sfacctd_ip, as not
+		doing so prevents the daemon to correctly receive data.
 DEFAULT:        none
 
 KEY:		[ nfacctd_ipv6_only | sfacctd_ipv6_only ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
