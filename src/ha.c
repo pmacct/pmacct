@@ -20,7 +20,7 @@ struct QNode *newNode(void *k, size_t k_len)
   return temp;
 }
 
-// The function to add a key k to q
+// The function to add a key k to queue
 void enQueue(cdada_queue_t *ha_data_queue, void *k, size_t k_len)
 {
   // Store key,key length and its timestamp in a struct
