@@ -1811,6 +1811,14 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     tee_dissect->flowSetLen = NfDataHdrV9Sz; /* updated later */
   }
 
+  if (config.debug) {
+    sa_to_addr((struct sockaddr *)pptrs->f_agent, &debug_a, &debug_agent_port);
+    addr_to_str(debug_agent_addr, &debug_a);
+
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): Processing NetFlow/IPFIX flowset [%d] from [%s:%u] seqno [%u]\n",
+	config.name, fid, debug_agent_addr, debug_agent_port, FlowSeq);
+  }
+
   if (fid == 0 || fid == 2) { /* template: 0 NetFlow v9, 2 IPFIX */ 
     unsigned char *tpl_ptr = pkt;
     u_int16_t pens = 0;
