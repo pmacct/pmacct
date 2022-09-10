@@ -58,10 +58,10 @@ void warn_unsupported_packet_handler(u_int64_t primitive, u_int64_t tool)
   }
   else {
     if (tool_str) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): primitive %lu is not supported by '%s'.\n", config.name, config.type, primitive, tool_str);
+      Log(LOG_WARNING, "WARN ( %s/%s ): primitive %" PRIu64 "is not supported by '%s'.\n", config.name, config.type, primitive, tool_str);
     }
     else {
-      Log(LOG_WARNING, "WARN ( %s/%s ): primitive %lu is not supported by the tool in use.\n", config.name, config.type, primitive);
+      Log(LOG_WARNING, "WARN ( %s/%s ): primitive %" PRIu64 "is not supported by the tool in use.\n", config.name, config.type, primitive);
     }
   }
 }
