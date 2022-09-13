@@ -363,6 +363,7 @@ struct child_ctl2 {
   u_int32_t flags;
 };
 
+//The group of global variables used for BMP High Availability feature
 struct bmp_ha{
 int set_to_active_flag, set_to_standby_flag, regenerate_timestamp_flag;
 bool dump_flag;
@@ -371,7 +372,6 @@ cdada_queue_t *bmp_ha_data_queue;
 pthread_mutex_t mutex_thr;
 pthread_cond_t sig;
 pthread_mutex_t mutex_rd;
-pthread_cond_t sig_rd;
 };
 struct bmp_ha bmp_ha_struct;
 
@@ -429,10 +429,10 @@ extern ssize_t recvfrom_savefile(struct pm_pcap_device *, void **, struct sockad
 extern ssize_t recvfrom_rawip(unsigned char *, size_t, struct sockaddr *, struct packet_ptrs *);
 
 #ifdef WITH_REDIS
-void re_generate_timestamp(int);
-void setto_aa(int);
-void setto_pp(int);
-void setto_normal(int);
+void pm_ha_re_generate_timestamp(int);
+void pm_ha_set_to_active(int);
+void pm_ha_set_to_standby(int);
+void pm_ha_set_to_normal(int);
 #endif
 
 #ifndef HAVE_STRLCPY

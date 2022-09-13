@@ -438,7 +438,7 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, si
 
   kafkap_ret_err_cb = FALSE;
   
-  int dump_msg;
+  int dump_msg = 0;
 
   if (do_free) {
     flag = RD_KAFKA_MSG_F_FREE;
@@ -455,8 +455,12 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, si
     pthread_mutex_unlock(&bmp_ha_struct.mutex_rd);
     if(dump_queue)
       ret = p_kafka_dump_data_queue(kafka_host, part, do_free);
-    if(ret == ERR)
+    if(ret == ERR){
+      Log(LOG_ERR, "ERROR ( %s/%s ): Failed to produce to topic %s partition %i: %s\n", config.name, config.type,
+            rd_kafka_topic_name(kafka_host->topic), part, rd_kafka_err2str(rd_kafka_last_error()));
+      p_kafka_close(kafka_host, TRUE);
       return ERR;
+      }
   }
   else // If this is not BMP message, dump the message regardless of the dump_flag
     dump_msg = true;
@@ -532,7 +536,7 @@ int p_kafka_dump_data_queue(struct p_kafka_host *kafka_host, int part, int do_fr
     bmp_ha_struct.queue_dump_flag = false;
     Log(LOG_DEBUG, "DEBUG ( %s/%s ): Finish dumping message in the queue:%s\n", config.name, config.type, config.type);
   }
-  else if (!(kafka_host && kafka_host->rk && kafka_host->topic))
+  else
     return ERR;
   return SUCCESS;
 }

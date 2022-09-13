@@ -16,4 +16,3 @@ extern void pm_ha_countdown_delete();
 extern void pm_ha_queue_thread_wrapper();
 extern int pm_ha_queue_produce_thread(void *);
 extern void enQueue(cdada_queue_t*, void *, size_t);
-// extern int getCount(struct Queue *);

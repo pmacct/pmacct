@@ -685,19 +685,19 @@ int main(int argc,char **argv, char **envp)
 
 #ifdef WITH_REDIS
   /* reset the timestamp of collector as the newest */
-  sighandler_action.sa_handler = re_generate_timestamp;
+  sighandler_action.sa_handler = pm_ha_re_generate_timestamp;
   sigaction(SIGRTMIN, &sighandler_action, NULL);
 
   /* set all collector as active*/
-  sighandler_action.sa_handler = setto_aa;
+  sighandler_action.sa_handler = pm_ha_set_to_active;
   sigaction(SIGRTMIN + 1, &sighandler_action, NULL);
 
   /* set all collector as passive*/
-  sighandler_action.sa_handler = setto_pp;
+  sighandler_action.sa_handler = pm_ha_set_to_standby;
   sigaction(SIGRTMIN + 2, &sighandler_action, NULL);
 
   /* set all back to normal */
-  sighandler_action.sa_handler = setto_normal;
+  sighandler_action.sa_handler = pm_ha_set_to_normal;
   sigaction(SIGRTMIN + 3, &sighandler_action, NULL);
 #endif
 
@@ -1375,8 +1375,7 @@ int main(int argc,char **argv, char **envp)
     bmp_ha_struct.dump_flag = true; //Setting the flag as true by default in case connection to Redis fails
     char log_id[SHORTBUFLEN];
     snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
-    if (pthread_mutex_init(&bmp_ha_struct.mutex_rd, NULL) || pthread_cond_init(&bmp_ha_struct.sig_rd, NULL))
-    {
+    if (pthread_mutex_init(&bmp_ha_struct.mutex_rd, NULL)){
       Log(LOG_ERR, "ERROR ( %s ): mutex_init failed\n", log_id);
       return 1;
     }
