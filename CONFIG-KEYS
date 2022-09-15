@@ -1473,7 +1473,8 @@ DESC:		Defines the executable to be launched at fixed time intervals to post-pro
 		A number of environment variables are set in order to allow the trigger to take actions and 
 		are listed in docs/TRIGGER_VARS. Non-SQL plugins feature a simpler implementation: triggers
 		can only be fired each time data is written to the backend (ie. print_refresh_time) and no
-		environment variables are passed over to the executable.
+		environment variables are passed over to the executable; useful also to upload data to cloud
+		storage that supports upload via API end-points. 
 DEFAULT:	none
 
 KEY:		sql_trigger_time
