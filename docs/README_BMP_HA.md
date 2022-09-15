@@ -8,8 +8,8 @@ DOCUMENTATION
   The timestamp is written to redis with key:
   
   ```bash
-  config.name+config.cluster_id+attachment_time
-  e.g. nfacctd-bmp-locB+0+locBbmp-locB01c+0+attachment_time
+  [config.name]+[config.cluster_id]+[core_proc_name]+"attachment_time"ß
+  e.g. nfacctd-bmp-locB+0+locBbmp-locB01c+attachment_time
   ```
  
   In redis_common.c, I wrote a function called p_redis_get_time(). In this function it queried with command
@@ -64,6 +64,17 @@ struct QNode *newNode(void *k, size_t k_len)
   
   For dumping data in the list, I created another queue_dump_flag, which will be set when there is a change with the value of dump_flag while it's not the first time getting the dump_flag.
   With the queue_dump_flag, it goes through all the data in the list and dump them before the next new BMP message will be dumped.
+
+# Possible daemon state
+(listed according to priority)
+situation                       daemon A's state    Other daemon's state
+Redis Unavailable               active              active
+Send signal 34 to A             active              standby
+Send signal 35 to A             active              - -
+Send signal 36 to A             standby             - -
+Only A's timestamp              active              standby
+A has smallest timestsmp        active              standby
+One tiemstamp smaller than A    standby             - -
 
 # Sending Signals Commands
 

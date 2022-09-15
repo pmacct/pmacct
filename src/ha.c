@@ -20,7 +20,7 @@ struct QNode *newNode(void *k, size_t k_len)
   return temp;
 }
 
-// The function to add a key k to queue
+// The function to add a key k to q
 void enQueue(cdada_queue_t *ha_data_queue, void *k, size_t k_len)
 {
   // Store key,key length and its timestamp in a struct
@@ -34,12 +34,9 @@ void pm_ha_queue_thread_wrapper()
     Log(LOG_ERR, "ERROR ( %s/%s ): mutex_init failed\n", config.name, config.type);
     return;
   }
-  cdada_queue_t *temp = cdada_queue_create(nodestruct);
   pthread_mutex_lock(&bmp_ha_struct.mutex_thr);
-  bmp_ha_struct.bmp_ha_data_queue = calloc(1, sizeof(cdada_queue_t));
-  bmp_ha_struct.bmp_ha_data_queue = temp;
+  bmp_ha_data_queue = cdada_queue_create(nodestruct);
   pthread_mutex_unlock(&bmp_ha_struct.mutex_thr);
-  free(temp);
   queue_thread_handler th_hdlr = &pm_ha_countdown_delete;
 
   dq_pool = allocate_thread_pool(1);
@@ -64,17 +61,17 @@ void pm_ha_countdown_delete()
   gettimeofday(&current_time, NULL);                                // Get time in micro second
   timestamp = current_time.tv_sec * 1000000 + current_time.tv_usec; // Setting the time when redis connects as timestamp for this bmp session
   pthread_mutex_lock(&bmp_ha_struct.mutex_thr);
-  int flag = cdada_queue_empty(bmp_ha_struct.bmp_ha_data_queue) ? 0 : 1;
+  int flag = cdada_queue_empty(bmp_ha_data_queue) ? 0 : 1;
   pthread_mutex_unlock(&bmp_ha_struct.mutex_thr);
   if (flag){
     pthread_mutex_lock(&bmp_ha_struct.mutex_thr);
     pthread_cond_wait(&bmp_ha_struct.sig, &bmp_ha_struct.mutex_thr);
-    cdada_queue_front(bmp_ha_struct.bmp_ha_data_queue, &nodes);
+    cdada_queue_front(bmp_ha_data_queue, &nodes);
     // while the data in the queue is expired by 2s
-    while (cdada_queue_size(bmp_ha_struct.bmp_ha_data_queue) && (timestamp - nodes.timestamp > 1999999) && !bmp_ha_struct.queue_dump_flag){
-      cdada_queue_pop(bmp_ha_struct.bmp_ha_data_queue);
-      Log(LOG_DEBUG, "DEBUG ( %s/%s ): Delete one from queue: %d %d %d %d \n", config.type, config.name, cdada_queue_size(bmp_ha_struct.bmp_ha_data_queue), !cdada_queue_empty(bmp_ha_struct.bmp_ha_data_queue), (timestamp - nodes.timestamp > 1999999), !bmp_ha_struct.queue_dump_flag);
-      cdada_queue_front(bmp_ha_struct.bmp_ha_data_queue, &nodes);
+    while (cdada_queue_size(bmp_ha_data_queue) && (timestamp - nodes.timestamp > 2000000) && !bmp_ha_struct.queue_dump_flag){
+      cdada_queue_pop(bmp_ha_data_queue);
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): Delete one from queue: %d %d %d %d \n", config.type, config.name, cdada_queue_size(bmp_ha_data_queue), !cdada_queue_empty(bmp_ha_data_queue), (timestamp - nodes.timestamp > 1999999), !bmp_ha_struct.queue_dump_flag);
+      cdada_queue_front(bmp_ha_data_queue, &nodes);
     }
     pthread_mutex_unlock(&bmp_ha_struct.mutex_thr);
   }

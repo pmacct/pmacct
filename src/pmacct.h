@@ -365,15 +365,17 @@ struct child_ctl2 {
 
 //The group of global variables used for BMP High Availability feature
 struct bmp_ha{
-int set_to_active_flag, set_to_standby_flag, regenerate_timestamp_flag;
-bool dump_flag;
-bool queue_dump_flag;
-cdada_queue_t *bmp_ha_data_queue;
-pthread_mutex_t mutex_thr;
-pthread_cond_t sig;
-pthread_mutex_t mutex_rd;
+int set_to_active_flag; //Send signal 35 to set this flag, force setting daemon state as active 
+int set_to_standby_flag;//Send signal 36 to set this flag, force setting daemon state as standby
+int regenerate_timestamp_flag; //Send signal 34 to set this flag, refresh daemon's timestamp
+bool dump_flag; //Telling daemon whether to dump BMP message or not
+bool queue_dump_flag;//If the message is not to be dumped, telling daemon whether the message needs to be put in the queue
+pthread_mutex_t mutex_thr; //Mutex for locking the queue
+pthread_cond_t sig; //cond variable to notify freeing mutex_thr
+pthread_mutex_t mutex_rd; //Mutex for locking bmp_ha global variable
 };
 struct bmp_ha bmp_ha_struct;
+cdada_queue_t *bmp_ha_data_queue;
 
 #define INIT_BUF(x) \
 	memset(x.base, 0, sizeof(x.base)); \
