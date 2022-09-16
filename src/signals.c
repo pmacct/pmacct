@@ -248,7 +248,7 @@ void pm_ha_re_generate_timestamp(int signum)
   if (config.redis_host)
   {
     bmp_ha_struct.regenerate_timestamp_flag = true;
-    Log(LOG_DEBUG, "DEBUG(%s/signal) : Timestamp reset\n", config.name);
+    Log(LOG_INFO, "INFO(%s/%s) : Timestamp reset\n", config.name, config.type);
   }
 }
 
@@ -256,20 +256,20 @@ void pm_ha_set_to_active(int signum)
 {
   bmp_ha_struct.set_to_standby_flag = false;
   bmp_ha_struct.set_to_active_flag = true;
-  Log(LOG_DEBUG, "DEBUG(%s/%s) : Setting all collectors as active\n", config.name, config.type);
+  Log(LOG_INFO, "INFO(%s/%s) : Setting %s as active\n", config.name, config.type, config.name);
 }
 
 void pm_ha_set_to_standby(int signum)
 {
   bmp_ha_struct.set_to_standby_flag = true;
   bmp_ha_struct.set_to_active_flag = false;
-  Log(LOG_DEBUG, "DEBUG(%s/%s) : Setting all collectors as passive\n", config.name, config.type);
+  Log(LOG_INFO, "INFO(%s/%s) : Setting %s as standby\n", config.name, config.type, config.name);
 }
 
 void pm_ha_set_to_normal(int signum)
 {
   bmp_ha_struct.set_to_standby_flag = false;
   bmp_ha_struct.set_to_active_flag = false;
-  Log(LOG_DEBUG, "DEBUG(%s/%s) : Setting back to normal status\n", config.name, config.type);
+  Log(LOG_INFO, "INFO(%s/%s) : Setting %s back to normal state\n", config.name, config.type, config.name);
 }
 #endif

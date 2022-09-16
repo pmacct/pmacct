@@ -68,9 +68,9 @@ void pm_ha_countdown_delete()
     pthread_cond_wait(&bmp_ha_struct.sig, &bmp_ha_struct.mutex_thr);
     cdada_queue_front(bmp_ha_data_queue, &nodes);
     // while the data in the queue is expired by 2s
-    while (cdada_queue_size(bmp_ha_data_queue) && (timestamp - nodes.timestamp > 2000000) && !bmp_ha_struct.queue_dump_flag){
+    while (cdada_queue_size(bmp_ha_data_queue) && (timestamp - nodes.timestamp > 5000000) && !bmp_ha_struct.queue_dump_flag){
       cdada_queue_pop(bmp_ha_data_queue);
-      Log(LOG_DEBUG, "DEBUG ( %s/%s ): Delete one from queue: %d %d %d %d \n", config.type, config.name, cdada_queue_size(bmp_ha_data_queue), !cdada_queue_empty(bmp_ha_data_queue), (timestamp - nodes.timestamp > 1999999), !bmp_ha_struct.queue_dump_flag);
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): Delete one from queue: %d %d %d %d \n", config.type, config.name, cdada_queue_size(bmp_ha_data_queue), !cdada_queue_empty(bmp_ha_data_queue), (timestamp - nodes.timestamp > 5000000), !bmp_ha_struct.queue_dump_flag);
       cdada_queue_front(bmp_ha_data_queue, &nodes);
     }
     pthread_mutex_unlock(&bmp_ha_struct.mutex_thr);
