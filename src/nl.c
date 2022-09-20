@@ -309,9 +309,9 @@ int ip_handler(register struct packet_ptrs *pptrs)
         if (((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_FIN) pptrs->tcp_flags |= TH_FIN;
         if (((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_RST) pptrs->tcp_flags |= TH_RST;
         if (((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_ACK && pptrs->tcp_flags) pptrs->tcp_flags |= TH_ACK;
-      }
 
-      ip_flow_handler(pptrs);
+	ip_flow_handler(pptrs);
+      }
     }
 
     /* XXX: optimize/short circuit here! */
@@ -492,9 +492,9 @@ int ip6_handler(register struct packet_ptrs *pptrs)
         if (((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_FIN) pptrs->tcp_flags |= TH_FIN;
         if (((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_RST) pptrs->tcp_flags |= TH_RST;
         if (((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_ACK && pptrs->tcp_flags) pptrs->tcp_flags |= TH_ACK;
-      }
 
-      ip_flow6_handler(pptrs);
+	ip_flow6_handler(pptrs);
+      }
     }
 
     /* XXX: optimize/short circuit here! */
