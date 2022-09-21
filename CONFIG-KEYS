@@ -2494,7 +2494,9 @@ DEFAULT:        false
 
 KEY:            [ bgp_daemon_interface | bmp_daemon_interface ] [GLOBAL]
 DESC:           Defines the interface for the BGP / BMP daemon to listen on. This makes it possible to have
-		the session happen entirely in one VRF by specifying the VRF device name here.
+		the session happen entirely in one VRF by specifying the VRF device name here. If having to
+		listen on an IPv6 address inside the VRF, this has to be specified via the relevant config
+		directive, ie. bgp_daemon_ip, as not doing so prevents the daemon to correctly receive data.
 DEFAULT:        none
 
 KEY:            bgp_daemon_id [GLOBAL]
@@ -3253,7 +3255,9 @@ DEFAULT:        0.0.0.0
 KEY:            telemetry_daemon_interface [GLOBAL]
 DESC:           Defines the interface for the Streaming Telemetry daemon to listen on. This makes it
 		possible to have the session happen entirely in one VRF by specifying the VRF device
-		name here.
+		name here. If having to listen on an IPv6 address inside the VRF, this has to be
+		specified via the relevant config directive, ie. telemetry_daemon_ip, as not doing
+		so prevents the daemon to correctly receive data.
 DEFAULT:        none
 
 KEY:		telemetry_daemon_ipv6_only [GLOBAL]
@@ -3354,7 +3358,9 @@ DEFAULT:	none
 KEY:		telemetry_daemon_udp_notif_interface [GLOBAL]
 DESC:		Defines the interface for the Streaming Telemetry daemon to listen on for UDP-Notif.
 		This makes it possible to have the session happen entirely in one VRF by specifying
-		the VRF device name here.
+		the VRF device name here. If having to listen on an IPv6 address inside the VRF,
+		this has to be specified via the relevant config directive, ie. telemetry_daemon_
+		udp_notif_ip, as not doing so prevents the daemon to correctly receive data.
 DEFAULT:	none
 
 KEY:		telemetry_daemon_udp_notif_ipv6_only [GLOBAL]
