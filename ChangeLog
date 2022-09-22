@@ -1,8 +1,52 @@
 pmacct [IP traffic accounting : BGP : BMP : RPKI : IGP : Streaming Telemetry]
-pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 
 The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
+
+1.7.8 -- XX-XX-2022
+  + Introduced support for eBPF for all daemons: if SO_REUSEPORT is
+    supported by the OS and eBPF support is compiled in, this allows
+    to load a custom load-balancer. To load-share, daemons have to
+    be part of the same cluster_name and each be configured with a
+    distinct cluster_id.
+  + Introduced support for listening on VRF interfaces on Linux for
+    all daemons that can be configured via nfacctd_interface,
+    bgp_daemon_interface and equivalent knobs. Many thanks to
+    @WRMSRwasTaken for this contribution.
+  + pmtelemetryd: aligned daemon to the latest Unyte UDP-Notif API
+    (0.6.1) and related standardization draft-ietf-netconf-udp-notif
+  + RPKI daemon: added case for input "asn" value being integer (ie.
+    "asn" : 2914) on top of the string case (ie. "asn" : "AS2914").
+  + pre_tag_map: defined a new pre_tag_label_encode_as_map config
+    knob to encode the output 'label' value as a map for JSON and
+    Apache Avro encodings, ie. in JSON "label": { "key1": "value1",
+    "key2": "value2" }. For keys and values to be correctly mapped,
+    the '%' delimiter is used when composing a pre_tag_map, ie.
+    "set_label=key1%value1,key2%value2 ip=0.0.0.0/0". Thanks to
+    Salvatore Cuzzilla ( @scuzzilla ) for this contribution.
+  + Added aggregate_unknown_etype config knob: by default, Ethernet
+    frames with EtherTypes for which there is no decoding support
+    are ignored. This option allows such frames to be aggregated by
+    the available Ethernet L2 fields ('src_mac', 'dst_mac', 'vlan',
+    'cos', 'etype'). Thanks to @singularsyntax for this contribution.
+  + [print|kafka|amqp]_preprocess: added suppport for 'maxp', 'maxb'
+    and 'maxf' keys when preprocessing aggregates of non-SQL plugins.
+    Thanks to Andrew R. Lake ( @arlake228 ) for this contribution.
+  ! fix, plugin_common.[ch]: when stitching feature was enabled,
+    ie. nfacctd_stitching, timestamp_min was never reset. Also both
+    timestamp_min and timestamp_max were clamped to sec granularity.
+  ! fix, BGP, BMP daemons: added a tmp_bgp_daemon_origin_type_int to
+    print out BGP "origin" field as int (legacy behaviour) instead
+    of string (current behaviour).
+  ! fix, BMP daemon: now checking that ADD-PATH capability is enabled
+    at both ends of the monitored session (check both BGP OPEN in a
+    Peer Up message) in order to infer that the capability exchange
+    was successful.
+  ! fix, pmacctd: improved processing of pcap_interfaces_map for
+    cases where the same interface is present multiple times (maybe
+    with different directions). Also, if the map is empty then bail
+    out at startup.
 
 1.7.7 -- 07-11-2021
   + BGP, BMP, Streaming Telemetry daemons: introduced parallelization
