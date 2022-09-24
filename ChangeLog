@@ -18,6 +18,9 @@ The keys used are:
     (0.6.1) and related standardization draft-ietf-netconf-udp-notif
   + RPKI daemon: added case for input "asn" value being integer (ie.
     "asn" : 2914) on top of the string case (ie. "asn" : "AS2914").
+  + pre_tag_map: introduced limited support for BGP (pmbgpd), BMP
+    (pmbmpd) and Streaming Telemetry (pmtelemetryd) daemons. ip,
+    set_tag, set_label keywords being currently supported.
   + pre_tag_map: defined a new pre_tag_label_encode_as_map config
     knob to encode the output 'label' value as a map for JSON and
     Apache Avro encodings, ie. in JSON "label": { "key1": "value1",
@@ -25,6 +28,12 @@ The keys used are:
     the '%' delimiter is used when composing a pre_tag_map, ie.
     "set_label=key1%value1,key2%value2 ip=0.0.0.0/0". Thanks to
     Salvatore Cuzzilla ( @scuzzilla ) for this contribution.
+  + Introduced a new tcpflags_encode_as_array config knob in order
+    to encode TCP flaga as an array for JSON and Apache Avro, ie.
+    in JSON "tcp_flags": [ "URG", "ACK", "PSH", "RST", "SYN",
+    "FIN" ] and in Avro "name": "tcp_flags", "type": { "type":
+    "array", "items": { "type": "string" } }. Thanks to Salvatore
+    Cuzzilla ( @scuzzilla ) for this contribution.
   + Added aggregate_unknown_etype config knob: by default, Ethernet
     frames with EtherTypes for which there is no decoding support
     are ignored. This option allows such frames to be aggregated by
@@ -39,6 +48,10 @@ The keys used are:
   ! fix, BGP, BMP daemons: added a tmp_bgp_daemon_origin_type_int to
     print out BGP "origin" field as int (legacy behaviour) instead
     of string (current behaviour).
+  ! fix, BGP, BMP daemons: MPLS labels are now encoded in both JSON
+    and Apache Avro as 'mpls_label' instead of 'label'. This is to
+    align behaviour with pre_tag_map where 'label' has a different
+    semantic.
   ! fix, BMP daemon: now checking that ADD-PATH capability is enabled
     at both ends of the monitored session (check both BGP OPEN in a
     Peer Up message) in order to infer that the capability exchange
@@ -47,6 +60,10 @@ The keys used are:
     cases where the same interface is present multiple times (maybe
     with different directions). Also, if the map is empty then bail
     out at startup.
+  ! fix, networks_file: remove_dupes() was making partial commits of
+    valid rows hence creating data inconsistencies.
+  ! fix, maps_index: uninitialized var could cause SEGV in case no
+    results are found in the map index.
 
 1.7.7 -- 07-11-2021
   + BGP, BMP, Streaming Telemetry daemons: introduced parallelization
