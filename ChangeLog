@@ -28,17 +28,25 @@ The keys used are:
     the '%' delimiter is used when composing a pre_tag_map, ie.
     "set_label=key1%value1,key2%value2 ip=0.0.0.0/0". Thanks to
     Salvatore Cuzzilla ( @scuzzilla ) for this contribution.
-  + Introduced a new tcpflags_encode_as_array config knob in order
-    to encode TCP flaga as an array for JSON and Apache Avro, ie.
-    in JSON "tcp_flags": [ "URG", "ACK", "PSH", "RST", "SYN",
-    "FIN" ] and in Avro "name": "tcp_flags", "type": { "type":
-    "array", "items": { "type": "string" } }. Thanks to Salvatore
-    Cuzzilla ( @scuzzilla ) for this contribution.
-  + Added aggregate_unknown_etype config knob: by default, Ethernet
+  + Introduced a new tcpflags_encode_as_array config knob to encode
+    TCP flags as an array for JSON and Apache Avro, ie. in JSON
+    "tcp_flags": [ "URG", "ACK", "PSH", "RST", "SYN", "FIN" ] and
+    in Avro "name": "tcp_flags", "type": { "type": "array",
+    "items": { "type": "string" } }. Thanks to Salvatore Cuzzilla
+    ( @scuzzilla ) for this contribution.
+  + Introduced a new fwd_status_encode_as_string config knob to
+    encode the 'fwd_status' primitive in human-readable format
+    like described by RFC-7270 Section 4.12 when JSON or Avro
+    formats are selected for output. Thanks to Salvatore Cuzzilla
+    ( @scuzzilla ) for this contribution. 
+  + Added a new aggregate_unknown_etype config knob to not ignore
     frames with EtherTypes for which there is no decoding support
-    are ignored. This option allows such frames to be aggregated by
-    the available Ethernet L2 fields ('src_mac', 'dst_mac', 'vlan',
-    'cos', 'etype'). Thanks to @singularsyntax for this contribution.
+    and allow to aggregate them by the available Ethernet L2 fields
+    (ie. 'src_mac', 'dst_mac', 'vlan', 'cos', 'etype'). Thanks to
+    @singularsyntax for this contribution.
+  + Added a new bgp_daemon_add_path_ignore config knob to ignore (do
+    not advertise back) the ADD-PATH capability advertised by remote
+    BGP peers.
   + [print|kafka|amqp]_preprocess: added suppport for 'maxp', 'maxb'
     and 'maxf' keys when preprocessing aggregates of non-SQL plugins.
     Thanks to Andrew R. Lake ( @arlake228 ) for this contribution.
@@ -60,10 +68,16 @@ The keys used are:
     cases where the same interface is present multiple times (maybe
     with different directions). Also, if the map is empty then bail
     out at startup.
+  ! fix, nfprobe plugin: BGP data enrichment was not working due to
+    a mistakenly moved pointer.
   ! fix, networks_file: remove_dupes() was making partial commits of
     valid rows hence creating data inconsistencies.
   ! fix, maps_index: uninitialized var could cause SEGV in case no
     results are found in the map index.
+  ! fix, util.c: roundoff_time() to reason always locally configured
+    time, like the rest of refresh time, deadline, etc. settings.
+  - Completed the retirement of legacy packet classification based on
+    home-grown code (Shared Objects) and the L7 layer project. 
 
 1.7.7 -- 07-11-2021
   + BGP, BMP, Streaming Telemetry daemons: introduced parallelization
