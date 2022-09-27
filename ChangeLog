@@ -28,6 +28,25 @@ The keys used are:
     the '%' delimiter is used when composing a pre_tag_map, ie.
     "set_label=key1%value1,key2%value2 ip=0.0.0.0/0". Thanks to
     Salvatore Cuzzilla ( @scuzzilla ) for this contribution.
+  + pre_tag_map: introduced two new 'is_nsel', 'is_nel' keys to
+    check for the presence of firewallEvent field (233) and
+    natEvent field (230) in NetFlow/IPFIX respectively in order
+    to infer whether data is NSEL / NEL. If set to 'true' this
+    does match NSEL / NEL, if set to 'false' it does match non
+    NSEL / NEL respectively.
+  + Introduced a new primitive mpls_label_stack, encoded as a
+    string and includes a comma-separated list of integers (label
+    values). Thanks to Salvatore Cuzzilla ( @scuzzilla ) for this
+    contribution.
+  + Introduced a new primitive fw_event, to support NetFlow v9/
+    IPFIX firewallEvent 233 Information Element.
+  + Introduced a new mpls_label_stack_encode_as_array config knob
+    to encode the MPLS label stack as an array for JSON and Apache
+    Avro encodings, ie. in JSON "mpls_label_stack": [ "0-label0",
+    "1-label1", "2-label2", "3-label3", "4-label4", "5-label5" ]
+    and in Avro "name": "mpls_label_stack", "type": { "type":
+    "array", "items": { "type": "string" } }. Thanks to Salvatore
+    Cuzzilla ( @scuzzilla ) for this contribution.
   + Introduced a new tcpflags_encode_as_array config knob to encode
     TCP flags as an array for JSON and Apache Avro, ie. in JSON
     "tcp_flags": [ "URG", "ACK", "PSH", "RST", "SYN", "FIN" ] and
@@ -47,9 +66,14 @@ The keys used are:
   + Added a new bgp_daemon_add_path_ignore config knob to ignore (do
     not advertise back) the ADD-PATH capability advertised by remote
     BGP peers.
+  + nfacctd, sfacctd: extended the possibility to run daemons from
+    a user with non root privileges to these daemons.  
   + [print|kafka|amqp]_preprocess: added suppport for 'maxp', 'maxb'
     and 'maxf' keys when preprocessing aggregates of non-SQL plugins.
     Thanks to Andrew R. Lake ( @arlake228 ) for this contribution.
+  + nDPI: newer versions of the library (ie. >= 4.0) bring changes
+    to the API. pmacct is now aligned to compile against these. At
+    the same time support for nDPI 3.x was dropped.
   ! fix, plugin_common.[ch]: when stitching feature was enabled,
     ie. nfacctd_stitching, timestamp_min was never reset. Also both
     timestamp_min and timestamp_max were clamped to sec granularity.
@@ -60,20 +84,34 @@ The keys used are:
     and Apache Avro as 'mpls_label' instead of 'label'. This is to
     align behaviour with pre_tag_map where 'label' has a different
     semantic.
+  ! fix, BGP, BMP daemons: resolved memory leak when encoding log
+    messaging (logmsg) in Avro format with Schema Registry support.
+  ! fix, BGP daemon: improved handling of ADD-PATH capability, making
+    it per-AF and not global.
   ! fix, BMP daemon: now checking that ADD-PATH capability is enabled
     at both ends of the monitored session (check both BGP OPEN in a
     Peer Up message) in order to infer that the capability exchange
     was successful.
+  ! fix, nfacctd: improved parsing of NetFlow v9 Options particularly
+    when multiple of them are packed as part of a flowset. 
   ! fix, pmacctd: improved processing of pcap_interfaces_map for
     cases where the same interface is present multiple times (maybe
     with different directions). Also, if the map is empty then bail
     out at startup.
+  ! fix, pmacctd: SEGV when ICMP/ICMPv6 traffic was processed and
+    'flows' primitive was enabled.
+  ! fix, pmacctd: sampling_rate primitive value was not reported
+    correctly when 'sampling_rate' config directive was specified.
+  ! fix, pmbgpd, pmpmbd, pmtelemtryd: changed SIGCHLD handler to
+    prevent zombification of last spawned data dump writer.
   ! fix, nfprobe plugin: BGP data enrichment was not working due to
     a mistakenly moved pointer.
   ! fix, networks_file: remove_dupes() was making partial commits of
     valid rows hence creating data inconsistencies.
   ! fix, maps_index: uninitialized var could cause SEGV in case no
     results are found in the map index.
+  ! fix, kafka_common.[ch]: a new p_kafka_produce_data_and_free() is
+    invoked to optimize memory allocations and releases.
   ! fix, util.c: roundoff_time() to reason always locally configured
     time, like the rest of refresh time, deadline, etc. settings.
   - Completed the retirement of legacy packet classification based on
