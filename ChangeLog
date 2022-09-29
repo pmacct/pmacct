@@ -58,16 +58,30 @@ The keys used are:
     like described by RFC-7270 Section 4.12 when JSON or Avro
     formats are selected for output. Thanks to Salvatore Cuzzilla
     ( @scuzzilla ) for this contribution. 
+  + Introduced a new protos_file to define a list of (known/
+    interesting/meaningful) IP protocols. Both protocol names, ie.
+    "tcp", and protocol numbers, ie. 1 (for icmp), are accepted.
+    IANA reserved protocol value 255 is used to bucket as 'others'
+    those IP protocols not matching the ones defined in the list.
+  + Introduced a new tos_file to define a list of (meaningful) IP
+    ToS values; if tos_encode_as_dscp is set to true then DSCP
+    values are expected as part of the file. The directive uses
+    value 255 to bucket as 'others' those ToS/DSCP values not
+    matching the ones defined in the list.
+  + A new tos_encode_as_dscp config knob makes pmacct to honour
+    only the 6 bits used by DSCP.
   + Added a new aggregate_unknown_etype config knob to not ignore
     frames with EtherTypes for which there is no decoding support
     and allow to aggregate them by the available Ethernet L2 fields
     (ie. 'src_mac', 'dst_mac', 'vlan', 'cos', 'etype'). Thanks to
     @singularsyntax for this contribution.
-  + Added a new bgp_daemon_add_path_ignore config knob to ignore (do
-    not advertise back) the ADD-PATH capability advertised by remote
-    BGP peers.
+  + Added a new bgp_daemon_add_path_ignore config knob to ignore
+    (do not advertise back) the ADD-PATH capability advertised by
+    remote BGP peers.
   + nfacctd, sfacctd: extended the possibility to run daemons from
     a user with non root privileges to these daemons.  
+  + nfacctd: if Information Element 90 (MPLS VPN RD) is present in
+    NetFlow v9/IPFIX, make it available for BGP/BMP correlation.
   + [print|kafka|amqp]_preprocess: added suppport for 'maxp', 'maxb'
     and 'maxf' keys when preprocessing aggregates of non-SQL plugins.
     Thanks to Andrew R. Lake ( @arlake228 ) for this contribution.
@@ -86,12 +100,12 @@ The keys used are:
     semantic.
   ! fix, BGP, BMP daemons: resolved memory leak when encoding log
     messaging (logmsg) in Avro format with Schema Registry support.
-  ! fix, BGP daemon: improved handling of ADD-PATH capability, making
-    it per-AF and not global.
-  ! fix, BMP daemon: now checking that ADD-PATH capability is enabled
-    at both ends of the monitored session (check both BGP OPEN in a
-    Peer Up message) in order to infer that the capability exchange
-    was successful.
+  ! fix, BGP daemon: improved handling of ADD-PATH capability,
+    making it per-AF and not global.
+  ! fix, BMP daemon: now checking that ADD-PATH capability is
+    enabled at both ends of the monitored session (check both BGP
+    OPEN in a Peer Up message) in order to infer that the capability
+    exchange was successful.
   ! fix, nfacctd: improved parsing of NetFlow v9 Options particularly
     when multiple of them are packed as part of a flowset. 
   ! fix, pmacctd: improved processing of pcap_interfaces_map for
@@ -109,13 +123,16 @@ The keys used are:
   ! fix, networks_file: remove_dupes() was making partial commits of
     valid rows hence creating data inconsistencies.
   ! fix, maps_index: uninitialized var could cause SEGV in case no
-    results are found in the map index.
+    results are found in the map index. Also introduced support for
+    catch-all rules, ie. "set_label=unknown". 
   ! fix, kafka_common.[ch]: a new p_kafka_produce_data_and_free() is
     invoked to optimize memory allocations and releases.
   ! fix, util.c: roundoff_time() to reason always locally configured
     time, like the rest of refresh time, deadline, etc. settings.
-  - Completed the retirement of legacy packet classification based on
-    home-grown code (Shared Objects) and the L7 layer project. 
+  - Completed the retirement of legacy packet classification based
+    on home-grown code (Shared Objects) and the L7 layer project. 
+  - Removed the mpls_stck_depth primitive due to the introduction of
+    the mpls_label_stack primitive.
 
 1.7.7 -- 07-11-2021
   + BGP, BMP, Streaming Telemetry daemons: introduced parallelization
