@@ -70,6 +70,16 @@ The keys used are:
     matching the ones defined in the list.
   + A new tos_encode_as_dscp config knob makes pmacct to honour
     only the 6 bits used by DSCP.
+  + BGP, BMP, Streaming Telemetry daemons: introduced a new
+    dump_time_slots config knob to spread the load deriving by
+    dumps over the configured refresh time interval. The interval
+    is divided into time slots and nodes are assigned to such
+    slots. The slot for each node is determined using its IP
+    address. Thanks to Raphael Barazzutti ( @rbarazzutti ) for
+    this contribution.
+  + Kafka, amqp plugins: introduced a new writer_id_string config
+    knob to allow to customize the the "writer_id" field value. A
+    few variables are supported along with static text definitions.
   + Added a new aggregate_unknown_etype config knob to not ignore
     frames with EtherTypes for which there is no decoding support
     and allow to aggregate them by the available Ethernet L2 fields
@@ -82,9 +92,10 @@ The keys used are:
     a user with non root privileges to these daemons.  
   + nfacctd: if Information Element 90 (MPLS VPN RD) is present in
     NetFlow v9/IPFIX, make it available for BGP/BMP correlation.
-  + [print|kafka|amqp]_preprocess: added suppport for 'maxp', 'maxb'
-    and 'maxf' keys when preprocessing aggregates of non-SQL plugins.
-    Thanks to Andrew R. Lake ( @arlake228 ) for this contribution.
+  + [print|kafka|amqp]_preprocess: added suppport for 'maxp',
+    'maxb' and 'maxf' keys when preprocessing aggregates of non-
+    SQL plugins. Thanks to Andrew R. Lake ( @arlake228 ) for this
+    contribution.
   + nDPI: newer versions of the library (ie. >= 4.0) bring changes
     to the API. pmacct is now aligned to compile against these. At
     the same time support for nDPI 3.x was dropped.
@@ -105,9 +116,12 @@ The keys used are:
   ! fix, BMP daemon: now checking that ADD-PATH capability is
     enabled at both ends of the monitored session (check both BGP
     OPEN in a Peer Up message) in order to infer that the capability
-    exchange was successful.
-  ! fix, nfacctd: improved parsing of NetFlow v9 Options particularly
-    when multiple of them are packed as part of a flowset. 
+    exchange was successful. Also some heuristics were added to
+    conciliate BGP Open / BGP Update 4-bytes ASN reality.
+  ! fix, nfacctd: improved parsing of NetFlow v9 Options data
+    particularly when multiple IEs are packed as part of a flowset.
+  ! fix, nfacctd: corrected parsing of Information Element 351
+    (layer2SegmentId).
   ! fix, pmacctd: improved processing of pcap_interfaces_map for
     cases where the same interface is present multiple times (maybe
     with different directions). Also, if the map is empty then bail
@@ -120,19 +134,23 @@ The keys used are:
     prevent zombification of last spawned data dump writer.
   ! fix, nfprobe plugin: BGP data enrichment was not working due to
     a mistakenly moved pointer.
-  ! fix, networks_file: remove_dupes() was making partial commits of
-    valid rows hence creating data inconsistencies.
+  ! fix, networks_file: remove_dupes() was making partial commits
+    of valid rows hence creating data inconsistencies.
   ! fix, maps_index: uninitialized var could cause SEGV in case no
     results are found in the map index. Also introduced support for
     catch-all rules, ie. "set_label=unknown". 
-  ! fix, kafka_common.[ch]: a new p_kafka_produce_data_and_free() is
-    invoked to optimize memory allocations and releases.
+  ! fix, pretag.c: allow to allocate maps greater than 2GB in size. 
+    Also several optimizations were carried out yelding to a better
+    memory utilization for allocated maps along with improved times
+    to resolve JEQs.
+  ! fix, kafka_common.[ch]: a new p_kafka_produce_data_and_free()
+    is invoked to optimize memory allocations and releases.
   ! fix, util.c: roundoff_time() to reason always locally configured
     time, like the rest of refresh time, deadline, etc. settings.
   - Completed the retirement of legacy packet classification based
     on home-grown code (Shared Objects) and the L7 layer project. 
-  - Removed the mpls_stck_depth primitive due to the introduction of
-    the mpls_label_stack primitive.
+  - Removed the mpls_stck_depth primitive due to the introduction
+    of the mpls_label_stack primitive.
 
 1.7.7 -- 07-11-2021
   + BGP, BMP, Streaming Telemetry daemons: introduced parallelization
