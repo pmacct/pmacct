@@ -154,6 +154,10 @@ The keys used are:
     at the start of the Kafka plugin process and not on every start
     of a writer process. Thanks to Uwe Storbeck ( @ustorbeck ) for
     this contribution.
+  ! fix, Kafka plugin: a check for kafka_partition was missing,
+    leading the plugin to always use the default partitioner
+    instead of sending data to the configured fixed partition.
+    Thanks to Martin Pels ( @rodecker ) for this contribution.
   ! fix, nfprobe plugin: BGP data enrichment was not working due to
     a mistakenly moved pointer.
   ! fix, sfprobe plugin: AS-PATH was being populated even when null;
@@ -162,13 +166,24 @@ The keys used are:
     Thanks to Marcel Menzel ( @WRMSRwasTaken ) for this contribution.
   ! fix, networks_file: remove_dupes() was making partial commits
     of valid rows hence creating data inconsistencies.
+  ! fix, pre_tag_map: resolved a potential string overflow that was
+    being triggered in pretag_append_label() when matching data
+    would be assigned multiple labels. Also now allow ',' chars in
+    set_label.
   ! fix, maps_index: uninitialized var could cause SEGV in case no
     results are found in the map index. Also introduced support for
     catch-all rules, ie. "set_label=unknown". 
+  ! fix, maps_index: optimized the case of no 'ip' key specified
+    (for nfacctd and sfacctd): when indexing is enabled, prevent
+    recirculation from happening, ie. test v4 first then v6, since
+    the 'ip' key is not going to be part of the hash serializer.
   ! fix, pretag.c: allow to allocate maps greater than 2GB in size. 
     Also several optimizations were carried out yelding to a better
     memory utilization for allocated maps along with improved times
     to resolve JEQs.
+  ! fix, pre_tag_label_filter: optimized and improved runtime
+    evaluation part of this feature, avoiding a costly strdup() and
+    bailing out immediately on certain basic mismatch conditions.
   ! fix, kafka_common.[ch]: a new p_kafka_produce_data_and_free()
     is invoked to optimize memory allocations and releases.
   ! fix, plugin_cmn_avro.c: when a schema registry is being defined,
