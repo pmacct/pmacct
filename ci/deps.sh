@@ -53,7 +53,7 @@ git clone -b 4.2-stable https://github.com/ntop/nDPI
 cd nDPI ; rm -rf ./.git ; ./autogen.sh ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; sudo ldconfig ; cd ..
 
 git clone -b v4.3.4 https://github.com/zeromq/libzmq
-cd libzmq ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
+cd libzmq ; ./autogen.sh ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
 wget ${WGET_FLAGS} https://archive.apache.org/dist/avro/avro-1.9.2/c/avro-c-1.9.2.tar.gz
 tar xfz avro-c-1.9.2.tar.gz
