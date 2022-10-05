@@ -52,9 +52,8 @@ cd libmaxminddb ; rm -rf ./.git ; ./bootstrap ; ./configure --prefix=/usr/local/
 git clone -b 4.2-stable https://github.com/ntop/nDPI
 cd nDPI ; rm -rf ./.git ; ./autogen.sh ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; sudo ldconfig ; cd ..
 
-wget ${WGET_FLAGS} https://github.com/zeromq/libzmq/releases/download/v4.3.2/zeromq-4.3.2.tar.gz
-tar xfz zeromq-4.3.2.tar.gz
-cd zeromq-4.3.2 ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
+git clone -b v4.3.4 https://github.com/zeromq/libzmq
+cd libzmq ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
 wget ${WGET_FLAGS} https://archive.apache.org/dist/avro/avro-1.9.2/c/avro-c-1.9.2.tar.gz
 tar xfz avro-c-1.9.2.tar.gz
