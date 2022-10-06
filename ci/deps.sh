@@ -59,7 +59,7 @@ wget ${WGET_FLAGS} https://archive.apache.org/dist/avro/avro-1.11.1/c/avro-c-1.1
 tar xfz avro-c-1.11.1.tar.gz
 cd avro-c-1.11.1 ; mkdir build ; cd build ; cmake -DCMAKE_INSTALL_PREFIX=/usr/local .. ; make ; sudo make install ; cd .. ; cd ..
 
-git clone -b v6.2.0-cp3-rc220119192525 https://github.com/confluentinc/libserdes
+git clone -b v7.2.2 https://github.com/confluentinc/libserdes
 cd libserdes ; rm -rf ./.git ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
 git clone https://github.com/redis/hiredis
