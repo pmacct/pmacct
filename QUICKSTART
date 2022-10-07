@@ -1243,8 +1243,8 @@ To enable the feature please follow these steps:
 2) Download nDPI from its GitHub repository (https://github.com/ntop/nDPI). The
    nDPI API tends to change frequently in a non-backward compatible fashion.
    This means that not every version of pmacct will work with any version of
-   nDPI. pmacct 1.7.6 works against nDPI 3.2-stable. pmacct 1.7.7 works against
-   nDPI 3.4-stable. pmacct 1.7.8 works against nDPI 4.0-stable and 4.2-stable.
+   nDPI. pmacct 1.7.8 and later work against nDPI 4.0-stable, 4.2-stable and
+   4.4-stable.
 
 3) Configure for compiling, compile and install the downloaded nDPI library, ie.
    inside the nDPI directory:
