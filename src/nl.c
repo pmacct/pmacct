@@ -507,6 +507,8 @@ int ip6_handler(register struct packet_ptrs *pptrs)
   pptrs->icmp_code = FALSE;
 
   if (pptrs->l4_proto == IPPROTO_ICMPV6) {
+    pptrs->tlh_ptr = ptr;
+
     pptrs->icmp_type = ((struct pm_icmphdr *)pptrs->tlh_ptr)->type;
     pptrs->icmp_code = ((struct pm_icmphdr *)pptrs->tlh_ptr)->code;
   }
