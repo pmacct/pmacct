@@ -1818,7 +1818,7 @@ DESC:		Defines the UDP port where to bind nfacctd (nfacctd_port) and sfacctd (sf
 		so with incoming NetFlow v9/IPFIX template-based protocols, nfacctd_templates_receiver and
 		nfacctd_templates_port should be used. At the end of this document, reference (1) to a
 		URL to a presentation of the SO_REUSEPORT feature. To enable SO_REUSEPORT on a Linux system
-		supporting it 'sysctl net.core.allow_reuseport=1'.
+		supporting it 'sysctl net.core.allow_reuseport=1'. 
 DEFAULT:	nfacctd_port: 2100; sfacctd_port: 6343 
 
 KEY:		[ nfacctd_ip | sfacctd_ip ] (-L) [GLOBAL, NO_PMACCTD, NO_UACCTD]
@@ -2514,13 +2514,16 @@ DESC:           Defines the BGP Local AS to the supplied value. By default, no v
 DEFAULT:        none
 
 KEY:		[ bgp_daemon_port | bmp_daemon_port ] [GLOBAL] 
-DESC:		Makes the BGP/BMP daemon listen to a port different from the standard port. Default port for
-		BGP is 179/tcp; default port for BMP is 1790. On systems where SO_REUSEPORT feature is
-		available: it allows multiple daemons to bind the same local address and port in order to
-		load-balance processing of incoming packets. This is best combined with a list of allowed
-		IP addresses, ie. bgp_daemon_allow_file, to explicitely wire peers to collectors. At the
-		end of this document, reference (1) to a URL to a presentation of the SO_REUSEPORT feature.
-		To enable SO_REUSEPORT on a Linux system supporting it 'sysctl net.core.allow_reuseport=1'.
+DESC:		Makes the BGP/BMP daemon listen to a port different from the standard port. Default port
+		for BGP is 179/tcp; default port for BMP is 1790. On systems where SO_REUSEPORT feature
+		is available: it allows multiple daemons to bind the same local address and port in order
+		to load-balance processing of incoming packets. For the sake of TCP sessions balancing,
+		one option is to define a list of allowed IP addresses, ie. bgp_daemon_allow_file, to
+		associate peers to collectors via a hit-and-miss mechanism that may take time to converge;
+		a second option is to define an eBPF load-balancer, ie. bgp_daemon_rp_ebpf_prog, to
+		explicitely wire peers to collectors. At the end of this document, reference (1) to a URL
+		to a presentation of the SO_REUSEPORT feature. To enable SO_REUSEPORT on a Linux system
+		supporting it 'sysctl net.core.allow_reuseport=1'.
 DEFAULT:	bgp_daemon_port: 179; bmp_daemon_port: 1790
 
 KEY:		[ bgp_daemon_rp_ebpf_prog | bmp_daemon_rp_ebpf_prog ] [GLOBAL]
@@ -3230,13 +3233,6 @@ DESC:		Enables the Streaming Telemetry thread in all daemons except pmtelemetryd
 		collaborative manner.".
 DEFAULT:        false
 
-KEY:		telemetry_daemon_port_tcp [GLOBAL]
-DESC:		Makes the Streaming Telemetry daemon, pmtelemetryd, or the Streaming Telemetry thread
-		listen on the specified TCP port. (see telemetry/README.telemetry for gRPC support).
-		If SO_REUSEPORT is supported by the Operating System, you can read more about it at
-		the config key telemetry_daemon_port_udp.
-DEFAULT:	none
-
 KEY:            telemetry_daemon_port_udp [GLOBAL]
 DESC:           Makes the Streaming Telemetry daemon, pmtelemetryd, or the Streaming Telemetry thread
 		listen on the specified UDP port. On systems where SO_REUSEPORT feature is available:
@@ -3246,6 +3242,15 @@ DESC:           Makes the Streaming Telemetry daemon, pmtelemetryd, or the Strea
 		end of this document, reference (1) to a URL to a presentation of the SO_REUSEPORT feature.
 		To enable SO_REUSEPORT on a Linux system supporting it 'sysctl net.core.allow_reuseport=1'. 
 DEFAULT:        none
+
+KEY:		telemetry_daemon_port_tcp [GLOBAL]
+DESC:		Makes the Streaming Telemetry daemon, pmtelemetryd, or the Streaming Telemetry thread
+		listen on the specified TCP port. (see telemetry/README.telemetry for gRPC support).
+		If SO_REUSEPORT is supported by the Operating System, you can read more about it at
+		the config key telemetry_daemon_port_udp. Alternstively, for the sake of TCP sessions
+		balancing, a eBPF load-balancer, ie. telemetry_daemon_rp_ebpf_prog, can be defined in
+		order to explicitely wire peers to collectors.
+DEFAULT:	none
 
 KEY:		telemetry_daemon_ip [GLOBAL]
 DESC:		Binds the Streaming Telemetry daemon to a specific interface. Expects as value an IPv4/
