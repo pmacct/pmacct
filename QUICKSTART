@@ -2869,12 +2869,12 @@ release), you may be very possibly asked to try one of these first. Finally,
 please refrain to open issues on GitHub if not using master code (use the
 pmacct-discussion mailing list or unicast email instead). 
 
-a) In cases of errors at configure script time (ie. library not found, headers
-  not found, etc.), additional info can be found in config.log at the end of
-  the 'Core tests' section. Also if reporting an issue related to configure
-  time, it is good idea to supply the config.log file as well. Here are recap
-  some popular issues when compiling pmacct or linking it at runtime against
-  shared libraries:
+a) In cases of errors at configure script time (ie. library not found,
+   headers not found, etc.), additional info can be found in config.log at
+   the end of the 'Core tests' section. Also if reporting an issue related
+   to configure time, it is good idea to supply the config.log file as well.
+   Here are recap some popular issues when compiling pmacct or linking it
+   at runtime against shared libraries:
 
   1) /usr/local/sbin/pmacctd: error while loading shared libraries:
      librabbitmq.so.4: cannot open shared object file: No such file or directory 
@@ -2910,219 +2910,269 @@ a) In cases of errors at configure script time (ie. library not found, headers
      variables are available. See examples in the "Configuring pmacct for
      compilation and installing" section of this document.
 
-b) In case of crashes of an any process, regardless if predictable or not, the
-advice is to run the daemon with "ulimit -c unlimited" so to generate a core
-dump. The core dump file location, on Linux, is determined by the following
-file: /proc/sys/kernel/core_pattern : if the value is "core", then the file is
-placed in the directory where the daemon is started so it is good to take care
-of that. pmacct developers will then ask for one or both of the following: 1)
-the core file along with the crashing executable and its configuration be made
-available for further inspection and/or 2) a backtrace in GDB obtained via the
-following two steps:
+b) In case of crashes of an any process, regardless if predictable or not,
+   the advice is to run the daemon with "ulimit -c unlimited" so to generate
+   a core dump. The core dump file location, on Linux, is determined by
+   the following file: /proc/sys/kernel/core_pattern : if the value is
+   "core", then the file is placed in the directory where the daemon is
+   started so it is good to take care of that. pmacct developers will
+   then ask for one or both of the following:
 
-shell> gdb /path/to/executable /path/to/core
+  1) the core file along with the crashing executable and its configuration
+     be made available for further inspection and/or
 
-Then once in the gdb console the backtrace output can be obtained with the
-following command:
+  2) a backtrace in GDB obtained via the following two steps:
 
-gdb> bt
+     shell> gdb /path/to/executable /path/to/core
 
-As an alternative to gdb, the valgrind tool can be used which, upon crashing,
-will simply print out the backtrace:
+     Then once in the gdb console the backtrace output can be obtained
+     with the following command:
 
-shell> valgrind /path/to/executable <command-line options>
+     gdb> bt
 
-If the dmesg command or system logs reveal a line like the following one:
+     As an alternative to gdb, the valgrind tool can be used which, upon
+     crashing, will simply print out the backtrace:
 
-Jan 01 00:00:00 xxxx kernel: [4075819.569587] nfacctd[51817]: segfault at 10 ip 00007f77f448ad44 sp 00007ffc6974ed70 error 4 ..
+     shell> valgrind /path/to/executable <command-line options>
 
-In certain cases, ie. if the crash is not inside a shared library, this can
-return useful information for debugging when examined with addr2line; using
-the example above:
+     If the dmesg command or system logs reveal a line like the following
+     one:
 
-shell> addr2line /path/to/nfacctd 00007f77f448ad44
+     Jan 01 00:00:00 xxxx kernel: [4075819.569587] nfacctd[51817]: segfault at 10 ip 00007f77f448ad44 sp 00007ffc6974ed70 error 4 ..
 
-Optionally, especially if the issue can be easily reproduced, the daemon can
-be re-configured for compiling with the --enable-debug flag so to produce
-extra info suitable for troubleshooting. 
+  In certain cases, ie. if the crash is not inside a shared library,
+  this can return useful information for debugging when examined with
+  addr2line; using the example below:
 
-There is a whole range of cases where the crash could be caused by corrupting
-the heap and these are evidenced when a 'bt' in gdb highlights a malloc() call
-as point of crash; while these issues often times boil down to erroneous coding,
-they are subtle, hard to reproduce and platform / OS dependant. When facing
-such issues, launching the daemon with the MALLOC_CHECK_ environment variable
-set to 2, ie.:
+  shell> addr2line /path/to/nfacctd 00007f77f448ad44
 
-shell> MALLOC_CHECK_=2
-shell> export MALLOC_CHECK_
+  Optionally, especially if the issue can be easily reproduced, the
+  daemon can be re-configured for compiling with the --enable-debug
+  flag so to produce extra info suitable for troubleshooting. 
 
-Would return additional useful information for the troubleshooting process. At
-times this action - that elicits the use of an alternate malloc() call - may
-even work as a work-around (if falling in this condition it is recommended to
-not use this 'mask' as long-term solution, that is, please report the issue).
+  There is a whole range of cases where the crash could be caused by
+  corrupting the heap and these are evidenced when a 'bt' in gdb
+  highlights a malloc() call as point of crash; while these issues
+  often times boil down to erroneous coding, they are subtle, hard to
+  reproduce and platform / OS dependant. When facing such issues,
+  launching the daemon with the MALLOC_CHECK_ environment variable
+  set to 2, ie.:
 
-The use of Docker containers is getting increasingly popular. The valgrind
-tool can be used when a crash is experienced in a container. The following
-example applies to any of the official pmacct containers (running on top of
-Debian):
+  shell> MALLOC_CHECK_=2
+  shell> export MALLOC_CHECK_
 
-shell> docker run -it --entrypoint bash <image_name>
-<container_id># apt-get update && apt-get install -y valgrind
-<container_id># valgrind /path/to/executable <command-line options>
+  Would return additional useful information for the troubleshooting
+  process. At times this action - that elicits the use of an alternate
+  malloc() call - may even work as a work-around (if falling in this
+  condition it is recommended to not use this 'mask' as long-term
+  solution, that is, please report the issue).
 
-c) In case of (suspected) memory leaks, the advice is to: 1) re-compile pmacct
-with "./configure --enable-debug <other flags already in use>"; --enable-debug
-sets as CFLAGS -O0 -g -Wall where especially -O0 is capital since it disables
-any code optimizations the compiler may introduce; 2) run the resulting daemon
-under valgrind, "valgrind --leak-check=yes /path/to/executable <command-line
-options>". A memory leak is confirmed if the amount of "definitely lost" bytes
-keeps increasing over time.
+  The use of Docker containers is getting increasingly popular. The
+  valgrind tool can be used when a crash is experienced in a container.
+  The following example applies to any of the official pmacct
+  containers (running on top of Debian):
+
+  shell> docker run -it --entrypoint bash <image_name>
+  <container_id># apt-get update && apt-get install -y valgrind
+  <container_id># valgrind /path/to/executable <command-line options>
+
+c) In case of (suspected) memory leaks, the advice is to:
+
+  1) re-compile pmacct with "./configure --enable-debug <other flags already
+     in use>"; --enable-debug sets as CFLAGS -O0 -g -Wall where especially
+     -O0 is capital since it disables any code optimizations the compiler
+     may introduce;
+
+  2) run the resulting daemon under valgrind, "valgrind --leak-check=yes
+     /path/to/executable <command-line options>". A memory leak is confirmed
+     if the amount of "definitely lost" bytes keeps increasing over time.
 
 d) In the two cases of nfacctd/sfacctd or nfprobe/sfprobe not showing signs of
-input/output data: 1) check with tcpdump, ie. "tcpdump -i <interface> -n
-<sfacctd/nfacctd listening port>" (for uacctd use -i nflog:<nflog group>), that
-packets are emitted/received. Optionally Wireshark (or its cli tool tshark) can
-be used, in conjunction with decoders ('cflow' for NetFlow/IPFIX and 'sflow' for
-sFlow), to validate packets are consistent; this proofs there is no filtering
-taking place in between exporters and collector; 2) check firewall settings on
-the collector box, ie. "iptables -L -n" on Linux (disable or do appropriate
-holes): tcpdump may see packets hitting the listening port as, in normal kernel
-operations, the filtering happens after the raw socket (the one used by tcpdump)
-is served; you can also check with 3rd party equivalent tools or netcat, "nc -l
--u -p <port>", that the same behaviour is obtained as with pmacct; finally, if
-running on a SELinux enabled system, consider that it could be interfering too;
-3) check the process list to confirm whether there is some stuck / forgotten
-running process which may be consuming data in place of a newly started one; 
-4) when not using ZeroMQ for internal buffering (plugin_pipe_zmq set to true)
-and especially in case of copy/paste of configs or if using a config from a
-production system in lab, disable/double-check values for internal buffering:
-if set too high they will likely retain data internally to the daemon; 5) if
-multiple interfaces are configured on a system, try to disable rp_filter. See
-http://tldp.org/HOWTO/Adv-Routing-HOWTO/lartc.kernel.rpf.html for more info
-on RP filtering. The value of rp_filter files in /proc must be set to zero
-(ie. "echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter") in order to disable
-RP filtering. Also, if working on a cloud instance, consider often times these
-are not configured by default to pass traffic through. These appear popular
-issues when replicating flow data with tee_transparent feature enabled (that
-is, packet spoofing); 6) in case aggregate_filter is in use: the feature expects
-a libpcap-style filter as value. BPF filters are sensible to both VLAN tags and
-MPLS labels: if, for example, the traffic is VLAN tagged and the value of
-aggregate_filter is 'src net X.X.X.X/Y', there will be no match for VLAN-tagged
-traffic from src net X.X.X.X/Y; the filter should be re-written as 'vlan and src
-net X.X.X.X/Y'; 7) in case of NetFlow v9/IPFIX collection, two protocols that
-are template-based, the issue may be with templates not being received by
-nfacctd (in which case by enabling debug you may see "Discarded NetFlow v9/IPFIX
-packet (R: unknown template [ .. ]" messages in your logs); you can confirm
-whether templates are being exported/replicated/received with a touch of
-"tshark -d udp.port==<NFv9/IPFIX port>,cflow -R cflow.template_id -2"; it may
-also happen the opposite: templates are received but no data packets are being
-sent (ie. because sampling is not configured on the actual interfaces on the
-exporting device): in this case tshark would only show periodic data being
-received (ie. every 30 secs, 60 secs, etc.) rather than a more constant stream
-of data.
+   input/output data:
+
+  1) check with tcpdump, ie. "tcpdump -i <interface> -n <sfacctd/nfacctd
+     listening port>" (for uacctd use -i nflog:<nflog group>), that
+     packets are emitted/received. Optionally Wireshark (or its cli tool
+     tshark) can be used, in conjunction with decoders ('cflow' for NetFlow/
+     IPFIX and 'sflow' for sFlow), to validate packets are consistent; this
+     proofs there is no filtering taking place in between exporters and
+     collector;
+
+  2) check firewall settings on the collector box, ie. "iptables -L -n" on
+     Linux (disable or do appropriate holes): tcpdump may see packets hitting
+     the listening port as, in normal kernel operations, the filtering
+     happens after the raw socket (the one used by tcpdump) is served; you
+     can also check with 3rd party equivalent tools or netcat, "nc -l -u
+     -p <port>", that the same behaviour is obtained as with pmacct; finally,
+     if running on a SELinux enabled system, consider that it could be
+     interfering too;
+
+  3) check the process list to confirm whether there is some stuck / forgotten
+     running process which may be consuming data in place of a newly started
+     one; 
+
+  4) when not using ZeroMQ for internal buffering (plugin_pipe_zmq set to
+     true) and especially in case of copy/paste of configs or if using a
+     config from a production system in lab, disable/double-check values
+     for internal buffering: if set too high they will likely retain data
+     internally to the daemon;
+
+  5) if multiple interfaces are configured on a system, try to disable
+     rp_filter. See http://tldp.org/HOWTO/Adv-Routing-HOWTO/lartc.kernel.rpf.html
+     for more info on RP filtering. The value of rp_filter files in /proc
+     must be set to zero (ie. "echo 0 > /proc/sys/net/ipv4/conf/all/rp_filter")
+     in order to disable RP filtering. Also, if working on a cloud instance,
+     consider often times these are not configured by default to pass traffic
+     through. These appear popular issues when replicating flow data with
+     tee_transparent feature enabled (that is, packet spoofing);
+
+  6) in case aggregate_filter is in use: the feature expects a libpcap-style
+     filter as value. BPF filters are sensible to both VLAN tags and MPLS
+     labels: if, for example, the traffic is VLAN tagged and the value of
+     aggregate_filter is 'src net X.X.X.X/Y', there will be no match for
+     VLAN-tagged traffic from src net X.X.X.X/Y; the filter should be
+     re-written as 'vlan and src net X.X.X.X/Y';
+
+  7) in case of NetFlow v9/IPFIX collection, two protocols that are template-
+     based, the issue may be with templates not being received by nfacctd (in
+     which case by enabling debug you may see "Discarded NetFlow v9/IPFIX
+     packet (R: unknown template [ .. ]" messages in your logs); you can
+     confirm whether templates are being exported/replicated/received with
+     a touch of "tshark -d udp.port==<NFv9/IPFIX port>,cflow -R
+     cflow.template_id -2"; it may also happen the opposite: templates are
+     received but no data packets are being sent (ie. because sampling is
+     not configured on the actual interfaces on the exporting device): in
+     this case tshark would only show periodic data being received (ie.
+     every 30 secs, 60 secs, etc.) rather than a more constant stream of
+     data.
 
 e) In the case of inconsistent output - inconsistent defined as replaying the
-same set of data, output produced by the daemon differs - of nfacctd/sfacctd:
-1) check the basics: whether another nfacctd/sfacctd is listening on the very
-same port; this is legit behaviour due to behaviour of SO_REUSEPORT, in brief:
-share load among multiple sockets listening on the same port, and SO_REUSEADDR,
-in brief: don't wait for a closing socket to be closed in order to bind a new
-one to the same port, options used on the listening socket; 2) check all tips
-about buffering provided slightly later in this document.
+   same set of data, output produced by the daemon differs - of nfacctd/
+   sfacctd:
+
+  1) check the basics: whether another nfacctd/sfacctd is listening on the
+     very same port; this is legit behaviour due to behaviour of SO_REUSEPORT,
+     in brief: share load among multiple sockets listening on the same port,
+     and SO_REUSEADDR, in brief: don't wait for a closing socket to be
+     closed in order to bind a new one to the same port, options used on
+     the listening socket;
+
+  2) check all tips about buffering provided slightly later in this document.
 
 f) Replay packets can be needed, for example, to troubleshoot the behaviour
-of one of the pmacct daemons. A capture in libpcap format, suitable for
-replay, can be produced with tcpdump. For example to produce a trace for
-NetFlow/IPFIX/sFlow this is the command-line: "tcpdump -i <interface> -n -s 0
--w <output file> port <sfacctd/nfacctd listening port>"; for ULOG/NFLOG on
-Linux the interface should be in the format "-i nflog:<nflog group>" instead.
-For traces over extended periods of time, ie. to troubleshoot specific bogus
-packets triggering crashes or capture NetFlow v9/IPFIX templates, optionally
-the -G tcpdump option can be specified to rotate the -w output_file each
-specified seconds interval (read more on tcpdump man page). Once the trace
-has been created, trace file(s) can be replayed by pmacct daemons using the
-pcap_savefile (-I) and, optionally, the pcap_savefile_wait (-W) directives,
-ie.: "nfacctd -I <pcap savefile> <..>".
-For more advanced use-cases, ie. loop indefinitely through the pcap file and
-run it with a speed multiplicator in order to stress test the daemon, the
-tcpreplay tool can be used. In this case, before replaying NetFlow/IPFIX/sFlow,
-L2/L3 of captured packets may need to be adjusted in order to reflect the lab/
-replay environment; this can be done with the tcprewrite tool of the tcpreplay
-package, ie.: "tcprewrite --enet-smac=<src MAC address> --enet-dmac= <dst MAC
-address> -S <src IP address rewrite> -D <dst IP address rewrite> --fixcsum
---infile=<input file, ie. output from tcpdump> --outfile=<output file>". Then
-the output file from tcprewrite can be supplied to tcpreplay for the actual
-replay to the pmacct daemon, ie.: "tcpreplay -x <speed multiplicator>
--i <output interface> <input file>".
+   of one of the pmacct daemons. A capture in libpcap format, suitable for
+   replay, can be produced with tcpdump. For example to produce a trace for
+   NetFlow/IPFIX/sFlow this is the command-line: "tcpdump -i <interface> -n
+   -s 0 -w <output file> port <sfacctd/nfacctd listening port>"; for ULOG/
+   NFLOG on Linux the interface should be in the format "-i nflog:<nflog
+   group>" instead.
+   For traces over extended periods of time, ie. to troubleshoot specific
+   bogus packets triggering crashes or capture NetFlow v9/IPFIX templates,
+   optionally the -G tcpdump option can be specified to rotate the
+   -w output_file each specified seconds interval (read more on tcpdump
+   man page). Once the trace has been created, trace file(s) can be
+   replayed by pmacct daemons using the pcap_savefile (-I) and, optionally,
+   the pcap_savefile_wait (-W) directives, ie.: "nfacctd -I <pcap savefile>
+   <..>".
+   For more advanced use-cases, ie. loop indefinitely through the pcap file
+   and run it with a speed multiplicator in order to stress test the daemon,
+   the tcpreplay tool can be used. In this case, before replaying NetFlow/
+   IPFIX/sFlow, L2/L3 of captured packets may need to be adjusted in order
+   to reflect the lab/replay environment; this can be done with the
+   tcprewrite tool of the tcpreplay package, ie.: "tcprewrite
+   --enet-smac=<src MAC address> --enet-dmac= <dst MAC address>
+   -S <src IP address rewrite> -D <dst IP address rewrite> --fixcsum
+   --infile=<input file, ie. output from tcpdump> --outfile=<output file>".
+   Then the output file from tcprewrite can be supplied to tcpreplay for the
+   actual replay to the pmacct daemon, ie.: "tcpreplay -x <speed multiplicator>
+   -i <output interface> <input file>".
 
-g) Buffering is often an element to tune in order to make sure that output
-is complete (packet loss may lead to incomplete results but also configuring
-too large buffers). While buffering internal to pmacct (configured with
-plugin_buffer_size / plugin_pipe_size or plugin_pipe_zmq) returns warning
-messages in case of data loss, buffering between pmacct and the kernel
-(configured with nfacctd_pipe_size and its equivalents) may be more tricky
-to detect and sometimes issues can only be inferred by symptoms (like
-sequence number checks for NetFlow v9/IPFIX). For nfacctd and sfacctd daemons,
-two commands useful to check this kind of buffering on Linux systems are:
-1) "cat /proc/net/udp" or "cat /proc/net/udp6" ensuring that "drops" value
-is not increasing and 2) "netstat -s" ensuring, under the section UDP, that
-errors are not increasing (since this command returns system-wide counters,
-the counter-check would be: stop the pmacct daemon running and, granted the
-counter was increasing, verify it does not increase anymore). For pmacctd,
-an UNIX signal can be sent to the daemon so that the amount of dropped packets
-is reported in the log output (ie. kill -USR1 <pmacctd core PID>). Finally,
-if troubleshooting incomplete output, please review tips about inconsistent
-output slightly earlier in this document.
+g) Buffering is often an element to tune in order to make sure that
+   output is complete (packet loss may lead to incomplete results but
+   also configuring too large buffers). While buffering internal to
+   pmacct (configured with plugin_buffer_size / plugin_pipe_size or
+   plugin_pipe_zmq) returns warning messages in case of data loss,
+   buffering between pmacct and the kernel (configured with
+   nfacctd_pipe_size and its equivalents) may be more tricky to detect
+   and sometimes issues can only be inferred by symptoms (like sequence
+   number checks for NetFlow v9/IPFIX). For nfacctd and sfacctd daemons,
+   two commands useful to check this kind of buffering on Linux systems
+   are:
 
-h) BMP, the BGP Monitoring Protocol, has got drafting traction at IETF. New
-protocol features drive the need for inter-op testing. The BMP play tool
-( https://github.com/paololucente/bmp_play ) is a simple script to record
-and replay raw BMP packets in order to reproduce issues. An example of how
-this can be done, here:
+  1) "cat /proc/net/udp" or "cat /proc/net/udp6" ensuring that "drops"
+     value is not increasing and
 
-Step 1: export BMP data from an exporter to a host/port where a bmp_play
-script is listening to. bmp_play will then save raw BMP data to a file:
+  2) "netstat -s" ensuring, under the section UDP, that errors are not
+     increasing (since this command returns system-wide counters, the
+     counter-check would be: stop the pmacct daemon running and, granted
+     the counter was increasing, verify it does not increase anymore).
 
-shell> bmp_play.py -m record -p 1791 -f bmp.dump
+  For pmacctd, an UNIX signal can be sent to the daemon so that the
+  amount of dropped packets is reported in the log output (ie. kill
+  -USR1 <pmacctd core PID>). Finally, if troubleshooting incomplete
+  output, please review tips about inconsistent output slightly earlier
+  in this document.
 
-Step 2: the file containing raw BMP data can be replayed at will with the
-same bmp_play script to a pmbmpd daemon:
+h) BMP, the BGP Monitoring Protocol, has got drafting traction at IETF.
+   New protocol features drive the need for inter-op testing. The BMP
+   play tool ( https://github.com/paololucente/bmp_play ) is a simple
+   script to record and replay raw BMP packets in order to reproduce
+   issues. An example of how this can be done, here:
+
+   Step 1: export BMP data from an exporter to a host/port where a
+   bmp_play script is listening to. bmp_play will then save raw BMP
+   data to a file:
+
+   shell> bmp_play.py -m record -p 1791 -f bmp.dump
+
+   Step 2: the file containing raw BMP data can be replayed at will
+   with the same bmp_play script to a pmbmpd daemon:
  
-shell 1> bmp_play.py -m play -p 1790 -f bmp.dump -d 127.0.0.1
+   shell 1> bmp_play.py -m play -p 1790 -f bmp.dump -d 127.0.0.1
 
-shell 2> pmbmpd -l 1790 -d -o bmp.log
+   shell 2> pmbmpd -l 1790 -d -o bmp.log
 
-Additionally, since version 1.7.5, pmbmpd supports pcap_savefile (-I) to
-replay a pcap trace that includes BMP packets; packets functional to the
-house-keeping of the TCP session are safely ignored and pcap_filter helps
-on replay to trash unrelevant (non BMP) packets; yet this method is less
-preferred to the capture of raw data via bmp_play.
+  Additionally, since version 1.7.5, pmbmpd supports pcap_savefile (-I)
+  to replay a pcap trace that includes BMP packets; packets functional
+  to the house-keeping of the TCP session are safely ignored and
+  pcap_filter helps on replay to trash unrelevant (non BMP) packets;
+  yet this method is less preferred to the capture of raw data via
+  bmp_play.
  
-i) packet classification using the nDPI library is among the new features of
-pmacct 1.7. Following are some tips on how to help by providing meaningful
-report of issues you may be experiencing in this area. 1) Please follow
-guidelines in the section "Quickstart guide to packet classification" of this
-document; 2) please avoid generic reporting; remember that the most effective
-way troubleshoot any issue related to packet classification is by the authors
-being able to reproduce the issue or for them to verify first-hand the issue:
-whenever possible please share a traffic capture in pcap format or grant
-remote-access to your testbed; 3) it is OK to compare classification results
-achieved with a 3rd party tool also using nDPI for classification; in case
-of different results, please show the actual results when reporting the issue
-and please elaborate as much as possible how the comparison was done (ie. say
-how it is being ensured that the two data-sets are the same or as much as
-possible similar); 4) excluded from these guidelines are problems related to
-nDPI but unrelated to classification, ie. memory leaks, performance issues,
-crashes, etc. for which you can follow the other guide lines in this document
-in the "Miscellaneous notes and troubleshooting tips" section.
+i) packet classification using the nDPI library is among the new features
+   of pmacct 1.7. Following are some tips on how to help by providing
+   meaningful report of issues you may be experiencing in this area.
 
-j) if supported and if enabled on the system, the SO_REUSEPORT feature can be
-leveraged on Linux and most BSDs where it is part of the standard kernel: it
-allows multiple daemons to bind to the same local address and port in order
-to load-balance processing of incoming packets. Here a reference to a
-presentation of this feature for Linux:
+  1) Please follow guidelines in the section "Quickstart guide to packet
+     classification" of this document;
 
-https://domsch.com/linux/lpc2010/Scaling_techniques_for_servers_with_high_connection%20rates.pdf
+  2) please avoid generic reporting; remember that the most effective
+     way troubleshoot any issue related to packet classification is by
+     the authors being able to reproduce the issue or for them to verify
+     first-hand the issue: whenever possible please share a traffic
+     capture in pcap format or grant remote-access to your testbed;
 
-To enable SO_REUSEPORT on a Linux system 'sysctl net.core.allow_reuseport=1'.
-Also the processes must be launched by the same user.
+  3) it is OK to compare classification results achieved with a 3rd
+     party tool also using nDPI for classification; in case of
+     different results, please show the actual results when reporting
+     the issue and please elaborate as much as possible how the
+     comparison was done (ie. say how it is being ensured that the
+     two data-sets are the same or as much as possible similar);
+
+  4) excluded from these guidelines are problems related to nDPI but
+     unrelated to classification, ie. memory leaks, performance issues,
+     crashes, etc. for which you can follow the other guide lines in
+     this document in the "Miscellaneous notes and troubleshooting
+     tips" section.
+
+j) if supported and if enabled on the system, the SO_REUSEPORT feature
+   can be leveraged on Linux and most BSDs where it is part of the
+   standard kernel: it allows multiple daemons to bind to the same
+   local address and port in order to load-balance processing of
+   incoming packets. Here a reference to a presentation of this feature
+   for Linux:
+
+   https://domsch.com/linux/lpc2010/Scaling_techniques_for_servers_with_high_connection%20rates.pdf
+
+   To enable SO_REUSEPORT on a Linux system 'sysctl net.core.allow_reuseport=1'.
+   Also the processes must be launched by the same user.
