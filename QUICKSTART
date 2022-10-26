@@ -3132,40 +3132,13 @@ h) BMP, the BGP Monitoring Protocol, has got drafting traction at IETF.
 
    shell 2> pmbmpd -l 1790 -d -o bmp.log
 
-  Additionally, since version 1.7.5, pmbmpd supports pcap_savefile (-I)
-  to replay a pcap trace that includes BMP packets; packets functional
-  to the house-keeping of the TCP session are safely ignored and
-  pcap_filter helps on replay to trash unrelevant (non BMP) packets;
-  yet this method is less preferred to the capture of raw data via
-  bmp_play.
+  Additionally pmbmpd supports pcap_savefile (-I) to replay a pcap
+  trace that includes BMP packets; packets functional to the house-
+  keeping of the TCP session are safely ignored and pcap_filter helps
+  on replay to trash unrelevant (non BMP) packets; yet this method is
+  less preferred to the capture of raw data via bmp_play.
  
-i) packet classification using the nDPI library is among the new features
-   of pmacct 1.7. Following are some tips on how to help by providing
-   meaningful report of issues you may be experiencing in this area.
-
-  1) Please follow guidelines in the section "Quickstart guide to packet
-     classification" of this document;
-
-  2) please avoid generic reporting; remember that the most effective
-     way troubleshoot any issue related to packet classification is by
-     the authors being able to reproduce the issue or for them to verify
-     first-hand the issue: whenever possible please share a traffic
-     capture in pcap format or grant remote-access to your testbed;
-
-  3) it is OK to compare classification results achieved with a 3rd
-     party tool also using nDPI for classification; in case of
-     different results, please show the actual results when reporting
-     the issue and please elaborate as much as possible how the
-     comparison was done (ie. say how it is being ensured that the
-     two data-sets are the same or as much as possible similar);
-
-  4) excluded from these guidelines are problems related to nDPI but
-     unrelated to classification, ie. memory leaks, performance issues,
-     crashes, etc. for which you can follow the other guide lines in
-     this document in the "Miscellaneous notes and troubleshooting
-     tips" section.
-
-j) if supported and if enabled on the system, the SO_REUSEPORT feature
+i) if supported and if enabled on the system, the SO_REUSEPORT feature
    can be leveraged on Linux and most BSDs where it is part of the
    standard kernel: it allows multiple daemons to bind to the same
    local address and port in order to load-balance processing of
