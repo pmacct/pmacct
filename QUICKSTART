@@ -3037,14 +3037,19 @@ d) In the two cases of nfacctd/sfacctd or nfprobe/sfprobe not showing signs of
      based, the issue may be with templates not being received by nfacctd (in
      which case by enabling debug you may see "Discarded NetFlow v9/IPFIX
      packet (R: unknown template [ .. ]" messages in your logs); you can
-     confirm whether templates are being exported/replicated/received with
-     a touch of "tshark -d udp.port==<NFv9/IPFIX port>,cflow -R
-     cflow.template_id -2"; it may also happen the opposite: templates are
-     received but no data packets are being sent (ie. because sampling is
-     not configured on the actual interfaces on the exporting device): in
-     this case tshark would only show periodic data being received (ie.
-     every 30 secs, 60 secs, etc.) rather than a more constant stream of
-     data.
+     confirm whether templates are being exported/replicated/received with:
+
+     * tshark / Wireshark, ie. "tshark -d udp.port==<NFv9/IPFIX port>,cflow
+       -R cflow.template_id -2";
+     * nfacctd, either enabling debug - in which case templates will be
+       part of the log output - or using nfacctd_templates_file - which
+       will dump templates to the pointed file in JSON format;
+
+     it may also happen the opposite: templates are received but no data
+     packets are being sent (ie. because sampling is not configured on the
+     actual interfaces on the exporting device): in this case tshark would
+     only show periodic data being received (ie. every 30 secs, 60 secs,
+     etc.) rather than a more constant stream of data.
 
 e) In the case of inconsistent output - inconsistent defined as replaying the
    same set of data, output produced by the daemon differs - of nfacctd/
