@@ -645,6 +645,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
             fprintf(f, "%-17s  ", empty_macaddress);
         }
         if (config.what_to_count & COUNT_VLAN) fprintf(f, "%-5u  ", data->vlan_id); 
+        if (config.what_to_count_2 & COUNT_OUT_VLAN) fprintf(f, "%-8u  ", data->out_vlan_id);
         if (config.what_to_count & COUNT_COS) fprintf(f, "%-2u  ", data->cos); 
         if (config.what_to_count & COUNT_ETHERTYPE) fprintf(f, "%-5x  ", data->etype); 
   #endif
@@ -751,7 +752,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   #endif
   
         if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "%-7u       ", data->sampling_rate);
-        if (config.what_to_count_2 & COUNT_SAMPLING_DIRECTION) fprintf(f, "%-1s                   ", data->sampling_direction);
+        if (config.what_to_count_2 & COUNT_SAMPLING_DIRECTION) fprintf(f, "%-1s                   ", sampling_direction_print(data->sampling_direction));
   
         if (config.what_to_count_2 & COUNT_POST_NAT_SRC_HOST) {
           addr_to_str(ip_address, &pnat->post_nat_src_ip);
@@ -935,6 +936,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
           fprintf(f, "%s%s", write_sep(sep, &count), dst_mac);
         }
         if (config.what_to_count & COUNT_VLAN) fprintf(f, "%s%u", write_sep(sep, &count), data->vlan_id); 
+        if (config.what_to_count_2 & COUNT_OUT_VLAN) fprintf(f, "%s%u", write_sep(sep, &count), data->out_vlan_id);
         if (config.what_to_count & COUNT_COS) fprintf(f, "%s%u", write_sep(sep, &count), data->cos); 
         if (config.what_to_count & COUNT_ETHERTYPE) fprintf(f, "%s%x", write_sep(sep, &count), data->etype); 
   #endif
@@ -1149,7 +1151,8 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   #endif
   
         if (config.what_to_count_2 & COUNT_SAMPLING_RATE) fprintf(f, "%s%u", write_sep(sep, &count), data->sampling_rate);
-        if (config.what_to_count_2 & COUNT_SAMPLING_DIRECTION) fprintf(f, "%s%s", write_sep(sep, &count), data->sampling_direction);
+        if (config.what_to_count_2 & COUNT_SAMPLING_DIRECTION) fprintf(f, "%s%s", write_sep(sep, &count),
+								       sampling_direction_print(data->sampling_direction));
   
         if (config.what_to_count_2 & COUNT_POST_NAT_SRC_HOST) {
           addr_to_str(src_host, &pnat->post_nat_src_ip);
@@ -1435,7 +1438,15 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
 #if defined (HAVE_L2)
   if (config.what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) fprintf(f, "SRC_MAC            ");
   if (config.what_to_count & COUNT_DST_MAC) fprintf(f, "DST_MAC            ");
-  if (config.what_to_count & COUNT_VLAN) fprintf(f, "VLAN   ");
+  if (config.what_to_count & COUNT_VLAN) {
+    if (config.tmp_vlan_legacy) {
+      fprintf(f, "VLAN   ");
+    }
+    else {
+      fprintf(f, "IN_VLAN  ");
+    }
+  }
+  if (config.what_to_count_2 & COUNT_OUT_VLAN) fprintf(f, "OUT_VLAN  ");
   if (config.what_to_count & COUNT_COS) fprintf(f, "COS ");
   if (config.what_to_count & COUNT_ETHERTYPE) fprintf(f, "ETYPE  ");
 #endif
@@ -1549,7 +1560,15 @@ void P_write_stats_header_csv(FILE *f, int is_event)
 #if defined HAVE_L2
   if (config.what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) fprintf(f, "%sSRC_MAC", write_sep(sep, &count));
   if (config.what_to_count & COUNT_DST_MAC) fprintf(f, "%sDST_MAC", write_sep(sep, &count));
-  if (config.what_to_count & COUNT_VLAN) fprintf(f, "%sVLAN", write_sep(sep, &count));
+  if (config.what_to_count & COUNT_VLAN) {
+    if (config.tmp_vlan_legacy) {
+      fprintf(f, "%sVLAN", write_sep(sep, &count));
+    }
+    else {
+      fprintf(f, "%sIN_VLAN", write_sep(sep, &count));
+    }
+  }
+  if (config.what_to_count_2 & COUNT_OUT_VLAN) fprintf(f, "%sOUT_VLAN", write_sep(sep, &count));
   if (config.what_to_count & COUNT_COS) fprintf(f, "%sCOS", write_sep(sep, &count));
   if (config.what_to_count & COUNT_ETHERTYPE) fprintf(f, "%sETYPE", write_sep(sep, &count));
 #endif

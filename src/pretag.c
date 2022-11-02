@@ -436,7 +436,15 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 		      tmp.e[tmp.num].key.agent_mask.family = AF_INET;
 
 		      memcpy(&recirc_e, &tmp.e[tmp.num], sizeof(struct id_entry));
-		      recirculate = TRUE;
+
+		      /*
+			If indexing is enabled and no address family is specified for 'ip'
+			(ie. 'ip' is likely not specified), we will not include it as part
+			of the index hash serializer anyway; we can skip recirculation.
+		      */
+		      if (!config.maps_index) {
+			recirculate = TRUE;
+		      }
 		    }
 		    else {
 		      memcpy(&tmp.e[tmp.num], &recirc_e, sizeof(struct id_entry));
@@ -958,7 +966,7 @@ int pretag_append_label(pt_label_t *dst, pt_label_t *src)
 
       strcat(dst->val, DEFAULT_SEP);
       strncat(dst->val, src->val, src->len);
-      dst->val[dst->len] = '\0';
+      dst->val[dst->len - 1] = '\0';
     }
   }
 
@@ -1166,6 +1174,7 @@ int pretag_index_allocate(struct id_table *t)
       if (idx_entry_size) {
 	char pm_cdada_map_container[idx_entry_size];
 
+	hash_init_serial(&t->index[iterator].hash_serializer, idx_entry_size);
         t->index[iterator].idx_map = cdada_map_create(pm_cdada_map_container);
         if (!t->index[iterator].idx_map) {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] maps_index: unable to allocate index %llx. Destroying.\n", config.name,
@@ -1225,8 +1234,8 @@ int pretag_index_fill(struct id_table *t, pt_bitmap_t idx_bmap, struct id_entry 
 	  u_char key_hexdump[hash_key_get_len(hash_key) * 3];
 	  serialize_hex(hash_key_get_val(hash_key), key_hexdump, hash_key_get_len(hash_key));
 
-	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] pretag_index_fill(): index=%llx key=%s (dup!)\n",
-	      config.name, config.type, t->filename, (unsigned long long)idx_bmap, key_hexdump);
+	  Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] pretag_index_fill(): index=%llx line=%d key=%s (dup!)\n",
+	      config.name, config.type, t->filename, (unsigned long long)idx_bmap, (lineno + 1), key_hexdump);
 
 	  ret = PRETAG_IDX_ERR_NONE; /* alias SUCCESS */
 	}

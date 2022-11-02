@@ -373,7 +373,7 @@ void p_redis_thread_produce_common_core_handler(void *rh)
   count_loop_num++;
   count_loop_num = count_loop_num % 62 + 2; //use 62, so that after the first loop, the number falls within the range[2, 62] other than goes back to 1 since 1 is needed before
 
-  if (config.acct_type < ACCT_FWPLANE_MAX) {
+  if (config.acct_type < ACCT_FWDPLANE_MAX) {
     if (config.nfacctd_isis) {
       snprintf(buf, sizeof(buf), "%s%sisis", name_and_type, PM_REDIS_DEFAULT_SEP);
       p_redis_set_int(redis_host, buf, TRUE, PM_REDIS_DEFAULT_EXP_TIME);

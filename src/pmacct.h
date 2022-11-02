@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -342,6 +342,11 @@ struct _primitives_matrix_struct {
   u_int8_t pmbgpd;
   u_int8_t pmbmpd;
   char desc[PRIMITIVE_DESC_LEN];
+};
+
+struct _id_to_string_struct {
+  u_int64_t id;
+  char str[PRIMITIVE_DESC_LEN];
 };
 
 struct largebuf {

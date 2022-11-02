@@ -826,7 +826,7 @@ int parse_configuration_file(char *filename)
   if (!cmdlineflag) num = parse_plugin_names(filename, rows, FALSE);
   else num = parse_plugin_names(filename, rows, TRUE);
 
-  if (!num && config.acct_type < ACCT_FWPLANE_MAX) {
+  if (!num && config.acct_type < ACCT_FWDPLANE_MAX) {
     Log(LOG_WARNING, "WARN: [%s] No plugin has been activated; defaulting to in-memory table.\n", filename); 
     num = create_plugin(filename, "default_memory", "memory");
   }

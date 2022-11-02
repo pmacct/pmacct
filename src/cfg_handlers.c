@@ -250,6 +250,8 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
 #if defined (HAVE_L2)
     else if (!strcmp(count_token, "src_mac")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_MAC, count_token);
     else if (!strcmp(count_token, "dst_mac")) cfg_set_aggregate(filename, value, COUNT_INT_DST_MAC, count_token);
+    else if (!strcmp(count_token, "out_vlan")) cfg_set_aggregate(filename, value, COUNT_INT_OUT_VLAN, count_token);
+    else if (!strcmp(count_token, "in_vlan")) cfg_set_aggregate(filename, value, COUNT_INT_VLAN, count_token);
     else if (!strcmp(count_token, "vlan")) {
       cfg_set_aggregate(filename, value, COUNT_INT_VLAN, count_token);
       config.tmp_vlan_legacy = TRUE;
@@ -257,7 +259,8 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "sum_mac")) cfg_set_aggregate(filename, value, COUNT_INT_SUM_MAC, count_token);
 #else
     else if (!strcmp(count_token, "src_mac") || !strcmp(count_token, "dst_mac") ||
-	     !strcmp(count_token, "vlan") || !strcmp(count_token, "sum_mac")) {
+       !strcmp(count_token, "vlan") || !strcmp(count_token, "in_vlan") ||
+       !strcmp(count_token, "out_vlan") || !strcmp(count_token, "sum_mac")) {
       Log(LOG_WARNING, "WARN: [%s] pmacct was compiled with --disable-l2 but 'aggregate' contains a L2 primitive. Ignored.\n", filename);
     }
 #endif
@@ -6701,10 +6704,26 @@ int cfg_key_geoipv2_file(char *filename, char *name, char *value_ptr)
 }
 #endif
 
+void cfg_get_primitive_index_value(u_int64_t input, u_int64_t *index, u_int64_t *value)
+{
+  if (index && value) {
+    (*index) = (input >> COUNT_REGISTRY_BITS) & COUNT_INDEX_MASK;
+    (*value) = (input & COUNT_REGISTRY_MASK);
+  }
+}
+
+void cfg_set_primitive_index_value(u_int64_t index, u_int64_t value, u_int64_t *output)
+{
+  if (output) {
+    (*output) = ((index << COUNT_REGISTRY_BITS) | (value & COUNT_REGISTRY_MASK));
+  }
+}
+
 void cfg_set_aggregate(char *filename, u_int64_t registry[], u_int64_t input, char *token)
 {
-  u_int64_t index = (input >> COUNT_REGISTRY_BITS) & COUNT_INDEX_MASK;
-  u_int64_t value = (input & COUNT_REGISTRY_MASK);
+  u_int64_t index, value;
+
+  cfg_get_primitive_index_value(input, &index, &value); 
 
   if (registry[index] & value) {
     Log(LOG_ERR, "ERROR: [%s] '%s' repeated in 'aggregate' or invalid 0x%llx bit code.\n", filename, token, (unsigned long long)input);

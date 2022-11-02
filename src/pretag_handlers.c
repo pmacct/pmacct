@@ -171,19 +171,45 @@ int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct
   // XXX: isprint check?
 
   len = strlen(value);
-  if (!strchr(value, DEFAULT_SEP_INT)) {
-    if (pretag_malloc_label(&e->label, len + 1 /* null */)) return TRUE;
-    strcpy(e->label.val, value);
-    e->label.len = len;
-    e->label.val[e->label.len] = '\0';
-  }
-  else {
-    e->label.val = NULL;
-    e->label.len = 0;
 
-    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Invalid set_label specified.\n", config.name, config.type, filename);
-    return TRUE;
+  /* light validation for this case */
+  if (config.pretag_label_encode_as_map) {
+    char *value_copy, *token;
+    char *map_key, *map_value;
+
+    value_copy = strdup(value);
+    if (value_copy) {
+      for (token = strtok(value_copy, DEFAULT_SEP); token; token = strtok(NULL, DEFAULT_SEP)) {
+	map_key = token;
+	map_value = strchr(token, PRETAG_LABEL_KV_SEP_INT);
+	if (map_value) {
+	  (*map_value) = '\0';
+	  map_value++;
+
+	  if (!strlen(map_key) || !strlen(map_value)) {
+	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Missing pretag_label_encode_as_map key or value.\n", config.name, config.type, filename);
+	    free(value_copy);
+	    return TRUE;
+	  }
+	}
+	else {
+	  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Missing pretag_label_encode_as_map separator.\n", config.name, config.type, filename);
+	  free(value_copy);
+	  return TRUE;
+	}
+      }
+      free(value_copy);
+    }
+    else {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] PT_map_label_handler() failed strdup()\n", config.name, config.type, filename);
+      return TRUE;
+    }
   }
+
+  if (pretag_malloc_label(&e->label, len + 1 /* null */)) return TRUE;
+  strcpy(e->label.val, value);
+  e->label.len = len;
+  e->label.val[e->label.len] = '\0';
 
   if (acct_type == ACCT_NF || acct_type == ACCT_SF || acct_type == ACCT_PM || acct_type == ACCT_PMBGP ||
       acct_type == ACCT_PMBMP || acct_type == ACCT_PMTELE) {
@@ -3419,6 +3445,7 @@ int PT_map_index_entries_src_net_handler(struct id_table_index *idx, int idx_hdl
   if (!idx || !hash_serializer || !src_e) return TRUE;
 
   hash_serial_append(hash_serializer, (char *)&src_e->key.src_net.a, sizeof(struct host_addr), TRUE);
+  hash_serial_append(hash_serializer, (char *)&src_e->key.src_net.m.len, sizeof(src_e->key.src_net.m.len), TRUE);
 
   if (idx->netmask.hdlr_no) {
     if (idx->netmask.hdlr_no != (idx_hdlr_no + 1)) {
@@ -3466,6 +3493,7 @@ int PT_map_index_entries_dst_net_handler(struct id_table_index *idx, int idx_hdl
   if (!idx || !hash_serializer || !src_e) return TRUE;
 
   hash_serial_append(hash_serializer, (char *)&src_e->key.dst_net.a, sizeof(struct host_addr), TRUE);
+  hash_serial_append(hash_serializer, (char *)&src_e->key.dst_net.m.len, sizeof(src_e->key.dst_net.m.len), TRUE);
 
   if (idx->netmask.hdlr_no) {
     if (idx->netmask.hdlr_no != (idx_hdlr_no + 1)) {
@@ -4202,7 +4230,7 @@ int PT_map_index_fdata_src_net_handler(struct id_table_index *idx, int idx_hdlr,
   }
   else return TRUE;
 
-  if (idx_netmask >= 0 && idx->netmask.hdlr_no == idx_hdlr) {
+  if (idx_netmask >= 0 && idx->netmask.hdlr_no == (idx_hdlr + 1)) {
     if (e->key.src_net.a.family == AF_INET) {
       ret = cdada_list_get(idx->netmask.v4.list, idx_netmask, &netmask);
     }
@@ -4218,6 +4246,7 @@ int PT_map_index_fdata_src_net_handler(struct id_table_index *idx, int idx_hdlr,
   }
 
   hash_serial_append(hash_serializer, (char *)&e->key.src_net.a, sizeof(struct host_addr), FALSE);
+  hash_serial_append(hash_serializer, (char *)&e->key.src_net.m.len, sizeof(e->key.src_net.m.len), FALSE);
 
   return FALSE;
 }
@@ -4271,7 +4300,7 @@ int PT_map_index_fdata_dst_net_handler(struct id_table_index *idx, int idx_hdlr,
   }
   else return TRUE;
 
-  if (idx_netmask >= 0 && idx->netmask.hdlr_no == idx_hdlr) {
+  if (idx_netmask >= 0 && idx->netmask.hdlr_no == (idx_hdlr + 1)) {
     if (e->key.dst_net.a.family == AF_INET) {
       ret = cdada_list_get(idx->netmask.v4.list, idx_netmask, &netmask);
     }
@@ -4287,6 +4316,7 @@ int PT_map_index_fdata_dst_net_handler(struct id_table_index *idx, int idx_hdlr,
   }
 
   hash_serial_append(hash_serializer, (char *)&e->key.dst_net.a, sizeof(struct host_addr), FALSE);
+  hash_serial_append(hash_serializer, (char *)&e->key.dst_net.m.len, sizeof(e->key.dst_net.m.len), FALSE);
 
   return FALSE;
 }

@@ -1005,14 +1005,20 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
 	((list_counter + 1) < tokens_counter) && (tokens[list_counter + 1] != NULL);
 	list_counter += 2) {
     memset(&lbl, 0, sizeof(lbl));
-    if ((strlen(tokens[list_counter]) > MAX_PTM_LABEL_TOKEN_LEN - 1) || (strlen(tokens[list_counter + 1]) > MAX_PTM_LABEL_TOKEN_LEN - 1)) {
-      exit(EXIT_FAILURE);
-    } 
-    else {
-      strncpy(lbl.key, tokens[list_counter], (MAX_PTM_LABEL_TOKEN_LEN - 1));
-      strncpy(lbl.value, tokens[list_counter + 1], (MAX_PTM_LABEL_TOKEN_LEN - 1));
-      cdada_list_push_back(ptm_linked_list, &lbl);
+
+    if (strlen(tokens[list_counter]) > (MAX_PTM_LABEL_TOKEN_LEN - 1)) {
+      tokens[list_counter][MAX_PTM_LABEL_TOKEN_LEN - 2] = '$';
+      tokens[list_counter][MAX_PTM_LABEL_TOKEN_LEN - 1] = '\0';
     }
+
+    if (strlen(tokens[list_counter + 1]) > (MAX_PTM_LABEL_TOKEN_LEN - 1)) {
+      tokens[list_counter + 1][MAX_PTM_LABEL_TOKEN_LEN - 2] = '$';
+      tokens[list_counter + 1][MAX_PTM_LABEL_TOKEN_LEN - 1] = '\0';
+    }
+
+    strncpy(lbl.key, tokens[list_counter], (MAX_PTM_LABEL_TOKEN_LEN - 1));
+    strncpy(lbl.value, tokens[list_counter + 1], (MAX_PTM_LABEL_TOKEN_LEN - 1));
+    cdada_list_push_back(ptm_linked_list, &lbl);
   }
 
   return ptm_linked_list;

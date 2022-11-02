@@ -115,6 +115,8 @@ Similarly, BGP tables:
   * src_mac => mac_src (CHAR(17) NOT NULL DEFAULT '0:0:0:0:0:0')
   * dst_mac => mac_dst (CHAR(17) NOT NULL DEFAULT '0:0:0:0:0:0')
   * vlan => vlan (INT(4) NOT NULL DEFAULT 0)
+  * in_vlan => vlan_in (INT(4) NOT NULL DEFAULT 0)
+  * out_vlan => vlan_out (INT(4) NOT NULL DEFAULT 0)
   * src_as => as_src (INT(8) NOT NULL DEFAULT 0)
   * dst_as => as_dst (INT(8) NOT NULL DEFAULT 0)
   * src_host => ip_src (CHAR(45) NOT NULL DEFAULT '0.0.0.0')

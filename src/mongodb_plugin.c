@@ -513,7 +513,19 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
         bson_append_string(bson_elem, "mac_dst", dst_mac);
       }
   
-      if (config.what_to_count & COUNT_VLAN) bson_append_int(bson_elem, "vlan_id", data->vlan_id);
+      if (config.what_to_count & COUNT_VLAN) {
+	if (config.tmp_vlan_legacy) {
+	  bson_append_int(bson_elem, "vlan", data->vlan_id);
+	}
+	else {
+	  bson_append_int(bson_elem, "vlan_in", data->vlan_id);
+	}
+      }
+
+      if (config.what_to_count_2 & COUNT_OUT_VLAN) {
+	  bson_append_int(bson_elem, "vlan_out", data->out_vlan_id);
+      }
+
       if (config.what_to_count & COUNT_COS) bson_append_int(bson_elem, "cos", data->cos);
       if (config.what_to_count & COUNT_ETHERTYPE) {
         sprintf(misc_str, "%x", data->etype); 
@@ -746,7 +758,8 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
   
       if (config.what_to_count & COUNT_IP_TOS) bson_append_int(bson_elem, "tos", data->tos);
       if (config.what_to_count_2 & COUNT_SAMPLING_RATE) bson_append_int(bson_elem, "sampling_rate", data->sampling_rate);
-      if (config.what_to_count_2 & COUNT_SAMPLING_DIRECTION) bson_append_string(bson_elem, "sampling_direction", data->sampling_direction);
+      if (config.what_to_count_2 & COUNT_SAMPLING_DIRECTION) bson_append_string(bson_elem, "sampling_direction",
+										sampling_direction_print(data->sampling_direction));
   
       if (config.what_to_count_2 & COUNT_POST_NAT_SRC_HOST) {
         addr_to_str(src_host, &pnat->post_nat_src_ip);

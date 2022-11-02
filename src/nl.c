@@ -309,9 +309,9 @@ int ip_handler(register struct packet_ptrs *pptrs)
         if (((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_FIN) pptrs->tcp_flags |= TH_FIN;
         if (((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_RST) pptrs->tcp_flags |= TH_RST;
         if (((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_ACK && pptrs->tcp_flags) pptrs->tcp_flags |= TH_ACK;
-      }
 
-      ip_flow_handler(pptrs);
+	ip_flow_handler(pptrs);
+      }
     }
 
     /* XXX: optimize/short circuit here! */
@@ -492,9 +492,9 @@ int ip6_handler(register struct packet_ptrs *pptrs)
         if (((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_FIN) pptrs->tcp_flags |= TH_FIN;
         if (((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_RST) pptrs->tcp_flags |= TH_RST;
         if (((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags & TH_ACK && pptrs->tcp_flags) pptrs->tcp_flags |= TH_ACK;
-      }
 
-      ip_flow6_handler(pptrs);
+	ip_flow6_handler(pptrs);
+      }
     }
 
     /* XXX: optimize/short circuit here! */
@@ -507,6 +507,8 @@ int ip6_handler(register struct packet_ptrs *pptrs)
   pptrs->icmp_code = FALSE;
 
   if (pptrs->l4_proto == IPPROTO_ICMPV6) {
+    pptrs->tlh_ptr = ptr;
+
     pptrs->icmp_type = ((struct pm_icmphdr *)pptrs->tlh_ptr)->type;
     pptrs->icmp_code = ((struct pm_icmphdr *)pptrs->tlh_ptr)->code;
   }
@@ -541,7 +543,7 @@ int PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
     pptrs->have_tag2 = FALSE;
   }
 
-  /* Giving a first try with index(es) */
+  /* If we have any index defined, let's use it */
   if (config.maps_index && pretag_index_have_one(t)) {
     struct id_entry *index_results[ID_TABLE_INDEX_RESULTS];
     u_int32_t iterator;
@@ -554,7 +556,7 @@ int PM_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
       if (!(ret & PRETAG_MAP_RCODE_JEQ)) return ret;
     }
 
-    /* if we have at least one index we trust we did a good job */
+    /* done */
     return ret;
   }
 

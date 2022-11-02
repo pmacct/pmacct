@@ -25,6 +25,7 @@
 extern struct channels_list_entry channels_list[MAX_N_PLUGINS]; /* communication channels: core <-> plugins */
 extern pkt_handler phandler[N_PRIMITIVES];
 
+extern void warn_unsupported_packet_handler(u_int64_t, u_int64_t);
 extern void evaluate_packet_handlers(); 
 extern void src_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void dst_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -72,6 +73,8 @@ extern void mpls_vpn_rd_frommap_handler(struct channels_list_entry *, struct pac
 extern void NF_src_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_dst_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void NF_in_vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void NF_out_vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_cos_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_etype_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_src_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -145,6 +148,8 @@ extern void igp_peer_dst_ip_handler(struct channels_list_entry *, struct packet_
 extern void SF_src_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_dst_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void SF_in_vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void SF_out_vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_cos_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_etype_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_src_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

@@ -2177,22 +2177,46 @@ int evaluate_tags(struct pretag_filter *filter, pm_id_t tag)
 
 int evaluate_labels(struct pretag_label_filter *filter, pt_label_t *label)
 {
-  int index;
+  int index, ret;
+  int null_label_len = 4; /* 'null' excluding terminating zero */
   char *null_label = "null";
 
   if (filter->num == 0) return FALSE; /* no entries in the filter array: tag filtering disabled */
-  if (!label->val) label->val = strdup(null_label);
+  if (!label->val) {
+    label->val = null_label;
+    label->len = null_label_len;
+  }
 
   for (index = 0; index < filter->num; index++) {
-    if (!memcmp(filter->table[index].v, label->val, filter->table[index].len)) return (FALSE | filter->table[index].neg);
+    if (filter->table[index].len != label->len) {
+      ret = TRUE;
+    }
     else {
-      if (filter->table[index].neg) return FALSE;
+      ret = FALSE;
+    }
+
+    if (!ret) {
+      ret = memcmp(filter->table[index].v, label->val, filter->table[index].len);
+    }
+
+    /* cleanup */
+    if (label->val == null_label) {
+      label->val = NULL;
+      label->len = 0;
+    }
+
+    if (!ret) {
+      return (FALSE | filter->table[index].neg);
+    }
+    else {
+      if (filter->table[index].neg) {
+	return FALSE;
+      }
     }
   }
 
   return TRUE;
 }
-
 char *write_sep(char *sep, int *count)
 {
   static char empty_sep[] = "";
@@ -3703,3 +3727,30 @@ unsigned long pm_djb2_string_hash(unsigned char *str)
   return hash;
 }
 
+char *lookup_id_to_string_struct(const struct _id_to_string_struct *table, u_int64_t value)
+{
+  int index;
+
+  for (index = 0; table[index].id; index++) {
+    if (table[index].id == value) {
+      return (char * const) table[index].str;
+    }
+  }
+
+  return NULL;
+}
+
+const char *sampling_direction_print(u_int8_t sd_id)
+{
+  if (sd_id <= SAMPLING_DIRECTION_MAX) return sampling_direction[sd_id];
+  else return sampling_direction[SAMPLING_DIRECTION_UNKNOWN];
+}
+
+u_int8_t sampling_direction_str2id(char *sd_str)
+{
+  if (!strcmp(sd_str, "u")) return SAMPLING_DIRECTION_UNKNOWN;
+  else if (!strcmp(sd_str, "i")) return SAMPLING_DIRECTION_INGRESS;
+  else if (!strcmp(sd_str, "e")) return SAMPLING_DIRECTION_EGRESS;
+
+  return SAMPLING_DIRECTION_UNKNOWN;
+}

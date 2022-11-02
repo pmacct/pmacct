@@ -1845,6 +1845,14 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     tee_dissect->flowSetLen = NfDataHdrV9Sz; /* updated later */
   }
 
+  if (config.debug) {
+    sa_to_addr((struct sockaddr *)pptrs->f_agent, &debug_a, &debug_agent_port);
+    addr_to_str(debug_agent_addr, &debug_a);
+
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): Processing NetFlow/IPFIX flowset [%d] from [%s:%u] seqno [%u]\n",
+	config.name, fid, debug_agent_addr, debug_agent_port, FlowSeq);
+  }
+
   if (fid == 0 || fid == 2) { /* template: 0 NetFlow v9, 2 IPFIX */ 
     unsigned char *tpl_ptr = pkt;
     u_int16_t pens = 0;
@@ -3112,7 +3120,8 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
 
   sa = (struct sockaddr *) pptrs->f_agent;
 
-  /* The id_table is shared between by IPv4 and IPv6 NetFlow agents.
+  /* 
+     The id_table is shared between by IPv4 and IPv6 NetFlow agents.
      IPv4 ones are in the lower part (0..x), IPv6 ones are in the upper
      part (x+1..end)
   */
@@ -3125,7 +3134,7 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
     pptrs->have_tag2 = FALSE;
   }
 
-  /* Giving a first try with index(es) */
+  /* If we have any index defined, let's use it */
   if (config.maps_index && pretag_index_have_one(t)) {
     struct id_entry *index_results[ID_TABLE_INDEX_RESULTS];
     u_int32_t iterator, num_results;
@@ -3137,7 +3146,7 @@ int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_i
       if (!(ret & PRETAG_MAP_RCODE_JEQ)) goto exit_lane;
     }
 
-    /* if we have at least one index we trust we did a good job */
+    /* done */
     goto exit_lane;
   }
 

@@ -83,8 +83,17 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc & COUNT_DST_MAC)
     avro_schema_record_field_append(schema, "mac_dst", avro_schema_string());
 
-  if (wtc & COUNT_VLAN)
-    avro_schema_record_field_append(schema, "vlan", avro_schema_long());
+  if (wtc & COUNT_VLAN) {
+    if (config.tmp_vlan_legacy) {
+      avro_schema_record_field_append(schema, "vlan", avro_schema_long());
+    }
+    else {
+      avro_schema_record_field_append(schema, "vlan_in", avro_schema_long());
+    }
+  }
+
+  if (wtc_2 & COUNT_OUT_VLAN)
+    avro_schema_record_field_append(schema, "vlan_out", avro_schema_long());
 
   if (wtc & COUNT_COS)
     avro_schema_record_field_append(schema, "cos", avro_schema_long());
@@ -253,7 +262,7 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
     avro_schema_record_field_append(schema, "sampling_rate", avro_schema_long());
 
   if (wtc_2 & COUNT_SAMPLING_DIRECTION)
-    avro_schema_record_field_append(schema, "sampling_direction", avro_schema_long());
+    avro_schema_record_field_append(schema, "sampling_direction", avro_schema_string());
 
   if (wtc_2 & COUNT_POST_NAT_SRC_HOST)
     avro_schema_record_field_append(schema, "post_nat_ip_src", avro_schema_string());
@@ -509,8 +518,19 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
   }
 
   if (wtc & COUNT_VLAN) {
-    pm_avro_check(avro_value_get_by_name(&value, "vlan", &field, NULL));
-    pm_avro_check(avro_value_set_long(&field, pbase->vlan_id));
+    if (config.tmp_vlan_legacy) {
+      pm_avro_check(avro_value_get_by_name(&value, "vlan", &field, NULL));
+      pm_avro_check(avro_value_set_long(&field, pbase->vlan_id));
+    }
+    else {
+      pm_avro_check(avro_value_get_by_name(&value, "vlan_in", &field, NULL));
+      pm_avro_check(avro_value_set_long(&field, pbase->vlan_id));
+    }
+  }
+
+  if (wtc_2 & COUNT_OUT_VLAN) {
+    pm_avro_check(avro_value_get_by_name(&value, "vlan_out", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pbase->out_vlan_id));
   }
 
   if (wtc & COUNT_COS) {
@@ -900,7 +920,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
 
   if (wtc_2 & COUNT_SAMPLING_DIRECTION) {
     pm_avro_check(avro_value_get_by_name(&value, "sampling_direction", &field, NULL));
-    pm_avro_check(avro_value_set_string(&field, pbase->sampling_direction));
+    pm_avro_check(avro_value_set_string(&field, sampling_direction_print(pbase->sampling_direction)));
   }
 
   if (wtc_2 & COUNT_POST_NAT_SRC_HOST) {
@@ -984,6 +1004,11 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
   if (wtc_2 & COUNT_TUNNEL_SRC_PORT) {
     pm_avro_check(avro_value_get_by_name(&value, "tunnel_port_src", &field, NULL));
     pm_avro_check(avro_value_set_long(&field, ptun->tunnel_src_port));
+  }
+
+  if (wtc_2 & COUNT_TUNNEL_DST_PORT) {
+    pm_avro_check(avro_value_get_by_name(&value, "tunnel_port_dst", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, ptun->tunnel_dst_port));
   }
 
   if (wtc & COUNT_TUNNEL_TCPFLAGS) {

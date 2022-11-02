@@ -699,6 +699,9 @@ void Tee_init_zmq_host(struct p_zmq_host *zmq_host, char *zmq_address, u_int32_t
 int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, char *src_ip, u_int16_t src_port, int transparent, int pipe_size)
 {
   int s, ret = 0;
+#if defined BSD
+  int hincl = TRUE;
+#endif
 
   if (!transparent) {
     struct host_addr source_ip;
@@ -732,7 +735,6 @@ int Tee_prepare_sock(struct sockaddr *addr, socklen_t len, char *src_ip, u_int16
       Log(LOG_ERR, "ERROR ( %s/%s ): socket() error: %s\n", config.name, config.type, strerror(errno));
       exit_gracefully(1);
     }
-
 
 #if defined BSD
     setsockopt(s, IPPROTO_IP, IP_HDRINCL, &hincl, (socklen_t) sizeof(hincl));

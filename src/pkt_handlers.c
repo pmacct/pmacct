@@ -40,9 +40,32 @@
 struct channels_list_entry channels_list[MAX_N_PLUGINS];
 pkt_handler phandler[N_PRIMITIVES];
 
-
-
 /* functions */
+void warn_unsupported_packet_handler(u_int64_t primitive, u_int64_t tool)
+{
+  char *primitive_str = NULL, *tool_str = NULL;
+
+  primitive_str = lookup_id_to_string_struct(_primitives_map, primitive);
+  tool_str = lookup_id_to_string_struct(_tools_map, tool);
+
+  if (primitive_str) {
+    if (tool_str) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): primitive '%s' is not supported by '%s'.\n", config.name, config.type, primitive_str, tool_str);
+    }
+    else {
+      Log(LOG_WARNING, "WARN ( %s/%s ): primitive '%s' is not supported by the tool in use.\n", config.name, config.type, primitive_str);
+    }
+  }
+  else {
+    if (tool_str) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): primitive %" PRIu64 "is not supported by '%s'.\n", config.name, config.type, primitive, tool_str);
+    }
+    else {
+      Log(LOG_WARNING, "WARN ( %s/%s ): primitive %" PRIu64 "is not supported by the tool in use.\n", config.name, config.type, primitive);
+    }
+  }
+}
+
 void evaluate_packet_handlers()
 {
   int primitives = 0, index = 0;
@@ -75,11 +98,20 @@ void evaluate_packet_handlers()
       }
       else {
         if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = vlan_handler;
-	else primitives--; /* Just in case */
+        else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_in_vlan_handler;
+        else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_in_vlan_handler;
         primitives++;
-
-	// XXX
       }
+    }
+
+    if (channels_list[index].aggregation_2 & COUNT_OUT_VLAN) {
+      if (config.acct_type == ACCT_PM) {
+        warn_unsupported_packet_handler(COUNT_INT_OUT_VLAN, ACCT_PM);
+	primitives--;
+      }
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_out_vlan_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_out_vlan_handler;
+      primitives++;
     }
 
     if (channels_list[index].aggregation & COUNT_COS) {
@@ -288,9 +320,12 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation & COUNT_PEER_SRC_IP) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_peer_src_ip_handler; 
+      if (config.acct_type == ACCT_PM) {
+        warn_unsupported_packet_handler(COUNT_INT_PEER_SRC_IP, ACCT_PM);
+	primitives--;
+      }
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_peer_src_ip_handler; 
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_peer_src_ip_handler; 
-      else primitives--; /* Just in case */
       primitives++;
     }
 
@@ -438,9 +473,12 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation_2 & COUNT_MPLS_PW_ID) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_pw_id_handler;
+      if (config.acct_type == ACCT_PM) {
+	warn_unsupported_packet_handler(COUNT_INT_MPLS_PW_ID, ACCT_PM);
+	primitives--;
+      }
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_pw_id_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_mpls_pw_id_handler;
-      else primitives--;
       primitives++;
     }
 
@@ -542,10 +580,16 @@ void evaluate_packet_handlers()
       primitives++;
     }
     
-    /* ACCT_PM & ACCT_SF atm not handled */
     if (channels_list[index].aggregation_2 & COUNT_FWD_STATUS) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_fwd_status_handler;
-      else primitives--;
+      if (config.acct_type == ACCT_PM) {
+	warn_unsupported_packet_handler(COUNT_INT_FWD_STATUS, ACCT_PM);
+	primitives--;
+      }
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_fwd_status_handler;
+      else if (config.acct_type == ACCT_SF) {
+	warn_unsupported_packet_handler(COUNT_INT_FWD_STATUS, ACCT_SF);
+	primitives--;
+      }
       primitives++;
     }
 
@@ -656,101 +700,170 @@ void evaluate_packet_handlers()
 #endif
 
     if (channels_list[index].aggregation_2 & COUNT_POST_NAT_SRC_HOST) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_post_nat_src_host_handler;
-      else primitives--;
+      if (config.acct_type == ACCT_PM) {
+	warn_unsupported_packet_handler(COUNT_INT_POST_NAT_SRC_HOST, ACCT_PM);
+        primitives--;
+      }
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_post_nat_src_host_handler;
+      else if (config.acct_type == ACCT_SF) {
+	warn_unsupported_packet_handler(COUNT_INT_POST_NAT_SRC_HOST, ACCT_SF);
+        primitives--;
+      }
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_POST_NAT_DST_HOST) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_post_nat_dst_host_handler;
-      else primitives--;
+      if (config.acct_type == ACCT_PM) {
+        warn_unsupported_packet_handler(COUNT_INT_POST_NAT_DST_HOST, ACCT_PM);
+        primitives--;
+      }
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_post_nat_dst_host_handler;
+      else if (config.acct_type == ACCT_SF) {
+        warn_unsupported_packet_handler(COUNT_INT_POST_NAT_SRC_HOST, ACCT_SF);
+        primitives--;
+      }
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_POST_NAT_SRC_PORT) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_post_nat_src_port_handler;
-      else primitives--;
+      if (config.acct_type == ACCT_PM) {
+        warn_unsupported_packet_handler(COUNT_INT_POST_NAT_SRC_PORT, ACCT_PM);
+        primitives--;
+      }
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_post_nat_src_port_handler;
+      else if (config.acct_type == ACCT_SF) {
+        warn_unsupported_packet_handler(COUNT_INT_POST_NAT_SRC_PORT, ACCT_SF);
+        primitives--;
+      }
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_POST_NAT_DST_PORT) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_post_nat_dst_port_handler;
-      else primitives--;
+      if (config.acct_type == ACCT_PM) {
+        warn_unsupported_packet_handler(COUNT_INT_POST_NAT_DST_PORT, ACCT_PM);
+        primitives--;
+      }
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_post_nat_dst_port_handler;
+      else if (config.acct_type == ACCT_SF) {
+        warn_unsupported_packet_handler(COUNT_INT_POST_NAT_DST_PORT, ACCT_SF);
+        primitives--;
+      }
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_NAT_EVENT) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_nat_event_handler;
-      else primitives--;
+      if (config.acct_type == ACCT_PM) {
+        warn_unsupported_packet_handler(COUNT_INT_NAT_EVENT, ACCT_PM);
+        primitives--;
+      }
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_nat_event_handler;
+      else if (config.acct_type == ACCT_SF) {
+        warn_unsupported_packet_handler(COUNT_INT_NAT_EVENT, ACCT_SF);
+        primitives--;
+      }
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_FW_EVENT) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_fw_event_handler;
-      else primitives--;
+      if (config.acct_type == ACCT_PM) {
+        warn_unsupported_packet_handler(COUNT_INT_FW_EVENT, ACCT_PM);
+        primitives--;
+      }
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_fw_event_handler;
+      else if (config.acct_type == ACCT_SF) {
+        warn_unsupported_packet_handler(COUNT_INT_FW_EVENT, ACCT_SF);
+        primitives--;
+      }
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_SRC_MAC) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_src_mac_handler;
+      else if (config.acct_type == ACCT_NF) {
+        warn_unsupported_packet_handler(COUNT_INT_TUNNEL_SRC_MAC, ACCT_NF);
+        primitives--;
+      }
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_src_mac_handler;
-      else primitives--;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_DST_MAC) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_dst_mac_handler;
+      else if (config.acct_type == ACCT_NF) {
+        warn_unsupported_packet_handler(COUNT_INT_TUNNEL_DST_MAC, ACCT_NF);
+        primitives--;
+      }
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_dst_mac_handler;
-      else primitives--;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_SRC_HOST) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_src_host_handler;
+      else if (config.acct_type == ACCT_NF) {
+        warn_unsupported_packet_handler(COUNT_INT_TUNNEL_SRC_HOST, ACCT_NF);
+        primitives--;
+      }
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_src_host_handler;
-      else primitives--;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_DST_HOST) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_dst_host_handler;
+      else if (config.acct_type == ACCT_NF) {
+        warn_unsupported_packet_handler(COUNT_INT_TUNNEL_DST_HOST, ACCT_NF);
+        primitives--;
+      }
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_dst_host_handler;
-      else primitives--;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_IP_PROTO) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_ip_proto_handler;
+      else if (config.acct_type == ACCT_NF) {
+        warn_unsupported_packet_handler(COUNT_INT_TUNNEL_IP_PROTO, ACCT_NF);
+        primitives--;
+      }
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_ip_proto_handler;
-      else primitives--;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_IP_TOS) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_ip_tos_handler;
+      else if (config.acct_type == ACCT_NF) {
+        warn_unsupported_packet_handler(COUNT_INT_TUNNEL_IP_TOS, ACCT_NF);
+        primitives--;
+      }
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_ip_tos_handler;
-      else primitives--;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_SRC_PORT) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_src_port_handler;
+      else if (config.acct_type == ACCT_NF) {
+        warn_unsupported_packet_handler(COUNT_INT_TUNNEL_SRC_PORT, ACCT_NF);
+        primitives--;
+      }
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_src_port_handler;
-      else primitives--;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_DST_PORT) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_dst_port_handler;
+      else if (config.acct_type == ACCT_NF) {
+        warn_unsupported_packet_handler(COUNT_INT_TUNNEL_DST_PORT, ACCT_NF);
+        primitives--;
+      }
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_dst_port_handler;
-      else primitives--;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_TCPFLAGS) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_tcp_flags_handler;
+      else if (config.acct_type == ACCT_NF) {
+        warn_unsupported_packet_handler(COUNT_INT_TUNNEL_TCPFLAGS, ACCT_NF);
+        primitives--;
+      }
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_tcp_flags_handler;
-      else primitives--;
       primitives++;
     }
 
@@ -785,13 +898,23 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation_2 & COUNT_TIMESTAMP_START) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = timestamp_start_handler; // XXX: to be removed
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_timestamp_start_handler;
-      else primitives--;
+      else if (config.acct_type == ACCT_SF) {
+        warn_unsupported_packet_handler(COUNT_INT_TIMESTAMP_START, ACCT_SF);
+        primitives--;
+      }
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TIMESTAMP_END) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_timestamp_end_handler;
-      else primitives--;
+      if (config.acct_type == ACCT_PM) {
+        warn_unsupported_packet_handler(COUNT_INT_TIMESTAMP_END, ACCT_PM);
+        primitives--;
+      }
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_timestamp_end_handler;
+      else if (config.acct_type == ACCT_SF) {
+        warn_unsupported_packet_handler(COUNT_INT_TIMESTAMP_END, ACCT_SF);
+        primitives--;
+      }
       primitives++;
     }
 
@@ -803,29 +926,45 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation_2 & COUNT_EXPORT_PROTO_SEQNO) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_sequence_number_handler;
+      if (config.acct_type == ACCT_PM) {
+        warn_unsupported_packet_handler(COUNT_INT_EXPORT_PROTO_SEQNO, ACCT_PM);
+        primitives--;
+      }
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_sequence_number_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_sequence_number_handler;
-      else primitives--;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_EXPORT_PROTO_VERSION) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_version_handler;
+      if (config.acct_type == ACCT_PM) {
+        warn_unsupported_packet_handler(COUNT_INT_EXPORT_PROTO_VERSION, ACCT_PM);
+        primitives--;
+      }
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_version_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_version_handler;
-      else primitives--;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_EXPORT_PROTO_SYSID) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_sysid_handler;
+      if (config.acct_type == ACCT_PM) {
+        warn_unsupported_packet_handler(COUNT_INT_EXPORT_PROTO_SYSID, ACCT_PM);
+        primitives--;
+      }
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_sysid_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_sysid_handler;
-      else primitives--;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_EXPORT_PROTO_TIME) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_timestamp_export_handler;
-      else primitives--;
+      if (config.acct_type == ACCT_PM) {
+        warn_unsupported_packet_handler(COUNT_INT_EXPORT_PROTO_TIME, ACCT_PM);
+        primitives--;
+      }
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_timestamp_export_handler;
+      else if (config.acct_type == ACCT_SF) {
+        warn_unsupported_packet_handler(COUNT_INT_EXPORT_PROTO_TIME, ACCT_SF);
+        primitives--;
+      }
       primitives++;
     }
 
@@ -1730,8 +1869,7 @@ void sampling_direction_handler(struct channels_list_entry *chptr, struct packet
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
   /* dummy */
-  pdata->primitives.sampling_direction[0] = 'u';
-  pdata->primitives.sampling_direction[1] = '\0';
+  pdata->primitives.sampling_direction = SAMPLING_DIRECTION_UNKNOWN;
 }
 
 void mpls_vpn_rd_frommap_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -1915,6 +2053,56 @@ void NF_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
     }
 
     pdata->primitives.vlan_id = ntohs(pdata->primitives.vlan_id);
+    break;
+  default:
+    break;
+  }
+}
+
+void NF_in_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_IN_VLAN].len) {
+      memcpy(&pdata->primitives.vlan_id, pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off, MIN(tpl->tpl[NF9_IN_VLAN].len, 2));
+    }
+    else if (tpl->tpl[NF9_DOT1QVLANID].len) {
+      memcpy(&pdata->primitives.vlan_id, pptrs->f_data+tpl->tpl[NF9_DOT1QVLANID].off, MIN(tpl->tpl[NF9_DOT1QVLANID].len, 2));
+    }
+    else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len) {
+      vlan_handler(chptr, pptrs, data);
+      break;
+    }
+
+    pdata->primitives.vlan_id = ntohs(pdata->primitives.vlan_id);
+    break;
+  default:
+    break;
+  }
+}
+
+void NF_out_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->tpl[NF9_OUT_VLAN].len) {
+      memcpy(&pdata->primitives.out_vlan_id, pptrs->f_data+tpl->tpl[NF9_OUT_VLAN].off, MIN(tpl->tpl[NF9_OUT_VLAN].len, 2));
+    }
+    else if (tpl->tpl[NF9_POST_DOT1QVLANID].len) {
+      memcpy(&pdata->primitives.out_vlan_id, pptrs->f_data+tpl->tpl[NF9_POST_DOT1QVLANID].off, MIN(tpl->tpl[NF9_POST_DOT1QVLANID].len, 2));
+    }
+
+    pdata->primitives.out_vlan_id = ntohs(pdata->primitives.out_vlan_id);
     break;
   default:
     break;
@@ -2664,7 +2852,7 @@ void NF_time_msecs_handler(struct channels_list_entry *chptr, struct packet_ptrs
     if (tpl->tpl[NF9_FIRST_SWITCHED].len && hdr->version == 9) {
       memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED].off, tpl->tpl[NF9_FIRST_SWITCHED].len);
       pdata->time_start.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
-        ((ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
+        ((int32_t)(ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
 
       if (config.debug) {
 	if (ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime) < ntohl(fstime)) {
@@ -2745,7 +2933,7 @@ void NF_time_msecs_handler(struct channels_list_entry *chptr, struct packet_ptrs
     if (tpl->tpl[NF9_LAST_SWITCHED].len && hdr->version == 9) {
       memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED].off, tpl->tpl[NF9_LAST_SWITCHED].len);
       pdata->time_end.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
-        ((ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
+        ((int32_t)(ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
 
       if (config.debug) {
 	if (ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime) < ntohl(fstime)) {
@@ -2835,7 +3023,7 @@ void NF_time_secs_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   case 9:
     memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED].off, tpl->tpl[NF9_FIRST_SWITCHED].len);
     pdata->time_start.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
-      (ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime));
+      (int32_t)(ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime));
 
     if (config.debug) {
       if (ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime) < ntohl(fstime)) {
@@ -2846,7 +3034,7 @@ void NF_time_secs_handler(struct channels_list_entry *chptr, struct packet_ptrs 
 
     memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED].off, tpl->tpl[NF9_LAST_SWITCHED].len);
     pdata->time_end.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
-      (ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime));
+      (int32_t)(ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime));
 
     if (config.debug) {
       if (ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime) < ntohl(fstime)) {
@@ -3133,17 +3321,15 @@ void NF_sampling_direction_handler(struct channels_list_entry *chptr, struct pac
 
   switch(direction) {
   case 0:
-    pdata->primitives.sampling_direction[0] = 'i';
+    pdata->primitives.sampling_direction = SAMPLING_DIRECTION_INGRESS;
     break;
   case 1:
-    pdata->primitives.sampling_direction[0] = 'e';
+    pdata->primitives.sampling_direction = SAMPLING_DIRECTION_EGRESS;
     break;
   default:
-    pdata->primitives.sampling_direction[0] = 'u';
+    pdata->primitives.sampling_direction = SAMPLING_DIRECTION_UNKNOWN;
     break;
   }
-
-  pdata->primitives.sampling_direction[1] = '\0';
 }
 
 void NF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
@@ -3162,7 +3348,7 @@ void NF_timestamp_start_handler(struct channels_list_entry *chptr, struct packet
     if (tpl->tpl[NF9_FIRST_SWITCHED].len && hdr->version == 9) {
       memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_FIRST_SWITCHED].off, tpl->tpl[NF9_FIRST_SWITCHED].len);
       pnat->timestamp_start.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
-        ((ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
+        ((int32_t)(ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
     }
     else if (tpl->tpl[NF9_FIRST_SWITCHED].len && hdr->version == 10) {
       if (tpl->tpl[NF9_SYS_UPTIME_MSEC].len == 8) {
@@ -3261,7 +3447,7 @@ void NF_timestamp_end_handler(struct channels_list_entry *chptr, struct packet_p
     if (tpl->tpl[NF9_LAST_SWITCHED].len && hdr->version == 9) {
       memcpy(&fstime, pptrs->f_data+tpl->tpl[NF9_LAST_SWITCHED].off, tpl->tpl[NF9_LAST_SWITCHED].len);
       pnat->timestamp_end.tv_sec = ntohl(((struct struct_header_v9 *) pptrs->f_header)->unix_secs)-
-        ((ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
+        ((int32_t)(ntohl(((struct struct_header_v9 *) pptrs->f_header)->SysUptime)-ntohl(fstime))/1000);
     }
     else if (tpl->tpl[NF9_LAST_SWITCHED].len && hdr->version == 10) {
       if (tpl->tpl[NF9_SYS_UPTIME_MSEC].len == 8) {
@@ -4855,6 +5041,22 @@ void SF_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptr
   if (!pdata->primitives.vlan_id) pdata->primitives.vlan_id = sample->out_vlan;
 }
 
+void SF_in_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  pdata->primitives.vlan_id = sample->in_vlan;
+}
+
+void SF_out_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  pdata->primitives.out_vlan_id = sample->out_vlan;
+}
+
 void SF_cos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
@@ -5369,8 +5571,7 @@ void SF_sampling_direction_handler(struct channels_list_entry *chptr, struct pac
   struct pkt_data *pdata = (struct pkt_data *) *data;
 
   /* dummy */
-  pdata->primitives.sampling_direction[0] = 'u';
-  pdata->primitives.sampling_direction[1] = '\0';
+  pdata->primitives.sampling_direction = SAMPLING_DIRECTION_UNKNOWN;
 }
 
 void SF_timestamp_arrival_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

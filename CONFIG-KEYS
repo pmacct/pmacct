@@ -47,10 +47,10 @@ VALUES:		[ true | false ]
 DESC:		Daemonizes the process (default: false).
 
 KEY:		aggregate (-c)
-VALUES:		[ src_mac, dst_mac, vlan, cos, etype, src_host, dst_host, src_net, dst_net,
-		 src_mask, dst_mask, src_as, dst_as, src_port, dst_port, tos, proto, none,
-		 sum_mac, sum_host, sum_net, sum_as, sum_port, flows, tag, tag2, label,
-		 class, tcpflags, in_iface, out_iface, std_comm, ext_comm, lrg_comm,
+VALUES:		[ src_mac, dst_mac, vlan, in_vlan, out_vlan, cos, etype, src_host, dst_host,
+		 src_net, dst_net, src_mask, dst_mask, src_as, dst_as, src_port, dst_port,
+		 tos, proto, none, sum_mac, sum_host, sum_net, sum_as, sum_port, flows, tag,
+		 tag2, label, class, tcpflags, in_iface, out_iface, std_comm, ext_comm, lrg_comm,
 		 as_path, peer_src_ip, peer_dst_ip, peer_src_as, peer_dst_as, local_pref,
 		 med, dst_roa, src_std_comm, src_ext_comm, src_lrg_comm, src_as_path,
 		 src_local_pref, src_med, src_roa, mpls_vpn_rd, mpls_pw_id, mpls_label_top,
@@ -141,6 +141,12 @@ NOTES:		* List of the aggregation primitives available to each specific pmacct d
 		  class primitive instead allows to leverage traditional classification using
 		  NetFlow v9/IPFIX IE 94, 95 and 96 (applicationDescription, applicationId
 		  and applicationName).
+		* vlan / in_vlan / out_vlan: in NetFlow / IPFIX and sFlow, where there is
+		  indication (explicit or implicit, ie. expressing sample direction) of
+		  ingress / egress sampling, 'vlan' checks both cases reporting the VLAN ID
+		  of the first case checked reporting a non-zero ID (ingress > egress); more
+		  intuitively, in_vlan reports ingress VLAN ID if any and out_vlan reports
+		  egress VLAN ID if any.
 DEFAULT:	src_host
 
 KEY:		aggregate_primitives [GLOBAL, MAP]
@@ -1467,7 +1473,8 @@ DESC:		Defines the executable to be launched at fixed time intervals to post-pro
 		A number of environment variables are set in order to allow the trigger to take actions and 
 		are listed in docs/TRIGGER_VARS. Non-SQL plugins feature a simpler implementation: triggers
 		can only be fired each time data is written to the backend (ie. print_refresh_time) and no
-		environment variables are passed over to the executable.
+		environment variables are passed over to the executable; useful also to upload data to cloud
+		storage that supports upload via API end-points. 
 DEFAULT:	none
 
 KEY:		sql_trigger_time
@@ -1811,7 +1818,7 @@ DESC:		Defines the UDP port where to bind nfacctd (nfacctd_port) and sfacctd (sf
 		so with incoming NetFlow v9/IPFIX template-based protocols, nfacctd_templates_receiver and
 		nfacctd_templates_port should be used. At the end of this document, reference (1) to a
 		URL to a presentation of the SO_REUSEPORT feature. To enable SO_REUSEPORT on a Linux system
-		supporting it 'sysctl net.core.allow_reuseport=1'.
+		supporting it 'sysctl net.core.allow_reuseport=1'. 
 DEFAULT:	nfacctd_port: 2100; sfacctd_port: 6343 
 
 KEY:		[ nfacctd_ip | sfacctd_ip ] (-L) [GLOBAL, NO_PMACCTD, NO_UACCTD]
@@ -1820,8 +1827,10 @@ DESC:		Defines the IPv4/IPv6 address where to bind the nfacctd (nfacctd_ip) and 
 DEFAULT:	all interfaces
 
 KEY:            [ nfacctd_interface | sfacctd_interface ] [GLOBAL]
-DESC:           Defines the interface for the nfacctd / sfacctd daemon to listen on. This makes it possible
-		to receive flow packets entirely in one VRF by specifying the VRF device name here.
+DESC:           Defines the interface for the nfacctd / sfacctd daemon to listen on making it possible to
+		receive data in VRFs on Linux. If having to listen on an IPv6 address inside the VRF, this
+		has to be specified via the relevant config directive, ie. nfacctd_ip / sfacctd_ip, as not
+		doing so prevents the daemon to correctly receive data.
 DEFAULT:        none
 
 KEY:		[ nfacctd_ipv6_only | sfacctd_ipv6_only ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
@@ -2093,11 +2102,22 @@ DESC:		Enables indexing of maps (ie. pre_tag_map) to increase lookup speeds on l
 		supported. Only a sub-set of pre_tag_map keys are supported, including: ip, bgp_nexthop,
 		vlan, cvlan, src_mac, dst_mac, src_net, dst_net, mpls_vpn_rd, mpls_pw_id, src_as, dst_as,
 		peer_src_as, peer_dst_as, input, output. For keys accepting IP addresses as value (ie. ip,
-		src_net and dst_net), only specific IP addresses, ie. /32 for v4 and /128 for v6, are
-		supported. Also, negations are not supported (ie. 'in=-216' match all but input interface
+		src_net and dst_net) specific IP addresses, ie. /32 for v4 and /128 for v6, are supported
+		throughout. Also, negations are not supported (ie. 'in=-216' match all but input interface
 		216). bgp_agent_map and sampling_map implement a separate caching mechanism and hence do
 		not leverage this feature.
 DEFAULT:        false
+NOTES:		* Initial support for networks has been introduced for src_net and dst_net keys: in any
+		  entry, only one key can include a network because matrixing of networks would degrade
+		  performances of the current implementation. A construction like the following would
+		  be perfectly valid, ie.:
+
+		  label=src_A	src_net=X/24	jeq=dst_net
+		  label=src_B	src_net=Y/25	jeq=dst_net
+		  label=src_C	src_net=Z/26	jeq=dst_net
+		  label=dst_A	dst_net=X/24	label=dst_net
+		  label=dst_B	dst_net=Y/25
+		  label=dst_C	dst_net=Z/26
 
 KEY:            pre_tag_filter, pre_tag2_filter [NO_GLOBAL]
 VALUES:         [ 0-2^64-1 ]
@@ -2116,12 +2136,14 @@ DEFAULT:	none
 
 KEY:            pre_tag_label_filter [NO_GLOBAL]
 DESC:		Expects one or more labels as value (when multiple labels are supplied, they need to be
-		comma separated and a logical OR is used in the evaluation phase) and allows to filter in
-		data basing upon its label value(s): in case of match, data is delivered to the plugin the
-		filter is attached to. This directive has to be attached to a plugin (that is, it cannot be
-		global). Null label values (ie. unlabelled data) can be matched using the special 'null'
-		keyword. Negations are allowed by pre-pending a minus sign to the label value. The use of
-		this directive makes sense if coupled with 'pre_tag_map'.
+		comma separated and a logical OR is performed when evaluating at runtime) and allows to
+		filter in data basing upon label value(s): in case of match, data is delivered to the
+		plugin. This directive has to be attached to a plugin (that is, it cannot be global).
+		Null label values (ie. unlabelled data) can be matched using the special 'null' keyword.
+		Negations are allowed by pre-pending a minus sign to the label value. The use of this
+		directive is meant coupled with a 'pre_tag_map'; it is also currenly not compatible
+		with the use of pre_tag_label_encode_as_map except for the basic use-case of filtering
+		null vs non-null labels.
 DEFAULT:	none
 
 KEY:		pre_tag_label_encode_as_map
@@ -2130,9 +2152,9 @@ DESC:		The 'label' field is encoded by default as an unique comma-separated stri
 		"label": "value1,value2,value3". Setting this knob to true, makes it being encoded as a
 		map for JSON and Apache Avro encodings, ie. in JSON "label": { "key1": "value1", "key2":
 		"value2" }. For keys and values to be correctly mapped, the '%' delimiter is used when
-		composing a pre_tag_map, ie. "set_label=key1%value1 ip=0.0.0.0/0". This knob has no effects
-		for other encodings (ie. CSV, formatted) and backends not supporting complex types (ie. SQL
-		plugins).
+		composing a pre_tag_map, ie. "set_label=key1%value1,key2%value2 ip=0.0.0.0/0". This knob
+		has no effects for other encodings (ie. CSV, formatted) and backends not supporting
+		complex types (ie. SQL plugins).
 DEFAULT:	false
 
 KEY:            [ post_tag | post_tag2 ] 
@@ -2472,7 +2494,9 @@ DEFAULT:        false
 
 KEY:            [ bgp_daemon_interface | bmp_daemon_interface ] [GLOBAL]
 DESC:           Defines the interface for the BGP / BMP daemon to listen on. This makes it possible to have
-		the session happen entirely in one VRF by specifying the VRF device name here.
+		the session happen entirely in one VRF by specifying the VRF device name here. If having to
+		listen on an IPv6 address inside the VRF, this has to be specified via the relevant config
+		directive, ie. bgp_daemon_ip, as not doing so prevents the daemon to correctly receive data.
 DEFAULT:        none
 
 KEY:            bgp_daemon_id [GLOBAL]
@@ -2490,13 +2514,16 @@ DESC:           Defines the BGP Local AS to the supplied value. By default, no v
 DEFAULT:        none
 
 KEY:		[ bgp_daemon_port | bmp_daemon_port ] [GLOBAL] 
-DESC:		Makes the BGP/BMP daemon listen to a port different from the standard port. Default port for
-		BGP is 179/tcp; default port for BMP is 1790. On systems where SO_REUSEPORT feature is
-		available: it allows multiple daemons to bind the same local address and port in order to
-		load-balance processing of incoming packets. This is best combined with a list of allowed
-		IP addresses, ie. bgp_daemon_allow_file, to explicitely wire peers to collectors. At the
-		end of this document, reference (1) to a URL to a presentation of the SO_REUSEPORT feature.
-		To enable SO_REUSEPORT on a Linux system supporting it 'sysctl net.core.allow_reuseport=1'.
+DESC:		Makes the BGP/BMP daemon listen to a port different from the standard port. Default port
+		for BGP is 179/tcp; default port for BMP is 1790. On systems where SO_REUSEPORT feature
+		is available: it allows multiple daemons to bind the same local address and port in order
+		to load-balance processing of incoming packets. For the sake of TCP sessions balancing,
+		one option is to define a list of allowed IP addresses, ie. bgp_daemon_allow_file, to
+		associate peers to collectors via a hit-and-miss mechanism that may take time to converge;
+		a second option is to define an eBPF load-balancer, ie. bgp_daemon_rp_ebpf_prog, to
+		explicitely wire peers to collectors. At the end of this document, reference (1) to a URL
+		to a presentation of the SO_REUSEPORT feature. To enable SO_REUSEPORT on a Linux system
+		supporting it 'sysctl net.core.allow_reuseport=1'.
 DEFAULT:	bgp_daemon_port: 179; bmp_daemon_port: 1790
 
 KEY:		[ bgp_daemon_rp_ebpf_prog | bmp_daemon_rp_ebpf_prog ] [GLOBAL]
@@ -3206,13 +3233,6 @@ DESC:		Enables the Streaming Telemetry thread in all daemons except pmtelemetryd
 		collaborative manner.".
 DEFAULT:        false
 
-KEY:		telemetry_daemon_port_tcp [GLOBAL]
-DESC:		Makes the Streaming Telemetry daemon, pmtelemetryd, or the Streaming Telemetry thread
-		listen on the specified TCP port. (see telemetry/README.telemetry for gRPC support).
-		If SO_REUSEPORT is supported by the Operating System, you can read more about it at
-		the config key telemetry_daemon_port_udp.
-DEFAULT:	none
-
 KEY:            telemetry_daemon_port_udp [GLOBAL]
 DESC:           Makes the Streaming Telemetry daemon, pmtelemetryd, or the Streaming Telemetry thread
 		listen on the specified UDP port. On systems where SO_REUSEPORT feature is available:
@@ -3223,6 +3243,15 @@ DESC:           Makes the Streaming Telemetry daemon, pmtelemetryd, or the Strea
 		To enable SO_REUSEPORT on a Linux system supporting it 'sysctl net.core.allow_reuseport=1'. 
 DEFAULT:        none
 
+KEY:		telemetry_daemon_port_tcp [GLOBAL]
+DESC:		Makes the Streaming Telemetry daemon, pmtelemetryd, or the Streaming Telemetry thread
+		listen on the specified TCP port. (see telemetry/README.telemetry for gRPC support).
+		If SO_REUSEPORT is supported by the Operating System, you can read more about it at
+		the config key telemetry_daemon_port_udp. Alternstively, for the sake of TCP sessions
+		balancing, a eBPF load-balancer, ie. telemetry_daemon_rp_ebpf_prog, can be defined in
+		order to explicitely wire peers to collectors.
+DEFAULT:	none
+
 KEY:		telemetry_daemon_ip [GLOBAL]
 DESC:		Binds the Streaming Telemetry daemon to a specific interface. Expects as value an IPv4/
 		IPv6 address.
@@ -3231,7 +3260,9 @@ DEFAULT:        0.0.0.0
 KEY:            telemetry_daemon_interface [GLOBAL]
 DESC:           Defines the interface for the Streaming Telemetry daemon to listen on. This makes it
 		possible to have the session happen entirely in one VRF by specifying the VRF device
-		name here.
+		name here. If having to listen on an IPv6 address inside the VRF, this has to be
+		specified via the relevant config directive, ie. telemetry_daemon_ip, as not doing
+		so prevents the daemon to correctly receive data.
 DEFAULT:        none
 
 KEY:		telemetry_daemon_ipv6_only [GLOBAL]
@@ -3332,7 +3363,9 @@ DEFAULT:	none
 KEY:		telemetry_daemon_udp_notif_interface [GLOBAL]
 DESC:		Defines the interface for the Streaming Telemetry daemon to listen on for UDP-Notif.
 		This makes it possible to have the session happen entirely in one VRF by specifying
-		the VRF device name here.
+		the VRF device name here. If having to listen on an IPv6 address inside the VRF,
+		this has to be specified via the relevant config directive, ie. telemetry_daemon_
+		udp_notif_ip, as not doing so prevents the daemon to correctly receive data.
 DEFAULT:	none
 
 KEY:		telemetry_daemon_udp_notif_ipv6_only [GLOBAL]
