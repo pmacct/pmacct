@@ -21,13 +21,15 @@
 
 /* defines */
 #define PM_REDIS_DEFAULT_PORT		6379
-#define PM_REDIS_DEFAULT_TIMEOUT	60
-#define PM_REDIS_DEFAULT_EXP_TIME	60
+#define PM_REDIS_DEFAULT_TIMEOUT	3
+#define PM_REDIS_DEFAULT_EXP_TIME	3
 #define PM_REDIS_DEFAULT_REFRESH_TIME	(PM_REDIS_DEFAULT_EXP_TIME / 3)
 #define PM_REDIS_DEFAULT_CONN_RETRY	(PM_REDIS_DEFAULT_EXP_TIME / 5)
 #define PM_REDIS_DEFAULT_SEP		"+"
 
 typedef void (*redis_thread_handler)(void *);
+
+/* Global variables */
 
 /* structures */
 struct p_redis_host {
@@ -62,3 +64,5 @@ extern void p_redis_select_db(struct p_redis_host *);
 
 extern void p_redis_thread_produce_common_core_handler(void *);
 extern void p_redis_thread_produce_common_plugin_handler(void *);
+
+extern bool p_redis_get_time(struct p_redis_host *);

@@ -234,6 +234,7 @@ typedef struct {
 #endif
 #endif
 
+#include "ha.h"
 #ifdef WITH_REDIS
 #include "redis_common.h"
 #endif
@@ -367,6 +368,20 @@ struct child_ctl2 {
   u_int32_t flags;
 };
 
+//The group of global variables used for BMP High Availability feature
+struct bmp_ha{
+int set_to_active_flag; //Send signal 35 to set this flag, force setting daemon state as active 
+int set_to_standby_flag;//Send signal 36 to set this flag, force setting daemon state as standby
+int regenerate_timestamp_flag; //Send signal 34 to set this flag, refresh daemon's timestamp
+bool dump_flag; //Telling daemon whether to dump BMP message or not
+bool queue_dump_flag;//If the message is not to be dumped, telling daemon whether the message needs to be put in the queue
+pthread_mutex_t mutex_thr; //Mutex for locking the queue
+pthread_cond_t sig; //cond variable to notify freeing mutex_thr
+pthread_mutex_t mutex_rd; //Mutex for locking bmp_ha global variable
+};
+struct bmp_ha bmp_ha_struct;
+cdada_queue_t *bmp_ha_data_queue;
+
 #define INIT_BUF(x) \
 	memset(x.base, 0, sizeof(x.base)); \
 	x.end = x.base+sizeof(x.base); \
@@ -420,6 +435,13 @@ extern void PM_evaluate_flow_type(struct packet_ptrs *);
 extern ssize_t recvfrom_savefile(struct pm_pcap_device *, void **, struct sockaddr *, struct timeval **, int *, struct packet_ptrs *);
 extern ssize_t recvfrom_rawip(unsigned char *, size_t, struct sockaddr *, struct packet_ptrs *);
 
+#ifdef WITH_REDIS
+void pm_ha_re_generate_timestamp(int);
+void pm_ha_set_to_active(int);
+void pm_ha_set_to_standby(int);
+void pm_ha_set_to_normal(int);
+#endif
+
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *, const char *, size_t);
 #endif
@@ -468,4 +490,5 @@ extern char uacctd_globstr[];
 extern char pmtele_globstr[];
 extern char pmbgpd_globstr[];
 extern char pmbmpd_globstr[];
+
 #endif /* _PMACCT_H_ */

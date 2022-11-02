@@ -20,9 +20,15 @@
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "thread_pool.h"
+#include <sys/time.h>
 
 /* Global variables */
 thread_pool_t *redis_pool;
+char timestamp[SHORTBUFLEN];
+int count_loop_num;
+int ingest_flag;
+int old_ingest_flag;
+int write_log_flag, old_write_log_flag;
 
 /* Functions */
 void p_redis_thread_wrapper(struct p_redis_host *redis_host)
@@ -43,7 +49,7 @@ int p_redis_master_produce_thread(void *rh)
 {
   struct p_redis_host *redis_host = rh;
   unsigned int ret = 0, period = 0;
-
+  
   p_redis_connect(redis_host, TRUE);
 
   for (;;) {
@@ -91,8 +97,13 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
 
   time_t now = time(NULL);
 
+  pthread_mutex_lock(&bmp_ha_struct.mutex_rd);
+  bmp_ha_struct.dump_flag = true;
+  pthread_mutex_unlock(&bmp_ha_struct.mutex_rd);
+
   assert(redis_host);
 
+connect://re-connect
   if (config.redis_host) {
     if (now >= (redis_host->last_conn + PM_REDIS_DEFAULT_CONN_RETRY)) {
       redis_host->last_conn = now;
@@ -112,7 +123,12 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
 	if (redis_host->ctx) {
 	  if (fatal) {
 	    Log(LOG_ERR, "ERROR ( %s ): Connection error: %s\n", redis_host->log_id, redis_host->ctx->errstr);
-	    exit_gracefully(1);
+	    pthread_mutex_lock(&bmp_ha_struct.mutex_rd);
+      bmp_ha_struct.dump_flag = true;
+      pthread_mutex_unlock(&bmp_ha_struct.mutex_rd);
+      // Retry connection instead of exiting, so that when redis is unavailable during runtime it will retry conecction. When redis recover the HA function will recover as well.
+      sleep(5);
+      goto connect;
 	  }
 	  else {
 	    return ERR;
@@ -128,8 +144,64 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
       }
     }
   }
+  
+  count_loop_num = 1;
+  // Set the timestamp
+  if (strcmp(config.type, "core") == 0)
+  {
+    Log(LOG_DEBUG, "DEBUG ( %s ): Redis connection reset\n", redis_host->log_id);
+    struct timeval current_time;
+    gettimeofday(&current_time, NULL);                                                                   // Get time in micro second
+    snprintf(timestamp, sizeof(timestamp), "%ld", current_time.tv_sec * 1000000 + current_time.tv_usec); // Setting the time when redis connects as timestamp for this bmp session
+  }
 
   return SUCCESS;
+}
+
+// Return a boolean that stands for active(1)/standby(0)
+bool p_redis_get_time(struct p_redis_host *redis_host)
+{ 
+  char session_name[SHORTBUFLEN][SHORTBUFLEN];  // the keys to the timestamp value. Each key is stores in one row
+  //throw wraning: memory corrupt
+  long long session_value[SHORTBUFLEN]; // the timestamp value
+  int session_num;              // the number of keys in Redis
+  char *eptr;
+
+  redis_host->reply = redisCommand(redis_host->ctx, "KEYS %s%s%d*attachment_time",config.cluster_name, PM_REDIS_DEFAULT_SEP, config.cluster_id);
+  // Check if the Redis has replied as expected without freeing the object
+  if (redis_host->reply){
+    if (redis_host->reply->type == REDIS_REPLY_ERROR){
+      Log(LOG_WARNING, "WARN ( %s ): reply='%s'\n", redis_host->log_id, redis_host->reply->str);
+    }
+  }
+  else{
+    p_redis_connect(redis_host, FALSE);
+    return false;
+  }
+  session_num = (int)redis_host->reply->elements;
+  // If there is no timestamp in the Redis, set all as standby
+  if (session_num == 0)
+    return false;
+  for (int i = 0; i < session_num; i++){
+    strcpy(session_name[i], redis_host->reply->element[i]->str);
+  }
+  freeReplyObject(redis_host->reply);
+
+  for (int i = 0; i < session_num; i++){
+    redis_host->reply = redisCommand(redis_host->ctx, "GET %s", session_name[i]);
+    session_value[i] = strtoll(redis_host->reply->str, &eptr, 0);
+    // If there is a timestamp larger than its timestamp, return 0
+    if (strtoll(timestamp, &eptr, 0) > session_value[i]){
+      p_redis_process_reply(redis_host);
+      return false;
+    }
+    // Continue if it's its timestamp
+    else if (strtoll(timestamp, &eptr, 0) == session_value[i]){
+      continue;
+    }
+  }
+  p_redis_process_reply(redis_host);
+  return true;
 }
 
 void p_redis_close(struct p_redis_host *redis_host)
@@ -222,7 +294,7 @@ void p_redis_set_thread_handler(struct p_redis_host *redis_host, redis_thread_ha
 void p_redis_thread_produce_common_core_handler(void *rh)
 {
   struct p_redis_host *redis_host = rh;
-  char buf[SRVBUFLEN], name_and_type[SHORTBUFLEN], daemon_type[VERYSHORTBUFLEN];
+  char buf[SRVBUFLEN], name_and_type[SHORTBUFLEN], daemon_type[VERYSHORTBUFLEN], name_and_time[SHORTBUFLEN];
 
   switch (config.acct_type) {
   case ACCT_NF:
@@ -257,6 +329,50 @@ void p_redis_thread_produce_common_core_handler(void *rh)
 	   config.name, PM_REDIS_DEFAULT_SEP, config.type);
   p_redis_set_int(redis_host, name_and_type, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
 
+  // Refresh the timestamp if the regenerate_timestamp_flag is set
+  if (bmp_ha_struct.regenerate_timestamp_flag){
+    Log(LOG_DEBUG, "DEBUG ( %s ): Redis timestamp reset\n", redis_host->log_id);
+    struct timeval current_time;
+    gettimeofday(&current_time, NULL);                                                                   // Get time in micro second
+    snprintf(timestamp, sizeof(timestamp), "%ld", current_time.tv_sec * 1000000 + current_time.tv_usec); // Setting the time when redis connects as timestamp for this bmp session
+    bmp_ha_struct.regenerate_timestamp_flag = false;
+  }
+
+  // If this thread belongs to the core process, write the current attachment time to redis
+  if (strcmp(config.type, "core") == 0){
+    snprintf(name_and_time, sizeof(name_and_time), "%s%sattachment_time",
+             config.name, PM_REDIS_DEFAULT_SEP);
+    p_redis_set_string(redis_host, name_and_time, timestamp, PM_REDIS_DEFAULT_EXP_TIME);
+  }
+  // Doing a "get timestamp" per second
+  ingest_flag = p_redis_get_time(redis_host);
+  write_log_flag = (ingest_flag||bmp_ha_struct.set_to_active_flag)&&!bmp_ha_struct.set_to_standby_flag;
+
+  // Dump the queue when there is a status change and this is not the first connection
+  if (ingest_flag && !old_ingest_flag && count_loop_num != 1){
+    pthread_mutex_lock(&bmp_ha_struct.mutex_rd);
+    bmp_ha_struct.queue_dump_flag = true;
+    pthread_mutex_unlock(&bmp_ha_struct.mutex_rd);
+  }
+
+  pthread_mutex_lock(&bmp_ha_struct.mutex_rd);
+  if (bmp_ha_struct.set_to_active_flag)
+    bmp_ha_struct.dump_flag = true;
+  else if (bmp_ha_struct.set_to_standby_flag)
+    bmp_ha_struct.dump_flag = false;
+  else
+    bmp_ha_struct.dump_flag = ingest_flag;
+  pthread_mutex_unlock(&bmp_ha_struct.mutex_rd);
+
+  // Write the current collector status to Log
+  if((write_log_flag != old_write_log_flag) || count_loop_num ==1)
+    Log(LOG_INFO, "INFO ( %s ): Daemon state: %s\n", redis_host->log_id, (ingest_flag||bmp_ha_struct.set_to_active_flag)&&!bmp_ha_struct.set_to_standby_flag?"ACTIVE":"STANDBY");
+  old_ingest_flag = ingest_flag;
+  old_write_log_flag = write_log_flag;
+  // count_loop_num is used to record the number of loops. More specificly, it's useful when identifying the first loop, within which we need to log initial daemon state. To avoid the number going too large, the range is limited within[2, 62]
+  count_loop_num++;
+  count_loop_num = count_loop_num % 62 + 2; //use 62, so that after the first loop, the number falls within the range[2, 62] other than goes back to 1 since 1 is needed before
+
   if (config.acct_type < ACCT_FWDPLANE_MAX) {
     if (config.nfacctd_isis) {
       snprintf(buf, sizeof(buf), "%s%sisis", name_and_type, PM_REDIS_DEFAULT_SEP);
@@ -289,3 +405,4 @@ void p_redis_thread_produce_common_plugin_handler(void *rh)
 	   config.name, PM_REDIS_DEFAULT_SEP, config.type);
   p_redis_set_int(redis_host, name_and_type, TRUE, PM_REDIS_DEFAULT_EXP_TIME);
 }
+
