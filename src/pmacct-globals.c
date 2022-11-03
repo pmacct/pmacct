@@ -51,6 +51,7 @@ struct sigaction sighandler_action;
 int protocols_number;
 
 struct bmp_ha bmp_ha_struct;
+cdada_queue_t *bmp_ha_data_queue;
 
 u_int32_t PdataSz, ChBufHdrSz, CharPtrSz, CounterSz, HostAddrSz;
 u_int32_t PpayloadSz, PextrasSz, PmsgSz, PvhdrSz, PtLabelTSz;
