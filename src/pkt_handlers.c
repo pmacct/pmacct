@@ -3962,21 +3962,22 @@ void NF_srv6_segment_ipv6_list(struct channels_list_entry *chptr, struct packet_
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
   struct host_addr srv6_segment_ipv6_list[MAX_SRV6_SEGMENT_IPV6_LIST_ENTRIES];
-  u_int8_t list_off = 0, list_len = 0, list_elems, list_idx;
+  u_int8_t list_off = 0, list_len = 0, list_elems = 0, list_idx = 0;
+  struct utpl_field *utpl = NULL;
 
   memset(&srv6_segment_ipv6_list, 0, sizeof(srv6_segment_ipv6_list));
 
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_srhSegmentIPv6ListSection].len) {
-      memcpy(&list_len, pptrs->f_data+tpl->tpl[NF9_srhSegmentIPv6ListSection].off, 1);
-    }
+    if ((utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_srhSegmentIPv6ListSection, FALSE))) {
+      list_len = utpl->len;
 
-    if (list_len && !(list_len % 16 /* IPv6 Address length */)) {
-      for (list_off = 1, list_idx = 0, list_elems = list_len / 16; list_idx < list_elems; list_off += 16, list_idx++) {
-	srv6_segment_ipv6_list[list_idx].family = AF_INET6;
-	memcpy(&srv6_segment_ipv6_list[list_idx].address.ipv6, pptrs->f_data+tpl->tpl[NF9_srhSegmentIPv6ListSection].off + list_off, 16);
+      if (list_len && !(list_len % 16 /* IPv6 Address length */)) {
+	for (list_off = 0, list_idx = 0, list_elems = list_len / 16; list_idx < list_elems; list_off += 16, list_idx++) {
+	  srv6_segment_ipv6_list[list_idx].family = AF_INET6;
+	  memcpy(&srv6_segment_ipv6_list[list_idx].address.ipv6, (pptrs->f_data + utpl->off + list_off), 16);
+	}
       }
     }
     break;
@@ -3988,7 +3989,10 @@ void NF_srv6_segment_ipv6_list(struct channels_list_entry *chptr, struct packet_
     vlen_prims_init(pvlen, 0);
     return;
   }
-  else vlen_prims_insert(pvlen, COUNT_INT_SRV6_SEG_IPV6_SECTION, list_len, (u_char *) &srv6_segment_ipv6_list, PM_MSG_BIN_COPY);
+  else {
+    list_len = sizeof(struct host_addr) * list_elems;
+    vlen_prims_insert(pvlen, COUNT_INT_SRV6_SEG_IPV6_SECTION, list_len, (u_char *) &srv6_segment_ipv6_list, PM_MSG_BIN_COPY);
+  }
 }
 
 void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

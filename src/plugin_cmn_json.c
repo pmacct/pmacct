@@ -347,6 +347,11 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2)
     idx++;
   }
 
+  if (wtc_2 & COUNT_SRV6_SEG_IPV6_SECTION) {
+    cjhandler[idx] = compose_json_array_srv6_segment_ipv6_list;
+    idx++;
+  }
+
   if (wtc & COUNT_IP_PROTO) {
     cjhandler[idx] = compose_json_proto;
     idx++;
@@ -1385,6 +1390,17 @@ void compose_json_array_mpls_label_stack(json_t *obj, struct chained_cache *cc)
   json_object_set_new_nocheck(obj, "mpls_label_stack", root_l1);
 }
 
+void compose_json_array_srv6_segment_ipv6_list(json_t *obj, struct chained_cache *cc)
+{
+  struct host_addr *list_ptr = NULL;
+  int list_len = 0;
+
+  list_len = vlen_prims_get(cc->pvlen, COUNT_INT_SRV6_SEG_IPV6_SECTION, (char **) &list_ptr);
+  json_t *root_l1 = compose_srv6_segment_ipv6_list_json_data((struct host_addr *)list_ptr, list_len);
+
+  json_object_set_new_nocheck(obj, "srv6_seg_ipv6_list", root_l1);
+}
+
 json_t *compose_label_json_data(cdada_list_t *ll, int ll_size)
 {
   ptm_label lbl;
@@ -1489,6 +1505,31 @@ json_t *compose_mpls_label_stack_json_data(u_int32_t *label_stack, int ls_len)
     strncat(label_idx_buf, label_buf, (MAX_MPLS_LABEL_IDX_LEN - max_mpls_label_idx_len_dec));
     max_mpls_label_idx_len_dec = (strlen(idx_buf) + strlen("-") + strlen(label_buf) + 3);
     j_str_tmp = json_string(label_idx_buf);
+    json_array_append(root, j_str_tmp); 
+  }
+
+  return root;
+}
+
+json_t *compose_srv6_segment_ipv6_list_json_data(struct host_addr *ipv6_list, int list_len)
+{
+  char ipv6_str[INET6_ADDRSTRLEN];
+  u_int8_t list_elems = 0;
+
+  if (!(list_len % sizeof(struct host_addr))) {
+    list_elems = (list_len / sizeof(struct host_addr));
+  }
+  else {
+    return NULL;
+  }
+
+  json_t *root = json_array();
+  json_t *j_str_tmp = NULL;
+
+  size_t idx_0;
+  for (idx_0 = 0; idx_0 < list_elems; idx_0++) {
+    addr_to_str(ipv6_str, &ipv6_list[idx_0]);
+    j_str_tmp = json_string(ipv6_str);
     json_array_append(root, j_str_tmp); 
   }
 
