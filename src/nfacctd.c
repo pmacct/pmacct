@@ -543,7 +543,7 @@ int main(int argc,char **argv, char **envp)
 			COUNT_VXLAN))
 	  list->cfg.data_type |= PIPE_TYPE_TUN;
 
-	if (list->cfg.what_to_count_2 & (COUNT_LABEL|COUNT_MPLS_LABEL_STACK))
+	if (list->cfg.what_to_count_2 & (COUNT_LABEL|COUNT_MPLS_LABEL_STACK|COUNT_SRV6_SEG_IPV6_SECTION))
 	  list->cfg.data_type |= PIPE_TYPE_VLEN;
 
         if (list->cfg.what_to_count & (COUNT_SRC_PORT|COUNT_DST_PORT|COUNT_SUM_PORT|COUNT_TCPFLAGS)) {

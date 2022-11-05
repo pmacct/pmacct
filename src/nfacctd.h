@@ -263,6 +263,8 @@ struct data_hdr_v9 {
 /* ... */
 #define NF9_DATALINK_FRAME_TYPE		408
 /* ... */
+#define NF9_srhSegmentIPv6ListSection	505
+/* ... */
 #define NF9_ASA_XLATE_IPV4_SRC_ADDR	40001
 #define NF9_ASA_XLATE_IPV4_DST_ADDR	40002
 #define NF9_ASA_XLATE_L4_SRC_PORT	40003
