@@ -512,7 +512,7 @@ struct pkt_stitching {
 #define MAX_MPLS_LABEL_LEN      16
 
 /* SRV6 */
-#define MAX_SRV6_SEGMENT_IPV6_LIST_ENTRIES	10
+#define MAX_SRV6_SEGMENT_IPV6_LIST_ENTRIES	16
 
 struct extra_primitives {
   u_int16_t off_pkt_bgp_primitives;

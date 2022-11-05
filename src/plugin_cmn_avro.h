@@ -52,11 +52,13 @@ extern void compose_tcpflags_avro_schema(avro_schema_t);
 extern void compose_tunnel_tcpflags_avro_schema(avro_schema_t);
 extern void compose_fwd_status_avro_schema(avro_schema_t);
 extern void compose_mpls_label_stack_schema(avro_schema_t);
+extern void compose_srv6_segment_ipv6_list_schema(avro_schema_t);
 extern int compose_label_avro_data_opt(char *, avro_value_t);
 extern int compose_label_avro_data_nonopt(char *, avro_value_t);
 extern int compose_tcpflags_avro_data(size_t, avro_value_t);
 extern int compose_tunnel_tcpflags_avro_data(size_t, avro_value_t);
 extern int compose_mpls_label_stack_data(u_int32_t *, int, avro_value_t);
+extern int compose_srv6_segment_ipv6_list_data(struct host_addr *, int, avro_value_t);
 extern int compose_fwd_status_avro_data(size_t, avro_value_t);
 
 extern void pm_avro_exit_gracefully(int);

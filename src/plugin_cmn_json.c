@@ -1513,8 +1513,12 @@ json_t *compose_mpls_label_stack_json_data(u_int32_t *label_stack, int ls_len)
 
 json_t *compose_srv6_segment_ipv6_list_json_data(struct host_addr *ipv6_list, int list_len)
 {
-  char ipv6_str[INET6_ADDRSTRLEN];
+  char ipv6_str[INET6_ADDRSTRLEN + 1 /* sep */ + 2 /* index */ + 1 /* term */];
+  char idx_str[2 /* index */ + 1 /* term */];
   u_int8_t list_elems = 0;
+
+  memset(ipv6_str, 0, sizeof(ipv6_str));
+  memset(idx_str, 0, sizeof(idx_str));
 
   if (!(list_len % sizeof(struct host_addr))) {
     list_elems = (list_len / sizeof(struct host_addr));
@@ -1529,6 +1533,9 @@ json_t *compose_srv6_segment_ipv6_list_json_data(struct host_addr *ipv6_list, in
   size_t idx_0;
   for (idx_0 = 0; idx_0 < list_elems; idx_0++) {
     addr_to_str(ipv6_str, &ipv6_list[idx_0]);
+    strcat(ipv6_str, "-");
+    snprintf(idx_str, 3, "%zu", idx_0); 
+    strcat(ipv6_str, idx_str);
     j_str_tmp = json_string(ipv6_str);
     json_array_append(root, j_str_tmp); 
   }

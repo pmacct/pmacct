@@ -252,6 +252,10 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
     }
   }
 
+  if (wtc_2 & COUNT_SRV6_SEG_IPV6_SECTION) {
+    compose_srv6_segment_ipv6_list_schema(schema);
+  }
+
   if (wtc & COUNT_IP_PROTO)
     avro_schema_record_field_append(schema, "ip_proto", avro_schema_string());
 
@@ -1530,6 +1534,17 @@ void compose_mpls_label_stack_schema(avro_schema_t sc_type_record)
   avro_schema_decref(sc_type_string);
 }
 
+void compose_srv6_segment_ipv6_list_schema(avro_schema_t sc_type_record)
+{
+  sc_type_string = avro_schema_string();
+  sc_type_array = avro_schema_array(sc_type_string);
+  avro_schema_record_field_append(sc_type_record, "srv6_seg_ipv6_list", sc_type_array);
+
+  /* free-up memory */
+  avro_schema_decref(sc_type_array);
+  avro_schema_decref(sc_type_string);
+}
+
 /* Insert mandatory / non-optional label data, ie. in IPFIX */
 int compose_label_avro_data_nonopt(char *str_ptr, avro_value_t v_type_record)
 {
@@ -1753,6 +1768,41 @@ int compose_mpls_label_stack_data(u_int32_t *label_stack, int ls_len, avro_value
       max_mpls_label_idx_len_dec = (strlen(idx_buf) + strlen("-") + strlen(label_buf) + 3);
       if (avro_value_append(&v_type_array, &v_type_string, NULL) == 0) {
         avro_value_set_string(&v_type_string, label_idx_buf);
+      }
+    }
+  }
+
+  return FALSE;
+}
+
+int compose_srv6_segment_ipv6_list_data(struct host_addr *ipv6_list, int list_len, avro_value_t v_type_record)
+{
+  char ipv6_str[INET6_ADDRSTRLEN + 1 /* sep */ + 2 /* index */ + 1 /* term */];
+  char idx_str[2 /* index */ + 1 /* term */];
+  u_int8_t list_elems = 0;
+
+  memset(ipv6_str, 0, sizeof(ipv6_str));
+  memset(idx_str, 0, sizeof(idx_str));
+
+  if (!(list_len % sizeof(struct host_addr))) {
+    list_elems = (list_len / sizeof(struct host_addr));
+  }
+  else {
+    return TRUE;
+  }
+
+  avro_value_t v_type_array, v_type_string;
+
+  size_t idx_0;
+  for (idx_0 = 0; idx_0 < list_elems; idx_0++) {
+    addr_to_str(ipv6_str, &ipv6_list[idx_0]);
+    strcat(ipv6_str, "-");
+    snprintf(idx_str, 3, "%zu", idx_0);
+    strcat(ipv6_str, idx_str);
+
+    if (avro_value_get_by_name(&v_type_record, "srv6_seg_ipv6_list", &v_type_array, NULL) == 0) {
+      if (avro_value_append(&v_type_array, &v_type_string, NULL) == 0) {
+        avro_value_set_string(&v_type_string, ipv6_str);
       }
     }
   }
