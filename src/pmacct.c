@@ -23,6 +23,7 @@
 
 /* include */
 #include "pmacct.h"
+#include "pmacct-build.h"
 #include "pmacct-data.h"
 #include "imt_plugin.h"
 #include "bgp/bgp_packet.h"
