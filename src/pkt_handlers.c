@@ -3970,7 +3970,8 @@ void NF_srv6_segment_ipv6_list(struct channels_list_entry *chptr, struct packet_
   switch(hdr->version) {
   case 10:
   case 9:
-    if ((utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_srhSegmentIPv6ListSection, FALSE))) {
+    if ((utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_srhSegmentIPv6ListSection, FALSE)) ||
+	(utpl = (*get_ext_db_ie_by_type)(tpl, HUAWEI_PEN, NF9_srhSegmentIPv6ListSection, FALSE))) {
       list_len = utpl->len;
 
       if (list_len && !(list_len % 16 /* IPv6 Address length */)) {

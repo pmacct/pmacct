@@ -117,6 +117,9 @@ struct data_hdr_v9 {
 
 #define IPFIX_TPL_EBIT                  0x8000 /* IPFIX telmplate enterprise bit */
 #define IPFIX_VARIABLE_LENGTH           65535
+
+/* PENs */
+#define HUAWEI_PEN			2011
 #define PMACCT_PEN                      43874
 
 /* NetFlow V9 stuff */
