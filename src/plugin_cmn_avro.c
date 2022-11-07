@@ -905,6 +905,16 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
     }
   }
 
+  if (wtc_2 & COUNT_SRV6_SEG_IPV6_SECTION) {
+    struct host_addr *list_ptr = NULL;
+    int list_len = 0;
+
+    list_len = vlen_prims_get(pvlen, COUNT_INT_SRV6_SEG_IPV6_SECTION, (char **) &list_ptr);
+    if (list_ptr) {
+      compose_srv6_segment_ipv6_list_data((struct host_addr *) list_ptr, list_len, value);
+    }
+  }
+
   if (wtc & COUNT_IP_PROTO) {
     char proto[PROTO_NUM_STRLEN];
 
