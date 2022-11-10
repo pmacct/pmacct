@@ -61,7 +61,8 @@ VALUES:		[ src_mac, dst_mac, vlan, in_vlan, out_vlan, cos, etype, src_host, dst_
 		 tunnel_dst_mac, tunnel_src_host, tunnel_dst_host, tunnel_proto, tunnel_tos,
 		 tunnel_src_port, tunnel_dst_port, tunnel_tcpflags, fwd_status, vxlan,
 		 timestamp_start, timestamp_end, timestamp_arrival, timestamp_export,
-		 export_proto_seqno, export_proto_version, export_proto_sysid ]
+		 export_proto_seqno, export_proto_version, export_proto_sysid,
+		 srv6_seg_ipv6_list ]
 FOREWORDS:	Individual IP packets are uniquely identified by their header field values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
 		they have at least enough information to discriminate where packets are coming
@@ -147,6 +148,8 @@ NOTES:		* List of the aggregation primitives available to each specific pmacct d
 		  of the first case checked reporting a non-zero ID (ingress > egress); more
 		  intuitively, in_vlan reports ingress VLAN ID if any and out_vlan reports
 		  egress VLAN ID if any.
+		* srv6_seg_ipv6_list primitive is only available if using an encoding, like
+		  JSON or Avro, that supports complex data (ie. arrays, maps, etc.). 
 DEFAULT:	src_host
 
 KEY:		aggregate_primitives [GLOBAL, MAP]
