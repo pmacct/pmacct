@@ -657,6 +657,7 @@ static const struct _dictionary_line dictionary[] = {
   {"tmp_bgp_daemon_origin_type_int", cfg_key_tmp_bgp_daemon_origin_type_int},
   {"tmp_telemetry_daemon_udp_notif_legacy", cfg_key_tmp_telemetry_daemon_udp_notif_legacy},
   {"tmp_telemetry_decode_cisco_v1_json_string", cfg_key_tmp_telemetry_decode_cisco_v1_json_string},
+  {"tmp_bmp_daemon_ha", cfg_key_tmp_bmp_daemon_ha},
   {"", NULL}
 };
 

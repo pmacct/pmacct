@@ -435,38 +435,36 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, si
   int count;
   int ret = SUCCESS;
   int flag = RD_KAFKA_MSG_F_COPY;
+  int dump_msg = TRUE;
 
   kafkap_ret_err_cb = FALSE;
   
-  int dump_msg = 0;
-
   if (do_free) {
     flag = RD_KAFKA_MSG_F_FREE;
   }
 
-  // If this is a BMP message
 #ifdef WITH_REDIS
-  int dump_queue;
-  if (config.acct_type == ACCT_NF && !strcmp(config.type, "core"))
-  {
+  // XXX: to be generalized or moved away
+  if (config.tmp_bmp_daemon_ha && config.acct_type == ACCT_NF && !strcmp(config.type, "core")) {
+    int dump_queue;
+
     pthread_mutex_lock(&bmp_ha_struct.mutex_rd);
     dump_queue = bmp_ha_struct.queue_dump_flag;
     dump_msg = (bmp_ha_struct.dump_flag || bmp_ha_struct.set_to_active_flag) && !bmp_ha_struct.set_to_standby_flag;
     pthread_mutex_unlock(&bmp_ha_struct.mutex_rd);
-    if(dump_queue)
+
+    if (dump_queue) {
       ret = p_kafka_dump_data_queue(kafka_host, part, do_free);
-    if(ret == ERR){
+    }
+    if (ret == ERR) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Failed to produce to topic %s partition %i: %s\n", config.name, config.type,
             rd_kafka_topic_name(kafka_host->topic), part, rd_kafka_err2str(rd_kafka_last_error()));
       p_kafka_close(kafka_host, TRUE);
       return ERR;
-      }
+    }
   }
-  else // If this is not BMP message, dump the message regardless of the dump_flag
-    dump_msg = true;
-#else
-  dump_msg = true;
 #endif
+
   if (kafka_host && kafka_host->rk && kafka_host->topic && dump_msg) {
     ret = rd_kafka_produce(kafka_host->topic, part, flag, data, data_len,
 			   kafka_host->key, kafka_host->key_len, NULL);
@@ -477,11 +475,9 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, si
       p_kafka_close(kafka_host, TRUE);
       return ERR;
     }
-    Log(LOG_DEBUG, "DEBUG ( %s/%s ): kafka return%d\n", config.type, config.name, ret);
   }
-  // If this is a BMP message which belongs to a standby collector
-  else if (!dump_msg && config.acct_type == ACCT_NF && !strcmp(config.type, "core"))
-  {
+  // XXX: to be generalized or moved away
+  else if (!dump_msg && config.tmp_bmp_daemon_ha && config.acct_type == ACCT_NF && !strcmp(config.type, "core")) {
     void *data_cpy = (void *)malloc(data_len);
     memcpy(data_cpy, data, data_len);
 
@@ -494,18 +490,21 @@ int p_kafka_produce_data_to_part(struct p_kafka_host *kafka_host, void *data, si
     Log(LOG_DEBUG, "DEBUG ( %s/%s ): put data into queue:%d\n", config.name, config.type, count);
     ret = SUCCESS;
   }
-  else
+  else {
     return ERR;
+  }
 
   rd_kafka_poll(kafka_host->rk, 0);
   return ret; 
 }
 
+// XXX: to be generalized or moved away
 int p_kafka_dump_data_queue(struct p_kafka_host *kafka_host, int part, int do_free)
 {
   int flag = RD_KAFKA_MSG_F_COPY;
   int ret = SUCCESS;
   nodestruct nodes;
+
   if (kafka_host && kafka_host->rk && kafka_host->topic)
   {
     pthread_mutex_lock(&bmp_ha_struct.mutex_thr);
@@ -537,8 +536,10 @@ int p_kafka_dump_data_queue(struct p_kafka_host *kafka_host, int part, int do_fr
     bmp_ha_struct.queue_dump_flag = false;
     Log(LOG_DEBUG, "DEBUG ( %s/%s ): Finish dumping message in the queue:%s\n", config.name, config.type, config.type);
   }
-  else
+  else {
     return ERR;
+  }
+
   return SUCCESS;
 }
 
