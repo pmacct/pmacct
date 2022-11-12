@@ -368,8 +368,9 @@ struct child_ctl2 {
   u_int32_t flags;
 };
 
-//The group of global variables used for BMP High Availability feature
-struct bmp_ha{
+/* XXX: to be moved away: tmp_bmp_daemon_ha stuff: the group of
+   global variables used for BMP High Availability feature */
+struct bmp_ha {
   int set_to_active_flag; //Send signal 35 to set this flag, force setting daemon state as active 
   int set_to_standby_flag; //Send signal 36 to set this flag, force setting daemon state as standby
   int regenerate_timestamp_flag; //Send signal 34 to set this flag, refresh daemon's timestamp

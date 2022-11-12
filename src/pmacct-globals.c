@@ -50,6 +50,7 @@ struct sigaction sighandler_action;
 
 int protocols_number;
 
+/* XXX: to be moved away: tmp_bmp_daemon_ha stuff */
 struct bmp_ha bmp_ha_struct;
 cdada_queue_t *bmp_ha_data_queue;
 
