@@ -21,6 +21,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "pmacct-build.h"
 #include "bgp/bgp.h"
 #include "bmp/bmp.h"
 #include "pmbmpd.h"

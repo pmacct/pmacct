@@ -21,6 +21,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "pmacct-build.h"
 #include "sflow.h"
 #include "bgp/bgp_packet.h"
 #include "bgp/bgp.h"

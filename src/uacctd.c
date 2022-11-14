@@ -21,6 +21,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "pmacct-build.h"
 #include "uacctd.h"
 #include "pmacct-data.h"
 #include "pretag_handlers.h"
