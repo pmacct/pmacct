@@ -4,21 +4,21 @@ DOCUMENTATION
 =============
 # Functionality
 
-  * Collector will be working on active/standby mode for BMP session(IPFIX won't be affected). This active/standby status is determined by the timestamp of the collector, which is set at the establishment of nfacctd core process. We consider that having a smaller timestamp means that a collector has worked for a longer time, and thus can be considered as a stable one, while the others, having a larger timestamp due to either just establishing bmp session a bit later, or carshing while running, will be considered as less stable ones. (Please note that there can be more than three collectors, more than one collector can be standby but only one will be active.)
-  The timestamp is written to redis with key:
+  * Active/standby mode for the BMP collector (or thread) is enabled via the tmp_bmp_daemon_ha config knob (currently undocumented, until the feature is considered GA). The active/standby status is determined by the timestamp of the collector, which is set at startup of the process: a smaller timestamp means that a collector has worked fine for a longer time, and thus can be considered as a stable one, while the other(s), having a larger timestamp due to either just establishing BMP session a later, or crashing while running, will be considered as less stable one(s). (Please note that there can be multiple collectors where more than one collector can be standby but only one will be active)
+  The timestamp is written to Redis with key:
   
   ```bash
   [config.name]+[config.cluster_id]+[core_proc_name]+"attachment_time"ß
   e.g. nfacctd-bmp-locB+0+locBbmp-locB01c+attachment_time
   ```
  
-  In redis_common.c, I wrote a function called p_redis_get_time(). In this function it queried with command
+  In redis_common.c, the function called p_redis_get_time() performs the following query:
   
   ```bash
   KEYS *(cluster id)+attachment_time
   ```
-  It can get a reply with information such as: a two dimensional array containing all keys that fit the condition(session_name), and the number of keys that fit the condition(session_num). In order to get timestamp, do another GET with the key.
-  See code below:
+
+  The query is replied with information such as: a two dimensional array containing all keys that fit the condition(session_name), and the number of keys that fit the condition(session_num). In order to get timestamps, it does a GET with the key, see code below:
   
   ```bash
  for (int i = 0; i < session_num; i++) 
@@ -39,13 +39,9 @@ DOCUMENTATION
   }
 ```
   
-  * Redis is used by each collector to exchange timesamp information. Initially, nfacctd is publishing to redis once per minute. I speed it up to once per second in order to get information faster. 
-  In addition, nfacctd is also consuming timestamp information from redis with the same rate as that for publishing. And the active/standby will be calculated each time and be written to the log.
-  Then the active/standby status will by notified by a global variable "dump_flag", which will be used by kafka thread afterwards.
+  * Redis is used by each collector for broader cluster management, ie. to exchange timestamp information. Initially, the collector publishes to Redis once per minute. Then such interval decreases in order to exchange information faster. In addition, the collector does also consume timestamp information from Redis with the same rate of publishing. The active/standby status is calculated each time, written to the log and notified by a global variable "dump_flag" which will be used by the Kafka thread afterwards.
   
-  * nfacctd is calling the p_kafka_produce_data_to_part() function to dump message to kafka. Each time before dumping, I make the program check with the dump_flag, and pulish only if it's true.
-  If it's false, it stores the data pointer, the data lenth as well as when the data is intended to be dumped in as struct and enqueue it in a shared linked list.
-  See code below:
+  * The collector calls the p_kafka_produce_data_to_part() function to dump messages to Kafka. Each time before dumping data, the dump_flag is checked and, if true, publish to the message bus will take place. If false, a data pointer, data length as well as a timestamp is saved in a structure and queued in a global linked list. See code below:
   
   ```bash
 struct QNode *newNode(void *k, size_t k_len)
@@ -60,14 +56,12 @@ struct QNode *newNode(void *k, size_t k_len)
   return temp;
 }
   ```
-  I created a global linked list and a thread that is iteratively dequeuing nodes in the queue whose timestamp is 2s earlier than current time. I set it as 2s because theoratically the failover does for maximum 2s. In this case it can store data for the past two seconds and dump it ot avoid data loss if the failover happends during dumping.
-  
-  For dumping data in the list, I created another queue_dump_flag, which will be set when there is a change with the value of dump_flag while it's not the first time getting the dump_flag.
-  With the queue_dump_flag, it goes through all the data in the list and dump them before the next new BMP message will be dumped.
 
-# Possible daemon state
+  A thread iteratively goes over the global linked list and removes entries whose timestamp is 2 secs earlier than current time. For dumping data in the linked list, another variable `queue_dump_flag` is used, which is set when there is a change in the value of `dump_flag` (and when it's not the first time getting the `dump_flag`). With the `queue_dump_flag` set, the thread goes through all the data in the list and dumps it before the next new BMP message will be dumped.
+
+# Possible daemon states
 (listed according to priority)
-situation                       daemon A's state    Other daemon's state
+Scenario			Daemon A's state    Other daemon's state
 Redis Unavailable               active              active
 Send signal 34 to A             active              standby
 Send signal 35 to A             active              - -
@@ -78,38 +72,38 @@ One tiemstamp smaller than A    standby             - -
 
 # Sending Signals Commands
 
-The main actions that need to be triggered by commands, are sending the siganls to refresh the timestamp and to force to change collector status. To use them, firstly start the collector:
+The main actions that may need to be triggered by commands are the likes of refreshing the timestamp and force to change collector status. To use them, firstly start the collector:
 
 ```bash
  ~# sudo systemctl nfacctd-bmp-locA01.service
  ~# sudo systemctl nfacctd-bmp-locB01.service
 ```
 
-In order to send the signal, we need to search for the process ID of targeted process. Let's assume that now A is active and B is passive. To search for the process ID, type:
+In order to send the signal, one has to seek for the PID of the targeted process. Let's assume that now A is active and B is passive. To search for the process ID, type:
 
 ```bash
  ~# sudo ps -ef | grep "nfacctd: Core Process"
 ```
 
-If you want to now set B as the active one, you need to refresh A's timestamp. Simply type:
+If one now wants to set B as the active one, one needs to refresh A's timestamp. Simply type:
 
 ```bash
  ~# sudo kill -34 collectorA-nfacctd-core-processID
 ```
 
-Now A is queuing messages while B is dumping. If you want to now force A to dump as well, type:
+Now A is queuing messages while B is dumping. If now one wants to force A to dump as well, type:
 
 ```bash
  ~# sudo kill -35 collectorA-nfacctd-core-processID
 ```
 
-Now both A&B are dumping. If you now want B, which is initially dumping, to stop and queue messages, simply type:
+Now both A & B are dumping. If you now want B, which is initially dumping, to stop and queue messages, simply type:
 
 ```bash
  ~# sudo kill -36 collectorB-nfacctd-core-processID
 ```
 
-Now A is dumping and B is queuing messages. However, A has a lower priority and B has a higher priority due to the timestamp. If you want to set all them back to their normal status, simply type:
+Now A is dumping and B is queuing messages. However, A has a lower priority and B has a higher priority due to the timestamp. If one wants to set all them back to their normal status, simply type:
 
 ```bash
  ~# sudo kill -37 collectorA-nfacctd-core-processID
@@ -117,6 +111,3 @@ Now A is dumping and B is queuing messages. However, A has a lower priority and 
 ```
 
 Then A will be queuing messaging while B will be dumping, just like what is indicated by their timestamps.
-
-
-
