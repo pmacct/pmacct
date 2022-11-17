@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -195,6 +195,8 @@ void rpki_roas_file_reload()
 
       rpki_ribs_free(&rpki_peer, saved_rib_v4, saved_rib_v6);
     }
-    else rpki_ribs_free(&rpki_peer, new_rib_v4, new_rib_v6);
+    else {
+      rpki_ribs_free(&rpki_peer, new_rib_v4, new_rib_v6);
+    }
   }
 }

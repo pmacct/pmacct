@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -111,6 +111,8 @@ int rpki_roas_file_load(char *file, struct bgp_table *rib_v4, struct bgp_table *
 	  }
 
 	  ret = rpki_info_add(&rpki_peer, &p, asn, maxlen, rib_v4, rib_v6);
+
+	  json_decref(roa_json);
 
 	  exit_lane:
 	  continue;
