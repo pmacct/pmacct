@@ -5830,6 +5830,20 @@ int cfg_key_nfacctd_disable_opt_scope_check(char *filename, char *name, char *va
   return changes;
 }
 
+int cfg_key_nfacctd_ignore_exporter_address(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse_nonzero(value_ptr);
+  if (value == ERR) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_ignore_exporter_address = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'nfacctd_ignore_exporter_address'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_classifier_ndpi_num_roots(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

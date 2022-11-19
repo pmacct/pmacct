@@ -249,6 +249,7 @@ static const struct _dictionary_line dictionary[] = {
   {"nfacctd_renormalize", cfg_key_sfacctd_renormalize},
   {"nfacctd_disable_checks", cfg_key_nfacctd_disable_checks},
   {"nfacctd_disable_opt_scope_check", cfg_key_nfacctd_disable_opt_scope_check},
+  {"nfacctd_ignore_exporter_address", cfg_key_nfacctd_ignore_exporter_address},
   {"nfacctd_kafka_broker_host", cfg_key_nfacctd_kafka_broker_host},
   {"nfacctd_kafka_broker_port", cfg_key_nfacctd_kafka_broker_port},
   {"nfacctd_kafka_topic", cfg_key_nfacctd_kafka_topic},

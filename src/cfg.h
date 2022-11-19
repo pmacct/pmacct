@@ -248,6 +248,7 @@ struct configuration {
   char *sfacctd_counter_kafka_config_file;
   int nfacctd_disable_checks;
   int nfacctd_disable_opt_scope_check;
+  int nfacctd_ignore_exporter_address;
   int telemetry_daemon;
   int telemetry_sock;
   int telemetry_port_tcp;

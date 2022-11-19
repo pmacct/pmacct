@@ -2451,7 +2451,7 @@ void NF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
 
   /* 1) NF9_EXPORTER_IPV[46]_ADDRESS from NetFlow v9/IPFIX options */
-  if (entry->exp_addr.family) {
+  if (entry->exp_addr.family && !config.nfacctd_ignore_exporter_address) {
     memcpy(&pbgp->peer_src_ip, &entry->exp_addr, sizeof(struct host_addr));
   }
   /* 2) Socket IP address */
