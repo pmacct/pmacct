@@ -2465,29 +2465,6 @@ void NF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
       pbgp->peer_src_ip.family = AF_INET6;
     }
   }
-
-  /* 3) NetFlow v9/IPFIX inline NF9_EXPORTER_IPV[46]_ADDRESS */
-  if (!pbgp->peer_src_ip.family) {
-    int got_ipv4 = FALSE;
-
-    switch (hdr->version) {
-    case 10:
-    case 9:
-      if (tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].len) {
-	memcpy(&pbgp->peer_src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].off, MIN(tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].len, 4));
-	pbgp->peer_src_ip.family = AF_INET;
-
-	if (!is_any(&pbgp->peer_src_ip)) {
-	  got_ipv4 = TRUE;
-	}
-      }
-
-      if (!got_ipv4 && tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].len) {
-	memcpy(&pbgp->peer_src_ip.address.ipv6, pptrs->f_data+tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].off, MIN(tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].len, 16));
-	pbgp->peer_src_ip.family = AF_INET6;
-      }
-    }
-  }
 }
 
 void NF_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
