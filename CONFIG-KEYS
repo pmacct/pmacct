@@ -2056,6 +2056,15 @@ DESC:		Mainly a workaround to implementations not encoding NetFlow v9/IPIFX opti
 		to the system level (ie. to the IP address of the expoter).
 DEFAULT:	false
 
+KEY:		nfacctd_ignore_exporter_address [GLOBAL, ONLY_NFACCTD]
+VALUES:         [ true | false ]
+DESC:		Some IPFIX implementations do send IE #130 (exporterIPv4Address) and/or IE #131
+		(exporterIPv4Address) via Options packets, very convenient per se and especially in
+		case of NAT between the exporter and the collector. This knob is to ignore the IE and
+		honour instead the socket address and was introduced in order to counter some flawed
+		implementations. 
+DEFAULT:	false
+
 KEY:		pre_tag_map [MAP]
 DESC:		Full pathname to a file containing specific tags for data. For all daemons, tags (be that
 		numerical 'tag' or stringy 'label') can be exposed in output data; traffic daemons (ie.
