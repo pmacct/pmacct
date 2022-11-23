@@ -1366,7 +1366,7 @@ DESC:		Enables alignment of minutes (m), hours (h), days of month (d), weeks (w)
 		start at 7:00pm, 8:00pm, etc. Now, you go with 'sql_history: 5m', 'sql_history_roundoff: m'
 		and it's 6:37pm. Rounding off minutes will result in a first slot starting at 6:35pm; next
 		slot will start at 6:40pm, and then every 5 minutes (6:45pm ... 7:00pm, etc.). 'w' and 'd'
-		are mutually exclusive, that is: you can either reset the date to last Monday or reset the
+		are mutually exclusive, that is: you can either reset the date to last Sunday or reset the
 		date to the first day of the month. 
 DEFAULT:	none
 
