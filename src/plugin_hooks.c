@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -549,9 +549,12 @@ reprocess:
 
 	if (channels_list[index].reprocess) goto reprocess;
 
-	/* if reading from a savefile, let's sleep a bit after
-	   having sent over a buffer worth of data */
-	if (channels_list[index].plugin->cfg.pcap_savefile) usleep(1000); /* 1 msec */ 
+	/* if reading from a savefile and not using ZeroMQ for buffering,
+	   let's sleep a bit after having sent over a buffer worth of data */
+	if (channels_list[index].plugin->cfg.pcap_savefile &&
+	    !channels_list[index].plugin->cfg.pipe_zmq) {
+	  usleep(1000); /* 1 msec */ 
+	}
       }
     }
 
