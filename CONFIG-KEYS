@@ -462,18 +462,21 @@ DEFAULT:	false
 
 KEY:		pcap_savefile (-I) [GLOBAL, NO_UACCTD, NO_PMBGPD]
 DESC:		File in libpcap savefile format to read data from (as an alternative to live data
-		collection). As soon as the daemon finished processing the file, it exits (unless in
-		pmacctd the 'pcap_savefile_wait' config directive is specified). The directive is
-		mutually exclusive with reading live traffic (ie. pcap_interface (-i) for pmacctd,
-		[ns]facctd_ip (-L) and [ns]facctd_port (-l) for nfacctd and sfacctd respectively,
-		bmp_daemon_ip for pmbmpd). If using a traffic daemon (ie. nfacctd) with a BMP thread
-		(ie. bmp_daemon: true) and wanting to feed both with a savefile, only one file can
-		be supplied (that is, only a single pcap_savefile can be specified in the config):
-		if having multiple files, ie. one with traffic data and one with BMP data, these
-		can be merged using, for example, Wireshark which offers options to prepend, merge
-		chronologically and append data. Note: reading libpcap savefiles does use the
-		cap_next_ex() call which seems not to be highly portable, ie. a capture produced on
-		a Linux does not always read on a MacOS.  
+		collection). As soon as the daemon processed the file, it exits (unless, in pmacctd,
+		'pcap_savefile_wait' is specified). The directive is mutually exclusive with reading
+		live traffic (ie. pcap_interface (-i) for pmacctd, [ns]facctd_ip (-L) and
+		[ns]facctd_port (-l) for nfacctd and sfacctd respectively, bmp_daemon_ip for pmbmpd).
+		If using a traffic daemon (ie. nfacctd) with a BMP thread (ie. bmp_daemon: true) and
+		wanting to feed both with a savefile, only one file can be supplied (that is, only a
+		single pcap_savefile can be specified in the config): if having multiple files, ie.
+		one with traffic data and one with BMP data, these can be merged using, for example,
+		Wireshark which offers options to prepend, merge chronologically and append data.
+		Note: reading libpcap savefiles does use the cap_next_ex() call which seems not to be
+		highly portable, ie. a capture produced on a Linux does not always read on a MacOS.  
+		Note: when using home-grown buffering (ie. not ZeroMQ), usleep() calls are placed
+		upon wrapping-up one buffer and starting up a new one. This may lead to under using
+		CPU and not the quickest processing experience; if a fastest rate is wanted, switch
+		buffering to ZeroMQ ('plugin_pipe_zmq: true'). 
 DEFAULT:	none
 
 KEY:            pcap_savefile_wait (-W) [GLOBAL, NO_UACCTD, NO_PMBGPD]
