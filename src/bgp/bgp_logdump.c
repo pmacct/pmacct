@@ -37,6 +37,9 @@
 #ifdef WITH_AVRO
 #include "plugin_cmn_avro.h"
 #endif
+#ifdef WITH_REDIS
+#include "ha.h"
+#endif
 
 /* functions */
 int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, safi_t safi,
@@ -639,7 +642,15 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       }
 
       if (output == PRINT_OUTPUT_AVRO_BIN) {
-	kafka_ret = write_binary_kafka(peer->log->kafka_host, p_avro_local_buf, p_avro_len);
+        if (bmp_bgp_forwarding) {
+          kafka_ret = write_binary_kafka(peer->log->kafka_host, p_avro_local_buf, p_avro_len);
+        }
+#ifdef WITH_REDIS
+        else {
+          /*BMP-BGP-HA stand-by - intercept BGP packet*/
+          bmp_bgp_ha_enqueue(p_avro_local_buf, p_avro_len);
+        }
+#endif
       }
       else if (output == PRINT_OUTPUT_AVRO_JSON) {
 	char *avro_local_str = NULL;
@@ -919,9 +930,17 @@ int bgp_peer_log_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int typ
 #endif
 	}
 
-	if (output == PRINT_OUTPUT_AVRO_BIN) {
-	  kafka_ret = write_binary_kafka(peer->log->kafka_host, p_avro_local_buf, p_avro_len);
-	}
+  if (output == PRINT_OUTPUT_AVRO_BIN) {
+    if (bmp_bgp_forwarding) {
+      kafka_ret = write_binary_kafka(peer->log->kafka_host, p_avro_local_buf, p_avro_len);
+    }
+#ifdef WITH_REDIS
+    else {
+      /*BMP-BGP-HA stand-by - intercept BGP packet*/
+      bmp_bgp_ha_enqueue(p_avro_local_buf, p_avro_len);
+    }
+#endif
+  }
 	else if (output == PRINT_OUTPUT_AVRO_JSON) {
 	  char *avro_local_str = NULL;
 
@@ -1151,9 +1170,17 @@ int bgp_peer_log_close(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
 #endif
 	}
 
-	if (output == PRINT_OUTPUT_AVRO_BIN) {
-	  kafka_ret = write_binary_kafka(peer->log->kafka_host, p_avro_local_buf, p_avro_len);
-	}
+  if (output == PRINT_OUTPUT_AVRO_BIN) {
+    if (bmp_bgp_forwarding) {
+      kafka_ret = write_binary_kafka(peer->log->kafka_host, p_avro_local_buf, p_avro_len);
+    }
+#ifdef WITH_REDIS
+    else {
+      /*BMP-BGP-HA stand-by - intercept BGP packet*/
+      bmp_bgp_ha_enqueue(p_avro_local_buf, p_avro_len);
+      }
+#endif
+  }
 	else if (output == PRINT_OUTPUT_AVRO_JSON) {
 	  char *avro_local_str = NULL;
 
@@ -1515,7 +1542,15 @@ int bgp_peer_dump_init(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
       }
 
       if (output == PRINT_OUTPUT_AVRO_BIN) {
-	kafka_ret = write_binary_kafka(peer->log->kafka_host, p_avro_local_buf, p_avro_len);
+        if (bmp_bgp_forwarding) {
+          kafka_ret = write_binary_kafka(peer->log->kafka_host, p_avro_local_buf, p_avro_len);
+        }
+#ifdef WITH_REDIS
+        else {
+          /*BMP-BGP-HA stand-by - intercept BGP packet*/
+          bmp_bgp_ha_enqueue(p_avro_local_buf, p_avro_len);
+        }
+#endif
       }
       else if (output == PRINT_OUTPUT_AVRO_JSON) {
 	char *avro_local_str = NULL;
@@ -1743,7 +1778,15 @@ int bgp_peer_dump_close(struct bgp_peer *peer, bgp_tag_t *tag, struct bgp_dump_s
       }
 
       if (output == PRINT_OUTPUT_AVRO_BIN) {
-	kafka_ret = write_binary_kafka(peer->log->kafka_host, p_avro_local_buf, p_avro_len);
+        if (bmp_bgp_forwarding) {
+          kafka_ret = write_binary_kafka(peer->log->kafka_host, p_avro_local_buf, p_avro_len);
+        }
+#ifdef WITH_REDIS
+        else {
+          /*BMP-BGP-HA stand-by - intercept BGP packet*/
+          bmp_bgp_ha_enqueue(p_avro_local_buf, p_avro_len);
+        }
+#endif
       }
       else if (output == PRINT_OUTPUT_AVRO_JSON) {
 	char *avro_local_str = NULL;
@@ -1809,9 +1852,12 @@ void bgp_handle_dump_event(int max_peers_idx)
     bgp_table_dump_workers_pool = allocate_thread_pool(config.bgp_table_dump_workers);
     assert(bgp_table_dump_workers_pool);
 
-    for (idx = 0; idx < config.bgp_table_dump_workers; idx++) {
-      if (!pdr[idx].noop) {
-        send_to_pool(bgp_table_dump_workers_pool, bgp_table_dump_event_runner, &pdr[idx]);
+    /* (BMP-BGP-HA feature) don't perform the dump in case the daemon is stand-by */
+    if (bmp_bgp_forwarding) {
+      for (idx = 0; idx < config.bgp_table_dump_workers; idx++) {
+        if (!pdr[idx].noop) {
+          send_to_pool(bgp_table_dump_workers_pool, bgp_table_dump_event_runner, &pdr[idx]);
+        }
       }
     }
 

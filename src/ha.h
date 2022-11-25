@@ -22,21 +22,25 @@
 #ifndef HA_H
 #define HA_H
 
-/*Global variables*/
-typedef void (*queue_thread_handler)();
+/* Defines [in microseconds] for how long messages will be kept in the queue*/
+#define QUEUE_POP_THRESHOLD 10000000LL  // 10s
 
-// A linked list (LL) node to store a queue entry
-typedef struct QNode
-{
-    void *key; //Data
-    size_t key_len; //Data length
+/*Linked list (LL) node to store a queue entry*/
+typedef struct QNode {
+    void *buf;
+    size_t buf_len;
     long long timestamp;
-}nodestruct;
+} nodestruct;
 
-/*Functions*/
-extern void pm_ha_countdown_delete();
-extern void pm_ha_queue_thread_wrapper();
-extern int pm_ha_queue_produce_thread(void *);
-extern void enQueue(cdada_queue_t*, void *, size_t);
+/*Global Functions*/
+extern void bmp_bgp_ha_enqueue(void *, size_t);
+extern void p_redis_thread_bmp_bgp_ha_handler(void *);
+extern void bmp_bgp_ha_main(void);
 
-#endif //HA_H
+/*Signal handlers*/
+extern void bmp_bgp_ha_regenerate_timestamp(int);
+extern void bmp_bgp_ha_set_to_active(int);
+extern void bmp_bgp_ha_set_to_standby(int);
+extern void bmp_bgp_ha_set_to_normal(int);
+
+#endif

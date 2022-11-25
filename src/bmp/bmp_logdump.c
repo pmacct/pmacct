@@ -35,6 +35,9 @@
 #ifdef WITH_AVRO
 #include "plugin_cmn_avro.h"
 #endif
+#ifdef WITH_REDIS
+#include "ha.h"
+#endif
 
 int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, bgp_tag_t *tag,
 		void *log_data, u_int64_t log_seq, char *event_type, int output, int log_type)
@@ -327,7 +330,15 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
       }
 
       if (output == PRINT_OUTPUT_AVRO_BIN) {
-	kafka_ret = write_binary_kafka(peer->log->kafka_host, p_avro_local_buf, p_avro_len);
+        if (bmp_bgp_forwarding) {
+          kafka_ret = write_binary_kafka(peer->log->kafka_host, p_avro_local_buf, p_avro_len);
+        }
+#ifdef WITH_REDIS
+        else {
+          /*BMP-BGP-HA stand-by - intercept BMP packet*/
+          bmp_bgp_ha_enqueue(p_avro_local_buf, p_avro_len);
+        }
+#endif
       }
       else if (output == PRINT_OUTPUT_AVRO_JSON) {
 	char *avro_local_str = NULL;
@@ -1598,9 +1609,12 @@ void bmp_handle_dump_event(int max_peers_idx)
     bmp_dump_workers_pool = allocate_thread_pool(config.bmp_dump_workers);
     assert(bmp_dump_workers_pool);
 
-    for (idx = 0; idx < config.bmp_dump_workers; idx++) {
-      if (!pdr[idx].noop) {
-        send_to_pool(bmp_dump_workers_pool, bmp_dump_event_runner, &pdr[idx]);
+    /* (BMP-BGP-HA feature) don't perform the dump in case the daemon is stand-by */
+    if (bmp_bgp_forwarding) {
+      for (idx = 0; idx < config.bmp_dump_workers; idx++) {
+        if (!pdr[idx].noop) {
+          send_to_pool(bmp_dump_workers_pool, bmp_dump_event_runner, &pdr[idx]);
+        }
       }
     }
 
