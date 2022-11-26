@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -26,7 +26,7 @@
 #define REPROCESS_SPECIFIC	1
 #define REPROCESS_BULK		2
 
-#include "sql_common.h"
+#include "plugin_common.h"
 
 /* prototypes */
 void pgsql_plugin(int, struct configuration *, void *);
