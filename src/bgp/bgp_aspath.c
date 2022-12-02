@@ -1155,6 +1155,7 @@ aspath_str2aspath (const char *str)
   u_short as_type;
   as_t asno = 0;
   struct aspath *aspath;
+  char *aspath_str;
   int needtype;
 
   aspath = aspath_new ();
@@ -1207,7 +1208,8 @@ aspath_str2aspath (const char *str)
     }
   }
 
-  aspath_make_str_count (aspath);
+  aspath_str = aspath_make_str_count (aspath);
+  free(aspath_str);
 
   return aspath;
 }
@@ -1216,11 +1218,13 @@ struct aspath *
 aspath_ast2aspath (as_t asn)
 {
   struct aspath *aspath;
+  char *aspath_str;
 
   aspath = aspath_new ();
   aspath_segment_add (aspath, AS_SEQUENCE);
   aspath_as_add (aspath, asn);
-  aspath_make_str_count (aspath);
+  aspath_str = aspath_make_str_count (aspath);
+  free(aspath_str);
 
   return aspath;
 }
