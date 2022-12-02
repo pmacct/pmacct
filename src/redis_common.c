@@ -92,13 +92,6 @@ void p_redis_init(struct p_redis_host *redis_host, char *log_id, redis_thread_ha
 
 int p_redis_connect(struct p_redis_host *redis_host, int fatal)
 {
-  struct sockaddr_storage dest;
-  socklen_t dest_len = sizeof(dest);
-  char dest_str[INET6_ADDRSTRLEN];
-  int dest_port;
-
-  time_t now = time(NULL);
-
   if (config.tmp_bmp_daemon_ha) {
     pthread_mutex_lock(&bmp_ha_struct.mutex_rd);
     bmp_ha_struct.dump_flag = TRUE;
@@ -110,24 +103,42 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
   connect: //re-connect
 
   if (config.redis_host) {
+
+    time_t now = time(NULL);
+
     if (now >= (redis_host->last_conn + PM_REDIS_DEFAULT_CONN_RETRY)) {
+      int res = REDIS_OK;
       redis_host->last_conn = now;
+      if (redis_host->ctx) {
+        /* reconnect */
+        Log(LOG_DEBUG, "DEBUG ( %s ): reconnecting to redis server (fd %d)\n",
+            redis_host->log_id, redis_host->ctx->fd);
+        res = redisReconnect(redis_host->ctx);
+      }
+      else {
+        /* initial connect */
+        struct sockaddr_storage dest;
+        socklen_t dest_len = sizeof(dest);
+        char dest_str[INET6_ADDRSTRLEN];
+        int dest_port;
 
-      /* round of parsing and validation */
-      parse_hostport(config.redis_host, (struct sockaddr *)&dest, &dest_len);
-      sa_to_str(dest_str, sizeof(dest_str), (struct sockaddr *)&dest, FALSE);
-
-      sa_to_port(&dest_port, (struct sockaddr *)&dest);
-      if (!dest_port) {
-	dest_port = PM_REDIS_DEFAULT_PORT;
+        /* round of parsing and validation */
+        parse_hostport(config.redis_host, (struct sockaddr *)&dest, &dest_len);
+        sa_to_str(dest_str, sizeof(dest_str), (struct sockaddr *)&dest, FALSE);
+        sa_to_port(&dest_port, (struct sockaddr *)&dest);
+        if (!dest_port) {
+          dest_port = PM_REDIS_DEFAULT_PORT;
+        }
+        Log(LOG_INFO, "INFO ( %s ): connecting to redis server %s:%d\n",
+            redis_host->log_id, dest_str, dest_port);
+        redis_host->ctx = redisConnect(dest_str, dest_port);
       }
 
-      redis_host->ctx = redisConnect(dest_str, dest_port);
-
-      if (redis_host->ctx == NULL || redis_host->ctx->err) {
+      if (res != REDIS_OK || redis_host->ctx == NULL || redis_host->ctx->err) {
 	if (redis_host->ctx) {
 	  if (fatal) {
-	    Log(LOG_ERR, "ERROR ( %s ): Connection error: %s\n", redis_host->log_id, redis_host->ctx->errstr);
+            Log(LOG_ERR, "ERROR ( %s ): Can't connect to redis server: %s\n",
+                redis_host->log_id, redis_host->ctx->errstr);
 
 	    if (config.tmp_bmp_daemon_ha) {
 	      pthread_mutex_lock(&bmp_ha_struct.mutex_rd);
@@ -146,6 +157,8 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
 	    }
 	  }
 	  else {
+            Log(LOG_WARNING, "WARN ( %s ): Can't connect to redis server: %s\n",
+                redis_host->log_id, redis_host->ctx->errstr);
 	    return ERR;
 	  }
 	}
