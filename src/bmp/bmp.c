@@ -309,12 +309,22 @@ int skinny_bmp_daemon()
 
     {
       char srv_string[INET6_ADDRSTRLEN];
+      char *srv_interface = NULL, default_interface[] = "all";
       struct host_addr srv_addr;
       u_int16_t srv_port;
 
+      if (!config.bmp_daemon_interface) {
+	srv_interface = default_interface;
+      }
+      else {
+	srv_interface = config.bmp_daemon_interface;
+      }
+
       sa_to_addr((struct sockaddr *)&server, &srv_addr, &srv_port);
       addr_to_str(srv_string, &srv_addr);
-      Log(LOG_INFO, "INFO ( %s/%s ): waiting for BMP data on %s:%u\n", config.name, bmp_misc_db->log_str, srv_string, srv_port);
+
+      Log(LOG_INFO, "INFO ( %s/%s ): waiting for BMP data on interface=%s ip=%s port=%u/tcp\n",
+	  config.name, bmp_misc_db->log_str, srv_interface, srv_string, srv_port);
     }
 
 #if defined WITH_EBPF

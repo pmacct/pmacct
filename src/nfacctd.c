@@ -1351,25 +1351,40 @@ int main(int argc,char **argv, char **envp)
 #endif
   else {
     char srv_string[INET6_ADDRSTRLEN];
+    char *srv_interface = NULL, default_interface[] = "all";
     struct host_addr srv_addr;
     u_int16_t srv_port;
 
+    if (!config.nfacctd_interface) {
+      srv_interface = default_interface;
+    }
+    else {
+      srv_interface = config.nfacctd_interface;
+    }
+
     sa_to_addr((struct sockaddr *)&server, &srv_addr, &srv_port); 
     addr_to_str(srv_string, &srv_addr);
-    Log(LOG_INFO, "INFO ( %s/core ): waiting for NetFlow/IPFIX data on %s:%u\n", config.name, srv_string, srv_port);
+
+    Log(LOG_INFO, "INFO ( %s/core ): waiting for NetFlow/IPFIX data on interfce=%s ip=%s port=%u/udp\n",
+	config.name, srv_interface, srv_string, srv_port);
+
     allowed = TRUE;
 
     if (config.nfacctd_templates_port) {
       sa_to_addr((struct sockaddr *)&server_templates, &srv_addr, &srv_port); 
       addr_to_str(srv_string, &srv_addr);
-      Log(LOG_INFO, "INFO ( %s/core ): waiting for NetFlow/IPFIX templates on %s:%u\n", config.name, srv_string, srv_port);
+
+      Log(LOG_INFO, "INFO ( %s/core ): waiting for NetFlow/IPFIX templates on interface=%s ip=%s port=%u/udp\n",
+	  config.name, srv_interface, srv_string, srv_port);
     }
 
 #if WITH_GNUTLS
     if (config.nfacctd_dtls_port) {
       sa_to_addr((struct sockaddr *)&server_dtls, &srv_addr, &srv_port); 
       addr_to_str(srv_string, &srv_addr);
-      Log(LOG_INFO, "INFO ( %s/core ): waiting for DTLS NetFlow/IPFIX on %s:%u\n", config.name, srv_string, srv_port);
+
+      Log(LOG_INFO, "INFO ( %s/core ): waiting for DTLS NetFlow/IPFIX data on interface=%s ip=%s port=%u/udp\n",
+	  config.name, srv_interface, srv_string, srv_port);
     }
 #endif
   }

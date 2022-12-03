@@ -421,12 +421,22 @@ int telemetry_daemon(void *t_data_void)
 
   if (!zmq_input && !kafka_input && !unyte_udp_notif_input) {
     char srv_string[INET6_ADDRSTRLEN];
+    char *srv_interface = NULL, default_interface[] = "all";
     struct host_addr srv_addr;
     u_int16_t srv_port;
 
+    if (!config.telemetry_interface) {
+      srv_interface = default_interface;
+    }
+    else {
+      srv_interface = config.telemetry_interface;
+    }
+
     sa_to_addr((struct sockaddr *)&server, &srv_addr, &srv_port);
     addr_to_str(srv_string, &srv_addr);
-    Log(LOG_INFO, "INFO ( %s/%s ): waiting for telemetry data on %s:%u/%s\n", config.name, t_data->log_str, srv_string, srv_port, srv_proto);
+
+    Log(LOG_INFO, "INFO ( %s/%s ): waiting for telemetry data on interface=%s ip=%s port=%u/%s\n",
+	config.name, t_data->log_str, srv_interface, srv_string, srv_port, srv_proto);
   }
 #if defined WITH_ZMQ
   else if (zmq_input) {
