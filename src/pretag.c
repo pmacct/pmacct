@@ -471,7 +471,12 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   tmp.num++;
 
 		  if (recirculate) {
-		    if (tmp.num < map_entries) goto recirculate_ipv6;
+		    if (tmp.num < map_entries) {
+		      tmp.e[tmp.num].key.agent_ip.a.family = FALSE;
+		      tmp.e[tmp.num].key.agent_mask.family = FALSE;
+
+		      goto recirculate_ipv6;
+		    }
 		  }
                 }
 	        /* if any required field is missing and other errors have been signalled
