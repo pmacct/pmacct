@@ -438,11 +438,11 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 		      memcpy(&recirc_e, &tmp.e[tmp.num], sizeof(struct id_entry));
 
 		      /*
-			If indexing is enabled and no address family is specified for 'ip'
-			(ie. 'ip' is likely not specified), we will not include it as part
-			of the index hash serializer anyway; we can skip recirculation.
+			Recirculate by default in order to ensure correctness of maps;
+			if this can be skipped, ie. v4-only or no-ip-only map, then the
+			'maps_dont_recirculate' config knob can be used to save memory.
 		      */
-		      if (!config.maps_index) {
+		      if (!config.maps_dont_recirculate) {
 			recirculate = TRUE;
 		      }
 		    }

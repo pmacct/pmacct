@@ -285,6 +285,7 @@ extern int cfg_key_maps_refresh(char *, char *, char *);
 extern int cfg_key_maps_index(char *, char *, char *);
 extern int cfg_key_maps_entries(char *, char *, char *);
 extern int cfg_key_maps_row_len(char *, char *, char *);
+extern int cfg_key_maps_dont_recirculate(char *, char *, char *);
 extern int cfg_key_pre_tag_map(char *, char *, char *);
 extern int cfg_key_pre_tag_filter(char *, char *, char *);
 extern int cfg_key_pre_tag2_filter(char *, char *, char *);

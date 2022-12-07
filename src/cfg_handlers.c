@@ -3038,6 +3038,20 @@ int cfg_key_maps_refresh(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_maps_dont_recirculate(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.maps_dont_recirculate = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'maps_dont_recirculate'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_print_cache_entries(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
