@@ -2082,6 +2082,14 @@ DESC:		Full pathname to a file containing specific tags for data. For all daemon
 		a SIGUSR2 signal (ie. "killall -USR2 nfacctd").
 DEFAULT:	none
 
+KEY:		pre_tag_map_dont_recirculate
+VALUES:		[ true | false ]
+DESC:		By default pre_tag_map entries without an 'ip' key specified are inserted in both v4 and
+		v6 maps, so-called recirculation (from one entry, two are actually created in the in-mem
+		structures), ensuring correctess of computed results. If a map does not include any v6
+		'ip' keys and the environment is v4-only, recirculation can be safely disabled by setting
+		this knob to true, hence yelding memory savings. 
+
 KEY:		maps_entries
 DESC:		Defines the maximum number of entries a map can contain (ie. pre_tag_map and all directives
 		with the 'MAP' flag in this document). The default value is suitable for most scenarios,
