@@ -440,9 +440,10 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 		      /*
 			Recirculate by default in order to ensure correctness of maps;
 			if this can be skipped, ie. v4-only or no-ip-only map, then the
-			'maps_dont_recirculate' config knob can be used to save memory.
+			'pre_tag_map_dont_recirculate' config knob can be used to save
+			memory.
 		      */
-		      if (!config.maps_dont_recirculate) {
+		      if (!config.pre_tag_map_dont_recirculate) {
 			recirculate = TRUE;
 		      }
 		    }

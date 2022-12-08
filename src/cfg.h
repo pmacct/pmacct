@@ -561,8 +561,8 @@ struct configuration {
   int maps_index;
   int maps_entries;
   int maps_row_len;
-  int maps_dont_recirculate;
   char *pre_tag_map;
+  int pre_tag_map_dont_recirculate;
   struct id_table ptm;
   int ptm_alloc;
   int ptm_global;

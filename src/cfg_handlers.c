@@ -3038,7 +3038,7 @@ int cfg_key_maps_refresh(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_maps_dont_recirculate(char *filename, char *name, char *value_ptr)
+int cfg_key_pre_tag_map_dont_recirculate(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -3046,8 +3046,8 @@ int cfg_key_maps_dont_recirculate(char *filename, char *name, char *value_ptr)
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  for (; list; list = list->next, changes++) list->cfg.maps_dont_recirculate = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'maps_dont_recirculate'. Globalized.\n", filename);
+  for (; list; list = list->next, changes++) list->cfg.pre_tag_map_dont_recirculate = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'pre_tag_map_dont_recirculate'. Globalized.\n", filename);
 
   return changes;
 }
