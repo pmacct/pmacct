@@ -71,6 +71,7 @@ extern pm_id_t PT_stack_sum(pm_id_t, pm_id_t);
 extern pm_id_t PT_stack_logical_or(pm_id_t, pm_id_t);
 
 extern int PT_map_index_entries_ip_handler(struct id_table_index *, int, pm_hash_serial_t *, void *);
+extern int PT_map_index_entries_ip_af_handler(struct id_table_index *, int, pm_hash_serial_t *, void *);
 extern int PT_map_index_entries_input_handler(struct id_table_index *, int, pm_hash_serial_t *, void *);
 extern int PT_map_index_entries_output_handler(struct id_table_index *, int, pm_hash_serial_t *, void *);
 extern int PT_map_index_entries_bgp_nexthop_handler(struct id_table_index *, int, pm_hash_serial_t *, void *);
@@ -92,6 +93,7 @@ extern int PT_map_index_entries_is_multicast_handler(struct id_table_index *, in
 extern int PT_map_index_entries_fwd_status_handler(struct id_table_index *, int, pm_hash_serial_t *, void *);
 extern int PT_map_index_entries_null_handler(struct id_table_index *, int, pm_hash_serial_t *, void *);
 extern int PT_map_index_fdata_ip_handler(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *); 
+extern int PT_map_index_fdata_ip_af_handler(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_fdata_input_handler(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_fdata_output_handler(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_fdata_bgp_nexthop_handler(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *); 

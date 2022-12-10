@@ -72,6 +72,7 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
 
 const struct _map_index_internal_dictionary_line tag_map_index_entries_dictionary[] = {
   {PRETAG_IP, PT_map_index_entries_ip_handler},
+  {PRETAG_IP_AF, PT_map_index_entries_ip_af_handler},
   {PRETAG_IN_IFACE, PT_map_index_entries_input_handler},
   {PRETAG_OUT_IFACE, PT_map_index_entries_output_handler},
   {PRETAG_BGP_NEXTHOP, PT_map_index_entries_bgp_nexthop_handler},
@@ -97,6 +98,7 @@ const struct _map_index_internal_dictionary_line tag_map_index_entries_dictionar
 
 const struct _map_index_dictionary_line tag_map_index_fdata_dictionary[] = {
   {PRETAG_IP, PT_map_index_fdata_ip_handler},
+  {PRETAG_IP_AF, PT_map_index_fdata_ip_af_handler},
   {PRETAG_IN_IFACE, PT_map_index_fdata_input_handler},
   {PRETAG_OUT_IFACE, PT_map_index_fdata_output_handler},
   {PRETAG_BGP_NEXTHOP, PT_map_index_fdata_bgp_nexthop_handler},
@@ -122,6 +124,7 @@ const struct _map_index_dictionary_line tag_map_index_fdata_dictionary[] = {
 
 const struct _map_index_size_dictionary_line tag_map_index_entries_size_dictionary[] = {
   {PRETAG_IP, sizeof(struct host_addr)},
+  {PRETAG_IP_AF, sizeof(u_int8_t)},
   {PRETAG_IN_IFACE, sizeof(u_int32_t)},
   {PRETAG_OUT_IFACE, sizeof(u_int32_t)},
   {PRETAG_BGP_NEXTHOP, sizeof(struct host_addr)},

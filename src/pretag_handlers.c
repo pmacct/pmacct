@@ -3273,6 +3273,17 @@ int PT_map_index_entries_ip_handler(struct id_table_index *idx, int idx_hdlr_no,
   return FALSE;
 }
 
+int PT_map_index_entries_ip_af_handler(struct id_table_index *idx, int idx_hdlr_no, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!idx || !hash_serializer || !src_e) return TRUE;
+
+  hash_serial_append(hash_serializer, (char *)&src_e->key.agent_ip.a.family, sizeof(u_int8_t), TRUE);
+
+  return FALSE;
+}
+
 int PT_map_index_entries_input_handler(struct id_table_index *idx, int idx_hdlr_no, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct id_entry *src_e = (struct id_entry *) src;
@@ -3590,6 +3601,31 @@ int PT_map_index_fdata_ip_handler(struct id_table_index *idx, int idx_hdlr, int 
   else return TRUE;
 
   hash_serial_append(hash_serializer, (char *)&e->key.agent_ip.a, sizeof(struct host_addr), FALSE);
+
+  return FALSE;
+}
+
+int PT_map_index_fdata_ip_af_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
+  SFSample *sample = (SFSample *)pptrs->f_data;
+  u_int16_t port;
+
+  if (config.acct_type == ACCT_NF) {
+    sa_to_addr((struct sockaddr *)sa, &e->key.agent_ip.a, &port);
+  }
+  else if (config.acct_type == ACCT_SF) {
+    if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V4) {
+      e->key.agent_ip.a.family = AF_INET;
+    }
+    else if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V6) {
+      e->key.agent_ip.a.family = AF_INET6;
+    }
+  }
+  else return TRUE;
+
+  hash_serial_append(hash_serializer, (char *)&e->key.agent_ip.a.family, sizeof(u_int8_t), FALSE);
 
   return FALSE;
 }
