@@ -1080,7 +1080,7 @@ pt_bitmap_t pretag_index_build_bitmap(struct id_entry *ptr, int acct_type)
   /* 3) if 'ip' key is not defined, still define the address family (AF)
      so to be memory-savvy and avoid creating duplicate entries in case
      of v4/v6 recirculation */
-  if (!(idx_bmap & PRETAG_IP)) idx_bmap &= PRETAG_IP_AF;
+  if (!(idx_bmap & PRETAG_IP)) idx_bmap |= PRETAG_IP_AF;
 
   /* 4) handle the case of catch-all rule */
   if (!idx_bmap) idx_bmap = PRETAG_NULL;
