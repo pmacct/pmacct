@@ -206,7 +206,6 @@ struct id_entry_key {
   pt_uint32_t mpls_pw_id;
   pt_uint8_t fwd_status;
   struct bpf_program filter;
-  pt_uint8_t null;
 };
 
 struct id_entry {

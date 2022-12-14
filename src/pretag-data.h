@@ -92,7 +92,6 @@ const struct _map_index_internal_dictionary_line tag_map_index_entries_dictionar
   {PRETAG_DST_NET, PT_map_index_entries_dst_net_handler},
   {PRETAG_IS_MULTICAST, PT_map_index_entries_is_multicast_handler},
   {PRETAG_FWDSTATUS_ID, PT_map_index_entries_fwd_status_handler},
-  {PRETAG_NULL, PT_map_index_entries_null_handler},
   {0, NULL}
 };
 
@@ -118,7 +117,6 @@ const struct _map_index_dictionary_line tag_map_index_fdata_dictionary[] = {
   {PRETAG_DST_NET, PT_map_index_fdata_dst_net_handler},
   {PRETAG_IS_MULTICAST, PT_map_index_fdata_is_multicast_handler},
   {PRETAG_FWDSTATUS_ID, PT_map_index_fdata_fwd_status_handler},
-  {PRETAG_NULL, PT_map_index_fdata_null_handler},
   {0, NULL}
 };
 
@@ -143,7 +141,6 @@ const struct _map_index_size_dictionary_line tag_map_index_entries_size_dictiona
   {PRETAG_DST_NET, (sizeof(struct host_addr) /* net */ + sizeof(u_int8_t) /* mask */)},
   {PRETAG_IS_MULTICAST, sizeof(u_int8_t)},
   {PRETAG_FWDSTATUS_ID, sizeof(u_int8_t)},
-  {PRETAG_NULL, sizeof(u_int8_t)},
   {0, 0}
 };
 
