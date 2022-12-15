@@ -264,6 +264,9 @@ struct data_hdr_v9 {
 #define NF9_LAYER2_SEGMENT_ID		351
 #define NF9_LAYER2OCTETDELTACOUNT	352
 /* ... */
+#define NF9_staMacAddress		365
+#define NF9_staIPv4Address		366
+/* ... */
 #define NF9_DATALINK_FRAME_TYPE		408
 /* ... */
 #define NF9_srhSegmentIPv6ListSection	505

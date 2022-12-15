@@ -3035,7 +3035,8 @@ void NF_evaluate_flow_type(struct flow_chars *flow_type, struct template_cache_e
 	  have_ip_proto = TRUE;
 	}
       }
-      else if (tpl->tpl[NF9_IPV4_SRC_ADDR].len || tpl->tpl[NF9_IPV4_DST_ADDR].len) {
+      else if (tpl->tpl[NF9_IPV4_SRC_ADDR].len || tpl->tpl[NF9_IPV4_DST_ADDR].len ||
+	       tpl->tpl[NF9_staIPv4Address].len) {
         ret += PM_FTYPE_IPV4;
 	have_ip_proto = TRUE;
       }

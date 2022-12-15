@@ -1993,6 +1993,8 @@ void NF_src_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
       memcpy(&pdata->primitives.eth_shost, pptrs->f_data+tpl->tpl[NF9_IN_SRC_MAC].off, MIN(tpl->tpl[NF9_IN_SRC_MAC].len, 6));
     else if (tpl->tpl[NF9_OUT_SRC_MAC].len)
       memcpy(&pdata->primitives.eth_shost, pptrs->f_data+tpl->tpl[NF9_OUT_SRC_MAC].off, MIN(tpl->tpl[NF9_OUT_SRC_MAC].len, 6));
+    else if (tpl->tpl[NF9_staMacAddress].len)
+      memcpy(&pdata->primitives.eth_shost, pptrs->f_data+tpl->tpl[NF9_staMacAddress].off, MIN(tpl->tpl[NF9_staMacAddress].len, 6));
     else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len)
       src_mac_handler(chptr, pptrs, data);
 
@@ -2184,6 +2186,10 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       }
       else if (tpl->tpl[NF9_IPV4_SRC_PREFIX].len) {
         memcpy(&pdata->primitives.src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_PREFIX].off, MIN(tpl->tpl[NF9_IPV4_SRC_PREFIX].len, 4)); 
+        pdata->primitives.src_ip.family = AF_INET;
+      }
+      else if (tpl->tpl[NF9_staIPv4Address].len) {
+        memcpy(&pdata->primitives.src_ip.address.ipv4, pptrs->f_data+tpl->tpl[NF9_staIPv4Address].off, MIN(tpl->tpl[NF9_staIPv4Address].len, 4)); 
         pdata->primitives.src_ip.family = AF_INET;
       }
       else if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len)
