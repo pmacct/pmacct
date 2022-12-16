@@ -48,13 +48,9 @@
 !			[1,2,4,8 bytes long], presented as hexadecimal number),
 !			'ip' (IP address), 'mac' (L2 MAC address), 'str'
 !			(string) and 'raw' (raw data, fixed or variable length
-!			in hex format). Note: when selecting 'str' as semantics,
-!			although some effort is put in ensuring null-termination
-!			in pmacct, it is recommended that the original string is
-!			null-terminated; alternatively pick 'raw' in order to
-!			avoid undefined behaviours; 'raw' will require some
-!			simple post processing in order to be converted back to
-!			a string.
+!			presented in hex format). Note: it is recommended to
+!			select 'str' when original strings are null-terminated,
+!			alternatively pick 'raw'.
 ! 
 ! Examples:
 !
