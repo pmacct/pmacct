@@ -2363,7 +2363,8 @@ daemon is suitable for consuming BMP data only, real-time or at regular
 intervals; the thread solution is suitable for correlation of BMP with other
 data sources, ie. NetFlow, IPFIX, sFlow, etc.. The implementation bases on
 rfc7854 and is in-sync with most recent RFCs and draft-ietf-grow-bmp-* IETF
-documents (ie. rfc8671, ietf-grow-bmp-local-rib, ietf-grow-bmp-tlv, etc.).
+documents (ie. rfc8671, rfc9069, ietf-grow-bmp-tlv, ietf-grow-bmp-tlv-ebit,
+etc.).
 
 If unfamiliar with BMP, to quote rfc7854: "BMP is intended to provide a more
 convenient interface for obtaining route views for research purpose than the
@@ -2373,10 +2374,10 @@ BMP simple, useful, easily implemented, and minimally service-affecting.".
 The BMP daemon currently supports BMP data, events and stats, ie. initiation,
 termination, peer up, peer down, stats and route monitoring messages (that is
 no route mirroring messages; please get in touch if an implementation is
-wanted in this sense). The daemon enables to write BMP messages to files, AMQP
-and Kafka brokers, real-time (msglog) or at regular time intervals (dump).
-Also, route monitoring messages are saved in a RIB structure for IP prefix
-lookup.
+wanted in this sense). The daemon allows to write BMP messages to files,
+AMQP and Kafka brokers, real-time (msglog) or at regular time intervals
+(dump). Also, route monitoring messages are saved in a RIB structure for IP
+prefix lookup.
 
 All features export data formatted as JSON or Avro messages. Please review
 the section "Compiling pmacct with JSON support" and, if planning to use Avro
@@ -2387,11 +2388,11 @@ or "Running the Kafka plugin" sections of this document. If making use of the
 Schema Registry component of the Confluent Platform please also review the
 "Running the Kafka plugin" section.
 
-Following a simple example on how to configure nfacctd to enable the BMP thread
-to a) log, in real-time, BGP stats, events and routes received via BMP to a
-text-file (bmp_daemon_msglog_file) and b) dump the same (ie. BGP stats and
-events received via BMP) to a text-file and at regular time intervals
-(bmp_dump_refresh_time, bmp_dump_file):
+Following a simple example on how to configure nfacctd to enable the BMP
+thread to a) log, in real-time, BGP stats, events and routes received via
+BMP to a text-file (bmp_daemon_msglog_file) and b) dump the same (ie. BGP
+stats and events received via BMP) to a text-file and at regular time
+intervals (bmp_dump_refresh_time, bmp_dump_file):
 
 bmp_daemon: true
 !
@@ -2400,11 +2401,11 @@ bmp_daemon_msglog_file: /path/to/bmp-$peer_src_ip.log
 bmp_dump_file: /path/to/bmp-$peer_src_ip-%H%M.dump
 bmp_dump_refresh_time: 60
 
-Following a simple example on how to configure nfacctd to enable the BMP thread
-to a) log, in real-time, BGP stats, events and routes received via BMP to a
-Kafka broker (bmp_daemon_msglog_kafka_topic) and b) dump the same (ie. BGP stats
-and events received via BMP) to a text-file and at regular time intervals
-(bmp_dump_refresh_time, bmp_dump_kafka_topic):
+Following a simple example on how to configure nfacctd to enable the BMP
+thread to a) log, in real-time, BGP stats, events and routes received via
+BMP to a Kafka broker (bmp_daemon_msglog_kafka_topic) and b) dump the same
+(ie. BGP stats and events received via BMP) to a text-file and at regular
+time intervals (bmp_dump_refresh_time, bmp_dump_kafka_topic):
 
 bmp_daemon: true
 !
@@ -2416,9 +2417,12 @@ bmp_dump_refresh_time: 60
 ! [Optional] librdkafka config for buffer tuning, ssl config, etc. 
 ! bmp_dump_config_file: /path/to/librdkafka.conf
 
-The equivalent bmp_daemon_msglog_amqp_routing_key and bmp_dump_amqp_routing_key
-config directives can be used to make the above example work against a RabbitMQ
-broker.
+When many BMP exporters are pointed to a BMP receiver writing to Kafka, as
+in the example above, due to the state synchronization nature of Route
+Monitoring, the amount of data to be produced to the broker may exceed
+default queues depth. Please see the "Running the Kafka plugin" section of
+this document on how to adjust Kakfa queue depths via directives like
+batch.num.messages, queue.buffering.max.messages, etc.
 
 A sample of both the BMP msglog and dump formats are captured in the following
 document: docs/MSGLOG_DUMP_FORMATS
@@ -2426,8 +2430,8 @@ document: docs/MSGLOG_DUMP_FORMATS
 Setting up the stand-alone BMP collector daemon, pmbmpd, is the exact same as
 the configuration above except the 'bmp_daemon: true' line can be skipped.
 
-Following is an example of how a Cisco router running IOS/IOS-XE (15.4(2)T) should be
-configured in order to export BMP data to a collector:
+Following is an example of how a Cisco router running IOS/IOS-XE (15.4(2)T)
+should be configured in order to export BMP data to a collector:
 
 router bgp 64512
  bmp server 1
@@ -2444,8 +2448,8 @@ router bgp 64512
  neighbor Z.Z.Z.Z remote-as 64514
  neighbor Z.Z.Z.Z bmp-activate all
 
-Following is an example how a Cisco router running IOS-XR (6.2.1) should be configured
-in order to export BMP data to a collector:
+Following is an example how a Cisco router running IOS-XR (6.2.1) should be
+configured in order to export BMP data to a collector:
 
 router bgp 64512
  neighbor Y.Y.Y.Y
@@ -2509,7 +2513,7 @@ bmp
 
 Contribution of further configuration examples for Cisco and Juniper devices
 and/or other relevant vendors is more than welcome.
- 
+
 
 XVIII. Quickstart guide to setup Streaming Telemetry collection
 Quoting Cisco IOS-XR Telemetry Configuration Guide at the time of this writing:
