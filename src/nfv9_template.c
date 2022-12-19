@@ -225,7 +225,7 @@ void load_templates_from_file(char *path)
   struct sockaddr_storage agent;
 
   if (!tmp_file) {
-    Log(LOG_ERR, "ERROR ( %s/core ): [%s] load_templates_from_file(): unable to fopen(). File skipped.\n", config.name, path);
+    Log(LOG_INFO, "INFO ( %s/core ): [%s] load_templates_from_file(): unable to fopen(). Skipping.\n", config.name, path);
     return;
   }
 
