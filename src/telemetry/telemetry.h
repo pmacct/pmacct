@@ -28,57 +28,63 @@
 #include <unyte-udp-notif/unyte_udp_collector.h>
 #endif
 
-/* defines */
-#define TELEMETRY_TCP_PORT		1620
-#define TELEMETRY_UDP_PORT		1620
-#define TELEMETRY_MAX_PEERS_DEFAULT	100
-#define TELEMETRY_PEER_TIMEOUT_DEFAULT	300
-#define TELEMETRY_PEER_TIMEOUT_INTERVAL	60
-#define TELEMETRY_UDP_MAXMSG		65535
-#define TELEMETRY_LOG_STATS_INTERVAL	120	
-#define TELEMETRY_KAFKA_FD		INT_MAX	
-#define TELEMETRY_UDP_NOTIF_FD		INT_MAX
+#ifdef WITH_GRPC_COLLECTOR
+#include <grpc_collector_bridge/grpc_collector_bridge.h>
+#include <zmq.h>
+#endif
 
-#define TELEMETRY_DECODER_UNKNOWN	0
-#define TELEMETRY_DECODER_JSON		1
-#define TELEMETRY_DECODER_GPB		2
-#define TELEMETRY_DECODER_CISCO_V0	3
-#define TELEMETRY_DECODER_CISCO_V1	4
+/* defines */
+#define TELEMETRY_TCP_PORT              1620
+#define TELEMETRY_UDP_PORT              1620
+#define TELEMETRY_MAX_PEERS_DEFAULT     100
+#define TELEMETRY_PEER_TIMEOUT_DEFAULT  300
+#define TELEMETRY_PEER_TIMEOUT_INTERVAL 60
+#define TELEMETRY_UDP_MAXMSG            65535
+#define TELEMETRY_LOG_STATS_INTERVAL    120
+#define TELEMETRY_KAFKA_FD              INT_MAX
+#define TELEMETRY_UDP_NOTIF_FD          INT_MAX
+#define TELEMETRY_GRPC_COLLECTOR_FD     INT_MAX
+
+#define TELEMETRY_DECODER_UNKNOWN       0
+#define TELEMETRY_DECODER_JSON          1
+#define TELEMETRY_DECODER_GPB           2
+#define TELEMETRY_DECODER_CISCO_V0      3
+#define TELEMETRY_DECODER_CISCO_V1      4
 
 #define TELEMETRY_DATA_DECODER_UNKNOWN      0
 #define TELEMETRY_DATA_DECODER_JSON         1
 #define TELEMETRY_DATA_DECODER_GPB          2
 #define TELEMETRY_DATA_DECODER_JSON_STRING  3
 
-#define TELEMETRY_CISCO_VERSION_0		0
-#define TELEMETRY_CISCO_HDR_LEN_V0		12
-#define TELEMETRY_CISCO_VERSION_1		1
-#define TELEMETRY_CISCO_HDR_LEN_V1		12
+#define TELEMETRY_CISCO_VERSION_0               0
+#define TELEMETRY_CISCO_HDR_LEN_V0              12
+#define TELEMETRY_CISCO_VERSION_1               1
+#define TELEMETRY_CISCO_HDR_LEN_V1              12
 
-#define TELEMETRY_CISCO_RESET_COMPRESSOR	1
-#define TELEMETRY_CISCO_JSON			2
-#define TELEMETRY_CISCO_GPB_COMPACT		3
-#define TELEMETRY_CISCO_GPB_KV			4
+#define TELEMETRY_CISCO_RESET_COMPRESSOR        1
+#define TELEMETRY_CISCO_JSON                    2
+#define TELEMETRY_CISCO_GPB_COMPACT             3
+#define TELEMETRY_CISCO_GPB_KV                  4
 
-#define TELEMETRY_CISCO_V1_TYPE_UNUSED		0
-#define TELEMETRY_CISCO_V1_TYPE_DATA		1
-#define TELEMETRY_CISCO_V1_TYPE_HBEAT		2
+#define TELEMETRY_CISCO_V1_TYPE_UNUSED          0
+#define TELEMETRY_CISCO_V1_TYPE_DATA            1
+#define TELEMETRY_CISCO_V1_TYPE_HBEAT           2
 
-#define TELEMETRY_CISCO_V1_ENCAP_UNUSED		0
-#define TELEMETRY_CISCO_V1_ENCAP_GPB		1
-#define TELEMETRY_CISCO_V1_ENCAP_JSON		2
-#define TELEMETRY_CISCO_V1_ENCAP_GPV_CPT	3
-#define TELEMETRY_CISCO_V1_ENCAP_GPB_KV		4
+#define TELEMETRY_CISCO_V1_ENCAP_UNUSED         0
+#define TELEMETRY_CISCO_V1_ENCAP_GPB            1
+#define TELEMETRY_CISCO_V1_ENCAP_JSON           2
+#define TELEMETRY_CISCO_V1_ENCAP_GPV_CPT        3
+#define TELEMETRY_CISCO_V1_ENCAP_GPB_KV         4
 
-#define TELEMETRY_LOGDUMP_ET_NONE	BGP_LOGDUMP_ET_NONE
-#define TELEMETRY_LOGDUMP_ET_LOG	BGP_LOGDUMP_ET_LOG
-#define TELEMETRY_LOGDUMP_ET_DUMP	BGP_LOGDUMP_ET_DUMP
+#define TELEMETRY_LOGDUMP_ET_NONE       BGP_LOGDUMP_ET_NONE
+#define TELEMETRY_LOGDUMP_ET_LOG        BGP_LOGDUMP_ET_LOG
+#define TELEMETRY_LOGDUMP_ET_DUMP       BGP_LOGDUMP_ET_DUMP
 
 #ifdef WITH_UNYTE_UDP_NOTIF
-#define TELEMETRY_DEFAULT_UNYTE_UDP_NOTIF_NMSGS	1
-#define TELEMETRY_UDP_NOTIF_ENC_CBOR		0
-#define TELEMETRY_UDP_NOTIF_ENC_JSON		1
-#define TELEMETRY_UDP_NOTIF_ENC_XML		2
+#define TELEMETRY_DEFAULT_UNYTE_UDP_NOTIF_NMSGS 1
+#define TELEMETRY_UDP_NOTIF_ENC_CBOR            0
+#define TELEMETRY_UDP_NOTIF_ENC_JSON            1
+#define TELEMETRY_UDP_NOTIF_ENC_XML             2
 #endif
 
 typedef bgp_tag_t telemetry_tag_t;
@@ -162,12 +168,12 @@ extern void telemetry_tag_init_find(telemetry_peer *, struct sockaddr *, telemet
 extern int telemetry_tag_find(struct id_table *, telemetry_tag_t *, pm_id_t *, pm_id_t *);
 
 /* global variables */
-extern telemetry_misc_structs *telemetry_misc_db; 
+extern telemetry_misc_structs *telemetry_misc_db;
 
 extern telemetry_peer *telemetry_peers;
 extern void *telemetry_peers_cache;
-extern telemetry_peer_timeout *telemetry_peers_timeout; 
-extern int zmq_input, kafka_input, unyte_udp_notif_input;
+extern telemetry_peer_timeout *telemetry_peers_timeout;
+extern int zmq_input, kafka_input, unyte_udp_notif_input, grpc_collector_input;
 extern telemetry_tag_t telemetry_logdump_tag;
 extern struct sockaddr_storage telemetry_logdump_tag_peer;
 #endif //TELEMETRY_H

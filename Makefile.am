@@ -37,7 +37,7 @@ pmacct_examples__DATA = examples/allow.lst.example examples/bgp_agent.map.exampl
 	examples/primitives.lst.example examples/probe_netflow.conf.example \
 	examples/probe_sflow.conf.example examples/sampling.map.example \
 	examples/tee_receivers.lst.example examples/nfacctd-sql.conf.example \
-	examples/pmacctd-sql.conf.example examples/pmacctd-sqlite3.conf.example 
+	examples/pmacctd-sql.conf.example examples/pmacctd-sqlite3.conf.example
 pmacct_examples_kafka__DATA = examples/kafka/kafka_consumer.py
 pmacct_examples_amqp__DATA = examples/amqp/amqp_receiver.py
 pmacct_examples_avro__DATA = examples/avro/avro_file_decoder.py
