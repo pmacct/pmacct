@@ -26,9 +26,9 @@
 
 /* defines */
 #define CFG_LINE_LEN(x) (SRVBUFLEN-strlen(x))
-#define MAX_CUSTOM_PRIMITIVES		64
-#define MAX_CUSTOM_PRIMITIVE_NAMELEN	64
-#define MAX_CUSTOM_PRIMITIVE_PD_PTRS	8
+#define MAX_CUSTOM_PRIMITIVES           64
+#define MAX_CUSTOM_PRIMITIVE_NAMELEN    64
+#define MAX_CUSTOM_PRIMITIVE_PD_PTRS    8
 
 /* structures */
 struct _dictionary_line {
@@ -75,8 +75,8 @@ struct custom_primitives_ptrs {
 };
 
 struct configuration {
-  pm_cfgreg_t what_to_count;	/* first registry */
-  pm_cfgreg_t what_to_count_2;	/* second registry */
+  pm_cfgreg_t what_to_count;    /* first registry */
+  pm_cfgreg_t what_to_count_2;  /* second registry */
   pm_cfgreg_t nfprobe_what_to_count;
   pm_cfgreg_t nfprobe_what_to_count_2;
   char *aggregate_primitives;
@@ -97,8 +97,8 @@ struct configuration {
   int redis_db;
   int sock;
   int bgp_sock;
-  int acct_type; 
-  int data_type; 
+  int acct_type;
+  int data_type;
   int pipe_homegrown;
   u_int64_t pipe_size;
   u_int64_t buffer_size;
@@ -261,6 +261,7 @@ struct configuration {
   int telemetry_udp_notif_ipv6_only;
   int telemetry_udp_notif_nmsgs;
   char *telemetry_udp_notif_rp_ebpf_prog;
+  char *telemetry_grpc_collector_socket;
   int telemetry_ipv6_only;
   char *telemetry_zmq_address;
   char *telemetry_kafka_broker_host;
@@ -534,9 +535,9 @@ struct configuration {
   int buckets;
   int daemon;
   int active_plugins;
-  char *logfile; 
-  FILE *logfile_fd; 
-  char *pidfile; 
+  char *logfile;
+  FILE *logfile_fd;
+  char *pidfile;
   int networks_mask;
   char *networks_file;
   int networks_file_filter;
@@ -641,7 +642,7 @@ struct configuration {
   int bmp_daemon_parse_proxy_header;
 };
 
-/* prototypes */ 
+/* prototypes */
 extern void evaluate_configuration(char *, int);
 extern int parse_configuration_file(char *);
 extern int parse_plugin_names(char *, int, int);

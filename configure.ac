@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-dnl configuration file for pmacct 
+dnl configuration file for pmacct
 
 m4_include([VERSION]) #Force reconf on VERSION change
 AC_INIT([pmacct], m4_esyscmd_s(cat VERSION), [paolo@pmacct.net])
@@ -40,7 +40,7 @@ dnl: shared object handling
 AC_MSG_CHECKING([whether to disable linking against shared objects])
 AC_ARG_ENABLE(so,
         [  --disable-so                     Disable linking against shared objects (default: no)],
-	[ 
+        [
         if test x$enableval = x"yes" ; then
           AC_MSG_RESULT(no)
           AC_CHECK_FUNC(dlopen, [ USING_DLOPEN="yes" ], [])
@@ -53,12 +53,12 @@ AC_ARG_ENABLE(so,
           fi
         else
           AC_MSG_RESULT(yes)
-	  if test "x$ac_cv_prog_gcc" = xyes ; then
-		LDFLAGS="-static ${LDFLAGS}"
-	  fi
+          if test "x$ac_cv_prog_gcc" = xyes ; then
+                LDFLAGS="-static ${LDFLAGS}"
+          fi
         fi
         ],
-	[
+        [
         AC_MSG_RESULT(no)
         AC_CHECK_FUNC(dlopen, [ USING_DLOPEN="yes" ], [])
         AC_CHECK_LIB(dl, dlopen,
@@ -68,7 +68,7 @@ AC_ARG_ENABLE(so,
         if test x"$USING_DLOPEN" != x"yes"; then
                 AC_MSG_ERROR(Unable to find dlopen(). Try with --disable-so)
         fi
-	]
+        ]
 )
 dnl finish: shared object handling
 
@@ -98,14 +98,14 @@ dnl some systems have __progname ; if this is the case and we play around argv
 dnl we need to enable a minor hack to make things work nicely.
 dnl
 AC_MSG_CHECKING(for __progname)
-AC_TRY_LINK([ extern char *__progname; ], 
+AC_TRY_LINK([ extern char *__progname; ],
 [ __progname = "test"; ],
 [AC_MSG_RESULT(yes); AC_DEFINE(PROGNAME, 1)], [AC_MSG_RESULT(no)])
 
 dnl
-dnl Check for architecture endianess: big | little 
+dnl Check for architecture endianess: big | little
 dnl
-dnl XXX: switch to manually define this feature 
+dnl XXX: switch to manually define this feature
 ac_cv_endianess="unknown"
 if test x"$ac_cv_endianess" = x"unknown"; then
   AC_MSG_CHECKING(endianess)
@@ -158,14 +158,14 @@ if test x"$ac_cv_unaligned" = x"unknown"; then
 
     unsigned char a[[5]] = { 1, 2, 3, 4, 5 };
     int main () {
-    	unsigned int i;
+        unsigned int i;
         pid_t pid;
         int status;
         /* avoid "core dumped" message */
         pid = fork();
         if (pid <  0) exit(2);
         if (pid > 0) {
-        	/* parent */
+                /* parent */
                 pid = waitpid(pid, &status, 0);
                 if (pid < 0) exit(3);
                 exit(!WIFEXITED(status));
@@ -177,7 +177,7 @@ if test x"$ac_cv_unaligned" = x"unknown"; then
     }
 EOF
   ${CC-cc} -o conftest $CFLAGS $CPPFLAGS $LDFLAGS \
-	conftest.c $LIBS >/dev/null 2>&1
+        conftest.c $LIBS >/dev/null 2>&1
   if test ! -x conftest ; then
     ac_cv_unaligned="fail"
   else
@@ -197,49 +197,49 @@ fi
 AC_MSG_CHECKING([whether to enable L2 features])
 AC_ARG_ENABLE(l2,
         [  --enable-l2                      Enable Layer-2 features and support (default: yes)],
-	[
-        	if test x$enableval = x"yes" ; then
-        		AC_MSG_RESULT(yes)
-	  		AC_DEFINE(HAVE_L2, 1) 
-        	else
-			AC_MSG_RESULT(no)
-        	fi
-	],
-	[
-        	AC_MSG_RESULT(yes)
-		AC_DEFINE(HAVE_L2, 1) 
-		COMPILE_ARGS="${COMPILE_ARGS} '--enable-l2'"
-	]
+        [
+                if test x$enableval = x"yes" ; then
+                        AC_MSG_RESULT(yes)
+                        AC_DEFINE(HAVE_L2, 1)
+                else
+                        AC_MSG_RESULT(no)
+                fi
+        ],
+        [
+                AC_MSG_RESULT(yes)
+                AC_DEFINE(HAVE_L2, 1)
+                COMPILE_ARGS="${COMPILE_ARGS} '--enable-l2'"
+        ]
 )
 
 AC_CHECK_FUNCS(inet_pton)
 if test x"$ac_cv_func_inet_pton" = x"no"; then
-	AC_MSG_ERROR(ERROR: missing inet_pton())
+        AC_MSG_ERROR(ERROR: missing inet_pton())
 fi
 
 AC_CHECK_FUNCS(inet_ntop)
 if test x"$ac_cv_func_inet_ntop" = x"no"; then
-	AC_MSG_ERROR(ERROR: missing inet_ntop())
+        AC_MSG_ERROR(ERROR: missing inet_ntop())
 fi
 
 AC_ARG_WITH(pcap-includes,
   [  --with-pcap-includes=DIR         Search the specified directory for header files],
   [
-	AC_LINEARIZE_PATH($withval, withval=$absdir)
-	INCLUDES="${INCLUDES} -I$withval"
-	PCAPINCLS=$withval
-	PCAPINCLUDESFOUND=1
+        AC_LINEARIZE_PATH($withval, withval=$absdir)
+        INCLUDES="${INCLUDES} -I$withval"
+        PCAPINCLS=$withval
+        PCAPINCLUDESFOUND=1
   ])
 
 if test x"$PCAPINCLS" != x""; then
   AC_MSG_CHECKING(your own pcap includes)
-  if test -r $PCAPINCLS/pcap.h; then 
+  if test -r $PCAPINCLS/pcap.h; then
     AC_MSG_RESULT(ok)
     AC_DEFINE(HAVE_PCAP_H, 1)
     PCAPINCLUDESFOUND=1
   else
     AC_MSG_RESULT(no)
-    AC_MSG_ERROR(ERROR: missing pcap.h in $PCAPINCLS) 
+    AC_MSG_ERROR(ERROR: missing pcap.h in $PCAPINCLS)
   fi
 fi
 
@@ -270,7 +270,7 @@ if test x"$PCAPINCLUDESFOUND" = x""; then
     AC_MSG_RESULT([found in /usr/local/include])
     INCLUDES="${INCLUDES} -I/usr/local/include"
     PCAPINCLUDESFOUND=1
-    AC_DEFINE(HAVE_PCAP_H, 1) 
+    AC_DEFINE(HAVE_PCAP_H, 1)
   elif test -r /usr/local/include/pcap/pcap.h; then
     AC_MSG_RESULT([found in /usr/local/include])
     INCLUDES="${INCLUDES} -I/usr/local/include"
@@ -285,11 +285,11 @@ fi
 
 AC_ARG_WITH(pcap-libs,
   [  --with-pcap-libs=DIR             Search the specified directory for pcap library],
-  [	
-	AC_LINEARIZE_PATH($withval, withval=$absdir)
-	LIBS="${LIBS} -L$withval"
-	PCAPLIB=$withval
-	PCAPLIBFOUND=1
+  [
+        AC_LINEARIZE_PATH($withval, withval=$absdir)
+        LIBS="${LIBS} -L$withval"
+        PCAPLIB=$withval
+        PCAPLIBFOUND=1
   ])
 
 if test x"$PCAPLIB" != x""; then
@@ -465,40 +465,40 @@ AC_ARG_ENABLE(mongodb,
   yes)
     AC_MSG_RESULT(yes)
     PKG_CHECK_MODULES([MONGODB], [libmongoc],, [
-	AC_MSG_CHECKING([default locations for libmongoc])
-	if test -r /usr/lib/libmongoc.a -o -r /usr/lib/libmongoc.so; then
-		MONGODB_LIBS="-L/usr/lib -lmongoc"
-		AC_MSG_RESULT([found in /usr/lib])
-	elif test -r /usr/lib64/libmongoc.a -o -r /usr/lib64/libmongoc.so; then
-		MONGODB_LIBS="-L/usr/lib64 -lmongoc"
-		AC_MSG_RESULT([found in /usr/lib64])
-	elif test -r /usr/local/lib/libmongoc.a -o -r /usr/local/lib/libmongoc.so; then
-		MONGODB_LIBS="-L/usr/local/lib -lmongoc"
-		AC_MSG_RESULT([found in /usr/local/lib])
-	else
-		AC_MSG_RESULT([not found])
+        AC_MSG_CHECKING([default locations for libmongoc])
+        if test -r /usr/lib/libmongoc.a -o -r /usr/lib/libmongoc.so; then
+                MONGODB_LIBS="-L/usr/lib -lmongoc"
+                AC_MSG_RESULT([found in /usr/lib])
+        elif test -r /usr/lib64/libmongoc.a -o -r /usr/lib64/libmongoc.so; then
+                MONGODB_LIBS="-L/usr/lib64 -lmongoc"
+                AC_MSG_RESULT([found in /usr/lib64])
+        elif test -r /usr/local/lib/libmongoc.a -o -r /usr/local/lib/libmongoc.so; then
+                MONGODB_LIBS="-L/usr/local/lib -lmongoc"
+                AC_MSG_RESULT([found in /usr/local/lib])
+        else
+                AC_MSG_RESULT([not found])
                 _save_LIBS="$LIBS"
                 LIBS="$LIBS $MONGODB_LIBS"
-		AC_CHECK_LIB([mongoc], [mongo_connect], [], [AC_MSG_ERROR([
-			ERROR: missing MongoDB library (0.8 version). Refer to: https://github.com/mongodb/mongo-c-driver-legacy
-		])])
+                AC_CHECK_LIB([mongoc], [mongo_connect], [], [AC_MSG_ERROR([
+                        ERROR: missing MongoDB library (0.8 version). Refer to: https://github.com/mongodb/mongo-c-driver-legacy
+                ])])
                 LIBS="$_save_LIBS"
-	fi
+        fi
 
-	AC_MSG_CHECKING([default locations for mongo.h])
-	if test -r /usr/include/mongo.h; then
-		MONGODB_CFLAGS="-I/usr/include"
-		AC_MSG_RESULT([found in /usr/include])
-	elif test -r /usr/local/include/mongo.h; then
-		MONGODB_CFLAGS="-I/usr/local/include"
-		AC_MSG_RESULT([found in /usr/local/include])
-	else
-		AC_MSG_RESULT([not found])
+        AC_MSG_CHECKING([default locations for mongo.h])
+        if test -r /usr/include/mongo.h; then
+                MONGODB_CFLAGS="-I/usr/include"
+                AC_MSG_RESULT([found in /usr/include])
+        elif test -r /usr/local/include/mongo.h; then
+                MONGODB_CFLAGS="-I/usr/local/include"
+                AC_MSG_RESULT([found in /usr/local/include])
+        else
+                AC_MSG_RESULT([not found])
                 _save_CFLAGS="$CFLAGS"
                 CFLAGS="$CFLAGS $MONGODB_CFLAGS"
-		AC_CHECK_HEADER([mongo.h], [], [AC_MSG_ERROR(ERROR: missing MongoDB headers)])
+                AC_CHECK_HEADER([mongo.h], [], [AC_MSG_ERROR(ERROR: missing MongoDB headers)])
                 CFLAGS="$_save_CFLAGS"
-	fi
+        fi
     ])
     PLUGINS="${PLUGINS} mongodb"
     USING_MONGODB="yes"
@@ -955,7 +955,7 @@ AC_ARG_ENABLE(unyte-udp-notif,
       _save_LIBS="$LIBS"
       LIBS="$LIBS $UNYTE_UDP_NOTIF_LIBS -lpthread"
       AC_CHECK_LIB([unyte-udp-notif], [unyte_udp_start_collector], [], [AC_MSG_ERROR([
-	ERROR: missing unyte-udp-notif library. Refer to: https://github.com/insa-unyte/udp-notif-c-collector
+        ERROR: missing unyte-udp-notif library. Refer to: https://github.com/insa-unyte/udp-notif-c-collector
       ])])
       LIBS="$_save_LIBS"
       _save_CFLAGS="$CFLAGS"
@@ -974,6 +974,41 @@ AC_ARG_ENABLE(unyte-udp-notif,
   ]
 )
 dnl finish: unyte udp notif handling
+
+dnl start: grpc-collector handling
+AC_MSG_CHECKING(whether to enable grpc-collector support)
+AC_ARG_ENABLE(grpc-collector,
+  [  --enable-grpc-collector         Enable grpc-collector support (default: no)],
+  [ case "$enableval" in
+  yes)
+    AC_MSG_RESULT(yes)
+    PKG_CHECK_MODULES([GRPC_COLLECTOR], [grpc-collector >= v1.0.0], [
+      AC_SUBST(GRPC_COLLECTOR_CFLAGS)
+      AC_SUBST(GRPC_COLLECTOR_LIBS)
+      SUPPORTS="${SUPPORTS} grpc-collector"
+      USING_GRPC_COLLECTOR="yes"
+      PMACCT_CFLAGS="$PMACCT_CFLAGS $GRPC_COLLECTOR_CFLAGS"
+      GRPC_COLLECTOR_LIBS="$GRPC_COLLECTOR_LIBS -lgrpc_collector -lpthread"
+      AC_DEFINE(WITH_GRPC_COLLECTOR, 1)
+      _save_LIBS="$LIBS"
+      LIBS="$LIBS $GRPC_COLLECTOR_LIBS"
+      LIBS="$_save_LIBS"
+      _save_CFLAGS="$CFLAGS"
+      CFLAGS="$CFLAGS $GRPC_COLLECTOR_CFLAGS"
+      AC_CHECK_HEADER([grpc_collector_bridge/grpc_collector_bridge.h], [], [AC_MSG_ERROR(ERROR: missing grpc-collector headers)])
+      CFLAGS="$_save_CFLAGS"
+    ],
+    [AC_MSG_ERROR([ERROR: missing grpc-collector pkg-config. Refer to: https://github.com/scuzzilla/mdt-dialout-collector])])
+    ;;
+  no)
+    AC_MSG_RESULT(no)
+    ;;
+  esac ],
+  [
+    AC_MSG_RESULT(no)
+  ]
+)
+dnl finish: grpc-collector handling
 
 dnl start: eBPF handling
 AC_MSG_CHECKING(whether to enable eBPF support)
@@ -1012,18 +1047,18 @@ AC_ARG_ENABLE(ebpf,
 dnl finish: ebpf handling
 
 if test x"$USING_DLOPEN" = x"yes"; then
-	AC_DEFINE(HAVE_DLOPEN, 1)
+        AC_DEFINE(HAVE_DLOPEN, 1)
 else
-	# Adding linking to libdl here 1) if required and 2) in case of --disable-so
-	if test x"$USING_MYSQL" = x"yes" -o x"$USING_SQLITE3" = x"yes"; then
-		AC_CHECK_LIB([dl], [dlopen], [LIBS="${LIBS} -ldl"], [AC_MSG_ERROR([
-		  ERROR: missing libdl devel.
-		])])
-	fi
+        # Adding linking to libdl here 1) if required and 2) in case of --disable-so
+        if test x"$USING_MYSQL" = x"yes" -o x"$USING_SQLITE3" = x"yes"; then
+                AC_CHECK_LIB([dl], [dlopen], [LIBS="${LIBS} -ldl"], [AC_MSG_ERROR([
+                  ERROR: missing libdl devel.
+                ])])
+        fi
 fi
 
 if test x"$USING_SQL" = x"yes"; then
-	AC_CHECK_LIB([z], [zlibVersion], [], [AC_MSG_ERROR([ERROR: missing zlib. Requirement for building SQL plugins.])])
+        AC_CHECK_LIB([z], [zlibVersion], [], [AC_MSG_ERROR([ERROR: missing zlib. Requirement for building SQL plugins.])])
 fi
 
 LIBS="${LIBS} -lm -lpthread"
@@ -1069,22 +1104,22 @@ AC_MSG_RESULT(no))
 
 AC_MSG_CHECKING(whether to link IPv4/IPv6 traffic accounting accounting binaries)
 AC_ARG_ENABLE(traffic-bins,
-	[  --enable-traffic-bins            Link IPv4/IPv6 traffic accounting binaries (default: yes)],
-	[
-	  if test x$enableval = x"yes" ; then
-	    AC_MSG_RESULT(yes)
-	    AC_DEFINE(HAVE_TRAFFIC_BINS, 1)
-	    USING_TRAFFIC_BINS="yes"
-	  else
-	    AC_MSG_RESULT(no)
-	  fi
-	],
-	[
-	  AC_MSG_RESULT(yes)
-	  AC_DEFINE(HAVE_TRAFFIC_BINS, 1)
-	  USING_TRAFFIC_BINS="yes"
-	  COMPILE_ARGS="${COMPILE_ARGS} '--enable-traffic-bins'"
-	]
+        [  --enable-traffic-bins            Link IPv4/IPv6 traffic accounting binaries (default: yes)],
+        [
+          if test x$enableval = x"yes" ; then
+            AC_MSG_RESULT(yes)
+            AC_DEFINE(HAVE_TRAFFIC_BINS, 1)
+            USING_TRAFFIC_BINS="yes"
+          else
+            AC_MSG_RESULT(no)
+          fi
+        ],
+        [
+          AC_MSG_RESULT(yes)
+          AC_DEFINE(HAVE_TRAFFIC_BINS, 1)
+          USING_TRAFFIC_BINS="yes"
+          COMPILE_ARGS="${COMPILE_ARGS} '--enable-traffic-bins'"
+        ]
 )
 
 AC_MSG_CHECKING(whether to link BGP daemon binaries)
@@ -1094,7 +1129,7 @@ AC_ARG_ENABLE(bgp-bins,
           if test x$enableval = x"yes" ; then
             AC_MSG_RESULT(yes)
             AC_DEFINE(HAVE_BGP_BINS, 1)
-	    USING_BGP_BINS="yes"
+            USING_BGP_BINS="yes"
           else
             AC_MSG_RESULT(no)
           fi
@@ -1102,7 +1137,7 @@ AC_ARG_ENABLE(bgp-bins,
         [
           AC_MSG_RESULT(yes)
           AC_DEFINE(HAVE_BGP_BINS, 1)
-	  USING_BGP_BINS="yes"
+          USING_BGP_BINS="yes"
           COMPILE_ARGS="${COMPILE_ARGS} '--enable-bgp-bins'"
         ]
 )
@@ -1114,7 +1149,7 @@ AC_ARG_ENABLE(bmp-bins,
           if test x$enableval = x"yes" ; then
             AC_MSG_RESULT(yes)
             AC_DEFINE(HAVE_BMP_BINS, 1)
-	    USING_BMP_BINS="yes"
+            USING_BMP_BINS="yes"
           else
             AC_MSG_RESULT(no)
           fi
@@ -1122,7 +1157,7 @@ AC_ARG_ENABLE(bmp-bins,
         [
           AC_MSG_RESULT(yes)
           AC_DEFINE(HAVE_BMP_BINS, 1)
-	  USING_BMP_BINS="yes"
+          USING_BMP_BINS="yes"
           COMPILE_ARGS="${COMPILE_ARGS} '--enable-bmp-bins'"
         ]
 )
@@ -1134,7 +1169,7 @@ AC_ARG_ENABLE(st-bins,
           if test x$enableval = x"yes" ; then
             AC_MSG_RESULT(yes)
             AC_DEFINE(HAVE_ST_BINS, 1)
-	    USING_ST_BINS="yes"
+            USING_ST_BINS="yes"
           else
             AC_MSG_RESULT(no)
           fi
@@ -1142,7 +1177,7 @@ AC_ARG_ENABLE(st-bins,
         [
           AC_MSG_RESULT(yes)
           AC_DEFINE(HAVE_ST_BINS, 1)
-	  USING_ST_BINS="yes"
+          USING_ST_BINS="yes"
           COMPILE_ARGS="${COMPILE_ARGS} '--enable-st-bins'"
         ]
 )
@@ -1154,27 +1189,27 @@ AC_CHECK_FUNCS([setproctitle mallopt tdestroy strlcpy vfork])
 
 dnl Check for SO_BINDTODEVICE
 AC_CHECK_DECL([SO_BINDTODEVICE],
-	AC_DEFINE(HAVE_SO_BINDTODEVICE, 1, [Check if kernel supports SO_BINDTODEVICE]),,
-		[
-		  #include <sys/socket.h>
-		]
+        AC_DEFINE(HAVE_SO_BINDTODEVICE, 1, [Check if kernel supports SO_BINDTODEVICE]),,
+                [
+                  #include <sys/socket.h>
+                ]
 )
 
 dnl Check for SO_REUSEPORT & friends
 AC_CHECK_DECL([SO_REUSEPORT],
-	AC_DEFINE(HAVE_SO_REUSEPORT, 1, [Check if kernel supports SO_REUSEPORT]),,
-		[
-		  #include <sys/types.h>
-		  #include <sys/socket.h>
-		]
+        AC_DEFINE(HAVE_SO_REUSEPORT, 1, [Check if kernel supports SO_REUSEPORT]),,
+                [
+                  #include <sys/types.h>
+                  #include <sys/socket.h>
+                ]
 )
 
 AC_CHECK_DECL([SO_ATTACH_REUSEPORT_EBPF],
-	AC_DEFINE(HAVE_SO_ATTACH_REUSEPORT_EBPF, 1, [Check if kernel supports SO_ATTACH_REUSEPORT_EBPF]),,
-		[
-		  #include <sys/types.h>
-		  #include <sys/socket.h>
-		]
+        AC_DEFINE(HAVE_SO_ATTACH_REUSEPORT_EBPF, 1, [Check if kernel supports SO_ATTACH_REUSEPORT_EBPF]),,
+                [
+                  #include <sys/types.h>
+                  #include <sys/socket.h>
+                ]
 )
 
 dnl --------------------------------------
@@ -1184,22 +1219,22 @@ dnl --------------------------------------
 dnl First check whether to build git submodule deps
 WITH_EXTERNAL_DEPS_DEFAULT=yes
 if [ test ! -f "$srcdir/src/external_libs/libcdada/include/cdada.h" ] && [ test -z `git rev-parse HEAD 2> /dev/null` ]; then
-	WITH_EXTERNAL_DEPS_DEFAULT=no
+        WITH_EXTERNAL_DEPS_DEFAULT=no
 fi
 
 AC_MSG_CHECKING([whether external dependencies (git submodules) should be compiled])
 AC_ARG_WITH(external-deps,
-		AS_HELP_STRING([--without-external-deps], [Do not build external dependencies (git submodules), specially useful for package maintainers [default=with]]),
-			[WITH_EXTERNAL_DEPS="$withval"],
-			[WITH_EXTERNAL_DEPS="$WITH_EXTERNAL_DEPS_DEFAULT"]
-			)
+                AS_HELP_STRING([--without-external-deps], [Do not build external dependencies (git submodules), specially useful for package maintainers [default=with]]),
+                        [WITH_EXTERNAL_DEPS="$withval"],
+                        [WITH_EXTERNAL_DEPS="$WITH_EXTERNAL_DEPS_DEFAULT"]
+                        )
 if test x"$WITH_EXTERNAL_DEPS" = x"yes"; then
-	dnl Compiled-in dependencies
-	INCLUDES="-I${ac_pwd}/src/external_libs/rootfs/include ${INCLUDES} "
-	LDFLAGS="-L${ac_pwd}/src/external_libs/rootfs/lib ${LDFLAGS}"
-	AC_MSG_RESULT(yes)
+        dnl Compiled-in dependencies
+        INCLUDES="-I${ac_pwd}/src/external_libs/rootfs/include ${INCLUDES} "
+        LDFLAGS="-L${ac_pwd}/src/external_libs/rootfs/lib ${LDFLAGS}"
+        AC_MSG_RESULT(yes)
 else
-	AC_MSG_RESULT(no)
+        AC_MSG_RESULT(no)
 fi
 
 AM_CONDITIONAL([WITH_EXTERNAL_DEPS], [test "x$WITH_EXTERNAL_DEPS" = "xyes"])
@@ -1226,28 +1261,28 @@ AS_CASE(["$WITH_EXTERNAL_DEPS"],
 dnl set debug level
 AC_MSG_CHECKING([whether to enable debugging compiler options])
 AC_ARG_ENABLE(debug,
-	[  --enable-debug                   Enable debugging compiler options (default: no)],
-	[
-		if test x$enableval = x"yes" ; then
-			AC_MSG_RESULT(yes)
-			tmp_CFLAGS=`echo $CFLAGS | sed 's/O2/O0/g'`
-			CFLAGS="$tmp_CFLAGS"
-			CFLAGS="$CFLAGS -g -Wall -Werror"
-		else
-			CFLAGS="$CFLAGS -Wall -Werror"
-			AC_MSG_RESULT(no)
-		fi
-	],
-	[
-		AC_MSG_RESULT(no)
-	]
+        [  --enable-debug                   Enable debugging compiler options (default: no)],
+        [
+                if test x$enableval = x"yes" ; then
+                        AC_MSG_RESULT(yes)
+                        tmp_CFLAGS=`echo $CFLAGS | sed 's/O2/O0/g'`
+                        CFLAGS="$tmp_CFLAGS"
+                        CFLAGS="$CFLAGS -g -Wall -Werror"
+                else
+                        CFLAGS="$CFLAGS -Wall -Werror"
+                        AC_MSG_RESULT(no)
+                fi
+        ],
+        [
+                AC_MSG_RESULT(no)
+        ]
 )
 
 dnl Necessary for autogenerated build string
 INCLUDES="${INCLUDES} -I$(pwd)/src"
 
 dnl final checks
-dnl trivial solution to portability issue 
+dnl trivial solution to portability issue
 AC_DEFINE_UNQUOTED(COMPILE_ARGS, "$COMPILE_ARGS")
 CFLAGS="${CFLAGS} ${INCLUDES}"
 INCLUDES=""
@@ -1292,6 +1327,7 @@ AM_CONDITIONAL([WITH_AVRO], [test x"$USING_AVRO" = x"yes"])
 AM_CONDITIONAL([WITH_SERDES], [test x"$USING_SERDES" = x"yes"])
 AM_CONDITIONAL([WITH_NDPI], [test x"$USING_NDPI" = x"yes"])
 AM_CONDITIONAL([WITH_UNYTE_UDP_NOTIF], [test x"$USING_UNYTE_UDP_NOTIF" = x"yes"])
+AM_CONDITIONAL([WITH_GRPC_COLLECTOR], [test x"$USING_GRPC_COLLECTOR" = x"yes"])
 AM_CONDITIONAL([WITH_EBPF], [test x"$USING_EBPF" = x"yes"])
 AM_CONDITIONAL([WITH_NFLOG], [test x"$USING_NFLOG" = x"yes"])
 AM_CONDITIONAL([WITH_DLOPEN], [test x"$USING_DLOPEN" = x"yes"])
@@ -1301,15 +1337,15 @@ AM_CONDITIONAL([USING_BMP_BINS], [test x"$USING_BMP_BINS" = x"yes"])
 AM_CONDITIONAL([USING_ST_BINS], [test x"$USING_ST_BINS" = x"yes"])
 
 AC_CONFIG_FILES([
-	    src/pmacct-version.h
+            src/pmacct-version.h
 ])
 
 AC_OUTPUT([ Makefile \
-	    src/Makefile src/external_libs/Makefile \
-	    src/nfprobe_plugin/Makefile \
-	    src/sfprobe_plugin/Makefile src/bgp/Makefile \
-	    src/tee_plugin/Makefile src/isis/Makefile \
-	    src/bmp/Makefile src/rpki/Makefile \
-	    src/telemetry/Makefile src/ndpi/Makefile \
-	    src/filters/Makefile examples/lg/Makefile \
-	    src/ebpf/Makefile examples/custom/Makefile ])
+            src/Makefile src/external_libs/Makefile \
+            src/nfprobe_plugin/Makefile \
+            src/sfprobe_plugin/Makefile src/bgp/Makefile \
+            src/tee_plugin/Makefile src/isis/Makefile \
+            src/bmp/Makefile src/rpki/Makefile \
+            src/telemetry/Makefile src/ndpi/Makefile \
+            src/filters/Makefile examples/lg/Makefile \
+            src/ebpf/Makefile examples/custom/Makefile ])

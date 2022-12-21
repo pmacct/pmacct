@@ -103,7 +103,7 @@ static const struct _dictionary_line dictionary[] = {
   {"sql_table_schema", cfg_key_sql_table_schema},
   {"sql_table_version", cfg_key_sql_table_version},
   {"sql_table_type", cfg_key_sql_table_type},
-  {"sql_conn_ca_file", cfg_key_sql_conn_ca_file}, 
+  {"sql_conn_ca_file", cfg_key_sql_conn_ca_file},
   {"sql_host", cfg_key_sql_host},
   {"sql_port", cfg_key_sql_port},
   {"sql_data", cfg_key_sql_data},
@@ -295,6 +295,7 @@ static const struct _dictionary_line dictionary[] = {
   {"telemetry_daemon_udp_notif_ipv6_only", cfg_key_telemetry_udp_notif_ipv6_only},
   {"telemetry_daemon_udp_notif_nmsgs", cfg_key_telemetry_udp_notif_nmsgs},
   {"telemetry_daemon_udp_notif_rp_ebpf_prog", cfg_key_telemetry_udp_notif_rp_ebpf_prog},
+  {"telemetry_daemon_grpc_collector_socket", cfg_key_telemetry_grpc_collector_socket},
   {"telemetry_daemon_zmq_address", cfg_key_telemetry_zmq_address},
   {"telemetry_daemon_kafka_broker_host", cfg_key_telemetry_kafka_broker_host},
   {"telemetry_daemon_kafka_broker_port", cfg_key_telemetry_kafka_broker_port},
@@ -357,7 +358,7 @@ static const struct _dictionary_line dictionary[] = {
   {"maps_index", cfg_key_maps_index},
   {"maps_entries", cfg_key_maps_entries},
   {"maps_row_len", cfg_key_maps_row_len},
-  {"pre_tag_map", cfg_key_pre_tag_map},	
+  {"pre_tag_map", cfg_key_pre_tag_map},
   {"pre_tag_map_dont_recirculate", cfg_key_pre_tag_map_dont_recirculate},
   {"pre_tag_filter", cfg_key_pre_tag_filter},
   {"pre_tag2_filter", cfg_key_pre_tag2_filter},
@@ -366,7 +367,7 @@ static const struct _dictionary_line dictionary[] = {
   {"post_tag", cfg_key_post_tag},
   {"post_tag2", cfg_key_post_tag2},
   {"sampling_rate", cfg_key_sampling_rate},
-  {"sampling_map", cfg_key_sampling_map},	
+  {"sampling_map", cfg_key_sampling_map},
   {"sfacctd_proc_name", cfg_key_proc_name},
   {"sfacctd_port", cfg_key_nfacctd_port},
   {"sfacctd_ip", cfg_key_nfacctd_ip},
@@ -464,7 +465,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_daemon_port", cfg_key_bgp_daemon_port},
   {"bgp_daemon_rp_ebpf_prog", cfg_key_bgp_daemon_rp_ebpf_prog},
   {"bgp_daemon_add_path_ignore", cfg_key_bgp_daemon_add_path_ignore},
-  {"bgp_daemon_tag_map", cfg_key_bgp_daemon_tag_map},	
+  {"bgp_daemon_tag_map", cfg_key_bgp_daemon_tag_map},
   {"bgp_daemon_pipe_size", cfg_key_bgp_daemon_pipe_size},
   {"bgp_daemon_max_peers", cfg_key_bgp_daemon_max_peers},
   {"bgp_daemon_msglog_output", cfg_key_bgp_daemon_msglog_output},
@@ -564,7 +565,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bmp_daemon_ipv6_only", cfg_key_bmp_daemon_ipv6_only},
   {"bmp_daemon_port", cfg_key_bmp_daemon_port},
   {"bmp_daemon_rp_ebpf_prog", cfg_key_bmp_daemon_rp_ebpf_prog},
-  {"bmp_daemon_tag_map", cfg_key_bmp_daemon_tag_map},	
+  {"bmp_daemon_tag_map", cfg_key_bmp_daemon_tag_map},
   {"bmp_daemon_pipe_size", cfg_key_bmp_daemon_pipe_size},
   {"bmp_daemon_max_peers", cfg_key_bmp_daemon_max_peers},
   {"bmp_daemon_allow_file", cfg_key_bmp_daemon_allow_file},
@@ -664,32 +665,32 @@ static const struct _dictionary_line dictionary[] = {
 };
 
 static struct plugin_type_entry plugin_types_list[] = {
-  {PLUGIN_ID_CORE, 	"core", 	NULL},
-  {PLUGIN_ID_MEMORY, 	"memory", 	imt_plugin},
-  {PLUGIN_ID_PRINT,	"print",	print_plugin},
-  {PLUGIN_ID_NFPROBE,	"nfprobe",	nfprobe_plugin},
-  {PLUGIN_ID_SFPROBE,	"sfprobe",	sfprobe_plugin},
+  {PLUGIN_ID_CORE,      "core",         NULL},
+  {PLUGIN_ID_MEMORY,    "memory",       imt_plugin},
+  {PLUGIN_ID_PRINT,     "print",        print_plugin},
+  {PLUGIN_ID_NFPROBE,   "nfprobe",      nfprobe_plugin},
+  {PLUGIN_ID_SFPROBE,   "sfprobe",      sfprobe_plugin},
 #ifdef WITH_MYSQL
-  {PLUGIN_ID_MYSQL,	"mysql",	mysql_plugin},
+  {PLUGIN_ID_MYSQL,     "mysql",        mysql_plugin},
 #endif
 #ifdef WITH_PGSQL
-  {PLUGIN_ID_PGSQL,	"pgsql",	pgsql_plugin},
+  {PLUGIN_ID_PGSQL,     "pgsql",        pgsql_plugin},
 #endif
 #ifdef WITH_SQLITE3
-  {PLUGIN_ID_SQLITE3,	"sqlite3",	sqlite3_plugin},
+  {PLUGIN_ID_SQLITE3,   "sqlite3",      sqlite3_plugin},
 #endif
 #ifdef WITH_MONGODB
-  {PLUGIN_ID_UNKNOWN,	"mongodb",		mongodb_legacy_warning}, /* Legacy plugin */
-  {PLUGIN_ID_MONGODB,  	"mongodb_legacy",	mongodb_plugin}, /* Legacy plugin */
+  {PLUGIN_ID_UNKNOWN,   "mongodb",              mongodb_legacy_warning}, /* Legacy plugin */
+  {PLUGIN_ID_MONGODB,   "mongodb_legacy",       mongodb_plugin}, /* Legacy plugin */
 #endif
 #ifdef WITH_RABBITMQ
-  {PLUGIN_ID_AMQP,	"amqp",		amqp_plugin},
+  {PLUGIN_ID_AMQP,      "amqp",         amqp_plugin},
 #endif
 #ifdef WITH_KAFKA
   {PLUGIN_ID_KAFKA,     "kafka",        kafka_plugin},
 #endif
-  {PLUGIN_ID_TEE,	"tee",		tee_plugin},
-  {PLUGIN_ID_UNKNOWN,	"",		NULL},
+  {PLUGIN_ID_TEE,       "tee",          tee_plugin},
+  {PLUGIN_ID_UNKNOWN,   "",             NULL},
 };
 
 //Global variables
@@ -708,7 +709,7 @@ void evaluate_configuration(char *filename, int rows)
 
   while (index < rows) {
     if (*cfg[index] == '\0') valid_line = FALSE;
-    else valid_line = TRUE; 
+    else valid_line = TRUE;
 
     if (valid_line) {
       /* debugging the line if required */
@@ -732,17 +733,17 @@ void evaluate_configuration(char *filename, int rows)
       /* parsing keys */
       for (dindex = 0; strcmp(dictionary[dindex].key, ""); dindex++) {
         if (!strcmp(dictionary[dindex].key, key)) {
-	  res = FALSE;
+          res = FALSE;
           if ((*dictionary[dindex].func)) {
-	    res = (*dictionary[dindex].func)(filename, name, value);
-	    if (res < 0) Log(LOG_WARNING, "WARN: [%s:%u] Invalid value. Ignored.\n", filename, index+1);
-	    else if (!res) Log(LOG_WARNING, "WARN: [%s:%u] Unknown symbol '%s'. Ignored.\n", filename, index+1, name);
-	  }
-	  else Log(LOG_WARNING, "WARN: [%s:%u] Unable to handle key: %s. Ignored.\n", filename, index+1, key);
-	  key_found = TRUE;
-	  break;
+            res = (*dictionary[dindex].func)(filename, name, value);
+            if (res < 0) Log(LOG_WARNING, "WARN: [%s:%u] Invalid value. Ignored.\n", filename, index+1);
+            else if (!res) Log(LOG_WARNING, "WARN: [%s:%u] Unknown symbol '%s'. Ignored.\n", filename, index+1, name);
+          }
+          else Log(LOG_WARNING, "WARN: [%s:%u] Unable to handle key: %s. Ignored.\n", filename, index+1, key);
+          key_found = TRUE;
+          break;
         }
-	else key_found = FALSE;
+        else key_found = FALSE;
       }
 
       if (!key_found) Log(LOG_WARNING, "WARN: [%s:%u] Unknown key: %s. Ignored.\n", filename, index+1, key);
@@ -759,7 +760,7 @@ int parse_configuration_file(char *filename)
 {
   struct stat st;
   char localbuf[10240];
-  char cmdline [] = "cmdline"; 
+  char cmdline [] = "cmdline";
   FILE *file;
   int num = 0, cmdlineflag = FALSE, rows_cmdline = rows, idx, ret;
   rows = 0;
@@ -768,7 +769,7 @@ int parse_configuration_file(char *filename)
      file and store lines into a first char* array; merge commandline options, if
      required, placing them at the tail - in order to override directives placed
      in the configuration file */
-  if (filename) { 
+  if (filename) {
     ret = stat(filename, &st);
     if (ret < 0) {
       Log(LOG_ERR, "ERROR: [%s] file not found.\n", filename);
@@ -776,30 +777,30 @@ int parse_configuration_file(char *filename)
     }
     else {
       if (!S_ISREG(st.st_mode)) {
-	Log(LOG_ERR, "ERROR: [%s] path is not a regular file.\n", filename);
-	return ERR;
+        Log(LOG_ERR, "ERROR: [%s] path is not a regular file.\n", filename);
+        return ERR;
       }
     }
 
     if ((file = fopen(filename, "r"))) {
       while (!feof(file)) {
         if (rows == LARGEBUFLEN) {
-	  Log(LOG_ERR, "ERROR: [%s] maximum number of %d lines reached.\n", filename, LARGEBUFLEN);
-	  break;
+          Log(LOG_ERR, "ERROR: [%s] maximum number of %d lines reached.\n", filename, LARGEBUFLEN);
+          break;
         }
-	memset(localbuf, 0, sizeof(localbuf));
-        if (fgets(localbuf, sizeof(localbuf), file) == NULL) break;	
+        memset(localbuf, 0, sizeof(localbuf));
+        if (fgets(localbuf, sizeof(localbuf), file) == NULL) break;
         else {
-	  localbuf[sizeof(localbuf)-1] = '\0';
+          localbuf[sizeof(localbuf)-1] = '\0';
           cfg[rows] = malloc(strlen(localbuf)+2);
-	  if (!cfg[rows]) {
-	    Log(LOG_ERR, "ERROR: [%s] malloc() failed (parse_configuration_file). Exiting.\n", filename);
-	    exit(1);
-	  }
+          if (!cfg[rows]) {
+            Log(LOG_ERR, "ERROR: [%s] malloc() failed (parse_configuration_file). Exiting.\n", filename);
+            exit(1);
+          }
           strcpy(cfg[rows], localbuf);
           cfg[rows][strlen(localbuf)+1] = '\0';
           rows++;
-        } 
+        }
       }
     }
     fclose(file);
@@ -822,7 +823,7 @@ int parse_configuration_file(char *filename)
   /* 3rd stage: plugin structures creation; we discard
      plugin names if 'pmacctd' has been invoked commandline;
      if any plugin has been activated we default to a single
-     'imt' plugin */ 
+     'imt' plugin */
   if (!cmdlineflag) parse_core_process_name(filename, rows, FALSE);
   else parse_core_process_name(filename, rows, TRUE);
 
@@ -830,13 +831,13 @@ int parse_configuration_file(char *filename)
   else num = parse_plugin_names(filename, rows, TRUE);
 
   if (!num && config.acct_type < ACCT_FWDPLANE_MAX) {
-    Log(LOG_WARNING, "WARN: [%s] No plugin has been activated; defaulting to in-memory table.\n", filename); 
+    Log(LOG_WARNING, "WARN: [%s] No plugin has been activated; defaulting to in-memory table.\n", filename);
     num = create_plugin(filename, "default_memory", "memory");
   }
 
   if (debug) {
     struct plugins_list_entry *list = plugins_list;
-    
+
     while (list) {
       Log(LOG_DEBUG, "DEBUG: [%s] plugin name/type: '%s'/'%s'.\n", filename, list->name, list->type.string);
       list = list->next;
@@ -845,8 +846,8 @@ int parse_configuration_file(char *filename)
 
   /* 4th stage: setting some default value */
   set_default_values();
-  
-  /* 5th stage: parsing keys and building configurations */ 
+
+  /* 5th stage: parsing keys and building configurations */
   evaluate_configuration(filename, rows);
 
   return SUCCESS;
@@ -867,7 +868,7 @@ void sanitize_cfg(int rows, char *filename)
     /* checking the whole line: if it's void, it will be removed */
     if (isblankline(cfg[rindex])) memset(cfg[rindex], 0, strlen(cfg[rindex]));
 
-    /* 
+    /*
        a pair of syntax checks on the whole line:
        - does the line contain at least a ':' verb ?
        - are the square brackets weighted both in key and value ?
@@ -877,44 +878,44 @@ void sanitize_cfg(int rows, char *filename)
       int symbol = FALSE, cindex = 0, got_first = 0, got_first_colon = 0;
 
       if (!strchr(cfg[rindex], ':')) {
-	Log(LOG_ERR, "ERROR: [%s:%u] Syntax error: missing ':'. Exiting.\n", filename, rindex+1); 
-	exit(1);
+        Log(LOG_ERR, "ERROR: [%s:%u] Syntax error: missing ':'. Exiting.\n", filename, rindex+1);
+        exit(1);
       }
 
       while(cindex <= len) {
         if (cfg[rindex][cindex] == '[') symbol++;
         else if (cfg[rindex][cindex] == ']') {
-	  symbol--;
-	  got_first++;
-	}
-	
-	if (cfg[rindex][cindex] == ':' && !got_first_colon) {
-	  got_first_colon = TRUE;
+          symbol--;
+          got_first++;
+        }
 
-	  if (symbol) {
-	    Log(LOG_ERR, "ERROR: [%s:%u] Syntax error: illegal brackets. Exiting.\n", filename, rindex+1);
-	    exit(1);
-	  }
-	}
+        if (cfg[rindex][cindex] == ':' && !got_first_colon) {
+          got_first_colon = TRUE;
 
-	if (cfg[rindex][cindex] == '\0') {
-	  if (symbol && !got_first) {
+          if (symbol) {
+            Log(LOG_ERR, "ERROR: [%s:%u] Syntax error: illegal brackets. Exiting.\n", filename, rindex+1);
+            exit(1);
+          }
+        }
+
+        if (cfg[rindex][cindex] == '\0') {
+          if (symbol && !got_first) {
             Log(LOG_ERR, "ERROR: [%s:%u] Syntax error: not weighted brackets (1). Exiting.\n", filename, rindex+1);
-	    exit(1);
-	  }
-	}
+            exit(1);
+          }
+        }
 
-	if (symbol < 0 && !got_first) {
-	  Log(LOG_ERR, "ERROR: [%s:%u] Syntax error: not weighted brackets (2). Exiting.\n", filename, rindex+1);
-	  exit(1);
-	}
+        if (symbol < 0 && !got_first) {
+          Log(LOG_ERR, "ERROR: [%s:%u] Syntax error: not weighted brackets (2). Exiting.\n", filename, rindex+1);
+          exit(1);
+        }
 
-	if (symbol > 1 && !got_first) {
-	  Log(LOG_ERR, "ERROR: [%s:%u] Syntax error: nested symbols not allowed. Exiting.\n", filename, rindex+1);
-	  exit(1);
-	}
-	
-	cindex++;
+        if (symbol > 1 && !got_first) {
+          Log(LOG_ERR, "ERROR: [%s:%u] Syntax error: nested symbols not allowed. Exiting.\n", filename, rindex+1);
+          exit(1);
+        }
+
+        cindex++;
       }
     }
 
@@ -927,23 +928,23 @@ void sanitize_cfg(int rows, char *filename)
       char *valueptr = NULL;
 
       while(cindex <= len) {
-	if (!value) {
+        if (!value) {
           if (cfg[rindex][cindex] == '[') symbol++;
           else if (cfg[rindex][cindex] == ']') symbol--;
-	  else if (cfg[rindex][cindex] == ':') {
-	    value++;
-	    valueptr = &localbuf[lbindex+1];
-	  }
-	}
+          else if (cfg[rindex][cindex] == ':') {
+            value++;
+            valueptr = &localbuf[lbindex+1];
+          }
+        }
         if ((!symbol) && (!value)) {
-	  if (!isspace(cfg[rindex][cindex])) {
-	    localbuf[lbindex] = cfg[rindex][cindex]; 
-	    lbindex++;
-	  }
+          if (!isspace(cfg[rindex][cindex])) {
+            localbuf[lbindex] = cfg[rindex][cindex];
+            lbindex++;
+          }
         }
         else {
-	  localbuf[lbindex] = cfg[rindex][cindex];
-	  lbindex++;
+          localbuf[lbindex] = cfg[rindex][cindex];
+          lbindex++;
         }
         cindex++;
       }
@@ -959,22 +960,22 @@ void sanitize_cfg(int rows, char *filename)
 
       while (cindex < rows) {
         if (cfg[rindex][cindex] == '[') symbol++;
-	else if (cfg[rindex][cindex] == ']') {
-	  symbol--;
-	  key--;
-	}
+        else if (cfg[rindex][cindex] == ']') {
+          symbol--;
+          key--;
+        }
 
-	if (cfg[rindex][cindex] == ':') break;
+        if (cfg[rindex][cindex] == ':') break;
 
-	if (!symbol) {
-	  if (isalpha(cfg[rindex][cindex])) key = TRUE;
-	}
-	else {
-	  if (!key) {
+        if (!symbol) {
+          if (isalpha(cfg[rindex][cindex])) key = TRUE;
+        }
+        else {
+          if (!key) {
             Log(LOG_ERR, "ERROR: [%s:%u] Syntax error: symbol not referring to any key. Exiting.\n", filename, rindex+1);
-	    exit(1);
-	  }
-	}
+            exit(1);
+          }
+        }
         cindex++;
       }
     }
@@ -984,26 +985,26 @@ void sanitize_cfg(int rows, char *filename)
     len = strlen(cfg[rindex]);
     if (len) {
       if (cfg[rindex][0] == ':') {
-	Log(LOG_ERR, "ERROR: [%s:%u] Syntax error: missing key. Exiting.\n", filename, rindex+1);
-	exit(1);
+        Log(LOG_ERR, "ERROR: [%s:%u] Syntax error: missing key. Exiting.\n", filename, rindex+1);
+        exit(1);
       }
     }
 
-    /* checking key field: converting key to lower chars */ 
+    /* checking key field: converting key to lower chars */
     len = strlen(cfg[rindex]);
     if (len) {
       int symbol = FALSE, cindex = 0;
 
       while(cindex <= len) {
         if (cfg[rindex][cindex] == '[') symbol++;
-	else if (cfg[rindex][cindex] == ']') symbol--;
+        else if (cfg[rindex][cindex] == ']') symbol--;
 
-	if (cfg[rindex][cindex] == ':') break;
-	if (!symbol) {
-	  if (isalpha(cfg[rindex][cindex]))
-	    cfg[rindex][cindex] = tolower(cfg[rindex][cindex]);
-	}
-	cindex++;
+        if (cfg[rindex][cindex] == ':') break;
+        if (!symbol) {
+          if (isalpha(cfg[rindex][cindex]))
+            cfg[rindex][cindex] = tolower(cfg[rindex][cindex]);
+        }
+        cindex++;
       }
     }
 
@@ -1028,7 +1029,7 @@ void parse_core_process_name(char *filename, int rows, int ignore_names)
       if (!strncmp(key, "core_proc_name", sizeof("core_proc_name"))) {
         start = end+1;
         strlcpy(name, start, SRVBUFLEN);
-	found = TRUE;
+        found = TRUE;
         break;
       }
     }
@@ -1040,7 +1041,7 @@ void parse_core_process_name(char *filename, int rows, int ignore_names)
 }
 
 /* parse_plugin_names() leaves cfg array untouched: parses the key 'plugins'
-   if it exists and creates the plugins linked list */ 
+   if it exists and creates the plugins linked list */
 int parse_plugin_names(char *filename, int rows, int ignore_names)
 {
   int index = 0, num = 0, found = 0, default_name = FALSE;
@@ -1055,12 +1056,12 @@ int parse_plugin_names(char *filename, int rows, int ignore_names)
     start = cfg[index];
     end = strchr(cfg[index], ':');
     if (end > start) {
-      strlcpy(key, cfg[index], (end-start)+1); 
+      strlcpy(key, cfg[index], (end-start)+1);
       if (!strncmp(key, "plugins", sizeof("plugins"))) {
-	start = end+1;
-	strcpy(value, start); 
-	found = TRUE;
-	break;
+        start = end+1;
+        strcpy(value, start);
+        found = TRUE;
+        break;
       }
     }
     index++;
@@ -1078,12 +1079,12 @@ int parse_plugin_names(char *filename, int rows, int ignore_names)
       if ((start_name = strchr(token, '[')) && (end_name = strchr(token, ']'))) {
         if (end_name > (start_name+1)) {
           strlcpy(name, (start_name+1), (end_name-start_name));
-	  trim_spaces(name);
-	  *start_name = '\0';
-	}
+          trim_spaces(name);
+          *start_name = '\0';
+        }
       }
       else default_name = TRUE;
-	
+
       /* Having already plugins name and type, we'll filter out reserved symbols */
       trim_spaces(token);
       lower_string(token);
@@ -1175,7 +1176,7 @@ int create_plugin(char *filename, char *name, char *type)
   }
 
   memset(plugin, 0, sizeof(struct plugins_list_entry));
-  
+
   strcpy(plugin->name, name);
   plugin->id = id;
   memcpy(&plugin->type, ptype, sizeof(struct plugin_type_entry));
@@ -1184,7 +1185,7 @@ int create_plugin(char *filename, char *name, char *type)
   /* inserting our object in plugin's linked list */
   if (plugins_list) {
     ptr = plugins_list;
-    while(ptr->next) ptr = ptr->next; 
+    while(ptr->next) ptr = ptr->next;
     ptr->next = plugin;
   }
   else plugins_list = plugin;
@@ -1207,11 +1208,11 @@ int delete_plugin_by_id(int id)
       list = aux;
     }
     else {
-      if (list->id > highest_id) highest_id = list->id; 
+      if (list->id > highest_id) highest_id = list->id;
     }
     aux = list;
-    list = list->next; 
-  } 
+    list = list->next;
+  }
 
   return highest_id;
 }
@@ -1223,8 +1224,8 @@ struct plugins_list_entry *search_plugin_by_pipe(int pipe)
   if (pipe < 0) return NULL;
 
   while (list) {
-    if (list->pipe[1] == pipe) return list; 
-    else list = list->next; 
+    if (list->pipe[1] == pipe) return list;
+    else list = list->next;
   }
 
   return NULL;

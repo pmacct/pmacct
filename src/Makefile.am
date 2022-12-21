@@ -145,6 +145,10 @@ if WITH_UNYTE_UDP_NOTIF
 libdaemons_la_LIBADD  += @UNYTE_UDP_NOTIF_LIBS@
 libdaemons_la_CFLAGS  += @UNYTE_UDP_NOTIF_CFLAGS@
 endif
+if WITH_GRPC_COLLECTOR
+libdaemons_la_LIBADD  += @GRPC_COLLECTOR_LIBS@
+libdaemons_la_CFLAGS  += @GRPC_COLLECTOR_CFLAGS@
+endif
 if WITH_EBPF
 libdaemons_la_LIBADD  += @EBPF_LIBS@
 libdaemons_la_CFLAGS  += @EBPF_CFLAGS@
