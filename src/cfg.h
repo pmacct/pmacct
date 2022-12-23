@@ -262,6 +262,7 @@ struct configuration {
   int telemetry_udp_notif_nmsgs;
   char *telemetry_udp_notif_rp_ebpf_prog;
   char *telemetry_grpc_collector_socket;
+  char *telemetry_grpc_collector_conf;
   int telemetry_ipv6_only;
   char *telemetry_zmq_address;
   char *telemetry_kafka_broker_host;
