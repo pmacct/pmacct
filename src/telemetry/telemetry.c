@@ -120,7 +120,7 @@ int telemetry_daemon(void *t_data_void)
   void *zmq_pull = zmq_socket(ctx, ZMQ_PULL);
   zmq_bind(zmq_pull, config.telemetry_grpc_collector_socket);
 
-  start_grpc_dialout_collector(config.telemetry_daemon_grpc_collector_conf);
+  start_grpc_dialout_collector(config.telemetry_grpc_collector_conf);
 #endif
 
   if (!t_data) {
