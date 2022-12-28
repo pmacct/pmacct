@@ -115,7 +115,7 @@ int telemetry_daemon(void *t_data_void)
 #endif
 
 #if defined WITH_GRPC_COLLECTOR
-  void *seg_ptr = NULL;
+  void *grpc_payload_ptr = NULL;
   void *ctx = zmq_ctx_new();
   void *zmq_pull = zmq_socket(ctx, ZMQ_PULL);
   zmq_bind(zmq_pull, config.telemetry_grpc_collector_socket);
@@ -683,7 +683,7 @@ int telemetry_daemon(void *t_data_void)
 #endif
 #if defined WITH_GRPC_COLLECTOR
     else if (grpc_collector_input) {
-      zmq_recv(zmq_pull, &seg_ptr, sizeof(Payload), 0);
+      zmq_recv(zmq_pull, &grpc_payload_ptr, sizeof(Payload), 0);
       select_num = TRUE;
     }
 #endif
@@ -873,17 +873,17 @@ int telemetry_daemon(void *t_data_void)
 #endif
 #if defined WITH_GRPC_COLLECTOR
       else if (grpc_collector_input) {
-        zmq_recv(zmq_pull, &seg_ptr, sizeof(Payload), 0);
-        if (seg_ptr) {
+        zmq_recv(zmq_pull, &grpc_payload_ptr, sizeof(Payload), 0);
+        if (grpc_payload_ptr) {
           Payload *seg = NULL;
           int payload_len = 0;
 
-          seg = (Payload *) seg_ptr;
+          seg = (Payload *) grpc_payload_ptr;
 
           if (config.telemetry_decoder_id == TELEMETRY_DECODER_JSON && strcmp(seg->telemetry_data, " ")) {
             struct host_addr tmp;
             str_to_addr(seg->telemetry_node, &tmp);
-            addr_to_sa(&client, &tmp, atoi(seg->telemetry_port));
+            addr_to_sa((struct sockaddr *) &client, &tmp, atoi(seg->telemetry_port));
 
             payload_len = strlen(seg->telemetry_data);
             if (payload_len < sizeof(consumer_buf)) {
