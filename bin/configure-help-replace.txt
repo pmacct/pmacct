@@ -41,6 +41,8 @@
   NDPI_LIBS			linker flags for dynamic nDPI, overriding pkg-config
   UNYTE_UDP_NOTIF_CFLAGS	C compiler flags for dynamic Unyte UDP Notif, overriding pkg-config
   UNYTE_UDP_NOTIF_LIBS		linker flags for dynamic Unyte UDP Notif, overriding pkg-config
+  GRPC_COLLECTOR_CFLAGS		C compiler flags for dynamic GRPC Collector, overriding pkg-config
+  GRPC_COLLECTOR_LIBS		linker flags for dynamic GRPC Collector, overriding pkg-config
   EBPF_CFLAGS			C compiler flags for dynamic libbpf, overriding pkg-config
   EBPF_LIBS			linker flags for dynamic libbpf, overriding pkg-config
 

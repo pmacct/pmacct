@@ -978,7 +978,7 @@ dnl finish: unyte udp notif handling
 dnl start: grpc-collector handling
 AC_MSG_CHECKING(whether to enable grpc-collector support)
 AC_ARG_ENABLE(grpc-collector,
-  [  --enable-grpc-collector         Enable grpc-collector support (default: no)],
+  [  --enable-grpc-collector          Enable grpc-collector support (default: no)],
   [ case "$enableval" in
   yes)
     AC_MSG_RESULT(yes)
