@@ -198,7 +198,7 @@ format_time(time_t t)
 static const char *
 format_flow(struct FLOW *flow)
 {
-	char addr1[64], addr2[64], stime[20], ftime[20];
+	char addr1[64], addr2[64], stime[32], ftime[32];
 	static char buf[1024];
 
 	inet_ntop(flow->af, &flow->addr[0], addr1, sizeof(addr1));
