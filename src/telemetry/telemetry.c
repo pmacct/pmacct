@@ -116,9 +116,9 @@ int telemetry_daemon(void *t_data_void)
 
 #if defined WITH_GRPC_COLLECTOR
   void *grpc_payload_ptr = NULL;
-  void *ctx = zmq_ctx_new();
-  void *zmq_pull = zmq_socket(ctx, ZMQ_PULL);
-  zmq_bind(zmq_pull, config.telemetry_grpc_collector_socket);
+  void *grpc_ctx = zmq_ctx_new();
+  void *grpc_zmq_pull = zmq_socket(grpc_ctx, ZMQ_PULL);
+  zmq_bind(grpc_zmq_pull, config.telemetry_grpc_collector_socket);
 
   start_grpc_dialout_collector(config.telemetry_grpc_collector_conf);
 #endif
@@ -193,8 +193,8 @@ int telemetry_daemon(void *t_data_void)
   memset(consumer_buf, 0, sizeof(consumer_buf));
 
   if (!zmq_input && !kafka_input && !unyte_udp_notif_input && !grpc_collector_input) {
-    if (config.telemetry_port_tcp && config.telemetry_port_udp && config.telemetry_grpc_collector_socket) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_port_tcp and telemetry_daemon_port_udp and telemetry_grpc_collector_socket are mutually exclusive. Terminating.\n", config.name, t_data->log_str);
+    if (config.telemetry_port_tcp && config.telemetry_port_udp) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_port_tcp and telemetry_daemon_port_udp are mutually exclusive. Terminating.\n", config.name, t_data->log_str);
       exit_gracefully(1);
     }
     else if (!config.telemetry_port_tcp && !config.telemetry_port_udp) {
@@ -683,7 +683,7 @@ int telemetry_daemon(void *t_data_void)
 #endif
 #if defined WITH_GRPC_COLLECTOR
     else if (grpc_collector_input) {
-      zmq_recv(zmq_pull, &grpc_payload_ptr, sizeof(Payload), 0);
+      zmq_recv(grpc_zmq_pull, &grpc_payload_ptr, sizeof(Payload), 0);
       select_num = TRUE;
     }
 #endif
@@ -873,7 +873,7 @@ int telemetry_daemon(void *t_data_void)
 #endif
 #if defined WITH_GRPC_COLLECTOR
       else if (grpc_collector_input) {
-        zmq_recv(zmq_pull, &grpc_payload_ptr, sizeof(Payload), 0);
+        zmq_recv(grpc_zmq_pull, &grpc_payload_ptr, sizeof(Payload), 0);
         if (grpc_payload_ptr) {
           Payload *seg = NULL;
           int payload_len = 0;
