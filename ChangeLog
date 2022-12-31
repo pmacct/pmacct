@@ -4,7 +4,7 @@ pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
-1.7.8 -- XX-XX-2022
+1.7.8 -- 31-12-2022
   + Introduced support for eBPF for all daemons: if SO_REUSEPORT is
     supported by the OS and eBPF support is compiled in, this allows
     to load a custom load-balancer. To load-share, daemons have to
