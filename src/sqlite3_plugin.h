@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -22,7 +22,7 @@
 /* includes */
 #include <sqlite3.h>
 
-#include "sql_common.h"
+#include "plugin_common.h"
 
 /* prototypes */
 void sqlite3_plugin(int, struct configuration *, void *);
