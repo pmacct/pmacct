@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -116,11 +116,23 @@ int telemetry_daemon(void *t_data_void)
 
 #if defined WITH_GRPC_COLLECTOR
   void *grpc_payload_ptr = NULL;
-  void *grpc_ctx = zmq_ctx_new();
-  void *grpc_zmq_pull = zmq_socket(grpc_ctx, ZMQ_PULL);
-  zmq_bind(grpc_zmq_pull, config.telemetry_grpc_collector_socket);
+  void *grpc_ctx = NULL;
+  void *grpc_zmq_pull = NULL;
 
-  start_grpc_dialout_collector(config.telemetry_grpc_collector_conf);
+  if (config.telemetry_grpc_collector_socket) {
+    grpc_ctx = zmq_ctx_new();
+    grpc_zmq_pull = zmq_socket(grpc_ctx, ZMQ_PULL);
+    zmq_bind(grpc_zmq_pull, config.telemetry_grpc_collector_socket);
+
+    if (config.telemetry_grpc_collector_conf) {
+      start_grpc_dialout_collector(config.telemetry_grpc_collector_conf);
+    }
+    else {
+      Log(LOG_ERR, "ERROR ( %s/%s ): gRPC dial-out collection selected but missing telemetry_daemon_grpc_collector_conf. Terminating.\n",
+	  config.name, t_data->log_str);
+      exit_gracefully(1);
+    }
+  }
 #endif
 
   if (!t_data) {
