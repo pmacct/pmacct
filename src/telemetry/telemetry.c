@@ -695,7 +695,7 @@ int telemetry_daemon(void *t_data_void)
 #endif
 #if defined WITH_GRPC_COLLECTOR
     else if (grpc_collector_input) {
-      zmq_recv(grpc_zmq_pull, &grpc_payload_ptr, sizeof(Payload), 0);
+      zmq_recv(grpc_zmq_pull, &grpc_payload_ptr, sizeof(grpc_payload), 0);
       select_num = TRUE;
     }
 #endif
@@ -885,12 +885,12 @@ int telemetry_daemon(void *t_data_void)
 #endif
 #if defined WITH_GRPC_COLLECTOR
       else if (grpc_collector_input) {
-        zmq_recv(grpc_zmq_pull, &grpc_payload_ptr, sizeof(Payload), 0);
+        zmq_recv(grpc_zmq_pull, &grpc_payload_ptr, sizeof(grpc_payload), 0);
         if (grpc_payload_ptr) {
-          Payload *seg = NULL;
+          grpc_payload *seg = NULL;
           int payload_len = 0;
 
-          seg = (Payload *) grpc_payload_ptr;
+          seg = (grpc_payload *) grpc_payload_ptr;
 
           if (config.telemetry_decoder_id == TELEMETRY_DECODER_JSON && strcmp(seg->telemetry_data, " ")) {
             struct host_addr tmp;
@@ -902,10 +902,10 @@ int telemetry_daemon(void *t_data_void)
               /* printf("%s\n", seg->telemetry_data); */
               strlcpy((char *)consumer_buf, seg->telemetry_data, sizeof(consumer_buf));
               fd = TELEMETRY_GRPC_COLLECTOR_FD;
-              FreePayload(seg);
+              free_grpc_payload(seg);
             }
             else {
-              FreePayload(seg);
+              free_grpc_payload(seg);
               goto select_again;
             }
           }
