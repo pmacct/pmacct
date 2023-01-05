@@ -2537,11 +2537,15 @@ document. If writing to AMQP or Kafka brokers compiling against RabbitMQ or
 Kafka libraries is required; read more in respectively the "Running the
 RabbitMQ/AMQP plugin" or "Running the Kafka plugin" sections of this document.
 
-Data can be optionally consumed from a ZeroMQ queue, for example to have a
-pre-processor taking care of the GPB (Protobuf or Google Protocol Buffers) 
-de-marshalling and conversion to JSON; read more about (compiling) ZeroMQ in
-the "Internal buffering and queueing" section of this document; also read more
-about gRPC support and GPB de-marshalling in telemetry/README.telemetry .
+By setting telemetry_daemon_grpc_collector_socket to true, Streaming Telemetry
+data can be optionally consumed via a thread that takes care of gRPC and GPB
+(Protobuf or Google Protocol Buffers) de-marshalling and conversion to JSON;
+the thread leverages https://github.com/scuzzilla/mdt-dialout-collector as a
+library; the mdt-dialout-collector GitHub repository also says how to build
+the stack of dependencies in order to successfully process gRPC / GPB data.
+Data delivery into the main pmtelemetryd thread is done via ZeroMQ, read more
+about (compiling) ZeroMQ in the "Internal buffering and queueing" section of
+this document; also read more on the topic telemetry/README.telemetry .
 
 From a configuration standpoint both the thread (ie. telemetry configured part
 of nfacctd) and the daemon (pmtelemetryd) are configured the same way except the
