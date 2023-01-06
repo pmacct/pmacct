@@ -1,7 +1,0 @@
-ujson
-pyzmq
-grpcio-tools
-avro-python3
-requests
-confluent-kafka[avro]
-pytest
