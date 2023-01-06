@@ -2,40 +2,34 @@ INTRODUCTION.
 After some years in which the strategy towards Streaming Telemetry was
 dual (pmgrpcd.py, written in Python, to support gRPC and pmtelemetryd,
 written in C, to support everything else), the current approach (as of
-version 1.7.9) is to bring also gRPC into pmtelemetryd (and pmgrpcd.py
-should at this point be considered a legacy tool that is going to be
-retired in future versions of pmacct). Following is the support matrix
-for Streaming Telemetry collection:
+version 1.7.9) is to bring also gRPC into pmtelemetryd via an external
+C++ library/driver, https://github.com/scuzzilla/mdt-dialout-collector
+Following is the support matrix for Streaming Telemetry collection in
+pmtelemtryd:
 
 Input transports:
-* TCP proprietary / non-standard (pmtelemetryd)
-* UDP proprietary / non-standard (pmtelemetryd)
-* UDP draft-ietf-netconf-udp-notif (pmtelemetryd)
-* gRPC (pmtelemetryd, pmgrpcd.py)
-* gNMI (pmtelemetryd [WiP])
+* TCP proprietary / non-standard
+* UDP proprietary / non-standard
+* UDP draft-ietf-netconf-udp-notif
+* gRPC
+* gNMI [WiP]
 
 Input encodings:
-* JSON (pmtelemetryd)
-* Protobuf (pmtelemetryd, pmgrpcd.py)
+* JSON
+* Protobuf
 
 Output methods:
-* Kafka (pmtelemetryd, pmgrpcd.py)
-* files (pmtelemetryd)
+* Kafka
+* files
 
 Output encodings:
-* JSON (pmtelemetryd)
-* Avro (pmgrpcd.py)
+* JSON
 
 Examples of supported collection scenarios:
 * TCP/JSON -> pmtelemetryd -> Kafka/JSON
 * UDP draft-ietf-netconf-udp-notif/JSON -> pmtelemetryd -> Kafka/JSON
-* gRPC/Protobuf -> pmgrpcd.py -> Kafka/Avro
 * gRPC/Protobuf -> pmtelemetryd -> Kafka/JSON
 
-In the ROUTER CONFIGS section below there are snippets of some routers
-configuration in order to export Streaming Telemetry data. Quickstart
-guides for collection are in telemetry/decoders/v1/README.grpc_dialout
-and telemetry/decoders/v3/README.pmgrpcd
 
 ROUTER CONFIGS.
 IOS XR configuration example, gRPC JSON encoding suitable (at time of
