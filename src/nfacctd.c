@@ -48,11 +48,9 @@
 #include "tee_plugin/tee_plugin.h"
 
 /* Global variables */
-struct template_cache tpl_cache;
 struct host_addr debug_a;
 char debug_agent_addr[50];
 u_int16_t debug_agent_port;
-cdada_map_t *tpl_data_map, *tpl_opt_map;
 
 /* Functions */
 void usage_daemon(char *prog_name)
@@ -250,23 +248,6 @@ int main(int argc,char **argv, char **envp)
   num_descs = 0;
   FD_ZERO(&read_descs);
   FD_ZERO(&bkp_read_descs);
-
-  {
-    u_int16_t tpl_hash_keylen = calc_template_keylen();
-    char pm_cdada_map_container[tpl_hash_keylen];
-
-    tpl_data_map = cdada_map_create(pm_cdada_map_container);
-    if (!tpl_data_map) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to allocate tpl_data_map. Exiting.\n", config.name, config.type);
-      exit_gracefully(1);
-    }
-
-    tpl_opt_map = cdada_map_create(pm_cdada_map_container);
-    if (!tpl_opt_map) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): Unable to allocate tpl_opt_map. Exiting.\n", config.name, config.type);
-      exit_gracefully(1);
-    }
-  }
 
   /* getting commandline values */
   while (!errflag && ((cp = getopt(argc, argv, ARGS_NFACCTD)) != -1)) {
@@ -1201,9 +1182,10 @@ int main(int argc,char **argv, char **envp)
 
   kill(getpid(), SIGCHLD);
 
-  /* initializing template cache */ 
-  memset(&tpl_cache, 0, sizeof(tpl_cache));
-  tpl_cache.num = TEMPLATE_CACHE_ENTRIES;
+  /* initializing template cache */
+  init_template_cache();
+  if (init_template_cache_v2())
+    exit_gracefully(1);
 
   if (config.nfacctd_templates_file) {
     load_templates_from_file(config.nfacctd_templates_file);
@@ -3113,26 +3095,6 @@ void reset_dummy_v4(struct packet_ptrs *pptrs, u_char *dummy_packet)
   pptrs->pkthdr->caplen = 55;
   pptrs->pkthdr->len = 100;
   pptrs->l3_proto = ETHERTYPE_IP;
-}
-
-void notify_malf_packet(short int severity, char *severity_str, char *ostr, struct sockaddr *sa, u_int32_t seq)
-{
-  struct host_addr a;
-  char errstr[SRVBUFLEN];
-  char agent_addr[50] /* able to fit an IPv6 string aswell */, any[] = "0.0.0.0";
-  u_int16_t agent_port;
-
-  sa_to_addr((struct sockaddr *)sa, &a, &agent_port);
-  addr_to_str(agent_addr, &a);
-
-  if (seq) snprintf(errstr, SRVBUFLEN, "%s ( %s/core ): %s: nfacctd=%s:%u agent=%s:%u seq=%u\n",
-		severity_str, config.name, ostr, ((config.nfacctd_ip) ? config.nfacctd_ip : any),
-		collector_port, agent_addr, agent_port, seq);
-  else snprintf(errstr, SRVBUFLEN, "%s ( %s/core ): %s: nfacctd=%s:%u agent=%s:%u\n",
-		severity_str, config.name, ostr, ((config.nfacctd_ip) ? config.nfacctd_ip : any),
-		collector_port, agent_addr, agent_port);
-
-  Log(severity, "%s", errstr);
 }
 
 int NF_find_id(struct id_table *t, struct packet_ptrs *pptrs, pm_id_t *tag, pm_id_t *tag2)
