@@ -1839,9 +1839,8 @@ void load_templates_from_file(char *path)
 #else
 void load_templates_from_file(char *path)
 {
-  if (config.debug)
-    Log(LOG_DEBUG, "DEBUG ( %s/core ): load_templates_from_file(): JSON object not created due to missing --enable-jansson\n",
-        config.name);
+  Log(LOG_INFO, "INFO ( %s/core ): load_templates_from_file(): JSON object not created due to missing --enable-jansson\n",
+      config.name);
 }
 #endif
 
