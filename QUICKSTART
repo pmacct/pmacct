@@ -2547,7 +2547,7 @@ The gRPC thread can be configured via telemetry_daemon_grpc_collector_conf,
 read more in CONFIG-KEYS. Data delivery into the main pmtelemetryd thread is
 done via ZeroMQ, read more about (compiling) ZeroMQ in the "Internal buffering
 and queueing" section of this document; also read more on the topic in the
-telemetry/README.telemetry document.
+docs/README.telemetry document.
 
 From a configuration standpoint both the thread (ie. telemetry configured part
 of nfacctd) and the daemon (pmtelemetryd) are configured the same way except the
@@ -2588,8 +2588,8 @@ telemetry_dump_latest_file: /path/to/spool/telemetry-dump-$peer_src_ip.latest
 telemetry_dump_refresh_time: 60
 
 Following is a config example to receive JSON-formatted telemetry data from a
-pre-processor over a ZeroMQ queue (see telemetry/README.telemetry for further 
-info, ie. gRPC support and GPB de-marshalling):
+pre-processor over a ZeroMQ queue (see docs/README.telemetry for further info,
+ie. gRPC support and GPB de-marshalling):
 
 ! Telemetry thread configuration
 ! telemetry_daemon: true

@@ -3268,11 +3268,11 @@ DEFAULT:        none
 
 KEY:		telemetry_daemon_port_tcp [GLOBAL]
 DESC:		Makes the Streaming Telemetry daemon, pmtelemetryd, or the Streaming Telemetry thread
-		listen on the specified TCP port. (see telemetry/README.telemetry for gRPC support).
-		If SO_REUSEPORT is supported by the Operating System, you can read more about it at
-		the config key telemetry_daemon_port_udp. Alternstively, for the sake of TCP sessions
-		balancing, a eBPF load-balancer, ie. telemetry_daemon_rp_ebpf_prog, can be defined in
-		order to explicitely wire peers to collectors.
+		listen on the specified TCP port. If SO_REUSEPORT is supported by the Operating System,
+		you can read more about it at the config key telemetry_daemon_port_udp. Alternatively,
+		for the sake of TCP sessions balancing, a eBPF load-balancer, ie.
+		telemetry_daemon_rp_ebpf_prog, can be defined in order to explicitely wire peers to
+		collectors.
 DEFAULT:	none
 
 KEY:		telemetry_daemon_ip [GLOBAL]
@@ -3328,7 +3328,7 @@ DESC:		Sets the Streaming Telemetry data decoder to the specified type (over TCP
 		to GPB compact / GPB KV data and this can be read with the 'cisco_v1' decoder; the
 		'cisco_v0' is mostly obsoleted at this point. GPB de-marshaling is not supported
 		and will produce an output JSON object with a base64'd encoding of the original GPB
-		(see telemetry/README.telemetry for gRPC support and GPB de-marshalling). 
+		(see docs/README.telemetry for gRPC support and GPB de-marshalling). 
 DEFAULT:	none
 
 KEY:            telemetry_daemon_max_peers [GLOBAL]
