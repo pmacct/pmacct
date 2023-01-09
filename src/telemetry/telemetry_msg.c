@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -28,9 +28,6 @@
 #endif
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
-#endif
-#if defined WITH_ZMQ
-#include "zmq_common.h"
 #endif
 
 /* Functions */
@@ -63,22 +60,6 @@ void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data,
   if (tms->msglog_backend_methods || tms->dump_backend_methods)
     telemetry_log_seq_increment(&tms->log_seq);
 }
-
-#if defined WITH_ZMQ
-int telemetry_recv_zmq_generic(telemetry_peer *peer, u_int32_t len)
-{
-  int ret = 0;
-
-  ret = p_zmq_recv_bin(&telemetry_zmq_host.sock, peer->buf.base, peer->buf.tot_len);
-
-  if (ret > 0) {
-    peer->stats.packet_bytes += ret;
-    peer->msglen = ret;
-  }
-
-  return ret;
-}
-#endif
 
 #if defined WITH_KAFKA
 int telemetry_recv_kafka_generic(telemetry_peer *peer, u_int32_t len)
@@ -139,14 +120,9 @@ int telemetry_recv_json(telemetry_peer *peer, u_int32_t len, int *flags)
 
   (*flags) = FALSE;
 
-  if (!zmq_input && !kafka_input && !unyte_udp_notif_input) {
+  if (!kafka_input && !unyte_udp_notif_input) {
     ret = telemetry_recv_generic(peer, len);
   }
-#if defined WITH_ZMQ
-  else if (zmq_input) {
-    ret = telemetry_recv_zmq_generic(peer, len);
-  }
-#endif
 #if defined WITH_KAFKA
   else if (kafka_input) {
     ret = telemetry_recv_kafka_generic(peer, len);
@@ -300,13 +276,6 @@ int telemetry_decode_producer_peer(struct telemetry_data *t_data, void *h, u_cha
 
   if (!buf || !buflen || !addr || !addr_len) return ERR;
 
-#if defined WITH_ZMQ
-  if (zmq_input) {
-    struct p_zmq_host *zmq_host = h;
-
-    bytes = p_zmq_recv_bin(&zmq_host->sock, buf, buflen);
-  }
-#endif
 #if defined WITH_KAFKA
   else if (kafka_input) {
     struct p_kafka_host *kafka_host = h;

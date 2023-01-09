@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -29,9 +29,6 @@
 #ifdef WITH_KAFKA
 #include "kafka_common.h"
 #endif
-#if defined WITH_ZMQ
-#include "zmq_common.h"
-#endif
 
 /* Functions */
 int telemetry_peer_init(telemetry_peer *peer, int type)
@@ -59,7 +56,7 @@ void telemetry_peer_close(telemetry_peer *peer, int type)
     peer->bmp_se = NULL;
   }
 
-  if (config.telemetry_port_udp || config.telemetry_zmq_address) {
+  if (config.telemetry_port_udp) {
     telemetry_peer_cache tpc;
 
     memcpy(&tpc.addr, &peer->addr, sizeof(struct host_addr));
@@ -211,25 +208,6 @@ void telemetry_log_global_stats(struct telemetry_data *t_data)
   t_data->global_stats.msg_bytes = 0;
   t_data->global_stats.msg_errors = 0;
 }
-
-#ifdef WITH_ZMQ
-void telemetry_init_zmq_host(void *zh, int *pipe_fd)
-{
-  struct p_zmq_host *zmq_host = zh;
-  char log_id[SHORTBUFLEN];
-
-  p_zmq_init_pull(zmq_host);
-
-  snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
-  p_zmq_set_log_id(zmq_host, log_id);
-
-  p_zmq_set_address(zmq_host, config.telemetry_zmq_address);
-  p_zmq_pull_setup(zmq_host);
-  p_zmq_set_retry_timeout(zmq_host, PM_ZMQ_DEFAULT_RETRY);
-
-  if (pipe_fd) (*pipe_fd) = p_zmq_get_fd(zmq_host);
-}
-#endif
 
 #ifdef WITH_KAFKA
 void telemetry_init_kafka_host(void *kh)

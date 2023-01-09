@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -109,9 +109,6 @@ typedef struct bgp_peer_stats telemetry_stats;
 struct telemetry_data {
   int is_thread;
   char *log_str;
-#if defined WITH_ZMQ
-  void *zmq_host;
-#endif
 #if defined WITH_KAFKA
   void *kafka_msg;
 #endif
@@ -173,7 +170,7 @@ extern telemetry_misc_structs *telemetry_misc_db;
 extern telemetry_peer *telemetry_peers;
 extern void *telemetry_peers_cache;
 extern telemetry_peer_timeout *telemetry_peers_timeout;
-extern int zmq_input, kafka_input, unyte_udp_notif_input, grpc_collector_input;
+extern int kafka_input, unyte_udp_notif_input, grpc_collector_input;
 extern telemetry_tag_t telemetry_logdump_tag;
 extern struct sockaddr_storage telemetry_logdump_tag_peer;
 #endif //TELEMETRY_H
