@@ -3359,12 +3359,6 @@ DESC:           Marks self-originated Streaming Telemetry messages with the supp
 		Applies to TCP sessions only.
 DEFAULT:        0
 
-KEY:		telemetry_daemon_zmq_address [GLOBAL]
-DESC:           Defines the ZeroMQ queue address (host and port) to connect to for consuming
-		JSON-encoded Streaming Telemetry data from. An example of the expected value is
-		"127.0.0.1:50000".
-DEFAULT:	none
-
 KEY:		telemetry_daemon_kafka_broker_host [GLOBAL]
 DESC:		Defines one or multiple, comma-separated, Kafka brokers to consume JSON-encoded
 		Streaming Telemetry data from. See kafka_broker_host for more info.

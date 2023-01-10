@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -8031,17 +8031,6 @@ int cfg_key_telemetry_ipv6_only(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) list->cfg.telemetry_ipv6_only = value;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_ipv6_only'. Globalized.\n", filename);
-
-  return changes;
-}
-
-int cfg_key_telemetry_zmq_address(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int changes = 0;
-
-  for (; list; list = list->next, changes++) list->cfg.telemetry_zmq_address = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_zmq_address'. Globalized.\n", filename);
 
   return changes;
 }

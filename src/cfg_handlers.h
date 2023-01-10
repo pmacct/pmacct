@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -225,7 +225,6 @@ extern int cfg_key_telemetry_udp_notif_rp_ebpf_prog(char *, char *, char *);
 extern int cfg_key_telemetry_grpc_collector_socket(char *, char *, char *);
 extern int cfg_key_telemetry_grpc_collector_conf(char *, char *, char *);
 extern int cfg_key_telemetry_ipv6_only(char *, char *, char *);
-extern int cfg_key_telemetry_zmq_address(char *, char *, char *);
 extern int cfg_key_telemetry_kafka_broker_host(char *, char *, char *);
 extern int cfg_key_telemetry_kafka_broker_port(char *, char *, char *);
 extern int cfg_key_telemetry_kafka_topic(char *, char *, char *);

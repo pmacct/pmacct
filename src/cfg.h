@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -264,7 +264,6 @@ struct configuration {
   char *telemetry_grpc_collector_socket;
   char *telemetry_grpc_collector_conf;
   int telemetry_ipv6_only;
-  char *telemetry_zmq_address;
   char *telemetry_kafka_broker_host;
   int telemetry_kafka_broker_port;
   char *telemetry_kafka_topic;

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -297,7 +297,6 @@ static const struct _dictionary_line dictionary[] = {
   {"telemetry_daemon_udp_notif_rp_ebpf_prog", cfg_key_telemetry_udp_notif_rp_ebpf_prog},
   {"telemetry_daemon_grpc_collector_socket", cfg_key_telemetry_grpc_collector_socket},
   {"telemetry_daemon_grpc_collector_conf", cfg_key_telemetry_grpc_collector_conf},
-  {"telemetry_daemon_zmq_address", cfg_key_telemetry_zmq_address},
   {"telemetry_daemon_kafka_broker_host", cfg_key_telemetry_kafka_broker_host},
   {"telemetry_daemon_kafka_broker_port", cfg_key_telemetry_kafka_broker_port},
   {"telemetry_daemon_kafka_topic", cfg_key_telemetry_kafka_topic},
