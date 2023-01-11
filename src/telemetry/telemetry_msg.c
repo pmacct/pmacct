@@ -120,7 +120,7 @@ int telemetry_recv_json(telemetry_peer *peer, u_int32_t len, int *flags)
 
   (*flags) = FALSE;
 
-  if (!kafka_input && !unyte_udp_notif_input) {
+  if (!kafka_input && !unyte_udp_notif_input && !grpc_collector_input) {
     ret = telemetry_recv_generic(peer, len);
   }
 #if defined WITH_KAFKA
