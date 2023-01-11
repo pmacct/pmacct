@@ -115,6 +115,7 @@ int telemetry_daemon(void *t_data_void)
 #endif
 
 #if defined WITH_GRPC_COLLECTOR
+#if defined WITH_ZMQ
   void *grpc_payload_ptr = NULL;
   void *grpc_ctx = NULL;
   void *grpc_zmq_pull = NULL;
@@ -133,6 +134,11 @@ int telemetry_daemon(void *t_data_void)
       exit_gracefully(1);
     }
   }
+#else
+  Log(LOG_ERR, "ERROR ( %s/%s ): gRPC dial-out collection depends on ZeroMQ (--enable-zmq). Terminating.\n",
+      config.name, t_data->log_str);
+  exit_gracefully(1);
+#endif
 #endif
 
   if (!t_data) {
@@ -166,7 +172,7 @@ int telemetry_daemon(void *t_data_void)
   }
 
   if (config.telemetry_grpc_collector_socket) {
-#if defined WITH_GRPC_COLLECTOR
+#if defined WITH_GRPC_COLLECTOR && defined WITH_ZMQ
     capture_methods++;
     grpc_collector_input = TRUE;
 #endif
@@ -667,7 +673,7 @@ int telemetry_daemon(void *t_data_void)
       select_num = TRUE; /* anything but zero or negative */
     }
 #endif
-#if defined WITH_GRPC_COLLECTOR
+#if defined WITH_GRPC_COLLECTOR && defined WITH_ZMQ
     else if (grpc_collector_input) {
       zmq_recv(grpc_zmq_pull, &grpc_payload_ptr, sizeof(grpc_payload), 0);
       select_num = TRUE;
@@ -850,7 +856,7 @@ int telemetry_daemon(void *t_data_void)
         }
       }
 #endif
-#if defined WITH_GRPC_COLLECTOR
+#if defined WITH_GRPC_COLLECTOR && defined WITH_ZMQ
       else if (grpc_collector_input) {
         zmq_recv(grpc_zmq_pull, &grpc_payload_ptr, sizeof(grpc_payload), 0);
         if (grpc_payload_ptr) {
