@@ -40,10 +40,6 @@ extern int telemetry_validate_input_output_decoders(int, int);
 extern void telemetry_log_peer_stats(telemetry_peer *, struct telemetry_data *);
 extern void telemetry_log_global_stats(struct telemetry_data *);
 
-#ifdef WITH_KAFKA
-extern void telemetry_init_kafka_host(void *);
-#endif
-
 #ifdef WITH_UNYTE_UDP_NOTIF
 extern int create_socket_unyte_udp_notif(struct telemetry_data *, char *, char *);
 #endif

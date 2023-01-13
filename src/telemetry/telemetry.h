@@ -41,7 +41,6 @@
 #define TELEMETRY_PEER_TIMEOUT_INTERVAL 60
 #define TELEMETRY_UDP_MAXMSG            65535
 #define TELEMETRY_LOG_STATS_INTERVAL    120
-#define TELEMETRY_KAFKA_FD              INT_MAX
 #define TELEMETRY_UDP_NOTIF_FD          INT_MAX
 #define TELEMETRY_GRPC_COLLECTOR_FD     INT_MAX
 
@@ -109,9 +108,6 @@ typedef struct bgp_peer_stats telemetry_stats;
 struct telemetry_data {
   int is_thread;
   char *log_str;
-#if defined WITH_KAFKA
-  void *kafka_msg;
-#endif
 
   telemetry_stats global_stats;
   time_t now;
@@ -170,7 +166,7 @@ extern telemetry_misc_structs *telemetry_misc_db;
 extern telemetry_peer *telemetry_peers;
 extern void *telemetry_peers_cache;
 extern telemetry_peer_timeout *telemetry_peers_timeout;
-extern int kafka_input, unyte_udp_notif_input, grpc_collector_input;
+extern int unyte_udp_notif_input, grpc_collector_input;
 extern telemetry_tag_t telemetry_logdump_tag;
 extern struct sockaddr_storage telemetry_logdump_tag_peer;
 #endif //TELEMETRY_H

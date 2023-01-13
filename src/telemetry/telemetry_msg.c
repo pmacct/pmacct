@@ -61,24 +61,6 @@ void telemetry_process_data(telemetry_peer *peer, struct telemetry_data *t_data,
     telemetry_log_seq_increment(&tms->log_seq);
 }
 
-#if defined WITH_KAFKA
-int telemetry_recv_kafka_generic(telemetry_peer *peer, u_int32_t len)
-{
-  int ret = 0;
-
-  ret = p_kafka_consume_data(&telemetry_kafka_host, peer->buf.kafka_msg, (u_char *)peer->buf.base, peer->buf.tot_len);
-
-  if (ret > 0) {
-    peer->stats.packet_bytes += ret;
-    peer->msglen = ret;
-  }
-
-  peer->buf.kafka_msg = NULL;
-
-  return ret;
-}
-#endif
-
 int telemetry_recv_generic(telemetry_peer *peer, u_int32_t len)
 {
   int ret = 0;
@@ -120,14 +102,9 @@ int telemetry_recv_json(telemetry_peer *peer, u_int32_t len, int *flags)
 
   (*flags) = FALSE;
 
-  if (!kafka_input && !unyte_udp_notif_input && !grpc_collector_input) {
+  if (!unyte_udp_notif_input && !grpc_collector_input) {
     ret = telemetry_recv_generic(peer, len);
   }
-#if defined WITH_KAFKA
-  else if (kafka_input) {
-    ret = telemetry_recv_kafka_generic(peer, len);
-  }
-#endif
 
   telemetry_basic_process_json(peer);
 
@@ -275,14 +252,6 @@ int telemetry_decode_producer_peer(struct telemetry_data *t_data, void *h, u_cha
   int bytes = 0, ret = SUCCESS;
 
   if (!buf || !buflen || !addr || !addr_len) return ERR;
-
-#if defined WITH_KAFKA
-  else if (kafka_input) {
-    struct p_kafka_host *kafka_host = h;
-
-    bytes = p_kafka_consume_data(kafka_host, t_data->kafka_msg, buf, buflen);
-  }
-#endif
 
   if (bytes > 0) {
     buf[bytes] = '\0';

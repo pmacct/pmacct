@@ -40,8 +40,4 @@ extern void telemetry_basic_process_json(telemetry_peer *);
 extern int telemetry_basic_validate_json(telemetry_peer *);
 extern int telemetry_decode_producer_peer(struct telemetry_data *, void *, u_char *, size_t, struct sockaddr *, socklen_t *);
 
-#if defined (WITH_KAFKA)
-extern int telemetry_recv_kafka_generic(telemetry_peer *, u_int32_t);
-#endif
-
 #endif//TELEMETRY_MSG_H

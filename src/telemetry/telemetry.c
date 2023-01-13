@@ -43,7 +43,7 @@ telemetry_misc_structs *telemetry_misc_db;
 telemetry_peer *telemetry_peers;
 void *telemetry_peers_cache;
 telemetry_peer_timeout *telemetry_peers_timeout;
-int kafka_input = 0, unyte_udp_notif_input = 0, grpc_collector_input = 0;
+int unyte_udp_notif_input = 0, grpc_collector_input = 0;
 telemetry_tag_t telemetry_logdump_tag;
 struct sockaddr_storage telemetry_logdump_tag_peer;
 
@@ -178,30 +178,15 @@ int telemetry_daemon(void *t_data_void)
 #endif
   }
 
-  if (config.telemetry_kafka_broker_host || config.telemetry_kafka_topic) {
-#if defined WITH_KAFKA
-    capture_methods++;
-    kafka_input = TRUE;
-
-    if ((config.telemetry_kafka_broker_host && !config.telemetry_kafka_topic) || (config.telemetry_kafka_topic && !config.telemetry_kafka_broker_host)) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): Kafka collection requires both broker host and topic to be specified. Terminating.\n\n", config.name, t_data->log_str);
-      exit_gracefully(1);
-    }
-#else
-    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_kafka_* require --enable-kafka. Terminating.\n", config.name, t_data->log_str);
-    exit_gracefully(1);
-#endif
-  }
-
   if (capture_methods > 1) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_ip, telemetry_kafka_* and telemetry_daemon_grpc_* are mutually exclusive. Exiting...\n",
+    Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_ip and telemetry_daemon_grpc_* are mutually exclusive. Exiting...\n",
         config.name, t_data->log_str);
     exit_gracefully(1);
   }
 
   memset(consumer_buf, 0, sizeof(consumer_buf));
 
-  if (!kafka_input && !unyte_udp_notif_input && !grpc_collector_input) {
+  if (!unyte_udp_notif_input && !grpc_collector_input) {
     if (config.telemetry_port_tcp && config.telemetry_port_udp) {
       Log(LOG_ERR, "ERROR ( %s/%s ): telemetry_daemon_port_tcp and telemetry_daemon_port_udp are mutually exclusive. Terminating.\n", config.name, t_data->log_str);
       exit_gracefully(1);
@@ -260,11 +245,6 @@ int telemetry_daemon(void *t_data_void)
     }
 
     if (config.telemetry_decoder_id != TELEMETRY_DECODER_JSON) {
-      if (kafka_input) {
-        Log(LOG_ERR, "ERROR ( %s/%s ): Kafka collection supports only 'json' decoder (telemetry_daemon_decoder). Terminating.\n", config.name, t_data->log_str);
-        exit_gracefully(1);
-      }
-
       if (unyte_udp_notif_input) {
         Log(LOG_ERR, "ERROR ( %s/%s ): Unyte UDP Notif collection supports only 'json' decoder (telemetry_daemon_decoder). Terminating.\n", config.name, t_data->log_str);
         exit_gracefully(1);
@@ -280,7 +260,7 @@ int telemetry_daemon(void *t_data_void)
   if (!config.telemetry_max_peers) config.telemetry_max_peers = TELEMETRY_MAX_PEERS_DEFAULT;
   Log(LOG_INFO, "INFO ( %s/%s ): maximum telemetry peers allowed: %d\n", config.name, t_data->log_str, config.telemetry_max_peers);
 
-  if (config.telemetry_port_udp || kafka_input || unyte_udp_notif_input || grpc_collector_input) {
+  if (config.telemetry_port_udp || unyte_udp_notif_input || grpc_collector_input) {
     if (!config.telemetry_peer_timeout) config.telemetry_peer_timeout = TELEMETRY_PEER_TIMEOUT_DEFAULT;
     Log(LOG_INFO, "INFO ( %s/%s ): telemetry peers timeout: %u\n", config.name, t_data->log_str, config.telemetry_peer_timeout);
   }
@@ -292,7 +272,7 @@ int telemetry_daemon(void *t_data_void)
   }
   memset(telemetry_peers, 0, config.telemetry_max_peers*sizeof(telemetry_peer));
 
-  if (config.telemetry_port_udp || kafka_input || unyte_udp_notif_input || grpc_collector_input) {
+  if (config.telemetry_port_udp || unyte_udp_notif_input || grpc_collector_input) {
     telemetry_peers_timeout = malloc(config.telemetry_max_peers*sizeof(telemetry_peer_timeout));
     if (!telemetry_peers_timeout) {
       Log(LOG_ERR, "ERROR ( %s/%s ): Unable to malloc() telemetry_peers_timeout structure. Terminating.\n", config.name, t_data->log_str);
@@ -355,7 +335,7 @@ int telemetry_daemon(void *t_data_void)
     }
   }
 
-  if (!kafka_input && !unyte_udp_notif_input && !grpc_collector_input) {
+  if (!unyte_udp_notif_input && !grpc_collector_input) {
     if (config.telemetry_port_tcp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_STREAM, 0);
     else if (config.telemetry_port_udp) config.telemetry_sock = socket(((struct sockaddr *)&server)->sa_family, SOCK_DGRAM, 0);
 
@@ -444,7 +424,7 @@ int telemetry_daemon(void *t_data_void)
     }
   }
 
-  if (!kafka_input && !unyte_udp_notif_input && !grpc_collector_input) {
+  if (!unyte_udp_notif_input && !grpc_collector_input) {
     char srv_string[INET6_ADDRSTRLEN];
     char *srv_interface = NULL, default_interface[] = "all";
     struct host_addr srv_addr;
@@ -463,13 +443,6 @@ int telemetry_daemon(void *t_data_void)
     Log(LOG_INFO, "INFO ( %s/%s ): waiting for telemetry data on interface=%s ip=%s port=%u/%s\n",
         config.name, t_data->log_str, srv_interface, srv_string, srv_port, srv_proto);
   }
-#if defined WITH_KAFKA
-  else if (kafka_input) {
-    telemetry_init_kafka_host(&telemetry_kafka_host);
-    Log(LOG_INFO, "INFO ( %s/%s ): reading telemetry data from Kafka %s:%s\n", config.name, t_data->log_str,
-        p_kafka_get_broker(&telemetry_kafka_host), p_kafka_get_topic(&telemetry_kafka_host));
-  }
-#endif
 #if defined WITH_UNYTE_UDP_NOTIF
   else if (unyte_udp_notif_input) {
     unyte_udp_options_t options = {0};
@@ -646,27 +619,10 @@ int telemetry_daemon(void *t_data_void)
     }
     else drt_ptr = NULL;
 
-    if (!kafka_input && !unyte_udp_notif_input && !grpc_collector_input) {
+    if (!unyte_udp_notif_input && !grpc_collector_input) {
       select_num = select(select_fd, &read_descs, NULL, NULL, drt_ptr);
       if (select_num < 0) goto select_again;
     }
-#if defined WITH_KAFKA
-    else if (kafka_input) {
-      t_data->kafka_msg = NULL;
-
-      select_num = p_kafka_consume_poller(&telemetry_kafka_host, &t_data->kafka_msg, drt_ptr ? (drt_ptr->tv_sec * 1000) : 1000);
-
-      if (select_num < 0) {
-        /* Close */
-        p_kafka_manage_consumer(&nfacctd_kafka_host, FALSE);
-
-        /* Re-open */
-        telemetry_init_kafka_host(&telemetry_kafka_host);
-
-        goto select_again;
-      }
-    }
-#endif
 #if defined WITH_UNYTE_UDP_NOTIF
     else if (unyte_udp_notif_input) {
       seg_ptr = unyte_udp_queue_read(uun_collector->queue);
@@ -702,8 +658,8 @@ int telemetry_daemon(void *t_data_void)
       t_data->global_stats.last_check = t_data->now;
     }
 
-    /* XXX: ZeroMQ / Kafka cases: timeout handling (to be tested) */
-    if (config.telemetry_port_udp || kafka_input || unyte_udp_notif_input || grpc_collector_input) {
+    /* XXX: ZeroMQ case: timeout handling (to be tested) */
+    if (config.telemetry_port_udp || unyte_udp_notif_input || grpc_collector_input) {
       if (t_data->now > (last_peers_timeout_check + TELEMETRY_PEER_TIMEOUT_INTERVAL)) {
         for (peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
           telemetry_peer_timeout *peer_timeout;
@@ -808,7 +764,7 @@ int telemetry_daemon(void *t_data_void)
     if (!select_num) goto select_again;
 
     /* New connection is coming in */
-    if (FD_ISSET(config.telemetry_sock, &read_descs) || kafka_input || unyte_udp_notif_input || grpc_collector_input) {
+    if (FD_ISSET(config.telemetry_sock, &read_descs) || unyte_udp_notif_input || grpc_collector_input) {
       if (config.telemetry_port_tcp) {
         fd = accept(config.telemetry_sock, (struct sockaddr *) &client, &clen);
         if (fd == ERR) goto read_data;
@@ -820,13 +776,6 @@ int telemetry_daemon(void *t_data_void)
         if (ret <= 0) goto select_again;
         else fd = config.telemetry_sock;
       }
-#if defined WITH_KAFKA
-      else if (kafka_input) {
-        ret = telemetry_decode_producer_peer(t_data, &telemetry_kafka_host, consumer_buf, sizeof(consumer_buf), (struct sockaddr *) &client, &clen);
-        if (ret < 0) goto select_again;
-        else fd = TELEMETRY_KAFKA_FD;
-      }
-#endif
 #if defined WITH_UNYTE_UDP_NOTIF
       else if (unyte_udp_notif_input) {
         if (seg_ptr) {
@@ -901,7 +850,7 @@ int telemetry_daemon(void *t_data_void)
       }
 
       /* XXX: UDP, ZeroMQ and Kafka cases may be optimized further */
-      if (config.telemetry_port_udp || kafka_input || unyte_udp_notif_input || grpc_collector_input) {
+      if (config.telemetry_port_udp || unyte_udp_notif_input || grpc_collector_input) {
         telemetry_peer_cache *tpc_ret;
         u_int16_t client_port;
 
@@ -925,9 +874,9 @@ int telemetry_daemon(void *t_data_void)
           if (telemetry_peer_init(peer, FUNC_TYPE_TELEMETRY)) peer = NULL;
 
           if (peer) {
-            recalc_fds = TRUE; // XXX: do we need this for Kafka / gRPC cases?
+            recalc_fds = TRUE; // XXX: do we need this for the gRPC case?
 
-            if (config.telemetry_port_udp || kafka_input || unyte_udp_notif_input || grpc_collector_input) {
+            if (config.telemetry_port_udp || unyte_udp_notif_input || grpc_collector_input) {
               tpc.index = peers_idx;
               telemetry_peers_timeout[peers_idx].last_msg = t_data->now;
 
@@ -947,13 +896,6 @@ int telemetry_daemon(void *t_data_void)
         if (config.telemetry_port_tcp) close(fd);
         goto read_data;
       }
-
-#if defined WITH_KAFKA
-      if (kafka_input) {
-        peer->buf.kafka_msg = t_data->kafka_msg;
-        t_data->kafka_msg = NULL;
-      }
-#endif
 
       peer->fd = fd;
       if (config.telemetry_port_tcp) FD_SET(peer->fd, &bkp_read_descs);
@@ -1009,7 +951,7 @@ int telemetry_daemon(void *t_data_void)
 
     switch (config.telemetry_decoder_id) {
     case TELEMETRY_DECODER_JSON:
-      if (!kafka_input && !unyte_udp_notif_input && !grpc_collector_input) {
+      if (!unyte_udp_notif_input && !grpc_collector_input) {
         ret = telemetry_recv_json(peer, 0, &recv_flags);
       }
       else {
@@ -1065,7 +1007,7 @@ int telemetry_daemon(void *t_data_void)
         telemetry_process_data(peer, t_data, data_decoder);
       }
 
-      if (kafka_input || unyte_udp_notif_input || grpc_collector_input) {
+      if (unyte_udp_notif_input || grpc_collector_input) {
         peer->buf.base = saved_peer_buf;
       }
     }
