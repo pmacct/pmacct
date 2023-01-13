@@ -209,20 +209,6 @@ void telemetry_log_global_stats(struct telemetry_data *t_data)
   t_data->global_stats.msg_errors = 0;
 }
 
-#ifdef WITH_KAFKA
-void telemetry_init_kafka_host(void *kh)
-{
-  struct p_kafka_host *kafka_host = kh;
-
-  p_kafka_init_host(kafka_host, config.telemetry_kafka_config_file);
-  p_kafka_connect_to_consume(kafka_host);
-  p_kafka_set_broker(kafka_host, config.telemetry_kafka_broker_host, config.telemetry_kafka_broker_port);
-  p_kafka_set_topic(kafka_host, config.telemetry_kafka_topic);
-  p_kafka_set_content_type(kafka_host, PM_KAFKA_CNT_TYPE_STR);
-  p_kafka_manage_consumer(kafka_host, TRUE);
-}
-#endif
-
 #ifdef WITH_UNYTE_UDP_NOTIF
 int create_socket_unyte_udp_notif(struct telemetry_data *t_data, char *address, char *port)
 {

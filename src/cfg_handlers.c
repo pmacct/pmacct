@@ -8035,55 +8035,6 @@ int cfg_key_telemetry_ipv6_only(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_telemetry_kafka_broker_host(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int changes = 0;
-
-  for (; list; list = list->next, changes++) list->cfg.telemetry_kafka_broker_host = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_kafka_broker_host'. Globalized.\n", filename);
-
-  return changes;
-}
-
-int cfg_key_telemetry_kafka_broker_port(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int value, changes = 0;
-
-  value = atoi(value_ptr);
-  if ((value <= 0) || (value > 65535)) {
-    Log(LOG_ERR, "WARN: [%s] 'telemetry_kafka_broker_port' has to be in the range 1-65535.\n", filename);
-    return ERR;
-  }
-
-  for (; list; list = list->next, changes++) list->cfg.telemetry_kafka_broker_port = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_kafka_broker_port'. Globalized.\n", filename);
-
-  return changes;
-}
-
-int cfg_key_telemetry_kafka_topic(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int changes = 0;
-
-  for (; list; list = list->next, changes++) list->cfg.telemetry_kafka_topic = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_kafka_topic'. Globalized.\n", filename);
-
-  return changes;
-}
-
-int cfg_key_telemetry_kafka_config_file(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int changes = 0;
-
-  for (; list; list = list->next, changes++) list->cfg.telemetry_kafka_config_file = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_kafka_config_file'. Globalized.\n", filename);
-
-  return changes;
-}
 int cfg_key_telemetry_decoder(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

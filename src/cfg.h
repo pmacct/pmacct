@@ -264,10 +264,6 @@ struct configuration {
   char *telemetry_grpc_collector_socket;
   char *telemetry_grpc_collector_conf;
   int telemetry_ipv6_only;
-  char *telemetry_kafka_broker_host;
-  int telemetry_kafka_broker_port;
-  char *telemetry_kafka_topic;
-  char *telemetry_kafka_config_file;
   char *telemetry_decoder;
   int telemetry_decoder_id;
   int telemetry_max_peers;
