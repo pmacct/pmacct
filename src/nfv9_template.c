@@ -242,6 +242,7 @@ void load_templates_from_file(char *path)
       if (find_template(tpl->template_id, (struct sockaddr *) &agent, tpl->template_type, tpl->source_id)) {
 	Log(LOG_WARNING, "WARN ( %s/core ): load_templates_from_file(): template %u already cached. Skipping.\n",
 	    config.name, tpl->template_id);
+        free(tpl);
       }
       else {
         modulo = modulo_template(tpl->template_id, (struct sockaddr *) &agent, tpl_cache.num);
