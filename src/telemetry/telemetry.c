@@ -658,7 +658,7 @@ int telemetry_daemon(void *t_data_void)
       t_data->global_stats.last_check = t_data->now;
     }
 
-    /* XXX: ZeroMQ case: timeout handling (to be tested) */
+    /* XXX: UDP-Notif, gRPC cases: timeout handling (to be tested) */
     if (config.telemetry_port_udp || unyte_udp_notif_input || grpc_collector_input) {
       if (t_data->now > (last_peers_timeout_check + TELEMETRY_PEER_TIMEOUT_INTERVAL)) {
         for (peers_idx = 0; peers_idx < config.telemetry_max_peers; peers_idx++) {
@@ -849,7 +849,7 @@ int telemetry_daemon(void *t_data_void)
         goto read_data;
       }
 
-      /* XXX: UDP, ZeroMQ and Kafka cases may be optimized further */
+      /* XXX: UDP, UDP-Notif and gRPC cases may be optimized further */
       if (config.telemetry_port_udp || unyte_udp_notif_input || grpc_collector_input) {
         telemetry_peer_cache *tpc_ret;
         u_int16_t client_port;
@@ -874,7 +874,7 @@ int telemetry_daemon(void *t_data_void)
           if (telemetry_peer_init(peer, FUNC_TYPE_TELEMETRY)) peer = NULL;
 
           if (peer) {
-            recalc_fds = TRUE; // XXX: do we need this for the gRPC case?
+            recalc_fds = TRUE; // XXX: do we need this for the UDP-Notif and gRPC cases?
 
             if (config.telemetry_port_udp || unyte_udp_notif_input || grpc_collector_input) {
               tpc.index = peers_idx;
