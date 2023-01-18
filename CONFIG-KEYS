@@ -3361,27 +3361,6 @@ DESC:           Marks self-originated Streaming Telemetry messages with the supp
 		Applies to TCP sessions only.
 DEFAULT:        0
 
-KEY:		telemetry_daemon_kafka_broker_host [GLOBAL]
-DESC:		Defines one or multiple, comma-separated, Kafka brokers to consume JSON-encoded
-		Streaming Telemetry data from. See kafka_broker_host for more info.
-DEFAULT:	none
-
-KEY:		telemetry_daemon_kafka_broker_port [GLOBAL]
-DESC:		Defines the Kafka broker port to consume JSON-encoded Streaming Telemetry data
-		from. See kafka_broker_host for more info.
-DEFAULT:	9092
-
-KEY:            telemetry_daemon_kafka_config_file [GLOBAL]
-DESC:           Full pathname to a file containing directives to configure librdkafka to consume
-		JSON-encoded Streaming Telemetry data from. See kafka_config_file for more info.
-DEFAULT:        none
-
-KEY:            telemetry_daemon_kafka_topic [GLOBAL]
-DESC:           Name of the Kafka topic to consume JSON-encoded Streaming Telemetry data from. No
-		variables are supported for dynamic naming of the topic. See kafka_topic for more
-		info.
-DEFAULT:        none
-
 KEY:		telemetry_daemon_udp_notif_ip [GLOBAL]
 DESC:		Defines the IP address to listen to for UDP-Notif, a proposed standard at IETF
 		for UDP-based Transport for Configured Subscriptions. Expects as value an IPv4/
