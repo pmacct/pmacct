@@ -182,7 +182,7 @@ void PM_sigint_handler(int signum)
   }
 
   if (config.acct_type == ACCT_PMTELE) {
-    if (config.telemetry_grpc_collector_socket) {
+    if (config.telemetry_grpc_collector_conf) {
       p_zmq_remove_ipc_file(config.telemetry_grpc_collector_socket);
     }
   }

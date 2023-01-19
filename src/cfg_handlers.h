@@ -222,7 +222,6 @@ extern int cfg_key_telemetry_udp_notif_interface(char *, char *, char *);
 extern int cfg_key_telemetry_udp_notif_ipv6_only(char *, char *, char *);
 extern int cfg_key_telemetry_udp_notif_nmsgs(char *, char *, char *);
 extern int cfg_key_telemetry_udp_notif_rp_ebpf_prog(char *, char *, char *);
-extern int cfg_key_telemetry_grpc_collector_socket(char *, char *, char *);
 extern int cfg_key_telemetry_grpc_collector_conf(char *, char *, char *);
 extern int cfg_key_telemetry_ipv6_only(char *, char *, char *);
 extern int cfg_key_telemetry_decoder(char *, char *, char *);
