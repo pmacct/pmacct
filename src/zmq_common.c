@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -848,4 +848,11 @@ void p_zmq_router_worker(void *zh)
 void p_zmq_close(struct p_zmq_host *zmq_host)
 {
   p_zmq_plugin_pipe_init_plugin(zmq_host);
+}
+
+void p_zmq_remove_ipc_file(char *filename)
+{
+  if (filename && (strlen(filename) > 6 /* ipc:// */)) {
+    unlink(filename + 6);
+  }
 }

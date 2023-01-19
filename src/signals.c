@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -178,6 +178,12 @@ void PM_sigint_handler(int signum)
       }
 
       printf("NOTICE ( %s/%s ): ---\n", config.name, config.type);
+    }
+  }
+
+  if (config.acct_type == ACCT_PMTELE) {
+    if (config.telemetry_grpc_collector_socket) {
+      p_zmq_remove_ipc_file(config.telemetry_grpc_collector_socket);
     }
   }
 

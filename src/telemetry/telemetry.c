@@ -119,11 +119,16 @@ int telemetry_daemon(void *t_data_void)
   void *grpc_payload_ptr = NULL;
   void *grpc_ctx = NULL;
   void *grpc_zmq_pull = NULL;
+  char grpc_socket[VERYSHORTBUFLEN];
 
   if (config.telemetry_grpc_collector_socket) {
     grpc_ctx = zmq_ctx_new();
     grpc_zmq_pull = zmq_socket(grpc_ctx, ZMQ_PULL);
-    zmq_bind(grpc_zmq_pull, config.telemetry_grpc_collector_socket);
+
+    snprintf(grpc_socket, sizeof(grpc_socket), "ipc:///tmp/pmtelemetryd_grpc-%u.sock", getpid());
+    config.telemetry_grpc_collector_socket = grpc_socket;
+    Log(LOG_INFO, "INFO ( %s/%s ): waiting for gRPC dial-out collection on zmq=%s\n", config.name, t_data->log_str, grpc_socket);
+    zmq_bind(grpc_zmq_pull, grpc_socket);
 
     if (config.telemetry_grpc_collector_conf) {
       start_grpc_dialout_collector(config.telemetry_grpc_collector_conf);
@@ -135,9 +140,11 @@ int telemetry_daemon(void *t_data_void)
     }
   }
 #else
-  Log(LOG_ERR, "ERROR ( %s/%s ): gRPC dial-out collection depends on ZeroMQ (--enable-zmq). Terminating.\n",
-      config.name, t_data->log_str);
-  exit_gracefully(1);
+  if (config.telemetry_grpc_collector_socket) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): gRPC dial-out collection depends on ZeroMQ (--enable-zmq). Terminating.\n",
+	config.name, t_data->log_str);
+    exit_gracefully(1);
+  }
 #endif
 #endif
 
