@@ -130,7 +130,7 @@ int telemetry_daemon(void *t_data_void)
     Log(LOG_INFO, "INFO ( %s/%s ): waiting for gRPC dial-out collection on zmq=%s\n", config.name, t_data->log_str, grpc_socket);
     zmq_bind(grpc_zmq_pull, grpc_socket);
 
-    start_grpc_dialout_collector(config.telemetry_grpc_collector_conf);
+    start_grpc_dialout_collector(config.telemetry_grpc_collector_conf, grpc_socket);
   }
 #else
   if (config.telemetry_grpc_collector_conf) {
