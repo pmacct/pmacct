@@ -295,7 +295,6 @@ static const struct _dictionary_line dictionary[] = {
   {"telemetry_daemon_udp_notif_ipv6_only", cfg_key_telemetry_udp_notif_ipv6_only},
   {"telemetry_daemon_udp_notif_nmsgs", cfg_key_telemetry_udp_notif_nmsgs},
   {"telemetry_daemon_udp_notif_rp_ebpf_prog", cfg_key_telemetry_udp_notif_rp_ebpf_prog},
-  {"telemetry_daemon_grpc_collector_socket", cfg_key_telemetry_grpc_collector_socket},
   {"telemetry_daemon_grpc_collector_conf", cfg_key_telemetry_grpc_collector_conf},
   {"telemetry_daemon_decoder", cfg_key_telemetry_decoder},
   {"telemetry_daemon_max_peers", cfg_key_telemetry_max_peers},

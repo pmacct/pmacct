@@ -7999,17 +7999,6 @@ int cfg_key_telemetry_udp_notif_rp_ebpf_prog(char *filename, char *name, char *v
   return changes;
 }
 
-int cfg_key_telemetry_grpc_collector_socket(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int changes = 0;
-
-  for (; list; list = list->next, changes++) list->cfg.telemetry_grpc_collector_socket = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'telemetry_daemon_collector_socket'. Globalized.\n", filename);
-
-  return changes;
-}
-
 int cfg_key_telemetry_grpc_collector_conf(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
