@@ -43,6 +43,11 @@ struct p_redis_host {
   redisReply *reply;
 };
 
+struct p_redis_keys {
+  char keys[SHORTBUFLEN][SHORTBUFLEN];
+  int keys_amount;
+};
+
 /* prototypes */
 extern void p_redis_thread_wrapper(struct p_redis_host *);
 extern int p_redis_master_produce_thread(void *);
@@ -58,11 +63,11 @@ extern void p_redis_set_exp_time(struct p_redis_host *, int);
 extern void p_redis_set_thread_handler(struct p_redis_host *, redis_thread_handler);
 
 extern void p_redis_set_string(struct p_redis_host *, char *, char *, int);
+extern void p_redis_get_string(struct p_redis_host *, char *, char *);
+extern void p_redis_get_keys(struct p_redis_host *, char *, struct p_redis_keys *);
 extern void p_redis_set_int(struct p_redis_host *, char *, int, int);
 extern void p_redis_ping(struct p_redis_host *);
 extern void p_redis_select_db(struct p_redis_host *);
 
 extern void p_redis_thread_produce_common_core_handler(void *);
 extern void p_redis_thread_produce_common_plugin_handler(void *);
-
-extern bool p_redis_get_time(struct p_redis_host *);

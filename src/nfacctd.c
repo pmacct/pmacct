@@ -46,6 +46,9 @@
 #include "ndpi/ndpi.h"
 #endif
 #include "tee_plugin/tee_plugin.h"
+#ifdef WITH_REDIS
+#include "ha.h"
+#endif
 
 /* Global variables */
 struct host_addr debug_a;
@@ -204,9 +207,6 @@ int main(int argc,char **argv, char **envp)
   data_plugins = 0;
   tee_plugins = 0;
   errflag = 0;
-
-  /* XXX: to be moved away: tmp_bmp_daemon_ha stuff */
-  bmp_ha_struct.dump_flag = TRUE;
 
   memset(cfg_cmdline, 0, sizeof(cfg_cmdline));
   memset(&server, 0, sizeof(server));
@@ -667,21 +667,22 @@ int main(int argc,char **argv, char **envp)
   sigaction(SIGALRM, &sighandler_action, NULL);
 
 #ifdef WITH_REDIS
-  if (config.tmp_bmp_daemon_ha) {
-    /* reset the timestamp of collector as the newest */
-    sighandler_action.sa_handler = pm_ha_re_generate_timestamp;
+  /* Signals for BMP-BGP-HA feature */
+  if (config.tmp_bmp_bgp_daemon_ha) {
+    /* reset the local timestamp of the collector (SIGNAL=34)*/
+    sighandler_action.sa_handler = bmp_bgp_ha_regenerate_timestamp;
     sigaction(SIGRTMIN, &sighandler_action, NULL);
 
-    /* set all collector as active*/
-    sighandler_action.sa_handler = pm_ha_set_to_active;
+    /* set collector to forced active mode (SIGNAL=35)*/
+    sighandler_action.sa_handler = bmp_bgp_ha_set_to_active;
     sigaction(SIGRTMIN + 1, &sighandler_action, NULL);
 
-    /* set all collector as passive*/
-    sighandler_action.sa_handler = pm_ha_set_to_standby;
+    /* set collector to forced stand-by mode (SIGNAL=36)*/
+    sighandler_action.sa_handler = bmp_bgp_ha_set_to_standby;
     sigaction(SIGRTMIN + 2, &sighandler_action, NULL);
 
-    /* set all back to normal */
-    sighandler_action.sa_handler = pm_ha_set_to_normal;
+    /* set collector back to timestamp-based (i.e. non-forced) mode (SIGNAL=37)*/
+    sighandler_action.sa_handler = bmp_bgp_ha_set_to_normal;
     sigaction(SIGRTMIN + 3, &sighandler_action, NULL);
   }
 #endif
@@ -1373,20 +1374,17 @@ int main(int argc,char **argv, char **envp)
 
 #ifdef WITH_REDIS
   if (config.redis_host) {
+
+    /* Kicking off redis thread */
     char log_id[SHORTBUFLEN];
-
     snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
-
-    if (config.tmp_bmp_daemon_ha) {
-      bmp_ha_struct.dump_flag = true; //Setting the flag as true by default in case connection to Redis fails
-
-      if (pthread_mutex_init(&bmp_ha_struct.mutex_rd, NULL)){
-	Log(LOG_ERR, "ERROR ( %s ): mutex_init failed\n", log_id);
-	return TRUE;
-      }
+    if (config.tmp_bmp_bgp_daemon_ha) {
+      /* If BMP-BGP-HA feature is enabled, redirect redis thread */
+      p_redis_init(&redis_host, log_id, p_redis_thread_bmp_bgp_ha_handler); 
     }
-
-    p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_core_handler); 
+    else{
+      p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_core_handler); 
+    }
   }
 #endif
 
@@ -1401,7 +1399,8 @@ int main(int argc,char **argv, char **envp)
   sigaddset(&signal_set, SIGTERM);
 
 #ifdef WITH_REDIS
-  if (config.tmp_bmp_daemon_ha) {
+  if (config.tmp_bmp_bgp_daemon_ha) {
+    /* Signals for BMP-BGP-HA feature */
     sigaddset(&signal_set, SIGRTMIN);
     sigaddset(&signal_set, SIGRTMIN + 1);
     sigaddset(&signal_set, SIGRTMIN + 2);
@@ -1413,9 +1412,9 @@ int main(int argc,char **argv, char **envp)
     sigaddset(&signal_set, SIGINT);
   }
 
-  if (config.tmp_bmp_daemon_ha) {
-    // lanuch the data queue countdown delete thread
-    pm_ha_queue_thread_wrapper();
+  if (config.tmp_bmp_bgp_daemon_ha) {
+    /* Kicking off BMP-BGP-HA feature (BMP-BGP Daemon High Availability) */
+    bmp_bgp_ha_main();
   }
 
   /* Main loop */
