@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -21,6 +21,8 @@
 
 #ifndef HA_H
 #define HA_H
+
+#if defined WITH_REDIS
 
 /* Defines [in microseconds] for how long messages will be kept in the queue*/
 #define QUEUE_POP_THRESHOLD 10000000LL  // 10s
@@ -43,4 +45,5 @@ extern void bmp_bgp_ha_set_to_active(int);
 extern void bmp_bgp_ha_set_to_standby(int);
 extern void bmp_bgp_ha_set_to_normal(int);
 
+#endif
 #endif

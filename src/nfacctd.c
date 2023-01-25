@@ -1412,10 +1412,12 @@ int main(int argc,char **argv, char **envp)
     sigaddset(&signal_set, SIGINT);
   }
 
+#if defined WITH_REDIS
   if (config.tmp_bmp_bgp_daemon_ha) {
     /* Kicking off BMP-BGP-HA feature (BMP-BGP Daemon High Availability) */
     bmp_bgp_ha_main();
   }
+#endif
 
   /* Main loop */
   for (;;) {

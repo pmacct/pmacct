@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -25,6 +25,8 @@
 #include <sys/time.h>
 #include "kafka_common.h"
 #include "ha.h"
+
+#if defined WITH_REDIS
 
 /*Threads*/
 thread_pool_t *bmp_bgp_ha_queue_mgmt_pool;
@@ -373,3 +375,5 @@ void bmp_bgp_ha_main(void){
     // Thread 2: dump the queue if the daemon goes from stand-by to active
     bmp_bgp_ha_queue_dump_thread_wrapper();
 }
+
+#endif
