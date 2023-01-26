@@ -23,7 +23,9 @@
 #include "pmacct-data.h"
 #include "thread_pool.h"
 #include <sys/time.h>
+#ifdef WITH_KAFKA
 #include "kafka_common.h"
+#endif
 #include "ha.h"
 
 #if defined WITH_REDIS
