@@ -458,6 +458,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_daemon_id", cfg_key_bgp_daemon_id},
   {"bgp_daemon_as", cfg_key_bgp_daemon_as},
   {"bgp_daemon_port", cfg_key_bgp_daemon_port},
+  {"bgp_daemon_ha", cfg_key_bgp_bmp_daemon_ha},
   {"bgp_daemon_rp_ebpf_prog", cfg_key_bgp_daemon_rp_ebpf_prog},
   {"bgp_daemon_add_path_ignore", cfg_key_bgp_daemon_add_path_ignore},
   {"bgp_daemon_tag_map", cfg_key_bgp_daemon_tag_map},
@@ -559,6 +560,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bmp_daemon_interface", cfg_key_bmp_daemon_interface},
   {"bmp_daemon_ipv6_only", cfg_key_bmp_daemon_ipv6_only},
   {"bmp_daemon_port", cfg_key_bmp_daemon_port},
+  {"bmp_daemon_ha", cfg_key_bgp_bmp_daemon_ha},
   {"bmp_daemon_rp_ebpf_prog", cfg_key_bmp_daemon_rp_ebpf_prog},
   {"bmp_daemon_tag_map", cfg_key_bmp_daemon_tag_map},
   {"bmp_daemon_pipe_size", cfg_key_bmp_daemon_pipe_size},
@@ -655,7 +657,6 @@ static const struct _dictionary_line dictionary[] = {
   {"tmp_bgp_daemon_origin_type_int", cfg_key_tmp_bgp_daemon_origin_type_int},
   {"tmp_telemetry_daemon_udp_notif_legacy", cfg_key_tmp_telemetry_daemon_udp_notif_legacy},
   {"tmp_telemetry_decode_cisco_v1_json_string", cfg_key_tmp_telemetry_decode_cisco_v1_json_string},
-  {"tmp_bmp_bgp_daemon_ha", cfg_key_tmp_bmp_bgp_daemon_ha},
   {"", NULL}
 };
 

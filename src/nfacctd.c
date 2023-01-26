@@ -668,7 +668,7 @@ int main(int argc,char **argv, char **envp)
 
 #ifdef WITH_REDIS
   /* Signals for BMP-BGP-HA feature */
-  if (config.tmp_bmp_bgp_daemon_ha) {
+  if (config.bgp_bmp_daemon_ha) {
     /* reset the local timestamp of the collector (SIGNAL=34)*/
     sighandler_action.sa_handler = bmp_bgp_ha_regenerate_timestamp;
     sigaction(SIGRTMIN, &sighandler_action, NULL);
@@ -1378,7 +1378,7 @@ int main(int argc,char **argv, char **envp)
     /* Kicking off redis thread */
     char log_id[SHORTBUFLEN];
     snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
-    if (config.tmp_bmp_bgp_daemon_ha) {
+    if (config.bgp_bmp_daemon_ha) {
       /* If BMP-BGP-HA feature is enabled, redirect redis thread */
       p_redis_init(&redis_host, log_id, p_redis_thread_bmp_bgp_ha_handler); 
     }
@@ -1399,7 +1399,7 @@ int main(int argc,char **argv, char **envp)
   sigaddset(&signal_set, SIGTERM);
 
 #ifdef WITH_REDIS
-  if (config.tmp_bmp_bgp_daemon_ha) {
+  if (config.bgp_bmp_daemon_ha) {
     /* Signals for BMP-BGP-HA feature */
     sigaddset(&signal_set, SIGRTMIN);
     sigaddset(&signal_set, SIGRTMIN + 1);
@@ -1413,7 +1413,7 @@ int main(int argc,char **argv, char **envp)
   }
 
 #if defined WITH_REDIS
-  if (config.tmp_bmp_bgp_daemon_ha) {
+  if (config.bgp_bmp_daemon_ha) {
     /* Kicking off BMP-BGP-HA feature (BMP-BGP Daemon High Availability) */
     bmp_bgp_ha_main();
   }
