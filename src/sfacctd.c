@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -49,6 +49,9 @@
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #include "ndpi/ndpi_util.h"
+#endif
+#ifdef WITH_REDIS
+#include "ha.h"
 #endif
 
 /* variables to be exported away */
@@ -629,6 +632,27 @@ int main(int argc,char **argv, char **envp)
   sighandler_action.sa_handler = PM_sigalrm_noop_handler;
   sigaction(SIGALRM, &sighandler_action, NULL);
 
+#ifdef WITH_REDIS
+  /* Signals for BMP-BGP-HA feature */
+  if (config.bgp_bmp_daemon_ha) {
+    /* reset the local timestamp of the collector (SIGNAL=34)*/
+    sighandler_action.sa_handler = bmp_bgp_ha_regenerate_timestamp;
+    sigaction(SIGRTMIN, &sighandler_action, NULL);
+
+    /* set collector to forced active mode (SIGNAL=35)*/
+    sighandler_action.sa_handler = bmp_bgp_ha_set_to_active;
+    sigaction(SIGRTMIN + 1, &sighandler_action, NULL);
+
+    /* set collector to forced stand-by mode (SIGNAL=36)*/
+    sighandler_action.sa_handler = bmp_bgp_ha_set_to_standby;
+    sigaction(SIGRTMIN + 2, &sighandler_action, NULL);
+
+    /* set collector back to timestamp-based (i.e. non-forced) mode (SIGNAL=37)*/
+    sighandler_action.sa_handler = bmp_bgp_ha_set_to_normal;
+    sigaction(SIGRTMIN + 3, &sighandler_action, NULL);
+  }
+#endif
+
   if (config.pcap_savefile) {
     open_pcap_savefile(&device, config.pcap_savefile);
     pm_pcap_savefile_round = 1;
@@ -1108,6 +1132,22 @@ int main(int argc,char **argv, char **envp)
     allowed = TRUE;
   }
 
+#ifdef WITH_REDIS
+  if (config.redis_host) {
+
+    /* Kicking off redis thread */
+    char log_id[SHORTBUFLEN];
+    snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
+    if (config.bgp_bmp_daemon_ha) {
+      /* If BMP-BGP-HA feature is enabled, redirect redis thread */
+      p_redis_init(&redis_host, log_id, p_redis_thread_bmp_bgp_ha_handler);
+    }
+    else{
+      p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_core_handler);
+    }
+  }
+#endif
+
   if (config.sfacctd_counter_file || config.sfacctd_counter_amqp_routing_key || config.sfacctd_counter_kafka_topic) {
     if (config.sfacctd_counter_file) sfacctd_counter_backend_methods++;
     if (config.sfacctd_counter_amqp_routing_key) sfacctd_counter_backend_methods++;
@@ -1184,6 +1224,23 @@ int main(int argc,char **argv, char **envp)
   if (config.daemon) {
     sigaddset(&signal_set, SIGINT);
   }
+
+#ifdef WITH_REDIS
+  if (config.bgp_bmp_daemon_ha) {
+    /* Signals for BMP-BGP-HA feature */
+    sigaddset(&signal_set, SIGRTMIN);
+    sigaddset(&signal_set, SIGRTMIN + 1);
+    sigaddset(&signal_set, SIGRTMIN + 2);
+    sigaddset(&signal_set, SIGRTMIN + 3);
+  }
+#endif
+
+#if defined WITH_REDIS
+  if (config.bgp_bmp_daemon_ha) {
+    /* Kicking off BMP-BGP-HA feature (BMP-BGP Daemon High Availability) */
+    bmp_bgp_ha_main();
+  }
+#endif
 
   /* Main loop */
   for (;;) {
