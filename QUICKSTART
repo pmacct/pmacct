@@ -1,5 +1,5 @@
 pmacct [IP traffic accounting : BGP : BMP : RPKI : IGP : Streaming Telemetry]
-pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 
 
 TABLE OF CONTENTS:
@@ -2537,10 +2537,10 @@ document. If writing to AMQP or Kafka brokers compiling against RabbitMQ or
 Kafka libraries is required; read more in respectively the "Running the
 RabbitMQ/AMQP plugin" or "Running the Kafka plugin" sections of this document.
 
-By defining telemetry_daemon_grpc_collector_socket, Streaming Telemetry
-data can be optionally consumed via a thread that takes care of gRPC and GPB
-(Protobuf or Google Protocol Buffers) de-marshalling and conversion to JSON;
-the thread leverages https://github.com/scuzzilla/mdt-dialout-collector as a
+By defining telemetry_daemon_grpc_collector_conf, Streaming Telemetry data can
+be optionally consumed via a thread that takes care of gRPC and GPB (Protobuf,
+or Google Protocol Buffers) de-marshalling and conversion to JSON; the thread
+leverages https://github.com/network-analytics/mdt-dialout-collector as a
 library; the mdt-dialout-collector GitHub repository also says how to build
 the stack of dependencies in order to successfully collect gRPC / GPB data.
 The gRPC thread can be configured via telemetry_daemon_grpc_collector_conf,

@@ -3311,8 +3311,9 @@ DESC:		Enables Streaming Telemetry data collection via gRPC, mutual exclusive wi
 		telemetry collection methods (ie. TCP, UDP, UDP-Notif). Points to a file containing
 		the configuration of the gRPC collector thread. Read more, including instructions
 		on how to build the dependency stack and config examples and reference here:
-		https://github.com/scuzzilla/mdt-dialout-collector . This feature requires to
-		configure pmacct for compiling with --enable-zmq and --enable-grpc-collector flags.
+		https://github.com/network-analytics/mdt-dialout-collector . This feature requires
+		to configure pmacct for compiling with --enable-zmq and --enable-grpc-collector
+		flags.
 DEFAULT:	none
 
 KEY:		telemetry_daemon_decoder [GLOBAL]

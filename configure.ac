@@ -998,7 +998,7 @@ AC_ARG_ENABLE(grpc-collector,
       AC_CHECK_HEADER([grpc_collector_bridge/grpc_collector_bridge.h], [], [AC_MSG_ERROR(ERROR: missing grpc-collector headers)])
       CFLAGS="$_save_CFLAGS"
     ],
-    [AC_MSG_ERROR([ERROR: missing grpc-collector pkg-config. Refer to: https://github.com/scuzzilla/mdt-dialout-collector])])
+    [AC_MSG_ERROR([ERROR: missing grpc-collector pkg-config. Refer to: https://github.com/network-analytics/mdt-dialout-collector])])
     ;;
   no)
     AC_MSG_RESULT(no)

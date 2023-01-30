@@ -3,7 +3,7 @@ After some years in which the strategy towards Streaming Telemetry was
 dual (pmgrpcd.py, written in Python, to support gRPC and pmtelemetryd,
 written in C, to support everything else), the current approach (as of
 version 1.7.9) is to bring also gRPC into pmtelemetryd via an external
-C++ library/driver, https://github.com/scuzzilla/mdt-dialout-collector
+C++ library, https://github.com/network-analytics/mdt-dialout-collector
 Following is the support matrix for Streaming Telemetry collection in
 pmtelemtryd:
 
