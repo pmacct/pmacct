@@ -4,30 +4,31 @@ BMP/BGP HIGH-AVAILABILITY FEATURE DOCUMENTATION
 =============
 ## Important Information and Current Implementation Status
 
-* This contribution doesn't change the behavior of the software when not enabled in the configuration file. The high-availability (HA) feature can be enabled via the following config knob (currently undocumented, until the feature is considered GA). 
+* This contribution doesn't change the behavior of the software when not enabled in the configuration file. The high-availability (HA) feature can be enabled via the following config knobs: 
   ```bash
-  tmp_bmp_bgp_daemon_ha: true
+  bgp_daemon_ha: true
+  bmp_daemon_ha: true
   ```
-* Compilation with --enable-redis is required for this feature
+* Compiling with --enable-redis is required for this feature
 
-* The HA functionality supports both nfacctd+bmp and nfacctd+bgp.
+* The HA feature supports both BGP and BMP
 
-* Regarding exporting methods, it is currently only supporting kafka with avro.
+* Regarding exporting methods, it is currently only supporting kafka with Avro
 
 * Given vendor implementation it might be the case that the multiple BMP sessions established by a router with different collectors don't generate the exact same messages to both collectors. Thus the collector cache state might differ slightly.
 
 ## Functionality
 
-  * While high-availability (HA) and load-balancing for IPFIX can be easily achieved at a network level by using IP anycast addresses, this is not the case for BMP, as state need to be maintained in pmacct for correlation to work properly. To achieve high-availability with BMP/BGP, all collectors need to receive the same BMP/BGP information from the router. The HA functionality was developed to reduce BMP/BGP duplicated messages arriving at the data collection, which would be the case in the described scenario otherwise.
+  * While high-availability (HA) and load-balancing for IPFIX can be easily achieved at a network level by using IP anycast addresses, this is not the case for BGP and BMP, as state need to be maintained in pmacct for correlation in order to work properly. To achieve high-availability with BMP/BGP, all collectors need to receive the same BMP/BGP information from the router. The HA functionality was developed to reduce BMP/BGP duplicated messages arriving at the data collection, which would be the case in the described scenario otherwise.
 
-  * The HA feature integrates a mechanism that specifies whether an nfacctd daemon should be active (i.e. normally forwarding all received BMP/BGP messages) or stand-by (i.e. only enrich the local pmacct cache with information in the BMP/BGP packets but then dropping them instead of forwarding them).
+  * The HA feature integrates a mechanism that specifies whether a daemon should be active (i.e. normally forwarding all received BMP/BGP messages) or stand-by (i.e. only enrich the local pmacct cache with information in the BMP/BGP packets but then dropping them instead of forwarding them).
 
-  * The active/standby status is determined by the startup timestamp of the collector: a smaller timestamp means that a collector has worked fine for a longer time, and thus can be considered as a stable one, while the other(s), having a larger timestamp due to either being started later, or crashing while running, will be considered as less stable one(s). Please note that there can be multiple collectors where more than one collector can be standby but only one will be active (unless you're manually triggering forced-active or forced-standby states for a daemon, see below).
+  * The active/standby status is determined by the startup timestamp of the collector: a smaller timestamp means that a collector has worked fine for a longer time, and thus can be considered as a stable one, while the other(s), having a larger timestamp due to either being started later, or crashing while running, will be considered as less stable one(s). Please note that there can be multiple collectors where more than one collector can be standby but only one will be active (unless manually triggering forced-active or forced-standby states for a daemon, see below).
 
   * It is also possible to manually trigger forced active/standby states for maintenance purposes: a deamon can be triggered to be in active or standby state no matter its timestamp.
 
 ### Redis
-  * Redis is used by each collector for broader cluster management, i.e. to exchange timestamp information. To quickly summarize the functionality: all daemons will periodically read the timestamp of all other daemons in the cluster and compare it with their local timestamp, to decide whether they need to be in active or stand-by state. A global variable (bmp_bgp_forwarding) is then set accordingly, to tell nfacctd if BMP/BGP packets need to be forwarded (active state) or need to be dropped (stand-by state).
+  * Redis is used by each collector for broader cluster management, i.e. to exchange timestamp information. To quickly summarize the functionality: all daemons will periodically read the timestamp of all other daemons in the cluster and compare it with their local timestamp, to decide whether they need to be in active or stand-by state. A global variable (bmp_bgp_forwarding) is then set accordingly, to tell the daemon whether BMP/BGP packets need to be forwarded (active state) or need to be dropped (stand-by state).
 
   * The timestamp is written to redis every 1s (PM_REDIS_DEFAULT_REFRESH_TIME) and has an expiration time of 3s (PM_REDIS_DEFAULT_EXP_TIME). If the timestamp expires, the other daemons cannot get it anymore and will assume that the daemon is offline.
 
@@ -51,7 +52,7 @@ BMP/BGP HIGH-AVAILABILITY FEATURE DOCUMENTATION
     * router delay in sending the BMP/BGP messages to different collectors (unknown, estimate max couple of seconds)
     * network and redis querying delays (minor)
 
-  * In case that the daemon should change to active state, all messages in the queue are immediately forwarded to kafka. This makes sure that no BMP messages are dropped during the failover period. Keep in mind however, that some duplicate packets might arrive at the data collection in these failover situations.
+  * In case that the daemon should change to active state, all messages in the queue are immediately forwarded to Kafka. This makes sure that no BMP/BGP messages are dropped during the failover period. Keep in mind however, that some duplicate packets might arrive at the data collection in these failover situations.
 
   * A thread handles the discarding of messages from the queue after they've been there for more than the message expiry timeout (i.e. 10s), while another thread handles the forwarding of all the messages in the queue to the data collection as soon as the daemon becomes active.
 
