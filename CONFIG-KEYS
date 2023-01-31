@@ -2549,6 +2549,15 @@ DESC:		Makes the BGP/BMP daemon listen to a port different from the standard por
 		supporting it 'sysctl net.core.allow_reuseport=1'.
 DEFAULT:	bgp_daemon_port: 179; bmp_daemon_port: 1790
 
+KEY:		[ bgp_daemon_ha | bmp_daemon_ha ] [GLOBAL]
+VALUES:		[ true | false ]
+DESC:		Enables the High Availability feature for the BGP/BMP daemon. The HA feature is a mechanism
+		that specifies whether a daemon should be active (i.e. normally forwarding all received
+		BMP/BGP messages) or stand-by (i.e. only enrich the local pmacct cache with information
+		in the BMP/BGP packets but then dropping them instead of forwarding them). Read more in
+		docs/README_BGP_BMP_HA.md .
+DEFAULT:	none
+
 KEY:		[ bgp_daemon_rp_ebpf_prog | bmp_daemon_rp_ebpf_prog ] [GLOBAL]
 DESC:		If SO_REUSEPORT is supported by the Operating System (read more about this feature at the
 		config key b[mg]p_daemon_port) and eBPF support is configured when compiling (--enable-ebpf),
