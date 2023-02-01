@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -620,6 +620,18 @@ void skinny_bgp_daemon_online()
   sigaddset(&signal_set, SIGTERM);
   if (config.daemon) {
     sigaddset(&signal_set, SIGINT);
+  }
+
+  if (!bgp_misc_db->is_thread) {
+#ifdef WITH_REDIS
+    if (config.bgp_bmp_daemon_ha) {
+      /* Signals for BMP-BGP-HA feature */
+      sigaddset(&signal_set, SIGRTMIN);
+      sigaddset(&signal_set, SIGRTMIN + 1);
+      sigaddset(&signal_set, SIGRTMIN + 2);
+      sigaddset(&signal_set, SIGRTMIN + 3);
+    }
+#endif
   }
 
   for (;;) {

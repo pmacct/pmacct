@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -32,6 +32,9 @@
 #include "ip_flow.h"
 #include "net_aggr.h"
 #include "thread_pool.h"
+#ifdef WITH_REDIS
+#include "ha.h"
+#endif
 
 /* Functions */
 void usage_daemon(char *prog_name)
@@ -288,6 +291,27 @@ int main(int argc,char **argv, char **envp)
   sighandler_action.sa_handler = PM_sigalrm_noop_handler;
   sigaction(SIGALRM, &sighandler_action, NULL);
 
+#ifdef WITH_REDIS
+  /* Signals for BMP-BGP-HA feature */
+  if (config.bgp_bmp_daemon_ha) {
+    /* reset the local timestamp of the collector (SIGNAL=34)*/
+    sighandler_action.sa_handler = bmp_bgp_ha_regenerate_timestamp;
+    sigaction(SIGRTMIN, &sighandler_action, NULL);
+
+    /* set collector to forced active mode (SIGNAL=35)*/
+    sighandler_action.sa_handler = bmp_bgp_ha_set_to_active;
+    sigaction(SIGRTMIN + 1, &sighandler_action, NULL);
+
+    /* set collector to forced stand-by mode (SIGNAL=36)*/
+    sighandler_action.sa_handler = bmp_bgp_ha_set_to_standby;
+    sigaction(SIGRTMIN + 2, &sighandler_action, NULL);
+
+    /* set collector back to timestamp-based (i.e. non-forced) mode (SIGNAL=37)*/
+    sighandler_action.sa_handler = bmp_bgp_ha_set_to_normal;
+    sigaction(SIGRTMIN + 3, &sighandler_action, NULL);
+  }
+#endif
+
   if (!config.bgp_daemon) config.bgp_daemon = BGP_DAEMON_ONLINE;
   if (!config.bgp_daemon_port) config.bgp_daemon_port = BGP_TCP_PORT;
 
@@ -305,7 +329,20 @@ int main(int argc,char **argv, char **envp)
     char log_id[SHORTBUFLEN];
 
     snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
-    p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_core_handler);
+    if (config.bgp_bmp_daemon_ha) {
+      /* If BMP-BGP-HA feature is enabled, redirect redis thread */
+      p_redis_init(&redis_host, log_id, p_redis_thread_bmp_bgp_ha_handler);
+    }
+    else{
+      p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_core_handler);
+    }
+  }
+#endif
+
+#ifdef WITH_REDIS
+  if (config.bgp_bmp_daemon_ha) {
+    /* Kicking off BMP-BGP-HA feature (BMP-BGP Daemon High Availability) */
+    bmp_bgp_ha_main();
   }
 #endif
 
