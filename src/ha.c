@@ -331,9 +331,6 @@ void p_redis_thread_bmp_bgp_ha_handler(void *rh)
   old_bmp_bgp_forwarding = bmp_bgp_forwarding;
   redis_loop_num++;
   redis_loop_num = redis_loop_num % 62 + 2;           // result in range[2, 62]
-
-  // Redirect to redis common handler
-  p_redis_thread_produce_common_core_handler(redis_host);
 }
 
 

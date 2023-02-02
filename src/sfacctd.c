@@ -169,7 +169,7 @@ int main(int argc,char **argv, char **envp)
   int errflag, cp; 
 
 #ifdef WITH_REDIS
-  struct p_redis_host redis_host;
+  struct p_redis_host redis_host, redis_ha_host;
 #endif
 
 #if defined HAVE_MALLOPT
@@ -1133,18 +1133,18 @@ int main(int argc,char **argv, char **envp)
   }
 
 #ifdef WITH_REDIS
+  /* Kicking off redis-reladed thread(s) */
   if (config.redis_host) {
-
-    /* Kicking off redis thread */
     char log_id[SHORTBUFLEN];
+
     snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
+
     if (config.bgp_bmp_daemon_ha) {
       /* If BMP-BGP-HA feature is enabled, redirect redis thread */
-      p_redis_init(&redis_host, log_id, p_redis_thread_bmp_bgp_ha_handler);
+      p_redis_init(&redis_ha_host, log_id, p_redis_thread_bmp_bgp_ha_handler);
     }
-    else{
-      p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_core_handler);
-    }
+
+    p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_core_handler);
   }
 #endif
 
@@ -1201,15 +1201,6 @@ int main(int argc,char **argv, char **envp)
 #endif
   }
 
-#ifdef WITH_REDIS
-  if (config.redis_host) {
-    char log_id[SHORTBUFLEN];
-
-    snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
-    p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_core_handler);
-  }
-#endif
-
   if (alloc_sppi) {
     spp.sppi = malloc(sizeof(SFSample));
     memset(spp.sppi, 0, sizeof(SFSample));
@@ -1232,11 +1223,7 @@ int main(int argc,char **argv, char **envp)
     sigaddset(&signal_set, SIGRTMIN + 1);
     sigaddset(&signal_set, SIGRTMIN + 2);
     sigaddset(&signal_set, SIGRTMIN + 3);
-  }
-#endif
 
-#if defined WITH_REDIS
-  if (config.bgp_bmp_daemon_ha) {
     /* Kicking off BMP-BGP-HA feature (BMP-BGP Daemon High Availability) */
     bmp_bgp_ha_main();
   }

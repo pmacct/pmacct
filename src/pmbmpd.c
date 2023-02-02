@@ -79,7 +79,7 @@ int main(int argc,char **argv, char **envp)
   int errflag, cp;
 
 #ifdef WITH_REDIS
-  struct p_redis_host redis_host;
+  struct p_redis_host redis_host, redis_ha_host;
 #endif
 
 #if defined HAVE_MALLOPT
@@ -327,17 +327,18 @@ int main(int argc,char **argv, char **envp)
   if (!config.bmp_daemon_port) config.bmp_daemon_port = BMP_TCP_PORT;
 
 #ifdef WITH_REDIS
+  /* Kicking off redis-reladed thread(s) */
   if (config.redis_host) {
     char log_id[SHORTBUFLEN];
 
     snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
+
     if (config.bgp_bmp_daemon_ha) {
       /* If BMP-BGP-HA feature is enabled, redirect redis thread */
-      p_redis_init(&redis_host, log_id, p_redis_thread_bmp_bgp_ha_handler);
+      p_redis_init(&redis_ha_host, log_id, p_redis_thread_bmp_bgp_ha_handler);
     }
-    else{
-      p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_core_handler);
-    }
+
+    p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_core_handler);
   }
 #endif
 
