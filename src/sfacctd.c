@@ -1223,7 +1223,11 @@ int main(int argc,char **argv, char **envp)
     sigaddset(&signal_set, SIGRTMIN + 1);
     sigaddset(&signal_set, SIGRTMIN + 2);
     sigaddset(&signal_set, SIGRTMIN + 3);
+  }
+#endif
 
+#ifdef WITH_REDIS
+  if (config.bgp_bmp_daemon_ha) {
     /* Kicking off BMP-BGP-HA feature (BMP-BGP Daemon High Availability) */
     bmp_bgp_ha_main();
   }
