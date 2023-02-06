@@ -1347,9 +1347,11 @@ DESC:		Enables historical accounting by placing accounted data into configurable
 		the time-bin was touched) fields. The supplied value defines the time slot length during
 		which counters are accumulated. See also *_history_roundoff'. In nfacctd, where a flow
 		can span across multiple time-bins, flow counters can be pro-rated (seconds timestamp
-		resolution) over involved the time-bins by setting nfacctd_pro_rating to true.
-		The end net effect of this directive is close to time slots in a RRD file. Examples of
-		valid values are: '300s' or '5m' - five minutes, '3600s' or '1h' - one hour, '14400s' or
+		resolution) over involved the time-bins by setting nfacctd_pro_rating to true. 
+		The end net effect of this directive is the same as time slots in a RRD file. When
+		expressing time in seconds, time must be minute-aligned (ie. 60 secs or multiples),
+		effectively making the currently supported minumum time-bin value 1 minute. Examples of
+		of values are: '300s' or '5m' - five minutes, '3600s' or '1h' - one hour, '14400s' or
 		'4h' - four hours, '86400s' or '1d' - one day, '1w' - one week, '1M' - one month).
 DEFAULT:	none
 
