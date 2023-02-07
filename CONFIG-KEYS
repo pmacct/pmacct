@@ -3324,7 +3324,8 @@ DESC:		Enables Streaming Telemetry data collection via gRPC, mutual exclusive wi
 		on how to build the dependency stack and config examples and reference here:
 		https://github.com/network-analytics/mdt-dialout-collector . This feature requires
 		to configure pmacct for compiling with --enable-zmq and --enable-grpc-collector
-		flags.
+		flags; also --enable-grpc-collector requires to use a compiler that supports C++20
+		standard (ie. gcc >= 10).
 DEFAULT:	none
 
 KEY:		telemetry_daemon_decoder [GLOBAL]
