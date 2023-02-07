@@ -196,6 +196,8 @@
 #define NF9_SELECTOR_ALGORITHM          304
 #define NF9_SAMPLING_PKT_INTERVAL       305
 #define NF9_SAMPLING_PKT_SPACE          306
+#define NF9_SAMPLING_SIZE               309
+#define NF9_SAMPLING_POPULATION         310
 
 /* Classification */
 #define NF9_APPLICATION_DESC            94
