@@ -6627,8 +6627,10 @@ void parse_time(char *filename, char *value, int *mu, int *howmany)
   if (k > 0) {
     if (*mu == COUNT_SECONDLY) {
       if (k % 60) {
-        Log(LOG_WARNING, "WARN: [%s] Ignoring invalid time value: %d (residual secs afters conversion in mins)\n", filename, k);
-        goto exit_lane;
+	if (k / 60) {
+          Log(LOG_WARNING, "WARN: [%s] Ignoring invalid time value: %d (residual secs afters conversion in mins)\n", filename, k);
+          goto exit_lane;
+	}
       }
       else {
         k = k / 60;

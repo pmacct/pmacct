@@ -1348,11 +1348,9 @@ DESC:		Enables historical accounting by placing accounted data into configurable
 		which counters are accumulated. See also *_history_roundoff'. In nfacctd, where a flow
 		can span across multiple time-bins, flow counters can be pro-rated (seconds timestamp
 		resolution) over involved the time-bins by setting nfacctd_pro_rating to true. 
-		The end net effect of this directive is the same as time slots in a RRD file. When
-		expressing time in seconds, time must be minute-aligned (ie. 60 secs or multiples),
-		effectively making the currently supported minumum time-bin value 1 minute. Examples of
-		of values are: '300s' or '5m' - five minutes, '3600s' or '1h' - one hour, '14400s' or
-		'4h' - four hours, '86400s' or '1d' - one day, '1w' - one week, '1M' - one month).
+		The end net effect of this directive is the same as time slots in a RRD file. Examples
+		of of values are: '300s' or '5m' - five minutes, '3600s' or '1h' - one hour, '14400s'
+		or '4h' - four hours, '86400s' or '1d' - one day, '1w' - one week, '1M' - one month).
 DEFAULT:	none
 
 KEY:            [ sql_history_offset | print_history_offset | amqp_history_offset | kafka_history_offset ]
@@ -1366,13 +1364,13 @@ KEY:		[ sql_history_roundoff | print_history_roundoff | amqp_history_roundoff |
 VALUES		[m,h,d,w,M]
 DESC:		Enables alignment of minutes (m), hours (h), days of month (d), weeks (w) and months (M)
 		in print (to print_refresh_time) and SQL plugins (to sql_history and sql_refresh_time).
-		Suppose you go with 'sql_history: 1h', 'sql_history_roundoff: m' and it's 6:34pm. Rounding
-		off minutes gives you an hourly timeslot (1h) starting at 6:00pm; so, subsequent ones will
-		start at 7:00pm, 8:00pm, etc. Now, you go with 'sql_history: 5m', 'sql_history_roundoff: m'
-		and it's 6:37pm. Rounding off minutes will result in a first slot starting at 6:35pm; next
-		slot will start at 6:40pm, and then every 5 minutes (6:45pm ... 7:00pm, etc.). 'w' and 'd'
-		are mutually exclusive, that is: you can either reset the date to last Sunday or reset the
-		date to the first day of the month. 
+		For example, 'sql_history: 1h', 'sql_history_roundoff: m' and it's 6:34pm. Rounding off
+		minutes makes the hourly timeslot (1h) starting at 6:00pm; subsequent ones will start at
+		7:00pm, 8:00pm, etc. For example again, 'sql_history: 5m', 'sql_history_roundoff: m' and
+		it's 6:37pm. Rounding off minutes will result in a first slot starting at 6:35pm; next
+		slot will start at 6:40pm, and then every 5 minutes (6:45pm ... 7:00pm, etc.). 'w' and
+		'd' are mutually exclusive, that is, it is possible to either reset the date to last
+		Sunday or reset the date to the first day of the month. Seconds are aligned by default. 
 DEFAULT:	none
 
 KEY:            sql_recovery_backup_host
