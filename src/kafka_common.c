@@ -287,12 +287,14 @@ int p_kafka_parse_config_entry(char *buf, char *type, char **key, char **value)
 void p_kafka_apply_global_config(struct p_kafka_host *kafka_host)
 {
   FILE *file;
-  char buf[SRVBUFLEN], errstr[SRVBUFLEN], *key, *value;
+  char buf[SRVBUFLEN], errstr[LONGLONGSRVBUFLEN], *key, *value;
   int lineno = 1, ret;
 
   if (kafka_host && kafka_host->config_file && kafka_host->cfg) {
     if ((file = fopen(kafka_host->config_file, "r")) == NULL) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] file not found. librdkafka global config not loaded.\n", config.name, config.type, kafka_host->config_file);
+      strerror_r(errno, errstr, sizeof(errstr));
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] %s. librdkafka global config not loaded.\n",
+          config.name, config.type, kafka_host->config_file, errstr);
       return;
     }
     else Log(LOG_INFO, "INFO ( %s/%s ): [%s] Reading librdkafka global config.\n", config.name, config.type, kafka_host->config_file);
@@ -323,12 +325,14 @@ void p_kafka_apply_global_config(struct p_kafka_host *kafka_host)
 void p_kafka_apply_topic_config(struct p_kafka_host *kafka_host)
 {
   FILE *file;
-  char buf[SRVBUFLEN], errstr[SRVBUFLEN], *key, *value;
+  char buf[SRVBUFLEN], errstr[LONGLONGSRVBUFLEN], *key, *value;
   int lineno = 1, ret;
 
   if (kafka_host && kafka_host->config_file && kafka_host->topic_cfg) {
     if ((file = fopen(kafka_host->config_file, "r")) == NULL) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] file not found. librdkafka topic configuration not loaded.\n", config.name, config.type, kafka_host->config_file);
+      strerror_r(errno, errstr, sizeof(errstr));
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] %s. librdkafka topic configuration not loaded.\n",
+          config.name, config.type, kafka_host->config_file, errstr);
       return;
     }
     else Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] Reading librdkafka topic configuration.\n", config.name, config.type, kafka_host->config_file);
