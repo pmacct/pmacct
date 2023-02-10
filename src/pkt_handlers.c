@@ -3217,7 +3217,7 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
     switch (hdr->version) {
     case 10:
     case 9:
-      if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len || tpl->tpl[NF9_SELECTOR_ID].len == 8) {
+      if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len || tpl->tpl[NF9_SELECTOR_ID].len) {
         if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 1) {
           memcpy(&t8, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 1);
           sampler_id = t8;
@@ -3228,6 +3228,14 @@ void NF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
         }
         else if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 4) {
           memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 4);
+          sampler_id = ntohl(t32);
+        }
+        else if (tpl->tpl[NF9_SELECTOR_ID].len == 2) {
+          memcpy(&t16, pptrs->f_data+tpl->tpl[NF9_SELECTOR_ID].off, 2);
+          sampler_id = ntohs(t16);
+        }
+        else if (tpl->tpl[NF9_SELECTOR_ID].len == 4) {
+          memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_SELECTOR_ID].off, 4);
           sampler_id = ntohl(t32);
         }
         else if (tpl->tpl[NF9_SELECTOR_ID].len == 8) {
@@ -4228,7 +4236,7 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
   switch (hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len || tpl->tpl[NF9_SELECTOR_ID].len == 8) {
+    if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len || tpl->tpl[NF9_SELECTOR_ID].len) {
       if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 1) {
         memcpy(&t8, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 1);
         sampler_id = t8;
@@ -4239,6 +4247,14 @@ void NF_counters_renormalize_handler(struct channels_list_entry *chptr, struct p
       }
       else if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 4) {
         memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 4);
+        sampler_id = ntohl(t32);
+      }
+      else if (tpl->tpl[NF9_SELECTOR_ID].len == 2) {
+        memcpy(&t16, pptrs->f_data+tpl->tpl[NF9_SELECTOR_ID].off, 2);
+        sampler_id = ntohs(t16);
+      }
+      else if (tpl->tpl[NF9_SELECTOR_ID].len == 4) {
+        memcpy(&t32, pptrs->f_data+tpl->tpl[NF9_SELECTOR_ID].off, 4);
         sampler_id = ntohl(t32);
       }
       else if (tpl->tpl[NF9_SELECTOR_ID].len == 8) {
