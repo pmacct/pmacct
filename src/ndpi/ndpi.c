@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -354,7 +354,11 @@ struct ndpi_proto pm_ndpi_packet_processing(struct pm_ndpi_workflow *workflow,
   /* Protocol already detected */
   if (flow->detection_completed) return(flow->detected_protocol);
 
-#if (NDPI_MAJOR == 4 && NDPI_MINOR >= 2) || NDPI_MAJOR > 4
+#if (NDPI_MAJOR == 4 && NDPI_MINOR >= 6) || NDPI_MAJOR > 4
+  flow->detected_protocol = ndpi_detection_process_packet(workflow->ndpi_struct, ndpi_flow,
+							  iph ? (uint8_t *)iph : (uint8_t *)iph6,
+							  ipsize, time, NULL);
+#elif (NDPI_MAJOR == 4 && NDPI_MINOR >= 2) || (NDPI_MAJOR == 4 && NDPI_MINOR <= 4) 
   flow->detected_protocol = ndpi_detection_process_packet(workflow->ndpi_struct, ndpi_flow,
 							  iph ? (uint8_t *)iph : (uint8_t *)iph6,
 							  ipsize, time);
