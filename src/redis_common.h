@@ -1,7 +1,7 @@
 /*  
  * pmacct (Promiscuous mode IP Accounting package)
  *
- * Copyright (c) 2003-2020 Paolo Lucente <paolo@pmacct.net>
+ * Copyright (c) 2003-2023 Paolo Lucente <paolo@pmacct.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
