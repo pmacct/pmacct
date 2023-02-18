@@ -316,7 +316,7 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
   if (wtc_2 & COUNT_TUNNEL_DST_PORT)
     avro_schema_record_field_append(schema, "tunnel_port_dst", avro_schema_long());
 
-  if (wtc & COUNT_TUNNEL_TCPFLAGS) {
+  if (wtc_2 & COUNT_TUNNEL_TCPFLAGS) {
     if (config.tcpflags_encode_as_array) {
       compose_tunnel_tcpflags_avro_schema(schema);
     }
@@ -1025,7 +1025,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flo
     pm_avro_check(avro_value_set_long(&field, ptun->tunnel_dst_port));
   }
 
-  if (wtc & COUNT_TUNNEL_TCPFLAGS) {
+  if (wtc_2 & COUNT_TUNNEL_TCPFLAGS) {
     sprintf(misc_str, "%u", tunnel_tcp_flags);
 
     if (config.tcpflags_encode_as_array) {
