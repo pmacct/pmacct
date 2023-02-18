@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -144,6 +144,7 @@ void eth_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
     pptrs->l3_proto = etype;
     pptrs->l3_handler = unknown_etype_handler;
     pptrs->iph_ptr = pptrs->packet_ptr + nl;
+
     return;
   }
 

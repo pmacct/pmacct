@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -74,6 +74,7 @@ struct chdlc_header {
 
 /* Ethernet protocol ID's */
 #define ETHERTYPE_IP		0x0800          /* IP */
+#define ETHERTYPE_ARP		0x0806          /* ARP */
 #define ETHERTYPE_IPV6          0x86dd		/* IPv6 */
 #define ETHERTYPE_PPPOE         0x8864          /* pppoe (session stage) */
 #define ETHERTYPE_8021Q		0x8100          /* 802.1Q */

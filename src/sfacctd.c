@@ -1766,13 +1766,16 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
   /*
      We consider packets if:
      - sample->gotIPV4 || sample->gotIPV6 : it belongs to either an IPv4 or IPv6 packet.
+     - sample->eth_type == ETHERTYPE_ARP : pass ARP samples in case we want to account for them.
      - !sample->eth_type : we don't know the L3 protocol. VLAN or MPLS accounting case.
   */
-  if (sample->gotIPV4 || sample->gotIPV6 || !sample->eth_type) {
+  if (sample->gotIPV4 || sample->gotIPV6 || sample->eth_type == ETHERTYPE_ARP || !sample->eth_type) {
     reset_net_status_v(pptrsv);
     pptrs->flow_type.traffic_type = SF_evaluate_flow_type(pptrs);
 
-    if (config.classifier_ndpi || config.aggregate_primitives) sf_flow_sample_hdr_decode(sample);
+    if (config.classifier_ndpi || config.aggregate_primitives || sample->eth_type == ETHERTYPE_ARP) {
+      sf_flow_sample_hdr_decode(sample);
+    }
 
     /* we need to understand the IP protocol version in order to build the fake packet */
     switch (pptrs->flow_type.traffic_type) {
@@ -2120,6 +2123,10 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       exec_plugins(&pptrsv->vlanmpls6, req);
       break;
     default:
+      if (config.aggregate_unknown_etype && sample->eth_type == ETHERTYPE_ARP) {
+	if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, &pptrs->bta2);
+        exec_plugins(pptrs, req);
+      }
       break;
     }
   }
