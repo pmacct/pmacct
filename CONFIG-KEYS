@@ -188,7 +188,9 @@ VALUES:		[ true | false ]
 DESC:		By default, Ethernet frames with unknown EtherTypes for which pmacct has not
 		implemented decoding support are ignored by the aggregation engine. Enabling this
 		option allows such frames to be aggregated by the available Ethernet L2 header
-		fields ('src_mac', 'dst_mac', 'vlan', 'cos', 'etype').
+		fields ('src_mac', 'dst_mac', 'vlan', 'cos', 'etype'). This is currently
+		supported in pmacctd and uacctd; while it only makes ARP packets pass through
+		in sfacctd.
 DEFAULT:	false
 
 KEY:		dtls_path [GLOBAL]
