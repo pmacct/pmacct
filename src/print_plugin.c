@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -106,13 +106,13 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   if (config.print_output & PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
-    compose_json(config.what_to_count, config.what_to_count_2);
+    compose_json(config.what_to_count, config.what_to_count_2, config.what_to_count_3);
 #endif
   }
   else if ((config.print_output & PRINT_OUTPUT_AVRO_BIN) ||
 	   (config.print_output & PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
-    p_avro_acct_schema = p_avro_schema_build_acct_data(config.what_to_count, config.what_to_count_2);
+    p_avro_acct_schema = p_avro_schema_build_acct_data(config.what_to_count, config.what_to_count_2, config.what_to_count_3);
     if (config.avro_schema_file) write_avro_schema_to_file(config.avro_schema_file, p_avro_acct_schema);
 #endif
   }
@@ -1321,9 +1321,10 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         avro_value_iface_t *p_avro_iface = avro_generic_class_from_schema(p_avro_acct_schema);
 
         avro_value_t p_avro_value = compose_avro_acct_data(config.what_to_count, config.what_to_count_2,
-			 queue[j]->flow_type, &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust,
-			 pvlen, queue[j]->bytes_counter, queue[j]->packet_counter, queue[j]->flow_counter,
-			 queue[j]->tcp_flags, queue[j]->tunnel_tcp_flags, NULL, queue[j]->stitch, p_avro_iface);
+			 config.what_to_count_3, queue[j]->flow_type, &queue[j]->primitives, pbgp, pnat,
+			 pmpls, ptun, pcust, pvlen, queue[j]->bytes_counter, queue[j]->packet_counter,
+			 queue[j]->flow_counter, queue[j]->tcp_flags, queue[j]->tunnel_tcp_flags, NULL,
+			 queue[j]->stitch, p_avro_iface);
 
         if (config.sql_table) {
 	  if (config.print_output & PRINT_OUTPUT_AVRO_BIN) {

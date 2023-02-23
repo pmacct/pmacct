@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -629,7 +629,7 @@ int bgp_lookup_node_vector_unicast(struct prefix *p, struct bgp_peer *peer, stru
 }
 
 void pkt_to_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives *c, struct pkt_legacy_bgp_primitives *p,
-					pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count_2)
+					pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count_2, pm_cfgreg_t what_to_count_3)
 {
   if (c && p) {
     if (what_to_count & COUNT_STD_COMM) {

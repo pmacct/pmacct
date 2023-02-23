@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -39,7 +39,7 @@ avro_schema_t p_avro_acct_schema, p_avro_acct_init_schema, p_avro_acct_close_sch
 avro_schema_t sc_type_array, sc_type_map, sc_type_string, sc_type_union;
 
 /* functions */
-avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2)
+avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3)
 {
   avro_schema_t schema = avro_schema_record("acct_data", NULL);
   avro_schema_t optlong_s = avro_schema_union();
@@ -452,11 +452,12 @@ avro_value_t compose_avro_acct_close(char *writer_name, pid_t writer_pid, int pu
   return value;
 }
 
-avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
-  struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
-  struct pkt_tunnel_primitives *ptun, u_char *pcust, struct pkt_vlen_hdr_primitives *pvlen,
-  pm_counter_t bytes_counter, pm_counter_t packet_counter, pm_counter_t flow_counter, u_int8_t tcp_flags,
-  u_int8_t tunnel_tcp_flags, struct timeval *basetime, struct pkt_stitching *stitch, avro_value_iface_t *iface)
+avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3, u_int8_t flow_type,
+  struct pkt_primitives *pbase, struct pkt_bgp_primitives *pbgp, struct pkt_nat_primitives *pnat,
+  struct pkt_mpls_primitives *pmpls, struct pkt_tunnel_primitives *ptun, u_char *pcust,
+  struct pkt_vlen_hdr_primitives *pvlen, pm_counter_t bytes_counter, pm_counter_t packet_counter,
+  pm_counter_t flow_counter, u_int8_t tcp_flags, u_int8_t tunnel_tcp_flags, struct timeval *basetime,
+  struct pkt_stitching *stitch, avro_value_iface_t *iface)
 {
   char src_mac[18], dst_mac[18], src_host[INET6_ADDRSTRLEN], dst_host[INET6_ADDRSTRLEN], ip_address[INET6_ADDRSTRLEN];
   char rd_str[SRVBUFLEN], misc_str[SRVBUFLEN], *as_path, *bgp_comm, empty_string[] = "", *str_ptr;

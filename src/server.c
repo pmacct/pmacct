@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -165,6 +165,8 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
   if (q->type & WANT_STATS) {
     q->what_to_count = config.what_to_count; 
     q->what_to_count_2 = config.what_to_count_2; 
+    q->what_to_count_3 = config.what_to_count_3; 
+
     for (idx = 0; idx < config.buckets; idx++) {
       if (!following_chain) acc_elem = (struct acc *) elem;
       if (!test_zero_elem(acc_elem)) {
@@ -242,6 +244,8 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 
     q->what_to_count = config.what_to_count;
     q->what_to_count_2 = config.what_to_count_2;
+    q->what_to_count_3 = config.what_to_count_3;
+
     for (j = 0; j < uq->num; j++, bufptr += sizeof(struct query_entry)) {
       memcpy(&request, bufptr, sizeof(struct query_entry));
       Log(LOG_DEBUG, "DEBUG ( %s/%s ): Searching into accounting structure ...\n", config.name, config.type); 

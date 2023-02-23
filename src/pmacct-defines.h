@@ -266,6 +266,9 @@
 #define COUNT_INT_OUT_VLAN		0x0002080000000000ULL
 #define COUNT_INT_CUSTOM_PRIMITIVES	0x0002800000000000ULL
 
+/* internal: third registry, ie. what_to_count_3, aggregation_3, etc. */
+/* #define COUNT_INT_XXX		0x0003000000000001ULL */
+
 #define COUNT_INDEX_MASK	0xFFFF
 #define COUNT_INDEX_CP		0xFFFF000000000000ULL  /* index 0xffff reserved to custom primitives */
 #define COUNT_REGISTRY_MASK	0x0000FFFFFFFFFFFFULL
@@ -367,6 +370,9 @@
 #define COUNT_TUNNEL_TCPFLAGS		(COUNT_INT_TUNNEL_TCPFLAGS & COUNT_REGISTRY_MASK)
 #define COUNT_OUT_VLAN			(COUNT_INT_OUT_VLAN & COUNT_REGISTRY_MASK)
 #define COUNT_CUSTOM_PRIMITIVES		(COUNT_INT_CUSTOM_PRIMITIVES & COUNT_REGISTRY_MASK)
+
+/* external: third registry, ie. what_to_count_3, aggregation_3, etc. */
+/* #define COUNT_XXX			(COUNT_INT_XXX & COUNT_REGISTRY_MASK) */
 /* PRIMITIVES DEFINITION: END */
 
 /* BYTES and PACKETS are used into templates; we let their values to

@@ -77,8 +77,10 @@ struct custom_primitives_ptrs {
 struct configuration {
   pm_cfgreg_t what_to_count;    /* first registry */
   pm_cfgreg_t what_to_count_2;  /* second registry */
+  pm_cfgreg_t what_to_count_3;  /* third registry */
   pm_cfgreg_t nfprobe_what_to_count;
   pm_cfgreg_t nfprobe_what_to_count_2;
+  pm_cfgreg_t nfprobe_what_to_count_3;
   char *aggregate_primitives;
   int aggregate_unknown_etype;
   struct custom_primitives_ptrs cpptrs;

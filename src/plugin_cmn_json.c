@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -38,7 +38,7 @@
 compose_json_handler cjhandler[N_PRIMITIVES];
 
 /* Functions */
-void compose_json(u_int64_t wtc, u_int64_t wtc_2)
+void compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3)
 {
   int idx = 0;
 

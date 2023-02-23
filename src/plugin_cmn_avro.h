@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -63,21 +63,20 @@ extern int compose_fwd_status_avro_data(size_t, avro_value_t);
 
 extern void pm_avro_exit_gracefully(int);
 
-extern avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2);
+extern avro_schema_t p_avro_schema_build_acct_data(u_int64_t, u_int64_t, u_int64_t);
 extern avro_schema_t p_avro_schema_build_acct_init();
 extern avro_schema_t p_avro_schema_build_acct_close();
 extern void p_avro_schema_add_writer_id(avro_schema_t);
 extern void add_writer_name_and_pid_avro(avro_value_t, char *, pid_t);
 extern void add_writer_name_and_pid_avro_v2(avro_value_t, struct dynname_tokens *);
 
-extern avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type,
-  struct pkt_primitives *pbase, struct pkt_bgp_primitives *pbgp,
-  struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
-  struct pkt_tunnel_primitives *ptun, u_char *pcust,
-  struct pkt_vlen_hdr_primitives *pvlen, pm_counter_t bytes_counter,
-  pm_counter_t packet_counter, pm_counter_t flow_counter, u_int8_t tcp_flags, 
-  u_int8_t tunnel_tcp_flags, struct timeval *basetime, struct pkt_stitching *stitch,
-  avro_value_iface_t *iface);
+extern avro_value_t compose_avro_acct_data(u_int64_t, u_int64_t, u_int64_t, u_int8_t,
+  struct pkt_primitives *, struct pkt_bgp_primitives *,
+  struct pkt_nat_primitives *, struct pkt_mpls_primitives *,
+  struct pkt_tunnel_primitives *, u_char *,
+  struct pkt_vlen_hdr_primitives *, pm_counter_t,
+  pm_counter_t, pm_counter_t, u_int8_t, u_int8_t,
+  struct timeval *, struct pkt_stitching *, avro_value_iface_t *);
 extern avro_value_t compose_avro_acct_init(char *, pid_t, avro_value_iface_t *);
 extern avro_value_t compose_avro_acct_close(char *, pid_t, int, int, int, avro_value_iface_t *);
 extern void write_avro_schema_to_file(char *, avro_schema_t);

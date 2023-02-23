@@ -518,8 +518,10 @@ int main(int argc,char **argv, char **envp)
 	config.handle_fragments = TRUE;
 	list->cfg.nfprobe_what_to_count = list->cfg.what_to_count;
 	list->cfg.nfprobe_what_to_count_2 = list->cfg.what_to_count_2;
-	list->cfg.what_to_count = 0;
-	list->cfg.what_to_count_2 = 0;
+	list->cfg.nfprobe_what_to_count_3 = list->cfg.what_to_count_3;
+	list->cfg.what_to_count = FALSE;
+	list->cfg.what_to_count_2 = FALSE;
+	list->cfg.what_to_count_3 = FALSE;
 #if defined (HAVE_L2)
 	if (list->cfg.nfprobe_version == 9 || list->cfg.nfprobe_version == 10) {
 	  list->cfg.what_to_count |= COUNT_SRC_MAC;
@@ -597,7 +599,8 @@ int main(int argc,char **argv, char **envp)
 
 	if (config.snaplen < 128) config.snaplen = 128; /* SFL_DEFAULT_HEADER_SIZE */
 	list->cfg.what_to_count = COUNT_PAYLOAD;
-	list->cfg.what_to_count_2 = 0;
+	list->cfg.what_to_count_2 = FALSE;
+	list->cfg.what_to_count_3 = FALSE;
 #if defined (WITH_NDPI)
 	if (list->cfg.ndpi_num_roots) list->cfg.what_to_count_2 |= COUNT_NDPI_CLASS;
 #endif

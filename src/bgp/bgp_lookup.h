@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -30,7 +30,8 @@ extern u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *, path_id_t *, in
 extern int bgp_lookup_node_match_cmp_bgp(struct bgp_info *, struct node_match_cmp_term2 *);
 extern int bgp_lookup_node_vector_unicast(struct prefix *, struct bgp_peer *, struct bgp_node_vector *);
 
-extern void pkt_to_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives *, struct pkt_legacy_bgp_primitives *, pm_cfgreg_t, pm_cfgreg_t);
+extern void pkt_to_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives *, struct pkt_legacy_bgp_primitives *,
+					       pm_cfgreg_t, pm_cfgreg_t, pm_cfgreg_t);
 extern void cache_to_pkt_legacy_bgp_primitives(struct pkt_legacy_bgp_primitives *, struct cache_legacy_bgp_primitives *);
 extern void free_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives **);
 

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -95,12 +95,12 @@ void amqp_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
 
   
   if (config.message_broker_output & PRINT_OUTPUT_JSON) {
-    compose_json(config.what_to_count, config.what_to_count_2);
+    compose_json(config.what_to_count, config.what_to_count_2, config.what_to_count_3);
   }
   else if ((config.message_broker_output & PRINT_OUTPUT_AVRO_BIN) ||
 	   (config.message_broker_output & PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
-    p_avro_acct_schema = p_avro_schema_build_acct_data(config.what_to_count, config.what_to_count_2);
+    p_avro_acct_schema = p_avro_schema_build_acct_data(config.what_to_count, config.what_to_count_2, config.what_to_count_3);
     p_avro_schema_add_writer_id(p_avro_acct_schema);
 
     p_avro_acct_init_schema = p_avro_schema_build_acct_init();
@@ -585,8 +585,8 @@ void amqp_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 #ifdef WITH_AVRO
       avro_value_iface_t *p_avro_iface = avro_generic_class_from_schema(p_avro_acct_schema);
       avro_value_t p_avro_value = compose_avro_acct_data(config.what_to_count, config.what_to_count_2,
-			   queue[j]->flow_type, &queue[j]->primitives, pbgp, pnat, pmpls, ptun, pcust,
-			   pvlen, queue[j]->bytes_counter, queue[j]->packet_counter,
+			   config.what_to_count_3, queue[j]->flow_type, &queue[j]->primitives, pbgp,
+			   pnat, pmpls, ptun, pcust, pvlen, queue[j]->bytes_counter, queue[j]->packet_counter,
 			   queue[j]->flow_counter, queue[j]->tcp_flags, queue[j]->tunnel_tcp_flags,
 			   &queue[j]->basetime, queue[j]->stitch, p_avro_iface);
       add_writer_name_and_pid_avro_v2(p_avro_value, &writer_id_tokens);

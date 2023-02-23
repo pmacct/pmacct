@@ -231,7 +231,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
   struct custom_primitives_ptrs cpptrs;
   char *count_token;
   u_int32_t changes = 0; 
-  u_int64_t value[3];
+  u_int64_t value[4];
 
   trim_all_spaces(value_ptr);
   lower_string(value_ptr);
@@ -369,6 +369,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
   if (!name) for (; list; list = list->next, changes++) {
     list->cfg.what_to_count = value[1];
     list->cfg.what_to_count_2 = value[2];
+    list->cfg.what_to_count_3 = value[3];
     memcpy(&list->cfg.cpptrs, &cpptrs, sizeof(cpptrs));
   }
   else {
@@ -376,6 +377,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
       if (!strcmp(name, list->name)) {
         list->cfg.what_to_count = value[1];
         list->cfg.what_to_count_2 = value[2];
+        list->cfg.what_to_count_3 = value[3];
         memcpy(&list->cfg.cpptrs, &cpptrs, sizeof(cpptrs));
         changes++;
         break;

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -164,7 +164,8 @@ void print_ex_options_error()
   exit(1);
 }
 
-void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count_2, u_int8_t have_wtc, int is_event)
+void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count_2, pm_cfgreg_t what_to_count_3,
+				  u_int8_t have_wtc, int is_event)
 {
   if (!have_wtc) {
     printf("TAG         ");
@@ -386,7 +387,8 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
   }
 }
 
-void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count_2, u_int8_t have_wtc, char *sep, int is_event)
+void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count_2, pm_cfgreg_t what_to_count_3,
+			    u_int8_t have_wtc, char *sep, int is_event)
 {
   int count = 0;
 
@@ -697,7 +699,7 @@ int main(int argc,char **argv)
   int which_counter, topN_counter, fetch_from_file, sum_counters, num_counters;
   int topN_howmany, topN_printed;
   int datasize;
-  pm_cfgreg_t what_to_count, what_to_count_2, have_wtc;
+  pm_cfgreg_t what_to_count, what_to_count_2, what_to_count_3, have_wtc;
   u_int32_t tmpnum;
   struct extra_primitives extras;
   char *topN_howmany_ptr, *endptr;
@@ -743,6 +745,7 @@ int main(int argc,char **argv)
   fetch_from_file = FALSE;
   what_to_count = FALSE;
   what_to_count_2 = FALSE;
+  what_to_count_3 = FALSE;
   have_wtc = FALSE;
   want_output = PRINT_OUTPUT_FORMATTED;
   is_event = FALSE;
@@ -1452,9 +1455,13 @@ int main(int argc,char **argv)
     for (q.num = 0; (q.num < strnum) && (q.num < MAX_QUERIES); q.num++) {
       match_string_ptr = strings[q.num];
       match_string_index = 0;
+
       memset(&request, 0, sizeof(struct query_entry));
+
       request.what_to_count = what_to_count;
       request.what_to_count_2 = what_to_count_2;
+      request.what_to_count_3 = what_to_count_3;
+
       while ((*match_string_ptr != '\0') && (match_string_index < count_index))  {
         match_string_token = pmc_extract_token(&match_string_ptr, ',');
 
@@ -2122,8 +2129,11 @@ int main(int argc,char **argv)
 
     if (want_all_fields) have_wtc = FALSE; 
     else have_wtc = TRUE; 
+
     what_to_count = ((struct query_header *)largebuf)->what_to_count;
     what_to_count_2 = ((struct query_header *)largebuf)->what_to_count_2;
+    what_to_count_3 = ((struct query_header *)largebuf)->what_to_count_3;
+
     datasize = ((struct query_header *)largebuf)->datasize;
     memcpy(&extras, &((struct query_header *)largebuf)->extras, sizeof(struct extra_primitives));
     if (check_data_sizes((struct query_header *)largebuf, acc_elem)) exit(1);
@@ -2163,10 +2173,12 @@ int main(int argc,char **argv)
       }
     }
 
-    if (want_output & PRINT_OUTPUT_FORMATTED)
-      write_stats_header_formatted(what_to_count, what_to_count_2, have_wtc, is_event);
-    else if (want_output & PRINT_OUTPUT_CSV)
-      write_stats_header_csv(what_to_count, what_to_count_2, have_wtc, sep_ptr, is_event);
+    if (want_output & PRINT_OUTPUT_FORMATTED) {
+      write_stats_header_formatted(what_to_count, what_to_count_2, what_to_count_3, have_wtc, is_event);
+    }
+    else if (want_output & PRINT_OUTPUT_CSV) {
+      write_stats_header_csv(what_to_count, what_to_count_2, what_to_count_3, have_wtc, sep_ptr, is_event);
+    }
 
     elem = largebuf+sizeof(struct query_header);
     unpacked -= sizeof(struct query_header);

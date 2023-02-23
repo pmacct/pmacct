@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -70,6 +70,7 @@ struct query_header {
   int type;				/* type of query */
   pm_cfgreg_t what_to_count;		/* aggregation */
   pm_cfgreg_t what_to_count_2;		/* aggregation */
+  pm_cfgreg_t what_to_count_3;		/* aggregation */
   unsigned int num;			/* number of queries */
   unsigned int ip_sz;			/* IP addresses size (in bytes) */
   unsigned int cnt_sz;			/* counters size (in bytes) */
@@ -81,6 +82,7 @@ struct query_header {
 struct query_entry {
   pm_cfgreg_t what_to_count;			/* aggregation */
   pm_cfgreg_t what_to_count_2;			/* aggregation */
+  pm_cfgreg_t what_to_count_3;			/* aggregation */
   struct pkt_primitives data;			/* actual data */
   struct pkt_bgp_primitives pbgp;		/* extended BGP data */
   struct pkt_legacy_bgp_primitives plbgp;	/* extended BGP data */

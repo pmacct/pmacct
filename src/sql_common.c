@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -1085,7 +1085,7 @@ void sql_exit_gracefully(int signum)
 
 int sql_evaluate_primitives(int primitive)
 {
-  pm_cfgreg_t what_to_count = 0, what_to_count_2 = 0, fakes = 0;
+  pm_cfgreg_t what_to_count = 0, what_to_count_2 = 0, /* XXX: what_to_count_3 = 0, */ fakes = 0;
   short int assume_custom_table = FALSE; 
   char *insert_clause_start_ptr = insert_clause + strlen(insert_clause);
   char default_delim[] = ",", delim_buf[SRVBUFLEN];
@@ -1103,6 +1103,7 @@ int sql_evaluate_primitives(int primitive)
   if (config.sql_optimize_clauses) {
     what_to_count = config.what_to_count;
     what_to_count_2 = config.what_to_count_2;
+    /* XXX: what_to_count_3 = config.what_to_count_3; */
     assume_custom_table = TRUE;
   }
   else {
