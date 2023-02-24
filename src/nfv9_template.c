@@ -1300,14 +1300,16 @@ static int get_ipfix_vlen(u_char *base, u_int16_t remlen, u_int16_t *len)
   return ret;
 }
 
-static u_char *compose_template_key(pm_hash_serial_t *ser, u_int16_t template_id,
-                                    struct sockaddr *agent, u_int32_t source_id)
+static u_char *compose_template_key(pm_hash_serial_t *ser, u_int8_t nf_version,
+				    u_int16_t template_id, struct sockaddr *agent,
+				    u_int32_t source_id)
 {
   pm_hash_key_t *hash_key;
   u_int16_t hash_keylen;
 
   hash_keylen = calc_template_keylen();
   hash_init_serial(ser, hash_keylen);
+  hash_serial_append(ser, (char *)&nf_version, sizeof(nf_version), FALSE);
   hash_serial_append(ser, (char *)&template_id, sizeof(template_id), FALSE);
   hash_serial_append(ser, (char *)&source_id, sizeof(source_id), TRUE);
   hash_serial_append(ser, (char *)agent, sizeof(struct sockaddr_storage), TRUE);
@@ -1687,7 +1689,7 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
     version = 10;
   }
 
-  hash_keyval = compose_template_key(&hash_serializer, hdr->template_id,
+  hash_keyval = compose_template_key(&hash_serializer, version, hdr->template_id,
                                      (struct sockaddr *)pptrs->f_agent, sid);
 
   /* 0 NetFlow v9, 2 IPFIX */
@@ -1846,7 +1848,8 @@ void load_templates_from_file(char *path)
 
 u_int16_t calc_template_keylen(void)
 {
-  return (sizeof(u_int16_t /* template id */) +
+  return (sizeof(u_int8_t) /* NetFlow version */ +
+	  sizeof(u_int16_t /* template id */) +
           sizeof(u_int32_t /* source id */) +
           sizeof(struct sockaddr_storage /* sender IP */));
 }
