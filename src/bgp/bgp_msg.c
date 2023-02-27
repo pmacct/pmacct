@@ -1018,8 +1018,8 @@ int bgp_attr_parse_mp_reach(struct bgp_peer *peer, u_int16_t len, struct bgp_att
   mpnhoplen = *ptr; ptr++;
   mpreachlen -= 4; /* 2+1+1 above */ 
   
-  /* IPv4 (4), RD+IPv4 (12), IPv6 (16), RD+IPv6 (24), IPv6 link-local+IPv6 global (32) */
-  if (mpnhoplen == 4 || mpnhoplen == 12 || mpnhoplen == 16 || mpnhoplen == 24 || mpnhoplen == 32) {
+  /* IPv4 (4), RD+IPv4 (12), IPv6 (16), RD+IPv6 (24), IPv6 link-local+IPv6 global (32), RD+IPv6+RD+IPv6 link-local (48) */
+  if (mpnhoplen == 4 || mpnhoplen == 12 || mpnhoplen == 16 || mpnhoplen == 24 || mpnhoplen == 32 || mpnhoplen == 48) {
     if (mpreachlen > mpnhoplen) {
       memset(&attr->mp_nexthop, 0, sizeof(struct host_addr));
 
