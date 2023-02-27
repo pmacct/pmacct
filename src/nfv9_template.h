@@ -301,6 +301,8 @@ extern int init_template_cache_v2(void);
 extern struct template_cache_entry *find_template(u_int16_t, struct sockaddr *, u_int16_t, u_int32_t);
 extern struct template_cache_entry *handle_template(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int16_t, u_int32_t);
 extern struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t, u_int32_t, u_int16_t *, u_int16_t, u_int32_t);
+extern struct template_cache_entry *find_template_v2(u_int16_t, struct sockaddr *, u_int8_t, u_int16_t, u_int32_t);
+
 extern int resolve_vlen_template(u_char *, u_int16_t, struct template_cache_entry *);
 extern void load_templates_from_file(char *);
 extern u_int16_t calc_template_keylen(void);

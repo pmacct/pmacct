@@ -37,7 +37,7 @@ struct options_template_hdr_ipfix {
 
 /* global variables */
 static struct template_cache tpl_cache;
-static cdada_map_t *tpl_data_map, *tpl_opt_map;
+static cdada_map_t *tpl_data_map;
 
 #define MAX_TPL_DESC_LIST 90
 static const char *tpl_desc_list[] = {
@@ -1604,12 +1604,6 @@ int init_template_cache_v2(void)
     return ERR;
   }
 
-  tpl_opt_map = cdada_map_create(pm_cdada_map_container);
-  if (!tpl_opt_map) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): Unable to allocate tpl_opt_map. Exiting.\n", config.name, config.type);
-    return ERR;
-  }
-
   return SUCCESS;
 }
 
@@ -1696,28 +1690,40 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
   if (tpl_type == 0 || tpl_type == 2) {
     tpl = compose_template(hdr, (struct sockaddr *)pptrs->f_agent, tpl_type,
                            sid, pens, version, len, seq);
-
-    ret = cdada_map_insert_replace(tpl_data_map, hash_keyval, tpl);
-    if (ret != CDADA_SUCCESS) {
-      Log(LOG_WARNING, "WARN ( %s/core ): Unable to insert / refresh template in tpl_data_map\n",
-          config.name);
-      goto exit_lane;
-    }
   }
   /* 1 NetFlow v9, 3 IPFIX */
   else if (tpl_type == 1 || tpl_type == 3) {
     tpl = compose_opt_template(hdr, (struct sockaddr *)pptrs->f_agent, tpl_type,
                                sid, pens, version, len, seq);
-
-    ret = cdada_map_insert_replace(tpl_data_map, hash_keyval, tpl);
-    if (ret != CDADA_SUCCESS) {
-      Log(LOG_WARNING, "WARN ( %s/core ): Unable to insert / refresh template in tpl_opt_map\n",
-          config.name);
-      goto exit_lane;
-    }
   }
 
-  exit_lane:
+  ret = cdada_map_insert_replace(tpl_data_map, hash_keyval, tpl);
+  if (ret != CDADA_SUCCESS) {
+    Log(LOG_WARNING, "WARN ( %s/core ): Unable to insert / refresh template in tpl_data_map\n",
+	config.name);
+  }
+
+  /* freeing hash key */
+  hash_destroy_serial(&hash_serializer);
+
+  return tpl;
+}
+
+struct template_cache_entry *find_template_v2(u_int16_t id, struct sockaddr *agent,
+                                           u_int8_t version, u_int16_t tpl_type,
+					   u_int32_t sid)
+{
+  struct template_cache_entry *tpl = NULL;
+  pm_hash_serial_t hash_serializer;
+  u_char *hash_keyval;
+  int ret;
+
+  hash_keyval = compose_template_key(&hash_serializer, version, id, (struct sockaddr *)agent, sid);
+
+  ret = cdada_map_find(tpl_data_map, hash_keyval, (void **) &tpl);
+  if (ret == CDADA_E_NOT_FOUND) {
+    // XXX: log message?
+  }
 
   /* freeing hash key */
   hash_destroy_serial(&hash_serializer);
