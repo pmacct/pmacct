@@ -1821,9 +1821,9 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   pptrs->f_header = pkt;
   pkt += HdrSz;
   off += HdrSz; 
-  pptrsv->v4.f_status = (u_char *) nfv9_check_status(pptrs, SourceId, 0, FlowSeq, TRUE);
+  pptrsv->v4.f_status = (u_char *) nfv9_check_status(pptrs, SourceId, 0, FlowSeq, TRUE);  /* SCOPE = SourceID / observation_ID */
   set_vector_f_status(pptrsv);
-  pptrsv->v4.f_status_g = (u_char *) nfv9_check_status(pptrs, 0, NF9_OPT_SCOPE_SYSTEM, 0, FALSE);
+  pptrsv->v4.f_status_g = (u_char *) nfv9_check_status(pptrs, 0, NF9_OPT_SCOPE_SYSTEM, 0, FALSE); /* SCOPE = SYSTEM (socket IP address) */
   set_vector_f_status_g(pptrsv);
 
   process_flowset:
@@ -2023,7 +2023,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	/* Is this option about sampling? */
 	if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len || tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4 || 
-      tpl->tpl[NF9_SAMPLING_PKT_INTERVAL].len == 4 || tpl->tpl[NF9_SAMPLING_SIZE].len == 4) {
+            tpl->tpl[NF9_SAMPLING_PKT_INTERVAL].len == 4 || tpl->tpl[NF9_SAMPLING_SIZE].len == 4) {
 	  u_int8_t t8 = 0;
 	  u_int16_t t16 = 0;
 	  u_int32_t sampler_id = 0, t32 = 0, t32_2 = 0;
