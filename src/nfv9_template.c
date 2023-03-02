@@ -1698,7 +1698,7 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
 */
 
   {
-    void *old_tpl_aux;
+    void *old_tpl_aux = NULL;
 
     cdada_map_find(tpl_data_map, hash_keyval, &old_tpl_aux);
     old_tpl = (struct template_cache_entry *) old_tpl_aux;
