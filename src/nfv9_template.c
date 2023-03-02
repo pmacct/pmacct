@@ -1697,10 +1697,32 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
                                sid, pens, version, len, seq);
   }
 
+/*
+  XXX: to be used in future when it will return value of the old record
+
   ret = cdada_map_insert_replace(tpl_data_map, hash_keyval, tpl);
   if (ret != CDADA_SUCCESS) {
     Log(LOG_WARNING, "WARN ( %s/core ): Unable to insert / refresh template in tpl_data_map\n",
 	config.name);
+  }
+*/
+
+  {
+    void *old_tpl_aux;
+    struct template_cache_entry *old_tpl = NULL;
+
+    cdada_map_find(tpl_data_map, hash_keyval, &old_tpl_aux);
+    old_tpl = (struct template_cache_entry *) old_tpl_aux;
+
+    if (old_tpl) {
+      cdada_map_erase(tpl_data_map, hash_keyval);
+      free(old_tpl);
+    }
+
+    ret = cdada_map_insert(tpl_data_map, hash_keyval, tpl);
+    if (ret != CDADA_SUCCESS) {
+      Log(LOG_WARNING, "WARN ( %s/core ): Unable to insert template in tpl_data_map\n", config.name);
+    }
   }
 
   /* freeing hash key */
