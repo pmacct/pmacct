@@ -1448,11 +1448,6 @@ static struct template_cache_entry *compose_template(struct template_hdr_v9 *hdr
 
   log_template_footer(tpl, tpl->len, version);
 
-#ifdef WITH_JANSSON
-  if (config.nfacctd_templates_file)
-    save_template(tpl, config.nfacctd_templates_file);
-#endif
-
   return tpl;
 }
 
@@ -1576,11 +1571,6 @@ static struct template_cache_entry *compose_opt_template(void *hdr, struct socka
 
   log_template_footer(tpl, tpl->len, version);
 
-#ifdef WITH_JANSSON
-  if (config.nfacctd_templates_file)
-    save_template(tpl, config.nfacctd_templates_file);
-#endif
-
   return tpl;
 }
 
@@ -1665,7 +1655,7 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
                                                 u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens,
                                                 u_int16_t len, u_int32_t seq)
 {
-  struct template_cache_entry *tpl = NULL;
+  struct template_cache_entry *tpl = NULL, *old_tpl = NULL;
   u_int8_t version = 0;
   int ret;
 
@@ -1709,7 +1699,6 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
 
   {
     void *old_tpl_aux;
-    struct template_cache_entry *old_tpl = NULL;
 
     cdada_map_find(tpl_data_map, hash_keyval, &old_tpl_aux);
     old_tpl = (struct template_cache_entry *) old_tpl_aux;
@@ -1724,6 +1713,17 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
       Log(LOG_WARNING, "WARN ( %s/core ): Unable to insert template in tpl_data_map\n", config.name);
     }
   }
+
+#ifdef WITH_JANSSON
+  if (config.nfacctd_templates_file) {
+    if (old_tpl) {
+      update_template_in_file(tpl, config.nfacctd_templates_file);
+    }
+    else {
+      save_template(tpl, config.nfacctd_templates_file);
+    }
+  }
+#endif
 
   /* freeing hash key */
   hash_destroy_serial(&hash_serializer);
