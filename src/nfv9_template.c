@@ -1339,6 +1339,7 @@ static struct template_cache_entry *compose_template(struct template_hdr_v9 *hdr
 
   memset(tpl, 0, sizeof(struct template_cache_entry));
   sa_to_addr(agent, &tpl->agent, &port);
+  tpl->version = version;
   tpl->source_id = sid;
   tpl->template_id = hdr->template_id;
   tpl->template_type = 0;
@@ -1491,6 +1492,7 @@ static struct template_cache_entry *compose_opt_template(void *hdr, struct socka
 
   memset(tpl, 0, sizeof(struct template_cache_entry));
   sa_to_addr(agent, &tpl->agent, &port);
+  tpl->version = version;
   tpl->source_id = sid;
   tpl->template_id = tid;
   tpl->template_type = 1;

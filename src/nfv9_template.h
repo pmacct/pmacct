@@ -283,6 +283,7 @@ struct tpl_field_list {
 
 struct template_cache_entry {
   struct host_addr agent;               /* NetFlow Exporter agent */
+  u_int8_t version;			/* NetFlow version */
   u_int32_t source_id;                  /* Exporter Observation Domain */
   u_int16_t template_id;                /* template ID */
   u_int16_t template_type;              /* Data = 0, Options = 1 */
