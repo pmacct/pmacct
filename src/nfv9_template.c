@@ -1838,7 +1838,7 @@ void load_templates_from_file(char *path)
       addr_to_sa((struct sockaddr *) &agent, &tpl->agent, 0);
 
       /* We assume the cache is empty when templates are loaded */
-      if (find_template(tpl->template_id, (struct sockaddr *) &agent, tpl->template_type, tpl->source_id)) {
+      if (find_template_v2(tpl->template_id, (struct sockaddr *) &agent, tpl->version, tpl->template_type, tpl->source_id)) {
         Log(LOG_WARNING, "WARN ( %s/core ): load_templates_from_file(): template %u already cached. Skipping.\n",
             config.name, tpl->template_id);
         free(tpl);
