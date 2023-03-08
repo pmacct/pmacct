@@ -36,7 +36,6 @@ struct options_template_hdr_ipfix {
 };
 
 /* global variables */
-static struct template_cache tpl_cache;
 static cdada_map_t *tpl_data_map;
 
 #define MAX_TPL_DESC_LIST 90
@@ -235,11 +234,6 @@ static void log_template_footer(struct template_cache_entry *tpl,
     Log(LOG_DEBUG, "DEBUG ( %s/core ): Netflow V9/IPFIX record size : %u\n",
         config.name, size);
   Log(LOG_DEBUG, "DEBUG ( %s/core ): \n", config.name);
-}
-
-static u_int16_t modulo_template(u_int16_t template_id, struct sockaddr *agent)
-{
-  return hash_status_table(ntohs(template_id), agent, TEMPLATE_CACHE_ENTRIES);
 }
 
 static struct utpl_field *ext_db_get_next_ie(struct template_cache_entry *ptr,
@@ -1212,11 +1206,10 @@ int resolve_vlen_template(u_char *ptr, u_int16_t remlen, struct template_cache_e
 #ifdef WITH_JANSSON
 void load_templates_from_file(char *path)
 {
-  struct template_cache_entry *tpl, *prev_ptr = NULL, *ptr = NULL;
+  struct template_cache_entry *tpl;
   FILE *tmp_file = fopen(path, "r");
   char errbuf[SRVBUFLEN], tmpbuf[LARGEBUFLEN];
   int line = 1;
-  u_int16_t modulo;
 
   struct sockaddr_storage agent;
 
@@ -1242,25 +1235,13 @@ void load_templates_from_file(char *path)
         free(tpl);
       }
       else {
-        modulo = modulo_template(tpl->template_id, (struct sockaddr *) &agent);
-        ptr = tpl_cache.c[modulo];
-
-        while (ptr) {
-          prev_ptr = ptr;
-          ptr = ptr->next;
-        }
-
-        if (prev_ptr)
-          prev_ptr->next = tpl;
-        else
-          tpl_cache.c[modulo] = tpl;
+	// XXX
 
         Log(LOG_DEBUG, "DEBUG ( %s/core ): load_templates_from_file(): loaded template %u into cache.\n",
             config.name, tpl->template_id);
       }
     }
 
-    prev_ptr = NULL;
     line++;
   }
 
