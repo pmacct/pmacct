@@ -282,21 +282,28 @@ static void save_template(struct template_cache_entry *tpl, char *file)
       json_t *json_tfl_field = json_object();
 
       json_object_set_new_nocheck(json_tfl_field, "type", json_integer(tpl->list[field_idx].type));
+      json_object_set_new_nocheck(json_tfl_field, "repeat", json_integer(tpl->list[field_idx].repeat));
 
       /* idea: depending on tpl->list[field_idx].type,
          serialize either an otpl_field (if TPL_TYPE_LEGACY) or
          an utpl_field (if TPL_TYPE_EXT_DB) */
       if (tpl->list[field_idx].type == TPL_TYPE_LEGACY){
         struct otpl_field *otpl_field = (struct otpl_field *) tpl->list[field_idx].ptr;
-        /* Where in tpl->tpl to insert the otpl_field
+        /* Where in tpl->fld to insert the otpl_field
            when deserializing */
-        int tpl_index = (otpl_field - tpl->tpl);
+        int tpl_index = otpl_field - tpl->fld;
         json_t *json_otpl_field = json_object();
 
-        json_object_set_new_nocheck(json_otpl_field, "off", json_integer(otpl_field->off));
-        json_object_set_new_nocheck(json_otpl_field, "len", json_integer(otpl_field->len));
-        json_object_set_new_nocheck(json_otpl_field, "tpl_len", json_integer(otpl_field->tpl_len));
-        json_object_set_new_nocheck(json_otpl_field, "tpl_index", json_integer(tpl_index));
+        json_object_set_new_nocheck(json_otpl_field, "off",
+                                    json_integer(otpl_field->off[tpl->list[field_idx].repeat-1]));
+        json_object_set_new_nocheck(json_otpl_field, "len",
+                                    json_integer(otpl_field->len[tpl->list[field_idx].repeat-1]));
+        json_object_set_new_nocheck(json_otpl_field, "tpl_len",
+                                    json_integer(otpl_field->tpl_len[tpl->list[field_idx].repeat-1]));
+        json_object_set_new_nocheck(json_otpl_field, "count",
+                                    json_integer(otpl_field->count));
+        json_object_set_new_nocheck(json_otpl_field,
+                                    "tpl_index", json_integer(tpl_index));
         json_object_set_new(json_tfl_field, "otpl", json_otpl_field);
       }
       else if (tpl->list[field_idx].type == TPL_TYPE_EXT_DB) {
@@ -329,12 +336,12 @@ static void save_template(struct template_cache_entry *tpl, char *file)
        since they don't appear to be taken into account when receiving
        the template. */
     for (field_idx = 0; field_idx < NF9_MAX_DEFINED_FIELD; field_idx++) {
-      if (tpl->tpl[field_idx].off == 0 && tpl->tpl[field_idx].len == 0)
+      if (tpl->fld[field_idx].off[0] == 0 && tpl->fld[field_idx].len[0] == 0)
         continue;
       json_t *json_tpl_field = json_object();
       json_object_set_new_nocheck(json_tpl_field, "type", json_integer(field_idx));
-      json_object_set_new_nocheck(json_tpl_field, "off", json_integer(tpl->tpl[field_idx].off));
-      json_object_set_new_nocheck(json_tpl_field, "len", json_integer(tpl->tpl[field_idx].len));
+      json_object_set_new_nocheck(json_tpl_field, "off", json_integer(tpl->fld[field_idx].off[0]));
+      json_object_set_new_nocheck(json_tpl_field, "len", json_integer(tpl->fld[field_idx].len[0]));
       json_array_append_new(tpl_array, json_tpl_field);
     }
 
@@ -458,6 +465,7 @@ static struct template_cache_entry *nfacctd_offline_read_json_template(char *buf
   json_error_t json_err;
   json_t *json_obj = NULL, *json_tpl_id = NULL, *json_src_id = NULL, *json_tpl_type = NULL;
   json_t *json_num = NULL, *json_len = NULL, *json_agent = NULL, *json_list = NULL;
+  json_t *json_val;
   const char *agent_str;
 
   json_obj = json_loads(buf, 0, &json_err);
@@ -543,12 +551,10 @@ static struct template_cache_entry *nfacctd_offline_read_json_template(char *buf
           json_array_foreach(json_list, key, value) {
             if (json_integer_value(json_object_get(value, "type")) == TPL_TYPE_LEGACY) {
               json_t *json_otpl = NULL, *json_otpl_member = NULL;
-              struct otpl_field otpl;
+              struct otpl_field *otpl;
               int tpl_index = 0;
 
               ret->list[idx].type = TPL_TYPE_LEGACY;
-
-              memset(&otpl, 0, sizeof (struct otpl_field));
 
               json_otpl = json_object_get(value, "otpl");
               if (json_otpl == NULL) {
@@ -556,26 +562,12 @@ static struct template_cache_entry *nfacctd_offline_read_json_template(char *buf
                 goto exit_lane;
               }
 
-              json_otpl_member = json_object_get(json_otpl, "off");
-              if (json_otpl_member == NULL) {
-                snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): off null. Line skipped.\n");
+              json_val = json_object_get(value, "repeat");
+              if (json_val == NULL) {
+                snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): repeat null. Line skipped.\n");
                 goto exit_lane;
               }
-              else otpl.off = json_integer_value(json_otpl_member);
-
-              json_otpl_member = json_object_get(json_otpl, "len");
-              if (json_otpl_member == NULL) {
-                snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): len null. Line skipped.\n");
-                goto exit_lane;
-              }
-              else otpl.len = json_integer_value(json_otpl_member);
-
-              json_otpl_member = json_object_get(json_otpl, "tpl_len");
-              if (json_otpl_member == NULL) {
-                snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): tpl_len null. Line skipped.\n");
-                goto exit_lane;
-              }
-              else otpl.tpl_len = json_integer_value(json_otpl_member);
+              ret->list[idx].repeat = json_integer_value(json_val);
 
               json_otpl_member = json_object_get(json_otpl, "tpl_index");
               if (json_otpl_member == NULL) {
@@ -584,8 +576,35 @@ static struct template_cache_entry *nfacctd_offline_read_json_template(char *buf
               }
               else tpl_index = json_integer_value(json_otpl_member);
 
-              memcpy(&ret->tpl[tpl_index], &otpl, sizeof(struct otpl_field));
-              ret->list[idx].ptr = (char *) &ret->tpl[tpl_index];
+              otpl = ret->list[idx].ptr = &ret->fld[tpl_index];
+
+              json_otpl_member = json_object_get(json_otpl, "off");
+              if (json_otpl_member == NULL) {
+                snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): off null. Line skipped.\n");
+                goto exit_lane;
+              }
+              else otpl->off[ret->list[idx].repeat-1] = json_integer_value(json_otpl_member);
+
+              json_otpl_member = json_object_get(json_otpl, "len");
+              if (json_otpl_member == NULL) {
+                snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): len null. Line skipped.\n");
+                goto exit_lane;
+              }
+              else otpl->len[ret->list[idx].repeat-1] = json_integer_value(json_otpl_member);
+
+              json_otpl_member = json_object_get(json_otpl, "tpl_len");
+              if (json_otpl_member == NULL) {
+                snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): tpl_len null. Line skipped.\n");
+                goto exit_lane;
+              }
+              else otpl->tpl_len[ret->list[idx].repeat-1] = json_integer_value(json_otpl_member);
+
+              json_otpl_member = json_object_get(json_otpl, "count");
+              if (json_otpl_member == NULL) {
+                snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): count null. Line skipped.\n");
+                goto exit_lane;
+              }
+              else otpl->count = json_integer_value(json_otpl_member);
             }
             else if (json_integer_value(json_object_get(value, "type")) == TPL_TYPE_EXT_DB) {
               json_t *json_utpl = NULL, *json_utpl_member = NULL;
@@ -652,7 +671,7 @@ static struct template_cache_entry *nfacctd_offline_read_json_template(char *buf
 
               modulo = (utpl.type % TPL_EXT_DB_ENTRIES);
               memcpy(&ret->ext_db[modulo].ie[ie_idx], &utpl, sizeof(struct utpl_field));
-              ret->list[idx].ptr = (char *) &ret->ext_db[modulo].ie[ie_idx];
+              ret->list[idx].ptr = &ret->ext_db[modulo].ie[ie_idx];
             }
             else {
               snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): incorrect field type. Line skipped.\n");
@@ -692,16 +711,16 @@ static struct template_cache_entry *nfacctd_offline_read_json_template(char *buf
               snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): off null. Line skipped.\n");
               goto exit_lane;
             }
-            else otpl.off = json_integer_value(json_otpl_member);
+            else otpl.off[0] = json_integer_value(json_otpl_member);
 
             json_otpl_member = json_object_get(value, "len");
             if (json_otpl_member == NULL) {
               snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): len null. Line skipped.\n");
               goto exit_lane;
             }
-            else otpl.len = json_integer_value(json_otpl_member);
+            else otpl.len[0] = json_integer_value(json_otpl_member);
 
-            memcpy(&ret->tpl[tpl_idx], &otpl, sizeof(struct otpl_field));
+            memcpy(&ret->fld[tpl_idx], &otpl, sizeof(struct otpl_field));
           }
         }
       }
@@ -724,8 +743,9 @@ static struct template_cache_entry *nfacctd_offline_read_json_template(char *buf
 static int get_ipfix_vlen(u_char *base, u_int16_t remlen, u_int16_t *len)
 {
   u_char *ptr = base;
-  u_int8_t *len8, ret = 0;
+  u_int8_t *len8;
   u_int16_t *len16;
+  int ret = 0;
 
   if (ptr && len) {
     if (remlen >= 1) {
@@ -840,24 +860,38 @@ static struct template_cache_entry *compose_template(struct template_hdr_v9 *hdr
        new template database (ie. if we have a PEN or high field
        value, >= 384) */
     if (type < NF9_MAX_DEFINED_FIELD && !pen) {
-      tpl->tpl[type].off = tpl->len;
-      tpl->tpl[type].tpl_len = ntohs(field->len);
+      if (tpl->fld[type].count < TPL_MAX_ELEM_REPEATS) {
+        tpl->fld[type].count++;
+      } else {
+        if (type == NF9_PADDING_OCTETS) {
+          Log(LOG_WARNING,
+              "WARN ( %s/core ): template element %u repeated too often, flow data might get dropped or parsed incorrectly\n",
+              config.name, type);
+        } else {
+          Log(LOG_INFO,
+              "INFO ( %s/core ): template element %u repeated too often, skipping data\n",
+              config.name, type);
+        }
+      }
+      tpl->fld[type].off[tpl->fld[type].count-1] = tpl->len;
+      tpl->fld[type].tpl_len[tpl->fld[type].count-1] = ntohs(field->len);
 
       if (tpl->vlen)
-        tpl->tpl[type].off = 0;
+        tpl->fld[type].off[tpl->fld[type].count-1] = 0;
 
-      if (tpl->tpl[type].tpl_len == IPFIX_VARIABLE_LENGTH) {
-        tpl->tpl[type].len = 0;
+      if (tpl->fld[type].tpl_len[tpl->fld[type].count-1] == IPFIX_VARIABLE_LENGTH) {
+        tpl->fld[type].len[tpl->fld[type].count-1] = 0;
         tpl->vlen = TRUE;
         tpl->len = 0;
       }
       else {
-        tpl->tpl[type].len = tpl->tpl[type].tpl_len;
+        tpl->fld[type].len[tpl->fld[type].count-1] = tpl->fld[type].tpl_len[tpl->fld[type].count-1];
         if (!tpl->vlen)
-          tpl->len += tpl->tpl[type].len;
+          tpl->len += tpl->fld[type].len[tpl->fld[type].count-1];
       }
-      tpl->list[count].ptr = (char *) &tpl->tpl[type];
+      tpl->list[count].ptr = &tpl->fld[type];
       tpl->list[count].type = TPL_TYPE_LEGACY;
+      tpl->list[count].repeat = tpl->fld[type].count;
     }
     else {
       u_int8_t repeat_id = 0;
@@ -885,7 +919,7 @@ static struct template_cache_entry *compose_template(struct template_hdr_v9 *hdr
             tpl->len += ext_db_tpl->len;
         }
       }
-      tpl->list[count].ptr = (char *) ext_db_tpl;
+      tpl->list[count].ptr = ext_db_tpl;
       tpl->list[count].type = TPL_TYPE_EXT_DB;
     }
 
@@ -982,9 +1016,22 @@ static struct template_cache_entry *compose_opt_template(void *hdr, struct socka
 
     log_opt_template_field(FALSE, pen, type, tpl->len, ntohs(field->len), version);
     if (type < NF9_MAX_DEFINED_FIELD && !pen) {
-      tpl->tpl[type].off = tpl->len;
-      tpl->tpl[type].len = ntohs(field->len);
-      tpl->len += tpl->tpl[type].len;
+      if (tpl->fld[type].count < TPL_MAX_ELEM_REPEATS) {
+        tpl->fld[type].count++;
+      } else {
+        if (type == NF9_PADDING_OCTETS) {
+          Log(LOG_WARNING,
+              "WARN ( %s/core ): template element %u repeated too often, flow data might get dropped or parsed incorrectly\n",
+              config.name, type);
+        } else {
+          Log(LOG_INFO,
+              "INFO ( %s/core ): template element %u repeated too often, skipping data\n",
+              config.name, type);
+        }
+      }
+      tpl->fld[type].off[tpl->fld[type].count-1] = tpl->len;
+      tpl->fld[type].len[tpl->fld[type].count-1] = ntohs(field->len);
+      tpl->len += tpl->fld[type].len[tpl->fld[type].count-1];
     }
     else {
       u_int8_t repeat_id = 0;
@@ -1008,7 +1055,7 @@ static struct template_cache_entry *compose_opt_template(void *hdr, struct socka
         return NULL;
       }
 
-      tpl->list[count].ptr = (char *) ext_db_tpl;
+      tpl->list[count].ptr = ext_db_tpl;
       tpl->list[count].type = TPL_TYPE_EXT_DB;
       tpl->len += ext_db_tpl->len;
     }
@@ -1161,18 +1208,19 @@ int resolve_vlen_template(u_char *ptr, u_int16_t remlen, struct template_cache_e
     if (tpl->list[idx].type == TPL_TYPE_LEGACY) {
       otpl_ptr = (struct otpl_field *) tpl->list[idx].ptr;
       if (vlen)
-        otpl_ptr->off = len;
-      if (otpl_ptr->tpl_len == IPFIX_VARIABLE_LENGTH) {
+        otpl_ptr->off[tpl->list[idx].repeat-1] = len;
+      if (otpl_ptr->tpl_len[tpl->list[idx].repeat-1] == IPFIX_VARIABLE_LENGTH) {
         vlen = TRUE;
-        ret = get_ipfix_vlen(ptr+len, remlen - len, &otpl_ptr->len);
+        ret = get_ipfix_vlen(ptr+len, remlen - len,
+                             &otpl_ptr->len[tpl->list[idx].repeat-1]);
         if (ret > 0)
           add_len = ret;
         else
           return ERR;
 
-        otpl_ptr->off = (len + add_len);
+        otpl_ptr->off[tpl->list[idx].repeat-1] = len + add_len;
       }
-      len += (otpl_ptr->len + add_len);
+      len += otpl_ptr->len[tpl->list[idx].repeat-1] + add_len;
     }
     else if (tpl->list[idx].type == TPL_TYPE_EXT_DB) {
       utpl_ptr = (struct utpl_field *) tpl->list[idx].ptr;
