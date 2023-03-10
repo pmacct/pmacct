@@ -2393,6 +2393,9 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           exec_plugins(pptrs, req);
 	  break;
 	case PM_FTYPE_IPV6:
+        case PM_FTYPE_SRV6:
+        case PM_FTYPE_SRV6_IPV4:
+        case PM_FTYPE_SRV6_IPV6:
 	  pptrsv->v6.f_header = pptrs->f_header;
 	  pptrsv->v6.f_data = pptrs->f_data;
 	  pptrsv->v6.f_tpl = pptrs->f_tpl;
@@ -3285,12 +3288,48 @@ void NF_evaluate_flow_type(struct flow_chars *flow_type, struct template_cache_e
       }
     }
 
+    /* SRv6 checks */
+    if (tpl->layers.count && tpl->layers.prot[0] == ipv6 &&
+        tpl->fld[NF9_L4_PROTOCOL].count) {
+      u_int8_t tun_prot;
+      memcpy(&tun_prot, pptrs->f_data+tpl->fld[NF9_L4_PROTOCOL].off[0], 1);
+      if (tpl->layers.count > 1) {
+        if (tun_prot == 4 || tun_prot == 41) {
+          if (tpl->layers.prot[1] == ipv4) {
+            /* IPv4 in IPv6 encapsulation */
+            ret = PM_FTYPE_SRV6_IPV4;
+            have_ip_proto = TRUE;
+          }
+          else if (tpl->layers.prot[1] == ipv6) {
+            /* IPv6 in IPv6 encapsulation */
+            ret = PM_FTYPE_SRV6_IPV6;
+            have_ip_proto = TRUE;
+          }
+        }
+      }
+      else if (tun_prot == 143) {
+        /* Ethernet in IPv6 encapsulation */
+        ret = PM_FTYPE_SRV6;
+        have_ip_proto = TRUE;
+      }
+    }
+
     if (!have_ip_proto) {
       /* If we have both v4 and v6 as part of the same flow, let's run the
 	 cheapest check possible to try to determine which one is non-zero */
       if ((tpl->fld[NF9_IPV4_SRC_ADDR].count || tpl->fld[NF9_IPV4_DST_ADDR].count) &&
           (tpl->fld[NF9_IPV6_SRC_ADDR].count || tpl->fld[NF9_IPV6_DST_ADDR].count)) {
-        if (*(pptrs->f_data+tpl->fld[NF9_IPV4_SRC_ADDR].off[0]) != 0) {
+        if (tpl->layers.count > 0 && tpl->layers.prot[0] == ipv4 &&
+            *(pptrs->f_data+tpl->fld[NF9_IPV4_SRC_ADDR].off[0]) != 0) {
+          ret += PM_FTYPE_IPV4;
+          have_ip_proto = TRUE;
+        }
+        else if (tpl->layers.count > 0 && tpl->layers.prot[0] == ipv6 &&
+                 *(pptrs->f_data+tpl->fld[NF9_IPV6_SRC_ADDR].off[0]) != 0) {
+          ret += PM_FTYPE_IPV6;
+          have_ip_proto = TRUE;
+        }
+        else if (*(pptrs->f_data+tpl->fld[NF9_IPV4_SRC_ADDR].off[0]) != 0) {
           ret += PM_FTYPE_IPV4;
 	  have_ip_proto = TRUE;
 	}

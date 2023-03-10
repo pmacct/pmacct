@@ -286,6 +286,13 @@ struct tpl_field_list {
   void *ptr;                            /* struct otpl_field or utpl_field */
 };
 
+typedef enum { none, ipv4, ipv6 } layer_prot;
+
+struct layer_protocols {
+  layer_prot prot[TPL_MAX_ELEM_REPEATS];
+  u_int8_t count;
+};
+
 struct template_cache_entry {
   struct host_addr agent;               /* NetFlow Exporter agent */
   u_int8_t version;			/* NetFlow version */
@@ -298,6 +305,7 @@ struct template_cache_entry {
   struct otpl_field fld[NF9_MAX_DEFINED_FIELD];
   struct tpl_field_db ext_db[TPL_EXT_DB_ENTRIES];
   struct tpl_field_list list[TPL_LIST_ENTRIES];
+  struct layer_protocols layers;
   struct template_cache_entry *next;
 };
 

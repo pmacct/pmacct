@@ -36,6 +36,22 @@
 #include "ndpi/ndpi.h"
 #endif
 
+/* get offset of first instance of an otpl field */
+#define OTPL_FIRST_OFS(tpl_fld) tpl->fld[tpl_fld].off[0]
+
+/* get length of first instance of an otpl field */
+#define OTPL_FIRST_LEN(tpl_fld) tpl->fld[tpl_fld].len[0]
+
+/* copy first instance of an otpl field */
+#define OTPL_CP_FIRST(target, tpl_fld) \
+  memcpy(target, pptrs->f_data+tpl->fld[tpl_fld].off[0], \
+         tpl->fld[tpl_fld].len[0])
+
+/* copy first instance of an otpl field with minimum length */
+#define OTPL_CP_FIRST_M(target, tpl_fld, length) \
+  memcpy(target, pptrs->f_data+tpl->fld[tpl_fld].off[0], \
+         MIN(tpl->fld[tpl_fld].len[0], length))
+
 /* get offset of last instance of an otpl field */
 #define OTPL_LAST_OFS(tpl_fld) tpl->fld[tpl_fld].off[tpl->fld[tpl_fld].count-1]
 
@@ -814,72 +830,72 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_SRC_HOST) {
-      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_src_host_handler;
-      else if (config.acct_type == ACCT_NF) {
-        warn_unsupported_packet_handler(COUNT_INT_TUNNEL_SRC_HOST, ACCT_NF);
-        primitives--;
-      }
-      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_src_host_handler;
+      if (config.acct_type == ACCT_PM)
+        channels_list[index].phandler[primitives] = tunnel_src_host_handler;
+      else if (config.acct_type == ACCT_NF)
+        channels_list[index].phandler[primitives] = NF_tunnel_src_host_handler;
+      else if (config.acct_type == ACCT_SF)
+        channels_list[index].phandler[primitives] = SF_tunnel_src_host_handler;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_DST_HOST) {
-      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_dst_host_handler;
-      else if (config.acct_type == ACCT_NF) {
-        warn_unsupported_packet_handler(COUNT_INT_TUNNEL_DST_HOST, ACCT_NF);
-        primitives--;
-      }
-      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_dst_host_handler;
+      if (config.acct_type == ACCT_PM)
+        channels_list[index].phandler[primitives] = tunnel_dst_host_handler;
+      else if (config.acct_type == ACCT_NF)
+        channels_list[index].phandler[primitives] = NF_tunnel_dst_host_handler;
+      else if (config.acct_type == ACCT_SF)
+        channels_list[index].phandler[primitives] = SF_tunnel_dst_host_handler;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_IP_PROTO) {
-      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_ip_proto_handler;
-      else if (config.acct_type == ACCT_NF) {
-        warn_unsupported_packet_handler(COUNT_INT_TUNNEL_IP_PROTO, ACCT_NF);
-        primitives--;
-      }
-      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_ip_proto_handler;
+      if (config.acct_type == ACCT_PM)
+        channels_list[index].phandler[primitives] = tunnel_ip_proto_handler;
+      else if (config.acct_type == ACCT_NF)
+        channels_list[index].phandler[primitives] = NF_tunnel_ip_proto_handler;
+      else if (config.acct_type == ACCT_SF)
+        channels_list[index].phandler[primitives] = SF_tunnel_ip_proto_handler;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_IP_TOS) {
-      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_ip_tos_handler;
-      else if (config.acct_type == ACCT_NF) {
-        warn_unsupported_packet_handler(COUNT_INT_TUNNEL_IP_TOS, ACCT_NF);
-        primitives--;
-      }
-      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_ip_tos_handler;
+      if (config.acct_type == ACCT_PM)
+        channels_list[index].phandler[primitives] = tunnel_ip_tos_handler;
+      else if (config.acct_type == ACCT_NF)
+        channels_list[index].phandler[primitives] = NF_tunnel_ip_tos_handler;
+      else if (config.acct_type == ACCT_SF)
+        channels_list[index].phandler[primitives] = SF_tunnel_ip_tos_handler;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_SRC_PORT) {
-      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_src_port_handler;
-      else if (config.acct_type == ACCT_NF) {
-        warn_unsupported_packet_handler(COUNT_INT_TUNNEL_SRC_PORT, ACCT_NF);
-        primitives--;
-      }
-      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_src_port_handler;
+      if (config.acct_type == ACCT_PM)
+        channels_list[index].phandler[primitives] = tunnel_src_port_handler;
+      else if (config.acct_type == ACCT_NF)
+        channels_list[index].phandler[primitives] = NF_tunnel_src_port_handler;
+      else if (config.acct_type == ACCT_SF)
+        channels_list[index].phandler[primitives] = SF_tunnel_src_port_handler;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_DST_PORT) {
-      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_dst_port_handler;
-      else if (config.acct_type == ACCT_NF) {
-        warn_unsupported_packet_handler(COUNT_INT_TUNNEL_DST_PORT, ACCT_NF);
-        primitives--;
-      }
-      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_dst_port_handler;
+      if (config.acct_type == ACCT_PM)
+        channels_list[index].phandler[primitives] = tunnel_dst_port_handler;
+      else if (config.acct_type == ACCT_NF)
+        channels_list[index].phandler[primitives] = NF_tunnel_dst_port_handler;
+      else if (config.acct_type == ACCT_SF)
+        channels_list[index].phandler[primitives] = SF_tunnel_dst_port_handler;
       primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_TUNNEL_TCPFLAGS) {
-      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = tunnel_tcp_flags_handler;
-      else if (config.acct_type == ACCT_NF) {
-        warn_unsupported_packet_handler(COUNT_INT_TUNNEL_TCPFLAGS, ACCT_NF);
-        primitives--;
-      }
-      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_tunnel_tcp_flags_handler;
+      if (config.acct_type == ACCT_PM)
+        channels_list[index].phandler[primitives] = tunnel_tcp_flags_handler;
+      else if (config.acct_type == ACCT_NF)
+        channels_list[index].phandler[primitives] = NF_tunnel_tcp_flags_handler;
+      else if (config.acct_type == ACCT_SF)
+        channels_list[index].phandler[primitives] = SF_tunnel_tcp_flags_handler;
       primitives++;
     }
 
@@ -2014,9 +2030,6 @@ void NF_src_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
     else if (tpl->fld[NF9_DATALINK_FRAME_SECTION].count ||
              tpl->fld[NF9_LAYER2_PKT_SECTION_DATA].count)
       src_mac_handler(chptr, pptrs, data);
-
-    break;
-  default:
     break;
   }
 }
@@ -2037,9 +2050,6 @@ void NF_dst_mac_handler(struct channels_list_entry *chptr, struct packet_ptrs *p
     else if (tpl->fld[NF9_DATALINK_FRAME_SECTION].count ||
              tpl->fld[NF9_LAYER2_PKT_SECTION_DATA].count)
       dst_mac_handler(chptr, pptrs, data);
-
-    break;
-  default:
     break;
   }
 }
@@ -2201,7 +2211,8 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   switch(hdr->version) {
   case 10:
   case 9:
-    if (pptrs->l3_proto == ETHERTYPE_IP || pptrs->flow_type.traffic_type == NF9_FTYPE_NAT_EVENT /* NAT64 case */) {
+    if (pptrs->l3_proto == ETHERTYPE_IP ||
+        pptrs->flow_type.traffic_type == NF9_FTYPE_NAT_EVENT /* NAT64 case */) {
       if (tpl->fld[NF9_IPV4_SRC_ADDR].count) {
         OTPL_CP_LAST_M(&pdata->primitives.src_ip.address.ipv4, NF9_IPV4_SRC_ADDR, 4);
         pdata->primitives.src_ip.family = AF_INET;
@@ -2218,8 +2229,24 @@ void NF_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
                tpl->fld[NF9_LAYER2_PKT_SECTION_DATA].count)
 	src_host_handler(chptr, pptrs, data);
     }
-    if (pptrs->l3_proto == ETHERTYPE_IPV6 || pptrs->flow_type.traffic_type == NF9_FTYPE_NAT_EVENT /* NAT64 case */) {
-      if (tpl->fld[NF9_IPV6_SRC_ADDR].count) {
+    if (pptrs->l3_proto == ETHERTYPE_IPV6 ||
+        pptrs->flow_type.traffic_type == NF9_FTYPE_NAT_EVENT /* NAT64 case */) {
+      if (pptrs->flow_type.traffic_type == PM_FTYPE_SRV6) {
+        /* no inner IP layer */
+      }
+      else if (pptrs->flow_type.traffic_type == PM_FTYPE_SRV6_IPV4) {
+        if (tpl->fld[NF9_IPV4_SRC_ADDR].count) {
+          OTPL_CP_LAST_M(&pdata->primitives.src_ip.address.ipv4, NF9_IPV4_SRC_ADDR, 4);
+          pdata->primitives.src_ip.family = AF_INET;
+        }
+      }
+      else if (pptrs->flow_type.traffic_type == PM_FTYPE_SRV6_IPV6) {
+        if (tpl->fld[NF9_IPV6_SRC_ADDR].count) {
+          OTPL_CP_LAST_M(&pdata->primitives.src_ip.address.ipv4, NF9_IPV6_SRC_ADDR, 16);
+          pdata->primitives.src_ip.family = AF_INET6;
+        }
+      }
+      else if (tpl->fld[NF9_IPV6_SRC_ADDR].count) {
         OTPL_CP_LAST_M(&pdata->primitives.src_ip.address.ipv6, NF9_IPV6_SRC_ADDR, 16);
         pdata->primitives.src_ip.family = AF_INET6;
       }
@@ -2263,8 +2290,24 @@ void NF_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *
                tpl->fld[NF9_LAYER2_PKT_SECTION_DATA].count)
 	dst_host_handler(chptr, pptrs, data);
     }
-    if (pptrs->l3_proto == ETHERTYPE_IPV6 || pptrs->flow_type.traffic_type == NF9_FTYPE_NAT_EVENT /* NAT64 case */) {
-      if (tpl->fld[NF9_IPV6_DST_ADDR].count) {
+    if (pptrs->l3_proto == ETHERTYPE_IPV6 ||
+        pptrs->flow_type.traffic_type == NF9_FTYPE_NAT_EVENT /* NAT64 case */) {
+      if (pptrs->flow_type.traffic_type == PM_FTYPE_SRV6) {
+        /* no inner IP layer */
+      }
+      else if (pptrs->flow_type.traffic_type == PM_FTYPE_SRV6_IPV4) {
+        if (tpl->fld[NF9_IPV4_DST_ADDR].count) {
+          OTPL_CP_LAST_M(&pdata->primitives.dst_ip.address.ipv4, NF9_IPV4_DST_ADDR, 4);
+          pdata->primitives.dst_ip.family = AF_INET;
+        }
+      }
+      else if (pptrs->flow_type.traffic_type == PM_FTYPE_SRV6_IPV6) {
+        if (tpl->fld[NF9_IPV6_DST_ADDR].count) {
+          OTPL_CP_LAST_M(&pdata->primitives.dst_ip.address.ipv4, NF9_IPV6_DST_ADDR, 16);
+          pdata->primitives.dst_ip.family = AF_INET6;
+        }
+      }
+      else if (tpl->fld[NF9_IPV6_DST_ADDR].count) {
         OTPL_CP_LAST_M(&pdata->primitives.dst_ip.address.ipv6, NF9_IPV6_DST_ADDR, 16);
         pdata->primitives.dst_ip.family = AF_INET6;
       }
@@ -2481,19 +2524,19 @@ void NF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
 
-  /* 1) NF9_EXPORTER_IPV[46]_ADDRESS from Netflow v9/IPFIX Data Packet */ 
-  if ((tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].len || tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].len) 
-        && !config.nfacctd_ignore_exporter_address) {
-    
+  /* 1) NF9_EXPORTER_IPV[46]_ADDRESS from Netflow v9/IPFIX Data Packet */
+  if ((tpl->fld[NF9_EXPORTER_IPV4_ADDRESS].count || tpl->fld[NF9_EXPORTER_IPV6_ADDRESS].count)
+      && !config.nfacctd_ignore_exporter_address) {
+
     int got_v4 = FALSE;
 
-    if (tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].len) {
-      raw_to_addr(&pbgp->peer_src_ip, pptrs->f_data+tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].off, AF_INET);
+    if (tpl->fld[NF9_EXPORTER_IPV4_ADDRESS].count) {
+      raw_to_addr(&pbgp->peer_src_ip, pptrs->f_data + OTPL_LAST_OFS(NF9_EXPORTER_IPV4_ADDRESS), AF_INET);
       if (!is_any(&pbgp->peer_src_ip)) got_v4 = TRUE;
     }
 
-    if (!got_v4 && tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].len) {
-      raw_to_addr(&pbgp->peer_src_ip, pptrs->f_data+tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].off, AF_INET6);
+    if (!got_v4 && tpl->fld[NF9_EXPORTER_IPV6_ADDRESS].count) {
+      raw_to_addr(&pbgp->peer_src_ip, pptrs->f_data + OTPL_LAST_OFS(NF9_EXPORTER_IPV6_ADDRESS), AF_INET6);
     }
   }
 
@@ -2589,9 +2632,10 @@ void NF_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   switch(hdr->version) {
   case 10:
   case 9:
+    if (pptrs->flow_type.traffic_type == PM_FTYPE_SRV6)
+      break;
     if (OTPL_LAST_LEN(NF9_L4_PROTOCOL) == 1)
       OTPL_CP_LAST(&l4_proto, NF9_L4_PROTOCOL);
-
     if (tpl->fld[NF9_L4_SRC_PORT].count)
       OTPL_CP_LAST_M(&pdata->primitives.src_port, NF9_L4_SRC_PORT, 2);
     else if (tpl->fld[NF9_UDP_SRC_PORT].count)
@@ -2603,7 +2647,6 @@ void NF_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       src_port_handler(chptr, pptrs, data);
       break;
     }
-
     pdata->primitives.src_port = ntohs(pdata->primitives.src_port);
     break;
   case 5:
@@ -2628,9 +2671,10 @@ void NF_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   switch(hdr->version) {
   case 10:
   case 9:
+    if (pptrs->flow_type.traffic_type == PM_FTYPE_SRV6)
+      break;
     if (OTPL_LAST_LEN(NF9_L4_PROTOCOL) == 1)
       OTPL_CP_LAST(&l4_proto, NF9_L4_PROTOCOL);
-
     if (tpl->fld[NF9_L4_DST_PORT].count)
       OTPL_CP_LAST_M(&pdata->primitives.dst_port, NF9_L4_DST_PORT, 2);
     else if (tpl->fld[NF9_UDP_DST_PORT].count)
@@ -2642,7 +2686,6 @@ void NF_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *
       dst_port_handler(chptr, pptrs, data);
       break;
     }
-
     pdata->primitives.dst_port = ntohs(pdata->primitives.dst_port);
     break;
   case 5:
@@ -2704,12 +2747,14 @@ void NF_ip_proto_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   switch(hdr->version) {
   case 10:
   case 9:
+    if (pptrs->flow_type.traffic_type == PM_FTYPE_SRV6)
+      // no innner IP protocol
+      break;
     if (tpl->fld[NF9_L4_PROTOCOL].count)
       OTPL_CP_LAST_M(&pdata->primitives.proto, NF9_L4_PROTOCOL, 1);
     else if (tpl->fld[NF9_DATALINK_FRAME_SECTION].count ||
              tpl->fld[NF9_LAYER2_PKT_SECTION_DATA].count)
       ip_proto_handler(chptr, pptrs, data);
-
     break;
   case 5:
     pdata->primitives.proto = ((struct struct_export_v5 *) pptrs->f_data)->prot;
@@ -2729,6 +2774,9 @@ void NF_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs 
   switch(hdr->version) {
   case 10:
   case 9:
+    if (pptrs->flow_type.traffic_type == PM_FTYPE_SRV6)
+      // no innner IP protocol
+      break;
     if (OTPL_LAST_LEN(NF9_TCP_FLAGS) == 1) {
       OTPL_CP_LAST(&tcp_flags, NF9_TCP_FLAGS);
       pdata->tcp_flags = tcp_flags;
@@ -4450,6 +4498,161 @@ void NF_counters_map_renormalize_handler(struct channels_list_entry *chptr, stru
     pdata->pkt_num = pdata->pkt_num * pptrs->st;
 
     pptrs->renormalized = TRUE;
+  }
+}
+
+void NF_tunnel_src_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) (*data + chptr->extras.off_pkt_tun_primitives);
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  if (hdr->version == 5)
+    return;
+
+  switch (pptrs->flow_type.traffic_type) {
+  case PM_FTYPE_SRV6:
+  case PM_FTYPE_SRV6_IPV4:
+  case PM_FTYPE_SRV6_IPV6:
+    {
+      if (tpl->fld[NF9_IPV6_SRC_ADDR].count) {
+        OTPL_CP_FIRST_M(&ptun->tunnel_src_ip.address.ipv6, NF9_IPV6_SRC_ADDR, 16);
+        ptun->tunnel_src_ip.family = AF_INET6;
+      }
+    }
+  }
+}
+
+void NF_tunnel_dst_host_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) (*data + chptr->extras.off_pkt_tun_primitives);
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  if (hdr->version == 5)
+    return;
+
+  switch (pptrs->flow_type.traffic_type) {
+  case PM_FTYPE_SRV6:
+  case PM_FTYPE_SRV6_IPV4:
+  case PM_FTYPE_SRV6_IPV6:
+    {
+      if (tpl->fld[NF9_IPV6_DST_ADDR].count) {
+        OTPL_CP_FIRST_M(&ptun->tunnel_dst_ip.address.ipv6, NF9_IPV6_DST_ADDR, 16);
+        ptun->tunnel_dst_ip.family = AF_INET6;
+      }
+    }
+  }
+}
+
+void NF_tunnel_src_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) (*data + chptr->extras.off_pkt_tun_primitives);
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  if (hdr->version == 5)
+    return;
+
+  switch (pptrs->flow_type.traffic_type) {
+  case PM_FTYPE_SRV6:
+  case PM_FTYPE_SRV6_IPV4:
+  case PM_FTYPE_SRV6_IPV6:
+    if (tpl->fld[NF9_L4_SRC_PORT].count) {
+      OTPL_CP_FIRST_M(&ptun->tunnel_src_port, NF9_L4_SRC_PORT, 2);
+      ptun->tunnel_src_port = ntohs(ptun->tunnel_src_port);
+    }
+    break;
+  }
+}
+
+void NF_tunnel_dst_port_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) (*data + chptr->extras.off_pkt_tun_primitives);
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+
+  if (hdr->version == 5)
+    return;
+
+  switch (pptrs->flow_type.traffic_type) {
+  case PM_FTYPE_SRV6:
+  case PM_FTYPE_SRV6_IPV4:
+  case PM_FTYPE_SRV6_IPV6:
+    if (tpl->fld[NF9_L4_DST_PORT].count) {
+      OTPL_CP_FIRST_M(&ptun->tunnel_dst_port, NF9_L4_DST_PORT, 2);
+      ptun->tunnel_dst_port = ntohs(ptun->tunnel_dst_port);
+    }
+    break;
+  }
+}
+
+void NF_tunnel_ip_tos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) (*data + chptr->extras.off_pkt_tun_primitives);
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->fld[NF9_SRC_TOS].count > 1)
+      OTPL_CP_FIRST_M(&ptun->tunnel_tos, NF9_SRC_TOS, 1);
+    break;
+  }
+
+  if (chptr->plugin->cfg.tos_encode_as_dscp) {
+    ptun->tunnel_tos = ptun->tunnel_tos >> 2;
+  }
+}
+
+void NF_tunnel_ip_proto_handler(struct channels_list_entry *chptr,
+                                struct packet_ptrs *pptrs, char **data)
+{
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *)
+    ((*data) + chptr->extras.off_pkt_tun_primitives);
+
+  if (hdr->version == 5)
+    return;
+
+  switch (pptrs->flow_type.traffic_type) {
+  case PM_FTYPE_SRV6:
+  case PM_FTYPE_SRV6_IPV4:
+  case PM_FTYPE_SRV6_IPV6:
+    if (tpl->fld[NF9_L4_PROTOCOL].count) {
+      OTPL_CP_FIRST_M(&ptun->tunnel_proto, NF9_L4_PROTOCOL, 1);
+    }
+    break;
+  }
+}
+
+void NF_tunnel_tcp_flags_handler(struct channels_list_entry *chptr,
+                                 struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int8_t tcp_flags = 0;
+
+  if (hdr->version == 5)
+    return;
+
+  switch (pptrs->flow_type.traffic_type) {
+  case PM_FTYPE_SRV6:
+  case PM_FTYPE_SRV6_IPV4:
+  case PM_FTYPE_SRV6_IPV6:
+    if (OTPL_FIRST_LEN(NF9_TCP_FLAGS) == 1) {
+      OTPL_CP_FIRST(&tcp_flags, NF9_TCP_FLAGS);
+      pdata->tunnel_tcp_flags = tcp_flags;
+    }
+    else if (OTPL_FIRST_LEN(NF9_TCP_FLAGS) == 2) {
+      /* trash the first octet and copy over the second one */
+      memcpy(&tcp_flags, pptrs->f_data + OTPL_FIRST_OFS(NF9_TCP_FLAGS) + 1, 1);
+      pdata->tunnel_tcp_flags = tcp_flags;
+    }
+    break;
   }
 }
 

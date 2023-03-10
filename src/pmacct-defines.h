@@ -565,6 +565,9 @@ typedef u_int64_t pm_counter_t;
 #define PM_FTYPE_VLAN_MPLS		15 /* PM_FTYPE_MPLS + PM_FTYPE_VLAN */
 #define PM_FTYPE_VLAN_MPLS_IPV4		17 /* PM_FTYPE_VLAN_MPLS + PM_FTYPE_IPV4 */
 #define PM_FTYPE_VLAN_MPLS_IPV6		18 /* PM_FTYPE_VLAN_MPLS + PM_FTYPE_IPV6 */
+#define PM_FTYPE_SRV6			20
+#define PM_FTYPE_SRV6_IPV4		22 /* PM_FTYPE_SRV6 + PM_FTYPE_IPV4 */
+#define PM_FTYPE_SRV6_IPV6		23 /* PM_FTYPE_SRV6 + PM_FTYPE_IPV6 */
 #define PM_FTYPE_TRAFFIC_MAX		99  /* temporary: re-coding needed */
 
 /* flow type: NetFlow/IPFIX extended code-points */

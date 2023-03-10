@@ -740,6 +740,24 @@ static struct template_cache_entry *nfacctd_offline_read_json_template(char *buf
 }
 #endif
 
+static layer_prot evaluate_layer_prot(u_int16_t type)
+{
+  layer_prot prot;
+
+  switch (type) {
+    case NF9_IPV4_SRC_ADDR:
+      prot = ipv4;
+      break;
+    case NF9_IPV6_SRC_ADDR:
+      prot = ipv6;
+      break;
+    default:
+      prot = none;
+  }
+
+  return prot;
+}
+
 static int get_ipfix_vlen(u_char *base, u_int16_t remlen, u_int16_t *len)
 {
   u_char *ptr = base;
@@ -892,6 +910,18 @@ static struct template_cache_entry *compose_template(struct template_hdr_v9 *hdr
       tpl->list[count].ptr = &tpl->fld[type];
       tpl->list[count].type = TPL_TYPE_LEGACY;
       tpl->list[count].repeat = tpl->fld[type].count;
+
+      layer_prot prot = evaluate_layer_prot(type);
+      if (prot != none) {
+        if (tpl->layers.count < TPL_MAX_ELEM_REPEATS) {
+          tpl->layers.count++;
+        } else {
+          Log(LOG_INFO,
+              "INFO ( %s/core ): too many protocol layers in template, skipping layer info\n",
+              config.name);
+        }
+        tpl->layers.prot[tpl->layers.count-1] = prot;
+      }
     }
     else {
       u_int8_t repeat_id = 0;
