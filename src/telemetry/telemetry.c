@@ -719,15 +719,13 @@ int telemetry_daemon(void *t_data_void)
       if (telemetry_log_seq_has_ro_bit(&telemetry_misc_db->log_seq))
         telemetry_log_seq_init(&telemetry_misc_db->log_seq);
 
-      int refreshTimePerSlot = config.telemetry_dump_refresh_time / config.telemetry_dump_time_slots;
-
       if (telemetry_misc_db->dump_backend_methods) {
         while (telemetry_misc_db->log_tstamp.tv_sec > dump_refresh_deadline) {
           telemetry_misc_db->dump.tstamp.tv_sec = dump_refresh_deadline;
           telemetry_misc_db->dump.tstamp.tv_usec = 0;
           compose_timestamp(telemetry_misc_db->dump.tstamp_str, SRVBUFLEN, &telemetry_misc_db->dump.tstamp, FALSE,
                             config.timestamps_since_epoch, config.timestamps_rfc3339, config.timestamps_utc);
-          telemetry_misc_db->dump.period = refreshTimePerSlot;
+          telemetry_misc_db->dump.period = config.telemetry_dump_refresh_time / config.telemetry_dump_time_slots;
 
           telemetry_handle_dump_event(t_data, max_peers_idx);
 
