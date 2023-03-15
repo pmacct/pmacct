@@ -740,22 +740,19 @@ void skinny_bgp_daemon_online()
 	  bgp_peer_log_seq_init(&bgp_misc_db->log_seq);
       }
 
-
-      int refreshTimePerSlot = config.bgp_table_dump_refresh_time / config.bgp_table_dump_time_slots;
       if (bgp_misc_db->dump_backend_methods) {
+        bgp_misc_db->dump.period = config.bgp_table_dump_refresh_time / config.bgp_table_dump_time_slots;
 	while (bgp_misc_db->log_tstamp.tv_sec > dump_refresh_deadline) {
 	  bgp_misc_db->dump.tstamp.tv_sec = dump_refresh_deadline;
 	  bgp_misc_db->dump.tstamp.tv_usec = 0;
 	  compose_timestamp(bgp_misc_db->dump.tstamp_str, SRVBUFLEN, &bgp_misc_db->dump.tstamp, FALSE,
 			    config.timestamps_since_epoch, config.timestamps_rfc3339, config.timestamps_utc);
-	  bgp_misc_db->dump.period = refreshTimePerSlot;
 
 	  if (bgp_peer_log_seq_has_ro_bit(&bgp_misc_db->log_seq))
 	    bgp_peer_log_seq_init(&bgp_misc_db->log_seq);
 
 	  bgp_handle_dump_event(max_peers_idx);
-
-	  dump_refresh_deadline += refreshTimePerSlot;
+          dump_refresh_deadline += bgp_misc_db->dump.period;
 	}
       }
 
