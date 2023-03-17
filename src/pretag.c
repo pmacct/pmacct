@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -659,8 +659,10 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 
 	  /* honouring reserved labels (ie. "next"). Then resolving unknown labels */
 	  if (!strcmp(ptr->jeq.label, "next")) {
-	    ptr->jeq.ptr = ptr+1;
-	    label_solved = TRUE;
+	    if (x < (t->ipv4_num - 1)) {
+	      ptr->jeq.ptr = ptr+1;
+	      label_solved = TRUE;
+	    }
 	  }
 	  else {
             int ret;
