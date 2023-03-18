@@ -4006,7 +4006,7 @@ void NF_srv6_segment_ipv6_list(struct channels_list_entry *chptr, struct packet_
 
 void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status_g;
+  struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives); 
@@ -4022,7 +4022,7 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
       memcpy(&direction, pptrs->f_data+tpl->tpl[NF9_DIRECTION].off, MIN(tpl->tpl[NF9_DIRECTION].len, 1));
     }
 
-    if (!pbgp->mpls_vpn_rd.val) {
+    if (!pbgp->mpls_vpn_rd.val) { /* RD was not set with flow2rdmap */
       if (tpl->tpl[NF9_INGRESS_VRFID].len) {
 	memcpy(&ingress_vrfid, pptrs->f_data+tpl->tpl[NF9_INGRESS_VRFID].off, MIN(tpl->tpl[NF9_INGRESS_VRFID].len, 4));
 	ingress_vrfid = ntohl(ingress_vrfid);
@@ -4035,35 +4035,59 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
     }
 
     if (ingress_vrfid && (!direction /* 0 = ingress */ || !egress_vrfid)) {
-      if (entry->in_rd_map) {
+
+      if (entry->in_rd_map) { /* check obsID/srcID scoped xflow_status table */
         ret = cdada_map_find(entry->in_rd_map, &ingress_vrfid, (void **) &rd);
 	if (ret == CDADA_SUCCESS) {
 	  memcpy(&pbgp->mpls_vpn_rd, rd, 8);
 	  bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
 	}
       }
-      else {
-        pbgp->mpls_vpn_rd.val = ingress_vrfid;
-        if (pbgp->mpls_vpn_rd.val) {
-	  pbgp->mpls_vpn_rd.type = RD_TYPE_VRFID;
-	  bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
-	}
+
+      if ( !entry->in_rd_map || ret != CDADA_SUCCESS ) { /* fallback to the global xflow_status table */
+        entry = (struct xflow_status_entry *) pptrs->f_status_g;
+        if (entry->in_rd_map) {
+          ret = cdada_map_find(entry->in_rd_map, &ingress_vrfid, (void **) &rd);
+          if (ret == CDADA_SUCCESS) {
+            memcpy(&pbgp->mpls_vpn_rd, rd, 8);
+            bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
+          }
+        }
+        if ( !entry->in_rd_map || ret != CDADA_SUCCESS ) { /* no RD found in option data --> fallback to vrfID:XXX */
+          pbgp->mpls_vpn_rd.val = ingress_vrfid;
+          if (pbgp->mpls_vpn_rd.val) {
+	    pbgp->mpls_vpn_rd.type = RD_TYPE_VRFID;
+	    bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
+	  }
+        }
       }
     }
 
     if (egress_vrfid && (direction /* 1 = egress */ || !ingress_vrfid)) {
-      if (entry->out_rd_map) {
+
+      if (entry->out_rd_map) { /* check obsID/srcID scoped xflow_status table */
         ret = cdada_map_find(entry->out_rd_map, &egress_vrfid, (void **) &rd);
 	if (ret == CDADA_SUCCESS) {
 	  memcpy(&pbgp->mpls_vpn_rd, rd, 8);
 	  bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
 	}
       }
-      else {
-        pbgp->mpls_vpn_rd.val = egress_vrfid;
-        if (pbgp->mpls_vpn_rd.val) {
-	  pbgp->mpls_vpn_rd.type = RD_TYPE_VRFID;
-	  bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
+
+      if ( !entry->out_rd_map || ret != CDADA_SUCCESS ) { /* fallback to the global xflow_status table */
+        entry = (struct xflow_status_entry *) pptrs->f_status_g;
+        if (entry->out_rd_map) { 
+          ret = cdada_map_find(entry->out_rd_map, &egress_vrfid, (void **) &rd);
+          if (ret == CDADA_SUCCESS) {
+            memcpy(&pbgp->mpls_vpn_rd, rd, 8);
+            bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
+          }
+        }
+        if ( !entry->out_rd_map || ret != CDADA_SUCCESS ) { /* no RD found in option data --> fallback to vrfID:XXX */
+          pbgp->mpls_vpn_rd.val = egress_vrfid;
+          if (pbgp->mpls_vpn_rd.val) {
+            pbgp->mpls_vpn_rd.type = RD_TYPE_VRFID;
+            bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
+          }
 	}
       }
     }

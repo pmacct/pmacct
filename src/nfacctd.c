@@ -2023,7 +2023,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	/* Is this option about sampling? */
 	if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len || tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4 || 
-      tpl->tpl[NF9_SAMPLING_PKT_INTERVAL].len == 4 || tpl->tpl[NF9_SAMPLING_SIZE].len == 4) {
+            tpl->tpl[NF9_SAMPLING_PKT_INTERVAL].len == 4 || tpl->tpl[NF9_SAMPLING_SIZE].len == 4) {
 	  u_int8_t t8 = 0;
 	  u_int16_t t16 = 0;
 	  u_int32_t sampler_id = 0, t32 = 0, t32_2 = 0;
