@@ -1904,7 +1904,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	break;
       }
 
-      tpl = handle_template_v2(template_hdr, pptrs, fid, SourceId, &pens, flowsetlen-flowoff, FlowSeq);
+      tpl = handle_template_v2(template_hdr, (struct sockaddr *)pptrs->f_agent, fid, SourceId, &pens, flowsetlen-flowoff, FlowSeq);
       if (!tpl) return;
 
       tpl_len = sizeof(struct template_hdr_v9)+(ntohs(template_hdr->num)*sizeof(struct template_field_v9))+(pens*sizeof(u_int32_t));
@@ -1952,7 +1952,8 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	break;
       }
 
-      tpl = handle_template_v2((struct template_hdr_v9 *)opt_template_hdr, pptrs, fid, SourceId, &pens, flowsetlen-flowoff, FlowSeq);
+      tpl = handle_template_v2((struct template_hdr_v9 *)opt_template_hdr, (struct sockaddr *)pptrs->f_agent,
+			       fid, SourceId, &pens, flowsetlen-flowoff, FlowSeq);
       if (!tpl) return;
 
       if (fid == 3 /* IPFIX */) {

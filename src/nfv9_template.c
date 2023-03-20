@@ -1045,7 +1045,7 @@ int init_template_cache_v2(void)
   return SUCCESS;
 }
 
-struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, struct packet_ptrs *pptrs,
+struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, struct sockaddr *agent,
                                                 u_int16_t tpl_type, u_int32_t sid, u_int16_t *pens,
                                                 u_int16_t len, u_int32_t seq)
 {
@@ -1067,18 +1067,15 @@ struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *hdr, str
     version = 10;
   }
 
-  hash_keyval = compose_template_key(&hash_serializer, version, hdr->template_id,
-                                     (struct sockaddr *)pptrs->f_agent, sid);
+  hash_keyval = compose_template_key(&hash_serializer, version, hdr->template_id, agent, sid);
 
   /* 0 NetFlow v9, 2 IPFIX */
   if (tpl_type == 0 || tpl_type == 2) {
-    tpl = compose_template(hdr, (struct sockaddr *)pptrs->f_agent, tpl_type,
-                           sid, pens, version, len, seq);
+    tpl = compose_template(hdr, agent, tpl_type, sid, pens, version, len, seq);
   }
   /* 1 NetFlow v9, 3 IPFIX */
   else if (tpl_type == 1 || tpl_type == 3) {
-    tpl = compose_opt_template(hdr, (struct sockaddr *)pptrs->f_agent, tpl_type,
-                               sid, pens, version, len, seq);
+    tpl = compose_opt_template(hdr, agent, tpl_type, sid, pens, version, len, seq);
   }
 
 /*
@@ -1134,7 +1131,7 @@ struct template_cache_entry *find_template_v2(u_int16_t id, struct sockaddr *age
   u_char *hash_keyval;
   int ret;
 
-  hash_keyval = compose_template_key(&hash_serializer, version, id, (struct sockaddr *)agent, sid);
+  hash_keyval = compose_template_key(&hash_serializer, version, id, agent, sid);
 
   ret = cdada_map_find(tpl_data_map, hash_keyval, (void **) &tpl);
   if (ret == CDADA_E_NOT_FOUND) {
