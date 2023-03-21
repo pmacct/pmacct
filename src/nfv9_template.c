@@ -267,6 +267,7 @@ static void save_template(struct template_cache_entry *tpl, char *file)
 
   addr_to_str(ip_addr, &tpl->agent);
   json_object_set_new_nocheck(root, "agent", json_string(ip_addr));
+  json_object_set_new_nocheck(root, "version", json_integer(tpl->version));
   json_object_set_new_nocheck(root, "source_id", json_integer(tpl->source_id));
   json_object_set_new_nocheck(root, "template_id", json_integer(tpl->template_id));
   json_object_set_new_nocheck(root, "template_type", json_integer(tpl->template_type));
@@ -360,6 +361,7 @@ static void update_template_in_file(struct template_cache_entry *tpl, char *path
   char tmpbuf[LARGEBUFLEN], tpl_agent_str[INET6_ADDRSTRLEN];
   const char *addr;
   int line = 0, tpl_found = 0;
+  u_int8_t version;
   u_int16_t tpl_id, tpl_type;
   u_int32_t src_id;
 
@@ -419,11 +421,20 @@ static void update_template_in_file(struct template_cache_entry *tpl, char *path
           goto next_line;
         }
         else tpl_type = json_integer_value(json_tpl_type);
+
+        json_t *json_version = json_object_get(json_obj, "version");
+        if (json_version == NULL) {
+          Log(LOG_WARNING, "WARN ( %s/core ): [%s] update_template_in_file(): version null. Line skipped.\n",
+              config.name, path);
+          goto next_line;
+        }
+        else version = json_integer_value(json_version);
       }
 
       addr_to_str(tpl_agent_str, &tpl->agent);
       if (tpl_id == tpl->template_id && tpl_type == tpl->template_type
-              && src_id == tpl->source_id && !strcmp(addr, tpl_agent_str)) {
+              && src_id == tpl->source_id && version == tpl->version
+	      && !strcmp(addr, tpl_agent_str)) {
         tpl_found = TRUE;
         json_decref(json_obj);
         break;
@@ -458,6 +469,7 @@ static struct template_cache_entry *nfacctd_offline_read_json_template(char *buf
   json_error_t json_err;
   json_t *json_obj = NULL, *json_tpl_id = NULL, *json_src_id = NULL, *json_tpl_type = NULL;
   json_t *json_num = NULL, *json_len = NULL, *json_agent = NULL, *json_list = NULL;
+  json_t *json_version = NULL;
   const char *agent_str;
 
   json_obj = json_loads(buf, 0, &json_err);
@@ -485,6 +497,13 @@ static struct template_cache_entry *nfacctd_offline_read_json_template(char *buf
         goto exit_lane;
       }
       else ret->template_id = json_integer_value(json_tpl_id);
+
+      json_version = json_object_get(json_obj, "version");
+      if (json_version == NULL) {
+        snprintf(errbuf, errlen, "nfacctd_offline_read_json_template(): version null. Line skipped.\n");
+        goto exit_lane;
+      }
+      else ret->version = json_integer_value(json_version);
 
       json_src_id = json_object_get(json_obj, "source_id");
       if (json_src_id == NULL) {
@@ -757,13 +776,16 @@ static u_char *compose_template_key(pm_hash_serial_t *ser, u_int8_t nf_version,
 {
   pm_hash_key_t *hash_key;
   u_int16_t hash_keylen;
+  u_int16_t saved_agent_port;
 
   hash_keylen = calc_template_keylen();
   hash_init_serial(ser, hash_keylen);
   hash_serial_append(ser, (char *)&nf_version, sizeof(nf_version), FALSE);
   hash_serial_append(ser, (char *)&template_id, sizeof(template_id), FALSE);
   hash_serial_append(ser, (char *)&source_id, sizeof(source_id), TRUE);
+  sa_reset_and_save_port((struct sockaddr_storage *) agent, &saved_agent_port);
   hash_serial_append(ser, (char *)agent, sizeof(struct sockaddr_storage), TRUE);
+  sa_set_port((struct sockaddr_storage *)agent, saved_agent_port);
   hash_key = hash_serial_get_key(ser);
 
   return hash_key_get_val(hash_key);
@@ -1223,6 +1245,7 @@ void load_templates_from_file(char *path)
       Log(LOG_WARNING, "WARN ( %s/core ): [%s:%u] %s\n", config.name, path, line, errbuf);
     }
     else {
+      memset(&agent, 0, sizeof(struct sockaddr_storage));
       addr_to_sa((struct sockaddr *) &agent, &tpl->agent, 0);
 
       /* We assume the cache is empty when templates are loaded */
@@ -1232,10 +1255,23 @@ void load_templates_from_file(char *path)
         free(tpl);
       }
       else {
-	// XXX
+	char debug_agent_addr[50];
+	pm_hash_serial_t hash_serializer;
+	u_char *hash_keyval;
+	int ret;
 
-        Log(LOG_DEBUG, "DEBUG ( %s/core ): load_templates_from_file(): loaded template %u into cache.\n",
-            config.name, tpl->template_id);
+	hash_keyval = compose_template_key(&hash_serializer, tpl->version, tpl->template_id, (struct sockaddr *)&agent, tpl->source_id);
+	addr_to_str(debug_agent_addr, &tpl->agent);
+
+	ret = cdada_map_insert(tpl_data_map, hash_keyval, tpl);
+	if (ret != CDADA_SUCCESS) {
+	  Log(LOG_WARNING, "WARN ( %s/core ): load_templates_from_file(): Unable to insert template %u [%s:%u] in tpl_data_map\n",
+	      config.name, ntohs(tpl->template_id), debug_agent_addr, tpl->source_id);
+	}
+	else {
+          Log(LOG_DEBUG, "DEBUG ( %s/core ): load_templates_from_file(): loaded template %u [%s:%u] into cache.\n",
+	      config.name, ntohs(tpl->template_id), debug_agent_addr, tpl->source_id);
+	}
       }
     }
 
