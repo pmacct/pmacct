@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -1009,6 +1009,48 @@ socklen_t sa_len(struct sockaddr_storage *ss)
     }
     else {
       return sizeof(struct sockaddr_storage);
+    }
+  }
+
+  return 0;
+}
+
+unsigned int sa_reset_and_save_port(struct sockaddr_storage *ss, u_int16_t *port)
+{
+  struct sockaddr *sa = (struct sockaddr *) ss;
+
+  if (sa) {
+    if (sa->sa_family == AF_INET) {
+      struct sockaddr_in *sin = (struct sockaddr_in *) sa;
+      (*port) = sin->sin_port;
+      sin->sin_port = 0;
+      return sa->sa_family;
+    }
+    else if (sa->sa_family == AF_INET6) {
+      struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) sa;
+      (*port) = sin6->sin6_port;
+      sin6->sin6_port = 0;
+      return sa->sa_family;
+    }
+  }
+
+  return 0;
+}
+
+unsigned int sa_set_port(struct sockaddr_storage *ss, u_int16_t port)
+{
+  struct sockaddr *sa = (struct sockaddr *) ss;
+
+  if (sa) {
+    if (sa->sa_family == AF_INET) {
+      struct sockaddr_in *sin = (struct sockaddr_in *) sa;
+      sin->sin_port = port;
+      return sa->sa_family;
+    }
+    else if (sa->sa_family == AF_INET6) {
+      struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *) sa;
+      sin6->sin6_port = port;
+      return sa->sa_family;
     }
   }
 

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -102,6 +102,8 @@ extern u_int32_t addr_port_hash(struct host_addr *, u_int16_t, u_int32_t);
 extern u_int32_t sa_hash(struct sockaddr *, u_int32_t);
 extern u_int16_t sa_has_family(struct sockaddr *);
 extern socklen_t sa_len(struct sockaddr_storage *);
+extern unsigned int sa_reset_and_save_port(struct sockaddr_storage *, u_int16_t *);
+extern unsigned int sa_set_port(struct sockaddr_storage *, u_int16_t);
 
 extern void ipv4_to_ipv4_mapped(struct sockaddr_storage *);
 extern void ipv4_mapped_to_ipv4(struct sockaddr_storage *);
