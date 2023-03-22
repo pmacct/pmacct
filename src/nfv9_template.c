@@ -158,7 +158,7 @@ static void log_template_header(struct template_cache_entry *tpl, struct sockadd
                                 u_int16_t tpl_type, u_int32_t sid, u_int8_t version)
 {
   struct host_addr a;
-  char agent_addr[50];
+  char agent_addr[INET6_ADDRSTRLEN];
   u_int16_t agent_port;
 
   sa_to_addr(agent, &a, &agent_port);
@@ -347,9 +347,13 @@ static void save_template(struct template_cache_entry *tpl, char *file)
      to prevent the template cache from being corrupted. */
 
   if (root) {
-      write_and_free_json(tpl_file, root);
-      Log(LOG_DEBUG, "DEBUG ( %s/core ): save_template(): saved template %u into file.\n",
-          config.name, tpl->template_id);
+    char debug_agent_addr[INET6_ADDRSTRLEN];
+
+    addr_to_str(debug_agent_addr, &tpl->agent);
+
+    write_and_free_json(tpl_file, root);
+    Log(LOG_DEBUG, "DEBUG ( %s/core ): save_template(): saved template %u [%s:%u] into file.\n",
+	config.name, ntohs(tpl->template_id), debug_agent_addr, tpl->source_id); 
   }
 
   close_output_file(tpl_file);
@@ -1255,7 +1259,7 @@ void load_templates_from_file(char *path)
         free(tpl);
       }
       else {
-	char debug_agent_addr[50];
+	char debug_agent_addr[INET6_ADDRSTRLEN];
 	pm_hash_serial_t hash_serializer;
 	u_char *hash_keyval;
 	int ret;
@@ -1319,7 +1323,7 @@ void notify_malf_packet(short int severity, char *severity_str, char *ostr,
 {
   struct host_addr a;
   char errstr[SRVBUFLEN];
-  char agent_addr[50] /* able to fit an IPv6 string aswell */, any[] = "0.0.0.0";
+  char agent_addr[INET6_ADDRSTRLEN] /* able to fit an IPv6 string aswell */, any[] = "0.0.0.0";
   u_int16_t agent_port;
 
   sa_to_addr((struct sockaddr *)sa, &a, &agent_port);
