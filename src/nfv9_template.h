@@ -311,7 +311,7 @@ struct template_cache_entry {
 
 /* functions */
 extern int init_template_cache_v2(void);
-extern struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *, struct packet_ptrs *, u_int16_t,
+extern struct template_cache_entry *handle_template_v2(struct template_hdr_v9 *, struct sockaddr *, u_int16_t,
 						       u_int32_t, u_int16_t *, u_int16_t, u_int32_t);
 extern struct template_cache_entry *find_template_v2(u_int16_t, struct sockaddr *, u_int8_t, u_int16_t, u_int32_t);
 
