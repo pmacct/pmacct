@@ -29,7 +29,7 @@
 /* prototypes */
 extern void bmp_srcdst_lookup(struct packet_ptrs *);
 extern struct bgp_peer *bgp_lookup_find_bmp_peer(struct sockaddr *, struct xflow_status_entry *, u_int16_t, int);
-extern u_int32_t bmp_route_info_modulo_pathid(struct bgp_peer *, path_id_t *, int);
+extern u_int32_t bmp_route_info_modulo_pathid(struct bgp_peer *, rd_t *, path_id_t *, int);
 extern int bgp_lookup_node_match_cmp_bmp(struct bgp_info *, struct node_match_cmp_term2 *);
 
 #endif //BMP_LOOKUP_H

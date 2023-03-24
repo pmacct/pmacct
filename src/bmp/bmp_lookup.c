@@ -86,21 +86,23 @@ struct bgp_peer *bgp_lookup_find_bmp_peer(struct sockaddr *sa, struct xflow_stat
   return peer;
 }
 
-u_int32_t bmp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id, int per_peer_buckets)
+u_int32_t bmp_route_info_modulo_pathid(struct bgp_peer *peer, rd_t *rd, path_id_t *path_id, int per_peer_buckets)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
   struct bmp_peer *bmpp = peer->bmp_se;
   path_id_t local_path_id = 1;
   int fd = 0;
+  u_int16_t local_rd = 0;
 
   if (path_id && *path_id) local_path_id = *path_id;
+  if (rd) local_rd = (rd->type + rd->as + rd->val);
 
   if (peer->fd) fd = peer->fd;
   else {
     if (bmpp && bmpp->self.fd) fd = bmpp->self.fd;
   }
 
-  return (((fd * per_peer_buckets) +
+  return ((((fd + local_rd) * per_peer_buckets) +
           ((local_path_id - 1) % per_peer_buckets)) %
           (bms->table_peer_buckets * per_peer_buckets));
 }
