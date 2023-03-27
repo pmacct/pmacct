@@ -517,7 +517,9 @@ int main(int argc,char **argv, char **envp)
 			COUNT_EXPORT_PROTO_TIME|COUNT_FWD_STATUS|COUNT_FW_EVENT))
 	  list->cfg.data_type |= PIPE_TYPE_NAT;
 
-	if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_TOP| COUNT_MPLS_LABEL_BOTTOM))
+	if (list->cfg.what_to_count_2 & (COUNT_MPLS_LABEL_TOP|COUNT_MPLS_LABEL_BOTTOM|
+					 COUNT_PATH_DELAY_AVG_USEC|COUNT_PATH_DELAY_MIN_USEC|
+					 COUNT_PATH_DELAY_MAX_USEC))
 	  list->cfg.data_type |= PIPE_TYPE_MPLS;
 
 	if (list->cfg.what_to_count_2 & (COUNT_TUNNEL_SRC_MAC|COUNT_TUNNEL_DST_MAC|

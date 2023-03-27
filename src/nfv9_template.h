@@ -180,6 +180,11 @@
 /* ... */
 #define NF9_srhSegmentIPv6ListSection   505
 /* ... */
+#define NF9_PathDelayMeanDeltaUsecs	600
+#define NF9_PathDelayMinDeltaUsecs	601
+#define NF9_PathDelayMaxDeltaUsecs	602
+#define NF9_PathDelaySumDeltaUsecs	603
+/* ... */
 #define NF9_ASA_XLATE_IPV4_SRC_ADDR     40001
 #define NF9_ASA_XLATE_IPV4_DST_ADDR     40002
 #define NF9_ASA_XLATE_L4_SRC_PORT       40003

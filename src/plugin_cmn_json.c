@@ -352,6 +352,21 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3)
     idx++;
   }
 
+  if (wtc_2 & COUNT_PATH_DELAY_AVG_USEC) {
+    cjhandler[idx] = compose_json_path_delay_avg_usec;
+    idx++;
+  }
+
+  if (wtc_2 & COUNT_PATH_DELAY_MIN_USEC) {
+    cjhandler[idx] = compose_json_path_delay_min_usec;
+    idx++;
+  }
+
+  if (wtc_2 & COUNT_PATH_DELAY_MAX_USEC) {
+    cjhandler[idx] = compose_json_path_delay_max_usec;
+    idx++;
+  }
+
   if (wtc & COUNT_IP_PROTO) {
     cjhandler[idx] = compose_json_proto;
     idx++;
@@ -1541,4 +1556,19 @@ json_t *compose_srv6_segment_ipv6_list_json_data(struct host_addr *ipv6_list, in
   }
 
   return root;
+}
+
+void compose_json_path_delay_avg_usec(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "path_delay_avg_usec", json_integer((json_int_t)cc->pmpls->path_delay_avg_usec));
+}
+
+void compose_json_path_delay_min_usec(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "path_delay_min_usec", json_integer((json_int_t)cc->pmpls->path_delay_min_usec));
+}
+
+void compose_json_path_delay_max_usec(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "path_delay_max_usec", json_integer((json_int_t)cc->pmpls->path_delay_max_usec));
 }

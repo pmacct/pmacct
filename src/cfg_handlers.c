@@ -360,6 +360,9 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "src_roa")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_ROA, count_token);
     else if (!strcmp(count_token, "dst_roa")) cfg_set_aggregate(filename, value, COUNT_INT_DST_ROA, count_token);
     else if (!strcmp(count_token, "vxlan")) cfg_set_aggregate(filename, value, COUNT_INT_VXLAN, count_token);
+    else if (!strcmp(count_token, "path_delay_avg_usec")) cfg_set_aggregate(filename, value, COUNT_INT_PATH_DELAY_AVG_USEC, count_token);
+    else if (!strcmp(count_token, "path_delay_min_usec")) cfg_set_aggregate(filename, value, COUNT_INT_PATH_DELAY_MIN_USEC, count_token);
+    else if (!strcmp(count_token, "path_delay_max_usec")) cfg_set_aggregate(filename, value, COUNT_INT_PATH_DELAY_MAX_USEC, count_token);
     else {
       cpptrs.primitive[cpptrs.num].name = count_token;
       cpptrs.num++;

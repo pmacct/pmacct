@@ -585,6 +585,9 @@ struct pkt_nat_primitives {
 struct pkt_mpls_primitives {
   u_int32_t mpls_label_top;
   u_int32_t mpls_label_bottom;
+  u_int32_t path_delay_avg_usec;
+  u_int32_t path_delay_min_usec;
+  u_int32_t path_delay_max_usec;
 };
 
 struct pkt_tunnel_primitives {

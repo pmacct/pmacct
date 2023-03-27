@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -116,6 +116,9 @@ extern void NF_srv6_segment_ipv6_list(struct channels_list_entry *, struct packe
 extern void NF_mpls_vpn_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_vpn_rd_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_pw_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void NF_path_delay_avg_usec_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void NF_path_delay_min_usec_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void NF_path_delay_max_usec_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_vxlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_timestamp_start_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_timestamp_end_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

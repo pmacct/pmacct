@@ -884,6 +884,10 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (config.what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) fprintf(f, "%-20u  ", data->export_proto_version);
         if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SYSID) fprintf(f, "%-18u  ", data->export_proto_sysid);
 
+        if (config.what_to_count_2 & COUNT_PATH_DELAY_AVG_USEC) fprintf(f, "%-19u  ", pmpls->path_delay_avg_usec);
+        if (config.what_to_count_2 & COUNT_PATH_DELAY_MIN_USEC) fprintf(f, "%-19u  ", pmpls->path_delay_min_usec);
+        if (config.what_to_count_2 & COUNT_PATH_DELAY_MAX_USEC) fprintf(f, "%-19u  ", pmpls->path_delay_max_usec);
+
         /* all custom primitives printed here */
         {
           int cp_idx;
@@ -1276,6 +1280,10 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) fprintf(f, "%s%u", write_sep(sep, &count), data->export_proto_seqno);
         if (config.what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) fprintf(f, "%s%u", write_sep(sep, &count), data->export_proto_version);
         if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SYSID) fprintf(f, "%s%u", write_sep(sep, &count), data->export_proto_sysid);
+
+        if (config.what_to_count_2 & COUNT_PATH_DELAY_AVG_USEC) fprintf(f, "%s%u", write_sep(sep, &count), pmpls->path_delay_avg_usec);
+        if (config.what_to_count_2 & COUNT_PATH_DELAY_MIN_USEC) fprintf(f, "%s%u", write_sep(sep, &count), pmpls->path_delay_min_usec);
+        if (config.what_to_count_2 & COUNT_PATH_DELAY_MAX_USEC) fprintf(f, "%s%u", write_sep(sep, &count), pmpls->path_delay_max_usec);
   
         /* all custom primitives printed here */
         {
@@ -1526,6 +1534,9 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) fprintf(f, "EXPORT_PROTO_SEQNO  ");
   if (config.what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) fprintf(f, "EXPORT_PROTO_VERSION  ");
   if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SYSID) fprintf(f, "EXPORT_PROTO_SYSID  ");
+  if (config.what_to_count_2 & COUNT_PATH_DELAY_AVG_USEC) fprintf(f, "PATH_DELAY_AVG_USEC  ");
+  if (config.what_to_count_2 & COUNT_PATH_DELAY_MIN_USEC) fprintf(f, "PATH_DELAY_MIN_USEC  ");
+  if (config.what_to_count_2 & COUNT_PATH_DELAY_MAX_USEC) fprintf(f, "PATH_DELAY_MAX_USEC  ");
 
   /* all custom primitives printed here */
   {
@@ -1657,6 +1668,9 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SEQNO) fprintf(f, "%sEXPORT_PROTO_SEQNO", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_EXPORT_PROTO_VERSION) fprintf(f, "%sEXPORT_PROTO_VERSION", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_EXPORT_PROTO_SYSID) fprintf(f, "%sEXPORT_PROTO_SYSID", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_PATH_DELAY_AVG_USEC) fprintf(f, "%sPATH_DELAY_AVG_USEC", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_PATH_DELAY_MIN_USEC) fprintf(f, "%sPATH_DELAY_MIN_USEC", write_sep(sep, &count));
+  if (config.what_to_count_2 & COUNT_PATH_DELAY_MAX_USEC) fprintf(f, "%sPATH_DELAY_MAX_USEC", write_sep(sep, &count));
 
   /* all custom primitives printed here */
   { 

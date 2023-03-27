@@ -292,6 +292,15 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_in
   if (wtc_2 & COUNT_MPLS_LABEL_BOTTOM)
     avro_schema_record_field_append(schema, "mpls_label_bottom", avro_schema_long());
 
+  if (wtc_2 & COUNT_PATH_DELAY_AVG_USEC)
+    avro_schema_record_field_append(schema, "path_delay_avg_usec", avro_schema_long());
+
+  if (wtc_2 & COUNT_PATH_DELAY_MIN_USEC)
+    avro_schema_record_field_append(schema, "path_delay_min_usec", avro_schema_long());
+
+  if (wtc_2 & COUNT_PATH_DELAY_MAX_USEC)
+    avro_schema_record_field_append(schema, "path_delay_max_usec", avro_schema_long());
+
   if (wtc_2 & COUNT_TUNNEL_SRC_MAC)
     avro_schema_record_field_append(schema, "tunnel_mac_src", avro_schema_string());
 
@@ -978,6 +987,21 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wt
   if (wtc_2 & COUNT_MPLS_LABEL_BOTTOM) {
     pm_avro_check(avro_value_get_by_name(&value, "mpls_label_bottom", &field, NULL));
     pm_avro_check(avro_value_set_long(&field, pmpls->mpls_label_bottom));
+  }
+
+  if (wtc_2 & COUNT_PATH_DELAY_AVG_USEC) {
+    pm_avro_check(avro_value_get_by_name(&value, "path_delay_avg_usec", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pmpls->path_delay_avg_usec));
+  }
+
+  if (wtc_2 & COUNT_PATH_DELAY_MIN_USEC) {
+    pm_avro_check(avro_value_get_by_name(&value, "path_delay_min_usec", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pmpls->path_delay_min_usec));
+  }
+
+  if (wtc_2 & COUNT_PATH_DELAY_MAX_USEC) {
+    pm_avro_check(avro_value_get_by_name(&value, "path_delay_max_usec", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, pmpls->path_delay_max_usec));
   }
 
   if (wtc_2 & COUNT_TUNNEL_SRC_MAC) {

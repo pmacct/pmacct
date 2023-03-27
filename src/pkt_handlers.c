@@ -908,6 +908,45 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    if (channels_list[index].aggregation_2 & COUNT_PATH_DELAY_AVG_USEC) {
+      if (config.acct_type == ACCT_PM) {
+	warn_unsupported_packet_handler(COUNT_INT_PATH_DELAY_AVG_USEC, ACCT_PM);
+	primitives--;
+      }
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_path_delay_avg_usec_handler;
+      else if (config.acct_type == ACCT_SF) {
+	warn_unsupported_packet_handler(COUNT_INT_PATH_DELAY_AVG_USEC, ACCT_SF);
+	primitives--;
+      }
+      primitives++;
+    }
+
+    if (channels_list[index].aggregation_2 & COUNT_PATH_DELAY_MIN_USEC) {
+      if (config.acct_type == ACCT_PM) {
+	warn_unsupported_packet_handler(COUNT_INT_PATH_DELAY_MIN_USEC, ACCT_PM);
+	primitives--;
+      }
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_path_delay_min_usec_handler;
+      else if (config.acct_type == ACCT_SF) {
+	warn_unsupported_packet_handler(COUNT_INT_PATH_DELAY_MIN_USEC, ACCT_SF);
+	primitives--;
+      }
+      primitives++;
+    }
+
+    if (channels_list[index].aggregation_2 & COUNT_PATH_DELAY_MAX_USEC) {
+      if (config.acct_type == ACCT_PM) {
+	warn_unsupported_packet_handler(COUNT_INT_PATH_DELAY_MAX_USEC, ACCT_PM);
+	primitives--;
+      }
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_path_delay_max_usec_handler;
+      else if (config.acct_type == ACCT_SF) {
+	warn_unsupported_packet_handler(COUNT_INT_PATH_DELAY_MAX_USEC, ACCT_SF);
+	primitives--;
+      }
+      primitives++;
+    }
+
     if (channels_list[index].aggregation_2 & COUNT_TIMESTAMP_START) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = timestamp_start_handler; // XXX: to be removed
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_timestamp_start_handler;
@@ -3958,6 +3997,94 @@ void NF_mpls_label_bottom_handler(struct channels_list_entry *chptr, struct pack
         mpls_label_bottom_handler(chptr, pptrs, data);
     }
 
+    break;
+  default:
+    break;
+  }
+}
+
+void NF_path_delay_avg_usec_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
+  struct utpl_field *utpl = NULL;
+  u_int32_t packets32 = 0, delay32 = 0;
+  u_int64_t packets64 = 0, delay64 = 0;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    /* case 1: PathDelayMeanDeltaUsecs */
+    if ((utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_PathDelayMeanDeltaUsecs, FALSE)) ||
+        (utpl = (*get_ext_db_ie_by_type)(tpl, HUAWEI_PEN, 521, FALSE))) {
+      memcpy(&delay32, (pptrs->f_data + utpl->off), 4);
+      pmpls->path_delay_avg_usec = ntohl(delay32);
+    }
+    
+    /* case 2: PathDelaySumDeltaUsecs */
+    if ((utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_PathDelaySumDeltaUsecs, FALSE)) ||
+        (utpl = (*get_ext_db_ie_by_type)(tpl, HUAWEI_PEN, 527, FALSE))) {
+      memcpy(&delay64, (pptrs->f_data + utpl->off), 8);
+
+      if (tpl->tpl[NF9_IN_PACKETS].len == 4) {
+	memcpy(&packets32, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 4);
+	packets64 = ntohl(packets32);
+      }
+      else if (tpl->tpl[NF9_IN_PACKETS].len == 8) {
+	memcpy(&packets64, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 8);
+	packets64 = pm_ntohll(packets64);
+      }
+
+      if (pmpls->path_delay_avg_usec && packets64) {
+	pmpls->path_delay_avg_usec = pm_ntohll(delay64);
+	pmpls->path_delay_avg_usec /= packets64;
+      }
+    }
+    break;
+  default:
+    break;
+  }
+}
+
+void NF_path_delay_min_usec_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
+  struct utpl_field *utpl = NULL;
+  u_int32_t delay32 = 0;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if ((utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_PathDelayMinDeltaUsecs, FALSE)) ||
+        (utpl = (*get_ext_db_ie_by_type)(tpl, HUAWEI_PEN, 523, FALSE))) {
+      memcpy(&delay32, (pptrs->f_data + utpl->off), 4);
+      pmpls->path_delay_min_usec = ntohl(delay32);
+    }
+    break;
+  default:
+    break;
+  }
+}
+
+void NF_path_delay_max_usec_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_mpls_primitives *pmpls = (struct pkt_mpls_primitives *) ((*data) + chptr->extras.off_pkt_mpls_primitives);
+  struct utpl_field *utpl = NULL;
+  u_int32_t delay32 = 0;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if ((utpl = (*get_ext_db_ie_by_type)(tpl, 0, NF9_PathDelayMaxDeltaUsecs, FALSE)) ||
+        (utpl = (*get_ext_db_ie_by_type)(tpl, HUAWEI_PEN, 525, FALSE))) {
+      memcpy(&delay32, (pptrs->f_data + utpl->off), 4);
+      pmpls->path_delay_max_usec = ntohl(delay32);
+    }
     break;
   default:
     break;

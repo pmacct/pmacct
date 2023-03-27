@@ -140,6 +140,10 @@ extern void compose_json_custom_primitives(json_t *, struct chained_cache *);
 extern void compose_json_history(json_t *, struct chained_cache *);
 extern void compose_json_flows(json_t *, struct chained_cache *);
 extern void compose_json_counters(json_t *, struct chained_cache *);
+extern void compose_json_path_delay_avg_usec(json_t *, struct chained_cache *);
+extern void compose_json_path_delay_min_usec(json_t *, struct chained_cache *);
+extern void compose_json_path_delay_max_usec(json_t *, struct chained_cache *);
+
 #endif
 extern void compose_json(u_int64_t, u_int64_t, u_int64_t);
 extern void *compose_purge_init_json(char *, pid_t);
