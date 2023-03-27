@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -791,6 +791,10 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
 
 	bson_append_int(bson_elem, "mpls_label_stack", label_stack);
       }
+
+      if (config.what_to_count_2 & COUNT_PATH_DELAY_AVG_USEC) bson_append_int(bson_elem, "path_delay_avg_usec", pmpls->path_delay_avg_usec);
+      if (config.what_to_count_2 & COUNT_PATH_DELAY_MIN_USEC) bson_append_int(bson_elem, "path_delay_min_usec", pmpls->path_delay_min_usec);
+      if (config.what_to_count_2 & COUNT_PATH_DELAY_MAX_USEC) bson_append_int(bson_elem, "path_delay_max_usec", pmpls->path_delay_max_usec);
 
       if (config.what_to_count_2 & COUNT_TUNNEL_SRC_MAC) {
         etheraddr_string(ptun->tunnel_eth_shost, src_mac);

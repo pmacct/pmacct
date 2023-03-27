@@ -1234,6 +1234,10 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) what_to_count_2 |= COUNT_MPLS_LABEL_BOTTOM;
     if (config.what_to_count_2 & COUNT_MPLS_LABEL_STACK) what_to_count_2 |= COUNT_MPLS_LABEL_STACK;
 
+    if (config.what_to_count_2 & COUNT_PATH_DELAY_AVG_USEC) what_to_count_2 |= COUNT_PATH_DELAY_AVG_USEC;
+    if (config.what_to_count_2 & COUNT_PATH_DELAY_MIN_USEC) what_to_count_2 |= COUNT_PATH_DELAY_MIN_USEC;
+    if (config.what_to_count_2 & COUNT_PATH_DELAY_MAX_USEC) what_to_count_2 |= COUNT_PATH_DELAY_MAX_USEC;
+
     if (config.what_to_count_2 & COUNT_TUNNEL_SRC_MAC) what_to_count_2 |= COUNT_TUNNEL_SRC_MAC;
     if (config.what_to_count_2 & COUNT_TUNNEL_DST_MAC) what_to_count_2 |= COUNT_TUNNEL_DST_MAC;
     if (config.what_to_count_2 & COUNT_TUNNEL_SRC_HOST) what_to_count_2 |= COUNT_TUNNEL_SRC_HOST;
@@ -2483,6 +2487,48 @@ int sql_evaluate_primitives(int primitive)
     strncat(values[primitive].string, "%s", SPACELEFT(values[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_INT_MPLS_LABEL_STACK;
     values[primitive].handler = where[primitive].handler = count_mpls_label_stack_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_PATH_DELAY_AVG_USEC) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "path_delay_avg_usec", SPACELEFT(insert_clause));
+    strncat(where[primitive].string, "path_delay_avg_usec=%u", SPACELEFT(where[primitive].string));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_PATH_DELAY_AVG_USEC;
+    values[primitive].handler = where[primitive].handler = count_path_delay_avg_usec_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_PATH_DELAY_MIN_USEC) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "path_delay_min_usec", SPACELEFT(insert_clause));
+    strncat(where[primitive].string, "path_delay_min_usec=%u", SPACELEFT(where[primitive].string));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_PATH_DELAY_MIN_USEC;
+    values[primitive].handler = where[primitive].handler = count_path_delay_min_usec_handler;
+    primitive++;
+  }
+
+  if (what_to_count_2 & COUNT_PATH_DELAY_MAX_USEC) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "path_delay_max_usec", SPACELEFT(insert_clause));
+    strncat(where[primitive].string, "path_delay_max_usec=%u", SPACELEFT(where[primitive].string));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_PATH_DELAY_MAX_USEC;
+    values[primitive].handler = where[primitive].handler = count_path_delay_max_usec_handler;
     primitive++;
   }
 
