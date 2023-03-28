@@ -395,7 +395,7 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
   }
 #endif
 
-  for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
+  for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2 || channels_list[index].aggregation_3; index++) {
     struct plugins_list_entry *p = channels_list[index].plugin;
 
     channels_list[index].already_reprocessed = FALSE;
@@ -569,7 +569,7 @@ reprocess:
   if (reload_map_exec_plugins) {
     memset(&req->ptm_c, 0, sizeof(struct ptm_complex)); 
 
-    for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
+    for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2 || channels_list[index].aggregation_3; index++) {
       struct plugins_list_entry *p = channels_list[index].plugin;
 
       if (p->cfg.pre_tag_map && find_id_func) {
@@ -602,9 +602,11 @@ struct channels_list_entry *insert_pipe_channel(int plugin_type, struct configur
 
   while (index < MAX_N_PLUGINS) {
     chptr = &channels_list[index]; 
-    if (!chptr->aggregation && !chptr->aggregation_2) { /* found room */
+    if (!chptr->aggregation && !chptr->aggregation_2 && !chptr->aggregation_3) {
+      /* found room */
       chptr->aggregation = cfg->what_to_count;
       chptr->aggregation_2 = cfg->what_to_count_2;
+      chptr->aggregation_3 = cfg->what_to_count_3;
       chptr->pipe = pipe; 
       chptr->agg_filter.table = cfg->bpfp_a_table;
       chptr->agg_filter.num = (int *) &cfg->bpfp_a_num; 
@@ -667,6 +669,7 @@ void delete_pipe_channel(int pipe)
     if (chptr->pipe == pipe) {
       chptr->aggregation = FALSE;
       chptr->aggregation_2 = FALSE;
+      chptr->aggregation_3 = FALSE;
 	
       /* we ensure that any plugin is depending on the one
 	 being removed via the 'same_aggregate' flag */
@@ -674,8 +677,8 @@ void delete_pipe_channel(int pipe)
 	index2 = index;
 	for (index2++; index2 < MAX_N_PLUGINS; index2++) {
 	  chptr = &channels_list[index2];
-
-	  if (!chptr->aggregation && !chptr->aggregation_2) break; /* we finished channels */
+          if (!chptr->aggregation && !chptr->aggregation_2 && !chptr->aggregation_3)
+            break; /* we finished channels */
 	  if (chptr->same_aggregate) {
 	    chptr->same_aggregate = FALSE;
 	    break; 
@@ -687,7 +690,7 @@ void delete_pipe_channel(int pipe)
       index2 = index;
       for (index2++; index2 < MAX_N_PLUGINS; index2++) {
 	chptr = &channels_list[index2];
-	if (chptr->aggregation || chptr->aggregation_2) {
+	if (chptr->aggregation || chptr->aggregation_2 || chptr->aggregation_3) {
 	  memcpy(&channels_list[index], chptr, sizeof(struct channels_list_entry)); 
 	  memset(chptr, 0, sizeof(struct channels_list_entry)); 
 	  index++;
@@ -709,12 +712,15 @@ void sort_pipe_channels()
   int x = 0, y = 0; 
 
   while (x < MAX_N_PLUGINS) {
-    if (!channels_list[x].aggregation && !channels_list[x].aggregation_2) break;
+    if (!channels_list[x].aggregation && !channels_list[x].aggregation_2 && !channels_list[x].aggregation_3)
+      break;
     y = x+1; 
     while (y < MAX_N_PLUGINS) {
-      if (!channels_list[y].aggregation && !channels_list[y].aggregation_2) break;
+      if (!channels_list[y].aggregation && !channels_list[y].aggregation_2 && !channels_list[x].aggregation_3)
+        break;
       if (channels_list[x].aggregation == channels_list[y].aggregation &&
-          channels_list[x].aggregation_2 == channels_list[y].aggregation_2) {
+          channels_list[x].aggregation_2 == channels_list[y].aggregation_2 &&
+          channels_list[x].aggregation_3 == channels_list[y].aggregation_3) {
 	channels_list[y].same_aggregate = TRUE;
 	if (y == x+1) x++;
 	else {
@@ -836,7 +842,7 @@ void fill_pipe_buffer()
   struct channels_list_entry *chptr;
   int index;
 
-  for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2; index++) {
+  for (index = 0; channels_list[index].aggregation || channels_list[index].aggregation_2 || channels_list[index].aggregation_3; index++) {
     chptr = &channels_list[index];
 
     chptr->hdr.seq++;

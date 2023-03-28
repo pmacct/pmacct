@@ -89,6 +89,7 @@ struct plugins_list_entry {
 struct channels_list_entry {
   pm_cfgreg_t aggregation;
   pm_cfgreg_t aggregation_2;
+  pm_cfgreg_t aggregation_3;
   u_int64_t buf;	/* buffer base */
   u_int64_t bufptr;	/* buffer current */
   u_int64_t bufend;	/* buffer end */
