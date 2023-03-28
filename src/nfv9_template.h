@@ -39,6 +39,7 @@
 #define IES_PER_TPL_EXT_DB_ENTRY        32
 #define TPL_EXT_DB_ENTRIES              8
 #define TPL_LIST_ENTRIES                256
+#define TPL_MAX_ELEM_REPEATS            3
 #define TPL_TYPE_LEGACY                 0
 #define TPL_TYPE_EXT_DB                 1
 
@@ -139,6 +140,8 @@
 #define NF9_UDP_DST_PORT                181
 #define NF9_TCP_SRC_PORT                182
 #define NF9_TCP_DST_PORT                183
+/* ... */
+#define NF9_PADDING_OCTETS              210
 /* ... */
 #define NF9_POST_NAT_IPV4_SRC_ADDR      225
 #define NF9_POST_NAT_IPV4_DST_ADDR      226
@@ -260,9 +263,10 @@ struct options_template_hdr_v9 {
 
 /* Ordered Template field */
 struct otpl_field {
-  u_int16_t off;
-  u_int16_t len;
-  u_int16_t tpl_len;
+  u_int16_t off[TPL_MAX_ELEM_REPEATS];
+  u_int16_t len[TPL_MAX_ELEM_REPEATS];
+  u_int16_t tpl_len[TPL_MAX_ELEM_REPEATS];
+  u_int8_t count;
 };
 
 /* Unsorted Template field */
@@ -283,7 +287,15 @@ struct tpl_field_db {
 /* Template field ordered list */
 struct tpl_field_list {
   u_int8_t type;
-  char *ptr;
+  u_int8_t repeat;
+  void *ptr;                            /* struct otpl_field or utpl_field */
+};
+
+typedef enum { none, ipv4, ipv6 } layer_prot;
+
+struct layer_protocols {
+  layer_prot prot[TPL_MAX_ELEM_REPEATS];
+  u_int8_t count;
 };
 
 struct template_cache_entry {
@@ -295,9 +307,10 @@ struct template_cache_entry {
   u_int16_t num;                        /* number of fields described into template */
   u_int16_t len;                        /* total length of the described flowset */
   u_int8_t vlen;                        /* flag for variable-length fields */
-  struct otpl_field tpl[NF9_MAX_DEFINED_FIELD];
+  struct otpl_field fld[NF9_MAX_DEFINED_FIELD];
   struct tpl_field_db ext_db[TPL_EXT_DB_ENTRIES];
   struct tpl_field_list list[TPL_LIST_ENTRIES];
+  struct layer_protocols layers;
   struct template_cache_entry *next;
 };
 

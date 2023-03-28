@@ -33,6 +33,32 @@
 #include "plugin_hooks.h"
 #include "pkt_handlers.h"
 
+/* get offset of last instance of an otpl field */
+#define OTPL_LAST_OFS(tpl_fld) tpl->fld[tpl_fld].off[tpl->fld[tpl_fld].count-1]
+
+/* get length of last instance of an otpl field */
+#define OTPL_LAST_LEN(tpl_fld) tpl->fld[tpl_fld].len[tpl->fld[tpl_fld].count-1]
+
+/* compare last instance of an otpl field */
+#define OTPL_CMP_LAST(target, tpl_fld) \
+  memcmp(target, pptrs->f_data+tpl->fld[tpl_fld].off[tpl->fld[tpl_fld].count-1], \
+         tpl->fld[tpl_fld].len[tpl->fld[tpl_fld].count-1])
+
+/* compare last instance of an otpl field with minimum length */
+#define OTPL_CMP_LAST_M(target, tpl_fld, length) \
+  memcmp(target, pptrs->f_data+tpl->fld[tpl_fld].off[tpl->fld[tpl_fld].count-1], \
+         MIN(tpl->fld[tpl_fld].len[tpl->fld[tpl_fld].count-1], length))
+
+/* copy last instance of an otpl field */
+#define OTPL_CP_LAST(target, tpl_fld, length) \
+  memcpy(target, pptrs->f_data+tpl->fld[tpl_fld].off[tpl->fld[tpl_fld].count-1], \
+         length)
+
+/* copy last instance of an otpl field with minimum length */
+#define OTPL_CP_LAST_M(target, tpl_fld, length) \
+  memcpy(target, pptrs->f_data+tpl->fld[tpl_fld].off[tpl->fld[tpl_fld].count-1], \
+         MIN(tpl->fld[tpl_fld].len[tpl->fld[tpl_fld].count-1], length))
+
 int PT_map_id_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   struct host_addr a;
@@ -1585,22 +1611,22 @@ int pretag_input_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_INPUT_SNMP].len == 2) { 
-      if (!memcmp(&input16, pptrs->f_data+tpl->tpl[NF9_INPUT_SNMP].off, tpl->tpl[NF9_INPUT_SNMP].len))
-	return (FALSE | neg);
+    if (OTPL_LAST_LEN(NF9_INPUT_SNMP) == 2) {
+      if (!OTPL_CMP_LAST(&input16, NF9_INPUT_SNMP))
+        return (FALSE | neg);
     }
-    else if (tpl->tpl[NF9_INPUT_SNMP].len == 4) { 
-      if (!memcmp(&input32, pptrs->f_data+tpl->tpl[NF9_INPUT_SNMP].off, tpl->tpl[NF9_INPUT_SNMP].len))
-	return (FALSE | neg);
+    else if (OTPL_LAST_LEN(NF9_INPUT_SNMP) == 4) {
+      if (!OTPL_CMP_LAST(&input32, NF9_INPUT_SNMP))
+        return (FALSE | neg);
     }
-    else if (tpl->tpl[NF9_INPUT_PHYSINT].len == 4) {
-      if (!memcmp(&input32, pptrs->f_data+tpl->tpl[NF9_INPUT_PHYSINT].off, tpl->tpl[NF9_INPUT_PHYSINT].len))
+    else if (OTPL_LAST_LEN(NF9_INPUT_PHYSINT) == 4) {
+      if (!OTPL_CMP_LAST(&input32, NF9_INPUT_PHYSINT))
         return (FALSE | neg);
     }
     return (TRUE ^ neg);
   case 5:
     if (input16 == ((struct struct_export_v5 *)pptrs->f_data)->input) return (FALSE | neg);
-    else return (TRUE ^ neg); 
+    else return (TRUE ^ neg);
   default:
     return TRUE;
   }
@@ -1620,16 +1646,16 @@ int pretag_output_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_OUTPUT_SNMP].len == 2) {
-      if (!memcmp(&output16, pptrs->f_data+tpl->tpl[NF9_OUTPUT_SNMP].off, tpl->tpl[NF9_OUTPUT_SNMP].len))
-	return (FALSE | neg);
+    if (OTPL_LAST_LEN(NF9_OUTPUT_SNMP) == 2) {
+      if (!OTPL_CMP_LAST(&output16, NF9_OUTPUT_SNMP))
+        return (FALSE | neg);
     }
-    else if (tpl->tpl[NF9_OUTPUT_SNMP].len == 4) {
-      if (!memcmp(&output32, pptrs->f_data+tpl->tpl[NF9_OUTPUT_SNMP].off, tpl->tpl[NF9_OUTPUT_SNMP].len))
-	return (FALSE | neg);
+    else if (OTPL_LAST_LEN(NF9_OUTPUT_SNMP) == 4) {
+      if (!OTPL_CMP_LAST(&output32, NF9_OUTPUT_SNMP))
+        return (FALSE | neg);
     }
-    else if (tpl->tpl[NF9_OUTPUT_PHYSINT].len == 4) {
-      if (!memcmp(&output32, pptrs->f_data+tpl->tpl[NF9_OUTPUT_PHYSINT].off, tpl->tpl[NF9_OUTPUT_PHYSINT].len))
+    else if (OTPL_LAST_LEN(NF9_OUTPUT_PHYSINT) == 4) {
+      if (!OTPL_CMP_LAST(&output32, NF9_OUTPUT_PHYSINT))
         return (FALSE | neg);
     }
     return (TRUE ^ neg);
@@ -1653,12 +1679,14 @@ int pretag_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   case 10:
   case 9:
     if (entry->key.nexthop.a.family == AF_INET) {
-      if (!memcmp(&entry->key.nexthop.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_NEXT_HOP].off, tpl->tpl[NF9_IPV4_NEXT_HOP].len))
-	return (FALSE | entry->key.nexthop.neg);
+      if (!OTPL_CMP_LAST(&entry->key.nexthop.a.address.ipv4,
+                         NF9_IPV4_NEXT_HOP))
+        return (FALSE | entry->key.nexthop.neg);
     }
     else if (entry->key.nexthop.a.family == AF_INET6) {
-      if (!memcmp(&entry->key.nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_NEXT_HOP].off, tpl->tpl[NF9_IPV6_NEXT_HOP].len))
-	return (FALSE | entry->key.nexthop.neg);
+      if (!OTPL_CMP_LAST(&entry->key.nexthop.a.address.ipv6,
+                         NF9_IPV6_NEXT_HOP))
+        return (FALSE | entry->key.nexthop.neg);
     }
     return (TRUE ^ entry->key.nexthop.neg);
   case 5:
@@ -1686,23 +1714,27 @@ int pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   case 10:
   case 9:
     if (entry->key.bgp_nexthop.a.family == AF_INET) {
-      if (tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].len) {
-	if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].off, tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].len))
-	  return (FALSE | entry->key.bgp_nexthop.neg);
+      if (tpl->fld[NF9_BGP_IPV4_NEXT_HOP].count) {
+        if (!OTPL_CMP_LAST(&entry->key.bgp_nexthop.a.address.ipv4,
+                           NF9_BGP_IPV4_NEXT_HOP))
+          return (FALSE | entry->key.bgp_nexthop.neg);
       }
-      else if (tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len) {
-	if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].off, tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len))
-	  return (FALSE | entry->key.bgp_nexthop.neg);
+      else if (tpl->fld[NF9_MPLS_TOP_LABEL_ADDR].count) {
+        if (!OTPL_CMP_LAST(&entry->key.bgp_nexthop.a.address.ipv4,
+                           NF9_MPLS_TOP_LABEL_ADDR))
+          return (FALSE | entry->key.bgp_nexthop.neg);
       }
     }
     else if (entry->key.nexthop.a.family == AF_INET6) {
-      if (tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len) {
-	if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].off, tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len))
-	  return (FALSE | entry->key.bgp_nexthop.neg);
+      if (tpl->fld[NF9_BGP_IPV6_NEXT_HOP].count) {
+        if (!OTPL_CMP_LAST(&entry->key.bgp_nexthop.a.address.ipv6,
+                           NF9_BGP_IPV6_NEXT_HOP))
+          return (FALSE | entry->key.bgp_nexthop.neg);
       }
-      else if (tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].len) {
-	if (!memcmp(&entry->key.bgp_nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].off, tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].len))
-	  return (FALSE | entry->key.bgp_nexthop.neg);
+      else if (tpl->fld[NF9_MPLS_TOP_LABEL_IPV6_ADDR].count) {
+        if (!OTPL_CMP_LAST(&entry->key.bgp_nexthop.a.address.ipv6,
+                           NF9_MPLS_TOP_LABEL_IPV6_ADDR))
+          return (FALSE | entry->key.bgp_nexthop.neg);
       }
     }
     return (TRUE ^ entry->key.bgp_nexthop.neg);
@@ -1843,12 +1875,12 @@ int pretag_src_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_SRC_AS].len == 2) {
-      memcpy(&asn16, pptrs->f_data+tpl->tpl[NF9_SRC_AS].off, 2);
+    if (OTPL_LAST_LEN(NF9_SRC_AS) == 2) {
+      OTPL_CP_LAST(&asn16, NF9_SRC_AS, 2);
       asn32 = ntohs(asn16);
     }
-    else if (tpl->tpl[NF9_SRC_AS].len == 4) {
-      memcpy(&asn32, pptrs->f_data+tpl->tpl[NF9_SRC_AS].off, 4);
+    else if (OTPL_LAST_LEN(NF9_SRC_AS) == 4) {
+      OTPL_CP_LAST(&asn32, NF9_SRC_AS, 4);
       asn32 = ntohl(asn32);
     }
     break;
@@ -1902,12 +1934,12 @@ int pretag_dst_as_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_DST_AS].len == 2) {
-      memcpy(&asn16, pptrs->f_data+tpl->tpl[NF9_DST_AS].off, 2);
+    if (OTPL_LAST_LEN(NF9_DST_AS) == 2) {
+      OTPL_CP_LAST(&asn16, NF9_DST_AS, 2);
       asn32 = ntohs(asn16);
     }
-    else if (tpl->tpl[NF9_DST_AS].len == 4) {
-      memcpy(&asn32, pptrs->f_data+tpl->tpl[NF9_DST_AS].off, 4);
+    else if (OTPL_LAST_LEN(NF9_DST_AS) == 4) {
+      OTPL_CP_LAST(&asn32, NF9_DST_AS, 4);
       asn32 = ntohl(asn32);
     }
     break;
@@ -2130,7 +2162,7 @@ int pretag_is_nsel_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   switch (hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_FW_EVENT].len) {
+    if (tpl->fld[NF9_FW_EVENT].count) {
       nsel = TRUE;
     }
     break;
@@ -2158,7 +2190,7 @@ int pretag_is_nel_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   switch (hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_NAT_EVENT].len) {
+    if (tpl->fld[NF9_NAT_EVENT].count) {
       nel = TRUE;
     }
     break;
@@ -2186,8 +2218,8 @@ int pretag_direction_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   switch (hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_DIRECTION].len == 1) {
-      memcpy(&direction, pptrs->f_data+tpl->tpl[NF9_DIRECTION].off, 1);
+    if (OTPL_LAST_LEN(NF9_DIRECTION) == 1) {
+      OTPL_CP_LAST(&direction, NF9_DIRECTION, 1);
     }
     if (entry->key.direction.n == direction) return (FALSE | entry->key.direction.neg);
     else return (TRUE ^ entry->key.direction.neg);
@@ -2208,8 +2240,8 @@ int pretag_nat_event_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   switch (hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_NAT_EVENT].len == 1) {
-      memcpy(&nat_event, pptrs->f_data+tpl->tpl[NF9_NAT_EVENT].off, 1);
+    if (OTPL_LAST_LEN(NF9_NAT_EVENT) == 1) {
+      OTPL_CP_LAST(&nat_event, NF9_NAT_EVENT, 1);
     }
     if (entry->key.nat_event.n == nat_event) return (FALSE | entry->key.nat_event.neg);
     else return (TRUE ^ entry->key.nat_event.neg);
@@ -2248,10 +2280,10 @@ int pretag_mpls_pw_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   switch (hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_PSEUDOWIREID].len) {
-      memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_PSEUDOWIREID].off, 4);
+    if (tpl->fld[NF9_PSEUDOWIREID].count) {
+      OTPL_CP_LAST(&tmp32, NF9_PSEUDOWIREID, 4);
       mpls_pw_id = ntohl(tmp32);
-    } 
+    }
 
     if (entry->key.mpls_pw_id.n == mpls_pw_id) return (FALSE | entry->key.mpls_pw_id.neg);
     else return (TRUE ^ entry->key.mpls_pw_id.neg);
@@ -2271,9 +2303,9 @@ int pretag_src_mac_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   switch (hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_IN_SRC_MAC].len) {
-      if (!memcmp(&entry->key.src_mac.a, pptrs->f_data+tpl->tpl[NF9_IN_SRC_MAC].off, MIN(tpl->tpl[NF9_IN_SRC_MAC].len, 6)))
-	return (FALSE | entry->key.src_mac.neg);
+    if (tpl->fld[NF9_IN_SRC_MAC].count) {
+      if (!OTPL_CMP_LAST_M(&entry->key.src_mac.a, NF9_IN_SRC_MAC, 6))
+        return (FALSE | entry->key.src_mac.neg);
     }
     return (TRUE ^ entry->key.src_mac.neg);
   default:
@@ -2292,8 +2324,8 @@ int pretag_dst_mac_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   switch (hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_IN_DST_MAC].len) {
-      if (!memcmp(&entry->key.dst_mac.a, pptrs->f_data+tpl->tpl[NF9_IN_DST_MAC].off, MIN(tpl->tpl[NF9_IN_DST_MAC].len, 6)))
+    if (tpl->fld[NF9_IN_DST_MAC].count) {
+      if (!OTPL_CMP_LAST_M(&entry->key.dst_mac.a, NF9_IN_DST_MAC, 6))
         return (FALSE | entry->key.dst_mac.neg);
     }
     return (TRUE ^ entry->key.dst_mac.neg);
@@ -2314,11 +2346,11 @@ int pretag_vlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   switch (hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_IN_VLAN].len) {
-      memcpy(&tmp16, pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off, MIN(tpl->tpl[NF9_IN_VLAN].len, 2));
+    if (tpl->fld[NF9_IN_VLAN].count) {
+      OTPL_CP_LAST_M(&tmp16, NF9_IN_VLAN, 2);
     }
-    else if (tpl->tpl[NF9_DOT1QVLANID].len) {
-      memcpy(&tmp16, pptrs->f_data+tpl->tpl[NF9_DOT1QVLANID].off, MIN(tpl->tpl[NF9_DOT1QVLANID].len, 2));
+    else if (tpl->fld[NF9_DOT1QVLANID].count) {
+      OTPL_CP_LAST_M(&tmp16, NF9_DOT1QVLANID, 2);
     }
     vlan_id = ntohs(tmp16);
     if (entry->key.vlan_id.n == vlan_id) return (FALSE | entry->key.vlan_id.neg);
@@ -2340,20 +2372,20 @@ int pretag_src_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_IPV4_SRC_ADDR].len) {
-      memcpy(&addr.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV4_SRC_ADDR].len, 4));
+    if (tpl->fld[NF9_IPV4_SRC_ADDR].count) {
+      OTPL_CP_LAST_M(&addr.address.ipv4, NF9_IPV4_SRC_ADDR, 4);
       addr.family = AF_INET;
     }
-    else if (tpl->tpl[NF9_IPV4_SRC_PREFIX].len) {
-      memcpy(&addr.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_PREFIX].off, MIN(tpl->tpl[NF9_IPV4_SRC_PREFIX].len, 4));
+    else if (tpl->fld[NF9_IPV4_SRC_PREFIX].count) {
+      OTPL_CP_LAST_M(&addr.address.ipv4, NF9_IPV4_SRC_PREFIX, 4);
       addr.family = AF_INET;
     }
-    if (tpl->tpl[NF9_IPV6_SRC_ADDR].len) {
-      memcpy(&addr.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV6_SRC_ADDR].len, 16));
+    if (tpl->fld[NF9_IPV6_SRC_ADDR].count) {
+      OTPL_CP_LAST_M(&addr.address.ipv6, NF9_IPV6_SRC_ADDR, 16);
       addr.family = AF_INET6;
     }
-    else if (tpl->tpl[NF9_IPV6_SRC_PREFIX].len) {
-      memcpy(&addr.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_PREFIX].off, MIN(tpl->tpl[NF9_IPV6_SRC_PREFIX].len, 16));
+    else if (tpl->fld[NF9_IPV6_SRC_PREFIX].count) {
+      OTPL_CP_LAST_M(&addr.address.ipv6, NF9_IPV6_SRC_PREFIX, 16);
       addr.family = AF_INET6;
     }
     break;
@@ -2383,20 +2415,20 @@ int pretag_dst_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_IPV4_DST_ADDR].len) {
-      memcpy(&addr.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV4_DST_ADDR].len, 4));
+    if (tpl->fld[NF9_IPV4_DST_ADDR].count) {
+      OTPL_CP_LAST_M(&addr.address.ipv4, NF9_IPV4_DST_ADDR, 4);
       addr.family = AF_INET;
     }
-    else if (tpl->tpl[NF9_IPV4_DST_PREFIX].len) {
-      memcpy(&addr.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV4_DST_PREFIX].len, 4));
+    else if (tpl->fld[NF9_IPV4_DST_PREFIX].count) {
+      OTPL_CP_LAST_M(&addr.address.ipv4, NF9_IPV4_DST_PREFIX, 4);
       addr.family = AF_INET;
     }
-    if (tpl->tpl[NF9_IPV6_DST_ADDR].len) {
-      memcpy(&addr.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV6_DST_ADDR].len, 16));
+    if (tpl->fld[NF9_IPV6_DST_ADDR].count) {
+      OTPL_CP_LAST_M(&addr.address.ipv6, NF9_IPV6_DST_ADDR, 16);
       addr.family = AF_INET6;
     }
-    else if (tpl->tpl[NF9_IPV6_DST_PREFIX].len) {
-      memcpy(&addr.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV6_DST_PREFIX].len, 16));
+    else if (tpl->fld[NF9_IPV6_DST_PREFIX].count) {
+      OTPL_CP_LAST_M(&addr.address.ipv6, NF9_IPV6_DST_PREFIX, 16);
       addr.family = AF_INET6;
     }
     break;
@@ -2426,8 +2458,8 @@ int pretag_is_multicast_handler(struct packet_ptrs *pptrs, void *unused, void *e
   switch (hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_IN_DST_MAC].len) {
-      multicast = IS_MAC_MULTICAST(pptrs->f_data+tpl->tpl[NF9_IN_DST_MAC].off);
+    if (tpl->fld[NF9_IN_DST_MAC].count) {
+      multicast = IS_MAC_MULTICAST(pptrs->f_data+OTPL_LAST_OFS(NF9_IN_DST_MAC));
     }
     break;
   default:
@@ -2457,8 +2489,8 @@ int pretag_fwd_status_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     /* being specific on the length because IANA defines this field as
        unsigned32 but vendor implementation suggests this is defined as
        1 octet */
-    if (tpl->tpl[NF9_FWD_STATUS].len == 1) {
-      memcpy(&fwd_status, pptrs->f_data+tpl->tpl[NF9_FWD_STATUS].off, MIN(tpl->tpl[NF9_FWD_STATUS].len, 1));
+    if (OTPL_LAST_LEN(NF9_FWD_STATUS) == 1) {
+      OTPL_CP_LAST_M(&fwd_status, NF9_FWD_STATUS, 1);
     }
     else return TRUE;
     
@@ -2495,8 +2527,8 @@ int pretag_cvlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   switch (hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_DOT1QCVLANID].len) {
-      memcpy(&tmp16, pptrs->f_data+tpl->tpl[NF9_DOT1QCVLANID].off, MIN(tpl->tpl[NF9_DOT1QCVLANID].len, 2));
+    if (tpl->fld[NF9_DOT1QCVLANID].count) {
+      OTPL_CP_LAST_M(&tmp16, NF9_DOT1QCVLANID, 2);
     }
     cvlan_id = ntohs(tmp16);
     if (entry->key.cvlan_id.n == cvlan_id) return (FALSE | entry->key.cvlan_id.neg);
@@ -2931,9 +2963,11 @@ int BITR_mpls_label_bottom_handler(struct packet_ptrs *pptrs, void *unused, void
   case 10:
   case 9:
     for (label_idx = NF9_MPLS_LABEL_1; label_idx <= NF9_MPLS_LABEL_9; label_idx++) {
-      if (tpl->tpl[label_idx].len == 3 && check_bosbit(pptrs->f_data+tpl->tpl[label_idx].off)) {
-        label = decode_mpls_label(pptrs->f_data+tpl->tpl[label_idx].off);
-	if (entry->key.mpls_label_bottom.n == label) return (FALSE | entry->key.mpls_label_bottom.neg);
+      if (tpl->fld[label_idx].len[0] == 3 &&
+          check_bosbit(pptrs->f_data+tpl->fld[label_idx].off[0])) {
+        label = decode_mpls_label(pptrs->f_data+tpl->fld[label_idx].off[0]);
+        if (entry->key.mpls_label_bottom.n == label)
+          return (FALSE | entry->key.mpls_label_bottom.neg);
       }
     }
     return (TRUE ^ entry->key.mpls_label_bottom.neg);
@@ -2954,15 +2988,15 @@ int BITR_mpls_vpn_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_INGRESS_VRFID].len) {
-      memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_INGRESS_VRFID].off, MIN(tpl->tpl[NF9_INGRESS_VRFID].len, 4));
+    if (tpl->fld[NF9_INGRESS_VRFID].count) {
+      OTPL_CP_LAST_M(&tmp32, NF9_INGRESS_VRFID, 4);
       id = ntohl(tmp32);
 
       if (entry->key.mpls_vpn_id.n == id) return (FALSE | entry->key.mpls_vpn_id.neg);
     }
 
-    if (tpl->tpl[NF9_EGRESS_VRFID].len) {
-      memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_EGRESS_VRFID].off, MIN(tpl->tpl[NF9_EGRESS_VRFID].len, 4));
+    if (tpl->fld[NF9_EGRESS_VRFID].count) {
+      OTPL_CP_LAST_M(&tmp32, NF9_EGRESS_VRFID, 4);
       id = ntohl(tmp32);
 
       if (entry->key.mpls_vpn_id.n == id) return (FALSE | entry->key.mpls_vpn_id.neg);
@@ -3633,16 +3667,16 @@ int PT_map_index_fdata_input_handler(struct id_table_index *idx, int idx_hdlr, i
     switch(hdr->version) {
     case 10:
     case 9:
-      if (tpl->tpl[NF9_INPUT_SNMP].len == 2) {
-        memcpy(&iface16, pptrs->f_data+tpl->tpl[NF9_INPUT_SNMP].off, 2);
+      if (OTPL_LAST_LEN(NF9_INPUT_SNMP) == 2) {
+        OTPL_CP_LAST(&iface16, NF9_INPUT_SNMP, 2);
         e->key.input.n = ntohs(iface16);
       }
-      else if (tpl->tpl[NF9_INPUT_SNMP].len == 4) {
-        memcpy(&iface32, pptrs->f_data+tpl->tpl[NF9_INPUT_SNMP].off, 4);
+      else if (OTPL_LAST_LEN(NF9_INPUT_SNMP) == 4) {
+        OTPL_CP_LAST(&iface32, NF9_INPUT_SNMP, 4);
         e->key.input.n = ntohl(iface32);
       }
-      else if (tpl->tpl[NF9_INPUT_PHYSINT].len == 4) {
-        memcpy(&iface32, pptrs->f_data+tpl->tpl[NF9_INPUT_PHYSINT].off, 4);
+      else if (OTPL_LAST_LEN(NF9_INPUT_PHYSINT) == 4) {
+        OTPL_CP_LAST(&iface32, NF9_INPUT_PHYSINT, 4);
         e->key.input.n = ntohl(iface32);
       }
       break; 
@@ -3680,16 +3714,16 @@ int PT_map_index_fdata_output_handler(struct id_table_index *idx, int idx_hdlr, 
     switch(hdr->version) {
     case 10:
     case 9:
-      if (tpl->tpl[NF9_OUTPUT_SNMP].len == 2) {
-        memcpy(&iface16, pptrs->f_data+tpl->tpl[NF9_OUTPUT_SNMP].off, 2);
+      if (OTPL_LAST_LEN(NF9_OUTPUT_SNMP) == 2) {
+        OTPL_CP_LAST(&iface16, NF9_OUTPUT_SNMP, 2);
         e->key.output.n = ntohs(iface16);
       }
-      else if (tpl->tpl[NF9_OUTPUT_SNMP].len == 4) {
-        memcpy(&iface32, pptrs->f_data+tpl->tpl[NF9_OUTPUT_SNMP].off, 4);
+      else if (OTPL_LAST_LEN(NF9_OUTPUT_SNMP) == 4) {
+        OTPL_CP_LAST(&iface32, NF9_OUTPUT_SNMP, 4);
         e->key.output.n = ntohl(iface32);
       }
-      else if (tpl->tpl[NF9_OUTPUT_PHYSINT].len == 4) {
-        memcpy(&iface32, pptrs->f_data+tpl->tpl[NF9_OUTPUT_PHYSINT].off, 4);
+      else if (OTPL_LAST_LEN(NF9_OUTPUT_PHYSINT) == 4) {
+        OTPL_CP_LAST(&iface32, NF9_OUTPUT_PHYSINT, 4);
         e->key.output.n = ntohl(iface32);
       }
       break;
@@ -3747,30 +3781,35 @@ int PT_map_index_fdata_bgp_nexthop_handler(struct id_table_index *idx, int idx_h
       switch(hdr->version) {
       case 10:
       case 9:
-	if (pptrs->l3_proto == ETHERTYPE_IP) {
-	  if (tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].len) {
-	    memcpy(&e->key.bgp_nexthop.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].off, MIN(tpl->tpl[NF9_BGP_IPV4_NEXT_HOP].len, 4));
-	    e->key.bgp_nexthop.a.family = AF_INET;
-	  }
-	  else if (tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len) {
-	    memcpy(&e->key.bgp_nexthop.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].off, MIN(tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len, 4));
-	    e->key.bgp_nexthop.a.family = AF_INET;
-	  }
-	}
-	else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
-	  if (tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len) {
-	    memcpy(&e->key.bgp_nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].off, MIN(tpl->tpl[NF9_BGP_IPV6_NEXT_HOP].len, 16));
-	    e->key.bgp_nexthop.a.family = AF_INET6;
-	  }
-	  else if (tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len) {
-	    memcpy(&e->key.bgp_nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].off, MIN(tpl->tpl[NF9_MPLS_TOP_LABEL_ADDR].len, 4));
-	    e->key.bgp_nexthop.a.family = AF_INET;
-	  }
-	  else if (tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].len) {
-	    memcpy(&e->key.bgp_nexthop.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].off, MIN(tpl->tpl[NF9_MPLS_TOP_LABEL_IPV6_ADDR].len, 16));
-	    e->key.bgp_nexthop.a.family = AF_INET6;
-	  }
-	}
+        if (pptrs->l3_proto == ETHERTYPE_IP) {
+          if (tpl->fld[NF9_BGP_IPV4_NEXT_HOP].count) {
+            OTPL_CP_LAST_M(&e->key.bgp_nexthop.a.address.ipv4,
+                           NF9_BGP_IPV4_NEXT_HOP, 4);
+            e->key.bgp_nexthop.a.family = AF_INET;
+          }
+          else if (tpl->fld[NF9_MPLS_TOP_LABEL_ADDR].count) {
+            OTPL_CP_LAST_M(&e->key.bgp_nexthop.a.address.ipv4,
+                           NF9_MPLS_TOP_LABEL_ADDR, 4);
+            e->key.bgp_nexthop.a.family = AF_INET;
+          }
+        }
+        else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+          if (tpl->fld[NF9_BGP_IPV6_NEXT_HOP].count) {
+            OTPL_CP_LAST_M(&e->key.bgp_nexthop.a.address.ipv6,
+                           NF9_BGP_IPV6_NEXT_HOP, 16);
+            e->key.bgp_nexthop.a.family = AF_INET6;
+          }
+          else if (tpl->fld[NF9_MPLS_TOP_LABEL_ADDR].count) {
+            OTPL_CP_LAST_M(&e->key.bgp_nexthop.a.address.ipv6,
+                           NF9_MPLS_TOP_LABEL_ADDR, 4);
+            e->key.bgp_nexthop.a.family = AF_INET;
+          }
+          else if (tpl->fld[NF9_MPLS_TOP_LABEL_IPV6_ADDR].count) {
+            OTPL_CP_LAST_M(&e->key.bgp_nexthop.a.address.ipv6,
+                           NF9_MPLS_TOP_LABEL_IPV6_ADDR, 16);
+            e->key.bgp_nexthop.a.family = AF_INET6;
+          }
+        }
       }
     }
     else if (config.acct_type == ACCT_SF) {
@@ -3815,14 +3854,14 @@ int PT_map_index_fdata_src_as_handler(struct id_table_index *idx, int idx_hdlr, 
       switch(hdr->version) {
       case 10:
       case 9:
-	if (tpl->tpl[NF9_SRC_AS].len == 2) {
-	  memcpy(&asn16, pptrs->f_data+tpl->tpl[NF9_SRC_AS].off, 2);
-	  e->key.src_as.n = ntohs(asn16);
-	}
-	else if (tpl->tpl[NF9_SRC_AS].len == 4) {
-	  memcpy(&asn32, pptrs->f_data+tpl->tpl[NF9_SRC_AS].off, 4);
-	  e->key.src_as.n = ntohl(asn32);
-	}
+        if (OTPL_LAST_LEN(NF9_SRC_AS) == 2) {
+          OTPL_CP_LAST(&asn16, NF9_SRC_AS, 2);
+          e->key.src_as.n = ntohs(asn16);
+        }
+        else if (OTPL_LAST_LEN(NF9_SRC_AS) == 4) {
+          OTPL_CP_LAST(&asn32, NF9_SRC_AS, 4);
+          e->key.src_as.n = ntohl(asn32);
+        }
 	break;
       case 5:
 	e->key.src_as.n = ntohs(((struct struct_export_v5 *) pptrs->f_data)->src_as);
@@ -3866,12 +3905,12 @@ int PT_map_index_fdata_dst_as_handler(struct id_table_index *idx, int idx_hdlr, 
       switch(hdr->version) {
       case 10:
       case 9:
-        if (tpl->tpl[NF9_DST_AS].len == 2) {
-          memcpy(&asn16, pptrs->f_data+tpl->tpl[NF9_DST_AS].off, 2);
+        if (OTPL_LAST_LEN(NF9_DST_AS) == 2) {
+          OTPL_CP_LAST(&asn16, NF9_DST_AS, 2);
           e->key.dst_as.n = ntohs(asn16);
         }
-        else if (tpl->tpl[NF9_DST_AS].len == 4) {
-          memcpy(&asn32, pptrs->f_data+tpl->tpl[NF9_DST_AS].off, 4);
+        else if (OTPL_LAST_LEN(NF9_DST_AS) == 4) {
+          OTPL_CP_LAST(&asn32, NF9_DST_AS, 4);
           e->key.dst_as.n = ntohl(asn32);
         }
         break;
@@ -3921,12 +3960,12 @@ int PT_map_index_fdata_peer_src_as_handler(struct id_table_index *idx, int idx_h
         switch(hdr->version) {
         case 10:
         case 9:
-          if (tpl->tpl[NF9_PEER_SRC_AS].len == 2) {
-            memcpy(&asn16, pptrs->f_data+tpl->tpl[NF9_PEER_SRC_AS].off, 2);
+          if (OTPL_LAST_LEN(NF9_PEER_SRC_AS) == 2) {
+            OTPL_CP_LAST(&asn16, NF9_PEER_SRC_AS, 2);
             e->key.peer_src_as.n = ntohs(asn16);
           }
-          else if (tpl->tpl[NF9_PEER_SRC_AS].len == 4) {
-            memcpy(&asn32, pptrs->f_data+tpl->tpl[NF9_PEER_SRC_AS].off, 4);
+          else if (OTPL_LAST_LEN(NF9_PEER_SRC_AS) == 4) {
+            OTPL_CP_LAST(&asn32, NF9_PEER_SRC_AS, 4);
             e->key.peer_src_as.n = ntohl(asn32);
           }
           break;
@@ -3970,12 +4009,12 @@ int PT_map_index_fdata_peer_dst_as_handler(struct id_table_index *idx, int idx_h
       switch(hdr->version) {
       case 10:
       case 9:
-        if (tpl->tpl[NF9_PEER_DST_AS].len == 2) {
-          memcpy(&asn16, pptrs->f_data+tpl->tpl[NF9_PEER_DST_AS].off, 2);
+        if (OTPL_LAST_LEN(NF9_PEER_DST_AS) == 2) {
+          OTPL_CP_LAST(&asn16, NF9_PEER_DST_AS, 2);
           e->key.peer_dst_as.n = ntohs(asn16);
         }
-        else if (tpl->tpl[NF9_PEER_DST_AS].len == 4) {
-          memcpy(&asn32, pptrs->f_data+tpl->tpl[NF9_PEER_DST_AS].off, 4);
+        else if (OTPL_LAST_LEN(NF9_PEER_DST_AS) == 4) {
+          OTPL_CP_LAST(&asn32, NF9_PEER_DST_AS, 4);
           e->key.peer_dst_as.n = ntohl(asn32);
         }
         break;
@@ -4028,9 +4067,9 @@ int PT_map_index_fdata_mpls_pw_id_handler(struct id_table_index *idx, int idx_hd
     switch (hdr->version) {
     case 10:
     case 9:
-      if (tpl->tpl[NF9_PSEUDOWIREID].len) {
-	memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_PSEUDOWIREID].off, 4);
-	e->key.mpls_pw_id.n = ntohl(tmp32);
+      if (tpl->fld[NF9_PSEUDOWIREID].count) {
+        OTPL_CP_LAST(&tmp32, NF9_PSEUDOWIREID, 4);
+        e->key.mpls_pw_id.n = ntohl(tmp32);
       }
     }
   }
@@ -4054,14 +4093,14 @@ int PT_map_index_fdata_mpls_vpn_id_handler(struct id_table_index *idx, int idx_h
     switch(hdr->version) {
     case 10:
     case 9:
-      if (tpl->tpl[NF9_INGRESS_VRFID].len) {
-        memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_INGRESS_VRFID].off, MIN(tpl->tpl[NF9_INGRESS_VRFID].len, 4));
-	e->key.mpls_vpn_id.n = ntohl(tmp32);
+      if (tpl->fld[NF9_INGRESS_VRFID].count) {
+        OTPL_CP_LAST_M(&tmp32, NF9_INGRESS_VRFID, 4);
+        e->key.mpls_vpn_id.n = ntohl(tmp32);
       }
 
-      if (tpl->tpl[NF9_EGRESS_VRFID].len && !e->key.mpls_vpn_id.n) {
-        memcpy(&tmp32, pptrs->f_data+tpl->tpl[NF9_EGRESS_VRFID].off, MIN(tpl->tpl[NF9_EGRESS_VRFID].len, 4));
-	e->key.mpls_vpn_id.n = ntohl(tmp32);
+      if (tpl->fld[NF9_EGRESS_VRFID].count && !e->key.mpls_vpn_id.n) {
+        OTPL_CP_LAST_M(&tmp32, NF9_EGRESS_VRFID, 4);
+        e->key.mpls_vpn_id.n = ntohl(tmp32);
       }
     }
   }
@@ -4084,8 +4123,9 @@ int PT_map_index_fdata_mpls_label_bottom_handler(struct id_table_index *idx, int
     case 10:
     case 9:
       for (label_idx = NF9_MPLS_LABEL_1; label_idx <= NF9_MPLS_LABEL_9; label_idx++) {
-        if (tpl->tpl[label_idx].len == 3 && check_bosbit(pptrs->f_data+tpl->tpl[label_idx].off)) {
-          e->key.mpls_label_bottom.n = decode_mpls_label(pptrs->f_data+tpl->tpl[label_idx].off);
+        if (tpl->fld[label_idx].len[0] == 3 &&
+            check_bosbit(pptrs->f_data+tpl->fld[label_idx].off[0])) {
+          e->key.mpls_label_bottom.n = decode_mpls_label(pptrs->f_data+tpl->fld[label_idx].off[0]);
           break;
         }
       }
@@ -4109,8 +4149,8 @@ int PT_map_index_fdata_src_mac_handler(struct id_table_index *idx, int idx_hdlr,
     switch (hdr->version) {
     case 10:
     case 9:
-      if (tpl->tpl[NF9_IN_SRC_MAC].len) {
-        memcpy(&e->key.src_mac.a, pptrs->f_data+tpl->tpl[NF9_IN_SRC_MAC].off, MIN(tpl->tpl[NF9_IN_SRC_MAC].len, 6));
+      if (tpl->fld[NF9_IN_SRC_MAC].count) {
+        OTPL_CP_LAST_M(&e->key.src_mac.a, NF9_IN_SRC_MAC, 6);
       }
     }
   }
@@ -4135,8 +4175,8 @@ int PT_map_index_fdata_dst_mac_handler(struct id_table_index *idx, int idx_hdlr,
     switch (hdr->version) {
     case 10:
     case 9:
-      if (tpl->tpl[NF9_IN_DST_MAC].len) {
-        memcpy(&e->key.dst_mac.a, pptrs->f_data+tpl->tpl[NF9_IN_DST_MAC].off, MIN(tpl->tpl[NF9_IN_DST_MAC].len, 6));
+      if (tpl->fld[NF9_IN_DST_MAC].count) {
+        OTPL_CP_LAST_M(&e->key.dst_mac.a, NF9_IN_DST_MAC, 6);
       }
     }
   }
@@ -4162,11 +4202,11 @@ int PT_map_index_fdata_vlan_id_handler(struct id_table_index *idx, int idx_hdlr,
     switch (hdr->version) {
     case 10:
     case 9:
-      if (tpl->tpl[NF9_IN_VLAN].len) {
-        memcpy(&tmp16, pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off, MIN(tpl->tpl[NF9_IN_VLAN].len, 2));
+      if (tpl->fld[NF9_IN_VLAN].count) {
+        OTPL_CP_LAST_M(&tmp16, NF9_IN_VLAN, 2);
       }
-      else if (tpl->tpl[NF9_DOT1QVLANID].len) {
-        memcpy(&tmp16, pptrs->f_data+tpl->tpl[NF9_DOT1QVLANID].off, MIN(tpl->tpl[NF9_DOT1QVLANID].len, 2));
+      else if (tpl->fld[NF9_DOT1QVLANID].count) {
+        OTPL_CP_LAST_M(&tmp16, NF9_DOT1QVLANID, 2);
       }
       e->key.vlan_id.n = ntohs(tmp16);
     }
@@ -4193,9 +4233,9 @@ int PT_map_index_fdata_cvlan_id_handler(struct id_table_index *idx, int idx_hdlr
     switch (hdr->version) {
     case 10:
     case 9:
-      if (tpl->tpl[NF9_DOT1QCVLANID].len) {
-        memcpy(&tmp16, pptrs->f_data+tpl->tpl[NF9_DOT1QCVLANID].off, MIN(tpl->tpl[NF9_DOT1QCVLANID].len, 2));
-	e->key.cvlan_id.n = ntohs(tmp16);
+      if (tpl->fld[NF9_DOT1QCVLANID].count) {
+        OTPL_CP_LAST_M(&tmp16, NF9_DOT1QCVLANID, 2);
+        e->key.cvlan_id.n = ntohs(tmp16);
       }
     }
   }
@@ -4220,21 +4260,25 @@ int PT_map_index_fdata_src_net_handler(struct id_table_index *idx, int idx_hdlr,
     switch(hdr->version) {
     case 10:
     case 9:
-      if (tpl->tpl[NF9_IPV4_SRC_ADDR].len) {
-	memcpy(&e->key.src_net.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV4_SRC_ADDR].len, 4));
-	e->key.src_net.a.family = AF_INET;
+      if (tpl->fld[NF9_IPV4_SRC_ADDR].count) {
+        OTPL_CP_LAST_M(&e->key.src_net.a.address.ipv4,
+                       NF9_IPV4_SRC_ADDR, 4);
+        e->key.src_net.a.family = AF_INET;
       }
-      else if (tpl->tpl[NF9_IPV4_SRC_PREFIX].len) {
-	memcpy(&e->key.src_net.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_PREFIX].off, MIN(tpl->tpl[NF9_IPV4_SRC_PREFIX].len, 4));
-	e->key.src_net.a.family = AF_INET;
+      else if (tpl->fld[NF9_IPV4_SRC_PREFIX].count) {
+        OTPL_CP_LAST_M(&e->key.src_net.a.address.ipv4,
+                       NF9_IPV4_SRC_PREFIX, 4);
+        e->key.src_net.a.family = AF_INET;
       }
-      if (tpl->tpl[NF9_IPV6_SRC_ADDR].len) {
-	memcpy(&e->key.src_net.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_ADDR].off, MIN(tpl->tpl[NF9_IPV6_SRC_ADDR].len, 16));
-	e->key.src_net.a.family = AF_INET6;
+      if (tpl->fld[NF9_IPV6_SRC_ADDR].count) {
+        OTPL_CP_LAST_M(&e->key.src_net.a.address.ipv6,
+                       NF9_IPV6_SRC_ADDR, 16);
+        e->key.src_net.a.family = AF_INET6;
       }
-      else if (tpl->tpl[NF9_IPV6_SRC_PREFIX].len) {
-	memcpy(&e->key.src_net.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_SRC_PREFIX].off, MIN(tpl->tpl[NF9_IPV6_SRC_PREFIX].len, 16));
-	e->key.src_net.a.family = AF_INET6;
+      else if (tpl->fld[NF9_IPV6_SRC_PREFIX].count) {
+        OTPL_CP_LAST_M(&e->key.src_net.a.address.ipv6,
+                       NF9_IPV6_SRC_PREFIX, 16);
+        e->key.src_net.a.family = AF_INET6;
       }
       break;
     case 5:
@@ -4290,21 +4334,25 @@ int PT_map_index_fdata_dst_net_handler(struct id_table_index *idx, int idx_hdlr,
     switch(hdr->version) {
     case 10:
     case 9:
-      if (tpl->tpl[NF9_IPV4_DST_ADDR].len) {
-	memcpy(&e->key.dst_net.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV4_DST_ADDR].len, 4));
-	e->key.dst_net.a.family = AF_INET;
+      if (tpl->fld[NF9_IPV4_DST_ADDR].count) {
+        OTPL_CP_LAST_M(&e->key.dst_net.a.address.ipv4,
+                       NF9_IPV4_DST_ADDR, 4);
+        e->key.dst_net.a.family = AF_INET;
       }
-      else if (tpl->tpl[NF9_IPV4_DST_PREFIX].len) {
-	memcpy(&e->key.dst_net.a.address.ipv4, pptrs->f_data+tpl->tpl[NF9_IPV4_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV4_DST_PREFIX].len, 4));
-	e->key.dst_net.a.family = AF_INET;
+      else if (tpl->fld[NF9_IPV4_DST_PREFIX].count) {
+        OTPL_CP_LAST_M(&e->key.dst_net.a.address.ipv4,
+                       NF9_IPV4_DST_PREFIX, 4);
+        e->key.dst_net.a.family = AF_INET;
       }
-      if (tpl->tpl[NF9_IPV6_DST_ADDR].len) {
-	memcpy(&e->key.dst_net.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_ADDR].off, MIN(tpl->tpl[NF9_IPV6_DST_ADDR].len, 16));
-	e->key.dst_net.a.family = AF_INET6;
+      if (tpl->fld[NF9_IPV6_DST_ADDR].count) {
+        OTPL_CP_LAST_M(&e->key.dst_net.a.address.ipv6,
+                       NF9_IPV6_DST_ADDR, 16);
+        e->key.dst_net.a.family = AF_INET6;
       }
-      else if (tpl->tpl[NF9_IPV6_DST_PREFIX].len) {
-	memcpy(&e->key.dst_net.a.address.ipv6, pptrs->f_data+tpl->tpl[NF9_IPV6_DST_PREFIX].off, MIN(tpl->tpl[NF9_IPV6_DST_PREFIX].len, 16));
-	e->key.dst_net.a.family = AF_INET6;
+      else if (tpl->fld[NF9_IPV6_DST_PREFIX].count) {
+        OTPL_CP_LAST_M(&e->key.dst_net.a.address.ipv6,
+                       NF9_IPV6_DST_PREFIX, 16);
+        e->key.dst_net.a.family = AF_INET6;
       }
       break;
     case 5:
@@ -4357,8 +4405,8 @@ int PT_map_index_fdata_is_multicast_handler(struct id_table_index *idx, int idx_
     switch (hdr->version) {
     case 10:
     case 9:
-      if (tpl->tpl[NF9_IN_DST_MAC].len) {
-	e->key.is_multicast.n = IS_MAC_MULTICAST(pptrs->f_data+tpl->tpl[NF9_IN_DST_MAC].off);
+      if (tpl->fld[NF9_IN_DST_MAC].count) {
+        e->key.is_multicast.n = IS_MAC_MULTICAST(pptrs->f_data+OTPL_LAST_OFS(NF9_IN_DST_MAC));
       }
       break;
     default:
@@ -4385,8 +4433,8 @@ int PT_map_index_fdata_fwd_status_handler(struct id_table_index *idx, int idx_hd
     switch (hdr->version) {
     case 10:
     case 9:
-      if (tpl->tpl[NF9_FWD_STATUS].len == 1) {
-        memcpy(&fwd_status, pptrs->f_data+tpl->tpl[NF9_FWD_STATUS].off, MIN(tpl->tpl[NF9_FWD_STATUS].len, 1));
+      if (OTPL_LAST_LEN(NF9_FWD_STATUS) == 1) {
+        OTPL_CP_LAST_M(&fwd_status, NF9_FWD_STATUS, 1);
         e->key.fwd_status.n = fwd_status;
       }
     }

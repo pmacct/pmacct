@@ -2025,52 +2025,50 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	if (tee_dissect) goto finalize_opt_record;
 
 	/* Is this option about sampling? */
-	if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len || tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4 || 
-            tpl->tpl[NF9_SAMPLING_PKT_INTERVAL].len == 4 || tpl->tpl[NF9_SAMPLING_SIZE].len == 4) {
+        if (tpl->fld[NF9_FLOW_SAMPLER_ID].count ||
+            tpl->fld[NF9_SAMPLING_INTERVAL].len[0] == 4 ||
+            tpl->fld[NF9_SAMPLING_PKT_INTERVAL].len[0] == 4 ||
+            tpl->fld[NF9_SAMPLING_SIZE].len[0] == 4) {
 	  u_int8_t t8 = 0;
 	  u_int16_t t16 = 0;
 	  u_int32_t sampler_id = 0, t32 = 0, t32_2 = 0;
 	  u_int64_t t64 = 0;
 
 	  /* Handling the global option scoping case */
-	  if (!config.nfacctd_disable_opt_scope_check) {
-	    if (tpl->tpl[NF9_OPT_SCOPE_SYSTEM].len) entry = (struct xflow_status_entry *) pptrs->f_status_g;
-	    else {
-	      if (version == 10) {
-		if (tpl->tpl[IPFIX_SCOPE_TEMPLATE_ID].len) {
-		  entry = (struct xflow_status_entry *) pptrs->f_status;
-		  memcpy(&t16, pkt+tpl->tpl[IPFIX_SCOPE_TEMPLATE_ID].off, 2);
-		  sampler_id = ntohs(t16);
-		}
-	      }
-	    }
-	  }
-	  else entry = (struct xflow_status_entry *) pptrs->f_status_g;
+          if (config.nfacctd_disable_opt_scope_check ||
+              tpl->fld[NF9_OPT_SCOPE_SYSTEM].count) {
+            entry = (struct xflow_status_entry *) pptrs->f_status_g;
+          }
+          else if (version == 10 && tpl->fld[IPFIX_SCOPE_TEMPLATE_ID].count) {
+            entry = (struct xflow_status_entry *) pptrs->f_status;
+            memcpy(&t16, pkt+tpl->fld[IPFIX_SCOPE_TEMPLATE_ID].off[0], 2);
+            sampler_id = ntohs(t16);
+          }
 
-	  if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 1) {
-	    memcpy(&t8, pkt+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 1);
-	    sampler_id = t8;
-	  }
-	  else if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 2) {
-	    memcpy(&t16, pkt+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 2);
-	    sampler_id = ntohs(t16);
-	  }
-	  else if (tpl->tpl[NF9_FLOW_SAMPLER_ID].len == 4) {
-	    memcpy(&t32, pkt+tpl->tpl[NF9_FLOW_SAMPLER_ID].off, 4);
-	    sampler_id = ntohl(t32);
-	  }
-	  else if (tpl->tpl[NF9_SELECTOR_ID].len == 2) {
-	    memcpy(&t16, pkt+tpl->tpl[NF9_SELECTOR_ID].off, 2);
-	    sampler_id = ntohs(t16);
-	  }
-	  else if (tpl->tpl[NF9_SELECTOR_ID].len == 4) {
-	    memcpy(&t32, pkt+tpl->tpl[NF9_SELECTOR_ID].off, 4);
-	    sampler_id = ntohl(t32);
-	  }
-	  else if (tpl->tpl[NF9_SELECTOR_ID].len == 8) {
-	    memcpy(&t64, pkt+tpl->tpl[NF9_SELECTOR_ID].off, 8);
-	    sampler_id = pm_ntohll(t64); /* XXX: sampler_id to be moved to 64 bit */
-	  }
+          if (tpl->fld[NF9_FLOW_SAMPLER_ID].len[0] == 1) {
+            memcpy(&t8, pkt+tpl->fld[NF9_FLOW_SAMPLER_ID].off[0], 1);
+            sampler_id = t8;
+          }
+          else if (tpl->fld[NF9_FLOW_SAMPLER_ID].len[0] == 2) {
+            memcpy(&t16, pkt+tpl->fld[NF9_FLOW_SAMPLER_ID].off[0], 2);
+            sampler_id = ntohs(t16);
+          }
+          else if (tpl->fld[NF9_FLOW_SAMPLER_ID].len[0] == 4) {
+            memcpy(&t32, pkt+tpl->fld[NF9_FLOW_SAMPLER_ID].off[0], 4);
+            sampler_id = ntohl(t32);
+          }
+          else if (tpl->fld[NF9_SELECTOR_ID].len[0] == 2) {
+            memcpy(&t16, pkt+tpl->fld[NF9_SELECTOR_ID].off[0], 2);
+            sampler_id = ntohs(t16);
+          }
+          else if (tpl->fld[NF9_SELECTOR_ID].len[0] == 4) {
+            memcpy(&t32, pkt+tpl->fld[NF9_SELECTOR_ID].off[0], 4);
+            sampler_id = ntohl(t32);
+          }
+          else if (tpl->fld[NF9_SELECTOR_ID].len[0] == 8) {
+            memcpy(&t64, pkt+tpl->fld[NF9_SELECTOR_ID].off[0], 8);
+            sampler_id = pm_ntohll(t64); /* XXX: sampler_id to be moved to 64 bit */
+          }
 
 	  if (entry) sentry = search_smp_id_status_table(entry->sampling, sampler_id, FALSE);
 	  if (!sentry) sentry = create_smp_entry_status_table(&xflow_status_table, entry);
@@ -2078,45 +2076,47 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  if (sentry) {
 	    memset(sentry, 0, sizeof(struct xflow_status_entry_sampling));
-	    if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 1) {
-	      memcpy(&t8, pkt+tpl->tpl[NF9_SAMPLING_INTERVAL].off, 1);
-	      sentry->sample_pool = t8;
-	    }
-	    if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 2) {
-	      memcpy(&t16, pkt+tpl->tpl[NF9_SAMPLING_INTERVAL].off, 2);
-	      sentry->sample_pool = ntohs(t16);
-	    }
-	    if (tpl->tpl[NF9_SAMPLING_INTERVAL].len == 4) {
-	      memcpy(&t32, pkt+tpl->tpl[NF9_SAMPLING_INTERVAL].off, 4);
-	      sentry->sample_pool = ntohl(t32);
-	    }
-	    if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 1) {
-	      memcpy(&t8, pkt+tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 1);
-	      sentry->sample_pool = t8;
-	    }
-	    else if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 2) {
-	      memcpy(&t16, pkt+tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 2);
-	      sentry->sample_pool = ntohs(t16);
-	    }
-	    else if (tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].len == 4) {
-	      memcpy(&t32, pkt+tpl->tpl[NF9_FLOW_SAMPLER_INTERVAL].off, 4);
-	      sentry->sample_pool = ntohl(t32);
-	    }
-	    else if (tpl->tpl[NF9_SAMPLING_PKT_INTERVAL].len == 4 && tpl->tpl[NF9_SAMPLING_PKT_SPACE].len == 4) {
+            if (tpl->fld[NF9_SAMPLING_INTERVAL].len[0] == 1) {
+              memcpy(&t8, pkt+tpl->fld[NF9_SAMPLING_INTERVAL].off[0], 1);
+              sentry->sample_pool = t8;
+            }
+            if (tpl->fld[NF9_SAMPLING_INTERVAL].len[0] == 2) {
+              memcpy(&t16, pkt+tpl->fld[NF9_SAMPLING_INTERVAL].off[0], 2);
+              sentry->sample_pool = ntohs(t16);
+            }
+            if (tpl->fld[NF9_SAMPLING_INTERVAL].len[0] == 4) {
+              memcpy(&t32, pkt+tpl->fld[NF9_SAMPLING_INTERVAL].off[0], 4);
+              sentry->sample_pool = ntohl(t32);
+            }
+            if (tpl->fld[NF9_FLOW_SAMPLER_INTERVAL].len[0] == 1) {
+              memcpy(&t8, pkt+tpl->fld[NF9_FLOW_SAMPLER_INTERVAL].off[0], 1);
+              sentry->sample_pool = t8;
+            }
+            else if (tpl->fld[NF9_FLOW_SAMPLER_INTERVAL].len[0] == 2) {
+              memcpy(&t16, pkt+tpl->fld[NF9_FLOW_SAMPLER_INTERVAL].off[0], 2);
+              sentry->sample_pool = ntohs(t16);
+            }
+            else if (tpl->fld[NF9_FLOW_SAMPLER_INTERVAL].len[0] == 4) {
+              memcpy(&t32, pkt+tpl->fld[NF9_FLOW_SAMPLER_INTERVAL].off[0], 4);
+              sentry->sample_pool = ntohl(t32);
+            }
+            else if (tpl->fld[NF9_SAMPLING_PKT_INTERVAL].len[0] == 4 &&
+                     tpl->fld[NF9_SAMPLING_PKT_SPACE].len[0] == 4) {
 	      u_int32_t pkt_interval = 0, pkt_space = 0;
 
-	      memcpy(&t32, pkt+tpl->tpl[NF9_SAMPLING_PKT_INTERVAL].off, 4);
-	      memcpy(&t32_2, pkt+tpl->tpl[NF9_SAMPLING_PKT_SPACE].off, 4);
+              memcpy(&t32, pkt+tpl->fld[NF9_SAMPLING_PKT_INTERVAL].off[0], 4);
+              memcpy(&t32_2, pkt+tpl->fld[NF9_SAMPLING_PKT_SPACE].off[0], 4);
 	      pkt_interval = ntohl(t32);
 	      pkt_space = ntohl(t32_2);
 
 	      if (pkt_interval) sentry->sample_pool = ((pkt_interval + pkt_space) / pkt_interval);
 	    }
-	    else if (tpl->tpl[NF9_SAMPLING_SIZE].len == 4 && tpl->tpl[NF9_SAMPLING_POPULATION].len == 4) {
+            else if (tpl->fld[NF9_SAMPLING_SIZE].len[0] == 4 &&
+                     tpl->fld[NF9_SAMPLING_POPULATION].len[0] == 4) {
 	      u_int32_t sampling_size = 0, sampling_population = 0;
 
-	      memcpy(&t32, pkt+tpl->tpl[NF9_SAMPLING_SIZE].off, 4);
-	      memcpy(&t32_2, pkt+tpl->tpl[NF9_SAMPLING_POPULATION].off, 4);
+              memcpy(&t32, pkt+tpl->fld[NF9_SAMPLING_SIZE].off[0], 4);
+              memcpy(&t32_2, pkt+tpl->fld[NF9_SAMPLING_POPULATION].off[0], 4);
 	      sampling_size = ntohl(t32);
 	      sampling_population = ntohl(t32_2);
 
@@ -2128,18 +2128,20 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  }
 	}
 
-	if ((tpl->tpl[NF9_APPLICATION_ID].len == 2 || tpl->tpl[NF9_APPLICATION_ID].len == 3 || tpl->tpl[NF9_APPLICATION_ID].len == 5) &&
-	    tpl->tpl[NF9_APPLICATION_NAME].len > 0) {
+        if ((tpl->fld[NF9_APPLICATION_ID].len[0] == 2 ||
+             tpl->fld[NF9_APPLICATION_ID].len[0] == 3 ||
+             tpl->fld[NF9_APPLICATION_ID].len[0] == 5) &&
+            tpl->fld[NF9_APPLICATION_NAME].len[0] > 0) {
 	  struct pkt_classifier css;
 	  pm_class_t class_id = 0, class_int_id = 0;
 
 	  /* Handling the global option scoping case */
-	  if (!config.nfacctd_disable_opt_scope_check) {
-	    if (tpl->tpl[NF9_OPT_SCOPE_SYSTEM].len) entry = (struct xflow_status_entry *) pptrs->f_status_g;
-	  }
-	  else entry = (struct xflow_status_entry *) pptrs->f_status_g;
+          if (config.nfacctd_disable_opt_scope_check ||
+              tpl->fld[NF9_OPT_SCOPE_SYSTEM].count)
+            entry = (struct xflow_status_entry *) pptrs->f_status_g;
 
-	  memcpy(&class_id, (pkt + tpl->tpl[NF9_APPLICATION_ID].off + 1), (tpl->tpl[NF9_APPLICATION_ID].len - 1));
+          memcpy(&class_id, (pkt + tpl->fld[NF9_APPLICATION_ID].off[0] + 1),
+                 tpl->fld[NF9_APPLICATION_ID].len[0] - 1);
 
           if (entry) centry = search_class_id_status_table(entry->class, class_id);
           if (!centry) {
@@ -2155,7 +2157,9 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (centry) {
             memset(centry, 0, sizeof(struct xflow_status_entry_class));
 	    memset(&css, 0, sizeof(struct pkt_classifier));
-	    memcpy(&centry->class_name, pkt+tpl->tpl[NF9_APPLICATION_NAME].off, MIN((MAX_PROTOCOL_LEN-1), tpl->tpl[NF9_APPLICATION_NAME].len));
+            memcpy(&centry->class_name,
+                   pkt+tpl->fld[NF9_APPLICATION_NAME].off[0],
+                   MIN(MAX_PROTOCOL_LEN-1, tpl->fld[NF9_APPLICATION_NAME].len[0]));
             centry->class_id = class_id;
 	    centry->class_int_id = class_int_id;
             if (csaved) centry->next = csaved;
@@ -2170,38 +2174,46 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	}
 
         /* XXX: this is dangerous, currently does not support multiple exporters behind the same proxy (same socket address). */
-	if (tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].len == 4 || tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].len == 16) {
+        if (tpl->fld[NF9_EXPORTER_IPV4_ADDRESS].len[0] == 4 ||
+            tpl->fld[NF9_EXPORTER_IPV6_ADDRESS].len[0] == 16) {
           /* Handling the global option scoping case */
-          if (!config.nfacctd_disable_opt_scope_check) {
-            if (tpl->tpl[NF9_OPT_SCOPE_SYSTEM].len) entry = (struct xflow_status_entry *) pptrs->f_status_g;
-          }
-          else entry = (struct xflow_status_entry *) pptrs->f_status_g;
+          if (config.nfacctd_disable_opt_scope_check ||
+              tpl->fld[NF9_OPT_SCOPE_SYSTEM].count)
+            entry = (struct xflow_status_entry *) pptrs->f_status_g;
 
 	  if (entry) {
 	    int got_v4 = FALSE;
 
-	    if (tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].len) {
-	      raw_to_addr(&entry->exp_addr, pkt+tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].off, AF_INET);
-	      raw_to_sa(&entry->exp_sa, pkt+tpl->tpl[NF9_EXPORTER_IPV4_ADDRESS].off, 0, AF_INET);
+	    if (tpl->fld[NF9_EXPORTER_IPV4_ADDRESS].count) {
+              raw_to_addr(&entry->exp_addr,
+                          pkt+tpl->fld[NF9_EXPORTER_IPV4_ADDRESS].off[0],
+                          AF_INET);
+              raw_to_sa(&entry->exp_sa,
+                        pkt+tpl->fld[NF9_EXPORTER_IPV4_ADDRESS].off[0],
+                        0, AF_INET);
 
 	      if (!is_any(&entry->exp_addr)) {
 		got_v4 = TRUE;
 	      }
 	    }
 
-	    if (!got_v4 && tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].len) {
-	      raw_to_addr(&entry->exp_addr, pkt+tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].off, AF_INET6);
-	      raw_to_sa(&entry->exp_sa, pkt+tpl->tpl[NF9_EXPORTER_IPV6_ADDRESS].off, 0, AF_INET6);
+            if (!got_v4 && tpl->fld[NF9_EXPORTER_IPV6_ADDRESS].count) {
+              raw_to_addr(&entry->exp_addr,
+                          pkt+tpl->fld[NF9_EXPORTER_IPV6_ADDRESS].off[0],
+                          AF_INET6);
+              raw_to_sa(&entry->exp_sa,
+                        pkt+tpl->fld[NF9_EXPORTER_IPV6_ADDRESS].off[0],
+                        0, AF_INET6);
 	    }
 	  }
 	}
 
-        if (tpl->tpl[NF9_INGRESS_VRFID].len == 4 && tpl->tpl[NF9_MPLS_VPN_RD].len == 8) {
+        if (tpl->fld[NF9_INGRESS_VRFID].len[0] == 4 &&
+            tpl->fld[NF9_MPLS_VPN_RD].len[0] == 8) {
           /* Handling the global option scoping case */
-          if (!config.nfacctd_disable_opt_scope_check) {
-            if (tpl->tpl[NF9_OPT_SCOPE_SYSTEM].len) entry = (struct xflow_status_entry *) pptrs->f_status_g;
-          }
-          else entry = (struct xflow_status_entry *) pptrs->f_status_g;
+          if (config.nfacctd_disable_opt_scope_check ||
+              tpl->fld[NF9_OPT_SCOPE_SYSTEM].count)
+            entry = (struct xflow_status_entry *) pptrs->f_status_g;
 
 	  if (entry) {
 	    u_int32_t ingress_vrfid, egress_vrfid;
@@ -2223,16 +2235,19 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	      }
 	    }
 
-	    memcpy(&ingress_vrfid, pkt+tpl->tpl[NF9_INGRESS_VRFID].off, tpl->tpl[NF9_INGRESS_VRFID].len);
+            memcpy(&ingress_vrfid, pkt+tpl->fld[NF9_INGRESS_VRFID].off[0],
+                   tpl->fld[NF9_INGRESS_VRFID].len[0]);
 	    ingress_vrfid = ntohl(ingress_vrfid);
 
-	    memcpy(&egress_vrfid, pkt+tpl->tpl[NF9_EGRESS_VRFID].off, tpl->tpl[NF9_EGRESS_VRFID].len);
+            memcpy(&egress_vrfid, pkt+tpl->fld[NF9_EGRESS_VRFID].off[0],
+                   tpl->fld[NF9_EGRESS_VRFID].len[0]);
 	    egress_vrfid = ntohl(egress_vrfid);
 
 	    if (ingress_vrfid || egress_vrfid) {
 	      mpls_vpn_rd = malloc(sizeof(rd_t));
 
-	      memcpy(mpls_vpn_rd, pkt+tpl->tpl[NF9_MPLS_VPN_RD].off, tpl->tpl[NF9_MPLS_VPN_RD].len);
+              memcpy(mpls_vpn_rd, pkt+tpl->fld[NF9_MPLS_VPN_RD].off[0],
+                     tpl->fld[NF9_MPLS_VPN_RD].len[0]);
 	      bgp_rd_ntoh(mpls_vpn_rd);
 
 	      if (ingress_vrfid) {
@@ -2317,31 +2332,56 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    reset_ip4(pptrs);
 
 	    if (direction == DIRECTION_IN) {
-              memcpy(pptrs->mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_IN_SRC_MAC].off, tpl->tpl[NF9_IN_SRC_MAC].len);
-              memcpy(pptrs->mac_ptr, pkt+tpl->tpl[NF9_IN_DST_MAC].off, tpl->tpl[NF9_IN_DST_MAC].len);
+              memcpy(pptrs->mac_ptr+ETH_ADDR_LEN,
+                     pkt+tpl->fld[NF9_IN_SRC_MAC].off[0],
+                     tpl->fld[NF9_IN_SRC_MAC].len[0]);
+              memcpy(pptrs->mac_ptr,
+                     pkt+tpl->fld[NF9_IN_DST_MAC].off[0],
+                     tpl->fld[NF9_IN_DST_MAC].len[0]);
 	    }
 	    else if (direction == DIRECTION_OUT) {
-              memcpy(pptrs->mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_OUT_SRC_MAC].off, tpl->tpl[NF9_OUT_SRC_MAC].len);
-              memcpy(pptrs->mac_ptr, pkt+tpl->tpl[NF9_OUT_DST_MAC].off, tpl->tpl[NF9_OUT_DST_MAC].len);
+              memcpy(pptrs->mac_ptr+ETH_ADDR_LEN,
+                     pkt+tpl->fld[NF9_OUT_SRC_MAC].off[0],
+                     tpl->fld[NF9_OUT_SRC_MAC].len[0]);
+              memcpy(pptrs->mac_ptr,
+                     pkt+tpl->fld[NF9_OUT_DST_MAC].off[0],
+                     tpl->fld[NF9_OUT_DST_MAC].len[0]);
 	    }
 	    ((struct pm_iphdr *)pptrs->iph_ptr)->ip_vhl = 0x45;
-            memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_src, pkt+tpl->tpl[NF9_IPV4_SRC_ADDR].off, tpl->tpl[NF9_IPV4_SRC_ADDR].len);
-            memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst, pkt+tpl->tpl[NF9_IPV4_DST_ADDR].off, tpl->tpl[NF9_IPV4_DST_ADDR].len);
-            memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_p, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
-            memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_tos, pkt+tpl->tpl[NF9_SRC_TOS].off, tpl->tpl[NF9_SRC_TOS].len);
-            memcpy(&((struct pm_tlhdr *)pptrs->tlh_ptr)->src_port, pkt+tpl->tpl[NF9_L4_SRC_PORT].off, tpl->tpl[NF9_L4_SRC_PORT].len);
-            memcpy(&((struct pm_tlhdr *)pptrs->tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
-            memcpy(&((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
+            memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_src,
+                   pkt+tpl->fld[NF9_IPV4_SRC_ADDR].off[0],
+                   tpl->fld[NF9_IPV4_SRC_ADDR].len[0]);
+            memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst,
+                   pkt+tpl->fld[NF9_IPV4_DST_ADDR].off[0],
+                   tpl->fld[NF9_IPV4_DST_ADDR].len[0]);
+            memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_p,
+                   pkt+tpl->fld[NF9_L4_PROTOCOL].off[0],
+                   tpl->fld[NF9_L4_PROTOCOL].len[0]);
+            memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_tos,
+                   pkt+tpl->fld[NF9_SRC_TOS].off[0],
+                   tpl->fld[NF9_SRC_TOS].len[0]);
+            memcpy(&((struct pm_tlhdr *)pptrs->tlh_ptr)->src_port,
+                   pkt+tpl->fld[NF9_L4_SRC_PORT].off[0],
+                   tpl->fld[NF9_L4_SRC_PORT].len[0]);
+            memcpy(&((struct pm_tlhdr *)pptrs->tlh_ptr)->dst_port,
+                   pkt+tpl->fld[NF9_L4_DST_PORT].off[0],
+                   tpl->fld[NF9_L4_DST_PORT].len[0]);
+            memcpy(&((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags,
+                   pkt+tpl->fld[NF9_TCP_FLAGS].off[0],
+                   tpl->fld[NF9_TCP_FLAGS].len[0]);
 	  }
 
-	  memcpy(&pptrs->lm_mask_src, pkt+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len);
-	  memcpy(&pptrs->lm_mask_dst, pkt+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+          memcpy(&pptrs->lm_mask_src, pkt+tpl->fld[NF9_SRC_MASK].off[0],
+                 tpl->fld[NF9_SRC_MASK].len[0]);
+          memcpy(&pptrs->lm_mask_dst, pkt+tpl->fld[NF9_DST_MASK].off[0],
+                 tpl->fld[NF9_DST_MASK].len[0]);
 	  pptrs->lm_method_src = NF_NET_KEEP;
 	  pptrs->lm_method_dst = NF_NET_KEEP;
 
 	  /* Let's copy some relevant field */
 	  pptrs->l4_proto = 0;
-	  memcpy(&pptrs->l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
+          memcpy(&pptrs->l4_proto, pkt+tpl->fld[NF9_L4_PROTOCOL].off[0],
+                 tpl->fld[NF9_L4_PROTOCOL].len[0]);
 
 	  NF_process_classifiers(pptrs, pptrs, pkt, tpl);
 	  NF_mpls_vpn_rd_fromie90(pptrs);
@@ -2356,6 +2396,9 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           exec_plugins(pptrs, req);
 	  break;
 	case PM_FTYPE_IPV6:
+        case PM_FTYPE_SRV6:
+        case PM_FTYPE_SRV6_IPV4:
+        case PM_FTYPE_SRV6_IPV6:
 	  pptrsv->v6.f_header = pptrs->f_header;
 	  pptrsv->v6.f_data = pptrs->f_data;
 	  pptrsv->v6.f_tpl = pptrs->f_tpl;
@@ -2366,31 +2409,56 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    reset_ip6(&pptrsv->v6);
 
 	    if (direction == DIRECTION_IN) {
-	      memcpy(pptrsv->v6.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_IN_SRC_MAC].off, tpl->tpl[NF9_IN_SRC_MAC].len);
-	      memcpy(pptrsv->v6.mac_ptr, pkt+tpl->tpl[NF9_IN_DST_MAC].off, tpl->tpl[NF9_IN_DST_MAC].len);
+              memcpy(pptrsv->v6.mac_ptr+ETH_ADDR_LEN,
+                     pkt+tpl->fld[NF9_IN_SRC_MAC].off[0],
+                     tpl->fld[NF9_IN_SRC_MAC].len[0]);
+              memcpy(pptrsv->v6.mac_ptr,
+                     pkt+tpl->fld[NF9_IN_DST_MAC].off[0],
+                     tpl->fld[NF9_IN_DST_MAC].len[0]);
 	    }
 	    else if (direction == DIRECTION_OUT) {
-	      memcpy(pptrsv->v6.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_OUT_SRC_MAC].off, tpl->tpl[NF9_OUT_SRC_MAC].len);
-	      memcpy(pptrsv->v6.mac_ptr, pkt+tpl->tpl[NF9_OUT_DST_MAC].off, tpl->tpl[NF9_OUT_DST_MAC].len);
+              memcpy(pptrsv->v6.mac_ptr+ETH_ADDR_LEN,
+                     pkt+tpl->fld[NF9_OUT_SRC_MAC].off[0],
+                     tpl->fld[NF9_OUT_SRC_MAC].len[0]);
+              memcpy(pptrsv->v6.mac_ptr,
+                     pkt+tpl->fld[NF9_OUT_DST_MAC].off[0],
+                     tpl->fld[NF9_OUT_DST_MAC].len[0]);
 	    }
 	    ((struct ip6_hdr *)pptrsv->v6.iph_ptr)->ip6_ctlun.ip6_un2_vfc = 0x60;
-            memcpy(&((struct ip6_hdr *)pptrsv->v6.iph_ptr)->ip6_src, pkt+tpl->tpl[NF9_IPV6_SRC_ADDR].off, tpl->tpl[NF9_IPV6_SRC_ADDR].len);
-            memcpy(&((struct ip6_hdr *)pptrsv->v6.iph_ptr)->ip6_dst, pkt+tpl->tpl[NF9_IPV6_DST_ADDR].off, tpl->tpl[NF9_IPV6_DST_ADDR].len);
-            memcpy(&((struct ip6_hdr *)pptrsv->v6.iph_ptr)->ip6_nxt, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
+            memcpy(&((struct ip6_hdr *)pptrsv->v6.iph_ptr)->ip6_src,
+                   pkt+tpl->fld[NF9_IPV6_SRC_ADDR].off[0],
+                   tpl->fld[NF9_IPV6_SRC_ADDR].len[0]);
+            memcpy(&((struct ip6_hdr *)pptrsv->v6.iph_ptr)->ip6_dst,
+                   pkt+tpl->fld[NF9_IPV6_DST_ADDR].off[0],
+                   tpl->fld[NF9_IPV6_DST_ADDR].len[0]);
+            memcpy(&((struct ip6_hdr *)pptrsv->v6.iph_ptr)->ip6_nxt,
+                   pkt+tpl->fld[NF9_L4_PROTOCOL].off[0],
+                   tpl->fld[NF9_L4_PROTOCOL].len[0]);
 	    /* XXX: class ID ? */
-            memcpy(&((struct pm_tlhdr *)pptrsv->v6.tlh_ptr)->src_port, pkt+tpl->tpl[NF9_L4_SRC_PORT].off, tpl->tpl[NF9_L4_SRC_PORT].len);
-            memcpy(&((struct pm_tlhdr *)pptrsv->v6.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
-            memcpy(&((struct pm_tcphdr *)pptrsv->v6.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
+            memcpy(&((struct pm_tlhdr *)pptrsv->v6.tlh_ptr)->src_port,
+                   pkt+tpl->fld[NF9_L4_SRC_PORT].off[0],
+                   tpl->fld[NF9_L4_SRC_PORT].len[0]);
+            memcpy(&((struct pm_tlhdr *)pptrsv->v6.tlh_ptr)->dst_port,
+                   pkt+tpl->fld[NF9_L4_DST_PORT].off[0],
+                   tpl->fld[NF9_L4_DST_PORT].len[0]);
+            memcpy(&((struct pm_tcphdr *)pptrsv->v6.tlh_ptr)->th_flags,
+                   pkt+tpl->fld[NF9_TCP_FLAGS].off[0],
+                   tpl->fld[NF9_TCP_FLAGS].len[0]);
 	  }
 
-          memcpy(&pptrsv->v6.lm_mask_src, pkt+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len);
-          memcpy(&pptrsv->v6.lm_mask_dst, pkt+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+          memcpy(&pptrsv->v6.lm_mask_src,
+                 pkt+tpl->fld[NF9_SRC_MASK].off[0],
+                 tpl->fld[NF9_SRC_MASK].len[0]);
+          memcpy(&pptrsv->v6.lm_mask_dst,
+                 pkt+tpl->fld[NF9_DST_MASK].off[0],
+                 tpl->fld[NF9_DST_MASK].len[0]);
           pptrsv->v6.lm_method_src = NF_NET_KEEP;
           pptrsv->v6.lm_method_dst = NF_NET_KEEP;
 
 	  /* Let's copy some relevant field */
 	  pptrsv->v6.l4_proto = 0;
-	  memcpy(&pptrsv->v6.l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
+          memcpy(&pptrsv->v6.l4_proto, pkt+tpl->fld[NF9_L4_PROTOCOL].off[0],
+                 tpl->fld[NF9_L4_PROTOCOL].len[0]);
 
 	  NF_process_classifiers(pptrs, &pptrsv->v6, pkt, tpl);
 	  NF_mpls_vpn_rd_fromie90(&pptrsv->v6);
@@ -2415,33 +2483,65 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    reset_ip4(&pptrsv->vlan4);
 
 	    if (direction == DIRECTION_IN) {
-	      memcpy(pptrsv->vlan4.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_IN_SRC_MAC].off, tpl->tpl[NF9_IN_SRC_MAC].len);
-	      memcpy(pptrsv->vlan4.mac_ptr, pkt+tpl->tpl[NF9_IN_DST_MAC].off, tpl->tpl[NF9_IN_DST_MAC].len);
-	      memcpy(pptrsv->vlan4.vlan_ptr, pkt+tpl->tpl[NF9_IN_VLAN].off, tpl->tpl[NF9_IN_VLAN].len);
+              memcpy(pptrsv->vlan4.mac_ptr+ETH_ADDR_LEN,
+                     pkt+tpl->fld[NF9_IN_SRC_MAC].off[0],
+                     tpl->fld[NF9_IN_SRC_MAC].len[0]);
+              memcpy(pptrsv->vlan4.mac_ptr,
+                     pkt+tpl->fld[NF9_IN_DST_MAC].off[0],
+                     tpl->fld[NF9_IN_DST_MAC].len[0]);
+              memcpy(pptrsv->vlan4.vlan_ptr,
+                     pkt+tpl->fld[NF9_IN_VLAN].off[0],
+                     tpl->fld[NF9_IN_VLAN].len[0]);
 	    }
 	    else if (direction == DIRECTION_OUT) {
-	      memcpy(pptrsv->vlan4.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_OUT_SRC_MAC].off, tpl->tpl[NF9_OUT_SRC_MAC].len);
-	      memcpy(pptrsv->vlan4.mac_ptr, pkt+tpl->tpl[NF9_OUT_DST_MAC].off, tpl->tpl[NF9_OUT_DST_MAC].len);
-	      memcpy(pptrsv->vlan4.vlan_ptr, pkt+tpl->tpl[NF9_OUT_VLAN].off, tpl->tpl[NF9_OUT_VLAN].len);
-	    }
+              memcpy(pptrsv->vlan4.mac_ptr+ETH_ADDR_LEN,
+                     pkt+tpl->fld[NF9_OUT_SRC_MAC].off[0],
+                     tpl->fld[NF9_OUT_SRC_MAC].len[0]);
+              memcpy(pptrsv->vlan4.mac_ptr,
+                     pkt+tpl->fld[NF9_OUT_DST_MAC].off[0],
+                     tpl->fld[NF9_OUT_DST_MAC].len[0]);
+              memcpy(pptrsv->vlan4.vlan_ptr,
+                     pkt+tpl->fld[NF9_OUT_VLAN].off[0],
+                     tpl->fld[NF9_OUT_VLAN].len[0]);
+            }
 	    ((struct pm_iphdr *)pptrsv->vlan4.iph_ptr)->ip_vhl = 0x45;
-	    memcpy(&((struct pm_iphdr *)pptrsv->vlan4.iph_ptr)->ip_src, pkt+tpl->tpl[NF9_IPV4_SRC_ADDR].off, tpl->tpl[NF9_IPV4_SRC_ADDR].len);
-	    memcpy(&((struct pm_iphdr *)pptrsv->vlan4.iph_ptr)->ip_dst, pkt+tpl->tpl[NF9_IPV4_DST_ADDR].off, tpl->tpl[NF9_IPV4_DST_ADDR].len);
-	    memcpy(&((struct pm_iphdr *)pptrsv->vlan4.iph_ptr)->ip_p, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
-	    memcpy(&((struct pm_iphdr *)pptrsv->vlan4.iph_ptr)->ip_tos, pkt+tpl->tpl[NF9_SRC_TOS].off, tpl->tpl[NF9_SRC_TOS].len);
-	    memcpy(&((struct pm_tlhdr *)pptrsv->vlan4.tlh_ptr)->src_port, pkt+tpl->tpl[NF9_L4_SRC_PORT].off, tpl->tpl[NF9_L4_SRC_PORT].len);
-	    memcpy(&((struct pm_tlhdr *)pptrsv->vlan4.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
-            memcpy(&((struct pm_tcphdr *)pptrsv->vlan4.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
+            memcpy(&((struct pm_iphdr *)pptrsv->vlan4.iph_ptr)->ip_src,
+                   pkt+tpl->fld[NF9_IPV4_SRC_ADDR].off[0],
+                   tpl->fld[NF9_IPV4_SRC_ADDR].len[0]);
+            memcpy(&((struct pm_iphdr *)pptrsv->vlan4.iph_ptr)->ip_dst,
+                   pkt+tpl->fld[NF9_IPV4_DST_ADDR].off[0],
+                   tpl->fld[NF9_IPV4_DST_ADDR].len[0]);
+            memcpy(&((struct pm_iphdr *)pptrsv->vlan4.iph_ptr)->ip_p,
+                   pkt+tpl->fld[NF9_L4_PROTOCOL].off[0],
+                   tpl->fld[NF9_L4_PROTOCOL].len[0]);
+            memcpy(&((struct pm_iphdr *)pptrsv->vlan4.iph_ptr)->ip_tos,
+                   pkt+tpl->fld[NF9_SRC_TOS].off[0],
+                   tpl->fld[NF9_SRC_TOS].len[0]);
+            memcpy(&((struct pm_tlhdr *)pptrsv->vlan4.tlh_ptr)->src_port,
+                   pkt+tpl->fld[NF9_L4_SRC_PORT].off[0],
+                   tpl->fld[NF9_L4_SRC_PORT].len[0]);
+            memcpy(&((struct pm_tlhdr *)pptrsv->vlan4.tlh_ptr)->dst_port,
+                   pkt+tpl->fld[NF9_L4_DST_PORT].off[0],
+                   tpl->fld[NF9_L4_DST_PORT].len[0]);
+            memcpy(&((struct pm_tcphdr *)pptrsv->vlan4.tlh_ptr)->th_flags,
+                   pkt+tpl->fld[NF9_TCP_FLAGS].off[0],
+                   tpl->fld[NF9_TCP_FLAGS].len[0]);
 	  }
 
-          memcpy(&pptrsv->vlan4.lm_mask_src, pkt+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len);
-          memcpy(&pptrsv->vlan4.lm_mask_dst, pkt+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+          memcpy(&pptrsv->vlan4.lm_mask_src,
+                 pkt+tpl->fld[NF9_SRC_MASK].off[0],
+                 tpl->fld[NF9_SRC_MASK].len[0]);
+          memcpy(&pptrsv->vlan4.lm_mask_dst,
+                 pkt+tpl->fld[NF9_DST_MASK].off[0],
+                 tpl->fld[NF9_DST_MASK].len[0]);
           pptrsv->vlan4.lm_method_src = NF_NET_KEEP;
           pptrsv->vlan4.lm_method_dst = NF_NET_KEEP;
 
 	  /* Let's copy some relevant field */
 	  pptrsv->vlan4.l4_proto = 0;
-	  memcpy(&pptrsv->vlan4.l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
+          memcpy(&pptrsv->vlan4.l4_proto,
+                 pkt+tpl->fld[NF9_L4_PROTOCOL].off[0],
+                 tpl->fld[NF9_L4_PROTOCOL].len[0]);
 
 	  NF_process_classifiers(pptrs, &pptrsv->vlan4, pkt, tpl);
 	  NF_mpls_vpn_rd_fromie90(&pptrsv->vlan4);
@@ -2466,33 +2566,62 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    reset_ip6(&pptrsv->vlan6);
 
 	    if (direction == DIRECTION_IN) {
-	      memcpy(pptrsv->vlan6.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_IN_SRC_MAC].off, tpl->tpl[NF9_IN_SRC_MAC].len);
-	      memcpy(pptrsv->vlan6.mac_ptr, pkt+tpl->tpl[NF9_IN_DST_MAC].off, tpl->tpl[NF9_IN_DST_MAC].len);
-	      memcpy(pptrsv->vlan6.vlan_ptr, pkt+tpl->tpl[NF9_IN_VLAN].off, tpl->tpl[NF9_IN_VLAN].len);
+              memcpy(pptrsv->vlan6.mac_ptr+ETH_ADDR_LEN,
+                     pkt+tpl->fld[NF9_IN_SRC_MAC].off[0],
+                     tpl->fld[NF9_IN_SRC_MAC].len[0]);
+              memcpy(pptrsv->vlan6.mac_ptr,
+                     pkt+tpl->fld[NF9_IN_DST_MAC].off[0],
+                     tpl->fld[NF9_IN_DST_MAC].len[0]);
+              memcpy(pptrsv->vlan6.vlan_ptr,
+                     pkt+tpl->fld[NF9_IN_VLAN].off[0],
+                     tpl->fld[NF9_IN_VLAN].len[0]);
 	    }
             else if (direction == DIRECTION_OUT) {
-	      memcpy(pptrsv->vlan6.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_OUT_SRC_MAC].off, tpl->tpl[NF9_OUT_SRC_MAC].len);
-	      memcpy(pptrsv->vlan6.mac_ptr, pkt+tpl->tpl[NF9_OUT_DST_MAC].off, tpl->tpl[NF9_OUT_DST_MAC].len);
-	      memcpy(pptrsv->vlan6.vlan_ptr, pkt+tpl->tpl[NF9_OUT_VLAN].off, tpl->tpl[NF9_OUT_VLAN].len);
-	    }
+              memcpy(pptrsv->vlan6.mac_ptr+ETH_ADDR_LEN,
+                     pkt+tpl->fld[NF9_OUT_SRC_MAC].off[0],
+                     tpl->fld[NF9_OUT_SRC_MAC].len[0]);
+              memcpy(pptrsv->vlan6.mac_ptr,
+                     pkt+tpl->fld[NF9_OUT_DST_MAC].off[0],
+                     tpl->fld[NF9_OUT_DST_MAC].len[0]);
+              memcpy(pptrsv->vlan6.vlan_ptr,
+                     pkt+tpl->fld[NF9_OUT_VLAN].off[0],
+                     tpl->fld[NF9_OUT_VLAN].len[0]);
+            }
 	    ((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_ctlun.ip6_un2_vfc = 0x60;
-	    memcpy(&((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_src, pkt+tpl->tpl[NF9_IPV6_SRC_ADDR].off, tpl->tpl[NF9_IPV6_SRC_ADDR].len);
-	    memcpy(&((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_dst, pkt+tpl->tpl[NF9_IPV6_DST_ADDR].off, tpl->tpl[NF9_IPV6_DST_ADDR].len);
-	    memcpy(&((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_nxt, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
+            memcpy(&((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_src,
+                   pkt+tpl->fld[NF9_IPV6_SRC_ADDR].off[0],
+                   tpl->fld[NF9_IPV6_SRC_ADDR].len[0]);
+            memcpy(&((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_dst,
+                   pkt+tpl->fld[NF9_IPV6_DST_ADDR].off[0],
+                   tpl->fld[NF9_IPV6_DST_ADDR].len[0]);
+            memcpy(&((struct ip6_hdr *)pptrsv->vlan6.iph_ptr)->ip6_nxt,
+                   pkt+tpl->fld[NF9_L4_PROTOCOL].off[0],
+                   tpl->fld[NF9_L4_PROTOCOL].len[0]);
 	    /* XXX: class ID ? */
-	    memcpy(&((struct pm_tlhdr *)pptrsv->vlan6.tlh_ptr)->src_port, pkt+tpl->tpl[NF9_L4_SRC_PORT].off, tpl->tpl[NF9_L4_SRC_PORT].len);
-	    memcpy(&((struct pm_tlhdr *)pptrsv->vlan6.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
-            memcpy(&((struct pm_tcphdr *)pptrsv->vlan6.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
+            memcpy(&((struct pm_tlhdr *)pptrsv->vlan6.tlh_ptr)->src_port,
+                   pkt+tpl->fld[NF9_L4_SRC_PORT].off[0],
+                   tpl->fld[NF9_L4_SRC_PORT].len[0]);
+            memcpy(&((struct pm_tlhdr *)pptrsv->vlan6.tlh_ptr)->dst_port,
+                   pkt+tpl->fld[NF9_L4_DST_PORT].off[0],
+                   tpl->fld[NF9_L4_DST_PORT].len[0]);
+            memcpy(&((struct pm_tcphdr *)pptrsv->vlan6.tlh_ptr)->th_flags,
+                   pkt+tpl->fld[NF9_TCP_FLAGS].off[0],
+                   tpl->fld[NF9_TCP_FLAGS].len[0]);
 	  }
 
-          memcpy(&pptrsv->vlan6.lm_mask_src, pkt+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len);
-          memcpy(&pptrsv->vlan6.lm_mask_dst, pkt+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+          memcpy(&pptrsv->vlan6.lm_mask_src,
+                 pkt+tpl->fld[NF9_SRC_MASK].off[0],
+                 tpl->fld[NF9_SRC_MASK].len[0]);
+          memcpy(&pptrsv->vlan6.lm_mask_dst,
+                 pkt+tpl->fld[NF9_DST_MASK].off[0],
+                 tpl->fld[NF9_DST_MASK].len[0]);
           pptrsv->vlan6.lm_method_src = NF_NET_KEEP;
           pptrsv->vlan6.lm_method_dst = NF_NET_KEEP;
 
 	  /* Let's copy some relevant field */
 	  pptrsv->vlan6.l4_proto = 0;
-	  memcpy(&pptrsv->vlan6.l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
+          memcpy(&pptrsv->vlan6.l4_proto, pkt+tpl->fld[NF9_L4_PROTOCOL].off[0],
+                 tpl->fld[NF9_L4_PROTOCOL].len[0]);
 
 	  NF_process_classifiers(pptrs, &pptrsv->vlan6, pkt, tpl);
 	  NF_mpls_vpn_rd_fromie90(&pptrsv->vlan6);
@@ -2519,41 +2648,66 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
             /* XXX: fix caplen */
             reset_mac(&pptrsv->mpls4);
 	    if (direction == DIRECTION_IN) {
-              memcpy(pptrsv->mpls4.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_IN_SRC_MAC].off, tpl->tpl[NF9_IN_SRC_MAC].len);
-              memcpy(pptrsv->mpls4.mac_ptr, pkt+tpl->tpl[NF9_IN_DST_MAC].off, tpl->tpl[NF9_IN_DST_MAC].len);
+              memcpy(pptrsv->mpls4.mac_ptr+ETH_ADDR_LEN,
+                     pkt+tpl->fld[NF9_IN_SRC_MAC].off[0],
+                     tpl->fld[NF9_IN_SRC_MAC].len[0]);
+              memcpy(pptrsv->mpls4.mac_ptr,
+                     pkt+tpl->fld[NF9_IN_DST_MAC].off[0],
+                     tpl->fld[NF9_IN_DST_MAC].len[0]);
 	    }
 	    else if (direction == DIRECTION_OUT) {
-              memcpy(pptrsv->mpls4.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_OUT_SRC_MAC].off, tpl->tpl[NF9_OUT_SRC_MAC].len);
-              memcpy(pptrsv->mpls4.mac_ptr, pkt+tpl->tpl[NF9_OUT_DST_MAC].off, tpl->tpl[NF9_OUT_DST_MAC].len);
+              memcpy(pptrsv->mpls4.mac_ptr+ETH_ADDR_LEN,
+                     pkt+tpl->fld[NF9_OUT_SRC_MAC].off[0],
+                     tpl->fld[NF9_OUT_SRC_MAC].len[0]);
+              memcpy(pptrsv->mpls4.mac_ptr,
+                     pkt+tpl->fld[NF9_OUT_DST_MAC].off[0],
+                     tpl->fld[NF9_OUT_DST_MAC].len[0]);
 	    }
 
-	    for (idx = NF9_MPLS_LABEL_1; idx <= NF9_MPLS_LABEL_10 && tpl->tpl[idx].len; idx++, ptr += 4) {
-	      memset(ptr, 0, 4);
-	      memcpy(ptr, pkt+tpl->tpl[idx].off, tpl->tpl[idx].len);
-	    }
+            for (idx = NF9_MPLS_LABEL_1; idx <= NF9_MPLS_LABEL_10 && tpl->fld[idx].len[0]; idx++, ptr += 4) {
+              memset(ptr, 0, 4);
+              memcpy(ptr, pkt+tpl->fld[idx].off[0], tpl->fld[idx].len[0]);
+            }
 	    stick_bosbit(ptr-4);
 	    pptrsv->mpls4.iph_ptr = ptr;
 	    pptrsv->mpls4.tlh_ptr = ptr + IP4HdrSz;
             reset_ip4(&pptrsv->mpls4);
 
 	    ((struct pm_iphdr *)pptrsv->mpls4.iph_ptr)->ip_vhl = 0x45;
-            memcpy(&((struct pm_iphdr *)pptrsv->mpls4.iph_ptr)->ip_src, pkt+tpl->tpl[NF9_IPV4_SRC_ADDR].off, tpl->tpl[NF9_IPV4_SRC_ADDR].len);
-            memcpy(&((struct pm_iphdr *)pptrsv->mpls4.iph_ptr)->ip_dst, pkt+tpl->tpl[NF9_IPV4_DST_ADDR].off, tpl->tpl[NF9_IPV4_DST_ADDR].len);
-            memcpy(&((struct pm_iphdr *)pptrsv->mpls4.iph_ptr)->ip_p, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
-            memcpy(&((struct pm_iphdr *)pptrsv->mpls4.iph_ptr)->ip_tos, pkt+tpl->tpl[NF9_SRC_TOS].off, tpl->tpl[NF9_SRC_TOS].len);
-            memcpy(&((struct pm_tlhdr *)pptrsv->mpls4.tlh_ptr)->src_port, pkt+tpl->tpl[NF9_L4_SRC_PORT].off, tpl->tpl[NF9_L4_SRC_PORT].len);
-            memcpy(&((struct pm_tlhdr *)pptrsv->mpls4.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
-            memcpy(&((struct pm_tcphdr *)pptrsv->mpls4.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
+            memcpy(&((struct pm_iphdr *)pptrsv->mpls4.iph_ptr)->ip_src,
+                   pkt+tpl->fld[NF9_IPV4_SRC_ADDR].off[0],
+                   tpl->fld[NF9_IPV4_SRC_ADDR].len[0]);
+            memcpy(&((struct pm_iphdr *)pptrsv->mpls4.iph_ptr)->ip_dst,
+                   pkt+tpl->fld[NF9_IPV4_DST_ADDR].off[0],
+                   tpl->fld[NF9_IPV4_DST_ADDR].len[0]);
+            memcpy(&((struct pm_iphdr *)pptrsv->mpls4.iph_ptr)->ip_p,
+                   pkt+tpl->fld[NF9_L4_PROTOCOL].off[0],
+                   tpl->fld[NF9_L4_PROTOCOL].len[0]);
+            memcpy(&((struct pm_iphdr *)pptrsv->mpls4.iph_ptr)->ip_tos,
+                   pkt+tpl->fld[NF9_SRC_TOS].off[0],
+                   tpl->fld[NF9_SRC_TOS].len[0]);
+            memcpy(&((struct pm_tlhdr *)pptrsv->mpls4.tlh_ptr)->src_port,
+                   pkt+tpl->fld[NF9_L4_SRC_PORT].off[0],
+                   tpl->fld[NF9_L4_SRC_PORT].len[0]);
+            memcpy(&((struct pm_tlhdr *)pptrsv->mpls4.tlh_ptr)->dst_port,
+                   pkt+tpl->fld[NF9_L4_DST_PORT].off[0],
+                   tpl->fld[NF9_L4_DST_PORT].len[0]);
+            memcpy(&((struct pm_tcphdr *)pptrsv->mpls4.tlh_ptr)->th_flags,
+                   pkt+tpl->fld[NF9_TCP_FLAGS].off[0],
+                   tpl->fld[NF9_TCP_FLAGS].len[0]);
 	  }
 
-          memcpy(&pptrsv->mpls4.lm_mask_src, pkt+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len);
-          memcpy(&pptrsv->mpls4.lm_mask_dst, pkt+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+          memcpy(&pptrsv->mpls4.lm_mask_src, pkt+tpl->fld[NF9_SRC_MASK].off[0],
+                 tpl->fld[NF9_SRC_MASK].len[0]);
+          memcpy(&pptrsv->mpls4.lm_mask_dst, pkt+tpl->fld[NF9_DST_MASK].off[0],
+                 tpl->fld[NF9_DST_MASK].len[0]);
           pptrsv->mpls4.lm_method_src = NF_NET_KEEP;
           pptrsv->mpls4.lm_method_dst = NF_NET_KEEP;
 
 	  /* Let's copy some relevant field */
 	  pptrsv->mpls4.l4_proto = 0;
-	  memcpy(&pptrsv->mpls4.l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
+          memcpy(&pptrsv->mpls4.l4_proto, pkt+tpl->fld[NF9_L4_PROTOCOL].off[0],
+                 tpl->fld[NF9_L4_PROTOCOL].len[0]);
 
 	  NF_process_classifiers(pptrs, &pptrsv->mpls4, pkt, tpl);
 	  NF_mpls_vpn_rd_fromie90(&pptrsv->mpls4);
@@ -2580,40 +2734,63 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    /* XXX: fix caplen */
 	    reset_mac(&pptrsv->mpls6);
 	    if (direction == DIRECTION_IN) {
-	      memcpy(pptrsv->mpls6.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_IN_SRC_MAC].off, tpl->tpl[NF9_IN_SRC_MAC].len);
-	      memcpy(pptrsv->mpls6.mac_ptr, pkt+tpl->tpl[NF9_IN_DST_MAC].off, tpl->tpl[NF9_IN_DST_MAC].len);
+              memcpy(pptrsv->mpls6.mac_ptr+ETH_ADDR_LEN,
+                     pkt+tpl->fld[NF9_IN_SRC_MAC].off[0],
+                     tpl->fld[NF9_IN_SRC_MAC].len[0]);
+              memcpy(pptrsv->mpls6.mac_ptr,
+                     pkt+tpl->fld[NF9_IN_DST_MAC].off[0],
+                     tpl->fld[NF9_IN_DST_MAC].len[0]);
 	    }
 	    else if (direction == DIRECTION_OUT) {
-	      memcpy(pptrsv->mpls6.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_OUT_SRC_MAC].off, tpl->tpl[NF9_OUT_SRC_MAC].len);
-	      memcpy(pptrsv->mpls6.mac_ptr, pkt+tpl->tpl[NF9_OUT_DST_MAC].off, tpl->tpl[NF9_OUT_DST_MAC].len);
+              memcpy(pptrsv->mpls6.mac_ptr+ETH_ADDR_LEN,
+                     pkt+tpl->fld[NF9_OUT_SRC_MAC].off[0],
+                     tpl->fld[NF9_OUT_SRC_MAC].len[0]);
+              memcpy(pptrsv->mpls6.mac_ptr,
+                     pkt+tpl->fld[NF9_OUT_DST_MAC].off[0],
+                     tpl->fld[NF9_OUT_DST_MAC].len[0]);
 	    }
-            for (idx = NF9_MPLS_LABEL_1; idx <= NF9_MPLS_LABEL_10 && tpl->tpl[idx].len; idx++, ptr += 4) {
-	      memset(ptr, 0, 4);
-	      memcpy(ptr, pkt+tpl->tpl[idx].off, tpl->tpl[idx].len);
-	    }
+            for (idx = NF9_MPLS_LABEL_1; idx <= NF9_MPLS_LABEL_10 && tpl->fld[idx].len[0]; idx++, ptr += 4) {
+              memset(ptr, 0, 4);
+              memcpy(ptr, pkt+tpl->fld[idx].off[0], tpl->fld[idx].len[0]);
+            }
 	    stick_bosbit(ptr-4);
 	    pptrsv->mpls6.iph_ptr = ptr;
 	    pptrsv->mpls6.tlh_ptr = ptr + IP6HdrSz;
 	    reset_ip6(&pptrsv->mpls6);
 
 	    ((struct ip6_hdr *)pptrsv->mpls6.iph_ptr)->ip6_ctlun.ip6_un2_vfc = 0x60;
-	    memcpy(&((struct ip6_hdr *)pptrsv->mpls6.iph_ptr)->ip6_src, pkt+tpl->tpl[NF9_IPV6_SRC_ADDR].off, tpl->tpl[NF9_IPV6_SRC_ADDR].len);
-	    memcpy(&((struct ip6_hdr *)pptrsv->mpls6.iph_ptr)->ip6_dst, pkt+tpl->tpl[NF9_IPV6_DST_ADDR].off, tpl->tpl[NF9_IPV6_DST_ADDR].len);
-	    memcpy(&((struct ip6_hdr *)pptrsv->mpls6.iph_ptr)->ip6_nxt, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
+            memcpy(&((struct ip6_hdr *)pptrsv->mpls6.iph_ptr)->ip6_src,
+                   pkt+tpl->fld[NF9_IPV6_SRC_ADDR].off[0],
+                   tpl->fld[NF9_IPV6_SRC_ADDR].len[0]);
+            memcpy(&((struct ip6_hdr *)pptrsv->mpls6.iph_ptr)->ip6_dst,
+                   pkt+tpl->fld[NF9_IPV6_DST_ADDR].off[0],
+                   tpl->fld[NF9_IPV6_DST_ADDR].len[0]);
+            memcpy(&((struct ip6_hdr *)pptrsv->mpls6.iph_ptr)->ip6_nxt,
+                   pkt+tpl->fld[NF9_L4_PROTOCOL].off[0],
+                   tpl->fld[NF9_L4_PROTOCOL].len[0]);
 	    /* XXX: class ID ? */
-	    memcpy(&((struct pm_tlhdr *)pptrsv->mpls6.tlh_ptr)->src_port, pkt+tpl->tpl[NF9_L4_SRC_PORT].off, tpl->tpl[NF9_L4_SRC_PORT].len);
-	    memcpy(&((struct pm_tlhdr *)pptrsv->mpls6.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
-            memcpy(&((struct pm_tcphdr *)pptrsv->mpls6.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
+            memcpy(&((struct pm_tlhdr *)pptrsv->mpls6.tlh_ptr)->src_port,
+                   pkt+tpl->fld[NF9_L4_SRC_PORT].off[0],
+                   tpl->fld[NF9_L4_SRC_PORT].len[0]);
+            memcpy(&((struct pm_tlhdr *)pptrsv->mpls6.tlh_ptr)->dst_port,
+                   pkt+tpl->fld[NF9_L4_DST_PORT].off[0],
+                   tpl->fld[NF9_L4_DST_PORT].len[0]);
+            memcpy(&((struct pm_tcphdr *)pptrsv->mpls6.tlh_ptr)->th_flags,
+                   pkt+tpl->fld[NF9_TCP_FLAGS].off[0],
+                   tpl->fld[NF9_TCP_FLAGS].len[0]);
 	  }
 
-          memcpy(&pptrsv->mpls6.lm_mask_src, pkt+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len);
-          memcpy(&pptrsv->mpls6.lm_mask_dst, pkt+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+          memcpy(&pptrsv->mpls6.lm_mask_src, pkt+tpl->fld[NF9_SRC_MASK].off[0],
+                 tpl->fld[NF9_SRC_MASK].len[0]);
+          memcpy(&pptrsv->mpls6.lm_mask_dst, pkt+tpl->fld[NF9_DST_MASK].off[0],
+                 tpl->fld[NF9_DST_MASK].len[0]);
           pptrsv->mpls6.lm_method_src = NF_NET_KEEP;
           pptrsv->mpls6.lm_method_dst = NF_NET_KEEP;
 
 	  /* Let's copy some relevant field */
 	  pptrsv->mpls6.l4_proto = 0;
-	  memcpy(&pptrsv->mpls6.l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
+          memcpy(&pptrsv->mpls6.l4_proto, pkt+tpl->fld[NF9_L4_PROTOCOL].off[0],
+                 tpl->fld[NF9_L4_PROTOCOL].len[0]);
 
 	  NF_process_classifiers(pptrs, &pptrsv->mpls6, pkt, tpl);
 	  NF_mpls_vpn_rd_fromie90(&pptrsv->mpls6);
@@ -2640,43 +2817,75 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    /* XXX: fix caplen */
 	    reset_mac_vlan(&pptrsv->vlanmpls4);
 	    if (direction == DIRECTION_IN) {
-	      memcpy(pptrsv->vlanmpls4.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_IN_SRC_MAC].off, tpl->tpl[NF9_IN_SRC_MAC].len);
-	      memcpy(pptrsv->vlanmpls4.mac_ptr, pkt+tpl->tpl[NF9_IN_DST_MAC].off, tpl->tpl[NF9_IN_DST_MAC].len);
-	      memcpy(pptrsv->vlanmpls4.vlan_ptr, pkt+tpl->tpl[NF9_IN_VLAN].off, tpl->tpl[NF9_IN_VLAN].len);
+              memcpy(pptrsv->vlanmpls4.mac_ptr+ETH_ADDR_LEN,
+                     pkt+tpl->fld[NF9_IN_SRC_MAC].off[0],
+                     tpl->fld[NF9_IN_SRC_MAC].len[0]);
+              memcpy(pptrsv->vlanmpls4.mac_ptr,
+                     pkt+tpl->fld[NF9_IN_DST_MAC].off[0],
+                     tpl->fld[NF9_IN_DST_MAC].len[0]);
+              memcpy(pptrsv->vlanmpls4.vlan_ptr,
+                     pkt+tpl->fld[NF9_IN_VLAN].off[0],
+                     tpl->fld[NF9_IN_VLAN].len[0]);
 	    }
 	    else if (direction == DIRECTION_OUT) {
-	      memcpy(pptrsv->vlanmpls4.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_OUT_SRC_MAC].off, tpl->tpl[NF9_OUT_SRC_MAC].len);
-	      memcpy(pptrsv->vlanmpls4.mac_ptr, pkt+tpl->tpl[NF9_OUT_DST_MAC].off, tpl->tpl[NF9_OUT_DST_MAC].len);
-	      memcpy(pptrsv->vlanmpls4.vlan_ptr, pkt+tpl->tpl[NF9_OUT_VLAN].off, tpl->tpl[NF9_OUT_VLAN].len);
+              memcpy(pptrsv->vlanmpls4.mac_ptr+ETH_ADDR_LEN,
+                     pkt+tpl->fld[NF9_OUT_SRC_MAC].off[0],
+                     tpl->fld[NF9_OUT_SRC_MAC].len[0]);
+              memcpy(pptrsv->vlanmpls4.mac_ptr,
+                     pkt+tpl->fld[NF9_OUT_DST_MAC].off[0],
+                     tpl->fld[NF9_OUT_DST_MAC].len[0]);
+              memcpy(pptrsv->vlanmpls4.vlan_ptr,
+                     pkt+tpl->fld[NF9_OUT_VLAN].off[0],
+                     tpl->fld[NF9_OUT_VLAN].len[0]);
 	    }
 
-	    for (idx = NF9_MPLS_LABEL_1; idx <= NF9_MPLS_LABEL_10 && tpl->tpl[idx].len; idx++, ptr += 4) {
-	      memset(ptr, 0, 4);
-	      memcpy(ptr, pkt+tpl->tpl[idx].off, tpl->tpl[idx].len);
-	    }
+            for (idx = NF9_MPLS_LABEL_1; idx <= NF9_MPLS_LABEL_10 && tpl->fld[idx].len[0]; idx++, ptr += 4) {
+              memset(ptr, 0, 4);
+              memcpy(ptr, pkt+tpl->fld[idx].off[0], tpl->fld[idx].len[0]);
+            }
 	    stick_bosbit(ptr-4);
 	    pptrsv->vlanmpls4.iph_ptr = ptr;
 	    pptrsv->vlanmpls4.tlh_ptr = ptr + IP4HdrSz;
             reset_ip4(&pptrsv->vlanmpls4);
 
 	    ((struct pm_iphdr *)pptrsv->vlanmpls4.iph_ptr)->ip_vhl = 0x45;
-            memcpy(&((struct pm_iphdr *)pptrsv->vlanmpls4.iph_ptr)->ip_src, pkt+tpl->tpl[NF9_IPV4_SRC_ADDR].off, tpl->tpl[NF9_IPV4_SRC_ADDR].len);
-	    memcpy(&((struct pm_iphdr *)pptrsv->vlanmpls4.iph_ptr)->ip_dst, pkt+tpl->tpl[NF9_IPV4_DST_ADDR].off, tpl->tpl[NF9_IPV4_DST_ADDR].len);
-	    memcpy(&((struct pm_iphdr *)pptrsv->vlanmpls4.iph_ptr)->ip_p, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
-	    memcpy(&((struct pm_iphdr *)pptrsv->vlanmpls4.iph_ptr)->ip_tos, pkt+tpl->tpl[NF9_SRC_TOS].off, tpl->tpl[NF9_SRC_TOS].len);
-	    memcpy(&((struct pm_tlhdr *)pptrsv->vlanmpls4.tlh_ptr)->src_port, pkt+tpl->tpl[NF9_L4_SRC_PORT].off, tpl->tpl[NF9_L4_SRC_PORT].len);
-	    memcpy(&((struct pm_tlhdr *)pptrsv->vlanmpls4.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
-            memcpy(&((struct pm_tcphdr *)pptrsv->vlanmpls4.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
+            memcpy(&((struct pm_iphdr *)pptrsv->vlanmpls4.iph_ptr)->ip_src,
+                   pkt+tpl->fld[NF9_IPV4_SRC_ADDR].off[0],
+                   tpl->fld[NF9_IPV4_SRC_ADDR].len[0]);
+            memcpy(&((struct pm_iphdr *)pptrsv->vlanmpls4.iph_ptr)->ip_dst,
+                   pkt+tpl->fld[NF9_IPV4_DST_ADDR].off[0],
+                   tpl->fld[NF9_IPV4_DST_ADDR].len[0]);
+            memcpy(&((struct pm_iphdr *)pptrsv->vlanmpls4.iph_ptr)->ip_p,
+                   pkt+tpl->fld[NF9_L4_PROTOCOL].off[0],
+                   tpl->fld[NF9_L4_PROTOCOL].len[0]);
+            memcpy(&((struct pm_iphdr *)pptrsv->vlanmpls4.iph_ptr)->ip_tos,
+                   pkt+tpl->fld[NF9_SRC_TOS].off[0],
+                   tpl->fld[NF9_SRC_TOS].len[0]);
+            memcpy(&((struct pm_tlhdr *)pptrsv->vlanmpls4.tlh_ptr)->src_port,
+                   pkt+tpl->fld[NF9_L4_SRC_PORT].off[0],
+                   tpl->fld[NF9_L4_SRC_PORT].len[0]);
+            memcpy(&((struct pm_tlhdr *)pptrsv->vlanmpls4.tlh_ptr)->dst_port,
+                   pkt+tpl->fld[NF9_L4_DST_PORT].off[0],
+                   tpl->fld[NF9_L4_DST_PORT].len[0]);
+            memcpy(&((struct pm_tcphdr *)pptrsv->vlanmpls4.tlh_ptr)->th_flags,
+                   pkt+tpl->fld[NF9_TCP_FLAGS].off[0],
+                   tpl->fld[NF9_TCP_FLAGS].len[0]);
 	  }
 
-          memcpy(&pptrsv->vlanmpls4.lm_mask_src, pkt+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len);
-          memcpy(&pptrsv->vlanmpls4.lm_mask_dst, pkt+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+          memcpy(&pptrsv->vlanmpls4.lm_mask_src,
+                 pkt+tpl->fld[NF9_SRC_MASK].off[0],
+                 tpl->fld[NF9_SRC_MASK].len[0]);
+          memcpy(&pptrsv->vlanmpls4.lm_mask_dst,
+                 pkt+tpl->fld[NF9_DST_MASK].off[0],
+                 tpl->fld[NF9_DST_MASK].len[0]);
           pptrsv->vlanmpls4.lm_method_src = NF_NET_KEEP;
           pptrsv->vlanmpls4.lm_method_dst = NF_NET_KEEP;
 
 	  /* Let's copy some relevant field */
 	  pptrsv->vlanmpls4.l4_proto = 0;
-	  memcpy(&pptrsv->vlanmpls4.l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
+          memcpy(&pptrsv->vlanmpls4.l4_proto,
+                 pkt+tpl->fld[NF9_L4_PROTOCOL].off[0],
+                 tpl->fld[NF9_L4_PROTOCOL].len[0]);
 
 	  NF_process_classifiers(pptrs, &pptrsv->vlanmpls4, pkt, tpl);
 	  NF_mpls_vpn_rd_fromie90(&pptrsv->vlanmpls4);
@@ -2703,42 +2912,72 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
             /* XXX: fix caplen */
 	    reset_mac_vlan(&pptrsv->vlanmpls6);
 	    if (direction == DIRECTION_IN) {
-	      memcpy(pptrsv->vlanmpls6.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_IN_SRC_MAC].off, tpl->tpl[NF9_IN_SRC_MAC].len);
-	      memcpy(pptrsv->vlanmpls6.mac_ptr, pkt+tpl->tpl[NF9_IN_DST_MAC].off, tpl->tpl[NF9_IN_DST_MAC].len);
-	      memcpy(pptrsv->vlanmpls6.vlan_ptr, pkt+tpl->tpl[NF9_IN_VLAN].off, tpl->tpl[NF9_IN_VLAN].len);
+              memcpy(pptrsv->vlanmpls6.mac_ptr+ETH_ADDR_LEN,
+                     pkt+tpl->fld[NF9_IN_SRC_MAC].off[0],
+                     tpl->fld[NF9_IN_SRC_MAC].len[0]);
+              memcpy(pptrsv->vlanmpls6.mac_ptr,
+                     pkt+tpl->fld[NF9_IN_DST_MAC].off[0],
+                     tpl->fld[NF9_IN_DST_MAC].len[0]);
+              memcpy(pptrsv->vlanmpls6.vlan_ptr,
+                     pkt+tpl->fld[NF9_IN_VLAN].off[0],
+                     tpl->fld[NF9_IN_VLAN].len[0]);
 	    }
 	    else if (direction == DIRECTION_OUT) {
-	      memcpy(pptrsv->vlanmpls6.mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_OUT_SRC_MAC].off, tpl->tpl[NF9_OUT_SRC_MAC].len);
-	      memcpy(pptrsv->vlanmpls6.mac_ptr, pkt+tpl->tpl[NF9_OUT_DST_MAC].off, tpl->tpl[NF9_OUT_DST_MAC].len);
-	      memcpy(pptrsv->vlanmpls6.vlan_ptr, pkt+tpl->tpl[NF9_OUT_VLAN].off, tpl->tpl[NF9_OUT_VLAN].len);
+              memcpy(pptrsv->vlanmpls6.mac_ptr+ETH_ADDR_LEN,
+                     pkt+tpl->fld[NF9_OUT_SRC_MAC].off[0],
+                     tpl->fld[NF9_OUT_SRC_MAC].len[0]);
+              memcpy(pptrsv->vlanmpls6.mac_ptr,
+                     pkt+tpl->fld[NF9_OUT_DST_MAC].off[0],
+                     tpl->fld[NF9_OUT_DST_MAC].len[0]);
+              memcpy(pptrsv->vlanmpls6.vlan_ptr,
+                     pkt+tpl->fld[NF9_OUT_VLAN].off[0],
+                     tpl->fld[NF9_OUT_VLAN].len[0]);
 	    }
-	    for (idx = NF9_MPLS_LABEL_1; idx <= NF9_MPLS_LABEL_10 && tpl->tpl[idx].len; idx++, ptr += 4) {
-	      memset(ptr, 0, 4);
-	      memcpy(ptr, pkt+tpl->tpl[idx].off, tpl->tpl[idx].len);
-	    }
+            for (idx = NF9_MPLS_LABEL_1; idx <= NF9_MPLS_LABEL_10 && tpl->fld[idx].len[0]; idx++, ptr += 4) {
+              memset(ptr, 0, 4);
+              memcpy(ptr, pkt+tpl->fld[idx].off[0], tpl->fld[idx].len[0]);
+            }
 	    stick_bosbit(ptr-4);
 	    pptrsv->vlanmpls6.iph_ptr = ptr;
 	    pptrsv->vlanmpls6.tlh_ptr = ptr + IP6HdrSz;
 	    reset_ip6(&pptrsv->vlanmpls6);
 
 	    ((struct ip6_hdr *)pptrsv->vlanmpls6.iph_ptr)->ip6_ctlun.ip6_un2_vfc = 0x60;
-	    memcpy(&((struct ip6_hdr *)pptrsv->vlanmpls6.iph_ptr)->ip6_src, pkt+tpl->tpl[NF9_IPV6_SRC_ADDR].off, tpl->tpl[NF9_IPV6_SRC_ADDR].len);
-	    memcpy(&((struct ip6_hdr *)pptrsv->vlanmpls6.iph_ptr)->ip6_dst, pkt+tpl->tpl[NF9_IPV6_DST_ADDR].off, tpl->tpl[NF9_IPV6_DST_ADDR].len);
-	    memcpy(&((struct ip6_hdr *)pptrsv->vlanmpls6.iph_ptr)->ip6_nxt, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
+            memcpy(&((struct ip6_hdr *)pptrsv->vlanmpls6.iph_ptr)->ip6_src,
+                   pkt+tpl->fld[NF9_IPV6_SRC_ADDR].off[0],
+                   tpl->fld[NF9_IPV6_SRC_ADDR].len[0]);
+            memcpy(&((struct ip6_hdr *)pptrsv->vlanmpls6.iph_ptr)->ip6_dst,
+                   pkt+tpl->fld[NF9_IPV6_DST_ADDR].off[0],
+                   tpl->fld[NF9_IPV6_DST_ADDR].len[0]);
+            memcpy(&((struct ip6_hdr *)pptrsv->vlanmpls6.iph_ptr)->ip6_nxt,
+                   pkt+tpl->fld[NF9_L4_PROTOCOL].off[0],
+                   tpl->fld[NF9_L4_PROTOCOL].len[0]);
 	    /* XXX: class ID ? */
-	    memcpy(&((struct pm_tlhdr *)pptrsv->vlanmpls6.tlh_ptr)->src_port, pkt+tpl->tpl[NF9_L4_SRC_PORT].off, tpl->tpl[NF9_L4_SRC_PORT].len);
-	    memcpy(&((struct pm_tlhdr *)pptrsv->vlanmpls6.tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
-            memcpy(&((struct pm_tcphdr *)pptrsv->vlanmpls6.tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
+            memcpy(&((struct pm_tlhdr *)pptrsv->vlanmpls6.tlh_ptr)->src_port,
+                   pkt+tpl->fld[NF9_L4_SRC_PORT].off[0],
+                   tpl->fld[NF9_L4_SRC_PORT].len[0]);
+            memcpy(&((struct pm_tlhdr *)pptrsv->vlanmpls6.tlh_ptr)->dst_port,
+                   pkt+tpl->fld[NF9_L4_DST_PORT].off[0],
+                   tpl->fld[NF9_L4_DST_PORT].len[0]);
+            memcpy(&((struct pm_tcphdr *)pptrsv->vlanmpls6.tlh_ptr)->th_flags,
+                   pkt+tpl->fld[NF9_TCP_FLAGS].off[0],
+                   tpl->fld[NF9_TCP_FLAGS].len[0]);
 	  }
 
-          memcpy(&pptrsv->vlanmpls6.lm_mask_src, pkt+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len);
-          memcpy(&pptrsv->vlanmpls6.lm_mask_dst, pkt+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+          memcpy(&pptrsv->vlanmpls6.lm_mask_src,
+                 pkt+tpl->fld[NF9_SRC_MASK].off[0],
+                 tpl->fld[NF9_SRC_MASK].len[0]);
+          memcpy(&pptrsv->vlanmpls6.lm_mask_dst,
+                 pkt+tpl->fld[NF9_DST_MASK].off[0],
+                 tpl->fld[NF9_DST_MASK].len[0]);
           pptrsv->vlanmpls6.lm_method_src = NF_NET_KEEP;
           pptrsv->vlanmpls6.lm_method_dst = NF_NET_KEEP;
 
 	  /* Let's copy some relevant field */
 	  pptrsv->vlanmpls6.l4_proto = 0;
-	  memcpy(&pptrsv->vlanmpls6.l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
+          memcpy(&pptrsv->vlanmpls6.l4_proto,
+                 pkt+tpl->fld[NF9_L4_PROTOCOL].off[0],
+                 tpl->fld[NF9_L4_PROTOCOL].len[0]);
 
 	  NF_process_classifiers(pptrs, &pptrsv->vlanmpls6, pkt, tpl);
 	  NF_mpls_vpn_rd_fromie90(&pptrsv->vlanmpls6);
@@ -2759,31 +2998,56 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	    reset_ip4(pptrs);
 
 	    if (direction == DIRECTION_IN) {
-              memcpy(pptrs->mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_IN_SRC_MAC].off, tpl->tpl[NF9_IN_SRC_MAC].len);
-              memcpy(pptrs->mac_ptr, pkt+tpl->tpl[NF9_IN_DST_MAC].off, tpl->tpl[NF9_IN_DST_MAC].len);
+              memcpy(pptrs->mac_ptr+ETH_ADDR_LEN,
+                     pkt+tpl->fld[NF9_IN_SRC_MAC].off[0],
+                     tpl->fld[NF9_IN_SRC_MAC].len[0]);
+              memcpy(pptrs->mac_ptr,
+                     pkt+tpl->fld[NF9_IN_DST_MAC].off[0],
+                     tpl->fld[NF9_IN_DST_MAC].len[0]);
 	    }
 	    else if (direction == DIRECTION_OUT) {
-              memcpy(pptrs->mac_ptr+ETH_ADDR_LEN, pkt+tpl->tpl[NF9_OUT_SRC_MAC].off, tpl->tpl[NF9_OUT_SRC_MAC].len);
-              memcpy(pptrs->mac_ptr, pkt+tpl->tpl[NF9_OUT_DST_MAC].off, tpl->tpl[NF9_OUT_DST_MAC].len);
+              memcpy(pptrs->mac_ptr+ETH_ADDR_LEN,
+                     pkt+tpl->fld[NF9_OUT_SRC_MAC].off[0],
+                     tpl->fld[NF9_OUT_SRC_MAC].len[0]);
+              memcpy(pptrs->mac_ptr,
+                     pkt+tpl->fld[NF9_OUT_DST_MAC].off[0],
+                     tpl->fld[NF9_OUT_DST_MAC].len[0]);
 	    }
 	    ((struct pm_iphdr *)pptrs->iph_ptr)->ip_vhl = 0x45;
-            memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_src, pkt+tpl->tpl[NF9_IPV4_SRC_ADDR].off, tpl->tpl[NF9_IPV4_SRC_ADDR].len);
-            memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst, pkt+tpl->tpl[NF9_IPV4_DST_ADDR].off, tpl->tpl[NF9_IPV4_DST_ADDR].len);
-            memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_p, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
-            memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_tos, pkt+tpl->tpl[NF9_SRC_TOS].off, tpl->tpl[NF9_SRC_TOS].len);
-            memcpy(&((struct pm_tlhdr *)pptrs->tlh_ptr)->src_port, pkt+tpl->tpl[NF9_L4_SRC_PORT].off, tpl->tpl[NF9_L4_SRC_PORT].len);
-            memcpy(&((struct pm_tlhdr *)pptrs->tlh_ptr)->dst_port, pkt+tpl->tpl[NF9_L4_DST_PORT].off, tpl->tpl[NF9_L4_DST_PORT].len);
-            memcpy(&((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags, pkt+tpl->tpl[NF9_TCP_FLAGS].off, tpl->tpl[NF9_TCP_FLAGS].len);
+            memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_src,
+                   pkt+tpl->fld[NF9_IPV4_SRC_ADDR].off[0],
+                   tpl->fld[NF9_IPV4_SRC_ADDR].len[0]);
+            memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst,
+                   pkt+tpl->fld[NF9_IPV4_DST_ADDR].off[0],
+                   tpl->fld[NF9_IPV4_DST_ADDR].len[0]);
+            memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_p,
+                   pkt+tpl->fld[NF9_L4_PROTOCOL].off[0],
+                   tpl->fld[NF9_L4_PROTOCOL].len[0]);
+            memcpy(&((struct pm_iphdr *)pptrs->iph_ptr)->ip_tos,
+                   pkt+tpl->fld[NF9_SRC_TOS].off[0],
+                   tpl->fld[NF9_SRC_TOS].len[0]);
+            memcpy(&((struct pm_tlhdr *)pptrs->tlh_ptr)->src_port,
+                   pkt+tpl->fld[NF9_L4_SRC_PORT].off[0],
+                   tpl->fld[NF9_L4_SRC_PORT].len[0]);
+            memcpy(&((struct pm_tlhdr *)pptrs->tlh_ptr)->dst_port,
+                   pkt+tpl->fld[NF9_L4_DST_PORT].off[0],
+                   tpl->fld[NF9_L4_DST_PORT].len[0]);
+            memcpy(&((struct pm_tcphdr *)pptrs->tlh_ptr)->th_flags,
+                   pkt+tpl->fld[NF9_TCP_FLAGS].off[0],
+                   tpl->fld[NF9_TCP_FLAGS].len[0]);
 	  }
 
-	  memcpy(&pptrs->lm_mask_src, pkt+tpl->tpl[NF9_SRC_MASK].off, tpl->tpl[NF9_SRC_MASK].len);
-	  memcpy(&pptrs->lm_mask_dst, pkt+tpl->tpl[NF9_DST_MASK].off, tpl->tpl[NF9_DST_MASK].len);
+          memcpy(&pptrs->lm_mask_src, pkt+tpl->fld[NF9_SRC_MASK].off[0],
+                 tpl->fld[NF9_SRC_MASK].len[0]);
+          memcpy(&pptrs->lm_mask_dst, pkt+tpl->fld[NF9_DST_MASK].off[0],
+                 tpl->fld[NF9_DST_MASK].len[0]);
 	  pptrs->lm_method_src = NF_NET_KEEP;
 	  pptrs->lm_method_dst = NF_NET_KEEP;
 
 	  /* Let's copy some relevant field */
 	  pptrs->l4_proto = 0;
-	  memcpy(&pptrs->l4_proto, pkt+tpl->tpl[NF9_L4_PROTOCOL].off, tpl->tpl[NF9_L4_PROTOCOL].len);
+          memcpy(&pptrs->l4_proto, pkt+tpl->fld[NF9_L4_PROTOCOL].off[0],
+                 tpl->fld[NF9_L4_PROTOCOL].len[0]);
 
 	  if (config.nfacctd_isis) isis_srcdst_lookup(pptrs);
 	  if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, &pptrs->bta2);
@@ -2999,40 +3263,76 @@ void NF_evaluate_flow_type(struct flow_chars *flow_type, struct template_cache_e
   memset(flow_type, 0, sizeof(struct flow_chars));
 
   /* first round: event vs traffic */
-  if (!tpl->tpl[NF9_IN_BYTES].len && !tpl->tpl[NF9_OUT_BYTES].len && !tpl->tpl[NF9_FLOW_BYTES].len &&
-      !tpl->tpl[NF9_INITIATOR_OCTETS].len && !tpl->tpl[NF9_RESPONDER_OCTETS].len && /* packets? && */
-      !tpl->tpl[NF9_DATALINK_FRAME_SECTION].len && !tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len &&
-      !tpl->tpl[NF9_LAYER2OCTETDELTACOUNT].len) {
+  if (!tpl->fld[NF9_IN_BYTES].count && !tpl->fld[NF9_OUT_BYTES].count && !tpl->fld[NF9_FLOW_BYTES].count &&
+      !tpl->fld[NF9_INITIATOR_OCTETS].count && !tpl->fld[NF9_RESPONDER_OCTETS].count && /* packets? && */
+      !tpl->fld[NF9_DATALINK_FRAME_SECTION].count && !tpl->fld[NF9_LAYER2_PKT_SECTION_DATA].count &&
+      !tpl->fld[NF9_LAYER2OCTETDELTACOUNT].count) {
     ret = NF9_FTYPE_EVENT;
   }
   else {
-    if ((tpl->tpl[NF9_IN_VLAN].len && *(pptrs->f_data+tpl->tpl[NF9_IN_VLAN].off) > 0) ||
-        (tpl->tpl[NF9_OUT_VLAN].len && *(pptrs->f_data+tpl->tpl[NF9_OUT_VLAN].off) > 0)) {
+    if ((tpl->fld[NF9_IN_VLAN].count && *(pptrs->f_data+tpl->fld[NF9_IN_VLAN].off[0]) > 0) ||
+        (tpl->fld[NF9_OUT_VLAN].count && *(pptrs->f_data+tpl->fld[NF9_OUT_VLAN].off[0]) > 0)) {
       ret += PM_FTYPE_VLAN;
     }
 
-    if (tpl->tpl[NF9_MPLS_LABEL_1].len /* check: value > 0 ? */) {
+    if (tpl->fld[NF9_MPLS_LABEL_1].count /* check: value > 0 ? */) {
       ret += PM_FTYPE_MPLS;
     }
 
     /* Explicit IP protocol definition first; a bit of heuristics as fallback */
-    if (tpl->tpl[NF9_IP_PROTOCOL_VERSION].len) {
-      if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 4) {
+    if (tpl->fld[NF9_IP_PROTOCOL_VERSION].count) {
+      if (*(pptrs->f_data+tpl->fld[NF9_IP_PROTOCOL_VERSION].off[0]) == 4) {
 	ret += PM_FTYPE_IPV4;
 	have_ip_proto = TRUE;
       }
-      else if (*(pptrs->f_data+tpl->tpl[NF9_IP_PROTOCOL_VERSION].off) == 6) {
+      else if (*(pptrs->f_data+tpl->fld[NF9_IP_PROTOCOL_VERSION].off[0]) == 6) {
 	ret += PM_FTYPE_IPV6;
 	have_ip_proto = TRUE;
+      }
+    }
+
+    /* SRv6 checks */
+    if (tpl->layers.count && tpl->layers.prot[0] == ipv6 &&
+        tpl->fld[NF9_L4_PROTOCOL].count) {
+      u_int8_t tun_prot;
+      memcpy(&tun_prot, pptrs->f_data+tpl->fld[NF9_L4_PROTOCOL].off[0], 1);
+      if (tpl->layers.count > 1) {
+        if (tun_prot == 4 || tun_prot == 41) {
+          if (tpl->layers.prot[1] == ipv4) {
+            /* IPv4 in IPv6 encapsulation */
+            ret = PM_FTYPE_SRV6_IPV4;
+            have_ip_proto = TRUE;
+          }
+          else if (tpl->layers.prot[1] == ipv6) {
+            /* IPv6 in IPv6 encapsulation */
+            ret = PM_FTYPE_SRV6_IPV6;
+            have_ip_proto = TRUE;
+          }
+        }
+      }
+      else if (tun_prot == 143) {
+        /* Ethernet in IPv6 encapsulation */
+        ret = PM_FTYPE_SRV6;
+        have_ip_proto = TRUE;
       }
     }
 
     if (!have_ip_proto) {
       /* If we have both v4 and v6 as part of the same flow, let's run the
 	 cheapest check possible to try to determine which one is non-zero */
-      if ((tpl->tpl[NF9_IPV4_SRC_ADDR].len || tpl->tpl[NF9_IPV4_DST_ADDR].len) &&
-	  (tpl->tpl[NF9_IPV6_SRC_ADDR].len || tpl->tpl[NF9_IPV6_DST_ADDR].len)) {
-	if (*(pptrs->f_data+tpl->tpl[NF9_IPV4_SRC_ADDR].off) != 0) {
+      if ((tpl->fld[NF9_IPV4_SRC_ADDR].count || tpl->fld[NF9_IPV4_DST_ADDR].count) &&
+          (tpl->fld[NF9_IPV6_SRC_ADDR].count || tpl->fld[NF9_IPV6_DST_ADDR].count)) {
+        if (tpl->layers.count > 0 && tpl->layers.prot[0] == ipv4 &&
+            *(pptrs->f_data+tpl->fld[NF9_IPV4_SRC_ADDR].off[0]) != 0) {
+          ret += PM_FTYPE_IPV4;
+          have_ip_proto = TRUE;
+        }
+        else if (tpl->layers.count > 0 && tpl->layers.prot[0] == ipv6 &&
+                 *(pptrs->f_data+tpl->fld[NF9_IPV6_SRC_ADDR].off[0]) != 0) {
+          ret += PM_FTYPE_IPV6;
+          have_ip_proto = TRUE;
+        }
+        else if (*(pptrs->f_data+tpl->fld[NF9_IPV4_SRC_ADDR].off[0]) != 0) {
           ret += PM_FTYPE_IPV4;
 	  have_ip_proto = TRUE;
 	}
@@ -3041,24 +3341,24 @@ void NF_evaluate_flow_type(struct flow_chars *flow_type, struct template_cache_e
 	  have_ip_proto = TRUE;
 	}
       }
-      else if (tpl->tpl[NF9_IPV4_SRC_ADDR].len || tpl->tpl[NF9_IPV4_DST_ADDR].len ||
-	       tpl->tpl[NF9_IPV4_SRC_PREFIX].len || tpl->tpl[NF9_IPV4_DST_PREFIX].len ||
-	       tpl->tpl[NF9_staIPv4Address].len) {
+      else if (tpl->fld[NF9_IPV4_SRC_ADDR].count || tpl->fld[NF9_IPV4_DST_ADDR].count ||
+               tpl->fld[NF9_IPV4_SRC_PREFIX].count || tpl->fld[NF9_IPV4_DST_PREFIX].count ||
+               tpl->fld[NF9_staIPv4Address].count) {
         ret += PM_FTYPE_IPV4;
 	have_ip_proto = TRUE;
       }
-      else if (tpl->tpl[NF9_IPV6_SRC_ADDR].len || tpl->tpl[NF9_IPV6_DST_ADDR].len ||
-	       tpl->tpl[NF9_IPV6_SRC_PREFIX].len || tpl->tpl[NF9_IPV6_DST_PREFIX].len) {
+      else if (tpl->fld[NF9_IPV6_SRC_ADDR].count || tpl->fld[NF9_IPV6_DST_ADDR].count ||
+               tpl->fld[NF9_IPV6_SRC_PREFIX].count || tpl->fld[NF9_IPV6_DST_PREFIX].count) {
 	ret += PM_FTYPE_IPV6;
 	have_ip_proto = TRUE;
       }
     }
 
-    if (tpl->tpl[NF9_DATALINK_FRAME_SECTION].len || tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len) {
+    if (tpl->fld[NF9_DATALINK_FRAME_SECTION].count || tpl->fld[NF9_LAYER2_PKT_SECTION_DATA].count) {
       ret = NF9_FTYPE_DLFS;
     }
 
-    if (tpl->tpl[NF9_INITIATOR_OCTETS].len && tpl->tpl[NF9_RESPONDER_OCTETS].len) {
+    if (tpl->fld[NF9_INITIATOR_OCTETS].count && tpl->fld[NF9_RESPONDER_OCTETS].count) {
       flow_type->is_bi = TRUE;
     }
   }
@@ -3066,7 +3366,7 @@ void NF_evaluate_flow_type(struct flow_chars *flow_type, struct template_cache_e
   /* second round: overrides */
 
   /* NetFlow Event Logging (NEL): generic NAT event support */
-  if (tpl->tpl[NF9_NAT_EVENT].len) ret = NF9_FTYPE_NAT_EVENT;
+  if (tpl->fld[NF9_NAT_EVENT].count) ret = NF9_FTYPE_NAT_EVENT;
 
   /* NetFlow/IPFIX option final override */
   if (tpl->template_type == 1) ret = NF9_FTYPE_OPTION;
@@ -3078,7 +3378,8 @@ u_int16_t NF_evaluate_direction(struct template_cache_entry *tpl, struct packet_
 {
   u_int16_t ret = DIRECTION_IN;
 
-  if (tpl->tpl[NF9_DIRECTION].len && *(pptrs->f_data+tpl->tpl[NF9_DIRECTION].off) == 1) ret = DIRECTION_OUT;
+  if (tpl->fld[NF9_DIRECTION].count && *(pptrs->f_data+tpl->fld[NF9_DIRECTION].off[0]) == 1)
+    ret = DIRECTION_OUT;
 
   return ret;
 }
@@ -3236,12 +3537,15 @@ struct xflow_status_entry *nfv9_check_status(struct packet_ptrs *pptrs, u_int32_
 
 void NF_process_classifiers(struct packet_ptrs *pptrs_main, struct packet_ptrs *pptrs, unsigned char *pkt, struct template_cache_entry *tpl)
 {
-  if (tpl->tpl[NF9_APPLICATION_ID].len == 2 || tpl->tpl[NF9_APPLICATION_ID].len == 3 || tpl->tpl[NF9_APPLICATION_ID].len == 5) {
+  if (tpl->fld[NF9_APPLICATION_ID].len[0] == 2 ||
+      tpl->fld[NF9_APPLICATION_ID].len[0] == 3 ||
+      tpl->fld[NF9_APPLICATION_ID].len[0] == 5) {
     struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs_main->f_status;
     struct xflow_status_entry *gentry = (struct xflow_status_entry *) pptrs_main->f_status_g;
     pm_class_t class_id = 0;
 
-    memcpy(&class_id, (pkt + tpl->tpl[NF9_APPLICATION_ID].off + 1), (tpl->tpl[NF9_APPLICATION_ID].len - 1));
+    memcpy(&class_id, pkt + tpl->fld[NF9_APPLICATION_ID].off[0] + 1,
+           tpl->fld[NF9_APPLICATION_ID].len[0] - 1);
     if (entry) pptrs->class = NF_evaluate_classifiers(entry->class, &class_id, gentry);
   }
 }
@@ -3289,16 +3593,16 @@ void nfv9_datalink_frame_section_handler(struct packet_ptrs *pptrs)
   /* XXX: in case of no NF9_DATALINK_FRAME_TYPE, let's assume Ethernet */
   else frame_type = NF9_DL_F_TYPE_ETHERNET;
 
-  if (tpl->tpl[NF9_LAYER2_PKT_SECTION_DATA].len) {
+  if (tpl->fld[NF9_LAYER2_PKT_SECTION_DATA].count) {
     idx = NF9_LAYER2_PKT_SECTION_DATA;
   }
   else {
     idx = NF9_DATALINK_FRAME_SECTION;
   }
 
-  if (tpl->tpl[idx].len) {
-    pptrs->pkthdr->caplen = tpl->tpl[idx].len;
-    pptrs->packet_ptr = (u_char *) pptrs->f_data+tpl->tpl[idx].off;
+  if (tpl->fld[idx].count) {
+    pptrs->pkthdr->caplen = tpl->fld[idx].len[0];
+    pptrs->packet_ptr = (u_char *) pptrs->f_data+tpl->fld[idx].off[0];
 
     if (frame_type == NF9_DL_F_TYPE_ETHERNET) {
       eth_handler(pptrs->pkthdr, pptrs);
@@ -3358,8 +3662,9 @@ void NF_mpls_vpn_rd_fromie90(struct packet_ptrs *pptrs)
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->tpl[NF9_MPLS_VPN_RD].len) {
-      memcpy(&pptrs->bitr, pptrs->f_data+tpl->tpl[NF9_MPLS_VPN_RD].off, MIN(tpl->tpl[NF9_MPLS_VPN_RD].len, 8));
+    if (tpl->fld[NF9_MPLS_VPN_RD].count) {
+      memcpy(&pptrs->bitr, pptrs->f_data+tpl->fld[NF9_MPLS_VPN_RD].off[0],
+             MIN(tpl->fld[NF9_MPLS_VPN_RD].len[0], 8));
       bgp_rd_ntoh((rd_t *)&pptrs->bitr);
       bgp_rd_origin_set((rd_t *)&pptrs->bitr, RD_ORIGIN_FLOW);
     }
