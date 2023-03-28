@@ -4117,12 +4117,12 @@ void NF_path_delay_avg_usec_handler(struct channels_list_entry *chptr, struct pa
         (utpl = (*get_ext_db_ie_by_type)(tpl, HUAWEI_PEN, 527, FALSE))) {
       memcpy(&delay64, (pptrs->f_data + utpl->off), 8);
 
-      if (tpl->tpl[NF9_IN_PACKETS].len == 4) {
-	memcpy(&packets32, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 4);
+      if (OTPL_LAST_LEN(NF9_IN_PACKETS) == 4) {
+	OTPL_CP_LAST(&packets32, NF9_IN_PACKETS);
 	packets64 = ntohl(packets32);
       }
-      else if (tpl->tpl[NF9_IN_PACKETS].len == 8) {
-	memcpy(&packets64, pptrs->f_data+tpl->tpl[NF9_IN_PACKETS].off, 8);
+      else if (OTPL_LAST_LEN(NF9_IN_PACKETS) == 8) {
+	OTPL_CP_LAST(&packets64, NF9_IN_PACKETS);
 	packets64 = pm_ntohll(packets64);
       }
 
