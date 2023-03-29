@@ -932,7 +932,7 @@ void evaluate_packet_handlers()
 	warn_unsupported_packet_handler(COUNT_INT_SRV6_SEG_IPV6_SECTION, ACCT_PM);
 	primitives--;
       }
-      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_srv6_segment_ipv6_list;
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_srv6_segment_ipv6_list_handler;
       else if (config.acct_type == ACCT_SF) {
 	warn_unsupported_packet_handler(COUNT_INT_SRV6_SEG_IPV6_SECTION, ACCT_SF);
 	primitives--;
@@ -4181,7 +4181,7 @@ void NF_path_delay_max_usec_handler(struct channels_list_entry *chptr, struct pa
   }
 }
 
-void NF_srv6_segment_ipv6_list(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+void NF_srv6_segment_ipv6_list_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
