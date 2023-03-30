@@ -1499,7 +1499,7 @@ void lower_string(char *string)
   }
 }
 
-void evaluate_sums(u_int64_t *wtc, u_int64_t *wtc_2, char *name, char *type)
+void evaluate_sums(u_int64_t *wtc, u_int64_t *wtc_2, u_int64_t *wtc_3, char *name, char *type)
 {
   int tag = FALSE;
   int tag2 = FALSE;

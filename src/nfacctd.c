@@ -535,8 +535,11 @@ int main(int argc,char **argv, char **envp)
           enable_ip_fragment_handler();
 	}
 
-	evaluate_sums(&list->cfg.what_to_count, &list->cfg.what_to_count_2, list->name, list->type.string);
-	if (!list->cfg.what_to_count && !list->cfg.what_to_count_2 && !list->cfg.cpptrs.num) {
+	evaluate_sums(&list->cfg.what_to_count, &list->cfg.what_to_count_2,
+		      &list->cfg.what_to_count_3, list->name, list->type.string);
+
+	if (!list->cfg.what_to_count && !list->cfg.what_to_count_2 &&
+	    !list->cfg.what_to_count_3 && !list->cfg.cpptrs.num) {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): defaulting to SRC HOST aggregation.\n", list->name, list->type.string);
 	  list->cfg.what_to_count |= COUNT_SRC_HOST;
 	}

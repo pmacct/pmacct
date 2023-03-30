@@ -804,14 +804,17 @@ int main(int argc,char **argv, char **envp)
         if (list->cfg.what_to_count_2 & (COUNT_LABEL|COUNT_MPLS_LABEL_STACK))
           list->cfg.data_type |= PIPE_TYPE_VLEN;
 
-	evaluate_sums(&list->cfg.what_to_count, &list->cfg.what_to_count_2, list->name, list->type.string);
+	evaluate_sums(&list->cfg.what_to_count, &list->cfg.what_to_count_2,
+		      &list->cfg.what_to_count_3, list->name, list->type.string);
+
 	if (list->cfg.what_to_count & (COUNT_SRC_PORT|COUNT_DST_PORT|COUNT_SUM_PORT|COUNT_TCPFLAGS))
 	  config.handle_fragments = TRUE;
 	if (list->cfg.what_to_count & COUNT_FLOWS) {
 	  config.handle_fragments = TRUE;
 	  config.handle_flows = TRUE;
 	}
-	if (!list->cfg.what_to_count && !list->cfg.what_to_count_2 && !list->cfg.cpptrs.num) {
+	if (!list->cfg.what_to_count && !list->cfg.what_to_count_2 &&
+	    !list->cfg.what_to_count_3 && !list->cfg.cpptrs.num) {
 	  Log(LOG_WARNING, "WARN ( %s/%s ): defaulting to SRC HOST aggregation.\n", list->name, list->type.string);
 	  list->cfg.what_to_count |= COUNT_SRC_HOST;
 	}

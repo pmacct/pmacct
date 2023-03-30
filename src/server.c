@@ -249,7 +249,9 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
     for (j = 0; j < uq->num; j++, bufptr += sizeof(struct query_entry)) {
       memcpy(&request, bufptr, sizeof(struct query_entry));
       Log(LOG_DEBUG, "DEBUG ( %s/%s ): Searching into accounting structure ...\n", config.name, config.type); 
-      if (request.what_to_count == config.what_to_count && request.what_to_count_2 == config.what_to_count_2) {
+      if (request.what_to_count == config.what_to_count &&
+	  request.what_to_count_2 == config.what_to_count_2 &&
+	  request.what_to_count_3 == config.what_to_count_3) {
         struct pkt_data pd_dummy;
 	struct primitives_ptrs prim_ptrs;
 

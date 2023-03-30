@@ -81,7 +81,7 @@ extern void mark_columns(char *);
 extern int Setsocksize(int, int, int, void *, socklen_t);
 extern void *map_shared(void *, size_t, int, int, int, off_t);
 extern void lower_string(char *);
-extern void evaluate_sums(u_int64_t *, u_int64_t *, char *, char *);
+extern void evaluate_sums(u_int64_t *, u_int64_t *, u_int64_t *, char *, char *);
 extern void stop_all_childs();
 extern int file_lock(int);
 extern int file_unlock(int);

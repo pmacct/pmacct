@@ -1337,7 +1337,7 @@ int main(int argc,char **argv)
     exit(1);
   }
 
-  if ((want_counter || want_match) && (!what_to_count && !what_to_count_2)) {
+  if ((want_counter || want_match) && (!what_to_count && !what_to_count_2 && !what_to_count_3)) {
     printf("ERROR: -N or -M selected but -c has not been specified or is invalid.\n  Exiting...\n\n");
     usage_client(argv[0]);
     exit(1);
