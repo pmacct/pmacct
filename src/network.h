@@ -597,6 +597,7 @@ struct pkt_tunnel_primitives {
   struct host_addr tunnel_src_ip;
   struct host_addr tunnel_dst_ip;
   u_int8_t tunnel_tos;
+  u_int32_t tunnel_flow_label;
   u_int8_t tunnel_proto;
   u_int16_t tunnel_src_port;
   u_int16_t tunnel_dst_port;

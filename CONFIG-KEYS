@@ -59,9 +59,9 @@ VALUES:		[ src_mac, dst_mac, vlan, in_vlan, out_vlan, cos, etype, src_host, dst_
 		 src_host_coords, dst_host_coords, nat_event, fw_event, post_nat_src_host,
 		 post_nat_dst_host, post_nat_src_port, post_nat_dst_port, tunnel_src_mac,
 		 tunnel_dst_mac, tunnel_src_host, tunnel_dst_host, tunnel_proto, tunnel_tos,
-		 tunnel_src_port, tunnel_dst_port, tunnel_tcpflags, fwd_status, vxlan,
-		 timestamp_start, timestamp_end, timestamp_arrival, timestamp_export,
-		 export_proto_seqno, export_proto_version, export_proto_sysid,
+		 tunnel_src_port, tunnel_dst_port, tunnel_tcpflags, tunnel_flow_label,
+		 fwd_status, vxlan, timestamp_start, timestamp_end, timestamp_arrival,
+		 timestamp_export, export_proto_seqno, export_proto_version, export_proto_sysid,
 		 srv6_seg_ipv6_list ]
 FOREWORDS:	Individual IP packets are uniquely identified by their header field values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as

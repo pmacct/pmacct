@@ -819,6 +819,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	}
 
 	if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) fprintf(f, "%-3u         ", ptun->tunnel_tos);
+        if (config.what_to_count_3 & COUNT_TUNNEL_FLOW_LABEL) fprintf(f, "%-10u        ", ptun->tunnel_flow_label);
         if (config.what_to_count_2 & COUNT_TUNNEL_SRC_PORT) fprintf(f, "%-5u            ", ptun->tunnel_src_port);
         if (config.what_to_count_2 & COUNT_TUNNEL_DST_PORT) fprintf(f, "%-5u            ", ptun->tunnel_dst_port);
 	if (config.what_to_count_2 & COUNT_TUNNEL_TCPFLAGS) fprintf(f, "%-3u               ", queue[j]->tunnel_tcp_flags);
@@ -1217,6 +1218,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	}
 
 	if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) fprintf(f, "%s%u", write_sep(sep, &count), ptun->tunnel_tos);
+        if (config.what_to_count_3 & COUNT_TUNNEL_FLOW_LABEL) fprintf(f, "%s%u", write_sep(sep, &count), ptun->tunnel_flow_label);
 	if (config.what_to_count_2 & COUNT_TUNNEL_SRC_PORT) fprintf(f, "%s%u", write_sep(sep, &count), ptun->tunnel_src_port);
         if (config.what_to_count_2 & COUNT_TUNNEL_DST_PORT) fprintf(f, "%s%u", write_sep(sep, &count), ptun->tunnel_dst_port);
         if (config.what_to_count_2 & COUNT_TUNNEL_TCPFLAGS) fprintf(f, "%s%u", write_sep(sep, &count), queue[j]->tunnel_tcp_flags);
@@ -1522,6 +1524,7 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_TUNNEL_DST_HOST) fprintf(f, "TUNNEL_DST_IP                                  ");
   if (config.what_to_count_2 & COUNT_TUNNEL_IP_PROTO) fprintf(f, "TUNNEL_PROTOCOL  ");
   if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) fprintf(f, "TUNNEL_TOS  ");
+  if (config.what_to_count_3 & COUNT_TUNNEL_FLOW_LABEL) fprintf(f, "TUNNEL_FLOW_LABEL ");
   if (config.what_to_count_2 & COUNT_TUNNEL_SRC_PORT) fprintf(f, "TUNNEL_SRC_PORT  "); 
   if (config.what_to_count_2 & COUNT_TUNNEL_DST_PORT) fprintf(f, "TUNNEL_DST_PORT  "); 
   if (config.what_to_count_2 & COUNT_TUNNEL_TCPFLAGS) fprintf(f, "TUNNEL_TCP_FLAGS  "); 
@@ -1657,6 +1660,7 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_TUNNEL_DST_HOST) fprintf(f, "%sTUNNEL_DST_IP", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TUNNEL_IP_PROTO) fprintf(f, "%sTUNNEL_PROTOCOL", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) fprintf(f, "%sTUNNEL_TOS", write_sep(sep, &count));
+  if (config.what_to_count_3 & COUNT_TUNNEL_FLOW_LABEL) fprintf(f, "%sTUNNEL_FLOW_LABEL", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TUNNEL_SRC_PORT) fprintf(f, "%sTUNNEL_SRC_PORT", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TUNNEL_DST_PORT) fprintf(f, "%sTUNNEL_DST_PORT", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TUNNEL_TCPFLAGS) fprintf(f, "%sTUNNEL_TCP_FLAGS", write_sep(sep, &count));

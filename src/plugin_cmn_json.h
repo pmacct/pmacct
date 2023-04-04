@@ -125,6 +125,7 @@ extern void compose_json_tunnel_src_host(json_t *, struct chained_cache *);
 extern void compose_json_tunnel_dst_host(json_t *, struct chained_cache *);
 extern void compose_json_tunnel_proto(json_t *, struct chained_cache *);
 extern void compose_json_tunnel_tos(json_t *, struct chained_cache *);
+extern void compose_json_tunnel_flow_label(json_t *, struct chained_cache *);
 extern void compose_json_tunnel_src_port(json_t *, struct chained_cache *);
 extern void compose_json_tunnel_dst_port(json_t *, struct chained_cache *);
 extern void compose_json_tunnel_tcp_flags(json_t *, struct chained_cache *);

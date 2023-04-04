@@ -1248,6 +1248,7 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count_2 & COUNT_TUNNEL_SRC_PORT) what_to_count_2 |= COUNT_TUNNEL_SRC_PORT;
     if (config.what_to_count_2 & COUNT_TUNNEL_DST_PORT) what_to_count_2 |= COUNT_TUNNEL_DST_PORT;
     if (config.what_to_count_2 & COUNT_TUNNEL_TCPFLAGS) what_to_count_2 |= COUNT_TUNNEL_TCPFLAGS;
+    if (config.what_to_count_3 & COUNT_TUNNEL_FLOW_LABEL) what_to_count_3 |= COUNT_TUNNEL_FLOW_LABEL;
 
     if (config.what_to_count_2 & COUNT_TIMESTAMP_START) what_to_count_2 |= COUNT_TIMESTAMP_START;
     if (config.what_to_count_2 & COUNT_TIMESTAMP_END) what_to_count_2 |= COUNT_TIMESTAMP_END;
@@ -2695,6 +2696,20 @@ int sql_evaluate_primitives(int primitive)
     strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_INT_TUNNEL_TCPFLAGS;
     values[primitive].handler = where[primitive].handler = count_tunnel_tcpflags_handler;
+    primitive++;
+  }
+
+  if (what_to_count_3 & COUNT_TUNNEL_FLOW_LABEL) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "tunnel_flow_label", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "tunnel_flow_label=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_TUNNEL_FLOW_LABEL;
+    values[primitive].handler = where[primitive].handler = count_tunnel_flow_label_handler;
     primitive++;
   }
 

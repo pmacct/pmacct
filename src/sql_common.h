@@ -263,6 +263,7 @@ extern void count_tunnel_ip_tos_handler(const struct db_cache *, struct insert_d
 extern void count_tunnel_src_port_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_tunnel_dst_port_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_tunnel_tcpflags_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_tunnel_flow_label_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_vxlan_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_timestamp_start_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void PG_copy_count_timestamp_start_handler(const struct db_cache *, struct insert_data *, int, char **, char **);

@@ -462,6 +462,11 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3)
     idx++;
   }
 
+  if (wtc_3 & COUNT_TUNNEL_FLOW_LABEL) {
+    cjhandler[idx] = compose_json_tunnel_flow_label;
+    idx++;
+  }
+
   if (wtc_2 & COUNT_TUNNEL_SRC_PORT) {
     cjhandler[idx] = compose_json_tunnel_src_port;
     idx++;
@@ -1138,6 +1143,11 @@ void compose_json_tunnel_proto(json_t *obj, struct chained_cache *cc)
 void compose_json_tunnel_tos(json_t *obj, struct chained_cache *cc)
 {
   json_object_set_new_nocheck(obj, "tunnel_tos", json_integer((json_int_t)cc->ptun->tunnel_tos));
+}
+
+void compose_json_tunnel_flow_label(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "tunnel_flow_label", json_integer((json_int_t)cc->ptun->tunnel_flow_label));
 }
 
 void compose_json_tunnel_src_port(json_t *obj, struct chained_cache *cc)
