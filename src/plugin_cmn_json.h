@@ -108,6 +108,7 @@ extern void compose_json_fwd_status(json_t *, struct chained_cache *);
 extern void compose_json_mpls_label_stack(json_t *, struct chained_cache *);
 extern void compose_json_proto(json_t *, struct chained_cache *);
 extern void compose_json_tos(json_t *, struct chained_cache *);
+extern void compose_json_flow_label(json_t *, struct chained_cache *);
 extern void compose_json_sampling_rate(json_t *, struct chained_cache *);
 extern void compose_json_sampling_direction(json_t *, struct chained_cache *);
 extern void compose_json_post_nat_src_host(json_t *, struct chained_cache *);

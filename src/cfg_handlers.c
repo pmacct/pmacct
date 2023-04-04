@@ -265,6 +265,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     }
 #endif
     else if (!strcmp(count_token, "tos")) cfg_set_aggregate(filename, value, COUNT_INT_IP_TOS, count_token);
+    else if (!strcmp(count_token, "flow_label")) cfg_set_aggregate(filename, value, COUNT_INT_FLOW_LABEL, count_token);
     else if (!strcmp(count_token, "none")) cfg_set_aggregate(filename, value, COUNT_INT_NONE, count_token);
     else if (!strcmp(count_token, "src_as")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_AS, count_token);
     else if (!strcmp(count_token, "dst_as")) cfg_set_aggregate(filename, value, COUNT_INT_DST_AS, count_token);

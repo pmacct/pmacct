@@ -69,7 +69,7 @@ static const char *tpl_desc_list[] = {
   "IPv6 dst addr",      // 28
   "IPv6 src mask",      // 29
   "IPv6 dst mask",      // 30
-  "",
+  "IPv6 flow label",    // 31
   "icmp type",          // 32
   "",
   "sampling interval",  // 34

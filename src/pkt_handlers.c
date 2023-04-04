@@ -632,6 +632,21 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    if (channels_list[index].aggregation_3 & COUNT_FLOW_LABEL) {
+      if (config.acct_type == ACCT_PM) {
+        warn_unsupported_packet_handler(COUNT_INT_FLOW_LABEL, ACCT_PM);
+        primitives--;
+      }
+      else if (config.acct_type == ACCT_NF) {
+        channels_list[index].phandler[primitives] = NF_flow_label_handler;
+      }
+      else if (config.acct_type == ACCT_SF) {
+        warn_unsupported_packet_handler(COUNT_INT_FLOW_LABEL, ACCT_SF);
+        primitives--;
+      }
+      primitives++;
+    }
+
     if (channels_list[index].aggregation & COUNT_CLASS) {
       if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_class_handler;
       else primitives--;
@@ -2800,6 +2815,31 @@ void NF_ip_proto_handler(struct channels_list_entry *chptr, struct packet_ptrs *
     break;
   default:
     break;
+  }
+}
+
+void NF_flow_label_handler(struct channels_list_entry *chptr,
+                           struct packet_ptrs *pptrs, char **data)
+{
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  int size;
+
+  switch (hdr->version) {
+  case 10:
+    size = 4;
+    break;
+  case 9:
+    size = 3;
+    break;
+  default:
+    return;
+  }
+  if (tpl->fld[NF9_IPV6_FLOW_LABEL].count) {
+    u_int32_t t32;
+    OTPL_CP_LAST_M(&t32, NF9_IPV6_FLOW_LABEL, size);
+    pdata->primitives.flow_label = ntohl(t32);
   }
 }
 

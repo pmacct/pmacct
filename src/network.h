@@ -412,6 +412,7 @@ struct pkt_primitives {
   u_int16_t dst_port;
   u_int8_t tos;
   u_int8_t proto;
+  u_int32_t flow_label;
   u_int32_t ifindex_in;
   u_int32_t ifindex_out;
 #if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)

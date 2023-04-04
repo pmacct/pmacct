@@ -757,6 +757,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
       }
   
       if (config.what_to_count & COUNT_IP_TOS) bson_append_int(bson_elem, "tos", data->tos);
+      if (config.what_to_count_3 & COUNT_FLOW_LABEL) bson_append_int(bson_elem, "flow_label", data->flow_label);
       if (config.what_to_count_2 & COUNT_SAMPLING_RATE) bson_append_int(bson_elem, "sampling_rate", data->sampling_rate);
       if (config.what_to_count_2 & COUNT_SAMPLING_DIRECTION) bson_append_string(bson_elem, "sampling_direction",
 										sampling_direction_print(data->sampling_direction));

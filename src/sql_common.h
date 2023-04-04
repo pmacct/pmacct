@@ -246,6 +246,7 @@ extern void count_post_nat_dst_port_handler(const struct db_cache *, struct inse
 extern void count_nat_event_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_fw_event_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_fwd_status_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_flow_label_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_mpls_label_top_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_mpls_label_bottom_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_mpls_label_stack_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
