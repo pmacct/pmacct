@@ -757,6 +757,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
       }
   
       if (config.what_to_count & COUNT_IP_TOS) bson_append_int(bson_elem, "tos", data->tos);
+      if (config.what_to_count_3 & COUNT_FLOW_LABEL) bson_append_int(bson_elem, "flow_label", data->flow_label);
       if (config.what_to_count_2 & COUNT_SAMPLING_RATE) bson_append_int(bson_elem, "sampling_rate", data->sampling_rate);
       if (config.what_to_count_2 & COUNT_SAMPLING_DIRECTION) bson_append_string(bson_elem, "sampling_direction",
 										sampling_direction_print(data->sampling_direction));
@@ -819,6 +820,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
       }
 
       if (config.what_to_count_2 & COUNT_TUNNEL_IP_TOS) bson_append_int(bson_elem, "tunnel_tos", ptun->tunnel_tos);
+      if (config.what_to_count_3 & COUNT_TUNNEL_FLOW_LABEL) bson_append_int(bson_elem, "tunnel_flow_label", ptun->tunnel_flow_label);
       if (config.what_to_count_2 & COUNT_TUNNEL_SRC_PORT) bson_append_int(bson_elem, "tunnel_port_src", ptun->tunnel_src_port);
       if (config.what_to_count_2 & COUNT_TUNNEL_DST_PORT) bson_append_int(bson_elem, "tunnel_port_dst", ptun->tunnel_dst_port);
       if (config.what_to_count_2 & COUNT_TUNNEL_TCPFLAGS) bson_append_int(bson_elem, "tunnel_tcp_flags", data->tunnel_tcp_flags);

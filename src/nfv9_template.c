@@ -41,74 +41,74 @@ static cdada_map_t *tpl_data_map;
 #define MAX_TPL_DESC_LIST 90
 static const char *tpl_desc_list[] = {
   "",
-  "in bytes",
-  "in packets",
-  "flows",
-  "L4 protocol",
-  "tos",
-  "tcp flags",
-  "L4 src port",
-  "IPv4 src addr",
-  "IPv4 src mask",
-  "input snmp",
-  "L4 dst port",
-  "IPv4 dst addr",
-  "IPv4 dst mask",
-  "output snmp",
-  "IPv4 next hop",
-  "src as",
-  "dst as",
-  "BGP IPv4 next hop",
+  "in bytes",           //  1
+  "in packets",         //  2
+  "flows",              //  3
+  "L4 protocol",        //  4
+  "tos",                //  5
+  "tcp flags",          //  6
+  "L4 src port",        //  7
+  "IPv4 src addr",      //  8
+  "IPv4 src mask",      //  9
+  "input snmp",         // 10
+  "L4 dst port",        // 11
+  "IPv4 dst addr",      // 12
+  "IPv4 dst mask",      // 13
+  "output snmp",        // 14
+  "IPv4 next hop",      // 15
+  "src as",             // 16
+  "dst as",             // 17
+  "BGP IPv4 next hop",  // 18
   "", "",
-  "last switched",
-  "first switched",
-  "out bytes",
-  "out packets",
+  "last switched",      // 21
+  "first switched",     // 22
+  "out bytes",          // 23
+  "out packets",        // 24
   "", "",
-  "IPv6 src addr",
-  "IPv6 dst addr",
-  "IPv6 src mask",
-  "IPv6 dst mask",
+  "IPv6 src addr",      // 27
+  "IPv6 dst addr",      // 28
+  "IPv6 src mask",      // 29
+  "IPv6 dst mask",      // 30
+  "IPv6 flow label",    // 31
+  "icmp type",          // 32
   "",
-  "icmp type",
-  "",
-  "sampling interval",
-  "sampling algorithm",
+  "sampling interval",  // 34
+  "sampling algorithm", // 35
   "",
   "", "", "", "",
   "", "", "", "",
   "", "", "",
-  "sampler ID",
-  "sampler mode",
-  "sampler interval",
+  "sampler ID",         // 48
+  "sampler mode",       // 49
+  "sampler interval",   // 50
   "", "", "", "",
   "",
-  "in src mac",
-  "out dst mac",
+  "in src mac",         // 56
+  "out dst mac",        // 57
   "", "",
-  "ip version",
-  "direction",
-  "IPv6 next hop",
-  "IPv6 BGP next hop",
+  "ip version",         // 60
+  "direction",          // 61
+  "IPv6 next hop",      // 62
+  "IPv6 BGP next hop",  // 63
   "",
   "", "", "", "",
   "",
-  "mpls label 1",
-  "mpls label 2",
-  "mpls label 3",
-  "mpls label 4",
-  "mpls label 5",
-  "mpls label 6",
-  "mpls label 7",
-  "mpls label 8",
-  "mpls label 9",
-  "mpls label 10",
-  "in dst mac",
-  "out src mac",
+  "mpls label 1",       // 70
+  "mpls label 2",       // 71
+  "mpls label 3",       // 72
+  "mpls label 4",       // 73
+  "mpls label 5",       // 74
+  "mpls label 6",       // 75
+  "mpls label 7",       // 76
+  "mpls label 8",       // 77
+  "mpls label 9",       // 78
+  "mpls label 10",      // 79
+  "in dst mac",         // 80
+  "out src mac",        // 81
   "", "", "", "",
   "", "", "",
-  "forwarding status",
-  "mpls vpn rd"
+  "forwarding status",  // 89
+  "mpls vpn rd"         // 90
 };
 
 #define MAX_OPT_TPL_DESC_LIST 100

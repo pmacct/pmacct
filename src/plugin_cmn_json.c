@@ -377,6 +377,11 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3)
     idx++;
   }
 
+  if (wtc_3 & COUNT_FLOW_LABEL) {
+    cjhandler[idx] = compose_json_flow_label;
+    idx++;
+  }
+
   if (wtc_2 & COUNT_SAMPLING_RATE) {
     cjhandler[idx] = compose_json_sampling_rate;
     idx++;
@@ -454,6 +459,11 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3)
     
   if (wtc_2 & COUNT_TUNNEL_IP_TOS) {
     cjhandler[idx] = compose_json_tunnel_tos;
+    idx++;
+  }
+
+  if (wtc_3 & COUNT_TUNNEL_FLOW_LABEL) {
+    cjhandler[idx] = compose_json_tunnel_flow_label;
     idx++;
   }
 
@@ -1030,6 +1040,11 @@ void compose_json_tos(json_t *obj, struct chained_cache *cc)
   json_object_set_new_nocheck(obj, "tos", json_integer((json_int_t)cc->primitives.tos));
 }
 
+void compose_json_flow_label(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "flow_label", json_integer((json_int_t)cc->primitives.flow_label));
+}
+
 void compose_json_sampling_rate(json_t *obj, struct chained_cache *cc)
 {
   json_object_set_new_nocheck(obj, "sampling_rate", json_integer((json_int_t)cc->primitives.sampling_rate));
@@ -1128,6 +1143,11 @@ void compose_json_tunnel_proto(json_t *obj, struct chained_cache *cc)
 void compose_json_tunnel_tos(json_t *obj, struct chained_cache *cc)
 {
   json_object_set_new_nocheck(obj, "tunnel_tos", json_integer((json_int_t)cc->ptun->tunnel_tos));
+}
+
+void compose_json_tunnel_flow_label(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "tunnel_flow_label", json_integer((json_int_t)cc->ptun->tunnel_flow_label));
 }
 
 void compose_json_tunnel_src_port(json_t *obj, struct chained_cache *cc)

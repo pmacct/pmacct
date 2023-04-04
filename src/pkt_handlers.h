@@ -91,6 +91,7 @@ extern void NF_peer_src_ip_handler(struct channels_list_entry *, struct packet_p
 extern void NF_peer_dst_ip_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_ip_tos_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_ip_proto_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void NF_flow_label_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_tcp_flags_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_fwd_status_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_counters_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
@@ -132,6 +133,7 @@ extern void NF_tunnel_dst_port_handler(struct channels_list_entry *, struct pack
 extern void NF_tunnel_tcp_flags_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_tunnel_ip_tos_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_tunnel_ip_proto_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void NF_tunnel_flow_label_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_version_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_sysid_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_custom_primitives_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

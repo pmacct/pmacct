@@ -262,6 +262,9 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_in
   if (wtc & COUNT_IP_TOS)
     avro_schema_record_field_append(schema, "tos", avro_schema_long());
 
+  if (wtc_3 & COUNT_FLOW_LABEL)
+    avro_schema_record_field_append(schema, "flow_label", avro_schema_int());
+
   if (wtc_2 & COUNT_SAMPLING_RATE)
     avro_schema_record_field_append(schema, "sampling_rate", avro_schema_long());
 
@@ -318,6 +321,9 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_in
 
   if (wtc_2 & COUNT_TUNNEL_IP_TOS)
     avro_schema_record_field_append(schema, "tunnel_tos", avro_schema_long());
+
+  if (wtc_3 & COUNT_TUNNEL_FLOW_LABEL)
+    avro_schema_record_field_append(schema, "tunnel_flow_label", avro_schema_int());
 
   if (wtc_2 & COUNT_TUNNEL_SRC_PORT)
     avro_schema_record_field_append(schema, "tunnel_port_src", avro_schema_long());
@@ -937,6 +943,11 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wt
     pm_avro_check(avro_value_set_long(&field, pbase->tos));
   }
 
+  if (wtc_3 & COUNT_FLOW_LABEL) {
+    pm_avro_check(avro_value_get_by_name(&value, "flow_label", &field, NULL));
+    pm_avro_check(avro_value_set_int(&field, pbase->flow_label));
+  }
+
   if (wtc_2 & COUNT_SAMPLING_RATE) {
     pm_avro_check(avro_value_get_by_name(&value, "sampling_rate", &field, NULL));
     pm_avro_check(avro_value_set_long(&field, pbase->sampling_rate));
@@ -1038,6 +1049,11 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wt
   if (wtc_2 & COUNT_TUNNEL_IP_TOS) {
     pm_avro_check(avro_value_get_by_name(&value, "tunnel_tos", &field, NULL));
     pm_avro_check(avro_value_set_long(&field, ptun->tunnel_tos));
+  }
+
+  if (wtc_3 & COUNT_TUNNEL_FLOW_LABEL) {
+    pm_avro_check(avro_value_get_by_name(&value, "tunnel_flow_label", &field, NULL));
+    pm_avro_check(avro_value_set_int(&field, ptun->tunnel_flow_label));
   }
 
   if (wtc_2 & COUNT_TUNNEL_SRC_PORT) {

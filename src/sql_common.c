@@ -1085,7 +1085,7 @@ void sql_exit_gracefully(int signum)
 
 int sql_evaluate_primitives(int primitive)
 {
-  pm_cfgreg_t what_to_count = 0, what_to_count_2 = 0, /* XXX: what_to_count_3 = 0, */ fakes = 0;
+  pm_cfgreg_t what_to_count = 0, what_to_count_2 = 0, what_to_count_3 = 0, fakes = 0;
   short int assume_custom_table = FALSE; 
   char *insert_clause_start_ptr = insert_clause + strlen(insert_clause);
   char default_delim[] = ",", delim_buf[SRVBUFLEN];
@@ -1103,7 +1103,7 @@ int sql_evaluate_primitives(int primitive)
   if (config.sql_optimize_clauses) {
     what_to_count = config.what_to_count;
     what_to_count_2 = config.what_to_count_2;
-    /* XXX: what_to_count_3 = config.what_to_count_3; */
+    what_to_count_3 = config.what_to_count_3;
     assume_custom_table = TRUE;
   }
   else {
@@ -1229,6 +1229,7 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count_2 & COUNT_NAT_EVENT) what_to_count_2 |= COUNT_NAT_EVENT;
     if (config.what_to_count_2 & COUNT_FW_EVENT) what_to_count_2 |= COUNT_FW_EVENT;
     if (config.what_to_count_2 & COUNT_FWD_STATUS) what_to_count_2 |= COUNT_FWD_STATUS;
+    if (config.what_to_count_3 & COUNT_FLOW_LABEL) what_to_count_3 |= COUNT_FLOW_LABEL;
 
     if (config.what_to_count_2 & COUNT_MPLS_LABEL_TOP) what_to_count_2 |= COUNT_MPLS_LABEL_TOP;
     if (config.what_to_count_2 & COUNT_MPLS_LABEL_BOTTOM) what_to_count_2 |= COUNT_MPLS_LABEL_BOTTOM;
@@ -1247,6 +1248,7 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count_2 & COUNT_TUNNEL_SRC_PORT) what_to_count_2 |= COUNT_TUNNEL_SRC_PORT;
     if (config.what_to_count_2 & COUNT_TUNNEL_DST_PORT) what_to_count_2 |= COUNT_TUNNEL_DST_PORT;
     if (config.what_to_count_2 & COUNT_TUNNEL_TCPFLAGS) what_to_count_2 |= COUNT_TUNNEL_TCPFLAGS;
+    if (config.what_to_count_3 & COUNT_TUNNEL_FLOW_LABEL) what_to_count_3 |= COUNT_TUNNEL_FLOW_LABEL;
 
     if (config.what_to_count_2 & COUNT_TIMESTAMP_START) what_to_count_2 |= COUNT_TIMESTAMP_START;
     if (config.what_to_count_2 & COUNT_TIMESTAMP_END) what_to_count_2 |= COUNT_TIMESTAMP_END;
@@ -2448,6 +2450,20 @@ int sql_evaluate_primitives(int primitive)
     primitive++;
   }
 
+  if (what_to_count_3 & COUNT_FLOW_LABEL) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "flow_label", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "flow_label=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_FLOW_LABEL;
+    values[primitive].handler = where[primitive].handler = count_flow_label_handler;
+    primitive++;
+  }
+
   if (what_to_count_2 & COUNT_MPLS_LABEL_TOP) {
     if (primitive) {
       strncat(insert_clause, ", ", SPACELEFT(insert_clause));
@@ -2680,6 +2696,20 @@ int sql_evaluate_primitives(int primitive)
     strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_INT_TUNNEL_TCPFLAGS;
     values[primitive].handler = where[primitive].handler = count_tunnel_tcpflags_handler;
+    primitive++;
+  }
+
+  if (what_to_count_3 & COUNT_TUNNEL_FLOW_LABEL) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "tunnel_flow_label", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "tunnel_flow_label=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_TUNNEL_FLOW_LABEL;
+    values[primitive].handler = where[primitive].handler = count_tunnel_flow_label_handler;
     primitive++;
   }
 
