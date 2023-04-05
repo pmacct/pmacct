@@ -41,6 +41,10 @@ Such fields are being introduced to support tunnel primitives. The guidelines be
   - "tunnel_port_dst (INT(2) UNSIGNED NOT NULL)," to declare the field itself
   - "PRIMARY KEY (..., tunnel_port_dst, ...)" to put it in the primary key
 
+* tunnel_flow_label field:
+  - "tunnel_flow_label INT(4) UNSIGNED NOT NULL," to declare the field itself
+  - "PRIMARY KEY (..., tunnel_flow_label, ...)" to put it in the primary key
+
 The primitive is not declared as part of any default table version; yet will not fail
 version checks which are enabled when 'sql_optimize_clauses' feature is disabled.
 

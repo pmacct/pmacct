@@ -136,6 +136,7 @@ are no longer supplied as part of the PostgreSQL table creation script.
   * tcpflags => tcp_flags (SMALLINT NOT NULL DEFAULT 0)
   * proto => ip_proto (SMALLINT NOT NULL DEFAULT 0)
   * tos => tos (INT NOT NULL DEFAULT 0)
+  * flow_label => flow_label (INT NOT NULL DEFAULT 0)
   * post_nat_src_host => post_nat_ip_src (inet NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
   * post_nat_dst_host => post_nat_ip_dst (inet NOT NULL DEFAULT '0.0.0.0', see README.IPv6)
   * post_nat_src_port => post_nat_port_src (INT NOT NULL DEFAULT 0)
@@ -155,6 +156,7 @@ are no longer supplied as part of the PostgreSQL table creation script.
   * tunnel_src_port => tunnel_port_src (INT NOT NULL DEFAULT 0)
   * tunnel_dst_port => tunnel_port_dst (INT NOT NULL DEFAULT 0)
   * tunnel_tcpflags => tunnel_tcp_flags (SMALLINT NOT NULL DEFAULT 0)
+  * tunnel_flow_label => tunnel_flow_label (INT NOT NULL DEFAULT 0)
   * timestamp_start => timestamp_start, timestamp_start_residual:
     - timestamp_start timestamp without time zone NOT NULL DEFAULT '0000-01-01 00:00:00', see README.timestamp)
     - timestamp_start_residual INT NOT NULL DEFAULT 0, see README.timestamp)

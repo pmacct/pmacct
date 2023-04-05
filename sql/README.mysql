@@ -134,6 +134,7 @@ Similarly, BGP tables:
   * proto => ip_proto (CHAR(6) NOT NULL)
     - or (INT(1) UNSIGNED NOT NULL, if sql_num_protos: true)
   * tos => tos (INT(4) UNSIGNED NOT NULL)
+  * flow_label => flow_label (INT(4) UNSIGNED NOT NULL)
   * post_nat_src_host => post_nat_ip_src (CHAR(45) NOT NULL)
     - or (VARBINARY(16) NOT NULL, if sql_num_hosts: true)
   * post_nat_dst_host => post_nat_ip_dst (CHAR(45) NOT NULL)
@@ -158,6 +159,7 @@ Similarly, BGP tables:
   * tunnel_src_port => tunnel_port_src (INT(2) UNSIGNED NOT NULL)
   * tunnel_dst_port => tunnel_port_dst (INT(2) UNSIGNED NOT NULL)
   * tunnel_tcpflags => tunnel_tcp_flags (INT(2) UNSIGNED NOT NULL)
+  * tunnel_flow_label => tunnel_flow_label (INT(4) UNSIGNED NOT NULL)
   * timestamp_start => timestamp_start, timestamp_start_residual:
     - timestamp_start DATETIME NOT NULL, see README.timestamp)
     - timestamp_start_residual INT NOT NULL, see README.timestamp)
