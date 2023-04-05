@@ -16,9 +16,8 @@ name=mtla       field_type=47   len=4   semantics=ip
 
 Semantics is 'ip', so the field contains an IP address, length being 4 meaning only
 IPv4 addresses are expected. The corresponding SQL field can be defined as follows:
-"mtla CHAR(15) NOT NULL". If the primitive would have been suitable to also travel
-IPv6 addresses, the field could have been defined according to guidelines in the
-README.IPv6 doc (essentially CHAR(45) instead of CHAR(15). 
+"mtla CHAR(15) NOT NULL". If the primitive could encapsulate IPv6 addresses, the
+field should be defined as CHAR(45).
 
 name=mtlpl      field_type=91   len=1   semantics=u_int
 
