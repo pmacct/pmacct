@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -136,6 +136,9 @@ static const struct _primitives_matrix_struct _primitives_matrix[] = {
   {"timestamp_end", 0, 0, 1, 0, 0, 0, 0, "Flow end time"},
   {"timestamp_arrival", 1, 1, 1, 1, 0, 0, 0, "Observation time at the collector"},
   {"timestamp_export", 0, 0, 1, 0, 0, 0, 0, "Observation time at the exporter"},
+  {"path_delay_avg_usec", 0, 0, 1, 0, 0, 0, 0, "Average On-Path Telemetry measured delay (usec)"},
+  {"path_delay_min_usec", 0, 0, 1, 0, 0, 0, 0, "Minimum On-Path Telemetry measured delay (usec)"},
+  {"path_delay_max_usec", 0, 0, 1, 0, 0, 0, 0, "Maximum On-Path Telemetry measured delay (usec)"},
   {"", 0, 0, 0, 0, 0, 0, 0, ""}
 };
 
