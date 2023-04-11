@@ -26,7 +26,7 @@
 extern void bgp_srcdst_lookup(struct packet_ptrs *, int);
 extern void bgp_follow_nexthop_lookup(struct packet_ptrs *, int);
 extern struct bgp_peer *bgp_lookup_find_bgp_peer(struct sockaddr *, struct xflow_status_entry *, u_int16_t, int); 
-extern u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *, path_id_t *, int);
+extern u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *, rd_t *, path_id_t *, int);
 extern int bgp_lookup_node_match_cmp_bgp(struct bgp_info *, struct node_match_cmp_term2 *);
 extern int bgp_lookup_node_vector_unicast(struct prefix *, struct bgp_peer *, struct bgp_node_vector *);
 

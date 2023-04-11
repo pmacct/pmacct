@@ -377,7 +377,7 @@ void bgp_follow_nexthop_lookup(struct packet_ptrs *pptrs, int type)
   }
 
   if (nh_peer) {
-    modulo = bms->route_info_modulo(nh_peer, NULL, bms->table_per_peer_buckets);
+    modulo = bms->route_info_modulo(nh_peer, NULL, NULL, bms->table_per_peer_buckets);
 
     // XXX: to be optimized 
     if (bms->table_per_peer_hash == BGP_ASPATH_HASH_PATHID) modulo_max = bms->table_per_peer_buckets;
@@ -789,14 +789,16 @@ void free_cache_legacy_bgp_primitives(struct cache_legacy_bgp_primitives **c)
   }
 }
 
-u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *peer, path_id_t *path_id, int per_peer_buckets)
+u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *peer, rd_t *rd, path_id_t *path_id, int per_peer_buckets)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
   path_id_t local_path_id = 1;
+  u_int16_t local_rd = 0;
 
   if (path_id && *path_id) local_path_id = *path_id;
+  if (rd) local_rd = (rd->type + rd->as + rd->val);
 
-  return (((peer->fd * per_peer_buckets) +
+  return ((((peer->fd + local_rd) * per_peer_buckets) +
           ((local_path_id - 1) % per_peer_buckets)) %
           (bms->table_peer_buckets * per_peer_buckets));
 }

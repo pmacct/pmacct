@@ -292,7 +292,7 @@ struct bgp_misc_structs {
   int table_per_peer_buckets;
   int table_attr_hash_buckets;
   int table_per_peer_hash;
-  u_int32_t (*route_info_modulo)(struct bgp_peer *, path_id_t *, int);
+  u_int32_t (*route_info_modulo)(struct bgp_peer *, rd_t *, path_id_t *, int);
   struct bgp_peer *(*bgp_lookup_find_peer)(struct sockaddr *, struct xflow_status_entry *, u_int16_t, int);
   int (*bgp_lookup_node_match_cmp)(struct bgp_info *, struct node_match_cmp_term2 *);
 
@@ -416,7 +416,7 @@ extern char *std_comm_patterns_to_asn[MAX_BGP_COMM_PATTERNS];
 extern char *lrg_comm_patterns_to_asn[MAX_BGP_COMM_PATTERNS];
 extern struct bgp_comm_range peer_src_as_ifrange; 
 extern struct bgp_comm_range peer_src_as_asrange; 
-extern u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, path_id_t *, int);
+extern u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, rd_t *, path_id_t *, int);
 
 extern struct bgp_rt_structs inter_domain_routing_dbs[FUNC_TYPE_MAX], *bgp_routing_db;
 extern struct bgp_misc_structs inter_domain_misc_dbs[FUNC_TYPE_MAX], *bgp_misc_db;

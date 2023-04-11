@@ -899,7 +899,7 @@ void bgp_table_info_delete(struct bgp_peer *peer, struct bgp_table *table, afi_t
     struct bgp_info *ri;
     struct bgp_info *ri_next;
 
-    if (bms->route_info_modulo) modulo = bms->route_info_modulo(peer, NULL, bms->table_per_peer_buckets);
+    if (bms->route_info_modulo) modulo = bms->route_info_modulo(peer, NULL, NULL, bms->table_per_peer_buckets);
     else modulo = 0;
 
     for (peer_buckets = 0; peer_buckets < bms->table_per_peer_buckets; peer_buckets++) {
