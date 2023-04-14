@@ -4333,8 +4333,8 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
         if (entry->in_rd_map) {
           ret = cdada_map_find(entry->in_rd_map, &ingress_vrfid, (void **) &rd);
           if (ret == CDADA_SUCCESS) {
-            memcpy(&pbgp->mpls_vpn_rd, rd, 8);
-            bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
+	    memcpy(&pbgp->mpls_vpn_rd, rd, 8);
+	    bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
           }
         }
         if ( !entry->in_rd_map || ret != CDADA_SUCCESS ) { /* no RD found in option data --> fallback to vrfID:XXX */
@@ -4362,8 +4362,8 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
         if (entry->out_rd_map) { 
           ret = cdada_map_find(entry->out_rd_map, &egress_vrfid, (void **) &rd);
           if (ret == CDADA_SUCCESS) {
-            memcpy(&pbgp->mpls_vpn_rd, rd, 8);
-            bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
+	    memcpy(&pbgp->mpls_vpn_rd, rd, 8);
+	    bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
           }
         }
         if ( !entry->out_rd_map || ret != CDADA_SUCCESS ) { /* no RD found in option data --> fallback to vrfID:XXX */
