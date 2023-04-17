@@ -2899,19 +2899,31 @@ void NF_fwd_status_handler(struct channels_list_entry *chptr, struct packet_ptrs
   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int32_t fwd_status = 0;
 
   switch(hdr->version) {
   case 10:
   case 9:
     if (OTPL_LAST_LEN(NF9_FWD_STATUS) == 1) {
-      OTPL_CP_LAST(&fwd_status, NF9_FWD_STATUS);
-      pnat->fwd_status = fwd_status;
+      OTPL_CP_LAST(&pnat->fwd_status, NF9_FWD_STATUS);
     }
-    break;
-  case 5:
-    break;
-  default:
+    else {
+      u_int32_t fwd_status = 0;
+      if (OTPL_LAST_LEN(NF9_FWD_STATUS) == 2) {
+        u_int16_t t16;
+        OTPL_CP_LAST(&t16, NF9_FWD_STATUS);
+        fwd_status = ntohs(t16);
+      }
+      else if (OTPL_LAST_LEN(NF9_FWD_STATUS) == 4) {
+        u_int32_t t32;
+        OTPL_CP_LAST(&t32, NF9_FWD_STATUS);
+        fwd_status = ntohl(t32);
+      }
+      if (fwd_status > 255)
+        Log(LOG_WARNING, "WARN ( %s/%s ): unsupported forwarding status %xh (more than 8 bits).\n",
+            config.name, config.type, fwd_status);
+      else
+        pnat->fwd_status = fwd_status;
+    }
     break;
   }
 }
