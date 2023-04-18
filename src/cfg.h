@@ -128,7 +128,6 @@ struct configuration {
   pm_dtls_glob_t dtls_globs;
 #endif
   char *imt_plugin_path;
-  char *imt_plugin_passwd;
   char *sql_db;
   char *sql_table;
   char *sql_table_schema;

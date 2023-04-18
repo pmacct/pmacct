@@ -70,7 +70,6 @@ extern int cfg_key_promisc(char *, char *, char *);
 extern int cfg_key_num_protos(char *, char *, char *);
 extern int cfg_key_num_hosts(char *, char *, char *);
 extern int cfg_key_imt_path(char *, char *, char *);
-extern int cfg_key_imt_passwd(char *, char *, char *);
 extern int cfg_key_imt_buckets(char *, char *, char *);
 extern int cfg_key_imt_mem_pools_number(char *, char *, char *);
 extern int cfg_key_imt_mem_pools_size(char *, char *, char *);

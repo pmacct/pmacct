@@ -153,11 +153,6 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 
   Log(LOG_DEBUG, "DEBUG ( %s/%s ): Processing data received from client ...\n", config.name, config.type);
 
-  if (config.imt_plugin_passwd) {
-    if (!strncmp(config.imt_plugin_passwd, q->passwd, MIN(strlen(config.imt_plugin_passwd), 8)));
-    else return;
-  }
-
   elem = (unsigned char *) a;
 
   reset_counter = q->type & WANT_RESET;

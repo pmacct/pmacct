@@ -977,25 +977,6 @@ int cfg_key_imt_path(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_imt_passwd(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int changes = 0;
-
-  if (!name) for (; list; list = list->next, changes++) list->cfg.imt_plugin_passwd = value_ptr;
-  else {
-    for (; list; list = list->next) {
-      if (!strcmp(name, list->name)) {
-        list->cfg.imt_plugin_passwd = value_ptr;
-        changes++;
-        break;
-      }
-    }
-  }
-
-  return changes;
-}
-
 int cfg_key_imt_buckets(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

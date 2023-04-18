@@ -94,7 +94,6 @@ static const struct _dictionary_line dictionary[] = {
   {"fwd_status_encode_as_string", cfg_key_fwd_status_encode_as_string},
   {"tos_encode_as_dscp", cfg_key_tos_encode_as_dscp},
   {"imt_path", cfg_key_imt_path},
-  {"imt_passwd", cfg_key_imt_passwd},
   {"imt_buckets", cfg_key_imt_buckets},
   {"imt_mem_pools_number", cfg_key_imt_mem_pools_number},
   {"imt_mem_pools_size", cfg_key_imt_mem_pools_size},

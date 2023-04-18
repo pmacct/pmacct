@@ -1392,8 +1392,6 @@ int main(int argc,char **argv)
     }
   }
 
-  memcpy(q.passwd, password, sizeof(password));
-
   /* setting number of entries in _protocols structure */
   while (_protocols[protocols_number].number != -1) protocols_number++;
   

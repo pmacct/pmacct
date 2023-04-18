@@ -76,7 +76,6 @@ struct query_header {
   unsigned int cnt_sz;			/* counters size (in bytes) */
   struct extra_primitives extras;	/* offsets for non-standard aggregation primitives structures */
   int datasize;				/* total length of aggregation primitives structures */
-  char passwd[12];			/* OBSOLETED: password */
 };
 
 struct query_entry {
