@@ -709,7 +709,7 @@ int main(int argc,char **argv)
   extern char *optarg;
   extern int optind, opterr, optopt;
   int errflag, cp, want_stats, want_erase, want_reset, want_class_table; 
-  int want_status, want_mrtg, want_counter, want_match, want_all_fields;
+  int want_status, want_counter, want_match, want_all_fields;
   int want_output, want_custom_primitives_table;
   int want_erase_last_tstamp, want_tstamp_since_epoch, want_tstamp_utc;
   int which_counter, topN_counter, fetch_from_file, sum_counters, num_counters;
@@ -746,7 +746,6 @@ int main(int argc,char **argv)
   want_erase_last_tstamp = FALSE;
   want_status = FALSE;
   want_counter = FALSE;
-  want_mrtg = FALSE;
   want_match = FALSE;
   want_all_fields = FALSE;
   want_reset = FALSE;
@@ -1156,9 +1155,6 @@ int main(int argc,char **argv)
     case 'l':
       q.type |= WANT_LOCK_OP;
       break;
-    case 'm': /* obsoleted */
-      want_mrtg = TRUE;
-      (void)want_mrtg;
     case 'N':
       if (CHECK_Q_TYPE(q.type)) print_ex_options_error();
       strlcpy(match_string, optarg, sizeof(match_string));
