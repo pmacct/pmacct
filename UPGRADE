@@ -6,6 +6,13 @@ the changes done or break old assumptions no longer valid; while the effort
 is to keep these cases at a low, please read this file in preparation to
 upgrading your installation.
 
+TO:	>= 1.7.9
+FROM:	<= 1.7.8
+TOPIC:	imt_passwd
+DESC:	This configuration knob was removed from user-facing documentation
+	long ago but underlying code was never deprecated. With this release
+	the feature is effectively not supported anymore.
+
 TO:	>= 1.7.8
 FROM:	<= 1.7.7
 TOPIC:	kafka_avro_schema_registry
