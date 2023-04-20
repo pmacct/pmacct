@@ -23,7 +23,6 @@
 #include "pmacct.h"
 #include "pmacct-build.h"
 #include "pmacct-data.h"
-#include "pmacct-dlt.h"
 #include "pretag_handlers.h"
 #include "plugin_hooks.h"
 #include "pkt_handlers.h"
