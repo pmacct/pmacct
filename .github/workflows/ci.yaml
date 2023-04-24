@@ -18,7 +18,7 @@ jobs:
 
   ### Step 1: build container images
   builder-ubuntu-docker:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout pmacct
         uses: actions/checkout@v2
@@ -44,7 +44,7 @@ jobs:
             /tmp/docker
 
   builder-centos-docker:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout pmacct
         uses: actions/checkout@v2
@@ -72,7 +72,7 @@ jobs:
   ### Step 2: permutations
   build-and-test:
     needs: [builder-ubuntu-docker, builder-centos-docker]
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
@@ -135,7 +135,7 @@ jobs:
 
   ### Step 3: official docker image generation
   pmacct-docker:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout pmacct
         uses: actions/checkout@v1 #Don't use v2 messes everything
@@ -189,7 +189,7 @@ jobs:
   ### Step 4: Upload images to dockerhub (bleeding-edge, latest and releases)
   publish-dockerhub:
     needs: [pmacct-docker, build-and-test]
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     if: github.event_name != 'pull_request'
     env:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
