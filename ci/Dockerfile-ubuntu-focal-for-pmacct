@@ -1,6 +1,6 @@
 # produces a docker image suitable to build pmacct
 
-FROM ubuntu:bionic
+FROM ubuntu:focal
 
 RUN apt-get update && \
     apt-get install -y \
