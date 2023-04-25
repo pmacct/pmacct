@@ -11,6 +11,7 @@ RUN apt-get update && \
     bash \
     bison \
     cmake \
+    build-essential \
     default-libmysqlclient-dev \
     libnuma-dev \
     flex \
