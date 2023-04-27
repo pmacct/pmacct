@@ -1259,13 +1259,21 @@ void write_pid_file(char *filename)
   char pid[10];
   uid_t owner = -1;
   gid_t group = -1;
+  int ret;
 
   unlink(filename); 
 
   if (config.files_uid) owner = config.files_uid;
   if (config.files_gid) group = config.files_gid;
+
+  /* create dir structure to get to file, if needed */
+  ret = mkdir_multilevel(filename, TRUE, owner, group);
+  if (ret) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] write_pid_file(): mkdir_multilevel() failed.\n", config.name, config.type, filename);
+    return;
+  }
     
-  file = fopen(filename,"w");
+  file = fopen(filename, "w");
   if (file) {
     if (chown(filename, owner, group) == -1)
       Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unable to chown(): %s\n", config.name, config.type, filename, strerror(errno));
@@ -1288,11 +1296,13 @@ void write_pid_file(char *filename)
 
 void write_pid_file_plugin(char *filename, char *type, char *name)
 {
+  
   int len = strlen(filename) + strlen(type) + strlen(name) + 3;
   FILE *file;
   char *fname, pid[10], minus[] = "-";
   uid_t owner = -1;
   gid_t group = -1;
+  int ret;
 
   fname = malloc(len);
   if (!fname) {
@@ -1311,6 +1321,13 @@ void write_pid_file_plugin(char *filename, char *type, char *name)
 
   if (config.files_uid) owner = config.files_uid;
   if (config.files_gid) group = config.files_gid;
+
+  /* create dir structure to get to file, if needed */
+  ret = mkdir_multilevel(fname, TRUE, owner, group);
+  if (ret) {
+    Log(LOG_ERR, "ERROR ( %s/%s ): [%s] write_pid_file_plugin(): mkdir_multilevel() failed.\n", config.name, config.type, fname);
+    return;
+  }
 
   file = fopen(fname, "w");
   if (file) {
