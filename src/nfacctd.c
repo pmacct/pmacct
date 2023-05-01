@@ -1356,7 +1356,7 @@ int main(int argc,char **argv, char **envp)
     sa_to_addr((struct sockaddr *)&server, &srv_addr, &srv_port); 
     addr_to_str(srv_string, &srv_addr);
 
-    Log(LOG_INFO, "INFO ( %s/core ): waiting for NetFlow/IPFIX data on interfce=%s ip=%s port=%u/udp\n",
+    Log(LOG_INFO, "INFO ( %s/core ): waiting for NetFlow/IPFIX data on interface=%s ip=%s port=%u/udp\n",
 	config.name, srv_interface, srv_string, srv_port);
 
     allowed = TRUE;
@@ -2390,6 +2390,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
                  tpl->fld[NF9_L4_PROTOCOL].len[0]);
 
 	  NF_process_classifiers(pptrs, pptrs, pkt, tpl);
+          NF_mpls_vpn_rd_from_options(pptrs);
 	  NF_mpls_vpn_rd_fromie90(pptrs);
 	  if (config.nfacctd_isis) isis_srcdst_lookup(pptrs);
 	  if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, &pptrs->bta2);
@@ -2467,6 +2468,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
                  tpl->fld[NF9_L4_PROTOCOL].len[0]);
 
 	  NF_process_classifiers(pptrs, &pptrsv->v6, pkt, tpl);
+          NF_mpls_vpn_rd_from_options(&pptrsv->v6);
 	  NF_mpls_vpn_rd_fromie90(&pptrsv->v6);
 	  if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->v6);
 	  if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->v6, &pptrsv->v6.bta, &pptrsv->v6.bta2);
@@ -2550,6 +2552,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
                  tpl->fld[NF9_L4_PROTOCOL].len[0]);
 
 	  NF_process_classifiers(pptrs, &pptrsv->vlan4, pkt, tpl);
+          NF_mpls_vpn_rd_from_options(&pptrsv->vlan4);
 	  NF_mpls_vpn_rd_fromie90(&pptrsv->vlan4);
 	  if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->vlan4);
 	  if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan4, &pptrsv->vlan4.bta, &pptrsv->vlan4.bta2);
@@ -2630,6 +2633,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
                  tpl->fld[NF9_L4_PROTOCOL].len[0]);
 
 	  NF_process_classifiers(pptrs, &pptrsv->vlan6, pkt, tpl);
+          NF_mpls_vpn_rd_from_options(&pptrsv->vlan6);
 	  NF_mpls_vpn_rd_fromie90(&pptrsv->vlan6);
 	  if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->vlan6);
 	  if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan6, &pptrsv->vlan6.bta, &pptrsv->vlan6.bta2);
@@ -2716,6 +2720,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
                  tpl->fld[NF9_L4_PROTOCOL].len[0]);
 
 	  NF_process_classifiers(pptrs, &pptrsv->mpls4, pkt, tpl);
+          NF_mpls_vpn_rd_from_options(&pptrsv->mpls4);
 	  NF_mpls_vpn_rd_fromie90(&pptrsv->mpls4);
 	  if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->mpls4);
 	  if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls4, &pptrsv->mpls4.bta, &pptrsv->mpls4.bta2);
@@ -2799,6 +2804,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
                  tpl->fld[NF9_L4_PROTOCOL].len[0]);
 
 	  NF_process_classifiers(pptrs, &pptrsv->mpls6, pkt, tpl);
+          NF_mpls_vpn_rd_from_options(&pptrsv->mpls6);
 	  NF_mpls_vpn_rd_fromie90(&pptrsv->mpls6);
 	  if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->mpls6);
 	  if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls6, &pptrsv->mpls6.bta, &pptrsv->mpls6.bta2);
@@ -2894,6 +2900,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
                  tpl->fld[NF9_L4_PROTOCOL].len[0]);
 
 	  NF_process_classifiers(pptrs, &pptrsv->vlanmpls4, pkt, tpl);
+          NF_mpls_vpn_rd_from_options(&pptrsv->vlanmpls4);
 	  NF_mpls_vpn_rd_fromie90(&pptrsv->vlanmpls4);
 	  if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->vlanmpls4);
 	  if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bta, &pptrsv->vlanmpls4.bta2);
@@ -2986,6 +2993,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
                  tpl->fld[NF9_L4_PROTOCOL].len[0]);
 
 	  NF_process_classifiers(pptrs, &pptrsv->vlanmpls6, pkt, tpl);
+          NF_mpls_vpn_rd_from_options(&pptrsv->vlanmpls6);
 	  NF_mpls_vpn_rd_fromie90(&pptrsv->vlanmpls6);
 	  if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->vlanmpls6);
 	  if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bta, &pptrsv->vlanmpls6.bta2);
@@ -3660,6 +3668,85 @@ void NF_init_zmq_host(void *zh, int *pipe_fd)
 }
 #endif
 
+/* Get RD from IPFIX/NFv9 Option Data for correlation with BGP/BMP */
+void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
+{
+  struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int32_t ingress_vrfid = 0, egress_vrfid = 0;
+  u_int8_t direction = 0;
+  rd_t *rd = NULL;
+  int ret;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->fld[NF9_DIRECTION].count) {
+      memcpy(&direction, pptrs->f_data+tpl->fld[NF9_DIRECTION].off[0], 
+              MIN(tpl->fld[NF9_DIRECTION].len[0], 1));
+    }
+    if (tpl->fld[NF9_INGRESS_VRFID].count) {
+      memcpy(&ingress_vrfid, pptrs->f_data+tpl->fld[NF9_INGRESS_VRFID].off[0], 
+              MIN(tpl->fld[NF9_INGRESS_VRFID].len[0], 4));
+      ingress_vrfid = ntohl(ingress_vrfid);
+    }
+    if (tpl->fld[NF9_EGRESS_VRFID].count) {
+      memcpy(&egress_vrfid, pptrs->f_data+tpl->fld[NF9_EGRESS_VRFID].off[0], 
+              MIN(tpl->fld[NF9_EGRESS_VRFID].len[0], 4));
+      egress_vrfid = ntohl(egress_vrfid);
+    }
+
+    if (ingress_vrfid && (!direction /* 0 = ingress */ || !egress_vrfid)) {
+
+      if (entry->in_rd_map) { /* check obsID/srcID scoped xflow_status table */
+        ret = cdada_map_find(entry->in_rd_map, &ingress_vrfid, (void **) &rd);
+        if (ret == CDADA_SUCCESS) {
+          memcpy(&pptrs->bitr, rd, 8);
+          bgp_rd_origin_set((rd_t *)&pptrs->bitr, RD_ORIGIN_FLOW);
+        }
+      }
+
+      if ( !entry->in_rd_map || ret != CDADA_SUCCESS ) { /* fallback to the global xflow_status table */
+        entry = (struct xflow_status_entry *) pptrs->f_status_g;
+        if (entry->in_rd_map) {
+          ret = cdada_map_find(entry->in_rd_map, &ingress_vrfid, (void **) &rd);
+          if (ret == CDADA_SUCCESS) {
+            memcpy(&pptrs->bitr, rd, 8);
+            bgp_rd_origin_set((rd_t *)&pptrs->bitr, RD_ORIGIN_FLOW);
+          }
+        }
+      }
+    }
+
+    if (egress_vrfid && (direction /* 1 = egress */ || !ingress_vrfid)) {
+
+      if (entry->out_rd_map) { /* check obsID/srcID scoped xflow_status table */
+        ret = cdada_map_find(entry->out_rd_map, &egress_vrfid, (void **) &rd);
+	if (ret == CDADA_SUCCESS) {
+	  memcpy(&pptrs->bitr, rd, 8);
+	  bgp_rd_origin_set((rd_t *)&pptrs->bitr, RD_ORIGIN_FLOW);
+	}
+      }
+
+      if ( !entry->out_rd_map || ret != CDADA_SUCCESS ) { /* fallback to the global xflow_status table */
+        entry = (struct xflow_status_entry *) pptrs->f_status_g;
+        if (entry->out_rd_map) { 
+          ret = cdada_map_find(entry->out_rd_map, &egress_vrfid, (void **) &rd);
+          if (ret == CDADA_SUCCESS) {
+	    memcpy(&pptrs->bitr, rd, 8);
+	    bgp_rd_origin_set((rd_t *)&pptrs->bitr, RD_ORIGIN_FLOW);
+          }
+        }
+      }
+    }
+    break;
+  default:
+    break;
+  }
+}
+
+/* Get RD from IPFIX/NFv9 Data Packet for correlation with BGP/BMP */
 void NF_mpls_vpn_rd_fromie90(struct packet_ptrs *pptrs)
 {
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;

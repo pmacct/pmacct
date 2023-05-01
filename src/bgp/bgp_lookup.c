@@ -105,6 +105,7 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
       memcpy(&peer_dst_ip, &pbgp.peer_dst_ip, sizeof(struct host_addr));
     }
 
+    /* Get RD for correlation */
     if (pptrs->bitr) {
       safi = SAFI_MPLS_VPN;
       memcpy(&rd, &pptrs->bitr, sizeof(rd));
