@@ -141,7 +141,7 @@ extern void NF_init_zmq_host(void *, int *);
 #endif
 
 extern void NF_mpls_vpn_rd_from_options(struct packet_ptrs *);
-extern void NF_mpls_vpn_rd_fromie90(struct packet_ptrs *);
+extern void NF_mpls_vpn_rd_from_ie90(struct packet_ptrs *);
 
 extern struct utpl_field *(*get_ext_db_ie_by_type)(struct template_cache_entry *, u_int32_t, u_int16_t, u_int8_t);
 #endif //NFACCTD_H

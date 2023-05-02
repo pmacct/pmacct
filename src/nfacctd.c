@@ -2391,7 +2391,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  NF_process_classifiers(pptrs, pptrs, pkt, tpl);
           NF_mpls_vpn_rd_from_options(pptrs);
-	  NF_mpls_vpn_rd_fromie90(pptrs);
+	  NF_mpls_vpn_rd_from_ie90(pptrs);
 	  if (config.nfacctd_isis) isis_srcdst_lookup(pptrs);
 	  if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, &pptrs->bta2);
 	  if (config.nfacctd_flow_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, pptrs, &pptrs->bitr, NULL);
@@ -2469,7 +2469,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  NF_process_classifiers(pptrs, &pptrsv->v6, pkt, tpl);
           NF_mpls_vpn_rd_from_options(&pptrsv->v6);
-	  NF_mpls_vpn_rd_fromie90(&pptrsv->v6);
+	  NF_mpls_vpn_rd_from_ie90(&pptrsv->v6);
 	  if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->v6);
 	  if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->v6, &pptrsv->v6.bta, &pptrsv->v6.bta2);
 	  if (config.nfacctd_flow_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->v6, &pptrsv->v6.bitr, NULL);
@@ -2553,7 +2553,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  NF_process_classifiers(pptrs, &pptrsv->vlan4, pkt, tpl);
           NF_mpls_vpn_rd_from_options(&pptrsv->vlan4);
-	  NF_mpls_vpn_rd_fromie90(&pptrsv->vlan4);
+	  NF_mpls_vpn_rd_from_ie90(&pptrsv->vlan4);
 	  if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->vlan4);
 	  if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan4, &pptrsv->vlan4.bta, &pptrsv->vlan4.bta2);
 	  if (config.nfacctd_flow_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlan4, &pptrsv->vlan4.bitr, NULL);
@@ -2634,7 +2634,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  NF_process_classifiers(pptrs, &pptrsv->vlan6, pkt, tpl);
           NF_mpls_vpn_rd_from_options(&pptrsv->vlan6);
-	  NF_mpls_vpn_rd_fromie90(&pptrsv->vlan6);
+	  NF_mpls_vpn_rd_from_ie90(&pptrsv->vlan6);
 	  if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->vlan6);
 	  if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan6, &pptrsv->vlan6.bta, &pptrsv->vlan6.bta2);
 	  if (config.nfacctd_flow_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlan6, &pptrsv->vlan6.bitr, NULL);
@@ -2721,7 +2721,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  NF_process_classifiers(pptrs, &pptrsv->mpls4, pkt, tpl);
           NF_mpls_vpn_rd_from_options(&pptrsv->mpls4);
-	  NF_mpls_vpn_rd_fromie90(&pptrsv->mpls4);
+	  NF_mpls_vpn_rd_from_ie90(&pptrsv->mpls4);
 	  if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->mpls4);
 	  if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls4, &pptrsv->mpls4.bta, &pptrsv->mpls4.bta2);
 	  if (config.nfacctd_flow_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->mpls4, &pptrsv->mpls4.bitr, NULL);
@@ -2805,7 +2805,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  NF_process_classifiers(pptrs, &pptrsv->mpls6, pkt, tpl);
           NF_mpls_vpn_rd_from_options(&pptrsv->mpls6);
-	  NF_mpls_vpn_rd_fromie90(&pptrsv->mpls6);
+	  NF_mpls_vpn_rd_from_ie90(&pptrsv->mpls6);
 	  if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->mpls6);
 	  if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls6, &pptrsv->mpls6.bta, &pptrsv->mpls6.bta2);
 	  if (config.nfacctd_flow_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->mpls6, &pptrsv->mpls6.bitr, NULL);
@@ -2901,7 +2901,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  NF_process_classifiers(pptrs, &pptrsv->vlanmpls4, pkt, tpl);
           NF_mpls_vpn_rd_from_options(&pptrsv->vlanmpls4);
-	  NF_mpls_vpn_rd_fromie90(&pptrsv->vlanmpls4);
+	  NF_mpls_vpn_rd_from_ie90(&pptrsv->vlanmpls4);
 	  if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->vlanmpls4);
 	  if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bta, &pptrsv->vlanmpls4.bta2);
 	  if (config.nfacctd_flow_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bitr, NULL);
@@ -2994,7 +2994,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	  NF_process_classifiers(pptrs, &pptrsv->vlanmpls6, pkt, tpl);
           NF_mpls_vpn_rd_from_options(&pptrsv->vlanmpls6);
-	  NF_mpls_vpn_rd_fromie90(&pptrsv->vlanmpls6);
+	  NF_mpls_vpn_rd_from_ie90(&pptrsv->vlanmpls6);
 	  if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->vlanmpls6);
 	  if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bta, &pptrsv->vlanmpls6.bta2);
 	  if (config.nfacctd_flow_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bitr, NULL);
@@ -3747,7 +3747,7 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
 }
 
 /* Get RD from IPFIX/NFv9 Data Packet for correlation with BGP/BMP */
-void NF_mpls_vpn_rd_fromie90(struct packet_ptrs *pptrs)
+void NF_mpls_vpn_rd_from_ie90(struct packet_ptrs *pptrs)
 {
   struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
