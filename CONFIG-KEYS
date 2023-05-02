@@ -2802,9 +2802,10 @@ DESC:		Full pathname to a file to map flows (typically, a) router or b) ingress 
 		interfaces or c) MPLS bottom label, BGP next-hop couples) to BGP/MPLS Virtual Private
 		Network (VPN) Route Distinguisher (RD), based upon rfc4364. See flow_to_rd.map file in
 		the examples section for further info. Definitions in this map do override same data
-		received from the export protocol if any (ie. NetFlow v9/IPFIX IE #90). Number of map
-		entries (by default 384) can be modified via maps_entries. Content can be reloaded at
-		runtime by sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd").
+		received from the export protocol if any (ie. NetFlow v9/IPFIX options or NetFlow v9/
+		IPFIX IE #90). Number of map entries (by default 384) can be modified via maps_entries.
+		Content can be reloaded at runtime by sending the daemon a SIGUSR2 signal (ie.
+		"killall -USR2 nfacctd").
 DEFAULT:	none
 
 KEY:		bgp_follow_default [GLOBAL]
