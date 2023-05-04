@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -46,6 +46,7 @@ extern int bgp_attr_parse_mp_reach(struct bgp_peer *, u_int16_t, struct bgp_attr
 extern int bgp_attr_parse_mp_unreach(struct bgp_peer *, u_int16_t, struct bgp_attr *, char *, struct bgp_nlri *);
 extern int bgp_attr_parse_aigp(struct bgp_peer *, u_int16_t, struct bgp_attr_extra *, char *, u_char);
 extern int bgp_attr_parse_prefix_sid(struct bgp_peer *, u_int16_t, struct bgp_attr_extra *, char *, u_char);
+extern int bgp_attr_parse_otc(struct bgp_peer *, u_int16_t, struct bgp_attr_extra *, char *, u_char);
 extern int bgp_nlri_parse(struct bgp_msg_data *, void *, struct bgp_attr_extra *, struct bgp_nlri *, int);
 extern int bgp_process_update(struct bgp_msg_data *, struct prefix *, void *, struct bgp_attr_extra *, afi_t, safi_t, int);
 extern int bgp_process_withdraw(struct bgp_msg_data *, struct prefix *, void *, struct bgp_attr_extra *, afi_t, safi_t, int);

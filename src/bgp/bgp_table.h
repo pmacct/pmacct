@@ -73,6 +73,7 @@ struct bgp_attr_extra
   path_id_t path_id;
   u_int64_t aigp;
   u_int32_t psid_li;
+  u_int32_t otc;
 };
 
 struct bgp_info

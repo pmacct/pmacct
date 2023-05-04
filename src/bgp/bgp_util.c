@@ -342,6 +342,17 @@ struct bgp_attr_extra *bgp_attr_extra_process(struct bgp_peer *peer, struct bgp_
     }
   }
 
+  /* OTC: either > 0 or absent */
+  if (attr_extra->otc) {
+    if (!rie) {
+      rie = bgp_attr_extra_get(ri);
+    }
+
+    if (rie) {
+      rie->otc = attr_extra->otc;
+    }
+  }
+
   if (rie && !(attr_extra->bitmap & BGP_BMAP_ATTR_AIGP)) rie->bitmap &= ~BGP_BMAP_ATTR_AIGP;
 
   return rie;

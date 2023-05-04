@@ -876,6 +876,9 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
     case BGP_ATTR_PREFIX_SID:
       ret = bgp_attr_parse_prefix_sid(peer, attr_len, attr_extra, ptr, flag);
       break;
+    case BGP_ATTR_OTC:
+      ret = bgp_attr_parse_otc(peer, attr_len, attr_extra, ptr, flag);
+      break;
     default:
       ret = 0;
       break;
@@ -1346,6 +1349,21 @@ int bgp_attr_parse_prefix_sid(struct bgp_peer *peer, u_int16_t len, struct bgp_a
 
   /* XXX: Originator SRGB TLV not decoded yet */
 
+  ptr += len;
+
+  return SUCCESS;
+}
+
+/* OTC attribute. */
+int bgp_attr_parse_otc(struct bgp_peer *peer, u_int16_t len, struct bgp_attr_extra *attr_extra, char *ptr, u_char flag)
+{
+  u_int32_t tmp32;
+
+  /* Length check. */
+  if (len < 4) return ERR;
+
+  memcpy(&tmp32, ptr, 4);
+  attr_extra->otc = ntohl(tmp32);
   ptr += len;
 
   return SUCCESS;
