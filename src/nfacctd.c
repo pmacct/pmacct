@@ -3677,6 +3677,7 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
   u_int32_t ingress_vrfid = 0, egress_vrfid = 0;
   u_int8_t direction = 0;
   rd_t *rd = NULL;
+  rd_t rd_default = {0};
   int ret;
 
   switch(hdr->version) {
@@ -3702,6 +3703,12 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
       if (entry->in_rd_map) { /* check obsID/srcID scoped xflow_status table */
         ret = cdada_map_find(entry->in_rd_map, &ingress_vrfid, (void **) &rd);
         if (ret == CDADA_SUCCESS) {
+
+          /* If RD=0:0:0 [rd_default] --> check also egress VRF */
+          if (!memcmp(rd, &rd_default, sizeof(rd_t)) && entry->out_rd_map) { 
+            cdada_map_find(entry->out_rd_map, &egress_vrfid, (void **) &rd);
+          }
+
           memcpy(&pptrs->bitr, rd, 8);
           bgp_rd_origin_set((rd_t *)&pptrs->bitr, RD_ORIGIN_FLOW);
         }
@@ -3712,6 +3719,12 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
         if (entry->in_rd_map) {
           ret = cdada_map_find(entry->in_rd_map, &ingress_vrfid, (void **) &rd);
           if (ret == CDADA_SUCCESS) {
+
+            /* If RD=0:0:0 [rd_default] --> check also egress VRF */
+            if (!memcmp(rd, &rd_default, sizeof(rd_t)) && entry->out_rd_map) { 
+              cdada_map_find(entry->out_rd_map, &egress_vrfid, (void **) &rd);
+            }
+
             memcpy(&pptrs->bitr, rd, 8);
             bgp_rd_origin_set((rd_t *)&pptrs->bitr, RD_ORIGIN_FLOW);
           }
@@ -3724,6 +3737,12 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
       if (entry->out_rd_map) { /* check obsID/srcID scoped xflow_status table */
         ret = cdada_map_find(entry->out_rd_map, &egress_vrfid, (void **) &rd);
 	if (ret == CDADA_SUCCESS) {
+
+          /* If RD=0:0:0 [rd_default] --> check also ingress VRF */
+          if (!memcmp(rd, &rd_default, sizeof(rd_t)) && entry->in_rd_map) { 
+            cdada_map_find(entry->in_rd_map, &ingress_vrfid, (void **) &rd);
+          }
+
 	  memcpy(&pptrs->bitr, rd, 8);
 	  bgp_rd_origin_set((rd_t *)&pptrs->bitr, RD_ORIGIN_FLOW);
 	}
@@ -3734,6 +3753,12 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
         if (entry->out_rd_map) { 
           ret = cdada_map_find(entry->out_rd_map, &egress_vrfid, (void **) &rd);
           if (ret == CDADA_SUCCESS) {
+
+          /* If RD=0:0:0 [rd_default] --> check also ingress VRF */
+            if (!memcmp(rd, &rd_default, sizeof(rd_t)) && entry->in_rd_map) { 
+              cdada_map_find(entry->in_rd_map, &ingress_vrfid, (void **) &rd);
+            }
+
 	    memcpy(&pptrs->bitr, rd, 8);
 	    bgp_rd_origin_set((rd_t *)&pptrs->bitr, RD_ORIGIN_FLOW);
           }
