@@ -496,10 +496,10 @@ void evaluate_packet_handlers()
       } 
 
       if (config.acct_type == ACCT_NF) {
-        channels_list[index].phandler[primitives] = NF_mpls_vpn_id_handler;
+        channels_list[index].phandler[primitives] = NF_mpls_vpn_rd_handler;
         primitives++;
 
-        channels_list[index].phandler[primitives] = NF_mpls_vpn_rd_handler;
+        channels_list[index].phandler[primitives] = NF_mpls_vpn_id_handler;
         primitives++;
       }
     }
@@ -4307,7 +4307,7 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
       OTPL_CP_LAST_M(&direction, NF9_DIRECTION, 1);
     }
 
-    if (!pbgp->mpls_vpn_rd.val) { /* RD was not set with flow2rdmap */
+    if (!pbgp->mpls_vpn_rd.val) { /* RD was not set with flow2rdmap or from pkt_data */
       if (tpl->fld[NF9_INGRESS_VRFID].count) {
         OTPL_CP_LAST_M(&ingress_vrfid, NF9_INGRESS_VRFID, 4);
 	ingress_vrfid = ntohl(ingress_vrfid);
