@@ -160,7 +160,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
     if (attr) {
       memset(nexthop_str, 0, INET6_ADDRSTRLEN);
-      if (attr->mp_nexthop.family) addr_to_str2(nexthop_str, &attr->mp_nexthop, bgp_afi2family(afi));
+      if (attr->mp_nexthop.family) addr_to_str2(nexthop_str, &attr->mp_nexthop, attr->mp_nexthop.family);
       else inet_ntop(AF_INET, &attr->nexthop, nexthop_str, INET6_ADDRSTRLEN);
       json_object_set_new_nocheck(obj, "bgp_nexthop", json_string(nexthop_str));
 
@@ -377,7 +377,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 
     if (attr) {
       memset(nexthop_str, 0, INET6_ADDRSTRLEN);
-      if (attr->mp_nexthop.family) addr_to_str2(nexthop_str, &attr->mp_nexthop, bgp_afi2family(afi));
+      if (attr->mp_nexthop.family) addr_to_str2(nexthop_str, &attr->mp_nexthop, attr->mp_nexthop.family);
       else inet_ntop(AF_INET, &attr->nexthop, nexthop_str, INET6_ADDRSTRLEN);
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "bgp_nexthop", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));

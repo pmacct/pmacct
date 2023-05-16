@@ -347,6 +347,29 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 		  bgp_open_cap_reply_ptr += cap_len+2;
 		}
 	      }
+              /* Support for Extended Next-Hop Encoding as of RFC8950, required
+                 for enabling advertising IPv4 NLRI with an IPv6 Next Hop. */
+              else if (cap_type == BGP_CAPABILITY_EXTENDED_NEXT_HOP_ENCODING) {
+                char *cap_ptr = optcap_ptr+2;
+                struct capability_ext_nh_enc_data cap_data;
+
+                for (int cap_idx = 0; cap_idx < cap_len; cap_idx += sizeof(cap_data)) {
+                  memcpy(&cap_data, cap_ptr+cap_idx, sizeof(cap_data));
+
+                  if (online) {
+                    bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+                    Log(LOG_INFO, "INFO ( %s/%s ): [%s] Capability: Extended Next Hop Encoding [%u] "
+                                   "AFI [%u] SAFI [%u] Next Hop AFI [%u]\n",
+                                   config.name, bms->log_str, bgp_peer_str, cap_type,
+                                   ntohs(cap_data.afi), ntohs(cap_data.safi), ntohs(cap_data.nh_afi));
+                  }
+                }
+
+                if (online) {
+                  memcpy(bgp_open_cap_reply_ptr, optcap_ptr, cap_len+2);
+                  bgp_open_cap_reply_ptr += cap_len+2;
+                }
+              }
 
 	      optcap_ptr += (cap_len + 2);
 	      optcap_len -= (cap_len + 2);
