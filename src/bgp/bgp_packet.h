@@ -160,6 +160,14 @@ struct capability_mp_data
   u_char safi;
 };
 
+/* Fields are encoded with 2 octets according to RFC8950 */
+struct capability_ext_nh_enc_data
+{
+  u_int16_t afi;
+  u_int16_t safi;       
+  u_int16_t nh_afi;
+};
+
 struct capability_as4
 {
   uint32_t as4;
@@ -192,6 +200,7 @@ struct capability_add_paths
 #define BGP_CAPABILITY_RESERVED		           0   /* RFC2434 */
 #define BGP_CAPABILITY_MULTIPROTOCOL	           1   /* RFC2858 */
 #define BGP_CAPABILITY_ROUTE_REFRESH	           2   /* RFC2918 */
+#define BGP_CAPABILITY_EXTENDED_NEXT_HOP_ENCODING  5   /* RFC8950 */
 #define BGP_CAPABILITY_4_OCTET_AS_NUMBER	0x41   /* RFC4893 */
 #define BGP_CAPABILITY_ADD_PATHS		0x45   /* RFC7911 */
 
