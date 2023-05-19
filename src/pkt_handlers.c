@@ -1992,7 +1992,7 @@ void mpls_vpn_rd_frommap_handler(struct channels_list_entry *chptr, struct packe
 
   if (pbgp && pptrs->bitr) {
     memcpy(&pbgp->mpls_vpn_rd, &pptrs->bitr, sizeof(rd_t));
-    bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
+    bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_MAP);
   }
 }
 
@@ -4307,7 +4307,7 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
       OTPL_CP_LAST_M(&direction, NF9_DIRECTION, 1);
     }
 
-    if (!pbgp->mpls_vpn_rd.val) { /* RD was not set with flow2rdmap or from pkt_data */
+    if (!pbgp->mpls_vpn_rd.val) { /* RD was not set with flow_to_rd_map or from pkt_data */
       if (tpl->fld[NF9_INGRESS_VRFID].count) {
         OTPL_CP_LAST_M(&ingress_vrfid, NF9_INGRESS_VRFID, 4);
 	ingress_vrfid = ntohl(ingress_vrfid);
@@ -4350,6 +4350,7 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
 	    bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
           }
         }
+
         if ( !entry->in_rd_map || ret != CDADA_SUCCESS ) { /* no RD found in option data --> fallback to vrfID:XXX */
           pbgp->mpls_vpn_rd.val = ingress_vrfid;
           if (pbgp->mpls_vpn_rd.val) {
@@ -4391,6 +4392,7 @@ void NF_mpls_vpn_id_handler(struct channels_list_entry *chptr, struct packet_ptr
 	    bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
           }
         }
+
         if ( !entry->out_rd_map || ret != CDADA_SUCCESS ) { /* no RD found in option data --> fallback to vrfID:XXX */
           pbgp->mpls_vpn_rd.val = egress_vrfid;
           if (pbgp->mpls_vpn_rd.val) {
@@ -4415,10 +4417,12 @@ void NF_mpls_vpn_rd_handler(struct channels_list_entry *chptr, struct packet_ptr
   switch(hdr->version) {
   case 10:
   case 9:
-    if (tpl->fld[NF9_MPLS_VPN_RD].count && !pbgp->mpls_vpn_rd.val) {
-      OTPL_CP_LAST_M(&pbgp->mpls_vpn_rd, NF9_MPLS_VPN_RD, 8);
-      bgp_rd_ntoh(&pbgp->mpls_vpn_rd);
-      bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
+    if (tpl->fld[NF9_MPLS_VPN_RD].count) {
+      if (!pbgp->mpls_vpn_rd.val) { /* RD was not set with flow_to_rd_map */
+        OTPL_CP_LAST_M(&pbgp->mpls_vpn_rd, NF9_MPLS_VPN_RD, 8);
+        bgp_rd_ntoh(&pbgp->mpls_vpn_rd);
+        bgp_rd_origin_set(&pbgp->mpls_vpn_rd, RD_ORIGIN_FLOW);
+      }
     }
     break;
   default:

@@ -255,14 +255,15 @@ typedef u_int8_t safi_t;
 #define RD_TYPE_AS4     2
 
 /* RD: squat squat */
-#define RD_TYPE_VRFID	0x1000
-#define RD_TYPE_MASK	0x1FFF
+#define RD_TYPE_VRFID	0x0800
+#define RD_TYPE_MASK	0x0FFF
 
 #define RD_ORIGIN_UNKNOWN	0x0000
+#define RD_ORIGIN_MAP		0x1000
 #define RD_ORIGIN_FLOW		0x2000
 #define RD_ORIGIN_BGP		0x4000
 #define RD_ORIGIN_BMP		0x8000
-#define RD_ORIGIN_MASK		0xE000
+#define RD_ORIGIN_MASK		0xF000
 
 #define RD_ORIGIN_FUNC_TYPE_MAX 2
 

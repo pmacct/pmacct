@@ -74,6 +74,8 @@ const char *bgp_rd_origin_print(u_int16_t type)
     return bgp_rd_origin[2];
   case RD_ORIGIN_FLOW:
     return bgp_rd_origin[3];
+  case RD_ORIGIN_MAP:
+    return bgp_rd_origin[4];
   default:
     return bgp_rd_origin[0];
   };

@@ -437,6 +437,7 @@ static const char __attribute__((unused)) *bgp_rd_origin[] = {
   "bgp",
   "bmp",
   "flow",
+  "map",
   ""
 };
 
