@@ -33,7 +33,7 @@
 #define _BGP_PACKET_H_
 
 /* some handy things to know */
-#define BGP_BUFFER_SIZE			100000
+#define BGP_BUFFER_SIZE			1000000
 #define BGP_MARKER_SIZE			16	/* size of BGP marker */
 #define BGP_HEADER_SIZE			19	/* size of BGP header, including marker */
 #define BGP_MIN_OPEN_MSG_SIZE		29
