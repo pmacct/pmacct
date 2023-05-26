@@ -487,7 +487,7 @@ struct pkt_extras {
   u_int8_t icmp_code;
 };
 
-#define PKT_MSG_SIZE 10000
+#define PKT_MSG_SIZE 1000000
 struct pkt_msg {
   struct sockaddr_storage agent;
   u_int32_t seqno;
