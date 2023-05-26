@@ -258,7 +258,7 @@ int bmp_peer_init(struct bmp_peer *bmpp, int type)
 
   if (!bmpp) return ERR;
 
-  ret = bgp_peer_init(&bmpp->self, type);
+  ret = bgp_peer_init(&bmpp->self, type, BGP_BUFFER_SIZE);
   log_notification_init(&bmpp->missing_peer_up);
 
   return ret;

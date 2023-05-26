@@ -33,7 +33,7 @@
 /* Functions */
 int telemetry_peer_init(telemetry_peer *peer, int type)
 {
-  return bgp_peer_init(peer, type);
+  return bgp_peer_init(peer, type, TELEMETRY_BUFFER_SIZE);
 }
 
 void telemetry_peer_close(telemetry_peer *peer, int type)

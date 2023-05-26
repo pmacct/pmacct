@@ -682,7 +682,7 @@ struct bgp_peer *bgp_peer_cache_search(struct bgp_peer_cache_bucket *cache, u_in
   return ret;
 }
 
-int bgp_peer_init(struct bgp_peer *peer, int type)
+int bgp_peer_init(struct bgp_peer *peer, int type, int buflen)
 {
   struct bgp_misc_structs *bms;
   int ret = TRUE;
@@ -694,7 +694,7 @@ int bgp_peer_init(struct bgp_peer *peer, int type)
   memset(peer, 0, sizeof(struct bgp_peer));
   peer->type = type;
   peer->status = Idle;
-  peer->buf.tot_len = BGP_BUFFER_SIZE;
+  peer->buf.tot_len = buflen;
   peer->buf.base = malloc(peer->buf.tot_len);
   if (!peer->buf.base) {
     Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (bgp_peer_init). Exiting ..\n", config.name, bms->log_str);
@@ -706,7 +706,7 @@ int bgp_peer_init(struct bgp_peer *peer, int type)
   }
 
   if (config.bgp_xconnect_map) {
-    peer->xbuf.tot_len = BGP_BUFFER_SIZE;
+    peer->xbuf.tot_len = buflen;
     peer->xbuf.base = malloc(peer->xbuf.tot_len);
     if (!peer->xbuf.base) {
       Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (bgp_peer_init). Exiting ..\n", config.name, bms->log_str);

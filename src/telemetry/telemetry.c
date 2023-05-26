@@ -100,7 +100,7 @@ int telemetry_daemon(void *t_data_void)
 
   /* ZeroMQ and Kafka stuff */
   char *saved_peer_buf = NULL;
-  u_char consumer_buf[PKT_MSG_SIZE];
+  u_char consumer_buf[TELEMETRY_BUFFER_SIZE];
 
   /* telemetry_tag_map stuff */
   struct plugin_requests req;
