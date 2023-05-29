@@ -335,7 +335,7 @@ isis_str2prefix_ipv6 (const char *str, struct prefix_ipv6 *p)
     {
       int plen;
 
-      cp = calloc(0, (pnt - str) + 1);
+      cp = calloc(1, (pnt - str) + 1);
       strncpy (cp, str, pnt - str);
       *(cp + (pnt - str)) = '\0';
       ret = inet_pton (AF_INET6, cp, &p->prefix);
