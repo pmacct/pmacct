@@ -3496,10 +3496,13 @@ void parse_hostport(const char *s, struct sockaddr *addr, socklen_t *len)
     Log(LOG_ERR, "ERROR ( %s/%s ): parse_hostport(), invalid '%s' argument\n", config.name, config.type, orig);
     exit_gracefully(1);
   }
-  *(port - 1) = '\0';
+
+  if (port) { 
+    *(port - 1) = '\0';
+  }
 	
   /* Accept [host]:port for numeric IPv6 addresses */
-  if (*host == '[' && *(port - 2) == ']') {
+  if (host && port && *host == '[' && *(port - 2) == ']') {
     host++;
     *(port - 2) = '\0';
   }
