@@ -1857,9 +1857,9 @@ DESC:		If SO_REUSEPORT is supported by the Operating System (read more about thi
 		config key [ns]facctd_port) and eBPF support is configured when compiling (--enable-ebpf),
 		this allows to load a custom load-balancer. To load-share, daemons have to be part of the
 		same cluster_name and each be configured with a distinct cluster_id. An example of such
-		eBPF program is available here: https://github.com/insa-unyte/ebpf-loadbalancer . Note:
-		Linux kernel 4.x does not yet support eBPF locking so daemons have currently to be (re-)
-		started with a short time gap to avoid race conditions.
+		eBPF program is available here: https://github.com/network-analytics/ebpf-loadbalancer .
+		Note: Linux kernel 4.x does not yet support eBPF locking so daemons have currently to be
+		(re-)started with a short time gap to avoid race conditions.
 DEFAULT:	none
 
 KEY:		[ nfacctd_kafka_broker_host | sfacctd_kafka_broker_host ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
@@ -2569,9 +2569,9 @@ DESC:		If SO_REUSEPORT is supported by the Operating System (read more about thi
 		config key b[mg]p_daemon_port) and eBPF support is configured when compiling (--enable-ebpf),
 		this allows to load a custom load-balancer. To load-share, daemons have to be part of the
 		same cluster_name and each be configured with a distinct cluster_id. An example of such
-		eBPF program is available here: https://github.com/insa-unyte/ebpf-loadbalancer . Note:
-		Linux kernel 4.x does not yet support eBPF locking so daemons have currently to be (re-)
-		started with a short time gap to avoid race conditions.
+		eBPF program is available here: https://github.com/network-analytics/ebpf-loadbalancer .
+		Note: Linux kernel 4.x does not yet support eBPF locking so daemons have currently to be
+		(re-)started with a short time gap to avoid race conditions.
 DEFAULT:	none
 
 KEY:		[ bgp_daemon_tag_map | bmp_daemon_tag_map | telemetry_daemon_tag_map ] [GLOBAL] [MAP]
@@ -3317,9 +3317,9 @@ DESC:		If SO_REUSEPORT is supported by the Operating System (read more about thi
 		(--enable-ebpf), this allows to load a custom load-balancer. To load-share, daemons
 		have to be part of the same cluster_name and each be configured with a distinct
 		cluster_id. An example of such eBPF program is available here:
-		https://github.com/insa-unyte/ebpf-loadbalancer Note: Linux kernel 4.x does not yet
-		support eBPF locking so daemons have currently to be (re-) started with a short time
-		gap to avoid race conditions.
+		https://github.com/network-analytics/ebpf-loadbalancer Note: Linux kernel 4.x does
+		not yet support eBPF locking so daemons have currently to be (re-) started with a
+		short time gap to avoid race conditions.
 DEFAULT:	none
 
 KEY:		telemetry_daemon_grpc_collector_conf
@@ -3376,7 +3376,7 @@ DESC:		Defines the IP address to listen to for UDP-Notif, a proposed standard at
 		for UDP-based Transport for Configured Subscriptions. Expects as value an IPv4/
                 IPv6 address. UDP-Notif collection relies on the Unyte UDP-Notif C collector
 		library developed by INSA Lyon and publicly available on GitHub at this URL:
-		https://github.com/insa-unyte/udp-notif-c-collector
+		https://github.com/network-analytics/udp-notif-c-collector
 DEFAULT:	none
 
 KEY:		telemetry_daemon_udp_notif_port [GLOBAL]

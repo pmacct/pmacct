@@ -955,7 +955,7 @@ AC_ARG_ENABLE(unyte-udp-notif,
       _save_LIBS="$LIBS"
       LIBS="$LIBS $UNYTE_UDP_NOTIF_LIBS -lpthread"
       AC_CHECK_LIB([unyte-udp-notif], [unyte_udp_start_collector], [], [AC_MSG_ERROR([
-        ERROR: missing unyte-udp-notif library. Refer to: https://github.com/insa-unyte/udp-notif-c-collector
+        ERROR: missing unyte-udp-notif library. Refer to: https://github.com/network-analytics/udp-notif-c-collector
       ])])
       LIBS="$_save_LIBS"
       _save_CFLAGS="$CFLAGS"
@@ -963,7 +963,7 @@ AC_ARG_ENABLE(unyte-udp-notif,
       AC_CHECK_HEADER([unyte-udp-notif/unyte_udp_collector.h], [], [AC_MSG_ERROR(ERROR: missing unyte-udp-notif headers)])
       CFLAGS="$_save_CFLAGS"
     ],
-    [AC_MSG_ERROR([ERROR: missing unyte-udp-notif pkg-config. Refer to: https://github.com/insa-unyte/udp-notif-c-collector])])
+    [AC_MSG_ERROR([ERROR: missing unyte-udp-notif pkg-config. Refer to: https://github.com/network-analytics/udp-notif-c-collector])])
     ;;
   no)
     AC_MSG_RESULT(no)
