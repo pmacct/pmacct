@@ -1063,9 +1063,6 @@ fi
 
 LIBS="${LIBS} -lm -lpthread"
 
-dnl Checks for header files.
-AC_HEADER_STDC
-
 dnl Extra checks for header files
 AC_CHECK_HEADERS([arpa/inet.h assert.h ctype.h dirent.h dlfcn.h errno.h fcntl.h getopt.h grp.h inttypes.h])
 AC_CHECK_HEADERS([limits.h malloc.h math.h netdb.h net/if.h netinet/in.h netinet/in_systm.h netinet/ip.h])
@@ -1181,9 +1178,6 @@ AC_ARG_ENABLE(st-bins,
           COMPILE_ARGS="${COMPILE_ARGS} '--enable-st-bins'"
         ]
 )
-
-dnl Checks for library functions.
-AC_TYPE_SIGNAL
 
 AC_CHECK_FUNCS([setproctitle mallopt tdestroy strlcpy vfork])
 
