@@ -98,9 +98,11 @@ dnl some systems have __progname ; if this is the case and we play around argv
 dnl we need to enable a minor hack to make things work nicely.
 dnl
 AC_MSG_CHECKING(for __progname)
-AC_TRY_LINK([ extern char *__progname; ],
-[ __progname = "test"; ],
-[AC_MSG_RESULT(yes); AC_DEFINE(PROGNAME, 1)], [AC_MSG_RESULT(no)])
+AC_LINK_IFELSE(
+	[AC_LANG_PROGRAM([ extern char *__progname; ],
+			 [ __progname = "test"; ])],
+	[AC_MSG_RESULT(yes); AC_DEFINE(PROGNAME, 1)],
+	[AC_MSG_RESULT(no)])
 
 dnl
 dnl Check for architecture endianess: big | little
@@ -109,20 +111,21 @@ dnl XXX: switch to manually define this feature
 ac_cv_endianess="unknown"
 if test x"$ac_cv_endianess" = x"unknown"; then
   AC_MSG_CHECKING(endianess)
-  AC_TRY_RUN([
-  #include <stdlib.h>
+  AC_RUN_IFELSE(
+	[AC_LANG_PROGRAM([ #include <stdlib.h> ],
+			 [[
+    			  union {
+      			    long l;
+      			    char c[sizeof (long)];
+    			  } u;
 
-  int main () {
-    union {
-      long l;
-      char c[sizeof (long)];
-    } u;
+    			  u.l = 1;
 
-    u.l = 1;
-
-    exit (u.c[sizeof (long) - 1] == 1);
-  }
-  ], ac_cv_endianess="little", ac_cv_endianess="big", ac_cv_endianess="little")
+    			  exit (u.c[sizeof (long) - 1] == 1);
+			 ]])],
+	[ac_cv_endianess="little"],
+	[ac_cv_endianess="big"],
+	[ac_cv_endianess="little"])
   AC_MSG_RESULT($ac_cv_endianess)
 fi
 
