@@ -481,6 +481,7 @@ plugins: print
 print_refresh_time: 30
 aggregate: src_host, dst_host
 pcap_interfaces_map: /path/to/pcap_interfaces.map
+pcap_ifindex: map
 ! ...
 
 Then in /path/to/pcap_interfaces.map:

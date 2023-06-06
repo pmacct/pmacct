@@ -529,9 +529,10 @@ DEFAULT:	none
 KEY:		pcap_interfaces_map [GLOBAL, PMACCTD_ONLY, MAP]
 DESC:		Allows to listen for traffic data on multiple interfaces (compared to pcap_interface
 		where only a single interface can be defined). The map allows to define also ifindex
-		and capturing direction on a per-interface basis. The map can be reloaded at runtime
-		by sending the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd"). Sample map in
-                examples/pcap_interfaces.map.example .
+		and capturing direction on a per-interface basis; to include the computed ifindex in
+		output data set pcap_ifindex to 'map'. The map can be reloaded at runtime by sending
+		the daemon a SIGUSR2 signal (ie. "killall -USR2 nfacctd"). Sample map in
+		examples/pcap_interfaces.map.example .
 DEFAULT:	none
 
 KEY:		promisc (-N) [GLOBAL, PMACCTD_ONLY]
