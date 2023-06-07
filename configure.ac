@@ -14,7 +14,7 @@ AC_SUBST(PMACCT_VERSION)
 
 COMPILE_ARGS="${ac_configure_args}"
 
-dnl Checks for programs.
+dnl Determine a C compiler to use
 AC_PROG_CC
 
 dnl pkg-config stuff
@@ -32,7 +32,7 @@ AC_MSG_RESULT($host_cpu)
 
 dnl initial checks; tweakings to CFLAGS and LDFLAGS
 dnl see final checks for tweakings to LIBS
-if test "x$ac_cv_prog_gcc" = xyes ; then
+if test "x$GCC" = xyes ; then
   CFLAGS="-O2 ${CFLAGS}"
 fi
 
@@ -53,7 +53,7 @@ AC_ARG_ENABLE(so,
           fi
         else
           AC_MSG_RESULT(yes)
-          if test "x$ac_cv_prog_gcc" = xyes ; then
+          if test "x$GCC" = xyes ; then
                 LDFLAGS="-static ${LDFLAGS}"
           fi
         fi
