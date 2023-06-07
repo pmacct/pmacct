@@ -1334,10 +1334,7 @@ AM_CONDITIONAL([USING_BMP_BINS], [test x"$USING_BMP_BINS" = x"yes"])
 AM_CONDITIONAL([USING_ST_BINS], [test x"$USING_ST_BINS" = x"yes"])
 
 AC_CONFIG_FILES([
-            src/pmacct-version.h
-])
-
-AC_OUTPUT([ Makefile \
+            src/pmacct-version.h Makefile \
             src/Makefile src/external_libs/Makefile \
             src/nfprobe_plugin/Makefile \
             src/sfprobe_plugin/Makefile src/bgp/Makefile \
@@ -1346,3 +1343,5 @@ AC_OUTPUT([ Makefile \
             src/telemetry/Makefile src/ndpi/Makefile \
             src/filters/Makefile examples/lg/Makefile \
             src/ebpf/Makefile examples/custom/Makefile ])
+
+AC_OUTPUT
