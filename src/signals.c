@@ -230,6 +230,7 @@ void reload_maps(int signum)
   reload_map = FALSE;
   reload_map_bgp_thread = FALSE;
   reload_map_bmp_thread = FALSE;
+  reload_map_telemetry_thread = FALSE;
   reload_map_rpki_thread = FALSE;
   reload_map_exec_plugins = FALSE;
   reload_geoipv2_file = FALSE;
@@ -238,6 +239,7 @@ void reload_maps(int signum)
     reload_map = TRUE; 
     reload_map_bgp_thread = TRUE;
     reload_map_bmp_thread = TRUE;
+    reload_map_telemetry_thread = TRUE;
     reload_map_rpki_thread = TRUE;
     reload_map_exec_plugins = TRUE;
     reload_geoipv2_file = TRUE;
