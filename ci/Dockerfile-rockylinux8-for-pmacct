@@ -1,6 +1,6 @@
 # produces a docker image suitable to build pmacct
 
-FROM centos:8
+FROM rockylinux:8
 
 RUN yum install -y dnf-plugins-core && \
     yum config-manager --set-enabled powertools && \

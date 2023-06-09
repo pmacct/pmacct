@@ -11,8 +11,8 @@ on:
 env:
   BUILD_DOCKER_FILE_UBUNTU_FOCAL: ci/Dockerfile-ubuntu-focal-for-pmacct
   BUILD_DOCKER_TAG_UBUNTU_FOCAL: ci/ubuntu-focal-for-pmacct
-  BUILD_DOCKER_FILE_CENTOS_8: ci/Dockerfile-centos-8-for-pmacct
-  BUILD_DOCKER_TAG_CENTOS_8: ci/centos8-for-pmacct
+  BUILD_DOCKER_FILE_ROCKYLINUX_8: ci/Dockerfile-rockylinux-8-for-pmacct
+  BUILD_DOCKER_TAG_ROCKYLINUX_8: ci/rockylinux8-for-pmacct
 
 jobs:
 
@@ -43,7 +43,7 @@ jobs:
           path: |
             /tmp/docker
 
-  builder-centos-docker:
+  builder-rockylinux-docker:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout pmacct
@@ -51,32 +51,32 @@ jobs:
         with:
           path: pmacct
 
-      - name: Build docker image for Centos 8
+      - name: Build docker image for Rocky Linux 8
         run: |
           cd pmacct
           git config --global --add safe.directory $GITHUB_WORKSPACE
           git config --global --add safe.directory $GITHUB_WORKSPACE/src/external_libs/libcdada
           git rev-parse HEAD
-          docker build -f $BUILD_DOCKER_FILE_CENTOS_8 -t $BUILD_DOCKER_FILE_CENTOS_8 .
+          docker build -f $BUILD_DOCKER_FILE_ROCKYLINUX_8 -t $BUILD_DOCKER_FILE_ROCKYLINUX_8 .
           mkdir -p /tmp/docker/
-          docker save -o /tmp/docker/builder_centos.tar $BUILD_DOCKER_FILE_CENTOS_8
+          docker save -o /tmp/docker/builder_rockylinux.tar $BUILD_DOCKER_FILE_ROCKYLINUX_8
 
       - name: Artifact docker image
         uses: actions/upload-artifact@v2.2.2
         with:
-          name: builder_centos
+          name: builder_rockylinux
           retention-days: 1
           path: |
             /tmp/docker
 
   ### Step 2: permutations
   build-and-test:
-    needs: [builder-ubuntu-docker, builder-centos-docker]
+    needs: [builder-ubuntu-docker, builder-rockylinux-docker]
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
-        builder-name: [builder_ubuntu, builder_centos]
+        builder-name: [builder_ubuntu, builder_rockylinux]
         CONFIG_FLAGS: [
                 "",
                 "--enable-debug",
