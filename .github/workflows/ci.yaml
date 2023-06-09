@@ -57,9 +57,9 @@ jobs:
           git config --global --add safe.directory $GITHUB_WORKSPACE
           git config --global --add safe.directory $GITHUB_WORKSPACE/src/external_libs/libcdada
           git rev-parse HEAD
-          docker build -f $BUILD_DOCKER_FILE_ROCKYLINUX_8 -t $BUILD_DOCKER_FILE_ROCKYLINUX_8 .
+          docker build -f $BUILD_DOCKER_FILE_ROCKYLINUX_8 -t $BUILD_DOCKER_TAG_ROCKYLINUX_8 .
           mkdir -p /tmp/docker/
-          docker save -o /tmp/docker/builder_rockylinux.tar $BUILD_DOCKER_FILE_ROCKYLINUX_8
+          docker save -o /tmp/docker/builder_rockylinux.tar $BUILD_DOCKER_TAG_ROCKYLINUX_8
 
       - name: Artifact docker image
         uses: actions/upload-artifact@v2.2.2
