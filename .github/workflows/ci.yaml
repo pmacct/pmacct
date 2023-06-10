@@ -10,9 +10,9 @@ on:
 #Global vars
 env:
   BUILD_DOCKER_FILE_UBUNTU_FOCAL: ci/Dockerfile-ubuntu-focal-for-pmacct
-  BUILD_DOCKER_TAG_UBUNTU_FOCAL: ci/ubuntu-focal-for-pmacct
+  BUILD_DOCKER_TAG_UBUNTU_FOCAL: builder_ubuntu
   BUILD_DOCKER_FILE_ROCKYLINUX_8: ci/Dockerfile-rockylinux-8-for-pmacct
-  BUILD_DOCKER_TAG_ROCKYLINUX_8: ci/rockylinux8-for-pmacct
+  BUILD_DOCKER_TAG_ROCKYLINUX_8: builder_rockylinux
 
 jobs:
 
@@ -128,7 +128,7 @@ jobs:
           git config --global --add safe.directory $GITHUB_WORKSPACE/src/external_libs/libcdada
           git rev-parse HEAD
           docker load -i /tmp/docker/${{ matrix.builder-name }}.tar
-          CONTAINER_ID=$(docker run --rm -it -d -v `pwd`:`pwd` -w `pwd` -e CONFIG_FLAGS $BUILD_DOCKER_TAG_UBUNTU_FOCAL:latest)
+          CONTAINER_ID=$(docker run --rm -it -d -v `pwd`:`pwd` -w `pwd` -e CONFIG_FLAGS ${{ matrix.builder-name }}:latest)
           echo "Launched container id:" $CONTAINER_ID
           docker exec -i $CONTAINER_ID ./ci/script.sh
           docker stop $CONTAINER_ID
