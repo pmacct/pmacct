@@ -85,14 +85,14 @@ jobs:
                 "--enable-debug --enable-jansson --enable-kafka --enable-avro --enable-serdes",
                 "--enable-debug --enable-jansson --enable-zmq",
                 "--enable-debug --enable-jansson --enable-zmq --enable-kafka",
-                "--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis --enable-unyte-udp-notif",
+                "--enable-debug --enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis --enable-unyte-udp-notif",
                 "--enable-debug --enable-zmq",
                 "--enable-jansson",
                 "--enable-jansson --enable-kafka",
                 "--enable-jansson --enable-kafka --enable-avro --enable-serdes",
                 "--enable-jansson --enable-zmq",
                 "--enable-jansson --enable-zmq --enable-kafka",
-                "--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-nflog --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis --enable-unyte-udp-notif",
+                "--enable-mysql --enable-pgsql --enable-sqlite3 --enable-kafka --enable-geoipv2 --enable-jansson --enable-rabbitmq --enable-ndpi --enable-zmq --enable-avro --enable-serdes --enable-redis --enable-unyte-udp-notif",
                 "--enable-zmq"]
     env:
       CONFIG_FLAGS: ${{ matrix.CONFIG_FLAGS }}
