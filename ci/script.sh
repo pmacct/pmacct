@@ -23,6 +23,7 @@ set -e
 #Ugly hack for libavro; how to avoid?
 export AVRO_LIBS="-L/usr/local/avro/lib -L/usr/local/lib64 -lavro"
 export AVRO_CFLAGS="-I/usr/local/avro/include -I/usr/local/include"
+export LD_LIBRARY_PATH=/usr/local/avro/lib:/usr/local/lib64
 
 #New versions of git complain with "unsafe directory "otherwise due to patches
 #for CVE-2022-24765, CVE-2022-24767
