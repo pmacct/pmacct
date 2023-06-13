@@ -181,7 +181,7 @@
 /* ... */
 #define NF9_DATALINK_FRAME_TYPE         408
 /* ... */
-#define NF9_srhSegmentIPv6ListSection   505
+#define NF9_srhSegmentIPv6ListSection   497
 /* ... */
 #define NF9_PathDelayMeanDeltaUsecs	600
 #define NF9_PathDelayMinDeltaUsecs	601
