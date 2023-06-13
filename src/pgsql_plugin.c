@@ -803,7 +803,7 @@ void PG_compose_conn_string(struct DBdesc *db, char *host, int port, char *ca_fi
     }
     string = db->conn_string;
 
-    snprintf(string, slen, "dbname=%s user=%s password=%s", config.sql_db, config.sql_user, config.sql_passwd);
+    snprintf(string, slen, "dbname=%s user=%s", config.sql_db, config.sql_user);
     slen -= strlen(string);
     string += strlen(string);
 
