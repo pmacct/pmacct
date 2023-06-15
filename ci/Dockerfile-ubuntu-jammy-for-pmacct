@@ -34,7 +34,7 @@ RUN apt-get update && \
     wget \
     zlib1g-dev
 
-COPY ./pmacct/ci/deps.sh .
+COPY ./ci/deps.sh .
 RUN ./deps.sh
 
 ENTRYPOINT ["/bin/bash"]
