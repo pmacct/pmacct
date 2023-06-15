@@ -40,7 +40,7 @@ jobs:
       - name: Artifact docker image
         uses: actions/upload-artifact@v2.2.2
         with:
-          name: $BUILD_DOCKER_TAG_UBUNTU_FOCAL
+          name: builder_ubuntu_focal
           retention-days: 1
           path: |
             /tmp/docker
@@ -66,7 +66,7 @@ jobs:
       - name: Artifact docker image
         uses: actions/upload-artifact@v2.2.2
         with:
-          name: $BUILD_DOCKER_TAG_UBUNTU_JAMMY
+          name: builder_ubuntu_jammy 
           retention-days: 1
           path: |
             /tmp/docker
