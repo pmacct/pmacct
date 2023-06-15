@@ -10,14 +10,16 @@ on:
 #Global vars
 env:
   BUILD_DOCKER_FILE_UBUNTU_FOCAL: ci/Dockerfile-ubuntu-focal-for-pmacct
-  BUILD_DOCKER_TAG_UBUNTU_FOCAL: builder_ubuntu
+  BUILD_DOCKER_TAG_UBUNTU_FOCAL: builder_ubuntu_focal
+  BUILD_DOCKER_FILE_UBUNTU_JAMMY: ci/Dockerfile-ubuntu-jammy-for-pmacct
+  BUILD_DOCKER_TAG_UBUNTU_JAMMY: builder_ubuntu_jammy
   BUILD_DOCKER_FILE_ROCKYLINUX_8: ci/Dockerfile-rockylinux-8-for-pmacct
   BUILD_DOCKER_TAG_ROCKYLINUX_8: builder_rockylinux
 
 jobs:
 
   ### Step 1: build container images
-  builder-ubuntu-docker:
+  builder-ubuntu-focal-docker:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout pmacct
@@ -33,12 +35,38 @@ jobs:
           git rev-parse HEAD
           docker build -f $BUILD_DOCKER_FILE_UBUNTU_FOCAL -t $BUILD_DOCKER_TAG_UBUNTU_FOCAL .
           mkdir -p /tmp/docker/
-          docker save -o /tmp/docker/builder_ubuntu.tar $BUILD_DOCKER_TAG_UBUNTU_FOCAL
+          docker save -o /tmp/docker/$BUILD_DOCKER_TAG_UBUNTU_FOCAL.tar $BUILD_DOCKER_TAG_UBUNTU_FOCAL
 
       - name: Artifact docker image
         uses: actions/upload-artifact@v2.2.2
         with:
-          name: builder_ubuntu
+          name: $BUILD_DOCKER_TAG_UBUNTU_FOCAL
+          retention-days: 1
+          path: |
+            /tmp/docker
+
+  builder-ubuntu-jammy-docker:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout pmacct
+        uses: actions/checkout@v2
+        with:
+          path: pmacct
+
+      - name: Build docker image for Ubuntu Jammy
+        run: |
+          cd pmacct
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+          git config --global --add safe.directory $GITHUB_WORKSPACE/src/external_libs/libcdada
+          git rev-parse HEAD
+          docker build -f $BUILD_DOCKER_FILE_UBUNTU_JAMMY -t $BUILD_DOCKER_TAG_UBUNTU_JAMMY .
+          mkdir -p /tmp/docker/
+          docker save -o /tmp/docker/$BUILD_DOCKER_TAG_UBUNTU_JAMMY.tar $BUILD_DOCKER_TAG_UBUNTU_JAMMY
+
+      - name: Artifact docker image
+        uses: actions/upload-artifact@v2.2.2
+        with:
+          name: $BUILD_DOCKER_TAG_UBUNTU_JAMMY
           retention-days: 1
           path: |
             /tmp/docker
@@ -71,12 +99,12 @@ jobs:
 
   ### Step 2: permutations
   build-and-test:
-    needs: [builder-ubuntu-docker, builder-rockylinux-docker]
+    needs: [builder-ubuntu-focal-docker, builder-ubuntu-jammy-docker, builder-rockylinux-docker]
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
-        builder-name: [builder_ubuntu, builder_rockylinux]
+        builder-name: [builder_ubuntu_focal, builder_ubuntu_jammy, builder_rockylinux]
         CONFIG_FLAGS: [
                 "",
                 "--enable-debug",

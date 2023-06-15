@@ -1,0 +1,40 @@
+# produces a docker image suitable to build pmacct
+
+FROM ubuntu:jammy
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y \
+    autoconf \
+    automake \
+    bash \
+    bison \
+    cmake \
+    build-essential \
+    default-libmysqlclient-dev \
+    libnuma-dev \
+    flex \
+    gcc \
+    git \
+    libcurl4-openssl-dev \
+    libjansson-dev \
+    libjson-c-dev \
+    libnetfilter-log-dev \
+    libpcap-dev \
+    libpq-dev \
+    libsnappy-dev \
+    libsqlite3-dev \
+    libssl-dev \
+    libgnutls28-dev \
+    libtool \
+    make \
+    pkg-config \
+    sudo \
+    wget \
+    zlib1g-dev
+
+COPY ./pmacct/ci/deps.sh .
+RUN ./deps.sh
+
+ENTRYPOINT ["/bin/bash"]
