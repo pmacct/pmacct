@@ -14,7 +14,9 @@ env:
   BUILD_DOCKER_FILE_UBUNTU_JAMMY: ci/Dockerfile-ubuntu-jammy-for-pmacct
   BUILD_DOCKER_TAG_UBUNTU_JAMMY: builder_ubuntu_jammy
   BUILD_DOCKER_FILE_ROCKYLINUX_8: ci/Dockerfile-rockylinux-8-for-pmacct
-  BUILD_DOCKER_TAG_ROCKYLINUX_8: builder_rockylinux
+  BUILD_DOCKER_TAG_ROCKYLINUX_8: builder_rockylinux8
+  BUILD_DOCKER_FILE_ROCKYLINUX_9: ci/Dockerfile-rockylinux-9-for-pmacct
+  BUILD_DOCKER_TAG_ROCKYLINUX_9: builder_rockylinux9
 
 jobs:
 
@@ -71,7 +73,7 @@ jobs:
           path: |
             /tmp/docker
 
-  builder-rockylinux-docker:
+  builder-rockylinux8-docker:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout pmacct
@@ -87,24 +89,50 @@ jobs:
           git rev-parse HEAD
           docker build -f $BUILD_DOCKER_FILE_ROCKYLINUX_8 -t $BUILD_DOCKER_TAG_ROCKYLINUX_8 .
           mkdir -p /tmp/docker/
-          docker save -o /tmp/docker/builder_rockylinux.tar $BUILD_DOCKER_TAG_ROCKYLINUX_8
+          docker save -o /tmp/docker/builder_rockylinux8.tar $BUILD_DOCKER_TAG_ROCKYLINUX_8
 
       - name: Artifact docker image
         uses: actions/upload-artifact@v2.2.2
         with:
-          name: builder_rockylinux
+          name: builder_rockylinux8
+          retention-days: 1
+          path: |
+            /tmp/docker
+
+  builder-rockylinux9-docker:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout pmacct
+        uses: actions/checkout@v2
+        with:
+          path: pmacct
+
+      - name: Build docker image for Rocky Linux 9
+        run: |
+          cd pmacct
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+          git config --global --add safe.directory $GITHUB_WORKSPACE/src/external_libs/libcdada
+          git rev-parse HEAD
+          docker build -f $BUILD_DOCKER_FILE_ROCKYLINUX_9 -t $BUILD_DOCKER_TAG_ROCKYLINUX_9 .
+          mkdir -p /tmp/docker/
+          docker save -o /tmp/docker/builder_rockylinux9.tar $BUILD_DOCKER_TAG_ROCKYLINUX_9
+
+      - name: Artifact docker image
+        uses: actions/upload-artifact@v2.2.2
+        with:
+          name: builder_rockylinux9
           retention-days: 1
           path: |
             /tmp/docker
 
   ### Step 2: permutations
   build-and-test:
-    needs: [builder-ubuntu-focal-docker, builder-ubuntu-jammy-docker, builder-rockylinux-docker]
+    needs: [builder-ubuntu-focal-docker, builder-ubuntu-jammy-docker, builder-rockylinux8-docker, builder-rockylinux9-docker]
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
-        builder-name: [builder_ubuntu_focal, builder_ubuntu_jammy, builder_rockylinux]
+        builder-name: [builder_ubuntu_focal, builder_ubuntu_jammy, builder_rockylinux8, builder_rockylinux9]
         CONFIG_FLAGS: [
                 "",
                 "--enable-debug",
