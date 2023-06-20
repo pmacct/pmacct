@@ -76,7 +76,7 @@ RUN apt-get update && \
     libcurl4 \
     libpcap0.8 \
     libpq5 \
-    libjson-c3 \
+    libjson-c5 \
     libnetfilter-log1 \
     libsnappy1v5 \
     libsqlite3-0 \
