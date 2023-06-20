@@ -1,12 +1,12 @@
 ##pmacct (Promiscuous mode IP Accounting package)
-##pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+##pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 
 #Author: Marc Sune <marcdevel (at) gmail.com>
 
 #This Dockerfile creates a base docker image with pmacct and other useful
 #tools for network telemetry and monitoring
 
-FROM debian:buster-slim as build-stage
+FROM debian:bullseye-slim as build-stage
 # We don't want man pages
 COPY ci/dpkg.cfg.d/excludes /etc/dpkg/dpkg.cfg.d/excludes
 # This is not the runtime/final image:
@@ -35,7 +35,6 @@ RUN apt-get update && \
     libsqlite3-dev \
     libssl-dev \
     libgnutls28-dev \
-    libstdc++-8-dev \
     libtool \
     make \
     pkg-config \
@@ -64,7 +63,7 @@ RUN export AVRO_LIBS="-L/usr/local/avro/lib -lavro" && \
                               --enable-redis --enable-gnutls && \
   make install
 
-FROM debian:buster-slim as base
+FROM debian:bullseye-slim as base
 LABEL maintainer "pmacct Docker Doctors <docker-doctors (at) pmacct.net>"
 # We don't want man pages
 COPY ci/dpkg.cfg.d/excludes /etc/dpkg/dpkg.cfg.d/excludes
