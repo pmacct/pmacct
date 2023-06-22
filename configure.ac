@@ -763,7 +763,7 @@ AC_ARG_ENABLE(geoipv2,
       AC_CHECK_HEADER([maxminddb.h])
       CFLAGS="$_save_CFLAGS"
     ], [
-      AC_MSG_ERROR([Missing Maxmind libmaxminddb C library. Refer to: http://www.maxmind.com/download/geoip/api/c/])
+      AC_MSG_ERROR([Missing Maxmind libmaxminddb C library. Refer to: https://github.com/maxmind/libmaxminddb])
     ])
     ;;
   no)
