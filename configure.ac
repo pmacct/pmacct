@@ -719,30 +719,6 @@ AC_ARG_ENABLE(gnutls,
 )
 dnl finish: GnuTLS handling
 
-dnl start: geoip handling
-AC_MSG_CHECKING(whether to enable GeoIP support)
-AC_ARG_ENABLE(geoip,
-  [  --enable-geoip                   Enable GeoIP support (default: no)],
-  [ case "$enableval" in
-  yes)
-    AC_MSG_RESULT(yes)
-    dnl reasonably old Maxmind GeoIP v1 already support pkg-config
-    PKG_CHECK_MODULES([GEOIP], [geoip >= 1.0.0], [
-      SUPPORTS="${SUPPORTS} geoip"
-      USING_MMGEOIP="yes"
-      PMACCT_CFLAGS="$PMACCT_CFLAGS $GEOIP_CFLAGS"
-      AC_DEFINE(WITH_GEOIP, 1)
-    ])
-    ;;
-  no)
-    AC_MSG_RESULT(no)
-    ;;
-  esac ],
-  [
-    AC_MSG_RESULT(no)
-  ]
-)
-
 AC_MSG_CHECKING(whether to enable GeoIPv2 (libmaxminddb) support)
 AC_ARG_ENABLE(geoipv2,
   [  --enable-geoipv2                 Enable GeoIPv2 (libmaxminddb) support (default: no)],

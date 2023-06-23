@@ -2668,30 +2668,6 @@ dst_host_coords. Pre-requisite for the feature to work are: a) a working
 installed Maxmind GeoIP library and headers and b) a Maxmind GeoIP database
 (freely available). Two steps to quickly start with GeoIP lookups in pmacct:
  
-GeoIP v1 (libGeoIP):
-* Have libGeoIP library and headers available to compile against; have a GeoIP
-  database also available: http://dev.maxmind.com/geoip/legacy/install/country/ 
-
-* To compile the pmacct package with support for GeoIP lookups, the code must
-  be configured for compilation as follows:
-
-  shell> ./configure --enable-geoip [ ... ]
-
-  But, for example, should you have installed libGeoIP in /usr/local/geoip and
-  pkg-config is unable to help, you can supply this non-default location as
-  follows (assuming you are running the bash shell):
-
-  shell> export GEOIP_LIBS="-L/usr/local/geoip/lib -lgeoip"
-  shell> export GEOIP_CFLAGS="-I/usr/local/geoip/include"
-  shell> ./configure --enable-geoip [ ... ]
-
-* Include as part of the pmacct configuration the following fragment:
-
-  ...
-  geoip_ipv4_file: /path/to/GeoIP/GeoIP.dat  
-  aggregate: src_host_country, dst_host_country, ...
-  ...
-
 GeoIP v2 (libmaxminddb):
 * Have libmaxminddb library and headers to compile against, available at:
   https://github.com/maxmind/libmaxminddb/releases ; have also a database
