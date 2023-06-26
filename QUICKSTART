@@ -2534,12 +2534,10 @@ be optionally consumed via a thread that takes care of gRPC and GPB (Protobuf,
 or Google Protocol Buffers) de-marshalling and conversion to JSON; the thread
 leverages https://github.com/network-analytics/mdt-dialout-collector as a
 library; the mdt-dialout-collector GitHub repository also says how to build
-the stack of dependencies in order to successfully collect gRPC / GPB data.
+the stack of dependencies in order to successfully collect gRPC / GPB data:
+https://github.com/network-analytics/mdt-dialout-collector/blob/main/doc/integration-with-pmtelemetryd.md
 The gRPC thread can be configured via telemetry_daemon_grpc_collector_conf,
-read more in CONFIG-KEYS. Data delivery into the main pmtelemetryd thread is
-done via ZeroMQ, read more about (compiling) ZeroMQ in the "Internal buffering
-and queueing" section of this document; also read more on the topic in the
-docs/README.telemetry document.
+read more in CONFIG-KEYS. 
 
 From a configuration standpoint both the thread (ie. telemetry configured part
 of nfacctd) and the daemon (pmtelemetryd) are configured the same way except the
