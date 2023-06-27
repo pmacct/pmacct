@@ -3152,13 +3152,6 @@ DESC:	 	Enables IS-IS messages logging: as this can get easily verbose, it is in
 		and troubleshooting purposes only.
 DEFAULT:        false
 
-KEY:		[ geoip_ipv4_file | geoip_ipv6_file ] [GLOBAL]
-DESC:		If pmacct is compiled with --enable-geoip, this defines full pathname to the Maxmind GeoIP
-		Country v1 ( http://dev.maxmind.com/geoip/legacy/install/country/ ) IPv4/IPv6 databases
-		to use. pmacct, leveraging the Maxmind API, will detect if the file is updated and reload
-		it. The use of --enable-geoip is mutually exclusive with --enable-geoipv2. 
-DEFAULT:	none
-
 KEY:            geoipv2_file [GLOBAL]
 DESC:           If pmacct is compiled with --enable-geoipv2, this defines full pathname to a Maxmind GeoIP
 		database v2 (libmaxminddb, ie. https://dev.maxmind.com/geoip/geoip2/geolite2/ ). It does
