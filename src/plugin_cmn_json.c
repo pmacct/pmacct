@@ -273,18 +273,7 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3)
     idx++;
   }
 
-#if defined (WITH_GEOIP)
-  if (wtc_2 & COUNT_SRC_HOST_COUNTRY) {
-    cjhandler[idx] = compose_json_src_host_country;
-    idx++;
-  }
-
-  if (wtc_2 & COUNT_DST_HOST_COUNTRY) {
-    cjhandler[idx] = compose_json_dst_host_country;
-    idx++;
-  }
-#endif
-#if defined (WITH_GEOIPV2)
+#if defined WITH_GEOIPV2
   if (wtc_2 & COUNT_SRC_HOST_COUNTRY) {
     cjhandler[idx] = compose_json_src_host_country;
     idx++;
@@ -921,28 +910,7 @@ void compose_json_dst_port(json_t *obj, struct chained_cache *cc)
   json_object_set_new_nocheck(obj, "port_dst", json_integer((json_int_t)cc->primitives.dst_port));
 }
 
-#if defined (WITH_GEOIP)
-void compose_json_src_host_country(json_t *obj, struct chained_cache *cc)
-{
-  char empty_string[] = "";
- 
-  if (cc->primitives.src_ip_country.id > 0)
-    json_object_set_new_nocheck(obj, "country_ip_src", json_string(GeoIP_code_by_id(cc->primitives.src_ip_country.id)));
-  else
-    json_object_set_new_nocheck(obj, "country_ip_src", json_string(empty_string));
-}
-
-void compose_json_dst_host_country(json_t *obj, struct chained_cache *cc)
-{
-  char empty_string[] = "";
-
-  if (cc->primitives.dst_ip_country.id > 0)
-    json_object_set_new_nocheck(obj, "country_ip_dst", json_string(GeoIP_code_by_id(cc->primitives.dst_ip_country.id)));
-  else
-    json_object_set_new_nocheck(obj, "country_ip_dst", json_string(empty_string));
-}
-#endif
-#if defined (WITH_GEOIPV2)
+#if defined WITH_GEOIPV2
 void compose_json_src_host_country(json_t *obj, struct chained_cache *cc)
 {
   char empty_string[] = "";

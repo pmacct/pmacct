@@ -507,10 +507,6 @@ struct configuration {
   char *igp_daemon_map_msglog;
   char *geoip_ipv4_file;
   char *geoip_ipv6_file;
-#if defined WITH_GEOIP
-  GeoIP *geoip_ipv4;
-  GeoIP *geoip_ipv6;
-#endif
   char *geoipv2_file;
 #if defined WITH_GEOIPV2
   MMDB_s geoipv2_db;

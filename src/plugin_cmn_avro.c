@@ -198,7 +198,7 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_in
   if (wtc & COUNT_DST_PORT)
     avro_schema_record_field_append(schema, "port_dst", avro_schema_long());
 
-#if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
+#if defined WITH_GEOIPV2
   if (wtc_2 & COUNT_SRC_HOST_COUNTRY)
     avro_schema_record_field_append(schema, "country_ip_src", avro_schema_string());
 
@@ -206,7 +206,7 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_in
     avro_schema_record_field_append(schema, "country_ip_dst", avro_schema_string());
 #endif
 
-#if defined (WITH_GEOIPV2)
+#if defined WITH_GEOIPV2
   if (wtc_2 & COUNT_SRC_HOST_POCODE)
     avro_schema_record_field_append(schema, "pocode_ip_src", avro_schema_string());
 
@@ -812,24 +812,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wt
     pm_avro_check(avro_value_set_long(&field, pbase->dst_port));
   }
 
-#if defined (WITH_GEOIP)
-  if (wtc_2 & COUNT_SRC_HOST_COUNTRY) {
-    pm_avro_check(avro_value_get_by_name(&value, "country_ip_src", &field, NULL));
-    if (pbase->src_ip_country.id > 0)
-      pm_avro_check(avro_value_set_string(&field, GeoIP_code_by_id(pbase->src_ip_country.id)));
-    else
-      pm_avro_check(avro_value_set_string(&field, empty_string));
-  }
-
-  if (wtc_2 & COUNT_DST_HOST_COUNTRY) {
-    pm_avro_check(avro_value_get_by_name(&value, "country_ip_dst", &field, NULL));
-    if (pbase->dst_ip_country.id > 0)
-      pm_avro_check(avro_value_set_string(&field, GeoIP_code_by_id(pbase->dst_ip_country.id)));
-    else
-      pm_avro_check(avro_value_set_string(&field, empty_string));
-  }
-#endif
-#if defined (WITH_GEOIPV2)
+#if defined WITH_GEOIPV2
   if (wtc_2 & COUNT_SRC_HOST_COUNTRY) {
     pm_avro_check(avro_value_get_by_name(&value, "country_ip_src", &field, NULL));
     if (strlen(pbase->src_ip_country.str))

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -87,13 +87,7 @@
 #include "pmacct-version.h"
 #include "pmacct-defines.h"
 
-#if defined (WITH_GEOIP)
-#include <GeoIP.h>
-#if defined (WITH_GEOIPV2)
-#error "--enable-geoip and --enable-geoipv2 are mutually exclusive"
-#endif
-#endif
-#if defined (WITH_GEOIPV2)
+#if defined WITH_GEOIPV2
 #include <maxminddb.h>
 #endif
 

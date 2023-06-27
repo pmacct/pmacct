@@ -223,12 +223,6 @@ extern void pre_tag_label_handler(struct channels_list_entry *, struct packet_pt
 extern void sampling_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void sfprobe_sampling_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 
-#if defined (WITH_GEOIP)
-extern void pm_geoip_init();
-extern void src_host_country_geoip_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-extern void dst_host_country_geoip_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
-#endif
-
 #if defined (WITH_GEOIPV2)
 extern void pm_geoipv2_init();
 extern void pm_geoipv2_close();

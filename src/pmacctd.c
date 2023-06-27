@@ -1153,12 +1153,6 @@ int main(int argc,char **argv, char **envp)
     sleep(sleep_time);
   }
 
-#if defined WITH_GEOIP
-  if (config.geoip_ipv4_file || config.geoip_ipv6_file) {
-    req.bpf_filter = TRUE;
-  }
-#endif
-
 #if defined WITH_GEOIPV2
   if (config.geoipv2_file) {
     req.bpf_filter = TRUE;

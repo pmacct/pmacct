@@ -6686,30 +6686,6 @@ int cfg_key_tunnel_0(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-#if defined WITH_GEOIP
-int cfg_key_geoip_ipv4_file(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int changes = 0;
-
-  for (; list; list = list->next, changes++) list->cfg.geoip_ipv4_file = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'geoip_ipv4_file'. Globalized.\n", filename);
-
-  return changes;
-}
-
-int cfg_key_geoip_ipv6_file(char *filename, char *name, char *value_ptr)
-{
-  struct plugins_list_entry *list = plugins_list;
-  int changes = 0;
-
-  for (; list; list = list->next, changes++) list->cfg.geoip_ipv6_file = value_ptr;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'geoip_ipv6_file'. Globalized.\n", filename);
-
-  return changes;
-}
-#endif
-
 #if defined WITH_GEOIPV2
 int cfg_key_geoipv2_file(char *filename, char *name, char *value_ptr)
 {

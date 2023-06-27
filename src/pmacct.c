@@ -206,11 +206,9 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     printf("TCP_FLAGS  ");
     printf("PROTOCOL    ");
     printf("TOS    ");
-#if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
+#if defined WITH_GEOIPV2
     printf("SH_COUNTRY  ");
     printf("DH_COUNTRY  "); 
-#endif
-#if defined (WITH_GEOIPV2)
     printf("SH_POCODE     ");
     printf("DH_POCODE     ");
     printf("SH_LAT        ");
@@ -323,11 +321,9 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count & COUNT_IP_PROTO) printf("PROTOCOL    ");
     if (what_to_count & COUNT_IP_TOS) printf("TOS    ");
 
-#if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
+#if defined WITH_GEOIPV2
     if (what_to_count_2 & COUNT_SRC_HOST_COUNTRY) printf("SH_COUNTRY  ");
     if (what_to_count_2 & COUNT_DST_HOST_COUNTRY) printf("DH_COUNTRY  "); 
-#endif
-#if defined (WITH_GEOIPV2)
     if (what_to_count_2 & COUNT_SRC_HOST_POCODE) printf("SH_POCODE     ");
     if (what_to_count_2 & COUNT_DST_HOST_POCODE) printf("DH_POCODE     ");
     if (what_to_count_2 & COUNT_SRC_HOST_COORDS) {
@@ -441,11 +437,9 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     printf("%sTCP_FLAGS", write_sep(sep, &count));
     printf("%sPROTOCOL", write_sep(sep, &count));
     printf("%sTOS", write_sep(sep, &count));
-#if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
+#if defined WITH_GEOIPV2
     printf("%sSH_COUNTRY", write_sep(sep, &count));
     printf("%sDH_COUNTRY", write_sep(sep, &count));
-#endif
-#if defined (WITH_GEOIPV2)
     printf("%sSH_POCODE", write_sep(sep, &count));
     printf("%sDH_POCODE", write_sep(sep, &count));
     printf("%sSH_LAT", write_sep(sep, &count));
@@ -551,11 +545,9 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     if (what_to_count & COUNT_IP_PROTO) printf("%sPROTOCOL", write_sep(sep, &count));
     if (what_to_count & COUNT_IP_TOS) printf("%sTOS", write_sep(sep, &count));
 
-#if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
+#if defined WITH_GEOIPV2
     if (what_to_count_2 & COUNT_SRC_HOST_COUNTRY) printf("%sSH_COUNTRY", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_DST_HOST_COUNTRY) printf("%sDH_COUNTRY", write_sep(sep, &count));
-#endif
-#if defined (WITH_GEOIPV2)
     if (what_to_count_2 & COUNT_SRC_HOST_POCODE) printf("%sSH_POCODE", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_DST_HOST_POCODE) printf("%sDH_POCODE", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_SRC_HOST_COORDS) {
@@ -860,7 +852,7 @@ int main(int argc,char **argv)
 	  count_token_int[count_index] = COUNT_INT_IP_TOS;
 	  what_to_count |= COUNT_IP_TOS;
 	}
-#if defined (WITH_GEOIP) || defined (WITH_GEOIPV2)
+#if defined WITH_GEOIPV2
         else if (!strcmp(count_token[count_index], "src_host_country")) {
           count_token_int[count_index] = COUNT_INT_SRC_HOST_COUNTRY;
           what_to_count_2 |= COUNT_SRC_HOST_COUNTRY;
@@ -869,8 +861,6 @@ int main(int argc,char **argv)
           count_token_int[count_index] = COUNT_INT_DST_HOST_COUNTRY;
           what_to_count_2 |= COUNT_DST_HOST_COUNTRY;
         }
-#endif
-#if defined (WITH_GEOIPV2)
         else if (!strcmp(count_token[count_index], "src_host_pocode")) {
           count_token_int[count_index] = COUNT_INT_SRC_HOST_POCODE;
           what_to_count_2 |= COUNT_SRC_HOST_POCODE;
@@ -1599,14 +1589,6 @@ int main(int argc,char **argv)
 	  tmpnum = atoi(match_string_token);
 	  request.data.tos = (u_int8_t) tmpnum; 
 	}
-#if defined WITH_GEOIP
-        else if (!strcmp(count_token[match_string_index], "src_host_country")) {
-          request.data.src_ip_country.id = GeoIP_id_by_code(match_string_token);
-        }
-        else if (!strcmp(count_token[match_string_index], "dst_host_country")) {
-          request.data.dst_ip_country.id = GeoIP_id_by_code(match_string_token);
-        }
-#endif
 #if defined WITH_GEOIPV2
         else if (!strcmp(count_token[match_string_index], "src_host_country")) {
           strlcpy(request.data.src_ip_country.str, match_string_token, PM_COUNTRY_T_STRLEN);
@@ -2635,17 +2617,6 @@ int main(int argc,char **argv)
 	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), acc_elem->primitives.tos); 
 	}
 
-#if defined WITH_GEOIP
-        if (!have_wtc || (what_to_count_2 & COUNT_SRC_HOST_COUNTRY)) {
-          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-5s       ", GeoIP_code_by_id(acc_elem->primitives.src_ip_country.id));
-          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), GeoIP_code_by_id(acc_elem->primitives.src_ip_country.id));
-        }
-
-        if (!have_wtc || (what_to_count_2 & COUNT_DST_HOST_COUNTRY)) {
-          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-5s       ", GeoIP_code_by_id(acc_elem->primitives.dst_ip_country.id));
-          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), GeoIP_code_by_id(acc_elem->primitives.dst_ip_country.id));
-        }
-#endif
 #if defined WITH_GEOIPV2
         if (!have_wtc || (what_to_count_2 & COUNT_SRC_HOST_COUNTRY)) {
           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-5s       ", acc_elem->primitives.src_ip_country.str);
@@ -3621,22 +3592,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
 
   if (wtc & COUNT_DST_PORT) json_object_set_new_nocheck(obj, "port_dst", json_integer((json_int_t)pbase->dst_port));
 
-#if defined (WITH_GEOIP)
-  if (wtc_2 & COUNT_SRC_HOST_COUNTRY) {
-    if (pbase->src_ip_country.id > 0)
-      json_object_set_new_nocheck(obj, "country_ip_src", json_string(GeoIP_code_by_id(pbase->src_ip_country.id)));
-    else
-      json_object_set_new_nocheck(obj, "country_ip_src", json_string(empty_string));
-  }
-
-  if (wtc_2 & COUNT_DST_HOST_COUNTRY) {
-    if (pbase->dst_ip_country.id > 0)
-      json_object_set_new_nocheck(obj, "country_ip_dst", json_string(GeoIP_code_by_id(pbase->dst_ip_country.id)));
-    else
-      json_object_set_new_nocheck(obj, "country_ip_dst", json_string(empty_string));
-  }
-#endif
-#if defined (WITH_GEOIPV2)
+#if defined WITH_GEOIPV2
   if (wtc_2 & COUNT_SRC_HOST_COUNTRY) {
     if (strlen(pbase->src_ip_country.str))
       json_object_set_new_nocheck(obj, "country_ip_src", json_string(pbase->src_ip_country.str));

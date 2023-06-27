@@ -690,19 +690,7 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
-#if defined (WITH_GEOIP)
-    if (channels_list[index].aggregation_2 & COUNT_SRC_HOST_COUNTRY) {
-      channels_list[index].phandler[primitives] = src_host_country_geoip_handler;
-      primitives++;
-    }
-
-    if (channels_list[index].aggregation_2 & COUNT_DST_HOST_COUNTRY) {
-      channels_list[index].phandler[primitives] = dst_host_country_geoip_handler;
-      primitives++;
-    }
-#endif
-
-#if defined (WITH_GEOIPV2)
+#if defined WITH_GEOIPV2
     pm_geoipv2_init();
 
     if (channels_list[index].aggregation_2 & (COUNT_SRC_HOST_COUNTRY|COUNT_SRC_HOST_POCODE|COUNT_SRC_HOST_COORDS) /* other GeoIP primitives here */) {
@@ -6453,64 +6441,6 @@ void SF_custom_primitives_handler(struct channels_list_entry *chptr, struct pack
 
   custom_primitives_handler(chptr, &sample->hdr_ptrs, data);
 }
-
-#if defined WITH_GEOIP
-void pm_geoip_init()
-{
-  if (config.geoip_ipv4_file && !config.geoip_ipv4) { 
-    config.geoip_ipv4 = GeoIP_open(config.geoip_ipv4_file, (GEOIP_MEMORY_CACHE|GEOIP_CHECK_CACHE));
-
-    if (!config.geoip_ipv4 && !log_notification_isset(&log_notifications.geoip_ipv4_file_null, FALSE)) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): geoip_ipv4_file database can't be loaded.\n", config.name, config.type);
-      log_notification_set(&log_notifications.geoip_ipv4_file_null, FALSE, FALSE);
-    }
-  }
-
-  if (config.geoip_ipv6_file && !config.geoip_ipv6) {
-    config.geoip_ipv6 = GeoIP_open(config.geoip_ipv6_file, (GEOIP_MEMORY_CACHE|GEOIP_CHECK_CACHE));
-
-    if (!config.geoip_ipv6 && !log_notification_isset(&log_notifications.geoip_ipv6_file_null, FALSE)) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): geoip_ipv6_file database can't be loaded.\n", config.name, config.type);
-      log_notification_set(&log_notifications.geoip_ipv6_file_null, FALSE, FALSE);
-    }
-  }
-}
-
-void src_host_country_geoip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_data *pdata = (struct pkt_data *) *data;
-
-  pm_geoip_init();
-  pdata->primitives.src_ip_country.id = 0;
-
-  if (config.geoip_ipv4) {
-    if (pptrs->l3_proto == ETHERTYPE_IP)
-      pdata->primitives.src_ip_country.id = GeoIP_id_by_ipnum(config.geoip_ipv4, ntohl(((struct pm_iphdr *) pptrs->iph_ptr)->ip_src.s_addr));
-  }
-  if (config.geoip_ipv6) {
-    if (pptrs->l3_proto == ETHERTYPE_IPV6)
-      pdata->primitives.src_ip_country.id = GeoIP_id_by_ipnum_v6(config.geoip_ipv6, ((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src);
-  }
-}
-
-void dst_host_country_geoip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
-{
-  struct pkt_data *pdata = (struct pkt_data *) *data;
-
-  pm_geoip_init();
-  pdata->primitives.dst_ip_country.id = 0;
-
-  if (config.geoip_ipv4) {
-    if (pptrs->l3_proto == ETHERTYPE_IP)
-      pdata->primitives.dst_ip_country.id = GeoIP_id_by_ipnum(config.geoip_ipv4, ntohl(((struct pm_iphdr *) pptrs->iph_ptr)->ip_dst.s_addr));
-  }
-
-  if (config.geoip_ipv6) {
-    if (pptrs->l3_proto == ETHERTYPE_IPV6)
-      pdata->primitives.dst_ip_country.id = GeoIP_id_by_ipnum_v6(config.geoip_ipv6, ((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst);
-  }
-}
-#endif
 
 #if defined WITH_GEOIPV2
 void pm_geoipv2_init()

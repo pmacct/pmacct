@@ -91,11 +91,7 @@ extern void compose_json_src_mask(json_t *, struct chained_cache *);
 extern void compose_json_dst_mask(json_t *, struct chained_cache *);
 extern void compose_json_src_port(json_t *, struct chained_cache *);
 extern void compose_json_dst_port(json_t *, struct chained_cache *);
-#if defined (WITH_GEOIP)
-extern void compose_json_src_host_country(json_t *, struct chained_cache *);
-extern void compose_json_dst_host_country(json_t *, struct chained_cache *);
-#endif
-#if defined (WITH_GEOIPV2)
+#if defined WITH_GEOIPV2
 extern void compose_json_src_host_country(json_t *, struct chained_cache *);
 extern void compose_json_dst_host_country(json_t *, struct chained_cache *);
 extern void compose_json_src_host_pocode(json_t *, struct chained_cache *);
