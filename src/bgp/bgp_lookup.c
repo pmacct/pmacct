@@ -858,7 +858,7 @@ int bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep *
 
     if (l3_proto == ETHERTYPE_IP) {
       bgp_node_match(inter_domain_routing_db->rib[AFI_IP][safi],
-			    &req->pref, peer, bgp_route_info_modulo_pathid,
+			    &req->pref, peer, bms->route_info_modulo,
 			    bms->bgp_lookup_node_match_cmp, &nmct2,
 			    NULL, &result, &info);
 
@@ -870,7 +870,7 @@ int bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep *
     }
     else if (l3_proto == ETHERTYPE_IPV6) {
       bgp_node_match(inter_domain_routing_db->rib[AFI_IP6][safi],
-		            &req->pref, peer, bgp_route_info_modulo_pathid,
+		            &req->pref, peer, bms->route_info_modulo,
 			    bms->bgp_lookup_node_match_cmp, &nmct2,
 			    NULL, &result, &info);
 
