@@ -293,7 +293,7 @@ The keys used are:
     and Prefix SID attributes. Same applies for Local Preference
     and MED attributes.
   ! fix, BMP daemon: resolved a memory leak in bgp_peers_free().
-    Thanks to Pether Pothier ( @pothier-peter ) for his patch. Also
+    Thanks to Peter Pothier ( @pothier-peter ) for his patch. Also
     resolved a leak caused by an invalid BGP message contained in a
     BMP Route Message v4.
   ! fix, BMP daemon: correctly setting peer_ip and peer_tcp_port
