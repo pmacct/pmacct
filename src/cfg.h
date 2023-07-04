@@ -619,7 +619,6 @@ struct configuration {
   int pcap_arista_trailer_flag_value;
   int dump_max_writers;
   int tmp_asa_bi_flow;
-  int tmp_vlan_legacy;
   int tmp_bgp_lookup_compare_ports;
   int tmp_bgp_daemon_route_refresh;
   int tmp_bgp_daemon_origin_type_int;

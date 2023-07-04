@@ -97,6 +97,11 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3)
     idx++;
   }
 
+  if (wtc_3 & COUNT_IN_VLAN) {
+    cjhandler[idx] = compose_json_in_vlan;
+    idx++;
+  }
+
   if (wtc_2 & COUNT_OUT_VLAN) {
     cjhandler[idx] = compose_json_out_vlan;
     idx++;
@@ -606,12 +611,12 @@ void compose_json_dst_mac(json_t *obj, struct chained_cache *cc)
 
 void compose_json_vlan(json_t *obj, struct chained_cache *cc)
 {
-  if (config.tmp_vlan_legacy) {
-    json_object_set_new_nocheck(obj, "vlan", json_integer((json_int_t)cc->primitives.vlan_id));
-  }
-  else {
-    json_object_set_new_nocheck(obj, "vlan_in", json_integer((json_int_t)cc->primitives.vlan_id));
-  }
+  json_object_set_new_nocheck(obj, "vlan", json_integer((json_int_t)cc->primitives.vlan_id));
+}
+
+void compose_json_in_vlan(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "vlan_in", json_integer((json_int_t)cc->primitives.vlan_id));
 }
 
 void compose_json_out_vlan(json_t *obj, struct chained_cache *cc)

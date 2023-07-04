@@ -1260,6 +1260,8 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count_2 & COUNT_EXPORT_PROTO_TIME) what_to_count_2 |= COUNT_EXPORT_PROTO_TIME;
     if (config.what_to_count_2 & COUNT_LABEL) what_to_count_2 |= COUNT_LABEL;
 
+    if (config.what_to_count_3 & COUNT_IN_VLAN) what_to_count_3 |= COUNT_IN_VLAN;
+
 #if defined (WITH_NDPI)
     if (config.what_to_count_2 & COUNT_NDPI_CLASS) what_to_count_2 |= COUNT_NDPI_CLASS;
 #endif
@@ -1323,7 +1325,7 @@ int sql_evaluate_primitives(int primitive)
     }
   }
 
-  if ((what_to_count & COUNT_VLAN) && config.tmp_vlan_legacy) {
+  if (what_to_count & COUNT_VLAN) {
     int count_it = FALSE;
 
     if ((config.sql_table_version < 2 || config.sql_table_version >= SQL_TABLE_VERSION_BGP) && !assume_custom_table) {
@@ -1350,7 +1352,7 @@ int sql_evaluate_primitives(int primitive)
     }
   }
 
-  if ((what_to_count & COUNT_VLAN) && !config.tmp_vlan_legacy) {
+  if (what_to_count_3 & COUNT_IN_VLAN) {
     if (primitive) {
       strncat(insert_clause, ", ", SPACELEFT(insert_clause));
       strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
@@ -1359,7 +1361,7 @@ int sql_evaluate_primitives(int primitive)
     strncat(insert_clause, "vlan_in", SPACELEFT(insert_clause));
     strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
     strncat(where[primitive].string, "vlan_in=%u", SPACELEFT(where[primitive].string));
-    values[primitive].type = where[primitive].type = COUNT_INT_VLAN;
+    values[primitive].type = where[primitive].type = COUNT_INT_IN_VLAN;
     values[primitive].handler = where[primitive].handler = count_vlan_handler;
     primitive++;
   }

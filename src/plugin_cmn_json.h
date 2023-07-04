@@ -56,6 +56,7 @@ extern void compose_json_ndpi_class(json_t *, struct chained_cache *);
 extern void compose_json_src_mac(json_t *, struct chained_cache *);
 extern void compose_json_dst_mac(json_t *, struct chained_cache *);
 extern void compose_json_vlan(json_t *, struct chained_cache *);
+extern void compose_json_in_vlan(json_t *, struct chained_cache *);
 extern void compose_json_out_vlan(json_t *, struct chained_cache *);
 extern void compose_json_cos(json_t *, struct chained_cache *);
 extern void compose_json_etype(json_t *, struct chained_cache *);

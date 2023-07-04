@@ -251,11 +251,8 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "src_mac")) cfg_set_aggregate(filename, value, COUNT_INT_SRC_MAC, count_token);
     else if (!strcmp(count_token, "dst_mac")) cfg_set_aggregate(filename, value, COUNT_INT_DST_MAC, count_token);
     else if (!strcmp(count_token, "out_vlan")) cfg_set_aggregate(filename, value, COUNT_INT_OUT_VLAN, count_token);
-    else if (!strcmp(count_token, "in_vlan")) cfg_set_aggregate(filename, value, COUNT_INT_VLAN, count_token);
-    else if (!strcmp(count_token, "vlan")) {
-      cfg_set_aggregate(filename, value, COUNT_INT_VLAN, count_token);
-      config.tmp_vlan_legacy = TRUE;
-    }
+    else if (!strcmp(count_token, "in_vlan")) cfg_set_aggregate(filename, value, COUNT_INT_IN_VLAN, count_token);
+    else if (!strcmp(count_token, "vlan")) cfg_set_aggregate(filename, value, COUNT_INT_VLAN, count_token);
     else if (!strcmp(count_token, "sum_mac")) cfg_set_aggregate(filename, value, COUNT_INT_SUM_MAC, count_token);
 #else
     else if (!strcmp(count_token, "src_mac") || !strcmp(count_token, "dst_mac") ||

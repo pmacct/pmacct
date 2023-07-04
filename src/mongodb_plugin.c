@@ -514,12 +514,11 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
       }
   
       if (config.what_to_count & COUNT_VLAN) {
-	if (config.tmp_vlan_legacy) {
-	  bson_append_int(bson_elem, "vlan", data->vlan_id);
-	}
-	else {
-	  bson_append_int(bson_elem, "vlan_in", data->vlan_id);
-	}
+	bson_append_int(bson_elem, "vlan", data->vlan_id);
+      }
+
+      if (config.what_to_count_3 & COUNT_IN_VLAN) {
+	bson_append_int(bson_elem, "vlan_in", data->vlan_id);
       }
 
       if (config.what_to_count_2 & COUNT_OUT_VLAN) {

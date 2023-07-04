@@ -122,18 +122,17 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation & COUNT_VLAN) {
-      if (config.tmp_vlan_legacy) {
-        if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = vlan_handler;
-        else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_vlan_handler;
-        else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_vlan_handler;
-        primitives++;
-      }
-      else {
-        if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = vlan_handler;
-        else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_in_vlan_handler;
-        else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_in_vlan_handler;
-        primitives++;
-      }
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = vlan_handler;
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_vlan_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_vlan_handler;
+      primitives++;
+    }
+
+    if (channels_list[index].aggregation_3 & COUNT_IN_VLAN) {
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = vlan_handler;
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_in_vlan_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_in_vlan_handler;
+      primitives++;
     }
 
     if (channels_list[index].aggregation_2 & COUNT_OUT_VLAN) {

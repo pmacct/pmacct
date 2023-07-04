@@ -645,6 +645,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
             fprintf(f, "%-17s  ", empty_macaddress);
         }
         if (config.what_to_count & COUNT_VLAN) fprintf(f, "%-5u  ", data->vlan_id); 
+        if (config.what_to_count_3 & COUNT_IN_VLAN) fprintf(f, "%-7u  ", data->vlan_id); 
         if (config.what_to_count_2 & COUNT_OUT_VLAN) fprintf(f, "%-8u  ", data->out_vlan_id);
         if (config.what_to_count & COUNT_COS) fprintf(f, "%-2u  ", data->cos); 
         if (config.what_to_count & COUNT_ETHERTYPE) fprintf(f, "%-5x  ", data->etype); 
@@ -938,6 +939,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
           fprintf(f, "%s%s", write_sep(sep, &count), dst_mac);
         }
         if (config.what_to_count & COUNT_VLAN) fprintf(f, "%s%u", write_sep(sep, &count), data->vlan_id); 
+        if (config.what_to_count_3 & COUNT_IN_VLAN) fprintf(f, "%s%u", write_sep(sep, &count), data->vlan_id); 
         if (config.what_to_count_2 & COUNT_OUT_VLAN) fprintf(f, "%s%u", write_sep(sep, &count), data->out_vlan_id);
         if (config.what_to_count & COUNT_COS) fprintf(f, "%s%u", write_sep(sep, &count), data->cos); 
         if (config.what_to_count & COUNT_ETHERTYPE) fprintf(f, "%s%x", write_sep(sep, &count), data->etype); 
@@ -1443,14 +1445,8 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
 #if defined (HAVE_L2)
   if (config.what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) fprintf(f, "SRC_MAC            ");
   if (config.what_to_count & COUNT_DST_MAC) fprintf(f, "DST_MAC            ");
-  if (config.what_to_count & COUNT_VLAN) {
-    if (config.tmp_vlan_legacy) {
-      fprintf(f, "VLAN   ");
-    }
-    else {
-      fprintf(f, "IN_VLAN  ");
-    }
-  }
+  if (config.what_to_count & COUNT_VLAN) fprintf(f, "VLAN   ");
+  if (config.what_to_count_3 & COUNT_IN_VLAN) fprintf(f, "IN_VLAN  ");
   if (config.what_to_count_2 & COUNT_OUT_VLAN) fprintf(f, "OUT_VLAN  ");
   if (config.what_to_count & COUNT_COS) fprintf(f, "COS ");
   if (config.what_to_count & COUNT_ETHERTYPE) fprintf(f, "ETYPE  ");
@@ -1568,14 +1564,8 @@ void P_write_stats_header_csv(FILE *f, int is_event)
 #if defined HAVE_L2
   if (config.what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) fprintf(f, "%sSRC_MAC", write_sep(sep, &count));
   if (config.what_to_count & COUNT_DST_MAC) fprintf(f, "%sDST_MAC", write_sep(sep, &count));
-  if (config.what_to_count & COUNT_VLAN) {
-    if (config.tmp_vlan_legacy) {
-      fprintf(f, "%sVLAN", write_sep(sep, &count));
-    }
-    else {
-      fprintf(f, "%sIN_VLAN", write_sep(sep, &count));
-    }
-  }
+  if (config.what_to_count & COUNT_VLAN) fprintf(f, "%sVLAN", write_sep(sep, &count));
+  if (config.what_to_count_3 & COUNT_IN_VLAN) fprintf(f, "%sIN_VLAN", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_OUT_VLAN) fprintf(f, "%sOUT_VLAN", write_sep(sep, &count));
   if (config.what_to_count & COUNT_COS) fprintf(f, "%sCOS", write_sep(sep, &count));
   if (config.what_to_count & COUNT_ETHERTYPE) fprintf(f, "%sETYPE", write_sep(sep, &count));
