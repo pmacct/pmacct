@@ -394,7 +394,7 @@ extern void bmp_daemon_msglog_prepare_sd_schemas();
 
 /* global variables */
 extern struct bmp_peer *bmp_peers;
-extern u_int32_t (*bmp_route_info_modulo)(struct bgp_peer *, rd_t *, path_id_t *, int);
+extern u_int32_t (*bmp_route_info_modulo)(struct bgp_peer *, rd_t *, path_id_t *, struct bgp_msg_extra_data *, int);
 extern struct bgp_rt_structs *bmp_routing_db;
 extern struct bgp_misc_structs *bmp_misc_db;
 extern bgp_tag_t bmp_logdump_tag;

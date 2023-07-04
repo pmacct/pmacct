@@ -4368,6 +4368,7 @@ int cfg_key_bgp_daemon_table_per_peer_hash(char *filename, char *name, char *val
 
   lower_string(value_ptr);
   if (!strncmp(value_ptr, "path_id", strlen("path_id"))) value = BGP_ASPATH_HASH_PATHID;
+  else if (!strncmp(value_ptr, "mpls_vpn_rd", strlen("mpls_vpn_rd"))) value = BGP_ASPATH_HASH_MPLSVPNRD;
   else Log(LOG_WARNING, "WARN: [%s] Ignoring unknown 'bgp_table_per_peer_hash' value.\n", filename);
 
   for (; list; list = list->next, changes++) list->cfg.bgp_table_per_peer_hash = value;
@@ -4654,6 +4655,7 @@ int cfg_key_bmp_daemon_table_per_peer_hash(char *filename, char *name, char *val
 
   lower_string(value_ptr);
   if (!strncmp(value_ptr, "path_id", strlen("path_id"))) value = BGP_ASPATH_HASH_PATHID;
+  else if (!strncmp(value_ptr, "mpls_vpn_rd", strlen("mpls_vpn_rd"))) value = BGP_ASPATH_HASH_MPLSVPNRD;
   else Log(LOG_WARNING, "WARN: [%s] Ignoring unknown 'bmp_table_per_peer_hash' value.\n", filename);
 
   for (; list; list = list->next, changes++) list->cfg.bmp_table_per_peer_hash = value;

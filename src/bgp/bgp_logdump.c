@@ -2078,7 +2078,7 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 	  node = bgp_table_top(peer, table);
 
 	  while (node) {
-	    u_int32_t modulo = bgp_route_info_modulo(peer, NULL, NULL, bms->table_per_peer_buckets);
+	    u_int32_t modulo = bgp_route_info_modulo(peer, NULL, NULL, NULL, bms->table_per_peer_buckets);
 	    u_int32_t peer_buckets;
 	    struct bgp_info *ri;
 

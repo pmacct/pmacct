@@ -2910,11 +2910,22 @@ DESC:		Sets the number of buckets of BGP attributes hashes (ie. AS-PATH, communi
 DEFAULT:	65535
 
 KEY:            [ bgp_table_per_peer_hash | bmp_table_per_peer_hash ] [GLOBAL]
-VALUE:          [ path_id ]
+VALUE:          [ path_id, mpls_vpn_rd ]
 DESC:		If bgp_table_per_peer_buckets is greater than 1, this parameter allows to set the
 		hashing to be used. By default hashing happens against the BGP ADD-PATH path_id field.
-		Hashing over other fields or field combinations (hashing over BGP next-hop is on the
+                Hashing over other fields or field combinations (hashing over BGP next-hop is on the
 		radar) are planned to be supported in future.
+                The list of currently supported hash parameters follows:
+
+                path_id                 Hashing happens against the BGP ADD-PATH path_id field
+
+                mpls_vpn_rd             DISCLAIMER: this is still in a beta stage!
+                                        Hashing happens against the BGP MPLS VPN ROUTE DISGINGUISHER (RD) field.
+                                        This improves lookup performance from IPFIX/NFv9 since the specific 
+                                        bucket number can be calculated exactly without needing to loop through 
+                                        all the per_peer_buckets for a specific peer.
+
+
 DEFAULT:	path_id
 
 KEY:            [ bgp_table_dump_file | bmp_dump_file | telemetry_dump_file ] [GLOBAL] 

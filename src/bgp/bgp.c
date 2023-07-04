@@ -54,7 +54,7 @@ char *std_comm_patterns_to_asn[MAX_BGP_COMM_PATTERNS];
 char *lrg_comm_patterns_to_asn[MAX_BGP_COMM_PATTERNS];
 struct bgp_comm_range peer_src_as_ifrange; 
 struct bgp_comm_range peer_src_as_asrange; 
-u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, rd_t *, path_id_t *, int);
+u_int32_t (*bgp_route_info_modulo)(struct bgp_peer *, rd_t *, path_id_t *, struct bgp_msg_extra_data *, int);
 struct bgp_rt_structs inter_domain_routing_dbs[FUNC_TYPE_MAX], *bgp_routing_db;
 struct bgp_misc_structs inter_domain_misc_dbs[FUNC_TYPE_MAX], *bgp_misc_db;
 bgp_tag_t bgp_logdump_tag;
@@ -298,6 +298,8 @@ void skinny_bgp_daemon_online()
 
   if (config.bgp_table_per_peer_hash == BGP_ASPATH_HASH_PATHID)
     bgp_route_info_modulo = bgp_route_info_modulo_pathid; 
+  else if (config.bgp_table_per_peer_hash == BGP_ASPATH_HASH_MPLSVPNRD)
+    bgp_route_info_modulo = bgp_route_info_modulo_mplsvpnrd;
   else {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unknown 'bgp_table_per_peer_hash' value. Terminating thread.\n", config.name, bgp_misc_db->log_str);
     exit_gracefully(1);
