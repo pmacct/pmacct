@@ -1261,6 +1261,7 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count_2 & COUNT_LABEL) what_to_count_2 |= COUNT_LABEL;
 
     if (config.what_to_count_3 & COUNT_IN_VLAN) what_to_count_3 |= COUNT_IN_VLAN;
+    if (config.what_to_count_2 & COUNT_OUT_VLAN) what_to_count_2 |= COUNT_OUT_VLAN;
 
 #if defined (WITH_NDPI)
     if (config.what_to_count_2 & COUNT_NDPI_CLASS) what_to_count_2 |= COUNT_NDPI_CLASS;
