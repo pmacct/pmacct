@@ -28,6 +28,8 @@
 #include "pmbgpd.h"
 #include "rpki/rpki.h"
 
+static void print_netflow_parsing(char* flow_direction, struct packet_ptrs *pptrs, struct node_match_cmp_term2 nmct2, int match_bool);
+
 void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 {
   struct bgp_misc_structs *bms;
@@ -146,7 +148,11 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 	  if (config.rpki_roas_file || config.rpki_rtr_cache) {
 	    pptrs->src_roa = rpki_vector_prefix_lookup(bms->bnv);
 	  }
+    print_netflow_parsing("PktSrcIp", pptrs, nmct2, TRUE);
         }
+      }
+      else{
+        print_netflow_parsing("PktSrcIp", pptrs, nmct2, FALSE);
       }
 
       if (!pptrs->bgp_dst) {
@@ -176,6 +182,10 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 	    pptrs->dst_roa = rpki_vector_prefix_lookup(bms->bnv);
 	  }
         }
+        print_netflow_parsing("PktDstIp", pptrs, nmct2, TRUE);
+      }
+      else{
+        print_netflow_parsing("PktDstIp", pptrs, nmct2, FALSE);
       }
     }
     else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
@@ -206,6 +216,10 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 	    pptrs->src_roa = rpki_vector_prefix_lookup(bms->bnv); 
 	  }
         }
+        print_netflow_parsing("PktSrcIp", pptrs, nmct2, TRUE);
+      }
+      else{
+        print_netflow_parsing("PktSrcIp", pptrs, nmct2, FALSE);
       }
 
       if (!pptrs->bgp_dst) {
@@ -235,6 +249,10 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
 	    pptrs->dst_roa = rpki_vector_prefix_lookup(bms->bnv);
 	  }
         }
+        print_netflow_parsing("PktDstIp", pptrs, nmct2, TRUE);
+      }
+      else{
+        print_netflow_parsing("PktDstIp", pptrs, nmct2, FALSE);
       }
     }
 
@@ -995,4 +1013,70 @@ void bgp_lg_rep_gp_data_add(struct bgp_lg_rep *rep, struct bgp_peer *peer)
   data->ptr = gp_data;
 
   gp_data->peer = peer;
+}
+
+void print_netflow_parsing(char* flow_direction, struct packet_ptrs *pptrs, struct node_match_cmp_term2 nmct2, int match_bool){
+  if (config.debug_netflow_parsing){
+      /*
+       * For PktFlowDstIp, debug messages will be printed solely based on whether the debug_netflow_parsing key is enabled
+       * For PktFlowSrcIp, along with the debug key being enabled, messages will be printed out when BGP has been configured 
+       * as the method to map PktSrcIp
+      */
+      if ((strcmp(flow_direction,"PktSrcIp") ==0) && (config.bgp_daemon_peer_as_src_type != BGP_SRC_PRIMITIVES_BGP)) return;
+      struct host_addr nf_gen_src_addr, ip_src_addr, ip_dst_addr, nf_bgp_nexthop_addr, empty_addr;
+      u_int16_t nf_gen_src_port;
+      char nf_gen_src[INET6_ADDRSTRLEN];          // Holds the source of Netflow Packet
+      char ip_src[INET6_ADDRSTRLEN];              // Holds the SrcIp of the flow captured by Netflow
+      char ip_dst[INET6_ADDRSTRLEN];              // Holds the DstIp of the flow captured by Netflow
+      char bgp_lookup_peer[INET6_ADDRSTRLEN];     // Holds the Address of the Peer whose BGP table would be referred to
+      char nf_bgp_nexthop[INET6_ADDRSTRLEN];      // NextHop for the Flow Src/Dst Pair as seen in Netflow
+  
+      if (pptrs->l3_proto == ETHERTYPE_IP){
+          //Ipv4
+          memcpy(&ip_src_addr.address, &((struct pm_iphdr *)pptrs->iph_ptr)->ip_src, sizeof(struct in_addr));
+          memcpy(&ip_dst_addr.address, &((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
+          ip_src_addr.family = ip_dst_addr.family = nf_bgp_nexthop_addr.family = AF_INET;
+      }
+      else if (pptrs->l3_proto == ETHERTYPE_IPV6){
+          //Ipv6
+          memcpy(&ip_src_addr.address, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, sizeof(struct in6_addr));
+          memcpy(&ip_dst_addr.address, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
+          ip_src_addr.family = ip_dst_addr.family = nf_bgp_nexthop_addr.family = AF_INET6;
+      }
+      memset(&empty_addr, 0, sizeof(empty_addr));
+      sa_to_addr((struct sockaddr *)pptrs->f_agent, &nf_gen_src_addr, &nf_gen_src_port);
+      addr_to_str(ip_src, &ip_src_addr);
+      addr_to_str(ip_dst, &ip_dst_addr);
+      addr_to_str(bgp_lookup_peer, &((struct bgp_peer*)pptrs->bgp_peer)->addr);
+      addr_to_str(nf_gen_src, &nf_gen_src_addr);
+
+      //Check if Netflow has BgpNextHop Information
+      if (memcmp(&nmct2.peer_dst_ip, &empty_addr, sizeof(struct host_addr)) != 0){
+          memcpy(&nf_bgp_nexthop_addr, nmct2.peer_dst_ip, sizeof(struct host_addr));
+          addr_to_str(nf_bgp_nexthop, &nf_bgp_nexthop_addr);
+          if (match_bool){
+            Log(LOG_DEBUG, "MatchField:%s,NflowPacketSrc:%s,Status:MatchFound,BgpPeer:%s,NflowPeerDstIp:%s,FlowIpSrc:%s,FlowIpDst:%s\n",
+                  flow_direction, nf_gen_src,bgp_lookup_peer, nf_bgp_nexthop, ip_src, ip_dst);
+          }
+          else{
+            Log(LOG_DEBUG, "MatchField:%s,NflowPacketSrc:%s,Status:NoMatchFound,BgpPeer:%s,NflowPeerDstIp:%s,FlowIpSrc:%s,FlowIpDst:%s\n",
+                  flow_direction, nf_gen_src,bgp_lookup_peer, nf_bgp_nexthop, ip_src, ip_dst);
+          }
+      }
+      else{
+          // Different Message Format to indicate NoBgpNextHop in Netflow
+          if (strcmp(flow_direction,"PktDstIp") == 0){
+              Log(LOG_DEBUG, "Err:NoNflowBgpNextHop,NflowPacketSrc:%s,BgpPeer:%s,FlowIpSrc:%s,FlowIpDst:%s\n",
+                        nf_gen_src,bgp_lookup_peer, ip_src, ip_dst);
+          }
+          if (match_bool){
+            Log(LOG_DEBUG, "MatchField:%s,NflowPacketSrc:%s,Status:MatchFound,BgpPeer:%s,FlowIpSrc:%s,FlowIpDst:%s\n",
+                  flow_direction, nf_gen_src,bgp_lookup_peer, ip_src, ip_dst);
+          }
+          else{
+            Log(LOG_DEBUG, "MatchField:%s,NflowPacketSrc:%s,Status:NoMatchFound,BgpPeer:%s,FlowIpSrc:%s,FlowIpDst:%s\n",
+                  flow_direction, nf_gen_src,bgp_lookup_peer, ip_src, ip_dst);
+          }
+      }
+  }
 }

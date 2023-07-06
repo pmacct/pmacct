@@ -569,6 +569,7 @@ struct configuration {
   char *syslog;
   int debug;
   int debug_internal_msg;
+  int debug_netflow_parsing;
   int snaplen;
   int classifier_table_num;
   int classifier_ndpi;
