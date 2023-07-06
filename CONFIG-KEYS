@@ -2921,9 +2921,9 @@ DESC:		If bgp_table_per_peer_buckets is greater than 1, this parameter allows to
 
                 mpls_vpn_rd             DISCLAIMER: this is still in a beta stage!
                                         Hashing happens against the BGP MPLS VPN ROUTE DISGINGUISHER (RD) field.
-                                        This improves lookup performance from IPFIX/NFv9 since the specific 
-                                        bucket number can be calculated exactly without needing to loop through 
-                                        all the per_peer_buckets for a specific peer.
+                                        This improves lookup performance when correlating with IPFIX/NFv9
+                                        information since the specific bucket number can be calculated exactly 
+                                        without needing to loop through all the per_peer_buckets for a specific peer.
 
 
 DEFAULT:	path_id

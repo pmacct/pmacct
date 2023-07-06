@@ -262,8 +262,6 @@ bgp_node_match (const struct bgp_table *table, struct prefix *p, struct bgp_peer
 
   /* XXX: see https://github.com/pmacct/pmacct/pull/78 */
 
-  //TMP: can we do better here?
-
   /* Path_id info not known here, bucket number cannot be calculated exactly 
      --> we need to iterate through the whole peer_bucket  */
   if (bms->table_per_peer_hash == BGP_ASPATH_HASH_PATHID) 
@@ -273,7 +271,7 @@ bgp_node_match (const struct bgp_table *table, struct prefix *p, struct bgp_peer
      --> no need to iterate through the whole peer_bucket  */
   else if (bms->table_per_peer_hash == BGP_ASPATH_HASH_MPLSVPNRD) {
     per_peer_buckets = bms->table_per_peer_buckets;
-    modulo_idx_max = 1;       // exit loop after 1 iteration
+    modulo_idx_max = 1;
   }
   else per_peer_buckets = modulo_idx_max = 1;
 
