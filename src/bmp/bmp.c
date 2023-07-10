@@ -220,6 +220,8 @@ int skinny_bmp_daemon()
 
   if (config.bmp_table_per_peer_hash == BGP_ASPATH_HASH_PATHID)
     bmp_route_info_modulo = bmp_route_info_modulo_pathid;
+  else if (config.bmp_table_per_peer_hash == BGP_ASPATH_HASH_MPLSVPNRD)
+    bmp_route_info_modulo = bmp_route_info_modulo_mplsvpnrd;
   else {
     Log(LOG_ERR, "ERROR ( %s/%s ): Unknown 'bmp_table_per_peer_hash' value. Terminating thread.\n", config.name, bmp_misc_db->log_str);
     exit_gracefully(1);
