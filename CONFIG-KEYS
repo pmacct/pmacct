@@ -322,23 +322,27 @@ DESC:           Defines the size of the kernel socket used for BGP and BMP messa
 DEFAULT:	Operating System default
 
 KEY:		plugin_pipe_size
-DESC:		Core Process and each of the plugin instances are run into different processes. To
-		exchange data, they set up a circular queue (home-grown implementation, referred to
-		as 'pipe') and highlighted below with "XXXX":
+DESC:		Core Process and each plugin instance are run into different processes. To exchange
+		data, a circular queue is set up and highlighted below with "XXXX":
 
 							      XXXX
 		[network] ----> [kernel] ----> [core process] ----> [plugin] ----> [backend]
 					       [__________pmacct___________]
 
-		This directive sets the total size, in bytes, of such queue. Its default size is set
-		to 4MB. Whenever facing heavy traffic loads, this size can be adjusted to hold more
-		data. In the following example, the queue between the Core process and the plugin
-		'test' is set to 10MB:
+		This directive activates the so-called home-grown queue and sets the total size,
+		in bytes, of such queue. Its default size is set to 4MB. Whenever facing heavy
+		traffic loads, this size can be adjusted to hold more data. In the following
+		example, the queue between the Core process and the plugin 'test' is set to 10MB:
 
 		...
 		plugins: memory[test]
 		plugin_pipe_size[test]: 10240000 
 		...
+
+		It is HIGHLY recommended NOT to use the home-grown queue implementation except
+		for quick test purposes. Please use the ZeroMQ implementation configureable with
+		plugin_pipe_zmq and plugin_pipe_zmq_profile knobs. Read more in the "Internal
+		buffering and queueing" section of QUICKSTART.
 
 		When enabling debug, log messages about obtained and target pipe sizes are printed.
 		If obtained is less than target, it could mean the maximum socket size granted by
@@ -349,36 +353,32 @@ DESC:		Core Process and each of the plugin instances are run into different proc
 
 		In case of data loss messages containing the "missing data detected" string will be
 		logged - indicating the plugin affected and current settings.
-
-		Alternatively see at plugin_pipe_zmq and plugin_pipe_zmq_profile.
 DEFAULT:	4MB
 
 KEY:		plugin_buffer_size 
 DESC:		By defining the transfer buffer size, in bytes, this directive enables buffering of
-		data transfers between core process and active plugins. Once a buffer is filled, it
-		is delivered to the plugin. Setting a larger value may improve throughput (ie. amount
-		of CPU cycles required to transfer data); setting a smaller value may improve latency,
-		especially in scenarios with little data influx. It is disabled by default. If used
-		with the home-grown circular queue implemetation, the value has to be minor/equal to
-		the size defined by 'plugin_pipe_size' and keeping a ratio between 1:100 and 1:1000
+		data transfers between core process and active plugins for the home-grown circular
+		queue implementation. Once a buffer is filled, it is delivered to the plugin. Setting
+		a larger value may improve throughput (ie. amount of CPU cycles required to transfer
+		data); setting a smaller value may improve latency, especially in scenarios with
+		little data influx. Buffering is disabled by default. The value has to be less/equal
+		to the size defined by 'plugin_pipe_size' and keeping a ratio between 1:100 and 1:1000
 		among the two is considered good practice; the circular queue of plugin_pipe_size size
 		is partitioned in chunks of plugin_buffer_size. 
 
-		Alternatively see at plugin_pipe_zmq and plugin_pipe_zmq_profile.
+		It is HIGHLY recommended NOT to use the home-grown queue implementation except
+		for quick test purposes. Please use the ZeroMQ implementation configureable with
+		plugin_pipe_zmq and plugin_pipe_zmq_profile knobs. Read more in the "Internal
+		buffering and queueing" section of QUICKSTART.
 DEFAULT:	Set to the size of the smallest element to buffer 
 
 KEY:		plugin_pipe_zmq
 VALUES:		[ true | false ]
 DESC:		By defining this directive to 'true', a ZeroMQ queue is used for queueing and data
-		exchange between the Core Process and the plugins. This is in alternative to the
-		home-grown circular queue implementation (see plugin_pipe_size description). This
-		directive, along with all other plugin_pipe_zmq_* directives, can be set globally
-		or be applied on a per plugin basis (ie. it is a valid scenario, if multiple
-		plugins are instantiated, that some make use of home-grown queueing, while others
-		use ZeroMQ based queueing). For a quick comparison: while relying on a ZeroMQ queue
-                introduces an external dependency, ie. libzmq, it reduces the bare minimum the need
-		of settings of the home-grown circular queue implementation. See QUICKSTART for
-		some examples.
+		exchange between the Core Process and the plugins. This is the recommended approach
+		for internal pmacct queueing and buffering. This directive, along with all other
+		plugin_pipe_zmq_* directives, can be set globally or be applied on a per plugin
+		basis. Read more in the "Internal buffering and queueing" section of QUICKSTART.
 DEFAULT:        false
 
 KEY:		plugin_pipe_zmq_retry

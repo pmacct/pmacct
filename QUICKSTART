@@ -1174,7 +1174,7 @@ X. Internal buffering and queueing
 Two options are provided for internal buffering and queueing: 1) a home-grown circular
 queue implementation available since day one of pmacct (configured via plugin_pipe_size
 and documented in docs/INTERNALS) and 2) a ZeroMQ queue (configured via plugin_pipe_zmq
-and plugin_pipe_zmq_* directives).
+and plugin_pipe_zmq_* directives). The ZeroMQ queue is the recommended one.
 
 For a quick comparison: while relying on a ZeroMQ queue does introduce an external
 dependency, ie. libzmq, it reduces the amount of trial and error needed to fine
