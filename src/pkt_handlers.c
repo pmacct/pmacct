@@ -129,7 +129,10 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation_3 & COUNT_IN_VLAN) {
-      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = vlan_handler;
+      if (config.acct_type == ACCT_PM) {
+        warn_unsupported_packet_handler(COUNT_INT_IN_VLAN, ACCT_PM);
+	primitives--;
+      }
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_in_vlan_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_in_vlan_handler;
       primitives++;
