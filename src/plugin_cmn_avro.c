@@ -1807,12 +1807,13 @@ int compose_mpls_label_stack_data(u_int32_t *label_stack, int ls_len, avro_value
 
 int compose_srv6_segment_ipv6_list_data(struct host_addr *ipv6_list, int list_len, avro_value_t v_type_record)
 {
-  char ipv6_str[INET6_ADDRSTRLEN + 1 /* sep */ + 2 /* index */ + 1 /* term */];
-  char idx_str[2 /* index */ + 1 /* term */];
-  u_int8_t list_elems = 0;
+  const int MAX_IDX_LEN = 2 /* index */ + 1 /* sep */ + 1 /* term */;
+  const int MAX_IDX_SID_LEN = (MAX_IDX_LEN + INET6_ADDRSTRLEN);
 
-  memset(ipv6_str, 0, sizeof(ipv6_str));
-  memset(idx_str, 0, sizeof(idx_str));
+  char ipv6_str[INET6_ADDRSTRLEN];
+  char idx_str[MAX_IDX_LEN];
+  char idx_ipv6_str[MAX_IDX_SID_LEN];
+  u_int8_t list_elems = 0;
 
   if (!(list_len % sizeof(struct host_addr))) {
     list_elems = (list_len / sizeof(struct host_addr));
@@ -1825,14 +1826,21 @@ int compose_srv6_segment_ipv6_list_data(struct host_addr *ipv6_list, int list_le
 
   size_t idx_0;
   for (idx_0 = 0; idx_0 < list_elems; idx_0++) {
+
+    memset(ipv6_str, 0, sizeof(ipv6_str));
     addr_to_str(ipv6_str, &ipv6_list[idx_0]);
-    strcat(ipv6_str, "-");
+
+    memset(idx_str, 0, sizeof(idx_str));
     snprintf(idx_str, 3, "%zu", idx_0);
-    strcat(ipv6_str, idx_str);
+    strcat(idx_str, "-");
+
+    memset(idx_ipv6_str, 0, sizeof(idx_ipv6_str));
+    strcat(idx_ipv6_str, idx_str);
+    strcat(idx_ipv6_str, ipv6_str);
 
     if (avro_value_get_by_name(&v_type_record, "srv6_seg_ipv6_list", &v_type_array, NULL) == 0) {
       if (avro_value_append(&v_type_array, &v_type_string, NULL) == 0) {
-        avro_value_set_string(&v_type_string, ipv6_str);
+        avro_value_set_string(&v_type_string, idx_ipv6_str);
       }
     }
   }
