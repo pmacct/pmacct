@@ -20,7 +20,7 @@
 */
 
 /* defines */
-#define ARGS_NFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:o:t:O:MuRVaAE:I:WZ:Y:"
+#define ARGS_NFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:o:t:O:MuRVaAE:I:WZ:Y:T:"
 #define ARGS_SFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:o:t:O:MuRVaAE:I:WZ:Y:"
 #define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:o:t:O:MuwWZ:Y:L:RVazAE:"
 #define ARGS_UACCTD "n:NdDhP:b:f:F:c:m:p:r:s:S:o:t:O:MuRg:L:VaAE:"
@@ -500,6 +500,9 @@
 #define DYN_STR_PRINT_FILE		6
 #define DYN_STR_WRITER_ID		7
 #define DYN_STR_MAX			7
+
+#define DRY_RUN_UNKNOWN			0
+#define DRY_RUN_CONFIG			1
 
 typedef u_int32_t pm_class_t;
 typedef u_int64_t pm_id_t;

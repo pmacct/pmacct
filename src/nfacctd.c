@@ -383,6 +383,11 @@ int main(int argc,char **argv, char **envp)
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
+    case 'T':
+      strlcpy(cfg_cmdline[rows], "dry_run: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
     case 'h':
       usage_daemon(argv[0]);
       exit(0);
@@ -411,7 +416,7 @@ int main(int argc,char **argv, char **envp)
     if (parse_configuration_file(NULL) != SUCCESS)
       exit(1);
   }
-    
+
   /* XXX: glue; i'm conscious it's a dirty solution from an engineering viewpoint;
      someday later i'll fix this */
   list = plugins_list;
@@ -425,6 +430,11 @@ int main(int argc,char **argv, char **envp)
       config.type = list->type.string;
     }
     list = list->next;
+  }
+
+  if (config.dry_run == DRY_RUN_CONFIG) {
+    printf("INFO ( %s/core ): Dry run 'config'. Exiting ..\n", config.name);
+    exit(0);
   }
 
   if (config.files_umask) umask(config.files_umask);

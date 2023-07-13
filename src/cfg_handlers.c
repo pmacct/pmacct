@@ -108,6 +108,21 @@ int cfg_key_debug_internal_msg(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_dry_run(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0, value = 0;
+
+  lower_string(value_ptr);
+  if (!strncmp(value_ptr, "config", strlen("config"))) value = DRY_RUN_CONFIG;
+  else Log(LOG_WARNING, "WARN: [%s] Ignoring unknown 'dry_run' value.\n", filename);
+
+  for (; list; list = list->next, changes++) list->cfg.dry_run = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'dry_run'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_syslog(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
