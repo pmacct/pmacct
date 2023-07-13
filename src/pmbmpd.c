@@ -50,7 +50,7 @@ void usage_daemon(char *prog_name)
   printf("  -I  \tRead packets from the specified savefile\n");
   printf("  -Z  \tReading from a savefile, sleep the given amount of seconds at startup and between replays\n");
   printf("  -Y  \tReading from a savefile, replay the number of times specified\n");
-  printf("  -T  \tReading from a savefile, apply the filter specified with tcpdump syntax, ie. \"dst port 1790\"\n");
+  printf("  -R  \tReading from a savefile, apply the filter specified with tcpdump syntax, ie. \"dst port 1790\"\n");
   printf("  -f  \tLoad configuration from the specified file\n");
   printf("  -D  \tDaemonize\n");
   printf("  -d  \tEnable debug\n");
@@ -136,7 +136,7 @@ int main(int argc,char **argv, char **envp)
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
-    case 'T':
+    case 'R':
       strlcpy(cfg_cmdline[rows], "pcap_filter: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;

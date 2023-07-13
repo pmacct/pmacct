@@ -26,7 +26,7 @@
 #define ARGS_UACCTD "n:NdDhP:b:f:F:c:m:p:r:s:S:o:t:O:MuRg:L:VaAE:"
 #define ARGS_PMTELEMETRYD "hVL:u:t:f:dDS:F:o:O:i:"
 #define ARGS_PMBGPD "hVL:l:f:dDS:F:o:O:i:gm:"
-#define ARGS_PMBMPD "hVL:l:f:dDS:F:o:O:i:I:Z:Y:T:"
+#define ARGS_PMBMPD "hVL:l:f:dDS:F:o:O:i:I:Z:Y:R:"
 #define ARGS_PMACCT "hSsc:Cet:p:P:M:arN:n:lT:O:E:uVUiI0"
 #define N_PRIMITIVES 128
 #define N_FUNCS 10 
