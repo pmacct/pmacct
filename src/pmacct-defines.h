@@ -21,12 +21,12 @@
 
 /* defines */
 #define ARGS_NFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:o:t:O:MuRVaAE:I:WZ:Y:T:"
-#define ARGS_SFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:o:t:O:MuRVaAE:I:WZ:Y:"
-#define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:o:t:O:MuwWZ:Y:L:RVazAE:"
-#define ARGS_UACCTD "n:NdDhP:b:f:F:c:m:p:r:s:S:o:t:O:MuRg:L:VaAE:"
-#define ARGS_PMTELEMETRYD "hVL:u:t:f:dDS:F:o:O:i:"
-#define ARGS_PMBGPD "hVL:l:f:dDS:F:o:O:i:gm:"
-#define ARGS_PMBMPD "hVL:l:f:dDS:F:o:O:i:I:Z:Y:R:"
+#define ARGS_SFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:o:t:O:MuRVaAE:I:WZ:Y:T:"
+#define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:o:t:O:MuwWZ:Y:L:RVazAE:T:"
+#define ARGS_UACCTD "n:NdDhP:b:f:F:c:m:p:r:s:S:o:t:O:MuRg:L:VaAE:T:"
+#define ARGS_PMTELEMETRYD "hVL:u:t:f:dDS:F:o:O:i:T:"
+#define ARGS_PMBGPD "hVL:l:f:dDS:F:o:O:i:gm:T:"
+#define ARGS_PMBMPD "hVL:l:f:dDS:F:o:O:i:I:Z:Y:R:T:"
 #define ARGS_PMACCT "hSsc:Cet:p:P:M:arN:n:lT:O:E:uVUiI0"
 #define N_PRIMITIVES 128
 #define N_FUNCS 10 
@@ -503,6 +503,7 @@
 
 #define DRY_RUN_UNKNOWN			0
 #define DRY_RUN_CONFIG			1
+#define DRY_RUN_SETUP			2
 
 typedef u_int32_t pm_class_t;
 typedef u_int64_t pm_id_t;

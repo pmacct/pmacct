@@ -59,7 +59,7 @@ void usage_daemon(char *prog_name)
   printf("  -o  \tOutput file to log real-time BMP messages\n");
   printf("  -O  \tOutput file to dump BMP data and generated RIBs at regular time intervals\n");
   printf("  -i  \tInterval, in secs, to write to the dump output file (supplied by -O)\n");
-  printf("  -T  \t[ config ]\n\tPerform a dry run\n");
+  printf("  -T  \t[ config | setup ]\n\tPerform a dry run\n");
   printf("\n");
   printf("For examples, see:\n");
   printf("  https://github.com/pmacct/pmacct/blob/master/QUICKSTART or\n");
@@ -176,6 +176,11 @@ int main(int argc,char **argv, char **envp)
       break;
     case 'i':
       strlcpy(cfg_cmdline[rows], "bmp_dump_refresh_time: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
+    case 'T':
+      strlcpy(cfg_cmdline[rows], "dry_run: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;

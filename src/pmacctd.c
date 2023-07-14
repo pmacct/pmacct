@@ -73,7 +73,7 @@ void usage_daemon(char *prog_name)
   printf("  -R  \tRenormalize sampled data\n");
   printf("  -L  \tSet snapshot length\n");
   printf("  -u  \tLeave IP protocols in numerical format\n");
-  printf("  -T  \t[ config ]\n\tPerform a dry run\n");
+  printf("  -T  \t[ config | setup ]\n\tPerform a dry run\n");
   printf("\nMemory plugin (-P memory) options:\n");
   printf("  -p  \tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
   printf("  -b  \tNumber of buckets\n");
@@ -516,6 +516,11 @@ int main(int argc,char **argv, char **envp)
       break;
     case 'R':
       strlcpy(cfg_cmdline[rows], "sfacctd_renormalize: true", SRVBUFLEN);
+      rows++;
+      break;
+    case 'T':
+      strlcpy(cfg_cmdline[rows], "dry_run: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;
     case 'h':
@@ -1245,6 +1250,12 @@ int main(int argc,char **argv, char **envp)
     bmp_bgp_ha_main();
   }
 #endif
+
+  if (config.dry_run == DRY_RUN_SETUP) {
+    sleep(DEFAULT_SLOTH_SLEEP_TIME); /* Make sure all comes up */
+    printf("INFO ( %s/%s ): Dry run 'setup'. Exiting ..\n", config.name, config.type);
+    exit(0);
+  }
 
   /* Main loop (for the case of a single interface): if pcap_loop() exits
      maybe an error occurred; we will try closing and reopening again our

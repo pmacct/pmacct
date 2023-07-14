@@ -58,7 +58,7 @@ void usage_daemon(char *prog_name)
   printf("  -i  \tInterval, in secs, to write to the dump output file (supplied by -O)\n");
   printf("  -g  \tEnable the Looking Glass server\n");
   printf("  -m  \tLoad a BGP xconnects map from the specified file\n");
-  printf("  -T  \t[ config ]\n\tPerform a dry run\n");
+  printf("  -T  \t[ config | setup ]\n\tPerform a dry run\n");
   printf("\n");
   printf("For examples, see:\n");
   printf("  https://github.com/pmacct/pmacct/blob/master/QUICKSTART or\n");
@@ -164,6 +164,11 @@ int main(int argc,char **argv, char **envp)
       break;
     case 'm':
       strlcpy(cfg_cmdline[rows], "bgp_daemon_xconnect_map: ", SRVBUFLEN);
+      strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
+      rows++;
+      break;
+    case 'T':
+      strlcpy(cfg_cmdline[rows], "dry_run: ", SRVBUFLEN);
       strncat(cfg_cmdline[rows], optarg, CFG_LINE_LEN(cfg_cmdline[rows]));
       rows++;
       break;

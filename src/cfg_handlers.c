@@ -115,6 +115,7 @@ int cfg_key_dry_run(char *filename, char *name, char *value_ptr)
 
   lower_string(value_ptr);
   if (!strncmp(value_ptr, "config", strlen("config"))) value = DRY_RUN_CONFIG;
+  else if (!strncmp(value_ptr, "setup", strlen("setup"))) value = DRY_RUN_SETUP;
   else Log(LOG_WARNING, "WARN: [%s] Ignoring unknown 'dry_run' value.\n", filename);
 
   for (; list; list = list->next, changes++) list->cfg.dry_run = value;

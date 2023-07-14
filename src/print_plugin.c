@@ -230,6 +230,12 @@ void print_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   }
 #endif
 
+  if (config.dry_run == DRY_RUN_SETUP) {
+    sleep(DEFAULT_SLOTH_SLEEP_TIME); /* Make sure all comes up */
+    printf("INFO ( %s/%s ): Dry run 'setup'. Exiting ..\n", config.name, config.type);
+    exit(0);
+  }
+
   /* plugin main loop */
   for(;;) {
     poll_again:

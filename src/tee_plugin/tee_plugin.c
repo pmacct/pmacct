@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -150,6 +150,12 @@ void tee_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
     p_redis_init(&redis_host, log_id, p_redis_thread_produce_common_plugin_handler);
   }
 #endif
+
+  if (config.dry_run == DRY_RUN_SETUP) {
+    sleep(DEFAULT_SLOTH_SLEEP_TIME); /* Make sure all comes up */
+    printf("INFO ( %s/%s ): Dry run 'setup'. Exiting ..\n", config.name, config.type);
+    exit(0);
+  }
 
   /* plugin main loop */
   for (;;) {
