@@ -56,6 +56,7 @@ void usage_daemon(char *prog_name)
   printf("  -o  \tOutput file to log real-time Streaming Telemetry data\n");
   printf("  -O  \tOutput file to dump Streaming Telemetry data at regular time intervals\n");
   printf("  -i  \tInterval, in secs, to write to the dump output file (supplied by -O)\n");
+  printf("  -T  \t[ config ]\n\tPerform a dry run\n");
   printf("\n");
   printf("For examples, see:\n");
   printf("  https://github.com/pmacct/pmacct/blob/master/QUICKSTART or\n");
@@ -197,6 +198,11 @@ int main(int argc,char **argv, char **envp)
       config.type = list->type.string;
     }
     list = list->next;
+  }
+
+  if (config.dry_run == DRY_RUN_CONFIG) {
+    printf("INFO ( %s/core ): Dry run 'config'. Exiting ..\n", config.name);
+    exit(0);
   }
 
   if (config.files_umask) umask(config.files_umask);

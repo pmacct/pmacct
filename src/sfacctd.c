@@ -91,6 +91,7 @@ void usage_daemon(char *prog_name)
   printf("  -Z  \tReading from a savefile, sleep the given amount of seconds at startup and between replays\n");
   printf("  -W  \tReading from a savefile, don't exit but sleep when finished\n");
   printf("  -Y  \tReading from a savefile, replay the number of times specified\n");
+  printf("  -T  \t[ config ]\n\tPerform a dry run\n");
   printf("\nMemory plugin (-P memory) options:\n");
   printf("  -p  \tSocket for client-server communication (DEFAULT: /tmp/collect.pipe)\n");
   printf("  -b  \tNumber of buckets\n");
@@ -407,6 +408,11 @@ int main(int argc,char **argv, char **envp)
       config.type = list->type.string;
     }
     list = list->next;
+  }
+
+  if (config.dry_run == DRY_RUN_CONFIG) {
+    printf("INFO ( %s/core ): Dry run 'config'. Exiting ..\n", config.name);
+    exit(0);
   }
 
   if (config.files_umask) umask(config.files_umask);

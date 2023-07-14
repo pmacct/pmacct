@@ -42,6 +42,11 @@ VALUES:         [ true | false ]
 DESC:           Extra flag to enable debug of internal messaging between Core process
 		and plugins. It has to be enabled on top of 'debug' (default: false).
 
+KEY:		dry_run
+VALUES:		[ config ]
+DESC:		Performs a dry run. With 'config', only the configuration is parsed
+		(reporting any config validation errors). 
+
 KEY:		daemonize (-D) [GLOBAL]
 VALUES:		[ true | false ]
 DESC:		Daemonizes the process (default: false).
