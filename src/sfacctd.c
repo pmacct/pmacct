@@ -416,8 +416,14 @@ int main(int argc,char **argv, char **envp)
   }
 
   if (config.dry_run == DRY_RUN_CONFIG) {
-    printf("INFO ( %s/core ): Dry run 'config'. Exiting ..\n", config.name);
+    printf("INFO ( %s/%s ): Dry run 'config'. Exiting ..\n", config.name, config.type);
     exit(0);
+  }
+  else if (config.dry_run  == DRY_RUN_SETUP) {
+    if (config.daemon) {
+      printf("INFO ( %s/%s ): Dry run 'setup'. Not daemonizing.\n", config.name, config.type);
+      config.daemon = FALSE;
+    }
   }
 
   if (config.files_umask) umask(config.files_umask);
@@ -1243,7 +1249,7 @@ int main(int argc,char **argv, char **envp)
 
   if (config.dry_run == DRY_RUN_SETUP) {
     sleep(DEFAULT_SLOTH_SLEEP_TIME); /* Make sure all comes up */
-    printf("INFO ( %s/%s ): Dry run 'setup'. Exiting ..\n", config.name, config.type);
+    Log(LOG_INFO, "INFO ( %s/%s ): Dry run 'setup'. Exiting ..\n", config.name, config.type);
     exit(0);
   }
 

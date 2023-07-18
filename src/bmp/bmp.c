@@ -622,7 +622,7 @@ int skinny_bmp_daemon()
   if (config.dry_run == DRY_RUN_SETUP) {
     if (!bmp_misc_db->is_thread) {
       sleep(DEFAULT_SLOTH_SLEEP_TIME); /* Make sure all comes up */
-      printf("INFO ( %s/%s ): Dry run 'setup'. Exiting ..\n", config.name, bmp_misc_db->log_str);
+      Log(LOG_INFO, "INFO ( %s/%s ): Dry run 'setup'. Exiting ..\n", config.name, bmp_misc_db->log_str);
       exit(0);
     }
     else {
