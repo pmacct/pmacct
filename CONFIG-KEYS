@@ -43,9 +43,11 @@ DESC:           Extra flag to enable debug of internal messaging between Core pr
 		and plugins. It has to be enabled on top of 'debug' (default: false).
 
 KEY:		dry_run
-VALUES:		[ config ]
+VALUES:		[ config | setup ]
 DESC:		Performs a dry run. With 'config', only the configuration is parsed
-		(reporting any config validation errors). 
+		(reporting any config validation errors). With 'setup', on top of the
+		config validation also the daemon, its plugins and all their config
+		options are instantiated and validated. 
 
 KEY:		daemonize (-D) [GLOBAL]
 VALUES:		[ true | false ]
