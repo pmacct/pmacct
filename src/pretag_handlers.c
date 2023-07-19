@@ -202,7 +202,7 @@ int PT_map_label_handler(char *filename, struct id_entry *e, char *value, struct
   if (config.pretag_label_encode_as_map) {
     char *value_copy, *token;
     char *map_key, *map_value;
-    char *saveptr1, *saveptr2 = NULL;
+    char *saveptr1 = NULL, *saveptr2 = NULL;
 
     value_copy = strndup(value, len);
     if (value_copy) {

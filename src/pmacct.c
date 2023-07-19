@@ -1604,9 +1604,10 @@ int main(int argc,char **argv)
         }
         else if (!strcmp(count_token[match_string_index], "src_host_coords")) {
 	  char *lat_token, *lon_token, *coord_str = strdup(match_string_token), coord_delim[] = ":";
+	  char *saveptr = NULL;
 
-	  lat_token = strtok(coord_str, coord_delim);
-	  lon_token = strtok(NULL, coord_delim);
+	  lat_token = strtok_r(coord_str, coord_delim, &saveptr);
+	  lon_token = strtok_r(NULL, coord_delim, &saveptr);
 
 	  if (!lat_token || !lon_token) {
 	    printf("ERROR: src_host_coords: Invalid coordinates: '%s'.\n", match_string_token);
@@ -1621,9 +1622,10 @@ int main(int argc,char **argv)
 	}
         else if (!strcmp(count_token[match_string_index], "dst_host_coords")) {
 	  char *lat_token, *lon_token, *coord_str = strdup(match_string_token), coord_delim[] = ":";
+	  char *saveptr = NULL;
 
-	  lat_token = strtok(coord_str, coord_delim);
-	  lon_token = strtok(NULL, coord_delim);
+	  lat_token = strtok_r(coord_str, coord_delim, &saveptr);
+	  lon_token = strtok_r(NULL, coord_delim, &saveptr);
 
 	  if (!lat_token || !lon_token) {
 	    printf("ERROR: dst_host_coords: Invalid coordinates: '%s'.\n", match_string_token);

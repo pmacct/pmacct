@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -994,7 +994,9 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
   }
 
   size_t tokens_counter = 0;
-  for (token = strtok(ptm_array_labels, DEFAULT_SEP); token != NULL; token = strtok(NULL, DEFAULT_SEP)) {
+  char *saveptr = NULL;
+
+  for (token = strtok_r(ptm_array_labels, DEFAULT_SEP, &saveptr); token != NULL; token = strtok_r(NULL, DEFAULT_SEP, &saveptr)) {
     tokens[tokens_counter] = token;
     tokens_counter++;
   }
