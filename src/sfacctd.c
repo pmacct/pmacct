@@ -1826,11 +1826,11 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_isis) isis_srcdst_lookup(pptrs);
       if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, &pptrs->bta2);
       if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, pptrs, &pptrs->bitr, NULL);
-      if (config.bgp_daemon) bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP);
+      if (config.bgp_daemon) bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP, NULL);
       if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
       if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
       if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
-      if (config.bmp_daemon) bmp_srcdst_lookup(pptrs);
+      if (config.bmp_daemon) bmp_srcdst_lookup(pptrs, NULL);
       exec_plugins(pptrs, req);
       break;
     case PM_FTYPE_IPV6:
@@ -1862,11 +1862,11 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->v6);
       if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->v6, &pptrsv->v6.bta, &pptrsv->v6.bta2);
       if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->v6, &pptrsv->v6.bitr, NULL);
-      if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->v6, FUNC_TYPE_BGP);
+      if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->v6, FUNC_TYPE_BGP, NULL);
       if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->v6, &pptrsv->v6.bpas, NULL);
       if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->v6, &pptrsv->v6.blp, NULL);
       if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->v6, &pptrsv->v6.bmed, NULL);
-      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->v6);
+      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->v6, NULL);
       exec_plugins(&pptrsv->v6, req);
       break;
     case PM_FTYPE_VLAN_IPV4:
@@ -1899,11 +1899,11 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->vlan4);
       if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan4, &pptrsv->vlan4.bta, &pptrsv->vlan4.bta2);
       if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlan4, &pptrsv->vlan4.bitr, NULL);
-      if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->vlan4, FUNC_TYPE_BGP);
+      if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->vlan4, FUNC_TYPE_BGP, NULL);
       if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan4, &pptrsv->vlan4.bpas, NULL);
       if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlan4, &pptrsv->vlan4.blp, NULL);
       if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlan4, &pptrsv->vlan4.bmed, NULL);
-      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlan4);
+      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlan4, NULL);
       exec_plugins(&pptrsv->vlan4, req);
       break;
     case PM_FTYPE_VLAN_IPV6:
@@ -1936,11 +1936,11 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->vlan6);
       if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan6, &pptrsv->vlan6.bta, &pptrsv->vlan6.bta2);
       if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlan6, &pptrsv->vlan6.bitr, NULL);
-      if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->vlan6, FUNC_TYPE_BGP);
+      if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->vlan6, FUNC_TYPE_BGP, NULL);
       if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan6, &pptrsv->vlan6.bpas, NULL);
       if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlan6, &pptrsv->vlan6.blp, NULL);
       if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlan6, &pptrsv->vlan6.bmed, NULL);
-      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlan6);
+      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlan6, NULL);
       exec_plugins(&pptrsv->vlan6, req);
       break;
     case PM_FTYPE_MPLS_IPV4:
@@ -1986,11 +1986,11 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->mpls4);
       if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls4, &pptrsv->mpls4.bta, &pptrsv->mpls4.bta2);
       if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->mpls4, &pptrsv->mpls4.bitr, NULL);
-      if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->mpls4, FUNC_TYPE_BGP);
+      if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->mpls4, FUNC_TYPE_BGP, NULL);
       if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls4, &pptrsv->mpls4.bpas, NULL);
       if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->mpls4, &pptrsv->mpls4.blp, NULL);
       if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->mpls4, &pptrsv->mpls4.bmed, NULL);
-      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->mpls4);
+      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->mpls4, NULL);
       exec_plugins(&pptrsv->mpls4, req);
       break;
     case PM_FTYPE_MPLS_IPV6:
@@ -2035,11 +2035,11 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->mpls6);
       if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls6, &pptrsv->mpls6.bta, &pptrsv->mpls6.bta2);
       if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->mpls6, &pptrsv->mpls6.bitr, NULL);
-      if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->mpls6, FUNC_TYPE_BGP);
+      if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->mpls6, FUNC_TYPE_BGP, NULL);
       if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls6, &pptrsv->mpls6.bpas, NULL);
       if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->mpls6, &pptrsv->mpls6.blp, NULL);
       if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->mpls6, &pptrsv->mpls6.bmed, NULL);
-      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->mpls6);
+      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->mpls6, NULL);
       exec_plugins(&pptrsv->mpls6, req);
       break;
     case PM_FTYPE_VLAN_MPLS_IPV4:
@@ -2085,11 +2085,11 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->vlanmpls4);
       if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bta, &pptrsv->vlanmpls4.bta2);
       if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bitr, NULL);
-      if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->vlanmpls4, FUNC_TYPE_BGP);
+      if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->vlanmpls4, FUNC_TYPE_BGP, NULL);
       if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bpas, NULL);
       if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.blp, NULL);
       if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bmed, NULL);
-      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlanmpls4);
+      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlanmpls4, NULL);
       exec_plugins(&pptrsv->vlanmpls4, req);
       break;
     case PM_FTYPE_VLAN_MPLS_IPV6:
@@ -2135,11 +2135,11 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
       if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->vlanmpls6);
       if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bta, &pptrsv->vlanmpls6.bta2);
       if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bitr, NULL);
-      if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->vlanmpls6, FUNC_TYPE_BGP);
+      if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->vlanmpls6, FUNC_TYPE_BGP, NULL);
       if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bpas, NULL);
       if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.blp, NULL);
       if (config.bgp_daemon_src_med_map) SF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bmed, NULL);
-      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlanmpls6);
+      if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->vlanmpls6, NULL);
       exec_plugins(&pptrsv->vlanmpls6, req);
       break;
     default:

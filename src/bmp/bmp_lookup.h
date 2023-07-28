@@ -24,10 +24,10 @@
 
 /* includes */
 
-/* defines */
+/* defines */ 
 
 /* prototypes */
-extern void bmp_srcdst_lookup(struct packet_ptrs *);
+extern void bmp_srcdst_lookup(struct packet_ptrs *, struct bgp_lookup_info *);
 extern struct bgp_peer *bgp_lookup_find_bmp_peer(struct sockaddr *, struct xflow_status_entry *, u_int16_t, int);
 extern u_int32_t bmp_route_info_modulo_pathid(struct bgp_peer *, rd_t *, path_id_t *, struct bgp_msg_extra_data *, int);
 extern u_int32_t bmp_route_info_modulo_mplsvpnrd(struct bgp_peer *, rd_t *, path_id_t *, struct bgp_msg_extra_data *, int);
