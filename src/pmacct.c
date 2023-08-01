@@ -3833,8 +3833,12 @@ void pmc_compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, 
   }
   else {
     time1 = tv->tv_sec;
-    if (!tstamp_utc) time2 = localtime(&time1);
-    else time2 = gmtime_r(&time1, &result_tm);
+    if (!tstamp_utc) {
+      time2 = localtime_r(&time1, &result_tm);
+    }
+    else {
+      time2 = gmtime_r(&time1, &result_tm);
+    }
 
     slen = strftime(buf, buflen, "%Y-%m-%dT%H:%M:%S", time2);
 
