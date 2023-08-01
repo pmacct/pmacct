@@ -352,10 +352,10 @@ void string_add_newline(char *buf)
 
 time_t roundoff_time(time_t t, char *value)
 {
-  struct tm *rounded;
+  struct tm result_tm, *rounded;
   int len, j;
 
-  rounded = localtime(&t);
+  rounded = localtime_r(&t, &result_tm);
 
   rounded->tm_sec = 0; /* default round off */
 
@@ -398,10 +398,14 @@ time_t roundoff_time(time_t t, char *value)
 time_t calc_monthly_timeslot(time_t t, int howmany, int op)
 {
   time_t base = t, final;
-  struct tm *tmt;
+  struct tm result_tm, *tmt;
 
-  if (!config.timestamps_utc) tmt = localtime(&t);
-  else tmt = gmtime(&t);
+  if (!config.timestamps_utc) {
+    tmt = localtime_r(&t, &result_tm);
+  }
+  else {
+    tmt = gmtime_r(&t, &result_tm);
+  }
 
   while (howmany) {
     tmt->tm_mday = 1;
@@ -1596,13 +1600,17 @@ void stop_all_childs()
 void pm_strftime(char *s, int max, char *format, const time_t *time_ref, int utc)
 {
   time_t time_loc;  
-  struct tm *tm_loc;
+  struct tm result_tm, *tm_loc;
 
   if (time_ref && (*time_ref)) time_loc = (*time_ref);
   else time_loc = time(NULL);
 
-  if (!utc) tm_loc = localtime(&time_loc);
-  else tm_loc = gmtime(&time_loc);
+  if (!utc) {
+    tm_loc = localtime_r(&time_loc, &result_tm);
+  }
+  else {
+    tm_loc = gmtime_r(&time_loc, &result_tm);
+  }
 
   strftime(s, max, format, tm_loc);
   insert_rfc3339_timezone(s, max, tm_loc);
@@ -1613,13 +1621,17 @@ void pm_strftime(char *s, int max, char *format, const time_t *time_ref, int utc
 void pm_strftime_same(char *s, int max, char *tmp, const time_t *time_ref, int utc)
 {
   time_t time_loc;
-  struct tm *tm_loc;
+  struct tm result_tm, *tm_loc;
 
   if (time_ref && (*time_ref)) time_loc = (*time_ref);
   else time_loc = time(NULL);
 
-  if (!utc) tm_loc = localtime(&time_loc);
-  else tm_loc = gmtime(&time_loc);
+  if (!utc) {
+    tm_loc = localtime_r(&time_loc, &result_tm);
+  }
+  else {
+    tm_loc = gmtime_r(&time_loc, &result_tm);
+  }
 
   strftime(tmp, max, s, tm_loc);
   insert_rfc3339_timezone(tmp, max, tm_loc);
@@ -2438,7 +2450,7 @@ void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int 
 {
   int slen;
   time_t time1;
-  struct tm *time2;
+  struct tm result_tm, *time2;
 
   if (buflen < VERYSHORTBUFLEN) return; 
 
@@ -2448,8 +2460,12 @@ void compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, int 
   }
   else {
     time1 = tv->tv_sec;
-    if (!utc) time2 = localtime(&time1);
-    else time2 = gmtime(&time1);
+    if (!utc) {
+      time2 = localtime_r(&time1, &result_tm);
+    }
+    else {
+      time2 = gmtime_r(&time1, &result_tm);
+    }
     
     if (tv->tv_sec) {
       if (!rfc3339) slen = strftime(buf, buflen, "%Y-%m-%d %H:%M:%S", time2);

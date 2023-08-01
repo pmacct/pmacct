@@ -3825,7 +3825,7 @@ void pmc_compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, 
 {
   int slen;
   time_t time1;
-  struct tm *time2;
+  struct tm result_tm, *time2;
 
   if (tstamp_since_epoch) {
     if (usec) snprintf(buf, buflen, "%ld.%.6ld", tv->tv_sec, (long)tv->tv_usec);
@@ -3833,8 +3833,12 @@ void pmc_compose_timestamp(char *buf, int buflen, struct timeval *tv, int usec, 
   }
   else {
     time1 = tv->tv_sec;
-    if (!tstamp_utc) time2 = localtime(&time1);
-    else time2 = gmtime(&time1);
+    if (!tstamp_utc) {
+      time2 = localtime_r(&time1, &result_tm);
+    }
+    else {
+      time2 = gmtime_r(&time1, &result_tm);
+    }
 
     slen = strftime(buf, buflen, "%Y-%m-%dT%H:%M:%S", time2);
 
