@@ -53,6 +53,7 @@ extern void compose_tunnel_tcpflags_avro_schema(avro_schema_t);
 extern void compose_fwd_status_avro_schema(avro_schema_t);
 extern void compose_mpls_label_stack_schema(avro_schema_t);
 extern void compose_srv6_segment_ipv6_list_schema(avro_schema_t);
+extern void compose_str_linked_list_to_avro_array_schema(avro_schema_t, const char *);
 extern int compose_label_avro_data_opt(char *, avro_value_t);
 extern int compose_label_avro_data_nonopt(char *, avro_value_t);
 extern int compose_tcpflags_avro_data(size_t, avro_value_t);
@@ -60,6 +61,7 @@ extern int compose_tunnel_tcpflags_avro_data(size_t, avro_value_t);
 extern int compose_mpls_label_stack_data(u_int32_t *, int, avro_value_t);
 extern int compose_srv6_segment_ipv6_list_data(struct host_addr *, int, avro_value_t);
 extern int compose_fwd_status_avro_data(size_t, avro_value_t);
+extern int compose_str_linked_list_to_avro_array_data(const char *, const char *, avro_value_t);
 
 extern void pm_avro_exit_gracefully(int);
 
@@ -95,6 +97,14 @@ extern serdes_schema_t *compose_avro_schema_registry_name_2(char *, int, avro_sc
 
 /* global variables */
 extern avro_schema_t p_avro_acct_schema, p_avro_acct_init_schema, p_avro_acct_close_schema;
+typedef void (*compose_bgp_comm_to_avro_array_schema_type)(avro_schema_t, const char *);
+typedef int (*compose_bgp_comm_to_avro_array_data_type)(const char *, const char *, avro_value_t);
+typedef void (*compose_as_path_to_avro_array_schema_type)(avro_schema_t, const char *);
+typedef int (*compose_as_path_to_avro_array_data_type)(const char *, const char *, avro_value_t);
+extern compose_bgp_comm_to_avro_array_schema_type compose_bgp_comm_to_avro_array_schema;
+extern compose_bgp_comm_to_avro_array_data_type compose_bgp_comm_to_avro_array_data;
+extern compose_as_path_to_avro_array_schema_type compose_as_path_to_avro_array_schema;
+extern compose_as_path_to_avro_array_data_type compose_as_apth_to_avro_array_data;
 #endif
 
 #endif //PLUGIN_CMN_AVRO_H
