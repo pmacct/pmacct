@@ -643,6 +643,8 @@ int telemetry_daemon(void *t_data_void)
 #if defined WITH_GRPC_COLLECTOR && defined WITH_ZMQ
     else if (grpc_collector_input) {
       zmq_recv(grpc_zmq_pull, &grpc_payload_ptr, sizeof(grpc_payload), 0);
+      free_grpc_payload(grpc_payload_ptr);
+      grpc_payload_ptr = NULL;
       select_num = TRUE;
     }
 #endif
@@ -833,9 +835,11 @@ int telemetry_daemon(void *t_data_void)
               strlcpy((char *)consumer_buf, seg->telemetry_data, sizeof(consumer_buf));
               fd = TELEMETRY_GRPC_COLLECTOR_FD;
               free_grpc_payload(seg);
+              seg = NULL;
             }
             else {
               free_grpc_payload(seg);
+              seg = NULL;
               goto select_again;
             }
           }
