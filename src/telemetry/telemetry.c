@@ -357,8 +357,17 @@ int telemetry_daemon(void *t_data_void)
         Log(LOG_ERR, "ERROR ( %s/%s ): socket() failed. Terminating.\n", config.name, t_data->log_str);
         exit_gracefully(1);
       }
+    }
 
-      if (config.telemetry_port_tcp) setsockopt(config.telemetry_sock, SOL_SOCKET, SO_KEEPALIVE, (void *)&yes, sizeof(yes));
+    if (config.telemetry_port_tcp)
+    {
+      rc = setsockopt(config.telemetry_sock, SOL_SOCKET, SO_KEEPALIVE, (void *)&yes, sizeof(yes));
+      if (rc < 0) {
+        char errstr[LONGLONGSRVBUFLEN];
+        strerror_r(errno, errstr, sizeof(errstr));
+        Log(LOG_WARNING, "WARN ( %s/%s ): setsockopt() failed for SO_KEEPALIVE - %s (error %d).\n",
+            config.name, t_data->log_str, errstr, errno);
+      }
     }
 
     if (config.telemetry_ipprec) {
