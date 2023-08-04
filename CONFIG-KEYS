@@ -830,13 +830,13 @@ DESC:           Defines one or multiple, comma-separated, Kafka brokers for the 
 		If only a single broker IP address is defined then the broker port is read via the
 		kafka_broker_port config directive (legacy syntax); if multiple brokers are defined
 		then each broker port, if not left to default 9092, is expected as part of this
-		directive, for example: "broker1:10000,broker2". When defining multiple brokers,
-		if the host is IPv4, the value is expected as 'address:port'. If IPv6, it is
-		expected as '[address]:port' (although when defining a single broker, this is not
+		directive, for example: broker1:10000,broker2 . When defining multiple brokers,
+		if the host is IPv4, the value is expected as address:port . If IPv6, it is
+		expected as [address]:port (although when defining a single broker, this is not
 		required as the IPv6 address is detected and wrapped-around '[' ']' symbols).
 		Resolvable hostnames are also accepted, if host resolves to multiple addresses it
 		will round-robin the addresses for each connection attempt. SSL connections can be
-		configured as "ssl://broker3:9000,ssl://broker2". All kafka_* directives are used
+		configured as ssl://broker3:9000,ssl://broker2 . All kafka_* directives are used
 		by the Kafka plugin of flow daemons only. Check other *_kafka_broker_host out (ie.
 		bgp_daemon_msglog_kafka_broker_host) for the equivalent directives relevant to
 		other Kafka exports.
