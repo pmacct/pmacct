@@ -288,6 +288,8 @@ extern int cfg_key_pre_tag2_filter(char *, char *, char *);
 extern int cfg_key_pre_tag_label_filter(char *, char *, char *);
 extern int cfg_key_pre_tag_label_encode_as_map(char *, char *, char *);
 extern int cfg_key_tcpflags_encode_as_array(char *, char *, char *);
+extern int cfg_key_bgp_comms_encode_as_array(char *, char *, char *);
+extern int cfg_key_as_path_encode_as_array(char *, char *, char *);
 extern int cfg_key_fwd_status_encode_as_string(char *, char *, char *);
 extern int cfg_key_tos_encode_as_dscp(char *, char *, char *);
 extern int cfg_key_post_tag(char *, char *, char *);

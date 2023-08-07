@@ -27,16 +27,18 @@
 #include "preprocess.h"
 
 /* defines */
-#define DEFAULT_PLUGIN_COMMON_REFRESH_TIME 60 
+#define DEFAULT_PLUGIN_COMMON_REFRESH_TIME 60
 #define DEFAULT_PLUGIN_COMMON_WRITERS_NO 10
 #define DEFAULT_PLUGIN_COMMON_RECV_BUDGET 100
 
 #define AVERAGE_CHAIN_LEN 10
 #define PRINT_CACHE_ENTRIES 16411
-#define MAX_PTM_LABEL_TOKEN_LEN	128
+#define MAX_PTM_LABEL_TOKEN_LEN 128
 #define TCP_FLAG_LEN 6
 #define FWD_TYPES_STR_LEN 50
 #define MAX_MPLS_LABEL_STACK 128
+#define MAX_GENERIC_DELIM_STR_LEN 256
+#define GENERIC_STR_DELIM " "
 
 #define PORTS_TABLE_ENTRIES  65536
 #define PROTOS_TABLE_ENTRIES 256
@@ -45,11 +47,11 @@
 #define PM_IP_TOS_OTHERS 255
 
 /* cache element states */
-#define PRINT_CACHE_FREE	0
-#define PRINT_CACHE_COMMITTED	1
-#define PRINT_CACHE_INUSE	2 
-#define PRINT_CACHE_INVALID	3 
-#define PRINT_CACHE_ERROR	255
+#define PRINT_CACHE_FREE        0
+#define PRINT_CACHE_COMMITTED   1
+#define PRINT_CACHE_INUSE       2
+#define PRINT_CACHE_INVALID     3
+#define PRINT_CACHE_ERROR       255
 
 /* structures */
 #ifndef STRUCT_SCRATCH_AREA
@@ -120,7 +122,7 @@ typedef struct {
 #endif
 
 #ifndef STRUCT_PORTS_TABLE
-#define STRUCT_PORTS_TABLE 
+#define STRUCT_PORTS_TABLE
 struct ports_table {
   u_int8_t table[PORTS_TABLE_ENTRIES];
   time_t timestamp;
@@ -128,11 +130,18 @@ struct ports_table {
 #endif
 
 #ifndef STRUCT_PROTOS_TABLE
-#define STRUCT_PROTOS_TABLE 
+#define STRUCT_PROTOS_TABLE
 struct protos_table {
   u_int8_t table[PROTOS_TABLE_ENTRIES];
   time_t timestamp;
 };
+#endif
+
+#ifndef STRUCT_DELIM_STR
+#define STRUCT_DELIM_STR
+typedef struct {
+  char delim_str[MAX_GENERIC_DELIM_STR_LEN];
+} __attribute__((packed)) generic_delim_string;
 #endif
 
 #include "sql_common.h"
@@ -171,6 +180,7 @@ extern void P_update_stitch(struct chained_cache *, struct pkt_data *, struct in
 extern cdada_list_t *ptm_labels_to_linked_list(const char *);
 extern cdada_list_t *tcpflags_to_linked_list(size_t);
 extern cdada_list_t *fwd_status_to_linked_list();
+extern cdada_list_t *generic_delim_str_to_linked_list(const char *, const char *);
 
 extern void mpls_label_stack_to_str(char *, int, u_int32_t *, int);
 
@@ -180,13 +190,13 @@ extern void load_tos(char *, struct protos_table *);
 
 /* global vars */
 extern void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
-extern void (*purge_func)(struct chained_cache *[], int, int); /* pointer to purge function */ 
+extern void (*purge_func)(struct chained_cache *[], int, int); /* pointer to purge function */
 extern struct scratch_area sa;
 extern struct chained_cache *cache;
 extern struct chained_cache **queries_queue, **pending_queries_queue, *pqq_container;
 extern struct timeval flushtime;
 extern int qq_ptr, pqq_ptr, pp_size, pb_size, pn_size, pm_size, pt_size, pc_size;
-extern int dbc_size, quit; 
+extern int dbc_size, quit;
 extern time_t refresh_deadline;
 
 extern void (*basetime_init)(time_t);

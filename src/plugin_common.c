@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
 */
 
 /*
@@ -31,13 +31,13 @@
 
 /* Global variables */
 void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
-void (*purge_func)(struct chained_cache *[], int, int); /* pointer to purge function */ 
+void (*purge_func)(struct chained_cache *[], int, int); /* pointer to purge function */
 struct scratch_area sa;
 struct chained_cache *cache;
 struct chained_cache **queries_queue, **pending_queries_queue, *pqq_container;
 struct timeval flushtime;
 int qq_ptr, pqq_ptr, pp_size, pb_size, pn_size, pm_size, pt_size, pc_size;
-int dbc_size, quit; 
+int dbc_size, quit;
 time_t refresh_deadline;
 
 void (*basetime_init)(time_t);
@@ -57,7 +57,7 @@ void P_set_signals()
   signal(SIGPIPE, SIG_IGN);
   signal(SIGCHLD, SIG_IGN);
 }
- 
+
 void P_init_default_values()
 {
   if (config.pidfile) write_pid_file_plugin(config.pidfile, config.type, config.name);
@@ -103,8 +103,8 @@ void P_init_default_values()
   sa.size = sa.num*dbc_size;
 
   Log(LOG_INFO, "INFO ( %s/%s ): cache entries=%d base cache memory=%" PRIu64 " bytes\n", config.name, config.type,
-	config.print_cache_entries, ((config.print_cache_entries * dbc_size) + (2 * ((sa.num +
-	config.print_cache_entries) * sizeof(struct chained_cache *))) + sa.size));
+        config.print_cache_entries, ((config.print_cache_entries * dbc_size) + (2 * ((sa.num +
+        config.print_cache_entries) * sizeof(struct chained_cache *))) + sa.size));
 
   cache = (struct chained_cache *) pm_malloc(config.print_cache_entries*dbc_size);
   queries_queue = (struct chained_cache **) pm_malloc((sa.num+config.print_cache_entries)*sizeof(struct chained_cache *));
@@ -221,7 +221,7 @@ struct chained_cache *P_cache_search(struct primitives_ptrs *prim_ptrs)
       }
     }
   }
-  else return cache_ptr; 
+  else return cache_ptr;
 
   return NULL;
 }
@@ -273,7 +273,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
   start:
   res_data = res_bgp = res_nat = res_mpls = res_tun = res_time = res_cust = res_vlen = TRUE;
 
-  res_data = memcmp(&cache_ptr->primitives, srcdst, sizeof(struct pkt_primitives)); 
+  res_data = memcmp(&cache_ptr->primitives, srcdst, sizeof(struct pkt_primitives));
 
   if (basetime_cmp) {
     res_time = (*basetime_cmp)(&cache_ptr->basetime, &ibasetime);
@@ -301,7 +301,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
   else res_tun = FALSE;
 
   if (pcust) {
-    if (cache_ptr->pcust) res_cust = memcmp(cache_ptr->pcust, pcust, config.cpptrs.len); 
+    if (cache_ptr->pcust) res_cust = memcmp(cache_ptr->pcust, pcust, config.cpptrs.len);
   }
   else res_cust = FALSE;
 
@@ -312,18 +312,18 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
 
   if (res_data || res_bgp || res_nat || res_mpls || res_tun || res_time || res_cust || res_vlen) {
     /* aliasing of entries */
-    if (cache_ptr->valid == PRINT_CACHE_INUSE) { 
+    if (cache_ptr->valid == PRINT_CACHE_INUSE) {
       if (cache_ptr->next) {
-	cache_ptr = cache_ptr->next;
-	goto start;
+        cache_ptr = cache_ptr->next;
+        goto start;
       }
       else {
-	cache_ptr = P_cache_attach_new_node(cache_ptr); 
-	if (!cache_ptr) goto safe_action;
-	else {
-	  queries_queue[qq_ptr] = cache_ptr;
-	  qq_ptr++;
-	}
+        cache_ptr = P_cache_attach_new_node(cache_ptr);
+        if (!cache_ptr) goto safe_action;
+        else {
+          queries_queue[qq_ptr] = cache_ptr;
+          qq_ptr++;
+        }
       }
     }
     else {
@@ -404,11 +404,11 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
 
     if (config.nfacctd_stitching) {
       if (!cache_ptr->stitch) {
-	cache_ptr->stitch = (struct pkt_stitching *) malloc(sizeof(struct pkt_stitching));
+        cache_ptr->stitch = (struct pkt_stitching *) malloc(sizeof(struct pkt_stitching));
       }
 
       if (cache_ptr->stitch) {
-	P_set_stitch(cache_ptr, data, idata);
+        P_set_stitch(cache_ptr, data, idata);
       }
       else Log(LOG_WARNING, "WARN ( %s/%s ): Finished memory for flow stitching.\n", config.name, config.type);
     }
@@ -429,9 +429,9 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
       cache_ptr->tunnel_tcp_flags |= data->tunnel_tcp_flags;
 
       if (config.nfacctd_stitching) {
-	if (cache_ptr->stitch) {
-	  P_update_stitch(cache_ptr, data, idata);
-	}
+        if (cache_ptr->stitch) {
+          P_update_stitch(cache_ptr, data, idata);
+        }
       }
     }
     else {
@@ -444,7 +444,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
       cache_ptr->tunnel_tcp_flags = data->tunnel_tcp_flags;
 
       if (config.nfacctd_stitching) {
-	P_set_stitch(cache_ptr, data, idata);
+        P_set_stitch(cache_ptr, data, idata);
       }
 
       cache_ptr->valid = PRINT_CACHE_INUSE;
@@ -481,8 +481,8 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
     if (dump_writers_get_flags() != CHLD_ALERT) {
       switch (ret = fork()) {
       case 0: /* Child */
-	pm_setproctitle("%s %s [%s]", config.type, "Plugin -- Writer (urgent)", config.name);
-	config.is_forked = TRUE;
+        pm_setproctitle("%s %s [%s]", config.type, "Plugin -- Writer (urgent)", config.name);
+        config.is_forked = TRUE;
 
         (*purge_func)(queries_queue, qq_ptr, TRUE);
 
@@ -491,7 +491,7 @@ void P_cache_insert(struct primitives_ptrs *prim_ptrs, struct insert_data *idata
         if (ret == -1) Log(LOG_WARNING, "WARN ( %s/%s ): Unable to fork writer: %s\n", config.name, config.type, strerror(errno));
         else dump_writers_add(ret);
 
-	break;
+        break;
       }
     }
     else Log(LOG_WARNING, "WARN ( %s/%s ): Maximum number of writer processes reached (%d).\n", config.name, config.type, dump_writers_get_active());
@@ -557,7 +557,7 @@ void P_cache_insert_pending(struct chained_cache *queue[], int index, struct cha
     if (cache_ptr->pvlen) free(cache_ptr->pvlen);
     if (cache_ptr->stitch) free(cache_ptr->stitch);
 
-    memcpy(cache_ptr, &container[j], dbc_size); 
+    memcpy(cache_ptr, &container[j], dbc_size);
 
     container[j].pbgp = NULL;
     container[j].pnat = NULL;
@@ -635,7 +635,7 @@ void P_cache_mark_flush(struct chained_cache *queue[], int index, int exiting)
 
   /* check-pointing */
   if (new_basetime.tv_sec) commit_basetime.tv_sec = new_basetime.tv_sec;
-  else commit_basetime.tv_sec = basetime.tv_sec; 
+  else commit_basetime.tv_sec = basetime.tv_sec;
 
   /* evaluating any delay we may have to introduce */
   if (config.sql_startup_delay) {
@@ -654,13 +654,13 @@ void P_cache_mark_flush(struct chained_cache *queue[], int index, int exiting)
     }
 
     if (pqq_ptr) {
-      pqq_container = (struct chained_cache *) malloc(pqq_ptr*dbc_size); 
+      pqq_container = (struct chained_cache *) malloc(pqq_ptr*dbc_size);
       if (!pqq_container) {
-	Log(LOG_ERR, "ERROR ( %s/%s ): P_cache_mark_flush() cannot allocate pqq_container. Exiting ..\n", config.name, config.type);
-	exit_gracefully(1); 
+        Log(LOG_ERR, "ERROR ( %s/%s ): P_cache_mark_flush() cannot allocate pqq_container. Exiting ..\n", config.name, config.type);
+        exit_gracefully(1);
       }
     }
-    
+
     /* we copy un-committed elements to a container structure for re-insertion
        in cache. As we copy elements out of the cache we mark entries as free */
     for (j = 0; j < pqq_ptr; j++) {
@@ -932,7 +932,7 @@ void P_update_time_reference(struct insert_data *idata)
       new_basetime.tv_sec = basetime.tv_sec;
       basetime.tv_sec += timeslot;
       if (config.sql_history == COUNT_MONTHLY)
-	timeslot = calc_monthly_timeslot(basetime.tv_sec, config.sql_history_howmany, ADD);
+        timeslot = calc_monthly_timeslot(basetime.tv_sec, config.sql_history_howmany, ADD);
     }
   }
 }
@@ -994,18 +994,16 @@ cdada_list_t *ptm_labels_to_linked_list(const char *ptm_labels)
   }
 
   size_t tokens_counter = 0;
-  char *saveptr = NULL;
-
-  for (token = strtok_r(ptm_array_labels, DEFAULT_SEP, &saveptr); token != NULL; token = strtok_r(NULL, DEFAULT_SEP, &saveptr)) {
+  for (token = strtok(ptm_array_labels, DEFAULT_SEP); token != NULL; token = strtok(NULL, DEFAULT_SEP)) {
     tokens[tokens_counter] = token;
     tokens_counter++;
   }
 
   size_t list_counter;
   for (list_counter = 0;
-	(list_counter < tokens_counter) && (tokens[list_counter] != NULL) &&
-	((list_counter + 1) < tokens_counter) && (tokens[list_counter + 1] != NULL);
-	list_counter += 2) {
+        (list_counter < tokens_counter) && (tokens[list_counter] != NULL) &&
+        ((list_counter + 1) < tokens_counter) && (tokens[list_counter + 1] != NULL);
+        list_counter += 2) {
     memset(&lbl, 0, sizeof(lbl));
 
     if (strlen(tokens[list_counter]) > (MAX_PTM_LABEL_TOKEN_LEN - 1)) {
@@ -1121,6 +1119,36 @@ cdada_list_t *fwd_status_to_linked_list()
   return fwd_status_linked_list;
 }
 
+cdada_list_t *generic_delim_str_to_linked_list(const char *generic_delim_str, const char *generic_str_delim)
+{
+  generic_delim_string delim_s = {0};
+
+  /* Setting the defualt delimiter */
+  if (generic_str_delim == NULL) {
+    generic_str_delim = " ";
+  }
+
+  cdada_list_t *delim_str_to_linked_list = cdada_list_create(generic_delim_str);
+  if (!delim_str_to_linked_list) {
+      Log(LOG_ERR, "ERROR ( %s/%s ): generic_delim_str_to_linked_list() cannot instantiate delim_str_to_linked_list. Exiting ..\n", config.name, config.type);
+      exit_gracefully(1);
+  }
+
+  /* Safer to work on a copy of the original string*/
+  char generic_delim_str_cpy[MAX_GENERIC_DELIM_STR_LEN];
+  strncpy(generic_delim_str_cpy, generic_delim_str, MAX_GENERIC_DELIM_STR_LEN);
+  generic_delim_str_cpy[MAX_GENERIC_DELIM_STR_LEN - 1] = '\0';
+
+  char *saveptr = NULL;
+  for (char *token = strtok_r(generic_delim_str_cpy, generic_str_delim, &saveptr); token != NULL; token = strtok_r(NULL, generic_str_delim, &saveptr)) {
+      memset(&delim_s, 0, sizeof(delim_s));
+      strncpy(delim_s.delim_str, token, MAX_GENERIC_DELIM_STR_LEN - 1);
+      cdada_list_push_back(delim_str_to_linked_list, &delim_s);
+  }
+
+  return delim_str_to_linked_list;
+}
+
 void mpls_label_stack_to_str(char *str_label_stack, int sls_len, u_int32_t *label_stack, int ls_len)
 {
   int max_mpls_label_stack_dec = 0, idx_0;
@@ -1172,52 +1200,52 @@ void load_protos(char *filename, struct protos_table *pt)
       memset(pt, 0, sizeof(struct protos_table));
 
       while (!feof(file)) {
-        if (fgets(buf, sizeof(buf), file)) { 
-	  if (strchr(buf, '\n')) { 
+        if (fgets(buf, sizeof(buf), file)) {
+          if (strchr(buf, '\n')) {
             if (!newline) {
-	      newline = TRUE; 
-	      continue;
-	    }
-	  }
-	  else {
+              newline = TRUE;
+              continue;
+            }
+          }
+          else {
             if (!newline) continue;
-	    newline = FALSE;
-	  }
-	  trim_spaces(buf);
-	  buf_eff_len = strlen(buf);
-	  if (!buf_eff_len || (buf[0] == '!')) {
-	    continue;
-	  }
+            newline = FALSE;
+          }
+          trim_spaces(buf);
+          buf_eff_len = strlen(buf);
+          if (!buf_eff_len || (buf[0] == '!')) {
+            continue;
+          }
 
-	  for (idx = 0, ret = 0; idx < buf_eff_len; idx++) {
-	    ret = isdigit(buf[idx]);
-	    if (!ret) {
-	      break;
-	    }
-	  }
+          for (idx = 0, ret = 0; idx < buf_eff_len; idx++) {
+            ret = isdigit(buf[idx]);
+            if (!ret) {
+              break;
+            }
+          }
 
-	  if (!ret) {
-	    for (idx = 0; _protocols[idx].number != -1; idx++) {
-	      if (!strcmp(buf, _protocols[idx].name)) {
-		ret = _protocols[idx].number;
-		break;
-	      }
-	    }
-	  }
-	  else {
-	    ret = atoi(buf); 
-	  }
+          if (!ret) {
+            for (idx = 0; _protocols[idx].number != -1; idx++) {
+              if (!strcmp(buf, _protocols[idx].name)) {
+                ret = _protocols[idx].number;
+                break;
+              }
+            }
+          }
+          else {
+            ret = atoi(buf);
+          }
 
-	  /* 255 / 'others' excluded from valid IP protocols */
-	  if ((ret >= 0) && (ret < (PROTOS_TABLE_ENTRIES - 1))) {
-	    pt->table[ret] = TRUE;
-	  }
-	  else {
-	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] invalid protocol specified.\n", config.name, config.type, filename, rows); 
-	  }
+          /* 255 / 'others' excluded from valid IP protocols */
+          if ((ret >= 0) && (ret < (PROTOS_TABLE_ENTRIES - 1))) {
+            pt->table[ret] = TRUE;
+          }
+          else {
+            Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] invalid protocol specified.\n", config.name, config.type, filename, rows);
+          }
 
-	  rows++;
-	}
+          rows++;
+        }
       }
       fclose(file);
 
@@ -1227,7 +1255,7 @@ void load_protos(char *filename, struct protos_table *pt)
   }
 
   /* filename check to not print nulls as load_networks()
-     may not be secured inside an if statement */ 
+     may not be secured inside an if statement */
   if (filename) {
     Log(LOG_INFO, "INFO ( %s/%s ): [%s] map successfully (re)loaded.\n", config.name, config.type, filename);
   }
@@ -1263,23 +1291,23 @@ void load_ports(char *filename, struct ports_table *pt)
       memset(pt, 0, sizeof(struct ports_table));
 
       while (!feof(file)) {
-        if (fgets(buf, 8, file)) { 
-	  if (strchr(buf, '\n')) { 
+        if (fgets(buf, 8, file)) {
+          if (strchr(buf, '\n')) {
             if (!newline) {
-	      newline = TRUE; 
-	      continue;
-	    }
-	  }
-	  else {
+              newline = TRUE;
+              continue;
+            }
+          }
+          else {
             if (!newline) continue;
-	    newline = FALSE;
-	  }
-	  trim_spaces(buf);
-	  if (!strlen(buf) || (buf[0] == '!')) continue;
-	  ret = atoi(buf); 
-	  if ((ret > 0) && (ret < PORTS_TABLE_ENTRIES)) pt->table[ret] = TRUE;
-	  else Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] invalid port specified.\n", config.name, config.type, filename, rows); 
-	}
+            newline = FALSE;
+          }
+          trim_spaces(buf);
+          if (!strlen(buf) || (buf[0] == '!')) continue;
+          ret = atoi(buf);
+          if ((ret > 0) && (ret < PORTS_TABLE_ENTRIES)) pt->table[ret] = TRUE;
+          else Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] invalid port specified.\n", config.name, config.type, filename, rows);
+        }
       }
       fclose(file);
 
@@ -1289,7 +1317,7 @@ void load_ports(char *filename, struct ports_table *pt)
   }
 
   /* filename check to not print nulls as load_networks()
-     may not be secured inside an if statement */ 
+     may not be secured inside an if statement */
   if (filename) {
     Log(LOG_INFO, "INFO ( %s/%s ): [%s] map successfully (re)loaded.\n", config.name, config.type, filename);
   }
@@ -1311,3 +1339,4 @@ void load_tos(char *filename, struct protos_table *tost)
 {
   load_protos(filename, tost);
 }
+
