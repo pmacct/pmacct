@@ -812,13 +812,16 @@ int telemetry_daemon(void *t_data_void)
             payload_len = strlen(seg->payload);
             if (payload_len < sizeof(consumer_buf)) {
               strlcpy((char *)consumer_buf, seg->payload, sizeof(consumer_buf));
+              unyte_udp_free_all(seg);
               fd = TELEMETRY_UDP_NOTIF_FD;
             }
             else {
+              unyte_udp_free_all(seg);
               goto select_again;
             }
           }
           else {
+            unyte_udp_free_all(seg);
             goto select_again;
           }
         }
