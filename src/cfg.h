@@ -250,6 +250,7 @@ struct configuration {
   int nfacctd_disable_checks;
   int nfacctd_disable_opt_scope_check;
   int nfacctd_ignore_exporter_address;
+  int nfacctd_pre_processing_checks;
   int telemetry_daemon;
   int telemetry_sock;
   int telemetry_port_tcp;

@@ -8942,3 +8942,17 @@ int cfg_key_nfacctd_bmp_daemon_parse_proxy_header(char *filename, char *name, ch
 
   return changes;
 }
+
+int cfg_key_nfacctd_pre_processing_checks(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_pre_processing_checks = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'nfacctd_pre_processing_checks'. Globalized.\n", filename);
+
+  return changes;
+}
