@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -965,7 +965,7 @@ int PT_map_peer_src_as_handler(char *filename, struct id_entry *e, char *value, 
     return FALSE;
   }
 
-  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'peer_src_as' requires '%s_as_new: [ bgp | longest ]' to be specified.\n",
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'peer_src_as' requires '%s_as: [ bgp | longest ]' to be specified.\n",
       config.name, config.type, filename, config.progname);
 
   return TRUE;
@@ -995,7 +995,7 @@ int PT_map_peer_dst_as_handler(char *filename, struct id_entry *e, char *value, 
     return FALSE;
   }
 
-  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'peer_dst_as' requires '%s_as_new: [ bgp | longest ]' to be specified.\n",
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'peer_dst_as' requires '%s_as: [ bgp | longest ]' to be specified.\n",
       config.name, config.type, filename, config.progname);
 
   return TRUE;
@@ -1025,7 +1025,7 @@ int PT_map_src_local_pref_handler(char *filename, struct id_entry *e, char *valu
     return FALSE;
   }
 
-  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'src_local_pref' requires '%s_as_new: [ bgp | longest ]' to be specified.\n",
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'src_local_pref' requires '%s_as: [ bgp | longest ]' to be specified.\n",
       config.name, config.type, filename, config.progname);
 
   return TRUE;
@@ -1055,7 +1055,7 @@ int PT_map_local_pref_handler(char *filename, struct id_entry *e, char *value, s
     return FALSE;
   }
 
-  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'local_pref' requires '%s_as_new: [ bgp | longest ]' to be specified.\n",
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'local_pref' requires '%s_as: [ bgp | longest ]' to be specified.\n",
       config.name, config.type, filename, config.progname);
 
   return TRUE;
@@ -1081,7 +1081,7 @@ int PT_map_src_roa_handler(char *filename, struct id_entry *e, char *value, stru
     return FALSE;
   }
 
-  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'src_roa' requires '%s_as_new: [ bgp | longest ]' to be specified.\n",
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'src_roa' requires '%s_as: [ bgp | longest ]' to be specified.\n",
       config.name, config.type, filename, config.progname);
 
   return TRUE;
@@ -1107,7 +1107,7 @@ int PT_map_dst_roa_handler(char *filename, struct id_entry *e, char *value, stru
     return FALSE;
   }
 
-  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'dst_roa' requires '%s_as_new: [ bgp | longest ]' to be specified.\n",
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'dst_roa' requires '%s_as: [ bgp | longest ]' to be specified.\n",
       config.name, config.type, filename, config.progname);
 
   return TRUE;
@@ -1146,7 +1146,7 @@ int PT_map_src_comms_handler(char *filename, struct id_entry *e, char *value, st
     return FALSE;
   }
 
-  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'src_comms' requires '%s_as_new: [ bgp | longest ]' to be specified.\n",
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'src_comms' requires '%s_as: [ bgp | longest ]' to be specified.\n",
       config.name, config.type, filename, config.progname);
 
   return TRUE;
@@ -1185,7 +1185,7 @@ int PT_map_comms_handler(char *filename, struct id_entry *e, char *value, struct
     return FALSE;
   }
 
-  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'comms' requires '%s_as_new: [ bgp | longest ]' to be specified.\n",
+  Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'comms' requires '%s_as: [ bgp | longest ]' to be specified.\n",
       config.name, config.type, filename, config.progname);
 
   return TRUE;
