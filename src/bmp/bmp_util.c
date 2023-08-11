@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -238,7 +238,8 @@ struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bg
     for (afi = 0; afi <= afi_max; afi++) {
       for (safi = 0; safi <= safi_max; safi++) {
         if ((bgp_peer_loc->cap_add_paths.cap[afi][safi] && !bgp_peer_rem->cap_add_paths.cap[afi][safi]) ||
-	    (!bgp_peer_loc->cap_add_paths.cap[afi][safi] && bgp_peer_rem->cap_add_paths.cap[afi][safi])) {
+	    (!bgp_peer_loc->cap_add_paths.cap[afi][safi] && bgp_peer_rem->cap_add_paths.cap[afi][safi]) ||
+	    bgp_peer_rem->cap_add_paths.cap[afi][safi] == 1 /* receive only */) {
 	  bgp_peer_loc->cap_add_paths.cap[afi][safi] = FALSE;
 	  bgp_peer_rem->cap_add_paths.cap[afi][safi] = FALSE;
         }

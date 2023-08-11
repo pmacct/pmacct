@@ -304,11 +304,12 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 		    	  config.name, bms->log_str, bgp_peer_str, cap_type, ntohs(cap_data.afi), cap_data.safi,
 			  cap_data.sndrcv);
 		    }
-		    if ((cap_data.sndrcv == 2 /* send */) || (cap_data.sndrcv == 3 /* send and receive */)) {
+		    if ((!online && cap_data.sndrcv /* any */) || (online && 
+		       ((cap_data.sndrcv == 2 /* send */) || (cap_data.sndrcv == 3 /* send and receive */)))) {
 		      afi_t cap_add_paths_afi = ntohs(cap_data.afi);
 
 		      if (cap_add_paths_afi < AFI_MAX && cap_data.safi < SAFI_MAX) {
-		        peer->cap_add_paths.cap[cap_add_paths_afi][cap_data.safi] = TRUE;
+		        peer->cap_add_paths.cap[cap_add_paths_afi][cap_data.safi] = cap_data.sndrcv; /* 1, 2 or 3 */
 
 		        if (cap_add_paths_afi > peer->cap_add_paths.afi_max) {
 		          peer->cap_add_paths.afi_max = cap_add_paths_afi;
