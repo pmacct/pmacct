@@ -2097,13 +2097,12 @@ DESC:		Mainly a workaround to implementations not encoding NetFlow v9/IPIFX opti
 		to the system level (ie. to the IP address of the expoter).
 DEFAULT:	false
 
-KEY:		nfacctd_ignore_exporter_address [GLOBAL, ONLY_NFACCTD]
+KEY:		[ nfacctd_ignore_exporter_address | sfacctd_ignore_exporter_address ] [GLOBAL]
 VALUES:         [ true | false ]
-DESC:		Some IPFIX implementations do send IE #130 (exporterIPv4Address) and/or IE #131
-		(exporterIPv4Address) via Options packets, very convenient per se and especially in
-		case of NAT between the exporter and the collector. This knob is to ignore the IE and
-		honour instead the socket address and was introduced in order to counter some flawed
-		implementations. 
+DESC:		This knob is to use the socket address instead of the one passed as part of the IPFIX,
+		sFlow protocols. Some IPFIX implementations do send IE #130 (exporterIPv4Address) and/
+		or IE #131 (exporterIPv4Address) via Options packets and all sFlow implementations do
+		send Agent Address and that is used by default.
 DEFAULT:	false
 
 KEY:		pre_tag_map [MAP]
