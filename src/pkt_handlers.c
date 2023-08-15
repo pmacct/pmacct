@@ -5920,14 +5920,27 @@ void SF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptr
 {
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   SFSample *sample = (SFSample *) pptrs->f_data;
+  struct sockaddr *sa = (struct sockaddr *) &sample->sourceIP;
 
-  if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V4) {
-    pbgp->peer_src_ip.address.ipv4.s_addr = sample->agent_addr.address.ip_v4.s_addr;
-    pbgp->peer_src_ip.family = AF_INET;
+  if (!config.nfacctd_ignore_exporter_address) {
+    if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V4) {
+      pbgp->peer_src_ip.address.ipv4.s_addr = sample->agent_addr.address.ip_v4.s_addr;
+      pbgp->peer_src_ip.family = AF_INET;
+    }
+    else if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V6) {
+      memcpy(&pbgp->peer_src_ip.address.ipv6, &sample->agent_addr.address.ip_v6, IP6AddrSz);
+      pbgp->peer_src_ip.family = AF_INET6;
+    }
   }
-  else if (sample->agent_addr.type == SFLADDRESSTYPE_IP_V6) {
-    memcpy(&pbgp->peer_src_ip.address.ipv6, &sample->agent_addr.address.ip_v6, IP6AddrSz);
-    pbgp->peer_src_ip.family = AF_INET6;
+  else {
+    if (sa->sa_family == AF_INET) {
+      pbgp->peer_src_ip.address.ipv4.s_addr = ((struct sockaddr_in *)sa)->sin_addr.s_addr;
+      pbgp->peer_src_ip.family = AF_INET;
+    }
+    else if (sa->sa_family == AF_INET6) {
+      memcpy(&pbgp->peer_src_ip.address.ipv6, &((struct sockaddr_in6 *)sa)->sin6_addr, IP6AddrSz);
+      pbgp->peer_src_ip.family = AF_INET6;
+    }
   }
 }
 

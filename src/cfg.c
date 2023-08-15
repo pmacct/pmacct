@@ -403,6 +403,7 @@ static const struct _dictionary_line dictionary[] = {
   {"sfacctd_counter_kafka_partition_key", cfg_key_sfacctd_counter_kafka_partition_key},
   {"sfacctd_counter_kafka_retry", cfg_key_sfacctd_counter_kafka_retry},
   {"sfacctd_counter_kafka_config_file", cfg_key_sfacctd_counter_kafka_config_file},
+  {"sfacctd_ignore_exporter_address", cfg_key_nfacctd_ignore_exporter_address},
   {"sfacctd_kafka_broker_host", cfg_key_nfacctd_kafka_broker_host},
   {"sfacctd_kafka_broker_port", cfg_key_nfacctd_kafka_broker_port},
   {"sfacctd_kafka_topic", cfg_key_nfacctd_kafka_topic},

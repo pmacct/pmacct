@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -59,7 +59,7 @@ enum INMCounters_version {
 
 typedef struct _SFSample {
   struct timeval *ts;
-  struct in_addr sourceIP;
+  struct sockaddr_storage sourceIP;
   SFLAddress agent_addr;
   u_int32_t agentSubId;
 

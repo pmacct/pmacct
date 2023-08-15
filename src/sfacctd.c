@@ -1421,6 +1421,9 @@ int main(int argc,char **argv, char **envp)
       case 5:
 	getAddress(&spp, &spp.agent_addr);
 
+	/* We backup the source IP address from f_agent */
+	memcpy(&spp.sourceIP, &client, sizeof(struct sockaddr_storage));
+
 	/* We trash the source IP address from f_agent */
 	if (spp.agent_addr.type == SFLADDRESSTYPE_IP_V4) {
 	  struct sockaddr *sa = (struct sockaddr *) &client;
