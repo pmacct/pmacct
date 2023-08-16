@@ -74,6 +74,7 @@ extern void NF_dst_mac_handler(struct channels_list_entry *, struct packet_ptrs 
 extern void NF_vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_in_vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_out_vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void NF_cvlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_cos_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_etype_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_src_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
