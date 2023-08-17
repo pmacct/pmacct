@@ -30,6 +30,7 @@ extern void evaluate_packet_handlers();
 extern void src_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void dst_mac_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void cvlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void cos_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void etype_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void mpls_label_top_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

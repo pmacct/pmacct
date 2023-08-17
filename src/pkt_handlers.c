@@ -150,8 +150,7 @@ void evaluate_packet_handlers()
 
     if (channels_list[index].aggregation_3 & COUNT_CVLAN) {
       if (config.acct_type == ACCT_PM) {
-        warn_unsupported_packet_handler(COUNT_INT_CVLAN, ACCT_PM);
-        primitives--;
+        channels_list[index].phandler[primitives] = cvlan_handler;
       }
       else if (config.acct_type == ACCT_NF) {
         channels_list[index].phandler[primitives] = NF_cvlan_handler;
@@ -1293,6 +1292,18 @@ void vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, 
   }
 }
 
+void cvlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  u_int16_t cvlan_id = 0;
+
+  if (pptrs->cvlan_ptr) {
+    memcpy(&cvlan_id, pptrs->cvlan_ptr, 2);
+    ptun->cvlan_id = ntohs(cvlan_id);
+    ptun->cvlan_id = ptun->cvlan_id & 0x0FFF;
+  }
+}
+
 void cos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
@@ -2250,6 +2261,12 @@ void NF_cvlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
     if (tpl->fld[NF9_DOT1QCVLANID].count) {
       OTPL_CP_LAST_M(&tmp16, NF9_DOT1QCVLANID, 2);
     }
+    else if (tpl->fld[NF9_DATALINK_FRAME_SECTION].count ||
+	     tpl->fld[NF9_LAYER2_PKT_SECTION_DATA].count) {
+      cvlan_handler(chptr, pptrs, data);
+      break;
+    }
+
     ptun->cvlan_id = ntohs(tmp16);
     break;
   default:
