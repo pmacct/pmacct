@@ -50,7 +50,7 @@ char *pmc_extract_token(char **, int);
 u_int16_t pmc_bgp_rd_type_get(u_int16_t);
 int pmc_bgp_rd2str(char *, rd_t *);
 int pmc_bgp_str2rd(rd_t *, char *);
-char *pmc_compose_json(u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
+char *pmc_compose_json(u_int64_t, u_int64_t, u_int64_t, u_int8_t, struct pkt_primitives *,
 			struct pkt_bgp_primitives *, struct pkt_legacy_bgp_primitives *,
 			struct pkt_nat_primitives *, struct pkt_mpls_primitives *,
 			struct pkt_tunnel_primitives *, u_char *,
@@ -178,6 +178,7 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     printf("DST_MAC            ");
     printf("VLAN   ");
     printf("OUT_VLAN   ");
+    printf("CVLAN  ");
     printf("COS ");
     printf("ETYPE  ");
 #endif
@@ -284,6 +285,7 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count & COUNT_DST_MAC) printf("DST_MAC            "); 
     if (what_to_count & COUNT_VLAN) printf("VLAN   ");
     if (what_to_count_2 & COUNT_OUT_VLAN) printf("OUT_VLAN ");
+    if (what_to_count_3 & COUNT_CVLAN) printf("CVLAN  ");
     if (what_to_count & COUNT_COS) printf("COS ");
     if (what_to_count & COUNT_ETHERTYPE) printf("ETYPE  ");
 #endif
@@ -409,6 +411,7 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     printf("%sDST_MAC", write_sep(sep, &count));
     printf("%sVLAN", write_sep(sep, &count));
     printf("%sOUT_VLAN", write_sep(sep, &count));
+    printf("%sCVLAN", write_sep(sep, &count));
     printf("%sCOS", write_sep(sep, &count));
     printf("%sETYPE", write_sep(sep, &count));
 #endif
@@ -508,6 +511,7 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     if (what_to_count & COUNT_DST_MAC) printf("%sDST_MAC", write_sep(sep, &count)); 
     if (what_to_count & COUNT_VLAN) printf("%sVLAN", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_OUT_VLAN) printf("%sOUT_VLAN", write_sep(sep, &count));
+    if (what_to_count_3 & COUNT_CVLAN) printf("%sCVLAN", write_sep(sep, &count));
     if (what_to_count & COUNT_COS) printf("%sCOS", write_sep(sep, &count));
     if (what_to_count & COUNT_ETHERTYPE) printf("%sETYPE", write_sep(sep, &count));
 #endif
@@ -826,6 +830,10 @@ int main(int argc,char **argv)
         else if (!strcmp(count_token[count_index], "out_vlan")) {
 	  count_token_int[count_index] = COUNT_INT_OUT_VLAN;
 	  what_to_count_2 |= COUNT_OUT_VLAN;
+	}
+        else if (!strcmp(count_token[count_index], "cvlan")) {
+	  count_token_int[count_index] = COUNT_INT_CVLAN;
+	  what_to_count_3 |= COUNT_CVLAN;
 	}
         else if (!strcmp(count_token[count_index], "cos")) {
           count_token_int[count_index] = COUNT_INT_COS;
@@ -2301,6 +2309,11 @@ int main(int argc,char **argv)
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), acc_elem->primitives.out_vlan_id);
         }
 
+	if (!have_wtc || (what_to_count_3 & COUNT_CVLAN)) {
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-5u  ", ptun->cvlan_id);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), ptun->cvlan_id);
+	}
+
         if (!have_wtc || (what_to_count & COUNT_COS)) {
           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-2u  ", acc_elem->primitives.cos);
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), acc_elem->primitives.cos);
@@ -2902,7 +2915,7 @@ int main(int argc,char **argv)
 	if (want_output & PRINT_OUTPUT_JSON) {
 	  char *json_str;
 
-	  json_str = pmc_compose_json(what_to_count, what_to_count_2, acc_elem->flow_type,
+	  json_str = pmc_compose_json(what_to_count, what_to_count_2, what_to_count_3, acc_elem->flow_type,
 				      &acc_elem->primitives, pbgp, plbgp, pnat, pmpls, ptun, pcust, pvlen,
 				      acc_elem->pkt_len, acc_elem->pkt_num, acc_elem->flo_num,
 				      acc_elem->tcp_flags, acc_elem->tunnel_tcp_flags, NULL,
@@ -3362,7 +3375,7 @@ int pmc_bgp_str2rd(rd_t *output, char *value)
 }
 
 #ifdef WITH_JANSSON 
-char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
+char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3, u_int8_t flow_type, struct pkt_primitives *pbase,
 		  struct pkt_bgp_primitives *pbgp, struct pkt_legacy_bgp_primitives *plbgp,
 		  struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
 		  struct pkt_tunnel_primitives *ptun, u_char *pcust, struct pkt_vlen_hdr_primitives *pvlen,
@@ -3414,6 +3427,8 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   if (wtc & COUNT_VLAN) json_object_set_new_nocheck(obj, "vlan", json_integer((json_int_t)pbase->vlan_id));
 
   if (wtc_2 & COUNT_OUT_VLAN) json_object_set_new_nocheck(obj, "vlan_out", json_integer((json_int_t)pbase->out_vlan_id));
+
+  if (wtc_3 & COUNT_CVLAN) json_object_set_new_nocheck(obj, "cvlan", json_integer((json_int_t)ptun->cvlan_id));
 
   if (wtc & COUNT_COS) json_object_set_new_nocheck(obj, "cos", json_integer((json_int_t)pbase->cos));
 
@@ -3786,7 +3801,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struc
   return tmpbuf;
 }
 #else
-char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int8_t flow_type, struct pkt_primitives *pbase,
+char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3, u_int8_t flow_type, struct pkt_primitives *pbase,
                   struct pkt_bgp_primitives *pbgp, struct pkt_legacy_bgp_primitives *plbgp,
 		  struct pkt_nat_primitives *pnat, struct pkt_mpls_primitives *pmpls,
 		  struct pkt_tunnel_primitives *ptun, u_char *pcust, struct pkt_vlen_hdr_primitives *pvlen,

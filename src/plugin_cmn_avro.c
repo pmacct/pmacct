@@ -97,6 +97,9 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_in
   if (wtc_2 & COUNT_OUT_VLAN)
     avro_schema_record_field_append(schema, "vlan_out", avro_schema_long());
 
+  if (wtc_3 & COUNT_CVLAN)
+    avro_schema_record_field_append(schema, "cvlan", avro_schema_long());
+
   if (wtc & COUNT_COS)
     avro_schema_record_field_append(schema, "cos", avro_schema_long());
 
@@ -600,6 +603,11 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wt
   if (wtc_2 & COUNT_OUT_VLAN) {
     pm_avro_check(avro_value_get_by_name(&value, "vlan_out", &field, NULL));
     pm_avro_check(avro_value_set_long(&field, pbase->out_vlan_id));
+  }
+
+  if (wtc_3 & COUNT_CVLAN) {
+    pm_avro_check(avro_value_get_by_name(&value, "cvlan", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, ptun->cvlan_id));
   }
 
   if (wtc & COUNT_COS) {

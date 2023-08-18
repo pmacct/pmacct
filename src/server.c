@@ -375,7 +375,8 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
           if (!following_chain) acc_elem = (struct acc *) elem;
 	  if (!test_zero_elem(acc_elem)) {
 	    /* XXX: support for custom and vlen primitives */
-	    mask_elem(&tbuf, &bbuf, &lbbuf, &nbuf, &mbuf, &ubuf, acc_elem, request.what_to_count, request.what_to_count_2, extras); 
+	    mask_elem(&tbuf, &bbuf, &lbbuf, &nbuf, &mbuf, &ubuf, acc_elem, request.what_to_count,
+		      request.what_to_count_2, request.what_to_count_3, extras); 
             if (!memcmp(&tbuf, &request.data, sizeof(struct pkt_primitives)) &&
 		!memcmp(&bbuf, &request.pbgp, sizeof(struct pkt_bgp_primitives)) &&
 		!memcmp(&lbbuf, &request.plbgp, sizeof(struct pkt_legacy_bgp_primitives)) &&
@@ -488,7 +489,7 @@ void process_query_data(int sd, unsigned char *buf, int len, struct extra_primit
 
 void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct pkt_legacy_bgp_primitives *d5,
 		struct pkt_nat_primitives *d3, struct pkt_mpls_primitives *d4, struct pkt_tunnel_primitives *d6,
-		struct acc *src, pm_cfgreg_t w, pm_cfgreg_t w2, struct extra_primitives *extras)
+		struct acc *src, pm_cfgreg_t w, pm_cfgreg_t w2, pm_cfgreg_t w3, struct extra_primitives *extras)
 {
   struct pkt_primitives *s1 = &src->primitives;
   struct pkt_bgp_primitives *s2 = src->pbgp;
@@ -512,6 +513,7 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
   if (w & COUNT_DST_MAC) memcpy(d1->eth_dhost, s1->eth_dhost, ETH_ADDR_LEN); 
   if (w & COUNT_VLAN) d1->vlan_id = s1->vlan_id; 
   if (w2 & COUNT_OUT_VLAN) d1->out_vlan_id = s1->out_vlan_id;
+  if (w3 & COUNT_CVLAN) d6->cvlan_id = s6->cvlan_id;
   if (w & COUNT_COS) d1->cos = s1->cos; 
   if (w & COUNT_ETHERTYPE) d1->etype = s1->etype; 
 #endif

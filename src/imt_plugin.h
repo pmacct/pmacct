@@ -140,7 +140,7 @@ extern int build_query_server(char *);
 extern void process_query_data(int, unsigned char *, int, struct extra_primitives *, int, int);
 extern void mask_elem(struct pkt_primitives *, struct pkt_bgp_primitives *, struct pkt_legacy_bgp_primitives *,
 			struct pkt_nat_primitives *, struct pkt_mpls_primitives *, struct pkt_tunnel_primitives *,
-			struct acc *, u_int64_t, u_int64_t, struct extra_primitives *);
+			struct acc *, u_int64_t, u_int64_t, u_int64_t, struct extra_primitives *);
 extern void enQueue_elem(int, struct reply_buffer *, void *, int, int);
 extern void Accumulate_Counters(struct pkt_data *, struct acc *);
 extern int test_zero_elem(struct acc *);
