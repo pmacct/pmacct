@@ -595,7 +595,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wt
     pm_avro_check(avro_value_set_long(&field, pbase->vlan_id));
   }
 
-  if (wtc_3 & COUNT_VLAN) {
+  if (wtc_3 & COUNT_IN_VLAN) {
     pm_avro_check(avro_value_get_by_name(&value, "vlan_in", &field, NULL));
     pm_avro_check(avro_value_set_long(&field, pbase->vlan_id));
   }
