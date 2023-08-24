@@ -19,11 +19,26 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 */
 
+/* defines */ 
 #ifndef _BGP_LOOKUP_H_
 #define _BGP_LOOKUP_H_
 
+
+/* Struct with additional information required to perform correlation of NFv9/IPFIX with BGP information */
+struct bgp_lookup_info {
+  
+  /* Inner/customer layer IPv4 source and destination addresses [e.g. for SRv6 tunnel]*/
+  struct in_addr inner_ip_src;	
+  struct in_addr inner_ip_dst; 
+
+  /* Inner/customer layer IPv6 source and destination addresses [e.g. for SRv6 tunnel] */
+  struct in6_addr inner_ipv6_src;	
+  struct in6_addr inner_ipv6_dst; 
+};
+extern struct bgp_lookup_info *bl_info;
+
 /* prototypes */
-extern void bgp_srcdst_lookup(struct packet_ptrs *, int);
+extern void bgp_srcdst_lookup(struct packet_ptrs *, int, struct bgp_lookup_info *);
 extern void bgp_follow_nexthop_lookup(struct packet_ptrs *, int);
 extern struct bgp_peer *bgp_lookup_find_bgp_peer(struct sockaddr *, struct xflow_status_entry *, u_int16_t, int); 
 extern u_int32_t bgp_route_info_modulo_pathid(struct bgp_peer *, rd_t *, path_id_t *, struct bgp_msg_extra_data *, int);

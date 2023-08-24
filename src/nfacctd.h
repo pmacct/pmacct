@@ -144,5 +144,8 @@ extern void NF_mpls_vpn_rd_from_map(struct packet_ptrs *);
 extern void NF_mpls_vpn_rd_from_ie90(struct packet_ptrs *);
 extern void NF_mpls_vpn_rd_from_options(struct packet_ptrs *);
 
+extern struct bgp_lookup_info *bl_info;
+extern void NF_bgp_lookup_info_preload(struct packet_ptrs *, struct bgp_lookup_info *);
+
 extern struct utpl_field *(*get_ext_db_ie_by_type)(struct template_cache_entry *, u_int32_t, u_int16_t, u_int8_t);
 #endif //NFACCTD_H

@@ -28,7 +28,7 @@
 #include "pmbgpd.h"
 #include "rpki/rpki.h"
 
-void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
+void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type, struct bgp_lookup_info *bl_info)
 {
   struct bgp_misc_structs *bms;
   struct bgp_rt_structs *inter_domain_routing_db;
@@ -179,61 +179,187 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type)
       }
     }
     else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
-      if (!pptrs->bgp_src) {
-        memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
-        nmct2.peer = (struct bgp_peer *) pptrs->bgp_peer;
-	nmct2.afi = AFI_IP6;
-	nmct2.safi = safi;
-        nmct2.rd = &rd;
-        nmct2.peer_dst_ip = NULL;
 
-        memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, sizeof(struct in6_addr));
-	bgp_node_match_ipv6(inter_domain_routing_db->rib[AFI_IP6][safi],
-		            &pref6, (struct bgp_peer *) pptrs->bgp_peer,
-		            bms->route_info_modulo,
-		            bms->bgp_lookup_node_match_cmp, &nmct2,
-		            bms->bnv, &result, &info);
-      }
+      /* SRv6 Tunnel with IPv4 inner/customer layer */
+      if (pptrs->flow_type.traffic_type == PM_FTYPE_SRV6_IPV4) { 
+        if (!pptrs->bgp_src) {
+          memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
+          nmct2.peer = (struct bgp_peer *) pptrs->bgp_peer;
+          nmct2.afi = AFI_IP;
+          nmct2.safi = safi;
+          nmct2.rd = &rd;
+          nmct2.peer_dst_ip = NULL;
 
-      if (!pptrs->bgp_src_info && result) {
-        pptrs->bgp_src = (char *) result;
-        pptrs->bgp_src_info = (char *) info;
-        if (result->p.prefixlen >= pptrs->lm_mask_src) {
-          pptrs->lm_mask_src = result->p.prefixlen;
-          pptrs->lm_method_src = NF_NET_BGP;
+          memcpy(&pref4, &bl_info->inner_ip_src, sizeof(struct in_addr));
+          bgp_node_match_ipv4(inter_domain_routing_db->rib[AFI_IP][safi],
+                              &pref4, (struct bgp_peer *) pptrs->bgp_peer,
+                              bms->route_info_modulo,
+                              bms->bgp_lookup_node_match_cmp, &nmct2,
+                              bms->bnv, &result, &info);
+        }
 
-	  if (config.rpki_roas_file || config.rpki_rtr_cache) {
-	    pptrs->src_roa = rpki_vector_prefix_lookup(bms->bnv); 
-	  }
+        if (!pptrs->bgp_src_info && result) {
+          pptrs->bgp_src = (char *) result;
+          pptrs->bgp_src_info = (char *) info;
+          if (result->p.prefixlen >= pptrs->lm_mask_src) {
+            pptrs->lm_mask_src = result->p.prefixlen;
+            pptrs->lm_method_src = NF_NET_BGP;
+
+            if (config.rpki_roas_file || config.rpki_rtr_cache) {
+              pptrs->src_roa = rpki_vector_prefix_lookup(bms->bnv); 
+            }
+          }
+        }
+
+        if (!pptrs->bgp_dst) {
+          memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
+          nmct2.peer = (struct bgp_peer *) pptrs->bgp_peer;
+          nmct2.afi = AFI_IP;
+          nmct2.safi = safi;
+          nmct2.rd = &rd;
+          nmct2.peer_dst_ip = &peer_dst_ip;
+
+          memcpy(&pref4, &bl_info->inner_ip_dst, sizeof(struct in_addr));
+          bgp_node_match_ipv4(inter_domain_routing_db->rib[AFI_IP][safi],
+                              &pref4, (struct bgp_peer *) pptrs->bgp_peer,
+                              bms->route_info_modulo,
+                              bms->bgp_lookup_node_match_cmp, &nmct2,
+                              bms->bnv, &result, &info);
+        }
+
+        if (!pptrs->bgp_dst_info && result) {
+          pptrs->bgp_dst = (char *) result;
+          pptrs->bgp_dst_info = (char *) info;
+          if (result->p.prefixlen >= pptrs->lm_mask_dst) {
+            pptrs->lm_mask_dst = result->p.prefixlen;
+            pptrs->lm_method_dst = NF_NET_BGP;
+
+            if (config.rpki_roas_file || config.rpki_rtr_cache) {
+              pptrs->dst_roa = rpki_vector_prefix_lookup(bms->bnv);
+            }
+          }
         }
       }
 
-      if (!pptrs->bgp_dst) {
-        memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
-        nmct2.peer = (struct bgp_peer *) pptrs->bgp_peer;
-	nmct2.afi = AFI_IP6;
-	nmct2.safi = safi;
-        nmct2.rd = &rd;
-        nmct2.peer_dst_ip = &peer_dst_ip;
+      /* SRv6 Tunnel with IPv6 inner/customer layer */
+      else if (pptrs->flow_type.traffic_type == PM_FTYPE_SRV6_IPV6) {
+        if (!pptrs->bgp_src) {
+          memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
+          nmct2.peer = (struct bgp_peer *) pptrs->bgp_peer;
+          nmct2.afi = AFI_IP6;
+          nmct2.safi = safi;
+          nmct2.rd = &rd;
+          nmct2.peer_dst_ip = NULL;
 
-        memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
-	bgp_node_match_ipv6(inter_domain_routing_db->rib[AFI_IP6][safi],
-	     		    &pref6, (struct bgp_peer *) pptrs->bgp_peer,
-			    bms->route_info_modulo,
-			    bms->bgp_lookup_node_match_cmp, &nmct2,
-			    bms->bnv, &result, &info);
-      }
+          memcpy(&pref6, &bl_info->inner_ipv6_src, sizeof(struct in6_addr));
+          bgp_node_match_ipv6(inter_domain_routing_db->rib[AFI_IP6][safi],
+                              &pref6, (struct bgp_peer *) pptrs->bgp_peer,
+                              bms->route_info_modulo,
+                              bms->bgp_lookup_node_match_cmp, &nmct2,
+                              bms->bnv, &result, &info);
+        }
 
-      if (!pptrs->bgp_dst_info && result) {
-        pptrs->bgp_dst = (char *) result;
-        pptrs->bgp_dst_info = (char *) info;
-        if (result->p.prefixlen >= pptrs->lm_mask_dst) {
-          pptrs->lm_mask_dst = result->p.prefixlen;
-          pptrs->lm_method_dst = NF_NET_BGP;
+        if (!pptrs->bgp_src_info && result) {
+          pptrs->bgp_src = (char *) result;
+          pptrs->bgp_src_info = (char *) info;
+          if (result->p.prefixlen >= pptrs->lm_mask_src) {
+            pptrs->lm_mask_src = result->p.prefixlen;
+            pptrs->lm_method_src = NF_NET_BGP;
 
-	  if (config.rpki_roas_file || config.rpki_rtr_cache) {
-	    pptrs->dst_roa = rpki_vector_prefix_lookup(bms->bnv);
-	  }
+            if (config.rpki_roas_file || config.rpki_rtr_cache) {
+              pptrs->src_roa = rpki_vector_prefix_lookup(bms->bnv); 
+            }
+          }
+        }
+
+        if (!pptrs->bgp_dst) {
+          memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
+          nmct2.peer = (struct bgp_peer *) pptrs->bgp_peer;
+          nmct2.afi = AFI_IP6;
+          nmct2.safi = safi;
+          nmct2.rd = &rd;
+          nmct2.peer_dst_ip = &peer_dst_ip;
+
+          memcpy(&pref6, &bl_info->inner_ipv6_dst, sizeof(struct in6_addr));
+          bgp_node_match_ipv6(inter_domain_routing_db->rib[AFI_IP6][safi],
+                              &pref6, (struct bgp_peer *) pptrs->bgp_peer,
+                              bms->route_info_modulo,
+                              bms->bgp_lookup_node_match_cmp, &nmct2,
+                              bms->bnv, &result, &info);
+        }
+
+        if (!pptrs->bgp_dst_info && result) {
+          pptrs->bgp_dst = (char *) result;
+          pptrs->bgp_dst_info = (char *) info;
+          if (result->p.prefixlen >= pptrs->lm_mask_dst) {
+            pptrs->lm_mask_dst = result->p.prefixlen;
+            pptrs->lm_method_dst = NF_NET_BGP;
+
+            if (config.rpki_roas_file || config.rpki_rtr_cache) {
+              pptrs->dst_roa = rpki_vector_prefix_lookup(bms->bnv);
+            }
+          }
+        }
+      } 
+
+      /* Plain IPv6 or other IPv6 scenarios */
+      else {
+        if (!pptrs->bgp_src) {
+          memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
+          nmct2.peer = (struct bgp_peer *) pptrs->bgp_peer;
+          nmct2.afi = AFI_IP6;
+          nmct2.safi = safi;
+          nmct2.rd = &rd;
+          nmct2.peer_dst_ip = NULL;
+
+          memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, sizeof(struct in6_addr));
+          bgp_node_match_ipv6(inter_domain_routing_db->rib[AFI_IP6][safi],
+                              &pref6, (struct bgp_peer *) pptrs->bgp_peer,
+                              bms->route_info_modulo,
+                              bms->bgp_lookup_node_match_cmp, &nmct2,
+                              bms->bnv, &result, &info);
+        }
+
+        if (!pptrs->bgp_src_info && result) {
+          pptrs->bgp_src = (char *) result;
+          pptrs->bgp_src_info = (char *) info;
+          if (result->p.prefixlen >= pptrs->lm_mask_src) {
+            pptrs->lm_mask_src = result->p.prefixlen;
+            pptrs->lm_method_src = NF_NET_BGP;
+
+            if (config.rpki_roas_file || config.rpki_rtr_cache) {
+              pptrs->src_roa = rpki_vector_prefix_lookup(bms->bnv); 
+            }
+          }
+        }
+
+        if (!pptrs->bgp_dst) {
+          memset(&nmct2, 0, sizeof(struct node_match_cmp_term2));
+          nmct2.peer = (struct bgp_peer *) pptrs->bgp_peer;
+          nmct2.afi = AFI_IP6;
+          nmct2.safi = safi;
+          nmct2.rd = &rd;
+          nmct2.peer_dst_ip = &peer_dst_ip;
+
+          memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
+          bgp_node_match_ipv6(inter_domain_routing_db->rib[AFI_IP6][safi],
+                              &pref6, (struct bgp_peer *) pptrs->bgp_peer,
+                              bms->route_info_modulo,
+                              bms->bgp_lookup_node_match_cmp, &nmct2,
+                              bms->bnv, &result, &info);
+        }
+
+        if (!pptrs->bgp_dst_info && result) {
+          pptrs->bgp_dst = (char *) result;
+          pptrs->bgp_dst_info = (char *) info;
+          if (result->p.prefixlen >= pptrs->lm_mask_dst) {
+            pptrs->lm_mask_dst = result->p.prefixlen;
+            pptrs->lm_method_dst = NF_NET_BGP;
+
+            if (config.rpki_roas_file || config.rpki_rtr_cache) {
+              pptrs->dst_roa = rpki_vector_prefix_lookup(bms->bnv);
+            }
+          }
         }
       }
     }
