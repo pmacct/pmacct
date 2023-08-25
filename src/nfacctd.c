@@ -3697,10 +3697,14 @@ void NF_init_zmq_host(void *zh, int *pipe_fd)
 }
 #endif
 
-/* Set RD_ORIGIN_MAP flag if RD was set with flow_to_rd_map */
 void NF_mpls_vpn_rd_from_map (struct packet_ptrs *pptrs)
 {
-  if (((rd_t *)&pptrs->bitr)->val) bgp_rd_origin_set((rd_t *)&pptrs->bitr, RD_ORIGIN_MAP);
+  /* Set RD_ORIGIN_MAP flag if RD was set with flow_to_rd_map */
+  if (config.nfacctd_flow_to_rd_map) {
+    if (((rd_t *)&pptrs->bitr)->val) bgp_rd_origin_set((rd_t *)&pptrs->bitr, RD_ORIGIN_MAP);
+  }
+  /* Clear pptrs->bitr to be safe side if f2rdmap is not used */
+  else memset(&pptrs->bitr, 0, 8); 
 }
 
 /* Get RD from IPFIX/NFv9 Data Packet for correlation with BGP/BMP */
@@ -3736,6 +3740,7 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
   u_int32_t ingress_vrfid = 0, egress_vrfid = 0;
   u_int8_t direction = 0;
   rd_t *rd = NULL;
+  rd_t rd_vrfid;
   rd_t rd_default = {0};
   int ret;
 
@@ -3777,7 +3782,8 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
         }
       }
 
-      if ( !entry->in_rd_map || ret != CDADA_SUCCESS ) { /* fallback to the global xflow_status table */
+      /* Fallback to the global xflow_status table */
+      if ( !entry->in_rd_map || ret != CDADA_SUCCESS ) { 
         entry = (struct xflow_status_entry *) pptrs->f_status_g;
         if (entry->in_rd_map) {
           ret = cdada_map_find(entry->in_rd_map, &ingress_vrfid, (void **) &rd);
@@ -3789,6 +3795,16 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
             }
 
             memcpy(&pptrs->bitr, rd, 8);
+            bgp_rd_origin_set((rd_t *)&pptrs->bitr, RD_ORIGIN_FLOW);
+          }
+        }
+
+        /* No RD found in option data --> fallback to vrfid:XXX */
+        if ( !entry->in_rd_map || ret != CDADA_SUCCESS ) { 
+          rd_vrfid.val = ingress_vrfid;
+          if (rd_vrfid.val) {
+            rd_vrfid.type = RD_TYPE_VRFID;
+            memcpy(&pptrs->bitr, &rd_vrfid, 8);
             bgp_rd_origin_set((rd_t *)&pptrs->bitr, RD_ORIGIN_FLOW);
           }
         }
@@ -3811,7 +3827,8 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
 	}
       }
 
-      if ( !entry->out_rd_map || ret != CDADA_SUCCESS ) { /* fallback to the global xflow_status table */
+      /* Fallback to the global xflow_status table */
+      if ( !entry->out_rd_map || ret != CDADA_SUCCESS ) { 
         entry = (struct xflow_status_entry *) pptrs->f_status_g;
         if (entry->out_rd_map) { 
           ret = cdada_map_find(entry->out_rd_map, &egress_vrfid, (void **) &rd);
@@ -3824,6 +3841,16 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
 
 	    memcpy(&pptrs->bitr, rd, 8);
 	    bgp_rd_origin_set((rd_t *)&pptrs->bitr, RD_ORIGIN_FLOW);
+          }
+        }
+
+        /* No RD found in option data --> fallback to vrfid:XXX */
+        if ( !entry->out_rd_map || ret != CDADA_SUCCESS ) { 
+          rd_vrfid.val = egress_vrfid;
+          if (rd_vrfid.val) {
+            rd_vrfid.type = RD_TYPE_VRFID;
+            memcpy(&pptrs->bitr, &rd_vrfid, 8);
+            bgp_rd_origin_set((rd_t *)&pptrs->bitr, RD_ORIGIN_FLOW);
           }
         }
       }
