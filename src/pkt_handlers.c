@@ -2639,42 +2639,54 @@ void NF_peer_dst_as_handler(struct channels_list_entry *chptr, struct packet_ptr
 
 void NF_peer_src_ip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
   struct sockaddr *sa = (struct sockaddr *) pptrs->f_agent;
+  int got_peer_src_ip = FALSE;
 
-  /* 1) NF9_EXPORTER_IPV[46]_ADDRESS from Netflow v9/IPFIX Data Packet */
-  if ((tpl->fld[NF9_EXPORTER_IPV4_ADDRESS].count || tpl->fld[NF9_EXPORTER_IPV6_ADDRESS].count)
-      && !config.nfacctd_ignore_exporter_address) {
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    /* 1) NF9_EXPORTER_IPV[46]_ADDRESS from Netflow v9/IPFIX Data Packet */
+    if ((tpl->fld[NF9_EXPORTER_IPV4_ADDRESS].count || tpl->fld[NF9_EXPORTER_IPV6_ADDRESS].count)
+        && !config.nfacctd_ignore_exporter_address) {
 
-    int got_v4 = FALSE;
+      if (tpl->fld[NF9_EXPORTER_IPV4_ADDRESS].count) {
+        raw_to_addr(&pbgp->peer_src_ip, pptrs->f_data + OTPL_LAST_OFS(NF9_EXPORTER_IPV4_ADDRESS), AF_INET);
+        if (!is_any(&pbgp->peer_src_ip)) {
+	  got_peer_src_ip = TRUE;
+	}
+      }
 
-    if (tpl->fld[NF9_EXPORTER_IPV4_ADDRESS].count) {
-      raw_to_addr(&pbgp->peer_src_ip, pptrs->f_data + OTPL_LAST_OFS(NF9_EXPORTER_IPV4_ADDRESS), AF_INET);
-      if (!is_any(&pbgp->peer_src_ip)) got_v4 = TRUE;
+      if (!got_peer_src_ip && tpl->fld[NF9_EXPORTER_IPV6_ADDRESS].count) {
+        raw_to_addr(&pbgp->peer_src_ip, pptrs->f_data + OTPL_LAST_OFS(NF9_EXPORTER_IPV6_ADDRESS), AF_INET6);
+	got_peer_src_ip = TRUE;
+      }
     }
-
-    if (!got_v4 && tpl->fld[NF9_EXPORTER_IPV6_ADDRESS].count) {
-      raw_to_addr(&pbgp->peer_src_ip, pptrs->f_data + OTPL_LAST_OFS(NF9_EXPORTER_IPV6_ADDRESS), AF_INET6);
+    /* 2) NF9_EXPORTER_IPV[46]_ADDRESS from NetFlow v9/IPFIX options */
+    /* XXX: this is dangerous, currently does not support multiple exporters behind the same proxy (same socket address). */
+    else if (entry->exp_addr.family && !config.nfacctd_ignore_exporter_address) {
+      memcpy(&pbgp->peer_src_ip, &entry->exp_addr, sizeof(struct host_addr));
+      got_peer_src_ip = TRUE;
     }
-  }
-
-  /* 2) NF9_EXPORTER_IPV[46]_ADDRESS from NetFlow v9/IPFIX options */
-  /* XXX: this is dangerous, currently does not support multiple exporters behind the same proxy (same socket address). */
-  else if (entry->exp_addr.family && !config.nfacctd_ignore_exporter_address) {
-    memcpy(&pbgp->peer_src_ip, &entry->exp_addr, sizeof(struct host_addr));
+    break;
+  default:
+    break;
   }
 
   /* 3) Socket IP address */
-  else {
+  if (!got_peer_src_ip) {
     if (sa->sa_family == AF_INET) {
       pbgp->peer_src_ip.address.ipv4.s_addr = ((struct sockaddr_in *)sa)->sin_addr.s_addr;
       pbgp->peer_src_ip.family = AF_INET;
+      got_peer_src_ip = TRUE;
     }
     else if (sa->sa_family == AF_INET6) {
       memcpy(&pbgp->peer_src_ip.address.ipv6, &((struct sockaddr_in6 *)sa)->sin6_addr, IP6AddrSz);
       pbgp->peer_src_ip.family = AF_INET6;
+      got_peer_src_ip = TRUE;
     }
   }
 }
