@@ -560,21 +560,44 @@ AC_ARG_ENABLE(rabbitmq,
   yes)
     AC_MSG_RESULT(yes)
     dnl reasonably old librabbitmq already support pkg-config
-    PKG_CHECK_MODULES([RABBITMQ], [librabbitmq >= 0.8.0], [
+    PKG_CHECK_MODULES([RABBITMQ], [librabbitmq >= 0.13.0], [
       PLUGINS="${PLUGINS} rabbitmq"
       USING_RABBITMQ="yes"
-      PMACCT_CFLAGS="$PMACCT_CFLAGS $RABBITMQ_CFLAGS"
       AC_DEFINE(WITH_RABBITMQ, 1)
+      USING_RABBITMQ_13="yes"
+      AC_DEFINE(WITH_RABBITMQ_13, 1)
+      PMACCT_CFLAGS="$PMACCT_CFLAGS $RABBITMQ_CFLAGS"
       _save_LIBS="$LIBS"
       LIBS="$LIBS $RABBITMQ_LIBS"
       AC_CHECK_LIB([rabbitmq], [amqp_basic_publish])
       LIBS="$_save_LIBS"
       _save_CFLAGS="$CFLAGS"
       CFLAGS="$CFLAGS $RABBITMQ_CFLAGS"
-      AC_CHECK_HEADER([amqp.h])
+      AC_CHECK_HEADER([rabbitmq-c/amqp.h])
       CFLAGS="$_save_CFLAGS"
     ], [
-      AC_MSG_ERROR([Missing RabbitMQ C API. Refer to: https://github.com/alanxz/rabbitmq-c/])
+      USING_RABBITMQ_13="no"
+    ])
+    
+    AS_IF([test "$USING_RABBITMQ_13" = "no"], [
+      PKG_CHECK_MODULES([RABBITMQ], [librabbitmq >= 0.8.0], [
+	PLUGINS="${PLUGINS} rabbitmq"
+	USING_RABBITMQ="yes"
+	AC_DEFINE(WITH_RABBITMQ, 1)
+	USING_RABBITMQ_8="yes"
+	AC_DEFINE(WITH_RABBITMQ_8, 1)
+	PMACCT_CFLAGS="$PMACCT_CFLAGS $RABBITMQ_CFLAGS"
+	_save_LIBS="$LIBS"
+	LIBS="$LIBS $RABBITMQ_LIBS"
+	AC_CHECK_LIB([rabbitmq], [amqp_basic_publish])
+	LIBS="$_save_LIBS"
+	_save_CFLAGS="$CFLAGS"
+	CFLAGS="$CFLAGS $RABBITMQ_CFLAGS"
+	AC_CHECK_HEADER([amqp.h])
+	CFLAGS="$_save_CFLAGS"
+      ], [
+	AC_MSG_ERROR([Missing RabbitMQ C API. Refer to: https://github.com/alanxz/rabbitmq-c/])
+      ])
     ])
     ;;
   no)
@@ -1290,6 +1313,8 @@ AM_CONDITIONAL([WITH_PGSQL], [test x"$USING_PGSQL" = x"yes"])
 AM_CONDITIONAL([WITH_MONGODB], [test x"$USING_MONGODB" = x"yes"])
 AM_CONDITIONAL([WITH_SQLITE3], [test x"$USING_SQLITE3" = x"yes"])
 AM_CONDITIONAL([WITH_RABBITMQ], [test x"$USING_RABBITMQ" = x"yes"])
+AM_CONDITIONAL([WITH_RABBITMQ_8], [test x"$USING_RABBITMQ_8" = x"yes"])
+AM_CONDITIONAL([WITH_RABBITMQ_13], [test x"$USING_RABBITMQ_13" = x"yes"])
 AM_CONDITIONAL([WITH_ZMQ], [test x"$USING_ZMQ" = x"yes"])
 AM_CONDITIONAL([WITH_KAFKA], [test x"$USING_KAFKA" = x"yes"])
 AM_CONDITIONAL([WITH_REDIS], [test x"$USING_REDIS" = x"yes"])

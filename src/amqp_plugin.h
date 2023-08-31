@@ -22,8 +22,13 @@
 #define AMQP_PLUGIN_COMMON_H
 
 /* includes */
+#if defined WITH_RABBITMQ_13
 #include <rabbitmq-c/amqp.h>
 #include <rabbitmq-c/tcp_socket.h>
+#else
+#include <amqp.h>
+#include <amqp_tcp_socket.h>
+#endif
 #include <sys/poll.h>
 
 #include "plugin_common.h"
