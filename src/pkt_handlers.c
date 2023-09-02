@@ -148,7 +148,7 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
-    if (channels_list[index].aggregation_3 & COUNT_CVLAN) {
+    if (channels_list[index].aggregation_3 & COUNT_IN_CVLAN) {
       if (config.acct_type == ACCT_PM) {
         channels_list[index].phandler[primitives] = cvlan_handler;
       }
@@ -156,7 +156,7 @@ void evaluate_packet_handlers()
         channels_list[index].phandler[primitives] = NF_cvlan_handler;
       }
       else if (config.acct_type == ACCT_SF) {
-        warn_unsupported_packet_handler(COUNT_INT_CVLAN, ACCT_SF);
+        warn_unsupported_packet_handler(COUNT_INT_IN_CVLAN, ACCT_SF);
         primitives--;
       }
       primitives++;

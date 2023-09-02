@@ -177,8 +177,8 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     printf("SRC_MAC            ");
     printf("DST_MAC            ");
     printf("VLAN   ");
-    printf("OUT_VLAN   ");
-    printf("CVLAN  ");
+    printf("OUT_VLAN  ");
+    printf("IN_CVLAN  ");
     printf("COS ");
     printf("ETYPE  ");
 #endif
@@ -284,8 +284,8 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count & (COUNT_SRC_MAC|COUNT_SUM_MAC)) printf("SRC_MAC            "); 
     if (what_to_count & COUNT_DST_MAC) printf("DST_MAC            "); 
     if (what_to_count & COUNT_VLAN) printf("VLAN   ");
-    if (what_to_count_2 & COUNT_OUT_VLAN) printf("OUT_VLAN ");
-    if (what_to_count_3 & COUNT_CVLAN) printf("CVLAN  ");
+    if (what_to_count_2 & COUNT_OUT_VLAN) printf("OUT_VLAN  ");
+    if (what_to_count_3 & COUNT_IN_CVLAN) printf("IN_CVLAN  ");
     if (what_to_count & COUNT_COS) printf("COS ");
     if (what_to_count & COUNT_ETHERTYPE) printf("ETYPE  ");
 #endif
@@ -411,7 +411,7 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     printf("%sDST_MAC", write_sep(sep, &count));
     printf("%sVLAN", write_sep(sep, &count));
     printf("%sOUT_VLAN", write_sep(sep, &count));
-    printf("%sCVLAN", write_sep(sep, &count));
+    printf("%sIN_CVLAN", write_sep(sep, &count));
     printf("%sCOS", write_sep(sep, &count));
     printf("%sETYPE", write_sep(sep, &count));
 #endif
@@ -511,7 +511,7 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     if (what_to_count & COUNT_DST_MAC) printf("%sDST_MAC", write_sep(sep, &count)); 
     if (what_to_count & COUNT_VLAN) printf("%sVLAN", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_OUT_VLAN) printf("%sOUT_VLAN", write_sep(sep, &count));
-    if (what_to_count_3 & COUNT_CVLAN) printf("%sCVLAN", write_sep(sep, &count));
+    if (what_to_count_3 & COUNT_IN_CVLAN) printf("%sIN_CVLAN", write_sep(sep, &count));
     if (what_to_count & COUNT_COS) printf("%sCOS", write_sep(sep, &count));
     if (what_to_count & COUNT_ETHERTYPE) printf("%sETYPE", write_sep(sep, &count));
 #endif
@@ -831,9 +831,9 @@ int main(int argc,char **argv)
 	  count_token_int[count_index] = COUNT_INT_OUT_VLAN;
 	  what_to_count_2 |= COUNT_OUT_VLAN;
 	}
-        else if (!strcmp(count_token[count_index], "cvlan")) {
-	  count_token_int[count_index] = COUNT_INT_CVLAN;
-	  what_to_count_3 |= COUNT_CVLAN;
+        else if (!strcmp(count_token[count_index], "in_cvlan")) {
+	  count_token_int[count_index] = COUNT_INT_IN_CVLAN;
+	  what_to_count_3 |= COUNT_IN_CVLAN;
 	}
         else if (!strcmp(count_token[count_index], "cos")) {
           count_token_int[count_index] = COUNT_INT_COS;
@@ -2305,12 +2305,12 @@ int main(int argc,char **argv)
         }
 
 	if (!have_wtc || (what_to_count_2 & COUNT_OUT_VLAN)) {
-          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-5u  ", acc_elem->primitives.out_vlan_id);
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-8u  ", acc_elem->primitives.out_vlan_id);
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), acc_elem->primitives.out_vlan_id);
         }
 
-	if (!have_wtc || (what_to_count_3 & COUNT_CVLAN)) {
-          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-5u  ", ptun->cvlan_id);
+	if (!have_wtc || (what_to_count_3 & COUNT_IN_CVLAN)) {
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-8u  ", ptun->cvlan_id);
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), ptun->cvlan_id);
 	}
 
@@ -3428,7 +3428,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3, u_int8_t
 
   if (wtc_2 & COUNT_OUT_VLAN) json_object_set_new_nocheck(obj, "vlan_out", json_integer((json_int_t)pbase->out_vlan_id));
 
-  if (wtc_3 & COUNT_CVLAN) json_object_set_new_nocheck(obj, "cvlan", json_integer((json_int_t)ptun->cvlan_id));
+  if (wtc_3 & COUNT_IN_CVLAN) json_object_set_new_nocheck(obj, "in_cvlan", json_integer((json_int_t)ptun->cvlan_id));
 
   if (wtc & COUNT_COS) json_object_set_new_nocheck(obj, "cos", json_integer((json_int_t)pbase->cos));
 

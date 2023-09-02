@@ -1263,7 +1263,7 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count_3 & COUNT_IN_VLAN) what_to_count_3 |= COUNT_IN_VLAN;
     if (config.what_to_count_2 & COUNT_OUT_VLAN) what_to_count_2 |= COUNT_OUT_VLAN;
 
-    if (config.what_to_count_3 & COUNT_CVLAN) what_to_count_3 |= COUNT_CVLAN;
+    if (config.what_to_count_3 & COUNT_IN_CVLAN) what_to_count_3 |= COUNT_IN_CVLAN;
 
 #if defined (WITH_NDPI)
     if (config.what_to_count_2 & COUNT_NDPI_CLASS) what_to_count_2 |= COUNT_NDPI_CLASS;
@@ -1383,17 +1383,17 @@ int sql_evaluate_primitives(int primitive)
     primitive++;
   }
 
-  if (what_to_count_3 & COUNT_CVLAN) {
+  if (what_to_count_3 & COUNT_IN_CVLAN) {
     if (primitive) {
       strncat(insert_clause, ", ", SPACELEFT(insert_clause));
       strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
       strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
     }
-    strncat(insert_clause, "cvlan", SPACELEFT(insert_clause));
+    strncat(insert_clause, "cvlan_in", SPACELEFT(insert_clause));
     strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
-    strncat(where[primitive].string, "cvlan=%u", SPACELEFT(where[primitive].string));
-    values[primitive].type = where[primitive].type = COUNT_INT_CVLAN;
-    values[primitive].handler = where[primitive].handler = count_cvlan_handler;
+    strncat(where[primitive].string, "cvlan_in=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_IN_CVLAN;
+    values[primitive].handler = where[primitive].handler = count_in_cvlan_handler;
     primitive++;
   }
 

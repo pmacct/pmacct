@@ -817,7 +817,7 @@ int main(int argc,char **argv, char **envp)
 	  cb_data.has_tun_prims = TRUE;
 	}
 
-	if (list->cfg.what_to_count_3 & COUNT_CVLAN)
+	if (list->cfg.what_to_count_3 & COUNT_IN_CVLAN)
 	  list->cfg.data_type |= PIPE_TYPE_TUN;
 
         if (list->cfg.what_to_count_2 & (COUNT_LABEL|COUNT_MPLS_LABEL_STACK))

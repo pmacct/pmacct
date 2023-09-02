@@ -513,7 +513,7 @@ void mask_elem(struct pkt_primitives *d1, struct pkt_bgp_primitives *d2, struct 
   if (w & COUNT_DST_MAC) memcpy(d1->eth_dhost, s1->eth_dhost, ETH_ADDR_LEN); 
   if (w & COUNT_VLAN) d1->vlan_id = s1->vlan_id; 
   if (w2 & COUNT_OUT_VLAN) d1->out_vlan_id = s1->out_vlan_id;
-  if (w3 & COUNT_CVLAN) d6->cvlan_id = s6->cvlan_id;
+  if (w3 & COUNT_IN_CVLAN) d6->cvlan_id = s6->cvlan_id;
   if (w & COUNT_COS) d1->cos = s1->cos; 
   if (w & COUNT_ETHERTYPE) d1->etype = s1->etype; 
 #endif
