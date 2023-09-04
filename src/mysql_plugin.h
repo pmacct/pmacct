@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -36,6 +36,7 @@ int MY_evaluate_history(int);
 int MY_compose_static_queries();
 void MY_Lock(struct DBdesc *);
 void MY_Unlock(struct BE_descs *);
+void MY_Set_Timezone(struct DBdesc *);
 void MY_DB_Connect(struct DBdesc *, char *);
 void MY_DB_Close(struct BE_descs *); 
 void MY_create_dyn_table(struct DBdesc *, char *);

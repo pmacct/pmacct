@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -665,6 +665,9 @@ int MY_compose_static_queries()
     }
   }
 
+  /* SET time_zone */
+  strncpy(timezone_clause, "SET time_zone = '+00:00'", sizeof(timezone_clause));
+
   return primitives;
 }
 
@@ -683,6 +686,17 @@ void MY_Unlock(struct BE_descs *bed)
 {
   if (bed->p->connected) mysql_query(bed->p->desc, unlock_clause);
   if (bed->b->connected) mysql_query(bed->b->desc, unlock_clause);
+}
+
+void MY_Set_Timezone(struct DBdesc *db)
+{
+  if (!db->fail) {
+    if (mysql_query(db->desc, timezone_clause)) {
+      MY_get_errmsg(db);
+      sql_db_warnmsg(db);
+      /* non fatal error */
+    }
+  }
 }
 
 void MY_DB_Connect(struct DBdesc *db, char *host)
@@ -717,6 +731,10 @@ void MY_DB_Connect(struct DBdesc *db, char *host)
     else {
       sql_db_ok(db);
     }
+  }
+
+  if (config.timestamps_utc) {
+    MY_Set_Timezone(db);
   }
 }
 

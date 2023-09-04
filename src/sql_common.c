@@ -41,6 +41,7 @@ char insert_full_clause[LONGSRVBUFLEN];
 char values_clause[LONGLONGSRVBUFLEN];
 char *multi_values_buffer;
 char where_clause[LONGLONGSRVBUFLEN];
+char timezone_clause[LONGSRVBUFLEN];
 unsigned char *pipebuf;
 struct db_cache *sql_cache;
 struct db_cache **sql_queries_queue, **sql_pending_queries_queue;

@@ -390,6 +390,7 @@ extern char insert_full_clause[LONGSRVBUFLEN];
 extern char values_clause[LONGLONGSRVBUFLEN];
 extern char *multi_values_buffer;
 extern char where_clause[LONGLONGSRVBUFLEN];
+extern char timezone_clause[LONGSRVBUFLEN];
 extern unsigned char *pipebuf;
 extern struct db_cache *sql_cache;
 extern struct db_cache **sql_queries_queue, **sql_pending_queries_queue;
