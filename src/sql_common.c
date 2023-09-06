@@ -1398,6 +1398,20 @@ int sql_evaluate_primitives(int primitive)
     primitive++;
   }
 
+  if (what_to_count_3 & COUNT_OUT_CVLAN) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "cvlan_out", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "%u", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "cvlan_out=%u", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_OUT_CVLAN;
+    values[primitive].handler = where[primitive].handler = count_out_cvlan_handler;
+    primitive++;
+  }
+
   if (what_to_count & COUNT_COS) {
     if (primitive) {
       strncat(insert_clause, ", ", SPACELEFT(insert_clause));

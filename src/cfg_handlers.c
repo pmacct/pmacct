@@ -270,11 +270,13 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "in_vlan")) cfg_set_aggregate(filename, value, COUNT_INT_IN_VLAN, count_token);
     else if (!strcmp(count_token, "vlan")) cfg_set_aggregate(filename, value, COUNT_INT_VLAN, count_token);
     else if (!strcmp(count_token, "in_cvlan")) cfg_set_aggregate(filename, value, COUNT_INT_IN_CVLAN, count_token);
+    else if (!strcmp(count_token, "out_cvlan")) cfg_set_aggregate(filename, value, COUNT_INT_OUT_CVLAN, count_token);
     else if (!strcmp(count_token, "sum_mac")) cfg_set_aggregate(filename, value, COUNT_INT_SUM_MAC, count_token);
 #else
     else if (!strcmp(count_token, "src_mac") || !strcmp(count_token, "dst_mac") ||
        !strcmp(count_token, "vlan") || !strcmp(count_token, "in_vlan") ||
-       !strcmp(count_token, "out_vlan") || !strcmp(count_token, "sum_mac")) {
+       !strcmp(count_token, "out_vlan") || !strcmp(count_token, "sum_mac") ||
+       !strcmp(count_token, "in_cvlan") || !strcmp(count_token, "out_cvlan")) {
       Log(LOG_WARNING, "WARN: [%s] pmacct was compiled with --disable-l2 but 'aggregate' contains a L2 primitive. Ignored.\n", filename);
     }
 #endif

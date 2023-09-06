@@ -98,6 +98,14 @@ void count_in_cvlan_handler(const struct db_cache *cache_elem, struct insert_dat
   *ptr_values += strlen(*ptr_values);
 }
 
+void count_out_cvlan_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->ptun->out_cvlan_id);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->ptun->out_cvlan_id);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
 void count_cos_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->primitives.cos);

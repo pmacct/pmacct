@@ -112,6 +112,11 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3)
     idx++;
   }
 
+  if (wtc_3 & COUNT_OUT_CVLAN) {
+    cjhandler[idx] = compose_json_out_cvlan;
+    idx++;
+  }
+
   if (wtc & COUNT_COS) {
     cjhandler[idx] = compose_json_cos;
     idx++;
@@ -632,6 +637,11 @@ void compose_json_out_vlan(json_t *obj, struct chained_cache *cc)
 void compose_json_in_cvlan(json_t *obj, struct chained_cache *cc)
 {
   json_object_set_new_nocheck(obj, "cvlan_in", json_integer((json_int_t)cc->ptun->cvlan_id));
+}
+
+void compose_json_out_cvlan(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "cvlan_out", json_integer((json_int_t)cc->ptun->out_cvlan_id));
 }
 
 void compose_json_cos(json_t *obj, struct chained_cache *cc)

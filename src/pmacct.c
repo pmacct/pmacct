@@ -835,6 +835,10 @@ int main(int argc,char **argv)
 	  count_token_int[count_index] = COUNT_INT_IN_CVLAN;
 	  what_to_count_3 |= COUNT_IN_CVLAN;
 	}
+        else if (!strcmp(count_token[count_index], "out_cvlan")) {
+	  count_token_int[count_index] = COUNT_INT_OUT_CVLAN;
+	  what_to_count_3 |= COUNT_OUT_CVLAN;
+	}
         else if (!strcmp(count_token[count_index], "cos")) {
           count_token_int[count_index] = COUNT_INT_COS;
           what_to_count |= COUNT_COS;
@@ -2314,6 +2318,11 @@ int main(int argc,char **argv)
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), ptun->cvlan_id);
 	}
 
+	if (!have_wtc || (what_to_count_3 & COUNT_OUT_CVLAN)) {
+          if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-9u  ", ptun->out_cvlan_id);
+          else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), ptun->out_cvlan_id);
+	}
+
         if (!have_wtc || (what_to_count & COUNT_COS)) {
           if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-2u  ", acc_elem->primitives.cos);
           else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), acc_elem->primitives.cos);
@@ -3429,6 +3438,8 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3, u_int8_t
   if (wtc_2 & COUNT_OUT_VLAN) json_object_set_new_nocheck(obj, "vlan_out", json_integer((json_int_t)pbase->out_vlan_id));
 
   if (wtc_3 & COUNT_IN_CVLAN) json_object_set_new_nocheck(obj, "in_cvlan", json_integer((json_int_t)ptun->cvlan_id));
+
+  if (wtc_3 & COUNT_OUT_CVLAN) json_object_set_new_nocheck(obj, "out_cvlan", json_integer((json_int_t)ptun->out_cvlan_id));
 
   if (wtc & COUNT_COS) json_object_set_new_nocheck(obj, "cos", json_integer((json_int_t)pbase->cos));
 

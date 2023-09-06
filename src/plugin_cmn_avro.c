@@ -58,11 +58,13 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_in
   avro_schema_union_append(optstr_s, avro_schema_null());
   avro_schema_union_append(optstr_s, avro_schema_string());
 
-  if (wtc & COUNT_TAG)
+  if (wtc & COUNT_TAG) {
     avro_schema_record_field_append(schema, "tag", avro_schema_long());
+  }
 
-  if (wtc & COUNT_TAG2)
+  if (wtc & COUNT_TAG2) {
     avro_schema_record_field_append(schema, "tag2", avro_schema_long());
+  }
 
   if (wtc_2 & COUNT_LABEL) {
     if (config.pretag_label_encode_as_map) {
@@ -73,45 +75,61 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_in
     }
   }
 
-  if (wtc & COUNT_CLASS)
+  if (wtc & COUNT_CLASS) {
     avro_schema_record_field_append(schema, "class_legacy", avro_schema_string());
+  }
 
 #if defined (WITH_NDPI)
-  if (wtc_2 & COUNT_NDPI_CLASS)
+  if (wtc_2 & COUNT_NDPI_CLASS) {
     avro_schema_record_field_append(schema, "class", avro_schema_string());
+  }
 #endif
 
 #if defined (HAVE_L2)
-  if (wtc & (COUNT_SRC_MAC|COUNT_SUM_MAC))
+  if (wtc & (COUNT_SRC_MAC|COUNT_SUM_MAC)) {
     avro_schema_record_field_append(schema, "mac_src", avro_schema_string());
+  }
 
-  if (wtc & COUNT_DST_MAC)
+  if (wtc & COUNT_DST_MAC) {
     avro_schema_record_field_append(schema, "mac_dst", avro_schema_string());
+  }
 
-  if (wtc & COUNT_VLAN)
+  if (wtc & COUNT_VLAN) {
     avro_schema_record_field_append(schema, "vlan", avro_schema_long());
+  }
 
-  if (wtc_3 & COUNT_IN_VLAN)
+  if (wtc_3 & COUNT_IN_VLAN) {
     avro_schema_record_field_append(schema, "vlan_in", avro_schema_long());
+  }
 
-  if (wtc_2 & COUNT_OUT_VLAN)
+  if (wtc_2 & COUNT_OUT_VLAN) {
     avro_schema_record_field_append(schema, "vlan_out", avro_schema_long());
+  }
 
-  if (wtc_3 & COUNT_IN_CVLAN)
+  if (wtc_3 & COUNT_IN_CVLAN) {
     avro_schema_record_field_append(schema, "cvlan_in", avro_schema_long());
+  }
 
-  if (wtc & COUNT_COS)
+  if (wtc_3 & COUNT_OUT_CVLAN) {
+    avro_schema_record_field_append(schema, "cvlan_out", avro_schema_long());
+  }
+
+  if (wtc & COUNT_COS) {
     avro_schema_record_field_append(schema, "cos", avro_schema_long());
+  }
 
-  if (wtc & COUNT_ETHERTYPE)
+  if (wtc & COUNT_ETHERTYPE) {
     avro_schema_record_field_append(schema, "etype", avro_schema_string());
+  }
 #endif
 
-  if (wtc & (COUNT_SRC_AS|COUNT_SUM_AS))
+  if (wtc & (COUNT_SRC_AS|COUNT_SUM_AS)) { 
     avro_schema_record_field_append(schema, "as_src", avro_schema_long());
+  }
 
-  if (wtc & COUNT_DST_AS)
+  if (wtc & COUNT_DST_AS) {
     avro_schema_record_field_append(schema, "as_dst", avro_schema_long());
+  }
 
   if (wtc & COUNT_STD_COMM) {
     if (config.bgp_comms_encode_as_array) {
@@ -149,26 +167,33 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_in
     }
   }
 
-  if (wtc & COUNT_LOCAL_PREF)
+  if (wtc & COUNT_LOCAL_PREF) {
     avro_schema_record_field_append(schema, "local_pref", avro_schema_long());
+  }
 
-  if (wtc & COUNT_MED)
+  if (wtc & COUNT_MED) {
     avro_schema_record_field_append(schema, "med", avro_schema_long());
+  }
 
-  if (wtc_2 & COUNT_DST_ROA)
+  if (wtc_2 & COUNT_DST_ROA) {
     avro_schema_record_field_append(schema, "roa_dst", avro_schema_string());
+  }
 
-  if (wtc & COUNT_PEER_SRC_AS)
+  if (wtc & COUNT_PEER_SRC_AS) {
     avro_schema_record_field_append(schema, "peer_as_src", avro_schema_long());
+  }
 
-  if (wtc & COUNT_PEER_DST_AS)
+  if (wtc & COUNT_PEER_DST_AS) {
     avro_schema_record_field_append(schema, "peer_as_dst", avro_schema_long());
+  }
 
-  if (wtc & COUNT_PEER_SRC_IP)
+  if (wtc & COUNT_PEER_SRC_IP) {
     avro_schema_record_field_append(schema, "peer_ip_src", avro_schema_string());
+  }
 
-  if (wtc & COUNT_PEER_DST_IP)
+  if (wtc & COUNT_PEER_DST_IP) {
     avro_schema_record_field_append(schema, "peer_ip_dst", avro_schema_string());
+  }
 
   if (wtc & COUNT_SRC_STD_COMM) {
     if (config.bgp_comms_encode_as_array) {
@@ -206,65 +231,84 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_in
     }
   }
 
-  if (wtc & COUNT_SRC_LOCAL_PREF)
+  if (wtc & COUNT_SRC_LOCAL_PREF) {
     avro_schema_record_field_append(schema, "local_pref_src", avro_schema_long());
+  }
 
-  if (wtc & COUNT_SRC_MED)
+  if (wtc & COUNT_SRC_MED) {
     avro_schema_record_field_append(schema, "med_src", avro_schema_long());
+  }
 
-  if (wtc_2 & COUNT_SRC_ROA)
+  if (wtc_2 & COUNT_SRC_ROA) {
     avro_schema_record_field_append(schema, "roa_src", avro_schema_string());
+  }
 
-  if (wtc & COUNT_IN_IFACE)
+  if (wtc & COUNT_IN_IFACE) {
     avro_schema_record_field_append(schema, "iface_in", avro_schema_long());
+  }
 
-  if (wtc & COUNT_OUT_IFACE)
+  if (wtc & COUNT_OUT_IFACE) {
     avro_schema_record_field_append(schema, "iface_out", avro_schema_long());
+  }
 
-  if (wtc & COUNT_MPLS_VPN_RD)
+  if (wtc & COUNT_MPLS_VPN_RD) {
     avro_schema_record_field_append(schema, "mpls_vpn_rd", avro_schema_string());
+  }
 
-  if (wtc_2 & COUNT_MPLS_PW_ID)
+  if (wtc_2 & COUNT_MPLS_PW_ID) {
     avro_schema_record_field_append(schema, "mpls_pw_id", avro_schema_long());
+  }
 
-  if (wtc & (COUNT_SRC_HOST|COUNT_SUM_HOST))
+  if (wtc & (COUNT_SRC_HOST|COUNT_SUM_HOST)) {
     avro_schema_record_field_append(schema, "ip_src", avro_schema_string());
+  }
 
-  if (wtc & (COUNT_SRC_NET|COUNT_SUM_NET))
+  if (wtc & (COUNT_SRC_NET|COUNT_SUM_NET)) {
     avro_schema_record_field_append(schema, "net_src", avro_schema_string());
+  }
 
-  if (wtc & COUNT_DST_HOST)
+  if (wtc & COUNT_DST_HOST) {
     avro_schema_record_field_append(schema, "ip_dst", avro_schema_string());
+  }
 
-  if (wtc & COUNT_DST_NET)
+  if (wtc & COUNT_DST_NET) {
     avro_schema_record_field_append(schema, "net_dst", avro_schema_string());
+  }
 
-  if (wtc & COUNT_SRC_NMASK)
+  if (wtc & COUNT_SRC_NMASK) {
     avro_schema_record_field_append(schema, "mask_src", avro_schema_long());
+  }
 
-  if (wtc & COUNT_DST_NMASK)
+  if (wtc & COUNT_DST_NMASK) {
     avro_schema_record_field_append(schema, "mask_dst", avro_schema_long());
+  }
 
-  if (wtc & (COUNT_SRC_PORT|COUNT_SUM_PORT))
+  if (wtc & (COUNT_SRC_PORT|COUNT_SUM_PORT)) {
     avro_schema_record_field_append(schema, "port_src", avro_schema_long());
+  }
 
-  if (wtc & COUNT_DST_PORT)
+  if (wtc & COUNT_DST_PORT) {
     avro_schema_record_field_append(schema, "port_dst", avro_schema_long());
+  }
 
 #if defined WITH_GEOIPV2
-  if (wtc_2 & COUNT_SRC_HOST_COUNTRY)
+  if (wtc_2 & COUNT_SRC_HOST_COUNTRY) {
     avro_schema_record_field_append(schema, "country_ip_src", avro_schema_string());
+  }
 
-  if (wtc_2 & COUNT_DST_HOST_COUNTRY)
+  if (wtc_2 & COUNT_DST_HOST_COUNTRY) {
     avro_schema_record_field_append(schema, "country_ip_dst", avro_schema_string());
+  }
 #endif
 
 #if defined WITH_GEOIPV2
-  if (wtc_2 & COUNT_SRC_HOST_POCODE)
+  if (wtc_2 & COUNT_SRC_HOST_POCODE) {
     avro_schema_record_field_append(schema, "pocode_ip_src", avro_schema_string());
+  }
 
-  if (wtc_2 & COUNT_DST_HOST_POCODE)
+  if (wtc_2 & COUNT_DST_HOST_POCODE) {
     avro_schema_record_field_append(schema, "pocode_ip_dst", avro_schema_string());
+  }
 
   if (wtc_2 & COUNT_SRC_HOST_COORDS) {
     avro_schema_record_field_append(schema, "lat_ip_src", avro_schema_double());
@@ -309,80 +353,105 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_in
     compose_srv6_segment_ipv6_list_schema(schema);
   }
 
-  if (wtc & COUNT_IP_PROTO)
+  if (wtc & COUNT_IP_PROTO) {
     avro_schema_record_field_append(schema, "ip_proto", avro_schema_string());
+  }
 
-  if (wtc & COUNT_IP_TOS)
+  if (wtc & COUNT_IP_TOS) {
     avro_schema_record_field_append(schema, "tos", avro_schema_long());
+  }
 
-  if (wtc_3 & COUNT_FLOW_LABEL)
+  if (wtc_3 & COUNT_FLOW_LABEL) {
     avro_schema_record_field_append(schema, "flow_label", avro_schema_int());
+  }
 
-  if (wtc_2 & COUNT_SAMPLING_RATE)
+  if (wtc_2 & COUNT_SAMPLING_RATE) {
     avro_schema_record_field_append(schema, "sampling_rate", avro_schema_long());
+  }
 
-  if (wtc_2 & COUNT_SAMPLING_DIRECTION)
+  if (wtc_2 & COUNT_SAMPLING_DIRECTION) {
     avro_schema_record_field_append(schema, "sampling_direction", avro_schema_string());
+  }
 
-  if (wtc_2 & COUNT_POST_NAT_SRC_HOST)
+  if (wtc_2 & COUNT_POST_NAT_SRC_HOST) {
     avro_schema_record_field_append(schema, "post_nat_ip_src", avro_schema_string());
+  }
 
-  if (wtc_2 & COUNT_POST_NAT_DST_HOST)
+  if (wtc_2 & COUNT_POST_NAT_DST_HOST) {
     avro_schema_record_field_append(schema, "post_nat_ip_dst", avro_schema_string());
+  }
 
-  if (wtc_2 & COUNT_POST_NAT_SRC_PORT)
+  if (wtc_2 & COUNT_POST_NAT_SRC_PORT) {
     avro_schema_record_field_append(schema, "post_nat_port_src", avro_schema_long());
+  }
 
-  if (wtc_2 & COUNT_POST_NAT_DST_PORT)
+  if (wtc_2 & COUNT_POST_NAT_DST_PORT) {
     avro_schema_record_field_append(schema, "post_nat_port_dst", avro_schema_long());
+  }
 
-  if (wtc_2 & COUNT_NAT_EVENT)
+  if (wtc_2 & COUNT_NAT_EVENT) {
     avro_schema_record_field_append(schema, "nat_event", avro_schema_long());
+  }
 
-  if (wtc_2 & COUNT_FW_EVENT)
+  if (wtc_2 & COUNT_FW_EVENT) {
     avro_schema_record_field_append(schema, "fw_event", avro_schema_long());
+  }
 
-  if (wtc_2 & COUNT_MPLS_LABEL_TOP)
+  if (wtc_2 & COUNT_MPLS_LABEL_TOP) {
     avro_schema_record_field_append(schema, "mpls_label_top", avro_schema_long());
+  }
 
-  if (wtc_2 & COUNT_MPLS_LABEL_BOTTOM)
+  if (wtc_2 & COUNT_MPLS_LABEL_BOTTOM) {
     avro_schema_record_field_append(schema, "mpls_label_bottom", avro_schema_long());
+  }
 
-  if (wtc_2 & COUNT_PATH_DELAY_AVG_USEC)
+  if (wtc_2 & COUNT_PATH_DELAY_AVG_USEC) {
     avro_schema_record_field_append(schema, "path_delay_avg_usec", avro_schema_long());
+  }
 
-  if (wtc_2 & COUNT_PATH_DELAY_MIN_USEC)
+  if (wtc_2 & COUNT_PATH_DELAY_MIN_USEC) {
     avro_schema_record_field_append(schema, "path_delay_min_usec", avro_schema_long());
+  }
 
-  if (wtc_2 & COUNT_PATH_DELAY_MAX_USEC)
+  if (wtc_2 & COUNT_PATH_DELAY_MAX_USEC) {
     avro_schema_record_field_append(schema, "path_delay_max_usec", avro_schema_long());
+  }
 
-  if (wtc_2 & COUNT_TUNNEL_SRC_MAC)
+  if (wtc_2 & COUNT_TUNNEL_SRC_MAC) {
     avro_schema_record_field_append(schema, "tunnel_mac_src", avro_schema_string());
+  }
 
-  if (wtc_2 & COUNT_TUNNEL_DST_MAC)
+  if (wtc_2 & COUNT_TUNNEL_DST_MAC) {
     avro_schema_record_field_append(schema, "tunnel_mac_dst", avro_schema_string());
+  }
 
-  if (wtc_2 & COUNT_TUNNEL_SRC_HOST)
+  if (wtc_2 & COUNT_TUNNEL_SRC_HOST) {
     avro_schema_record_field_append(schema, "tunnel_ip_src", avro_schema_string());
+  }
 
-  if (wtc_2 & COUNT_TUNNEL_DST_HOST)
+  if (wtc_2 & COUNT_TUNNEL_DST_HOST) {
     avro_schema_record_field_append(schema, "tunnel_ip_dst", avro_schema_string());
+  }
 
-  if (wtc_2 & COUNT_TUNNEL_IP_PROTO)
+  if (wtc_2 & COUNT_TUNNEL_IP_PROTO) {
     avro_schema_record_field_append(schema, "tunnel_ip_proto", avro_schema_string());
+  }
 
-  if (wtc_2 & COUNT_TUNNEL_IP_TOS)
+  if (wtc_2 & COUNT_TUNNEL_IP_TOS) {
     avro_schema_record_field_append(schema, "tunnel_tos", avro_schema_long());
+  }
 
-  if (wtc_3 & COUNT_TUNNEL_FLOW_LABEL)
+  if (wtc_3 & COUNT_TUNNEL_FLOW_LABEL) {
     avro_schema_record_field_append(schema, "tunnel_flow_label", avro_schema_int());
+  }
 
-  if (wtc_2 & COUNT_TUNNEL_SRC_PORT)
+  if (wtc_2 & COUNT_TUNNEL_SRC_PORT) {
     avro_schema_record_field_append(schema, "tunnel_port_src", avro_schema_long());
+  }
 
-  if (wtc_2 & COUNT_TUNNEL_DST_PORT)
+  if (wtc_2 & COUNT_TUNNEL_DST_PORT) {
     avro_schema_record_field_append(schema, "tunnel_port_dst", avro_schema_long());
+  }
 
   if (wtc_2 & COUNT_TUNNEL_TCPFLAGS) {
     if (config.tcpflags_encode_as_array) {
@@ -393,34 +462,42 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_in
     }
   }
 
-  if (wtc_2 & COUNT_VXLAN)
+  if (wtc_2 & COUNT_VXLAN) {
     avro_schema_record_field_append(schema, "vxlan", avro_schema_long());
+  }
 
-  if (wtc_2 & COUNT_TIMESTAMP_START)
+  if (wtc_2 & COUNT_TIMESTAMP_START) {
     avro_schema_record_field_append(schema, "timestamp_start", avro_schema_string());
+  }
 
-  if (wtc_2 & COUNT_TIMESTAMP_END)
+  if (wtc_2 & COUNT_TIMESTAMP_END) {
     avro_schema_record_field_append(schema, "timestamp_end", avro_schema_string());
+  }
 
-  if (wtc_2 & COUNT_TIMESTAMP_ARRIVAL)
+  if (wtc_2 & COUNT_TIMESTAMP_ARRIVAL) {
     avro_schema_record_field_append(schema, "timestamp_arrival", avro_schema_string());
+  }
 
   if (config.nfacctd_stitching) {
     avro_schema_record_field_append(schema, "timestamp_min", optstr_s);
     avro_schema_record_field_append(schema, "timestamp_max", optstr_s);
   }
 
-  if (wtc_2 & COUNT_EXPORT_PROTO_SEQNO)
+  if (wtc_2 & COUNT_EXPORT_PROTO_SEQNO) {
     avro_schema_record_field_append(schema, "export_proto_seqno", avro_schema_long());
+  }
 
-  if (wtc_2 & COUNT_EXPORT_PROTO_VERSION)
+  if (wtc_2 & COUNT_EXPORT_PROTO_VERSION) {
     avro_schema_record_field_append(schema, "export_proto_version", avro_schema_long());
+  }
 
-  if (wtc_2 & COUNT_EXPORT_PROTO_SYSID)
+  if (wtc_2 & COUNT_EXPORT_PROTO_SYSID) {
     avro_schema_record_field_append(schema, "export_proto_sysid", avro_schema_long());
+  }
 
-  if (wtc_2 & COUNT_EXPORT_PROTO_TIME)
+  if (wtc_2 & COUNT_EXPORT_PROTO_TIME) {
     avro_schema_record_field_append(schema, "timestamp_export", avro_schema_string());
+  }
 
   if (config.cpptrs.num > 0) {
     avro_schema_record_field_append(
@@ -608,6 +685,11 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wt
   if (wtc_3 & COUNT_IN_CVLAN) {
     pm_avro_check(avro_value_get_by_name(&value, "cvlan_in", &field, NULL));
     pm_avro_check(avro_value_set_long(&field, ptun->cvlan_id));
+  }
+
+  if (wtc_3 & COUNT_OUT_CVLAN) {
+    pm_avro_check(avro_value_get_by_name(&value, "cvlan_out", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, ptun->out_cvlan_id));
   }
 
   if (wtc & COUNT_COS) {
