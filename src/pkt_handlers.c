@@ -149,16 +149,9 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation_3 & COUNT_IN_CVLAN) {
-      if (config.acct_type == ACCT_PM) {
-        channels_list[index].phandler[primitives] = cvlan_handler;
-      }
-      else if (config.acct_type == ACCT_NF) {
-        channels_list[index].phandler[primitives] = NF_cvlan_handler;
-      }
-      else if (config.acct_type == ACCT_SF) {
-        warn_unsupported_packet_handler(COUNT_INT_IN_CVLAN, ACCT_SF);
-        primitives--;
-      }
+      if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = cvlan_handler;
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_cvlan_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_cvlan_handler;
       primitives++;
     }
 
@@ -5606,6 +5599,14 @@ void SF_out_vlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   pdata->primitives.out_vlan_id = sample->out_vlan;
+}
+
+void SF_cvlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  ptun->cvlan_id = sample->cvlan;
 }
 
 void SF_cos_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

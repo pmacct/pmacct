@@ -51,7 +51,7 @@ static const struct _primitives_matrix_struct _primitives_matrix[] = {
   {"vlan", 1, 1, 1, 1, 0, 0, 0, "Ethernet VLAN, 802.1Q"},
   {"in_vlan", 0, 0, 1, 1, 0, 0, 0, "Input Ethernet VLAN, 802.1Q"},
   {"out_vlan", 0, 0, 1, 1, 0, 0, 0, "Output Ethernet VLAN, 802.1Q"},
-  {"in_cvlan", 1, 1, 1, 0, 0, 0, 0, "Input Customer Ethernet VLAN"},
+  {"in_cvlan", 1, 1, 1, 1, 0, 0, 0, "Input Customer Ethernet VLAN"},
   {"L3", 1, 1, 1, 1, 0, 0, 0, ""}, 
   {"src_host", 1, 1, 1, 1, 0, 0, 0, "Source IPv4/IPv6 address"}, 
   {"dst_host", 1, 1, 1, 1, 0, 0, 0, "Destination IPv4/IPv6 address"},

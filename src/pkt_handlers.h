@@ -164,6 +164,7 @@ extern void SF_dst_mac_handler(struct channels_list_entry *, struct packet_ptrs 
 extern void SF_vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_in_vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_out_vlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void SF_cvlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_cos_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_etype_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void SF_src_host_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

@@ -522,7 +522,7 @@ int main(int argc,char **argv, char **envp)
 	if (list->cfg.what_to_count_2 & (COUNT_TUNNEL_SRC_MAC|COUNT_TUNNEL_DST_MAC|
 			COUNT_TUNNEL_SRC_HOST|COUNT_TUNNEL_DST_HOST|COUNT_TUNNEL_IP_PROTO|
 			COUNT_TUNNEL_IP_TOS|COUNT_TUNNEL_SRC_PORT|COUNT_TUNNEL_DST_PORT|
-			COUNT_VXLAN)) {
+			COUNT_VXLAN|COUNT_IN_CVLAN)) {
 	  list->cfg.data_type |= PIPE_TYPE_TUN;
 	  alloc_sppi = TRUE;
 	}
