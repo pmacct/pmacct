@@ -126,6 +126,7 @@ are no longer supplied as part of the PostgreSQL table creation script.
   * in_vlan => vlan_in (INT NOT NULL DEFAULT 0)
   * out_vlan => vlan_out (INT NOT NULL DEFAULT 0)
   * in_cvlan => cvlan_in (INT NOT NULL DEFAULT 0)
+  * out_cvlan => cvlan_out (INT NOT NULL DEFAULT 0)
   * src_as => as_src (BIGINT NOT NULL DEFAULT 0)
   * dst_as => as_dst (BIGINT NOT NULL DEFAULT 0)
   * src_host => ip_src (inet NOT NULL DEFAULT '0.0.0.0')
