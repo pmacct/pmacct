@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -158,7 +158,7 @@ void imt_plugin(int pipe_fd, struct configuration *cfgptr, void *ptr)
   if (!config.imt_plugin_path) config.imt_plugin_path = path; 
   if (!config.buckets) config.buckets = MAX_HOSTS;
 
-  init_memory_pool_table(config);
+  init_memory_pool_table();
   if (mpd == NULL) {
     Log(LOG_ERR, "ERROR ( %s/%s ): unable to allocate memory pools table\n", config.name, config.type);
     exit_gracefully(1);
