@@ -1157,8 +1157,16 @@ global, ssl.certificate.location, client_?????_client.pem
 global, ssl.key.location, client_?????_client.key
 global, ssl.key.password, abcdefgh
 
-Or, for example, trying to connect to Microsoft Azure via their Kafka API
-using SASL:
+Example: connect to a Confluent Cloud instance via SASL + SSL:
+
+global, bootstrap.servers, <instance>.aws.confluent.cloud:9092
+global, security.protocol, SASL_SSL
+global, sasl.mechanisms, PLAIN
+global, sasl.username, <API key>
+global, sasl.password, <API secret>
+global, session.timeout.ms, 45000
+
+Example: connect to Microsoft Azure via the Kafka API using SASL:
 
 global, security.protocol, SASL_SSL
 global, sasl.mechanism, PLAIN
