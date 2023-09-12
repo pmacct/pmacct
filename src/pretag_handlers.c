@@ -1341,7 +1341,8 @@ int PT_map_cvlan_id_handler(char *filename, struct id_entry *e, char *value, str
   }
 
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_cvlan_id_handler;
-  /* else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_vlan_id_handler; */
+  else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_cvlan_id_handler;
+
   if (e->func[x]) e->func_type[x] = PRETAG_CVLAN_ID;
 
   return FALSE;
@@ -2767,6 +2768,19 @@ int SF_pretag_vlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   if (entry->key.vlan_id.n == sample->in_vlan ||
       entry->key.vlan_id.n == sample->out_vlan) return (FALSE | entry->key.vlan_id.neg);
   else return (TRUE ^ entry->key.vlan_id.neg);
+}
+
+int SF_pretag_cvlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  if (entry->key.cvlan_id.n == sample->cvlan) {
+    return (FALSE | entry->key.cvlan_id.neg);
+  }
+  else {
+    return (TRUE ^ entry->key.cvlan_id.neg);
+  }
 }
 
 int SF_pretag_mpls_pw_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)

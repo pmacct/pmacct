@@ -187,6 +187,7 @@ extern int SF_pretag_dst_as_handler(struct packet_ptrs *, void *, void *);
 extern int SF_pretag_src_mac_handler(struct packet_ptrs *, void *, void *);
 extern int SF_pretag_dst_mac_handler(struct packet_ptrs *, void *, void *);
 extern int SF_pretag_vlan_id_handler(struct packet_ptrs *, void *, void *);
+extern int SF_pretag_cvlan_id_handler(struct packet_ptrs *, void *, void *);
 extern int SF_pretag_mpls_pw_id_handler(struct packet_ptrs *, void *, void *);
 extern int SF_pretag_src_net_handler(struct packet_ptrs *, void *, void *);
 extern int SF_pretag_dst_net_handler(struct packet_ptrs *, void *, void *);
