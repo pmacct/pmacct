@@ -2512,7 +2512,6 @@ int pretag_fwd_status_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   }
 }
 
-
 int pretag_cvlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
@@ -2528,9 +2527,18 @@ int pretag_cvlan_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     if (tpl->fld[NF9_DOT1QCVLANID].count) {
       OTPL_CP_LAST_M(&tmp16, NF9_DOT1QCVLANID, 2);
     }
+    else if (tpl->fld[NF9_POST_DOT1QCVLANID].count) {
+      OTPL_CP_LAST_M(&tmp16, NF9_POST_DOT1QCVLANID, 2);
+    }
+
     cvlan_id = ntohs(tmp16);
-    if (entry->key.cvlan_id.n == cvlan_id) return (FALSE | entry->key.cvlan_id.neg);
-    else return (TRUE ^ entry->key.cvlan_id.neg);
+
+    if (entry->key.cvlan_id.n == cvlan_id) {
+      return (FALSE | entry->key.cvlan_id.neg);
+    }
+    else {
+      return (TRUE ^ entry->key.cvlan_id.neg);
+    }
   default:
     return TRUE; /* this field does not exist: condition is always true */
   }
