@@ -187,9 +187,13 @@
 !			in sFlow against destination MAC address field part of
 !			the Extended Switch object.
 ! 'vlan'		MATCH: In NFv9/IPFIX this is compared against IE #58 and,
-!			if not existing, against IE #242, in sFlow against in/out
-!			VLAN ID fields part of the Extended Switch object.
-! 'cvlan'		MATCH: In NFv9/IPFIX this is compared against IE #245.
+!			if not existing, against IE #242; in sFlow this is
+!			compared against in/out VLAN ID fields part of the
+!			Extended Switch object.
+! 'cvlan'		MATCH: In NFv9/IPFIX this is compared against IE #245
+!			and, if not existing, against IE #255; in sFlow this is
+!			compared against the cvlan field part of the Extended
+!			Switch object.
 ! 'src_net'		MATCH: Source IP address field in NeFlow v5 and sFlow.
 !			In NFv9/IPFIX this is compared against IE #27 or #44.
 ! 'dst_net'             MATCH: Destination IP address field in NetFlow v5 and
