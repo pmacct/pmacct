@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -40,6 +40,7 @@ char pgsql_table_v5[] = "acct_v5";
 char pgsql_table_v6[] = "acct_v6";
 char pgsql_table_v7[] = "acct_v7";
 char pgsql_table_v8[] = "acct_v8";
+char pgsql_table_v9[] = "acct_v9";
 char pgsql_table_bgp[] = "acct_bgp";
 char pgsql_table_uni[] = "acct_uni";
 char pgsql_table_uni_v2[] = "acct_uni_v2";
@@ -957,6 +958,7 @@ void PG_init_default_values(struct insert_data *idata)
 
     if (typed) {
       if (config.sql_table_version == (SQL_TABLE_VERSION_BGP+1)) config.sql_table = pgsql_table_bgp;
+      else if (config.sql_table_version == 9) config.sql_table = pgsql_table_v9;
       else if (config.sql_table_version == 8) config.sql_table = pgsql_table_v8;
       else if (config.sql_table_version == 7) config.sql_table = pgsql_table_v7;
       else if (config.sql_table_version == 6) config.sql_table = pgsql_table_v6; 
@@ -982,18 +984,14 @@ void PG_init_default_values(struct insert_data *idata)
       }
     }
     else {
-      if (config.sql_table_version == 8) {
+      if (config.sql_table_version >= 6 && config.sql_table_version <= 9) {
         Log(LOG_WARNING, "WARN ( %s/%s ): Unified data are no longer supported. Switching to typed data.\n", config.name, config.type);
-        config.sql_table = pgsql_table_v8;
       }
-      if (config.sql_table_version == 7) {
-	Log(LOG_WARNING, "WARN ( %s/%s ): Unified data are no longer supported. Switching to typed data.\n", config.name, config.type);
-	config.sql_table = pgsql_table_v7;
-      }
-      else if (config.sql_table_version == 6) {
-	Log(LOG_WARNING, "WARN ( %s/%s ): Unified data are no longer supported. Switching to typed data.\n", config.name, config.type);
-	config.sql_table = pgsql_table_v6;
-      }
+
+      if (config.sql_table_version == 9) config.sql_table = pgsql_table_v9;
+      else if (config.sql_table_version == 8) config.sql_table = pgsql_table_v8;
+      else if (config.sql_table_version == 7) config.sql_table = pgsql_table_v7;
+      else if (config.sql_table_version == 6) config.sql_table = pgsql_table_v6;
       else if (config.sql_table_version == 5) config.sql_table = pgsql_table_uni_v5;
       else if (config.sql_table_version == 4) config.sql_table = pgsql_table_uni_v4;
       else if (config.sql_table_version == 3) config.sql_table = pgsql_table_uni_v3;

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -51,4 +51,5 @@ extern char sqlite3_table_v5[];
 extern char sqlite3_table_v6[];
 extern char sqlite3_table_v7[];
 extern char sqlite3_table_v8[];
+extern char sqlite3_table_v9[];
 extern char sqlite3_table_bgp[];

@@ -59,4 +59,5 @@ extern char mysql_table_v5[];
 extern char mysql_table_v6[];
 extern char mysql_table_v7[];
 extern char mysql_table_v8[];
+extern char mysql_table_v9[];
 extern char mysql_table_bgp[];

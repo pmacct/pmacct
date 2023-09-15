@@ -32,7 +32,7 @@ Similarly, v2 to v9 tables:
 
 - To use v9 tables:
   * data will be available in 'acct_v9' table of 'pmacct' DB.
-  * Add 'sql_table_version: 7' line to your configuration.
+  * Add 'sql_table_version: 9' line to your configuration.
 
 Similarly, BGP tables:
 

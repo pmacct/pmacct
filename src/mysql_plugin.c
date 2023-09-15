@@ -41,6 +41,7 @@ char mysql_table_v5[] = "acct_v5";
 char mysql_table_v6[] = "acct_v6";
 char mysql_table_v7[] = "acct_v7";
 char mysql_table_v8[] = "acct_v8";
+char mysql_table_v9[] = "acct_v9";
 char mysql_table_bgp[] = "acct_bgp";
 
 /* Functions */
@@ -795,6 +796,7 @@ void MY_init_default_values(struct insert_data *idata)
   if (!config.sql_port) config.sql_port = mysql_prt;
   if (!config.sql_table) {
     if (config.sql_table_version == (SQL_TABLE_VERSION_BGP+1)) config.sql_table = mysql_table_bgp;
+    else if (config.sql_table_version == 9) config.sql_table = mysql_table_v9;
     else if (config.sql_table_version == 8) config.sql_table = mysql_table_v8;
     else if (config.sql_table_version == 7) config.sql_table = mysql_table_v7;
     else if (config.sql_table_version == 6) config.sql_table = mysql_table_v6;
