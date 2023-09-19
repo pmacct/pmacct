@@ -709,7 +709,7 @@ void evaluate_packet_handlers()
     if (channels_list[index].aggregation_2 & COUNT_SAMPLING_DIRECTION) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = sampling_direction_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_sampling_direction_handler;
-      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = SF_sampling_direction_handler;
+      else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_sampling_direction_handler;
       primitives++;
     }
 
