@@ -2105,6 +2105,19 @@ DESC:		This knob is to use the socket address instead of the one passed as part 
 		send Agent Address and that is used by default.
 DEFAULT:	false
 
+KEY:		[ nfacctd_pre_processing_checks ] [GLOBAL, ONLY_NFACCTD]
+VALUES:         [ true | false ]
+DESC:		This knob is to enable some pre-processing checks on the IPFIX/NFv9 Data Records in order 
+                to ensure these would not contain incorrect information (e.g. due to buggy router sending 
+                garbage or a wrong template). If enabled, flowsets that are considered malformed according 
+                to the currently implemented checks (see NOTES below) will be discarded and not processed 
+                by nfacctd. Additional checks might be implemented in the future.
+DEFAULT:	false
+NOTES:          * Currently implemented pre-processing checks:
+                  - end-of-flowset padding: malformed if contains non-zero bytes (before enabling these 
+                    checks consider that RFC7011[IPFIX] mandates zero-octets padding whereas RFC3954[NFv9]
+                    only recommends it).
+
 KEY:		pre_tag_map [MAP]
 DESC:		Full pathname to a file containing specific tags for data. For all daemons, tags (be that
 		numerical 'tag' or stringy 'label') can be exposed in output data; traffic daemons (ie.

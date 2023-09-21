@@ -2015,7 +2015,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
     flowoff += NfDataHdrV9Sz;
 
     tpl = find_template_v2(data_hdr->flow_id, (struct sockaddr *) pptrs->f_agent, version, fid, SourceId);
-    if (!tpl) {
+    if (!tpl) { /* Unknown template */
       sa_to_addr((struct sockaddr *)pptrs->f_agent, &debug_a, &debug_agent_port);
       addr_to_str(debug_agent_addr, &debug_a);
 
@@ -2322,14 +2322,72 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       pkt += (flowsetlen-flowoff); /* handling padding */
       off += flowsetlen;
     }
-    else {
+    else { /* Flow data coming */
+
+      /* Pre-processing checks */
+      /* --> discard flowset if padding is malformed, i.e. composed of non-zero bytes */
+      if (config.nfacctd_pre_processing_checks) {
+        int skip_pp_checks = FALSE;
+
+        unsigned char *cpy_pkt = pkt;
+        u_int16_t cpy_flowoff = flowoff;
+        struct template_cache_entry *cpy_tpl = tpl;
+        
+        /* Dry-run through flowset to check lenghts */
+        while (cpy_flowoff+tpl->len <= flowsetlen) {
+          /* Handle variable-length fields */
+          if (cpy_tpl->vlen) {
+            int ret;
+            ret = resolve_vlen_template(cpy_pkt, (flowsetlen - cpy_flowoff), cpy_tpl);
+            if (ret == ERR) skip_pp_checks = TRUE; /* Skip checks, flowset will be discarded anyway... */
+          }
+
+          /* Update packet pointer and offset */
+          cpy_pkt += cpy_tpl->len;
+          cpy_flowoff += cpy_tpl->len;
+
+          if (cpy_tpl->vlen) cpy_tpl->len = 1;
+        }
+
+        /* If padding is there, check if it is regular or not */
+        if (flowsetlen - cpy_flowoff > 0 && !skip_pp_checks) {
+          int padding_length = flowsetlen - cpy_flowoff;
+          unsigned char zerobuf[padding_length];
+          memset(zerobuf, 0, padding_length);
+          
+          if (memcmp(cpy_pkt, zerobuf, padding_length) != 0) { /* Wrong (non-zero) padding*/
+            Log(LOG_DEBUG, "DEBUG ( %s/%s ): Discarded NetFlow v9/IPFIX flowset (R: malformed non-zero %d-byte padding [%s:%u]).\n", 
+                config.name, config.type, padding_length, debug_agent_addr, SourceId);
+
+            /* Handling padding & prepare for next flowset if there is one */
+            pkt = cpy_pkt + padding_length; 
+            off += flowsetlen;
+
+            if ((version == 9 && (flowsetCount + 1) < flowsetNo && off < len) || (version == 10 && off < len)) {
+              /* Skip this flowset and go to the next! */
+              flowsetCount++;
+              goto process_flowset;
+            }
+            else {
+              /* This is the last flowset, discard packet! */
+              return;
+            }
+          }
+        }
+      } /* End of pre-processing checks */
+
+      /* Processing Flowset entries */
       while (flowoff+tpl->len <= flowsetlen) {
         /* Let's bake offsets and lengths if we have variable-length fields */
         if (tpl->vlen) {
 	  int ret;
 
 	  ret = resolve_vlen_template(pkt, (flowsetlen - flowoff), tpl);
-	  if (ret == ERR) break;
+          if (ret == ERR) {
+            Log(LOG_DEBUG, "DEBUG ( %s/%s ): Discarded NetFlow v9/IPFIX flowset (R: invalid len [%s:%u]).\n", 
+              config.name, config.type, debug_agent_addr, SourceId);
+            break;
+          }
 	}
 
         pptrs->f_data = pkt;
