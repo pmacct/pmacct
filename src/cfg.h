@@ -247,7 +247,7 @@ struct configuration {
   int sfacctd_counter_kafka_broker_port;
   int sfacctd_counter_kafka_retry;
   char *sfacctd_counter_kafka_config_file;
-  int nfacctd_disable_checks;
+  int nfacctd_disable_sanity_checks;
   int nfacctd_disable_opt_scope_check;
   int nfacctd_ignore_exporter_address;
   int nfacctd_pre_processing_checks;

@@ -163,7 +163,7 @@ extern int cfg_key_nfacctd_time_secs(char *, char *, char *);
 extern int cfg_key_nfacctd_time_new(char *, char *, char *);
 extern int cfg_key_nfacctd_as_new(char *, char *, char *);
 extern int cfg_key_nfacctd_net(char *, char *, char *);
-extern int cfg_key_nfacctd_disable_checks(char *, char *, char *);
+extern int cfg_key_nfacctd_disable_sanity_checks(char *, char *, char *);
 extern int cfg_key_nfacctd_disable_opt_scope_check(char *, char *, char *);
 extern int cfg_key_nfacctd_ignore_exporter_address(char *, char *, char *);
 extern int cfg_key_nfacctd_mcast_groups(char *, char *, char *);

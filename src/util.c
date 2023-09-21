@@ -1942,7 +1942,7 @@ void set_default_preferences(struct configuration *cfg)
   if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) {
     if (!cfg->nfacctd_net) cfg->nfacctd_net = NF_NET_KEEP;
     if (!cfg->nfacctd_as) cfg->nfacctd_as = NF_AS_KEEP;
-    set_truefalse_nonzero(&cfg->nfacctd_disable_checks);
+    set_truefalse_nonzero(&cfg->nfacctd_disable_sanity_checks);
   }
   if (!cfg->bgp_daemon_peer_as_src_type) cfg->bgp_daemon_peer_as_src_type = BGP_SRC_PRIMITIVES_KEEP;
   if (!cfg->bgp_daemon_src_std_comm_type) cfg->bgp_daemon_src_std_comm_type = BGP_SRC_PRIMITIVES_KEEP;

@@ -5866,7 +5866,7 @@ int cfg_key_nfacctd_net(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_nfacctd_disable_checks(char *filename, char *name, char *value_ptr)
+int cfg_key_nfacctd_disable_sanity_checks(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -5874,8 +5874,8 @@ int cfg_key_nfacctd_disable_checks(char *filename, char *name, char *value_ptr)
   value = parse_truefalse_nonzero(value_ptr);
   if (value == ERR) return ERR;
 
-  for (; list; list = list->next, changes++) list->cfg.nfacctd_disable_checks = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key '[ns]facctd_disable_checks'. Globalized.\n", filename);
+  for (; list; list = list->next, changes++) list->cfg.nfacctd_disable_sanity_checks = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key '[ns]facctd_disable_sanity_checks'. Globalized.\n", filename);
 
   return changes;
 }

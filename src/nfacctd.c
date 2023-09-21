@@ -1662,7 +1662,7 @@ int main(int argc,char **argv, char **envp)
 
 	break;
       default:
-        if (!config.nfacctd_disable_checks) {
+        if (!config.nfacctd_disable_sanity_checks) {
 	  notify_malf_packet(LOG_INFO, "INFO", "discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent, 0);
 	  xflow_status_table.tot_bad_datagrams++;
         }
@@ -3244,7 +3244,7 @@ void process_raw_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_ve
   else nfv = ntohs(((struct struct_header_v5 *)pkt)->version);
 
   if (nfv != 5 && nfv != 9 && nfv != 10) {
-    if (!config.nfacctd_disable_checks) {
+    if (!config.nfacctd_disable_sanity_checks) {
       notify_malf_packet(LOG_INFO, "INFO", "discarding unknown NetFlow packet", (struct sockaddr *) pptrs->f_agent, 0);
       xflow_status_table.tot_bad_datagrams++;
     }

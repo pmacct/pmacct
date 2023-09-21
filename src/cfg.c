@@ -249,7 +249,8 @@ static const struct _dictionary_line dictionary[] = {
   {"nfacctd_stitching", cfg_key_nfacctd_stitching},
   {"nfacctd_ext_sampling_rate", cfg_key_pmacctd_ext_sampling_rate},
   {"nfacctd_renormalize", cfg_key_sfacctd_renormalize},
-  {"nfacctd_disable_checks", cfg_key_nfacctd_disable_checks},
+  {"nfacctd_disable_checks", cfg_key_nfacctd_disable_sanity_checks}, // XXX: legacy
+  {"nfacctd_disable_sanity_checks", cfg_key_nfacctd_disable_sanity_checks},
   {"nfacctd_disable_opt_scope_check", cfg_key_nfacctd_disable_opt_scope_check},
   {"nfacctd_ignore_exporter_address", cfg_key_nfacctd_ignore_exporter_address},
   {"nfacctd_kafka_broker_host", cfg_key_nfacctd_kafka_broker_host},
@@ -380,7 +381,8 @@ static const struct _dictionary_line dictionary[] = {
   {"sfacctd_time_new", cfg_key_nfacctd_time_new},
   {"sfacctd_pipe_size", cfg_key_nfacctd_pipe_size},
   {"sfacctd_renormalize", cfg_key_sfacctd_renormalize},
-  {"sfacctd_disable_checks", cfg_key_nfacctd_disable_checks},
+  {"sfacctd_disable_checks", cfg_key_nfacctd_disable_sanity_checks}, // XXX: legacy
+  {"sfacctd_disable_sanity_checks", cfg_key_nfacctd_disable_sanity_checks},
   {"sfacctd_mcast_groups", cfg_key_nfacctd_mcast_groups},
   {"sfacctd_stitching", cfg_key_nfacctd_stitching},
   {"sfacctd_ext_sampling_rate", cfg_key_pmacctd_ext_sampling_rate},

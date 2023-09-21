@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -94,7 +94,7 @@ void update_status_table(struct xflow_status_entry *entry, u_int32_t seqno, int 
   entry->counters.total++;
   entry->counters.bytes += bytes;
 
-  if (!entry->seqno || config.nfacctd_disable_checks) {
+  if (!entry->seqno || config.nfacctd_disable_sanity_checks) {
     entry->counters.good++;
   }
   else {

@@ -1465,7 +1465,7 @@ int main(int argc,char **argv, char **envp)
 	process_SFv2v4_packet(&spp, &pptrs, &req, (struct sockaddr *) &client);
 	break;
       default:
-	if (!config.nfacctd_disable_checks) {
+	if (!config.nfacctd_disable_sanity_checks) {
 	  SF_notify_malf_packet(LOG_INFO, "INFO", "discarding unknown packet", (struct sockaddr *) pptrs.v4.f_agent);
 	  xflow_status_table.tot_bad_datagrams++;
 	}
@@ -1625,7 +1625,7 @@ void process_SF_raw_packet(SFSample *spp, struct packet_ptrs_vector *pptrsv,
     pptrs->seqno = getData32(spp);
     break;
   default:
-    if (!config.nfacctd_disable_checks) {
+    if (!config.nfacctd_disable_sanity_checks) {
       SF_notify_malf_packet(LOG_INFO, "INFO", "discarding unknown sFlow packet", (struct sockaddr *) pptrs->f_agent);
       xflow_status_table.tot_bad_datagrams++;
     }
