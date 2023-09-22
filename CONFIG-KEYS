@@ -2081,13 +2081,13 @@ DESC:		Defines one or more IPv4/IPv6 multicast groups to be joined by the daemon
 		to bind to which - in turn - can be supplied declaring an IP address ('nfacctd_ip' key). 
 DEFAULT:	none
 
-KEY:            [ nfacctd_disable_checks | sfacctd_disable_checks ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
+KEY:            [ nfacctd_disable_sanity_checks | sfacctd_disable_sanity_checks ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
 VALUES:         [ true | false ]
 DESC:           Both nfacctd and sfacctd can log warning messages for failing basic checks against incoming
 		NetFlow/sFlow datagrams, ie. sequence number checks, protocol version. You may want to disable 
-		such feature, default, because of buggy or non-standard implementations. Also, for sequencing
-		checks, the 'export_proto_seqno' primitive is recommended instead (see 'aggregate' description
-		and notes).
+		such feature, by default true / enabled, because of buggy or non-standard implementations.i
+		Also, for sequencing checks, the 'export_proto_seqno' primitive is recommended instead (see
+		'aggregate' description and notes).
 DEFAULT:        true
 
 KEY:		nfacctd_disable_opt_scope_check [GLOBAL, ONLY_NFACCTD]
@@ -2105,7 +2105,7 @@ DESC:		This knob is to use the socket address instead of the one passed as part 
 		send Agent Address and that is used by default.
 DEFAULT:	false
 
-KEY:		[ nfacctd_pre_processing_checks ] [GLOBAL, ONLY_NFACCTD]
+KEY:		nfacctd_pre_processing_checks [GLOBAL, ONLY_NFACCTD]
 VALUES:         [ true | false ]
 DESC:		This knob is to enable some pre-processing checks on the IPFIX/NFv9 Data Records in order 
                 to ensure these would not contain incorrect information (e.g. due to buggy router sending 

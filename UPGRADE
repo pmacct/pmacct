@@ -8,6 +8,15 @@ upgrading your installation.
 
 TO:	>= 1.7.9
 FROM:	<= 1.7.8
+TOPIC:	nfacctd_disable_checks, sfacctd_disable_checks
+DESC:   Due to newly introduced nfacctd_pre_processing_checks config knob,
+	it was felt that nfacctd_disable_checks needed to be renamed for a
+	more clear disambiguation. While the old name will still be available
+	and will only be deprecated over time, it has been removed from docs 
+	and renamed nfacctd_disable_sanity_checks.
+
+TO:	>= 1.7.9
+FROM:	<= 1.7.8
 TOPIC:	imt_passwd
 DESC:	This configuration knob was removed from user-facing documentation
 	long ago but underlying code was never deprecated. With this release
