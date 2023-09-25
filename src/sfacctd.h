@@ -36,7 +36,7 @@
 enum INMPacket_information_type {
   INMPACKETTYPE_HEADER  = 1,      /* Packet headers are sampled */
   INMPACKETTYPE_IPV4    = 2,      /* IP version 4 data */
-  INMPACKETTYPE_IPV6    = 3       /* IP version 4 data */
+  INMPACKETTYPE_IPV6    = 3       /* IP version 6 data */
 };
 
 enum INMExtended_information_type {

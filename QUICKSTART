@@ -31,7 +31,7 @@ XXIII.	Miscellaneous notes and troubleshooting tips
 I. Daemons and plugins included with pmacct distribution
 All traffic accounting daemons can print statistics to stdout, keep them in
 memory tables, store persistently to open-source RDBMS (MySQL, PostgreSQL,
-Sqlite 3) or to noSQL databates (ie. BerkeleyDB) and to flat-files, and
+Sqlite 3) or to noSQL databases (ie. BerkeleyDB) and to flat-files, and
 publish to AMQP and Kafka brokers (typically to insert in ElasticSearch,
 InfluxDB, Druid, ClickHouse and, more in general, all backends which are not
 natively supported by pmacct). BGP, BMP and Streaming Telemetry daemons can
@@ -224,7 +224,7 @@ PF_RING) or static linking is wanted.
 
 Once libpcap is downloaded, if static linking is wanted (ideal for example
 for distributing pmacct without external dependencies), the library can be
-configured for comipiling:
+configured for compiling:
 
 shell> ./configure --disable-so
 
@@ -287,7 +287,7 @@ Data will be available in 'acct_v2' table of 'pmacct' DB.
 ... And so on for the newer versions.
 
 IIIb. PostgreSQL examples
-Which user has to execute the following two scripts and how to autenticate with the
+Which user has to execute the following two scripts and how to authenticate with the
 PostgreSQL server depends upon your current configuration. Keep in mind that both
 scripts need postgres superuser permissions to execute some commands successfully:
 
@@ -932,7 +932,7 @@ shell> pmacct -c src_host,dst_host -N "file:/home/paolo/queries.list"
 VIII. Running the RabbitMQ/AMQP plugin
 The Advanced Message Queuing Protocol (AMQP) is an open standard for passing business
 messages between applications. RabbitMQ is a messaging broker, an intermediary for
-messaging, which implementes AMQP. pmacct RabbitMQ/AMQP plugin is designed to send
+messaging, which implements AMQP. pmacct RabbitMQ/AMQP plugin is designed to send
 aggregated network traffic data, in JSON or Avro format, through a RabbitMQ server
 to 3rd party applications (typically, but not limited to, noSQL databases like
 ElasticSearch, InfluxDB, etc.). Requirements to use the plugin are:
@@ -1001,7 +1001,7 @@ Kafka broker to 3rd party applications (typically, but not limited to, noSQL
 databases like ElasticSearch, InfluxDB, etc.). Requirements to use the plugin
 are:
 
-* A working Kafka broker (and Zookeper server): http://kafka.apache.org/
+* A working Kafka broker (and Zookeeper server): http://kafka.apache.org/
 * Librdkafka: https://github.com/edenhill/librdkafka/
 * Libjansson to cook JSON objects: http://www.digip.org/jansson/
 
@@ -1189,7 +1189,7 @@ dependency, ie. libzmq, it reduces the amount of trial and error needed to fine
 tune plugin_buffer_size and plugin_pipe_size directives needed by the home-grown
 queue implementation.
 
-The home-grown cicular queue has no external dependencies and is configured, for
+The home-grown circular queue has no external dependencies and is configured, for
 example, as:
 
 plugins: print[blabla]
@@ -1449,7 +1449,7 @@ b) build NetFlow probe configuration, using pmacctd:
    classification' section of this document.
 
    3) add direction (ingress, egress) awareness to measured IP traffic flows. Direction
-   can be defined statically (in, out) or inferred dinamically (tag, tag2) via the use
+   can be defined statically (in, out) or inferred dynamically (tag, tag2) via the use
    of the nfprobe_direction directive. Let's look at a dynamic example using tag2;
    first, add the following lines to the daemon configuration:
 
@@ -1522,7 +1522,7 @@ XIII. Quickstart guide to setup a sFlow agent/probe
 pmacct can export traffic data via sFlow; such protocol is different from NetFlow/
 IPFIX: in short, it works by sampling individual packets (and exporting portions of
 them) instead of caching uni-directional flows as it happens for NetFlow; such a 
-statelss approach makes sFlow a light export protocol well-tailored for high-speed
+stateless approach makes sFlow a light export protocol well-tailored for high-speed
 networks. Furthermore, sFlow v5 can be extended much like NetFlow v9/IPFIX: meaning
 classification information (if nDPI is compiled in, see 'Quickstart guide to packet
 classification' section of this document), tags and/or basic Extended Gateway info
@@ -1901,7 +1901,7 @@ be rotated by an external tool/script) is configured as follows:
 bgp_daemon_msglog_file: /path/to/spool/bgp/bgp-$peer_src_ip.log
 
 A basic dump of BGP tables at regular intervals (60 secs) to a Kafka broker,
-listening on the localost and default port, is configured as follows:
+listening on the localhost and default port, is configured as follows:
 
 bgp_table_dump_kafka_topic: pmacct.bgp
 bgp_table_dump_refresh_time: 60
@@ -1928,7 +1928,7 @@ document: docs/MSGLOG_DUMP_FORMATS
 
 XIVg. Example: querying the BGP daemon via the Looking Glass server.
 The Looking Glass server allows to query RIBs stored in the BGP daemon. The
-server is asyncronous and uses ZeroMQ as transport layer to serve incoming
+server is asynchronous and uses ZeroMQ as transport layer to serve incoming
 queries. The LG server can be configured as follows:
 
 bgp_daemon_lg: true
@@ -1993,7 +1993,7 @@ with BGP xconnects, ie. for massive multi-node scale-out.
 
 Leveraging SO_REUSEPORT, when used in alternative to BGP xconnects, may be
 best combined with a list of allowed IP addresses, ie. bgp_daemon_allow_file,
-to explicitely wire peers to collectors. 
+to explicitly wire peers to collectors.
 
 When SO_REUSEPORT is used in conjunction with BGP xconnects there is virtually
 no config change to make (except perhaps the sensible decision to use different
@@ -2090,7 +2090,7 @@ https://rpki.gin.ntt.net/api/export.json .
 
 2) Connecting to a RPKI RTR Cache for live ROA updates. Its IP address
    and port being defined by the rpki_rtr_cache config directive (a few
-   more optional rpki_rtr_* directives are available and can be reviwed
+   more optional rpki_rtr_* directives are available and can be revived
    in the CONFIG-KEYS document).  
 
 Once rpki_roas_file or rpki_rtr_cache are defined, traffic daemons (ie.
@@ -2526,7 +2526,7 @@ in real-time, locate where problems occur, and investigate issues in a
 collaborative manner.". Streaming telemetry support comes in pmacct in two
 flavours: 1) a telemetry thread can be started in existing daemons, ie. sFlow,
 NetFlow/IPFIX, etc. for the purpose of data correlation and 2) a new daemon
-pmtelemetryd for standalone consumpton of data. Streaming telemetry data can
+pmtelemetryd for standalone consumption of data. Streaming telemetry data can
 be logged real-time and/or dumped at regular time intervals to flat-files,
 RabbitMQ or Kafka brokers.
 
@@ -2549,7 +2549,7 @@ read more in CONFIG-KEYS.
 
 From a configuration standpoint both the thread (ie. telemetry configured part
 of nfacctd) and the daemon (pmtelemetryd) are configured the same way except the
-thread must be explicitely enabled with a 'telemetry_daemon: true' config line.
+thread must be explicitly enabled with a 'telemetry_daemon: true' config line.
 Hence the following examples hold for both the thread and the daemon setups.  
 
 Following is a config example to receive telemetry data in JSON format over UDP
@@ -2819,7 +2819,7 @@ should do is just:
 
 shell> ./configure --enable-redis
 
-But, for example, should you have installed Hiedis in /usr/local/redis and
+But, for example, should you have installed Hiredis in /usr/local/redis and
 pkg-config is unable to help, you can supply this non-default location as
 follows (assuming you are running the bash shell):
 
@@ -2875,7 +2875,7 @@ a) In cases of errors at configure script time (ie. library not found,
      nfv9_template.c: In function ‘nfacctd_offline_read_json_template’:
      nfv9_template.c:572:53: error: expected ‘;’ before ‘{’ token
 
-     This can happen at compile time and and is a bit tricky to hint. In this
+     This can happen at compile time and is a bit tricky to hint. In this
      example the function json_array_foreach() is not being recognized, in
      other words while the library could be located, it does not contain the
      specific function. This is a symptom that the library version in use is
@@ -3124,7 +3124,7 @@ h) BMP, the BGP Monitoring Protocol, has got drafting traction at IETF.
   Additionally pmbmpd supports pcap_savefile (-I) to replay a pcap
   trace that includes BMP packets; packets functional to the house-
   keeping of the TCP session are safely ignored and pcap_filter helps
-  on replay to trash unrelevant (non BMP) packets; yet this method is
+  on replay to trash irrelevant (non BMP) packets; yet this method is
   less preferred to the capture of raw data via bmp_play.
  
 i) if supported and if enabled on the system, the SO_REUSEPORT feature

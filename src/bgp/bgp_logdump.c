@@ -1214,7 +1214,7 @@ int bgp_peer_log_close(struct bgp_peer *peer, bgp_tag_t *tag, int output, int ty
 	char peer_str[INET6_ADDRSTRLEN];
 
 	addr_to_str(peer_str, &peer->addr);
-	Log(LOG_WARNING, "WARNING ( %s/%s ): Unable to get kafka_host: %s\n", config.name, bms->log_str, peer_str);
+	Log(LOG_WARNING, "WARN ( %s/%s ): Unable to get kafka_host: %s\n", config.name, bms->log_str, peer_str);
       }
     }
 #endif

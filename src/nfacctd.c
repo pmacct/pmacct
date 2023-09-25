@@ -1025,7 +1025,7 @@ int main(int argc,char **argv, char **envp)
     exit_gracefully(1);
   }
 
-  /* starting the ISIS threa */
+  /* starting the ISIS thread */
   if (config.nfacctd_isis) { 
     req.bpf_filter = TRUE;
 
@@ -1212,7 +1212,7 @@ int main(int argc,char **argv, char **envp)
   }
 
   /* arranging static pointers to dummy packet; to speed up things into the
-     main loop we mantain two packet_ptrs structures when IPv6 is enabled:
+     main loop we maintain two packet_ptrs structures when IPv6 is enabled:
      we will sync here 'pptrs6' for common tables and pointers */
   memset(dummy_packet, 0, sizeof(dummy_packet));
   pptrs.v4.f_agent = (u_char *) &client;
