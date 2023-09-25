@@ -2711,6 +2711,12 @@ int SF_pretag_direction_handler(struct packet_ptrs *pptrs, void *unused, void *e
   struct id_entry *entry = e;
   SFSample *sample = (SFSample *) pptrs->f_data;
 
+  /*
+    In the standard sFlow data model, every measurement comes from a particular datasource defined by
+    agent IP address, ds_class and ds_index, and written as agent>ds_class:ds_index. For example the
+    interface counters for interface 17 on switch 10.1.2.3 come from datasource 10.1.2.3>0:17
+  */
+
   if ((sample->inputPort == sample->ds_index && entry->key.direction.n == 0) ||
       (sample->outputPort == sample->ds_index && entry->key.direction.n == 1)) {
     return (FALSE | entry->key.direction.neg);

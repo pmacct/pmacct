@@ -6134,9 +6134,24 @@ void SF_sampling_rate_handler(struct channels_list_entry *chptr, struct packet_p
 void SF_sampling_direction_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
 
-  /* dummy */
-  pdata->primitives.sampling_direction = SAMPLING_DIRECTION_UNKNOWN;
+  /*
+    In the standard sFlow data model, every measurement comes from a particular datasource defined by
+    agent IP address, ds_class and ds_index, and written as agent>ds_class:ds_index. For example the
+    interface counters for interface 17 on switch 10.1.2.3 come from datasource 10.1.2.3>0:17
+  */
+
+  if (sample->inputPort == sample->ds_index) {
+    pdata->primitives.sampling_direction = SAMPLING_DIRECTION_INGRESS;
+  }
+  else if (sample->outputPort == sample->ds_index) {
+    pdata->primitives.sampling_direction = SAMPLING_DIRECTION_EGRESS;
+  }
+  else {
+    pdata->primitives.sampling_direction = SAMPLING_DIRECTION_UNKNOWN;
+  }
+
 }
 
 void SF_timestamp_arrival_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

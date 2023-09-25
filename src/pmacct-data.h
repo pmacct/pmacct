@@ -123,7 +123,7 @@ static const struct _primitives_matrix_struct _primitives_matrix[] = {
   {"out_iface", 0, 1, 1, 1, 0, 0, 0, "Output interface, SNMP ifIndex"}, 
   {"peer_src_ip", 0, 0, 1, 1, 0, 0, 0, "IP address or identificator of telemetry exporting device"},
   {"sampling_rate", 1, 1, 1, 1, 0, 0, 0, "Sampling rate"},
-  {"sampling_direction", 0, 0, 1, 0, 0, 0, 0, "Sampling direction (ie. ingress vs egress)"},
+  {"sampling_direction", 0, 0, 1, 1, 0, 0, 0, "Sampling direction (ie. ingress vs egress)"},
   {"tag", 1, 1, 1, 1, 0, 0, 0, "Numeric tag, ie. as result of pre_tag_map evaluation"},
   {"tag2", 1, 1, 1, 1, 0, 0, 0, "Numeric tag, ie. as result of pre_tag_map evaluation"},
   {"label", 1, 1, 1, 1, 0, 0, 0, "String label, ie. as result of pre_tag_map evaluation"},
