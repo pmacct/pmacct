@@ -105,6 +105,13 @@ NOTES:		* List of the aggregation primitives available to each specific pmacct d
 		  enabled this field will report a value of one (1); otherwise it will report
 		  the rate that is passed by the protocol or sampling_map. A value of zero (0)
 		  means 'unknown' and hence no rate is applied to original counter values.
+		* sampling_direction: in case of sFlow, direction is derived in the following
+		  way: if ds_index part of Source ID matches input interface of a Flow Sample,
+		  it is inferred that sampling direction is 'ingress'; if ds_index matches the
+		  output interface, it is inferred that sampling direction is 'egress'.
+		  In the standard sFlow data model, every measurement comes from a particular
+		  datasource defined by agent IP address, ds_class and ds_index, and written
+		  as agent>ds_class:ds_index.
 		* src_std_comm, src_ext_comm, src_lrg_comm, src_as_path are based on reverse
 		  BGP lookups; peer_src_as, src_local_pref and src_med are by default based on
 		  reverse BGP lookups but can be alternatively based on other methods, for
