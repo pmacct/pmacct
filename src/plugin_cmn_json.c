@@ -139,22 +139,42 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3)
   }
 
   if (wtc & COUNT_STD_COMM) {
-    cjhandler[idx] = compose_json_std_comm;
+    if (config.bgp_comms_encode_as_array) {
+      cjhandler[idx] = compose_json_array_std_comm;
+    }
+    else {
+      cjhandler[idx] = compose_json_std_comm;
+    }
     idx++;
   }
 
   if (wtc & COUNT_EXT_COMM) {
-    cjhandler[idx] = compose_json_ext_comm;
+    if (config.bgp_comms_encode_as_array) {
+      cjhandler[idx] = compose_json_array_ext_comm;
+    }
+    else {
+      cjhandler[idx] = compose_json_ext_comm;
+    }
     idx++;
   }
 
   if (wtc_2 & COUNT_LRG_COMM) {
-    cjhandler[idx] = compose_json_lrg_comm;
+    if (config.bgp_comms_encode_as_array) {
+      cjhandler[idx] = compose_json_array_lrg_comm;
+    }
+    else {
+      cjhandler[idx] = compose_json_lrg_comm;
+    }
     idx++;
   }
 
   if (wtc & COUNT_AS_PATH) {
-    cjhandler[idx] = compose_json_as_path;
+    if (config.as_path_encode_as_array) {
+      cjhandler[idx] = compose_json_array_as_path;
+    }
+    else {
+      cjhandler[idx] = compose_json_as_path;
+    }
     idx++;
   }
 
@@ -194,22 +214,42 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3)
   }
 
   if (wtc & COUNT_SRC_STD_COMM) {
-    cjhandler[idx] = compose_json_src_std_comm;
+    if (config.bgp_comms_encode_as_array) {
+      cjhandler[idx] = compose_json_array_src_std_comm;
+    }
+    else {
+      cjhandler[idx] = compose_json_src_std_comm;
+    }
     idx++;
   }
 
   if (wtc & COUNT_SRC_EXT_COMM) {
-    cjhandler[idx] = compose_json_src_ext_comm;
+    if (config.bgp_comms_encode_as_array) {
+      cjhandler[idx] = compose_json_array_src_ext_comm;
+    }
+    else {
+      cjhandler[idx] = compose_json_src_ext_comm;
+    }
     idx++;
   }
 
   if (wtc_2 & COUNT_SRC_LRG_COMM) {
-    cjhandler[idx] = compose_json_src_lrg_comm;
+    if (config.bgp_comms_encode_as_array) {
+      cjhandler[idx] = compose_json_array_src_lrg_comm;
+    }
+    else {
+      cjhandler[idx] = compose_json_src_lrg_comm;
+    }
     idx++;
   }
 
   if (wtc & COUNT_SRC_AS_PATH) {
-    cjhandler[idx] = compose_json_src_as_path;
+    if (config.as_path_encode_as_array) {
+      cjhandler[idx] = compose_json_array_src_as_path;
+    }
+    else {
+      cjhandler[idx] = compose_json_src_as_path;
+    }
     idx++;
   }
 
@@ -330,7 +370,7 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3)
     }
     idx++;
   }
-  
+
   if (wtc_2 & COUNT_FWD_STATUS) {
     if (config.fwd_status_encode_as_string) {
       cjhandler[idx] = compose_json_string_fwd_status;
@@ -459,8 +499,8 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3)
   if (wtc_2 & COUNT_TUNNEL_IP_PROTO) {
     cjhandler[idx] = compose_json_tunnel_proto;
     idx++;
-  } 
-    
+  }
+
   if (wtc_2 & COUNT_TUNNEL_IP_TOS) {
     cjhandler[idx] = compose_json_tunnel_tos;
     idx++;
@@ -614,7 +654,7 @@ void compose_json_src_mac(json_t *obj, struct chained_cache *cc)
 void compose_json_dst_mac(json_t *obj, struct chained_cache *cc)
 {
   char mac[18];
-  
+
   etheraddr_string(cc->primitives.eth_dhost, mac);
   json_object_set_new_nocheck(obj, "mac_dst", json_string(mac));
 }
@@ -1376,7 +1416,7 @@ void compose_json_map_label(json_t *obj, struct chained_cache *cc)
   json_t *root_l1 = compose_label_json_data(ptm_ll, ll_size);
 
   json_object_set_new_nocheck(obj, "label", root_l1);
-  
+
   cdada_str_destroy(lbls_cdada);
   cdada_list_destroy(ptm_ll);
 }
@@ -1405,6 +1445,150 @@ void compose_json_string_fwd_status(json_t *obj, struct chained_cache *cc)
   json_object_set_new_nocheck(obj, "fwd_status", root_l1);
 
   cdada_list_destroy(fwd_status_ll);
+}
+
+void compose_json_array_std_comm(json_t *obj, struct chained_cache *cc)
+{
+  char empty_string[] = "", *str_ptr;
+
+  vlen_prims_get(cc->pvlen, COUNT_INT_STD_COMM, &str_ptr);
+  if (!str_ptr) str_ptr = empty_string;
+
+  /* linked-list creation */
+  cdada_list_t *std_comm_ll = generic_delim_str_to_linked_list(str_ptr, GENERIC_STR_DELIM);;
+  size_t ll_size = cdada_list_size(std_comm_ll);
+
+  json_t *root_l1 = compose_str_linked_list_to_json_array_data(std_comm_ll, ll_size);
+
+  json_object_set_new_nocheck(obj, "comms", root_l1);
+
+  cdada_list_destroy(std_comm_ll);
+}
+
+void compose_json_array_src_std_comm(json_t *obj, struct chained_cache *cc)
+{
+  char empty_string[] = "", *str_ptr;
+
+  vlen_prims_get(cc->pvlen, COUNT_INT_SRC_STD_COMM, &str_ptr);
+  if (!str_ptr) str_ptr = empty_string;
+
+  /* linked-list creation */
+  cdada_list_t *std_comm_ll = generic_delim_str_to_linked_list(str_ptr, GENERIC_STR_DELIM);;
+  size_t ll_size = cdada_list_size(std_comm_ll);
+
+  json_t *root_l1 = compose_str_linked_list_to_json_array_data(std_comm_ll, ll_size);
+
+  json_object_set_new_nocheck(obj, "comms_src", root_l1);
+
+  cdada_list_destroy(std_comm_ll);
+}
+
+void compose_json_array_ext_comm(json_t *obj, struct chained_cache *cc)
+{
+  char empty_string[] = "", *str_ptr;
+
+  vlen_prims_get(cc->pvlen, COUNT_INT_EXT_COMM, &str_ptr);
+  if (!str_ptr) str_ptr = empty_string;
+
+  /* linked-list creation */
+  cdada_list_t *ext_comm_ll = generic_delim_str_to_linked_list(str_ptr, GENERIC_STR_DELIM);;
+  size_t ll_size = cdada_list_size(ext_comm_ll);
+
+  json_t *root_l1 = compose_str_linked_list_to_json_array_data(ext_comm_ll, ll_size);
+
+  json_object_set_new_nocheck(obj, "ecomms", root_l1);
+
+  cdada_list_destroy(ext_comm_ll);
+}
+
+void compose_json_array_src_ext_comm(json_t *obj, struct chained_cache *cc)
+{
+  char empty_string[] = "", *str_ptr;
+
+  vlen_prims_get(cc->pvlen, COUNT_INT_SRC_EXT_COMM, &str_ptr);
+  if (!str_ptr) str_ptr = empty_string;
+
+  /* linked-list creation */
+  cdada_list_t *ext_comm_ll = generic_delim_str_to_linked_list(str_ptr, GENERIC_STR_DELIM);;
+  size_t ll_size = cdada_list_size(ext_comm_ll);
+
+  json_t *root_l1 = compose_str_linked_list_to_json_array_data(ext_comm_ll, ll_size);
+
+  json_object_set_new_nocheck(obj, "ecomms_src", root_l1);
+
+  cdada_list_destroy(ext_comm_ll);
+}
+
+void compose_json_array_lrg_comm(json_t *obj, struct chained_cache *cc)
+{
+  char empty_string[] = "", *str_ptr;
+
+  vlen_prims_get(cc->pvlen, COUNT_INT_LRG_COMM, &str_ptr);
+  if (!str_ptr) str_ptr = empty_string;
+
+  /* linked-list creation */
+  cdada_list_t *lrg_comm_ll = generic_delim_str_to_linked_list(str_ptr, GENERIC_STR_DELIM);;
+  size_t ll_size = cdada_list_size(lrg_comm_ll);
+
+  json_t *root_l1 = compose_str_linked_list_to_json_array_data(lrg_comm_ll, ll_size);
+
+  json_object_set_new_nocheck(obj, "lcomms", root_l1);
+
+  cdada_list_destroy(lrg_comm_ll);
+}
+
+void compose_json_array_src_lrg_comm(json_t *obj, struct chained_cache *cc)
+{
+  char empty_string[] = "", *str_ptr;
+
+  vlen_prims_get(cc->pvlen, COUNT_INT_SRC_LRG_COMM, &str_ptr);
+  if (!str_ptr) str_ptr = empty_string;
+
+  /* linked-list creation */
+  cdada_list_t *lrg_comm_ll = generic_delim_str_to_linked_list(str_ptr, GENERIC_STR_DELIM);;
+  size_t ll_size = cdada_list_size(lrg_comm_ll);
+
+  json_t *root_l1 = compose_str_linked_list_to_json_array_data(lrg_comm_ll, ll_size);
+
+  json_object_set_new_nocheck(obj, "lcomms_src", root_l1);
+
+  cdada_list_destroy(lrg_comm_ll);
+}
+
+void compose_json_array_as_path(json_t *obj, struct chained_cache *cc)
+{
+  char empty_string[] = "", *str_ptr;
+
+  vlen_prims_get(cc->pvlen, COUNT_INT_AS_PATH, &str_ptr);
+  if (!str_ptr) str_ptr = empty_string;
+
+  /* linked-list creation */
+  cdada_list_t *as_path_ll = generic_delim_str_to_linked_list(str_ptr, GENERIC_STR_DELIM);;
+  size_t ll_size = cdada_list_size(as_path_ll);
+
+  json_t *root_l1 = compose_str_linked_list_to_json_array_data(as_path_ll, ll_size);
+
+  json_object_set_new_nocheck(obj, "as_apth", root_l1);
+
+  cdada_list_destroy(as_path_ll);
+}
+
+void compose_json_array_src_as_path(json_t *obj, struct chained_cache *cc)
+{
+  char empty_string[] = "", *str_ptr;
+
+  vlen_prims_get(cc->pvlen, COUNT_INT_SRC_AS_PATH, &str_ptr);
+  if (!str_ptr) str_ptr = empty_string;
+
+  /* linked-list creation */
+  cdada_list_t *as_path_ll = generic_delim_str_to_linked_list(str_ptr, GENERIC_STR_DELIM);;
+  size_t ll_size = cdada_list_size(as_path_ll);
+
+  json_t *root_l1 = compose_str_linked_list_to_json_array_data(as_path_ll, ll_size);
+
+  json_object_set_new_nocheck(obj, "as_apth_src", root_l1);
+
+  cdada_list_destroy(as_path_ll);
 }
 
 void compose_json_array_mpls_label_stack(json_t *obj, struct chained_cache *cc)
@@ -1533,7 +1717,7 @@ json_t *compose_mpls_label_stack_json_data(u_int32_t *label_stack, int ls_len)
     strncat(label_idx_buf, label_buf, (MAX_MPLS_LABEL_IDX_LEN - max_mpls_label_idx_len_dec));
     max_mpls_label_idx_len_dec = (strlen(idx_buf) + strlen("-") + strlen(label_buf) + 3);
     j_str_tmp = json_string(label_idx_buf);
-    json_array_append(root, j_str_tmp); 
+    json_array_append(root, j_str_tmp);
   }
 
   return root;
@@ -1574,7 +1758,27 @@ json_t *compose_srv6_segment_ipv6_list_json_data(struct host_addr *ipv6_list, in
     strcat(idx_ipv6_str, ipv6_str);
 
     j_str_tmp = json_string(idx_ipv6_str);
-    json_array_append(root, j_str_tmp); 
+    json_array_append(root, j_str_tmp);
+  }
+
+  return root;
+}
+
+json_t *compose_str_linked_list_to_json_array_data(cdada_list_t *ll, int ll_size)
+{
+  generic_delim_string delim_s = {0};
+
+  json_t *root = json_array();
+  json_t *j_str_tmp = NULL;
+
+  size_t idx_0;
+  for (idx_0 = 0; idx_0 < ll_size; idx_0++) {
+    memset(&delim_s, 0, sizeof(delim_s));
+    cdada_list_get(ll, idx_0, &delim_s);
+    if (strncmp(delim_s.delim_str, "NULL", (strlen(delim_s.delim_str) - 1)) != 0) {
+      j_str_tmp = json_string(delim_s.delim_str);
+      json_array_append(root, j_str_tmp);
+    }
   }
 
   return root;

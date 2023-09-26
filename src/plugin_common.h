@@ -37,7 +37,7 @@
 #define TCP_FLAG_LEN 6
 #define FWD_TYPES_STR_LEN 50
 #define MAX_MPLS_LABEL_STACK 128
-#define MAX_GENERIC_DELIM_STR_LEN 256
+#define MAX_GENERIC_DELIM_STR_TOKEN_LEN 128
 #define GENERIC_STR_DELIM " "
 
 #define PORTS_TABLE_ENTRIES  65536
@@ -140,7 +140,7 @@ struct protos_table {
 #ifndef STRUCT_DELIM_STR
 #define STRUCT_DELIM_STR
 typedef struct {
-  char delim_str[MAX_GENERIC_DELIM_STR_LEN];
+  char delim_str[MAX_GENERIC_DELIM_STR_TOKEN_LEN];
 } __attribute__((packed)) generic_delim_string;
 #endif
 
