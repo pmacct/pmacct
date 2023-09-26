@@ -100,7 +100,7 @@
 !			label address where available (ie. egress NFv9/IPFIX
 !			exports). In NFv9/IPFIX this is compared against IE #18
 !			for IPv4 and IE #62 for IPv6.
-! 'filter'		MATCH: incoming packets are mateched against the supplied
+! 'filter'		MATCH: incoming packets are matched against the supplied
 !			filter expression (expected in libpcap syntax); the filter
 !			needs to be enclosed in quotes ('). 
 ! 'agent_id'		MATCH: in sFlow v5 it's compared against the subAgentId
