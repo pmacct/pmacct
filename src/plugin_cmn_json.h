@@ -23,6 +23,7 @@
 #define PLUGIN_CMN_JSON_H
 
 /* typedefs */
+#include "preprocess.h"
 #ifdef WITH_JANSSON
 typedef void (*compose_json_handler)(json_t *, struct chained_cache *);
 #endif
@@ -38,12 +39,21 @@ extern void compose_json_string_fwd_status(json_t *, struct chained_cache *);
 extern void compose_json_array_mpls_label_stack(json_t *, struct chained_cache *);
 extern void compose_json_array_srv6_segment_ipv6_list(json_t *, struct chained_cache *);
 extern void compose_json_array_tunnel_tcp_flags(json_t *, struct chained_cache *);
+extern void compose_json_array_std_comm(json_t *, struct chained_cache *);
+extern void compose_json_array_src_std_comm(json_t *, struct chained_cache *);
+extern void compose_json_array_ext_comm(json_t *, struct chained_cache *);
+extern void compose_json_array_src_ext_comm(json_t *, struct chained_cache *);
+extern void compose_json_array_lrg_comm(json_t *, struct chained_cache *);
+extern void compose_json_array_src_lrg_comm(json_t *, struct chained_cache *);
+extern void compose_json_array_as_path(json_t *, struct chained_cache *);
+extern void compose_json_array_src_as_path(json_t *, struct chained_cache *);
 
 extern json_t *compose_label_json_data(cdada_list_t *, int);
 extern json_t *compose_tcpflags_json_data(cdada_list_t *, int);
 extern json_t *compose_fwd_status_json_data(size_t, cdada_list_t *, int);
 extern json_t *compose_mpls_label_stack_json_data(u_int32_t *, int);
 extern json_t *compose_srv6_segment_ipv6_list_json_data(struct host_addr *, int);
+extern json_t *compose_str_linked_list_to_json_array_data(cdada_list_t *ll, int ll_size);
 
 extern void compose_json_event_type(json_t *, struct chained_cache *);
 extern void compose_json_tag(json_t *, struct chained_cache *);
