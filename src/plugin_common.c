@@ -1119,33 +1119,34 @@ cdada_list_t *fwd_status_to_linked_list()
   return fwd_status_linked_list;
 }
 
-cdada_list_t *generic_delim_str_to_linked_list(const char *generic_delim_str, const char *generic_str_delim)
+cdada_list_t *generic_delim_str_to_linked_list(const char *delimited_string, const char *delimiter)
 {
-  size_t max_generic_delim_str_len = strlen(generic_delim_str) + 1;
+  size_t max_delimited_string_len = strlen(delimited_string) + 1;
 
   generic_delim_string delim_s = {0};
 
   /* Setting the defualt delimiter */
-  if (generic_str_delim == NULL) {
-    generic_str_delim = " ";
+  if (delimiter == NULL) {
+    delimiter = " ";
   }
 
   cdada_list_t *delim_str_to_linked_list = cdada_list_create(generic_delim_string);
   if (!delim_str_to_linked_list) {
-      Log(LOG_ERR, "ERROR ( %s/%s ): generic_delim_str_to_linked_list() cannot instantiate delim_str_to_linked_list. Exiting ..\n", config.name, config.type);
-      exit_gracefully(1);
+    Log(LOG_ERR, "ERROR ( %s/%s ): delimited_string_to_linked_list() cannot instantiate delim_str_to_linked_list. Exiting ..\n", config.name, config.type);
+    exit_gracefully(1);
   }
 
   /* Safer to work on a copy of the original string */
-  char generic_delim_str_cpy[max_generic_delim_str_len];
-  strncpy(generic_delim_str_cpy, generic_delim_str, max_generic_delim_str_len);
-  generic_delim_str_cpy[max_generic_delim_str_len - 1] = '\0';
+  char delimited_string_cpy[max_delimited_string_len];
+  strncpy(delimited_string_cpy, delimited_string, max_delimited_string_len - 1);
+  delimited_string_cpy[max_delimited_string_len - 1] = '\0';
 
   char *saveptr = NULL;
-  for (char *token = strtok_r(generic_delim_str_cpy, generic_str_delim, &saveptr); token != NULL; token = strtok_r(NULL, generic_str_delim, &saveptr)) {
-      memset(&delim_s, 0, sizeof(delim_s));
-      strncpy(delim_s.delim_str, token, strlen(token) + 1);
-      cdada_list_push_back(delim_str_to_linked_list, &delim_s);
+  for (char *token = strtok_r(delimited_string_cpy, delimiter, &saveptr); token != NULL; token = strtok_r(NULL, delimiter, &saveptr)) {
+    memset(&delim_s, 0, sizeof(delim_s));
+    strncpy(delim_s.delim_str, token, MAX_GENERIC_DELIM_STR_TOKEN_LEN - 1);
+    delim_s.delim_str[MAX_GENERIC_DELIM_STR_TOKEN_LEN - 1] = '\0';
+    cdada_list_push_back(delim_str_to_linked_list, &delim_s);
   }
 
   return delim_str_to_linked_list;
