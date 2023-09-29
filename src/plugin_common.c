@@ -1132,7 +1132,7 @@ cdada_list_t *generic_delim_str_to_linked_list(const char *delimited_string, con
 
   cdada_list_t *delim_str_to_linked_list = cdada_list_create(generic_delim_string);
   if (!delim_str_to_linked_list) {
-    Log(LOG_ERR, "ERROR ( %s/%s ): delimited_string_to_linked_list() cannot instantiate delim_str_to_linked_list. Exiting ..\n", config.name, config.type);
+    Log(LOG_ERR, "ERROR ( %s/%s ): generic_delim_str_to_linked_list() cannot instantiate delim_str_to_linked_list. Exiting ..\n", config.name, config.type);
     exit_gracefully(1);
   }
 
