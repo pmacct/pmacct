@@ -1767,7 +1767,7 @@ DESC:           Defines the print plugin output separator when print_output is s
 		strings allowed. Being able to choose a separator comes useful in cases in which the
 		default separator value is part of any of the supplied strings, for example certain BGP
 		AS PATHs like "AS1_AS2_AS3_{ASX,ASY,ASZ}".
-DEFAULT:	','
+DEFAULT:	,
 
 KEY:		print_output_custom_lib
 DESC:		Full path to a non-static library file that can be dynamically linked in pmacct to

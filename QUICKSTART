@@ -1277,7 +1277,7 @@ To enable the feature please follow these steps:
    location) on the system, then NDPI_LIBS and NDPI_CFLAGS should be set to the
    location where nDPI headers and dynamic library are lying, for example:
 
-   shell> NDPI_LIBS=-L/path/to/nDPI/src/lib/.libs  
+   shell> NDPI_LIBS="-L/path/to/nDPI/src/lib/.libs -lndpi" 
    shell> NDPI_CFLAGS=-I/path/to/nDPI/src/include
    shell> export NDPI_LIBS NDPI_CFLAGS
    shell> ./configure --enable-ndpi
