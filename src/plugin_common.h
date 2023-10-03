@@ -24,6 +24,7 @@
 
 /* includes */
 #include "net_aggr.h"
+#include "network.h"
 #include "preprocess.h"
 
 /* defines */

@@ -104,7 +104,7 @@ typedef int (*compose_as_path_to_avro_array_data_type)(const char *, const char 
 extern compose_bgp_comm_to_avro_array_schema_type compose_bgp_comm_to_avro_array_schema;
 extern compose_bgp_comm_to_avro_array_data_type compose_bgp_comm_to_avro_array_data;
 extern compose_as_path_to_avro_array_schema_type compose_as_path_to_avro_array_schema;
-extern compose_as_path_to_avro_array_data_type compose_as_apth_to_avro_array_data;
+extern compose_as_path_to_avro_array_data_type compose_as_path_to_avro_array_data;
 #endif
 
 #endif //PLUGIN_CMN_AVRO_H
