@@ -361,6 +361,7 @@ void write_stats_header_formatted(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to
     if (what_to_count_2 & COUNT_TUNNEL_DST_PORT) printf("TUNNEL_DST_PORT  ");
     if (what_to_count_2 & COUNT_TUNNEL_TCPFLAGS) printf("TUNNEL_TCP_FLAGS  ");
     if (what_to_count_2 & COUNT_VXLAN) printf("VXLAN     ");
+    if (what_to_count_3 & COUNT_NVGRE) printf("NVGRE     ");
 
     if (what_to_count_2 & COUNT_TIMESTAMP_START) printf("TIMESTAMP_START                ");
     if (what_to_count_2 & COUNT_TIMESTAMP_END) printf("TIMESTAMP_END                  "); 
@@ -587,6 +588,7 @@ void write_stats_header_csv(pm_cfgreg_t what_to_count, pm_cfgreg_t what_to_count
     if (what_to_count_2 & COUNT_TUNNEL_DST_PORT) printf("%sTUNNEL_DST_PORT", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_TUNNEL_TCPFLAGS) printf("%sTUNNEL_TCP_FLAGS", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_VXLAN) printf("%sVXLAN", write_sep(sep, &count));
+    if (what_to_count_3 & COUNT_NVGRE) printf("%sNVGRE", write_sep(sep, &count));
 
     if (what_to_count_2 & COUNT_TIMESTAMP_START) printf("%sTIMESTAMP_START", write_sep(sep, &count));
     if (what_to_count_2 & COUNT_TIMESTAMP_END) printf("%sTIMESTAMP_END", write_sep(sep, &count));
@@ -2030,6 +2032,10 @@ int main(int argc,char **argv)
 	  tmpnum = atoi(match_string_token);
 	  request.ptun.tunnel_id = tmpnum;
 	}
+	else if (!strcmp(count_token[match_string_index], "nvgre")) {
+	  tmpnum = atoi(match_string_token);
+	  request.ptun.nvgre_tunnel_id = tmpnum;
+	}
         else if (!strcmp(count_token[match_string_index], "timestamp_start")) {
 	  struct tm tmp;
 	  char *delim = strchr(match_string_token, '.');
@@ -2830,6 +2836,11 @@ int main(int argc,char **argv)
 	if (!have_wtc || (what_to_count_2 & COUNT_VXLAN)) {
 	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-8u  ", ptun->tunnel_id);
 	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), ptun->tunnel_id);
+	}
+
+	if (!have_wtc || (what_to_count_3 & COUNT_NVGRE)) {
+	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-8u  ", ptun->nvgre_tunnel_id);
+	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%u", write_sep(sep_ptr, &count), ptun->nvgre_tunnel_id);
 	}
 
         if (!have_wtc || (what_to_count_2 & COUNT_TIMESTAMP_START)) {
@@ -3744,6 +3755,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3, u_int8_t
   }
 
   if (wtc_2 & COUNT_VXLAN) json_object_set_new_nocheck(obj, "vxlan", json_integer((json_int_t)ptun->tunnel_id));
+  if (wtc_3 & COUNT_NVGRE) json_object_set_new_nocheck(obj, "nvgre", json_integer((json_int_t)ptun->nvgre_tunnel_id));
 
   if (wtc_2 & COUNT_TIMESTAMP_START) {
     pmc_compose_timestamp(tstamp_str, SRVBUFLEN, &pnat->timestamp_start, TRUE, tstamp_since_epoch, tstamp_utc);

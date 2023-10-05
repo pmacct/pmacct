@@ -545,7 +545,8 @@ int main(int argc,char **argv, char **envp)
 			COUNT_VXLAN))
 	  list->cfg.data_type |= PIPE_TYPE_TUN;
 
-        if (list->cfg.what_to_count_3 & (COUNT_TUNNEL_FLOW_LABEL|COUNT_IN_CVLAN|COUNT_OUT_CVLAN))
+        if (list->cfg.what_to_count_3 & (COUNT_TUNNEL_FLOW_LABEL|COUNT_IN_CVLAN|COUNT_OUT_CVLAN|
+                        COUNT_NVGRE))
           list->cfg.data_type |= PIPE_TYPE_TUN;
 
 	if (list->cfg.what_to_count_2 & (COUNT_LABEL|COUNT_MPLS_LABEL_STACK|COUNT_SRV6_SEG_IPV6_SECTION))

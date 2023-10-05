@@ -830,6 +830,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 	if (config.what_to_count_2 & COUNT_TUNNEL_TCPFLAGS) fprintf(f, "%-3u               ", queue[j]->tunnel_tcp_flags);
 
 	if (config.what_to_count_2 & COUNT_VXLAN) fprintf(f, "%-8u  ", ptun->tunnel_id);
+        if (config.what_to_count_3 & COUNT_NVGRE) fprintf(f, "%-8u  ", ptun->nvgre_tunnel_id);
   
         if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
 	  char tstamp_str[VERYSHORTBUFLEN];
@@ -1228,6 +1229,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         if (config.what_to_count_2 & COUNT_TUNNEL_TCPFLAGS) fprintf(f, "%s%u", write_sep(sep, &count), queue[j]->tunnel_tcp_flags);
 
 	if (config.what_to_count_2 & COUNT_VXLAN) fprintf(f, "%s%u", write_sep(sep, &count), ptun->tunnel_id);
+        if (config.what_to_count_3 & COUNT_NVGRE) fprintf(f, "%s%u", write_sep(sep, &count), ptun->nvgre_tunnel_id);
   
         if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
 	  char tstamp_str[VERYSHORTBUFLEN];
@@ -1527,6 +1529,7 @@ void P_write_stats_header_formatted(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_TUNNEL_DST_PORT) fprintf(f, "TUNNEL_DST_PORT  "); 
   if (config.what_to_count_2 & COUNT_TUNNEL_TCPFLAGS) fprintf(f, "TUNNEL_TCP_FLAGS  "); 
   if (config.what_to_count_2 & COUNT_VXLAN) fprintf(f, "VXLAN     ");
+  if (config.what_to_count_3 & COUNT_NVGRE) fprintf(f, "NVGRE     ");
   if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "TIMESTAMP_START                ");
   if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "TIMESTAMP_END                  "); 
   if (config.what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) fprintf(f, "TIMESTAMP_ARRIVAL              ");
@@ -1657,6 +1660,7 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count_2 & COUNT_TUNNEL_DST_PORT) fprintf(f, "%sTUNNEL_DST_PORT", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TUNNEL_TCPFLAGS) fprintf(f, "%sTUNNEL_TCP_FLAGS", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_VXLAN) fprintf(f, "%sVXLAN", write_sep(sep, &count));
+  if (config.what_to_count_3 & COUNT_NVGRE) fprintf(f, "%sNVGRE", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TIMESTAMP_START) fprintf(f, "%sTIMESTAMP_START", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TIMESTAMP_END) fprintf(f, "%sTIMESTAMP_END", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_TIMESTAMP_ARRIVAL) fprintf(f, "%sTIMESTAMP_ARRIVAL", write_sep(sep, &count));

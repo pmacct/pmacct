@@ -603,7 +603,9 @@ struct pkt_tunnel_primitives {
   u_int16_t tunnel_src_port;
   u_int16_t tunnel_dst_port;
   u_int8_t tunnel_tcp_flags;
+
   u_int32_t tunnel_id; /* ie. VXLAN VNI */
+  u_int32_t nvgre_tunnel_id; /* ie. NVGRE TNI */
 #if defined (HAVE_L2)
   u_int16_t cvlan_id;
   u_int16_t out_cvlan_id;
