@@ -536,6 +536,11 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3)
     idx++;
   }
 
+  if (wtc_3 & COUNT_NVGRE) {
+    cjhandler[idx] = compose_json_nvgre;
+    idx++;
+  }
+
   if (wtc_2 & COUNT_TIMESTAMP_START) {
     cjhandler[idx] = compose_json_timestamp_start;
     idx++;
@@ -1217,6 +1222,11 @@ void compose_json_array_tunnel_tcp_flags(json_t *obj, struct chained_cache *cc)
 void compose_json_vxlan(json_t *obj, struct chained_cache *cc)
 {
   json_object_set_new_nocheck(obj, "vxlan", json_integer((json_int_t)cc->ptun->tunnel_id));
+}
+
+void compose_json_nvgre(json_t *obj, struct chained_cache *cc)
+{
+  json_object_set_new_nocheck(obj, "nvgre", json_integer((json_int_t)cc->ptun->nvgre_tunnel_id));
 }
 
 void compose_json_timestamp_start(json_t *obj, struct chained_cache *cc)

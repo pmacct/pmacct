@@ -122,6 +122,7 @@ extern void NF_path_delay_avg_usec_handler(struct channels_list_entry *, struct 
 extern void NF_path_delay_min_usec_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_path_delay_max_usec_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_vxlan_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void NF_nvgre_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_timestamp_start_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_timestamp_end_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_timestamp_arrival_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

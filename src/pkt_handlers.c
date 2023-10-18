@@ -947,6 +947,12 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    if (channels_list[index].aggregation_3 & COUNT_NVGRE) {
+      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_nvgre_handler;
+      primitives++;
+    }
+
+
     if (channels_list[index].aggregation_2 & COUNT_MPLS_LABEL_STACK) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = mpls_label_stack_handler;
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_label_stack_handler;
@@ -4426,6 +4432,40 @@ void NF_vxlan_handler(struct channels_list_entry *chptr, struct packet_ptrs *ppt
 	ptun->tunnel_id += *vni_ptr++;
 	ptun->tunnel_id <<= 8;
 	ptun->tunnel_id += *vni_ptr++;
+      }
+    }
+
+    break;
+  default:
+    break;
+  }
+}
+
+void NF_nvgre_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct pkt_tunnel_primitives *ptun = (struct pkt_tunnel_primitives *) ((*data) + chptr->extras.off_pkt_tun_primitives);
+  u_char *tni_ptr = NULL, tmp64[8];
+  u_int8_t *type = NULL;
+
+  memset(tmp64, 0, sizeof(tmp64));
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (OTPL_LAST_LEN(NF9_LAYER2_SEGMENT_ID) == 8) {
+      OTPL_CP_LAST(tmp64, NF9_LAYER2_SEGMENT_ID);
+
+      type = (u_int8_t *) &tmp64[0];
+      if ((*type) == NF9_L2_SID_NVGRE) {
+	tni_ptr = &tmp64[5];
+
+	ptun->nvgre_tunnel_id = *tni_ptr++;
+	ptun->nvgre_tunnel_id <<= 8;
+	ptun->nvgre_tunnel_id += *tni_ptr++;
+	ptun->nvgre_tunnel_id <<= 8;
+	ptun->nvgre_tunnel_id += *tni_ptr++;
       }
     }
 

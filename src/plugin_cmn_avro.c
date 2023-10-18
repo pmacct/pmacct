@@ -466,6 +466,10 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_in
     avro_schema_record_field_append(schema, "vxlan", avro_schema_long());
   }
 
+  if (wtc_3 & COUNT_NVGRE) {
+    avro_schema_record_field_append(schema, "nvgre", avro_schema_long());
+  }
+
   if (wtc_2 & COUNT_TIMESTAMP_START) {
     avro_schema_record_field_append(schema, "timestamp_start", avro_schema_string());
   }
@@ -1267,6 +1271,11 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wt
   if (wtc_2 & COUNT_VXLAN) {
     pm_avro_check(avro_value_get_by_name(&value, "vxlan", &field, NULL));
     pm_avro_check(avro_value_set_long(&field, ptun->tunnel_id));
+  }
+
+  if (wtc_3 & COUNT_NVGRE) {
+    pm_avro_check(avro_value_get_by_name(&value, "nvgre", &field, NULL));
+    pm_avro_check(avro_value_set_long(&field, ptun->nvgre_tunnel_id));
   }
 
   if (wtc_2 & COUNT_TIMESTAMP_START) {

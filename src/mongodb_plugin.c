@@ -816,6 +816,7 @@ void MongoDB_cache_purge(struct chained_cache *queue[], int index, int safe_acti
       if (config.what_to_count_2 & COUNT_TUNNEL_DST_PORT) bson_append_int(bson_elem, "tunnel_port_dst", ptun->tunnel_dst_port);
       if (config.what_to_count_2 & COUNT_TUNNEL_TCPFLAGS) bson_append_int(bson_elem, "tunnel_tcp_flags", data->tunnel_tcp_flags);
       if (config.what_to_count_2 & COUNT_VXLAN) bson_append_int(bson_elem, "vxlan", ptun->tunnel_id);
+      if (config.what_to_count_3 & COUNT_NVGRE) bson_append_int(bson_elem, "nvgre", ptun->nvgre_tunnel_id);
   
       if (config.what_to_count_2 & COUNT_TIMESTAMP_START) {
 	if (config.timestamps_since_epoch) {

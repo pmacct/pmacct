@@ -523,6 +523,14 @@ void count_vxlan_handler(const struct db_cache *cache_elem, struct insert_data *
   *ptr_values += strlen(*ptr_values);
 }
 
+void count_nvgre_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->ptun->nvgre_tunnel_id);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->ptun->nvgre_tunnel_id);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
 void PG_copy_count_timestamp_start_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
   static char time_str[VERYSHORTBUFLEN];
