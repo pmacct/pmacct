@@ -1101,6 +1101,18 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
       json_object_set_new_nocheck(obj, "peer_type_str", json_string(bmp_peer_types[bdata->chars.peer_type]));
     }
 
+    if (!bdata->chars.is_loc && !bdata->chars.is_out) {
+      json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bdata->chars.is_post));
+      json_object_set_new_nocheck(obj, "is_in", json_integer(1));
+    }
+    else if (bdata->chars.is_loc) {
+      json_object_set_new_nocheck(obj, "is_loc", json_integer((json_int_t)bdata->chars.is_loc));
+    }
+    else if (bdata->chars.is_out) {
+      json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bdata->chars.is_post));
+      json_object_set_new_nocheck(obj, "is_out", json_integer((json_int_t)bdata->chars.is_out));
+    }
+
     if (!is_empty_256b(&bdata->chars.rd, sizeof(bdata->chars.rd))) {
       char rd_str[SHORTSHORTBUFLEN];
 
@@ -1181,6 +1193,51 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
     else {
       pm_avro_check(avro_value_get_by_name(obj, "peer_type_str", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+    }
+
+    if (!bdata->chars.is_loc && !bdata->chars.is_out) {
+      pm_avro_check(avro_value_get_by_name(obj, "is_in", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+      pm_avro_check(avro_value_set_int(&p_avro_branch, 1));
+
+      pm_avro_check(avro_value_get_by_name(obj, "is_post", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+      pm_avro_check(avro_value_set_int(&p_avro_branch, bdata->chars.is_post));
+
+      pm_avro_check(avro_value_get_by_name(obj, "is_loc", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+
+      pm_avro_check(avro_value_get_by_name(obj, "is_out", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+    }
+    else if (bdata->chars.is_loc) {
+      pm_avro_check(avro_value_get_by_name(obj, "is_in", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+
+      pm_avro_check(avro_value_get_by_name(obj, "is_loc", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+      pm_avro_check(avro_value_set_int(&p_avro_branch, bdata->chars.is_loc));
+
+      pm_avro_check(avro_value_get_by_name(obj, "is_post", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+
+      pm_avro_check(avro_value_get_by_name(obj, "is_out", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+    }
+    else if (bdata->chars.is_out) {
+      pm_avro_check(avro_value_get_by_name(obj, "is_in", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+
+      pm_avro_check(avro_value_get_by_name(obj, "is_loc", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+
+      pm_avro_check(avro_value_get_by_name(obj, "is_post", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+      pm_avro_check(avro_value_set_int(&p_avro_branch, bdata->chars.is_post));
+
+      pm_avro_check(avro_value_get_by_name(obj, "is_out", &p_avro_field, NULL));
+      pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+      pm_avro_check(avro_value_set_int(&p_avro_branch, bdata->chars.is_out));
     }
 
     if (!is_empty_256b(&bdata->chars.rd, sizeof(bdata->chars.rd))) {
@@ -2231,6 +2288,11 @@ avro_schema_t p_avro_schema_build_bmp_peer_down(char *schema_name)
   avro_schema_record_field_append(schema, "peer_asn", avro_schema_long());
   avro_schema_record_field_append(schema, "peer_type", avro_schema_int());
   avro_schema_record_field_append(schema, "peer_type_str", optstr_s);
+
+  avro_schema_record_field_append(schema, "is_in", optint_s);
+  avro_schema_record_field_append(schema, "is_loc", optint_s);
+  avro_schema_record_field_append(schema, "is_post", optint_s);
+  avro_schema_record_field_append(schema, "is_out", optint_s);
 
   avro_schema_record_field_append(schema, "rd", optstr_s);
   avro_schema_record_field_append(schema, "rd_origin", optstr_s);
