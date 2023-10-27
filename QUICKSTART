@@ -1071,6 +1071,7 @@ plugins: kafka
 aggregate: src_host, dst_host, src_port, dst_port, proto, tos
 kafka_output: json
 kafka_topic: pmacct.acct
+! kafka_broker_host: 127.0.0.1
 kafka_refresh_time: 300
 kafka_history: 5m
 kafka_history_roundoff: m
@@ -1095,7 +1096,8 @@ This is a pointer to the quick start guide to Kafka:
 
 https://kafka.apache.org/quickstart
 
-Some notes:
+
+IXa. Notes on writing to Kafka
 1) When using Kafka over a dedicated node or VM, you may have to update the
 default Kafka server configuration. Edit the file named server.properties under
 the config folder of your kafka installation. Uncomment the following parameters:
@@ -1904,6 +1906,7 @@ A basic dump of BGP tables at regular intervals (60 secs) to a Kafka broker,
 listening on the localhost and default port, is configured as follows:
 
 bgp_table_dump_kafka_topic: pmacct.bgp
+! bgp_table_dump_kafka_broker_host: 127.0.0.1
 bgp_table_dump_refresh_time: 60
 !
 ! [Optional] librdkafka config for buffer tuning, ssl config, etc. 
@@ -1916,6 +1919,7 @@ A basic log of BGP messaging in near real-time to a Kafka broker, listening on
 the localhost and default port, is configured as follows:
 
 bgp_daemon_msglog_kafka_topic: pmacct.bgp
+! bgp_daemon_msglog_kafka_broker_host: 127.0.0.1
 !
 ! [Optional] librdkafka config for buffer tuning, ssl config, etc. 
 ! bgp_daemon_msglog_kafka_config_file: /path/to/librdkafka.conf
@@ -2410,12 +2414,15 @@ time intervals (bmp_dump_refresh_time, bmp_dump_kafka_topic):
 bmp_daemon: true
 !
 bmp_daemon_msglog_kafka_topic: pmacct.bmp-msglog
+! bmp_daemon_msglog_kafka_broker_host: 127.0.0.1
 !
 bmp_dump_kafka_topic: pmacct.bmp-dump
+! bmp_dump_kafka_broker_host: 127.0.0.1
 bmp_dump_refresh_time: 60
 !
 ! [Optional] librdkafka config for buffer tuning, ssl config, etc. 
-! bmp_dump_config_file: /path/to/librdkafka.conf
+! Read more in section "IXa. Notes on writing to Kafka".
+! bmp_dump_kafka_config_file: /path/to/librdkafka.conf
 
 When many BMP exporters are pointed to a BMP receiver writing to Kafka, as
 in the example above, due to the state synchronization nature of Route
