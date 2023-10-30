@@ -44,8 +44,8 @@ extern int protocols_number;
 static const struct _primitives_matrix_struct _primitives_matrix[] = {
   /* primitive, pmacctd, uacctd, nfacctd, sfacctd, pmtelemetryd, pmbgpd, pmbmpd */
   {"L2", 1, 1, 1, 1, 0, 0, 0, ""}, 
-  {"cos", 1, 0, 1, 1, 0, 0, 0, "Ethernet CoS, 802.1P"},
-  {"etype", 1, 0, 1, 1, 0, 0, 0, "Ethernet Ethertype"},
+  {"cos", 1, 1, 1, 1, 0, 0, 0, "Ethernet CoS, 802.1P"},
+  {"etype", 1, 1, 1, 1, 0, 0, 0, "Ethernet Ethertype"},
   {"src_mac", 1, 1, 1, 1, 0, 0, 0, "Source MAC address"},
   {"dst_mac", 1, 1, 1, 1, 0, 0, 0, "Destination MAC address"},
   {"vlan", 1, 1, 1, 1, 0, 0, 0, "Ethernet VLAN, 802.1Q"},
