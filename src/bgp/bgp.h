@@ -344,7 +344,7 @@ struct bgp_attr {
   struct ecommunity *ecommunity;
   struct lcommunity *lcommunity;
   unsigned long refcnt;
-  u_int32_t flag;
+  u_int8_t flag;
   struct in_addr nexthop;
   struct host_addr mp_nexthop;
   u_int32_t med;
