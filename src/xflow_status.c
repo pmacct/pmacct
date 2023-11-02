@@ -263,6 +263,7 @@ create_class_entry_status_table(xflow_status_table_t *table, struct xflow_status
 
 void set_vector_f_status(struct packet_ptrs_vector *pptrsv)
 {
+  pptrsv->l2.f_status = pptrsv->v4.f_status;
   pptrsv->vlan4.f_status = pptrsv->v4.f_status;
   pptrsv->mpls4.f_status = pptrsv->v4.f_status;
   pptrsv->vlanmpls4.f_status = pptrsv->v4.f_status;
@@ -275,6 +276,7 @@ void set_vector_f_status(struct packet_ptrs_vector *pptrsv)
 
 void set_vector_f_status_g(struct packet_ptrs_vector *pptrsv)
 {
+  pptrsv->l2.f_status_g = pptrsv->v4.f_status_g;
   pptrsv->vlan4.f_status_g = pptrsv->v4.f_status_g;
   pptrsv->mpls4.f_status_g = pptrsv->v4.f_status_g;
   pptrsv->vlanmpls4.f_status_g = pptrsv->v4.f_status_g;

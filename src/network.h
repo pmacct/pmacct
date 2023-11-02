@@ -626,6 +626,7 @@ struct cache_legacy_bgp_primitives {
 /* END: BGP section */
 
 struct packet_ptrs_vector {
+  struct packet_ptrs l2;
   struct packet_ptrs v4;
   struct packet_ptrs vlan4;
   struct packet_ptrs mpls4;
