@@ -38,7 +38,7 @@ int bgp_afi2family (int afi)
     return AF_INET;
   else if (afi == AFI_IP6)
     return AF_INET6;
-  return SUCCESS;
+  return AF_UNSPEC;
 }
 
 u_int16_t bgp_rd_type_get(u_int16_t type)
