@@ -471,7 +471,7 @@ int attrhash_cmp(const void *p1, const void *p2)
   const struct bgp_attr *attr1 = (const struct bgp_attr *)p1;
   const struct bgp_attr *attr2 = (const struct bgp_attr *)p2;
 
-  if (attr1->flag == attr2->flag
+  if (attr1->rpki_maxlen == attr2->rpki_maxlen
       && attr1->bitmap == attr2->bitmap
       && attr1->origin == attr2->origin
       && attr1->nexthop.s_addr == attr2->nexthop.s_addr

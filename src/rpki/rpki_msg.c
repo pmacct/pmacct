@@ -155,7 +155,7 @@ int rpki_info_add(struct bgp_peer *peer, struct prefix *p, as_t asn, u_int8_t ma
   route = bgp_node_get(peer, rib, p);
 
   memset(&attr, 0, sizeof(attr));
-  attr.flag = maxlen; /* abusing flag for maxlen */
+  attr.rpki_maxlen = maxlen;
   attr.aspath = aspath_parse_ast(peer, asn);
   attr_new = bgp_attr_intern(peer, &attr);
   if (attr.aspath) aspath_unintern(peer, attr.aspath);

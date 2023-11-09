@@ -90,7 +90,7 @@ int rpki_prefix_lookup_node_match_cmp(struct bgp_info *info, struct node_match_c
 {
   if (!info || !info->attr || !info->attr->aspath || !nmct2) return TRUE;
 
-  if (info->attr->flag >= nmct2->p->prefixlen) {
+  if (info->attr->rpki_maxlen >= nmct2->p->prefixlen) {
     if (evaluate_last_asn(info->attr->aspath) == nmct2->last_as) {
       nmct2->ret_code = ROA_STATUS_VALID;
       return FALSE;
