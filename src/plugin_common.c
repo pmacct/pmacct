@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -774,7 +774,7 @@ void P_exit_now(int signum)
 int P_trigger_exec(char *filename)
 {
   char *args[2] = { filename, NULL };
-  int pid;
+  int pid, ret;
 
 #ifdef HAVE_VFORK
   switch (pid = vfork()) {
@@ -784,7 +784,12 @@ int P_trigger_exec(char *filename)
   case -1:
     return -1;
   case 0:
-    execv(filename, args);
+    ret = execv(filename, args);
+
+    if (ret == ERR) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): P_trigger_exec(): can't execute '%s'\n", config.name, config.type, filename);
+    }
+
     _exit(0);
   }
 
