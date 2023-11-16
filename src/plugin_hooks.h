@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -147,7 +147,6 @@ extern int pkt_msg_clean(void *, int);
 extern int pkt_extras_clean(void *, int);
 extern void evaluate_sampling(struct sampling *, pm_counter_t *, pm_counter_t *, pm_counter_t *);
 extern pm_counter_t take_simple_random_skip(pm_counter_t);
-extern pm_counter_t take_simple_systematic_skip(pm_counter_t);
 extern void plugin_pipe_zmq_compile_check();
 extern void plugin_pipe_check(struct configuration *);
 extern void P_zmq_pipe_init(void *, int *, u_int32_t *);

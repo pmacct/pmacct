@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -616,10 +616,14 @@ struct channels_list_entry *insert_pipe_channel(int plugin_type, struct configur
       chptr->tag = cfg->post_tag;
       chptr->tag2 = cfg->post_tag2;
       if (cfg->sampling_rate && plugin_type != PLUGIN_ID_SFPROBE) { /* sfprobe cares for itself */
-	chptr->s.rate = cfg->sampling_rate;
-
-	if (cfg->acct_type == ACCT_NF) chptr->s.sf = &take_simple_systematic_skip;
-	else chptr->s.sf = &take_simple_random_skip;
+	/* Bad idea to apply internal sampling to already-sampled data */
+	if (cfg->acct_type == ACCT_NF || cfg->acct_type == ACCT_SF) {
+          Log(LOG_WARNING, "WARN ( %s/%s ): sampling_rate does not apply to the specified daemon. Disabled.\n", cfg->name, cfg->type); 
+        }
+	else {
+	  chptr->s.rate = cfg->sampling_rate;
+	  chptr->s.sf = &take_simple_random_skip;
+        }
       } 
       memcpy(&chptr->tag_filter, &cfg->ptf, sizeof(struct pretag_filter));
       memcpy(&chptr->tag2_filter, &cfg->pt2f, sizeof(struct pretag_filter));
@@ -785,14 +789,6 @@ pm_counter_t take_simple_random_skip(pm_counter_t mean)
     srandom(random());
   }
   else skip = 1; /* smp->rate == 1 */
-
-  return skip;
-}
-
-/* simple systematic algorithm */
-pm_counter_t take_simple_systematic_skip(pm_counter_t mean)
-{
-  pm_counter_t skip = mean;
 
   return skip;
 }
