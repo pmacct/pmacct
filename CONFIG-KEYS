@@ -3471,9 +3471,11 @@ DESC:           Defines output format for the dump of Streaming Telemetry data (
 DEFAULT:        json
 
 KEY:		classifier_num_roots [GLOBAL]
-DESC:		Defines the number of buckets of the nDPI memory structure on which to hash flows.
-		The more the buckets, the more memory will be allocated at startup and the smaller
-		- and hence more performing - each memory structure will be.
+DESC:		Defines the number of buckets of the DPI memory structure on which to hash flows.
+		In case of nDPI, the more the buckets, the more memory will be allocated at startup
+		and the smaller - and hence more performing - each memory structure will be; in case
+		of NBAR (NetFlow v9 / IPFIX classification), the number of buckets allocated must be
+		sufficient to contain all classifier definitions sent by the exporter. 
 DEFAULT:	512
 
 KEY:		classifier_max_flows [GLOBAL]
