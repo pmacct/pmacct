@@ -2157,6 +2157,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
         if ((tpl->fld[NF9_APPLICATION_ID].len[0] == 2 ||
              tpl->fld[NF9_APPLICATION_ID].len[0] == 3 ||
+             tpl->fld[NF9_APPLICATION_ID].len[0] == 4 ||
              tpl->fld[NF9_APPLICATION_ID].len[0] == 5) &&
             tpl->fld[NF9_APPLICATION_NAME].len[0] > 0) {
 	  struct pkt_classifier css;
@@ -3641,6 +3642,7 @@ void NF_process_classifiers(struct packet_ptrs *pptrs_main, struct packet_ptrs *
 {
   if (tpl->fld[NF9_APPLICATION_ID].len[0] == 2 ||
       tpl->fld[NF9_APPLICATION_ID].len[0] == 3 ||
+      tpl->fld[NF9_APPLICATION_ID].len[0] == 4 ||
       tpl->fld[NF9_APPLICATION_ID].len[0] == 5) {
     struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs_main->f_status;
     struct xflow_status_entry *gentry = (struct xflow_status_entry *) pptrs_main->f_status_g;
