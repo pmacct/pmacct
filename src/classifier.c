@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -100,7 +100,7 @@ pm_class_t pmct_find_first_free()
 
   if (num && idx == num) {
     if (!log_notification_isset(&log_notifications.max_classifiers, FALSE)) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): Finished elements in class table (%u). Raise via classifier_table_num.\n", config.name, config.type, num);
+      Log(LOG_WARNING, "WARN ( %s/%s ): Finished elements in class table (%u). Raise via classifier_num_roots.\n", config.name, config.type, num);
       log_notification_set(&log_notifications.max_classifiers, FALSE, FALSE);
     }
   }

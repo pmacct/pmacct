@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
 */
 
 /*
@@ -72,7 +72,7 @@ struct pm_ndpi_workflow *pm_ndpi_workflow_init()
 
   workflow->prefs.decode_tunnels = FALSE;
 
-  if (config.ndpi_num_roots) workflow->prefs.num_roots = config.ndpi_num_roots;
+  if (config.classifier_table_num) workflow->prefs.num_roots = config.classifier_table_num;
   else workflow->prefs.num_roots = NDPI_NUM_ROOTS;
 
   if (config.ndpi_max_flows) workflow->prefs.max_ndpi_flows = config.ndpi_max_flows;

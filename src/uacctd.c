@@ -619,7 +619,7 @@ int main(int argc,char **argv, char **envp)
 	list->cfg.what_to_count_2 = FALSE;
 	list->cfg.what_to_count_3 = FALSE;
 #if defined (WITH_NDPI)
-	if (list->cfg.ndpi_num_roots) list->cfg.what_to_count_2 |= COUNT_NDPI_CLASS;
+	if (list->cfg.classifier_table_num) list->cfg.what_to_count_2 |= COUNT_NDPI_CLASS;
 #endif
         if (list->cfg.networks_file ||
 	   ((list->cfg.bgp_daemon || list->cfg.bmp_daemon) && list->cfg.nfacctd_as == NF_AS_BGP)) {

@@ -576,7 +576,6 @@ struct configuration {
   int snaplen;
   int classifier_table_num;
   int classifier_ndpi;
-  u_int32_t ndpi_num_roots;
   u_int32_t ndpi_max_flows;
   int ndpi_proto_guess;
   u_int32_t ndpi_idle_scan_period;
