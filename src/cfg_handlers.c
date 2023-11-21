@@ -5085,6 +5085,20 @@ int cfg_key_bmp_daemon_dump_time_slots(char *filename, char *name, char *value_p
   return changes;
 }
 
+int cfg_key_bmp_daemon_dump_exclude_stats(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.bmp_dump_exclude_stats = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_dump_exclude_stats'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_bmp_daemon_dump_amqp_host(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

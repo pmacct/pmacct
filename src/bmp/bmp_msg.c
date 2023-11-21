@@ -1034,11 +1034,11 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
           bmp_log_msg(peer, &bdata, tlvs, &bmp_logdump_tag, &blstats, bgp_peer_log_seq_get(&bms->log_seq), event_type, config.bmp_daemon_msglog_output, BMP_LOG_TYPE_STATS);
         } 
 
-        if (bms->dump_backend_methods) bmp_dump_se_ll_append(peer, &bdata, tlvs, &blstats, BMP_LOG_TYPE_STATS);
+        if (bms->dump_backend_methods && !config.bmp_dump_exclude_stats) bmp_dump_se_ll_append(peer, &bdata, tlvs, &blstats, BMP_LOG_TYPE_STATS);
 
         if (bms->msglog_backend_methods || bms->dump_backend_methods) bgp_peer_log_seq_increment(&bms->log_seq);
 
-	if (!pm_listcount(tlvs) || !bms->dump_backend_methods) bmp_tlv_list_destroy(tlvs);
+	if (!pm_listcount(tlvs) || !bms->dump_backend_methods || config.bmp_dump_exclude_stats) bmp_tlv_list_destroy(tlvs);
       }
     }
   }

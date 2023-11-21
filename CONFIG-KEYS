@@ -3045,6 +3045,12 @@ DESC:		Enables spreading the load deriving by BGP, BMP and Streaming Telemetry d
 		time.
 DEFAULT:	1
 
+KEY:		bmp_dump_exclude_stats [GLOBAL]
+VALUES:		[ true | false ]
+DESC:		When true, BMP Messages of Type 1 (Statistics Reports) are excluded from the dump
+                mechanism, i.e. they are only exported once in real-time but not cached.
+DEFAULT:	false
+
 KEY:            [ bgp_table_dump_latest_file | bmp_dump_latest_file | telemetry_dump_latest_file ]
 		[GLOBAL]
 DESC:           Defines the full pathname to pointer(s) to latest file(s). Dynamic names are supported

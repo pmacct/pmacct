@@ -478,6 +478,7 @@ struct configuration {
   char *bmp_dump_avro_schema_file;
   int bmp_dump_refresh_time;
   int bmp_dump_time_slots;
+  int bmp_dump_exclude_stats;
   char *bmp_dump_amqp_host;
   char *bmp_dump_amqp_vhost;
   char *bmp_dump_amqp_user;

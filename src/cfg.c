@@ -611,6 +611,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bmp_dump_avro_schema_file", cfg_key_bmp_daemon_dump_avro_schema_file},
   {"bmp_dump_refresh_time", cfg_key_bmp_daemon_dump_refresh_time},
   {"bmp_dump_time_slots", cfg_key_bmp_daemon_dump_time_slots},
+  {"bmp_dump_exclude_stats", cfg_key_bmp_daemon_dump_exclude_stats},
   {"bmp_dump_amqp_host", cfg_key_bmp_daemon_dump_amqp_host},
   {"bmp_dump_amqp_vhost", cfg_key_bmp_daemon_dump_amqp_vhost},
   {"bmp_dump_amqp_user", cfg_key_bmp_daemon_dump_amqp_user},
