@@ -482,6 +482,7 @@ extern int cfg_key_bmp_daemon_dump_avro_schema_file(char *, char *, char *);
 extern int cfg_key_bmp_daemon_dump_latest_file(char *, char *, char *);
 extern int cfg_key_bmp_daemon_dump_refresh_time(char *, char *, char *);
 extern int cfg_key_bmp_daemon_dump_time_slots(char *, char *, char *);
+extern int cfg_key_bmp_daemon_dump_exclude_stats(char *, char *, char *);
 extern int cfg_key_bmp_daemon_dump_amqp_host(char *, char *, char *);
 extern int cfg_key_bmp_daemon_dump_amqp_vhost(char *, char *, char *);
 extern int cfg_key_bmp_daemon_dump_amqp_user(char *, char *, char *);
