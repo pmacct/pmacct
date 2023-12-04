@@ -1216,6 +1216,17 @@ int main(int argc,char **argv, char **envp)
      main loop we maintain two packet_ptrs structures when IPv6 is enabled:
      we will sync here 'pptrs6' for common tables and pointers */
   memset(dummy_packet, 0, sizeof(dummy_packet));
+  pptrs.l2.f_agent = (u_char *) &client;
+  pptrs.l2.packet_ptr = dummy_packet;
+  pptrs.l2.pkthdr = &dummy_pkthdr;
+  Assign16(((struct eth_header *)pptrs.l2.packet_ptr)->ether_type, htons(ETHERTYPE_8021Q));
+  pptrs.l2.mac_ptr = (u_char *)((struct eth_header *)pptrs.l2.packet_ptr)->ether_dhost;
+  pptrs.l2.vlan_ptr = pptrs.l2.packet_ptr + ETHER_HDRLEN;
+  // pptrs.l2.pkthdr->caplen = 18; /* eth_header + vlan */
+  pptrs.l2.pkthdr->caplen = 35;
+  pptrs.l2.pkthdr->len = 100; /* fake len */
+
+  memset(dummy_packet, 0, sizeof(dummy_packet));
   pptrs.v4.f_agent = (u_char *) &client;
   pptrs.v4.packet_ptr = dummy_packet;
   pptrs.v4.pkthdr = &dummy_pkthdr;
@@ -2412,6 +2423,51 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	/* we need to understand the IP protocol version in order to build the fake packet */ 
 	switch (pptrs->flow_type.traffic_type) {
+        case PM_FTYPE_VLAN:
+          pptrsv->l2.f_header = pptrs->f_header;
+          pptrsv->l2.f_data = pptrs->f_data;
+          pptrsv->l2.f_tpl = pptrs->f_tpl;
+          memcpy(&pptrsv->l2.flow_type, &pptrs->flow_type, sizeof(struct flow_chars));
+
+          if (req->bpf_filter) {
+            reset_mac_vlan(&pptrsv->l2);
+            if (direction == DIRECTION_IN) {
+              memcpy(pptrsv->l2.mac_ptr+ETH_ADDR_LEN,
+                     pkt+tpl->fld[NF9_IN_SRC_MAC].off[0],
+                     tpl->fld[NF9_IN_SRC_MAC].len[0]);
+              memcpy(pptrsv->l2.mac_ptr,
+                     pkt+tpl->fld[NF9_IN_DST_MAC].off[0],
+                     tpl->fld[NF9_IN_DST_MAC].len[0]);
+              memcpy(pptrsv->l2.vlan_ptr,
+                     pkt+tpl->fld[NF9_IN_VLAN].off[0],
+                     tpl->fld[NF9_IN_VLAN].len[0]);
+            }
+            else if (direction == DIRECTION_OUT) {
+              memcpy(pptrsv->l2.mac_ptr+ETH_ADDR_LEN,
+                     pkt+tpl->fld[NF9_OUT_SRC_MAC].off[0],
+                     tpl->fld[NF9_OUT_SRC_MAC].len[0]);
+              memcpy(pptrsv->l2.mac_ptr,
+                     pkt+tpl->fld[NF9_OUT_DST_MAC].off[0],
+                     tpl->fld[NF9_OUT_DST_MAC].len[0]);
+              memcpy(pptrsv->l2.vlan_ptr,
+                     pkt+tpl->fld[NF9_OUT_VLAN].off[0],
+                     tpl->fld[NF9_OUT_VLAN].len[0]);
+            }
+          }
+
+          /* Let's copy some relevant fields */
+          pptrsv->l2.l4_proto = 0;
+          NF_process_classifiers(pptrs, &pptrsv->l2, pkt, tpl);
+          if (config.bgp_daemon_to_xflow_agent_map)
+            BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->l2, &pptrsv->l2.bta, &pptrsv->l2.bta2);
+          if (config.nfacctd_flow_to_rd_map)
+            NF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->l2, &pptrsv->l2.bitr, NULL);
+          NF_mpls_vpn_rd_from_map(&pptrsv->l2);
+          NF_mpls_vpn_rd_from_ie90(&pptrsv->l2);
+          NF_mpls_vpn_rd_from_options(&pptrsv->l2);
+          exec_plugins(&pptrsv->l2, req);
+          break;
+
 	case PM_FTYPE_IPV4:
 	  if (req->bpf_filter) {
 	    reset_mac(pptrs);
@@ -2563,6 +2619,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           if (config.bmp_daemon) bmp_srcdst_lookup(&pptrsv->v6, &bl_info);
           exec_plugins(&pptrsv->v6, req);
 	  break;
+
 	case PM_FTYPE_VLAN_IPV4:
 	  pptrsv->vlan4.f_header = pptrs->f_header;
 	  pptrsv->vlan4.f_data = pptrs->f_data;
