@@ -2423,7 +2423,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	/* we need to understand the IP protocol version in order to build the fake packet */ 
 	switch (pptrs->flow_type.traffic_type) {
-        case PM_FTYPE_VLAN:
+        case PM_FTYPE_L2:
           pptrsv->l2.f_header = pptrs->f_header;
           pptrsv->l2.f_data = pptrs->f_data;
           pptrsv->l2.f_tpl = pptrs->f_tpl;

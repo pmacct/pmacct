@@ -577,6 +577,7 @@ typedef u_int64_t pm_counter_t;
 #define PM_FTYPE_TRAFFIC		1
 #define PM_FTYPE_IPV4			2
 #define PM_FTYPE_IPV6			3
+#define PM_FTYPE_L2			5
 #define PM_FTYPE_VLAN			5
 #define PM_FTYPE_VLAN_IPV4		7  /* PM_FTYPE_VLAN + PM_FTYPE_IPV4 */
 #define PM_FTYPE_VLAN_IPV6		8  /* PM_FTYPE_VLAN + PM_FTYPE_IPV6 */
