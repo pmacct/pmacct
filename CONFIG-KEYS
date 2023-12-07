@@ -1893,8 +1893,8 @@ DESC:		If SO_REUSEPORT is supported by the Operating System (read more about thi
 		this allows to load a custom load-balancer. To load-share, daemons have to be part of the
 		same cluster_name and each be configured with a distinct cluster_id. An example of such
 		eBPF program is available here: https://github.com/network-analytics/ebpf-loadbalancer .
-		Note: Linux kernel 4.x does not yet support eBPF locking so daemons have currently to be
-		(re-)started with a short time gap to avoid race conditions.
+		Note: Linux kernel 4.x does not support eBPF locking so daemons have currently to be (re-)
+		started with a short time gap to avoid race conditions.
 DEFAULT:	none
 
 KEY:		[ nfacctd_kafka_broker_host | sfacctd_kafka_broker_host ] [GLOBAL, NO_PMACCTD, NO_UACCTD]
@@ -2617,8 +2617,8 @@ DESC:		If SO_REUSEPORT is supported by the Operating System (read more about thi
 		this allows to load a custom load-balancer. To load-share, daemons have to be part of the
 		same cluster_name and each be configured with a distinct cluster_id. An example of such
 		eBPF program is available here: https://github.com/network-analytics/ebpf-loadbalancer .
-		Note: Linux kernel 4.x does not yet support eBPF locking so daemons have currently to be
-		(re-)started with a short time gap to avoid race conditions.
+		Note: Linux kernel 4.x does not support eBPF locking so daemons have currently to be (re-)
+		started with a short time gap to avoid race conditions.
 DEFAULT:	none
 
 KEY:		[ bgp_daemon_tag_map | bmp_daemon_tag_map | telemetry_daemon_tag_map ] [GLOBAL] [MAP]
@@ -3375,8 +3375,8 @@ DESC:		If SO_REUSEPORT is supported by the Operating System (read more about thi
 		have to be part of the same cluster_name and each be configured with a distinct
 		cluster_id. An example of such eBPF program is available here:
 		https://github.com/network-analytics/ebpf-loadbalancer Note: Linux kernel 4.x does
-		not yet support eBPF locking so daemons have currently to be (re-) started with a
-		short time gap to avoid race conditions.
+		not support eBPF locking so daemons have currently to be (re-) started with a short
+		time gap to avoid race conditions.
 DEFAULT:	none
 
 KEY:		telemetry_daemon_grpc_collector_conf
