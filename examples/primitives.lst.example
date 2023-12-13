@@ -41,7 +41,10 @@
 ! 'len'			MATCH: Length of the primitive, in bytes. 'vlen' word
 !			defines a primitive to be variable length. In pmacctd
 !			and  uacctd only strings can be defined vlen; in nfacctd
-!			string and raw semantics can be defined vlen.
+!			string and raw semantics can be defined vlen and vlen
+!			will be honoured no matter if the underlying field type
+!			is declared variable length (like in IPFIX) or it is
+!			statically defined.
 ! 'semantics'		SET: Specifies semantics of the primitive. Allowed values
 !			are: 'u_int' (unsigned integer [1,2,4,8 bytes long],
 !			presented as decimal number), 'hex' (unsigned integer
