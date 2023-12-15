@@ -592,7 +592,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       t->ipv4_base = &t->e[x];
       t->flags = tmp.flags;
       {
-	pm_id_t pm_cdada_map_container;
+	char pm_cdada_map_container[MAX_LABEL_LEN];
 
         t->label_map_v4 = cdada_map_create(pm_cdada_map_container);
         t->label_map_v6 = cdada_map_create(pm_cdada_map_container);
@@ -610,10 +610,14 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	  if (t->e[x].entry_label) {
 	    int ret;
 	    pm_id_t *idx_value;
+	    char entry_label[MAX_LABEL_LEN];
 
-	    ret = cdada_map_find(t->label_map_v4, t->e[x].entry_label, (void **) &idx_value);
+	    memset(entry_label, 0, MAX_LABEL_LEN);
+	    strcpy(entry_label, t->e[x].entry_label);
+
+	    ret = cdada_map_find(t->label_map_v4, entry_label, (void **) &idx_value);
 	    if (ret == CDADA_E_NOT_FOUND) {
-	      ret = cdada_map_insert(t->label_map_v4, t->e[x].entry_label, &t->e[x].pos);
+	      ret = cdada_map_insert(t->label_map_v4, entry_label, &t->e[x].pos);
 	      if (ret != CDADA_SUCCESS) {
 		Log(LOG_ERR, "ERROR ( %s/%s ): [%s] unable to insert in Label Map v4. Exiting.\n", config.name, config.type, t->filename);
 		exit_gracefully(1);
@@ -635,10 +639,14 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	  if (t->e[x].entry_label) {
 	    int ret;
 	    pm_id_t *idx_value;
+            char entry_label[MAX_LABEL_LEN];
 
-	    ret = cdada_map_find(t->label_map_v6, t->e[x].entry_label, (void **) &idx_value);
+            memset(entry_label, 0, MAX_LABEL_LEN);
+            strcpy(entry_label, t->e[x].entry_label);
+
+	    ret = cdada_map_find(t->label_map_v6, entry_label, (void **) &idx_value);
 	    if (ret == CDADA_E_NOT_FOUND) {
-	      ret = cdada_map_insert(t->label_map_v6, t->e[x].entry_label, &t->e[x].pos);
+	      ret = cdada_map_insert(t->label_map_v6, entry_label, &t->e[x].pos);
 	      if (ret != CDADA_SUCCESS) {
 		Log(LOG_ERR, "ERROR ( %s/%s ): [%s] unable to insert in Label Map v6. Exiting.\n", config.name, config.type, t->filename);
 		exit_gracefully(1);
@@ -667,8 +675,12 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	  else {
             int ret;
             pm_id_t *idx_value;
+            char entry_label[MAX_LABEL_LEN];
 
-            ret = cdada_map_find(t->label_map_v4, ptr->jeq.label, (void **) &idx_value);
+            memset(entry_label, 0, MAX_LABEL_LEN);
+            strcpy(entry_label, ptr->jeq.label);
+
+            ret = cdada_map_find(t->label_map_v4, entry_label, (void **) &idx_value);
 	    if (ret == CDADA_SUCCESS) {
 	      if ((*idx_value) > ptr->pos) {
 		ptr->jeq.ptr = &t->e[(*idx_value)];
@@ -688,10 +700,14 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
         if (ptr->jeq.label) {
           int ret;
           pm_id_t *idx_value;
+          char entry_label[MAX_LABEL_LEN];
+
+          memset(entry_label, 0, MAX_LABEL_LEN);
+          strcpy(entry_label, ptr->jeq.label);
 
           label_solved = FALSE;
 
-          ret = cdada_map_find(t->label_map_v6, ptr->jeq.label, (void **) &idx_value);
+          ret = cdada_map_find(t->label_map_v6, entry_label, (void **) &idx_value);
 	  if (ret == CDADA_SUCCESS) {
 	    if ((*idx_value) > ptr->pos) {
 	      ptr->jeq.ptr = &t->e[(*idx_value)];
