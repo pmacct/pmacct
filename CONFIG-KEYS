@@ -1493,15 +1493,16 @@ DESC:		In SQL plugin, sql_multi_values enables the use of multi-values INSERT st
 DEFAULT:        0
 
 KEY:		[ sql_trigger_exec | print_trigger_exec | amqp_trigger_exec | kafka_trigger_exec ]
-DESC:		Defines the executable to be launched at fixed time intervals to post-process aggregates;
+DESC:		Defines the executable to be launched at fixed time intervals to post-process output data;
 		in SQL plugins, intervals are specified by the 'sql_trigger_time' directive; if no interval
 		is supplied 'sql_refresh_time' value is used instead: this will result in a trigger being
 		fired each purging event (recommended since all environment variables will be set, see next).
 		A number of environment variables are set in order to allow the trigger to take actions and 
 		are listed in docs/TRIGGER_VARS. Non-SQL plugins feature a simpler implementation: triggers
-		can only be fired each time data is written to the backend (ie. print_refresh_time) and no
-		environment variables are passed over to the executable; useful also to upload data to cloud
-		storage that supports upload via API end-points. 
+		can only be fired each time data is written to the backend (ie. each print_refresh_time) and
+		no environment variables are set; this may be useful also to upload data to cloud storage
+		that supports upload via API end-points. When running in Docker, to avoid the accumulation
+		of zombie processes, run the container with the --init flag, ie. "docker run --init [ .. ]". 
 DEFAULT:	none
 
 KEY:		sql_trigger_time
