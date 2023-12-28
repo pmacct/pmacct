@@ -1099,8 +1099,11 @@ void skinny_bgp_daemon_online()
 	if (peer->status == Established && ((now - peer->last_keepalive) > (peer->ht / 2))) {
 	  bgp_reply_pkt_ptr = bgp_reply_pkt;
 	  bgp_reply_pkt_ptr += bgp_write_keepalive_msg(bgp_reply_pkt_ptr);
+
 	  ret = send(recv_fd, bgp_reply_pkt, bgp_reply_pkt_ptr - bgp_reply_pkt, 0);
-	  peer->last_keepalive = now;
+	  if (ret != ERR) {
+	    peer->last_keepalive = now;
+	  }
 	} 
 
 	if (config.bgp_daemon_tag_map) {
