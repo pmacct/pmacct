@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -42,6 +42,7 @@ void eth_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
   etype = ntohs(eth_pk->ether_type);
   pptrs->mac_ptr = (u_char *) eth_pk->ether_dhost; 
   pptrs->vlan_ptr = NULL; /* avoid stale vlan pointers */
+  pptrs->cvlan_ptr = NULL; /* avoid stale cvlan_ptr pointers */
   pptrs->mpls_ptr = NULL; /* avoid stale MPLS pointers */
   nl = ETHER_HDRLEN;
   caplen -= ETHER_HDRLEN;
@@ -403,6 +404,7 @@ void sll_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
 
   pptrs->mac_ptr = NULL;
   pptrs->vlan_ptr = NULL;
+  pptrs->cvlan_ptr = NULL;
   pptrs->mpls_ptr = NULL;
 
   p = pptrs->packet_ptr;
