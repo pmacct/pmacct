@@ -41,6 +41,10 @@ int parse_proxy_header(int fd, struct host_addr *addr, u_int16_t *port)
 
   int ret = recv(fd, &hdr, sizeof(hdr), MSG_PEEK);
 
+  if (ret == 0) {
+    return 0; /* closed */
+  }
+
   /* 16 bytes can detect both V1 and V2 protocols */
   if (ret < 16) {
     return ERR;
@@ -98,6 +102,18 @@ int parse_proxy_header(int fd, struct host_addr *addr, u_int16_t *port)
         addr->family = AF_INET;
         memcpy(&addr->address.ipv4.s_addr, &hdr.v2.addr.ip4.src_addr, sizeof(hdr.v2.addr.ip4.src_addr));
         *port = ntohs(hdr.v2.addr.ip4.src_port);
+
+        addr_to_str(ip_address, addr);
+        Log(LOG_INFO, "INFO ( %s/%s ):            with Proxy Protocol V2 containing: %s:%u\n", config.name, config.type, ip_address, *port);
+      }
+      else if (hdr.v2.fam == 0x21) {
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): Proxy Protocol TCP/IPv6\n", config.name, config.type);
+
+        /* Replace IP address string originally obtained from socket */
+        Log(LOG_INFO, "INFO ( %s/%s ): Replacing: %s:%u\n", config.name, config.type, ip_address, *port);
+        addr->family = AF_INET6;
+        memcpy(&addr->address.ipv6.s6_addr, &hdr.v2.addr.ip6.src_addr, sizeof(hdr.v2.addr.ip6.src_addr));
+        *port = ntohs(hdr.v2.addr.ip6.src_port);
 
         addr_to_str(ip_address, addr);
         Log(LOG_INFO, "INFO ( %s/%s ):            with Proxy Protocol V2 containing: %s:%u\n", config.name, config.type, ip_address, *port);
