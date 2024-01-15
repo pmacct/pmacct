@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -3793,4 +3793,22 @@ u_int8_t sampling_direction_str2id(char *sd_str)
   else if (!strcmp(sd_str, "e")) return SAMPLING_DIRECTION_EGRESS;
 
   return SAMPLING_DIRECTION_UNKNOWN;
+}
+
+void remove_password(char *str, char *pwdstr)
+{
+  char *ptr = NULL;
+
+  ptr = strstr(str, pwdstr);
+  if (ptr) {
+    ptr += strlen(pwdstr);
+
+    if ((*ptr) == '=') {
+      ptr++;
+      while (!isblank((*ptr)) && !((*ptr) == '\0')) {
+        (*ptr) = 'X';
+	ptr++;
+      }
+    }
+  }
 }
