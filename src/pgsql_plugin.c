@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -810,7 +810,7 @@ void PG_compose_conn_string(struct DBdesc *db, char *host, int port, char *ca_fi
     }
     string = db->conn_string;
 
-    snprintf(string, slen, "dbname=%s user=%s", config.sql_db, config.sql_user);
+    snprintf(string, slen, "dbname=%s user=%s password=%s", config.sql_db, config.sql_user, config.sql_passwd);
     slen -= strlen(string);
     string += strlen(string);
 
@@ -871,6 +871,7 @@ void PG_DB_Connect(struct DBdesc *db, char *host)
       sql_db_fail(db);
       strcpy(errmsg, "Failed connecting to ");
       strcat(errmsg, db->conn_string);
+      remove_password(errmsg, "password");
       db->errmsg = errmsg;
       sql_db_errmsg(db);
     }
