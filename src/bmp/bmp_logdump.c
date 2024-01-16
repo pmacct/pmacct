@@ -410,6 +410,8 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_l
       json_object_set_new_nocheck(obj, "rd_origin", json_string(bgp_rd_origin_print(bdata->chars.rd.type)));
     }
 
+    json_object_set_new_nocheck(obj, "bgp_id", json_string(inet_ntoa(bdata->bgp_id.address.ipv4)));
+
     json_object_set_new_nocheck(obj, "counter_type", json_integer((json_int_t)blstats->cnt_type));
 
     if (blstats->cnt_type <= BMP_STATS_MAX) {
@@ -540,6 +542,9 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_l
       pm_avro_check(avro_value_get_by_name(obj, "rd_origin", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
+
+    pm_avro_check(avro_value_get_by_name(obj, "bgp_id", &p_avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&p_avro_field, inet_ntoa(bdata->bgp_id.address.ipv4)));
 
     pm_avro_check(avro_value_get_by_name(obj, "counter_type", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_int(&p_avro_field, blstats->cnt_type));
@@ -2331,6 +2336,8 @@ avro_schema_t p_avro_schema_build_bmp_stats(char *schema_name)
 
   avro_schema_record_field_append(schema, "rd", optstr_s);
   avro_schema_record_field_append(schema, "rd_origin", optstr_s);
+
+  avro_schema_record_field_append(schema, "bgp_id", avro_schema_string());
 
   avro_schema_record_field_append(schema, "counter_type", avro_schema_int());
   avro_schema_record_field_append(schema, "counter_type_str", avro_schema_string());
