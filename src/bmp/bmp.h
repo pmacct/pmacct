@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -26,7 +26,7 @@
 
 /* defines */
 #define BMP_TCP_PORT		1790
-#define BMP_MAX_PEERS_DEFAULT	4
+#define BMP_MAX_PEERS_DEFAULT	10
 #define BMP_V3			3
 #define BMP_V4			4
 
