@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -3100,6 +3100,7 @@ int Recv(int sd, unsigned char **buf)
   memset(emptybuf, 0, LARGEBUFLEN);
 
   do {
+    memset(rxbuf, 0, LARGEBUFLEN);
     num = recv(sd, rxbuf, LARGEBUFLEN, 0);
     if (num > 0) {
       if (!memcmp(rxbuf, emptybuf, LARGEBUFLEN)) {
