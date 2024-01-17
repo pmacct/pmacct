@@ -197,6 +197,7 @@ Title | Description
 `peer_type` | Type of BGP peer (https://www.iana.org/assignments/bmp-parameters/bmp-parameters.xhtml#peer-types)
 `rd` | BGP peer Route Distinguisher (https://tools.ietf.org/html/rfc7854#section-4.2)
 `rd_origin` | BGP peer Route Distinguisher origin. It will be set to "bmp".
+`bgp_id` | BGP router ID of remote peer
 `counter_type` | Statistics type field code (https://www.iana.org/assignments/bmp-parameters/bmp-parameters.xhtml#statistics-types)
 `counter_type_str` | Statistics description
 `counter_value` | Statistics counter value
@@ -217,6 +218,7 @@ Title | Description
   "peer_type": 0,
   "rd": "0:64499:2",
   "rd_origin": "bmp",
+  "bgp_id": "192.0.2.2",
   "counter_type": 0,
   "counter_type_str": "Number of prefixes rejected by inbound policy",
   "counter_value": 0
