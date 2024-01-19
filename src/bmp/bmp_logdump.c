@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -122,9 +122,6 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
       break;
     case BMP_LOG_TYPE_PEER_DOWN:
       ret = bmp_log_msg_peer_down(peer, bdata, tlvs, (struct bmp_log_peer_down *) log_data, event_type, output, obj);
-      break;
-    case BMP_LOG_TYPE_RPAT:
-      ret = bmp_log_msg_rpat(peer, bdata, tlvs, (struct bmp_log_rpat *) log_data, event_type, output, obj);
       break;
     default:
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] bmp_log_msg(): unknown message type (%u)\n", config.name, bms->log_str, peer->addr_str, log_type);
@@ -249,9 +246,6 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
       break;
     case BMP_LOG_TYPE_PEER_DOWN:
       ret = bmp_log_msg_peer_down(peer, bdata, tlvs, (struct bmp_log_peer_down *) log_data, event_type, output, &p_avro_obj);
-      break;
-    case BMP_LOG_TYPE_RPAT:
-      ret = bmp_log_msg_rpat(peer, bdata, tlvs, (struct bmp_log_rpat *) log_data, event_type, output, &p_avro_obj);
       break;
     default:
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] bmp_log_msg(): unknown message type (%u)\n", config.name, bms->log_str, peer->addr_str, log_type);
@@ -1800,11 +1794,6 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
     bmp_dump_kafka_host.sd_schema[BMP_MSG_TERM] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, FALSE,
 											     bmp_misc_db->dump_avro_schema[BMP_MSG_TERM],
 											     "bmp", "term",
-											     config.bmp_dump_kafka_avro_schema_registry);
-
-    bmp_dump_kafka_host.sd_schema[BMP_MSG_TMP_RPAT] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, FALSE,
-											     bmp_misc_db->dump_avro_schema[BMP_MSG_TMP_RPAT],
-											     "bmp", "rpat",
 											     config.bmp_dump_kafka_avro_schema_registry);
 
     bmp_dump_kafka_host.sd_schema[BMP_LOG_TYPE_DUMPINIT] = compose_avro_schema_registry_name_2(config.bmp_dump_kafka_topic, FALSE,

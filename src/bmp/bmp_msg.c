@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -98,9 +98,6 @@ u_int32_t bmp_process_packet(char *bmp_packet, u_int32_t len, struct bmp_peer *b
       break;
     case BMP_MSG_ROUTE_MIRROR:
       bmp_process_msg_route_mirror(&bmp_packet_ptr, &msg_len, bmpp);
-      break;
-    case BMP_MSG_TMP_RPAT:
-      bmp_process_msg_rpat(&bmp_packet_ptr, &msg_len, bmpp);
       break;
     default:
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] packet discarded: unknown message type (%u)\n",

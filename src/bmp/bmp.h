@@ -43,8 +43,7 @@
 #define	BMP_MSG_INIT			4
 #define BMP_MSG_TERM			5
 #define BMP_MSG_ROUTE_MIRROR		6
-#define BMP_MSG_TMP_RPAT		100
-#define BMP_MSG_TYPE_MAX		100 /* set to the highest BMP_MSG_* value */
+#define BMP_MSG_TYPE_MAX		6 /* set to the highest BMP_MSG_* value */
 
 static const char __attribute__((unused)) *bmp_msg_types[] = {
   "Route Monitoring",
@@ -53,27 +52,7 @@ static const char __attribute__((unused)) *bmp_msg_types[] = {
   "Peer Up Notification",
   "Initiation Message",
   "Termination Message",
-  "Route Mirroring",
-  "", "", "", "",    
-  "", "", "", "", "",
-  "", "", "", "", "",
-  "", "", "", "", "",
-  "", "", "", "", "",
-  "", "", "", "", "",
-  "", "", "", "", "",
-  "", "", "", "", "",
-  "", "", "", "", "",
-  "", "", "", "", "",
-  "", "", "", "", "",
-  "", "", "", "", "",
-  "", "", "", "", "",
-  "", "", "", "", "",
-  "", "", "", "", "",
-  "", "", "", "", "",
-  "", "", "", "", "",
-  "", "", "", "", "",
-  "", "", "", "", 
-  "RPAT"
+  "Route Mirroring"
 };
 
 struct bmp_common_hdr {
@@ -383,7 +362,6 @@ static const char __attribute__((unused)) *bmp_rm_pm_reason_types[] = {
 #include "bmp_util.h"
 #include "bmp_lookup.h"
 #include "bmp_tlv.h"
-#include "bmp_rpat.h"
 
 /* prototypes */
 extern void bmp_daemon_wrapper();
