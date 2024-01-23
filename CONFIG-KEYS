@@ -830,6 +830,9 @@ DESC:		Full pathname to a file containing directives to configure librdkafka. Al
 		topic, compression.codec, snappy
 		global, socket.keepalive.enable, true
 
+		Other aspects like the Kafka broker IP address / port and topic name are to be
+		configured via pmacct config knobs, ie. kafka_broker_host, kafka_broker_port,
+		kafka_topic, etc.
 DEFAULT:	none
 
 KEY:            kafka_broker_host
@@ -998,7 +1001,7 @@ KEY:            [ bgp_daemon_msglog_kafka_config_file | bgp_table_dump_kafka_con
                   bmp_daemon_msglog_kafka_config_file | bmp_dump_kafka_config_file |
                   sfacctd_counter_kafka_config_file | telemetry_daemon_msglog_kafka_config_file |
                   telemetry_dump_kafka_config_file ] [GLOBAL]
-DESC:           See kafka_config_file; see also bgp_daemon_msglog_kafka_broker_host.
+DESC:           See kafka_config_filefor more info; see also bgp_daemon_msglog_kafka_broker_host.
 DEFAULT:        See kafka_config_file
 
 KEY:		pidfile (-F) [GLOBAL]
