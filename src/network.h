@@ -505,9 +505,15 @@ struct pkt_stitching {
 };
 
 /* START: BGP section */
+#ifndef MAX_BGP_STD_COMMS
 #define MAX_BGP_STD_COMMS       96
+#endif
+#ifndef MAX_BGP_EXT_COMMS
 #define MAX_BGP_EXT_COMMS       96
+#endif
+#ifndef MAX_BGP_LRG_COMMS
 #define MAX_BGP_LRG_COMMS       96
+#endif
 #define MAX_BGP_ASPATH          128
 
 /* MPLS */
