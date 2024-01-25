@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -682,7 +682,9 @@ int main(int argc,char **argv, char **envp)
 	list->cfg.what_to_count_2 = FALSE;
 	list->cfg.what_to_count_3 = FALSE;
 #if defined (HAVE_L2)
-	if (list->cfg.nfprobe_version == 9 || list->cfg.nfprobe_version == 10) {
+	if (!list->cfg.nfprobe_version /* default == 10 */ ||
+	    list->cfg.nfprobe_version == 9 ||
+	    list->cfg.nfprobe_version == 10) {
 	  list->cfg.what_to_count |= COUNT_SRC_MAC;
 	  list->cfg.what_to_count |= COUNT_DST_MAC;
 	  list->cfg.what_to_count |= COUNT_VLAN;
@@ -706,7 +708,9 @@ int main(int argc,char **argv, char **envp)
 	  list->cfg.what_to_count |= COUNT_DST_AS;
 	  list->cfg.what_to_count |= COUNT_PEER_DST_IP;
 	}
-	if (list->cfg.nfprobe_version == 9 || list->cfg.nfprobe_version == 10) {
+	if (!list->cfg.nfprobe_version /* default == 10 */ ||
+	    list->cfg.nfprobe_version == 9 ||
+	    list->cfg.nfprobe_version == 10) {
 	  if (list->cfg.nfprobe_what_to_count_2 & COUNT_NDPI_CLASS)
 	    list->cfg.what_to_count_2 |= COUNT_NDPI_CLASS;
 
