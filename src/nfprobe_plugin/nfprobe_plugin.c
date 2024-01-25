@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -155,6 +155,9 @@ flow_compare(struct FLOW *a, struct FLOW *b)
 
 	if (a->ifindex[1] != b->ifindex[1])
 		return (a->ifindex[1] > b->ifindex[1] ? 1 : -1);
+
+	if (a->vlan != b->vlan)
+		return (a->vlan > b->vlan ? 1 : -1);
 
 	return (0);
 }
