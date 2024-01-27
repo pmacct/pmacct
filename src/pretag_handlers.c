@@ -559,7 +559,8 @@ int PT_map_engine_id_handler(char *filename, struct id_entry *e, char *value, st
     }
   }
 
-  if (config.acct_type == ACCT_NF) e->func[x] = pretag_engine_id_handler;
+  if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_engine_id_handler;
+  else if (config.acct_type == ACCT_NF) e->func[x] = pretag_engine_id_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_ENGINE_ID;
 
   return FALSE;
@@ -2687,6 +2688,15 @@ int SF_pretag_bgp_nexthop_handler(struct packet_ptrs *pptrs, void *unused, void 
   }
 
   return (TRUE ^ entry->key.bgp_nexthop.neg);
+}
+
+int SF_pretag_engine_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  if (entry->key.engine_id.n == sample->ds_index) return (FALSE | entry->key.engine_id.neg);
+  else return (TRUE ^ entry->key.engine_id.neg);
 }
 
 int SF_pretag_agent_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
