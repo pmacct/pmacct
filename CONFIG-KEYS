@@ -1706,8 +1706,9 @@ DESC:           BGP communities are encoded by default as a string, including a 
                 of integers (community values). Setting this knob to true, makes it being encoded as an
 		array for Apache Avro encodings, i.e., for Standard Communities in Avro: "name": "comms",
 		"type": { "type": "array", "items": { "type": "string" }}.
-                As of now, this configuration is applicable to IPFIX/BGP/BMP data streams for both AVRO and JSON encoding.
-                This knob has no effects for other encodings (i.e., CSV, formatted) and backends not supporting complex types (i.e., SQL plugins).
+                As of now, this configuration is applicable to IPFIX/BGP/BMP data streams for both AVRO and
+		JSON encoding. This knob has no effects for other encodings (i.e., CSV, formatted) and
+		backends not supporting complex types (i.e., SQL plugins).
 DEFAULT:        false
 
 KEY:            as_path_encode_as_array
@@ -1716,8 +1717,9 @@ DESC:           BGP AS_PATH is encoded by default as a string, including an unde
                 of integers (AS numbers). Setting this knob to true, makes it being encoded as an array
                 for Apache Avro encodings, i.e., in Avro "name": "as_path", "type": { "type": "array",
 		"items": { "type": "string" }}.
-                As of now, this configuration is applicable to IPFIX/BGP/BMP data streams for both AVRO and JSON encoding.
-                This knob has no effects for other encodings (i.e., CSV, formatted) and backends not supporting complex types (i.e., SQL plugins).
+                As of now, this configuration is applicable to IPFIX/BGP/BMP data streams for both AVRO and
+		JSON encoding. This knob has no effects for other encodings (i.e., CSV, formatted) and
+		backends not supporting complex types (i.e., SQL plugins).
 DEFAULT:        false
 
 KEY:		tos_encode_as_dscp

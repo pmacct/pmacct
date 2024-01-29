@@ -948,10 +948,17 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation_3 & COUNT_NVGRE) {
-      if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_nvgre_handler;
+      if (config.acct_type == ACCT_PM) {
+        warn_unsupported_packet_handler(COUNT_INT_NVGRE, ACCT_PM);
+        primitives--;
+      }
+      else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_nvgre_handler;
+      else if (config.acct_type == ACCT_SF) {
+        warn_unsupported_packet_handler(COUNT_INT_NVGRE, ACCT_SF);
+        primitives--;
+      }
       primitives++;
     }
-
 
     if (channels_list[index].aggregation_2 & COUNT_MPLS_LABEL_STACK) {
       if (config.acct_type == ACCT_PM) channels_list[index].phandler[primitives] = mpls_label_stack_handler;

@@ -55,8 +55,15 @@ The keys used are:
   + nfacctd: extended forwardingStatus support to be 2 or 4 bytes
     long. Also introduced support for flowLabelIPv6. Thanks to Uwe
     Storbeck ( @ustorbeck ) for these contributions.
+  + nfacctd: a new primitive 'nvgre' is defined representinf the
+    Tenant Network Identifier (TNI) for NVGRE L2 tunnels, which is
+    encoded in IANA IE 351 with MSB 0x02. Thanks to Leonardo Rodoni
+    ( @rodonile ) for this contribution.
   + sfacctd: added support for accounting for ARP packets via a new
     aggregate_unknown_etype config knob.
+  + nfacctd, sfacctd, pmacctd: added new 'in_cvlan' and 'out_cvlan'
+    primitives. It identifies the VLAN to which the frame belongs
+    when it is transmitted in the customer network.
   + BGP daemon: added support for "Only to Customer" OTC attribute,
     RFC9234.
   + BGP daemon: extend MP nexthop length to support 48 bytes to fit
@@ -68,6 +75,16 @@ The keys used are:
     been added so that the daemon can reply with this capability to
     the remote peer. Thanks to Leonardo Rodoni ( @rodonile ) for
     this contribution.
+  + BGP, BMP daemons: Two new configuration keys are introduced:
+    bgp_comms_encode_as_array and as_path_encode_as_array. They allow
+    to specify that BGP communities & the AS_PATH are encoded as an
+    array in JSON or AVRO encodings.
+  + BMP daemon: a new bmp_dump_exclude_stats config knob has been
+    added: if enabled, BMP stats messages are not going to be cached
+    and thus not being included in the regular dump.
+  + All daemons: added a -T / dry_run config knob. With 'config',
+    only the configuration is validated; with 'setup' the daemon and
+    plugins are also instantiated and validated.
   + Kafka plugin: allowing sub-minute historical time bins (ie.
     kafka_history, etc.).
   + pre_tag_map: introduced pre_tag_map_dont_recirculate config knob
@@ -91,6 +108,11 @@ The keys used are:
     contain multiple padding octet fields (information element 210)
     with different length. Thanks to Uwe Storbeck ( @ustorbeck ) for
     this contribution.
+  ! fix, nfacctd: 4 bytes long NBAR applicationID is now supported; as
+    part of this work the setup of nDPI and NBAR classifiers has been
+    harmonized.
+  ! fix, sfacctd: mispelled daemon type in sampling_direction handler
+    was causing counters not to print. 
   ! fix, pmacctd: restored pointer for correct collection of ICMPv6
     data. 
   ! fix, uacctd: the daemon crashes upon receiving an ICMP Echo
@@ -111,9 +133,14 @@ The keys used are:
     perform data correlation between BGP/BMP & IPFIX. Thanks to
     Salvatore Cuzzilla ( @scuzzilla ), Leonardo Rodoni ( @rodonile )
     for this contribution.
+  ! fix, BMP daemon: finer grained control on support of ADD-PATH
+    capability so to support the case of remote peer receive-only
+    scenario.
   ! fix, SQL plugins: 'in_vlan' primitive is not muxed anymore on
     'vlan' at configure time. Also, 'out_vlan' primitive is now
     properly handled if sql_optimize_clauses left false.
+  ! fix, MySQL plugin: if timestamps_utc is set to true, enforce UTC
+    for the current session.
   ! fix, tee plugin: missing variable definition when BSD definition
     is on.
   ! fix, pre_tag_map: check added to avoid daemon hanging if 'next'
