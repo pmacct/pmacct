@@ -16,7 +16,7 @@
 !
 ! sfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
 ! nexthop, bgp_nexthop, filter, agent_id, sample_type, direction, src_mac,
-! dst_mac, vlan, src_net, dst_net, is_multicast, mpls_pw_id.
+! dst_mac, vlan, src_net, dst_net, is_multicast, mpls_pw_id, engine_id.
 !
 ! pmacctd: valid keys: set_tag, set_tag2, set_label, direction and filter.
 !
