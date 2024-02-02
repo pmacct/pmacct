@@ -180,6 +180,7 @@ extern int SF_pretag_input_handler(struct packet_ptrs *, void *, void *);
 extern int SF_pretag_output_handler(struct packet_ptrs *, void *, void *);
 extern int SF_pretag_nexthop_handler(struct packet_ptrs *, void *, void *);
 extern int SF_pretag_bgp_nexthop_handler(struct packet_ptrs *, void *, void *);
+extern int SF_pretag_engine_id_handler(struct packet_ptrs *, void *, void *);
 extern int SF_pretag_agent_id_handler(struct packet_ptrs *, void *, void *);
 extern int SF_pretag_src_as_handler(struct packet_ptrs *, void *, void *);
 extern int SF_pretag_dst_as_handler(struct packet_ptrs *, void *, void *);
