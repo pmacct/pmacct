@@ -1403,6 +1403,30 @@ int PT_map_dst_net_handler(char *filename, struct id_entry *e, char *value, stru
   return FALSE;
 }
 
+int PT_map_ip_proto_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0;
+
+  if (req->ptm_c.load_ptm_plugin == PLUGIN_ID_TEE) req->ptm_c.load_ptm_res = TRUE;
+
+  e->key.ip_proto.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+
+  e->key.ip_proto.n = atoi(value);
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_IP_PROTO) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'ip_proto' clauses part of the same statement.\n", config.name, config.type, filename);
+      return TRUE;
+    }
+  }
+
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_ip_proto_handler;
+  else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_ip_proto_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_IP_PROTO;
+
+  return FALSE;
+}
+
 int PT_map_is_multicast_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int value_tf, x = 0;
@@ -2446,6 +2470,33 @@ int pretag_dst_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     return (TRUE ^ entry->key.dst_net.neg);
 }
 
+int pretag_ip_proto_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int8_t ip_proto = 0;
+
+  if (!pptrs->f_data) return TRUE;
+
+  switch (hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->fld[NF9_L4_PROTOCOL].count) {
+      OTPL_CP_LAST_M(&ip_proto, NF9_L4_PROTOCOL, 1);
+    }
+    break;
+  case 5:
+    ip_proto = ((struct struct_export_v5 *) pptrs->f_data)->prot;
+    break;
+  default:
+    return TRUE; /* this field does not exist: condition is always true */
+  }
+
+  if (entry->key.ip_proto.n == ip_proto) return (FALSE | entry->key.ip_proto.neg);
+  else return (TRUE ^ entry->key.ip_proto.neg);
+}
+
 int pretag_is_multicast_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
@@ -2850,6 +2901,15 @@ int SF_pretag_dst_net_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     return (FALSE | entry->key.dst_net.neg);
   else
     return (TRUE ^ entry->key.dst_net.neg);
+}
+
+int SF_pretag_ip_proto_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  if (entry->key.ip_proto.n == sample->dcd_ipProtocol) return (FALSE | entry->key.ip_proto.neg);
+  else return (TRUE ^ entry->key.ip_proto.neg);
 }
 
 int SF_pretag_is_multicast_handler(struct packet_ptrs *pptrs, void *unused, void *e)
@@ -3611,6 +3671,17 @@ int PT_map_index_entries_dst_net_handler(struct id_table_index *idx, int idx_hdl
       return TRUE;
     }
   }
+
+  return FALSE;
+}
+
+int PT_map_index_entries_ip_proto_handler(struct id_table_index *idx, int idx_hdlr_no, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!idx || !hash_serializer || !src_e) return TRUE;
+
+  hash_serial_append(hash_serializer, (char *)&src_e->key.ip_proto.n, sizeof(u_int8_t), TRUE);
 
   return FALSE;
 }
@@ -4426,6 +4497,36 @@ int PT_map_index_fdata_dst_net_handler(struct id_table_index *idx, int idx_hdlr,
 
   hash_serial_append(hash_serializer, (char *)&e->key.dst_net.a, sizeof(struct host_addr), FALSE);
   hash_serial_append(hash_serializer, (char *)&e->key.dst_net.m.len, sizeof(e->key.dst_net.m.len), FALSE);
+
+  return FALSE;
+}
+
+int PT_map_index_fdata_ip_proto_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  if (config.acct_type == ACCT_NF) {
+    switch (hdr->version) {
+    case 10:
+    case 9:
+      if (tpl->fld[NF9_L4_PROTOCOL].count) {
+        OTPL_CP_LAST_M(&e->key.ip_proto.n, NF9_L4_PROTOCOL, 1);
+      }
+      break;
+    case 5:
+      e->key.ip_proto.n = ((struct struct_export_v5 *) pptrs->f_data)->prot;
+      break;
+    }
+  }
+  else if (config.acct_type == ACCT_SF) {
+    e->key.ip_proto.n = sample->dcd_ipProtocol;
+  }
+  else return TRUE;
+
+  hash_serial_append(hash_serializer, (char *)&e->key.ip_proto.n, sizeof(u_int8_t), FALSE);
 
   return FALSE;
 }
