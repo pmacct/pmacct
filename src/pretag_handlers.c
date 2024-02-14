@@ -1427,6 +1427,30 @@ int PT_map_ip_proto_handler(char *filename, struct id_entry *e, char *value, str
   return FALSE;
 }
 
+int PT_map_src_port_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0;
+
+  if (req->ptm_c.load_ptm_plugin == PLUGIN_ID_TEE) req->ptm_c.load_ptm_res = TRUE;
+
+  e->key.src_port.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+
+  e->key.src_port.n = atoi(value);
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_SRC_PORT) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'src_port' clauses part of the same statement.\n", config.name, config.type, filename);
+      return TRUE;
+    }
+  }
+
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_src_port_handler;
+  else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_src_port_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_SRC_PORT;
+
+  return FALSE;
+}
+
 int PT_map_is_multicast_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int value_tf, x = 0;
@@ -2497,6 +2521,35 @@ int pretag_ip_proto_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   else return (TRUE ^ entry->key.ip_proto.neg);
 }
 
+int pretag_src_port_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int16_t tmp16, port = 0;
+
+  if (!pptrs->f_data) return TRUE;
+
+  switch (hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->fld[NF9_L4_SRC_PORT].count) {
+      OTPL_CP_LAST_M(&tmp16, NF9_L4_SRC_PORT, 2);
+    }
+    break;
+  case 5:
+    tmp16 = ((struct struct_export_v5 *) pptrs->f_data)->srcport;
+    break;
+  default:
+    return TRUE; /* this field does not exist: condition is always true */
+  }
+
+  port = ntohs(tmp16);
+
+  if (entry->key.src_port.n == port) return (FALSE | entry->key.src_port.neg);
+  else return (TRUE ^ entry->key.src_port.neg);
+}
+
 int pretag_is_multicast_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
@@ -2910,6 +2963,15 @@ int SF_pretag_ip_proto_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   if (entry->key.ip_proto.n == sample->dcd_ipProtocol) return (FALSE | entry->key.ip_proto.neg);
   else return (TRUE ^ entry->key.ip_proto.neg);
+}
+
+int SF_pretag_src_port_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  if (entry->key.src_port.n == sample->dcd_sport) return (FALSE | entry->key.src_port.neg);
+  else return (TRUE ^ entry->key.src_port.neg);
 }
 
 int SF_pretag_is_multicast_handler(struct packet_ptrs *pptrs, void *unused, void *e)
@@ -3682,6 +3744,17 @@ int PT_map_index_entries_ip_proto_handler(struct id_table_index *idx, int idx_hd
   if (!idx || !hash_serializer || !src_e) return TRUE;
 
   hash_serial_append(hash_serializer, (char *)&src_e->key.ip_proto.n, sizeof(u_int8_t), TRUE);
+
+  return FALSE;
+}
+
+int PT_map_index_entries_src_port_handler(struct id_table_index *idx, int idx_hdlr_no, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!idx || !hash_serializer || !src_e) return TRUE;
+
+  hash_serial_append(hash_serializer, (char *)&src_e->key.src_port.n, sizeof(u_int16_t), TRUE);
 
   return FALSE;
 }
@@ -4527,6 +4600,39 @@ int PT_map_index_fdata_ip_proto_handler(struct id_table_index *idx, int idx_hdlr
   else return TRUE;
 
   hash_serial_append(hash_serializer, (char *)&e->key.ip_proto.n, sizeof(u_int8_t), FALSE);
+
+  return FALSE;
+}
+
+int PT_map_index_fdata_src_port_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+  u_int16_t tmp16;
+
+  if (config.acct_type == ACCT_NF) {
+    switch (hdr->version) {
+    case 10:
+    case 9:
+      if (tpl->fld[NF9_L4_SRC_PORT].count) {
+        OTPL_CP_LAST_M(&tmp16, NF9_L4_SRC_PORT, 2);
+      }
+      break;
+    case 5:
+      tmp16 = ((struct struct_export_v5 *) pptrs->f_data)->srcport;
+      break;
+    }
+
+    e->key.src_port.n = ntohs(tmp16);
+  }
+  else if (config.acct_type == ACCT_SF) {
+    e->key.src_port.n = sample->dcd_sport;
+  }
+  else return TRUE;
+
+  hash_serial_append(hash_serializer, (char *)&e->key.src_port.n, sizeof(u_int16_t), FALSE);
 
   return FALSE;
 }
