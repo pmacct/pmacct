@@ -81,6 +81,7 @@
 #define PRETAG_IP_AF			0x0000100000000000ULL
 #define PRETAG_IP_PROTO			0x0000200000000000ULL
 #define PRETAG_SRC_PORT			0x0000400000000000ULL
+#define PRETAG_DST_PORT			0x0000800000000000ULL
 /* ... */
 #define PRETAG_NULL			0x8000000000000000ULL
 
@@ -201,6 +202,7 @@ struct id_entry_key {
   pt_netaddr_t dst_net;
   pt_uint8_t ip_proto;
   pt_uint16_t src_port;
+  pt_uint16_t dst_port;
   pt_uint8_t is_multicast;
   s_uint16_t lookup_bgp_port;
   char *src_comms[16]; /* XXX: MAX_BGP_COMM_PATTERNS = 16 */
