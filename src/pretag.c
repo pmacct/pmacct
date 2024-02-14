@@ -938,7 +938,6 @@ int pretag_copy_label(pt_label_t *dst, pt_label_t *src)
   else {
     if (src->len) {
       pretag_malloc_label(dst, src->len + 1);
-      dst->len = src->len; /* fix length in case of multiple mallocs */
 
       if (!dst->val) {
         Log(LOG_ERR, "ERROR ( %s/%s ): malloc() failed (pretag_copy_label).\n", config.name, config.type);
@@ -946,7 +945,16 @@ int pretag_copy_label(pt_label_t *dst, pt_label_t *src)
       }
 
       strncpy(dst->val, src->val, src->len);
-      dst->val[dst->len] = '\0';
+
+      if (dst->val[src->len - 1] == '\0') {
+         /* fix length in case of multiple mallocs */
+        dst->len = src->len;
+      }
+      else {
+         /* add null char only when not already there */
+        dst->val[dst->len - 1] = '\0';
+      }    
+
     }
   }
   
