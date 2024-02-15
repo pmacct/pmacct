@@ -816,6 +816,8 @@ int telemetry_daemon(void *t_data_void)
               fd = TELEMETRY_UDP_NOTIF_FD;
             }
             else {
+              Log(LOG_WARNING, "WARN ( %s/%s ): consumer buffer size too small (%lu vs. %u bytes), dropping message\n",
+                  config.name, t_data->log_str, sizeof(consumer_buf), payload_len+1);
               unyte_udp_free_all(seg);
               goto select_again;
             }
