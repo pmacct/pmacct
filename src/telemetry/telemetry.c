@@ -798,10 +798,7 @@ int telemetry_daemon(void *t_data_void)
 #if defined WITH_UNYTE_UDP_NOTIF
       else if (unyte_udp_notif_input) {
         if (seg_ptr) {
-          unyte_seg_met_t *seg = NULL;
-          int payload_len = 0;
-
-          seg = (unyte_seg_met_t *)seg_ptr;
+          unyte_seg_met_t *seg = seg_ptr;
 
           if (unyte_udp_get_media_type(seg) == UNYTE_MEDIATYPE_YANG_JSON && config.telemetry_decoder_id == TELEMETRY_DECODER_JSON) {
             struct sockaddr_storage *unsa = NULL;
@@ -809,9 +806,9 @@ int telemetry_daemon(void *t_data_void)
             unsa = unyte_udp_get_src(seg);
             memcpy(&client, unsa, sizeof(struct sockaddr_storage));
 
-            payload_len = strlen(seg->payload);
+            uint16_t payload_len = unyte_udp_get_payload_length(seg);
             if (payload_len < sizeof(consumer_buf)) {
-              strlcpy((char *)consumer_buf, seg->payload, sizeof(consumer_buf));
+              strlcpy((char *)consumer_buf, seg->payload, payload_len+1);
               unyte_udp_free_all(seg);
               fd = TELEMETRY_UDP_NOTIF_FD;
             }
