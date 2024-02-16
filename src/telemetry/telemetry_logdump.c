@@ -98,7 +98,13 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telem
       json_error_t json_err;
       json_t *log_data_obj = json_loads(log_data, 0, &json_err);
 
-      json_object_set_new_nocheck(obj, "telemetry_data", log_data_obj);
+      if (log_data_obj)
+        json_object_set_new_nocheck(obj, "telemetry_data", log_data_obj);
+      else
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): JSON error: %s (%d/%d/%d: %s)",
+            config.name, t_data->log_str, json_err.text,
+            json_err.line, json_err.column, json_err.position, json_err.source);
+
       json_object_set_new_nocheck(obj, "serialization", json_string("json"));
     }
     else if (data_decoder == TELEMETRY_DATA_DECODER_GPB) {
