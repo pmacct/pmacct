@@ -2218,7 +2218,9 @@ int evaluate_labels(struct pretag_label_filter *filter, pt_label_t *label)
   }
 
   for (index = 0; index < filter->num; index++) {
-    if (filter->table[index].len != label->len) {
+    /* Due to one null char super imposition in the label,
+       we must compare for one extra char len in the filter table */
+    if ((filter->table[index].len + 1) != label->len) {
       ret = TRUE;
     }
     else {
@@ -2247,6 +2249,7 @@ int evaluate_labels(struct pretag_label_filter *filter, pt_label_t *label)
 
   return TRUE;
 }
+
 char *write_sep(char *sep, int *count)
 {
   static char empty_sep[] = "";
