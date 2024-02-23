@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -188,7 +188,7 @@ int tee_recvs_map_kafka_broker_handler(char *filename, struct id_entry *e, char 
 
     memset(table->pools[table->num].kafka_broker, 0, len);
     strlcpy(table->pools[table->num].kafka_broker, value, len);
-    table->pools[table->num].kafka_broker[len] = '\0';
+    table->pools[table->num].kafka_broker[len - 1] = '\0';
   }
   else {
     Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Receivers table not allocated.\n", config.name, config.type, filename);
@@ -207,7 +207,7 @@ int tee_recvs_map_kafka_topic_handler(char *filename, struct id_entry *e, char *
 
     memset(table->pools[table->num].kafka_topic, 0, len);
     strlcpy(table->pools[table->num].kafka_topic, value, len);
-    table->pools[table->num].kafka_topic[len] = '\0';
+    table->pools[table->num].kafka_topic[len - 1] = '\0';
   } 
   else {
     Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Receivers table not allocated.\n", config.name, config.type, filename);
@@ -228,7 +228,7 @@ int tee_recvs_map_zmq_address_handler(char *filename, struct id_entry *e, char *
 
     memset(table->pools[table->num].zmq_address, 0, len);
     strlcpy(table->pools[table->num].zmq_address, value, len);
-    table->pools[table->num].zmq_address[len] = '\0';
+    table->pools[table->num].zmq_address[len - 1] = '\0';
   }
   else {
     Log(LOG_ERR, "ERROR ( %s/%s ): [%s] Receivers table not allocated.\n", config.name, config.type, filename);
