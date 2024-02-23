@@ -7892,6 +7892,56 @@ int cfg_key_bgp_bmp_daemon_ha(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_bgp_bmp_daemon_ha_cluster_name(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_bmp_daemon_ha_cluster_name = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_bmp_daemon_ha_cluster_name'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_bgp_bmp_daemon_ha_cluster_id(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_bmp_daemon_ha_cluster_id = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_bmp_daemon_ha_cluster_id'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_bgp_bmp_daemon_ha_queue_message_timeout(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_bmp_daemon_ha_queue_message_timeout = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_bmp_daemon_ha_queue_message_timeout'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_bgp_bmp_daemon_ha_queue_max_size(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = atoi(value_ptr);
+
+  for (; list; list = list->next, changes++) list->cfg.bgp_bmp_daemon_ha_queue_max_size = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bgp_bmp_daemon_ha_queue_max_size'. Globalized.\n", filename);
+
+  return changes;
+}
+
 int cfg_key_thread_stack(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;

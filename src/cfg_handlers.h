@@ -533,6 +533,10 @@ extern int cfg_key_tmp_bgp_daemon_origin_type_int(char *, char *, char *);
 extern int cfg_key_tmp_telemetry_daemon_udp_notif_legacy(char *, char *, char *);
 extern int cfg_key_tmp_telemetry_decode_cisco_v1_json_string(char *, char *, char *);
 extern int cfg_key_bgp_bmp_daemon_ha(char *, char *, char *);
+extern int cfg_key_bgp_bmp_daemon_ha_cluster_name(char *, char *, char *);
+extern int cfg_key_bgp_bmp_daemon_ha_cluster_id(char *, char *, char *);
+extern int cfg_key_bgp_bmp_daemon_ha_queue_message_timeout(char *, char *, char *);
+extern int cfg_key_bgp_bmp_daemon_ha_queue_max_size(char *, char *, char *);
 extern int cfg_key_nfacctd_pre_processing_checks(char *, char *, char *);
 
 extern void parse_time(char *, char *, int *, int *);

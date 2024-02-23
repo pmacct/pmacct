@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -23,9 +23,6 @@
 #define HA_H
 
 #if defined WITH_REDIS
-
-/* Defines [in microseconds] for how long messages will be kept in the queue*/
-#define QUEUE_POP_THRESHOLD 10000000LL  // 10s
 
 /*Linked list (LL) node to store a queue entry*/
 typedef struct QNode {

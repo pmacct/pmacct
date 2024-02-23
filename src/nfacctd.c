@@ -1411,7 +1411,7 @@ int main(int argc,char **argv, char **envp)
     snprintf(log_id, sizeof(log_id), "%s/%s", config.name, config.type);
 
     if (config.bgp_bmp_daemon_ha) {
-      /* If BMP-BGP-HA feature is enabled, redirect redis thread */
+      /* If BMP-BGP-HA feature is enabled, initialize additional redis thread */
       p_redis_init(&redis_ha_host, log_id, p_redis_thread_bmp_bgp_ha_handler); 
     }
 
