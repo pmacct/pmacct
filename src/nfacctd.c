@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -1972,6 +1972,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
       tee_dissect->flowSetEndPtr = (u_char *) (tee_dissect->flowSetBasePtr + ntohs(data_hdr->flow_len));
       tee_dissect->flowSetLen = ntohs(data_hdr->flow_len);
+      pptrs->tee_dissect_bcast = TRUE;
 
       exec_plugins(pptrs, req);
     }
