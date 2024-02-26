@@ -149,6 +149,8 @@ const struct _map_index_size_dictionary_line tag_map_index_entries_size_dictiona
   {PRETAG_SRC_NET, (sizeof(struct host_addr) /* net */ + sizeof(u_int8_t) /* mask */)},
   {PRETAG_DST_NET, (sizeof(struct host_addr) /* net */ + sizeof(u_int8_t) /* mask */)},
   {PRETAG_IP_PROTO, sizeof(u_int8_t)},
+  {PRETAG_SRC_PORT, sizeof(u_int16_t)},
+  {PRETAG_DST_PORT, sizeof(u_int16_t)},
   {PRETAG_IS_MULTICAST, sizeof(u_int8_t)},
   {PRETAG_FWDSTATUS_ID, sizeof(u_int8_t)},
   {0, 0}
