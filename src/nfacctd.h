@@ -96,7 +96,7 @@ struct data_hdr_v9 {
 
 struct NF_dissect {
   u_int8_t hdrVersion;
-  u_int16_t hdrCount; /* NetFlow v5 and v5 and v5 and v5 and v5 and v9 */
+  u_int16_t hdrCount; /* NetFlow v5 and v9 */
   u_char *hdrBasePtr;
   u_char *hdrEndPtr;
   u_int32_t hdrLen;

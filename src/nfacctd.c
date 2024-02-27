@@ -641,7 +641,7 @@ int main(int argc,char **argv, char **envp)
 
   if (config.nfacctd_templates_receiver) {
     if (tee_plugins) {
-      Log(LOG_ERR, "ERROR ( %s/core ): nfacctd_templates_receiver and tee plugin ae mutual exclusive. Exiting.\n\n", config.name);
+      Log(LOG_ERR, "ERROR ( %s/core ): nfacctd_templates_receiver and tee plugin are mutual exclusive. Exiting.\n\n", config.name);
       exit_gracefully(1);
     }
   }
