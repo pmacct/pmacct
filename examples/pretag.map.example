@@ -12,22 +12,25 @@
 ! nfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
 ! engine_type, engine_id, source_id, flowset_id, nexthop, bgp_nexthop, filter,
 ! sample_type, is_bi_flow, is_nel, is_nsel, direction, fwd_status, src_mac,
-! dst_mac, vlan, cvlan, src_net, dst_net, is_multicast, mpls_pw_id.
+! dst_mac, vlan, cvlan, src_net, dst_net, ip_proto, src_port, dst_port,
+! is_multicast, mpls_pw_id.
 !
 ! sfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
 ! nexthop, bgp_nexthop, filter, agent_id, sample_type, direction, src_mac,
-! dst_mac, vlan, src_net, dst_net, is_multicast, mpls_pw_id, engine_id.
+! dst_mac, vlan, src_net, dst_net, ip_proto, src_port, dst_port, is_multicast,
+! mpls_pw_id, engine_id.
 !
 ! pmacctd: valid keys: set_tag, set_tag2, set_label, direction and filter.
 !
 ! uacctd: valid keys: set_tag, set_tag2 and set_label. 
 !
 ! nfacctd when in 'tee' mode: valid keys: set_tag, set_tag2, set_label, ip,
-! in, out, src_mac, dst_mac, vlan, src_net, dst_net, bgp_nexthop, engine_type,
-! engine_id, source_id.
+! in, out, src_mac, dst_mac, vlan, src_net, dst_net, ip_proto, src_port,
+! dst_port, bgp_nexthop, engine_type, engine_id, source_id.
 !
 ! sfacctd when in 'tee' mode: valid keys: set_tag, set_tag2, set_label, ip,
-! in, out, src_mac, dst_mac, vlan, src_net, dst_net, bgp_nexthop, agent_id.
+! in, out, src_mac, dst_mac, vlan, src_net, dst_net, ip_proto, src_port,
+! dst_port, bgp_nexthop, agent_id.
 !
 ! BGP-related keys supported by pre_tag_map are independent of the collection
 ! method in use, hence apply to all traffic daemons (when BGP thread is
@@ -199,6 +202,12 @@
 ! 'dst_net'             MATCH: Destination IP address field in NetFlow v5 and
 !			sFlow. In NFv9/IPFIX this is compared against IE #28 or
 !			IE #45.
+! 'ip_proto'		MATCH: IP protocol field in NetFlow v5 and sFlow. In
+!			NFv9/IPFIX this is compared against IE #4.
+! 'src_port'		MATCH: Source Port in NetFlow v5 and sFlow. In NFv9/IPFIX
+!			this is compared against IE #7.
+! 'dst_port'		MATCH: Destination Port in NetFlow v5 and sFlow. In NFv9/
+!			IPFIX this is compared against IE #11.
 ! 'is_multicast'	MATCH: in NFv9/IPFIX this is compared against IE #57,
 !                       in sFlow against destination MAC address field part of
 !                       the Extended Switch object. If set to 'true' this does
