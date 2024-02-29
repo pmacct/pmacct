@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -33,6 +33,31 @@ void Log(short int level, char *msg, ...)
 
   if ((level == LOG_DEBUG) && (!config.debug && !debug)) return;
 
+  /* timestamp management for stderr and logfile */
+  if ((!config.syslog && !config.logfile_fd) || config.logfile_fd) {
+    char timebuf[SRVBUFLEN];
+    struct tm result_tm, *tmnow;
+    time_t now;
+
+    now = time(NULL);
+    if (!config.timestamps_utc) {
+      tmnow = localtime_r(&now, &result_tm);
+    }
+    else {
+      tmnow = gmtime_r(&now, &result_tm);
+    }
+
+    strftime(timebuf, SRVBUFLEN, "%Y-%m-%dT%H:%M:%S", tmnow);
+    append_rfc3339_timezone(timebuf, SRVBUFLEN, tmnow);
+
+    if ((!config.syslog && !config.logfile_fd)) {
+      fprintf(stderr, "%s ", timebuf);
+    }
+    else if (config.logfile_fd) {
+      fprintf(config.logfile_fd, "%s ", timebuf);
+    }
+  }
+
   if (!config.syslog && !config.logfile_fd) {
     va_start(ap, msg);
     vfprintf(stderr, msg, ap);
@@ -47,22 +72,6 @@ void Log(short int level, char *msg, ...)
     }
 
     if (config.logfile_fd) {
-      char timebuf[SRVBUFLEN];
-      struct tm result_tm, *tmnow;
-      time_t now;
-
-      now = time(NULL);
-      if (!config.timestamps_utc) {
-	tmnow = localtime_r(&now, &result_tm);
-      }
-      else {
-	tmnow = gmtime_r(&now, &result_tm);
-      }
-
-      strftime(timebuf, SRVBUFLEN, "%Y-%m-%dT%H:%M:%S", tmnow);
-      append_rfc3339_timezone(timebuf, SRVBUFLEN, tmnow);
-
-      fprintf(config.logfile_fd, "%s ", timebuf);
       va_start(ap, msg);
       vfprintf(config.logfile_fd, msg, ap);
       va_end(ap);
