@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -150,6 +150,20 @@ int cfg_key_logfile(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) list->cfg.logfile = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'logfile'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_log_stderr_tstamp(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+
+  for (; list; list = list->next, changes++) list->cfg.log_stderr_tstamp = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'log_stderr_tstamp'. Globalized.\n", filename); 
 
   return changes;
 }

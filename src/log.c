@@ -51,7 +51,9 @@ void Log(short int level, char *msg, ...)
     append_rfc3339_timezone(timebuf, SRVBUFLEN, tmnow);
 
     if ((!config.syslog && !config.logfile_fd)) {
-      fprintf(stderr, "%s ", timebuf);
+      if (config.log_stderr_tstamp) {
+        fprintf(stderr, "%s ", timebuf);
+      }
     }
     else if (config.logfile_fd) {
       fprintf(config.logfile_fd, "%s ", timebuf);

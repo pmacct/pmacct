@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -31,6 +31,7 @@ static const struct _dictionary_line dictionary[] = {
   {"dry_run", cfg_key_dry_run},
   {"syslog", cfg_key_syslog},
   {"logfile", cfg_key_logfile},
+  {"log_stderr_tstamp", cfg_key_log_stderr_tstamp},
   {"pidfile", cfg_key_pidfile},
   {"daemonize", cfg_key_daemonize},
   {"aggregate", cfg_key_aggregate},
