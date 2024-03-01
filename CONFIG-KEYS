@@ -594,6 +594,10 @@ DESC:           Enables logging to a file (bypassing syslog); expected value is 
 		be rotated. 
 DEFAULT:	none (logging to stderr)
 
+KEY:		log_stderr_tstamp [GLOBAL]
+DESC:		Prepend a timestamp to the log message when logging to stderr.
+DEFAULT:	none
+
 KEY:		amqp_host
 DESC:           Defines the AMQP/RabbitMQ broker IP. All amqp_* directives are used by the AMQP plugin
 		of flow daemons only. Check *_amqp_host out (ie. bgp_daemon_msglog_amqp_host) for the

@@ -6,16 +6,6 @@ the changes done or break old assumptions no longer valid; while the effort
 is to keep these cases at a low, please read this file in preparation to
 upgrading your installation.
 
-TO:	>= 1.7.10
-FROM:	<= 1.7.9
-TOPIC:	Logging to stderr
-DESC:	By default pmacct logging goes to stderr. Alternatives to stderr are
-	a log file or syslog. Both log file and syslog always included time
-	information while stderr did not. In this release stderr does now
-	include timestamp information in a consistent way as log file does;
-	this change may break any tool ingesting logs from stderr and relying
-	on the existing format. 
-
 TO:	>= 1.7.9
 FROM:	<= 1.7.8
 TOPIC:	nfacctd_disable_checks, sfacctd_disable_checks
