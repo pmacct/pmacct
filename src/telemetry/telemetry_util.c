@@ -56,7 +56,7 @@ void telemetry_peer_close(telemetry_peer *peer, int type)
     peer->bmp_se = NULL;
   }
 
-  if (config.telemetry_port_udp) {
+  if (config.telemetry_port_udp || unyte_udp_notif_input || grpc_collector_input) {
     telemetry_peer_cache tpc;
 
     memcpy(&tpc.addr, &peer->addr, sizeof(struct host_addr));
