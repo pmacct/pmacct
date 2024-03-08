@@ -143,13 +143,17 @@ struct bmp_tlv_def {
 #define BMP_INIT_INFO_STRING	0
 #define BMP_INIT_INFO_SYSDESCR	1
 #define BMP_INIT_INFO_SYSNAME	2
-#define BMP_INIT_INFO_MAX	2
+#define BMP_INIT_INFO_RESERVED3 3
+#define BMP_INIT_INFO_RESERVED4	4
+#define BMP_INIT_INFO_MAX	4
 #define BMP_INIT_INFO_ENTRIES	8
 
 static const struct bmp_tlv_def __attribute__((unused)) bmp_init_info_types[] = {
   { "string", BMP_TLV_SEM_STRING, NULL }, 
   { "sysdescr", BMP_TLV_SEM_STRING, NULL },
-  { "sysname", BMP_TLV_SEM_STRING, NULL }
+  { "sysname", BMP_TLV_SEM_STRING, NULL },
+  { "reserved", BMP_TLV_SEM_UNKNOWN, NULL },
+  { "reserved", BMP_TLV_SEM_UNKNOWN, NULL },
 };
 
 #define BMP_TERM_INFO_STRING    0
@@ -241,13 +245,21 @@ struct bmp_stats_cnt_hdr {
   u_int16_t	len;
 } __attribute__ ((packed));
 
-static const struct bmp_tlv_def __attribute__((unused)) bmp_peer_up_info_types[] = {
-  { "string", BMP_TLV_SEM_STRING, NULL }
-};
+#define BMP_PEER_UP_INFO_STRING         0
+#define BMP_PEER_UP_INFO_RESERVED1	1
+#define BMP_PEER_UP_INFO_RESERVED2	2
+#define BMP_PEER_UP_INFO_VRF_TABLE_NAME 3
+#define BMP_PEER_UP_INFO_ADMIN_LABEL    4
+#define BMP_PEER_UP_INFO_MAX            4
+#define BMP_PEER_UP_INFO_ENTRIES        8
 
-#define BMP_PEER_UP_INFO_STRING		0
-#define BMP_PEER_UP_INFO_MAX		0
-#define BMP_PEER_UP_INFO_ENTRIES	8	
+static const struct bmp_tlv_def __attribute__((unused)) bmp_peer_up_info_types[] = {
+  { "string", BMP_TLV_SEM_STRING, NULL },
+  { "reserved", BMP_TLV_SEM_UNKNOWN, NULL },
+  { "reserved", BMP_TLV_SEM_UNKNOWN, NULL },
+  { "vrf_table_name", BMP_TLV_SEM_STRING, NULL },
+  { "admin_label", BMP_TLV_SEM_STRING, NULL }
+};
 
 #define BMP_PEER_DOWN_RESERVED		0
 #define BMP_PEER_DOWN_LOC_NOT_MSG	1
