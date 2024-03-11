@@ -49,8 +49,8 @@ char redis_local_key[SRVBUFLEN];
 cdada_queue_t *bmp_bgp_ha_data_queue;           // Queue used for storing BMP/BGP messages
 pthread_mutex_t mutex_queue;                    // Mutex for locking the queue
 int queue_dumping = FALSE;                      // Flag that signals when the queue is beind dumped to kafka
-long long queue_message_timeout_us = 10000000;  // Time messages are kept in the queue [in microseconds]
-int queue_max_size = -1;                        // Max number of messages to be kept in the queue
+long long queue_message_timeout_us = 15000000;  // Time messages are kept in the queue [in microseconds] - default: 15s
+int queue_max_size = -1;                        // Max number of messages to be kept in the queue - default: no limit
 
 struct p_kafka_host kafka_host;
 
