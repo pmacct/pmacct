@@ -3171,6 +3171,7 @@ DEFAULT:	none
 KEY:		rpki_rtr_cache [GLOBAL]
 DESC:		Defines the remote IP address and port of a RPKI RTR cache to connect to. If IPv4,
 		the value is expected as 'address:port'. If IPv6, it is expected as '[address]:port'.
+		Only unprotected transport over TCP is supported.
 DEFAULT:	none
 
 KEY:		rpki_rtr_cache_version [GLOBAL]
