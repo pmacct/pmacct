@@ -2261,6 +2261,16 @@ avro_schema_t p_avro_schema_build_bmp_peer_up(char *schema_name)
   avro_schema_record_field_append(schema, type, optstr_s);
   free(type);
 
+  dummy_tlv.type = BMP_PEER_UP_INFO_VRF_TABLE_NAME;
+  type = bmp_tlv_type_print(&dummy_tlv, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
+  avro_schema_record_field_append(schema, type, optstr_s);
+  free(type);
+
+  dummy_tlv.type = BMP_PEER_UP_INFO_ADMIN_LABEL;
+  type = bmp_tlv_type_print(&dummy_tlv, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
+  avro_schema_record_field_append(schema, type, optstr_s);
+  free(type);
+
   avro_schema_decref(optlong_s);
   avro_schema_decref(optstr_s);
   avro_schema_decref(optint_s);

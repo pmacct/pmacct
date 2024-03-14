@@ -153,7 +153,7 @@ static const struct bmp_tlv_def __attribute__((unused)) bmp_init_info_types[] = 
   { "sysdescr", BMP_TLV_SEM_STRING, NULL },
   { "sysname", BMP_TLV_SEM_STRING, NULL },
   { "reserved", BMP_TLV_SEM_UNKNOWN, NULL },
-  { "reserved", BMP_TLV_SEM_UNKNOWN, NULL },
+  { "reserved", BMP_TLV_SEM_UNKNOWN, NULL }
 };
 
 #define BMP_TERM_INFO_STRING    0
