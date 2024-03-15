@@ -41,7 +41,7 @@ int regenerate_timestamp = FALSE;               // Flag used to trigger refresh 
 int forced_mode = FALSE;                        // Flag that specifies whether HA daemon is in forced mode or automatic (timestamp-based) mode
 
 struct p_redis_host *redis_host;
-int redis_first_loop = TRUE;                    // Flag for identifying first redis loop
+int redis_loop_counter = 0;                     // Flag for identifying first redis loop and for logging
 char timestamp_local[SHORTBUFLEN];              // Local timestamp
 char redis_key_id_string[SHORTBUFLEN] = "ha_daemon_startup_time";
 char redis_local_key[SRVBUFLEN];
@@ -311,8 +311,8 @@ void p_redis_thread_bmp_bgp_ha_handler(void *rh)
   struct p_redis_host *redis_host = rh;
 
   // Initialize the local timestamp (only at first loop/daemon startup)
-  if (redis_first_loop) {
-    Log(LOG_INFO, "INFO ( %s/%s/ha/redis ): BMP-BGP-HA - Redis connection successful\n", config.name, config.type);
+  if (!redis_loop_counter) {
+    Log(LOG_INFO, "INFO ( %s/%s/ha/redis ): BMP-BGP-HA - Redis loop starting!\n", config.name, config.type);
     updateLocalTimestamp();
     Log(LOG_DEBUG, "DEBUG ( %s/%s/ha/redis ): BMP-BGP-HA - Daemon startup timestamp=%s\n", config.name, config.type, timestamp_local);
   }
@@ -336,19 +336,19 @@ void p_redis_thread_bmp_bgp_ha_handler(void *rh)
     Log(LOG_INFO, "DEBUG ( %s/%s/ha/redis ): BMP-BGP-HA Thread is dumping the queue: waiting before going stand-by...\n", config.name, config.type);
   }
 
-  // Dump the queue when daemon becomes active and this is not the first connection
-  if ( (bmp_bgp_forwarding && !old_bmp_bgp_forwarding) && !redis_first_loop ){
+  // Dump the queue when daemon becomes active and this is not the first loop iteration
+  if ( (bmp_bgp_forwarding && !old_bmp_bgp_forwarding) && redis_loop_counter ){
     bmp_bgp_ha_queue_dump_start();
   }
 
-  // Write the current collector status to Log on state change
-  if ((bmp_bgp_forwarding != old_bmp_bgp_forwarding) || redis_first_loop) {
+  // Log the current collector status (at startup, on state change, and at every 10 minutes)
+  if ((bmp_bgp_forwarding != old_bmp_bgp_forwarding) || !redis_loop_counter || redis_loop_counter == 600) {
     Log(LOG_INFO, "INFO ( %s/%s/ha/redis ): BMP-BGP-HA Daemon state: %s\n", config.name, config.type, (bmp_bgp_forwarding ? "ACTIVE" : "STANDBY"));
   }
 
   // Update loop variables
   old_bmp_bgp_forwarding = bmp_bgp_forwarding;
-  redis_first_loop = FALSE;
+  redis_loop_counter = (redis_loop_counter % 600) + 1;  // Iterates continuously on range (1, 600)
 }
 
 
