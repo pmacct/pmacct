@@ -146,7 +146,6 @@ struct bmp_tlv_def {
 #define BMP_INIT_INFO_RESERVED3 3
 #define BMP_INIT_INFO_RESERVED4	4
 #define BMP_INIT_INFO_MAX	4
-#define BMP_INIT_INFO_ENTRIES	8
 
 static const struct bmp_tlv_def __attribute__((unused)) bmp_init_info_types[] = {
   { "string", BMP_TLV_SEM_STRING, NULL }, 
@@ -159,7 +158,6 @@ static const struct bmp_tlv_def __attribute__((unused)) bmp_init_info_types[] = 
 #define BMP_TERM_INFO_STRING    0
 #define BMP_TERM_INFO_REASON	1
 #define BMP_TERM_INFO_MAX	1
-#define BMP_TERM_INFO_ENTRIES	8
 
 #define BMP_TERM_REASON_ADM	0
 #define BMP_TERM_REASON_UNK	1
@@ -251,7 +249,6 @@ struct bmp_stats_cnt_hdr {
 #define BMP_PEER_UP_INFO_VRF_TABLE_NAME 3
 #define BMP_PEER_UP_INFO_ADMIN_LABEL    4
 #define BMP_PEER_UP_INFO_MAX            4
-#define BMP_PEER_UP_INFO_ENTRIES        8
 
 static const struct bmp_tlv_def __attribute__((unused)) bmp_peer_up_info_types[] = {
   { "string", BMP_TLV_SEM_STRING, NULL },
@@ -270,7 +267,6 @@ static const struct bmp_tlv_def __attribute__((unused)) bmp_peer_up_info_types[]
 #define BMP_PEER_DOWN_MAX		5 /* set to the highest BMP_PEER_DOWN_* value */
 
 #define BMP_PEER_DOWN_INFO_MAX		-1
-#define BMP_PEER_DOWN_INFO_ENTRIES	BMP_PEER_UP_INFO_ENTRIES
 
 static const char __attribute__((unused)) *bmp_peer_down_reason_types[] = {
   "Reserved",
@@ -307,7 +303,6 @@ static const struct bmp_tlv_def __attribute__((unused)) bmp_rm_info_types[] = {
 
 #define BMP_ROUTE_MONITOR_INFO_MARKING	0
 #define BMP_ROUTE_MONITOR_INFO_MAX	0
-#define BMP_ROUTE_MONITOR_INFO_ENTRIES	4
 
 struct bmp_rm_pm_tlv {
   u_int16_t	path_index;
