@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -259,6 +259,12 @@ struct options_template_hdr_v9 {
   u_int16_t template_id;
   u_int16_t scope_len;
   u_int16_t option_len;
+};
+
+struct options_template_hdr_ipfix {
+  u_int16_t template_id;
+  u_int16_t option_count;
+  u_int16_t scope_count;
 };
 
 /* Ordered Template field */

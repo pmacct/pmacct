@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -26,13 +26,6 @@
 /* structs */
 struct template_cache {
   struct template_cache_entry *c[TEMPLATE_CACHE_ENTRIES];
-};
-
-/* IPFIX: option field count and scope field count apparently inverted compared to NetFlow v9 */
-struct options_template_hdr_ipfix {
-  u_int16_t template_id;
-  u_int16_t option_count;
-  u_int16_t scope_count;
 };
 
 /* global variables */

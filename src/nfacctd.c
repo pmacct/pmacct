@@ -1805,6 +1805,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
   struct struct_header_ipfix *hdr_v10 = (struct struct_header_ipfix *)pkt;
   struct template_hdr_v9 *template_hdr = NULL;
   struct options_template_hdr_v9 *opt_template_hdr = NULL;
+  struct options_template_hdr_ipfix *opt_template_hdr_v10 = NULL;
   struct template_cache_entry *tpl = NULL;
   struct data_hdr_v9 *data_hdr = NULL;
   struct packet_ptrs *pptrs = &pptrsv->v4;
@@ -1998,9 +1999,11 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
       if (!tpl) return;
 
       if (fid == 3 /* IPFIX */) {
-	tpl_len = sizeof(struct options_template_hdr_v9) +
-		  (((ntohs(opt_template_hdr->scope_len) + ntohs(opt_template_hdr->option_len)) * sizeof(struct template_field_v9)) +
-		  (pens * sizeof(u_int32_t)));
+        opt_template_hdr_v10 = (struct options_template_hdr_ipfix *) opt_template_hdr;
+
+	tpl_len = sizeof(struct options_template_hdr_ipfix) +
+		  (ntohs(opt_template_hdr_v10->option_count) * sizeof(struct template_field_v9)) +
+		  (pens * sizeof(u_int32_t));
       }
       else if (fid == 1 /* NetFlow v9 */) {
 	tpl_len = sizeof(struct options_template_hdr_v9) +
