@@ -45,7 +45,8 @@ int p_redis_master_produce_thread(void *rh)
   struct p_redis_host *redis_host = rh;
   unsigned int ret = 0, period = 0;
   
-  p_redis_connect(redis_host, FALSE); //TODO: is it ok to have it non fatal even on daemon startup by default (or do we want a config knob)?
+  // Connect to redis, with fatal=FALSE, s.t. if daemon can restart while redis is offline (e.g. when handled by systemd)
+  p_redis_connect(redis_host, FALSE); 
 
   for (;;) {
     if (!ret) {
