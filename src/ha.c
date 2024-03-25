@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -35,20 +35,22 @@ thread_pool_t *bmp_bgp_ha_queue_mgmt_pool;
 thread_pool_t *bmp_bgp_ha_queue_dump_pool;
 
 /*Variables*/
-int daemon_state = TRUE;                    // Local daemon state
-int old_bmp_bgp_forwarding = FALSE;         // Previous state of global bmp_bgp_forwarding flag
-int regenerate_timestamp = FALSE;           // Flag used to trigger refresh of daemon's local timestamp
-int forced_mode = FALSE;                    // Flag that specifies whether HA daemon is in forced mode or automatic (timestamp-based) mode
+int daemon_state = TRUE;                        // Local daemon state
+int old_bmp_bgp_forwarding = FALSE;             // Previous state of global bmp_bgp_forwarding flag
+int regenerate_timestamp = FALSE;               // Flag used to trigger refresh of daemon's local timestamp
+int forced_mode = FALSE;                        // Flag that specifies whether HA daemon is in forced mode or automatic (timestamp-based) mode
 
 struct p_redis_host *redis_host;
-int redis_loop_num = 1;                     // Redis loop counter used for identifying first loop
-char timestamp_local[SHORTBUFLEN];          // Local timestamp
+int redis_loop_counter = 0;                     // Flag for identifying first redis loop and for logging
+char timestamp_local[SHORTBUFLEN];              // Local timestamp
 char redis_key_id_string[SHORTBUFLEN] = "ha_daemon_startup_time";
 char redis_local_key[SRVBUFLEN];
 
-cdada_queue_t *bmp_bgp_ha_data_queue;       // Queue used for storing BMP/BGP messages
-pthread_mutex_t mutex_queue;                // Mutex for locking the queue
-int queue_dumping = FALSE;                  // Flag to ensure queue popping stops & daemon stays active when queue is being dumped to kafka!
+cdada_queue_t *bmp_bgp_ha_data_queue;           // Queue used for storing BMP/BGP messages
+pthread_mutex_t mutex_queue;                    // Mutex for locking the queue
+int queue_dumping = FALSE;                      // Flag that signals when the queue is beind dumped to kafka
+long long queue_message_timeout_us = 15000000;  // Time messages are kept in the queue [in microseconds] - default: 15s
+int queue_max_size = -1;                        // Max number of messages to be kept in the queue - default: no limit
 
 struct p_kafka_host kafka_host;
 
@@ -142,13 +144,13 @@ void bmp_bgp_ha_enqueue(void *avro_buf, size_t avro_buf_len)
   void *buf_cpy = malloc(avro_buf_len);
   memcpy(buf_cpy, avro_buf, avro_buf_len);
 
-  // Enqueue the BMP message
+  // Enqueue the BMP/BGP message
   pthread_mutex_lock(&mutex_queue);
   enQueue(bmp_bgp_ha_data_queue, buf_cpy, avro_buf_len);
   queue_size = cdada_queue_size(bmp_bgp_ha_data_queue);
   pthread_mutex_unlock(&mutex_queue);
 
-  Log(LOG_DEBUG, "DEBUG ( %s/%s/ha ): BMP-BGP-HA - put data into queue. Queue size:%d.\n", config.name, config.type, queue_size);
+  Log(LOG_DEBUG, "DEBUG ( %s/%s/ha ): BMP-BGP-HA - added message into queue. Queue size:%d.\n", config.name, config.type, queue_size);
 }
 
 /*-------------------------------------------------------------------------------*/
@@ -168,16 +170,20 @@ int bmp_bgp_ha_queue_pop(void *qh)
     pthread_mutex_lock(&mutex_queue);
     cdada_queue_front(bmp_bgp_ha_data_queue, &nodes);
 
-    while (!cdada_queue_empty(bmp_bgp_ha_data_queue) && (timestamp - nodes.timestamp > QUEUE_POP_THRESHOLD) && !queue_dumping) {
-    
-      // Pop queue entries older than QUEUE_POP_THRESHOLD
+    /* Pop messages from the queue in the following cases:
+       - message is older than queue_message_timeout_us
+       - queue size is bigger than queue_max_size */
+    int queue_size = cdada_queue_size(bmp_bgp_ha_data_queue);
+    while(!queue_dumping && (queue_size > 0) &&
+          ((timestamp - nodes.timestamp > queue_message_timeout_us) ||
+            ((queue_max_size > 0) && (queue_size > queue_max_size)))) 
+    {     
       cdada_queue_pop(bmp_bgp_ha_data_queue);
 
-      int check_flag = !cdada_queue_empty(bmp_bgp_ha_data_queue) & (timestamp - nodes.timestamp > QUEUE_POP_THRESHOLD);
-      Log(LOG_DEBUG, "DEBUG ( %s/%s/ha ): BMP-BGP-HA-MGMT-%d - delete one from queue (check=%d). Queue size: %d\n", 
-            config.name, config.type, bmp_bgp_forwarding, check_flag, cdada_queue_size(bmp_bgp_ha_data_queue));
-    
+      queue_size = cdada_queue_size(bmp_bgp_ha_data_queue);
       cdada_queue_front(bmp_bgp_ha_data_queue, &nodes);
+      Log(LOG_DEBUG, "DEBUG ( %s/%s/ha ): BMP-BGP-HA-MGMT-%d - removed message from queue (queue size: %d).\n", 
+          config.name, config.type, bmp_bgp_forwarding, queue_size);
     }
     pthread_mutex_unlock(&mutex_queue);
   }
@@ -267,8 +273,8 @@ bool bmp_bgp_ha_redis_check_daemon_state(struct p_redis_host *redis_host)
   
   // Get all available keys storing bmp_bgp_ha timestamps from redis
   char keys_regex[SRVBUFLEN];
-  snprintf(keys_regex, sizeof(keys_regex), "%s%s%d%s%s%s", config.cluster_name, PM_REDIS_DEFAULT_SEP, 
-            config.cluster_id, PM_REDIS_DEFAULT_SEP, "*", redis_key_id_string);
+  snprintf(keys_regex, sizeof(keys_regex), "%s%s%d%s%s%s", config.bgp_bmp_daemon_ha_cluster_name, PM_REDIS_DEFAULT_SEP, 
+            config.bgp_bmp_daemon_ha_cluster_id, PM_REDIS_DEFAULT_SEP, "*", redis_key_id_string);
   p_redis_get_keys(redis_host, keys_regex, &bmp_bgp_ha_redis_keys);
   
   // Get timestamps and compare to local
@@ -282,55 +288,67 @@ bool bmp_bgp_ha_redis_check_daemon_state(struct p_redis_host *redis_host)
   return TRUE;
 }
 
+/* Update timestamp with current time */
+void updateLocalTimestamp() {
+    struct timeval current_time;
+    gettimeofday(&current_time, NULL);
+    snprintf(timestamp_local, sizeof(timestamp_local), "%ld", current_time.tv_sec * 1000000 + current_time.tv_usec);
+}
+
+/* Modified p_redis_set_string to use bgp_bmp_daemon_ha cluster params 
+   (instead of default cluster_name, cluster_id, which are used by eBPF) */
+void p_redis_set_string_ha(struct p_redis_host *redis_host, char *resource, char *value)
+{
+  redis_host->reply = redisCommand(redis_host->ctx, "SETEX %s%s%d%s%s %d %s", config.bgp_bmp_daemon_ha_cluster_name, PM_REDIS_DEFAULT_SEP,
+				   config.bgp_bmp_daemon_ha_cluster_id, PM_REDIS_DEFAULT_SEP, resource, redis_host->exp_time, value);
+
+  p_redis_process_reply(redis_host);
+}
+
 /* Main loop */
 void p_redis_thread_bmp_bgp_ha_handler(void *rh)
 {
   struct p_redis_host *redis_host = rh;
 
   // Initialize the local timestamp (only at first loop/daemon startup)
-  if (redis_loop_num == 1) {
-    Log(LOG_INFO, "INFO ( %s/%s/ha/redis ): BMP-BGP-HA - Redis connection successful\n", config.name, config.type);
-    struct timeval current_time;
-    gettimeofday(&current_time, NULL);
-    snprintf(timestamp_local, sizeof(timestamp_local), "%ld", current_time.tv_sec * 1000000 + current_time.tv_usec);
+  if (!redis_loop_counter) {
+    Log(LOG_INFO, "INFO ( %s/%s/ha/redis ): BMP-BGP-HA - Redis loop starting!\n", config.name, config.type);
+    updateLocalTimestamp();
     Log(LOG_DEBUG, "DEBUG ( %s/%s/ha/redis ): BMP-BGP-HA - Daemon startup timestamp=%s\n", config.name, config.type, timestamp_local);
   }
 
   // Refresh the local timestamp if the regenerate_timestamp flag is set
   if (regenerate_timestamp){
-    struct timeval current_time;
-    gettimeofday(&current_time, NULL);
-    snprintf(timestamp_local, sizeof(timestamp_local), "%ld", current_time.tv_sec * 1000000 + current_time.tv_usec);
+    updateLocalTimestamp();
     regenerate_timestamp = FALSE;
   }
 
   // Write the local timestamp to redis
   snprintf(redis_local_key, sizeof(redis_local_key), "%s%s%s", config.name, PM_REDIS_DEFAULT_SEP, redis_key_id_string);
-  p_redis_set_string(redis_host, redis_local_key, timestamp_local, PM_REDIS_DEFAULT_EXP_TIME);
+  p_redis_set_string_ha(redis_host, redis_local_key, timestamp_local);
 
   // Refresh daemon state based on timestamp
   if (!forced_mode) daemon_state = bmp_bgp_ha_redis_check_daemon_state(redis_host);
 
   // Set global flag [pmacct-globals.c] according to current daemon state 
-  bmp_bgp_forwarding = daemon_state | queue_dumping;  // prevent going stand-by if dumping
+  bmp_bgp_forwarding = daemon_state | queue_dumping;      // Prevent daemon from going stand-by if dumping
   if (queue_dumping && !daemon_state) { 
     Log(LOG_INFO, "DEBUG ( %s/%s/ha/redis ): BMP-BGP-HA Thread is dumping the queue: waiting before going stand-by...\n", config.name, config.type);
   }
 
-  // Dump the queue when daemon becomes active and this is not the first connection
-  if ( (bmp_bgp_forwarding && !old_bmp_bgp_forwarding) && redis_loop_num != 1 ){
+  // Dump the queue when daemon becomes active and this is not the first loop iteration
+  if ( (bmp_bgp_forwarding && !old_bmp_bgp_forwarding) && redis_loop_counter ){
     bmp_bgp_ha_queue_dump_start();
   }
 
-  // Write the current collector status to Log on state change
-  if ((bmp_bgp_forwarding != old_bmp_bgp_forwarding) || redis_loop_num == 1) {
+  // Log the current collector status (at startup, on state change, and at every 10 minutes)
+  if ((bmp_bgp_forwarding != old_bmp_bgp_forwarding) || !redis_loop_counter || redis_loop_counter == 600) {
     Log(LOG_INFO, "INFO ( %s/%s/ha/redis ): BMP-BGP-HA Daemon state: %s\n", config.name, config.type, (bmp_bgp_forwarding ? "ACTIVE" : "STANDBY"));
   }
 
   // Update loop variables
   old_bmp_bgp_forwarding = bmp_bgp_forwarding;
-  redis_loop_num++;
-  redis_loop_num = redis_loop_num % 62 + 2;           // result in range[2, 62]
+  redis_loop_counter = (redis_loop_counter % 600) + 1;  // Iterates continuously on range (1, 600)
 }
 
 
@@ -368,9 +386,24 @@ void bmp_bgp_ha_set_to_normal(int signum){
 /*-------------------------------------------------------------------------------*/
 void bmp_bgp_ha_main(void){
 
+    // Check if bgp_bmp_daemon_ha_cluster_name is configured, otherwise exit with ERROR
+    if (!config.bgp_bmp_daemon_ha_cluster_name) {
+      Log(LOG_ERR, "ERROR: ( %s/%s/ha ) BMP-BGP-HA: bgp_bmp_daemon_ha_cluster_name not configured, exiting!\n",
+          config.name, config.type);
+      exit_all(1);
+    }
+
+    // Set variables from config file if necessary
+    if (config.bgp_bmp_daemon_ha_queue_message_timeout) {
+      queue_message_timeout_us= 1000000 * config.bgp_bmp_daemon_ha_queue_message_timeout;
+    }
+    if (config.bgp_bmp_daemon_ha_queue_max_size) {
+      queue_max_size=config.bgp_bmp_daemon_ha_queue_max_size;
+    }
+
     // Thread 1: initialize the queue+mutex_queue and pops old messages
     bmp_bgp_ha_queue_mgmt_thread_wrapper();
-      
+
     // Thread 2: dump the queue if the daemon goes from stand-by to active
     bmp_bgp_ha_queue_dump_thread_wrapper();
 }

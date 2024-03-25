@@ -2615,12 +2615,40 @@ DEFAULT:	bgp_daemon_port: 179; bmp_daemon_port: 1790
 
 KEY:		[ bgp_daemon_ha | bmp_daemon_ha ] [GLOBAL]
 VALUES:		[ true | false ]
-DESC:		Enables the High Availability feature for the BGP/BMP daemon. The HA feature is a mechanism
-		that specifies whether a daemon should be active (i.e. normally forwarding all received
-		BMP/BGP messages) or stand-by (i.e. only enrich the local pmacct cache with information
-		in the BMP/BGP packets but then dropping them instead of forwarding them). Read more in
-		docs/README_BGP_BMP_HA.md .
+DESC:           Enables the High Availability feature for the BGP/BMP daemon. The HA feature is a mechanism
+                that specifies whether a daemon should be active (i.e. normally forwarding all received
+                BMP/BGP messages) or stand-by (i.e. only enrich the local pmacct cache with information
+                in the BMP/BGP packets but then dropping them instead of forwarding them). This feature
+                requires redis to be configured (see redis_host knob). Read more in docs/README_BGP_BMP_HA.md. 
+DEFAULT:        none
+
+KEY:		[ bgp_daemon_ha_cluster_name | bmp_daemon_ha_cluster_name ]
+DESC:		Defines the name of the HA cluster and is expected to be a string, ie. "nfacctd_ha_cluster".
+                This argument is mandatory when bgp(bmp)_daemon_ha is enabled. This parameter enables
+                distinguishing the BMP/BGP HA cluster from the eBPF load balancing cluster specified by the
+                cluster_name knob, and thus in most cases they need to be different.
 DEFAULT:	none
+
+KEY:		[ bgp_daemon_ha_cluster_id | bmp_daemon_ha_cluster_id ]
+DESC:		Defines the ID of a HA sub-cluster within <redis_host, bgp(bmp)_daemon_ha_cluster_name>
+                and is expected to be a positive integer. This is used to identify daemons configured to receive 
+                the same BMP/BGP data in different locations, and thus that are part of the same HA domain.
+                Concretely, all daemons with the same <bgp(bmp)_daemon_ha_cluster_name, bgp(bmp)_daemon_ha_cluster_id>
+                constitute a HA cluster; i.e. one of them will be elected as active node, while the others will
+                be standby. Refer to docs/README_BGP_BMP_HA.md for some deployment examples. 
+DEFAULT:	0
+
+KEY:		[ bgp_daemon_ha_queue_message_timeout | bmp_daemon_ha_queue_message_timeout ]
+DESC:		In order to ensure that no BMP/BGP messages are lost in case of a HA failover, the stand-by daemon 
+                is always queuing the messages before discarding them. The message expiry timeout [in seconds] can 
+                be configured with this knob (loose bound, as the queue cleanup thread is executed at 1s intervals).
+DEFAULT:	10
+
+KEY:		[ bgp_daemon_ha_queue_max_size | bmp_daemon_ha_queue_max_size ]
+DESC:		In order to ensure that no BMP/BGP messages are lost in case of a HA failover, the stand-by daemon 
+                is always queuing the messages before discarding them. The maximum queue size can be set with this
+                parameter (loose bound, as the queue cleanup thread is executed at 1s intervals).
+DEFAULT:	-1
 
 KEY:		[ bgp_daemon_rp_ebpf_prog | bmp_daemon_rp_ebpf_prog ] [GLOBAL]
 DESC:		If SO_REUSEPORT is supported by the Operating System (read more about this feature at the

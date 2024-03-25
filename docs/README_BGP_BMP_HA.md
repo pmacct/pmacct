@@ -5,10 +5,47 @@ BMP/BGP HIGH-AVAILABILITY FEATURE DOCUMENTATION
 ## Important Information and Current Implementation Status
 
 * This contribution doesn't change the behavior of the software when not enabled in the configuration file. The high-availability (HA) feature can be enabled via the following config knobs: 
+
+**BMP Daemons:**
   ```bash
-  bgp_daemon_ha: true
+  !--------------------!
+  !   Redis Settings   !                        # Required for the HA feature
+  !--------------------!
+  redis_host: redis-host:redis-port
+  cluster_name: nfacctd_bmp_daemon_1_location_1
+  cluster_id: 0
+  !
+  !--------------------!
+  ! BMP HA Settings !
+  !--------------------!
   bmp_daemon_ha: true
+  bmp_daemon_ha_cluster_name: nfacctd_bmp_ha_cluster
+  bmp_daemon_ha_cluster_id: 0
+  bmp_daemon_ha_queue_message_timeout: 15       # Optional (default=15s)
+  bmp_daemon_ha_queue_max_size: 1000000         # Optional (default=-1, i.e. unlimited)
   ```
+
+**BGP Daemons:**
+  ```bash
+  !--------------------!
+  !   Redis Settings   !                        # Required for the HA feature
+  !--------------------!
+  redis_host: redis-host:redis-port
+  cluster_name: nfacctd_bmp_daemon_1_location_1
+  cluster_id: 0
+  !
+  !--------------------!
+  ! BGP HA Settings !
+  !--------------------!
+  bgp_daemon_ha: true
+  bgp_daemon_ha_cluster_name: nfacctd_bgp_ha_cluster
+  bgp_daemon_ha_cluster_id: 0
+  bgp_daemon_ha_queue_message_timeout: 15       # Optional (default=15s)
+  bgp_daemon_ha_queue_max_size: 1000000         # Optional (default=-1, i.e. unlimited)
+  ```
+
+* A new pair of knobs (*bm(g)p_daemon_ha_cluster_name*, *bm(g)p_daemon_ha_cluster_id*) was added specifically for this feature, as the already existing (*cluster_name*, *cluster_id*) pair was already used for the eBPF cluster, and using the same would make ha and eBPF features mutually exclusive. For more infor see the **Redis** section below.
+
 * Compiling with --enable-redis is required for this feature
 
 * The HA feature supports both BGP and BMP
@@ -27,28 +64,65 @@ BMP/BGP HIGH-AVAILABILITY FEATURE DOCUMENTATION
 
   * It is also possible to manually trigger forced active/standby states for maintenance purposes: a deamon can be triggered to be in active or standby state no matter its timestamp.
 
+## Deployment Example (complex case with HA and eBPF load balancing)
+
+In this example we deploy nfacctd in 2 locations (3 daemons per location), with HA enabled and eBPF load balancing (load balancing per source IP).
+
+<p align="center">
+  <img src="img/ha-ebpf-diagram.png" alt="drawing" width="600"/>
+</p>
+
+
+When using eBPF with HA, eBPF load balancing calculation needs to be deterministic, i.e. we need to ensure to have the same number of daemons as well as the same cluster_id=bmp_daemon_ha_cluster_id in the 2 locations. This way the BMP information from the same router (source IP) is sent to the daemon with the same id in both locations. Since these daemons receive the same data it makes sense that they work in HA mode (only one of the 2 daemons is producing BMP data to kafka, see diagram above).
+
+**Configs (only for Daemon 1):**
+  ```bash
+  !---------------------!                               !---------------------!
+  ! Generic Settings !                                  ! Generic Settings !
+  !---------------------!                               !---------------------!
+  core_proc_name: nfacctd_core_loc_A                    core_proc_name: nfacctd_core_loc_B
+  !                                                     !
+  !--------------------!                                !--------------------!
+  ! Redis Settings !                                    ! Redis Settings !  
+  !--------------------!                                !--------------------!
+  redis_host: redis-hostname:6379                       redis_host: redis-hostname:6379
+  cluster_name: nfacctd_bmp_loc_A                       cluster_name: nfacctd_bmp_loc_B
+  cluster_id: 1                                         cluster_id: 1
+  !                                                     !
+  !--------------------!                                !--------------------!
+  ! BMP HA Settings !                                   ! BMP HA Settings !
+  !--------------------!                                !--------------------!
+  bmp_daemon_ha: true                                   bmp_daemon_ha: true
+  bmp_daemon_ha_cluster_name: nfacctd_bmp               bmp_daemon_ha_cluster_name: nfacctd_bmp
+  bmp_daemon_ha_cluster_id: 1                           bmp_daemon_ha_cluster_id: 1
+  !
+  ```
+
 ### Redis
-  * Redis is used by each collector for broader cluster management, i.e. to exchange timestamp information. To quickly summarize the functionality: all daemons will periodically read the timestamp of all other daemons in the cluster and compare it with their local timestamp, to decide whether they need to be in active or stand-by state. A global variable (bmp_bgp_forwarding) is then set accordingly, to tell the daemon whether BMP/BGP packets need to be forwarded (active state) or need to be dropped (stand-by state).
+  * Redis is used by each collector for cluster management, i.e. to exchange timestamp information. To quickly summarize the functionality: all daemons will periodically read the timestamp of all other daemons in the ha-cluster and compare it with their local timestamp, to decide whether they need to be in active or stand-by state. A global variable (bmp_bgp_forwarding) is then set accordingly, to tell the daemon whether BMP/BGP packets need to be forwarded (active state) or need to be dropped (stand-by state).
 
   * The timestamp is written to redis every 1s (PM_REDIS_DEFAULT_REFRESH_TIME) and has an expiration time of 3s (PM_REDIS_DEFAULT_EXP_TIME). If the timestamp expires, the other daemons cannot get it anymore and will assume that the daemon is offline.
 
   * The timestamp is written to Redis with the following key:
     ```bash
-    [config.cluster_name]+[config.cluster_id]+[core_proc_name]+"ha_daemon_startup_time"
+    [config.bmp_daemon_ha_cluster_name]+[config.bmp_daemon_ha_cluster_id]+[core_proc_name]+"ha_daemon_startup_time"
 
-    e.g. nfacctd-bmp+0+locBbmp-locB01c+ha_daemon_startup_time
+    e.g. nfacctd_bmp+1+nfacctd_bmp_loc_A+ha_daemon_startup_time
+    (using the knobs configure in example above, location A)
     ```
 
   * To gather the startup timestamps of all the daemons in the cluster, we use the p_redis_get_keys() function in redis_common.c and we query redis with the following regex:
     ```bash
-    KEYS [config.cluster_name]+[config.cluster_id]+"*"+"ha_daemon_startup_time"
+    KEYS [config.bmp_daemon_ha_cluster_name]+[config.bmp_daemon_ha_cluster_id]+"*"+"ha_daemon_startup_time"
     ```
+    This means that the core_proc_name (defined by the homonym config knob) serves as the daemon discriminator, thus should be different between daemons in the same ha cluster (as is in the **deployment example** above).
     The query above is replied with a two dimensional array containing all keys that fit the condition (i.e. all keys of all daemons in the cluster). In order to then get the actual timestamps, we use the p_redis_get_string() function in redis_common.c.
 
 ### Queuing
   
-  * In order to ensure that no BMP/BGP messages are lost in case of a failover (e.g. daemon going from stand-by to active mode, because the current active daemon has crashed), the stand-by daemon is always queuing the messages for 10s before discarding them. The message expiry timeout of 10s accounts for:
+  * In order to ensure that no BMP/BGP messages are lost in case of a failover (e.g. daemon going from stand-by to active mode, because the current active daemon has crashed), the stand-by daemon is always queuing the messages (by default for 15s, but can be configured via the *bm(g)p_daemon_ha_queue_message_timeout* config knob) before discarding them. The message expiry timeout accounts for:
     * internal state-change delays (1s redis loop and 3s redis key expiration)
+    * redis command timeouts ,i.e. when tcp connection with redis goes down abruptly (3s redis command timeout)
     * router delay in sending the BMP/BGP messages to different collectors (unknown, estimate max couple of seconds)
     * network and redis querying delays (minor)
 

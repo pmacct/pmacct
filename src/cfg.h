@@ -630,6 +630,10 @@ struct configuration {
   int tmp_telemetry_udp_notif_legacy;
   int tmp_telemetry_decode_cisco_v1_json_string;
   int bgp_bmp_daemon_ha;
+  char *bgp_bmp_daemon_ha_cluster_name;
+  int bgp_bmp_daemon_ha_cluster_id;
+  int bgp_bmp_daemon_ha_queue_message_timeout;
+  int bgp_bmp_daemon_ha_queue_max_size;
   size_t thread_stack;
   char *rpki_roas_file;
   char *rpki_rtr_cache;

@@ -59,7 +59,7 @@ cd avro-c-1.11.2 ; mkdir build ; cd build ; cmake -DCMAKE_INSTALL_PREFIX=/usr/lo
 git clone --depth 1 -b v7.2.2 https://github.com/confluentinc/libserdes
 cd libserdes ; rm -rf ./.git ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
-git clone --depth 1 https://github.com/redis/hiredis
+git clone --depth 1 -b v1.2.0 https://github.com/redis/hiredis
 cd hiredis ; rm -rf ./.git ; make ; sudo make install ; cd ..
 
 git clone --depth 1 -b v0.6.1 https://github.com/network-analytics/udp-notif-c-collector
