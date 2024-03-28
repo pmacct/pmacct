@@ -50,7 +50,7 @@ cd libmaxminddb ; rm -rf ./.git ; ./bootstrap ; ./configure --prefix=/usr/local/
 git clone --depth 1 -b 4.6-stable https://github.com/ntop/nDPI
 cd nDPI ; rm -rf ./.git ; ./autogen.sh ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; sudo ldconfig ; cd ..
 
-git clone --depth 1 -b v4.3.4 https://github.com/zeromq/libzmq
+git clone --depth 1 -b v4.3.5 https://github.com/zeromq/libzmq
 cd libzmq ; ./autogen.sh ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
 wget ${WGET_FLAGS} -O - https://archive.apache.org/dist/avro/avro-1.11.3/c/avro-c-1.11.3.tar.gz | tar xzf -
