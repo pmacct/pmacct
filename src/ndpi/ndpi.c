@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -378,7 +378,7 @@ struct ndpi_proto pm_ndpi_packet_processing(struct pm_ndpi_workflow *workflow,
 
     if (workflow->prefs.protocol_guess) {
       if (flow->detected_protocol.app_protocol == NDPI_PROTOCOL_UNKNOWN && !flow->guess_completed) {
-        pm_ndpi_node_guess_undetected_protocol(workflow, flow);
+        pm_ndpi_node_guess_undetected_protocol(workflow, flow, iph ? TRUE : FALSE);
 	flow->guess_completed = TRUE;
       }
     }
@@ -436,17 +436,24 @@ struct ndpi_proto pm_ndpi_workflow_process_packet(struct pm_ndpi_workflow *workf
 /*
  * Guess Undetected Protocol
  */
-u_int16_t pm_ndpi_node_guess_undetected_protocol(struct pm_ndpi_workflow *workflow, struct pm_ndpi_flow_info *flow)
+u_int16_t pm_ndpi_node_guess_undetected_protocol(struct pm_ndpi_workflow *workflow, struct pm_ndpi_flow_info *flow, int is_ipv4)
 {
   if (!flow || !workflow) return 0;
 
-  flow->detected_protocol = ndpi_guess_undetected_protocol(workflow->ndpi_struct,
-							   flow->ndpi_flow,
-                                                           flow->protocol,
-                                                           ntohl(flow->lower_ip),
-                                                           ntohs(flow->lower_port),
-                                                           ntohl(flow->upper_ip),
-                                                           ntohs(flow->upper_port));
+  if (is_ipv4) {
+    flow->detected_protocol = ndpi_guess_undetected_protocol_v4(workflow->ndpi_struct,
+							        flow->ndpi_flow,
+								flow->protocol,
+								ntohl(flow->lower_ip),
+								ntohs(flow->lower_port),
+								ntohl(flow->upper_ip),
+								ntohs(flow->upper_port));
+  }
+  else {
+    flow->detected_protocol = ndpi_guess_undetected_protocol(workflow->ndpi_struct,
+							     flow->ndpi_flow,
+							     flow->protocol);
+  }
 
   return (flow->detected_protocol.app_protocol);
 }

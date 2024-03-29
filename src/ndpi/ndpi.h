@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -146,7 +146,7 @@ extern struct pm_ndpi_flow_info *pm_ndpi_get_flow_info6(struct pm_ndpi_workflow 
 extern struct ndpi_proto pm_ndpi_packet_processing(struct pm_ndpi_workflow *, struct packet_ptrs *, const u_int64_t, u_int16_t,
 						const struct ndpi_iphdr *, struct ndpi_ipv6hdr *, u_int16_t, u_int16_t, u_int16_t); 
 
-extern u_int16_t pm_ndpi_node_guess_undetected_protocol(struct pm_ndpi_workflow *, struct pm_ndpi_flow_info *);
+extern u_int16_t pm_ndpi_node_guess_undetected_protocol(struct pm_ndpi_workflow *, struct pm_ndpi_flow_info *, int);
 extern void pm_ndpi_idle_flows_cleanup(struct pm_ndpi_workflow *);
 
 extern int pm_ndpi_node_idle_scan_walker(const void *, const pm_VISIT, const int, void *);

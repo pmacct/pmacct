@@ -47,7 +47,7 @@ cd rabbitmq-c-0.13.0 ; mkdir build ; cd build ; cmake -DCMAKE_INSTALL_PREFIX=/us
 git clone --depth 1 --recursive https://github.com/maxmind/libmaxminddb
 cd libmaxminddb ; rm -rf ./.git ; ./bootstrap ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
-git clone --depth 1 -b 4.6-stable https://github.com/ntop/nDPI
+git clone --depth 1 -b 4.8-stable https://github.com/ntop/nDPI
 cd nDPI ; rm -rf ./.git ; ./autogen.sh ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; sudo ldconfig ; cd ..
 
 git clone --depth 1 -b v4.3.5 https://github.com/zeromq/libzmq
