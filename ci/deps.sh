@@ -56,7 +56,7 @@ cd libzmq ; ./autogen.sh ; ./configure --prefix=/usr/local/ ; make ; sudo make i
 wget ${WGET_FLAGS} -O - https://archive.apache.org/dist/avro/avro-1.11.3/c/avro-c-1.11.3.tar.gz | tar xzf -
 cd avro-c-1.11.3 ; mkdir build ; cd build ; cmake -DCMAKE_INSTALL_PREFIX=/usr/local .. ; make ; sudo make install ; cd .. ; cd ..
 
-git clone --depth 1 -b v7.2.9 https://github.com/confluentinc/libserdes
+git clone --depth 1 -b v7.5.3 https://github.com/confluentinc/libserdes
 cd libserdes ; rm -rf ./.git ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
 git clone --depth 1 -b v1.2.0 https://github.com/redis/hiredis
