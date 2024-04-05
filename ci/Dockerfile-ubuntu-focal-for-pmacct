@@ -3,7 +3,7 @@
 FROM ubuntu:focal
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG DISTRIBUTION="ubuntu:focal"
+ARG DISTRIBUTION=ubuntu:focal
 
 RUN apt-get update && \
     apt-get install -y \

@@ -42,7 +42,7 @@ git clone --depth 1 https://github.com/edenhill/librdkafka
 cd librdkafka ; rm -rf ./.git ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
 # rabbitmq-c 0.14.0 depends on cmake 3.22 or greater
-if [ "${DISTRIBUTION}" == "ubuntu:jammy" ]; then
+if [ "${DISTRIBUTION}" = "ubuntu:jammy" ]; then
     wget ${WGET_FLAGS} -O - https://github.com/alanxz/rabbitmq-c/archive/refs/tags/v0.14.0.tar.gz | tar xzf -
     cd rabbitmq-c-0.14.0 ; mkdir build ; cd build ; cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_INSTALL_LIBDIR=lib .. ; sudo cmake --build . --target install ; cd .. ; cd ..
 else
