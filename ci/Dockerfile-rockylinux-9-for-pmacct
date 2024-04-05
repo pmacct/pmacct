@@ -2,6 +2,8 @@
 
 FROM rockylinux:9
 
+ARG DISTRIBUTION="rockylinux:9"
+
 RUN yum install -y dnf-plugins-core && \
     yum config-manager --set-enabled crb && \
     yum install -y \
