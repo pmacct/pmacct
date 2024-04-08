@@ -1,0 +1,6 @@
+containers:
+  - name: traffic-reproducer-205
+    processes:
+      - pcap: traffic-00.pcap
+        config: traffic-reproducer-00.yml
+        collector: nfacctd-00

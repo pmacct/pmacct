@@ -1,0 +1,15 @@
+##pmacct (Promiscuous mode IP Accounting package)
+##pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+
+#Author: Marc Sune <marcdevel (at) gmail.com>
+
+#This Dockerfile creates an image for nfacctd
+
+FROM pmacct-base:_build
+
+# Move this permission stuff to the base image eventually
+RUN useradd -m -u 1000 -o -s /bin/bash pmacct_user
+USER pmacct_user
+
+ENTRYPOINT ["/usr/local/sbin/nfacctd"]
+CMD ["-f", "/etc/pmacct/nfacctd.conf"]

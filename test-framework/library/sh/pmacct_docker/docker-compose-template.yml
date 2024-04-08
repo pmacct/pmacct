@@ -1,0 +1,18 @@
+---
+version: '3'
+
+networks:
+  pmacct_test_network:
+    external: true
+
+services:
+  pmacct:
+    image: ${PMACCT_IMAGE}
+    container_name: pmacct
+    volumes:
+      - ${PMACCT_CONF}:/etc/pmacct/${PMACCT_DAEMON}.conf
+      - ${PMACCT_MOUNT}:/var/log/pmacct
+    networks:
+      pmacct_test_network:
+        ipv4_address: 172.21.1.13
+        ipv6_address: fd25::13

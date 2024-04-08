@@ -1,0 +1,6 @@
+${TIMESTAMP} INFO ( pmbmpd_core/core ): [${repro_ip}] BMP connection reset by peer (0).
+${TIMESTAMP} WARN ( pmbmpd_core/core ): Unable to get kafka_host: ${repro_ip}
+${TIMESTAMP} INFO ( pmbmpd_core/core ): [${repro_ip}] BMP connection reset by peer (0).
+${TIMESTAMP} WARN ( pmbmpd_core/core ): Unable to get kafka_host: ${repro_ip}
+${TIMESTAMP} INFO ( pmbmpd_core/core ): [${repro_ip}] BMP connection reset by peer (0).
+${TIMESTAMP} WARN ( pmbmpd_core/core ): Unable to get kafka_host: ${repro_ip}

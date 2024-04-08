@@ -1,0 +1,5 @@
+${TIMESTAMP} INFO ( nfacctd_core/core/BGP ): [213.3.223.36] Capability: MultiProtocol [1] AFI [2] SAFI [128]
+${TIMESTAMP} INFO ( nfacctd_core/core/BGP ): [213.3.223.36] Capability: MultiProtocol [1] AFI [1] SAFI [128]
+${TIMESTAMP} INFO ( nfacctd_core/core/BGP ): [213.3.223.36] Capability: Route Refresh [2]
+${TIMESTAMP} INFO ( nfacctd_core/core/BGP ): [213.3.223.36] Capability: 4-bytes AS [65] ASN [4260102238]
+${TIMESTAMP} INFO ( nfacctd_core/core/BGP ): [213.3.223.36] BGP_OPEN: Local AS: 65543 Remote AS: 4260102238 HoldTime: 180

@@ -1,0 +1,6 @@
+${TIMESTAMP} INFO ( nfacctd_core/core/BMP ): maximum BMP peers allowed: 600
+${TIMESTAMP} INFO ( nfacctd_core/core ): [/etc/pmacct/librdkafka.conf] Reading librdkafka global config.
+${TIMESTAMP} INFO ( nfacctd_core/core/BMP ): waiting for BMP data on interface=all ip=0.0.0.0 port=1790/tcp
+${TIMESTAMP} INFO ( nfacctd_core/core/BMP ): [${repro_ip}] BMP peers usage: 1/600
+${TIMESTAMP} INFO ( nfacctd_core/core/BMP ): [${repro_ip}] BMP connection reset by peer (0).
+${TIMESTAMP} WARN ( nfacctd_core/core/BMP ): Unable to get kafka_host: ${repro_ip}

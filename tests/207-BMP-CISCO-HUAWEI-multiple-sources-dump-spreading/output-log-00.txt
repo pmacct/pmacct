@@ -1,0 +1,1 @@
+${TIMESTAMP} INFO ( pmbmpd_core/core ): *** Dumping BMP tables - START ${IGNORE_REST}
