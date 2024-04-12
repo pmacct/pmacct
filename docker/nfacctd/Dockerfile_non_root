@@ -5,9 +5,13 @@
 
 #This Dockerfile creates an image for nfacctd
 
-FROM pmacct-base:_build
+#The pmacct daemon is ran with a non-root user (required for being 
+#able to locally run the test-framework as a non-root user)
 
-# Move this permission stuff to the base image eventually
+FROM base:_build
+MAINTAINER pmacct Docker Doctors <docker-doctors (at) pmacct.net>
+
+# Set UID 1000 for the pmacct process
 RUN useradd -m -u 1000 -o -s /bin/bash pmacct_user
 USER pmacct_user
 

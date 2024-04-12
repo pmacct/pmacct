@@ -49,6 +49,9 @@ Build pmacct images (checkout to desired branch or commit first):
 tools/pmacct_build/build_docker_images.sh
 ```
 
+**HINT**: if you already locally compiled pmacct you need to clean up the repo from the build artifacts, otherwise building the container will fail.
+
+
 ## 2 - How To Run
 
 In order to run the tests locally you need to be in the 'test-framework' folder (which is the pytest root folder).
