@@ -125,7 +125,7 @@ NOTES:		* List of the aggregation primitives available to each specific pmacct d
 		  IPFIX. On the contrary mpls_label_stack does extract the full 3 bytes.
 		* mpls_vpn_rd primitive value can be sourced in multiple ways in case of
 		  IPFIX/NFv9. The current preference is: flow_to_rd.map > RD in IPFIX/NFv9
-		  data packet > RD in IPFIX/NFv9 option packets.
+		  data packets > RD in IPFIX/NFv9 option packets > vrfID in data packets.
 		* timestamp_start, timestamp_end and timestamp_arrival let pmacct act as a
 		  traffic logger up to the msec level (if reported by the capturing method).
 		  timestamp_start records NetFlow/IPFIX flow start time or observation;
