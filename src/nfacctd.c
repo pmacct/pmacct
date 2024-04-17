@@ -2066,6 +2066,18 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 
 	if (tee_dissect) goto finalize_opt_record;
 
+        /* Let's bake offsets and lengths if we have variable-length fields */
+        if (tpl->vlen) {
+          int ret;
+
+          ret = resolve_vlen_template(pkt, (flowsetlen - flowoff), tpl);
+          if (ret == ERR) {
+            Log(LOG_DEBUG, "DEBUG ( %s/%s ): Discarded NetFlow v9/IPFIX Options flowset (R: invalid len [%s:%u]).\n",
+              config.name, config.type, debug_agent_addr, SourceId);
+            break;
+          }
+        }
+
 	/* Is this option about sampling? */
         if (tpl->fld[NF9_FLOW_SAMPLER_ID].count ||
             tpl->fld[NF9_SAMPLING_INTERVAL].len[0] == 4 ||

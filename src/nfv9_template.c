@@ -1030,18 +1030,17 @@ static struct template_cache_entry *compose_opt_template(void *hdr, struct socka
   tpl->source_id = sid;
   tpl->template_id = tid;
   tpl->template_type = 1;
-  tpl->num = olen+slen;
+  tpl->num = olen + slen;
 
   log_template_header(tpl, agent, tpl_type, sid, version);
 
-  off = 0;
-  count = tpl->num;
+  count = off = 0;
   tpl_ptr = (u_char *) hdr;
   tpl_ptr += NfOptTplHdrV9Sz;
   off += NfOptTplHdrV9Sz;
   field = (struct template_field_v9 *)tpl_ptr;
 
-  while (count) {
+  while (count < (olen + slen)) {
     if (off >= len) {
       notify_malf_packet(LOG_INFO, "INFO", "insert_opt_template(): unable to read Options Template Flowset (malformed)",
                          agent, seq);
@@ -1078,9 +1077,29 @@ static struct template_cache_entry *compose_opt_template(void *hdr, struct socka
               config.name, type);
         }
       }
+
       tpl->fld[type].off[tpl->fld[type].count-1] = tpl->len;
-      tpl->fld[type].len[tpl->fld[type].count-1] = ntohs(field->len);
-      tpl->len += tpl->fld[type].len[tpl->fld[type].count-1];
+      tpl->fld[type].tpl_len[tpl->fld[type].count-1] = ntohs(field->len);
+
+      if (tpl->vlen) {
+	tpl->fld[type].off[tpl->fld[type].count-1] = 0;
+      }
+
+      if (tpl->fld[type].tpl_len[tpl->fld[type].count-1] == IPFIX_VARIABLE_LENGTH) {
+	tpl->fld[type].len[tpl->fld[type].count-1] = 0;
+	tpl->vlen = TRUE;
+	tpl->len = 0;
+      }
+      else {
+        tpl->fld[type].off[tpl->fld[type].count-1] = tpl->len;
+        tpl->fld[type].len[tpl->fld[type].count-1] = ntohs(field->len);
+	if (!tpl->vlen) {
+	  tpl->len += tpl->fld[type].len[tpl->fld[type].count-1];
+	}
+      }
+      tpl->list[count].ptr = &tpl->fld[type];
+      tpl->list[count].type = TPL_TYPE_LEGACY;
+      tpl->list[count].repeat = tpl->fld[type].count;
     }
     else {
       u_int8_t repeat_id = 0;
@@ -1096,20 +1115,26 @@ static struct template_cache_entry *compose_opt_template(void *hdr, struct socka
         ext_db_tpl->len = ext_db_tpl->tpl_len;
       }
 
-      if (count >= TPL_LIST_ENTRIES) {
-        notify_malf_packet(LOG_INFO, "INFO", "insert_opt_template(): unable to read Options Template (too long)",
-                           agent, seq);
-        xflow_status_table.tot_bad_datagrams++;
-        free(tpl);
-        return NULL;
+      if (tpl->vlen) {
+	ext_db_tpl->off = 0;
       }
 
+      if (ext_db_tpl->tpl_len == IPFIX_VARIABLE_LENGTH) {
+	ext_db_tpl->len = 0;
+	tpl->vlen = TRUE;
+	tpl->len = 0;
+      }
+      else {
+	ext_db_tpl->len = ext_db_tpl->tpl_len;
+	if (!tpl->vlen) {
+          tpl->len += ext_db_tpl->len;
+        }
+      }
       tpl->list[count].ptr = ext_db_tpl;
       tpl->list[count].type = TPL_TYPE_EXT_DB;
-      tpl->len += ext_db_tpl->len;
     }
 
-    count--;
+    count++;
     off += NfTplFieldV9Sz;
     if (ipfix_ebit) {
       field++; /* skip 32-bits ahead */

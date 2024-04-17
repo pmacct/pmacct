@@ -40,8 +40,9 @@
 #define TPL_EXT_DB_ENTRIES              8
 #define TPL_LIST_ENTRIES                256
 #define TPL_MAX_ELEM_REPEATS            3
-#define TPL_TYPE_LEGACY                 0
-#define TPL_TYPE_EXT_DB                 1
+#define TPL_TYPE_UNKNOWN		0
+#define TPL_TYPE_LEGACY                 1
+#define TPL_TYPE_EXT_DB                 2
 
 /* Flowset record types we care about */
 #define NF9_IN_BYTES                    1
