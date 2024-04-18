@@ -2026,7 +2026,49 @@ KEY:            nfacctd_account_options [GLOBAL, NFACCTD_ONLY]
 VALUES:         [ true | false ]
 DESC:		If set to true account for NetFlow/IPFIX option records. This will require define custom
 		primitives via aggregate_primitives. pre_tag_map offers sample_type value of 'option' in
-		order to split option data records from flow or event data ones.
+		order to split option data records from flow or event data ones. It is recommended, then,
+		to instantiate one plugin per wanted tuple of options. For example, to log VRF ID to VRF
+		Name and IfIndex to Interface Name mappings:
+
+		== pretag.map ==
+		set_tag=100     sample_type=option
+		set_tag=200     sample_type=flow
+
+		== primitives.lst ==
+		name=vrf_id	field_type=234	len=4		semantics=u_int
+		name=vrf_name	field_type=236	len=vlen	semantics=str
+		name=if_id	field_type=10	len=4		semantics=u_int
+		name=if_name	field_type=82	len=vlen	semantics=str
+
+		== nfacctd.conf ==
+		aggregate_primitives: primitives.lst
+		pre_tag_map: pretag.map
+		!
+		plugins: print[data], print[option_vrf], print[option_if]
+		!
+		pre_tag_filter[option_vrf]: 100
+		aggregate[option_vrf]: peer_src_ip, vrf_id, vrf_name
+		print_output[option_vrf]: json
+		print_output_file[option_vrf]: /path/to/option_vrf.json
+		!
+		pre_tag_filter[option_if]: 100
+		aggregate[option_vrf]: peer_src_ip, if_id, if_name
+		print_output[option_vrf]: json
+		print_output_file[option_vrf]: /path/to/option_if.json
+		!
+		pre_tag_filter[data]: 200
+		aggregate[data]: peer_src_ip, .., mpls_vpn_rd, .. iface_in, ..
+		print_output[data]: json
+		print_output_file[data]: /path/to/data.json
+
+		Optionally, in pre_tag_map, different tags may be issued for different options by
+		relying on the flowset ID (for example, flowset 256 is for VRF ID -> VRF Name
+		mapping and flowset 257 is for ifIndex -> Interface Name mapping), ie.:
+
+		set_tag=100     sample_type=option	flowset_id=256
+		set_tag=101     sample_type=option	flowset_id=257
+		set_tag=200     sample_type=flow
+
 DEFAULT:        false
 
 KEY:		[ nfacctd_as | sfacctd_as | pmacctd_as | uacctd_as ] [GLOBAL]
