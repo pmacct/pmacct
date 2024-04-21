@@ -17,6 +17,7 @@ env:
   BUILD_DOCKER_TAG_ROCKYLINUX_8: builder_rockylinux8
   BUILD_DOCKER_FILE_ROCKYLINUX_9: ci/Dockerfile-rockylinux-9-for-pmacct
   BUILD_DOCKER_TAG_ROCKYLINUX_9: builder_rockylinux9
+  DAEMONS: "pmacctd nfacctd sfacctd uacctd pmbgpd pmbmpd pmtelemetryd"
 
 jobs:
 
@@ -29,7 +30,7 @@ jobs:
         with:
           path: pmacct
 
-      - name: Build docker image for Ubuntu Focal 
+      - name: Build docker image for Ubuntu Focal
         run: |
           cd pmacct
           git config --global --add safe.directory $GITHUB_WORKSPACE
@@ -68,7 +69,7 @@ jobs:
       - name: Artifact docker image
         uses: actions/upload-artifact@v2.2.2
         with:
-          name: builder_ubuntu_jammy 
+          name: builder_ubuntu_jammy
           retention-days: 1
           path: |
             /tmp/docker
@@ -211,16 +212,12 @@ jobs:
           echo "Building the base container..."
           docker build --build-arg NUM_WORKERS=$CI_NUM_WORKERS --build-arg DEPS_DONT_CHECK_CERTIFICATE=$CI_DEPS_DONT_CHECK_CERTIFICATE -f docker/base/Dockerfile -t base:_build .
           echo "Building daemon containers..."
-          docker build -f docker/pmacctd/Dockerfile -t pmacctd:_build .
-          docker build -f docker/nfacctd/Dockerfile -t nfacctd:_build .
-          docker build -f docker/sfacctd/Dockerfile -t sfacctd:_build .
-          docker build -f docker/uacctd/Dockerfile -t uacctd:_build .
-          docker build -f docker/pmbgpd/Dockerfile -t pmbgpd:_build .
-          docker build -f docker/pmbmpd/Dockerfile -t pmbmpd:_build .
-          docker build -f docker/pmtelemetryd/Dockerfile -t pmtelemetryd:_build .
+          for DAEMON in ${DAEMONS}; do
+            docker build -f docker/${DAEMON}/Dockerfile -t ${DAEMON}:_build .
+          done
           echo "Saving images as artifacts..."
           mkdir -p /tmp/docker/
-          docker save -o /tmp/docker/pmacct_docker_images.tar base:_build pmacctd:_build nfacctd:_build sfacctd:_build uacctd:_build pmbgpd:_build pmbmpd:_build pmtelemetryd:_build
+          docker save -o /tmp/docker/pmacct_docker_images.tar base:_build $(for DAEMON in ${DAEMONS};do echo "${DAEMON}:_build "; done)
 
       - name: Docker (compose) smoke test
         run: |
@@ -274,71 +271,47 @@ jobs:
           echo "PMACCT_VERSION=$PMACCT_VERSION"
           echo "Uploading to dockerhub ...";
           echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin;
+
           #Always push bleeding-edge when pushed to master
           GIT_IS_BLEEDING_EDGE=$( (git branch --all --contains HEAD | grep master ) || echo "")
           echo "GIT_IS_BLEEDING_EDGE=$GIT_IS_BLEEDING_EDGE"
           if [ "$GIT_IS_BLEEDING_EDGE" != "" ]; then
-            echo "Uploading 'bleeding-edge' tag for `git describe`...";
-            docker tag base:_build ${DOCKER_USERNAME}/base:bleeding-edge;
-            docker push ${DOCKER_USERNAME}/base:bleeding-edge;
-            docker tag pmacctd:_build ${DOCKER_USERNAME}/pmacctd:bleeding-edge;
-            docker push ${DOCKER_USERNAME}/pmacctd:bleeding-edge;
-            docker tag nfacctd:_build ${DOCKER_USERNAME}/nfacctd:bleeding-edge;
-            docker push ${DOCKER_USERNAME}/nfacctd:bleeding-edge;
-            docker tag sfacctd:_build ${DOCKER_USERNAME}/sfacctd:bleeding-edge;
-            docker push ${DOCKER_USERNAME}/sfacctd:bleeding-edge;
-            docker tag uacctd:_build ${DOCKER_USERNAME}/uacctd:bleeding-edge;
-            docker push ${DOCKER_USERNAME}/uacctd:bleeding-edge;
-            docker tag pmbgpd:_build ${DOCKER_USERNAME}/pmbgpd:bleeding-edge;
-            docker push ${DOCKER_USERNAME}/pmbgpd:bleeding-edge;
-            docker tag pmbmpd:_build ${DOCKER_USERNAME}/pmbmpd:bleeding-edge;
-            docker push ${DOCKER_USERNAME}/pmbmpd:bleeding-edge;
-            docker tag pmtelemetryd:_build ${DOCKER_USERNAME}/pmtelemetryd:bleeding-edge;
-            docker push ${DOCKER_USERNAME}/pmtelemetryd:bleeding-edge;
+            echo "Tagging and uploading 'bleeding-edge'..."
+          else
+            echo "NOT uploading 'bleeding-edge'... Not HEAD of master"
           fi
+
           #Upload vX.Y.Z only of it's a release commit
           GIT_RELEASE_TAG=$(git describe --exact-match --match "v*" || echo "")
-          echo "GIT_RELEASE_TAG=$GIT_RELEASE_TAG"
           if [ "$GIT_RELEASE_TAG" != "" ]; then
-            echo "Uploading '$PMACCT_VERSION' tag for `git describe`...";
-            docker tag base:_build ${DOCKER_USERNAME}/base:${PMACCT_VERSION};
-            docker push ${DOCKER_USERNAME}/base:${PMACCT_VERSION};
-            docker tag pmacctd:_build ${DOCKER_USERNAME}/pmacctd:${PMACCT_VERSION};
-            docker push ${DOCKER_USERNAME}/pmacctd:${PMACCT_VERSION};
-            docker tag nfacctd:_build ${DOCKER_USERNAME}/nfacctd:${PMACCT_VERSION};
-            docker push ${DOCKER_USERNAME}/nfacctd:${PMACCT_VERSION};
-            docker tag sfacctd:_build ${DOCKER_USERNAME}/sfacctd:${PMACCT_VERSION};
-            docker push ${DOCKER_USERNAME}/sfacctd:${PMACCT_VERSION};
-            docker tag uacctd:_build ${DOCKER_USERNAME}/uacctd:${PMACCT_VERSION};
-            docker push ${DOCKER_USERNAME}/uacctd:${PMACCT_VERSION};
-            docker tag pmbgpd:_build ${DOCKER_USERNAME}/pmbgpd:${PMACCT_VERSION};
-            docker push ${DOCKER_USERNAME}/pmbgpd:${PMACCT_VERSION};
-            docker tag pmbmpd:_build ${DOCKER_USERNAME}/pmbmpd:${PMACCT_VERSION};
-            docker push ${DOCKER_USERNAME}/pmbmpd:${PMACCT_VERSION};
-            docker tag pmtelemetryd:_build ${DOCKER_USERNAME}/pmtelemetryd:${PMACCT_VERSION};
-            docker push ${DOCKER_USERNAME}/pmtelemetryd:${PMACCT_VERSION};
-          fi
-          #Upload "latest" if the release version is the highest
-          if [ "$GIT_RELEASE_TAG" != "" ]; then
+            echo "GIT_RELEASE_TAG=$GIT_RELEASE_TAG"
+            echo "Tagging and uploading release '$GIT_RELEASE_TAG'..."
+
+            #Latest tag
             GIT_LAST_TAG=$(git tag --sort=v:refname | tail -n 1);
             echo "GIT_LAST_TAG=$GIT_LAST_TAG"
             if [ "$GIT_RELEASE_TAG" == "$GIT_LAST_TAG" ]; then
-              echo "Uploading 'latest' tag for `git describe`...";
-              docker tag base:_build ${DOCKER_USERNAME}/base:latest;
-              docker push ${DOCKER_USERNAME}/base:latest;
-              docker tag pmacctd:_build ${DOCKER_USERNAME}/pmacctd:latest;
-              docker push ${DOCKER_USERNAME}/pmacctd:latest;
-              docker tag nfacctd:_build ${DOCKER_USERNAME}/nfacctd:latest;
-              docker push ${DOCKER_USERNAME}/nfacctd:latest;
-              docker tag sfacctd:_build ${DOCKER_USERNAME}/sfacctd:latest;
-              docker push ${DOCKER_USERNAME}/sfacctd:latest;
-              docker tag uacctd:_build ${DOCKER_USERNAME}/uacctd:latest;
-              docker push ${DOCKER_USERNAME}/uacctd:latest;
-              docker tag pmbgpd:_build ${DOCKER_USERNAME}/pmbgpd:latest;
-              docker push ${DOCKER_USERNAME}/pmbgpd:latest;
-              docker tag pmbmpd:_build ${DOCKER_USERNAME}/pmbmpd:latest;
-              docker push ${DOCKER_USERNAME}/pmbmpd:latest;
-              docker tag pmtelemetryd:_build ${DOCKER_USERNAME}/pmtelemetryd:latest;
-              docker push ${DOCKER_USERNAME}/pmtelemetryd:latest;
+              echo "Tagging and uploading 'latest'..."
+            else
+              echo "NOT uploading 'latest'..."
             fi
+          else
+            echo "NOT uploading '$GIT_RELEASE_TAG' nor 'latest'. Not a release!"
           fi
+
+          #Let's do it!
+          EXT_DAEMONS="base ${DAEMONS}"
+          for DAEMON in ${EXT_DAEMONS}; do
+            if [ "$GIT_IS_BLEEDING_EDGE" != "" ]; then
+              docker tag ${DAEMON}:_build ${DOCKER_USERNAME}/${DAEMON}:bleeding-edge;
+              docker push ${DOCKER_USERNAME}/${DAEMON}:bleeding-edge;
+            fi
+            if [ "$GIT_RELEASE_TAG" != "" ]; then
+              docker tag ${DAEMON}:_build ${DOCKER_USERNAME}/${DAEMON}:${PMACCT_VERSION};
+              docker push ${DOCKER_USERNAME}/${DAEMON}:${PMACCT_VERSION};
+              if [ "$GIT_RELEASE_TAG" == "$GIT_LAST_TAG" ]; then
+                docker tag ${DAEMON}:_build ${DOCKER_USERNAME}/${DAEMON}:latest;
+                docker push ${DOCKER_USERNAME}/${DAEMON}:latest;
+              fi
+            fi
+          done
