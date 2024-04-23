@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -326,7 +326,6 @@ void decodeIPV4(SFSample *sample)
 
 void decodeIPV6(SFSample *sample)
 {
-  u_int32_t label;
   u_int32_t nextHeader;
   u_char *end = sample->header + sample->headerLen;
 
@@ -343,13 +342,13 @@ void decodeIPV6(SFSample *sample)
     }
 
     // get the tos (priority)
-    sample->dcd_ipTos = *ptr++ & 15;
-    // 24-bit label
-    label = *ptr++;
-    label <<= 8;
-    label += *ptr++;
-    label <<= 8;
-    label += *ptr++;
+    sample->dcd_ipTos = ((ptr[0] & 15) << 4) + (ptr[1] >> 4);
+    ptr++;
+
+    /* 20-bit label */
+    sample->dcd_flowLabel = ((ptr[0] & 15) << 16) + (ptr[1] << 8) + ptr[2];
+    ptr += 3;
+
     // payload
     ptr += 2;
     // if payload is zero, that implies a jumbo payload

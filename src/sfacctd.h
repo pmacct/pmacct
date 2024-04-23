@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -107,6 +107,7 @@ typedef struct _SFSample {
   u_int32_t dcd_sport;
   u_int32_t dcd_dport;
   u_int32_t dcd_tcpFlags;
+  u_int32_t dcd_flowLabel;
   u_int32_t ip_fragmentOffset;
   u_int32_t udp_pduLen;
 
