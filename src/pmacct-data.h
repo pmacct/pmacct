@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -113,7 +113,7 @@ static const struct _primitives_matrix_struct _primitives_matrix[] = {
   {"MISC", 1, 1, 1, 1, 0, 0, 0, ""}, 
   {"class", 1, 1, 1, 1, 0, 0, 0, "L7 protocol classification"},
   {"flows", 0, 0, 1, 0, 0, 0, 0, "IP flows"},
-  {"flow_label", 0, 0, 1, 0, 0, 0, 0, "IPv6 flow label"},
+  {"flow_label", 0, 0, 1, 1, 0, 0, 0, "IPv6 flow label"},
   {"src_host_country", 1, 1, 1, 1, 0, 0, 0, "Source IP address GeoIP resolution: country"},
   {"dst_host_country", 1, 1, 1, 1, 0, 0, 0, "Destination IP address GeoIP resolution: country"},
   {"src_host_pocode", 1, 1, 1, 1, 0, 0, 0, "Source IP address GeoIP resolution: postal code"},

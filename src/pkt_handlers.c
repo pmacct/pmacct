@@ -664,8 +664,7 @@ void evaluate_packet_handlers()
         channels_list[index].phandler[primitives] = NF_flow_label_handler;
       }
       else if (config.acct_type == ACCT_SF) {
-        warn_unsupported_packet_handler(COUNT_INT_FLOW_LABEL, ACCT_SF);
-        primitives--;
+        channels_list[index].phandler[primitives] = SF_flow_label_handler;
       }
       primitives++;
     }
@@ -5768,6 +5767,14 @@ void SF_ip_proto_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   SFSample *sample = (SFSample *) pptrs->f_data;
 
   pdata->primitives.proto = sample->dcd_ipProtocol; 
+}
+
+void SF_flow_label_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_data *pdata = (struct pkt_data *) *data;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  pdata->primitives.flow_label = sample->dcd_flowLabel;
 }
 
 void SF_tcp_flags_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
