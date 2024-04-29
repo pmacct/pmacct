@@ -3762,7 +3762,7 @@ void NF_mpls_vpn_rd_from_map (struct packet_ptrs *pptrs)
 {
   /* Set RD_ORIGIN_MAP flag if RD was set with flow_to_rd_map */
   if (config.nfacctd_flow_to_rd_map) {
-    if (((rd_t *)&pptrs->bitr)->val) bgp_rd_origin_set((rd_t *)&pptrs->bitr, RD_ORIGIN_MAP);
+    if (pptrs->have_tag) bgp_rd_origin_set((rd_t *)&pptrs->bitr, RD_ORIGIN_MAP);
   }
   /* Clear pptrs->bitr to be safe side if f2rdmap is not used */
   else memset(&pptrs->bitr, 0, 8); 
@@ -3778,7 +3778,7 @@ void NF_mpls_vpn_rd_from_ie90(struct packet_ptrs *pptrs)
   case 10:
   case 9:
     if (tpl->fld[NF9_MPLS_VPN_RD].count) {
-      if (!((rd_t *)&pptrs->bitr)->val) { /* RD was not set with flow_to_rd_map */
+      if (!pptrs->bitr) { /* RD was not set with flow_to_rd_map */
 
         memcpy(&pptrs->bitr, pptrs->f_data+tpl->fld[NF9_MPLS_VPN_RD].off[0],
              MIN(tpl->fld[NF9_MPLS_VPN_RD].len[0], 8));
@@ -3813,8 +3813,7 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
               MIN(tpl->fld[NF9_DIRECTION].len[0], 1));
     }
     
-    if (!((rd_t *)&pptrs->bitr)->val) { /* RD was not set with flow_to_rd_map or from IPFIX/NFv9 data */
-
+    if (!pptrs->bitr) { /* RD was not set with flow_to_rd_map or from IPFIX/NFv9 data */
       if (tpl->fld[NF9_INGRESS_VRFID].count) {
         memcpy(&ingress_vrfid, pptrs->f_data+tpl->fld[NF9_INGRESS_VRFID].off[0], 
                 MIN(tpl->fld[NF9_INGRESS_VRFID].len[0], 4));
@@ -3825,7 +3824,7 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
                 MIN(tpl->fld[NF9_EGRESS_VRFID].len[0], 4));
         egress_vrfid = ntohl(egress_vrfid);
       }
-  }
+    }
 
     if (ingress_vrfid && (!direction /* 0 = ingress */ || !egress_vrfid)) {
 

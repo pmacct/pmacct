@@ -538,7 +538,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                         config.name, config.type, filename, tot_lines);
               }
               else if (acct_type == MAP_FLOW_TO_RD) {
-                if (!err && tmp.e[tmp.num].id && tmp.e[tmp.num].key.agent_ip.a.family) {
+                if (!err && tmp.e[tmp.num].key.agent_ip.a.family) {
                   int j;
 
                   for (j = 0; tmp.e[tmp.num].func[j]; j++);
