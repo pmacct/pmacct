@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -107,11 +107,19 @@ void bgp_srcdst_lookup(struct packet_ptrs *pptrs, int type, struct bgp_lookup_in
 
     /* Get RD for correlation */
     if (pptrs->bitr) {
-      safi = SAFI_MPLS_VPN;
-      memcpy(&rd, &pptrs->bitr, sizeof(rd));
+      rd_t *rd_ptr = (rd_t *) &pptrs->bitr;
+ 
+      if (!rd_ptr->as && !rd_ptr->val && bgp_rd_origin_get(rd_ptr->type) == RD_ORIGIN_MAP) {
+	safi = SAFI_UNICAST;
+	memset(&rd, 0, sizeof(rd));
+      }
+      else {
+	safi = SAFI_MPLS_VPN;
+	memcpy(&rd, &pptrs->bitr, sizeof(rd));
 
-      if (type <= RD_ORIGIN_FUNC_TYPE_MAX) {
-	bgp_rd_origin_set(&rd, lookup_type_to_bgp_rd_origin[type]);
+	if (type <= RD_ORIGIN_FUNC_TYPE_MAX) {
+	  bgp_rd_origin_set(&rd, lookup_type_to_bgp_rd_origin[type]);
+	}
       }
     }
 
