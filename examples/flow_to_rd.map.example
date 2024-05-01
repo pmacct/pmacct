@@ -54,3 +54,8 @@ id=1:192.168.1.1:1	ip=192.168.1.1          in=100
 ! to rfc4364: <IPv4 Address>:<value>
 !
 id=2:4200000000:1	ip=192.168.1.1          in=100
+!
+! Maps the router 10.0.0.1, that is, all interfaces belonging to such
+! router to Global Routing Table
+!
+id=0:0:0		ip=10.0.0.1
