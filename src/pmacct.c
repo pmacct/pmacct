@@ -3600,6 +3600,7 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3, u_int8_t
   if (wtc & COUNT_MPLS_VPN_RD) {
     pmc_bgp_rd2str(rd_str, &pbgp->mpls_vpn_rd);
     json_object_set_new_nocheck(obj, "mpls_vpn_rd", json_string(rd_str));
+    json_object_set_new_nocheck(obj, "mpls_vpn_rd_origin", json_string(bgp_rd_origin_print(pbgp->mpls_vpn_rd.type)));
   }
 
   if (wtc_2 & COUNT_MPLS_PW_ID) json_object_set_new_nocheck(obj, "mpls_pw_id", json_integer((json_int_t)pbgp->mpls_pw_id));

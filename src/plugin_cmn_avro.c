@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -253,6 +253,7 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_in
 
   if (wtc & COUNT_MPLS_VPN_RD) {
     avro_schema_record_field_append(schema, "mpls_vpn_rd", avro_schema_string());
+    avro_schema_record_field_append(schema, "mpls_vpn_rd_origin", avro_schema_string());
   }
 
   if (wtc_2 & COUNT_MPLS_PW_ID) {
@@ -968,6 +969,8 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wt
     bgp_rd2str(rd_str, &pbgp->mpls_vpn_rd);
     pm_avro_check(avro_value_get_by_name(&value, "mpls_vpn_rd", &field, NULL));
     pm_avro_check(avro_value_set_string(&field, rd_str));
+    pm_avro_check(avro_value_get_by_name(&value, "mpls_vpn_rd_origin", &field, NULL));
+    pm_avro_check(avro_value_set_string(&field, bgp_rd_origin_print(pbgp->mpls_vpn_rd.type)));
   }
 
   if (wtc_2 & COUNT_MPLS_PW_ID) {

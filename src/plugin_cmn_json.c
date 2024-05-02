@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -921,6 +921,7 @@ void compose_json_mpls_vpn_rd(json_t *obj, struct chained_cache *cc)
 
   bgp_rd2str(rd_str, &cc->pbgp->mpls_vpn_rd);
   json_object_set_new_nocheck(obj, "mpls_vpn_rd", json_string(rd_str));
+  json_object_set_new_nocheck(obj, "mpls_vpn_rd_origin", json_string(bgp_rd_origin_print(cc->pbgp->mpls_vpn_rd.type)));
 }
 
 void compose_json_mpls_pw_id(json_t *obj, struct chained_cache *cc)
