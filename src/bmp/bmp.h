@@ -88,6 +88,7 @@ struct bmp_chars {
   u_int8_t is_filtered;
   u_int8_t is_out;
   u_int8_t is_loc;
+  u_int8_t rib_type; /* new replacing is_in, is_out, is_loc, is_post */
   rd_t rd;
 
   /* non-key */
@@ -362,6 +363,24 @@ static const char __attribute__((unused)) *bmp_rm_pm_reason_types[] = {
   "not preferred for nexthop-priority",
   "not preferred for process ID",
   "no reason code"
+};
+
+/* BMP RIB types */
+#define BMP_RIB_UNKNOWN			0
+#define BMP_RIB_ADJ_RIB_IN_PRE		1
+#define BMP_RIB_ADJ_RIB_IN_POST		2
+#define BMP_RIB_LOC_RIB			3
+#define BMP_RIB_ADJ_RIB_OUT_PRE		4
+#define BMP_RIB_ADJ_RIB_OUT_POST	5
+#define BMP_RIB_MAX			5 /* set to the highest BMP_RIB_* value */
+
+static const char __attribute__((unused)) *bmp_rib_types[] = {
+  "Unknown",
+  "Adj-Rib-In Pre-Policy",
+  "Adj-Rib-In Post-Policy",
+  "Loc-Rib",
+  "Adj-Rib-Out Pre-Policy",
+  "Adj-Rib-Out Post-Policy"
 };
 
 /* more includes */

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -518,6 +518,47 @@ char *bmp_term_reason_print(u_int16_t in)
   }
   else {
     out = malloc(5 /* value len */ + 1 /* null */);
+    sprintf(out, "%u", in);
+  }
+
+  return out;
+}
+
+void bmp_rib_type_set(struct bmp_chars *chars)
+{
+  if (chars->is_loc) {
+    chars->rib_type = BMP_RIB_LOC_RIB; 
+  }
+  else if (chars->is_out) {
+    if (chars->is_post) {
+      chars->rib_type = BMP_RIB_ADJ_RIB_OUT_POST;
+    }
+    else {
+      chars->rib_type = BMP_RIB_ADJ_RIB_OUT_PRE;
+    }
+  }
+  else {
+    if (chars->is_post) {
+      chars->rib_type = BMP_RIB_ADJ_RIB_IN_POST;
+    }
+    else {
+      chars->rib_type = BMP_RIB_ADJ_RIB_IN_PRE;
+    }
+  }
+}
+
+char *bmp_rib_type_print(u_int8_t in)
+{
+  char *out = NULL;
+  int value_len;
+
+  if (in <= BMP_RIB_MAX) {
+    value_len = strlen(bmp_rib_types[in]);
+    out = malloc(value_len + 1 /* null */);
+    sprintf(out, "%s", bmp_rib_types[in]);
+  }
+  else {
+    out = malloc(3 /* value len */ + 1 /* null */);
     sprintf(out, "%u", in);
   }
 

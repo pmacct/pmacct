@@ -319,6 +319,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
   bmp_peer_hdr_get_rd(bph, &bdata.chars.rd);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
+  bmp_rib_type_set(&bdata.chars);
 
   if (!bdata.family) return;
 
@@ -542,6 +543,7 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
   bmp_peer_hdr_get_rd(bph, &bdata.chars.rd);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
+  bmp_rib_type_set(&bdata.chars);
 
   if (!bdata.family) return;
 
@@ -713,6 +715,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
   bmp_peer_hdr_get_rd(bph, &bdata.chars.rd);
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
+  bmp_rib_type_set(&bdata.chars);
 
   if (!bdata.family) return;
 
@@ -923,6 +926,7 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
   bmp_peer_hdr_get_tstamp(bph, &bdata.tstamp);
   bmp_peer_hdr_get_peer_asn(bph, &bdata.peer_asn);
   bmp_stats_hdr_get_count(bsh, &count);
+  bmp_rib_type_set(&bdata.chars);
 
   if (!bdata.family) return;
 
