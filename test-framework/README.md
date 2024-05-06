@@ -58,12 +58,12 @@ In order to run the tests locally you need to be in the 'test-framework' folder 
 
 To run one or more test cases:
 ```shell
-./runtest.sh  [--dry] \
-              [--exitfirst] \
-              [--loglevel=<log level>] \
-              [--mark=<expression>] \
-              [--key=<expression>] \
-              [<test-case number or wildcard>[:<scenario or wildcard>] ... ]
+sudo env PATH="$PATH" ./runtest.sh  [--dry] \
+                                    [--exitfirst] \
+                                    [--loglevel=<log level>] \
+                                    [--mark=<expression>] \
+                                    [--key=<expression>] \
+                                    [<test-case number or wildcard>[:<scenario or wildcard>] ... ]
 
 Examples:
 ./runtest.sh 202                              # run test 202[all scenarios]"
