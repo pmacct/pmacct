@@ -66,7 +66,7 @@ def main(consumers):
     assert th.wait_and_check_regex_sequence_in_pmacct_log([loglines[1], loglines[2]], 10, 2, 'nfacctd-00')
 
     # Compare BMP Init Message (timestamp is not from packets and cannot be matched)
-    th.set_ignored_fields(['timestamp', 'bmp_router_port', 'timestamp_arrival', 'writer_id'])
+    th.set_ignored_fields(['seq', 'timestamp', 'bmp_router_port', 'timestamp_arrival', 'writer_id'])
     assert th.read_and_compare_messages('daisy.bmp', 'bmp-00')
 
     # Compare all other received messages to reference file output-bgp-01.json
