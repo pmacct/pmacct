@@ -32,10 +32,100 @@ Containers are published with the following tags:
 
 ## How to use them (docker/docker-compose only)
 
+Docker:
 ```
  ~# docker pull pmacct/pmacctd:latest
  ~# docker run -v /path/to/pmacctd.conf:/etc/pmacct/pmacctd.conf pmacct/pmacctd
 ```
+
+Docker-compose example configuration/usage:
+
+Create `docker-compose.yml` file with container specifications:
+
+```yaml
+version: '3'
+
+services:
+  sflow-collector1:
+    image: pmacct/sfacctd:bleeding-edge
+    init: true
+    container_name: sflow-collector
+    restart: always
+    ports:
+      - "6343:6343/udp"
+    volumes:
+      # Map local configuration file
+      - ./configs/sfacctd.conf:/etc/pmacct/sfacctd.conf:ro
+      # Folder to store data if needed to keep it persistent
+      - ./data:/root/data
+    environment:
+      - LC_ALL="en_US.UTF-8"
+      - LANG="en_US.UTF-8"
+      - LANGUAGE="en_US.UTF-8"
+    networks:
+      vpcbr:
+        ipv4_address: 10.69.69.100
+
+  nflow-collector:
+    image: pmacct/nfacctd:bleeding-edge
+    init: true
+    container_name: nflow-collector
+    restart: always
+    ports:
+      - "2100:2100/udp"
+    volumes:
+      # Map local configuration file
+      - ./nfacctd.conf:/etc/pmacct/nfacctd.conf:ro
+      # Folder to store data if needed to keep it persistent
+      - ./data:/root/data
+    environment:
+      - LC_ALL="en_US.UTF-8"
+      - LANG="en_US.UTF-8"
+      - LANGUAGE="en_US.UTF-8"
+    networks:
+      vpcbr:
+        ipv4_address: 10.69.69.150
+
+networks:
+  vpcbr:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 10.69.69.0/24
+         gateway: 10.69.69.1
+```
+
+## Commands:
+
+- **Bring containers up in the background:**
+  ```bash
+  docker-compose -f docker-compose.yml up -d
+  ```
+
+- **Bring containers up in the background:**
+  ```bash
+  docker-compose -f docker-compose.yml up -d
+  ```
+
+- **Bring containers up attached (good for`troubleshooting):**
+  ```bash
+  docker-compose -f docker-compose.yml up -d
+  ```
+
+- **Bring containers down:**
+  ```bash
+  docker-compose -f docker-compose.yml down
+  ```
+
+- **Pull new images**
+  ```bash
+  docker-compose -f docker-compose.yml pull
+  ```
+
+- **Tail container logs:**
+  ```bash
+  docker-compose logs -f --tail 100
+  ```
 
 To use another daemon, e.g. `nfacctd`, just replace `pmacct/pmacctd` with `pmacct/nfacctd` in both commands.
 
