@@ -18,7 +18,7 @@ DOCUMENTATION
 
 # DOCKER IMAGES
 
-Official pmacct docker images can be found in [docker hub](https://hub.docker.com/r/pmacct/). To use them, simply (e.g. `sfacctd`):
+Official pmacct docker images can be found in [docker hub](https://hub.docker.com/u/pmacct). To use them, simply (e.g. `sfacctd`):
 
 ```bash
  ~# docker pull pmacct/sfacctd:latest
@@ -39,10 +39,10 @@ Build GitHub code:
 ```bash
  ~# git clone https://github.com/pmacct/pmacct.git
  ~# cd pmacct
- ~#  ./autogen.sh
+ ~# ./autogen.sh
  ~# ./configure #check-out available configure knobs via ./configure --help
- ~#  make
- ~#  make install #with super-user permission
+ ~# make
+ ~# make install #with super-user permission
 ```
 
 # RELICENSE INITIATIVE
