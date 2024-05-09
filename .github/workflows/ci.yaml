@@ -9,131 +9,47 @@ on:
 
 #Global vars
 env:
-  BUILD_DOCKER_FILE_UBUNTU_FOCAL: ci/Dockerfile-ubuntu-focal-for-pmacct
-  BUILD_DOCKER_TAG_UBUNTU_FOCAL: builder_ubuntu_focal
-  BUILD_DOCKER_FILE_UBUNTU_JAMMY: ci/Dockerfile-ubuntu-jammy-for-pmacct
-  BUILD_DOCKER_TAG_UBUNTU_JAMMY: builder_ubuntu_jammy
-  BUILD_DOCKER_FILE_ROCKYLINUX_8: ci/Dockerfile-rockylinux-8-for-pmacct
-  BUILD_DOCKER_TAG_ROCKYLINUX_8: builder_rockylinux8
-  BUILD_DOCKER_FILE_ROCKYLINUX_9: ci/Dockerfile-rockylinux-9-for-pmacct
-  BUILD_DOCKER_TAG_ROCKYLINUX_9: builder_rockylinux9
   DAEMONS: "pmacctd nfacctd sfacctd uacctd pmbgpd pmbmpd pmtelemetryd"
-
 jobs:
-
   ### Step 1: build container images
-  builder-ubuntu-focal-docker:
+  builder-docker:
     runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        builder-name: [ ubuntu-focal, ubuntu-jammy, rockylinux-8, rockylinux-9 ]
     steps:
       - name: Checkout pmacct
         uses: actions/checkout@v2
         with:
           path: pmacct
 
-      - name: Build docker image for Ubuntu Focal
+      - name: Build docker image for ${{ matrix.builder-name }}
         run: |
           cd pmacct
           git config --global --add safe.directory $GITHUB_WORKSPACE
           git config --global --add safe.directory $GITHUB_WORKSPACE/src/external_libs/libcdada
           git rev-parse HEAD
-          docker build -f $BUILD_DOCKER_FILE_UBUNTU_FOCAL -t $BUILD_DOCKER_TAG_UBUNTU_FOCAL .
+          docker build -f ci/Dockerfile-${{ matrix.builder-name }}-for-pmacct -t builder_${{ matrix.builder-name }} .
           mkdir -p /tmp/docker/
-          docker save -o /tmp/docker/$BUILD_DOCKER_TAG_UBUNTU_FOCAL.tar $BUILD_DOCKER_TAG_UBUNTU_FOCAL
+          docker save -o /tmp/docker/builder_${{ matrix.builder-name }}.tar builder_${{ matrix.builder-name }}
 
       - name: Artifact docker image
         uses: actions/upload-artifact@v2.2.2
         with:
-          name: builder_ubuntu_focal
-          retention-days: 1
-          path: |
-            /tmp/docker
-
-  builder-ubuntu-jammy-docker:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout pmacct
-        uses: actions/checkout@v2
-        with:
-          path: pmacct
-
-      - name: Build docker image for Ubuntu Jammy
-        run: |
-          cd pmacct
-          git config --global --add safe.directory $GITHUB_WORKSPACE
-          git config --global --add safe.directory $GITHUB_WORKSPACE/src/external_libs/libcdada
-          git rev-parse HEAD
-          docker build -f $BUILD_DOCKER_FILE_UBUNTU_JAMMY -t $BUILD_DOCKER_TAG_UBUNTU_JAMMY .
-          mkdir -p /tmp/docker/
-          docker save -o /tmp/docker/$BUILD_DOCKER_TAG_UBUNTU_JAMMY.tar $BUILD_DOCKER_TAG_UBUNTU_JAMMY
-
-      - name: Artifact docker image
-        uses: actions/upload-artifact@v2.2.2
-        with:
-          name: builder_ubuntu_jammy
-          retention-days: 1
-          path: |
-            /tmp/docker
-
-  builder-rockylinux8-docker:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout pmacct
-        uses: actions/checkout@v2
-        with:
-          path: pmacct
-
-      - name: Build docker image for Rocky Linux 8
-        run: |
-          cd pmacct
-          git config --global --add safe.directory $GITHUB_WORKSPACE
-          git config --global --add safe.directory $GITHUB_WORKSPACE/src/external_libs/libcdada
-          git rev-parse HEAD
-          docker build -f $BUILD_DOCKER_FILE_ROCKYLINUX_8 -t $BUILD_DOCKER_TAG_ROCKYLINUX_8 .
-          mkdir -p /tmp/docker/
-          docker save -o /tmp/docker/builder_rockylinux8.tar $BUILD_DOCKER_TAG_ROCKYLINUX_8
-
-      - name: Artifact docker image
-        uses: actions/upload-artifact@v2.2.2
-        with:
-          name: builder_rockylinux8
-          retention-days: 1
-          path: |
-            /tmp/docker
-
-  builder-rockylinux9-docker:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout pmacct
-        uses: actions/checkout@v2
-        with:
-          path: pmacct
-
-      - name: Build docker image for Rocky Linux 9
-        run: |
-          cd pmacct
-          git config --global --add safe.directory $GITHUB_WORKSPACE
-          git config --global --add safe.directory $GITHUB_WORKSPACE/src/external_libs/libcdada
-          git rev-parse HEAD
-          docker build -f $BUILD_DOCKER_FILE_ROCKYLINUX_9 -t $BUILD_DOCKER_TAG_ROCKYLINUX_9 .
-          mkdir -p /tmp/docker/
-          docker save -o /tmp/docker/builder_rockylinux9.tar $BUILD_DOCKER_TAG_ROCKYLINUX_9
-
-      - name: Artifact docker image
-        uses: actions/upload-artifact@v2.2.2
-        with:
-          name: builder_rockylinux9
+          name: builder_${{ matrix.builder-name }}
           retention-days: 1
           path: |
             /tmp/docker
 
   ### Step 2: permutations
   build-and-test:
-    needs: [builder-ubuntu-focal-docker, builder-ubuntu-jammy-docker, builder-rockylinux8-docker, builder-rockylinux9-docker]
+    needs: [builder-docker]
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
-        builder-name: [builder_ubuntu_focal, builder_ubuntu_jammy, builder_rockylinux8, builder_rockylinux9]
+        builder-name: [ ubuntu-focal, ubuntu-jammy, rockylinux-8, rockylinux-9 ]
         CONFIG_FLAGS: [
                 "",
                 "--enable-debug",
@@ -156,7 +72,7 @@ jobs:
     steps:
       - name: Info
         run: |
-          echo "Builder: ${{ matrix.builder-name }}"
+          echo "Builder: builder_${{ matrix.builder-name }}"
           echo "CONFIG_FLAGS: ${{ matrix.CONFIG_FLAGS }}"
 
       - name: Create /tmp/docker folder to copy the docker registry (artifact)
@@ -165,7 +81,7 @@ jobs:
 
       - uses: actions/download-artifact@v2
         with:
-          name: ${{ matrix.builder-name }}
+          name: builder_${{ matrix.builder-name }}
           path: /tmp/docker
 
       - name: List contents of /tmp/docker
@@ -178,14 +94,14 @@ jobs:
           fetch-depth: 0
           path: pmacct
 
-      - name: Build in '${{ matrix.builder-name }}' with '${{ matrix.CONFIG_FLAGS }}'
+      - name: Build in 'builder_${{ matrix.builder-name }}' with '${{ matrix.CONFIG_FLAGS }}'
         run: |
           cd pmacct
           git config --global --add safe.directory $GITHUB_WORKSPACE
           git config --global --add safe.directory $GITHUB_WORKSPACE/src/external_libs/libcdada
           git rev-parse HEAD
-          docker load -i /tmp/docker/${{ matrix.builder-name }}.tar
-          CONTAINER_ID=$(docker run --rm -it -d -v `pwd`:`pwd` -w `pwd` -e CONFIG_FLAGS ${{ matrix.builder-name }}:latest)
+          docker load -i /tmp/docker/builder_${{ matrix.builder-name }}.tar
+          CONTAINER_ID=$(docker run --rm -it -d -v `pwd`:`pwd` -w `pwd` -e CONFIG_FLAGS builder_${{ matrix.builder-name }}:latest)
           echo "Launched container id:" $CONTAINER_ID
           docker exec -i $CONTAINER_ID ./ci/script.sh
           docker stop $CONTAINER_ID
