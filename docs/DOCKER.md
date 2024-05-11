@@ -43,8 +43,7 @@ Docker-compose example configuration/usage:
 Create `docker-compose.yml` file with container specifications:
 
 ```yaml
-version: '3'
-
+---
 services:
   sflow-collector1:
     image: pmacct/sfacctd:bleeding-edge
