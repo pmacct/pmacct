@@ -2069,6 +2069,21 @@ DESC:		If set to true account for NetFlow/IPFIX option records. This will requir
 		set_tag=101     sample_type=option	flowset_id=257
 		set_tag=200     sample_type=flow
 
+		The output of the Options data files, ie. as per the example config above
+		option_if.json and option_vrf.json, can be used to populate an augmented
+		pre_tag_map via an external script. For example, in the option_vrf.json
+		file there is an entry like the following:
+
+		{"event_type": "purge", "peer_ip_src": "X.X.X.X", "if_id": "1", "if_name": "Ethernet0/0"}
+
+		The VRF name can become a label for flow data by:
+		* adding "label" to the "aggregate[data]" config directive,
+		* adding the "pre_tag_map_encode_as_map: true" config directive
+		* re-working the pre_tag_map as:
+
+		set_tag=200	sample_type=flow	jeq=enrich_flows
+		set_label=if_name%Ethernet0/0	ip=X.X.X.X	in=1	label=enrich_flows
+
 DEFAULT:        false
 
 KEY:		[ nfacctd_as | sfacctd_as | pmacctd_as | uacctd_as ] [GLOBAL]
