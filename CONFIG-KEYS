@@ -2078,11 +2078,11 @@ DESC:		If set to true account for NetFlow/IPFIX option records. This will requir
 
 		The VRF name can become a label for flow data by:
 		* adding "label" to the "aggregate[data]" config directive,
-		* adding the "pre_tag_map_encode_as_map: true" config directive
+		* adding the "pre_tag_label_encode_as_map: true" config directive
 		* re-working the pre_tag_map as:
 
 		set_tag=200	sample_type=flow	jeq=enrich_flows
-		set_label=if_name%Ethernet0/0	ip=X.X.X.X	in=1	label=enrich_flows
+		set_label=if_name_in%Ethernet0/0	ip=X.X.X.X	in=1	label=enrich_flows
 
 DEFAULT:        false
 
