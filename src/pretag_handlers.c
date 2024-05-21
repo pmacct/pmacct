@@ -1192,6 +1192,58 @@ int PT_map_comms_handler(char *filename, struct id_entry *e, char *value, struct
   return TRUE;
 }
 
+int PT_map_mpls_vpn_id_in_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0;
+  char *endptr;
+
+  e->key.mpls_vpn_id_in.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+  e->key.mpls_vpn_id_in.n = strtoul(value, &endptr, 10);
+
+  if (!e->key.mpls_vpn_id_in.n) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Bad MPLS VPN ID value '%u'.\n", config.name, config.type, filename, e->key.mpls_vpn_id.n);
+    return TRUE;
+  }
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_MPLS_VPN_ID_IN) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'mpls_vpn_id_in' clauses part of the same statement.\n", config.name, config.type, filename);
+      return TRUE;
+    }
+  }
+
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_mpls_vpn_id_in_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_MPLS_VPN_ID_IN;
+
+  return FALSE;
+}
+
+int PT_map_mpls_vpn_id_out_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0;
+  char *endptr;
+  
+  e->key.mpls_vpn_id_out.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+  e->key.mpls_vpn_id_out.n = strtoul(value, &endptr, 10);
+  
+  if (!e->key.mpls_vpn_id_out.n) {
+    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Bad MPLS VPN ID value '%u'.\n", config.name, config.type, filename, e->key.mpls_vpn_id.n);
+    return TRUE;
+  }
+  
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_MPLS_VPN_ID_OUT) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'mpls_vpn_id_out' clauses part of the same statement.\n", config.name, config.type, filename);
+      return TRUE;
+    }
+  }
+  
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_mpls_vpn_id_out_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_MPLS_VPN_ID_OUT;
+  
+  return FALSE;
+}
+
 int PT_map_mpls_vpn_rd_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int x = 0, ret;
@@ -2319,6 +2371,54 @@ int pretag_nat_event_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     else return (TRUE ^ entry->key.nat_event.neg);
   default:
     return TRUE; /* this field does not exist: condition is always true */
+  }
+}
+
+int pretag_mpls_vpn_id_in_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int32_t tmp32 = 0, id = 0;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->fld[NF9_INGRESS_VRFID].count) {
+      OTPL_CP_LAST_M(&tmp32, NF9_INGRESS_VRFID, 4);
+      id = ntohl(tmp32);
+    }
+
+    if (entry->key.mpls_vpn_id_in.n == id) return (FALSE | entry->key.mpls_vpn_id_in.neg);
+    else return (TRUE ^ entry->key.mpls_vpn_id_in.neg);
+    break;
+  default:
+    return (TRUE ^ entry->key.mpls_vpn_id_in.neg);
+    break;
+  }
+}
+
+int pretag_mpls_vpn_id_out_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int32_t tmp32 = 0, id = 0;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->fld[NF9_EGRESS_VRFID].count) {
+      OTPL_CP_LAST_M(&tmp32, NF9_EGRESS_VRFID, 4);
+      id = ntohl(tmp32);
+    }
+    
+    if (entry->key.mpls_vpn_id_out.n == id) return (FALSE | entry->key.mpls_vpn_id_out.neg);
+    else return (TRUE ^ entry->key.mpls_vpn_id_out.neg);
+    break;
+  default:
+    return (TRUE ^ entry->key.mpls_vpn_id_out.neg);
+    break;
   }
 }
 

@@ -67,7 +67,7 @@
 #define PRETAG_IP			0x0000000040000000ULL
 #define PRETAG_SET_LABEL		0x0000000080000000ULL
 #define PRETAG_CVLAN_ID			0x0000000100000000ULL
-#define PRETAG_MPLS_VPN_ID		0x0000000200000000ULL
+#define PRETAG_MPLS_VPN_ID		0x0000000200000000ULL /* XXX: to be removed */
 #define PRETAG_FWDSTATUS_ID		0x0000000400000000ULL
 #define PRETAG_SRC_NET			0x0000000800000000ULL
 #define PRETAG_DST_NET			0x0000001000000000ULL
@@ -82,6 +82,8 @@
 #define PRETAG_IP_PROTO			0x0000200000000000ULL
 #define PRETAG_SRC_PORT			0x0000400000000000ULL
 #define PRETAG_DST_PORT			0x0000800000000000ULL
+#define PRETAG_MPLS_VPN_ID_IN		0x0001000000000000ULL
+#define PRETAG_MPLS_VPN_ID_OUT		0x0002000000000000ULL
 /* ... */
 #define PRETAG_NULL			0x8000000000000000ULL
 
@@ -207,7 +209,9 @@ struct id_entry_key {
   s_uint16_t lookup_bgp_port;
   char *src_comms[16]; /* XXX: MAX_BGP_COMM_PATTERNS = 16 */
   char *comms[16]; /* XXX: MAX_BGP_COMM_PATTERNS = 16 */
-  pt_uint32_t mpls_vpn_id;
+  pt_uint32_t mpls_vpn_id; /* XXX: to be removed */
+  pt_uint32_t mpls_vpn_id_in;
+  pt_uint32_t mpls_vpn_id_out;
   pt_rd_t mpls_vpn_rd;
   pt_uint32_t mpls_pw_id;
   pt_uint8_t fwd_status;

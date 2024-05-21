@@ -53,6 +53,8 @@ extern int PT_map_src_roa_handler(char *, struct id_entry *, char *, struct plug
 extern int PT_map_dst_roa_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 extern int PT_map_src_comms_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 extern int PT_map_comms_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+extern int PT_map_mpls_vpn_id_in_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
+extern int PT_map_mpls_vpn_id_out_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 extern int PT_map_mpls_vpn_rd_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 extern int PT_map_mpls_pw_id_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
 extern int PT_map_src_mac_handler(char *, struct id_entry *, char *, struct plugin_requests *, int);
@@ -173,6 +175,8 @@ extern int pretag_is_nsel_handler(struct packet_ptrs *, void *, void *);
 extern int pretag_is_nel_handler(struct packet_ptrs *, void *, void *);
 extern int pretag_direction_handler(struct packet_ptrs *, void *, void *);
 extern int pretag_nat_event_handler(struct packet_ptrs *, void *, void *);
+extern int pretag_mpls_vpn_id_in_handler(struct packet_ptrs *, void *, void *);
+extern int pretag_mpls_vpn_id_out_handler(struct packet_ptrs *, void *, void *);
 extern int pretag_mpls_vpn_rd_handler(struct packet_ptrs *, void *, void *);
 extern int pretag_mpls_pw_id_handler(struct packet_ptrs *, void *, void *);
 extern int pretag_src_mac_handler(struct packet_ptrs *, void *, void *);
