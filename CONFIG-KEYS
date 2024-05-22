@@ -2076,13 +2076,27 @@ DESC:		If set to true account for NetFlow/IPFIX option records. This will requir
 
 		{"event_type": "purge", "peer_ip_src": "X.X.X.X", "if_id": "1", "if_name": "Ethernet0/0"}
 
-		The VRF name can become a label for flow data by:
+		The VRF Name can become a label for flow data by:
 		* adding "label" to the "aggregate[data]" config directive,
 		* adding the "pre_tag_label_encode_as_map: true" config directive
 		* re-working the pre_tag_map as:
 
 		set_tag=200	sample_type=flow	jeq=enrich_flows
 		set_label=if_name_in%Ethernet0/0	ip=X.X.X.X	in=1	label=enrich_flows
+
+		Same for the Interface Name, it can become yet another label for flow data. For
+		that to happen in conjunction with VRF Name, the pre_tag_map would need to be
+		further re-worked a bit as follows so that the jeq/label definitions do guide
+		the workflow:
+
+		set_tag=200	sample_type=flow	jeq=enrich_flows_if_name
+		set_label=if_name_in%Ethernet0/0	ip=X.X.X.X	in=1	jeq=enrich_flows_vpn_name	label=enrich_flows_if_name
+		set_label=if_name_in%EthernetX/X	ip=X.X.X.X	in=2	jeq=enrich_flows_vpn_name
+		set_label=if_name_in%EthernetY/Y	ip=X.X.X.X	in=3	jeq=enrich_flows_vpn_name
+		..
+		set_label=vpn_name_in%AAAA	ip=X.X.X.X	mpls_vpn_id_in=1	label=enrich_flows_vpn_name
+		set_label=vpn_name_in%BBBB	ip=X.X.X.X	mpls_vpn_id_in=2
+		set_label=vpn_name_in%CCCC	ip=X.X.X.X	mpls_vpn_id_in=3
 
 DEFAULT:        false
 
