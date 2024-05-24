@@ -13,7 +13,7 @@
 ! engine_type, engine_id, source_id, flowset_id, nexthop, bgp_nexthop, filter,
 ! sample_type, is_bi_flow, is_nel, is_nsel, direction, fwd_status, src_mac,
 ! dst_mac, vlan, cvlan, src_net, dst_net, ip_proto, src_port, dst_port,
-! is_multicast, mpls_pw_id.
+! is_multicast, mpls_pw_id, mpls_vpn_id_in, mpls_vpn_id_out.
 !
 ! sfacctd: valid keys: set_tag, set_tag2, set_label, set_tos, ip, in, out,
 ! nexthop, bgp_nexthop, filter, agent_id, sample_type, direction, src_mac,
@@ -183,6 +183,12 @@
 !			v9/IPFIX this is compared against IE #249; in sFlow v5
 !			this is compared against vll_vc_id field, extended MPLS
 !			VC object.
+! 'mpls_vpn_id_in'	MATCH: ingress MPLS VPN ID. A positive 32-bit unsigned
+!			integer is expected as value. In NetFlow/IPFIX this is
+!			compared against field type #234.
+! 'mpls_vpn_id_out'	MATCH: egress MPLS VPN ID. A positive 32-bit unsigned
+!			integer is expected as value. In NetFlow/IPFIX this is
+!			compared against field type #235.
 ! 'src_mac'		MATCH: In NFv9/IPFIX this is compared against IE #56,
 !			in sFlow against source MAC address field part of the
 !			Extended Switch object.
