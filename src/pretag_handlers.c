@@ -3759,6 +3759,28 @@ int PT_map_index_entries_mpls_vpn_id_handler(struct id_table_index *idx, int idx
   return FALSE;
 }
 
+int PT_map_index_entries_mpls_vpn_id_in_handler(struct id_table_index *idx, int idx_hdlr_no, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!idx || !hash_serializer || !src_e) return TRUE;
+
+  hash_serial_append(hash_serializer, (char *)&src_e->key.mpls_vpn_id_in.n, sizeof(u_int32_t), TRUE);
+
+  return FALSE;
+}
+
+int PT_map_index_entries_mpls_vpn_id_out_handler(struct id_table_index *idx, int idx_hdlr_no, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!idx || !hash_serializer || !src_e) return TRUE;
+
+  hash_serial_append(hash_serializer, (char *)&src_e->key.mpls_vpn_id_out.n, sizeof(u_int32_t), TRUE);
+
+  return FALSE;
+}
+
 int PT_map_index_entries_src_mac_handler(struct id_table_index *idx, int idx_hdlr_no, pm_hash_serial_t *hash_serializer, void *src)
 {
   struct id_entry *src_e = (struct id_entry *) src;
@@ -4459,6 +4481,52 @@ int PT_map_index_fdata_mpls_vpn_id_handler(struct id_table_index *idx, int idx_h
   }
 
   hash_serial_append(hash_serializer, (char *)&e->key.mpls_vpn_id.n, sizeof(u_int32_t), FALSE);
+
+  return FALSE;
+}
+
+int PT_map_index_fdata_mpls_vpn_id_in_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int32_t tmp32 = 0;
+
+  if (config.acct_type == ACCT_NF) {
+    switch(hdr->version) {
+    case 10:
+    case 9:
+      if (tpl->fld[NF9_INGRESS_VRFID].count) {
+        OTPL_CP_LAST_M(&tmp32, NF9_INGRESS_VRFID, 4);
+        e->key.mpls_vpn_id_in.n = ntohl(tmp32);
+      }
+    }
+  }
+
+  hash_serial_append(hash_serializer, (char *)&e->key.mpls_vpn_id_in.n, sizeof(u_int32_t), FALSE);
+
+  return FALSE;
+}
+
+int PT_map_index_fdata_mpls_vpn_id_out_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{   
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int32_t tmp32 = 0;
+
+  if (config.acct_type == ACCT_NF) {
+    switch(hdr->version) {
+    case 10:
+    case 9:
+      if (tpl->fld[NF9_EGRESS_VRFID].count) {
+        OTPL_CP_LAST_M(&tmp32, NF9_EGRESS_VRFID, 4);
+        e->key.mpls_vpn_id_out.n = ntohl(tmp32);
+      }
+    }
+  }
+
+  hash_serial_append(hash_serializer, (char *)&e->key.mpls_vpn_id_out.n, sizeof(u_int32_t), FALSE);
 
   return FALSE;
 }

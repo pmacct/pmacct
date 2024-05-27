@@ -85,6 +85,8 @@ extern int PT_map_index_entries_dst_as_handler(struct id_table_index *, int, pm_
 extern int PT_map_index_entries_peer_src_as_handler(struct id_table_index *, int, pm_hash_serial_t *, void *);
 extern int PT_map_index_entries_peer_dst_as_handler(struct id_table_index *, int, pm_hash_serial_t *, void *);
 extern int PT_map_index_entries_mpls_vpn_id_handler(struct id_table_index *, int, pm_hash_serial_t *, void *);
+extern int PT_map_index_entries_mpls_vpn_id_in_handler(struct id_table_index *, int, pm_hash_serial_t *, void *);
+extern int PT_map_index_entries_mpls_vpn_id_out_handler(struct id_table_index *, int, pm_hash_serial_t *, void *);
 extern int PT_map_index_entries_mpls_vpn_rd_handler(struct id_table_index *, int, pm_hash_serial_t *, void *);
 extern int PT_map_index_entries_mpls_pw_id_handler(struct id_table_index *, int, pm_hash_serial_t *, void *);
 extern int PT_map_index_entries_mpls_label_bottom_handler(struct id_table_index *, int, pm_hash_serial_t *, void *);
@@ -109,6 +111,8 @@ extern int PT_map_index_fdata_dst_as_handler(struct id_table_index *, int, int, 
 extern int PT_map_index_fdata_peer_src_as_handler(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_fdata_peer_dst_as_handler(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_fdata_mpls_vpn_id_handler(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *); 
+extern int PT_map_index_fdata_mpls_vpn_id_in_handler(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *); 
+extern int PT_map_index_fdata_mpls_vpn_id_out_handler(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_fdata_mpls_vpn_rd_handler(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_fdata_mpls_pw_id_handler(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *); 
 extern int PT_map_index_fdata_mpls_label_bottom_handler(struct id_table_index *, int, int, struct id_entry *, pm_hash_serial_t *, void *); 
