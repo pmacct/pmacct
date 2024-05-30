@@ -690,7 +690,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	  }
 	  if (!label_solved) {
 	    ptr->jeq.ptr = NULL;
-	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unresolved label '%s'. Ignoring it.\n",
+	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unresolved label '%s' in v4 namespace. Ignoring it.\n",
 			config.name, config.type, filename, ptr->jeq.label);
 	  }
         }
@@ -717,7 +717,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 
 	  if (!label_solved) {
 	    ptr->jeq.ptr = NULL;
-	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unresolved label '%s'. Ignoring it.\n",
+	    Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Unresolved label '%s' in v6 namespace. Ignoring it.\n",
 			config.name, config.type, filename, ptr->jeq.label);
 	  }
         }
