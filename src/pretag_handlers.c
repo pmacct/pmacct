@@ -2205,9 +2205,10 @@ int pretag_src_roa_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 int pretag_dst_roa_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
+  struct bgp_node *dst_ret = (struct bgp_node *) pptrs->bgp_dst;
   u_int8_t roa = ROA_STATUS_UNKNOWN;
 
-  if (config.bgp_daemon_dst_roa_type & BGP_SRC_PRIMITIVES_BGP) {
+  if (config.bgp_daemon_src_roa_type & BGP_SRC_PRIMITIVES_BGP) {
     if (dst_ret) roa = pptrs->dst_roa;
   }
 
