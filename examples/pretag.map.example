@@ -37,9 +37,9 @@
 ! enabled): src_as, dst_as, src_comms, comms, peer_src_as, peer_dst_as,
 ! src_local_pref, local_pref, src_roa, dst_roa, mpls_vpn_rd.
 !
-! Non-traffic daemons, ie. pmbgpd (including bgp_daemon_tag_map), pmbmpd
-! (including bmp_daemon_tag_map), pmtelemetryd, valid keys: set_tag,
-! set_label, ip.
+! Non-traffic daemons and threads, ie. pmbgpd (bgp_daemon_tag_map), pmbmpd
+! (bmp_daemon_tag_map), pmtelemetryd (telemetry_daemon_tag_map) valid keys:
+! set_tag, set_label, ip.
 !
 ! list of currently supported keys follows:
 !
