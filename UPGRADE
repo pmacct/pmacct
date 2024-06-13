@@ -8,6 +8,19 @@ upgrading your installation.
 
 TO:	>= 1.7.9
 FROM:	<= 1.7.8
+TOPIC:	NetFlow v9 / IPFIX and flows with (ingress / egress) VRF ID field
+DESC:   Version 1.7.9 and later do formalize much more than previous releases
+	the presence of an ingress / egress VRF ID field as part of a NetFlow
+	v9 / IPFIX packet: if such field is present, the corresponding VRF is
+	looked up in the corresponding BGP feed for correlation, failing
+	which, any BGP primitive in the aggregation method will remain
+	unpopulated. Symptoms, examples and recommended remedies are
+	documented in two (at the time of writing) issues on GitHub:
+	* https://github.com/pmacct/pmacct/issues/768
+	* https://github.com/pmacct/pmacct/issues/777
+
+TO:	>= 1.7.9
+FROM:	<= 1.7.8
 TOPIC:	nfacctd_disable_checks, sfacctd_disable_checks
 DESC:   Due to newly introduced nfacctd_pre_processing_checks config knob,
 	it was felt that nfacctd_disable_checks needed to be renamed for a
