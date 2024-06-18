@@ -9,15 +9,22 @@ upgrading your installation.
 TO:	>= 1.7.9
 FROM:	<= 1.7.8
 TOPIC:	NetFlow v9 / IPFIX and flows with (ingress / egress) VRF ID field
-DESC:   Version 1.7.9 and later do formalize much more than previous releases
-	the presence of an ingress / egress VRF ID field as part of a NetFlow
-	v9 / IPFIX packet: if such field is present, the corresponding VRF is
-	looked up in the corresponding BGP feed for correlation, failing
-	which, any BGP primitive in the aggregation method will remain
-	unpopulated. Symptoms, examples and recommended remedies are
-	documented in two (at the time of writing) issues on GitHub:
+DESC:   Version 1.7.9 does formalize much more than previous releases the
+	presence of an ingress / egress VRF ID field as part of a NetFlow
+	v9 / IPFIX packet: if such field is present, the corresponding RD for
+	the VRF is looked up in the BGP feed for correlation, failing which,
+	any BGP primitive in the aggregation method will remain unpopulated.
+
+	Symptoms, examples and recommended remedies are documented in two (at
+	the time of writing) issues on GitHub:
 	* https://github.com/pmacct/pmacct/issues/768
 	* https://github.com/pmacct/pmacct/issues/777
+
+	In the case where a platform reports an ingress / egress VRF ID but a
+	lookup in the Global Routing Table is required, a flow_to_rd_map can
+	be configured. For example a line "id=0:0:0 ip=10.0.0.1" would look
+	up flows coming from network element 10.0.0.1 in the GRT. For further
+	guidance look examples/flow_to_rd.map.example.
 
 TO:	>= 1.7.9
 FROM:	<= 1.7.8
