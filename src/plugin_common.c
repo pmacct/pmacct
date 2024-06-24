@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -787,10 +787,9 @@ int P_trigger_exec(char *filename)
   char *tmp = strdup(filename);
   if (tmp == NULL) {
     Log(LOG_ERR,
-        "ERROR ( %s/%s ): P_trigger_exec(): failed to duplicate filename - "
-        "'%s' \n",
+        "ERROR ( %s/%s ): P_trigger_exec(): failed to duplicate filename - '%s'\n",
         config.name, config.type, filename);
-    return -1;
+    return ERR;
   }
 
   // trim trailing spaces from the duplicated string
@@ -810,10 +809,9 @@ int P_trigger_exec(char *filename)
   args = malloc((arg_count + 1) * sizeof(char *));
   if (args == NULL) {
     Log(LOG_ERR,
-        "ERROR ( %s/%s ): P_trigger_exec(): failed to allocate memory - '%s' "
-        "\n",
-        config.name, config.type, filename);
-    return -1;
+        "ERROR ( %s/%s ): P_trigger_exec(): failed to allocate memory - '%s'\n",
+	config.name, config.type, filename);
+    return ERR;
   }
 
   // second step: populate the arguments array
@@ -831,18 +829,17 @@ int P_trigger_exec(char *filename)
 #else
   switch (pid = fork()) {
 #endif
-  case -1:
+  case ERR:
     free(args);
     Log(LOG_ERR,
-        "ERROR ( %s/%s ): P_trigger_exec(): failed to fork/vfork - '%s' \n",
+        "ERROR ( %s/%s ): P_trigger_exec(): failed to fork/vfork - '%s'\n",
         config.name, config.type, filename);
-    return -1;
-  case 0:
+    return ERR;
+  case FALSE:
     ret = execv(args[0], args);
-    if (ret == -1) {
+    if (ret == ERR) {
       Log(LOG_WARNING,
-          "WARN ( %s/%s ): P_trigger_exec(): can't execute - '%s' | args: "
-          "'%s'\n",
+          "WARN ( %s/%s ): P_trigger_exec(): can't execute - '%s' | args: '%s'\n",
           config.name, config.type, args[0], filename);
       _exit(1); // use _exit in child to avoid flushing buffers
     }
@@ -850,7 +847,8 @@ int P_trigger_exec(char *filename)
   }
 
   free(args);
-  return 0;
+
+  return FALSE;
 }
 
 void P_init_historical_acct(time_t now)
