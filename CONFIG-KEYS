@@ -1509,7 +1509,8 @@ DESC:		Defines the executable to be launched at fixed time intervals to post-pro
 		can only be fired each time data is written to the backend (ie. each print_refresh_time) and
 		no environment variables are set; this may be useful also to upload data to cloud storage
 		that supports upload via API end-points. When running in Docker, to avoid the accumulation
-		of zombie processes, run the container with the --init flag, ie. "docker run --init [ .. ]". 
+		of zombie processes, run the container with the --init flag, ie. "docker run --init [ .. ]".
+		Trigger script parameters are now supported. 
 DEFAULT:	none
 
 KEY:		sql_trigger_time

@@ -773,8 +773,58 @@ void P_exit_now(int signum)
 
 int P_trigger_exec(char *filename)
 {
-  char *args[2] = { filename, NULL };
+  char **args;
+  int arg_count = 0;
+  char *token;
+  char *saveptr;
   int pid, ret;
+
+  // trim leading spaces from the filename
+  while (isspace((unsigned char)*filename))
+    filename++;
+
+  // duplicate filename to avoid modifying the original
+  char *tmp = strdup(filename);
+  if (tmp == NULL) {
+    Log(LOG_ERR,
+        "ERROR ( %s/%s ): P_trigger_exec(): failed to duplicate filename - "
+        "'%s' \n",
+        config.name, config.type, filename);
+    return -1;
+  }
+
+  // trim trailing spaces from the duplicated string
+  char *end = tmp + strlen(tmp) - 1;
+  while (end > tmp && isspace((unsigned char)*end))
+    *end-- = '\0';
+
+  // first step: count the number of arguments
+  token = strtok_r(tmp, " ", &saveptr);
+  while (token != NULL) {
+    arg_count++;
+    token = strtok_r(NULL, " ", &saveptr);
+  }
+  free(tmp);
+
+  // allocate memory for arguments array (+1 for NULL terminator)
+  args = malloc((arg_count + 1) * sizeof(char *));
+  if (args == NULL) {
+    Log(LOG_ERR,
+        "ERROR ( %s/%s ): P_trigger_exec(): failed to allocate memory - '%s' "
+        "\n",
+        config.name, config.type, filename);
+    return -1;
+  }
+
+  // second step: populate the arguments array
+  arg_count = 0;
+  saveptr = NULL; // reset saveptr for the second pass
+  token = strtok_r(filename, " ", &saveptr);
+  while (token != NULL) {
+    args[arg_count++] = token;
+    token = strtok_r(NULL, " ", &saveptr);
+  }
+  args[arg_count] = NULL; // NULL-terminate the array
 
 #ifdef HAVE_VFORK
   switch (pid = vfork()) {
@@ -782,17 +832,24 @@ int P_trigger_exec(char *filename)
   switch (pid = fork()) {
 #endif
   case -1:
+    free(args);
+    Log(LOG_ERR,
+        "ERROR ( %s/%s ): P_trigger_exec(): failed to fork/vfork - '%s' \n",
+        config.name, config.type, filename);
     return -1;
   case 0:
-    ret = execv(filename, args);
-
-    if (ret == ERR) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): P_trigger_exec(): can't execute '%s'\n", config.name, config.type, filename);
+    ret = execv(args[0], args);
+    if (ret == -1) {
+      Log(LOG_WARNING,
+          "WARN ( %s/%s ): P_trigger_exec(): can't execute - '%s' | args: "
+          "'%s'\n",
+          config.name, config.type, args[0], filename);
+      _exit(1); // use _exit in child to avoid flushing buffers
     }
-
     _exit(0);
   }
 
+  free(args);
   return 0;
 }
 
