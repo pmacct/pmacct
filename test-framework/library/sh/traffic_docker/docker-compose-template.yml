@@ -1,0 +1,17 @@
+---
+version: '3'
+
+networks:
+  pmacct_test_network:
+    external: true
+
+services:
+  traffic-reproducer:
+    image: ${TRAFFIC_REPRO_IMG}
+    container_name: ${TRAFFIC_REPRO_NAME}
+    volumes:
+      - ${PCAP_MOUNT_DIR}:/pcap
+    networks:
+      pmacct_test_network:
+        ipv4_address: ${REPRO_IPV4}
+        ipv6_address: ${REPRO_IPV6}

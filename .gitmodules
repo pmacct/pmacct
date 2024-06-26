@@ -1,3 +1,6 @@
 [submodule "src/external_libs/libcdada"]
 	path = src/external_libs/libcdada
 	url = https://github.com/msune/libcdada.git
+[submodule "test-framework/tools/pcap_player/traffic-reproducer"]
+	path = test-framework/tools/pcap_player/traffic-reproducer
+	url = https://github.com/network-analytics/traffic-reproducer.git

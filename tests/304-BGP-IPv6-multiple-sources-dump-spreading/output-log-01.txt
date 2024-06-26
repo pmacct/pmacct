@@ -1,0 +1,1 @@
+${TIMESTAMP} INFO ( nfacctd_core/core/BGP ): *** Dumping BGP tables - START ${IGNORE_REST}

@@ -1,0 +1,5 @@
+${TIMESTAMP} INFO ( nfacctd_core/core/BGP ): [${repro_ip}] BGP peers usage: 1/600
+${TIMESTAMP} INFO ( nfacctd_core/core/BGP ): [${repro_ip}] BGP peers usage: 2/600
+${TIMESTAMP} INFO ( nfacctd_core/core/BGP ): [${repro_ip}] BGP peers usage: 3/600
+${TIMESTAMP} WARN ( nfacctd_core/core/BGP ): [213.3.223.36] Refusing new connection from existing peer (residual holdtime: ${RANDOM}).
+${TIMESTAMP} WARN ( nfacctd_core/core/BGP ): Unable to get kafka_host: ${repro_ip}

@@ -1,0 +1,15 @@
+---
+version: '3'
+
+networks:
+  pmacct_test_network:
+    external: true
+
+services:
+  redis:
+    image: ${REDIS_IMG}
+    container_name: redis
+    networks:
+      pmacct_test_network:
+        ipv4_address: 172.21.1.14
+        ipv6_address: fd25::14

@@ -1,0 +1,3 @@
+${TIMESTAMP} INFO ( nfacctd_core/core/BMP ): [${repro_ip}] BMP peers usage: 1/600
+${TIMESTAMP} INFO ( nfacctd_core/core/BMP ): [${repro_ip}] BMP connection reset by peer (0).
+${TIMESTAMP} WARN ( nfacctd_core/core/BMP ): Unable to get kafka_host: ${repro_ip}

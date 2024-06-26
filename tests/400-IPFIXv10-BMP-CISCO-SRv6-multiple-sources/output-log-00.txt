@@ -1,0 +1,2 @@
+${RANDOM} BMP peers usage: 1/600
+${RANDOM} BMP peers usage: 2/600

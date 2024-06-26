@@ -1,0 +1,10 @@
+${RANDOM} BMP-BGP-HA - Redis loop starting!
+${RANDOM} BMP-BGP-HA Daemon state: ACTIVE
+${RANDOM} BMP-BGP-HA Daemon state: STANDBY
+${RANDOM} [${repro_ip}] BMP peers usage: 1/600
+${RANDOM} BMP-BGP-HA: Local startup timestamp reset triggered.
+${RANDOM} BMP-BGP-HA: Setting daemon to forced-active state.
+${RANDOM} BMP-BGP-HA: Setting daemon to forced-standby state.
+${RANDOM} BMP-BGP-HA: Setting daemon back to automatic timestamp-based mode.
+${RANDOM} BMP-BGP-HA Daemon is in forced-mode (ACTIVE): startup timestamp has no influence on state!
+${RANDOM} BMP-BGP-HA Daemon is in forced-mode (STANDBY): startup timestamp has no influence on state!

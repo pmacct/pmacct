@@ -1,0 +1,2 @@
+set_label=nkey%NODE_ID,pkey%PLATFORM_ID                              ip=192.168.100.1
+set_label=nkey%unknown,pkey%unknown

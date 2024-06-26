@@ -48,3 +48,18 @@ src/external_libs/.*mark
 
 # Submodule deps tmp install directory
 src/external_libs/rootfs
+
+# Test-framework
+test-framework/**/.idea/
+test-framework/**/venv/
+test-framework/**/__pycache__/
+tests/**/__pycache__/
+test-framework/**/.DS_Store
+test-framework/library/sh/docker_tools/clear-topic.json
+test-framework/**/assets/
+test-framework/**/*.tmp
+tests/**/tmp.py
+test-framework/**/*.bak
+tests/**/*.bak
+test-framework/results/
+

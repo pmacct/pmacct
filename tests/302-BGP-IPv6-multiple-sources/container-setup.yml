@@ -1,0 +1,19 @@
+containers:
+  - name: traffic-reproducer-302a
+    processes:
+      - pcap: traffic-00.pcap
+        config: traffic-reproducer-00.yml
+        collector: nfacctd-00
+  - name: traffic-reproducer-302b
+    processes:
+      - pcap: traffic-01.pcap
+        config: traffic-reproducer-01.yml
+        collector: nfacctd-00
+  - name: traffic-reproducer-302cd
+    processes:
+      - pcap: traffic-02.pcap
+        config: traffic-reproducer-02.yml
+        collector: nfacctd-00
+      - pcap: traffic-03.pcap
+        config: traffic-reproducer-03.yml
+        collector: nfacctd-00

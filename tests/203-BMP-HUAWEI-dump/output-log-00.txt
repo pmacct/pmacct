@@ -1,0 +1,1 @@
+${TIMESTAMP} INFO ( nfacctd_core/core/BMP ): [${repro_ip}] BMP peers usage: 1/600

@@ -1,0 +1,3 @@
+${TIMESTAMP} INFO ( pmbmpd_core/core ): [${repro_ip}] BMP peers usage: 1/600
+${TIMESTAMP} INFO ( pmbmpd_core/core ): [${repro_ip}] BMP peers usage: 2/600
+${TIMESTAMP} INFO ( pmbmpd_core/core ): [${repro_ip}] BMP peers usage: 3/600
