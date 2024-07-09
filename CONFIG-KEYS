@@ -2043,6 +2043,7 @@ DESC:		If set to true account for NetFlow/IPFIX option records. This will requir
 		name=if_name	field_type=82	len=vlen	semantics=str
 
 		== nfacctd.conf ==
+		nfacctd_account_options: true
 		aggregate_primitives: primitives.lst
 		pre_tag_map: pretag.map
 		!
