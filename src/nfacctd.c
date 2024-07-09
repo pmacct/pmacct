@@ -551,6 +551,8 @@ int main(int argc,char **argv, char **envp)
 
 	if (list->cfg.what_to_count_2 & (COUNT_LABEL|COUNT_MPLS_LABEL_STACK|COUNT_SRV6_SEG_IPV6_SECTION))
 	  list->cfg.data_type |= PIPE_TYPE_VLEN;
+  if (list->cfg.what_to_count_3 & (COUNT_INGRESS_VRF_NAME))
+    list->cfg.data_type |= PIPE_TYPE_VLEN;
 
         if (list->cfg.what_to_count & (COUNT_SRC_PORT|COUNT_DST_PORT|COUNT_SUM_PORT|COUNT_TCPFLAGS)) {
           enable_ip_fragment_handler();
@@ -2320,6 +2322,31 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 		  exit_gracefully(1);
 		}
 	      }
+        
+        if (tpl->fld[NF9_INGRESS_VRF_NAME].count) {
+          void *ingress_vrf_name;
+
+          if (!entry->vrf_name_map) {
+              entry->vrf_name_map = cdada_map_create(MAX_VRF_NAME); /* size of vrf-name */
+              if (!entry->vrf_name_map) {
+                Log(LOG_ERR, "ERROR ( %s/core ): Unable to allocate entry->vrf_name_map. Exiting.\n", config.name);
+                exit_gracefully(1);
+              }
+          }
+          ingress_vrf_name = malloc(tpl->fld[NF9_INGRESS_VRF_NAME].len[0]);
+          if (!ingress_vrf_name) {
+            Log(LOG_ERR, "ERROR ( %s/core ): Unable to malloc ingress_vrf_name. Exiting.\n", config.name);
+            exit_gracefully(1);
+          } 
+          memcpy(ingress_vrf_name, pkt+tpl->fld[NF9_INGRESS_VRF_NAME].off[0],
+                 tpl->fld[NF9_INGRESS_VRF_NAME].len[0]);
+          ret = cdada_map_insert(entry->vrf_name_map, &ingress_vrfid, ingress_vrf_name);
+          if (ret != CDADA_SUCCESS && ret != CDADA_E_EXISTS) {
+            Log(LOG_ERR, "ERROR ( %s/core ): Unable to insert in entry->vrf_name_map. Exiting.\n", config.name);
+            exit_gracefully(1);
+          } 
+          Log(LOG_DEBUG, "DEBUG ( %s/core ): Mapped ingress vrf id %d, to vrf_name %s\n", config.name, ingress_vrfid, (char *) ingress_vrf_name );
+        }
 	    }
 	  }
 	}
@@ -3899,6 +3926,15 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
       }
     }
 
+    if (ingress_vrfid) {
+      char *vrf_name;
+      ret = cdada_map_find(entry->vrf_name_map, &ingress_vrfid, (void **) &vrf_name);
+
+      if (ret == CDADA_SUCCESS) {
+        Log(LOG_DEBUG, "DEBUG ( %s/core ): Found VRF Name in hashmap for ingress_vrf_id %d to name %s\n", config.name, ingress_vrfid, vrf_name);
+        memcpy (pptrs->ingress_vrf_name, vrf_name, MAX_VRF_NAME);
+      }
+    }
     if (ingress_vrfid && (!direction /* 0 = ingress */ || !egress_vrfid)) {
 
       if (entry->in_rd_map) { /* check obsID/srcID scoped xflow_status table */
