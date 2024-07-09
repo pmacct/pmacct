@@ -513,6 +513,15 @@ void evaluate_packet_handlers()
       }
     }
 
+    if (channels_list[index].aggregation_3 & COUNT_INGRESS_VRF_NAME) {
+
+      if (config.acct_type == ACCT_NF) {
+        channels_list[index].phandler[primitives] = NF_ingress_vrf_name_handler;
+        primitives++;
+      }
+
+    }
+
     if (channels_list[index].aggregation & COUNT_MPLS_VPN_RD) {
 
       if (config.acct_type == ACCT_NF) {
@@ -2039,6 +2048,18 @@ void NF_mpls_vpn_rd_handler(struct channels_list_entry *chptr, struct packet_ptr
     /* RD_ORIGIN is already set in nfacctd.c */
     memcpy(&pbgp->mpls_vpn_rd, &pptrs->bitr, sizeof(rd_t)); 
   }
+}
+
+void NF_ingress_vrf_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+
+  struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
+  if (check_pipe_buffer_space(chptr, pvlen, MAX_VRF_NAME)) {
+    vlen_prims_init(pvlen, 0);
+    return;
+  }
+  else vlen_prims_insert(pvlen, COUNT_INT_INGRESS_VRF_NAME, MAX_VRF_NAME, (u_char *) pptrs->ingress_vrf_name, PM_MSG_BIN_COPY);
+
 }
 
 void timestamp_start_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)

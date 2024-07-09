@@ -267,6 +267,10 @@ typedef u_int8_t safi_t;
 
 #define RD_ORIGIN_FUNC_TYPE_MAX 2
 
+#ifndef MAX_VRF_NAME
+#define MAX_VRF_NAME            32
+#endif
+
 struct rd_as
 {
   u_int16_t type;
@@ -383,6 +387,7 @@ struct packet_ptrs {
   u_int8_t renormalized; /* Is it renormalized yet ? */
   u_char *pkt_data_ptrs[CUSTOM_PRIMITIVE_MAX_PPTRS_IDX]; /* indexed packet pointers */
   u_int16_t pkt_proto[CUSTOM_PRIMITIVE_MAX_PPTRS_IDX]; /* indexed packet protocols */
+  char ingress_vrf_name[MAX_VRF_NAME];
 #if defined (WITH_GEOIPV2)
   MMDB_lookup_result_s geoipv2_src;
   MMDB_lookup_result_s geoipv2_dst;
