@@ -1,0 +1,4 @@
+set_label=nkey%100.1,pkey%testing                                 ip=192.168.100.1/32
+set_label=nkey%100.2,pkey%testing                                 ip=192.168.100.2/32
+set_label=nkey%cafe.1,pkey%testing                                ip=cafe::1/128
+set_label=nkey%unknown,pkey%unknown

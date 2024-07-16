@@ -1,0 +1,3 @@
+${TIMESTAMP} INFO ( nfacctd_kafka/kafka ): p_avro_schema_build_acct_data(): building acct schema.
+${TIMESTAMP} INFO ( nfacctd_kafka/kafka ): p_avro_schema_build_acct_init(): building acct_init schema.
+${TIMESTAMP} INFO ( nfacctd_kafka/kafka ): p_avro_schema_build_acct_close(): building acct_close schema.

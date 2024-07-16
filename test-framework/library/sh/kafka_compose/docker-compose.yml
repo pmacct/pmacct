@@ -1,0 +1,66 @@
+---
+version: '3'
+
+networks:
+  pmacct_test_network:
+    external: true
+
+services:
+  zookeeper:
+    image: ${ZOOKEEPER_IMG}
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      pmacct_test_network:
+        ipv4_address: 172.21.1.10
+        ipv6_address: fd25::10
+    
+  broker:
+    image: ${KAFKA_IMG}
+    container_name: broker
+    ports:
+      - "9092:9092"
+    healthcheck:
+      test: kafka-topics --bootstrap-server broker:9092 --list
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    networks:
+      pmacct_test_network:
+        ipv4_address: 172.21.1.11
+        ipv6_address: fd25::11
+      
+  schema-registry:
+    image: ${SCHEMAREGISTRY_IMG}
+    hostname: schema-registry
+    container_name: schema-registry
+    depends_on:
+      broker:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: curl --output /dev/null --silent --head --fail http://schema-registry:8081/subjects
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:29092
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+    networks:
+      pmacct_test_network:
+        ipv4_address: 172.21.1.12
+        ipv6_address: fd25::12

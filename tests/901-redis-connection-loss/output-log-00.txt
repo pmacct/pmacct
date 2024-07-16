@@ -1,0 +1,1 @@
+${TIMESTAMP} INFO ( nfacctd_core/core/redis ): connecting to redis server ${redis_ip}:${redis_port}

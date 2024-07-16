@@ -1,0 +1,7 @@
+${TIMESTAMP} INFO ( nfacctd_core/core/BGP ): [10.10.0.35] Capability: MultiProtocol [1] AFI [1] SAFI [128]
+${TIMESTAMP} INFO ( nfacctd_core/core/BGP ): [10.10.0.35] Capability: MultiProtocol [1] AFI [2] SAFI [128]
+${TIMESTAMP} INFO ( nfacctd_core/core/BGP ): [10.10.0.35] Capability: Route Refresh [2]
+${TIMESTAMP} INFO ( nfacctd_core/core/BGP ): [10.10.0.35] Capability: 4-bytes AS [65] ASN [65511]
+${TIMESTAMP} INFO ( nfacctd_core/core/BGP ): [10.10.0.35] Capability: Extended Next Hop Encoding [5] AFI [1] SAFI [1] Next Hop AFI [2]
+${TIMESTAMP} INFO ( nfacctd_core/core/BGP ): [10.10.0.35] Capability: Extended Next Hop Encoding [5] AFI [1] SAFI [2] Next Hop AFI [2]
+${TIMESTAMP} INFO ( nfacctd_core/core/BGP ): [10.10.0.35] BGP_OPEN: Local AS: 65543 Remote AS: 65511 HoldTime: 180

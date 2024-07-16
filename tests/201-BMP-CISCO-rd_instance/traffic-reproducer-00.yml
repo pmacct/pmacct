@@ -1,0 +1,30 @@
+pcap: traffic-00.pcap
+
+time_factor: 1                            # multiplicative factor for speed (2 = twice as slow)
+keep_open: false                          # set to true to not stop application (-> keep sockets open)
+no_sync: true                             # set to true to start reproducing right away (-> don't wait to sync to next full_minute)
+
+optimize:
+  threading: false 
+  preload: false 
+  network:
+    so_sndbuf: null 
+    so_rcvbuf: null
+
+network:
+  map: 
+  - src_ip:           192.0.2.55
+    repro_ip:         192.168.100.1       # can be empty string for OS default
+    
+  interface: null                         # to use a VRF, give the vrf name
+
+bmp:
+  select: 
+    tcp:
+      dport: 
+      - 1790
+  collector:                              # collector that will receive the reproduced messages
+    ip: localhost 
+    port: 1790
+
+

@@ -1,0 +1,2 @@
+${TIMESTAMP} INFO ( nfacctd_core/core ): waiting for NetFlow/IPFIX data on interface=all ip=0.0.0.0 port=9991/udp
+${TIMESTAMP} INFO ( nfacctd_kafka/kafka ): *** Purging cache - END (PID: ${RANDOM}, QN: 51/51, ET: 0) ***

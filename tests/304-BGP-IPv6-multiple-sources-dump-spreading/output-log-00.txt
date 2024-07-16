@@ -1,0 +1,3 @@
+${TIMESTAMP} INFO ( nfacctd_core/core/BGP ): [${repro_ip}] BGP peers usage: 1/600
+${TIMESTAMP} INFO ( nfacctd_core/core/BGP ): [${repro_ip}] BGP peers usage: 2/600
+${TIMESTAMP} INFO ( nfacctd_core/core/BGP ): [${repro_ip}] BGP peers usage: 3/600
