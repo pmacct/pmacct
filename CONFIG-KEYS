@@ -3032,9 +3032,16 @@ DESC:           Full pathname to a file containing the BGP peers (IP address onl
 		and their corresponding MD5 passwords in CSV format (ie. 10.15.0.1, arealsmartpwd).
 		BGP peers not making use of a MD5 password should not be listed. The maximum number
 		of peers supported is 8192. For a sample map look in: 'examples/bgp_md5.lst.example'.
-		/proc/sys/net/core/optmem_max default value allows for some 150 keys to be registered
-		as https://patchwork.ozlabs.org/patch/138861/ documents: its value should be reviewed
-		upwards in order to register more keys.
+		Notes:
+		* /proc/sys/net/core/optmem_max default value allows for some 150 keys to be registered
+		  as https://patchwork.ozlabs.org/patch/138861/ documents: its value should be reviewed
+		  upwards in order to register more keys;
+		* MD5 creates a hash of the pseudo header which includes also the source IP address;
+		  the presence of NAT between route and collector will effectively break TCP-MD5; 
+		* TCP-MD5 is a feature mainly handled in the Linux kernel; would MD5 not / stop work
+		  the application (ie. pmacct) would not be handed over packets related to the BGP
+		  session, meaning logs will be empty of any errors. Kernel logs should be consulted
+		  instead. 
 DEFAULT:	none
 
 KEY:		[ bgp_table_peer_buckets | bmp_table_peer_buckets ] [GLOBAL]
