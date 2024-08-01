@@ -4,7 +4,7 @@ pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature
 
-1.7.9 -- XX-XX-2024
+1.7.9 -- 01-08-2024
   + pmtelemetryd: gRPC data collection functionalities were added to
     the daemon. https://github.com/scuzzilla/mdt-dialout-collector is
     the library linked to add the functions required to collect data
