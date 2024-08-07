@@ -397,6 +397,8 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
 #ifdef WITH_JANSSON
     json_t *obj = void_obj;
 
+    json_object_set_new_nocheck(obj, "bmp_rib_type", json_string(bmp_rib_type_print(bmed_bmp->rib_type)));
+
     if (!bmed_bmp->is_loc && !bmed_bmp->is_out) {
       json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bmed_bmp->is_post));
       json_object_set_new_nocheck(obj, "is_in", json_integer(1));
@@ -423,6 +425,9 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
 	   (output == PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
     avro_value_t *obj = (avro_value_t *) void_obj, p_avro_field, p_avro_branch;
+
+    pm_avro_check(avro_value_get_by_name(obj, "bmp_rib_type", &p_avro_field, NULL));
+    pm_avro_check(avro_value_set_string(&p_avro_field, bmp_rib_type_print(bmed_bmp->rib_type)));
 
     if (!bmed_bmp->is_loc && !bmed_bmp->is_out) {
       pm_avro_check(avro_value_get_by_name(obj, "is_in", &p_avro_field, NULL));
