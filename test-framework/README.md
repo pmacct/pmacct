@@ -39,9 +39,9 @@ Install/Update Python project dependencies:
 pip install -r requirements.txt
 ```
 
-Build single- and multi-pcap traffic reproducer images:
+Build single- and multi-pcap traffic reproducer image:
 ```shell
-tools/pcap_player/build_docker_images.sh
+tools/pcap_player/build_docker_image.sh
 ```
 
 Build pmacct images (checkout to desired branch or commit first):
