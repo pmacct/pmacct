@@ -53,6 +53,8 @@ extern void compose_tunnel_tcpflags_avro_schema(avro_schema_t);
 extern void compose_fwd_status_avro_schema(avro_schema_t);
 extern void compose_mpls_label_stack_schema(avro_schema_t);
 extern void compose_srv6_segment_ipv6_list_schema(avro_schema_t);
+extern void compose_ingress_vrf_name_schema(avro_schema_t);
+extern void compose_egress_vrf_name_schema(avro_schema_t);
 extern void compose_str_linked_list_to_avro_array_schema(avro_schema_t, const char *);
 extern int compose_label_avro_data_opt(char *, avro_value_t);
 extern int compose_label_avro_data_nonopt(char *, avro_value_t);

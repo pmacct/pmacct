@@ -1,0 +1,444 @@
+diff --git a/CONFIG-KEYS b/CONFIG-KEYS
+index f9a56123..04a335a2 100644
+--- a/CONFIG-KEYS
++++ b/CONFIG-KEYS
+@@ -2041,7 +2041,6 @@ DESC:		If set to true account for NetFlow/IPFIX option records. This will requir
+ 		name=if_name	field_type=82	len=vlen	semantics=str
+ 
+ 		== nfacctd.conf ==
+-                nfacctd_account_options: true
+ 		aggregate_primitives: primitives.lst
+ 		pre_tag_map: pretag.map
+ 		!
+diff --git a/src/cfg_handlers.c b/src/cfg_handlers.c
+index 8c567e93..b9b83459 100644
+--- a/src/cfg_handlers.c
++++ b/src/cfg_handlers.c
+@@ -396,8 +396,6 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
+     else if (!strcmp(count_token, "path_delay_avg_usec")) cfg_set_aggregate(filename, value, COUNT_INT_PATH_DELAY_AVG_USEC, count_token);
+     else if (!strcmp(count_token, "path_delay_min_usec")) cfg_set_aggregate(filename, value, COUNT_INT_PATH_DELAY_MIN_USEC, count_token);
+     else if (!strcmp(count_token, "path_delay_max_usec")) cfg_set_aggregate(filename, value, COUNT_INT_PATH_DELAY_MAX_USEC, count_token);
+-    else if (!strcmp(count_token, "ingress_vrf_name")) cfg_set_aggregate(filename, value, COUNT_INT_INGRESS_VRF_NAME, count_token);
+-    else if (!strcmp(count_token, "egress_vrf_name")) cfg_set_aggregate(filename, value, COUNT_INT_EGRESS_VRF_NAME, count_token);
+     else {
+       cpptrs.primitive[cpptrs.num].name = count_token;
+       cpptrs.num++;
+diff --git a/src/network.h b/src/network.h
+index 71a2ed99..65f426a9 100644
+--- a/src/network.h
++++ b/src/network.h
+@@ -267,10 +267,6 @@ typedef u_int8_t safi_t;
+ 
+ #define RD_ORIGIN_FUNC_TYPE_MAX 2
+ 
+-#ifndef MAX_VRF_NAME
+-#define MAX_VRF_NAME            32
+-#endif
+-
+ struct rd_as
+ {
+   u_int16_t type;
+@@ -387,14 +383,6 @@ struct packet_ptrs {
+   u_int8_t renormalized; /* Is it renormalized yet ? */
+   u_char *pkt_data_ptrs[CUSTOM_PRIMITIVE_MAX_PPTRS_IDX]; /* indexed packet pointers */
+   u_int16_t pkt_proto[CUSTOM_PRIMITIVE_MAX_PPTRS_IDX]; /* indexed packet protocols */
+-//#define USE_VRF_NAME_PTR 1
+-#if defined (USE_VRF_NAME_PTR)
+-  char *ingress_vrf_name;
+-  char *egress_vrf_name;
+-#else
+-  char ingress_vrf_name[MAX_VRF_NAME];
+-  char egress_vrf_name[MAX_VRF_NAME];
+-#endif
+ #if defined (WITH_GEOIPV2)
+   MMDB_lookup_result_s geoipv2_src;
+   MMDB_lookup_result_s geoipv2_dst;
+diff --git a/src/nfacctd.c b/src/nfacctd.c
+index 304fa354..26b94d44 100644
+--- a/src/nfacctd.c
++++ b/src/nfacctd.c
+@@ -551,8 +551,6 @@ int main(int argc,char **argv, char **envp)
+ 
+ 	if (list->cfg.what_to_count_2 & (COUNT_LABEL|COUNT_MPLS_LABEL_STACK|COUNT_SRV6_SEG_IPV6_SECTION))
+ 	  list->cfg.data_type |= PIPE_TYPE_VLEN;
+-  if (list->cfg.what_to_count_3 & (COUNT_INGRESS_VRF_NAME))
+-    list->cfg.data_type |= PIPE_TYPE_VLEN;
+ 
+         if (list->cfg.what_to_count & (COUNT_SRC_PORT|COUNT_DST_PORT|COUNT_SUM_PORT|COUNT_TCPFLAGS)) {
+           enable_ip_fragment_handler();
+@@ -2322,32 +2320,6 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
+ 		  exit_gracefully(1);
+ 		}
+ 	      }
+-        
+-        if (tpl->fld[NF9_VRF_NAME].count) {
+-          char *vrf_name;
+-
+-          if (!entry->vrf_name_map) {
+-              entry->vrf_name_map = cdada_map_create(MAX_VRF_NAME+1); /* size of vrf-name */
+-              if (!entry->vrf_name_map) {
+-                Log(LOG_ERR, "ERROR ( %s/core ): Unable to allocate entry->vrf_name_map. Exiting.\n", config.name);
+-                exit_gracefully(1);
+-              }
+-          }
+-          vrf_name = malloc(MAX_VRF_NAME+1);
+-          if (!vrf_name) {
+-            Log(LOG_ERR, "ERROR ( %s/core ): Unable to malloc vrf_name. Exiting.\n", config.name);
+-            exit_gracefully(1);
+-          } 
+-
+-          strncpy(vrf_name, (const char *) pkt+tpl->fld[NF9_VRF_NAME].off[0], MAX_VRF_NAME);
+-          vrf_name[MAX_VRF_NAME] = '\0';
+-          ret = cdada_map_insert(entry->vrf_name_map, &ingress_vrfid, vrf_name);
+-          if (ret != CDADA_SUCCESS && ret != CDADA_E_EXISTS) {
+-            Log(LOG_ERR, "ERROR ( %s/core ): Unable to insert in entry->vrf_name_map. Exiting.\n", config.name);
+-            exit_gracefully(1);
+-          } 
+-          Log(LOG_DEBUG, "DEBUG ( %s/core ): Mapped ingress vrf id %d, to vrf_name %s\n", config.name, ingress_vrfid, (char *) vrf_name );
+-        }
+ 	    }
+ 	  }
+ 	}
+@@ -3927,54 +3899,6 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
+       }
+     }
+ 
+-#if defined (USE_VRF_NAME_PTR)
+-    if (ingress_vrfid) {
+-      ret = cdada_map_find(entry->vrf_name_map, &ingress_vrfid, (void **) &pptrs->ingress_vrf_name);
+-
+-      if (ret == CDADA_SUCCESS) {
+-        Log(LOG_DEBUG, "DEBUG ( %s/core ): Found VRF Name in hashmap for ingress_vrf_id %d to ptr %s\n", config.name, ingress_vrfid, pptrs->ingress_vrf_name);
+-      } else {
+-        pptrs->ingress_vrf_name = NULL;
+-      }
+-    }
+-    if (egress_vrfid) {
+-      char *egress_vrf_name;
+-      ret = cdada_map_find(entry->vrf_name_map, &egress_vrfid, (void **) &pptrs->egress_vrf_name);
+-
+-      if (ret == CDADA_SUCCESS) {
+-        Log(LOG_DEBUG, "DEBUG ( %s/core ): Found VRF Name in hashmap for egress_vrf_id %d to ptr %s\n", config.name, egress_vrfid, pptrs->egress_vrf_name);
+-      } else {
+-        pptrs->egress_vrf_name = NULL;
+-      }
+-    }
+-
+-#else
+-    if (ingress_vrfid) {
+-      char *ingress_vrf_name;
+-      ret = cdada_map_find(entry->vrf_name_map, &ingress_vrfid, (void **) &ingress_vrf_name);
+-
+-      if (ret == CDADA_SUCCESS) {
+-        Log(LOG_DEBUG, "DEBUG ( %s/core ): Found VRF Name in hashmap for ingress_vrf_id %d to name %s\n", config.name, ingress_vrfid, ingress_vrf_name);
+-        memcpy (pptrs->ingress_vrf_name, ingress_vrf_name, MAX_VRF_NAME);
+-      } else {
+-        pptrs->ingress_vrf_name[0] = '\0';
+-      } 
+-    }
+-    if (egress_vrfid) {
+-      char *egress_vrf_name;
+-      ret = cdada_map_find(entry->vrf_name_map, &egress_vrfid, (void **) &egress_vrf_name);
+-
+-      if (ret == CDADA_SUCCESS) {
+-        Log(LOG_DEBUG, "DEBUG ( %s/core ): Found VRF Name in hashmap for egress_vrf_id %d to name %s\n", config.name, egress_vrfid, egress_vrf_name);
+-        memcpy (pptrs->egress_vrf_name, egress_vrf_name, MAX_VRF_NAME);
+-      } else {
+-        pptrs->egress_vrf_name[0] = '\0';
+-      }      
+-
+-    }
+-#endif
+-
+-
+     if (ingress_vrfid && (!direction /* 0 = ingress */ || !egress_vrfid)) {
+ 
+       if (entry->in_rd_map) { /* check obsID/srcID scoped xflow_status table */
+diff --git a/src/nfv9_template.h b/src/nfv9_template.h
+index 7db5fb6c..96fbe76c 100644
+--- a/src/nfv9_template.h
++++ b/src/nfv9_template.h
+@@ -156,7 +156,6 @@
+ #define NF9_FW_EVENT                    233
+ #define NF9_INGRESS_VRFID               234
+ #define NF9_EGRESS_VRFID                235
+-#define NF9_VRF_NAME                    236
+ /* ... */
+ #define NF9_DOT1QVLANID                 243
+ #define NF9_DOT1QPRIORITY               244
+diff --git a/src/pkt_handlers.c b/src/pkt_handlers.c
+index c2e94b34..e94b2196 100644
+--- a/src/pkt_handlers.c
++++ b/src/pkt_handlers.c
+@@ -513,25 +513,6 @@ void evaluate_packet_handlers()
+       }
+     }
+ 
+-    if (channels_list[index].aggregation_3 & COUNT_INGRESS_VRF_NAME) {
+-
+-      if (config.acct_type == ACCT_NF) {
+-        channels_list[index].phandler[primitives] = NF_ingress_vrf_name_handler;
+-        primitives++;
+-      }
+-
+-    }
+-
+-    if (channels_list[index].aggregation_3 & COUNT_EGRESS_VRF_NAME) {
+-    
+-      if (config.acct_type == ACCT_NF) {
+-        channels_list[index].phandler[primitives] = NF_egress_vrf_name_handler; 
+-        primitives++;
+-      }
+-
+-    }
+-
+-
+     if (channels_list[index].aggregation & COUNT_MPLS_VPN_RD) {
+ 
+       if (config.acct_type == ACCT_NF) {
+@@ -2060,41 +2041,6 @@ void NF_mpls_vpn_rd_handler(struct channels_list_entry *chptr, struct packet_ptr
+   }
+ }
+ 
+-void NF_ingress_vrf_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+-{
+-
+-  struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
+-#if defined (USE_VRF_NAME_PTR)
+-  if (pptrs->ingress_vrf_name == NULL) {
+-    return;
+-  }
+-#endif
+-
+-  if (check_pipe_buffer_space(chptr, pvlen, MAX_VRF_NAME)) {
+-    vlen_prims_init(pvlen, 0);
+-    return;
+-  }
+-  else vlen_prims_insert(pvlen, COUNT_INT_INGRESS_VRF_NAME, MAX_VRF_NAME, (u_char *) pptrs->ingress_vrf_name, PM_MSG_STR_COPY);
+-
+-}
+-
+-void NF_egress_vrf_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+-{
+-
+-  struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
+-#if defined (USE_VRF_NAME_PTR)
+-  if (pptrs->egress_vrf_name == NULL) {
+-    return;
+-  }
+-#endif
+-  if (check_pipe_buffer_space(chptr, pvlen, MAX_VRF_NAME)) {
+-    vlen_prims_init(pvlen, 0);
+-    return;
+-  }
+-  else vlen_prims_insert(pvlen, COUNT_INT_EGRESS_VRF_NAME, MAX_VRF_NAME, (u_char *) pptrs->egress_vrf_name, PM_MSG_STR_COPY);
+-
+-}
+-
+ void timestamp_start_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+ {
+   struct pkt_nat_primitives *pnat = (struct pkt_nat_primitives *) ((*data) + chptr->extras.off_pkt_nat_primitives);
+diff --git a/src/pkt_handlers.h b/src/pkt_handlers.h
+index 4724b567..0d892aed 100644
+--- a/src/pkt_handlers.h
++++ b/src/pkt_handlers.h
+@@ -117,8 +117,6 @@ extern void NF_mpls_label_top_handler(struct channels_list_entry *, struct packe
+ extern void NF_mpls_label_bottom_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+ extern void NF_srv6_segment_ipv6_list_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+ extern void NF_mpls_vpn_rd_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+-extern void NF_ingress_vrf_name_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+-extern void NF_egress_vrf_name_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+ extern void NF_mpls_pw_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+ extern void NF_path_delay_avg_usec_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+ extern void NF_path_delay_min_usec_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+diff --git a/src/plugin_cmn_avro.c b/src/plugin_cmn_avro.c
+index b9d01240..4a131be0 100644
+--- a/src/plugin_cmn_avro.c
++++ b/src/plugin_cmn_avro.c
+@@ -354,14 +354,6 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_in
+     compose_srv6_segment_ipv6_list_schema(schema);
+   }
+ 
+-  if (wtc_3 & COUNT_INGRESS_VRF_NAME) {
+-    compose_ingress_vrf_name_schema(schema);
+-  }
+-
+-   if (wtc_3 & COUNT_EGRESS_VRF_NAME) {
+-    compose_egress_vrf_name_schema(schema);
+-  }
+-
+   if (wtc & COUNT_IP_PROTO) {
+     avro_schema_record_field_append(schema, "ip_proto", avro_schema_string());
+   }
+@@ -1132,30 +1124,6 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wt
+     }
+   }
+ 
+-  if (wtc_3 & COUNT_INGRESS_VRF_NAME) {
+-
+-    char *str_ptr;
+-
+-    vlen_prims_get(pvlen, COUNT_INT_INGRESS_VRF_NAME, &str_ptr);
+-    
+-    if (str_ptr) {
+-      pm_avro_check(avro_value_get_by_name(&value, "ingress_vrf_name", &field, NULL));
+-      pm_avro_check(avro_value_set_string(&field, str_ptr));
+-    }
+-  }
+-
+-  if (wtc_3 & COUNT_EGRESS_VRF_NAME) {
+-
+-    char *str_ptr;
+-
+-    vlen_prims_get(pvlen, COUNT_INT_EGRESS_VRF_NAME, &str_ptr);
+-    
+-    if (str_ptr) {
+-      pm_avro_check(avro_value_get_by_name(&value, "egress_vrf_name", &field, NULL));
+-      pm_avro_check(avro_value_set_string(&field, str_ptr));
+-    }
+-  }
+-
+   if (wtc & COUNT_IP_PROTO) {
+     char proto[PROTO_NUM_STRLEN];
+ 
+@@ -1826,24 +1794,6 @@ void compose_srv6_segment_ipv6_list_schema(avro_schema_t sc_type_record)
+   avro_schema_decref(sc_type_string);
+ }
+ 
+-void compose_ingress_vrf_name_schema(avro_schema_t sc_type_record)
+-{
+-  sc_type_string = avro_schema_string();
+-  avro_schema_record_field_append(sc_type_record, "ingress_vrf_name", sc_type_string);
+-
+-  /* free-up memory */
+-  avro_schema_decref(sc_type_string);
+-}
+-
+-void compose_egress_vrf_name_schema(avro_schema_t sc_type_record)
+-{
+-  sc_type_string = avro_schema_string();
+-  avro_schema_record_field_append(sc_type_record, "egress_vrf_name", sc_type_string);
+-
+-  /* free-up memory */
+-  avro_schema_decref(sc_type_string);
+-}
+-
+ void compose_str_linked_list_to_avro_array_schema(avro_schema_t sc_type_record, const char *comm_type)
+ {
+   sc_type_string = avro_schema_string();
+diff --git a/src/plugin_cmn_avro.h b/src/plugin_cmn_avro.h
+index 0b35847c..6453709e 100644
+--- a/src/plugin_cmn_avro.h
++++ b/src/plugin_cmn_avro.h
+@@ -53,8 +53,6 @@ extern void compose_tunnel_tcpflags_avro_schema(avro_schema_t);
+ extern void compose_fwd_status_avro_schema(avro_schema_t);
+ extern void compose_mpls_label_stack_schema(avro_schema_t);
+ extern void compose_srv6_segment_ipv6_list_schema(avro_schema_t);
+-extern void compose_ingress_vrf_name_schema(avro_schema_t);
+-extern void compose_egress_vrf_name_schema(avro_schema_t);
+ extern void compose_str_linked_list_to_avro_array_schema(avro_schema_t, const char *);
+ extern int compose_label_avro_data_opt(char *, avro_value_t);
+ extern int compose_label_avro_data_nonopt(char *, avro_value_t);
+diff --git a/src/plugin_cmn_json.c b/src/plugin_cmn_json.c
+index 447f6709..ec407b8c 100644
+--- a/src/plugin_cmn_json.c
++++ b/src/plugin_cmn_json.c
+@@ -596,16 +596,6 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3)
+     idx++;
+   }
+ 
+-  if (wtc_3 & COUNT_INGRESS_VRF_NAME) {
+-    cjhandler[idx] = compose_json_ingress_vrf_name;
+-    idx++;
+-  }
+-
+-  if (wtc_3 & COUNT_EGRESS_VRF_NAME) {
+-    cjhandler[idx] = compose_json_egress_vrf_name;
+-    idx++;
+-  }
+-
+   cjhandler[idx] = compose_json_counters;
+ }
+ 
+@@ -934,32 +924,6 @@ void compose_json_mpls_vpn_rd(json_t *obj, struct chained_cache *cc)
+   json_object_set_new_nocheck(obj, "mpls_vpn_rd_origin", json_string(bgp_rd_origin_print(cc->pbgp->mpls_vpn_rd.type)));
+ }
+ 
+-void compose_json_ingress_vrf_name(json_t *obj, struct chained_cache *cc) 
+-{
+-
+-  char empty_string[] = "", *str_ptr;
+-
+-  vlen_prims_get(cc->pvlen, COUNT_INT_INGRESS_VRF_NAME, &str_ptr);
+-  if (!str_ptr) {
+-    str_ptr = empty_string;
+-  } 
+-
+-  json_object_set_new_nocheck(obj, "ingress_vrf_name", json_string(str_ptr));
+-}
+-
+-void compose_json_egress_vrf_name(json_t *obj, struct chained_cache *cc) 
+-{
+-
+-  char empty_string[] = "", *str_ptr;
+-
+-  vlen_prims_get(cc->pvlen, COUNT_INT_EGRESS_VRF_NAME, &str_ptr);
+-  if (!str_ptr) {
+-    str_ptr = empty_string;
+-  } 
+-
+-  json_object_set_new_nocheck(obj, "egress_vrf_name", json_string(str_ptr));
+-}
+-
+ void compose_json_mpls_pw_id(json_t *obj, struct chained_cache *cc)
+ {
+   json_object_set_new_nocheck(obj, "mpls_pw_id", json_integer((json_int_t)cc->pbgp->mpls_pw_id));
+diff --git a/src/plugin_cmn_json.h b/src/plugin_cmn_json.h
+index 9f0eefca..ad41506b 100644
+--- a/src/plugin_cmn_json.h
++++ b/src/plugin_cmn_json.h
+@@ -155,8 +155,6 @@ extern void compose_json_counters(json_t *, struct chained_cache *);
+ extern void compose_json_path_delay_avg_usec(json_t *, struct chained_cache *);
+ extern void compose_json_path_delay_min_usec(json_t *, struct chained_cache *);
+ extern void compose_json_path_delay_max_usec(json_t *, struct chained_cache *);
+-extern void compose_json_ingress_vrf_name(json_t *, struct chained_cache *);
+-extern void compose_json_egress_vrf_name(json_t *, struct chained_cache *);
+ 
+ #endif
+ extern void compose_json(u_int64_t, u_int64_t, u_int64_t);
+diff --git a/src/pmacct-defines.h b/src/pmacct-defines.h
+index 02a01dff..d9c20e37 100644
+--- a/src/pmacct-defines.h
++++ b/src/pmacct-defines.h
+@@ -276,9 +276,6 @@
+ #define COUNT_INT_IN_CVLAN		0x0003000000000008ULL
+ #define COUNT_INT_OUT_CVLAN		0x0003000000000010ULL
+ #define COUNT_INT_NVGRE			0x0003000000000020ULL
+-#define COUNT_INT_INGRESS_VRF_NAME			0x0003000000000040ULL
+-#define COUNT_INT_EGRESS_VRF_NAME			0x0003000000000080ULL
+-
+ 
+ #define COUNT_INDEX_MASK	0xFFFF
+ #define COUNT_INDEX_CP		0xFFFF000000000000ULL  /* index 0xffff reserved to custom primitives */
+@@ -392,9 +389,6 @@
+ #define COUNT_IN_CVLAN			(COUNT_INT_IN_CVLAN & COUNT_REGISTRY_MASK)
+ #define COUNT_OUT_CVLAN			(COUNT_INT_OUT_CVLAN & COUNT_REGISTRY_MASK)
+ #define COUNT_NVGRE			(COUNT_INT_NVGRE & COUNT_REGISTRY_MASK)
+-#define COUNT_INGRESS_VRF_NAME  (COUNT_INT_INGRESS_VRF_NAME & COUNT_REGISTRY_MASK)
+-#define COUNT_EGRESS_VRF_NAME  (COUNT_INT_EGRESS_VRF_NAME & COUNT_REGISTRY_MASK)
+-
+ /* PRIMITIVES DEFINITION: END */
+ 
+ /* BYTES and PACKETS are used into templates; we let their values to
+diff --git a/src/xflow_status.h b/src/xflow_status.h
+index 5765f172..901d17a9 100644
+--- a/src/xflow_status.h
++++ b/src/xflow_status.h
+@@ -89,7 +89,6 @@ struct xflow_status_entry
+   struct xflow_status_entry_class *class;
+   cdada_map_t *in_rd_map;	/* hash map for ingress vrf id -> mpls vpn rd lookup */
+   cdada_map_t *out_rd_map;	/* hash map for egress vrf id -> mpls vpn rd lookup */
+-  cdada_map_t *vrf_name_map; /* hash map for ingress vrf id -> vrf name lookup*/
+   void *sf_cnt;			/* struct (ab)used for sFlow counters logging */
+ 
+ #ifdef WITH_GNUTLS
