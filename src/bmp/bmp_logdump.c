@@ -384,13 +384,13 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_l
     json_object_set_new_nocheck(obj, "peer_type", json_integer((json_int_t)bdata->chars.peer_type));
 
     json_object_set_new_nocheck(obj, "bmp_rib_type", json_string(bmp_rib_type_print(bdata->chars.rib_type)));
+    json_object_set_new_nocheck(obj, "is_filtered", json_integer((json_int_t)bdata->chars.is_filtered));
 
     if (!bdata->chars.is_loc && !bdata->chars.is_out) {
       json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bdata->chars.is_post));
       json_object_set_new_nocheck(obj, "is_in", json_integer(1));
     }
     else if (bdata->chars.is_loc) {
-      json_object_set_new_nocheck(obj, "is_filtered", json_integer((json_int_t)bdata->chars.is_filtered));
       json_object_set_new_nocheck(obj, "is_loc", json_integer((json_int_t)bdata->chars.is_loc));
     }
     else if (bdata->chars.is_out) {
@@ -467,6 +467,9 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_l
     pm_avro_check(avro_value_get_by_name(obj, "bmp_rib_type", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_string(&p_avro_field, bmp_rib_type_print(bdata->chars.rib_type)));
 
+    pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &p_avro_field, NULL));
+    pm_avro_check(avro_value_set_int(&p_avro_field, bdata->chars.is_filtered));
+
     if (!bdata->chars.is_loc && !bdata->chars.is_out) {
       pm_avro_check(avro_value_get_by_name(obj, "is_in", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
@@ -475,9 +478,6 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_l
       pm_avro_check(avro_value_get_by_name(obj, "is_post", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
       pm_avro_check(avro_value_set_int(&p_avro_branch, bdata->chars.is_post));
-
-      pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &p_avro_field, NULL));
-      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
 
       pm_avro_check(avro_value_get_by_name(obj, "is_loc", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
@@ -488,10 +488,6 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_l
     else if (bdata->chars.is_loc) {
       pm_avro_check(avro_value_get_by_name(obj, "is_in", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
-
-      pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &p_avro_field, NULL));
-      pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-      pm_avro_check(avro_value_set_int(&p_avro_branch, bdata->chars.is_filtered));
 
       pm_avro_check(avro_value_get_by_name(obj, "is_loc", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
@@ -505,9 +501,6 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_l
     }
     else if (bdata->chars.is_out) {
       pm_avro_check(avro_value_get_by_name(obj, "is_in", &p_avro_field, NULL));
-      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
-
-      pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
 
       pm_avro_check(avro_value_get_by_name(obj, "is_loc", &p_avro_field, NULL));
@@ -849,13 +842,13 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
     }
 
     json_object_set_new_nocheck(obj, "bmp_rib_type", json_string(bmp_rib_type_print(bdata->chars.rib_type)));
+    json_object_set_new_nocheck(obj, "is_filtered", json_integer((json_int_t)bdata->chars.is_filtered));
 
     if (!bdata->chars.is_loc && !bdata->chars.is_out) {
       json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bdata->chars.is_post));
       json_object_set_new_nocheck(obj, "is_in", json_integer(1));
     }
     else if (bdata->chars.is_loc) {
-      json_object_set_new_nocheck(obj, "is_filtered", json_integer((json_int_t)bdata->chars.is_filtered));
       json_object_set_new_nocheck(obj, "is_loc", json_integer((json_int_t)bdata->chars.is_loc));
     }
     else if (bdata->chars.is_out) {
@@ -945,6 +938,9 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
     pm_avro_check(avro_value_get_by_name(obj, "bmp_rib_type", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_string(&p_avro_field, bmp_rib_type_print(bdata->chars.rib_type)));
 
+    pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &p_avro_field, NULL));
+    pm_avro_check(avro_value_set_int(&p_avro_field, bdata->chars.is_filtered));
+
     if (!bdata->chars.is_loc && !bdata->chars.is_out) {
       pm_avro_check(avro_value_get_by_name(obj, "is_in", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
@@ -953,9 +949,6 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
       pm_avro_check(avro_value_get_by_name(obj, "is_post", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
       pm_avro_check(avro_value_set_int(&p_avro_branch, bdata->chars.is_post));
-
-      pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &p_avro_field, NULL));
-      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
 
       pm_avro_check(avro_value_get_by_name(obj, "is_loc", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
@@ -966,10 +959,6 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
     else if (bdata->chars.is_loc) {
       pm_avro_check(avro_value_get_by_name(obj, "is_in", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
-
-      pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &p_avro_field, NULL));
-      pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-      pm_avro_check(avro_value_set_int(&p_avro_branch, bdata->chars.is_filtered));
 
       pm_avro_check(avro_value_get_by_name(obj, "is_loc", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
@@ -983,9 +972,6 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
     }
     else if (bdata->chars.is_out) {
       pm_avro_check(avro_value_get_by_name(obj, "is_in", &p_avro_field, NULL));
-      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
-
-      pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
 
       pm_avro_check(avro_value_get_by_name(obj, "is_loc", &p_avro_field, NULL));
@@ -1111,6 +1097,7 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
     }
 
     json_object_set_new_nocheck(obj, "bmp_rib_type", json_string(bmp_rib_type_print(bdata->chars.rib_type)));
+    json_object_set_new_nocheck(obj, "is_filtered", json_integer((json_int_t)bdata->chars.is_filtered));
 
     if (!bdata->chars.is_loc && !bdata->chars.is_out) {
       json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bdata->chars.is_post));
@@ -1208,6 +1195,9 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
 
     pm_avro_check(avro_value_get_by_name(obj, "bmp_rib_type", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_string(&p_avro_field, bmp_rib_type_print(bdata->chars.rib_type)));
+
+    pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &p_avro_field, NULL));
+    pm_avro_check(avro_value_set_int(&p_avro_field, bdata->chars.is_filtered));
 
     if (!bdata->chars.is_loc && !bdata->chars.is_out) {
       pm_avro_check(avro_value_get_by_name(obj, "is_in", &p_avro_field, NULL));
@@ -2159,8 +2149,8 @@ avro_schema_t p_avro_schema_build_bmp_rm(int log_type, char *schema_name)
   avro_schema_record_field_append(schema, "bmp_msg_type", avro_schema_string());
 
   avro_schema_record_field_append(schema, "bmp_rib_type", avro_schema_string());
+  avro_schema_record_field_append(schema, "is_filtered", avro_schema_int());
   avro_schema_record_field_append(schema, "is_in", optint_s);
-  avro_schema_record_field_append(schema, "is_filtered", optint_s);
   avro_schema_record_field_append(schema, "is_loc", optint_s);
   avro_schema_record_field_append(schema, "is_post", optint_s);
   avro_schema_record_field_append(schema, "is_out", optint_s);
@@ -2264,8 +2254,8 @@ avro_schema_t p_avro_schema_build_bmp_peer_up(char *schema_name)
   avro_schema_record_field_append(schema, "peer_type_str", optstr_s);
 
   avro_schema_record_field_append(schema, "bmp_rib_type", avro_schema_string());
+  avro_schema_record_field_append(schema, "is_filtered", avro_schema_int());
   avro_schema_record_field_append(schema, "is_in", optint_s);
-  avro_schema_record_field_append(schema, "is_filtered", optint_s);
   avro_schema_record_field_append(schema, "is_loc", optint_s);
   avro_schema_record_field_append(schema, "is_post", optint_s);
   avro_schema_record_field_append(schema, "is_out", optint_s);
@@ -2321,6 +2311,7 @@ avro_schema_t p_avro_schema_build_bmp_peer_down(char *schema_name)
   avro_schema_record_field_append(schema, "peer_type_str", optstr_s);
 
   avro_schema_record_field_append(schema, "bmp_rib_type", avro_schema_string());
+  avro_schema_record_field_append(schema, "is_filtered", avro_schema_int());
   avro_schema_record_field_append(schema, "is_in", optint_s);
   avro_schema_record_field_append(schema, "is_loc", optint_s);
   avro_schema_record_field_append(schema, "is_post", optint_s);
@@ -2356,8 +2347,8 @@ avro_schema_t p_avro_schema_build_bmp_stats(char *schema_name)
   avro_schema_record_field_append(schema, "peer_type_str", avro_schema_string());
 
   avro_schema_record_field_append(schema, "bmp_rib_type", avro_schema_string());
+  avro_schema_record_field_append(schema, "is_filtered", avro_schema_int());
   avro_schema_record_field_append(schema, "is_in", optint_s);
-  avro_schema_record_field_append(schema, "is_filtered", optint_s);
   avro_schema_record_field_append(schema, "is_loc", optint_s);
   avro_schema_record_field_append(schema, "is_post", optint_s);
   avro_schema_record_field_append(schema, "is_out", optint_s);

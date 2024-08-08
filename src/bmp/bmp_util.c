@@ -398,13 +398,13 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
     json_t *obj = void_obj;
 
     json_object_set_new_nocheck(obj, "bmp_rib_type", json_string(bmp_rib_type_print(bmed_bmp->rib_type)));
+    json_object_set_new_nocheck(obj, "is_filtered", json_integer((json_int_t)bmed_bmp->is_filtered));
 
     if (!bmed_bmp->is_loc && !bmed_bmp->is_out) {
       json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bmed_bmp->is_post));
       json_object_set_new_nocheck(obj, "is_in", json_integer(1));
     }
     else if (bmed_bmp->is_loc) {
-      json_object_set_new_nocheck(obj, "is_filtered", json_integer((json_int_t)bmed_bmp->is_filtered));
       json_object_set_new_nocheck(obj, "is_loc", json_integer((json_int_t)bmed_bmp->is_loc));
     }
     else if (bmed_bmp->is_out) {
@@ -429,6 +429,9 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
     pm_avro_check(avro_value_get_by_name(obj, "bmp_rib_type", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_string(&p_avro_field, bmp_rib_type_print(bmed_bmp->rib_type)));
 
+    pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &p_avro_field, NULL));
+    pm_avro_check(avro_value_set_int(&p_avro_field, bmed_bmp->is_filtered));
+
     if (!bmed_bmp->is_loc && !bmed_bmp->is_out) {
       pm_avro_check(avro_value_get_by_name(obj, "is_in", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
@@ -437,9 +440,6 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
       pm_avro_check(avro_value_get_by_name(obj, "is_post", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
       pm_avro_check(avro_value_set_int(&p_avro_branch, bmed_bmp->is_post));
-
-      pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &p_avro_field, NULL));
-      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
 
       pm_avro_check(avro_value_get_by_name(obj, "is_loc", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
@@ -450,10 +450,6 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
     else if (bmed_bmp->is_loc) {
       pm_avro_check(avro_value_get_by_name(obj, "is_in", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
-
-      pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &p_avro_field, NULL));
-      pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-      pm_avro_check(avro_value_set_int(&p_avro_branch, bmed_bmp->is_filtered));
 
       pm_avro_check(avro_value_get_by_name(obj, "is_loc", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
@@ -467,9 +463,6 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
     }
     else if (bmed_bmp->is_out) {
       pm_avro_check(avro_value_get_by_name(obj, "is_in", &p_avro_field, NULL));
-      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
-
-      pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
 
       pm_avro_check(avro_value_get_by_name(obj, "is_loc", &p_avro_field, NULL));
