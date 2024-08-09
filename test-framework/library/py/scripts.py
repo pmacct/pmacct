@@ -66,7 +66,7 @@ def stop_and_remove_pmacct_container(pmacct_name: str, pmacct_docker_compose_fil
 # Stops and removes Redis container
 def stop_and_remove_redis_container() -> bool:
     logger.info("Stopping Redis container")
-    return run_script(['./library/sh/redis_docker/stop_and_remove.sh'])[0]
+    return run_script(['./library/sh/redis_docker/stop.sh'])[0]
 
 
 # Stops traffic-reproducer container using the corresponding docker-compose file

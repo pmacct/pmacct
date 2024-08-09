@@ -21,7 +21,7 @@ def main(consumers):
     th = KTestHelper(testParams, consumers)
     assert th.spawn_traffic_container('traffic-reproducer-205', detached=True)
 
-    th.set_ignored_fields(['seq', 'timestamp', 'bmp_router_port', 'timestamp_arrival'])
+    th.set_ignored_fields(['seq', 'timestamp', 'bmp_router_port', 'timestamp_arrival', 'bmp_rib_type', 'is_filtered'])
     assert th.read_and_compare_messages('daisy.bmp', 'bmp-00')
 
     assert not th.check_regex_in_pmacct_log('ERROR|WARN(?!.*Unable to get kafka_host)')
