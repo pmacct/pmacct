@@ -117,6 +117,8 @@ extern void NF_mpls_label_top_handler(struct channels_list_entry *, struct packe
 extern void NF_mpls_label_bottom_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_srv6_segment_ipv6_list_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_vpn_rd_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void NF_ingress_vrf_name_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void NF_egress_vrf_name_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_pw_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_path_delay_avg_usec_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_path_delay_min_usec_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

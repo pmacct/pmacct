@@ -155,6 +155,8 @@ extern void compose_json_counters(json_t *, struct chained_cache *);
 extern void compose_json_path_delay_avg_usec(json_t *, struct chained_cache *);
 extern void compose_json_path_delay_min_usec(json_t *, struct chained_cache *);
 extern void compose_json_path_delay_max_usec(json_t *, struct chained_cache *);
+extern void compose_json_ingress_vrf_name(json_t *, struct chained_cache *);
+extern void compose_json_egress_vrf_name(json_t *, struct chained_cache *);
 
 #endif
 extern void compose_json(u_int64_t, u_int64_t, u_int64_t);

@@ -156,6 +156,7 @@
 #define NF9_FW_EVENT                    233
 #define NF9_INGRESS_VRFID               234
 #define NF9_EGRESS_VRFID                235
+#define NF9_VRF_NAME                    236
 /* ... */
 #define NF9_DOT1QVLANID                 243
 #define NF9_DOT1QPRIORITY               244
