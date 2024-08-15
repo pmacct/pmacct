@@ -27,10 +27,12 @@ All the components (kafka stack, pmacct daemon, and traffic reproducer) are depl
 
 ## 1 - How To Install
 
-Create and activate Python virtual envirinment:
+**NOTE**: the framework depends on a functional Docker installation; to install Docker see: `https://docs.docker.com/engine/install/`. If using venv, that should also be installed, ie. on Debian/Ubuntu `apt-get install python3-venv`.
+
+As super-user create and activate Python virtual environment:
 ```shell
 cd test-framework
-python -m venv venv
+python3 -m venv venv
 source ./venv/bin/activate
 ```
 
@@ -39,7 +41,7 @@ Install/Update Python project dependencies:
 pip install -r requirements.txt
 ```
 
-Build single- and multi-pcap traffic reproducer image:
+Still as super-user build single- and multi-pcap traffic reproducer image:
 ```shell
 tools/pcap_player/build_docker_image.sh
 ```
@@ -54,7 +56,9 @@ tools/pmacct_build/build_docker_images.sh
 
 ## 2 - How To Run
 
-In order to run the tests locally you need to be in the 'test-framework' folder (which is the pytest root folder).
+**NOTE**: minimum system requirements to run the framework are currently 4GB RAM and 10GB free disk space. Recommended is 2 CPUs, 8GB RAM and 20GB free disk space.
+
+In order to run the tests locally you need to be in the 'test-framework' folder (which is the pytest root folder). Also, if venv is in use, you must be in the previously built venv environment.
 
 To run one or more test cases:
 ```shell
