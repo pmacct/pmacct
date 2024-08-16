@@ -3927,14 +3927,14 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
       }
     }
 #if defined (USE_VRF_NAME_PTR)
+    pptrs->ingress_vrf_name = NULL;
+    pptrs->egress_vrf_name = NULL;
     if (ingress_vrfid) {
       ret = cdada_map_find(entry->vrf_name_map, &ingress_vrfid, (void **) &pptrs->ingress_vrf_name);
 
       if (ret == CDADA_SUCCESS) {
         Log(LOG_DEBUG, "DEBUG ( %s/core ): Found VRF Name in hashmap for ingress_vrf_id %d to ptr %s\n", config.name, ingress_vrfid, pptrs->ingress_vrf_name);
-      } else {
-        pptrs->ingress_vrf_name = NULL;
-      }
+      } 
     }
     if (egress_vrfid) {
       char *egress_vrf_name;
@@ -3942,11 +3942,11 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
 
       if (ret == CDADA_SUCCESS) {
         Log(LOG_DEBUG, "DEBUG ( %s/core ): Found VRF Name in hashmap for egress_vrf_id %d to ptr %s\n", config.name, egress_vrfid, pptrs->egress_vrf_name);
-      } else {
-        pptrs->egress_vrf_name = NULL;
-      }
+      } 
     }
 #else
+    pptrs->ingress_vrf_name[0] = '\0';
+    pptrs->egress_vrf_name[0] = '\0';
     if (ingress_vrfid) {
       char *ingress_vrf_name;
       ret = cdada_map_find(entry->vrf_name_map, &ingress_vrfid, (void **) &ingress_vrf_name);
@@ -3954,9 +3954,7 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
       if (ret == CDADA_SUCCESS) {
         Log(LOG_DEBUG, "DEBUG ( %s/core ): Found VRF Name in hashmap for ingress_vrf_id %d to name %s\n", config.name, ingress_vrfid, ingress_vrf_name);
         memcpy (pptrs->ingress_vrf_name, ingress_vrf_name, MAX_VRF_NAME);
-      } else {
-        pptrs->ingress_vrf_name[0] = '\0';
-      } 
+      }
     }
     if (egress_vrfid) {
       char *egress_vrf_name;
@@ -3965,10 +3963,7 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
       if (ret == CDADA_SUCCESS) {
         Log(LOG_DEBUG, "DEBUG ( %s/core ): Found VRF Name in hashmap for egress_vrf_id %d to name %s\n", config.name, egress_vrfid, egress_vrf_name);
         memcpy (pptrs->egress_vrf_name, egress_vrf_name, MAX_VRF_NAME);
-      } else {
-        pptrs->egress_vrf_name[0] = '\0';
-      }      
-
+      } 
     }
 #endif
 
