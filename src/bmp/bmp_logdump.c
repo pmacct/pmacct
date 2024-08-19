@@ -413,11 +413,11 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_l
     }
 
     if (!is_empty_256b(&bdata->chars.rd, sizeof(bdata->chars.rd))) {
-      char rd_str[SHORTSHORTBUFLEN];
+      char pd_str[SHORTSHORTBUFLEN];
 
-      bgp_rd2str(rd_str, &bdata->chars.rd);
-      json_object_set_new_nocheck(obj, "rd", json_string(rd_str));
-      json_object_set_new_nocheck(obj, "rd_origin", json_string(bgp_rd_origin_print(bdata->chars.rd.type)));
+      bgp_rd2str(pd_str, &bdata->chars.rd);
+      json_object_set_new_nocheck(obj, "pd", json_string(pd_str));
+      json_object_set_new_nocheck(obj, "pd_origin", json_string(bgp_rd_origin_print(bdata->chars.rd.type)));
     }
 
     json_object_set_new_nocheck(obj, "bgp_id", json_string(inet_ntoa(bdata->bgp_id.address.ipv4)));
@@ -532,22 +532,22 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_l
     }
 
     if (!is_empty_256b(&bdata->chars.rd, sizeof(bdata->chars.rd))) {
-      char rd_str[SHORTSHORTBUFLEN];
+      char pd_str[SHORTSHORTBUFLEN];
 
-      bgp_rd2str(rd_str, &bdata->chars.rd);
-      pm_avro_check(avro_value_get_by_name(obj, "rd", &p_avro_field, NULL));
+      bgp_rd2str(pd_str, &bdata->chars.rd);
+      pm_avro_check(avro_value_get_by_name(obj, "pd", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-      pm_avro_check(avro_value_set_string(&p_avro_branch, rd_str));
+      pm_avro_check(avro_value_set_string(&p_avro_branch, pd_str));
 
-      pm_avro_check(avro_value_get_by_name(obj, "rd_origin", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(obj, "pd_origin", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
       pm_avro_check(avro_value_set_string(&p_avro_branch, bgp_rd_origin_print(bdata->chars.rd.type)));
     }
     else {
-      pm_avro_check(avro_value_get_by_name(obj, "rd", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(obj, "pd", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
 
-      pm_avro_check(avro_value_get_by_name(obj, "rd_origin", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(obj, "pd_origin", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
@@ -883,11 +883,11 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
     json_object_set_new_nocheck(obj, "local_ip", json_string(ip_address));
 
     if (!is_empty_256b(&bdata->chars.rd, sizeof(bdata->chars.rd))) {
-      char rd_str[SHORTSHORTBUFLEN];
+      char pd_str[SHORTSHORTBUFLEN];
 
-      bgp_rd2str(rd_str, &bdata->chars.rd);
-      json_object_set_new_nocheck(obj, "rd", json_string(rd_str));
-      json_object_set_new_nocheck(obj, "rd_origin", json_string(bgp_rd_origin_print(bdata->chars.rd.type)));
+      bgp_rd2str(pd_str, &bdata->chars.rd);
+      json_object_set_new_nocheck(obj, "pd", json_string(pd_str));
+      json_object_set_new_nocheck(obj, "pd_origin", json_string(bgp_rd_origin_print(bdata->chars.rd.type)));
     }
 
     if (tlvs) {
@@ -1021,22 +1021,22 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
     pm_avro_check(avro_value_set_string(&p_avro_field, ip_address));
 
     if (!is_empty_256b(&bdata->chars.rd, sizeof(bdata->chars.rd))) {
-      char rd_str[SHORTSHORTBUFLEN];
+      char pd_str[SHORTSHORTBUFLEN];
 
-      bgp_rd2str(rd_str, &bdata->chars.rd);
+      bgp_rd2str(pd_str, &bdata->chars.rd);
       pm_avro_check(avro_value_get_by_name(obj, "rd", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-      pm_avro_check(avro_value_set_string(&p_avro_branch, rd_str));
+      pm_avro_check(avro_value_set_string(&p_avro_branch, pd_str));
 
-      pm_avro_check(avro_value_get_by_name(obj, "rd_origin", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(obj, "pd_origin", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
       pm_avro_check(avro_value_set_string(&p_avro_branch, bgp_rd_origin_print(bdata->chars.rd.type)));
     }
     else {
-      pm_avro_check(avro_value_get_by_name(obj, "rd", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(obj, "pd", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
 
-      pm_avro_check(avro_value_get_by_name(obj, "rd_origin", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(obj, "pd_origin", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
@@ -1136,11 +1136,11 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
     }
 
     if (!is_empty_256b(&bdata->chars.rd, sizeof(bdata->chars.rd))) {
-      char rd_str[SHORTSHORTBUFLEN];
+      char pd_str[SHORTSHORTBUFLEN];
 
-      bgp_rd2str(rd_str, &bdata->chars.rd);
-      json_object_set_new_nocheck(obj, "rd", json_string(rd_str));
-      json_object_set_new_nocheck(obj, "rd_origin", json_string(bgp_rd_origin_print(bdata->chars.rd.type)));
+      bgp_rd2str(pd_str, &bdata->chars.rd);
+      json_object_set_new_nocheck(obj, "pd", json_string(pd_str));
+      json_object_set_new_nocheck(obj, "pd_origin", json_string(bgp_rd_origin_print(bdata->chars.rd.type)));
     }
 
     json_object_set_new_nocheck(obj, "reason_type", json_integer((json_int_t)blpd->reason));
@@ -1271,22 +1271,22 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
     }
 
     if (!is_empty_256b(&bdata->chars.rd, sizeof(bdata->chars.rd))) {
-      char rd_str[SHORTSHORTBUFLEN];
+      char pd_str[SHORTSHORTBUFLEN];
 
-      bgp_rd2str(rd_str, &bdata->chars.rd);
-      pm_avro_check(avro_value_get_by_name(obj, "rd", &p_avro_field, NULL));
+      bgp_rd2str(pd_str, &bdata->chars.rd);
+      pm_avro_check(avro_value_get_by_name(obj, "pd", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-      pm_avro_check(avro_value_set_string(&p_avro_branch, rd_str));
+      pm_avro_check(avro_value_set_string(&p_avro_branch, pd_str));
 
-      pm_avro_check(avro_value_get_by_name(obj, "rd_origin", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(obj, "pd_origin", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
       pm_avro_check(avro_value_set_string(&p_avro_branch, bgp_rd_origin_print(bdata->chars.rd.type)));
     }
     else {
-      pm_avro_check(avro_value_get_by_name(obj, "rd", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(obj, "pd", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
 
-      pm_avro_check(avro_value_get_by_name(obj, "rd_origin", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(obj, "pd_origin", &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
@@ -2284,8 +2284,8 @@ avro_schema_t p_avro_schema_build_bmp_peer_up(char *schema_name)
   avro_schema_record_field_append(schema, "is_post", optint_s);
   avro_schema_record_field_append(schema, "is_out", optint_s);
 
-  avro_schema_record_field_append(schema, "rd", optstr_s);
-  avro_schema_record_field_append(schema, "rd_origin", optstr_s);
+  avro_schema_record_field_append(schema, "pd", optstr_s);
+  avro_schema_record_field_append(schema, "pd_origin", optstr_s);
 
   avro_schema_record_field_append(schema, "bgp_id", avro_schema_string());
   avro_schema_record_field_append(schema, "local_port", avro_schema_int());
@@ -2341,8 +2341,8 @@ avro_schema_t p_avro_schema_build_bmp_peer_down(char *schema_name)
   avro_schema_record_field_append(schema, "is_post", optint_s);
   avro_schema_record_field_append(schema, "is_out", optint_s);
 
-  avro_schema_record_field_append(schema, "rd", optstr_s);
-  avro_schema_record_field_append(schema, "rd_origin", optstr_s);
+  avro_schema_record_field_append(schema, "pd", optstr_s);
+  avro_schema_record_field_append(schema, "pd_origin", optstr_s);
 
   avro_schema_record_field_append(schema, "reason_type", avro_schema_int());
   avro_schema_record_field_append(schema, "reason_str", optstr_s);
@@ -2377,8 +2377,8 @@ avro_schema_t p_avro_schema_build_bmp_stats(char *schema_name)
   avro_schema_record_field_append(schema, "is_post", optint_s);
   avro_schema_record_field_append(schema, "is_out", optint_s);
 
-  avro_schema_record_field_append(schema, "rd", optstr_s);
-  avro_schema_record_field_append(schema, "rd_origin", optstr_s);
+  avro_schema_record_field_append(schema, "pd", optstr_s);
+  avro_schema_record_field_append(schema, "pd_origin", optstr_s);
 
   avro_schema_record_field_append(schema, "bgp_id", avro_schema_string());
 
