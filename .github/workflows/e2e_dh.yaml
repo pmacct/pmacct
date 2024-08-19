@@ -1,0 +1,12 @@
+name: e2e_datahangar_test
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # every day at midnight
+
+jobs:
+  datahangar-single-test-run:
+    uses: datahangar/datahangar/.github/workflows/single_test_run.yaml@main
+    with:
+      pmacct-ref: "${{github.sha}}"
+      db: "druid"
