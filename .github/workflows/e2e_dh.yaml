@@ -8,5 +8,5 @@ jobs:
   datahangar-single-test-run:
     uses: datahangar/datahangar/.github/workflows/single_test_run.yaml@main
     with:
-      pmacct-ref: "${{github.sha}}"
+      pmacct-ref: "bleeding-edge"
       db: "druid"
