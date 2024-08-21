@@ -51,7 +51,7 @@ Build pmacct images (checkout to desired branch or commit first):
 tools/pmacct_build/build_docker_images.sh
 ```
 
-**HINT**: if you already locally compiled pmacct you need to clean up the repo from the build artifacts, otherwise building the container will fail.
+**HINT**: if you already locally compiled pmacct you need to clean up the repo from the build artifacts, otherwise building the container will fail. This can be done with a `make distclean`, `git clean` and going in `src/external_libs/libcdada` and removing all content with a `rm -rf *` and `rm -rf .*`.
 
 
 ## 2 - How To Run
