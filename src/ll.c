@@ -480,6 +480,99 @@ void sll_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs
   pptrs->iph_ptr = NULL;
 }
 
+void sll2_handler(const struct pcap_pkthdr *h, register struct packet_ptrs *pptrs)
+{
+  register const struct sll2_header *sllp;
+  register u_short etype;
+  u_char *p;
+  u_int16_t caplen = h->caplen;
+  u_int16_t e8021Q, nl;
+  int cursor;
+
+  if (caplen < SLL2_HDR_LEN) {
+    pptrs->iph_ptr = NULL;
+    return;
+  }
+
+  pptrs->mac_ptr = NULL;
+  pptrs->vlan_ptr = NULL;
+  pptrs->cvlan_ptr = NULL;
+  pptrs->mpls_ptr = NULL;
+
+  p = pptrs->packet_ptr;
+
+  sllp = (const struct sll2_header *) pptrs->packet_ptr;
+  etype = ntohs(sllp->sll2_protocol);
+  nl = SLL2_HDR_LEN;
+
+  /* XXX: probably we should make use of hatype instead */
+  if (EXTRACT_16BITS(&sllp->sll2_halen) == ETH_ADDR_LEN) {
+    memcpy(sll_mac[1], sllp->sll2_addr, ETH_ADDR_LEN);
+    pptrs->mac_ptr = (u_char *) sll_mac;
+  }
+
+  recurse:
+  if (etype == ETHERTYPE_IP) {
+    pptrs->l3_proto = ETHERTYPE_IP;
+    pptrs->l3_handler = ip_handler; 
+    pptrs->iph_ptr = (u_char *)(pptrs->packet_ptr + nl);
+    return;
+  }
+  
+  if (etype == ETHERTYPE_IPV6) {
+    pptrs->l3_proto = ETHERTYPE_IPV6;
+    pptrs->l3_handler = ip6_handler;
+    pptrs->iph_ptr = pptrs->packet_ptr + nl;
+    return;
+  }
+
+  if (etype == LINUX_SLL_P_802_2) {
+    /* going up to LLC/SNAP layer header */
+    p += SLL2_HDR_LEN;
+    caplen -= SLL2_HDR_LEN;
+    if ((p = llc_handler(h, caplen, p, pptrs)) != NULL) {
+      pptrs->iph_ptr = p;
+      return;
+    }
+  }
+
+  /* originally contributed by Rich Gade for eth_handler() */
+  if (etype == ETHERTYPE_8021Q || etype == ETHERTYPE_8021AD) {
+    if (caplen < IEEE8021Q_TAGLEN) {
+      pptrs->iph_ptr = NULL;
+      return;
+    }
+
+    memcpy(&e8021Q, (pptrs->packet_ptr + nl + 2), 2);
+
+    if (!cursor) {
+      pptrs->vlan_ptr = (pptrs->packet_ptr + nl);
+    }
+    else {
+      if (pptrs->vlan_ptr) {
+	pptrs->cvlan_ptr = (pptrs->packet_ptr + nl);
+      }
+    }
+
+    etype = ntohs(e8021Q);
+    nl += IEEE8021Q_TAGLEN;
+    caplen -= IEEE8021Q_TAGLEN;
+    cursor++;
+
+    goto recurse;
+  }
+
+  if (etype == ETHERTYPE_MPLS || etype == ETHERTYPE_MPLS_MULTI) {
+    etype = mpls_handler(pptrs->packet_ptr + nl, &caplen, &nl, pptrs);
+    cursor = 1;
+    goto recurse;
+  }
+
+  pptrs->l3_proto = 0;
+  pptrs->l3_handler = NULL;
+  pptrs->iph_ptr = NULL;
+}
+
 u_char *llc_handler(const struct pcap_pkthdr *h, u_int caplen, register u_char *buf, register struct packet_ptrs *pptrs)
 {
   struct llc llc;

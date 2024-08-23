@@ -66,6 +66,9 @@ struct _devices_struct _devices[] = {
 #if defined DLT_LINUX_SLL
   {sll_handler, DLT_LINUX_SLL},
 #endif
+#if defined DLT_LINUX_SLL2
+  {sll2_handler, DLT_LINUX_SLL2},
+#endif
 #if defined DLT_RAW
   {raw_handler, DLT_RAW},
 #endif

@@ -91,6 +91,21 @@ struct sll_header {
 };
 
 /*
+ * A DLT_LINUX_SLL2 fake link-layer header.
+ */
+#define SLL2_HDR_LEN    20              /* total header length */
+
+struct sll2_header {
+        u_int16_t     sll2_protocol;          /* protocol */
+        u_int16_t     sll2_reserved_mbz;      /* reserved - must be zero */
+        u_int32_t     sll2_if_index;          /* 1-based interface index */
+        u_int16_t     sll2_hatype;            /* link-layer address type */
+        u_int8_t      sll2_pkttype;           /* packet type */
+        u_int8_t      sll2_halen;             /* link-layer address length */
+        u_int8_t      sll2_addr[SLL_ADDRLEN]; /* link-layer address */
+};
+
+/*
  * The LINUX_SLL_ values for "sll_pkttype"; these correspond to the
  * PACKET_ values on Linux, but are defined here so that they're
  * available even on systems other than Linux, and so that they
