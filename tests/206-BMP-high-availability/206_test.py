@@ -75,7 +75,7 @@ def main(consumers):
     logger.info('Comparing messages received with json lines in file ' + helpers.short_name(output_json_file))
     assert json_tools.compare_messages_to_json_file(messages, output_json_file, ['seq', 'bmp_router_port',
                                                                                  'timestamp_arrival','writer_id',
-                                                                                 'bmp_rib_type', 'is_filtered'], 
+                                                                                 'bmp_rib_type', 'is_filtered'],
                                                                                  multi_match_allowed=True)
 
     # Ensuring all 2 writer_id's show up in the messages
