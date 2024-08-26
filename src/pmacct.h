@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -393,6 +393,7 @@ extern u_int16_t mpls_handler(u_char *, u_int16_t *, u_int16_t *, register struc
 extern void ppp_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
 extern void ieee_802_11_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
 extern void sll_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
+extern void sll2_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
 extern void raw_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
 extern u_char *llc_handler(const struct pcap_pkthdr *, u_int, register u_char *, register struct packet_ptrs *);
 extern void chdlc_handler(const struct pcap_pkthdr *, register struct packet_ptrs *);
