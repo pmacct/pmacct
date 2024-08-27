@@ -49,7 +49,7 @@ def main(consumers):
     assert th.wait_and_check_regex_in_pmacct_log(loglines[3], 10, 2, 'nfacctd-01')
 
     # Check the BMP topic (has to contain only messages from active daemon, i.e. nfacctd_00_loc_A)
-    th.set_ignored_fields(['seq', 'timestamp', 'timestamp_arrival', 'bmp_router_port', 'bmp_rib_type'])
+    th.set_ignored_fields(['seq', 'timestamp', 'timestamp_arrival', 'bmp_router_port'])
     assert th.read_and_compare_messages('daisy.bmp', 'bmp-00')
 
     # Check the flow topic: we need to receive the exact same messages from both daemons

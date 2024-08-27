@@ -28,7 +28,7 @@ def main(consumers):
         th.spawn_traffic_container('traffic-reproducer-207' + suffix, detached=True)
 
     # TODO DAISY: investigate why with table dump enabled bgp_nexthop sometimes changes to :ffff...
-    th.set_ignored_fields(['seq', 'timestamp', 'timestamp_arrival', 'bmp_router_port', 'bgp_nexthop', 'bmp_rib_type'])
+    th.set_ignored_fields(['seq', 'timestamp', 'timestamp_arrival', 'bmp_router_port', 'bgp_nexthop'])
     assert th.read_and_compare_messages('daisy.bmp', 'bmp-00')
 
     # Make sure the expected logs exist in pmacct log
@@ -42,5 +42,5 @@ def main(consumers):
     assert th.wait_and_check_logs('log-00', 120, 10)
 
     # Check messages from BMP table dump
-    th.set_ignored_fields(['seq', 'timestamp', 'timestamp_arrival', 'bmp_router_port', 'dump_period', 'bmp_rib_type'])
+    th.set_ignored_fields(['seq', 'timestamp', 'timestamp_arrival', 'bmp_router_port', 'dump_period'])
     assert th.read_and_compare_messages('daisy.bmp.dump', 'bmp-dump-00', wait_time=120)
