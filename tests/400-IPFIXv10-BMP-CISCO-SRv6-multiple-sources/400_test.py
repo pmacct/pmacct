@@ -31,7 +31,7 @@ def main(consumers):
     assert th.read_and_compare_messages('daisy.flow', 'flow-00')
 
     # Compare received messages on topic daisy.bmp to reference file output-bmp-00.json
-    th.set_ignored_fields(['seq', 'timestamp', 'timestamp_arrival', 'bmp_router_port', 'bmp_rib_type', 'is_filtered'])
+    th.set_ignored_fields(['seq', 'timestamp', 'timestamp_arrival', 'bmp_router_port'])
     assert th.read_and_compare_messages('daisy.bmp', 'bmp-00')
 
     # Check logs for BMP peer up notification
