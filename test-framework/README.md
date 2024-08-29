@@ -96,6 +96,9 @@ Example (run test case 300 [default scenario] with python without the ./runtest.
 python3 -m pytest tests/300* --runconfig=300:00 -c=pytest.ini --log-cli-level=DEBUG --log-file=results/pytestlog.log --html=results/report.html
 ```
 
+A list of markers (ie. ipfix, bmp, etc.) are available to run a specific subset of tests. The full list is part of the
+[pytest.ini](pytest.ini) file.
+
 In exceptional situations, e.g. when setup or teardown fails or is stopped, there may be some remaining components left running.
 To stop Kafka components, including the created network, do:
 ```shell
