@@ -59,6 +59,7 @@ const struct _map_dictionary_line tag_map_dictionary[] = {
   {"ip_proto", PT_map_ip_proto_handler},
   {"src_port", PT_map_src_port_handler},
   {"dst_port", PT_map_dst_port_handler},
+  {"tcp_flags", PT_map_tcp_flags_handler},
   {"is_multicast", PT_map_is_multicast_handler},
   {"set_tag", PT_map_id_handler},
   {"set_tag2", PT_map_id2_handler},
@@ -100,6 +101,7 @@ const struct _map_index_internal_dictionary_line tag_map_index_entries_dictionar
   {PRETAG_IP_PROTO, PT_map_index_entries_ip_proto_handler},
   {PRETAG_SRC_PORT, PT_map_index_entries_src_port_handler},
   {PRETAG_DST_PORT, PT_map_index_entries_dst_port_handler},
+  {PRETAG_TCP_FLAGS, PT_map_index_entries_tcp_flags_handler},
   {PRETAG_IS_MULTICAST, PT_map_index_entries_is_multicast_handler},
   {PRETAG_FWDSTATUS_ID, PT_map_index_entries_fwd_status_handler},
   {0, NULL}
@@ -130,6 +132,7 @@ const struct _map_index_dictionary_line tag_map_index_fdata_dictionary[] = {
   {PRETAG_IP_PROTO, PT_map_index_fdata_ip_proto_handler},
   {PRETAG_SRC_PORT, PT_map_index_fdata_src_port_handler},
   {PRETAG_DST_PORT, PT_map_index_fdata_dst_port_handler},
+  {PRETAG_TCP_FLAGS, PT_map_index_fdata_tcp_flags_handler},
   {PRETAG_IS_MULTICAST, PT_map_index_fdata_is_multicast_handler},
   {PRETAG_FWDSTATUS_ID, PT_map_index_fdata_fwd_status_handler},
   {0, NULL}

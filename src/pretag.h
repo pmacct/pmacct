@@ -84,6 +84,7 @@
 #define PRETAG_DST_PORT			0x0000800000000000ULL
 #define PRETAG_MPLS_VPN_ID_IN		0x0001000000000000ULL
 #define PRETAG_MPLS_VPN_ID_OUT		0x0002000000000000ULL
+#define PRETAG_TCP_FLAGS		0x0004000000000000ULL
 /* ... */
 #define PRETAG_NULL			0x8000000000000000ULL
 
@@ -205,6 +206,7 @@ struct id_entry_key {
   pt_uint8_t ip_proto;
   pt_uint16_t src_port;
   pt_uint16_t dst_port;
+  pt_uint8_t tcp_flags;
   pt_uint8_t is_multicast;
   s_uint16_t lookup_bgp_port;
   char *src_comms[16]; /* XXX: MAX_BGP_COMM_PATTERNS = 16 */

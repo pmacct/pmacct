@@ -1527,6 +1527,30 @@ int PT_map_dst_port_handler(char *filename, struct id_entry *e, char *value, str
   return FALSE;
 }
 
+int PT_map_tcp_flags_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
+{
+  int x = 0;
+
+  if (req->ptm_c.load_ptm_plugin == PLUGIN_ID_TEE) req->ptm_c.load_ptm_res = TRUE;
+
+  e->key.tcp_flags.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
+
+  e->key.tcp_flags.n = strtol(value, NULL, 16);
+
+  for (x = 0; e->func[x]; x++) {
+    if (e->func_type[x] == PRETAG_TCP_FLAGS) {
+      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'tcp_flags' clauses part of the same statement.\n", config.name, config.type, filename);
+      return TRUE;
+    }
+  }
+
+  if (config.acct_type == ACCT_NF) e->func[x] = pretag_tcp_flags_handler;
+  else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_tcp_flags_handler;
+  if (e->func[x]) e->func_type[x] = PRETAG_TCP_FLAGS;
+
+  return FALSE;
+}
+
 int PT_map_is_multicast_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   int value_tf, x = 0;
@@ -2706,6 +2730,33 @@ int pretag_dst_port_handler(struct packet_ptrs *pptrs, void *unused, void *e)
   else return (TRUE ^ entry->key.dst_port.neg);
 }
 
+int pretag_tcp_flags_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  u_int8_t tcp_flags;
+  
+  if (!pptrs->f_data) return TRUE;
+  
+  switch (hdr->version) {
+  case 10:
+  case 9:
+    if (tpl->fld[NF9_TCP_FLAGS].count) {
+      OTPL_CP_LAST_M(&tcp_flags, NF9_TCP_FLAGS, 1);
+    }
+    break;
+  case 5:
+    tcp_flags = ((struct struct_export_v5 *) pptrs->f_data)->tcp_flags;
+    break;
+  default:
+    return TRUE; /* this field does not exist: condition is always true */
+  }
+
+  if (entry->key.tcp_flags.n == tcp_flags) return (FALSE | entry->key.tcp_flags.neg);
+  else return (TRUE ^ entry->key.tcp_flags.neg);
+}
+
 int pretag_is_multicast_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 {
   struct id_entry *entry = e;
@@ -3137,6 +3188,15 @@ int SF_pretag_dst_port_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   if (entry->key.dst_port.n == sample->dcd_dport) return (FALSE | entry->key.dst_port.neg);
   else return (TRUE ^ entry->key.dst_port.neg);
+}
+
+int SF_pretag_tcp_flags_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+
+  if (entry->key.tcp_flags.n == sample->dcd_tcpFlags) return (FALSE | entry->key.tcp_flags.neg);
+  else return (TRUE ^ entry->key.tcp_flags.neg);
 }
 
 int SF_pretag_is_multicast_handler(struct packet_ptrs *pptrs, void *unused, void *e)
@@ -3953,6 +4013,17 @@ int PT_map_index_entries_dst_port_handler(struct id_table_index *idx, int idx_hd
   if (!idx || !hash_serializer || !src_e) return TRUE;
 
   hash_serial_append(hash_serializer, (char *)&src_e->key.dst_port.n, sizeof(u_int16_t), TRUE);
+
+  return FALSE;
+}
+
+int PT_map_index_entries_tcp_flags_handler(struct id_table_index *idx, int idx_hdlr_no, pm_hash_serial_t *hash_serializer, void *src)
+{
+  struct id_entry *src_e = (struct id_entry *) src;
+
+  if (!idx || !hash_serializer || !src_e) return TRUE;
+
+  hash_serial_append(hash_serializer, (char *)&src_e->key.tcp_flags.n, sizeof(u_int8_t), TRUE);
 
   return FALSE;
 }
@@ -4911,6 +4982,39 @@ int PT_map_index_fdata_dst_port_handler(struct id_table_index *idx, int idx_hdlr
 
   hash_serial_append(hash_serializer, (char *)&e->key.dst_port.n, sizeof(u_int16_t), FALSE);
 
+  return FALSE;
+}
+
+int PT_map_index_fdata_tcp_flags_handler(struct id_table_index *idx, int idx_hdlr, int idx_netmask, struct id_entry *e, pm_hash_serial_t *hash_serializer, void *src)
+{ 
+  struct packet_ptrs *pptrs = (struct packet_ptrs *) src; 
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  SFSample *sample = (SFSample *) pptrs->f_data;
+  u_int8_t tcp_flags;
+  
+  if (config.acct_type == ACCT_NF) {
+    switch (hdr->version) {
+    case 10:
+    case 9:
+      if (tpl->fld[NF9_TCP_FLAGS].count) {
+        OTPL_CP_LAST_M(&tcp_flags, NF9_TCP_FLAGS, 1);
+      }
+      break;
+    case 5: 
+      tcp_flags = ((struct struct_export_v5 *) pptrs->f_data)->tcp_flags;
+      break;
+    }
+    
+    e->key.tcp_flags.n = tcp_flags;
+  }
+  else if (config.acct_type == ACCT_SF) {
+    e->key.tcp_flags.n = sample->dcd_tcpFlags;
+  }
+  else return TRUE;
+  
+  hash_serial_append(hash_serializer, (char *)&e->key.tcp_flags.n, sizeof(u_int8_t), FALSE);
+  
   return FALSE;
 }
 
