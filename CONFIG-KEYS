@@ -3620,9 +3620,9 @@ DESC:		If DPI classification is unsuccessful, and before giving up, try guessing
 DEFAULT:	false
 
 KEY:		classifier_idle_scan_period [GLOBAL]
-DESC:		Defines the time interval, in seconds, at which going through the memory structure to
-		find for idle flows to expire.  
-DEFAULT:	10
+DESC:		Defines the time interval, in milliseconds, at which going through the memory structure
+		to find for idle flows to expire.
+DEFAULT:	10000
 
 KEY:		classifier_idle_scan_budget [GLOBAL]
 DESC:		Defines the amount of idle flows to expire per each classifier_idle_scan_period. This

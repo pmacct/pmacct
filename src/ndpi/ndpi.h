@@ -31,8 +31,8 @@
 #include "ndpi_util.h"
 
 /* defines */
-#define NDPI_IDLE_SCAN_PERIOD		10
-#define NDPI_IDLE_MAX_TIME		600
+#define NDPI_IDLE_SCAN_PERIOD		10000 /* msec */
+#define NDPI_IDLE_MAX_TIME		300000 /* msec */
 #define NDPI_IDLE_SCAN_BUDGET		1024
 #define NDPI_NUM_ROOTS			512
 #define NDPI_MAXFLOWS			200000000
@@ -95,8 +95,8 @@ typedef struct pm_ndpi_workflow_prefs {
   u_int8_t protocol_guess;
   u_int32_t num_roots;
   u_int32_t max_ndpi_flows;
-  u_int32_t idle_scan_period;
-  u_int32_t idle_max_time;
+  u_int64_t idle_scan_period;
+  u_int64_t idle_max_time;
   u_int32_t idle_scan_budget; 
   u_int8_t giveup_proto_tcp;
   u_int8_t giveup_proto_udp;
