@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -157,7 +157,7 @@ void PM_sigint_handler(int signum)
 
   wait(NULL);
 
-  Log(LOG_INFO, "INFO ( %s/%s ): OK, Exiting ...\n", config.name, config.type);
+  Log(LOG_INFO, "INFO ( %s/%s ): SIGINT received. Exiting ...\n", config.name, config.type);
 
   if (config.acct_type == ACCT_PM && !config.uacctd_group /* XXX */) {
     int device_idx;
