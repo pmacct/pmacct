@@ -148,6 +148,7 @@ Local folders **results/\<test case\>/\<container name>** are mounted on traffic
 - 400: IPFIXv10-BMP-CISCO-SRv6-multiple-sources
 - 401: IPFIXv10-BMP-IPv6-CISCO-MPLS-multiple-sources
 - 402: IPFIXv10-BMP-IPv6-high-availability
+- 403: IPFIXv10-BMP-IPv6-CISCO-locrib-peerdown-vrf
 ```
 
 ### 5XX - IPFIX/NFv9 + BGP
@@ -216,9 +217,11 @@ def main(consumers):
 ```
 
 To overcome this, we can temporarily replace that function with another one specifically developed for this purpose:
-```
+``` # Add this import if not already there
+    import library.py.test_tools as test_tools 
+    
     consumer = consumers.get_consumer_of_topic_like('daisy.flow')
-    assert test_tools.read_messages_dump_only(consumers[0], testParams, wait_time=120)             # wait_time is optional (default=120s)
+    assert test_tools.read_messages_dump_only(consumer, testParams, wait_time=120)             # wait_time is optional (default=120s)
 ```
 
 This way we can simply call:
