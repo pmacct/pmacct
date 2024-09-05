@@ -214,6 +214,12 @@
 !			this is compared against IE #7.
 ! 'dst_port'		MATCH: Destination Port in NetFlow v5 and sFlow. In NFv9/
 !			IPFIX this is compared against IE #11.
+! 'tcp_flags'		MATCH: TCP Flags field in NetFlow v5 and sFlow. In NFv9/
+!			IPFIX this is compared against IE #6. The expected value
+!			is in hexadecimal format (ie. 0x01 to match SYN packets).
+!			While in NetFlow/IPFIX the accumulation of all bits seen
+!			in a flow is set to 1, this key matches the exact value
+!			of the field, ie. it does not perform bitwise operations. 
 ! 'is_multicast'	MATCH: in NFv9/IPFIX this is compared against IE #57,
 !                       in sFlow against destination MAC address field part of
 !                       the Extended Switch object. If set to 'true' this does
