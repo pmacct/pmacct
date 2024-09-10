@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -1250,6 +1250,7 @@ int sql_evaluate_primitives(int primitive)
     if (config.what_to_count_2 & COUNT_TUNNEL_DST_PORT) what_to_count_2 |= COUNT_TUNNEL_DST_PORT;
     if (config.what_to_count_2 & COUNT_TUNNEL_TCPFLAGS) what_to_count_2 |= COUNT_TUNNEL_TCPFLAGS;
     if (config.what_to_count_3 & COUNT_TUNNEL_FLOW_LABEL) what_to_count_3 |= COUNT_TUNNEL_FLOW_LABEL;
+    if (config.what_to_count_3 & COUNT_NVGRE) what_to_count_3 |= COUNT_NVGRE;
 
     if (config.what_to_count_2 & COUNT_TIMESTAMP_START) what_to_count_2 |= COUNT_TIMESTAMP_START;
     if (config.what_to_count_2 & COUNT_TIMESTAMP_END) what_to_count_2 |= COUNT_TIMESTAMP_END;
@@ -2761,7 +2762,7 @@ int sql_evaluate_primitives(int primitive)
     primitive++;
   }
 
-  if (what_to_count_2 & COUNT_NVGRE) {
+  if (what_to_count_3 & COUNT_NVGRE) {
     if (primitive) {
       strncat(insert_clause, ", ", SPACELEFT(insert_clause));
       strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
