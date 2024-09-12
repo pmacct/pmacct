@@ -2141,6 +2141,7 @@ avro_schema_t p_avro_schema_build_bmp_rm(int log_type, char *schema_name)
 
   /* also cherry-picking from avro_schema_build_bmp_common() */ 
   avro_schema_record_field_append(schema, "peer_ip", avro_schema_string());
+  avro_schema_record_field_append(schema, "peer_asn", avro_schema_long());
   avro_schema_record_field_append(schema, "peer_tcp_port", optint_s);
   avro_schema_record_field_append(schema, "timestamp_arrival", optstr_s);
 

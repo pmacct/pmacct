@@ -90,6 +90,7 @@ void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int etype, int log_type,
 
     addr_to_str(ip_address, &peer->addr);
     json_object_set_new_nocheck(obj, "peer_ip", json_string(ip_address));
+    json_object_set_new_nocheck(obj, "peer_asn", json_integer(peer->as));
 
     json_object_set_new_nocheck(obj, "peer_tcp_port", json_integer((json_int_t)peer->tcp_port));
 
@@ -128,6 +129,9 @@ void bgp_peer_log_msg_extras_bmp(struct bgp_peer *peer, int etype, int log_type,
     addr_to_str(ip_address, &peer->addr);
     pm_avro_check(avro_value_get_by_name(obj, "peer_ip", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_string(&p_avro_field, ip_address));
+
+    pm_avro_check(avro_value_get_by_name(obj, "peer_asn", &p_avro_field, NULL));
+    pm_avro_check(avro_value_set_long(&p_avro_field, peer->as));
 
     pm_avro_check(avro_value_get_by_name(obj, "peer_tcp_port", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
