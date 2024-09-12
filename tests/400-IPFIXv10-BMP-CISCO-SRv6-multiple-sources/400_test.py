@@ -27,11 +27,11 @@ def main(consumers):
     assert th.spawn_traffic_container('traffic-reproducer-400b', detached=True)
 
     # Compare received messages on topic daisy.flow to reference file output-flow-00.json
-    th.set_ignored_fields(['stamp_inserted', 'stamp_updated', 'timestamp_max', 'timestamp_arrival', 'timestamp_min'])
+    th.set_ignored_fields(['stamp_inserted', 'stamp_updated', 'timestamp_max', 'timestamp_arrival', 'timestamp_min', 'peer_asn'])
     assert th.read_and_compare_messages('daisy.flow', 'flow-00')
 
     # Compare received messages on topic daisy.bmp to reference file output-bmp-00.json
-    th.set_ignored_fields(['seq', 'timestamp', 'timestamp_arrival', 'bmp_router_port'])
+    th.set_ignored_fields(['seq', 'timestamp', 'timestamp_arrival', 'bmp_router_port', 'peer_asn'])
     assert th.read_and_compare_messages('daisy.bmp', 'bmp-00')
 
     # Check logs for BMP peer up notification

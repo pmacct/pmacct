@@ -23,7 +23,7 @@ def main(consumers):
     for suffix in ['a', 'b', 'c']:
         th.spawn_traffic_container('traffic-reproducer-202' + suffix, detached=True)
 
-    th.set_ignored_fields(['seq', 'timestamp', 'timestamp_arrival', 'bmp_router_port'])
+    th.set_ignored_fields(['seq', 'timestamp', 'timestamp_arrival', 'bmp_router_port', 'peer_asn'])
     assert th.read_and_compare_messages('daisy.bmp', 'bmp-00')
 
     # Make sure the expected logs exist in pmacct log

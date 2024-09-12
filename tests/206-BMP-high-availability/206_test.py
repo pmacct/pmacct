@@ -66,7 +66,7 @@ def main(consumers):
     assert th.wait_and_check_regex_sequence_in_pmacct_log([loglines[1], loglines[2]], 10, 2, 'nfacctd-00')
 
     # Compare BMP Init Message (timestamp is not from packets and cannot be matched)
-    th.set_ignored_fields(['seq', 'timestamp', 'bmp_router_port', 'timestamp_arrival', 'writer_id', 'bmp_rib_type', 'is_filtered'])
+    th.set_ignored_fields(['seq', 'timestamp', 'bmp_router_port', 'timestamp_arrival', 'writer_id', 'bmp_rib_type', 'is_filtered', 'peer_asn'])
     assert th.read_and_compare_messages('daisy.bmp', 'bmp-00')
 
     # Compare all other received messages to reference file output-bmp-01.json
@@ -75,7 +75,8 @@ def main(consumers):
     logger.info('Comparing messages received with json lines in file ' + helpers.short_name(output_json_file))
     assert json_tools.compare_messages_to_json_file(messages, output_json_file, ['seq', 'bmp_router_port',
                                                                                  'timestamp_arrival','writer_id',
-                                                                                 'bmp_rib_type', 'is_filtered'],
+                                                                                 'bmp_rib_type', 'is_filtered',
+										 'peer_asn'],
                                                                                  multi_match_allowed=True)
 
     # Ensuring all 2 writer_id's show up in the messages

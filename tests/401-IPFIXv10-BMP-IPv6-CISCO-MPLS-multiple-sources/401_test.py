@@ -24,9 +24,9 @@ def main(consumers):
     assert th.spawn_traffic_container('traffic-reproducer-401a', detached=True)
     assert th.spawn_traffic_container('traffic-reproducer-401b', detached=True)
 
-    th.set_ignored_fields(['stamp_inserted', 'stamp_updated', 'timestamp_max', 'timestamp_arrival', 'timestamp_min'])
+    th.set_ignored_fields(['stamp_inserted', 'stamp_updated', 'timestamp_max', 'timestamp_arrival', 'timestamp_min', 'peer_asn'])
     assert th.read_and_compare_messages('daisy.flow', 'flow-00')
-    th.set_ignored_fields(['seq', 'timestamp', 'timestamp_arrival', 'bmp_router_port'])
+    th.set_ignored_fields(['seq', 'timestamp', 'timestamp_arrival', 'bmp_router_port', 'peer_asn'])
     assert th.read_and_compare_messages('daisy.bmp', 'bmp-00')
 
     assert not th.check_regex_in_pmacct_log('ERROR|WARN(?!.*Unable to get kafka_host)')

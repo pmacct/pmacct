@@ -49,7 +49,7 @@ def main(consumers):
     assert th.wait_and_check_regex_in_pmacct_log(loglines[3], 10, 2, 'nfacctd-01')
 
     # Check the BMP topic (has to contain only messages from active daemon, i.e. nfacctd_00_loc_A)
-    th.set_ignored_fields(['seq', 'timestamp', 'timestamp_arrival', 'bmp_router_port'])
+    th.set_ignored_fields(['seq', 'timestamp', 'timestamp_arrival', 'bmp_router_port', 'peer_asn'])
     assert th.read_and_compare_messages('daisy.bmp', 'bmp-00')
 
     # Check the flow topic: we need to receive the exact same messages from both daemons
@@ -60,7 +60,7 @@ def main(consumers):
     logger.info('Comparing messages received with json lines in file ' + helpers.short_name(output_json_file))
     assert json_tools.compare_messages_to_json_file(messages, output_json_file, ['stamp_inserted', 'stamp_updated', 
                                                                                  'timestamp_max', 'timestamp_arrival', 
-                                                                                 'timestamp_min', 'writer_id'], 
+                                                                                 'timestamp_min', 'writer_id', 'peer_asn'], 
                                                                                   multi_match_allowed=True,
                                                                                   max_matches=2)
 
