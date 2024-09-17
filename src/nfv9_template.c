@@ -1254,7 +1254,7 @@ struct template_cache_entry *find_template_v2(u_int16_t id, struct sockaddr *age
     addr_to_str(debug_agent_addr, &debug_a);
 
     Log(LOG_DEBUG, "DEBUG ( %s/core ): find_template_v2(): cdada_map_find() returned CDADA_E_NOT_FOUND for template %u [%s:%u])\n",
-	config.name, id, debug_agent_addr, sid);
+	config.name, ntohs(id), debug_agent_addr, sid);
   }
 
   /* freeing hash key */
