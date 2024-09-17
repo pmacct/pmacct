@@ -1,0 +1,52 @@
+name: "Build containers"
+description: "Reusable GitHub Action to build pmacct containers"
+
+inputs:
+  commit-id:
+    required: true
+    default: "HEAD"
+    type: string
+  daemons:
+    required: true
+    type: string
+    default: "pmacctd nfacctd sfacctd uacctd pmbgpd pmbmpd pmtelemetryd"
+  ci_num_workers:
+    required: false
+    type: string
+    default: 4
+  ci_deps_dont_check_cert:
+    required: false
+    default: 0
+runs:
+  using: "composite"
+  steps:
+    - name: Build pmacct containers
+      env:
+        COMMIT_ID: ${{ inputs.commit-id }}
+        DAEMONS: ${{ inputs.daemons }}
+        CI_NUM_WORKERS: ${{ inputs.ci_num_workers }}
+        CI_DEPS_DONT_CHECK_CERTIFICATE: ${{ inputs.ci_deps_dont_check_cert }}
+      shell: bash
+      run: |
+        cd pmacct
+        git config --global --add safe.directory $GITHUB_WORKSPACE
+        git config --global --add safe.directory $GITHUB_WORKSPACE/src/external_libs/libcdada
+        git rev-parse HEAD
+        echo "Fix mess with tags in actions/checkout..."
+        git fetch -f && git fetch -f --tags
+        echo
+        if [[ "$COMMIT_ID" != "" ]]
+        then
+          echo "Checking out at commit id=$COMMIT_ID"
+          git checkout $COMMIT_ID
+        fi
+        echo
+        echo "Deducing PMACCT_VERSION..."
+        PMACCT_VERSION=$(git describe --abbrev=0 --match="v*")
+        echo "PMACCT_VERSION=$PMACCT_VERSION"
+        echo "Building the base container..."
+        docker build --build-arg NUM_WORKERS=$CI_NUM_WORKERS --build-arg DEPS_DONT_CHECK_CERTIFICATE=$CI_DEPS_DONT_CHECK_CERTIFICATE -f docker/base/Dockerfile -t base:_build .
+        echo "Building daemon containers..."
+        for DAEMON in ${DAEMONS}; do
+          docker build -f docker/${DAEMON}/Dockerfile -t ${DAEMON}:_build .
+        done
