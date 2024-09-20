@@ -183,6 +183,7 @@ const struct _map_dictionary_line tag_map_tee_dictionary[] = {
   {"dst_port", PT_map_dst_port_handler},
   {"tcp_flags", PT_map_tcp_flags_handler},
   {"bgp_nexthop", PT_map_bgp_nexthop_handler},
+  {"direction", PT_map_direction_handler},
   {"engine_type", PT_map_engine_type_handler},
   {"engine_id", PT_map_engine_id_handler},
   {"source_id", PT_map_engine_id_handler},

@@ -806,6 +806,8 @@ int PT_map_direction_handler(char *filename, struct id_entry *e, char *value, st
 {
   int x = 0;
 
+  if (req->ptm_c.load_ptm_plugin == PLUGIN_ID_TEE) req->ptm_c.load_ptm_res = TRUE;
+
   e->key.direction.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
   e->key.direction.n = atoi(value);
   for (x = 0; e->func[x]; x++) {
