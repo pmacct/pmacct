@@ -208,6 +208,22 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->bgp_table_info_delete_tag_find = bgp_table_info_delete_tag_find_bmp;
 }
 
+int bgp_peer_cmp_bmp(const void *a, const void *b)
+{
+  int addr_cmp_res = host_addr_cmp(&((struct bgp_peer *)a)->addr, &((struct bgp_peer *)b)->addr);
+  if (addr_cmp_res != 0) return addr_cmp_res;
+
+  return memcmp(&((struct bgp_peer *)a)->peer_distinguisher, &((struct bgp_peer *)b)->peer_distinguisher, sizeof(rd_t));
+}
+
+int bgp_peer_host_addr_peer_dist_cmp(const void *a, const void *b)
+{
+  int addr_cmp_res = host_addr_cmp(&((struct bmp_data *)a)->peer_ip, &((struct bgp_peer *)b)->addr);
+  if (addr_cmp_res != 0) return addr_cmp_res;
+
+  return memcmp(&((struct bmp_data *)a)->chars.rd, &((struct bgp_peer *)b)->peer_distinguisher, sizeof(rd_t));
+}
+
 struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bgp_peer *bgp_peer_rem)
 {
   if (!bgp_peer_loc || !bgp_peer_rem) return NULL;
