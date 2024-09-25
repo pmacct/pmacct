@@ -1,5 +1,5 @@
 pmacct [IP traffic accounting : BGP : BMP : RPKI : IGP : Streaming Telemetry]
-pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 
 
 TABLE OF CONTENTS:
@@ -1941,8 +1941,8 @@ bgp_daemon_lg: true
 ! bgp_daemon_lg_passwd: arealsmartpwd 
 
 This configuration will enable plain authentication and will make the server
-listen on all interfaces on port 17900/TCP. Following an example of querying
-with the Python client available in 'examples/lg':
+listen on the localhost interface on port 17900/TCP. Following an example of
+querying with the Python client available in 'examples/lg':
 
 Get the list of available BGP peers:
 

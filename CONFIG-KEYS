@@ -3193,7 +3193,7 @@ DEFAULT:	false
 KEY:            bgp_daemon_lg_ip [GLOBAL]
 DESC:           Binds the BGP Looking Glass server to a specific interface. Expects as value an IP
 		address.
-DEFAULT:        0.0.0.0
+DEFAULT:        127.0.0.1
 
 KEY:            bgp_daemon_lg_port [GLOBAL]
 DESC:           Makes the BGP Looking Glass server listen to a specific port.
