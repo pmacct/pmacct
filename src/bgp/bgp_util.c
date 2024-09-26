@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -768,6 +768,7 @@ void bgp_peer_close(struct bgp_peer *peer, int type, int no_quiet, int send_noti
   memset(&peer->id, 0, sizeof(peer->id));
   memset(&peer->addr, 0, sizeof(peer->addr));
   memset(&peer->addr_str, 0, sizeof(peer->addr_str));
+  memset(&peer->peer_distinguisher, 0, sizeof(peer->peer_distinguisher));
 
   free(peer->buf.base);
   if (config.bgp_xconnect_map) {
