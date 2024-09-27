@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -212,6 +212,7 @@ struct bgp_peer {
   */
   void *bmp_se;
   rd_t peer_distinguisher; /* only relevant for BGP peer learned via BMP */
+  u_int8_t eor[AFI_MAX][SAFI_MAX]; /* End of RIB received */
 
   struct bgp_xconnect xc;
   struct bgp_peer_buf xbuf;

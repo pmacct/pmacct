@@ -769,6 +769,7 @@ void bgp_peer_close(struct bgp_peer *peer, int type, int no_quiet, int send_noti
   memset(&peer->addr, 0, sizeof(peer->addr));
   memset(&peer->addr_str, 0, sizeof(peer->addr_str));
   memset(&peer->peer_distinguisher, 0, sizeof(peer->peer_distinguisher));
+  memset(&peer->eor, 0, sizeof(peer->eor));
 
   free(peer->buf.base);
   if (config.bgp_xconnect_map) {

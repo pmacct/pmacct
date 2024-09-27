@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -806,6 +806,8 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
       ri.peer = peer;
       ri.bmed = bmd->extra;
       bgp_peer_log_msg(NULL, &ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_EOR);
+
+      peer->eor[afi][safi] = TRUE;
     }
   }
 
