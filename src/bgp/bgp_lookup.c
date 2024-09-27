@@ -990,6 +990,17 @@ int bgp_lg_daemon_ip_lookup(struct bgp_lg_req_ipl_data *req, struct bgp_lg_rep *
   if (peer) {
     // XXX: ADD-PATH code not currently supported
 
+    if (l3_proto == ETHERTYPE_IP) {
+      if (!peer->eor[AFI_IP][safi]) {
+        return BGP_LOOKUP_NOEOR;
+      }
+    }
+    else if (l3_proto == ETHERTYPE_IPV6) {
+      if (!peer->eor[AFI_IP6][safi]) {
+        return BGP_LOOKUP_NOEOR;
+      }
+    }
+
     rd_as4_ptr = (struct rd_as4 *) &req->rd;
     if (rd_as4_ptr->as) safi = SAFI_MPLS_VPN;
 

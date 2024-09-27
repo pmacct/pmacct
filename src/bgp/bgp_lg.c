@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -313,6 +313,9 @@ void bgp_lg_daemon_encode_reply_results_json(struct p_zmq_sock *sock, struct bgp
       break;
     case BGP_LOOKUP_NOPEER:
       json_object_set_new_nocheck(rep_results_obj, "text", json_string("peer not found"));
+      break;
+    case BGP_LOOKUP_NOEOR:
+      json_object_set_new_nocheck(rep_results_obj, "text", json_string("EoR not received"));
       break;
     default:
       json_object_set_new_nocheck(rep_results_obj, "text", json_string("unknown lookup error"));
