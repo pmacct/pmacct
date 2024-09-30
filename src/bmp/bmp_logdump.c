@@ -373,7 +373,7 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_l
 #ifdef WITH_JANSSON
     json_t *obj = (json_t *) vobj;
     char bmp_msg_type[] = "stats";
-    char ip_address[INET6_ADDRSTRLEN];
+    char ip_address[INET6_ADDRSTRLEN], *bmp_rib_type = NULL;
 
     json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 
@@ -383,7 +383,10 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_l
     json_object_set_new_nocheck(obj, "peer_asn", json_integer((json_int_t)bdata->peer_asn));
     json_object_set_new_nocheck(obj, "peer_type", json_integer((json_int_t)bdata->chars.peer_type));
 
-    json_object_set_new_nocheck(obj, "bmp_rib_type", json_string(bmp_rib_type_print(bdata->chars.rib_type)));
+    bmp_rib_type = bmp_rib_type_print(bdata->chars.rib_type);
+    json_object_set_new_nocheck(obj, "bmp_rib_type", json_string(bmp_rib_type));
+    if (bmp_rib_type) free(bmp_rib_type);
+
     json_object_set_new_nocheck(obj, "is_filtered", json_integer((json_int_t)bdata->chars.is_filtered));
 
     if (!bdata->chars.is_loc && !bdata->chars.is_out) {
@@ -449,7 +452,7 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_l
 #ifdef WITH_AVRO
     avro_value_t *obj = (avro_value_t *) vobj, p_avro_field, p_avro_branch;
     char bmp_msg_type[] = "stats";
-    char ip_address[INET6_ADDRSTRLEN];
+    char ip_address[INET6_ADDRSTRLEN], *bmp_rib_type = NULL;
 
     pm_avro_check(avro_value_get_by_name(obj, "bmp_msg_type", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_string(&p_avro_field, bmp_msg_type));
@@ -464,8 +467,10 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_l
     pm_avro_check(avro_value_get_by_name(obj, "peer_type", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_int(&p_avro_field, bdata->chars.peer_type));
 
+    bmp_rib_type = bmp_rib_type_print(bdata->chars.rib_type);
     pm_avro_check(avro_value_get_by_name(obj, "bmp_rib_type", &p_avro_field, NULL));
-    pm_avro_check(avro_value_set_string(&p_avro_field, bmp_rib_type_print(bdata->chars.rib_type)));
+    pm_avro_check(avro_value_set_string(&p_avro_field, bmp_rib_type));
+    if (bmp_rib_type) free(bmp_rib_type);
 
     pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_int(&p_avro_field, bdata->chars.is_filtered));
@@ -826,7 +831,7 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     char bmp_msg_type[] = "peer_up";
-    char ip_address[INET6_ADDRSTRLEN];
+    char ip_address[INET6_ADDRSTRLEN], *bmp_rib_type = NULL;
     json_t *obj = (json_t *) vobj;
 
     json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
@@ -841,7 +846,10 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
       json_object_set_new_nocheck(obj, "peer_type_str", json_string(bmp_peer_types[bdata->chars.peer_type]));
     }
 
-    json_object_set_new_nocheck(obj, "bmp_rib_type", json_string(bmp_rib_type_print(bdata->chars.rib_type)));
+    bmp_rib_type = bmp_rib_type_print(bdata->chars.rib_type);
+    json_object_set_new_nocheck(obj, "bmp_rib_type", json_string(bmp_rib_type));
+    if (bmp_rib_type) free(bmp_rib_type);
+
     json_object_set_new_nocheck(obj, "is_filtered", json_integer((json_int_t)bdata->chars.is_filtered));
 
     if (!bdata->chars.is_loc && !bdata->chars.is_out) {
@@ -910,7 +918,7 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
     int idx = 0, bmp_peer_up_tlvs[BMP_PEER_UP_INFO_MAX + 1];
     avro_value_t *obj = (avro_value_t *) vobj, p_avro_field, p_avro_branch;
     char bmp_msg_type[] = "peer_up";
-    char ip_address[INET6_ADDRSTRLEN];
+    char ip_address[INET6_ADDRSTRLEN], *bmp_rib_type = NULL;
 
     pm_avro_check(avro_value_get_by_name(obj, "bmp_msg_type", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_string(&p_avro_field, bmp_msg_type));
@@ -935,8 +943,10 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
+    bmp_rib_type = bmp_rib_type_print(bdata->chars.rib_type);
     pm_avro_check(avro_value_get_by_name(obj, "bmp_rib_type", &p_avro_field, NULL));
-    pm_avro_check(avro_value_set_string(&p_avro_field, bmp_rib_type_print(bdata->chars.rib_type)));
+    pm_avro_check(avro_value_set_string(&p_avro_field, bmp_rib_type));
+    if (bmp_rib_type) free(bmp_rib_type);
 
     pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_int(&p_avro_field, bdata->chars.is_filtered));
@@ -1081,7 +1091,7 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     char bmp_msg_type[] = "peer_down";
-    char ip_address[INET6_ADDRSTRLEN];
+    char ip_address[INET6_ADDRSTRLEN], *bmp_rib_type = NULL;
     json_t *obj = (json_t *) vobj;
 
     json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
@@ -1096,7 +1106,10 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
       json_object_set_new_nocheck(obj, "peer_type_str", json_string(bmp_peer_types[bdata->chars.peer_type]));
     }
 
-    json_object_set_new_nocheck(obj, "bmp_rib_type", json_string(bmp_rib_type_print(bdata->chars.rib_type)));
+    bmp_rib_type = bmp_rib_type_print(bdata->chars.rib_type);
+    json_object_set_new_nocheck(obj, "bmp_rib_type", json_string(bmp_rib_type));
+    if (bmp_rib_type) free(bmp_rib_type);
+
     json_object_set_new_nocheck(obj, "is_filtered", json_integer((json_int_t)bdata->chars.is_filtered));
 
     if (!bdata->chars.is_loc && !bdata->chars.is_out) {
@@ -1168,7 +1181,7 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
     int idx = 0, bmp_peer_down_tlvs[BMP_PEER_DOWN_INFO_MAX + 1];
     avro_value_t *obj = (avro_value_t *) vobj, p_avro_field, p_avro_branch;
     char bmp_msg_type[] = "peer_down";
-    char ip_address[INET6_ADDRSTRLEN];
+    char ip_address[INET6_ADDRSTRLEN], *bmp_rib_type = NULL;
 
     pm_avro_check(avro_value_get_by_name(obj, "bmp_msg_type", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_string(&p_avro_field, bmp_msg_type));
@@ -1193,8 +1206,10 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
+    bmp_rib_type = bmp_rib_type_print(bdata->chars.rib_type);
     pm_avro_check(avro_value_get_by_name(obj, "bmp_rib_type", &p_avro_field, NULL));
-    pm_avro_check(avro_value_set_string(&p_avro_field, bmp_rib_type_print(bdata->chars.rib_type)));
+    pm_avro_check(avro_value_set_string(&p_avro_field, bmp_rib_type));
+    if (bmp_rib_type) free(bmp_rib_type);
 
     pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_int(&p_avro_field, bdata->chars.is_filtered));
