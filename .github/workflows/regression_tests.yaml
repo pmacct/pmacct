@@ -32,6 +32,11 @@ on:
         - signals
         - ha
 
+#Global vars
+env:
+  #TODO: avoid duplicity ci/regression_tests
+  DAEMONS: "pmacctd nfacctd sfacctd uacctd pmbgpd pmbmpd pmtelemetryd"
+
 jobs:
   ### Step 0: Build Traffic Reproducer Images
   ### Step 1: Build Traffic Reproducer Images
@@ -81,6 +86,8 @@ jobs:
 
       - name: Build containers
         uses: ./pmacct/.github/actions/build_containers/
+        with:
+            daemons: ${{env.DAEMONS}}
 
       - name: Download images and prepare artifacts
         run: |

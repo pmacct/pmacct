@@ -9,7 +9,6 @@ inputs:
   daemons:
     required: true
     type: string
-    default: "pmacctd nfacctd sfacctd uacctd pmbgpd pmbmpd pmtelemetryd"
   ci_num_workers:
     required: false
     type: string
@@ -28,6 +27,12 @@ runs:
         CI_DEPS_DONT_CHECK_CERTIFICATE: ${{ inputs.ci_deps_dont_check_cert }}
       shell: bash
       run: |
+        #Sanity, avoid regression #816
+        N_DAEMONS="$(echo $DAEMONS | wc --words)"
+        if [[ "${N_DAEMONS}" != "7" ]]; then
+            echo "ERROR: invalid number of DAEMONS: ${N_DAEMONS}"
+            exit 1
+        fi
         cd pmacct
         git config --global --add safe.directory $GITHUB_WORKSPACE
         git config --global --add safe.directory $GITHUB_WORKSPACE/src/external_libs/libcdada
