@@ -7,6 +7,10 @@ on:
     - cron: '0 0 * * *'  # every day at midnight
 
 #Global vars
+env:
+  #TODO: avoid duplicity ci/regression_tests
+  DAEMONS: "pmacctd nfacctd sfacctd uacctd pmbgpd pmbmpd pmtelemetryd"
+
 jobs:
   ### Step 1: build container images
   builder-docker:
@@ -114,8 +118,19 @@ jobs:
           fetch-depth: 0
           fetch-tags: 1
 
+      - name: Check DAEMONS env. variable...
+        run: |
+          #Sanity, avoid regression #816
+          N_DAEMONS="$(echo $DAEMONS | wc --words)"
+          if [[ "${N_DAEMONS}" != "7" ]]; then
+              echo "ERROR: invalid number of DAEMONS: ${N_DAEMONS}"
+              exit 1
+          fi
+
       - name: Build containers
         uses: ./pmacct/.github/actions/build_containers/
+        with:
+            daemons: ${{env.DAEMONS}}
 
       - name: Docker save images
         run: |
