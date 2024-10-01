@@ -147,7 +147,7 @@ jobs:
   publish-dockerhub:
     needs: [pmacct-docker, build-and-test]
     runs-on: ubuntu-22.04
-    if: ${{ github.event_name == 'schedule' && github.repository == 'pmacct/pmacct' }}
+    if: github.event_name != 'pull_request'
     env:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
