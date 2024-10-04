@@ -15,15 +15,15 @@ All the components (kafka stack, pmacct daemon, and traffic reproducer) are depl
 - nfacctd
 - pmbgpd
 - pmbmpd
+- pmtelemetryd
 - *sfacctd* [**coming soon...**]
-- *pmtelemetryd* [**coming soon...**]
 
 **Network Telemetry Protocols currently included in the tests:**
 - IPFIX / NFv9
 - BMP
 - BGP
+- YANG Push (UDP-notif or TCP-json transport supported)
 - *sFlow* [**coming soon...**]
-- *YANG Push* [**coming soon...**]
 
 ## 1 - How To Install
 
@@ -157,6 +157,10 @@ Local folders **results/\<test case\>/\<container name>** are mounted on traffic
 - 501: IPFIXv10-BGP-IPv6-CISCO-MPLS
 - 502: IPFIXv10-BGP-IPv6-CISCO-SRv6-lcomms
 ```
+
+### 8XX - YANG Telemetry
+- 800: YANG-telemetry-HUAWEI-udp-notif
+- 801: YANG-telemetry-IPv6-CISCO-tcp-json
 
 ### 9XX - Miscellaneous
 ```

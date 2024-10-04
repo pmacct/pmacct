@@ -1,0 +1,6 @@
+containers:
+  - name: traffic-reproducer
+    processes:
+      - pcap: traffic-00.pcap
+        config: traffic-reproducer-00.yml
+        collector: pmtelemetryd-00
