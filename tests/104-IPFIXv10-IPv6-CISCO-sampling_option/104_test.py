@@ -7,7 +7,8 @@ logger = logging.getLogger(__name__)
 
 testParams = KModuleParams(__file__, daemon='nfacctd', ipv6_subnet='cafe::')
 
-
+@pytest.mark.ci
+@pytest.mark.light
 @pytest.mark.nfacctd
 @pytest.mark.ipfix
 @pytest.mark.ipfix_only

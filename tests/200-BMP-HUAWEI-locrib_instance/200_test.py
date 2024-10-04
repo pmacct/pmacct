@@ -8,7 +8,8 @@ logger = logging.getLogger(__name__)
 
 testParams = KModuleParams(__file__, daemon='nfacctd', ipv4_subnet='192.168.100.')
 
-
+@pytest.mark.ci
+@pytest.mark.light
 @pytest.mark.nfacctd
 @pytest.mark.bmp
 @pytest.mark.bmp_only
