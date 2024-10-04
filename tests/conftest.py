@@ -160,9 +160,15 @@ def pmacct_setup(request):
 def pmacct_logcheck(request):
     params = request.module.testParams
     for pmacct in params.pmacct:
-        assert helpers.retry_until_true('Pmacct first log line', lambda: os.path.isfile(pmacct.pmacct_log_file) and
-                                        helpers.check_regex_sequence_in_file(pmacct.pmacct_log_file,
-                                        ['_core.*/core .+ waiting for .+ data on interface']), 30, 5)
+        assert helpers.retry_until_true(
+            'Pmacct first log line',
+            lambda: os.path.isfile(pmacct.pmacct_log_file) and (
+                helpers.check_regex_sequence_in_file(pmacct.pmacct_log_file, ['_core.*/core .+ waiting for .+ data on interface']) or
+                helpers.check_regex_sequence_in_file(pmacct.pmacct_log_file, ['reading telemetry data from'])
+            ),
+            30,
+            5
+        )
         pmacct_version = helpers.read_pmacct_version(pmacct.pmacct_log_file)
         assert pmacct_version
         logger.info(pmacct.name + ' version: ' + pmacct_version)
