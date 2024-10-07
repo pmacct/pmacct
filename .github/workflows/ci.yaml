@@ -162,7 +162,7 @@ jobs:
   publish-dockerhub:
     needs: [pmacct-docker, build-and-test]
     runs-on: ubuntu-22.04
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && vars.SKIP_DOCKERHUB_PUBLISH != 'true'
     env:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
