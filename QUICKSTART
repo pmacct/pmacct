@@ -1146,6 +1146,10 @@ For example:
 
 global, statistics.interval.ms, 60000
 
+This can come especially useful to perform more specific health checks (ie. is
+the daemon as a whole successfully processing data?) against the running daemon
+beyond checking, for example, pid files.  
+
 4) SSL and SASL supports in librdkafka are totally configuration based, meaning
 they can be enabled via the kafka_config_file. More info is available at the
 pages: https://github.com/edenhill/librdkafka/wiki/Using-SSL-with-librdkafka
