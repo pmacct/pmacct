@@ -1,6 +1,7 @@
 ## Test Description(205-BMP-6wind-FRR-peer_down)
 
 Test with BMP peer-up, route-monitoring, stats and peer-down messages from 6wind PE router (FRR-based router).
+TODO: regenerate new pcap for this test with updated FRR release (contains invalid BMP data)
 
 ### Provided files:
 ```

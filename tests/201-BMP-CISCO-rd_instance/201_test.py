@@ -22,8 +22,8 @@ def main(consumers):
     th = KTestHelper(testParams, consumers)
     assert th.spawn_traffic_container('traffic-reproducer-201')
 
-    th.set_ignored_fields(['seq', 'timestamp', 'bmp_router_port', 'timestamp_arrival', 'peer_asn'])
-    assert th.read_and_compare_messages('daisy.bmp', 'bmp-00')
+    th.set_ignored_fields(['seq', 'timestamp', 'bmp_router_port', 'timestamp_arrival'])
+    assert th.read_and_compare_messages('daisy.bmp', 'bmp-00', wait_time=30)
 
     th.transform_log_file('log-00', 'traffic-reproducer-201')
     assert th.wait_and_check_logs('log-00', 30, 10)
