@@ -16,7 +16,6 @@ from library.py.test_params import KModuleParams
 from typing import List
 logger = logging.getLogger(__name__)
 
-
 def replace_ips_and_get_reference_file(params: KModuleParams, json_name: str):
     # Replacing IP addresses in output json file with the ones anticipated from pmacct
     output_json_file = params.output_files.get_path_like(json_name)
@@ -75,6 +74,35 @@ def read_messages_dump_only(consumer: KMessageReader, params: KModuleParams, wai
 
     logger.info('Consumed ' + str(len(messages)) + ' messages')
     logger.warning('Json comparing disabled (test-case development)!')
+    return True 
+
+
+# Reads all messages from Kafka topic within a specified timeout (wait_time)
+# and overwrites the relative output json file
+# --> used for test-case development
+def read_messages_and_overwrite_output_files(consumer: KMessageReader, params: KModuleParams, json_name: str,
+                                             wait_time: int = 120) -> bool:
+
+    # Reading messages from Kafka topic
+    # The get_messages method with wait_time as only argument consumes all messages and returns 
+    # when wait_time (default=120s) has passed
+    logger.info('Consuming from kafka [timeout=' + str(wait_time) + 's]')
+    messages = consumer.get_messages(wait_time)
+    if len(messages) < 1:
+        logger.warning('No messages read by kafka consumer in ' + str(wait_time) + ' second(s)')
+        return False
+
+    logger.info('Consumed ' + str(len(messages)) + ' messages')
+
+    kafka_dump_file = consumer.dumpfile + '.json'
+    output_json_file = helpers.KPathList(params.test_output_files).get_path_like(json_name)
+    with open(kafka_dump_file, 'r') as kafka_dump:
+        content = kafka_dump.read()
+    with open(output_json_file, 'w') as output_json:
+        output_json.write(content)
+
+    logger.warning('OVERWRITE=true - file changed: ' + output_json_file)
+
     return True 
 
 
