@@ -151,3 +151,47 @@ def compare_messages_to_json_file(message_dicts: List[Dict], jsonfile: str, igno
     if multi_match_allowed:
         return compare_json_lists_multi_match(jsons, lines, ignore_fields, max_matches)
     return compare_json_lists(jsons, lines, ignore_fields)
+
+# Removes fields from a json object
+def remove_fields_from_json(input_file, fields_to_remove):
+    logger.info(f'Removing fields "{fields_to_remove}" from JSON message')
+
+    with open(input_file, 'r') as infile:
+        content = infile.readlines()
+
+    modified_content = []
+    for line in content:
+        json_message = json.loads(line)
+        for field in fields_to_remove:
+            if field in json_message:
+                del json_message[field]
+        modified_content.append(json.dumps(json_message))
+
+    with open(input_file, 'w') as outfile:
+        outfile.write('\n'.join(modified_content))
+
+# Aligns json columns for better visualization (used for development/debugging only)
+def align_json_columns(input_file):
+    logger.info(f'Aligning json columns for better visualization')
+
+    with open(input_file, 'r') as infile:
+        lines = infile.readlines()
+
+    json_objects = [json.loads(line) for line in lines]
+    
+    all_keys = sorted(set(key for obj in json_objects for key in obj.keys()))
+
+    max_key_length = max(len(key) for key in all_keys)
+    max_value_lengths = {key: max(len(json.dumps(obj.get(key, ''))) for obj in json_objects) for key in all_keys}
+
+    formatted_lines = []
+    for obj in json_objects:
+        formatted_line = '{'
+        for key in all_keys:
+            value = json.dumps(obj.get(key, ''))
+            formatted_line += f'"{key}": {value.ljust(max_value_lengths[key])}, '
+        formatted_line = formatted_line.rstrip(', ') + '}'
+        formatted_lines.append(formatted_line)
+
+    with open(input_file, 'w') as outfile:
+        outfile.write('\n'.join(formatted_lines))

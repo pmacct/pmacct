@@ -8,6 +8,7 @@ import logging
 import secrets
 import time
 import datetime
+import shutil
 import library.py.json_tools as jsontools
 import library.py.helpers as helpers
 import library.py.escape_regex as escape_regex
@@ -78,14 +79,13 @@ def read_messages_dump_only(consumer: KMessageReader, params: KModuleParams, wai
 
 
 # Reads all messages from Kafka topic within a specified timeout (wait_time)
-# and overwrites the relative output json file
-# --> used for test-case development
+# and overwrites the relative output json file (used for test-case development)
+# While doing so, it also:
+# - removes (pmacct internal) timestamp fields from the output json file
+# - aligns columns in the output json file
 def read_messages_and_overwrite_output_files(consumer: KMessageReader, params: KModuleParams, json_name: str,
                                              wait_time: int = 120) -> bool:
 
-    # Reading messages from Kafka topic
-    # The get_messages method with wait_time as only argument consumes all messages and returns 
-    # when wait_time (default=120s) has passed
     logger.info('Consuming from kafka [timeout=' + str(wait_time) + 's]')
     messages = consumer.get_messages(wait_time)
     if len(messages) < 1:
@@ -101,7 +101,18 @@ def read_messages_and_overwrite_output_files(consumer: KMessageReader, params: K
     with open(output_json_file, 'w') as output_json:
         output_json.write(content)
 
+    # Remove (pmacct internal) timestamp fields from the output json file
+    fields_to_remove = ['timestamp_arrival', 'timestamp_min', 'timestamp_max', 'stamp_inserted', 'stamp_updated']
+    jsontools.remove_fields_from_json(output_json_file, fields_to_remove)
+
     logger.warning('OVERWRITE=true - file changed: ' + output_json_file)
+
+    # Move the kafka_dump_file to a new file with a timestamp
+    # (to support consuming multiple times from the same topic)
+    timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    new_kafka_dump_file = consumer.dumpfile + '_' + timestamp + '.json'
+    shutil.move(kafka_dump_file, new_kafka_dump_file)
+    logger.info('Moved kafka dump file to: ' + new_kafka_dump_file)
 
     return True 
 
