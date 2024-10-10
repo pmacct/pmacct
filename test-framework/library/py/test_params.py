@@ -45,6 +45,7 @@ class KModuleParams:
         self.pmacct = []
         self.results_folder = self.results_dump_folder = None
         self.test_output_files = self.test_log_files = self.test_conf_files = []
+        self.overwrite_json_output = os.getenv('OVERWRITE', 'false').lower() == 'true'
 
     @property
     def pmacct_log_file(self):

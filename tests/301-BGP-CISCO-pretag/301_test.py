@@ -7,7 +7,8 @@ logger = logging.getLogger(__name__)
 
 testParams = KModuleParams(__file__, daemon='pmbgpd', ipv4_subnet='192.168.100.')
 
-
+@pytest.mark.ci
+@pytest.mark.light
 @pytest.mark.pmbgpd
 @pytest.mark.bgp
 @pytest.mark.bgp_only

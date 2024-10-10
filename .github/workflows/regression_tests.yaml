@@ -22,23 +22,26 @@ on:
         type: choice
         options:
         - ''
-        - basic
+        - ci
+        - light
+        - ha
         - ipfix
-        - bmp
         - bgp
+        - bmp
         - avro
         - json
         - redis
         - signals
-        - ha
 
 #Global vars
 env:
   #TODO: avoid duplicity ci/regression_tests
   DAEMONS: "pmacctd nfacctd sfacctd uacctd pmbgpd pmbmpd pmtelemetryd"
+  MARKER: "ci"    # Default marker for normal CI execution
+  COMMIT_ID: ${{ github.sha }}
+  DEFAULT_ONLY: false
 
 jobs:
-  ### Step 0: Build Traffic Reproducer Images
   ### Step 1: Build Traffic Reproducer Images
   traf-repro-docker:
     runs-on: ubuntu-22.04
@@ -84,10 +87,21 @@ jobs:
           fetch-depth: 0
           fetch-tags: 1
 
+      - name: Overwrite environment variables for the workflow_dispatch event
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "MARKER=${{ inputs.marker }}" >> $GITHUB_ENV
+            if [ ! -z "${{ inputs.commit_id }}" ]; then
+              echo "COMMIT_ID=${{ inputs.commit_id }}" >> $GITHUB_ENV
+            fi
+            echo "DEFAULT_ONLY=${{ inputs.default_only }}" >> $GITHUB_ENV
+          fi
+
       - name: Build containers
         uses: ./pmacct/.github/actions/build_containers/
         with:
             daemons: ${{env.DAEMONS}}
+            commit-id: ${{env.COMMIT_ID}}
 
       - name: Download images and prepare artifacts
         run: |
@@ -123,21 +137,44 @@ jobs:
         with:
           path: pmacct
 
-      - name: Collect list of tests from tests/ folder
-        id: set-matrix
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Framework Requirements
         run: |
-          cd pmacct/tests
-          MATRIX="{"test": $(find . -mindepth 1 -maxdepth 1 -type d | cut -c 3- | cut -c 1-3 | sort | jq -R -s -c 'split("\n")[:-1]')}"
+          sudo apt update
+          sudo apt install librdkafka-dev docker
+          pip install --upgrade pip
+          pip install -r pmacct/test-framework/requirements.txt
+
+      - name: Overwrite environment variables for the workflow_dispatch event
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "MARKER=${{ inputs.marker }}" >> $GITHUB_ENV
+            if [ ! -z "${{ inputs.commit_id }}" ]; then
+              echo "COMMIT_ID=${{ inputs.commit_id }}" >> $GITHUB_ENV
+            fi
+            echo "DEFAULT_ONLY=${{ inputs.default_only }}" >> $GITHUB_ENV
+          fi
+
+      - name: Collect list of tests matching with the provided marker
+        id: set-matrix
+        env:
+          MARKER: ${{ env.MARKER }}
+        run: |
+          cd pmacct/test-framework
+          dry_run_output=$(sudo env PATH="$PATH" ./runtest.sh --dry * --mark="$MARKER")
+          MATRIX="{"test": $(echo "$dry_run_output" | grep -oP '(?<=<Module )\d+(?=_test\.py)' | jq -R -s -c 'split("\n")[:-1]')}"
           echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
-          echo "Collected tests:"
+          echo "Collected Tests:"
           echo $MATRIX
 
   ### Step 4: Setup Framework and Run Tests
   pytest-runtests:
     needs: [collect-tests, traf-repro-docker, cache-docker-images]
     runs-on: ubuntu-22.04
-    env:
-      SKIP: 'false'
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.collect-tests.outputs.matrix) }}
@@ -162,63 +199,42 @@ jobs:
           pip install --upgrade pip
           pip install -r pmacct/test-framework/requirements.txt
 
-      - name: Dry-run to check collected tests
-        if: ${{ success() && inputs.marker != '' }}
-        env:
-          MARKER: ${{ inputs.marker }}
-        run: |
-          function intercept_pytest_no_tests_collected {
-            exit_code=$?
-            if [[ ${exit_code} -eq 5 ]]
-            then
-              echo "Intercepting pytest exit code 5 (no tests collected) and replacing with 0"
-              echo "Setting early_exit to true!"
-              echo "SKIP=true" >> "$GITHUB_ENV"
-              exit 0
-            fi
-          }
-          trap intercept_pytest_no_tests_collected EXIT
-          cd pmacct/test-framework
-          sudo env PATH="$PATH" ./runtest.sh --dry ${{ matrix.test }} --mark="$MARKER"
-
       - name: Download Artifacts
-        if: ${{ success() && env.SKIP == 'false' }}
         uses: actions/download-artifact@v4
         with:
           pattern: '*_docker_images'
           path: /tmp/docker
 
       - name: Import images in the local registry
-        if: ${{ success() && env.SKIP == 'false' }}
         run: |
           docker load -i /tmp/docker/traffic_reproducer_docker_images/traffic_reproducer_docker_images.tar
           docker load -i /tmp/docker/hub_pulled_docker_images/hub_pulled_docker_images.tar
           echo "List Images"
           docker images | grep 'confluentinc\|redis\|traffic\|_build'
 
+      - name: Overwrite environment variables for the workflow_dispatch event
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "MARKER=${{ inputs.marker }}" >> $GITHUB_ENV
+            if [ ! -z "${{ inputs.commit_id }}" ]; then
+              echo "COMMIT_ID=${{ inputs.commit_id }}" >> $GITHUB_ENV
+            fi
+            echo "DEFAULT_ONLY=${{ inputs.default_only }}" >> $GITHUB_ENV
+          fi
+
       - name: Run the test(s)
-        if: ${{ success() && env.SKIP == 'false' }}
         env:
-          DEFAULT_ONLY: ${{ inputs.default_only }}
-          MARKER: ${{ inputs.marker }}
+          DEFAULT_ONLY: ${{ env.DEFAULT_ONLY }}
         run: |
           cd pmacct/test-framework
           if [[ "$DEFAULT_ONLY" == "true" ]]; then
-            if [[ "$MARKER" == "" ]]; then
-              sudo env PATH="$PATH" ./runtest.sh ${{ matrix.test }}:00
-            else
-              sudo env PATH="$PATH" ./runtest.sh ${{ matrix.test }}:00 --mark="$MARKER"
-            fi
+            sudo env PATH="$PATH" ./runtest.sh ${{ matrix.test }}:00
           else
-            if [[ "$MARKER" == "" ]]; then
-              sudo env PATH="$PATH" ./runtest.sh ${{ matrix.test }}
-            else
-              sudo env PATH="$PATH" ./runtest.sh ${{ matrix.test }} --mark="$MARKER"
-            fi
+            sudo env PATH="$PATH" ./runtest.sh ${{ matrix.test }}
           fi
 
       - name: Prepare Results Folder for Upload (permissions and folder name)
-        if: ${{ !cancelled() && env.SKIP == 'false' }}    # always run this step, unless job manually cancelled or we are skipping the test
+        if: '!cancelled()'                            # always run this step, unless job manually cancelled
         run: |
           cd pmacct/test-framework
           sudo chown -R 1000:1000 results/
@@ -229,7 +245,7 @@ jobs:
           echo "TEST_FOLDER_NAME=$TEST_FOLDER_NAME" >> "$GITHUB_ENV"
 
       - name: Upload Results Folder
-        if: ${{ !cancelled() && env.SKIP == 'false' }}    # always run this step, unless job manually cancelled or we are skipping the test
+        if: '!cancelled()'                            # always run this step, unless job manually cancelled
         uses: actions/upload-artifact@v4
         with:
           retention-days: 7
@@ -305,18 +321,28 @@ jobs:
         with:
           path: github-pages/
 
+      - name: Overwrite environment variables for the workflow_dispatch event
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "MARKER=${{ inputs.marker }}" >> $GITHUB_ENV
+            if [ ! -z "${{ inputs.commit_id }}" ]; then
+              echo "COMMIT_ID=${{ inputs.commit_id }}" >> $GITHUB_ENV
+            fi
+            echo "DEFAULT_ONLY=${{ inputs.default_only }}" >> $GITHUB_ENV
+          fi
+
       - name: Add info to markdown summary
         env:
-          MARKER: ${{ inputs.marker }}
-          COMMIT_ID: ${{ inputs.commit_id }}
-          DEFAULT_ONLY: ${{ inputs.default_only }}
+          MARKER: ${{ env.MARKER }}
+          COMMIT_ID: ${{ env.COMMIT_ID }}
+          DEFAULT_ONLY: ${{ env.DEFAULT_ONLY }}
         run: |
           echo "## :loudspeaker: Pytest Run Information: :loudspeaker:" >> $GITHUB_STEP_SUMMARY
           echo "### Test Results:" >> $GITHUB_STEP_SUMMARY
           echo "The Pytest HTML report is only deployed on github pages for runs triggered from the master branch (for security reasons), \
                 and is only available for the latest CI run. This is due to current Github Actions limitations of not supporting \
                 different URLs for deployments. Nonetheless, reports are anyway available for download as artifacts for up to 15 days \
-                after the test run (see Artifacts section above)." >> $GITHUB_STEP_SUMMARY
+                after the test run (see Artifacts section below)." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Quick links for downloading:**" >> $GITHUB_STEP_SUMMARY
           echo "- Pytest HTML Report: ${{ steps.upload-artifact-html-report.outputs.artifact-url }}'" >> $GITHUB_STEP_SUMMARY
@@ -324,10 +350,10 @@ jobs:
                   ${{ steps.upload-artifact-results.outputs.artifact-url }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo
-          echo "### Input Arguments (use for manual workflow dispatch of the CI only):" >> $GITHUB_STEP_SUMMARY
-          echo "Marker provided: $MARKER" >> $GITHUB_STEP_SUMMARY
-          echo "Commit ID provided: $COMMIT_ID" >> $GITHUB_STEP_SUMMARY
-          echo "Default_only: $DEFAULT_ONLY" >> $GITHUB_STEP_SUMMARY
+          echo "### Input Arguments (can be changed when launching manual workflow_dispatch runs):" >> $GITHUB_STEP_SUMMARY
+          echo "Test default scenarios only: $DEFAULT_ONLY" >> $GITHUB_STEP_SUMMARY
+          echo "Pytest Marker: $MARKER" >> $GITHUB_STEP_SUMMARY
+          echo "Commit ID: https://github.com/${{github.repository}}/tree/$COMMIT_ID" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo
 

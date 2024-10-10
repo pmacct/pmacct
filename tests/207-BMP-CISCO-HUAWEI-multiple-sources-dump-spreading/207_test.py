@@ -8,11 +8,11 @@ logger = logging.getLogger(__name__)
 
 testParams = KModuleParams(__file__, daemon='pmbmpd', ipv4_subnet='192.168.100.')
 
+@pytest.mark.ci
 @pytest.mark.pmbmpd
 @pytest.mark.bmp
 @pytest.mark.bmp_only
 @pytest.mark.bmpv3
-@pytest.mark.basic
 @pytest.mark.avro
 def test(test_core, consumer_setup_teardown):
     main(consumer_setup_teardown)
