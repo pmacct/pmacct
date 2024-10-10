@@ -98,7 +98,7 @@ class KTrafficSetup:
         pmacct = self.params.get_pmacct_with_name(collector_name)
         pmacct_ip = pmacct.ipv6 if is_ipv6 else pmacct.ipv4
         logger.debug('Traffic reproducer uses ' + ('IPv6' if is_ipv6 else 'IPv4'))
-        for k in ['bmp', 'bgp', 'ipfix']:
+        for k in ['bmp', 'bgp', 'ipfix', 'udp_generic', 'tcp_generic']:
             if k in data:
                 data[k]['collector']['ip'] = pmacct_ip
         self._fix_repro_ip_in_config(data, is_ipv6)

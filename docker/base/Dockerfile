@@ -60,7 +60,8 @@ RUN export AVRO_LIBS="-L/usr/local/avro/lib -lavro" && \
                               --enable-rabbitmq --enable-nflog  \
                               --enable-ndpi --enable-zmq        \
                               --enable-avro --enable-serdes     \
-                              --enable-redis --enable-gnutls && \
+                              --enable-redis --enable-gnutls    \
+                              --enable-unyte-udp-notif &&       \
   make install
 
 FROM debian:bookworm-slim as base
