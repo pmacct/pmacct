@@ -103,7 +103,7 @@ sudo env PATH="$PATH" OVERWRITE=true ./runtest.sh 203 --loglevel=DEBUG
 
 Example (overwrite the expected output files for test with BMP data [more info [here](#expected-json-output)]):
 ```shell
-sudo env PATH="$PATH" OVERWRITE=true ./runtest.sh * --mark=bmp --loglevel=DEBUG
+sudo env PATH="$PATH" OVERWRITE=true ./runtest.sh * --mark=bmp
 ```
 
 A list of markers (ie. ipfix, bmp, etc.) are available to run a specific subset of tests. The full list is part of the
@@ -220,9 +220,10 @@ The [Traffic Reproducer Project](https://github.com/network-analytics/traffic-re
 
 The framework can also be used to generate or update the expected json output files by setting the OVERWRITE env var when running the tests:
 
-Example:
+Examples:
 ```
 sudo env PATH="$PATH" OVERWRITE=true ./runtest.sh 203 --loglevel=DEBUG   # overwrite all output files for test 203
+sudo env PATH="$PATH" OVERWRITE=true ./runtest.sh * --marc=ci            # overwrite all output files for ci marker (takes long time!)
 ```
 
 Keep in mind that the output file (e.g. output-flow-00.json) needs to exist at least as empty file, otherwise it will fail. 

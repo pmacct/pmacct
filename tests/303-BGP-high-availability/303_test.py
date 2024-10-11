@@ -3,10 +3,11 @@ from library.py.test_params import KModuleParams
 from library.py.test_helper import KTestHelper
 import library.py.helpers as helpers
 import library.py.json_tools as json_tools
+import library.py.test_tools as test_tools
 import logging
 import pytest
 import time
-import library.py.test_tools as test_tools
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,11 @@ testParams = KModuleParams(__file__, daemon='nfacctd', ipv6_subnet='cafe::')
 @pytest.mark.avro
 @pytest.mark.ha
 def test(test_core_redis, consumer_setup_teardown):
+    
+    # Exit if OVERWRITE=true (HA tests do not support OVERWRITE, as they use non-default output validation)
+    if os.getenv('OVERWRITE') == 'true':
+        pytest.fail("OVERWRITE functionality is not available for this test (HA setup with non-default output validation).")
+
     main(consumer_setup_teardown)
 
 
