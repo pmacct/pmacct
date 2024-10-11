@@ -8,14 +8,13 @@ logger = logging.getLogger(__name__)
 
 testParams = KModuleParams(__file__, daemon='nfacctd')
 
-
+@pytest.mark.ci
 @pytest.mark.nfacctd
 @pytest.mark.ipfix
 @pytest.mark.ipfix_only
 @pytest.mark.ipfixv10
 @pytest.mark.nfv9
 @pytest.mark.avro
-@pytest.mark.basic
 def test(test_core, consumer_setup_teardown):
     main(consumer_setup_teardown)
 

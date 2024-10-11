@@ -96,6 +96,16 @@ Example (run test case 300 [default scenario] with python without the ./runtest.
 python3 -m pytest tests/300* --runconfig=300:00 -c=pytest.ini --log-cli-level=DEBUG --log-file=results/pytestlog.log --html=results/report.html
 ```
 
+Example (overwrite the expected output files for test 203 [more info [here](#expected-json-output)]):
+```shell
+sudo env PATH="$PATH" OVERWRITE=true ./runtest.sh 203 --loglevel=DEBUG
+```
+
+Example (overwrite the expected output files for test with BMP data [more info [here](#expected-json-output)]):
+```shell
+sudo env PATH="$PATH" OVERWRITE=true ./runtest.sh * --mark=bmp --loglevel=DEBUG
+```
+
 A list of markers (ie. ipfix, bmp, etc.) are available to run a specific subset of tests. The full list is part of the
 [pytest.ini](pytest.ini) file.
 
@@ -208,35 +218,18 @@ The [Traffic Reproducer Project](https://github.com/network-analytics/traffic-re
 
 ### Expected json output
 
-The framework can also be used to generate the expected json output files that pmacct produces to kafka. Just keep in mind that the json output needs to be manually checked to verify that the data received is as expected.
+The framework can also be used to generate or update the expected json output files by setting the OVERWRITE env var when running the tests:
 
-This is possible since the framework will always provide the kafka dumps (in the [results](results) folder) for each test after execution. The only problem is that without any output-XXX.json files, the tests will fail throwing a *file_not_found* error.
-
-As example, if we want to generate the output files for test 100 (assuming that the output-flow-00.json file is not existing yet), we cannot just run the test normally as the *read_and_compare_messages* function will throw an error.
+Example:
 ```
-def main(consumers):
-    th = KTestHelper(testParams, consumers)
-    assert th.spawn_traffic_container('traffic-reproducer')
-
-    th.set_ignored_fields(['stamp_inserted', 'stamp_updated', 'timestamp_max', 'timestamp_arrival', 'timestamp_min'])
-    assert th.read_and_compare_messages('daisy.flow', 'flow-00')
+sudo env PATH="$PATH" OVERWRITE=true ./runtest.sh 203 --loglevel=DEBUG   # overwrite all output files for test 203
 ```
 
-To overcome this, we can temporarily replace that function with another one specifically developed for this purpose:
-``` # Add this import if not already there
-    import library.py.test_tools as test_tools 
-    
-    consumer = consumers.get_consumer_of_topic_like('daisy.flow')
-    assert test_tools.read_messages_dump_only(consumer, testParams, wait_time=120)             # wait_time is optional (default=120s)
-```
+Keep in mind that the output file (e.g. output-flow-00.json) needs to exist at least as empty file, otherwise it will fail. 
 
-This way we can simply call:
-```
-./runtest 100
-```
-and the test will be executed omitting the output check, just consuming and dumping all messages sent to the kafka topic for the specified wait_time.
+Remark: this process is significantly slower than the normal test execution, since we are currently waiting for a default 120s timeout to ensure all messages arrive, due to the internal flow record bucketing. During the normal test execution, instead, as soon as the expected number of packets arrives we can stop the kafka consume process. This can be improved (TODO).
 
-The json data can be found in the [results/100-IPFIXv10-CISCO/kafka_dumps](results/100-IPFIXv10-CISCO/kafka_dumps) folder and its content can be used to generate the output-flow-00.json file. 
+The json data can also be found in the [results/203-BMP-HUAWEI-dump/kafka_dumps](results/203-BMP-HUAWEI-dump/kafka_dumps) folder.
 
 ### Expected log output
 

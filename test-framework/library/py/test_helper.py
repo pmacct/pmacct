@@ -41,10 +41,16 @@ class KTestHelper:
     # Consumes from the provided kafka topic topic_name as many messages as the number of lines in the json
     # reference file implied by the keyword reference_json (searched for with *like* in the tests folder). Then,
     # it compares the received messages with the jsons corresponding to the lines in the reference file.
+    # If OVERWRITE=true environment variable is set, the output test files are overwritten (used for test development)
     def read_and_compare_messages(self, topic_name: str, reference_json: str, wait_time: int = 120) -> bool:
         consumer = self.consumers.get_consumer_of_topic_like(topic_name)
-        return test_tools.read_and_compare_messages(consumer, self.params, reference_json,
-                                                    self.ignored_fields, wait_time)
+
+        if self.params.overwrite_json_output:
+            return test_tools.read_messages_and_overwrite_output_files(consumer, self.params, reference_json,
+                                                                       wait_time) 
+        else:
+            return test_tools.read_and_compare_messages(consumer, self.params, reference_json,
+                                                        self.ignored_fields, wait_time)
 
     # Identifies the reference log file corresponding to log_tag and transforms it with respect to
     # traffic reproduction IP address and other wildcards/regexes used therein. The traffic reproduction
