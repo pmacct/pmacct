@@ -23,8 +23,8 @@ def main(consumers):
     th = KTestHelper(testParams, consumers)
     assert th.spawn_traffic_container('traffic-reproducer-200')
 
-    th.set_ignored_fields(['seq', 'timestamp', 'timestamp_arrival', 'bmp_router_port', 'peer_asn'])
-    assert th.read_and_compare_messages('daisy.bmp', 'bmp-00')
+    th.set_ignored_fields(['seq', 'timestamp', 'timestamp_arrival', 'bmp_router_port'])
+    assert th.read_and_compare_messages('daisy.bmp', 'bmp-00', wait_time=30)
 
     logfile = testParams.log_files.get_path_like('log-00')
     helpers.replace_in_file(logfile, '/etc/pmacct/librdkafka.conf', testParams.pmacct_mount_folder + '/librdkafka.conf')

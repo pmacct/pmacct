@@ -33,7 +33,7 @@ def main(consumers):
 
     # Compare received messages on topic daisy.bmp to reference file output-bmp-00.json
     th.set_ignored_fields(['seq', 'timestamp', 'timestamp_arrival', 'bmp_router_port', 'peer_asn'])
-    assert th.read_and_compare_messages('daisy.bmp', 'bmp-00')
+    assert th.read_and_compare_messages('daisy.bmp', 'bmp-00', wait_time=15)
 
     # Check logs for BMP peer up notification
     th.transform_log_file('log-00')
@@ -46,4 +46,4 @@ def main(consumers):
     assert th.delete_traffic_container('traffic-reproducer-400b')
 
     # Compare received messages on topic daisy.bmp to reference file output-bmp-01.json
-    assert th.read_and_compare_messages('daisy.bmp', 'bmp-01')
+    assert th.read_and_compare_messages('daisy.bmp', 'bmp-01', wait_time=30)

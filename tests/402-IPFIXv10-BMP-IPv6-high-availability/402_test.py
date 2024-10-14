@@ -8,6 +8,7 @@ import library.py.scripts as scripts
 import logging
 import pytest
 import time
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,11 @@ testParams = KModuleParams(__file__, daemon='nfacctd')
 @pytest.mark.avro
 @pytest.mark.ha
 def test(test_core_redis, consumer_setup_teardown):
+    
+    # Exit if OVERWRITE=true (HA tests do not support OVERWRITE, as they use non-default output validation)
+    if os.getenv('OVERWRITE') == 'true':
+        pytest.fail("OVERWRITE functionality is not available for this test (HA setup with non-default output validation).")
+
     main(consumer_setup_teardown)
 
 def main(consumers):
