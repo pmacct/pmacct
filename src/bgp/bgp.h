@@ -310,6 +310,7 @@ struct bgp_misc_structs {
 
   char *tag_map;
   bgp_tag_t *tag;
+  struct pretag_label_filter *msglog_label_filter;
 
   int current_slot;
   struct sockaddr_storage *tag_peer;

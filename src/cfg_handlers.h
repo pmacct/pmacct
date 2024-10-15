@@ -369,6 +369,7 @@ extern int cfg_key_bgp_daemon_ip_precedence(char *, char *, char *);
 extern int cfg_key_bgp_daemon_allow_file(char *, char *, char *);
 extern int cfg_key_bgp_daemon_add_path_ignore(char *, char *, char *);
 extern int cfg_key_bgp_daemon_tag_map(char *, char *, char *);
+extern int cfg_key_bgp_daemon_msglog_label_filter(char *, char *, char *);
 extern int cfg_key_bgp_daemon_aspath_radius(char *, char *, char *);
 extern int cfg_key_bgp_daemon_stdcomm_pattern(char *, char *, char *);
 extern int cfg_key_bgp_daemon_extcomm_pattern(char *, char *, char *);

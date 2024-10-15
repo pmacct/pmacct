@@ -1549,6 +1549,7 @@ void bgp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->tag = &bgp_logdump_tag;
   bms->tag_map = config.bgp_daemon_tag_map;
   bms->tag_peer = &bgp_logdump_tag_peer;
+  bms->msglog_label_filter = NULL;
 }
 
 void bgp_blackhole_link_misc_structs(struct bgp_misc_structs *m_data)

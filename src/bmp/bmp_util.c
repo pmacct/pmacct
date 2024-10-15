@@ -206,6 +206,7 @@ void bmp_link_misc_structs(struct bgp_misc_structs *bms)
   bms->tag_map = config.bmp_daemon_tag_map;
   bms->tag_peer = &bmp_logdump_tag_peer;
   bms->bgp_table_info_delete_tag_find = bgp_table_info_delete_tag_find_bmp;
+  bms->msglog_label_filter = &config.bmp_daemon_msglog_label_filter;
 }
 
 int bgp_peer_cmp_bmp(const void *a, const void *b)
