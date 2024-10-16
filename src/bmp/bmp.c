@@ -871,7 +871,7 @@ int skinny_bmp_daemon()
 
       if (!config.bmp_daemon_parse_proxy_header) {
 	if (config.bmp_daemon_tag_map) {
-	  bgp_tag_init_find(peer, (struct sockaddr *) &bmp_logdump_tag_peer, &bmp_logdump_tag);
+	  bgp_tag_init_find(peer, (struct sockaddr *) &bmp_logdump_tag_peer, &bmp_logdump_tag, NULL);
 	  bgp_tag_find((struct id_table *)bmp_logdump_tag.tag_table, &bmp_logdump_tag, &bmp_logdump_tag.tag, NULL);
 	}
 
@@ -931,7 +931,7 @@ int skinny_bmp_daemon()
       addr_to_str(peer->addr_str, &peer->addr);
 
       if (config.bmp_daemon_tag_map) {
-	bgp_tag_init_find(peer, (struct sockaddr *) &bmp_logdump_tag_peer, &bmp_logdump_tag);
+	bgp_tag_init_find(peer, (struct sockaddr *) &bmp_logdump_tag_peer, &bmp_logdump_tag, NULL);
 	bgp_tag_find((struct id_table *)bmp_logdump_tag.tag_table, &bmp_logdump_tag, &bmp_logdump_tag.tag, NULL);
       }
 
@@ -1032,7 +1032,7 @@ int skinny_bmp_daemon()
     }
 
     if (config.bmp_daemon_tag_map) {
-      bgp_tag_init_find(peer, (struct sockaddr *) &bmp_logdump_tag_peer, &bmp_logdump_tag);
+      bgp_tag_init_find(peer, (struct sockaddr *) &bmp_logdump_tag_peer, &bmp_logdump_tag, NULL);
       bgp_tag_find((struct id_table *)bmp_logdump_tag.tag_table, &bmp_logdump_tag, &bmp_logdump_tag.tag, NULL);
     }
 

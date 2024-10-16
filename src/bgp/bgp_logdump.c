@@ -2255,7 +2255,7 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
    finely placed here. Should further lookups be possible, this
    may be very possibly moved inside the loop */
       if (config.bgp_daemon_tag_map) {
-	bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag);
+	bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag, NULL);
 	bgp_tag_find((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
       }
 

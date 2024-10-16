@@ -618,6 +618,6 @@ void bgp_table_info_delete_tag_find_bmp(struct bgp_peer *peer)
   if (peer && peer->bmp_se) bmpp = peer->bmp_se;
   if (bmpp) bgpp = &bmpp->self;
 
-  bgp_tag_init_find(bgpp ? bgpp : peer, (struct sockaddr *) bms->tag_peer, bms->tag);
+  bgp_tag_init_find(bgpp ? bgpp : peer, (struct sockaddr *) bms->tag_peer, bms->tag, NULL);
   bgp_tag_find((struct id_table *)bms->tag->tag_table, bms->tag, &bms->tag->tag, NULL);
 }

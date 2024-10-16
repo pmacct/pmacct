@@ -368,7 +368,23 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   }
                   key = NULL; value = NULL;
                 }
-		else if (acct_type == ACCT_PMBGP || acct_type == ACCT_PMBMP || acct_type == ACCT_PMTELE) {
+		else if (acct_type == ACCT_PMBGP || acct_type == ACCT_PMBMP) {
+                  for (dindex = 0; strcmp(tag_map_bgp_dictionary[dindex].key, ""); dindex++) {
+                    if (!strcmp(tag_map_bgp_dictionary[dindex].key, key)) {
+                      err = (*tag_map_bgp_dictionary[dindex].func)(filename, &tmp.e[tmp.num], value, req, acct_type);
+                      break;
+                    }
+                    else err = E_NOTFOUND; /* key not found */
+		  }
+                  if (err) {
+                    if (err == E_NOTFOUND) Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] unknown key '%s'. Ignored.\n", 
+						config.name, config.type, filename, tot_lines, key);
+                    else Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
+                    break;
+                  }
+                  key = NULL; value = NULL;
+		}
+		else if (acct_type == ACCT_PMTELE) {
                   for (dindex = 0; strcmp(tag_map_nonflow_dictionary[dindex].key, ""); dindex++) {
                     if (!strcmp(tag_map_nonflow_dictionary[dindex].key, key)) {
                       err = (*tag_map_nonflow_dictionary[dindex].func)(filename, &tmp.e[tmp.num], value, req, acct_type);

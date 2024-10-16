@@ -443,6 +443,7 @@ extern int cfg_key_bmp_daemon_ipv6_only(char *, char *, char *);
 extern int cfg_key_bmp_daemon_port(char *, char *, char *);
 extern int cfg_key_bmp_daemon_rp_ebpf_prog(char *, char *, char *);
 extern int cfg_key_bmp_daemon_tag_map(char *, char *, char *);
+extern int cfg_key_bmp_daemon_msglog_label_filter(char *, char *, char *);
 extern int cfg_key_bmp_daemon_pipe_size(char *, char *, char *);
 extern int cfg_key_bmp_daemon_max_peers(char *, char *, char *);
 extern int cfg_key_bmp_daemon_allow_file(char *, char *, char *);

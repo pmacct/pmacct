@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -893,7 +893,7 @@ void skinny_bgp_daemon_online()
 	 finely placed here. Should further lookups be possible, this
 	 may be very possibly moved inside the loop */
       if (config.bgp_daemon_tag_map) {
-	bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag);
+	bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag, NULL);
 	bgp_tag_find((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
       }
 
@@ -1107,7 +1107,7 @@ void skinny_bgp_daemon_online()
 	} 
 
 	if (config.bgp_daemon_tag_map) {
-	  bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag);
+	  bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag, NULL);
 	  bgp_tag_find((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
 	}
 
@@ -1223,10 +1223,11 @@ void bgp_daemon_msglog_prepare_sd_schemas()
 #endif
 }
 
-void bgp_tag_init_find(struct bgp_peer *peer, struct sockaddr *sa, bgp_tag_t *pptrs)
+void bgp_tag_init_find(struct bgp_peer *peer, struct sockaddr *sa, bgp_tag_t *pptrs, struct bgp_info *info)
 {
   addr_to_sa(sa, &peer->addr, peer->tcp_port);
   pptrs->f_agent = (u_char *) sa;
+  pptrs->bgp_dst_info = (char *) info;
 }
 
 int bgp_tag_find(struct id_table *t, bgp_tag_t *pptrs, pm_id_t *tag, pm_id_t *tag2)

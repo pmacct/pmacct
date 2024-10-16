@@ -1182,10 +1182,17 @@ int PT_map_comms_handler(char *filename, struct id_entry *e, char *value, struct
     }
   }
 
-  if (config.nfacctd_as & NF_AS_BGP && e->key.comms[0]) {
-    e->func[x] = pretag_comms_handler;
+  if (acct_type == ACCT_PMBGP || acct_type == ACCT_PMBMP) {
+    e->func[x] = pretag_BGP_comms_handler;
     e->func_type[x] = PRETAG_STD_COMM;
     return FALSE;
+  }
+  else {
+    if (config.nfacctd_as & NF_AS_BGP && e->key.comms[0]) {
+      e->func[x] = pretag_comms_handler;
+      e->func_type[x] = PRETAG_STD_COMM;
+      return FALSE;
+    }
   }
 
   Log(LOG_WARNING, "WARN ( %s/%s ): [%s] 'comms' requires '%s_as: [ bgp | longest ]' to be specified.\n",
@@ -3393,6 +3400,23 @@ int BITR_mpls_vpn_id_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     return (TRUE ^ entry->key.mpls_vpn_id.neg);
     break;
   }
+}
+
+int pretag_BGP_comms_handler(struct packet_ptrs *pptrs, void *unused, void *e)
+{
+  struct id_entry *entry = e;
+  struct bgp_info *info;
+  char tmp_stdcomms[MAX_BGP_STD_COMMS];
+
+  memset(tmp_stdcomms, 0, sizeof(tmp_stdcomms));
+
+  info = (struct bgp_info *) pptrs->bgp_dst_info;
+  if (info && info->attr && info->attr->community && info->attr->community->str) {
+    evaluate_comm_patterns(tmp_stdcomms, info->attr->community->str, entry->key.comms, MAX_BGP_STD_COMMS);
+  }
+
+  if (strlen(tmp_stdcomms)) return FALSE;
+  else return TRUE;
 }
 
 int custom_primitives_map_name_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)

@@ -196,6 +196,7 @@ extern int pretag_src_port_handler(struct packet_ptrs *, void *, void *);
 extern int pretag_dst_port_handler(struct packet_ptrs *, void *, void *);
 extern int pretag_tcp_flags_handler(struct packet_ptrs *, void *, void *);
 extern int pretag_is_multicast_handler(struct packet_ptrs *, void *, void *);
+extern int pretag_BGP_comms_handler(struct packet_ptrs *, void *, void *);
 extern int pretag_fwd_status_handler(struct packet_ptrs *, void *, void *);
 extern int pretag_cvlan_id_handler(struct packet_ptrs *, void *, void *);
 extern int pretag_set_tos_handler(struct packet_ptrs *, void *, void *);

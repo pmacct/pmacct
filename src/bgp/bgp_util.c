@@ -1719,6 +1719,6 @@ void bgp_table_info_delete_tag_find_bgp(struct bgp_peer *peer)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
 
-  bgp_tag_init_find(peer, (struct sockaddr *) bms->tag_peer, bms->tag);
+  bgp_tag_init_find(peer, (struct sockaddr *) bms->tag_peer, bms->tag, NULL);
   bgp_tag_find((struct id_table *)bms->tag->tag_table, bms->tag, &bms->tag->tag, NULL);
 }
