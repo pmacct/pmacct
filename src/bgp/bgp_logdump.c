@@ -80,6 +80,11 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
 #endif
   }
 
+  if (bms->tag_map) {
+    bgp_tag_init_find(NULL, NULL, tag, ri);
+    bgp_tag_find((struct id_table *) tag->tag_table, tag, &tag->tag, NULL);
+  }
+
   if (etype == BGP_LOGDUMP_ET_LOG) {
     if (bms->tag_map && tag && bms->msglog_label_filter) {
       if (bms->msglog_label_filter->num) {

@@ -1225,9 +1225,16 @@ void bgp_daemon_msglog_prepare_sd_schemas()
 
 void bgp_tag_init_find(struct bgp_peer *peer, struct sockaddr *sa, bgp_tag_t *pptrs, struct bgp_info *info)
 {
-  addr_to_sa(sa, &peer->addr, peer->tcp_port);
-  pptrs->f_agent = (u_char *) sa;
-  pptrs->bgp_dst_info = (char *) info;
+  if (pptrs) {
+    if (peer && sa) {
+      addr_to_sa(sa, &peer->addr, peer->tcp_port);
+      pptrs->f_agent = (u_char *) sa;
+    }
+
+    if (info) { 
+      pptrs->bgp_dst_info = (char *) info;
+    }
+  }
 }
 
 int bgp_tag_find(struct id_table *t, bgp_tag_t *pptrs, pm_id_t *tag, pm_id_t *tag2)
