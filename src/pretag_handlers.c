@@ -3410,9 +3410,11 @@ int pretag_BGP_comms_handler(struct packet_ptrs *pptrs, void *unused, void *e)
 
   memset(tmp_stdcomms, 0, sizeof(tmp_stdcomms));
 
-  info = (struct bgp_info *) pptrs->bgp_dst_info;
-  if (info && info->attr && info->attr->community && info->attr->community->str) {
-    evaluate_comm_patterns(tmp_stdcomms, info->attr->community->str, entry->key.comms, MAX_BGP_STD_COMMS);
+  if (pptrs) {
+    info = (struct bgp_info *) pptrs->bgp_dst_info;
+    if (info && info->attr && info->attr->community && info->attr->community->str) {
+      evaluate_comm_patterns(tmp_stdcomms, info->attr->community->str, entry->key.comms, MAX_BGP_STD_COMMS);
+    }
   }
 
   if (strlen(tmp_stdcomms)) return FALSE;

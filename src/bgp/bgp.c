@@ -889,11 +889,8 @@ void skinny_bgp_daemon_online()
 	bgp_peer_cache_insert(peers_port_cache, bucket, peer);
       }
 
-      /* Being bgp_daemon_tag_map limited to 'ip' key lookups, this is
-	 finely placed here. Should further lookups be possible, this
-	 may be very possibly moved inside the loop */
       if (config.bgp_daemon_tag_map) {
-	bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag, NULL);
+	bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, NULL, &bgp_logdump_tag, TRUE);
 	bgp_tag_find((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
       }
 
@@ -1107,7 +1104,7 @@ void skinny_bgp_daemon_online()
 	} 
 
 	if (config.bgp_daemon_tag_map) {
-	  bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag, NULL);
+	  bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, NULL, &bgp_logdump_tag, TRUE);
 	  bgp_tag_find((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
 	}
 
@@ -1223,9 +1220,24 @@ void bgp_daemon_msglog_prepare_sd_schemas()
 #endif
 }
 
-void bgp_tag_init_find(struct bgp_peer *peer, struct sockaddr *sa, bgp_tag_t *pptrs, struct bgp_info *info)
+void bgp_tag_clear(bgp_tag_t *pptrs)
 {
+  pptrs->f_agent = NULL;
+  pptrs->bgp_dst_info = NULL;
+}
+
+void bgp_tag_init_find(struct bgp_peer *peer, struct sockaddr *sa, struct bgp_info *info, bgp_tag_t *pptrs, int clear)
+{
+  /* checking for "peer" and "info" separately allows for multi-
+     stage / incremental bgp_tag_find(). This also allows for
+     more generic code and optimizes lookup of certain keys that,
+     are known not to change, for example, during a dump event,
+     like 'ip' */
   if (pptrs) {
+    if (clear) {
+      bgp_tag_clear(pptrs);
+    }
+
     if (peer && sa) {
       addr_to_sa(sa, &peer->addr, peer->tcp_port);
       pptrs->f_agent = (u_char *) sa;

@@ -1053,7 +1053,7 @@ void telemetry_prepare_daemon(struct telemetry_data *t_data)
 
 void telemetry_tag_init_find(telemetry_peer *peer, struct sockaddr *sa, telemetry_tag_t *pptrs)
 {
-  bgp_tag_init_find(peer, sa, pptrs, NULL);
+  bgp_tag_init_find(peer, sa, NULL, pptrs, FALSE);
 }
 
 int telemetry_tag_find(struct id_table *t, telemetry_tag_t *pptrs, pm_id_t *tag, pm_id_t *tag2)

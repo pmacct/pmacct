@@ -81,7 +81,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
   }
 
   if (bms->tag_map) {
-    bgp_tag_init_find(NULL, NULL, tag, ri);
+    bgp_tag_init_find(NULL, NULL, ri, tag, FALSE);
     bgp_tag_find((struct id_table *) tag->tag_table, tag, &tag->tag, NULL);
   }
 
@@ -2256,11 +2256,8 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
       }
 #endif
 
-      /* Being bgp_daemon_tag_map limited to 'ip' key lookups, this is
-   finely placed here. Should further lookups be possible, this
-   may be very possibly moved inside the loop */
       if (config.bgp_daemon_tag_map) {
-	bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, &bgp_logdump_tag, NULL);
+	bgp_tag_init_find(peer, (struct sockaddr *) &bgp_logdump_tag_peer, NULL, &bgp_logdump_tag, TRUE);
 	bgp_tag_find((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
       }
 

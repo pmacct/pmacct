@@ -1921,11 +1921,8 @@ int bmp_dump_event_runner(struct pm_dump_runner *pdr)
       }
 #endif
 
-      /* Being bmp_daemon_tag_map limited to 'ip' key lookups, this is
-	 finely placed here. Should further lookups be possible, this
-	 may be very possibly moved inside the loop */
       if (config.bmp_daemon_tag_map) {
-	bgp_tag_init_find(peer, (struct sockaddr *) &bmp_logdump_tag_peer, &bmp_logdump_tag, NULL);
+	bgp_tag_init_find(peer, (struct sockaddr *) &bmp_logdump_tag_peer, NULL, &bmp_logdump_tag, TRUE);
 	bgp_tag_find((struct id_table *)bmp_logdump_tag.tag_table, &bmp_logdump_tag, &bmp_logdump_tag.tag, NULL);
       }
 
