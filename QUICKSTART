@@ -2992,7 +2992,12 @@ d) In the two cases of nfacctd/sfacctd or nfprobe/sfprobe not showing signs of
      tshark) can be used, in conjunction with decoders ('cflow' for NetFlow/
      IPFIX and 'sflow' for sFlow), to validate packets are consistent; this
      proofs there is no filtering taking place in between exporters and
-     collector;
+     collector; a sample command-line for tshark for NetFlow/IPFIX would be:
+
+     tshark -d udp.port==<listening port>,cflow -VVV src host <exporter IP>
+
+     Optionally -Y can be passed to further filter flow traffic down and/or
+     validate specific elements of it, ie. -Y "cflow.dstaddr==X.X.X.X/31".
 
   2) check firewall settings on the collector box, ie. "iptables -L -n" on
      Linux (disable or do appropriate holes): tcpdump may see packets hitting
