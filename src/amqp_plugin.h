@@ -37,6 +37,7 @@
 EXT void amqp_plugin(int, struct configuration *, void *);
 EXT void amqp_cache_purge(struct chained_cache *[], int);
 
+#if 0
 /* global vars */
 EXT void (*insert_func)(struct primitives_ptrs *, struct insert_data *); /* pointer to INSERT function */
 EXT void (*purge_func)(struct chained_cache *[], int); /* pointer to purge function */ 
@@ -46,6 +47,7 @@ EXT struct chained_cache **queries_queue;
 EXT struct timeval flushtime;
 EXT int qq_ptr, pp_size, pb_size, pn_size, pm_size, dbc_size, quit; 
 EXT time_t refresh_deadline;
+#endif
 
 EXT struct timeval sbasetime;
 #undef EXT
