@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -679,7 +679,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   	  else fprintf(f, "%-45s  ", empty_ip6);
         }
         if (config.what_to_count & COUNT_PEER_DST_IP) {
-          addr_to_str2(ip_address, &pbgp->peer_dst_ip, ft2af(queue[j]->flow_type));
+          addr_to_str(ip_address, &pbgp->peer_dst_ip);
 
           if (strlen(ip_address)) fprintf(f, "%-45s  ", ip_address);
           else fprintf(f, "%-45s  ", empty_ip6);
@@ -1099,7 +1099,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
           fprintf(f, "%s%s", write_sep(sep, &count), ip_address);
         }
         if (config.what_to_count & COUNT_PEER_DST_IP) {
-          addr_to_str2(ip_address, &pbgp->peer_dst_ip, ft2af(queue[j]->flow_type));
+          addr_to_str(ip_address, &pbgp->peer_dst_ip);
           fprintf(f, "%s%s", write_sep(sep, &count), ip_address);
         }
   

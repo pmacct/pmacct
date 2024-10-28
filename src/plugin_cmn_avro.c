@@ -852,7 +852,7 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wt
 
   if (wtc & COUNT_PEER_DST_IP) {
     pm_avro_check(avro_value_get_by_name(&value, "peer_ip_dst", &field, NULL));
-    addr_to_str2(ip_address, &pbgp->peer_dst_ip, ft2af(flow_type));
+    addr_to_str(ip_address, &pbgp->peer_dst_ip);
     pm_avro_check(avro_value_set_string(&field, ip_address));
   }
 

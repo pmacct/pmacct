@@ -828,7 +828,7 @@ void compose_json_peer_dst_ip(json_t *obj, struct chained_cache *cc)
 {
   char ip_address[INET6_ADDRSTRLEN];
 
-  addr_to_str2(ip_address, &cc->pbgp->peer_dst_ip, ft2af(cc->flow_type));
+  addr_to_str(ip_address, &cc->pbgp->peer_dst_ip);
   json_object_set_new_nocheck(obj, "peer_ip_dst", json_string(ip_address));
 }
 
