@@ -417,8 +417,12 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     json_t *obj = void_obj;
+    char *bmp_rib_type = NULL;
 
-    json_object_set_new_nocheck(obj, "bmp_rib_type", json_string(bmp_rib_type_print(bmed_bmp->rib_type)));
+    bmp_rib_type = bmp_rib_type_print(bmed_bmp->rib_type);
+    json_object_set_new_nocheck(obj, "bmp_rib_type", json_string(bmp_rib_type));
+    if (bmp_rib_type) free(bmp_rib_type);
+
     json_object_set_new_nocheck(obj, "is_filtered", json_integer((json_int_t)bmed_bmp->is_filtered));
 
     if (!bmed_bmp->is_loc && !bmed_bmp->is_out) {
@@ -446,9 +450,12 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
 	   (output == PRINT_OUTPUT_AVRO_JSON)) {
 #ifdef WITH_AVRO
     avro_value_t *obj = (avro_value_t *) void_obj, p_avro_field, p_avro_branch;
+    char *bmp_rib_type = NULL;
 
+    bmp_rib_type = bmp_rib_type_print(bmed_bmp->rib_type);
     pm_avro_check(avro_value_get_by_name(obj, "bmp_rib_type", &p_avro_field, NULL));
-    pm_avro_check(avro_value_set_string(&p_avro_field, bmp_rib_type_print(bmed_bmp->rib_type)));
+    pm_avro_check(avro_value_set_string(&p_avro_field, bmp_rib_type));
+    if (bmp_rib_type) free(bmp_rib_type);
 
     pm_avro_check(avro_value_get_by_name(obj, "is_filtered", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_int(&p_avro_field, bmed_bmp->is_filtered));
