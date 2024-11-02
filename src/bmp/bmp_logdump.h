@@ -48,6 +48,7 @@ struct bmp_log_tlv {
   u_int32_t pen;
   u_int16_t type;
   u_int16_t len;
+  u_int16_t index;
   void *val;
 };
 

@@ -174,7 +174,7 @@ void bmp_process_msg_init(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
       return;
     }
 
-    ret = bmp_tlv_list_add(tlvs, pen, bmp_tlv_type, bmp_tlv_len, bmp_tlv_value);
+    ret = bmp_tlv_list_add(tlvs, pen, bmp_tlv_type, bmp_tlv_len, 0, bmp_tlv_value);
     if (ret == ERR) {
       Log(LOG_ERR, "ERROR ( %s/%s ): [%s] [init] bmp_tlv_list_add() failed.\n", config.name, bms->log_str, peer->addr_str); 
       exit_gracefully(1);
@@ -251,7 +251,7 @@ void bmp_process_msg_term(char **bmp_packet, u_int32_t *len, struct bmp_peer *bm
       return;
     }
 
-    ret = bmp_tlv_list_add(tlvs, pen, bmp_tlv_type, bmp_tlv_len, bmp_tlv_value);
+    ret = bmp_tlv_list_add(tlvs, pen, bmp_tlv_type, bmp_tlv_len, 0, bmp_tlv_value);
     if (ret == ERR) {
       Log(LOG_ERR, "ERROR ( %s/%s ): [%s] [term] bmp_tlv_list_add() failed.\n", config.name, bms->log_str, peer->addr_str);
       exit_gracefully(1);
@@ -480,7 +480,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
       return;
     }
 
-    ret2 = bmp_tlv_list_add(tlvs, pen, bmp_tlv_type, bmp_tlv_len, bmp_tlv_value);
+    ret2 = bmp_tlv_list_add(tlvs, pen, bmp_tlv_type, bmp_tlv_len, 0, bmp_tlv_value);
     if (ret2 == ERR) {
       Log(LOG_ERR, "ERROR ( %s/%s ): [%s] [peer up] bmp_tlv_list_add() failed.\n", config.name, bms->log_str, peer->addr_str);
       exit_gracefully(1);
@@ -621,7 +621,7 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
           return;
         }
 
-        ret2 = bmp_tlv_list_add(tlvs, pen, bmp_tlv_type, bmp_tlv_len, bmp_tlv_value);
+        ret2 = bmp_tlv_list_add(tlvs, pen, bmp_tlv_type, bmp_tlv_len, 0, bmp_tlv_value);
         if (ret2 == ERR) {
           Log(LOG_ERR, "ERROR ( %s/%s ): [%s] [peer down] bmp_tlv_list_add() failed.\n", config.name, bms->log_str, peer->addr_str);
           exit_gracefully(1);
@@ -751,6 +751,10 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
   struct bmp_chars bmed_bmp;
   struct bgp_msg_data bmd;
 
+  struct pm_list *tlvs = NULL;
+  char **bgp_pdu_ptrptr = NULL, *bgp_pdu_ptr = NULL;
+  u_int32_t *bgp_pdu_lenptr = NULL, bgp_pdu_len;
+
   bmpp_bgp_peer = (*(struct bgp_peer **) ret);
   memset(&bmd, 0, sizeof(bmd));
   memset(&bmed_bmp, 0, sizeof(bmed_bmp));
@@ -767,34 +771,17 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 
   encode_tstamp_arrival(bms->log_tstamp_str, SRVBUFLEN, &bdata.tstamp_arrival, TRUE);
 
-  /* length checks & draft-ietf-grow-bmp-tlv preps */
-  if ((*len) >= sizeof(struct bgp_header)) {
-    bgp_update_len = bgp_get_packet_len((*bmp_packet));
-    if (bgp_update_len <= 0 || bgp_update_len > (*len)) {
-      Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: bgp_get_packet_len() failed\n",
-          config.name, bms->log_str, peer->addr_str);
-      return;
-    }
-  }
-  else {
-    Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: incomplete BGP header\n",
-        config.name, bms->log_str, peer->addr_str);
-    return;
-  }
-
-  if (peer->version == BMP_V4 && bgp_update_len && bgp_update_len < (*len)) {
+  /* Build list of TLVs */
+  if (peer->version == BMP_V4) {
     struct bmp_tlv_hdr *bth;
-    u_int16_t bmp_tlv_type, bmp_tlv_len;
+    u_int16_t bmp_tlv_type, bmp_tlv_len, bmp_tlv_index;
     char *bmp_tlv_value;
-    struct pm_list *tlvs = NULL;
 
     tlvs = bmp_tlv_list_new(NULL, bmp_tlv_list_node_del);
     if (!tlvs) return;
 
     u_int32_t loc_len = (*len);
     char *loc_ptr = (*bmp_packet);
-
-    bmp_jump_offset(&loc_ptr, &loc_len, bgp_update_len);
 
     while (loc_len) {
       u_int32_t pen = 0;
@@ -817,25 +804,70 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
         }
       }
 
-      if (!(bmp_tlv_value = bmp_get_and_check_length(&loc_ptr, &loc_len, bmp_tlv_len))) {
-        Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: failed bmp_get_and_check_length() BMP TLV info\n",
+      if (!(bmp_tlv_value = bmp_get_and_check_length(&loc_ptr, &loc_len, 2))) {
+        Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: failed bmp_get_and_check_length() BMP TLV index\n",
             config.name, bms->log_str, peer->addr_str);
         bmp_tlv_list_destroy(tlvs);
         return;
       }
 
-      ret2 = bmp_tlv_list_add(tlvs, pen, bmp_tlv_type, bmp_tlv_len, bmp_tlv_value);
+      bmp_tlv_hdr_get_index(bmp_tlv_value, &bmp_tlv_index);
+
+      if (!(bmp_tlv_value = bmp_get_and_check_length(&loc_ptr, &loc_len, bmp_tlv_len))) {
+        Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: failed bmp_get_and_check_length() BMP TLV value\n",
+            config.name, bms->log_str, peer->addr_str);
+        bmp_tlv_list_destroy(tlvs);
+	return;
+      }
+
+      ret2 = bmp_tlv_list_add(tlvs, pen, bmp_tlv_type, bmp_tlv_len, bmp_tlv_index, bmp_tlv_value);
       if (ret2 == ERR) {
         Log(LOG_ERR, "ERROR ( %s/%s ): [%s] [route monitor] bmp_tlv_list_add() failed.\n", config.name, bms->log_str, peer->addr_str);
         exit_gracefully(1);
       }
     }
-
+  
     bmed_bmp.tlvs = tlvs;
   }
 
-  if ((bgp_msg_type = bgp_get_packet_type((*bmp_packet))) == BGP_UPDATE) {
-    bgp_update_len = bgp_parse_update_msg(&bmd, (*bmp_packet));
+  /* Let's parse the BGP Update PDU (TLV) */
+  if (peer->version == BMP_V4) {
+    struct bmp_log_tlv *tlv = NULL;
+
+    tlv = bmp_tlv_list_find(tlvs, NULL, BMP_ROUTE_MONITOR_INFO_BGP_PDU); 
+    if (tlv) {
+      bgp_pdu_ptr = tlv->val;
+      bgp_pdu_ptrptr = (char **) &bgp_pdu_ptr;
+      bgp_pdu_len = tlv->len;
+      bgp_pdu_lenptr = (u_int32_t *) &bgp_pdu_len;
+      tlv->val = NULL; /* flagging TLV value as 'consuned' */
+      tlv->len = 0;
+    }
+    else {
+      // XXX
+    }
+  }
+  else {
+    bgp_pdu_ptrptr = bmp_packet;
+    bgp_pdu_lenptr = len;
+  }
+
+  if ((*bgp_pdu_lenptr) >= sizeof(struct bgp_header)) {
+    bgp_update_len = bgp_get_packet_len((*bgp_pdu_ptrptr));
+    if (bgp_update_len <= 0 || bgp_update_len > (*bgp_pdu_lenptr)) {
+      Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: bgp_get_packet_len() failed\n",
+          config.name, bms->log_str, peer->addr_str);
+      return;
+    }
+  }
+  else {
+    Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: incomplete BGP header\n",
+        config.name, bms->log_str, peer->addr_str);
+    return;
+  }
+
+  if ((bgp_msg_type = bgp_get_packet_type((*bgp_pdu_ptrptr))) == BGP_UPDATE) {
+    bgp_update_len = bgp_parse_update_msg(&bmd, (*bgp_pdu_ptrptr));
     if (bgp_update_len <= 0) {
       Log(LOG_INFO, "INFO ( %s/%s ): [%s] [route monitor] packet discarded: bgp_parse_update_msg() failed\n",
           config.name, bms->log_str, peer->addr_str);
@@ -850,7 +882,12 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
         bgp_msg_type);
   }
 
-  bmp_get_and_check_length(bmp_packet, len, bgp_update_len);
+  if (peer->version == BMP_V3) {
+    bmp_get_and_check_length(bmp_packet, len, bgp_update_len);
+  }
+  else {
+    free(bgp_pdu_ptr);
+  }
 
   bmp_tlv_list_destroy(bmed_bmp.tlvs);
 }
@@ -1014,7 +1051,7 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
         return;
       }
 
-      ret = bmp_tlv_list_add(tlvs, 0, cnt_type, cnt_len, cnt_value);
+      ret = bmp_tlv_list_add(tlvs, 0, cnt_type, cnt_len, 0, cnt_value);
       if (ret == ERR) {
         Log(LOG_ERR, "ERROR ( %s/%s ): [%s] [stats] bmp_tlv_list_add() failed.\n", config.name, bms->log_str, peer->addr_str);
         exit_gracefully(1);
@@ -1062,6 +1099,11 @@ void bmp_tlv_hdr_get_type(struct bmp_tlv_hdr *bth, u_int16_t *type)
 void bmp_tlv_hdr_get_len(struct bmp_tlv_hdr *bth, u_int16_t *len)
 {
   if (bth && len) (*len) = ntohs(bth->len);
+}
+
+void bmp_tlv_hdr_get_index(char *idx_ptr, u_int16_t *idx)
+{
+  if (idx_ptr && idx) (*idx) = ntohs((u_int16_t) *idx_ptr);
 }
 
 void bmp_term_hdr_get_reason_type(char **bmp_packet, u_int32_t *pkt_size, u_int16_t *type)

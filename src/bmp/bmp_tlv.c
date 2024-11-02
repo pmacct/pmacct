@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -127,7 +127,7 @@ struct pm_list *bmp_tlv_list_new(int (*cmp)(void *val1, void *val2), void (*del)
   return tlvs;
 }
 
-int bmp_tlv_list_add(struct pm_list *tlvs, u_int32_t pen, u_int16_t type, u_int16_t len, char *val) 
+int bmp_tlv_list_add(struct pm_list *tlvs, u_int32_t pen, u_int16_t type, u_int16_t len, u_int16_t index, char *val) 
 {
   struct bmp_log_tlv *tlv;
 
@@ -141,6 +141,7 @@ int bmp_tlv_list_add(struct pm_list *tlvs, u_int32_t pen, u_int16_t type, u_int1
   tlv->pen = pen;
   tlv->type = type;
   tlv->len = len;
+  tlv->index = index;
 
   if (len) {
 
@@ -185,7 +186,7 @@ struct pm_list *bmp_tlv_list_copy(struct pm_list *src)
 
   dst = bmp_tlv_list_new(NULL, bmp_tlv_list_node_del);
   for (PM_ALL_LIST_ELEMENTS_RO(src, node, tlv)) {
-    ret = bmp_tlv_list_add(dst, tlv->pen, tlv->type, tlv->len, tlv->val);
+    ret = bmp_tlv_list_add(dst, tlv->pen, tlv->type, tlv->len, tlv->index, tlv->val);
     if (ret == ERR) {
       bmp_tlv_list_destroy(dst);
       dst = NULL;
