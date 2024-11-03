@@ -1408,9 +1408,6 @@ int bmp_log_msg_route_monitor_tlv(struct pm_list *tlvs, int output, void *vobj)
 	    json_object_set_new_nocheck(obj, type, json_string(value));
 	    free(value);
 	  }
-	  else {
-	    json_object_set_new_nocheck(obj, type, json_null());
-	  }
 
 	  free(type);
 	}
@@ -1446,7 +1443,7 @@ int bmp_log_rm_tlv_path_marking(struct bgp_peer *null1, struct bmp_data *null2, 
 
     bmp_log_rm_tlv_pm_status(ntohl(pm_tlv->path_status), output, vobj);
 
-    if (tlv->len == 8 /* index (2) + status (4) + reason code (2) */) {
+    if (tlv->len == 6 /* status (4) + reason code (2) */) {
       value = (unsigned char *) &pm_tlv->reason_code;
       snprintf(value_str, SUPERSHORTBUFLEN, "0x%02x%02x", value[0], value[1]);
       json_object_set_new_nocheck(obj, "reason_code", json_string(value_str));
