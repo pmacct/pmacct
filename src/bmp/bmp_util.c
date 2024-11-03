@@ -370,8 +370,6 @@ int bgp_extra_data_process_bmp(struct bgp_msg_extra_data *bmed, struct bgp_info 
 
 	  for (PM_ALL_LIST_ELEMENTS(bmed_bmp_dst->tlvs, node, next_node, tlv)) {
 	    if (tlv->type == BMP_ROUTE_MONITOR_INFO_MARKING) {
-	      struct bmp_rm_pm_tlv *tlv_pm = tlv->val;
-
 	      if (idx != ntohs(tlv->index)) {
 		pm_list_delete_node(bmed_bmp_dst->tlvs, node);
 	      }
