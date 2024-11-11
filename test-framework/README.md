@@ -342,7 +342,7 @@ either the consumer list, or the first consumer only- it's up to the test case a
 
 ### Fixtures
 
-In [tests/conftest.py](tests/conftest.py) we define the following fixtures, i.e. functions that provide a fix baseline for initializing the tests:
+In [../tests/conftest.py](tests/conftest.py) we define the following fixtures, i.e. functions that provide a fix baseline for initializing the tests:
 
 **check_root_dir** makes sure pytest is run from the top level directory of the framework
 
