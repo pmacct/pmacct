@@ -1511,7 +1511,7 @@ DESC:		Defines the executable to be launched at fixed time intervals to post-pro
 		that supports upload via API end-points. When running in Docker, to avoid the accumulation
 		of zombie processes, run the container with the --init flag, ie. "docker run --init [ .. ]".
 		Trigger scripts do accept command-line parameters (ie. /path/to/script.sh -f example.conf -t
-		xpto). 
+		xpto). To run multiple scripts, it is recommended to use a wrapper script.
 DEFAULT:	none
 
 KEY:		sql_trigger_time
