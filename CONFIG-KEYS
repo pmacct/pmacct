@@ -1508,10 +1508,18 @@ DESC:		Defines the executable to be launched at fixed time intervals to post-pro
 		are listed in docs/TRIGGER_VARS. Non-SQL plugins feature a simpler implementation: triggers
 		can only be fired each time data is written to the backend (ie. each print_refresh_time) and
 		no environment variables are set; this may be useful also to upload data to cloud storage
-		that supports upload via API end-points. When running in Docker, to avoid the accumulation
-		of zombie processes, run the container with the --init flag, ie. "docker run --init [ .. ]".
-		Trigger scripts do accept command-line parameters (ie. /path/to/script.sh -f example.conf -t
-		xpto). To run multiple scripts, it is recommended to use a wrapper script.
+		that supports upload via API end-points. 
+NOTES:		* When running in Docker, to avoid the accumulation of zombie processes, run the container
+		  with the --init flag, ie. "docker run --init [ .. ]".
+		* Trigger scripts do accept command-line parameters (ie. /path/to/script.sh -f example.conf
+		  -t xpto). To run multiple scripts, it is recommended to use a wrapper script.
+		* In the context of the Print plugin, when using print_latest_file, the latest file symlink
+		  is done before executing the trigger; this does come handy as the trigger has a finalized
+		  static file to point to; however this could be an issue if a 3rd party processor, ie.
+		  invoked by cron or anyway at regular time intervals, does rely on the latest file to
+		  have been already processed by the trigger. The advice is hence to make the latest file
+		  an input only for the trigger as that is a strictly syncronous operation; the trigger
+		  can then output to a file, named differently, that is input for a 3rd party processor.
 DEFAULT:	none
 
 KEY:		sql_trigger_time
