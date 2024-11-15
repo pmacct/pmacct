@@ -356,6 +356,7 @@ struct configuration {
   int bgp_daemon_port;
   char *bgp_daemon_rp_ebpf_prog;
   char *bgp_daemon_tag_map;
+  struct pretag_label_filter bgp_daemon_msglog_label_filter;
   int bgp_daemon_pipe_size;
   int bgp_daemon_ipprec;
   char *bgp_daemon_allow_file;

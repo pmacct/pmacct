@@ -3795,6 +3795,18 @@ int cfg_key_bgp_daemon_tag_map(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_bgp_daemon_msglog_label_filter(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) {
+    changes = load_labels(filename, &list->cfg.bgp_daemon_msglog_label_filter, value_ptr);
+  }
+
+  return changes;
+}
+
 int cfg_key_bgp_daemon_aspath_radius(char *filename, char *name, char *value_ptr)
 {
   struct plugins_list_entry *list = plugins_list;
