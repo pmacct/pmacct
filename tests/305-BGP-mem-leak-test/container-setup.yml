@@ -1,0 +1,30 @@
+# TODO: extend framework/reproducer docker image to support multiple IPs per container, for now let's split into multiple containers...
+containers:
+  - name: repro-1
+    processes:
+      - pcap:
+        - bgp-multi-sources-open.pcap
+        - bgp-multi-sources-update-keepalive.pcap
+        config: traffic-reproducer-configs/repro-53.yml
+        collector: nfacctd-00
+  - name: repro-2
+    processes:
+      - pcap:
+        - bgp-multi-sources-open.pcap
+        - bgp-multi-sources-update-keepalive.pcap
+        config: traffic-reproducer-configs/repro-73.yml
+        collector: nfacctd-00
+  - name: repro-3
+    processes:
+      - pcap:
+        - bgp-multi-sources-open.pcap
+        - bgp-multi-sources-update-keepalive.pcap
+        config: traffic-reproducer-configs/repro-90.yml
+        collector: nfacctd-00
+  - name: repro-4
+    processes:
+      - pcap:
+        - bgp-multi-sources-open.pcap
+        - bgp-multi-sources-update-keepalive.pcap
+        config: traffic-reproducer-configs/repro-91.yml
+        collector: nfacctd-00
