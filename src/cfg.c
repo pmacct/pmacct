@@ -471,6 +471,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bgp_daemon_rp_ebpf_prog", cfg_key_bgp_daemon_rp_ebpf_prog},
   {"bgp_daemon_add_path_ignore", cfg_key_bgp_daemon_add_path_ignore},
   {"bgp_daemon_tag_map", cfg_key_bgp_daemon_tag_map},
+  {"bgp_daemon_msglog_label_filter", cfg_key_bgp_daemon_msglog_label_filter},
   {"bgp_daemon_pipe_size", cfg_key_bgp_daemon_pipe_size},
   {"bgp_daemon_max_peers", cfg_key_bgp_daemon_max_peers},
   {"bgp_daemon_msglog_output", cfg_key_bgp_daemon_msglog_output},
