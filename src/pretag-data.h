@@ -200,6 +200,8 @@ const struct _map_dictionary_line tag_map_bgp_dictionary[] = {
   {"ip", PT_map_ip_handler},
   {"comms", PT_map_comms_handler},
   {"set_label", PT_map_label_handler},
+  {"label", PT_map_entry_label_handler},
+  {"jeq", PT_map_jeq_handler},
   {"", NULL}
 };
 
