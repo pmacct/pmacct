@@ -56,6 +56,13 @@ def get_pmacct_stats(pmacct_name: str) -> str:
         return ret[2]
     return ret[1]
 
+# Gets pmacct container Memory Utilization in MiB for the specific pmacct instance
+def get_pmacct_memused(pmacct_name: str) -> str:
+    logger.info("Getting pmacct Memory Utilization from docker for: " + pmacct_name)
+    ret = run_script(['./library/sh/docker_tools/get-container-memused.sh', pmacct_name])
+    if not ret[0]:
+        return ret[2]
+    return ret[1]
 
 # Stops pmacct container using the corresponding docker-compose file
 def stop_and_remove_pmacct_container(pmacct_name: str, pmacct_docker_compose_file: str) -> bool:

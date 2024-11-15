@@ -1,0 +1,9 @@
+${TIMESTAMP} WARN ( nfacctd_core/core/BMP ): Unable to get kafka_host: ${repro_ip}
+${TIMESTAMP} WARN ( nfacctd_core/core/BMP ): Unable to get kafka_host: ${repro_ip}
+${TIMESTAMP} WARN ( nfacctd_core/core/BMP ): Unable to get kafka_host: ${repro_ip}
+${TIMESTAMP} WARN ( nfacctd_core/core/BMP ): Unable to get kafka_host: ${repro_ip}
+${TIMESTAMP} WARN ( nfacctd_core/core/BMP ): Unable to get kafka_host: ${repro_ip}
+${TIMESTAMP} WARN ( nfacctd_core/core/BMP ): Unable to get kafka_host: ${repro_ip}
+${TIMESTAMP} WARN ( nfacctd_core/core/BMP ): Unable to get kafka_host: ${repro_ip}
+${TIMESTAMP} WARN ( nfacctd_core/core/BMP ): Unable to get kafka_host: ${repro_ip}
+${TIMESTAMP} WARN ( nfacctd_core/core/BMP ): Unable to get kafka_host: ${repro_ip}

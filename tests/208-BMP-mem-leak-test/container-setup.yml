@@ -1,0 +1,83 @@
+# TODO: extend framework/reproducer docker image to support multiple IPs per container, for now let's split into multiple containers...
+containers:
+  - name: repro-1
+    processes:
+      - pcap:
+        - bmp-multi-sources-init.pcap
+        - bmp-multi-sources-peer-up.pcap
+        - bmp-multi-sources-route-monitoring.pcap
+        - bmp-multi-sources-stats.pcap
+        config: traffic-reproducer-configs/repro-44.yml
+        collector: nfacctd-00
+  - name: repro-2
+    processes:
+      - pcap:
+        - bmp-multi-sources-init.pcap
+        - bmp-multi-sources-peer-up.pcap
+        - bmp-multi-sources-route-monitoring.pcap
+        - bmp-multi-sources-stats.pcap
+        config: traffic-reproducer-configs/repro-54.yml
+        collector: nfacctd-00
+  - name: repro-3
+    processes:
+      - pcap:
+        - bmp-multi-sources-init.pcap
+        - bmp-multi-sources-peer-up.pcap
+        - bmp-multi-sources-route-monitoring.pcap
+        - bmp-multi-sources-stats.pcap
+        config: traffic-reproducer-configs/repro-90.yml
+        collector: nfacctd-00
+  - name: repro-4
+    processes:
+      - pcap:
+        - bmp-multi-sources-init.pcap
+        - bmp-multi-sources-peer-up.pcap
+        - bmp-multi-sources-route-monitoring.pcap
+        - bmp-multi-sources-stats.pcap
+        config: traffic-reproducer-configs/repro-91.yml
+        collector: nfacctd-00
+  - name: repro-5
+    processes:
+      - pcap:
+        - bmp-multi-sources-init.pcap
+        - bmp-multi-sources-peer-up.pcap
+        - bmp-multi-sources-route-monitoring.pcap
+        - bmp-multi-sources-stats.pcap
+        config: traffic-reproducer-configs/repro-19.yml
+        collector: nfacctd-00
+  - name: repro-6
+    processes:
+      - pcap:
+        - bmp-multi-sources-init.pcap
+        - bmp-multi-sources-peer-up.pcap
+        - bmp-multi-sources-route-monitoring.pcap
+        - bmp-multi-sources-stats.pcap
+        config: traffic-reproducer-configs/repro-58.yml
+        collector: nfacctd-00
+  - name: repro-7
+    processes:
+      - pcap:
+        - bmp-multi-sources-init.pcap
+        - bmp-multi-sources-peer-up.pcap
+        - bmp-multi-sources-route-monitoring.pcap
+        - bmp-multi-sources-stats.pcap
+        config: traffic-reproducer-configs/repro-81.yml
+        collector: nfacctd-00
+  - name: repro-8
+    processes:
+      - pcap:
+        - bmp-multi-sources-init.pcap
+        - bmp-multi-sources-peer-up.pcap
+        - bmp-multi-sources-route-monitoring.pcap
+        - bmp-multi-sources-stats.pcap
+        config: traffic-reproducer-configs/repro-23.yml
+        collector: nfacctd-00
+  - name: repro-9
+    processes:
+      - pcap:
+        - bmp-multi-sources-init.pcap
+        - bmp-multi-sources-peer-up.pcap
+        - bmp-multi-sources-route-monitoring.pcap
+        - bmp-multi-sources-stats.pcap
+        config: traffic-reproducer-configs/repro-24.yml
+        collector: nfacctd-00

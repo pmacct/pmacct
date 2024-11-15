@@ -1,0 +1,39 @@
+pcap:
+  - bmp-multi-sources-init.pcap
+  - bmp-multi-sources-peer-up.pcap
+  - bmp-multi-sources-route-monitoring.pcap
+  - bmp-multi-sources-stats.pcap
+
+repeat:
+  count: [1,1,10,10]                      # number of times to repeat each of the pcaps
+  pattern: "round-robin"                  # round-robin or bulk
+
+time_factor: 0.001                        # 1000x faster
+keep_open: false                          # set to true to not stop application (-> keep sockets open)
+no_sync: true                             # set to true to start reproducing right away (-> don't wait to sync to next full_minute)
+
+optimize:
+  threading: false                        # assign one peer per thread -> we can process packet while sending. No order guarantee between peers
+  preload: false                          # preload pcap in memory. Faster but more ram used. Often not useful
+  network:
+    so_sndbuf: null                       # max possible: cat /proc/sys/net/core/wmem_max - send buffer - null for default
+    so_rcvbuf: null
+
+network:
+  map:                                    # map a src IP to a new source IP used for repro
+  - src_ip:         203.0.113.58
+    repro_ip:       192.168.100.6
+
+  interface: null
+
+bmp:
+  select:
+    ip:
+      src:
+      - 203.0.113.58
+    tcp:
+      dport:
+      - 1790
+  collector:                              # collector that will receive the reproduced messages
+    ip: 192.168.100.102
+    port: 1790

@@ -32,6 +32,7 @@ on:
         - json
         - redis
         - signals
+        - memory_leak
 
 #Global vars
 env:
