@@ -127,6 +127,7 @@ extern int load_tags(char *, struct pretag_filter *, char *);
 extern int load_labels(char *, struct pretag_label_filter *, char *);
 extern int evaluate_tags(struct pretag_filter *, pm_id_t);
 extern int evaluate_labels(struct pretag_label_filter *, pt_label_t *);
+extern int evaluate_labels_v2(struct pretag_label_filter *, pt_label_t *);
 extern char *write_sep(char *, int *);
 extern void version_daemon(int, char *);
 extern void set_truefalse_nonzero(int *);

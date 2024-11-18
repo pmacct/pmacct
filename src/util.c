@@ -2253,6 +2253,68 @@ int evaluate_labels(struct pretag_label_filter *filter, pt_label_t *label)
   return TRUE;
 }
 
+int evaluate_labels_v2(struct pretag_label_filter *filter, pt_label_t *label)
+{
+  int index, ret;
+  int null_label_len = 4; /* 'null' excluding terminating zero */
+  char *null_label = "null";
+
+  if (filter->num == 0) return FALSE; /* no entries in the filter array: tag filtering disabled */
+  if (!label->val) {
+    label->val = null_label;
+    label->len = null_label_len;
+  }
+
+  for (index = 0; index < filter->num; index++) {
+    char *token = NULL, *saveptr = NULL, *tmp = NULL;
+
+    tmp = strdup(label->val);
+    token = strtok_r(tmp, ",", &saveptr);
+    while (token != NULL) {
+      /* Due to one null char super imposition in the label,
+         we must compare for one extra char len in the filter table */
+      if ((filter->table[index].len) != strlen(token)) {
+        ret = TRUE;
+      }
+      else {
+        ret = FALSE;
+      }
+
+      if (!ret) {
+        ret = strncmp(filter->table[index].v, token, filter->table[index].len);
+      }
+
+      if (ret) {
+        token = strtok_r(NULL, ",", &saveptr);
+      }
+      else {
+	break;
+      }
+    }
+
+    /* cleanup */
+    if (tmp) {
+      free(tmp);
+    }
+
+    if (label->val == null_label) {
+      label->val = NULL;
+      label->len = 0;
+    }
+
+    if (!ret) {
+      return (FALSE | filter->table[index].neg);
+    }
+    else {
+      if (filter->table[index].neg) {
+	return FALSE;
+      }
+    }
+  }
+
+  return TRUE;
+}
+
 char *write_sep(char *sep, int *count)
 {
   static char empty_sep[] = "";

@@ -72,7 +72,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
 
   if (etype == BGP_LOGDUMP_ET_LOG) {
     if (config.bmp_daemon_tag_map && tag && config.bmp_daemon_msglog_label_filter.num) {
-      if (!tag->have_label || evaluate_labels(&config.bmp_daemon_msglog_label_filter, &tag->label)) {
+      if (!tag->have_label || evaluate_labels_v2(&config.bmp_daemon_msglog_label_filter, &tag->label)) {
         /* no match */
         return ret;
       }

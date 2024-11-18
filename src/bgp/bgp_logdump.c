@@ -88,7 +88,7 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
   if (etype == BGP_LOGDUMP_ET_LOG) {
     if (bms->tag_map && tag && bms->msglog_label_filter) {
       if (bms->msglog_label_filter->num) {
-        if (!tag->have_label || evaluate_labels(bms->msglog_label_filter, &tag->label)) {
+        if (!tag->have_label || evaluate_labels_v2(bms->msglog_label_filter, &tag->label)) {
           /* no match */
           return ret;
 	}
