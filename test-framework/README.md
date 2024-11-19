@@ -142,6 +142,7 @@ Local folders **results/\<test case\>/\<container name>** are mounted on traffic
 - 205: BMP-6wind-FRR-peer_down
 - 206: BMP-high-availability
 - 207: BMP-CISCO-HUAWEI-multiple-sources-dump-spreading
+- 208: BMP-mem-leak-test
 ```
 
 ### 3XX - BGP
@@ -151,6 +152,7 @@ Local folders **results/\<test case\>/\<container name>** are mounted on traffic
 - 302: BGP-IPv6-multiple-sources
 - 303: BGP-high-availability
 - 304: BGP-IPv6-multiple-sources-dump-spreading
+- 305: BGP-mem-leak-test
 ```
 
 ### 4XX - IPFIX/NFv9 + BMP
@@ -183,7 +185,7 @@ Local folders **results/\<test case\>/\<container name>** are mounted on traffic
 ## 4 - Developing Test Cases
 
 In general, refer to the existing test cases as an example on how to develop additional ones.
-Here are some useful guidelines to keep in mind when developing new test cases. 
+Here are some useful guidelines to keep in mind when developing new test cases.
 
 For a new test it is necessary to provide at least the following files:
 ```
@@ -212,7 +214,7 @@ Refer to those files as well if you need more additional functionality for more 
 
 ### Pcap File
 
-A pcap file containing the desired telemetry packets to be reproduced to the collector needs to be provided. 
+A pcap file containing the desired telemetry packets to be reproduced to the collector needs to be provided.
 
 The [Traffic Reproducer Project](https://github.com/network-analytics/traffic-reproducer) project provides a feature to pre-process a pcap, which can be used to clean up for example a tcpdump capture of telemetry data from lab router. This ensures that the Network Telemetry sessions within the pcap file are complete and well formed so that they can be deterministically reproduced at every test run. Refer to the [README](https://github.com/network-analytics/traffic-reproducer#pcap-pre-processing) and [examples](https://github.com/network-analytics/traffic-reproducer/tree/master/examples/pcap_processing) in the project for usage instructions.
 
@@ -226,7 +228,7 @@ sudo env PATH="$PATH" OVERWRITE=true ./runtest.sh 203 --loglevel=DEBUG   # overw
 sudo env PATH="$PATH" OVERWRITE=true ./runtest.sh * --marc=ci            # overwrite all output files for ci marker (takes long time!)
 ```
 
-Keep in mind that the output file (e.g. output-flow-00.json) needs to exist at least as empty file, otherwise it will fail. 
+Keep in mind that the output file (e.g. output-flow-00.json) needs to exist at least as empty file, otherwise it will fail.
 
 Remark: this process is significantly slower than the normal test execution, since we are currently waiting for a default 120s timeout to ensure all messages arrive, due to the internal flow record bucketing. During the normal test execution, instead, as soon as the expected number of packets arrives we can stop the kafka consume process. This can be improved (TODO).
 
@@ -239,10 +241,10 @@ The framework allows for checking the logfile as well, i.e. to detect if any ERR
 Concretely, this works by adding in the test file something like:
 ```
     th.transform_log_file('log-00')
-    
+
     # Match for patterns in a provided file
     assert th.check_file_regex_sequence_in_pmacct_log('log-00')
-    
+
     # Match for patterns provided directly
     assert not th.check_regex_in_pmacct_log('ERROR|WARN')
 ```
@@ -308,7 +310,7 @@ tools/start_pmacct_and_setup_test_case.sh 302
 ```
 
 To play pcap file from a specific pcap folder (i.e., which contains a pcap file and a config file).
-Note: the pcap folder must have been created in the corresponding results folder, 
+Note: the pcap folder must have been created in the corresponding results folder,
 if the start_pmacct script has been used for deploying pmacct:
 ```shell
 tools/play_traffic.sh <full-path-to-pcap-folder> <IP address of the pcap player>
@@ -334,7 +336,7 @@ tools/get_pending_kafka_messages.sh daisy.bmp.19f5021c Avro
 
 If no messages are received and reading times out, it is very probably that you are not using the correct consumer
 object in the test. The framework creates as many consumers as the number of Kafka topics referenced in the pmacct
-config file. 
+config file.
 The fixture consumer_setup_teardown returns the list of consumers created. The test method typically calls main with
 either the consumer list, or the first consumer only- it's up to the test case author.
 
@@ -348,7 +350,7 @@ In [../tests/conftest.py](tests/conftest.py) we define the following fixtures, i
 
 **kafka_infra_setup_teardown** sets up (and tears down) kafka infrastructure
 
-**prepare_test** creates results folder, pmacct_mount, etc. and copies all needed files there 
+**prepare_test** creates results folder, pmacct_mount, etc. and copies all needed files there
     edits pmacct config file with framework-specific details (IPs, ports, paths, etc.)
 
 **pmacct_setup_teardown** sets up (and tears down) pmacct containers
