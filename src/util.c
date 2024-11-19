@@ -2178,6 +2178,7 @@ int load_labels(char *filename, struct pretag_label_filter *filter, char *value_
   while ((count_token = extract_token(&value_ptr, ',')) && changes < MAX_PRETAG_MAP_ENTRIES/4) {
     neg = pt_check_neg(&count_token, NULL);
     value = count_token;
+    trim_spaces(value);
 
     filter->table[filter->num].neg = neg;
     filter->table[filter->num].v = value;
