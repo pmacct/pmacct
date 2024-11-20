@@ -2209,6 +2209,7 @@ int evaluate_tags(struct pretag_filter *filter, pm_id_t tag)
   return TRUE;
 }
 
+// XXX: to be deprecated
 int evaluate_labels(struct pretag_label_filter *filter, pt_label_t *label)
 {
   int index, ret;

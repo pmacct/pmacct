@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
 */
 
 /*
@@ -449,7 +449,7 @@ void exec_plugins(struct packet_ptrs *pptrs, struct plugin_requests *req)
     if (evaluate_filters(&channels_list[index].agg_filter, pptrs->packet_ptr, pptrs->pkthdr) &&
         !evaluate_tags(&channels_list[index].tag_filter, pptrs->tag) && 
         !evaluate_tags(&channels_list[index].tag2_filter, pptrs->tag2) && 
-        !evaluate_labels(&channels_list[index].label_filter, &pptrs->label) && 
+        !evaluate_labels_v2(&channels_list[index].label_filter, &pptrs->label) &&
 	!check_shadow_status(pptrs, &channels_list[index])) {
       /* arranging buffer: supported primitives + packet total length */
 reprocess:

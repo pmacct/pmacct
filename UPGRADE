@@ -6,6 +6,15 @@ the changes done or break old assumptions no longer valid; while the effort
 is to keep these cases at a low, please read this file in preparation to
 upgrading your installation.
 
+TO:	>= 1.7.10
+FROM:	<= 1.7.9
+TOPIC:	pre_tag_label_map behaviour
+DESC:	Given a "pre_tag_label_map: foo" and a label string pre_tag_map (and
+	equivalents) result of "foo, bar", a match would not happen because
+	the evaluation would be against the whole string ("foo bar") instead
+	of each token ("foo", "bar"). This is now resolved and is working as
+	expected. Yet it's a change of behaviour from previous versions.
+
 TO:	>= 1.7.9
 FROM:	<= 1.7.8
 TOPIC:	NetFlow v9 / IPFIX and flows with (ingress / egress) VRF ID field
