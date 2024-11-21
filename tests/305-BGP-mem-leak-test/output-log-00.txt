@@ -1,0 +1,4 @@
+${TIMESTAMP} WARN ( nfacctd_core/core/BGP ): Unable to get kafka_host: ${repro_ip}
+${TIMESTAMP} WARN ( nfacctd_core/core/BGP ): Unable to get kafka_host: ${repro_ip}
+${TIMESTAMP} WARN ( nfacctd_core/core/BGP ): Unable to get kafka_host: ${repro_ip}
+${TIMESTAMP} WARN ( nfacctd_core/core/BGP ): Unable to get kafka_host: ${repro_ip}

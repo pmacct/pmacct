@@ -9,7 +9,7 @@ import library.py.test_tools as test_tools
 import library.py.helpers as helpers
 import library.py.scripts as scripts
 from library.py.test_params import KModuleParams
-from typing import List
+from typing import List, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -129,3 +129,8 @@ class KTestHelper:
         if not pmacct_name:
             pmacct_name = self.params.pmacct[0].name
         return scripts.send_signal_to_pmacct(pmacct_name, sig)
+
+    # Returns true if the memory utilization of the pmacct instance with name pmacct_name is less than max_mib
+    def memory_utilization_max_MiB(self, pmacct_name: str, max_mib: int) -> Tuple[bool, int]:
+        mem_util = int(float(scripts.get_pmacct_memused(pmacct_name)))
+        return mem_util < max_mib, mem_util

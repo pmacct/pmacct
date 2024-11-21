@@ -9,6 +9,7 @@ import shutil
 import logging
 import os
 import yaml
+import glob
 from library.py.test_params import KModuleParams
 import library.py.helpers as helpers
 from typing import Dict, Optional, Tuple
@@ -91,10 +92,10 @@ class KTrafficSetup:
             config['network']['map'][0]['repro_ip'] = config['network']['map'][0]['repro_ip'].replace(ex_subnet,
                                                                                                       fw_subnet)
 
-    def _build_process_traffic_yml(self, traffic_yml_file: str, pcap_file: str, collector_name: str, is_ipv6: bool):
+    def _build_process_traffic_yml(self, traffic_yml_file: str, pcaps: list, collector_name: str, is_ipv6: bool):
         with open(traffic_yml_file) as f:
             data = yaml.load(f, Loader=yaml.FullLoader)
-        data['pcap'] = '/pcap/' + pcap_file
+        data['pcap'] = ['/pcap/' + pcap_file for pcap_file in pcaps]
         pmacct = self.params.get_pmacct_with_name(collector_name)
         pmacct_ip = pmacct.ipv6 if is_ipv6 else pmacct.ipv4
         logger.debug('Traffic reproducer uses ' + ('IPv6' if is_ipv6 else 'IPv4'))
@@ -106,14 +107,26 @@ class KTrafficSetup:
             yaml.dump(data, f, default_flow_style=False, sort_keys=False)
 
     def _setup_process_files(self, container_folder: str, process: Dict, process_folder: str, is_ipv6: bool):
-        pcap_file_dst = container_folder + '/' + process['pcap']
-        if not os.path.isfile(pcap_file_dst):
-            shutil.copy(self.params.test_folder + '/' + process['pcap'], pcap_file_dst)
+
+        # Support string, regex or list as pcap selector
+        pcaps = process['pcap']
+        if isinstance(pcaps, str):
+          if '*' in pcaps or '?' in pcaps:
+              pcaps = glob.glob(self.params.test_folder + '/' + pcaps)
+              pcaps = [os.path.basename(pcap) for pcap in pcaps]
+          else:
+              pcaps = [pcaps]
+
+        for pcap in pcaps:
+            pcap_file_dst = container_folder + '/' + pcap
+            if not os.path.isfile(pcap_file_dst):
+                shutil.copy(self.params.test_folder + '/' + pcap, pcap_file_dst)
+
         os.makedirs(process_folder)
         config_file_dst = process_folder + '/traffic-reproducer.yml'
         shutil.copy(self.params.test_folder + '/' + process['config'], config_file_dst)
 
-        self._build_process_traffic_yml(config_file_dst, process['pcap'], process['collector'], is_ipv6)
+        self._build_process_traffic_yml(config_file_dst, pcaps, process['collector'], is_ipv6)
 
 
 def prepare_pcap(params: KModuleParams):
