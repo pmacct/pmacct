@@ -2754,6 +2754,14 @@ DESC:		Full pathname to a file containing specific tags for data. Equivalent to 
 		sending the daemon a SIGUSR2 signal (ie. "killall -USR2 pmbgpd").
 DEFAULT:	none
 
+KEY:		[ bgp_daemon_msglog_label_filter | bmp_daemon_msglog_label_filter ]
+DESC:		Expects one or more labels as value (when multiple labels are supplied, they need to be
+		comma separated and a logical OR is performed when evaluating at runtime) and allows to
+		filter in data basing upon label value(s): in case of match, data is logged. The use of
+		this directive is meant coupled with a 'bgp_daemon_tag_map' / 'bmp_daemon_tag_map'.
+		Please read more in 'pre_tag_label_filter'.
+DEFAULT:	none
+
 KEY:		[ bgp_daemon_ipprec | bmp_daemon_ipprec ] [GLOBAL]
 DESC:		Marks self-originated BGP/BMP messages with the supplied IP precedence value.
 DEFAULT:	0
