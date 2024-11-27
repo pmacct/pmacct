@@ -187,7 +187,6 @@ struct id_entry_key {
   pt_uint8_t is_nsel;
   pt_uint8_t is_nel;
   pt_uint8_t direction;
-  pt_uint8_t nat_event;
   pt_uint32_t src_as;
   pt_uint32_t dst_as;
   pt_uint32_t peer_src_as;

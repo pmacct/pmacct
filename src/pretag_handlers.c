@@ -825,25 +825,6 @@ int PT_map_direction_handler(char *filename, struct id_entry *e, char *value, st
   return FALSE;
 }
 
-int PT_map_nat_event_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
-{
-  int x = 0;
-
-  e->key.nat_event.neg = pt_check_neg(&value, &((struct id_table *) req->key_value_table)->flags);
-  e->key.nat_event.n = atoi(value);
-  for (x = 0; e->func[x]; x++) {
-    if (e->func_type[x] == PRETAG_NAT_EVENT) {
-      Log(LOG_WARNING, "WARN ( %s/%s ): [%s] Multiple 'nat_event' clauses part of the same statement.\n", config.name, config.type, filename);
-      return TRUE;
-    }
-  }
-
-  if (config.acct_type == ACCT_NF) e->func[x] = pretag_nat_event_handler;
-  if (e->func[x]) e->func_type[x] = PRETAG_NAT_EVENT;
-
-  return FALSE;
-}
-
 int PT_map_src_as_handler(char *filename, struct id_entry *e, char *value, struct plugin_requests *req, int acct_type)
 {
   as_t tmp;
@@ -2383,28 +2364,6 @@ int pretag_direction_handler(struct packet_ptrs *pptrs, void *unused, void *e)
     }
     if (entry->key.direction.n == direction) return (FALSE | entry->key.direction.neg);
     else return (TRUE ^ entry->key.direction.neg);
-  default:
-    return TRUE; /* this field does not exist: condition is always true */
-  }
-}
-
-int pretag_nat_event_handler(struct packet_ptrs *pptrs, void *unused, void *e)
-{
-  struct id_entry *entry = e;
-  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
-  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
-  u_int8_t nat_event = 0;
-
-  if (!pptrs->f_data) return TRUE;
-
-  switch (hdr->version) {
-  case 10:
-  case 9:
-    if (OTPL_LAST_LEN(NF9_NAT_EVENT) == 1) {
-      OTPL_CP_LAST(&nat_event, NF9_NAT_EVENT, 1);
-    }
-    if (entry->key.nat_event.n == nat_event) return (FALSE | entry->key.nat_event.neg);
-    else return (TRUE ^ entry->key.nat_event.neg);
   default:
     return TRUE; /* this field does not exist: condition is always true */
   }
