@@ -531,6 +531,14 @@ void evaluate_packet_handlers()
 
     }
 
+    if (channels_list[index].aggregation_3 & COUNT_VRF_NAME) {
+    
+      if (config.acct_type == ACCT_NF) {
+        channels_list[index].phandler[primitives] = NF_vrf_name_handler; 
+        primitives++;
+      }
+    }
+
     if (channels_list[index].aggregation & COUNT_MPLS_VPN_RD) {
 
       if (config.acct_type == ACCT_NF) {
@@ -2029,7 +2037,9 @@ void sampling_rate_handler(struct channels_list_entry *chptr, struct packet_ptrs
   if (config.sfacctd_renormalize) {
     pdata->primitives.sampling_rate = 1; /* already renormalized */
   }
-}void NF_ingress_vrf_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+}
+
+void NF_ingress_vrf_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
 
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
@@ -2061,6 +2071,22 @@ void NF_egress_vrf_name_handler(struct channels_list_entry *chptr, struct packet
     return;
   }
   else vlen_prims_insert(pvlen, COUNT_INT_EGRESS_VRF_NAME, MAX_VRF_NAME, (u_char *) pptrs->egress_vrf_name, PM_MSG_STR_COPY);
+}
+
+void NF_vrf_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+
+  struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
+#if defined (USE_VRF_NAME_PTR)
+  if (pptrs->vrf_name == NULL) {
+    return;
+  }
+#endif
+  if (check_pipe_buffer_space(chptr, pvlen, MAX_VRF_NAME)) {
+    vlen_prims_init(pvlen, 0);
+    return;
+  }
+  else vlen_prims_insert(pvlen, COUNT_INT_VRF_NAME, MAX_VRF_NAME, (u_char *) pptrs->vrf_name, PM_MSG_STR_COPY);
 
 }
 

@@ -398,6 +398,7 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "path_delay_max_usec")) cfg_set_aggregate(filename, value, COUNT_INT_PATH_DELAY_MAX_USEC, count_token);
     else if (!strcmp(count_token, "ingress_vrf_name")) cfg_set_aggregate(filename, value, COUNT_INT_INGRESS_VRF_NAME, count_token);
     else if (!strcmp(count_token, "egress_vrf_name")) cfg_set_aggregate(filename, value, COUNT_INT_EGRESS_VRF_NAME, count_token);
+    else if (!strcmp(count_token, "vrf_name")) cfg_set_aggregate(filename, value, COUNT_INT_VRF_NAME, count_token);
     else {
       cpptrs.primitive[cpptrs.num].name = count_token;
       cpptrs.num++;

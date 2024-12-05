@@ -70,7 +70,7 @@ VALUES:		[ src_mac, dst_mac, vlan, in_vlan, out_vlan, in_cvlan, out_cvlan, cos, 
 		 tunnel_tcpflags, tunnel_flow_label, fwd_status, vxlan, nvgre, timestamp_start,
 		 timestamp_end, timestamp_arrival, timestamp_export, export_proto_seqno,
 		 export_proto_version, export_proto_sysid, path_delay_avg_usec,
-		 path_delay_min_usec, path_delay_max_usec, srv6_seg_ipv6_list ]
+		 path_delay_min_usec, path_delay_max_usec, srv6_seg_ipv6_list, vrf_name ]
 FOREWORDS:	Individual IP packets are uniquely identified by their header field values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
 		they have at least enough information to discriminate where packets are coming
