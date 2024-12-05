@@ -270,6 +270,9 @@ typedef u_int8_t safi_t;
 #ifndef MAX_VRF_NAME
 #define MAX_VRF_NAME            32
 #endif
+#ifndef MAX_VRF_NAME_STR_LEN
+#define MAX_VRF_NAME_STR_LEN            (MAX_VRF_NAME+1)
+#endif
 
 struct rd_as
 {
@@ -398,9 +401,11 @@ struct packet_ptrs {
 #if defined (USE_VRF_NAME_PTR)
   char *ingress_vrf_name;
   char *egress_vrf_name;
+  char *vrf_name;
 #else
-  char ingress_vrf_name[MAX_VRF_NAME];
-  char egress_vrf_name[MAX_VRF_NAME];
+  char ingress_vrf_name[MAX_VRF_NAME_STR_LEN];
+  char egress_vrf_name[MAX_VRF_NAME_STR_LEN];
+  char vrf_name[MAX_VRF_NAME_STR_LEN];
 #endif  
 #if defined (WITH_GEOIPV2)
   MMDB_lookup_result_s geoipv2_src;
