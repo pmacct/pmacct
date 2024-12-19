@@ -305,14 +305,6 @@ struct flow_chars {
   u_int8_t is_bi;
 };
 
-/* 
-  In case required, the USE_VRF_NAME_PTR define enables the vrf_name to be saved in a ptr 
-  instead of a char array which is more efficient.  However, if the code is updated to run
-  in a multi-threaded environment, then this will not work as ptr may be modified by another 
-  thread
-*/
-//#define USE_VRF_NAME_PTR 1
-
 struct packet_ptrs {
   struct pcap_pkthdr *pkthdr; /* ptr to header structure passed by libpcap */
   u_char *f_agent; /* ptr to flow export agent */ 
@@ -398,15 +390,9 @@ struct packet_ptrs {
   u_int8_t renormalized; /* Is it renormalized yet ? */
   u_char *pkt_data_ptrs[CUSTOM_PRIMITIVE_MAX_PPTRS_IDX]; /* indexed packet pointers */
   u_int16_t pkt_proto[CUSTOM_PRIMITIVE_MAX_PPTRS_IDX]; /* indexed packet protocols */
-#if defined (USE_VRF_NAME_PTR)
-  char *ingress_vrf_name;
-  char *egress_vrf_name;
-  char *vrf_name;
-#else
   char ingress_vrf_name[MAX_VRF_NAME_STR_LEN];
   char egress_vrf_name[MAX_VRF_NAME_STR_LEN];
   char vrf_name[MAX_VRF_NAME_STR_LEN];
-#endif  
 #if defined (WITH_GEOIPV2)
   MMDB_lookup_result_s geoipv2_src;
   MMDB_lookup_result_s geoipv2_dst;
