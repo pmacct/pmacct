@@ -6,7 +6,7 @@
 #This Dockerfile creates an image for uacctd
 
 FROM base:_build
-MAINTAINER pmacct Docker Doctors <docker-doctors (at) pmacct.net>
+LABEL maintainer="pmacct Docker Doctors <docker-doctors (at) pmacct.net>"
 
 ENTRYPOINT ["/usr/local/sbin/uacctd"]
 CMD ["-f", "/etc/pmacct/uacctd.conf"]

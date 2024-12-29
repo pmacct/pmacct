@@ -65,7 +65,7 @@ RUN export AVRO_LIBS="-L/usr/local/avro/lib -lavro" && \
   make install
 
 FROM debian:bookworm-slim AS base
-LABEL maintainer "pmacct Docker Doctors <docker-doctors (at) pmacct.net>"
+LABEL maintainer="pmacct Docker Doctors <docker-doctors (at) pmacct.net>"
 # We don't want man pages
 COPY ci/dpkg.cfg.d/excludes /etc/dpkg/dpkg.cfg.d/excludes
 COPY --from=build-stage /usr/local/ /usr/local
