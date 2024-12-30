@@ -14,6 +14,7 @@ COPY ci/dpkg.cfg.d/excludes /etc/dpkg/dpkg.cfg.d/excludes
 #   * this only covers build deps
 RUN apt-get update && \
   apt-get install -y \
+    build-essential \
     autoconf \
     automake \
     bash \
@@ -35,12 +36,14 @@ RUN apt-get update && \
     libsqlite3-dev \
     libssl-dev \
     libgnutls28-dev \
+    libnsl-dev \
     libtool \
     make \
     pkg-config \
     sudo \
     wget \
     zlib1g-dev
+
 WORKDIR /tmp/pmacct/
 # About to deal with deps installation
 COPY ci/deps.sh ci/
