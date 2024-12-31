@@ -107,40 +107,21 @@ jobs:
           docker exec -i $CONTAINER_ID ./ci/script.sh
           docker stop $CONTAINER_ID
 
-  ### Step 3: official docker image generation
-  pmacct-docker:
+  ### Step 3.1: test that local single-platform builds work fine
+  docker-build-test-local:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout pmacct
-        uses: actions/checkout@v4
+        uses: actions/checkout@v1 #Don't use v2 messes everything
         with:
           path: pmacct
-          fetch-depth: 0
-          fetch-tags: 1
 
-      - name: Check DAEMONS env. variable...
+      - name: Build single-platform
         run: |
-          #Sanity, avoid regression #816
-          N_DAEMONS="$(echo $DAEMONS | wc --words)"
-          if [[ "${N_DAEMONS}" != "7" ]]; then
-              echo "ERROR: invalid number of DAEMONS: ${N_DAEMONS}"
-              exit 1
-          fi
-
-      - name: Build containers
-        uses: ./pmacct/.github/actions/build_containers/
-        with:
-            daemons: ${{env.DAEMONS}}
-
-      - name: Docker save images
-        run: |
-          echo "Saving images as artifacts..."
-          mkdir -p /tmp/docker/
-          docker save -o /tmp/docker/pmacct_docker_images.tar base:_build $(for DAEMON in ${DAEMONS};do echo "${DAEMON}:_build "; done)
+          cd docker && V=1 make
 
       - name: Docker (compose) smoke test
         run: |
-          cd pmacct
           echo "Running smoke test using docker compose..."
           TAG=_build docker compose -f ci/smoke-test/docker-compose.yml up -d
           sleep 10
@@ -151,51 +132,31 @@ jobs:
           echo "Stopping containers..."
           TAG=_build docker compose -f ci/smoke-test/docker-compose.yml down
 
-      - name: Export pmacct docker images as an artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: pmacct_docker_images
-          retention-days: 1
-          path: /tmp/docker
-
-  ### Step 4: Upload images to dockerhub (bleeding-edge, latest and releases)
-  publish-dockerhub:
-    needs: [pmacct-docker, build-and-test]
+  ### Step 3.2: Build test and publish (bleeding-edge, latest and releases)
+  docker-multiplatform-build-test-publish:
     runs-on: ubuntu-22.04
-    if: github.event_name != 'pull_request' && vars.SKIP_DOCKERHUB_PUBLISH != 'true'
+    needs: [build-and-test, docker-build-test-local]
     env:
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      PLATFORMS: linux/amd64,linux/arm64
     steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: pmacct_docker_images
-          path: /tmp/docker
-
-      - name: Import pmacct docker images in the local registry
-        run: |
-          docker load -i /tmp/docker/pmacct_docker_images.tar
-
       - name: Checkout pmacct
         uses: actions/checkout@v1 #Don't use v2 messes everything
         with:
           path: pmacct
 
-      - name: Build and upload containers
+      - name: Deduce PMACCT version and tags
         run: |
           echo "Fix mess with tags in actions/checkout..."
           git fetch -f && git fetch -f --tags
           echo "Deducing PMACCT_VERSION..."
           PMACCT_VERSION=$(git describe --abbrev=0 --match="v*")
-          echo "PMACCT_VERSION=$PMACCT_VERSION"
-          echo "Uploading to dockerhub ...";
-          echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin;
 
           #Always push bleeding-edge when pushed to master
           GIT_IS_BLEEDING_EDGE=$( (git branch --all --contains HEAD | grep master ) || echo "")
           echo "GIT_IS_BLEEDING_EDGE=$GIT_IS_BLEEDING_EDGE"
           if [ "$GIT_IS_BLEEDING_EDGE" != "" ]; then
             echo "Tagging and uploading 'bleeding-edge'..."
+            TAGS="$TAGS bleeding-edge"
           else
             echo "NOT uploading 'bleeding-edge'... Not HEAD of master"
           fi
@@ -205,12 +166,14 @@ jobs:
           if [ "$GIT_RELEASE_TAG" != "" ]; then
             echo "GIT_RELEASE_TAG=$GIT_RELEASE_TAG"
             echo "Tagging and uploading release '$GIT_RELEASE_TAG'..."
+            TAGS="$TAGS $GIT_RELEASE_TAG"
 
             #Latest tag
             GIT_LAST_TAG=$(git tag --sort=v:refname | tail -n 1);
             echo "GIT_LAST_TAG=$GIT_LAST_TAG"
             if [ "$GIT_RELEASE_TAG" == "$GIT_LAST_TAG" ]; then
               echo "Tagging and uploading 'latest'..."
+              TAGS="$TAGS latest"
             else
               echo "NOT uploading 'latest'..."
             fi
@@ -218,19 +181,54 @@ jobs:
             echo "NOT uploading '$GIT_RELEASE_TAG' nor 'latest'. Not a release!"
           fi
 
-          #Let's do it!
-          EXT_DAEMONS="base ${DAEMONS}"
-          for DAEMON in ${EXT_DAEMONS}; do
-            if [ "$GIT_IS_BLEEDING_EDGE" != "" ]; then
-              docker tag ${DAEMON}:_build ${DOCKER_USERNAME}/${DAEMON}:bleeding-edge;
-              docker push ${DOCKER_USERNAME}/${DAEMON}:bleeding-edge;
-            fi
-            if [ "$GIT_RELEASE_TAG" != "" ]; then
-              docker tag ${DAEMON}:_build ${DOCKER_USERNAME}/${DAEMON}:${PMACCT_VERSION};
-              docker push ${DOCKER_USERNAME}/${DAEMON}:${PMACCT_VERSION};
-              if [ "$GIT_RELEASE_TAG" == "$GIT_LAST_TAG" ]; then
-                docker tag ${DAEMON}:_build ${DOCKER_USERNAME}/${DAEMON}:latest;
-                docker push ${DOCKER_USERNAME}/${DAEMON}:latest;
-              fi
-            fi
-          done
+          #Summarize deduced tags
+          echo "Deduced tags: $TAGS"
+          echo "TAGS=$TAGS" >> $GITHUB_ENV
+
+      - name: Get Runner's IP Address
+        run: |
+           RUNNER_IP=$(hostname -I | awk '{print $1}')
+           echo "RUNNER_IP=$RUNNER_IP" >> $GITHUB_ENV
+           echo "Deduced RUNNER_IP: $RUNNER_IP"
+
+      - name: Spawn docker registry
+        run: |
+          echo "Instruct dockerd to trust $RUNNER_IP:5000 as an insecure registry..."
+          sudo mkdir -p /etc/docker
+          echo "{
+            \"insecure-registries\": [\"http://$RUNNER_IP:5000\"]
+          }" | sudo tee /etc/docker/daemon.json > /dev/null
+          sudo systemctl restart docker
+          echo "Starting temporary docker registry..."
+          docker run -d -p 5000:5000 --name registry registry:2
+
+      - name: Build for platforms
+        run: |
+          echo "Building platforms: ${{ env.PLATFORMS }}..."
+          echo "Got tags from previous step: $TAGS"
+          cd docker && BUILD_REGISTRY=$RUNNER_IP:5000 PLATFORMS="${{env.PLATFORMS}}" V=1 make
+
+      - name: Docker (compose) smoke test
+        run: |
+          echo "Running smoke test using docker compose..."
+          export DOCKER_OPTS="--insecure-registry $RUNNER_IP:5000"
+          TAG=_build REPO=$RUNNER_IP:5000/ docker compose -f ci/smoke-test/docker-compose.yml up -d
+          sleep 10
+          echo "Check that all containers are up and running, without restarts ..."
+          if [[ "$(docker inspect `docker ps -aq` | grep RestartCount | grep -v '\"RestartCount\": 0')" != "" ]]; then
+            echo "Some containers restarted!" && docker inspect `docker ps -aq` && /bin/false
+          fi
+          echo "Stopping containers..."
+          TAG=_build docker compose -f ci/smoke-test/docker-compose.yml down
+
+      - name: Tag and push to dockerhub
+        if: ${{ github.event_name != 'pull_request' && vars.SKIP_DOCKERHUB_PUBLISH != 'true' && env.TAGS != '' }}
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo "Logging in...";
+          echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin
+          echo "Publishing platforms(archs): ${{ env.PLATFORMS }}..."
+          echo "Got tags from previous step: $TAGS"
+          cd docker && BUILD_REGISTRY=$RUNNER_IP:5000 PUSH=${{secrets.DOCKER_USERNAME}} TAGS="${TAGS}" PLATFORMS="${{env.PLATFORMS}}" V=1 make

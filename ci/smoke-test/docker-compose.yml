@@ -1,44 +1,42 @@
-version: "3"
-
 services:
   nfacctd:
-    image: nfacctd:${TAG}
+    image: ${REPO:-}nfacctd:${TAG}
     volumes:
       - ./etc/pmacct:/etc/pmacct
     restart: on-failure
 
   pmacctd:
-    image: pmacctd:${TAG}
+    image: ${REPO:-}pmacctd:${TAG}
     volumes:
       - ./etc/pmacct:/etc/pmacct
     restart: on-failure
 
   pmbgpd:
-    image: pmbgpd:${TAG}
+    image: ${REPO:-}pmbgpd:${TAG}
     volumes:
       - ./etc/pmacct:/etc/pmacct
     restart: on-failure
 
   pmbmpd:
-    image: pmbmpd:${TAG}
+    image: ${REPO:-}pmbmpd:${TAG}
     volumes:
       - ./etc/pmacct:/etc/pmacct
     restart: on-failure
 
   pmtelemetryd:
-    image: pmtelemetryd:${TAG}
+    image: ${REPO:-}pmtelemetryd:${TAG}
     volumes:
       - ./etc/pmacct:/etc/pmacct
     restart: on-failure
 
   sfacctd:
-    image: sfacctd:${TAG}
+    image: ${REPO:-}sfacctd:${TAG}
     volumes:
       - ./etc/pmacct:/etc/pmacct
     restart: on-failure
 
   uacctd:
-    image: uacctd:${TAG}
+    image: ${REPO:-}uacctd:${TAG}
     volumes:
       - ./etc/pmacct:/etc/pmacct
     restart: on-failure
