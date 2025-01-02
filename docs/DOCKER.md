@@ -30,6 +30,12 @@ Containers are published with the following tags:
   * `bleeding-edge`: only for the brave. Latest commit on `master`. This container
                      is not recommended to be used in production.
 
+### Architectures
+
+Official docker images are built for `linux/amd64` and `linux/arm64`.
+
+:warning: **`linux/arm64` support is experimental**.
+
 ## How to use them (docker/docker-compose only)
 
 Docker:
@@ -325,11 +331,11 @@ Solution:
 docker run -v /home/marc/tmp/pmacctd.conf:/etc/pmacct/pmacctd.conf pmacct/pmacctd:latest
 ```
 
-2. Question: 
+2. Question:
 
 ```
 If i want to daemonize pmacct running inside a Docker container, should i use either the
-"daemonize: true" config knob or the -d pmacct command-line flag?   
+"daemonize: true" config knob or the -d pmacct command-line flag?
 ```
 
 Answer:
@@ -354,7 +360,8 @@ of the containers.
 This image can be used to to create your customized docker image, with different
 entrypoints or other tools in.
 
-### Building your Docker image from scratch
+### And more...
 
 If you still feel you need to compile your own custom version of pmacct, you
-can take a look at the `Dockerfile` in the folder `docker/base` as a starting point.
+can take a look at the `Dockerfile`s in the folder `docker/` as a starting
+point. Make sure to review the [README.md](../docker/README.md).
