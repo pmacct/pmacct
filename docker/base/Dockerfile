@@ -6,7 +6,7 @@
 #This Dockerfile creates a base docker image with pmacct and other useful
 #tools for network telemetry and monitoring
 
-FROM debian:bookworm-slim as build-stage
+FROM debian:bookworm-slim AS build-stage
 # We don't want man pages
 COPY ci/dpkg.cfg.d/excludes /etc/dpkg/dpkg.cfg.d/excludes
 # This is not the runtime/final image:
@@ -14,6 +14,7 @@ COPY ci/dpkg.cfg.d/excludes /etc/dpkg/dpkg.cfg.d/excludes
 #   * this only covers build deps
 RUN apt-get update && \
   apt-get install -y \
+    build-essential \
     autoconf \
     automake \
     bash \
@@ -35,12 +36,14 @@ RUN apt-get update && \
     libsqlite3-dev \
     libssl-dev \
     libgnutls28-dev \
+    libnsl-dev \
     libtool \
     make \
     pkg-config \
     sudo \
     wget \
     zlib1g-dev
+
 WORKDIR /tmp/pmacct/
 # About to deal with deps installation
 COPY ci/deps.sh ci/
@@ -64,8 +67,8 @@ RUN export AVRO_LIBS="-L/usr/local/avro/lib -lavro" && \
                               --enable-unyte-udp-notif &&       \
   make install
 
-FROM debian:bookworm-slim as base
-LABEL maintainer "pmacct Docker Doctors <docker-doctors (at) pmacct.net>"
+FROM debian:bookworm-slim AS base
+LABEL maintainer="pmacct Docker Doctors <docker-doctors (at) pmacct.net>"
 # We don't want man pages
 COPY ci/dpkg.cfg.d/excludes /etc/dpkg/dpkg.cfg.d/excludes
 COPY --from=build-stage /usr/local/ /usr/local

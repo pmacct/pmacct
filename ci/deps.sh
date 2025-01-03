@@ -35,10 +35,10 @@ mkdir -p /tmp
 cd /tmp
 
 # Dependencies (not fulfilled by Dockerfile)
-git clone --depth 1 https://github.com/akheron/jansson
+git clone --depth 1 -b v2.14 https://github.com/akheron/jansson
 cd jansson ; rm -rf ./.git ; autoreconf -i ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
-git clone --depth 1 https://github.com/edenhill/librdkafka
+git clone --depth 1 -b v2.6.1 https://github.com/confluentinc/librdkafka
 cd librdkafka ; rm -rf ./.git ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
 # rabbitmq-c 0.14.0 depends on cmake 3.22 or greater
@@ -50,7 +50,7 @@ else
     cd rabbitmq-c-0.13.0 ; mkdir build ; cd build ; cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_INSTALL_LIBDIR=lib .. ; sudo cmake --build . --target install ; cd .. ; cd ..
 fi
 
-git clone --depth 1 --recursive https://github.com/maxmind/libmaxminddb
+git clone --depth 1 -b 1.11.0 --recursive https://github.com/maxmind/libmaxminddb
 cd libmaxminddb ; rm -rf ./.git ; ./bootstrap ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
 git clone --depth 1 -b 4.8-stable https://github.com/ntop/nDPI

@@ -51,3 +51,6 @@ src/external_libs/rootfs
 
 # Dockerfiles makes no sense in the build context
 **/Dockerfile
+
+# Exclude Makefile (dev only)
+docker/Makefile

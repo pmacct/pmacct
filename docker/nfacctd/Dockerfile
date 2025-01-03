@@ -5,8 +5,10 @@
 
 #This Dockerfile creates an image for nfacctd
 
-FROM base:_build
-MAINTAINER pmacct Docker Doctors <docker-doctors (at) pmacct.net>
+ARG BUILD_REGISTRY=
+
+FROM ${BUILD_REGISTRY:+${BUILD_REGISTRY}/}base:_build
+LABEL maintainer="pmacct Docker Doctors <docker-doctors (at) pmacct.net>"
 
 ENTRYPOINT ["/usr/local/sbin/nfacctd"]
 CMD ["-f", "/etc/pmacct/nfacctd.conf"]
