@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -225,6 +225,7 @@ struct bgp_msg_data {
   struct bgp_peer *peer;
   struct bgp_msg_extra_data extra;
   int is_blackhole;
+  int nlri_count;
 };
 
 typedef struct packet_ptrs bgp_tag_t;

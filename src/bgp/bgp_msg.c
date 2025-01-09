@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -720,12 +720,12 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 
   /* NLRI parsing */
   if (withdraw.length) {
-    bgp_nlri_parse(bmd, NULL, &attr_extra, &withdraw, BGP_NLRI_WITHDRAW);
+    ret = bgp_nlri_parse(bmd, NULL, &attr_extra, &withdraw, BGP_NLRI_WITHDRAW);
     parsed = TRUE;
   }
 
   if (update.length) {
-    bgp_nlri_parse(bmd, &attr, &attr_extra, &update, BGP_NLRI_UPDATE);
+    ret = bgp_nlri_parse(bmd, &attr, &attr_extra, &update, BGP_NLRI_UPDATE);
     parsed = TRUE;
   }
 	
@@ -733,7 +733,7 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 	  && mp_update.afi == AFI_IP
 	  && (mp_update.safi == SAFI_UNICAST || mp_update.safi == SAFI_MPLS_LABEL ||
 	      mp_update.safi == SAFI_MPLS_VPN)) {
-    bgp_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_UPDATE);
+    ret = bgp_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_UPDATE);
     parsed = TRUE;
   }
 
@@ -741,7 +741,7 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 	  && mp_withdraw.afi == AFI_IP
 	  && (mp_withdraw.safi == SAFI_UNICAST || mp_withdraw.safi == SAFI_MPLS_LABEL ||
 	      mp_withdraw.safi == SAFI_MPLS_VPN)) {
-    bgp_nlri_parse (bmd, NULL, &attr_extra, &mp_withdraw, BGP_NLRI_WITHDRAW);
+    ret = bgp_nlri_parse (bmd, NULL, &attr_extra, &mp_withdraw, BGP_NLRI_WITHDRAW);
     parsed = TRUE;
   }
 
@@ -749,7 +749,7 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 	  && mp_update.afi == AFI_IP6
 	  && (mp_update.safi == SAFI_UNICAST || mp_update.safi == SAFI_MPLS_LABEL ||
 	      mp_update.safi == SAFI_MPLS_VPN)) {
-    bgp_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_UPDATE);
+    ret = bgp_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_UPDATE);
     parsed = TRUE;
   }
 
@@ -757,21 +757,21 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 	  && mp_withdraw.afi == AFI_IP6
 	  && (mp_withdraw.safi == SAFI_UNICAST || mp_withdraw.safi == SAFI_MPLS_LABEL ||
 	      mp_withdraw.safi == SAFI_MPLS_VPN)) {
-    bgp_nlri_parse(bmd, NULL, &attr_extra, &mp_withdraw, BGP_NLRI_WITHDRAW);
+    ret = bgp_nlri_parse(bmd, NULL, &attr_extra, &mp_withdraw, BGP_NLRI_WITHDRAW);
     parsed = TRUE;
   }
 
   if (mp_update.length
 	  && mp_update.afi == AFI_BGP_LS
 	  && (mp_update.safi == SAFI_LS_GLOBAL || mp_update.safi == SAFI_LS_VPN)) {
-    bgp_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_UPDATE);
+    ret = bgp_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_UPDATE);
     parsed = TRUE;
   }
 
   if (mp_withdraw.length
 	  && mp_withdraw.afi == AFI_BGP_LS
 	  && (mp_withdraw.safi == SAFI_LS_GLOBAL || mp_withdraw.safi == SAFI_LS_VPN)) {
-    bgp_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_WITHDRAW);
+    ret = bgp_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_WITHDRAW);
     parsed = TRUE;
   }
 
@@ -1150,11 +1150,11 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
   struct rd_as  *rda;
   struct rd_as4 *rda4;
 
-  if (!peer) return ERR;
+  if (!peer) goto exit_fail_lane;
 
   bms = bgp_select_misc_db(peer->type);
 
-  if (!bms) return ERR;
+  if (!bms) goto exit_fail_lane; 
   
   memset(&p, 0, sizeof(struct prefix));
 
@@ -1177,10 +1177,10 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
     p.family = bgp_afi2family (info->afi);
 
     if (info->safi == SAFI_UNICAST) {
-      if ((info->afi == AFI_IP && p.prefixlen > 32) || (info->afi == AFI_IP6 && p.prefixlen > 128)) return ERR;
+      if ((info->afi == AFI_IP && p.prefixlen > 32) || (info->afi == AFI_IP6 && p.prefixlen > 128)) goto exit_fail_lane; 
 
       psize = ((p.prefixlen+7)/8);
-      if (psize > end) return ERR;
+      if (psize > end) goto exit_fail_lane; 
 
       /* Fetch prefix from NLRI packet. */
       memcpy(&p.u.prefix, pnt, psize);
@@ -1189,10 +1189,10 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
       int labels_size = 0;
       u_char *label_ptr = NULL;
 
-      if ((info->afi == AFI_IP && p.prefixlen > 56) || (info->afi == AFI_IP6 && p.prefixlen > 152)) return ERR;
+      if ((info->afi == AFI_IP && p.prefixlen > 56) || (info->afi == AFI_IP6 && p.prefixlen > 152)) goto exit_fail_lane; 
 
       psize = ((p.prefixlen+7)/8);
-      if (psize > end || psize < 3 /* one label */) return ERR;
+      if (psize > end || psize < 3 /* one label */) goto exit_fail_lane; 
 
       /* Fetch label(s) and prefix from NLRI packet */
       label_ptr = pnt;
@@ -1209,7 +1209,9 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
         label_ptr += 3;
         labels_size += 3;
       }
-      else return ERR;
+      else {
+	goto exit_fail_lane;
+      } 
 	
       memcpy(&p.u.prefix, (pnt + labels_size), (psize - labels_size));
       p.prefixlen -= (8 * labels_size);
@@ -1218,10 +1220,10 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
       int labels_size = 0;
       u_char *label_ptr = NULL;
 
-      if ((info->afi == AFI_IP && p.prefixlen > 120) || (info->afi == AFI_IP6 && p.prefixlen > 216)) return ERR;
+      if ((info->afi == AFI_IP && p.prefixlen > 120) || (info->afi == AFI_IP6 && p.prefixlen > 216)) goto exit_fail_lane; 
 
       psize = ((p.prefixlen+7)/8);
-      if (psize > end || psize < 3 /* one label */) return ERR;
+      if (psize > end || psize < 3 /* one label */) goto exit_fail_lane; 
 
       /* Fetch label (3), RD (8) and prefix from NLRI packet */
       label_ptr = pnt;
@@ -1238,9 +1240,11 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
 	label_ptr += 3;
 	labels_size += 3;
       }
-      else return ERR;
+      else {
+	goto exit_fail_lane; 
+      }
 
-      if (labels_size + 8 /* RD */ > psize) return ERR; 
+      if (labels_size + 8 /* RD */ > psize) goto exit_fail_lane; 
 
       memcpy(&attr_extra->rd.type, (pnt + labels_size), 2);
       attr_extra->rd.type = ntohs(attr_extra->rd.type);
@@ -1266,7 +1270,7 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
 	rda4->val = ntohs(tmp16);
 	break;
       default:
-	return ERR;
+	goto exit_fail_lane;
 	break;
       }
       bgp_rd_origin_set(&attr_extra->rd, RD_ORIGIN_BGP);
@@ -1278,6 +1282,8 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
       bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
       Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_nlri_parse() Received unsupported NLRI afi=%u safi=%u\n",
         config.name, bms->log_str, bgp_peer_str, info->afi, info->safi);
+
+      bmd->nlri_count = ERR;
       continue;
     }
 
@@ -1311,9 +1317,17 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
       }
     }
 #endif
+
+    if (bmd->nlri_count >= 0) {
+      bmd->nlri_count++;
+    }
   }
 
   return SUCCESS;
+
+exit_fail_lane:
+  bmd->nlri_count = ERR;
+  return ERR;
 }
 
 /* AIGP attribute. */
