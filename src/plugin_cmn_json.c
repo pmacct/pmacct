@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -1633,7 +1633,7 @@ void compose_json_array_as_path(json_t *obj, struct chained_cache *cc)
 
   json_t *root_l1 = compose_str_linked_list_to_json_array_data(as_path_ll, ll_size);
 
-  json_object_set_new_nocheck(obj, "as_apth", root_l1);
+  json_object_set_new_nocheck(obj, "as_path", root_l1);
 
   cdada_list_destroy(as_path_ll);
 }
@@ -1651,7 +1651,7 @@ void compose_json_array_src_as_path(json_t *obj, struct chained_cache *cc)
 
   json_t *root_l1 = compose_str_linked_list_to_json_array_data(as_path_ll, ll_size);
 
-  json_object_set_new_nocheck(obj, "as_apth_src", root_l1);
+  json_object_set_new_nocheck(obj, "as_path_src", root_l1);
 
   cdada_list_destroy(as_path_ll);
 }
