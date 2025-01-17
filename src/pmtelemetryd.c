@@ -45,9 +45,6 @@ void usage_daemon(char *prog_name)
   printf("  -L  \tBind to the specified IP address\n");
   printf("  -u  \tListen on the specified UDP port\n");
   printf("  -t  \tListen on the specified TCP port\n");
-#ifdef WITH_ZMQ
-  printf("  -Z  \tConnect to the specified ZeroMQ queue address\n");
-#endif
   printf("  -f  \tLoad configuration from the specified file\n");
   printf("  -D  \tDaemonize\n");
   printf("  -d  \tEnable debug\n");
