@@ -23,11 +23,11 @@
 #define ARGS_NFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:o:t:O:MuRVaAE:I:WZ:Y:T:"
 #define ARGS_SFACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:L:l:o:t:O:MuRVaAE:I:WZ:Y:T:"
 #define ARGS_PMACCTD "n:NdDhP:b:f:F:c:i:I:m:p:r:s:S:o:t:O:MuwWZ:Y:L:RVazAE:T:"
-#define ARGS_UACCTD "n:NdDhP:b:f:F:c:m:p:r:s:S:o:t:O:MuRg:L:VaAE:T:"
+#define ARGS_UACCTD "n:dDhP:b:f:F:c:m:p:r:s:S:o:t:O:MuRg:L:VaAE:T:"
 #define ARGS_PMTELEMETRYD "hVL:u:t:f:dDS:F:o:O:i:T:"
 #define ARGS_PMBGPD "hVL:l:f:dDS:F:o:O:i:gm:T:"
 #define ARGS_PMBMPD "hVL:l:f:dDS:F:o:O:i:I:Z:Y:R:T:"
-#define ARGS_PMACCT "hSsc:Cet:p:P:M:arN:n:lT:O:E:uVUiI0"
+#define ARGS_PMACCT "hSsc:Cetp:M:arN:n:lT:O:E:uVUiI0"
 #define N_PRIMITIVES 128
 #define N_FUNCS 10 
 #define MAX_N_PLUGINS 32
