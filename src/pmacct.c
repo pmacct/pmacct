@@ -690,7 +690,7 @@ int main(int argc,char **argv)
 #if defined (WITH_NDPI)
   char ndpi_class[SUPERSHORTBUFLEN];
 #endif
-  char path[SRVBUFLEN], file[SRVBUFLEN], password[9], rd_str[SRVBUFLEN], tmpbuf[SRVBUFLEN];
+  char path[SRVBUFLEN], file[SRVBUFLEN], rd_str[SRVBUFLEN], tmpbuf[SRVBUFLEN];
   char *as_path, empty_aspath[] = "^$", empty_string[] = "", *bgp_comm;
   int sd, buflen, unpacked, printed;
   int counter=0, sep_len=0, is_event;
@@ -730,7 +730,6 @@ int main(int argc,char **argv)
   memset(&empty_ptun, 0, sizeof(struct pkt_tunnel_primitives));
   memset(&empty_pvlen, 0, sizeof(struct pkt_vlen_hdr_primitives));
   memset(count, 0, sizeof(count));
-  memset(password, 0, sizeof(password)); 
   memset(sep, 0, sizeof(sep));
   memset(&pmc_custom_primitives_registry, 0, sizeof(pmc_custom_primitives_registry));
   memset(&custom_primitives_input, 0, sizeof(custom_primitives_input));
@@ -1202,9 +1201,6 @@ int main(int argc,char **argv)
       break;
     case 'p':
       strlcpy(path, optarg, sizeof(path));
-      break;
-    case 'P':
-      strlcpy(password, optarg, sizeof(password));
       break;
     case 'a':
       want_all_fields = TRUE;
