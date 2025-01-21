@@ -59,8 +59,8 @@ cd nDPI ; rm -rf ./.git ; ./autogen.sh ; ./configure --prefix=/usr/local/ ; make
 git clone --depth 1 -b v4.3.5 https://github.com/zeromq/libzmq
 cd libzmq ; ./autogen.sh ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
-wget ${WGET_FLAGS} -O - https://archive.apache.org/dist/avro/avro-1.11.3/c/avro-c-1.11.3.tar.gz | tar xzf -
-cd avro-c-1.11.3 ; mkdir build ; cd build ; cmake -DCMAKE_INSTALL_PREFIX=/usr/local .. ; make ; sudo make install ; cd .. ; cd ..
+wget ${WGET_FLAGS} -O - https://github.com/apache/avro/archive/refs/tags/release-1.11.4.tar.gz | tar xzf -
+cd avro-release-1.11.4/lang/c ; mkdir build ; cd build ; cmake -DCMAKE_INSTALL_PREFIX=/usr/local .. ; make ; sudo make install ; cd .. ; cd .. ; cd.. ; cd ..
 
 git clone --depth 1 -b v7.5.3 https://github.com/confluentinc/libserdes
 cd libserdes ; rm -rf ./.git ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
