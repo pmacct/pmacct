@@ -456,6 +456,8 @@ static const struct _dictionary_line dictionary[] = {
   {"tee_ipprec", cfg_key_nfprobe_ip_precedence},
   {"tee_pipe_size", cfg_key_tee_pipe_size},
   {"tee_kafka_config_file", cfg_key_tee_kafka_config_file},
+  {"tee_counters_refresh_time", cfg_key_tee_counters_refresh_time},
+  {"tee_counters_path", cfg_key_tee_counters_path},
   {"bgp_daemon", cfg_key_bgp_daemon},
   {"bgp_daemon_ip", cfg_key_bgp_daemon_ip},
   {"bgp_daemon_interface", cfg_key_bgp_daemon_interface},

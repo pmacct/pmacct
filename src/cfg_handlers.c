@@ -6697,6 +6697,57 @@ int cfg_key_tee_kafka_config_file(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
+int cfg_key_tee_counters_refresh_time(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0, i, len = strlen(value_ptr);
+
+  for (i = 0; i < len; i++) {
+    if (!isdigit(value_ptr[i]) && !isspace(value_ptr[i])) {
+      Log(LOG_ERR, "WARN: [%s] 'tee_counters_refresh_time' is expected in secs but contains non-digit chars: '%c'\n", filename, value_ptr[i]);
+      return ERR;
+    }
+  }
+
+  value = atoi(value_ptr);
+  if (value <= 0) {
+    Log(LOG_ERR, "WARN: [%s] 'tee_counters_refresh_time' has to be > 0.\n", filename);
+    return ERR;
+  }
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.tee_counters_refresh_time = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.tee_counters_refresh_time = value;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
+int cfg_key_tee_counters_path(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  if (!name) for (; list; list = list->next, changes++) list->cfg.tee_counters_path = value_ptr;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.tee_counters_path = value_ptr;
+        changes++;
+        break;
+      }
+    }
+  }
+
+  return changes;
+}
+
 void parse_time(char *filename, char *value, int *mu, int *howmany)
 {
   int k, j, len;
