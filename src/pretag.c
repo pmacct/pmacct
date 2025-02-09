@@ -65,6 +65,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
   struct stat st;
   int v6_num = 0;
   u_int64_t sz;
+  unsigned int new_map_size;
 
   if (!filename || !map_allocated) return;
 
@@ -817,10 +818,17 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
     }
   }
 
+  new_map_size = tmp.num;
+  if (t)
+    new_map_size = t->num;
+  if (acct_type == MAP_CUSTOM_PRIMITIVES)
+    new_map_size = ((struct custom_primitives *) req->key_value_table)->num;
+
   if (tmp.e) free(tmp.e) ;
   if (buf) free(buf) ;
 
-  Log(LOG_INFO, "INFO ( %s/%s ): [%s] map successfully (re)loaded.\n", config.name, config.type, filename);
+  Log(LOG_INFO, "INFO ( %s/%s ): [%s] map successfully (re)loaded with %d entries.\n",
+    config.name, config.type, filename, new_map_size);
 
   return;
 

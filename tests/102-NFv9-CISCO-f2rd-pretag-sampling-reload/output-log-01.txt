@@ -2,11 +2,11 @@ ${TIMESTAMP} INFO ( nfacctd_core/core ): [/etc/pmacct/f2rd.map] (re)loading map.
 ${TIMESTAMP} INFO ( nfacctd_core/core ): [/etc/pmacct/f2rd.map] maps_index: destroying index ${IGNORE_REST}
 ${TIMESTAMP} INFO ( nfacctd_core/core ): [/etc/pmacct/f2rd.map] maps_index: creating index ${IGNORE_REST}
 ${TIMESTAMP} INFO ( nfacctd_core/core ): [/etc/pmacct/f2rd.map] pretag_index_report(): ${IGNORE_REST}
-${TIMESTAMP} INFO ( nfacctd_core/core ): [/etc/pmacct/f2rd.map] map successfully (re)loaded.
+${TIMESTAMP} INFO ( nfacctd_core/core ): [/etc/pmacct/f2rd.map] map successfully (re)loaded with 7 entries.
 ${TIMESTAMP} INFO ( nfacctd_core/core ): [/etc/pmacct/sampling.map] (re)loading map.
-${TIMESTAMP} INFO ( nfacctd_core/core ): [/etc/pmacct/sampling.map] map successfully (re)loaded.
+${TIMESTAMP} INFO ( nfacctd_core/core ): [/etc/pmacct/sampling.map] map successfully (re)loaded with 1 entries.
 ${TIMESTAMP} INFO ( nfacctd_core/core ): [/etc/pmacct/pretag.map] (re)loading map.
 ${TIMESTAMP} INFO ( nfacctd_core/core ): [/etc/pmacct/pretag.map] maps_index: destroying index ${IGNORE_REST}
 ${TIMESTAMP} INFO ( nfacctd_core/core ): [/etc/pmacct/pretag.map] maps_index: creating index ${IGNORE_REST}
 ${TIMESTAMP} INFO ( nfacctd_core/core ): [/etc/pmacct/pretag.map] pretag_index_report(): ${IGNORE_REST}
-${TIMESTAMP} INFO ( nfacctd_core/core ): [/etc/pmacct/pretag.map] map successfully (re)loaded.
+${TIMESTAMP} INFO ( nfacctd_core/core ): [/etc/pmacct/pretag.map] map successfully (re)loaded with 3 entries.

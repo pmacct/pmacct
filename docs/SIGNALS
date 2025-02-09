@@ -47,7 +47,7 @@ SIGUSR2:	if 'maps_refresh' config directive is enabled, it causes maps
 		be derived by the logs, ie.:
 
 		INFO ( default/core ): [/path/to/primitives.lst] (re)loading map.
-		INFO ( default/core ): [/path/to/primitives.lst] map successfully (re)loaded.
+		INFO ( default/core ): [/path/to/primitives.lst] map successfully (re)loaded with 3 entries.
 
 		primitives.lst is loaded by the core process and a signal to
 		reload such map should be sent to the Core Process. There is
