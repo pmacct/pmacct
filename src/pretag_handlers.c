@@ -268,7 +268,7 @@ int PT_map_ip_handler(char *filename, struct id_entry *e, char *value, struct pl
   }
 
   e->func[x] = pretag_dummy_ip_handler;
-  if (e->func[x]) e->func_type[x] = PRETAG_IP;
+  e->func_type[x] = PRETAG_IP;
 
   return FALSE;
 }
@@ -304,6 +304,7 @@ int PT_map_input_handler(char *filename, struct id_entry *e, char *value, struct
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_input_handler;
   else if (config.acct_type == ACCT_PM) e->func[x] = PM_pretag_input_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_IN_IFACE;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -339,6 +340,7 @@ int PT_map_output_handler(char *filename, struct id_entry *e, char *value, struc
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_output_handler;
   else if (config.acct_type == ACCT_PM) e->func[x] = PM_pretag_output_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_OUT_IFACE;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -363,6 +365,7 @@ int PT_map_nexthop_handler(char *filename, struct id_entry *e, char *value, stru
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_nexthop_handler;
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_nexthop_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_NEXTHOP;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -430,6 +433,7 @@ int BPAS_map_bgp_nexthop_handler(char *filename, struct id_entry *e, char *value
     e->func[x] = BPAS_bgp_nexthop_handler;
     e->func_type[x] = PRETAG_BGP_NEXTHOP;
   }
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -450,6 +454,7 @@ int BPAS_map_bgp_peer_dst_as_handler(char *filename, struct id_entry *e, char *v
     e->func[x] = BPAS_bgp_peer_dst_as_handler;
     e->func_type[x] = PRETAG_BGP_NEXTHOP;
   }
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -470,6 +475,7 @@ int BITR_map_mpls_label_bottom_handler(char *filename, struct id_entry *e, char 
   /* Currently supported only in nfacctd */
   if (config.acct_type == ACCT_NF) e->func[x] = BITR_mpls_label_bottom_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_MPLS_LABEL_BOTTOM;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -496,6 +502,7 @@ int BITR_map_mpls_vpn_id_handler(char *filename, struct id_entry *e, char *value
 
   if (config.acct_type == ACCT_NF) e->func[x] = BITR_mpls_vpn_id_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_MPLS_VPN_ID;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -530,6 +537,7 @@ int PT_map_engine_type_handler(char *filename, struct id_entry *e, char *value, 
   }
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_engine_type_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_ENGINE_TYPE;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -562,6 +570,7 @@ int PT_map_engine_id_handler(char *filename, struct id_entry *e, char *value, st
   if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_engine_id_handler;
   else if (config.acct_type == ACCT_NF) e->func[x] = pretag_engine_id_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_ENGINE_ID;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -604,7 +613,7 @@ int PT_map_filter_handler(char *filename, struct id_entry *e, char *value, struc
   }
 
   e->func[x] = pretag_filter_handler;
-  if (e->func[x]) e->func_type[x] = PRETAG_FILTER;
+  e->func_type[x] = PRETAG_FILTER;
   req->bpf_filter = TRUE;
   return FALSE;
 }
@@ -623,6 +632,7 @@ int PT_map_agent_id_handler(char *filename, struct id_entry *e, char *value, str
   }
   if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_agent_id_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_SF_AGENTID;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -641,6 +651,7 @@ int PT_map_flowset_id_handler(char *filename, struct id_entry *e, char *value, s
   }
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_flowset_id_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_FLOWSET_ID;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -723,6 +734,7 @@ int PT_map_sample_type_handler(char *filename, struct id_entry *e, char *value, 
   if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_sample_type_handler;
   else if (config.acct_type == ACCT_NF) e->func[x] = pretag_sample_type_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_SAMPLE_TYPE;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -748,6 +760,7 @@ int PT_map_is_bi_flow_handler(char *filename, struct id_entry *e, char *value, s
   }
 
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_is_bi_flow_handler;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -773,6 +786,7 @@ int PT_map_is_nsel_handler(char *filename, struct id_entry *e, char *value, stru
   }
 
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_is_nsel_handler;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -798,6 +812,7 @@ int PT_map_is_nel_handler(char *filename, struct id_entry *e, char *value, struc
   }
 
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_is_nel_handler;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -821,6 +836,7 @@ int PT_map_direction_handler(char *filename, struct id_entry *e, char *value, st
   else if (config.acct_type == ACCT_NF) e->func[x] = pretag_direction_handler;
   else if (config.acct_type == ACCT_PM) e->func[x] = PM_pretag_direction_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_DIRECTION;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -1204,6 +1220,7 @@ int PT_map_mpls_vpn_id_in_handler(char *filename, struct id_entry *e, char *valu
 
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_mpls_vpn_id_in_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_MPLS_VPN_ID_IN;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -1230,6 +1247,7 @@ int PT_map_mpls_vpn_id_out_handler(char *filename, struct id_entry *e, char *val
   
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_mpls_vpn_id_out_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_MPLS_VPN_ID_OUT;
+  else return E_NOTFOUND;
   
   return FALSE;
 }
@@ -1276,6 +1294,7 @@ int PT_map_mpls_pw_id_handler(char *filename, struct id_entry *e, char *value, s
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_mpls_pw_id_handler;
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_mpls_pw_id_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_MPLS_PW_ID;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -1303,6 +1322,7 @@ int PT_map_src_mac_handler(char *filename, struct id_entry *e, char *value, stru
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_src_mac_handler;
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_src_mac_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_SRC_MAC;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -1330,6 +1350,7 @@ int PT_map_dst_mac_handler(char *filename, struct id_entry *e, char *value, stru
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_dst_mac_handler;
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_dst_mac_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_DST_MAC;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -1359,6 +1380,7 @@ int PT_map_vlan_id_handler(char *filename, struct id_entry *e, char *value, stru
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_vlan_id_handler;
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_vlan_id_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_VLAN_ID;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -1387,6 +1409,7 @@ int PT_map_cvlan_id_handler(char *filename, struct id_entry *e, char *value, str
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_cvlan_id_handler;
 
   if (e->func[x]) e->func_type[x] = PRETAG_CVLAN_ID;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -1414,6 +1437,7 @@ int PT_map_src_net_handler(char *filename, struct id_entry *e, char *value, stru
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_src_net_handler;
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_src_net_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_SRC_NET;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -1441,6 +1465,7 @@ int PT_map_dst_net_handler(char *filename, struct id_entry *e, char *value, stru
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_dst_net_handler;
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_dst_net_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_DST_NET;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -1465,6 +1490,7 @@ int PT_map_ip_proto_handler(char *filename, struct id_entry *e, char *value, str
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_ip_proto_handler;
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_ip_proto_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_IP_PROTO;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -1489,6 +1515,7 @@ int PT_map_src_port_handler(char *filename, struct id_entry *e, char *value, str
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_src_port_handler;
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_src_port_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_SRC_PORT;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -1513,6 +1540,7 @@ int PT_map_dst_port_handler(char *filename, struct id_entry *e, char *value, str
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_dst_port_handler;
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_dst_port_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_DST_PORT;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -1537,6 +1565,7 @@ int PT_map_tcp_flags_handler(char *filename, struct id_entry *e, char *value, st
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_tcp_flags_handler;
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_tcp_flags_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_TCP_FLAGS;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -1564,6 +1593,7 @@ int PT_map_is_multicast_handler(char *filename, struct id_entry *e, char *value,
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_is_multicast_handler;
   else if (config.acct_type == ACCT_SF) e->func[x] = SF_pretag_is_multicast_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_IS_MULTICAST;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -1596,6 +1626,7 @@ int PT_map_set_tos_handler(char *filename, struct id_entry *e, char *value, stru
   if (config.acct_type == ACCT_NF) e->set_func[x] = pretag_set_tos_handler;
 
   if (e->set_func[x]) e->set_func_type[x] = PRETAG_SET_TOS;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -1628,6 +1659,7 @@ int BTA_map_lookup_bgp_port_handler(char *filename, struct id_entry *e, char *va
   if (acct_type == MAP_BGP_TO_XFLOW_AGENT) e->set_func[x] = BTA_lookup_bgp_port_handler;
 
   if (e->set_func[x]) e->set_func_type[x] = PRETAG_LOOKUP_BGP_PORT;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
@@ -1726,6 +1758,7 @@ int PT_map_fwd_status_handler(char *filename, struct id_entry *e, char *value, s
 
   if (config.acct_type == ACCT_NF) e->func[x] = pretag_fwd_status_handler;
   if (e->func[x]) e->func_type[x] = PRETAG_FWDSTATUS_ID;
+  else return E_NOTFOUND;
 
   return FALSE;
 }
