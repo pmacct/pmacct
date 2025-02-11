@@ -2043,11 +2043,15 @@ void NF_ingress_vrf_name_handler(struct channels_list_entry *chptr, struct packe
 {
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
 
-  if (check_pipe_buffer_space(chptr, pvlen, MAX_VRF_NAME)) {
+  if (strlen(pptrs->ingress_vrf_name) == 0) {
+    return;
+  }
+
+  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz+strlen(pptrs->ingress_vrf_name)+1)) {
     vlen_prims_init(pvlen, 0);
     return;
   }
-  else vlen_prims_insert(pvlen, COUNT_INT_INGRESS_VRF_NAME, MAX_VRF_NAME, (u_char *) pptrs->ingress_vrf_name, PM_MSG_STR_COPY);
+  else vlen_prims_insert(pvlen, COUNT_INT_INGRESS_VRF_NAME, strlen(pptrs->ingress_vrf_name)+1, (u_char *) pptrs->ingress_vrf_name, PM_MSG_STR_COPY);
 
 }
 
@@ -2055,22 +2059,31 @@ void NF_egress_vrf_name_handler(struct channels_list_entry *chptr, struct packet
 {
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
 
-  if (check_pipe_buffer_space(chptr, pvlen, MAX_VRF_NAME)) {
+  if (strlen(pptrs->egress_vrf_name) == 0) {
+    return;
+  }
+	
+  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz+strlen(pptrs->egress_vrf_name)+1)) {
     vlen_prims_init(pvlen, 0);
     return;
   }
-  else vlen_prims_insert(pvlen, COUNT_INT_EGRESS_VRF_NAME, MAX_VRF_NAME, (u_char *) pptrs->egress_vrf_name, PM_MSG_STR_COPY);
+  else vlen_prims_insert(pvlen, COUNT_INT_EGRESS_VRF_NAME, strlen(pptrs->egress_vrf_name)+1, (u_char *) pptrs->egress_vrf_name, PM_MSG_STR_COPY);
 }
 
 void NF_vrf_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
 
-  if (check_pipe_buffer_space(chptr, pvlen, MAX_VRF_NAME)) {
+  if (strlen(pptrs->vrf_name) == 0) {
+    return;
+  }
+	
+  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz+strlen(pptrs->vrf_name)+1)) {
     vlen_prims_init(pvlen, 0);
     return;
   }
-  else vlen_prims_insert(pvlen, COUNT_INT_VRF_NAME, MAX_VRF_NAME, (u_char *) pptrs->vrf_name, PM_MSG_STR_COPY);
+  else vlen_prims_insert(pvlen, COUNT_INT_VRF_NAME, strlen(pptrs->vrf_name)+1, (u_char *) pptrs->vrf_name, PM_MSG_STR_COPY);
+  
 }
 
 
