@@ -109,7 +109,11 @@ jobs:
 
   ### Step 3.1: test that local single-platform builds work fine
   docker-build-test-local:
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [ ubuntu-24.04, ubuntu-24.04-arm ]
     steps:
       - name: Checkout pmacct
         uses: actions/checkout@v1 #Don't use v2 messes everything

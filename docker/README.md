@@ -8,7 +8,8 @@ the build process, particularly for [multi-platform images](https://docs.docker.
 A number of environment variables control the build process (`make`):
 
 * `PLATFORMS`: comma separated list of platforms to pass to `docker buildx
-                --platforms`. Default: `linux/amd64`.
+                --platform`. This option is only valid in x86_64 architectures.
+               Default: ``
 * `BUILD_REGISTRY`: intermediate registry to build multi-platform images.
                     Default: `""` (none).
 * `PUSH`: push to docker registry `$PUSH`. The registry should NOT have
