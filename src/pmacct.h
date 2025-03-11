@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -368,9 +368,9 @@ struct child_ctl2 {
 #include "util.h"
 
 /* prototypes */
-void startup_handle_falling_child();
-void handle_falling_child();
-void ignore_falling_child();
+void startup_handle_falling_child(int);
+void handle_falling_child(int);
+void ignore_falling_child(int);
 void PM_sigint_handler(int);
 void PM_sigalrm_noop_handler(int);
 void reload(int);

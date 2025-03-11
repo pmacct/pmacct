@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -29,7 +29,7 @@
 extern struct plugins_list_entry *plugin_list;
 
 /* functions */
-void startup_handle_falling_child()
+void startup_handle_falling_child(int unused)
 {
   int i, j;
 
@@ -42,7 +42,7 @@ void startup_handle_falling_child()
   }
 }
 
-void handle_falling_child()
+void handle_falling_child(int unused)
 {
   struct plugins_list_entry *list = NULL;
   int j, ret;
@@ -100,7 +100,7 @@ void handle_falling_child()
   }
 }
 
-void ignore_falling_child()
+void ignore_falling_child(int unused)
 {
   pid_t cpid;
   int status;
