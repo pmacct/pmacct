@@ -74,7 +74,7 @@ __builder_setup:
 		else \
 			echo "Using default buildx builder..."; \
 		fi; \
-		docker run --privileged multiarch/qemu-user-static --reset -p yes
+		docker run --privileged --rm tonistiigi/binfmt:master --install all
 else
 __builder_setup:
 endif

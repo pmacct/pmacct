@@ -143,6 +143,15 @@ jobs:
     env:
       PLATFORMS: linux/amd64,linux/arm64
     steps:
+      - name: Cleanup disk to maximize runner disk space
+        uses: AdityaGarg8/remove-unwanted-software@v3 #easimon/maximize-build-space@v10
+        with:
+          remove-android: true
+          remove-dotnet: True
+          remove-haskell: true
+          remove-codeql: true
+          remove-docker-images: true
+
       - name: Checkout pmacct
         uses: actions/checkout@v1 #Don't use v2 messes everything
         with:
