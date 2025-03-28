@@ -33,6 +33,7 @@ RUN apt-get update && \
     libpcap-dev \
     libpq-dev \
     libsnappy-dev \
+    libzstd-dev \
     libsqlite3-dev \
     libssl-dev \
     libgnutls28-dev \
@@ -83,6 +84,7 @@ RUN apt-get update && \
     libjson-c5 \
     libnetfilter-log1 \
     libsnappy1v5 \
+    libzstd-dev \
     libsqlite3-0 \
     libssl3 && \
   apt-get -y clean && \
