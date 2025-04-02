@@ -25,6 +25,7 @@ RUN apt-get update && \
     libpcap-dev \
     libpq-dev \
     libsnappy-dev \
+    libzstd-dev \
     libsqlite3-dev \
     libssl-dev \
     libgnutls28-dev \
