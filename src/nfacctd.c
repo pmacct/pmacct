@@ -3974,7 +3974,7 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
         Log(LOG_DEBUG, "DEBUG ( %s/core ): Found VRF Name in hashmap for egress_vrf_id %d to name %s\n", config.name, egress_vrfid, egress_vrf_name);
         memcpy (pptrs->egress_vrf_name, egress_vrf_name, MAX_VRF_NAME_STR_LEN);
         pptrs->egress_vrf_name[MAX_VRF_NAME] = '\0';
-        if (ingress_vrfid && strcmp(pptrs->ingress_vrf_name, "default") == 0) {
+        if ((ingress_vrfid == 0) || (strcmp(pptrs->ingress_vrf_name, "default") == 0)) {
           memcpy (pptrs->vrf_name, egress_vrf_name, MAX_VRF_NAME_STR_LEN);
           pptrs->vrf_name[MAX_VRF_NAME] = '\0';
         }
