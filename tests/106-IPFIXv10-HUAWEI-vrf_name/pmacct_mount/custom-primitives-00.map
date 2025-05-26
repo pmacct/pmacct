@@ -1,0 +1,5 @@
+name=vrf_id_ingress field_type=234 len=4 semantics=u_int
+name=vrf_id_egress field_type=235 len=4 semantics=u_int
+name=mpls_tl_ipv4_address field_type=47 len=4 semantics=ip
+name=mpls_tl_prefix_length field_type=91 len=1 semantics=u_int
+name=mpls_tl_type field_type=46 len=1 semantics=u_int
