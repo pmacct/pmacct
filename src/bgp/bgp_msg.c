@@ -799,7 +799,7 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
       struct bgp_info ri;
 
       bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
-      Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_parse_update_msg() Received unsupported NLRI afi=%u safi=%u\n",
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_parse_update_msg() Received EoR afi=%u safi=%u\n",
 	  config.name, bms->log_str, bgp_peer_str, afi, safi);
 
       memset(&ri, 0, sizeof(ri));
@@ -807,7 +807,9 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
       ri.bmed = bmd->extra;
       bgp_peer_log_msg(NULL, &ri, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_EOR);
 
-      peer->eor[afi][safi] = TRUE;
+      if (afi < AFI_MAX && safi < SAFI_MAX) {
+	peer->eor[afi][safi] = TRUE;
+      }
     }
   }
 
