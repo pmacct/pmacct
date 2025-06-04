@@ -1166,10 +1166,13 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
 
   for (idx = 0; pnt < lim; pnt += psize, idx++) {
     /* handle path identifier */
-    if (peer->cap_add_paths.cap[info->afi][info->safi]) {
-      memcpy(&attr_extra->path_id, pnt, 4);
-      attr_extra->path_id = ntohl(attr_extra->path_id);
-      pnt += 4;
+    if ((info->afi == AFI_IP || info->afi == AFI_IP6) &&
+        (info->safi == SAFI_UNICAST || info->safi == SAFI_MULTICAST)) {
+      if (peer->cap_add_paths.cap[info->afi][info->safi]) {
+        memcpy(&attr_extra->path_id, pnt, 4);
+        attr_extra->path_id = ntohl(attr_extra->path_id);
+        pnt += 4;
+      }
     }
 
     memset(&p, 0, sizeof(struct prefix));
