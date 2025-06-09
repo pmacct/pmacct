@@ -1283,6 +1283,11 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
       memcpy(&p.u.prefix, (pnt + labels_size + 8 /* RD */), (psize - (labels_size + 8 /* RD */)));
       p.prefixlen -= (8 * (labels_size + 8 /* RD */));
     }
+    else if (info->safi == SAFI_LS_GLOBAL) { /* rfc7752 BGP-LS */
+      // XXX
+
+      goto nlri_count;
+    }
     else {
       bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
       Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_nlri_parse() Received unsupported NLRI afi=%u safi=%u\n",
@@ -1322,6 +1327,8 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
       }
     }
 #endif
+
+nlri_count:
 
     if (bmd->nlri_count >= 0) {
       bmd->nlri_count++;
