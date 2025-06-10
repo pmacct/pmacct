@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /* 
@@ -65,6 +65,12 @@ struct bgp_msg_extra_data {
   void *data;
 };
 
+struct bgp_attr_ls
+{
+  char *ptr; /* pointer to BGP-LS Attribute Sub-TLVs */
+  u_int16_t len; /* length of BGP-LS Attribute Sub-TLVs */
+};
+
 struct bgp_attr_extra
 {
   u_int8_t bitmap;
@@ -74,6 +80,7 @@ struct bgp_attr_extra
   u_int64_t aigp;
   u_int32_t psid_li;
   u_int32_t otc;
+  struct bgp_attr_ls ls;
 };
 
 struct bgp_info

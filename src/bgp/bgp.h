@@ -461,6 +461,14 @@ struct bgp_ls_nlri {
   } nlri;
 };
 
+typedef int (*bgp_ls_nlri_tlv_hdlr)(char *, int, struct bgp_ls_nlri *);
+
+struct bgp_ls_nlri_tlv_list_entry {
+  u_int16_t type;
+  bgp_ls_nlri_tlv_hdlr hdlr;
+};
+/* BGP-LS: END */
+
 /* Looking Glass */
 struct bgp_lg_req {
   u_int32_t type;
@@ -529,4 +537,7 @@ extern bgp_tag_t bgp_logdump_tag;
 extern struct sockaddr_storage bgp_logdump_tag_peer;
 
 extern struct bgp_xconnects bgp_xcs_map;
+
+/* BGP-LS global variables */
+extern cdada_map_t *bgp_ls_nlri_tlv_map;
 #endif 

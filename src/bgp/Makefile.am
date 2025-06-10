@@ -9,6 +9,6 @@ libpmbgp_la_SOURCES = bgp.c bgp_aspath.c bgp_community.c		\
 	bgp_lookup.h bgp_msg.h bgp_packet.h bgp_prefix.h		\
 	bgp_table.h bgp_util.h bgp_lcommunity.h bgp_xcs.h		\
 	bgp_xcs-data.h bgp_blackhole.c bgp_blackhole.h			\
-	bgp_lg.c bgp_lg.h
+	bgp_lg.c bgp_lg.h bgp_ls-data.h
 
 libpmbgp_la_CFLAGS = -I$(srcdir)/.. $(AM_CFLAGS)

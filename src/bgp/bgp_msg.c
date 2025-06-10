@@ -764,14 +764,14 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   if (mp_update.length
 	  && mp_update.afi == AFI_BGP_LS
 	  && (mp_update.safi == SAFI_LS_GLOBAL || mp_update.safi == SAFI_LS_VPN)) {
-    ret = bgp_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_UPDATE);
+    ret = bgp_ls_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_UPDATE);
     parsed = TRUE;
   }
 
   if (mp_withdraw.length
 	  && mp_withdraw.afi == AFI_BGP_LS
 	  && (mp_withdraw.safi == SAFI_LS_GLOBAL || mp_withdraw.safi == SAFI_LS_VPN)) {
-    ret = bgp_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_WITHDRAW);
+    ret = bgp_ls_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_WITHDRAW);
     parsed = TRUE;
   }
 
@@ -907,6 +907,8 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
     case BGP_ATTR_OTC:
       ret = bgp_attr_parse_otc(peer, attr_len, attr_extra, ptr, flag);
       break;
+    case BGP_ATTR_BGP_LS:
+      ret = bgp_attr_parse_ls(peer, attr_len, attr_extra, ptr, flag);
     default:
       ret = 0;
       break;
@@ -1283,11 +1285,6 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
       memcpy(&p.u.prefix, (pnt + labels_size + 8 /* RD */), (psize - (labels_size + 8 /* RD */)));
       p.prefixlen -= (8 * (labels_size + 8 /* RD */));
     }
-    else if (info->safi == SAFI_LS_GLOBAL) { /* rfc7752 BGP-LS */
-      // XXX
-
-      goto nlri_count;
-    }
     else {
       bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
       Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_nlri_parse() Received unsupported NLRI afi=%u safi=%u\n",
@@ -1328,8 +1325,6 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
     }
 #endif
 
-nlri_count:
-
     if (bmd->nlri_count >= 0) {
       bmd->nlri_count++;
     }
@@ -1340,6 +1335,79 @@ nlri_count:
 exit_fail_lane:
   bmd->nlri_count = ERR;
   return ERR;
+}
+
+int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *attr_extra, struct bgp_nlri *info, int type)
+{
+  struct bgp_misc_structs *bms;
+  struct bgp_peer *peer = bmd->peer;
+  struct bgp_ls_nlri blsn;
+
+  char bgp_peer_str[INET6_ADDRSTRLEN];
+  u_char *pnt;
+  int rem_len, ret, idx;
+  u_int8_t nh_len;
+  u_int16_t nlri_type, nlri_len;
+
+  if (!peer) goto exit_fail_lane;
+
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) goto exit_fail_lane;
+
+  rem_len = info->length;
+  memset(&blsn, 0, sizeof(blsn));
+
+  /* Parse BGP next-hop */
+  nh_len = (*pnt); pnt++; rem_len--;
+
+  if (rem_len > nh_len) {
+    if (nh_len == 12 || nh_len == 24 || nh_len == 40) {
+      pnt += 8; /* skip zero RD */
+      nh_len -= 8; rem_len -= 8;
+    }
+
+    if (nh_len == 4) {
+      blsn.nexthop.family = AF_INET;
+      memcpy(&blsn.nexthop.address.ipv4, pnt, 4);
+    }
+    else if (nh_len == 16 || nh_len == 32) {
+      blsn.nexthop.family = AF_INET6;
+      memcpy(&blsn.nexthop.address.ipv6, pnt, 16);
+    }
+    else {
+      return ERR;
+    }
+
+    pnt += nh_len;
+    rem_len -= nh_len;
+  }
+
+  /* Skip SNPA */
+  pnt++; rem_len--;
+
+  /* parse NLRIs, make sure can read Type and Length */
+  for (idx = 0; rem_len > 4; rem_len -= nlri_len, idx++) {
+    blsn.type = nlri_type = ntohs((*pnt));
+    pnt += 2; rem_len -= 2;
+    nlri_len = ntohs((*pnt));
+    pnt += 2; rem_len -= 2;
+
+    // XXX
+  }
+
+  return SUCCESS;
+
+exit_fail_lane:
+  bmd->nlri_count = ERR;
+  return ERR;
+}
+
+int bgp_ls_nlri_tlv_dummy_handler(char *ptr, int len, struct bgp_ls_nlri *blsn)
+{
+  // XXX
+
+  return SUCCESS;
 }
 
 /* AIGP attribute. */
@@ -1417,6 +1485,17 @@ int bgp_attr_parse_otc(struct bgp_peer *peer, u_int16_t len, struct bgp_attr_ext
   memcpy(&tmp32, ptr, 4);
   attr_extra->otc = ntohl(tmp32);
   ptr += len;
+
+  return SUCCESS;
+}
+
+int bgp_attr_parse_ls(struct bgp_peer *peer, u_int16_t len, struct bgp_attr_extra *attr_extra, char *ptr, u_char flag)
+{
+  /* Length check. */
+  if (len < 4) return ERR;
+
+  attr_extra->ls.ptr = ptr;
+  attr_extra->ls.len = len;
 
   return SUCCESS;
 }
