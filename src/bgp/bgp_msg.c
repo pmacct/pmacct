@@ -1346,8 +1346,8 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extr
   char bgp_peer_str[INET6_ADDRSTRLEN];
   u_char *pnt;
   int rem_len, ret, idx;
+  u_int16_t nlri_type, nlri_len, tlv_type, tlv_len, rem_nlri_len;
   u_int8_t nh_len;
-  u_int16_t nlri_type, nlri_len;
 
   if (!peer) goto exit_fail_lane;
 
@@ -1355,6 +1355,7 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extr
 
   if (!bms) goto exit_fail_lane;
 
+  pnt = info->nlri;
   rem_len = info->length;
   memset(&blsn, 0, sizeof(blsn));
 
@@ -1382,18 +1383,41 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extr
     pnt += nh_len;
     rem_len -= nh_len;
   }
+  else {
+    goto exit_fail_lane;
+  }
 
   /* Skip SNPA */
-  pnt++; rem_len--;
+  if (rem_len) {
+    pnt++; rem_len--;
+  }
+  else {
+    goto exit_fail_lane;
+  }
 
   /* parse NLRIs, make sure can read Type and Length */
   for (idx = 0; rem_len > 4; rem_len -= nlri_len, idx++) {
     blsn.type = nlri_type = ntohs((*pnt));
     pnt += 2; rem_len -= 2;
-    nlri_len = ntohs((*pnt));
+    rem_nlri_len = nlri_len = ntohs((*pnt));
     pnt += 2; rem_len -= 2;
 
-    // XXX
+    for (; nlri_len >= 4; rem_nlri_len -= tlv_len) {
+      bgp_ls_nlri_tlv_hdlr *tlv_hdlr = NULL;
+
+      tlv_type = ntohs((*pnt));
+      pnt += 2; nlri_len -= 2;
+      tlv_len = ntohs((*pnt));
+      pnt += 2; nlri_len -= 2;
+
+      ret = cdada_map_find(bgp_ls_nlri_tlv_map, &tlv_type, (void **) tlv_hdlr);
+      if (ret == CDADA_SUCCESS && tlv_hdlr) {
+	ret = (*tlv_hdlr)(pnt, tlv_len, &blsn);
+      }
+      else {
+        Log(LOG_DEBUG, "DEBUG ( %s/%s ): BGP-LS unknown TLV %u\n", config.name, config.type, tlv_type);
+      }
+    }
   }
 
   return SUCCESS;
