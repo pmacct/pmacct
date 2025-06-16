@@ -20,12 +20,18 @@
 */
 
 const struct bgp_ls_nlri_tlv_list_entry bgp_ls_nlri_tlv_list[] = {
-  {BGP_LS_LOCAL_ND, bgp_ls_nlri_tlv_dummy_handler},
-  {BGP_LS_REMOTE_ND, bgp_ls_nlri_tlv_dummy_handler},
+  {BGP_LS_LOCAL_ND, bgp_ls_nlri_tlv_local_nd_handler},
+  {BGP_LS_REMOTE_ND, bgp_ls_nlri_tlv_remote_nd_handler},
   {BGP_LS_V4_ADDR_IF, bgp_ls_nlri_tlv_dummy_handler},
   {BGP_LS_V4_ADDR_NEIGHBOR, bgp_ls_nlri_tlv_dummy_handler},
   {BGP_LS_V6_ADDR_IF, bgp_ls_nlri_tlv_dummy_handler},
   {BGP_LS_V6_ADDR_NEIGHBOR, bgp_ls_nlri_tlv_dummy_handler},
   {BGP_LS_IP_REACH, bgp_ls_nlri_tlv_dummy_handler},
+  {0, NULL}
+};
+
+const struct bgp_ls_nd_tlv_list_entry bgp_ls_nd_tlv_list[] = {
+  {BGP_LS_ND_AS, bgp_ls_nd_tlv_as_handler},
+  {BGP_LS_ND_ID, bgp_ls_nd_tlv_id_handler},
   {0, NULL}
 };

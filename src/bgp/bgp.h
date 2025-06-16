@@ -401,6 +401,10 @@ struct bgp_comm_range {
    - Multi-Topology
    - Link Local/Remote IDs / GMPLS
 */
+struct bgp_ls_parse_ctx {
+  int nd_is_remote;
+};
+
 struct bgp_ls_node_desc {
   as_t asn;
   u_int32_t bgp_ls_id;
@@ -444,8 +448,6 @@ struct bgp_ls_topo_pfx_nlri {
 };
 
 struct bgp_ls_nlri {
-  rd_t rd;
-  struct host_addr nexthop;
   u_int8_t proto; /* see BGP_LS_PROTO definitions */
   u_int8_t type; /* see BGP_LS_NLRI definitions */
   union {
@@ -461,11 +463,17 @@ struct bgp_ls_nlri {
   } nlri;
 };
 
-typedef int (*bgp_ls_nlri_tlv_hdlr)(char *, int, struct bgp_ls_nlri *);
+typedef int (*bgp_ls_nlri_tlv_hdlr)(char *, int, struct bgp_ls_nlri *, struct bgp_ls_parse_ctx *);
+typedef int (*bgp_ls_nd_tlv_hdlr)(char *, int, struct bgp_ls_node_desc *);
 
 struct bgp_ls_nlri_tlv_list_entry {
   u_int16_t type;
   bgp_ls_nlri_tlv_hdlr hdlr;
+};
+
+struct bgp_ls_nd_tlv_list_entry {
+  u_int16_t type;
+  bgp_ls_nd_tlv_hdlr hdlr;
 };
 /* BGP-LS: END */
 
@@ -539,5 +547,5 @@ extern struct sockaddr_storage bgp_logdump_tag_peer;
 extern struct bgp_xconnects bgp_xcs_map;
 
 /* BGP-LS global variables */
-extern cdada_map_t *bgp_ls_nlri_tlv_map;
+extern cdada_map_t *bgp_ls_nlri_tlv_map, *bgp_ls_nd_tlv_map;
 #endif 

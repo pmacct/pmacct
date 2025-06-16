@@ -1342,12 +1342,12 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extr
   struct bgp_misc_structs *bms;
   struct bgp_peer *peer = bmd->peer;
   struct bgp_ls_nlri blsn;
+  struct bgp_ls_parse_ctx ctx;
 
   char bgp_peer_str[INET6_ADDRSTRLEN];
   u_char *pnt;
-  int rem_len, ret, idx;
-  u_int16_t nlri_type, nlri_len, tlv_type, tlv_len, rem_nlri_len;
-  u_int8_t nh_len;
+  int rem_len, rem_nlri_len, rem_tlv_len, ret, idx;
+  u_int16_t tmp16, nlri_type, nlri_len, tlv_type, tlv_len;
 
   if (!peer) goto exit_fail_lane;
 
@@ -1359,60 +1359,37 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extr
   rem_len = info->length;
   memset(&blsn, 0, sizeof(blsn));
 
-  /* Parse BGP next-hop */
-  nh_len = (*pnt); pnt++; rem_len--;
-
-  if (rem_len > nh_len) {
-    if (nh_len == 12 || nh_len == 24 || nh_len == 40) {
-      pnt += 8; /* skip zero RD */
-      nh_len -= 8; rem_len -= 8;
-    }
-
-    if (nh_len == 4) {
-      blsn.nexthop.family = AF_INET;
-      memcpy(&blsn.nexthop.address.ipv4, pnt, 4);
-    }
-    else if (nh_len == 16 || nh_len == 32) {
-      blsn.nexthop.family = AF_INET6;
-      memcpy(&blsn.nexthop.address.ipv6, pnt, 16);
-    }
-    else {
-      return ERR;
-    }
-
-    pnt += nh_len;
-    rem_len -= nh_len;
-  }
-  else {
-    goto exit_fail_lane;
-  }
-
-  /* Skip SNPA */
-  if (rem_len) {
-    pnt++; rem_len--;
-  }
-  else {
-    goto exit_fail_lane;
-  }
-
   /* parse NLRIs, make sure can read Type and Length */
   for (idx = 0; rem_len > 4; rem_len -= nlri_len, idx++) {
-    blsn.type = nlri_type = ntohs((*pnt));
-    pnt += 2; rem_len -= 2;
-    rem_nlri_len = nlri_len = ntohs((*pnt));
+    memcpy(&tmp16, pnt, 2);
+    nlri_type = blsn.type = ntohs(tmp16);
     pnt += 2; rem_len -= 2;
 
-    for (; nlri_len >= 4; rem_nlri_len -= tlv_len) {
+    memcpy(&tmp16, pnt, 2);
+    nlri_len = rem_nlri_len = ntohs(tmp16);
+    pnt += 2; rem_len -= 2;
+
+    if (nlri_len >= 9) {
+      blsn.proto = (*pnt); pnt++; rem_nlri_len--;
+
+      /* skip identifier */
+      pnt += 8; rem_nlri_len -= 8;
+    }
+
+    for (; rem_nlri_len >= 4; rem_nlri_len -= tlv_len) {
       bgp_ls_nlri_tlv_hdlr *tlv_hdlr = NULL;
 
-      tlv_type = ntohs((*pnt));
-      pnt += 2; nlri_len -= 2;
-      tlv_len = ntohs((*pnt));
-      pnt += 2; nlri_len -= 2;
+      memcpy(&tmp16, pnt, 2);
+      tlv_type = ntohs(tmp16);
+      pnt += 2; rem_nlri_len -= 2;
+
+      memcpy(&tmp16, pnt, 2);
+      tlv_len = ntohs(tmp16);
+      pnt += 2; rem_nlri_len -= 2;
 
       ret = cdada_map_find(bgp_ls_nlri_tlv_map, &tlv_type, (void **) tlv_hdlr);
       if (ret == CDADA_SUCCESS && tlv_hdlr) {
-	ret = (*tlv_hdlr)(pnt, tlv_len, &blsn);
+	ret = (*tlv_hdlr)(pnt, tlv_len, &blsn, &ctx);
       }
       else {
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): BGP-LS unknown TLV %u\n", config.name, config.type, tlv_type);
@@ -1427,9 +1404,103 @@ exit_fail_lane:
   return ERR;
 }
 
-int bgp_ls_nlri_tlv_dummy_handler(char *ptr, int len, struct bgp_ls_nlri *blsn)
+int bgp_ls_nlri_tlv_dummy_handler(char *pnt, int len, struct bgp_ls_nlri *blsn, struct bgp_ls_parse_ctx *ctx)
 {
   // XXX
+
+  return SUCCESS;
+}
+
+int bgp_ls_nlri_tlv_local_nd_handler(char *pnt, int len, struct bgp_ls_nlri *blsn, struct bgp_ls_parse_ctx *ctx)
+{
+  u_int16_t tlv_type, tlv_len;
+  struct bgp_ls_node_desc *blnd = NULL;
+
+  if (!pnt || !len || !blsn) {
+    return ERR;
+  }
+
+  switch (blsn->type) {
+  case BGP_LS_NLRI_NODE:
+    blnd = &blsn->nlri.node.n.ndesc;
+    break;
+  case BGP_LS_NLRI_LINK:
+    blnd = &blsn->nlri.link.l.loc_ndesc;
+    break;
+  case BGP_LS_NLRI_V4_TOPO_PFX:
+  case BGP_LS_NLRI_V6_TOPO_PFX:
+    blnd = &blsn->nlri.topo_pfx.p.ndesc;
+  default:
+    return ERR;
+  };
+
+  for (; len >= 4; len -= tlv_len) {
+    int ret, rem_len = len;
+    bgp_ls_nd_tlv_hdlr *tlv_hdlr = NULL;
+
+    tlv_type = ntohs((*pnt));
+    pnt += 2; rem_len -= 2;
+    tlv_len = ntohs((*pnt));
+    pnt += 2; rem_len -= 2;
+
+    ret = cdada_map_find(bgp_ls_nd_tlv_map, &tlv_type, (void **) tlv_hdlr);
+    if (ret == CDADA_SUCCESS && tlv_hdlr) {
+      ret = (*tlv_hdlr)(pnt, tlv_len, blnd);
+    }
+    else {
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): BGP-LS unknown ND Sub-TLV %u\n", config.name, config.type, tlv_type);
+    }
+  }
+
+  return SUCCESS;
+}
+
+int bgp_ls_nlri_tlv_remote_nd_handler(char *pnt, int len, struct bgp_ls_nlri *blsn, struct bgp_ls_parse_ctx *ctx)
+{
+  u_int16_t tlv_type, tlv_len;
+  struct bgp_ls_node_desc *blnd = NULL;
+
+  if (!pnt || !len || !blsn) {
+    return ERR;
+  }
+
+  blnd = &blsn->nlri.link.l.rem_ndesc;
+
+  for (; len >= 4; len -= tlv_len) {
+    int ret, rem_len = len;
+    bgp_ls_nd_tlv_hdlr *tlv_hdlr = NULL;
+
+    tlv_type = ntohs((*pnt));
+    pnt += 2; rem_len -= 2;
+    tlv_len = ntohs((*pnt));
+    pnt += 2; rem_len -= 2;
+
+    ret = cdada_map_find(bgp_ls_nd_tlv_map, &tlv_type, (void **) tlv_hdlr);
+    if (ret == CDADA_SUCCESS && tlv_hdlr) {
+      ret = (*tlv_hdlr)(pnt, tlv_len, blnd);
+    }
+    else {
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): BGP-LS unknown Remote ND Sub-TLV %u\n", config.name, config.type, tlv_type);
+    }
+  }
+
+  return SUCCESS;
+}
+
+int bgp_ls_nd_tlv_as_handler(char *pnt, int len, struct bgp_ls_node_desc *blnd)
+{
+  if (len == 4) {
+    blnd->asn = ntohl(*pnt);
+  }
+
+  return SUCCESS;
+}
+
+int bgp_ls_nd_tlv_id_handler(char *pnt, int len, struct bgp_ls_node_desc *blnd)
+{
+  if (len == 6) {
+    memcpy(blnd->igp_id.isis.rtr_id, pnt, 6);
+  }
 
   return SUCCESS;
 }
