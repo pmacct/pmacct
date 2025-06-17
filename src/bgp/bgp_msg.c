@@ -1342,11 +1342,10 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extr
   struct bgp_misc_structs *bms;
   struct bgp_peer *peer = bmd->peer;
   struct bgp_ls_nlri blsn;
-  struct bgp_ls_parse_ctx ctx;
 
   char bgp_peer_str[INET6_ADDRSTRLEN];
   u_char *pnt;
-  int rem_len, rem_nlri_len, rem_tlv_len, ret, idx;
+  int rem_len, rem_nlri_len, ret, idx;
   u_int16_t tmp16, nlri_type, nlri_len, tlv_type, tlv_len;
 
   if (!peer) goto exit_fail_lane;
@@ -1376,7 +1375,7 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extr
       pnt += 8; rem_nlri_len -= 8;
     }
 
-    for (; rem_nlri_len >= 4; rem_nlri_len -= tlv_len) {
+    for (; rem_nlri_len >= 4; rem_nlri_len -= tlv_len, pnt += tlv_len) {
       bgp_ls_nlri_tlv_hdlr *tlv_hdlr = NULL;
 
       memcpy(&tmp16, pnt, 2);
@@ -1387,9 +1386,9 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extr
       tlv_len = ntohs(tmp16);
       pnt += 2; rem_nlri_len -= 2;
 
-      ret = cdada_map_find(bgp_ls_nlri_tlv_map, &tlv_type, (void **) tlv_hdlr);
+      ret = cdada_map_find(bgp_ls_nlri_tlv_map, &tlv_type, (void **) &tlv_hdlr);
       if (ret == CDADA_SUCCESS && tlv_hdlr) {
-	ret = (*tlv_hdlr)(pnt, tlv_len, &blsn, &ctx);
+	ret = (*tlv_hdlr)(pnt, tlv_len, &blsn);
       }
       else {
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): BGP-LS unknown TLV %u\n", config.name, config.type, tlv_type);
@@ -1404,16 +1403,16 @@ exit_fail_lane:
   return ERR;
 }
 
-int bgp_ls_nlri_tlv_dummy_handler(char *pnt, int len, struct bgp_ls_nlri *blsn, struct bgp_ls_parse_ctx *ctx)
+int bgp_ls_nlri_tlv_dummy_handler(char *pnt, int len, struct bgp_ls_nlri *blsn)
 {
   // XXX
 
   return SUCCESS;
 }
 
-int bgp_ls_nlri_tlv_local_nd_handler(char *pnt, int len, struct bgp_ls_nlri *blsn, struct bgp_ls_parse_ctx *ctx)
+int bgp_ls_nlri_tlv_local_nd_handler(char *pnt, int len, struct bgp_ls_nlri *blsn)
 {
-  u_int16_t tlv_type, tlv_len;
+  u_int16_t tlv_type, tlv_len, tmp16;
   struct bgp_ls_node_desc *blnd = NULL;
 
   if (!pnt || !len || !blsn) {
@@ -1434,16 +1433,19 @@ int bgp_ls_nlri_tlv_local_nd_handler(char *pnt, int len, struct bgp_ls_nlri *bls
     return ERR;
   };
 
-  for (; len >= 4; len -= tlv_len) {
-    int ret, rem_len = len;
+  for (; len >= 4; len -= tlv_len, pnt += tlv_len) {
     bgp_ls_nd_tlv_hdlr *tlv_hdlr = NULL;
+    int ret;
 
-    tlv_type = ntohs((*pnt));
-    pnt += 2; rem_len -= 2;
-    tlv_len = ntohs((*pnt));
-    pnt += 2; rem_len -= 2;
+    memcpy(&tmp16, pnt, 2);
+    tlv_type = ntohs(tmp16);
+    pnt += 2; len -= 2;
 
-    ret = cdada_map_find(bgp_ls_nd_tlv_map, &tlv_type, (void **) tlv_hdlr);
+    memcpy(&tmp16, pnt, 2);
+    tlv_len = ntohs(tmp16);
+    pnt += 2; len -= 2;
+
+    ret = cdada_map_find(bgp_ls_nd_tlv_map, &tlv_type, (void **) &tlv_hdlr);
     if (ret == CDADA_SUCCESS && tlv_hdlr) {
       ret = (*tlv_hdlr)(pnt, tlv_len, blnd);
     }
@@ -1455,9 +1457,9 @@ int bgp_ls_nlri_tlv_local_nd_handler(char *pnt, int len, struct bgp_ls_nlri *bls
   return SUCCESS;
 }
 
-int bgp_ls_nlri_tlv_remote_nd_handler(char *pnt, int len, struct bgp_ls_nlri *blsn, struct bgp_ls_parse_ctx *ctx)
+int bgp_ls_nlri_tlv_remote_nd_handler(char *pnt, int len, struct bgp_ls_nlri *blsn)
 {
-  u_int16_t tlv_type, tlv_len;
+  u_int16_t tlv_type, tlv_len, tmp16;
   struct bgp_ls_node_desc *blnd = NULL;
 
   if (!pnt || !len || !blsn) {
@@ -1466,16 +1468,19 @@ int bgp_ls_nlri_tlv_remote_nd_handler(char *pnt, int len, struct bgp_ls_nlri *bl
 
   blnd = &blsn->nlri.link.l.rem_ndesc;
 
-  for (; len >= 4; len -= tlv_len) {
-    int ret, rem_len = len;
+  for (; len >= 4; len -= tlv_len, pnt += tlv_len) {
     bgp_ls_nd_tlv_hdlr *tlv_hdlr = NULL;
+    int ret;
 
-    tlv_type = ntohs((*pnt));
-    pnt += 2; rem_len -= 2;
-    tlv_len = ntohs((*pnt));
-    pnt += 2; rem_len -= 2;
+    memcpy(&tmp16, pnt, 2);
+    tlv_type = ntohs(tmp16);
+    pnt += 2; len -= 2;
 
-    ret = cdada_map_find(bgp_ls_nd_tlv_map, &tlv_type, (void **) tlv_hdlr);
+    memcpy(&tmp16, pnt, 2);
+    tlv_len = ntohs(tmp16);
+    pnt += 2; len -= 2;
+
+    ret = cdada_map_find(bgp_ls_nd_tlv_map, &tlv_type, (void **) &tlv_hdlr);
     if (ret == CDADA_SUCCESS && tlv_hdlr) {
       ret = (*tlv_hdlr)(pnt, tlv_len, blnd);
     }
@@ -1489,14 +1494,17 @@ int bgp_ls_nlri_tlv_remote_nd_handler(char *pnt, int len, struct bgp_ls_nlri *bl
 
 int bgp_ls_nd_tlv_as_handler(char *pnt, int len, struct bgp_ls_node_desc *blnd)
 {
+  u_int32_t tmp32;
+
   if (len == 4) {
-    blnd->asn = ntohl(*pnt);
+    memcpy(&tmp32, pnt, 4);
+    blnd->asn = ntohl(tmp32);
   }
 
   return SUCCESS;
 }
 
-int bgp_ls_nd_tlv_id_handler(char *pnt, int len, struct bgp_ls_node_desc *blnd)
+int bgp_ls_nd_tlv_router_id_handler(char *pnt, int len, struct bgp_ls_node_desc *blnd)
 {
   if (len == 6) {
     memcpy(blnd->igp_id.isis.rtr_id, pnt, 6);

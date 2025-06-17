@@ -1732,7 +1732,7 @@ void bgp_ls_init()
   }
 
   for (idx = 0; bgp_ls_nlri_tlv_list[idx].hdlr; idx++) {
-    ret = cdada_map_insert(bgp_ls_nlri_tlv_map, &bgp_ls_nlri_tlv_list[idx].type, bgp_ls_nlri_tlv_list[idx].hdlr);
+    ret = cdada_map_insert(bgp_ls_nlri_tlv_map, &bgp_ls_nlri_tlv_list[idx].type, (void *) &bgp_ls_nlri_tlv_list[idx].hdlr);
   }
 
   bgp_ls_nd_tlv_map = cdada_map_create(u_int16_t); /* sizeof type */
@@ -1742,6 +1742,6 @@ void bgp_ls_init()
   }
 
   for (idx = 0; bgp_ls_nd_tlv_list[idx].hdlr; idx++) {
-    ret = cdada_map_insert(bgp_ls_nd_tlv_map, &bgp_ls_nd_tlv_list[idx].type, bgp_ls_nd_tlv_list[idx].hdlr);
+    ret = cdada_map_insert(bgp_ls_nd_tlv_map, &bgp_ls_nd_tlv_list[idx].type, (void *) &bgp_ls_nd_tlv_list[idx].hdlr);
   }
 }

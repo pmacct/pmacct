@@ -401,10 +401,6 @@ struct bgp_comm_range {
    - Multi-Topology
    - Link Local/Remote IDs / GMPLS
 */
-struct bgp_ls_parse_ctx {
-  int nd_is_remote;
-};
-
 struct bgp_ls_node_desc {
   as_t asn;
   u_int32_t bgp_ls_id;
@@ -463,7 +459,7 @@ struct bgp_ls_nlri {
   } nlri;
 };
 
-typedef int (*bgp_ls_nlri_tlv_hdlr)(char *, int, struct bgp_ls_nlri *, struct bgp_ls_parse_ctx *);
+typedef int (*bgp_ls_nlri_tlv_hdlr)(char *, int, struct bgp_ls_nlri *);
 typedef int (*bgp_ls_nd_tlv_hdlr)(char *, int, struct bgp_ls_node_desc *);
 
 struct bgp_ls_nlri_tlv_list_entry {
