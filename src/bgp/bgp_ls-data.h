@@ -22,11 +22,11 @@
 const struct bgp_ls_nlri_tlv_list_entry bgp_ls_nlri_tlv_list[] = {
   {BGP_LS_LOCAL_ND, bgp_ls_nlri_tlv_local_nd_handler},
   {BGP_LS_REMOTE_ND, bgp_ls_nlri_tlv_remote_nd_handler},
-  {BGP_LS_V4_ADDR_IF, bgp_ls_nlri_tlv_dummy_handler},
-  {BGP_LS_V4_ADDR_NEIGHBOR, bgp_ls_nlri_tlv_dummy_handler},
-  {BGP_LS_V6_ADDR_IF, bgp_ls_nlri_tlv_dummy_handler},
-  {BGP_LS_V6_ADDR_NEIGHBOR, bgp_ls_nlri_tlv_dummy_handler},
-  {BGP_LS_IP_REACH, bgp_ls_nlri_tlv_dummy_handler},
+  {BGP_LS_V4_ADDR_IF, bgp_ls_nlri_tlv_v4_addr_if_handler},
+  {BGP_LS_V4_ADDR_NEIGHBOR, bgp_ls_nlri_tlv_v4_addr_neigh_handler},
+  {BGP_LS_V6_ADDR_IF, bgp_ls_nlri_tlv_v6_addr_if_handler},
+  {BGP_LS_V6_ADDR_NEIGHBOR, bgp_ls_nlri_tlv_v6_addr_neigh_handler},
+  {BGP_LS_IP_REACH, bgp_ls_nlri_tlv_ip_reach_handler},
   {0, NULL}
 };
 

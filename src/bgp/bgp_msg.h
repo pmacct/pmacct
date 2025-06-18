@@ -53,9 +53,14 @@ extern int bgp_ls_nlri_parse(struct bgp_msg_data *, void *, struct bgp_attr_extr
 extern int bgp_process_update(struct bgp_msg_data *, struct prefix *, void *, struct bgp_attr_extra *, afi_t, safi_t, int);
 extern int bgp_process_withdraw(struct bgp_msg_data *, struct prefix *, void *, struct bgp_attr_extra *, afi_t, safi_t, int);
 
-extern int bgp_ls_nlri_tlv_dummy_handler(char *, int, struct bgp_ls_nlri *);
 extern int bgp_ls_nlri_tlv_local_nd_handler(char *, int, struct bgp_ls_nlri *);
 extern int bgp_ls_nlri_tlv_remote_nd_handler(char *, int, struct bgp_ls_nlri *);
+extern int bgp_ls_nlri_tlv_v4_addr_if_handler(char *, int, struct bgp_ls_nlri *);
+extern int bgp_ls_nlri_tlv_v4_addr_neigh_handler(char *, int, struct bgp_ls_nlri *);
+extern int bgp_ls_nlri_tlv_v6_addr_if_handler(char *, int, struct bgp_ls_nlri *);
+extern int bgp_ls_nlri_tlv_v6_addr_neigh_handler(char *, int, struct bgp_ls_nlri *);
+extern int bgp_ls_nlri_tlv_ip_reach_handler(char *, int, struct bgp_ls_nlri *);
+
 extern int bgp_ls_nd_tlv_as_handler(char *, int, struct bgp_ls_node_desc *);
 extern int bgp_ls_nd_tlv_router_id_handler(char *, int, struct bgp_ls_node_desc *);
 #endif 

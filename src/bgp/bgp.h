@@ -444,8 +444,8 @@ struct bgp_ls_topo_pfx_nlri {
 };
 
 struct bgp_ls_nlri {
-  u_int8_t proto; /* see BGP_LS_PROTO definitions */
   u_int8_t type; /* see BGP_LS_NLRI definitions */
+  u_int8_t proto; /* see BGP_LS_PROTO definitions */
   union {
     struct {
       struct bgp_ls_node_nlri n;
