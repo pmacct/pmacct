@@ -395,84 +395,6 @@ struct bgp_comm_range {
   u_int32_t last;
 };
 
-/* BGP-LS */
-/*
-   Currently unsupported:
-   - Multi-Topology
-   - Link Local/Remote IDs / GMPLS
-*/
-struct bgp_ls_node_desc {
-  as_t asn;
-  u_int32_t bgp_ls_id;
-  union {
-    struct {
-      char rtr_id[6];
-      u_int8_t psn_id;
-    } isis;
-    struct {
-      u_int32_t area_id;
-      u_int32_t rtr_id;
-      u_int32_t if_id;
-    } ospf;
-  } igp_id;
-};
-
-struct bgp_ls_link_desc {
-  struct host_addr local_addr;
-  struct host_addr neigh_addr;
-};
-
-struct bgp_ls_prefix_desc {
-  u_int8_t ospf_route_type;
-  struct host_addr addr;
-  struct host_mask mask;
-};
-
-struct bgp_ls_node_nlri {
-  struct bgp_ls_node_desc ndesc;
-};
-
-struct bgp_ls_link_nlri {
-  struct bgp_ls_node_desc loc_ndesc;
-  struct bgp_ls_node_desc rem_ndesc;
-  struct bgp_ls_link_desc ldesc;
-};
-
-struct bgp_ls_topo_pfx_nlri {
-  struct bgp_ls_node_desc ndesc;
-  struct bgp_ls_prefix_desc pdesc;
-};
-
-struct bgp_ls_nlri {
-  u_int8_t type; /* see BGP_LS_NLRI definitions */
-  u_int8_t proto; /* see BGP_LS_PROTO definitions */
-  union {
-    struct {
-      struct bgp_ls_node_nlri n;
-    } node;
-    struct {
-      struct bgp_ls_link_nlri l;
-    } link;
-    struct {
-      struct bgp_ls_topo_pfx_nlri p;
-    } topo_pfx;
-  } nlri;
-};
-
-typedef int (*bgp_ls_nlri_tlv_hdlr)(char *, int, struct bgp_ls_nlri *);
-typedef int (*bgp_ls_nd_tlv_hdlr)(char *, int, struct bgp_ls_node_desc *);
-
-struct bgp_ls_nlri_tlv_list_entry {
-  u_int16_t type;
-  bgp_ls_nlri_tlv_hdlr hdlr;
-};
-
-struct bgp_ls_nd_tlv_list_entry {
-  u_int16_t type;
-  bgp_ls_nd_tlv_hdlr hdlr;
-};
-/* BGP-LS: END */
-
 /* Looking Glass */
 struct bgp_lg_req {
   u_int32_t type;
@@ -541,7 +463,4 @@ extern bgp_tag_t bgp_logdump_tag;
 extern struct sockaddr_storage bgp_logdump_tag_peer;
 
 extern struct bgp_xconnects bgp_xcs_map;
-
-/* BGP-LS global variables */
-extern cdada_map_t *bgp_ls_nlri_tlv_map, *bgp_ls_nd_tlv_map;
 #endif 

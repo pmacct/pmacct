@@ -25,6 +25,7 @@
 #include "bgp_xcs.h"
 #include "rpki/rpki.h"
 #include "bgp_blackhole.h"
+#include "bgp_ls.h"
 #include "thread_pool.h"
 #if defined WITH_EBPF
 #include "ebpf/ebpf_rp_balancer.h"

@@ -23,7 +23,6 @@
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "bgp.h"
-#include "bgp_ls-data.h"
 #include "thread_pool.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
@@ -1719,29 +1718,4 @@ void bgp_table_info_delete_tag_find_bgp(struct bgp_peer *peer)
 
   bgp_tag_init_find(peer, (struct sockaddr *) bms->tag_peer, NULL, bms->tag, TRUE);
   bgp_tag_find((struct id_table *)bms->tag->tag_table, bms->tag, &bms->tag->tag, NULL);
-}
-
-void bgp_ls_init()
-{
-  int ret, idx;
-
-  bgp_ls_nlri_tlv_map = cdada_map_create(u_int16_t); /* sizeof type */
-  if (!bgp_ls_nlri_tlv_map) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unable to allocate bgp_ls_nlri_tlv_map. Exiting.\n", config.name);
-    exit_gracefully(1);
-  }
-
-  for (idx = 0; bgp_ls_nlri_tlv_list[idx].hdlr; idx++) {
-    ret = cdada_map_insert(bgp_ls_nlri_tlv_map, &bgp_ls_nlri_tlv_list[idx].type, (void *) &bgp_ls_nlri_tlv_list[idx].hdlr);
-  }
-
-  bgp_ls_nd_tlv_map = cdada_map_create(u_int16_t); /* sizeof type */
-  if (!bgp_ls_nd_tlv_map) {
-    Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unable to allocate bgp_ls_nd_tlv_map. Exiting.\n", config.name);
-    exit_gracefully(1);
-  }
-
-  for (idx = 0; bgp_ls_nd_tlv_list[idx].hdlr; idx++) {
-    ret = cdada_map_insert(bgp_ls_nd_tlv_map, &bgp_ls_nd_tlv_list[idx].type, (void *) &bgp_ls_nd_tlv_list[idx].hdlr);
-  }
 }
