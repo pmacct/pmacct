@@ -45,6 +45,12 @@ void bgp_ls_init()
     exit_gracefully(1);
   }
 
+  bgp_ls_nlri_map = cdada_map_create(struct bgp_ls_nlri);
+  if (!bgp_ls_nlri_map) {
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unable to allocate bgp_ls_nlri_map. Exiting.\n", config.name);
+    exit_gracefully(1);
+  }
+
   for (idx = 0; bgp_ls_nd_tlv_list[idx].hdlr; idx++) {
     ret = cdada_map_insert(bgp_ls_nd_tlv_map, &bgp_ls_nd_tlv_list[idx].type, (void *) &bgp_ls_nd_tlv_list[idx].hdlr);
   }
@@ -106,6 +112,33 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extr
       else {
         Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS Unknown TLV %u\n", config.name, config.type, tlv_type);
       }
+    }
+  }
+
+  if (type == BGP_NLRI_UPDATE) {
+    void *attr_aux = NULL;
+
+    if (attr_extra && attr_extra->ls.ptr) {
+      attr_aux = malloc(attr_extra->ls.len);
+      if (attr_aux) {
+	memcpy(attr_aux, attr_extra->ls.ptr, attr_extra->ls.len);
+	ret = cdada_map_insert_replace(bgp_ls_nlri_map, &blsn, &attr_aux, NULL);
+	if (ret != CDADA_SUCCESS) {
+	  Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS failed NLRI Insert/Replace\n", config.name, config.type);
+	}
+      }
+    }
+  }
+  else if (type == BGP_NLRI_WITHDRAW) {
+    void *attr_aux = NULL;
+
+    ret = cdada_map_find(bgp_ls_nlri_map, &blsn, &attr_aux);
+    if (ret == CDADA_SUCCESS && attr_aux) {
+      cdada_map_erase(bgp_ls_nlri_map, &blsn);
+      free(attr_aux);
+    }
+    else {
+      Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS failed NLRI Withdraw\n", config.name, config.type);
     }
   }
 

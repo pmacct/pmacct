@@ -124,6 +124,6 @@ extern int bgp_ls_nd_tlv_as_handler(char *, int, struct bgp_ls_node_desc *);
 extern int bgp_ls_nd_tlv_router_id_handler(char *, int, struct bgp_ls_node_desc *);
 
 /* global variables */
-extern cdada_map_t *bgp_ls_nlri_tlv_map, *bgp_ls_nd_tlv_map;
+extern cdada_map_t *bgp_ls_nlri_tlv_map, *bgp_ls_nd_tlv_map, *bgp_ls_nlri_map;
 
 #endif //BGP_LS_H
