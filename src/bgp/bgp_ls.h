@@ -34,6 +34,8 @@
 /* includes */
 
 /* defines */
+
+/* structures */
 struct bgp_ls_node_desc {
   as_t asn;
   u_int32_t bgp_ls_id;
@@ -79,6 +81,8 @@ struct bgp_ls_topo_pfx_nlri {
 struct bgp_ls_nlri {
   u_int8_t type; /* see BGP_LS_NLRI definitions */
   u_int8_t proto; /* see BGP_LS_PROTO definitions */
+  struct host_addr nexthop;
+  rd_t rd;
   union {
     struct {
       struct bgp_ls_node_nlri n;
@@ -105,12 +109,17 @@ struct bgp_ls_nd_tlv_list_entry {
   bgp_ls_nd_tlv_hdlr hdlr;
 };
 
-/* structures */
+struct bgp_ls_nlri_map_trav_del {
+  struct bgp_peer *peer;
+  cdada_list_t *list_del;
+};
 
 /* prototypes */
 extern void bgp_ls_init();
 extern int bgp_attr_parse_ls(struct bgp_peer *, u_int16_t, struct bgp_attr_extra *, char *, u_char);
-extern int bgp_ls_nlri_parse(struct bgp_msg_data *, void *, struct bgp_attr_extra *, struct bgp_nlri *, int);
+extern int bgp_ls_nlri_parse(struct bgp_msg_data *, struct bgp_attr *, struct bgp_attr_extra *, struct bgp_nlri *, int);
+extern void bgp_ls_info_delete(struct bgp_peer *);
+extern void bgp_ls_peer_info_delete(const cdada_map_t *, const void *, void *, void *);
 
 extern int bgp_ls_nlri_tlv_local_nd_handler(char *, int, struct bgp_ls_nlri *);
 extern int bgp_ls_nlri_tlv_remote_nd_handler(char *, int, struct bgp_ls_nlri *);

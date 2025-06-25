@@ -23,6 +23,7 @@
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "bgp.h"
+#include "bgp_ls.h"
 #include "thread_pool.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
@@ -892,6 +893,8 @@ void bgp_peer_info_delete(struct bgp_peer *peer)
       bgp_table_info_delete(peer, table, afi, safi);
     }
   }
+
+  bgp_ls_info_delete(peer);
 }
 
 void bgp_table_info_delete(struct bgp_peer *peer, struct bgp_table *table, afi_t afi, safi_t safi)

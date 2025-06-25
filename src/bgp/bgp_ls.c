@@ -56,7 +56,7 @@ void bgp_ls_init()
   }
 }
 
-int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *attr_extra, struct bgp_nlri *info, int type)
+int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bgp_attr_extra *attr_extra, struct bgp_nlri *info, int type)
 {
   struct bgp_misc_structs *bms;
   struct bgp_peer *peer = bmd->peer;
@@ -64,7 +64,7 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extr
 
   char bgp_peer_str[INET6_ADDRSTRLEN];
   u_char *pnt;
-  int rem_len, rem_nlri_len, ret, idx;
+  int rem_len, rem_nlri_len, ret, idx, log_type = 0;
   u_int16_t tmp16, nlri_type, nlri_len, tlv_type, tlv_len;
 
   if (!peer) goto exit_fail_lane;
@@ -76,6 +76,7 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extr
   pnt = info->nlri;
   rem_len = info->length;
   memset(&blsn, 0, sizeof(blsn));
+  memcpy(&blsn.nexthop, &attr->mp_nexthop, sizeof(struct host_addr));
 
   /* parse NLRIs, make sure can read Type and Length */
   for (idx = 0; rem_len > 4; rem_len -= nlri_len, idx++) {
@@ -116,30 +117,55 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extr
   }
 
   if (type == BGP_NLRI_UPDATE) {
-    void *attr_aux = NULL;
+    void *attr_aux = NULL, *attr_prev = NULL;
+    struct bgp_attr_ls *attr_hdr_aux = NULL;
 
-    if (attr_extra && attr_extra->ls.ptr) {
-      attr_aux = malloc(attr_extra->ls.len);
-      if (attr_aux) {
-	memcpy(attr_aux, attr_extra->ls.ptr, attr_extra->ls.len);
-	ret = cdada_map_insert_replace(bgp_ls_nlri_map, &blsn, &attr_aux, NULL);
-	if (ret != CDADA_SUCCESS) {
-	  Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS failed NLRI Insert/Replace\n", config.name, config.type);
+    if (!bms->skip_rib) {
+      if (attr_extra && attr_extra->ls.ptr) {
+        attr_hdr_aux = malloc(sizeof(struct bgp_attr_ls));
+        attr_aux = malloc(attr_extra->ls.len);
+        if (attr_hdr_aux && attr_aux) {
+	  memcpy(attr_hdr_aux, &attr_extra->ls, sizeof(struct bgp_attr_ls));
+	  memcpy(attr_aux, attr_extra->ls.ptr, attr_extra->ls.len);
+	  attr_hdr_aux->ptr = attr_aux;
+
+	  ret = cdada_map_insert_replace(bgp_ls_nlri_map, &blsn, &attr_hdr_aux, &attr_prev);
+	  if (ret != CDADA_SUCCESS) {
+	    Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS failed NLRI Insert/Replace\n", config.name, config.type);
+	  }
+	  else {
+	    if (attr_prev) {
+	      free(attr_prev);
+	    }
+	  }
 	}
       }
     }
+
+    log_type = BGP_LOG_TYPE_UPDATE;
   }
   else if (type == BGP_NLRI_WITHDRAW) {
-    void *attr_aux = NULL;
+    struct bgp_attr_ls *blsa = NULL;
 
-    ret = cdada_map_find(bgp_ls_nlri_map, &blsn, &attr_aux);
-    if (ret == CDADA_SUCCESS && attr_aux) {
-      cdada_map_erase(bgp_ls_nlri_map, &blsn);
-      free(attr_aux);
+    if (!bms->skip_rib) {
+      ret = cdada_map_find(bgp_ls_nlri_map, &blsn, (void **) &blsa);
+      if (ret == CDADA_SUCCESS && blsa) {
+        cdada_map_erase(bgp_ls_nlri_map, &blsn);
+        free(blsa->ptr);
+	free(blsa);
+      }
+      else {
+        Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS failed NLRI Withdraw\n", config.name, config.type);
+      }
     }
-    else {
-      Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS failed NLRI Withdraw\n", config.name, config.type);
-    }
+
+    log_type = BGP_LOG_TYPE_WITHDRAW;
+  }
+
+  if (bms->msglog_backend_methods) {
+    char event_type[] = "log";
+
+    // XXX: bgp_ls_log_msg(&blsn, attr_extra->ls, info->afi, info->safi, bms->tag, event_type, bms->msglog_output, NULL, log_type);
   }
 
   return SUCCESS;
@@ -147,6 +173,52 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extr
 exit_fail_lane:
   bmd->nlri_count = ERR;
   return ERR;
+}
+
+void bgp_ls_peer_info_delete(const cdada_map_t *m, const void *k, void *v, void *o)
+{
+  struct bgp_ls_nlri_map_trav_del *blsnmtd = o;
+  struct bgp_ls_nlri *blsn = (void *) k;
+
+  if (!host_addr_cmp(&blsnmtd->peer->addr, &blsn->nexthop)) {
+    cdada_list_push_back(blsnmtd->list_del, blsn);
+  }
+}
+
+void bgp_ls_info_delete(struct bgp_peer *peer)
+{
+  if (peer) {
+    struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
+
+    if (!cdada_map_empty(bgp_ls_nlri_map)) {
+      struct bgp_ls_nlri_map_trav_del blsnmtd;
+      struct bgp_ls_nlri *blsn = NULL;
+      
+      blsnmtd.peer = peer;
+      blsnmtd.list_del = cdada_list_create(struct bgp_ls_nlri);
+
+      cdada_map_traverse(bgp_ls_nlri_map, bgp_ls_peer_info_delete, &blsnmtd);
+
+      while (cdada_list_first(blsnmtd.list_del, blsn) == CDADA_SUCCESS) {
+	struct bgp_attr_ls *blsa = NULL;
+	cdada_map_find(bgp_ls_nlri_map, &blsn, (void **) &blsa);
+
+	if (bms->msglog_backend_methods) {
+	  char event_type[] = "log";
+
+	  // XXX bgp_ls_log_msg(&blsn, blsa, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_DELETE);
+        }
+
+	cdada_map_erase(bgp_ls_nlri_map, &blsn); 
+	free(blsa->ptr);
+	free(blsa);
+
+	cdada_list_pop_front(blsnmtd.list_del);
+      }
+
+      cdada_list_destroy(blsnmtd.list_del);
+    }
+  }
 }
 
 int bgp_ls_nlri_tlv_local_nd_handler(char *pnt, int len, struct bgp_ls_nlri *blsn)
