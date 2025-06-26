@@ -79,8 +79,10 @@ struct bgp_ls_topo_pfx_nlri {
 };
 
 struct bgp_ls_nlri {
+  struct bgp_peer *peer;
   u_int8_t type; /* see BGP_LS_NLRI definitions */
   u_int8_t proto; /* see BGP_LS_PROTO definitions */
+  safi_t safi;
   struct host_addr nexthop;
   rd_t rd;
   union {
@@ -131,6 +133,8 @@ extern int bgp_ls_nlri_tlv_ip_reach_handler(char *, int, struct bgp_ls_nlri *);
 
 extern int bgp_ls_nd_tlv_as_handler(char *, int, struct bgp_ls_node_desc *);
 extern int bgp_ls_nd_tlv_router_id_handler(char *, int, struct bgp_ls_node_desc *);
+
+int bgp_ls_log_msg(struct bgp_ls_nlri *, struct bgp_attr_ls *, afi_t, safi_t, bgp_tag_t *, char *, int, char **, int);
 
 /* global variables */
 extern cdada_map_t *bgp_ls_nlri_tlv_map, *bgp_ls_nd_tlv_map, *bgp_ls_nlri_map;

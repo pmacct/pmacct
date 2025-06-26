@@ -25,6 +25,16 @@
 #include "bgp_ls.h"
 #include "bgp_ls-data.h"
 
+#if defined WITH_RABBITMQ
+#include "amqp_common.h"
+#endif
+#ifdef WITH_KAFKA
+#include "kafka_common.h"
+#endif
+#ifdef WITH_AVRO
+#include "plugin_cmn_avro.h"
+#endif
+
 void bgp_ls_init()
 {
   int ret, idx;
@@ -77,6 +87,8 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
   rem_len = info->length;
   memset(&blsn, 0, sizeof(blsn));
   memcpy(&blsn.nexthop, &attr->mp_nexthop, sizeof(struct host_addr));
+  blsn.safi = info->safi;
+  blsn.peer = peer;
 
   /* parse NLRIs, make sure can read Type and Length */
   for (idx = 0; rem_len > 4; rem_len -= nlri_len, idx++) {
@@ -165,7 +177,7 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
   if (bms->msglog_backend_methods) {
     char event_type[] = "log";
 
-    // XXX: bgp_ls_log_msg(&blsn, attr_extra->ls, info->afi, info->safi, bms->tag, event_type, bms->msglog_output, NULL, log_type);
+    bgp_ls_log_msg(&blsn, &attr_extra->ls, AFI_BGP_LS, blsn.safi, bms->tag, event_type, bms->msglog_output, NULL, log_type);
   }
 
   return SUCCESS;
@@ -180,7 +192,7 @@ void bgp_ls_peer_info_delete(const cdada_map_t *m, const void *k, void *v, void 
   struct bgp_ls_nlri_map_trav_del *blsnmtd = o;
   struct bgp_ls_nlri *blsn = (void *) k;
 
-  if (!host_addr_cmp(&blsnmtd->peer->addr, &blsn->nexthop)) {
+  if (!host_addr_cmp(&blsnmtd->peer->addr, &blsn->peer->addr)) {
     cdada_list_push_back(blsnmtd->list_del, blsn);
   }
 }
@@ -206,7 +218,7 @@ void bgp_ls_info_delete(struct bgp_peer *peer)
 	if (bms->msglog_backend_methods) {
 	  char event_type[] = "log";
 
-	  // XXX bgp_ls_log_msg(&blsn, blsa, afi, safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_DELETE);
+	  bgp_ls_log_msg(blsn, blsa, AFI_BGP_LS, blsn->safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_DELETE);
         }
 
 	cdada_map_erase(bgp_ls_nlri_map, &blsn); 
@@ -467,4 +479,123 @@ int bgp_ls_nd_tlv_router_id_handler(char *pnt, int len, struct bgp_ls_node_desc 
   }
 
   return ret;
+}
+
+int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
+		afi_t afi, safi_t safi, bgp_tag_t *tag, char *event_type,
+		int output, char **output_data, int log_type)
+{
+  struct bgp_misc_structs *bms;
+  struct bgp_peer *peer;
+  int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
+
+  if (!blsn->peer || !event_type) return ERR; /* missing required parameters */
+  if (!blsn->peer->log && !output_data) return ERR; /* missing any output method */
+
+  peer = blsn->peer;
+
+  bms = bgp_select_misc_db(peer->type);
+  if (!bms) return ERR;
+
+  if (!strcmp(event_type, "dump")) etype = BGP_LOGDUMP_ET_DUMP;
+  else if (!strcmp(event_type, "log")) etype = BGP_LOGDUMP_ET_LOG;
+  else if (!strcmp(event_type, "lglass")) etype = BGP_LOGDUMP_ET_LG;
+
+  if ((bms->msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
+      (bms->dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP)) {
+#ifdef WITH_RABBITMQ
+    p_amqp_set_routing_key(peer->log->amqp_host, peer->log->filename);
+#endif
+  }
+
+  if ((bms->msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
+      (bms->dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
+#ifdef WITH_KAFKA
+    p_kafka_set_topic(peer->log->kafka_host, peer->log->filename);
+
+    if (bms->msglog_kafka_partition_key && etype == BGP_LOGDUMP_ET_LOG) {
+      p_kafka_set_key(peer->log->kafka_host, peer->log->partition_key, strlen(peer->log->partition_key));
+    }
+#endif
+  }
+
+  // XXX: tag handling
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    char ip_address[INET6_ADDRSTRLEN], log_type_str[SUPERSHORTBUFLEN];
+    json_t *obj = json_object();
+
+    char empty[] = "";
+    char prefix_str[PREFIX_STRLEN], nexthop_str[INET6_ADDRSTRLEN];
+    char *aspath;
+
+    if (etype == BGP_LOGDUMP_ET_LOG) {
+      json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq)));
+      bgp_peer_log_seq_increment(&bms->log_seq);
+
+      switch (log_type) {
+      case BGP_LOG_TYPE_UPDATE:
+	json_object_set_new_nocheck(obj, "log_type", json_string("update"));
+	break;
+      case BGP_LOG_TYPE_WITHDRAW:
+	json_object_set_new_nocheck(obj, "log_type", json_string("withdraw"));
+	break;
+      case BGP_LOG_TYPE_DELETE:
+	json_object_set_new_nocheck(obj, "log_type", json_string("delete"));
+	break;
+      default:
+	snprintf(log_type_str, SUPERSHORTBUFLEN, "%d", log_type);
+	json_object_set_new_nocheck(obj, "log_type", json_string(log_type_str));
+	break;
+      }
+    }
+    else if (etype == BGP_LOGDUMP_ET_DUMP) {
+      json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq)));
+    }
+
+    if (etype == BGP_LOGDUMP_ET_LOG) {
+      json_object_set_new_nocheck(obj, "timestamp", json_string(bms->log_tstamp_str));
+    }
+    else if (etype == BGP_LOGDUMP_ET_DUMP) {
+      json_object_set_new_nocheck(obj, "timestamp", json_string(bms->dump.tstamp_str));
+    }
+
+    json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
+    json_object_set_new_nocheck(obj, "afi", json_integer((json_int_t)afi));
+    json_object_set_new_nocheck(obj, "safi", json_integer((json_int_t)safi));
+
+    // XXX: NLRI and Attr output
+
+    if ((bms->msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
+	(bms->dump_file && etype == BGP_LOGDUMP_ET_DUMP)) {
+      write_and_free_json(peer->log->fd, obj);
+    }
+
+    if (output_data && etype == BGP_LOGDUMP_ET_LG) {
+      (*output_data) = compose_json_str(obj);
+    }
+
+    if ((bms->msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
+	(bms->dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP)) {
+      add_writer_name_and_pid_json(obj, &bms->writer_id_tokens);
+#ifdef WITH_RABBITMQ
+      amqp_ret = write_and_free_json_amqp(peer->log->amqp_host, obj);
+      p_amqp_unset_routing_key(peer->log->amqp_host);
+#endif
+    }
+
+    if ((bms->msglog_kafka_topic && etype == BGP_LOGDUMP_ET_LOG) ||
+	(bms->dump_kafka_topic && etype == BGP_LOGDUMP_ET_DUMP)) {
+      add_writer_name_and_pid_json(obj, &bms->writer_id_tokens);
+#ifdef WITH_KAFKA
+      kafka_ret = write_and_free_json_kafka(peer->log->kafka_host, obj);
+      p_kafka_unset_topic(peer->log->kafka_host);
+#endif
+    }
+#endif
+  }
+  // XXX: Apache Avro handling
+
+  return (ret | amqp_ret | kafka_ret);
 }
