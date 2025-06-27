@@ -34,6 +34,39 @@
 /* includes */
 
 /* defines */
+#define BGP_LS_NLRI_NODE		1
+#define BGP_LS_NLRI_LINK		2
+#define BGP_LS_NLRI_V4_TOPO_PFX		3
+#define BGP_LS_NLRI_V6_TOPO_PFX		4
+#define BGP_LS_NLRI_MAX			4
+
+#define BGP_LS_PROTO_ISIS_L1		1
+#define BGP_LS_PROTO_ISIS_L2		2
+#define BGP_LS_PROTO_OSPFV2		3
+#define BGP_LS_PROTO_DIRECT		4
+#define BGP_LS_PROTO_STATIC		5
+#define BGP_LS_PROTO_OSPFV3		6
+#define BGP_LS_PROTO_MAX		6
+
+#define BGP_LS_RU_DEFAULT_L3_TOPO	0
+
+#define BGP_LS_LOCAL_ND			256
+#define BGP_LS_REMOTE_ND		257
+#define BGP_LS_LL_REMOTE_ID		258
+#define BGP_LS_V4_ADDR_IF		259
+#define BGP_LS_V4_ADDR_NEIGHBOR		260
+#define BGP_LS_V6_ADDR_IF		261
+#define BGP_LS_V6_ADDR_NEIGHBOR		262
+#define BGP_LS_MULTI_TOPO_ID		263
+#define BGP_LS_OSPF_ROUTE_TYPE		264
+#define BGP_LS_IP_REACH			265
+
+#define BGP_LS_ND_AS			512
+#define BGP_LS_ND_ID			513
+#define BGP_LS_ND_OSPF_AREA_ID		514
+#define BGP_LS_ND_IGP_ROUTER_ID		515
+
+#define BGP_LS_ISIS_SYS_ID_LEN		6 
 
 /* structures */
 struct bgp_ls_node_desc {
@@ -135,6 +168,8 @@ extern int bgp_ls_nd_tlv_as_handler(char *, int, struct bgp_ls_node_desc *);
 extern int bgp_ls_nd_tlv_router_id_handler(char *, int, struct bgp_ls_node_desc *);
 
 int bgp_ls_log_msg(struct bgp_ls_nlri *, struct bgp_attr_ls *, afi_t, safi_t, bgp_tag_t *, char *, int, char **, int);
+void bgp_ls_log_node_desc(void *, struct bgp_ls_node_desc *, u_int8_t, char *, int);
+void bgp_ls_isis_sysid_print(char *, char *);
 
 /* global variables */
 extern cdada_map_t *bgp_ls_nlri_tlv_map, *bgp_ls_nd_tlv_map, *bgp_ls_nlri_map;

@@ -21,6 +21,7 @@
 
 /* includes */
 #include "pmacct.h"
+#include "pmacct-data.h"
 #include "bgp.h"
 #include "bgp_ls.h"
 #include "bgp_ls-data.h"
@@ -523,7 +524,7 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
-    char ip_address[INET6_ADDRSTRLEN], log_type_str[SUPERSHORTBUFLEN];
+    char ip_address[INET6_ADDRSTRLEN], ip_addr_mask[INET6_ADDRSTRLEN + 1 + 3], log_type_str[SUPERSHORTBUFLEN];
     json_t *obj = json_object();
 
     char empty[] = "";
@@ -565,7 +566,59 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
     json_object_set_new_nocheck(obj, "afi", json_integer((json_int_t)afi));
     json_object_set_new_nocheck(obj, "safi", json_integer((json_int_t)safi));
 
-    // XXX: NLRI and Attr output
+    addr_to_str(ip_address, &peer->addr);
+    json_object_set_new_nocheck(obj, bms->peer_str, json_string(ip_address));
+
+    if (blsn->type <= BGP_LS_NLRI_MAX) {
+      json_object_set_new_nocheck(obj, "nlri_type", json_string(bgp_ls_nlri_type[blsn->type]));
+    } 
+    else {
+      json_object_set_new_nocheck(obj, "nlri_type", json_integer(blsn->type));
+    }
+
+    if (blsn->proto <= BGP_LS_PROTO_MAX) {
+      json_object_set_new_nocheck(obj, "proto", json_string(bgp_ls_protocol_id[blsn->proto]));
+    }
+    else {
+      json_object_set_new_nocheck(obj, "proto", json_integer(blsn->proto));
+    }
+
+    addr_to_str(ip_address, &blsn->nexthop);
+    json_object_set_new_nocheck(obj, "nexthop", json_string(ip_address));
+
+    if (safi == SAFI_LS_VPN) {
+      char rd_str[SHORTSHORTBUFLEN];
+
+      bgp_rd2str(rd_str, &blsn->rd);
+      json_object_set_new_nocheck(obj, "rd", json_string(rd_str));
+    }
+
+    switch (blsn->type) {
+    case BGP_LS_NLRI_NODE:
+      bgp_ls_log_node_desc(obj, &blsn->nlri.node.n.ndesc, blsn->proto, "local", output);
+      break;
+    case BGP_LS_NLRI_LINK:
+      bgp_ls_log_node_desc(obj, &blsn->nlri.node.n.ndesc, blsn->proto, "local", output);
+      bgp_ls_log_node_desc(obj, &blsn->nlri.node.n.ndesc, blsn->proto, "remote", output);
+
+      addr_to_str(ip_address, &blsn->nlri.link.l.ldesc.local_addr);
+      json_object_set_new_nocheck(obj, "local_addr", json_string(ip_address));
+
+      addr_to_str(ip_address, &blsn->nlri.link.l.ldesc.neigh_addr);
+      json_object_set_new_nocheck(obj, "neigh_addr", json_string(ip_address));
+
+      break;
+    case BGP_LS_NLRI_V4_TOPO_PFX:
+    case BGP_LS_NLRI_V6_TOPO_PFX:
+      bgp_ls_log_node_desc(obj, &blsn->nlri.node.n.ndesc, blsn->proto, "local", output);
+
+      addr_mask_to_str(ip_addr_mask, sizeof(ip_addr_mask), &blsn->nlri.topo_pfx.p.pdesc.addr, &blsn->nlri.topo_pfx.p.pdesc.mask); 
+      json_object_set_new_nocheck(obj, "ip_reach", json_string(ip_addr_mask));
+
+      break;
+    }
+
+    // XXX: Attr output
 
     if ((bms->msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
 	(bms->dump_file && etype == BGP_LOGDUMP_ET_DUMP)) {
@@ -598,4 +651,61 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
   // XXX: Apache Avro handling
 
   return (ret | amqp_ret | kafka_ret);
+}
+
+void bgp_ls_log_node_desc(void *void_obj, struct bgp_ls_node_desc *blsnd, u_int8_t proto, char *in_prefix, int output)
+{
+  char key_str[32];
+  char empty_prefix[] = "", *prefix;
+
+  if (!in_prefix) {
+    prefix = empty_prefix;
+  }
+  else {
+    prefix = in_prefix;
+  }
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    json_t *obj = void_obj;
+
+    strcpy(key_str, prefix); strcat(key_str, "asn");
+    json_object_set_new_nocheck(obj, key_str, json_integer(blsnd->asn));
+
+    strcpy(key_str, prefix); strcat(key_str, "bgp_ls_id");
+    json_object_set_new_nocheck(obj, key_str, json_integer(blsnd->bgp_ls_id));
+
+    if (proto == BGP_LS_PROTO_ISIS_L1 || proto == BGP_LS_PROTO_ISIS_L2) {
+      char sys_id[BGP_LS_ISIS_SYS_ID_LEN];
+
+      bgp_ls_isis_sysid_print(sys_id, blsnd->igp_id.isis.rtr_id);
+      strcpy(key_str, prefix); strcat(key_str, "rtr_id");
+      json_object_set_new_nocheck(obj, key_str, json_string(sys_id));
+    }
+#endif
+  }
+}
+
+void bgp_ls_isis_sysid_print(char *to, char *from)
+{
+  int i = 0;
+
+  if (!from || !to) return;
+
+  while (i < BGP_LS_ISIS_SYS_ID_LEN - 1) {
+    if (i & 1) {
+      sprintf (to, "%02x.", *(from + i));
+      to += 3;
+    }
+    else {
+      sprintf (to, "%02x", *(from + i));
+      to += 2;
+    }
+
+    i++;
+  }
+
+  sprintf (to, "%02x", *(from + (BGP_LS_ISIS_SYS_ID_LEN - 1)));
+  to += 2;
+  *(to) = '\0';
 }

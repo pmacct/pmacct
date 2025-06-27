@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -444,10 +444,32 @@ static const char __attribute__((unused)) *bgp_rd_origin[] = {
   ""
 };
 
+
+
 static const u_int16_t __attribute__((unused)) lookup_type_to_bgp_rd_origin[] = {
   RD_ORIGIN_UNKNOWN,
   RD_ORIGIN_BGP,
   RD_ORIGIN_BMP
+};
+
+static const char __attribute__((unused)) *bgp_ls_nlri_type[] = {
+  "Unknown",
+  "Node",
+  "Link",
+  "IPv4 Topology Prefix",
+  "IPv6 Topology Prefix",
+  ""
+};
+
+static const char __attribute__((unused)) *bgp_ls_protocol_id[] = {
+  "Unknown",
+  "IS-IS Level 1",
+  "IS-IS Level 2",
+  "OSPFv2",
+  "Direct",
+  "Static",
+  "OSPFv3",
+  ""
 };
 
 static const char __attribute__((unused)) *rpki_roa[] = {
