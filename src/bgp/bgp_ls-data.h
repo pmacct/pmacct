@@ -32,6 +32,7 @@ const struct bgp_ls_nlri_tlv_list_entry bgp_ls_nlri_tlv_list[] = {
 
 const struct bgp_ls_nd_tlv_list_entry bgp_ls_nd_tlv_list[] = {
   {BGP_LS_ND_AS, bgp_ls_nd_tlv_as_handler},
+  {BGP_LS_ND_ID, bgp_ls_nd_tlv_id_handler},
   {BGP_LS_ND_IGP_ROUTER_ID, bgp_ls_nd_tlv_router_id_handler},
   {0, NULL}
 };

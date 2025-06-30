@@ -69,20 +69,15 @@
 #define BGP_LS_ISIS_SYS_ID_LEN		6 
 
 /* structures */
+struct bgp_ls_nd_igp_rtr_id {
+  char id[8];
+  u_int8_t len;
+};
 struct bgp_ls_node_desc {
   as_t asn;
   u_int32_t bgp_ls_id;
-  union {
-    struct {
-      char rtr_id[6];
-      u_int8_t psn_id;
-    } isis;
-    struct {
-      u_int32_t area_id;
-      u_int32_t rtr_id;
-      u_int32_t if_id;
-    } ospf;
-  } igp_id;
+  struct bgp_ls_nd_igp_rtr_id igp_rtr_id;
+  u_int32_t area_id;
 };
   
 struct bgp_ls_link_desc {
@@ -165,6 +160,7 @@ extern int bgp_ls_nlri_tlv_v6_addr_neigh_handler(char *, int, struct bgp_ls_nlri
 extern int bgp_ls_nlri_tlv_ip_reach_handler(char *, int, struct bgp_ls_nlri *);
 
 extern int bgp_ls_nd_tlv_as_handler(char *, int, struct bgp_ls_node_desc *);
+extern int bgp_ls_nd_tlv_id_handler(char *, int, struct bgp_ls_node_desc *);
 extern int bgp_ls_nd_tlv_router_id_handler(char *, int, struct bgp_ls_node_desc *);
 
 int bgp_ls_log_msg(struct bgp_ls_nlri *, struct bgp_attr_ls *, afi_t, safi_t, bgp_tag_t *, char *, int, char **, int);

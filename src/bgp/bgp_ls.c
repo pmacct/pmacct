@@ -254,6 +254,7 @@ int bgp_ls_nlri_tlv_local_nd_handler(char *pnt, int len, struct bgp_ls_nlri *bls
   case BGP_LS_NLRI_V4_TOPO_PFX:
   case BGP_LS_NLRI_V6_TOPO_PFX:
     blnd = &blsn->nlri.topo_pfx.p.ndesc;
+    break;
   default:
     return ERR;
   };
@@ -423,7 +424,7 @@ int bgp_ls_nlri_tlv_ip_reach_handler(char *pnt, int len, struct bgp_ls_nlri *bls
       memcpy(&blsn->nlri.topo_pfx.p.pdesc.addr.address.ipv4, pnt, pfx_size);
 
       blsn->nlri.topo_pfx.p.pdesc.mask.family = AF_INET;
-      blsn->nlri.topo_pfx.p.pdesc.mask.len = pfx_size;
+      blsn->nlri.topo_pfx.p.pdesc.mask.len = pfx_len;
     }
     /* IPv6 */
     else if (blsn->type == 4 && pfx_size <= 16) {
@@ -431,7 +432,7 @@ int bgp_ls_nlri_tlv_ip_reach_handler(char *pnt, int len, struct bgp_ls_nlri *bls
       memcpy(&blsn->nlri.topo_pfx.p.pdesc.addr.address.ipv6, pnt, pfx_size);
 
       blsn->nlri.topo_pfx.p.pdesc.mask.family = AF_INET6;
-      blsn->nlri.topo_pfx.p.pdesc.mask.len = pfx_size;
+      blsn->nlri.topo_pfx.p.pdesc.mask.len = pfx_len;
     }
     else {
       Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS Wrong Length (pfx_size) TLV %u\n", config.name, config.type, BGP_LS_IP_REACH);
@@ -463,6 +464,27 @@ int bgp_ls_nd_tlv_as_handler(char *pnt, int len, struct bgp_ls_node_desc *blnd)
   return ret;
 }
 
+int bgp_ls_nd_tlv_id_handler(char *pnt, int len, struct bgp_ls_node_desc *blnd)
+{
+  int ret = SUCCESS;
+  u_int32_t tmp32;
+
+  if (!pnt || !len || !blnd) {
+    return ERR;
+  }
+
+  if (len == 4) {
+    memcpy(&tmp32, pnt, 4);
+    blnd->bgp_ls_id = ntohl(tmp32);
+  }
+  else {
+    Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS Wrong Length TLV %u\n", config.name, config.type, BGP_LS_ND_ID);
+    ret = ERR;
+  }
+
+  return ret;
+}
+
 int bgp_ls_nd_tlv_router_id_handler(char *pnt, int len, struct bgp_ls_node_desc *blnd)
 {
   int ret = SUCCESS;
@@ -471,8 +493,8 @@ int bgp_ls_nd_tlv_router_id_handler(char *pnt, int len, struct bgp_ls_node_desc 
     return ERR;
   }
 
-  if (len == 6) {
-    memcpy(blnd->igp_id.isis.rtr_id, pnt, 6);
+  if (len <= 8) {
+    memcpy(blnd->igp_rtr_id.id, pnt, len);
   }
   else {
     Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS Wrong Length TLV %u\n", config.name, config.type, BGP_LS_ND_IGP_ROUTER_ID);
@@ -598,8 +620,8 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
       bgp_ls_log_node_desc(obj, &blsn->nlri.node.n.ndesc, blsn->proto, "local", output);
       break;
     case BGP_LS_NLRI_LINK:
-      bgp_ls_log_node_desc(obj, &blsn->nlri.node.n.ndesc, blsn->proto, "local", output);
-      bgp_ls_log_node_desc(obj, &blsn->nlri.node.n.ndesc, blsn->proto, "remote", output);
+      bgp_ls_log_node_desc(obj, &blsn->nlri.link.l.loc_ndesc, blsn->proto, "local", output);
+      bgp_ls_log_node_desc(obj, &blsn->nlri.link.l.rem_ndesc, blsn->proto, "remote", output);
 
       addr_to_str(ip_address, &blsn->nlri.link.l.ldesc.local_addr);
       json_object_set_new_nocheck(obj, "local_addr", json_string(ip_address));
@@ -610,7 +632,7 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
       break;
     case BGP_LS_NLRI_V4_TOPO_PFX:
     case BGP_LS_NLRI_V6_TOPO_PFX:
-      bgp_ls_log_node_desc(obj, &blsn->nlri.node.n.ndesc, blsn->proto, "local", output);
+      bgp_ls_log_node_desc(obj, &blsn->nlri.topo_pfx.p.ndesc, blsn->proto, "local", output);
 
       addr_mask_to_str(ip_addr_mask, sizeof(ip_addr_mask), &blsn->nlri.topo_pfx.p.pdesc.addr, &blsn->nlri.topo_pfx.p.pdesc.mask); 
       json_object_set_new_nocheck(obj, "ip_reach", json_string(ip_addr_mask));
@@ -669,17 +691,18 @@ void bgp_ls_log_node_desc(void *void_obj, struct bgp_ls_node_desc *blsnd, u_int8
 #ifdef WITH_JANSSON
     json_t *obj = void_obj;
 
-    strcpy(key_str, prefix); strcat(key_str, "asn");
+    strcpy(key_str, prefix); strcat(key_str, "_asn");
     json_object_set_new_nocheck(obj, key_str, json_integer(blsnd->asn));
 
-    strcpy(key_str, prefix); strcat(key_str, "bgp_ls_id");
+    strcpy(key_str, prefix); strcat(key_str, "_bgp_ls_id");
     json_object_set_new_nocheck(obj, key_str, json_integer(blsnd->bgp_ls_id));
 
     if (proto == BGP_LS_PROTO_ISIS_L1 || proto == BGP_LS_PROTO_ISIS_L2) {
-      char sys_id[BGP_LS_ISIS_SYS_ID_LEN];
+      char sys_id[BGP_LS_ISIS_SYS_ID_LEN * 3];
 
-      bgp_ls_isis_sysid_print(sys_id, blsnd->igp_id.isis.rtr_id);
-      strcpy(key_str, prefix); strcat(key_str, "rtr_id");
+      memset(sys_id, 0, sizeof(sys_id));
+      bgp_ls_isis_sysid_print(sys_id, blsnd->igp_rtr_id.id);
+      strcpy(key_str, prefix); strcat(key_str, "_igp_rtr_id");
       json_object_set_new_nocheck(obj, key_str, json_string(sys_id));
     }
 #endif
