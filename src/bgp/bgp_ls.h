@@ -66,6 +66,32 @@
 #define BGP_LS_ND_OSPF_AREA_ID		514
 #define BGP_LS_ND_IGP_ROUTER_ID		515
 
+#define BGP_LS_ATTR_NODE_FLAG_BITS	1024
+#define BGP_LS_ATTR_NODE_OPAQUE		1025
+#define BGP_LS_ATTR_NODE_NAME		1026
+#define BGP_LS_ATTR_ISIS_AREA_ID	1027
+#define BGP_LS_ATTR_V4_RID_LOCAL	1028
+#define BGP_LS_ATTR_V6_RID_LOCAL	1029
+#define BGP_LS_ATTR_V4_RID_REMOTE	1030
+#define BGP_LS_ATTR_V6_RID_REMOTE	1031
+#define BGP_LS_ATTR_ADMIN_GROUP		1088
+#define BGP_LS_ATTR_MAX_BW		1089
+#define BGP_LS_ATTR_MAX_RESV_BW		1090
+#define BGP_LS_ATTR_UNRESV_BW		1091
+#define BGP_LS_ATTR_TE_DEFAULT_METRIC	1092
+#define BGP_LS_ATTR_PROTECTION_TYPE	1093
+#define BGP_LS_ATTR_MPLS_PROTO_MASK	1094
+#define BGP_LS_ATTR_IGP_METRIC		1095
+#define BGP_LS_ATTR_SR_LINK_GROUP	1096
+#define BGP_LS_ATTR_LINK_OPAQUE		1097
+#define BGP_LS_ATTR_LINK_NAME		1098
+#define BGP_LS_ATTR_IGP_FLAGS		1152
+#define BGP_LS_ATTR_IGP_ROUTE_TAG	1153
+#define BGP_LS_ATTR_IGP_EXT_ROUTE_TAG	1154
+#define BGP_LS_ATTR_PFX_METRIC		1155
+#define BGP_LS_ATTR_OSPF_FWD_ADDR	1156
+#define BGP_LS_ATTR_PFX_OPAQUE		1157
+
 #define BGP_LS_ISIS_SYS_ID_LEN		6 
 
 /* structures */
@@ -128,6 +154,7 @@ struct bgp_ls_nlri {
 
 typedef int (*bgp_ls_nlri_tlv_hdlr)(char *, int, struct bgp_ls_nlri *);
 typedef int (*bgp_ls_nd_tlv_hdlr)(char *, int, struct bgp_ls_node_desc *);
+typedef int (*bgp_ls_attr_tlv_print_hdlr)(char *, u_int16_t, int, void *);
 
 struct bgp_ls_nlri_tlv_list_entry {
   u_int16_t type;
@@ -137,6 +164,11 @@ struct bgp_ls_nlri_tlv_list_entry {
 struct bgp_ls_nd_tlv_list_entry {
   u_int16_t type;
   bgp_ls_nd_tlv_hdlr hdlr;
+};
+
+struct bgp_ls_attr_tlv_print_list_entry {
+  u_int16_t type;
+  bgp_ls_attr_tlv_print_hdlr hdlr;
 };
 
 struct bgp_ls_nlri_map_trav_del {
@@ -163,11 +195,14 @@ extern int bgp_ls_nd_tlv_as_handler(char *, int, struct bgp_ls_node_desc *);
 extern int bgp_ls_nd_tlv_id_handler(char *, int, struct bgp_ls_node_desc *);
 extern int bgp_ls_nd_tlv_router_id_handler(char *, int, struct bgp_ls_node_desc *);
 
+extern int bgp_ls_attr_tlv_unknown_handler(char *, u_int16_t, u_int16_t, int, void *);
+
 int bgp_ls_log_msg(struct bgp_ls_nlri *, struct bgp_attr_ls *, afi_t, safi_t, bgp_tag_t *, char *, int, char **, int);
 void bgp_ls_log_node_desc(void *, struct bgp_ls_node_desc *, u_int8_t, char *, int);
 void bgp_ls_isis_sysid_print(char *, char *);
 
 /* global variables */
 extern cdada_map_t *bgp_ls_nlri_tlv_map, *bgp_ls_nd_tlv_map, *bgp_ls_nlri_map;
+extern cdada_map_t *bgp_ls_attr_tlv_print_map;
 
 #endif //BGP_LS_H

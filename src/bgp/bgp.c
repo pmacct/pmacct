@@ -64,6 +64,7 @@ struct bgp_xconnects bgp_xcs_map;
 
 /* BGP-LS global variables */
 cdada_map_t *bgp_ls_nlri_tlv_map, *bgp_ls_nd_tlv_map, *bgp_ls_nlri_map;
+cdada_map_t *bgp_ls_attr_tlv_print_map;
 
 /* Functions */
 void bgp_daemon_wrapper()

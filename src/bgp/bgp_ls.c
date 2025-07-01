@@ -56,14 +56,24 @@ void bgp_ls_init()
     exit_gracefully(1);
   }
 
+  for (idx = 0; bgp_ls_nd_tlv_list[idx].hdlr; idx++) {
+    ret = cdada_map_insert(bgp_ls_nd_tlv_map, &bgp_ls_nd_tlv_list[idx].type, (void *) &bgp_ls_nd_tlv_list[idx].hdlr);
+  }
+
+  bgp_ls_attr_tlv_print_map = cdada_map_create(u_int16_t); /* sizeof type */
+  if (!bgp_ls_attr_tlv_print_map) {
+    Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unable to allocate bgp_ls_attr_tlv_print_map. Exiting.\n", config.name);
+    exit_gracefully(1);
+  }
+
+  for (idx = 0; bgp_ls_attr_tlv_print_list[idx].hdlr; idx++) {
+    ret = cdada_map_insert(bgp_ls_attr_tlv_print_map, &bgp_ls_attr_tlv_print_list[idx].type, (void *) &bgp_ls_attr_tlv_print_list[idx].hdlr);
+  }
+
   bgp_ls_nlri_map = cdada_map_create(struct bgp_ls_nlri);
   if (!bgp_ls_nlri_map) {
     Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unable to allocate bgp_ls_nlri_map. Exiting.\n", config.name);
     exit_gracefully(1);
-  }
-
-  for (idx = 0; bgp_ls_nd_tlv_list[idx].hdlr; idx++) {
-    ret = cdada_map_insert(bgp_ls_nd_tlv_map, &bgp_ls_nd_tlv_list[idx].type, (void *) &bgp_ls_nd_tlv_list[idx].hdlr);
   }
 }
 
@@ -504,6 +514,34 @@ int bgp_ls_nd_tlv_router_id_handler(char *pnt, int len, struct bgp_ls_node_desc 
   return ret;
 }
 
+int bgp_ls_attr_tlv_unknown_handler(char *pnt, u_int16_t len, u_int16_t type, int output, void *void_obj)
+{
+  if (!pnt || !len || !type || !void_obj) {
+    return ERR;
+  }
+ 
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    json_t *obj = void_obj;
+    char key[32], *value = NULL;
+
+    value = malloc(len * 3);    
+    if (value) {
+      memset(key, 0, sizeof(key));
+      memset(value, 0, len * 3);
+
+      snprintf(key, sizeof(key), "bgp_ls_attr_%d", type);
+      serialize_hex(pnt, value, len);
+      json_object_set_new_nocheck(obj, key, json_string(value));
+
+      free(value);
+    } 
+#endif
+  }
+
+  return SUCCESS;
+}
+
 int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
 		afi_t afi, safi_t safi, bgp_tag_t *tag, char *event_type,
 		int output, char **output_data, int log_type)
@@ -640,7 +678,31 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
       break;
     }
 
-    // XXX: Attr output
+    if (blsa && blsa->ptr && blsa->len) {
+      char *pnt = blsa->ptr;
+      u_int16_t rem_len = blsa->len, tlv_type, tlv_len, tmp16;
+
+      for (; rem_len >= 4; rem_len -= tlv_len, pnt += tlv_len) {
+	bgp_ls_attr_tlv_print_hdlr *tlv_hdlr;
+
+	memcpy(&tmp16, pnt, 2);
+	tlv_type = ntohs(tmp16);
+	pnt += 2; rem_len -= 2;
+
+	memcpy(&tmp16, pnt, 2);
+	tlv_len = ntohs(tmp16);
+	pnt += 2; rem_len -= 2;
+
+	ret = cdada_map_find(bgp_ls_attr_tlv_print_map, &tlv_type, (void **) &tlv_hdlr);
+	if (ret == CDADA_SUCCESS && tlv_hdlr) {
+	  ret = (*tlv_hdlr)(pnt, tlv_len, output, obj);
+	}
+	else {
+	  Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS Unknown Attr TLV %u\n", config.name, config.type, tlv_type);
+	  ret = bgp_ls_attr_tlv_unknown_handler(pnt, tlv_len, tlv_type, output, obj);
+	}
+      }
+    }
 
     if ((bms->msglog_file && etype == BGP_LOGDUMP_ET_LOG) ||
 	(bms->dump_file && etype == BGP_LOGDUMP_ET_DUMP)) {

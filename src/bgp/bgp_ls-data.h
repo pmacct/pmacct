@@ -36,3 +36,7 @@ const struct bgp_ls_nd_tlv_list_entry bgp_ls_nd_tlv_list[] = {
   {BGP_LS_ND_IGP_ROUTER_ID, bgp_ls_nd_tlv_router_id_handler},
   {0, NULL}
 };
+
+const struct bgp_ls_attr_tlv_print_list_entry bgp_ls_attr_tlv_print_list[] = {
+  {0, NULL}
+};
