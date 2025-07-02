@@ -97,7 +97,6 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
   pnt = info->nlri;
   rem_len = info->length;
   memset(&blsn, 0, sizeof(blsn));
-  memcpy(&blsn.nexthop, &attr->mp_nexthop, sizeof(struct host_addr));
   blsn.safi = info->safi;
   blsn.peer = peer;
 
@@ -140,25 +139,26 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
   }
 
   if (type == BGP_NLRI_UPDATE) {
-    void *attr_aux = NULL, *attr_prev = NULL;
-    struct bgp_attr_ls *attr_hdr_aux = NULL;
+    void *attr_aux = NULL;
+    struct bgp_attr_ls *attr_hdr = NULL, *attr_hdr_prev = NULL;
 
     if (!bms->skip_rib) {
       if (attr_extra && attr_extra->ls.ptr) {
-        attr_hdr_aux = malloc(sizeof(struct bgp_attr_ls));
+        attr_hdr = malloc(sizeof(struct bgp_attr_ls));
         attr_aux = malloc(attr_extra->ls.len);
-        if (attr_hdr_aux && attr_aux) {
-	  memcpy(attr_hdr_aux, &attr_extra->ls, sizeof(struct bgp_attr_ls));
+        if (attr_hdr && attr_aux) {
 	  memcpy(attr_aux, attr_extra->ls.ptr, attr_extra->ls.len);
-	  attr_hdr_aux->ptr = attr_aux;
+	  attr_hdr->ptr = attr_aux;
+	  attr_hdr->len = attr_extra->ls.len;
 
-	  ret = cdada_map_insert_replace(bgp_ls_nlri_map, &blsn, &attr_hdr_aux, &attr_prev);
+	  ret = cdada_map_insert_replace(bgp_ls_nlri_map, &blsn, attr_hdr, (void **) &attr_hdr_prev);
 	  if (ret != CDADA_SUCCESS) {
 	    Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS failed NLRI Insert/Replace\n", config.name, config.type);
 	  }
 	  else {
-	    if (attr_prev) {
-	      free(attr_prev);
+	    if (attr_hdr_prev) {
+	      free(attr_hdr_prev->ptr);
+	      free(attr_hdr_prev);
 	    }
 	  }
 	}
@@ -198,6 +198,21 @@ exit_fail_lane:
   return ERR;
 }
 
+void bgp_ls_peer_info_print(const cdada_map_t *m, const void *k, void *v, void *o)
+{
+  struct bgp_ls_nlri_map_trav_print *blsnmtp = o;
+  struct bgp_ls_nlri *blsn = (void *) k;
+  struct bgp_attr_ls *blsa = (void *) v;
+  struct bgp_misc_structs *bms = bgp_select_misc_db(blsnmtp->peer->type);
+
+  if (!host_addr_cmp(&blsnmtp->peer->addr, &blsn->peer->addr)) {
+    char event_type[] = "dump";
+
+    bgp_ls_log_msg(blsn, blsa, AFI_BGP_LS, blsn->safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_MISC);
+    (*blsnmtp->num_entries)++;
+  }
+}
+
 void bgp_ls_peer_info_delete(const cdada_map_t *m, const void *k, void *v, void *o)
 {
   struct bgp_ls_nlri_map_trav_del *blsnmtd = o;
@@ -205,6 +220,21 @@ void bgp_ls_peer_info_delete(const cdada_map_t *m, const void *k, void *v, void 
 
   if (!host_addr_cmp(&blsnmtd->peer->addr, &blsn->peer->addr)) {
     cdada_list_push_back(blsnmtd->list_del, blsn);
+  }
+}
+
+void bgp_ls_info_print(struct bgp_peer *peer, u_int64_t *num_entries)
+{
+  if (peer) {
+    struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
+
+    if (!cdada_map_empty(bgp_ls_nlri_map)) {
+      struct bgp_ls_nlri_map_trav_print blsnmtp;
+
+      blsnmtp.peer = peer;
+      blsnmtp.num_entries = num_entries;
+      cdada_map_traverse(bgp_ls_nlri_map, bgp_ls_peer_info_print, &blsnmtp);
+    }
   }
 }
 
@@ -560,7 +590,6 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
 
   if (!strcmp(event_type, "dump")) etype = BGP_LOGDUMP_ET_DUMP;
   else if (!strcmp(event_type, "log")) etype = BGP_LOGDUMP_ET_LOG;
-  else if (!strcmp(event_type, "lglass")) etype = BGP_LOGDUMP_ET_LG;
 
   if ((bms->msglog_amqp_routing_key && etype == BGP_LOGDUMP_ET_LOG) ||
       (bms->dump_amqp_routing_key && etype == BGP_LOGDUMP_ET_DUMP)) {
@@ -588,7 +617,7 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
     json_t *obj = json_object();
 
     char empty[] = "";
-    char prefix_str[PREFIX_STRLEN], nexthop_str[INET6_ADDRSTRLEN];
+    char prefix_str[PREFIX_STRLEN];
     char *aspath;
 
     if (etype == BGP_LOGDUMP_ET_LOG) {
@@ -642,9 +671,6 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
     else {
       json_object_set_new_nocheck(obj, "proto", json_integer(blsn->proto));
     }
-
-    addr_to_str(ip_address, &blsn->nexthop);
-    json_object_set_new_nocheck(obj, "nexthop", json_string(ip_address));
 
     if (safi == SAFI_LS_VPN) {
       char rd_str[SHORTSHORTBUFLEN];

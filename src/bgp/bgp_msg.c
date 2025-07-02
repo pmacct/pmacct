@@ -772,7 +772,7 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   if (mp_withdraw.length
 	  && mp_withdraw.afi == AFI_BGP_LS
 	  && (mp_withdraw.safi == SAFI_LS_GLOBAL || mp_withdraw.safi == SAFI_LS_VPN)) {
-    ret = bgp_ls_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_WITHDRAW);
+    ret = bgp_ls_nlri_parse(bmd, &attr, &attr_extra, &mp_withdraw, BGP_NLRI_WITHDRAW);
     parsed = TRUE;
   }
 

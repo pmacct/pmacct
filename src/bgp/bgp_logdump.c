@@ -23,6 +23,7 @@
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "bgp.h"
+#include "bgp_ls.h"
 #include "rpki/rpki.h"
 #include "thread_pool.h"
 #include "plugin_common.h"
@@ -2278,32 +2279,32 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 
       if (!inter_domain_routing_db) return ERR;
 
+      bgp_ls_info_print(peer, &dump_elems);
 
       for (afi = AFI_IP; afi < AFI_MAX; afi++) {
-  for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
-    table = inter_domain_routing_db->rib[afi][safi];
-    node = bgp_table_top(peer, table);
+	for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
+	  table = inter_domain_routing_db->rib[afi][safi];
+	  node = bgp_table_top(peer, table);
 
-    while (node) {
-      u_int32_t modulo = bgp_route_info_modulo(peer, NULL, NULL, NULL, bms->table_per_peer_buckets);
-      u_int32_t peer_buckets;
-      struct bgp_info *ri;
+	  while (node) {
+	    u_int32_t modulo = bgp_route_info_modulo(peer, NULL, NULL, NULL, bms->table_per_peer_buckets);
+	    u_int32_t peer_buckets;
+	    struct bgp_info *ri;
 
-      for (peer_buckets = 0; peer_buckets < config.bgp_table_per_peer_buckets; peer_buckets++) {
-        for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
-
-    if (ri->peer == peer) {
+	    for (peer_buckets = 0; peer_buckets < config.bgp_table_per_peer_buckets; peer_buckets++) {
+	      for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
+	        if (ri->peer == peer) {
             
-            bgp_peer_log_msg(node, ri, afi, safi, &bgp_logdump_tag, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC);
-            dump_elems++;
-            bds.entries++;
-    }
-        }
-      }
+		  bgp_peer_log_msg(node, ri, afi, safi, &bgp_logdump_tag, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC);
+		  dump_elems++;
+		  bds.entries++;
+		}
+	      }
+	    }
 
-      node = bgp_route_next(peer, node);
-    }
-  }
+	    node = bgp_route_next(peer, node);
+	  }
+	}
       }
 
       saved_peer = peer;
