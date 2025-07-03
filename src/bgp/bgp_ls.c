@@ -623,7 +623,6 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
 		afi_t afi, safi_t safi, bgp_tag_t *tag, char *event_type,
 		int output, char **output_data, int log_type)
 {
-  char bgp_peer_str[INET6_ADDRSTRLEN];
   struct bgp_misc_structs *bms;
   struct bgp_peer *peer;
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
@@ -662,6 +661,7 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     char ip_address[INET6_ADDRSTRLEN], ip_addr_mask[INET6_ADDRSTRLEN + 1 + 3], log_type_str[SUPERSHORTBUFLEN];
+    char bgp_peer_str[INET6_ADDRSTRLEN];
     json_t *obj = json_object();
 
     if (etype == BGP_LOGDUMP_ET_LOG) {
@@ -814,19 +814,18 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
 
 void bgp_ls_log_node_desc(void *void_obj, struct bgp_ls_node_desc *blsnd, u_int8_t proto, char *in_prefix, int output)
 {
-  char key_str[32];
-  char empty_prefix[] = "", *prefix;
-
-  if (!in_prefix) {
-    prefix = empty_prefix;
-  }
-  else {
-    prefix = in_prefix;
-  }
-
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     json_t *obj = void_obj;
+    char key_str[32];
+    char empty_prefix[] = "", *prefix;
+
+    if (!in_prefix) {
+      prefix = empty_prefix;
+    }
+    else {
+      prefix = in_prefix;
+    }
 
     strcpy(key_str, prefix); strcat(key_str, "_asn");
     json_object_set_new_nocheck(obj, key_str, json_integer(blsnd->asn));
