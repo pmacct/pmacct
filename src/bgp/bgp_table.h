@@ -67,7 +67,7 @@ struct bgp_msg_extra_data {
 
 struct bgp_attr_ls
 {
-  char *ptr; /* pointer to BGP-LS Attribute Sub-TLVs */
+  u_char *ptr; /* pointer to BGP-LS Attribute Sub-TLVs */
   u_int16_t len; /* length of BGP-LS Attribute Sub-TLVs */
 };
 

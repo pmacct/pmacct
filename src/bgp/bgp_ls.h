@@ -152,9 +152,9 @@ struct bgp_ls_nlri {
   } nlri;
 };
 
-typedef int (*bgp_ls_nlri_tlv_hdlr)(char *, int, struct bgp_ls_nlri *);
-typedef int (*bgp_ls_nd_tlv_hdlr)(char *, int, struct bgp_ls_node_desc *);
-typedef int (*bgp_ls_attr_tlv_print_hdlr)(char *, u_int16_t, int, void *);
+typedef int (*bgp_ls_nlri_tlv_hdlr)(u_char *, int, struct bgp_ls_nlri *);
+typedef int (*bgp_ls_nd_tlv_hdlr)(u_char *, int, struct bgp_ls_node_desc *);
+typedef int (*bgp_ls_attr_tlv_print_hdlr)(u_char *, u_int16_t, int, void *);
 
 struct bgp_ls_nlri_tlv_list_entry {
   u_int16_t type;
@@ -183,26 +183,26 @@ struct bgp_ls_nlri_map_trav_print {
 
 /* prototypes */
 extern void bgp_ls_init();
-extern int bgp_attr_parse_ls(struct bgp_peer *, u_int16_t, struct bgp_attr_extra *, char *, u_char);
+extern int bgp_attr_parse_ls(struct bgp_peer *, u_int16_t, struct bgp_attr_extra *, u_char *, u_char);
 extern int bgp_ls_nlri_parse(struct bgp_msg_data *, struct bgp_attr *, struct bgp_attr_extra *, struct bgp_nlri *, int);
 extern void bgp_ls_info_print(struct bgp_peer *, u_int64_t *);
 extern void bgp_ls_info_delete(struct bgp_peer *);
 extern void bgp_ls_peer_info_print(const cdada_map_t *, const void *, void *, void *);
 extern void bgp_ls_peer_info_delete(const cdada_map_t *, const void *, void *, void *);
 
-extern int bgp_ls_nlri_tlv_local_nd_handler(char *, int, struct bgp_ls_nlri *);
-extern int bgp_ls_nlri_tlv_remote_nd_handler(char *, int, struct bgp_ls_nlri *);
-extern int bgp_ls_nlri_tlv_v4_addr_if_handler(char *, int, struct bgp_ls_nlri *);
-extern int bgp_ls_nlri_tlv_v4_addr_neigh_handler(char *, int, struct bgp_ls_nlri *);
-extern int bgp_ls_nlri_tlv_v6_addr_if_handler(char *, int, struct bgp_ls_nlri *);
-extern int bgp_ls_nlri_tlv_v6_addr_neigh_handler(char *, int, struct bgp_ls_nlri *);
-extern int bgp_ls_nlri_tlv_ip_reach_handler(char *, int, struct bgp_ls_nlri *);
+extern int bgp_ls_nlri_tlv_local_nd_handler(u_char *, int, struct bgp_ls_nlri *);
+extern int bgp_ls_nlri_tlv_remote_nd_handler(u_char *, int, struct bgp_ls_nlri *);
+extern int bgp_ls_nlri_tlv_v4_addr_if_handler(u_char *, int, struct bgp_ls_nlri *);
+extern int bgp_ls_nlri_tlv_v4_addr_neigh_handler(u_char *, int, struct bgp_ls_nlri *);
+extern int bgp_ls_nlri_tlv_v6_addr_if_handler(u_char *, int, struct bgp_ls_nlri *);
+extern int bgp_ls_nlri_tlv_v6_addr_neigh_handler(u_char *, int, struct bgp_ls_nlri *);
+extern int bgp_ls_nlri_tlv_ip_reach_handler(u_char *, int, struct bgp_ls_nlri *);
 
-extern int bgp_ls_nd_tlv_as_handler(char *, int, struct bgp_ls_node_desc *);
-extern int bgp_ls_nd_tlv_id_handler(char *, int, struct bgp_ls_node_desc *);
-extern int bgp_ls_nd_tlv_router_id_handler(char *, int, struct bgp_ls_node_desc *);
+extern int bgp_ls_nd_tlv_as_handler(u_char *, int, struct bgp_ls_node_desc *);
+extern int bgp_ls_nd_tlv_id_handler(u_char *, int, struct bgp_ls_node_desc *);
+extern int bgp_ls_nd_tlv_router_id_handler(u_char *, int, struct bgp_ls_node_desc *);
 
-extern int bgp_ls_attr_tlv_unknown_handler(char *, u_int16_t, u_int16_t, int, void *);
+extern int bgp_ls_attr_tlv_unknown_handler(u_char *, u_int16_t, u_int16_t, int, void *);
 
 int bgp_ls_log_msg(struct bgp_ls_nlri *, struct bgp_attr_ls *, afi_t, safi_t, bgp_tag_t *, char *, int, char **, int);
 void bgp_ls_log_node_desc(void *, struct bgp_ls_node_desc *, u_int8_t, char *, int);

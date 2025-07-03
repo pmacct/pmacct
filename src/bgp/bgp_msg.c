@@ -909,7 +909,7 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
       ret = bgp_attr_parse_otc(peer, attr_len, attr_extra, ptr, flag);
       break;
     case BGP_ATTR_BGP_LS:
-      ret = bgp_attr_parse_ls(peer, attr_len, attr_extra, ptr, flag);
+      ret = bgp_attr_parse_ls(peer, attr_len, attr_extra, (u_char *)ptr, flag);
     default:
       ret = 0;
       break;
@@ -1417,7 +1417,7 @@ int bgp_attr_parse_otc(struct bgp_peer *peer, u_int16_t len, struct bgp_attr_ext
   return SUCCESS;
 }
 
-int bgp_attr_parse_ls(struct bgp_peer *peer, u_int16_t len, struct bgp_attr_extra *attr_extra, char *ptr, u_char flag)
+int bgp_attr_parse_ls(struct bgp_peer *peer, u_int16_t len, struct bgp_attr_extra *attr_extra, u_char *ptr, u_char flag)
 {
   /* Length check. */
   if (len < 4) return ERR;

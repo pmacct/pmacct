@@ -48,6 +48,10 @@ void bgp_ls_init()
 
   for (idx = 0; bgp_ls_nlri_tlv_list[idx].hdlr; idx++) {
     ret = cdada_map_insert(bgp_ls_nlri_tlv_map, &bgp_ls_nlri_tlv_list[idx].type, (void *) &bgp_ls_nlri_tlv_list[idx].hdlr);
+    if (ret != CDADA_SUCCESS) {
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unable to insert in bgp_ls_nlri_tlv_map. Exiting.\n", config.name);
+      exit_gracefully(1);
+    }
   }
 
   bgp_ls_nd_tlv_map = cdada_map_create(u_int16_t); /* sizeof type */
@@ -58,6 +62,10 @@ void bgp_ls_init()
 
   for (idx = 0; bgp_ls_nd_tlv_list[idx].hdlr; idx++) {
     ret = cdada_map_insert(bgp_ls_nd_tlv_map, &bgp_ls_nd_tlv_list[idx].type, (void *) &bgp_ls_nd_tlv_list[idx].hdlr);
+    if (ret != CDADA_SUCCESS) {
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unable to insert in bgp_ls_nd_tlv_map. Exiting.\n", config.name);
+      exit_gracefully(1);
+    } 
   }
 
   bgp_ls_attr_tlv_print_map = cdada_map_create(u_int16_t); /* sizeof type */
@@ -68,6 +76,10 @@ void bgp_ls_init()
 
   for (idx = 0; bgp_ls_attr_tlv_print_list[idx].hdlr; idx++) {
     ret = cdada_map_insert(bgp_ls_attr_tlv_print_map, &bgp_ls_attr_tlv_print_list[idx].type, (void *) &bgp_ls_attr_tlv_print_list[idx].hdlr);
+    if (ret != CDADA_SUCCESS) {
+      Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unable to insert in bgp_ls_attr_tlv_print_map. Exiting.\n", config.name);
+      exit_gracefully(1);
+    }
   }
 
   bgp_ls_nlri_map = cdada_map_create(struct bgp_ls_nlri);
@@ -86,7 +98,7 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
   char bgp_peer_str[INET6_ADDRSTRLEN];
   u_char *pnt;
   int rem_len, rem_nlri_len, ret, idx, log_type = 0;
-  u_int16_t tmp16, nlri_type, nlri_len, tlv_type, tlv_len;
+  u_int16_t tmp16, nlri_len, tlv_type, tlv_len;
 
   if (!peer) goto exit_fail_lane;
 
@@ -103,7 +115,7 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
   /* parse NLRIs, make sure can read Type and Length */
   for (idx = 0; rem_len > 4; rem_len -= nlri_len, idx++) {
     memcpy(&tmp16, pnt, 2);
-    nlri_type = blsn.type = ntohs(tmp16);
+    blsn.type = ntohs(tmp16);
     pnt += 2; rem_len -= 2;
 
     memcpy(&tmp16, pnt, 2);
@@ -133,7 +145,8 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
 	ret = (*tlv_hdlr)(pnt, tlv_len, &blsn);
       }
       else {
-        Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS Unknown TLV %u\n", config.name, config.type, tlv_type);
+	bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+        Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): [%s] BGP-LS Unknown TLV %u\n", config.name, config.type, bgp_peer_str, tlv_type);
       }
     }
   }
@@ -153,7 +166,8 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
 
 	  ret = cdada_map_insert_replace(bgp_ls_nlri_map, &blsn, attr_hdr, (void **) &attr_hdr_prev);
 	  if (ret != CDADA_SUCCESS) {
-	    Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS failed NLRI Insert/Replace\n", config.name, config.type);
+	    bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+	    Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS failed NLRI Insert/Replace\n", config.name, config.type, bgp_peer_str);
 	  }
 	  else {
 	    if (attr_hdr_prev) {
@@ -178,7 +192,8 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
 	free(blsa);
       }
       else {
-        Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS failed NLRI Withdraw\n", config.name, config.type);
+	bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+        Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS failed NLRI Withdraw\n", config.name, config.type, bgp_peer_str);
       }
     }
 
@@ -226,8 +241,6 @@ void bgp_ls_peer_info_delete(const cdada_map_t *m, const void *k, void *v, void 
 void bgp_ls_info_print(struct bgp_peer *peer, u_int64_t *num_entries)
 {
   if (peer) {
-    struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
-
     if (!cdada_map_empty(bgp_ls_nlri_map)) {
       struct bgp_ls_nlri_map_trav_print blsnmtp;
 
@@ -274,8 +287,9 @@ void bgp_ls_info_delete(struct bgp_peer *peer)
   }
 }
 
-int bgp_ls_nlri_tlv_local_nd_handler(char *pnt, int len, struct bgp_ls_nlri *blsn)
+int bgp_ls_nlri_tlv_local_nd_handler(u_char *pnt, int len, struct bgp_ls_nlri *blsn)
 {
+  char bgp_peer_str[INET6_ADDRSTRLEN];
   u_int16_t tlv_type, tlv_len, tmp16;
   struct bgp_ls_node_desc *blnd = NULL;
   int ret = SUCCESS;
@@ -313,9 +327,14 @@ int bgp_ls_nlri_tlv_local_nd_handler(char *pnt, int len, struct bgp_ls_nlri *bls
     ret = cdada_map_find(bgp_ls_nd_tlv_map, &tlv_type, (void **) &tlv_hdlr);
     if (ret == CDADA_SUCCESS && tlv_hdlr) {
       ret = (*tlv_hdlr)(pnt, tlv_len, blnd);
+      if (ret == ERR) {
+	bgp_peer_print(blsn->peer, bgp_peer_str, INET6_ADDRSTRLEN);
+	Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS Issue parsing ND Sub-TLV %u\n", config.name, config.type, bgp_peer_str, tlv_type);
+      }
     }
     else {
-      Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS Unknown ND Sub-TLV %u\n", config.name, config.type, tlv_type);
+      bgp_peer_print(blsn->peer, bgp_peer_str, INET6_ADDRSTRLEN);
+      Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): [%s] BGP-LS Unknown ND Sub-TLV %u\n", config.name, config.type, bgp_peer_str, tlv_type);
       ret = SUCCESS;
     }
   }
@@ -323,8 +342,9 @@ int bgp_ls_nlri_tlv_local_nd_handler(char *pnt, int len, struct bgp_ls_nlri *bls
   return ret;
 }
 
-int bgp_ls_nlri_tlv_remote_nd_handler(char *pnt, int len, struct bgp_ls_nlri *blsn)
+int bgp_ls_nlri_tlv_remote_nd_handler(u_char *pnt, int len, struct bgp_ls_nlri *blsn)
 {
+  char bgp_peer_str[INET6_ADDRSTRLEN];
   u_int16_t tlv_type, tlv_len, tmp16;
   struct bgp_ls_node_desc *blnd = NULL;
   int ret = SUCCESS;
@@ -349,9 +369,15 @@ int bgp_ls_nlri_tlv_remote_nd_handler(char *pnt, int len, struct bgp_ls_nlri *bl
     ret = cdada_map_find(bgp_ls_nd_tlv_map, &tlv_type, (void **) &tlv_hdlr);
     if (ret == CDADA_SUCCESS && tlv_hdlr) {
       ret = (*tlv_hdlr)(pnt, tlv_len, blnd);
+      if (ret == ERR) {
+        bgp_peer_print(blsn->peer, bgp_peer_str, INET6_ADDRSTRLEN);
+        Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS Issue parsing Remote ND Sub-TLV %u\n", config.name, config.type, bgp_peer_str, tlv_type);
+      }
     }
     else {
-      Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS Unknown Remote ND Sub-TLV %u\n", config.name, config.type, tlv_type);
+      bgp_peer_print(blsn->peer, bgp_peer_str, INET6_ADDRSTRLEN);
+      Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): [%s] BGP-LS Unknown Remote ND Sub-TLV %u\n", config.name, config.type, bgp_peer_str, tlv_type);
+
       ret = SUCCESS;
     }
   }
@@ -359,7 +385,7 @@ int bgp_ls_nlri_tlv_remote_nd_handler(char *pnt, int len, struct bgp_ls_nlri *bl
   return ret;
 }
 
-int bgp_ls_nlri_tlv_v4_addr_if_handler(char *pnt, int len, struct bgp_ls_nlri *blsn)
+int bgp_ls_nlri_tlv_v4_addr_if_handler(u_char *pnt, int len, struct bgp_ls_nlri *blsn)
 {
   int ret = SUCCESS;
 
@@ -372,14 +398,18 @@ int bgp_ls_nlri_tlv_v4_addr_if_handler(char *pnt, int len, struct bgp_ls_nlri *b
     memcpy(&blsn->nlri.link.l.ldesc.local_addr.address.ipv4, pnt, 4);
   }
   else {
-    Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS Wrong Length TLV %u\n", config.name, config.type, BGP_LS_V4_ADDR_IF);
+    char bgp_peer_str[INET6_ADDRSTRLEN];
+
+    bgp_peer_print(blsn->peer, bgp_peer_str, INET6_ADDRSTRLEN);
+    Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS Wrong Length TLV %u\n", config.name, config.type, bgp_peer_str, BGP_LS_V4_ADDR_IF);
+
     ret = ERR;
   }
 
   return ret;
 }
 
-int bgp_ls_nlri_tlv_v4_addr_neigh_handler(char *pnt, int len, struct bgp_ls_nlri *blsn)
+int bgp_ls_nlri_tlv_v4_addr_neigh_handler(u_char *pnt, int len, struct bgp_ls_nlri *blsn)
 {
   int ret = SUCCESS;
 
@@ -392,14 +422,18 @@ int bgp_ls_nlri_tlv_v4_addr_neigh_handler(char *pnt, int len, struct bgp_ls_nlri
     memcpy(&blsn->nlri.link.l.ldesc.neigh_addr.address.ipv4, pnt, 4);
   }
   else {
-    Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS Wrong Length TLV %u\n", config.name, config.type, BGP_LS_V4_ADDR_NEIGHBOR);
+    char bgp_peer_str[INET6_ADDRSTRLEN];
+
+    bgp_peer_print(blsn->peer, bgp_peer_str, INET6_ADDRSTRLEN);
+    Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS Wrong Length TLV %u\n", config.name, config.type, bgp_peer_str, BGP_LS_V4_ADDR_NEIGHBOR);
+
     ret = ERR;
   }
 
   return ret;
 }
 
-int bgp_ls_nlri_tlv_v6_addr_if_handler(char *pnt, int len, struct bgp_ls_nlri *blsn)
+int bgp_ls_nlri_tlv_v6_addr_if_handler(u_char *pnt, int len, struct bgp_ls_nlri *blsn)
 {
   int ret = SUCCESS;
 
@@ -412,14 +446,18 @@ int bgp_ls_nlri_tlv_v6_addr_if_handler(char *pnt, int len, struct bgp_ls_nlri *b
     memcpy(&blsn->nlri.link.l.ldesc.local_addr.address.ipv6, pnt, 16);
   }
   else {
-    Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS Wrong Length TLV %u\n", config.name, config.type, BGP_LS_V6_ADDR_IF);
+    char bgp_peer_str[INET6_ADDRSTRLEN];
+
+    bgp_peer_print(blsn->peer, bgp_peer_str, INET6_ADDRSTRLEN);
+    Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS Wrong Length TLV %u\n", config.name, config.type, bgp_peer_str, BGP_LS_V6_ADDR_IF);
+
     ret = ERR;
   }
 
   return ret;
 }
 
-int bgp_ls_nlri_tlv_v6_addr_neigh_handler(char *pnt, int len, struct bgp_ls_nlri *blsn)
+int bgp_ls_nlri_tlv_v6_addr_neigh_handler(u_char *pnt, int len, struct bgp_ls_nlri *blsn)
 {
   int ret = SUCCESS;
 
@@ -432,14 +470,18 @@ int bgp_ls_nlri_tlv_v6_addr_neigh_handler(char *pnt, int len, struct bgp_ls_nlri
     memcpy(&blsn->nlri.link.l.ldesc.neigh_addr.address.ipv6, pnt, 16);
   }
   else {
-    Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS Wrong Length TLV %u\n", config.name, config.type, BGP_LS_V6_ADDR_NEIGHBOR);
+    char bgp_peer_str[INET6_ADDRSTRLEN];
+
+    bgp_peer_print(blsn->peer, bgp_peer_str, INET6_ADDRSTRLEN);
+    Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS Wrong Length TLV %u\n", config.name, config.type, bgp_peer_str, BGP_LS_V6_ADDR_NEIGHBOR);
+
     ret = ERR;
   }
 
   return ret;
 }
 
-int bgp_ls_nlri_tlv_ip_reach_handler(char *pnt, int len, struct bgp_ls_nlri *blsn)
+int bgp_ls_nlri_tlv_ip_reach_handler(u_char *pnt, int len, struct bgp_ls_nlri *blsn)
 {
   int ret = SUCCESS, pfx_size;
   u_int8_t pfx_len;
@@ -453,7 +495,11 @@ int bgp_ls_nlri_tlv_ip_reach_handler(char *pnt, int len, struct bgp_ls_nlri *bls
 
   pfx_size = ((pfx_len + 7) / 8);
   if (pfx_size > len) {
-    Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS Wrong Length TLV %u\n", config.name, config.type, BGP_LS_IP_REACH);
+    char bgp_peer_str[INET6_ADDRSTRLEN];
+
+    bgp_peer_print(blsn->peer, bgp_peer_str, INET6_ADDRSTRLEN);
+    Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS Wrong Length TLV %u\n", config.name, config.type, bgp_peer_str, BGP_LS_IP_REACH);
+
     ret = ERR;
   }
 
@@ -475,7 +521,11 @@ int bgp_ls_nlri_tlv_ip_reach_handler(char *pnt, int len, struct bgp_ls_nlri *bls
       blsn->nlri.topo_pfx.p.pdesc.mask.len = pfx_len;
     }
     else {
-      Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS Wrong Length (pfx_size) TLV %u\n", config.name, config.type, BGP_LS_IP_REACH);
+      char bgp_peer_str[INET6_ADDRSTRLEN];
+
+      bgp_peer_print(blsn->peer, bgp_peer_str, INET6_ADDRSTRLEN);
+      Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS Wrong Length (pfx_size) TLV %u\n", config.name, config.type, bgp_peer_str, BGP_LS_IP_REACH);
+
       ret = ERR;
     }
   }
@@ -483,7 +533,7 @@ int bgp_ls_nlri_tlv_ip_reach_handler(char *pnt, int len, struct bgp_ls_nlri *bls
   return ret;
 }
 
-int bgp_ls_nd_tlv_as_handler(char *pnt, int len, struct bgp_ls_node_desc *blnd)
+int bgp_ls_nd_tlv_as_handler(u_char *pnt, int len, struct bgp_ls_node_desc *blnd)
 {
   int ret = SUCCESS;
   u_int32_t tmp32;
@@ -497,14 +547,13 @@ int bgp_ls_nd_tlv_as_handler(char *pnt, int len, struct bgp_ls_node_desc *blnd)
     blnd->asn = ntohl(tmp32);
   }
   else {
-    Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS Wrong Length TLV %u\n", config.name, config.type, BGP_LS_ND_AS);
     ret = ERR;
   }
 
   return ret;
 }
 
-int bgp_ls_nd_tlv_id_handler(char *pnt, int len, struct bgp_ls_node_desc *blnd)
+int bgp_ls_nd_tlv_id_handler(u_char *pnt, int len, struct bgp_ls_node_desc *blnd)
 {
   int ret = SUCCESS;
   u_int32_t tmp32;
@@ -518,14 +567,13 @@ int bgp_ls_nd_tlv_id_handler(char *pnt, int len, struct bgp_ls_node_desc *blnd)
     blnd->bgp_ls_id = ntohl(tmp32);
   }
   else {
-    Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS Wrong Length TLV %u\n", config.name, config.type, BGP_LS_ND_ID);
     ret = ERR;
   }
 
   return ret;
 }
 
-int bgp_ls_nd_tlv_router_id_handler(char *pnt, int len, struct bgp_ls_node_desc *blnd)
+int bgp_ls_nd_tlv_router_id_handler(u_char *pnt, int len, struct bgp_ls_node_desc *blnd)
 {
   int ret = SUCCESS;
 
@@ -537,14 +585,13 @@ int bgp_ls_nd_tlv_router_id_handler(char *pnt, int len, struct bgp_ls_node_desc 
     memcpy(blnd->igp_rtr_id.id, pnt, len);
   }
   else {
-    Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS Wrong Length TLV %u\n", config.name, config.type, BGP_LS_ND_IGP_ROUTER_ID);
     ret = ERR;
   }
 
   return ret;
 }
 
-int bgp_ls_attr_tlv_unknown_handler(char *pnt, u_int16_t len, u_int16_t type, int output, void *void_obj)
+int bgp_ls_attr_tlv_unknown_handler(u_char *pnt, u_int16_t len, u_int16_t type, int output, void *void_obj)
 {
   if (!pnt || !len || !type || !void_obj) {
     return ERR;
@@ -561,7 +608,7 @@ int bgp_ls_attr_tlv_unknown_handler(char *pnt, u_int16_t len, u_int16_t type, in
       memset(value, 0, len * 3);
 
       snprintf(key, sizeof(key), "bgp_ls_attr_%d", type);
-      serialize_hex(pnt, value, len);
+      serialize_hex((u_char *)pnt, (u_char *)value, len);
       json_object_set_new_nocheck(obj, key, json_string(value));
 
       free(value);
@@ -576,6 +623,7 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
 		afi_t afi, safi_t safi, bgp_tag_t *tag, char *event_type,
 		int output, char **output_data, int log_type)
 {
+  char bgp_peer_str[INET6_ADDRSTRLEN];
   struct bgp_misc_structs *bms;
   struct bgp_peer *peer;
   int ret = 0, amqp_ret = 0, kafka_ret = 0, etype = BGP_LOGDUMP_ET_NONE;
@@ -615,10 +663,6 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
 #ifdef WITH_JANSSON
     char ip_address[INET6_ADDRSTRLEN], ip_addr_mask[INET6_ADDRSTRLEN + 1 + 3], log_type_str[SUPERSHORTBUFLEN];
     json_t *obj = json_object();
-
-    char empty[] = "";
-    char prefix_str[PREFIX_STRLEN];
-    char *aspath;
 
     if (etype == BGP_LOGDUMP_ET_LOG) {
       json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) bgp_peer_log_seq_get(&bms->log_seq)));
@@ -705,7 +749,7 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
     }
 
     if (blsa && blsa->ptr && blsa->len) {
-      char *pnt = blsa->ptr;
+      u_char *pnt = blsa->ptr;
       u_int16_t rem_len = blsa->len, tlv_type, tlv_len, tmp16;
 
       for (; rem_len >= 4; rem_len -= tlv_len, pnt += tlv_len) {
@@ -722,9 +766,14 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
 	ret = cdada_map_find(bgp_ls_attr_tlv_print_map, &tlv_type, (void **) &tlv_hdlr);
 	if (ret == CDADA_SUCCESS && tlv_hdlr) {
 	  ret = (*tlv_hdlr)(pnt, tlv_len, output, obj);
+	  if (ret == ERR) { 
+	    bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+	    Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS Issue parsing Attribute TLV %u\n", config.name, config.type, bgp_peer_str, tlv_type);
+	  }
 	}
 	else {
-	  Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): BGP-LS Unknown Attr TLV %u\n", config.name, config.type, tlv_type);
+	  bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+	  Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): [%s] BGP-LS Unknown Attribute TLV %u\n", config.name, config.type, bgp_peer_str, tlv_type);
 	  ret = bgp_ls_attr_tlv_unknown_handler(pnt, tlv_len, tlv_type, output, obj);
 	}
       }
