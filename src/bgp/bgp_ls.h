@@ -211,5 +211,4 @@ void bgp_ls_isis_sysid_print(char *, char *);
 /* global variables */
 extern cdada_map_t *bgp_ls_nlri_tlv_map, *bgp_ls_nd_tlv_map, *bgp_ls_nlri_map;
 extern cdada_map_t *bgp_ls_attr_tlv_print_map;
-
 #endif //BGP_LS_H

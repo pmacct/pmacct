@@ -234,7 +234,7 @@ void bgp_ls_peer_info_delete(const cdada_map_t *m, const void *k, void *v, void 
   struct bgp_ls_nlri *blsn = (void *) k;
 
   if (!host_addr_cmp(&blsnmtd->peer->addr, &blsn->peer->addr)) {
-    cdada_list_push_back(blsnmtd->list_del, blsn);
+    cdada_list_push_back(blsnmtd->list_del, &blsn);
   }
 }
 
@@ -253,6 +253,8 @@ void bgp_ls_info_print(struct bgp_peer *peer, u_int64_t *num_entries)
 
 void bgp_ls_info_delete(struct bgp_peer *peer)
 {
+  int ret;
+
   if (peer) {
     struct bgp_misc_structs *bms = bgp_select_misc_db(peer->type);
 
@@ -261,25 +263,33 @@ void bgp_ls_info_delete(struct bgp_peer *peer)
       struct bgp_ls_nlri *blsn = NULL;
       
       blsnmtd.peer = peer;
-      blsnmtd.list_del = cdada_list_create(struct bgp_ls_nlri);
+      blsnmtd.list_del = cdada_list_create(struct bgp_ls_nlri *);
 
       cdada_map_traverse(bgp_ls_nlri_map, bgp_ls_peer_info_delete, &blsnmtd);
 
-      while (cdada_list_first(blsnmtd.list_del, blsn) == CDADA_SUCCESS) {
+      while (cdada_list_first(blsnmtd.list_del, &blsn) == CDADA_SUCCESS) {
 	struct bgp_attr_ls *blsa = NULL;
-	cdada_map_find(bgp_ls_nlri_map, &blsn, (void **) &blsa);
 
-	if (bms->msglog_backend_methods) {
-	  char event_type[] = "log";
+	ret = cdada_map_find(bgp_ls_nlri_map, blsn, (void **) &blsa);
+	if (ret == CDADA_SUCCESS && blsa) {
+	  if (bms->msglog_backend_methods) {
+	    char event_type[] = "log";
 
-	  bgp_ls_log_msg(blsn, blsa, AFI_BGP_LS, blsn->safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_DELETE);
+	    bgp_ls_log_msg(blsn, blsa, AFI_BGP_LS, blsn->safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_DELETE);
+          }
+
+	  cdada_map_erase(bgp_ls_nlri_map, blsn); 
+	  free(blsa->ptr);
+	  free(blsa);
+
+	  cdada_list_pop_front(blsnmtd.list_del);
         }
+	else {
+	  char bgp_peer_str[INET6_ADDRSTRLEN];
 
-	cdada_map_erase(bgp_ls_nlri_map, &blsn); 
-	free(blsa->ptr);
-	free(blsa);
-
-	cdada_list_pop_front(blsnmtd.list_del);
+	  bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+	  Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS failed NLRI delete\n", config.name, config.type, bgp_peer_str);
+	}
       }
 
       cdada_list_destroy(blsnmtd.list_del);
