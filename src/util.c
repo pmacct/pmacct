@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -3209,12 +3209,12 @@ int delete_line_from_file(int index, char *path)
     line_idx++;
   }
 
+  file_unlock(fileno(file));
   fclose(file);
   unlink(path);
   fclose(file_copy);
   rename(copy_path, path);
 
-  file_unlock(fileno(file));
   free(copy_path);
   return 0;
 }

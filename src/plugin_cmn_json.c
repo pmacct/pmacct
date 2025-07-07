@@ -1815,7 +1815,7 @@ json_t *compose_srv6_segment_ipv6_list_json_data(struct host_addr *ipv6_list, in
     addr_to_str(ipv6_str, &ipv6_list[idx_0]);
 
     memset(idx_str, 0, sizeof(idx_str));
-    snprintf(idx_str, 3, "%zu", idx_0);
+    snprintf(idx_str, 4, "%zu", idx_0);
     strcat(idx_str, "-");
 
     memset(idx_ipv6_str, 0, sizeof(idx_ipv6_str));

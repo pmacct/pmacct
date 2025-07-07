@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -2136,7 +2136,7 @@ int compose_srv6_segment_ipv6_list_data(struct host_addr *ipv6_list, int list_le
     addr_to_str(ipv6_str, &ipv6_list[idx_0]);
 
     memset(idx_str, 0, sizeof(idx_str));
-    snprintf(idx_str, 3, "%zu", idx_0);
+    snprintf(idx_str, 4, "%zu", idx_0);
     strcat(idx_str, "-");
 
     memset(idx_ipv6_str, 0, sizeof(idx_ipv6_str));
