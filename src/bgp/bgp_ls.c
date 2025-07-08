@@ -75,7 +75,7 @@ void bgp_ls_init()
   }
 
   for (idx = 0; bgp_ls_attr_tlv_print_list[idx].hdlr; idx++) {
-    ret = cdada_map_insert(bgp_ls_attr_tlv_print_map, &bgp_ls_attr_tlv_print_list[idx].type, (void *) &bgp_ls_attr_tlv_print_list[idx].hdlr);
+    ret = cdada_map_insert(bgp_ls_attr_tlv_print_map, &bgp_ls_attr_tlv_print_list[idx].type, (void *) &bgp_ls_attr_tlv_print_list[idx]);
     if (ret != CDADA_SUCCESS) {
       Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unable to insert in bgp_ls_attr_tlv_print_map. Exiting.\n", config.name);
       exit_gracefully(1);
@@ -617,7 +617,7 @@ int bgp_ls_attr_tlv_unknown_handler(u_char *pnt, u_int16_t len, u_int16_t type, 
       memset(key, 0, sizeof(key));
       memset(value, 0, len * 3);
 
-      snprintf(key, sizeof(key), "bgp_ls_attr_%d", type);
+      snprintf(key, sizeof(key), "attr_%d", type);
       serialize_hex((u_char *)pnt, (u_char *)value, len);
       json_object_set_new_nocheck(obj, key, json_string(value));
 
@@ -763,7 +763,7 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
       u_int16_t rem_len = blsa->len, tlv_type, tlv_len, tmp16;
 
       for (; rem_len >= 4; rem_len -= tlv_len, pnt += tlv_len) {
-	bgp_ls_attr_tlv_print_hdlr *tlv_hdlr;
+	struct bgp_ls_attr_tlv_print_list_entry *blsatple = NULL;
 
 	memcpy(&tmp16, pnt, 2);
 	tlv_type = ntohs(tmp16);
@@ -773,9 +773,9 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
 	tlv_len = ntohs(tmp16);
 	pnt += 2; rem_len -= 2;
 
-	ret = cdada_map_find(bgp_ls_attr_tlv_print_map, &tlv_type, (void **) &tlv_hdlr);
-	if (ret == CDADA_SUCCESS && tlv_hdlr) {
-	  ret = (*tlv_hdlr)(pnt, tlv_len, output, obj);
+	ret = cdada_map_find(bgp_ls_attr_tlv_print_map, &tlv_type, (void **) &blsatple);
+	if (ret == CDADA_SUCCESS && blsatple && blsatple->hdlr) {
+	  ret = (*blsatple->hdlr)(pnt, tlv_len, blsatple->keystr, output, obj);
 	  if (ret == ERR) { 
 	    bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
 	    Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS Issue parsing Attribute TLV %u\n", config.name, config.type, bgp_peer_str, tlv_type);
@@ -877,4 +877,115 @@ void bgp_ls_isis_sysid_print(char *to, char *from)
   sprintf (to, "%02x", *(from + (BGP_LS_ISIS_SYS_ID_LEN - 1)));
   to += 2;
   *(to) = '\0';
+}
+
+int bgp_ls_attr_tlv_string_print(u_char *pnt, u_int16_t len, char *key, int output, void *void_obj)
+{
+  if (!pnt || !key || !output || !void_obj) {
+    return ERR;
+  };
+
+  if (len) {
+    if (output == PRINT_OUTPUT_JSON) { 
+#ifdef WITH_JANSSON
+      json_t *obj = void_obj;
+      char *null_term_str = NULL;
+
+      null_term_str = malloc(len + 1);
+      if (null_term_str) {
+	memcpy(null_term_str, pnt, len);
+	null_term_str[len] = '\0';
+
+	json_object_set_new_nocheck(obj, key, json_string(null_term_str));
+	free(null_term_str);
+      }
+      else {
+	return ERR;
+      }
+#endif
+    }
+  }
+
+  return SUCCESS;
+}
+
+int bgp_ls_attr_tlv_ip_print(u_char *pnt, u_int16_t len, char *key, int output, void *void_obj)
+{
+  if (!pnt || !key || !output || !void_obj) {
+    return ERR;
+  };
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    json_t *obj = void_obj;
+    char ip_str[INET6_ADDRSTRLEN];
+    struct host_addr ip;
+
+    if (len == 4) {
+      ip.family = AF_INET;
+      memcpy(&ip.address.ipv4, pnt, 4);
+    }
+    else if (len == 16) {
+      ip.family = AF_INET6;
+      memcpy(&ip.address.ipv6, pnt, 16);
+    }
+    else {
+      return ERR;
+    }
+
+    addr_to_str(ip_str, &ip);
+    json_object_set_new_nocheck(obj, key, json_string(ip_str));
+#endif
+  }
+
+  return SUCCESS;
+}
+
+int bgp_ls_attr_tlv_int32_print(u_char *pnt, u_int16_t len, char *key, int output, void *void_obj)
+{
+  if (!pnt || !key || !output || !void_obj) {
+    return ERR;
+  }; 
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    json_t *obj = void_obj;
+    u_int32_t tmp32 = 0;
+
+    if (len == 4) {
+      memcpy(&tmp32, pnt, 4);
+      json_object_set_new_nocheck(obj, key, json_integer(ntohl(tmp32)));
+    }
+    else {
+      return ERR;
+    }
+#endif
+  }
+
+  return SUCCESS;
+}
+
+int bgp_ls_attr_tlv_int32_bits_print(u_char *pnt, u_int16_t len, char *key, int output, void *void_obj)
+{
+  if (!pnt || !key || !output || !void_obj) {
+    return ERR;
+  };
+
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    json_t *obj = void_obj;
+    u_int32_t tmp32 = 0, bits32 = 0;
+
+    if (len == 4) {
+      memcpy(&tmp32, pnt, 4);
+      bits32 = ntohl(tmp32) * 8;
+      json_object_set_new_nocheck(obj, key, json_integer(bits32));
+    }
+    else {
+      return ERR;
+    }
+#endif
+  }
+
+  return SUCCESS;
 }

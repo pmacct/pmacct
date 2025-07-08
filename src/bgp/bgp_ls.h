@@ -154,7 +154,7 @@ struct bgp_ls_nlri {
 
 typedef int (*bgp_ls_nlri_tlv_hdlr)(u_char *, int, struct bgp_ls_nlri *);
 typedef int (*bgp_ls_nd_tlv_hdlr)(u_char *, int, struct bgp_ls_node_desc *);
-typedef int (*bgp_ls_attr_tlv_print_hdlr)(u_char *, u_int16_t, int, void *);
+typedef int (*bgp_ls_attr_tlv_print_hdlr)(u_char *, u_int16_t, char *, int, void *);
 
 struct bgp_ls_nlri_tlv_list_entry {
   u_int16_t type;
@@ -168,6 +168,7 @@ struct bgp_ls_nd_tlv_list_entry {
 
 struct bgp_ls_attr_tlv_print_list_entry {
   u_int16_t type;
+  char *keystr;
   bgp_ls_attr_tlv_print_hdlr hdlr;
 };
 
@@ -207,6 +208,10 @@ extern int bgp_ls_attr_tlv_unknown_handler(u_char *, u_int16_t, u_int16_t, int, 
 int bgp_ls_log_msg(struct bgp_ls_nlri *, struct bgp_attr_ls *, afi_t, safi_t, bgp_tag_t *, char *, int, char **, int);
 void bgp_ls_log_node_desc(void *, struct bgp_ls_node_desc *, u_int8_t, char *, int);
 void bgp_ls_isis_sysid_print(char *, char *);
+int bgp_ls_attr_tlv_string_print(u_char *, u_int16_t, char *, int, void *); 
+int bgp_ls_attr_tlv_ip_print(u_char *, u_int16_t, char *, int, void *);
+int bgp_ls_attr_tlv_int32_print(u_char *, u_int16_t, char *, int, void *);
+int bgp_ls_attr_tlv_int32_bits_print(u_char *, u_int16_t, char *, int, void *);
 
 /* global variables */
 extern cdada_map_t *bgp_ls_nlri_tlv_map, *bgp_ls_nd_tlv_map, *bgp_ls_nlri_map;

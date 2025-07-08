@@ -38,5 +38,13 @@ const struct bgp_ls_nd_tlv_list_entry bgp_ls_nd_tlv_list[] = {
 };
 
 const struct bgp_ls_attr_tlv_print_list_entry bgp_ls_attr_tlv_print_list[] = {
+  {BGP_LS_ATTR_NODE_NAME, "attr_node_name", bgp_ls_attr_tlv_string_print},
+  {BGP_LS_ATTR_V4_RID_LOCAL, "attr_v4_rid_local", bgp_ls_attr_tlv_ip_print},
+  {BGP_LS_ATTR_V6_RID_LOCAL, "attr_v6_rid_local", bgp_ls_attr_tlv_ip_print},
+  {BGP_LS_ATTR_V4_RID_REMOTE, "attr_v4_rid_remote", bgp_ls_attr_tlv_ip_print},
+  {BGP_LS_ATTR_V6_RID_REMOTE, "attr_v6_rid_remote", bgp_ls_attr_tlv_ip_print},
+  {BGP_LS_ATTR_MAX_BW, "attr_max_bw", bgp_ls_attr_tlv_int32_bits_print},
+  {BGP_LS_ATTR_MAX_RESV_BW, "attr_max_resv_bw", bgp_ls_attr_tlv_int32_bits_print},
+  {BGP_LS_ATTR_TE_DEFAULT_METRIC, "attr_te_df_metric", bgp_ls_attr_tlv_int32_print},
   {0, NULL}
 };
