@@ -775,7 +775,7 @@ int bgp_ls_log_msg(struct bgp_ls_nlri *blsn, struct bgp_attr_ls *blsa,
 
 	ret = cdada_map_find(bgp_ls_attr_tlv_print_map, &tlv_type, (void **) &blsatple);
 	if (ret == CDADA_SUCCESS && blsatple && blsatple->hdlr) {
-	  ret = (*blsatple->hdlr)(pnt, tlv_len, blsatple->keystr, output, obj);
+	  ret = (*blsatple->hdlr)(pnt, tlv_len, blsatple->keystr, blsatple->flags, output, obj);
 	  if (ret == ERR) { 
 	    bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
 	    Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS Issue parsing Attribute TLV %u\n", config.name, config.type, bgp_peer_str, tlv_type);
@@ -879,7 +879,7 @@ void bgp_ls_isis_sysid_print(char *to, char *from)
   *(to) = '\0';
 }
 
-int bgp_ls_attr_tlv_string_print(u_char *pnt, u_int16_t len, char *key, int output, void *void_obj)
+int bgp_ls_attr_tlv_string_print(u_char *pnt, u_int16_t len, char *key, u_int8_t flags, int output, void *void_obj)
 {
   if (!pnt || !key || !output || !void_obj) {
     return ERR;
@@ -909,7 +909,7 @@ int bgp_ls_attr_tlv_string_print(u_char *pnt, u_int16_t len, char *key, int outp
   return SUCCESS;
 }
 
-int bgp_ls_attr_tlv_ip_print(u_char *pnt, u_int16_t len, char *key, int output, void *void_obj)
+int bgp_ls_attr_tlv_ip_print(u_char *pnt, u_int16_t len, char *key, u_int8_t flags, int output, void *void_obj)
 {
   if (!pnt || !key || !output || !void_obj) {
     return ERR;
@@ -941,7 +941,7 @@ int bgp_ls_attr_tlv_ip_print(u_char *pnt, u_int16_t len, char *key, int output, 
   return SUCCESS;
 }
 
-int bgp_ls_attr_tlv_int32_print(u_char *pnt, u_int16_t len, char *key, int output, void *void_obj)
+int bgp_ls_attr_tlv_int32_print(u_char *pnt, u_int16_t len, char *key, u_int8_t flags, int output, void *void_obj)
 {
   if (!pnt || !key || !output || !void_obj) {
     return ERR;
@@ -954,7 +954,47 @@ int bgp_ls_attr_tlv_int32_print(u_char *pnt, u_int16_t len, char *key, int outpu
 
     if (len == 4) {
       memcpy(&tmp32, pnt, 4);
-      json_object_set_new_nocheck(obj, key, json_integer(ntohl(tmp32)));
+      tmp32 = ntohl(tmp32);
+      
+      if (flags & BGP_LS_PRINT_BYTES_TO_BITS) {
+	tmp32 *= 8;
+      }
+
+      if (!(flags & BGP_LS_PRINT_HEX)) {
+        json_object_set_new_nocheck(obj, key, json_integer(tmp32));
+      }
+      else {
+	char hex[10];
+
+	sprintf(hex, "%x", tmp32);
+	json_object_set_new_nocheck(obj, key, json_string(hex));
+      }
+    }
+    else if (!(len % 4) && (flags & BGP_LS_PRINT_ARRAY)) {
+      json_t *l1 = json_array(), *tmp32_json = NULL;
+
+      for (; len; pnt += 4, len -=4) {
+	memcpy(&tmp32, pnt, 4);
+	tmp32 = ntohl(tmp32);
+
+	if (flags & BGP_LS_PRINT_BYTES_TO_BITS) {
+	  tmp32 *= 8;
+	}
+
+	if (!(flags & BGP_LS_PRINT_HEX)) {
+	  tmp32_json = json_integer(tmp32);
+	}
+	else {
+	  char hex[10];
+
+	  sprintf(hex, "%x", tmp32);
+	  tmp32_json = json_string(hex);
+	}
+
+	json_array_append(l1, tmp32_json);
+      }
+
+      json_object_set_new_nocheck(obj, key, l1);
     }
     else {
       return ERR;
@@ -965,21 +1005,50 @@ int bgp_ls_attr_tlv_int32_print(u_char *pnt, u_int16_t len, char *key, int outpu
   return SUCCESS;
 }
 
-int bgp_ls_attr_tlv_int32_bits_print(u_char *pnt, u_int16_t len, char *key, int output, void *void_obj)
+int bgp_ls_attr_tlv_int8_print(u_char *pnt, u_int16_t len, char *key, u_int8_t flags, int output, void *void_obj)
 {
   if (!pnt || !key || !output || !void_obj) {
     return ERR;
-  };
+  }; 
 
   if (output == PRINT_OUTPUT_JSON) {
 #ifdef WITH_JANSSON
     json_t *obj = void_obj;
-    u_int32_t tmp32 = 0, bits32 = 0;
+    u_int8_t tmp8 = 0;
 
-    if (len == 4) {
-      memcpy(&tmp32, pnt, 4);
-      bits32 = ntohl(tmp32) * 8;
-      json_object_set_new_nocheck(obj, key, json_integer(bits32));
+    if (len == 1) {
+      memcpy(&tmp8, pnt, 1);
+      
+      if (!(flags & BGP_LS_PRINT_HEX)) {
+        json_object_set_new_nocheck(obj, key, json_integer(tmp8));
+      }
+      else {
+	char hex[10];
+
+	sprintf(hex, "%x", tmp8);
+	json_object_set_new_nocheck(obj, key, json_string(hex));
+      }
+    }
+    else if (flags & BGP_LS_PRINT_ARRAY) {
+      json_t *l1 = json_array(), *tmp8_json = NULL;
+
+      for (; len; pnt ++, len--) {
+	memcpy(&tmp8, pnt, 1);
+
+	if (!(flags & BGP_LS_PRINT_HEX)) {
+	  tmp8_json = json_integer(tmp8);
+	}
+	else {
+	  char hex[10];
+
+	  sprintf(hex, "%x", tmp8);
+	  tmp8_json = json_string(hex);
+	}
+
+	json_array_append(l1, tmp8_json);
+      }
+
+      json_object_set_new_nocheck(obj, key, l1);
     }
     else {
       return ERR;
