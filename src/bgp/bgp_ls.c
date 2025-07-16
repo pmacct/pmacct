@@ -951,47 +951,56 @@ int bgp_ls_attr_tlv_int32_print(u_char *pnt, u_int16_t len, char *key, u_int8_t 
 #ifdef WITH_JANSSON
     json_t *obj = void_obj;
     u_int32_t tmp32 = 0;
+    u_int64_t tmp64 = 0;
 
     if (len == 4) {
       memcpy(&tmp32, pnt, 4);
       tmp32 = ntohl(tmp32);
       
-      if (flags & BGP_LS_PRINT_BYTES_TO_BITS) {
-	tmp32 *= 8;
+      if (flags & BGP_LS_PRINT_IEEE_TO_BITS) {
+	tmp64 = convertIEEEFloatToUnsignedInt(tmp32);
+	tmp64 *= 8;
+      }
+      else {
+	tmp64 = tmp32;
       }
 
       if (!(flags & BGP_LS_PRINT_HEX)) {
-        json_object_set_new_nocheck(obj, key, json_integer(tmp32));
+        json_object_set_new_nocheck(obj, key, json_integer(tmp64));
       }
       else {
-	char hex[10];
+	char hex[16];
 
-	sprintf(hex, "%x", tmp32);
+	snprintf(hex, sizeof(hex), "%lx", tmp64);
 	json_object_set_new_nocheck(obj, key, json_string(hex));
       }
     }
     else if (!(len % 4) && (flags & BGP_LS_PRINT_ARRAY)) {
-      json_t *l1 = json_array(), *tmp32_json = NULL;
+      json_t *l1 = json_array(), *tmp64_json = NULL;
 
       for (; len; pnt += 4, len -=4) {
 	memcpy(&tmp32, pnt, 4);
 	tmp32 = ntohl(tmp32);
 
-	if (flags & BGP_LS_PRINT_BYTES_TO_BITS) {
-	  tmp32 *= 8;
+	if (flags & BGP_LS_PRINT_IEEE_TO_BITS) {
+	  tmp64 = convertIEEEFloatToUnsignedInt(tmp32);
+	  tmp64 *= 8;
+	}
+	else {
+	  tmp64 = tmp32;
 	}
 
 	if (!(flags & BGP_LS_PRINT_HEX)) {
-	  tmp32_json = json_integer(tmp32);
+	  tmp64_json = json_integer(tmp64);
 	}
 	else {
-	  char hex[10];
+	  char hex[16];
 
-	  sprintf(hex, "%x", tmp32);
-	  tmp32_json = json_string(hex);
+	  snprintf(hex, sizeof(hex), "%lx", tmp64);
+	  tmp64_json = json_string(hex);
 	}
 
-	json_array_append(l1, tmp32_json);
+	json_array_append(l1, tmp64_json);
       }
 
       json_object_set_new_nocheck(obj, key, l1);

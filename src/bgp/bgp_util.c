@@ -1722,3 +1722,30 @@ void bgp_table_info_delete_tag_find_bgp(struct bgp_peer *peer)
   bgp_tag_init_find(peer, (struct sockaddr *) bms->tag_peer, NULL, bms->tag, TRUE);
   bgp_tag_find((struct id_table *)bms->tag->tag_table, bms->tag, &bms->tag->tag, NULL);
 }
+
+/*
+   Simplified version largely taken from Wireshark code.
+
+   Cases not handled:
+   - Negative sign
+   - Infinity
+   - Not a Number
+*/
+u_int64_t convertIEEEFloatToUnsignedInt(u_int32_t in)
+{
+  u_int32_t mantissa, exp, sign;
+  u_int64_t out = 0;
+
+  sign = in & IEEE_SP_SIGN_MASK;
+  exp = (((in & IEEE_SP_EXPONENT_MASK) >> IEEE_SP_MANTISSA_WIDTH) - IEEE_SP_BIAS) - IEEE_SP_MANTISSA_WIDTH;
+  mantissa = (in & IEEE_SP_MANTISSA_MASK) | IEEE_SP_IMPLIED_BIT;
+
+  if (sign) { 
+    /* XXX: Houston we have a problem */
+  }
+  else {
+    out = mantissa * pow(2, exp);
+  }
+
+  return out;
+}
