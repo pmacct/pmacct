@@ -593,6 +593,7 @@ int bgp_ls_nd_tlv_router_id_handler(u_char *pnt, int len, struct bgp_ls_node_des
 
   if (len <= 8) {
     memcpy(blnd->igp_rtr_id.id, pnt, len);
+    blnd->igp_rtr_id.len = len;
   }
   else {
     ret = ERR;
@@ -844,10 +845,15 @@ void bgp_ls_log_node_desc(void *void_obj, struct bgp_ls_node_desc *blsnd, u_int8
     json_object_set_new_nocheck(obj, key_str, json_integer(blsnd->bgp_ls_id));
 
     if (proto == BGP_LS_PROTO_ISIS_L1 || proto == BGP_LS_PROTO_ISIS_L2) {
-      char sys_id[BGP_LS_ISIS_SYS_ID_LEN * 3];
+      char sys_id[BGP_LS_ISIS_SYS_ID_LEN * 3 + 4 /* pseudonode */];
 
       memset(sys_id, 0, sizeof(sys_id));
       bgp_ls_isis_sysid_print(sys_id, blsnd->igp_rtr_id.id);
+      if (blsnd->igp_rtr_id.len == 7) {
+	sprintf(&sys_id[strlen(sys_id)], "-%02x", blsnd->igp_rtr_id.id[6]);
+        json_object_set_new_nocheck(obj, "pseudonode", json_string("true"));
+      }
+ 
       strcpy(key_str, prefix); strcat(key_str, "_igp_rtr_id");
       json_object_set_new_nocheck(obj, key_str, json_string(sys_id));
     }
