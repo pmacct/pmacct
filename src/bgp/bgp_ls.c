@@ -602,6 +602,26 @@ int bgp_ls_nd_tlv_router_id_handler(u_char *pnt, int len, struct bgp_ls_node_des
   return ret;
 }
 
+int bgp_ls_nd_tlv_confed_member_handler(u_char *pnt, int len, struct bgp_ls_node_desc *blnd)
+{
+  int ret = SUCCESS;
+  u_int32_t tmp32;
+
+  if (!pnt || !len || !blnd) {
+    return ERR;
+  }
+
+  if (len == 4) {
+    memcpy(&tmp32, pnt, 4);
+    blnd->confed_asn = ntohl(tmp32);
+  }
+  else {
+    ret = ERR;
+  }
+
+  return ret;
+}
+
 int bgp_ls_attr_tlv_unknown_handler(u_char *pnt, u_int16_t len, u_int16_t type, int output, void *void_obj)
 {
   if (!pnt || !len || !type || !void_obj) {
@@ -840,6 +860,11 @@ void bgp_ls_log_node_desc(void *void_obj, struct bgp_ls_node_desc *blsnd, u_int8
 
     strcpy(key_str, prefix); strcat(key_str, "_asn");
     json_object_set_new_nocheck(obj, key_str, json_integer(blsnd->asn));
+
+    if (blsnd->confed_asn) {
+      strcpy(key_str, prefix); strcat(key_str, "_confed_asn");
+      json_object_set_new_nocheck(obj, key_str, json_integer(blsnd->confed_asn));
+    }
 
     strcpy(key_str, prefix); strcat(key_str, "_bgp_ls_id");
     json_object_set_new_nocheck(obj, key_str, json_integer(blsnd->bgp_ls_id));

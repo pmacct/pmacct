@@ -52,7 +52,7 @@
 
 #define BGP_LS_LOCAL_ND			256
 #define BGP_LS_REMOTE_ND		257
-#define BGP_LS_LL_REMOTE_ID		258
+#define BGP_LS_LL_LR_ID			258
 #define BGP_LS_V4_ADDR_IF		259
 #define BGP_LS_V4_ADDR_NEIGHBOR		260
 #define BGP_LS_V6_ADDR_IF		261
@@ -65,6 +65,7 @@
 #define BGP_LS_ND_ID			513
 #define BGP_LS_ND_OSPF_AREA_ID		514
 #define BGP_LS_ND_IGP_ROUTER_ID		515
+#define BGP_LS_ND_CONFED_MEMBER		517
 
 #define BGP_LS_ATTR_NODE_FLAG_BITS	1024
 #define BGP_LS_ATTR_NODE_OPAQUE		1025
@@ -91,6 +92,7 @@
 #define BGP_LS_ATTR_PFX_METRIC		1155
 #define BGP_LS_ATTR_OSPF_FWD_ADDR	1156
 #define BGP_LS_ATTR_PFX_OPAQUE		1157
+#define BGP_LS_ATTR_EXT_ADMIN_GROUPS	1173
 
 #define BGP_LS_PRINT_HEX		0x01
 #define BGP_LS_PRINT_ARRAY		0x02
@@ -107,6 +109,7 @@ struct bgp_ls_nd_igp_rtr_id {
 
 struct bgp_ls_node_desc {
   as_t asn;
+  as_t confed_asn;
   u_int32_t bgp_ls_id;
   struct bgp_ls_nd_igp_rtr_id igp_rtr_id;
   u_int32_t area_id;
@@ -208,6 +211,7 @@ extern int bgp_ls_nlri_tlv_ip_reach_handler(u_char *, int, struct bgp_ls_nlri *)
 extern int bgp_ls_nd_tlv_as_handler(u_char *, int, struct bgp_ls_node_desc *);
 extern int bgp_ls_nd_tlv_id_handler(u_char *, int, struct bgp_ls_node_desc *);
 extern int bgp_ls_nd_tlv_router_id_handler(u_char *, int, struct bgp_ls_node_desc *);
+extern int bgp_ls_nd_tlv_confed_member_handler(u_char *, int, struct bgp_ls_node_desc *);
 
 extern int bgp_ls_attr_tlv_unknown_handler(u_char *, u_int16_t, u_int16_t, int, void *);
 

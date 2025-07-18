@@ -34,10 +34,12 @@ const struct bgp_ls_nd_tlv_list_entry bgp_ls_nd_tlv_list[] = {
   {BGP_LS_ND_AS, bgp_ls_nd_tlv_as_handler},
   {BGP_LS_ND_ID, bgp_ls_nd_tlv_id_handler},
   {BGP_LS_ND_IGP_ROUTER_ID, bgp_ls_nd_tlv_router_id_handler},
+  {BGP_LS_ND_CONFED_MEMBER, bgp_ls_nd_tlv_confed_member_handler},
   {0, NULL}
 };
 
 const struct bgp_ls_attr_tlv_print_list_entry bgp_ls_attr_tlv_print_list[] = {
+  {BGP_LS_LL_LR_ID, "ll_lr_id", BGP_LS_PRINT_ARRAY|BGP_LS_PRINT_HEX, bgp_ls_attr_tlv_int32_print},
   {BGP_LS_ATTR_NODE_FLAG_BITS, "attr_node_flags", BGP_LS_PRINT_HEX, bgp_ls_attr_tlv_int8_print},
   {BGP_LS_ATTR_NODE_NAME, "attr_node_name", 0, bgp_ls_attr_tlv_string_print},
   {BGP_LS_ATTR_V4_RID_LOCAL, "attr_v4_rid_local", 0, bgp_ls_attr_tlv_ip_print},
@@ -50,5 +52,6 @@ const struct bgp_ls_attr_tlv_print_list_entry bgp_ls_attr_tlv_print_list[] = {
   {BGP_LS_ATTR_UNRESV_BW, "attr_unresv_bw", BGP_LS_PRINT_ARRAY|BGP_LS_PRINT_IEEE_TO_BITS, bgp_ls_attr_tlv_int32_print},
   {BGP_LS_ATTR_TE_DEFAULT_METRIC, "attr_te_df_metric", 0, bgp_ls_attr_tlv_int32_print},
   {BGP_LS_ATTR_PFX_METRIC, "attr_prefix_metric", 0, bgp_ls_attr_tlv_int32_print},
+  {BGP_LS_ATTR_EXT_ADMIN_GROUPS, "attr_ext_admin_groups", BGP_LS_PRINT_ARRAY|BGP_LS_PRINT_HEX, bgp_ls_attr_tlv_int32_print},
   {0, NULL}
 };
