@@ -223,7 +223,7 @@ void bgp_ls_peer_info_print(const cdada_map_t *m, const void *k, void *v, void *
   if (!host_addr_cmp(&blsnmtp->peer->addr, &blsn->peer->addr)) {
     char event_type[] = "dump";
 
-    bgp_ls_log_msg(blsn, blsa, AFI_BGP_LS, blsn->safi, bms->tag, event_type, bms->msglog_output, NULL, BGP_LOG_TYPE_MISC);
+    bgp_ls_log_msg(blsn, blsa, AFI_BGP_LS, blsn->safi, bms->tag, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC);
     (*blsnmtp->num_entries)++;
   }
 }
