@@ -3116,6 +3116,12 @@ void NF_counters_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   u_int32_t t32 = 0;
   u_int64_t t64 = 0;
 
+  /* If this is an event or options, skip packets and bytes */
+  if (pptrs->flow_type.traffic_type > PM_FTYPE_TRAFFIC_MAX) {
+    pdata->flow_type = pptrs->flow_type.traffic_type;
+    return;
+  }
+
   switch(hdr->version) {
   case 10:
   case 9:
