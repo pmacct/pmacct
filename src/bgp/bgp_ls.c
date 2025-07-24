@@ -910,6 +910,18 @@ void bgp_ls_isis_sysid_print(char *to, char *from)
   *(to) = '\0';
 }
 
+void bgp_ls_isis_areaid_print(char *to, char *from, int len)
+{
+  int i;
+
+  for (i = 0, to[0] = '\0'; i < len; ++i) {
+    char tmp[4];
+
+    snprintf(tmp, sizeof(tmp), "%02x", from[i]);
+    strcat(to, tmp);
+  }
+}
+
 int bgp_ls_attr_tlv_string_print(u_char *pnt, u_int16_t len, char *key, u_int8_t flags, int output, void *void_obj)
 {
   if (!pnt || !key || !output || !void_obj) {
@@ -1072,6 +1084,32 @@ int bgp_ls_attr_tlv_int8_print(u_char *pnt, u_int16_t len, char *key, u_int8_t f
         json_object_set_new_nocheck(obj, key, tmp8_json);
       }
     }
+#endif
+  }
+
+  return SUCCESS;
+}
+
+int bgp_ls_attr_tlv_isis_areaid_print(u_char *pnt, u_int16_t len, char *key, u_int8_t flags, int output, void *void_obj)
+{
+  if (!pnt || !key || !output || !void_obj) {
+    return ERR;
+  };  
+        
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    json_t *obj = void_obj;
+    json_t *l1 = NULL;
+    char area_id[3 * len];
+
+    l1 = json_object_get(obj, key);
+    if (!l1) {
+      l1 = json_array();
+      json_object_set_new_nocheck(obj, key, l1); 
+    }
+
+    bgp_ls_isis_areaid_print(area_id, (char *)pnt, len);
+    json_array_append(l1, json_string(area_id));
 #endif
   }
 

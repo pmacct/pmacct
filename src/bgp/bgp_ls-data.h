@@ -42,6 +42,7 @@ const struct bgp_ls_attr_tlv_print_list_entry bgp_ls_attr_tlv_print_list[] = {
   {BGP_LS_LL_LR_ID, "ll_lr_id", BGP_LS_PRINT_ARRAY|BGP_LS_PRINT_HEX, bgp_ls_attr_tlv_int32_print},
   {BGP_LS_ATTR_NODE_FLAG_BITS, "attr_node_flags", BGP_LS_PRINT_HEX, bgp_ls_attr_tlv_int8_print},
   {BGP_LS_ATTR_NODE_NAME, "attr_node_name", 0, bgp_ls_attr_tlv_string_print},
+  {BGP_LS_ATTR_ISIS_AREA_ID, "attr_isis_area_id", 0, bgp_ls_attr_tlv_isis_areaid_print}, 
   {BGP_LS_ATTR_V4_RID_LOCAL, "attr_v4_rid_local", 0, bgp_ls_attr_tlv_ip_print},
   {BGP_LS_ATTR_V6_RID_LOCAL, "attr_v6_rid_local", 0, bgp_ls_attr_tlv_ip_print},
   {BGP_LS_ATTR_V4_RID_REMOTE, "attr_v4_rid_remote", 0, bgp_ls_attr_tlv_ip_print},

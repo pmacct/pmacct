@@ -217,10 +217,12 @@ extern int bgp_ls_attr_tlv_unknown_handler(u_char *, u_int16_t, u_int16_t, int, 
 int bgp_ls_log_msg(struct bgp_ls_nlri *, struct bgp_attr_ls *, afi_t, safi_t, bgp_tag_t *, char *, int, char **, int);
 void bgp_ls_log_node_desc(void *, struct bgp_ls_node_desc *, u_int8_t, char *, int);
 void bgp_ls_isis_sysid_print(char *, char *);
+void bgp_ls_isis_areaid_print(char *, char *, int);
 int bgp_ls_attr_tlv_string_print(u_char *, u_int16_t, char *, u_int8_t, int, void *); 
 int bgp_ls_attr_tlv_ip_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 int bgp_ls_attr_tlv_int8_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 int bgp_ls_attr_tlv_int32_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
+int bgp_ls_attr_tlv_isis_areaid_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 
 /* global variables */
 extern cdada_map_t *bgp_ls_nlri_tlv_map, *bgp_ls_nd_tlv_map, *bgp_ls_nlri_map;
