@@ -1726,10 +1726,8 @@ void bgp_table_info_delete_tag_find_bgp(struct bgp_peer *peer)
 /*
    Simplified version largely taken from Wireshark code.
 
-   Cases not handled:
+   Case(s) not handled:
    - Negative sign
-   - Infinity
-   - Not a Number
 */
 u_int64_t convertIEEEFloatToUnsignedInt(u_int32_t in)
 {
@@ -1739,6 +1737,16 @@ u_int64_t convertIEEEFloatToUnsignedInt(u_int32_t in)
   sign = in & IEEE_SP_SIGN_MASK;
   exp = (((in & IEEE_SP_EXPONENT_MASK) >> IEEE_SP_MANTISSA_WIDTH) - IEEE_SP_BIAS) - IEEE_SP_MANTISSA_WIDTH;
   mantissa = (in & IEEE_SP_MANTISSA_MASK) | IEEE_SP_IMPLIED_BIT;
+
+  /* Check for special cases: NaN or Infinity */
+  if (exp == 0xFF) {
+    if (mantissa) {
+      return 0; // NaN
+    }
+    else {
+      return (sign == 0) ? 0xFFFFFFFF : 0; // Positive and Negative Infinity
+    }
+  }
 
   if (sign) { 
     /* XXX: Houston we have a problem */
