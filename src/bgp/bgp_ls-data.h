@@ -40,6 +40,8 @@ const struct bgp_ls_nd_tlv_list_entry bgp_ls_nd_tlv_list[] = {
 
 const struct bgp_ls_attr_tlv_print_list_entry bgp_ls_attr_tlv_print_list[] = {
   {BGP_LS_LL_LR_ID, "ll_lr_id", BGP_LS_PRINT_ARRAY|BGP_LS_PRINT_HEX, bgp_ls_attr_tlv_int32_print},
+  {BGP_LS_NODE_MSD, "attr_node_msd", 0, bgp_ls_attr_tlv_msd_print},
+  {BGP_LS_LINK_MSD, "attr_link_msd", 0, bgp_ls_attr_tlv_msd_print},
   {BGP_LS_ATTR_NODE_FLAG_BITS, "attr_node_flags", BGP_LS_PRINT_HEX, bgp_ls_attr_tlv_int8_print},
   {BGP_LS_ATTR_NODE_NAME, "attr_node_name", 0, bgp_ls_attr_tlv_string_print},
   {BGP_LS_ATTR_ISIS_AREA_ID, "attr_isis_area_id", 0, bgp_ls_attr_tlv_isis_areaid_print}, 

@@ -60,6 +60,8 @@
 #define BGP_LS_MULTI_TOPO_ID		263
 #define BGP_LS_OSPF_ROUTE_TYPE		264
 #define BGP_LS_IP_REACH			265
+#define BGP_LS_NODE_MSD			266
+#define BGP_LS_LINK_MSD			267
 
 #define BGP_LS_ND_AS			512
 #define BGP_LS_ND_ID			513
@@ -222,6 +224,7 @@ int bgp_ls_attr_tlv_string_print(u_char *, u_int16_t, char *, u_int8_t, int, voi
 int bgp_ls_attr_tlv_ip_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 int bgp_ls_attr_tlv_int8_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 int bgp_ls_attr_tlv_int32_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
+int bgp_ls_attr_tlv_msd_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 int bgp_ls_attr_tlv_isis_areaid_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 int bgp_ls_attr_tlv_igp_metric_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 

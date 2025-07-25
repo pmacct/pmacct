@@ -1147,3 +1147,36 @@ int bgp_ls_attr_tlv_igp_metric_print(u_char *pnt, u_int16_t len, char *key, u_in
 
   return SUCCESS;
 }
+
+int bgp_ls_attr_tlv_msd_print(u_char *pnt, u_int16_t len, char *key, u_int8_t flags, int output, void *void_obj)
+{     
+  if (!pnt || !key || !output || !void_obj) {
+    return ERR;
+  };  
+
+  if (len % 2) {
+    return ERR;
+  }
+     
+  if (output == PRINT_OUTPUT_JSON) {
+#ifdef WITH_JANSSON
+    json_t *obj = void_obj;
+    json_t *l1 = NULL;
+
+    l1 = json_object_get(obj, key);
+    if (!l1) {
+      l1 = json_array();
+      json_object_set_new_nocheck(obj, key, l1);
+    }
+
+    for (; len; pnt += 2, len -= 2) {
+      char hex[10];
+
+      sprintf(hex, "%02x%02x", pnt[0], pnt[1]);
+      json_array_append(l1, json_string(hex));
+    }
+#endif
+  }
+  
+  return SUCCESS;
+}
