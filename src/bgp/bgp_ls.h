@@ -223,6 +223,7 @@ int bgp_ls_attr_tlv_ip_print(u_char *, u_int16_t, char *, u_int8_t, int, void *)
 int bgp_ls_attr_tlv_int8_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 int bgp_ls_attr_tlv_int32_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 int bgp_ls_attr_tlv_isis_areaid_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
+int bgp_ls_attr_tlv_igp_metric_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
 
 /* global variables */
 extern cdada_map_t *bgp_ls_nlri_tlv_map, *bgp_ls_nd_tlv_map, *bgp_ls_nlri_map;

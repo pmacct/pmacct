@@ -52,6 +52,7 @@ const struct bgp_ls_attr_tlv_print_list_entry bgp_ls_attr_tlv_print_list[] = {
   {BGP_LS_ATTR_MAX_RESV_BW, "attr_max_resv_bw", BGP_LS_PRINT_IEEE_TO_BITS, bgp_ls_attr_tlv_int32_print},
   {BGP_LS_ATTR_UNRESV_BW, "attr_unresv_bw", BGP_LS_PRINT_ARRAY|BGP_LS_PRINT_IEEE_TO_BITS, bgp_ls_attr_tlv_int32_print},
   {BGP_LS_ATTR_TE_DEFAULT_METRIC, "attr_te_df_metric", 0, bgp_ls_attr_tlv_int32_print},
+  {BGP_LS_ATTR_IGP_METRIC, "attr_igp_metric", 0, bgp_ls_attr_tlv_igp_metric_print},
   {BGP_LS_ATTR_PFX_METRIC, "attr_prefix_metric", 0, bgp_ls_attr_tlv_int32_print},
   {BGP_LS_ATTR_EXT_ADMIN_GROUPS, "attr_ext_admin_groups", BGP_LS_PRINT_ARRAY|BGP_LS_PRINT_HEX, bgp_ls_attr_tlv_int32_print},
   {0, NULL}
