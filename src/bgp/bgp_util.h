@@ -58,6 +58,7 @@ extern void bgp_md5_file_init(struct bgp_md5_table *);
 extern void bgp_md5_file_load(char *, struct bgp_md5_table *);
 extern void bgp_md5_file_unload(struct bgp_md5_table *);
 extern void bgp_md5_file_process(int, struct bgp_md5_table *);
+extern void bgp_md5_file_process_tcp_ao(int, struct bgp_md5_table *);
 extern void bgp_config_checks(struct configuration *);
 extern struct bgp_misc_structs *bgp_select_misc_db(int);
 extern void bgp_link_misc_structs(struct bgp_misc_structs *);
