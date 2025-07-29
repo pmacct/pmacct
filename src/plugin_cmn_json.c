@@ -1709,7 +1709,7 @@ json_t *compose_tcpflags_json_data(cdada_list_t *ll, int ll_size)
     cdada_list_get(ll, idx_0, &tcpstate);
     if (strncmp(tcpstate.flag, "NULL", (TCP_FLAG_LEN - 1)) != 0) {
       j_str_tmp = json_string(tcpstate.flag);
-      json_array_append(root, j_str_tmp);
+      json_array_append_new(root, j_str_tmp);
     }
   }
 
@@ -1782,7 +1782,7 @@ json_t *compose_mpls_label_stack_json_data(u_int32_t *label_stack, int ls_len)
     strncat(label_idx_buf, label_buf, (MAX_MPLS_LABEL_IDX_LEN - max_mpls_label_idx_len_dec));
     max_mpls_label_idx_len_dec = (strlen(idx_buf) + strlen("-") + strlen(label_buf) + 3);
     j_str_tmp = json_string(label_idx_buf);
-    json_array_append(root, j_str_tmp);
+    json_array_append_new(root, j_str_tmp);
   }
 
   return root;
@@ -1823,7 +1823,7 @@ json_t *compose_srv6_segment_ipv6_list_json_data(struct host_addr *ipv6_list, in
     strcat(idx_ipv6_str, ipv6_str);
 
     j_str_tmp = json_string(idx_ipv6_str);
-    json_array_append(root, j_str_tmp);
+    json_array_append_new(root, j_str_tmp);
   }
 
   return root;
@@ -1842,7 +1842,7 @@ json_t *compose_str_linked_list_to_json_array_data(cdada_list_t *ll, int ll_size
     cdada_list_get(ll, idx_0, &delim_s);
     if (strncmp(delim_s.delim_str, "NULL", (strlen(delim_s.delim_str) - 1)) != 0) {
       j_str_tmp = json_string(delim_s.delim_str);
-      json_array_append(root, j_str_tmp);
+      json_array_append_new(root, j_str_tmp);
     }
   }
 
