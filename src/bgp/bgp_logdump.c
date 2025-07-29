@@ -2239,7 +2239,7 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
     if (fd_buf) {
       if (setvbuf(peer->log->fd, fd_buf, _IOFBF, OUTPUT_FILE_BUFSZ))
         Log(LOG_WARNING, "WARN ( %s/%s ): [%s] setvbuf() failed: %s\n",
-      config.name, bms->log_str, current_filename, strerror(errno));
+	    config.name, bms->log_str, current_filename, strerror(errno));
       else memset(fd_buf, 0, OUTPUT_FILE_BUFSZ); 
     }
   }
@@ -2332,6 +2332,10 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
   if (config.bgp_table_dump_latest_file && peer) {
     bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bgp_table_dump_latest_file, peer);
     link_latest_output_file(latest_filename, last_filename);
+  }
+
+  if (fd_buf) {
+    free(fd_buf);
   }
   
   duration = time(NULL)-start;

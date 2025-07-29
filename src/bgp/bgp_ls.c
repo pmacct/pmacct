@@ -1032,7 +1032,7 @@ int bgp_ls_attr_tlv_int32_print(u_char *pnt, u_int16_t len, char *key, u_int8_t 
       }
 
       if (flags & BGP_LS_PRINT_ARRAY) {
-	json_array_append(l1, tmp64_json);
+	json_array_append_new(l1, tmp64_json);
       }
       else {
 	json_object_set_new_nocheck(obj, key, tmp64_json);
@@ -1078,7 +1078,7 @@ int bgp_ls_attr_tlv_int8_print(u_char *pnt, u_int16_t len, char *key, u_int8_t f
       }
 
       if (flags & BGP_LS_PRINT_ARRAY) {
-	json_array_append(l1, tmp8_json);
+	json_array_append_new(l1, tmp8_json);
       }
       else {
         json_object_set_new_nocheck(obj, key, tmp8_json);
@@ -1109,7 +1109,7 @@ int bgp_ls_attr_tlv_isis_areaid_print(u_char *pnt, u_int16_t len, char *key, u_i
     }
 
     bgp_ls_isis_areaid_print(area_id, (char *)pnt, len);
-    json_array_append(l1, json_string(area_id));
+    json_array_append_new(l1, json_string(area_id));
 #endif
   }
 
@@ -1173,7 +1173,7 @@ int bgp_ls_attr_tlv_msd_print(u_char *pnt, u_int16_t len, char *key, u_int8_t fl
       char hex[10];
 
       sprintf(hex, "%02x%02x", pnt[0], pnt[1]);
-      json_array_append(l1, json_string(hex));
+      json_array_append_new(l1, json_string(hex));
     }
 #endif
   }
