@@ -633,7 +633,7 @@ void compose_json_tag2(json_t *obj, struct chained_cache *cc)
 
 void compose_json_label(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_LABEL, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;
@@ -941,41 +941,47 @@ void compose_json_mpls_vpn_rd(json_t *obj, struct chained_cache *cc)
 
 void compose_json_vrf_name(json_t *obj, struct chained_cache *cc) 
 {
-
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
+  json_t *str_json;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_VRF_NAME, &str_ptr);
   if (!str_ptr) {
     str_ptr = empty_string;
   } 
 
-  json_object_set_new_nocheck(obj, "vrf_name", json_string(str_ptr));
+  str_json = json_string(str_ptr);
+  json_object_set_nocheck(obj, "vrf_name", str_json);
+  json_decref(str_json);
 }
 
 void compose_json_ingress_vrf_name(json_t *obj, struct chained_cache *cc) 
 {
-
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
+  json_t *str_json;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_INGRESS_VRF_NAME, &str_ptr);
   if (!str_ptr) {
     str_ptr = empty_string;
   } 
 
-  json_object_set_new_nocheck(obj, "ingress_vrf_name", json_string(str_ptr));
+  str_json = json_string(str_ptr);
+  json_object_set_nocheck(obj, "ingress_vrf_name", str_json);
+  json_decref(str_json);
 }
 
 void compose_json_egress_vrf_name(json_t *obj, struct chained_cache *cc) 
 {
-
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
+  json_t *str_json;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_EGRESS_VRF_NAME, &str_ptr);
   if (!str_ptr) {
     str_ptr = empty_string;
   } 
 
-  json_object_set_new_nocheck(obj, "egress_vrf_name", json_string(str_ptr));
+  str_json = json_string(str_ptr);
+  json_object_set_nocheck(obj, "egress_vrf_name", str_json);
+  json_decref(str_json);
 }
 
 void compose_json_mpls_pw_id(json_t *obj, struct chained_cache *cc)
@@ -1464,7 +1470,7 @@ void *compose_purge_close_json(char *writer_name, pid_t writer_pid, int purged_e
 
 void compose_json_map_label(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_LABEL, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;
@@ -1514,7 +1520,7 @@ void compose_json_string_fwd_status(json_t *obj, struct chained_cache *cc)
 
 void compose_json_array_std_comm(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_STD_COMM, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;
@@ -1532,7 +1538,7 @@ void compose_json_array_std_comm(json_t *obj, struct chained_cache *cc)
 
 void compose_json_array_src_std_comm(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_SRC_STD_COMM, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;
@@ -1550,7 +1556,7 @@ void compose_json_array_src_std_comm(json_t *obj, struct chained_cache *cc)
 
 void compose_json_array_ext_comm(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_EXT_COMM, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;
@@ -1568,7 +1574,7 @@ void compose_json_array_ext_comm(json_t *obj, struct chained_cache *cc)
 
 void compose_json_array_src_ext_comm(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_SRC_EXT_COMM, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;
@@ -1586,7 +1592,7 @@ void compose_json_array_src_ext_comm(json_t *obj, struct chained_cache *cc)
 
 void compose_json_array_lrg_comm(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_LRG_COMM, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;
@@ -1604,7 +1610,7 @@ void compose_json_array_lrg_comm(json_t *obj, struct chained_cache *cc)
 
 void compose_json_array_src_lrg_comm(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_SRC_LRG_COMM, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;
@@ -1622,7 +1628,7 @@ void compose_json_array_src_lrg_comm(json_t *obj, struct chained_cache *cc)
 
 void compose_json_array_as_path(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_AS_PATH, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;
@@ -1640,7 +1646,7 @@ void compose_json_array_as_path(json_t *obj, struct chained_cache *cc)
 
 void compose_json_array_src_as_path(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_SRC_AS_PATH, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;

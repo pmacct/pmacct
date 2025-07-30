@@ -514,25 +514,20 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation_3 & COUNT_INGRESS_VRF_NAME) {
-
       if (config.acct_type == ACCT_NF) {
         channels_list[index].phandler[primitives] = NF_ingress_vrf_name_handler;
         primitives++;
       }
-
     }
 
     if (channels_list[index].aggregation_3 & COUNT_EGRESS_VRF_NAME) {
-    
       if (config.acct_type == ACCT_NF) {
         channels_list[index].phandler[primitives] = NF_egress_vrf_name_handler; 
         primitives++;
       }
-
     }
 
     if (channels_list[index].aggregation_3 & COUNT_VRF_NAME) {
-    
       if (config.acct_type == ACCT_NF) {
         channels_list[index].phandler[primitives] = NF_vrf_name_handler; 
         primitives++;
@@ -2042,9 +2037,9 @@ void sampling_rate_handler(struct channels_list_entry *chptr, struct packet_ptrs
 void NF_ingress_vrf_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
-  int ingress_vrf_name_len = strlen(pptrs->ingress_vrf_name);
+  int ingress_vrf_name_len = strlen(pptrs->ingress_vrf_name) + 1;
 
-  if (!ingress_vrf_name_len) {
+  if (ingress_vrf_name_len == 1) {
     return;
   }
 
@@ -2060,9 +2055,9 @@ void NF_ingress_vrf_name_handler(struct channels_list_entry *chptr, struct packe
 void NF_egress_vrf_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
-  int egress_vrf_name_len = strlen(pptrs->egress_vrf_name);
+  int egress_vrf_name_len = strlen(pptrs->egress_vrf_name) + 1;
 
-  if (!egress_vrf_name_len) {
+  if (egress_vrf_name_len == 1) {
     return;
   }
 	
@@ -2078,9 +2073,9 @@ void NF_egress_vrf_name_handler(struct channels_list_entry *chptr, struct packet
 void NF_vrf_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
-  int vrf_name_len = strlen(pptrs->vrf_name);
+  int vrf_name_len = strlen(pptrs->vrf_name) + 1;
 
-  if (!vrf_name_len) {
+  if (vrf_name_len == 1) {
     return;
   }
 	

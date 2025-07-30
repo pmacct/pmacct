@@ -3963,8 +3963,8 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
       if (ret == CDADA_SUCCESS) {
         Log(LOG_DEBUG, "DEBUG ( %s/core ): Found VRF Name in hashmap for ingress_vrf_id %d to name %s\n", config.name, ingress_vrfid, ingress_vrf_name);
 
-        strncpy(pptrs->ingress_vrf_name, ingress_vrf_name, strlen(ingress_vrf_name));
-        strncpy(pptrs->vrf_name, ingress_vrf_name, strlen(ingress_vrf_name));
+        strncpy(pptrs->ingress_vrf_name, ingress_vrf_name, strlen(ingress_vrf_name) + 1);
+        strncpy(pptrs->vrf_name, ingress_vrf_name, strlen(ingress_vrf_name) + 1);
       }
     }
 
@@ -3976,10 +3976,10 @@ void NF_mpls_vpn_rd_from_options(struct packet_ptrs *pptrs)
       if (ret == CDADA_SUCCESS) {
         Log(LOG_DEBUG, "DEBUG ( %s/core ): Found VRF Name in hashmap for egress_vrf_id %d to name %s\n", config.name, egress_vrfid, egress_vrf_name);
 
-        strncpy(pptrs->egress_vrf_name, egress_vrf_name, strlen(egress_vrf_name));
+        strncpy(pptrs->egress_vrf_name, egress_vrf_name, strlen(egress_vrf_name) + 1);
 
         if ((ingress_vrfid == 0) || !strcmp(pptrs->ingress_vrf_name, "default")) {
-          strncpy(pptrs->vrf_name, egress_vrf_name, strlen(egress_vrf_name));
+          strncpy(pptrs->vrf_name, egress_vrf_name, strlen(egress_vrf_name) + 1);
         }
       }
     }
