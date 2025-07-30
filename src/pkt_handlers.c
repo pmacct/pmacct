@@ -2042,9 +2042,9 @@ void sampling_rate_handler(struct channels_list_entry *chptr, struct packet_ptrs
 void NF_ingress_vrf_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
-  int ingress_vrf_name_len = strlen(pptrs->ingress_vrf_name) + 1;
+  int ingress_vrf_name_len = strlen(pptrs->ingress_vrf_name);
 
-  if (ingress_vrf_name_len == 1 /* due to the + 1 */) {
+  if (!ingress_vrf_name_len) {
     return;
   }
 
@@ -2053,6 +2053,7 @@ void NF_ingress_vrf_name_handler(struct channels_list_entry *chptr, struct packe
     return;
   }
   else {
+    printf("CI PASSO: %s (%d)\n", pptrs->ingress_vrf_name, ingress_vrf_name_len);
     vlen_prims_insert(pvlen, COUNT_INT_INGRESS_VRF_NAME, ingress_vrf_name_len, (u_char *) pptrs->ingress_vrf_name, PM_MSG_STR_COPY);
   }
 }
@@ -2060,32 +2061,37 @@ void NF_ingress_vrf_name_handler(struct channels_list_entry *chptr, struct packe
 void NF_egress_vrf_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
+  int egress_vrf_name_len = strlen(pptrs->egress_vrf_name);
 
-  if (strlen(pptrs->egress_vrf_name) == 0) {
+  if (!egress_vrf_name_len) {
     return;
   }
 	
-  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz+strlen(pptrs->egress_vrf_name)+1)) {
+  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + egress_vrf_name_len)) {
     vlen_prims_init(pvlen, 0);
     return;
   }
-  else vlen_prims_insert(pvlen, COUNT_INT_EGRESS_VRF_NAME, strlen(pptrs->egress_vrf_name)+1, (u_char *) pptrs->egress_vrf_name, PM_MSG_STR_COPY);
+  else {
+    vlen_prims_insert(pvlen, COUNT_INT_EGRESS_VRF_NAME, egress_vrf_name_len, (u_char *) pptrs->egress_vrf_name, PM_MSG_STR_COPY);
+  }
 }
 
 void NF_vrf_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
+  int vrf_name_len = strlen(pptrs->vrf_name);
 
-  if (strlen(pptrs->vrf_name) == 0) {
+  if (!vrf_name_len) {
     return;
   }
 	
-  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz+strlen(pptrs->vrf_name)+1)) {
+  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + vrf_name_len)) {
     vlen_prims_init(pvlen, 0);
     return;
   }
-  else vlen_prims_insert(pvlen, COUNT_INT_VRF_NAME, strlen(pptrs->vrf_name)+1, (u_char *) pptrs->vrf_name, PM_MSG_STR_COPY);
-  
+  else {
+    vlen_prims_insert(pvlen, COUNT_INT_VRF_NAME, vrf_name_len, (u_char *) pptrs->vrf_name, PM_MSG_STR_COPY);
+  }
 }
 
 
