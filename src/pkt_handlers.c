@@ -2053,7 +2053,6 @@ void NF_ingress_vrf_name_handler(struct channels_list_entry *chptr, struct packe
     return;
   }
   else {
-    printf("CI PASSO: %s (%d)\n", pptrs->ingress_vrf_name, ingress_vrf_name_len);
     vlen_prims_insert(pvlen, COUNT_INT_INGRESS_VRF_NAME, ingress_vrf_name_len, (u_char *) pptrs->ingress_vrf_name, PM_MSG_STR_COPY);
   }
 }

@@ -2359,9 +2359,7 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	      }
 
 	      memset(vrf_name, 0, MAX_VRF_NAME_STR_LEN);
-	      if (tpl->fld[NF9_VRF_NAME].len[0] < MAX_VRF_NAME) {
-	        memcpy(vrf_name, (const char *)pkt + tpl->fld[NF9_VRF_NAME].off[0], tpl->fld[NF9_VRF_NAME].len[0]);
-	      }
+	      memcpy(vrf_name, (const char *)pkt + tpl->fld[NF9_VRF_NAME].off[0], MIN(tpl->fld[NF9_VRF_NAME].len[0], (MAX_VRF_NAME - 1)));
 
 	      ret = cdada_map_insert(entry->vrf_name_map, &ingress_vrfid, vrf_name);
               if (ret != CDADA_SUCCESS && ret != CDADA_E_EXISTS) {
