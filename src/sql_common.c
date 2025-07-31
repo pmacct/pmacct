@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -1955,6 +1955,48 @@ int sql_evaluate_primitives(int primitive)
     strncat(where[primitive].string, "mpls_pw_id=%u", SPACELEFT(where[primitive].string));
     values[primitive].type = where[primitive].type = COUNT_INT_MPLS_PW_ID;
     values[primitive].handler = where[primitive].handler = count_mpls_pw_id_handler;
+    primitive++;
+  }
+
+  if (what_to_count_3 & COUNT_VRF_NAME) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "vrf_name", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "vrf_name=\'%s\'", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_VRF_NAME;
+    values[primitive].handler = where[primitive].handler = count_vrf_name_handler;
+    primitive++;
+  }
+
+  if (what_to_count_3 & COUNT_INGRESS_VRF_NAME) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "vrf_name_ingress", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "vrf_name_ingress=\'%s\'", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_INGRESS_VRF_NAME;
+    values[primitive].handler = where[primitive].handler = count_ingress_vrf_name_handler;
+    primitive++;
+  }
+
+  if (what_to_count_3 & COUNT_EGRESS_VRF_NAME) {
+    if (primitive) {
+      strncat(insert_clause, ", ", SPACELEFT(insert_clause));
+      strncat(values[primitive].string, delim_buf, SPACELEFT(values[primitive].string));
+      strncat(where[primitive].string, " AND ", SPACELEFT(where[primitive].string));
+    }
+    strncat(insert_clause, "vrf_name_egress", SPACELEFT(insert_clause));
+    strncat(values[primitive].string, "\'%s\'", SPACELEFT(values[primitive].string));
+    strncat(where[primitive].string, "vrf_name_egress=\'%s\'", SPACELEFT(where[primitive].string));
+    values[primitive].type = where[primitive].type = COUNT_INT_EGRESS_VRF_NAME;
+    values[primitive].handler = where[primitive].handler = count_egress_vrf_name_handler;
     primitive++;
   }
 

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -919,6 +919,45 @@ void count_mpls_pw_id_handler(const struct db_cache *cache_elem, struct insert_d
 {
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pbgp->mpls_pw_id);
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, cache_elem->pbgp->mpls_pw_id);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_vrf_name_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char *vrf_name_ptr = NULL, empty_string[] = "";
+
+  vlen_prims_get(cache_elem->pvlen, COUNT_INT_VRF_NAME, &vrf_name_ptr);
+  if (!vrf_name_ptr) vrf_name_ptr = empty_string;
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, vrf_name_ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, vrf_name_ptr);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_ingress_vrf_name_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char *vrf_name_ptr = NULL, empty_string[] = "";
+
+  vlen_prims_get(cache_elem->pvlen, COUNT_INT_INGRESS_VRF_NAME, &vrf_name_ptr);
+  if (!vrf_name_ptr) vrf_name_ptr = empty_string;
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, vrf_name_ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, vrf_name_ptr);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_egress_vrf_name_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char *vrf_name_ptr = NULL, empty_string[] = "";
+
+  vlen_prims_get(cache_elem->pvlen, COUNT_INT_EGRESS_VRF_NAME, &vrf_name_ptr);
+  if (!vrf_name_ptr) vrf_name_ptr = empty_string;
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, vrf_name_ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, vrf_name_ptr);
   *ptr_where += strlen(*ptr_where);
   *ptr_values += strlen(*ptr_values);
 }

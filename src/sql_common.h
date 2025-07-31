@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -219,6 +219,9 @@ extern void count_src_med_handler(const struct db_cache *, struct insert_data *,
 extern void count_src_roa_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_mpls_vpn_rd_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_mpls_pw_id_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_vrf_name_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_ingress_vrf_name_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_egress_vrf_name_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_peer_src_as_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_peer_dst_as_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_peer_src_ip_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
