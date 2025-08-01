@@ -307,6 +307,7 @@ extern void readv2v4FlowSample(SFSample *, struct packet_ptrs_vector *, struct p
 extern void readv5FlowSample(SFSample *, int, struct packet_ptrs_vector *, struct plugin_requests *, int);
 extern void readv2v4CountersSample(SFSample *, struct packet_ptrs_vector *);
 extern void readv5CountersSample(SFSample *, int, struct packet_ptrs_vector *);
+extern void skipv5Sample(SFSample *);
 extern void finalizeSample(SFSample *, struct packet_ptrs_vector *, struct plugin_requests *);
 extern void InterSampleCleanup(SFSample *);
 extern void decodeMpls(SFSample *, u_char **);

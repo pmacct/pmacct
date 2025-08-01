@@ -331,6 +331,7 @@ enum SFL_sample_tag {
   SFLCOUNTERS_SAMPLE = 2,          /* enterprise = 0 : format = 2 */
   SFLFLOW_SAMPLE_EXPANDED = 3,     /* enterprise = 0 : format = 3 */
   SFLCOUNTERS_SAMPLE_EXPANDED = 4, /* enterprise = 0 : format = 4 */
+  SFLFLOW_SAMPLE_DROPPED = 5,      /* enterprise = 0 : format = 5 */
   SFLACL_BROCADE_SAMPLE = 8155137  /* enterprise = 1991 : format = 1 */
 };
   
