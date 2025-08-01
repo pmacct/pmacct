@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -94,6 +94,7 @@ static const struct _dictionary_line dictionary[] = {
   {"timestamps_since_epoch", cfg_key_timestamps_since_epoch},
   {"tcpflags_encode_as_array", cfg_key_tcpflags_encode_as_array},
   {"bgp_comms_encode_as_array", cfg_key_bgp_comms_encode_as_array},
+  {"bgp_comms_num", cfg_key_bgp_comms_num},
   {"as_path_encode_as_array", cfg_key_as_path_encode_as_array},
   {"fwd_status_encode_as_string", cfg_key_fwd_status_encode_as_string},
   {"tos_encode_as_dscp", cfg_key_tos_encode_as_dscp},

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -554,6 +554,7 @@ struct configuration {
   int pretag_label_encode_as_map;
   int tcpflags_encode_as_array;
   int bgp_comms_encode_as_array;
+  int bgp_comms_num;
   int as_path_encode_as_array;
   int mpls_label_stack_encode_as_array;
   int fwd_status_encode_as_string;

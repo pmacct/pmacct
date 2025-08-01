@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2019 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /* 
@@ -254,8 +254,8 @@ community_com2str  (struct bgp_peer *peer, struct community *com)
       memcpy (&comval, com_nthval (com, i), sizeof (u_int32_t));
       comval = ntohl (comval);
 
-      switch (comval) 
-	{
+      if (!config.bgp_comms_num) {
+        switch (comval) {
 	case COMMUNITY_INTERNET:
 	  len += strlen (" internet");
 	  break;
@@ -272,6 +272,10 @@ community_com2str  (struct bgp_peer *peer, struct community *com)
 	  len += strlen (" 65536:65535");
 	  break;
 	}
+      }
+      else {
+	len += strlen (" 65536:65535");
+      }
     }
 
   /* Allocate memory.  */
@@ -293,8 +297,8 @@ community_com2str  (struct bgp_peer *peer, struct community *com)
       else
 	*pnt++ = ' ';
 
-      switch (comval) 
-	{
+      if (!config.bgp_comms_num) {
+        switch (comval) {
 	case COMMUNITY_INTERNET:
 	  strcpy (pnt, "internet");
 	  pnt += strlen ("internet");
@@ -318,6 +322,13 @@ community_com2str  (struct bgp_peer *peer, struct community *com)
 	  pnt += strlen (pnt);
 	  break;
 	}
+      }
+      else {
+	as = (comval >> 16) & 0xFFFF;
+	val = comval & 0xFFFF;
+	sprintf (pnt, "%d:%d", as, val);
+	pnt += strlen (pnt);
+      }
     }
   *pnt = '\0';
 

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -290,6 +290,7 @@ extern int cfg_key_pre_tag_label_filter(char *, char *, char *);
 extern int cfg_key_pre_tag_label_encode_as_map(char *, char *, char *);
 extern int cfg_key_tcpflags_encode_as_array(char *, char *, char *);
 extern int cfg_key_bgp_comms_encode_as_array(char *, char *, char *);
+extern int cfg_key_bgp_comms_num(char *, char *, char *);
 extern int cfg_key_as_path_encode_as_array(char *, char *, char *);
 extern int cfg_key_fwd_status_encode_as_string(char *, char *, char *);
 extern int cfg_key_tos_encode_as_dscp(char *, char *, char *);
