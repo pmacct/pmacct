@@ -81,6 +81,9 @@ this:
 Or on systems that have the `env' program, you can do it like this:
      env CPPFLAGS=-I/usr/local/include LDFLAGS=-s ./configure
 
+Check docs/BUILD.md for the set of environment variables to pass to
+configure.
+
 COMPILING FOR MULTIPLE ARCHITECTURES:
 
    You can compile the package for more than one kind of computer at the
