@@ -1726,6 +1726,13 @@ DESC:           BGP communities are encoded by default as a string, including a 
 		backends not supporting complex types (i.e., SQL plugins).
 DEFAULT:        false
 
+KEY:		bgp_comms_num
+DESC:		Defines whether known Standard (ie. "internet") and Extended Communities (ie. "RT")
+		shdould be presented in string or numerical format. By default communities are looked up
+		for their name; setting this knob to true disables the feature.
+VALUES:         [ true | false ]
+DEFAULT:        false
+
 KEY:            as_path_encode_as_array
 VALUES:         [ true | false ]
 DESC:           BGP AS_PATH is encoded by default as a string, including an underscore-separated list
@@ -1853,8 +1860,8 @@ DEFAULT:	none
 
 KEY:            [ print_num_protos | sql_num_protos | amqp_num_protos | kafka_num_protos ]
 VALUES:         [ true | false ]
-DESC:		Defines whether IP protocols (ie. tcp, udp) should be looked up and presented in string format
-		or left numerical. The default is to look protocol names up. If this feature is not available
+DESC:		Defines whether known IP protocols (ie. tcp, udp) should be presented in string format or
+		left numerical. The default is to look protocol names up. If this feature is not available
 		for the intended plugin - and NetFlow/IPFIX or libpcap/ULOG daemons are used - a custom
 		primitive can be defined (see aggregate_primitives config directive), for example in the case
 		of NetFlow/IPFIX:
