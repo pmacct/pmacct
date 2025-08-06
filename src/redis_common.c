@@ -1,7 +1,7 @@
 /*  
  * pmacct (Promiscuous mode IP Accounting package)
  *
- * Copyright (c) 2003-2024 Paolo Lucente <paolo@pmacct.net>
+ * Copyright (c) 2003-2025 Paolo Lucente <paolo@pmacct.net>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -94,6 +94,7 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
 
     if (now >= (redis_host->last_conn + PM_REDIS_DEFAULT_CONN_RETRY)) {
       int res = REDIS_OK;
+
       redis_host->last_conn = now;
       if (redis_host->ctx && redis_host->ctx->fd != -1) {
         /* reconnect */
@@ -130,11 +131,11 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
       if (res != REDIS_OK || redis_host->ctx == NULL || redis_host->ctx->err) {
 	if (redis_host->ctx) {
 	  if (fatal) {
-      Log(LOG_ERR, "ERROR ( %s ): Can't connect to redis server: %s\n", redis_host->log_id, redis_host->ctx->errstr);
-      exit_gracefully(1);
+	    Log(LOG_ERR, "ERROR ( %s ): Can't connect to redis server: %s\n", redis_host->log_id, redis_host->ctx->errstr);
+	    exit_gracefully(1);
 	  }
 	  else {
-      Log(LOG_WARNING, "WARN ( %s ): Can't connect to redis server: %s\n", redis_host->log_id, redis_host->ctx->errstr);
+	    Log(LOG_WARNING, "WARN ( %s ): Can't connect to redis server: %s\n", redis_host->log_id, redis_host->ctx->errstr);
 	    return ERR;
 	  }
 	}
@@ -144,6 +145,16 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
 	}
       }
       else {
+	if (config.redis_passwd) {
+	  redis_host->reply = redisCommand(redis_host->ctx, "AUTH %s", config.redis_passwd);
+	  if (!redis_host->reply || redis_host->reply->type == REDIS_REPLY_ERROR) {
+	    Log(LOG_ERR, "ERROR ( %s ): Authentication error: %s\n", redis_host->log_id, (redis_host->reply ? redis_host->reply->str : "Unknown error"));
+            exit_gracefully(1);
+	  }
+	
+	  freeReplyObject(redis_host->reply);
+	}
+
 	Log(LOG_DEBUG, "DEBUG ( %s ): Connection successful\n", redis_host->log_id);
       }
     }
