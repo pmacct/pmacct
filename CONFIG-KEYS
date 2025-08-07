@@ -3679,6 +3679,10 @@ DESC:		Defines the Redis server IP address and port to connect to, ie. "127.0.0.
 		<redis_host, cluster_name>. It needs pmacct to be compiled with --enable-redis. 
 DEFAULT:	none
 
+KEY:		redis_passwd
+DESC:		Defines the password to use when connecting to the server.
+DEFAULT:	none
+
 KEY:		redis_db
 DESC:		Defines the Redis database to select. The database is a positive integer and, at
 		time of this writing, allowed numbers are in the range 0 to 15.
