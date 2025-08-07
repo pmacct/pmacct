@@ -34,7 +34,7 @@ void p_redis_thread_wrapper(struct p_redis_host *redis_host)
   assert(redis_pool);
   assert(redis_host);
 
-  Log(LOG_DEBUG, "DEBUG ( %s ): [redis] %d thread(s) initialized\n", redis_host->log_id, 1);
+  Log(LOG_DEBUG, "DEBUG ( %s ): %d thread(s) initialized\n", redis_host->log_id, 1);
 
   /* giving a kick to the Redis thread */
   send_to_pool(redis_pool, p_redis_master_produce_thread, redis_host);
@@ -76,7 +76,7 @@ void p_redis_init(struct p_redis_host *redis_host, char *log_id, redis_thread_ha
     p_redis_set_thread_handler(redis_host, th_hdlr);
  
     if (!config.cluster_name) {
-      Log(LOG_ERR, "ERROR ( %s ): [redis] cluster_name must be specified. Exiting...\n\n", redis_host->log_id);
+      Log(LOG_ERR, "ERROR ( %s ): redis_host requires cluster_name to be specified. Exiting...\n\n", redis_host->log_id);
       exit_gracefully(1);
     }
 
@@ -98,7 +98,7 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
       redis_host->last_conn = now;
       if (redis_host->ctx && redis_host->ctx->fd != -1) {
         /* reconnect */
-        Log(LOG_DEBUG, "DEBUG ( %s ): [redis] Reconnecting to server (fd %d)\n",
+        Log(LOG_DEBUG, "DEBUG ( %s ): reconnecting to redis server (fd %d)\n",
             redis_host->log_id, redis_host->ctx->fd);
         res = redisReconnect(redis_host->ctx);
       }
@@ -116,7 +116,7 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
         if (!dest_port) {
           dest_port = PM_REDIS_DEFAULT_PORT;
         }
-        Log(LOG_INFO, "INFO ( %s ): [redis] Connecting to server %s:%d\n",
+        Log(LOG_INFO, "INFO ( %s ): connecting to redis server %s:%d\n",
             redis_host->log_id, dest_str, dest_port);
 
         /* Connect to redis (with connection timeout) */
@@ -131,16 +131,16 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
       if (res != REDIS_OK || redis_host->ctx == NULL || redis_host->ctx->err) {
 	if (redis_host->ctx) {
 	  if (fatal) {
-	    Log(LOG_ERR, "ERROR ( %s ): [redis] Can't connect to server: %s\n", redis_host->log_id, redis_host->ctx->errstr);
+	    Log(LOG_ERR, "ERROR ( %s ): Can't connect to redis server: %s\n", redis_host->log_id, redis_host->ctx->errstr);
 	    exit_gracefully(1);
 	  }
 	  else {
-	    Log(LOG_WARNING, "WARN ( %s ): [redis] Can't connect to server: %s\n", redis_host->log_id, redis_host->ctx->errstr);
+	    Log(LOG_WARNING, "WARN ( %s ): Can't connect to redis server: %s\n", redis_host->log_id, redis_host->ctx->errstr);
 	    return ERR;
 	  }
 	}
 	else {
-	  Log(LOG_ERR, "ERROR ( %s ): [redis] Connection error: can't allocate context\n", redis_host->log_id);
+	  Log(LOG_ERR, "ERROR ( %s ): Connection error: can't allocate redis context\n", redis_host->log_id);
           exit_gracefully(1);
 	}
       }
@@ -148,15 +148,14 @@ int p_redis_connect(struct p_redis_host *redis_host, int fatal)
 	if (config.redis_passwd) {
 	  redis_host->reply = redisCommand(redis_host->ctx, "AUTH %s", config.redis_passwd);
 	  if (!redis_host->reply || redis_host->reply->type == REDIS_REPLY_ERROR) {
-	    Log(LOG_ERR, "ERROR ( %s ): [redis] Authentication error: %s\n", redis_host->log_id,
-		(redis_host->reply ? redis_host->reply->str : "Unknown error"));
+	    Log(LOG_ERR, "ERROR ( %s ): Authentication error: %s\n", redis_host->log_id, (redis_host->reply ? redis_host->reply->str : "Unknown error"));
             exit_gracefully(1);
 	  }
 	
 	  freeReplyObject(redis_host->reply);
 	}
 
-	Log(LOG_DEBUG, "DEBUG ( %s ): [redis] Connection successful\n", redis_host->log_id);
+	Log(LOG_DEBUG, "DEBUG ( %s ): Connection successful\n", redis_host->log_id);
       }
     }
   }
@@ -246,7 +245,7 @@ void p_redis_process_reply(struct p_redis_host *redis_host)
 {
   if (redis_host->reply) {
     if (redis_host->reply->type == REDIS_REPLY_ERROR) {
-      Log(LOG_WARNING, "WARN ( %s ): [redis] reply='%s'\n", redis_host->log_id, redis_host->reply->str);
+      Log(LOG_WARNING, "WARN ( %s ): reply='%s'\n", redis_host->log_id, redis_host->reply->str);
     }
 
     freeReplyObject(redis_host->reply);
