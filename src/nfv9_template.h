@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -107,6 +107,7 @@
 #define NF9_MPLS_LABEL_10               79
 #define NF9_IN_DST_MAC                  80
 #define NF9_OUT_SRC_MAC                 81
+#define NF9_IFACE_NAME			82
 /* ... */
 #define NF9_FLOW_BYTES                  85
 #define NF9_FLOW_PACKETS                86

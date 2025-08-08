@@ -288,10 +288,17 @@ typedef u_int8_t safi_t;
 #define RD_ORIGIN_FUNC_TYPE_MAX 2
 
 #ifndef MAX_VRF_NAME
-#define MAX_VRF_NAME            32
+#define MAX_VRF_NAME		32
 #endif
 #ifndef MAX_VRF_NAME_STR_LEN
-#define MAX_VRF_NAME_STR_LEN            (MAX_VRF_NAME+1)
+#define MAX_VRF_NAME_STR_LEN	(MAX_VRF_NAME+1)
+#endif
+
+#ifndef MAX_IFACE_NAME
+#define MAX_IFACE_NAME		32
+#endif
+#ifndef MAX_IFACE_NAME_STR_LEN
+#define MAX_IFACE_NAME_STR_LEN	(MAX_IFACE_NAME+1)
 #endif
 
 struct rd_as

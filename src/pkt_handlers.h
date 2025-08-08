@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -121,6 +121,8 @@ extern void NF_vrf_name_handler(struct channels_list_entry *, struct packet_ptrs
 extern void NF_ingress_vrf_name_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_egress_vrf_name_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_mpls_pw_id_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void NF_in_iface_name_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
+extern void NF_out_iface_name_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_path_delay_avg_usec_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_path_delay_min_usec_handler(struct channels_list_entry *, struct packet_ptrs *, char **);
 extern void NF_path_delay_max_usec_handler(struct channels_list_entry *, struct packet_ptrs *, char **);

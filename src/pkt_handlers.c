@@ -558,6 +558,20 @@ void evaluate_packet_handlers()
       primitives++;
     }
 
+    if (channels_list[index].aggregation_3 & COUNT_IN_IFACE_NAME) {
+      if (config.acct_type == ACCT_NF) {
+        channels_list[index].phandler[primitives] = NF_in_iface_name_handler;
+        primitives++;
+      }
+    }
+
+    if (channels_list[index].aggregation_3 & COUNT_OUT_IFACE_NAME) {
+      if (config.acct_type == ACCT_NF) {
+        channels_list[index].phandler[primitives] = NF_out_iface_name_handler; 
+        primitives++;
+      }
+    }
+
     if (channels_list[index].aggregation & COUNT_PEER_SRC_AS) {
       if (config.acct_type == ACCT_PM && config.bgp_daemon) {
 	if (config.bgp_daemon_peer_as_src_type & BGP_SRC_PRIMITIVES_MAP) {
@@ -2088,6 +2102,91 @@ void NF_vrf_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   }
 }
 
+void NF_in_iface_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{     
+  struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
+
+  u_int32_t iface = 0;
+  char *iface_name = NULL;
+  int ret, iface_name_len = 1, have_iface = FALSE;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (OTPL_LAST_LEN(NF9_INPUT_SNMP) == 4) {
+      OTPL_CP_LAST(&iface, NF9_INPUT_SNMP);
+      iface = ntohl(iface);
+      have_iface = TRUE;
+    }
+    break;
+  }
+
+  if (have_iface) { 
+    ret = cdada_map_find(entry->iface_name_map, &iface, (void **) &iface_name);
+    if (ret == CDADA_SUCCESS) {
+      Log(LOG_DEBUG, "DEBUG ( %s/core ): Found Interface Name in hashmap for Interface ID '%d' -> '%s'\n", config.name, iface, iface_name);
+      iface_name_len = strlen(iface_name) + 1;
+    }
+  }
+
+  if (iface_name_len == 1) {
+    return;
+  }
+      
+  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + iface_name_len)) {
+    vlen_prims_init(pvlen, 0);
+    return;
+  }   
+  else {
+    vlen_prims_insert(pvlen, COUNT_INT_IN_IFACE_NAME, iface_name_len, (u_char *) iface_name, PM_MSG_STR_COPY);
+  }
+}
+
+void NF_out_iface_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
+
+  u_int32_t iface = 0;
+  char *iface_name = NULL;
+  int ret, iface_name_len = 1, have_iface = FALSE;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (OTPL_LAST_LEN(NF9_OUTPUT_SNMP) == 4) {
+      OTPL_CP_LAST(&iface, NF9_OUTPUT_SNMP);
+      iface = ntohl(iface);
+      have_iface = TRUE;
+    }
+    break;
+  }
+
+  if (have_iface) { 
+    ret = cdada_map_find(entry->iface_name_map, &iface, (void **) &iface_name);
+    if (ret == CDADA_SUCCESS) {
+      Log(LOG_DEBUG, "DEBUG ( %s/core ): Found Interface Name in hashmap for Interface ID '%d' -> '%s'\n", config.name, iface, iface_name);
+      iface_name_len = strlen(iface_name) + 1;
+    }
+  }
+
+  if (iface_name_len == 1) {
+    return;
+  }
+      
+  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + iface_name_len)) {
+    vlen_prims_init(pvlen, 0);
+    return;
+  }   
+  else {
+    vlen_prims_insert(pvlen, COUNT_INT_OUT_IFACE_NAME, iface_name_len, (u_char *) iface_name, PM_MSG_STR_COPY);
+  }
+}
 
 void sampling_direction_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {

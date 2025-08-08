@@ -549,7 +549,8 @@ int main(int argc,char **argv, char **envp)
                         COUNT_NVGRE))
           list->cfg.data_type |= PIPE_TYPE_TUN;
 
-  if (list->cfg.what_to_count_3 & (COUNT_INGRESS_VRF_NAME | COUNT_EGRESS_VRF_NAME | COUNT_VRF_NAME))
+  if (list->cfg.what_to_count_3 & (COUNT_INGRESS_VRF_NAME|COUNT_EGRESS_VRF_NAME|COUNT_VRF_NAME|
+				   COUNT_IN_IFACE_NAME|COUNT_OUT_IFACE_NAME))
     list->cfg.data_type |= PIPE_TYPE_VLEN;
 
 	if (list->cfg.what_to_count_2 & (COUNT_LABEL|COUNT_MPLS_LABEL_STACK|COUNT_SRV6_SEG_IPV6_SECTION))
@@ -2368,6 +2369,51 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
               }
 
               Log(LOG_DEBUG, "DEBUG ( %s/core ): Mapped ingress vrf id %d, to vrf_name %s\n", config.name, ingress_vrfid, vrf_name);
+            }
+          }
+        }
+
+        if ((tpl->fld[NF9_INPUT_SNMP].len[0] == 4) &&
+            (tpl->fld[NF9_IFACE_NAME].len[0] != 0)) {
+          /* Handling the global option scoping case */
+          if (config.nfacctd_disable_opt_scope_check ||
+              tpl->fld[NF9_OPT_SCOPE_SYSTEM].count) {
+            entry = (struct xflow_status_entry *)pptrs->f_status_g;
+	  }
+
+          if (entry)  {
+            u_int32_t iface_id = 0;
+
+	    memcpy(&iface_id, pkt + tpl->fld[NF9_INPUT_SNMP].off[0], tpl->fld[NF9_INPUT_SNMP].len[0]);
+            iface_id = ntohl(iface_id);
+
+	    if (tpl->fld[NF9_IFACE_NAME].count) {
+	      char *iface_name = NULL;
+
+              if (!entry->iface_name_map) {
+                entry->iface_name_map = cdada_map_create(u_int32_t);
+                if (!entry->iface_name_map) {
+                  Log(LOG_ERR, "ERROR ( %s/core ): Unable to allocate entry->iface_name_map. Exiting.\n", config.name);
+                  exit_gracefully(1);
+                }
+              }
+
+              iface_name = malloc(MAX_IFACE_NAME_STR_LEN);
+	      if (!iface_name) {
+	        Log(LOG_ERR, "ERROR ( %s/core ): Unable to malloc iface_name. Exiting.\n", config.name);
+	        exit_gracefully(1);
+	      }
+
+	      memset(iface_name, 0, MAX_IFACE_NAME_STR_LEN);
+	      memcpy(iface_name, (const char *)pkt + tpl->fld[NF9_IFACE_NAME].off[0], MIN(tpl->fld[NF9_IFACE_NAME].len[0], (MAX_IFACE_NAME - 1)));
+
+	      ret = cdada_map_insert(entry->iface_name_map, &iface_id, iface_name);
+              if (ret != CDADA_SUCCESS && ret != CDADA_E_EXISTS) {
+                Log(LOG_ERR, "ERROR ( %s/core ): Unable to insert in entry->iface_name_map. Exiting.\n", config.name);
+                exit_gracefully(1);
+              }
+
+              Log(LOG_DEBUG, "DEBUG ( %s/core ): Mapped Interface ID '%d', to Interface Name '%s'\n", config.name, iface_id, iface_name);
             }
           }
         }

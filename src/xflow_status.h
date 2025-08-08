@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -89,7 +89,8 @@ struct xflow_status_entry
   struct xflow_status_entry_class *class;
   cdada_map_t *in_rd_map;	/* hash map for ingress vrf id -> mpls vpn rd lookup */
   cdada_map_t *out_rd_map;	/* hash map for egress vrf id -> mpls vpn rd lookup */
-  cdada_map_t *vrf_name_map; /* hash map for ingress vrf id -> vrf name lookup*/
+  cdada_map_t *vrf_name_map;	/* hash map for ingress vrf id -> vrf name lookup */
+  cdada_map_t *iface_name_map;	/* hash map for interface id -> interface name lookup */
   void *sf_cnt;			/* struct (ab)used for sFlow counters logging */
 
 #ifdef WITH_GNUTLS
