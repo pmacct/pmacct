@@ -222,6 +222,8 @@ extern void count_mpls_pw_id_handler(const struct db_cache *, struct insert_data
 extern void count_vrf_name_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_ingress_vrf_name_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_egress_vrf_name_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_in_iface_name_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
+extern void count_out_iface_name_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_peer_src_as_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_peer_dst_as_handler(const struct db_cache *, struct insert_data *, int, char **, char **);
 extern void count_peer_src_ip_handler(const struct db_cache *, struct insert_data *, int, char **, char **);

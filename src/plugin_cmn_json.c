@@ -611,6 +611,16 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3)
     idx++;
   }
 
+  if (wtc_3 & COUNT_IN_IFACE_NAME) {
+    cjhandler[idx] = compose_json_in_iface_name;
+    idx++;
+  }
+
+  if (wtc_3 & COUNT_OUT_IFACE_NAME) {
+    cjhandler[idx] = compose_json_out_iface_name;
+    idx++;
+  }
+
   cjhandler[idx] = compose_json_counters;
 }
 
@@ -981,6 +991,36 @@ void compose_json_egress_vrf_name(json_t *obj, struct chained_cache *cc)
 
   str_json = json_string(str_ptr);
   json_object_set_nocheck(obj, "egress_vrf_name", str_json);
+  json_decref(str_json);
+}
+
+void compose_json_in_iface_name(json_t *obj, struct chained_cache *cc)
+{   
+  char empty_string[] = "", *str_ptr = NULL;
+  json_t *str_json;
+
+  vlen_prims_get(cc->pvlen, COUNT_INT_IN_IFACE_NAME, &str_ptr);
+  if (!str_ptr) {
+    str_ptr = empty_string;
+  }
+
+  str_json = json_string(str_ptr);
+  json_object_set_nocheck(obj, "iface_name_in", str_json);
+  json_decref(str_json);
+}
+
+void compose_json_out_iface_name(json_t *obj, struct chained_cache *cc)
+{   
+  char empty_string[] = "", *str_ptr = NULL;
+  json_t *str_json;
+  
+  vlen_prims_get(cc->pvlen, COUNT_INT_OUT_IFACE_NAME, &str_ptr);
+  if (!str_ptr) {
+    str_ptr = empty_string;
+  }
+  
+  str_json = json_string(str_ptr);
+  json_object_set_nocheck(obj, "iface_name_out", str_json);
   json_decref(str_json);
 }
 

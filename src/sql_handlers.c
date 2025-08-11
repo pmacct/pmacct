@@ -962,6 +962,32 @@ void count_egress_vrf_name_handler(const struct db_cache *cache_elem, struct ins
   *ptr_values += strlen(*ptr_values);
 }
 
+void count_in_iface_name_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char *iface_name_ptr = NULL, empty_string[] = "";
+
+  vlen_prims_get(cache_elem->pvlen, COUNT_INT_IN_IFACE_NAME, &iface_name_ptr);
+  if (!iface_name_ptr) iface_name_ptr = empty_string;
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, iface_name_ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, iface_name_ptr);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
+void count_out_iface_name_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
+{
+  char *iface_name_ptr = NULL, empty_string[] = "";
+
+  vlen_prims_get(cache_elem->pvlen, COUNT_INT_OUT_IFACE_NAME, &iface_name_ptr);
+  if (!iface_name_ptr) iface_name_ptr = empty_string;
+
+  snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, iface_name_ptr);
+  snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, iface_name_ptr);
+  *ptr_where += strlen(*ptr_where);
+  *ptr_values += strlen(*ptr_values);
+}
+
 void count_peer_src_as_handler(const struct db_cache *cache_elem, struct insert_data *idata, int num, char **ptr_values, char **ptr_where)
 {
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, cache_elem->pbgp->peer_src_as);

@@ -1145,7 +1145,29 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
 
           P_fprintf_csv_string(f, pvlen, COUNT_INT_EGRESS_VRF_NAME, write_sep(sep, &count), str_ptr);
         }
+
+        if (config.what_to_count_3 & COUNT_IN_IFACE_NAME) {
+          char *str_ptr = NULL; 
   
+          vlen_prims_get(pvlen, COUNT_INT_IN_IFACE_NAME, &str_ptr);
+          if (!str_ptr) {
+	    str_ptr = empty_string;
+	  }
+
+          P_fprintf_csv_string(f, pvlen, COUNT_INT_IN_IFACE_NAME, write_sep(sep, &count), str_ptr);
+        }
+
+        if (config.what_to_count_3 & COUNT_OUT_IFACE_NAME) {
+          char *str_ptr = NULL; 
+  
+          vlen_prims_get(pvlen, COUNT_INT_OUT_IFACE_NAME, &str_ptr);
+          if (!str_ptr) {
+	    str_ptr = empty_string;
+	  }
+
+          P_fprintf_csv_string(f, pvlen, COUNT_INT_OUT_IFACE_NAME, write_sep(sep, &count), str_ptr);
+        }
+
         if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) {
           addr_to_str(src_host, &data->src_ip);
           fprintf(f, "%s%s", write_sep(sep, &count), src_host);
@@ -1647,6 +1669,8 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count_3 & COUNT_VRF_NAME) fprintf(f, "%sVRF_NAME", write_sep(sep, &count));
   if (config.what_to_count_3 & COUNT_INGRESS_VRF_NAME) fprintf(f, "%sINGRESS_VRF_NAME", write_sep(sep, &count));
   if (config.what_to_count_3 & COUNT_EGRESS_VRF_NAME) fprintf(f, "%sEGRESS_VRF_NAME", write_sep(sep, &count));
+  if (config.what_to_count_3 & COUNT_IN_IFACE_NAME) fprintf(f, "%sIN_IFACE_NAME", write_sep(sep, &count));
+  if (config.what_to_count_3 & COUNT_OUT_IFACE_NAME) fprintf(f, "%sOUT_IFACE_NAME", write_sep(sep, &count));
   if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) fprintf(f, "%sSRC_IP", write_sep(sep, &count));
   if (config.what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) fprintf(f, "%sSRC_NET", write_sep(sep, &count));
   if (config.what_to_count & COUNT_DST_HOST) fprintf(f, "%sDST_IP", write_sep(sep, &count));

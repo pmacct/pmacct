@@ -366,6 +366,14 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_in
     compose_egress_vrf_name_schema(schema);
   }
 
+  if (wtc_3 & COUNT_IN_IFACE_NAME) {
+    compose_in_iface_name_schema(schema);
+  }
+
+  if (wtc_3 & COUNT_OUT_IFACE_NAME) {
+    compose_out_iface_name_schema(schema);
+  }
+
   if (wtc & COUNT_IP_PROTO) {
     avro_schema_record_field_append(schema, "ip_proto", avro_schema_string());
   }
@@ -1172,6 +1180,30 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wt
     pm_avro_check(avro_value_set_string(&field, str_ptr));
   }
 
+  if (wtc_3 & COUNT_IN_IFACE_NAME) {
+    
+    char *str_ptr;
+    char empty_string[] = "";
+  
+    pm_avro_check(avro_value_get_by_name(&value, "iface_name_in", &field, NULL));
+
+    vlen_prims_get(pvlen, COUNT_INT_IN_IFACE_NAME, &str_ptr);
+    if (!str_ptr) str_ptr = empty_string;
+    pm_avro_check(avro_value_set_string(&field, str_ptr));
+  }
+
+  if (wtc_3 & COUNT_OUT_IFACE_NAME) {
+
+    char *str_ptr;
+    char empty_string[] = "";
+
+    pm_avro_check(avro_value_get_by_name(&value, "iface_name_out", &field, NULL));
+
+    vlen_prims_get(pvlen, COUNT_INT_OUT_IFACE_NAME, &str_ptr);
+    if (!str_ptr) str_ptr = empty_string;
+    pm_avro_check(avro_value_set_string(&field, str_ptr));
+  }
+
   if (wtc & COUNT_IP_PROTO) {
     char proto[PROTO_NUM_STRLEN];
 
@@ -1864,6 +1896,24 @@ void compose_vrf_name_schema(avro_schema_t sc_type_record)
 {
   sc_type_string = avro_schema_string();
   avro_schema_record_field_append(sc_type_record, "vrf_name", sc_type_string);
+
+  /* free-up memory */
+  avro_schema_decref(sc_type_string);
+}
+
+void compose_in_iface_name_schema(avro_schema_t sc_type_record)
+{
+  sc_type_string = avro_schema_string();
+  avro_schema_record_field_append(sc_type_record, "iface_name_in", sc_type_string);
+    
+  /* free-up memory */
+  avro_schema_decref(sc_type_string);
+}
+
+void compose_out_iface_name_schema(avro_schema_t sc_type_record)
+{
+  sc_type_string = avro_schema_string();
+  avro_schema_record_field_append(sc_type_record, "iface_name_out", sc_type_string);
 
   /* free-up memory */
   avro_schema_decref(sc_type_string);

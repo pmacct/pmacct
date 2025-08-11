@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -158,6 +158,8 @@ extern void compose_json_path_delay_max_usec(json_t *, struct chained_cache *);
 extern void compose_json_vrf_name(json_t *, struct chained_cache *);
 extern void compose_json_ingress_vrf_name(json_t *, struct chained_cache *);
 extern void compose_json_egress_vrf_name(json_t *, struct chained_cache *);
+extern void compose_json_in_iface_name(json_t *, struct chained_cache *);
+extern void compose_json_out_iface_name(json_t *, struct chained_cache *);
 
 #endif
 extern void compose_json(u_int64_t, u_int64_t, u_int64_t);
