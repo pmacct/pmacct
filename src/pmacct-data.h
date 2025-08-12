@@ -125,6 +125,8 @@ static const struct _primitives_matrix_struct _primitives_matrix[] = {
   {"dst_host_coords", 1, 1, 1, 1, 0, 0, 0, "Destination IP address GeoIP resolution: lat/lon coordinates"},
   {"in_iface", 0, 1, 1, 1, 0, 0, 0, "Input interface, SNMP ifIndex"}, 
   {"out_iface", 0, 1, 1, 1, 0, 0, 0, "Output interface, SNMP ifIndex"}, 
+  {"in_iface_name", 0, 0, 1, 0, 0, 0, 0, "Input interface Name"},
+  {"out_iface_name", 0, 0, 1, 0, 0, 0, 0, "Output interface Name"},
   {"peer_src_ip", 0, 0, 1, 1, 0, 0, 0, "IP address or identificator of telemetry exporting device"},
   {"sampling_rate", 1, 1, 1, 1, 0, 0, 0, "Sampling rate"},
   {"sampling_direction", 0, 0, 1, 1, 0, 0, 0, "Sampling direction (ie. ingress vs egress)"},

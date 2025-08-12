@@ -58,20 +58,20 @@ VALUES:		[ src_mac, dst_mac, vlan, in_vlan, out_vlan, in_cvlan, out_cvlan, cos, 
 		 src_host, dst_host,  src_net, dst_net, src_mask, dst_mask, src_as, dst_as,
 		 src_port, dst_port, tos, proto, none, sum_mac, sum_host, sum_net, sum_as,
 		 sum_port, flows, flow_label, tag, tag2, label, class, tcpflags, in_iface,
-		 out_iface, std_comm, ext_comm, lrg_comm, as_path, peer_src_ip, peer_dst_ip,
-		 peer_src_as, peer_dst_as, local_pref, med, dst_roa, src_std_comm,
-		 src_ext_comm, src_lrg_comm, src_as_path, src_local_pref, src_med, src_roa,
-		 mpls_vpn_rd, mpls_pw_id, mpls_label_top, mpls_label_bottom, mpls_label_stack,
-		 sampling_rate, sampling_direction, src_host_country, dst_host_country,
-		 src_host_pocode, dst_host_pocode, src_host_coords, dst_host_coords,
-		 nat_event, fw_event, post_nat_src_host, post_nat_dst_host, post_nat_src_port,
-		 post_nat_dst_port, tunnel_src_mac, tunnel_dst_mac, tunnel_src_host,
-		 tunnel_dst_host, tunnel_proto, tunnel_tos, tunnel_src_port, tunnel_dst_port,
-		 tunnel_tcpflags, tunnel_flow_label, fwd_status, vxlan, nvgre, timestamp_start,
-		 timestamp_end, timestamp_arrival, timestamp_export, export_proto_seqno,
-		 export_proto_version, export_proto_sysid, path_delay_avg_usec,
-		 path_delay_min_usec, path_delay_max_usec, srv6_seg_ipv6_list, vrf_name,
-		 ingress_vrf_name, egress_vrf_name ]
+		 out_iface, in_iface_name, out_iface_name, std_comm, ext_comm, lrg_comm,
+		 as_path, peer_src_ip, peer_dst_ip, peer_src_as, peer_dst_as, local_pref,
+		 med, dst_roa, src_std_comm, src_ext_comm, src_lrg_comm, src_as_path,
+		 src_local_pref, src_med, src_roa, mpls_vpn_rd, mpls_pw_id, mpls_label_top,
+		 mpls_label_bottom, mpls_label_stack, sampling_rate, sampling_direction,
+		 src_host_country, dst_host_country, src_host_pocode, dst_host_pocode,
+		 src_host_coords, dst_host_coords, nat_event, fw_event, post_nat_src_host,
+		 post_nat_dst_host, post_nat_src_port, post_nat_dst_port, tunnel_src_mac,
+		 tunnel_dst_mac, tunnel_src_host, tunnel_dst_host, tunnel_proto, tunnel_tos,
+		 tunnel_src_port, tunnel_dst_port, tunnel_tcpflags, tunnel_flow_label,
+		 fwd_status, vxlan, nvgre, timestamp_start, timestamp_end, timestamp_arrival,
+		 timestamp_export, export_proto_seqno, export_proto_version, export_proto_sysid,
+		 path_delay_avg_usec, path_delay_min_usec, path_delay_max_usec,
+		 srv6_seg_ipv6_list, vrf_name, ingress_vrf_name, egress_vrf_name ]
 FOREWORDS:	Individual IP packets are uniquely identified by their header field values (a
 		rather large set of primitives!). Same applies to uni-directional IP flows, as
 		they have at least enough information to discriminate where packets are coming
@@ -2059,7 +2059,7 @@ DESC:		If set to true account for NetFlow/IPFIX option records. This will requir
 		name=if_name	field_type=82	len=vlen	semantics=str
 
 		== nfacctd.conf ==
-	    nfacctd_account_options: true
+		nfacctd_account_options: true
 		aggregate_primitives: primitives.lst
 		pre_tag_map: pretag.map
 		!
@@ -2087,36 +2087,6 @@ DESC:		If set to true account for NetFlow/IPFIX option records. This will requir
 		set_tag=100     sample_type=option	flowset_id=256
 		set_tag=101     sample_type=option	flowset_id=257
 		set_tag=200     sample_type=flow
-
-		The output of the Options data files, ie. as per the example config above
-		option_if.json and option_vrf.json, can be used to populate an augmented
-		pre_tag_map via an external script. For example, in the option_vrf.json
-		file there is an entry like the following:
-
-		{"event_type": "purge", "peer_ip_src": "X.X.X.X", "if_id": "1", "if_name": "Ethernet0/0"}
-
-		The VRF Name can become a label for flow data by:
-		* adding "label" to the "aggregate[data]" config directive,
-		* adding the "pre_tag_label_encode_as_map: true" config directive
-		* re-working the pre_tag_map as:
-
-		set_tag=200	sample_type=flow	jeq=enrich_flows
-		set_label=if_name_in%Ethernet0/0	ip=X.X.X.X	in=1	label=enrich_flows
-
-		Same for the Interface Name, it can become yet another label for flow data. For
-		that to happen in conjunction with VRF Name, the pre_tag_map would need to be
-		further re-worked a bit as follows so that the jeq/label definitions do guide
-		the workflow:
-
-		set_tag=200	sample_type=flow	jeq=enrich_flows_if_name
-		set_label=if_name_in%Ethernet0/0	ip=X.X.X.X	in=1	jeq=enrich_flows_vpn_name	label=enrich_flows_if_name
-		set_label=if_name_in%EthernetX/X	ip=X.X.X.X	in=2	jeq=enrich_flows_vpn_name
-		set_label=if_name_in%EthernetY/Y	ip=X.X.X.X	in=3	jeq=enrich_flows_vpn_name
-		..
-		set_label=vpn_name_in%AAAA	ip=X.X.X.X	mpls_vpn_id_in=1	label=enrich_flows_vpn_name
-		set_label=vpn_name_in%BBBB	ip=X.X.X.X	mpls_vpn_id_in=2
-		set_label=vpn_name_in%CCCC	ip=X.X.X.X	mpls_vpn_id_in=3
-
 DEFAULT:        false
 
 KEY:		[ nfacctd_as | sfacctd_as | pmacctd_as | uacctd_as ] [GLOBAL]
