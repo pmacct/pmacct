@@ -671,8 +671,8 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wt
     char ndpi_class[SUPERSHORTBUFLEN];
 
     snprintf(ndpi_class, SUPERSHORTBUFLEN, "%s/%s",
-        ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, pbase->ndpi_class.master_protocol),
-        ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, pbase->ndpi_class.app_protocol));
+        ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, pbase->ndpi_class.proto.master_protocol),
+        ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, pbase->ndpi_class.proto.app_protocol));
 
     pm_avro_check(avro_value_get_by_name(&value, "class", &field, NULL));
     pm_avro_check(avro_value_set_string(&field, ndpi_class));

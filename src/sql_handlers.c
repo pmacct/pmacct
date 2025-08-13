@@ -1151,8 +1151,8 @@ void count_ndpi_class_handler(const struct db_cache *cache_elem, struct insert_d
   char ndpi_class[SUPERSHORTBUFLEN];
 
   snprintf(ndpi_class, SUPERSHORTBUFLEN, "%s/%s",
-	ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, cache_elem->primitives.ndpi_class.master_protocol),
-	ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, cache_elem->primitives.ndpi_class.app_protocol));
+	ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, cache_elem->primitives.ndpi_class.proto.master_protocol),
+	ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, cache_elem->primitives.ndpi_class.proto.app_protocol));
 
   snprintf(*ptr_where, SPACELEFT(where_clause), where[num].string, ndpi_class);
   snprintf(*ptr_values, SPACELEFT(values_clause), values[num].string, ndpi_class);

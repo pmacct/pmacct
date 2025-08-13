@@ -817,8 +817,8 @@ void readExtendedClass2(SFSample *sample)
 {
   if (config.classifier_ndpi) {
 #if defined (WITH_NDPI)
-    sample->ndpi_class.master_protocol = getData32(sample);
-    sample->ndpi_class.app_protocol = getData32(sample);
+    sample->ndpi_class.proto.master_protocol = getData32(sample);
+    sample->ndpi_class.proto.app_protocol = getData32(sample);
 #endif
   }
   else skipBytes(sample, 8);

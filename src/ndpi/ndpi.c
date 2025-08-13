@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -321,7 +321,7 @@ struct ndpi_proto pm_ndpi_packet_processing(struct pm_ndpi_workflow *workflow,
   u_int16_t sport, dport, payload_len;
   u_int8_t *payload;
   u_int8_t src_to_dst_direction = 1;
-  struct ndpi_proto nproto = { NDPI_PROTOCOL_UNKNOWN, NDPI_PROTOCOL_UNKNOWN };
+  struct ndpi_proto nproto = { 0 };
 
   if (!workflow) return nproto;
 
@@ -358,7 +358,7 @@ struct ndpi_proto pm_ndpi_packet_processing(struct pm_ndpi_workflow *workflow,
 							  iph ? (uint8_t *)iph : (uint8_t *)iph6,
 							  ipsize, time, NULL);
 
-  if ((flow->detected_protocol.app_protocol != NDPI_PROTOCOL_UNKNOWN)
+  if ((flow->detected_protocol.proto.app_protocol != NDPI_PROTOCOL_UNKNOWN)
      || ((proto == IPPROTO_UDP) && (flow->packets > workflow->prefs.giveup_proto_tcp))
      || ((proto == IPPROTO_TCP) && (flow->packets > workflow->prefs.giveup_proto_udp))
      || ((proto != IPPROTO_UDP && proto != IPPROTO_TCP) && (flow->packets > workflow->prefs.giveup_proto_other))) {
@@ -372,12 +372,12 @@ struct ndpi_proto pm_ndpi_packet_processing(struct pm_ndpi_workflow *workflow,
   }
 
   if (flow->detection_completed || flow->tcp_finished) {
-    if (flow->detected_protocol.app_protocol == NDPI_PROTOCOL_UNKNOWN) {
-      flow->detected_protocol = ndpi_detection_giveup(workflow->ndpi_struct, flow->ndpi_flow, 1, &workflow->prefs.protocol_guess);
+    if (flow->detected_protocol.proto.app_protocol == NDPI_PROTOCOL_UNKNOWN) {
+      flow->detected_protocol = ndpi_detection_giveup(workflow->ndpi_struct, flow->ndpi_flow, &workflow->prefs.protocol_guess);
     }
 
     if (workflow->prefs.protocol_guess) {
-      if (flow->detected_protocol.app_protocol == NDPI_PROTOCOL_UNKNOWN && !flow->guess_completed) {
+      if (flow->detected_protocol.proto.app_protocol == NDPI_PROTOCOL_UNKNOWN && !flow->guess_completed) {
         pm_ndpi_node_guess_undetected_protocol(workflow, flow, iph ? TRUE : FALSE);
 	flow->guess_completed = TRUE;
       }
@@ -391,7 +391,7 @@ struct ndpi_proto pm_ndpi_workflow_process_packet(struct pm_ndpi_workflow *workf
 {
   struct ndpi_iphdr *iph = NULL;
   struct ndpi_ipv6hdr *iph6 = NULL;
-  struct ndpi_proto nproto = { NDPI_PROTOCOL_UNKNOWN, NDPI_PROTOCOL_UNKNOWN };
+  struct ndpi_proto nproto = { 0 };
   u_int64_t time = 0;
   u_int16_t ip_offset = 0, vlan_id = 0;
 
@@ -455,7 +455,7 @@ u_int16_t pm_ndpi_node_guess_undetected_protocol(struct pm_ndpi_workflow *workfl
 							     flow->protocol);
   }
 
-  return (flow->detected_protocol.app_protocol);
+  return (flow->detected_protocol.proto.app_protocol);
 }
 
 /*

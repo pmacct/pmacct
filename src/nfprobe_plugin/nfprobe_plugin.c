@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -796,7 +796,7 @@ process_packet(struct FLOWTRACK *ft, struct primitives_ptrs *prim_ptrs, const st
     }
     if (!flow->class) flow->class = tmp.class;
 #if defined (WITH_NDPI)
-    if (!flow->ndpi_class.app_protocol)
+    if (!flow->ndpi_class.proto.app_protocol)
       memcpy(&flow->ndpi_class, &tmp.ndpi_class, sizeof(pm_class2_t));
 #endif
     if (!flow->tag[0]) flow->tag[0] = tmp.tag[0];
