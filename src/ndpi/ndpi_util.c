@@ -63,14 +63,12 @@ struct pm_ndpi_workflow *pm_ndpi_workflow_init()
     
   NDPI_PROTOCOL_BITMASK all;
     
-  // XXX ndpi_init_prefs pm_ndpi_init_prefs = ndpi_no_prefs;
   struct ndpi_detection_module_struct *module = ndpi_init_detection_module(NULL); // pm_ndpi_init_prefs);
   struct pm_ndpi_workflow *workflow = ndpi_calloc(1, sizeof(struct pm_ndpi_workflow));
 
   log_notification_init(&log_notifications.ndpi_cache_full);
   log_notification_init(&log_notifications.ndpi_tmp_frag_warn);
 
-/* XXX
   workflow->prefs.decode_tunnels = FALSE;
 
   if (config.classifier_table_num) workflow->prefs.num_roots = config.classifier_table_num;
@@ -99,7 +97,6 @@ struct pm_ndpi_workflow *pm_ndpi_workflow_init()
 
   if (config.ndpi_giveup_proto_other) workflow->prefs.giveup_proto_other = config.ndpi_giveup_proto_other;
   else workflow->prefs.giveup_proto_other = NDPI_GIVEUP_PROTO_OTHER;
-*/
 
   workflow->ndpi_struct = module;
 
