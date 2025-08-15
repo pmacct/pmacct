@@ -144,12 +144,11 @@ int bmp_tlv_list_add(struct pm_list *tlvs, u_int32_t pen, u_int16_t type, u_int1
   tlv->index = index;
 
   if (len) {
-
     tlv->val = malloc(len);
     if (!tlv->val) {
       free(tlv);
       return ERR;
-      };
+    };
 
     memcpy(tlv->val, val, len);
   }

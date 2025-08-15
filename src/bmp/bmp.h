@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -299,26 +299,26 @@ struct bmp_peer_up_hdr {
 
 static const struct bmp_tlv_def __attribute__((unused)) bmp_rm_info_types[] = {
   { "unknown0", BMP_TLV_SEM_UNKNOWN, NULL },
-  { "unknown1", BMP_TLV_SEM_UNKNOWN, NULL },
-  { "unknown2", BMP_TLV_SEM_UNKNOWN, NULL },
-  { "vrf", BMP_TLV_SEM_UNKNOWN, NULL },
   { "bgp_pdu", BMP_TLV_SEM_COMPLEX, NULL }, /* XXX */
   { "group", BMP_TLV_SEM_UNKNOWN, NULL },
+  { "vrf", BMP_TLV_SEM_UNKNOWN, NULL },
+  { "stateless", BMP_TLV_SEM_COMPLEX, NULL }, /* XXX */
+  { "unknown5", BMP_TLV_SEM_UNKNOWN, NULL },
   { "unknown6", BMP_TLV_SEM_UNKNOWN, NULL },
-  { "add_path", BMP_TLV_SEM_UNKNOWN, NULL },
+  { "unknown7", BMP_TLV_SEM_UNKNOWN, NULL },
   { "unknown8", BMP_TLV_SEM_UNKNOWN, NULL },
   { "path_marking", BMP_TLV_SEM_COMPLEX, bmp_log_rm_tlv_path_marking }
 };
 
 /* XXX: provisional code points */
 #define BMP_ROUTE_MONITOR_INFO_UNKNOWN0	0
-#define BMP_ROUTE_MONITOR_INFO_UNKNOWN1	1
-#define BMP_ROUTE_MONITOR_INFO_UNKNOWN2	2
+#define BMP_ROUTE_MONITOR_INFO_BGP_PDU	1
+#define BMP_ROUTE_MONITOR_INFO_GROUP	2
 #define BMP_ROUTE_MONITOR_INFO_VRF	3
-#define BMP_ROUTE_MONITOR_INFO_BGP_PDU	4
-#define BMP_ROUTE_MONITOR_INFO_GROUP	5
+#define BMP_ROUTE_MONITOR_INFO_SP	4
+#define BMP_ROUTE_MONITOR_INFO_UNKNOWN5	5
 #define BMP_ROUTE_MONITOR_INFO_UNKNOWN6	6
-#define BMP_ROUTE_MONITOR_INFO_ADDPATH	7
+#define BMP_ROUTE_MONITOR_INFO_UNKNOWN7	7
 #define BMP_ROUTE_MONITOR_INFO_UNKNOWN8	8
 #define BMP_ROUTE_MONITOR_INFO_MARKING	9
 #define BMP_ROUTE_MONITOR_INFO_MAX	9
