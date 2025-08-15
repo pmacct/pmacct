@@ -8,6 +8,9 @@ if USING_SQL
 EXTRA_DIST += src/sql_common_m.c
 endif
 
+# Add test subdir at the very end
+SUBDIRS += test/
+
 pmacct_data_dir = $(datarootdir)/pmacct
 pmacct_libs_dir = $(libdir)/pmacct
 pmacct_docs_dir = $(pmacct_data_dir)/docs
