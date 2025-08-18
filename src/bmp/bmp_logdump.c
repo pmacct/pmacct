@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -1514,6 +1514,26 @@ int bmp_log_rm_tlv_pm_status(u_int32_t path_status, int output, void *vobj)
       if (path_status & BMP_RM_PM_PS_ADD_PATH) {
 	json_array_append_new(ps_array, json_string("Add-Path"));
 	path_status ^= BMP_RM_PM_PS_ADD_PATH;
+      }
+
+      if (path_status & BMP_RM_PM_PS_FILTER_IN) {
+	json_array_append_new(ps_array, json_string("Filtered-In-Policy"));
+	path_status ^= BMP_RM_PM_PS_FILTER_IN;
+      }
+
+      if (path_status & BMP_RM_PM_PS_FILTER_OUT) {
+	json_array_append_new(ps_array, json_string("Filtered-Out-Policy"));
+	path_status ^= BMP_RM_PM_PS_FILTER_OUT;
+      }
+
+      if (path_status & BMP_RM_PM_PS_STALE) {
+	json_array_append_new(ps_array, json_string("Stale"));
+	path_status ^= BMP_RM_PM_PS_STALE;
+      }
+
+      if (path_status & BMP_RM_PM_PS_SUPPRESSED) {
+	json_array_append_new(ps_array, json_string("Suppressed"));
+	path_status ^= BMP_RM_PM_PS_SUPPRESSED;
       }
 
       if (path_status) {
