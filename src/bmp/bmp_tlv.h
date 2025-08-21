@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -37,4 +37,12 @@ extern void bmp_tlv_list_node_del(void *node);
 extern struct pm_list *bmp_tlv_list_copy(struct pm_list *);
 extern void *bmp_tlv_list_find(struct pm_list *, struct pm_listnode *, u_int16_t);
 extern void bmp_tlv_list_destroy(struct pm_list *);
+
+extern cdada_list_t *bmp_tlv_list_new_v2(void);
+extern int bmp_tlv_list_add_v2(cdada_list_t *, u_int32_t, u_int16_t, u_int16_t, u_int16_t, char *);
+extern void bmp_tlv_list_node_del_v2(void *);
+extern cdada_list_t *bmp_tlv_list_copy_v2(cdada_list_t *);
+extern void bmp_tlv_list_find_callback_v2(const cdada_list_t *, const void *, void *);
+extern struct bmp_log_tlv *bmp_tlv_list_find_v2(cdada_list_t *, u_int16_t);
+extern void bmp_tlv_list_destroy_v2(cdada_list_t *);
 #endif //BMP_TLV_H
