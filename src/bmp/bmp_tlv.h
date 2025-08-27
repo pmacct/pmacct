@@ -25,6 +25,10 @@
 /* includes */
 
 /* defines */
+struct bmp_tlv_list_result {
+  u_int16_t type;
+  struct bmp_log_tlv *found;
+};
 
 /* prototypes */
 extern int bmp_tlv_handle_ebit(u_int16_t *);
@@ -40,7 +44,6 @@ extern void bmp_tlv_list_destroy(struct pm_list *);
 
 extern cdada_list_t *bmp_tlv_list_new_v2(void);
 extern int bmp_tlv_list_add_v2(cdada_list_t *, u_int32_t, u_int16_t, u_int16_t, u_int16_t, char *);
-extern void bmp_tlv_list_node_del_v2(void *);
 extern cdada_list_t *bmp_tlv_list_copy_v2(cdada_list_t *);
 extern void bmp_tlv_list_find_callback_v2(const cdada_list_t *, const void *, void *);
 extern struct bmp_log_tlv *bmp_tlv_list_find_v2(cdada_list_t *, u_int16_t);

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2021 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -72,7 +72,7 @@ struct bmp_dump_se {
     struct bmp_log_peer_up peer_up;
     struct bmp_log_peer_down peer_down;
   } se;
-  struct pm_list *tlvs;
+  struct cdada_list_t *tlvs;
 };
 
 struct bmp_dump_se_ll_elem {
@@ -90,17 +90,17 @@ extern void bmp_daemon_msglog_init_amqp_host();
 extern void bmp_dump_init_peer(struct bgp_peer *);
 extern void bmp_dump_close_peer(struct bgp_peer *);
 
-extern int bmp_log_msg(struct bgp_peer *, struct bmp_data *, struct pm_list *tlvs, bgp_tag_t *, void *, u_int64_t, char *, int, int);
-extern int bmp_log_msg_stats(struct bgp_peer *, struct bmp_data *, struct pm_list *, struct bmp_log_stats *, char *, int, void *);
-extern int bmp_log_msg_init(struct bgp_peer *, struct bmp_data *, struct pm_list *, char *, int, void *);
-extern int bmp_log_msg_term(struct bgp_peer *, struct bmp_data *, struct pm_list *, char *, int, void *);
-extern int bmp_log_msg_peer_up(struct bgp_peer *, struct bmp_data *, struct pm_list *, struct bmp_log_peer_up *, char *, int, void *);
-extern int bmp_log_msg_peer_down(struct bgp_peer *, struct bmp_data *, struct pm_list *, struct bmp_log_peer_down *, char *, int, void *);
-extern int bmp_log_msg_route_monitor_tlv(struct pm_list *, int, void *);
+extern int bmp_log_msg(struct bgp_peer *, struct bmp_data *, struct cdada_list_t *tlvs, bgp_tag_t *, void *, u_int64_t, char *, int, int);
+extern int bmp_log_msg_stats(struct bgp_peer *, struct bmp_data *, struct cdada_list_t *, struct bmp_log_stats *, char *, int, void *);
+extern int bmp_log_msg_init(struct bgp_peer *, struct bmp_data *, struct cdada_list_t *, char *, int, void *);
+extern int bmp_log_msg_term(struct bgp_peer *, struct bmp_data *, struct cdada_list_t *, char *, int, void *);
+extern int bmp_log_msg_peer_up(struct bgp_peer *, struct bmp_data *, struct cdada_list_t *, struct bmp_log_peer_up *, char *, int, void *);
+extern int bmp_log_msg_peer_down(struct bgp_peer *, struct bmp_data *, struct cdada_list_t *, struct bmp_log_peer_down *, char *, int, void *);
+extern int bmp_log_msg_route_monitor_tlv(struct cdada_list_t *, int, void *);
 extern int bmp_log_rm_tlv_path_marking(struct bgp_peer *, struct bmp_data *, void *, void *, char *, int , void *);
 extern int bmp_log_rm_tlv_pm_status(u_int32_t, int, void *);
 
-extern void bmp_dump_se_ll_append(struct bgp_peer *, struct bmp_data *, struct pm_list *tlvs, void *, int);
+extern void bmp_dump_se_ll_append(struct bgp_peer *, struct bmp_data *, struct cdada_list_t *tlvs, void *, int);
 extern void bmp_dump_se_ll_destroy(struct bmp_dump_se_ll *);
 
 extern void bmp_handle_dump_event(int);

@@ -92,7 +92,7 @@ struct bmp_chars {
   rd_t rd;
 
   /* non-key */
-  struct pm_list *tlvs;
+  struct cdada_list_t *tlvs;
 };
 
 struct bmp_data {
@@ -317,7 +317,6 @@ static const struct bmp_tlv_def __attribute__((unused)) bmp_rm_info_types[] = {
 #define BMP_ROUTE_MONITOR_INFO_VRF	3
 #define BMP_ROUTE_MONITOR_INFO_SP	4
 #define BMP_ROUTE_MONITOR_INFO_MARKING	5
-#define BMP_ROUTE_MONITOR_INFO_UNKNOWN5	5
 #define BMP_ROUTE_MONITOR_INFO_UNKNOWN6	6
 #define BMP_ROUTE_MONITOR_INFO_UNKNOWN7	7
 #define BMP_ROUTE_MONITOR_INFO_UNKNOWN8	8

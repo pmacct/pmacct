@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -361,17 +361,31 @@ int bgp_extra_data_process_bmp(struct bgp_msg_extra_data *bmed, struct bgp_info 
       bmed_bmp_dst = (struct bmp_chars *) ri->bmed.data;
 
       if (bmed_bmp_src->tlvs) {
-	bmed_bmp_dst->tlvs = bmp_tlv_list_copy(bmed_bmp_src->tlvs);
+	bmed_bmp_dst->tlvs = bmp_tlv_list_copy_v2(bmed_bmp_src->tlvs);
 
 	/* post process copied TLV list */
 	{
-	  struct pm_listnode *node = NULL, *next_node = NULL;
 	  struct bmp_log_tlv *tlv = NULL;
+	  int idx, rc, size;
 
-	  for (PM_ALL_LIST_ELEMENTS(bmed_bmp_dst->tlvs, node, next_node, tlv)) {
+	  size = cdada_list_size(bmed_bmp_dst->tlvs);
+	  for (idx = 0; idx < size; idx++) {
+	    rc = cdada_list_get(bmed_bmp_dst->tlvs, idx, &tlv);
+
+	    if (rc != CDADA_SUCCESS || !tlv) {
+	      continue;
+	    }
+
 	    if (tlv->type == BMP_ROUTE_MONITOR_INFO_MARKING) {
 	      if (idx != ntohs(tlv->index)) {
-		pm_list_delete_node(bmed_bmp_dst->tlvs, node);
+		if (tlv->val) free(tlv->val);
+		free(tlv);
+		cdada_list_erase(bmed_bmp_dst->tlvs, idx);
+
+		/* XXX: in case of repeated TLVs, honor the first one;
+		   alternatively one could go back to cdada_list_size()
+		   step for small lists */
+		break;
 	      }
 	    }
 	  }
@@ -394,7 +408,7 @@ void bgp_extra_data_free_bmp(struct bgp_msg_extra_data *bmed)
       bmed_bmp = (struct bmp_chars *) bmed->data;
 
       if (bmed_bmp->tlvs) {
-	bmp_tlv_list_destroy(bmed_bmp->tlvs);
+	bmp_tlv_list_destroy_v2(bmed_bmp->tlvs);
       }
 
       free(bmed->data);

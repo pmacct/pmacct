@@ -261,16 +261,6 @@ int bmp_tlv_list_add_v2(cdada_list_t *tlvs, u_int32_t pen, u_int16_t type, u_int
   return SUCCESS;
 }
 
-void bmp_tlv_list_node_del_v2(void *node_ptr)
-{
-  struct bmp_log_tlv *tlv = *(struct bmp_log_tlv **)node_ptr;
-
-  if (tlv) {
-    if (tlv->val) free(tlv->val);
-    free(tlv);
-  }
-}
-
 cdada_list_t *bmp_tlv_list_copy_v2(cdada_list_t *src)
 {
   if (!src) {
@@ -293,8 +283,7 @@ cdada_list_t *bmp_tlv_list_copy_v2(cdada_list_t *src)
 
     int add_ret = bmp_tlv_list_add_v2(dst, tlv_ptr->pen, tlv_ptr->type, tlv_ptr->len, tlv_ptr->index, tlv_ptr->val);
     if (add_ret != CDADA_SUCCESS) {
-      cdada_list_traverse(dst, (cdada_list_it)bmp_tlv_list_node_del_v2, NULL);
-      cdada_list_destroy(dst);
+      bmp_tlv_list_destroy_v2(dst);
       return NULL;
     }
   }
@@ -305,10 +294,13 @@ cdada_list_t *bmp_tlv_list_copy_v2(cdada_list_t *src)
 void bmp_tlv_list_find_callback_v2(const cdada_list_t *list, const void *val, void *opaque)
 {
   struct bmp_log_tlv *current = *(struct bmp_log_tlv **)val;
-  u_int16_t search_type = *(u_int16_t *)opaque;
+  struct bmp_tlv_list_result *ctx = opaque;
 
-  if (current && current->type == search_type) {
-    *(struct bmp_log_tlv **)opaque = current;
+  if (current && current->type == ctx->type) {
+    /* XXX: in case of repeated TLVs, honor the first one */
+    if (!ctx->found) {
+      ctx->found = current;
+    }
   }
 }
 
@@ -316,10 +308,7 @@ struct bmp_log_tlv *bmp_tlv_list_find_v2(cdada_list_t *tlvs, u_int16_t type)
 {
   // Use the type as opaque data pointer replacement:
   // store input type in 'search_type' and result in 'result'
-  struct {
-    u_int16_t type;
-    struct bmp_log_tlv *found;
-  } ctx = { type, NULL };
+  struct bmp_tlv_list_result ctx = { type, NULL };
 
   if (!tlvs) {
     return NULL;
@@ -332,10 +321,27 @@ struct bmp_log_tlv *bmp_tlv_list_find_v2(cdada_list_t *tlvs, u_int16_t type)
 
 void bmp_tlv_list_destroy_v2(cdada_list_t *tlvs)
 {
+  struct bmp_log_tlv *tlv = NULL;
+  int rc, idx, size;
+
   if (!tlvs) {
     return;
   }
 
-  cdada_list_traverse(tlvs, (cdada_list_it)bmp_tlv_list_node_del_v2, NULL);
+  size = cdada_list_size(tlvs);
+  for (idx = 0; idx < size; idx++) {
+    rc = cdada_list_get(tlvs, idx, &tlv);
+
+    if (rc != CDADA_SUCCESS || !tlv) {
+      continue;
+    }
+
+    if (tlv->val) {
+      free(tlv->val);
+    }
+
+    free(tlv);
+  }
+
   cdada_list_destroy(tlvs);
 }
