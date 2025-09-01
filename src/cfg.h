@@ -437,6 +437,7 @@ struct configuration {
   int bmp_daemon_port;
   char *bmp_daemon_rp_ebpf_prog;
   char *bmp_daemon_tag_map;
+  int bmp_daemon_correct_pd;
   struct pretag_label_filter bmp_daemon_msglog_label_filter;
   int bmp_daemon_pipe_size;
   int bmp_daemon_max_peers;
