@@ -560,7 +560,7 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_l
     }
 
     if (!is_empty_256b(&bdata->chars.pd, sizeof(bdata->chars.pd))) {
-      char rd_str[SHORTSHORTBUFLEN];
+      char pd_str[SHORTSHORTBUFLEN];
 
       bgp_rd2str(pd_str, &bdata->chars.pd);
       pm_avro_check(avro_value_get_by_name(obj, "pd", &p_avro_field, NULL));
