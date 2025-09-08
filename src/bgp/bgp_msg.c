@@ -681,7 +681,11 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   /* handling Unfeasible routes */
   memcpy(&tmp, pkt, 2);
   withdraw_len = ntohs(tmp);
-  if (withdraw_len > end) return ERR;  
+  if (withdraw_len > end) {
+    bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_parse_update_msg() failed: withdraw_len > end\n", config.name, bms->log_str, bgp_peer_str);
+    return ERR;  
+  }
   else {
     end -= withdraw_len;
     pkt += 2; end -= 2;
@@ -698,7 +702,11 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   /* handling Attributes */
   memcpy(&tmp, pkt, 2);
   attribute_len = ntohs(tmp);
-  if (attribute_len > end) return ERR;
+  if (attribute_len > end) {
+    bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_parse_update_msg() failed: attribute_len > end\n", config.name, bms->log_str, bgp_peer_str);
+    return ERR;
+  }
   else {
     end -= attribute_len;
     pkt += 2; end -= 2;
@@ -706,7 +714,9 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 
   if (attribute_len > 0) {
     ret = bgp_attr_parse(peer, &attr, &attr_extra, pkt, attribute_len, &mp_update, &mp_withdraw);
-    if (ret < 0) return ret;
+    if (ret < 0) {
+      return ret;
+    }
     pkt += attribute_len;
   }
 
@@ -842,6 +852,8 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr_extra *attr_extra,
 		   char *ptr, int len, struct bgp_nlri *mp_update, struct bgp_nlri *mp_withdraw)
 {
+  struct bgp_misc_structs *bms;
+  char bgp_peer_str[INET6_ADDRSTRLEN];
   int to_the_end = len, ret;
   u_int8_t flag, type, *tmp;
   u_int16_t tmp16, attr_len;
@@ -849,8 +861,16 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
 
   if (!ptr) return ERR;
 
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return ERR;
+
   while (to_the_end > 0) {
-    if (to_the_end < BGP_ATTR_MIN_LEN) return ERR;
+    if (to_the_end < BGP_ATTR_MIN_LEN) {
+      bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_attr_parse() failed: to_the_end < BGP_ATTR_MIN_LEN\n", config.name, bms->log_str, bgp_peer_str);
+      return ERR;
+    }
 
     tmp = (u_int8_t *) ptr++; to_the_end--; flag = *tmp;
     tmp = (u_int8_t *) ptr++; to_the_end--; type = *tmp;
@@ -858,11 +878,19 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
     /* Attribute length */
     if (flag & BGP_ATTR_FLAG_EXTLEN) {
       memcpy(&tmp16, ptr, 2); ptr += 2; to_the_end -= 2; attr_len = ntohs(tmp16);
-      if (attr_len > to_the_end) return ERR;
+      if (attr_len > to_the_end) {
+	bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+	Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_attr_parse() failed: attr_len > to_the_end (1)\n", config.name, bms->log_str, bgp_peer_str);
+        return ERR;
+      }
     }
     else {
       tmp = (u_int8_t *) ptr++; to_the_end--; attr_len = *tmp;
-      if (attr_len > to_the_end) return ERR;
+      if (attr_len > to_the_end) {
+	bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+	Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_attr_parse() failed: attr_len > to_the_end (2)\n", config.name, bms->log_str, bgp_peer_str);
+	return ERR;
+      }
     }
 
     switch (type) {
@@ -915,7 +943,11 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
       break;
     }
 
-    if (ret < 0) return ret; 
+    if (ret < 0) {
+      bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_attr_parse() failed: type=%d\n", config.name, bms->log_str, bgp_peer_str, type);
+      return ret; 
+    }
 
     ptr += attr_len;
     to_the_end -= attr_len;
