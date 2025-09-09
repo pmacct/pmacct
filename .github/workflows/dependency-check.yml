@@ -1,0 +1,529 @@
+name: Dependency (deps.sh) Updates
+
+on:
+    schedule:
+        # run weekly on wednesdays at 5 am utc
+        - cron: "0 5 * * 3"
+    workflow_dispatch: # allow manual triggering
+
+jobs:
+    check-dependencies:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Check for dependency updates
+              id: check-deps
+              run: |
+                  # parse deps.sh dynamically to extract repository urls and versions
+                  echo "[INFO] Parsing ci/deps.sh for dependencies..."
+
+                  # configuration: packages to ignore or pin
+                  # format: "repo_name:action:value"
+                  # actions: ignore, pin, ignore-version, skip
+                  declare -a DEPENDENCY_CONFIG=(
+                    # "confluentinc/libserdes:ignore"                    # ignore this package completely
+                    # "confluentinc/libserdes:pin:v7.5.3"               # pin to specific version  
+                    # "akheron/jansson:ignore-version:v2.14.1"          # ignore specific version
+                    # "zeromq/libzmq:ignore-version:v4.4.0,v4.4.1"      # ignore multiple versions
+                    # "confluentinc/libserdes:skip:v8.0.0"              # skip specific version, find next one
+                    "confluentinc/libserdes:skip:v8.0.0"
+                  )
+
+                  # function to check if repo should be ignored
+                  should_ignore_repo() {
+                    local repo="$1"
+                    for config in "${DEPENDENCY_CONFIG[@]}"; do
+                      if [[ $config == "$repo:ignore" ]]; then
+                        return 0  # true - ignore this repo
+                      fi
+                    done
+                    return 1  # false - don't ignore
+                  }
+
+                  # function to get pinned version for repo
+                  get_pinned_version() {
+                    local repo="$1"
+                    for config in "${DEPENDENCY_CONFIG[@]}"; do
+                      if [[ $config =~ ^$repo:pin:(.+)$ ]]; then
+                        echo "${BASH_REMATCH[1]}"
+                        return
+                      fi
+                    done
+                    echo ""  # no pinned version
+                  }
+
+                  # function to normalize version (remove common suffixes like -stable)
+                  normalize_version() {
+                    local version="$1"
+                    # remove common suffixes that indicate the same version
+                    echo "$version" | sed -E 's/-stable$//g' | sed -E 's/-release$//g'
+                  }
+
+                  # function to check if two versions are semantically equivalent
+                  versions_are_equivalent() {
+                    local version1="$1"
+                    local version2="$2"
+                    local norm1=$(normalize_version "$version1")
+                    local norm2=$(normalize_version "$version2")
+                    [[ "$norm1" == "$norm2" ]]
+                  }
+
+                  # function to check if version should be ignored
+                  should_ignore_version() {
+                    local repo="$1"
+                    local version="$2"
+                    for config in "${DEPENDENCY_CONFIG[@]}"; do
+                      if [[ $config =~ ^$repo:ignore-version:(.+)$ ]]; then
+                        local ignored_versions="${BASH_REMATCH[1]}"
+                        # split by comma and check each version
+                        IFS=',' read -ra VERSIONS <<< "$ignored_versions"
+                        for ignored_version in "${VERSIONS[@]}"; do
+                          if [[ "$version" == "$ignored_version" ]]; then
+                            return 0  # true - ignore this version
+                          fi
+                        done
+                      fi
+                    done
+                    return 1  # false - don't ignore
+                  }
+
+                  # function to get skipped versions for repo
+                  get_skipped_versions() {
+                    local repo="$1"
+                    for config in "${DEPENDENCY_CONFIG[@]}"; do
+                      if [[ $config =~ ^$repo:skip:(.+)$ ]]; then
+                        echo "${BASH_REMATCH[1]}"
+                        return
+                      fi
+                    done
+                    echo ""  # no skipped versions
+                  }
+
+                  updates_needed=""
+
+                  # extract git clone dependencies
+                  echo "--- Section 1: Git clone dependencies ---"
+                  while IFS= read -r line; do
+                    if [[ $line =~ git\ clone.*-b\ ([^[:space:]]+).*https://github\.com/([^[:space:]]+) ]]; then
+                      version="${BASH_REMATCH[1]}"
+                      repo_url="${BASH_REMATCH[2]}"
+                      repo="${repo_url%.git}"  # remove .git suffix if present
+                      
+                      # check if this repo should be ignored
+                      if should_ignore_repo "$repo"; then
+                        echo "[SKIP] Skipping $repo (configured to ignore)"
+                        continue
+                      fi
+                      
+                      echo "[CHECK] Checking $repo (current: $version)"
+                      
+                      # check if this repo is pinned to a specific version
+                      pinned_version=$(get_pinned_version "$repo")
+                      if [ -n "$pinned_version" ]; then
+                        if [ "$version" == "$pinned_version" ]; then
+                          echo "[PINNED] Up to date: $repo (pinned to $pinned_version)"
+                        else
+                          echo "[PINNED] Update needed: $repo ($version -> $pinned_version - pinned version)"
+                          updates_needed="${updates_needed}${repo}: ${version} -> ${pinned_version}\n"
+                        fi
+                        continue
+                      fi
+                      
+                      # check if we have skip configurations for this repo
+                      skipped_versions=$(get_skipped_versions "$repo")
+                      
+                      # get latest release tag from github api
+                      latest=$(curl -s "https://api.github.com/repos/$repo/releases/latest" | jq -r '.tag_name // empty')
+                      
+                      # if no releases, or we need to skip some versions, get all stable tags
+                      if [ -z "$latest" ] || [ "$latest" == "null" ] || [ "$latest" == "empty" ] || [ -n "$skipped_versions" ]; then
+                        if [ -n "$skipped_versions" ]; then
+                          # build jq filter to exclude skipped versions
+                          IFS=',' read -ra SKIP_VERSIONS <<< "$skipped_versions"
+                          skip_filter=""
+                          for skip_version in "${SKIP_VERSIONS[@]}"; do
+                            if [ -n "$skip_filter" ]; then
+                              skip_filter="$skip_filter and "
+                            fi
+                            skip_filter="$skip_filter(.name != \"$skip_version\")"
+                          done
+                          
+                          latest=$(curl -s "https://api.github.com/repos/$repo/tags" | jq -r "
+                            [.[] | select(.name | test(\"-(rc|alpha|beta|dev|pre|snapshot|cp)\"; \"i\") | not) | select($skip_filter)] | 
+                            if length > 0 then .[0].name else empty end
+                          ")
+                          
+                          if [ -n "$latest" ] && [ "$latest" != "empty" ]; then
+                            echo "[SKIP-VER] Skipping configured versions, found: $latest"
+                          fi
+                        else
+                          # no skip versions, just filter pre-releases
+                          latest=$(curl -s "https://api.github.com/repos/$repo/tags" | jq -r '
+                            [.[] | select(.name | test("-(rc|alpha|beta|dev|pre|snapshot|cp)"; "i") | not)] | 
+                            if length > 0 then .[0].name else empty end
+                          ')
+                        fi
+                      fi
+                      
+                      if [ -n "$latest" ] && [ "$latest" != "empty" ] && [ "$latest" != "$version" ] && ! versions_are_equivalent "$version" "$latest"; then
+                        # check if this version should be ignored
+                        if should_ignore_version "$repo" "$latest"; then
+                          echo "[IGNORE] Update available but ignored: $repo ($version -> $latest - version ignored)"
+                        else
+                          echo "[UPDATE] Update available: $repo ($version -> $latest)"
+                          updates_needed="${updates_needed}${repo}: ${version} -> ${latest}\n"
+                        fi
+                      else
+                        # handle case where versions are equivalent
+                        if [ -n "$latest" ] && [ "$latest" != "empty" ] && [ "$latest" != "$version" ] && versions_are_equivalent "$version" "$latest"; then
+                          echo "[OK] Up to date: $repo (semantically equivalent: $version == $latest)"
+                        else
+                          echo "[OK] Up to date: $repo"
+                        fi
+                      fi
+                    fi
+                  done < ci/deps.sh
+
+                  # extract all wget dependencies with flexible pattern
+                  echo "--- Section 2: Wget dependencies ---"
+                  while IFS= read -r line; do
+                    # skip if not a wget line with github.com and .tar.gz
+                    if [[ ! $line =~ wget ]] || [[ ! $line =~ https://github\.com ]] || [[ ! $line =~ \.tar\.gz ]]; then
+                      continue
+                    fi
+                    
+                    # extract repo name
+                    if [[ $line =~ https://github\.com/([^/]+/[^/]+)/ ]]; then
+                      repo="${BASH_REMATCH[1]}"
+                    else
+                      continue
+                    fi
+                    
+                    # extract versions
+                    version=""
+                    if [[ $line =~ /archive/refs/tags/([^/]+)\.tar\.gz ]]; then
+                      version="${BASH_REMATCH[1]}"
+                    elif [[ $line =~ /tags/([^/]+) ]]; then
+                      version="${BASH_REMATCH[1]}"
+                    fi
+                    
+                    if [ -n "$version" ] && [ -n "$repo" ]; then
+                      # check if this repo should be ignored
+                      if should_ignore_repo "$repo"; then
+                        echo "[SKIP] Skipping $repo (configured to ignore)"
+                        continue
+                      fi
+                      
+                      echo "[CHECK] Checking $repo (current: $version)"
+                      
+                      # check if this repo is pinned to a specific version
+                      pinned_version=$(get_pinned_version "$repo")
+                      if [ -n "$pinned_version" ]; then
+                        if [ "$version" == "$pinned_version" ]; then
+                          echo "[PINNED] Up to date: $repo (pinned to $pinned_version)"
+                        else
+                          echo "[PINNED] Update needed: $repo ($version -> $pinned_version - pinned version)"
+                          updates_needed="${updates_needed}${repo}: ${version} -> ${pinned_version}\n"
+                        fi
+                        continue
+                      fi
+                      
+                      # check if we have skip configurations for this repo
+                      skipped_versions=$(get_skipped_versions "$repo")
+                      
+                      # get latest release tag from github api
+                      latest=$(curl -s "https://api.github.com/repos/$repo/releases/latest" | jq -r '.tag_name // empty')
+                      
+                      # if no releases, or we need to skip some versions, get all stable tags
+                      if [ -z "$latest" ] || [ "$latest" == "null" ] || [ "$latest" == "empty" ] || [ -n "$skipped_versions" ]; then
+                        if [ -n "$skipped_versions" ]; then
+                          # build jq filter to exclude skipped versions
+                          IFS=',' read -ra SKIP_VERSIONS <<< "$skipped_versions"
+                          skip_filter=""
+                          for skip_version in "${SKIP_VERSIONS[@]}"; do
+                            if [ -n "$skip_filter" ]; then
+                              skip_filter="$skip_filter and "
+                            fi
+                            skip_filter="$skip_filter(.name != \"$skip_version\")"
+                          done
+                          
+                          latest=$(curl -s "https://api.github.com/repos/$repo/tags" | jq -r "
+                            [.[] | select(.name | test(\"-(rc|alpha|beta|dev|pre|snapshot|cp)\"; \"i\") | not) | select($skip_filter)] | 
+                            if length > 0 then .[0].name else empty end
+                          ")
+                          
+                          if [ -n "$latest" ] && [ "$latest" != "empty" ]; then
+                            echo "[SKIP-VER] Skipping configured versions, found: $latest"
+                          fi
+                        else
+                          # no skip versions, just filter pre-releases
+                          latest=$(curl -s "https://api.github.com/repos/$repo/tags" | jq -r '
+                            [.[] | select(.name | test("-(rc|alpha|beta|dev|pre|snapshot|cp)"; "i") | not)] | 
+                            if length > 0 then .[0].name else empty end
+                          ')
+                        fi
+                      fi
+                      
+                      if [ -n "$latest" ] && [ "$latest" != "empty" ] && [ "$latest" != "$version" ] && ! versions_are_equivalent "$version" "$latest"; then
+                        # check if this version should be ignored
+                        if should_ignore_version "$repo" "$latest"; then
+                          echo "[IGNORE] Update available but ignored: $repo ($version -> $latest - version ignored)"
+                        else
+                          echo "[UPDATE] Update available: $repo ($version -> $latest)"
+                          updates_needed="${updates_needed}${repo}: ${version} -> ${latest}\n"
+                        fi
+                      else
+                        # handle case where versions are equivalent
+                        if [ -n "$latest" ] && [ "$latest" != "empty" ] && [ "$latest" != "$version" ] && versions_are_equivalent "$version" "$latest"; then
+                          echo "[OK] Up to date: $repo (semantically equivalent: $version == $latest)"
+                        else
+                          echo "[OK] Up to date: $repo"
+                        fi
+                      fi
+                    else
+                      echo "[WARN] Could not extract repo/version from: $line"
+                    fi
+                  done < ci/deps.sh
+
+
+                  if [ -n "$updates_needed" ]; then
+                    echo "updates_found=true" >> $GITHUB_OUTPUT
+                    echo "updates_list<<EOF" >> $GITHUB_OUTPUT
+                    echo -e "$updates_needed" >> $GITHUB_OUTPUT
+                    echo "EOF" >> $GITHUB_OUTPUT
+                  else
+                    echo "updates_found=false" >> $GITHUB_OUTPUT
+                    echo "[SUCCESS] All dependencies are up to date!"
+                  fi
+
+            - name: Create Pull Requests for Updates
+              if: steps.check-deps.outputs.updates_found == 'true'
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      const updates = `${{ steps.check-deps.outputs.updates_list }}`.trim();
+                      if (!updates) return;
+
+                      const updateLines = updates.split('\n').filter(line => line.trim());
+
+                      // deduplicate by repo - keep the entry with highest current version
+                      const repoUpdates = {};
+                      for (const updateLine of updateLines) {
+                        const match = updateLine.match(/^(.+): (.+) -> (.+)$/);
+                        if (!match) continue;
+                        
+                        const [, repo, currentVersion, newVersion] = match;
+                        
+                        // if we haven't seen this repo, or this current version is "higher", use it
+                        if (!repoUpdates[repo] || 
+                            currentVersion.localeCompare(repoUpdates[repo].currentVersion, undefined, {numeric: true}) > 0) {
+                          repoUpdates[repo] = { currentVersion, newVersion, updateLine };
+                        }
+                      }
+
+                      // process deduplicated updates  
+                      for (const [repo, updateData] of Object.entries(repoUpdates)) {
+                        const { currentVersion, newVersion } = updateData;
+                        const repoName = repo.split('/')[1];
+                        
+                        // create a branch name
+                        const branchName = `dependabot/deps.sh/${repoName}-${newVersion}`;
+                        const prTitle = `deps: bump ${repoName} from ${currentVersion} to ${newVersion}`;
+                        
+                        // check if PR already exists for this exact version
+                        const existingPRs = await github.rest.pulls.list({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          state: 'open',
+                          head: `${context.repo.owner}:${branchName}`
+                        });
+                        
+                        if (existingPRs.data.length > 0) {
+                          console.log(`PR already exists for ${repo}: ${newVersion} (#${existingPRs.data[0].number})`);
+                          continue;
+                        }
+                        
+                        // check for any open PRs for this repo with different versions
+                        const allOpenPRsForRepo = await github.rest.pulls.list({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          state: 'open'
+                        });
+                        
+                        // find open PRs for this specific repo with dependabot branches
+                        const outdatedPRs = allOpenPRsForRepo.data.filter(pr => 
+                          pr.head.ref.startsWith(`dependabot/deps.sh/${repoName}-`) &&
+                          pr.head.ref !== branchName
+                        );
+                        
+                        // close outdated PRs and delete their branches
+                        for (const outdatedPR of outdatedPRs) {
+                          const oldVersion = outdatedPR.head.ref.replace(`dependabot/deps.sh/${repoName}-`, '');
+                          
+                            // compare versions - if current newVersion is "newer", close the old PR
+                          if (newVersion.localeCompare(oldVersion, undefined, {numeric: true}) > 0) {
+                            console.log(`Closing outdated PR #${outdatedPR.number} for ${repo}: ${oldVersion} (superseded by ${newVersion})`);
+                            
+                            // add comment explaining why we're closing
+                            await github.rest.issues.createComment({
+                              owner: context.repo.owner,
+                              repo: context.repo.repo,
+                              issue_number: outdatedPR.number,
+                              body: `**Superseded by newer version**\n\nThis PR has been automatically closed because a newer version update is available.\n\n**This PR**: ${oldVersion} -> Superseded\n**New PR**: Will update to ${newVersion}\n\n_The dependency check workflow found a more recent version and will create a new PR for it._`
+                            });
+                            
+                            // close the PR
+                            await github.rest.pulls.update({
+                              owner: context.repo.owner,
+                              repo: context.repo.repo,
+                              pull_number: outdatedPR.number,
+                              state: 'closed'
+                            });
+                            
+                            // delete the outdated branch
+                            try {
+                              await github.rest.git.deleteRef({
+                                owner: context.repo.owner,
+                                repo: context.repo.repo,
+                                ref: `heads/${outdatedPR.head.ref}`
+                              });
+                              console.log(`Deleted outdated branch: ${outdatedPR.head.ref}`);
+                            } catch (error) {
+                              console.log(`Could not delete branch ${outdatedPR.head.ref}: ${error.message}`);
+                            }
+                          }
+                        }
+                        
+                        try {
+                            // get current file content
+                          const fileResponse = await github.rest.repos.getContent({
+                            owner: context.repo.owner,
+                            repo: context.repo.repo,
+                            path: 'ci/deps.sh',
+                            ref: 'master'
+                          });
+                          
+                          const currentContent = Buffer.from(fileResponse.data.content, 'base64').toString();
+                          
+                            // update the content
+                          let updatedContent = currentContent;
+                          
+                          // handle git clone updates
+                          const gitCloneRegex = new RegExp(`(git clone --depth 1 -b )${currentVersion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}( .*github\\.com/${repo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'g');
+                          updatedContent = updatedContent.replace(gitCloneRegex, `$1${newVersion}$2`);
+                          
+                          // handle wget updates
+                          const wgetRegex = new RegExp(`(wget.*github\\.com/${repo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/archive/refs/tags/)${currentVersion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\.tar\\.gz)`, 'g');
+                          updatedContent = updatedContent.replace(wgetRegex, `$1${newVersion}$2`);
+                          
+                          // also update the directory name for wget packages
+                          const dirRegex = new RegExp(`(cd ${repoName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-)${currentVersion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g');
+                          updatedContent = updatedContent.replace(dirRegex, `$1${newVersion}`);
+                          
+                          if (updatedContent === currentContent) {
+                            console.log(`No changes made for ${repo} - regex might need adjustment`);
+                            continue;
+                          }
+                          
+                          // get the default branch SHA
+                          const defaultBranch = await github.rest.repos.get({
+                            owner: context.repo.owner,
+                            repo: context.repo.repo
+                          });
+                          const masterSha = defaultBranch.data.default_branch;
+                          
+                          const masterRef = await github.rest.git.getRef({
+                            owner: context.repo.owner,
+                            repo: context.repo.repo,
+                            ref: `heads/${masterSha}`
+                          });
+                          
+                          // check if branch already exists and delete it if it's stale
+                          try {
+                            const existingBranch = await github.rest.git.getRef({
+                              owner: context.repo.owner,
+                              repo: context.repo.repo,
+                              ref: `heads/${branchName}`
+                            });
+                            
+                            // branch exists, delete it (outdated PRs already handled above)
+                            await github.rest.git.deleteRef({
+                              owner: context.repo.owner,
+                              repo: context.repo.repo,
+                              ref: `heads/${branchName}`
+                            });
+                            console.log(`Deleted stale branch: ${branchName}`);
+                          } catch (error) {
+                            // branch doesn't exist, that's fine
+                          }
+                          
+                          // create new branch
+                          await github.rest.git.createRef({
+                            owner: context.repo.owner,
+                            repo: context.repo.repo,
+                            ref: `refs/heads/${branchName}`,
+                            sha: masterRef.data.object.sha
+                          });
+                          
+                          // update file in new branch
+                          await github.rest.repos.createOrUpdateFileContents({
+                            owner: context.repo.owner,
+                            repo: context.repo.repo,
+                            path: 'ci/deps.sh',
+                            message: `deps: bump ${repoName} from ${currentVersion} to ${newVersion}`,
+                            content: Buffer.from(updatedContent).toString('base64'),
+                            sha: fileResponse.data.sha,
+                            branch: branchName
+                          });
+                          
+                          // create PR
+                          const prBody = [
+                            "## Dependency Update",
+                            "",
+                            `**Repository**: ${repo}`,
+                            `**Current Version**: \`${currentVersion}\``,
+                            `**New Version**: \`${newVersion}\``,
+                            "",
+                            "### Changes",
+                            `- Updates \`ci/deps.sh\` to use ${repoName} ${newVersion}`,
+                            "",
+                            "### Release Notes", 
+                            `- [View ${newVersion} release](https://github.com/${repo}/releases/tag/${newVersion})`,
+                            `- [Compare ${currentVersion}...${newVersion}](https://github.com/${repo}/compare/${currentVersion}...${newVersion})`,
+                            "",
+                            "### Testing Required",
+                            "- [ ] Build test with new version",
+                            "- [ ] Compatibility verification", 
+                            "- [ ] Integration testing",
+                            "",
+                            "---",
+                            "_This PR was automatically created by the dependency check workflow._"
+                          ].join("\n");
+
+                          const pr = await github.rest.pulls.create({
+                            owner: context.repo.owner,
+                            repo: context.repo.repo,
+                            title: prTitle,
+                            head: branchName,
+                            base: masterSha,
+                            body: prBody,
+                            draft: false
+                          });
+                          
+                          // add labels
+                          await github.rest.issues.addLabels({
+                            owner: context.repo.owner,
+                            repo: context.repo.repo,
+                            issue_number: pr.data.number,
+                            labels: ['dependencies', 'automated', 'deps.sh']
+                          });
+                          
+                          console.log(`Created PR #${pr.data.number} for ${repo}: ${currentVersion} -> ${newVersion}`);
+                          
+                        } catch (error) {
+                          console.error(`Failed to create PR for ${repo}:`, error.message);
+                        }
+                      }
