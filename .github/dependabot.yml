@@ -1,0 +1,46 @@
+version: 2
+updates:
+  # monitor python dependencies in test framework
+  - package-ecosystem: "pip"
+    directory: "/test-framework"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "python"
+      - "testing"
+    commit-message:
+      prefix: "test/python"
+      include: "scope"
+
+  # monitor gitHub actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci"
+    commit-message:
+      prefix: "ci/actions"
+      include: "scope"
+
+  # monitor docker base images in CI build images
+  - package-ecosystem: "docker"
+    directory: "/ci"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "docker"
+      - "ci"
+    commit-message:
+      prefix: "ci/docker"
+      include: "scope"
