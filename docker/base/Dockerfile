@@ -6,7 +6,7 @@
 #This Dockerfile creates a base docker image with pmacct and other useful
 #tools for network telemetry and monitoring
 
-FROM debian:bookworm-slim AS build-stage
+FROM debian:trixie-slim AS build-stage
 # We don't want man pages
 COPY ci/dpkg.cfg.d/excludes /etc/dpkg/dpkg.cfg.d/excludes
 # This is not the runtime/final image:
@@ -68,7 +68,7 @@ RUN export AVRO_LIBS="-L/usr/local/avro/lib -lavro" && \
                               --enable-unyte-udp-notif &&       \
   make install
 
-FROM debian:bookworm-slim AS base
+FROM debian:trixie-slim AS base
 LABEL maintainer="pmacct Docker Doctors <docker-doctors (at) pmacct.net>"
 # We don't want man pages
 COPY ci/dpkg.cfg.d/excludes /etc/dpkg/dpkg.cfg.d/excludes

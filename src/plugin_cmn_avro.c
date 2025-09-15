@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -366,6 +366,14 @@ avro_schema_t p_avro_schema_build_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_in
     compose_egress_vrf_name_schema(schema);
   }
 
+  if (wtc_3 & COUNT_IN_IFACE_NAME) {
+    compose_in_iface_name_schema(schema);
+  }
+
+  if (wtc_3 & COUNT_OUT_IFACE_NAME) {
+    compose_out_iface_name_schema(schema);
+  }
+
   if (wtc & COUNT_IP_PROTO) {
     avro_schema_record_field_append(schema, "ip_proto", avro_schema_string());
   }
@@ -663,8 +671,8 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wt
     char ndpi_class[SUPERSHORTBUFLEN];
 
     snprintf(ndpi_class, SUPERSHORTBUFLEN, "%s/%s",
-        ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, pbase->ndpi_class.master_protocol),
-        ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, pbase->ndpi_class.app_protocol));
+        ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, pbase->ndpi_class.proto.master_protocol),
+        ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, pbase->ndpi_class.proto.app_protocol));
 
     pm_avro_check(avro_value_get_by_name(&value, "class", &field, NULL));
     pm_avro_check(avro_value_set_string(&field, ndpi_class));
@@ -1168,6 +1176,30 @@ avro_value_t compose_avro_acct_data(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wt
     pm_avro_check(avro_value_get_by_name(&value, "vrf_name", &field, NULL));
 
     vlen_prims_get(pvlen, COUNT_INT_VRF_NAME, &str_ptr);
+    if (!str_ptr) str_ptr = empty_string;
+    pm_avro_check(avro_value_set_string(&field, str_ptr));
+  }
+
+  if (wtc_3 & COUNT_IN_IFACE_NAME) {
+    
+    char *str_ptr;
+    char empty_string[] = "";
+  
+    pm_avro_check(avro_value_get_by_name(&value, "iface_name_in", &field, NULL));
+
+    vlen_prims_get(pvlen, COUNT_INT_IN_IFACE_NAME, &str_ptr);
+    if (!str_ptr) str_ptr = empty_string;
+    pm_avro_check(avro_value_set_string(&field, str_ptr));
+  }
+
+  if (wtc_3 & COUNT_OUT_IFACE_NAME) {
+
+    char *str_ptr;
+    char empty_string[] = "";
+
+    pm_avro_check(avro_value_get_by_name(&value, "iface_name_out", &field, NULL));
+
+    vlen_prims_get(pvlen, COUNT_INT_OUT_IFACE_NAME, &str_ptr);
     if (!str_ptr) str_ptr = empty_string;
     pm_avro_check(avro_value_set_string(&field, str_ptr));
   }
@@ -1869,6 +1901,24 @@ void compose_vrf_name_schema(avro_schema_t sc_type_record)
   avro_schema_decref(sc_type_string);
 }
 
+void compose_in_iface_name_schema(avro_schema_t sc_type_record)
+{
+  sc_type_string = avro_schema_string();
+  avro_schema_record_field_append(sc_type_record, "iface_name_in", sc_type_string);
+    
+  /* free-up memory */
+  avro_schema_decref(sc_type_string);
+}
+
+void compose_out_iface_name_schema(avro_schema_t sc_type_record)
+{
+  sc_type_string = avro_schema_string();
+  avro_schema_record_field_append(sc_type_record, "iface_name_out", sc_type_string);
+
+  /* free-up memory */
+  avro_schema_decref(sc_type_string);
+}
+
 void compose_str_linked_list_to_avro_array_schema(avro_schema_t sc_type_record, const char *comm_type)
 {
   sc_type_string = avro_schema_string();
@@ -2136,7 +2186,7 @@ int compose_srv6_segment_ipv6_list_data(struct host_addr *ipv6_list, int list_le
     addr_to_str(ipv6_str, &ipv6_list[idx_0]);
 
     memset(idx_str, 0, sizeof(idx_str));
-    snprintf(idx_str, 3, "%zu", idx_0);
+    snprintf(idx_str, 4, "%zu", idx_0);
     strcat(idx_str, "-");
 
     memset(idx_ipv6_str, 0, sizeof(idx_ipv6_str));

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -21,6 +21,14 @@
 
 #ifndef _BGP_UTIL_H_
 #define _BGP_UTIL_H_
+
+/* defines */
+#define IEEE_SP_SIGN_MASK	0x80000000
+#define IEEE_SP_EXPONENT_MASK	0x7F800000
+#define IEEE_SP_MANTISSA_MASK	0x007FFFFF
+#define IEEE_SP_BIAS		127
+#define IEEE_SP_MANTISSA_WIDTH	23
+#define IEEE_SP_IMPLIED_BIT	(1 << IEEE_SP_MANTISSA_WIDTH)
 
 /* prototypes */
 extern int bgp_afi2family(int);
@@ -44,11 +52,13 @@ extern void evaluate_bgp_aspath_radius(char *, int, int);
 extern void copy_stdcomm_to_asn(char *, as_t *, int);
 extern void copy_lrgcomm_to_asn(char *, as_t *, int);
 extern void write_neighbors_file(char *, int);
+extern u_int64_t convertIEEEFloatToUnsignedInt(u_int32_t);
 extern struct bgp_rt_structs *bgp_select_routing_db(int);
 extern void bgp_md5_file_init(struct bgp_md5_table *);
 extern void bgp_md5_file_load(char *, struct bgp_md5_table *);
 extern void bgp_md5_file_unload(struct bgp_md5_table *);
 extern void bgp_md5_file_process(int, struct bgp_md5_table *);
+extern void bgp_md5_file_process_tcp_ao(int, struct bgp_md5_table *);
 extern void bgp_config_checks(struct configuration *);
 extern struct bgp_misc_structs *bgp_select_misc_db(int);
 extern void bgp_link_misc_structs(struct bgp_misc_structs *);

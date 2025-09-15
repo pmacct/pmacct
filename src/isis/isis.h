@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -25,6 +25,7 @@
 /* includes */
 #include "isis_ll.h"
 #include "prefix.h"
+#include "linklist.h"
 #include "isis_constants.h"
 
 /* defines */

@@ -514,25 +514,20 @@ void evaluate_packet_handlers()
     }
 
     if (channels_list[index].aggregation_3 & COUNT_INGRESS_VRF_NAME) {
-
       if (config.acct_type == ACCT_NF) {
         channels_list[index].phandler[primitives] = NF_ingress_vrf_name_handler;
         primitives++;
       }
-
     }
 
     if (channels_list[index].aggregation_3 & COUNT_EGRESS_VRF_NAME) {
-    
       if (config.acct_type == ACCT_NF) {
         channels_list[index].phandler[primitives] = NF_egress_vrf_name_handler; 
         primitives++;
       }
-
     }
 
     if (channels_list[index].aggregation_3 & COUNT_VRF_NAME) {
-    
       if (config.acct_type == ACCT_NF) {
         channels_list[index].phandler[primitives] = NF_vrf_name_handler; 
         primitives++;
@@ -561,6 +556,20 @@ void evaluate_packet_handlers()
       else if (config.acct_type == ACCT_NF) channels_list[index].phandler[primitives] = NF_mpls_pw_id_handler;
       else if (config.acct_type == ACCT_SF) channels_list[index].phandler[primitives] = SF_mpls_pw_id_handler;
       primitives++;
+    }
+
+    if (channels_list[index].aggregation_3 & COUNT_IN_IFACE_NAME) {
+      if (config.acct_type == ACCT_NF) {
+        channels_list[index].phandler[primitives] = NF_in_iface_name_handler;
+        primitives++;
+      }
+    }
+
+    if (channels_list[index].aggregation_3 & COUNT_OUT_IFACE_NAME) {
+      if (config.acct_type == ACCT_NF) {
+        channels_list[index].phandler[primitives] = NF_out_iface_name_handler; 
+        primitives++;
+      }
     }
 
     if (channels_list[index].aggregation & COUNT_PEER_SRC_AS) {
@@ -2042,50 +2051,142 @@ void sampling_rate_handler(struct channels_list_entry *chptr, struct packet_ptrs
 void NF_ingress_vrf_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
+  int ingress_vrf_name_len = strlen(pptrs->ingress_vrf_name) + 1;
 
-  if (strlen(pptrs->ingress_vrf_name) == 0) {
+  if (ingress_vrf_name_len == 1) {
     return;
   }
 
-  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz+strlen(pptrs->ingress_vrf_name)+1)) {
+  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + ingress_vrf_name_len)) {
     vlen_prims_init(pvlen, 0);
     return;
   }
-  else vlen_prims_insert(pvlen, COUNT_INT_INGRESS_VRF_NAME, strlen(pptrs->ingress_vrf_name)+1, (u_char *) pptrs->ingress_vrf_name, PM_MSG_STR_COPY);
-
+  else {
+    vlen_prims_insert(pvlen, COUNT_INT_INGRESS_VRF_NAME, ingress_vrf_name_len, (u_char *) pptrs->ingress_vrf_name, PM_MSG_STR_COPY);
+  }
 }
 
 void NF_egress_vrf_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
+  int egress_vrf_name_len = strlen(pptrs->egress_vrf_name) + 1;
 
-  if (strlen(pptrs->egress_vrf_name) == 0) {
+  if (egress_vrf_name_len == 1) {
     return;
   }
 	
-  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz+strlen(pptrs->egress_vrf_name)+1)) {
+  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + egress_vrf_name_len)) {
     vlen_prims_init(pvlen, 0);
     return;
   }
-  else vlen_prims_insert(pvlen, COUNT_INT_EGRESS_VRF_NAME, strlen(pptrs->egress_vrf_name)+1, (u_char *) pptrs->egress_vrf_name, PM_MSG_STR_COPY);
+  else {
+    vlen_prims_insert(pvlen, COUNT_INT_EGRESS_VRF_NAME, egress_vrf_name_len, (u_char *) pptrs->egress_vrf_name, PM_MSG_STR_COPY);
+  }
 }
 
 void NF_vrf_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
+  int vrf_name_len = strlen(pptrs->vrf_name) + 1;
 
-  if (strlen(pptrs->vrf_name) == 0) {
+  if (vrf_name_len == 1) {
     return;
   }
 	
-  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz+strlen(pptrs->vrf_name)+1)) {
+  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + vrf_name_len)) {
     vlen_prims_init(pvlen, 0);
     return;
   }
-  else vlen_prims_insert(pvlen, COUNT_INT_VRF_NAME, strlen(pptrs->vrf_name)+1, (u_char *) pptrs->vrf_name, PM_MSG_STR_COPY);
-  
+  else {
+    vlen_prims_insert(pvlen, COUNT_INT_VRF_NAME, vrf_name_len, (u_char *) pptrs->vrf_name, PM_MSG_STR_COPY);
+  }
 }
 
+void NF_in_iface_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{     
+  struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
+
+  u_int32_t iface = 0;
+  char *iface_name = NULL;
+  int ret, iface_name_len = 1, have_iface = FALSE;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (OTPL_LAST_LEN(NF9_INPUT_SNMP) == 4) {
+      OTPL_CP_LAST(&iface, NF9_INPUT_SNMP);
+      iface = ntohl(iface);
+      have_iface = TRUE;
+    }
+    break;
+  }
+
+  if (have_iface) { 
+    ret = cdada_map_find(entry->iface_name_map, &iface, (void **) &iface_name);
+    if (ret == CDADA_SUCCESS) {
+      Log(LOG_DEBUG, "DEBUG ( %s/core ): Found Interface Name in hashmap for Interface ID '%d' -> '%s'\n", config.name, iface, iface_name);
+      iface_name_len = strlen(iface_name) + 1;
+    }
+  }
+
+  if (iface_name_len == 1) {
+    return;
+  }
+      
+  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + iface_name_len)) {
+    vlen_prims_init(pvlen, 0);
+    return;
+  }   
+  else {
+    vlen_prims_insert(pvlen, COUNT_INT_IN_IFACE_NAME, iface_name_len, (u_char *) iface_name, PM_MSG_STR_COPY);
+  }
+}
+
+void NF_out_iface_name_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
+{
+  struct pkt_vlen_hdr_primitives *pvlen = (struct pkt_vlen_hdr_primitives *) ((*data) + chptr->extras.off_pkt_vlen_hdr_primitives);
+  struct struct_header_v5 *hdr = (struct struct_header_v5 *) pptrs->f_header;
+  struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
+  struct xflow_status_entry *entry = (struct xflow_status_entry *) pptrs->f_status;
+
+  u_int32_t iface = 0;
+  char *iface_name = NULL;
+  int ret, iface_name_len = 1, have_iface = FALSE;
+
+  switch(hdr->version) {
+  case 10:
+  case 9:
+    if (OTPL_LAST_LEN(NF9_OUTPUT_SNMP) == 4) {
+      OTPL_CP_LAST(&iface, NF9_OUTPUT_SNMP);
+      iface = ntohl(iface);
+      have_iface = TRUE;
+    }
+    break;
+  }
+
+  if (have_iface) { 
+    ret = cdada_map_find(entry->iface_name_map, &iface, (void **) &iface_name);
+    if (ret == CDADA_SUCCESS) {
+      Log(LOG_DEBUG, "DEBUG ( %s/core ): Found Interface Name in hashmap for Interface ID '%d' -> '%s'\n", config.name, iface, iface_name);
+      iface_name_len = strlen(iface_name) + 1;
+    }
+  }
+
+  if (iface_name_len == 1) {
+    return;
+  }
+      
+  if (check_pipe_buffer_space(chptr, pvlen, PmLabelTSz + iface_name_len)) {
+    vlen_prims_init(pvlen, 0);
+    return;
+  }   
+  else {
+    vlen_prims_insert(pvlen, COUNT_INT_OUT_IFACE_NAME, iface_name_len, (u_char *) iface_name, PM_MSG_STR_COPY);
+  }
+}
 
 void sampling_direction_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
@@ -3115,6 +3216,12 @@ void NF_counters_handler(struct channels_list_entry *chptr, struct packet_ptrs *
   struct template_cache_entry *tpl = (struct template_cache_entry *) pptrs->f_tpl;
   u_int32_t t32 = 0;
   u_int64_t t64 = 0;
+
+  /* If this is an event or options, skip packets and bytes */
+  if (pptrs->flow_type.traffic_type > PM_FTYPE_TRAFFIC_MAX) {
+    pdata->flow_type = pptrs->flow_type.traffic_type;
+    return;
+  }
 
   switch(hdr->version) {
   case 10:

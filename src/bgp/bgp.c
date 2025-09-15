@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -25,6 +25,7 @@
 #include "bgp_xcs.h"
 #include "rpki/rpki.h"
 #include "bgp_blackhole.h"
+#include "bgp_ls.h"
 #include "thread_pool.h"
 #if defined WITH_EBPF
 #include "ebpf/ebpf_rp_balancer.h"
@@ -60,6 +61,10 @@ struct bgp_misc_structs inter_domain_misc_dbs[FUNC_TYPE_MAX], *bgp_misc_db;
 bgp_tag_t bgp_logdump_tag;
 struct sockaddr_storage bgp_logdump_tag_peer;
 struct bgp_xconnects bgp_xcs_map;
+
+/* BGP-LS global variables */
+cdada_map_t *bgp_ls_nlri_tlv_map, *bgp_ls_nd_tlv_map, *bgp_ls_nlri_map;
+cdada_map_t *bgp_ls_attr_tlv_print_map;
 
 /* Functions */
 void bgp_daemon_wrapper()
@@ -240,6 +245,9 @@ void skinny_bgp_daemon_online()
     exit_gracefully(1);
 #endif
   }
+
+  /* BGP-LS */
+  bgp_ls_init();
 
   if (config.bgp_daemon_msglog_file || config.bgp_daemon_msglog_amqp_routing_key || config.bgp_daemon_msglog_kafka_topic) {
     if (config.bgp_daemon_msglog_file) bgp_misc_db->msglog_backend_methods++;

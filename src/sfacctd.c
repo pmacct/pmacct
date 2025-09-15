@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -1596,6 +1596,11 @@ SFv5_read_sampleType:
     case SFLCOUNTERS_SAMPLE_EXPANDED:
       readv5CountersSample(spp, TRUE, pptrsv);
       break;
+    case SFLFLOW_SAMPLE_DROPPED:
+      /* We discard the dropped packet samples for now. */
+      /* This allows sfacctd to ingest sflow packets with dropped samples types. */
+      skipv5Sample(spp);
+      break;
     case SFLACL_BROCADE_SAMPLE:
       getData32(spp); /* trash: sample length */
       getData32(spp); /* trash: FoundryFlags */
@@ -1603,9 +1608,14 @@ SFv5_read_sampleType:
       goto SFv5_read_sampleType; /* rewind */
       break;
     default:
-      SF_notify_malf_packet(LOG_INFO, "INFO", "discarding unknown v5 sample", (struct sockaddr *) pptrsv->v4.f_agent);
-      xflow_status_table.tot_bad_datagrams++;
-      return; /* unexpected sampleType; aborting packet */
+      if (!config.nfacctd_disable_sanity_checks) {
+        SF_notify_malf_packet(LOG_INFO, "INFO", "discarding unknown v5 sample", (struct sockaddr *) pptrsv->v4.f_agent);
+        xflow_status_table.tot_bad_datagrams++;
+        return; /* unexpected sampleType; aborting packet */
+      } else {
+        Log(LOG_DEBUG, "DEBUG ( %s/core ): skipping unknown v5 sample of type %d.\n", config.name, sampleType);
+        skipv5Sample(spp);
+      }
     }
     if ((u_char *)spp->datap > spp->endp) return; 
   }

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -1753,8 +1753,8 @@ int main(int argc,char **argv)
   	      }
 	      else {
 #if defined (WITH_NDPI)
-		request.data.ndpi_class.master_protocol = FALSE;
-		request.data.ndpi_class.app_protocol = class_table[ct_idx].id;
+		request.data.ndpi_class.proto.master_protocol = FALSE;
+		request.data.ndpi_class.proto.app_protocol = class_table[ct_idx].id;
 		request.data.ndpi_class.category = class_table[ct_idx].category;
 #endif
 	      }
@@ -2270,8 +2270,8 @@ int main(int argc,char **argv)
 #if defined (WITH_NDPI)
 	if (!have_wtc || (what_to_count_2 & COUNT_NDPI_CLASS)) {
 	  snprintf(ndpi_class, SUPERSHORTBUFLEN, "%s/%s",
-		pmc_ndpi_get_proto_name(acc_elem->primitives.ndpi_class.master_protocol),
-		pmc_ndpi_get_proto_name(acc_elem->primitives.ndpi_class.app_protocol));
+		pmc_ndpi_get_proto_name(acc_elem->primitives.ndpi_class.proto.master_protocol),
+		pmc_ndpi_get_proto_name(acc_elem->primitives.ndpi_class.proto.app_protocol));
 
 	  if (want_output & PRINT_OUTPUT_FORMATTED) printf("%-16s  ", ndpi_class); 
 	  else if (want_output & PRINT_OUTPUT_CSV) printf("%s%s", write_sep(sep_ptr, &count), ndpi_class);
@@ -3423,8 +3423,8 @@ char *pmc_compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3, u_int8_t
   char ndpi_class[SUPERSHORTBUFLEN];
   if (wtc_2 & COUNT_NDPI_CLASS) {
     snprintf(ndpi_class, SUPERSHORTBUFLEN, "%s/%s",
-		pmc_ndpi_get_proto_name(pbase->ndpi_class.master_protocol),
-		pmc_ndpi_get_proto_name(pbase->ndpi_class.app_protocol));
+		pmc_ndpi_get_proto_name(pbase->ndpi_class.proto.master_protocol),
+		pmc_ndpi_get_proto_name(pbase->ndpi_class.proto.app_protocol));
 
     json_object_set_new_nocheck(obj, "class", json_string(ndpi_class));
   }

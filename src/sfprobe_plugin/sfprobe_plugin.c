@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /* 
@@ -512,8 +512,8 @@ static void readPacket(SflSp *sp, struct pkt_payload *hdr, const unsigned char *
     if (config.what_to_count_2 & COUNT_NDPI_CLASS) {
       memset(&class2HdrElem, 0, sizeof(class2HdrElem));
       class2HdrElem.tag = SFLFLOW_EX_CLASS2;
-      class2HdrElem.flowType.ndpi_class.id.master_protocol = hdr->ndpi_class.master_protocol;
-      class2HdrElem.flowType.ndpi_class.id.app_protocol = hdr->ndpi_class.app_protocol;
+      class2HdrElem.flowType.ndpi_class.id.proto.master_protocol = hdr->ndpi_class.proto.master_protocol;
+      class2HdrElem.flowType.ndpi_class.id.proto.app_protocol = hdr->ndpi_class.proto.app_protocol;
       SFLADD_ELEMENT(&fs, &class2HdrElem);
     }
 #endif

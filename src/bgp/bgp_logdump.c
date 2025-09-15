@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -23,6 +23,7 @@
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "bgp.h"
+#include "bgp_ls.h"
 #include "rpki/rpki.h"
 #include "thread_pool.h"
 #include "plugin_common.h"
@@ -170,8 +171,11 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       json_object_set_new_nocheck(obj, "ip_prefix", json_string(prefix_str));
     }
 
-    if (peer->cap_add_paths.cap[afi][safi] && ri && ri->attr_extra) {
-      json_object_set_new_nocheck(obj, "as_path_id", json_integer((json_int_t)ri->attr_extra->path_id));
+    if ((afi == AFI_IP || afi == AFI_IP6) &&
+	(safi == SAFI_UNICAST || safi == SAFI_MULTICAST)) {
+      if (peer->cap_add_paths.cap[afi][safi] && ri && ri->attr_extra) {
+        json_object_set_new_nocheck(obj, "as_path_id", json_integer((json_int_t)ri->attr_extra->path_id));
+      }
     }
 
     if (attr) {
@@ -712,10 +716,17 @@ int bgp_peer_log_msg(struct bgp_node *route, struct bgp_info *ri, afi_t afi, saf
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
-    if (peer->cap_add_paths.cap[afi][safi] && ri && ri->attr_extra) {
-      pm_avro_check(avro_value_get_by_name(&p_avro_obj, "as_path_id", &p_avro_field, NULL));
-      pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-      pm_avro_check(avro_value_set_long(&p_avro_branch, ri->attr_extra->path_id));
+    if ((afi == AFI_IP || afi == AFI_IP6) &&
+	(safi == SAFI_UNICAST || safi == SAFI_MULTICAST)) {
+      if (peer->cap_add_paths.cap[afi][safi] && ri && ri->attr_extra) {
+        pm_avro_check(avro_value_get_by_name(&p_avro_obj, "as_path_id", &p_avro_field, NULL));
+        pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+        pm_avro_check(avro_value_set_long(&p_avro_branch, ri->attr_extra->path_id));
+      }
+      else {
+        pm_avro_check(avro_value_get_by_name(&p_avro_obj, "as_path_id", &p_avro_field, NULL));
+        pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+      }
     }
     else {
       pm_avro_check(avro_value_get_by_name(&p_avro_obj, "as_path_id", &p_avro_field, NULL));
@@ -2228,7 +2239,7 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
     if (fd_buf) {
       if (setvbuf(peer->log->fd, fd_buf, _IOFBF, OUTPUT_FILE_BUFSZ))
         Log(LOG_WARNING, "WARN ( %s/%s ): [%s] setvbuf() failed: %s\n",
-      config.name, bms->log_str, current_filename, strerror(errno));
+	    config.name, bms->log_str, current_filename, strerror(errno));
       else memset(fd_buf, 0, OUTPUT_FILE_BUFSZ); 
     }
   }
@@ -2268,32 +2279,32 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
 
       if (!inter_domain_routing_db) return ERR;
 
+      bgp_ls_info_print(peer, &dump_elems);
 
       for (afi = AFI_IP; afi < AFI_MAX; afi++) {
-  for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
-    table = inter_domain_routing_db->rib[afi][safi];
-    node = bgp_table_top(peer, table);
+	for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
+	  table = inter_domain_routing_db->rib[afi][safi];
+	  node = bgp_table_top(peer, table);
 
-    while (node) {
-      u_int32_t modulo = bgp_route_info_modulo(peer, NULL, NULL, NULL, bms->table_per_peer_buckets);
-      u_int32_t peer_buckets;
-      struct bgp_info *ri;
+	  while (node) {
+	    u_int32_t modulo = bgp_route_info_modulo(peer, NULL, NULL, NULL, bms->table_per_peer_buckets);
+	    u_int32_t peer_buckets;
+	    struct bgp_info *ri;
 
-      for (peer_buckets = 0; peer_buckets < config.bgp_table_per_peer_buckets; peer_buckets++) {
-        for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
-
-    if (ri->peer == peer) {
+	    for (peer_buckets = 0; peer_buckets < config.bgp_table_per_peer_buckets; peer_buckets++) {
+	      for (ri = node->info[modulo+peer_buckets]; ri; ri = ri->next) {
+	        if (ri->peer == peer) {
             
-            bgp_peer_log_msg(node, ri, afi, safi, &bgp_logdump_tag, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC);
-            dump_elems++;
-            bds.entries++;
-    }
-        }
-      }
+		  bgp_peer_log_msg(node, ri, afi, safi, &bgp_logdump_tag, event_type, config.bgp_table_dump_output, NULL, BGP_LOG_TYPE_MISC);
+		  dump_elems++;
+		  bds.entries++;
+		}
+	      }
+	    }
 
-      node = bgp_route_next(peer, node);
-    }
-  }
+	    node = bgp_route_next(peer, node);
+	  }
+	}
       }
 
       saved_peer = peer;
@@ -2321,6 +2332,10 @@ int bgp_table_dump_event_runner(struct pm_dump_runner *pdr)
   if (config.bgp_table_dump_latest_file && peer) {
     bgp_peer_log_dynname(latest_filename, SRVBUFLEN, config.bgp_table_dump_latest_file, peer);
     link_latest_output_file(latest_filename, last_filename);
+  }
+
+  if (fd_buf) {
+    free(fd_buf);
   }
   
   duration = time(NULL)-start;

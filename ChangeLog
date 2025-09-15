@@ -1,5 +1,5 @@
 pmacct [IP traffic accounting : BGP : BMP : RPKI : IGP : Streaming Telemetry]
-pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 
 The keys used are:
   !: fixed/modified feature, -: deleted feature, +: new feature

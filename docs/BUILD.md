@@ -1,3 +1,19 @@
+# Building pmacct
+
+## Basics
+
+```
+autogen.sh
+./configure
+make
+make install
+```
+
+## `configure`: environment variables
+
+A list of environment variables to pass to `configure`:
+
+```
   CC				C compiler command
   CFLAGS			C compiler flags
   LDFLAGS     			linker flags, e.g. -L<lib dir> if you have libraries in a
@@ -43,4 +59,4 @@
   GRPC_COLLECTOR_LIBS		linker flags for dynamic GRPC Collector, overriding pkg-config
   EBPF_CFLAGS			C compiler flags for dynamic libbpf, overriding pkg-config
   EBPF_LIBS			linker flags for dynamic libbpf, overriding pkg-config
-
+```

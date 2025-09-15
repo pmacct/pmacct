@@ -1,18 +1,15 @@
 INTRODUCTION.
-After some years in which the strategy towards Streaming Telemetry was
-dual (pmgrpcd.py, written in Python, to support gRPC and pmtelemetryd,
-written in C, to support everything else), the current approach (as of
-version 1.7.9) is to bring also gRPC into pmtelemetryd via an external
-C++ library, https://github.com/network-analytics/mdt-dialout-collector
-Following is the support matrix for Streaming Telemetry collection in
-pmtelemtryd:
+From version 1.7.9 the approach to Streaming Telemetry has been to rely
+on external toolkits: MDT Dialout Collector for gRPC / gNMI and Unyte
+UDP Notif for YANG Push. Following is the support matrix for Streaming
+Telemetry collection in pmtelemtryd:
 
 Input transports:
 * TCP proprietary / non-standard
 * UDP proprietary / non-standard
-* UDP draft-ietf-netconf-udp-notif
+* UDP draft-ietf-netconf-udp-notif / Yang Push
 * gRPC
-* gNMI [WiP]
+* gNMI
 
 Input encodings:
 * JSON
@@ -27,8 +24,11 @@ Output encodings:
 
 Examples of supported collection scenarios:
 * TCP/JSON -> pmtelemetryd -> Kafka/JSON
-* UDP draft-ietf-netconf-udp-notif/JSON -> pmtelemetryd -> Kafka/JSON
-* gRPC/Protobuf -> pmtelemetryd -> Kafka/JSON
+* Yang Push/JSON -> pmtelemetryd (!) -> Kafka/JSON
+* gNMI/Protobuf -> pmtelemetryd (!!) -> Kafka/JSON
+
+(!)  Compiled with: --enable-unyte-udp-notif, https://github.com/network-analytics/udp-notif-c-collector 
+(!!) Compiled with: --enable-grpc-collector, https://github.com/network-analytics/mdt-dialout-collector
 
 
 ROUTER CONFIGS.

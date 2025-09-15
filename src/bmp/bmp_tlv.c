@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -114,106 +114,131 @@ char *bmp_tlv_value_print(struct bmp_log_tlv *tlv, const struct bmp_tlv_def *reg
   return value;
 }
 
-struct pm_list *bmp_tlv_list_new(int (*cmp)(void *val1, void *val2), void (*del)(void *val))
+cdada_list_t *bmp_tlv_list_new_v2(void)
 {
-  struct pm_list *tlvs = NULL;
-  
-  tlvs = pm_list_new();
-  if (tlvs) {
-    tlvs->cmp = cmp;
-    tlvs->del = del;
-  }
-
-  return tlvs;
+  return cdada_list_create(char *);
 }
 
-int bmp_tlv_list_add(struct pm_list *tlvs, u_int32_t pen, u_int16_t type, u_int16_t len, u_int16_t index, char *val) 
+int bmp_tlv_list_add_v2(cdada_list_t *tlvs, u_int32_t pen, u_int16_t type, u_int16_t len, u_int16_t index, char *val)
 {
-  struct bmp_log_tlv *tlv;
+  if (!tlvs || (len && !val)) {
+    return ERR;
+  }
 
-  if (!tlvs || (len && !val)) return ERR;
-
-  tlv = malloc(sizeof(struct bmp_log_tlv));
-  if (!tlv) return ERR;
-
-  memset(tlv, 0, sizeof(struct bmp_log_tlv));
+  struct bmp_log_tlv *tlv = malloc(sizeof(struct bmp_log_tlv));
+  if (!tlv) {
+    return ERR;
+  } 
 
   tlv->pen = pen;
   tlv->type = type;
   tlv->len = len;
   tlv->index = index;
-
   if (len) {
-
     tlv->val = malloc(len);
     if (!tlv->val) {
       free(tlv);
       return ERR;
-      };
-
+    }
     memcpy(tlv->val, val, len);
-  }
+  } 
   else {
     tlv->val = NULL;
   }
 
-  pm_listnode_add(tlvs, tlv);
+  int ret = cdada_list_push_back(tlvs, &tlv);
+  if (ret != CDADA_SUCCESS) {
+    if (tlv->val) {
+      free(tlv->val);
+    }
+    free(tlv);
+    return ERR;
+  }
 
   return SUCCESS;
 }
 
-void bmp_tlv_list_node_del(void *node)
+cdada_list_t *bmp_tlv_list_copy_v2(cdada_list_t *src)
 {
-  struct bmp_log_tlv *tlv = NULL;
-
-  tlv = (struct bmp_log_tlv *) node;
-
-  if (tlv) {
-    if (tlv->val) free(tlv->val);
-
-    tlv->len = 0;
-    tlv->val = NULL;
-    free(tlv);
+  if (!src) {
+    return NULL;
   }
-}
 
-struct pm_list *bmp_tlv_list_copy(struct pm_list *src)
-{
-  struct pm_listnode *node = NULL;
-  struct bmp_log_tlv *tlv = NULL;
-  struct pm_list *dst = NULL;
-  int ret;
+  cdada_list_t *dst = bmp_tlv_list_new_v2();
+  if (!dst) {
+    return NULL;
+  }
 
-  dst = bmp_tlv_list_new(NULL, bmp_tlv_list_node_del);
-  for (PM_ALL_LIST_ELEMENTS_RO(src, node, tlv)) {
-    ret = bmp_tlv_list_add(dst, tlv->pen, tlv->type, tlv->len, tlv->index, tlv->val);
-    if (ret == ERR) {
-      bmp_tlv_list_destroy(dst);
-      dst = NULL;
-      break;
+  uint32_t size = cdada_list_size(src);
+  struct bmp_log_tlv *tlv_ptr = NULL;
+
+  for (uint32_t i = 0; i < size; i++) {
+    int ret = cdada_list_get(src, i, &tlv_ptr);
+    if (ret != CDADA_SUCCESS || !tlv_ptr) {
+      continue;
+    }
+
+    int add_ret = bmp_tlv_list_add_v2(dst, tlv_ptr->pen, tlv_ptr->type, tlv_ptr->len, tlv_ptr->index, tlv_ptr->val);
+    if (add_ret != CDADA_SUCCESS) {
+      bmp_tlv_list_destroy_v2(dst);
+      return NULL;
     }
   }
 
   return dst;
 }
 
-void *bmp_tlv_list_find(struct pm_list *tlvs, struct pm_listnode *next_node, u_int16_t type)
+void bmp_tlv_list_find_callback_v2(const cdada_list_t *list, const void *val, void *opaque)
 {
-  struct pm_listnode *node = NULL;
-  struct bmp_log_tlv *tlv = NULL;
+  struct bmp_log_tlv *current = *(struct bmp_log_tlv **)val;
+  struct bmp_tlv_list_result *ctx = opaque;
 
-  for (PM_ALL_LIST_ELEMENTS(tlvs, node, next_node, tlv)) {
-    if (tlv->type == type) {
-      return tlv;
+  if (current && current->type == ctx->type) {
+    /* XXX: in case of repeated TLVs, honor the first one */
+    if (!ctx->found) {
+      ctx->found = current;
     }
   }
-
-  return NULL;
 }
 
-void bmp_tlv_list_destroy(struct pm_list *tlvs)
+struct bmp_log_tlv *bmp_tlv_list_find_v2(cdada_list_t *tlvs, u_int16_t type)
 {
-  if (!tlvs) return;
+  // Use the type as opaque data pointer replacement:
+  // store input type in 'search_type' and result in 'result'
+  struct bmp_tlv_list_result ctx = { type, NULL };
 
-  pm_list_delete(tlvs);
+  if (!tlvs) {
+    return NULL;
+  }
+
+  cdada_list_traverse(tlvs, bmp_tlv_list_find_callback_v2, &ctx);
+
+  return ctx.found;
+}
+
+void bmp_tlv_list_destroy_v2(cdada_list_t *tlvs)
+{
+  struct bmp_log_tlv *tlv = NULL;
+  int rc, idx, size;
+
+  if (!tlvs) {
+    return;
+  }
+
+  size = cdada_list_size(tlvs);
+  for (idx = 0; idx < size; idx++) {
+    rc = cdada_list_get(tlvs, idx, &tlv);
+
+    if (rc != CDADA_SUCCESS || !tlv) {
+      continue;
+    }
+
+    if (tlv->val) {
+      free(tlv->val);
+    }
+
+    free(tlv);
+  }
+
+  cdada_list_destroy(tlvs);
 }

@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -363,8 +363,8 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
 	  continue;
 	}
 
-      switch (format)
-	{
+      if (!config.bgp_comms_num) {
+        switch (format) {
 	case ECOMMUNITY_FORMAT_COMMUNITY_LIST:
 	  prefix = (type == ECOMMUNITY_ROUTE_TARGET ? "rt " : "soo ");
 	  break;
@@ -378,6 +378,10 @@ ecommunity_ecom2str (struct bgp_peer *peer, struct ecommunity *ecom, int format)
 	  prefix = "";
 	  break;
 	}
+      }
+      else {
+	prefix = "";
+      }
 
       /* Put string into buffer.  */
       if (encode == ECOMMUNITY_ENCODE_AS4)

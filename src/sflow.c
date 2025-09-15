@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -817,8 +817,8 @@ void readExtendedClass2(SFSample *sample)
 {
   if (config.classifier_ndpi) {
 #if defined (WITH_NDPI)
-    sample->ndpi_class.master_protocol = getData32(sample);
-    sample->ndpi_class.app_protocol = getData32(sample);
+    sample->ndpi_class.proto.master_protocol = getData32(sample);
+    sample->ndpi_class.proto.app_protocol = getData32(sample);
 #endif
   }
   else skipBytes(sample, 8);
@@ -1175,6 +1175,20 @@ void readv5FlowSample(SFSample *sample, int expanded, struct packet_ptrs_vector 
 
   if (finalize) finalizeSample(sample, pptrsv, req);
 }
+
+/*_________________---------------------------__________________
+  _________________    skipv5Sample           __________________
+  -----------------___________________________------------------
+*/
+void skipv5Sample(SFSample *sample)
+{
+  uint32_t sampleLength;
+
+  sampleLength = getData32(sample);
+
+  skipBytes(sample, sampleLength);
+}
+
 
 void readv5CountersSample(SFSample *sample, int expanded, struct packet_ptrs_vector *pptrsv)
 {

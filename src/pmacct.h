@@ -70,7 +70,6 @@
 #include <dlfcn.h>
 #include <math.h>
 #include "pmsearch.h"
-#include "linklist.h"
 #include "filters/bloom.h"
 #include <cdada.h>
 

@@ -23,6 +23,7 @@
 #include "pmacct.h"
 #include "bgp.h"
 #include "bgp_blackhole.h"
+#include "bgp_ls.h"
 
 int bgp_parse_msg(struct bgp_peer *peer, time_t now, int online)
 {
@@ -680,7 +681,11 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   /* handling Unfeasible routes */
   memcpy(&tmp, pkt, 2);
   withdraw_len = ntohs(tmp);
-  if (withdraw_len > end) return ERR;  
+  if (withdraw_len > end) {
+    bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_parse_update_msg() failed: withdraw_len > end\n", config.name, bms->log_str, bgp_peer_str);
+    return ERR;  
+  }
   else {
     end -= withdraw_len;
     pkt += 2; end -= 2;
@@ -697,7 +702,11 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   /* handling Attributes */
   memcpy(&tmp, pkt, 2);
   attribute_len = ntohs(tmp);
-  if (attribute_len > end) return ERR;
+  if (attribute_len > end) {
+    bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+    Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_parse_update_msg() failed: attribute_len > end\n", config.name, bms->log_str, bgp_peer_str);
+    return ERR;
+  }
   else {
     end -= attribute_len;
     pkt += 2; end -= 2;
@@ -705,7 +714,9 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 
   if (attribute_len > 0) {
     ret = bgp_attr_parse(peer, &attr, &attr_extra, pkt, attribute_len, &mp_update, &mp_withdraw);
-    if (ret < 0) return ret;
+    if (ret < 0) {
+      return ret;
+    }
     pkt += attribute_len;
   }
 
@@ -764,14 +775,14 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
   if (mp_update.length
 	  && mp_update.afi == AFI_BGP_LS
 	  && (mp_update.safi == SAFI_LS_GLOBAL || mp_update.safi == SAFI_LS_VPN)) {
-    ret = bgp_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_UPDATE);
+    ret = bgp_ls_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_UPDATE);
     parsed = TRUE;
   }
 
   if (mp_withdraw.length
 	  && mp_withdraw.afi == AFI_BGP_LS
 	  && (mp_withdraw.safi == SAFI_LS_GLOBAL || mp_withdraw.safi == SAFI_LS_VPN)) {
-    ret = bgp_nlri_parse(bmd, &attr, &attr_extra, &mp_update, BGP_NLRI_WITHDRAW);
+    ret = bgp_ls_nlri_parse(bmd, &attr, &attr_extra, &mp_withdraw, BGP_NLRI_WITHDRAW);
     parsed = TRUE;
   }
 
@@ -841,6 +852,8 @@ int bgp_parse_update_msg(struct bgp_msg_data *bmd, char *pkt)
 int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr_extra *attr_extra,
 		   char *ptr, int len, struct bgp_nlri *mp_update, struct bgp_nlri *mp_withdraw)
 {
+  struct bgp_misc_structs *bms;
+  char bgp_peer_str[INET6_ADDRSTRLEN];
   int to_the_end = len, ret;
   u_int8_t flag, type, *tmp;
   u_int16_t tmp16, attr_len;
@@ -848,8 +861,16 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
 
   if (!ptr) return ERR;
 
+  bms = bgp_select_misc_db(peer->type);
+
+  if (!bms) return ERR;
+
   while (to_the_end > 0) {
-    if (to_the_end < BGP_ATTR_MIN_LEN) return ERR;
+    if (to_the_end < BGP_ATTR_MIN_LEN) {
+      bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_attr_parse() failed: to_the_end < BGP_ATTR_MIN_LEN\n", config.name, bms->log_str, bgp_peer_str);
+      return ERR;
+    }
 
     tmp = (u_int8_t *) ptr++; to_the_end--; flag = *tmp;
     tmp = (u_int8_t *) ptr++; to_the_end--; type = *tmp;
@@ -857,11 +878,19 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
     /* Attribute length */
     if (flag & BGP_ATTR_FLAG_EXTLEN) {
       memcpy(&tmp16, ptr, 2); ptr += 2; to_the_end -= 2; attr_len = ntohs(tmp16);
-      if (attr_len > to_the_end) return ERR;
+      if (attr_len > to_the_end) {
+	bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+	Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_attr_parse() failed: attr_len > to_the_end (1)\n", config.name, bms->log_str, bgp_peer_str);
+        return ERR;
+      }
     }
     else {
       tmp = (u_int8_t *) ptr++; to_the_end--; attr_len = *tmp;
-      if (attr_len > to_the_end) return ERR;
+      if (attr_len > to_the_end) {
+	bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+	Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_attr_parse() failed: attr_len > to_the_end (2)\n", config.name, bms->log_str, bgp_peer_str);
+	return ERR;
+      }
     }
 
     switch (type) {
@@ -907,12 +936,18 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
     case BGP_ATTR_OTC:
       ret = bgp_attr_parse_otc(peer, attr_len, attr_extra, ptr, flag);
       break;
+    case BGP_ATTR_BGP_LS:
+      ret = bgp_attr_parse_ls(peer, attr_len, attr_extra, (u_char *)ptr, flag);
     default:
       ret = 0;
       break;
     }
 
-    if (ret < 0) return ret; 
+    if (ret < 0) {
+      bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+      Log(LOG_DEBUG, "DEBUG ( %s/%s ): [%s] bgp_attr_parse() failed: type=%d\n", config.name, bms->log_str, bgp_peer_str, type);
+      return ret; 
+    }
 
     ptr += attr_len;
     to_the_end -= attr_len;
@@ -1166,10 +1201,13 @@ int bgp_nlri_parse(struct bgp_msg_data *bmd, void *attr, struct bgp_attr_extra *
 
   for (idx = 0; pnt < lim; pnt += psize, idx++) {
     /* handle path identifier */
-    if (peer->cap_add_paths.cap[info->afi][info->safi]) {
-      memcpy(&attr_extra->path_id, pnt, 4);
-      attr_extra->path_id = ntohl(attr_extra->path_id);
-      pnt += 4;
+    if ((info->afi == AFI_IP || info->afi == AFI_IP6) &&
+        (info->safi == SAFI_UNICAST || info->safi == SAFI_MULTICAST)) {
+      if (peer->cap_add_paths.cap[info->afi][info->safi]) {
+        memcpy(&attr_extra->path_id, pnt, 4);
+        attr_extra->path_id = ntohl(attr_extra->path_id);
+        pnt += 4;
+      }
     }
 
     memset(&p, 0, sizeof(struct prefix));
@@ -1407,6 +1445,17 @@ int bgp_attr_parse_otc(struct bgp_peer *peer, u_int16_t len, struct bgp_attr_ext
   memcpy(&tmp32, ptr, 4);
   attr_extra->otc = ntohl(tmp32);
   ptr += len;
+
+  return SUCCESS;
+}
+
+int bgp_attr_parse_ls(struct bgp_peer *peer, u_int16_t len, struct bgp_attr_extra *attr_extra, u_char *ptr, u_char flag)
+{
+  /* Length check. */
+  if (len < 4) return ERR;
+
+  attr_extra->ls.ptr = ptr;
+  attr_extra->ls.len = len;
 
   return SUCCESS;
 }

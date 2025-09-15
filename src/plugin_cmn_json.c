@@ -611,6 +611,16 @@ void compose_json(u_int64_t wtc, u_int64_t wtc_2, u_int64_t wtc_3)
     idx++;
   }
 
+  if (wtc_3 & COUNT_IN_IFACE_NAME) {
+    cjhandler[idx] = compose_json_in_iface_name;
+    idx++;
+  }
+
+  if (wtc_3 & COUNT_OUT_IFACE_NAME) {
+    cjhandler[idx] = compose_json_out_iface_name;
+    idx++;
+  }
+
   cjhandler[idx] = compose_json_counters;
 }
 
@@ -633,7 +643,7 @@ void compose_json_tag2(json_t *obj, struct chained_cache *cc)
 
 void compose_json_label(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_LABEL, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;
@@ -655,8 +665,8 @@ void compose_json_ndpi_class(json_t *obj, struct chained_cache *cc)
   struct pkt_primitives *pbase = &cc->primitives;
 
   snprintf(ndpi_class, SUPERSHORTBUFLEN, "%s/%s",
-	ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, pbase->ndpi_class.master_protocol),
-	ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, pbase->ndpi_class.app_protocol));
+	ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, pbase->ndpi_class.proto.master_protocol),
+	ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, pbase->ndpi_class.proto.app_protocol));
 
   json_object_set_new_nocheck(obj, "class", json_string(ndpi_class));
 }
@@ -941,41 +951,77 @@ void compose_json_mpls_vpn_rd(json_t *obj, struct chained_cache *cc)
 
 void compose_json_vrf_name(json_t *obj, struct chained_cache *cc) 
 {
-
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
+  json_t *str_json;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_VRF_NAME, &str_ptr);
   if (!str_ptr) {
     str_ptr = empty_string;
   } 
 
-  json_object_set_new_nocheck(obj, "vrf_name", json_string(str_ptr));
+  str_json = json_string(str_ptr);
+  json_object_set_nocheck(obj, "vrf_name", str_json);
+  json_decref(str_json);
 }
 
 void compose_json_ingress_vrf_name(json_t *obj, struct chained_cache *cc) 
 {
-
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
+  json_t *str_json;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_INGRESS_VRF_NAME, &str_ptr);
   if (!str_ptr) {
     str_ptr = empty_string;
   } 
 
-  json_object_set_new_nocheck(obj, "ingress_vrf_name", json_string(str_ptr));
+  str_json = json_string(str_ptr);
+  json_object_set_nocheck(obj, "ingress_vrf_name", str_json);
+  json_decref(str_json);
 }
 
 void compose_json_egress_vrf_name(json_t *obj, struct chained_cache *cc) 
 {
-
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
+  json_t *str_json;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_EGRESS_VRF_NAME, &str_ptr);
   if (!str_ptr) {
     str_ptr = empty_string;
   } 
 
-  json_object_set_new_nocheck(obj, "egress_vrf_name", json_string(str_ptr));
+  str_json = json_string(str_ptr);
+  json_object_set_nocheck(obj, "egress_vrf_name", str_json);
+  json_decref(str_json);
+}
+
+void compose_json_in_iface_name(json_t *obj, struct chained_cache *cc)
+{   
+  char empty_string[] = "", *str_ptr = NULL;
+  json_t *str_json;
+
+  vlen_prims_get(cc->pvlen, COUNT_INT_IN_IFACE_NAME, &str_ptr);
+  if (!str_ptr) {
+    str_ptr = empty_string;
+  }
+
+  str_json = json_string(str_ptr);
+  json_object_set_nocheck(obj, "iface_name_in", str_json);
+  json_decref(str_json);
+}
+
+void compose_json_out_iface_name(json_t *obj, struct chained_cache *cc)
+{   
+  char empty_string[] = "", *str_ptr = NULL;
+  json_t *str_json;
+  
+  vlen_prims_get(cc->pvlen, COUNT_INT_OUT_IFACE_NAME, &str_ptr);
+  if (!str_ptr) {
+    str_ptr = empty_string;
+  }
+  
+  str_json = json_string(str_ptr);
+  json_object_set_nocheck(obj, "iface_name_out", str_json);
+  json_decref(str_json);
 }
 
 void compose_json_mpls_pw_id(json_t *obj, struct chained_cache *cc)
@@ -1464,7 +1510,7 @@ void *compose_purge_close_json(char *writer_name, pid_t writer_pid, int purged_e
 
 void compose_json_map_label(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_LABEL, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;
@@ -1514,7 +1560,7 @@ void compose_json_string_fwd_status(json_t *obj, struct chained_cache *cc)
 
 void compose_json_array_std_comm(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_STD_COMM, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;
@@ -1532,7 +1578,7 @@ void compose_json_array_std_comm(json_t *obj, struct chained_cache *cc)
 
 void compose_json_array_src_std_comm(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_SRC_STD_COMM, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;
@@ -1550,7 +1596,7 @@ void compose_json_array_src_std_comm(json_t *obj, struct chained_cache *cc)
 
 void compose_json_array_ext_comm(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_EXT_COMM, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;
@@ -1568,7 +1614,7 @@ void compose_json_array_ext_comm(json_t *obj, struct chained_cache *cc)
 
 void compose_json_array_src_ext_comm(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_SRC_EXT_COMM, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;
@@ -1586,7 +1632,7 @@ void compose_json_array_src_ext_comm(json_t *obj, struct chained_cache *cc)
 
 void compose_json_array_lrg_comm(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_LRG_COMM, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;
@@ -1604,7 +1650,7 @@ void compose_json_array_lrg_comm(json_t *obj, struct chained_cache *cc)
 
 void compose_json_array_src_lrg_comm(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_SRC_LRG_COMM, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;
@@ -1622,7 +1668,7 @@ void compose_json_array_src_lrg_comm(json_t *obj, struct chained_cache *cc)
 
 void compose_json_array_as_path(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_AS_PATH, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;
@@ -1640,7 +1686,7 @@ void compose_json_array_as_path(json_t *obj, struct chained_cache *cc)
 
 void compose_json_array_src_as_path(json_t *obj, struct chained_cache *cc)
 {
-  char empty_string[] = "", *str_ptr;
+  char empty_string[] = "", *str_ptr = NULL;
 
   vlen_prims_get(cc->pvlen, COUNT_INT_SRC_AS_PATH, &str_ptr);
   if (!str_ptr) str_ptr = empty_string;
@@ -1709,7 +1755,7 @@ json_t *compose_tcpflags_json_data(cdada_list_t *ll, int ll_size)
     cdada_list_get(ll, idx_0, &tcpstate);
     if (strncmp(tcpstate.flag, "NULL", (TCP_FLAG_LEN - 1)) != 0) {
       j_str_tmp = json_string(tcpstate.flag);
-      json_array_append(root, j_str_tmp);
+      json_array_append_new(root, j_str_tmp);
     }
   }
 
@@ -1782,7 +1828,7 @@ json_t *compose_mpls_label_stack_json_data(u_int32_t *label_stack, int ls_len)
     strncat(label_idx_buf, label_buf, (MAX_MPLS_LABEL_IDX_LEN - max_mpls_label_idx_len_dec));
     max_mpls_label_idx_len_dec = (strlen(idx_buf) + strlen("-") + strlen(label_buf) + 3);
     j_str_tmp = json_string(label_idx_buf);
-    json_array_append(root, j_str_tmp);
+    json_array_append_new(root, j_str_tmp);
   }
 
   return root;
@@ -1815,7 +1861,7 @@ json_t *compose_srv6_segment_ipv6_list_json_data(struct host_addr *ipv6_list, in
     addr_to_str(ipv6_str, &ipv6_list[idx_0]);
 
     memset(idx_str, 0, sizeof(idx_str));
-    snprintf(idx_str, 3, "%zu", idx_0);
+    snprintf(idx_str, 4, "%zu", idx_0);
     strcat(idx_str, "-");
 
     memset(idx_ipv6_str, 0, sizeof(idx_ipv6_str));
@@ -1823,7 +1869,7 @@ json_t *compose_srv6_segment_ipv6_list_json_data(struct host_addr *ipv6_list, in
     strcat(idx_ipv6_str, ipv6_str);
 
     j_str_tmp = json_string(idx_ipv6_str);
-    json_array_append(root, j_str_tmp);
+    json_array_append_new(root, j_str_tmp);
   }
 
   return root;
@@ -1842,7 +1888,7 @@ json_t *compose_str_linked_list_to_json_array_data(cdada_list_t *ll, int ll_size
     cdada_list_get(ll, idx_0, &delim_s);
     if (strncmp(delim_s.delim_str, "NULL", (strlen(delim_s.delim_str) - 1)) != 0) {
       j_str_tmp = json_string(delim_s.delim_str);
-      json_array_append(root, j_str_tmp);
+      json_array_append_new(root, j_str_tmp);
     }
   }
 

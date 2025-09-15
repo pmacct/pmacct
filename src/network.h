@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -179,11 +179,20 @@ struct pm_tcphdr
 
 /* For TCP_MD5SIG socket option.  */
 #ifndef TCP_MD5SIG_MAXKEYLEN 
-#define TCP_MD5SIG_MAXKEYLEN    80
+#define TCP_MD5SIG_MAXKEYLEN	80
 #endif
 
 #ifndef TCP_MD5SIG
-#define TCP_MD5SIG       14
+#define TCP_MD5SIG	14
+#endif
+
+/* For TCP_AUTHOPT socket option.  */
+#ifndef TCP_AUTHOPT_MAXKEYLEN 
+#define TCP_AUTHOPT_MAXKEYLEN	80
+#endif
+
+#ifndef TCP_AUTHOPT
+#define TCP_AUTHOPT	38
 #endif
 
 struct pm_tcp_md5sig
@@ -193,6 +202,17 @@ struct pm_tcp_md5sig
   u_int16_t     tcpm_keylen;                    /* Key length.  */
   u_int32_t     __tcpm_pad2;                    /* Zero.  */
   u_int8_t      tcpm_key[TCP_MD5SIG_MAXKEYLEN]; /* Key (binary).  */
+};
+
+struct pm_tcp_authopt_key {
+  u_int8_t op;		/* 0 = add, 1 = delete */
+  u_int8_t flags;
+  u_int8_t send_id;     /* Sender key ID */
+  u_int8_t recv_id;     /* Receiver key ID */
+  u_int16_t keylen;
+  u_int16_t __pad;
+  u_int8_t key[TCP_AUTHOPT_MAXKEYLEN];
+  struct sockaddr_storage addr;
 };
 
 #define UDP_PORT_VXLAN	4789
@@ -268,10 +288,17 @@ typedef u_int8_t safi_t;
 #define RD_ORIGIN_FUNC_TYPE_MAX 2
 
 #ifndef MAX_VRF_NAME
-#define MAX_VRF_NAME            32
+#define MAX_VRF_NAME		32
 #endif
 #ifndef MAX_VRF_NAME_STR_LEN
-#define MAX_VRF_NAME_STR_LEN            (MAX_VRF_NAME+1)
+#define MAX_VRF_NAME_STR_LEN	(MAX_VRF_NAME+1)
+#endif
+
+#ifndef MAX_IFACE_NAME
+#define MAX_IFACE_NAME		32
+#endif
+#ifndef MAX_IFACE_NAME_STR_LEN
+#define MAX_IFACE_NAME_STR_LEN	(MAX_IFACE_NAME+1)
 #endif
 
 struct rd_as

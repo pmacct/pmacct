@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2020 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /* 
@@ -417,8 +417,8 @@ inline static void putClass2(SFLReceiver *receiver, SFLExtended_classification2 
 {
 
 #if defined (WITH_NDPI)
-  putNet32(receiver, class2_elem->id.master_protocol);
-  putNet32(receiver, class2_elem->id.app_protocol);
+  putNet32(receiver, class2_elem->id.proto.master_protocol);
+  putNet32(receiver, class2_elem->id.proto.app_protocol);
 #else
   u_int64_t dummy = 0;
   putNet64(receiver, dummy);

@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -23,6 +23,7 @@
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "bgp.h"
+#include "bgp_ls.h"
 #include "thread_pool.h"
 #if defined WITH_RABBITMQ
 #include "amqp_common.h"
@@ -892,6 +893,8 @@ void bgp_peer_info_delete(struct bgp_peer *peer)
       bgp_table_info_delete(peer, table, afi, safi);
     }
   }
+
+  bgp_ls_info_delete(peer);
 }
 
 void bgp_table_info_delete(struct bgp_peer *peer, struct bgp_table *table, afi_t afi, safi_t safi)
@@ -1399,6 +1402,56 @@ void bgp_md5_file_process(int sock, struct bgp_md5_table *bgp_md5)
   }
 }
 
+void bgp_md5_file_process_tcp_ao(int sock, struct bgp_md5_table *bgp_md5)
+{
+  char peer_str[INET6_ADDRSTRLEN + PORT_STRLEN + 1];
+  struct pm_tcp_authopt_key tcpaosig;
+  struct sockaddr_storage ss_tcpaosig, ss_server;
+  struct sockaddr *sa_tcpaosig = (struct sockaddr *)&ss_tcpaosig, *sa_server = (struct sockaddr *)&ss_server;
+  int rc, keylen, idx = 0, ss_tcpaosig_len;
+  socklen_t ss_server_len;
+
+  if (!bgp_md5) return;
+
+  while (idx < bgp_md5->num) {
+    memset(&tcpaosig, 0, sizeof(tcpaosig));
+    memset(&ss_tcpaosig, 0, sizeof(ss_tcpaosig));
+
+    ss_tcpaosig_len = addr_to_sa((struct sockaddr *)&ss_tcpaosig, &bgp_md5->table[idx].addr, 0);
+
+    ss_server_len = sizeof(ss_server);
+    getsockname(sock, (struct sockaddr *)&ss_server, &ss_server_len);
+
+    if (sa_tcpaosig->sa_family == AF_INET6 && sa_server->sa_family == AF_INET) {
+      ipv4_mapped_to_ipv4(&ss_tcpaosig);
+      ss_tcpaosig_len = sizeof(struct sockaddr_in);
+    }
+    else if (sa_tcpaosig->sa_family == AF_INET && sa_server->sa_family == AF_INET6) {
+      ipv4_to_ipv4_mapped(&ss_tcpaosig);
+      ss_tcpaosig_len = sizeof(struct sockaddr_in6);
+    }
+
+    memcpy(&tcpaosig.addr, &ss_tcpaosig, ss_tcpaosig_len);
+    keylen = strlen(bgp_md5->table[idx].key);
+    if (keylen) {
+      tcpaosig.keylen = keylen;
+      memcpy(tcpaosig.key, &bgp_md5->table[idx].key, keylen);
+    }
+
+    sa_to_str(peer_str, sizeof(peer_str), sa_tcpaosig, TRUE);
+
+    rc = setsockopt(sock, IPPROTO_TCP, TCP_AUTHOPT, &tcpaosig, (socklen_t) sizeof(tcpaosig));
+    if (rc < 0) {
+      Log(LOG_WARNING, "WARN ( %s/core/BGP ): setsockopt() failed for TCP_AUTHOPT peer=%s (errno: %d)\n", config.name, peer_str, errno);
+    }
+    else { 
+      Log(LOG_DEBUG, "DEBUG ( %s/core/BGP ): setsockopt() set TCP_AUTHOPT peer=%s\n", config.name, peer_str);
+    }
+
+    idx++;
+  }
+}
+
 void bgp_batch_init(struct bgp_peer_batch *bp_batch, int num, int interval)
 {
   if (bp_batch) {
@@ -1718,4 +1771,39 @@ void bgp_table_info_delete_tag_find_bgp(struct bgp_peer *peer)
 
   bgp_tag_init_find(peer, (struct sockaddr *) bms->tag_peer, NULL, bms->tag, TRUE);
   bgp_tag_find((struct id_table *)bms->tag->tag_table, bms->tag, &bms->tag->tag, NULL);
+}
+
+/*
+   Simplified version largely taken from Wireshark code.
+
+   Case(s) not handled:
+   - Negative sign
+*/
+u_int64_t convertIEEEFloatToUnsignedInt(u_int32_t in)
+{
+  u_int32_t mantissa, exp, sign;
+  u_int64_t out = 0;
+
+  sign = in & IEEE_SP_SIGN_MASK;
+  exp = (((in & IEEE_SP_EXPONENT_MASK) >> IEEE_SP_MANTISSA_WIDTH) - IEEE_SP_BIAS) - IEEE_SP_MANTISSA_WIDTH;
+  mantissa = (in & IEEE_SP_MANTISSA_MASK) | IEEE_SP_IMPLIED_BIT;
+
+  /* Check for special cases: NaN or Infinity */
+  if (exp == 0xFF) {
+    if (mantissa) {
+      return 0; // NaN
+    }
+    else {
+      return (sign == 0) ? 0xFFFFFFFF : 0; // Positive and Negative Infinity
+    }
+  }
+
+  if (sign) { 
+    /* XXX: Houston we have a problem */
+  }
+  else {
+    out = mantissa * pow(2, exp);
+  }
+
+  return out;
 }

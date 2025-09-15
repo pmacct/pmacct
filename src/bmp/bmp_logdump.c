@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -39,7 +39,7 @@
 #include "ha.h"
 #endif
 
-int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, bgp_tag_t *tag,
+int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct cdada_list_t *tlvs, bgp_tag_t *tag,
 		void *log_data, u_int64_t log_seq, char *event_type, int output, int log_type)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BMP);
@@ -374,7 +374,7 @@ int bmp_log_msg(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *t
   return (ret | amqp_ret | kafka_ret);
 }
 
-int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, struct bmp_log_stats *blstats, char *event_type, int output, void *vobj)
+int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct cdada_list_t *tlvs, struct bmp_log_stats *blstats, char *event_type, int output, void *vobj)
 {
   int ret = 0;
 
@@ -444,15 +444,23 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_l
       json_object_set_new_nocheck(obj, "safi", json_integer((json_int_t)blstats->cnt_safi));
     }
 
-    if (!tlvs || !pm_listcount(tlvs)) {
+    if (!tlvs || !cdada_list_size(tlvs)) {
       json_object_set_new_nocheck(obj, "counter_value", json_integer((json_int_t)blstats->cnt_data));
     }
     else {
-      char *value = NULL;
-      struct pm_listnode *node = NULL;
       struct bmp_log_tlv *tlv = NULL;
+      int idx, size, rc;
 
-      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
+      size = cdada_list_size(tlvs);
+      for (idx = 0; idx < size; idx++) {
+        char *value = NULL;
+
+	rc = cdada_list_get(tlvs, idx, &tlv);
+
+	if (rc != CDADA_SUCCESS || !tlv) {
+	  continue;
+	}
+
 	value = bmp_tlv_value_print(tlv, bmp_stats_info_types, BMP_STATS_INFO_MAX);
 
 	if (value) {
@@ -619,7 +627,7 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_l
   return ret;
 }
 
-int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, char *event_type, int output, void *vobj)
+int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct cdada_list_t *tlvs, char *event_type, int output, void *vobj)
 {
   int ret = 0;
 
@@ -633,11 +641,18 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
     json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 
     if (tlvs) {
-      struct pm_listnode *node = NULL;
       struct bmp_log_tlv *tlv = NULL;
-      
-      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
-	char *type = NULL, *value = NULL;
+      int idx, size, rc;
+    
+      size = cdada_list_size(tlvs);
+      for (idx = 0; idx < size; idx++) {
+        char *type = NULL, *value = NULL;
+
+        rc = cdada_list_get(tlvs, idx, &tlv);
+
+        if (rc != CDADA_SUCCESS || !tlv) {
+          continue;     
+        }
 
 	switch (tlv->pen) {
 	case BMP_TLV_PEN_STD:
@@ -678,12 +693,20 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
     memset(&bmp_init_tlvs, 0, sizeof(bmp_init_tlvs));
 
     if (tlvs) {
-      char *type = NULL, *value = NULL;
-      struct pm_listnode *node = NULL;
       struct bmp_log_tlv *tlv = NULL;
+      int idx, size, rc;
 
       /* No PEN defined so far so we short-circuit to standard elements */
-      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
+      size = cdada_list_size(tlvs);
+      for (idx = 0; idx < size; idx++) {
+        char *type = NULL, *value = NULL;
+
+        rc = cdada_list_get(tlvs, idx, &tlv);
+
+        if (rc != CDADA_SUCCESS || !tlv) {
+          continue;
+        }
+
 	if (tlv->type <= BMP_INIT_INFO_MAX) {
 	  type = bmp_tlv_type_print(tlv, "bmp_init_info", bmp_init_info_types, BMP_INIT_INFO_MAX);
 	  value = bmp_tlv_value_print(tlv, bmp_init_info_types, BMP_INIT_INFO_MAX);
@@ -727,7 +750,7 @@ int bmp_log_msg_init(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
   return ret;
 }
 
-int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, char *event_type, int output, void *vobj)
+int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct cdada_list_t *tlvs, char *event_type, int output, void *vobj)
 {
   int ret = 0;
 
@@ -741,11 +764,18 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
     json_object_set_new_nocheck(obj, "bmp_msg_type", json_string(bmp_msg_type));
 
     if (tlvs) {
-      struct pm_listnode *node = NULL;
       struct bmp_log_tlv *tlv = NULL;
+      int idx, size, rc;
 
-      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
+      size = cdada_list_size(tlvs);
+      for (idx = 0; idx < size; idx++) {
         char *type = NULL, *value = NULL;
+
+        rc = cdada_list_get(tlvs, idx, &tlv);
+
+        if (rc != CDADA_SUCCESS || !tlv) {
+          continue;
+        }
 
 	switch (tlv->pen) {
 	case BMP_TLV_PEN_STD:
@@ -802,12 +832,20 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
     memset(&bmp_term_tlvs, 0, sizeof(bmp_term_tlvs));
 
     if (tlvs) {
-      char *type = NULL, *value = NULL;
-      struct pm_listnode *node = NULL;
       struct bmp_log_tlv *tlv = NULL;
+      int idx, size, rc;
 
       /* No PEN defined so far so we short-circuit to standard elements */
-      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
+      size = cdada_list_size(tlvs);
+      for (idx = 0; idx < size; idx++) {
+        char *type = NULL, *value = NULL;
+
+        rc = cdada_list_get(tlvs, idx, &tlv);
+
+        if (rc != CDADA_SUCCESS || !tlv) {
+          continue;
+        }
+
 	if (tlv->type <= BMP_TERM_INFO_MAX) {
 	  type = bmp_tlv_type_print(tlv, "bmp_term_info", bmp_term_info_types, BMP_TERM_INFO_MAX);
 
@@ -861,7 +899,7 @@ int bmp_log_msg_term(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_li
   return ret;
 }
 
-int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, struct bmp_log_peer_up *blpu, char *event_type, int output, void *vobj)
+int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct cdada_list_t *tlvs, struct bmp_log_peer_up *blpu, char *event_type, int output, void *vobj)
 {
   int ret = 0;
 
@@ -927,11 +965,18 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
     }
 
     if (tlvs) {
-      struct pm_listnode *node = NULL;
       struct bmp_log_tlv *tlv = NULL;
+      int idx, size, rc;
 
-      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
+      size = cdada_list_size(tlvs);
+      for (idx = 0; idx < size; idx++) {
         char *type = NULL, *value = NULL;
+
+        rc = cdada_list_get(tlvs, idx, &tlv);
+
+        if (rc != CDADA_SUCCESS || !tlv) {
+          continue;
+        }
 
 	switch (tlv->pen) {
 	case BMP_TLV_PEN_STD:
@@ -1099,12 +1144,20 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
     memset(&bmp_peer_up_tlvs, 0, sizeof(bmp_peer_up_tlvs));
 
     if (tlvs) {
-      char *type = NULL, *value = NULL;
-      struct pm_listnode *node = NULL;
       struct bmp_log_tlv *tlv = NULL;
+      int idx, size, rc;
 
       /* No PEN defined so far so we short-circuit to standard elements */
-      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
+      size = cdada_list_size(tlvs);
+      for (idx = 0; idx < size; idx++) {
+        char *type = NULL, *value = NULL;
+
+        rc = cdada_list_get(tlvs, idx, &tlv);
+
+        if (rc != CDADA_SUCCESS || !tlv) {
+          continue;
+        }
+
 	if (tlv->type <= BMP_PEER_UP_INFO_MAX) {
 	  type = bmp_tlv_type_print(tlv, "bmp_peer_up_info", bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
 	  value = bmp_tlv_value_print(tlv, bmp_peer_up_info_types, BMP_PEER_UP_INFO_MAX);
@@ -1149,7 +1202,7 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct pm
   return ret;
 }
 
-int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, struct bmp_log_peer_down *blpd, char *event_type, int output, void *vobj)
+int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct cdada_list_t *tlvs, struct bmp_log_peer_down *blpd, char *event_type, int output, void *vobj)
 {
   int ret = 0;
 
@@ -1218,11 +1271,18 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
     }
 
     if (tlvs) {
-      struct pm_listnode *node = NULL;
       struct bmp_log_tlv *tlv = NULL;
+      int idx, size, rc;
 
-      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
-	char *type = NULL, *value = NULL;
+      size = cdada_list_size(tlvs);
+      for (idx = 0; idx < size; idx++) {
+        char *type = NULL, *value = NULL;
+
+        rc = cdada_list_get(tlvs, idx, &tlv);
+
+        if (rc != CDADA_SUCCESS || !tlv) {
+          continue;
+        }
 
 	switch (tlv->pen) {
 	case BMP_TLV_PEN_STD:
@@ -1402,12 +1462,20 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
     /* No Peer Down TLVs defined, BMP_PEER_DOWN_INFO_MAX is hence set to
        -1 and this requires converting to int to sanitize comparisons */
     if (tlvs) {
-      char *type = NULL, *value = NULL;
-      struct pm_listnode *node = NULL;
       struct bmp_log_tlv *tlv = NULL;
+      int idx, size, rc;
 
       /* No PEN defined so far so we short-circuit to standard elements */
-      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
+      size = cdada_list_size(tlvs);
+      for (idx = 0; idx < size; idx++) {
+        char *type = NULL, *value = NULL;
+
+        rc = cdada_list_get(tlvs, idx, &tlv);
+
+        if (rc != CDADA_SUCCESS || !tlv) {
+          continue;
+        }
+
 	if ((int)tlv->type <= (int)BMP_PEER_DOWN_INFO_MAX) {
 	  type = bmp_tlv_type_print(tlv, "bmp_peer_down_info", bmp_peer_down_info_types, BMP_PEER_DOWN_INFO_MAX);
 	  value = bmp_tlv_value_print(tlv, bmp_peer_down_info_types, BMP_PEER_DOWN_INFO_MAX);
@@ -1452,7 +1520,7 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
   return ret;
 }
 
-int bmp_log_msg_route_monitor_tlv(struct pm_list *tlvs, int output, void *vobj)
+int bmp_log_msg_route_monitor_tlv(struct cdada_list_t *tlvs, int output, void *vobj)
 {
   int ret = 0;
 
@@ -1463,11 +1531,18 @@ int bmp_log_msg_route_monitor_tlv(struct pm_list *tlvs, int output, void *vobj)
     json_t *obj = (json_t *) vobj;
 
     if (tlvs) {
-      struct pm_listnode *node = NULL;
       struct bmp_log_tlv *tlv = NULL;
+      int idx, size, rc;
 
-      for (PM_ALL_LIST_ELEMENTS_RO(tlvs, node, tlv)) {
-	char *type = NULL, *value = NULL;
+      size = cdada_list_size(tlvs);
+      for (idx = 0; idx < size; idx++) {
+        char *type = NULL, *value = NULL;
+
+        rc = cdada_list_get(tlvs, idx, &tlv);
+
+        if (rc != CDADA_SUCCESS || !tlv) {
+          continue;
+        }
 
 	switch (tlv->pen) {
 	case BMP_TLV_PEN_STD:
@@ -1600,6 +1675,26 @@ int bmp_log_rm_tlv_pm_status(u_int32_t path_status, int output, void *vobj)
 	path_status ^= BMP_RM_PM_PS_ADD_PATH;
       }
 
+      if (path_status & BMP_RM_PM_PS_FILTER_IN) {
+	json_array_append_new(ps_array, json_string("Filtered-In-Policy"));
+	path_status ^= BMP_RM_PM_PS_FILTER_IN;
+      }
+
+      if (path_status & BMP_RM_PM_PS_FILTER_OUT) {
+	json_array_append_new(ps_array, json_string("Filtered-Out-Policy"));
+	path_status ^= BMP_RM_PM_PS_FILTER_OUT;
+      }
+
+      if (path_status & BMP_RM_PM_PS_STALE) {
+	json_array_append_new(ps_array, json_string("Stale"));
+	path_status ^= BMP_RM_PM_PS_STALE;
+      }
+
+      if (path_status & BMP_RM_PM_PS_SUPPRESSED) {
+	json_array_append_new(ps_array, json_string("Suppressed"));
+	path_status ^= BMP_RM_PM_PS_SUPPRESSED;
+      }
+
       if (path_status) {
 	value = (char *) &path_status;
 	snprintf(value_str, SUPERSHORTBUFLEN, "0x%02x%02x%02x%02x", value[0], value[1], value[2], value[3]);
@@ -1656,7 +1751,7 @@ void bmp_dump_close_peer(struct bgp_peer *peer)
   peer->bmp_se = NULL;
 }
 
-void bmp_dump_se_ll_append(struct bgp_peer *peer, struct bmp_data *bdata, struct pm_list *tlvs, void *extra, int log_type)
+void bmp_dump_se_ll_append(struct bgp_peer *peer, struct bmp_data *bdata, struct cdada_list_t *tlvs, void *extra, int log_type)
 {
   struct bgp_misc_structs *bms = bgp_select_misc_db(FUNC_TYPE_BMP);
   struct bmp_dump_se_ll *se_ll;
@@ -1692,7 +1787,7 @@ void bmp_dump_se_ll_append(struct bgp_peer *peer, struct bmp_data *bdata, struct
     }
   }
 
-  if (tlvs && pm_listcount(tlvs)) {
+  if (tlvs && cdada_list_size(tlvs)) {
     se_ll_elem->rec.tlvs = tlvs;
   }
   se_ll_elem->rec.seq = bgp_peer_log_seq_get(&bms->log_seq);
@@ -1728,7 +1823,7 @@ void bmp_dump_se_ll_destroy(struct bmp_dump_se_ll *bdsell)
   assert(bdsell->last);
   for (se_ll_elem = bdsell->start; se_ll_elem; se_ll_elem = se_ll_elem_next) {
     if (se_ll_elem->rec.tlvs) {
-      bmp_tlv_list_destroy(se_ll_elem->rec.tlvs);
+      bmp_tlv_list_destroy_v2(se_ll_elem->rec.tlvs);
     }
 
     se_ll_elem_next = se_ll_elem->next;

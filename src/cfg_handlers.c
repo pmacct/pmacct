@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -399,6 +399,8 @@ int cfg_key_aggregate(char *filename, char *name, char *value_ptr)
     else if (!strcmp(count_token, "ingress_vrf_name")) cfg_set_aggregate(filename, value, COUNT_INT_INGRESS_VRF_NAME, count_token);
     else if (!strcmp(count_token, "egress_vrf_name")) cfg_set_aggregate(filename, value, COUNT_INT_EGRESS_VRF_NAME, count_token);
     else if (!strcmp(count_token, "vrf_name")) cfg_set_aggregate(filename, value, COUNT_INT_VRF_NAME, count_token);
+    else if (!strcmp(count_token, "in_iface_name")) cfg_set_aggregate(filename, value, COUNT_INT_IN_IFACE_NAME, count_token);
+    else if (!strcmp(count_token, "out_iface_name")) cfg_set_aggregate(filename, value, COUNT_INT_OUT_IFACE_NAME, count_token);
     else {
       cpptrs.primitive[cpptrs.num].name = count_token;
       cpptrs.num++;
@@ -501,6 +503,17 @@ int cfg_key_redis_host(char *filename, char *name, char *value_ptr)
 
   for (; list; list = list->next, changes++) list->cfg.redis_host = value_ptr;
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'redis_host'. Globalized.\n", filename);
+
+  return changes;
+}
+
+int cfg_key_redis_passwd(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int changes = 0;
+
+  for (; list; list = list->next, changes++) list->cfg.redis_passwd = value_ptr;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'redis_passwd'. Globalized.\n", filename);
 
   return changes;
 }
@@ -695,6 +708,28 @@ int cfg_key_bgp_comms_encode_as_array(char *filename, char *name, char *value_pt
         break;
       }
     }
+  }
+
+  return changes;
+}
+
+int cfg_key_bgp_comms_num(char *filename, char *name, char *value_ptr)
+{
+  struct plugins_list_entry *list = plugins_list;
+  int value, changes = 0;
+    
+  value = parse_truefalse(value_ptr);
+  if (value < 0) return ERR;
+  
+  if (!name) for (; list; list = list->next, changes++) list->cfg.bgp_comms_num = value;
+  else {
+    for (; list; list = list->next) {
+      if (!strcmp(name, list->name)) {
+        list->cfg.bgp_comms_num = value;
+        changes++;
+        break;
+      } 
+    }   
   }
 
   return changes;

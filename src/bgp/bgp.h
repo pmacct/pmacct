@@ -64,6 +64,7 @@
 #define BGP_ATTR_AS4_AGGREGATOR                 18
 #define BGP_ATTR_AS_PATHLIMIT                   21
 #define BGP_ATTR_AIGP				26
+#define BGP_ATTR_BGP_LS				29
 #define BGP_ATTR_LARGE_COMMUNITIES		32
 #define BGP_ATTR_OTC				35 /* rfc9234 */
 #define BGP_ATTR_PREFIX_SID			40

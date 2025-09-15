@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2022 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -439,7 +439,7 @@ static int
 flow_to_flowset_ndpi_class_handler(char *flowset, const struct FLOW *flow, int idx, int size)
 {
   u_int8_t ie95_classId = 0x16; /* nDPI */
-  u_int32_t ie95_selectId = htonl(flow->ndpi_class.app_protocol);
+  u_int32_t ie95_selectId = htonl(flow->ndpi_class.proto.app_protocol);
 
   if (size == 5) {
     memcpy(flowset, &ie95_classId, 1);

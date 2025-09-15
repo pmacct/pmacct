@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -630,8 +630,8 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   #if defined (WITH_NDPI)
 	if (config.what_to_count_2 & COUNT_NDPI_CLASS) {
 	  snprintf(ndpi_class, SUPERSHORTBUFLEN, "%s/%s",
-		ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, data->ndpi_class.master_protocol),
-		ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, data->ndpi_class.app_protocol));
+		ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, data->ndpi_class.proto.master_protocol),
+		ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, data->ndpi_class.proto.app_protocol));
 	  fprintf(f, "%-16s  ", ndpi_class);
 	}
   #endif
@@ -697,7 +697,7 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         }
 
         if (config.what_to_count_2 & COUNT_MPLS_PW_ID) fprintf(f, "%-10u  ", pbgp->mpls_pw_id);
-  
+
         if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) {
           addr_to_str(src_host, &data->src_ip);
 
@@ -933,8 +933,8 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
   #if defined (WITH_NDPI)
         if (config.what_to_count_2 & COUNT_NDPI_CLASS) {
 	  snprintf(ndpi_class, SUPERSHORTBUFLEN, "%s/%s",
-		ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, data->ndpi_class.master_protocol),
-		ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, data->ndpi_class.app_protocol));
+		ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, data->ndpi_class.proto.master_protocol),
+		ndpi_get_proto_name(pm_ndpi_wfl->ndpi_struct, data->ndpi_class.proto.app_protocol));
 	  fprintf(f, "%s%s", write_sep(sep, &count), ndpi_class);
 	}
   #endif
@@ -1112,7 +1112,62 @@ void P_cache_purge(struct chained_cache *queue[], int index, int safe_action)
         }
 
         if (config.what_to_count_2 & COUNT_MPLS_PW_ID) fprintf(f, "%s%u", write_sep(sep, &count), pbgp->mpls_pw_id);
+
+        if (config.what_to_count_3 & COUNT_VRF_NAME) {
+          char *str_ptr = NULL; 
   
+          vlen_prims_get(pvlen, COUNT_INT_VRF_NAME, &str_ptr);
+          if (!str_ptr) {
+	    str_ptr = empty_string;
+	  }
+
+          P_fprintf_csv_string(f, pvlen, COUNT_INT_VRF_NAME, write_sep(sep, &count), str_ptr);
+        }
+
+        if (config.what_to_count_3 & COUNT_INGRESS_VRF_NAME) {
+          char *str_ptr = NULL; 
+  
+          vlen_prims_get(pvlen, COUNT_INT_INGRESS_VRF_NAME, &str_ptr);
+          if (!str_ptr) {
+	    str_ptr = empty_string;
+	  }
+
+          P_fprintf_csv_string(f, pvlen, COUNT_INT_INGRESS_VRF_NAME, write_sep(sep, &count), str_ptr);
+        }
+
+        if (config.what_to_count_3 & COUNT_EGRESS_VRF_NAME) {
+          char *str_ptr = NULL; 
+  
+          vlen_prims_get(pvlen, COUNT_INT_EGRESS_VRF_NAME, &str_ptr);
+          if (!str_ptr) {
+	    str_ptr = empty_string;
+	  }
+
+          P_fprintf_csv_string(f, pvlen, COUNT_INT_EGRESS_VRF_NAME, write_sep(sep, &count), str_ptr);
+        }
+
+        if (config.what_to_count_3 & COUNT_IN_IFACE_NAME) {
+          char *str_ptr = NULL; 
+  
+          vlen_prims_get(pvlen, COUNT_INT_IN_IFACE_NAME, &str_ptr);
+          if (!str_ptr) {
+	    str_ptr = empty_string;
+	  }
+
+          P_fprintf_csv_string(f, pvlen, COUNT_INT_IN_IFACE_NAME, write_sep(sep, &count), str_ptr);
+        }
+
+        if (config.what_to_count_3 & COUNT_OUT_IFACE_NAME) {
+          char *str_ptr = NULL; 
+  
+          vlen_prims_get(pvlen, COUNT_INT_OUT_IFACE_NAME, &str_ptr);
+          if (!str_ptr) {
+	    str_ptr = empty_string;
+	  }
+
+          P_fprintf_csv_string(f, pvlen, COUNT_INT_OUT_IFACE_NAME, write_sep(sep, &count), str_ptr);
+        }
+
         if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) {
           addr_to_str(src_host, &data->src_ip);
           fprintf(f, "%s%s", write_sep(sep, &count), src_host);
@@ -1611,6 +1666,11 @@ void P_write_stats_header_csv(FILE *f, int is_event)
   if (config.what_to_count & COUNT_OUT_IFACE) fprintf(f, "%sOUT_IFACE", write_sep(sep, &count));
   if (config.what_to_count & COUNT_MPLS_VPN_RD) fprintf(f, "%sMPLS_VPN_RD", write_sep(sep, &count));
   if (config.what_to_count_2 & COUNT_MPLS_PW_ID) fprintf(f, "%sMPLS_PW_ID", write_sep(sep, &count));
+  if (config.what_to_count_3 & COUNT_VRF_NAME) fprintf(f, "%sVRF_NAME", write_sep(sep, &count));
+  if (config.what_to_count_3 & COUNT_INGRESS_VRF_NAME) fprintf(f, "%sINGRESS_VRF_NAME", write_sep(sep, &count));
+  if (config.what_to_count_3 & COUNT_EGRESS_VRF_NAME) fprintf(f, "%sEGRESS_VRF_NAME", write_sep(sep, &count));
+  if (config.what_to_count_3 & COUNT_IN_IFACE_NAME) fprintf(f, "%sIN_IFACE_NAME", write_sep(sep, &count));
+  if (config.what_to_count_3 & COUNT_OUT_IFACE_NAME) fprintf(f, "%sOUT_IFACE_NAME", write_sep(sep, &count));
   if (config.what_to_count & (COUNT_SRC_HOST|COUNT_SUM_HOST)) fprintf(f, "%sSRC_IP", write_sep(sep, &count));
   if (config.what_to_count & (COUNT_SRC_NET|COUNT_SUM_NET)) fprintf(f, "%sSRC_NET", write_sep(sep, &count));
   if (config.what_to_count & COUNT_DST_HOST) fprintf(f, "%sDST_IP", write_sep(sep, &count));

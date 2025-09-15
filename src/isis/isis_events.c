@@ -24,6 +24,7 @@
 #include "dict.h"
 #include "thread.h"
 #include "prefix.h"
+#include "linklist.h"
 #include "isis_constants.h"
 #include "isis_common.h"
 #include "isis_circuit.h"

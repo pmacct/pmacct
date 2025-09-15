@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -109,6 +109,9 @@ static const struct _primitives_matrix_struct _primitives_matrix[] = {
   {"mpls_label_top", 1, 1, 1, 0, 0, 0, 0, "Top MPLS label"},
   {"mpls_label_stack", 1, 1, 1, 0, 0, 0, 0, "MPLS label stack"},
   {"mpls_vpn_rd", 0, 0, 1, 1, 0, 0, 0, "MPLS L3 VPN Route Distinguisher"},
+  {"vrf_name", 0, 0, 1, 0, 0, 0, 0, "Ingress/Egress MPLS L3 VPN Name"},
+  {"ingress_vrf_name", 0, 0, 1, 0, 0, 0, 0, "Ingress MPLS L3 VPN Name"},
+  {"egress_vrf_name", 0, 0, 1, 0, 0, 0, 0, "Egress MPLS L3 VPN Name"},
   {"mpls_pw_id", 0, 0, 1, 1, 0, 0, 0, "MPLS L2 VPN Pseudowire ID"},
   {"MISC", 1, 1, 1, 1, 0, 0, 0, ""}, 
   {"class", 1, 1, 1, 1, 0, 0, 0, "L7 protocol classification"},
@@ -122,6 +125,8 @@ static const struct _primitives_matrix_struct _primitives_matrix[] = {
   {"dst_host_coords", 1, 1, 1, 1, 0, 0, 0, "Destination IP address GeoIP resolution: lat/lon coordinates"},
   {"in_iface", 0, 1, 1, 1, 0, 0, 0, "Input interface, SNMP ifIndex"}, 
   {"out_iface", 0, 1, 1, 1, 0, 0, 0, "Output interface, SNMP ifIndex"}, 
+  {"in_iface_name", 0, 0, 1, 0, 0, 0, 0, "Input interface Name"},
+  {"out_iface_name", 0, 0, 1, 0, 0, 0, 0, "Output interface Name"},
   {"peer_src_ip", 0, 0, 1, 1, 0, 0, 0, "IP address or identificator of telemetry exporting device"},
   {"sampling_rate", 1, 1, 1, 1, 0, 0, 0, "Sampling rate"},
   {"sampling_direction", 0, 0, 1, 1, 0, 0, 0, "Sampling direction (ie. ingress vs egress)"},
@@ -444,10 +449,32 @@ static const char __attribute__((unused)) *bgp_rd_origin[] = {
   ""
 };
 
+
+
 static const u_int16_t __attribute__((unused)) lookup_type_to_bgp_rd_origin[] = {
   RD_ORIGIN_UNKNOWN,
   RD_ORIGIN_BGP,
   RD_ORIGIN_BMP
+};
+
+static const char __attribute__((unused)) *bgp_ls_nlri_type[] = {
+  "Unknown",
+  "Node",
+  "Link",
+  "IPv4 Topology Prefix",
+  "IPv6 Topology Prefix",
+  ""
+};
+
+static const char __attribute__((unused)) *bgp_ls_protocol_id[] = {
+  "Unknown",
+  "IS-IS Level 1",
+  "IS-IS Level 2",
+  "OSPFv2",
+  "Direct",
+  "Static",
+  "OSPFv3",
+  ""
 };
 
 static const char __attribute__((unused)) *rpki_roa[] = {
