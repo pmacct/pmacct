@@ -35,16 +35,16 @@ mkdir -p /tmp
 cd /tmp
 
 # Dependencies (not fulfilled by Dockerfile)
-git clone --depth 1 -b v2.14 https://github.com/akheron/jansson
+git clone --depth 1 -b v2.14.1 https://github.com/akheron/jansson
 cd jansson ; rm -rf ./.git ; autoreconf -i ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
-git clone --depth 1 -b v2.6.1 https://github.com/confluentinc/librdkafka
+git clone --depth 1 -b v2.11.1 https://github.com/confluentinc/librdkafka
 cd librdkafka ; rm -rf ./.git ; ./configure --prefix=/usr/local/ ; make ; sudo make install ; cd ..
 
 # rabbitmq-c 0.14.0 depends on cmake 3.22 or greater
 if [ "${DISTRIBUTION}" = "ubuntu:jammy" ]; then
-    wget ${WGET_FLAGS} -O - https://github.com/alanxz/rabbitmq-c/archive/refs/tags/v0.14.0.tar.gz | tar xzf -
-    cd rabbitmq-c-0.14.0 ; mkdir build ; cd build ; cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_INSTALL_LIBDIR=lib .. ; sudo cmake --build . --target install ; cd .. ; cd ..
+    wget ${WGET_FLAGS} -O - https://github.com/alanxz/rabbitmq-c/archive/refs/tags/v0.15.0.tar.gz | tar xzf -
+    cd rabbitmq-c-0.15.0 ; mkdir build ; cd build ; cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_INSTALL_LIBDIR=lib .. ; sudo cmake --build . --target install ; cd .. ; cd ..
 else
     wget ${WGET_FLAGS} -O - https://github.com/alanxz/rabbitmq-c/archive/refs/tags/v0.13.0.tar.gz | tar xzf -
     cd rabbitmq-c-0.13.0 ; mkdir build ; cd build ; cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_INSTALL_LIBDIR=lib .. ; sudo cmake --build . --target install ; cd .. ; cd ..
