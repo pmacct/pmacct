@@ -1,2 +1,2 @@
-${TIMESTAMP} ERROR ( nfacctd_kafka/kafka ): Connection failed to Kafka: p_kafka_check_outq_len() (11)
+${TIMESTAMP} ERROR ( nfacctd_kafka/kafka ): Connection failed to Kafka: p_kafka_check_outq_len()
 ${TIMESTAMP} ERROR ( nfacctd_kafka/kafka ): Connection failed to Kafka: p_kafka_close()
