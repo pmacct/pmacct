@@ -553,24 +553,26 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
-    if (!is_empty_256b(&bmed_bmp->pd, sizeof(bmed_bmp->pd))) {
-      char pd_str[SHORTSHORTBUFLEN];
+    if (config.bmp_daemon_correct_pd) {
+      if (!is_empty_256b(&bmed_bmp->pd, sizeof(bmed_bmp->pd))) {
+        char pd_str[SHORTSHORTBUFLEN];
 
-      bgp_rd2str(pd_str, &bmed_bmp->pd);
-      pm_avro_check(avro_value_get_by_name(obj, "pd", &p_avro_field, NULL));
-      pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-      pm_avro_check(avro_value_set_string(&p_avro_branch, pd_str));
+        bgp_rd2str(pd_str, &bmed_bmp->pd);
+        pm_avro_check(avro_value_get_by_name(obj, "pd", &p_avro_field, NULL));
+        pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+        pm_avro_check(avro_value_set_string(&p_avro_branch, pd_str));
 
-      pm_avro_check(avro_value_get_by_name(obj, "pd_origin", &p_avro_field, NULL));
-      pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-      pm_avro_check(avro_value_set_string(&p_avro_branch, bgp_rd_origin_print(bmed_bmp->pd.type)));
-    }
-    else {
-      pm_avro_check(avro_value_get_by_name(obj, "pd", &p_avro_field, NULL));
-      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+        pm_avro_check(avro_value_get_by_name(obj, "pd_origin", &p_avro_field, NULL));
+        pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
+        pm_avro_check(avro_value_set_string(&p_avro_branch, bgp_rd_origin_print(bmed_bmp->pd.type)));
+      }
+      else {
+        pm_avro_check(avro_value_get_by_name(obj, "pd", &p_avro_field, NULL));
+        pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
 
-      pm_avro_check(avro_value_get_by_name(obj, "pd_origin", &p_avro_field, NULL));
-      pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+        pm_avro_check(avro_value_get_by_name(obj, "pd_origin", &p_avro_field, NULL));
+        pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
+      }
     }
 #endif
   }
