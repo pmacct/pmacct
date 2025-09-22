@@ -2361,6 +2361,11 @@ avro_schema_t p_avro_schema_build_bmp_rm(int log_type, char *schema_name)
   avro_schema_record_field_append(schema, "is_post", optint_s);
   avro_schema_record_field_append(schema, "is_out", optint_s);
 
+  if (config.bmp_daemon_correct_pd) {
+    avro_schema_record_field_append(schema, "pd", optstr_s);
+    avro_schema_record_field_append(schema, "pd_origin", optstr_s);
+  }
+
   avro_schema_decref(optlong_s);
   avro_schema_decref(optstr_s);
   avro_schema_decref(optint_s);
@@ -2469,6 +2474,11 @@ avro_schema_t p_avro_schema_build_bmp_peer_up(char *schema_name)
   avro_schema_record_field_append(schema, "rd", optstr_s);
   avro_schema_record_field_append(schema, "rd_origin", optstr_s);
 
+  if (config.bmp_daemon_correct_pd) {
+    avro_schema_record_field_append(schema, "pd", optstr_s);
+    avro_schema_record_field_append(schema, "pd_origin", optstr_s);
+  }
+
   avro_schema_record_field_append(schema, "bgp_id", avro_schema_string());
   avro_schema_record_field_append(schema, "local_port", avro_schema_int());
   avro_schema_record_field_append(schema, "remote_port", avro_schema_int());
@@ -2526,6 +2536,11 @@ avro_schema_t p_avro_schema_build_bmp_peer_down(char *schema_name)
   avro_schema_record_field_append(schema, "rd", optstr_s);
   avro_schema_record_field_append(schema, "rd_origin", optstr_s);
 
+  if (config.bmp_daemon_correct_pd) {
+    avro_schema_record_field_append(schema, "pd", optstr_s);
+    avro_schema_record_field_append(schema, "pd_origin", optstr_s);
+  }
+
   avro_schema_record_field_append(schema, "reason_type", avro_schema_int());
   avro_schema_record_field_append(schema, "reason_str", optstr_s);
   avro_schema_record_field_append(schema, "reason_loc_code", optint_s);
@@ -2561,6 +2576,11 @@ avro_schema_t p_avro_schema_build_bmp_stats(char *schema_name)
 
   avro_schema_record_field_append(schema, "rd", optstr_s);
   avro_schema_record_field_append(schema, "rd_origin", optstr_s);
+
+  if (config.bmp_daemon_correct_pd) {
+    avro_schema_record_field_append(schema, "pd", optstr_s);
+    avro_schema_record_field_append(schema, "pd_origin", optstr_s);
+  }
 
   avro_schema_record_field_append(schema, "bgp_id", avro_schema_string());
 
