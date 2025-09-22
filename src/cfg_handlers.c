@@ -4625,7 +4625,7 @@ int cfg_key_bmp_daemon_tag_map(char *filename, char *name, char *value_ptr)
   return changes;
 }
 
-int cfg_key_bmp_daemon_correct_pd(char *filename, char *name, char *value_ptr)
+int cfg_key_bmp_daemon_set_pd(char *filename, char *name, char *value_ptr)
 { 
   struct plugins_list_entry *list = plugins_list;
   int value, changes = 0;
@@ -4633,8 +4633,8 @@ int cfg_key_bmp_daemon_correct_pd(char *filename, char *name, char *value_ptr)
   value = parse_truefalse(value_ptr);
   if (value < 0) return ERR;
 
-  for (; list; list = list->next, changes++) list->cfg.bmp_daemon_correct_pd = value;
-  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_daemon_correct_pd'. Globalized.\n", filename);
+  for (; list; list = list->next, changes++) list->cfg.bmp_daemon_set_pd = value;
+  if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'bmp_daemon_set_pd'. Globalized.\n", filename);
 
   return changes;
 }

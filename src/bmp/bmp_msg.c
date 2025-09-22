@@ -317,7 +317,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, &bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
 
-  if (config.bmp_daemon_correct_pd) {
+  if (config.bmp_daemon_set_pd) {
     bmp_peer_hdr_get_rd(bph, &bdata.chars.pd);
   }
   else {
@@ -448,7 +448,7 @@ void bmp_process_msg_peer_up(char **bmp_packet, u_int32_t *len, struct bmp_peer 
   bmpp_bgp_peer->log = bmpp->self.log;
   bmpp_bgp_peer->bmp_se = bmpp; /* using bmp_se field to back-point a BGP peer to its parent BMP peer */
 
-  if (config.bmp_daemon_correct_pd) {
+  if (config.bmp_daemon_set_pd) {
     bmpp_bgp_peer->peer_distinguisher = bdata.chars.pd;
   }
   else {
@@ -556,7 +556,7 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, &bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
 
-  if (config.bmp_daemon_correct_pd) {
+  if (config.bmp_daemon_set_pd) {
     bmp_peer_hdr_get_rd(bph, &bdata.chars.pd);
   }
   else {
@@ -664,7 +664,7 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
 
   /* Find the relevant BGP peer (matching peer_ip and peer_distinguisher) */
   if (bdata.family == AF_INET) {
-    if (config.bmp_daemon_correct_pd) {
+    if (config.bmp_daemon_set_pd) {
       ret = pm_tfind(&bdata, &bmpp->bgp_peers_v4, bmp_peer_host_addr_peer_dist_cmp);
     }
     else {
@@ -672,7 +672,7 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
     }
   }
   else if (bdata.family == AF_INET6) {
-    if (config.bmp_daemon_correct_pd) {
+    if (config.bmp_daemon_set_pd) {
       ret = pm_tfind(&bdata, &bmpp->bgp_peers_v6, bmp_peer_host_addr_peer_dist_cmp);
     }
     else {
@@ -686,7 +686,7 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
     bgp_peer_info_delete(bmpp_bgp_peer);
 
     if (bdata.family == AF_INET) {
-      if (config.bmp_daemon_correct_pd) {
+      if (config.bmp_daemon_set_pd) {
         pm_tdelete(&bdata, &bmpp->bgp_peers_v4, bmp_peer_host_addr_peer_dist_cmp);
       }
       else {
@@ -694,7 +694,7 @@ void bmp_process_msg_peer_down(char **bmp_packet, u_int32_t *len, struct bmp_pee
       }
     }
     else if (bdata.family == AF_INET6) {
-      if (config.bmp_daemon_correct_pd) {
+      if (config.bmp_daemon_set_pd) {
         pm_tdelete(&bdata, &bmpp->bgp_peers_v6, bmp_peer_host_addr_peer_dist_cmp);
       }
       else {
@@ -756,7 +756,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, &bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
 
-  if (config.bmp_daemon_correct_pd) {
+  if (config.bmp_daemon_set_pd) {
     bmp_peer_hdr_get_rd(bph, &bdata.chars.pd);
   }
   else {
@@ -773,7 +773,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
 
   /* Find the relevant BGP peer (matching peer_ip and peer_distinguisher) */
   if (bdata.family == AF_INET) {
-    if (config.bmp_daemon_correct_pd) {
+    if (config.bmp_daemon_set_pd) {
       ret = pm_tfind(&bdata, &bmpp->bgp_peers_v4, bmp_peer_host_addr_peer_dist_cmp);
     }
     else {
@@ -781,7 +781,7 @@ void bmp_process_msg_route_monitor(char **bmp_packet, u_int32_t *len, struct bmp
     }
   }
   else if (bdata.family == AF_INET6) {
-    if (config.bmp_daemon_correct_pd) {
+    if (config.bmp_daemon_set_pd) {
       ret = pm_tfind(&bdata, &bmpp->bgp_peers_v6, bmp_peer_host_addr_peer_dist_cmp);
     }
     else {
@@ -1023,7 +1023,7 @@ void bmp_process_msg_stats(char **bmp_packet, u_int32_t *len, struct bmp_peer *b
   bmp_peer_hdr_get_peer_ip(bph, &bdata.peer_ip, &bdata.family);
   bmp_peer_hdr_get_bgp_id(bph, &bdata.bgp_id);
 
-  if (config.bmp_daemon_correct_pd) {
+  if (config.bmp_daemon_set_pd) {
     bmp_peer_hdr_get_rd(bph, &bdata.chars.pd);
   }
   else {

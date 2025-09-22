@@ -578,7 +578,7 @@ static const struct _dictionary_line dictionary[] = {
   {"bmp_daemon_ha_queue_max_size", cfg_key_bgp_bmp_daemon_ha_queue_max_size},
   {"bmp_daemon_rp_ebpf_prog", cfg_key_bmp_daemon_rp_ebpf_prog},
   {"bmp_daemon_tag_map", cfg_key_bmp_daemon_tag_map},
-  {"bmp_daemon_correct_pd", cfg_key_bmp_daemon_correct_pd},
+  {"bmp_daemon_set_pd", cfg_key_bmp_daemon_set_pd},
   {"bmp_daemon_msglog_label_filter", cfg_key_bmp_daemon_msglog_label_filter},
   {"bmp_daemon_pipe_size", cfg_key_bmp_daemon_pipe_size},
   {"bmp_daemon_max_peers", cfg_key_bmp_daemon_max_peers},

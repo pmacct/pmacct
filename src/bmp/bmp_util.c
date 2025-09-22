@@ -553,7 +553,7 @@ void bgp_extra_data_print_bmp(struct bgp_msg_extra_data *bmed, int output, void 
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
-    if (config.bmp_daemon_correct_pd) {
+    if (config.bmp_daemon_set_pd) {
       if (!is_empty_256b(&bmed_bmp->pd, sizeof(bmed_bmp->pd))) {
         char pd_str[SHORTSHORTBUFLEN];
 

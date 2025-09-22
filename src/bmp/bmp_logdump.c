@@ -567,7 +567,7 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct cdad
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
-    if (config.bmp_daemon_correct_pd) {
+    if (config.bmp_daemon_set_pd) {
       if (!is_empty_256b(&bdata->chars.pd, sizeof(bdata->chars.pd))) {
         char pd_str[SHORTSHORTBUFLEN];
 
@@ -1123,7 +1123,7 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct cd
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
-    if (config.bmp_daemon_correct_pd) {
+    if (config.bmp_daemon_set_pd) {
       if (!is_empty_256b(&bdata->chars.pd, sizeof(bdata->chars.pd))) {
         char pd_str[SHORTSHORTBUFLEN];
 
@@ -1418,7 +1418,7 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
     }
 
-    if (config.bmp_daemon_correct_pd) {
+    if (config.bmp_daemon_set_pd) {
       if (!is_empty_256b(&bdata->chars.pd, sizeof(bdata->chars.pd))) {
         char pd_str[SHORTSHORTBUFLEN];
 
@@ -2361,7 +2361,7 @@ avro_schema_t p_avro_schema_build_bmp_rm(int log_type, char *schema_name)
   avro_schema_record_field_append(schema, "is_post", optint_s);
   avro_schema_record_field_append(schema, "is_out", optint_s);
 
-  if (config.bmp_daemon_correct_pd) {
+  if (config.bmp_daemon_set_pd) {
     avro_schema_record_field_append(schema, "pd", optstr_s);
     avro_schema_record_field_append(schema, "pd_origin", optstr_s);
   }
@@ -2474,7 +2474,7 @@ avro_schema_t p_avro_schema_build_bmp_peer_up(char *schema_name)
   avro_schema_record_field_append(schema, "rd", optstr_s);
   avro_schema_record_field_append(schema, "rd_origin", optstr_s);
 
-  if (config.bmp_daemon_correct_pd) {
+  if (config.bmp_daemon_set_pd) {
     avro_schema_record_field_append(schema, "pd", optstr_s);
     avro_schema_record_field_append(schema, "pd_origin", optstr_s);
   }
@@ -2536,7 +2536,7 @@ avro_schema_t p_avro_schema_build_bmp_peer_down(char *schema_name)
   avro_schema_record_field_append(schema, "rd", optstr_s);
   avro_schema_record_field_append(schema, "rd_origin", optstr_s);
 
-  if (config.bmp_daemon_correct_pd) {
+  if (config.bmp_daemon_set_pd) {
     avro_schema_record_field_append(schema, "pd", optstr_s);
     avro_schema_record_field_append(schema, "pd_origin", optstr_s);
   }
@@ -2577,7 +2577,7 @@ avro_schema_t p_avro_schema_build_bmp_stats(char *schema_name)
   avro_schema_record_field_append(schema, "rd", optstr_s);
   avro_schema_record_field_append(schema, "rd_origin", optstr_s);
 
-  if (config.bmp_daemon_correct_pd) {
+  if (config.bmp_daemon_set_pd) {
     avro_schema_record_field_append(schema, "pd", optstr_s);
     avro_schema_record_field_append(schema, "pd_origin", optstr_s);
   }
