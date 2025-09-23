@@ -3276,6 +3276,15 @@ DESC:		Full pathname to a file containing RPKI ROA data. Data encoding is JSON a
 		RPKI/ROA information" section. 
 DEFAULT:	none
 
+KEY:		bmp_daemon_set_pd [GLOBAL]
+VALUES:         [ true | false ]
+DESC:		The BMP protocol carries a field named Peer Distinguisher to "distinguish peers
+		that belong to one address domain from the other.", effectively carrying the RD,
+		L3 MPLS VPN Route Distinguisher, in case the peer type is set to "RD Instance".
+		By default this value is parsed and encoded in the "rd" field; setting this knob
+		to true makes it encoding in a separate "pd" field. 
+DEFAULT:	false
+
 KEY:		rpki_rtr_cache [GLOBAL]
 DESC:		Defines the remote IP address and port of a RPKI RTR cache to connect to. If IPv4,
 		the value is expected as 'address:port'. If IPv6, it is expected as '[address]:port'.
