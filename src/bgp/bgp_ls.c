@@ -36,9 +36,14 @@
 #include "plugin_cmn_avro.h"
 #endif
 
+struct bgp_rt_structs *bgp_ls_routing_db;
+struct bgp_peer bgp_ls_dummy_peer;
+
 void bgp_ls_init()
 {
   int ret, idx;
+  afi_t afi;
+  safi_t safi;
 
   bgp_ls_nlri_tlv_map = cdada_map_create(u_int16_t); /* sizeof type */
   if (!bgp_ls_nlri_tlv_map) {
@@ -87,6 +92,18 @@ void bgp_ls_init()
     Log(LOG_ERR, "ERROR ( %s/core/BGP ): Unable to allocate bgp_ls_nlri_map. Exiting.\n", config.name);
     exit_gracefully(1);
   }
+
+  bgp_ls_routing_db = &inter_domain_routing_dbs[FUNC_TYPE_BGP_LS];
+  memset(bgp_ls_routing_db, 0, sizeof(struct bgp_rt_structs));
+
+  for (afi = AFI_IP; afi < AFI_MAX; afi++) {
+    for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
+      bgp_ls_routing_db->rib[afi][safi] = bgp_table_init(afi, safi);
+    }
+  }
+
+  memset(&bgp_ls_dummy_peer, 0, sizeof(struct bgp_peer));
+  bgp_ls_dummy_peer.type = FUNC_TYPE_BGP_LS;
 }
 
 int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bgp_attr_extra *attr_extra, struct bgp_nlri *info, int type)
@@ -493,10 +510,22 @@ int bgp_ls_nlri_tlv_v6_addr_neigh_handler(u_char *pnt, int len, struct bgp_ls_nl
 
 int bgp_ls_nlri_tlv_ip_reach_handler(u_char *pnt, int len, struct bgp_ls_nlri *blsn)
 {
+  struct bgp_misc_structs *bms;
   int ret = SUCCESS, pfx_size;
   u_int8_t pfx_len;
+  afi_t afi;
 
   if (!pnt || !len || !blsn) {
+    return ERR;
+  }
+
+  if (!blsn->peer) {
+    return ERR;
+  }
+
+  bms = bgp_select_misc_db(blsn->peer->type);
+
+  if (!bms) {
     return ERR;
   }
 
@@ -521,6 +550,7 @@ int bgp_ls_nlri_tlv_ip_reach_handler(u_char *pnt, int len, struct bgp_ls_nlri *b
 
       blsn->nlri.topo_pfx.p.pdesc.mask.family = AF_INET;
       blsn->nlri.topo_pfx.p.pdesc.mask.len = pfx_len;
+      afi = AFI_IP;
     }
     /* IPv6 */
     else if (blsn->type == 4 && pfx_size <= 16) {
@@ -529,6 +559,7 @@ int bgp_ls_nlri_tlv_ip_reach_handler(u_char *pnt, int len, struct bgp_ls_nlri *b
 
       blsn->nlri.topo_pfx.p.pdesc.mask.family = AF_INET6;
       blsn->nlri.topo_pfx.p.pdesc.mask.len = pfx_len;
+      afi = AFI_IP6;
     }
     else {
       char bgp_peer_str[INET6_ADDRSTRLEN];
@@ -537,6 +568,19 @@ int bgp_ls_nlri_tlv_ip_reach_handler(u_char *pnt, int len, struct bgp_ls_nlri *b
       Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS Wrong Length (pfx_size) TLV %u\n", config.name, config.type, bgp_peer_str, BGP_LS_IP_REACH);
 
       ret = ERR;
+    }
+
+    if (!ret) {
+      if (!bms->skip_rib) {
+	// struct bgp_node *route = NULL;
+	struct prefix pfx;
+
+	pfx.family = blsn->nlri.topo_pfx.p.pdesc.addr.family;
+	pfx.prefixlen = pfx_len; 
+	memcpy(&pfx.u.prefix, pnt, pfx_size);
+
+	bgp_node_get(&bgp_ls_dummy_peer, bgp_ls_routing_db->rib[afi][SAFI_UNICAST], &pfx);
+      }
     }
   }
 

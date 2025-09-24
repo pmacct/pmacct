@@ -501,7 +501,8 @@
 #define FUNC_TYPE_SFLOW_COUNTER		4
 #define FUNC_TYPE_TELEMETRY		5
 #define FUNC_TYPE_BGP_BLACKHOLE		6
-#define FUNC_TYPE_MAX			7
+#define FUNC_TYPE_BGP_LS		7
+#define FUNC_TYPE_MAX			8
 
 #define PM_MSG_BIN_COPY			0
 #define PM_MSG_STR_COPY			1

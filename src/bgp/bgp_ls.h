@@ -231,4 +231,7 @@ int bgp_ls_attr_tlv_igp_metric_print(u_char *, u_int16_t, char *, u_int8_t, int,
 /* global variables */
 extern cdada_map_t *bgp_ls_nlri_tlv_map, *bgp_ls_nd_tlv_map, *bgp_ls_nlri_map;
 extern cdada_map_t *bgp_ls_attr_tlv_print_map;
+
+extern struct bgp_rt_structs *bgp_ls_routing_db;
+extern struct bgp_peer bgp_ls_dummy_peer;
 #endif //BGP_LS_H
