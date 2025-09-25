@@ -216,17 +216,20 @@ extern int bgp_ls_nd_tlv_confed_member_handler(u_char *, int, struct bgp_ls_node
 
 extern int bgp_ls_attr_tlv_unknown_handler(u_char *, u_int16_t, u_int16_t, int, void *);
 
-int bgp_ls_log_msg(struct bgp_ls_nlri *, struct bgp_attr_ls *, afi_t, safi_t, bgp_tag_t *, char *, int, char **, int);
-void bgp_ls_log_node_desc(void *, struct bgp_ls_node_desc *, u_int8_t, char *, int);
-void bgp_ls_isis_sysid_print(char *, char *);
-void bgp_ls_isis_areaid_print(char *, char *, int);
-int bgp_ls_attr_tlv_string_print(u_char *, u_int16_t, char *, u_int8_t, int, void *); 
-int bgp_ls_attr_tlv_ip_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
-int bgp_ls_attr_tlv_int8_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
-int bgp_ls_attr_tlv_int32_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
-int bgp_ls_attr_tlv_msd_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
-int bgp_ls_attr_tlv_isis_areaid_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
-int bgp_ls_attr_tlv_igp_metric_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
+extern int bgp_ls_log_msg(struct bgp_ls_nlri *, struct bgp_attr_ls *, afi_t, safi_t, bgp_tag_t *, char *, int, char **, int);
+extern void bgp_ls_log_node_desc(void *, struct bgp_ls_node_desc *, u_int8_t, char *, int);
+extern void bgp_ls_isis_sysid_print(char *, char *);
+extern void bgp_ls_isis_areaid_print(char *, char *, int);
+extern int bgp_ls_attr_tlv_string_print(u_char *, u_int16_t, char *, u_int8_t, int, void *); 
+extern int bgp_ls_attr_tlv_ip_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
+extern int bgp_ls_attr_tlv_int8_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
+extern int bgp_ls_attr_tlv_int32_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
+extern int bgp_ls_attr_tlv_msd_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
+extern int bgp_ls_attr_tlv_isis_areaid_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
+extern int bgp_ls_attr_tlv_igp_metric_print(u_char *, u_int16_t, char *, u_int8_t, int, void *);
+
+extern int bgp_lookup_node_match_cmp_bgp_ls(struct bgp_info *, struct node_match_cmp_term2 *);
+extern void bgp_ls_srcdst_lookup(struct packet_ptrs *, int);
 
 /* global variables */
 extern cdada_map_t *bgp_ls_nlri_tlv_map, *bgp_ls_nd_tlv_map, *bgp_ls_nlri_map;

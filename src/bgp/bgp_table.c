@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2023 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /* 
@@ -264,9 +264,9 @@ bgp_node_match (const struct bgp_table *table, struct prefix *p, struct bgp_peer
 
   /* Path_id info not known here, bucket number cannot be calculated exactly 
      --> we need to iterate through the whole peer_bucket  */
-  if (bms->table_per_peer_hash == BGP_ASPATH_HASH_PATHID) 
+  if (bms->table_per_peer_hash == BGP_ASPATH_HASH_PATHID) {
     per_peer_buckets = modulo_idx_max = bms->table_per_peer_buckets;
-
+  }
   /* RD info is known here: bucket number can be calculated exactly 
      --> no need to iterate through the whole peer_bucket  */
   else if (bms->table_per_peer_hash == BGP_ASPATH_HASH_MPLSVPNRD) {

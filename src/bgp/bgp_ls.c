@@ -37,13 +37,12 @@
 #endif
 
 struct bgp_rt_structs *bgp_ls_routing_db;
-struct bgp_peer bgp_ls_dummy_peer;
 
 void bgp_ls_init()
 {
   int ret, idx;
   afi_t afi;
-  safi_t safi;
+  safi_t safi = SAFI_UNICAST;
 
   bgp_ls_nlri_tlv_map = cdada_map_create(u_int16_t); /* sizeof type */
   if (!bgp_ls_nlri_tlv_map) {
@@ -96,14 +95,9 @@ void bgp_ls_init()
   bgp_ls_routing_db = &inter_domain_routing_dbs[FUNC_TYPE_BGP_LS];
   memset(bgp_ls_routing_db, 0, sizeof(struct bgp_rt_structs));
 
-  for (afi = AFI_IP; afi < AFI_MAX; afi++) {
-    for (safi = SAFI_UNICAST; safi < SAFI_MAX; safi++) {
-      bgp_ls_routing_db->rib[afi][safi] = bgp_table_init(afi, safi);
-    }
+  for (afi = AFI_IP; afi <= AFI_IP6; afi++) {
+    bgp_ls_routing_db->rib[afi][safi] = bgp_table_init(afi, safi);
   }
-
-  memset(&bgp_ls_dummy_peer, 0, sizeof(struct bgp_peer));
-  bgp_ls_dummy_peer.type = FUNC_TYPE_BGP_LS;
 }
 
 int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bgp_attr_extra *attr_extra, struct bgp_nlri *info, int type)
@@ -310,6 +304,17 @@ void bgp_ls_info_delete(struct bgp_peer *peer)
       }
 
       cdada_list_destroy(blsnmtd.list_del);
+    }
+
+    {
+      struct bgp_table *table;
+      afi_t afi;
+      safi_t safi = SAFI_UNICAST;
+
+      for (afi = AFI_IP; afi <= AFI_IP6; afi++) {
+	table = bgp_ls_routing_db->rib[afi][safi];
+	bgp_table_info_delete(peer, table, afi, safi);
+      }
     }
   }
 }
@@ -572,14 +577,15 @@ int bgp_ls_nlri_tlv_ip_reach_handler(u_char *pnt, int len, struct bgp_ls_nlri *b
 
     if (!ret) {
       if (!bms->skip_rib) {
-	// struct bgp_node *route = NULL;
+	struct bgp_node *route = NULL;
 	struct prefix pfx;
 
 	pfx.family = blsn->nlri.topo_pfx.p.pdesc.addr.family;
 	pfx.prefixlen = pfx_len; 
 	memcpy(&pfx.u.prefix, pnt, pfx_size);
 
-	bgp_node_get(&bgp_ls_dummy_peer, bgp_ls_routing_db->rib[afi][SAFI_UNICAST], &pfx);
+	route = bgp_node_get(blsn->peer, bgp_ls_routing_db->rib[afi][SAFI_UNICAST], &pfx);
+	bgp_unlock_node(blsn->peer, route);
       }
     }
   }
@@ -1223,4 +1229,105 @@ int bgp_ls_attr_tlv_msd_print(u_char *pnt, u_int16_t len, char *key, u_int8_t fl
   }
   
   return SUCCESS;
+}
+
+int bgp_lookup_node_match_cmp_bgp_ls(struct bgp_info *info, struct node_match_cmp_term2 *nmct2)
+{
+  /* No extra checks beyond prefix match */
+  return FALSE;
+}
+
+void bgp_ls_srcdst_lookup(struct packet_ptrs *pptrs, int type)
+{
+  struct bgp_misc_structs *bms;
+
+  struct in_addr pref4;
+  struct in6_addr pref6;
+  safi_t safi = SAFI_UNICAST;
+
+  struct bgp_node *result;
+  struct bgp_info *info = NULL;
+
+  pptrs->igp_src = NULL;
+  pptrs->igp_dst = NULL;
+  pptrs->igp_src_info = NULL;
+  pptrs->igp_dst_info = NULL;
+
+  bms = bgp_select_misc_db(type);
+  if (!bms) return;
+
+  if (pptrs->l3_proto == ETHERTYPE_IP) {
+    if (!pptrs->igp_src) {
+      memcpy(&pref4, &((struct pm_iphdr *)pptrs->iph_ptr)->ip_src, sizeof(struct in_addr));
+      bgp_node_match_ipv4(bgp_ls_routing_db->rib[AFI_IP][safi],
+			  &pref4, (struct bgp_peer *) pptrs->bgp_peer,
+			  bms->route_info_modulo,
+			  bgp_lookup_node_match_cmp_bgp_ls, NULL, bms->bnv,
+			  &result, &info);
+
+      if (result) {
+	pptrs->igp_src = (char *) &result->p;
+	pptrs->igp_src_info = (char *) result->info;
+	if (result->p.prefixlen > pptrs->lm_mask_src) {
+	  pptrs->lm_mask_src = result->p.prefixlen;
+	  pptrs->lm_method_src = NF_NET_IGP;
+	} 
+      }
+    }
+
+    if (!pptrs->igp_dst) {
+      memcpy(&pref4, &((struct pm_iphdr *)pptrs->iph_ptr)->ip_dst, sizeof(struct in_addr));
+      bgp_node_match_ipv4(bgp_ls_routing_db->rib[AFI_IP][safi],
+			  &pref4, (struct bgp_peer *) pptrs->bgp_peer,
+			  bms->route_info_modulo,
+			  bgp_lookup_node_match_cmp_bgp_ls, NULL, bms->bnv,
+			  &result, &info);
+
+      if (result) {
+	pptrs->igp_dst = (char *) &result->p;
+	pptrs->igp_dst_info = (char *) result->info;
+        if (result->p.prefixlen > pptrs->lm_mask_dst) {
+          pptrs->lm_mask_dst = result->p.prefixlen;
+          pptrs->lm_method_dst = NF_NET_IGP;
+        }
+      }
+    }
+  }
+  else if (pptrs->l3_proto == ETHERTYPE_IPV6) {
+    if (!pptrs->igp_src) {
+      memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_src, sizeof(struct in6_addr));
+      bgp_node_match_ipv6(bgp_ls_routing_db->rib[AFI_IP][safi],
+			  &pref6, (struct bgp_peer *) pptrs->bgp_peer,
+			  bms->route_info_modulo,
+			  bgp_lookup_node_match_cmp_bgp_ls, NULL, bms->bnv,
+			  &result, &info);
+
+      if (result) {
+        pptrs->igp_src = (char *) &result->p;
+        pptrs->igp_src_info = (char *) result->info;
+        if (result->p.prefixlen > pptrs->lm_mask_src) {
+          pptrs->lm_mask_src = result->p.prefixlen;
+          pptrs->lm_method_src = NF_NET_IGP;
+        }
+      }
+    }
+
+    if (!pptrs->igp_dst) {
+      memcpy(&pref6, &((struct ip6_hdr *)pptrs->iph_ptr)->ip6_dst, sizeof(struct in6_addr));
+      bgp_node_match_ipv6(bgp_ls_routing_db->rib[AFI_IP][safi],
+			  &pref6, (struct bgp_peer *) pptrs->bgp_peer,
+			  bms->route_info_modulo,
+			  bgp_lookup_node_match_cmp_bgp_ls, NULL, bms->bnv,
+			  &result, &info);
+
+      if (result) {
+	pptrs->igp_dst = (char *) &result->p;
+	pptrs->igp_dst_info = (char *) result->info;
+        if (result->p.prefixlen > pptrs->lm_mask_dst) {
+          pptrs->lm_mask_dst = result->p.prefixlen;
+          pptrs->lm_method_dst = NF_NET_IGP;
+        }
+      }
+    }
+  }
 }

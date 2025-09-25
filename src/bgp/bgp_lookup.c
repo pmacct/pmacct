@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -703,10 +703,11 @@ int bgp_lookup_node_match_cmp_bgp(struct bgp_info *info, struct node_match_cmp_t
   int no_match = FALSE;
 
   if (info->peer == nmct2->peer) {
+    /* Setting match conditions */
     if (nmct2->safi == SAFI_MPLS_VPN) no_match++;
-
     if (nmct2->peer->cap_add_paths.cap[nmct2->afi][nmct2->safi] && nmct2->peer_dst_ip) no_match++;
 
+    /* Checking match conditions */
     if (nmct2->safi == SAFI_MPLS_VPN) {
       if (info->attr_extra && !memcmp(&info->attr_extra->rd, nmct2->rd, sizeof(rd_t))) no_match--;
     }
