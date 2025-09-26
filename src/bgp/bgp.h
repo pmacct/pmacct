@@ -402,6 +402,7 @@ struct bgp_lg_rep_gp_data {
 #include "bgp_msg.h"
 #include "bgp_lookup.h"
 #include "bgp_util.h"
+#include "bgp_ls.h"
 
 /* prototypes */
 extern void bgp_daemon_wrapper();

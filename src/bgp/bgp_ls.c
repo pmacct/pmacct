@@ -23,7 +23,6 @@
 #include "pmacct.h"
 #include "pmacct-data.h"
 #include "bgp.h"
-#include "bgp_ls.h"
 #include "bgp_ls-data.h"
 
 #if defined WITH_RABBITMQ
@@ -579,12 +578,17 @@ int bgp_ls_nlri_tlv_ip_reach_handler(u_char *pnt, int len, struct bgp_ls_nlri *b
       if (!bms->skip_rib) {
 	struct bgp_node *route = NULL;
 	struct prefix pfx;
+	int saved_peer_type;
 
 	pfx.family = blsn->nlri.topo_pfx.p.pdesc.addr.family;
 	pfx.prefixlen = pfx_len; 
 	memcpy(&pfx.u.prefix, pnt, pfx_size);
 
+	saved_peer_type = blsn->peer->type;
+	blsn->peer->type = FUNC_TYPE_BGP_LS;
 	route = bgp_node_get(blsn->peer, bgp_ls_routing_db->rib[afi][SAFI_UNICAST], &pfx);
+	blsn->peer->type = saved_peer_type;
+
 	bgp_unlock_node(blsn->peer, route);
       }
     }

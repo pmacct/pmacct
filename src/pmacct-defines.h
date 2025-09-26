@@ -581,7 +581,8 @@ typedef u_int64_t pm_counter_t;
 #define NF_NET_NEW      0x00000002 /* Determine IP network prefixes from network files */
 #define NF_NET_BGP      0x00000004 /* Determine IP network prefixes from BGP peerings */
 #define NF_NET_STATIC   0x00000008 /* Determine IP network prefixes from static mask */
-#define NF_NET_IGP	0x00000010 /* Determine IP network prefixes from IGP */
+#define NF_NET_IGP	0x00000010 /* Determine IP network prefixes from IGP / BGP-LS */
+#define NF_NET_BGP_LS	NF_NET_IGP
 #define NF_NET_FALLBACK	0x80000000 /* Fallback flag */
 
 /* flow type */

@@ -589,7 +589,8 @@ int main(int argc,char **argv, char **envp)
 	  else {
 	    if ((list->cfg.nfacctd_net == NF_NET_NEW && !list->cfg.networks_file) || 
 	        (list->cfg.nfacctd_net == NF_NET_STATIC && !list->cfg.networks_mask) || 
-	        (list->cfg.nfacctd_net == NF_NET_BGP && !list->cfg.bgp_daemon && !list->cfg.bmp_daemon) ||
+	        ((list->cfg.nfacctd_net == NF_NET_BGP || list->cfg.nfacctd_net == NF_NET_BGP_LS) &&
+		 !list->cfg.bgp_daemon && !list->cfg.bmp_daemon) ||
 	        (list->cfg.nfacctd_net == NF_NET_IGP && !list->cfg.nfacctd_isis)) {
 	      Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'bmp_daemon', 'isis_daemon', 'networks_file', 'networks_mask' is specified. Exiting.\n\n", list->name, list->type.string);
 	      exit_gracefully(1);
@@ -1782,7 +1783,10 @@ void process_v5_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs *pp
       if (config.nfacctd_isis) isis_srcdst_lookup(pptrs);
       if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, &pptrs->bta2);
       if (config.nfacctd_flow_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, pptrs, &pptrs->bitr, NULL);
-      if (config.bgp_daemon) bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP, NULL);
+      if (config.bgp_daemon) {
+	bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP, NULL);
+	bgp_ls_srcdst_lookup(pptrs, FUNC_TYPE_BGP_LS);
+      }
       if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
       if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
       if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
@@ -2646,7 +2650,10 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           NF_mpls_vpn_rd_from_map(pptrs);
           NF_mpls_vpn_rd_from_ie90(pptrs);
           NF_mpls_vpn_rd_from_options(pptrs);
-	  if (config.bgp_daemon) bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP, NULL);
+	  if (config.bgp_daemon) {
+	    bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP, NULL);
+	    bgp_ls_srcdst_lookup(pptrs, FUNC_TYPE_BGP_LS);
+	  }
 	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
 	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
 	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
@@ -2726,7 +2733,10 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  NF_mpls_vpn_rd_from_ie90(&pptrsv->v6);
           NF_mpls_vpn_rd_from_options(&pptrsv->v6);
           NF_bgp_lookup_info_preload(&pptrsv->v6, &bl_info);
-	  if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->v6, FUNC_TYPE_BGP, &bl_info);
+	  if (config.bgp_daemon) {
+	    bgp_srcdst_lookup(&pptrsv->v6, FUNC_TYPE_BGP, &bl_info);
+	    bgp_ls_srcdst_lookup(&pptrsv->v6, FUNC_TYPE_BGP_LS);
+	  }
 	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->v6, &pptrsv->v6.bpas, NULL);
 	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->v6, &pptrsv->v6.blp, NULL);
 	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->v6, &pptrsv->v6.bmed, NULL);
@@ -2812,7 +2822,10 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           NF_mpls_vpn_rd_from_map(&pptrsv->vlan4);
           NF_mpls_vpn_rd_from_ie90(&pptrsv->vlan4);
           NF_mpls_vpn_rd_from_options(&pptrsv->vlan4);
-	  if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->vlan4, FUNC_TYPE_BGP, NULL);
+	  if (config.bgp_daemon) {
+	    bgp_srcdst_lookup(&pptrsv->vlan4, FUNC_TYPE_BGP, NULL);
+	    bgp_ls_srcdst_lookup(&pptrsv->vlan4, FUNC_TYPE_BGP_LS);
+	  }
 	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan4, &pptrsv->vlan4.bpas, NULL);
 	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlan4, &pptrsv->vlan4.blp, NULL);
 	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlan4, &pptrsv->vlan4.bmed, NULL);
@@ -2894,7 +2907,10 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           NF_mpls_vpn_rd_from_map(&pptrsv->vlan6);
           NF_mpls_vpn_rd_from_ie90(&pptrsv->vlan6);
           NF_mpls_vpn_rd_from_options(&pptrsv->vlan6);
-	  if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->vlan6, FUNC_TYPE_BGP, NULL);
+	  if (config.bgp_daemon) {
+	    bgp_srcdst_lookup(&pptrsv->vlan6, FUNC_TYPE_BGP, NULL);
+	    bgp_ls_srcdst_lookup(&pptrsv->vlan6, FUNC_TYPE_BGP_LS);
+	  }
 	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan6, &pptrsv->vlan6.bpas, NULL);
 	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlan6, &pptrsv->vlan6.blp, NULL);
 	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlan6, &pptrsv->vlan6.bmed, NULL);
@@ -2982,7 +2998,10 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           NF_mpls_vpn_rd_from_map(&pptrsv->mpls4);
           NF_mpls_vpn_rd_from_ie90(&pptrsv->mpls4);
           NF_mpls_vpn_rd_from_options(&pptrsv->mpls4);
-	  if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->mpls4, FUNC_TYPE_BGP, NULL);
+	  if (config.bgp_daemon) {
+	    bgp_srcdst_lookup(&pptrsv->mpls4, FUNC_TYPE_BGP, NULL);
+	    bgp_ls_srcdst_lookup(&pptrsv->mpls4, FUNC_TYPE_BGP_LS);
+	  }
 	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls4, &pptrsv->mpls4.bpas, NULL);
 	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->mpls4, &pptrsv->mpls4.blp, NULL);
 	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->mpls4, &pptrsv->mpls4.bmed, NULL);
@@ -3067,7 +3086,10 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           NF_mpls_vpn_rd_from_map(&pptrsv->mpls6);
           NF_mpls_vpn_rd_from_ie90(&pptrsv->mpls6);
           NF_mpls_vpn_rd_from_options(&pptrsv->mpls6);
-	  if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->mpls6, FUNC_TYPE_BGP, NULL);
+	  if (config.bgp_daemon) {
+	    bgp_srcdst_lookup(&pptrsv->mpls6, FUNC_TYPE_BGP, NULL);
+	    bgp_ls_srcdst_lookup(&pptrsv->mpls6, FUNC_TYPE_BGP_LS);
+	  }
 	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls6, &pptrsv->mpls6.bpas, NULL);
 	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->mpls6, &pptrsv->mpls6.blp, NULL);
 	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->mpls6, &pptrsv->mpls6.bmed, NULL);
@@ -3164,7 +3186,10 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           NF_mpls_vpn_rd_from_map(&pptrsv->vlanmpls4);
           NF_mpls_vpn_rd_from_ie90(&pptrsv->vlanmpls4);
           NF_mpls_vpn_rd_from_options(&pptrsv->vlanmpls4);
-	  if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->vlanmpls4, FUNC_TYPE_BGP, NULL);
+	  if (config.bgp_daemon) {
+	    bgp_srcdst_lookup(&pptrsv->vlanmpls4, FUNC_TYPE_BGP, NULL);
+	    bgp_ls_srcdst_lookup(&pptrsv->vlanmpls4, FUNC_TYPE_BGP_LS);
+	  }
 	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bpas, NULL);
 	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.blp, NULL);
 	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bmed, NULL);
@@ -3258,7 +3283,10 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
           NF_mpls_vpn_rd_from_map(&pptrsv->vlanmpls6);
           NF_mpls_vpn_rd_from_ie90(&pptrsv->vlanmpls6);
           NF_mpls_vpn_rd_from_options(&pptrsv->vlanmpls6);
-	  if (config.bgp_daemon) bgp_srcdst_lookup(&pptrsv->vlanmpls6, FUNC_TYPE_BGP, NULL);
+	  if (config.bgp_daemon) {
+	    bgp_srcdst_lookup(&pptrsv->vlanmpls6, FUNC_TYPE_BGP, NULL);
+	    bgp_ls_srcdst_lookup(&pptrsv->vlanmpls6, FUNC_TYPE_BGP_LS);
+	  }
 	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bpas, NULL);
 	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.blp, NULL);
 	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bmed, NULL);
@@ -3326,7 +3354,10 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.nfacctd_isis) isis_srcdst_lookup(pptrs);
 	  if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, &pptrs->bta2);
 	  if (config.nfacctd_flow_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, pptrs, &pptrs->bitr, NULL);
-	  if (config.bgp_daemon) bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP, NULL);
+	  if (config.bgp_daemon) {
+	    bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP, NULL);
+	    bgp_ls_srcdst_lookup(pptrs, FUNC_TYPE_BGP_LS);
+	  }
 	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
 	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
 	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);
@@ -3341,7 +3372,10 @@ void process_v9_packet(unsigned char *pkt, u_int16_t len, struct packet_ptrs_vec
 	  if (config.nfacctd_isis) isis_srcdst_lookup(pptrs);
 	  if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, &pptrs->bta2);
 	  if (config.nfacctd_flow_to_rd_map) NF_find_id((struct id_table *)pptrs->bitr_table, pptrs, &pptrs->bitr, NULL);
-	  if (config.bgp_daemon) bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP, NULL);
+	  if (config.bgp_daemon) {
+	    bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP, NULL);
+	    bgp_ls_srcdst_lookup(pptrs, FUNC_TYPE_BGP_LS);
+	  }
 	  if (config.bgp_daemon_peer_as_src_map) NF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
 	  if (config.bgp_daemon_src_local_pref_map) NF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
 	  if (config.bgp_daemon_src_med_map) NF_find_id((struct id_table *)pptrs->bmed_table, pptrs, &pptrs->bmed, NULL);

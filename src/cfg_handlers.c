@@ -5939,6 +5939,8 @@ int cfg_key_nfacctd_net(char *filename, char *name, char *value_ptr)
     value = NF_NET_BGP;
   else if (!strcmp(value_ptr, "igp"))
     value = NF_NET_IGP;
+  else if (!strcmp(value_ptr, "bgp-ls"))
+    value = NF_NET_BGP_LS;
   else if (!strcmp(value_ptr, "fallback") || !strcmp(value_ptr, "longest")) {
     value = NF_NET_FALLBACK;
 
