@@ -110,6 +110,14 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
   int rem_len, rem_nlri_len, ret, idx, log_type = 0;
   u_int16_t tmp16, nlri_len, tlv_type, tlv_len;
 
+  /* RIB vars */
+  struct bgp_node *route = NULL;
+  struct bgp_info *ri = NULL, *new = NULL;
+  struct prefix pfx;
+  int pfx_size;
+  u_int32_t modulo = 0;
+  afi_t afi;
+
   if (!peer) goto exit_fail_lane;
 
   bms = bgp_select_misc_db(peer->type);
@@ -153,10 +161,32 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
       ret = cdada_map_find(bgp_ls_nlri_tlv_map, &tlv_type, (void **) &tlv_hdlr);
       if (ret == CDADA_SUCCESS && tlv_hdlr) {
 	ret = (*tlv_hdlr)(pnt, tlv_len, &blsn);
+	if (ret == ERR) {
+	  bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+          Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): [%s] BGP-LS Malformed TLV %u\n", config.name, config.type, bgp_peer_str, tlv_type);
+	  goto exit_fail_lane;
+	}
       }
       else {
 	bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
         Log(LOG_DEBUG, "DEBUG ( %s/%s/BGP ): [%s] BGP-LS Unknown TLV %u\n", config.name, config.type, bgp_peer_str, tlv_type);
+      }
+    }
+  }
+
+  if (tlv_type == BGP_LS_IP_REACH) {
+    if (!bms->skip_rib) {
+      pfx.family = blsn.nlri.topo_pfx.p.pdesc.addr.family;
+      pfx.prefixlen = blsn.nlri.topo_pfx.p.pdesc.mask.len;
+      pfx_size = ((blsn.nlri.topo_pfx.p.pdesc.mask.len + 7) / 8);
+      memcpy(&pfx.u.prefix, pnt, pfx_size);
+      afi = family2afi(pfx.family);
+
+      route = bgp_node_get(peer, bgp_ls_routing_db->rib[afi][blsn.safi], &pfx);
+      for (ri = route->info[modulo]; ri; ri = ri->next) {
+	if (ri->peer == peer) {
+	  break;
+	}
       }
     }
   }
@@ -185,11 +215,29 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
 	      free(attr_hdr_prev);
 	    }
 	  }
-	}
+ 	}
       }
-    }
 
-    log_type = BGP_LOG_TYPE_UPDATE;
+      if (tlv_type == BGP_LS_IP_REACH) {
+	/* New info */
+	if (!ri) {
+	  new = bgp_info_new(peer);
+
+	  if (new) {
+	    new->peer = peer;
+	    bgp_info_add(peer, route, new, modulo);
+	  }
+	  else {
+	    bgp_unlock_node(peer, route);
+	    goto exit_fail_lane;
+	  }
+	}
+
+	bgp_unlock_node(peer, route);
+      }
+
+      log_type = BGP_LOG_TYPE_UPDATE;
+    }
   }
   else if (type == BGP_NLRI_WITHDRAW) {
     struct bgp_attr_ls *blsa = NULL;
@@ -204,6 +252,15 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
       else {
 	bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
         Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS failed NLRI Withdraw\n", config.name, config.type, bgp_peer_str);
+      }
+
+      if (tlv_type == BGP_LS_IP_REACH) {
+	/* Withdraw specified route from routing table. */
+	if (ri) {
+	  bgp_info_delete(peer, route, ri, modulo);
+	}
+
+	bgp_unlock_node(peer, route);
       }
     }
 
@@ -517,7 +574,6 @@ int bgp_ls_nlri_tlv_ip_reach_handler(u_char *pnt, int len, struct bgp_ls_nlri *b
   struct bgp_misc_structs *bms;
   int ret = SUCCESS, pfx_size;
   u_int8_t pfx_len;
-  afi_t afi;
 
   if (!pnt || !len || !blsn) {
     return ERR;
@@ -554,7 +610,6 @@ int bgp_ls_nlri_tlv_ip_reach_handler(u_char *pnt, int len, struct bgp_ls_nlri *b
 
       blsn->nlri.topo_pfx.p.pdesc.mask.family = AF_INET;
       blsn->nlri.topo_pfx.p.pdesc.mask.len = pfx_len;
-      afi = AFI_IP;
     }
     /* IPv6 */
     else if (blsn->type == 4 && pfx_size <= 16) {
@@ -563,7 +618,6 @@ int bgp_ls_nlri_tlv_ip_reach_handler(u_char *pnt, int len, struct bgp_ls_nlri *b
 
       blsn->nlri.topo_pfx.p.pdesc.mask.family = AF_INET6;
       blsn->nlri.topo_pfx.p.pdesc.mask.len = pfx_len;
-      afi = AFI_IP6;
     }
     else {
       char bgp_peer_str[INET6_ADDRSTRLEN];
@@ -572,25 +626,6 @@ int bgp_ls_nlri_tlv_ip_reach_handler(u_char *pnt, int len, struct bgp_ls_nlri *b
       Log(LOG_WARNING, "WARN ( %s/%s/BGP ): [%s] BGP-LS Wrong Length (pfx_size) TLV %u\n", config.name, config.type, bgp_peer_str, BGP_LS_IP_REACH);
 
       ret = ERR;
-    }
-
-    if (!ret) {
-      if (!bms->skip_rib) {
-	struct bgp_node *route = NULL;
-	struct prefix pfx;
-	int saved_peer_type;
-
-	pfx.family = blsn->nlri.topo_pfx.p.pdesc.addr.family;
-	pfx.prefixlen = pfx_len; 
-	memcpy(&pfx.u.prefix, pnt, pfx_size);
-
-	saved_peer_type = blsn->peer->type;
-	blsn->peer->type = FUNC_TYPE_BGP_LS;
-	route = bgp_node_get(blsn->peer, bgp_ls_routing_db->rib[afi][SAFI_UNICAST], &pfx);
-	blsn->peer->type = saved_peer_type;
-
-	bgp_unlock_node(blsn->peer, route);
-      }
     }
   }
 
