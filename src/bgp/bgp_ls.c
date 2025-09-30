@@ -117,6 +117,7 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
   int pfx_size;
   u_int32_t modulo = 0;
   afi_t afi;
+  safi_t safi;
 
   if (!peer) goto exit_fail_lane;
 
@@ -181,8 +182,9 @@ int bgp_ls_nlri_parse(struct bgp_msg_data *bmd, struct bgp_attr *attr, struct bg
       pfx_size = ((blsn.nlri.topo_pfx.p.pdesc.mask.len + 7) / 8);
       memcpy(&pfx.u.prefix, pnt, pfx_size);
       afi = family2afi(pfx.family);
+      safi = SAFI_UNICAST;
 
-      route = bgp_node_get(peer, bgp_ls_routing_db->rib[afi][blsn.safi], &pfx);
+      route = bgp_node_get(peer, bgp_ls_routing_db->rib[afi][safi], &pfx);
       for (ri = route->info[modulo]; ri; ri = ri->next) {
 	if (ri->peer == peer) {
 	  break;
