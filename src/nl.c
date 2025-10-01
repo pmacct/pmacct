@@ -29,7 +29,6 @@
 #include "ip_flow.h"
 #include "net_aggr.h"
 #include "thread_pool.h"
-#include "isis/isis.h"
 #include "bgp/bgp.h"
 #include "bmp/bmp.h"
 #if defined (WITH_NDPI)
@@ -148,13 +147,10 @@ void pm_pcap_cb(u_char *user, const struct pcap_pkthdr *pkthdr, const u_char *bu
 	}
 #endif
 
-        if (config.nfacctd_isis) {
-          isis_srcdst_lookup(&pptrs);
-        }
         if (config.bgp_daemon) {
           BTA_find_id((struct id_table *)pptrs.bta_table, &pptrs, &pptrs.bta, &pptrs.bta2);
-          bgp_srcdst_lookup(&pptrs, FUNC_TYPE_BGP, NULL);
 	  bgp_ls_srcdst_lookup(&pptrs, FUNC_TYPE_BGP_LS);
+          bgp_srcdst_lookup(&pptrs, FUNC_TYPE_BGP, NULL);
         }
         if (config.bgp_daemon_peer_as_src_map) PM_find_id((struct id_table *)pptrs.bpas_table, &pptrs, &pptrs.bpas, NULL);
         if (config.bgp_daemon_src_local_pref_map) PM_find_id((struct id_table *)pptrs.blp_table, &pptrs, &pptrs.blp, NULL);

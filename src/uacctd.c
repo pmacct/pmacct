@@ -32,7 +32,6 @@
 #include "net_aggr.h"
 #include "thread_pool.h"
 #include "bgp/bgp.h"
-#include "isis/isis.h"
 #include "bmp/bmp.h"
 #include <netinet/ip.h>
 #include <libnfnetlink/libnfnetlink.h>
@@ -721,9 +720,8 @@ int main(int argc,char **argv, char **envp)
                 (list->cfg.nfacctd_net == NF_NET_STATIC && !list->cfg.networks_mask) ||
                 ((list->cfg.nfacctd_net == NF_NET_BGP || list->cfg.nfacctd_net == NF_NET_BGP_LS)
 		 && !list->cfg.bgp_daemon && !list->cfg.bmp_daemon) ||
-                (list->cfg.nfacctd_net == NF_NET_IGP && !list->cfg.nfacctd_isis) ||
                 (list->cfg.nfacctd_net == NF_NET_KEEP)) {
-              Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'bmp_daemon', 'isis_daemon', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
+              Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'bmp_daemon', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
               exit_gracefully(1);
             }
             if (list->cfg.nfacctd_net & NF_NET_FALLBACK && list->cfg.networks_file)
@@ -917,16 +915,6 @@ int main(int argc,char **argv, char **envp)
   if (config.bgp_daemon && config.bmp_daemon) {
     Log(LOG_ERR, "ERROR ( %s/core ): bgp_daemon and bmp_daemon are currently mutual exclusive. Exiting.\n", config.name);
     exit_gracefully(1);
-  }
-
-  /* starting the ISIS threa */
-  if (config.nfacctd_isis) {
-    req.bpf_filter = TRUE;
-
-    nfacctd_isis_wrapper();
-
-    /* Let's give the ISIS thread some advantage to create its structures */
-    sleep(DEFAULT_SLOTH_SLEEP_TIME);
   }
 
   /* starting the BGP thread */

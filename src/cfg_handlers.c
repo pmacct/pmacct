@@ -5947,10 +5947,12 @@ int cfg_key_nfacctd_net(char *filename, char *name, char *value_ptr)
     if (config.acct_type == ACCT_NF || config.acct_type == ACCT_SF) {
       value |= NF_NET_KEEP;
       value |= NF_NET_BGP;
+      value |= NF_NET_BGP_LS;
       value |= NF_NET_IGP;
     }
     else {
       value |= NF_NET_BGP;
+      value |= NF_NET_BGP_LS;
       value |= NF_NET_IGP;
     }
   }

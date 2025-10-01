@@ -30,8 +30,6 @@
 #include "plugin_hooks.h"
 #include "pkt_handlers.h"
 #include "bgp/bgp.h"
-#include "isis/prefix.h"
-#include "isis/table.h"
 #if defined (WITH_NDPI)
 #include "ndpi/ndpi.h"
 #endif
@@ -1486,7 +1484,7 @@ void bgp_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_pt
 void igp_src_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct route_node *ret = (struct route_node *) pptrs->igp_src;
+  struct bgp_node *ret = (struct bgp_node *) pptrs->igp_src;
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, FALSE, chptr->plugin->cfg.nfacctd_net, NF_NET_IGP)) return;
@@ -1497,7 +1495,7 @@ void igp_src_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs
 void igp_dst_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
   struct pkt_data *pdata = (struct pkt_data *) *data;
-  struct route_node *ret = (struct route_node *) pptrs->igp_dst;
+  struct bgp_node *ret = (struct bgp_node *) pptrs->igp_dst;
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_IGP)) return;
@@ -1507,15 +1505,29 @@ void igp_dst_nmask_handler(struct channels_list_entry *chptr, struct packet_ptrs
 
 void igp_peer_dst_ip_handler(struct channels_list_entry *chptr, struct packet_ptrs *pptrs, char **data)
 {
-  struct route_node *ret = (struct route_node *) pptrs->igp_dst;
+  struct bgp_info *nh_info = (struct bgp_info *) pptrs->igp_dst_info;
   struct pkt_bgp_primitives *pbgp = (struct pkt_bgp_primitives *) ((*data) + chptr->extras.off_pkt_bgp_primitives);
 
   /* check network-related primitives against fallback scenarios */
   if (!evaluate_lm_method(pptrs, TRUE, chptr->plugin->cfg.nfacctd_net, NF_NET_IGP)) return;
 
-  if (ret) {
-    pbgp->peer_dst_ip.family = AF_INET;
-    memcpy(&pbgp->peer_dst_ip.address.ipv4, &ret->p.adv_router, 4);
+  if (pptrs->igp_dst_info) {
+    nh_info = (struct bgp_info *) pptrs->bgp_dst_info;
+  }
+        
+  if (nh_info && nh_info->attr) {
+    if (nh_info->attr->mp_nexthop.family == AF_INET) {
+      pbgp->peer_dst_ip.family = AF_INET;
+      memcpy(&pbgp->peer_dst_ip.address.ipv4, &nh_info->attr->mp_nexthop.address.ipv4, 4);
+    }
+    else if (nh_info->attr->mp_nexthop.family == AF_INET6) {
+      pbgp->peer_dst_ip.family = AF_INET6;
+      memcpy(&pbgp->peer_dst_ip.address.ipv6, &nh_info->attr->mp_nexthop.address.ipv6, 16);
+    }
+    else {
+      pbgp->peer_dst_ip.family = AF_INET;
+      pbgp->peer_dst_ip.address.ipv4.s_addr = nh_info->attr->nexthop.s_addr;
+    }
   }
 }
 

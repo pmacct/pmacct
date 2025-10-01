@@ -35,7 +35,6 @@
 #include "ip_frag.h"
 #include "net_aggr.h"
 #include "crc32.h"
-#include "isis/isis.h"
 #include "bmp/bmp.h"
 #if defined WITH_EBPF
 #include "ebpf/ebpf_rp_balancer.h"
@@ -565,9 +564,8 @@ int main(int argc,char **argv, char **envp)
             if ((list->cfg.nfacctd_net == NF_NET_NEW && !list->cfg.networks_file) ||
                 (list->cfg.nfacctd_net == NF_NET_STATIC && !list->cfg.networks_mask) ||
                 ((list->cfg.nfacctd_net == NF_NET_BGP || list->cfg.nfacctd_net == NF_NET_BGP_LS)
-		 && !list->cfg.bgp_daemon && !list->cfg.bmp_daemon) ||
-                (list->cfg.nfacctd_net == NF_NET_IGP && !list->cfg.nfacctd_isis)) {
-              Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'bmp_daemon', 'isis_daemon', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
+		 && !list->cfg.bgp_daemon && !list->cfg.bmp_daemon)) {
+              Log(LOG_ERR, "ERROR ( %s/%s ): network aggregation selected but none of 'bgp_daemon', 'bmp_daemon', 'networks_file', 'networks_mask' is specified. Exiting ...\n\n", list->name, list->type.string);
               exit_gracefully(1);
             }
             if (list->cfg.nfacctd_net & NF_NET_FALLBACK && list->cfg.networks_file)
@@ -837,16 +835,6 @@ int main(int argc,char **argv, char **envp)
   if (config.bgp_daemon && config.bmp_daemon) {
     Log(LOG_ERR, "ERROR ( %s/core ): bgp_daemon and bmp_daemon are currently mutual exclusive. Exiting.\n", config.name);
     exit_gracefully(1);
-  }
-
-  /* starting the ISIS threa */
-  if (config.nfacctd_isis) {
-    req.bpf_filter = TRUE;
-
-    nfacctd_isis_wrapper();
-
-    /* Let's give the ISIS thread some advantage to create its structures */
-    sleep(DEFAULT_SLOTH_SLEEP_TIME);
   }
 
   /* starting the BGP thread */
@@ -1842,12 +1830,11 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
 
       pptrs->l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_isis) isis_srcdst_lookup(pptrs);
       if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, pptrs, &pptrs->bta, &pptrs->bta2);
       if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, pptrs, &pptrs->bitr, NULL);
       if (config.bgp_daemon) {
-	bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP, NULL);
 	bgp_ls_srcdst_lookup(pptrs, FUNC_TYPE_BGP_LS);
+	bgp_srcdst_lookup(pptrs, FUNC_TYPE_BGP, NULL);
       }
       if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, pptrs, &pptrs->bpas, NULL);
       if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, pptrs, &pptrs->blp, NULL);
@@ -1881,12 +1868,11 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
 
       pptrsv->v6.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->v6);
       if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->v6, &pptrsv->v6.bta, &pptrsv->v6.bta2);
       if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->v6, &pptrsv->v6.bitr, NULL);
       if (config.bgp_daemon) {
-	bgp_srcdst_lookup(&pptrsv->v6, FUNC_TYPE_BGP, NULL);
 	bgp_ls_srcdst_lookup(&pptrsv->v6, FUNC_TYPE_BGP_LS);
+	bgp_srcdst_lookup(&pptrsv->v6, FUNC_TYPE_BGP, NULL);
       }
       if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->v6, &pptrsv->v6.bpas, NULL);
       if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->v6, &pptrsv->v6.blp, NULL);
@@ -1921,12 +1907,11 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
 
       pptrsv->vlan4.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->vlan4);
       if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan4, &pptrsv->vlan4.bta, &pptrsv->vlan4.bta2);
       if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlan4, &pptrsv->vlan4.bitr, NULL);
       if (config.bgp_daemon) {
-	bgp_srcdst_lookup(&pptrsv->vlan4, FUNC_TYPE_BGP, NULL);
 	bgp_ls_srcdst_lookup(&pptrsv->vlan4, FUNC_TYPE_BGP_LS);
+	bgp_srcdst_lookup(&pptrsv->vlan4, FUNC_TYPE_BGP, NULL);
       }
       if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan4, &pptrsv->vlan4.bpas, NULL);
       if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlan4, &pptrsv->vlan4.blp, NULL);
@@ -1961,12 +1946,11 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
 
       pptrsv->vlan6.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->vlan6);
       if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlan6, &pptrsv->vlan6.bta, &pptrsv->vlan6.bta2);
       if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlan6, &pptrsv->vlan6.bitr, NULL);
       if (config.bgp_daemon) {
-	bgp_srcdst_lookup(&pptrsv->vlan6, FUNC_TYPE_BGP, NULL);
 	bgp_ls_srcdst_lookup(&pptrsv->vlan6, FUNC_TYPE_BGP_LS);
+	bgp_srcdst_lookup(&pptrsv->vlan6, FUNC_TYPE_BGP, NULL);
       }
       if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlan6, &pptrsv->vlan6.bpas, NULL);
       if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlan6, &pptrsv->vlan6.blp, NULL);
@@ -2014,12 +1998,11 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
 
       pptrsv->mpls4.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->mpls4);
       if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls4, &pptrsv->mpls4.bta, &pptrsv->mpls4.bta2);
       if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->mpls4, &pptrsv->mpls4.bitr, NULL);
       if (config.bgp_daemon) {
-	bgp_srcdst_lookup(&pptrsv->mpls4, FUNC_TYPE_BGP, NULL);
 	bgp_ls_srcdst_lookup(&pptrsv->mpls4, FUNC_TYPE_BGP_LS);
+	bgp_srcdst_lookup(&pptrsv->mpls4, FUNC_TYPE_BGP, NULL);
       }
       if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls4, &pptrsv->mpls4.bpas, NULL);
       if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->mpls4, &pptrsv->mpls4.blp, NULL);
@@ -2066,12 +2049,11 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
 
       pptrsv->mpls6.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->mpls6);
       if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->mpls6, &pptrsv->mpls6.bta, &pptrsv->mpls6.bta2);
       if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->mpls6, &pptrsv->mpls6.bitr, NULL);
       if (config.bgp_daemon) {
-	bgp_srcdst_lookup(&pptrsv->mpls6, FUNC_TYPE_BGP, NULL);
 	bgp_ls_srcdst_lookup(&pptrsv->mpls6, FUNC_TYPE_BGP_LS);
+	bgp_srcdst_lookup(&pptrsv->mpls6, FUNC_TYPE_BGP, NULL);
       }
       if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->mpls6, &pptrsv->mpls6.bpas, NULL);
       if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->mpls6, &pptrsv->mpls6.blp, NULL);
@@ -2119,12 +2101,11 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
 
       pptrsv->vlanmpls4.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->vlanmpls4);
       if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bta, &pptrsv->vlanmpls4.bta2);
       if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bitr, NULL);
       if (config.bgp_daemon) {
-	bgp_srcdst_lookup(&pptrsv->vlanmpls4, FUNC_TYPE_BGP, NULL);
 	bgp_ls_srcdst_lookup(&pptrsv->vlanmpls4, FUNC_TYPE_BGP_LS);
+	bgp_srcdst_lookup(&pptrsv->vlanmpls4, FUNC_TYPE_BGP, NULL);
       }
       if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.bpas, NULL);
       if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlanmpls4, &pptrsv->vlanmpls4.blp, NULL);
@@ -2172,12 +2153,11 @@ void finalizeSample(SFSample *sample, struct packet_ptrs_vector *pptrsv, struct 
 
       pptrsv->vlanmpls6.l4_proto = sample->dcd_ipProtocol;
 
-      if (config.nfacctd_isis) isis_srcdst_lookup(&pptrsv->vlanmpls6);
       if (config.bgp_daemon_to_xflow_agent_map) BTA_find_id((struct id_table *)pptrs->bta_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bta, &pptrsv->vlanmpls6.bta2);
       if (config.nfacctd_flow_to_rd_map) SF_find_id((struct id_table *)pptrs->bitr_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bitr, NULL);
       if (config.bgp_daemon) {
-	bgp_srcdst_lookup(&pptrsv->vlanmpls6, FUNC_TYPE_BGP, NULL);
 	bgp_ls_srcdst_lookup(&pptrsv->vlanmpls6, FUNC_TYPE_BGP_LS);
+	bgp_srcdst_lookup(&pptrsv->vlanmpls6, FUNC_TYPE_BGP, NULL);
       }
       if (config.bgp_daemon_peer_as_src_map) SF_find_id((struct id_table *)pptrs->bpas_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.bpas, NULL);
       if (config.bgp_daemon_src_local_pref_map) SF_find_id((struct id_table *)pptrs->blp_table, &pptrsv->vlanmpls6, &pptrsv->vlanmpls6.blp, NULL);
