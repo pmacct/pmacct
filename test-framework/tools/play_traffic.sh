@@ -10,6 +10,7 @@ if [ -z "$1" ]; then
   print_help
   exit 1
 fi
+
 if [ -n "$2" ] && [ "$2" != "-d" ]; then
   print_help
   exit 1
