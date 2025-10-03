@@ -45,7 +45,7 @@ def read_and_compare_messages(consumer: KMessageReader, params: KModuleParams, j
         logger.warning('No messages read by kafka consumer in ' + str(wait_time) + ' second(s)')
         return False
     elif len(messages) < line_count:
-        logger.warning('Received ' + str(len(messages)) + ' messages instead of ' + str(line_count))
+        logger.warning('Received ' + str(len(messages)) + ' messages instead of ' + str(line_count) + ' in ' + str(wait_time) + ' second(s)')
         return False
     elif line_count == len(messages):
         logger.info('Received the expected number of messages (' + str(len(messages)) + ')')
