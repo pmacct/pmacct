@@ -35,7 +35,7 @@
 #include "plugin_cmn_avro.h"
 #endif
 
-struct bgp_rt_structs *bgp_ls_routing_db;
+struct bgp_rt_structs *bgp_ls_routing_db = NULL;
 
 void bgp_ls_init()
 {
@@ -364,7 +364,7 @@ void bgp_ls_info_delete(struct bgp_peer *peer)
       cdada_list_destroy(blsnmtd.list_del);
     }
 
-    {
+    if (bgp_ls_routing_db) {
       struct bgp_table *table;
       afi_t afi;
       safi_t safi = SAFI_UNICAST;
