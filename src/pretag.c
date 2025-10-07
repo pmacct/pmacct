@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -27,8 +27,6 @@
 #include "plugin_hooks.h"
 #include "tee_plugin/tee_recvs.h"
 #include "tee_plugin/tee_recvs-data.h"
-#include "isis/isis.h"
-#include "isis/isis-data.h"
 #include "bgp/bgp_xcs.h"
 #include "bgp/bgp_xcs-data.h"
 #include "crc32.h"
@@ -93,10 +91,7 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 
   if (req->map_row_len) map_row_len = req->map_row_len;
   else if (config.maps_row_len) map_row_len = config.maps_row_len;
-  else {
-    if (acct_type == MAP_IGP) map_row_len = LARGEBUFLEN;
-    else map_row_len = SRVBUFLEN;
-  }
+  else map_row_len = SRVBUFLEN;
 
   buf = (char *) malloc(map_row_len);
   if (!buf) {
@@ -158,7 +153,6 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
     memset(tmp.e, 0, sz);
     if (t) memset(t->e, 0, sz);
 
-    if (acct_type == MAP_IGP) igp_daemon_map_initialize(filename, req);
     if (acct_type == MAP_CUSTOM_PRIMITIVES) custom_primitives_map_initialize();
 
     /* first stage: reading Agent ID file and arranging it in a temporary memory table */
@@ -185,7 +179,6 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
 	    strip_quotes(buf);
 
 	    /* resetting the entry and enforcing defaults */
-	    if (acct_type == MAP_IGP) memset(&ime, 0, sizeof(ime));
             memset(&tmp.e[tmp.num], 0, sizeof(struct id_entry));
 	    tmp.e[tmp.num].ret = FALSE;
 
@@ -318,24 +311,6 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
                   }
                   key = NULL; value = NULL;
 		}
-                else if (acct_type == MAP_IGP) {
-                  for (dindex = 0; strcmp(igp_daemon_map_dictionary[dindex].key, ""); dindex++) {
-                    if (!strcmp(igp_daemon_map_dictionary[dindex].key, key)) {
-                      err = (*igp_daemon_map_dictionary[dindex].func)(filename, NULL, value, req, acct_type);
-                      break;
-                    }
-                    else err = E_NOTFOUND; /* key not found */
-                  }
-                  if (err) {
-                    if (err == E_NOTFOUND) Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line ignored because of unknown key '%s'.\n",
-                                                config.name, config.type, filename, tot_lines, key);
-                    else {
-		      Log(LOG_WARNING, "WARN ( %s/%s ): [%s:%u] Line ignored.\n", config.name, config.type, filename, tot_lines);
-		      ignoring = TRUE;
-		    }
-                  }
-                  key = NULL; value = NULL;
-                }
                 else if (acct_type == MAP_CUSTOM_PRIMITIVES) {
                   for (dindex = 0; strcmp(custom_primitives_map_dictionary[dindex].key, ""); dindex++) {
                     if (!strcmp(custom_primitives_map_dictionary[dindex].key, key)) {
@@ -581,7 +556,6 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
               }
 	      else if (acct_type == MAP_TEE_RECVS) tee_recvs_map_validate(filename, tot_lines, req); 
 	      else if (acct_type == MAP_BGP_XCS) bgp_xcs_map_validate(filename, req); 
-	      else if (acct_type == MAP_IGP) igp_daemon_map_validate(filename, req); 
 	      else if (acct_type == MAP_CUSTOM_PRIMITIVES) custom_primitives_map_validate(filename, req); 
 	      else if (acct_type == MAP_PCAP_INTERFACES) pm_pcap_interfaces_map_validate(filename, req); 
 	    }
@@ -592,8 +566,6 @@ void load_id_file(int acct_type, char *filename, struct id_table *t, struct plug
       }
     }
     fclose(file);
-
-    if (acct_type == MAP_IGP) igp_daemon_map_finalize(filename, req);
 
     if (t) {
       stat(filename, &st);

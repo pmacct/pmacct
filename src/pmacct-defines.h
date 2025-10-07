@@ -83,8 +83,6 @@
 #define LONGLONG_RETRY INT_MAX
 
 #define DEFAULT_SNAPLEN 128
-#define SNAPLEN_ISIS_MIN 512
-#define SNAPLEN_ISIS_DEFAULT 1476
 
 #define SUPERSHORTBUFLEN (16+MOREBUFSZ)
 #define VERYSHORTBUFLEN (32+MOREBUFSZ)
@@ -162,10 +160,9 @@
 #define MAP_FLOW_TO_RD		1004	/* flow_to_rd_map */
 #define MAP_SAMPLING		1005	/* sampling_map */
 #define MAP_TEE_RECVS		1006	/* tee_receivers */
-#define MAP_IGP			1007	/* igp_daemon_map */
-#define MAP_CUSTOM_PRIMITIVES	1008	/* aggregate_primitives */
-#define MAP_BGP_XCS		1009	/* bgp_xconnect_map */
-#define MAP_PCAP_INTERFACES	1010	/* pcap_interfaces_map */
+#define MAP_CUSTOM_PRIMITIVES	1007	/* aggregate_primitives */
+#define MAP_BGP_XCS		1008	/* bgp_xconnect_map */
+#define MAP_PCAP_INTERFACES	1009	/* pcap_interfaces_map */
 
 /* PRIMITIVES DEFINITION: START */
 /* internal: first registry, ie. what_to_count, aggregation, etc. */

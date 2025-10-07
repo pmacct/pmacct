@@ -649,15 +649,6 @@ static const struct _dictionary_line dictionary[] = {
   {"rpki_rtr_cache_pipe_size", cfg_key_rpki_rtr_cache_pipe_size},
   {"rpki_rtr_cache_ipprec", cfg_key_rpki_rtr_cache_ip_precedence},
   {"flow_to_rd_map", cfg_key_nfacctd_flow_to_rd_map},
-  {"isis_daemon", cfg_key_nfacctd_isis},
-  {"isis_daemon_ip", cfg_key_nfacctd_isis_ip},
-  {"isis_daemon_net", cfg_key_nfacctd_isis_net},
-  {"isis_daemon_iface", cfg_key_nfacctd_isis_iface},
-  {"isis_daemon_mtu", cfg_key_nfacctd_isis_mtu},
-  {"isis_daemon_msglog", cfg_key_nfacctd_isis_msglog},
-  {"igp_daemon", cfg_key_nfacctd_isis},
-  {"igp_daemon_map", cfg_key_igp_daemon_map},
-  {"igp_daemon_map_msglog", cfg_key_igp_daemon_map_msglog},
 #if defined WITH_GEOIPV2
   {"geoipv2_file", cfg_key_geoipv2_file},
 #endif

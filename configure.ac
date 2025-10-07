@@ -1339,10 +1339,10 @@ AC_CONFIG_FILES([
             src/Makefile src/external_libs/Makefile \
             src/nfprobe_plugin/Makefile \
             src/sfprobe_plugin/Makefile src/bgp/Makefile \
-            src/tee_plugin/Makefile src/isis/Makefile \
-            src/bmp/Makefile src/rpki/Makefile \
-            src/telemetry/Makefile src/ndpi/Makefile \
-            src/filters/Makefile examples/lg/Makefile \
-            src/ebpf/Makefile examples/custom/Makefile ])
+            src/tee_plugin/Makefile src/bmp/Makefile \
+	    src/rpki/Makefile src/telemetry/Makefile \
+	    src/ndpi/Makefile src/filters/Makefile \
+	    examples/lg/Makefile src/ebpf/Makefile \
+	    examples/custom/Makefile ])
 
 AC_OUTPUT

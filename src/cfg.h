@@ -503,14 +503,6 @@ struct configuration {
   int bmp_dump_kafka_broker_port;
   char *bmp_dump_kafka_config_file;
   char *bmp_dump_kafka_avro_schema_registry;
-  int nfacctd_isis;
-  char *nfacctd_isis_ip;
-  char *nfacctd_isis_net;
-  char *nfacctd_isis_iface;
-  int nfacctd_isis_mtu;
-  int nfacctd_isis_msglog;
-  char *igp_daemon_map;
-  char *igp_daemon_map_msglog;
   char *geoip_ipv4_file;
   char *geoip_ipv6_file;
   char *geoipv2_file;

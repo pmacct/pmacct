@@ -4,7 +4,7 @@ if WITH_EXTERNAL_DEPS
 SUBDIRS += external_libs
 endif
 
-SUBDIRS += nfprobe_plugin sfprobe_plugin bgp tee_plugin isis bmp telemetry rpki filters ebpf
+SUBDIRS += nfprobe_plugin sfprobe_plugin bgp tee_plugin bmp telemetry rpki filters ebpf
 sbin_PROGRAMS =
 bin_PROGRAMS =
 EXTRA_PROGRAMS =
@@ -67,7 +67,6 @@ libdaemons_la_LIBADD += bgp/libpmbgp.la
 libdaemons_la_LIBADD += rpki/libpmrpki.la
 libdaemons_la_LIBADD += filters/libpmfilters.la
 libdaemons_la_LIBADD += tee_plugin/libtee_plugin.la
-libdaemons_la_LIBADD += isis/libpmisis.la
 libdaemons_la_LIBADD += telemetry/libpmtelemetry.la
 libdaemons_la_LIBADD += ebpf/libpmebpf.la
 libdaemons_la_LIBADD += libcommon.la
