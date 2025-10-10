@@ -1,4 +1,4 @@
-pmacct [IP traffic accounting : BGP : BMP : RPKI : IGP : Streaming Telemetry]
+pmacct [IP traffic accounting : BGP : BMP : RPKI : BGP-LS : Streaming Telemetry]
 pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 
 
@@ -18,14 +18,13 @@ XII.	Quickstart guide to setup a NetFlow/IPFIX agent/probe
 XIII.	Quickstart guide to setup a sFlow agent/probe 
 XIV.	Quickstart guide to setup the BGP daemon
 XV.	Quickstart guide to setup a NetFlow/IPFIX/sFlow replicator
-XVI.	Quickstart guide to setup the IS-IS daemon
-XVII.	Quickstart guide to setup the BMP daemon
-XVIII.	Quickstart guide to setup Streaming Telemetry collection 
-XIX.	Running the print plugin to write to flat-files
-XX.	Quickstart guide to setup GeoIP lookups
-XXI.	Using pmacct as traffic/event logger
-XXII.   Connecting pmacct to a Redis cache
-XXIII.	Miscellaneous notes and troubleshooting tips
+XVI.	Quickstart guide to setup the BMP daemon
+XVII.	Quickstart guide to setup Streaming Telemetry collection 
+XVIII.	Running the print plugin to write to flat-files
+XIX.	Quickstart guide to setup GeoIP lookups
+XX.	Using pmacct as traffic/event logger
+XXI.    Connecting pmacct to a Redis cache
+XXII.	Miscellaneous notes and troubleshooting tips
 
 
 I. Daemons and plugins included with pmacct distribution
@@ -119,7 +118,7 @@ libpcap-devel on CentOS/RHEL (note: this may need enabling extra yum repos!) or
 of guessing is done via pkg-config then, for some libraries, "typical" default
 locations are checked, ie. /usr/local/lib. Switches one likely wants enabled are
 already set so, ie. 64 bits counters and multi-threading (pre- requisite for
-the BGP, BMP, and IGP daemon codes); the full list of switches enabled by default
+the BGP and BMP daemon codes); the full list of switches enabled by default
 are marked as 'default: yes' in the "./configure --help" output. SQL plugins, AMQP
 and Kafka support are all disabled by default instead. A few examples will follow;
 to get the list of available switches, you can use the following command-line:
@@ -2309,63 +2308,7 @@ negatively affected by any of these restrictions or limitations or you need
 other primitives to be supported by this feature, please get in touch.
 
 
-XVI. Quickstart guide to setup the IS-IS daemon
-pmacct integrates an IS-IS daemon as part of the IP accounting collectors. Such
-daemon is run as a thread within the collector core process. The idea is to
-receive data-plane information, ie. via NetFlow, sFlow, etc., and control-plane
-information via IS-IS. Currently a single L2 P2P neighborship, ie. over a GRE
-tunnel, is supported. The daemon is currently used for the purpose of route
-resolution. A sample scenario could be that more specific internal routes might
-be configured to get summarized in BGP while crossing cluster boundaries.  
-
-Pre-requisite for the use of the IS-IS daemon is that the pmacct package has to
-be configured for compilation with threads, this line will do it:
-
-shell> ./configure
-
-XVIa. Preparing the collector for the L2 P2P IS-IS neighborship
-It's assumed the collector sits on an Ethernet segment and has not direct link
-(L2) connectivity to an IS-IS speaker, hence the need to establish a GRE tunnel. 
-While extensive literature and OS specific examples exist on the topic, a brief
-example for Linux, consistent with rest of the chapter, is provided below:
-
-ip tunnel add gre2 mode gre remote 10.0.1.2 local 10.0.1.1 ttl 255
-ip link set gre2 up
-
-The following configuration fragment is sufficient to set up an IS-IS daemon
-which will bind to a network interface gre2 configured with IP address 10.0.1.1
-in an IS-IS area 49.0001 and a CLNS MTU set to 1400:
-
-isis_daemon: true
-isis_daemon_ip: 10.0.1.1
-isis_daemon_net: 49.0001.0100.0000.1001.00
-isis_daemon_iface: gre2
-isis_daemon_mtu: 1400
-! isis_daemon_msglog: true
-
-XVIb. Preparing the router for the L2 P2P IS-IS neighborship 
-Once the collector is ready, the remaining step is to configure a remote router
-for the L2 P2P IS-IS neighborship. The following bit of configuration (based on
-Cisco IOS) will match the above fragment of configuration for the IS-IS daemon:
-
-interface Tunnel0
- ip address 10.0.1.2 255.255.255.252
- ip router isis
- tunnel source FastEthernet0
- tunnel destination XXX.XXX.XXX.XXX
- clns mtu 1400
- isis metric 1000
-!
-router isis
- net 49.0001.0100.0000.1002.00
- is-type level-2-only
- metric-style wide
- log-adjacency-changes
- passive-interface Loopback0
-!
-
-
-XVII. Quickstart guide to setup the BMP daemon
+XVI. Quickstart guide to setup the BMP daemon
 BMP can be run as a stand-alone collector daemon (pmbmpd) or as a thread
 within one of the traffic accounting daemons (ie. nfacctd). The stand-alone
 daemon is suitable for consuming BMP data only, real-time or at regular
@@ -2527,7 +2470,7 @@ Contribution of further configuration examples for Cisco and Juniper devices
 and/or other relevant vendors is more than welcome.
 
 
-XVIII. Quickstart guide to setup Streaming Telemetry collection
+XVII. Quickstart guide to setup Streaming Telemetry collection
 Quoting Cisco IOS-XR Telemetry Configuration Guide at the time of this writing:
 "Streaming telemetry lets users direct data to a configured receiver. This data
 can be used for analysis and troubleshooting purposes to maintain the health of
@@ -2618,7 +2561,7 @@ A sample of both the Streaming Telemetry msglog and dump formats are captured in
 the following document: docs/MSGLOG_DUMP_FORMATS
 
 
-XIX. Running the print plugin to write to regular files and named pipes
+XVIII. Running the print plugin to write to regular files and named pipes
 pmacct can also output to regular files and named pipes via the 'print' plugin.
 Dynamic filenames are supported. Output encoding is either text-based using
 JSON or CSV or binary schema-based using Apache Avro; encoding can be set
@@ -2676,7 +2619,7 @@ ElasticSearch, InfluxDB, etc.). An example is the pmacct-to-elasticsearch
 project https://github.com/pierky/pmacct-to-elasticsearch . 
 
 
-XX. Quickstart guide to setup GeoIP lookups
+XIX. Quickstart guide to setup GeoIP lookups
 pmacct can perform GeoIP country lookups against a Maxmind DB v1 (--enable-geoip)
 and against a Maxmind DB v2 (--enable-geoipv2). A v1 database enables resolution
 of src_host_country and dst_host_country primitives only. A v2 database enables
@@ -2718,7 +2661,7 @@ states, counties, metro areas, zip codes, etc.) are not yet supported: should
 you be interested into any of these, please get in touch.  
 
 
-XXI. Using pmacct as traffic/event logger
+XX. Using pmacct as traffic/event logger
 This use-case has been fostered particularly by the use of NetFlow/IPFIX as
 generic transport, see for example Cisco NEL and Cisco NSEL. Key to logging
 are time-stamping primitives, timestamp_start and timestamp_end: the former
@@ -2810,7 +2753,7 @@ set_tag=20      ip=B.B.B.B	sample_type=event
 ! ...
 
 
-XXII. Connecting pmacct to a Redis cache
+XXI. Connecting pmacct to a Redis cache
 Since version 1.7.5, pmacct daemons can connect to a Redis cache. The main
 use-case currenly covered is: registering every stable daemon component (ie.
 plugins, threads, etc. but not writers for example) in a table so to have,
@@ -2851,7 +2794,7 @@ cluster_id: 1
 redis_host: 127.0.0.1:6379
 
 
-XXIII. Miscellaneous notes and troubleshooting tips
+XXII. Miscellaneous notes and troubleshooting tips
 This chapter will hopefully build up to the point of providing a taxonomy of
 popular cases to troubleshoot by daemon and what to do. Although that is the
 plan, the current format is sparse notes.  

@@ -2109,12 +2109,12 @@ DESC:		When set to 'netflow' or 'sflow' it instructs nfacctd and sfacctd to popu
 DEFAULT:        none
 
 KEY:            [ nfacctd_net | sfacctd_net | pmacctd_net | uacctd_net ] [GLOBAL]
-VALUES:         [ netflow | sflow | mask | file | igp | bgp | bmp | longest ]
+VALUES:         [ netflow | sflow | mask | file | bgp-ls | bgp | bmp | longest ]
 DESC:		Determines the method for performing IP prefix aggregation - hence directly influencing
 		'src_net', 'dst_net', 'src_mask', 'dst_mask' and 'peer_dst_ip' primitives. 'netflow' and
 		'sflow' get values from NetFlow and sFlow protocols respectively; these keywords are only
 		valid in nfacctd, sfacctd. 'mask' applies a defined networks_mask; 'file' selects a defined
-		networks_file; 'igp', 'bgp' and 'bmp' source values from IGP/IS-IS, BGP and BMP daemon
+		networks_file; 'bgp-ls', 'bgp' and 'bmp' source values from IGP/IS-IS, BGP and BMP daemon
 		respectively. For backward compatibility, the default behaviour in pmacctd and uacctd is:
 		'mask' and 'file' are turned on if a networks_mask and a networks_file are respectively
 		specified by configuration. If they are both defined, the outcome will be the intersection
@@ -3307,44 +3307,6 @@ DEFAULT:        Operating System default
 KEY:		rpki_rtr_cache_ipprec [GLOBAL]
 DESC:           Marks self-originated RPKI RTR messages with the supplied IP precedence value.
 DEFAULT:	0
-
-KEY:		isis_daemon [GLOBAL]
-VALUES:		[ true | false ]
-DESC:		Enables the skinny IS-IS daemon thread. It implements P2P Hellos, CSNP and PSNP -
-		and does not send any LSP information out. It currently supports a single L2 P2P
-		neighborship. Testing has been done over a GRE tunnel.
-DEFAULT:        false
-
-KEY:		isis_daemon_ip [GLOBAL]
-DESC:		Sets the sub-TLV of the Extended IS Reachability TLV that contains an IPv4 address for the
-		local end of a link. No default value is set and a non-zero value is mandatory. It should
-		be set to the IPv4 address configured on the interface pointed by isis_daemon_iface. 
-DEFAULT:	none
-
-KEY:		isis_daemon_net [GLOBAL]
-DESC:		Defines the Network entity title (NET) of the IS-IS daemon. In turn a NET defines the area
-		addresses for the IS-IS area and the system ID of the router. No default value is set and
-		a non-zero value is mandatory. Extensive IS-IS and ISO literature cover the topic, example
-		of the NET value format can be found as part of the "Quickstart guide to setup the IS-IS
-		daemon" in the QUICKSTART document.
-DEFAULT:	none
-
-KEY:		isis_daemon_iface [GLOBAL]
-DESC:		Defines the network interface (ie. gre1) where to bind the IS-IS daemon. No default value
-		is set and a non-zero value is mandatory.
-DEFAULT:	none
-
-KEY:		isis_daemon_mtu [GLOBAL]
-DESC:		Defines the available MTU for the IS-IS daemon. P2P HELLOs will be padded to such length.
-		When the daemon is configured to set a neighborship with a Cisco router running IOS, this
-		value should match the value of the "clns mtu" IOS directive.
-DEFAUT:		1476
-
-KEY:		isis_daemon_msglog [GLOBAL]
-VALUES:		[ true | false ]
-DESC:	 	Enables IS-IS messages logging: as this can get easily verbose, it is intended for debug
-		and troubleshooting purposes only.
-DEFAULT:        false
 
 KEY:            geoipv2_file [GLOBAL]
 DESC:           If pmacct is compiled with --enable-geoipv2, this defines full pathname to a Maxmind GeoIP
