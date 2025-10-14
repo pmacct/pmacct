@@ -152,6 +152,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
   int ret;
   u_int16_t remote_as = 0;
   u_int32_t remote_as4 = 0;
+  char* cap_as4_ptr = NULL;
 
   if (!peer || !bgp_packet_ptr) return ERR;
 
@@ -255,39 +256,40 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 		  memcpy(bgp_open_cap_reply_ptr, optcap_ptr, cap_len+2);
 		  bgp_open_cap_reply_ptr += cap_len+2;
 		}
-	      }
-	      else if (cap_type == BGP_CAPABILITY_4_OCTET_AS_NUMBER) {
-		char *cap_ptr = optcap_ptr+2;
-		u_int32_t as4_ptr;
+    }
+    else if (cap_type == BGP_CAPABILITY_4_OCTET_AS_NUMBER) {
+      char *cap_ptr = optcap_ptr+2;
+      u_int32_t as4_ptr;
 
-	   	if (cap_len == CAPABILITY_CODE_AS4_LEN) {
-		  struct capability_as4 cap_data;
+      if (cap_len == CAPABILITY_CODE_AS4_LEN) {
+        struct capability_as4 cap_data;
 
-		  memcpy(&cap_data, cap_ptr, sizeof(cap_data));
+        memcpy(&cap_data, cap_ptr, sizeof(cap_data));
+        
+        peer->cap_4as.used = true;
+        peer->cap_4as.as4 = ntohl(cap_data.as4);
+        if (online) {
+          bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+          Log(LOG_INFO, "INFO ( %s/%s ): [%s] Capability: 4-bytes AS [%u] ASN [%u]\n",
+            config.name, bms->log_str, bgp_peer_str, cap_type, peer->cap_4as.as4);
+        }
+        memcpy(&as4_ptr, cap_ptr, 4);
+        remote_as4 = ntohl(as4_ptr);
 
-		  if (online) {
+        if (online) {
+          memcpy(bgp_open_cap_reply_ptr, optcap_ptr, cap_len+2); 
+          cap_as4_ptr = bgp_open_cap_base_reply_ptr;
+          bgp_open_cap_reply_ptr += cap_len+2;
+        }
+      }
+      else {
                     bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
-		    Log(LOG_INFO, "INFO ( %s/%s ): [%s] Capability: 4-bytes AS [%u] ASN [%u]\n",
-	    		config.name, bms->log_str, bgp_peer_str, cap_type, ntohl(cap_data.as4));
-		  }
-		  memcpy(&as4_ptr, cap_ptr, 4);
-		  remote_as4 = ntohl(as4_ptr);
-
-		  if (online) {
-		    memcpy(bgp_open_cap_reply_ptr, optcap_ptr, cap_len+2); 
-		    peer->cap_4as = bgp_open_cap_reply_ptr+2;
-		    bgp_open_cap_reply_ptr += cap_len+2;
-		  }
-		  else peer->cap_4as = bgp_open_cap_ptr+4;
-		}
-		else {
-                  bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
-		  Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP Open packet (malformed AS4 option).\n",
-			config.name, bms->log_str, bgp_peer_str);
-		  return ERR;
-		}
-	      }
-	      else if (cap_type == BGP_CAPABILITY_ADD_PATHS) {
+        Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP Open packet (malformed AS4 option).\n",
+        config.name, bms->log_str, bgp_peer_str);
+        return ERR;
+      }
+    }
+    else if (cap_type == BGP_CAPABILITY_ADD_PATHS) {
 		if (!bms->cap_add_path_ignore) {
 		  char *cap_ptr = (optcap_ptr + 2);
 		  struct capability_add_paths cap_data;
@@ -430,7 +432,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
         Log(LOG_INFO, "INFO ( %s/%s ): [%s] BGP_OPEN: Local AS: %u Remote AS: %u HoldTime: %u\n", config.name,
 		bms->log_str, bgp_peer_str, peer->myas, peer->as, peer->ht);
 
-        ret = bgp_write_open_msg(bgp_reply_pkt_ptr, bgp_open_cap_reply, bgp_open_cap_reply_ptr-bgp_open_cap_reply, peer);
+        ret = bgp_write_open_msg(bgp_reply_pkt_ptr, bgp_open_cap_reply, bgp_open_cap_reply_ptr-bgp_open_cap_reply, peer, cap_as4_ptr);
         if (ret > 0) bgp_reply_pkt_ptr += ret;
         else {
           bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
@@ -492,23 +494,21 @@ int bgp_write_keepalive_msg(char *msg)
 }
 
 /* write BGP OPEN msg */
-int bgp_write_open_msg(char *msg, char *cp_msg, int cp_msglen, struct bgp_peer *peer)
+int bgp_write_open_msg(char *msg, char *cp_msg, int cp_msglen, struct bgp_peer *peer, char *cap_as4_ptr)
 {
   struct bgp_open *bopen_reply = (struct bgp_open *) msg;
   char my_id_static[] = "1.2.3.4", *my_id = my_id_static;
   struct host_addr my_id_addr, bgp_ip, bgp_id;
   u_int16_t local_as;
-  u_int32_t *local_as4;
 
   memset(bopen_reply->bgpo_marker, 0xff, BGP_MARKER_SIZE);
   bopen_reply->bgpo_type = BGP_OPEN;
   bopen_reply->bgpo_version = BGP_VERSION4;
   bopen_reply->bgpo_holdtime = htons(peer->ht);
   if (peer->myas > BGP_AS_MAX) {
-    if (peer->cap_4as) {
+    if (cap_as4_ptr) {
       bopen_reply->bgpo_myas = htons(BGP_AS_TRANS);
-      local_as4 = (u_int32_t *) peer->cap_4as;
-      *local_as4 = htonl(peer->myas);
+      *cap_as4_ptr = htonl(peer->myas);
     }
     /* This is currently an unsupported configuration */
     else return ERR;
@@ -516,9 +516,8 @@ int bgp_write_open_msg(char *msg, char *cp_msg, int cp_msglen, struct bgp_peer *
   else {
     local_as = peer->myas;
     bopen_reply->bgpo_myas = htons(local_as);
-    if (peer->cap_4as) {
-      local_as4 = (u_int32_t *) peer->cap_4as;
-      *local_as4 = htonl(peer->myas);
+    if (cap_as4_ptr) {
+      *cap_as4_ptr = htonl(peer->myas);
     }
   }
 
@@ -969,9 +968,8 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
 
 int bgp_attr_parse_aspath(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag)
 {
-  u_int8_t cap_4as = peer->cap_4as ? 1 : 0;
 
-  attr->aspath = aspath_parse(peer, ptr, len, cap_4as);
+  attr->aspath = aspath_parse(peer, ptr, len, peer->cap_4as.used);
 
   return SUCCESS;
 }
