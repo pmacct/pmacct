@@ -52,6 +52,7 @@ struct lcommunity_val
 
 extern void lcommunity_init (int, struct hash **);
 extern void lcommunity_free (struct lcommunity *);
+extern int lcommunity_add_val (struct bgp_peer *peer, struct lcommunity *lcom, struct lcommunity_val *lval);
 extern struct lcommunity *lcommunity_new (struct bgp_peer *);
 extern struct lcommunity *lcommunity_parse (struct bgp_peer *, u_int8_t *, u_short);
 extern struct lcommunity *lcommunity_intern (struct bgp_peer *, struct lcommunity *);

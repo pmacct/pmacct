@@ -62,7 +62,7 @@ lcommunity_free (struct lcommunity *lcom)
    the structure, we don't add the value.  Newly added
    value is sorted by numerical order.  When the value is
    added to the structure return 1 else return 0.  */
-static int
+int
 lcommunity_add_val (struct bgp_peer *peer, struct lcommunity *lcom, struct lcommunity_val *lval)
 {
   struct bgp_misc_structs *bms;
