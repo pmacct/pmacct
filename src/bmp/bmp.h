@@ -313,10 +313,10 @@ static const struct bmp_tlv_def __attribute__((unused)) bmp_rm_info_types[] = {
 
 /* XXX: provisional code points */
 #define BMP_ROUTE_MONITOR_INFO_UNKNOWN0	0
-#define BMP_ROUTE_MONITOR_INFO_BGP_PDU	1
+#define BMP_ROUTE_MONITOR_INFO_SP	1
 #define BMP_ROUTE_MONITOR_INFO_GROUP	2
 #define BMP_ROUTE_MONITOR_INFO_VRF	3
-#define BMP_ROUTE_MONITOR_INFO_SP	4
+#define BMP_ROUTE_MONITOR_INFO_BGP_PDU	4
 #define BMP_ROUTE_MONITOR_INFO_MARKING	5
 #define BMP_ROUTE_MONITOR_INFO_UNKNOWN6	6
 #define BMP_ROUTE_MONITOR_INFO_UNKNOWN7	7
