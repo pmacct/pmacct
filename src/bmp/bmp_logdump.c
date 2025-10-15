@@ -408,24 +408,19 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct cdad
       json_object_set_new_nocheck(obj, "is_loc", json_integer((json_int_t)bdata->chars.is_loc));
     }
     else if (bdata->chars.is_out) {
-      json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bdata->chars.is_post));
-      json_object_set_new_nocheck(obj, "is_out", json_integer((json_int_t)bdata->chars.is_out));
+        json_object_set_new_nocheck(obj, "is_post", json_integer((json_int_t)bdata->chars.is_post));
+        json_object_set_new_nocheck(obj, "is_out", json_integer((json_int_t)bdata->chars.is_out));
     }
 
-    if (!is_empty_256b(&bdata->chars.rd, sizeof(bdata->chars.rd))) {
-      char rd_str[SHORTSHORTBUFLEN];
-
-      bgp_rd2str(rd_str, &bdata->chars.rd);
-      json_object_set_new_nocheck(obj, "rd", json_string(rd_str));
-      json_object_set_new_nocheck(obj, "rd_origin", json_string(bgp_rd_origin_print(bdata->chars.rd.type)));
-    }
+    const char* pd_target = config.bmp_daemon_set_pd ? "pd" : "rd";
+    const char* pd_origin_target = config.bmp_daemon_set_pd ? "pd_origin" : "rd_origin";
 
     if (!is_empty_256b(&bdata->chars.pd, sizeof(bdata->chars.pd))) {
       char pd_str[SHORTSHORTBUFLEN];
 
       bgp_rd2str(pd_str, &bdata->chars.pd);
-      json_object_set_new_nocheck(obj, "pd", json_string(pd_str));
-      json_object_set_new_nocheck(obj, "pd_origin", json_string(bgp_rd_origin_print(bdata->chars.pd.type)));
+      json_object_set_new_nocheck(obj, pd_target, json_string(pd_str));
+      json_object_set_new_nocheck(obj, pd_origin_target, json_string(bgp_rd_origin_print(bdata->chars.pd.type)));
     }
 
     json_object_set_new_nocheck(obj, "bgp_id", json_string(inet_ntoa(bdata->bgp_id.address.ipv4)));
@@ -547,46 +542,27 @@ int bmp_log_msg_stats(struct bgp_peer *peer, struct bmp_data *bdata, struct cdad
       pm_avro_check(avro_value_set_int(&p_avro_branch, bdata->chars.is_out));
     }
 
-    if (!is_empty_256b(&bdata->chars.rd, sizeof(bdata->chars.rd))) {
+    const char* pd_target = config.bmp_daemon_set_pd ? "pd" : "rd";
+    const char* pd_origin_target = config.bmp_daemon_set_pd ? "pd_origin" : "rd_origin";
+
+    if (!is_empty_256b(&bdata->chars.pd, sizeof(bdata->chars.pd))) {
       char rd_str[SHORTSHORTBUFLEN];
 
-      bgp_rd2str(rd_str, &bdata->chars.rd);
-      pm_avro_check(avro_value_get_by_name(obj, "rd", &p_avro_field, NULL));
+      bgp_rd2str(rd_str, &bdata->chars.pd);
+      pm_avro_check(avro_value_get_by_name(obj, pd_target, &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
       pm_avro_check(avro_value_set_string(&p_avro_branch, rd_str));
 
-      pm_avro_check(avro_value_get_by_name(obj, "rd_origin", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(obj, pd_origin_target, &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-      pm_avro_check(avro_value_set_string(&p_avro_branch, bgp_rd_origin_print(bdata->chars.rd.type)));
+      pm_avro_check(avro_value_set_string(&p_avro_branch, bgp_rd_origin_print(bdata->chars.pd.type)));
     }
     else {
-      pm_avro_check(avro_value_get_by_name(obj, "rd", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(obj, pd_target, &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
 
-      pm_avro_check(avro_value_get_by_name(obj, "rd_origin", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(obj, pd_origin_target, &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
-    }
-
-    if (config.bmp_daemon_set_pd) {
-      if (!is_empty_256b(&bdata->chars.pd, sizeof(bdata->chars.pd))) {
-        char pd_str[SHORTSHORTBUFLEN];
-
-        bgp_rd2str(pd_str, &bdata->chars.pd);
-        pm_avro_check(avro_value_get_by_name(obj, "pd", &p_avro_field, NULL));
-        pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-        pm_avro_check(avro_value_set_string(&p_avro_branch, pd_str));
-
-        pm_avro_check(avro_value_get_by_name(obj, "pd_origin", &p_avro_field, NULL));
-        pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-        pm_avro_check(avro_value_set_string(&p_avro_branch, bgp_rd_origin_print(bdata->chars.pd.type)));
-      }
-      else {
-        pm_avro_check(avro_value_get_by_name(obj, "pd", &p_avro_field, NULL));
-        pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
-
-        pm_avro_check(avro_value_get_by_name(obj, "pd_origin", &p_avro_field, NULL));
-        pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
-      }
     }
 
     pm_avro_check(avro_value_get_by_name(obj, "bgp_id", &p_avro_field, NULL));
@@ -950,20 +926,15 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct cd
     addr_to_str(ip_address, &blpu->local_ip);
     json_object_set_new_nocheck(obj, "local_ip", json_string(ip_address));
 
-    if (!is_empty_256b(&bdata->chars.rd, sizeof(bdata->chars.rd))) {
-      char rd_str[SHORTSHORTBUFLEN];
-
-      bgp_rd2str(rd_str, &bdata->chars.rd);
-      json_object_set_new_nocheck(obj, "rd", json_string(rd_str));
-      json_object_set_new_nocheck(obj, "rd_origin", json_string(bgp_rd_origin_print(bdata->chars.rd.type)));
-    }
+    const char* pd_target = config.bmp_daemon_set_pd ? "pd" : "rd";
+    const char* pd_origin_target = config.bmp_daemon_set_pd ? "pd_origin" : "rd_origin";
 
     if (!is_empty_256b(&bdata->chars.pd, sizeof(bdata->chars.pd))) {
       char pd_str[SHORTSHORTBUFLEN];
 
       bgp_rd2str(pd_str, &bdata->chars.pd);
-      json_object_set_new_nocheck(obj, "pd", json_string(pd_str));
-      json_object_set_new_nocheck(obj, "pd_origin", json_string(bgp_rd_origin_print(bdata->chars.pd.type)));
+      json_object_set_new_nocheck(obj, pd_target, json_string(pd_str));
+      json_object_set_new_nocheck(obj, pd_origin_target, json_string(bgp_rd_origin_print(bdata->chars.pd.type)));
     }
 
     if (tlvs) {
@@ -1103,46 +1074,27 @@ int bmp_log_msg_peer_up(struct bgp_peer *peer, struct bmp_data *bdata, struct cd
     pm_avro_check(avro_value_get_by_name(obj, "local_ip", &p_avro_field, NULL));
     pm_avro_check(avro_value_set_string(&p_avro_field, ip_address));
 
-    if (!is_empty_256b(&bdata->chars.rd, sizeof(bdata->chars.rd))) {
+    const char* pd_target = config.bmp_daemon_set_pd ? "pd" : "rd";
+    const char* pd_origin_target = config.bmp_daemon_set_pd ? "pd_origin" : "rd_origin";
+
+    if (!is_empty_256b(&bdata->chars.pd, sizeof(bdata->chars.pd))) {
       char rd_str[SHORTSHORTBUFLEN];
 
-      bgp_rd2str(rd_str, &bdata->chars.rd);
-      pm_avro_check(avro_value_get_by_name(obj, "rd", &p_avro_field, NULL));
+      bgp_rd2str(rd_str, &bdata->chars.pd);
+      pm_avro_check(avro_value_get_by_name(obj, pd_target, &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
       pm_avro_check(avro_value_set_string(&p_avro_branch, rd_str));
 
-      pm_avro_check(avro_value_get_by_name(obj, "rd_origin", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(obj, pd_origin_target, &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-      pm_avro_check(avro_value_set_string(&p_avro_branch, bgp_rd_origin_print(bdata->chars.rd.type)));
+      pm_avro_check(avro_value_set_string(&p_avro_branch, bgp_rd_origin_print(bdata->chars.pd.type)));
     }
     else {
-      pm_avro_check(avro_value_get_by_name(obj, "rd", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(obj, pd_target, &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
 
-      pm_avro_check(avro_value_get_by_name(obj, "rd_origin", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(obj, pd_origin_target, &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
-    }
-
-    if (config.bmp_daemon_set_pd) {
-      if (!is_empty_256b(&bdata->chars.pd, sizeof(bdata->chars.pd))) {
-        char pd_str[SHORTSHORTBUFLEN];
-
-        bgp_rd2str(pd_str, &bdata->chars.pd);
-        pm_avro_check(avro_value_get_by_name(obj, "pd", &p_avro_field, NULL));
-        pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-        pm_avro_check(avro_value_set_string(&p_avro_branch, pd_str));
-
-        pm_avro_check(avro_value_get_by_name(obj, "pd_origin", &p_avro_field, NULL));
-        pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-        pm_avro_check(avro_value_set_string(&p_avro_branch, bgp_rd_origin_print(bdata->chars.pd.type)));
-      }
-      else {
-        pm_avro_check(avro_value_get_by_name(obj, "pd", &p_avro_field, NULL));
-        pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
-
-        pm_avro_check(avro_value_get_by_name(obj, "pd_origin", &p_avro_field, NULL));
-        pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
-      }
     }
 
     memset(&bmp_peer_up_tlvs, 0, sizeof(bmp_peer_up_tlvs));
@@ -1248,20 +1200,15 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
       json_object_set_new_nocheck(obj, "is_out", json_integer((json_int_t)bdata->chars.is_out));
     }
 
-    if (!is_empty_256b(&bdata->chars.rd, sizeof(bdata->chars.rd))) {
-      char rd_str[SHORTSHORTBUFLEN];
-
-      bgp_rd2str(rd_str, &bdata->chars.rd);
-      json_object_set_new_nocheck(obj, "rd", json_string(rd_str));
-      json_object_set_new_nocheck(obj, "rd_origin", json_string(bgp_rd_origin_print(bdata->chars.rd.type)));
-    }
+    const char* pd_target = config.bmp_daemon_set_pd ? "pd" : "rd";
+    const char* pd_origin_target = config.bmp_daemon_set_pd ? "pd_origin" : "rd_origin";
 
     if (!is_empty_256b(&bdata->chars.pd, sizeof(bdata->chars.pd))) {
       char pd_str[SHORTSHORTBUFLEN];
 
       bgp_rd2str(pd_str, &bdata->chars.pd);
-      json_object_set_new_nocheck(obj, "pd", json_string(pd_str));
-      json_object_set_new_nocheck(obj, "pd_origin", json_string(bgp_rd_origin_print(bdata->chars.pd.type)));
+      json_object_set_new_nocheck(obj, pd_target, json_string(pd_str));
+      json_object_set_new_nocheck(obj, pd_origin_target, json_string(bgp_rd_origin_print(bdata->chars.pd.type)));
     }
 
     json_object_set_new_nocheck(obj, "reason_type", json_integer((json_int_t)blpd->reason));
@@ -1398,46 +1345,27 @@ int bmp_log_msg_peer_down(struct bgp_peer *peer, struct bmp_data *bdata, struct 
       pm_avro_check(avro_value_set_int(&p_avro_branch, bdata->chars.is_out));
     }
 
-    if (!is_empty_256b(&bdata->chars.rd, sizeof(bdata->chars.rd))) {
+    const char* pd_target = config.bmp_daemon_set_pd ? "pd" : "rd";
+    const char* pd_origin_target = config.bmp_daemon_set_pd ? "pd_origin" : "rd_origin";
+
+    if (!is_empty_256b(&bdata->chars.pd, sizeof(bdata->chars.pd))) {
       char rd_str[SHORTSHORTBUFLEN];
 
-      bgp_rd2str(rd_str, &bdata->chars.rd);
-      pm_avro_check(avro_value_get_by_name(obj, "rd", &p_avro_field, NULL));
+      bgp_rd2str(rd_str, &bdata->chars.pd);
+      pm_avro_check(avro_value_get_by_name(obj, pd_target, &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
       pm_avro_check(avro_value_set_string(&p_avro_branch, rd_str));
 
-      pm_avro_check(avro_value_get_by_name(obj, "rd_origin", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(obj, pd_origin_target, &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-      pm_avro_check(avro_value_set_string(&p_avro_branch, bgp_rd_origin_print(bdata->chars.rd.type)));
+      pm_avro_check(avro_value_set_string(&p_avro_branch, bgp_rd_origin_print(bdata->chars.pd.type)));
     }
     else {
-      pm_avro_check(avro_value_get_by_name(obj, "rd", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(obj, pd_target, &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
 
-      pm_avro_check(avro_value_get_by_name(obj, "rd_origin", &p_avro_field, NULL));
+      pm_avro_check(avro_value_get_by_name(obj, pd_origin_target, &p_avro_field, NULL));
       pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
-    }
-
-    if (config.bmp_daemon_set_pd) {
-      if (!is_empty_256b(&bdata->chars.pd, sizeof(bdata->chars.pd))) {
-        char pd_str[SHORTSHORTBUFLEN];
-
-        bgp_rd2str(pd_str, &bdata->chars.pd);
-        pm_avro_check(avro_value_get_by_name(obj, "pd", &p_avro_field, NULL));
-        pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-        pm_avro_check(avro_value_set_string(&p_avro_branch, pd_str));
-
-        pm_avro_check(avro_value_get_by_name(obj, "pd_origin", &p_avro_field, NULL));
-        pm_avro_check(avro_value_set_branch(&p_avro_field, TRUE, &p_avro_branch));
-        pm_avro_check(avro_value_set_string(&p_avro_branch, bgp_rd_origin_print(bdata->chars.pd.type)));
-      }
-      else {
-        pm_avro_check(avro_value_get_by_name(obj, "pd", &p_avro_field, NULL));
-        pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
-
-        pm_avro_check(avro_value_get_by_name(obj, "pd_origin", &p_avro_field, NULL));
-        pm_avro_check(avro_value_set_branch(&p_avro_field, FALSE, &p_avro_branch));
-      }
     }
 
     pm_avro_check(avro_value_get_by_name(obj, "reason_type", &p_avro_field, NULL));

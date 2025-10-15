@@ -89,7 +89,6 @@ struct bmp_chars {
   u_int8_t is_out;
   u_int8_t is_loc;
   u_int8_t rib_type; /* new replacing is_in, is_out, is_loc, is_post */
-  rd_t rd;
   rd_t pd;
 
   /* non-key */
