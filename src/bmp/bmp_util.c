@@ -222,7 +222,12 @@ int bgp_peer_host_addr_peer_dist_cmp(const void *a, const void *b)
   int addr_cmp_res = host_addr_cmp(&((struct bmp_data *)a)->peer_ip, &((struct bgp_peer *)b)->addr);
   if (addr_cmp_res != 0) return addr_cmp_res;
 
-  return memcmp(&((struct bmp_data *)a)->chars.rd, &((struct bgp_peer *)b)->peer_distinguisher, sizeof(rd_t));
+  if (config.bmp_daemon_set_pd) {
+    return memcmp(&((struct bmp_data *)a)->chars.pd, &((struct bgp_peer *)b)->peer_distinguisher, sizeof(rd_t));
+  }
+  else {
+    return memcmp(&((struct bmp_data *)a)->chars.rd, &((struct bgp_peer *)b)->peer_distinguisher, sizeof(rd_t));
+  }
 }
 
 int bmp_peer_host_addr_peer_dist_cmp(const void *a, const void *b)
