@@ -266,7 +266,7 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
 
         memcpy(&cap_data, cap_ptr, sizeof(cap_data));
         
-        peer->cap_4as.used = true;
+        peer->cap_4as.is_used = TRUE;
         peer->cap_4as.as4 = ntohl(cap_data.as4);
         if (online) {
           bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
@@ -969,7 +969,7 @@ int bgp_attr_parse(struct bgp_peer *peer, struct bgp_attr *attr, struct bgp_attr
 int bgp_attr_parse_aspath(struct bgp_peer *peer, u_int16_t len, struct bgp_attr *attr, char *ptr, u_int8_t flag)
 {
 
-  attr->aspath = aspath_parse(peer, ptr, len, peer->cap_4as.used);
+  attr->aspath = aspath_parse(peer, ptr, len, peer->cap_4as.is_used);
 
   return SUCCESS;
 }

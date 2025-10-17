@@ -942,7 +942,7 @@ int bgp_attr_munge_as4path(struct bgp_peer *peer, struct bgp_attr *attr, struct 
   struct aspath *newpath;
 
   /* If the BGP peer supports 32bit AS_PATH then we are done */ 
-  if (peer->cap_4as.used) return SUCCESS;
+  if (peer->cap_4as.is_used) return SUCCESS;
 
   /* pre-requisite for AS4_PATH is AS_PATH indeed */ 
   // XXX if (as4path && !attr->aspath) return ERR;

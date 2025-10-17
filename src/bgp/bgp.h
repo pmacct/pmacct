@@ -189,7 +189,7 @@ struct cap_per_af {
 // This thing was dangerous because it kept a pointer to the msg buffer
 // which is freed way earlier than the peer.
 struct cap_4as {
-    bool used;
+    bool is_used;
     uint32_t as4;
 };
 
