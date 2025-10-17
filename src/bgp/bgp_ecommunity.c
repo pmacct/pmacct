@@ -65,7 +65,7 @@ ecommunity_free (struct ecommunity *ecom)
    structure, we don't add the value.  Newly added value is sorted by
    numerical order.  When the value is added to the structure return 1
    else return 0.  */
-static int
+int
 ecommunity_add_val (struct bgp_peer *peer, struct ecommunity *ecom, struct ecommunity_val *eval)
 {
   struct bgp_misc_structs *bms;

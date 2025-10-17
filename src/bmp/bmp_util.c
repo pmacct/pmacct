@@ -242,7 +242,7 @@ struct bgp_peer *bmp_sync_loc_rem_peers(struct bgp_peer *bgp_peer_loc, struct bg
 {
   if (!bgp_peer_loc || !bgp_peer_rem) return NULL;
 
-  if (!bgp_peer_loc->cap_4as || !bgp_peer_rem->cap_4as) bgp_peer_rem->cap_4as = FALSE;
+  if (!bgp_peer_loc->cap_4as.used || !bgp_peer_rem->cap_4as.used) bgp_peer_rem->cap_4as.used = FALSE;
 
   /* XXX: since BGP OPENs are fabricated, we assume that if remote
      peer is marked as able to send ADD-PATH capability, the local

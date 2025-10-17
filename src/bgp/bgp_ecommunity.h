@@ -73,6 +73,7 @@ struct ecommunity_val
 
 extern void ecommunity_init (int, struct hash **);
 extern void ecommunity_free (struct ecommunity *);
+extern int ecommunity_add_val (struct bgp_peer *peer, struct ecommunity *ecom, struct ecommunity_val *eval);
 extern struct ecommunity *ecommunity_new (struct bgp_peer *);
 extern struct ecommunity *ecommunity_parse (struct bgp_peer *, u_int8_t *, u_short);
 extern struct ecommunity *ecommunity_intern (struct bgp_peer *, struct ecommunity *);

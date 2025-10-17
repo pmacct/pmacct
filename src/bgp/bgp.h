@@ -185,6 +185,14 @@ struct cap_per_af {
   safi_t safi_max;
 };
 
+// Replaces the char* kept in bgp_peer.
+// This thing was dangerous because it kept a pointer to the msg buffer
+// which is freed way earlier than the peer.
+struct cap_4as {
+    bool used;
+    uint32_t as4;
+};
+
 struct bgp_peer {
   int idx;
   int fd;
@@ -201,7 +209,7 @@ struct bgp_peer {
   char addr_str[INET6_ADDRSTRLEN];
   u_int16_t tcp_port;
   u_int8_t cap_mp;
-  char *cap_4as;
+  struct cap_4as cap_4as;
   struct cap_per_af cap_add_paths;
   u_int32_t msglen;
   struct bgp_peer_stats stats;
