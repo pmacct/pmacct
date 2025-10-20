@@ -122,7 +122,7 @@ u_int32_t bmp_route_info_modulo_mplsvpnrd(struct bgp_peer *peer, rd_t *rd, path_
 
   if (bmed) { /* BMP message being parsed (RD is stored in bmed->data->rd) */
     struct bmp_chars *bmed_bmp_chars = (struct bmp_chars *) bmed->data;
-    if (bmed_bmp_chars->rd.val) local_rd = (bmed_bmp_chars->rd.type + bmed_bmp_chars->rd.as + bmed_bmp_chars->rd.val);
+    if (bmed_bmp_chars->pd.val) local_rd = (bmed_bmp_chars->pd.type + bmed_bmp_chars->pd.as + bmed_bmp_chars->pd.val);
   }
   else { /* Correlating with flow */
     if (rd) local_rd = (rd->type + rd->as + rd->val);
@@ -164,7 +164,7 @@ int bgp_lookup_node_match_cmp_bmp(struct bgp_info *info, struct node_match_cmp_t
 	if (info->bmed.id == BGP_MSG_EXTRA_DATA_BMP) {
 	  struct bmp_chars *bmed_bmp = (struct bmp_chars *) info->bmed.data;
 
-	  if (bmed_bmp && !memcmp(&bmed_bmp->rd, nmct2->rd, sizeof(rd_t))) {
+	  if (bmed_bmp && !memcmp(&bmed_bmp->pd, nmct2->rd, sizeof(rd_t))) {
 	    no_match--;
 	  }
 	}

@@ -29,7 +29,6 @@
 /* prototypes */
 extern int bgp_peer_cmp_bmp(const void *, const void *);
 extern int bgp_peer_host_addr_peer_dist_cmp(const void *, const void *);
-extern int bmp_peer_host_addr_peer_dist_cmp(const void *, const void *);
 
 extern char *bmp_get_and_check_length(char **, u_int32_t *, u_int32_t);
 extern int bmp_jump_offset(char **, u_int32_t *, u_int32_t);
