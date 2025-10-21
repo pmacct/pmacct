@@ -268,22 +268,27 @@ int bgp_parse_open_msg(struct bgp_msg_data *bmd, char *bgp_packet_ptr, time_t no
         
         peer->cap_4as.is_used = TRUE;
         peer->cap_4as.as4 = ntohl(cap_data.as4);
+
         if (online) {
           bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
           Log(LOG_INFO, "INFO ( %s/%s ): [%s] Capability: 4-bytes AS [%u] ASN [%u]\n",
             config.name, bms->log_str, bgp_peer_str, cap_type, peer->cap_4as.as4);
         }
+
         memcpy(&as4_ptr, cap_ptr, 4);
         remote_as4 = ntohl(as4_ptr);
 
         if (online) {
           memcpy(bgp_open_cap_reply_ptr, optcap_ptr, cap_len+2); 
-          cap_as4_ptr = bgp_open_cap_base_reply_ptr;
+          cap_as4_ptr = bgp_open_cap_reply_ptr+2;
           bgp_open_cap_reply_ptr += cap_len+2;
         }
+	else {
+	  cap_as4_ptr = bgp_open_cap_ptr+4;
+	}
       }
       else {
-                    bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
+        bgp_peer_print(peer, bgp_peer_str, INET6_ADDRSTRLEN);
         Log(LOG_INFO, "INFO ( %s/%s ): [%s] Received malformed BGP Open packet (malformed AS4 option).\n",
         config.name, bms->log_str, bgp_peer_str);
         return ERR;
