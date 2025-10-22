@@ -17,7 +17,7 @@ packet_processor load_dynamic_lib(char* lib_path)
 
     void* handle = dlopen(lib_path, RTLD_NOW);
     if (!handle) {
-        fprintf(stderr, "%s\n", dlerror());
+        Log(LOG_ERR, "ERROR ( %s ): [parsing lib %s] Error when dlopen-ing provided library : %s\n", config.name, lib_path, dlerror());
         exit_gracefully(1);
     }
 

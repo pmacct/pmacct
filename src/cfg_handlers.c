@@ -8997,5 +8997,6 @@ int cfg_key_nfacctd_pre_processing_checks(char *filename, char *name, char *valu
 
 int cfg_custom_packet_parsing_lib(char *filename, char *name, char *value_ptr)
 {
+  Log(LOG_INFO, "INFO: [parsing lib] Got to dynamic lib loading with %s | %s | %s : %s\n", filename, name, value_ptr);
   DEFAULT_PACKET_PROCESSOR = load_dynamic_lib(value_ptr);
 }
