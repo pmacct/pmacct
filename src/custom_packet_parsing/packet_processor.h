@@ -2,9 +2,9 @@
 #define _PACKET_PROCESSOR_H_
 
 #include "pmacct.h"
-#include "bgp/bgp_msg.h"
-#include "bmp/bmp_msg.h"
-#include "bmp/bmp_util.h"
+#include "bgp/bgp.h"
+#include "bmp/bmp.h"
+#include <time.h>
 
 
 
