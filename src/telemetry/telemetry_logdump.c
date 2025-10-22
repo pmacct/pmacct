@@ -1,6 +1,6 @@
 /*  
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -72,61 +72,66 @@ int telemetry_log_msg(telemetry_peer *peer, struct telemetry_data *t_data, telem
     u_char *base64_tdata = NULL;
     size_t base64_tdata_len = 0;
     json_t *obj = json_object();
+    json_t *netop_meta_obj = json_object();
+    json_t *tmesg_meta_obj = json_object();
 
-    json_object_set_new_nocheck(obj, "event_type", json_string(event_type));
+    json_object_set_new_nocheck(netop_meta_obj, "event_type", json_string(event_type));
 
     if (etype == BGP_LOGDUMP_ET_LOG) {
-      json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t)log_seq));
-
-      json_object_set_new_nocheck(obj, "timestamp", json_string(tms->log_tstamp_str));
+      json_object_set_new_nocheck(netop_meta_obj, "seq", json_integer((json_int_t)log_seq));
+      json_object_set_new_nocheck(tmesg_meta_obj, "collection-timestamp", json_string(tms->log_tstamp_str));
     }
     else if (etype == BGP_LOGDUMP_ET_DUMP) {
-      json_object_set_new_nocheck(obj, "seq", json_integer((json_int_t) telemetry_log_seq_get(&tms->log_seq)));
-
-      json_object_set_new_nocheck(obj, "timestamp", json_string(tms->dump.tstamp_str));
+      json_object_set_new_nocheck(netop_meta_obj, "seq", json_integer((json_int_t) telemetry_log_seq_get(&tms->log_seq)));
+      json_object_set_new_nocheck(tmesg_meta_obj, "collection-timestamp", json_string(tms->dump.tstamp_str));
     }
 
-    json_object_set_new_nocheck(obj, "telemetry_node", json_string(peer->addr_str));
-
-    json_object_set_new_nocheck(obj, "telemetry_port", json_integer((json_int_t)peer->tcp_port));
+    json_object_set_new_nocheck(netop_meta_obj, "telemetry_node", json_string(peer->addr_str));
+    json_object_set_new_nocheck(netop_meta_obj, "telemetry_port", json_integer((json_int_t)peer->tcp_port));
 
     if (config.telemetry_tag_map && tag) {
-      telemetry_tag_print_json(obj, tag);
+      telemetry_tag_print_json(netop_meta_obj, tag);
     }
 
     if (data_decoder == TELEMETRY_DATA_DECODER_JSON) {
       json_error_t json_err;
       json_t *log_data_obj = json_loads(log_data, 0, &json_err);
 
-      if (log_data_obj)
-        json_object_set_new_nocheck(obj, "telemetry_data", log_data_obj);
-      else
+      if (log_data_obj) {
+        json_object_set_new_nocheck(obj, "payload", log_data_obj);
+      }
+      else {
         Log(LOG_DEBUG, "DEBUG ( %s/%s ): JSON error: %s (%d/%d/%d: %s)",
             config.name, t_data->log_str, json_err.text,
             json_err.line, json_err.column, json_err.position, json_err.source);
+      }
 
-      json_object_set_new_nocheck(obj, "serialization", json_string("json"));
+      json_object_set_new_nocheck(netop_meta_obj, "serialization", json_string("json"));
     }
     else if (data_decoder == TELEMETRY_DATA_DECODER_GPB) {
       base64_tdata = base64_encode(log_data, log_data_len, &base64_tdata_len);
 
       if (base64_tdata) {
-        json_object_set_new_nocheck(obj, "telemetry_data", json_string((char *)base64_tdata));
+        json_object_set_new_nocheck(obj, "payload", json_string((char *)base64_tdata));
 	base64_freebuf(base64_tdata);
         base64_tdata_len = 0;
       }
-      else json_object_set_new_nocheck(obj, "telemetry_data", json_null());
-           // XXX: kv = json_pack("{sn}", "telemetry_data");
+      else {
+        json_object_set_new_nocheck(obj, "payload", json_null());
+      }
 
-      json_object_set_new_nocheck(obj, "serialization", json_string("gpb"));
+      json_object_set_new_nocheck(netop_meta_obj, "serialization", json_string("gpb"));
     }
     else if (data_decoder == TELEMETRY_DATA_DECODER_JSON_STRING) {
-      json_object_set_new_nocheck(obj, "telemetry_data", json_string((char *) log_data));
-      json_object_set_new_nocheck(obj, "serialization", json_string("json_string"));
+      json_object_set_new_nocheck(obj, "payload", json_string((char *) log_data));
+      json_object_set_new_nocheck(netop_meta_obj, "serialization", json_string("json_string"));
     }
     else if (data_decoder == TELEMETRY_DATA_DECODER_UNKNOWN) {
-      json_object_set_new_nocheck(obj, "serialization", json_string("unknown"));
+      json_object_set_new_nocheck(netop_meta_obj, "serialization", json_string("unknown"));
     }
+
+    json_object_set_new_nocheck(obj, "network-operator-metadata", netop_meta_obj);
+    json_object_set_new_nocheck(obj, "telemetry-message-metadata", tmesg_meta_obj);
 
     if ((config.telemetry_msglog_file && etype == TELEMETRY_LOGDUMP_ET_LOG) ||
         (config.telemetry_dump_file && etype == TELEMETRY_LOGDUMP_ET_DUMP))

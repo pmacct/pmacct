@@ -1,6 +1,6 @@
 /*
     pmacct (Promiscuous mode IP Accounting package)
-    pmacct is Copyright (C) 2003-2024 by Paolo Lucente
+    pmacct is Copyright (C) 2003-2025 by Paolo Lucente
 */
 
 /*
@@ -168,6 +168,10 @@ int telemetry_daemon(void *t_data_void)
 #if defined WITH_UNYTE_UDP_NOTIF
     capture_methods++;
     unyte_udp_notif_input = TRUE;
+#else
+    Log(LOG_ERR, "ERROR ( %s/%s ): Please recompile with --enable-unyte-udp-notif for UDP-Notif collection. Exiting...\n",
+	config.name, t_data->log_str);
+    exit_gracefully(1);
 #endif
   }
 
@@ -175,6 +179,10 @@ int telemetry_daemon(void *t_data_void)
 #if defined WITH_GRPC_COLLECTOR && defined WITH_ZMQ
     capture_methods++;
     grpc_collector_input = TRUE;
+#else
+    Log(LOG_ERR, "ERROR ( %s/%s ): Please recompile with --enable-grpc-collector for gRPC collection. Exiting...\n",
+	config.name, t_data->log_str);
+    exit_gracefully(1);
 #endif
   }
 
