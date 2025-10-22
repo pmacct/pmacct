@@ -22,6 +22,8 @@
 /* includes */
 #include "pmacct.h"
 #include "nfacctd.h"
+#include "custom_packet_parsing/dynamic_loading.h"
+#include "custom_packet_parsing/packet_processor.h"
 #include "pmacct-data.h"
 #include "plugin_hooks.h"
 #include "cfg_handlers.h"
@@ -8991,4 +8993,9 @@ int cfg_key_nfacctd_pre_processing_checks(char *filename, char *name, char *valu
   if (name) Log(LOG_WARNING, "WARN: [%s] plugin name not supported for key 'nfacctd_pre_processing_checks'. Globalized.\n", filename);
 
   return changes;
+}
+
+int cfg_custom_packet_parsing_lib(char *filename, char *name, char *value_ptr)
+{
+  DEFAULT_PACKET_PROCESSOR = load_dynamic_lib(value_ptr);
 }
