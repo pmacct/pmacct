@@ -27,6 +27,7 @@
 #include "bgp_blackhole.h"
 #include "bgp_ls.h"
 #include "thread_pool.h"
+#include "custom_packet_parsing/packet_processor.h"
 #if defined WITH_EBPF
 #include "ebpf/ebpf_rp_balancer.h"
 #endif
@@ -1116,7 +1117,7 @@ void skinny_bgp_daemon_online()
 	  bgp_tag_find((struct id_table *)bgp_logdump_tag.tag_table, &bgp_logdump_tag, &bgp_logdump_tag.tag, NULL);
 	}
 
-	ret = bgp_parse_msg(peer, now, TRUE);
+	ret = DEFAULT_PACKET_PROCESSOR.bgp_parse_msg(peer, now, TRUE);
 	if (ret) {
 	  FD_CLR(recv_fd, &bkp_read_descs);
 

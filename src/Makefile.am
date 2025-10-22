@@ -54,7 +54,8 @@ libdaemons_la_SOURCES = signals.c util.c plugin_hooks.c		\
 	ll.c nl.c						\
 	base64.c pmsearch.c 					\
 	thread_pool.c						\
-	plugin_cmn_custom.c network.c pmacct-globals.c
+	plugin_cmn_custom.c network.c pmacct-globals.c 			\
+	custom_packet_parsing/dynamic_loading.c custom_packet_parsing/packet_processor.c
 
 libcommon_la_LIBADD  =
 libcommon_la_CFLAGS  = $(AM_CFLAGS)
